@@ -1,0 +1,40 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors / IDE
+.idea/
+.vscode/
+*.swp
+
+# Python (backend, when it lands)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node / frontend (when it lands)
+node_modules/
+.next/
+dist/
+build/
+*.tsbuildinfo
+
+# Rust (the plane / brainstem, when it lands)
+target/
+
+# Secrets / local env — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Infra / build artifacts
+cdk.out/
+*.log

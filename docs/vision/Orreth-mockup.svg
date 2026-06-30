@@ -1,0 +1,224 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1080" viewBox="0 0 1600 1080" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="1" stop-color="#05060c"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.55"/>
+      <stop offset="0.45" stop-color="#f59e0b" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sunCore" cx="0.5" cy="0.42" r="0.6">
+      <stop offset="0" stop-color="#fde68a"/>
+      <stop offset="0.5" stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#b45309"/>
+    </radialGradient>
+    <linearGradient id="planet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#312e81" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#0c1024" stop-opacity="0.95"/>
+    </linearGradient>
+    <radialGradient id="planetGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#6366f1" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#6366f1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="greenGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#34d399" stop-opacity="0.40"/>
+      <stop offset="1" stop-color="#34d399" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#67e8f9" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0.10"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="soft" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+    <marker id="down" markerWidth="11" markerHeight="11" refX="6" refY="5.5" orient="auto">
+      <path d="M1,1 L10,5.5 L1,10 z" fill="#67e8f9"/>
+    </marker>
+    <marker id="up" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+      <path d="M1,1 L9,5 L1,9 z" fill="#34d399"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1080" fill="url(#bg)"/>
+
+  <!-- spacetime perspective grid -->
+  <g stroke="#22d3ee" stroke-opacity="0.05" stroke-width="1">
+    <line x1="0" y1="1080" x2="800" y2="200"/>
+    <line x1="300" y1="1080" x2="800" y2="200"/>
+    <line x1="600" y1="1080" x2="800" y2="200"/>
+    <line x1="1000" y1="1080" x2="800" y2="200"/>
+    <line x1="1300" y1="1080" x2="800" y2="200"/>
+    <line x1="1600" y1="1080" x2="800" y2="200"/>
+    <line x1="120" y1="430" x2="1480" y2="430"/>
+    <line x1="90" y1="560" x2="1510" y2="560"/>
+    <line x1="60" y1="700" x2="1540" y2="700"/>
+  </g>
+
+  <!-- title -->
+  <text x="60" y="86" font-size="54" font-weight="800" fill="#f8fafc" letter-spacing="6">ORRETH</text>
+  <text x="64" y="118" font-size="17" fill="#94a3b8">a governed model of nested worlds &#8212; universes &#183; ecosystems &#183; fields &#183; agents</text>
+  <text x="1540" y="64" font-size="13" fill="#64748b" text-anchor="end">orrery &#183; the conductor, recursed</text>
+  <text x="1540" y="86" font-size="13" fill="#475569" text-anchor="end">the 1999 bet &#8212; a universe of single panes</text>
+
+  <!-- legend -->
+  <g font-size="13.5">
+    <line x1="600" y1="158" x2="636" y2="158" stroke="#34d399" stroke-width="2" marker-end="url(#up)"/>
+    <text x="644" y="162" fill="#86efac">signed records roll UP</text>
+    <line x1="864" y1="158" x2="900" y2="158" stroke="#67e8f9" stroke-width="2" marker-end="url(#down)"/>
+    <text x="908" y="162" fill="#7dd3fc">standards cascade DOWN</text>
+  </g>
+
+  <!-- ============ ORRERY ============ -->
+  <!-- ecosystem orbit ring + outer echo ring -->
+  <circle cx="800" cy="480" r="215" fill="none" stroke="#475569" stroke-opacity="0.30" stroke-width="1.2" stroke-dasharray="2 7"/>
+  <circle cx="800" cy="480" r="215" fill="none" stroke="#6366f1" stroke-opacity="0.10" stroke-width="1"/>
+  <circle cx="800" cy="480" r="250" fill="none" stroke="#475569" stroke-opacity="0.14" stroke-width="1" stroke-dasharray="1 9"/>
+
+  <!-- faint cascade to echo-worlds (the multiverse) -->
+  <g stroke="#6366f1" stroke-opacity="0.22" stroke-width="1.4" stroke-dasharray="3 6">
+    <line x1="800" y1="480" x2="583.5" y2="605"/>
+    <line x1="800" y1="480" x2="1016.5" y2="605"/>
+  </g>
+
+  <!-- cascade beams (behind bodies) -->
+  <g stroke-width="11" stroke-linecap="round" opacity="0.9">
+    <line x1="800" y1="480" x2="614" y2="373" stroke="url(#beam)"/>
+    <line x1="800" y1="480" x2="986" y2="373" stroke="url(#beam)"/>
+  </g>
+  <!-- directional arrows: down = standards, up = records -->
+  <g stroke-width="2.2">
+    <line x1="802.99" y1="474.81" x2="616.99" y2="367.81" stroke="#67e8f9" stroke-opacity="0.85" marker-end="url(#down)"/>
+    <line x1="611.01" y1="378.19" x2="797.01" y2="485.19" stroke="#34d399" stroke-opacity="0.8" marker-end="url(#up)"/>
+    <line x1="802.99" y1="485.19" x2="988.99" y2="378.19" stroke="#67e8f9" stroke-opacity="0.85" marker-end="url(#down)"/>
+    <line x1="983.01" y1="367.81" x2="797.01" y2="474.81" stroke="#34d399" stroke-opacity="0.8" marker-end="url(#up)"/>
+  </g>
+
+  <!-- ===== echo-worlds (faint, imply "any number") ===== -->
+  <g opacity="0.32">
+    <circle cx="583.5" cy="605" r="30" fill="url(#planet)" stroke="#6366f1" stroke-width="1.2" stroke-dasharray="3 4"/>
+    <circle cx="583.5" cy="595" r="7" fill="#0c1024" stroke="#475569"/>
+    <circle cx="571" cy="615" r="7" fill="#0c1024" stroke="#475569"/>
+    <circle cx="596" cy="615" r="7" fill="#0c1024" stroke="#475569"/>
+    <circle cx="1016.5" cy="605" r="30" fill="url(#planet)" stroke="#6366f1" stroke-width="1.2" stroke-dasharray="3 4"/>
+    <circle cx="1016.5" cy="595" r="7" fill="#0c1024" stroke="#475569"/>
+    <circle cx="1004" cy="615" r="7" fill="#0c1024" stroke="#475569"/>
+    <circle cx="1029" cy="615" r="7" fill="#0c1024" stroke="#475569"/>
+  </g>
+
+  <!-- ===== ECOSYSTEM E1 : Cloud (conformant / autotuned) ===== -->
+  <g>
+    <circle cx="614" cy="373" r="78" fill="url(#greenGlow)"/>
+    <circle cx="614" cy="373" r="54" fill="url(#planet)" stroke="#34d399" stroke-width="2"/>
+    <circle cx="614" cy="373" r="61" fill="none" stroke="#34d399" stroke-opacity="0.45" stroke-width="1.2"/>
+    <!-- field dots + agent fleet (green) -->
+    <g>
+      <circle cx="614" cy="347" r="13" fill="#0c1024" stroke="#22d3ee" stroke-opacity="0.7"/>
+      <circle cx="591.5" cy="386" r="13" fill="#0c1024" stroke="#22d3ee" stroke-opacity="0.7"/>
+      <circle cx="636.5" cy="386" r="13" fill="#0c1024" stroke="#22d3ee" stroke-opacity="0.7"/>
+      <g fill="#34d399">
+        <circle cx="609" cy="344" r="2.4"/><circle cx="619" cy="344" r="2.4"/><circle cx="614" cy="353" r="2.4"/>
+        <circle cx="586.5" cy="383" r="2.4"/><circle cx="596.5" cy="383" r="2.4"/><circle cx="591.5" cy="391" r="2.4"/>
+        <circle cx="631.5" cy="383" r="2.4"/><circle cx="641.5" cy="383" r="2.4"/><circle cx="636.5" cy="391" r="2.4"/>
+      </g>
+    </g>
+    <text x="614" y="470" font-size="17" font-weight="700" fill="#c7d2fe" text-anchor="middle">Cloud &#183; ecosystem</text>
+    <g transform="translate(579,480)">
+      <rect x="0" y="0" width="70" height="20" rx="10" fill="#064e3b" stroke="#34d399" stroke-opacity="0.6"/>
+      <text x="35" y="14" font-size="11.5" font-weight="700" fill="#6ee7b7" text-anchor="middle">CONFORMANT</text>
+    </g>
+    <text x="614" y="518" font-size="11.5" fill="#64748b" text-anchor="middle">reproducible &#183; on-baseline</text>
+  </g>
+
+  <!-- ===== ECOSYSTEM E2 : Developer ===== -->
+  <g>
+    <circle cx="986" cy="373" r="74" fill="url(#planetGlow)"/>
+    <circle cx="986" cy="373" r="54" fill="url(#planet)" stroke="#6366f1" stroke-width="1.6"/>
+    <g>
+      <circle cx="986" cy="347" r="13" fill="#0c1024" stroke="#22d3ee" stroke-opacity="0.7"/>
+      <circle cx="963.5" cy="386" r="13" fill="#0c1024" stroke="#22d3ee" stroke-opacity="0.7"/>
+      <circle cx="1008.5" cy="386" r="13" fill="#0c1024" stroke="#22d3ee" stroke-opacity="0.7"/>
+      <g fill="#a855f7">
+        <circle cx="981" cy="345" r="2.3"/><circle cx="991" cy="345" r="2.3"/><circle cx="986" cy="352" r="2.3"/>
+        <circle cx="958.5" cy="384" r="2.3"/><circle cx="968.5" cy="384" r="2.3"/>
+        <circle cx="1003.5" cy="384" r="2.3"/><circle cx="1013.5" cy="384" r="2.3"/>
+      </g>
+    </g>
+    <text x="986" y="470" font-size="17" font-weight="700" fill="#c7d2fe" text-anchor="middle">Developer &#183; ecosystem</text>
+    <text x="986" y="492" font-size="11.5" fill="#64748b" text-anchor="middle">same Fields &#183; its own doctrine</text>
+  </g>
+
+  <!-- ===== THE UNIVERSE (sun / apex) ===== -->
+  <circle cx="800" cy="480" r="150" fill="url(#sunGlow)"/>
+  <circle cx="800" cy="480" r="66" fill="url(#sunCore)" stroke="#f59e0b" stroke-width="2" filter="url(#glow)"/>
+  <circle cx="800" cy="480" r="44" fill="#fbbf24" opacity="0.25"/>
+  <!-- conductor glyph -->
+  <g transform="translate(800,452)" stroke="#7c2d12" stroke-width="2.4" fill="none" opacity="0.85">
+    <circle cx="0" cy="-2" r="6.5" fill="#7c2d12" stroke="none"/>
+    <path d="M-12,14 a12,12 0 0 1 24,0"/>
+  </g>
+  <text x="800" y="488" font-size="19" font-weight="800" fill="#1f2937" text-anchor="middle" letter-spacing="1.5">UNIVERSE</text>
+  <text x="800" y="506" font-size="11.5" font-weight="600" fill="#7c2d12" text-anchor="middle">orreth &#183; the apex</text>
+  <text x="800" y="566" font-size="12.5" fill="#fcd34d" text-anchor="middle">becky &#183; human at the helm</text>
+  <text x="800" y="585" font-size="11" fill="#64748b" text-anchor="middle">DID &#8594; NANDA &#183; every world cryptographically attributable</text>
+
+  <!-- nesting + multiverse caption -->
+  <text x="800" y="630" font-size="12.5" fill="#475569" text-anchor="middle" font-style="italic">harnesses all the way down, until agents &#183; the only special node is the Field</text>
+  <text x="800" y="651" font-size="11.5" fill="#475569" text-anchor="middle" font-style="italic">&#8230; any number of worlds &#8212; the multiverse, branch &amp; diverge</text>
+
+  <!-- ===== teacher -> skill -> fleet inset ===== -->
+  <g>
+    <rect x="60" y="744" width="372" height="150" rx="14" fill="#0c1226" stroke="#1e293b"/>
+    <text x="80" y="772" font-size="15" font-weight="700" fill="#e2e8f0">teacher &#8594; skill &#8594; fleet</text>
+    <text x="80" y="791" font-size="11.5" fill="#64748b">tune once at the top &#8212; cheap agents reproduce an expensive result</text>
+    <!-- teacher -->
+    <circle cx="104" cy="838" r="16" fill="url(#sunCore)" stroke="#f59e0b"/>
+    <text x="104" y="872" font-size="10.5" fill="#fcd34d" text-anchor="middle">teacher</text>
+    <text x="104" y="884" font-size="9.5" fill="#64748b" text-anchor="middle">expensive</text>
+    <line x1="124" y1="838" x2="166" y2="838" stroke="#67e8f9" stroke-width="2" marker-end="url(#down)"/>
+    <!-- skill -->
+    <g transform="translate(188,838)">
+      <rect x="-15" y="-15" width="30" height="30" rx="5" transform="rotate(45)" fill="#0c1024" stroke="#34d399" stroke-width="1.6"/>
+      <text x="0" y="3.5" font-size="11" fill="#6ee7b7" text-anchor="middle">skill</text>
+    </g>
+    <text x="188" y="878" font-size="9.5" fill="#64748b" text-anchor="middle">+ rubric</text>
+    <line x1="212" y1="838" x2="252" y2="838" stroke="#34d399" stroke-width="2" marker-end="url(#down)"/>
+    <!-- fleet -->
+    <g fill="#34d399">
+      <circle cx="280" cy="822" r="7"/><circle cx="306" cy="822" r="7"/>
+      <circle cx="280" cy="844" r="7"/><circle cx="306" cy="844" r="7"/>
+      <circle cx="332" cy="833" r="7"/>
+    </g>
+    <text x="306" y="872" font-size="10.5" fill="#86efac" text-anchor="middle">cheap fleet</text>
+    <text x="306" y="884" font-size="9.5" fill="#64748b" text-anchor="middle">matches the baseline</text>
+  </g>
+
+  <!-- ===== fourth dimension ribbon ===== -->
+  <g>
+    <text x="470" y="772" font-size="14" font-weight="700" fill="#94a3b8">THE FOURTH DIMENSION</text>
+    <text x="470" y="791" font-size="11.5" fill="#64748b">time turns a snapshot into a trajectory &#8212; drift becomes a vector you correct</text>
+    <!-- baseline -->
+    <line x1="470" y1="862" x2="1530" y2="862" stroke="#34d399" stroke-opacity="0.5" stroke-width="1.4" stroke-dasharray="5 5"/>
+    <!-- trajectory: baseline -> drift bump -> autotune -> back -->
+    <path d="M470,862 L700,862 C760,862 770,812 850,812 C918,812 928,862 1010,862 L1530,862"
+          fill="none" stroke="#f59e0b" stroke-width="2.6"/>
+    <path d="M1010,862 L1530,862" fill="none" stroke="#34d399" stroke-width="2.6"/>
+    <circle cx="850" cy="812" r="5" fill="#f59e0b"/>
+    <text x="850" y="800" font-size="11" fill="#fbbf24" text-anchor="middle">drift detected</text>
+    <circle cx="1010" cy="862" r="5" fill="#34d399"/>
+    <text x="1052" y="850" font-size="11" fill="#6ee7b7" text-anchor="middle">autotune</text>
+    <text x="1410" y="852" font-size="11" fill="#86efac" text-anchor="middle">&#8594; back on baseline</text>
+    <g font-size="10.5" fill="#64748b" text-anchor="middle">
+      <text x="470" y="884">t0</text><text x="850" y="884">t1</text><text x="1010" y="884">t2</text><text x="1530" y="884">tn</text>
+    </g>
+  </g>
+
+  <!-- ===== bottom caption bar ===== -->
+  <rect x="60" y="1018" width="1480" height="44" rx="10" fill="#0c1226" stroke="#1e293b"/>
+  <text x="800" y="1045" font-size="14" fill="#cbd5e1" text-anchor="middle">analysis rolls <tspan fill="#86efac" font-weight="700">UP</tspan>  &#183;  standards cascade <tspan fill="#7dd3fc" font-weight="700">DOWN</tspan>  &#183;  meaty context held high, tuned once  &#183;  <tspan fill="#fcd34d">Security first. Trust, but verify &#8212; at ecosystem scale.</tspan></text>
+</svg>

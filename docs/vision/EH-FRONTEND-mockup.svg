@@ -1,0 +1,219 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1040" viewBox="0 0 1600 1040" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="main" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1020"/><stop offset="1" stop-color="#070a14"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f1626"/><stop offset="1" stop-color="#0c1120"/>
+    </linearGradient>
+    <linearGradient id="eh" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b2f6b"/><stop offset="1" stop-color="#1e2a5a"/>
+    </linearGradient>
+    <radialGradient id="driftGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.40"/><stop offset="1" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="up" markerWidth="11" markerHeight="11" refX="5.5" refY="5.5" orient="auto"><path d="M1,9 L5.5,1 L10,9 z" fill="#22d3ee"/></marker>
+    <marker id="down" markerWidth="11" markerHeight="11" refX="5.5" refY="5.5" orient="auto"><path d="M1,2 L5.5,10 L10,2 z" fill="#34d399"/></marker>
+  </defs>
+
+  <rect width="1600" height="1040" fill="url(#main)"/>
+
+  <!-- ===== SIDEBAR ===== -->
+  <rect x="0" y="0" width="210" height="1040" fill="#0a0e1a" stroke="#1e293b" stroke-width="1"/>
+  <rect x="22" y="26" width="34" height="34" rx="9" fill="url(#eh)" stroke="#818cf8" stroke-opacity="0.6"/>
+  <text x="39" y="49" text-anchor="middle" fill="#c7d2fe" font-size="14" font-weight="700">EH</text>
+  <text x="68" y="44" fill="#e5e7eb" font-size="14" font-weight="700">ecosystem</text>
+  <text x="68" y="60" fill="#64748b" font-size="11" font-family="ui-monospace,monospace">.harness · v0.1</text>
+  <!-- nav -->
+  <g font-size="13.5">
+    <rect x="12" y="92" width="186" height="34" rx="8" fill="#1d4ed8" fill-opacity="0.18" stroke="#3b82f6" stroke-opacity="0.5"/>
+    <circle cx="32" cy="109" r="4" fill="#60a5fa"/><text x="48" y="114" fill="#bfdbfe" font-weight="600">Field Map</text>
+    <circle cx="32" cy="151" r="4" fill="#475569"/><text x="48" y="156" fill="#94a3b8">Cross-Field Telemetry</text>
+    <circle cx="32" cy="191" r="4" fill="#475569"/><text x="48" y="196" fill="#94a3b8">Standards Store</text>
+    <circle cx="32" cy="231" r="4" fill="#475569"/><text x="48" y="236" fill="#94a3b8">Objective Model</text>
+    <circle cx="32" cy="271" r="4" fill="#475569"/><text x="48" y="276" fill="#94a3b8">Governance Gate</text>
+    <circle cx="32" cy="311" r="4" fill="#475569"/><text x="48" y="316" fill="#94a3b8">Identity · Index</text>
+  </g>
+  <text x="20" y="400" fill="#334155" font-size="10.5" letter-spacing="1.5">TRUST FABRIC</text>
+  <text x="20" y="424" fill="#64748b" font-size="11.5">becky → DID → NANDA</text>
+  <g font-size="10.5" font-family="ui-monospace,monospace" fill="#475569">
+    <text x="20" y="452">did:web:acme ✓</text>
+    <text x="20" y="470">did:web:devbox ✓</text>
+    <text x="20" y="488">did:web:custX ✓</text>
+    <text x="20" y="506" fill="#7f1d1d">did:key:old ⦸ revoked</text>
+  </g>
+  <text x="20" y="1006" fill="#475569" font-size="12">becky · admin</text>
+
+  <!-- ===== HEADER ===== -->
+  <rect x="210" y="0" width="1390" height="72" fill="#0a0e1a" stroke="#1e293b" stroke-width="1"/>
+  <text x="234" y="36" fill="#e5e7eb" font-size="21" font-weight="700">Global Cross-Field Overview</text>
+  <text x="234" y="57" fill="#64748b" font-size="13">the 4th plane — one EH singleton, every Field, across time</text>
+  <rect x="690" y="24" width="190" height="26" rx="13" fill="#0c1426" stroke="#34d399" stroke-opacity="0.5"/>
+  <circle cx="710" cy="37" r="4" fill="#34d399"/><text x="724" y="42" fill="#6ee7b7" font-size="12">singleton · 4 fields online</text>
+  <circle cx="1556" cy="36" r="15" fill="#1e2a5a" stroke="#818cf8" stroke-opacity="0.5"/><text x="1556" y="41" text-anchor="middle" fill="#c7d2fe" font-size="12" font-weight="700">b</text>
+
+  <!-- ===== STAT BAND ===== -->
+  <g>
+    <!-- 5 cards -->
+    <g>
+      <rect x="230" y="92" width="254" height="84" rx="12" fill="url(#panel)" stroke="#1e293b"/>
+      <text x="250" y="120" fill="#64748b" font-size="12">Fields online</text><text x="250" y="156" fill="#e5e7eb" font-size="28" font-weight="700">4</text>
+      <text x="350" y="156" fill="#34d399" font-size="12">all verified</text>
+    </g>
+    <g>
+      <rect x="504" y="92" width="254" height="84" rx="12" fill="url(#panel)" stroke="#1e293b"/>
+      <text x="524" y="120" fill="#64748b" font-size="12">Run Records · 24h</text><text x="524" y="156" fill="#67e8f9" font-size="28" font-weight="700">1,284</text>
+      <text x="660" y="156" fill="#64748b" font-size="12">signed ▲</text>
+    </g>
+    <g>
+      <rect x="778" y="92" width="254" height="84" rx="12" fill="url(#panel)" stroke="#f59e0b" stroke-opacity="0.5"/>
+      <text x="798" y="120" fill="#64748b" font-size="12">Active drifts</text><text x="798" y="156" fill="#fbbf24" font-size="28" font-weight="700">2</text>
+      <text x="848" y="156" fill="#f59e0b" font-size="12">cost · tier</text>
+    </g>
+    <g>
+      <rect x="1052" y="92" width="254" height="84" rx="12" fill="url(#panel)" stroke="#1e293b"/>
+      <text x="1072" y="120" fill="#64748b" font-size="12">Standards</text><text x="1072" y="156" fill="#e5e7eb" font-size="28" font-weight="700">11</text>
+      <text x="1126" y="146" fill="#94a3b8" font-size="12">field</text><text x="1126" y="164" fill="#6ee7b7" font-size="12">+3 global</text>
+    </g>
+    <g>
+      <rect x="1326" y="92" width="254" height="84" rx="12" fill="url(#panel)" stroke="#a855f7" stroke-opacity="0.45"/>
+      <text x="1346" y="120" fill="#64748b" font-size="12">Pending escalations</text><text x="1346" y="156" fill="#c084fc" font-size="28" font-weight="700">1</text>
+      <text x="1404" y="156" fill="#94a3b8" font-size="12">human gate</text>
+    </g>
+  </g>
+
+  <!-- ===== FIELD MAP ===== -->
+  <rect x="230" y="196" width="770" height="430" rx="14" fill="url(#panel)" stroke="#1e293b"/>
+  <text x="252" y="226" fill="#e5e7eb" font-size="15" font-weight="600">Field Map</text>
+  <text x="340" y="226" fill="#64748b" font-size="12.5">— fan-in · ▲ signed push-up · ▼ standards pull-down</text>
+
+  <!-- edges (drawn first, under nodes) -->
+  <g>
+    <!-- push-up from each field to EH -->
+    <line x1="330" y1="430" x2="585" y2="312" stroke="#22d3ee" stroke-opacity="0.55" stroke-width="2" marker-end="url(#up)"/>
+    <line x1="512" y1="430" x2="615" y2="316" stroke="#22d3ee" stroke-opacity="0.7" stroke-width="2.5" marker-end="url(#up)"/>
+    <line x1="694" y1="430" x2="655" y2="312" stroke="#22d3ee" stroke-opacity="0.55" stroke-width="2" marker-end="url(#up)"/>
+    <line x1="876" y1="430" x2="690" y2="316" stroke="#22d3ee" stroke-opacity="0.55" stroke-width="2" marker-end="url(#up)"/>
+    <!-- pull-down standard to drifting field B -->
+    <line x1="600" y1="316" x2="512" y2="428" stroke="#34d399" stroke-opacity="0.85" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#down)"/>
+  </g>
+
+  <!-- EH node -->
+  <rect x="520" y="248" width="200" height="62" rx="13" fill="url(#eh)" stroke="#818cf8" stroke-opacity="0.7" filter="url(#glow)"/>
+  <text x="620" y="276" text-anchor="middle" fill="#c7d2fe" font-size="15" font-weight="700">ecosystem.harness</text>
+  <text x="620" y="296" text-anchor="middle" fill="#94a3b8" font-size="11">singleton governance plane</text>
+
+  <!-- Field cards -->
+  <!-- A -->
+  <g>
+    <rect x="250" y="430" width="160" height="150" rx="12" fill="#0d1322" stroke="#34d399" stroke-opacity="0.45"/>
+    <text x="266" y="454" fill="#e5e7eb" font-size="13" font-weight="600">Field A</text><circle cx="394" cy="450" r="4" fill="#34d399"/>
+    <text x="266" y="472" fill="#64748b" font-size="10" font-family="ui-monospace,monospace">did:web:acme</text>
+    <text x="266" y="500" fill="#94a3b8" font-size="11">Cloud · LOB</text>
+    <text x="266" y="540" fill="#475569" font-size="10.5">standards</text><text x="266" y="556" fill="#6ee7b7" font-size="12">v12 · in-sync</text>
+  </g>
+  <!-- B (DRIFTING) -->
+  <g>
+    <ellipse cx="512" cy="505" rx="120" ry="100" fill="url(#driftGlow)"/>
+    <rect x="432" y="430" width="160" height="150" rx="12" fill="#0d1322" stroke="#f59e0b" stroke-opacity="0.85" stroke-width="2" filter="url(#glow)"/>
+    <text x="448" y="454" fill="#e5e7eb" font-size="13" font-weight="600">Field B</text><circle cx="576" cy="450" r="4" fill="#fbbf24"/>
+    <text x="448" y="472" fill="#64748b" font-size="10" font-family="ui-monospace,monospace">did:web:devbox</text>
+    <rect x="448" y="486" width="118" height="22" rx="11" fill="#3a2a0c" stroke="#f59e0b" stroke-opacity="0.7"/>
+    <text x="507" y="501" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">COST DRIFT</text>
+    <text x="448" y="532" fill="#475569" font-size="10.5">standards</text><text x="448" y="548" fill="#67e8f9" font-size="12">v9 → pulling v10</text>
+  </g>
+  <!-- C -->
+  <g>
+    <rect x="614" y="430" width="160" height="150" rx="12" fill="#0d1322" stroke="#34d399" stroke-opacity="0.45"/>
+    <text x="630" y="454" fill="#e5e7eb" font-size="13" font-weight="600">Field C</text><circle cx="758" cy="450" r="4" fill="#34d399"/>
+    <text x="630" y="472" fill="#64748b" font-size="10" font-family="ui-monospace,monospace">did:web:custX</text>
+    <text x="630" y="500" fill="#94a3b8" font-size="11">Trading · LOB</text>
+    <text x="630" y="540" fill="#475569" font-size="10.5">standards</text><text x="630" y="556" fill="#6ee7b7" font-size="12">v11 · in-sync</text>
+  </g>
+  <!-- D -->
+  <g>
+    <rect x="796" y="430" width="160" height="150" rx="12" fill="#0d1322" stroke="#a855f7" stroke-opacity="0.4"/>
+    <text x="812" y="454" fill="#e5e7eb" font-size="13" font-weight="600">Field D</text><circle cx="940" cy="450" r="4" fill="#34d399"/>
+    <text x="812" y="472" fill="#64748b" font-size="10" font-family="ui-monospace,monospace">did:web:mlx</text>
+    <text x="812" y="500" fill="#94a3b8" font-size="11">ML · LOB</text>
+    <text x="812" y="540" fill="#475569" font-size="10.5">standards</text><text x="812" y="556" fill="#6ee7b7" font-size="12">v12 · in-sync</text>
+  </g>
+  <text x="252" y="606" fill="#475569" font-size="11">each Field = a full CortexObserver · click to drill in →</text>
+
+  <!-- ===== GOVERNANCE GATE ===== -->
+  <rect x="1024" y="196" width="556" height="214" rx="14" fill="url(#panel)" stroke="#f59e0b" stroke-opacity="0.45"/>
+  <g transform="translate(1048,222)"><circle cx="0" cy="-6" r="6" fill="none" stroke="#fbbf24" stroke-width="2"/><path d="M-9,10 C-9,0 9,0 9,10" fill="none" stroke="#fbbf24" stroke-width="2"/></g>
+  <text x="1070" y="226" fill="#fcd34d" font-size="15" font-weight="700">Governance Gate</text>
+  <rect x="1430" y="210" width="130" height="24" rx="12" fill="#0c1426" stroke="#34d399" stroke-opacity="0.5"/><text x="1495" y="226" text-anchor="middle" fill="#6ee7b7" font-size="11">becky-attested</text>
+  <text x="1048" y="256" fill="#94a3b8" font-size="12.5">Escalation · Field B · ambiguous trade-off → human</text>
+  <!-- delta vector -->
+  <g font-size="12.5">
+    <text x="1048" y="290" fill="#94a3b8">cost</text><text x="1180" y="290" fill="#6ee7b7">−12%</text><text x="1260" y="290" fill="#34d399">✓ improves target</text>
+    <text x="1048" y="314" fill="#94a3b8">security floor</text><text x="1180" y="314" fill="#6ee7b7">pass</text><text x="1260" y="314" fill="#34d399">✓ hard floor held</text>
+    <text x="1048" y="338" fill="#94a3b8">quality</text><text x="1180" y="338" fill="#fbbf24">−2%</text><text x="1260" y="338" fill="#fbbf24">? within margin — ambiguous</text>
+  </g>
+  <rect x="1048" y="360" width="240" height="34" rx="8" fill="#0c2a1f" stroke="#34d399" stroke-opacity="0.7"/><text x="1168" y="382" text-anchor="middle" fill="#6ee7b7" font-size="13" font-weight="600">Approve → promote</text>
+  <rect x="1300" y="360" width="160" height="34" rx="8" fill="#2a0f12" stroke="#f87171" stroke-opacity="0.7"/><text x="1380" y="382" text-anchor="middle" fill="#fca5a5" font-size="13" font-weight="600">Reject → revert</text>
+
+  <!-- ===== OBJECTIVE MODEL ===== -->
+  <rect x="1024" y="426" width="556" height="200" rx="14" fill="url(#panel)" stroke="#1e293b"/>
+  <text x="1048" y="456" fill="#e5e7eb" font-size="15" font-weight="600">Objective Model</text><text x="1190" y="456" fill="#64748b" font-size="12">— the human setpoint</text>
+  <text x="1048" y="484" fill="#475569" font-size="11" letter-spacing="1">HARD FLOORS · lexicographic · non-negotiable</text>
+  <rect x="1048" y="494" width="160" height="26" rx="13" fill="#2a0f12" stroke="#f87171" stroke-opacity="0.6"/><text x="1128" y="511" text-anchor="middle" fill="#fca5a5" font-size="11.5">🔒 security_critical</text>
+  <rect x="1218" y="494" width="130" height="26" rx="13" fill="#2a0f12" stroke="#f87171" stroke-opacity="0.6"/><text x="1283" y="511" text-anchor="middle" fill="#fca5a5" font-size="11.5">🔒 compliance</text>
+  <text x="1048" y="550" fill="#475569" font-size="11" letter-spacing="1">SOFT WEIGHTS · weighted utility</text>
+  <g>
+    <text x="1048" y="578" fill="#94a3b8" font-size="12">cost</text>      <rect x="1110" y="569" width="180" height="8" rx="4" fill="#1e293b"/><rect x="1110" y="569" width="90" height="8" rx="4" fill="#67e8f9"/><text x="1300" y="578" fill="#94a3b8" font-size="11">0.50</text>
+    <text x="1048" y="602" fill="#94a3b8" font-size="12">latency</text>   <rect x="1110" y="593" width="180" height="8" rx="4" fill="#1e293b"/><rect x="1110" y="593" width="54" height="8" rx="4" fill="#a855f7"/><text x="1300" y="602" fill="#94a3b8" font-size="11">0.30</text>
+  </g>
+
+  <!-- ===== CROSS-FIELD TELEMETRY ===== -->
+  <rect x="230" y="646" width="1350" height="208" rx="14" fill="url(#panel)" stroke="#1e293b"/>
+  <text x="252" y="676" fill="#e5e7eb" font-size="15" font-weight="600">Cross-Field Telemetry</text>
+  <text x="430" y="676" fill="#64748b" font-size="12.5">— Run Records across time · the 4th dimension</text>
+  <!-- legend -->
+  <g font-size="11"><circle cx="1180" cy="672" r="4" fill="#475569"/><text x="1190" y="676" fill="#64748b">run</text><circle cx="1240" cy="672" r="4" fill="#fbbf24"/><text x="1250" y="676" fill="#64748b">drift</text><circle cx="1300" cy="672" r="4" fill="#67e8f9"/><text x="1310" y="676" fill="#64748b">applied</text><circle cx="1380" cy="672" r="4" fill="#34d399"/><text x="1390" y="676" fill="#64748b">promoted</text></g>
+  <!-- lanes -->
+  <g font-size="11.5" fill="#94a3b8">
+    <text x="252" y="715">Field A</text><text x="252" y="747">Field B</text><text x="252" y="779">Field C</text><text x="252" y="811">Field D</text>
+  </g>
+  <g fill="#475569">
+    <!-- A -->
+    <g><circle cx="340" cy="711" r="3.5"/><circle cx="420" cy="711" r="3.5"/><circle cx="520" cy="711" r="3.5"/><circle cx="640" cy="711" r="3.5"/><circle cx="760" cy="711" r="3.5"/><circle cx="900" cy="711" r="3.5"/><circle cx="1040" cy="711" r="3.5"/><circle cx="1180" cy="711" r="3.5"/><circle cx="1320" cy="711" r="3.5"/><circle cx="1460" cy="711" r="3.5"/></g>
+    <!-- B (drift then applied) -->
+    <g><circle cx="340" cy="743" r="3.5"/><circle cx="440" cy="743" r="3.5"/><circle cx="560" cy="743" r="3.5"/><circle cx="700" cy="743" r="4.5" fill="#fbbf24"/><circle cx="820" cy="743" r="3.5" fill="#f59e0b"/><circle cx="940" cy="743" r="4.5" fill="#67e8f9"/><circle cx="1080" cy="743" r="3.5"/><circle cx="1240" cy="743" r="3.5"/><circle cx="1400" cy="743" r="3.5"/></g>
+    <!-- C -->
+    <g><circle cx="360" cy="775" r="3.5"/><circle cx="500" cy="775" r="3.5"/><circle cx="660" cy="775" r="3.5"/><circle cx="820" cy="775" r="3.5"/><circle cx="980" cy="775" r="3.5"/><circle cx="1140" cy="775" r="3.5"/><circle cx="1300" cy="775" r="3.5"/><circle cx="1460" cy="775" r="3.5"/></g>
+    <!-- D (promoted global) -->
+    <g><circle cx="340" cy="807" r="3.5"/><circle cx="480" cy="807" r="3.5"/><circle cx="640" cy="807" r="3.5"/><circle cx="800" cy="807" r="3.5"/><circle cx="980" cy="807" r="4.5" fill="#34d399"/><circle cx="1140" cy="807" r="3.5"/><circle cx="1320" cy="807" r="3.5"/></g>
+  </g>
+  <!-- drift trajectory hint on B -->
+  <path d="M560,743 C640,743 660,730 700,730 C760,730 760,743 940,743" fill="none" stroke="#f59e0b" stroke-opacity="0.5" stroke-width="1.5"/>
+  <!-- time axis -->
+  <line x1="320" y1="832" x2="1500" y2="832" stroke="#334155" stroke-width="1"/>
+  <g fill="#475569" font-size="10.5" font-family="ui-monospace,monospace"><text x="320" y="848">t0</text><text x="700" y="848">drift</text><text x="940" y="848">autotune</text><text x="1480" y="848">tn →</text></g>
+
+  <!-- ===== STANDARDS STORE ===== -->
+  <rect x="230" y="874" width="1350" height="146" rx="14" fill="url(#panel)" stroke="#1e293b"/>
+  <text x="252" y="902" fill="#e5e7eb" font-size="15" font-weight="600">Standards Store</text><text x="412" y="902" fill="#64748b" font-size="12">— versioned · scoped · lifecycle</text>
+  <g font-size="12.5">
+    <!-- row 1 -->
+    <text x="252" y="936" fill="#e5e7eb">STD-014 · retry-budget cap</text>
+    <rect x="640" y="924" width="78" height="20" rx="10" fill="#1e1b3a" stroke="#a855f7" stroke-opacity="0.5"/><text x="679" y="938" text-anchor="middle" fill="#c084fc" font-size="10.5">field</text>
+    <rect x="730" y="924" width="84" height="20" rx="10" fill="#3a341f" stroke="#fbbf24" stroke-opacity="0.5"/><text x="772" y="938" text-anchor="middle" fill="#fde68a" font-size="10.5">canary</text>
+    <text x="850" y="936" fill="#94a3b8">conf 0.86</text><text x="990" y="936" fill="#64748b" font-family="ui-monospace,monospace" font-size="11">seam: harness.retry</text>
+    <!-- row 2 -->
+    <text x="252" y="970" fill="#e5e7eb">STD-011 · enforce-kms-encryption</text>
+    <rect x="640" y="958" width="78" height="20" rx="10" fill="#0c2a1f" stroke="#34d399" stroke-opacity="0.6"/><text x="679" y="972" text-anchor="middle" fill="#6ee7b7" font-size="10.5">global</text>
+    <rect x="730" y="958" width="98" height="20" rx="10" fill="#0c2a1f" stroke="#34d399" stroke-opacity="0.6"/><text x="779" y="972" text-anchor="middle" fill="#6ee7b7" font-size="10.5">promoted</text>
+    <text x="850" y="970" fill="#94a3b8">conf 0.94</text><text x="990" y="970" fill="#64748b" font-family="ui-monospace,monospace" font-size="11">seam: deploy.policy · ≥2 fields</text>
+    <!-- row 3 -->
+    <text x="252" y="1004" fill="#e5e7eb">STD-013 · model-tier downgrade on cost drift</text>
+    <rect x="640" y="992" width="78" height="20" rx="10" fill="#1e1b3a" stroke="#a855f7" stroke-opacity="0.5"/><text x="679" y="1006" text-anchor="middle" fill="#c084fc" font-size="10.5">field</text>
+    <rect x="730" y="992" width="98" height="20" rx="10" fill="#3a1f1f" stroke="#f87171" stroke-opacity="0.6"/><text x="779" y="1006" text-anchor="middle" fill="#fca5a5" font-size="10.5">escalated</text>
+    <text x="850" y="1004" fill="#94a3b8">conf 0.72</text><text x="990" y="1004" fill="#64748b" font-family="ui-monospace,monospace" font-size="11">seam: gateway.tier</text>
+  </g>
+</svg>

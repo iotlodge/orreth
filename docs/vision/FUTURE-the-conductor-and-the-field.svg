@@ -1,0 +1,190 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1040" viewBox="0 0 1600 1040" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="1" stop-color="#05060c"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b45309" stop-opacity="0.35"/>
+      <stop offset="0.5" stop-color="#f59e0b" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#b45309" stop-opacity="0.35"/>
+    </linearGradient>
+    <linearGradient id="field" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1e1b4b" stop-opacity="0.65"/>
+      <stop offset="1" stop-color="#0c1024" stop-opacity="0.65"/>
+    </linearGradient>
+    <linearGradient id="agentfield" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.10"/>
+      <stop offset="0.5" stop-color="#a855f7" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0.10"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#67e8f9" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0.15"/>
+    </linearGradient>
+    <radialGradient id="tunedGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#34d399" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#34d399" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softglow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto">
+      <path d="M1,1 L11,6 L1,11 z" fill="#67e8f9"/>
+    </marker>
+    <marker id="tarrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+      <path d="M1,1 L9,5 L1,9 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1040" fill="url(#bg)"/>
+
+  <!-- subtle spacetime perspective grid -->
+  <g stroke="#22d3ee" stroke-opacity="0.06" stroke-width="1">
+    <line x1="0" y1="1040" x2="800" y2="120"/>
+    <line x1="270" y1="1040" x2="800" y2="120"/>
+    <line x1="540" y1="1040" x2="800" y2="120"/>
+    <line x1="1060" y1="1040" x2="800" y2="120"/>
+    <line x1="1330" y1="1040" x2="800" y2="120"/>
+    <line x1="1600" y1="1040" x2="800" y2="120"/>
+  </g>
+  <g stroke="#a855f7" stroke-opacity="0.05" stroke-width="1">
+    <line x1="0" y1="640" x2="1600" y2="640"/>
+    <line x1="0" y1="780" x2="1600" y2="780"/>
+    <line x1="0" y1="900" x2="1600" y2="900"/>
+  </g>
+
+  <!-- title -->
+  <text x="130" y="58" fill="#e5e7eb" font-size="34" font-weight="700" letter-spacing="3">THE CONDUCTOR AND THE FIELD</text>
+  <text x="132" y="86" fill="#94a3b8" font-size="17" letter-spacing="1.5">governing a living agent ecosystem across spacetime</text>
+  <text x="1470" y="58" text-anchor="end" fill="#64748b" font-size="13" letter-spacing="1" font-family="ui-monospace, monospace">ecosystem.harness · NANDA · AgentField</text>
+  <text x="1470" y="80" text-anchor="end" fill="#475569" font-size="12" letter-spacing="1">the 1999 bet — three dimensions bigger</text>
+
+  <!-- THE CONDUCTOR -->
+  <rect x="130" y="115" width="1340" height="96" rx="16" fill="url(#amber)" stroke="#f59e0b" stroke-opacity="0.55" stroke-width="1.5" filter="url(#glow)"/>
+  <!-- human glyph (humans conduct) -->
+  <g transform="translate(186,163)">
+    <circle cx="0" cy="-14" r="9" fill="none" stroke="#fbbf24" stroke-width="2.5"/>
+    <path d="M-16,16 C-16,0 16,0 16,16" fill="none" stroke="#fbbf24" stroke-width="2.5"/>
+  </g>
+  <text x="232" y="152" fill="#fcd34d" font-size="22" font-weight="700" letter-spacing="2">THE CONDUCTOR</text>
+  <text x="232" y="178" fill="#e5e7eb" font-size="15" font-family="ui-monospace, monospace">ecosystem.harness</text>
+  <text x="232" y="198" fill="#94a3b8" font-size="13">top layer — humans conduct · agents perform</text>
+  <!-- agent chips -->
+  <g>
+    <rect x="980" y="140" width="210" height="30" rx="15" fill="#0c1024" stroke="#f59e0b" stroke-opacity="0.5"/>
+    <text x="1085" y="160" text-anchor="middle" fill="#fcd34d" font-size="13">compliance agents</text>
+    <rect x="1205" y="140" width="225" height="30" rx="15" fill="#0c1024" stroke="#f59e0b" stroke-opacity="0.5"/>
+    <text x="1317" y="160" text-anchor="middle" fill="#fcd34d" font-size="13">engineering agents</text>
+  </g>
+  <text x="1420" y="194" text-anchor="end" fill="#64748b" font-size="12">watch every field · push control / skills / policy down</text>
+
+  <!-- NANDA INDEX ribbon -->
+  <rect x="130" y="248" width="1340" height="48" rx="12" fill="#0c1426" stroke="#22d3ee" stroke-opacity="0.4"/>
+  <text x="156" y="277" fill="#67e8f9" font-size="15" font-weight="600" letter-spacing="1.5">NANDA INDEX</text>
+  <text x="320" y="277" fill="#94a3b8" font-size="13.5">identity · external anchoring — who is this agent, and is it really who it claims?</text>
+  <g fill="#22d3ee">
+    <circle cx="1180" cy="272" r="3.5"/><circle cx="1230" cy="272" r="3.5"/><circle cx="1280" cy="272" r="3.5"/>
+    <circle cx="1330" cy="272" r="3.5"/><circle cx="1380" cy="272" r="3.5"/><circle cx="1430" cy="272" r="3.5"/>
+  </g>
+  <line x1="1180" y1="272" x2="1430" y2="272" stroke="#22d3ee" stroke-opacity="0.4" stroke-width="1"/>
+
+  <!-- THE AGENTFIELD -->
+  <rect x="130" y="330" width="1340" height="88" rx="14" fill="url(#agentfield)" stroke="#a855f7" stroke-opacity="0.35"/>
+  <text x="156" y="362" fill="#c084fc" font-size="15" font-weight="600" letter-spacing="1.5">THE AGENTFIELD</text>
+  <text x="156" y="384" fill="#94a3b8" font-size="13">the medium — a field with a gradient, not point-to-point wiring; control propagates through it</text>
+  <!-- mesh dots -->
+  <g fill="#a855f7" fill-opacity="0.45">
+    <circle cx="900" cy="352" r="2"/><circle cx="940" cy="352" r="2"/><circle cx="980" cy="352" r="2"/><circle cx="1020" cy="352" r="2"/><circle cx="1060" cy="352" r="2"/><circle cx="1100" cy="352" r="2"/><circle cx="1140" cy="352" r="2"/><circle cx="1180" cy="352" r="2"/><circle cx="1220" cy="352" r="2"/><circle cx="1260" cy="352" r="2"/><circle cx="1300" cy="352" r="2"/><circle cx="1340" cy="352" r="2"/><circle cx="1380" cy="352" r="2"/><circle cx="1420" cy="352" r="2"/>
+    <circle cx="900" cy="384" r="2"/><circle cx="940" cy="384" r="2"/><circle cx="980" cy="384" r="2"/><circle cx="1020" cy="384" r="2"/><circle cx="1060" cy="384" r="2"/><circle cx="1100" cy="384" r="2"/><circle cx="1140" cy="384" r="2"/><circle cx="1180" cy="384" r="2"/><circle cx="1220" cy="384" r="2"/><circle cx="1260" cy="384" r="2"/><circle cx="1300" cy="384" r="2"/><circle cx="1340" cy="384" r="2"/><circle cx="1380" cy="384" r="2"/><circle cx="1420" cy="384" r="2"/>
+  </g>
+
+  <!-- AUTOTUNE BEAM into field 2 (center x=626) -->
+  <g>
+    <rect x="617" y="211" width="18" height="259" fill="url(#beam)" filter="url(#softglow)" opacity="0.7"/>
+    <line x1="626" y1="211" x2="626" y2="468" stroke="#67e8f9" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <!-- crossing nodes: identity check on NANDA, ripple on AgentField -->
+    <circle cx="626" cy="272" r="6" fill="#0c1426" stroke="#67e8f9" stroke-width="2"/>
+    <circle cx="626" cy="374" r="9" fill="none" stroke="#67e8f9" stroke-opacity="0.6" stroke-width="1.5"/>
+    <rect x="650" y="222" width="46" height="26" rx="13" fill="#06121a" stroke="#67e8f9" stroke-opacity="0.7"/>
+    <text x="673" y="240" text-anchor="middle" fill="#67e8f9" font-size="15" font-weight="700">X</text>
+    <text x="650" y="452" fill="#67e8f9" font-size="13" font-weight="600">autotune →</text>
+  </g>
+
+  <!-- FIELDS row -->
+  <!-- helper: each card 300 wide, h270, y470 -->
+  <!-- Field 1: Cloud -->
+  <g>
+    <rect x="130" y="470" width="300" height="270" rx="16" fill="url(#field)" stroke="#a855f7" stroke-opacity="0.4"/>
+    <text x="152" y="502" fill="#c084fc" font-size="14" font-weight="700" letter-spacing="1.5">FIELD</text>
+    <text x="152" y="524" fill="#e5e7eb" font-size="15">Cloud · commander</text>
+    <text x="152" y="545" fill="#64748b" font-size="11.5">a CortexObserver — its own roster + governance</text>
+    <g fill="#a855f7"><circle cx="180" cy="600" r="9"/><circle cx="230" cy="600" r="9"/><circle cx="280" cy="600" r="9"/><circle cx="330" cy="600" r="9"/></g>
+    <text x="152" y="700" fill="#475569" font-size="11">↻ humans define · agents work · truth returns</text>
+  </g>
+  <!-- Field 2: ML  (TARGET — tuned) -->
+  <g>
+    <ellipse cx="626" cy="605" rx="180" ry="150" fill="url(#tunedGlow)"/>
+    <rect x="476" y="470" width="300" height="270" rx="16" fill="url(#field)" stroke="#34d399" stroke-opacity="0.8" stroke-width="2" filter="url(#glow)"/>
+    <text x="498" y="502" fill="#6ee7b7" font-size="14" font-weight="700" letter-spacing="1.5">FIELD</text>
+    <text x="498" y="524" fill="#e5e7eb" font-size="15">ML · commander</text>
+    <rect x="640" y="488" width="118" height="24" rx="12" fill="#052e23" stroke="#34d399" stroke-opacity="0.7"/>
+    <text x="699" y="505" text-anchor="middle" fill="#6ee7b7" font-size="11.5" font-weight="600">AUTOTUNED</text>
+    <text x="498" y="545" fill="#64748b" font-size="11.5">received X → re-bound skills · re-injected policy</text>
+    <!-- agents aligned + emerald -->
+    <g fill="#34d399"><circle cx="526" cy="600" r="9"/><circle cx="576" cy="600" r="9"/><circle cx="626" cy="600" r="9"/><circle cx="676" cy="600" r="9"/><circle cx="726" cy="600" r="9"/></g>
+    <line x1="520" y1="622" x2="732" y2="622" stroke="#34d399" stroke-opacity="0.5" stroke-width="1.5"/>
+    <text x="498" y="700" fill="#6ee7b7" font-size="12" font-weight="600">reproducible · compliant · on-baseline</text>
+  </g>
+  <!-- Field 3: Trading -->
+  <g>
+    <rect x="822" y="470" width="300" height="270" rx="16" fill="url(#field)" stroke="#a855f7" stroke-opacity="0.4"/>
+    <text x="844" y="502" fill="#c084fc" font-size="14" font-weight="700" letter-spacing="1.5">FIELD</text>
+    <text x="844" y="524" fill="#e5e7eb" font-size="15">Trading · commander</text>
+    <text x="844" y="545" fill="#64748b" font-size="11.5">its own roster + governance</text>
+    <g fill="#a855f7"><circle cx="872" cy="600" r="9"/><circle cx="922" cy="600" r="9"/><circle cx="972" cy="600" r="9"/></g>
+    <text x="844" y="700" fill="#475569" font-size="11">↻ governed circular loop</text>
+  </g>
+  <!-- Field 4: … many -->
+  <g>
+    <rect x="1168" y="470" width="300" height="270" rx="16" fill="url(#field)" stroke="#a855f7" stroke-opacity="0.4"/>
+    <!-- ghost echoes behind = same field across time -->
+    <rect x="1184" y="456" width="300" height="270" rx="16" fill="none" stroke="#a855f7" stroke-opacity="0.10"/>
+    <rect x="1198" y="444" width="300" height="270" rx="16" fill="none" stroke="#a855f7" stroke-opacity="0.06"/>
+    <text x="1190" y="502" fill="#c084fc" font-size="14" font-weight="700" letter-spacing="1.5">FIELD</text>
+    <text x="1190" y="524" fill="#e5e7eb" font-size="15">… any number</text>
+    <text x="1190" y="545" fill="#64748b" font-size="11.5">tune one, or a thousand, with one gesture</text>
+    <g fill="#a855f7"><circle cx="1218" cy="600" r="9"/><circle cx="1268" cy="600" r="9"/><circle cx="1318" cy="600" r="9"/><circle cx="1368" cy="600" r="9"/></g>
+    <text x="1190" y="700" fill="#475569" font-size="11">echoes = the same field, across time →</text>
+  </g>
+
+  <!-- THE FOURTH DIMENSION: time axis + drift trajectory -->
+  <text x="130" y="804" fill="#94a3b8" font-size="14" font-weight="600" letter-spacing="1">THE FOURTH DIMENSION — time turns a snapshot into a trajectory</text>
+  <!-- baseline -->
+  <line x1="180" y1="858" x2="1430" y2="858" stroke="#34d399" stroke-opacity="0.45" stroke-width="1.5" stroke-dasharray="6 6"/>
+  <text x="1440" y="862" fill="#6ee7b7" font-size="12">baseline</text>
+  <!-- drift curve: on baseline, drifts up, detected, snaps back -->
+  <path d="M180,858 L470,858 C600,858 640,806 760,806 L820,806" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+  <path d="M820,806 C900,806 900,858 980,858 L1430,858" fill="none" stroke="#34d399" stroke-width="2.5"/>
+  <circle cx="760" cy="806" r="5" fill="#f59e0b"/>
+  <text x="600" y="798" fill="#fbbf24" font-size="12">drift detected</text>
+  <circle cx="900" cy="832" r="5" fill="#67e8f9"/>
+  <text x="912" y="828" fill="#67e8f9" font-size="12">autotune (X)</text>
+  <text x="1120" y="848" fill="#6ee7b7" font-size="12">→ back on baseline</text>
+  <!-- time arrow -->
+  <line x1="180" y1="900" x2="1440" y2="900" stroke="#94a3b8" stroke-opacity="0.7" stroke-width="1.5" marker-end="url(#tarrow)"/>
+  <g fill="#64748b" font-size="12" font-family="ui-monospace, monospace">
+    <text x="180" y="922">t0</text><text x="600" y="922">t1</text><text x="900" y="922">t2</text><text x="1410" y="922">tn</text>
+  </g>
+  <g fill="#94a3b8" fill-opacity="0.6"><circle cx="186" cy="900" r="2.5"/><circle cx="606" cy="900" r="2.5"/><circle cx="906" cy="900" r="2.5"/></g>
+
+  <!-- footer caption -->
+  <rect x="130" y="966" width="1340" height="44" rx="12" fill="#0a0e1a" stroke="#334155" stroke-opacity="0.5"/>
+  <text x="800" y="994" text-anchor="middle" fill="#cbd5e1" font-size="15">
+    harness sends <tspan fill="#67e8f9" font-weight="700">X</tspan>  →  field <tspan fill="#34d399" font-weight="700">autotunes</tspan>  →  agents return <tspan fill="#6ee7b7">reproducible · compliant</tspan>.   Security first. Trust, but verify — at ecosystem scale.
+  </text>
+</svg>
