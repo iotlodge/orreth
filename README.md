@@ -88,6 +88,7 @@ orreth/
 │   │   ├── governed-human-oversight.md             ← humans as governed principals: scoped, directional, audited access
 │   │   ├── Orreth-mockup.(png|svg)                 ← the orrery (pre-rebaseline · superseded by Orreth-agentic-hierarchy)
 │   │   ├── Orreth-agentic-hierarchy.(png|svg)      ← the staffing view: agents run every layer; humans at the gates
+│   │   ├── Orreth-spacetime-window-concept.(png|svg) ← the north star: the block, the hypersurface at T, the cut
 │   │   ├── FUTURE-the-conductor-and-the-field.md   ← the EH-tier vision (+ image)
 │   │   └── EH-FRONTEND-the-cross-field-pane.md     ← the EH single-pane sketch (+ image)
 │   ├── design/                ← build-phase design specs (the keystone dives)

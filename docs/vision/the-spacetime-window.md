@@ -1,6 +1,9 @@
 # The Spacetime Window
 ### The apex payoff, taken to its limit — a live, navigable, verified cross-section of a world
 
+*Concept art: `Orreth-spacetime-window-concept.(svg|png)` — the block, the hypersurface at T, the cut
+(shipped with `../design/0008`, 2026-07-01).*
+
 *Private vision artifact. Captured 2026-06-30 from JB's "spacetime understanding." Companion to
 `FUTURE-the-orreth.md` (this is its `## The apex payoff` section, followed all the way down).*
 

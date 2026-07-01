@@ -22,7 +22,7 @@ Ordered by leverage — each unlocks the next.
 | 0005 | Run Record & monoidal roll-up | The aggregatable envelope; how scoring/confidence/cost/tokens compose up the tree. | ⏳ |
 | **0006** | [becky — identity & capability chain](0006-becky-identity-and-capability-chain.md) | DID delegation root→leaf (**locked:** did:web roots + did:key leaves); resident (TCB) vs registered (workforce); archetype→incarnation issuance; attenuation-only CapabilityTokens; revocation kill-switch; AgentFacts. **Pulled forward** — 0002's authz assumes it. | 🟡 draft for review |
 | 0007 | The cascade resolver | How Resolved Context is composed from the inherited chain — deterministic, fast (Rust). | ⏳ |
-| 0008 | The pane & graph engineering (interop/UX) | **Pulled forward — next dive.** The Field commander pane (v1 hero) + dual-mode authoring (English ↔ canvas, both projections of **GraphSpec**) + lane-routed change flow. The recursive pane generalizes upward; the **spacetime window** is the declared north star, concept-designed in parallel. | ⏳ next |
+| **0008** | [The pane & graph engineering (interop/UX)](0008-pane-and-graph-engineering.md) | The Field commander pane (v1 hero, six regions) + dual-mode authoring (English ↔ canvas, both projections of **GraphSpec v0**, sentence↔node bijection, never-guess-silently) + lane-routed change flow. Recursive pane = same components, ScopePath-parametrized. **Spacetime window concept art shipped** (`../vision/Orreth-spacetime-window-concept`). | 🟡 draft for review |
 | 0009 | "Build My First Universe" — templates · marketplace · interview | Tier-Profile templates; the agent **interview** (showcase scope); "wild vs REAL is a policy dial"; self-serve provisioning. | ⏳ |
 
 ## How we work a dive

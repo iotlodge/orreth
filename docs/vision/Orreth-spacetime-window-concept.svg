@@ -1,0 +1,136 @@
+<svg viewBox="0 0 1600 1000" xmlns="http://www.w3.org/2000/svg" role="img" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+  <title>Orreth — the spacetime window (concept)</title>
+  <desc>A block of stacked hypersurface slices through time. Worldlines thread the slices; one instant is selected and expanded showing the complete verified cross-section of the world; a scrubber navigates from distilled deep past to the live present; a side panel shows that the window is only a governed Query.</desc>
+
+  <defs>
+    <linearGradient id="scrub" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1d3a33"/><stop offset="0.6" stop-color="#1f6f5c"/><stop offset="1" stop-color="#34d399"/>
+    </linearGradient>
+    <radialGradient id="selGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#f7b731" stop-opacity="0.45"/><stop offset="1" stop-color="#f7b731" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sliceNow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#134e4a"/><stop offset="1" stop-color="#0b2e2c"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="1000" fill="#0a0e1a"/>
+
+  <!-- header -->
+  <text x="60" y="76" font-size="38" font-weight="700" letter-spacing="8" fill="#ffffff">THE SPACETIME WINDOW</text>
+  <text x="60" y="106" font-size="15" fill="#8b93a7">occupy any (space × time) coordinate — perceive the complete, verified state of a world there</text>
+  <text x="1540" y="60" font-size="13" fill="#8b93a7" text-anchor="end">the apex payoff, at its limit</text>
+  <text x="1540" y="82" font-size="13" fill="#a78bfa" text-anchor="end">a telescope, never a wiretap</text>
+
+  <!-- the block: hypersurface slices through time -->
+  <text x="200" y="180" font-size="12" fill="#4d7c6f" font-style="italic">deep past — distilled, an impression</text>
+  <text x="1010" y="180" font-size="12" fill="#34d399" font-style="italic" text-anchor="end">the moving present — live</text>
+
+  <!-- older slices (fading with depth) -->
+  <g stroke-width="1.5">
+    <path d="M180,270 L240,220 L240,540 L180,590 Z" fill="#101826" stroke="#22304a" opacity="0.45"/>
+    <path d="M290,270 L350,220 L350,540 L290,590 Z" fill="#101826" stroke="#22304a" opacity="0.55"/>
+    <path d="M400,270 L460,220 L460,540 L400,590 Z" fill="#111a2b" stroke="#2a3a58" opacity="0.65"/>
+    <path d="M510,270 L570,220 L570,540 L510,590 Z" fill="#111a2b" stroke="#2a3a58" opacity="0.75"/>
+    <path d="M620,270 L680,220 L680,540 L620,590 Z" fill="#121c30" stroke="#334568" opacity="0.85"/>
+  </g>
+
+  <!-- worldlines threading the slices -->
+  <g fill="none" stroke-width="2" opacity="0.9">
+    <polyline points="205,340 315,332 425,346 535,336 645,344 758,338 908,334" stroke="#34d399"/>
+    <polyline points="205,415 315,422 425,410 535,420 645,412 758,420 908,416" stroke="#22d3ee"/>
+    <polyline points="205,505 315,498 425,508 535,500 645,506 758,502 908,498" stroke="#fbbf24" opacity="0.8"/>
+    <polyline points="205,465 315,470 425,462 535,468" stroke="#a78bfa"/>
+  </g>
+  <circle cx="535" cy="468" r="5" fill="none" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="548" y="482" font-size="10" fill="#a78bfa">retired — the audit stub remains</text>
+  <text x="207" y="325" font-size="10" fill="#5b6274">worldlines — each identity's history, a line through spacetime</text>
+
+  <!-- SELECTED slice: the hypersurface at T -->
+  <ellipse cx="790" cy="405" rx="150" ry="230" fill="url(#selGlow)"/>
+  <path d="M725,250 L800,190 L800,560 L725,620 Z" fill="#1a1f33" stroke="#f7b731" stroke-width="2.5"/>
+  <!-- the world inside the slice: the complete cross-section -->
+  <g>
+    <circle cx="762" cy="250" r="7" fill="#f7b731"/>
+    <circle cx="746" cy="310" r="5.5" fill="#5b5bd6"/><circle cx="780" cy="302" r="5.5" fill="#5b5bd6"/>
+    <circle cx="738" cy="370" r="4.5" fill="#17a2a2"/><circle cx="764" cy="364" r="4.5" fill="#17a2a2"/><circle cx="790" cy="356" r="4.5" fill="#17a2a2"/>
+    <g stroke="#3a4a6b" stroke-width="1">
+      <path d="M762,257 L746,304"/><path d="M762,257 L780,296"/>
+      <path d="M746,316 L738,365"/><path d="M746,316 L764,359"/><path d="M780,308 L790,351"/>
+    </g>
+    <g fill="#cbd5e1">
+      <circle cx="734" cy="420" r="2.6"/><circle cx="748" cy="416" r="2.6"/><circle cx="762" cy="412" r="2.6"/><circle cx="776" cy="408" r="2.6"/><circle cx="790" cy="404" r="2.6"/>
+      <circle cx="734" cy="444" r="2.6"/><circle cx="748" cy="440" r="2.6"/><circle cx="762" cy="436" r="2.6"/><circle cx="776" cy="432" r="2.6"/><circle cx="790" cy="428" r="2.6"/>
+      <circle cx="734" cy="468" r="2.6"/><circle cx="748" cy="464" r="2.6"/><circle cx="762" cy="460" r="2.6"/><circle cx="776" cy="456" r="2.6"/><circle cx="790" cy="452" r="2.6"/>
+    </g>
+    <text x="762" y="520" font-size="9.5" fill="#d9a94e" text-anchor="middle" transform="rotate(-3 762 520)">every identity · every action</text>
+    <text x="762" y="538" font-size="9.5" fill="#d9a94e" text-anchor="middle" transform="rotate(-3 762 538)">Sourced + Verified</text>
+  </g>
+  <text x="790" y="652" font-size="13" font-weight="600" fill="#f7b731" text-anchor="middle">the hypersurface at T</text>
+  <text x="790" y="672" font-size="11" fill="#d9a94e" text-anchor="middle">the complete, verified cross-section of the world at one instant</text>
+
+  <!-- the NOW slice -->
+  <path d="M900,250 L975,190 L975,560 L900,620 Z" fill="url(#sliceNow)" stroke="#34d399" stroke-width="2"/>
+  <text x="938" y="238" font-size="12" font-weight="700" fill="#34d399" text-anchor="middle">NOW</text>
+  <text x="938" y="586" font-size="10" fill="#4d7c6f" text-anchor="middle" transform="rotate(-38 938 586)"></text>
+  <text x="990" y="410" font-size="10.5" fill="#4d7c6f" transform="rotate(90 990 410)" text-anchor="middle">being written live</text>
+
+  <!-- time scrubber -->
+  <rect x="180" y="740" width="800" height="14" rx="7" fill="url(#scrub)"/>
+  <g font-size="10.5" fill="#5b6274">
+    <text x="180" y="775">−3y</text>
+    <text x="440" y="775">−1y</text>
+    <text x="700" y="775">−30d</text>
+    <text x="962" y="775" fill="#34d399">now</text>
+  </g>
+  <path d="M780,732 L788,720 L772,720 Z" fill="#f7b731"/>
+  <path d="M780,736 L780,758" stroke="#f7b731" stroke-width="2"/>
+  <text x="780" y="706" font-size="12" font-weight="600" fill="#f7b731" text-anchor="middle">T = Tuesday 14:14 — "reconstruct the world here"</text>
+  <text x="180" y="800" font-size="10.5" fill="#4d7c6f" font-style="italic">fidelity softens with depth — pruning (0003) is this curve, rendered honestly, never hidden</text>
+
+  <!-- THE CUT panel -->
+  <rect x="1150" y="150" width="400" height="600" rx="14" fill="#11172a" stroke="#2a3350" stroke-width="1.5"/>
+  <text x="1174" y="186" font-size="16" font-weight="700" fill="#e6e9f2">THE CUT</text>
+  <text x="1174" y="206" font-size="11.5" fill="#8b93a7">the window is only a Query — nothing privileged exists</text>
+  <path d="M1170,222 L1530,222" stroke="#2a3350"/>
+  <g font-family="SF Mono, Menlo, monospace" font-size="11.5" fill="#9fb0d0">
+    <text x="1174" y="248">space  : subtree(u:acme)</text>
+    <text x="1174" y="268">time   : 2026-06-30T14:14Z</text>
+    <text x="1174" y="288">intent : analyze</text>
+    <text x="1174" y="308">auth   : capability · down/within</text>
+  </g>
+  <path d="M1170,326 L1530,326" stroke="#2a3350"/>
+  <g font-size="11.5">
+    <rect x="1174" y="342" width="352" height="26" rx="13" fill="#0f1f1a" stroke="#1f6f5c"/>
+    <text x="1190" y="359" fill="#34d399">Sourced — 4,812 identities recorded this instant</text>
+    <rect x="1174" y="376" width="352" height="26" rx="13" fill="#0f1f1a" stroke="#1f6f5c"/>
+    <text x="1190" y="393" fill="#34d399">Verified 99.2% · distilled 0.8% · nothing unattributed</text>
+    <rect x="1174" y="410" width="352" height="26" rx="13" fill="#141b2e" stroke="#2a3a58"/>
+    <text x="1190" y="427" fill="#9fb0d0">remainder — none · nothing left unsearched</text>
+    <rect x="1174" y="444" width="352" height="26" rx="13" fill="#141b2e" stroke="#2a3a58"/>
+    <text x="1190" y="461" fill="#9fb0d0">light-cone — the state as risen &amp; verified by T+2s</text>
+  </g>
+  <path d="M1170,494 L1530,494" stroke="#2a3350"/>
+  <g font-size="11.5" font-style="italic" fill="#a78bfa">
+    <text x="1174" y="520">seen through your entitlement — your layer, down.</text>
+    <text x="1174" y="538">this view is itself a signed access record;</text>
+    <text x="1174" y="556">the operator is in the log too.</text>
+  </g>
+  <path d="M1170,578 L1530,578" stroke="#2a3350"/>
+  <g font-size="10.5" fill="#5b6274">
+    <text x="1174" y="602">the honest edges (kept honest by design):</text>
+    <text x="1174" y="622">· coverage = participation — closed worlds are total first</text>
+    <text x="1174" y="642">· the present has an edge — verification takes Δ</text>
+    <text x="1174" y="662">· the deep past is an impression — by pruning policy</text>
+    <text x="1174" y="682">· observatory vs panopticon = governance, only</text>
+  </g>
+  <g font-size="11" fill="#d9a94e">
+    <text x="1174" y="716">scrub to any minute · watch any minute being written</text>
+    <text x="1174" y="734">a DVR for a world — with an operator's log</text>
+  </g>
+
+  <!-- footer -->
+  <rect x="60" y="900" width="1490" height="48" rx="10" fill="#11172a" stroke="#2a3350"/>
+  <text x="84" y="930" font-size="14" fill="#e6e9f2">not a dashboard of a world — a <tspan fill="#f7b731">window into any moment of it</tspan> · live · navigable · verified · governed</text>
+  <text x="1526" y="930" font-size="14" font-weight="600" fill="#34d399" text-anchor="end">the window is only a Query.</text>
+</svg>
