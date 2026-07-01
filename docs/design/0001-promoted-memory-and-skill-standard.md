@@ -240,5 +240,5 @@ same number, measured once.
 
 ---
 
-*Next dive once this is blessed: **0002 — Tier Profile** (what a Run Record + objective vector means at
-each tier), which 0004 (Run Record & roll-up) then makes concrete.*
+*Extracted to `contracts/v0/` (memory-record, skill-standard schemas). Successors: `0004` (Tier Profile —
+the dials) and `0005` (Run Record & roll-up — where the deferred confidence statistic gets picked).*

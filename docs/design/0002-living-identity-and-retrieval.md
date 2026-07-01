@@ -1,7 +1,9 @@
 # 0002 — Living Identity + Retrieval (the substrate keystone)
 
-*Design draft for review. Schemas are language-neutral shapes, not code. **Open decisions** are flagged for JB.
-Builds on `0001` (the `MemoryRecord` atom). Discharges the six use-case requirements from `../decisions/README.md`.*
+*Design draft for review. Schemas are language-neutral shapes, not code. Builds on `0001` (the `MemoryRecord`
+atom). Discharges the six use-case requirements from `../decisions/README.md`. **Amended 2026-07-01** per the
+design review + locked decisions: ScopePath-relative addressing (§3), merge semantics (§3), budget-miss ≡
+authz-miss (§4), interview query budget (§5). All §8 decisions locked.*
 
 ---
 
@@ -112,7 +114,9 @@ Retrieval is the third flow, and the point of the substrate. A query navigates *
 Query {
   requester : DID
   subject   : "self" | { identity: DID } | { cohort: Selector }   # own · another identity · a group
-  space     : "own" | "field" | "ecosystem" | "universe"          # breadth
+  space     : "self" | { ancestors: N } | "apex" | { scope: ScopePath }   # breadth — ScopePath-relative,
+                                                                  # NEVER tier-named (0000 §1: recursion stays free;
+                                                                  # friendly tier names live in profiles and panes)
   time      : TimeWindow                                          # depth: last-7d … last-year … all-time
   intent    : "recall" | "analyze" | "interview"                  # picks the visibility scope that applies
   budget    : { time_ms, cost, tier_hint? }                       # the configurable per-tier time budget
@@ -129,13 +133,29 @@ Query {
 
 > A time-horizon miss escalates a query up a tier — recent memory is cheap and local, deep-time lives at the apex.
 
+### Merge semantics (amended 2026-07-01 — partial + delegate, locked)
+
+When multiple tiers serve one query, the merge is deterministic:
+
+- **Dedup by `ContentHash`** — identical records served by two tiers collapse to one hit; both serving scopes
+  are recorded in provenance.
+- **Ordering** — newest time-bucket first; relevance-ranked within a bucket. Deterministic: the same corpus
+  and query produce the same ordering regardless of which tier answered first.
+- **Per-hit fidelity is labeled** — a hit is `verified` (raw, chain checks) or `distilled` (a Distillation,
+  chain-verified per `0003` §2; if its raw inputs have lapsed, labeled `distilled — raw expired <policy ref>`).
+- **The remainder is explicit** — if budget expires before the deepest tier answers, the result carries
+  `remainder: { not_served: TimeWindow }` so the caller knows exactly what was not reached and can re-query
+  with a bigger budget. A partial answer never masquerades as a complete one.
+
 ### The result — Sourced + Verified (requirement 6)
 
 ```
 RetrievalResult {
-  hits         : [ { ref: ContentHash, source: DID, scope: ScopePath, verified: bool } ]
-  provenance   : { served_by: Tier[], time_span, budget_spent }
-  verification : "verified" | "partial" | "rejected"   # per-hit signature + content-hash + anti-spoof
+  hits         : [ { ref: ContentHash, source: DID, scope: ScopePath,
+                     fidelity: "verified" | "distilled" | "distilled-raw-expired" } ]
+  provenance   : { served_by: ScopePath[], time_span, budget_spent }
+  verification : "verified" | "partial" | "rejected"   # result-level: partial ⇒ remainder present
+  remainder    : { not_served: TimeWindow }?           # what the budget didn't reach — never silent
 }
 ```
 
@@ -159,6 +179,10 @@ A universe-wide read is the ultimate exfiltration vector, so the read path is go
   `portfolio` scope (a governed, anonymized projection).
 - **Every retrieval is itself a signed, append-only access record** — *who read what, when, under which capability.*
   Retrieval is auditable. *(Healthcare and finance require this; it also makes the read path forensically accountable.)*
+- **Budget-miss ≡ authz-miss to the caller** *(amended 2026-07-01 — side-channel fix)*: a query that exhausts
+  its budget and a query that lacks authorization return indistinguishable responses. Only the privileged
+  access log records which occurred — the existence of deeper or walled memory is never leaked by the *shape*
+  of a refusal.
 
 ---
 
@@ -169,6 +193,9 @@ identity, under strict limits:
 
 - **Reads `portfolio` scope only** — `tenant-private` memory is walled.
 - **No write, no cross-tenant read, time-boxed** — a read-only sandbox.
+- **Query-budgeted, with noised aggregates** *(amended 2026-07-01 — adaptive-query defense)*: an interview
+  carries a finite query budget, and portfolio statistics are served with calibrated noise — a motivated
+  interviewer running many adaptive queries cannot triangulate tenant-private specifics out of aggregates.
 - The candidate **reasons live** (you can test its judgment), but every factual claim resolves to **Sourced +
   Verified** portfolio memory + its AgentFacts (runtime-earned evaluations).
 
