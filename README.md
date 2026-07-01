@@ -1,12 +1,14 @@
 # Orreth
 
-**A governed model of nested worlds — Universes of Ecosystems of Fields of Agents.**
+**A security-first, identity-anchored memory across spacetime — Universes of Ecosystems of Fields of Agents.**
 
-An *orrery* is a clockwork model of a planetary system: nested worlds turning in governed,
-predictable orbits, observed and tuned from outside and above. **Orreth** is that, for agents.
+An agent today is only as good as its data, and its data is bounded by time. Orreth uses the running
+universe as **memory that never fades** (configurable for years) and is **not lonely** (collective,
+cross-agent, authorized). **Governance is its first application, not its purpose.**
 
-> Analysis rolls **up** (agent → field → ecosystem → universe). Standards cascade **down**
-> (universe → ecosystem → field → agent). Humans conduct; agents perform.
+> Three flows: **policy cascades down** (foundational, non-overridable) · **memory rises up** (pruned at
+> every layer) · **retrieval escalates up by time-horizon** (Sourced + Verified). Identity is the immortal
+> thread; the Universe is both the **foundation** (policy) and the **apex** (all-time memory).
 > *Security first. Trust, but verify — at ecosystem scale.*
 
 ---
@@ -22,17 +24,22 @@ capture time but is **not yet purchased** — confirm at a registrar + a tradema
 
 ---
 
-## The one idea
+## The center, and the mechanism
 
-Don't build three tiers as three codebases. Build **one recursive primitive — the Harness — and
-make `tier` a property.** Its children are other Harnesses, until the leaf **Field**, whose children
-are **Agents**. The same governance loop runs at every tier, parameterized by a **Tier Profile**.
+**The center — what Orreth *is*.** A memory substrate for **Living Identities**. An agent's process is
+ephemeral (online / offline / reboot); its **identity is the immortal thread**, universe-unique, and
+**memory is keyed to the identity, not the process.** Reboot is not death. Governance (drift → tune) is
+the *first application* the substrate powers, not the point.
+
+**The mechanism — how it's built.** One recursive primitive — the **Harness** — with `tier` as a property
+(a **Tier Profile**), not three codebases. Children are Harnesses until the leaf **Field**, whose children
+are living **Agents**.
 
 - **Multiverse is free** — a Harness above Universes is just another Harness.
 - **A 2-tier customer is free** — "just an Ecosystem with Fields" is a depth-2 tree.
 - Depth is **capped at 3** (Universe / Ecosystem / Field) until we prove it out; expandable by design.
 
-> Harnesses all the way down, until agents. The only special node is the Field.
+> Harnesses all the way down, until agents. The only special node is the Field — where governance meets a life.
 
 ---
 
@@ -54,8 +61,10 @@ orreth/
 ├── README.md                 ← you are here
 ├── docs/
 │   ├── vision/                ← the north stars (private vision artifacts + hero mockups)
-│   │   ├── FUTURE-the-orreth.md                    ← the canonical Orreth spec
-│   │   ├── Orreth-mockup.(png|svg)                 ← the Orreth hero image
+│   │   ├── FUTURE-the-orreth.md                    ← the canonical Orreth spec (memory-first)
+│   │   ├── Orreth-spacetime-memory.(png|svg)       ← the hero: the memory pyramid
+│   │   ├── use-cases.md                            ← the same machine, different costumes + "Build My First Universe"
+│   │   ├── Orreth-mockup.(png|svg)                 ← companion: the orrery (governance/recursion view)
 │   │   ├── FUTURE-the-conductor-and-the-field.md   ← the EH-tier vision (+ image)
 │   │   └── EH-FRONTEND-the-cross-field-pane.md     ← the EH single-pane sketch (+ image)
 │   ├── design/                ← build-phase design specs (the keystone dives)
@@ -74,11 +83,12 @@ the vision becomes buildable, one schema at a time.
 
 ## Principles
 
-- **Security first. Trust, but verify — recursively.** DID-signed, capability-scoped, tenant-isolated at every tier.
-- **Tuning is governance, and it's pulled, not pushed.** A tier pulls a signed Standard and verifies it before applying.
-- **Bound outcomes, not paths.** Conform the result; never constrain the reasoning.
-- **Skills are governed memories.** One substrate for reproducibility and remembering.
-- **Humans conduct; agents perform.** A hand on the wheel even when no human could watch every world.
+- **Security first. Trust, but verify — foundationally, from the Universe down.** Universal policy is non-overridable; **retrieval is the #1 security surface.**
+- **Identity is the thread; memory is the life.** The process is disposable; the identity and its memory are not.
+- **The layers prune so the Universe holds only what matters.** Compression is the shape of the pyramid.
+- **Skills are crystallized memory** — learn once, stop re-remembering.
+- **Retrieval spans spacetime — Sourced and Verified, or not at all.**
+- **Humans conduct; agents perform — and now, agents remember forever.**
 
 ---
 
