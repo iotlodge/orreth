@@ -15,7 +15,7 @@ Ordered by leverage — each unlocks the next.
 | # | Spec | Why it's a keystone | Status |
 |---|---|---|---|
 | **0001** | [Promoted Memory & Skill Standard + acceptance rubric](0001-promoted-memory-and-skill-standard.md) | The `MemoryRecord` atom + skills as promoted memories + the rubric. **Reframed:** memory is the substrate; skills/governance are what it powers. | 🟡 draft for review |
-| **0002** | **Living Identity + Retrieval — the substrate keystone** | Identity as universe-unique key; **memory keyed to identity**; the space×time **retrieval contract** (time-budget escalation, Sourced + Verified). Folds in the 6 open requirements: **archetype→incarnation**, **memory portability scope**, **cross-tenant retrieval authz**, **showcase/portfolio scope**, **retention/consent**, **Sourced+Verified audit**. | ⏳ **next** |
+| **0002** | [**Living Identity + Retrieval — the substrate keystone**](0002-living-identity-and-retrieval.md) | Identity as universe-unique key; **memory keyed to identity**; the space×time **retrieval contract** (time-budget escalation, Sourced + Verified). Discharges all 6 requirements: **archetype→incarnation**, **memory portability scope**, **cross-tenant retrieval authz**, **showcase/portfolio scope**, **retention/consent**, **Sourced+Verified audit**. | 🟡 draft for review |
 | 0003 | Pruning policy | What each layer keeps vs distills vs tombstones; how "years" stays affordable. | ⏳ |
 | 0004 | Tier Profile | What memory + objective vector + **time-budget** mean at each of the 3 tiers. | ⏳ |
 | 0005 | Run Record & monoidal roll-up | The aggregatable envelope; how scoring/confidence/cost/tokens compose up the tree. | ⏳ |
