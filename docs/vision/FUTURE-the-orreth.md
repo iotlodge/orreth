@@ -5,7 +5,8 @@
 to its true center: **a memory substrate for immortal identities, that governs itself with what it remembers.***
 
 *Hero: `Orreth-spacetime-memory.(png|svg)` — the memory pyramid across spacetime.*
-*Companion (the governance/recursion view): `Orreth-mockup.(png|svg)` — the orrery.*
+*Companion (the staffing view): `Orreth-agentic-hierarchy.(png|svg)` — agents run every layer; humans at the gates.*
+*(`Orreth-mockup.(png|svg)` — the orrery — is pre-rebaseline and superseded.)*
 *Lineage companions: `FUTURE-the-conductor-and-the-field.md`, `EH-FRONTEND-the-cross-field-pane.md`.*
 
 > An *orrery* is a clockwork model of nested worlds turning in governed orbits.
@@ -191,7 +192,7 @@ None of this changes the structural bet; it re-centers its payload.
 |---|---|---|
 | **Universe** (foundation + apex) | **Orreth** (`orreth`) | the recursive runtime; all-time memory + universal policy; where "understand anything" runs |
 | **Ecosystem** | **ecosystem.harness** (EH) | proven governance loop (61 tests); its engine lifts in as the node core; mid-horizon memory + pruning |
-| **Field** | **CortexObserver** | a full CortexObserver per line-of-business; recent memory, the agents that live and remember |
+| **Field** *(native)* | **CortexObserver = reference proof** | the leaf harness — recent memory, the agents that live and remember. Orreth's Field is native; CO informed the pattern and interoperability, it is not baked in |
 | **Agents** | LangGraph · AgentField · any SDK | the **living identities**; DID via becky → NANDA; each with a memory steward |
 
 ---

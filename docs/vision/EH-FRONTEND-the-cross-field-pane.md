@@ -3,6 +3,10 @@
 
 *Companion to `FUTURE-the-conductor-and-the-field.md`. Private design sketch. 2026-06-25.*
 
+> ⚠️ **Lineage artifact (EH-tier, pre-rebaseline).** The "lift CortexObserver's visual language" framing is
+> superseded: Orreth's pane is a **native, fresh design** (CO informs, never drives) — see `../design/0000` §5
+> and `../decisions/` (2026-07-01). Kept for the EH-frontend build plan it still sketches.
+
 ![EH cross-Field overview — the 4D field map](EH-FRONTEND-mockup.png)
 *(scalable master: `EH-FRONTEND-mockup.svg`. This is a mockup, not a screenshot — EH's `frontend/` is still reserved.)*
 

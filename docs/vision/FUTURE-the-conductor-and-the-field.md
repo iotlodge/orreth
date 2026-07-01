@@ -4,6 +4,9 @@
 *Private vision artifact — the north star, reconciled against the real `ecosystem.harness` design. Captured 2026-06-25, updated after reading EH.*
 *Lives outside the repo on purpose. The foundation is real and running — we built it (EH closes the loop end-to-end in code; only the frontend is reserved). This is the vision still ahead of it: the part we point at while we design.*
 
+> ⚠️ **Lineage artifact (EH-tier, pre-rebaseline).** Written when "Field == a full CortexObserver." In Orreth,
+> the **Field is native** and CO is a *reference proof* — see `../design/0000` and `../decisions/` (2026-07-01).
+
 ![The Conductor and the Field — ecosystem.harness governing the AgentField across spacetime](FUTURE-the-conductor-and-the-field.png)
 *(scalable master: `FUTURE-the-conductor-and-the-field.svg` — opens in any browser. NOTE: the diagram shows the **theoretical** model; for the **real** control direction, see "The control loop" below — observations flow UP, standards flow DOWN.)*
 
