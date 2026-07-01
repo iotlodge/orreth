@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/tier-profile.schema.json",
+  "title": "TierProfile",
+  "description": "The dials that make one node (orrethd) a Universe, Ecosystem, or Field (0000 §1). This v0 carries every dial already locked by decisions (retention 0003, TTLs 0006, QA sample, judge sampling 0001, cadence); the 0004 narrative spec will refine, not redefine. tier_label is FRIENDLY DISPLAY ONLY — wire contracts never branch on it.",
+  "type": "object",
+  "properties": {
+    "tier_label": { "type": "string", "description": "Display name (e.g. 'universe', 'ecosystem', 'field', or anything a customer likes). Never used for logic." },
+    "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+    "parent_endpoint": { "type": "string", "format": "uri", "description": "Absent ⇒ apex. PUSH up / PULL down; a parent never reaches in." },
+    "is_leaf": { "type": "boolean", "description": "true ⇒ children are Agents (a Field); false ⇒ children are Harnesses." },
+    "memory": {
+      "type": "object",
+      "properties": {
+        "raw_retention": { "$ref": "common.schema.json#/$defs/Duration", "description": "Starting leans: P90D field · per-floors eco." },
+        "distilled_retention": {
+          "oneOf": [{ "$ref": "common.schema.json#/$defs/Duration" }, { "const": "forever" }],
+          "description": "Starting leans: P13M eco · forever at apex."
+        },
+        "qa_sample_rate": {
+          "type": "number", "minimum": 0, "maximum": 1,
+          "description": "Sealed 1-in-N raw kept past horizon to measure distillation loss (locked 2026-07-01). Leans: 0.01 field · 0.001 eco."
+        }
+      },
+      "required": ["raw_retention", "distilled_retention", "qa_sample_rate"],
+      "additionalProperties": false
+    },
+    "retrieval": {
+      "type": "object",
+      "properties": {
+        "time_budget": { "$ref": "common.schema.json#/$defs/Budget", "description": "The per-tier escalation gate (0002 §3)." },
+        "horizon": { "$ref": "common.schema.json#/$defs/Duration", "description": "How far back this tier serves before delegating up." }
+      },
+      "required": ["time_budget", "horizon"],
+      "additionalProperties": false
+    },
+    "steward": {
+      "type": "object",
+      "properties": {
+        "token_budget": { "$ref": "common.schema.json#/$defs/Budget" },
+        "cadence": { "$ref": "common.schema.json#/$defs/Duration" },
+        "on_budget_exhaustion": {
+          "const": "degrade-to-floors-and-flag",
+          "description": "Locked 2026-07-01: floors never stop; surge distills coarsely; quality-drift signal raised; never backpressure ingestion."
+        }
+      },
+      "required": ["token_budget", "cadence", "on_budget_exhaustion"],
+      "additionalProperties": false
+    },
+    "tokens": {
+      "type": "object",
+      "properties": {
+        "workforce_ttl": { "$ref": "common.schema.json#/$defs/Duration", "description": "Starting lean: P1D." },
+        "resident_ttl": { "$ref": "common.schema.json#/$defs/Duration", "description": "Starting lean: P30D." }
+      },
+      "required": ["workforce_ttl", "resident_ttl"],
+      "additionalProperties": false
+    },
+    "model_gateway": {
+      "type": "object",
+      "properties": {
+        "judge_sample_rate": {
+          "type": "number", "minimum": 0, "maximum": 1,
+          "description": "model_judge steady-state sampling (locked: 1-in-N steady, 1.0 forced during canary)."
+        },
+        "default_model_tier": { "type": "string" },
+        "routing": { "enum": ["litellm", "openrouter", "direct"], "description": "How this layer reaches models. No agent calls a model ungoverned." }
+      },
+      "required": ["judge_sample_rate", "routing"],
+      "additionalProperties": false
+    },
+    "join_default": {
+      "enum": ["fully-joined", "floors-only", "observe-only", "decoupled"],
+      "description": "The join spectrum default for children (floors compelled for the joined)."
+    },
+    "trust_root": {
+      "type": "object",
+      "properties": {
+        "mode": { "enum": ["did-web", "pinned"], "description": "did-web = resolvable under orreth.ai; pinned = out-of-band root for self-hosted/air-gapped (locked 2026-07-01)." },
+        "root": { "type": "string", "description": "did:web DID or pinned root key, per mode." }
+      },
+      "required": ["mode", "root"],
+      "additionalProperties": false
+    },
+    "version": { "$ref": "common.schema.json#/$defs/SemVer" },
+    "signature": { "$ref": "common.schema.json#/$defs/Sig" }
+  },
+  "required": ["tier_label", "scope", "is_leaf", "memory", "retrieval", "steward", "tokens", "model_gateway", "join_default", "trust_root", "version", "signature"],
+  "additionalProperties": false
+}

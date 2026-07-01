@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/memory-record.schema.json",
+  "title": "MemoryRecord",
+  "description": "The atom of the fabric (0001 §1) with visibility facets (0002 §2), retention (0001 §5, 0003), and the Distillation extension (0003 §2). Append-only, content-addressed, DID-signed.",
+  "type": "object",
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/ContentHash" },
+    "kind": { "enum": ["episodic", "semantic", "procedural", "distillation"] },
+    "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+    "author": { "$ref": "common.schema.json#/$defs/DID" },
+    "signature": { "$ref": "common.schema.json#/$defs/Sig" },
+    "created_at": { "$ref": "common.schema.json#/$defs/EcosystemClock" },
+    "supersedes": { "$ref": "common.schema.json#/$defs/ContentHash" },
+    "body": { "type": "string", "description": "Compressed blob (headroom CCR), base64; ORIGINAL retrievable via body_ref." },
+    "body_ref": { "type": "string", "format": "uri", "description": "Signed pointer to full detail at the owning tier — the apex holds pointers, not blobs (0003 §3)." },
+    "embedding_ref": { "type": "string", "description": "Vector store reference for semantic retrieval." },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "run_id": { "type": "string" },
+        "model": { "type": "string" },
+        "source_record": { "$ref": "common.schema.json#/$defs/ContentHash" }
+      },
+      "additionalProperties": true
+    },
+    "retention": { "$ref": "#/$defs/RetentionState" },
+    "visibility": { "$ref": "#/$defs/Visibility" },
+    "keep_class": {
+      "enum": ["keep-raw", "distilled-raw-retained", "distilled-raw-dropped", "tombstoned"],
+      "description": "Pruning lifecycle class (0003 §1). Every transition is a signed pruning record."
+    },
+    "derived_from": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/ContentHash" },
+      "description": "Distillation only: the signed chain to every input (0003 §2). Verified(derived) = chain verification."
+    },
+    "method": {
+      "type": "object",
+      "description": "Distillation only: pinned so the grader can't drift (0003 §2).",
+      "properties": {
+        "steward": { "$ref": "common.schema.json#/$defs/DID" },
+        "rubric": { "$ref": "common.schema.json#/$defs/StandardRef" },
+        "model": { "type": "string" },
+        "prompt_version": { "$ref": "common.schema.json#/$defs/SemVer" }
+      },
+      "required": ["steward", "rubric", "model"],
+      "additionalProperties": false
+    },
+    "window": { "$ref": "common.schema.json#/$defs/TimeWindow", "description": "Distillation only: the spacetime slice compressed." },
+    "cohort": { "$ref": "common.schema.json#/$defs/Selector", "description": "Distillation only: whose memories it summarizes." },
+    "redactions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/RedactionMarker" },
+      "description": "Distillation only: tombstoned inputs — annotate, never rewrite (locked 2026-07-01)."
+    },
+    "tags": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["id", "kind", "scope", "author", "signature", "created_at", "retention", "visibility"],
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "distillation" } } },
+      "then": { "required": ["derived_from", "method", "window"] }
+    }
+  ],
+  "$defs": {
+    "RetentionState": {
+      "oneOf": [
+        { "const": "active" },
+        {
+          "type": "object",
+          "properties": {
+            "tombstoned": {
+              "type": "object",
+              "properties": {
+                "by": { "$ref": "common.schema.json#/$defs/DID" },
+                "policy_ref": { "$ref": "common.schema.json#/$defs/StandardRef" },
+                "reason": { "type": "string" },
+                "at": { "$ref": "common.schema.json#/$defs/EcosystemClock" },
+                "signature": { "$ref": "common.schema.json#/$defs/Sig" }
+              },
+              "required": ["by", "policy_ref", "reason", "at", "signature"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["tombstoned"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Visibility": {
+      "type": "object",
+      "description": "The three facets the use cases demand (0002 §2).",
+      "properties": {
+        "tenancy": { "enum": ["tenant-private", "portfolio"] },
+        "mobility": { "enum": ["branch-bound", "portable"], "default": "branch-bound" },
+        "consent": {
+          "oneOf": [
+            { "const": "active" },
+            {
+              "type": "object",
+              "properties": {
+                "consented_for": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+              },
+              "required": ["consented_for"],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": ["tenancy", "mobility"],
+      "additionalProperties": false
+    },
+    "RedactionMarker": {
+      "type": "object",
+      "properties": {
+        "tombstone_ref": { "$ref": "common.schema.json#/$defs/ContentHash" },
+        "at": { "$ref": "common.schema.json#/$defs/EcosystemClock" },
+        "policy_ref": { "$ref": "common.schema.json#/$defs/StandardRef" },
+        "sig": { "$ref": "common.schema.json#/$defs/Sig" }
+      },
+      "required": ["tombstone_ref", "at", "policy_ref", "sig"],
+      "additionalProperties": false
+    },
+    "Promotion": {
+      "type": "object",
+      "description": "A governed re-scope upward — never an automatic copy (0001 §2). to_scope must be a strict ancestor of from_scope; sibling crossing requires the human-gated global step.",
+      "properties": {
+        "memory": { "$ref": "common.schema.json#/$defs/ContentHash" },
+        "from_scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+        "to_scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+        "lane": { "enum": ["auto", "human"] },
+        "approved_by": { "$ref": "common.schema.json#/$defs/DID" },
+        "evidence": {
+          "type": "object",
+          "properties": {
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+            "supporting_records": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/ContentHash" } }
+          },
+          "additionalProperties": true
+        },
+        "signature": { "$ref": "common.schema.json#/$defs/Sig" },
+        "created_at": { "$ref": "common.schema.json#/$defs/EcosystemClock" }
+      },
+      "required": ["memory", "from_scope", "to_scope", "lane", "approved_by", "signature", "created_at"],
+      "additionalProperties": false
+    }
+  }
+}

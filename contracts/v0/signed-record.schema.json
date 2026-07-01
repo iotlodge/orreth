@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/signed-record.schema.json",
+  "title": "SignedRecord / SignedBundle",
+  "description": "The push-up and pull-down envelopes (lifted from EH's proven flow: observations PUSH up, standards PULL down — a parent never reaches into a child).",
+  "$defs": {
+    "SignedRecord": {
+      "type": "object",
+      "description": "Push-up envelope: one payload, hash-addressed, DID-signed, scope-tagged.",
+      "properties": {
+        "payload_hash": { "$ref": "common.schema.json#/$defs/ContentHash" },
+        "payload_type": {
+          "type": "string",
+          "format": "uri",
+          "description": "The $id of the schema the payload conforms to (e.g. .../memory-record.schema.json)."
+        },
+        "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+        "author": { "$ref": "common.schema.json#/$defs/DID" },
+        "created_at": { "$ref": "common.schema.json#/$defs/EcosystemClock" },
+        "sig": { "$ref": "common.schema.json#/$defs/Sig" }
+      },
+      "required": ["payload_hash", "payload_type", "scope", "author", "created_at", "sig"],
+      "additionalProperties": false
+    },
+    "SignedBundle": {
+      "type": "object",
+      "description": "Pull-down envelope: versioned Standards a child fetches and VERIFIES before applying — you can't slip a poisoned standard in.",
+      "properties": {
+        "standards": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/StandardRef" },
+          "minItems": 1
+        },
+        "target": { "$ref": "common.schema.json#/$defs/Selector" },
+        "issued_by": { "$ref": "common.schema.json#/$defs/DID" },
+        "issued_at": { "$ref": "common.schema.json#/$defs/EcosystemClock" },
+        "sig": { "$ref": "common.schema.json#/$defs/Sig" }
+      },
+      "required": ["standards", "target", "issued_by", "issued_at", "sig"],
+      "additionalProperties": false
+    }
+  }
+}

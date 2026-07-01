@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/capability-token.schema.json",
+  "title": "CapabilityToken",
+  "description": "Attenuation-only capability (0006 §3, locked: biscuit-style on the wire — this schema describes the logical content a biscuit encodes). Every delegation hop narrows, never widens. Humans hold the same shape (governed principals).",
+  "type": "object",
+  "properties": {
+    "subject": { "$ref": "common.schema.json#/$defs/DID" },
+    "audience": { "$ref": "common.schema.json#/$defs/ScopePath" },
+    "grants": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/Grant" }
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "expiry": { "$ref": "common.schema.json#/$defs/EcosystemClock" },
+        "direction": { "enum": ["down", "within", "up", "across"] },
+        "budget": { "$ref": "common.schema.json#/$defs/Budget" }
+      },
+      "required": ["expiry", "direction"],
+      "additionalProperties": false
+    },
+    "chain": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "DelegationProofs — every hop from the universe root, verifiable offline. Opaque here; biscuit blocks on the wire."
+    },
+    "sig": { "$ref": "common.schema.json#/$defs/Sig" }
+  },
+  "required": ["subject", "audience", "grants", "constraints", "chain", "sig"],
+  "additionalProperties": false,
+  "$defs": {
+    "Grant": {
+      "type": "object",
+      "properties": {
+        "action": { "enum": ["retrieve", "write", "distill", "interview", "govern", "transfer", "issue"] },
+        "space": { "$ref": "common.schema.json#/$defs/Space" },
+        "time": { "$ref": "common.schema.json#/$defs/TimeWindow", "description": "How deep in time this grant reaches." },
+        "visibility": {
+          "type": "array",
+          "items": { "enum": ["tenant-private", "portfolio"] },
+          "description": "e.g. ['portfolio'] — the interview sandbox is just a token."
+        }
+      },
+      "required": ["action", "space"],
+      "additionalProperties": false
+    }
+  }
+}

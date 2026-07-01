@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/skill-standard.schema.json",
+  "title": "SkillStandard",
+  "description": "A promoted procedural memory with a rubric (0001 §3) — crystallized memory. One store, one lineage (locked 2026-07-01): this extends MemoryRecord; promotion is a state transition, never a copy. Carries the scaffold-portability tag (locked: block only on hard-floor canary fail).",
+  "allOf": [{ "$ref": "memory-record.schema.json" }],
+  "type": "object",
+  "properties": {
+    "kind": { "const": "procedural" },
+    "version": { "$ref": "common.schema.json#/$defs/SemVer" },
+    "scaffold": { "$ref": "#/$defs/Scaffold" },
+    "rubric": { "$ref": "#/$defs/AcceptanceRubric" },
+    "target": { "$ref": "common.schema.json#/$defs/Selector" },
+    "model_tier": {
+      "type": "object",
+      "properties": {
+        "teacher": { "type": "string" },
+        "intended_floor": { "type": "string" },
+        "compatible_families": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Scaffold-portability tag (locked 2026-07-01): binding outside it is allowed but canaried; hard-floor fail blocks."
+        }
+      },
+      "required": ["teacher", "intended_floor", "compatible_families"],
+      "additionalProperties": false
+    },
+    "lifecycle": { "enum": ["proposed", "canary", "promoted", "reverted", "escalated"] },
+    "baseline": {
+      "type": "object",
+      "description": "The teacher's measured ObjectiveVector — the bar the fleet cohort must meet within a dead-band (conformance ≠ identical output).",
+      "additionalProperties": { "type": "number" }
+    }
+  },
+  "required": ["version", "scaffold", "rubric", "target", "model_tier", "lifecycle", "baseline"],
+  "$defs": {
+    "Scaffold": {
+      "type": "object",
+      "description": "What the teacher actually did (0001 §3.1).",
+      "properties": {
+        "prompt_template": { "type": "string" },
+        "procedure": { "type": "array", "items": { "type": "string" } },
+        "exemplars": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "input": { "type": "string" }, "output": { "type": "string" } },
+            "required": ["input", "output"],
+            "additionalProperties": false
+          }
+        },
+        "tool_recipe": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "tool": { "type": "string" }, "args_shape": { "type": "object", "additionalProperties": true } },
+            "required": ["tool"],
+            "additionalProperties": false
+          }
+        },
+        "notes": { "type": "string" }
+      },
+      "required": ["prompt_template", "procedure"],
+      "additionalProperties": false
+    },
+    "AcceptanceRubric": {
+      "type": "object",
+      "description": "The keystone of the keystone (0001 §3.2). Its output shape IS the roll-up metric — measured once, used twice. Authored by workforce at most as a PROPOSAL; ratified by residents/humans only (locked 2026-07-01).",
+      "properties": {
+        "dimensions": { "type": "array", "items": { "$ref": "#/$defs/Dimension" }, "minItems": 1 },
+        "aggregate": {
+          "type": "object",
+          "properties": {
+            "pass_threshold": { "type": "number", "minimum": 0, "maximum": 1 },
+            "confidence_model": {
+              "type": "string",
+              "description": "Count-weighted; exact statistic deferred to 0005 (locked shape: never a bare average)."
+            }
+          },
+          "required": ["pass_threshold", "confidence_model"],
+          "additionalProperties": false
+        },
+        "ratified_by": { "$ref": "common.schema.json#/$defs/DID", "description": "Resident or human. A rubric grades nothing unsigned." },
+        "ratified_sig": { "$ref": "common.schema.json#/$defs/Sig" }
+      },
+      "required": ["dimensions", "aggregate", "ratified_by", "ratified_sig"],
+      "additionalProperties": false
+    },
+    "Dimension": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "enum": ["floor", "scored"], "description": "floor = hard, lexicographic, pass/fail; scored = weighted 0..1. A Skill may raise an inherited floor, never lower it." },
+        "evaluator": { "$ref": "#/$defs/Evaluator" },
+        "weight": { "type": "number", "minimum": 0, "maximum": 1 },
+        "threshold": { "type": "number" },
+        "evidence_required": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["name", "type", "evaluator"],
+      "additionalProperties": false
+    },
+    "Evaluator": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": { "kind": { "const": "programmatic" }, "check": { "type": "string" } },
+          "required": ["kind", "check"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "kind": { "const": "assertion" }, "match": { "type": "string" } },
+          "required": ["kind", "match"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "LLM-graded — itself governed: model + prompt pinned as part of the rubric version; sampled steady-state, full-graded on canary (locked 2026-07-01).",
+          "properties": {
+            "kind": { "const": "model_judge" },
+            "judge_prompt": { "type": "string" },
+            "judge_model": { "type": "string" }
+          },
+          "required": ["kind", "judge_prompt", "judge_model"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "kind": { "const": "human" }, "queue": { "type": "string" } },
+          "required": ["kind", "queue"],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

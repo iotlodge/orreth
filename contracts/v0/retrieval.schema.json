@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/retrieval.schema.json",
+  "title": "Query / RetrievalResult",
+  "description": "The read path — space × time, budget-gated, Sourced + Verified (0002 §3 as amended 2026-07-01: ScopePath-relative space, explicit merge semantics, remainder never silent). Budget-miss ≡ authz-miss to the caller (0002 §4).",
+  "$defs": {
+    "Query": {
+      "type": "object",
+      "properties": {
+        "requester": { "$ref": "common.schema.json#/$defs/DID" },
+        "subject": {
+          "oneOf": [
+            { "const": "self" },
+            {
+              "type": "object",
+              "properties": { "identity": { "$ref": "common.schema.json#/$defs/DID" } },
+              "required": ["identity"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": { "cohort": { "$ref": "common.schema.json#/$defs/Selector" } },
+              "required": ["cohort"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "space": { "$ref": "common.schema.json#/$defs/Space" },
+        "time": { "$ref": "common.schema.json#/$defs/TimeWindow" },
+        "intent": { "enum": ["recall", "analyze", "interview"] },
+        "budget": { "$ref": "common.schema.json#/$defs/Budget" },
+        "auth": { "type": "string", "description": "Serialized CapabilityToken (biscuit on the wire, 0006 §3)." }
+      },
+      "required": ["requester", "subject", "space", "time", "intent", "budget", "auth"],
+      "additionalProperties": false
+    },
+    "Hit": {
+      "type": "object",
+      "properties": {
+        "ref": { "$ref": "common.schema.json#/$defs/ContentHash" },
+        "source": { "$ref": "common.schema.json#/$defs/DID", "description": "Sourced: the author identity." },
+        "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+        "fidelity": {
+          "enum": ["verified", "distilled", "distilled-raw-expired"],
+          "description": "verified = raw, signature + hash check; distilled = Distillation, chain-verified (0003 §2); distilled-raw-expired = chain ends in a tombstone stub, honestly labeled."
+        }
+      },
+      "required": ["ref", "source", "scope", "fidelity"],
+      "additionalProperties": false
+    },
+    "RetrievalResult": {
+      "type": "object",
+      "properties": {
+        "hits": { "type": "array", "items": { "$ref": "#/$defs/Hit" } },
+        "provenance": {
+          "type": "object",
+          "properties": {
+            "served_by": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/ScopePath" } },
+            "time_span": { "$ref": "common.schema.json#/$defs/TimeWindow" },
+            "budget_spent": { "$ref": "common.schema.json#/$defs/Budget" }
+          },
+          "required": ["served_by", "time_span", "budget_spent"],
+          "additionalProperties": false
+        },
+        "verification": {
+          "enum": ["verified", "partial", "rejected"],
+          "description": "Result-level. partial ⇒ remainder MUST be present. Unverifiable hits are dropped or flagged — a retrieval never launders an unattributable memory."
+        },
+        "remainder": {
+          "type": "object",
+          "description": "What the budget did not reach — a partial answer never masquerades as complete.",
+          "properties": {
+            "not_served": { "$ref": "common.schema.json#/$defs/TimeWindow" }
+          },
+          "required": ["not_served"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["hits", "provenance", "verification"],
+      "if": { "properties": { "verification": { "const": "partial" } } },
+      "then": { "required": ["hits", "provenance", "verification", "remainder"] },
+      "additionalProperties": false
+    }
+  }
+}

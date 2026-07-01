@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/join.schema.json",
+  "title": "Join",
+  "description": "How a child registers with its parent (0000 §1, §4). The whole tree is: ScopePath + parent endpoint + joined children. Floors are compelled for the joined; everything else is offered.",
+  "type": "object",
+  "properties": {
+    "child_did": { "$ref": "common.schema.json#/$defs/DID" },
+    "child_scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+    "parent_scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+    "join_level": { "enum": ["fully-joined", "floors-only", "observe-only", "decoupled"] },
+    "floors_ack": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/StandardRef" },
+      "description": "The inherited floors the child acknowledges — compelled for any joined level above decoupled."
+    },
+    "lease": {
+      "type": "object",
+      "description": "Present for leased identities: the minimum join level is a lease term (0006 §2).",
+      "properties": {
+        "credential": { "type": "string", "description": "The lease VC, opaque." },
+        "min_join_level": { "enum": ["fully-joined", "floors-only", "observe-only"] }
+      },
+      "required": ["credential", "min_join_level"],
+      "additionalProperties": false
+    },
+    "at": { "$ref": "common.schema.json#/$defs/EcosystemClock" },
+    "sig": { "$ref": "common.schema.json#/$defs/Sig" }
+  },
+  "required": ["child_did", "child_scope", "parent_scope", "join_level", "floors_ack", "at", "sig"],
+  "additionalProperties": false
+}

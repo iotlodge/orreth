@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/common.schema.json",
+  "title": "Orreth common definitions",
+  "description": "Shared primitives referenced by every Orreth contract. Source specs: design/0000-0006. ScopePath and Space are depth-agnostic by design (0000 §1) — tier names never appear in wire contracts.",
+  "$defs": {
+    "DID": {
+      "type": "string",
+      "pattern": "^did:(web|key):\\S+$",
+      "description": "Universe-unique decentralized identifier, becky-issued (0006). did:web at roots, did:key at leaves."
+    },
+    "ContentHash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Content address: sha256 of the canonical body (0001 §1)."
+    },
+    "Sig": {
+      "type": "object",
+      "description": "Ed25519 signature over the canonical payload.",
+      "properties": {
+        "alg": { "const": "ed25519" },
+        "by": { "$ref": "#/$defs/DID" },
+        "sig": { "type": "string", "description": "base64-encoded signature bytes" }
+      },
+      "required": ["alg", "by", "sig"],
+      "additionalProperties": false
+    },
+    "ScopePath": {
+      "type": "string",
+      "pattern": "^[a-z]+:[A-Za-z0-9_-]+(/[a-z]+:[A-Za-z0-9_-]+)*$",
+      "description": "Slash-delimited path of typed segments, root first (e.g. 'u:acme/e:cloud/f:prod'). Depth-agnostic: the depth-3 cap is policy (0000 §1), not structure."
+    },
+    "EcosystemClock": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp — the universal index (0001)."
+    },
+    "SemVer": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
+    },
+    "Duration": {
+      "type": "string",
+      "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+S)?)?$",
+      "description": "ISO-8601 duration (e.g. 'P90D', 'P13M', 'PT1H')."
+    },
+    "TimeWindow": {
+      "type": "object",
+      "properties": {
+        "from": { "$ref": "#/$defs/EcosystemClock" },
+        "to": { "$ref": "#/$defs/EcosystemClock", "description": "absent ⇒ the moving present" }
+      },
+      "required": ["from"],
+      "additionalProperties": false
+    },
+    "Space": {
+      "description": "Retrieval breadth — ScopePath-relative, never tier-named (0002 §3 as amended 2026-07-01).",
+      "oneOf": [
+        { "const": "self" },
+        {
+          "type": "object",
+          "properties": { "ancestors": { "type": "integer", "minimum": 1 } },
+          "required": ["ancestors"],
+          "additionalProperties": false
+        },
+        { "const": "apex" },
+        {
+          "type": "object",
+          "properties": { "scope": { "$ref": "#/$defs/ScopePath" } },
+          "required": ["scope"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Selector": {
+      "description": "Targeting for cascade and cohorts (0001 §4, made depth-agnostic: subtree targeting is by ScopePath, not tier name). A tier may target at-or-below itself only.",
+      "oneOf": [
+        { "const": "all" },
+        {
+          "type": "object",
+          "properties": { "role": { "type": "string" } },
+          "required": ["role"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "scope": { "$ref": "#/$defs/ScopePath" } },
+          "required": ["scope"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "selection": { "type": "array", "items": { "$ref": "#/$defs/DID" }, "minItems": 1 }
+          },
+          "required": ["selection"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Budget": {
+      "type": "object",
+      "properties": {
+        "time_ms": { "type": "integer", "minimum": 0 },
+        "cost": { "type": "number", "minimum": 0 },
+        "tokens": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "StandardRef": {
+      "type": "object",
+      "description": "Versioned reference to a Standard (policy, rubric, anonymization, pruning...).",
+      "properties": {
+        "id": { "$ref": "#/$defs/ContentHash" },
+        "version": { "$ref": "#/$defs/SemVer" }
+      },
+      "required": ["id", "version"],
+      "additionalProperties": false
+    }
+  }
+}

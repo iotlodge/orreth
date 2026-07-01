@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/identity.schema.json",
+  "title": "Identity",
+  "description": "The Living Identity (0002 §1) — the immortal thread. Memory is keyed to the DID, never to the process. Includes Attachment (session binding) and Transfer (governed re-scope with source veto + ancestor override, locked 2026-07-01).",
+  "type": "object",
+  "properties": {
+    "did": { "$ref": "common.schema.json#/$defs/DID" },
+    "lineage": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/DID" }, { "type": "null" }],
+      "description": "→ its archetype if this is an instance; null for an archetype/root identity."
+    },
+    "role": { "enum": ["archetype", "instance"] },
+    "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+    "facts": {
+      "type": "object",
+      "description": "AgentFacts — W3C VC: declared capabilities + runtime-earned evaluations (0006 §5). Never self-asserted.",
+      "additionalProperties": true
+    },
+    "keys": {
+      "type": "object",
+      "properties": {
+        "signing": { "type": "string", "description": "Ed25519 public key, multibase" }
+      },
+      "required": ["signing"],
+      "additionalProperties": false
+    },
+    "status": { "enum": ["online", "offline", "retired"] },
+    "resident": {
+      "type": "boolean",
+      "default": false,
+      "description": "true = TCB roster (steward, governance, analysis, becky); false = registered workforce. Residents author floors; workforce never governs its own tuning."
+    },
+    "born_at": { "$ref": "common.schema.json#/$defs/EcosystemClock" }
+  },
+  "required": ["did", "role", "scope", "keys", "status", "born_at"],
+  "$defs": {
+    "Attachment": {
+      "type": "object",
+      "description": "A running process attaches to an identity for a session; detaches on offline. Reboot ≠ death (0002 §1).",
+      "properties": {
+        "identity": { "$ref": "common.schema.json#/$defs/DID" },
+        "process": { "type": "string", "description": "opaque ProcessRef" },
+        "session_keys": { "type": "string", "description": "ephemeral session public key, multibase" },
+        "since": { "$ref": "common.schema.json#/$defs/EcosystemClock" }
+      },
+      "required": ["identity", "process", "session_keys", "since"],
+      "additionalProperties": false
+    },
+    "Transfer": {
+      "type": "object",
+      "description": "Governed re-scope (0002 §1). Portable memory follows; branch-bound stays. Locked 2026-07-01: the source scope must release (its authority appears in approved_by); a common ancestor may override the source veto — signed, on the record.",
+      "properties": {
+        "identity": { "$ref": "common.schema.json#/$defs/DID" },
+        "from": { "$ref": "common.schema.json#/$defs/ScopePath" },
+        "to": { "$ref": "common.schema.json#/$defs/ScopePath" },
+        "approved_by": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/DID" },
+          "minItems": 3,
+          "description": "source authority + destination authority + identity owner"
+        },
+        "ancestor_override": {
+          "type": "object",
+          "description": "Present only when a common ancestor overrides the source veto.",
+          "properties": {
+            "ancestor": { "$ref": "common.schema.json#/$defs/DID" },
+            "reason": { "type": "string" },
+            "sig": { "$ref": "common.schema.json#/$defs/Sig" }
+          },
+          "required": ["ancestor", "reason", "sig"],
+          "additionalProperties": false
+        },
+        "carries": { "const": "portable-only" },
+        "at": { "$ref": "common.schema.json#/$defs/EcosystemClock" },
+        "sig": { "$ref": "common.schema.json#/$defs/Sig" }
+      },
+      "required": ["identity", "from", "to", "approved_by", "carries", "at", "sig"],
+      "additionalProperties": false
+    }
+  }
+}

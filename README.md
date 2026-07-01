@@ -31,6 +31,14 @@ on one compose stack (2–3 sessions). In parallel on the design track: `0008` (
 GraphSpec) with the spacetime-window concept. Rust begins once the sim proves the contracts and the EH
 conformance fixtures are extracted; remaining dives interleave with the build.
 
+**orreth.ai milestones — when something must actually be live on the domain:**
+1. **Now → simulator: nothing.** Contract `$id`s are namespaced URIs resolved locally; the sim uses pinned
+   trust roots. The domain just needs to stay registered.
+2. **Rust plane / 0006 implementation: static `/.well-known/` hosting** — the first real did:web root
+   resolution needs `https://orreth.ai/.well-known/…/did.json` served (S3+CloudFront-grade static, minutes
+   of infra). *This is the first hard requirement.*
+3. **"Build My First Universe" (0009): the real site** — provisioning, marketplace, interviews.
+
 ---
 
 ## The center, and the mechanism

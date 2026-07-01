@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/pruning-policy.schema.json",
+  "title": "PruningPolicy",
+  "description": "The metabolism (0003 §1, all decisions locked 2026-07-01: hybrid floors + steward; cadence + event triggers; degrade-to-floors on budget exhaustion). A PruningPolicy is a Standard — versioned, signed, cascaded; lower layers may tighten, never loosen inherited floors.",
+  "type": "object",
+  "properties": {
+    "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+    "floors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/KeepRule" },
+      "description": "Deterministic, non-overridable downward (lexicographic). Evaluated by the plane on ingest — floors never stop."
+    },
+    "distill": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/DistillDirective" }
+    },
+    "budgets": {
+      "type": "object",
+      "properties": {
+        "storage_bytes": { "type": "integer", "minimum": 0 },
+        "steward_tokens": { "$ref": "common.schema.json#/$defs/Budget" }
+      },
+      "additionalProperties": false
+    },
+    "version": { "$ref": "common.schema.json#/$defs/SemVer" },
+    "signature": { "$ref": "common.schema.json#/$defs/Sig" }
+  },
+  "required": ["scope", "floors", "distill", "budgets", "version", "signature"],
+  "additionalProperties": false,
+  "$defs": {
+    "KeepRule": {
+      "type": "object",
+      "properties": {
+        "match": {
+          "type": "object",
+          "description": "Predicate over kind / tags / outcome / outliers.",
+          "properties": {
+            "kind": { "enum": ["episodic", "semantic", "procedural", "distillation"] },
+            "tags": { "type": "array", "items": { "type": "string" } },
+            "outcome": { "enum": ["failure", "floor-breach", "any"] },
+            "outlier": {
+              "type": "object",
+              "properties": {
+                "metric": { "type": "string" },
+                "top_bottom_pct": { "type": "number", "exclusiveMinimum": 0, "maximum": 50 }
+              },
+              "required": ["metric", "top_bottom_pct"],
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "action": { "enum": ["keep-raw", "distill", "drop-after-distill"] },
+        "keep_for": {
+          "oneOf": [{ "$ref": "common.schema.json#/$defs/Duration" }, { "const": "promote" }]
+        },
+        "reason": { "type": "string", "description": "Every rule says why — the audit trail starts in the policy." }
+      },
+      "required": ["match", "action", "keep_for", "reason"],
+      "additionalProperties": false
+    },
+    "DistillDirective": {
+      "type": "object",
+      "properties": {
+        "cohort": { "$ref": "common.schema.json#/$defs/Selector" },
+        "cadence": { "$ref": "common.schema.json#/$defs/Duration" },
+        "triggers": {
+          "type": "object",
+          "description": "Event triggers on top of the floor cadence (locked 2026-07-01).",
+          "properties": {
+            "cohort_size": { "type": "integer", "minimum": 1 },
+            "novelty_score": { "type": "number", "minimum": 0, "maximum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "target_ratio": { "type": "number", "exclusiveMinimum": 0, "maximum": 1, "description": "Compression target: distilled/raw." },
+        "rubric": { "$ref": "common.schema.json#/$defs/StandardRef", "description": "Resident/human-ratified only (0001 rule)." }
+      },
+      "required": ["cohort", "cadence", "target_ratio", "rubric"],
+      "additionalProperties": false
+    }
+  }
+}
