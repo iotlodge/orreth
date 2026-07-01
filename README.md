@@ -19,9 +19,17 @@ cross-agent, authorized). **Governance is its first application, not its purpose
 *lightweight architecture that can be expanded* before we build. The vision is captured; the
 build-phase design specs are being written one keystone at a time (see `docs/design/`).
 
-The brand name **Orreth** is locked. **`orreth.ai` was registered 2026-07-01 (AWS Route 53)** — the did:web
-trust root (`design/0006`) now has a real anchor. Still open: a trademark glance, and `orreth.com` as an
-optional defensive registration.
+The brand name **Orreth** is locked. **`orreth.ai` was registered 2026-07-01 (AWS Route 53, confirmed)** —
+the did:web trust root (`design/0006`) now has a real anchor. Still open: a trademark glance, and
+`orreth.com` as an optional defensive registration.
+
+**Path to build (roadmap owner: Fable · 2026-07-01).** The decision-heavy design work is **done** —
+0000/0001/0002/0003/0006 are decision-complete and the ledger is clean. Before first code (2–3 sessions):
+`0002` amendments → `contracts/` v0 (JSON Schema, extracted from the blessed specs) → minimal `0004`
+(Tier Profile dials, already decided). **First code = the Python simulator** — the three flows end-to-end
+on one compose stack (2–3 sessions). In parallel on the design track: `0008` (Field commander pane +
+GraphSpec) with the spacetime-window concept. Rust begins once the sim proves the contracts and the EH
+conformance fixtures are extracted; remaining dives interleave with the build.
 
 ---
 
