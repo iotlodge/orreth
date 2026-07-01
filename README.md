@@ -15,9 +15,12 @@ cross-agent, authorized). **Governance is its first application, not its purpose
 
 ## Status
 
-🟣 **Design phase.** No application code yet — this is deliberate. We are designing a
-*lightweight architecture that can be expanded* before we build. The vision is captured; the
-build-phase design specs are being written one keystone at a time (see `docs/design/`).
+🟢 **Design decisions complete · the simulator runs.** The keystone specs are decision-complete (ledger
+clean — see `docs/decisions/`). `contracts/v0/` holds ten validated JSON Schemas, and `backend/conformance/`
+runs the **Python reference simulator**: all three flows end-to-end, 10 passing tests — policy cascades and
+cannot be loosened, memory rises pruned with provenance intact, retrieval escalates by time-horizon with
+uniform refusals and real Ed25519 throughout. Next: the `0008` pane/GraphSpec dive (design track) and EH
+conformance extraction → the Rust plane (build track).
 
 The brand name **Orreth** is locked. **`orreth.ai` was registered 2026-07-01 (AWS Route 53, confirmed)** —
 the did:web trust root (`design/0006`) now has a real anchor. Still open: a trademark glance, and

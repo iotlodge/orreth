@@ -29,7 +29,10 @@
       "type": "object",
       "properties": {
         "time_budget": { "$ref": "common.schema.json#/$defs/Budget", "description": "The per-tier escalation gate (0002 §3)." },
-        "horizon": { "$ref": "common.schema.json#/$defs/Duration", "description": "How far back this tier serves before delegating up." }
+        "horizon": {
+          "oneOf": [{ "$ref": "common.schema.json#/$defs/Duration" }, { "const": "forever" }],
+          "description": "How far back this tier serves before delegating up. 'forever' = the apex: no time restriction — all of spacetime."
+        }
       },
       "required": ["time_budget", "horizon"],
       "additionalProperties": false
