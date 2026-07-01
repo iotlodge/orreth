@@ -1,344 +1,241 @@
 # FUTURE — Orreth
-### The governed model of nested worlds — Universes of Ecosystems of Fields of Agents
+### A security-first, identity-anchored memory across spacetime
 
-*Private vision artifact. The third in the set, sitting one tier above the other two.*
-*Captured 2026-06-30 for JB. Lives outside the repo on purpose — the part we point at while we design.*
+*Private vision artifact. **Rebaselined 2026-06-30** — re-centered from "a governance system with memory"
+to its true center: **a memory substrate for immortal identities, that governs itself with what it remembers.***
 
-*Companions:*
-- *`FUTURE-the-conductor-and-the-field.md` — the EH layer (the Conductor governing a field of agents).*
-- *`EH-FRONTEND-the-cross-field-pane.md` — the EH single pane of glass.*
+*Hero: `Orreth-spacetime-memory.(png|svg)` — the memory pyramid across spacetime.*
+*Companion (the governance/recursion view): `Orreth-mockup.(png|svg)` — the orrery.*
+*Lineage companions: `FUTURE-the-conductor-and-the-field.md`, `EH-FRONTEND-the-cross-field-pane.md`.*
 
-> An **orrery** is a clockwork model of a planetary system — nested worlds turning in governed,
-> predictable orbits, observed and tuned from outside and above.
-> **Orreth** is that, for agents: a governed model of nested worlds, across time.
-
----
-
-## The name
-
-**Orreth** — heir to *orrery*. The product and the repo. The brand is the whole machine; the
-**Harness** is the part it's built from. *"Orreth is built from nested harnesses."*
-
-- **Product / repo:** `orreth`
-- **Architectural primitive:** the **Harness** (the recursive node — still the correct, industry-standard term)
-- **The tiers:** **Universe → Ecosystem → Field → Agents**
-- **Domains:** `orreth.ai` / `orreth.com` showed no DNS delegation at capture time. *Not yet purchased — confirm at a registrar + a trademark glance before spending a dollar. "Open in DNS" ≠ "yours."*
+> An *orrery* is a clockwork model of nested worlds turning in governed orbits.
+> **Orreth** is that — but the thing the worlds are made of is **memory**, and the thing that
+> never dies is **identity**.
 
 ---
 
-## The one idea that makes this lightweight *and* infinite
+## The inversion — what we almost got wrong
 
-**Do not build three tiers as three codebases. Build one recursive primitive — the Harness — and make `tier` a property.**
+We first framed Orreth as a **governance system that happens to have memory.** That was backwards.
 
-EH already told us this: *"EH = a trimmed CortexObserver, one tier up."* The pattern is
-self-similar, so the code is too. A **Harness** is:
+> **Orreth is a memory system — a security-first, identity-anchored memory that spans all of
+> spacetime — and governance is its first application, not its purpose.**
 
-- one **identity** (DID), one **parent** (or none = root), N **children**;
-- its children are **other Harnesses** — until the leaf **Field**, whose children are **Agents**;
-- it runs the *identical* control loop over its children, parameterized by a **Tier Profile**
-  (config, not code) that defines *what a Run Record means here* and *what the objective vector is here.*
-
-Why this is the whole game:
-
-- **Multiverse is free.** A Harness above Universes is just another Harness. We never write
-  "Multiverse" — it exists the moment recursion does.
-- **A 2-tier customer is free.** "Just an Ecosystem with Fields" is a depth-2 tree. No Universe required.
-- **One pane, one loop, one identity chain** to build and harden — not three diverging ones.
-
-> **Harnesses all the way down, until agents.** The only special node is the **Field** —
-> the boundary where governance meets execution.
-
-**Decision (locked):** cap practical depth at **3 governance tiers** (Universe / Ecosystem / Field)
-until we prove it out. Expandable by design (SDK / CDK) — the cap is a guardrail, not a hardcode.
+The control loop (drift → tune) is real and it ships. But it is the *first thing the substrate powers*,
+not the substrate itself. The substrate is: **living identities with non-fading, collective, sourced-and-verified
+memory, tiered across time, pruned as it rises.**
 
 ---
 
-## The recursive loop — roll-up *up*, cascade *down*
+## Why — the human-memory problem, inverted
 
-Two flows, both recursive. The asymmetry is the design.
+As humans age, our memories fade. An agent today is worse off still: it is **only as good as its data, and
+its data is bounded by time** — a context window, a training cutoff, a session. It forgets on reboot.
 
-### Up — aggregation, not the firehose
+Orreth gives an agent the two things no agent has:
 
-Each tier **summarizes its children** into a tier-appropriate, signed Run Record and pushes
-*that* up. The Universe never ingests a billion agent runs — it ingests **Ecosystem-level trajectories.**
+- **Memory that does not fade** — configurable for *years*, held by the running universe itself.
+- **Memory that is not lonely** — its own recall *and*, when authorized, the recall of **every identity in
+  the universe.** Collective memory, sourced and verified.
 
-- **Roll up only what's mathematically aggregatable.** Sums (cost, tokens), counts, min/max, and
-  the *components* of averages (sum + count) compose at every hop — **monoidal**, so aggregation is
-  associative and lossless across tiers. The Universe tracks **cost · tokens · averages · scoring · confidence.**
-- **Keep a signed pointer, not the payload.** The top stores the aggregate + a DID-signed,
-  content-addressed pointer down to where the detail lives. Click → drill → fetch from the tier
-  that owns it. *Light at the top, full fidelity on demand, raw tenant data never physically leaves its tier.*
-- **Honest caveat — confidence.** Averaging confidences naively is wrong (0.9 over 1000 runs ≠ 0.9
-  over 3). Carry the **count-weighted statistic**, not a bare number. Shape fixed now; exact statistic
-  falls out per-objective as we build.
-
-### Down — inheritance, not injection
-
-A **Standard** (the versioned downward unit) is signed, scoped, and **inherited**. Its kinds:
-`policy · skill · procedure · context-block · model-pin · budget`.
-
-The effective config an agent runs with — its **Resolved Context** — is the composition of every
-ancestor's Standards that target it:
-
-> **Resolved Context = Universe ⊕ Ecosystem ⊕ Field ⊕ local**, composed top-down,
-> pulled-and-verified at the Field, **never pushed in.**
-
-Composition rules (security-critical):
-
-- **Hard floors inherit and cannot be loosened.** A Universe security/compliance floor is
-  **lexicographic** and **non-overridable** by any descendant. A Field may be *stricter*, never looser.
-- **Soft policy = most-specific-wins** override.
-- **Skills = additive**, with explicit revocation.
+That is not "more storage." It is **superhuman recall**: no fade, and no walls between minds.
 
 ---
 
-## The proof: the context cascade *is* a cache hierarchy
+## The primary primitive — the **Living Identity**
 
-Your "meaty-high / light-low" intuition, formalized and testable:
+Everything hangs on identity. Not as a security wrapper (that was our under-weighting) — as *the organizing
+principle.*
 
-- **Universe Standards** = the constitution. Heavy, stable, shared by everyone, changes rarely.
-- **Ecosystem Standards** = the domain charter (the "Cloud" doctrine vs the "Developer" doctrine).
-- **Field Standards** = line-of-business tuning.
-- **Agent-local** = the volatile per-run scraps.
+- An agent's **process is ephemeral**: *online* (alive) or *offline* (reboot). Reboot is not death.
+- An agent's **identity is the immortal thread** — **universe-unique**, used at **every** layer, decoupled
+  from the process. When the agent comes back online it re-attaches to its identity and its whole lifetime of memory.
+- **Memory is keyed by identity, not by process.** The identity is the address of a life.
 
-> **Context shared by more descendants lives higher and changes less → maximally prompt-cacheable.
-> Context specific to fewer descendants lives lower and changes more → cheap because it's small.**
-
-The topology drawn for *governance* reasons turns out to be the optimal **cost/latency** layout
-for prompt caching. Governance shape = cache shape. *Change a Universe Standard once → it re-tunes
-every descendant; change an agent-local scrap → nothing upstream recomputes.* **Tune from the top, pay once.**
-
-**Headroom realizes the cache half of this proof** (see below) — its `CacheAligner` already stabilizes
-prefixes for KV-cache hits. We don't build that; we depend on it.
+> The process is the incarnation. The **identity** is the soul, and the **memory** is everything the soul has lived.
 
 ---
 
-## Reproducibility — the headline proof: **teacher → skill → fleet**
+## The Universe — the Foundation *and* the Apex
 
-The largest open problem we aim at: *like agents don't reproduce results.* The mechanism:
+The Universe is a duality, and both halves are true at once:
 
-1. **Teacher run.** An expensive agent (or a frontier model) solves the task and emits not just the
-   answer but the *scaffold* — prompt, procedure, exemplars, tool recipe, and an **acceptance rubric.**
-2. **Capture.** A resident skill-capture agent distills that into a versioned **Skill Standard**,
-   tagged with the model tier it's meant to lift and the rubric it must satisfy.
-3. **Distribute.** The Harness pushes it down, **targeted** (all / role / hand-picked — see Selectors).
-4. **Fleet replay.** Cheap like-agents pull + verify + apply, run, and emit Run Records carrying
-   **scoring + confidence.**
-5. **Roll-up verifies.** Aggregated scoring tells you whether the cheap cohort now *meets the teacher's
-   baseline.* Drift below → re-capture or escalate.
+- **The Foundation.** It is the bedrock. **Foundational, universal policies push DOWN** from it — security
+  first among them. Every layer below may add its own policy, but **no layer can ever change a universal one.**
+  The Universe is what everything rests on.
+- **The Apex.** It is where **all memory rises to** — pruned and distilled along the way — so that at the top
+  sits the deepest, broadest, all-time view: everything worth keeping, from every identity, across all time.
 
-> **You will never get two LLM calls to take the identical path — and chasing that destroys the
-> capability you pay for.** What Orreth delivers and sells is **outcome conformance**:
-> *cheap-agent + captured-skill + shared-rubric → meets the standard the teacher set,* measured, not asserted.
-
-The hard, valuable part is **the rubric/scoring, not the skill.** A vague rubric makes "reproducible"
-mean "reproducibly mediocre." And the scoring/confidence we roll up to the Universe is the **same
-primitive** that validates reproducibility — build the measurement once, use it for both.
-
-Model tier becomes a **dial in the Objective Model** (cost-weight down, quality-floor held). The
-captured skill is the artifact that lets you turn the cost dial without dropping through the floor.
-*That is the demo: a fleet of cheap agents matching an expensive baseline because the Universe taught them once.*
+> Alpha and omega: everything is built **on** the Universe (policy down) and everything flows **up** to it (memory up).
 
 ---
 
-## The Multiverse, made real: **governed branch-and-diverge**
+## The three flows
 
-Usecase 2 — *"everything the same but everything different; choices diverge outcomes"* — is a feature,
-and recursion hands it over: a Universe canarying two **Ecosystem branches** is structurally identical
-to an Ecosystem canarying two **Standard versions.** Same machinery, one tier up.
+We had two. The third is the point.
 
-- Clone an Ecosystem (same Fields/Agents), fork one Standard at the top.
-- Run both; the Universe measures the **Δ-objective-vector** between branches across time.
-- The human-owned Objective Model arbitrates; promote the winner, revert the loser.
+### 1. Policy cascades **DOWN** — foundational, non-overridable
 
-Productized: *"Clone your production ecosystem, change one policy at the top, watch the two diverge,
-promote the winner."* The canary you already built — sold as counterfactual experimentation.
+Universal policy originates at the Universe (security, compliance, identity — the **foundational** rules).
+It cascades down; each layer may *add* local policy but **never loosen** a universal one (lexicographic,
+inherited floors). *The Universe governs; the layers below refine within its bounds.*
 
----
+### 2. Memory rises **UP** — and is **pruned at every layer**
 
-## Targeting — one selector for "mandate to all" *and* "hand-pick"
+This is the purpose of the layers, and it's the piece I most under-weighted: **the layers are filters.**
+Raw observation is abundant at the base and mostly noise. Each layer **prunes, dedups, summarizes, and
+compresses** what its children send up — so that **only what's worth keeping reaches the Universe.** The
+layers exist to **protect the Universe's space** — to keep unneeded information from ever wasting it.
 
-"Create a skill from the Universe and assign it to all agents in role Y" is a **selector** on a
-Standard, matched against the identity facts we already carry:
+> The pyramid's shape *is* the compression: memory **narrows** as it rises (pruning), policy **widens** as it
+> falls (reach). The org chart and the information theory are the same triangle.
 
-`all` · `role:Y` · `ecosystem:Z` · `field:X` · `selection:[did, …]`
+### 3. Retrieval escalates **UP by time-horizon** — the read path
 
-- **Mandated guardrails** = a floor Standard with selector `all`. **Hand-selected skill** = the same
-  primitive with `selection:[…]`. One mechanism, two uses.
-- **A tier can only target at or below itself.** Universe reaches anyone; a Field reaches only its own
-  agents. Capability flows down — never sideways or up.
+Any identity, at any time, can retrieve **its own** memory — or, **if authorized**, memory **across all
+identities in the universe.** Retrieval is served locally first (the Field — recent, fast). If a query
+**exceeds the time budget** configured for that Ecosystem, it **escalates** to EH; exceed again, it escalates
+to the **Universe**, which has **no time restriction — all of spacetime.** Every result comes back **Sourced**
+(which identity) and **Verified** (metadata-attested).
 
----
+> A **time-horizon miss** escalates a query up a tier — exactly like an L1→L2→L3 cache miss. The pyramid is a
+> **temporal cache**: recent memory is cheap and local; deep-time memory lives at the apex and costs more to reach.
 
-## Consent — the **join spectrum** (the trust question for the business model)
-
-Opt-in/opt-out recurses (a Field opts into EH; an EH opts into UH), but flat "opt-out" collides with
-"mandated floors." The honest reconciliation is a **spectrum of join**, chosen per tier:
-
-| Join level | Pulls down | Use |
-|---|---|---|
-| **Fully joined** | all Standards (floors mandated, soft tuning offered + consented) | maximum managed value |
-| **Floors-only** | security / compliance / CVE floors only | *the likely enterprise default* — "take your patches, evaluate your suggestions" |
-| **Observe-only** | nothing down; pushes telemetry up | billing / monitoring |
-| **Decoupled** | nothing | standalone; UH sees nothing, sends nothing |
-
-The truth this forces into the open: **"mandated" only binds a tier that stays joined.** A genuinely
-decoupled Ecosystem sits behind its own firewall — UH can't reach in, so it can't compel anything.
-That's the consent model being honest, not a flaw.
-
-**But:** a **leased agent's minimum join level is a lease term**, enforced by its capability credential
-(AgentFacts encode "must stay joined ≥ floors"; drop below → capability revokes). Opt-out is the
-customer's right for agents they **own**; it's bounded by contract for agents they **rent.** *That line
-keeps a rented agent from opting out of your security updates and becoming a liability with your name on it.*
-
-**Decision (locked):** **floors compelled (for the joined), everything else offered.**
+**Space × time, made literal.** Retrieval navigates two axes: **space** = *which* identities (own → cross-agent →
+universe-wide, gated by authorization); **time** = *how far back* (recent → deep → all-time, gated by the per-tier
+time budget). The apex commands both — which is why analysis there can reach for understanding nothing below it could.
 
 ---
 
-## Security spine — recursive, and not retrofitted
+## Skills — crystallized memory that saves you from remembering
 
-1. **Identity = a DID delegation chain.** `becky` issues DIDs at every tier. An Agent's AgentFacts are
-   signed by its Field; the Field's DID anchored by its Ecosystem; the Ecosystem's by the Universe.
-   **Capability flows down (delegation); attestation flows up (proof). A child can never assert a
-   capability its parent didn't grant.** Capability-based security, recursively — the thing that makes
-   *leasing an agent safe.*
-2. **The TCB line — resident vs registered agents.** Every Harness ships with **resident system agents**
-   (security, identity, change-control, the drift/attribution/arbitration workers) — the trusted compute
-   base, **not leasable, not user-supplied.** **Registered/leased agents are workforce only**, running
-   with Field-granted capabilities. *A rented agent can never become a governor of its own tuning.*
-3. **Tenant isolation recurses.** One Ecosystem's runs *or memories* never shape another's governance
-   unless **a human promotes** them (proven across ≥2 tenants, becky/human-gated). Cross-tenant leakage
-   is the multi-tenant nightmare; the DID + capability + tier-scope chain forecloses it.
-4. **Floors inherit, can't be loosened** (above). Bound outcomes, not paths.
+Skills are built, **versioned, and updated across the universe** — and their deepest purpose is to **reduce the
+need to go back into raw memory at all.**
 
-> **Security first. Trust, but verify — at ecosystem scale, recursively.**
+> A **skill is memory that has been distilled into a reflex.** Once the lesson is captured as a versioned skill
+> and cascaded down, a like-agent doesn't re-retrieve and re-derive it from raw memory — it just *knows.*
+
+So skills are both an *output* of the memory substrate (promoted, distilled procedural memory — see `design/0001`)
+and a *pressure-release valve* on it: the better the universe's skills, the less anyone has to trawl deep time.
+Skills are how the substrate **learns**, and learning is what lets it **prune** — because a captured lesson makes
+its raw source expendable.
 
 ---
 
-## The memory fabric — "no loss ever," designed honestly
+## The memory steward — the identity's embedded agent
 
-Recurses like everything else: **a Memory API spawned per Harness node.** An agent talks to its Field's
-memory; the Field promotes up to the Ecosystem's; the Ecosystem to the Universe's. It's CortexObserver's
-existing **L1→L4 Memory Farm** (Redis session → Postgres episodic/semantic → snapshots → procedural)
-**lifted across the governance tiers,** with **headroom's CCR** underneath.
-
-What makes *"never lose a memory"* true rather than aspirational:
-
-- **Append-only + content-addressed + signed.** Hash = id (dedup + integrity for free); every memory
-  carries its author agent's **DID signature** (no memory without provenance). Supersede, never silently mutate or drop.
-- **Push up = pointers + promoted memories, not the firehose.** The Universe holds the *promoted/shared*
-  memories + a content-addressed **index** to everything below — full detail stays at the owning tier,
-  retrievable via signed pointer. Keeps "no loss" (durable, retrievable) compatible with "light at the top."
-- **Authorization + opt-in = capabilities.** A memory scope is a capability grant; an agent reads
-  at-or-below its scope, only what its grant + tenant-isolation permit. Isolation recurses.
-
-> **Honest reconciliation (GDPR / data-residency):** you cannot promise both "every byte forever" *and*
-> "delete a user's data on request." So: **immutable by default; erasure only via a governed, audited
-> tombstone** — a Standard-gated action leaving a provable *"retired by X under policy Y at time T"*
-> record. The memory isn't *lost* (silent, unaccountable) — it's **provably retired** (governed,
-> attributable). That's the version auditors accept and enterprises buy.
-
-### The convergence — skills *are* promoted memories
-
-> **A Skill Standard is a procedural memory that got promoted up the stack and handed an acceptance rubric.**
-
-The teacher→skill→fleet loop and the memory fabric are the **same substrate.** We don't build two
-systems — we build **one governed memory fabric,** and "skills" are one privileged, rubric-bearing kind
-of promoted memory. That collapses surface area and is why the memory strategy belongs in the spec from day one.
+Each living identity runs an **embedded memory agent** (the back channel): it manages **ingress** (process,
+optimize, dedup, summarize what comes up from below) and **egress** (retrieve, source, verify what goes out).
+It is the identity's librarian — a **resident** role, part of the trusted base, distinct from the workforce.
 
 ---
 
-## Headroom — the byte substrate (adopted)
+## Retrieval is the #1 security surface (keep-us-real)
 
-[`headroomlabs-ai/headroom`](https://github.com/headroomlabs-ai/headroom) — a context-compression layer
-(60–95% token reduction, **Apache-2.0**, Rust core + Python/TS). Four seams:
+A universe-wide query is the ultimate exfiltration vector. So the read path gets **more** rigor than the write path:
 
-- **`CacheAligner`** → the implementation of our cache-hierarchy proof (prefix stabilization → KV-cache hits).
-- **Compression** → the cost engine of "tune from the top" (compress heavy high-tier context once, cascade it).
-- **`CCR` (reversible, originals retrievable)** → a pillar of "no loss ever."
-- **Cross-agent memory + provenance + dedup** → a building block of the memory fabric.
-
-> **Boundary (keep it crisp):** headroom owns the **bytes** — compress, cache-align, store-reversibly,
-> dedup. **Orreth owns the governance** — access, opt-in, retention, isolation, promotion, signing.
-> Don't let it creep into being the memory *strategy*; it's the high-performance floor the strategy stands on.
-
-**Supply-chain note:** third-party dependency in a security-conscious product → **vendor / pin / review**
-it into the trusted path; their managed service stays optional.
+- **Every retrieval is an authorized capability** — scoped by identity, tier, and space (own vs cross-agent vs universe).
+- **Every result is Sourced + Verified** — DID-signed, content-addressed, tamper-evident (the security primitives we
+  already built serve memory-trust identically).
+- **Tenant isolation holds on read** — one tenant's identities never read another's memory unless a human-gated,
+  cross-tenant authorization exists. *Security first — foundational, from the Universe down.*
 
 ---
 
-## Rust where it pays — brainstem vs cortex
+## The apex payoff — the honest north star
 
-- **Rust = the plane (mechanism).** Ingestion gateway, Ed25519/DID verify + revocation + anti-spoof
-  (hot, security-critical), the **cascade resolver** (composing Resolved Context deterministically and
-  fast), drift gating, and the always-on **brainstem** (a billion cheap observations, summon the LLM only
-  on a threshold cross). Stateless, like EH's singleton.
-- **Python / LangGraph = the agents (cognition).** Attribution proposals, arbitration assist, drift
-  explanation, skill capture.
+Because the Universe holds **all identities across all time**, it can run analysis over a corpus **no single agent
+and no human could ever hold at once.** The inspiring claim is "understand anything." The honest, still-staggering
+deliverable is:
 
-*Rust runs the loop; the LLMs do the thinking.* The brainstem/cortex split — and how we keep cost sane
-at Universe scale.
+> **Understand, across every identity and all of time, what nothing bounded could hold.** A new organ of cognition —
+> ceilinged only by retrieval precision, verification, and the cost of reasoning over deep time.
+
+That ceiling is exactly why the layers **prune** and skills **crystallize**: they make deep-time reasoning affordable.
+
+---
+
+## The mechanism still recurses — one Harness, `tier` as a property
+
+None of this changes the structural bet; it re-centers its payload.
+
+- **One recursive primitive — the Harness** — with `tier` as a config (a **Tier Profile**), not three codebases.
+  Children are Harnesses until the leaf **Field**, whose children are **living Agents.**
+- **Depth capped at 3** (Universe / Ecosystem / Field) for now; expandable by design. Multiverse is free.
+- The **join spectrum** (fully-joined / floors-only / observe-only / decoupled) governs how much a tier
+  participates; **floors are compelled for the joined, everything else offered**; a leased agent's minimum join
+  level is a lease term.
+- **One Selector** (`all` / `role` / `ecosystem` / `field` / `selection`, target at-or-below) distributes both
+  mandated guardrails and hand-picked skills.
+- **Rust** runs the plane (identity verify, ingestion, the cascade/pruning resolver, retrieval routing + time-budget
+  gating, the always-on brainstem); **Python/LangGraph** runs cognition (the memory stewards, the analysis agents).
+- **Headroom** is the byte substrate (compression · CacheAligner · CCR reversible store · cross-agent memory);
+  governance and pruning *policy* stay ours. Vendor/pin/review.
 
 ---
 
 ## How the three projects compose
 
-| Layer | Project | Role |
+| Layer | Project | Role in the substrate |
 |---|---|---|
-| **Universe** (apex + recursive runtime) | **Orreth** (`orreth`) | the recursive Harness runtime; tier = a profile; the new home |
-| **Ecosystem** | **ecosystem.harness** (EH) | the governance loop, **proven** (61 tests, end-to-end). Its engine **lifts** into Orreth as the **node core** — reuse, don't fork-and-diverge. EH stays the reference single-ecosystem deployment. |
-| **Field** | **CortexObserver** | a *full* CortexObserver per line-of-business — commander, roster, farms, skills, memory |
-| **Agents** | LangGraph · AgentField | the workforce; DID-identified via becky → NANDA; built or leased; decoupled / SDK-joined when not required |
+| **Universe** (foundation + apex) | **Orreth** (`orreth`) | the recursive runtime; all-time memory + universal policy; where "understand anything" runs |
+| **Ecosystem** | **ecosystem.harness** (EH) | proven governance loop (61 tests); its engine lifts in as the node core; mid-horizon memory + pruning |
+| **Field** | **CortexObserver** | a full CortexObserver per line-of-business; recent memory, the agents that live and remember |
+| **Agents** | LangGraph · AgentField · any SDK | the **living identities**; DID via becky → NANDA; each with a memory steward |
 
-**Orreth = the recursive runtime.** **EH = its proven node core.** **CortexObserver = the Field.**
-Many Fields = many lines of business; many Ecosystems = many domains; many Universes = the Multiverse.
+---
+
+## What this rebaseline changes
+
+- **Governance is demoted** from "the product" to **the first application** of the substrate.
+- **Identity is promoted** from a security wrapper to **the primary primitive.**
+- **Retrieval becomes a first-class flow** — the read path, escalating by time-horizon, Sourced + Verified.
+- **The layers' purpose is named:** they are **filters** that prune to protect the Universe's space.
+- `design/0001` (promoted memory & skills) **stays valid but reframed:** memory is the substrate; skills/governance
+  are what it powers.
 
 ---
 
 ## North star / first principles
 
-- **Security first. Trust, but verify — at ecosystem scale, recursively.** Locks at line one.
-- **Humans conduct; agents perform.** A human's hand on the wheel *even when no human could watch every world.*
-- **Tuning is governance, and it's pulled, not pushed.** A tier *pulls* a signed Standard and *verifies*
-  it before applying. You can't slip in a poisoned standard.
-- **Bound outcomes, not paths.** Conform the result; never constrain the reasoning.
-- **The Field is the unit.** Compose Fields like instruments; Ecosystems like sections; the Universe is the score.
-- **Skills are governed memories.** One substrate for reproducibility and remembering.
+- **Security first. Trust, but verify — foundationally, from the Universe down.** Universal policy is non-overridable.
+- **Identity is the thread; memory is the life.** The process is disposable; the identity and its memory are not.
+- **The layers prune so the Universe holds only what matters.** Compression is the shape of the pyramid.
+- **Skills are crystallized memory** — learn once, and stop re-remembering.
+- **Retrieval spans spacetime — Sourced and Verified, or not at all.**
+- **Bound outcomes, not paths. Humans conduct; agents perform — and now, agents *remember* forever.**
 
 ---
 
-## Decisions locked this session
+## Decisions locked (carried + new)
 
-- **Name:** Orreth. Repo `orreth`. Harness = the primitive. Tiers = Universe / Ecosystem / Field / Agents.
-- **One recursive primitive**, tier = a Tier Profile (config, not code).
-- **Depth capped at 3** for now; expandable by SDK/CDK.
-- **Roll-up:** monoidal sufficient statistics + signed content-addressed pointers; count-weighted confidence.
-- **Cascade:** inherited Standards; floors non-overridable (lexicographic); soft = most-specific-wins; skills additive.
-- **Consent:** the join spectrum; **floors compelled for the joined, everything else offered**; leased-agent floor enforced by lease/capability.
-- **Selectors:** all / role / ecosystem / field / selection; target at-or-below only.
-- **Security:** recursive DID chain; resident (TCB) vs registered (workforce) agents; tenant isolation recurses.
-- **Rust** for the plane; **Python/LangGraph** for cognition.
-- **Headroom adopted** as the byte substrate; governance stays ours; vendor/pin/review.
-- **Memory fabric:** per-node API; append-only + content-addressed + signed; promoted-up-as-pointers;
-  **governed-tombstone erasure**; built on CortexObserver L1–L4 + headroom CCR.
-- **Skills are promoted memories** — one substrate.
+- Name **Orreth**; repo `orreth`; Harness = the primitive; tiers Universe/Ecosystem/Field/Agents; depth capped at 3.
+- **Memory-first center; governance is the first application; identity is the primary primitive.** *(new)*
+- **Three flows:** policy DOWN (foundational, non-overridable), memory UP (pruned at every layer), retrieval UP
+  (by time-horizon, Sourced + Verified). *(new)*
+- **Layers are filters** — prune/dedup/summarize/compress to protect the Universe's space. *(new)*
+- **Living identity** — universe-unique, used at every layer, decoupled from process; memory keyed by identity. *(new)*
+- **Retrieval is the #1 security surface** — authorized capability, tenant-isolated on read. *(new)*
+- Roll-up = monoidal sufficient stats + signed pointers; cascade floors lexicographic/non-overridable; join spectrum
+  (floors compelled for the joined); one Selector; resident (TCB) vs registered (workforce) agents; Rust plane +
+  Python cognition; headroom byte substrate; append-only + content-addressed + signed memory; governed-tombstone erasure.
 
 ---
 
-## What's left — and the first design dive
+## What's left — the dives, re-ordered around the true center
 
-- [ ] **The keystone schema (next):** the unified **promoted-memory / Skill Standard + acceptance rubric.**
-      Because skills-are-memories, this one schema is the keystone for *both* reproducibility and the
-      memory fabric — and it's genuinely new, not a lift.
-- [ ] **Tier Profile** spec — what a Run Record + objective vector means at each of the 3 tiers.
-- [ ] **The cascade resolver** (Rust) — compose Resolved Context from the inherited chain, deterministically.
-- [ ] **The recursive pane** — the zoomable single-pane: Universe → Ecosystem → Field → Agent, role-scoped inbox.
-- [ ] **becky, one issuer across all tiers** — the DID/capability chain wired root→leaf.
-- [ ] **Lift EH's engine** into `orreth` as the node core (port vs depend-on vs subsume — a build-time call).
-- [ ] **The horizon:** the ambient per-piece **Rust brainstem** beneath the run loop — the smallest possible nervous system.
+- [ ] **The substrate keystone (next):** the **Living Identity + Memory Record + retrieval** model — identity as
+      universe-unique key, memory keyed to it, the space×time retrieval contract with time-budget escalation and
+      Sourced/Verified results. *(This subsumes and reframes `0001`.)*
+- [ ] **Pruning policy** — what each layer keeps vs distills vs tombstones; how "years" stays affordable.
+- [ ] **Retrieval security** — the authorization model for own vs cross-agent vs universe-wide reads.
+- [ ] **Tier Profile** — what memory + objective + time-budget mean at each of the 3 tiers.
+- [ ] **becky, one issuer across all tiers** — the DID/identity chain, root→leaf.
+- [ ] **The recursive pane** — the zoomable single-pane, now foregrounding identity + memory + retrieval.
+- [ ] **The horizon:** the ambient per-piece **Rust brainstem** beneath the run loop.
 
 ---
 
-*Captured for JB. The 1999 single-pane bet, now a Universe of them — nested, governed, tuned from the
-top, and never forgetting. You have the vision; I have the code and the usability. We move at the speed
-of your ideas.* 🥃
+*Captured for JB, rebaselined. The 1999 single-pane bet became a universe of them — and the universe turned out to
+be made of memory, addressed by identity, and it never forgets. You have the vision; I have the code and the
+usability. We move at the speed of your ideas.* 🥃

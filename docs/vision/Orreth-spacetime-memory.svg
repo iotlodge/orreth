@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1080" viewBox="0 0 1600 1080" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1020"/><stop offset="1" stop-color="#05060c"/>
+    </linearGradient>
+    <linearGradient id="uni" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="eco" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4338ca" stop-opacity="0.92"/><stop offset="1" stop-color="#312e81" stop-opacity="0.92"/>
+    </linearGradient>
+    <linearGradient id="fld" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0e7490" stop-opacity="0.85"/><stop offset="1" stop-color="#155e75" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="agt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1e293b" stop-opacity="0.9"/><stop offset="1" stop-color="#0c1226" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="memfun" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#34d399" stop-opacity="0.30"/><stop offset="1" stop-color="#34d399" stop-opacity="0.02"/>
+    </linearGradient>
+    <linearGradient id="polfun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.28"/><stop offset="1" stop-color="#f59e0b" stop-opacity="0.02"/>
+    </linearGradient>
+    <radialGradient id="uniGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.5"/><stop offset="1" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="mup" markerWidth="12" markerHeight="12" refX="6" refY="3" orient="auto"><path d="M6,1 L11,10 L1,10 z" fill="#34d399"/></marker>
+    <marker id="pdown" markerWidth="12" markerHeight="12" refX="6" refY="9" orient="auto"><path d="M6,11 L11,2 L1,2 z" fill="#f59e0b"/></marker>
+    <marker id="ret" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto"><path d="M1,1 L9,5 L1,9 z" fill="#c084fc"/></marker>
+  </defs>
+
+  <rect width="1600" height="1080" fill="url(#bg)"/>
+  <g stroke="#22d3ee" stroke-opacity="0.05" stroke-width="1">
+    <line x1="0" y1="1080" x2="800" y2="180"/><line x1="400" y1="1080" x2="800" y2="180"/>
+    <line x1="800" y1="1080" x2="800" y2="180"/><line x1="1200" y1="1080" x2="800" y2="180"/><line x1="1600" y1="1080" x2="800" y2="180"/>
+  </g>
+
+  <!-- title -->
+  <text x="60" y="82" font-size="52" font-weight="800" fill="#f8fafc" letter-spacing="6">ORRETH</text>
+  <text x="64" y="114" font-size="16.5" fill="#94a3b8">a security-first, identity-anchored memory across spacetime</text>
+  <text x="1540" y="60" font-size="13" fill="#64748b" text-anchor="end">the substrate &#183; governance is its first application</text>
+  <text x="1540" y="82" font-size="13" fill="#475569" text-anchor="end">memory never fades &#183; identity never dies</text>
+
+  <!-- 3-flow legend -->
+  <g font-size="13" transform="translate(505,146)">
+    <path d="M2,16 L14,16 L8,6 z" fill="#34d399"/><text x="22" y="14" fill="#86efac">memory rises &#183; pruned</text>
+    <path d="M232,6 L244,6 L238,16 z" fill="#f59e0b"/><text x="252" y="14" fill="#fcd34d">policy cascades &#183; foundational</text>
+    <text x="500" y="14" fill="#c084fc">&#8986; retrieval escalates by time-horizon</text>
+  </g>
+
+  <!-- ===== LEFT: memory funnel (rises + pruned) ===== -->
+  <polygon points="120,778 246,778 183,232" fill="url(#memfun)"/>
+  <line x1="183" y1="760" x2="183" y2="250" stroke="#34d399" stroke-width="2.5" marker-end="url(#mup)" opacity="0.9"/>
+  <text x="183" y="800" font-size="12" fill="#6ee7b7" text-anchor="middle">raw &#183; recent &#183; abundant</text>
+  <text x="183" y="222" font-size="12" fill="#a7f3d0" text-anchor="middle">distilled &#183; all-time &#183; essential</text>
+  <text transform="translate(96,600) rotate(-90)" font-size="13.5" font-weight="700" fill="#34d399">MEMORY rises &#8212; pruned at every layer</text>
+  <!-- prune tags at tier boundaries -->
+  <g font-size="12" fill="#86efac">
+    <text x="300" y="614" text-anchor="end">dedup &#10230;</text>
+    <text x="360" y="454" text-anchor="end">summarize &#10230;</text>
+    <text x="420" y="314" text-anchor="end">distill &#10230;</text>
+  </g>
+
+  <!-- ===== RIGHT: policy funnel (cascades down, foundational) ===== -->
+  <polygon points="1452,232 1388,772 1516,772" fill="url(#polfun)"/>
+  <line x1="1452" y1="252" x2="1452" y2="762" stroke="#f59e0b" stroke-width="2.5" marker-end="url(#pdown)" opacity="0.9"/>
+  <text transform="translate(1548,372) rotate(90)" font-size="13.5" font-weight="700" fill="#f59e0b">POLICY cascades &#8212; foundational</text>
+  <g font-size="12" fill="#fcd34d" text-anchor="start">
+    <text x="1300" y="300">&#10229; universal floors (security)</text>
+    <text x="1300" y="470">&#10229; + ecosystem policy</text>
+    <text x="1300" y="600">&#10229; + field policy (adds, can't loosen)</text>
+  </g>
+
+  <!-- ===== THE PYRAMID ===== -->
+  <circle cx="800" cy="256" r="150" fill="url(#uniGlow)"/>
+  <!-- Agents (base) -->
+  <polygon points="494.5,620 1105.5,620 1180,780 420,780" fill="url(#agt)" stroke="#334155" stroke-width="1.5"/>
+  <!-- Fields -->
+  <polygon points="569,460 1031,460 1096.2,600 503.8,600" fill="url(#fld)" stroke="#22d3ee" stroke-opacity="0.5" stroke-width="1.5"/>
+  <!-- Ecosystems -->
+  <polygon points="634.1,320 965.9,320 1021.7,440 578.3,440" fill="url(#eco)" stroke="#818cf8" stroke-opacity="0.6" stroke-width="1.5"/>
+  <!-- Universe (apex) -->
+  <polygon points="685.3,210 914.7,210 956.6,300 643.4,300" fill="url(#uni)" stroke="#f59e0b" stroke-width="2" filter="url(#glow)"/>
+
+  <!-- tier labels -->
+  <text x="800" y="252" font-size="19" font-weight="800" fill="#1f2937" text-anchor="middle" letter-spacing="1">UNIVERSE</text>
+  <text x="800" y="272" font-size="10.5" font-weight="600" fill="#7c2d12" text-anchor="middle">foundation &amp; apex &#183; all-time memory</text>
+  <text x="800" y="286" font-size="10.5" font-weight="600" fill="#7c2d12" text-anchor="middle">universal policy &#183; understand across all spacetime</text>
+
+  <text x="800" y="374" font-size="16" font-weight="700" fill="#c7d2fe" text-anchor="middle">ECOSYSTEMS</text>
+  <text x="800" y="394" font-size="11" fill="#a5b4fc" text-anchor="middle">mid-horizon memory &#183; prune &amp; distill upward</text>
+  <text x="800" y="410" font-size="11" fill="#818cf8" text-anchor="middle">governance loop (EH) &#183; the first application</text>
+
+  <text x="800" y="512" font-size="16" font-weight="700" fill="#a5f3fc" text-anchor="middle">FIELDS</text>
+  <text x="800" y="532" font-size="11" fill="#67e8f9" text-anchor="middle">recent memory, fast &#183; where agents live (CortexObserver)</text>
+
+  <text x="800" y="648" font-size="15" font-weight="700" fill="#e2e8f0" text-anchor="middle">LIVING IDENTITIES</text>
+  <!-- agent dots -->
+  <g fill="#64748b">
+    <circle cx="500" cy="690" r="6"/><circle cx="552" cy="690" r="6"/><circle cx="604" cy="690" r="6"/><circle cx="656" cy="690" r="6"/><circle cx="864" cy="690" r="6"/><circle cx="916" cy="690" r="6"/><circle cx="968" cy="690" r="6"/><circle cx="1020" cy="690" r="6"/><circle cx="1072" cy="690" r="6"/>
+    <circle cx="480" cy="730" r="6"/><circle cx="532" cy="730" r="6"/><circle cx="584" cy="730" r="6"/><circle cx="636" cy="730" r="6"/><circle cx="688" cy="730" r="6"/><circle cx="740" cy="730" r="6"/><circle cx="792" cy="730" r="6"/><circle cx="844" cy="730" r="6"/><circle cx="896" cy="730" r="6"/><circle cx="948" cy="730" r="6"/><circle cx="1000" cy="730" r="6"/><circle cx="1052" cy="730" r="6"/><circle cx="1100" cy="730" r="6"/>
+  </g>
+
+  <!-- identity thread: one immortal identity through every layer -->
+  <line x1="604" y1="690" x2="660" y2="264" stroke="#fde68a" stroke-width="2.6" opacity="0.9"/>
+  <circle cx="604" cy="690" r="7.5" fill="#fbbf24" filter="url(#glow)"/>
+  <circle cx="625" cy="530" r="4.5" fill="#fde68a"/><circle cx="642" cy="400" r="4.5" fill="#fde68a"/><circle cx="659" cy="270" r="4.5" fill="#fde68a"/>
+  <text transform="translate(556,600) rotate(-82)" font-size="11.5" fill="#fcd34d">one identity &#8212; the immortal thread &#183; online &#183; offline &#183; reboot</text>
+
+  <!-- ===== RETRIEVAL callout ===== -->
+  <g>
+    <rect x="1150" y="638" width="396" height="196" rx="14" fill="#140c26" stroke="#4c1d95"/>
+    <text x="1172" y="668" font-size="15" font-weight="700" fill="#e9d5ff">&#8986; RETRIEVAL &#183; the read path</text>
+    <text x="1172" y="688" font-size="11" fill="#a78bfa">any identity retrieves its own &#8212; or, if authorized, across the universe</text>
+    <!-- mini escalation ladder -->
+    <g font-size="10.5">
+      <circle cx="1188" cy="792" r="7" fill="#c084fc"/><text x="1188" y="815" fill="#c4b5fd" text-anchor="middle">agent</text>
+      <line x1="1198" y1="788" x2="1240" y2="770" stroke="#c084fc" stroke-width="1.8" marker-end="url(#ret)"/>
+      <circle cx="1252" cy="766" r="7" fill="#a855f7"/><text x="1252" y="789" fill="#c4b5fd" text-anchor="middle">field</text>
+      <line x1="1262" y1="762" x2="1304" y2="742" stroke="#c084fc" stroke-width="1.8" marker-end="url(#ret)"/>
+      <circle cx="1316" cy="738" r="7" fill="#8b5cf6"/><text x="1316" y="761" fill="#c4b5fd" text-anchor="middle">eco</text>
+      <line x1="1326" y1="734" x2="1368" y2="714" stroke="#c084fc" stroke-width="1.8" marker-end="url(#ret)"/>
+      <circle cx="1382" cy="710" r="8" fill="#fbbf24"/><text x="1382" y="734" fill="#fcd34d" text-anchor="middle">universe</text>
+    </g>
+    <text x="1420" y="762" font-size="10.5" fill="#a78bfa">&#8986; time-budget miss</text>
+    <text x="1420" y="778" font-size="10.5" fill="#a78bfa">&#8594; escalate up a tier</text>
+    <text x="1420" y="800" font-size="10.5" fill="#fcd34d">universe = all spacetime</text>
+    <text x="1172" y="824" font-size="10.5" fill="#86efac">every result: Sourced (identity) + Verified (metadata)</text>
+  </g>
+
+  <!-- caption bar -->
+  <rect x="60" y="1016" width="1480" height="46" rx="10" fill="#0c1226" stroke="#1e293b"/>
+  <text x="800" y="1044" font-size="13.5" fill="#cbd5e1" text-anchor="middle">identity is the thread &#183; memory never fades &#183; the layers <tspan fill="#86efac" font-weight="700">prune</tspan> so only what matters rises &#183; retrieval spans <tspan fill="#c084fc" font-weight="700">all spacetime</tspan> &#8212; Sourced &amp; Verified &#183; <tspan fill="#fcd34d">Security first.</tspan></text>
+</svg>
