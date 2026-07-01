@@ -69,9 +69,12 @@ orreth/
 │   │   └── EH-FRONTEND-the-cross-field-pane.md     ← the EH single-pane sketch (+ image)
 │   ├── design/                ← build-phase design specs (the keystone dives)
 │   │   ├── README.md          ← the dive sequence + index
-│   │   └── 0001-promoted-memory-and-skill-standard.md
-│   └── decisions/             ← locked decisions / ADRs
-│       └── README.md
+│   │   ├── 0001-promoted-memory-and-skill-standard.md
+│   │   └── 0002-living-identity-and-retrieval.md   ← the substrate keystone
+│   ├── decisions/             ← locked decisions / ADRs (made + to-be-made)
+│   │   └── README.md
+│   └── articles/              ← public thought-leadership pieces (LinkedIn)
+│       └── 01-the-amnesiac-genius.md
 └── (backend/ · frontend/ · infrastructure/  — reserved; added when we start building,
     mirroring ecosystem.harness's spec §9 layout)
 ```
