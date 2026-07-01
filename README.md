@@ -19,8 +19,9 @@ cross-agent, authorized). **Governance is its first application, not its purpose
 *lightweight architecture that can be expanded* before we build. The vision is captured; the
 build-phase design specs are being written one keystone at a time (see `docs/design/`).
 
-The brand name **Orreth** is locked. The domain (`orreth.ai` / `.com`) showed no DNS delegation at
-capture time but is **not yet purchased** — confirm at a registrar + a trademark glance before spending.
+The brand name **Orreth** is locked. **`orreth.ai` was registered 2026-07-01 (AWS Route 53)** — the did:web
+trust root (`design/0006`) now has a real anchor. Still open: a trademark glance, and `orreth.com` as an
+optional defensive registration.
 
 ---
 
@@ -49,7 +50,7 @@ are living **Agents**.
 |---|---|---|---|
 | **Universe** (apex + recursive runtime) | **Orreth** | this repo | the recursive Harness runtime; tier = a profile |
 | **Ecosystem** | **ecosystem.harness** (EH) | `../ecosystem.harness` | the governance loop, proven (61 tests, end-to-end). Its engine **lifts** into Orreth as the node core. |
-| **Field** | **CortexObserver** | `../CortexObserver/CortexObserver` | a full CortexObserver per line-of-business — commander, roster, farms, skills, memory |
+| **Field** | **native Orreth** *(reference proof: CortexObserver)* | `../CortexObserver/CortexObserver` (reference) | the leaf Harness where agents live — designed fresh for Orreth. CO proved the pattern (commander, roster, farms, skills, memory) and informs interoperability; it does **not** drive the design |
 | **Agents** | LangGraph · AgentField | (in each Field) | the workforce; DID-identified via becky → NANDA; built or leased |
 
 ---
@@ -66,7 +67,8 @@ orreth/
 │   │   ├── use-cases.md                            ← the same machine, different costumes + "Build My First Universe"
 │   │   ├── the-spacetime-window.md                 ← the apex payoff at its limit: a live cross-section of a world
 │   │   ├── governed-human-oversight.md             ← humans as governed principals: scoped, directional, audited access
-│   │   ├── Orreth-mockup.(png|svg)                 ← companion: the orrery (governance/recursion view)
+│   │   ├── Orreth-mockup.(png|svg)                 ← the orrery (pre-rebaseline · superseded by Orreth-agentic-hierarchy)
+│   │   ├── Orreth-agentic-hierarchy.(png|svg)      ← the staffing view: agents run every layer; humans at the gates
 │   │   ├── FUTURE-the-conductor-and-the-field.md   ← the EH-tier vision (+ image)
 │   │   └── EH-FRONTEND-the-cross-field-pane.md     ← the EH single-pane sketch (+ image)
 │   ├── design/                ← build-phase design specs (the keystone dives)
