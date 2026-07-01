@@ -153,6 +153,11 @@ deliverable is:
 
 That ceiling is exactly why the layers **prune** and skills **crystallize**: they make deep-time reasoning affordable.
 
+> **Taken to its limit → a *live cross-section of a world.*** If every identity records its slice of a given
+> minute, the Universe can reconstruct the complete, verified state of that world at that instant — and navigate to
+> any instant. The apex payoff becomes a **live, navigable, governed window into any moment of spacetime.** Full
+> treatment: **`the-spacetime-window.md`.**
+
 ---
 
 ## The mechanism still recurses — one Harness, `tier` as a property
