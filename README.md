@@ -97,10 +97,11 @@ orreth/
 │   │   └── 0002-living-identity-and-retrieval.md   ← the substrate keystone
 │   ├── decisions/             ← locked decisions / ADRs (made + to-be-made)
 │   │   └── README.md
-│   └── articles/              ← public thought-leadership pieces (LinkedIn)
-│       └── 01-the-amnesiac-genius.md
-└── (backend/ · frontend/ · infrastructure/  — reserved; added when we start building,
-    mirroring ecosystem.harness's spec §9 layout)
+│   └── articles/              ← LinkedIn pieces — local only, kept OUT of git (marketing/feedback iteration)
+├── contracts/                 ← the wire contracts (v0 JSON Schemas — the product of design phase)
+├── backend/
+│   └── conformance/           ← the reference simulator + (soon) the EH-derived fixture suite
+└── (frontend/ · infrastructure/ — reserved; arrive with the pane build and the provisioner)
 ```
 
 **Start here:** `docs/vision/FUTURE-the-orreth.md` is the full vision. `docs/design/` is where
