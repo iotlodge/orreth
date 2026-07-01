@@ -65,6 +65,7 @@ orreth/
 │   │   ├── Orreth-spacetime-memory.(png|svg)       ← the hero: the memory pyramid
 │   │   ├── use-cases.md                            ← the same machine, different costumes + "Build My First Universe"
 │   │   ├── the-spacetime-window.md                 ← the apex payoff at its limit: a live cross-section of a world
+│   │   ├── governed-human-oversight.md             ← humans as governed principals: scoped, directional, audited access
 │   │   ├── Orreth-mockup.(png|svg)                 ← companion: the orrery (governance/recursion view)
 │   │   ├── FUTURE-the-conductor-and-the-field.md   ← the EH-tier vision (+ image)
 │   │   └── EH-FRONTEND-the-cross-field-pane.md     ← the EH single-pane sketch (+ image)

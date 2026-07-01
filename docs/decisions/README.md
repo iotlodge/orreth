@@ -63,6 +63,13 @@ Surfaced by the use cases (`../vision/use-cases.md`). Each becomes a `design/` s
 13. **"Wild vs REAL is a policy dial."** Which policy floors define the tone spectrum, and what's the safe default?
 14. **Provisioning / subscription** — self-serve spin-up of a Universe from a template.
 
+### Open (governance / human oversight — `../vision/governed-human-oversight.md`)
+15. **Human entitlement model.** Humans as principals: entitlement is **scoped** (tier), **directional**
+    (down/within default; up/across granted), and **separated** (read vs control). Confirm the directional +
+    read/control split, and the default (down-and-within only).
+16. **Multi-party authorization for apex actions.** Which actions require ≥2 human co-signs (universe-wide reads,
+    cross-tenant grants, mass policy change, erasure)? Where's the line?
+
 ---
 
 ## ADR convention (for individual decisions once we start logging them)

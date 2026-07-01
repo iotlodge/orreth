@@ -140,6 +140,12 @@ A universe-wide query is the ultimate exfiltration vector. So the read path gets
 - **Tenant isolation holds on read** — one tenant's identities never read another's memory unless a human-gated,
   cross-tenant authorization exists. *Security first — foundational, from the Universe down.*
 
+> **Humans are governed principals too.** A human looking in has an identity + an entitlement that is *scoped*
+> (which tier), *directional* (down/within by default; up and across require explicit grant), and *separated*
+> (read-entitlement vs control-entitlement). Every human action is Sourced + Verified + logged — the watchers are
+> watched, sensitive apex actions need multi-party co-sign, and even the conductor is constrained. Full treatment:
+> **`governed-human-oversight.md`.**
+
 ---
 
 ## The apex payoff — the honest north star
