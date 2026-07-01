@@ -197,24 +197,24 @@ identity, under strict limits:
 
 ---
 
-## 8. Open decisions — your call, JB
+## 8. Decisions — **all locked by JB, 2026-07-01** (recorded in `../decisions/`)
 
-1. **Portfolio derivation.** Is the portfolio an **auto-maintained anonymized projection** of tenant-private memory
-   (governed by an anonymization Standard), or an **owner-curated "resume"** they opt achievements into? *Lean:*
-   auto-projection with per-entry owner opt-out — trustworthy + low-friction — **but** it lives or dies on the
-   anonymization guarantee. (Curated is safer from leaks but gameable.) Which risk do you prefer to carry?
-2. **Default mobility.** `branch-bound` by default (my lean — nothing follows by accident), or `portable` by default
-   (more "it's my agent, my memory")? I strongly lean branch-bound; confirm.
-3. **Universe-wide read authority.** Raw universe-wide reads = conductor + resident analysis agents only. Can a *tenant*
-   ever get a cross-tenant read? *Lean:* only **aggregated, anonymized** cross-tenant *benchmarks* via a governed
-   projection — never raw. Agree that's the line?
-4. **Escalation semantics.** A tier **serves-what-it-has + delegates the deeper-time remainder** (my lean — efficient,
-   matches the cache model), vs all-or-nothing escalate. Confirm partial+delegate.
-5. **Transfer/consent flow.** A `Transfer` is co-signed by both scopes' authorities **and** the identity owner; portable
-   memory follows, branch-bound stays, an access record is written. Enough gates, or do you want the *source* scope to
-   hold a veto (e.g., a team must release a player)?
-6. **Interview footprint.** Does an interview leave a trace on the candidate? *Lean:* a minimal signed access record
-   visible to the **identity's owner** but **not** to future buyers — audit without a chilling effect. OK?
+1. **Portfolio: auto-projection + per-entry owner opt-out**, governed by an anonymization Standard. Defensible
+   because the interview sandbox carries a **query budget + noised aggregates** (adaptive-query defense, per the
+   2026-07-01 review).
+2. **Mobility: `branch-bound` by default.** Nothing follows an identity unless explicitly marked portable;
+   skills travel by nature (cascaded Standards, not memory).
+3. **Cross-tenant line: anonymized benchmarks only.** Collective reads *up the ancestor chain* are a core,
+   capability-gated right for authorized agents. **Sibling** tenant-private memory is never readable raw by a
+   sibling — only governed, anonymized aggregates computed at the common parent. Raw universe-wide reads remain
+   conductor + resident analysis agents (2 human co-signs, per 0006).
+4. **Escalation: serve-what-you-have + delegate the deeper-time remainder.** Cross-tier merge/dedup/ordering
+   semantics to be pinned in this spec's amendments.
+5. **Transfer: source veto, overridable by a common ancestor** as a governed, signed action — a team must
+   release a player; the league can compel under its rules; the override is on the record. Co-signs remain:
+   both authorities + the identity owner.
+6. **Interview footprint: owner-visible, buyer-invisible.** A minimal signed access record the identity's owner
+   sees; future buyers never do — audit without market chill.
 
 ---
 

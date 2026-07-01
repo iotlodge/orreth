@@ -225,24 +225,18 @@ same number, measured once.
 
 ---
 
-## 8. Open decisions — your call, JB
+## 8. Decisions — **locked by JB, 2026-07-01** (recorded in `../decisions/`; one deferral)
 
-1. **Skill vs Memory split — one table or two?** I lean: **one store, one `MemoryRecord` lineage**, with
-   `SkillStandard` as a typed view/extension (skills are queryable as the procedural memories they are).
-   Simpler, and it makes "promote a memory into a skill" a state transition, not a copy. Agree?
-2. **Rubric authority.** Who may *write/edit* an acceptance rubric? I lean: **resident governance agents
-   + humans only** (a rubric is a floor-shaped artifact; letting workforce agents grade their own work is
-   the fox guarding the henhouse). Registered agents can *propose* a rubric; a resident/human ratifies it.
-3. **Confidence statistic.** Shape is locked (count-weighted, not bare average). Exact model — Wilson
-   interval? Beta-Bernoulli posterior? simple count-weighted mean + n? — I'd **defer to 0004 (Run Record)**
-   and pick per-objective. OK to defer?
-4. **`model_judge` cost governance.** Model-judged dimensions cost real tokens at fleet scale. Cap them via
-   the Objective Model (a budget dimension), or sample (grade 1-in-N)? I lean **sample-by-default, full-grade
-   on canary**. Your appetite?
-5. **Scaffold portability across model families.** A scaffold captured from one teacher (say, Opus) may not
-   transfer cleanly to a different cheap family. Do we tag scaffolds with a **compatible-model-family set**
-   and refuse to bind outside it (safe), or allow-and-measure (flexible, riskier)? I lean **tag + measure on
-   canary, refuse only if canary fails the floor.**
+1. **One store, one `MemoryRecord` lineage.** `SkillStandard` is a typed view/extension; "promote a memory
+   into a skill" is a state transition, never a copy — provenance never forks.
+2. **Rubric authority: workforce proposes, residents/humans ratify.** A rubric grades nothing until a
+   resident or human signs it. The fox never guards the henhouse; its expertise still gets used.
+3. **Confidence statistic — deferred to `0005` (Run Record & roll-up)**, picked per-objective there. Shape
+   remains locked: count-weighted, never a bare average.
+4. **`model_judge` cost: sample steady-state (1-in-N, a Tier Profile dial), full-grade on canary.**
+   Promotion bars are measured, not estimated.
+5. **Scaffold portability: compatible-family tag + canary measurement; block only on hard-floor fail.**
+   Soft drift goes to the Objective Model to arbitrate the cost-vs-quality trade.
 
 ---
 

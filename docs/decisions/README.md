@@ -35,27 +35,109 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
   governance/pruning *policy* stays ours; vendor / pin / review.
 - **Memory records** = append-only + content-addressed + DID-signed; promoted-up-as-pointers; **governed-tombstone erasure**.
 
+### Locked 2026-07-01 (the structure dive, `design/0000`)
+- **becky is an IAM *agent*** — resident (TCB), the identity issuer root→leaf and the agentic half of every
+  promotion gate. becky is never a human; humans are separate governed principals who appear only at the gates.
+- **Every layer is staffed by resident agents** (steward, governance, analysis, becky). The hierarchy runs
+  entirely agentically; humans conduct at the gates, they do not operate the layers.
+- **CortexObserver is a reference, not a component.** The Field tier is **native Orreth**. CO proved the pattern
+  and taught interoperability (humans using NLP to engineer complex LangGraph agent graphs); it may join via an
+  optional adapter, but it never drives Orreth's design. Orreth's layouts and usability are designed fresh
+  (Fable owns design/UX/build; JB owns vision/objectives).
+- **The Field is native Orreth's only special node** — where governance meets a life; children are Agents.
+
+### Locked 2026-07-01 (pruning pre-decisions, JB's calls — drive `design/0003`)
+- **Pruning brain = hybrid.** Deterministic policy **floors** keep the non-negotiables (failures, floor-breaches,
+  outliers); the resident **steward** distills the rest under a governed rubric, within budgets.
+- **Apex fidelity = distilled + signed pointers.** The Universe holds distillations plus signed pointers to raw
+  retained below per retention dial; deep queries re-fetch surviving raw. Expired raw resolves to a tombstone-stub —
+  results say so honestly.
+- **Tombstones: annotate, don't rewrite.** A consent tombstone purges raw; derived aggregates *stand*, carrying a
+  signed redaction marker in their `derived_from` chain. History never silently changes.
+- **Dive order: 0003 (pruning) → 0006 (becky) → interop/UX** (NLP-driven agent-graph engineering + the pane).
+- **QA sample: yes, per-tier dial.** Sealed 1-in-N raw survives past horizon purely to measure distillation
+  loss; distillation quality is a measured, driftable objective.
+- **Budget exhaustion: degrade to floors + flag.** Floors never stop, nothing is dropped, surges distill
+  coarsely with an honest "coarse window" marker. The steward never backpressures the workforce.
+- **Distillation timing: cadence + event triggers.** Predictable base cost; novelty/cohort spikes fire extra passes.
+- **becky's trust root (anchors 0006): did:web universe roots + did:key leaves.** Universe roots anchored under
+  `orreth.ai` (KMS/HSM-held, multi-party rotation); agents get cheap did:key identities chained to the root.
+  Self-hosted / air-gapped universes use a pinned root distributed out-of-band — a policy dial, not a fork.
+
+### Locked 2026-07-01 (0006 close-out)
+- **Capability tokens are biscuit-style** — the delegation chain travels in the token; attenuation and
+  verification are fully offline; no introspection callbacks in the trust path.
+- **Apex co-signs: 2 humans; root rotation: 3.** Urgent apex acts stay workable at 3 a.m.; the root of the
+  trust fabric — scheduled, never urgent — survives a compromised pair.
+- **Token TTLs are Tier Profile dials** (0004) — starting values workforce 24h · resident 30d · session keys
+  per-session. Shape locked in 0006; numbers are policy.
+
+### Locked 2026-07-01 (interop/UX pre-decisions — drive the 0008 dive)
+- **Authoring is dual-mode, equal weight** — JB's call: English and canvas are both first-class surfaces.
+  Tractable because of the next lock: both are *projections of one IR* — there is no text↔canvas sync
+  problem, only two renderers of one artifact.
+- **NLP authoring produces Orreth GraphSpec** — a governed, versionable, diffable intermediate representation,
+  policy-checkable before anything runs. LangGraph is the first compile target (via AgentSurface); any SDK can
+  be a target. Governance, canary, and the pane speak GraphSpec, never SDK internals.
+- **Graph changes ship via the lane-routed Standards flow** — low-risk/high-confidence → auto-apply lane
+  (signed, canaried, revertible); the rest → governed lane with a human gate. One mechanism, no new machinery.
+- **v1 hero = the Field commander pane.** The **Universe spacetime window** is the declared north star —
+  concept-designed in parallel (a live window assembled from operating state; likely the revolutionary
+  screen), built once the field pane proves the design language.
+
+### Locked 2026-07-01 (0000 close-out — the build gates)
+- **Contracts: JSON Schema now → protobuf at Rust-time** (JSON Schema stays as documentation).
+- **Simulator-first: yes** — a throwaway Python sim proves the contracts + three flows before Rust begins.
+- **Domain: reserve now** — ✅ **done: `orreth.ai` registered 2026-07-01 by JB (AWS Route 53).** becky's
+  did:web roots have a real anchor. Remaining: trademark glance; `orreth.com` optional defensive.
+- **Dive order blessed**: 0002-amendments → **0008 (pane & GraphSpec, next)** → 0004 → 0005 → 0010 → 0011 →
+  0012 → 0007 → 0009. (0000, 0001, 0003, 0006 closed.)
+
+### Locked 2026-07-01 (0002 close-out, part 1)
+- **Portfolio: auto-projection + per-entry owner opt-out**, governed by an anonymization Standard — defensible
+  because the interview sandbox carries a query budget + noised aggregates.
+- **Memory mobility: branch-bound by default.** Nothing follows an identity unless explicitly marked portable;
+  skills travel by nature (they're cascaded Standards, not memory).
+- **Escalation: serve-what-you-have + delegate the deeper-time remainder** — the L1→L2→L3 model, with
+  cross-tier merge/dedup semantics owed by the 0002 amendments.
+- *(Cross-agent collective reads confirmed as core design — an authorized agent reads ecosystem/universe
+  records subject to visibility. The sibling question was distinct, and is locked below.)*
+
+### Locked 2026-07-01 (0002 close-out, part 2)
+- **Sibling walls: anonymized benchmarks only.** Sibling tenant-private memory is never readable raw by a
+  sibling; governed, anonymized, aggregated projections (computed at the common parent) may flow. Raw
+  whole-universe reads remain conductor + resident analysis agents (2 co-signs). *Collective reads up the
+  ancestor chain remain a core, capability-gated right.*
+- **Transfer: source veto, overridable by a common ancestor** as a governed, signed action. A team must
+  release a player; the league can compel under its rules; every override is on the record.
+- **Interview footprint: owner-visible, buyer-invisible.** Every interview writes a minimal signed access
+  record the identity's owner can see; future buyers cannot — audit without market chill.
+
+### Locked 2026-07-01 (0001 close-out)
+- **One store.** Skills are typed views of promoted procedural memories — one `MemoryRecord` lineage;
+  promotion is a state transition, never a copy; provenance never forks.
+- **Rubric authority: workforce proposes, residents/humans ratify.** No agent grades its own yardstick.
+- **`model_judge` cost: sample steady-state (1-in-N, a Tier Profile dial); full-grade every canary.**
+  Promotion decisions never rest on a sample.
+- **Scaffold portability: compatible-family tag + canary measurement; block only on hard-floor fail.**
+  Soft drift is measured and arbitrated by the Objective Model, not guessed.
+
 ---
 
-## 🟡 Open — to be made (drives the substrate keystone dive)
+## ✅ Discharged 2026-07-01 — the six use-case requirements
 
-Surfaced by the use cases (`../vision/use-cases.md`). Each becomes a `design/` spec, then locks up here.
+Surfaced by the use cases (`../vision/use-cases.md`); discharged by `design/0002` (schemas) and now locked as
+decisions: **identity lineage** (archetype → incarnation; shared skills, isolated memory) · **mobility**
+(branch-bound by default; portable by explicit marking) · **cross-branch authorization** (collective reads up
+the chain are capability-gated rights; sibling walls = anonymized benchmarks only) · **portfolio/interview**
+(auto-projection + owner opt-out; query-budgeted sandbox; owner-visible footprint) · **retention/consent**
+(governed tombstone; derived memories annotate, never rewrite) · **Sourced + Verified** (first-class,
+including derived-memory chain verification).
 
-1. **Identity lineage — archetype → incarnation.** One template identity, many scoped incarnations; **shared skills,
-   isolated memory.** *(game's N lives · "same function across LOBs" · a traded player)*
-2. **Memory portability scope — `portable | branch-bound`.** What memory travels when an identity moves branches. *(trade, reorg, new life)*
-3. **Cross-branch / cross-tenant retrieval authorization.** Who may read across ecosystems (the conductor: yes; a rival: no). *(compare-my-lives · scout-the-league · benchmark-all-LOBs)*
-4. **Showcase / portfolio scope vs tenant-private memory.** The **interview-before-you-buy** mechanism: an identity's
-   public, Sourced+Verified portfolio (interviewable) vs its walled tenant-private memory. *(Build My First Universe)*
-5. **Retention / governed-tombstone erasure + consent as a foundational floor.** *(healthcare, GDPR)*
-6. **Sourced + Verified as a first-class audit property.** *(finance, science, supply chain)*
+## 🟡 Open — remaining
 
-### Open (carried from `design/0001`, to lock during the keystone dive)
-7. **One store or two** for skills vs memories? *(lean: one `MemoryRecord` lineage, skills as a typed view)*
-8. **Who may author an acceptance rubric?** *(lean: resident/human only; workforce agents may propose, not ratify)*
-9. **Confidence statistic** — exact model *(lean: defer to the Run Record dive)*
-10. **`model_judge` cost** at fleet scale *(lean: sample-by-default, full-grade on canary)*
-11. **Scaffold portability across model families** *(lean: tag + measure on canary, refuse only if the floor fails)*
+### Open (carried from `design/0001`)
+7. **Confidence statistic** — exact model *(lean: defer to the Run Record dive, `0005`)*
 
 ### Open (product / GTM — "Build My First Universe")
 12. **Universe templates** = a Tier Profile + starter bundle (Standards, skill archetypes, agent-template roster,
@@ -63,12 +145,11 @@ Surfaced by the use cases (`../vision/use-cases.md`). Each becomes a `design/` s
 13. **"Wild vs REAL is a policy dial."** Which policy floors define the tone spectrum, and what's the safe default?
 14. **Provisioning / subscription** — self-serve spin-up of a Universe from a template.
 
-### Open (governance / human oversight — `../vision/governed-human-oversight.md`)
-15. **Human entitlement model.** Humans as principals: entitlement is **scoped** (tier), **directional**
-    (down/within default; up/across granted), and **separated** (read vs control). Confirm the directional +
-    read/control split, and the default (down-and-within only).
-16. **Multi-party authorization for apex actions.** Which actions require ≥2 human co-signs (universe-wide reads,
-    cross-tenant grants, mass policy change, erasure)? Where's the line?
+### ✅ Governance / human oversight — locked 2026-07-01
+15. **Human entitlement model locked:** down/within by default; up and across by explicit, logged grant;
+    read-entitlement and control-entitlement never conflate.
+16. **Multi-party apex authorization locked (via 0006):** 2 human co-signs for universe-wide raw reads,
+    cross-tenant grants, and erasure; **3** for trust-root rotation.
 
 ---
 
