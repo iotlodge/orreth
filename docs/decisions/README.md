@@ -225,6 +225,23 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
 - *Mechanism landed same day: `resolved-context.schema.json`, `run-record.context_hash`, simulator
   `resolver.py`: 32/32 tests (incl. reverse-declaration-order ⇒ identical hash).*
 
+### Locked 2026-07-02 (0009 close-out — the design phase's last three)
+- **Templates (#12): League · Second Brain · Company** — one per funnel stage (play / keep / buy). Game folds
+  into League; Lab waits honestly behind the regulated tier, whose quorum (0012 — bars absolute) doesn't exist
+  yet: a greyed-out template is the lock made visible.
+- **Tone (#13): blank universes default REAL; templates override.** Wild is a visible choice, never an
+  accident — and **the dial modulates rigor (signal capture, judge sampling, retention classes), never
+  safety: platform floors are identical at both ends** (tested — a wild League and a REAL Second Brain
+  resolve to equal floor sets).
+- **Subscription (#14): fuel + hibernation + BYO-key.** Free = a one-time fuel allotment (worst-case cost per
+  signup is a constant the operator sets — metered marketing, not a bleed). Out of fuel or idle ⇒
+  **hibernate, never delete**: agents pause, the read-only window stays watchable — *your universe never
+  dies; it dreams only when fueled.* Wake by subscription or bring-your-own model key (the hobbyist pays
+  their own LLM bill and stays a zero-cost evangelist). Anonymous-tier caps bound every free universe: the
+  safety architecture IS the free-tier economics.
+- *Mechanism landed same day: `universe-template.schema.json`, simulator `provisioner.py` (provision ·
+  hibernate · the three templates as validated data): 36/36 tests.*
+
 ### Locked 2026-07-01 (interop/UX pre-decisions — drive the 0008 dive)
 - **Authoring is dual-mode, equal weight** — JB's call: English and canvas are both first-class surfaces.
   Tractable because of the next lock: both are *projections of one IR* — there is no text↔canvas sync
@@ -287,7 +304,10 @@ the chain are capability-gated rights; sibling walls = anonymized benchmarks onl
 (governed tombstone; derived memories annotate, never rewrite) · **Sourced + Verified** (first-class,
 including derived-memory chain verification).
 
-## 🟡 Open — remaining
+## ✅ Open — **none. The ledger closed 2026-07-02.**
+
+> Every question this ledger ever carried has been answered and locked by JB. The design phase (0000–0013)
+> is complete; new questions belong to the build phase and will be logged here as they arise.
 
 ### ✅ Trust & safety (`0013`) — nothing open
 21. ~~The Warden's name~~ — **christened `vigil` by JB, 2026-07-02.** 0013 has no remaining open items.
@@ -295,11 +315,10 @@ including derived-memory chain verification).
 ### ✅ Carried from `design/0001` — discharged
 7. ~~Confidence statistic~~ — **locked 2026-07-02 in the 0005 close-out: Bayesian posterior** (see above).
 
-### Open (product / GTM — "Build My First Universe")
-12. **Universe templates** = a Tier Profile + starter bundle (Standards, skill archetypes, agent-template roster,
-    retention config, policy floors). What's in the first templates (Company / League / Game / Lab / Second Brain)?
-13. **"Wild vs REAL is a policy dial."** Which policy floors define the tone spectrum, and what's the safe default?
-14. **Provisioning / subscription** — self-serve spin-up of a Universe from a template.
+### ✅ Product / GTM ("Build My First Universe") — discharged in the 0009 close-out
+12. ~~Universe templates~~ — **League · Second Brain · Company, locked 2026-07-02.**
+13. ~~Wild vs REAL~~ — **default REAL, templates override; rigor never safety, locked 2026-07-02.**
+14. ~~Provisioning / subscription~~ — **fuel + hibernation + BYO-key, locked 2026-07-02.**
 
 ### ✅ Governance / human oversight — locked 2026-07-01
 15. **Human entitlement model locked:** down/within by default; up and across by explicit, logged grant;

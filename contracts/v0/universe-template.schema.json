@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/universe-template.schema.json",
+  "title": "UniverseTemplate",
+  "description": "A universe as data, not code (0000 §6, 0009): a pre-authored chain for the resolver to fold (0007), a roster of StampOrders (0011), profiles with a clock (0004). The provisioner renders it into a running universe — same artifact for compose (dev) and CDK (cloud). Locked 2026-07-02: first templates League · Second Brain · Company; tone defaults REAL, templates override; wild-vs-REAL modulates RIGOR, never safety — platform floors are identical at both ends.",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" },
+    "version": { "$ref": "common.schema.json#/$defs/SemVer" },
+    "description": { "type": "string" },
+    "trust_tier_required": {
+      "enum": ["anonymous", "verified", "regulated"],
+      "description": "The 0013 §8 door: a template above the requester's tier refuses to render. A 'regulated' template is structurally unavailable until the Custodian org can meet its quorums (0012 — bars are absolute)."
+    },
+    "tone": { "enum": ["wild", "REAL"], "description": "The template's own dial position (blank universes default REAL, locked 2026-07-02). Modulates signal_capture, judge sampling, retention classes — NEVER the platform floors." },
+    "clock_mode": { "enum": ["wall", "declared"], "description": "declared ⇒ an accelerated universe (the League simulates seasons overnight, 0004 §1)." },
+    "topology": {
+      "type": "object",
+      "properties": {
+        "ecosystems": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "fields": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+            },
+            "required": ["name", "fields"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["ecosystems"],
+      "additionalProperties": false
+    },
+    "profile_dials": {
+      "type": "object",
+      "description": "TierProfile fragments per tier — the provisioner completes scope/trust_root/signature at render time and validates the result against tier-profile.schema.json. Anonymous-tier renders CLAMP stamp_quota and budgets to the platform caps (0013 §8) — the safety architecture is the free-tier economics.",
+      "additionalProperties": { "type": "object", "additionalProperties": true }
+    },
+    "floors": { "type": "array", "items": { "type": "object", "additionalProperties": true }, "description": "Starter policy floors — published at the universe on render, cascaded from breath one." },
+    "soft": { "type": "object", "additionalProperties": true, "description": "The tone made concrete — soft standards seeded at the apex (most-specific-wins thereafter)." },
+    "skills": { "type": "object", "additionalProperties": { "$ref": "common.schema.json#/$defs/SemVer" } },
+    "roster": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "archetype": { "type": "string", "description": "Archetype name — issued at the universe, stamped into fields (0011)." },
+          "per_field": { "type": "integer", "minimum": 1 },
+          "generation": { "type": "string" },
+          "budget_tokens": { "type": "integer", "minimum": 0 },
+          "probation_runs": { "type": "integer", "minimum": 0 }
+        },
+        "required": ["archetype", "per_field", "generation"],
+        "additionalProperties": false
+      }
+    },
+    "fuel": {
+      "type": "object",
+      "description": "Locked 2026-07-02 (#14): charge by fuel, not by time. One-time free allotment; out of fuel ⇒ HIBERNATE, never delete — the window stays watchable, agents pause ('it dreams only when fueled'); wake by subscription or bring-your-own model key; idle ⇒ hibernate regardless.",
+      "properties": {
+        "allotment_tokens": { "type": "integer", "minimum": 0 },
+        "idle_hibernate": { "$ref": "common.schema.json#/$defs/Duration" },
+        "byo_key_allowed": { "type": "boolean", "default": true }
+      },
+      "required": ["allotment_tokens", "idle_hibernate"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["name", "version", "trust_tier_required", "tone", "clock_mode", "topology", "profile_dials", "roster", "fuel"],
+  "additionalProperties": false
+}

@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from orreth_sim import crypto, factory, hitl, resolver, rollup
+from orreth_sim import crypto, factory, hitl, provisioner, resolver, rollup
 from orreth_sim.agent_surface import BudgetExceeded, join_workforce
 from orreth_sim.identity import AuthzError, tenant_of
 from orreth_sim.node import ClockViolation, FloorViolation, Refusal, make_memory
@@ -540,6 +540,62 @@ def test_runs_pin_the_context_they_ran_under(world):
     run["context_hash"] = rc["id"]
     rid = world.field_prod.record_run(run)
     assert world.field_prod.runs[rid]["context_hash"] == rc["id"]
+
+
+# ---------------------------------------------------------------- 0009: build my first universe
+def test_league_provisions_opening_day():
+    """The funnel's Play step, end to end: pick League, name it, and a world exists."""
+    prov = provisioner.provision(provisioner.league_template(), "myleague")
+    assert prov.universe.scope == "u:myleague"
+    assert set(prov.fields) == {"team-a", "team-b"}
+    assert all(len(r) == 3 for r in prov.surfaces.values())        # a draft class per team
+    assert prov.fields["team-a"].profile["clock"]["mode"] == "declared"   # accelerated seasons
+    rookie = prov.surfaces["team-a"][0]
+    rid = rookie.write({"game": "opening day"})
+    assert rid in prov.fields["team-a"].records                    # the world is alive
+    rc = resolver.resolve(prov.fields["team-a"])
+    assert rc["soft"]["tone"]["value"] == "wild"                   # the template's tone, resolved
+    # anonymous tier: caps clamp regardless of what the template asked for
+    assert prov.fields["team-a"].profile["stamp_quota"] <= provisioner.ANON_CAPS["stamp_quota"]
+    assert rookie.budget_left <= provisioner.ANON_CAPS["budget_tokens"]
+
+
+def test_wild_and_real_differ_in_rigor_never_safety():
+    """Locked 2026-07-02: the tone dial modulates observability; the floors are identical."""
+    league = provisioner.provision(provisioner.league_template(), "l1")
+    brain = provisioner.provision(provisioner.second_brain_template(), "b1")
+    l_field, b_field = league.fields["team-a"], brain.fields["desk"]
+    l_rc, b_rc = resolver.resolve(l_field), resolver.resolve(b_field)
+    assert l_rc["floors"] == b_rc["floors"]                        # safety: identical, both ends
+    assert l_rc["soft"]["tone"]["value"] != b_rc["soft"]["tone"]["value"]
+    assert l_field.profile["signal_capture"] == "none"             # wild: chatter evaporates
+    assert b_field.profile["signal_capture"] == "full"             # REAL: everything remembers
+    assert b_field.profile["model_gateway"]["judge_sample_rate"] > \
+        l_field.profile["model_gateway"]["judge_sample_rate"]      # REAL watches harder
+
+
+def test_trust_tier_gates_the_template_door():
+    """0013 §8 at the provisioner: Company requires verified; anonymous is refused at the door."""
+    with pytest.raises(provisioner.TrustTierError):
+        provisioner.provision(provisioner.company_template(), "acme")
+    acme = provisioner.provision(provisioner.company_template(), "acme", trust_tier="verified")
+    assert set(acme.fields) == {"finance", "delivery"}
+
+
+def test_hibernation_pauses_the_dream_never_the_memory():
+    """Locked 2026-07-02 (#14): out of fuel ⇒ agents pause, the window stays watchable, nothing dies."""
+    prov = provisioner.provision(provisioner.league_template(), "sleepy")
+    rookie = prov.surfaces["team-a"][0]
+    rid = rookie.write({"season": "one great year"})
+    rookie.call_model("nano", 10)                                  # alive: the dream runs
+    prov.hibernate()
+    with pytest.raises(BudgetExceeded):
+        rookie.call_model("nano", 10)                              # asleep: it dreams only when fueled
+    q = {"requester": rookie.identity["did"], "subject": "self", "space": "self",
+         "time": {"from": iso(1)}, "intent": "recall", "budget": {"cost": 2}, "auth": "biscuit-sim"}
+    res = rookie.retrieve(q)
+    assert any(h["ref"] == rid for h in res["hits"])               # the window stays watchable
+    assert rid in prov.fields["team-a"].records                    # and nothing died
 
 
 # ---------------------------------------------------------------- tombstones
