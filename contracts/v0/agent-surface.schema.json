@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/agent-surface.schema.json",
+  "title": "AgentSurface",
+  "description": "The SDK-neutral interoperability contract (0000 §4, 0010 §3) — the ONLY handle a workforce agent holds. Five verbs: write memory, retrieve, receive skill bindings, call models via the layer's Model Gateway, signal. GraphSpec (0008) compiles onto this surface; 'a field can be doing anything' stays true because the surface, not the SDK, is what governance sees.",
+  "type": "object",
+  "properties": {
+    "surface_version": { "$ref": "common.schema.json#/$defs/SemVer" },
+    "identity": { "$ref": "common.schema.json#/$defs/DID", "description": "The leased, becky-issued identity this surface is bound to." },
+    "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+    "ops": {
+      "type": "array",
+      "items": { "enum": ["write", "retrieve", "standards", "call_model", "signal"] },
+      "minItems": 1,
+      "description": "Which verbs this lease grants — attenuation applies to the surface too."
+    }
+  },
+  "required": ["surface_version", "identity", "scope", "ops"],
+  "additionalProperties": false,
+  "$defs": {
+    "ModelCall": {
+      "type": "object",
+      "description": "A request at the Model Gateway (0000 §2 — no agent calls a model ungoverned). The per-identity budget rides the lease token's constraints.budget (0006 §3).",
+      "properties": {
+        "caller": { "$ref": "common.schema.json#/$defs/DID" },
+        "requested_tier": { "type": "string" },
+        "tokens": { "type": "integer", "minimum": 0 },
+        "pinned": { "type": "boolean", "default": false, "description": "true ⇒ a SkillStandard.model_tier pin — a floor. Locked 2026-07-02: pinned calls FAIL honestly when unaffordable; they never silently degrade." },
+        "skill_ref": { "$ref": "common.schema.json#/$defs/StandardRef" }
+      },
+      "required": ["caller", "requested_tier", "tokens"],
+      "additionalProperties": false
+    },
+    "ModelCallResult": {
+      "type": "object",
+      "description": "Locked 2026-07-02: degrade-where-pins-allow. A degraded call is honestly flagged — drift/canary can tell budget-dips from skill rot.",
+      "properties": {
+        "served_tier": { "type": "string" },
+        "requested_tier": { "type": "string" },
+        "degraded": { "type": "boolean" },
+        "charged": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["served_tier", "requested_tier", "degraded", "charged"],
+      "additionalProperties": false
+    },
+    "Signal": {
+      "type": "object",
+      "description": "Intra-field transport (0010 §1). Locked 2026-07-02: signals are transport by default; anything state-changing MUST land as a MemoryRecord to have happened — 'if it's not memory, it didn't happen.' The Tier Profile signal_capture dial (none | state-changing | full) is the first concrete member of wild-vs-REAL.",
+      "properties": {
+        "from": { "$ref": "common.schema.json#/$defs/DID" },
+        "to": { "$ref": "common.schema.json#/$defs/DID" },
+        "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+        "payload_class": { "enum": ["chatter", "state-changing"] },
+        "occurred_at": { "$ref": "common.schema.json#/$defs/UniverseTime" },
+        "body": { "type": "object", "additionalProperties": true }
+      },
+      "required": ["from", "to", "scope", "payload_class", "occurred_at"],
+      "additionalProperties": false
+    }
+  }
+}

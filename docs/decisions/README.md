@@ -172,6 +172,18 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
   `rollup.py` + `record_run`/`roll_up` (push-up, pointers only — raw runs never travel), 5 new tests incl. the
   monoid one-truth law and a League-standings tree roll-up: 17/17.*
 
+### Locked 2026-07-02 (0010 close-out — the doors)
+- **Model budget exhaustion: degrade where pins allow.** A squeezed call routes to a cheaper tier with an
+  honest `degraded` flag (drift/canary can tell budget-dips from skill rot); a **pinned `model_tier` is a
+  floor** — unaffordable pinned calls fail honestly, never silently dumber. Same shape as the steward's
+  degrade-to-floors-and-flag: Orreth degrades loudly or not at all.
+- **Signals: Tier Profile dial (`none | state-changing | full`), default state-changing.** Signals are
+  transport; a state-change **must land as a MemoryRecord to have happened** — "if it's not memory, it didn't
+  happen." `full` for REAL/regulated universes (the first concrete wild-vs-REAL dial); vigil sees volume/shape
+  as metadata regardless of the dial.
+- *Mechanism landed same day: `agent-surface.schema.json` (five verbs + ModelCall/Signal), the `signal_capture`
+  dial, simulator `agent_surface.py` (ModelGateway · AgentSurface · join_workforce): 20/20 tests.*
+
 ### Locked 2026-07-01 (interop/UX pre-decisions — drive the 0008 dive)
 - **Authoring is dual-mode, equal weight** — JB's call: English and canvas are both first-class surfaces.
   Tractable because of the next lock: both are *projections of one IR* — there is no text↔canvas sync

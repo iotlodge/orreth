@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from orreth_sim import crypto, rollup
+from orreth_sim.agent_surface import BudgetExceeded, join_workforce
 from orreth_sim.identity import AuthzError, tenant_of
 from orreth_sim.node import ClockViolation, FloorViolation, Refusal, make_memory
 from orreth_sim.world import build
@@ -311,6 +312,50 @@ def test_self_asserted_evaluation_rejected(world):
                        ("id", "agent", "scope", "goal_hash", "occurred_at")})
     with pytest.raises(AuthzError):
         world.field_prod.record_run(r)
+
+
+# ---------------------------------------------------------------- 0010: the gateway & the surface
+def test_workforce_joins_and_holds_only_the_surface(world):
+    """Any-SDK agent presents at the Gateway → leased identity + budgeted token + the surface."""
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    surf = join_workforce(world.field_prod, b_prod, budget_tokens=5000)
+    rid = surf.write({"observation": "joined and working"})
+    assert rid in world.field_prod.records                     # the write landed, governed
+    q = {"requester": surf.identity["did"], "subject": "self", "space": "self",
+         "time": {"from": iso(1)}, "intent": "recall", "budget": {"cost": 2}, "auth": "biscuit-sim"}
+    res = surf.retrieve(q)
+    assert any(h["ref"] == rid for h in res["hits"])           # and reads back under the lease
+
+
+def test_model_calls_degrade_where_pins_allow(world):
+    """Locked 2026-07-02: budget dips degrade WITH a flag; a pinned tier fails honestly."""
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    rich = join_workforce(world.field_prod, b_prod, budget_tokens=10_000)
+    assert rich.call_model("premium", 100)["degraded"] is False
+    poor = join_workforce(world.field_prod, b_prod, budget_tokens=500)
+    r = poor.call_model("premium", 100)                        # premium costs 2000 — unaffordable
+    assert r["served_tier"] == "standard" and r["degraded"] is True   # honest downgrade
+    r2 = poor.call_model("standard", 100)                      # 400 > 100 left — degrades again
+    assert r2["served_tier"] == "nano" and r2["degraded"] is True
+    with pytest.raises(BudgetExceeded):
+        poor.call_model("nano", 10, pinned=True)               # a pin is a floor: never silently dumber
+    # every call — served or refused — is on the gateway log: vigil's tap, content-blind
+    gw = world.field_prod.model_gateway
+    assert len(gw.call_log) == 4 and all("caller" in e for e in gw.call_log)
+
+
+def test_signals_are_transport_unless_state_changing(world):
+    """Locked 2026-07-02: 'if it's not memory, it didn't happen' — the dial's default."""
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    a, b = (join_workforce(world.field_prod, b_prod) for _ in range(2))
+    before = len(world.field_prod.records)
+    assert a.signal(b, {"chat": "how's the weather in season 3?"}) is None
+    assert b.inbox and len(world.field_prod.records) == before          # delivered, not remembered
+    rid = a.signal(b, {"handoff": "ticket-42 is yours"}, state_changing=True)
+    assert rid in world.field_prod.records                              # a state-change HAPPENED
+    assert world.field_prod.signal_count == 2                           # vigil saw both shapes
+    world.field_prod.profile["signal_capture"] = "full"                 # the REAL/regulated dial
+    assert a.signal(b, {"chat": "recorded now"}) is not None            # full capture keeps chatter too
 
 
 # ---------------------------------------------------------------- tombstones

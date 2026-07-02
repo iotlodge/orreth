@@ -122,6 +122,11 @@
       "required": ["judge_sample_rate", "routing"],
       "additionalProperties": false
     },
+    "signal_capture": {
+      "enum": ["none", "state-changing", "full"],
+      "default": "state-changing",
+      "description": "What intra-field signals persist as memory (0010 §1, locked 2026-07-02): transport by default, state-changes always land, 'full' for REAL/regulated universes. The first concrete wild-vs-REAL dial. vigil sees signal volume/shape as metadata regardless."
+    },
     "join_default": {
       "enum": ["fully-joined", "floors-only", "observe-only", "decoupled"],
       "description": "The join spectrum default for children (floors compelled for the joined)."

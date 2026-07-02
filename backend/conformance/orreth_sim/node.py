@@ -10,6 +10,7 @@ import re
 from datetime import datetime
 
 from . import crypto, rollup
+from .agent_surface import ModelGateway
 from .identity import AuthzError, Becky, Nanda, NOW, is_within, tenant_of
 from .schemas import validate
 
@@ -66,6 +67,8 @@ class HarnessNode:
         self.high_water: str | None = None          # the scope's universe-time frontier (0004 §1)
         self.runs: dict[str, dict] = {}             # ContentHash -> RunRecord (0005)
         self.child_rollups: list[dict] = []         # RollUps pushed up by children
+        self.model_gateway = ModelGateway()         # the governed door to models (0010)
+        self.signal_count = 0                       # vigil's tap: signal volume, content-blind
         self._bundle: dict | None = None            # what children PULL
         # a layer is born with its staff (0006 §2): the steward exists before any workforce
         self.steward, self.steward_kp = becky.issue_identity(
