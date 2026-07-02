@@ -122,6 +122,11 @@
       "required": ["judge_sample_rate", "routing"],
       "additionalProperties": false
     },
+    "stamp_quota": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Max live incarnations stamped into this scope (0011). Where 0013 §8's trust-tier hard scale caps become mechanical — a self-serve anonymous universe gets a small number; verified tiers raise it. Absent ⇒ no cap (self-hosted / fully verified)."
+    },
     "signal_capture": {
       "enum": ["none", "state-changing", "full"],
       "default": "state-changing",

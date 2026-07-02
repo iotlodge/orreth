@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/factory.schema.json",
+  "title": "StampOrder",
+  "description": "The Factory contract (0011) — archetype → incarnation stamping at scale, governed. CO's farms generalized. Every stamped incarnation walks through the Gateway (0010): leased, budgeted, surfaced. Trust-tier scale caps (0013 §8) land here as the stamp_quota dial.",
+  "type": "object",
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/ContentHash" },
+    "archetype": { "$ref": "common.schema.json#/$defs/DID" },
+    "to_scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+    "count": { "type": "integer", "minimum": 1 },
+    "generation": { "type": "string", "description": "The cohort label — the draft class. Feeds (scope, generation) roll-ups: compare season-3's class to season-1's (0005)." },
+    "skills": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/StandardRef" },
+      "description": "The skill-version pin at birth. Upgrades arrive later via the normal Standards cascade — locked 2026-07-02: incarnations upgrade IN PLACE, memory intact."
+    },
+    "budget_tokens": { "type": "integer", "minimum": 0, "description": "Per-incarnation model budget, riding each lease token (0010)." },
+    "probation_runs": { "type": "integer", "minimum": 0, "description": "Locked 2026-07-02: judge sampling runs at 1.0 until the incarnation's first bundle reaches this n — rookies play under full observation until they have a track record." },
+    "ordered_by": { "$ref": "common.schema.json#/$defs/DID" },
+    "sig": { "$ref": "common.schema.json#/$defs/Sig" }
+  },
+  "required": ["id", "archetype", "to_scope", "count", "generation", "ordered_by", "sig"],
+  "additionalProperties": false,
+  "$defs": {
+    "BirthCertificate": {
+      "type": "object",
+      "description": "An incarnation's provenance — identity operations are memory too (0006 §4): the certificate is written as a signed record at the stamping scope. born_at is universe-time: the rookie is born in season 3.",
+      "properties": {
+        "incarnation": { "$ref": "common.schema.json#/$defs/DID" },
+        "archetype": { "$ref": "common.schema.json#/$defs/DID" },
+        "generation": { "type": "string" },
+        "order": { "$ref": "common.schema.json#/$defs/ContentHash", "description": "→ the StampOrder this birth belongs to." },
+        "stamped_by": { "$ref": "common.schema.json#/$defs/DID" },
+        "born_at": { "$ref": "common.schema.json#/$defs/UniverseTime" },
+        "skills": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/StandardRef" } },
+        "probation_until_n": { "type": "integer", "minimum": 0 },
+        "sig": { "$ref": "common.schema.json#/$defs/Sig" }
+      },
+      "required": ["incarnation", "archetype", "generation", "order", "stamped_by", "born_at", "probation_until_n", "sig"],
+      "additionalProperties": false
+    }
+  }
+}

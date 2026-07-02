@@ -184,6 +184,18 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
 - *Mechanism landed same day: `agent-surface.schema.json` (five verbs + ModelCall/Signal), the `signal_capture`
   dial, simulator `agent_surface.py` (ModelGateway · AgentSurface · join_workforce): 20/20 tests.*
 
+### Locked 2026-07-02 (0011 close-out — the factory)
+- **Upgrade in place; re-stamp is a new life.** Archetype upgrades reach running incarnations through the
+  normal Standards cascade — **identity and memory persist** (the League's player improves in the offseason;
+  the Enterprise's accountant keeps its quarters of context). An explicit re-stamp mints a new DID with the
+  same lineage — a sibling, never a silent successor. Memory is the asset; upgrades don't destroy it by default.
+- **Rookie probation: full-grade until the first bundle.** Fresh incarnations run at judge sampling 1.0 until
+  their first roll-up reaches the birth certificate's probation n, then the tier's steady 1-in-N. A mis-stamped
+  draft class is caught in its first runs; judge tokens go exactly where uncertainty is highest.
+- *Mechanism landed same day: `factory.schema.json` (StampOrder + BirthCertificate — identity ops are memory;
+  generations are roll-up cohorts), the `stamp_quota` dial (0013 §8 scale caps made mechanical), simulator
+  `factory.py` (stamp · retire · judge_rate): 23/23 tests.*
+
 ### Locked 2026-07-01 (interop/UX pre-decisions — drive the 0008 dive)
 - **Authoring is dual-mode, equal weight** — JB's call: English and canvas are both first-class surfaces.
   Tractable because of the next lock: both are *projections of one IR* — there is no text↔canvas sync

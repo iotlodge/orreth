@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from orreth_sim import crypto, rollup
+from orreth_sim import crypto, factory, rollup
 from orreth_sim.agent_surface import BudgetExceeded, join_workforce
 from orreth_sim.identity import AuthzError, tenant_of
 from orreth_sim.node import ClockViolation, FloorViolation, Refusal, make_memory
@@ -356,6 +356,56 @@ def test_signals_are_transport_unless_state_changing(world):
     assert world.field_prod.signal_count == 2                           # vigil saw both shapes
     world.field_prod.profile["signal_capture"] = "full"                 # the REAL/regulated dial
     assert a.signal(b, {"chat": "recorded now"}) is not None            # full capture keeps chatter too
+
+
+# ---------------------------------------------------------------- 0011: the factory
+def test_draft_class_stamps_through_the_gateway(world):
+    """One archetype, a draft class of rookies — each leased, budgeted, certified; quota is a wall."""
+    world.field_prod.profile["stamp_quota"] = 6
+    arch, _ = world.agents["architect-archetype"]
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    rookies = factory.stamp(world.field_prod, b_prod, arch, 5, generation="draft-s3")
+    assert all(r.identity["lineage"] == arch["did"] for r in rookies)   # one template, five lives
+    certs = [r for r in world.field_prod.records.values() if "draft-s3" in r.get("tags", [])]
+    assert len(certs) == 5                                              # births are on the record
+    rid = rookies[0].write({"first": "day at practice"})
+    assert rid in world.field_prod.records                              # the surface works
+    with pytest.raises(factory.QuotaExceeded):
+        factory.stamp(world.field_prod, b_prod, arch, 2, generation="draft-s3b")   # 5+2 > 6
+    factory.retire(world.field_prod, rookies[0].identity)               # a slot frees on retirement
+    factory.stamp(world.field_prod, b_prod, arch, 2, generation="draft-s3b")
+
+
+def test_upgrade_in_place_restamp_is_a_new_life(world):
+    """Locked 2026-07-02: memory survives upgrades; a re-stamp is a sibling, never a silent successor."""
+    arch, _ = world.agents["architect-archetype"]
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    (veteran,) = factory.stamp(world.field_prod, b_prod, arch, 1, generation="gen-1")
+    memory = veteran.write({"season": "hard-won experience"})
+    # the archetype 'upgrades' — skills arrive via the Standards cascade; identity and memory persist
+    (fresh,) = factory.stamp(world.field_prod, b_prod, arch, 1, generation="gen-2")
+    assert fresh.identity["did"] != veteran.identity["did"]             # a new life...
+    assert fresh.identity["lineage"] == veteran.identity["lineage"]     # ...same bloodline
+    rec = world.field_prod.records[memory]
+    assert rec["author"] == veteran.identity["did"]                     # the veteran keeps its past
+
+
+def test_rookie_probation_full_grade_until_first_bundle(world):
+    """Locked 2026-07-02: uncertainty pays for observation — nothing else does."""
+    arch, _ = world.agents["architect-archetype"]
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    (rookie,) = factory.stamp(world.field_prod, b_prod, arch, 1,
+                              generation="gen-p", probation_runs=5)
+    cert = rookie.birth_certificate                                     # provenance travels with the handle
+    young = rollup.empty_bundle()
+    for s in (0.9, 0.8):
+        young = rollup.merge(young, rollup.bundle_of(_run(world.field_prod, world, "prod-1", "g", s)))
+    assert factory.judge_rate(world.field_prod, cert, young) == 1.0     # n=2 < 5: full observation
+    proven = dict(young)
+    for _ in range(12):
+        proven = rollup.merge(proven, rollup.bundle_of(_run(world.field_prod, world, "prod-1", "g", 0.9)))
+    assert factory.judge_rate(world.field_prod, cert, proven) == \
+        world.field_prod.profile["model_gateway"]["judge_sample_rate"]  # a track record earns 1-in-N
 
 
 # ---------------------------------------------------------------- tombstones

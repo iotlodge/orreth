@@ -69,6 +69,7 @@ class HarnessNode:
         self.child_rollups: list[dict] = []         # RollUps pushed up by children
         self.model_gateway = ModelGateway()         # the governed door to models (0010)
         self.signal_count = 0                       # vigil's tap: signal volume, content-blind
+        self.stamped_live = 0                       # live incarnations vs the stamp_quota (0011)
         self._bundle: dict | None = None            # what children PULL
         # a layer is born with its staff (0006 §2): the steward exists before any workforce
         self.steward, self.steward_kp = becky.issue_identity(
