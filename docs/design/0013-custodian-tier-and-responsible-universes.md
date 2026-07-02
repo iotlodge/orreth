@@ -267,23 +267,20 @@ Mapper proves the substrate; the Enterprise sells it — to the CFO-led buyers w
 
 ---
 
-## 12. Open decisions — **reopened for your real call, JB**
-*(An earlier auto pass recorded these as "locked"; you never made them. They are yours.)*
+## 12. Decisions — **locked by JB, 2026-07-01** (via AskUserQuestion; recorded in `../decisions/`)
+*(An earlier auto pass falsely recorded these as locked before JB decided. These are the real answers.)*
 
-1. **Key custody offering.** Tiered — platform-managed default + BYOK + split/escrow for high-assurance (my
-   strong lean) — or platform-managed only to start? *A hospital or defense tenant won't sign without BYOK; a
-   hobbyist doesn't care. Tiered lets both in and makes "we cannot read you" a sellable promise.*
-2. **Quarantine authorization bar.** Confirm: throttle autonomous · suspend/freeze = 2 Custodian co-signs +
-   customer notice (unless gagged) · destroy = 3 + cooling-off? *A late invoice gets notice-then-suspend; an
-   active child-safety hit freezes first, notice after.*
-3. **Onboarding posture.** Risk-tiered (benign self-serve, flagged domains human-gated — my lean) vs
-   attestation-only-for-all (faster, weaker door) vs review-everything (safest, slow)? *Risk-tiered lets "my
-   second brain" spin up in minutes while "population health analytics" meets a human + KYC first.*
-4. **POC sequence.** Earth Mapper first, Enterprise second (my lean) — or Enterprise first because it's the
-   northstar? *Earth Mapper is public, dazzling, needs no compliance build; the Enterprise is months and needs
-   §7 hardened first.*
-5. **The Warden's name.** becky is the IAM agent; the security resident is "the Warden" as a role. Want a
-   becky-style given name, and if so, yours to christen.
+1. **Key custody: tiered** — platform-managed default + BYOK + split/escrow for high-assurance. "We
+   structurally cannot read you" becomes a true, sellable promise at the higher tiers.
+2. **Quarantine bars: 2 to freeze, 3 to destroy.** Throttle autonomous (bounded); suspend/freeze = 2 Custodian
+   co-signs + customer notice (unless gagged) + state preserved; destroy = 3 + cooling-off. Active child-safety
+   harm freezes first, notice after.
+3. **Onboarding: risk-tiered.** Benign domains self-serve; flagged domains → human review + KYC before a key
+   issues; published refuse-to-host list.
+4. **POC order: Earth Mapper first, Agentic Enterprise second** (compliance floors + HITL map built in parallel).
+
+**Still open:** the **Warden's name** — becky is the IAM agent; the security resident is "the Warden" as a
+role. A becky-style given name is yours to christen, JB.
 
 ---
 

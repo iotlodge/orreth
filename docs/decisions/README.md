@@ -46,6 +46,19 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
   audited; BYOK/split tiers make unilateral operator read technically impossible.
 - **Self-hosting has no Custodian** — the operator is it; the safety story is strongest for the hosted service.
 
+### Locked 2026-07-01 (0013 — genuinely by JB this time, via AskUserQuestion)
+- **Key custody: tiered.** Platform-managed default (self-serve) + BYOK (privacy-serious) + split/escrow
+  (regulated/defense). "We structurally cannot read you" is a true, sellable promise at the higher tiers.
+- **Quarantine bars: 2 to freeze, 3 to destroy.** Throttle autonomous (bounded); suspend/freeze = 2 Custodian
+  co-signs, reversible, preserves state, customer notice unless lawfully gagged; destroy = 3 + cooling-off.
+  Active child-safety harm freezes first, notice after. No single employee is a god.
+- **Onboarding: risk-tiered.** Benign domains self-serve instantly; flagged domains (health, finance,
+  PII-at-scale, bio/cyber dual-use, population-scale observation, influence ops) → human review + KYC before a
+  key issues; published refuse-to-host list.
+- **POC order: Earth Mapper first** (public/consented data, near-zero regulatory surface, exercises collective
+  memory + skills cascade + the window literally), **Agentic Enterprise second** (compliance floors + full HITL
+  map built in parallel, then the C-suite/regulator showcase).
+
 ### The mechanism
 - **Name** Orreth; repo `orreth`; "Harness" = the architectural primitive; tiers Universe / Ecosystem / Field / Agents.
 - **One recursive primitive**, `tier` = a Tier Profile (config, not code). **Depth capped at 3**; expandable by SDK/CDK.
@@ -162,15 +175,8 @@ including derived-memory chain verification).
 
 ## 🟡 Open — remaining
 
-### Trust & safety — REOPENED 2026-07-01 (were falsely auto-locked; `0013` §12 — JB's real call)
-17. **Key custody offering** — tiered (platform-managed default + BYOK + split/escrow for high-assurance;
-    Fable's strong lean) vs platform-managed-only-to-start?
-18. **Quarantine authorization bar** — confirm throttle autonomous / suspend·freeze = 2 co-signs + customer
-    notice / destroy = 3 + cooling-off? (Active child-safety harm: freeze-first, notice-after.)
-19. **Onboarding posture** — risk-tiered (benign self-serve, flagged domains human-gated; Fable's lean) vs
-    attestation-only-for-all vs review-everything?
-20. **POC sequence** — Earth Mapper first + Enterprise second (Fable's lean) vs Enterprise first?
-21. **The Warden's name** — becky-style given name for the security resident? JB to christen.
+### Trust & safety — still open (`0013`)
+21. **The Warden's name** — becky-style given name for the security resident? JB to christen (only open item).
 
 ### Open (carried from `design/0001`)
 7. **Confidence statistic** — exact model *(lean: defer to the Run Record dive, `0005`)*
