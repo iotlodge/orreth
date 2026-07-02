@@ -55,6 +55,7 @@ fn build_universe(f: &Value) -> (Universe, BTreeMap<String, usize>) {
             revoked: BTreeSet::new(),
             purged: BTreeSet::new(),
             now: f["now"].as_str().unwrap().to_string(),
+            body_store: None,
         },
         index,
     )

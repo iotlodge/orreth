@@ -1,0 +1,12 @@
+[package]
+name = "orreth-store"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# S3 stays behind object_store's "aws" feature — OFF until the hosted deploy;
+# local FS + in-memory are the dev/self-host/test backends (decision 2026-07-02).
+object_store = "0.11"
+tokio = { version = "1", features = ["rt"] }
+base64 = { workspace = true }
+sha2 = { workspace = true }

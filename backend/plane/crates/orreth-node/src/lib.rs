@@ -17,6 +17,11 @@ pub fn tenant_of(scope: &str) -> String {
     scope.split('/').take(2).collect::<Vec<_>>().join("/")
 }
 
+/// The universe segment — the storage isolation prefix (one prefix per tenant universe).
+pub fn scope_root(scope: &str) -> String {
+    scope.split('/').next().unwrap_or(scope).to_string()
+}
+
 /// "%Y-%m-%dT%H:%M:%SZ" → seconds since epoch (days_from_civil; no deps, no clocks).
 pub fn ts_seconds(iso: &str) -> i64 {
     let b = iso.as_bytes();
@@ -86,6 +91,9 @@ pub struct Universe {
     pub revoked: BTreeSet<String>,
     pub purged: BTreeSet<String>, // tree-global, like the reference's purged_anywhere
     pub now: String,              // the pinned wall clock (fixtures are deterministic)
+    /// When present, record bodies live here — content-addressed, tamper-evident,
+    /// physically erasable (decision 2026-07-02: S3 API as contract, backend as config).
+    pub body_store: Option<orreth_store::BodyStore>,
 }
 
 impl Universe {
@@ -132,13 +140,37 @@ impl Universe {
         rec["received_at"] = json!(now); // gateway stamp — physics, nobody's claim
         rec["keep_class"] = json!(classify(&node.floors, record));
         let id = rec["id"].as_str().unwrap().to_string();
+        // bodies leave the record at ingress: the store holds bytes, the node holds pointers
+        if let (Some(store), Some(body)) = (&self.body_store, rec.get("body").and_then(Value::as_str)) {
+            let root = scope_root(rec["scope"].as_str().unwrap());
+            let body_ref = store
+                .put_body(&root, &id, body)
+                .map_err(|_| WriteError::AuthzError)?;
+            let obj = rec.as_object_mut().unwrap();
+            obj.remove("body");
+            obj.insert("body_ref".into(), json!(body_ref));
+        }
         node.records.insert(id.clone(), rec);
         Ok(id)
     }
 
+    /// Fetch a record's body from the store — VERIFIED against its own content address.
+    pub fn get_body(&self, record: &Value) -> Result<Vec<u8>, orreth_store::StoreError> {
+        let store = self.body_store.as_ref().ok_or(orreth_store::StoreError::NotFound)?;
+        let id = record["id"].as_str().unwrap();
+        store.get_body(&scope_root(record["scope"].as_str().unwrap()), id)
+    }
+
     pub fn tombstone(&mut self, node_idx: usize, record_id: &str) {
+        let scope = self.nodes[node_idx].records.get(record_id)
+            .map(|r| r["scope"].as_str().unwrap().to_string());
         if let Some(rec) = self.nodes[node_idx].records.get_mut(record_id) {
             rec.as_object_mut().unwrap().remove("body");
+            rec.as_object_mut().unwrap().remove("body_ref");
+        }
+        // the tombstone's storage twin: the bytes are PHYSICALLY gone; the signed stub remains
+        if let (Some(store), Some(scope)) = (&self.body_store, scope) {
+            let _ = store.delete_body(&scope_root(&scope), record_id);
         }
         self.purged.insert(record_id.to_string());
     }

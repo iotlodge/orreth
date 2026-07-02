@@ -5,6 +5,7 @@ members = [
     "crates/orreth-rollup",
     "crates/orreth-resolver",
     "crates/orreth-node",
+    "crates/orreth-store",
 ]
 
 # NOTE: serde_json stays on default features — its Map is a BTreeMap (sorted keys),

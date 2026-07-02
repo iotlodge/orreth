@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 serde_json = { workspace = true }
 orreth-crypto = { path = "../orreth-crypto" }
+orreth-store = { path = "../orreth-store" }
