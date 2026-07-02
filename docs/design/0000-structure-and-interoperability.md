@@ -39,6 +39,12 @@ depth-2 tree.
 = one universe). In prod, tiers separate across hosts/accounts with no code change — the same PUSH-up / PULL-down
 direction EH proved (a child is never reachable *from* above; parents never poll in).
 
+**The Custodian — the apex above the apex.** When Orreth is *hosted* (orreth.ai), the platform is itself a
+Harness one tier above every customer Universe — the **Custodian** (`0013`). Its powers are deliberately
+asymmetric: it can freeze (quarantine) and enforce non-overridable platform floors, but is **structurally
+blinded to tenant content** (key custody). The safety architecture is Orreth recursed once more onto its own
+operator, and governed harder than any tenant. Self-hosted deployments have no Custodian — the operator is it.
+
 **Finding discharged (tier-hardcoding).** All contracts speak **ScopePath-relative** addressing. `0002`'s
 `space: "own" | "field" | "ecosystem" | "universe"` amends to:
 
@@ -65,9 +71,10 @@ Same organs at every tier; the Tier Profile sets their dials.
 | **Model Gateway** | the layer's governed door to models — **LiteLLM / OpenRouter** routing, model-tier pinning (enforces `SkillStandard.model_tier`), per-identity token/cost budgets | Plane shell, Python routing | no agent calls a model ungoverned; this is where the cost dial actually turns |
 
 **Every layer is staffed — agents are required inside every tier, not only Fields.** The **resident roster**
-(TCB) *runs the layer itself*: the memory steward, the governance agents, the apex analysis agents — and
-**becky, the IAM agent** (resident; becky is an *agent*, not a human): one issuer of DIDs root→leaf, the agentic
-half of every promotion gate. The **registered workforce** (LangGraph / AgentField / any SDK) does the domain
+(TCB) *runs the layer itself*: the memory steward, the governance agents, the apex analysis agents, the
+**security agent** (floor sensing + enforcement — content-blind to the platform, tenant-serving within;
+`0013`), and **becky, the IAM agent** (resident; becky is an *agent*, not a human): one issuer of DIDs
+root→leaf, the agentic half of every promotion gate. The **registered workforce** (LangGraph / AgentField / any SDK) does the domain
 labor in Fields. Governance is **bidirectional at every layer**: each Harness governs its subtree down *and* is
 governed from above — the same node is conductor to its children and instrument to its parent. Humans appear
 only at the gates (HITL), as governed principals — the hierarchy runs entirely agentic.

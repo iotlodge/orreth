@@ -92,6 +92,31 @@ smart cities (a living municipal record), collaborative fiction (a shared world-
 
 ---
 
+## Proof-of-concept universes for orreth.ai (captured 2026-07-01)
+
+Two POCs picked to prove the range — one *safe by construction*, one *the commercial northstar* — and together
+they motivate the whole trust-and-safety build (`../design/0013`).
+
+### POC-1 — **Earth Mapper** (the safe showcase)
+A Universe whose Ecosystem of agents, across fields (geospatial, climate, logistics, public-knowledge), work
+together to render a **live, rotating understanding of Earth** — each agent discovering, applying what it knows,
+and contributing its slice to a shared world-memory. **Why it's the right first showcase:** it demonstrates
+collective memory + the spacetime window at their most dazzling *while staying clear of the privacy landmine* —
+it's a **closed/public-data world about a planet, not a surveillance tool about people.** The window over Earth
+is the honest "100% coverage" case; the only floor to hold is *public/scientific data only, no personal-data
+drift.* Pure wonder, near-zero dual-use exposure.
+
+### POC-2 — **The Agentic Enterprise** (JB's northstar)
+A truly agentic enterprise that amazes the whole C-suite — **CFO, CRO, CTO, CPO, CEO, CCO — and the regulators**
+(NIST, PCI-DSS, PII, DORA, GDPR, plus the Universe Audit itself). It runs, measures, reports, and governs a
+company's entire digital lifecycle, and its killer property is that **governance is the product**: every number
+Sourced+Verified to the function that produced it, every control provably enforced, every human action logged.
+**Why it's the right northstar:** it's the case where the safety architecture (`0013`) isn't overhead — it's the
+value proposition. It forces us to build the Custodian, the floors, and the audit surface, and it's the demo
+that turns "AWESOME and SCARY" into "the window a regulator will license instead of fear."
+
+---
+
 ## The product — **"Build My First Universe"**
 
 Orreth up and running, self-serve. You subscribe and spin up a Universe from a **template** — and the

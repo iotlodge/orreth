@@ -20,6 +20,21 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
 - **Skills are crystallized memory** — versioned across the universe; they reduce the need to trawl raw memory.
 - **Retrieval is the #1 security surface** — an authorized capability, tenant-isolated on read.
 
+### Trust & safety (design draft `0013`, 2026-07-01 — direction set, decisions open below)
+- **The Custodian tier.** Hosted orreth.ai is a Harness one tier above every customer Universe, with
+  **deliberately asymmetric powers**: it can *freeze* (quarantine) and *enforce platform floors*, but is
+  **structurally blinded to tenant content**. The landlord can change the locks; it cannot read the mail.
+  The safety architecture is Orreth recursed onto its own operator, and the Custodian is governed *harder*
+  than any tenant (multi-party co-sign, fully audited — the watchers of the watchers are watched).
+- **Platform floors (the meta-cascade)** — the most foundational, non-overridable rules cascade into every
+  Universe and no Universe GOD can loosen them: no targeting non-consenting real people · illegal-content
+  prohibition · PII/regulated-data consent · autonomy ceilings by trust tier · non-optional attribution.
+- **Security Agent** — a resident (TCB) organ at every layer: tenant-serving within the customer's authority,
+  **content-blind (behavioral/metadata only) to the platform**. Safety and reliability are the same instrument.
+- **Quarantine** — one mechanism, three postures: commercial (reversible freeze, data retained) · abuse
+  (freeze + preserve + multi-party review) · lawful process (freeze + preserve, disclose only what we hold).
+  Freezes, never deletes; un-quarantine as gated as quarantine; no secret freezes.
+- **Self-hosting has no Custodian** — the operator is it; our safety story is strongest for the hosted service.
 ### The mechanism
 - **Name** Orreth; repo `orreth`; "Harness" = the architectural primitive; tiers Universe / Ecosystem / Field / Agents.
 - **One recursive primitive**, `tier` = a Tier Profile (config, not code). **Depth capped at 3**; expandable by SDK/CDK.
