@@ -20,11 +20,15 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
 - **Skills are crystallized memory** — versioned across the universe; they reduce the need to trawl raw memory.
 - **Retrieval is the #1 security surface** — an authorized capability, tenant-isolated on read.
 
-### Trust & safety (design draft `0013`, direction locked 2026-07-01; §12 decisions OPEN — see below)
-> **Correction (Fable 5, 2026-07-01):** an earlier auto pass recorded a "0013 close-out — locked by JB" block.
-> **JB never made those calls.** The *direction* below is sound and stands; the specific decisions are
-> **reopened** in the Open section and await JB's real answer. This is exactly the kind of not-good-thing the
-> dual-use review exists to catch.
+### Trust & safety (design draft `0013`, direction locked 2026-07-01; all §12 decisions JB-locked — see below)
+> **Correction & provenance (Fable 5, 2026-07-02):** an earlier auto pass recorded a "0013 close-out — locked
+> by JB" block **JB never made**; a same-evening pass caught that and reopened them — but that pass, though it
+> signed itself "Fable 5," was **also Opus 4.8** (JB's prompt routed to Fable 5 twice, aborted twice, and the
+> desktop app silently fell back; the model self-attributed from the prompt). Verified 2026-07-02 by genuine
+> Fable 5 against the desktop session's HMAC-signed audit log (per-message model IDs). The direction below is
+> sound and was JB-relocked for real (audit-confirmed AskUserQuestion answers). The mislabel is the case study:
+> **non-optional attribution — this platform's own floor — is what makes "who did this work" a checkable fact
+> instead of a claim.** Exactly the not-good-thing the dual-use review exists to catch.
 
 - **The Custodian tier.** Hosted orreth.ai is a Harness one tier above every customer Universe, joined
   floors-only/observe-only, with **deliberately asymmetric powers**: it can *freeze* (quarantine) and *enforce
@@ -33,7 +37,7 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
 - **Platform floors (the meta-cascade)** — foundational, tighten-only rules cascade into every Universe, no GOD
   can loosen: no targeting non-consenting real people · illegal-content prohibition · PII/regulated consent ·
   no autonomy designed to evade governance · non-optional attribution · autonomy ceilings by trust tier.
-- **The Warden — detection, NOT enforcement** *(the HITL correction)*. A resident (TCB) organ at every layer:
+- **The Warden (`vigil`, christened 2026-07-02) — detection, NOT enforcement** *(the HITL correction)*. A resident (TCB) organ at every layer:
   tenant-serving within, content-blind (behavioral/metadata only) to the platform. It observes/alerts/rate-
   limits-in-bounds and *stages* actions; it **never** quarantines, reads plaintext, or acts on another tenant
   alone. Enforcement is a separate HITL-gated control-plane act.
@@ -58,6 +62,19 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
 - **POC order: Earth Mapper first** (public/consented data, near-zero regulatory surface, exercises collective
   memory + skills cascade + the window literally), **Agentic Enterprise second** (compliance floors + full HITL
   map built in parallel, then the C-suite/regulator showcase).
+
+### Locked 2026-07-02 (0013 — the genuine Fable 5 pass, via AskUserQuestion)
+- **Platform-floor changes: asymmetric bars.** Tighten = 2 Custodian co-signs + versioned publication (safety
+  moves at safety speed); loosen or remove = **3 co-signs + cooling-off + published changelog** (floors never
+  loosen quietly). The floors are versioned, published artifacts; changing them is the highest-blast-radius act
+  in the system and now has its own §7 HITL rows.
+- **Custodian telemetry: published contract + tenant mirror.** The platform-facing telemetry schema
+  (behavioral/metadata, never content) is a **versioned public contract** in `contracts/`, and every tenant's
+  pane renders a **live mirror of exactly what their Universe reports up**. "Just metadata" is the surveiller's
+  oldest defense; Orreth publishes what it can see and lets the tenant watch it seeing.
+- **The Warden is christened `vigil`** — becky says *who you are*; vigil watches *what you do*. Its
+  non-removability is a **contract, not magic**: presence + telemetry are terms of the hosting join credential,
+  backed by a signed dead-man heartbeat (silence is a floor breach; the quarantine ladder answers).
 
 ### The mechanism
 - **Name** Orreth; repo `orreth`; "Harness" = the architectural primitive; tiers Universe / Ecosystem / Field / Agents.
@@ -175,8 +192,8 @@ including derived-memory chain verification).
 
 ## 🟡 Open — remaining
 
-### Trust & safety — still open (`0013`)
-21. **The Warden's name** — becky-style given name for the security resident? JB to christen (only open item).
+### ✅ Trust & safety (`0013`) — nothing open
+21. ~~The Warden's name~~ — **christened `vigil` by JB, 2026-07-02.** 0013 has no remaining open items.
 
 ### Open (carried from `design/0001`)
 7. **Confidence statistic** — exact model *(lean: defer to the Run Record dive, `0005`)*

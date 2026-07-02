@@ -72,9 +72,9 @@ Same organs at every tier; the Tier Profile sets their dials.
 
 **Every layer is staffed — agents are required inside every tier, not only Fields.** The **resident roster**
 (TCB) *runs the layer itself*: the memory steward, the governance agents, the apex analysis agents, the
-**Warden** (the security resident — floor **detection & advisory**, content-blind to the platform, tenant-
-serving within; **enforcement is a separate HITL-gated control-plane act, never the Warden acting alone**;
-`0013`), and **becky, the IAM agent** (resident; becky is an *agent*, not a human): one issuer of DIDs
+**Warden** (**vigil** — the security resident; floor **detection & advisory**, content-blind to the platform,
+tenant-serving within; **enforcement is a separate HITL-gated control-plane act, never the Warden acting
+alone**; `0013`), and **becky, the IAM agent** (resident; becky is an *agent*, not a human): one issuer of DIDs
 root→leaf, the agentic half of every promotion gate. The **registered workforce** (LangGraph / AgentField / any SDK) does the domain
 labor in Fields. Governance is **bidirectional at every layer**: each Harness governs its subtree down *and* is
 governed from above — the same node is conductor to its children and instrument to its parent. Humans appear

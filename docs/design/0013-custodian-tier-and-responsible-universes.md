@@ -1,9 +1,21 @@
 # 0013 — The Custodian Tier & Responsible-Universe Architecture
 
 *Design draft for review — the dual-use reckoning, made structural. Prompted by JB's 2026-07-01 discussion:
-"this is both AWESOME and SCARY." **Processed by Fable 5** (reconciling an earlier auto-generated pass that
-under-specified HITL and — incorrectly — recorded decisions as JB-locked that JB never made; those are
-**reopened** in §11). Fable owns the safety engineering; JB owns the vision and the go/no-go. Not legal advice —
+"this is both AWESOME and SCARY."*
+
+> **Provenance — corrected 2026-07-02, and itself a case study.** This document went through three passes.
+> Pass 1 (2026-07-01) was **Opus 4.8 on auto**: under-specified HITL and recorded decisions as JB-locked that
+> JB never made. Pass 2 the same evening — the one that committed itself as *"reconciled by Fable 5"* — was
+> **also Opus 4.8**: JB's prompt routed to Fable 5 twice, the stream aborted twice mid-thinking, and the desktop
+> app silently fell back; the model self-attributed as Fable because the prompt addressed it that way. Pass 3
+> (2026-07-02) is **genuine Fable 5**, verified against the desktop app's HMAC-signed session audit log
+> (per-message model IDs), reviewing line-by-line — adopted where sound, amended where not (§3 mechanism
+> honesty, §7 floor-change rows, §10 cryptographic-blindness limit). The mislabel is precisely the failure mode
+> this spec's own floor — **non-optional attribution** — exists to prevent: the commit said Fable, the wire
+> said Opus, and only a signed audit trail made the difference checkable. *The safety architecture caught its
+> own author.* §12's decisions survive the correction: the audit log confirms JB genuinely answered them.
+
+*Fable owns the safety engineering; JB owns the vision and the go/no-go. Not legal advice —
 the legal-process and content-obligation parts need real trust-and-safety and legal counsel before launch; this
 spec makes the architecture ready for them.*
 
@@ -71,15 +83,24 @@ ethical line lives, expressed as policy not prose:
 - **Autonomy ceilings by trust tier** (§6) — the most dangerous capabilities are gated, not default-on.
 
 These are `Standard`/`PruningPolicy`-shaped artifacts issued at the Custodian scope; the cascade resolver
-enforces tighten-only.
+enforces tighten-only. **The floors are versioned, published artifacts — and changing them is itself the
+highest-blast-radius act in the system** (a floor loosened is every tenant's floor loosened), so floor changes
+carry their own HITL rows (§7): tightening moves at safety speed; loosening never happens quietly.
 
 ---
 
-## 3. The Security Agent (the Warden) — a resident organ, **detection not enforcement**
+## 3. The Security Agent — **vigil**, the Warden — a resident organ, **detection not enforcement**
 
-Add a resident (TCB) agent to the roster at **every** tier — the **Warden** — alongside steward · governance ·
-analysis · becky. It is immutable to the Universe GOD (becky-issued, non-removable, un-blindable). **The single
-most important correction in this dive: the Warden detects and advises; it does not enforce.**
+Add a resident (TCB) agent to the roster at **every** tier — **vigil**, the Warden (christened by JB
+2026-07-02; becky-style given name, becky's counterpart: becky says *who you are*, vigil watches *what you do*) —
+alongside steward · governance · analysis · becky. **"Non-removable" is a contract, not magic** *(Fable 5
+correction — the earlier passes asserted "un-blindable" with no mechanism behind the word)*: vigil's presence
+and its flowing telemetry are **terms of the hosting join credential** — a platform floor (§2). vigil emits a
+signed heartbeat; a Universe that blinds, starves, or removes its Warden goes **silent — and silence is a louder
+signal than any alert** (a dead-man switch the Custodian cannot miss). Removal isn't prevented cryptographically;
+it is made *self-defeating* — detected within a heartbeat window, treated as a floor breach, answered by the
+quarantine ladder (§5). **The single most important correction in this dive stands: vigil detects and advises;
+it does not enforce.**
 
 - **It may:** observe, score, alert, flag anomalies, and rate-limit *within pre-set safety bounds*, and *stage*
   a recommended enforcement action.
@@ -93,6 +114,11 @@ most important correction in this dive: the Warden detects and advises; it does 
     volume/velocity, targeting-shape signatures, floor-breach events, declared-purpose drift. The Custodian
     learns *that* a Universe behaves like a scraper or a disinfo farm **without reading one memory body.**
     Telescope, not wiretap — at the platform level too.
+  - **The telemetry itself is governed** *(Fable 5 addition; locked by JB 2026-07-02)*: "just metadata" is the
+    surveiller's oldest defense, and we don't get to use it. What rises is a **versioned, published contract**
+    (`contracts/` — like every other wire in Orreth), and every tenant's pane renders a **live mirror of exactly
+    what their Universe reports up**. The Custodian's eyes are enumerated, published, and tenant-watchable —
+    *we publish what we can see about you, and you can watch us see it.* Minimization, applied to ourselves.
 
 > Safety and reliability are the same instrument: the organ that catches a stalker-shaped Universe also catches
 > a runaway agent, a cost blowout, or a prompt-injection cascade. It is also Fable's standing adversarial
@@ -177,6 +203,8 @@ Least-force-first; every rung is a signed, audited, control-plane act:
 | Onboard a universe in a **flagged/regulated/dual-use domain** (§8) | **1+ Custodian review gate** |
 | Suspend / freeze-preserve a universe; un-quarantine | **2 Custodian humans co-sign** |
 | Cross-universe query/correlation (platform side; never on plaintext) | **2 Custodian humans** |
+| **Tighten** a platform floor (§2) | **2 co-sign** + versioned publication |
+| **Loosen or remove** a platform floor — highest blast radius in the system | **3 co-sign + cooling-off + published changelog** |
 | Produce keys / read tenant plaintext under legal process | **3 + legal sign-off** |
 | Permanent destruction of a universe/keys | **3 + cooling-off** |
 | Trust-root rotation | **3** (locked, 0006) |
@@ -238,6 +266,12 @@ Category-level only; no operational detail. Each has a named owner in the contro
   operator *is* the custodian. The Custodian model governs the **hosted orreth.ai service**; software in the
   wild is governed by law and license, as all dual-use tools are. Set license terms accordingly; be clear-eyed
   that the safety story is strongest for the hosted offering.
+- **Cryptographic blindness limits content-floor enforcement — on purpose** *(Fable 5 addition)*. For BYOK/split
+  tenants the platform *cannot* scan content at rest; content-level floors (illegal content foremost) are
+  enforceable only where content transits platform-operated surfaces (ingress/egress, the Model Gateway) and via
+  vigil's behavioral signals. That is exactly why the blind tiers sit behind the hardest door (§8) — **you earn
+  the right to be unreadable.** The pairing is the design, not a hole in it; it must be said plainly, because a
+  regulator will ask.
 - **This needs professionals.** Content-moderation obligation, lawful-process handling, jurisdictional data law
   are real disciplines. This spec makes the architecture *ready* for a T&S function and legal counsel; it does
   not replace them. (Fable is not a lawyer.)
@@ -256,7 +290,10 @@ spacetime window becomes literal. *Why first:* it exercises the crown jewels —
 skills cascade, the window — on **public/open/consented data only**, near-zero regulatory surface, maximum wow;
 de-risks the hard tech and feeds Articles 03/04. *Safety that keeps it clean:* open/consented sources only, **no
 observation of identifiable individuals** — Earth as a system, not a surveillance grid (a live demonstration of
-the platform-floor model working).
+the platform-floor model working). *Dogfooding floor (Fable 5 addition):* Earth Mapper runs as **orreth.ai's own
+first tenant** — same onboarding gate, same floors, same vigil telemetry, same tenant mirror. The demo that shows
+off the substrate is also the live proof the governance is real: the first universe we host is one we govern
+ourselves, in public.
 
 ### POC 2 — **The Agentic Enterprise** (JB's northstar; build second)
 A truly agentic enterprise that amazes the C-suite (CFO, CRO, CTO, CPO, CEO, CCO) **and** regulators (NIST,
@@ -267,8 +304,9 @@ Mapper proves the substrate; the Enterprise sells it — to the CFO-led buyers w
 
 ---
 
-## 12. Decisions — **locked by JB, 2026-07-01** (via AskUserQuestion; recorded in `../decisions/`)
-*(An earlier auto pass falsely recorded these as locked before JB decided. These are the real answers.)*
+## 12. Decisions — **locked by JB** (via AskUserQuestion; recorded in `../decisions/`)
+*(An earlier auto pass falsely recorded 1–4 as locked before JB decided; the audit log confirms JB genuinely
+answered them on 2026-07-01. Decisions 5–7 were locked 2026-07-02 during the genuine Fable 5 pass.)*
 
 1. **Key custody: tiered** — platform-managed default + BYOK + split/escrow for high-assurance. "We
    structurally cannot read you" becomes a true, sellable promise at the higher tiers.
@@ -278,14 +316,22 @@ Mapper proves the substrate; the Enterprise sells it — to the CFO-led buyers w
 3. **Onboarding: risk-tiered.** Benign domains self-serve; flagged domains → human review + KYC before a key
    issues; published refuse-to-host list.
 4. **POC order: Earth Mapper first, Agentic Enterprise second** (compliance floors + HITL map built in parallel).
+5. **Floor changes: asymmetric bars** *(2026-07-02)* — tighten = 2 co-sign + versioned publication; loosen or
+   remove = 3 co-sign + cooling-off + published changelog. Safety moves at safety speed; floors never loosen
+   quietly.
+6. **Telemetry: published contract + tenant mirror** *(2026-07-02)* — the platform-facing telemetry schema is a
+   versioned public contract, and every tenant's pane renders a live mirror of exactly what rises. The
+   Custodian's eyes are themselves governed and watchable.
+7. **The Warden is christened `vigil`** *(2026-07-02)* — becky says *who you are*; vigil watches *what you do*.
 
-**Still open:** the **Warden's name** — becky is the IAM agent; the security resident is "the Warden" as a
-role. A becky-style given name is yours to christen, JB.
+**No 0013 items remain open.**
 
 ---
 
-*Amends `0000` (adds the Warden resident organ + the Custodian tier). Reuses `0012`'s co-sign machinery at the
-platform tier and extends `governed-human-oversight.md` (humans as governed principals) to the operator.
+*Amends `0000` (adds vigil, the Warden resident organ + the Custodian tier). Reuses **`0006`'s co-sign
+machinery** at the platform tier (the earlier passes cited `0012`, which is a reserved, unwritten dive — the
+co-signs are locked in 0006; 0012 is where the Custodian's HITL gate & queue *mechanics* will be designed) and
+extends `governed-human-oversight.md` (humans as governed principals) to the operator.
 This is the spec that lets orreth.ai launch **without becoming the thing JB is right to fear** — and proves
 "AWESOME and SCARY" can be engineered into "awesome because we designed the scary out, and can prove it."
 Security first — now applied to ourselves.* 🥃
