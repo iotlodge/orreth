@@ -35,6 +35,18 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
   (freeze + preserve + multi-party review) · lawful process (freeze + preserve, disclose only what we hold).
   Freezes, never deletes; un-quarantine as gated as quarantine; no secret freezes.
 - **Self-hosting has no Custodian** — the operator is it; our safety story is strongest for the hosted service.
+
+### Locked 2026-07-01 (0013 close-out)
+- **Key custody: split-key freeze-not-read.** Customer holds the read key; Custodian holds only a freeze key —
+  "cannot read" is a mathematical fact. *Owed: customer-side lost-key recovery story (enterprise tier).*
+- **Custodian read stance: structurally blinded** (public commitment) — floor enforcement behavioral-only;
+  the readable-content capability does not exist to be subpoenaed, breached, or coerced.
+- **Creation gate: invite-only now → trust-tiered later** (anonymous-sandbox / KYC-verified / regulated-high-
+  assurance; dangerous powers unlock with verification).
+- **First POC: Earth Mapper first** (safe showcase), **Agentic Enterprise designed in parallel** (northstar
+  where governance is the product; forces the Custodian + audit build).
+- *Honest limits on record: self-hosting escapes the Custodian; content-moderation + lawful-process + data law
+  need real T&S and legal counsel (Fable is not a lawyer); attribution proves chain-of-custody, not right-to-hold.*
 ### The mechanism
 - **Name** Orreth; repo `orreth`; "Harness" = the architectural primitive; tiers Universe / Ecosystem / Field / Agents.
 - **One recursive primitive**, `tier` = a Tier Profile (config, not code). **Depth capped at 3**; expandable by SDK/CDK.

@@ -185,15 +185,19 @@ models the floors and security agents exist to counter):
 
 ---
 
-## 9. Open decisions — your call, JB
+## 9. Decisions — **all locked by JB, 2026-07-01** (recorded in `../decisions/`)
 
-1. **Key custody default** — platform-held / BYOK / **split-key freeze-not-read** (my strong lean: split).
-2. **Custodian read stance** — can-read-under-process vs **structurally blinded** (my strong lean: blinded;
-   it is the whole safety and sales story).
-3. **Universe-creation trust tiers** — open-with-caps + KYC-to-unlock-dangerous vs invite-only during the POC
-   phase (my lean: invite-only now, tiered later).
-4. **First POC on orreth.ai** — the safe showcase (Earth Mapper) vs the commercial northstar (the agentic
-   enterprise) vs both in parallel (see the POC note in `../vision/use-cases.md`).
+1. **Key custody: split-key, freeze-not-read.** Customer holds the read key; the Custodian holds only a
+   freeze/quarantine key. "Cannot read" is a mathematical fact. *Owed: a customer-side recovery story for a
+   lost read key (a lost key = a lost Universe) — flagged for the enterprise tier design.*
+2. **Custodian read stance: structurally blinded.** Architecturally incapable of reading tenant content;
+   floor enforcement is behavioral/metadata only. The capability that would be subpoenaed/breached/coerced
+   simply does not exist. This is the public commitment.
+3. **Creation gate: invite-only now, trust-tiered later.** Every operator is known during POC; the
+   anonymous-sandbox → KYC-verified → regulated-high-assurance tiers (dangerous powers gated behind
+   verification) come online as the floors and Custodian mature.
+4. **First POC: Earth Mapper first; the Agentic Enterprise designed in parallel.** Dazzle with the
+   near-zero-dual-use showcase while building the Custodian + audit surface the northstar requires anyway.
 
 ---
 
