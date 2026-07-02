@@ -309,6 +309,20 @@ including derived-memory chain verification).
 > Every question this ledger ever carried has been answered and locked by JB. The design phase (0000–0013)
 > is complete; new questions belong to the build phase and will be logged here as they arise.
 
+---
+
+## 🔧 Build phase — decisions as they arise
+
+### Locked 2026-07-02 (object store — JB asked, Fable advised, JB accepted)
+- **The object-store contract is the S3 API; the backend is config, not architecture.** Rust plane uses the
+  `object_store` crate (one trait: S3 · GCS · Azure · local FS · in-memory). Hosted default = **AWS S3**
+  (content-addressed immutable bodies at `bodies/<universe>/<hash>`; SSE-KMS with the per-universe key for the
+  platform-managed tier, client-side envelope encryption for BYOK/split — the blind tiers stay blind at the
+  storage layer; lifecycle policies = the pruning metabolism's physical twin, and a hibernated universe is
+  pennies of cold storage). Dev/self-host = **MinIO** in compose (per 0000 §7) or local FS; air-gap = any
+  S3-compatible. **Cloudflare R2 (zero egress, S3-compatible) noted as a launch-time cost swap** for the
+  read-heavy public window — a config decision to make with real traffic numbers.
+
 ### ✅ Trust & safety (`0013`) — nothing open
 21. ~~The Warden's name~~ — **christened `vigil` by JB, 2026-07-02.** 0013 has no remaining open items.
 
