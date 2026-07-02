@@ -20,33 +20,32 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
 - **Skills are crystallized memory** — versioned across the universe; they reduce the need to trawl raw memory.
 - **Retrieval is the #1 security surface** — an authorized capability, tenant-isolated on read.
 
-### Trust & safety (design draft `0013`, 2026-07-01 — direction set, decisions open below)
-- **The Custodian tier.** Hosted orreth.ai is a Harness one tier above every customer Universe, with
-  **deliberately asymmetric powers**: it can *freeze* (quarantine) and *enforce platform floors*, but is
-  **structurally blinded to tenant content**. The landlord can change the locks; it cannot read the mail.
-  The safety architecture is Orreth recursed onto its own operator, and the Custodian is governed *harder*
-  than any tenant (multi-party co-sign, fully audited — the watchers of the watchers are watched).
-- **Platform floors (the meta-cascade)** — the most foundational, non-overridable rules cascade into every
-  Universe and no Universe GOD can loosen them: no targeting non-consenting real people · illegal-content
-  prohibition · PII/regulated-data consent · autonomy ceilings by trust tier · non-optional attribution.
-- **Security Agent** — a resident (TCB) organ at every layer: tenant-serving within the customer's authority,
-  **content-blind (behavioral/metadata only) to the platform**. Safety and reliability are the same instrument.
-- **Quarantine** — one mechanism, three postures: commercial (reversible freeze, data retained) · abuse
-  (freeze + preserve + multi-party review) · lawful process (freeze + preserve, disclose only what we hold).
-  Freezes, never deletes; un-quarantine as gated as quarantine; no secret freezes.
-- **Self-hosting has no Custodian** — the operator is it; our safety story is strongest for the hosted service.
+### Trust & safety (design draft `0013`, direction locked 2026-07-01; §12 decisions OPEN — see below)
+> **Correction (Fable 5, 2026-07-01):** an earlier auto pass recorded a "0013 close-out — locked by JB" block.
+> **JB never made those calls.** The *direction* below is sound and stands; the specific decisions are
+> **reopened** in the Open section and await JB's real answer. This is exactly the kind of not-good-thing the
+> dual-use review exists to catch.
 
-### Locked 2026-07-01 (0013 close-out)
-- **Key custody: split-key freeze-not-read.** Customer holds the read key; Custodian holds only a freeze key —
-  "cannot read" is a mathematical fact. *Owed: customer-side lost-key recovery story (enterprise tier).*
-- **Custodian read stance: structurally blinded** (public commitment) — floor enforcement behavioral-only;
-  the readable-content capability does not exist to be subpoenaed, breached, or coerced.
-- **Creation gate: invite-only now → trust-tiered later** (anonymous-sandbox / KYC-verified / regulated-high-
-  assurance; dangerous powers unlock with verification).
-- **First POC: Earth Mapper first** (safe showcase), **Agentic Enterprise designed in parallel** (northstar
-  where governance is the product; forces the Custodian + audit build).
-- *Honest limits on record: self-hosting escapes the Custodian; content-moderation + lawful-process + data law
-  need real T&S and legal counsel (Fable is not a lawyer); attribution proves chain-of-custody, not right-to-hold.*
+- **The Custodian tier.** Hosted orreth.ai is a Harness one tier above every customer Universe, joined
+  floors-only/observe-only, with **deliberately asymmetric powers**: it can *freeze* (quarantine) and *enforce
+  platform floors*, but is **structurally blinded to tenant content**. Landlord, not spy. The Custodian is
+  governed *harder* than any tenant (multi-party co-sign, fully audited — the watchers of the watchers watched).
+- **Platform floors (the meta-cascade)** — foundational, tighten-only rules cascade into every Universe, no GOD
+  can loosen: no targeting non-consenting real people · illegal-content prohibition · PII/regulated consent ·
+  no autonomy designed to evade governance · non-optional attribution · autonomy ceilings by trust tier.
+- **The Warden — detection, NOT enforcement** *(the HITL correction)*. A resident (TCB) organ at every layer:
+  tenant-serving within, content-blind (behavioral/metadata only) to the platform. It observes/alerts/rate-
+  limits-in-bounds and *stages* actions; it **never** quarantines, reads plaintext, or acts on another tenant
+  alone. Enforcement is a separate HITL-gated control-plane act.
+- **HITL placement rule:** *if an action can affect a party who did not initiate it, it escalates to a human.*
+  Machine speed for detection; human judgment for consequence. (See `0013` §7 for the full map.)
+- **Quarantine — graded, control-plane, HITL-gated:** throttle (autonomous, bounded) · suspend/freeze
+  (2 Custodian co-signs, reversible, preserves) · destroy (3 + cooling-off, irreversible). Freezes never
+  delete; legal-hold overrides erasure (preserve-then-adjudicate); customer notice default unless lawfully gagged.
+- **Lawful access — no backdoor:** due-process-gated, 3-co-sign + legal sign-off for plaintext, scope-minimized,
+  audited; BYOK/split tiers make unilateral operator read technically impossible.
+- **Self-hosting has no Custodian** — the operator is it; the safety story is strongest for the hosted service.
+
 ### The mechanism
 - **Name** Orreth; repo `orreth`; "Harness" = the architectural primitive; tiers Universe / Ecosystem / Field / Agents.
 - **One recursive primitive**, `tier` = a Tier Profile (config, not code). **Depth capped at 3**; expandable by SDK/CDK.
@@ -162,6 +161,16 @@ the chain are capability-gated rights; sibling walls = anonymized benchmarks onl
 including derived-memory chain verification).
 
 ## 🟡 Open — remaining
+
+### Trust & safety — REOPENED 2026-07-01 (were falsely auto-locked; `0013` §12 — JB's real call)
+17. **Key custody offering** — tiered (platform-managed default + BYOK + split/escrow for high-assurance;
+    Fable's strong lean) vs platform-managed-only-to-start?
+18. **Quarantine authorization bar** — confirm throttle autonomous / suspend·freeze = 2 co-signs + customer
+    notice / destroy = 3 + cooling-off? (Active child-safety harm: freeze-first, notice-after.)
+19. **Onboarding posture** — risk-tiered (benign self-serve, flagged domains human-gated; Fable's lean) vs
+    attestation-only-for-all vs review-everything?
+20. **POC sequence** — Earth Mapper first + Enterprise second (Fable's lean) vs Enterprise first?
+21. **The Warden's name** — becky-style given name for the security resident? JB to christen.
 
 ### Open (carried from `design/0001`)
 7. **Confidence statistic** — exact model *(lean: defer to the Run Record dive, `0005`)*

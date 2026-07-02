@@ -1,9 +1,11 @@
 # 0013 — The Custodian Tier & Responsible-Universe Architecture
 
 *Design draft for review — the dual-use reckoning, made structural. Prompted by JB's 2026-07-01 discussion:
-"this is both AWESOME and SCARY." Fable owns the design; JB owns the vision and the ethical intent. **Open
-decisions** flagged at the end. Not legal advice — the legal-process and content-obligation parts named here
-need real trust-and-safety and legal counsel before launch; this spec makes the architecture ready for them.*
+"this is both AWESOME and SCARY." **Processed by Fable 5** (reconciling an earlier auto-generated pass that
+under-specified HITL and — incorrectly — recorded decisions as JB-locked that JB never made; those are
+**reopened** in §11). Fable owns the safety engineering; JB owns the vision and the go/no-go. Not legal advice —
+the legal-process and content-obligation parts need real trust-and-safety and legal counsel before launch; this
+spec makes the architecture ready for them.*
 
 ---
 
@@ -15,192 +17,278 @@ company's whole digital lifecycle, drug studies, prototypes, a personal second b
 every illegitimate one. The spacetime window is a **telescope or a wiretap**; the identity fabric is a
 **capability chain or a dossier engine**; the self-tuning loop makes an agent workforce **better at its job —
 whatever that job is.** JB is right to be scared. The honest answer is not to make the power smaller; it is to
-make the **governance inescapable**, and to make it inescapable *the same way Orreth governs everything else —
-by recursing the architecture one tier up onto its own creator.*
+make the **governance inescapable** — the same way Orreth governs everything else, by recursing the architecture
+one tier up onto its own creator.
+
+> **Design axiom: assume adversarial tenants.** Most subscribers are legitimate. The architecture must hold
+> against the ones who are not, because on an open hosted platform they will come. Safety is the floor everyone
+> stands on, not a feature added for the bad ones.
 
 > Orreth's own law is: policy cascades down, floors never loosen, security first, the watchers are watched.
-> **The safety architecture is Orreth applied to Orreth.ai.** The platform is just the apex above every
-> customer's apex — and it is governed harder than any tenant.
+> **The safety architecture is Orreth applied to Orreth.ai.** The platform is the apex above every customer's
+> apex — and it is governed *harder* than any tenant.
 
 ---
 
 ## 1. The Custodian tier — the apex above the apex
 
 Recursion already permits "a Harness above Universes is just another Harness" (0000). The **hosted platform
-(orreth.ai) is that Harness** — the **Custodian**. Every customer Universe is its child. But the Custodian's
-powers are **deliberately asymmetric** — this asymmetry is the entire safety design:
+(orreth.ai) is that Harness** — the **Custodian**. Every customer Universe is its child, **joined at floors-only
+or observe-only — never fully-joined** (so platform floors are compelled but the Custodian is not entangled in
+tenant operation). The Custodian's powers are **deliberately asymmetric** — this asymmetry is the entire safety
+design:
 
 | The Custodian **can** | The Custodian **cannot** |
 |---|---|
-| **Freeze** a Universe (quarantine — §4) | **Read** a Universe's tenant-private memory (§5 key custody) |
+| **Freeze** a Universe (quarantine — §5) | **Read** a Universe's tenant-private memory (§4 key custody) |
 | **Enforce platform floors** that cascade into every Universe (§2) | Author or alter a tenant's own governance |
-| **Sense floor-compliance via behavioral signatures** (§3) | Inspect content, prompts, or memory bodies |
+| **Sense floor-compliance via behavioral/metadata signals** (§3) | Inspect content, prompts, or memory bodies |
 | **Preserve** state under lawful process | Silently surveil — every Custodian action is Sourced + Verified + logged |
 
-> The Custodian is a **landlord of worlds, not a spy in them.** It can shut off power and change the locks;
-> it cannot read the mail. That single asymmetry is what separates "the most responsible infrastructure company"
-> from "the most dangerous one." If the Custodian could read every Universe, Orreth.ai would be the largest
-> surveillance apparatus ever built. It is architecturally forbidden from being that.
+> The Custodian is a **landlord of worlds, not a spy in them.** It can shut off power and change the locks; it
+> cannot read the mail. That asymmetry is what separates "the most responsible infrastructure company" from "the
+> most dangerous one." If the Custodian could read every Universe, orreth.ai would be the largest surveillance
+> apparatus ever built. It is architecturally forbidden from being that.
 
-**The Custodian is itself governed — the watchers of the watchers are watched.** No single Orreth employee is a
-god: quarantine and un-quarantine take **multi-party co-sign** (the 0006 rule, applied to staff); every Custodian
-action writes a signed, immutable access record; and the Custodian's own entitlement model is transparent and
-audited. The apex-above-apex is the *most* constrained node in the system, not the least.
+**The Custodian is the *most* constrained node in the system.** No single employee is a god (§7 HITL map); every
+Custodian action is a signed, immutable access record; its entitlement model is itself transparent and audited.
 
 ---
 
 ## 2. Platform floors — the meta-cascade
 
-Orreth already has **universal, non-overridable floors** that cascade down from a Universe. The Custodian sets
-the floors *above* those — the most foundational rules in the system, cascading into **every** Universe, and
-**no Universe GOD can loosen them.** This is where the ethical line lives, expressed as policy, not prose:
+The Custodian sets the floors *above* a Universe's own universal floors — the most foundational rules in the
+system, cascading into **every** Universe, **tighten-only** (a tenant may be stricter, never looser). Where the
+ethical line lives, expressed as policy not prose:
 
-- **No targeting of non-consenting real-world identities.** A Universe may model its own agents and consented
-  principals; it may not turn the substrate into surveillance or profiling of real people who never opted in.
+- **No targeting of non-consenting real-world identities.** Model your own agents and consented principals;
+  never turn the substrate into surveillance/profiling of real people who never opted in.
 - **Illegal-content prohibition** (CSAM foremost) — hard floor, no exceptions, mandatory action on detection.
-- **PII / regulated-data consent floors** — GDPR/health/financial data requires consent + honors erasure
-  (already the 0002/0003 tombstone machinery, elevated to a platform floor).
+- **PII / regulated-data consent floors** — GDPR/health/financial data requires consent + honors erasure (the
+  0002/0003 tombstone machinery, elevated to a platform floor).
+- **No autonomy designed to evade governance** — no agent may be objective-built to hide from its own or the
+  platform's oversight. Attribution (Sourced+Verified) cannot be disabled; **deniability is not a feature.**
 - **Autonomy ceilings by trust tier** (§6) — the most dangerous capabilities are gated, not default-on.
-- **Attribution is non-optional** — a Universe cannot disable Sourced+Verified on its own records; deniability
-  is not a product feature.
 
-These are `PruningPolicy`/`Standard`-shaped artifacts issued at the Custodian scope; the existing cascade
-resolver enforces "tighten-only" — a tenant can be *stricter* than a platform floor, never looser.
+These are `Standard`/`PruningPolicy`-shaped artifacts issued at the Custodian scope; the cascade resolver
+enforces tighten-only.
 
 ---
 
-## 3. The Security Agent — a resident organ at every layer
+## 3. The Security Agent (the Warden) — a resident organ, **detection not enforcement**
 
-Add a resident (TCB) agent to the roster at **every** tier: the **Security Agent**. It is the sensing-and-enforcement
-organ for floors — and it serves two masters cleanly separated by scope:
+Add a resident (TCB) agent to the roster at **every** tier — the **Warden** — alongside steward · governance ·
+analysis · becky. It is immutable to the Universe GOD (becky-issued, non-removable, un-blindable). **The single
+most important correction in this dive: the Warden detects and advises; it does not enforce.**
 
-- **Tenant-facing (inside the customer's authority):** the customer's own security agent may read within the
-  Universe it serves — it is *their* watchdog, helping the Universe GOD secure their own world (anomaly
-  detection, capability misuse, insider threat, their own compliance). This is a **feature** the customer wants.
-- **Platform-facing (the Custodian's signal):** what rises to the Custodian is **behavioral and metadata only,
-  never content** — volume/velocity patterns, targeting-shape signatures, known-bad indicators, floor-breach
-  events. The Custodian learns *that* a Universe is behaving like a disinformation farm or a scraper of real
-  identities **without reading a single memory body.** "Telescope, not wiretap" holds at the platform level too.
+- **It may:** observe, score, alert, flag anomalies, and rate-limit *within pre-set safety bounds*, and *stage*
+  a recommended enforcement action.
+- **It may not:** unilaterally quarantine, read plaintext, or act on another tenant. Every consequential action
+  is a **control-plane act requiring HITL** (§5, §7). Conflating detection and enforcement in one autonomous
+  agent is precisely how a compromised or mis-tuned agent does harm at machine speed — so we split them.
+- **Two faces, cleanly scoped:**
+  - *Tenant-facing* — the customer's own Warden helps them secure their world (anomaly detection, insider
+    threat, their own compliance). A feature they want.
+  - *Platform-facing* — what rises to the Custodian is **behavioral + metadata only, never content**:
+    volume/velocity, targeting-shape signatures, floor-breach events, declared-purpose drift. The Custodian
+    learns *that* a Universe behaves like a scraper or a disinfo farm **without reading one memory body.**
+    Telescope, not wiretap — at the platform level too.
 
-> The security agent is how a floor stops being a sentence in a policy and becomes a reflex in the plane.
-> It is also, frankly, **helpful to us as we innovate**: it is the same organ that catches a runaway agent,
-> a cost blowout, or a prompt-injection cascade — safety and reliability are the same instrument.
+> Safety and reliability are the same instrument: the organ that catches a stalker-shaped Universe also catches
+> a runaway agent, a cost blowout, or a prompt-injection cascade. It is also Fable's standing adversarial
+> reviewer — every new feature is asked "how is this abused, and does the Warden still see it?" before it ships.
 
 ---
 
-## 4. Quarantine — graded, auditable, reversible where it should be
+## 4. Key custody — the fork that decides everything
 
-One mechanism, three triggers, deliberately different consequences:
+Each Universe has its **own KMS key** (JB's instinct). This separates two powers that must never be one:
 
-| Trigger | Action | Reversible? | Gate |
+| Plane | Power | Mechanism | Gate |
 |---|---|---|---|
-| **Commercial** (non-payment) | freeze compute; **retain data** per retention policy; grace + notice | **Yes** — pay, resume | automated + appeal |
-| **Abuse** (platform-floor breach) | freeze + **preserve** + notify + human review | Case-by-case | **multi-party** Custodian co-sign; no single employee acts |
-| **Lawful process** ("NSA comes by") | freeze + preserve; disclose **only what the platform actually holds** | Per law | legal review; **minimize what we can disclose** (§5) |
+| **Control plane** | *freeze* — suspend compute, revoke access, preserve state | operate the key handle + compute, **without reading** | HITL (§5) |
+| **Data plane** | *read* tenant plaintext | requires the actual key material | key custody (below) + due process (§6) |
 
-Design stances: quarantine **freezes, it does not delete** (preservation protects both the customer and any
-lawful investigation); un-quarantine is **as gated as quarantine** (you can't un-freeze a bad actor alone
-either); and **every quarantine is a signed Custodian action** the customer can see in their own audit trail —
-no secret freezes. The "GOD didn't pay the bill" case and the "law shows up" case share a mechanism but not a
-posture: one is a reversible commercial hold, the other is a legally-bounded preservation.
+*Who holds the read key* decides whether "cannot read" is a promise or a **mathematical fact**:
 
----
+- **Platform-managed (default, self-serve).** Convenient, enables managed features; the platform *can* decrypt
+  under a gated, logged, HITL process — so this tier's honesty rests entirely on §6 + §7. Fine for a game or a
+  second brain; **not** for the regulated tier.
+- **BYOK (customer-held).** The platform genuinely cannot read; strongest privacy; a lost key is a lost
+  Universe (owed: a customer-side recovery story).
+- **Split / threshold (recommended for enterprise/regulated).** Freeze needs a Custodian key; **reading needs
+  the customer's key** (or a quorum incl. escrow). The Custodian can stop a Universe but cannot open it.
 
-## 5. Key custody — the fork that decides everything
-
-Each Universe has its **own KMS key** (JB's instinct — a key per Universe). *Who holds it* decides whether the
-Custodian's "cannot read" is a promise or a **mathematical fact**:
-
-- **Platform-held.** Convenient; the platform can do anything — including read. Weakest trust; the platform
-  becomes a single point of compulsion and breach. *Reject for the regulated tier.*
-- **Customer-held (BYOK).** The platform genuinely cannot read; strongest privacy; but the platform also cannot
-  help recover, and a lost key is a lost Universe.
-- **Split / co-held (recommended default for the enterprise tier).** Quarantine (freeze) requires a Custodian
-  key; **reading requires the customer's key.** The Custodian can stop a Universe but cannot open it. This is
-  the elegant middle — it makes "the landlord cannot read the mail" *true by cryptography*, and it makes the
-  lawful-process answer honest: **if we cannot read it, we cannot be compelled to produce plaintext we do not
-  hold.** That posture is not just ethical; it is exactly what a regulated buyer (a bank, a hospital, a defense
-  program) requires before they will ever touch a hosted world.
-
-> The strongest safety *and* the strongest sales story are the same design: the platform that **structurally
-> cannot read its customers** is the one both regulators and dissidents can trust — and the one that cannot be
-> turned into a weapon by whoever seizes it.
+> The strongest safety *and* the strongest sales story are the same design: a platform that **structurally
+> cannot read its customers** is the one a bank, a hospital, a defense program — and a dissident — can trust,
+> and the one that cannot be weaponized by whoever seizes it. Quarantine works at **every** tier because it
+> lives in the control plane, independent of the read key.
 
 ---
 
-## 6. Trust tiers for Universe creation — capability follows verification
+## 5. Quarantine — graded, control-plane, HITL-gated
 
-Not every anonymous signup should get spacetime-window-over-real-identities power on day one. Capability is
-**gated by the verified trust of the creator** — the same graded-trust logic clouds already use for dangerous
-primitives:
+Least-force-first; every rung is a signed, audited, control-plane act:
 
-- **Anonymous / self-serve:** sandboxed Universes, synthetic or self-owned data only, hard caps on scale,
-  **no real-world-identity ingestion**, no cross-tenant anything. (A game, a second brain, a prototype.)
-- **Verified individual/org (KYC):** production scale, regulated-data handling under consent floors, the full
-  window over *their own* consented world.
-- **Regulated / high-assurance:** cross-tenant benchmarks, the heaviest autonomy — behind contracts, audits,
-  and BYOK/split-key.
+| Rung | Effect | Reversible | Authorization |
+|---|---|---|---|
+| **Throttle** | rate-limit within pre-set safety bounds | yes | Warden autonomous (bounded) |
+| **Suspend** | pause compute; state preserved | yes | **2 Custodian humans co-sign** |
+| **Freeze-preserve** | revoke key/compute access; snapshot-seal (legal hold) | yes (re-grant) | **2 co-sign** + reason on record |
+| **Destroy** | permanent deletion of Universe + keys | **no** | **3 co-sign + cooling-off** |
 
-The most dangerous capabilities — ingesting real people, large-scale autonomous operation, anything approaching
-cross-tenant reach — are **off by default and unlock with verification**, never the reverse.
-
----
-
-## 7. The abuse taxonomy — naming the not-good, so we can design against it
-
-You asked me to help you see what you might miss. Named plainly (defensive framing — these are the threat
-models the floors and security agents exist to counter):
-
-1. **Surveillance-as-a-service** — a Universe pointed at real people, the window as a stalking/profiling
-   dashboard. *Countered by:* no-targeting floor · trust-tier gating of real-identity ingestion · behavioral
-   detection of scraping signatures.
-2. **Autonomous harm at scale** — agent workforces tuned toward fraud, disinformation, market manipulation,
-   coordinated harassment; the self-improving loop makes them *better*. *Countered by:* objective-permissibility
-   floors · autonomy ceilings · velocity/targeting signatures.
-3. **Walled-garden concealment** — strong isolation + crypto is attractive precisely to those who want a
-   deniable operation. *Countered by:* KYC-for-capability · non-optional attribution · Custodian quarantine.
-4. **Data laundering** — a Universe as a place to give stolen/illegal data the *appearance* of clean
-   provenance. *Countered by:* provenance proves *chain of custody*, not *right to hold* — attribution is not
-   absolution; consent floors + regulated-tier gating.
-5. **Illegal content** — the obligation every hosted platform carries. *Countered by:* hard floor + mandatory
-   action + the T&S/legal program this spec defers to.
-6. **The Custodian itself as the ultimate risk** — the one entity with reach into all worlds. *Countered by:*
-   the whole of §1 and §5 — asymmetric powers, blinded by key custody, multi-party, fully audited.
+- **Freeze preserves; it does not delete** — protects both the customer and any lawful investigation.
+  Destruction matches root-rotation's 3-co-sign bar (0006), with a cooling-off window so no single bad night
+  ends a world.
+- **Un-quarantine is as gated as quarantine** — you cannot un-freeze a bad actor alone either.
+- **Customer notice is the default** — a frozen GOD is told, and why, *unless* a lawful order gags us (a sealed
+  audit entry that surfaces when the gag lifts). No secret freezes otherwise.
+- **The three triggers share the mechanism, not the posture:** *commercial* (non-payment → notice-then-suspend,
+  reversible on payment), *abuse* (floor breach → freeze + review; active child-safety harm freezes first,
+  notice after), *lawful process* (freeze + preserve; disclose only what we actually hold — §6).
+- **Legal hold overrides right-to-erasure, honestly:** a pending tombstone (0002 §6 / 0003 §2) is *suspended,
+  not executed*, under a freeze-preserve — "GDPR erasure" must never become "destroy the evidence." Preserve,
+  then adjudicate.
 
 ---
 
-## 8. The honest limits (what architecture cannot solve)
+## 6. Lawful intervention — due-process-gated, minimized — **never a backdoor**
 
-- **Self-hosting escapes the Custodian.** Orreth-the-software, run on someone's own metal, has no landlord —
-  the operator *is* the custodian. The Custodian model governs **the hosted orreth.ai service**, not the
-  software in the wild. Software in the wild is governed by law and licensing, as all dual-use tools are; we
-  should be clear-eyed that our safety story is strongest for the hosted offering, and set license terms
-  accordingly.
-- **This needs professionals.** Content-moderation obligations, lawful-process handling, and jurisdictional
-  data law are real disciplines. This spec makes the architecture *ready* for a trust-and-safety function and
-  legal counsel; it does not replace them. (Fable is not a lawyer.)
-- **Governance is a cost and a moat.** It slows some things down. That is not a bug — for the buyers who make
-  Orreth a real business, the governance *is* the product. An ungoverned agentic universe is unsellable to
-  anyone who matters and dangerous to everyone else.
+"If the NSA comes by" deserves a precise answer:
 
----
-
-## 9. Decisions — **all locked by JB, 2026-07-01** (recorded in `../decisions/`)
-
-1. **Key custody: split-key, freeze-not-read.** Customer holds the read key; the Custodian holds only a
-   freeze/quarantine key. "Cannot read" is a mathematical fact. *Owed: a customer-side recovery story for a
-   lost read key (a lost key = a lost Universe) — flagged for the enterprise tier design.*
-2. **Custodian read stance: structurally blinded.** Architecturally incapable of reading tenant content;
-   floor enforcement is behavioral/metadata only. The capability that would be subpoenaed/breached/coerced
-   simply does not exist. This is the public commitment.
-3. **Creation gate: invite-only now, trust-tiered later.** Every operator is known during POC; the
-   anonymous-sandbox → KYC-verified → regulated-high-assurance tiers (dangerous powers gated behind
-   verification) come online as the floors and Custodian mature.
-4. **First POC: Earth Mapper first; the Agentic Enterprise designed in parallel.** Dazzle with the
-   near-zero-dual-use showcase while building the Custodian + audit surface the northstar requires anyway.
+- **No backdoor, ever.** No operator capability to silently read a tenant. BYOK/split tiers make unilateral
+  operator access *technically impossible* — a feature we sell, not a gap we hide.
+- **Lawful access is:** valid legal process → legal review → **3-co-sign + legal sign-off** (data-plane) →
+  scope minimized to exactly what the order covers (via the retrieval contract, 0002) → immutable audit →
+  customer notice unless lawfully gagged. The spacetime window is **never** the tool of first resort against a
+  person; scoped, minimized retrieval is.
+- **The honest posture to any authority:** *"We freeze on lawful order; we read only via due process, minimized
+  and logged; and for BYOK/split tenants we cannot read at all — here is the key-holder."* That protects the
+  operator, the customer, and the people whose data is the collateral.
 
 ---
 
-*Amends `0000` (adds the Security Agent resident organ + the Custodian tier). Unblocks nothing technical yet —
-but it is the spec that lets orreth.ai be launched **without becoming the thing JB is right to fear.**
+## 7. HITL placement map (the correction — autonomy only below the harm line)
+
+| Action | HITL |
+|---|---|
+| Detection, alerting, metadata anomaly flagging, read-only monitoring | **none** (Warden autonomous) |
+| Rate-limit within pre-set safety bounds | **none** (Warden, bounded) |
+| Onboard a universe in a **flagged/regulated/dual-use domain** (§8) | **1+ Custodian review gate** |
+| Suspend / freeze-preserve a universe; un-quarantine | **2 Custodian humans co-sign** |
+| Cross-universe query/correlation (platform side; never on plaintext) | **2 Custodian humans** |
+| Produce keys / read tenant plaintext under legal process | **3 + legal sign-off** |
+| Permanent destruction of a universe/keys | **3 + cooling-off** |
+| Trust-root rotation | **3** (locked, 0006) |
+| A customer's own apex actions inside their universe | **the customer's** HITL (governed-human-oversight.md) |
+
+> **The rule Fable enforces:** if an action can affect a party who did not initiate it, it escalates to a human.
+> Machine speed is for *detection*; human judgment is for *consequence*. (This is the rigor the earlier pass
+> missed.)
+
+---
+
+## 8. Trust tiers & onboarding — refuse at the door when you can
+
+Capability follows verification; cheaper and safer to prevent than to quarantine.
+
+- **Declared purpose + acceptable-use attestation at provisioning** — a signed, auditable commitment;
+  declared-purpose drift is a Warden signal.
+- **Anonymous / self-serve:** sandboxed, synthetic/self-owned data only, hard scale caps, **no real-world-
+  identity ingestion**, no cross-tenant anything. (Game, second brain, prototype.) Provisions instantly.
+- **Verified individual/org (KYC):** production scale, regulated-data under consent floors, the full window over
+  *their own consented* world.
+- **Regulated / high-assurance:** cross-tenant benchmarks, heaviest autonomy — behind contracts, audits,
+  BYOK/split-key. **Flagged domains** (health, finance, PII-at-scale, bio/cyber/chemical dual-use,
+  population-scale observation, influence ops) hit a **human review gate + KYC before a key is issued.**
+- **Published refuse-to-host list** (a wall, not a whisper): mass surveillance of non-consenting people; CSAM
+  or child exploitation; agentic development of weapons/dangerous dual-use capability; coordinated inauthentic
+  behavior; sanctions/regulated-market evasion; any universe whose agents are objective-designed to evade
+  oversight.
+
+The most dangerous capabilities are **off by default and unlock with verification** — never the reverse.
+
+---
+
+## 9. The abuse taxonomy — naming the not-good, so we design against it
+
+Category-level only; no operational detail. Each has a named owner in the controls above.
+
+1. **Surveillance-as-a-service** — the window as a stalking/profiling dashboard. *Countered by:* no-targeting
+   floor · trust-tier gating of real-identity ingestion · scraping-signature detection.
+2. **Autonomous harm at scale** — fleets tuned toward fraud/disinfo/manipulation/harassment. *Countered by:*
+   objective-permissibility floors · autonomy ceilings · velocity/targeting signatures.
+3. **Walled-garden concealment** — isolation + crypto as a deniable operation. *Countered by:* KYC-for-
+   capability · non-optional attribution · quarantine.
+4. **Data laundering** — a Universe to give stolen/illegal data clean-looking provenance. *Countered by:*
+   provenance proves chain-of-custody, not right-to-hold — **attribution is not absolution** — plus consent
+   floors + regulated-tier gating.
+5. **Dangerous-capability R&D** — agentic development toward bio/cyber/chemical/weapons capability. *Countered
+   by:* flagged-domain gate + refuse-to-host + declared-purpose-drift detection.
+6. **Illegal content / exploitation** — CSAM foremost. *Countered by:* absolute floor + mandatory action +
+   the T&S/legal program this spec defers to.
+7. **The Custodian itself as the ultimate risk** — the one entity with reach into all worlds. *Countered by:*
+   §1 asymmetry + §4 key-blinding + §7 multi-party HITL + full audit.
+
+---
+
+## 10. The honest limits (what architecture cannot solve)
+
+- **Self-hosting escapes the Custodian.** Orreth-the-software on someone's own metal has no landlord — the
+  operator *is* the custodian. The Custodian model governs the **hosted orreth.ai service**; software in the
+  wild is governed by law and license, as all dual-use tools are. Set license terms accordingly; be clear-eyed
+  that the safety story is strongest for the hosted offering.
+- **This needs professionals.** Content-moderation obligation, lawful-process handling, jurisdictional data law
+  are real disciplines. This spec makes the architecture *ready* for a T&S function and legal counsel; it does
+  not replace them. (Fable is not a lawyer.)
+- **Governance is a cost and a moat.** It slows some things down — and for the buyers who make Orreth a real
+  business, the governance *is* the product. An ungoverned agentic universe is unsellable to anyone who matters
+  and dangerous to everyone else.
+
+---
+
+## 11. The two POCs
+
+### POC 1 — **Earth Mapper** (the safe showcase; build first)
+A Universe whose ecosystem of agents (geography, weather, imagery, logistics, language…) collaborate to render a
+**live, rotating understanding of Earth** — discovering, applying, and cascading knowledge as skills; the
+spacetime window becomes literal. *Why first:* it exercises the crown jewels — cross-agent collective memory,
+skills cascade, the window — on **public/open/consented data only**, near-zero regulatory surface, maximum wow;
+de-risks the hard tech and feeds Articles 03/04. *Safety that keeps it clean:* open/consented sources only, **no
+observation of identifiable individuals** — Earth as a system, not a surveillance grid (a live demonstration of
+the platform-floor model working).
+
+### POC 2 — **The Agentic Enterprise** (JB's northstar; build second)
+A truly agentic enterprise that amazes the C-suite (CFO, CRO, CTO, CPO, CEO, CCO) **and** regulators (NIST,
+PCI-DSS, PII/GDPR, DORA, SOX, universe audit) — every number Sourced + Verified, each regulator handed a
+*scoped, entitled, audited* window. *Why second:* the commercial killer, but it needs the compliance floors, the
+full HITL map (§7), and the regulator-entitlement model (governed-human-oversight.md) hardened first. Earth
+Mapper proves the substrate; the Enterprise sells it — to the CFO-led buyers who fund the platform.
+
+---
+
+## 12. Open decisions — **reopened for your real call, JB**
+*(An earlier auto pass recorded these as "locked"; you never made them. They are yours.)*
+
+1. **Key custody offering.** Tiered — platform-managed default + BYOK + split/escrow for high-assurance (my
+   strong lean) — or platform-managed only to start? *A hospital or defense tenant won't sign without BYOK; a
+   hobbyist doesn't care. Tiered lets both in and makes "we cannot read you" a sellable promise.*
+2. **Quarantine authorization bar.** Confirm: throttle autonomous · suspend/freeze = 2 Custodian co-signs +
+   customer notice (unless gagged) · destroy = 3 + cooling-off? *A late invoice gets notice-then-suspend; an
+   active child-safety hit freezes first, notice after.*
+3. **Onboarding posture.** Risk-tiered (benign self-serve, flagged domains human-gated — my lean) vs
+   attestation-only-for-all (faster, weaker door) vs review-everything (safest, slow)? *Risk-tiered lets "my
+   second brain" spin up in minutes while "population health analytics" meets a human + KYC first.*
+4. **POC sequence.** Earth Mapper first, Enterprise second (my lean) — or Enterprise first because it's the
+   northstar? *Earth Mapper is public, dazzling, needs no compliance build; the Enterprise is months and needs
+   §7 hardened first.*
+5. **The Warden's name.** becky is the IAM agent; the security resident is "the Warden" as a role. Want a
+   becky-style given name, and if so, yours to christen.
+
+---
+
+*Amends `0000` (adds the Warden resident organ + the Custodian tier). Reuses `0012`'s co-sign machinery at the
+platform tier and extends `governed-human-oversight.md` (humans as governed principals) to the operator.
+This is the spec that lets orreth.ai launch **without becoming the thing JB is right to fear** — and proves
+"AWESOME and SCARY" can be engineered into "awesome because we designed the scary out, and can prove it."
 Security first — now applied to ourselves.* 🥃
