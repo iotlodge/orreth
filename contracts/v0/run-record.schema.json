@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/run-record.schema.json",
+  "title": "RunRecord",
+  "description": "The aggregatable envelope for one unit of work (0005 §1). Resident-authored — evaluations are never self-asserted (0001). Cohort key (scope, goal_hash) is EH's key, depth-agnostic. occurred_at buckets in universe-time; cost is physical (0004 §1).",
+  "type": "object",
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/ContentHash" },
+    "agent": { "$ref": "common.schema.json#/$defs/DID", "description": "Who did the work — the subject, never the author." },
+    "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+    "goal_hash": { "type": "string", "description": "The cohort key's second half — (scope, goal_hash), lifted from EH." },
+    "skill_ref": { "$ref": "common.schema.json#/$defs/StandardRef", "description": "Which skill/version was exercised (0001), if any." },
+    "occurred_at": { "$ref": "common.schema.json#/$defs/UniverseTime" },
+    "received_at": { "$ref": "common.schema.json#/$defs/WallClock" },
+    "outcome": { "enum": ["success", "failure", "partial", "aborted"] },
+    "scores": {
+      "type": "array",
+      "description": "Per-objective scores against the tier's objective vector (0004 §3). floor_breached marks a never-trade-off objective violated in this run.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "objective": { "type": "string" },
+          "score": { "type": "number", "minimum": 0, "maximum": 1 },
+          "floor_breached": { "type": "boolean", "default": false }
+        },
+        "required": ["objective", "score"],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "cost": {
+      "type": "object",
+      "description": "Physical spend — wall-clock side of the two-clock split.",
+      "properties": {
+        "tokens": { "type": "integer", "minimum": 0 },
+        "model_calls": { "type": "integer", "minimum": 0 },
+        "usd": { "type": "number", "minimum": 0 },
+        "wall_ms": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "run_ref": { "type": "string", "description": "Opaque trace ref — the full run detail at the owning tier (pointer, not payload)." },
+    "author": { "$ref": "common.schema.json#/$defs/DID", "description": "The resident (steward/judge) that wrote this — never the agent grading itself (0001)." },
+    "sig": { "$ref": "common.schema.json#/$defs/Sig" }
+  },
+  "required": ["id", "agent", "scope", "goal_hash", "occurred_at", "outcome", "scores", "author", "sig"],
+  "additionalProperties": false,
+  "$defs": {
+    "ObjectiveStat": {
+      "type": "object",
+      "description": "Sufficient statistics per objective — the monoid element (0005 §2). The Beta prior is applied ONCE at report time (merging posteriors would double-count it).",
+      "properties": {
+        "objective": { "type": "string" },
+        "n": { "type": "integer", "minimum": 0 },
+        "sum": { "type": "number", "minimum": 0 },
+        "sum_sq": { "type": "number", "minimum": 0 },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "floor_breaches": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["objective", "n", "sum", "sum_sq", "min", "max", "floor_breaches"],
+      "additionalProperties": false
+    },
+    "StatBundle": {
+      "type": "object",
+      "description": "The monoid (0005 §2): merge is component-wise, associative, with the empty bundle as identity. Everything a tier needs to score, price, and trust a cohort — no raw records travel.",
+      "properties": {
+        "n": { "type": "integer", "minimum": 0 },
+        "outcomes": {
+          "type": "object",
+          "properties": {
+            "success": { "type": "integer", "minimum": 0 },
+            "failure": { "type": "integer", "minimum": 0 },
+            "partial": { "type": "integer", "minimum": 0 },
+            "aborted": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["success", "failure", "partial", "aborted"],
+          "additionalProperties": false
+        },
+        "per_objective": { "type": "array", "items": { "$ref": "#/$defs/ObjectiveStat" } },
+        "cost": {
+          "type": "object",
+          "properties": {
+            "tokens": { "type": "integer", "minimum": 0 },
+            "model_calls": { "type": "integer", "minimum": 0 },
+            "usd": { "type": "number", "minimum": 0 },
+            "wall_ms": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "compliance": { "enum": ["clean", "breached"], "description": "Locked 2026-07-02: any floor breach anywhere ⇒ 'breached' — flagged, never averaged away; the mean stays honest." }
+      },
+      "required": ["n", "outcomes", "per_objective", "compliance"],
+      "additionalProperties": false
+    },
+    "RollUp": {
+      "type": "object",
+      "description": "A signed, content-addressed aggregate for a cohort × universe-time bucket (0005 §5). Composable: contributors may be RunRecords or child RollUps — the stats are identical either way (the monoid law, tested).",
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/ContentHash" },
+        "scope": { "$ref": "common.schema.json#/$defs/ScopePath", "description": "The aggregating tier." },
+        "cohort": {
+          "type": "object",
+          "properties": {
+            "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+            "goal_hash": { "type": "string" },
+            "agent": { "$ref": "common.schema.json#/$defs/DID" }
+          },
+          "minProperties": 1,
+          "additionalProperties": false
+        },
+        "bucket": { "$ref": "common.schema.json#/$defs/TimeWindow", "description": "Universe-time (0004): the season, the quarter — the same monoid." },
+        "stats": { "$ref": "#/$defs/StatBundle" },
+        "contributors": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/ContentHash" },
+          "description": "Signed content-addressed pointers (the locked roll-up mechanism) — RunRecords or child RollUps."
+        },
+        "supersedes": { "$ref": "common.schema.json#/$defs/ContentHash", "description": "Late arrivals re-aggregate by superseding — annotate, never rewrite." },
+        "author": { "$ref": "common.schema.json#/$defs/DID" },
+        "version": { "$ref": "common.schema.json#/$defs/SemVer" },
+        "sig": { "$ref": "common.schema.json#/$defs/Sig" }
+      },
+      "required": ["id", "scope", "cohort", "bucket", "stats", "contributors", "author", "version", "sig"],
+      "additionalProperties": false
+    }
+  }
+}

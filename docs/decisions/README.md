@@ -158,6 +158,20 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
 - *Schema deltas landed same day (UniverseTime/WallClock split, occurred_at/received_at, provenance_class,
   TimeWindow.clock, TierProfile clock/objective/retention_classes); simulator enforces + proves: 12/12 tests.*
 
+### Locked 2026-07-02 (0005 close-out — the score that composes)
+- **Confidence = Bayesian posterior** (discharges open #7, the last carried from 0001). Scores mean-match into
+  Beta pseudo-counts; a weak per-tier prior (`confidence_prior`, Tier Profile dial, default uniform) is applied
+  **once at the report edge** — bundles store pure evidence, merging them can never double-count opinion.
+  Reported as mean + 95% credible interval + n: count-weighted by construction, honest at tiny n.
+- **Floor breaches: flag, never average away.** Any breach in a window sets `compliance: breached` —
+  unmissable, undilutable by volume — and the performance mean is untouched. A 0.98 agent with one compliance
+  breach shows both truths.
+- **Portfolio/interview shows mean + interval + n** ("0.94 ± 0.03 across 47 runs") — honest uncertainty is the
+  anti-star-rating differentiator; the 0002 noise defense applies on top.
+- *Mechanism landed same day: `run-record.schema.json` (RunRecord · StatBundle · RollUp), simulator
+  `rollup.py` + `record_run`/`roll_up` (push-up, pointers only — raw runs never travel), 5 new tests incl. the
+  monoid one-truth law and a League-standings tree roll-up: 17/17.*
+
 ### Locked 2026-07-01 (interop/UX pre-decisions — drive the 0008 dive)
 - **Authoring is dual-mode, equal weight** — JB's call: English and canvas are both first-class surfaces.
   Tractable because of the next lock: both are *projections of one IR* — there is no text↔canvas sync
@@ -225,8 +239,8 @@ including derived-memory chain verification).
 ### ✅ Trust & safety (`0013`) — nothing open
 21. ~~The Warden's name~~ — **christened `vigil` by JB, 2026-07-02.** 0013 has no remaining open items.
 
-### Open (carried from `design/0001`)
-7. **Confidence statistic** — exact model *(lean: defer to the Run Record dive, `0005`)*
+### ✅ Carried from `design/0001` — discharged
+7. ~~Confidence statistic~~ — **locked 2026-07-02 in the 0005 close-out: Bayesian posterior** (see above).
 
 ### Open (product / GTM — "Build My First Universe")
 12. **Universe templates** = a Tier Profile + starter bundle (Standards, skill archetypes, agent-template roster,

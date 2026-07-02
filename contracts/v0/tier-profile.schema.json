@@ -20,6 +20,14 @@
       "required": ["mode"],
       "additionalProperties": false
     },
+    "confidence_prior": {
+      "type": "array",
+      "description": "The tier's weak Beta prior [alpha, beta] for rolled-score confidence (0005 §3, locked 2026-07-02). Applied ONCE at the report edge — never stored in bundles. Default uniform (1,1).",
+      "items": { "type": "number", "exclusiveMinimum": 0 },
+      "minItems": 2,
+      "maxItems": 2,
+      "default": [1, 1]
+    },
     "objective": {
       "type": "array",
       "description": "The objective vector (0004 §3, locked 2026-07-02) — what 'good' means at this tier; the dial the governance loop steers by. Shape locked here; scoring semantics land in 0005. A 'floor: true' objective never trades off.",

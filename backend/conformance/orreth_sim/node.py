@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from datetime import datetime
 
-from . import crypto
+from . import crypto, rollup
 from .identity import AuthzError, Becky, Nanda, NOW, is_within, tenant_of
 from .schemas import validate
 
@@ -64,6 +64,8 @@ class HarnessNode:
         self.local_floors: dict[str, dict] = {}
         self.access_log: list[dict] = []
         self.high_water: str | None = None          # the scope's universe-time frontier (0004 §1)
+        self.runs: dict[str, dict] = {}             # ContentHash -> RunRecord (0005)
+        self.child_rollups: list[dict] = []         # RollUps pushed up by children
         self._bundle: dict | None = None            # what children PULL
         # a layer is born with its staff (0006 §2): the steward exists before any workforce
         self.steward, self.steward_kp = becky.issue_identity(
@@ -206,6 +208,54 @@ class HarnessNode:
             validate(env, "signed-record.schema.json#/$defs/SignedRecord")
             self.parent.write(dist)  # PUSH up — the parent verifies for itself
         return dist
+
+    # ---- 0005: run records + the monoidal roll-up -----------------------------------
+    def record_run(self, run: dict) -> str:
+        """Resident-authored only (0001: no agent grades its own yardstick)."""
+        validate(run, "run-record.schema.json")
+        pub = self.nanda.public(run["author"])
+        if not crypto.verify_sig(run["sig"], {k: run[k] for k in
+                                              ("id", "agent", "scope", "goal_hash", "occurred_at")}, pub):
+            raise AuthzError("bad run signature")
+        if run["author"] == run["agent"]:
+            raise AuthzError("self-asserted evaluation — resident-authored only (0001)")
+        self.runs[run["id"]] = run
+        return run["id"]
+
+    def roll_up(self, bucket: dict, goal_hash: str | None = None) -> dict:
+        """Aggregate own runs in the universe-time bucket + child bundles, sign, push UP.
+
+        The stats are identical whether built from RunRecords or child RollUps — the
+        monoid law is the 'one truth' property the conformance tests pin."""
+        stats = rollup.empty_bundle()
+        contributors: list[str] = []
+        for r in self.runs.values():
+            in_bucket = bucket["from"] <= r["occurred_at"] <= bucket.get("to", r["occurred_at"])
+            if in_bucket and (goal_hash is None or r["goal_hash"] == goal_hash):
+                stats = rollup.merge(stats, rollup.bundle_of(r))
+                contributors.append(r["id"])
+        for child_ru in self.child_rollups:
+            if child_ru["bucket"] == bucket and \
+                    (goal_hash is None or child_ru["cohort"].get("goal_hash") == goal_hash):
+                stats = rollup.merge(stats, child_ru["stats"])
+                contributors.append(child_ru["id"])
+        ru = {
+            "id": crypto.content_hash({"scope": self.scope, "bucket": bucket,
+                                       "goal_hash": goal_hash, "contributors": contributors}),
+            "scope": self.scope,
+            "cohort": {"scope": self.scope, **({"goal_hash": goal_hash} if goal_hash else {})},
+            "bucket": bucket,
+            "stats": stats,
+            "contributors": contributors,
+            "author": self.steward["did"],
+            "version": "0.0.1",
+        }
+        ru["sig"] = self.steward_kp.sign(self.steward["did"],
+                                         {k: ru[k] for k in ("id", "scope", "bucket", "stats")})
+        validate(ru, "run-record.schema.json#/$defs/RollUp")
+        if self.parent is not None:
+            self.parent.child_rollups.append(ru)   # PUSH up — pointers travel, raw runs never do
+        return ru
 
     # ---- erasure: governed tombstone; derived memories annotate, never rewrite -----
     def tombstone(self, record_id: str, by: str, reason: str) -> None:

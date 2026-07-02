@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from orreth_sim import crypto
+from orreth_sim import crypto, rollup
 from orreth_sim.identity import AuthzError, tenant_of
 from orreth_sim.node import ClockViolation, FloorViolation, Refusal, make_memory
 from orreth_sim.world import build
@@ -206,6 +206,111 @@ def test_ingested_archive_carries_history_honestly(world):
     forged["provenance_class"] = "ingested-archive"
     with pytest.raises(AuthzError):
         world.field_prod.write(forged)
+
+
+# ---------------------------------------------------------------- 0005: the roll-up
+def _run(node, world, agent_name, goal, score, *, outcome="success", breach=False,
+         occurred_at=None, objective="reliability"):
+    ident, _ = world.agents[agent_name]
+    r = {
+        "id": crypto.content_hash({"g": goal, "a": ident["did"], "s": score, "t": occurred_at or iso()}),
+        "agent": ident["did"], "scope": ident["scope"], "goal_hash": goal,
+        "occurred_at": occurred_at or iso(), "outcome": outcome,
+        "scores": [{"objective": objective, "score": score,
+                    **({"floor_breached": True} if breach else {})}],
+        "cost": {"tokens": 100},
+        "author": node.steward["did"],
+    }
+    r["sig"] = node.steward_kp.sign(node.steward["did"], {k: r[k] for k in
+                                    ("id", "agent", "scope", "goal_hash", "occurred_at")})
+    return r
+
+
+def test_rollup_monoid_one_truth(world):
+    """The monoid law: chunked merges == one shot — standings compose from any split.
+    (Float sums compare via report, tolerance-free integers exactly; the Rust plane
+    will use fixed-point so the bundle itself is bit-identical.)"""
+    runs = [rollup.bundle_of(_run(world.field_prod, world, "prod-1", "g", s))
+            for s in (0.9, 0.8, 0.7, 0.95, 0.6)]
+    left = rollup.merge(rollup.merge(runs[0], runs[1]), rollup.merge(runs[2], rollup.merge(runs[3], runs[4])))
+    right = rollup.merge(rollup.merge(rollup.merge(rollup.merge(runs[0], runs[1]), runs[2]), runs[3]), runs[4])
+    assert left["n"] == right["n"] == 5
+    assert left["outcomes"] == right["outcomes"] and left["cost"] == right["cost"]
+    rl, rr = rollup.report(left, "reliability"), rollup.report(right, "reliability")
+    assert rl["mean"] == pytest.approx(rr["mean"]) and rl["n"] == rr["n"]
+    ident = rollup.merge(rollup.empty_bundle(), left)           # identity element
+    assert ident["n"] == left["n"] and ident["outcomes"] == left["outcomes"]
+
+
+def test_confidence_is_count_weighted(world):
+    """Locked 2026-07-02: Bayesian posterior — a lucky n=2 is honestly wider than a proven n=50."""
+    small = rollup.empty_bundle()
+    for s in (0.94, 0.94):
+        small = rollup.merge(small, rollup.bundle_of(_run(world.field_prod, world, "prod-1", "g", s)))
+    big = rollup.empty_bundle()
+    for _ in range(25):
+        for s in (0.94, 0.94):
+            big = rollup.merge(big, rollup.bundle_of(_run(world.field_prod, world, "prod-1", "g", s)))
+    r_small, r_big = (rollup.report(b, "reliability") for b in (small, big))
+    width = lambda r: r["ci95"][1] - r["ci95"][0]
+    assert width(r_small) > width(r_big)          # same mean, honest uncertainty
+    assert r_small["n"] == 2 and r_big["n"] == 50
+
+
+def test_floor_breach_flags_never_averages(world):
+    """Locked 2026-07-02: a 0.98 agent with one breach shows BOTH truths —
+    the breach flips compliance, and the performance mean is untouched by it."""
+    clean = rollup.empty_bundle()
+    for _ in range(9):
+        clean = rollup.merge(clean, rollup.bundle_of(_run(world.field_prod, world, "prod-1", "g", 0.98)))
+    before = rollup.report(clean, "reliability")
+    b = rollup.merge(clean, rollup.bundle_of(
+        _run(world.field_prod, world, "prod-1", "g", 0.98, breach=True, objective="compliance")))
+    rep = rollup.report(b, "reliability")
+    assert rep["compliance"] == "breached"                        # the breach is unmissable
+    assert rep["mean"] == pytest.approx(before["mean"])           # and it never averages away the score
+    vec = [{"objective": "reliability", "weight": 1.0},
+           {"objective": "compliance", "weight": 1.0, "floor": True}]
+    ts = rollup.tier_score(b, vec)
+    assert ts["compliance"] == "breached"                         # floors gate...
+    assert ts["score"] == pytest.approx(before["mean"])           # ...they never dilute
+
+
+def test_league_standings_roll_up_the_tree(world):
+    """PG-1 in miniature: two teams' seasons roll to the league — raw runs never travel."""
+    season = {"from": iso(30), "to": iso(0)}
+    for s in (0.9, 0.8, 0.85):                                   # team prod: strong season
+        world.field_prod.record_run(_run(world.field_prod, world, "prod-1", "season-1", s,
+                                         occurred_at=iso(15)))
+    for s in (0.5, 0.6):                                         # team lab: rebuilding year
+        world.field_lab.record_run(_run(world.field_lab, world, "lab-1", "season-1", s,
+                                        occurred_at=iso(15)))
+    ru_prod = world.field_prod.roll_up(season, goal_hash="season-1")
+    ru_lab = world.field_lab.roll_up(season, goal_hash="season-1")
+    ru_cloud = world.eco_cloud.roll_up(season, goal_hash="season-1")   # conference: from child bundle
+    ru_dev = world.eco_dev.roll_up(season, goal_hash="season-1")
+    league = world.universe.roll_up(season, goal_hash="season-1")      # the league table
+    assert league["stats"]["n"] == 5                              # every game counted once
+    assert ru_cloud["stats"] == ru_prod["stats"]                  # composed, not recomputed
+    # standings: the same bundles, read per team — count-weighted, honestly uncertain
+    standing_prod = rollup.report(ru_prod["stats"], "reliability")
+    standing_lab = rollup.report(ru_lab["stats"], "reliability")
+    assert standing_prod["mean"] > standing_lab["mean"]
+    # no raw run ever left its field — only signed pointers traveled
+    assert all(rid in world.field_prod.runs for rid in ru_prod["contributors"])
+    assert league["contributors"] and all(
+        cid not in world.universe.runs for cid in league["contributors"])
+
+
+def test_self_asserted_evaluation_rejected(world):
+    """0001's rule, enforced: no agent grades its own yardstick."""
+    ident, kp = world.agents["prod-1"]
+    r = _run(world.field_prod, world, "prod-1", "g", 1.0)
+    r["author"] = ident["did"]                                   # the agent grading itself
+    r["sig"] = kp.sign(ident["did"], {k: r[k] for k in
+                       ("id", "agent", "scope", "goal_hash", "occurred_at")})
+    with pytest.raises(AuthzError):
+        world.field_prod.record_run(r)
 
 
 # ---------------------------------------------------------------- tombstones
