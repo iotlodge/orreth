@@ -9,10 +9,52 @@
     "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
     "parent_endpoint": { "type": "string", "format": "uri", "description": "Absent ⇒ apex. PUSH up / PULL down; a parent never reaches in." },
     "is_leaf": { "type": "boolean", "description": "true ⇒ children are Agents (a Field); false ⇒ children are Harnesses." },
+    "clock": {
+      "type": "object",
+      "description": "The two-clock model (0004 §1, locked 2026-07-02): meaning runs on universe-time; security and money run on wall-clock. Memory dials below are universe-time; token TTLs, heartbeats, co-signs are wall-clock.",
+      "properties": {
+        "mode": { "enum": ["wall", "declared"], "description": "'declared' ⇒ the universe asserts its own now (bursty sims welcome); 'wall' ⇒ universe-time tracks physical time 1:1." },
+        "high_water_scope": { "$ref": "common.schema.json#/$defs/ScopePath", "description": "Monotonicity enforced per this scope (default: this profile's own scope). Lived records below the high-water mark are rejected — backdating is structurally detectable." },
+        "dilation_hint": { "type": "number", "exclusiveMinimum": 0, "description": "Display/ops only (pane scrubber, cost projection) — never logic." }
+      },
+      "required": ["mode"],
+      "additionalProperties": false
+    },
+    "objective": {
+      "type": "array",
+      "description": "The objective vector (0004 §3, locked 2026-07-02) — what 'good' means at this tier; the dial the governance loop steers by. Shape locked here; scoring semantics land in 0005. A 'floor: true' objective never trades off.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "objective": { "type": "string" },
+          "weight": { "type": "number", "minimum": 0, "maximum": 1 },
+          "floor": { "type": "boolean", "default": false }
+        },
+        "required": ["objective", "weight"],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "retention_classes": {
+      "type": "object",
+      "description": "Compliance retention per record class (0004 §4, locked 2026-07-02): min = keep-at-least (SOX/books-and-records), max = keep-at-most (GDPR/consent). Cascade enforces each direction independently, tighten-only (min may rise, max may fall). Legal hold = a governed, temporary min of 'forever' on a scope. Bounds the metabolism dials in 'memory'.",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "object",
+          "properties": {
+            "min": { "oneOf": [{ "$ref": "common.schema.json#/$defs/Duration" }, { "const": "forever" }], "description": "Deleting earlier than this is the violation. 'forever' = legal hold." },
+            "max": { "oneOf": [{ "$ref": "common.schema.json#/$defs/Duration" }, { "const": "forever" }], "description": "Keeping longer than this is the violation." }
+          },
+          "minProperties": 1,
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "memory": {
       "type": "object",
       "properties": {
-        "raw_retention": { "$ref": "common.schema.json#/$defs/Duration", "description": "Starting leans: P90D field · per-floors eco." },
+        "raw_retention": { "$ref": "common.schema.json#/$defs/Duration", "description": "UNIVERSE-TIME (0004 §1). Starting leans: P90D field · per-floors eco." },
         "distilled_retention": {
           "oneOf": [{ "$ref": "common.schema.json#/$defs/Duration" }, { "const": "forever" }],
           "description": "Starting leans: P13M eco · forever at apex."
@@ -88,6 +130,6 @@
     "version": { "$ref": "common.schema.json#/$defs/SemVer" },
     "signature": { "$ref": "common.schema.json#/$defs/Sig" }
   },
-  "required": ["tier_label", "scope", "is_leaf", "memory", "retrieval", "steward", "tokens", "model_gateway", "join_default", "trust_root", "version", "signature"],
+  "required": ["tier_label", "scope", "is_leaf", "clock", "objective", "memory", "retrieval", "steward", "tokens", "model_gateway", "join_default", "trust_root", "version", "signature"],
   "additionalProperties": false
 }

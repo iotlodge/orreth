@@ -17,6 +17,10 @@ def _profile(label: str, scope: str, *, leaf: bool, parent: str | None,
         "scope": scope,
         **({"parent_endpoint": parent} if parent else {}),
         "is_leaf": leaf,
+        # wall mode: universe-time tracks physics 1:1 (the League's declared clock is the other mode, 0004 §1)
+        "clock": {"mode": "wall", "high_water_scope": scope},
+        "objective": [{"objective": "reliability", "weight": 0.7},
+                      {"objective": "cost", "weight": 0.3}],
         "memory": {
             "raw_retention": "P90D" if leaf else "P395D",
             "distilled_retention": "forever" if label == "universe" else "P395D",

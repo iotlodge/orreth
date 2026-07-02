@@ -16,7 +16,7 @@
         },
         "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
         "author": { "$ref": "common.schema.json#/$defs/DID" },
-        "created_at": { "$ref": "common.schema.json#/$defs/EcosystemClock" },
+        "created_at": { "$ref": "common.schema.json#/$defs/WallClock" },
         "sig": { "$ref": "common.schema.json#/$defs/Sig" }
       },
       "required": ["payload_hash", "payload_type", "scope", "author", "created_at", "sig"],
@@ -33,7 +33,7 @@
         },
         "target": { "$ref": "common.schema.json#/$defs/Selector" },
         "issued_by": { "$ref": "common.schema.json#/$defs/DID" },
-        "issued_at": { "$ref": "common.schema.json#/$defs/EcosystemClock" },
+        "issued_at": { "$ref": "common.schema.json#/$defs/WallClock" },
         "sig": { "$ref": "common.schema.json#/$defs/Sig" }
       },
       "required": ["standards", "target", "issued_by", "issued_at", "sig"],

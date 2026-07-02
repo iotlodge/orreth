@@ -7,7 +7,7 @@ memory rises UP (pruned; distillations carry provenance), retrieval escalates UP
 from __future__ import annotations
 
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
 from . import crypto
 from .identity import AuthzError, Becky, Nanda, NOW, is_within, tenant_of
@@ -26,6 +26,10 @@ class Refusal(Exception):
 
 class FloorViolation(Exception):
     pass
+
+
+class ClockViolation(Exception):
+    """Lived memory below the scope's high-water mark — you cannot quietly write yourself a past (0004 §1)."""
 
 
 _DUR = re.compile(r"^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$")
@@ -59,6 +63,7 @@ class HarnessNode:
         self.inherited_floors: dict[str, dict] = {} # match-hash -> KeepRule (non-loosenable)
         self.local_floors: dict[str, dict] = {}
         self.access_log: list[dict] = []
+        self.high_water: str | None = None          # the scope's universe-time frontier (0004 §1)
         self._bundle: dict | None = None            # what children PULL
         # a layer is born with its staff (0006 §2): the steward exists before any workforce
         self.steward, self.steward_kp = becky.issue_identity(
@@ -138,6 +143,13 @@ class HarnessNode:
         if not is_within(record["scope"], self.scope):
             raise AuthzError("record scope outside this harness")
         record = dict(record)
+        # the declared clock (0004 §1): lived memory only moves forward; archives are labeled
+        if record.get("provenance_class", "lived") == "lived":
+            if self.high_water is not None and _ts(record["occurred_at"]) < _ts(self.high_water):
+                raise ClockViolation("occurred_at below scope high-water")
+            if self.high_water is None or _ts(record["occurred_at"]) > _ts(self.high_water):
+                self.high_water = record["occurred_at"]
+        record["received_at"] = NOW()               # gateway stamp — physics, nobody's claim
         record["keep_class"] = self._classify(record)
         self.records[record["id"]] = record
         # each layer distills what rises to it — including children's distillations;
@@ -162,14 +174,15 @@ class HarnessNode:
             return None
         ids = list(self.undistilled)
         self.undistilled.clear()
-        times = sorted(self.records[i]["created_at"] for i in ids)
+        times = sorted(self.records[i]["occurred_at"] for i in ids)
         body = {"summary": f"distilled {len(ids)} records at {self.scope}", "count": len(ids)}
         dist = {
             "id": crypto.content_hash({"body": body, "derived_from": ids}),
             "kind": "distillation",
             "scope": self.scope,
             "author": self.steward["did"],
-            "created_at": NOW(),
+            "occurred_at": self._universe_now(),
+            "provenance_class": "lived",
             "retention": "active",
             "visibility": {"tenancy": "tenant-private", "mobility": "branch-bound"},
             "derived_from": ids,
@@ -216,6 +229,10 @@ class HarnessNode:
             yield n
             n = n.parent
 
+    def _universe_now(self) -> str:
+        """The universe's own 'now' — the high-water frontier (wall for a young/wall-mode scope)."""
+        return self.high_water or NOW()
+
     # ---- flow 3: retrieval escalates UP --------------------------------------------
     def retrieve(self, query: dict, token: dict, requester_scope: str) -> dict:
         validate(query, "retrieval.schema.json#/$defs/Query")
@@ -250,12 +267,13 @@ class HarnessNode:
                 if self._readable(r, query, token, requester_scope, interview):
                     hits_raw.setdefault(r["id"], r)
             horizon_days = dur_days(node.profile["retrieval"]["horizon"])
-            window_age_days = (datetime.now(timezone.utc) - _ts(window_from)).total_seconds() / 86400
+            # horizons are universe-time (0004 §1): age is measured against the scope's own now
+            window_age_days = (_ts(node._universe_now()) - _ts(window_from)).total_seconds() / 86400
             if window_age_days <= horizon_days:
                 break  # this tier's horizon covers the window — done ('forever' always covers)
             node = node.parent  # time-horizon miss: delegate the deeper remainder UP
 
-        ordered = sorted(hits_raw.values(), key=lambda r: r["created_at"], reverse=True)
+        ordered = sorted(hits_raw.values(), key=lambda r: r["occurred_at"], reverse=True)
         hits = [{
             "ref": r["id"], "source": r["author"], "scope": r["scope"],
             "fidelity": self._fidelity(r),
@@ -293,7 +311,7 @@ class HarnessNode:
         elif "cohort" in subj and isinstance(subj["cohort"], dict) and "scope" in subj["cohort"]:
             if not is_within(r["scope"], subj["cohort"]["scope"]):
                 return False
-        if not (_ts(query["time"]["from"]) <= _ts(r["created_at"])):
+        if not (_ts(query["time"]["from"]) <= _ts(r["occurred_at"])):
             return False
         tenancy = r["visibility"]["tenancy"] if "visibility" in r else "tenant-private"
         if interview:
@@ -342,7 +360,9 @@ class HarnessNode:
 
 
 def _sig_subset(record: dict) -> dict:
-    return {k: record[k] for k in ("id", "kind", "scope", "author", "created_at")}
+    # occurred_at and provenance_class are SIGNED (backdating and archive-flipping are author claims);
+    # received_at is gateway physics and deliberately outside the signature (0004 §1)
+    return {k: record[k] for k in ("id", "kind", "scope", "author", "occurred_at", "provenance_class")}
 
 
 def _covering_grant(token: dict, action: str) -> dict:
@@ -354,13 +374,15 @@ def _covering_grant(token: dict, action: str) -> dict:
 
 def make_memory(author: dict, kp, scope: str, body: dict, *, kind: str = "episodic",
                 tenancy: str = "tenant-private", mobility: str = "branch-bound",
-                tags: list[str] | None = None, created_at: str | None = None) -> dict:
+                tags: list[str] | None = None, occurred_at: str | None = None,
+                provenance_class: str = "lived") -> dict:
     rec = {
         "id": crypto.content_hash(body),
         "kind": kind,
         "scope": scope,
         "author": author["did"],
-        "created_at": created_at or NOW(),
+        "occurred_at": occurred_at or NOW(),
+        "provenance_class": provenance_class,
         "body": crypto._b64e(crypto.canonical(body)),
         "retention": "active",
         "visibility": {"tenancy": tenancy, "mobility": mobility},

@@ -30,10 +30,15 @@
       "pattern": "^[a-z]+:[A-Za-z0-9_-]+(/[a-z]+:[A-Za-z0-9_-]+)*$",
       "description": "Slash-delimited path of typed segments, root first (e.g. 'u:acme/e:cloud/f:prod'). Depth-agnostic: the depth-3 cap is policy (0000 §1), not structure."
     },
-    "EcosystemClock": {
+    "UniverseTime": {
       "type": "string",
       "format": "date-time",
-      "description": "UTC timestamp — the universal index (0001)."
+      "description": "The universe's own lived timeline (0004 §1, locked 2026-07-02) — declared by the universe, monotonic per scope (high-water enforced for provenance_class 'lived'). Replaces v0's EcosystemClock, which conflated lived time with wall time. For clock.mode 'wall' universes it tracks WallClock 1:1."
+    },
+    "WallClock": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Physical UTC time (0004 §1). Security and money live here: TTLs, co-signs, heartbeats, gateway ingest stamps. Meaning runs on UniverseTime; the locks rust on WallClock."
     },
     "SemVer": {
       "type": "string",
@@ -47,8 +52,13 @@
     "TimeWindow": {
       "type": "object",
       "properties": {
-        "from": { "$ref": "#/$defs/EcosystemClock" },
-        "to": { "$ref": "#/$defs/EcosystemClock", "description": "absent ⇒ the moving present" }
+        "from": { "$ref": "#/$defs/UniverseTime" },
+        "to": { "$ref": "#/$defs/UniverseTime", "description": "absent ⇒ the moving present" },
+        "clock": {
+          "enum": ["universe", "wall"],
+          "default": "universe",
+          "description": "Locked 2026-07-02 (0004 §7): queries and the pane's scrubber speak universe-time by default — the same time the memory means; 'wall' is the explicit ops/forensics escape hatch."
+        }
       },
       "required": ["from"],
       "additionalProperties": false

@@ -10,7 +10,7 @@ import pytest
 
 from orreth_sim import crypto
 from orreth_sim.identity import AuthzError, tenant_of
-from orreth_sim.node import FloorViolation, Refusal, make_memory
+from orreth_sim.node import ClockViolation, FloorViolation, Refusal, make_memory
 from orreth_sim.world import build
 
 
@@ -176,6 +176,36 @@ def test_interview_reads_portfolio_only(world):
     assert len(res["hits"]) == 1                                # tenant-private is walled
     # the trace is owner-visible (access log), invisible to future buyers (not in results)
     assert any(e["intent"] == "interview" for e in world.field_lab.access_log)
+
+
+# ---------------------------------------------------------------- the two clocks (0004 §1)
+def test_lived_memory_cannot_be_backdated(world):
+    ident, kp = world.agents["prod-1"]
+    world.field_prod.write(make_memory(ident, kp, ident["scope"], {"event": "now"}))
+    # a 'lived' record below the scope's high-water mark is rejected — no quietly written pasts
+    with pytest.raises(ClockViolation):
+        world.field_prod.write(make_memory(ident, kp, ident["scope"],
+                                           {"event": "forged past"}, occurred_at=iso(30)))
+    # and the record carries both clocks: the author's signed claim + the gateway's stamp
+    rec = next(iter(world.field_prod.records.values()))
+    assert "occurred_at" in rec and "received_at" in rec
+
+
+def test_ingested_archive_carries_history_honestly(world):
+    ident, kp = world.agents["prod-1"]
+    world.field_prod.write(make_memory(ident, kp, ident["scope"], {"event": "now"}))
+    # backfill below the high-water mark is legal ONLY as labeled archive (lived vs ingested)
+    rid = world.field_prod.write(make_memory(ident, kp, ident["scope"],
+                                             {"hurricane": "1850"}, occurred_at=iso(30),
+                                             provenance_class="ingested-archive"))
+    assert world.field_prod.records[rid]["provenance_class"] == "ingested-archive"
+    # the archive did not move the frontier: lived writes at the present still land
+    world.field_prod.write(make_memory(ident, kp, ident["scope"], {"event": "still now"}))
+    # provenance_class is SIGNED — flipping lived→archive to smuggle a backdate breaks the signature
+    forged = make_memory(ident, kp, ident["scope"], {"event": "flip"}, occurred_at=iso(30))
+    forged["provenance_class"] = "ingested-archive"
+    with pytest.raises(AuthzError):
+        world.field_prod.write(forged)
 
 
 # ---------------------------------------------------------------- tombstones

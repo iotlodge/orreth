@@ -15,7 +15,7 @@
     "constraints": {
       "type": "object",
       "properties": {
-        "expiry": { "$ref": "common.schema.json#/$defs/EcosystemClock" },
+        "expiry": { "$ref": "common.schema.json#/$defs/WallClock" },
         "direction": { "enum": ["down", "within", "up", "across"] },
         "budget": { "$ref": "common.schema.json#/$defs/Budget" }
       },

@@ -31,7 +31,7 @@
       "default": false,
       "description": "true = TCB roster (steward, governance, analysis, becky); false = registered workforce. Residents author floors; workforce never governs its own tuning."
     },
-    "born_at": { "$ref": "common.schema.json#/$defs/EcosystemClock" }
+    "born_at": { "$ref": "common.schema.json#/$defs/UniverseTime", "description": "An identity is born in the universe's life — the League's rookie is born in season 3, not on a Tuesday (0004 §1)." }
   },
   "required": ["did", "role", "scope", "keys", "status", "born_at"],
   "$defs": {
@@ -42,7 +42,7 @@
         "identity": { "$ref": "common.schema.json#/$defs/DID" },
         "process": { "type": "string", "description": "opaque ProcessRef" },
         "session_keys": { "type": "string", "description": "ephemeral session public key, multibase" },
-        "since": { "$ref": "common.schema.json#/$defs/EcosystemClock" }
+        "since": { "$ref": "common.schema.json#/$defs/WallClock", "description": "Session binding is security — wall-clock (0004 §1)." }
       },
       "required": ["identity", "process", "session_keys", "since"],
       "additionalProperties": false
@@ -72,7 +72,7 @@
           "additionalProperties": false
         },
         "carries": { "const": "portable-only" },
-        "at": { "$ref": "common.schema.json#/$defs/EcosystemClock" },
+        "at": { "$ref": "common.schema.json#/$defs/WallClock", "description": "The authorization is a control-plane act (wall); the trade's place in the universe's story is carried by the memory records about it (occurred_at)." },
         "sig": { "$ref": "common.schema.json#/$defs/Sig" }
       },
       "required": ["identity", "from", "to", "approved_by", "carries", "at", "sig"],

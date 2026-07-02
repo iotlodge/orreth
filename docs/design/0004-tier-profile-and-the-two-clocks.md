@@ -157,19 +157,24 @@ step (0013 §11) wearing config.*
 
 ---
 
-## 7. Decisions — open, for JB
+## 7. Decisions — **all locked by JB, 2026-07-02** (via AskUserQuestion; recorded in `../decisions/`)
 
-1. **The clock model (§1): declared + monotonic high-water + lived-vs-ingested labeling** — or a simpler linear
-   dilation factor? *(Lean strongly: declared. Dilation factors lie about bursty simulations, and the
-   high-water rule is a real security property — it makes memory-backdating structurally detectable. This is
-   also the general answer for every future game/sim universe, not a League special.)*
-2. **Query default: `Query.time` windows are universe-time** (the window scrubs the universe's life; wall-time
-   queries available explicitly for ops/forensics)? *(Lean: yes — the pane's scrubber and the retrieval
-   contract should speak the same time the memory means.)*
-3. **Retention min/max per record class (§4)** — ratify the two-direction cascade? *(Lean: yes; the Enterprise
-   is unsellable without keep-at-least, and legal hold stops being a special case.)*
-4. **Objective vector (§3): shape here, scoring semantics in 0005** — ratify the split? *(Lean: yes — 0005's
-   roll-up is where objectives meet the statistics that score them.)*
+1. **Clock model: declared + monotonic high-water + lived-vs-ingested labeling.** Bursty sims work honestly;
+   memory-backdating is structurally detectable; archives never masquerade as biography. The general answer
+   for every future game/sim universe, not a League special.
+2. **Query default: universe-time.** `Query.time` windows and the pane's scrubber speak the universe's lived
+   time; `clock: "wall"` is the explicit ops/forensics escape hatch.
+3. **Retention is min *and* max, per record class.** Keep-at-least and keep-at-most cascade independently,
+   tighten-only; legal hold = a governed `min: forever`, no longer a special case.
+4. **Objective vector: shape here, scoring semantics in 0005** — where objectives meet the roll-up statistics
+   that score them.
+
+**Schema deltas landed on blessing** (same day): `UniverseTime` + `WallClock` replace `EcosystemClock`
+(data plane speaks UniverseTime; control plane speaks WallClock) · `MemoryRecord.created_at` →
+`occurred_at` (signed) + `received_at` (gateway-stamped) + signed `provenance_class` · `TimeWindow.clock`
+defaulting to `universe` · TierProfile `clock` / `objective` / `retention_classes` blocks. The reference
+simulator enforces the high-water rule and proves it: **12/12 tests**, including backdating-rejected and
+archive-honesty (flipping `lived → ingested-archive` to smuggle a backdate breaks the author's signature).
 
 ---
 

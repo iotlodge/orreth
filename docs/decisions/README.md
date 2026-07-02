@@ -143,6 +143,21 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
 - **Token TTLs are Tier Profile dials** (0004) — starting values workforce 24h · resident 30d · session keys
   per-session. Shape locked in 0006; numbers are policy.
 
+### Locked 2026-07-02 (0004 close-out — the two clocks)
+- **The clock model: declared + monotonic high-water + lived-vs-ingested.** Meaning runs on **universe-time**;
+  security and money run on **wall-clock**. A universe asserts its own now (`occurred_at`, signed) and the
+  gateway stamps physics (`received_at`); lived memory below the scope's high-water mark is rejected —
+  **memory-backdating is structurally detectable** — and backfilled history enters only as signed
+  `ingested-archive` (biography vs data, never blurred). Surfaced by the League; general to every sim universe.
+- **Queries speak universe-time by default.** The scrubber and the retrieval contract speak the time the
+  memory means; `clock: "wall"` is the explicit ops/forensics escape hatch.
+- **Retention is min AND max per record class.** Keep-at-least (SOX) and keep-at-most (GDPR) cascade
+  independently, tighten-only; legal hold = a governed `min: forever` — no longer a special case.
+- **Objective vector: shape in 0004, scoring in 0005.** Weighted objectives with never-trade-off floors live
+  in the TierProfile; how they're scored lands with the roll-up monoids.
+- *Schema deltas landed same day (UniverseTime/WallClock split, occurred_at/received_at, provenance_class,
+  TimeWindow.clock, TierProfile clock/objective/retention_classes); simulator enforces + proves: 12/12 tests.*
+
 ### Locked 2026-07-01 (interop/UX pre-decisions — drive the 0008 dive)
 - **Authoring is dual-mode, equal weight** — JB's call: English and canvas are both first-class surfaces.
   Tractable because of the next lock: both are *projections of one IR* — there is no text↔canvas sync

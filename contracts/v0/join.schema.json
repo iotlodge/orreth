@@ -24,7 +24,7 @@
       "required": ["credential", "min_join_level"],
       "additionalProperties": false
     },
-    "at": { "$ref": "common.schema.json#/$defs/EcosystemClock" },
+    "at": { "$ref": "common.schema.json#/$defs/WallClock" },
     "sig": { "$ref": "common.schema.json#/$defs/Sig" }
   },
   "required": ["child_did", "child_scope", "parent_scope", "join_level", "floors_ack", "at", "sig"],
