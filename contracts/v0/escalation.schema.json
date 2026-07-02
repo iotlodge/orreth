@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/escalation.schema.json",
+  "title": "Escalation",
+  "description": "The HITL work item (0012 §1): staged by machine, decided by humans. Machine speed for detection; human judgment for consequence (0013 §7). Everything here runs on WALL-CLOCK — locks rust at physical speed (0004 §1). Silence never approves: expiry is denial, and a vigil signal (locked 2026-07-02).",
+  "type": "object",
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/ContentHash" },
+    "action_class": { "type": "string", "description": "The gate key — e.g. 'suspend-universe', 'floor-loosen', 'produce-keys', 'destroy-universe' (0013 §7)." },
+    "action": { "type": "object", "additionalProperties": true, "description": "The staged act, opaque to the queue — executed only after quorum + cooling-off." },
+    "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+    "staged_by": { "$ref": "common.schema.json#/$defs/DID", "description": "vigil, a steward, a gateway, or a human — staging is free; deciding is gated." },
+    "evidence": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/ContentHash" }, "description": "Signed record refs — the case for the action, Sourced + Verified." },
+    "required": { "$ref": "#/$defs/GateRule" },
+    "staged_at": { "$ref": "common.schema.json#/$defs/WallClock" },
+    "expires_at": { "$ref": "common.schema.json#/$defs/WallClock", "description": "Past this, the escalation is DENIED (default-deny) and vigil is signaled. Re-staging needs fresh evidence." },
+    "state": { "enum": ["pending", "approved", "executed", "rejected", "expired"] },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "by": { "$ref": "common.schema.json#/$defs/DID", "description": "A control-entitled human principal — distinct per approval; no DID signs twice." },
+          "at": { "$ref": "common.schema.json#/$defs/WallClock" },
+          "sig": { "$ref": "common.schema.json#/$defs/Sig" }
+        },
+        "required": ["by", "at", "sig"],
+        "additionalProperties": false
+      }
+    },
+    "approved_at": { "$ref": "common.schema.json#/$defs/WallClock", "description": "When quorum completed — cooling-off counts from here." },
+    "sig": { "$ref": "common.schema.json#/$defs/Sig" }
+  },
+  "required": ["id", "action_class", "action", "scope", "staged_by", "required", "staged_at", "expires_at", "state", "approvals", "sig"],
+  "additionalProperties": false,
+  "$defs": {
+    "GateRule": {
+      "type": "object",
+      "description": "One row of a GatePolicy (0012 §2). Gate policies cascade TIGHTEN-ONLY like floors: a child may raise co_signs, lengthen cooling_off, or shorten ttl — never the reverse. Locked 2026-07-02: bars are ABSOLUTE — if fewer entitled humans exist than co_signs requires, the action is structurally unavailable (no clamping, no bootstrap exception).",
+      "properties": {
+        "co_signs": { "type": "integer", "minimum": 1 },
+        "legal_signoff": { "type": "boolean", "default": false, "description": "e.g. produce-keys under lawful process: 3 + legal (0013 §6)." },
+        "cooling_off": { "$ref": "common.schema.json#/$defs/Duration", "description": "Approved-but-held: the abort window between quorum and execution (destroy, floor-loosen)." },
+        "ttl": { "$ref": "common.schema.json#/$defs/Duration", "description": "Wall-clock life of a pending escalation before default-deny." }
+      },
+      "required": ["co_signs", "ttl"],
+      "additionalProperties": false
+    }
+  }
+}

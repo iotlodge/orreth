@@ -196,6 +196,21 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
   generations are roll-up cohorts), the `stamp_quota` dial (0013 §8 scale caps made mechanical), simulator
   `factory.py` (stamp · retire · judge_rate): 23/23 tests.*
 
+### Locked 2026-07-02 (0012 close-out — consequence waits for humans)
+- **Expiry = deny + signal.** A pending escalation past its wall-clock TTL is denied by default (re-staging
+  needs fresh evidence), and the expiry is itself a vigil signal — an unattended queue is a finding about the
+  org. Silence never approves; queues cannot rot into ambient authority.
+- **Bars are absolute — no solo-org clamping.** Co-sign bars never bend to headcount: below quorum, the action
+  is structurally unavailable (staging refuses, loudly), and the trust-tier gate must not admit tenants whose
+  obligations require unavailable quorums — no regulated tier before a legal-process quorum exists. "No single
+  employee is a god" is true from day one; staffing is a published launch gate.
+- *Also structural, from the dive: gate policies cascade tighten-only like floors (co_signs rise, cooling_off
+  lengthens, ttl shortens — never the reverse) · cooling-off is approved-but-held with a one-voice abort
+  (three to destroy a universe, one to save it) · no break-glass exists, deliberately (the 2-bar was sized
+  for 3 a.m.; a bypass would be the backdoor 0013 §6 forbids).*
+- *Mechanism landed same day: `escalation.schema.json` (Escalation + GateRule), simulator `hitl.py`
+  (EscalationQueue + cascade_gate): 27/27 tests.*
+
 ### Locked 2026-07-01 (interop/UX pre-decisions — drive the 0008 dive)
 - **Authoring is dual-mode, equal weight** — JB's call: English and canvas are both first-class surfaces.
   Tractable because of the next lock: both are *projections of one IR* — there is no text↔canvas sync

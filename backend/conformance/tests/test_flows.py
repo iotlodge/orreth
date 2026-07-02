@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from orreth_sim import crypto, factory, rollup
+from orreth_sim import crypto, factory, hitl, rollup
 from orreth_sim.agent_surface import BudgetExceeded, join_workforce
 from orreth_sim.identity import AuthzError, tenant_of
 from orreth_sim.node import ClockViolation, FloorViolation, Refusal, make_memory
@@ -406,6 +406,77 @@ def test_rookie_probation_full_grade_until_first_bundle(world):
         proven = rollup.merge(proven, rollup.bundle_of(_run(world.field_prod, world, "prod-1", "g", 0.9)))
     assert factory.judge_rate(world.field_prod, cert, proven) == \
         world.field_prod.profile["model_gateway"]["judge_sample_rate"]  # a track record earns 1-in-N
+
+
+# ---------------------------------------------------------------- 0012: gates & queues
+GATES = {"suspend-universe": {"co_signs": 2, "ttl": "P7D"},
+         "destroy-universe": {"co_signs": 3, "ttl": "P7D", "cooling_off": "P2D"}}
+
+
+def _humans(world, n):
+    out = []
+    for _ in range(n):
+        ident, kp = world.becky.issue_identity("instance", "u:demo")
+        out.append((ident["did"], kp))
+    return out
+
+
+def test_quorum_lifecycle_and_distinct_signers(world):
+    """Staging is free; deciding is gated; no DID signs twice; quorum is not a formality."""
+    humans = _humans(world, 2)
+    q = hitl.EscalationQueue(GATES, {d for d, _ in humans}, world.nanda)
+    vigil_did, vigil_kp = world.becky.issue_identity("instance", "u:demo", resident=True)
+    esc = q.stage("suspend-universe", {"target": "u:demo/e:dev"}, scope="u:demo",
+                  staged_by=vigil_did["did"], staged_by_kp=vigil_kp, now=iso(0))
+    with pytest.raises(AuthzError):
+        q.execute(esc["id"], now=iso(0))                       # zero signatures ≠ approved
+    q.approve(esc["id"], humans[0][0], humans[0][1], now=iso(0))
+    with pytest.raises(AuthzError):
+        q.approve(esc["id"], humans[0][0], humans[0][1], now=iso(0))   # no double-sign
+    with pytest.raises(AuthzError):
+        q.execute(esc["id"], now=iso(0))                       # 1 of 2 is not quorum
+    q.approve(esc["id"], humans[1][0], humans[1][1], now=iso(0))
+    assert q.execute(esc["id"], now=iso(0))["state"] == "executed"
+
+
+def test_bars_are_absolute_for_a_solo_org(world):
+    """Locked 2026-07-02: 'no single employee is a god' is true from day one, not aspirational."""
+    (jb,) = _humans(world, 1)
+    q = hitl.EscalationQueue(GATES, {jb[0]}, world.nanda)
+    with pytest.raises(hitl.QuorumUnavailable):
+        q.stage("suspend-universe", {"target": "u:demo/e:dev"}, scope="u:demo",
+                staged_by=jb[0], staged_by_kp=jb[1], now=iso(0))
+
+
+def test_silence_never_approves(world):
+    """Locked 2026-07-02: expiry = deny + signal — an unattended queue is itself a finding."""
+    humans = _humans(world, 2)
+    q = hitl.EscalationQueue(GATES, {d for d, _ in humans}, world.nanda)
+    esc = q.stage("suspend-universe", {"target": "u:demo/e:dev"}, scope="u:demo",
+                  staged_by=humans[0][0], staged_by_kp=humans[0][1], now=iso(10))
+    with pytest.raises(AuthzError):
+        q.approve(esc["id"], humans[0][0], humans[0][1], now=iso(0))   # 10 days later: expired
+    assert q.items[esc["id"]]["state"] == "expired"
+    assert q.expired_signals == 1                                       # vigil heard the silence
+
+
+def test_cooling_off_holds_and_gates_tighten_only(world):
+    """The abort window is the point — and co-sign bars cascade like floors."""
+    humans = _humans(world, 3)
+    q = hitl.EscalationQueue(GATES, {d for d, _ in humans}, world.nanda)
+    esc = q.stage("destroy-universe", {"target": "u:demo/e:dev"}, scope="u:demo",
+                  staged_by=humans[0][0], staged_by_kp=humans[0][1], now=iso(3))
+    for did, kp in humans:
+        q.approve(esc["id"], did, kp, now=iso(3))
+    with pytest.raises(AuthzError):
+        q.execute(esc["id"], now=iso(3))                       # quorum met — but held
+    q.reject(esc["id"], humans[0][0], now=iso(2))              # one voice aborts during cooling-off
+    with pytest.raises(AuthzError):
+        q.execute(esc["id"], now=iso(0))                       # aborted stays aborted
+    # gate cascade: a child may raise a bar, never lower one
+    hitl.cascade_gate(GATES, {"suspend-universe": {"co_signs": 3, "ttl": "P3D"}})
+    with pytest.raises(hitl.GateViolation):
+        hitl.cascade_gate(GATES, {"suspend-universe": {"co_signs": 1, "ttl": "P7D"}})
 
 
 # ---------------------------------------------------------------- tombstones
