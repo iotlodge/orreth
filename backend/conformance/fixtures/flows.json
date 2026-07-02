@@ -1,0 +1,725 @@
+{
+  "description": "The node semantics end-to-end (store + gateway ingress + retrieval router), scripted against the reference. The plane verifies, never signs. Pinned clocks; expected outputs are exact.",
+  "distillation_pushed_up": {
+    "author": "did:key:zVFDTNRB1cDNberVVyRdBwjjFN3kVk-OIeoc7TrDVg14",
+    "derived_from": [
+      "sha256:2bfd14f43d17fc7cea24e0917a8879b4b2f880b8baeec1b9d90fbaad655e71bd",
+      "sha256:090e206c393748e06c4e9ce580471c33a1948504004942cea1791478ede18d79",
+      "sha256:5ec4b9b1f7c95a22f15707dcbcc9fc44b08a6267a0437d9d84536c5885de3c54",
+      "sha256:f250bfe2bbe6710096189b2b9a6d8f155cb3ac05c2ee313df5d41e5a277330e8"
+    ],
+    "id": "sha256:cf19be5f3b40930d4104e533d65c415913a6d364d1e6933fb7dc7df10d883f50",
+    "kind": "distillation",
+    "method": {
+      "model": "deterministic-sim",
+      "rubric": {
+        "id": "sha256:fee4ce1ef9381ef04526d1fb17413b916cff1ca1a33b349d4f5a41873b41412d",
+        "version": "0.0.1"
+      },
+      "steward": "did:key:zVFDTNRB1cDNberVVyRdBwjjFN3kVk-OIeoc7TrDVg14"
+    },
+    "occurred_at": "2026-06-14T00:00:00Z",
+    "provenance_class": "lived",
+    "redactions": [
+      {
+        "at": "2026-07-02T23:36:33Z",
+        "policy_ref": {
+          "id": "sha256:8182270de43558646d570965217b08f3bca00efebea1672cfcab98f8a68eeac3",
+          "version": "0.0.1"
+        },
+        "sig": {
+          "alg": "ed25519",
+          "by": "did:key:zVFDTNRB1cDNberVVyRdBwjjFN3kVk-OIeoc7TrDVg14",
+          "sig": "zZjHZ6-GkkaNYUgQ_inYieIfr0alvW9Vwgws3wbnWe-RjlGmV-ngV1TAhBSMxvMFdlLjtroGat_0mTRY5dedCg"
+        },
+        "tombstone_ref": "sha256:f250bfe2bbe6710096189b2b9a6d8f155cb3ac05c2ee313df5d41e5a277330e8"
+      },
+      {
+        "at": "2026-07-02T23:36:33Z",
+        "policy_ref": {
+          "id": "sha256:8182270de43558646d570965217b08f3bca00efebea1672cfcab98f8a68eeac3",
+          "version": "0.0.1"
+        },
+        "sig": {
+          "alg": "ed25519",
+          "by": "did:key:zVFDTNRB1cDNberVVyRdBwjjFN3kVk-OIeoc7TrDVg14",
+          "sig": "zZjHZ6-GkkaNYUgQ_inYieIfr0alvW9Vwgws3wbnWe-RjlGmV-ngV1TAhBSMxvMFdlLjtroGat_0mTRY5dedCg"
+        },
+        "tombstone_ref": "sha256:f250bfe2bbe6710096189b2b9a6d8f155cb3ac05c2ee313df5d41e5a277330e8"
+      }
+    ],
+    "retention": "active",
+    "scope": "u:demo/e:cloud/f:prod",
+    "signature": {
+      "alg": "ed25519",
+      "by": "did:key:zVFDTNRB1cDNberVVyRdBwjjFN3kVk-OIeoc7TrDVg14",
+      "sig": "NcfzRgo6xmmEWFYBovHXJpEI222-3f2N6gr-MwvdKNl2AinrIfFtwQx3jLtQW9OinEod365D-v4bnpG_OUg0BA"
+    },
+    "visibility": {
+      "mobility": "branch-bound",
+      "tenancy": "tenant-private"
+    },
+    "window": {
+      "from": "2026-06-02T00:00:00Z",
+      "to": "2026-06-14T00:00:00Z"
+    }
+  },
+  "floors": [
+    {
+      "action": "keep-raw",
+      "keep_for": "P90D",
+      "match": {
+        "outcome": "failure"
+      },
+      "reason": "failures survive"
+    }
+  ],
+  "identities": {
+    "did:key:z5GRK10AXpXHZTi6ROAFxoPnzZZstzq3bqcpHmdIxEWc": "z5GRK10AXpXHZTi6ROAFxoPnzZZstzq3bqcpHmdIxEWc",
+    "did:key:z6oGpkvRenA0EJc2CzE2O3aVfKkn3pypvkp1zmvB9ewk": "z6oGpkvRenA0EJc2CzE2O3aVfKkn3pypvkp1zmvB9ewk",
+    "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k": "zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+    "did:key:zJOt5dnNz65NujP2k5RWJwustUG5rfl9eqQGLsxwBk7U": "zJOt5dnNz65NujP2k5RWJwustUG5rfl9eqQGLsxwBk7U",
+    "did:key:zQGfTVRb-vVjfXX9jFrFUCEjtlbWOtbVa84N5AdwUvJA": "zQGfTVRb-vVjfXX9jFrFUCEjtlbWOtbVa84N5AdwUvJA",
+    "did:key:zT2yh3J7RgvyiUojXcov7Muc4vfa8h6BRZMEa2zPoevM": "zT2yh3J7RgvyiUojXcov7Muc4vfa8h6BRZMEa2zPoevM",
+    "did:key:zTxHM5ZUjbq3vg01PF9mOmuv8uYe_mZiB1E6-mnmYi4k": "zTxHM5ZUjbq3vg01PF9mOmuv8uYe_mZiB1E6-mnmYi4k",
+    "did:key:zVFDTNRB1cDNberVVyRdBwjjFN3kVk-OIeoc7TrDVg14": "zVFDTNRB1cDNberVVyRdBwjjFN3kVk-OIeoc7TrDVg14",
+    "did:key:zcztWeKEsdwFf-0INK-f1W-Mdsxmm6DOCyWG3XLhexNg": "zcztWeKEsdwFf-0INK-f1W-Mdsxmm6DOCyWG3XLhexNg",
+    "did:key:znXLekvvEk2sBC1CrAwnyphhrqKN3cnW-z2uwVGiofI8": "znXLekvvEk2sBC1CrAwnyphhrqKN3cnW-z2uwVGiofI8",
+    "did:key:zqkTfA_GYRmKvBSsx4kutKfZajRcUTy1JEYfSh2iq2Lg": "zqkTfA_GYRmKvBSsx4kutKfZajRcUTy1JEYfSh2iq2Lg",
+    "did:key:zvYQebd9-dRtsgn4-F2sm93tfC_hz1yL5QUtaI2hbILQ": "zvYQebd9-dRtsgn4-F2sm93tfC_hz1yL5QUtaI2hbILQ",
+    "did:key:zzj6zeOB82h6bm5He-gZrKaVUTDlwiMWmOEhutlm5qlY": "zzj6zeOB82h6bm5He-gZrKaVUTDlwiMWmOEhutlm5qlY",
+    "did:web:orreth.ai:u:demo": "zv-Un_2okj0PGD3wEuwihgkJ5_Vb1wJFYAWlFjkqDL4k"
+  },
+  "lab_chain": [
+    {
+      "horizon": "forever",
+      "scope": "u:demo"
+    },
+    {
+      "horizon": "P395D",
+      "scope": "u:demo/e:dev"
+    },
+    {
+      "horizon": "P90D",
+      "scope": "u:demo/e:dev/f:lab"
+    }
+  ],
+  "now": "2026-07-01T00:00:00Z",
+  "queries": [
+    {
+      "at_scope": "u:demo/e:cloud/f:prod",
+      "expect": {
+        "fidelity": {
+          "sha256:090e206c393748e06c4e9ce580471c33a1948504004942cea1791478ede18d79": "verified",
+          "sha256:2bfd14f43d17fc7cea24e0917a8879b4b2f880b8baeec1b9d90fbaad655e71bd": "verified",
+          "sha256:5ec4b9b1f7c95a22f15707dcbcc9fc44b08a6267a0437d9d84536c5885de3c54": "verified"
+        },
+        "has_remainder": false,
+        "hit_refs": [
+          "sha256:090e206c393748e06c4e9ce580471c33a1948504004942cea1791478ede18d79",
+          "sha256:2bfd14f43d17fc7cea24e0917a8879b4b2f880b8baeec1b9d90fbaad655e71bd",
+          "sha256:5ec4b9b1f7c95a22f15707dcbcc9fc44b08a6267a0437d9d84536c5885de3c54"
+        ],
+        "served_by": [
+          "u:demo/e:cloud/f:prod",
+          "u:demo/e:cloud"
+        ],
+        "verification": "verified"
+      },
+      "name": "escalates_past_field_horizon",
+      "query": {
+        "auth": "biscuit-sim",
+        "budget": {
+          "cost": 3
+        },
+        "intent": "recall",
+        "requester": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+        "space": "self",
+        "subject": "self",
+        "time": {
+          "from": "2026-01-01T00:00:00Z"
+        }
+      },
+      "requester_scope": "u:demo/e:cloud/f:prod",
+      "token": {
+        "audience": "u:demo",
+        "chain": [
+          "{\"audience\": \"u:demo\", \"constraints\": {\"direction\": \"within\", \"expiry\": \"2027-01-01T00:00:00Z\"}, \"grants\": [{\"action\": \"retrieve\", \"space\": \"self\"}], \"issuer\": \"did:web:orreth.ai:u:demo\", \"sig\": {\"alg\": \"ed25519\", \"by\": \"did:web:orreth.ai:u:demo\", \"sig\": \"KrGqUwfPAfDtbavHL7iaRTMGgk35Owu6lrzMK_-xGOJES1Tw2hU8AxG-yud-tgS0ykXe3YxZ4qNIuVJHLMuSCA\"}, \"subject\": \"did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k\"}"
+        ],
+        "constraints": {
+          "direction": "within",
+          "expiry": "2027-01-01T00:00:00Z"
+        },
+        "grants": [
+          {
+            "action": "retrieve",
+            "space": "self"
+          }
+        ],
+        "sig": {
+          "alg": "ed25519",
+          "by": "did:web:orreth.ai:u:demo",
+          "sig": "avGDXYG3k7Efhdy0wO1PoSx3Gjuy8wF5qmpPV_sSeCM4FzQN2Tvzplh2r6vvrSavhrhVMpOYN6DdG2qvto43AA"
+        },
+        "subject": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k"
+      }
+    },
+    {
+      "at_scope": "u:demo/e:cloud/f:prod",
+      "expect": {
+        "fidelity": {
+          "sha256:090e206c393748e06c4e9ce580471c33a1948504004942cea1791478ede18d79": "verified",
+          "sha256:2bfd14f43d17fc7cea24e0917a8879b4b2f880b8baeec1b9d90fbaad655e71bd": "verified",
+          "sha256:5ec4b9b1f7c95a22f15707dcbcc9fc44b08a6267a0437d9d84536c5885de3c54": "verified"
+        },
+        "has_remainder": true,
+        "hit_refs": [
+          "sha256:090e206c393748e06c4e9ce580471c33a1948504004942cea1791478ede18d79",
+          "sha256:2bfd14f43d17fc7cea24e0917a8879b4b2f880b8baeec1b9d90fbaad655e71bd",
+          "sha256:5ec4b9b1f7c95a22f15707dcbcc9fc44b08a6267a0437d9d84536c5885de3c54"
+        ],
+        "served_by": [
+          "u:demo/e:cloud/f:prod"
+        ],
+        "verification": "partial"
+      },
+      "name": "budget_miss",
+      "query": {
+        "auth": "biscuit-sim",
+        "budget": {
+          "cost": 1
+        },
+        "intent": "recall",
+        "requester": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+        "space": "self",
+        "subject": "self",
+        "time": {
+          "from": "2026-01-01T00:00:00Z"
+        }
+      },
+      "requester_scope": "u:demo/e:cloud/f:prod",
+      "token": {
+        "audience": "u:demo",
+        "chain": [
+          "{\"audience\": \"u:demo\", \"constraints\": {\"direction\": \"within\", \"expiry\": \"2027-01-01T00:00:00Z\"}, \"grants\": [{\"action\": \"retrieve\", \"space\": \"self\"}], \"issuer\": \"did:web:orreth.ai:u:demo\", \"sig\": {\"alg\": \"ed25519\", \"by\": \"did:web:orreth.ai:u:demo\", \"sig\": \"KrGqUwfPAfDtbavHL7iaRTMGgk35Owu6lrzMK_-xGOJES1Tw2hU8AxG-yud-tgS0ykXe3YxZ4qNIuVJHLMuSCA\"}, \"subject\": \"did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k\"}"
+        ],
+        "constraints": {
+          "direction": "within",
+          "expiry": "2027-01-01T00:00:00Z"
+        },
+        "grants": [
+          {
+            "action": "retrieve",
+            "space": "self"
+          }
+        ],
+        "sig": {
+          "alg": "ed25519",
+          "by": "did:web:orreth.ai:u:demo",
+          "sig": "avGDXYG3k7Efhdy0wO1PoSx3Gjuy8wF5qmpPV_sSeCM4FzQN2Tvzplh2r6vvrSavhrhVMpOYN6DdG2qvto43AA"
+        },
+        "subject": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k"
+      }
+    },
+    {
+      "at_scope": "u:demo/e:cloud/f:prod",
+      "expect": {
+        "fidelity": {
+          "sha256:090e206c393748e06c4e9ce580471c33a1948504004942cea1791478ede18d79": "verified",
+          "sha256:2bfd14f43d17fc7cea24e0917a8879b4b2f880b8baeec1b9d90fbaad655e71bd": "verified",
+          "sha256:5ec4b9b1f7c95a22f15707dcbcc9fc44b08a6267a0437d9d84536c5885de3c54": "verified"
+        },
+        "has_remainder": true,
+        "hit_refs": [
+          "sha256:090e206c393748e06c4e9ce580471c33a1948504004942cea1791478ede18d79",
+          "sha256:2bfd14f43d17fc7cea24e0917a8879b4b2f880b8baeec1b9d90fbaad655e71bd",
+          "sha256:5ec4b9b1f7c95a22f15707dcbcc9fc44b08a6267a0437d9d84536c5885de3c54"
+        ],
+        "served_by": [
+          "u:demo/e:cloud/f:prod"
+        ],
+        "verification": "partial"
+      },
+      "name": "authz_miss_same_shape",
+      "query": {
+        "auth": "biscuit-sim",
+        "budget": {
+          "cost": 99
+        },
+        "intent": "recall",
+        "requester": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+        "space": "self",
+        "subject": "self",
+        "time": {
+          "from": "2026-01-01T00:00:00Z"
+        }
+      },
+      "requester_scope": "u:demo/e:cloud/f:prod",
+      "token": {
+        "audience": "u:demo/e:cloud/f:prod",
+        "chain": [
+          "{\"at\": \"2026-07-02T23:36:33Z\", \"issuer\": \"did:web:orreth.ai:u:demo\", \"scope\": \"u:demo/e:cloud\", \"sig\": {\"alg\": \"ed25519\", \"by\": \"did:web:orreth.ai:u:demo\", \"sig\": \"JC34eKceguwR8goc0y6syrCka1WUStEucaRnkg1FsqcUXL2uCmlrJ4a-oq8Wp1YAonJYFwxnXXwA5B7A_hv-Bg\"}, \"subject\": \"did:key:z6oGpkvRenA0EJc2CzE2O3aVfKkn3pypvkp1zmvB9ewk\"}",
+          "{\"at\": \"2026-07-02T23:36:33Z\", \"issuer\": \"did:key:z6oGpkvRenA0EJc2CzE2O3aVfKkn3pypvkp1zmvB9ewk\", \"scope\": \"u:demo/e:cloud/f:prod\", \"sig\": {\"alg\": \"ed25519\", \"by\": \"did:key:z6oGpkvRenA0EJc2CzE2O3aVfKkn3pypvkp1zmvB9ewk\", \"sig\": \"4z9aLOFlAfTTKuqtqkD9mnJqEU9z4nlUg5d8yssFp2QwCqqdlQnNLaNuJIn--WlwSNaXEbUvlAaxUyN03hXPBA\"}, \"subject\": \"did:key:zvYQebd9-dRtsgn4-F2sm93tfC_hz1yL5QUtaI2hbILQ\"}",
+          "{\"audience\": \"u:demo/e:cloud/f:prod\", \"constraints\": {\"direction\": \"within\", \"expiry\": \"2027-01-01T00:00:00Z\"}, \"grants\": [{\"action\": \"retrieve\", \"space\": \"self\"}], \"issuer\": \"did:key:zvYQebd9-dRtsgn4-F2sm93tfC_hz1yL5QUtaI2hbILQ\", \"sig\": {\"alg\": \"ed25519\", \"by\": \"did:key:zvYQebd9-dRtsgn4-F2sm93tfC_hz1yL5QUtaI2hbILQ\", \"sig\": \"KBhu4tNNRFsQYDZylEAE95TKSn_OLwYdXRDzgTMy3FlYTlE0GjOB-0zoQEtd4vx89OU8uF0Zzhoy9ahf7jUACw\"}, \"subject\": \"did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k\"}"
+        ],
+        "constraints": {
+          "direction": "within",
+          "expiry": "2027-01-01T00:00:00Z"
+        },
+        "grants": [
+          {
+            "action": "retrieve",
+            "space": "self"
+          }
+        ],
+        "sig": {
+          "alg": "ed25519",
+          "by": "did:key:zvYQebd9-dRtsgn4-F2sm93tfC_hz1yL5QUtaI2hbILQ",
+          "sig": "diFU2Fzbrolt9bMBESFPbLlcPcmMGWilIFWqE50btEdavw0GoEvU7IR8pc6rHqEKkcM_ti39SGeIX_RVVjo7Bw"
+        },
+        "subject": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k"
+      }
+    },
+    {
+      "at_scope": "u:demo",
+      "expect": {
+        "fidelity": {},
+        "has_remainder": false,
+        "hit_refs": [],
+        "served_by": [
+          "u:demo"
+        ],
+        "verification": "verified"
+      },
+      "name": "sibling_raw_never",
+      "query": {
+        "auth": "biscuit-sim",
+        "budget": {
+          "cost": 3
+        },
+        "intent": "recall",
+        "requester": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+        "space": "self",
+        "subject": {
+          "identity": "did:key:znXLekvvEk2sBC1CrAwnyphhrqKN3cnW-z2uwVGiofI8"
+        },
+        "time": {
+          "from": "2026-01-01T00:00:00Z"
+        }
+      },
+      "requester_scope": "u:demo/e:cloud/f:prod",
+      "token": {
+        "audience": "u:demo",
+        "chain": [
+          "{\"audience\": \"u:demo\", \"constraints\": {\"direction\": \"within\", \"expiry\": \"2027-01-01T00:00:00Z\"}, \"grants\": [{\"action\": \"retrieve\", \"space\": \"self\"}], \"issuer\": \"did:web:orreth.ai:u:demo\", \"sig\": {\"alg\": \"ed25519\", \"by\": \"did:web:orreth.ai:u:demo\", \"sig\": \"KrGqUwfPAfDtbavHL7iaRTMGgk35Owu6lrzMK_-xGOJES1Tw2hU8AxG-yud-tgS0ykXe3YxZ4qNIuVJHLMuSCA\"}, \"subject\": \"did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k\"}"
+        ],
+        "constraints": {
+          "direction": "within",
+          "expiry": "2027-01-01T00:00:00Z"
+        },
+        "grants": [
+          {
+            "action": "retrieve",
+            "space": "self"
+          }
+        ],
+        "sig": {
+          "alg": "ed25519",
+          "by": "did:web:orreth.ai:u:demo",
+          "sig": "avGDXYG3k7Efhdy0wO1PoSx3Gjuy8wF5qmpPV_sSeCM4FzQN2Tvzplh2r6vvrSavhrhVMpOYN6DdG2qvto43AA"
+        },
+        "subject": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k"
+      }
+    },
+    {
+      "at_scope": "u:demo/e:dev/f:lab",
+      "expect": {
+        "fidelity": {
+          "sha256:994f9b3f3fb58b5fe3e3661a8f7ca984ccb58749c89ade64b83db44cb6733744": "verified"
+        },
+        "has_remainder": true,
+        "hit_refs": [
+          "sha256:994f9b3f3fb58b5fe3e3661a8f7ca984ccb58749c89ade64b83db44cb6733744"
+        ],
+        "served_by": [
+          "u:demo/e:dev/f:lab"
+        ],
+        "verification": "partial"
+      },
+      "name": "interview_portfolio_only",
+      "query": {
+        "auth": "biscuit-sim",
+        "budget": {
+          "cost": 2
+        },
+        "intent": "interview",
+        "requester": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+        "space": "self",
+        "subject": {
+          "identity": "did:key:znXLekvvEk2sBC1CrAwnyphhrqKN3cnW-z2uwVGiofI8"
+        },
+        "time": {
+          "from": "2026-01-01T00:00:00Z"
+        }
+      },
+      "requester_scope": "u:demo/e:cloud/f:prod",
+      "token": {
+        "audience": "u:demo/e:dev/f:lab",
+        "chain": [
+          "{\"at\": \"2026-07-02T23:36:33Z\", \"issuer\": \"did:web:orreth.ai:u:demo\", \"scope\": \"u:demo/e:dev\", \"sig\": {\"alg\": \"ed25519\", \"by\": \"did:web:orreth.ai:u:demo\", \"sig\": \"NOE_E80XzILsbGKx0nwxeHDHCn1pZoxaFVfDt1JsQdutb2UOutlzZNPycz13mInpvgZI5q4j_T4t6bX1rto6DQ\"}, \"subject\": \"did:key:zqkTfA_GYRmKvBSsx4kutKfZajRcUTy1JEYfSh2iq2Lg\"}",
+          "{\"at\": \"2026-07-02T23:36:33Z\", \"issuer\": \"did:key:zqkTfA_GYRmKvBSsx4kutKfZajRcUTy1JEYfSh2iq2Lg\", \"scope\": \"u:demo/e:dev/f:lab\", \"sig\": {\"alg\": \"ed25519\", \"by\": \"did:key:zqkTfA_GYRmKvBSsx4kutKfZajRcUTy1JEYfSh2iq2Lg\", \"sig\": \"x3ajCFf6lGtWSt1mHbRB7WFvT68ZKe0recb__Gw8E-eo-fFIGK7xr572TBvPZ2RVqTyGXZrPpBbBRXRLl-slDQ\"}, \"subject\": \"did:key:zT2yh3J7RgvyiUojXcov7Muc4vfa8h6BRZMEa2zPoevM\"}",
+          "{\"audience\": \"u:demo/e:dev/f:lab\", \"constraints\": {\"direction\": \"within\", \"expiry\": \"2027-01-01T00:00:00Z\"}, \"grants\": [{\"action\": \"retrieve\", \"space\": {\"scope\": \"u:demo/e:dev/f:lab\"}, \"visibility\": [\"portfolio\"]}, {\"action\": \"interview\", \"space\": {\"scope\": \"u:demo/e:dev/f:lab\"}}], \"issuer\": \"did:key:zT2yh3J7RgvyiUojXcov7Muc4vfa8h6BRZMEa2zPoevM\", \"sig\": {\"alg\": \"ed25519\", \"by\": \"did:key:zT2yh3J7RgvyiUojXcov7Muc4vfa8h6BRZMEa2zPoevM\", \"sig\": \"aPisM-sFcAMp7M4nCi37eTuJlz6vr3aVrYgeTEDF_tNjiZePur17blUS4sg72PsjH7WNv_4S7aR3PoF-nwrWAA\"}, \"subject\": \"did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k\"}"
+        ],
+        "constraints": {
+          "direction": "within",
+          "expiry": "2027-01-01T00:00:00Z"
+        },
+        "grants": [
+          {
+            "action": "retrieve",
+            "space": {
+              "scope": "u:demo/e:dev/f:lab"
+            },
+            "visibility": [
+              "portfolio"
+            ]
+          },
+          {
+            "action": "interview",
+            "space": {
+              "scope": "u:demo/e:dev/f:lab"
+            }
+          }
+        ],
+        "sig": {
+          "alg": "ed25519",
+          "by": "did:key:zT2yh3J7RgvyiUojXcov7Muc4vfa8h6BRZMEa2zPoevM",
+          "sig": "2eFqOw_JQ53M0eVdCNdHjZIYHHUum_Q4V1T-hoITpyUrVeOyi0LwbYLQ9M0Ceijq__tsj5d8ojmHw7XFSq-cAw"
+        },
+        "subject": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k"
+      }
+    },
+    {
+      "at_scope": "u:demo/e:cloud/f:prod",
+      "expect": {
+        "refusal": true
+      },
+      "name": "no_retrieve_grant_refused",
+      "query": {
+        "auth": "biscuit-sim",
+        "budget": {
+          "cost": 3
+        },
+        "intent": "recall",
+        "requester": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+        "space": "self",
+        "subject": "self",
+        "time": {
+          "from": "2026-01-01T00:00:00Z"
+        }
+      },
+      "requester_scope": "u:demo/e:cloud/f:prod",
+      "token": {
+        "audience": "u:demo",
+        "chain": [
+          "{\"audience\": \"u:demo\", \"constraints\": {\"direction\": \"within\", \"expiry\": \"2027-01-01T00:00:00Z\"}, \"grants\": [{\"action\": \"write\", \"space\": \"self\"}], \"issuer\": \"did:web:orreth.ai:u:demo\", \"sig\": {\"alg\": \"ed25519\", \"by\": \"did:web:orreth.ai:u:demo\", \"sig\": \"myOX7K71Cc0BvGTYGB46mql_Pk0BOaxhdbAWvWthADU66kDTPimkgh6N8WpRHuVQpvNwoai8Uh94zVEVz31ZAg\"}, \"subject\": \"did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k\"}"
+        ],
+        "constraints": {
+          "direction": "within",
+          "expiry": "2027-01-01T00:00:00Z"
+        },
+        "grants": [
+          {
+            "action": "write",
+            "space": "self"
+          }
+        ],
+        "sig": {
+          "alg": "ed25519",
+          "by": "did:web:orreth.ai:u:demo",
+          "sig": "xQzWLk1DNIOrxbgOrAO5yA7YPeqrV92qrblkRaNm03MtItgfOvfirCCnyG2YSxj42szsH8VLnhGESb-xGsq-Aw"
+        },
+        "subject": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k"
+      }
+    },
+    {
+      "at_scope": "u:demo/e:cloud/f:prod",
+      "expect": {
+        "fidelity": {
+          "sha256:cf19be5f3b40930d4104e533d65c415913a6d364d1e6933fb7dc7df10d883f50": "distilled-raw-expired"
+        },
+        "has_remainder": false,
+        "hit_refs": [
+          "sha256:cf19be5f3b40930d4104e533d65c415913a6d364d1e6933fb7dc7df10d883f50"
+        ],
+        "served_by": [
+          "u:demo/e:cloud/f:prod",
+          "u:demo/e:cloud"
+        ],
+        "verification": "verified"
+      },
+      "name": "tombstoned_raw_gone_dist_labeled",
+      "query": {
+        "auth": "biscuit-sim",
+        "budget": {
+          "cost": 3
+        },
+        "intent": "recall",
+        "requester": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+        "space": "self",
+        "subject": {
+          "identity": "did:key:zVFDTNRB1cDNberVVyRdBwjjFN3kVk-OIeoc7TrDVg14"
+        },
+        "time": {
+          "from": "2026-01-01T00:00:00Z"
+        }
+      },
+      "requester_scope": "u:demo/e:cloud/f:prod",
+      "token": {
+        "audience": "u:demo",
+        "chain": [
+          "{\"audience\": \"u:demo\", \"constraints\": {\"direction\": \"within\", \"expiry\": \"2027-01-01T00:00:00Z\"}, \"grants\": [{\"action\": \"retrieve\", \"space\": \"self\"}], \"issuer\": \"did:web:orreth.ai:u:demo\", \"sig\": {\"alg\": \"ed25519\", \"by\": \"did:web:orreth.ai:u:demo\", \"sig\": \"KrGqUwfPAfDtbavHL7iaRTMGgk35Owu6lrzMK_-xGOJES1Tw2hU8AxG-yud-tgS0ykXe3YxZ4qNIuVJHLMuSCA\"}, \"subject\": \"did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k\"}"
+        ],
+        "constraints": {
+          "direction": "within",
+          "expiry": "2027-01-01T00:00:00Z"
+        },
+        "grants": [
+          {
+            "action": "retrieve",
+            "space": "self"
+          }
+        ],
+        "sig": {
+          "alg": "ed25519",
+          "by": "did:web:orreth.ai:u:demo",
+          "sig": "avGDXYG3k7Efhdy0wO1PoSx3Gjuy8wF5qmpPV_sSeCM4FzQN2Tvzplh2r6vvrSavhrhVMpOYN6DdG2qvto43AA"
+        },
+        "subject": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k"
+      }
+    }
+  ],
+  "revoked": [],
+  "tombstones": [
+    {
+      "at_scope": "u:demo/e:cloud/f:prod",
+      "record_id": "sha256:f250bfe2bbe6710096189b2b9a6d8f155cb3ac05c2ee313df5d41e5a277330e8"
+    }
+  ],
+  "topology": [
+    {
+      "horizon": "forever",
+      "scope": "u:demo"
+    },
+    {
+      "horizon": "P395D",
+      "scope": "u:demo/e:cloud"
+    },
+    {
+      "horizon": "P90D",
+      "scope": "u:demo/e:cloud/f:prod"
+    }
+  ],
+  "writes": [
+    {
+      "at_scope": "u:demo/e:cloud/f:prod",
+      "expect": "ok",
+      "expect_keep_class": "distilled-raw-retained",
+      "record": {
+        "author": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+        "body": "eyJuIjoxfQ",
+        "id": "sha256:2bfd14f43d17fc7cea24e0917a8879b4b2f880b8baeec1b9d90fbaad655e71bd",
+        "kind": "episodic",
+        "occurred_at": "2026-06-10T00:00:00Z",
+        "provenance_class": "lived",
+        "retention": "active",
+        "scope": "u:demo/e:cloud/f:prod",
+        "signature": {
+          "alg": "ed25519",
+          "by": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+          "sig": "6XDOMnK4R7D28VzS1vZFAUkOnoHBiGqr8-WfE63ernMF4PZfn_-4TjSUbXQqKIgIYi7K0ZeT9UOGrhlarfImCg"
+        },
+        "tags": [],
+        "visibility": {
+          "mobility": "branch-bound",
+          "tenancy": "tenant-private"
+        }
+      }
+    },
+    {
+      "at_scope": "u:demo/e:cloud/f:prod",
+      "expect": "ok",
+      "expect_keep_class": "keep-raw",
+      "record": {
+        "author": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+        "body": "eyJib29tIjoxfQ",
+        "id": "sha256:090e206c393748e06c4e9ce580471c33a1948504004942cea1791478ede18d79",
+        "kind": "episodic",
+        "occurred_at": "2026-06-12T00:00:00Z",
+        "provenance_class": "lived",
+        "retention": "active",
+        "scope": "u:demo/e:cloud/f:prod",
+        "signature": {
+          "alg": "ed25519",
+          "by": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+          "sig": "WXAkZVSJAPM3qPCVm8Rkz3dTg8t6JMp5uoqf0Oy6xcHuxyHjZxcfjocrImsG2SJXgq-bNcu87za9dvBByJCTAQ"
+        },
+        "tags": [
+          "failure"
+        ],
+        "visibility": {
+          "mobility": "branch-bound",
+          "tenancy": "tenant-private"
+        }
+      }
+    },
+    {
+      "at_scope": "u:demo/e:cloud/f:prod",
+      "expect": "clock-violation",
+      "record": {
+        "author": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+        "body": "eyJsYXRlIjoxfQ",
+        "id": "sha256:bc32a3ba8a95f416bd3fd4092c52ef5175c2f6730c579f7744e145cb8d3cc8ed",
+        "kind": "episodic",
+        "occurred_at": "2026-06-11T00:00:00Z",
+        "provenance_class": "lived",
+        "retention": "active",
+        "scope": "u:demo/e:cloud/f:prod",
+        "signature": {
+          "alg": "ed25519",
+          "by": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+          "sig": "BbPQzbmY-wtuLJCb4FR3njBKUUMjcXICdwF_jqGV06F8tKm__RCjVIMPZnzZrijPcLj8Oj7GpSGvW3D8NmGmAw"
+        },
+        "tags": [],
+        "visibility": {
+          "mobility": "branch-bound",
+          "tenancy": "tenant-private"
+        }
+      }
+    },
+    {
+      "at_scope": "u:demo/e:cloud/f:prod",
+      "expect": "ok",
+      "expect_keep_class": "distilled-raw-retained",
+      "record": {
+        "author": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+        "body": "eyJvbGQiOjF9",
+        "id": "sha256:5ec4b9b1f7c95a22f15707dcbcc9fc44b08a6267a0437d9d84536c5885de3c54",
+        "kind": "episodic",
+        "occurred_at": "2026-06-02T00:00:00Z",
+        "provenance_class": "ingested-archive",
+        "retention": "active",
+        "scope": "u:demo/e:cloud/f:prod",
+        "signature": {
+          "alg": "ed25519",
+          "by": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+          "sig": "w96mQ_MEX8Dq0Yfb4Pz2WwQN6IroQ97V-dTagHwuSVw1-f2afxDK0FO_Wol_lvhKN4Dc6Kg7FCUbs6YWb04qCQ"
+        },
+        "tags": [],
+        "visibility": {
+          "mobility": "branch-bound",
+          "tenancy": "tenant-private"
+        }
+      }
+    },
+    {
+      "at_scope": "u:demo/e:cloud/f:prod",
+      "expect": "ok",
+      "expect_keep_class": "distilled-raw-retained",
+      "record": {
+        "author": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+        "body": "eyJwaGkiOjF9",
+        "id": "sha256:f250bfe2bbe6710096189b2b9a6d8f155cb3ac05c2ee313df5d41e5a277330e8",
+        "kind": "episodic",
+        "occurred_at": "2026-06-14T00:00:00Z",
+        "provenance_class": "lived",
+        "retention": "active",
+        "scope": "u:demo/e:cloud/f:prod",
+        "signature": {
+          "alg": "ed25519",
+          "by": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+          "sig": "rv-unTFxww4LubcJerNM2e4RRKwGztAGEonv37rTe0dqimMexAKzZjqLWahNxRyUG68URAqfArnJs3k7JqibCQ"
+        },
+        "tags": [],
+        "visibility": {
+          "mobility": "branch-bound",
+          "tenancy": "tenant-private"
+        }
+      }
+    },
+    {
+      "at_scope": "u:demo/e:cloud/f:prod",
+      "expect": "AuthzError",
+      "record": {
+        "author": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+        "body": "dGFtcGVyZWQ",
+        "id": "sha256:4834945f7bf91f82efc5cf881d902ec1cfa58f1be01cb35fe602b8ad4620c552",
+        "kind": "semantic",
+        "occurred_at": "2026-06-15T00:00:00Z",
+        "provenance_class": "lived",
+        "retention": "active",
+        "scope": "u:demo/e:cloud/f:prod",
+        "signature": {
+          "alg": "ed25519",
+          "by": "did:key:zAfMednByD0Dq_OcS5ukA8goegNm4v9Gz8CgYQvF6n2k",
+          "sig": "WXGi8rJUlVTEx4fkasDTRWmonEuReQEqFQdLb5epLj99DWbHM1E2Xsu-cGja06LaJuV43seg5rR90rF-Z4ecCA"
+        },
+        "tags": [],
+        "visibility": {
+          "mobility": "branch-bound",
+          "tenancy": "tenant-private"
+        }
+      }
+    },
+    {
+      "at_scope": "u:demo/e:dev/f:lab",
+      "expect": "ok",
+      "expect_keep_class": "distilled-raw-retained",
+      "record": {
+        "author": "did:key:znXLekvvEk2sBC1CrAwnyphhrqKN3cnW-z2uwVGiofI8",
+        "body": "eyJzZWNyZXQiOjF9",
+        "id": "sha256:303c81734ca9f66015accf5ba61d1d8f434c4bd5c4f31d3226b44cca229e765b",
+        "kind": "episodic",
+        "occurred_at": "2026-06-10T00:00:00Z",
+        "provenance_class": "lived",
+        "retention": "active",
+        "scope": "u:demo/e:dev/f:lab",
+        "signature": {
+          "alg": "ed25519",
+          "by": "did:key:znXLekvvEk2sBC1CrAwnyphhrqKN3cnW-z2uwVGiofI8",
+          "sig": "6Mp_CHx19NqSJu1TtTsDIv__r1waOB7gnrvVxo_uYaiPsYB6lWMdDki8LI9j3AzInEiv9u02Wtz27d17YjOGDA"
+        },
+        "tags": [],
+        "visibility": {
+          "mobility": "branch-bound",
+          "tenancy": "tenant-private"
+        }
+      }
+    },
+    {
+      "at_scope": "u:demo/e:dev/f:lab",
+      "expect": "ok",
+      "expect_keep_class": "distilled-raw-retained",
+      "record": {
+        "author": "did:key:znXLekvvEk2sBC1CrAwnyphhrqKN3cnW-z2uwVGiofI8",
+        "body": "eyJwb3J0Zm9saW8iOjF9",
+        "id": "sha256:994f9b3f3fb58b5fe3e3661a8f7ca984ccb58749c89ade64b83db44cb6733744",
+        "kind": "episodic",
+        "occurred_at": "2026-06-11T00:00:00Z",
+        "provenance_class": "lived",
+        "retention": "active",
+        "scope": "u:demo/e:dev/f:lab",
+        "signature": {
+          "alg": "ed25519",
+          "by": "did:key:znXLekvvEk2sBC1CrAwnyphhrqKN3cnW-z2uwVGiofI8",
+          "sig": "MUS5pPJXu-6lcjY4e8erOVtyq-DYa2lutlR6iUM_YHkiaGoQyzfWq83N2in3fJzX_474CPNU2aOIa3n4mdQGDQ"
+        },
+        "tags": [],
+        "visibility": {
+          "mobility": "branch-bound",
+          "tenancy": "portfolio"
+        }
+      }
+    }
+  ]
+}

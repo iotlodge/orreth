@@ -181,6 +181,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "orreth-node"
+version = "0.1.0"
+dependencies = [
+ "orreth-crypto",
+ "serde_json",
+]
+
+[[package]]
 name = "orreth-resolver"
 version = "0.1.0"
 dependencies = [

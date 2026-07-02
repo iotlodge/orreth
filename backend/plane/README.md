@@ -11,10 +11,11 @@ reference; the fixtures in `../conformance/fixtures` are the contract between th
 | `orreth-crypto` | canonical JSON **byte-for-byte** with the Python reference (sorted keys, `ensure_ascii` escaping, ryu floats) · sha256 content-addressing · Ed25519 verification of Python-produced signatures |
 | `orreth-rollup` | the StatBundle monoid (0005): merge/report/tier_score match the reference to 1e-9; monoid laws tested |
 | `orreth-resolver` | the cascade fold (0007): resolved content matches the reference **including the content-addressed id** — same chain, same hash, either language |
+| `orreth-node` | the node semantics: store (append-only, high-water clock), gateway ingress (signature/revocation/scope — the plane verifies, never signs), and the retrieval router (escalation, budget-miss ≡ authz-miss, interview firewall, tombstone fidelity). Replays the reference's full three-flow scenario from `fixtures/flows.json`, exactly |
 
-Next, per 0000 §2: the store crates (append-only, content-addressed), the gateway pipeline
-(ingress verify / egress authz), the retrieval router, and the `orrethd` binary that stacks them
-under a Tier Profile.
+Next, per 0000 §2: persistent stores (Postgres/pgvector + object store behind the same
+semantics), the network layer (PUSH up / PULL down between processes), and the `orrethd`
+binary that stacks the organs under a Tier Profile — one binary, tier as a profile.
 
 ## Run
 

@@ -121,8 +121,137 @@ def gen_resolver() -> None:
     })
 
 
+# ---- flows: the node semantics (store + gateway checks + retrieval router) -------------
+def gen_flows() -> None:
+    """Script a deterministic scenario against the reference sim; dump inputs + expected
+    outputs. Timestamps are pinned; the plane verifies signatures, never signs (the steward
+    is cognition), so every record here is pre-signed by the reference."""
+    from orreth_sim.node import ClockViolation, Refusal, make_memory
+    from orreth_sim.world import build
+
+    w = build()
+    prod, pkp = w.agents["prod-1"]
+    lab, lkp = w.agents["lab-1"]
+    T = lambda d, h=0: f"2026-06-{d:02d}T{h:02d}:00:00Z"
+    NOW_PIN = "2026-07-01T00:00:00Z"
+
+    # flow 1: a floor published at the apex, pulled down the chain
+    floor = {"match": {"outcome": "failure"}, "action": "keep-raw",
+             "keep_for": "P90D", "reason": "failures survive"}
+    w.universe.publish_floors([floor])
+    w.eco_cloud.pull_standards()
+    w.field_prod.pull_standards()
+    w.field_lab.pull_standards()
+
+    writes, records = [], {}
+
+    def try_write(node, rec, expect=None):
+        try:
+            node.write(rec)
+            outcome = {"expect": "ok", "expect_keep_class": node.records[rec["id"]]["keep_class"]}
+        except ClockViolation:
+            outcome = {"expect": "clock-violation"}
+        except Exception as e:
+            outcome = {"expect": str(e.__class__.__name__)}
+        records[rec["id"]] = rec
+        writes.append({"at_scope": node.scope, "record": rec, **(expect or outcome)})
+
+    r1 = make_memory(prod, pkp, prod["scope"], {"n": 1}, occurred_at=T(10))
+    r2 = make_memory(prod, pkp, prod["scope"], {"boom": 1}, tags=["failure"], occurred_at=T(12))
+    r3 = make_memory(prod, pkp, prod["scope"], {"late": 1}, occurred_at=T(11))       # backdated
+    r4 = make_memory(prod, pkp, prod["scope"], {"old": 1}, occurred_at=T(2),
+                     provenance_class="ingested-archive")                            # archive OK
+    r5 = make_memory(prod, pkp, prod["scope"], {"phi": 1}, occurred_at=T(14))        # tombstoned later
+    bad = make_memory(prod, pkp, prod["scope"], {"t": 1}, occurred_at=T(15))
+    bad["body"] = "dGFtcGVyZWQ"                                                      # body not signed;
+    bad["kind"] = "semantic"                                                         # kind IS signed
+    secret = make_memory(lab, lkp, lab["scope"], {"secret": 1}, occurred_at=T(10))
+    folio = make_memory(lab, lkp, lab["scope"], {"portfolio": 1}, tenancy="portfolio",
+                        occurred_at=T(11))
+    for node, rec in ((w.field_prod, r1), (w.field_prod, r2), (w.field_prod, r3),
+                      (w.field_prod, r4), (w.field_prod, r5), (w.field_prod, bad),
+                      (w.field_lab, secret), (w.field_lab, folio)):
+        try_write(node, rec)
+
+    # flow 2's product arrives as a pre-signed record: the steward's distillation, pushed up
+    dist = w.field_prod.run_distillation()
+    w.field_prod.tombstone(r5["id"], by=prod["did"], reason="consent withdrawn")
+
+    # flow 3: queries (tokens with far expiry; 'now' pinned for the plane's expiry check)
+    def tok(agent, audience, grants=None, issuer=None):
+        ident, _ = w.agents[agent]
+        issuer = issuer or (w.becky if audience == "u:demo" else w.beckys[audience])
+        return issuer.issue_token(ident["did"], audience,
+                                  grants or [{"action": "retrieve", "space": "self"}])
+
+    def q(agent, days_from="2026-01-01T00:00:00Z", cost=3, intent="recall", subject="self"):
+        ident, _ = w.agents[agent]
+        return {"requester": ident["did"], "subject": subject, "space": "self",
+                "time": {"from": days_from}, "intent": intent,
+                "budget": {"cost": cost}, "auth": "biscuit-sim"}
+
+    queries = []
+
+    def try_query(name, node, query, token, requester_scope):
+        try:
+            res = node.retrieve(query, token, requester_scope)
+            expected = {"hit_refs": [h["ref"] for h in res["hits"]],
+                        "fidelity": {h["ref"]: h["fidelity"] for h in res["hits"]},
+                        "served_by": res["provenance"]["served_by"],
+                        "verification": res["verification"],
+                        "has_remainder": "remainder" in res}
+        except Refusal:
+            expected = {"refusal": True}
+        queries.append({"name": name, "at_scope": node.scope, "query": query,
+                        "token": token, "requester_scope": requester_scope,
+                        "expect": expected})
+
+    try_query("escalates_past_field_horizon", w.field_prod, q("prod-1"),
+              tok("prod-1", "u:demo"), prod["scope"])
+    try_query("budget_miss", w.field_prod, q("prod-1", cost=1),
+              tok("prod-1", "u:demo"), prod["scope"])
+    try_query("authz_miss_same_shape", w.field_prod, q("prod-1", cost=99),
+              tok("prod-1", "u:demo/e:cloud/f:prod"), prod["scope"])
+    try_query("sibling_raw_never", w.universe,
+              q("prod-1", subject={"identity": lab["did"]}),
+              tok("prod-1", "u:demo"), prod["scope"])
+    try_query("interview_portfolio_only", w.field_lab,
+              {**q("prod-1", subject={"identity": lab["did"]}, intent="interview", cost=2)},
+              w.beckys["u:demo/e:dev/f:lab"].issue_token(
+                  prod["did"], "u:demo/e:dev/f:lab",
+                  [{"action": "retrieve", "space": {"scope": "u:demo/e:dev/f:lab"},
+                    "visibility": ["portfolio"]},
+                   {"action": "interview", "space": {"scope": "u:demo/e:dev/f:lab"}}]),
+              prod["scope"])
+    try_query("no_retrieve_grant_refused", w.field_prod, q("prod-1"),
+              tok("prod-1", "u:demo", grants=[{"action": "write", "space": "self"}]),
+              prod["scope"])
+    try_query("tombstoned_raw_gone_dist_labeled", w.field_prod,
+              q("prod-1", subject={"identity": w.field_prod.steward["did"]}),
+              tok("prod-1", "u:demo"), prod["scope"])
+
+    _write("flows.json", {
+        "description": "The node semantics end-to-end (store + gateway ingress + retrieval "
+                       "router), scripted against the reference. The plane verifies, never "
+                       "signs. Pinned clocks; expected outputs are exact.",
+        "now": NOW_PIN,
+        "identities": {d: e["public"] for d, e in w.nanda._e.items()},
+        "revoked": [],
+        "topology": [{"scope": n.scope, "horizon": n.profile["retrieval"]["horizon"]}
+                     for n in (w.universe, w.eco_cloud, w.field_prod)],
+        "lab_chain": [{"scope": n.scope, "horizon": n.profile["retrieval"]["horizon"]}
+                      for n in (w.universe, w.eco_dev, w.field_lab)],
+        "floors": [floor],
+        "writes": writes,
+        "distillation_pushed_up": dist,
+        "tombstones": [{"at_scope": w.field_prod.scope, "record_id": r5["id"]}],
+        "queries": queries,
+    })
+
+
 if __name__ == "__main__":
     print("generating conformance fixtures:")
     gen_crypto()
     gen_rollup()
     gen_resolver()
+    gen_flows()
