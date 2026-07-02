@@ -61,7 +61,8 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
   key issues; published refuse-to-host list.
 - **POC order: Earth Mapper first** (public/consented data, near-zero regulatory surface, exercises collective
   memory + skills cascade + the window literally), **Agentic Enterprise second** (compliance floors + full HITL
-  map built in parallel, then the C-suite/regulator showcase).
+  map built in parallel, then the C-suite/regulator showcase). *(Amended 2026-07-02 — see "Proving grounds"
+  below: The League joins as the time axis; League first if serialized; Enterprise in parallel throughout.)*
 
 ### Locked 2026-07-02 (0013 — the genuine Fable 5 pass, via AskUserQuestion)
 - **Platform-floor changes: asymmetric bars.** Tighten = 2 Custodian co-signs + versioned publication (safety
@@ -75,6 +76,20 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
 - **The Warden is christened `vigil`** — becky says *who you are*; vigil watches *what you do*. Its
   non-removability is a **contract, not magic**: presence + telemetry are terms of the hosting join credential,
   backed by a signed dead-man heartbeat (silence is a floor breach; the quarantine ladder answers).
+- **Proving grounds: twin axes + northstar** *(amends the POC-order lock)*. The spacetime window has two axes.
+  **The League** ("Create Your Sports League") proves **time**: accelerated universe-time yields decades of
+  lived, identity-keyed memory in weeks — the only honest proof of "no limit" depth on a young platform —
+  with pruning-as-fidelity-curve made legible (games → box scores → legends) and a near-1:1 costume for locked
+  0002 decisions (transfer veto/compel, interview-as-scouting, archetype→incarnation, sibling walls, roll-up
+  standings). Cost shape: cheap cognition, rich identity. **Earth Mapper** proves **space** (the live-globe
+  poster; dogfooded first tenant). The **Agentic Enterprise** northstar is built **in parallel** throughout.
+  If serialization is forced: League first.
+- **Funnel: Watch → Play → Build → Buy.** Every article ends at a public, read-only spacetime window on a
+  living demo universe (no signup — scrub a league's history in the browser) → create-your-league self-serve →
+  dev docker eco → enterprise track.
+- **New 0004 input — universe-time vs wall-clock (the time-dilation dial)**, surfaced by the League: memory
+  horizons, retention, and pruning cadence run on universe-time; security TTLs and co-signs stay on wall-clock.
+  Owned by the Tier Profile dive.
 
 ### The mechanism
 - **Name** Orreth; repo `orreth`; "Harness" = the architectural primitive; tiers Universe / Ecosystem / Field / Agents.

@@ -281,32 +281,62 @@ Category-level only; no operational detail. Each has a named owner in the contro
 
 ---
 
-## 11. The two POCs
+## 11. The proving grounds — three universes, two axes, one funnel
 
-### POC 1 — **Earth Mapper** (the safe showcase; build first)
+*(Amended 2026-07-02, JB + Fable 5. The spacetime window has **two axes**, and the original two-POC plan proved
+only one: Earth Mapper is the **space** axis and cannot prove **time** — a young universe has shallow lived
+history, and backfilled archives are ingested data, not lived memory. The League is the **time** axis: its
+internal clock outruns wall-clock, so decades of lived, identity-keyed history exist within weeks — the only
+honest way to demonstrate "no limit" memory depth on a young platform.)*
+
+### PG-1 — **The League** ("Create Your Sports League" — the time axis; first if we must serialize)
+Universe = the league; Ecosystems = conferences; Fields = teams; Agents = players, coaches, scouts, trainers,
+commentators. Seasons run at accelerated universe-time: rookie → veteran → legend → hall of fame, with the
+memory metabolism **visible to a layperson** — last night's game in full detail, last season as box scores, ten
+seasons back as records and legends (0003's pruning-as-fidelity-curve, needing no explanation). *Why it proves
+the substrate:* it is nearly a 1:1 costume for decisions already locked — transfers with source veto / league
+compel (0002 close-out), scouting = the interview sandbox, draft classes = archetype → incarnation, playbook
+secrecy = sibling walls, standings = `0005`'s monoidal roll-up wearing a jersey. *Cost shape (JB's instinct,
+confirmed):* **cheap cognition, rich identity** — games simulate programmatically; LLM calls only where they
+shine (scouting interviews, commentary). The spend lands in the substrate, which is the thing being proved.
+*New requirement it surfaces:* **universe-time vs wall-clock** (the time-dilation dial) — memory horizons,
+retention, and pruning cadence run on universe-time; security TTLs and co-signs stay on wall-clock. Owned by
+the `0004` Tier Profile dive.
+
+### PG-2 — **Earth Mapper** (the space axis; the poster)
 A Universe whose ecosystem of agents (geography, weather, imagery, logistics, language…) collaborate to render a
 **live, rotating understanding of Earth** — discovering, applying, and cascading knowledge as skills; the
-spacetime window becomes literal. *Why first:* it exercises the crown jewels — cross-agent collective memory,
-skills cascade, the window — on **public/open/consented data only**, near-zero regulatory surface, maximum wow;
+spacetime window becomes literal. It exercises the crown jewels — cross-agent collective memory, skills
+cascade, the window — on **public/open/consented data only**, near-zero regulatory surface, maximum wow;
 de-risks the hard tech and feeds Articles 03/04. *Safety that keeps it clean:* open/consented sources only, **no
 observation of identifiable individuals** — Earth as a system, not a surveillance grid (a live demonstration of
-the platform-floor model working). *Dogfooding floor (Fable 5 addition):* Earth Mapper runs as **orreth.ai's own
+the platform-floor model working). *Dogfooding floor:* Earth Mapper runs as **orreth.ai's own
 first tenant** — same onboarding gate, same floors, same vigil telemetry, same tenant mirror. The demo that shows
 off the substrate is also the live proof the governance is real: the first universe we host is one we govern
 ourselves, in public.
 
-### POC 2 — **The Agentic Enterprise** (JB's northstar; build second)
+### PG-3 — **The Agentic Enterprise** (JB's northstar; built **in parallel, always**)
 A truly agentic enterprise that amazes the C-suite (CFO, CRO, CTO, CPO, CEO, CCO) **and** regulators (NIST,
 PCI-DSS, PII/GDPR, DORA, SOX, universe audit) — every number Sourced + Verified, each regulator handed a
-*scoped, entitled, audited* window. *Why second:* the commercial killer, but it needs the compliance floors, the
-full HITL map (§7), and the regulator-entitlement model (governed-human-oversight.md) hardened first. Earth
-Mapper proves the substrate; the Enterprise sells it — to the CFO-led buyers who fund the platform.
+*scoped, entitled, audited* window. It needs the compliance floors, the full HITL map (§7), and the
+regulator-entitlement model (governed-human-oversight.md) hardened — so those are built against it continuously
+while the public proving grounds run ahead. The League and Earth Mapper prove the substrate; the Enterprise
+sells it — to the CFO-led buyers who fund the platform. It is also, plainly, **the portfolio artifact**: the
+demonstration that a governed agentic enterprise can be designed, run, and audited — valuable to its author
+independent of platform revenue.
+
+### The funnel — **Watch → Play → Build → Buy** (locked 2026-07-02)
+Every article ends at a **public, read-only spacetime window** on a living demo universe — no signup; scrub a
+league's decades in the browser (`0008`'s hero pane doing GTM duty; engagement begins before any account
+exists) → **Play:** create your own league (the `0009` self-serve template flow) → **Build:** the dev docker
+eco for engineers → **Buy:** the enterprise track. Every step up the funnel is the same architecture at a
+deeper commitment — the demo, the product, and the proof are one artifact.
 
 ---
 
 ## 12. Decisions — **locked by JB** (via AskUserQuestion; recorded in `../decisions/`)
 *(An earlier auto pass falsely recorded 1–4 as locked before JB decided; the audit log confirms JB genuinely
-answered them on 2026-07-01. Decisions 5–7 were locked 2026-07-02 during the genuine Fable 5 pass.)*
+answered them on 2026-07-01. Decisions 5–8 were locked 2026-07-02 during the genuine Fable 5 pass.)*
 
 1. **Key custody: tiered** — platform-managed default + BYOK + split/escrow for high-assurance. "We
    structurally cannot read you" becomes a true, sellable promise at the higher tiers.
@@ -323,6 +353,10 @@ answered them on 2026-07-01. Decisions 5–7 were locked 2026-07-02 during the g
    versioned public contract, and every tenant's pane renders a live mirror of exactly what rises. The
    Custodian's eyes are themselves governed and watchable.
 7. **The Warden is christened `vigil`** *(2026-07-02)* — becky says *who you are*; vigil watches *what you do*.
+8. **Proving grounds & funnel** *(2026-07-02; amends decision 4)* — the window's two axes split across two
+   public universes: **The League** (time; the playable; first if serialized) + **Earth Mapper** (space; the
+   poster), with the **Agentic Enterprise northstar built in parallel throughout**. GTM funnel: **Watch → Play →
+   Build → Buy** — articles land on a public read-only window, never a signup wall.
 
 **No 0013 items remain open.**
 
