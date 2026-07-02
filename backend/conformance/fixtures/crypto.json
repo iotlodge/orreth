@@ -1,0 +1,72 @@
+{
+  "canonical_vectors": [
+    {
+      "canonical": "{\"a\":2,\"b\":1}",
+      "hash": "sha256:d3626ac30a87e6f7a6428233b3c68299976865fa5508e4267c5415c76af7a772",
+      "input": {
+        "a": 2,
+        "b": 1
+      }
+    },
+    {
+      "canonical": "{\"nested\":{\"a\":{\"x\":true,\"y\":null},\"z\":[3,1,2]},\"s\":\"t\\u00e4st \\u26a1\"}",
+      "hash": "sha256:93be999c49438fc9e653fb56ee8d7383260165f5f17c7f1d21ae771032af97c2",
+      "input": {
+        "nested": {
+          "a": {
+            "x": true,
+            "y": null
+          },
+          "z": [
+            3,
+            1,
+            2
+          ]
+        },
+        "s": "t\u00e4st \u26a1"
+      }
+    },
+    {
+      "canonical": "{\"floats\":[0.9,0.81,1.0,0.001,123456.789],\"int\":42}",
+      "hash": "sha256:7ab11abebf66143eb4ee354251482dbe4d4e59b3857723f451d1266761094c0d",
+      "input": {
+        "floats": [
+          0.9,
+          0.81,
+          1.0,
+          0.001,
+          123456.789
+        ],
+        "int": 42
+      }
+    },
+    {
+      "canonical": "{\"empty\":{},\"list\":[],\"neg\":-7,\"zero\":0}",
+      "hash": "sha256:879a44950fc51baa2561d8ba4630142e58dee946abdc2a84586c36be1ac92c88",
+      "input": {
+        "empty": {},
+        "list": [],
+        "neg": -7,
+        "zero": 0
+      }
+    }
+  ],
+  "description": "Canonical JSON (sorted keys, no whitespace, shortest-float) + sha256 content-addressing + one real Ed25519 signature to verify.",
+  "signature_vector": {
+    "note": "verify sig.sig (urlsafe b64, no pad) over canonical(payload minus sig/signature)",
+    "payload": {
+      "author": "did:key:zTEST",
+      "id": "sha256:abc",
+      "kind": "episodic",
+      "occurred_at": "2026-07-01T00:00:00Z",
+      "provenance_class": "lived",
+      "scope": "u:demo/e:x/f:y"
+    },
+    "public": "zwsA7JCwUCafWK4p_GDbQCicJEAquoFLIUnEAw5GIiGo",
+    "sig": {
+      "alg": "ed25519",
+      "by": "did:key:zwsA7JCwUCafWK4p_GDbQCicJEAquoFLIUnEAw5GIiGo",
+      "sig": "A-9tziVvfOYH_vE_GXOAxiTqSNb1mVLnpwZjbRA-9FDDW54c-HshV-0gED6FZWvObncThPW-pW8WChpdM5CVDw"
+    }
+  }
+}

@@ -1,0 +1,232 @@
+{
+  "cases": [
+    {
+      "merged": {
+        "compliance": "clean",
+        "cost": {
+          "model_calls": 0,
+          "tokens": 300,
+          "usd": 0,
+          "wall_ms": 0
+        },
+        "n": 3,
+        "outcomes": {
+          "aborted": 0,
+          "failure": 0,
+          "partial": 0,
+          "success": 3
+        },
+        "per_objective": [
+          {
+            "floor_breaches": 0,
+            "max": 0.9,
+            "min": 0.7,
+            "n": 3,
+            "objective": "reliability",
+            "sum": 2.4000000000000004,
+            "sum_sq": 1.9400000000000002
+          }
+        ]
+      },
+      "name": "simple",
+      "report_reliability_uniform_prior": {
+        "ci95": [
+          0.3067413408014938,
+          1.0
+        ],
+        "compliance": "clean",
+        "floor_breaches": 0,
+        "mean": 0.68,
+        "n": 3
+      },
+      "runs": [
+        {
+          "cost": {
+            "tokens": 100
+          },
+          "outcome": "success",
+          "scores": [
+            {
+              "objective": "reliability",
+              "score": 0.9
+            }
+          ]
+        },
+        {
+          "cost": {
+            "tokens": 100
+          },
+          "outcome": "success",
+          "scores": [
+            {
+              "objective": "reliability",
+              "score": 0.8
+            }
+          ]
+        },
+        {
+          "cost": {
+            "tokens": 100
+          },
+          "outcome": "success",
+          "scores": [
+            {
+              "objective": "reliability",
+              "score": 0.7
+            }
+          ]
+        }
+      ],
+      "tier_score": {
+        "compliance": "clean",
+        "score": 0.68
+      }
+    },
+    {
+      "merged": {
+        "compliance": "breached",
+        "cost": {
+          "model_calls": 0,
+          "tokens": 600,
+          "usd": 0,
+          "wall_ms": 0
+        },
+        "n": 6,
+        "outcomes": {
+          "aborted": 0,
+          "failure": 1,
+          "partial": 0,
+          "success": 5
+        },
+        "per_objective": [
+          {
+            "floor_breaches": 1,
+            "max": 0.98,
+            "min": 0.98,
+            "n": 1,
+            "objective": "compliance",
+            "sum": 0.98,
+            "sum_sq": 0.9603999999999999
+          },
+          {
+            "floor_breaches": 0,
+            "max": 0.95,
+            "min": 0.6,
+            "n": 5,
+            "objective": "reliability",
+            "sum": 3.9500000000000006,
+            "sum_sq": 3.2025
+          }
+        ]
+      },
+      "name": "mixed_with_breach",
+      "report_reliability_uniform_prior": {
+        "ci95": [
+          0.39179305137155196,
+          1.0
+        ],
+        "compliance": "breached",
+        "floor_breaches": 0,
+        "mean": 0.7071428571428573,
+        "n": 5
+      },
+      "runs": [
+        {
+          "cost": {
+            "tokens": 100
+          },
+          "outcome": "success",
+          "scores": [
+            {
+              "objective": "reliability",
+              "score": 0.9
+            }
+          ]
+        },
+        {
+          "cost": {
+            "tokens": 100
+          },
+          "outcome": "success",
+          "scores": [
+            {
+              "objective": "reliability",
+              "score": 0.8
+            }
+          ]
+        },
+        {
+          "cost": {
+            "tokens": 100
+          },
+          "outcome": "success",
+          "scores": [
+            {
+              "objective": "reliability",
+              "score": 0.7
+            }
+          ]
+        },
+        {
+          "cost": {
+            "tokens": 100
+          },
+          "outcome": "success",
+          "scores": [
+            {
+              "objective": "reliability",
+              "score": 0.95
+            }
+          ]
+        },
+        {
+          "cost": {
+            "tokens": 100
+          },
+          "outcome": "failure",
+          "scores": [
+            {
+              "objective": "reliability",
+              "score": 0.6
+            }
+          ]
+        },
+        {
+          "cost": {
+            "tokens": 100
+          },
+          "outcome": "success",
+          "scores": [
+            {
+              "floor_breached": true,
+              "objective": "compliance",
+              "score": 0.98
+            }
+          ]
+        }
+      ],
+      "tier_score": {
+        "compliance": "breached",
+        "score": 0.7071428571428573
+      }
+    }
+  ],
+  "description": "The StatBundle monoid (0005): merge must be associative with empty as identity; the Beta prior applies ONCE at report; floors flag, never average. Floats compare to 1e-9.",
+  "empty": {
+    "compliance": "clean",
+    "cost": {
+      "model_calls": 0,
+      "tokens": 0,
+      "usd": 0,
+      "wall_ms": 0
+    },
+    "n": 0,
+    "outcomes": {
+      "aborted": 0,
+      "failure": 0,
+      "partial": 0,
+      "success": 0
+    },
+    "per_objective": []
+  }
+}

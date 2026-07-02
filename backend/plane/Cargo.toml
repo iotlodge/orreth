@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/orreth-crypto",
+    "crates/orreth-rollup",
+    "crates/orreth-resolver",
+]
+
+# NOTE: serde_json stays on default features — its Map is a BTreeMap (sorted keys),
+# which the canonicalization parity with the Python reference depends on.
+# Never enable "preserve_order" in this workspace.
+[workspace.dependencies]
+serde_json = "1"
+sha2 = "0.10"
+ed25519-dalek = "2"
+base64 = "0.22"

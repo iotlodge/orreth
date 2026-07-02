@@ -1,0 +1,93 @@
+{
+  "cases": [
+    {
+      "expected": {
+        "as_of": [
+          {
+            "scope": "u:demo",
+            "version": "0.0.1"
+          },
+          {
+            "scope": "u:demo/e:cloud",
+            "version": "0.0.1"
+          },
+          {
+            "scope": "u:demo/e:cloud/f:prod",
+            "version": "0.0.1"
+          }
+        ],
+        "floors": [
+          {
+            "action": "keep-raw",
+            "keep_for": "P90D",
+            "match": {
+              "outcome": "failure"
+            },
+            "reason": "failures survive"
+          }
+        ],
+        "id": "sha256:555a15768eab8521f02d12ae52b7fc4a8d5baff662f64b52de6c42ddb7d28893",
+        "scope": "u:demo/e:cloud/f:prod",
+        "skills": {
+          "pitching": "2.0.0",
+          "scouting": "1.0.0"
+        },
+        "soft": {
+          "tone": {
+            "from_scope": "u:demo/e:cloud/f:prod",
+            "value": "REAL",
+            "version": "1.0.0"
+          }
+        }
+      },
+      "floors": [
+        {
+          "action": "keep-raw",
+          "keep_for": "P90D",
+          "match": {
+            "outcome": "failure"
+          },
+          "reason": "failures survive"
+        }
+      ],
+      "name": "three_tier_chain",
+      "tiers": [
+        {
+          "scope": "u:demo",
+          "skills": {
+            "pitching": "1.0.0"
+          },
+          "soft": {
+            "tone": {
+              "value": "wild",
+              "version": "1.0.0"
+            }
+          },
+          "version": "0.0.1"
+        },
+        {
+          "scope": "u:demo/e:cloud",
+          "skills": {
+            "scouting": "1.0.0"
+          },
+          "soft": {},
+          "version": "0.0.1"
+        },
+        {
+          "scope": "u:demo/e:cloud/f:prod",
+          "skills": {
+            "pitching": "2.0.0"
+          },
+          "soft": {
+            "tone": {
+              "value": "REAL",
+              "version": "1.0.0"
+            }
+          },
+          "version": "0.0.1"
+        }
+      ]
+    }
+  ],
+  "description": "The cascade fold (0007): soft = most-specific-wins (attributed) \u00b7 skills = additive, higher version wins \u00b7 floors sorted by content hash \u00b7 the id is the content hash of the canonical resolved content. Deterministic \u2014 same chain, same id, regardless of declaration order."
+}

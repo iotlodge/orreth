@@ -38,3 +38,13 @@ No LLM steward (distillation is deterministic), no real biscuits (logical attenu
 network (in-process tree; compose arrives with the plane), no persistence. The **Rust plane** replaces this —
 same fixtures, two implementations, one truth. When these tests are ported to conformance fixtures, this
 package's job is done.
+
+## The conformance fixtures — the spec the Rust plane must pass
+
+`gen_fixtures.py` derives language-neutral fixtures (`fixtures/*.json`) from this reference:
+pure input → output pairs (0007's determinism is what makes them possible). `crypto.json` pins
+canonicalization **byte-for-byte** (sorted keys, compact, Python `ensure_ascii` escaping, ryu floats)
+plus a real Ed25519 vector; `rollup.json` pins the monoid and the Bayesian report edge;
+`resolver.json` pins the fold **including the content hash** — one truth, two implementations.
+Regenerate after any reference change: `uv run python gen_fixtures.py` (commit the fixtures; the
+Rust suite reads them directly and needs no Python).

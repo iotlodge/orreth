@@ -1,0 +1,8 @@
+[package]
+name = "orreth-resolver"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde_json = { workspace = true }
+orreth-crypto = { path = "../orreth-crypto" }
