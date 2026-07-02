@@ -211,6 +211,20 @@ Full rationale for locked items lives in `../vision/FUTURE-the-orreth.md`; use c
 - *Mechanism landed same day: `escalation.schema.json` (Escalation + GateRule), simulator `hitl.py`
   (EscalationQueue + cascade_gate): 27/27 tests.*
 
+### Locked 2026-07-02 (0007 close-out — one fold, every law)
+- **RunRecords pin their `context_hash`.** The ResolvedContext is content-addressed (same chain ⇒ same id —
+  policy is cacheable, diffable, canary-able), and every run records which context it executed under: "what
+  rules governed this agent when it did X" is a lookup, not an investigation. Memory records stay lighter —
+  their governance is derivable from scope + time.
+- **Partition: fail-closed continue + signal.** A node blind to its parent keeps enforcing its last-known
+  resolved context (floors persist; rules are never absent), marks stale tiers honestly in `as_of`, and the
+  blindness is a vigil signal that escalates with staleness (0012). Availability is never hostage to a blip;
+  a wall-clock partition never freezes a simulated season.
+- *Also structural, from the dive: merge laws travel with the field's contract (floor-tighten ·
+  most-specific-wins-attributed · additive · monotone dials), so new cascaded dials never touch resolver code.*
+- *Mechanism landed same day: `resolved-context.schema.json`, `run-record.context_hash`, simulator
+  `resolver.py`: 32/32 tests (incl. reverse-declaration-order ⇒ identical hash).*
+
 ### Locked 2026-07-01 (interop/UX pre-decisions — drive the 0008 dive)
 - **Authoring is dual-mode, equal weight** — JB's call: English and canvas are both first-class surfaces.
   Tractable because of the next lock: both are *projections of one IR* — there is no text↔canvas sync

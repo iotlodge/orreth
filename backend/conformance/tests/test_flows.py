@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from orreth_sim import crypto, factory, hitl, rollup
+from orreth_sim import crypto, factory, hitl, resolver, rollup
 from orreth_sim.agent_surface import BudgetExceeded, join_workforce
 from orreth_sim.identity import AuthzError, tenant_of
 from orreth_sim.node import ClockViolation, FloorViolation, Refusal, make_memory
@@ -477,6 +477,69 @@ def test_cooling_off_holds_and_gates_tighten_only(world):
     hitl.cascade_gate(GATES, {"suspend-universe": {"co_signs": 3, "ttl": "P3D"}})
     with pytest.raises(hitl.GateViolation):
         hitl.cascade_gate(GATES, {"suspend-universe": {"co_signs": 1, "ttl": "P7D"}})
+
+
+# ---------------------------------------------------------------- 0007: the resolver
+def test_resolver_is_deterministic_and_content_addressed(world):
+    """Same chain ⇒ same id — regardless of the order anything was declared in."""
+    world.universe.soft["tone"] = {"value": "wild", "version": "1.0.0"}
+    world.universe.skills["pitching"] = "1.0.0"
+    world.field_prod.skills["scouting"] = "1.0.0"
+    a = resolver.resolve(world.field_prod)
+    b = resolver.resolve(world.field_prod)
+    assert a["id"] == b["id"]                                   # pure function of the chain
+    w2 = build()                                                # a fresh world, declared in reverse
+    w2.field_prod.skills["scouting"] = "1.0.0"
+    w2.universe.skills["pitching"] = "1.0.0"
+    w2.universe.soft["tone"] = {"value": "wild", "version": "1.0.0"}
+    assert resolver.resolve(w2.field_prod)["id"] == a["id"]     # declaration order is irrelevant
+
+
+def test_most_specific_wins_and_floors_ride_along(world):
+    """Soft: the nearest tier wins, attributed. Floors: composed in, tighten-enforced at publication."""
+    world.universe.soft["tone"] = {"value": "wild", "version": "1.0.0"}
+    world.field_prod.soft["tone"] = {"value": "REAL", "version": "1.0.0"}
+    world.universe.publish_floors([{"match": {"outcome": "failure"}, "action": "keep-raw",
+                                    "keep_for": "P90D", "reason": "failures survive"}])
+    world.field_prod.pull_standards()
+    rc = resolver.resolve(world.field_prod)
+    assert rc["soft"]["tone"]["value"] == "REAL"                          # the field's REAL wins...
+    assert rc["soft"]["tone"]["from_scope"] == "u:demo/e:cloud/f:prod"    # ...and says so
+    assert any(f["match"] == {"outcome": "failure"} for f in rc["floors"])  # the floor rides along
+    eco_rc = resolver.resolve(world.eco_cloud)
+    assert eco_rc["soft"]["tone"]["value"] == "wild"            # untouched tiers keep the apex tone
+
+
+def test_skills_are_additive_with_version_tiebreak(world):
+    world.universe.skills["pitching"] = "1.0.0"
+    world.eco_cloud.skills["scouting"] = "1.0.0"
+    world.field_prod.skills["pitching"] = "2.0.0"
+    rc = resolver.resolve(world.field_prod)
+    assert rc["skills"] == {"pitching": "2.0.0", "scouting": "1.0.0"}   # union; higher version wins
+
+
+def test_partition_fails_closed_and_signals(world):
+    """Locked 2026-07-02: a blind node keeps its last-known law — floors persist, staleness is loud."""
+    world.universe.soft["tone"] = {"value": "wild", "version": "1.0.0"}
+    resolver.resolve(world.field_prod)                          # last-known view cached
+    world.universe.soft["tone"] = {"value": "wilder", "version": "1.1.0"}
+    world.field_prod.partitioned = True
+    signals = world.field_prod.signal_count
+    rc = resolver.resolve(world.field_prod)
+    assert rc["soft"]["tone"]["value"] == "wild"                # last-known, not absent
+    assert any(t.get("stale") for t in rc["as_of"])             # honestly marked
+    assert world.field_prod.signal_count == signals + 1         # vigil hears the blindness
+    world.field_prod.partitioned = False
+    assert resolver.resolve(world.field_prod)["soft"]["tone"]["value"] == "wilder"   # resync heals
+
+
+def test_runs_pin_the_context_they_ran_under(world):
+    """Locked 2026-07-02: 'what rules governed this agent' is a lookup, not an investigation."""
+    rc = resolver.resolve(world.field_prod)
+    run = _run(world.field_prod, world, "prod-1", "g", 0.9)
+    run["context_hash"] = rc["id"]
+    rid = world.field_prod.record_run(run)
+    assert world.field_prod.runs[rid]["context_hash"] == rc["id"]
 
 
 # ---------------------------------------------------------------- tombstones

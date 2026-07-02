@@ -40,6 +40,7 @@
       "additionalProperties": false
     },
     "run_ref": { "type": "string", "description": "Opaque trace ref — the full run detail at the owning tier (pointer, not payload)." },
+    "context_hash": { "$ref": "common.schema.json#/$defs/ContentHash", "description": "Locked 2026-07-02 (0007): the ResolvedContext this run executed under — 'what rules governed this agent' is a lookup, not an investigation." },
     "author": { "$ref": "common.schema.json#/$defs/DID", "description": "The resident (steward/judge) that wrote this — never the agent grading itself (0001)." },
     "sig": { "$ref": "common.schema.json#/$defs/Sig" }
   },

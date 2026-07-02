@@ -70,6 +70,10 @@ class HarnessNode:
         self.model_gateway = ModelGateway()         # the governed door to models (0010)
         self.signal_count = 0                       # vigil's tap: signal volume, content-blind
         self.stamped_live = 0                       # live incarnations vs the stamp_quota (0011)
+        self.soft: dict[str, dict] = {}             # soft standards: most-specific-wins (0007)
+        self.skills: dict[str, str] = {}            # skill name -> version: additive (0007)
+        self.partitioned = False                    # fail-closed on last-known context (0007)
+        self._last_ancestor_view: list | None = None
         self._bundle: dict | None = None            # what children PULL
         # a layer is born with its staff (0006 §2): the steward exists before any workforce
         self.steward, self.steward_kp = becky.issue_identity(

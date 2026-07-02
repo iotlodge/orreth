@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orreth.ai/contracts/v0/resolved-context.schema.json",
+  "title": "ResolvedContext",
+  "description": "The resolver's output (0007): the effective rule-set a subject operates under, composed deterministically from the inherited chain — one resolver, per-field merge laws (floors tighten-only · soft most-specific-wins · skills additive · dials per their monotone directions). CONTENT-ADDRESSED: same chain ⇒ same id, so policy is cacheable, diffable, and canary-able like everything else. Locked 2026-07-02: RunRecords pin the context_hash they executed under; partitioned nodes fail closed on their last-known context.",
+  "type": "object",
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/ContentHash", "description": "Hash of the canonical resolved content — the policy version a run pins." },
+    "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+    "subject": { "$ref": "common.schema.json#/$defs/DID", "description": "Optional: resolved for a specific principal (Selector-filtered)." },
+    "floors": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true },
+      "description": "The tighten-only merged floor set (enforced at publication; composed here). Floors always beat soft."
+    },
+    "soft": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "value": {},
+          "version": { "$ref": "common.schema.json#/$defs/SemVer" },
+          "from_scope": { "$ref": "common.schema.json#/$defs/ScopePath", "description": "Which tier won — most-specific-wins, tiebreak by version then id, never silent." }
+        },
+        "required": ["value", "from_scope"],
+        "additionalProperties": false
+      }
+    },
+    "skills": {
+      "type": "object",
+      "additionalProperties": { "$ref": "common.schema.json#/$defs/SemVer" },
+      "description": "Additive union along the chain; same name ⇒ higher version wins."
+    },
+    "as_of": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+          "version": { "$ref": "common.schema.json#/$defs/SemVer" },
+          "stale": { "type": "boolean", "default": false, "description": "true ⇒ served from the last-known view under partition (fail-closed; a vigil signal — staleness escalates, 0012)." }
+        },
+        "required": ["scope", "version"],
+        "additionalProperties": false
+      },
+      "description": "What the resolver saw, tier by tier — honest staleness, never silent."
+    },
+    "resolved_at": { "$ref": "common.schema.json#/$defs/WallClock" },
+    "sig": { "$ref": "common.schema.json#/$defs/Sig" }
+  },
+  "required": ["id", "scope", "floors", "soft", "skills", "as_of", "resolved_at", "sig"],
+  "additionalProperties": false
+}
