@@ -42,3 +42,4 @@ secrets/
 cdk.out/
 *.log
 .smoke-root-seed
+.demo-life-seed
