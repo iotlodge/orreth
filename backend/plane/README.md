@@ -76,3 +76,14 @@ its floor, the field inherits the apex's law through the middle tier without eve
 apex. `docker compose restart field-prod` is the resurrection demo at infrastructure level —
 "restored N record(s) · high_water=Some(…)" — and a field-scoped token that scrubs past its
 lease gets `partial`: the window is bounded by entitlement, honestly, even in containers.
+
+## The Window — the daemon carries its own glass
+
+`GET /window` serves the first pane: a single-file observatory console over the tier. The pane
+is a **client of the retrieval contract** (0008) — no privileged path; every render is a
+tokened `/retrieve`. The time rail plots memories as stars across the window's span (fidelity
+as spectral shift: verified near-light, distilled blue-shifted, expired red-shifted; the
+un-served remainder hatched like sky the telescope can't reach), the tier beads light up as
+the escalation crosses them, and bodies fetch hash-verified on open.
+`uv run python demo_open_window.py 4502 4500` seeds a biography across the tree and prints
+your URL — the capability rides the fragment; the daemon never sees it.

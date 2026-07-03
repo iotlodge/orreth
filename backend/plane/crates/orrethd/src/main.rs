@@ -162,6 +162,7 @@ async fn main() {
         .route("/records/:id/body", get(body))
         .route("/retrieve", post(egress))
         .route("/standards", get(standards))
+        .route("/window", get(window))
         .with_state(app);
 
     let bind = arg("--bind").unwrap_or_else(|| "127.0.0.1".to_string()); // 0.0.0.0 in containers
@@ -169,6 +170,12 @@ async fn main() {
     println!("orrethd · scope={scope} · tier_label={} · listening on {bind}:{port}",
              profile["tier_label"].as_str().unwrap_or("?"));
     axum::serve(listener, router).await.unwrap();
+}
+
+/// The daemon carries its own glass — but the pane is a CLIENT of the retrieval
+/// contract (0008): every render is a tokened query; there is no privileged path.
+async fn window() -> axum::response::Html<&'static str> {
+    axum::response::Html(include_str!("window.html"))
 }
 
 async fn health(State(app): State<Arc<App>>) -> Json<Value> {
