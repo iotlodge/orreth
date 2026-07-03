@@ -86,6 +86,7 @@ orreth/
 │   │   ├── Orreth-mockup.(png|svg)                 ← the orrery (pre-rebaseline · superseded by Orreth-agentic-hierarchy)
 │   │   ├── Orreth-agentic-hierarchy.(png|svg)      ← the staffing view: agents run every layer; humans at the gates
 │   │   ├── Orreth-spacetime-window-concept.(png|svg) ← the north star: the block, the hypersurface at T, the cut
+│   │   ├── Orreth-the-end-of-the-context-window.(png|svg) ← article 04 hero: the block as lanes, floors as bedrock, a context window drawn to scale
 │   │   ├── FUTURE-the-conductor-and-the-field.md   ← the EH-tier vision (+ image)
 │   │   └── EH-FRONTEND-the-cross-field-pane.md     ← the EH single-pane sketch (+ image)
 │   ├── design/                ← the fourteen dives, 0000–0013 — ALL drafted, every decision locked
