@@ -39,8 +39,18 @@ forwarding the query over HTTP with the spent budget deducted, then merging newe
 indistinguishable from budget exhaustion: un-served coverage, honest remainder, never an error
 shape. Demo: `demo_spacetime_window.py` — two daemons, one query, 300 days scrubbed.
 
-Next, per 0000 §7: Postgres/pgvector behind the record store, and the compose topology —
-one laptop, one universe.
+## Persistence — the daemon may die; the records don't
+
+`orrethd --pg postgres://…` turns on write-through persistence: every **accepted** record
+lands as JSONB (the stored form — body_ref, keep_class, received_at), and at boot the daemon
+restores its records **and its high-water mark**, so the clock's monotonicity survives
+restarts. Bodies already live in the object store; Postgres holds pointers, not blobs.
+Dev database: `docker run -d --name orreth-pg -e POSTGRES_PASSWORD=orreth -p 5433:5432 postgres:16`.
+The resurrection demo: run `demo_digital_life.py born`, kill the daemon, restart it, run
+`wake` — the life outlives the process, the machine boundary, and now the daemon itself.
+
+Next, per 0000 §7: pgvector for semantic retrieval, and the compose topology —
+one laptop, one universe, one command.
 
 ## Run
 

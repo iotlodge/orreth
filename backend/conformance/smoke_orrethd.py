@@ -110,7 +110,7 @@ def main() -> None:
     print(f"no retrieve grant        → {status} {res['error']}")
     assert status == 403
 
-    print("\nsmoke: Python signed, Rust verified — and only the pinned root mints authority. 🥃")
+    print("\nsmoke: Python signed, Rust verified — and only the pinned root mints authority. 🥂")
 
 
 if __name__ == "__main__":

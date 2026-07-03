@@ -18,11 +18,15 @@ use serde_json::{json, Value};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex};
 
+mod pg;
+
 struct App {
     universe: Mutex<Universe>,
     /// PUSH up / PULL down (0000 §1): a child knows its parent; a parent never reaches in.
     parent: Option<String>,
     horizon_days: f64,
+    /// Write-through persistence: the daemon may die; the records don't.
+    pg: Option<pg::PgRecords>,
 }
 
 /// "%Y-%m-%dT%H:%M:%SZ" from the system clock (civil-from-days; no chrono).
@@ -101,7 +105,7 @@ async fn main() {
     if let (Some(root), Some(pub_key)) = (&trust_root, arg("--root-pub")) {
         identities.insert(root.clone(), pub_key);
     }
-    let universe = Universe {
+    let mut universe = Universe {
         nodes: vec![node],
         identities,
         revoked: BTreeSet::new(),
@@ -110,10 +114,39 @@ async fn main() {
         body_store: arg("--store-dir").map(|d| BodyStore::local(std::path::Path::new(&d))),
         trust_root,
     };
+
+    // boot-restore: records return, and the high-water mark with them — the clock's
+    // monotonicity survives the daemon (0004 §1). Loaded rows are already the stored
+    // form (verified at original ingress); re-verification happens on every read anyway.
+    // the sync postgres client drives its own runtime — keep it off the async threads
+    let pg_store = tokio::task::block_in_place(|| {
+        arg("--pg").map(|conn| pg::PgRecords::connect(&conn).expect("postgres"))
+    });
+    if let Some(store) = &pg_store {
+        let restored = tokio::task::block_in_place(|| store.load(&scope)).expect("boot restore");
+        let n = restored.len();
+        for rec in restored {
+            let id = rec["id"].as_str().unwrap().to_string();
+            let occurred = rec["occurred_at"].as_str().unwrap();
+            let lived = rec.get("provenance_class").and_then(Value::as_str).unwrap_or("lived") == "lived";
+            let node = &mut universe.nodes[0];
+            if lived
+                && node.high_water.as_deref()
+                    .map_or(true, |hw| orreth_node::ts_seconds(occurred) > orreth_node::ts_seconds(hw))
+            {
+                node.high_water = Some(occurred.to_string());
+            }
+            node.records.insert(id, rec);
+        }
+        println!("orrethd · restored {n} record(s) from postgres · high_water={:?}",
+                 universe.nodes[0].high_water);
+    }
+
     let app = Arc::new(App {
         universe: Mutex::new(universe),
         parent,
         horizon_days: dur_days(horizon),
+        pg: pg_store,
     });
 
     let router = Router::new()
@@ -146,7 +179,15 @@ async fn ingress(State(app): State<Arc<App>>, Json(record): Json<Value>) -> impl
         let mut u = app.universe.lock().unwrap();
         u.now = now_iso();
         match u.write(0, &record) {
-            Ok(id) => (StatusCode::CREATED, Json(json!({"id": id}))),
+            Ok(id) => {
+                // write-through: persist the STORED form (body_ref, keep_class, received_at)
+                if let Some(store) = &app.pg {
+                    if let Err(e) = store.save(&u.nodes[0].records[&id]) {
+                        eprintln!("orrethd · postgres write-through failed for {id}: {e}");
+                    }
+                }
+                (StatusCode::CREATED, Json(json!({"id": id})))
+            }
             Err(WriteError::ClockViolation) => (
                 StatusCode::CONFLICT,
                 Json(json!({"error": "occurred_at below scope high-water — lived memory cannot be backdated"})),

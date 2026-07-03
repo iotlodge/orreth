@@ -78,7 +78,7 @@ def wake() -> None:
     for h in reversed(res["hits"]):
         body = call("GET", f"/records/{h['ref']}/body")
         print(f"  I remember: {body['memory']}   ({h['fidelity']}, {h['ref'][:18]}…)")
-    print(f"[process {id(kp) % 10000}] I am still me. The process died; my life didn't notice. 🥃")
+    print(f"[process {id(kp) % 10000}] I am still me. The process died; my life didn't notice. 🥂")
 
 
 if __name__ == "__main__":
