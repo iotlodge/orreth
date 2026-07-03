@@ -31,11 +31,37 @@ never deferred to the worst possible moment.
 > The pitch in one line: **everyone else's incident response begins with archaeology.
 > Ours begins with an answer.**
 
-## The Universe Risk Assessment
+## The LIVE Risk Assessment
+
+*(Sharpened by JB, same day: not a standing query — **live**. "Tell the regulators they can
+watch the ENTERPRISE LIVE and understand Verified Threats LIVE.")*
 
 JB has sat through the current state of the art: interviews, sampled evidence, screenshots of
 consoles — "talks and sampling," worthless for understanding actual threat and risk, repeated
-separately for every framework. The substrate inverts it:
+separately for every framework. The substrate inverts it — and it inverts it **in the present
+tense**. The regulator's scoped window is not a quarterly PDF; it is a **live pane over their
+jurisdiction**: floors holding, breaches flagging, quorums refusing, the enterprise breathing
+in front of them. Risk posture stops being *reported* and becomes *observable*.
+
+### The immune loop — a threat seen once is a floor everywhere
+
+The window doesn't just observe a threat; because everything in it is Sourced + Verified, a
+threat identified through the window carries its **origin signature** — chain-of-custody on the
+indicator itself, not an anonymous IOC from a feed. And a verified signature is exactly the
+shape a **floor** takes:
+
+> **Window → verified origin → signature → floor at ingest.**
+> What you learn across the window cascades down as policy: the gateway starts refusing the
+> threat's shape *at the door*, at the universe — or, at the Custodian tier, across every
+> universe hosted. Detection becomes prevention through the machinery that already exists:
+> floors tighten-only, tightening moves at safety speed (2 co-signs + publication, 0013 §7),
+> vigil watches for the signature's return. The universe develops **immunity with provenance**
+> — an antibody that remembers exactly which infection taught it, because the substrate never
+> loses the origin of a verified source.
+
+The enterprise version of this is powerful; the platform version is a moat: every hosted
+universe inherits immunity the moment one universe's verified threat becomes a platform floor.
+Threat intelligence stops being a subscription and becomes a property of the neighborhood.
 
 - **Sampling dies when you can afford the census.** Control testing today samples because
   checking everything is impossible. Roll-ups (0005) carry compliance state over **100% of
