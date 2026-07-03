@@ -15,32 +15,29 @@ cross-agent, authorized). **Governance is its first application, not its purpose
 
 ## Status
 
-🟢 **Design decisions complete · the simulator runs.** The keystone specs are decision-complete (ledger
-clean — see `docs/decisions/`). `contracts/v0/` holds ten validated JSON Schemas, and `backend/conformance/`
-runs the **Python reference simulator**: all three flows end-to-end, 10 passing tests — policy cascades and
-cannot be loosened, memory rises pruned with provenance intact, retrieval escalates by time-horizon with
-uniform refusals and real Ed25519 throughout. Next: the `0008` pane/GraphSpec dive (design track) and EH
-conformance extraction → the Rust plane (build track).
+🟢 **Design phase complete (2026-07-02) · the universe runs (2026-07-03).** All fourteen dives
+(`0000`–`0013`) are drafted and **every decision in the ledger is locked** (`docs/decisions/`). The
+**Python reference simulator** proves the whole model — 38 tests: three flows, the two-clock rule
+(lived memory cannot be backdated), the roll-up monoid, the resolver fold, factories with birth
+certificates, HITL quorums (bars are absolute), the provisioner rendering the League template.
 
-The brand name **Orreth** is locked. **`orreth.ai` was registered 2026-07-01 (AWS Route 53, confirmed)** —
-the did:web trust root (`design/0006`) now has a real anchor. Still open: a trademark glance, and
-`orreth.com` as an optional defensive registration.
+**The Rust plane is live.** Six crates at `backend/plane/`, conformance-green against fixtures derived
+from the reference (byte-for-byte canonicalization, same content hashes, Python-signed Ed25519 verifying
+in Rust). **`orrethd`** — one binary, tier as a profile — serves the gateway over HTTP with **trust-root
+pinning** (a self-issued token, however well signed, is refused), object-store bodies (tamper-evident;
+tombstones are physical erasure), and Postgres write-through (a restarted daemon restores its records
+*and its high-water mark*).
 
-**Path to build (roadmap owner: Fable · 2026-07-01).** The decision-heavy design work is **done** —
-0000/0001/0002/0003/0006 are decision-complete and the ledger is clean. Before first code (2–3 sessions):
-`0002` amendments → `contracts/` v0 (JSON Schema, extracted from the blessed specs) → minimal `0004`
-(Tier Profile dials, already decided). **First code = the Python simulator** — the three flows end-to-end
-on one compose stack (2–3 sessions). In parallel on the design track: `0008` (Field commander pane +
-GraphSpec) with the spacetime-window concept. Rust begins once the sim proves the contracts and the EH
-conformance fixtures are extracted; remaining dives interleave with the build.
+**One laptop = one universe:** `docker compose -f infrastructure/compose.yaml up` assembles the tree —
+universe → ecosystem → field, floors pulled down at boot, retrieval escalating deep-time remainders UP
+across containers. And the first **Window** exists: the daemon serves its own glass at `/window` — an
+observatory console where every render is a governed, tokened query (no privileged pane path). Live
+demos in `backend/conformance/`: `demo_digital_life.py` (the life outlives the process, the machine
+boundary, and the daemon), `demo_spacetime_window.py` (one query, three tiers), `demo_open_window.py`.
 
-**orreth.ai milestones — when something must actually be live on the domain:**
-1. **Now → simulator: nothing.** Contract `$id`s are namespaced URIs resolved locally; the sim uses pinned
-   trust roots. The domain just needs to stay registered.
-2. **Rust plane / 0006 implementation: static `/.well-known/` hosting** — the first real did:web root
-   resolution needs `https://orreth.ai/.well-known/…/did.json` served (S3+CloudFront-grade static, minutes
-   of infra). *This is the first hard requirement.*
-3. **"Build My First Universe" (0009): the real site** — provisioning, marketplace, interviews.
+The brand name **Orreth** is locked; **`orreth.ai` registered 2026-07-01**. Next hard domain milestone:
+static `/.well-known/` hosting for real did:web root resolution. Then: the pane grows beyond the first
+glass, pgvector retrieval, and the League (PG-1) — the funnel's Play step.
 
 ---
 
@@ -91,17 +88,17 @@ orreth/
 │   │   ├── Orreth-spacetime-window-concept.(png|svg) ← the north star: the block, the hypersurface at T, the cut
 │   │   ├── FUTURE-the-conductor-and-the-field.md   ← the EH-tier vision (+ image)
 │   │   └── EH-FRONTEND-the-cross-field-pane.md     ← the EH single-pane sketch (+ image)
-│   ├── design/                ← build-phase design specs (the keystone dives)
-│   │   ├── README.md          ← the dive sequence + index
-│   │   ├── 0001-promoted-memory-and-skill-standard.md
-│   │   └── 0002-living-identity-and-retrieval.md   ← the substrate keystone
-│   ├── decisions/             ← locked decisions / ADRs (made + to-be-made)
+│   ├── design/                ← the fourteen dives, 0000–0013 — ALL drafted, every decision locked
+│   │   └── README.md          ← the dive sequence + index (start here for the how)
+│   ├── decisions/             ← the ledger — closed 2026-07-02; build-phase decisions appended as they arise
 │   │   └── README.md
 │   └── articles/              ← LinkedIn pieces — local only, kept OUT of git (marketing/feedback iteration)
-├── contracts/                 ← the wire contracts (v0 JSON Schemas — the product of design phase)
+├── contracts/                 ← the wire contracts (v0 JSON Schemas — validated by both implementations)
 ├── backend/
-│   └── conformance/           ← the reference simulator + (soon) the EH-derived fixture suite
-└── (frontend/ · infrastructure/ — reserved; arrive with the pane build and the provisioner)
+│   ├── conformance/           ← the Python reference simulator (38 tests) + fixtures + live demos
+│   └── plane/                 ← the Rust plane: 6 crates + orrethd (the daemon) — conformance-green
+├── infrastructure/            ← compose.yaml — one laptop, one universe, one command
+└── (frontend/ — reserved; the Window's first pane currently ships inside orrethd at /window)
 ```
 
 **Start here:** `docs/vision/FUTURE-the-orreth.md` is the full vision. `docs/design/` is where
@@ -120,4 +117,4 @@ the vision becomes buildable, one schema at a time.
 
 ---
 
-*JB owns the vision. Claude owns the code and usability. We move at the speed of the ideas.* 🥃
+*JB owns the vision. Claude owns the code and usability. We move at the speed of the ideas.* 🥂
