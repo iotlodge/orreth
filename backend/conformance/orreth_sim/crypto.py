@@ -31,8 +31,16 @@ def _b64d(s: str) -> bytes:
 
 
 class KeyPair:
-    def __init__(self) -> None:
-        self._priv = Ed25519PrivateKey.generate()
+    def __init__(self, seed: bytes | None = None) -> None:
+        self._priv = (Ed25519PrivateKey.from_private_bytes(seed) if seed
+                      else Ed25519PrivateKey.generate())
+
+    @property
+    def seed(self) -> bytes:
+        """The raw private bytes — for root/becky persistence across processes (0006)."""
+        from cryptography.hazmat.primitives.serialization import (
+            NoEncryption, PrivateFormat)
+        return self._priv.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
 
     @property
     def public(self) -> str:

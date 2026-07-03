@@ -41,3 +41,4 @@ secrets/
 # Infra / build artifacts
 cdk.out/
 *.log
+.smoke-root-seed

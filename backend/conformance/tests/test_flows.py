@@ -50,6 +50,51 @@ def test_no_amplification_and_ancestor_killswitch(world):
         world.becky.verify_token(tok)                # ancestor revocation kills the subtree
 
 
+def test_foreign_root_mints_nothing(world):
+    """Trust-root pinning: a self-issued token — perfect signatures, wrong root — is refused.
+    (This exact hole was live in orrethd v0's smoke test; closed in both languages.)"""
+    import json as _json
+    ident, _ = world.agents["prod-1"]
+    forger = crypto.KeyPair()
+    forger_did = crypto.did_key_for(forger.public)
+    world.nanda.register(forger_did, forger.public)
+    cert = {"issuer": forger_did, "subject": ident["did"],
+            "audience": "u:demo/e:cloud/f:prod",
+            "grants": [{"action": "retrieve", "space": "self"}]}
+    cert["sig"] = forger.sign(forger_did, cert)
+    token = {"subject": ident["did"], "audience": "u:demo/e:cloud/f:prod",
+             "grants": cert["grants"],
+             "constraints": {"expiry": "2027-01-01T00:00:00Z", "direction": "within"},
+             "chain": [_json.dumps(cert, sort_keys=True)],
+             "sig": forger.sign(forger_did, {"s": ident["did"]})}
+    with pytest.raises(AuthzError, match="trust root"):
+        world.becky.verify_token(token)
+
+
+def test_delegation_continuity_and_attenuation_hold(world):
+    """A chain with a spliced hop (issuer ≠ previous subject) is refused; legitimate
+    chains — root → eco becky → field becky → token — verify to the pinned root."""
+    import json as _json
+    ident, _ = world.agents["prod-1"]
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    good = b_prod.issue_token(ident["did"], "u:demo/e:cloud/f:prod",
+                              [{"action": "retrieve", "space": "self"}])
+    world.becky.verify_token(good)                              # full chain to the root
+    # splice: replace the middle delegation cert with one from an unrelated key
+    rogue = crypto.KeyPair()
+    rogue_did = crypto.did_key_for(rogue.public)
+    world.nanda.register(rogue_did, rogue.public)
+    spliced_cert = {"issuer": rogue_did, "subject": b_prod.did,
+                    "scope": "u:demo/e:cloud/f:prod", "at": "2026-07-01T00:00:00Z"}
+    spliced_cert["sig"] = rogue.sign(rogue_did, spliced_cert)
+    bad = dict(good)
+    chain = list(good["chain"])
+    chain[1] = _json.dumps(spliced_cert, sort_keys=True)
+    bad["chain"] = chain
+    with pytest.raises(AuthzError, match="continuity"):
+        world.becky.verify_token(bad)
+
+
 # ---------------------------------------------------------------- flow 1: policy DOWN
 def test_floors_cascade_and_never_loosen(world):
     rule = {"match": {"outcome": "failure"}, "action": "keep-raw",

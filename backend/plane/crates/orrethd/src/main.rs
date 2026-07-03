@@ -66,13 +66,21 @@ async fn main() {
         high_water: None,
         floors: profile.get("floors").and_then(Value::as_array).cloned().unwrap_or_default(),
     };
+    // trust-root pinning: token chains must start at the profile's root. did:key roots
+    // embed their key; did:web roots need --root-pub until the resolver joins.
+    let trust_root = profile["trust_root"]["root"].as_str().map(str::to_string);
+    let mut identities = BTreeMap::new();
+    if let (Some(root), Some(pub_key)) = (&trust_root, arg("--root-pub")) {
+        identities.insert(root.clone(), pub_key);
+    }
     let universe = Universe {
         nodes: vec![node],
-        identities: BTreeMap::new(), // did:key authors carry their own keys; the index joins later
+        identities,
         revoked: BTreeSet::new(),
         purged: BTreeSet::new(),
         now: now_iso(),
         body_store: arg("--store-dir").map(|d| BodyStore::local(std::path::Path::new(&d))),
+        trust_root,
     };
     let app = Arc::new(App { universe: Mutex::new(universe) });
 

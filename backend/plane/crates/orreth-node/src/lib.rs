@@ -94,6 +94,9 @@ pub struct Universe {
     /// When present, record bodies live here — content-addressed, tamper-evident,
     /// physically erasable (decision 2026-07-02: S3 API as contract, backend as config).
     pub body_store: Option<orreth_store::BodyStore>,
+    /// The pinned trust root (0006 §1): token chains must START here. None = unpinned
+    /// (tests only) — a production profile always pins.
+    pub trust_root: Option<String>,
 }
 
 impl Universe {
@@ -244,9 +247,27 @@ impl Universe {
         if !self.active(token["subject"].as_str().unwrap_or("")) {
             return Err(Refusal);
         }
+        // pinned root + continuity + attenuation: verified at presentation, not trusted
+        // from issuance — no foreign root mints authority here (0006 §1/§3)
+        let mut prev_subject: Option<String> = None;
+        let mut prev_scope: Option<String> = None;
         for raw in token["chain"].as_array().ok_or(Refusal)? {
             let cert: Value = serde_json::from_str(raw.as_str().ok_or(Refusal)?).map_err(|_| Refusal)?;
             let issuer = cert["issuer"].as_str().ok_or(Refusal)?;
+            match &prev_subject {
+                None => {
+                    if let Some(root) = &self.trust_root {
+                        if issuer != root {
+                            return Err(Refusal); // chain does not start at the trust root
+                        }
+                    }
+                }
+                Some(ps) => {
+                    if issuer != ps {
+                        return Err(Refusal); // delegation continuity broken
+                    }
+                }
+            }
             if !self.active(issuer) {
                 return Err(Refusal); // ancestor revocation kills the subtree
             }
@@ -254,6 +275,18 @@ impl Universe {
             if !orreth_crypto::verify_sig(cert["sig"]["sig"].as_str().unwrap_or(""), &cert, &public) {
                 return Err(Refusal);
             }
+            let this_scope = cert
+                .get("scope")
+                .or_else(|| cert.get("audience"))
+                .and_then(Value::as_str)
+                .map(str::to_string);
+            if let (Some(prev), Some(this)) = (&prev_scope, &this_scope) {
+                if !is_within(this, prev) {
+                    return Err(Refusal); // attenuation violated — scopes only narrow
+                }
+            }
+            prev_subject = cert["subject"].as_str().map(str::to_string);
+            prev_scope = this_scope.or(prev_scope);
         }
         let last: Value = serde_json::from_str(
             token["chain"].as_array().unwrap().last().ok_or(Refusal)?.as_str().unwrap(),

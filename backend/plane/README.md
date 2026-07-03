@@ -14,18 +14,21 @@ reference; the fixtures in `../conformance/fixtures` are the contract between th
 | `orreth-node` | the node semantics: store (append-only, high-water clock), gateway ingress (signature/revocation/scope — the plane verifies, never signs), and the retrieval router (escalation, budget-miss ≡ authz-miss, interview firewall, tombstone fidelity). Replays the reference's full three-flow scenario from `fixtures/flows.json`, exactly |
 | `orreth-store` | the body store on the `object_store` trait (S3 API as contract, backend as config — decision 2026-07-02): bodies leave the record at ingress (`store://` refs), reads are **verified against their own content address** (tampering on disk is caught), and a tombstone is **physical erasure** — bytes gone, signed stub remains. In-memory + local FS now; the `aws` feature flag turns on S3 at hosted-deploy time |
 
-| `orrethd` | **the binary — one node, tier as a profile.** Loads a TierProfile, stands up the node with the body store behind it, and serves the gateway over HTTP: `POST /records` (ingress — verify, clock, store), `GET /records/:id/body` (hash-verified), `POST /retrieve` (the router, uniform 403 refusal), `GET /health`. The plane verifies, never signs |
+| `orrethd` | **the binary — one node, tier as a profile.** Loads a TierProfile, stands up the node with the body store behind it, and serves the gateway over HTTP: `POST /records` (ingress — verify, clock, store), `GET /records/:id/body` (hash-verified), `POST /retrieve` (the router, uniform 403 refusal), `GET /health`. **Trust-root pinned from the profile**: token chains must start at `trust_root.root`, hop continuity and scope attenuation verified at presentation — a self-issued token, however well signed, is refused. The plane verifies, never signs |
 
 ## Run a node
 
 ```bash
-cargo run -p orrethd -- --profile profiles/demo-field.json --store-dir /tmp/orreth-bodies
-# then, from ../conformance — Python signs, Rust verifies, on the wire:
-uv run python smoke_orrethd.py
+# mint/print the persistent demo root (Python side — cognition holds keys, the plane never does)
+cd ../conformance && uv run python smoke_orrethd.py root-pub
+# start the daemon with the pinned root's public key
+cargo run -p orrethd -- --profile profiles/demo-field.json \
+  --store-dir /tmp/orreth-bodies --root-pub <that key>
+# then: Python signs, Rust verifies, on the wire — and only the pinned root mints authority
+cd ../conformance && uv run python smoke_orrethd.py
 ```
 
-Next, per 0000 §2/§7: root pinning from the profile's `trust_root` (tokens verified to the
-pinned root, not just did:key), the parent PUSH-up / child PULL-down flows between processes,
+Next, per 0000 §2/§7: the parent PUSH-up / child PULL-down flows between processes,
 Postgres/pgvector behind the record store, and the compose topology — one laptop, one universe.
 
 ## Run

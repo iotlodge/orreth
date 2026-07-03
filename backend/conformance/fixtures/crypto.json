@@ -62,11 +62,11 @@
       "provenance_class": "lived",
       "scope": "u:demo/e:x/f:y"
     },
-    "public": "zQbEzV6ayO0ynclVv6W_kdfrxFemsQtQWDjZrNzQH820",
+    "public": "z8vn4ebKl9y4MJCo4E70-Xr42c_IBRo8aZ-WVXRfdRnU",
     "sig": {
       "alg": "ed25519",
-      "by": "did:key:zQbEzV6ayO0ynclVv6W_kdfrxFemsQtQWDjZrNzQH820",
-      "sig": "KE8Ctj1t2tzLFUCJ4Up-PO2-iLms9HyHBEreQ4zNyoPm1pXclWsm3f2G2SKJQd_YpoGqCY0vcDsdvGqoNRNzDQ"
+      "by": "did:key:z8vn4ebKl9y4MJCo4E70-Xr42c_IBRo8aZ-WVXRfdRnU",
+      "sig": "FnIVTymvAOvlNiTe3-kSa4-wtwxhlsaZ3qDdvGa7DANYGuCfAaXXQQWWGpMVtQ0SvCN0cMFFnhqr2zTpaMxHCQ"
     }
   }
 }

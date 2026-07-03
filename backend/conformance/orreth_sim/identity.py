@@ -52,9 +52,9 @@ class Becky:
     """One issuer, root -> leaf. Each layer's becky is a delegate of its parent's."""
 
     def __init__(self, scope: str, nanda: Nanda, parent: "Becky | None" = None,
-                 universe_name: str | None = None):
+                 universe_name: str | None = None, kp: crypto.KeyPair | None = None):
         self.scope, self.nanda, self.parent = scope, nanda, parent
-        self.kp = crypto.KeyPair()
+        self.kp = kp or crypto.KeyPair()   # a persistent kp = a root that survives the process
         if parent is None:
             # universe root: did:web anchored at orreth.ai (key via index — did:web can't embed)
             self.did = f"did:web:orreth.ai:u:{universe_name}"
@@ -115,19 +115,36 @@ class Becky:
         return validate(token, "capability-token.schema.json")
 
     def verify_token(self, token: dict) -> None:
-        """Every hop signed, every issuer alive, subject alive, not expired.
-        Ancestor revocation anywhere in the chain kills the token."""
+        """Every hop signed, every issuer alive, subject alive, not expired — and the chain
+        PINNED: it must start at this universe's trust root, each hop's issuer must be the
+        previous hop's subject (continuity), and scopes may only narrow (attenuation,
+        verified at presentation, not just trusted from issuance). No amplification exists;
+        no foreign root mints authority here. Ancestor revocation kills the subtree."""
         if token["constraints"]["expiry"] < NOW():
             raise AuthzError("expired")
         if not self.nanda.active(token["subject"]):
             raise AuthzError("subject revoked")
+        root = self
+        while root.parent is not None:
+            root = root.parent
+        prev_subject, prev_scope = None, None
         for raw in token["chain"]:
             cert = json.loads(raw)
             issuer = cert["issuer"]
+            if prev_subject is None:
+                if issuer != root.did:
+                    raise AuthzError("chain does not start at the trust root — foreign authority")
+            elif issuer != prev_subject:
+                raise AuthzError("delegation continuity broken")
             if not self.nanda.active(issuer):
                 raise AuthzError("issuer revoked (ancestor kill-switch)")
             if not crypto.verify_sig(cert["sig"], cert, self.nanda.public(issuer)):
                 raise AuthzError("bad delegation signature")
+            this_scope = cert.get("scope") or cert.get("audience")
+            if prev_scope is not None and this_scope is not None \
+                    and not is_within(this_scope, prev_scope):
+                raise AuthzError("attenuation violated — scopes may only narrow")
+            prev_subject, prev_scope = cert["subject"], this_scope or prev_scope
         # the final hop must bind this token's content
         last = json.loads(token["chain"][-1])
         if last.get("audience") != token["audience"] or last.get("subject") != token["subject"]:
