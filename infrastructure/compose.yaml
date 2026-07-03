@@ -14,6 +14,7 @@ name: orreth-demo-universe
 services:
   pg:
     image: postgres:16
+    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: orreth
     volumes:
@@ -26,6 +27,7 @@ services:
 
   universe:
     build: ../backend/plane
+    restart: unless-stopped
     command: ["--profile", "/profiles/demo-universe.json", "--bind", "0.0.0.0", "--port", "4500",
               "--store-dir", "/data/bodies", "--root-pub", "${ORRETH_ROOT_PUB}",
               "--pg", "postgres://postgres:orreth@pg:5432/postgres"]
@@ -38,6 +40,7 @@ services:
 
   eco-cloud:
     build: ../backend/plane
+    restart: unless-stopped
     command: ["--profile", "/profiles/demo-eco.json", "--bind", "0.0.0.0", "--port", "4501",
               "--store-dir", "/data/bodies", "--root-pub", "${ORRETH_ROOT_PUB}",
               "--parent", "http://universe:4500",
@@ -52,6 +55,7 @@ services:
 
   field-prod:
     build: ../backend/plane
+    restart: unless-stopped
     command: ["--profile", "/profiles/demo-field.json", "--bind", "0.0.0.0", "--port", "4502",
               "--store-dir", "/data/bodies", "--root-pub", "${ORRETH_ROOT_PUB}",
               "--parent", "http://eco-cloud:4501",
