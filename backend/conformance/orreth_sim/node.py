@@ -334,7 +334,7 @@ class HarnessNode:
         ordered = sorted(hits_raw.values(), key=lambda r: r["occurred_at"], reverse=True)
         hits = [{
             "ref": r["id"], "source": r["author"], "scope": r["scope"],
-            "fidelity": self._fidelity(r),
+            "occurred_at": r["occurred_at"], "fidelity": self._fidelity(r),
         } for r in ordered]
         result: dict = {
             "hits": hits,

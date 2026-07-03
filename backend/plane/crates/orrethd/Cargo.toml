@@ -7,5 +7,6 @@ edition = "2021"
 axum = "0.7"
 tokio = { version = "1", features = ["full"] }
 serde_json = { workspace = true }
+ureq = { version = "2", features = ["json"] }
 orreth-node = { path = "../orreth-node" }
 orreth-store = { path = "../orreth-store" }

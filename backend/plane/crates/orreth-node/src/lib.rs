@@ -225,7 +225,7 @@ impl Universe {
             .iter()
             .map(|r| {
                 json!({"ref": r["id"], "source": r["author"], "scope": r["scope"],
-                       "fidelity": self.fidelity(r)})
+                       "occurred_at": r["occurred_at"], "fidelity": self.fidelity(r)})
             })
             .collect();
         let mut result = json!({

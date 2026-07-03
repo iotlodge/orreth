@@ -1,0 +1,18 @@
+{
+  "tier_label": "universe",
+  "scope": "u:demo",
+  "is_leaf": false,
+  "clock": { "mode": "wall", "high_water_scope": "u:demo" },
+  "objective": [{ "objective": "reliability", "weight": 1.0 }],
+  "signal_capture": "state-changing",
+  "memory": { "raw_retention": "P395D", "distilled_retention": "forever", "qa_sample_rate": 0.001 },
+  "retrieval": { "time_budget": { "time_ms": 500, "cost": 3 }, "horizon": "forever" },
+  "steward": { "token_budget": { "tokens": 100000 }, "cadence": "P1D", "on_budget_exhaustion": "degrade-to-floors-and-flag" },
+  "tokens": { "workforce_ttl": "P1D", "resident_ttl": "P30D" },
+  "model_gateway": { "judge_sample_rate": 0.1, "routing": "litellm" },
+  "join_default": "floors-only",
+  "trust_root": { "mode": "did-web", "root": "did:web:orreth.ai:u:demo" },
+  "version": "0.1.0",
+  "floors": [{ "match": { "outcome": "failure" }, "action": "keep-raw", "keep_for": "P90D", "reason": "failures always survive — the apex floor, pulled by every child" }],
+  "signature": { "alg": "ed25519", "by": "did:web:orreth.ai:u:demo", "sig": "ZGVtbw" }
+}

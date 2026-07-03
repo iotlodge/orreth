@@ -40,12 +40,13 @@
         "ref": { "$ref": "common.schema.json#/$defs/ContentHash" },
         "source": { "$ref": "common.schema.json#/$defs/DID", "description": "Sourced: the author identity." },
         "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
+        "occurred_at": { "$ref": "common.schema.json#/$defs/UniverseTime", "description": "Travels with the hit so cross-tier / cross-process merges honor the locked ordering: newest first (0002 merge semantics)." },
         "fidelity": {
           "enum": ["verified", "distilled", "distilled-raw-expired"],
           "description": "verified = raw, signature + hash check; distilled = Distillation, chain-verified (0003 §2); distilled-raw-expired = chain ends in a tombstone stub, honestly labeled."
         }
       },
-      "required": ["ref", "source", "scope", "fidelity"],
+      "required": ["ref", "source", "scope", "occurred_at", "fidelity"],
       "additionalProperties": false
     },
     "RetrievalResult": {

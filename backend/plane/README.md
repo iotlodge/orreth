@@ -28,8 +28,19 @@ cargo run -p orrethd -- --profile profiles/demo-field.json \
 cd ../conformance && uv run python smoke_orrethd.py
 ```
 
-Next, per 0000 §2/§7: the parent PUSH-up / child PULL-down flows between processes,
-Postgres/pgvector behind the record store, and the compose topology — one laptop, one universe.
+## The tree — parent/child over the wire
+
+`orrethd --parent <url>` makes a node a child (0000 §1: PUSH up / PULL down; a parent never
+reaches in). At boot the child **PULLs** its parent's floors from `GET /standards` (inherited
+floors dominate; a child tightens, never loosens). On a retrieval whose window outruns the local
+horizon, the child **serves what it has and delegates the deeper remainder UP** (`0002 §3`) —
+forwarding the query over HTTP with the spent budget deducted, then merging newest-first
+(`occurred_at` travels with every hit for exactly this). A refusing or dead parent is
+indistinguishable from budget exhaustion: un-served coverage, honest remainder, never an error
+shape. Demo: `demo_spacetime_window.py` — two daemons, one query, 300 days scrubbed.
+
+Next, per 0000 §7: Postgres/pgvector behind the record store, and the compose topology —
+one laptop, one universe.
 
 ## Run
 
