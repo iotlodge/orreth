@@ -10,6 +10,7 @@ from __future__ import annotations
 import base64
 import json
 import sys
+import webbrowser
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
@@ -59,8 +60,10 @@ def main() -> None:
     cfg = {"token": token, "requester": agent["did"], "requester_scope": SCOPE,
            "tiers": [SCOPE, "u:demo/e:cloud", "u:demo"]}
     frag = base64.b64encode(json.dumps(cfg).encode()).decode()
-    print("the window is ready — open:\n")
-    print(f"  http://127.0.0.1:{FIELD_PORT}/window#t={frag}\n")
+    url = f"http://127.0.0.1:{FIELD_PORT}/window#t={frag}"
+    print("the window is ready — opening your browser…\n")
+    print(f"  {url}\n")
+    webbrowser.open(url)
     print("drag the brass handle into deep time and watch the tiers light up. 🥂")
 
 
