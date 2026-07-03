@@ -63,3 +63,18 @@ cargo test
 
 > serde_json stays on default features — its `Map` is a `BTreeMap` (sorted keys), which the
 > canonicalization parity depends on. Never enable `preserve_order` in this workspace.
+
+## One laptop = one universe
+
+```bash
+cd backend/conformance && uv run python smoke_orrethd.py root-pub   # mints .smoke-root-seed
+echo "ORRETH_ROOT_PUB=<that key>" > ../../infrastructure/.env       # keep seed + env in step
+docker compose -f infrastructure/compose.yaml up --build            # the tree assembles
+uv run python demo_spacetime_window.py 4502 4500 500 450            # one query, three tiers
+```
+
+The boot logs are the layering claim proving itself: the universe listens, the ecosystem pulls
+its floor, the field inherits the apex's law through the middle tier without ever meeting the
+apex. `docker compose restart field-prod` is the resurrection demo at infrastructure level —
+"restored N record(s) · high_water=Some(…)" — and a field-scoped token that scrubs past its
+lease gets `partial`: the window is bounded by entitlement, honestly, even in containers.

@@ -18,23 +18,27 @@ impl PgRecords {
         let mut client = postgres::Client::connect(conn, postgres::NoTls)?;
         client.batch_execute(
             "CREATE TABLE IF NOT EXISTS records (
-                 id          TEXT PRIMARY KEY,
+                 node_scope  TEXT NOT NULL,
+                 id          TEXT NOT NULL,
                  scope       TEXT NOT NULL,
                  occurred_at TEXT NOT NULL,
-                 record      JSONB NOT NULL
+                 record      JSONB NOT NULL,
+                 PRIMARY KEY (node_scope, id)
              );
-             CREATE INDEX IF NOT EXISTS records_scope ON records (scope);",
+             CREATE INDEX IF NOT EXISTS records_node ON records (node_scope);",
         )?;
         Ok(Self { client: Mutex::new(client) })
     }
 
-    /// Persist the STORED form of an accepted record (post-ingress: body_ref, keep_class,
-    /// received_at all present). Idempotent — content-addressed ids make replays harmless.
-    pub fn save(&self, record: &Value) -> Result<(), postgres::Error> {
+    /// Persist the STORED form of an accepted record, keyed by the ACCEPTING node —
+    /// in a shared database the tree's daemons each restore only what they accepted
+    /// (a record may legitimately live at several tiers: the push-up). Idempotent.
+    pub fn save(&self, node_scope: &str, record: &Value) -> Result<(), postgres::Error> {
         self.client.lock().unwrap().execute(
-            "INSERT INTO records (id, scope, occurred_at, record)
-             VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO records (node_scope, id, scope, occurred_at, record)
+             VALUES ($1, $2, $3, $4, $5) ON CONFLICT (node_scope, id) DO NOTHING",
             &[
+                &node_scope,
                 &record["id"].as_str().unwrap(),
                 &record["scope"].as_str().unwrap(),
                 &record["occurred_at"].as_str().unwrap(),
@@ -44,13 +48,11 @@ impl PgRecords {
         Ok(())
     }
 
-    /// Everything at-or-below this scope, for boot-restore.
-    pub fn load(&self, scope: &str) -> Result<Vec<Value>, postgres::Error> {
+    /// Exactly this node's records, for boot-restore.
+    pub fn load(&self, node_scope: &str) -> Result<Vec<Value>, postgres::Error> {
         let rows = self.client.lock().unwrap().query(
-            "SELECT record FROM records
-             WHERE scope = $1 OR scope LIKE $2
-             ORDER BY occurred_at",
-            &[&scope, &format!("{scope}/%")],
+            "SELECT record FROM records WHERE node_scope = $1 ORDER BY occurred_at",
+            &[&node_scope],
         )?;
         Ok(rows
             .into_iter()

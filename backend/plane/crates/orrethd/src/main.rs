@@ -74,18 +74,25 @@ async fn main() {
     });
     let mut floors: Vec<Value> = Vec::new();
     if let Some(parent_url) = &parent {
-        match ureq::get(&format!("{parent_url}/standards")).call() {
-            Ok(resp) => {
-                let pulled: Value = resp.into_json().expect("parent standards json");
-                let inherited = pulled["floors"].as_array().cloned().unwrap_or_default();
-                println!("orrethd · pulled {} inherited floor(s) from {parent_url}", inherited.len());
-                floors.extend(inherited);
+        // in a composed topology the parent may still be waking — be patient at the door
+        let mut pulled_ok = false;
+        for attempt in 1..=10 {
+            match ureq::get(&format!("{parent_url}/standards")).call() {
+                Ok(resp) => {
+                    let pulled: Value = resp.into_json().expect("parent standards json");
+                    let inherited = pulled["floors"].as_array().cloned().unwrap_or_default();
+                    println!("orrethd · pulled {} inherited floor(s) from {parent_url}", inherited.len());
+                    floors.extend(inherited);
+                    pulled_ok = true;
+                    break;
+                }
+                Err(_) => std::thread::sleep(std::time::Duration::from_millis(500 * attempt)),
             }
-            Err(e) => {
-                // fail-closed continue (0007): last-known would apply if we had it; at first
-                // boot there is nothing known — start with own floors and keep trying later
-                eprintln!("orrethd · parent unreachable at boot ({e}); starting with local floors only");
-            }
+        }
+        if !pulled_ok {
+            // fail-closed continue (0007): last-known would apply if we had it; at first
+            // boot there is nothing known — start with own floors, loudly
+            eprintln!("orrethd · parent unreachable after retries; starting with local floors only");
         }
     }
     floors.extend(profile.get("floors").and_then(Value::as_array).cloned().unwrap_or_default());
@@ -157,8 +164,9 @@ async fn main() {
         .route("/standards", get(standards))
         .with_state(app);
 
-    let listener = tokio::net::TcpListener::bind(("127.0.0.1", port)).await.unwrap();
-    println!("orrethd · scope={scope} · tier_label={} · listening on 127.0.0.1:{port}",
+    let bind = arg("--bind").unwrap_or_else(|| "127.0.0.1".to_string()); // 0.0.0.0 in containers
+    let listener = tokio::net::TcpListener::bind((bind.as_str(), port)).await.unwrap();
+    println!("orrethd · scope={scope} · tier_label={} · listening on {bind}:{port}",
              profile["tier_label"].as_str().unwrap_or("?"));
     axum::serve(listener, router).await.unwrap();
 }
@@ -182,7 +190,8 @@ async fn ingress(State(app): State<Arc<App>>, Json(record): Json<Value>) -> impl
             Ok(id) => {
                 // write-through: persist the STORED form (body_ref, keep_class, received_at)
                 if let Some(store) = &app.pg {
-                    if let Err(e) = store.save(&u.nodes[0].records[&id]) {
+                    let node_scope = u.nodes[0].scope.clone();
+                    if let Err(e) = store.save(&node_scope, &u.nodes[0].records[&id]) {
                         eprintln!("orrethd · postgres write-through failed for {id}: {e}");
                     }
                 }

@@ -1,0 +1,71 @@
+# One laptop = one universe (0000 §7) — the layering claim, proven every `docker compose up`.
+#
+# One image, three profiles: universe → ecosystem → field, each the SAME binary under a
+# different TierProfile, parents wired by service DNS. Children PULL floors at boot; queries
+# at the field escalate deep-time remainders UP over the wire; records persist per-node in
+# a shared Postgres; bodies live in per-node object stores.
+#
+#   cd backend/conformance && uv run python smoke_orrethd.py root-pub   # prints the root key
+#   echo "ORRETH_ROOT_PUB=<that key>" > infrastructure/.env
+#   docker compose -f infrastructure/compose.yaml up --build
+
+name: orreth-demo-universe
+
+services:
+  pg:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: orreth
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  universe:
+    build: ../backend/plane
+    command: ["--profile", "/profiles/demo-universe.json", "--bind", "0.0.0.0", "--port", "4500",
+              "--store-dir", "/data/bodies", "--root-pub", "${ORRETH_ROOT_PUB}",
+              "--pg", "postgres://postgres:orreth@pg:5432/postgres"]
+    volumes:
+      - ../backend/plane/profiles:/profiles:ro
+      - universe-bodies:/data/bodies
+    ports: ["4500:4500"]
+    depends_on:
+      pg: { condition: service_healthy }
+
+  eco-cloud:
+    build: ../backend/plane
+    command: ["--profile", "/profiles/demo-eco.json", "--bind", "0.0.0.0", "--port", "4501",
+              "--store-dir", "/data/bodies", "--root-pub", "${ORRETH_ROOT_PUB}",
+              "--parent", "http://universe:4500",
+              "--pg", "postgres://postgres:orreth@pg:5432/postgres"]
+    volumes:
+      - ../backend/plane/profiles:/profiles:ro
+      - eco-bodies:/data/bodies
+    ports: ["4501:4501"]
+    depends_on:
+      pg: { condition: service_healthy }
+      universe: { condition: service_started }
+
+  field-prod:
+    build: ../backend/plane
+    command: ["--profile", "/profiles/demo-field.json", "--bind", "0.0.0.0", "--port", "4502",
+              "--store-dir", "/data/bodies", "--root-pub", "${ORRETH_ROOT_PUB}",
+              "--parent", "http://eco-cloud:4501",
+              "--pg", "postgres://postgres:orreth@pg:5432/postgres"]
+    volumes:
+      - ../backend/plane/profiles:/profiles:ro
+      - field-bodies:/data/bodies
+    ports: ["4502:4502"]
+    depends_on:
+      pg: { condition: service_healthy }
+      eco-cloud: { condition: service_started }
+
+volumes:
+  pg-data:
+  universe-bodies:
+  eco-bodies:
+  field-bodies:

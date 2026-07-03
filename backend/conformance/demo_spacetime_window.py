@@ -20,6 +20,8 @@ from smoke_orrethd import root_keypair
 
 FIELD = f"http://127.0.0.1:{sys.argv[1] if len(sys.argv) > 1 else 4400}"
 UNIVERSE = f"http://127.0.0.1:{sys.argv[2] if len(sys.argv) > 2 else 4500}"
+WINDOW_DAYS = int(sys.argv[3]) if len(sys.argv) > 3 else 300   # >395 exercises a 3-tier hop
+OLD_DAYS = int(sys.argv[4]) if len(sys.argv) > 4 else 200
 SCOPE = "u:demo/e:cloud/f:prod"
 
 
@@ -46,7 +48,7 @@ def main() -> None:
 
     # deep time lives at the apex: a 200-day-old memory, long since risen to the universe
     old = make_memory(agent, kp, SCOPE, {"season": "the championship, long ago"},
-                      occurred_at=days_ago(200))
+                      occurred_at=days_ago(OLD_DAYS))
     call(UNIVERSE, "POST", "/records", old)
     # recent memory is cheap and local: yesterday, at the field
     new = make_memory(agent, kp, SCOPE, {"game": "yesterday's win"}, occurred_at=days_ago(1))
@@ -62,19 +64,20 @@ def main() -> None:
     # one question at the FIELD, scrubbing 300 days back
     res = call(FIELD, "POST", "/retrieve", {
         "query": {"requester": agent["did"], "subject": "self", "space": "self",
-                  "time": {"from": days_ago(300)}, "intent": "recall",
+                  "time": {"from": days_ago(WINDOW_DAYS)}, "intent": "recall",
                   "budget": {"cost": 3}, "auth": "biscuit-sim"},
         "token": token, "requester_scope": SCOPE})
 
-    print(f"\none query at the field, window = 300 days:")
-    print(f"  served_by: {res['provenance']['served_by']}   (the field, then the apex — over the wire)")
+    print(f"\none query at the field, window = {WINDOW_DAYS} days:")
+    print(f"  served_by: {res['provenance']['served_by']}   (every tier the remainder crossed — over the wire)")
     for h in res["hits"]:
         print(f"  {h['occurred_at']}  {h['fidelity']:>8}  {h['ref'][:18]}…")
     print(f"  verification: {res['verification']}  ·  hits newest-first across two processes")
     assert [h["ref"] for h in res["hits"]] == [new["id"], old["id"]]
-    assert len(res["provenance"]["served_by"]) == 2
+    assert len(res["provenance"]["served_by"]) >= 2
 
-    print("\nthe window scrubbed 300 days across two daemons — "
+    print(f"\nthe window scrubbed {WINDOW_DAYS} days across "
+          f"{len(res['provenance']['served_by'])} daemons — "
           "recent stayed local, deep time answered from the apex. 🥂")
 
 
