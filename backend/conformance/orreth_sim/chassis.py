@@ -14,6 +14,8 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 
+from . import crypto, resolver
+from .identity import NOW
 from .node import make_memory
 
 _PLAN = """{persona}
@@ -41,19 +43,23 @@ class Chassis:
         self.persona, self.skills = persona, skills or {}
         self.max_cycles, self.max_obs, self.klass = max_cycles, max_obs, klass
         self.trace: list[dict] = []               # the loop, on the record
+        self._ctx = None                          # ResolvedContext id — the law, pinned
 
     # ---- the fixed loop ---------------------------------------------------------------
     def run(self, intent: str) -> dict:
         feedback = ""
         for cycle in range(1, self.max_cycles + 1):
+            budget_before = self.surface.budget_left
             observations = self._plan(intent, feedback)
             results = self._nucleus(observations)             # parallel, least-privilege
             verdict = self.think(self.klass, _CRITIC.format(
                 persona=self.persona, intent=intent,
                 results="\n".join(f"- [{k}] {q} → {r}" for k, q, r in results)))
+            done = verdict.strip().upper().startswith("DONE")
             self.trace.append({"cycle": cycle, "observations": len(results),
                                "verdict": verdict[:60]})
-            if verdict.strip().upper().startswith("DONE"):
+            self._record(intent, cycle, done, budget_before - self.surface.budget_left)
+            if done:
                 return {"status": "done", "answer": verdict.split(":", 1)[1].strip(),
                         "cycles": cycle}
             feedback = f"Prior attempt lacked: {verdict.split(':', 1)[-1].strip()}\n"
@@ -82,6 +88,27 @@ class Chassis:
                     self.think(self.klass, f"{self.persona}\nAnswer concisely: {question}"))
         with ThreadPoolExecutor(max_workers=len(observations)) as pool:
             return list(pool.map(lambda o: one(*o), observations))
+
+    def _record(self, intent: str, cycle: int, done: bool, tokens: int) -> None:
+        """Every cycle of thought is a signed RunRecord, pinned to the law it ran under —
+        the roll-up's raw material, and the presence layer's heartbeat."""
+        node = self.surface.node
+        if self._ctx is None:
+            self._ctx = resolver.resolve(node)["id"]
+        run = {
+            "id": crypto.content_hash({"i": intent, "c": cycle, "at": NOW(),
+                                       "a": self.surface.identity["did"]}),
+            "agent": self.surface.identity["did"], "scope": node.scope,
+            "goal_hash": crypto.content_hash({"intent": intent}),
+            "occurred_at": NOW(), "outcome": "success" if done else "partial",
+            "scores": [{"objective": "objective-met", "score": 1.0 if done else 0.0}],
+            "cost": {"tokens": max(tokens, 0), "model_calls": 1},
+            "context_hash": self._ctx,
+            "author": node.steward["did"],
+        }
+        run["sig"] = node.steward_kp.sign(node.steward["did"], {k: run[k] for k in
+                     ("id", "agent", "scope", "goal_hash", "occurred_at")})
+        node.record_run(run)
 
     def _park(self, intent: str, feedback: str) -> dict:
         """Breaker: the unsolved objective becomes a knowledge-acquisition assignment (0014)."""

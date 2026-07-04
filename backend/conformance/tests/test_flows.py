@@ -764,3 +764,26 @@ def test_failure_is_fuel_the_circuit_closes(world):
                    skills={"lookup": lambda q: " | ".join(c["claim"] for c in kb.current())}
                    ).run("frost-depth foundation spec")
     assert out2["status"] == "done"                                   # the failure fed the success
+
+
+def test_chassis_cycles_are_run_records_pinned_to_the_law(world):
+    """Every thought on the record: cycle → signed RunRecord with context_hash → roll-up."""
+    from orreth_sim.chassis import Chassis
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    surf = join_workforce(world.field_prod, b_prod)
+    def th(_k, p):
+        if "Plan the MINIMUM" in p: return "OBSERVE reason: x"
+        if "Answer concisely" in p: return "y"
+        th.n += 1
+        return "DONE: z" if th.n > 1 else "RETRY: more"
+    th.n = 0
+    out = Chassis(surf, th, max_cycles=3).run("test intent")
+    assert out["status"] == "done" and out["cycles"] == 2
+    runs = [r for r in world.field_prod.runs.values()
+            if r["agent"] == surf.identity["did"]]
+    assert len(runs) == 2                                     # one record per cycle of thought
+    assert all(r["context_hash"] for r in runs)               # pinned to the law it ran under
+    assert {r["outcome"] for r in runs} == {"partial", "success"}
+    season = {"from": iso(1), "to": iso(0)}
+    ru = world.field_prod.roll_up(season, goal_hash=runs[0]["goal_hash"])
+    assert ru["stats"]["n"] == 2                              # thought rolls up like everything else
