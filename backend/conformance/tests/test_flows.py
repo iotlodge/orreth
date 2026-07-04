@@ -662,3 +662,39 @@ def test_tombstone_annotates_never_rewrites(world):
     assert fid.get(dist["id"]) == "distilled-raw-expired"
     # and the purged raw itself is gone from results
     assert rid not in fid
+
+
+# ---------------------------------------------------------------- 0014: the knowledge loop
+def test_knowledge_admitted_quarantined_promoted_on_receipts(world):
+    """The world speaks at 0.0000; promotion is earned; versions are time."""
+    from orreth_sim.knowledge import KnowledgeCategory, SourceRegistry
+    reg = SourceRegistry()
+    reg.register("did:web:example-feed.org", kind="feed")
+    cat = KnowledgeCategory(world.field_prod, "cold-weather build strategies", "cold-weather")
+    e1 = cat.admit("triple-pane glazing halves heat loss",
+                   {"did": "did:web:example-feed.org", "ref": "https://example-feed.org/a"})
+    assert cat.entries()[e1]["state"] == "untrusted"            # quarantined, always
+    assert cat.entries()[e1]["confidence"] == 0.0
+    e2 = cat.admit("heat-pump COP drops below -25C",
+                   {"did": "did:web:example-feed.org", "ref": "https://example-feed.org/b"})
+    v2 = cat.corroborate(e1, receipt_ids=[e2])                  # promotion carries receipts
+    current = {c["claim"]: c["state"] for c in cat.current()}
+    assert current["triple-pane glazing halves heat loss"] == "corroborated"
+    assert e1 not in [c["id"] for c in cat.current()]           # superseded version retired from view
+    assert e1 in world.field_prod.records                       # ...but never rewritten
+
+
+def test_recall_walks_the_lineage(world):
+    """Discredit the source: its entries AND everything derived from them die visibly."""
+    from orreth_sim.knowledge import KnowledgeCategory, SourceRegistry
+    reg = SourceRegistry()
+    reg.register("did:web:poisoned.example", kind="feed")
+    cat = KnowledgeCategory(world.field_prod, "test", "recall-test")
+    bad = cat.admit("plausible but wrong", {"did": "did:web:poisoned.example"})
+    derived = cat.corroborate(bad, receipt_ids=[])              # a version built on the poison
+    reg.discredit("did:web:poisoned.example", "fabricated data")
+    recalled = cat.recall_source("did:web:poisoned.example", "source discredited")
+    assert recalled                                              # the recall enumerated the lineage
+    states = {c["state"] for c in cat.current()}
+    assert states == {"recalled"}                                # nothing from that source survives
+    assert bad in world.field_prod.records and derived in world.field_prod.records  # history intact
