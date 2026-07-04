@@ -2,8 +2,6 @@
 .DS_Store
 Thumbs.db
 
-# Marketing drafts — local only (LinkedIn iteration happens outside git)
-docs/articles/
 
 # Editors / IDE
 .idea/
