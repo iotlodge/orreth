@@ -46,6 +46,7 @@ fn universe_with_store(f: &Value, dir: &std::path::Path) -> Universe {
         now: f["now"].as_str().unwrap().to_string(),
         body_store: Some(BodyStore::local(dir)),
         trust_root: None, // no retrieval in these tests; production profiles always pin
+        runs: BTreeMap::new(),
     }
 }
 

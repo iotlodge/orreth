@@ -123,6 +123,7 @@ async fn main() {
         now: now_iso(),
         body_store: arg("--store-dir").map(|d| BodyStore::local(std::path::Path::new(&d))),
         trust_root,
+        runs: BTreeMap::new(),
     };
 
     // boot-restore: records return, and the high-water mark with them — the clock's
@@ -173,6 +174,8 @@ async fn main() {
         .route("/model/meter", post(model_meter))
         .route("/model/usage", get(model_usage))
         .route("/model/state", post(model_state))
+        .route("/runs", post(runs_ingress))
+        .route("/presence", get(presence))
         .with_state(app);
 
     let bind = arg("--bind").unwrap_or_else(|| "127.0.0.1".to_string()); // 0.0.0.0 in containers
@@ -413,4 +416,42 @@ async fn model_state(State(app): State<Arc<App>>, Json(req): Json<Value>) -> imp
         req["model"].as_str().unwrap_or(""), req["state"].as_str().unwrap_or(""));
     (if ok { StatusCode::OK } else { StatusCode::BAD_REQUEST },
      Json(json!({"ok": ok})))
+}
+
+// ---------------------------------------------------------------- presence: the life layer
+
+async fn runs_ingress(State(app): State<Arc<App>>, Json(run): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let mut u = app.universe.lock().unwrap();
+        match u.record_run(&run) {
+            Ok(id) => (StatusCode::CREATED, Json(json!({"id": id}))),
+            Err(_) => (StatusCode::FORBIDDEN,
+                       Json(json!({"error": "run rejected — resident-signed or nothing"}))),
+        }
+    }).await.unwrap()
+}
+
+/// The roster, alive: per-agent activity from the signed diary of thought (0005) —
+/// what the Window's panes render as "agents doing their job."
+async fn presence(State(app): State<Arc<App>>) -> Json<Value> {
+    let u = app.universe.lock().unwrap();
+    let mut per: BTreeMap<String, (i64, i64, i64, String)> = BTreeMap::new();
+    for r in u.runs.values() {
+        let a = r["agent"].as_str().unwrap_or("?").to_string();
+        let e = per.entry(a).or_insert((0, 0, 0, String::new()));
+        e.0 += 1;
+        if r["outcome"] == "success" { e.1 += 1; }
+        e.2 += r["cost"]["tokens"].as_i64().unwrap_or(0);
+        let at = r["occurred_at"].as_str().unwrap_or("");
+        if at > e.3.as_str() { e.3 = at.to_string(); }
+    }
+    let now = now_iso();
+    Json(json!({"scope": u.nodes[0].scope, "as_of": now,
+        "roster": per.into_iter().map(|(agent,(runs,ok,tok,last))| {
+            let idle = orreth_node::ts_seconds(&now)
+                     - orreth_node::ts_seconds(if last.is_empty() { &now } else { &last });
+            json!({"agent": agent, "runs": runs, "success": ok, "tokens": tok,
+                   "last_seen": last,
+                   "state": if idle < 120 { "thinking" } else { "idle" }})
+        }).collect::<Vec<_>>()}))
 }

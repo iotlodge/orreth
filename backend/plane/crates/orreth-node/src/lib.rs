@@ -97,6 +97,8 @@ pub struct Universe {
     /// The pinned trust root (0006 §1): token chains must START here. None = unpinned
     /// (tests only) — a production profile always pins.
     pub trust_root: Option<String>,
+    /// RunRecords (0005): the universe's signed diary of work and thought.
+    pub runs: BTreeMap<String, Value>,
 }
 
 impl Universe {
@@ -154,6 +156,26 @@ impl Universe {
             obj.insert("body_ref".into(), json!(body_ref));
         }
         node.records.insert(id.clone(), rec);
+        Ok(id)
+    }
+
+    /// Ingest a RunRecord (0005): resident-authored only — no agent grades its own yardstick.
+    pub fn record_run(&mut self, run: &Value) -> Result<String, WriteError> {
+        let author = run["author"].as_str().ok_or(WriteError::AuthzError)?;
+        if !self.active(author) || run["author"] == run["agent"] {
+            return Err(WriteError::AuthzError);
+        }
+        let public = self.public_of(author).ok_or(WriteError::AuthzError)?;
+        let mut m = Map::new();
+        for k in ["id", "agent", "scope", "goal_hash", "occurred_at"] {
+            if let Some(v) = run.get(k) { m.insert(k.into(), v.clone()); }
+        }
+        if !orreth_crypto::verify_sig(run["sig"]["sig"].as_str().unwrap_or(""),
+                                      &Value::Object(m), &public) {
+            return Err(WriteError::AuthzError);
+        }
+        let id = run["id"].as_str().ok_or(WriteError::AuthzError)?.to_string();
+        self.runs.insert(id.clone(), run.clone());
         Ok(id)
     }
 
