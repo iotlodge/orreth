@@ -175,6 +175,10 @@
     background:linear-gradient(90deg,rgba(159,182,232,.24),rgba(159,182,232,.08))}
   .band.apex{background:linear-gradient(90deg,rgba(159,182,232,.05),transparent 70%)}
   .band .note{position:absolute;right:1rem;top:.45rem;font:.64rem var(--mono);color:var(--faint)}
+  /* sealed: worlds the pane knows exist (presence rolls up) but may never read */
+  .band.sealed .name{color:var(--faint)}
+  .band.sealed .lane{opacity:.3}
+  .band.sealed{background:repeating-linear-gradient(135deg,transparent 0 16px,rgba(75,86,120,.06) 16px 17px)}
   .skynote{position:absolute;bottom:.55rem;left:1rem;font:.68rem var(--mono);color:var(--faint)}
   .nowline{position:absolute;top:0;bottom:0;right:0;width:1px;background:linear-gradient(var(--brass),transparent 92%);opacity:.5}
   .nowline .cap{position:absolute;top:.4rem;right:.5rem;font:700 .66rem var(--mono);color:var(--brass);letter-spacing:.15em}
@@ -319,10 +323,14 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
 });
 
 /* ── the world: /topology heartbeats assembled — what this floor knows below it ── */
-let topoCache=null;
+let topoCache=null,laneSig="";
 async function world(){
   try{topoCache=await(await fetch("/topology")).json()}catch{topoCache=null}
   renderWorldRail(); renderOrrery();
+  // topology can land after the first scrub — redraw lanes when the world grows
+  const scopes=[]; const w=n=>{if(!n)return;scopes.push(n.scope);(n.children||[]).forEach(w)}; w(topoCache);
+  const sig=scopes.sort().join("|");
+  if(sig!==laneSig){laneSig=sig; if(!$("v-uni").classList.contains("hide"))scrub()}
 }
 function renderWorldRail(){
   const el=$("world"); if(!el)return;
@@ -523,7 +531,13 @@ const tiers=()=>cfg?.tiers?[...cfg.tiers].reverse():["u:demo","u:demo/e:cloud","
 let bandGeo=[];
 function layout(){
   const S=sky(); S.querySelectorAll(".band,.dust").forEach(e=>e.remove());
-  const T=tiers(),H=S.clientHeight,top=4,usable=H-28,bh=usable/T.length; bandGeo=[];
+  const T=tiers();
+  /* sibling worlds from topology: visible as SEALED lanes — the pane may know THAT
+     they exist (presence rolls up, 0005) but never WHAT they hold (capability, 0002) */
+  const others=[]; const walk=n=>{if(!n)return;
+    if(!T.includes(n.scope))others.push(n.scope);(n.children||[]).forEach(walk)};
+  walk(topoCache); others.sort();
+  const H=S.clientHeight,top=4,usable=H-28,bh=usable/(T.length+others.length); bandGeo=[];
   T.forEach((t,i)=>{const b=document.createElement("div");b.className="band"+(i===0?" apex":"");
     b.style.top=(top+bh*i)+"px";b.style.height=bh+"px";
     b.innerHTML=`<span class="name" style="left:${14+i*18}px">${t.split("/").pop()}<b id="bc-${i}"></b></span>`+
@@ -531,6 +545,12 @@ function layout(){
       (i===0?`<span class="note">all-time memory · the apex holds what mattered</span>`:"");
     S.insertBefore(b,S.firstChild);
     bandGeo[i]={top:top+bh*i,h:bh,scope:t}});
+  others.forEach((t,j)=>{const b=document.createElement("div");b.className="band sealed";
+    b.style.top=(top+bh*(T.length+j))+"px";b.style.height=bh+"px";
+    b.innerHTML=`<span class="name" style="left:${14+(t.split("/").length-1)*18}px">${t.split("/").pop()}<b>· sealed</b></span>`+
+      `<div class="lane"></div>`+
+      (j===0?`<span class="note">other worlds turn here — beyond this capability, by design</span>`:"");
+    S.insertBefore(b,S.firstChild)});
   for(let i=0;i<40;i++){const d=document.createElement("div");d.className="dust";
     d.style.left=Math.random()*100+"%";d.style.top=Math.random()*100+"%";
     d.style.opacity=.3+Math.random()*.4;S.appendChild(d)}
