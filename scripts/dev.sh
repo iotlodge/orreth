@@ -5,6 +5,7 @@
 #   scripts/dev.sh status    health of all three tiers
 #   scripts/dev.sh stop      bring it all down          restart = stop + start
 set -euo pipefail
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RUN=/tmp/orreth-dev; mkdir -p "$RUN"
 PLANE="$ROOT/backend/plane"; CONF="$ROOT/backend/conformance"
