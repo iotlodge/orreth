@@ -5,279 +5,197 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Orreth · the Window</title>
 <style>
-  :root {
-    --void: #0B1020;         /* the sky, not a monitor */
-    --glass: #121B32;
-    --plate: #0E1528;
-    --hairline: #263352;
-    --starlight: #E8EDF7;
-    --dim: #8B98B8;
-    --faint: #5A6584;
-    --brass: #D4A960;        /* the instrument fittings */
-    --brass-dim: #8a6f42;
-    --near: #7FD1A8;         /* verified — light arriving unchanged */
-    --blueshift: #9FB6E8;    /* distilled — deep time, shifted */
-    --redshift: #E89A8F;     /* expired chains, un-served sky */
-    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    --serif: Palatino, "Palatino Linotype", Georgia, serif;
-  }
-  * { box-sizing: border-box; margin: 0; }
-  html { color-scheme: dark; }
-  body {
-    background:
-      radial-gradient(1px 1px at 12% 22%, #2c3a5e 50%, transparent 51%),
-      radial-gradient(1px 1px at 78% 9%,  #2c3a5e 50%, transparent 51%),
-      radial-gradient(1px 1px at 55% 71%, #22304f 50%, transparent 51%),
-      radial-gradient(1px 1px at 91% 55%, #22304f 50%, transparent 51%),
-      radial-gradient(1px 1px at 33% 90%, #22304f 50%, transparent 51%),
-      var(--void);
-    color: var(--starlight);
-    font: 15px/1.55 system-ui, sans-serif;
-    min-height: 100vh;
-    padding: 2.5rem clamp(1rem, 5vw, 4rem) 4rem;
-  }
-  .plate { max-width: 980px; margin: 0 auto; }
+  :root{--void:#070B18;--deep:#0B1226;--hair:#243352;--star:#E8EDF7;--dim:#8B98B8;
+    --faint:#4A5578;--brass:#D4A960;--near:#7FD1A8;--blue:#9FB6E8;--red:#E89A8F;
+    --mono:ui-monospace,"SF Mono",Menlo,monospace;--serif:Palatino,Georgia,serif}
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%;overflow:hidden}
+  body{background:var(--void);color:var(--star);font:14px/1.5 system-ui,sans-serif}
 
-  /* ── engraved header ─────────────────────────────────────── */
-  header { display: flex; justify-content: space-between; align-items: baseline;
-           border-bottom: 1px solid var(--hairline); padding-bottom: 1rem; flex-wrap: wrap; gap: .5rem; }
-  .wordmark { font-family: var(--serif); font-variant-caps: small-caps;
-              letter-spacing: .35em; font-size: 1.05rem; color: var(--brass); }
-  .wordmark b { color: var(--starlight); font-weight: 400; }
-  .station { font-family: var(--mono); font-size: .8rem; color: var(--dim); }
-  .health { display: flex; gap: 1.6rem; font-family: var(--mono); font-size: .78rem;
-            color: var(--dim); padding: .7rem 0 0; flex-wrap: wrap; }
-  .health b { color: var(--starlight); font-weight: 500; }
-  .live { color: var(--near); }
-  .live::before { content: "●"; margin-right: .45em; animation: breathe 3s ease-in-out infinite; }
-  @keyframes breathe { 50% { opacity: .35; } }
-  @media (prefers-reduced-motion: reduce) { .live::before { animation: none; } }
+  /* ══ the block — the whole viewport IS the universe ══ */
+  #block{position:fixed;inset:0;cursor:crosshair}
+  .band{position:absolute;left:0;right:0;border-top:1px solid var(--hair)}
+  .band-label{position:absolute;left:1.2rem;top:.6rem;font-family:var(--serif);
+    font-variant-caps:small-caps;letter-spacing:.35em;font-size:.78rem;color:var(--faint);
+    pointer-events:none}
+  .band.apex{background:linear-gradient(90deg,rgba(159,182,232,.10),rgba(159,182,232,.02) 60%)}
+  .band.mid{background:linear-gradient(90deg,rgba(159,182,232,.05),transparent 55%)}
+  #nowline{position:absolute;top:0;bottom:0;right:3.5rem;width:1px;
+    background:linear-gradient(var(--brass),transparent 85%);opacity:.6}
+  #nowline::after{content:"NOW";position:absolute;top:50%;right:-2.6rem;
+    font:700 .7rem var(--mono);color:var(--brass);letter-spacing:.15em}
 
-  .label { font-family: var(--serif); font-variant-caps: small-caps; letter-spacing: .3em;
-           font-size: .8rem; color: var(--brass-dim); margin: 2.2rem 0 .8rem; }
+  .star{position:absolute;border-radius:50%;transform:translate(-50%,-50%);cursor:pointer;
+    transition:transform .18s ease}
+  .star:hover{transform:translate(-50%,-50%) scale(2.2)}
+  .star.near{background:var(--near);box-shadow:0 0 10px 2px rgba(127,209,168,.55)}
+  .star.blue{background:var(--blue);box-shadow:0 0 10px 2px rgba(159,182,232,.55)}
+  .star.red{background:var(--red);box-shadow:0 0 10px 2px rgba(232,154,143,.55)}
+  @keyframes arrive{from{opacity:0;transform:translate(-50%,-50%) scale(3)}to{opacity:1}}
+  .star{animation:arrive .5s ease both}
+  @media (prefers-reduced-motion:reduce){.star{animation:none}}
 
-  /* ── the time rail — the signature ───────────────────────── */
-  .rail-box { background: var(--glass); border: 1px solid var(--hairline); border-radius: 6px;
-              padding: 1.3rem 1.4rem 1.1rem; }
-  .rail { position: relative; height: 58px; }
-  .rail-line { position: absolute; left: 0; right: 0; top: 28px; height: 1px; background: var(--hairline); }
-  .rail-covered { position: absolute; top: 28px; height: 1px; background: var(--brass-dim); }
-  .rail-unserved { position: absolute; top: 22px; height: 13px;
-      background: repeating-linear-gradient(-45deg, transparent 0 4px, rgba(232,154,143,.35) 4px 6px);
-      border-left: 1px solid var(--redshift); }
-  .star { position: absolute; top: 28px; width: 7px; height: 7px; border-radius: 50%;
-          transform: translate(-50%, -50%); cursor: pointer; }
-  .star::after { content: ""; position: absolute; inset: -6px; }
-  .star.near      { background: var(--near);      box-shadow: 0 0 8px 1px rgba(127,209,168,.6); }
-  .star.blueshift { background: var(--blueshift); box-shadow: 0 0 8px 1px rgba(159,182,232,.6); }
-  .star.redshift  { background: var(--redshift);  box-shadow: 0 0 8px 1px rgba(232,154,143,.6); }
-  .rail-ends { display: flex; justify-content: space-between; font-family: var(--mono);
-               font-size: .72rem; color: var(--faint); padding-top: 2.4rem; }
-  input[type=range] { width: 100%; appearance: none; background: transparent; margin-top: .4rem; }
-  input[type=range]::-webkit-slider-runnable-track { height: 2px; background: var(--hairline); }
-  input[type=range]::-webkit-slider-thumb { appearance: none; width: 14px; height: 22px; margin-top: -10px;
-      background: var(--brass); border-radius: 2px; cursor: ew-resize;
-      box-shadow: 0 0 0 1px var(--void), 0 0 10px rgba(212,169,96,.5); }
-  .rail-meta { display: flex; justify-content: space-between; align-items: baseline;
-               font-family: var(--mono); font-size: .78rem; color: var(--dim); margin-top: .5rem; }
-  .rail-meta b { color: var(--brass); font-size: .95rem; }
+  /* ambient dust */
+  .dust{position:absolute;width:1px;height:1px;border-radius:50%;background:#2A3A60;
+    pointer-events:none}
 
-  /* ── tiers answered ──────────────────────────────────────── */
-  .chain { display: flex; align-items: center; gap: 0; font-family: var(--mono);
-           font-size: .78rem; margin-top: 1.1rem; flex-wrap: wrap; }
-  .bead { display: flex; align-items: center; gap: .5em; color: var(--faint);
-          border: 1px solid var(--hairline); border-radius: 999px; padding: .25em .9em; }
-  .bead.lit { color: var(--starlight); border-color: var(--brass-dim); }
-  .bead.lit::before { content: "●"; color: var(--brass); font-size: .7em; }
-  .link { width: 26px; height: 1px; background: var(--hairline); }
-  .link.lit { background: var(--brass-dim); }
+  /* ══ floating HUD — corners, zero chrome ══ */
+  .hud{position:fixed;font-family:var(--mono);z-index:5}
+  #hud-mark{top:1.1rem;left:1.3rem;font-family:var(--serif);font-variant-caps:small-caps;
+    letter-spacing:.4em;font-size:1rem;color:var(--brass)}
+  #hud-mark b{color:var(--star);font-weight:400}
+  #hud-station{top:2.9rem;left:1.35rem;font-size:.72rem;color:var(--dim)}
+  #hud-health{top:1.2rem;right:1.4rem;font-size:.74rem;color:var(--dim);text-align:right}
+  #hud-health b{color:var(--star)}
+  .live::before{content:"●";color:var(--near);margin-right:.4em;animation:breathe 3s infinite}
+  @keyframes breathe{50%{opacity:.3}}
+  #hud-chain{bottom:1.2rem;right:1.4rem;font-size:.72rem;display:flex;gap:.4rem;align-items:center}
+  .bead{border:1px solid var(--hair);border-radius:999px;padding:.15em .8em;color:var(--faint)}
+  .bead.lit{color:var(--star);border-color:var(--brass)}
+  #hud-scrub{bottom:1.1rem;left:1.3rem;width:min(42vw,460px)}
+  #hud-scrub .lbl{font-size:.72rem;color:var(--dim);margin-bottom:.3rem}
+  #hud-scrub .lbl b{color:var(--brass);font-size:.9rem}
+  input[type=range]{width:100%;appearance:none;background:transparent}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--hair)}
+  input[type=range]::-webkit-slider-thumb{appearance:none;width:15px;height:24px;margin-top:-11px;
+    background:var(--brass);border-radius:2px;cursor:ew-resize;
+    box-shadow:0 0 0 1px var(--void),0 0 12px rgba(212,169,96,.6)}
+  #remnote{position:fixed;bottom:4.2rem;left:1.35rem;font:italic .72rem var(--mono);
+    color:var(--red);opacity:.85;z-index:5}
 
-  /* ── memories ────────────────────────────────────────────── */
-  .row { background: var(--plate); border: 1px solid var(--hairline); border-radius: 6px;
-         padding: .85rem 1.1rem; margin-bottom: .6rem; }
-  .row summary { list-style: none; cursor: pointer; display: flex; gap: 1rem;
-                 align-items: baseline; flex-wrap: wrap; }
-  .row summary::-webkit-details-marker { display: none; }
-  .t { font-family: var(--mono); font-size: .82rem; color: var(--starlight); }
-  .chip { font-family: var(--mono); font-size: .68rem; letter-spacing: .08em;
-          padding: .1em .7em; border-radius: 999px; border: 1px solid; }
-  .chip.near      { color: var(--near);      border-color: var(--near); }
-  .chip.blueshift { color: var(--blueshift); border-color: var(--blueshift); }
-  .chip.redshift  { color: var(--redshift);  border-color: var(--redshift); }
-  .hash { font-family: var(--mono); font-size: .75rem; color: var(--faint); margin-left: auto; }
-  .hash b { color: var(--dim); font-weight: 500; }
-  .row-body { border-top: 1px solid var(--hairline); margin-top: .8rem; padding-top: .8rem;
-              font-family: var(--mono); font-size: .78rem; color: var(--dim);
-              display: grid; gap: .35rem; overflow-wrap: anywhere; }
-  .row-body .k { color: var(--faint); }
-  .row-body pre { color: var(--blueshift); white-space: pre-wrap; }
-  .remainder { font-family: var(--mono); font-size: .78rem; color: var(--redshift);
-               padding: .8rem 1.1rem; border: 1px dashed var(--redshift); border-radius: 6px;
-               opacity: .85; }
-  .quiet { color: var(--faint); font-size: .85rem; padding: 1.2rem 0; }
-  footer { margin-top: 3rem; border-top: 1px solid var(--hairline); padding-top: .8rem;
-           font-family: var(--mono); font-size: .7rem; color: var(--faint);
-           display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
-  a { color: var(--brass); }
-  @media (prefers-color-scheme: light) { /* the observatory keeps its night; the glass is the dark side */ }
+  /* ══ the glass — detail slides over the void ══ */
+  #glass{position:fixed;top:0;right:0;bottom:0;width:min(480px,92vw);z-index:9;
+    background:linear-gradient(105deg,rgba(13,20,40,.92),rgba(9,14,30,.97));
+    border-left:1px solid var(--brass);backdrop-filter:blur(6px);
+    transform:translateX(102%);transition:transform .28s ease;padding:2rem 1.8rem;
+    font-family:var(--mono);font-size:.8rem;overflow-y:auto}
+  #glass.open{transform:none}
+  #glass .t{color:var(--star);font-size:.95rem;margin-bottom:1rem}
+  #glass .k{color:var(--faint)} #glass .row{margin:.55rem 0;overflow-wrap:anywhere}
+  #glass pre{color:var(--blue);white-space:pre-wrap;border-top:1px solid var(--hair);
+    margin-top:1rem;padding-top:1rem}
+  #glass .chip{font-size:.68rem;border:1px solid;border-radius:999px;padding:.1em .7em}
+  #glass .close{position:absolute;top:1rem;right:1.2rem;color:var(--faint);cursor:pointer;
+    font-size:1.1rem}
+  .quiet{color:var(--faint)}
 </style>
 </head>
 <body>
-<div class="plate">
-  <header>
-    <div class="wordmark">orreth · <b>the window</b></div>
-    <div class="station" id="station">station —</div>
-  </header>
-  <div class="health" id="health"><span class="quiet">reaching the daemon…</span></div>
+<div id="block"></div>
+<div id="nowline"></div>
 
-  <div class="label">the time rail</div>
-  <div class="rail-box">
-    <div class="rail" id="rail">
-      <div class="rail-line"></div>
-    </div>
-    <div class="rail-ends"><span id="deep-end">—</span><span>now</span></div>
-    <input type="range" id="scrub" min="1" max="100" value="62" aria-label="window depth">
-    <div class="rail-meta">
-      <span>window&nbsp; <b id="days">—</b>&nbsp;days deep</span>
-      <span id="count">—</span>
-    </div>
-    <div class="chain" id="chain"></div>
-  </div>
-
-  <div class="label">memories · newest first</div>
-  <div id="hits"><div class="quiet">awaiting a capability…</div></div>
-
-  <footer>
-    <span>every render is a governed query · sourced + verified</span>
-    <span id="clock"></span>
-  </footer>
+<div class="hud" id="hud-mark">orreth · <b>the window</b></div>
+<div class="hud" id="hud-station">station —</div>
+<div class="hud" id="hud-health"><span class="quiet">reaching the daemon…</span></div>
+<div class="hud" id="hud-chain"></div>
+<div class="hud" id="hud-scrub">
+  <div class="lbl">window&nbsp;<b id="days">—</b>&nbsp;days into the past · <span id="count">—</span></div>
+  <input type="range" id="scrub" min="1" max="100" value="62" aria-label="window depth">
 </div>
+<div id="remnote" hidden></div>
+
+<aside id="glass"><span class="close" onclick="glass.classList.remove('open')">✕</span>
+  <div id="glass-body"><span class="quiet">select a memory…</span></div></aside>
 
 <script>
 "use strict";
-/* the pane is a client of the retrieval contract — there is no privileged path (0008) */
-const cfg = (() => {
-  try { return JSON.parse(atob(location.hash.slice(3))); } catch { return null; }
-})();
-const $ = id => document.getElementById(id);
-const DAY = 86400e3;
-const iso = d => d.toISOString().replace(/\.\d+Z$/, "Z");
-/* the scrubber is exponential: fine near now, sweeping into deep time */
-const scrubToDays = v => Math.round(Math.exp(Math.log(730) * v / 100));
+/* the pane is a client of the retrieval contract — no privileged path (0008).
+   v2: immersive — the viewport IS the block; tiers are bands of sky; memories are stars. */
+const cfg=(()=>{try{return JSON.parse(atob(location.hash.slice(3)))}catch{return null}})();
+const $=id=>document.getElementById(id);
+const glass=$("glass");
+const DAY=864e5, iso=d=>d.toISOString().replace(/\.\d+Z$/,"Z");
+const scrubToDays=v=>Math.round(Math.exp(Math.log(730)*v/100));
+const fclass=f=>f==="verified"?"near":f==="distilled"?"blue":"red";
+const tierOf=s=>Math.min((s.match(/\//g)||[]).length,2);   // 0 apex · 1 eco · 2 field
 
-function fidelityClass(f) {
-  return f === "verified" ? "near" : f === "distilled" ? "blueshift" : "redshift";
-}
-
-async function health() {
-  try {
-    const h = await (await fetch("/health")).json();
-    $("station").textContent = `station ${h.scope}`;
-    $("health").innerHTML =
-      `<span class="live">live</span>` +
-      `<span>records <b>${h.records}</b></span>` +
-      `<span>high-water <b>${h.high_water ?? "—"}</b></span>` +
-      `<span>bodies <b>${h.bodies ? "object store" : "inline"}</b></span>`;
-  } catch {
-    $("health").innerHTML = `<span style="color:var(--redshift)">the daemon is not answering</span>`;
-  }
-}
-
-let seq = 0;
-async function scrub() {
-  const days = scrubToDays(+$("scrub").value);
-  $("days").textContent = days;
-  const from = new Date(Date.now() - days * DAY);
-  $("deep-end").textContent = iso(from).slice(0, 10);
-  if (!cfg) return;
-  const mine = ++seq;
-  const res = await fetch("/retrieve", {
-    method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      query: { requester: cfg.requester, subject: "self", space: "self",
-               time: { from: iso(from) }, intent: "recall",
-               budget: { cost: 4 }, auth: "biscuit-sim" },
-      token: cfg.token, requester_scope: cfg.requester_scope })
+const block=$("block");
+function bands(){
+  const tiers=cfg?.tiers?[...cfg.tiers].reverse():["u:demo","u:demo/e:cloud","u:demo/e:cloud/f:prod"];
+  const h=window.innerHeight, top=0.14*h, usable=h-top-90;
+  block.innerHTML="";
+  tiers.forEach((t,i)=>{
+    const b=document.createElement("div");
+    b.className="band "+(i===0?"apex":i===tiers.length-1?"":"mid");
+    b.style.top=(top+usable*i/tiers.length)+"px"; b.style.height=(usable/tiers.length)+"px";
+    b.innerHTML=`<span class="band-label">${t}</span>`;
+    block.appendChild(b);
   });
-  if (mine !== seq) return;                 /* a newer scrub superseded this one */
-  if (!res.ok) {
-    $("hits").innerHTML = `<div class="remainder">the capability was refused — the window stays dark.</div>`;
-    return render_rail([], from, null);
-  }
-  const r = await res.json();
-  render_rail(r.hits, from, r.remainder ?? null);
-  render_chain(r.provenance.served_by);
-  render_hits(r, from);
-  $("count").textContent = `${r.hits.length} memor${r.hits.length === 1 ? "y" : "ies"} · ${r.verification}`;
+  for(let i=0;i<70;i++){const d=document.createElement("div");d.className="dust";
+    d.style.left=Math.random()*100+"%";d.style.top=Math.random()*100+"%";
+    d.style.opacity=.3+Math.random()*.5;block.appendChild(d)}
+  return {top,usable,n:tiers.length};
 }
 
-function render_rail(hits, from, remainder) {
-  const rail = $("rail");
-  rail.querySelectorAll(".star,.rail-unserved,.rail-covered").forEach(e => e.remove());
-  const span = Date.now() - from.getTime();
-  const pos = t => Math.min(99.5, Math.max(0.5, 100 * (new Date(t) - from.getTime()) / span));
-  if (remainder) {                        /* the sky the telescope couldn't reach */
-    const z = document.createElement("div");
-    z.className = "rail-unserved";
-    z.style.left = "0"; z.style.width = "14%";
-    z.title = "un-served: the remainder — deeper than this window's reach";
-    rail.appendChild(z);
-  }
-  for (const h of hits) {
-    const s = document.createElement("div");
-    s.className = `star ${fidelityClass(h.fidelity)}`;
-    s.style.left = pos(h.occurred_at) + "%";
-    s.title = `${h.occurred_at} · ${h.fidelity}`;
-    s.onclick = () => document.getElementById(h.ref)?.scrollIntoView({ behavior: "smooth", block: "center" });
-    rail.appendChild(s);
-  }
+async function health(){
+  try{const h=await (await fetch("/health")).json();
+    $("hud-station").textContent=`station ${h.scope}`;
+    $("hud-health").innerHTML=`<span class="live">live</span> records <b>${h.records}</b>`+
+      `<br>high-water <b>${h.high_water??"—"}</b>`;
+  }catch{$("hud-health").innerHTML=`<span style="color:var(--red)">daemon dark</span>`}
 }
 
-function render_chain(served) {
-  const tiers = (cfg?.tiers ?? ["u:demo/e:cloud/f:prod", "u:demo/e:cloud", "u:demo"]);
-  $("chain").innerHTML = tiers.map((t, i) => {
-    const lit = served.includes(t) ? " lit" : "";
-    const link = i ? `<span class="link${lit}"></span>` : "";
-    return `${link}<span class="bead${lit}">${t.split("/").pop()}</span>`;
-  }).join("");
+let seq=0;
+async function scrub(){
+  const days=scrubToDays(+$("scrub").value); $("days").textContent=days;
+  if(!cfg)return;
+  const from=new Date(Date.now()-days*DAY), mine=++seq;
+  const res=await fetch("/retrieve",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({query:{requester:cfg.requester,subject:"self",space:"self",
+      time:{from:iso(from)},intent:"recall",budget:{cost:4},auth:"biscuit-sim"},
+      token:cfg.token,requester_scope:cfg.requester_scope})});
+  if(mine!==seq)return;
+  if(!res.ok){$("count").textContent="capability refused — the window stays dark";return}
+  const r=await res.json();
+  render(r,from,days);
 }
 
-function render_hits(r, from) {
-  if (!r.hits.length) {
-    $("hits").innerHTML = `<div class="quiet">the window is open; nothing occurred in this span.</div>`;
-    return;
+function render(r,from,days){
+  const geo=bands();
+  const span=Date.now()-from.getTime();
+  const W=window.innerWidth-56, tiers=cfg?.tiers?[...cfg.tiers].reverse():[];
+  for(const h of r.hits){
+    const s=document.createElement("div");
+    const age=(new Date(h.occurred_at)-from.getTime())/span;
+    const ti=tiers.length?Math.max(0,tiers.indexOf(h.scope)):tierOf(h.scope);
+    const band=(ti<0?geo.n-1:ti);
+    s.className="star "+fclass(h.fidelity);
+    const sz=5+3*age;                        /* nearer light is larger */
+    s.style.width=s.style.height=sz+"px";
+    s.style.left=Math.max(8,Math.min(W,W*age))+"px";
+    s.style.top=(geo.top+geo.usable*(band+.25+Math.random()*.5)/geo.n)+"px";
+    s.title=`${h.occurred_at} · ${h.fidelity}`;
+    s.onclick=()=>open_glass(h);
+    block.appendChild(s);
   }
-  $("hits").innerHTML = r.hits.map(h => {
-    const [alg, hex] = h.ref.split(":");
-    return `<details class="row" id="${h.ref}">
-      <summary>
-        <span class="t">${h.occurred_at}</span>
-        <span class="chip ${fidelityClass(h.fidelity)}">${h.fidelity}</span>
-        <span class="hash">${alg}:<b>${hex.slice(0, 12)}</b>${hex.slice(12, 20)}…</span>
-      </summary>
-      <div class="row-body">
-        <span><span class="k">author&nbsp;&nbsp;</span>${h.source}</span>
-        <span><span class="k">scope&nbsp;&nbsp;&nbsp;</span>${h.scope}</span>
-        <pre data-body="${h.ref}">▸ open to fetch the body — verified against its own address</pre>
-      </div>
-    </details>`;
-  }).join("") + (r.remainder
-    ? `<div class="remainder">before ${r.remainder.not_served.from} · un-served — this window does not reach deeper. the remainder is honest, never silent.</div>`
-    : "");
-  document.querySelectorAll(".row").forEach(row => row.addEventListener("toggle", async () => {
-    if (!row.open) return;
-    const pre = row.querySelector("pre");
-    if (pre.dataset.done) return;
-    pre.dataset.done = "1";
-    const res = await fetch(`/records/${encodeURIComponent(pre.dataset.body)}/body`);
-    pre.textContent = res.ok ? JSON.stringify(await res.json(), null, 2)
-                             : "body not held at this tier (a deeper tier answered this hit)";
-  }));
+  $("count").textContent=`${r.hits.length} memor${r.hits.length===1?"y":"ies"} · ${r.verification}`;
+  const rem=$("remnote");
+  if(r.remainder){rem.hidden=false;
+    rem.textContent=`before ${r.remainder.not_served.from.slice(0,10)}: un-served — this lease does not reach deeper`}
+  else rem.hidden=true;
+  const served=r.provenance.served_by;
+  $("hud-chain").innerHTML=(cfg?.tiers??[]).map(t=>
+    `<span class="bead${served.includes(t)?" lit":""}">${t.split("/").pop()}</span>`).join("");
 }
 
-$("scrub").addEventListener("input", scrub);
-setInterval(health, 5000);
-setInterval(() => { $("clock").textContent = iso(new Date()); }, 1000);
+async function open_glass(h){
+  const cls=fclass(h.fidelity);
+  $("glass-body").innerHTML=`<div class="t">${h.occurred_at}</div>
+    <div class="row"><span class="chip ${cls}" style="color:var(--${cls==='near'?'near':cls==='blue'?'blue':'red'});border-color:currentColor">${h.fidelity}</span></div>
+    <div class="row"><span class="k">ref&nbsp;&nbsp;&nbsp;&nbsp;</span>${h.ref}</div>
+    <div class="row"><span class="k">author&nbsp;</span>${h.source}</div>
+    <div class="row"><span class="k">scope&nbsp;&nbsp;</span>${h.scope}</div>
+    <pre>fetching body — verified against its own address…</pre>`;
+  glass.classList.add("open");
+  const res=await fetch(`/records/${encodeURIComponent(h.ref)}/body`);
+  glass.querySelector("pre").textContent=res.ok?
+    JSON.stringify(await res.json(),null,2):
+    "body not held at this tier (a deeper tier answered this hit)";
+}
+
+$("scrub").addEventListener("input",scrub);
+window.addEventListener("resize",scrub);
+setInterval(health,5000); setInterval(scrub,20000);   /* the view is ALIVE — it re-observes */
 health().then(scrub);
 </script>
 </body>
