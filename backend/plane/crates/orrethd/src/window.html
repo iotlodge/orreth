@@ -57,28 +57,108 @@
   .who .sub{font:.65rem/1.35 var(--mono);color:var(--faint);margin-top:.1rem}
   .who .cost{color:var(--brass)}
   .rail .empty{padding:.6rem 1.1rem;font-size:.72rem;color:var(--faint)}
+  /* the world tree — what each floor knows below it */
+  .trow{display:flex;justify-content:space-between;align-items:baseline;
+    font:.7rem var(--mono);padding:.17rem 1.1rem}
+  .trow .tn{color:var(--star)} .trow.dim .tn{color:var(--faint)}
+  .trow.me .tn{color:var(--brass)}
+  .trow .tc{color:var(--faint);font-size:.63rem}
+  .tsum{font:.65rem/1.6 var(--mono);color:var(--faint);padding:.35rem 1.1rem .1rem}
+  .tsum b{color:var(--brass);font-weight:400}
 
   .view{position:relative;overflow:hidden}
-  .view.hide{display:none}
+  /* !important: the hidden state must beat any per-view #id display rule — this
+     specificity trap has bitten twice (#v-window, then #v-pulse). Never again. */
+  .view.hide{display:none!important}
+  #v-uni{display:flex;flex-direction:column}
+
+  /* ── THE ORRERY: the universe in orbit — worlds turn, policy rains down the beams ── */
+  .orrery{position:relative;flex:1.15;min-height:0;overflow:hidden;border-bottom:1px solid var(--hair)}
+  .anchor{position:absolute;width:0;height:0}
+  .ring{position:absolute;left:0;top:0;transform:translate(-50%,-50%);
+    border:1px dashed rgba(159,182,232,.13);border-radius:50%;pointer-events:none}
+  .orb{position:absolute;left:0;top:0;width:0;height:0;animation:rot linear infinite}
+  @keyframes rot{to{transform:rotate(360deg)}}
+  .orb .beam{position:absolute;left:0;top:-.5px;height:1px;transform-origin:left center;
+    background:linear-gradient(90deg,rgba(212,169,96,.55),transparent 88%);
+    opacity:0;animation:beat 7s ease-in-out infinite;pointer-events:none}
+  @keyframes beat{0%,70%,100%{opacity:0}78%{opacity:.9}92%{opacity:.2}}
+  .sat{position:absolute;width:0;height:0}
+  .cr{position:absolute;width:0;height:0;animation:rot linear infinite reverse}
+  .sphere{position:absolute;width:76px;height:76px;border-radius:50%;transform:translate(-50%,-50%);
+    overflow:hidden;background:radial-gradient(circle at 33% 28%,#43589a,#1a2650 55%,#0B1226 82%);
+    box-shadow:0 0 46px rgba(159,182,232,.30),inset -10px -12px 26px rgba(0,0,0,.65);cursor:pointer}
+  .sphere::after{content:"";position:absolute;inset:-30%;
+    background:conic-gradient(from 0deg,transparent 0 68%,rgba(212,169,96,.20) 78%,transparent 88%);
+    animation:rot 22s linear infinite}
+  .planet{position:absolute;width:26px;height:26px;border-radius:50%;transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 34% 30%,#8fa8e0,#33437a 58%,#141f42 82%);
+    box-shadow:0 0 14px rgba(159,182,232,.35);cursor:pointer}
+  .moon{position:absolute;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 35% 30%,#a9e8c8,#3d7a5e 60%,#16311f 85%);
+    box-shadow:0 0 9px rgba(127,209,168,.4);cursor:pointer}
+  .ship{position:absolute;width:3px;height:3px;border-radius:50%;background:var(--star);
+    box-shadow:0 0 5px 1px rgba(234,239,250,.75)}
+  .blabel{position:absolute;left:0;transform:translateX(-50%);
+    font:.66rem var(--mono);color:var(--dim);white-space:nowrap;pointer-events:none}
+  .corelabel{position:absolute;top:44px;left:0;transform:translateX(-50%);text-align:center;
+    font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.24em;
+    font-size:.8rem;color:var(--brass);white-space:nowrap;pointer-events:none}
+  .corelabel .sub{display:block;font:.62rem var(--mono);color:var(--faint);
+    letter-spacing:.03em;margin-top:.15rem;text-transform:none;font-variant:normal}
+  .olegend{position:absolute;right:1.1rem;bottom:.6rem;font:.66rem var(--mono);color:var(--faint)}
+  .olegend .b{color:var(--brass)}
+  .oleaf{position:absolute;left:50%;top:72%;transform:translate(-50%,0);
+    font:.75rem/1.9 var(--mono);color:var(--faint);text-align:center;white-space:nowrap}
+  #ocard{position:absolute;z-index:9;width:290px;background:rgba(11,18,38,.98);
+    border:1px solid var(--brassdim);border-radius:8px;padding:.75rem .95rem;
+    font:.75rem/1.65 var(--mono);box-shadow:0 10px 34px rgba(0,0,0,.6);
+    opacity:0;pointer-events:none;transition:opacity .12s}
+  #ocard.on{opacity:1}
+  #ocard .t{color:var(--brass)} #ocard .k{color:var(--faint)}
 
   /* ── PULSE ── */
-  #v-pulse{padding:1.6rem;overflow-y:auto}
-  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;max-width:900px}
-  .card{border:1px solid var(--hair);border-radius:10px;padding:1.1rem 1.2rem;
-    background:linear-gradient(160deg,rgba(159,182,232,.04),transparent)}
-  .card .n{font:800 2rem/1 system-ui;color:var(--star);letter-spacing:-.02em}
-  .card .n.brass{color:var(--brass)} .card .n.near{color:var(--near)}
+  #v-pulse{padding:2rem 2.4rem;overflow-y:auto;display:flex;flex-direction:column}
+  .hero{display:flex;align-items:baseline;gap:1.2rem;margin-bottom:1.8rem}
+  .hero .big{font:800 3.4rem/1 system-ui;letter-spacing:-.03em;
+    background:linear-gradient(90deg,var(--star),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .cap{font-family:var(--serif);color:var(--dim);font-size:1.05rem}
+  .hero .cap b{color:var(--brass);font-weight:400}
+  .belowline{font:.8rem var(--mono);color:var(--dim);margin:-1rem 0 1.6rem}
+  .belowline b{color:var(--brass);font-weight:400}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.1rem}
+  .card{border:1px solid var(--hair);border-radius:12px;padding:1.4rem 1.5rem;
+    background:linear-gradient(155deg,rgba(159,182,232,.05),transparent 70%);min-height:128px;
+    display:flex;flex-direction:column;justify-content:space-between}
+  .card .n{font:800 2.4rem/1 system-ui;color:var(--star);letter-spacing:-.02em;white-space:nowrap}
+  .card .n.brass{color:var(--brass)} .card .n.near{color:var(--near)} .card .n.date{font-size:1.5rem}
   .card .l{font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.22em;
-    font-size:.72rem;color:var(--dim);margin-top:.5rem}
-  .card .d{font:.68rem var(--mono);color:var(--faint);margin-top:.2rem}
+    font-size:.74rem;color:var(--dim);margin-top:.7rem}
+  .card .d{font:.7rem var(--mono);color:var(--faint);margin-top:.25rem}
   .section{font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.24em;
-    color:var(--faint);font-size:.78rem;margin:2rem 0 .8rem}
-  .feed{max-width:900px;font:.74rem/1.7 var(--mono)}
-  .feed .ev{display:flex;gap:1rem;padding:.35rem 0;border-bottom:1px solid var(--hair)}
-  .feed .ev .t{color:var(--faint);white-space:nowrap} .feed .ev .m{color:var(--dim)}
+    color:var(--faint);font-size:.82rem;margin:2.2rem 0 .9rem;
+    border-top:1px solid var(--hair);padding-top:1.4rem}
+  .feed{font:.78rem/1.9 var(--mono)}
+  .feed .ev{display:flex;gap:1.2rem;padding:.4rem 0;border-bottom:1px solid var(--hair);align-items:center}
+  .feed .ev .t{color:var(--faint);white-space:nowrap} .feed .ev .dot{width:6px;height:6px;border-radius:50%;background:var(--near);flex:0 0 auto}
+  .feed .ev .m{color:var(--dim)}
+  .opentab{font:.72rem var(--mono);color:var(--brass);cursor:pointer;letter-spacing:0;text-transform:none;font-variant:normal}
+  .opentab:hover{filter:brightness(1.15)}
+  .strip{position:relative;height:120px;border:1px solid var(--hair);border-radius:12px;overflow:hidden;
+    background:linear-gradient(180deg,rgba(159,182,232,.04),transparent)}
+  .strip .nowline{position:absolute;top:0;bottom:0;right:0;width:1px;background:linear-gradient(var(--brass),transparent 92%);opacity:.5}
+  .strip .nowline .cap{position:absolute;top:.35rem;right:.4rem;font:700 .6rem var(--mono);color:var(--brass);letter-spacing:.12em}
+  .strip .s{position:absolute;border-radius:50%;transform:translate(-50%,-50%)}
+  .strip .s.near{background:var(--near);box-shadow:0 0 8px 1px rgba(127,209,168,.5)}
+  .strip .s.blue{background:var(--blue);box-shadow:0 0 8px 1px rgba(159,182,232,.5)}
+  .strip .s.red{background:var(--red);box-shadow:0 0 8px 1px rgba(232,154,143,.5)}
+  .strip .ax{position:absolute;bottom:.35rem;font:.6rem var(--mono);color:var(--faint)}
+  .lower{display:grid;grid-template-columns:1fr 1fr;gap:2.4rem}
+  #spend .bar{margin:.5rem 0} #spend .bar .lab{display:flex;justify-content:space-between;font:.72rem var(--mono);color:var(--dim);margin-bottom:.2rem}
+  #spend .bar .lab b{color:var(--brass)} #spend .bar .track{height:6px;background:var(--hair);border-radius:3px;overflow:hidden}
+  #spend .bar .fill{height:100%;background:linear-gradient(90deg,var(--brassdim),var(--brass))}
 
   /* ── WINDOW (the spacetime sky) ── */
-  #v-window{display:flex;flex-direction:column}
   .skybar{display:flex;align-items:center;gap:1rem;padding:.7rem 1.2rem;border-bottom:1px solid var(--hair)}
   .skybar .lbl{font:.72rem var(--mono);color:var(--dim);white-space:nowrap} .skybar .lbl b{color:var(--brass)}
   input[type=range]{flex:1;max-width:520px;appearance:none;background:transparent}
@@ -87,9 +167,15 @@
     background:var(--brass);border-radius:2px;cursor:ew-resize;box-shadow:0 0 0 1px var(--void),0 0 10px rgba(212,169,96,.5)}
   .sky{flex:1;position:relative;overflow:hidden}
   .band{position:absolute;left:0;right:0;border-top:1px solid var(--hair)}
-  .band .name{position:absolute;left:1rem;top:.5rem;font-family:var(--serif);
-    font-variant-caps:small-caps;letter-spacing:.3em;font-size:.74rem;color:var(--faint)}
-  .band.apex{background:linear-gradient(90deg,rgba(159,182,232,.06),transparent 65%)}
+  .band .name{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--serif);
+    font-variant-caps:small-caps;letter-spacing:.22em;font-size:.78rem;color:var(--dim);white-space:nowrap}
+  .band .name b{font:.62rem var(--mono);color:var(--faint);letter-spacing:0;margin-left:.6em;font-weight:400}
+  /* the rail each tier's memories ride — beads on a wire, like the poster */
+  .band .lane{position:absolute;left:172px;right:12px;height:1px;top:58%;
+    background:linear-gradient(90deg,rgba(159,182,232,.24),rgba(159,182,232,.08))}
+  .band.apex{background:linear-gradient(90deg,rgba(159,182,232,.05),transparent 70%)}
+  .band .note{position:absolute;right:1rem;top:.45rem;font:.64rem var(--mono);color:var(--faint)}
+  .skynote{position:absolute;bottom:.55rem;left:1rem;font:.68rem var(--mono);color:var(--faint)}
   .nowline{position:absolute;top:0;bottom:0;right:0;width:1px;background:linear-gradient(var(--brass),transparent 92%);opacity:.5}
   .nowline .cap{position:absolute;top:.4rem;right:.5rem;font:700 .66rem var(--mono);color:var(--brass);letter-spacing:.15em}
   .star{position:absolute;border-radius:50%;transform:translate(-50%,-50%);cursor:pointer;
@@ -104,8 +190,8 @@
   #leader.on{opacity:1}
   #leader .line{position:absolute;height:1px;background:var(--brass);opacity:.75}
   #leader .dotend{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--brass);transform:translate(-50%,-50%)}
-  #leader .card2{position:absolute;width:300px;transform:translateY(-50%);background:rgba(11,18,38,.97);
-    border:1px solid var(--brassdim);border-radius:6px;padding:.7rem .9rem;font:.72rem/1.5 var(--mono);box-shadow:0 8px 30px rgba(0,0,0,.55)}
+  #leader .card2{position:absolute;width:340px;transform:translateY(-50%);background:rgba(11,18,38,.98);
+    border:1px solid var(--brassdim);border-radius:8px;padding:.85rem 1rem;font:.78rem/1.65 var(--mono);box-shadow:0 10px 34px rgba(0,0,0,.6)}
   #leader .card2 .when{color:var(--star)} #leader .card2 .k{color:var(--faint)}
   #leader .card2 .chip{font-size:.64rem;border:1px solid;border-radius:999px;padding:.05em .6em}
   #leader .card2 .body{color:var(--blue);border-top:1px solid var(--hair);margin-top:.5rem;padding-top:.5rem;overflow-wrap:anywhere;max-height:8rem;overflow:hidden}
@@ -116,13 +202,15 @@
   .ask-box{max-width:760px}
   .ask-box .prompt{font-family:var(--serif);font-size:1.2rem;color:var(--star);margin-bottom:.4rem}
   .ask-box .hint{font:.78rem var(--mono);color:var(--faint);margin-bottom:1rem}
-  .ask-in{display:flex;gap:.6rem}
-  .ask-in input{flex:1;background:var(--deep);border:1px solid var(--hair2);border-radius:8px;
+  .ask-in{display:flex;gap:.6rem;flex-wrap:wrap}
+  .ask-in input{flex:1;min-width:280px;background:var(--deep);border:1px solid var(--hair2);border-radius:8px;
     padding:.8rem 1rem;color:var(--star);font:.9rem var(--mono)}
   .ask-in input:focus{outline:none;border-color:var(--brass)}
   .ask-in button{background:var(--brass);color:#1a1305;border:none;border-radius:8px;
-    padding:0 1.4rem;font:700 .82rem var(--mono);cursor:pointer}
+    padding:.8rem 1.5rem;font:700 .82rem var(--mono);cursor:pointer}
   .ask-in button:hover{filter:brightness(1.08)}
+  .steps{display:flex;gap:1.4rem;flex-wrap:wrap;margin-top:1rem;font:.7rem/1.5 var(--mono);color:var(--faint)}
+  .steps .num{color:var(--brass);margin-right:.35em}
   .chips{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}
   .qchip{font:.72rem var(--mono);color:var(--dim);border:1px solid var(--hair2);border-radius:999px;
     padding:.3em .9em;cursor:pointer} .qchip:hover{color:var(--star);border-color:var(--brassdim)}
@@ -139,8 +227,8 @@
 <header>
   <div class="crest"><span class="r">ORRETH</span><span class="u">console · <b id="scope">…</b></span></div>
   <div class="tabs">
-    <span class="tab on" data-v="pulse">Pulse</span>
-    <span class="tab" data-v="window">Window</span>
+    <span class="tab on" data-v="uni">Universe</span>
+    <span class="tab" data-v="pulse">Pulse</span>
     <span class="tab" data-v="req">Requests<span class="badge" id="req-badge"></span></span>
     <span class="tab" data-v="ask">Ask</span>
   </div>
@@ -148,17 +236,14 @@
 </header>
 
 <main>
-  <div class="rail" id="rail"></div>
+  <div class="rail"><div id="world"></div><div id="roster"></div></div>
 
-  <!-- PULSE -->
-  <div class="view" id="v-pulse">
-    <div class="cards" id="cards"></div>
-    <div class="section">recent activity</div>
-    <div class="feed" id="feed"><div class="quiet" style="padding:.5rem 0">the field is quiet…</div></div>
-  </div>
-
-  <!-- WINDOW -->
-  <div class="view hide" id="v-window">
+  <!-- UNIVERSE: the orrery above, the spacetime window below — one living view -->
+  <div class="view" id="v-uni">
+    <div class="orrery" id="orrery">
+      <div class="olegend"><span class="b">━</span> policy rains down the beams · hover any world</div>
+      <div id="ocard"></div>
+    </div>
     <div class="skybar">
       <span class="lbl">the spacetime window · <b id="days">—</b> days</span>
       <input type="range" id="scrub" min="1" max="100" value="60">
@@ -166,7 +251,26 @@
     </div>
     <div class="sky" id="sky">
       <div class="nowline"><span class="cap">NOW</span></div>
+      <div class="skynote">◄ deep past · distilled, never lost</div>
       <div id="leader"><div class="line"></div><div class="dotend"></div><div class="card2"></div></div>
+    </div>
+  </div>
+
+  <!-- PULSE -->
+  <div class="view hide" id="v-pulse">
+    <div class="hero"><span class="big" id="hero-n">—</span>
+      <span class="cap" id="hero-c">the universe, at a glance</span></div>
+    <div class="belowline" id="below"></div>
+    <div class="cards" id="cards"></div>
+    <div class="section" style="display:flex;justify-content:space-between;align-items:baseline">
+      <span>the living memory · last 2 years</span>
+      <span class="opentab" onclick="document.querySelector('.tab[data-v=uni]').click()">open the universe →</span></div>
+    <div class="strip" id="strip"><div class="nowline"><span class="cap">NOW</span></div></div>
+    <div class="lower">
+      <div><div class="section">recent activity</div>
+        <div class="feed" id="feed"><div class="quiet" style="padding:.5rem 0">the field is quiet…</div></div></div>
+      <div><div class="section">spend by agent</div>
+        <div id="spend"><div class="quiet" style="padding:.5rem 0">no spend yet</div></div></div>
     </div>
   </div>
 
@@ -182,9 +286,12 @@
       <div class="prompt">Ask the universe.</div>
       <div class="hint">command the librarian to gather sourced, verified knowledge — it becomes memory in the Window.</div>
       <div class="ask-in">
-        <input id="ask" placeholder="Go gather sourced data on architecture strategies for cold climates…">
-        <button onclick="submitAsk()">Dispatch</button>
+        <input id="ask" placeholder="gather sourced knowledge on…">
+        <button onclick="submitAsk()">Dispatch →</button>
       </div>
+      <div class="steps"><span><span class="num">①</span>you dispatch an ask</span>
+        <span><span class="num">②</span>the librarian gathers from identified sources</span>
+        <span><span class="num">③</span>sourced memories land in the Window · quarantined until corroborated</span></div>
       <div class="chips" id="qchips"></div>
       <div class="section">dispatched</div>
       <div id="asklog"><div class="quiet">no dispatches yet.</div></div>
@@ -196,7 +303,9 @@
 "use strict";
 /* The Console — Agentic C2 (0000 · 0008). Every render is a governed, tokened query;
    the pane holds no privileged path. Views: Pulse · Window · Requests · Ask. */
-const cfg=(()=>{try{return JSON.parse(atob(location.hash.slice(3)))}catch{return null}})();
+/* robust: pull the t= capability from the hash regardless of other params (e.g. &v=) */
+const cfg=(()=>{try{const m=location.hash.match(/[#&]t=([^&]+)/);return m?JSON.parse(atob(m[1])):null}catch{return null}})();
+window.addEventListener("hashchange",()=>location.reload()); /* new token → new console */
 const $=id=>document.getElementById(id);
 const DAY=864e5, iso=d=>d.toISOString().replace(/\.\d+Z$/,"Z");
 const short=d=>String(d).replace(/^did:key:z/,"").replace(/·.*/,m=>m).slice(0,16)+(String(d).length>16?"…":"");
@@ -205,9 +314,106 @@ const money=u=>u>=0.01?"$"+u.toFixed(2):u>0?"$"+u.toFixed(5):"$0";
 /* view switching */
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));
-  ["pulse","window","req","ask"].forEach(v=>$("v-"+v).classList.toggle("hide",v!==t.dataset.v));
-  if(t.dataset.v==="window") scrub();
+  ["uni","pulse","req","ask"].forEach(v=>$("v-"+v).classList.toggle("hide",v!==t.dataset.v));
+  if(t.dataset.v==="uni"){const O=$("orrery");if(O)O.dataset.sig="";renderOrrery();scrub()}
 });
+
+/* ── the world: /topology heartbeats assembled — what this floor knows below it ── */
+let topoCache=null;
+async function world(){
+  try{topoCache=await(await fetch("/topology")).json()}catch{topoCache=null}
+  renderWorldRail(); renderOrrery();
+}
+function renderWorldRail(){
+  const el=$("world"); if(!el)return;
+  const t=topoCache;
+  let html=`<div class="grp"><span>the world</span><span></span></div>`, bl=$("below");
+  if(t&&(t.children||[]).length){
+    const rows=[],agg={eco:0,field:0,agents:0};
+    const walk=(n,d)=>{rows.push({n,d});
+      if(d>0){const L=n.scope.split("/").length;
+        if(L===2)agg.eco++;else if(L>=3)agg.field++;agg.agents+=n.agents||0}
+      (n.children||[]).forEach(c=>walk(c,d+1))};
+    walk(t,0);
+    html+=rows.map(({n,d})=>`<div class="trow${d===0?" me":""}" style="padding-left:${1.1+d*.85}rem">
+      <span class="tn">${d?"└ ":""}${n.scope.split("/").pop()}</span>
+      <span class="tc">${n.records}m · ${n.agents}a</span></div>`).join("");
+    const s=(n,w)=>`<b>${n}</b> ${w}${n===1?"":"s"}`;
+    html+=`<div class="tsum">below this floor: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"field")} · ${s(agg.agents,"agent")}</div>`;
+    if(bl)bl.innerHTML=`the world below: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"field")} · ${s(agg.agents,"agent")} — every one signed in`;
+  }else{
+    const chain=cfg?.tiers?[...cfg.tiers].reverse():[];
+    html+=chain.map((sc,i)=>{const me=i===chain.length-1;
+      return `<div class="trow${me?" me":" dim"}" style="padding-left:${1.1+i*.85}rem">
+      <span class="tn">${i?"└ ":""}${sc.split("/").pop()}${me?" ◂ you":""}</span>
+      <span class="tc">${me&&t?`${t.records}m · ${t.agents}a`:""}</span></div>`}).join("");
+    html+=`<div class="tsum">the bottom floor — ${t?`<b>${t.agents}</b> agent${t.agents===1?"":"s"} here`:"waking…"}</div>`;
+    if(bl&&t)bl.innerHTML=`bottom floor · <b>${t.agents}</b> agent${t.agents===1?"":"s"} here · under ${chain.slice(0,-1).map(x=>x.split("/").pop()).join(" · ")||"—"}`;
+  }
+  el.innerHTML=html;
+}
+
+/* ── the orrery renderer: core sphere, ecosystems in orbit, fields as moons,
+      agents as ships. Counter-rotators (.cr) keep every label upright. ── */
+function renderOrrery(){
+  const O=$("orrery"); if(!O||$("v-uni").classList.contains("hide"))return;
+  const t=topoCache;
+  const sig=t?JSON.stringify([t.scope,t.records,(t.children||[]).map(c=>
+    [c.scope,c.records,c.agents,(c.children||[]).map(g=>[g.scope,g.records,g.agents])])]):"none";
+  if(O.dataset.sig===sig)return; O.dataset.sig=sig;
+  O.querySelectorAll(".oo").forEach(e=>e.remove());
+  const W=O.clientWidth,H=O.clientHeight,R=Math.min(W,H)/2;
+  const wrap=document.createElement("div");wrap.className="oo";
+  wrap.style.cssText="position:absolute;inset:0";
+  if(!t){wrap.innerHTML=`<div class="oleaf">the daemon is dark — no world to draw</div>`;
+    O.appendChild(wrap);return}
+  const ecos=t.children||[], RE=Math.max(120,Math.min(R*.64,230));
+  let html=`<div class="anchor" style="left:50%;top:50%">`;
+  html+=`<div class="sphere" onmouseenter="oc(event,'${t.scope}',${t.records},${t.runs},${t.agents},${t.usd||0})" onmouseleave="ocOff()"></div>
+    <div class="corelabel">${t.scope}<span class="sub">${t.records} memories · the universal record</span></div>`;
+  if(ecos.length){
+    html+=`<div class="ring" style="width:${2*RE}px;height:${2*RE}px"></div>`;
+    ecos.forEach((e,i)=>{
+      const per=46+i*9, ph=-(i/ecos.length)*per, fields=e.children||[];
+      const RM=30+6*Math.max(0,fields.length-1);
+      let inner=fields.length?`<div class="ring" style="width:${2*RM}px;height:${2*RM}px"></div>`:"";
+      fields.forEach((f,j)=>{
+        const mper=13+j*5, mph=-(j/fields.length)*mper;
+        let ships="";
+        for(let k=0;k<Math.min(f.agents||0,6);k++){const sper=5+k*1.7;
+          ships+=`<div class="orb" style="animation-duration:${sper}s;animation-delay:${-k*1.3}s">
+            <div class="ship" style="left:10px;top:-1px"></div></div>`}
+        inner+=`<div class="orb" style="animation-duration:${mper}s;animation-delay:${mph}s">
+          <div class="sat" style="transform:translate(${RM}px,0)">
+            <div class="cr" style="animation-duration:${mper}s;animation-delay:${mph}s">
+              <div class="moon" onmouseenter="oc(event,'${f.scope}',${f.records},${f.runs},${f.agents},${f.usd||0})" onmouseleave="ocOff()"></div>
+              <div class="blabel" style="top:10px">${f.scope.split("/").pop()}${f.agents?` · ${f.agents}`:""}</div>
+              ${ships}</div></div></div>`});
+      html+=`<div class="orb" style="animation-duration:${per}s;animation-delay:${ph}s">
+        <div class="beam" style="width:${RE-16}px;animation-delay:${i*1.9}s"></div>
+        <div class="sat" style="transform:translate(${RE}px,0)">
+          <div class="cr" style="animation-duration:${per}s;animation-delay:${ph}s">
+            <div class="planet" onmouseenter="oc(event,'${e.scope}',${e.records},${e.runs},${e.agents},${e.usd||0})" onmouseleave="ocOff()"></div>
+            <div class="blabel" style="top:17px">${e.scope.split("/").pop()}</div>
+            ${inner}</div></div></div>`});
+  }else{
+    html+=`</div><div class="oleaf">this floor is a leaf — its whole world is itself<br>
+      open the universe console to watch every orbit</div><div class="anchor">`;
+  }
+  html+=`</div>`;
+  wrap.innerHTML=html; O.appendChild(wrap);
+}
+function oc(ev,scope,rec,runs,ag,usd){
+  const O=$("orrery"),c=$("ocard"),r=ev.currentTarget.getBoundingClientRect(),o=O.getBoundingClientRect();
+  c.innerHTML=`<div class="t">${scope}</div>
+    <div><span class="k">memories </span>${rec} · <span class="k">thoughts </span>${runs}</div>
+    <div><span class="k">agents </span>${ag} · <span class="k">spend </span>${money(usd)}</div>`;
+  let x=r.left-o.left+r.width/2+18, y=r.top-o.top+r.height/2;
+  if(x+300>o.width)x=Math.max(8,x-330);
+  y=Math.max(10,Math.min(o.height-86,y));
+  c.style.left=x+"px";c.style.top=y+"px";c.classList.add("on");
+}
+function ocOff(){$("ocard").classList.remove("on")}
 
 async function pulse(){
   try{
@@ -215,21 +421,22 @@ async function pulse(){
     const ro=await(await fetch("/rollup")).json();
     $("hpulse").innerHTML=`<span class="live">live</span> · ${h.scope}<br>`+
       `<b>${ro.memories}</b> memories · <b>${ro.runs}</b> runs · <b>${money(ro.usd)}</b> spent`;
+    $("hero-n").textContent=ro.memories.toLocaleString();
+    $("hero-c").innerHTML=`memories held at <b>${h.scope}</b> — every one signed, Sourced + Verified, and navigable across all of time`;
     $("cards").innerHTML=[
-      ["memories",ro.memories,"","every one signed · Sourced + Verified"],
       ["thoughts",ro.runs,"near",`${ro.success_rate}% reached objective`],
       ["tokens",ro.tokens.toLocaleString(),"","through the governed model plane"],
       ["spend",money(ro.usd),"brass",`${ro.model_calls} model calls · metered`],
-      ["high-water",(h.high_water||"—").slice(0,10),"","the universe's own now"],
+      ["high-water",(h.high_water||"—").slice(0,10),"date","the universe's own now"],
     ].map(([l,n,c,d])=>`<div class="card"><div class="n ${c||""}">${n}</div>
-      <div class="l">${l}</div><div class="d">${d}</div></div>`).join("");
+      <div><div class="l">${l}</div><div class="d">${d}</div></div></div>`).join("");
   }catch{$("hpulse").innerHTML=`<span style="color:var(--red)">daemon dark</span>`}
 }
 
 async function roster(){
   try{
     const p=await(await fetch("/presence")).json();
-    const r=$("rail");
+    const r=$("roster");
     let html=`<div class="grp"><span>residents · the organs</span><span>${p.residents.length}</span></div>`;
     for(const a of p.residents) html+=agentRow(a,true);
     html+=`<div class="grp"><span>workforce</span><span>${p.workforce.length}</span></div>`;
@@ -238,11 +445,39 @@ async function roster(){
     r.innerHTML=html;
     // feed: latest workforce activity
     const evs=p.workforce.filter(a=>a.last_seen).sort((x,y)=>y.last_seen.localeCompare(x.last_seen));
-    $("feed").innerHTML= evs.length? evs.slice(0,8).map(a=>
-      `<div class="ev"><span class="t">${a.last_seen.slice(11,19)}</span>
+    $("feed").innerHTML= evs.length? evs.slice(0,10).map(a=>
+      `<div class="ev"><span class="dot"></span><span class="t">${a.last_seen.slice(11,19)}</span>
        <span class="m">${short(a.agent)} · ${a.runs} thought${a.runs===1?"":"s"} · ${a.state} · ${money(a.usd||0)}</span></div>`).join("")
       : `<div class="quiet" style="padding:.5rem 0">the field is quiet…</div>`;
+    // spend by agent — the per-agent cost JB asked for, as bars
+    const spenders=[...p.residents.map(x=>({n:x.role,u:0})),
+      ...p.workforce.map(a=>({n:short(a.agent),u:a.usd||0,t:a.tokens}))]
+      .filter(x=>x.t!==undefined);
+    const max=Math.max(1,...spenders.map(x=>x.t||0));
+    $("spend").innerHTML= spenders.length? spenders.map(x=>
+      `<div class="bar"><div class="lab"><span>${x.n}</span><b>${x.t} tok · ${money(x.u)}</b></div>
+       <div class="track"><div class="fill" style="width:${Math.round(100*(x.t||0)/max)}%"></div></div></div>`).join("")
+      : `<div class="quiet" style="padding:.5rem 0">no spend yet</div>`;
   }catch{}
+}
+
+/* the living-memory strip: a compact spacetime window, always on the dashboard */
+async function renderStrip(){
+  if(!cfg)return; const el=$("strip"); if(!el)return;
+  const from=new Date(Date.now()-730*DAY);
+  let r; try{ r=await(await fetch("/retrieve",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({query:{requester:cfg.requester,subject:"self",space:"self",
+      time:{from:iso(from)},intent:"recall",budget:{cost:4},auth:"biscuit-sim"},
+      token:cfg.token,requester_scope:cfg.requester_scope})})).json(); }catch{return}
+  el.querySelectorAll(".s,.ax").forEach(e=>e.remove());
+  const span=Date.now()-from.getTime();
+  (r.hits||[]).forEach((h,i)=>{const age=(new Date(h.occurred_at)-from.getTime())/span;
+    const s=document.createElement("div");s.className="s "+(h.fidelity==="verified"?"near":h.fidelity==="distilled"?"blue":"red");
+    const sz=5+3*Math.max(0,age);s.style.width=s.style.height=sz+"px";
+    s.style.left=(2+96*Math.max(0,Math.min(1,age)))+"%";        /* % — layout-independent */
+    s.style.top=(24+(i*29)%64)+"px";                            /* deterministic vertical spread */
+    s.title=`${h.occurred_at} · ${h.fidelity}`;el.appendChild(s)});
+  const a1=document.createElement("div");a1.className="ax";a1.style.left="10px";a1.textContent=iso(from).slice(0,7)+" · deep past";el.appendChild(a1);
 }
 function agentRow(a,resident){
   const sub = resident? `<div class="sub">${a.blurb||""}</div>`
@@ -288,16 +523,32 @@ const tiers=()=>cfg?.tiers?[...cfg.tiers].reverse():["u:demo","u:demo/e:cloud","
 let bandGeo=[];
 function layout(){
   const S=sky(); S.querySelectorAll(".band,.dust").forEach(e=>e.remove());
-  const T=tiers(),H=S.clientHeight,top=6,usable=H-12,bh=usable/T.length; bandGeo=[];
+  const T=tiers(),H=S.clientHeight,top=4,usable=H-28,bh=usable/T.length; bandGeo=[];
   T.forEach((t,i)=>{const b=document.createElement("div");b.className="band"+(i===0?" apex":"");
     b.style.top=(top+bh*i)+"px";b.style.height=bh+"px";
-    b.innerHTML=`<span class="name">${t.split("/").pop()}</span>`;S.insertBefore(b,S.firstChild);
+    b.innerHTML=`<span class="name" style="left:${14+i*18}px">${t.split("/").pop()}<b id="bc-${i}"></b></span>`+
+      `<div class="lane"></div>`+
+      (i===0?`<span class="note">all-time memory · the apex holds what mattered</span>`:"");
+    S.insertBefore(b,S.firstChild);
     bandGeo[i]={top:top+bh*i,h:bh,scope:t}});
   for(let i=0;i<40;i++){const d=document.createElement("div");d.className="dust";
     d.style.left=Math.random()*100+"%";d.style.top=Math.random()*100+"%";
     d.style.opacity=.3+Math.random()*.4;S.appendChild(d)}
 }
-const bandFor=s=>{const T=tiers();let i=T.indexOf(s);if(i<0)i=Math.min((s.match(/\//g)||[]).length,T.length-1);return bandGeo[i]||bandGeo[bandGeo.length-1]};
+/* a memory rides the shallowest floor whose horizon still holds it (0002/0004):
+   the field serves its 90 days, the eco its year, the apex all of time — like the poster */
+function horizonFor(i){
+  const sc=bandGeo[i]?.scope;
+  const find=n=>{if(!n)return null;if(n.scope===sc)return n;
+    for(const c of n.children||[]){const r=find(c);if(r)return r}return null};
+  const n=topoCache?find(topoCache):null;
+  if(n&&n.horizon_days!=null&&isFinite(n.horizon_days)&&n.horizon_days<3e5)return n.horizon_days;
+  return i===bandGeo.length-1?90:395;      /* dev defaults below the apex */
+}
+function bandForAge(days){
+  for(let i=bandGeo.length-1;i>0;i--){if(days<=horizonFor(i))return bandGeo[i]}
+  return bandGeo[0];
+}
 let seq=0;
 async function scrub(){
   const days=scrubToDays(+$("scrub").value);$("days").textContent=days;
@@ -310,26 +561,32 @@ async function scrub(){
   if(!res.ok){$("count").textContent="capability refused";return}
   const r=await res.json();
   const S=sky();S.querySelectorAll(".star,.remnote").forEach(e=>e.remove());
-  const span=Date.now()-from.getTime(),W=S.clientWidth;
-  for(const h of r.hits){const age=(new Date(h.occurred_at)-from.getTime())/span,g=bandFor(h.scope);
+  /* beads on the wire: every memory rides its tier's lane, ordered by time */
+  const span=Date.now()-from.getTime(),W=S.clientWidth,X0=182,X1=W-26,perBand={};
+  for(const h of r.hits){const age=(new Date(h.occurred_at)-from.getTime())/span;
+    const g=bandForAge((Date.now()-new Date(h.occurred_at))/DAY);
+    const bi=bandGeo.indexOf(g),k=(perBand[bi]=(perBand[bi]||0)+1)-1;
     const s=document.createElement("div");s.className="star "+fclass(h.fidelity);
     const sz=5+3*Math.max(0,age);s.style.width=s.style.height=sz+"px";
-    s.style.left=Math.max(10,Math.min(W-6,W*age))+"px";s.style.top=(g.top+g.h*(.32+Math.random()*.42))+"px";
+    s.style.left=Math.max(X0,Math.min(X1,X0+(X1-X0)*age))+"px";
+    s.style.top=(g.top+g.h*.58+((k%3)-1)*7)+"px";
     s.onmouseenter=()=>showLeader(s,h);s.onmouseleave=()=>leader().classList.remove("on");S.appendChild(s)}
+  bandGeo.forEach((g,i)=>{const el=$("bc-"+i);if(el)el.textContent="· "+(perBand[i]||0)});
   $("count").textContent=`${r.hits.length} memor${r.hits.length===1?"y":"ies"} · ${r.verification}`;
   if(r.remainder){const n=document.createElement("div");n.className="remnote";
     n.textContent=`before ${r.remainder.not_served.from.slice(0,10)}: un-served — this lease reaches no deeper`;S.appendChild(n)}
 }
 async function showLeader(star,h){
   const cls=fclass(h.fidelity),x=parseFloat(star.style.left),y=parseFloat(star.style.top);
-  const CARD=300,GAP=58,W=sky().clientWidth,right=x>W*.5,L=leader();
+  const CARD=340,GAP=58,W=sky().clientWidth,H=sky().clientHeight,right=x>W*.5,L=leader();
+  const cy=Math.max(96,Math.min(H-100,y));   /* keep the card on the glass */
   const line=L.querySelector(".line"),card=L.querySelector(".card2"),dot=L.querySelector(".dotend");
   card.innerHTML=`<div class="when">${h.occurred_at}</div>
     <div style="margin:.35rem 0"><span class="chip" style="color:var(--${cls});border-color:currentColor">${h.fidelity}</span></div>
     <div><span class="k">author </span>${short(h.source)}</div>
     <div><span class="k">scope&nbsp;&nbsp;</span>${h.scope.split("/").pop()}</div>
     <div class="body">reading body…</div>`;
-  card.style.top=y+"px";line.style.top=y+"px";line.style.height="1px";dot.style.top=y+"px";dot.style.left=x+"px";
+  card.style.top=cy+"px";line.style.top=y+"px";line.style.height="1px";dot.style.top=y+"px";dot.style.left=x+"px";
   if(right){const left=Math.max(8,x-GAP-CARD);card.style.left=left+"px";line.style.left=(left+CARD)+"px";line.style.width=(x-(left+CARD))+"px";}
   else{const left=Math.min(W-CARD-8,x+GAP);card.style.left=left+"px";line.style.left=x+"px";line.style.width=(left-x)+"px";}
   L.classList.add("on");
@@ -337,10 +594,17 @@ async function showLeader(star,h){
   const b=card.querySelector(".body");if(b)b.textContent=res.ok?JSON.stringify(await res.json()):"body at a deeper tier";
 }
 $("scrub").addEventListener("input",scrub);
-window.addEventListener("resize",()=>{if(!$("v-window").classList.contains("hide"))scrub()});
+window.addEventListener("resize",()=>{if(!$("v-uni").classList.contains("hide")){
+  const O=$("orrery");if(O)O.dataset.sig="";renderOrrery();scrub()}});
 
-function tick(){pulse();roster();loadReq()}
+/* deep-link a view (#v=uni|pulse|req|ask; "window" stays an alias) */
+const vparam=(location.hash.match(/[#&]v=(\w+)/)||[])[1];
+const vmap={window:"uni",universe:"uni"};
+if(vparam){const t=document.querySelector(`.tab[data-v="${vmap[vparam]||vparam}"]`); if(t)t.click();}
+
+function tick(){pulse();roster();loadReq();renderStrip();world()}
 tick();setInterval(tick,4000);          /* the console breathes */
+scrub();                                /* the universe view is home — light it now */
 </script>
 </body>
 </html>

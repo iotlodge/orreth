@@ -33,6 +33,9 @@ struct App {
     /// Human requests: asks + HITL. Unsigned intents (inputs, not memories);
     /// cognition executes them with authority and the results become signed memories.
     requests: Mutex<Vec<Value>>,
+    /// Presence flows UP (0000 §1): children heartbeat their subtree summaries here.
+    /// A parent learns the world below without ever reaching into it.
+    children: Mutex<BTreeMap<String, Value>>,
 }
 
 /// "%Y-%m-%dT%H:%M:%SZ" from the system clock (civil-from-days; no chrono).
@@ -165,7 +168,19 @@ async fn main() {
         horizon_days: dur_days(horizon),
         pg: pg_store,
         requests: Mutex::new(Vec::new()),
+        children: Mutex::new(BTreeMap::new()),
     });
+
+    // the upward presence beat: every 5s tell the parent what this subtree holds,
+    // children riding along — so the apex assembles the whole world from heartbeats
+    if let Some(parent_url) = app.parent.clone() {
+        let beat = app.clone();
+        std::thread::spawn(move || loop {
+            let s = summary(&beat);
+            let _ = ureq::post(&format!("{parent_url}/hello")).send_json(&s);
+            std::thread::sleep(std::time::Duration::from_secs(5));
+        });
+    }
 
     let router = Router::new()
         .route("/health", get(health))
@@ -181,6 +196,8 @@ async fn main() {
         .route("/runs", post(runs_ingress))
         .route("/presence", get(presence))
         .route("/rollup", get(rollup))
+        .route("/hello", post(hello))
+        .route("/topology", get(topology))
         .route("/requests", get(requests_list))
         .route("/requests", post(requests_submit))
         .route("/requests/resolve", post(requests_resolve))
@@ -484,6 +501,48 @@ async fn presence(State(app): State<Arc<App>>) -> Json<Value> {
                "state": if idle < 120 { "thinking" } else { "idle" }})
     }).collect();
     Json(json!({"scope": scope, "as_of": now, "residents": residents, "workforce": workforce}))
+}
+
+/// This node's subtree summary: own stats + everything its children last reported.
+/// The Console's orrery renders exactly this shape, nested all the way down.
+fn summary(app: &App) -> Value {
+    let (scope, records) = {
+        let u = app.universe.lock().unwrap();
+        (u.nodes[0].scope.clone(), u.nodes[0].records.len())
+    };
+    let (runs, agents) = {
+        let u = app.universe.lock().unwrap();
+        let mut agents = BTreeSet::new();
+        for r in u.runs.values() {
+            if let Some(a) = r["agent"].as_str() {
+                agents.insert(a.to_string());
+            }
+        }
+        (u.runs.len(), agents.len())
+    };
+    let usd: f64 = app.model.lock().unwrap().meter_log.iter()
+        .filter_map(|e| e["usd"].as_f64()).sum();
+    let children: Vec<Value> = app.children.lock().unwrap().values().cloned().collect();
+    // horizon rides the beat (serde maps a non-finite "forever" to null — the apex)
+    json!({"scope": scope, "records": records, "runs": runs, "agents": agents,
+           "usd": (usd * 1e6).round() / 1e6, "horizon_days": app.horizon_days,
+           "children": children})
+}
+
+/// A child announces its subtree — the upward beat. Grandchildren ride along, so
+/// heartbeats cascade floor by floor and the apex ends up holding the whole world.
+async fn hello(State(app): State<Arc<App>>, Json(mut beat): Json<Value>) -> impl IntoResponse {
+    let Some(scope) = beat["scope"].as_str().map(str::to_string) else {
+        return (StatusCode::BAD_REQUEST, Json(json!({"error": "a beat needs a scope"})));
+    };
+    beat["heard_at"] = json!(now_iso());
+    app.children.lock().unwrap().insert(scope, beat);
+    (StatusCode::OK, Json(json!({"ok": true})))
+}
+
+/// The world below this floor — ecosystems, fields, agents — assembled from heartbeats.
+async fn topology(State(app): State<Arc<App>>) -> Json<Value> {
+    Json(summary(&app))
 }
 
 /// The tier's living numbers — what the Console's Pulse renders (0005 roll-up, at a glance).

@@ -76,8 +76,10 @@ def main() -> None:
            "tiers": [SCOPE, "u:demo/e:cloud", "u:demo"]}
     frag = base64.b64encode(json.dumps(cfg).encode()).decode()
     url = f"http://127.0.0.1:{FIELD_PORT}/window#t={frag}"
-    print("the window is ready — opening your browser…\n")
-    print(f"  {url}\n")
+    uni_url = f"http://127.0.0.1:{UNI_PORT}/window#t={frag}"   # same capability, apex floor
+    print("the console is ready — opening your browser…\n")
+    print(f"  field console (your biography, all lanes):  {url}\n")
+    print(f"  universe console (the whole world in orbit): {uni_url}\n")
     webbrowser.open(url)
     print("drag the brass handle into deep time and watch the tiers light up. 🥂")
 
