@@ -59,6 +59,33 @@ a market: **model cards with a chain of custody, generated as a side effect.**
 Plus the standing debt this all sits on: **LiteLLM through the floors** — the model gateway made
 real.
 
+## Topic 3 — the immune system's adaptive arm (captured 2026-07-03)
+
+The first-questions doc gave the **innate** arm: verified threats become floors at ingress.
+Topic 3 adds the **adaptive** arm — *poison search and removal* (working marketing name: **the
+Recall & Quarantine**; umbrella story: *the universe has an immune system*):
+
+- **Detection through intent and outcome.** Outcome is the empirical lens: 0005's bundles let a
+  hunter ask *which knowledge versions do failing runs have in common?* — poison located by its
+  symptoms. Intent is the other lens: records whose producing goal mismatches their claim.
+- **Enumeration via `derived_from`** — every downstream absorber listable (the recall).
+- **Agentic staging, HITL removal** — the hunter stages through the 0012 queues; humans hold the
+  delete, per policy. For knowledge, *discredit beats delete* by default: tombstone the body,
+  keep the signed stub, cascade redaction markers — history never silently changes.
+
+**The trust lifecycle** (JB's 0.0000 partition): unverified external data (Tavily-class web,
+AI-era content) is *admitted quarantined* — alive in time, tagged/attributed, with a lifecycle
+**state**: `untrusted (0.0000) → under investigation → corroborated → trusted`, and the poison
+arm is the same ladder running down. Investigation is a skill; promotion is earned; the Bayesian
+confidence is the math, the state is the workflow. Rookie probation applied to knowledge — one
+philosophy, third application. A universe that can *see* the whole web without *believing* it.
+
+**The MCP corollary:** cloud-provider MCPs as identified sources → provider-specific
+build/deploy/monitor skills that refresh as docs update → one agent identity, adaptive across
+every cloud, the skill shareable to any element of the universe. The product line hiding here:
+*a universe's identity IS its accumulated knowledge, skills, and earned trust postures — and you
+get to build it.*
+
 ## The honest boundaries
 
 - **Verified ≠ true.** The machinery guarantees authorship and integrity, never the truth of an
