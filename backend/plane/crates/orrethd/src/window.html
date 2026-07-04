@@ -377,9 +377,30 @@ function renderOrrery(){
     O.appendChild(wrap);return}
   const ecos=t.children||[], RE=Math.max(120,Math.min(R*.64,230));
   let html=`<div class="anchor" style="left:50%;top:50%">`;
+  if(!ecos.length){
+    /* a leaf console: the world seen from the bottom — YOU, in orbit around your ancestors */
+    const chain=tiers(), apex=chain[0], mid=chain.length>2?chain[1]:null, me=chain[chain.length-1];
+    const per=40, mper=14;
+    const you=`<div class="moon" style="box-shadow:0 0 12px 2px rgba(212,169,96,.55)"></div>
+      <div class="blabel" style="top:10px;color:var(--brass)">${me.split("/").pop()} · ${t.records}m ◂ you</div>`;
+    const inner=mid?`<div class="planet"></div><div class="blabel" style="top:17px">${mid.split("/").pop()}</div>
+      <div class="ring" style="width:68px;height:68px"></div>
+      <div class="orb" style="animation-duration:${mper}s"><div class="sat" style="transform:translate(34px,0)">
+        <div class="cr" style="animation-duration:${mper}s">${you}</div></div></div>`:you;
+    html+=`<div class="sphere"></div>
+      <div class="corelabel">${apex}<span class="sub">the universe above</span></div>
+      <div class="ring" style="width:${2*RE}px;height:${2*RE}px"></div>
+      <div class="orb" style="animation-duration:${per}s">
+        <div class="beam" style="width:${RE-16}px"></div>
+        <div class="sat" style="transform:translate(${RE}px,0)">
+          <div class="cr" style="animation-duration:${per}s">${inner}</div></div></div>`;
+    wrap.innerHTML=html+`</div>
+      <div class="oleaf">the view from the bottom floor — the universe console watches every orbit</div>`;
+    O.appendChild(wrap); return;
+  }
   html+=`<div class="sphere" onmouseenter="oc(event,'${t.scope}',${t.records},${t.runs},${t.agents},${t.usd||0})" onmouseleave="ocOff()"></div>
     <div class="corelabel">${t.scope}<span class="sub">${t.records} memories · the universal record</span></div>`;
-  if(ecos.length){
+  {
     html+=`<div class="ring" style="width:${2*RE}px;height:${2*RE}px"></div>`;
     ecos.forEach((e,i)=>{
       const per=46+i*9, ph=-(i/ecos.length)*per, fields=e.children||[];
@@ -404,9 +425,6 @@ function renderOrrery(){
             <div class="planet" onmouseenter="oc(event,'${e.scope}',${e.records},${e.runs},${e.agents},${e.usd||0})" onmouseleave="ocOff()"></div>
             <div class="blabel" style="top:17px">${e.scope.split("/").pop()}</div>
             ${inner}</div></div></div>`});
-  }else{
-    html+=`</div><div class="oleaf">this floor is a leaf — its whole world is itself<br>
-      open the universe console to watch every orbit</div><div class="anchor">`;
   }
   html+=`</div>`;
   wrap.innerHTML=html; O.appendChild(wrap);

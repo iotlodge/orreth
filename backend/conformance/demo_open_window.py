@@ -81,6 +81,7 @@ def main() -> None:
     print(f"  field console (your biography, all lanes):  {url}\n")
     print(f"  universe console (the whole world in orbit): {uni_url}\n")
     webbrowser.open(url)
+    webbrowser.open(uni_url)     # the turning universe deserves its own tab
     print("drag the brass handle into deep time and watch the tiers light up. 🥂")
 
 
