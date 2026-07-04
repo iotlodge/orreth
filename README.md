@@ -46,9 +46,19 @@ observatory console where every render is a governed, tokened query (no privileg
 demos in `backend/conformance/`: `demo_digital_life.py` (the life outlives the process, the machine
 boundary, and the daemon), `demo_spacetime_window.py` (one query, three tiers), `demo_open_window.py`.
 
-The brand name **Orreth** is locked; **`orreth.ai` registered 2026-07-01**. Next hard domain milestone:
-static `/.well-known/` hosting for real did:web root resolution. Then: the pane grows beyond the first
-glass, pgvector retrieval, and the League (PG-1) — the funnel's Play step.
+**The universe thinks (2026-07-04).** The Model Plane (0016) is live — LiteLLM through the floors,
+plane-held budgets, model lifecycle (no call ever lands on a retired model), first governed call
+metered end to end. The Knowledge Loop (0014) runs: external knowledge admitted quarantined at
+0.0000 through identified sources (did:web:tavily.com was the first), promoted on receipts,
+recalled through the derived_from lineage. And Orreth.agent's chassis (0015) took its first
+governed thought: one immutable loop, parallel nucleus, deterministic 0014 knowledge beside
+metered reasoning, breaker-parks-as-knowledge-intent. CI green on every push (private remote,
+iotlodge/orreth).
+
+The brand name **Orreth** is locked; **`orreth.ai` registered 2026-07-01**. Next: chassis
+maturation (GraphSpec compile, per-cycle RunRecords, the parked→librarian→retry circuit closing
+automatically), the pane growing beyond the first glass (usage + outage-survival views), pgvector
+retrieval, and the League (PG-1) — the funnel's Play step.
 
 ---
 
