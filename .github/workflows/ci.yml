@@ -1,0 +1,33 @@
+# The conformance suite as a gate: every push proves both implementations still agree.
+name: conformance
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  reference:
+    name: python reference (38 tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: install + test
+        working-directory: backend/conformance
+        run: |
+          uv venv
+          uv pip install -e ".[dev]"
+          uv run pytest -q
+
+  plane:
+    name: rust plane (conformance fixtures)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend/plane
+      - name: cargo test
+        working-directory: backend/plane
+        run: cargo test
