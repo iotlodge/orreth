@@ -6,6 +6,8 @@
 #   scripts/dev.sh stop      compose down                     restart = down + up --build
 set -euo pipefail
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+# docker compose needs a WRITABLE temp dir; macOS fallbacks are sometimes root-owned
+export TMPDIR="$HOME/.orreth/tmp"; mkdir -p "$TMPDIR"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CONF="$ROOT/backend/conformance"; COMPOSE="docker compose -f $ROOT/infrastructure/compose.yaml"
 
