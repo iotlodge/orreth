@@ -41,6 +41,18 @@ corroborating independent source mints a new version at `corroborated` (the rece
 math; the state is the workflow). Rookie probation applied to knowledge — the pattern's third
 application. **A universe that can see the whole web without believing it.**
 
+```mermaid
+stateDiagram-v2
+  [*] --> untrusted : admitted quarantined · 0.0000 · ingested-archive
+  untrusted --> investigating : librarian assigns (a skill)
+  investigating --> corroborated : receipts — independent source
+  corroborated --> trusted : validating use (Bayesian confidence)
+  untrusted --> recalled : source discredited
+  corroborated --> recalled : the lineage walk (derived_from)
+  trusted --> recalled
+  note right of recalled : annotate, never rewrite — history intact
+```
+
 ## 4. The recall (the immune system's adaptive arm)
 
 Discredit a source → every entry from it, and every version **derived** from those (the

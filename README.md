@@ -11,6 +11,17 @@ cross-agent, authorized). **Governance is its first application, not its purpose
 > thread; the Universe is both the **foundation** (policy) and the **apex** (all-time memory).
 > *Security first. Trust, but verify — at ecosystem scale.*
 
+```mermaid
+flowchart TD
+  U["UNIVERSE — foundation & apex · all-time memory"]
+  E["ECOSYSTEMS (any number)"]
+  F["FIELDS (any number)"]
+  A["AGENTS — living identities"]
+  U -- "policy cascades DOWN · floors never loosen" --> E --> F --> A
+  A -. "memory rises UP · pruned at every layer" .-> U
+  F -. "retrieval escalates UP · by time-horizon · Sourced + Verified" .-> U
+```
+
 ---
 
 ## Status

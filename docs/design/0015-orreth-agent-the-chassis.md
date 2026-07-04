@@ -6,7 +6,18 @@ changes; Policy, Prompts, Skills, Persona are the profile.*
 
 ## The loop (implemented: `orreth_sim/chassis.py`)
 
-**prepare → plan → NUCLEUS → reflect/critic → replan → … → objective | breaker**
+```mermaid
+flowchart LR
+  I([intent + persona]) --> P[prepare] --> PL[plan]
+  PL --> N{{"NUCLEUS — parallel,<br/>only what the planner asked"}}
+  N --> S["deterministic skill<br/>(0014 knowledge · $0)"]
+  N --> R["reason<br/>(governed model plane · metered)"]
+  S --> C[critic / reflect]
+  R --> C
+  C -- "DONE" --> OK([answer · on the record])
+  C -- "RETRY + feedback" --> PL
+  C -- "breaker" --> PK(["parked → knowledge-intent (0014)<br/>failure is fuel"])
+```
 
 - **Cognition is injected** (`think(class, prompt)`) — the same chassis runs on a stub in tests
   and the governed model plane (0016) in production. The loop never knows which.
