@@ -11,7 +11,10 @@ first application. The dives below are re-ordered around that center. The 6 use-
 > **Design phase complete — 2026-07-02.** All fourteen dives (0000–0013) are drafted, every decision in the
 > ledger is locked, and each close-out landed as contract + enforced simulator code (36/36 tests). The build
 > phase begins per 0000's blessed sequence: the Rust plane (`orrethd`) against the conformance suite, the pane
-> (0008), and the League (PG-1).
+> (0008), and the League (PG-1). **Queued from the build-phase dialogs:** `0014 — the Knowledge
+> Loop` (Knowledge Categories versioned by universe-time · Orreth.agent the librarian · external
+> sources as identities · frozen Datasets · propagation with recall + generation depth — see
+> `../vision/the-knowledge-loop.md`).
 
 ## The dive sequence
 
