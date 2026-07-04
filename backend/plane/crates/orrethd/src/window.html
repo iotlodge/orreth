@@ -75,13 +75,14 @@
   .dust{position:absolute;width:1px;height:1px;border-radius:50%;background:#243258;pointer-events:none}
 
   /* ── the leader: detail surfaces IN PLACE on hover, no modal ── */
-  #leader{position:absolute;pointer-events:none;z-index:6;opacity:0;transition:opacity .12s;
-    transform:translateY(-50%)}
+  #leader{position:absolute;inset:0;pointer-events:none;z-index:6;opacity:0;transition:opacity .12s}
   #leader.on{opacity:1}
-  #leader .line{position:absolute;height:1px;background:var(--brass);top:50%;opacity:.7}
-  #leader .card{background:rgba(11,18,38,.96);border:1px solid var(--brassdim);border-radius:6px;
-    padding:.7rem .9rem;font:.72rem/1.5 var(--mono);min-width:230px;max-width:340px;
-    box-shadow:0 8px 30px rgba(0,0,0,.5)}
+  #leader .line{position:absolute;height:1px;background:var(--brass);opacity:.75}
+  #leader .dotend{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--brass);
+    transform:translate(-50%,-50%)}
+  #leader .card{position:absolute;width:300px;transform:translateY(-50%);
+    background:rgba(11,18,38,.97);border:1px solid var(--brassdim);border-radius:6px;
+    padding:.7rem .9rem;font:.72rem/1.5 var(--mono);box-shadow:0 8px 30px rgba(0,0,0,.55)}
   #leader .card .when{color:var(--star)} #leader .card .k{color:var(--faint)}
   #leader .card .chip{font-size:.64rem;border:1px solid;border-radius:999px;padding:.05em .6em}
   #leader .card .body{color:var(--blue);border-top:1px solid var(--hair);margin-top:.5rem;
@@ -105,7 +106,7 @@
   <div class="rail" id="rail"><h4>the roster</h4><div class="empty">listening…</div></div>
   <div class="sky" id="sky">
     <div class="nowline"><span class="cap">NOW</span></div>
-    <div id="leader"><div class="line"></div><div class="card"></div></div>
+    <div id="leader"><div class="line"></div><div class="dotend"></div><div class="card"></div></div>
   </div>
 </main>
 
@@ -197,26 +198,34 @@ function render(r,from){
     sky.appendChild(n)}
 }
 
-/* the leader: on hover, a line reaches from the star to a card that surfaces IN PLACE */
+/* the leader: a line from the star's EXACT center to a fixed-width card that
+   surfaces in place. Geometry computed in sky-coordinates, so it always touches. */
 async function showLeader(star,h){
   const cls=fclass(h.fidelity), x=parseFloat(star.style.left), y=parseFloat(star.style.top);
-  const right=x>sky.clientWidth*.55;
-  leader.style.top=y+"px"; leader.classList.add("on");
-  leader.querySelector(".card").innerHTML=`
+  const CARD=300, GAP=58, W=sky.clientWidth, right=x>W*.5;
+  const line=leader.querySelector(".line"), card=leader.querySelector(".card"),
+        dot=leader.querySelector(".dotend");
+  card.innerHTML=`
     <div class="when">${h.occurred_at}</div>
     <div style="margin:.35rem 0"><span class="chip" style="color:var(--${cls});border-color:currentColor">${h.fidelity}</span></div>
     <div><span class="k">author </span>${short(h.source)}</div>
     <div><span class="k">scope&nbsp;&nbsp;</span>${h.scope.split("/").pop()}</div>
     <div class="body">reading body…</div>`;
-  const cw=340, lineLen=64;
-  if(right){leader.style.left=(x-lineLen-cw)+"px";
-    leader.querySelector(".line").style.left="auto";
-    leader.querySelector(".line").style.right="0"; leader.querySelector(".line").style.width=lineLen+"px";}
-  else{leader.style.left=(x+lineLen)+"px";
-    leader.querySelector(".line").style.right="auto";
-    leader.querySelector(".line").style.left=(-lineLen)+"px"; leader.querySelector(".line").style.width=lineLen+"px";}
+  card.style.top=y+"px";
+  line.style.top=y+"px"; line.style.height="1px";
+  dot.style.top=y+"px"; dot.style.left=x+"px";           // anchor sits ON the star
+  if(right){                                             // card to the LEFT of the star
+    const left=Math.max(8,x-GAP-CARD);
+    card.style.left=left+"px";
+    line.style.left=(left+CARD)+"px"; line.style.width=(x-(left+CARD))+"px";
+  }else{                                                 // card to the RIGHT
+    const left=Math.min(W-CARD-8,x+GAP);
+    card.style.left=left+"px";
+    line.style.left=x+"px"; line.style.width=(left-x)+"px";
+  }
+  leader.classList.add("on");
   const res=await fetch(`/records/${encodeURIComponent(h.ref)}/body`);
-  const b=leader.querySelector(".body");
+  const b=card.querySelector(".body");
   if(b) b.textContent=res.ok?JSON.stringify(await res.json()):"body at a deeper tier";
 }
 function hideLeader(){leader.classList.remove("on")}
