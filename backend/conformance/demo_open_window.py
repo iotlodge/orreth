@@ -53,6 +53,21 @@ def main() -> None:
     post(FIELD_PORT, make_memory(agent, kp, SCOPE, {"chapter": "yesterday's win"},
                                  occurred_at=ago(0.001)))
 
+    # seed a little LIFE so the roster rail breathes (v3): two steward-signed run records
+    from orreth_sim.identity import NOW as _NOW
+    steward = crypto.KeyPair(); s_did = crypto.did_key_for(steward.public)
+    for i, (oc, sc) in enumerate([("partial", 0.0), ("success", 1.0)]):
+        run = {"id": crypto.content_hash({"c": i, "t": _NOW(), "a": agent["did"]}),
+               "agent": agent["did"], "scope": SCOPE, "goal_hash": "sha256:demo-intent",
+               "occurred_at": _NOW(), "outcome": oc,
+               "scores": [{"objective": "objective-met", "score": sc}],
+               "cost": {"tokens": 55 + i}, "author": s_did}
+        run["sig"] = steward.sign(s_did, {k: run[k] for k in ("id","agent","scope","goal_hash","occurred_at")})
+        req = urllib.request.Request(f"http://127.0.0.1:{FIELD_PORT}/runs", method="POST",
+            data=json.dumps(run).encode(), headers={"Content-Type": "application/json"})
+        try: urllib.request.urlopen(req).read()
+        except Exception: pass
+
     nanda = Nanda()
     root = Becky("u:demo", nanda, universe_name="demo", kp=root_keypair())
     token = root.issue_token(agent["did"], "u:demo",

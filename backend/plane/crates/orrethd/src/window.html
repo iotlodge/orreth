@@ -5,198 +5,226 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Orreth · the Window</title>
 <style>
-  :root{--void:#070B18;--deep:#0B1226;--hair:#243352;--star:#E8EDF7;--dim:#8B98B8;
-    --faint:#4A5578;--brass:#D4A960;--near:#7FD1A8;--blue:#9FB6E8;--red:#E89A8F;
+  :root{--void:#080D1C;--deep:#0B1226;--hair:#1E2B49;--hair2:#2C3B60;
+    --star:#EAEFFA;--dim:#8894B4;--faint:#4B5678;--brass:#D4A960;--brassdim:#8a6f42;
+    --near:#7FD1A8;--blue:#9FB6E8;--red:#E89A8F;
     --mono:ui-monospace,"SF Mono",Menlo,monospace;--serif:Palatino,Georgia,serif}
   *{box-sizing:border-box;margin:0}
   html,body{height:100%;overflow:hidden}
-  body{background:var(--void);color:var(--star);font:14px/1.5 system-ui,sans-serif}
+  body{background:
+      radial-gradient(1200px 600px at 78% -5%,rgba(159,182,232,.06),transparent 60%),
+      var(--void);
+    color:var(--star);font:14px/1.5 system-ui,sans-serif;display:flex;flex-direction:column}
 
-  /* ══ the block — the whole viewport IS the universe ══ */
-  #block{position:fixed;inset:0;cursor:crosshair}
+  /* ── top rail: wordmark · scrubber · health — one thin band ── */
+  header{display:flex;align-items:center;gap:2rem;padding:.9rem 1.4rem;
+    border-bottom:1px solid var(--hair);flex:0 0 auto}
+  .mark{font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.34em;
+    font-size:1rem;color:var(--brass);white-space:nowrap}
+  .mark b{color:var(--star);font-weight:400}
+  .scrub{flex:1;display:flex;align-items:center;gap:1rem;max-width:640px}
+  .scrub .lbl{font:.72rem/1 var(--mono);color:var(--dim);white-space:nowrap}
+  .scrub .lbl b{color:var(--brass);font-size:.9rem}
+  input[type=range]{flex:1;appearance:none;background:transparent}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--hair2)}
+  input[type=range]::-webkit-slider-thumb{appearance:none;width:14px;height:22px;margin-top:-10px;
+    background:var(--brass);border-radius:2px;cursor:ew-resize;
+    box-shadow:0 0 0 1px var(--void),0 0 10px rgba(212,169,96,.5)}
+  .health{font:.74rem/1.35 var(--mono);color:var(--dim);text-align:right;white-space:nowrap}
+  .health b{color:var(--star)} .live::before{content:"●";color:var(--near);margin-right:.4em;
+    animation:breathe 3s infinite} @keyframes breathe{50%{opacity:.3}}
+
+  /* ── the stage: roster rail | the sky ── */
+  main{flex:1;display:grid;grid-template-columns:230px 1fr;min-height:0}
+  .rail{border-right:1px solid var(--hair);overflow-y:auto;padding:.4rem 0}
+  .rail h4{font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.28em;
+    font-size:.72rem;color:var(--faint);padding:.9rem 1.1rem .3rem}
+  .agent{display:flex;align-items:center;gap:.7rem;padding:.5rem 1.1rem;cursor:default;
+    border-left:2px solid transparent}
+  .agent:hover{background:rgba(159,182,232,.05);border-left-color:var(--brassdim)}
+  .orb{width:11px;height:11px;border-radius:50%;flex:0 0 auto;position:relative}
+  .orb.thinking{background:var(--near);box-shadow:0 0 0 0 rgba(127,209,168,.5);
+    animation:pulse 1.8s infinite}
+  .orb.idle{background:var(--faint)}
+  .orb.dormant{background:transparent;border:1px solid var(--faint)}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(127,209,168,.5)}
+    70%{box-shadow:0 0 0 7px rgba(127,209,168,0)}100%{box-shadow:0 0 0 0 rgba(127,209,168,0)}}
+  @media (prefers-reduced-motion:reduce){.orb.thinking{animation:none}}
+  .who{min-width:0} .who .id{font:.72rem/1.2 var(--mono);color:var(--star);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .who .sub{font:.66rem/1.3 var(--mono);color:var(--faint)}
+  .rail .empty{padding:1rem 1.1rem;font-size:.75rem;color:var(--faint)}
+
+  .sky{position:relative;overflow:hidden}
   .band{position:absolute;left:0;right:0;border-top:1px solid var(--hair)}
-  .band-label{position:absolute;left:1.2rem;top:.6rem;font-family:var(--serif);
-    font-variant-caps:small-caps;letter-spacing:.35em;font-size:.78rem;color:var(--faint);
-    pointer-events:none}
-  .band.apex{background:linear-gradient(90deg,rgba(159,182,232,.10),rgba(159,182,232,.02) 60%)}
-  .band.mid{background:linear-gradient(90deg,rgba(159,182,232,.05),transparent 55%)}
-  #nowline{position:absolute;top:0;bottom:0;right:3.5rem;width:1px;
-    background:linear-gradient(var(--brass),transparent 85%);opacity:.6}
-  #nowline::after{content:"NOW";position:absolute;top:50%;right:-2.6rem;
-    font:700 .7rem var(--mono);color:var(--brass);letter-spacing:.15em}
+  .band .name{position:absolute;left:1rem;top:.5rem;font-family:var(--serif);
+    font-variant-caps:small-caps;letter-spacing:.3em;font-size:.74rem;color:var(--faint)}
+  .band.apex{background:linear-gradient(90deg,rgba(159,182,232,.07),transparent 65%)}
+  .nowline{position:absolute;top:0;bottom:0;right:0;width:1px;
+    background:linear-gradient(var(--brass),transparent 92%);opacity:.5}
+  .nowline .cap{position:absolute;top:.4rem;right:.5rem;font:700 .66rem var(--mono);
+    color:var(--brass);letter-spacing:.15em}
 
   .star{position:absolute;border-radius:50%;transform:translate(-50%,-50%);cursor:pointer;
-    transition:transform .18s ease}
-  .star:hover{transform:translate(-50%,-50%) scale(2.2)}
-  .star.near{background:var(--near);box-shadow:0 0 10px 2px rgba(127,209,168,.55)}
-  .star.blue{background:var(--blue);box-shadow:0 0 10px 2px rgba(159,182,232,.55)}
-  .star.red{background:var(--red);box-shadow:0 0 10px 2px rgba(232,154,143,.55)}
+    transition:transform .15s;animation:arrive .5s ease both}
+  .star:hover{transform:translate(-50%,-50%) scale(1.9);z-index:4}
+  .star.near{background:var(--near);box-shadow:0 0 9px 1px rgba(127,209,168,.5)}
+  .star.blue{background:var(--blue);box-shadow:0 0 9px 1px rgba(159,182,232,.5)}
+  .star.red{background:var(--red);box-shadow:0 0 9px 1px rgba(232,154,143,.5)}
   @keyframes arrive{from{opacity:0;transform:translate(-50%,-50%) scale(3)}to{opacity:1}}
-  .star{animation:arrive .5s ease both}
-  @media (prefers-reduced-motion:reduce){.star{animation:none}}
+  .dust{position:absolute;width:1px;height:1px;border-radius:50%;background:#243258;pointer-events:none}
 
-  /* ambient dust */
-  .dust{position:absolute;width:1px;height:1px;border-radius:50%;background:#2A3A60;
-    pointer-events:none}
-
-  /* ══ floating HUD — corners, zero chrome ══ */
-  .hud{position:fixed;font-family:var(--mono);z-index:5}
-  #hud-mark{top:1.1rem;left:1.3rem;font-family:var(--serif);font-variant-caps:small-caps;
-    letter-spacing:.4em;font-size:1rem;color:var(--brass)}
-  #hud-mark b{color:var(--star);font-weight:400}
-  #hud-station{top:2.9rem;left:1.35rem;font-size:.72rem;color:var(--dim)}
-  #hud-health{top:1.2rem;right:1.4rem;font-size:.74rem;color:var(--dim);text-align:right}
-  #hud-health b{color:var(--star)}
-  .live::before{content:"●";color:var(--near);margin-right:.4em;animation:breathe 3s infinite}
-  @keyframes breathe{50%{opacity:.3}}
-  #hud-chain{bottom:1.2rem;right:1.4rem;font-size:.72rem;display:flex;gap:.4rem;align-items:center}
-  .bead{border:1px solid var(--hair);border-radius:999px;padding:.15em .8em;color:var(--faint)}
-  .bead.lit{color:var(--star);border-color:var(--brass)}
-  #hud-scrub{bottom:1.1rem;left:1.3rem;width:min(42vw,460px)}
-  #hud-scrub .lbl{font-size:.72rem;color:var(--dim);margin-bottom:.3rem}
-  #hud-scrub .lbl b{color:var(--brass);font-size:.9rem}
-  input[type=range]{width:100%;appearance:none;background:transparent}
-  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--hair)}
-  input[type=range]::-webkit-slider-thumb{appearance:none;width:15px;height:24px;margin-top:-11px;
-    background:var(--brass);border-radius:2px;cursor:ew-resize;
-    box-shadow:0 0 0 1px var(--void),0 0 12px rgba(212,169,96,.6)}
-  #remnote{position:fixed;bottom:4.2rem;left:1.35rem;font:italic .72rem var(--mono);
-    color:var(--red);opacity:.85;z-index:5}
-
-  /* ══ the glass — detail slides over the void ══ */
-  #glass{position:fixed;top:0;right:0;bottom:0;width:min(480px,92vw);z-index:9;
-    background:linear-gradient(105deg,rgba(13,20,40,.92),rgba(9,14,30,.97));
-    border-left:1px solid var(--brass);backdrop-filter:blur(6px);
-    transform:translateX(102%);transition:transform .28s ease;padding:2rem 1.8rem;
-    font-family:var(--mono);font-size:.8rem;overflow-y:auto}
-  #glass.open{transform:none}
-  #glass .t{color:var(--star);font-size:.95rem;margin-bottom:1rem}
-  #glass .k{color:var(--faint)} #glass .row{margin:.55rem 0;overflow-wrap:anywhere}
-  #glass pre{color:var(--blue);white-space:pre-wrap;border-top:1px solid var(--hair);
-    margin-top:1rem;padding-top:1rem}
-  #glass .chip{font-size:.68rem;border:1px solid;border-radius:999px;padding:.1em .7em}
-  #glass .close{position:absolute;top:1rem;right:1.2rem;color:var(--faint);cursor:pointer;
-    font-size:1.1rem}
+  /* ── the leader: detail surfaces IN PLACE on hover, no modal ── */
+  #leader{position:absolute;pointer-events:none;z-index:6;opacity:0;transition:opacity .12s;
+    transform:translateY(-50%)}
+  #leader.on{opacity:1}
+  #leader .line{position:absolute;height:1px;background:var(--brass);top:50%;opacity:.7}
+  #leader .card{background:rgba(11,18,38,.96);border:1px solid var(--brassdim);border-radius:6px;
+    padding:.7rem .9rem;font:.72rem/1.5 var(--mono);min-width:230px;max-width:340px;
+    box-shadow:0 8px 30px rgba(0,0,0,.5)}
+  #leader .card .when{color:var(--star)} #leader .card .k{color:var(--faint)}
+  #leader .card .chip{font-size:.64rem;border:1px solid;border-radius:999px;padding:.05em .6em}
+  #leader .card .body{color:var(--blue);border-top:1px solid var(--hair);margin-top:.5rem;
+    padding-top:.5rem;overflow-wrap:anywhere;max-height:8rem;overflow:hidden}
+  .remnote{position:absolute;bottom:.7rem;left:1rem;font:italic .72rem var(--mono);color:var(--red);opacity:.85}
   .quiet{color:var(--faint)}
 </style>
 </head>
 <body>
-<div id="block"></div>
-<div id="nowline"></div>
+<header>
+  <div class="mark">orreth · <b>the window</b></div>
+  <div class="scrub">
+    <span class="lbl">window <b id="days">—</b> days</span>
+    <input type="range" id="scrub" min="1" max="100" value="60" aria-label="window depth">
+    <span class="lbl" id="count">—</span>
+  </div>
+  <div class="health" id="health"><span class="quiet">reaching the daemon…</span></div>
+</header>
 
-<div class="hud" id="hud-mark">orreth · <b>the window</b></div>
-<div class="hud" id="hud-station">station —</div>
-<div class="hud" id="hud-health"><span class="quiet">reaching the daemon…</span></div>
-<div class="hud" id="hud-chain"></div>
-<div class="hud" id="hud-scrub">
-  <div class="lbl">window&nbsp;<b id="days">—</b>&nbsp;days into the past · <span id="count">—</span></div>
-  <input type="range" id="scrub" min="1" max="100" value="62" aria-label="window depth">
-</div>
-<div id="remnote" hidden></div>
-
-<aside id="glass"><span class="close" onclick="glass.classList.remove('open')">✕</span>
-  <div id="glass-body"><span class="quiet">select a memory…</span></div></aside>
+<main>
+  <div class="rail" id="rail"><h4>the roster</h4><div class="empty">listening…</div></div>
+  <div class="sky" id="sky">
+    <div class="nowline"><span class="cap">NOW</span></div>
+    <div id="leader"><div class="line"></div><div class="card"></div></div>
+  </div>
+</main>
 
 <script>
 "use strict";
 /* the pane is a client of the retrieval contract — no privileged path (0008).
-   v2: immersive — the viewport IS the block; tiers are bands of sky; memories are stars. */
+   v3: legible composition · roster rail (the LIFE layer) · memory sky · hover-leader detail. */
 const cfg=(()=>{try{return JSON.parse(atob(location.hash.slice(3)))}catch{return null}})();
 const $=id=>document.getElementById(id);
-const glass=$("glass");
 const DAY=864e5, iso=d=>d.toISOString().replace(/\.\d+Z$/,"Z");
 const scrubToDays=v=>Math.round(Math.exp(Math.log(730)*v/100));
 const fclass=f=>f==="verified"?"near":f==="distilled"?"blue":"red";
-const tierOf=s=>Math.min((s.match(/\//g)||[]).length,2);   // 0 apex · 1 eco · 2 field
+const short=d=>d.replace(/^did:key:z/,"").slice(0,10)+"…";
+const sky=$("sky"), leader=$("leader");
+const tiers=()=>cfg?.tiers?[...cfg.tiers].reverse():["u:demo","u:demo/e:cloud","u:demo/e:cloud/f:prod"];
 
-const block=$("block");
-function bands(){
-  const tiers=cfg?.tiers?[...cfg.tiers].reverse():["u:demo","u:demo/e:cloud","u:demo/e:cloud/f:prod"];
-  const h=window.innerHeight, top=0.14*h, usable=h-top-90;
-  block.innerHTML="";
-  tiers.forEach((t,i)=>{
+let bandGeo=[];
+function layout(){
+  sky.querySelectorAll(".band,.dust").forEach(e=>e.remove());
+  const T=tiers(), H=sky.clientHeight, top=6, usable=H-12, bh=usable/T.length;
+  bandGeo=[];
+  T.forEach((t,i)=>{
     const b=document.createElement("div");
-    b.className="band "+(i===0?"apex":i===tiers.length-1?"":"mid");
-    b.style.top=(top+usable*i/tiers.length)+"px"; b.style.height=(usable/tiers.length)+"px";
-    b.innerHTML=`<span class="band-label">${t}</span>`;
-    block.appendChild(b);
+    b.className="band"+(i===0?" apex":"");
+    b.style.top=(top+bh*i)+"px"; b.style.height=bh+"px";
+    b.innerHTML=`<span class="name">${t.split("/").pop()}</span>`;
+    sky.insertBefore(b,sky.firstChild);
+    bandGeo[i]={top:top+bh*i,h:bh,scope:t};
   });
-  for(let i=0;i<70;i++){const d=document.createElement("div");d.className="dust";
+  for(let i=0;i<50;i++){const d=document.createElement("div");d.className="dust";
     d.style.left=Math.random()*100+"%";d.style.top=Math.random()*100+"%";
-    d.style.opacity=.3+Math.random()*.5;block.appendChild(d)}
-  return {top,usable,n:tiers.length};
+    d.style.opacity=.3+Math.random()*.4;sky.appendChild(d)}
 }
+const bandFor=scope=>{const T=tiers();let i=T.indexOf(scope);
+  if(i<0)i=Math.min((scope.match(/\//g)||[]).length,T.length-1);return bandGeo[i]||bandGeo[bandGeo.length-1]}
 
 async function health(){
-  try{const h=await (await fetch("/health")).json();
-    $("hud-station").textContent=`station ${h.scope}`;
-    $("hud-health").innerHTML=`<span class="live">live</span> records <b>${h.records}</b>`+
-      `<br>high-water <b>${h.high_water??"—"}</b>`;
-  }catch{$("hud-health").innerHTML=`<span style="color:var(--red)">daemon dark</span>`}
+  try{const h=await(await fetch("/health")).json();
+    $("health").innerHTML=`<span class="live">live</span> · ${h.scope}<br>`+
+      `records <b>${h.records}</b> · high-water <b>${(h.high_water||"—").slice(0,10)}</b>`;
+  }catch{$("health").innerHTML=`<span style="color:var(--red)">daemon dark</span>`}
+}
+
+async function roster(){
+  try{
+    const p=await(await fetch("/presence")).json();
+    const r=$("rail"); r.innerHTML=`<h4>the roster · ${p.roster.length}</h4>`;
+    if(!p.roster.length){r.innerHTML+=`<div class="empty">no agents have acted yet — a quiet field</div>`;return}
+    for(const a of p.roster.sort((x,y)=>y.last_seen.localeCompare(x.last_seen))){
+      const rate=a.runs?Math.round(100*a.success/a.runs):0;
+      const el=document.createElement("div"); el.className="agent";
+      el.innerHTML=`<span class="orb ${a.state}"></span>
+        <span class="who"><span class="id">${short(a.agent)}</span>
+        <span class="sub">${a.runs} run${a.runs===1?"":"s"} · ${rate}% · ${a.tokens} tok</span></span>`;
+      r.appendChild(el);
+    }
+  }catch{}
 }
 
 let seq=0;
 async function scrub(){
   const days=scrubToDays(+$("scrub").value); $("days").textContent=days;
-  if(!cfg)return;
-  const from=new Date(Date.now()-days*DAY), mine=++seq;
+  if(!cfg)return; const from=new Date(Date.now()-days*DAY), mine=++seq;
   const res=await fetch("/retrieve",{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({query:{requester:cfg.requester,subject:"self",space:"self",
       time:{from:iso(from)},intent:"recall",budget:{cost:4},auth:"biscuit-sim"},
       token:cfg.token,requester_scope:cfg.requester_scope})});
   if(mine!==seq)return;
-  if(!res.ok){$("count").textContent="capability refused — the window stays dark";return}
-  const r=await res.json();
-  render(r,from,days);
+  layout();
+  if(!res.ok){$("count").textContent="capability refused";return}
+  const r=await res.json(); render(r,from);
 }
 
-function render(r,from,days){
-  const geo=bands();
-  const span=Date.now()-from.getTime();
-  const W=window.innerWidth-56, tiers=cfg?.tiers?[...cfg.tiers].reverse():[];
+function render(r,from){
+  sky.querySelectorAll(".star,.remnote").forEach(e=>e.remove());
+  const span=Date.now()-from.getTime(), W=sky.clientWidth;
   for(const h of r.hits){
-    const s=document.createElement("div");
-    const age=(new Date(h.occurred_at)-from.getTime())/span;
-    const ti=tiers.length?Math.max(0,tiers.indexOf(h.scope)):tierOf(h.scope);
-    const band=(ti<0?geo.n-1:ti);
-    s.className="star "+fclass(h.fidelity);
-    const sz=5+3*age;                        /* nearer light is larger */
-    s.style.width=s.style.height=sz+"px";
-    s.style.left=Math.max(8,Math.min(W,W*age))+"px";
-    s.style.top=(geo.top+geo.usable*(band+.25+Math.random()*.5)/geo.n)+"px";
-    s.title=`${h.occurred_at} · ${h.fidelity}`;
-    s.onclick=()=>open_glass(h);
-    block.appendChild(s);
+    const age=(new Date(h.occurred_at)-from.getTime())/span, g=bandFor(h.scope);
+    const s=document.createElement("div"); s.className="star "+fclass(h.fidelity);
+    const sz=5+3*Math.max(0,age); s.style.width=s.style.height=sz+"px";
+    s.style.left=Math.max(10,Math.min(W-6,W*age))+"px";
+    s.style.top=(g.top+g.h*(.32+Math.random()*.42))+"px";
+    s.onmouseenter=()=>showLeader(s,h); s.onmouseleave=hideLeader;
+    sky.appendChild(s);
   }
   $("count").textContent=`${r.hits.length} memor${r.hits.length===1?"y":"ies"} · ${r.verification}`;
-  const rem=$("remnote");
-  if(r.remainder){rem.hidden=false;
-    rem.textContent=`before ${r.remainder.not_served.from.slice(0,10)}: un-served — this lease does not reach deeper`}
-  else rem.hidden=true;
-  const served=r.provenance.served_by;
-  $("hud-chain").innerHTML=(cfg?.tiers??[]).map(t=>
-    `<span class="bead${served.includes(t)?" lit":""}">${t.split("/").pop()}</span>`).join("");
+  if(r.remainder){const n=document.createElement("div"); n.className="remnote";
+    n.textContent=`before ${r.remainder.not_served.from.slice(0,10)}: un-served — this lease reaches no deeper`;
+    sky.appendChild(n)}
 }
 
-async function open_glass(h){
-  const cls=fclass(h.fidelity);
-  $("glass-body").innerHTML=`<div class="t">${h.occurred_at}</div>
-    <div class="row"><span class="chip ${cls}" style="color:var(--${cls==='near'?'near':cls==='blue'?'blue':'red'});border-color:currentColor">${h.fidelity}</span></div>
-    <div class="row"><span class="k">ref&nbsp;&nbsp;&nbsp;&nbsp;</span>${h.ref}</div>
-    <div class="row"><span class="k">author&nbsp;</span>${h.source}</div>
-    <div class="row"><span class="k">scope&nbsp;&nbsp;</span>${h.scope}</div>
-    <pre>fetching body — verified against its own address…</pre>`;
-  glass.classList.add("open");
+/* the leader: on hover, a line reaches from the star to a card that surfaces IN PLACE */
+async function showLeader(star,h){
+  const cls=fclass(h.fidelity), x=parseFloat(star.style.left), y=parseFloat(star.style.top);
+  const right=x>sky.clientWidth*.55;
+  leader.style.top=y+"px"; leader.classList.add("on");
+  leader.querySelector(".card").innerHTML=`
+    <div class="when">${h.occurred_at}</div>
+    <div style="margin:.35rem 0"><span class="chip" style="color:var(--${cls});border-color:currentColor">${h.fidelity}</span></div>
+    <div><span class="k">author </span>${short(h.source)}</div>
+    <div><span class="k">scope&nbsp;&nbsp;</span>${h.scope.split("/").pop()}</div>
+    <div class="body">reading body…</div>`;
+  const cw=340, lineLen=64;
+  if(right){leader.style.left=(x-lineLen-cw)+"px";
+    leader.querySelector(".line").style.left="auto";
+    leader.querySelector(".line").style.right="0"; leader.querySelector(".line").style.width=lineLen+"px";}
+  else{leader.style.left=(x+lineLen)+"px";
+    leader.querySelector(".line").style.right="auto";
+    leader.querySelector(".line").style.left=(-lineLen)+"px"; leader.querySelector(".line").style.width=lineLen+"px";}
   const res=await fetch(`/records/${encodeURIComponent(h.ref)}/body`);
-  glass.querySelector("pre").textContent=res.ok?
-    JSON.stringify(await res.json(),null,2):
-    "body not held at this tier (a deeper tier answered this hit)";
+  const b=leader.querySelector(".body");
+  if(b) b.textContent=res.ok?JSON.stringify(await res.json()):"body at a deeper tier";
 }
+function hideLeader(){leader.classList.remove("on")}
 
 $("scrub").addEventListener("input",scrub);
 window.addEventListener("resize",scrub);
-setInterval(health,5000); setInterval(scrub,20000);   /* the view is ALIVE — it re-observes */
-health().then(scrub);
+setInterval(()=>{health();roster()},4000);         /* the view is alive — the roster breathes */
+health(); roster(); scrub();
 </script>
 </body>
 </html>
