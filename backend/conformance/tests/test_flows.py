@@ -698,3 +698,43 @@ def test_recall_walks_the_lineage(world):
     states = {c["state"] for c in cat.current()}
     assert states == {"recalled"}                                # nothing from that source survives
     assert bad in world.field_prod.records and derived in world.field_prod.records  # history intact
+
+
+# ---------------------------------------------------------------- 0015: the chassis
+def test_chassis_plans_observes_in_parallel_and_answers(world):
+    """One fixed loop: injected cognition, deterministic skill + reason side by side."""
+    from orreth_sim.chassis import Chassis
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    surf = join_workforce(world.field_prod, b_prod)
+    calls, hits = [], []
+    def think(_klass, prompt):
+        calls.append(prompt)
+        if "Plan the MINIMUM" in prompt:
+            return "OBSERVE lookup: heat pump limits\nOBSERVE reason: glazing tradeoffs"
+        if "Answer concisely" in prompt:
+            return "triple glazing wins below -20C"
+        return "DONE: build tight, glaze triple, pump to -25C."
+    agent = Chassis(surf, think, persona="You are a terse cold-climate architect.",
+                    skills={"lookup": lambda q: hits.append(q) or "COP<2 below -25C (kb)"})
+    out = agent.run("cold-climate envelope strategy")
+    assert out["status"] == "done" and out["cycles"] == 1
+    assert hits == ["heat pump limits"]                 # the deterministic half ran, free
+    assert len(agent.trace) == 1 and agent.trace[0]["observations"] == 2
+
+
+def test_chassis_breaker_parks_as_knowledge_intent(world):
+    """Failure is fuel: the breaker hands the unsolved objective to 0014."""
+    from orreth_sim.chassis import Chassis
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    surf = join_workforce(world.field_prod, b_prod)
+    def stubborn(_klass, prompt):
+        if "Plan the MINIMUM" in prompt:
+            return "OBSERVE reason: anything"
+        if "Answer concisely" in prompt:
+            return "unclear"
+        return "RETRY: needs data we do not hold"
+    agent = Chassis(surf, stubborn, max_cycles=2)
+    out = agent.run("predict next season's champion")
+    assert out["status"] == "parked"
+    parked = world.field_prod.records[out["record"]]
+    assert "knowledge-intent" in parked["tags"]         # the handoff to the librarian
