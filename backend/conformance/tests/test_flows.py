@@ -738,3 +738,29 @@ def test_chassis_breaker_parks_as_knowledge_intent(world):
     assert out["status"] == "parked"
     parked = world.field_prod.records[out["record"]]
     assert "knowledge-intent" in parked["tags"]         # the handoff to the librarian
+
+
+def test_failure_is_fuel_the_circuit_closes(world):
+    """0014 ∘ 0015: park → librarian gathers → retry succeeds on commissioned knowledge."""
+    from orreth_sim.chassis import Chassis
+    from orreth_sim.librarian import parked_intents, tend
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    surf = join_workforce(world.field_prod, b_prod)
+    def ignorant(_k, p):
+        if "Plan the MINIMUM" in p: return "OBSERVE reason: guess"
+        if "Answer concisely" in p: return "unknown"
+        return "RETRY: no data on frost-depth foundations"
+    out = Chassis(surf, ignorant, max_cycles=1).run("frost-depth foundation spec")
+    assert out["status"] == "parked"
+    cats = tend(world.field_prod, gather=lambda intent: [
+        {"claim": "frost line in Leadville: 48in; footings below it", "source_did": "did:web:codes.example"},
+        {"claim": "IRC R403.1.4.1 requires footings below frost line", "source_did": "did:web:irc.example"}])
+    assert len(cats) == 1 and not parked_intents(world.field_prod)   # lot swept, receipted
+    kb = cats[0]
+    def informed(_k, p):
+        if "Plan the MINIMUM" in p: return "OBSERVE lookup: frost depth"
+        return "DONE: footings at 48in+, per corroborated code refs."
+    out2 = Chassis(surf, informed,
+                   skills={"lookup": lambda q: " | ".join(c["claim"] for c in kb.current())}
+                   ).run("frost-depth foundation spec")
+    assert out2["status"] == "done"                                   # the failure fed the success
