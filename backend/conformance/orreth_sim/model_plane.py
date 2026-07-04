@@ -107,3 +107,45 @@ class LiveGateway:
         }
         self.call_log.append(meter)                             # rolls up via RunRecords (0005)
         return {"text": resp.choices[0].message.content, **meter}
+
+
+class PlaneClient:
+    """Cognition's side of the split (0016 §6): the plane authorizes and meters;
+    we execute. Budgets live in the daemon's ledger now — not in our honor."""
+
+    def __init__(self, base: str, token: dict):
+        self.base, self.token = base, token
+
+    def _post(self, path: str, payload: dict) -> tuple[int, dict]:
+        import json as _json
+        import urllib.request
+        from urllib.error import HTTPError
+        req = urllib.request.Request(self.base + path, method="POST",
+                                     data=_json.dumps(payload).encode(),
+                                     headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req) as r:
+                return r.status, _json.loads(r.read())
+        except HTTPError as e:
+            return e.code, _json.loads(e.read() or b"{}")
+
+    def call(self, klass: str, messages: list[dict], *, max_tokens: int = 300) -> dict:
+        est = max_tokens + sum(len(m.get("content", "")) // 3 for m in messages)
+        status, grant = self._post("/model/authorize",
+                                   {"token": self.token, "class": klass, "est_tokens": est})
+        if status != 200:
+            raise BudgetExceeded(grant.get("error", f"authorize refused ({status})"))
+        import litellm
+        resp = litellm.completion(model=grant["model"], messages=messages,
+                                  max_tokens=max_tokens)
+        tokens = resp.usage.total_tokens
+        try:
+            usd = litellm.completion_cost(completion_response=resp)
+        except Exception:
+            usd = 0.0
+        _, meter = self._post("/model/meter", {
+            "subject": grant["subject"], "est_tokens": est, "tokens": tokens,
+            "usd": round(usd, 6), "model": grant["model"], "class": klass})
+        return {"text": resp.choices[0].message.content, "model": grant["model"],
+                "class": klass, "tokens": tokens, "usd": round(usd, 6),
+                "remaining": meter.get("remaining")}

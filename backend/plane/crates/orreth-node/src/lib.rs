@@ -240,7 +240,7 @@ impl Universe {
         Ok(result)
     }
 
-    fn verify_token(&self, token: &Value) -> Result<(), Refusal> {
+    pub fn verify_token(&self, token: &Value) -> Result<(), Refusal> {
         if token["constraints"]["expiry"].as_str().unwrap_or("") < self.now.as_str() {
             return Err(Refusal);
         }

@@ -18,10 +18,13 @@ use serde_json::{json, Value};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex};
 
+mod model;
 mod pg;
 
 struct App {
     universe: Mutex<Universe>,
+    /// the plane authorizes and meters; cognition executes (0016 §6)
+    model: Mutex<model::ModelPlane>,
     /// PUSH up / PULL down (0000 §1): a child knows its parent; a parent never reaches in.
     parent: Option<String>,
     horizon_days: f64,
@@ -149,8 +152,11 @@ async fn main() {
                  universe.nodes[0].high_water);
     }
 
+    let model_plane = model::ModelPlane::from_file(
+        &arg("--models").unwrap_or_else(|| "profiles/model-registry.json".into()));
     let app = Arc::new(App {
         universe: Mutex::new(universe),
+        model: Mutex::new(model_plane),
         parent,
         horizon_days: dur_days(horizon),
         pg: pg_store,
@@ -163,6 +169,10 @@ async fn main() {
         .route("/retrieve", post(egress))
         .route("/standards", get(standards))
         .route("/window", get(window))
+        .route("/model/authorize", post(model_authorize))
+        .route("/model/meter", post(model_meter))
+        .route("/model/usage", get(model_usage))
+        .route("/model/state", post(model_state))
         .with_state(app);
 
     let bind = arg("--bind").unwrap_or_else(|| "127.0.0.1".to_string()); // 0.0.0.0 in containers
@@ -327,4 +337,80 @@ fn merge_results(local: Value, upstream: Value) -> Value {
         out["remainder"] = rem.clone();
     }
     out
+}
+
+// ---------------------------------------------------------------- the model plane (0016)
+
+async fn model_authorize(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let token = &req["token"];
+        {
+            let u = app.universe.lock().unwrap();
+            if u.verify_token(token).is_err() {
+                return (StatusCode::FORBIDDEN,
+                        Json(json!({"error": "request cannot be served under this capability"})));
+            }
+        }
+        let subject = token["subject"].as_str().unwrap_or("").to_string();
+        let budget = token["constraints"]["budget"]["tokens"].as_i64().unwrap_or(0);
+        let class = req["class"].as_str().unwrap_or("").to_string();
+        let est = req["est_tokens"].as_i64().unwrap_or(0);
+        let mut m = app.model.lock().unwrap();
+        match m.resolve(&class) {
+            model::Resolved::Model { model, deprecated } => {
+                match m.debit(&subject, budget, est) {
+                    Ok(remaining) => (StatusCode::OK, Json(json!({
+                        "model": model, "deprecated": deprecated,
+                        "subject": subject, "est_tokens": est, "remaining": remaining }))),
+                    Err(()) => (StatusCode::FORBIDDEN,
+                        Json(json!({"error": "request cannot be served under this capability"}))),
+                }
+            }
+            model::Resolved::Miss => {
+                if let Some(parent) = &app.parent {
+                    // the model-miss climbs, like retrieval (0016 §1)
+                    match ureq::post(&format!("{parent}/model/authorize")).send_json(&req) {
+                        Ok(resp) => (StatusCode::OK,
+                                     Json(resp.into_json().unwrap_or_else(|_| json!({})))),
+                        Err(_) => (StatusCode::SERVICE_UNAVAILABLE,
+                                   Json(json!({"error": "class has no living model at any tier"}))),
+                    }
+                } else {
+                    (StatusCode::SERVICE_UNAVAILABLE,
+                     Json(json!({"error": "class has no living model at any tier"})))
+                }
+            }
+        }
+    })
+    .await
+    .unwrap()
+}
+
+async fn model_meter(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let mut m = app.model.lock().unwrap();
+        let subject = req["subject"].as_str().unwrap_or("").to_string();
+        let remaining = m.reconcile(&subject,
+                                    req["est_tokens"].as_i64().unwrap_or(0),
+                                    req["tokens"].as_i64().unwrap_or(0));
+        let mut entry = req.clone();
+        entry["at"] = json!(now_iso());
+        m.meter_log.push(entry);          // the roll-up's raw material — usage rises
+        (StatusCode::OK, Json(json!({"remaining": remaining})))
+    })
+    .await
+    .unwrap()
+}
+
+async fn model_usage(State(app): State<Arc<App>>) -> Json<Value> {
+    Json(app.model.lock().unwrap().usage())
+}
+
+/// Dev-only lifecycle flip; becomes a governed escalation (0012 lanes) before any
+/// multi-tenant deployment — flipping a model's state is a consequential act.
+async fn model_state(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    let ok = app.model.lock().unwrap().set_state(
+        req["model"].as_str().unwrap_or(""), req["state"].as_str().unwrap_or(""));
+    (if ok { StatusCode::OK } else { StatusCode::BAD_REQUEST },
+     Json(json!({"ok": ok})))
 }

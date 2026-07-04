@@ -1,0 +1,34 @@
+{
+  "low": [
+    {
+      "model": "anthropic/claude-haiku-4-5-20251001",
+      "state": "available"
+    },
+    {
+      "model": "openai/gpt-4o-mini",
+      "state": "available"
+    }
+  ],
+  "medium": [
+    {
+      "model": "anthropic/claude-sonnet-4-6",
+      "state": "available"
+    },
+    {
+      "model": "openai/gpt-4o",
+      "state": "available"
+    }
+  ],
+  "high": [
+    {
+      "model": "anthropic/claude-opus-4-8",
+      "state": "available"
+    }
+  ],
+  "xhigh": [
+    {
+      "model": "anthropic/claude-fable-5",
+      "state": "available"
+    }
+  ]
+}
