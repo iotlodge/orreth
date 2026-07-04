@@ -14,7 +14,11 @@ first application. The dives below are re-ordered around that center. The 6 use-
 > (0008), and the League (PG-1). **Queued from the build-phase dialogs:** `0014 — the Knowledge
 > Loop` (Knowledge Categories versioned by universe-time · Orreth.agent the librarian · external
 > sources as identities · frozen Datasets · propagation with recall + generation depth — see
-> `../vision/the-knowledge-loop.md`).
+> `../vision/the-knowledge-loop.md`) and `0015 — Orreth.agent, the chassis` (one fixed
+> GraphSpec-authored loop — prepare · plan · parallel nucleus · reflect/critic · replan ·
+> breaker — behavior as a profile: Policy, Prompts, Skills, Persona; the parking lot that turns
+> failure into knowledge-acquisition intents; Master+swarm as teacher-auditor with a measured
+> gap — see `../vision/orreth-agent-the-chassis.md`).
 
 ## The dive sequence
 

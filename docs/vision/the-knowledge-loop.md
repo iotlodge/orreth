@@ -36,10 +36,11 @@ a market: **model cards with a chain of custody, generated as a side effect.**
 1. **The Knowledge Category** — a first-class, versioned-by-universe-time corpus built around an
    intent ("cold-weather architecture strategies"). Timestamps are knowledge versions: *what did
    we know about X, as of T.* A materialized, curated view over memory with a goal attached.
-2. **Orreth.agent — the librarian archetype.** The core agent whose intent is the goal it was
-   given and whose skill is building and tending Knowledge Categories from external feeds,
-   forever. The Second Brain's engine and the enterprise research organ — one archetype, two
-   markets.
+2. **The knowledge-acquisition organ** *(reframed per JB's Topic-2 correction: this is
+   becky-shaped — agent AND infrastructure, not a mere archetype)*: builds and tends Knowledge
+   Categories from external feeds, forever — deterministic retrieval when an agent asks, LLM
+   synthesis when a human asks, the core optimizing between modes. The Second Brain's engine and
+   the enterprise research organ. Full treatment: `orreth-agent-the-chassis.md` + dive 0015.
 3. **External sources as identities.** Feeds get DIDs and trust postures (a source registry:
    NOAA, arXiv, vendor APIs). Provenance of the outside world — without it, "verified" stops at
    our walls.
