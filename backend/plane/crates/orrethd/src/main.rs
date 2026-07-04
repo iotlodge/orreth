@@ -30,6 +30,9 @@ struct App {
     horizon_days: f64,
     /// Write-through persistence: the daemon may die; the records don't.
     pg: Option<pg::PgRecords>,
+    /// Human requests: asks + HITL. Unsigned intents (inputs, not memories);
+    /// cognition executes them with authority and the results become signed memories.
+    requests: Mutex<Vec<Value>>,
 }
 
 /// "%Y-%m-%dT%H:%M:%SZ" from the system clock (civil-from-days; no chrono).
@@ -161,6 +164,7 @@ async fn main() {
         parent,
         horizon_days: dur_days(horizon),
         pg: pg_store,
+        requests: Mutex::new(Vec::new()),
     });
 
     let router = Router::new()
@@ -176,6 +180,10 @@ async fn main() {
         .route("/model/state", post(model_state))
         .route("/runs", post(runs_ingress))
         .route("/presence", get(presence))
+        .route("/rollup", get(rollup))
+        .route("/requests", get(requests_list))
+        .route("/requests", post(requests_submit))
+        .route("/requests/resolve", post(requests_resolve))
         .with_state(app);
 
     let bind = arg("--bind").unwrap_or_else(|| "127.0.0.1".to_string()); // 0.0.0.0 in containers
@@ -431,10 +439,31 @@ async fn runs_ingress(State(app): State<Arc<App>>, Json(run): Json<Value>) -> im
     }).await.unwrap()
 }
 
-/// The roster, alive: per-agent activity from the signed diary of thought (0005) —
-/// what the Window's panes render as "agents doing their job."
+/// The roster, alive. RESIDENTS are the organs every tier is staffed with (0000 §2):
+/// becky issues identity, vigil watches (content-blind), the steward distills, governance
+/// arbitrates. WORKFORCE is the leased agents, their activity read from the signed diary of
+/// thought (0005). This is what the Console renders as "who is awake in this world."
 async fn presence(State(app): State<Arc<App>>) -> Json<Value> {
     let u = app.universe.lock().unwrap();
+    let scope = u.nodes[0].scope.clone();
+    let leaf = scope.rsplit('/').next().unwrap_or(&scope).to_string();
+    let residents = json!([
+        {"agent": format!("becky·{leaf}"), "role":"becky · IAM",
+         "state":"resident", "blurb":"issues every identity; the pinned trust root"},
+        {"agent": format!("vigil·{leaf}"), "role":"vigil · the Warden",
+         "state":"watching", "blurb":"detection, content-blind; stages, never enforces"},
+        {"agent": format!("steward·{leaf}"), "role":"steward · memory",
+         "state":"distilling", "blurb":"prunes and distills what the layer learns"},
+        {"agent": format!("governance·{leaf}"), "role":"governance",
+         "state":"resident", "blurb":"arbitrates drift; guards the floors"}
+    ]);
+    // per-agent USD from the model meter (0016) — what each agent COSTS, not just its tokens
+    let mut cost: BTreeMap<String, f64> = BTreeMap::new();
+    for e in &app.model.lock().unwrap().meter_log {
+        if let Some(s) = e["subject"].as_str() {
+            *cost.entry(s.to_string()).or_insert(0.0) += e["usd"].as_f64().unwrap_or(0.0);
+        }
+    }
     let mut per: BTreeMap<String, (i64, i64, i64, String)> = BTreeMap::new();
     for r in u.runs.values() {
         let a = r["agent"].as_str().unwrap_or("?").to_string();
@@ -446,12 +475,60 @@ async fn presence(State(app): State<Arc<App>>) -> Json<Value> {
         if at > e.3.as_str() { e.3 = at.to_string(); }
     }
     let now = now_iso();
-    Json(json!({"scope": u.nodes[0].scope, "as_of": now,
-        "roster": per.into_iter().map(|(agent,(runs,ok,tok,last))| {
-            let idle = orreth_node::ts_seconds(&now)
-                     - orreth_node::ts_seconds(if last.is_empty() { &now } else { &last });
-            json!({"agent": agent, "runs": runs, "success": ok, "tokens": tok,
-                   "last_seen": last,
-                   "state": if idle < 120 { "thinking" } else { "idle" }})
-        }).collect::<Vec<_>>()}))
+    let workforce: Vec<Value> = per.into_iter().map(|(agent,(runs,ok,tok,last))| {
+        let idle = orreth_node::ts_seconds(&now)
+                 - orreth_node::ts_seconds(if last.is_empty() { &now } else { &last });
+        let usd = *cost.get(&agent).unwrap_or(&0.0);
+        json!({"agent": agent, "role":"workforce", "runs": runs, "success": ok,
+               "tokens": tok, "usd": (usd*1e6).round()/1e6, "last_seen": last,
+               "state": if idle < 120 { "thinking" } else { "idle" }})
+    }).collect();
+    Json(json!({"scope": scope, "as_of": now, "residents": residents, "workforce": workforce}))
+}
+
+/// The tier's living numbers — what the Console's Pulse renders (0005 roll-up, at a glance).
+async fn rollup(State(app): State<Arc<App>>) -> Json<Value> {
+    let u = app.universe.lock().unwrap();
+    let m = app.model.lock().unwrap();
+    let (mut runs, mut ok, mut tok) = (0i64, 0i64, 0i64);
+    for r in u.runs.values() {
+        runs += 1;
+        if r["outcome"] == "success" { ok += 1; }
+        tok += r["cost"]["tokens"].as_i64().unwrap_or(0);
+    }
+    let usd: f64 = m.meter_log.iter().filter_map(|e| e["usd"].as_f64()).sum();
+    let calls = m.meter_log.len();
+    Json(json!({"scope": u.nodes[0].scope,
+        "memories": u.nodes[0].records.len(), "runs": runs, "success": ok,
+        "success_rate": if runs>0 {100*ok/runs} else {0},
+        "tokens": tok, "usd": (usd*1e6).round()/1e6, "model_calls": calls}))
+}
+
+async fn requests_resolve(State(app): State<Arc<App>>, Json(body): Json<Value>) -> impl IntoResponse {
+    let mut q = app.requests.lock().unwrap();
+    let id = body["id"].as_str().unwrap_or("");
+    for r in q.iter_mut() {
+        if r["id"] == id {
+            r["status"] = body.get("status").cloned().unwrap_or(json!("done"));
+            if let Some(n) = body.get("result") { r["result"] = n.clone(); }
+        }
+    }
+    (StatusCode::OK, Json(json!({"ok": true})))
+}
+
+async fn requests_list(State(app): State<Arc<App>>) -> Json<Value> {
+    Json(json!({"requests": *app.requests.lock().unwrap()}))
+}
+
+/// A human submits an intent — an ask ("gather knowledge on X") or a HITL decision.
+/// Unsigned: it is an INPUT, not a memory. Cognition picks it up and acts with authority,
+/// and the result becomes a signed memory in the Window (0014's loop, human-initiated).
+async fn requests_submit(State(app): State<Arc<App>>, Json(mut req): Json<Value>) -> impl IntoResponse {
+    let mut q = app.requests.lock().unwrap();
+    let id = format!("req-{}", q.len() + 1);
+    req["id"] = json!(id);
+    req["status"] = json!("pending");
+    req["at"] = json!(now_iso());
+    q.push(req.clone());
+    (StatusCode::CREATED, Json(req))
 }

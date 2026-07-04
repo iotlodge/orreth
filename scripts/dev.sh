@@ -19,12 +19,15 @@ rootpub() {  # keep the seed and infrastructure/.env in lockstep, always
 
 case "${1:-}" in
   start)   rootpub; $COMPOSE up --build -d; sleep 3; "$0" status ;;
-  stop)    $COMPOSE down ;;
+  stop)    pkill -f console_worker.py 2>/dev/null || true; $COMPOSE down ;;
   restart) $COMPOSE down; rootpub; $COMPOSE up --build -d; sleep 3; "$0" status ;;
   status)  $COMPOSE ps --format '  {{.Name}}\t{{.Status}}' 2>/dev/null || true
            for p in 4500 4501 4502; do printf "  :%s  " "$p"
              curl -sf "http://127.0.0.1:$p/health" || printf dark; echo; done ;;
   logs)    $COMPOSE logs -f --tail 40 ;;
-  window)  (cd "$CONF" && uv run python demo_open_window.py 4502 4500) ;;
+  window) pkill -f console_worker.py 2>/dev/null || true
+           (cd "$CONF" && nohup uv run python console_worker.py 4502 >"$TMPDIR/worker.log" 2>&1 &)
+           echo "· librarian worker started (Ask → memories); log: $TMPDIR/worker.log"
+           (cd "$CONF" && uv run python demo_open_window.py 4502 4500) ;;
   *) echo "usage: scripts/dev.sh start|stop|restart|status|logs|window" ;;
 esac
