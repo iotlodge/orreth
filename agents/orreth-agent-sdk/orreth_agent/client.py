@@ -64,10 +64,27 @@ class FieldClient:
     def health(self) -> dict:
         return self._call("GET", "/health")[1]
 
-    def join(self, *, timeout: float = 60.0, poll: float = 1.0) -> dict:
+    def wait_online(self, *, timeout: float = 30.0, poll: float = 1.0) -> dict:
+        """Block until the floor answers. A universe restart is transient — an agent waits
+        for its home to come back rather than treating a brief outage as a denial."""
+        import time as _t
+        deadline = _t.monotonic() + timeout
+        while True:
+            try:
+                return self.health()
+            except ConnectionError:
+                if _t.monotonic() >= deadline:
+                    raise ConnectionError(
+                        f"the floor at {self.base} did not come online within {timeout:.0f}s — "
+                        f"is orrethd running there? (start it with scripts/dev.sh start)")
+                _t.sleep(poll)
+
+    def join(self, *, timeout: float = 60.0, poll: float = 1.0,
+             wait_for_floor: float = 30.0) -> dict:
         """Ask the floor for a lease. Joining is a REQUEST in the human-visible queue —
-        becky (cognition) mints the token; in governed floors a human may hold the door."""
-        self.scope = self.health().get("scope")
+        becky (cognition) mints the token; in governed floors a human may hold the door.
+        Tolerates a restarting floor (waits up to `wait_for_floor` for it to come online)."""
+        self.scope = self.wait_online(timeout=wait_for_floor, poll=poll).get("scope")
         status, req = self._call("POST", "/requests", {
             "kind": "join", "did": self.did, "name": self.name, "role": self.role,
             "text": f"{self.name} asks to join {self.scope} as {self.role}"})
@@ -85,7 +102,10 @@ class FieldClient:
                     if r.get("status") == "denied":
                         raise JoinRefused("becky declined the lease")
             time.sleep(poll)
-        raise JoinRefused(f"no lease within {timeout}s — is a becky worker tending {self.base}?")
+        raise JoinRefused(
+            f"the floor is up but no lease came within {timeout:.0f}s — becky's join door is not "
+            f"tending {self.base}. Open it with: scripts/dev.sh start (or run "
+            f"console_worker.py against this floor's port).")
 
     def remember(self, body: dict, *, kind: str = "episodic", tags: list[str] | None = None,
                  occurred_at: str | None = None, provenance_class: str = "lived") -> str | None:

@@ -51,7 +51,7 @@ def build(cfg: dict, field_url: str):
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Run a Flavor-1 lifeforce agent.")
-    ap.add_argument("--field", default="http://127.0.0.1:4970", help="orrethd floor URL")
+    ap.add_argument("--field", default="http://127.0.0.1:4502", help="orrethd floor URL")
     ap.add_argument("--agent", default=str(Path(__file__).parent / "agent.yaml"))
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--once", action="store_true", help="run one loop and exit")

@@ -46,20 +46,34 @@ turn. It joins the universe without changing how it thinks.
 
 ## Run one (30 seconds)
 
-Stand up a floor and its join-door, then run a flavor:
+Bring the universe up — `start` now also opens **becky's join door** on the field (`:4502`),
+so a freshly-started (or restarted) universe is joinable out of the box — then run a flavor:
 
 ```bash
-# terminal 1 — a field + becky's join door (from repo root)
-scripts/dev.sh window            # or: run orrethd on :4970 and console_worker.py 4970
+# terminal 1 — the universe + its join door (from repo root)
+scripts/dev.sh start             # docker up + becky on :4502; `status` shows "join door: OPEN"
 
-# terminal 2 — a lifeforce agent, from anywhere that can reach the floor
+# terminal 2 — a lifeforce agent (defaults to the field on :4502)
+scripts/dev.sh agent 2 --forever         # convenience: runs flavor 02 into the field
+# …or directly, from anywhere that can reach the floor:
 cd agents/flavors/01-prototype
-uv run --with pyyaml --with cryptography python run.py --field http://127.0.0.1:4970 --forever
+uv run --with pyyaml --with cryptography python run.py --field http://127.0.0.1:4502 --forever
 ```
 
-Open the Console (the URL `dev.sh window` prints). Watch `scout` arrive in the roster and
-begin to breathe. Point `--field` at a floor across the network and it works identically —
-**an agent joins from anywhere.**
+Open the Console (`scripts/dev.sh window` prints the URL). Watch the agent arrive in the roster
+and become a ship in the orrery. Point `--field` at a floor across the network and it works
+identically — **an agent joins from anywhere.**
+
+### When the universe restarts
+
+A restart is transient, not a denial. `join()` **waits** for its floor to come back online (up
+to `wait_for_floor`, default 30s) before asking for a lease, so an agent launched against a
+restarting universe rejoins the moment the floor returns — no crash, no manual retry. If the
+floor is up but no lease arrives, the error tells you becky's door is closed (`dev.sh start`
+opens it). The two failure modes are named and distinct:
+
+- `ConnectionError: … did not come online within 30s` → the **daemon** isn't running there.
+- `JoinRefused: … no lease … becky's join door is not tending …` → the **worker** isn't running.
 
 ## The three flavors
 

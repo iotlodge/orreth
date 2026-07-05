@@ -19,7 +19,7 @@ from sentinel import app  # noqa: E402
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Run the Flavor-3 conformance sentinel.")
-    ap.add_argument("--field", default="http://127.0.0.1:4970")
+    ap.add_argument("--field", default="http://127.0.0.1:4502")
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--once", action="store_true")
     g.add_argument("--forever", action="store_true")

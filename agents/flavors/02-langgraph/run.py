@@ -35,7 +35,7 @@ def skills_for(client: FieldClient) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Run a Flavor-2 LangGraph agent.")
-    ap.add_argument("--field", default="http://127.0.0.1:4970")
+    ap.add_argument("--field", default="http://127.0.0.1:4502")
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--once", action="store_true")
     g.add_argument("--forever", action="store_true")
