@@ -26,7 +26,9 @@ loop) an identity and a home, changing nothing about how it thinks.
 `orreth_agent.FieldClient` is the whole relationship with a universe, over HTTP:
 
 1. **spawn** — a `KeyPair` is a self; `did:key` embeds the key, so an identity is resolvable
-   offline and joinable from anywhere (0006 §1).
+   offline and joinable from anywhere (0006 §1). The seed persists under
+   `~/.orreth/agents/<name>/` (agent + scribe), so the *same* self re-joins across runs —
+   a living identity, not a mayfly (0002).
 2. **join** — a *governed request* in the human-visible queue. becky (cognition) mints a
    scoped, root-chained lease and resolves it. The agent presents the lease thereafter.
 3. **remember / recall** — signed memory in (the plane verifies every byte; Sourced or

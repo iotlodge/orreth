@@ -27,6 +27,11 @@ from orreth_sim.node import make_memory
 from smoke_orrethd import root_keypair
 
 load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+sys.stdout.reconfigure(line_buffering=True)  # nohup'd by dev.sh — block-buffering leaves the log empty
+try:
+    os.setsid()  # own session: a Ctrl-C aimed at the launching script must not kill becky
+except OSError:
+    pass
 BASE = f"http://127.0.0.1:{sys.argv[1] if len(sys.argv) > 1 else 4502}"
 SCOPE = "u:demo/e:cloud/f:prod"
 LIB = crypto.KeyPair()                       # the librarian's identity (cognition holds keys)
@@ -80,17 +85,21 @@ def main():
     while True:
         try:
             for r in call("GET", "/requests").get("requests", []):
-                if r.get("status") != "pending" or r["id"] in seen:
+                # key by (id, at): the daemon's queue is in-memory with sequential ids, so a
+                # restarted daemon reissues req-1… — the timestamp keeps stale ids from
+                # deafening becky to new joins
+                key = (r.get("id"), r.get("at", ""))
+                if r.get("status") != "pending" or key in seen:
                     continue
                 if r.get("kind") == "gather":
-                    seen.add(r["id"])
+                    seen.add(key)
                     print(f"  ↳ dispatch {r['id']}: gather “{r['text']}”")
                     gather(r["text"])
                     call("POST", "/requests/resolve",
                          {"id": r["id"], "status": "done", "result": "admitted to the Window"})
                     print(f"    ✓ knowledge admitted — check the Window")
                 elif r.get("kind") == "join" and r.get("did"):
-                    seen.add(r["id"])
+                    seen.add(key)
                     print(f"  ↳ join {r['id']}: {r.get('name','?')} ({r['did'][:22]}…) as {r.get('role','workforce')}")
                     lease = grant_lease(r["did"])
                     call("POST", "/requests/resolve",

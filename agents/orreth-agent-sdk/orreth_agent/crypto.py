@@ -8,6 +8,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+from pathlib import Path
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat, PublicFormat
@@ -45,6 +46,18 @@ class KeyPair:
     def public(self) -> str:
         raw = self._priv.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
         return "z" + b64e(raw)
+
+    @classmethod
+    def load_or_create(cls, path: Path | str) -> "KeyPair":
+        """The self that survives the process (0002): seed bytes on disk, identity forever."""
+        path = Path(path)
+        if path.exists():
+            return cls(seed=path.read_bytes())
+        kp = cls()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(kp.seed)
+        path.chmod(0o600)
+        return kp
 
     def sign(self, by_did: str, payload: dict) -> dict:
         """A Sig over canonical(payload minus any 'signature'/'sig') — the plane verifies, never signs."""

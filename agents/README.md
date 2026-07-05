@@ -25,7 +25,7 @@ Every flavor is the same five verbs from `orreth_agent`, in the same order:
 
 | verb | what it is | governs |
 |---|---|---|
-| **spawn** | a keypair is a self (`did:key`, resolvable offline) | 0006 |
+| **spawn** | a keypair is a self (`did:key`, resolvable offline); seeds persist under `~/.orreth/agents/<name>/`, so the *same* self re-joins every run | 0002 · 0006 |
 | **join** | a *governed request*; becky answers with a scoped, root-chained lease | 0006 |
 | **remember** / **recall** | signed memory in; tokened retrieval out (escalates up the tree) | 0002 · 0004 |
 | **think** | the plane authorizes + meters; your code executes; the plane never sees the prompt | 0016 |

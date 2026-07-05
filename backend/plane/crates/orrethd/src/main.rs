@@ -460,20 +460,11 @@ async fn runs_ingress(State(app): State<Arc<App>>, Json(run): Json<Value>) -> im
 /// becky issues identity, vigil watches (content-blind), the steward distills, governance
 /// arbitrates. WORKFORCE is the leased agents, their activity read from the signed diary of
 /// thought (0005). This is what the Console renders as "who is awake in this world."
-async fn presence(State(app): State<Arc<App>>) -> Json<Value> {
+/// The leased agents on THIS floor, read from the signed diary (0005). Shared by
+/// `/presence` and the upward beat, so a parent's roster matches the floor's own.
+fn local_workforce(app: &App) -> Vec<Value> {
     let u = app.universe.lock().unwrap();
     let scope = u.nodes[0].scope.clone();
-    let leaf = scope.rsplit('/').next().unwrap_or(&scope).to_string();
-    let residents = json!([
-        {"agent": format!("becky·{leaf}"), "role":"becky · IAM",
-         "state":"resident", "blurb":"issues every identity; the pinned trust root"},
-        {"agent": format!("vigil·{leaf}"), "role":"vigil · the Warden",
-         "state":"watching", "blurb":"detection, content-blind; stages, never enforces"},
-        {"agent": format!("steward·{leaf}"), "role":"steward · memory",
-         "state":"distilling", "blurb":"prunes and distills what the layer learns"},
-        {"agent": format!("governance·{leaf}"), "role":"governance",
-         "state":"resident", "blurb":"arbitrates drift; guards the floors"}
-    ]);
     // per-agent USD from the model meter (0016) — what each agent COSTS, not just its tokens
     let mut cost: BTreeMap<String, f64> = BTreeMap::new();
     for e in &app.model.lock().unwrap().meter_log {
@@ -497,16 +488,39 @@ async fn presence(State(app): State<Arc<App>>) -> Json<Value> {
         .filter_map(|r| Some((r["did"].as_str()?.to_string(), r["name"].as_str()?.to_string())))
         .collect();
     let now = now_iso();
-    let workforce: Vec<Value> = per.into_iter().map(|(agent,(runs,ok,tok,last))| {
+    per.into_iter().map(|(agent,(runs,ok,tok,last))| {
         let idle = orreth_node::ts_seconds(&now)
                  - orreth_node::ts_seconds(if last.is_empty() { &now } else { &last });
         let usd = *cost.get(&agent).unwrap_or(&0.0);
         json!({"agent": agent, "name": names.get(&agent), "role":"workforce",
-               "runs": runs, "success": ok,
+               "scope": scope, "runs": runs, "success": ok,
                "tokens": tok, "usd": (usd*1e6).round()/1e6, "last_seen": last,
                "state": if idle < 120 { "thinking" } else { "idle" }})
-    }).collect();
-    Json(json!({"scope": scope, "as_of": now, "residents": residents, "workforce": workforce}))
+    }).collect()
+}
+
+async fn presence(State(app): State<Arc<App>>) -> Json<Value> {
+    let scope = { app.universe.lock().unwrap().nodes[0].scope.clone() };
+    let leaf = scope.rsplit('/').next().unwrap_or(&scope).to_string();
+    let residents = json!([
+        {"agent": format!("becky·{leaf}"), "role":"becky · IAM",
+         "state":"resident", "blurb":"issues every identity; the pinned trust root"},
+        {"agent": format!("vigil·{leaf}"), "role":"vigil · the Warden",
+         "state":"watching", "blurb":"detection, content-blind; stages, never enforces"},
+        {"agent": format!("steward·{leaf}"), "role":"steward · memory",
+         "state":"distilling", "blurb":"prunes and distills what the layer learns"},
+        {"agent": format!("governance·{leaf}"), "role":"governance",
+         "state":"resident", "blurb":"arbitrates drift; guards the floors"}
+    ]);
+    // this floor's leased agents, then every floor below: each child beat carries its
+    // subtree's rosters, so the Console here shows the whole world — matching the orrery
+    let mut workforce = local_workforce(&app);
+    fn descend(beat: &Value, out: &mut Vec<Value>) {
+        if let Some(ws) = beat["workforce"].as_array() { out.extend(ws.iter().cloned()); }
+        if let Some(kids) = beat["children"].as_array() { for k in kids { descend(k, out); } }
+    }
+    for beat in app.children.lock().unwrap().values() { descend(beat, &mut workforce); }
+    Json(json!({"scope": scope, "as_of": now_iso(), "residents": residents, "workforce": workforce}))
 }
 
 /// This node's subtree summary: own stats + everything its children last reported.
@@ -532,7 +546,7 @@ fn summary(app: &App) -> Value {
     // horizon rides the beat (serde maps a non-finite "forever" to null — the apex)
     json!({"scope": scope, "records": records, "runs": runs, "agents": agents,
            "usd": (usd * 1e6).round() / 1e6, "horizon_days": app.horizon_days,
-           "children": children})
+           "workforce": local_workforce(app), "children": children})
 }
 
 /// A child announces its subtree — the upward beat. Grandchildren ride along, so
@@ -590,10 +604,13 @@ async fn requests_list(State(app): State<Arc<App>>) -> Json<Value> {
 /// and the result becomes a signed memory in the Window (0014's loop, human-initiated).
 async fn requests_submit(State(app): State<Arc<App>>, Json(mut req): Json<Value>) -> impl IntoResponse {
     let mut q = app.requests.lock().unwrap();
-    let id = format!("req-{}", q.len() + 1);
+    // the id carries the submission second: the queue is in-memory, so a restarted daemon
+    // must never reissue an id a long-lived consumer (becky) has already seen
+    let at = now_iso();
+    let id = format!("req-{}-{}", q.len() + 1, orreth_node::ts_seconds(&at));
     req["id"] = json!(id);
     req["status"] = json!("pending");
-    req["at"] = json!(now_iso());
+    req["at"] = json!(at);
     q.push(req.clone());
     (StatusCode::CREATED, Json(req))
 }

@@ -14,12 +14,16 @@ import json
 import time
 import urllib.request
 from datetime import datetime, timezone
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 
 from .crypto import KeyPair, b64e, canonical, content_hash, did_key_for
 
 SIG_KEYS = ("id", "kind", "scope", "author", "occurred_at", "provenance_class")
 RUN_SIG_KEYS = ("id", "agent", "scope", "goal_hash", "occurred_at")
+
+# where a self lives between processes — one directory per agent name, seeds inside
+DEFAULT_HOME = Path.home() / ".orreth" / "agents"
 
 
 def now_iso() -> str:
@@ -34,8 +38,15 @@ class FieldClient:
     """One agent, one floor. Point it at any orrethd URL — local, docker, or across the world."""
 
     def __init__(self, field_url: str, name: str, *, role: str = "workforce",
-                 keypair: KeyPair | None = None, scribe: KeyPair | None = None):
+                 keypair: KeyPair | None = None, scribe: KeyPair | None = None,
+                 home: str | Path | None = DEFAULT_HOME):
         self.base = field_url.rstrip("/")
+        # a keypair is a self, and a self survives the process (0002): seeds persist under
+        # home/<name>/ so the SAME agent re-joins every run. home=None → ephemeral.
+        if home is not None:
+            nest = Path(home) / name
+            keypair = keypair or KeyPair.load_or_create(nest / "agent.seed")
+            scribe = scribe or KeyPair.load_or_create(nest / "scribe.seed")
         self.kp = keypair or KeyPair()
         self.did = did_key_for(self.kp.public)
         # the diary's co-signer: RunRecords are authored by a scribe, never self-attested (0005)

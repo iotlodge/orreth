@@ -510,7 +510,7 @@ function agentRow(a,resident){
     : `<div class="sub">${a.runs} run${a.runs===1?"":"s"} · ${a.runs?Math.round(100*a.success/a.runs):0}% · ${a.tokens} tok · <span class="cost">${money(a.usd||0)}</span></div>`;
   return `<div class="agent"><span class="orb ${a.state}"></span>
     <span class="who"><span class="id">${resident?a.role:(a.name||short(a.agent))}</span>
-    ${resident?"":`<span class="role">workforce</span>`}${sub}</span></div>`;
+    ${resident?"":`<span class="role">${a.scope?a.scope.split("/").pop():"workforce"}</span>`}${sub}</span></div>`;
 }
 
 /* ── requests + ask ── */
