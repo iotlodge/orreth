@@ -473,11 +473,11 @@ async function roster(){
     const evs=p.workforce.filter(a=>a.last_seen).sort((x,y)=>y.last_seen.localeCompare(x.last_seen));
     $("feed").innerHTML= evs.length? evs.slice(0,10).map(a=>
       `<div class="ev"><span class="dot"></span><span class="t">${a.last_seen.slice(11,19)}</span>
-       <span class="m">${short(a.agent)} · ${a.runs} thought${a.runs===1?"":"s"} · ${a.state} · ${money(a.usd||0)}</span></div>`).join("")
+       <span class="m">${a.name||short(a.agent)} · ${a.runs} thought${a.runs===1?"":"s"} · ${a.state} · ${money(a.usd||0)}</span></div>`).join("")
       : `<div class="quiet" style="padding:.5rem 0">the field is quiet…</div>`;
     // spend by agent — the per-agent cost JB asked for, as bars
     const spenders=[...p.residents.map(x=>({n:x.role,u:0})),
-      ...p.workforce.map(a=>({n:short(a.agent),u:a.usd||0,t:a.tokens}))]
+      ...p.workforce.map(a=>({n:a.name||short(a.agent),u:a.usd||0,t:a.tokens}))]
       .filter(x=>x.t!==undefined);
     const max=Math.max(1,...spenders.map(x=>x.t||0));
     $("spend").innerHTML= spenders.length? spenders.map(x=>
@@ -509,7 +509,7 @@ function agentRow(a,resident){
   const sub = resident? `<div class="sub">${a.blurb||""}</div>`
     : `<div class="sub">${a.runs} run${a.runs===1?"":"s"} · ${a.runs?Math.round(100*a.success/a.runs):0}% · ${a.tokens} tok · <span class="cost">${money(a.usd||0)}</span></div>`;
   return `<div class="agent"><span class="orb ${a.state}"></span>
-    <span class="who"><span class="id">${resident?a.role:short(a.agent)}</span>
+    <span class="who"><span class="id">${resident?a.role:(a.name||short(a.agent))}</span>
     ${resident?"":`<span class="role">workforce</span>`}${sub}</span></div>`;
 }
 

@@ -491,12 +491,18 @@ async fn presence(State(app): State<Arc<App>>) -> Json<Value> {
         let at = r["occurred_at"].as_str().unwrap_or("");
         if at > e.3.as_str() { e.3 = at.to_string(); }
     }
+    // names an agent gave when it joined — so the roster shows "scout", not a did:key prefix
+    let names: BTreeMap<String, String> = app.requests.lock().unwrap().iter()
+        .filter(|r| r["kind"] == "join")
+        .filter_map(|r| Some((r["did"].as_str()?.to_string(), r["name"].as_str()?.to_string())))
+        .collect();
     let now = now_iso();
     let workforce: Vec<Value> = per.into_iter().map(|(agent,(runs,ok,tok,last))| {
         let idle = orreth_node::ts_seconds(&now)
                  - orreth_node::ts_seconds(if last.is_empty() { &now } else { &last });
         let usd = *cost.get(&agent).unwrap_or(&0.0);
-        json!({"agent": agent, "role":"workforce", "runs": runs, "success": ok,
+        json!({"agent": agent, "name": names.get(&agent), "role":"workforce",
+               "runs": runs, "success": ok,
                "tokens": tok, "usd": (usd*1e6).round()/1e6, "last_seen": last,
                "state": if idle < 120 { "thinking" } else { "idle" }})
     }).collect();

@@ -1,9 +1,12 @@
-"""The console worker — cognition behind the human's Ask (0014, human-initiated).
+"""The console worker — cognition behind the human's queue (0014 · 0006, human-initiated).
 
-Polls orrethd's request queue; when a human dispatches "gather X" from the Console,
-this runs the librarian: searches an identified source (Tavily), admits the findings as
-signed memories (quarantined at 0.0000), and marks the request done — so the knowledge
-appears as stars in the Window seconds after the human asked. Keys stay here, in cognition.
+Polls orrethd's request queue and answers two kinds of intent, keys staying here in cognition:
+
+  · gather X  — runs the librarian: searches an identified source (Tavily), admits the
+    findings as signed memories (quarantined at 0.0000); knowledge appears in the Window.
+  · join      — becky's door: an agent (from anywhere) asks to join this floor; becky mints
+    a root-chained retrieve lease for its DID and resolves the request with the token. The
+    agent's first signed memory then lights it up in the roster and the orrery.
 
     uv run python console_worker.py [field_port]     (leave running while you use the Console)
 """
@@ -19,14 +22,25 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from orreth_sim import crypto
-from orreth_sim.identity import NOW
+from orreth_sim.identity import NOW, Becky, Nanda
 from orreth_sim.node import make_memory
+from smoke_orrethd import root_keypair
 
 load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 BASE = f"http://127.0.0.1:{sys.argv[1] if len(sys.argv) > 1 else 4502}"
 SCOPE = "u:demo/e:cloud/f:prod"
 LIB = crypto.KeyPair()                       # the librarian's identity (cognition holds keys)
 LIB_DID = crypto.did_key_for(LIB.public)
+
+# becky, chained from the pinned root — the only authority that can mint a joining lease
+_NANDA = Nanda()
+_ROOT = Becky("u:demo", _NANDA, universe_name="demo", kp=root_keypair())
+_BECKY = Becky(SCOPE, _NANDA, parent=_ROOT)
+
+
+def grant_lease(did: str) -> dict:
+    """A retrieve-self lease for a joining agent — attenuated to this floor, root-chained."""
+    return _BECKY.issue_token(did, SCOPE, [{"action": "retrieve", "space": "self"}])
 
 
 def call(method, path, payload=None):
@@ -61,18 +75,28 @@ def gather(text):
 
 
 def main():
-    print(f"console worker · librarian {LIB_DID[:30]}… · watching {BASE}/requests")
+    print(f"console worker · librarian+becky {LIB_DID[:24]}… · watching {BASE}/requests")
     seen = set()
     while True:
         try:
             for r in call("GET", "/requests").get("requests", []):
-                if r.get("kind") == "gather" and r["status"] == "pending" and r["id"] not in seen:
+                if r.get("status") != "pending" or r["id"] in seen:
+                    continue
+                if r.get("kind") == "gather":
                     seen.add(r["id"])
                     print(f"  ↳ dispatch {r['id']}: gather “{r['text']}”")
                     gather(r["text"])
                     call("POST", "/requests/resolve",
                          {"id": r["id"], "status": "done", "result": "admitted to the Window"})
                     print(f"    ✓ knowledge admitted — check the Window")
+                elif r.get("kind") == "join" and r.get("did"):
+                    seen.add(r["id"])
+                    print(f"  ↳ join {r['id']}: {r.get('name','?')} ({r['did'][:22]}…) as {r.get('role','workforce')}")
+                    lease = grant_lease(r["did"])
+                    call("POST", "/requests/resolve",
+                         {"id": r["id"], "status": "done",
+                          "result": {"token": lease, "scope": SCOPE, "granted_by": _BECKY.did}})
+                    print(f"    ✓ lease granted — welcome to {SCOPE}")
         except Exception as e:
             print("  (waiting for daemon…)", e)
         time.sleep(2)
