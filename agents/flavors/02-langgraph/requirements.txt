@@ -1,0 +1,3 @@
+# PROVENANCE: authored by Opus 4.8 (2026-07-05), pending Fable 5 review — see agents/PROVENANCE.md
+langgraph>=0.2
+cryptography>=42

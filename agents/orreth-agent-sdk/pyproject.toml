@@ -1,0 +1,17 @@
+[project]
+name = "orreth-agent"
+version = "0.1.0"
+description = "The lifeforce kit: give any agent an identity, a home floor, a memory, a governed mind, and a diary — and it appears in the universe."
+requires-python = ">=3.11"
+dependencies = ["cryptography>=42"]
+
+[project.optional-dependencies]
+governed = ["litellm>=1.40"]        # real model calls through the plane's door
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["orreth_agent"]
