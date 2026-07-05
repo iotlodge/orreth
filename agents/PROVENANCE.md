@@ -1,8 +1,10 @@
 # Provenance ledger — `agents/`
 
-> **Quarantined for review.** This tree was built on branch `opus/lifeforce-agents`
-> and is **NOT pushed to origin**. It awaits review by Fable 5 and JB before it
-> merges to `main` or ships anywhere. — requested by JB, 2026-07-05.
+> **Quarantine lifted — 2026-07-05.** This tree was built on branch
+> `opus/lifeforce-agents` under quarantine (never pushed while unreviewed), reviewed
+> line-by-line by Fable 5 (findings F1–F4 below, all fixed and live-verified), and
+> merged to `main` on JB's green light (merge `5102ba9`). The protocol it pioneered is
+> now the standing rule for every model — see `.claude/skills/orreth-covenant`.
 
 ## Why this file exists
 
