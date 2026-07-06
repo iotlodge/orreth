@@ -262,6 +262,11 @@ class FarmKeeper:
                 worldline(port, scope, svc, "denied")
             except Exception:
                 pass
+            # a denied service leaves the ledger too — replant must never resurrect
+            # what a human refused (the ledger seeds only the approved)
+            led = ledger_load(scope)
+            led.pop(name, None)
+            ledger_save(scope, led)
             call(port, "POST", "/requests/resolve", {"id": r["id"], "status": "done"})
             print(f"  ↳ denied {name} — never served")
             return True
