@@ -11,3 +11,4 @@ ureq = { version = "2", features = ["json"] }
 postgres = { version = "0.19", features = ["with-serde_json-1"] }
 orreth-node = { path = "../orreth-node" }
 orreth-store = { path = "../orreth-store" }
+orreth-crypto = { path = "../orreth-crypto" }

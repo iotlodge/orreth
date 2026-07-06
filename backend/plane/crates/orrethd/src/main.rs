@@ -18,6 +18,7 @@ use serde_json::{json, Value};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex};
 
+mod farm;
 mod model;
 mod pg;
 
@@ -25,6 +26,8 @@ struct App {
     universe: Mutex<Universe>,
     /// the plane authorizes and meters; cognition executes (0016 §6)
     model: Mutex<model::ModelPlane>,
+    /// the Tool Farm (0018): this floor's toolshed — services as identities, leased
+    farm: Mutex<farm::Farm>,
     /// PUSH up / PULL down (0000 §1): a child knows its parent; a parent never reaches in.
     parent: Option<String>,
     horizon_days: f64,
@@ -164,6 +167,7 @@ async fn main() {
     let app = Arc::new(App {
         universe: Mutex::new(universe),
         model: Mutex::new(model_plane),
+        farm: Mutex::new(farm::Farm::new()),
         parent,
         horizon_days: dur_days(horizon),
         pg: pg_store,
@@ -193,6 +197,11 @@ async fn main() {
         .route("/model/meter", post(model_meter))
         .route("/model/usage", get(model_usage))
         .route("/model/state", post(model_state))
+        .route("/farm", get(farm_list))
+        .route("/farm/plant", post(farm_plant))
+        .route("/farm/state", post(farm_state))
+        .route("/farm/hello", post(farm_hello))
+        .route("/farm/meter", post(farm_meter))
         .route("/runs", post(runs_ingress))
         .route("/presence", get(presence))
         .route("/rollup", get(rollup))
@@ -284,7 +293,25 @@ async fn egress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl Int
         let local = {
             let u = app.universe.lock().unwrap();
             match u.retrieve(0, &req["query"], &req["token"], &requester_scope) {
-                Ok(result) => result,
+                Ok(mut result) => {
+                    // enrichment at the plane, not the node (0018 §8): hits gain their
+                    // record's tags, and knowledge still in quarantine stops dressing as
+                    // verified — each tier decorates its own hits before merging up.
+                    if let Some(hits) = result["hits"].as_array_mut() {
+                        for h in hits {
+                            let Some(rec) = h["ref"].as_str()
+                                .and_then(|r| u.nodes[0].records.get(r)) else { continue };
+                            let tags = rec.get("tags").cloned().unwrap_or_else(|| json!([]));
+                            let knowledge = tags.as_array()
+                                .is_some_and(|t| t.iter().any(|x| x == "knowledge"));
+                            if knowledge && rec["provenance_class"] == "ingested-archive" {
+                                h["fidelity"] = json!("untrusted");
+                            }
+                            h["tags"] = tags;
+                        }
+                    }
+                    result
+                }
                 // the uniform refusal: authz-miss and every other miss share one shape (0002 §4)
                 Err(_) => {
                     return (
@@ -443,6 +470,57 @@ async fn model_state(State(app): State<Arc<App>>, Json(req): Json<Value>) -> imp
      Json(json!({"ok": ok})))
 }
 
+// ---------------------------------------------------------------- the tool farm (0018)
+
+/// This floor's toolshed, plus every toolshed below — assembled from the beats,
+/// exactly like presence (one world, one picture; the F2 lesson applied in advance).
+async fn farm_list(State(app): State<Arc<App>>) -> Json<Value> {
+    let scope = { app.universe.lock().unwrap().nodes[0].scope.clone() };
+    let mut services = app.farm.lock().unwrap().roster();
+    fn descend(beat: &Value, out: &mut Vec<Value>) {
+        if let Some(fs) = beat["farm"].as_array() { out.extend(fs.iter().cloned()); }
+        if let Some(kids) = beat["children"].as_array() { for k in kids { descend(k, out); } }
+    }
+    for beat in app.children.lock().unwrap().values() { descend(beat, &mut services); }
+    Json(json!({"scope": scope, "services": services}))
+}
+
+/// Dev-only direct planting (the keeper's move after it probes a staged request);
+/// becomes a governed escalation (0012 lanes) before any multi-tenant deployment.
+async fn farm_plant(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    let floor = { app.universe.lock().unwrap().nodes[0].scope.clone() };
+    match app.farm.lock().unwrap().plant(&req, &floor, &now_iso()) {
+        Ok(svc) => (StatusCode::CREATED, Json(svc)),
+        Err(e) => (StatusCode::CONFLICT, Json(json!({"error": e}))),
+    }
+}
+
+/// The guarded lifecycle move — the rug-pull check lives plane-side (farm.rs).
+async fn farm_state(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    match app.farm.lock().unwrap().transition(&req, &now_iso()) {
+        Ok(svc) => (StatusCode::OK, Json(svc)),
+        Err(e) => (StatusCode::CONFLICT, Json(json!({"error": e}))),
+    }
+}
+
+/// A heartbeat observed by the keeper — beats earn probation's exit (0018 §2).
+async fn farm_hello(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    match app.farm.lock().unwrap().beat(req["name"].as_str().unwrap_or(""), &now_iso()) {
+        Ok(svc) => (StatusCode::OK, Json(svc)),
+        Err(e) => (StatusCode::CONFLICT, Json(json!({"error": e}))),
+    }
+}
+
+/// Every consumption on the record — volume and shape, never payloads (0016 §6).
+async fn farm_meter(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    match app.farm.lock().unwrap().meter(&req, &now_iso()) {
+        Ok(v) => (StatusCode::OK, Json(v)),
+        // the uniform refusal: a non-serving service and a missing grant wear one face
+        Err(_) => (StatusCode::FORBIDDEN,
+                   Json(json!({"error": "request cannot be served under this capability"}))),
+    }
+}
+
 // ---------------------------------------------------------------- presence: the life layer
 
 async fn runs_ingress(State(app): State<Arc<App>>, Json(run): Json<Value>) -> impl IntoResponse {
@@ -546,7 +624,8 @@ fn summary(app: &App) -> Value {
     // horizon rides the beat (serde maps a non-finite "forever" to null — the apex)
     json!({"scope": scope, "records": records, "runs": runs, "agents": agents,
            "usd": (usd * 1e6).round() / 1e6, "horizon_days": app.horizon_days,
-           "workforce": local_workforce(app), "children": children})
+           "workforce": local_workforce(app), "farm": app.farm.lock().unwrap().roster(),
+           "children": children})
 }
 
 /// A child announces its subtree — the upward beat. Grandchildren ride along, so
@@ -577,10 +656,13 @@ async fn rollup(State(app): State<Arc<App>>) -> Json<Value> {
     }
     let usd: f64 = m.meter_log.iter().filter_map(|e| e["usd"].as_f64()).sum();
     let calls = m.meter_log.len();
+    let f = app.farm.lock().unwrap();
+    let serving = f.services.values().filter(|s| s["state"] == "serving").count();
     Json(json!({"scope": u.nodes[0].scope,
         "memories": u.nodes[0].records.len(), "runs": runs, "success": ok,
         "success_rate": if runs>0 {100*ok/runs} else {0},
-        "tokens": tok, "usd": (usd*1e6).round()/1e6, "model_calls": calls}))
+        "tokens": tok, "usd": (usd*1e6).round()/1e6, "model_calls": calls,
+        "services": serving, "tool_calls": f.meter_log.len()}))
 }
 
 async fn requests_resolve(State(app): State<Arc<App>>, Json(body): Json<Value>) -> impl IntoResponse {

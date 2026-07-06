@@ -985,6 +985,7 @@ name = "orrethd"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "orreth-crypto",
  "orreth-node",
  "orreth-store",
  "postgres",

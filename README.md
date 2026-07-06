@@ -55,6 +55,18 @@ governed thought: one immutable loop, parallel nucleus, deterministic 0014 knowl
 metered reasoning, breaker-parks-as-knowledge-intent. CI green on every push (private remote,
 iotlodge/orreth).
 
+**The world's services become residents of history (2026-07-05).** The **Tool Farm** (0018) is
+live: every tool/MCP an agent consumes is now an **identity with a worldline** — planted through
+the human's queue, probed and hash-pinned by **charlotte** (the farm keeper), earning `serving`
+through heartbeats, dropped by silence (the SPIFFE lesson: leases expire, nothing needs revoking),
+and **quarantined the instant it comes back with a changed manifest** (the rug-pull door,
+CVE-2025-54136's move, refused structurally — verified live against a mutating MCP stub). Every
+lifecycle transition is a keeper-signed MemoryRecord in the spacetime window; the Console grew a
+**Farm tab** (plant · approve · decommission, per floor), farm plots on the orrery, and worldline
+diamonds among the stars. The librarian's *Ask* now consumes only governed, metered, identified
+sources — and the Window finally shows what the librarian gathers (the pane's cut is the floor's
+subtree, not one worldline).
+
 The brand name **Orreth** is locked; **`orreth.ai` registered 2026-07-01**. Next: chassis
 maturation (GraphSpec compile, per-cycle RunRecords, the parked→librarian→retry circuit closing
 automatically), the pane growing beyond the first glass (usage + outage-survival views), pgvector

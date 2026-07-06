@@ -1,0 +1,161 @@
+// PROVENANCE: Fable 5 (claude-fable-5) — 0018, the Tool Farm · 2026-07-05
+//! The plane side of the Tool Farm (0018): registry, lifecycle legality, and the meter.
+//! The keeper (cognition) decides WHEN a service moves; this module refuses illegal
+//! WHATs — and the rug-pull check lives HERE: a rejoin's manifest is compared against
+//! the pinned hash by the plane, never trusted from the keeper's summary of it.
+//! The plane verifies and meters; it never signs — worldline records are the keeper's
+//! (0005: nothing self-attests, and the plane attests nothing either).
+
+use serde_json::{json, Value};
+use std::collections::BTreeMap;
+
+pub const PROBATION_BEATS: i64 = 3;
+
+/// every legal move, and no other — the state machine IS the governance card (0018 §2)
+fn legal(from: &str, to: &str) -> bool {
+    match from {
+        "proposed" => matches!(to, "probation" | "decommissioned"),
+        "probation" => matches!(to, "serving" | "dropped" | "quarantined" | "decommissioned"),
+        "serving" => matches!(to, "dropped" | "quarantined" | "decommissioned"),
+        "dropped" => matches!(to, "serving" | "quarantined" | "decommissioned"),
+        "quarantined" => matches!(to, "probation" | "decommissioned"),
+        _ => false, // decommissioned is terminal — history remains
+    }
+}
+
+pub struct Farm {
+    /// name -> ServiceRecord (0018 §1) — this floor's toolshed
+    pub services: BTreeMap<String, Value>,
+    /// volume and shape, never payloads (0016 §6) — the roll-up's raw material
+    pub meter_log: Vec<Value>,
+}
+
+impl Farm {
+    pub fn new() -> Self {
+        Self { services: BTreeMap::new(), meter_log: Vec::new() }
+    }
+
+    /// Planting: the staged request made visible. Proposed only — approval is a
+    /// human's move in the queue, attestation is the keeper's after it.
+    pub fn plant(&mut self, req: &Value, floor: &str, now: &str) -> Result<Value, &'static str> {
+        let name = req["name"].as_str().ok_or("a service needs a name")?;
+        if let Some(s) = self.services.get(name) {
+            if s["state"] != "decommissioned" {
+                return Err("already lives on this farm");
+            }
+        }
+        let manifest = req.get("manifest").cloned().unwrap_or_else(|| json!([]));
+        let svc = json!({
+            "name": name,
+            "did": req["did"].as_str().unwrap_or(""),
+            "kind": req["kind"].as_str().unwrap_or("http"),
+            "endpoint": req["endpoint"].as_str().unwrap_or(""),
+            "transport": req["transport"].as_str().unwrap_or("rest"),
+            "manifest_hash": orreth_crypto::content_hash(&manifest),
+            "manifest": manifest,
+            "state": "proposed", "floor": floor,
+            "planted_at": now, "last_seen": Value::Null, "beats": 0, "calls": 0,
+        });
+        self.services.insert(name.to_string(), svc.clone());
+        Ok(svc)
+    }
+
+    /// The guarded move. Ops carry their own manifest rules:
+    ///   attest    — proposed → probation, pin what the keeper SAW
+    ///   rejoin    — dropped → serving on the SAME hash, quarantined on any other
+    ///   reapprove — quarantined → probation, adopting the proposed hash (a human's call)
+    ///   expire    — → dropped (the lease aged out)
+    ///   decom     — → decommissioned (terminal; may carry discredit for 0014 §4)
+    pub fn transition(&mut self, req: &Value, now: &str) -> Result<Value, &'static str> {
+        let name = req["name"].as_str().ok_or("which service?")?.to_string();
+        let svc = self.services.get_mut(&name).ok_or("no such service on this farm")?;
+        let from = svc["state"].as_str().unwrap_or("").to_string();
+        let op = req["op"].as_str().ok_or("which move?")?;
+        let (to, extra) = match op {
+            "attest" => {
+                let manifest = req.get("manifest").cloned().unwrap_or_else(|| json!([]));
+                svc["manifest_hash"] = json!(orreth_crypto::content_hash(&manifest));
+                svc["manifest"] = manifest;
+                svc["beats"] = json!(0);
+                ("probation", json!({}))
+            }
+            "rejoin" => {
+                let manifest = req.get("manifest").cloned().unwrap_or_else(|| json!([]));
+                let seen = orreth_crypto::content_hash(&manifest);
+                if seen == svc["manifest_hash"].as_str().unwrap_or("") {
+                    svc["beats"] = json!(0);
+                    ("serving", json!({}))
+                } else {
+                    // the rug-pull door (CVE-2025-54136): a changed manifest is a NEW
+                    // claim — held at the gate until a human re-opens it
+                    svc["proposed_manifest"] = manifest;
+                    svc["proposed_hash"] = json!(seen);
+                    ("quarantined", json!({"pinned": svc["manifest_hash"], "seen": seen}))
+                }
+            }
+            "reapprove" => {
+                if let Some(m) = svc.as_object_mut().unwrap().remove("proposed_manifest") {
+                    svc["manifest"] = m;
+                }
+                if let Some(h) = svc.as_object_mut().unwrap().remove("proposed_hash") {
+                    svc["manifest_hash"] = h;
+                }
+                svc["beats"] = json!(0);
+                ("probation", json!({}))
+            }
+            "expire" => {
+                svc["beats"] = json!(0);
+                ("dropped", json!({"reason": req["reason"].as_str().unwrap_or("missed heartbeats")}))
+            }
+            "decom" => ("decommissioned",
+                        json!({"reason": req["reason"].as_str().unwrap_or(""),
+                               "discredit": req["discredit"].as_bool().unwrap_or(false)})),
+            _ => return Err("which move?"),
+        };
+        if !legal(&from, to) {
+            return Err("not a move this farm knows");
+        }
+        svc["state"] = json!(to);
+        let mut out = svc.clone();
+        out["transition"] = json!({"from": from, "to": to, "op": op, "at": now, "extra": extra});
+        Ok(out)
+    }
+
+    /// The lease: beats earn probation's exit; the keeper reports, the plane promotes.
+    pub fn beat(&mut self, name: &str, now: &str) -> Result<Value, &'static str> {
+        let svc = self.services.get_mut(name).ok_or("no such service on this farm")?;
+        let state = svc["state"].as_str().unwrap_or("").to_string();
+        if !matches!(state.as_str(), "probation" | "serving") {
+            return Err("only probation and serving services beat");
+        }
+        svc["last_seen"] = json!(now);
+        let beats = svc["beats"].as_i64().unwrap_or(0) + 1;
+        svc["beats"] = json!(beats);
+        if state == "probation" && beats >= PROBATION_BEATS {
+            svc["state"] = json!("serving"); // earned, not granted — rookie probation
+            let mut out = svc.clone();
+            out["transition"] = json!({"from": "probation", "to": "serving", "op": "beat", "at": now});
+            return Ok(out);
+        }
+        Ok(svc.clone())
+    }
+
+    /// Only a serving service is consumed — the refusal is the caller's uniform shape.
+    pub fn meter(&mut self, req: &Value, now: &str) -> Result<Value, &'static str> {
+        let name = req["name"].as_str().ok_or("which service?")?;
+        let svc = self.services.get_mut(name).ok_or("no such service on this farm")?;
+        if svc["state"] != "serving" {
+            return Err("request cannot be served under this capability");
+        }
+        svc["calls"] = json!(svc["calls"].as_i64().unwrap_or(0) + 1);
+        self.meter_log.push(json!({"at": now, "service": name,
+            "caller": req["caller"].as_str().unwrap_or(""),
+            "ms": req["ms"].as_i64().unwrap_or(0)}));
+        Ok(json!({"ok": true, "calls": svc["calls"]}))
+    }
+
+    /// The roster this floor beats upward — one world, one picture.
+    pub fn roster(&self) -> Vec<Value> {
+        self.services.values().cloned().collect()
+    }
+}
