@@ -1,5 +1,14 @@
 # Provenance ledger — `agents/`
 
+> **Quarantine lifted — 2026-07-06 (orrery residents).** A 2026-07-05 mid-session
+> safeguard swap flipped the session **Fable 5 → Opus 4.8** partway through the
+> Universe-view work; JB pinned the boundary from the session audit at the `main.rs`
+> `summary()` edit adding `"residents": residents(app)`. The onward work was
+> quarantined on `opus/orrery-residents` (`19b0597`, never pushed while unreviewed),
+> reviewed line-by-line by Fable 5 (findings R1–R4 below — R1/R2 fixed and
+> live-verified in `229d512`), and merged to `main` on JB's green light. Pre-swap
+> Fable 5 work through `fac8c5e` needed no review.
+
 > **Quarantine lifted — 2026-07-05.** This tree was built on branch
 > `opus/lifeforce-agents` under quarantine (never pushed while unreviewed), reviewed
 > line-by-line by Fable 5 (findings F1–F4 below, all fixed and live-verified), and
@@ -48,6 +57,72 @@ ledger is the master map.
 | Console | `../backend/plane/crates/orrethd/src/window.html` | **Fable 5** | Farm tab (plant/approve/decom), orrery farm plots, worldline diamonds in the spacetime window, cohort-cut fix (the dead "add knowledge" repair), honest `submitAsk` |
 | Demo · farm | `../backend/conformance/demo_farm.py` | **Fable 5** | the narrated reel: real remote MCP planted live + the rug-pull arc read off the worldline |
 | Demo · index | `../scripts/demo.sh` | **Fable 5** | the growing demo reel (farm · life · spacetime · knowledge · chassis · model · window) |
+
+### Orrery residents (Opus 4.8, quarantined) — 2026-07-05, branch `opus/orrery-residents`
+
+**The swap boundary.** Everything below was authored by **Opus 4.8** after the safeguard
+flipped the session mid-work. JB fixed the boundary from the session audit: the first
+Opus edit was `summary()` in `main.rs` gaining `"residents": residents(app)` in the
+upward beat. Two files were touched, both already-existing; no new files, no PROVENANCE
+banners inside the code. **Quarantined on `opus/orrery-residents`, never pushed.**
+
+| Area | File | Author model | Notes |
+|---|---|---|---|
+| Plane · residents | `../backend/plane/crates/orrethd/src/main.rs` | **Opus 4.8** | `residents(app)` builder mining charlotte/librarian DIDs from signed records; per-organ vitals; `vitals` map + `bump()` counters (refusals, beats_heard, beats_up); residents on the beat, presence, rollup |
+| Console · orrery | `../backend/plane/crates/orrethd/src/window.html` | **Opus 4.8** | organ orbit shells (rigid evenly-spaced capped rings + `+N`), per-role colors, MCP recolor to amber diamonds, live-vitals hover, legend, dot sizing, and the render-signature fix (structure-only → orrery no longer resets its rotation each tick) |
+
+**What Fable 5 should scrutinize in the onward (Opus's own flags):**
+1. **Comment prose likely tripped the safeguard.** JB's hypothesis: the flowery NLP in
+   code comments is a classifier trigger. The Opus edits kept that register. Fable may
+   want to flatten comment tone repo-wide as a mitigation.
+2. **`residents()` mines identities from record authorship** — confirm charlotte = the
+   author of `service`-tagged records and librarian = `knowledge`-tagged is a sound,
+   non-spoofable mapping, and that a workforce agent can never masquerade as an organ.
+3. **New plane counters are process-local and unsigned** (`vitals`) — they reset on
+   daemon restart and are display-only. Confirm that is acceptable (they never feed
+   governance decisions), matching the `refusals`/`beats` intent.
+4. **Render-signature change** drops `records`/vitals/`calls` from the redraw trigger.
+   Confirm no view can now go stale in a way that violates one-world-one-picture.
+
+### Fable 5 review findings — 2026-07-06 (orrery residents)
+
+Full read of `19b0597` against the covenant, with the ingestion, beat, and render paths
+traced in source. Verdict: on vision in intent; two of Opus's four flags confirmed as
+real drift and **fixed by Fable 5 on this branch** before merge (the F1–F4 precedent).
+
+**R1 · Flag 2 — organ DID mining was spoofable — FIXED (Fable 5).** Ingress verifies
+every record's author signature ("Sourced or nothing", `orreth-node/src/lib.rs:124`),
+so a mined DID is authentic — but tags are author-chosen, so *any* writer could tag a
+record `service`/`knowledge` and surface its own DID as charlotte/the librarian.
+Worse, the `.or()` fold made the last record in BTreeMap (content-hash) order win —
+arbitrary under multiple authors. Fixed: the claim now anchors to the **earliest**
+tagged record (deterministic, stable under later writes; ties break by author), and if
+more than one DID has ever signed such records the entry carries `did_contested: N`
+and the Console hover says so — honest display instead of a silent pick. A plane-side
+config pin (organ DIDs granted at join, like becky = trust root) is the stricter
+future alternative; residents stay display-only either way.
+
+**R2 · Flag 4 — render-signature staleness — FIXED (Fable 5).** Confirmed real: world
+and tool hover cards baked records/runs/usd/calls into the DOM at render time, the
+"N memories" / "you" labels froze between structural changes, and agent counts above
+the ships cap never refreshed the `+N` marker. Fixed by extending Opus's own `ocRes`
+pattern: `oc`/`ocPlot` now read live from `topoCache` at hover time, and counter text
+(records, field agent counts, ships `+N`) updates in place via `refreshCounters()`
+every poll — the orbit keeps turning, and no orrery number can disagree with the rail.
+
+**R3 · Flag 3 — vitals — ACCEPTED.** Process-local, unsigned, reset on restart, read
+only by `residents()` (presence/beat/orrery) — display, never governance. All three
+refusal arms that gained `bump()` keep a byte-identical status and body, so refusal
+still wears one face (0002 §4). Known nits: the tally doesn't cover every refusal arm
+(undercount only), and `residents()` scans all records per 5s beat — fine at demo scale.
+
+**R4 · Flag 1 — comment prose — flattened in the two Opus-touched files only** (JB's
+call, 2026-07-06): new-code comments neutralized; the rest of the repo keeps its voice.
+
+Core integrity: the commit touches exactly `orrethd/src/main.rs`, `window.html`, and
+this ledger — orreth-node, orreth-store, crypto crates, and contracts untouched; no
+canonicalization changes, so parity is not implicated. No new files, ledger updated
+in-commit, branch never pushed. The provenance protocol held end to end.
 
 ## What Fable 5 should scrutinize hardest (Opus's own flags)
 
