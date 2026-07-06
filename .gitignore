@@ -41,3 +41,8 @@ cdk.out/
 *.log
 .smoke-root-seed
 .demo-life-seed
+
+# generated demo snapshot + cdk artifacts (0019 demo)
+site/
+infrastructure/cdk/cdk.out/
+infrastructure/cdk/.venv/

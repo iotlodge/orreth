@@ -464,8 +464,29 @@
 "use strict";
 /* The Console — Agentic C2 (0000 · 0008). Every render is a governed, tokened query;
    the pane holds no privileged path. Views: Pulse · Window · Requests · Ask. */
+/* ── spectator mode (0019 demo): a captured moment of a real universe ──
+   The snapshot builder injects window.ORRETH_DEMO (+_CFG) before this script; the
+   flag is absent on the live Console. Reads serve from recorded fixtures; writes get
+   the uniform refusal — a spectator may see that the world turns, never touch it. */
+if(window.ORRETH_DEMO){
+  const realFetch=window.fetch.bind(window);
+  const FIX={"/topology":"topology","/presence":"presence","/rollup":"rollup",
+             "/farm":"farm","/stable":"stable","/requests":"requests","/health":"health"};
+  window.fetch=(url,opts)=>{
+    const path=String(url).split("#")[0].split("?")[0];
+    const method=((opts&&opts.method)||"GET").toUpperCase();
+    if(method==="GET"&&FIX[path])return realFetch(`fixtures/${FIX[path]}.json`);
+    if(method==="GET"&&path.startsWith("/records/"))
+      return Promise.resolve(new Response("{}",{status:404}));
+    if(method==="POST"&&path==="/retrieve")return realFetch("fixtures/retrieve.json");
+    return Promise.resolve(new Response(JSON.stringify(
+      {error:"request cannot be served under this capability"}),{status:403}));
+  };
+}
 /* robust: pull the t= capability from the hash regardless of other params (e.g. &v=) */
-const cfg=(()=>{try{const m=location.hash.match(/[#&]t=([^&]+)/);return m?JSON.parse(atob(m[1])):null}catch{return null}})();
+const cfg=(()=>{try{const m=location.hash.match(/[#&]t=([^&]+)/);
+  return m?JSON.parse(atob(m[1])):(window.ORRETH_DEMO_CFG||null)}
+  catch{return window.ORRETH_DEMO_CFG||null}})();
 window.addEventListener("hashchange",()=>location.reload()); /* new token → new console */
 const $=id=>document.getElementById(id);
 const DAY=864e5, iso=d=>d.toISOString().replace(/\.\d+Z$/,"Z");
@@ -1090,6 +1111,14 @@ if(vparam){const t=document.querySelector(`.tab[data-v="${vmap[vparam]||vparam}"
 
 function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable()}
 tick();setInterval(tick,4000);          /* the console breathes */
+if(window.ORRETH_DEMO){                 /* the spectator's ribbon — honest about the frame */
+  const b=document.createElement("div");
+  b.style.cssText="position:fixed;bottom:10px;right:14px;z-index:99;font:.68rem var(--mono);"+
+    "color:var(--brass);border:1px solid var(--brassdim);border-radius:999px;"+
+    "padding:.3em .9em;background:rgba(11,18,38,.88);pointer-events:none";
+  b.textContent=`spectator · a captured moment of a live universe · ${window.ORRETH_DEMO.at||""}`;
+  document.body.appendChild(b);
+}
 scrub();                                /* the universe view is home — light it now */
 </script>
 </body>
