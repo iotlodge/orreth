@@ -9,8 +9,13 @@
     --star:#EAEFFA;--dim:#8894B4;--faint:#4B5678;--brass:#D4A960;--brassdim:#8a6f42;
     --near:#7FD1A8;--blue:#9FB6E8;--red:#E89A8F;--viol:#B79CE8;
     --mono:ui-monospace,"SF Mono",Menlo,monospace;--serif:Palatino,Georgia,serif}
-  *{box-sizing:border-box;margin:0}
+  *{box-sizing:border-box;margin:0;scrollbar-width:thin;scrollbar-color:var(--hair) transparent}
   html,body{height:100%;overflow:hidden}
+  /* scrollbars wear the theme: hairline thumb on a void track, never the browser's chrome */
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--hair);border-radius:5px;border:2px solid var(--void)}
+  ::-webkit-scrollbar-thumb:hover{background:var(--hair2)}
   body{background:radial-gradient(1400px 700px at 82% -8%,rgba(159,182,232,.06),transparent 62%),var(--void);
     color:var(--star);font:14px/1.5 system-ui,sans-serif;display:flex;flex-direction:column}
 
@@ -32,7 +37,9 @@
     animation:breathe 3s infinite}@keyframes breathe{50%{opacity:.3}}
 
   /* ── stage: roster | view ── */
-  main{flex:1;display:grid;grid-template-columns:264px 1fr;min-height:0}
+  /* the single row is pinned to the container (minmax(0,1fr)) — an auto row would grow
+     to the tallest view's content and push the stage past the viewport */
+  main{flex:1;display:grid;grid-template-columns:264px 1fr;grid-template-rows:minmax(0,1fr);min-height:0}
   .rail{border-right:1px solid var(--hair);overflow-y:auto}
   .rail .grp{font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.26em;
     font-size:.7rem;color:var(--faint);padding:1rem 1.1rem .35rem;
@@ -220,7 +227,7 @@
   .remnote{position:absolute;bottom:.7rem;left:1rem;font:italic .72rem var(--mono);color:var(--red);opacity:.85}
 
   /* ── THE FARM (0018): services are identities with worldlines ── */
-  #v-farm{padding:1.6rem;overflow-y:auto}
+  #v-farm,#v-stable{padding:1.6rem;overflow-y:auto}
   .farmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1rem;max-width:1200px}
   .svc{border:1px solid var(--hair);border-radius:12px;padding:1rem 1.2rem;
     background:linear-gradient(155deg,rgba(159,182,232,.04),transparent 70%)}
@@ -260,7 +267,7 @@
   .think .nm{flex:2;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .think .fl{flex:1;color:var(--faint)} .think .n{width:6.5rem;text-align:right;color:var(--dim)}
   .think .u{width:5rem;text-align:right;color:var(--brass)}
-  .think.res .nm::after{content:" · resident";color:var(--faint)}
+  .think.resident .nm::after{content:" · resident";color:var(--faint)}
   .sbtn{font:.68rem var(--mono);color:var(--dim);border:1px solid var(--hair2);border-radius:6px;
     padding:.3em .8em;cursor:pointer;background:transparent}
   .sbtn:hover{color:var(--star);border-color:var(--brassdim)}
@@ -945,7 +952,7 @@ async function loadStable(){
     const usage=(st.usage||[]).slice().sort((a,b)=>(b.usd||0)-(a.usd||0));
     $("whothinks").innerHTML= usage.length? usage.map(u=>{
       const nm=agentName(u.subject), res=(presCache?.residents||[]).some(x=>x.did===u.subject);
-      return `<div class="think${res?" res":""}"><span class="nm" title="${u.subject}">${nm}</span>
+      return `<div class="think${res?" resident":""}"><span class="nm" title="${u.subject}">${nm}</span>
         <span class="fl">${(u.floor||"").split("/").pop()}</span>
         <span class="n">${(u.calls||0)} call${u.calls===1?"":"s"}</span>
         <span class="n">${(u.tokens||0).toLocaleString()} tok</span>
