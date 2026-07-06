@@ -39,6 +39,13 @@ struct App {
     /// Presence flows UP (0000 §1): children heartbeat their subtree summaries here.
     /// A parent learns the world below without ever reaching into it.
     children: Mutex<BTreeMap<String, Value>>,
+    /// The residents' vitals — small, honest counters (beats heard, refusals worn,
+    /// pushes sent) so the Console can show the organs are alive, not just named.
+    vitals: Mutex<BTreeMap<String, i64>>,
+}
+
+fn bump(app: &App, key: &str) {
+    *app.vitals.lock().unwrap().entry(key.to_string()).or_insert(0) += 1;
 }
 
 /// "%Y-%m-%dT%H:%M:%SZ" from the system clock (civil-from-days; no chrono).
@@ -173,6 +180,7 @@ async fn main() {
         pg: pg_store,
         requests: Mutex::new(Vec::new()),
         children: Mutex::new(BTreeMap::new()),
+        vitals: Mutex::new(BTreeMap::new()),
     });
 
     // the upward presence beat: every 5s tell the parent what this subtree holds,
@@ -181,7 +189,9 @@ async fn main() {
         let beat = app.clone();
         std::thread::spawn(move || loop {
             let s = summary(&beat);
-            let _ = ureq::post(&format!("{parent_url}/hello")).send_json(&s);
+            if ureq::post(&format!("{parent_url}/hello")).send_json(&s).is_ok() {
+                bump(&beat, "beats_up"); // what this floor tells its parent, counted
+            }
             std::thread::sleep(std::time::Duration::from_secs(5));
         });
     }
@@ -314,6 +324,7 @@ async fn egress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl Int
                 }
                 // the uniform refusal: authz-miss and every other miss share one shape (0002 §4)
                 Err(_) => {
+                    bump(&app, "refusals"); // vigil's tally — the shape, never the reason
                     return (
                         StatusCode::FORBIDDEN,
                         Json(json!({"error": "request cannot be served under this capability"})),
@@ -402,6 +413,7 @@ async fn model_authorize(State(app): State<Arc<App>>, Json(req): Json<Value>) ->
         {
             let u = app.universe.lock().unwrap();
             if u.verify_token(token).is_err() {
+                bump(&app, "refusals");
                 return (StatusCode::FORBIDDEN,
                         Json(json!({"error": "request cannot be served under this capability"})));
             }
@@ -513,11 +525,15 @@ async fn farm_hello(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl
 
 /// Every consumption on the record — volume and shape, never payloads (0016 §6).
 async fn farm_meter(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
-    match app.farm.lock().unwrap().meter(&req, &now_iso()) {
+    let out = app.farm.lock().unwrap().meter(&req, &now_iso());
+    match out {
         Ok(v) => (StatusCode::OK, Json(v)),
         // the uniform refusal: a non-serving service and a missing grant wear one face
-        Err(_) => (StatusCode::FORBIDDEN,
-                   Json(json!({"error": "request cannot be served under this capability"}))),
+        Err(_) => {
+            bump(&app, "refusals");
+            (StatusCode::FORBIDDEN,
+             Json(json!({"error": "request cannot be served under this capability"})))
+        }
     }
 }
 
@@ -577,19 +593,81 @@ fn local_workforce(app: &App) -> Vec<Value> {
     }).collect()
 }
 
+/// The organs, alive — names, honest vitals from real state, and DIDs MINED from the
+/// records each resident actually signed (nothing self-declares: charlotte is whoever
+/// authored the service worldlines; the librarian, whoever authored the knowledge).
+/// Shared by /presence and the upward beat — the rail and the orrery see one roster.
+fn residents(app: &App) -> Vec<Value> {
+    let u = app.universe.lock().unwrap();
+    let leaf = u.nodes[0].scope.rsplit('/').next().unwrap_or("").to_string();
+    let memories = u.nodes[0].records.len();
+    let floors = u.nodes[0].floors.len();
+    let root = u.trust_root.clone();
+    // mine the host-side residents' identities and tallies from signed memory
+    let (mut cha_did, mut lib_did) = (None::<String>, None::<String>);
+    let (mut worldlines, mut knowledge) = (0i64, 0i64);
+    for rec in u.nodes[0].records.values() {
+        let tags = rec.get("tags").and_then(Value::as_array);
+        let has = |t: &str| tags.is_some_and(|ts| ts.iter().any(|x| x == t));
+        if has("service") {
+            worldlines += 1;
+            cha_did = rec["author"].as_str().map(str::to_string).or(cha_did);
+        }
+        if has("knowledge") {
+            knowledge += 1;
+            lib_did = rec["author"].as_str().map(str::to_string).or(lib_did);
+        }
+    }
+    drop(u);
+    let (leases, gathers) = {
+        let q = app.requests.lock().unwrap();
+        (q.iter().filter(|r| r["kind"] == "join" && r["status"] == "done").count(),
+         q.iter().filter(|r| r["kind"] == "gather" && r["status"] == "done").count())
+    };
+    let (serving, tool_calls) = {
+        let f = app.farm.lock().unwrap();
+        (f.services.values().filter(|s| s["state"] == "serving").count(), f.meter_log.len())
+    };
+    let v = app.vitals.lock().unwrap();
+    let vital = |k: &str| v.get(k).copied().unwrap_or(0);
+
+    let mut out = vec![
+        json!({"agent": format!("becky·{leaf}"), "name": "becky", "role": "becky · IAM",
+               "state": "resident", "did": root,
+               "blurb": "issues every identity; the pinned trust root",
+               "vitals": {"leases": leases}}),
+        json!({"agent": format!("vigil·{leaf}"), "name": "vigil", "role": "vigil · the Warden",
+               "state": "watching",
+               "blurb": "detection, content-blind; stages, never enforces",
+               "vitals": {"beats heard": vital("beats_heard"), "refusals": vital("refusals")}}),
+        json!({"agent": format!("steward·{leaf}"), "name": "steward", "role": "steward · memory",
+               "state": "distilling",
+               "blurb": "prunes and distills what the layer learns",
+               "vitals": {"memories": memories}}),
+        json!({"agent": format!("governance·{leaf}"), "name": "governance", "role": "governance",
+               "state": "resident",
+               "blurb": "arbitrates drift; guards the floors",
+               "vitals": {"floors": floors, "beats up": vital("beats_up")}}),
+    ];
+    if serving > 0 || worldlines > 0 {
+        out.push(json!({"agent": format!("charlotte·{leaf}"), "name": "charlotte",
+            "role": "charlotte · farm keeper", "state": "tending", "did": cha_did,
+            "blurb": "probes, pins, and attests the toolshed; writes the worldlines",
+            "vitals": {"tools serving": serving, "tool calls": tool_calls,
+                       "worldline events": worldlines}}));
+    }
+    if knowledge > 0 {
+        out.push(json!({"agent": format!("librarian·{leaf}"), "name": "librarian",
+            "role": "librarian · knowledge", "state": "gathering", "did": lib_did,
+            "blurb": "gathers from identified sources; admits quarantined",
+            "vitals": {"gathers": gathers, "knowledge held": knowledge}}));
+    }
+    out
+}
+
 async fn presence(State(app): State<Arc<App>>) -> Json<Value> {
     let scope = { app.universe.lock().unwrap().nodes[0].scope.clone() };
-    let leaf = scope.rsplit('/').next().unwrap_or(&scope).to_string();
-    let residents = json!([
-        {"agent": format!("becky·{leaf}"), "role":"becky · IAM",
-         "state":"resident", "blurb":"issues every identity; the pinned trust root"},
-        {"agent": format!("vigil·{leaf}"), "role":"vigil · the Warden",
-         "state":"watching", "blurb":"detection, content-blind; stages, never enforces"},
-        {"agent": format!("steward·{leaf}"), "role":"steward · memory",
-         "state":"distilling", "blurb":"prunes and distills what the layer learns"},
-        {"agent": format!("governance·{leaf}"), "role":"governance",
-         "state":"resident", "blurb":"arbitrates drift; guards the floors"}
-    ]);
+    let residents = json!(residents(&app));
     // this floor's leased agents, then every floor below: each child beat carries its
     // subtree's rosters, so the Console here shows the whole world — matching the orrery
     let mut workforce = local_workforce(&app);
@@ -625,7 +703,7 @@ fn summary(app: &App) -> Value {
     json!({"scope": scope, "records": records, "runs": runs, "agents": agents,
            "usd": (usd * 1e6).round() / 1e6, "horizon_days": app.horizon_days,
            "workforce": local_workforce(app), "farm": app.farm.lock().unwrap().roster(),
-           "children": children})
+           "residents": residents(app), "children": children})
 }
 
 /// A child announces its subtree — the upward beat. Grandchildren ride along, so
@@ -636,6 +714,7 @@ async fn hello(State(app): State<Arc<App>>, Json(mut beat): Json<Value>) -> impl
     };
     beat["heard_at"] = json!(now_iso());
     app.children.lock().unwrap().insert(scope, beat);
+    bump(&app, "beats_heard"); // vigil hears the world breathe — shape, never content
     (StatusCode::OK, Json(json!({"ok": true})))
 }
 

@@ -1,5 +1,15 @@
 # Provenance ledger — `agents/`
 
+> **OPEN QUARANTINE — 2026-07-05, branch `opus/orrery-residents`.** A mid-session
+> safeguard swap flipped this session **Fable 5 → Opus 4.8** partway through the
+> Universe-view work. JB pinpointed the boundary from the session audit: the swap
+> landed at the `main.rs` `summary()` edit that added `"residents": residents(app)`
+> to the upward beat (screenshot-confirmed). **Everything from that edit onward is
+> Opus 4.8** and lives quarantined on `opus/orrery-residents`, never pushed, awaiting
+> Fable 5 + JB review. What sits on `origin/main` up to `fac8c5e` (the Tool Farm 0018
+> dive and the demo reel) is **pre-swap Fable 5, correctly attributed** — Fable reviews
+> only the onward. See "Orrery residents (Opus 4.8, quarantined)" below.
+
 > **Quarantine lifted — 2026-07-05.** This tree was built on branch
 > `opus/lifeforce-agents` under quarantine (never pushed while unreviewed), reviewed
 > line-by-line by Fable 5 (findings F1–F4 below, all fixed and live-verified), and
@@ -48,6 +58,32 @@ ledger is the master map.
 | Console | `../backend/plane/crates/orrethd/src/window.html` | **Fable 5** | Farm tab (plant/approve/decom), orrery farm plots, worldline diamonds in the spacetime window, cohort-cut fix (the dead "add knowledge" repair), honest `submitAsk` |
 | Demo · farm | `../backend/conformance/demo_farm.py` | **Fable 5** | the narrated reel: real remote MCP planted live + the rug-pull arc read off the worldline |
 | Demo · index | `../scripts/demo.sh` | **Fable 5** | the growing demo reel (farm · life · spacetime · knowledge · chassis · model · window) |
+
+### Orrery residents (Opus 4.8, quarantined) — 2026-07-05, branch `opus/orrery-residents`
+
+**The swap boundary.** Everything below was authored by **Opus 4.8** after the safeguard
+flipped the session mid-work. JB fixed the boundary from the session audit: the first
+Opus edit was `summary()` in `main.rs` gaining `"residents": residents(app)` in the
+upward beat. Two files were touched, both already-existing; no new files, no PROVENANCE
+banners inside the code. **Quarantined on `opus/orrery-residents`, never pushed.**
+
+| Area | File | Author model | Notes |
+|---|---|---|---|
+| Plane · residents | `../backend/plane/crates/orrethd/src/main.rs` | **Opus 4.8** | `residents(app)` builder mining charlotte/librarian DIDs from signed records; per-organ vitals; `vitals` map + `bump()` counters (refusals, beats_heard, beats_up); residents on the beat, presence, rollup |
+| Console · orrery | `../backend/plane/crates/orrethd/src/window.html` | **Opus 4.8** | organ orbit shells (rigid evenly-spaced capped rings + `+N`), per-role colors, MCP recolor to amber diamonds, live-vitals hover, legend, dot sizing, and the render-signature fix (structure-only → orrery no longer resets its rotation each tick) |
+
+**What Fable 5 should scrutinize in the onward (Opus's own flags):**
+1. **Comment prose likely tripped the safeguard.** JB's hypothesis: the flowery NLP in
+   code comments is a classifier trigger. The Opus edits kept that register. Fable may
+   want to flatten comment tone repo-wide as a mitigation.
+2. **`residents()` mines identities from record authorship** — confirm charlotte = the
+   author of `service`-tagged records and librarian = `knowledge`-tagged is a sound,
+   non-spoofable mapping, and that a workforce agent can never masquerade as an organ.
+3. **New plane counters are process-local and unsigned** (`vitals`) — they reset on
+   daemon restart and are display-only. Confirm that is acceptable (they never feed
+   governance decisions), matching the `refusals`/`beats` intent.
+4. **Render-signature change** drops `records`/vitals/`calls` from the redraw trigger.
+   Confirm no view can now go stale in a way that violates one-world-one-picture.
 
 ## What Fable 5 should scrutinize hardest (Opus's own flags)
 
