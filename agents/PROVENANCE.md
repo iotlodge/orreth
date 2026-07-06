@@ -1,14 +1,13 @@
 # Provenance ledger — `agents/`
 
-> **OPEN QUARANTINE — 2026-07-05, branch `opus/orrery-residents`.** A mid-session
-> safeguard swap flipped this session **Fable 5 → Opus 4.8** partway through the
-> Universe-view work. JB pinpointed the boundary from the session audit: the swap
-> landed at the `main.rs` `summary()` edit that added `"residents": residents(app)`
-> to the upward beat (screenshot-confirmed). **Everything from that edit onward is
-> Opus 4.8** and lives quarantined on `opus/orrery-residents`, never pushed, awaiting
-> Fable 5 + JB review. What sits on `origin/main` up to `fac8c5e` (the Tool Farm 0018
-> dive and the demo reel) is **pre-swap Fable 5, correctly attributed** — Fable reviews
-> only the onward. See "Orrery residents (Opus 4.8, quarantined)" below.
+> **Quarantine lifted — 2026-07-06 (orrery residents).** A 2026-07-05 mid-session
+> safeguard swap flipped the session **Fable 5 → Opus 4.8** partway through the
+> Universe-view work; JB pinned the boundary from the session audit at the `main.rs`
+> `summary()` edit adding `"residents": residents(app)`. The onward work was
+> quarantined on `opus/orrery-residents` (`19b0597`, never pushed while unreviewed),
+> reviewed line-by-line by Fable 5 (findings R1–R4 below — R1/R2 fixed and
+> live-verified in `229d512`), and merged to `main` on JB's green light. Pre-swap
+> Fable 5 work through `fac8c5e` needed no review.
 
 > **Quarantine lifted — 2026-07-05.** This tree was built on branch
 > `opus/lifeforce-agents` under quarantine (never pushed while unreviewed), reviewed
