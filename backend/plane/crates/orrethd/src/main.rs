@@ -169,8 +169,17 @@ async fn main() {
                  universe.nodes[0].high_water);
     }
 
-    let model_plane = model::ModelPlane::from_file(
+    let mut model_plane = model::ModelPlane::from_file(
         &arg("--models").unwrap_or_else(|| "profiles/model-registry.json".into()));
+    // the meter survives the daemon (0019 §4): usage history is memory, not vapor
+    if let Some(store) = &pg_store {
+        let meters = tokio::task::block_in_place(|| store.load_meters(&scope))
+            .unwrap_or_default();
+        if !meters.is_empty() {
+            println!("orrethd · restored {} meter entr(ies) from postgres", meters.len());
+        }
+        model_plane.meter_log = meters;
+    }
     let app = Arc::new(App {
         universe: Mutex::new(universe),
         model: Mutex::new(model_plane),
@@ -212,6 +221,10 @@ async fn main() {
         .route("/farm/state", post(farm_state))
         .route("/farm/hello", post(farm_hello))
         .route("/farm/meter", post(farm_meter))
+        .route("/stable", get(stable_list))
+        .route("/stable/saddle", post(stable_saddle))
+        .route("/stable/state", post(stable_state))
+        .route("/stable/hello", post(stable_hello))
         .route("/runs", post(runs_ingress))
         .route("/presence", get(presence))
         .route("/rollup", get(rollup))
@@ -462,7 +475,20 @@ async fn model_meter(State(app): State<Arc<App>>, Json(req): Json<Value>) -> imp
                                     req["tokens"].as_i64().unwrap_or(0));
         let mut entry = req.clone();
         entry["at"] = json!(now_iso());
-        m.meter_log.push(entry);          // the roll-up's raw material — usage rises
+        if let Some(mid) = entry["model"].as_str() {
+            if let Some(stall) = m.stalls.get_mut(mid) {
+                stall["calls"] = json!(stall["calls"].as_i64().unwrap_or(0) + 1);
+            }
+        }
+        m.meter_log.push(entry.clone());  // the roll-up's raw material — usage rises
+        drop(m);
+        // write-through (0019 §4): the meter outlives the daemon, like the records do
+        if let Some(store) = &app.pg {
+            let node_scope = app.universe.lock().unwrap().nodes[0].scope.clone();
+            if let Err(e) = store.save_meter(&node_scope, &entry) {
+                eprintln!("orrethd · postgres meter write-through failed: {e}");
+            }
+        }
         (StatusCode::OK, Json(json!({"remaining": remaining})))
     })
     .await
@@ -480,6 +506,62 @@ async fn model_state(State(app): State<Arc<App>>, Json(req): Json<Value>) -> imp
         req["model"].as_str().unwrap_or(""), req["state"].as_str().unwrap_or(""));
     (if ok { StatusCode::OK } else { StatusCode::BAD_REQUEST },
      Json(json!({"ok": ok})))
+}
+
+// ---------------------------------------------------------------- the stable (0019)
+
+/// This floor's stable plus every stable below, and per-agent usage floor-tagged from
+/// the beats — who is thinking, and what it costs, one picture for the whole subtree.
+async fn stable_list(State(app): State<Arc<App>>) -> Json<Value> {
+    let scope = { app.universe.lock().unwrap().nodes[0].scope.clone() };
+    let (mut stalls, own_usage) = {
+        let m = app.model.lock().unwrap();
+        (m.roster(), m.usage())
+    };
+    let mut usage: Vec<Value> = own_usage.as_array().cloned().unwrap_or_default();
+    for u in usage.iter_mut() { u["floor"] = json!(scope.clone()); }
+    fn descend(beat: &Value, stalls: &mut Vec<Value>, usage: &mut Vec<Value>) {
+        if let Some(ss) = beat["stable"].as_array() { stalls.extend(ss.iter().cloned()); }
+        if let Some(us) = beat["usage"].as_array() {
+            for u in us {
+                let mut u = u.clone();
+                u["floor"] = beat["scope"].clone();
+                usage.push(u);
+            }
+        }
+        if let Some(kids) = beat["children"].as_array() {
+            for k in kids { descend(k, stalls, usage); }
+        }
+    }
+    for beat in app.children.lock().unwrap().values() { descend(beat, &mut stalls, &mut usage); }
+    Json(json!({"scope": scope, "stalls": stalls, "usage": usage}))
+}
+
+/// Dev-only direct saddling (the wrangler's move after it probes a staged request);
+/// becomes a governed escalation (0012 lanes) before any multi-tenant deployment.
+async fn stable_saddle(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    let floor = { app.universe.lock().unwrap().nodes[0].scope.clone() };
+    match app.model.lock().unwrap().saddle(&req, &floor, &now_iso()) {
+        Ok(stall) => (StatusCode::CREATED, Json(stall)),
+        Err(e) => (StatusCode::CONFLICT, Json(json!({"error": e}))),
+    }
+}
+
+/// The guarded lifecycle move — the drift check lives plane-side (model.rs), never
+/// trusted from the wrangler's summary of it.
+async fn stable_state(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    match app.model.lock().unwrap().transition(&req, &now_iso()) {
+        Ok(stall) => (StatusCode::OK, Json(stall)),
+        Err(e) => (StatusCode::CONFLICT, Json(json!({"error": e}))),
+    }
+}
+
+/// A canary beat observed by the wrangler — beats earn `available` (0019 §2).
+async fn stable_hello(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    match app.model.lock().unwrap().canary(req["id"].as_str().unwrap_or(""), &now_iso()) {
+        Ok(stall) => (StatusCode::OK, Json(stall)),
+        Err(e) => (StatusCode::CONFLICT, Json(json!({"error": e}))),
+    }
 }
 
 // ---------------------------------------------------------------- the tool farm (0018)
@@ -606,9 +688,11 @@ fn residents(app: &App) -> Vec<Value> {
     let floors = u.nodes[0].floors.len();
     let root = u.trust_root.clone();
     // earliest (occurred_at, author) claim per tag, plus distinct-author counts
-    let (mut cha, mut lib) = (None::<(String, String)>, None::<(String, String)>);
-    let (mut cha_authors, mut lib_authors) = (BTreeSet::new(), BTreeSet::new());
-    let (mut worldlines, mut knowledge) = (0i64, 0i64);
+    let (mut cha, mut lib, mut ada) =
+        (None::<(String, String)>, None::<(String, String)>, None::<(String, String)>);
+    let (mut cha_authors, mut lib_authors, mut ada_authors) =
+        (BTreeSet::new(), BTreeSet::new(), BTreeSet::new());
+    let (mut worldlines, mut knowledge, mut mindlines) = (0i64, 0i64, 0i64);
     for rec in u.nodes[0].records.values() {
         let tags = rec.get("tags").and_then(Value::as_array);
         let has = |t: &str| tags.is_some_and(|ts| ts.iter().any(|x| x == t));
@@ -630,6 +714,10 @@ fn residents(app: &App) -> Vec<Value> {
             knowledge += 1;
             claim(&mut lib, &mut lib_authors);
         }
+        if has("mind") {
+            mindlines += 1;
+            claim(&mut ada, &mut ada_authors);
+        }
     }
     drop(u);
     let (leases, gathers) = {
@@ -641,45 +729,87 @@ fn residents(app: &App) -> Vec<Value> {
         let f = app.farm.lock().unwrap();
         (f.services.values().filter(|s| s["state"] == "serving").count(), f.meter_log.len())
     };
+    // every resident wears its meter — the honest zero included (0019 §4): per-DID
+    // llm calls/usd from the meter log, plus the stable's headcount for ada
+    let (n_stalls, minds_live, spend) = {
+        let m = app.model.lock().unwrap();
+        let live = m.stalls.values()
+            .filter(|s| matches!(s["state"].as_str(), Some("available") | Some("canaried")))
+            .count();
+        let mut spend: BTreeMap<String, (i64, f64)> = BTreeMap::new();
+        for e in &m.meter_log {
+            if let Some(s) = e["subject"].as_str() {
+                let en = spend.entry(s.to_string()).or_insert((0, 0.0));
+                en.0 += 1;
+                en.1 += e["usd"].as_f64().unwrap_or(0.0);
+            }
+        }
+        (m.stalls.len(), live, spend)
+    };
+    let llm = |did: Option<&str>| -> (i64, f64) {
+        did.and_then(|d| spend.get(d))
+            .map(|&(c, u)| (c, (u * 1e6).round() / 1e6))
+            .unwrap_or((0, 0.0))
+    };
+    let cha_did = cha.map(|(_, d)| d);
+    let lib_did = lib.map(|(_, d)| d);
+    let ada_did = ada.map(|(_, d)| d);
     let v = app.vitals.lock().unwrap();
     let vital = |k: &str| v.get(k).copied().unwrap_or(0);
 
+    let (bk_c, bk_u) = llm(root.as_deref());
     let mut out = vec![
         json!({"agent": format!("becky·{leaf}"), "name": "becky", "role": "becky · IAM",
                "state": "resident", "did": root,
                "blurb": "issues every identity; the pinned trust root",
-               "vitals": {"leases": leases}}),
+               "vitals": {"leases": leases, "llm calls": bk_c, "llm usd": bk_u}}),
         json!({"agent": format!("vigil·{leaf}"), "name": "vigil", "role": "vigil · the Warden",
                "state": "watching",
                "blurb": "detection, content-blind; stages, never enforces",
-               "vitals": {"beats heard": vital("beats_heard"), "refusals": vital("refusals")}}),
+               "vitals": {"beats heard": vital("beats_heard"), "refusals": vital("refusals"),
+                          "llm calls": 0, "llm usd": 0}}),
         json!({"agent": format!("steward·{leaf}"), "name": "steward", "role": "steward · memory",
                "state": "distilling",
                "blurb": "prunes and distills what the layer learns",
-               "vitals": {"memories": memories}}),
+               "vitals": {"memories": memories, "llm calls": 0, "llm usd": 0}}),
         json!({"agent": format!("governance·{leaf}"), "name": "governance", "role": "governance",
                "state": "resident",
                "blurb": "arbitrates drift; guards the floors",
-               "vitals": {"floors": floors, "beats up": vital("beats_up")}}),
+               "vitals": {"floors": floors, "beats up": vital("beats_up"),
+                          "llm calls": 0, "llm usd": 0}}),
     ];
     if serving > 0 || worldlines > 0 {
+        let (c_c, c_u) = llm(cha_did.as_deref());
         let mut c = json!({"agent": format!("charlotte·{leaf}"), "name": "charlotte",
             "role": "charlotte · farm keeper", "state": "tending",
-            "did": cha.map(|(_, d)| d),
+            "did": cha_did,
             "blurb": "probes, pins, and attests the toolshed; writes the worldlines",
             "vitals": {"tools serving": serving, "tool calls": tool_calls,
-                       "worldline events": worldlines}});
+                       "worldline events": worldlines, "llm calls": c_c, "llm usd": c_u}});
         if cha_authors.len() > 1 { c["did_contested"] = json!(cha_authors.len()); }
         out.push(c);
     }
     if knowledge > 0 {
+        let (l_c, l_u) = llm(lib_did.as_deref());
         let mut l = json!({"agent": format!("librarian·{leaf}"), "name": "librarian",
             "role": "librarian · knowledge", "state": "gathering",
-            "did": lib.map(|(_, d)| d),
+            "did": lib_did,
             "blurb": "gathers from identified sources; admits quarantined",
-            "vitals": {"gathers": gathers, "knowledge held": knowledge}});
+            "vitals": {"gathers": gathers, "knowledge held": knowledge,
+                       "llm calls": l_c, "llm usd": l_u}});
         if lib_authors.len() > 1 { l["did_contested"] = json!(lib_authors.len()); }
         out.push(l);
+    }
+    if n_stalls > 0 || mindlines > 0 {
+        let (a_c, a_u) = llm(ada_did.as_deref());
+        let mut a = json!({"agent": format!("ada·{leaf}"), "name": "ada",
+            "role": "ada · the wrangler", "state": "syncing",
+            "did": ada_did,
+            "blurb": "tends the stable; syncs the catalogs, pins the deals",
+            "vitals": {"stalls": n_stalls, "minds live": minds_live,
+                       "worldline events": mindlines, "llm calls": a_c, "llm usd": a_u}});
+        if ada_authors.len() > 1 { a["did_contested"] = json!(ada_authors.len()); }
+        out.push(a);
     }
     out
 }
@@ -699,29 +829,47 @@ async fn presence(State(app): State<Arc<App>>) -> Json<Value> {
 }
 
 /// This node's subtree summary: own stats + everything its children last reported.
-/// The Console's orrery renders exactly this shape, nested all the way down.
+/// The Console's orrery renders exactly this shape, nested all the way down. The beat
+/// now also carries `stable`, per-agent `usage`, and a `pulse` mini-rollup, so the apex
+/// can total the whole world without reaching into any floor (0019 §4).
 fn summary(app: &App) -> Value {
     let (scope, records) = {
         let u = app.universe.lock().unwrap();
         (u.nodes[0].scope.clone(), u.nodes[0].records.len())
     };
-    let (runs, agents) = {
+    let (runs, agents, success, tokens) = {
         let u = app.universe.lock().unwrap();
         let mut agents = BTreeSet::new();
+        let (mut ok, mut tok) = (0i64, 0i64);
         for r in u.runs.values() {
             if let Some(a) = r["agent"].as_str() {
                 agents.insert(a.to_string());
             }
+            if r["outcome"] == "success" { ok += 1; }
+            tok += r["cost"]["tokens"].as_i64().unwrap_or(0);
         }
-        (u.runs.len(), agents.len())
+        (u.runs.len(), agents.len(), ok, tok)
     };
-    let usd: f64 = app.model.lock().unwrap().meter_log.iter()
-        .filter_map(|e| e["usd"].as_f64()).sum();
+    let (usd, model_calls, usage, stable) = {
+        let m = app.model.lock().unwrap();
+        let usd: f64 = m.meter_log.iter().filter_map(|e| e["usd"].as_f64()).sum();
+        (usd, m.meter_log.len(), m.usage(), m.roster())
+    };
+    let (services, tool_calls, farm_roster) = {
+        let f = app.farm.lock().unwrap();
+        (f.services.values().filter(|s| s["state"] == "serving").count(),
+         f.meter_log.len(), f.roster())
+    };
     let children: Vec<Value> = app.children.lock().unwrap().values().cloned().collect();
     // horizon rides the beat (serde maps a non-finite "forever" to null — the apex)
     json!({"scope": scope, "records": records, "runs": runs, "agents": agents,
            "usd": (usd * 1e6).round() / 1e6, "horizon_days": app.horizon_days,
-           "workforce": local_workforce(app), "farm": app.farm.lock().unwrap().roster(),
+           "workforce": local_workforce(app), "farm": farm_roster,
+           "stable": stable, "usage": usage,
+           "pulse": {"memories": records, "runs": runs, "success": success,
+                     "tokens": tokens, "usd": (usd * 1e6).round() / 1e6,
+                     "model_calls": model_calls, "services": services,
+                     "tool_calls": tool_calls},
            "residents": residents(app), "children": children})
 }
 
@@ -742,25 +890,53 @@ async fn topology(State(app): State<Arc<App>>) -> Json<Value> {
     Json(summary(&app))
 }
 
-/// The tier's living numbers — what the Console's Pulse renders (0005 roll-up, at a glance).
+/// The tier's living numbers — what the Console's Pulse renders (0005 roll-up, at a
+/// glance). Own floor PLUS every descendant beat's pulse, so the dashboard and the
+/// orrery describe the same world (0019 §4 — the F2 lesson, at the numbers too).
 async fn rollup(State(app): State<Arc<App>>) -> Json<Value> {
-    let u = app.universe.lock().unwrap();
-    let m = app.model.lock().unwrap();
-    let (mut runs, mut ok, mut tok) = (0i64, 0i64, 0i64);
-    for r in u.runs.values() {
-        runs += 1;
-        if r["outcome"] == "success" { ok += 1; }
-        tok += r["cost"]["tokens"].as_i64().unwrap_or(0);
+    let scope = { app.universe.lock().unwrap().nodes[0].scope.clone() };
+    let mut acc: BTreeMap<&str, f64> = BTreeMap::new();
+    {
+        let u = app.universe.lock().unwrap();
+        for r in u.runs.values() {
+            *acc.entry("runs").or_default() += 1.0;
+            if r["outcome"] == "success" { *acc.entry("success").or_default() += 1.0; }
+            *acc.entry("tokens").or_default() += r["cost"]["tokens"].as_i64().unwrap_or(0) as f64;
+        }
+        *acc.entry("memories").or_default() += u.nodes[0].records.len() as f64;
     }
-    let usd: f64 = m.meter_log.iter().filter_map(|e| e["usd"].as_f64()).sum();
-    let calls = m.meter_log.len();
-    let f = app.farm.lock().unwrap();
-    let serving = f.services.values().filter(|s| s["state"] == "serving").count();
-    Json(json!({"scope": u.nodes[0].scope,
-        "memories": u.nodes[0].records.len(), "runs": runs, "success": ok,
-        "success_rate": if runs>0 {100*ok/runs} else {0},
-        "tokens": tok, "usd": (usd*1e6).round()/1e6, "model_calls": calls,
-        "services": serving, "tool_calls": f.meter_log.len()}))
+    {
+        let m = app.model.lock().unwrap();
+        *acc.entry("usd").or_default() += m.meter_log.iter()
+            .filter_map(|e| e["usd"].as_f64()).sum::<f64>();
+        *acc.entry("model_calls").or_default() += m.meter_log.len() as f64;
+    }
+    {
+        let f = app.farm.lock().unwrap();
+        *acc.entry("services").or_default() +=
+            f.services.values().filter(|s| s["state"] == "serving").count() as f64;
+        *acc.entry("tool_calls").or_default() += f.meter_log.len() as f64;
+    }
+    fn descend(beat: &Value, acc: &mut BTreeMap<&str, f64>) {
+        if let Some(p) = beat["pulse"].as_object() {
+            for k in ["memories", "runs", "success", "tokens", "usd",
+                      "model_calls", "services", "tool_calls"] {
+                *acc.entry(k).or_default() += p.get(k).and_then(Value::as_f64).unwrap_or(0.0);
+            }
+        }
+        if let Some(kids) = beat["children"].as_array() {
+            for k in kids { descend(k, acc); }
+        }
+    }
+    for beat in app.children.lock().unwrap().values() { descend(beat, &mut acc); }
+    let g = |k: &str| acc.get(k).copied().unwrap_or(0.0);
+    let (runs, ok) = (g("runs"), g("success"));
+    Json(json!({"scope": scope,
+        "memories": g("memories") as i64, "runs": runs as i64, "success": ok as i64,
+        "success_rate": if runs > 0.0 {(100.0 * ok / runs) as i64} else {0},
+        "tokens": g("tokens") as i64, "usd": (g("usd") * 1e6).round() / 1e6,
+        "model_calls": g("model_calls") as i64,
+        "services": g("services") as i64, "tool_calls": g("tool_calls") as i64}))
 }
 
 async fn requests_resolve(State(app): State<Arc<App>>, Json(body): Json<Value>) -> impl IntoResponse {

@@ -34,6 +34,8 @@ process — mayflies in a universe designed for living things. Review caught it
 
 5. **The plane authorizes and meters; it never sees the prompt** (0016).
    Cognition executes on the agent's side. Never route prompt content through orrethd.
+   And the meter is universal (0019): every resident's cognition goes through the
+   gateway — an organ that thinks off-meter is drift.
 
 6. **Canonical bytes are the contract** (0000 §3).
    Sorted keys, compact separators, ensure_ascii — byte-identical across the SDK, the

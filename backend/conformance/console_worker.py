@@ -1,8 +1,9 @@
 # PROVENANCE: console worker by Fable 5; charlotte's farm duties added by
-# Fable 5 (claude-fable-5) — 0018, the Tool Farm · 2026-07-05
-"""The console worker — cognition behind the human's queue (0014 · 0006 · 0018).
+# Fable 5 (claude-fable-5) — 0018, the Tool Farm · 2026-07-05;
+# ada's stable duties added by Fable 5 (claude-fable-5) — 0019, the Stable · 2026-07-06
+"""The console worker — cognition behind the human's queue (0014 · 0006 · 0018 · 0019).
 
-Watches every floor's request queue and carries three residents' duties, keys staying
+Watches every floor's request queue and carries four residents' duties, keys staying
 here in cognition (the plane verifies, never signs):
 
   · gather X  — the librarian: finds a SERVING search source on the Farm, meters the
@@ -15,11 +16,17 @@ here in cognition (the plane verifies, never signs):
     ages leases out, guards the rug-pull door on rejoin, and writes every lifecycle
     event as a signed MemoryRecord — the service's worldline. Nothing self-attests:
     the tool never wrote "SOME PIG" about itself.
+  · mind      — ada, the wrangler (0019): probes the catalog on a staged saddle and
+    pins the DEAL (pricing/context bytes), attests on human approval, canaries rookie
+    minds through the governed gateway (metered under her own DID — residents think
+    on-meter too), syncs the market for price drift and announced expiries, and
+    stages recommendations instead of letting a sunset become an outage.
 
 Residents persist their seeds under ~/.orreth/residents/ — a keypair is a self, and
 a self survives the process (0002 §1). Charlotte's ledger (~/.orreth/farm/) replants
-the toolshed after a daemon restart: the ledger seeds, the daemon holds live state,
-the worldline in the record store is the history that outlives both.
+the toolshed after a daemon restart, ada's (~/.orreth/stable/) re-saddles the stable:
+the ledger seeds, the daemon holds live state, the worldline in the record store is
+the history that outlives both.
 
     uv run python console_worker.py [join_port]      (leave running while you use the Console)
 """
@@ -72,6 +79,8 @@ LIB = _seed("librarian")                     # the librarian's identity
 LIB_DID = crypto.did_key_for(LIB.public)
 CHA = _seed("charlotte")                     # charlotte, the farm keeper (0018 §5)
 CHA_DID = crypto.did_key_for(CHA.public)
+ADA = _seed("ada")                           # ada, the wrangler (0019 §3)
+ADA_DID = crypto.did_key_for(ADA.public)
 
 # becky, chained from the pinned root — the only authority that can mint a joining lease
 _NANDA = Nanda()
@@ -335,6 +344,331 @@ class FarmKeeper:
 KEEPER = FarmKeeper()
 
 
+# ---------------------------------------------------------------- the wrangler (0019)
+
+CATALOG_TTL = 300                            # seconds the market snapshot stays fresh
+EOL_HORIZON_DAYS = 30                        # inside this window an expiry burns
+MIND_DIDS = {"anthropic": "did:web:anthropic.com", "openai": "did:web:openai.com",
+             "openrouter": "did:web:openrouter.ai", "google": "did:web:google.com",
+             "mistralai": "did:web:mistral.ai"}
+
+
+def stable_ledger_path(scope: str) -> Path:
+    nest = HOME / "stable" / scope.replace("/", "~")
+    nest.mkdir(parents=True, exist_ok=True)
+    return nest / "minds.json"
+
+
+def stable_ledger_load(scope: str) -> dict:
+    p = stable_ledger_path(scope)
+    return json.loads(p.read_text()) if p.exists() else {}
+
+
+def stable_ledger_save(scope: str, data: dict) -> None:
+    stable_ledger_path(scope).write_text(json.dumps(data, indent=1, sort_keys=True))
+
+
+def openrouter_catalog() -> list[dict]:
+    """The market, read freely: OpenRouter's public list is INTEL for every stall,
+    whatever route carries the call (0019 §1). Routing stays LiteLLM-direct on the
+    floor's own keys by default. Cached on disk; a stale snapshot beats none."""
+    cache = HOME / "stable" / "catalog.json"
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    if cache.exists() and time.time() - cache.stat().st_mtime < CATALOG_TTL:
+        return json.loads(cache.read_text())
+    try:
+        raw = json.loads(urllib.request.urlopen(urllib.request.Request(
+            "https://openrouter.ai/api/v1/models"), timeout=15).read())
+        cat = [{"id": m["id"], "provider": m["id"].split("/")[0],
+                "pricing": m.get("pricing", {}),
+                "context_length": m.get("context_length"),
+                "modalities": (m.get("architecture") or {}).get("input_modalities", []),
+                "created": m.get("created"),
+                "expires_at": m.get("expiration_date")}
+               for m in raw.get("data", [])]
+        cache.write_text(json.dumps(cat))
+        return cat
+    except Exception:
+        return json.loads(cache.read_text()) if cache.exists() else []
+
+
+def deal(entry: dict) -> dict:
+    """The manifest ada pins: the DEAL, not the name — pricing, context, modalities.
+    Any byte of it moving under the pin is drift, and drift walks the rug-pull door."""
+    return {"pricing": entry.get("pricing", {}),
+            "context_length": entry.get("context_length"),
+            "modalities": entry.get("modalities", [])}
+
+
+def mind_did(provider: str) -> str:
+    return MIND_DIDS.get(provider, f"did:web:{provider}")
+
+
+def mindline(port: int, scope: str, stall: dict, event: str, **extra) -> None:
+    """Every lifecycle transition is a signed MemoryRecord — the stall's worldline.
+    Ada authors; the model (and its provider) never self-attests."""
+    body = {"mind": stall.get("id", ""), "did": stall.get("did", ""), "event": event,
+            "state": stall.get("state", ""), "manifest_hash": stall.get("manifest_hash", ""),
+            "at": NOW(), **extra}
+    rec = make_memory({"did": ADA_DID, "scope": scope}, ADA, scope, body,
+                      kind="episodic", tags=["mind", stall.get("id", "")])
+    try:
+        call(port, "POST", "/records", rec)
+    except Exception as e:
+        print(f"    (mindline write failed: {e})")
+
+
+def recommend(old: dict, stalls: list, catalog: list) -> dict | None:
+    """The replacement pick: a stall already serving the class wins outright; else the
+    catalog ranks by price distance then recency, never the next casualty (0019 §7)."""
+    for s in stalls:
+        if s["id"] != old["id"] and s.get("class") == old.get("class") \
+                and s.get("state") == "available":
+            return {"id": s["id"], "why": "already serving this class", "in_stable": True}
+    old_p = float((old.get("manifest") or {}).get("pricing", {}).get("prompt") or 0)
+    live = [c for c in catalog if c["id"] != old["id"] and not c.get("expires_at")]
+    if not live:
+        return None
+    best = min(live, key=lambda c: (
+        abs(float((c.get("pricing") or {}).get("prompt") or 0) - old_p),
+        -(c.get("created") or 0)))
+    return {"id": best["id"], "provider": best.get("provider", ""),
+            "why": "nearest price, newest catalog entry", "in_stable": False,
+            "pricing": best.get("pricing", {}),
+            "context_length": best.get("context_length"),
+            "modalities": best.get("modalities", []), "created": best.get("created")}
+
+
+def governed_ping(port: int, klass: str) -> dict | None:
+    """One tiny real thought through ada's OWN gateway — authorize, call, meter, all
+    under her DID. Residents think on-meter too (0019 §4); silently skipped when no
+    provider key or litellm is around (canary then rests on verified syncs alone)."""
+    try:
+        import litellm  # noqa: F401
+    except Exception:
+        return None
+    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY")):
+        return None
+    try:
+        token = _BECKY.issue_token(ADA_DID, SCOPE, [{"action": "retrieve", "space": "self"}],
+                                   budget={"tokens": 50000})
+        est = 40
+        grant = call(port, "POST", "/model/authorize",
+                     {"token": token, "class": klass, "est_tokens": est})
+        import litellm
+        resp = litellm.completion(model=grant["model"],
+                                  messages=[{"role": "user", "content": "ping"}],
+                                  max_tokens=1)
+        tokens = resp.usage.total_tokens
+        try:
+            usd = litellm.completion_cost(completion_response=resp)
+        except Exception:
+            usd = 0.0
+        call(port, "POST", "/model/meter",
+             {"subject": grant["subject"], "est_tokens": est, "tokens": tokens,
+              "usd": round(usd, 6), "model": grant["model"], "class": klass})
+        return {"model": grant["model"], "tokens": tokens}
+    except Exception:
+        return None
+
+
+class Wrangler:
+    """Ada's round: probe staged saddles, attest approvals, canary rookie minds,
+    sync the market for drift and expiries, stage recommendations, re-saddle after
+    restarts. The plane refuses illegal moves; ada only ever proposes legal ones."""
+
+    def __init__(self) -> None:
+        self.pinged: set[str] = set()         # one governed canary thought per mind
+
+    def _local(self, port: int, scope: str) -> list[dict]:
+        return [s for s in call(port, "GET", "/stable")["stalls"]
+                if s.get("floor") == scope]
+
+    # ---- the queue: saddle · reapprove · retire · swap ---------------------------------
+    def on_mind_request(self, port: int, scope: str, r: dict) -> bool:
+        """Returns True when the request reached a resting state (done/denied)."""
+        action, status, mid = r.get("action", "saddle"), r.get("status"), r.get("mind", "")
+        if status == "pending" and action in ("reapprove", "retire", "swap"):
+            # nothing to probe — consequence waits for the human (0012)
+            call(port, "POST", "/requests/resolve", {"id": r["id"], "status": "staged"})
+            return False
+        if status == "pending" and action == "saddle":
+            entry = next((c for c in openrouter_catalog() if c["id"] == mid), None)
+            manifest = deal(entry) if entry else (r.get("manifest") or {})
+            provider = r.get("provider") or mid.split("/")[0]
+            stall = call(port, "POST", "/stable/saddle", {
+                "id": mid, "provider": provider,
+                "route": r.get("route", "litellm-direct"),
+                "did": mind_did(provider), "class": r.get("class", "medium"),
+                "manifest": manifest,
+                "expires_at": (entry or {}).get("expires_at") or r.get("expires_at")})
+            mindline(port, scope, stall, "saddled",
+                     in_catalog=bool(entry),
+                     pricing=manifest.get("pricing", {}))
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "staged",
+                  "result": {"manifest_hash": stall["manifest_hash"],
+                             "in_catalog": bool(entry),
+                             "expires_at": stall.get("expires_at"),
+                             "pricing": manifest.get("pricing", {})}})
+            print(f"  ↳ staged saddle {mid}: catalog={bool(entry)}, "
+                  f"pinned {stall['manifest_hash'][:18]}…")
+            return False
+        if status == "approved":
+            if action == "saddle":
+                stall = next((s for s in self._local(port, scope) if s["id"] == mid), {})
+                out = call(port, "POST", "/stable/state",
+                           {"id": mid, "op": "attest",
+                            "manifest": stall.get("manifest", {}),
+                            "expires_at": stall.get("expires_at")})
+                mindline(port, scope, out, "attested")
+                led = stable_ledger_load(scope)
+                led[mid] = {k: out.get(k) for k in ("id", "provider", "route", "class",
+                                                    "did", "manifest", "manifest_hash",
+                                                    "expires_at")}
+                stable_ledger_save(scope, led)
+                print(f"  ↳ attested {mid} — canary begins (governed beats earn available)")
+            elif action == "reapprove":
+                out = call(port, "POST", "/stable/state", {"id": mid, "op": "reapprove"})
+                mindline(port, scope, out, "re-approved", pinned=out.get("manifest_hash"))
+                led = stable_ledger_load(scope)
+                if mid in led:
+                    led[mid]["manifest"] = out.get("manifest")
+                    led[mid]["manifest_hash"] = out.get("manifest_hash")
+                    stable_ledger_save(scope, led)
+                print(f"  ↳ re-approved {mid} — the new deal is the pin now")
+            elif action == "swap":
+                rep = r.get("replacement") or {}
+                rep_id = rep.get("id", "")
+                if rep_id and not rep.get("in_stable"):
+                    provider = rep.get("provider") or rep_id.split("/")[0]
+                    new = call(port, "POST", "/stable/saddle", {
+                        "id": rep_id, "provider": provider,
+                        "route": r.get("route", "litellm-direct"),
+                        "did": mind_did(provider),
+                        "class": r.get("class") or "medium",
+                        "manifest": deal(rep), "expires_at": rep.get("expires_at")})
+                    mindline(port, scope, new, "saddled", reason=f"succeeds {mid}")
+                    out = call(port, "POST", "/stable/state",
+                               {"id": rep_id, "op": "attest", "manifest": deal(rep)})
+                    mindline(port, scope, out, "attested")
+                    led = stable_ledger_load(scope)
+                    led[rep_id] = {k: out.get(k) for k in ("id", "provider", "route",
+                                                           "class", "did", "manifest",
+                                                           "manifest_hash", "expires_at")}
+                    stable_ledger_save(scope, led)
+                old = call(port, "POST", "/stable/state",
+                           {"id": mid, "op": "retire",
+                            "reason": f"superseded by {rep_id or 'its class'}"})
+                mindline(port, scope, old, "retired", superseded_by=rep_id)
+                led = stable_ledger_load(scope)
+                led.pop(mid, None)
+                stable_ledger_save(scope, led)
+                print(f"  ↳ swapped {mid} → {rep_id or '(existing stall)'} — no outage, by appointment")
+            elif action == "retire":
+                out = call(port, "POST", "/stable/state",
+                           {"id": mid, "op": "retire", "reason": r.get("reason", "")})
+                mindline(port, scope, out, "retired", reason=r.get("reason", ""))
+                led = stable_ledger_load(scope)
+                led.pop(mid, None)
+                stable_ledger_save(scope, led)
+                print(f"  ↳ retired {mid} — sunset; never served again")
+            call(port, "POST", "/requests/resolve", {"id": r["id"], "status": "done"})
+            return True
+        if status == "denied":
+            try:
+                out = call(port, "POST", "/stable/state",
+                           {"id": mid, "op": "retire", "reason": "denied at the gate"})
+                mindline(port, scope, out, "denied")
+            except Exception:
+                pass
+            led = stable_ledger_load(scope)
+            led.pop(mid, None)
+            stable_ledger_save(scope, led)
+            call(port, "POST", "/requests/resolve", {"id": r["id"], "status": "done"})
+            print(f"  ↳ denied {mid} — never served")
+            return True
+        return False
+
+    # ---- the round: canary beats, market sync, EOL scan, re-saddles ---------------------
+    def sync(self, port: int, scope: str) -> None:
+        try:
+            stalls = self._local(port, scope)
+        except Exception:
+            return
+        led = stable_ledger_load(scope)
+        if not stalls and not led:
+            return                            # a floor with no stable stays quiet
+        self.restable(port, scope, {s["id"] for s in stalls})
+        cat = openrouter_catalog()
+        by_id = {c["id"]: c for c in cat}
+        from datetime import date, timedelta
+        edge = (date.fromisoformat(NOW()[:10]) + timedelta(days=EOL_HORIZON_DAYS)).isoformat()
+        for s in stalls:
+            mid, state = s["id"], s["state"]
+            if state == "canaried":
+                beat = call(port, "POST", "/stable/hello", {"id": mid})
+                if beat.get("transition", {}).get("to") == "available":
+                    mindline(port, scope, beat, "available",
+                             earned_after=beat.get("canary_beats"))
+                    print(f"  ↳ {mid} earned its place — available")
+                if port == JOIN_PORT and mid not in self.pinged:
+                    ping = governed_ping(port, s.get("class", "medium"))
+                    if ping:
+                        self.pinged.add(mid)
+                        mindline(port, scope, s, "canary-thought", **ping)
+                state = beat.get("state", state)
+            if state in ("canaried", "available") and mid in by_id:
+                c = by_id[mid]
+                out = call(port, "POST", "/stable/state",
+                           {"id": mid, "op": "sync", "manifest": deal(c),
+                            "expires_at": c.get("expires_at")})
+                if out.get("transition", {}).get("to") == "deprecated":
+                    mindline(port, scope, out, "manifest-drift",
+                             pinned=out.get("manifest_hash"),
+                             seen=out.get("proposed_hash"))
+                    call(port, "POST", "/requests",
+                         {"kind": "mind", "action": "reapprove", "mind": mid,
+                          "text": f"{mid}'s deal moved under its pin — re-approve the new terms?"})
+                    print(f"  ↳ {mid} drifted — the deal changed; held for your decision")
+                    continue
+                s = out                        # freshest expires_at for the EOL check
+                state = s.get("state", state)
+            exp = s.get("expires_at")
+            if exp and state in ("canaried", "available") and str(exp)[:10] <= edge:
+                out = call(port, "POST", "/stable/state",
+                           {"id": mid, "op": "eol", "expires_at": exp})
+                rec = recommend(s, stalls, cat)
+                mindline(port, scope, out, "expiring", expires_at=exp,
+                         recommends=(rec or {}).get("id"))
+                text = f"{mid} expires {str(exp)[:10]}"
+                text += f" — ada recommends {rec['id']} ({rec['why']})" if rec \
+                    else " — no replacement found yet"
+                call(port, "POST", "/requests",
+                     {"kind": "mind", "action": "swap", "mind": mid,
+                      "class": s.get("class"), "replacement": rec, "text": text})
+                print(f"  ↳ {mid} is expiring — recommendation staged")
+
+    def restable(self, port: int, scope: str, present: set) -> None:
+        """The daemon may die; the stable doesn't. The ledger re-saddles live state."""
+        for mid, stall in stable_ledger_load(scope).items():
+            if mid in present:
+                continue
+            try:
+                call(port, "POST", "/stable/saddle", stall)
+                call(port, "POST", "/stable/state",
+                     {"id": mid, "op": "attest", "manifest": stall.get("manifest", {}),
+                      "expires_at": stall.get("expires_at")})
+                mindline(port, scope, stall, "re-saddled",
+                         note="daemon restarted; approval is durable in the ledger")
+                print(f"  ↳ re-saddled {mid} after a daemon restart")
+            except Exception as e:
+                print(f"    (re-saddle {mid} failed: {e})")
+
+
+WRANGLER = Wrangler()
+
+
 # ---------------------------------------------------------------- the librarian (0014)
 
 def farm_search_source(port: int) -> dict | None:
@@ -384,7 +718,7 @@ def gather(port: int, scope: str, text: str) -> str:
 
 def main() -> None:
     print(f"console worker · librarian {LIB_DID[:20]}… · charlotte {CHA_DID[:20]}… "
-          f"· becky's door on :{JOIN_PORT} · tending floors {FLOORS}")
+          f"· ada {ADA_DID[:20]}… · becky's door on :{JOIN_PORT} · tending floors {FLOORS}")
     handled: set[tuple] = set()               # (port, id, at, status): each step acted once
     scopes: dict[int, str] = {}
     while True:
@@ -419,8 +753,12 @@ def main() -> None:
                     elif r.get("kind") == "service":
                         if KEEPER.on_service_request(port, scope, r) or r.get("status") == "staged":
                             handled.add(key)
+                    elif r.get("kind") == "mind":
+                        if WRANGLER.on_mind_request(port, scope, r) or r.get("status") == "staged":
+                            handled.add(key)
                 if beat_due:
                     KEEPER.tend(port, scope)
+                    WRANGLER.sync(port, scope)
             except Exception as e:
                 scopes.pop(port, None)
                 print(f"  (floor :{port} unreachable…)", e)

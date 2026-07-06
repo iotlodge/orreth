@@ -111,6 +111,7 @@
   .res.governance{background:var(--near);color:rgba(127,209,168,.6)}
   .res.charlotte{background:#8fd6b0;color:rgba(143,214,176,.7)}
   .res.librarian{background:#e8c98f;color:rgba(232,201,143,.6)}
+  .res.ada{background:#d99cc4;color:rgba(217,156,196,.7)}
   @media(prefers-reduced-motion:reduce){.res{animation:none!important}}
   .reslegend{position:absolute;left:1.1rem;bottom:.6rem;font:.64rem var(--mono);color:var(--faint);
     display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;max-width:52%}
@@ -232,6 +233,34 @@
   .schip.serving{color:var(--near)} .schip.probation{color:var(--blue)}
   .schip.proposed,.schip.staged{color:var(--dim)} .schip.dropped{color:var(--faint)}
   .schip.quarantined{color:var(--red)} .schip.decommissioned{color:var(--faint);opacity:.5}
+  /* the stable's lifecycle (0016 §3): candidate waits, canaried earns, available serves,
+     deprecated screams, sunset fades into history */
+  .schip.available{color:var(--near)} .schip.canaried{color:var(--blue)}
+  .schip.candidate{color:var(--dim)} .schip.deprecated{color:var(--red)}
+  .schip.sunset{color:var(--faint);opacity:.5}
+  /* the ladder: one lane per class, its serving minds in resolution order */
+  .ladder{display:flex;flex-direction:column;gap:.3rem;margin:.4rem 0 .8rem}
+  .ladder .lane{display:flex;align-items:center;gap:.6rem;font:.74rem var(--mono);flex-wrap:wrap}
+  .ladder .cls{width:4.2rem;color:var(--brass);text-align:right}
+  .ladder .mchip{border:1px solid var(--edge);border-radius:999px;padding:.1em .65em;color:var(--dim)}
+  .ladder .mchip .st{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:.35em;vertical-align:-1px}
+  /* the pasture calendar: expiries as diamonds on a 90-day line */
+  .pasture{position:relative;height:64px;border:1px solid var(--edge);border-radius:10px;
+    margin:.3rem 0 .6rem;overflow:hidden}
+  .pasture .axis{position:absolute;left:2%;right:2%;top:26px;border-top:1px dashed var(--edge)}
+  .pasture .tick{position:absolute;top:4px;font:.6rem var(--mono);color:var(--faint)}
+  .pasture .eol{position:absolute;top:26px;width:9px;height:9px;transform:translate(-50%,-50%) rotate(45deg);
+    background:var(--brass);box-shadow:0 0 8px 1px rgba(212,169,96,.6);cursor:default}
+  .pasture .eol.burn{background:var(--red);box-shadow:0 0 9px 2px rgba(232,154,143,.7)}
+  .pasture .eollab{position:absolute;top:36px;transform:translateX(-50%);font:.62rem var(--mono);
+    color:var(--dim);white-space:nowrap}
+  /* who is thinking: every agent's meter, residents included — the honest zero shows */
+  .think{display:flex;align-items:center;gap:.7rem;font:.74rem var(--mono);
+    padding:.32rem .2rem;border-bottom:1px solid var(--edge)}
+  .think .nm{flex:2;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .think .fl{flex:1;color:var(--faint)} .think .n{width:6.5rem;text-align:right;color:var(--dim)}
+  .think .u{width:5rem;text-align:right;color:var(--brass)}
+  .think.res .nm::after{content:" · resident";color:var(--faint)}
   .sbtn{font:.68rem var(--mono);color:var(--dim);border:1px solid var(--hair2);border-radius:6px;
     padding:.3em .8em;cursor:pointer;background:transparent}
   .sbtn:hover{color:var(--star);border-color:var(--brassdim)}
@@ -296,6 +325,7 @@
     <span class="tab on" data-v="uni">Universe</span>
     <span class="tab" data-v="pulse">Pulse</span>
     <span class="tab" data-v="farm">Farm<span class="badge" id="farm-badge"></span></span>
+    <span class="tab" data-v="stable">Stable<span class="badge" id="stable-badge"></span></span>
     <span class="tab" data-v="req">Requests<span class="badge" id="req-badge"></span></span>
     <span class="tab" data-v="ask">Ask</span>
   </div>
@@ -367,6 +397,36 @@
     <div class="quiet" id="farmempty" style="margin-top:.4rem">no services planted yet — this world consumes nothing.</div>
   </div>
 
+  <!-- THE STABLE (0019) -->
+  <div class="view hide" id="v-stable">
+    <div class="section" style="margin-top:0">the stable · minds this world thinks through — saddled on <span id="stable-floor" style="color:var(--brass)">…</span></div>
+    <div class="ladder" id="ladder"></div>
+    <div class="plantform">
+      <div class="row">
+        <input id="sf-id" placeholder="model id · anthropic/claude-sonnet-4-6" style="flex:2;min-width:220px">
+        <select id="sf-route"><option value="litellm-direct">litellm-direct (your keys)</option><option value="openrouter">openrouter</option></select>
+        <select id="sf-class"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option><option value="xhigh">xhigh</option></select>
+        <button class="go" onclick="saddleMind()">Saddle →</button>
+      </div>
+      <div class="chips"><span class="qchip" onclick="presetSaddle('anthropic/claude-sonnet-4-6','medium')">🐎 Sonnet (medium)</span>
+        <span class="qchip" onclick="presetSaddle('anthropic/claude-haiku-4-5-20251001','low')">🐎 Haiku (low)</span>
+        <span class="qchip" onclick="presetSaddle('openai/gpt-4o-mini','low')">🐎 gpt-4o-mini (low)</span></div>
+      <div class="formerr" id="sf-err"></div>
+      <div class="steps"><span><span class="num">①</span>you saddle — ada probes the catalog and pins the DEAL (pricing · context)</span>
+        <span><span class="num">②</span>you approve — canary begins; governed beats earn available</span>
+        <span><span class="num">③</span>drift and expiries come back to you as decisions, never outages</span></div>
+    </div>
+    <div class="section">awaiting your decision</div>
+    <div id="stablepending"><div class="quiet">nothing staged.</div></div>
+    <div class="section">the pasture calendar · next 90 days</div>
+    <div class="pasture" id="pasture"><span class="quiet">no announced expiries — a calm pasture.</span></div>
+    <div class="section">the stalls</div>
+    <div class="farmgrid" id="stableroster"></div>
+    <div class="quiet" id="stableempty" style="margin-top:.4rem">no minds saddled yet — the legacy registry file still routes.</div>
+    <div class="section">who is thinking · usage across the whole subtree</div>
+    <div id="whothinks"><div class="quiet">no governed thoughts metered yet.</div></div>
+  </div>
+
   <!-- REQUESTS -->
   <div class="view hide" id="v-req">
     <div class="section" style="margin-top:0">requests &amp; approvals · the human's queue</div>
@@ -408,7 +468,7 @@ const money=u=>u>=0.01?"$"+u.toFixed(2):u>0?"$"+u.toFixed(5):"$0";
 /* view switching */
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));
-  ["uni","pulse","farm","req","ask"].forEach(v=>$("v-"+v).classList.toggle("hide",v!==t.dataset.v));
+  ["uni","pulse","farm","stable","req","ask"].forEach(v=>$("v-"+v).classList.toggle("hide",v!==t.dataset.v));
   if(t.dataset.v==="uni"){const O=$("orrery");if(O)O.dataset.sig="";renderOrrery();scrub()}
 });
 
@@ -476,7 +536,8 @@ function plots(list,r,scope){
 }
 /* organ dots: residents on the innermost shell */
 const RESKEY={"becky · IAM":"becky","vigil · the Warden":"vigil","steward · memory":"steward",
-  "governance":"governance","charlotte · farm keeper":"charlotte","librarian · knowledge":"librarian"};
+  "governance":"governance","charlotte · farm keeper":"charlotte","librarian · knowledge":"librarian",
+  "ada · the wrangler":"ada"};
 const reskey=r=>RESKEY[r]||"governance";
 function organs(list,r,scope){
   return shell(list||[],r,6,26,a=>      // cap 6 = the full organ roster
@@ -600,9 +661,9 @@ function renderOrrery(){
     (n.residents||[]).forEach(a=>seen.add(reskey(a.role)));(n.children||[]).forEach(collect)};
   collect(t);
   const L=$("reslegend");
-  if(L){const order=["becky","vigil","steward","governance","charlotte","librarian"];
+  if(L){const order=["becky","vigil","steward","governance","charlotte","librarian","ada"];
     const col={becky:"var(--brass)",vigil:"var(--viol)",steward:"var(--blue)",
-      governance:"var(--near)",charlotte:"#8fd6b0",librarian:"#e8c98f"};
+      governance:"var(--near)",charlotte:"#8fd6b0",librarian:"#e8c98f",ada:"#d99cc4"};
     L.innerHTML=`<span style="color:var(--faint)">organs alive:</span>`+order.filter(k=>seen.has(k))
       .map(k=>`<span class="rl"><span class="rd" style="background:${col[k]}"></span>${k}</span>`).join("");}
 }
@@ -671,14 +732,16 @@ async function roster(){
       `<div class="ev"><span class="dot"></span><span class="t">${a.last_seen.slice(11,19)}</span>
        <span class="m">${a.name||short(a.agent)} · ${a.runs} thought${a.runs===1?"":"s"} · ${a.state} · ${money(a.usd||0)}</span></div>`).join("")
       : `<div class="quiet" style="padding:.5rem 0">the field is quiet…</div>`;
-    // spend by agent — the per-agent cost JB asked for, as bars
-    const spenders=[...p.residents.map(x=>({n:x.role,u:0})),
-      ...p.workforce.map(a=>({n:a.name||short(a.agent),u:a.usd||0,t:a.tokens}))]
-      .filter(x=>x.t!==undefined);
-    const max=Math.max(1,...spenders.map(x=>x.t||0));
+    presCache=p;
+    // spend by agent — every identity on one meter, residents included; the honest
+    // zero SHOWS instead of being filtered out (0019 §4)
+    const spenders=[...p.residents.map(x=>({n:x.role,u:x.vitals?.["llm usd"]||0,
+        lab:`${x.vitals?.["llm calls"]||0} call${(x.vitals?.["llm calls"]||0)===1?"":"s"}`})),
+      ...p.workforce.map(a=>({n:a.name||short(a.agent),u:a.usd||0,lab:`${a.tokens||0} tok`}))];
+    const max=Math.max(1e-9,...spenders.map(x=>x.u||0));
     $("spend").innerHTML= spenders.length? spenders.map(x=>
-      `<div class="bar"><div class="lab"><span>${x.n}</span><b>${x.t} tok · ${money(x.u)}</b></div>
-       <div class="track"><div class="fill" style="width:${Math.round(100*(x.t||0)/max)}%"></div></div></div>`).join("")
+      `<div class="bar"><div class="lab"><span>${x.n}</span><b>${x.lab} · ${money(x.u)}</b></div>
+       <div class="track"><div class="fill" style="width:${Math.round(100*(x.u||0)/max)}%"></div></div></div>`).join("")
       : `<div class="quiet" style="padding:.5rem 0">no spend yet</div>`;
   }catch{}
 }
@@ -814,6 +877,106 @@ async function farmDecom(name,discredit){
       text:`decommission ${name}${discredit?" + discredit the source":""}`})});
   loadFarm();
 }
+
+/* ── the stable (0019): saddle · approve · canary · sync · swap — minds as identities ── */
+let presCache=null;
+const agentName=did=>{
+  if(!presCache||!did)return short(did||"");
+  const r=(presCache.residents||[]).find(x=>x.did===did);
+  if(r)return r.role;
+  const w=(presCache.workforce||[]).find(x=>x.agent===did);
+  return w?(w.name||short(did)):short(did);
+};
+async function loadStable(){
+  try{
+    const st=await(await fetch("/stable")).json();
+    $("stable-floor").textContent=st.scope;
+    const q=(await(await fetch("/requests")).json()).requests||[];
+    const waiting=q.filter(r=>r.kind==="mind"&&["staged","pending"].includes(r.status));
+    $("stable-badge").textContent=waiting.length?`(${waiting.length})`:"";
+    $("stablepending").innerHTML= waiting.length? waiting.slice().reverse().map(r=>{
+      const v=r.result||{}, act=r.action||"saddle";
+      const sub=r.status!=="staged"?"ada is probing the catalog…":
+        act==="saddle"?`probed · ${v.in_catalog?"in the catalog":"manual manifest"} · pin ${(v.manifest_hash||"").slice(7,25)}…${v.expires_at?` · expires ${String(v.expires_at).slice(0,10)}`:""}`:
+        "consequence waits for you (0012)";
+      return `<div class="req"><span class="kind">${act}</span>
+       <span class="txt">${r.mind||""}<div class="sub">${r.text||""}</div><div class="sub">${sub}</div></span>
+       ${r.status==="staged"?`<button class="sbtn ok" onclick="stableDecide('${r.id}',true)">approve</button>
+        <button class="sbtn no" onclick="stableDecide('${r.id}',false)">deny</button>`:`<span class="st">${r.status}</span>`}</div>`;
+    }).join("") : `<div class="quiet">nothing staged.</div>`;
+    const stalls=(st.stalls||[]);
+    const live=stalls.filter(s=>s.state!=="sunset");
+    // the ladder: who answers each class, in resolution order
+    const dot={available:"var(--near)",canaried:"var(--blue)",candidate:"var(--dim)",
+      deprecated:"var(--red)",sunset:"var(--faint)"};
+    $("ladder").innerHTML=["low","medium","high","xhigh"].map(k=>{
+      const lane=live.filter(s=>s.class===k);
+      return `<div class="lane"><span class="cls">${k}</span>${lane.length?lane.map(s=>
+        `<span class="mchip"><span class="st" style="background:${dot[s.state]||"var(--dim)"}"></span>${s.id} · ${s.route}</span>`).join("")
+        :`<span class="mchip" style="opacity:.5">legacy registry routes this class</span>`}</div>`;}).join("");
+    // the pasture calendar: 90 days of announced expiries
+    const day=864e5, now=Date.now();
+    const eols=live.filter(s=>s.expires_at).map(s=>({s,d:(new Date(String(s.expires_at).slice(0,10))-now)/day}))
+      .filter(x=>x.d>-1&&x.d<=90);
+    $("pasture").innerHTML= eols.length?
+      `<div class="axis"></div><span class="tick" style="left:2%">now</span>
+       <span class="tick" style="left:31%">+30d</span><span class="tick" style="left:63%">+60d</span>
+       <span class="tick" style="right:2%">+90d</span>`+
+      eols.map(({s,d})=>{const x=2+96*Math.max(0,Math.min(1,d/90));
+        return `<div class="eol${d<=30?" burn":""}" style="left:${x}%" title="${s.id} · ${String(s.expires_at).slice(0,10)}"></div>
+          <span class="eollab" style="left:${x}%">${s.id.split("/").pop()} · ${String(s.expires_at).slice(5,10)}</span>`;}).join("")
+      : `<span class="quiet" style="position:absolute;left:1rem;top:22px">no announced expiries — a calm pasture.</span>`;
+    // the stalls
+    $("stableempty").style.display=live.length?"none":"";
+    $("stableroster").innerHTML=live.map(s=>{
+      const p=(s.manifest||{}).pricing||{};
+      const mt=v=>v?("$"+(parseFloat(v)*1e6).toFixed(2)):"—";
+      return `<div class="svc"><div class="hd"><span class="nm" title="${s.did}">${s.id}</span>
+        <span class="schip ${s.state}">${s.state}</span></div>
+        <div class="meta"><b>${s.provider} · ${s.route} · ${s.class}</b> · saddled on ${(s.floor||"").split("/").pop()}<br>
+        ${mt(p.prompt)} / ${mt(p.completion)} per Mtok · ${(s.manifest||{}).context_length?((s.manifest.context_length/1000)|0)+"k ctx":"ctx —"}<br>
+        <span class="hash" title='${JSON.stringify(s.manifest||{}).replace(/'/g,"&#39;")}'>pin ${(s.manifest_hash||"").slice(7,25)}…</span>
+        · <b>${s.calls||0}</b> call(s) · synced <b>${s.last_synced?ago(s.last_synced):"never"}</b>
+        ${s.expires_at?`<br><span style="color:${(new Date(String(s.expires_at).slice(0,10))-now)/day<=30?"var(--red)":"var(--brass)"}">expires ${String(s.expires_at).slice(0,10)}</span>`:""}
+        ${s.state==="deprecated"?`<br><span style="color:var(--red)">the deal moved or the clock ran — decide above</span>`:""}</div>
+        <div class="acts"><button class="sbtn no" onclick="stableRetire('${s.id}')">retire</button></div></div>`;
+    }).join("");
+    // who is thinking — every metered identity across the subtree, usd-sorted
+    const usage=(st.usage||[]).slice().sort((a,b)=>(b.usd||0)-(a.usd||0));
+    $("whothinks").innerHTML= usage.length? usage.map(u=>{
+      const nm=agentName(u.subject), res=(presCache?.residents||[]).some(x=>x.did===u.subject);
+      return `<div class="think${res?" res":""}"><span class="nm" title="${u.subject}">${nm}</span>
+        <span class="fl">${(u.floor||"").split("/").pop()}</span>
+        <span class="n">${(u.calls||0)} call${u.calls===1?"":"s"}</span>
+        <span class="n">${(u.tokens||0).toLocaleString()} tok</span>
+        <span class="u">${money(u.usd||0)}</span></div>`;}).join("")
+      : `<div class="quiet">no governed thoughts metered yet.</div>`;
+  }catch{}
+}
+async function saddleMind(){
+  const err=$("sf-err");err.textContent="";
+  const id=$("sf-id").value.trim();
+  if(!id||!id.includes("/")){err.textContent="a mind needs a provider/model id";return}
+  try{
+    const r=await fetch("/requests",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({kind:"mind",action:"saddle",mind:id,route:$("sf-route").value,
+        class:$("sf-class").value,text:`saddle ${id} (${$("sf-class").value})`})});
+    if(!r.ok){err.textContent=`the daemon refused: ${r.status}`;return}
+    $("sf-id").value="";
+    loadStable();
+  }catch{err.textContent="unreachable — is the daemon up? (scripts/dev.sh status)"}
+}
+function presetSaddle(id,klass){$("sf-id").value=id;$("sf-class").value=klass;$("sf-err").textContent=""}
+async function stableRetire(id){
+  await fetch("/requests",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({kind:"mind",action:"retire",mind:id,text:`retire ${id}`})});
+  loadStable();
+}
+async function stableDecide(id,ok){
+  await fetch("/requests/resolve",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({id,status:ok?"approved":"denied"})});
+  loadStable();loadReq();
+}
 $("qchips").innerHTML=["build strategies for cold-weather architecture",
   "PCI-DSS controls for payment services","recent advances in retrieval-augmented agents"]
   .map(q=>`<span class="qchip" onclick="$('ask').value=this.textContent">${q}</span>`).join("");
@@ -918,7 +1081,7 @@ const vparam=(location.hash.match(/[#&]v=(\w+)/)||[])[1];
 const vmap={window:"uni",universe:"uni"};
 if(vparam){const t=document.querySelector(`.tab[data-v="${vmap[vparam]||vparam}"]`); if(t)t.click();}
 
-function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm()}
+function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable()}
 tick();setInterval(tick,4000);          /* the console breathes */
 scrub();                                /* the universe view is home — light it now */
 </script>
