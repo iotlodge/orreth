@@ -99,11 +99,10 @@
     box-shadow:0 0 9px rgba(127,209,168,.4);cursor:pointer}
   .ship{position:absolute;width:3px;height:3px;border-radius:50%;background:var(--star);
     box-shadow:0 0 5px 1px rgba(234,239,250,.75)}
-  /* the organs, in orbit — the nervous system made visible (each colored by role,
-     breathing so a human can see the floor is alive, not just staffed) */
+  /* resident organ dots: one per organ, colored by role, with a slow pulse */
   .res{position:absolute;width:7px;height:7px;border-radius:50%;transform:translate(-50%,-50%);
     cursor:pointer;animation:resbreathe 3.4s ease-in-out infinite;
-    border:1px solid rgba(234,239,250,.5)}   /* a bright rim: organs read as BEINGS, not tools */
+    border:1px solid rgba(234,239,250,.5)}   /* rim distinguishes organ dots from tool plots */
   @keyframes resbreathe{0%,100%{opacity:.92;box-shadow:0 0 5px 1px currentColor}
     50%{opacity:.6;box-shadow:0 0 10px 2px currentColor}}
   .res.becky{background:var(--brass);color:rgba(212,169,96,.7)}
@@ -247,16 +246,16 @@
   .plantform .go{background:var(--brass);color:#1a1305;border:none;border-radius:8px;
     padding:.55rem 1.4rem;font:700 .78rem var(--mono);cursor:pointer}
   .formerr{font:.72rem var(--mono);color:var(--red);min-height:1.1rem;margin-top:.3rem}
-  /* farm plots on the orrery — tools orbit the floor they're planted at.
-     AMBER diamonds: tools are the farm (brass theme), never confused with the
-     living green organs. State reads through the amber: serving glows, others dim. */
+  /* farm plots on the orrery — tools orbit the floor they're planted at. Amber
+     diamonds (brass theme) keep tools distinct from the green organ dots; serving
+     glows, other states dim. */
   .plot{position:absolute;width:8px;height:8px;transform:translate(-50%,-50%) rotate(45deg);cursor:pointer}
   .plot.serving{background:var(--brass);box-shadow:0 0 8px 1px rgba(212,169,96,.6)}
   .plot.probation{background:var(--brassdim);box-shadow:0 0 6px 1px rgba(138,111,66,.5)}
   .plot.proposed{background:transparent;border:1px solid var(--brassdim)}
   .plot.dropped{background:transparent;border:1px solid var(--faint)}
   .plot.quarantined{background:var(--red);box-shadow:0 0 9px 2px rgba(232,154,143,.7)}
-  /* the overflow marker — one dot standing for the rest, so a busy ring stays legible */
+  /* overflow marker: items beyond a ring's cap collapse into one +N label */
   .more{position:absolute;transform:translate(-50%,-50%);font:.58rem var(--mono);
     color:var(--faint);white-space:nowrap;cursor:default}
   /* a service's worldline event in the spacetime window — a brass plot among the stars */
@@ -417,7 +416,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
 let topoCache=null,laneSig="";
 async function world(){
   try{topoCache=await(await fetch("/topology")).json()}catch{topoCache=null}
-  renderWorldRail(); renderOrrery();
+  renderWorldRail(); renderOrrery(); refreshCounters();
   // topology can land after the first scrub — redraw lanes when the world grows
   const scopes=[]; const w=n=>{if(!n)return;scopes.push(n.scope);(n.children||[]).forEach(w)}; w(topoCache);
   const sig=scopes.sort().join("|");
@@ -454,12 +453,11 @@ function renderWorldRail(){
 
 /* ── the orrery renderer: core sphere, ecosystems in orbit, fields as moons,
       agents as ships. Counter-rotators (.cr) keep every label upright. ── */
-/* ── the orbit shells: rigid rings, evenly spaced, capped ──
-   ONE period per ring, so every dot shares it and the ring turns as a fixed formation —
-   evenly spaced forever, never bunching (the fix for "clutter when >5"). Over the cap,
-   the last slot becomes a "+N" marker so a crowded floor stays a solar system, not a
-   scribble. Counter-rotators (.cr) keep every dot upright. */
-function shell(items,r,cap,period,cell){
+/* ── orbit shells: rigid rings, evenly spaced, capped ──
+   One period per ring so every slot shares it and the ring turns as a fixed formation
+   (no bunching). Items beyond the cap collapse into a "+N" marker; pass `more` to
+   customize that marker. Counter-rotators (.cr) keep contents upright. */
+function shell(items,r,cap,period,cell,more){
   const shown=items.slice(0,cap), over=items.length-shown.length;
   const slots=shown.length+(over>0?1:0), n=Math.max(slots,1);
   const at=(inner,k)=>{const ph=-(k/n)*period;
@@ -467,34 +465,36 @@ function shell(items,r,cap,period,cell){
       <div class="sat" style="transform:translate(${r}px,0)">
         <div class="cr" style="animation-duration:${period}s;animation-delay:${ph}s">${inner}</div></div></div>`;};
   let html=shown.map((it,k)=>at(cell(it),k)).join("");
-  if(over>0) html+=at(`<div class="more">+${over}</div>`,shown.length);
+  if(over>0) html+=at((more||(o=>`<div class="more">+${o}</div>`))(over),shown.length);
   return html;
 }
-/* farm plots: the floor's tools — amber diamonds (0018 §6) */
-function plots(list,r){
+/* farm plots: the floor's tools — amber diamonds (0018 §6); hover reads live from topoCache */
+function plots(list,r,scope){
   const svc=(list||[]).filter(s=>s.state!=="decommissioned");
   return shell(svc,r,5,10,s=>
-    `<div class="plot ${s.state}" onmouseenter="ocPlot(event,'${s.name}','${s.state}','${s.kind||""}',${s.calls||0},'${(s.manifest_hash||"").slice(7,19)}')" onmouseleave="ocOff()"></div>`);
+    `<div class="plot ${s.state}" onmouseenter="ocPlot(event,'${encodeURIComponent(scope||"")}','${encodeURIComponent(s.name||"")}')" onmouseleave="ocOff()"></div>`);
 }
-/* the organs: residents ride the innermost shell — closest to the body they run */
+/* organ dots: residents on the innermost shell */
 const RESKEY={"becky · IAM":"becky","vigil · the Warden":"vigil","steward · memory":"steward",
   "governance":"governance","charlotte · farm keeper":"charlotte","librarian · knowledge":"librarian"};
 const reskey=r=>RESKEY[r]||"governance";
 function organs(list,r,scope){
-  return shell(list||[],r,6,26,a=>      // 6 = the full roster; slow, dignified rhythm
+  return shell(list||[],r,6,26,a=>      // cap 6 = the full organ roster
     `<div class="res ${reskey(a.role)}" onmouseenter="ocRes(event,'${encodeURIComponent(scope||"")}','${a.name||""}')" onmouseleave="ocOff()"></div>`);
 }
-/* find a node anywhere in the tree by scope, so hover reads LIVE vitals (not the frozen
-   copy baked at render time) — the organs feel alive because their numbers are current */
+/* find a node by scope in the topology tree; hover cards and counter refresh read
+   live values from here instead of values baked into the DOM at render time */
 function findNode(scope){
   const hit=n=>{if(!n)return null;if(n.scope===scope)return n;
     for(const c of n.children||[]){const r=hit(c);if(r)return r}return null};
   return hit(topoCache);
 }
-/* the workforce: leased agents as white ships on their own middle shell */
-function ships(count,r){
+/* workforce: leased agents as white ships on the middle shell; the +N overflow
+   marker carries .lc so refreshCounters keeps its count current between renders */
+function ships(count,r,scope){
   const list=Array.from({length:count},(_,i)=>i);
-  return shell(list,r,5,7,()=>`<div class="ship" style="position:relative;left:0;top:0"></div>`);
+  return shell(list,r,5,7,()=>`<div class="ship" style="position:relative;left:0;top:0"></div>`,
+    o=>`<div class="more lc" data-scope="${encodeURIComponent(scope||"")}" data-k="shipsover">+${o}</div>`);
 }
 function ocRes(ev,scopeEnc,name){
   const O=$("orrery"),c=$("ocard"),r=ev.currentTarget.getBoundingClientRect(),o=O.getBoundingClientRect();
@@ -504,27 +504,28 @@ function ocRes(ev,scopeEnc,name){
   const rows=Object.entries(a.vitals||{}).map(([k,v])=>`<span class="k">${k} </span>${(+v).toLocaleString()}`).join(" · ");
   c.innerHTML=`<div class="t">◉ ${name} <span class="k">· ${role.split("·").slice(1).join("·").trim()||role} · ${floor}</span></div>
     ${rows?`<div>${rows}</div>`:""}
-    ${a.did?`<div class="k" style="overflow-wrap:anywhere;font-size:.68rem">${a.did}</div>`:`<div class="k" style="font-size:.68rem">resident · identity minting</div>`}`;
+    ${a.did?`<div class="k" style="overflow-wrap:anywhere;font-size:.68rem">${a.did}${a.did_contested?` <span style="color:var(--red)">· contested — ${a.did_contested} signers</span>`:""}</div>`:`<div class="k" style="font-size:.68rem">resident · identity minting</div>`}`;
   let x=r.left-o.left+r.width/2+16,y=r.top-o.top+r.height/2;
   if(x+300>o.width)x=Math.max(8,x-322);
   y=Math.max(10,Math.min(o.height-78,y));
   c.style.left=x+"px";c.style.top=y+"px";c.classList.add("on");
 }
-function ocPlot(ev,name,state,kind,calls,pin){
+function ocPlot(ev,scopeEnc,nameEnc){
   const O=$("orrery"),c=$("ocard"),r=ev.currentTarget.getBoundingClientRect(),o=O.getBoundingClientRect();
+  const node=findNode(decodeURIComponent(scopeEnc)), name=decodeURIComponent(nameEnc);
+  const s=(node?.farm||[]).find(x=>x.name===name)||{};
   c.innerHTML=`<div class="t">⚙ ${name}</div>
-    <div><span class="k">a ${kind} service · </span>${state}</div>
-    <div><span class="k">calls </span>${calls} · <span class="k">pin </span>${pin}…</div>`;
+    <div><span class="k">a ${s.kind||""} service · </span>${s.state||"?"}</div>
+    <div><span class="k">calls </span>${s.calls||0} · <span class="k">pin </span>${(s.manifest_hash||"").slice(7,19)}…</div>`;
   let x=r.left-o.left+r.width/2+14,y=r.top-o.top+r.height/2;
   if(x+300>o.width)x=Math.max(8,x-320);
   y=Math.max(10,Math.min(o.height-70,y));
   c.style.left=x+"px";c.style.top=y+"px";c.classList.add("on");
 }
-/* the render signature is STRUCTURE ONLY — which bodies exist, their states, their
-   populations. Live counters (records, vitals, calls, beats) are deliberately excluded:
-   they tick every few seconds, and if they forced a re-render the CSS orbit would restart
-   from 0° every time — the "spins 15° then snaps back to 3 o'clock" bug. Layout changes
-   redraw; a ticking counter never interrupts the turn. Hover reads fresh vitals live. */
+/* the render signature covers structure only: which bodies exist, their states, capped
+   populations. Live counters (records, vitals, calls) are excluded because a re-render
+   restarts the CSS orbit animation from 0° (the rotation-reset bug). Counter text is
+   kept current in place by refreshCounters(); hover cards read live from topoCache. */
 const farmSig=l=>(l||[]).filter(s=>s.state!=="decommissioned").map(s=>[s.name,s.state]);
 const resSig=l=>(l||[]).map(a=>reskey(a.role));
 const nodeSig=n=>[n.scope,Math.min(n.agents||0,5),(n.agents||0)>5,farmSig(n.farm),resSig(n.residents)];
@@ -547,8 +548,8 @@ function renderOrrery(){
     const chain=tiers(), apex=chain[0], mid=chain.length>2?chain[1]:null, me=chain[chain.length-1];
     const per=40, mper=14;
     const you=`<div class="moon" style="box-shadow:0 0 12px 2px rgba(212,169,96,.55)"></div>
-      <div class="blabel" style="top:16px;color:var(--brass)">${me.split("/").pop()} · ${t.records}m ◂ you</div>
-      ${organs(t.residents,18,t.scope)}${ships(t.agents||0,29)}${plots(t.farm,40)}`;
+      <div class="blabel" style="top:16px;color:var(--brass)">${me.split("/").pop()} · <span class="lc" data-scope="${encodeURIComponent(t.scope)}" data-k="records">${t.records}</span>m ◂ you</div>
+      ${organs(t.residents,18,t.scope)}${ships(t.agents||0,29,t.scope)}${plots(t.farm,40,t.scope)}`;
     const inner=mid?`<div class="planet"></div><div class="blabel" style="top:17px">${mid.split("/").pop()}</div>
       <div class="ring" style="width:132px;height:132px"></div>
       <div class="orb" style="animation-duration:${mper}s"><div class="sat" style="transform:translate(66px,0)">
@@ -564,9 +565,9 @@ function renderOrrery(){
       <div class="oleaf">the view from the bottom floor — the universe console watches every orbit</div>`;
     O.appendChild(wrap); return;
   }
-  html+=`<div class="sphere" onmouseenter="oc(event,'${t.scope}',${t.records},${t.runs},${t.agents},${t.usd||0})" onmouseleave="ocOff()"></div>
-    <div class="corelabel">${t.scope}<span class="sub">${t.records} memories · the universal record</span></div>
-    ${organs(t.residents,50,t.scope)}${plots(t.farm,66)}`;
+  html+=`<div class="sphere" onmouseenter="oc(event,'${encodeURIComponent(t.scope)}')" onmouseleave="ocOff()"></div>
+    <div class="corelabel">${t.scope}<span class="sub"><span class="lc" data-scope="${encodeURIComponent(t.scope)}" data-k="records">${t.records}</span> memories · the universal record</span></div>
+    ${organs(t.residents,50,t.scope)}${plots(t.farm,66,t.scope)}`;
   {
     html+=`<div class="ring" style="width:${2*RE}px;height:${2*RE}px"></div>`;
     ecos.forEach((e,i)=>{
@@ -581,20 +582,20 @@ function renderOrrery(){
         inner+=`<div class="orb" style="animation-duration:${mper}s;animation-delay:${mph}s">
           <div class="sat" style="transform:translate(${RM}px,0)">
             <div class="cr" style="animation-duration:${mper}s;animation-delay:${mph}s">
-              <div class="moon" onmouseenter="oc(event,'${f.scope}',${f.records},${f.runs},${f.agents},${f.usd||0})" onmouseleave="ocOff()"></div>
-              <div class="blabel" style="top:14px">${f.scope.split("/").pop()}${f.agents?` · ${f.agents}`:""}</div>
-              ${organs(f.residents,18,f.scope)}${ships(f.agents||0,29)}${plots(f.farm,40)}</div></div></div>`});
+              <div class="moon" onmouseenter="oc(event,'${encodeURIComponent(f.scope)}')" onmouseleave="ocOff()"></div>
+              <div class="blabel" style="top:14px">${f.scope.split("/").pop()}${f.agents?` · <span class="lc" data-scope="${encodeURIComponent(f.scope)}" data-k="agents">${f.agents}</span>`:""}</div>
+              ${organs(f.residents,18,f.scope)}${ships(f.agents||0,29,f.scope)}${plots(f.farm,40,f.scope)}</div></div></div>`});
       html+=`<div class="orb" style="animation-duration:${per}s;animation-delay:${ph}s">
         <div class="beam" style="width:${RE-16}px;animation-delay:${i*1.9}s"></div>
         <div class="sat" style="transform:translate(${RE}px,0)">
           <div class="cr" style="animation-duration:${per}s;animation-delay:${ph}s">
-            <div class="planet" onmouseenter="oc(event,'${e.scope}',${e.records},${e.runs},${e.agents},${e.usd||0})" onmouseleave="ocOff()"></div>
+            <div class="planet" onmouseenter="oc(event,'${encodeURIComponent(e.scope)}')" onmouseleave="ocOff()"></div>
             <div class="blabel" style="top:20px">${e.scope.split("/").pop()}</div>
-            ${organs(e.residents,18,e.scope)}${plots(e.farm,30)}${inner}</div></div></div>`});
+            ${organs(e.residents,18,e.scope)}${plots(e.farm,30,e.scope)}${inner}</div></div></div>`});
   }
   html+=`</div>`;
   wrap.innerHTML=html; O.appendChild(wrap);
-  // the organ legend — so a human reads the nervous system's colors at a glance
+  // organ legend: role → color, only for roles present somewhere in the tree
   const seen=new Set(); const collect=n=>{if(!n)return;
     (n.residents||[]).forEach(a=>seen.add(reskey(a.role)));(n.children||[]).forEach(collect)};
   collect(t);
@@ -605,17 +606,30 @@ function renderOrrery(){
     L.innerHTML=`<span style="color:var(--faint)">organs alive:</span>`+order.filter(k=>seen.has(k))
       .map(k=>`<span class="rl"><span class="rd" style="background:${col[k]}"></span>${k}</span>`).join("");}
 }
-function oc(ev,scope,rec,runs,ag,usd){
+function oc(ev,scopeEnc){
   const O=$("orrery"),c=$("ocard"),r=ev.currentTarget.getBoundingClientRect(),o=O.getBoundingClientRect();
-  c.innerHTML=`<div class="t">${scope}</div>
-    <div><span class="k">memories </span>${rec} · <span class="k">thoughts </span>${runs}</div>
-    <div><span class="k">agents </span>${ag} · <span class="k">spend </span>${money(usd)}</div>`;
+  const n=findNode(decodeURIComponent(scopeEnc))||{};
+  c.innerHTML=`<div class="t">${n.scope||decodeURIComponent(scopeEnc)}</div>
+    <div><span class="k">memories </span>${n.records||0} · <span class="k">thoughts </span>${n.runs||0}</div>
+    <div><span class="k">agents </span>${n.agents||0} · <span class="k">spend </span>${money(n.usd||0)}</div>`;
   let x=r.left-o.left+r.width/2+18, y=r.top-o.top+r.height/2;
   if(x+300>o.width)x=Math.max(8,x-330);
   y=Math.max(10,Math.min(o.height-86,y));
   c.style.left=x+"px";c.style.top=y+"px";c.classList.add("on");
 }
 function ocOff(){$("ocard").classList.remove("on")}
+/* counters excluded from the render signature update in place here, every poll —
+   so the orrery's numbers stay current without restarting the orbit animation */
+function refreshCounters(){
+  const O=$("orrery"); if(!O||$("v-uni").classList.contains("hide"))return;
+  O.querySelectorAll(".lc").forEach(el=>{
+    const n=findNode(decodeURIComponent(el.dataset.scope)); if(!n)return;
+    const k=el.dataset.k;
+    if(k==="records")el.textContent=n.records||0;
+    else if(k==="agents")el.textContent=n.agents||0;
+    else if(k==="shipsover")el.textContent="+"+Math.max(1,(n.agents||0)-5);
+  });
+}
 
 /* the pane's cut is the floor's SUBTREE, not the requester's own worldline (0000 §5:
    a human sees their layer and below) — self-only hid the librarian's knowledge, which

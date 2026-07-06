@@ -39,8 +39,8 @@ struct App {
     /// Presence flows UP (0000 §1): children heartbeat their subtree summaries here.
     /// A parent learns the world below without ever reaching into it.
     children: Mutex<BTreeMap<String, Value>>,
-    /// The residents' vitals — small, honest counters (beats heard, refusals worn,
-    /// pushes sent) so the Console can show the organs are alive, not just named.
+    /// Per-process display counters (beats heard, refusals, upward beats) surfaced as
+    /// resident vitals in the Console. Unsigned, reset on restart, never read by governance.
     vitals: Mutex<BTreeMap<String, i64>>,
 }
 
@@ -190,7 +190,7 @@ async fn main() {
         std::thread::spawn(move || loop {
             let s = summary(&beat);
             if ureq::post(&format!("{parent_url}/hello")).send_json(&s).is_ok() {
-                bump(&beat, "beats_up"); // what this floor tells its parent, counted
+                bump(&beat, "beats_up"); // count successful upward beats
             }
             std::thread::sleep(std::time::Duration::from_secs(5));
         });
@@ -324,7 +324,7 @@ async fn egress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl Int
                 }
                 // the uniform refusal: authz-miss and every other miss share one shape (0002 §4)
                 Err(_) => {
-                    bump(&app, "refusals"); // vigil's tally — the shape, never the reason
+                    bump(&app, "refusals"); // count only; the refusal shape is unchanged (0002 §4)
                     return (
                         StatusCode::FORBIDDEN,
                         Json(json!({"error": "request cannot be served under this capability"})),
@@ -593,29 +593,42 @@ fn local_workforce(app: &App) -> Vec<Value> {
     }).collect()
 }
 
-/// The organs, alive — names, honest vitals from real state, and DIDs MINED from the
-/// records each resident actually signed (nothing self-declares: charlotte is whoever
-/// authored the service worldlines; the librarian, whoever authored the knowledge).
-/// Shared by /presence and the upward beat — the rail and the orrery see one roster.
+/// Resident roster for this floor: names, display vitals from real state, and DIDs
+/// mined from signed records (ingress verifies every author signature, so a mined DID
+/// is authentic — but tags are author-chosen). The claim is therefore anchored to the
+/// EARLIEST tagged record, which is stable under later writes, and when more than one
+/// DID has signed such records the entry is marked contested rather than silently
+/// picking one. Shared by /presence and the upward beat — one roster for rail + orrery.
 fn residents(app: &App) -> Vec<Value> {
     let u = app.universe.lock().unwrap();
     let leaf = u.nodes[0].scope.rsplit('/').next().unwrap_or("").to_string();
     let memories = u.nodes[0].records.len();
     let floors = u.nodes[0].floors.len();
     let root = u.trust_root.clone();
-    // mine the host-side residents' identities and tallies from signed memory
-    let (mut cha_did, mut lib_did) = (None::<String>, None::<String>);
+    // earliest (occurred_at, author) claim per tag, plus distinct-author counts
+    let (mut cha, mut lib) = (None::<(String, String)>, None::<(String, String)>);
+    let (mut cha_authors, mut lib_authors) = (BTreeSet::new(), BTreeSet::new());
     let (mut worldlines, mut knowledge) = (0i64, 0i64);
     for rec in u.nodes[0].records.values() {
         let tags = rec.get("tags").and_then(Value::as_array);
         let has = |t: &str| tags.is_some_and(|ts| ts.iter().any(|x| x == t));
+        let claim = |slot: &mut Option<(String, String)>, authors: &mut BTreeSet<String>| {
+            if let Some(a) = rec["author"].as_str() {
+                authors.insert(a.to_string());
+                let at = rec["occurred_at"].as_str().unwrap_or("").to_string();
+                // ties on occurred_at break by author, so the winner is deterministic
+                if slot.as_ref().map_or(true, |(t, d)| (at.as_str(), a) < (t.as_str(), d.as_str())) {
+                    *slot = Some((at, a.to_string()));
+                }
+            }
+        };
         if has("service") {
             worldlines += 1;
-            cha_did = rec["author"].as_str().map(str::to_string).or(cha_did);
+            claim(&mut cha, &mut cha_authors);
         }
         if has("knowledge") {
             knowledge += 1;
-            lib_did = rec["author"].as_str().map(str::to_string).or(lib_did);
+            claim(&mut lib, &mut lib_authors);
         }
     }
     drop(u);
@@ -650,17 +663,23 @@ fn residents(app: &App) -> Vec<Value> {
                "vitals": {"floors": floors, "beats up": vital("beats_up")}}),
     ];
     if serving > 0 || worldlines > 0 {
-        out.push(json!({"agent": format!("charlotte·{leaf}"), "name": "charlotte",
-            "role": "charlotte · farm keeper", "state": "tending", "did": cha_did,
+        let mut c = json!({"agent": format!("charlotte·{leaf}"), "name": "charlotte",
+            "role": "charlotte · farm keeper", "state": "tending",
+            "did": cha.map(|(_, d)| d),
             "blurb": "probes, pins, and attests the toolshed; writes the worldlines",
             "vitals": {"tools serving": serving, "tool calls": tool_calls,
-                       "worldline events": worldlines}}));
+                       "worldline events": worldlines}});
+        if cha_authors.len() > 1 { c["did_contested"] = json!(cha_authors.len()); }
+        out.push(c);
     }
     if knowledge > 0 {
-        out.push(json!({"agent": format!("librarian·{leaf}"), "name": "librarian",
-            "role": "librarian · knowledge", "state": "gathering", "did": lib_did,
+        let mut l = json!({"agent": format!("librarian·{leaf}"), "name": "librarian",
+            "role": "librarian · knowledge", "state": "gathering",
+            "did": lib.map(|(_, d)| d),
             "blurb": "gathers from identified sources; admits quarantined",
-            "vitals": {"gathers": gathers, "knowledge held": knowledge}}));
+            "vitals": {"gathers": gathers, "knowledge held": knowledge}});
+        if lib_authors.len() > 1 { l["did_contested"] = json!(lib_authors.len()); }
+        out.push(l);
     }
     out
 }
@@ -714,7 +733,7 @@ async fn hello(State(app): State<Arc<App>>, Json(mut beat): Json<Value>) -> impl
     };
     beat["heard_at"] = json!(now_iso());
     app.children.lock().unwrap().insert(scope, beat);
-    bump(&app, "beats_heard"); // vigil hears the world breathe — shape, never content
+    bump(&app, "beats_heard"); // count beats received from children
     (StatusCode::OK, Json(json!({"ok": true})))
 }
 
