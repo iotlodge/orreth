@@ -330,6 +330,16 @@ async fn egress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl Int
                             if knowledge && rec["provenance_class"] == "ingested-archive" {
                                 h["fidelity"] = json!("untrusted");
                             }
+                            // the poison visibly dead (0014 §4): a recall version never
+                            // dresses as anything else, whatever its provenance class
+                            if tags.as_array().is_some_and(|t| t.iter().any(|x| x == "recalled")) {
+                                h["fidelity"] = json!("recalled");
+                            }
+                            // lineage rides the hit so the librarian's walk (and any
+                            // client) can follow derived_from without a privileged path
+                            if let Some(df) = rec.get("derived_from") {
+                                h["derived_from"] = df.clone();
+                            }
                             h["tags"] = tags;
                         }
                     }

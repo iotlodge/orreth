@@ -61,6 +61,16 @@ lineage preserved, the poison visibly dead. Detection lenses: source discredit, 
 and the **outcome lens** (0005: which knowledge versions do failing runs have in common?).
 Consequential removals stage through 0012; discredit-beats-delete by default.
 
+> **Landed on the wire 2026-07-07** (with the 0020 parlor era): decom-with-discredit at the
+> farm gate hands a `recall` request to the queue (charlotte discredits the *source*; the
+> *knowledge* walk is the librarian's — separation of duties, no second gate: the human already
+> approved the discredit). The librarian retrieves the floor's knowledge under her own
+> authority, walks source + `derived_from` (lineage now rides retrieval hits via orrethd
+> egress enrichment, 0018 §8 pattern), and writes recall versions. Egress dresses any
+> `recalled`-tagged version as `fidelity: recalled` — visibly dead in the Window. Reference
+> walk: `orreth_sim/knowledge.py::recall_source` · wire walk: `orreth_sim/librarian.py::
+> tainted_refs` + `console_worker.py::recall_walk` · demo: `scripts/demo.sh recall`.
+
 ## 5. The organ, and what waits
 
 The knowledge-acquisition organ is **becky-shaped — agent AND infrastructure** (JB's Topic-2

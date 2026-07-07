@@ -11,6 +11,22 @@ from .knowledge import KnowledgeCategory
 from .node import make_memory
 
 
+def tainted_refs(entries: list[dict], source_did: str) -> list[str]:
+    """The 0014 §4 walk over wire-shaped entries [{ref, source_did, derived_from}]:
+    everything the discredited source said, plus everything derived from those —
+    transitively, however deep the lineage runs. Pure; the wire worker feeds it hits."""
+    tainted = {e["ref"] for e in entries if e.get("source_did") == source_did}
+    grew = True
+    while grew:
+        grew = False
+        for e in entries:
+            if e["ref"] not in tainted and any(d in tainted
+                                               for d in e.get("derived_from") or []):
+                tainted.add(e["ref"])
+                grew = True
+    return sorted(tainted)
+
+
 def parked_intents(node) -> list[tuple[str, dict]]:
     handled = set()
     for rec in node.records.values():

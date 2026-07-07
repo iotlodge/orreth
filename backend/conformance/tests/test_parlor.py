@@ -80,6 +80,19 @@ def test_gather_routes_to_the_librarians_real_duty():
     assert any(a.get("template", "").startswith("gather") for a in c["asks"])
 
 
+def test_librarian_tells_the_recall_ledger():
+    """The immune system's ledger, in words — and an honest nothing when it's empty."""
+    quiet = parlor.answer("librarian", "has anything been recalled?", FACTS)
+    assert "nothing recalled" in quiet["reply"]
+    facts = {**FACTS, "requests": FACTS["requests"] + [
+        {"kind": "recall", "status": "done", "service": "local.demo/almanac",
+         "source_did": "did:web:almanac.example",
+         "result": "recalled 3 entr(ies) traced to did:web:almanac.example — "
+                   "annotated, never rewritten; the lineage is intact"}]}
+    told = parlor.answer("librarian", "has anything been recalled?", facts)
+    assert "local.demo/almanac" in told["reply"] and "3 entr" in told["reply"]
+
+
 def test_strangers_are_received_politely():
     assert "residence" in parlor.answer("hal9000", "open the pod bay doors", FACTS)["reply"]
     assert parlor.card("hal9000", FACTS)["asks"] == []

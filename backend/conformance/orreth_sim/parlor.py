@@ -78,9 +78,11 @@ def _card_librarian(facts: dict) -> tuple[str, list]:
     v = _vitals(facts, "librarian")
     return (f"I gather from identified sources — {v.get('knowledge held', 0)} piece(s) of "
             "sourced knowledge in the Window, every one quarantined until corroborated. "
-            "Ask me to gather, and it becomes memory.",
+            "Ask me to gather, and it becomes memory; discredit a source, and I walk "
+            "its lineage.",
             [{"label": "gather knowledge on…", "template": "gather sourced knowledge on "},
-             {"label": "what do you hold?", "ask": "what knowledge do you hold?"}])
+             {"label": "what do you hold?", "ask": "what knowledge do you hold?"},
+             {"label": "anything recalled?", "ask": "has anything been recalled?"}])
 
 
 def _card_ada(facts: dict) -> tuple[str, list]:
@@ -123,6 +125,8 @@ def answer(name: str, text: str, facts: dict) -> dict:
                 return {"reply": f"gathering on “{topic}” — sourced findings land in the "
                                  "Window, quarantined until corroborated.",
                         "action": "gather", "topic": topic}
+        if "recall" in t or "discredit" in t or "poison" in t:
+            return {"reply": _librarian_recalls(facts)}
         return {"reply": _librarian_reply(facts)}
     if name == "becky":
         return {"reply": _becky_reply(t, facts)}
@@ -196,6 +200,22 @@ def _librarian_reply(facts: dict) -> str:
             f"across {v.get('gathers', 0)} gather(s) — every source an identity, every "
             "finding quarantined at 0.0000 until corroborated. say “gather sourced "
             "knowledge on …” and I fetch with my own authority.")
+
+
+def _librarian_recalls(facts: dict) -> str:
+    """The immune system's ledger, in words: every recall walk that has run here."""
+    walks = [r for r in facts.get("requests") or [] if r.get("kind") == "recall"]
+    done = [r for r in walks if r.get("status") == "done"]
+    if not walks:
+        return ("nothing recalled — no source has been discredited here. When one is, "
+                "I walk its lineage: every entry it fed, and everything derived from "
+                "those, re-versioned to 'recalled'. Annotated, never rewritten.")
+    lines = "; ".join(
+        f"{r.get('service') or (r.get('source_did') or '?')[:28]} — "
+        + (str(r.get("result", "walk pending"))
+           if isinstance(r.get("result"), str) else "walk pending")
+        for r in done) or "a walk is in progress"
+    return f"{len(walks)} recall walk(s) on this floor: {lines}."
 
 
 def _organ_reply(name: str, facts: dict) -> str:

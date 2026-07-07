@@ -15,6 +15,8 @@
 #                                   market, earned by canary, retired by appointment
 #   scripts/demo.sh parlor          0020 · humans ask, residents fetch — audiences
 #                                   with the residents, signed onto the window
+#   scripts/demo.sh recall          0014 · discredit a source; the librarian walks
+#                                   the lineage and the poison dies visibly
 #   scripts/demo.sh window          0008 · seed a biography and open the Console
 #
 # Most demos want the rig up first: scripts/dev.sh start
@@ -35,6 +37,7 @@ case "${1:-list}" in
   model)     run demo_model_plane.py ;;
   stable)    run demo_stable.py "$FIELD" ;;
   parlor)    run demo_parlor.py "$FIELD" ;;
+  recall)    run demo_recall.py "$FIELD" ;;
   window)    "$ROOT/scripts/dev.sh" window ;;
   list|*)
     echo "the Orreth demo reel — scripts/demo.sh <name>   (rig first: scripts/dev.sh start)"
@@ -50,6 +53,8 @@ case "${1:-list}" in
     echo "              earned by canary, expiring by appointment, swapped, remembered"
     echo "  parlor      0020 · humans ask, residents fetch — an audience with charlotte,"
     echo "              ada, and vigil, every exchange signed onto the window"
+    echo "  recall      0014 · discredit a source and the librarian walks its lineage —"
+    echo "              every tainted entry re-versioned, the poison visibly dead"
     echo "  window      0008 · seed a biography and open the Console"
     ;;
 esac

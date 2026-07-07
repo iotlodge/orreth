@@ -700,6 +700,22 @@ def test_recall_walks_the_lineage(world):
     assert bad in world.field_prod.records and derived in world.field_prod.records  # history intact
 
 
+def test_tainted_refs_walks_wire_shaped_lineage():
+    """The wire-level walk (0014 §4, landed 2026-07-07): the librarian feeds it hits —
+    ref + body source + derived_from — and gets back the transitive taint, sorted."""
+    from orreth_sim.librarian import tainted_refs
+    entries = [
+        {"ref": "a1", "source_did": "did:web:poisoned.example", "derived_from": []},
+        {"ref": "a2", "source_did": "did:web:honest.example", "derived_from": []},
+        {"ref": "b1", "source_did": "", "derived_from": ["a1"]},          # built on poison
+        {"ref": "c1", "source_did": "", "derived_from": ["b1"]},          # two hops out
+        {"ref": "d1", "source_did": "", "derived_from": ["a2"]},          # clean lineage
+    ]
+    assert tainted_refs(entries, "did:web:poisoned.example") == ["a1", "b1", "c1"]
+    assert tainted_refs(entries, "did:web:honest.example") == ["a2", "d1"]
+    assert tainted_refs(entries, "did:web:unknown.example") == []
+
+
 # ---------------------------------------------------------------- 0015: the chassis
 def test_chassis_plans_observes_in_parallel_and_answers(world):
     """One fixed loop: injected cognition, deterministic skill + reason side by side."""

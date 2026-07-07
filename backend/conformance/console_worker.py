@@ -10,6 +10,10 @@ here in cognition (the plane verifies, never signs):
   · gather X  — the librarian: finds a SERVING search source on the Farm, meters the
     call, admits the findings as signed memories (quarantined at 0.0000) under the
     service's DID. No serving source → an honest refusal, never a silent nothing.
+  · recall    — the librarian's 0014 §4 walk: when a source is discredited at the
+    gate, charlotte hands the recall to the queue and the librarian re-versions
+    every entry from that source — and everything derived from those — to
+    'recalled'. Annotate-never-rewrite; the poison visibly dead in the Window.
   · join      — becky's door: an agent asks to join the field; becky mints a
     root-chained retrieve lease for its DID and resolves the request with the token.
   · service   — charlotte, the farm keeper (0018): verifies staged plantings (probe,
@@ -43,6 +47,7 @@ import os
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -260,10 +265,17 @@ class FarmKeeper:
                 worldline(port, scope, svc, "decommissioned",
                           reason=r.get("reason", ""), discredit=discredit)
                 if discredit:
-                    # the source registry flip + 0014 §4 lineage walk land with the
-                    # librarian organ (0015); the discredit is on the record TODAY
+                    # separation of duties: charlotte discredits the SOURCE; the
+                    # KNOWLEDGE recall is the librarian's walk (0014 §4). The handoff
+                    # rides the queue — visible, auditable, no second gate (the human
+                    # already approved the discredit).
                     worldline(port, scope, svc, "discredited",
-                              note="knowledge recall staged (0014 §4)")
+                              note="recall handed to the librarian (0014 §4)")
+                    call(port, "POST", "/requests",
+                         {"kind": "recall", "source_did": svc.get("did", ""),
+                          "service": name,
+                          "reason": r.get("reason", "") or "source discredited",
+                          "text": f"recall knowledge from discredited {name}"})
                 led = ledger_load(scope)
                 led.pop(name, None)
                 ledger_save(scope, led)
@@ -699,6 +711,59 @@ def tavily(q: str, n: int = 3) -> list:
     return json.loads(urllib.request.urlopen(req).read())["results"]
 
 
+def recall_walk(port: int, scope: str, source_did: str, reason: str) -> str:
+    """The librarian's 0014 §4 duty, on the wire: fetch the floor's knowledge under
+    her OWN authority (humans never read; organs do), walk source + derived_from
+    lineage, and version every tainted entry to 'recalled' — annotate-never-rewrite,
+    the poison visibly dead in the Window."""
+    from datetime import datetime, timedelta, timezone
+
+    from orreth_sim.librarian import tainted_refs
+
+    if not source_did:
+        return "nothing to recall — the discredited service carried no source DID"
+    token = _ROOT.issue_token(LIB_DID, "u:demo", [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    r = call(port, "POST", "/retrieve", {
+        "query": {"requester": LIB_DID, "subject": {"cohort": {"scope": scope}},
+                  "space": "self", "time": {"from": frm}, "intent": "recall",
+                  "budget": {"cost": 8}, "auth": "biscuit-sim"},
+        "token": token, "requester_scope": scope})
+    entries, bodies, tags_of = [], {}, {}
+    for h in r.get("hits", []):
+        tags = h.get("tags") or []
+        if "knowledge" not in tags:
+            continue
+        try:
+            body = call(port, "GET", f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        if not isinstance(body, dict):
+            continue
+        entries.append({"ref": h["ref"],
+                        "source_did": (body.get("source") or {}).get("did", ""),
+                        "derived_from": h.get("derived_from") or []})
+        bodies[h["ref"]] = body
+        tags_of[h["ref"]] = tags
+    # refs already annotated by a prior recall version stay annotated — idempotent
+    already = {d for e in entries if bodies[e["ref"]].get("state") == "recalled"
+               for d in e["derived_from"]}
+    recalled = 0
+    for ref in tainted_refs(entries, source_did):
+        if ref in already or bodies[ref].get("state") == "recalled":
+            continue
+        new_body = {**bodies[ref], "state": "recalled", "recall_reason": reason,
+                    "recalled_source": source_did, "at": NOW()}
+        tags = sorted({*tags_of.get(ref, []), "knowledge", "recalled"} - {"gathered"})
+        rec = make_memory({"did": LIB_DID, "scope": scope}, LIB, scope, new_body,
+                          kind="semantic", tags=list(tags))
+        rec["derived_from"] = [ref]
+        call(port, "POST", "/records", rec)
+        recalled += 1
+    return (f"recalled {recalled} entr(ies) traced to {source_did} — "
+            "annotated, never rewritten; the lineage is intact")
+
+
 def gather(port: int, scope: str, text: str) -> str:
     src = farm_search_source(port)
     if src is None:
@@ -919,6 +984,15 @@ def main() -> None:
                     elif r.get("kind") == "parlor" and r.get("status") == "pending":
                         handled.add(key)
                         on_parlor(port, scope, r)
+                    elif r.get("kind") == "recall" and r.get("status") == "pending":
+                        handled.add(key)
+                        print(f"  ↳ recall {r['id']}: walking knowledge from "
+                              f"{r.get('source_did', '?')[:32]}…")
+                        result = recall_walk(port, scope, r.get("source_did", ""),
+                                             r.get("reason", "source discredited"))
+                        call(port, "POST", "/requests/resolve",
+                             {"id": r["id"], "status": "done", "result": result})
+                        print(f"    ✓ {result}")
                 if beat_due:
                     KEEPER.tend(port, scope)
                     WRANGLER.sync(port, scope)
