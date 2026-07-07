@@ -313,6 +313,15 @@ including derived-memory chain verification).
 
 ## 🔧 Build phase — decisions as they arise
 
+### Locked 2026-07-07 (the join door — Fable staged the options, JB locked)
+- **Join-door hardening: HITL gate + nonce challenge.** Joins stage in the human queue
+  like plants and saddles (0012 — consequence waits); becky additionally challenges the
+  joiner to sign a nonce, proving key control before the request stages, so roster
+  names bind to proven keys. Demos show the gate (the narrated reel auto-approves,
+  visibly). Flagged at the 0017 review ("the join door is open"); the accepted-risk
+  era ends with this lock. If the mechanism turns out to need a `contracts/v0` change,
+  work stops and returns to JB — the sacred zone stays sacred.
+
 ### Locked 2026-07-02 (object store — JB asked, Fable advised, JB accepted)
 - **The object-store contract is the S3 API; the backend is config, not architecture.** Rust plane uses the
   `object_store` crate (one trait: S3 · GCS · Azure · local FS · in-memory). Hosted default = **AWS S3**
