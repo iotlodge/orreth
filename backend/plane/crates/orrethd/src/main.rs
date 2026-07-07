@@ -42,6 +42,9 @@ struct App {
     /// Per-process display counters (beats heard, refusals, upward beats) surfaced as
     /// resident vitals in the Console. Unsigned, reset on restart, never read by governance.
     vitals: Mutex<BTreeMap<String, i64>>,
+    /// Organ DIDs pinned at join (the R1 door, closed): becky mints the token, the
+    /// plane verifies its chain against the pinned root — authority beats archaeology.
+    organs: Mutex<BTreeMap<String, String>>,
 }
 
 fn bump(app: &App, key: &str) {
@@ -190,6 +193,7 @@ async fn main() {
         requests: Mutex::new(Vec::new()),
         children: Mutex::new(BTreeMap::new()),
         vitals: Mutex::new(BTreeMap::new()),
+        organs: Mutex::new(BTreeMap::new()),
     });
 
     // the upward presence beat: every 5s tell the parent what this subtree holds,
@@ -233,6 +237,8 @@ async fn main() {
         .route("/requests", get(requests_list))
         .route("/requests", post(requests_submit))
         .route("/requests/resolve", post(requests_resolve))
+        .route("/organs", get(organs_list))
+        .route("/organs/pin", post(organs_pin))
         .with_state(app);
 
     let bind = arg("--bind").unwrap_or_else(|| "127.0.0.1".to_string()); // 0.0.0.0 in containers
@@ -685,12 +691,13 @@ fn local_workforce(app: &App) -> Vec<Value> {
     }).collect()
 }
 
-/// Resident roster for this floor: names, display vitals from real state, and DIDs
-/// mined from signed records (ingress verifies every author signature, so a mined DID
-/// is authentic — but tags are author-chosen). The claim is therefore anchored to the
-/// EARLIEST tagged record, which is stable under later writes, and when more than one
-/// DID has signed such records the entry is marked contested rather than silently
-/// picking one. Shared by /presence and the upward beat — one roster for rail + orrery.
+/// Resident roster for this floor: names, display vitals from real state, and DIDs.
+/// An organ's DID comes from its JOIN PIN when one exists (becky-minted token, chain
+/// verified against the pinned root — see organs_pin); only unpinned organs fall back
+/// to mining signed records, anchored to the EARLIEST tagged claim and marked
+/// contested when more than one DID has signed (tags are author-chosen; the mined
+/// fallback stays honest, never silently picks). Shared by /presence and the upward
+/// beat — one roster for rail + orrery.
 fn residents(app: &App) -> Vec<Value> {
     let u = app.universe.lock().unwrap();
     let leaf = u.nodes[0].scope.rsplit('/').next().unwrap_or("").to_string();
@@ -761,9 +768,16 @@ fn residents(app: &App) -> Vec<Value> {
             .map(|&(c, u)| (c, (u * 1e6).round() / 1e6))
             .unwrap_or((0, 0.0))
     };
-    let cha_did = cha.map(|(_, d)| d);
-    let lib_did = lib.map(|(_, d)| d);
-    let ada_did = ada.map(|(_, d)| d);
+    // authority beats archaeology (the R1 door, closed): a pin granted at join —
+    // becky-chained, verified against the pinned root — overrides earliest-record
+    // mining and retires the contested flag for that organ. Mining stays as the
+    // honest fallback on floors nobody has pinned yet.
+    let pins = app.organs.lock().unwrap().clone();
+    let (cha_pin, lib_pin, ada_pin) =
+        (pins.get("charlotte").cloned(), pins.get("librarian").cloned(), pins.get("ada").cloned());
+    let cha_did = cha_pin.clone().or(cha.map(|(_, d)| d));
+    let lib_did = lib_pin.clone().or(lib.map(|(_, d)| d));
+    let ada_did = ada_pin.clone().or(ada.map(|(_, d)| d));
     let v = app.vitals.lock().unwrap();
     let vital = |k: &str| v.get(k).copied().unwrap_or(0);
 
@@ -796,7 +810,11 @@ fn residents(app: &App) -> Vec<Value> {
             "blurb": "probes, pins, and attests the toolshed; writes the worldlines",
             "vitals": {"tools serving": serving, "tool calls": tool_calls,
                        "worldline events": worldlines, "llm calls": c_c, "llm usd": c_u}});
-        if cha_authors.len() > 1 { c["did_contested"] = json!(cha_authors.len()); }
+        if cha_pin.is_some() {
+            c["pinned"] = json!(true);
+        } else if cha_authors.len() > 1 {
+            c["did_contested"] = json!(cha_authors.len());
+        }
         out.push(c);
     }
     if knowledge > 0 {
@@ -807,7 +825,11 @@ fn residents(app: &App) -> Vec<Value> {
             "blurb": "gathers from identified sources; admits quarantined",
             "vitals": {"gathers": gathers, "knowledge held": knowledge,
                        "llm calls": l_c, "llm usd": l_u}});
-        if lib_authors.len() > 1 { l["did_contested"] = json!(lib_authors.len()); }
+        if lib_pin.is_some() {
+            l["pinned"] = json!(true);
+        } else if lib_authors.len() > 1 {
+            l["did_contested"] = json!(lib_authors.len());
+        }
         out.push(l);
     }
     if n_stalls > 0 || mindlines > 0 {
@@ -818,7 +840,11 @@ fn residents(app: &App) -> Vec<Value> {
             "blurb": "tends the stable; syncs the catalogs, pins the deals",
             "vitals": {"stalls": n_stalls, "minds live": minds_live,
                        "worldline events": mindlines, "llm calls": a_c, "llm usd": a_u}});
-        if ada_authors.len() > 1 { a["did_contested"] = json!(ada_authors.len()); }
+        if ada_pin.is_some() {
+            a["pinned"] = json!(true);
+        } else if ada_authors.len() > 1 {
+            a["did_contested"] = json!(ada_authors.len());
+        }
         out.push(a);
     }
     out
@@ -947,6 +973,33 @@ async fn rollup(State(app): State<Arc<App>>) -> Json<Value> {
         "tokens": g("tokens") as i64, "usd": (g("usd") * 1e6).round() / 1e6,
         "model_calls": g("model_calls") as i64,
         "services": g("services") as i64, "tool_calls": g("tool_calls") as i64}))
+}
+
+/// The pinned organ roster — transparency for the pin round and any curious client.
+async fn organs_list(State(app): State<Arc<App>>) -> Json<Value> {
+    let scope = { app.universe.lock().unwrap().nodes[0].scope.clone() };
+    Json(json!({"scope": scope, "pins": *app.organs.lock().unwrap()}))
+}
+
+/// An organ's DID, pinned at join (the stricter R1): becky mints the token, this
+/// floor verifies the chain against its pinned trust root (0006) — the same math
+/// as every lease — and the roster stops mining archaeology for that organ.
+/// Re-pinning is idempotent; a rotated organ is one more becky-minted pin away.
+async fn organs_pin(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let organ = req["organ"].as_str().unwrap_or("").to_string();
+        let subject = req["token"]["subject"].as_str().unwrap_or("").to_string();
+        let ok = { app.universe.lock().unwrap().verify_token(&req["token"]).is_ok() };
+        if organ.is_empty() || subject.is_empty() || !ok {
+            bump(&app, "refusals"); // the uniform refusal — a bad chain learns nothing
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        app.organs.lock().unwrap().insert(organ.clone(), subject.clone());
+        (StatusCode::OK, Json(json!({"organ": organ, "did": subject})))
+    })
+    .await
+    .unwrap()
 }
 
 async fn requests_resolve(State(app): State<Arc<App>>, Json(body): Json<Value>) -> impl IntoResponse {

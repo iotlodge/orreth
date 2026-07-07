@@ -661,7 +661,7 @@ function ocRes(ev,scopeEnc,name){
   const rows=Object.entries(a.vitals||{}).map(([k,v])=>`<span class="k">${k} </span>${(+v).toLocaleString()}`).join(" · ");
   c.innerHTML=`<div class="t">◉ ${name} <span class="k">· ${role.split("·").slice(1).join("·").trim()||role} · ${floor}</span></div>
     ${rows?`<div>${rows}</div>`:""}
-    ${a.did?`<div class="k" style="overflow-wrap:anywhere;font-size:.68rem">${a.did}${a.did_contested?` <span style="color:var(--red)">· contested — ${a.did_contested} signers</span>`:""}</div>`:`<div class="k" style="font-size:.68rem">resident · identity minting</div>`}`;
+    ${a.did?`<div class="k" style="overflow-wrap:anywhere;font-size:.68rem">${a.did}${a.pinned?` <span style="color:var(--near)">· pinned at join</span>`:""}${a.did_contested?` <span style="color:var(--red)">· contested — ${a.did_contested} signers</span>`:""}</div>`:`<div class="k" style="font-size:.68rem">resident · identity minting</div>`}`;
   let x=r.left-o.left+r.width/2+16,y=r.top-o.top+r.height/2;
   if(x+300>o.width)x=Math.max(8,x-322);
   y=Math.max(10,Math.min(o.height-78,y));

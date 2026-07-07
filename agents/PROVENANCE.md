@@ -99,6 +99,18 @@ ledger is the master map.
 | Demo | `../backend/conformance/demo_recall.py`, `../scripts/demo.sh` | **Fable 5** | the poisoned almanac: planted, cited, derived, discredited, walked, read back off the Window |
 | Design | `../docs/design/0014-the-knowledge-loop.md` | **Fable 5** | §4 landing note — what shipped, where the pieces live |
 
+### Organ-DID pinning at join (the stricter R1) — 2026-07-07, on main (no quarantine: Fable 5 authored)
+
+| Area | File | Author model | Notes |
+|---|---|---|---|
+| Plane | `../backend/plane/crates/orrethd/src/main.rs` | **Fable 5** | `POST /organs/pin` verifies a becky-minted token's chain against the pinned root (reuses `verify_token`, node untouched) and pins organ→DID; `GET /organs` for transparency; `residents()` prefers pins — `pinned: true`, contested retired for pinned organs; mining stays as the honest fallback |
+| Worker | `../backend/conformance/console_worker.py` | **Fable 5** | `pin_organs` each beat: idempotent re-pin after daemon restarts (the replant, for identity); refusals grumble once, mined fallback stands |
+| Console | `../backend/plane/crates/orrethd/src/window.html` | **Fable 5** | organ hover card shows "· pinned at join" (green) beside the DID |
+
+Closes the R1 follow-up from the orrery-residents review below: the field librarian's
+`did_contested: 4` becomes a clean becky-chained pin; earliest-record mining survives
+only where nobody has pinned.
+
 ### Orrery residents (Opus 4.8, quarantined) — 2026-07-05, branch `opus/orrery-residents`
 
 **The swap boundary.** Everything below was authored by **Opus 4.8** after the safeguard

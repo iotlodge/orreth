@@ -785,6 +785,34 @@ def gather(port: int, scope: str, text: str) -> str:
     return f"admitted to the Window — {len(results)} finding(s) via {src['name']}, quarantined at 0.0000"
 
 
+# ---------------------------------------------------------------- the organ pins (R1)
+
+_PIN_FAILED: set = set()                     # (port, organ): grumble once, not every beat
+
+
+def pin_organs(port: int) -> None:
+    """Authority beats archaeology (the stricter R1): becky mints each organ an
+    identity token, the floor verifies its chain against the pinned root, and the
+    roster stops mining records for that organ's DID. Idempotent every beat, so a
+    restarted daemon is re-pinned within seconds — like the replant, for identity."""
+    try:
+        pins = call(port, "GET", "/organs").get("pins", {})
+    except Exception:
+        return
+    for organ, did in (("charlotte", CHA_DID), ("librarian", LIB_DID), ("ada", ADA_DID)):
+        if pins.get(organ) == did:
+            continue
+        try:
+            token = _BECKY.issue_token(did, SCOPE, [{"action": "retrieve", "space": "self"}])
+            call(port, "POST", "/organs/pin", {"organ": organ, "token": token})
+            _PIN_FAILED.discard((port, organ))
+            print(f"  ↳ pinned {organ} → {did[:22]}… on :{port} (becky-chained)")
+        except Exception as e:
+            if (port, organ) not in _PIN_FAILED:
+                _PIN_FAILED.add((port, organ))
+                print(f"    (pin {organ} on :{port} refused: {e} — mined fallback stands)")
+
+
 # ---------------------------------------------------------------- the parlor (0020)
 
 RESIDENT_KEYS = {"charlotte": (CHA, CHA_DID), "ada": (ADA, ADA_DID),
@@ -996,6 +1024,7 @@ def main() -> None:
                 if beat_due:
                     KEEPER.tend(port, scope)
                     WRANGLER.sync(port, scope)
+                    pin_organs(port)
             except Exception as e:
                 scopes.pop(port, None)
                 print(f"  (floor :{port} unreachable…)", e)
