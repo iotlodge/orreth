@@ -1,9 +1,10 @@
 # PROVENANCE: console worker by Fable 5; charlotte's farm duties added by
 # Fable 5 (claude-fable-5) — 0018, the Tool Farm · 2026-07-05;
-# ada's stable duties added by Fable 5 (claude-fable-5) — 0019, the Stable · 2026-07-06
-"""The console worker — cognition behind the human's queue (0014 · 0006 · 0018 · 0019).
+# ada's stable duties added by Fable 5 (claude-fable-5) — 0019, the Stable · 2026-07-06;
+# the parlor desk added by Fable 5 (claude-fable-5) — 0020, the Parlor · 2026-07-07
+"""The console worker — cognition behind the human's queue (0014 · 0006 · 0018 · 0019 · 0020).
 
-Watches every floor's request queue and carries four residents' duties, keys staying
+Watches every floor's request queue and carries the residents' duties, keys staying
 here in cognition (the plane verifies, never signs):
 
   · gather X  — the librarian: finds a SERVING search source on the Farm, meters the
@@ -21,6 +22,11 @@ here in cognition (the plane verifies, never signs):
     minds through the governed gateway (metered under her own DID — residents think
     on-meter too), syncs the market for price drift and announced expiries, and
     stages recommendations instead of letting a sunset become an outage.
+  · parlor    — the audience room (0020): humans never read the world, they ask it.
+    A resident receives the caller, fetches with its OWN authority, answers grounded
+    (voiced through one governed, metered thought when the floor is fueled), and
+    signs the exchange onto the spacetime window. Unembodied organs receive too,
+    and say honestly that they have no voice yet.
 
 Residents persist their seeds under ~/.orreth/residents/ — a keypair is a self, and
 a self survives the process (0002 §1). Charlotte's ledger (~/.orreth/farm/) replants
@@ -42,7 +48,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import crypto
+from orreth_sim import crypto, parlor
 from orreth_sim.identity import NOW, Becky, Nanda
 from orreth_sim.node import make_memory
 from smoke_orrethd import root_keypair
@@ -714,6 +720,160 @@ def gather(port: int, scope: str, text: str) -> str:
     return f"admitted to the Window — {len(results)} finding(s) via {src['name']}, quarantined at 0.0000"
 
 
+# ---------------------------------------------------------------- the parlor (0020)
+
+RESIDENT_KEYS = {"charlotte": (CHA, CHA_DID), "ada": (ADA, ADA_DID),
+                 "librarian": (LIB, LIB_DID)}
+
+
+def resident_key(name: str):
+    """The signing self behind a parlor seat — becky's door and her parlor chair are
+    one identity. Unembodied organs return (None, None): they receive, never sign."""
+    if name == "becky":
+        return _BECKY.kp, _BECKY.did
+    return RESIDENT_KEYS.get(name, (None, None))
+
+
+def parlor_facts(port: int, scope: str) -> dict:
+    """What the resident may read before it answers — its floor's governed state.
+    The human never sees any of this raw; only the composed answer travels."""
+    facts: dict = {"scope": scope}
+    try:
+        facts["farm"] = [s for s in call(port, "GET", "/farm").get("services", [])
+                         if s.get("floor") == scope]
+    except Exception:
+        pass
+    try:
+        st = call(port, "GET", "/stable")
+        facts["stalls"] = [s for s in st.get("stalls", []) if s.get("floor") == scope]
+        facts["usage"] = st.get("usage", [])
+    except Exception:
+        pass
+    try:
+        p = call(port, "GET", "/presence")
+        facts["residents"] = p.get("residents", [])
+        facts["workforce"] = p.get("workforce", [])
+    except Exception:
+        pass
+    try:
+        facts["requests"] = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        pass
+    return facts
+
+
+def executable(port: int, model: str) -> str | None:
+    """The litellm string cognition can actually call — or None when this floor holds
+    no key for the routed model. Authorize is truth for routing; keys are truth for
+    execution (0016 §6): a stall's route decides which key the call needs."""
+    route = "litellm-direct"
+    try:
+        for s in call(port, "GET", "/stable").get("stalls", []):
+            if s.get("id") == model:
+                route = s.get("route", route)
+                break
+    except Exception:
+        pass
+    if route == "openrouter":
+        return f"openrouter/{model}" if os.environ.get("OPENROUTER_API_KEY") else None
+    keys = {"anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY"}
+    need = keys.get(model.split("/")[0])
+    return model if need and os.environ.get(need) else None
+
+
+def governed_voice(port: int, name: str, did: str, question: str, grounded: str) -> str | None:
+    """The resident phrases its grounded answer with one governed thought —
+    authorize, think, meter, all under its own DID (0019 §4). The facts travel INTO
+    the prompt; the prompt never touches the plane (0016 §6). Classes are tried
+    cheap→rich, degrade-where-pins-allow (0010): a grant this floor cannot execute
+    is refunded and the next class asked. Unfueled floors fall back to the grounded
+    reply — deterministic, never silent, never faked."""
+    try:
+        import litellm
+    except Exception:
+        return None
+    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY")
+            or os.environ.get("OPENROUTER_API_KEY")):
+        return None
+    if port != JOIN_PORT:
+        return None                       # tokens chain to becky's floor, like the canary
+    est = 260
+    for klass in ("low", "medium", "high"):
+        try:
+            token = _BECKY.issue_token(did, SCOPE, [{"action": "retrieve", "space": "self"}],
+                                       budget={"tokens": 50000})
+            grant = call(port, "POST", "/model/authorize",
+                         {"token": token, "class": klass, "est_tokens": est})
+            model = executable(port, grant["model"])
+            if model is None:             # honest refund: authorized, but no key to execute
+                call(port, "POST", "/model/meter",
+                     {"subject": did, "est_tokens": est, "tokens": 0, "usd": 0,
+                      "model": grant["model"], "class": klass})
+                continue
+            resp = litellm.completion(
+                model=model, max_tokens=160,
+                messages=[{"role": "system", "content":
+                           f"You are {name}, a resident organ of the Orreth floor {SCOPE}. "
+                           "Answer the caller in at most three short sentences, grounded ONLY "
+                           "in the facts below. Never invent numbers or names.\n\nFACTS:\n"
+                           + grounded},
+                          {"role": "user", "content": question}])
+            tokens = resp.usage.total_tokens
+            try:
+                usd = litellm.completion_cost(completion_response=resp)
+            except Exception:
+                usd = 0.0
+            call(port, "POST", "/model/meter",
+                 {"subject": did, "est_tokens": est, "tokens": tokens,
+                  "usd": round(usd, 6), "model": grant["model"], "class": klass})
+            out = (resp.choices[0].message.content or "").strip()
+            if out:
+                return out
+        except Exception:
+            continue
+    return None
+
+
+def on_parlor(port: int, scope: str, r: dict) -> None:
+    """An audience: the caller asks, the resident fetches with its own authority,
+    and the exchange lands signed in the Window. Humans never read; they are answered."""
+    name = str(r.get("to") or "").strip().lower()
+    facts = parlor_facts(port, scope)
+    if r.get("verb") == "card":
+        c = parlor.card(name, facts)
+        _, did = resident_key(name)
+        if did:
+            c["did"] = did
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done", "result": {"card": c}})
+        print(f"  ↳ parlor · {name}'s card handed to the caller")
+        return
+    asked = str(r.get("text") or "").strip()
+    ans = parlor.answer(name, asked, facts)
+    reply = ans["reply"]
+    if ans.get("action") == "gather":     # the librarian's real duty (0014), front-doored
+        reply = gather(port, scope, ans["topic"])
+    kp, did = resident_key(name)
+    voiced = None
+    if kp is not None and ans.get("action") != "gather":
+        voiced = governed_voice(port, name, did, asked, reply)
+    final = voiced or reply
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "done",
+          "result": {"reply": final, "voiced": bool(voiced), "by": did}})
+    if kp is not None:                    # embodied residents sign the audience
+        body = parlor.audience_body(name, asked, final,
+                                    session=str(r.get("session") or ""),
+                                    voiced=bool(voiced))
+        rec = make_memory({"did": did, "scope": scope}, kp, scope, body,
+                          kind="episodic", tags=["parlor", name])
+        try:
+            call(port, "POST", "/records", rec)
+        except Exception as e:
+            print(f"    (audience write failed: {e})")
+    print(f"  ↳ parlor · {name} received “{asked[:48]}”" + (" · voiced" if voiced else ""))
+
+
 # ---------------------------------------------------------------- the round
 
 def main() -> None:
@@ -756,6 +916,9 @@ def main() -> None:
                     elif r.get("kind") == "mind":
                         if WRANGLER.on_mind_request(port, scope, r) or r.get("status") == "staged":
                             handled.add(key)
+                    elif r.get("kind") == "parlor" and r.get("status") == "pending":
+                        handled.add(key)
+                        on_parlor(port, scope, r)
                 if beat_due:
                     KEEPER.tend(port, scope)
                     WRANGLER.sync(port, scope)

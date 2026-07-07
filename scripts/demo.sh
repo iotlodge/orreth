@@ -13,6 +13,8 @@
 #   scripts/demo.sh model           0016 · the model plane, metered end to end
 #   scripts/demo.sh stable          0019 · a mind's whole life: saddled off the real
 #                                   market, earned by canary, retired by appointment
+#   scripts/demo.sh parlor          0020 · humans ask, residents fetch — audiences
+#                                   with the residents, signed onto the window
 #   scripts/demo.sh window          0008 · seed a biography and open the Console
 #
 # Most demos want the rig up first: scripts/dev.sh start
@@ -32,6 +34,7 @@ case "${1:-list}" in
   chassis)   run demo_chassis.py ;;
   model)     run demo_model_plane.py ;;
   stable)    run demo_stable.py "$FIELD" ;;
+  parlor)    run demo_parlor.py "$FIELD" ;;
   window)    "$ROOT/scripts/dev.sh" window ;;
   list|*)
     echo "the Orreth demo reel — scripts/demo.sh <name>   (rig first: scripts/dev.sh start)"
@@ -45,6 +48,8 @@ case "${1:-list}" in
     echo "  model       0016 · the model plane, metered end to end"
     echo "  stable      0019 · a mind's whole life — saddled off the real market,"
     echo "              earned by canary, expiring by appointment, swapped, remembered"
+    echo "  parlor      0020 · humans ask, residents fetch — an audience with charlotte,"
+    echo "              ada, and vigil, every exchange signed onto the window"
     echo "  window      0008 · seed a biography and open the Console"
     ;;
 esac
