@@ -39,7 +39,11 @@
   /* ── stage: roster | view ── */
   /* the single row is pinned to the container (minmax(0,1fr)) — an auto row would grow
      to the tallest view's content and push the stage past the viewport */
-  main{flex:1;display:grid;grid-template-columns:264px 1fr;grid-template-rows:minmax(0,1fr);min-height:0}
+  main{flex:1;display:grid;grid-template-columns:264px 1fr;grid-template-rows:minmax(0,1fr);min-height:0;
+    transition:margin-right .32s ease}
+  /* an audience never hides the world: the parlor pushes the view aside, and the
+     universe keeps turning beside the conversation (desktop; overlay on small glass) */
+  @media(min-width:821px){body.parlor-open main{margin-right:min(480px,50vw)}}
   .rail{border-right:1px solid var(--hair);overflow-y:auto}
   .rail .grp{font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.26em;
     font-size:.7rem;color:var(--faint);padding:1rem 1.1rem .35rem;
@@ -1189,10 +1193,15 @@ function openParlor(name){
   $("p-did").textContent=""; $("p-chips").innerHTML="";
   $("p-thread").innerHTML=`<div class="msg reply wait">${name} is coming to the parlor…</div>`;
   $("parlor").classList.add("on"); $("p-in").focus();
+  document.body.classList.add("parlor-open"); parlorRefit();
   parlorPost({verb:"card"});
   PA.timer=setInterval(parlorPoll,1500);
 }
-function closeParlor(){if(PA&&PA.timer)clearInterval(PA.timer);PA=null;$("parlor").classList.remove("on")}
+function closeParlor(){if(PA&&PA.timer)clearInterval(PA.timer);PA=null;
+  $("parlor").classList.remove("on");document.body.classList.remove("parlor-open");parlorRefit()}
+function parlorRefit(){ // after the pane slides, re-fit whatever measures itself in px
+  setTimeout(()=>{const d=$("drawer");
+    if(d&&d.dataset.state!=="closed"){layout();scrub()}},340)}
 async function parlorPost(extra){
   if(!PA)return;
   try{
