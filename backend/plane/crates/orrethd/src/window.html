@@ -58,6 +58,14 @@
     70%{box-shadow:0 0 0 6px transparent;opacity:.75}100%{box-shadow:0 0 0 0 transparent;opacity:1}}
   .orb.watching{color:var(--viol)} .orb.thinking{color:var(--near)} .orb.distilling{color:var(--blue)}
   @media(prefers-reduced-motion:reduce){.orb{animation:none!important}}
+  /* the universe holds its breath while you look — orbits pause under the cursor,
+     so a hover card can actually be caught (JB 2026-07-07) */
+  .orrery:hover .orb,.orrery:hover .cr,.orrery:hover .sphere::after{animation-play-state:paused}
+  /* one glass, every floor: worlds are doors, and the trail climbs back */
+  .trow{cursor:pointer} .trow:hover .tn{color:var(--star)}
+  #crumbs{font:.7rem var(--mono);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #crumbs .crumb{color:var(--brass);cursor:pointer} #crumbs .crumb:hover{filter:brightness(1.2)}
+  #crumbs .csep{color:var(--faint);margin:0 .35em} #crumbs .cnow{color:var(--faint)}
   .who{min-width:0;flex:1} .who .id{font:.73rem/1.25 var(--mono);color:var(--star);
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .who .role{font:.66rem var(--mono);color:var(--viol)}
@@ -385,6 +393,7 @@
 <body>
 <header>
   <div class="crest"><span class="r">ORRETH</span><span class="u">console · <b id="scope">…</b></span></div>
+  <span id="crumbs"></span>
   <div class="tabs">
     <span class="tab on" data-v="uni">Universe</span>
     <span class="tab" data-v="pulse">Pulse</span>
@@ -541,7 +550,8 @@ if(window.ORRETH_DEMO){
   const FIX={"/topology":"topology","/presence":"presence","/rollup":"rollup",
              "/farm":"farm","/stable":"stable","/requests":"requests","/health":"health"};
   window.fetch=(url,opts)=>{
-    const path=String(url).split("#")[0].split("?")[0];
+    /* absolute or relative, only the pathname decides the fixture (one-glass era) */
+    const path=new URL(String(url),location.href).pathname;
     const method=((opts&&opts.method)||"GET").toUpperCase();
     if(method==="GET"&&FIX[path])return realFetch(`fixtures/${FIX[path]}.json`);
     if(method==="GET"&&path.startsWith("/records/"))
@@ -557,6 +567,38 @@ const cfg=(()=>{try{const m=location.hash.match(/[#&]t=([^&]+)/);
   catch{return window.ORRETH_DEMO_CFG||null}})();
 window.addEventListener("hashchange",()=>location.reload()); /* new token → new console */
 const $=id=>document.getElementById(id);
+/* ── one glass, every floor (JB 2026-07-07): every call rides a switchable base.
+   "" = the floor that served this page; a click on any world re-aims the glass at
+   that floor's daemon (CORS is open on the rig; capability stays the boundary).
+   Descents push breadcrumbs; the trail climbs back — no more three URLs. ── */
+let API="";
+const api=p=>API+p;
+let CRUMBS=[];                     /* [{label, base}] — the trail behind this view */
+function floorReset(){
+  topoCache=null;presCache=null;farmCache=[];laneSig="";floorScope=null;
+  const O=$("orrery");if(O)O.dataset.sig="";
+  if(typeof closeParlor==="function")closeParlor();
+}
+function floorSet(base){
+  API=base;floorReset();renderCrumbs();tick();
+  if(!$("v-uni").classList.contains("hide"))setTimeout(scrub,300);
+}
+function floorGo(scopeEnc){
+  const n=findNode(decodeURIComponent(scopeEnc));
+  if(!n||!n.port)return;
+  const base=`${location.protocol}//${location.hostname}:${n.port}`;
+  const here=API||`${location.protocol}//${location.hostname}:${location.port}`;
+  if(base===here)return;
+  CRUMBS.push({label:(floorScope||"here").split("/").pop(),base:API});
+  floorSet(base);
+}
+function crumbTo(i){CRUMBS=CRUMBS.slice(0,i);const c=CRUMBS.pop();floorSet(c?c.base:"")}
+function renderCrumbs(){
+  const el=$("crumbs");if(!el)return;
+  el.innerHTML=CRUMBS.length?CRUMBS.map((c,i)=>
+    `<span class="crumb" onclick="crumbTo(${i+1})">${c.label||"home"}</span><span class="csep">▸</span>`).join("")
+    +`<span class="cnow">this view</span>`:"";
+}
 const DAY=864e5, iso=d=>d.toISOString().replace(/\.\d+Z$/,"Z");
 const short=d=>String(d).replace(/^did:key:z/,"").replace(/·.*/,m=>m).slice(0,16)+(String(d).length>16?"…":"");
 const money=u=>u>=0.01?"$"+u.toFixed(2):u>0?"$"+u.toFixed(5):"$0";
@@ -571,7 +613,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
 /* ── the world: /topology heartbeats assembled — what this floor knows below it ── */
 let topoCache=null,laneSig="";
 async function world(){
-  try{topoCache=await(await fetch("/topology")).json()}catch{topoCache=null}
+  try{topoCache=await(await fetch(api("/topology"))).json()}catch{topoCache=null}
   renderWorldRail(); renderOrrery(); refreshCounters();
   // topology can land after the first scrub — redraw lanes when the world grows
   const scopes=[]; const w=n=>{if(!n)return;scopes.push(n.scope);(n.children||[]).forEach(w)}; w(topoCache);
@@ -589,7 +631,8 @@ function renderWorldRail(){
         if(L===2)agg.eco++;else if(L>=3)agg.field++;agg.agents+=n.agents||0}
       (n.children||[]).forEach(c=>walk(c,d+1))};
     walk(t,0);
-    html+=rows.map(({n,d})=>`<div class="trow${d===0?" me":""}" style="padding-left:${1.1+d*.85}rem">
+    html+=rows.map(({n,d})=>`<div class="trow${d===0?" me":""}" style="padding-left:${1.1+d*.85}rem"
+      onclick="floorGo('${encodeURIComponent(n.scope)}')" title="step onto ${n.scope.split("/").pop()} — the view from that floor">
       <span class="tn">${d?"└ ":""}${n.scope.split("/").pop()}</span>
       <span class="tc">${n.records}m · ${n.agents}a</span></div>`).join("");
     const s=(n,w)=>`<b>${n}</b> ${w}${n===1?"":"s"}`;
@@ -739,14 +782,14 @@ function renderOrrery(){
         inner+=`<div class="orb" style="animation-duration:${mper}s;animation-delay:${mph}s">
           <div class="sat" style="transform:translate(${RM}px,0)">
             <div class="cr" style="animation-duration:${mper}s;animation-delay:${mph}s">
-              <div class="moon" onmouseenter="oc(event,'${encodeURIComponent(f.scope)}')" onmouseleave="ocOff()"></div>
+              <div class="moon" onclick="floorGo('${encodeURIComponent(f.scope)}')" onmouseenter="oc(event,'${encodeURIComponent(f.scope)}')" onmouseleave="ocOff()"></div>
               <div class="blabel" style="top:14px">${f.scope.split("/").pop()}${f.agents?` · <span class="lc" data-scope="${encodeURIComponent(f.scope)}" data-k="agents">${f.agents}</span>`:""}</div>
               ${organs(f.residents,18,f.scope)}${ships(f.agents||0,29,f.scope)}${plots(f.farm,40,f.scope)}</div></div></div>`});
       html+=`<div class="orb" style="animation-duration:${per}s;animation-delay:${ph}s">
         <div class="beam" style="width:${RE-16}px;animation-delay:${i*1.9}s"></div>
         <div class="sat" style="transform:translate(${RE}px,0)">
           <div class="cr" style="animation-duration:${per}s;animation-delay:${ph}s">
-            <div class="planet" onmouseenter="oc(event,'${encodeURIComponent(e.scope)}')" onmouseleave="ocOff()"></div>
+            <div class="planet" onclick="floorGo('${encodeURIComponent(e.scope)}')" onmouseenter="oc(event,'${encodeURIComponent(e.scope)}')" onmouseleave="ocOff()"></div>
             <div class="blabel" style="top:20px">${e.scope.split("/").pop()}</div>
             ${organs(e.residents,18,e.scope)}${plots(e.farm,30,e.scope)}${inner}</div></div></div>`});
   }
@@ -795,9 +838,9 @@ let floorScope=null;
 const SUBJ=()=>floorScope?{cohort:{scope:floorScope}}:"self";
 async function pulse(){
   try{
-    const h=await(await fetch("/health")).json(); $("scope").textContent=h.scope;
+    const h=await(await fetch(api("/health"))).json(); $("scope").textContent=h.scope;
     floorScope=h.scope;
-    const ro=await(await fetch("/rollup")).json();
+    const ro=await(await fetch(api("/rollup"))).json();
     $("hpulse").innerHTML=`<span class="live">live</span> · ${h.scope}<br>`+
       `<b>${ro.memories}</b> memories · <b>${ro.runs}</b> runs · <b>${money(ro.usd)}</b> spent`;
     $("hero-n").textContent=ro.memories.toLocaleString();
@@ -814,7 +857,7 @@ async function pulse(){
 
 async function roster(){
   try{
-    const p=await(await fetch("/presence")).json();
+    const p=await(await fetch(api("/presence"))).json();
     const r=$("roster");
     let html=`<div class="grp"><span>residents · the organs</span><span>${p.residents.length}</span></div>`;
     for(const a of p.residents) html+=agentRow(a,true);
@@ -846,7 +889,7 @@ async function roster(){
 async function renderStrip(){
   if(!cfg)return; const el=$("strip"); if(!el)return;
   const from=new Date(Date.now()-730*DAY);
-  let r; try{ r=await(await fetch("/retrieve",{method:"POST",headers:{"content-type":"application/json"},
+  let r; try{ r=await(await fetch(api("/retrieve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({query:{requester:cfg.requester,subject:SUBJ(),space:"self",
       time:{from:iso(from)},intent:"recall",budget:{cost:4},auth:"biscuit-sim"},
       token:cfg.token,requester_scope:cfg.requester_scope})})).json(); }catch{return}
@@ -878,17 +921,22 @@ const staleNote=r=>r.status==="pending"&&Date.now()-new Date(r.at)>12e3?
   `<div class="sub" style="color:var(--red)">…no keeper answering — is the join door open? (scripts/dev.sh start)</div>`:"";
 async function loadReq(){
   try{
-    const q=(await(await fetch("/requests")).json()).requests||[];
+    const q=(await(await fetch(api("/requests"))).json()).requests||[];
     $("req-badge").textContent=q.length?`(${q.length})`:"";
-    /* the join gate (0006 · 0012): a STAGED join has proven its key and waits for
-       the human — admit or turn away. Every other request renders as before. */
+    /* the gates (0012 — consequence waits): a STAGED join has proven its key; a
+       STAGED ecosystem is a drafted launch plan. Admit / launch, or turn away /
+       scrap. Every other request renders as before. */
     $("reqlist").innerHTML= q.length? q.slice().reverse().map(r=>{
-      const gate=r.kind==="join"&&r.status==="staged";
-      const note=gate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`:"";
+      const jgate=r.kind==="join"&&r.status==="staged";
+      const egate=r.kind==="ecosystem"&&r.status==="staged";
+      const note=jgate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`
+        :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`:"";
       return `<div class="req"><span class="kind">${r.kind||"request"}</span>
        <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
-       ${gate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">admit</button>
+       ${jgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">admit</button>
         <button class="sbtn no" onclick="joinDecide('${r.id}',false)">turn away</button>`
+       :egate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">launch</button>
+        <button class="sbtn no" onclick="joinDecide('${r.id}',false)">scrap</button>`
        :`<span class="st">${r.status}</span>`}</div>`;}).join("")
       : `<div class="quiet">nothing waiting — a calm universe.</div>`;
     $("asklog").innerHTML= q.filter(r=>r.kind==="gather").length?
@@ -901,14 +949,14 @@ async function loadReq(){
   }catch{}
 }
 async function joinDecide(id,ok){
-  await fetch("/requests/resolve",{method:"POST",headers:{"content-type":"application/json"},
+  await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({id,status:ok?"approved":"denied"})});
   loadReq();
 }
 async function submitAsk(){
   const t=$("ask").value.trim(); if(!t)return;
   try{
-    const r=await fetch("/requests",{method:"POST",headers:{"content-type":"application/json"},
+    const r=await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
       body:JSON.stringify({kind:"gather",text:t})});
     if(!r.ok){$("askerr").textContent=`the daemon refused the ask (${r.status})`;return}
     $("ask").value="";$("askerr").textContent="";
@@ -920,9 +968,9 @@ async function submitAsk(){
 let farmCache=[];
 async function loadFarm(){
   try{
-    const f=await(await fetch("/farm")).json(); farmCache=f.services||[];
+    const f=await(await fetch(api("/farm"))).json(); farmCache=f.services||[];
     $("farm-floor").textContent=f.scope;
-    const q=(await(await fetch("/requests")).json()).requests||[];
+    const q=(await(await fetch(api("/requests"))).json()).requests||[];
     const waiting=q.filter(r=>r.kind==="service"&&["staged","pending"].includes(r.status));
     $("farm-badge").textContent=waiting.length?`(${waiting.length})`:"";
     $("farmpending").innerHTML= waiting.length? waiting.slice().reverse().map(r=>{
@@ -953,7 +1001,7 @@ async function loadFarm(){
   }catch{}
 }
 async function farmDecide(id,ok){
-  await fetch("/requests/resolve",{method:"POST",headers:{"content-type":"application/json"},
+  await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({id,status:ok?"approved":"denied"})});
   loadFarm();loadReq();
 }
@@ -964,7 +1012,7 @@ async function plantTool(){
   let manifest=[];const mraw=$("pf-manifest").value.trim();
   if(mraw){try{manifest=JSON.parse(mraw)}catch{err.textContent="declared tools must be valid JSON";return}}
   try{
-    const r=await fetch("/requests",{method:"POST",headers:{"content-type":"application/json"},
+    const r=await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
       body:JSON.stringify({kind:"service",action:"plant",name,svc_kind:$("pf-kind").value,
         transport:$("pf-transport").value,endpoint,manifest,text:`plant ${name}`})});
     if(!r.ok){err.textContent=`the daemon refused: ${r.status}`;return}
@@ -981,7 +1029,7 @@ function presetTavily(){
   $("pf-err").textContent="";
 }
 async function farmDecom(name,discredit){
-  await fetch("/requests",{method:"POST",headers:{"content-type":"application/json"},
+  await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({kind:"service",action:"decom",name,discredit,
       text:`decommission ${name}${discredit?" + discredit the source":""}`})});
   loadFarm();
@@ -998,9 +1046,9 @@ const agentName=did=>{
 };
 async function loadStable(){
   try{
-    const st=await(await fetch("/stable")).json();
+    const st=await(await fetch(api("/stable"))).json();
     $("stable-floor").textContent=st.scope;
-    const q=(await(await fetch("/requests")).json()).requests||[];
+    const q=(await(await fetch(api("/requests"))).json()).requests||[];
     const waiting=q.filter(r=>r.kind==="mind"&&["staged","pending"].includes(r.status));
     $("stable-badge").textContent=waiting.length?`(${waiting.length})`:"";
     $("stablepending").innerHTML= waiting.length? waiting.slice().reverse().map(r=>{
@@ -1067,7 +1115,7 @@ async function saddleMind(){
   const id=$("sf-id").value.trim();
   if(!id||!id.includes("/")){err.textContent="a mind needs a provider/model id";return}
   try{
-    const r=await fetch("/requests",{method:"POST",headers:{"content-type":"application/json"},
+    const r=await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
       body:JSON.stringify({kind:"mind",action:"saddle",mind:id,route:$("sf-route").value,
         class:$("sf-class").value,text:`saddle ${id} (${$("sf-class").value})`})});
     if(!r.ok){err.textContent=`the daemon refused: ${r.status}`;return}
@@ -1077,12 +1125,12 @@ async function saddleMind(){
 }
 function presetSaddle(id,klass){$("sf-id").value=id;$("sf-class").value=klass;$("sf-err").textContent=""}
 async function stableRetire(id){
-  await fetch("/requests",{method:"POST",headers:{"content-type":"application/json"},
+  await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({kind:"mind",action:"retire",mind:id,text:`retire ${id}`})});
   loadStable();
 }
 async function stableDecide(id,ok){
-  await fetch("/requests/resolve",{method:"POST",headers:{"content-type":"application/json"},
+  await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({id,status:ok?"approved":"denied"})});
   loadStable();loadReq();
 }
@@ -1109,7 +1157,7 @@ function closeParlor(){if(PA&&PA.timer)clearInterval(PA.timer);PA=null;$("parlor
 async function parlorPost(extra){
   if(!PA)return;
   try{
-    const r=await fetch("/requests",{method:"POST",headers:{"content-type":"application/json"},
+    const r=await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
       body:JSON.stringify({kind:"parlor",to:PA.name,session:PA.session,
         text:extra.text||`${extra.verb||"say"} · ${PA.name}`,...extra})});
     if(!r.ok)parlorLine("reply","the door is sealed — a spectator may watch this world turn, never speak into it.");
@@ -1146,7 +1194,7 @@ function parlorCard(card){
 }
 async function parlorPoll(){
   if(!PA)return;
-  let q; try{q=(await(await fetch("/requests")).json()).requests||[]}catch{return}
+  let q; try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{return}
   const mine=q.filter(r=>r.kind==="parlor"&&r.session===PA.session);
   for(const r of mine){
     if(r.status!=="done"||PA.seen.has(r.id))continue;
@@ -1216,7 +1264,7 @@ let seq=0;
 async function scrub(){
   const days=scrubToDays(+$("scrub").value);$("days").textContent=days;
   if(!cfg)return;const from=new Date(Date.now()-days*DAY),mine=++seq;
-  const res=await fetch("/retrieve",{method:"POST",headers:{"content-type":"application/json"},
+  const res=await fetch(api("/retrieve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({query:{requester:cfg.requester,subject:SUBJ(),space:"self",
       time:{from:iso(from)},intent:"recall",budget:{cost:4},auth:"biscuit-sim"},
       token:cfg.token,requester_scope:cfg.requester_scope})});
@@ -1254,7 +1302,7 @@ async function showLeader(star,h){
   if(right){const left=Math.max(8,x-GAP-CARD);card.style.left=left+"px";line.style.left=(left+CARD)+"px";line.style.width=(x-(left+CARD))+"px";}
   else{const left=Math.min(W-CARD-8,x+GAP);card.style.left=left+"px";line.style.left=x+"px";line.style.width=(left-x)+"px";}
   L.classList.add("on");
-  const res=await fetch(`/records/${encodeURIComponent(h.ref)}/body`);
+  const res=await fetch(api(`/records/${encodeURIComponent(h.ref)}/body`));
   const b=card.querySelector(".body");if(b)b.textContent=res.ok?JSON.stringify(await res.json()):"body at a deeper tier";
 }
 $("scrub").addEventListener("input",scrub);

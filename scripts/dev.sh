@@ -27,10 +27,16 @@ joindoor() {  # becky answers joins + the librarian answers Asks — the floor's
 
 case "${1:-}" in
   start)   rootpub; $COMPOSE up --build -d; sleep 3; joindoor; "$0" status ;;
-  stop)    pkill -f console_worker.py 2>/dev/null || true; $COMPOSE down ;;
-  restart) $COMPOSE down; rootpub; $COMPOSE up --build -d; sleep 3; joindoor; "$0" status ;;
+  stop)    pkill -f console_worker.py 2>/dev/null || true
+           # dynamic hulls (the Shipyard) ride the rig's network — down together;
+           # the worker's replant relaunches them from ~/.orreth/shipyard on start
+           docker ps -aq --filter name=orreth-dyn- | xargs docker rm -f 2>/dev/null || true
+           $COMPOSE down ;;
+  restart) "$0" stop; rootpub; $COMPOSE up --build -d; sleep 3; joindoor; "$0" status ;;
   status)  $COMPOSE ps --format '  {{.Name}}\t{{.Status}}' 2>/dev/null || true
-           for p in 4500 4501 4502; do printf "  :%s  " "$p"
+           dyn=""; [ -f "$HOME/.orreth/shipyard/floors.json" ] && \
+             dyn=$(python3 -c 'import json,sys;print(" ".join(sorted(json.load(open(sys.argv[1])))))' "$HOME/.orreth/shipyard/floors.json" 2>/dev/null)
+           for p in 4500 4501 4502 $dyn; do printf "  :%s  " "$p"
              curl -sf "http://127.0.0.1:$p/health" || printf dark; echo; done
            pgrep -f "console_worker.py $FIELD" >/dev/null \
              && echo "  join door: OPEN (:$FIELD)" || echo "  join door: CLOSED — run scripts/dev.sh start" ;;

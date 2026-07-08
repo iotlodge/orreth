@@ -45,6 +45,9 @@ struct App {
     /// Organ DIDs pinned at join (the R1 door, closed): becky mints the token, the
     /// plane verifies its chain against the pinned root — authority beats archaeology.
     organs: Mutex<BTreeMap<String, String>>,
+    /// This floor's own port, riding the beat — so one glass can steer to any floor
+    /// it can see (the Console's plane-of-view transitions; JB 2026-07-07).
+    port: u16,
 }
 
 fn bump(app: &App, key: &str) {
@@ -194,6 +197,7 @@ async fn main() {
         children: Mutex::new(BTreeMap::new()),
         vitals: Mutex::new(BTreeMap::new()),
         organs: Mutex::new(BTreeMap::new()),
+        port,
     });
 
     // the upward presence beat: every 5s tell the parent what this subtree holds,
@@ -241,6 +245,8 @@ async fn main() {
         .route("/organs/pin", post(organs_pin))
         .with_state(app);
 
+    let router = router.layer(axum::middleware::from_fn(cors));
+
     let bind = arg("--bind").unwrap_or_else(|| "127.0.0.1".to_string()); // 0.0.0.0 in containers
     let listener = tokio::net::TcpListener::bind((bind.as_str(), port)).await.unwrap();
     println!("orrethd · scope={scope} · tier_label={} · listening on {bind}:{port}",
@@ -252,6 +258,24 @@ async fn main() {
 /// contract (0008): every render is a tokened query; there is no privileged path.
 async fn window() -> axum::response::Html<&'static str> {
     axum::response::Html(include_str!("window.html"))
+}
+
+/// One glass, every floor (JB 2026-07-07): the Console served by ANY floor reads and
+/// steers its siblings across ports, so the browser needs CORS opened. The rig is a
+/// dev universe; capability, not origin, remains the actual boundary — every request
+/// still meets the token checks and the uniform refusal exactly as before.
+async fn cors(req: axum::extract::Request, next: axum::middleware::Next) -> axum::response::Response {
+    use axum::http::{HeaderValue, Method};
+    let mut res = if req.method() == Method::OPTIONS {
+        StatusCode::NO_CONTENT.into_response()
+    } else {
+        next.run(req).await
+    };
+    let h = res.headers_mut();
+    h.insert("access-control-allow-origin", HeaderValue::from_static("*"));
+    h.insert("access-control-allow-methods", HeaderValue::from_static("GET, POST, OPTIONS"));
+    h.insert("access-control-allow-headers", HeaderValue::from_static("content-type"));
+    res
 }
 
 async fn health(State(app): State<Arc<App>>) -> Json<Value> {
@@ -901,6 +925,7 @@ fn summary(app: &App) -> Value {
     let children: Vec<Value> = app.children.lock().unwrap().values().cloned().collect();
     // horizon rides the beat (serde maps a non-finite "forever" to null — the apex)
     json!({"scope": scope, "records": records, "runs": runs, "agents": agents,
+           "port": app.port,
            "usd": (usd * 1e6).round() / 1e6, "horizon_days": app.horizon_days,
            "workforce": local_workforce(app), "farm": farm_roster,
            "stable": stable, "usage": usage,

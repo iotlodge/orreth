@@ -12,6 +12,8 @@ declares; a new resident with new flows changes nothing in the glass.
 """
 from __future__ import annotations
 
+import re
+
 from .identity import NOW
 
 RESIDENTS = ("becky", "vigil", "steward", "governance", "charlotte", "librarian", "ada")
@@ -24,6 +26,37 @@ ROLES = {"becky": "becky · IAM", "vigil": "vigil · the Warden",
 
 # the librarian's gather ask, in the shapes callers actually type
 _GATHER = ("gather sourced knowledge on", "gather knowledge on", "gather on", "gather")
+
+# growing the universe, in the shapes callers actually type (the Shipyard)
+_GROW = ("create ecosystem", "add ecosystem", "grow ecosystem", "new ecosystem",
+         "build ecosystem")
+
+
+def parse_grow(text: str):
+    """“create ecosystem foo with fields bar, baz” → (name, fields|None).
+    fields is None when the caller has not said — the parlor asks before staging;
+    an explicit “no fields” / “as is” / “alone” sails the hull by itself."""
+    t = (text or "").strip()
+    low = t.lower()
+    for p in _GROW:
+        if not low.startswith(p):
+            continue
+        rest = t[len(p):].strip().strip(".!?")
+        if not rest:
+            return "", None
+        lower = rest.lower()
+        for marker in (" with fields ", " with field "):
+            if marker in lower:
+                i = lower.index(marker)
+                name = rest[:i].strip()
+                fields = [f.strip().lower() for f in
+                          re.split(r"[,\s]+and\s+|,", rest[i + len(marker):]) if f.strip()]
+                return name.lower(), fields
+        for solo in (" with no fields", " no fields", " as is", " alone"):
+            if lower.endswith(solo):
+                return rest[: len(rest) - len(solo)].strip().lower(), []
+        return rest.split()[0].lower(), None
+    return None
 
 
 def _vitals(facts: dict, name: str) -> dict:
@@ -59,9 +92,11 @@ def _card_becky(facts: dict) -> tuple[str, list]:
     done = [r for r in facts.get("requests") or []
             if r.get("kind") == "join" and r.get("status") == "done"]
     return (f"I keep the door. Every identity here chains to the root I hold — "
-            f"{len(done)} lease(s) granted so far, nothing joins without one. Ask me who holds them.",
+            f"{len(done)} lease(s) granted so far, nothing joins without one. I can also "
+            "grow this universe: ask me for a new ecosystem, and the shipyard lays a hull.",
             [{"label": "who holds a lease?", "ask": "who holds a lease on this floor?"},
-             {"label": "how does joining work?", "ask": "how does an agent join this floor?"}])
+             {"label": "how does joining work?", "ask": "how does an agent join this floor?"},
+             {"label": "grow an ecosystem…", "template": "create ecosystem "}])
 
 
 def _card_charlotte(facts: dict) -> tuple[str, list]:
@@ -118,6 +153,29 @@ def answer(name: str, text: str, facts: dict) -> dict:
     if name not in RESIDENTS:
         return {"reply": f"no one by the name “{name}” is in residence on this floor."}
     t = (text or "").strip().lower()
+    if name == "becky":
+        grown = parse_grow(text)
+        if grown is not None:
+            eco, fields = grown
+            # flow-control replies travel VERBATIM — a governed voice may phrase
+            # facts, never rewrite a question or a staging confirmation
+            if not eco:
+                return {"reply": "an ecosystem needs a name — say: create ecosystem "
+                                 "<name>, or create ecosystem <name> with fields a, b.",
+                        "verbatim": True}
+            if fields is None:
+                return {"reply": f"laying a hull for e:{eco} — would you like one or "
+                                 f"more fields for it? say: create ecosystem {eco} with "
+                                 f"fields alpha, beta — or “create ecosystem {eco} as is” "
+                                 "and it sails alone (fields can join later).",
+                        "verbatim": True}
+            return {"reply": f"staging e:{eco}"
+                             + (f" with field(s) {', '.join(fields)}" if fields
+                                else " — sailing alone")
+                             + ". the shipyard drafts the plan; consequence waits for "
+                               "you at the gate (0012).",
+                    "action": "ecosystem", "eco": eco, "fields": fields,
+                    "verbatim": True}
     if name == "librarian":
         for p in _GATHER:
             topic = (text or "").strip()[len(p):].strip() if t.startswith(p) else ""

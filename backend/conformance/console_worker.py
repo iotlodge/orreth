@@ -29,6 +29,13 @@ here in cognition (the plane verifies, never signs):
     minds through the governed gateway (metered under her own DID — residents think
     on-meter too), syncs the market for price drift and announced expiries, and
     stages recommendations instead of letting a sunset become an outage.
+  · ecosystem — the Shipyard (0009's provisioner, on the wire): "create ecosystem
+    foo with fields bar, baz" in becky's parlor drafts a launch plan, stages it for
+    the human (growing the universe is consequential — 0012), and on approval the
+    dock crew launches REAL containers on the rig's network. New floors pull their
+    parent's floors at boot and beat into the orrery by themselves; the ledger
+    (~/.orreth/shipyard/) replants hulls the rig lost, and the worker tends every
+    dynamic floor's queue like the composed three.
   · parlor    — the audience room (0020): humans never read the world, they ask it.
     A resident receives the caller, fetches with its OWN authority, answers grounded
     (voiced through one governed, metered thought when the floor is fueled), and
@@ -56,7 +63,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import crypto, parlor
+from orreth_sim import crypto, parlor, shipyard
 from orreth_sim.identity import NOW, Becky, Nanda
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -793,6 +800,151 @@ def gather(port: int, scope: str, text: str) -> str:
     return f"admitted to the Window — {len(results)} finding(s) via {src['name']}, quarantined at 0.0000"
 
 
+# ---------------------------------------------------------------- the shipyard (0009→wire)
+
+UNIVERSE_SCOPE = "u:demo"
+TRUST_ROOT = "did:web:orreth.ai:u:demo"
+RIG_IMAGE = "orreth-demo-universe-eco-cloud"          # one binary, any tier (0000)
+RIG_NET = "orreth-demo-universe_default"
+RIG_PG = "postgres://postgres:orreth@pg:5432/postgres"
+PROFILES_DIR = Path(__file__).resolve().parents[1] / "plane" / "profiles"
+
+
+class Shipyard:
+    """The dock crew: executes launch plans the brain (orreth_sim.shipyard) drafts.
+    A staged plan waits for the human (0012 — growing the universe is consequential);
+    an approved plan becomes real containers on the rig's own network, each new floor
+    pulling its parent's floors at boot and beating into the orrery by itself. The
+    ledger (~/.orreth/shipyard/floors.json) makes launches durable: the worker tends
+    dynamic floors after its own restarts and relaunches hulls the rig lost."""
+
+    def __init__(self) -> None:
+        self.path = HOME / "shipyard" / "floors.json"
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.plans: dict[str, dict] = {}               # request id → drafted plan
+
+    def ledger(self) -> dict:
+        return json.loads(self.path.read_text()) if self.path.exists() else {}
+
+    def save(self, led: dict) -> None:
+        self.path.write_text(json.dumps(led, indent=1, sort_keys=True))
+
+    def floors(self) -> list[int]:
+        return sorted(int(p) for p in self.ledger())
+
+    def _docker(self, *args: str) -> tuple[bool, str]:
+        import subprocess
+        r = subprocess.run(["docker", *args], capture_output=True, text=True, timeout=120)
+        return r.returncode == 0, (r.stdout or r.stderr).strip()
+
+    def _launch_one(self, spec: dict) -> tuple[bool, str]:
+        (PROFILES_DIR / spec["profile_file"]).write_text(
+            json.dumps(spec["profile"], indent=2))
+        parent = (f"http://{spec['parent_container']}:{spec['parent_port']}"
+                  if spec.get("parent_container") else "http://universe:4500")
+        port = str(spec["port"])
+        self._docker("rm", "-f", spec["container"])    # a stale hull never blocks a launch
+        return self._docker(
+            "run", "-d", "--name", spec["container"], "--network", RIG_NET,
+            "--restart", "unless-stopped",
+            "-v", f"{PROFILES_DIR}:/profiles:ro",
+            "-v", f"{spec['container']}-bodies:/data/bodies",
+            "-p", f"{port}:{port}",
+            RIG_IMAGE,
+            "--profile", f"/profiles/{spec['profile_file']}", "--bind", "0.0.0.0",
+            "--port", port, "--store-dir", "/data/bodies",
+            "--root-pub", root_keypair().public,
+            "--parent", parent, "--pg", RIG_PG)
+
+    def on_request(self, port: int, r: dict) -> bool:
+        """Mirrors the farm gate: stage on pending, launch on approved.
+        Returns True when the request reached a resting state."""
+        status = r.get("status")
+        if status == "pending":
+            try:
+                p = shipyard.plan(UNIVERSE_SCOPE, r.get("eco", ""),
+                                  r.get("fields") or [],
+                                  {4500, 4501, 4502, *self.floors()}, TRUST_ROOT)
+            except ValueError as e:
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "denied", "result": {"note": str(e)}})
+                return True
+            self.plans[r["id"]] = p
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "staged",
+                  "result": {"plan": p["summary"],
+                             "note": "consequence waits for you (0012)"}})
+            print(f"  ↳ shipyard staged: {p['summary']}")
+            return False
+        if status == "approved":
+            p = self.plans.pop(r["id"], None)
+            if p is None:                              # worker restarted mid-gate: redraft
+                try:
+                    p = shipyard.plan(UNIVERSE_SCOPE, r.get("eco", ""),
+                                      r.get("fields") or [],
+                                      {4500, 4501, 4502, *self.floors()}, TRUST_ROOT)
+                except ValueError as e:
+                    call(port, "POST", "/requests/resolve",
+                         {"id": r["id"], "status": "denied", "result": {"note": str(e)}})
+                    return True
+            led, launched, failed = self.ledger(), [], None
+            eco = {**p["eco"], "parent_port": 4500}
+            ok, out = self._launch_one(eco)
+            if ok:
+                led[str(eco["port"])] = {k: eco[k] for k in
+                                         ("kind", "name", "scope", "port", "container",
+                                          "parent_container", "profile_file")}
+                led[str(eco["port"])]["parent_port"] = 4500
+                launched.append(f"{eco['scope']} :{eco['port']}")
+                for m in p["fields"]:
+                    m = {**m, "parent_port": eco["port"]}
+                    ok, out = self._launch_one(m)
+                    if not ok:
+                        failed = out
+                        break
+                    led[str(m["port"])] = {k: m[k] for k in
+                                           ("kind", "name", "scope", "port", "container",
+                                            "parent_container", "profile_file")}
+                    led[str(m["port"])]["parent_port"] = eco["port"]
+                    launched.append(f"{m['scope']} :{m['port']}")
+            else:
+                failed = out
+            self.save(led)
+            result = {"launched": launched}
+            if failed:
+                result["note"] = f"partial launch — docker said: {failed[:160]}"
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done", "result": result})
+            for line in launched:
+                print(f"    ✓ launched {line}")
+            if failed:
+                print(f"    (launch trouble: {failed[:120]})")
+            return True
+        if status == "denied":
+            self.plans.pop(r["id"], None)
+            call(port, "POST", "/requests/resolve", {"id": r["id"], "status": "done",
+                 "result": {"note": "scrapped at the gate — nothing launched"}})
+            print("  ↳ shipyard: plan scrapped at the gate")
+            return True
+        return False
+
+    def replant(self) -> None:
+        """The rig may restart without its dynamic hulls (they live outside compose):
+        relaunch anything in the ledger that is not answering."""
+        for port_s, spec in sorted(self.ledger().items()):
+            try:
+                call(int(port_s), "GET", "/health")
+                continue
+            except Exception:
+                pass
+            ok, out = self._launch_one(spec)
+            print(f"  ↳ shipyard replant {spec['scope']} :{port_s} — "
+                  + ("relaunched" if ok else f"failed: {out[:100]}"))
+
+
+SHIPYARD = Shipyard()
+
+
 # ---------------------------------------------------------------- the organ pins (R1)
 
 _PIN_FAILED: set = set()                     # (port, organ): grumble once, not every beat
@@ -954,9 +1106,17 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     reply = ans["reply"]
     if ans.get("action") == "gather":     # the librarian's real duty (0014), front-doored
         reply = gather(port, scope, ans["topic"])
+    if ans.get("action") == "ecosystem":  # the shipyard's front door — staged, never direct
+        call(port, "POST", "/requests",
+             {"kind": "ecosystem", "eco": ans["eco"], "fields": ans["fields"],
+              "text": f"grow e:{ans['eco']}"
+                      + (f" with field(s) {', '.join(ans['fields'])}" if ans["fields"]
+                         else " — sailing alone")})
     kp, did = resident_key(name)
     voiced = None
-    if kp is not None and ans.get("action") != "gather":
+    # descriptive answers may be voiced; actions and flow-control words never are —
+    # a governed thought phrases facts, it does not rewrite protocol
+    if kp is not None and not ans.get("action") and not ans.get("verbatim"):
         voiced = governed_voice(port, name, did, asked, reply)
     final = voiced or reply
     call(port, "POST", "/requests/resolve",
@@ -982,9 +1142,10 @@ def main() -> None:
           f"· ada {ADA_DID[:20]}… · becky's door on :{JOIN_PORT} · tending floors {FLOORS}")
     handled: set[tuple] = set()               # (port, id, at, status): each step acted once
     scopes: dict[int, str] = {}
+    SHIPYARD.replant()                        # hulls the rig lost come back before the round
     while True:
         beat_due = time.time() - KEEPER.last_beat >= BEAT_EVERY
-        for port in FLOORS:
+        for port in [*FLOORS, *SHIPYARD.floors()]:
             try:
                 if port not in scopes:
                     scopes[port] = call(port, "GET", "/health")["scope"]
@@ -1025,6 +1186,9 @@ def main() -> None:
                     elif r.get("kind") == "parlor" and r.get("status") == "pending":
                         handled.add(key)
                         on_parlor(port, scope, r)
+                    elif r.get("kind") == "ecosystem":
+                        if SHIPYARD.on_request(port, r) or r.get("status") == "staged":
+                            handled.add(key)
                     elif r.get("kind") == "recall" and r.get("status") == "pending":
                         handled.add(key)
                         print(f"  ↳ recall {r['id']}: walking knowledge from "
