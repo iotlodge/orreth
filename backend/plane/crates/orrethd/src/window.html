@@ -88,7 +88,20 @@
   #v-uni{display:flex;flex-direction:column}
 
   /* ── THE ORRERY: the universe in orbit — worlds turn, policy rains down the beams ── */
-  .orrery{position:relative;flex:1.15;min-height:0;overflow:hidden;border-bottom:1px solid var(--hair)}
+  .orrery{position:relative;flex:1;min-height:0;overflow:hidden}
+  /* the drawer: the spacetime window rides up OVER the orrery — the universe keeps
+     the whole pane; time pulls up when you ask for it (closed · peek · full) */
+  .drawer{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;flex-direction:column;
+    overflow:hidden;height:2.2rem;transition:height .32s ease;background:var(--void);
+    border-top:1px solid var(--hair);box-shadow:0 -14px 34px rgba(0,0,0,.5)}
+  .drawer[data-state="peek"]{height:46%}
+  .drawer[data-state="full"]{height:92%}
+  .dhandle{display:flex;align-items:center;gap:.7rem;padding:.5rem 1.2rem;cursor:pointer;
+    flex:0 0 auto;font:.72rem var(--mono);color:var(--dim);user-select:none;letter-spacing:.04em}
+  .dhandle:hover{color:var(--near,#cdd6ee)} .dhandle .grip{color:var(--brass)}
+  .dhandle .dhint{color:var(--faint)} .dhandle .down{margin-left:auto;padding:0 .5rem;color:var(--faint)}
+  .drawer[data-state="closed"] .down{display:none}
+  .dhandle .down:hover{color:var(--brass)}
   .anchor{position:absolute;width:0;height:0}
   .ring{position:absolute;left:0;top:0;transform:translate(-50%,-50%);
     border:1px dashed rgba(159,182,232,.13);border-radius:50%;pointer-events:none}
@@ -411,22 +424,31 @@
 <main>
   <div class="rail"><div id="world"></div><div id="roster"></div></div>
 
-  <!-- UNIVERSE: the orrery above, the spacetime window below — one living view -->
+  <!-- UNIVERSE: the orrery full-bleed; the spacetime window is a drawer that
+       pulls up over it — closed · peek · full. The orbit never stops turning. -->
   <div class="view" id="v-uni">
     <div class="orrery" id="orrery">
       <div class="olegend"><span class="b">━</span> policy rains down the beams · hover any world or organ</div>
       <div class="reslegend" id="reslegend"></div>
       <div id="ocard"></div>
     </div>
-    <div class="skybar">
-      <span class="lbl">the spacetime window · <b id="days">—</b> days</span>
-      <input type="range" id="scrub" min="1" max="100" value="60">
-      <span class="lbl" id="count">—</span>
-    </div>
-    <div class="sky" id="sky">
-      <div class="nowline"><span class="cap">NOW</span></div>
-      <div class="skynote">◄ deep past · distilled, never lost</div>
-      <div id="leader"><div class="line"></div><div class="dotend"></div><div class="card2"></div></div>
+    <div class="drawer" id="drawer" data-state="closed">
+      <div class="dhandle" onclick="drawerCycle()" title="the spacetime window — pull up">
+        <span class="grip" id="dgrip">⌃</span>
+        <span>the spacetime window</span>
+        <span class="dhint" id="dhint">pull up — every memory, in time</span>
+        <span class="down" id="ddown" onclick="drawerDown(event)" title="lower the window">⌄</span>
+      </div>
+      <div class="skybar">
+        <span class="lbl">window · <b id="days">—</b> days</span>
+        <input type="range" id="scrub" min="1" max="100" value="60">
+        <span class="lbl" id="count">—</span>
+      </div>
+      <div class="sky" id="sky">
+        <div class="nowline"><span class="cap">NOW</span></div>
+        <div class="skynote">◄ deep past · distilled, never lost</div>
+        <div id="leader"><div class="line"></div><div class="dotend"></div><div class="card2"></div></div>
+      </div>
     </div>
   </div>
 
@@ -1263,6 +1285,25 @@ async function rollDemo(name){
     out.textContent="(the story is still rolling — check the worker log)";
   }catch(e){out.textContent="(the projector jammed: "+e+")"}
   chip.textContent="▶ "+name; reelRolling=false;
+}
+
+/* ── the drawer: the spacetime window pulls up over the live universe ── */
+function drawerSet(st){
+  const d=$("drawer");if(!d)return;
+  d.dataset.state=st;
+  $("dgrip").textContent=st==="full"?"⌄":"⌃";
+  $("dhint").textContent=st==="closed"?"pull up — every memory, in time"
+    :st==="peek"?"pull higher for the full window":"the whole record, in time";
+  if(st!=="closed")setTimeout(()=>{layout();scrub()},340); // bands re-fit after the slide
+}
+function drawerCycle(){
+  const st=$("drawer").dataset.state;
+  drawerSet(st==="closed"?"peek":st==="peek"?"full":"closed");
+}
+function drawerDown(ev){
+  ev.stopPropagation();
+  const st=$("drawer").dataset.state;
+  drawerSet(st==="full"?"peek":"closed");
 }
 
 /* ── the spacetime window (one view) ── */
