@@ -46,7 +46,9 @@ observatory console where every render is a governed, tokened query (no privileg
 demos in `backend/conformance/`: `demo_digital_life.py` (the life outlives the process, the machine
 boundary, and the daemon), `demo_spacetime_window.py` (one query, three tiers), `demo_open_window.py`.
 **The demo reel** — `scripts/demo.sh` — indexes them all and grows with every dive; `scripts/demo.sh
-farm` tells 0018's whole story in ninety seconds, ending with a rug pull caught at the gate.
+farm` tells 0018's whole story in ninety seconds, ending with a rug pull caught at the gate. Every
+story also rolls from the Console (Ask tab → 🎬 the reel), and the reel replays — each story clears
+its own stage the governed way. The full tour: [`docs/demos.md`](docs/demos.md).
 
 **The universe thinks (2026-07-04).** The Model Plane (0016) is live — LiteLLM through the floors,
 plane-held budgets, model lifecycle (no call ever lands on a retired model), first governed call

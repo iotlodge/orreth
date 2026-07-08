@@ -37,6 +37,9 @@ here in cognition (the plane verifies, never signs):
     parent's floors at boot and beat into the orrery by themselves; the ledger
     (~/.orreth/shipyard/) replants hulls the rig lost, and the worker tends every
     dynamic floor's queue like the composed three.
+  · demo      — the reel, from the glass: a whitelisted name rolls scripts/demo.sh
+    in a background thread (the round keeps turning — the story's own requests need
+    tending) and the transcript lands as the request's result when it ends.
   · parlor    — the audience room (0020): humans never read the world, they ask it.
     A resident receives the caller, fetches with its OWN authority, answers grounded
     (voiced through one governed, metered thought when the floor is fueled), and
@@ -55,7 +58,9 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -839,8 +844,13 @@ class Shipyard:
         return r.returncode == 0, (r.stdout or r.stderr).strip()
 
     def _launch_one(self, spec: dict) -> tuple[bool, str]:
-        (PROFILES_DIR / spec["profile_file"]).write_text(
-            json.dumps(spec["profile"], indent=2))
+        # first launch carries the profile inline; a replant rides the file the
+        # first launch left on disk (the ledger stores names, never bodies)
+        prof = PROFILES_DIR / spec["profile_file"]
+        if "profile" in spec:
+            prof.write_text(json.dumps(spec["profile"], indent=2))
+        elif not prof.exists():
+            return False, f"no profile on disk for {spec['profile_file']} — cannot replant"
         parent = (f"http://{spec['parent_container']}:{spec['parent_port']}"
                   if spec.get("parent_container") else "http://universe:4500")
         port = str(spec["port"])
@@ -938,8 +948,11 @@ class Shipyard:
                 continue
             except Exception:
                 pass
-            ok, out = self._launch_one(spec)
-            print(f"  ↳ shipyard replant {spec['scope']} :{port_s} — "
+            try:                                   # one bad hull never sinks the round
+                ok, out = self._launch_one(spec)
+            except Exception as e:
+                ok, out = False, str(e)
+            print(f"  ↳ shipyard replant {spec.get('scope', '?')} :{port_s} — "
                   + ("relaunched" if ok else f"failed: {out[:100]}"))
 
 
@@ -1136,6 +1149,56 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     print(f"  ↳ parlor · {name} received “{asked[:48]}”" + (" · voiced" if voiced else ""))
 
 
+# ---------------------------------------------------------------- the reel
+
+REEL = {"farm", "life", "spacetime", "knowledge", "chassis", "model",
+        "stable", "parlor", "recall", "gate"}          # names only — never user text
+_REEL_LOCK = threading.Lock()                          # one stage, one story at a time
+_REPO = Path(__file__).resolve().parents[2]
+
+
+def on_demo(port: int, r: dict) -> None:
+    """Roll a demo from the glass: the request queue carries the ask, a background
+    thread runs the reel (the round must keep turning — the demo's own requests need
+    tending), and the transcript lands as the result when the story ends."""
+    name = r.get("demo", "")
+    if name not in REEL:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"refused": f"no “{name}” on the reel"}})
+        return
+    if not _REEL_LOCK.acquire(blocking=False):
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"refused": "a story is already rolling — one at a time"}})
+        return
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "staged",
+          "result": {"note": f"the reel is rolling: {name}"}})
+    print(f"  ↳ the reel rolls: {name} (asked from the glass)")
+
+    def roll() -> None:
+        try:
+            p = subprocess.run(["bash", str(_REPO / "scripts" / "demo.sh"), name],
+                               capture_output=True, text=True, timeout=300)
+            out, ok = (p.stdout + p.stderr)[-8000:], p.returncode == 0
+        except subprocess.TimeoutExpired:
+            out, ok = "(the story ran long — cut at 300s)", False
+        except Exception as e:
+            out, ok = f"(the projector jammed: {e})", False
+        finally:
+            _REEL_LOCK.release()
+        try:
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"ok": ok, "transcript": out}})
+            print(f"    ✓ reel {name}: {'the story landed' if ok else 'the story broke'}")
+        except Exception as e:
+            print(f"    (reel resolve failed: {e})")
+
+    threading.Thread(target=roll, daemon=True).start()
+
+
 # ---------------------------------------------------------------- the round
 
 def main() -> None:
@@ -1191,6 +1254,9 @@ def main() -> None:
                         elif r.get("kind") == "ecosystem":
                             if SHIPYARD.on_request(port, r) or r.get("status") == "staged":
                                 handled.add(key)
+                        elif r.get("kind") == "demo" and r.get("status") == "pending":
+                            handled.add(key)
+                            on_demo(port, r)
                         elif r.get("kind") == "recall" and r.get("status") == "pending":
                             handled.add(key)
                             print(f"  ↳ recall {r['id']}: walking knowledge from "

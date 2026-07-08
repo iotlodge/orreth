@@ -926,6 +926,10 @@ fn summary(app: &App) -> Value {
     // horizon rides the beat (serde maps a non-finite "forever" to null — the apex)
     json!({"scope": scope, "records": records, "runs": runs, "agents": agents,
            "port": app.port,
+           // the glass can climb: a child knows its parent (0000 §1) — hand the
+           // window the parent's port so the orrery's center is a door UP too
+           "parent_port": app.parent.as_ref().and_then(|p| p.trim_end_matches('/')
+               .rsplit(':').next().and_then(|s| s.parse::<u16>().ok())),
            "usd": (usd * 1e6).round() / 1e6, "horizon_days": app.horizon_days,
            "workforce": local_workforce(app), "farm": farm_roster,
            "stable": stable, "usage": usage,
