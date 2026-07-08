@@ -111,6 +111,23 @@ Closes the R1 follow-up from the orrery-residents review below: the field librar
 `did_contested: 4` becomes a clean becky-chained pin; earliest-record mining survives
 only where nobody has pinned.
 
+### The join door, hardened (JB's lock 2026-07-07) — 2026-07-07, on main (no quarantine: Fable 5 authored)
+
+| Area | File | Author model | Notes |
+|---|---|---|---|
+| Sim · desk | `../backend/conformance/orreth_sim/joindoor.py` | **Fable 5** | JoinDesk state machine: pending→challenged→proved→staged→done; verifies against the nonce becky ISSUED; approval without proof re-challenges, never mints; desk restart heals by re-challenging |
+| Worker | `../backend/conformance/console_worker.py` | **Fable 5** | JOINDOOR replaces the auto-grant; the desk is its own dedup |
+| SDK | `../agents/orreth-agent-sdk/orreth_agent/client.py` | **Fable 5** | join() speaks the handshake: signs the challenge, waits at the human gate, tolerates re-challenge; parity 10/10 untouched |
+| Plane | `../backend/plane/crates/orrethd/src/main.rs` | **Fable 5** | roster names bind only to COMPLETED joins — a squatter's pending claim names nobody |
+| Console | `../backend/plane/crates/orrethd/src/window.html` | **Fable 5** | Requests tab: staged joins show "key proven" + admit / turn away |
+| Tests | `../backend/conformance/tests/test_joindoor.py` | **Fable 5** | 7 tests: full handshake mints once; wrong key & tampered nonce turned away; forged approve re-challenges; restart heals; idempotent between transitions |
+| Demo | `../backend/conformance/demo_joindoor.py`, `../scripts/demo.sh` | **Fable 5** | `demo.sh gate`: the real SDK agent proves and is admitted visibly; an imposter wearing its DID is found out at the proof |
+
+Known residual (documented, deferred to 0012's signer registry): queue statuses are
+unsigned dev plumbing — "approved" is not yet a signed human act. The desk closes the
+*identity* hole (key control proven, ungated admission ended); the *signature* on the
+human's click lands with the signer registry, same as farm/stable approvals.
+
 ### Orrery residents (Opus 4.8, quarantined) — 2026-07-05, branch `opus/orrery-residents`
 
 **The swap boundary.** Everything below was authored by **Opus 4.8** after the safeguard
@@ -279,7 +296,9 @@ design doc 0017.
 
 1. **Open join door** — confirmed real: becky leases any DID that asks, and roster names
    ride unsigned requests. Acceptable for the demo floor only; a nonce challenge plus
-   0012 HITL gating is required before any governed floor.
+   0012 HITL gating is required before any governed floor. **CLOSED 2026-07-07** —
+   exactly that mechanism landed (JB's lock: HITL gate + nonce challenge; see "The
+   join door, hardened" above).
 2. **Crypto parity** — verified: the cases cover key order, non-ASCII, nesting, unicode,
    and a cross-verifier signature; suite run during this review, **10/10 green**.
 3. **Sentinel framing** — read in full: every probe *attempts* a violation and passes

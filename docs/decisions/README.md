@@ -320,7 +320,10 @@ including derived-memory chain verification).
   names bind to proven keys. Demos show the gate (the narrated reel auto-approves,
   visibly). Flagged at the 0017 review ("the join door is open"); the accepted-risk
   era ends with this lock. If the mechanism turns out to need a `contracts/v0` change,
-  work stops and returns to JB — the sacred zone stays sacred.
+  work stops and returns to JB — the sacred zone stays sacred. **Mechanism landed
+  2026-07-07, same day** (`orreth_sim/joindoor.py` + worker + SDK + Console gate;
+  `contracts/v0` untouched — the Sig shape and lease token were already enough).
+  Residual, documented: queue statuses stay unsigned until 0012's signer registry.
 
 ### Locked 2026-07-02 (object store — JB asked, Fable advised, JB accepted)
 - **The object-store contract is the S3 API; the backend is config, not architecture.** Rust plane uses the

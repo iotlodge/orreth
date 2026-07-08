@@ -90,11 +90,14 @@ class FieldClient:
                         f"is orrethd running there? (start it with scripts/dev.sh start)")
                 _t.sleep(poll)
 
-    def join(self, *, timeout: float = 60.0, poll: float = 1.0,
+    def join(self, *, timeout: float = 120.0, poll: float = 1.0,
              wait_for_floor: float = 30.0) -> dict:
-        """Ask the floor for a lease. Joining is a REQUEST in the human-visible queue —
-        becky (cognition) mints the token; in governed floors a human may hold the door.
-        Tolerates a restarting floor (waits up to `wait_for_floor` for it to come online)."""
+        """Ask the floor for a lease. Joining is a governed handshake in the
+        human-visible queue (JB's lock 2026-07-07): becky CHALLENGES this agent to
+        sign a nonce — proof of key control, not a claim — then the join waits at
+        the HUMAN gate (0012) before she mints the token. The protocol:
+        pending → challenged (we sign) → proved → staged (a human decides) → done.
+        A restarted desk re-challenges; this client simply proves again."""
         self.scope = self.wait_online(timeout=wait_for_floor, poll=poll).get("scope")
         status, req = self._call("POST", "/requests", {
             "kind": "join", "did": self.did, "name": self.name, "role": self.role,
@@ -102,21 +105,32 @@ class FieldClient:
         if status != 201:
             raise JoinRefused(f"the request queue refused ({status})")
         rid, deadline = req["id"], time.monotonic() + timeout
+        proved_nonce = None
         while time.monotonic() < deadline:
             for r in self._call("GET", "/requests")[1].get("requests", []):
-                if r.get("id") == rid:
-                    if r.get("status") == "done" and isinstance(r.get("result"), dict):
-                        self.token = r["result"]["token"]
-                        self.remember({"joined": self.name, "role": self.role, "did": self.did},
-                                      kind="episodic", tags=["birth"])
-                        return self.token
-                    if r.get("status") == "denied":
-                        raise JoinRefused("becky declined the lease")
+                if r.get("id") != rid:
+                    continue
+                st, result = r.get("status"), r.get("result") or {}
+                if st == "challenged":
+                    nonce = result.get("nonce")
+                    if nonce and nonce != proved_nonce:
+                        proof = self.kp.sign(self.did, {"join_nonce": nonce, "did": self.did})
+                        self._call("POST", "/requests/resolve",
+                                   {"id": rid, "status": "proved",
+                                    "result": {"nonce": nonce, "proof": proof}})
+                        proved_nonce = nonce
+                elif st == "done" and isinstance(result, dict) and result.get("token"):
+                    self.token = result["token"]
+                    self.remember({"joined": self.name, "role": self.role, "did": self.did},
+                                  kind="episodic", tags=["birth"])
+                    return self.token
+                elif st == "denied":
+                    raise JoinRefused("the door turned this identity away")
             time.sleep(poll)
         raise JoinRefused(
-            f"the floor is up but no lease came within {timeout:.0f}s — becky's join door is not "
-            f"tending {self.base}. Open it with: scripts/dev.sh start (or run "
-            f"console_worker.py against this floor's port).")
+            f"no lease within {timeout:.0f}s — either becky's desk is not tending "
+            f"{self.base} (scripts/dev.sh start), or the join is staged and waiting for "
+            f"a HUMAN at the gate: approve it in the Console's Requests tab.")
 
     def remember(self, body: dict, *, kind: str = "episodic", tags: list[str] | None = None,
                  occurred_at: str | None = None, provenance_class: str = "lived") -> str | None:

@@ -880,10 +880,16 @@ async function loadReq(){
   try{
     const q=(await(await fetch("/requests")).json()).requests||[];
     $("req-badge").textContent=q.length?`(${q.length})`:"";
-    $("reqlist").innerHTML= q.length? q.slice().reverse().map(r=>
-      `<div class="req"><span class="kind">${r.kind||"request"}</span>
-       <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${staleNote(r)}</span>
-       <span class="st">${r.status}</span></div>`).join("")
+    /* the join gate (0006 · 0012): a STAGED join has proven its key and waits for
+       the human — admit or turn away. Every other request renders as before. */
+    $("reqlist").innerHTML= q.length? q.slice().reverse().map(r=>{
+      const gate=r.kind==="join"&&r.status==="staged";
+      const note=gate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`:"";
+      return `<div class="req"><span class="kind">${r.kind||"request"}</span>
+       <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
+       ${gate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">admit</button>
+        <button class="sbtn no" onclick="joinDecide('${r.id}',false)">turn away</button>`
+       :`<span class="st">${r.status}</span>`}</div>`;}).join("")
       : `<div class="quiet">nothing waiting — a calm universe.</div>`;
     $("asklog").innerHTML= q.filter(r=>r.kind==="gather").length?
       q.filter(r=>r.kind==="gather").slice().reverse().map(r=>
@@ -893,6 +899,11 @@ async function loadReq(){
        <span class="st">${r.status}</span></div>`).join("")
       : `<div class="quiet">no dispatches yet.</div>`;
   }catch{}
+}
+async function joinDecide(id,ok){
+  await fetch("/requests/resolve",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({id,status:ok?"approved":"denied"})});
+  loadReq();
 }
 async function submitAsk(){
   const t=$("ask").value.trim(); if(!t)return;

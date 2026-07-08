@@ -674,9 +674,11 @@ fn local_workforce(app: &App) -> Vec<Value> {
         let at = r["occurred_at"].as_str().unwrap_or("");
         if at > e.3.as_str() { e.3 = at.to_string(); }
     }
-    // names an agent gave when it joined — so the roster shows "scout", not a did:key prefix
+    // names an agent gave when it joined — so the roster shows "scout", not a did:key
+    // prefix. Only COMPLETED joins bind (key proven + human-admitted, the hardened
+    // door): a squatter's pending claim never names anyone on this roster.
     let names: BTreeMap<String, String> = app.requests.lock().unwrap().iter()
-        .filter(|r| r["kind"] == "join")
+        .filter(|r| r["kind"] == "join" && r["status"] == "done")
         .filter_map(|r| Some((r["did"].as_str()?.to_string(), r["name"].as_str()?.to_string())))
         .collect();
     let now = now_iso();

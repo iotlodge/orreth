@@ -14,8 +14,11 @@ here in cognition (the plane verifies, never signs):
     gate, charlotte hands the recall to the queue and the librarian re-versions
     every entry from that source — and everything derived from those — to
     'recalled'. Annotate-never-rewrite; the poison visibly dead in the Window.
-  · join      — becky's door: an agent asks to join the field; becky mints a
-    root-chained retrieve lease for its DID and resolves the request with the token.
+  · join      — becky's door, HARDENED (JB's lock 2026-07-07): an agent asks to
+    join; becky challenges it to sign a nonce (key control proven, names bind to
+    real keys), stages the join for the HUMAN gate (0012 — consequence waits), and
+    mints the root-chained lease only after both. Approval without proof earns a
+    fresh challenge, never a token.
   · service   — charlotte, the farm keeper (0018): verifies staged plantings (probe,
     fetch manifest, pin hash), attests on human approval, heartbeats the toolshed,
     ages leases out, guards the rug-pull door on rejoin, and writes every lifecycle
@@ -55,6 +58,7 @@ from dotenv import load_dotenv
 
 from orreth_sim import crypto, parlor
 from orreth_sim.identity import NOW, Becky, Nanda
+from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
 from smoke_orrethd import root_keypair
 
@@ -102,6 +106,10 @@ _BECKY = Becky(SCOPE, _NANDA, parent=_ROOT)
 def grant_lease(did: str) -> dict:
     """A retrieve-self lease for a joining agent — attenuated to this floor, root-chained."""
     return _BECKY.issue_token(did, SCOPE, [{"action": "retrieve", "space": "self"}])
+
+
+# the desk at the door: challenge → prove → human gate → lease (JB's lock 2026-07-07)
+JOINDOOR = JoinDesk(grant=grant_lease)
 
 
 def call(port: int, method: str, path: str, payload=None):
@@ -992,17 +1000,22 @@ def main() -> None:
                         call(port, "POST", "/requests/resolve",
                              {"id": r["id"], "status": "done", "result": result})
                         print(f"    ✓ {result}")
-                    elif (r.get("kind") == "join" and r.get("did")
-                          and r.get("status") == "pending" and port == JOIN_PORT):
-                        handled.add(key)
-                        print(f"  ↳ join {r['id']}: {r.get('name','?')} "
-                              f"({r['did'][:22]}…) as {r.get('role','workforce')}")
-                        lease = grant_lease(r["did"])
-                        call(port, "POST", "/requests/resolve",
-                             {"id": r["id"], "status": "done",
-                              "result": {"token": lease, "scope": SCOPE,
-                                         "granted_by": _BECKY.did}})
-                        print(f"    ✓ lease granted — welcome to {SCOPE}")
+                    elif r.get("kind") == "join" and port == JOIN_PORT:
+                        # the desk is its own dedup — it acts only on real transitions
+                        act = JOINDOOR.tend(r)
+                        if act:
+                            status, result = act
+                            if status == "done":
+                                result = {**result, "scope": SCOPE,
+                                          "granted_by": _BECKY.did}
+                            call(port, "POST", "/requests/resolve",
+                                 {"id": r["id"], "status": status, "result": result})
+                            who = r.get("name") or (r.get("did") or "?")[:22] + "…"
+                            print({"challenged": f"  ↳ join {r['id']}: challenged {who} at the door",
+                                   "staged": f"  ↳ join {r['id']}: {who} proved its key — the door waits for you",
+                                   "done": f"    ✓ lease granted — welcome to {SCOPE}, {who}",
+                                   "denied": f"  ↳ join {r['id']}: {who} turned away — proof failed",
+                                   }.get(status, f"  ↳ join {r['id']} → {status}"))
                     elif r.get("kind") == "service":
                         if KEEPER.on_service_request(port, scope, r) or r.get("status") == "staged":
                             handled.add(key)

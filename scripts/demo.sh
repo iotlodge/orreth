@@ -17,6 +17,8 @@
 #                                   with the residents, signed onto the window
 #   scripts/demo.sh recall          0014 · discredit a source; the librarian walks
 #                                   the lineage and the poison dies visibly
+#   scripts/demo.sh gate            0006/0012 · the hardened join door: proof of
+#                                   key, then a human — an imposter is found out
 #   scripts/demo.sh window          0008 · seed a biography and open the Console
 #
 # Most demos want the rig up first: scripts/dev.sh start
@@ -38,6 +40,7 @@ case "${1:-list}" in
   stable)    run demo_stable.py "$FIELD" ;;
   parlor)    run demo_parlor.py "$FIELD" ;;
   recall)    run demo_recall.py "$FIELD" ;;
+  gate)      run demo_joindoor.py "$FIELD" ;;
   window)    "$ROOT/scripts/dev.sh" window ;;
   list|*)
     echo "the Orreth demo reel — scripts/demo.sh <name>   (rig first: scripts/dev.sh start)"
@@ -55,6 +58,8 @@ case "${1:-list}" in
     echo "              ada, and vigil, every exchange signed onto the window"
     echo "  recall      0014 · discredit a source and the librarian walks its lineage —"
     echo "              every tainted entry re-versioned, the poison visibly dead"
+    echo "  gate        0006/0012 · the hardened join door — a genuine agent proves its"
+    echo "              key and waits for the human; an imposter is found out"
     echo "  window      0008 · seed a biography and open the Console"
     ;;
 esac
