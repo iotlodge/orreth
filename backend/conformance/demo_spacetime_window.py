@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import json
 import sys
+import time
+import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
@@ -46,14 +48,40 @@ def main() -> None:
     print(f"field's floors (pulled from the apex at boot): "
           f"{[f['reason'][:28] for f in std['floors']]}")
 
-    # deep time lives at the apex: a 200-day-old memory, long since risen to the universe
+    # deep time lives at the apex: a 200-day-old memory, long since risen to the
+    # universe. And the apex GUARDS time — lived memory is monotone (0004 §1): a
+    # lived-in universe refuses the backdate, loudly. Either answer is this rig's truth.
     old = make_memory(agent, kp, SCOPE, {"season": "the championship, long ago"},
                       occurred_at=days_ago(OLD_DAYS))
-    call(UNIVERSE, "POST", "/records", old)
-    # recent memory is cheap and local: yesterday, at the field
-    new = make_memory(agent, kp, SCOPE, {"game": "yesterday's win"}, occurred_at=days_ago(1))
-    call(FIELD, "POST", "/records", new)
-    print("wrote: deep memory at the UNIVERSE, recent memory at the FIELD")
+    new_at = days_ago(1)                       # yesterday, at the field
+    try:
+        call(UNIVERSE, "POST", "/records", old)
+        print(f"wrote: a {OLD_DAYS}-day-old memory straight into the UNIVERSE — "
+              "a young apex, still seedable")
+    except urllib.error.HTTPError as e:
+        if e.code != 409:
+            raise
+        print("the apex REFUSED the backdate — lived time is monotone (0004 §1):")
+        print(f"  “{json.loads(e.read()).get('error', '')}”")
+        old = make_memory(agent, kp, SCOPE,
+                          {"season": "the championship, freshly risen to the apex"},
+                          occurred_at=days_ago(0))
+        call(UNIVERSE, "POST", "/records", old)
+        time.sleep(1.1)                        # a breath — the field's memory stays youngest
+        new_at = days_ago(0)
+        print("wrote: the apex's copy the honest way — as memory that just rose")
+    # recent memory is cheap and local, and always the youngest in the window
+    new = make_memory(agent, kp, SCOPE, {"game": "yesterday's win"}, occurred_at=new_at)
+    try:
+        call(FIELD, "POST", "/records", new)
+    except urllib.error.HTTPError as e:
+        if e.code != 409:
+            raise                              # the field guards time the same way
+        time.sleep(1.1)
+        new = make_memory(agent, kp, SCOPE, {"game": "yesterday's win"},
+                          occurred_at=days_ago(0))
+        call(FIELD, "POST", "/records", new)
+    print("wrote: recent memory at the FIELD")
 
     # one token, chained from the pinned root, audience = the whole universe
     nanda = Nanda()

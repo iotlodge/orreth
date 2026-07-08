@@ -1,7 +1,8 @@
 # PROVENANCE: console worker by Fable 5; charlotte's farm duties added by
 # Fable 5 (claude-fable-5) — 0018, the Tool Farm · 2026-07-05;
 # ada's stable duties added by Fable 5 (claude-fable-5) — 0019, the Stable · 2026-07-06;
-# the parlor desk added by Fable 5 (claude-fable-5) — 0020, the Parlor · 2026-07-07
+# the parlor desk added by Fable 5 (claude-fable-5) — 0020, the Parlor · 2026-07-07;
+# per-request quarantine in the round by Fable 5 (claude-fable-5) — 2026-07-08
 """The console worker — cognition behind the human's queue (0014 · 0006 · 0018 · 0019 · 0020).
 
 Watches every floor's request queue and carries the residents' duties, keys staying
@@ -1154,50 +1155,67 @@ def main() -> None:
                     key = (port, r.get("id"), r.get("at", ""), r.get("status"))
                     if key in handled:
                         continue
-                    if r.get("kind") == "gather" and r.get("status") == "pending":
-                        handled.add(key)
-                        print(f"  ↳ dispatch {r['id']}: gather “{r['text']}” on {scope}")
-                        result = gather(port, scope, r["text"])
-                        call(port, "POST", "/requests/resolve",
-                             {"id": r["id"], "status": "done", "result": result})
-                        print(f"    ✓ {result}")
-                    elif r.get("kind") == "join" and port == JOIN_PORT:
-                        # the desk is its own dedup — it acts only on real transitions
-                        act = JOINDOOR.tend(r)
-                        if act:
-                            status, result = act
-                            if status == "done":
-                                result = {**result, "scope": SCOPE,
-                                          "granted_by": _BECKY.did}
+                    try:
+                        if r.get("kind") == "gather" and r.get("status") == "pending":
+                            handled.add(key)
+                            print(f"  ↳ dispatch {r['id']}: gather “{r['text']}” on {scope}")
+                            result = gather(port, scope, r["text"])
                             call(port, "POST", "/requests/resolve",
-                                 {"id": r["id"], "status": status, "result": result})
-                            who = r.get("name") or (r.get("did") or "?")[:22] + "…"
-                            print({"challenged": f"  ↳ join {r['id']}: challenged {who} at the door",
-                                   "staged": f"  ↳ join {r['id']}: {who} proved its key — the door waits for you",
-                                   "done": f"    ✓ lease granted — welcome to {SCOPE}, {who}",
-                                   "denied": f"  ↳ join {r['id']}: {who} turned away — proof failed",
-                                   }.get(status, f"  ↳ join {r['id']} → {status}"))
-                    elif r.get("kind") == "service":
-                        if KEEPER.on_service_request(port, scope, r) or r.get("status") == "staged":
+                                 {"id": r["id"], "status": "done", "result": result})
+                            print(f"    ✓ {result}")
+                        elif r.get("kind") == "join" and port == JOIN_PORT:
+                            # the desk is its own dedup — it acts only on real transitions
+                            act = JOINDOOR.tend(r)
+                            if act:
+                                status, result = act
+                                if status == "done":
+                                    result = {**result, "scope": SCOPE,
+                                              "granted_by": _BECKY.did}
+                                call(port, "POST", "/requests/resolve",
+                                     {"id": r["id"], "status": status, "result": result})
+                                who = r.get("name") or (r.get("did") or "?")[:22] + "…"
+                                print({"challenged": f"  ↳ join {r['id']}: challenged {who} at the door",
+                                       "staged": f"  ↳ join {r['id']}: {who} proved its key — the door waits for you",
+                                       "done": f"    ✓ lease granted — welcome to {SCOPE}, {who}",
+                                       "denied": f"  ↳ join {r['id']}: {who} turned away — proof failed",
+                                       }.get(status, f"  ↳ join {r['id']} → {status}"))
+                        elif r.get("kind") == "service":
+                            if KEEPER.on_service_request(port, scope, r) or r.get("status") == "staged":
+                                handled.add(key)
+                        elif r.get("kind") == "mind":
+                            if WRANGLER.on_mind_request(port, scope, r) or r.get("status") == "staged":
+                                handled.add(key)
+                        elif r.get("kind") == "parlor" and r.get("status") == "pending":
                             handled.add(key)
-                    elif r.get("kind") == "mind":
-                        if WRANGLER.on_mind_request(port, scope, r) or r.get("status") == "staged":
+                            on_parlor(port, scope, r)
+                        elif r.get("kind") == "ecosystem":
+                            if SHIPYARD.on_request(port, r) or r.get("status") == "staged":
+                                handled.add(key)
+                        elif r.get("kind") == "recall" and r.get("status") == "pending":
                             handled.add(key)
-                    elif r.get("kind") == "parlor" and r.get("status") == "pending":
+                            print(f"  ↳ recall {r['id']}: walking knowledge from "
+                                  f"{r.get('source_did', '?')[:32]}…")
+                            result = recall_walk(port, scope, r.get("source_did", ""),
+                                                 r.get("reason", "source discredited"))
+                            call(port, "POST", "/requests/resolve",
+                                 {"id": r["id"], "status": "done", "result": result})
+                            print(f"    ✓ {result}")
+                    except urllib.error.HTTPError as e:
+                        # The floor ANSWERED — a refusal, not a dead wire (probe()'s
+                        # law). One poison request must never silence the residents:
+                        # relay the refusal onto the record and let the round go on.
                         handled.add(key)
-                        on_parlor(port, scope, r)
-                    elif r.get("kind") == "ecosystem":
-                        if SHIPYARD.on_request(port, r) or r.get("status") == "staged":
-                            handled.add(key)
-                    elif r.get("kind") == "recall" and r.get("status") == "pending":
-                        handled.add(key)
-                        print(f"  ↳ recall {r['id']}: walking knowledge from "
-                              f"{r.get('source_did', '?')[:32]}…")
-                        result = recall_walk(port, scope, r.get("source_did", ""),
-                                             r.get("reason", "source discredited"))
-                        call(port, "POST", "/requests/resolve",
-                             {"id": r["id"], "status": "done", "result": result})
-                        print(f"    ✓ {result}")
+                        try:
+                            err = json.loads(e.read() or b"{}").get("error") or str(e)
+                        except Exception:
+                            err = str(e)
+                        print(f"  ↳ {r.get('id')} refused by the floor: {err}")
+                        try:
+                            call(port, "POST", "/requests/resolve",
+                                 {"id": r["id"], "status": "done",
+                                  "result": {"refused": err}})
+                        except Exception:
+                            pass                 # resting state can wait a cycle
                 if beat_due:
                     KEEPER.tend(port, scope)
                     WRANGLER.sync(port, scope)

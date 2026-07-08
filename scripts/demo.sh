@@ -27,13 +27,15 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CONF="$ROOT/backend/conformance"
 FIELD=4502
+UNIVERSE=4500
 
 run() { (cd "$CONF" && uv run python "$1" "${@:2}"); }
 
 case "${1:-list}" in
   farm)      run demo_farm.py "$FIELD" ;;
-  life)      run demo_digital_life.py ;;
-  spacetime) run demo_spacetime_window.py ;;
+  life)      run demo_digital_life.py born "$FIELD"    # process one lives and dies…
+             run demo_digital_life.py wake "$FIELD" ;; # …process two attaches to the life
+  spacetime) run demo_spacetime_window.py "$FIELD" "$UNIVERSE" 500 ;;  # >395d = a true 3-tier hop
   knowledge) run demo_knowledge_loop.py ;;
   chassis)   run demo_chassis.py ;;
   model)     run demo_model_plane.py ;;

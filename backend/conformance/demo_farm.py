@@ -184,9 +184,19 @@ def main() -> None:
 
     # ---- Act II: the dark side, on a local stub ---------------------------------------
     say("ACT II · the greenhouse — drop, rug pull, and the door that holds\n")
-    if farm(GREENHOUSE):
-        raise SystemExit(f"  {GREENHOUSE} already on the farm — restart the rig "
-                         "(scripts/dev.sh restart) for a clean demo")
+    existing = farm(GREENHOUSE)
+    if existing and existing["state"] != "decommissioned":
+        # a previous telling crashed mid-story — walk the actor out the governed
+        # way (every state may reach decommissioned; planting rises legally from it)
+        say(f"  (clearing the stage: {GREENHOUSE} is {existing['state']} "
+            "from a previous telling — decommissioning)")
+        rid = call("POST", "/requests",
+                   {"kind": "service", "action": "decom", "name": GREENHOUSE,
+                    "reason": "the reel resets its stage",
+                    "text": f"decom {GREENHOUSE} — the reel resets its stage"})["id"]
+        wait_request(rid, "staged")
+        approve(rid)
+        wait_state(GREENHOUSE, "decommissioned", patience=20)
     _StubHandler.tools = HONEST
     srv = stub_start()
     say(f"  a local MCP wakes on :{STUB_PORT}; you plant it as {GREENHOUSE}")

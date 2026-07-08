@@ -85,11 +85,28 @@ def market_pick() -> str:
     return raw[0]["id"]
 
 
+def clear_stage(mid: str) -> None:
+    """The reel replays against a long-lived rig: if this actor is still in the
+    stable from a previous telling, walk it out the governed way — retire, sunset —
+    so the story starts clean. Sunset stalls re-saddle legally; occupied ones refuse."""
+    s = stall(mid)
+    if not s or s["state"] == "sunset":
+        return
+    say(f"  (clearing the stage: {mid} is {s['state']} from a previous telling — retiring)")
+    rid = submit({"kind": "mind", "action": "retire", "mind": mid,
+                  "reason": "the reel resets its stage",
+                  "text": f"retire {mid} — the reel resets its stage"})
+    wait_status(rid, {"staged"})
+    approve(rid)
+    wait_state(mid, {"sunset"})
+
+
 say("\n═══ THE STABLE (0019) · a mind's whole life ═══\n")
 
 # ---- ACT I · a real mind, saddled and earned -------------------------------------------
 say("ACT I · the market's mind\n")
 real = market_pick()
+clear_stage(real)
 say(f"  the market offers {real} — saddle it (medium):")
 rid = submit({"kind": "mind", "action": "saddle", "mind": real, "route": "litellm-direct",
               "class": "medium", "text": f"saddle {real} (medium)"})
@@ -107,6 +124,7 @@ say(f"  ✓ {real} is AVAILABLE — earned after {s.get('canary_beats')} governe
 # ---- ACT II · the pasture calendar ------------------------------------------------------
 say("ACT II · the old pony and the calendar\n")
 PONY = "local.demo/old-pony"
+clear_stage(PONY)
 soon = (date.today() + timedelta(days=10)).isoformat()
 say(f"  an old pony is saddled, its expiry already announced: {soon}")
 rid = submit({"kind": "mind", "action": "saddle", "mind": PONY, "route": "litellm-direct",
