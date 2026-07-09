@@ -930,9 +930,13 @@ fn summary(app: &App) -> Value {
          f.meter_log.len(), f.roster())
     };
     let children: Vec<Value> = app.children.lock().unwrap().values().cloned().collect();
+    // decisions waiting ride the beat too — the apex sees every floor that needs a human
+    let pending = app.requests.lock().unwrap().iter()
+        .filter(|r| matches!(r["status"].as_str(), Some("pending") | Some("staged")))
+        .count();
     // horizon rides the beat (serde maps a non-finite "forever" to null — the apex)
     json!({"scope": scope, "records": records, "runs": runs, "agents": agents,
-           "port": app.port,
+           "port": app.port, "pending": pending,
            // the glass can climb: a child knows its parent (0000 §1) — hand the
            // window the parent's port so the orrery's center is a door UP too
            "parent_port": app.parent.as_ref().and_then(|p| p.trim_end_matches('/')
