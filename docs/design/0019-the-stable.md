@@ -161,6 +161,24 @@ full dive now; LiteLLM-direct default routing with OpenRouter as route option + 
 4. **Recommendations rank by same-class → nearest price → newest catalog entry** — simple,
    explainable, human-overridable; smarter ranking is a later dive.
 
+**The wart pass (2026-07-08)** — the four known follow-ups from this dive, closed:
+
+1. **The canary ping travels, and it exercises the mind it vouches for.**
+   `/model/authorize` gains an optional `model` pin: the named stall serves or the grant
+   refuses — a pinned miss never climbs, because the stall it names lives on this floor.
+   `governed_ping` pins the rookie, honors the stall's route via `executable()` (0020's
+   law: authorize is truth for routing, keys are truth for execution), refunds honestly
+   when the floor holds no key, runs on any provider fuel including OpenRouter, and is no
+   longer scoped to the join floor — becky's tokens chain to the pinned root everywhere,
+   so every floor's stable earns its canary thought.
+2. **`resolve()` serves veterans first.** Available before canaried, at the plane and in
+   the sim — a rookie on canary never shadows a serving mind.
+3. **The queue refuses a caller-supplied `id` loudly** (400) instead of clobbering it
+   silently — name the subject in its own field (`mind`/`name`/`did`/`to`).
+4. **Recommendations gained the deal fit** — call 4's "later dive", arrived: candidates
+   must hold the pinned deal (context ≥ the pin's, modalities covering it) before price
+   distance and recency rank them; no full fit anywhere is said honestly in the `why`.
+
 ---
 
 *Saddled by request, pinned at the deal, canaried into service, deprecated by the

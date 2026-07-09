@@ -49,14 +49,16 @@ impl ModelPlane {
                meter_log: Vec::new() }
     }
 
-    /// First serviceable candidate: available/canaried serve; deprecated serves LOUDLY;
-    /// sunset is never served — the retired-model outage is structurally impossible.
-    /// Stalls are the routing truth for any class they populate; the legacy registry
-    /// file only answers when no stall of that class exists.
-    pub fn resolve(&mut self, class: &str) -> Resolved {
+    /// First serviceable candidate: available serves before canaried (a rookie on canary
+    /// must never shadow a veteran); deprecated serves LOUDLY; sunset is never served —
+    /// the retired-model outage is structurally impossible. Stalls are the routing truth
+    /// for any class they populate; the legacy registry file only answers when no stall
+    /// of that class exists. A pin narrows the field to one named mind — the canary's
+    /// ping must exercise the stall it vouches for, never whatever the router prefers.
+    pub fn resolve(&mut self, class: &str, pin: Option<&str>) -> Resolved {
         let stalled: Vec<Value> = self.stalls.values()
             .filter(|s| s["class"] == class).cloned().collect();
-        let entries = if stalled.is_empty() {
+        let mut entries: Vec<Value> = if stalled.is_empty() {
             match self.registry.get(class) {
                 Some(e) => e.clone(),
                 None => return Resolved::Miss,
@@ -64,10 +66,15 @@ impl ModelPlane {
         } else {
             stalled.iter().map(|s| json!({"model": s["id"], "state": s["state"]})).collect()
         };
-        for e in &entries {
-            if matches!(e["state"].as_str(), Some("available") | Some("canaried")) {
-                return Resolved::Model { model: e["model"].as_str().unwrap().to_string(),
-                                         deprecated: false };
+        if let Some(p) = pin {
+            entries.retain(|e| e["model"] == p);
+        }
+        for want in ["available", "canaried"] {
+            for e in &entries {
+                if e["state"] == want {
+                    return Resolved::Model { model: e["model"].as_str().unwrap().to_string(),
+                                             deprecated: false };
+                }
             }
         }
         for e in &entries {

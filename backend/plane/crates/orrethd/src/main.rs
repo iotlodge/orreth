@@ -475,8 +475,11 @@ async fn model_authorize(State(app): State<Arc<App>>, Json(req): Json<Value>) ->
         let budget = token["constraints"]["budget"]["tokens"].as_i64().unwrap_or(0);
         let class = req["class"].as_str().unwrap_or("").to_string();
         let est = req["est_tokens"].as_i64().unwrap_or(0);
+        // an optional pin names ONE mind (the canary's ping): it serves or it refuses —
+        // a pinned miss never climbs, because the stall it names lives on THIS floor
+        let pin = req["model"].as_str().map(|s| s.to_string());
         let mut m = app.model.lock().unwrap();
-        match m.resolve(&class) {
+        match m.resolve(&class, pin.as_deref()) {
             model::Resolved::Model { model, deprecated } => {
                 match m.debit(&subject, budget, est) {
                     Ok(remaining) => (StatusCode::OK, Json(json!({
@@ -487,6 +490,10 @@ async fn model_authorize(State(app): State<Arc<App>>, Json(req): Json<Value>) ->
                 }
             }
             model::Resolved::Miss => {
+                if pin.is_some() {
+                    return (StatusCode::SERVICE_UNAVAILABLE,
+                            Json(json!({"error": "the pinned mind cannot serve here"})));
+                }
                 if let Some(parent) = &app.parent {
                     // the model-miss climbs, like retrieval (0016 §1)
                     match ureq::post(&format!("{parent}/model/authorize")).send_json(&req) {
@@ -1053,6 +1060,13 @@ async fn requests_list(State(app): State<Arc<App>>) -> Json<Value> {
 /// Unsigned: it is an INPUT, not a memory. Cognition picks it up and acts with authority,
 /// and the result becomes a signed memory in the Window (0014's loop, human-initiated).
 async fn requests_submit(State(app): State<Arc<App>>, Json(mut req): Json<Value>) -> impl IntoResponse {
+    // the queue mints 'id'; a caller-supplied one used to be clobbered SILENTLY — the
+    // 0019 wart. Refuse loudly: name your subject in its own field (mind/name/did/to)
+    if req.get("id").is_some() {
+        return (StatusCode::BAD_REQUEST,
+                Json(json!({"error":
+                    "the queue mints 'id' — name your subject in its own field (mind/name/did/to)"})));
+    }
     let mut q = app.requests.lock().unwrap();
     // the id carries the submission second: the queue is in-memory, so a restarted daemon
     // must never reissue an id a long-lived consumer (becky) has already seen

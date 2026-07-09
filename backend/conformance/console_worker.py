@@ -458,44 +458,65 @@ def mindline(port: int, scope: str, stall: dict, event: str, **extra) -> None:
 
 
 def recommend(old: dict, stalls: list, catalog: list) -> dict | None:
-    """The replacement pick: a stall already serving the class wins outright; else the
-    catalog ranks by price distance then recency, never the next casualty (0019 §7)."""
+    """The replacement pick: a stall already serving the class wins outright; else
+    catalog entries that can HOLD THE DEAL (context ≥ the pin's, modalities covering
+    it) rank by price distance then recency — a cheaper mind that can't fit the work
+    is no replacement, and never the next casualty (0019 §7, fit added 2026-07-08)."""
     for s in stalls:
         if s["id"] != old["id"] and s.get("class") == old.get("class") \
                 and s.get("state") == "available":
             return {"id": s["id"], "why": "already serving this class", "in_stable": True}
-    old_p = float((old.get("manifest") or {}).get("pricing", {}).get("prompt") or 0)
+    man = old.get("manifest") or {}
+    old_p = float(man.get("pricing", {}).get("prompt") or 0)
     live = [c for c in catalog if c["id"] != old["id"] and not c.get("expires_at")]
     if not live:
         return None
-    best = min(live, key=lambda c: (
+    need_ctx = man.get("context_length") or 0
+    need_mods = set(man.get("modalities") or [])
+    fit = [c for c in live if (c.get("context_length") or 0) >= need_ctx
+           and need_mods <= set(c.get("modalities") or [])]
+    pool, why = (fit, "fits the deal — nearest price, newest catalog entry") if fit \
+        else (live, "no full fit in the catalog — nearest price, newest")
+    best = min(pool, key=lambda c: (
         abs(float((c.get("pricing") or {}).get("prompt") or 0) - old_p),
         -(c.get("created") or 0)))
     return {"id": best["id"], "provider": best.get("provider", ""),
-            "why": "nearest price, newest catalog entry", "in_stable": False,
+            "why": why, "in_stable": False,
             "pricing": best.get("pricing", {}),
             "context_length": best.get("context_length"),
             "modalities": best.get("modalities", []), "created": best.get("created")}
 
 
-def governed_ping(port: int, klass: str) -> dict | None:
+def governed_ping(port: int, mid: str, klass: str) -> dict | None:
     """One tiny real thought through ada's OWN gateway — authorize, call, meter, all
-    under her DID. Residents think on-meter too (0019 §4); silently skipped when no
-    provider key or litellm is around (canary then rests on verified syncs alone)."""
+    under her DID, PINNED to the rookie mind so the canary exercises the stall it
+    vouches for, never whatever the router prefers (the 0019 wart). Route honored via
+    executable() (0020's law: authorize is truth for routing, keys are truth for
+    execution) with the honest refund when this floor holds no key. Becky's tokens
+    chain to the pinned root, so every floor's stable earns its canary thought — not
+    just the join floor. Silently skipped when no provider key or litellm is around
+    (canary then rests on verified syncs alone)."""
     try:
         import litellm  # noqa: F401
     except Exception:
         return None
-    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY")):
+    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY")
+            or os.environ.get("OPENROUTER_API_KEY")):
         return None
     try:
         token = _BECKY.issue_token(ADA_DID, SCOPE, [{"action": "retrieve", "space": "self"}],
                                    budget={"tokens": 50000})
         est = 40
         grant = call(port, "POST", "/model/authorize",
-                     {"token": token, "class": klass, "est_tokens": est})
+                     {"token": token, "class": klass, "est_tokens": est, "model": mid})
+        model = executable(port, grant["model"])
+        if model is None:                 # honest refund: authorized, but no key to execute
+            call(port, "POST", "/model/meter",
+                 {"subject": grant["subject"], "est_tokens": est, "tokens": 0, "usd": 0,
+                  "model": grant["model"], "class": klass})
+            return None
         import litellm
-        resp = litellm.completion(model=grant["model"],
+        resp = litellm.completion(model=model,
                                   messages=[{"role": "user", "content": "ping"}],
                                   max_tokens=1)
         tokens = resp.usage.total_tokens
@@ -517,7 +538,7 @@ class Wrangler:
     restarts. The plane refuses illegal moves; ada only ever proposes legal ones."""
 
     def __init__(self) -> None:
-        self.pinged: set[str] = set()         # one governed canary thought per mind
+        self.pinged: set[tuple] = set()       # one governed canary thought per (floor, mind)
 
     def _local(self, port: int, scope: str) -> list[dict]:
         return [s for s in call(port, "GET", "/stable")["stalls"]
@@ -651,10 +672,10 @@ class Wrangler:
                     mindline(port, scope, beat, "available",
                              earned_after=beat.get("canary_beats"))
                     print(f"  ↳ {mid} earned its place — available")
-                if port == JOIN_PORT and mid not in self.pinged:
-                    ping = governed_ping(port, s.get("class", "medium"))
+                if (port, mid) not in self.pinged:
+                    ping = governed_ping(port, mid, s.get("class", "medium"))
                     if ping:
-                        self.pinged.add(mid)
+                        self.pinged.add((port, mid))
                         mindline(port, scope, s, "canary-thought", **ping)
                 state = beat.get("state", state)
             if state in ("canaried", "available") and mid in by_id:
@@ -1063,7 +1084,8 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
             or os.environ.get("OPENROUTER_API_KEY")):
         return None
     if port != JOIN_PORT:
-        return None                       # tokens chain to becky's floor, like the canary
+        return None                       # the voice stays at the parlor's home floor
+                                          # (the canary ping travels — governed_ping)
     est = 260
     for klass in ("low", "medium", "high"):
         try:

@@ -151,30 +151,41 @@ class Stable:
     # ---- routing view: who serves a class right now (0016 resolve, mirrored) -----------
     def resolve(self, klass: str) -> dict | None:
         stalls = [s for s in self.stalls.values() if s["class"] == klass]
-        for s in stalls:
-            if s["state"] in ("available", "canaried"):
-                return {"id": s["id"], "deprecated": False}
+        for want in ("available", "canaried"):  # veterans first — a rookie on canary
+            for s in stalls:                    # must never shadow a serving mind
+                if s["state"] == want:
+                    return {"id": s["id"], "deprecated": False}
         for s in stalls:
             if s["state"] == "deprecated":
                 return {"id": s["id"], "deprecated": True}  # loud last resort — never sunset
         return None
 
-    # ---- the recommendation: same class → nearest price → newest (0019 §7 call 4) ------
+    # ---- the recommendation: class → deal fit → nearest price → newest (0019 §7 call 4,
+    # capability fit added 2026-07-08 — the "later dive" that call reserved) -------------
     def recommend(self, mid: str, catalog: list[dict]) -> dict | None:
         """Pick the failing stall's replacement. Serving same-class stalls win outright;
-        else the catalog ranks by price distance, then recency. Explainable on purpose."""
+        else catalog entries that can HOLD THE DEAL (context ≥ the pin's, modalities
+        covering it) rank by price distance then recency — a cheaper mind that can't fit
+        the work is no replacement. No fit anywhere → nearest price, said honestly.
+        Explainable on purpose."""
         old = self.stalls.get(mid)
         if old is None:
             return None
         for s in self.stalls.values():
             if s["id"] != mid and s["class"] == old["class"] and s["state"] == "available":
                 return {"id": s["id"], "why": "already serving this class", "in_stable": True}
-        old_price = float(old["manifest"].get("pricing", {}).get("prompt", 0) or 0)
         live = [c for c in catalog if c["id"] != mid and not c.get("expires_at")]
         if not live:
             return None
-        best = min(live, key=lambda c: (
+        old_price = float(old["manifest"].get("pricing", {}).get("prompt", 0) or 0)
+        need_ctx = old["manifest"].get("context_length") or 0
+        need_mods = set(old["manifest"].get("modalities") or [])
+        fit = [c for c in live if (c.get("context_length") or 0) >= need_ctx
+               and need_mods <= set(c.get("modalities") or [])]
+        pool, why = (fit, "fits the deal — nearest price, newest catalog entry") if fit \
+            else (live, "no full fit in the catalog — nearest price, newest")
+        best = min(pool, key=lambda c: (
             abs(float(c.get("pricing", {}).get("prompt", 0) or 0) - old_price),
             -(c.get("created") or 0)))
-        return {"id": best["id"], "why": "nearest price, newest catalog entry",
+        return {"id": best["id"], "why": why,
                 "in_stable": False, "pricing": best.get("pricing", {})}

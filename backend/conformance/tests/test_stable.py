@@ -98,6 +98,15 @@ def test_eol_inside_horizon_flips_loud_and_outside_does_not():
     assert st2.eol_scan("2026-07-06") == [] and st2.stalls[SONNET]["state"] == "available"
 
 
+def test_resolve_prefers_a_veteran_over_a_rookie_on_canary():
+    st = Stable(SCOPE)
+    saddle(st, "aaa/rookie")                            # saddled first — insertion order
+    st.attest("aaa/rookie", DEAL)                       # canaried, still earning its place
+    saddle(st)
+    serve(st)                                           # SONNET is available
+    assert st.resolve("medium") == {"id": SONNET, "deprecated": False}
+
+
 def test_deprecated_serves_loudly_and_sunset_never():
     st = Stable(SCOPE)
     saddle(st)
@@ -136,3 +145,17 @@ def test_recommendation_ranks_catalog_by_price_then_recency():
     ]
     pick = st.recommend(SONNET, catalog)
     assert pick["id"] == "cheap/newer" and pick["in_stable"] is False
+
+
+def test_recommendation_prefers_a_deal_fit_over_raw_price():
+    st = Stable(SCOPE)
+    saddle(st)
+    serve(st)
+    catalog = [
+        {"id": "small/window", "pricing": {"prompt": "0.000003"}, "created": 300,
+         "context_length": 8000, "modalities": ["text"]},   # nearest price, can't hold the deal
+        {"id": "big/window", "pricing": {"prompt": "0.000005"}, "created": 200,
+         "context_length": 200000, "modalities": ["text", "image"]},
+    ]
+    pick = st.recommend(SONNET, catalog)
+    assert pick["id"] == "big/window" and "fits the deal" in pick["why"]
