@@ -803,3 +803,96 @@ def test_chassis_cycles_are_run_records_pinned_to_the_law(world):
     season = {"from": iso(1), "to": iso(0)}
     ru = world.field_prod.roll_up(season, goal_hash=runs[0]["goal_hash"])
     assert ru["stats"]["n"] == 2                              # thought rolls up like everything else
+
+
+# ------------------------------------------------- 0015 maturation (2026-07-08)
+def test_chassis_escalates_class_on_critic_uncertainty(world):
+    """The critic's RETRY is the uncertainty signal: the next cycle thinks one rung
+    higher. The ladder is profile data; the loop stays the law."""
+    from orreth_sim.chassis import Chassis
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    surf = join_workforce(world.field_prod, b_prod)
+    seen = []
+    def th(klass, p):
+        if "Plan the MINIMUM" in p:
+            seen.append(klass)
+            return "OBSERVE reason: x"
+        if "Answer concisely" in p:
+            return "y"
+        return "DONE: solved at altitude" if klass == "high" else "RETRY: unsure"
+    agent = Chassis(surf, th, max_cycles=3, ladder=["low", "medium", "high"])
+    out = agent.run("hard question")
+    assert out["status"] == "done" and out["cycles"] == 3
+    assert seen == ["low", "medium", "high"]            # each doubt climbed one rung
+    assert [t["class"] for t in agent.trace] == ["low", "medium", "high"]
+
+
+def test_librarian_retry_closes_the_parked_intent(world):
+    """0015 ∘ 0014, closed AUTOMATICALLY: park → tend → retry_parked — the lot
+    empties itself, receipted through the whole arc."""
+    from orreth_sim.chassis import Chassis
+    from orreth_sim.librarian import handled_open, retry_parked, tend
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    surf = join_workforce(world.field_prod, b_prod)
+    def ignorant(_k, p):
+        if "Plan the MINIMUM" in p: return "OBSERVE reason: guess"
+        if "Answer concisely" in p: return "unknown"
+        return "RETRY: no data on permafrost anchors"
+    out = Chassis(surf, ignorant, max_cycles=1).run("permafrost anchor spec")
+    assert out["status"] == "parked"
+    tend(world.field_prod, gather=lambda intent: [
+        {"claim": "helical piles below the active layer", "source_did": "did:web:a.example"},
+        {"claim": "adfreeze bond rated per AK guidance", "source_did": "did:web:b.example"}])
+    assert handled_open(world.field_prod)               # handled, not yet closed
+    def informed(_k, p):
+        if "Plan the MINIMUM" in p: return "OBSERVE lookup: anchors"
+        return "DONE: helical piles below the active layer."
+    closures = retry_parked(
+        world.field_prod,
+        run=lambda intent, skills: Chassis(surf, informed, skills=skills).run(intent))
+    assert len(closures) == 1 and closures[0]["intent"] == "permafrost anchor spec"
+    rec = world.field_prod.records[closures[0]["record"]]
+    assert "parked-closed" in rec["tags"]
+    assert len(rec["derived_from"]) == 2                # the parked intent AND the marker
+    assert not handled_open(world.field_prod)           # the lot emptied itself
+    again = retry_parked(world.field_prod, run=lambda i, s: {"status": "done"})
+    assert again == []                                  # closed stays closed
+
+
+def test_graphspec_compiles_to_the_chassis(world):
+    """0008 ∘ 0015: the loop as an artifact — content-addressed, signed, narrative
+    bijective with the graph — compiled down to a running chassis, least-privilege."""
+    from orreth_sim import graphspec
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    surf = join_workforce(world.field_prod, b_prod)
+    spec = graphspec.sign(graphspec.chassis_spec(
+        world.field_prod.scope, title="cold-climate architect",
+        persona="You are a terse cold-climate architect.",
+        skills=("lookup",), ladder=["low", "medium"]), world.field_prod)
+    def th(_k, p):
+        if "Plan the MINIMUM" in p: return "OBSERVE lookup: frost line"
+        return "DONE: footings below the frost line."
+    agent = graphspec.compile_chassis(
+        spec, surf, th, skills={"lookup": lambda q: "48in (corroborated)",
+                                "unused": lambda q: "never bound"})
+    assert agent.run("frost-depth foundation spec")["status"] == "done"
+    assert "unused" not in agent.skills                 # only what the artifact names
+    assert agent.ladder == ["low", "medium"]            # profile flowed from the graph
+    named_nodes = sorted(n for s in spec["narrative"] for n in s.get("nodes", []))
+    assert named_nodes == sorted(n["id"] for n in spec["nodes"])   # the bijection holds
+
+
+def test_graphspec_refuses_at_save_not_incident_review(world):
+    """A skill the floor cannot bind, or an artifact that moved under its id, fails
+    at compile — a refused artifact never becomes an incident."""
+    from orreth_sim import graphspec
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    surf = join_workforce(world.field_prod, b_prod)
+    unbound = graphspec.chassis_spec(world.field_prod.scope, title="t",
+                                     skills=("missing-skill",))
+    with pytest.raises(graphspec.GraphSpecError, match="not bound"):
+        graphspec.compile_chassis(unbound, surf, lambda k, p: "DONE: x", skills={})
+    tampered = graphspec.chassis_spec(world.field_prod.scope, title="t")
+    tampered["nodes"][0]["profile"]["persona"] = "quietly different"
+    with pytest.raises(graphspec.GraphSpecError, match="moved under its id"):
+        graphspec.compile_chassis(tampered, surf, lambda k, p: "DONE: x", skills={})

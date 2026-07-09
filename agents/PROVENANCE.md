@@ -146,6 +146,16 @@ web, pos" → staged plan `e:retail on :4503 with web:4504, pos:4505` → LAUNCH
 real containers, all healthy, beating into the apex orrery with their ports; one-glass
 descent onto e:retail and breadcrumb ascent verified in Chrome, zero JS errors.
 
+### Chassis maturation (0015 backlog) — 2026-07-08, on main (no quarantine: Fable 5 authored)
+
+| Area | File | Author model | Notes |
+|---|---|---|---|
+| Sim · graphspec | `../backend/conformance/orreth_sim/graphspec.py` | **Fable 5** | NEW: GraphSpec v0 (0008 §2) sim-first — the chassis as a content-addressed, steward-signed artifact with a bijective narrative; `compile_chassis` binds only spec-named skills and refuses at save (unbound skill, tampered id, broken bijection); schema stays out of `contracts/` until 0008 is blessed |
+| Sim · chassis | `../backend/conformance/orreth_sim/chassis.py` | **Fable 5** | class escalation on critic uncertainty: the `ladder` profile knob — every RETRY climbs one rung; no ladder = fixed class, unchanged |
+| Sim · librarian | `../backend/conformance/orreth_sim/librarian.py` | **Fable 5** | `retry_parked` closes the parked→librarian→retry circuit automatically; `lookup_skill` hands back claims wearing their state; `handled_open` is the retry worklist |
+| Tests | `../backend/conformance/tests/test_flows.py` | **Fable 5** | 4 new: escalation ladder, auto-close (idempotent, whole-arc lineage), GraphSpec compile (least privilege + bijection), refused-at-save (suite 86/86) |
+| Design | `../docs/design/0015-orreth-agent-the-chassis.md` | **Fable 5** | "Matured (2026-07-08)" section; remaining: persona as cascaded soft standard |
+
 ### Orrery residents (Opus 4.8, quarantined) — 2026-07-05, branch `opus/orrery-residents`
 
 **The swap boundary.** Everything below was authored by **Opus 4.8** after the safeguard

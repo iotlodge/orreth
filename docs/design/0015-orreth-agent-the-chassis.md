@@ -37,10 +37,27 @@ Hermetic: parallel skill+reason observation, single-cycle completion, breaker-pa
 3 parallel observations, the corroborated 0014 claim flowing verbatim into the answer at $0,
 836 metered tokens total. The two loops met.
 
+## Matured (2026-07-08)
+
+- **Chassis-as-GraphSpec** (0008 compile target): `orreth_sim/graphspec.py` — the loop as
+  a content-addressed, steward-signed artifact carrying its own narrative (sentence ↔
+  node/edge bijection, kept by construction). `compile_chassis` binds ONLY the skills the
+  spec names (least-privilege attention starts at the artifact) and refuses at SAVE — an
+  unbound skill, a tampered id, a broken bijection — never at incident review. The schema
+  hardens into `contracts/` only after 0008 is blessed.
+- **RunRecords per cycle with context_hash** — landed 2026-07-04; every cycle of thought
+  is a signed RunRecord pinned to the ResolvedContext it ran under.
+- **The parked-intent → librarian → retry circuit closes automatically**:
+  `librarian.retry_parked` sweeps every handled assignment still open, retries the intent
+  with the commissioned knowledge as a lookup skill (claims wear their state honestly),
+  and a DONE writes a `parked-closed` record deriving from the whole arc — the lot
+  empties itself, receipted, annotate-never-rewrite.
+- **Class escalation on critic uncertainty**: the `ladder` profile knob — every RETRY
+  climbs one rung; doubt buys altitude, bounded by the profile. No ladder → fixed class,
+  exactly as before. The ladder is data, like everything else.
+
 ## What matures next
 
-Chassis-as-GraphSpec (0008 compile target) · RunRecords per cycle with context_hash · persona
-as cascaded soft standard · the parked-intent → librarian → retry circuit closed automatically ·
-Master/swarm class escalation on critic uncertainty.
+Persona as cascaded soft standard.
 
 *One chassis, many costumes, one immortal thread each.* 🥂
