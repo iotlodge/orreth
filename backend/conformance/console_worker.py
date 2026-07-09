@@ -1174,7 +1174,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
 # ---------------------------------------------------------------- the reel
 
 REEL = {"farm", "life", "spacetime", "knowledge", "chassis", "model",
-        "stable", "parlor", "recall", "gate"}          # names only — never user text
+        "stable", "parlor", "recall", "gate", "crew"}  # names only — never user text
 _REEL_LOCK = threading.Lock()                          # one stage, one story at a time
 _REPO = Path(__file__).resolve().parents[2]
 

@@ -43,6 +43,7 @@ case "${1:-list}" in
   parlor)    run demo_parlor.py "$FIELD" ;;
   recall)    run demo_recall.py "$FIELD" ;;
   gate)      run demo_joindoor.py "$FIELD" ;;
+  crew)      run demo_workforce.py "$FIELD" ;;
   window)    "$ROOT/scripts/dev.sh" window ;;
   list|*)
     echo "the Orreth demo reel — scripts/demo.sh <name>   (rig first: scripts/dev.sh start)"
@@ -62,6 +63,8 @@ case "${1:-list}" in
     echo "              every tainted entry re-versioned, the poison visibly dead"
     echo "  gate        0006/0012 · the hardened join door — a genuine agent proves its"
     echo "              key and waits for the human; an imposter is found out"
+    echo "  crew        0006/0015 · the field takes on hands — three SDK agents join at"
+    echo "              the gate (wren returns as the same self) and work on the record"
     echo "  window      0008 · seed a biography and open the Console"
     ;;
 esac
