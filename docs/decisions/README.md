@@ -313,6 +313,17 @@ including derived-memory chain verification).
 
 ## 🔧 Build phase — decisions as they arise
 
+### Locked 2026-07-08 (pgvector — Fable staged the options, JB locked)
+- **Prep now, design dive later.** The compose pg image moves `postgres:16` →
+  `pgvector/pgvector:pg16` (same postgres, the `vector` extension present but dormant;
+  the `pg-data` volume carries over untouched). Semantic retrieval itself waits for a
+  **0002-amendment dive** — a new query shape deserves the contract pass: fidelity,
+  remainder honesty, and the uniform refusal on the new path. **Open inside that dive:**
+  the embedding source — local model (free, keyless, bodies never leave the rig; weaker)
+  vs API embeddings (stronger; but record bodies would leave the plane to a third party —
+  a privacy-posture change needing its own explicit lock) — and which organ's DID the
+  embedding cost rides on the meter. **Mechanism (image swap) landed 2026-07-08.**
+
 ### Locked 2026-07-07 (the join door — Fable staged the options, JB locked)
 - **Join-door hardening: HITL gate + nonce challenge.** Joins stage in the human queue
   like plants and saddles (0012 — consequence waits); becky additionally challenges the

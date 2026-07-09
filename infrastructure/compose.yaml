@@ -13,7 +13,10 @@ name: orreth-demo-universe
 
 services:
   pg:
-    image: postgres:16
+    # pgvector staged (JB's lock 2026-07-08): same postgres:16 plus the vector
+    # extension, dormant until semantic retrieval lands via a 0002-amendment dive —
+    # the embedding-source decision (local model vs API vs defer) is still open there.
+    image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: orreth
