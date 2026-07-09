@@ -89,12 +89,17 @@
   /* !important: the hidden state must beat any per-view #id display rule — this
      specificity trap has bitten twice (#v-window, then #v-pulse). Never again. */
   .view.hide{display:none!important}
-  #v-uni{display:flex;flex-direction:column}
+  #v-uni{display:flex;flex-direction:column;position:relative}
 
   /* ── THE ORRERY: the universe in orbit — worlds turn, policy rains down the beams ── */
-  .orrery{position:relative;flex:1;min-height:0;overflow:hidden}
-  /* the drawer: the spacetime window rides up OVER the orrery — the universe keeps
-     the whole pane; time pulls up when you ask for it (closed · peek · full) */
+  .orrery{position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;
+    transition:bottom .32s ease}
+  /* the window never hides the world (the parlor's law, applied to time): at PEEK the
+     universe resizes into the space above the drawer — both stay whole, both stay alive.
+     FULL still covers: the whole pane belongs to spacetime when you ask for all of it. */
+  #v-uni.drawer-up .orrery{bottom:46%}
+  /* the drawer: the spacetime window rides up over the orrery's yielded space —
+     time pulls up when you ask for it (closed · peek · full) */
   .drawer{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;flex-direction:column;
     overflow:hidden;height:2.2rem;transition:height .32s ease;background:var(--void);
     border-top:1px solid var(--hair);box-shadow:0 -14px 34px rgba(0,0,0,.5)}
@@ -1356,11 +1361,16 @@ async function rollDemo(name){
 /* ── the drawer: the spacetime window pulls up over the live universe ── */
 function drawerSet(st){
   const d=$("drawer");if(!d)return;
+  const was=$("v-uni").classList.contains("drawer-up");
   d.dataset.state=st;
+  const up=st!=="closed";
+  $("v-uni").classList.toggle("drawer-up",up);   // the universe yields the peek space
   $("dgrip").textContent=st==="full"?"⌄":"⌃";
   $("dhint").textContent=st==="closed"?"pull up — every memory, in time"
     :st==="peek"?"pull higher for the full window":"the whole record, in time";
-  if(st!=="closed")setTimeout(()=>{layout();scrub()},340); // bands re-fit after the slide
+  if(st!=="closed")setTimeout(()=>{layout();scrub()},380); // bands re-fit after the slide
+  if(up!==was)setTimeout(()=>{                  // the world re-centers in its new box
+    const O=$("orrery");if(O){O.dataset.sig="";renderOrrery()}},380);
 }
 function drawerCycle(){
   const st=$("drawer").dataset.state;
