@@ -1,10 +1,12 @@
 //! Write-through Postgres persistence for the record store (0000 §2 "Stores").
 //!
 //! The node stays a pure in-memory structure (the conformance suite stays hermetic);
-//! orrethd persists every ACCEPTED record as JSONB and restores records + the
-//! high-water mark at boot — the clock's monotonicity survives restarts. Bodies
-//! already live in the object store; what's persisted here is the stored form
-//! (pointers, not blobs).
+//! orrethd persists every ACCEPTED record — and every scribe-signed run (0022 §8) —
+//! as JSONB and restores records, runs, and the high-water mark at boot: the clock's
+//! monotonicity and the diary both survive restarts. Bodies already live in the
+//! object store; what's persisted here is the stored form (pointers, not blobs).
+//! Indexes serve the persisted log's query families (0022 §2): scoped time-range,
+//! tag membership, author forensics, distillation cohorts, lineage walks.
 
 use serde_json::Value;
 use std::sync::Mutex;
@@ -31,7 +33,27 @@ impl PgRecords {
                  seq         BIGSERIAL,
                  entry       JSONB NOT NULL,
                  PRIMARY KEY (node_scope, seq)
-             );",
+             );
+             CREATE TABLE IF NOT EXISTS runs (
+                 node_scope  TEXT NOT NULL,
+                 id          TEXT NOT NULL,
+                 agent       TEXT NOT NULL,
+                 occurred_at TEXT NOT NULL,
+                 run         JSONB NOT NULL,
+                 PRIMARY KEY (node_scope, id)
+             );
+             CREATE INDEX IF NOT EXISTS runs_scope_agent_time
+                 ON runs (node_scope, agent, occurred_at DESC);
+             CREATE INDEX IF NOT EXISTS records_scope_time
+                 ON records (node_scope, occurred_at DESC);
+             CREATE INDEX IF NOT EXISTS records_tags
+                 ON records USING GIN ((record->'tags'));
+             CREATE INDEX IF NOT EXISTS records_author
+                 ON records ((record->>'author'));
+             CREATE INDEX IF NOT EXISTS records_distillations
+                 ON records ((record->>'kind')) WHERE record->>'kind' = 'distillation';
+             CREATE INDEX IF NOT EXISTS records_derived_from
+                 ON records USING GIN ((record->'derived_from'));",
         )?;
         Ok(Self { client: Mutex::new(client) })
     }
@@ -52,6 +74,35 @@ impl PgRecords {
             ],
         )?;
         Ok(())
+    }
+
+    /// Persist a scribe-signed RunRecord — the diary survives the daemon (0022 §8:
+    /// presence stats and rollup continuity no longer reset with the process). Idempotent.
+    pub fn save_run(&self, node_scope: &str, run: &Value) -> Result<(), postgres::Error> {
+        self.client.lock().unwrap().execute(
+            "INSERT INTO runs (node_scope, id, agent, occurred_at, run)
+             VALUES ($1, $2, $3, $4, $5) ON CONFLICT (node_scope, id) DO NOTHING",
+            &[
+                &node_scope,
+                &run["id"].as_str().unwrap(),
+                &run["agent"].as_str().unwrap_or(""),
+                &run["occurred_at"].as_str().unwrap_or(""),
+                &postgres::types::Json(run),
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Exactly this node's runs, for boot-restore.
+    pub fn load_runs(&self, node_scope: &str) -> Result<Vec<Value>, postgres::Error> {
+        let rows = self.client.lock().unwrap().query(
+            "SELECT run FROM runs WHERE node_scope = $1 ORDER BY occurred_at",
+            &[&node_scope],
+        )?;
+        Ok(rows
+            .into_iter()
+            .map(|r| r.get::<_, postgres::types::Json<Value>>(0).0)
+            .collect())
     }
 
     /// Persist one model-meter entry — usage history is memory, not vapor (0019 §4).

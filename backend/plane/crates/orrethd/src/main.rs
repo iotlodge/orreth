@@ -173,6 +173,19 @@ async fn main() {
         }
         println!("orrethd · restored {n} record(s) from postgres · high_water={:?}",
                  universe.nodes[0].high_water);
+
+        // the diary returns with the records (0022 §8): runs were scribe-verified at
+        // original ingress; presence stats and rollup continuity survive the restart
+        let runs = tokio::task::block_in_place(|| store.load_runs(&scope)).expect("runs restore");
+        if !runs.is_empty() {
+            println!("orrethd · restored {} run(s) from postgres", runs.len());
+        }
+        for run in runs {
+            if let Some(id) = run["id"].as_str() {
+                let id = id.to_string();
+                universe.runs.insert(id, run);
+            }
+        }
     }
 
     let mut model_plane = model::ModelPlane::from_file(
@@ -672,7 +685,17 @@ async fn runs_ingress(State(app): State<Arc<App>>, Json(run): Json<Value>) -> im
     tokio::task::spawn_blocking(move || {
         let mut u = app.universe.lock().unwrap();
         match u.record_run(&run) {
-            Ok(id) => (StatusCode::CREATED, Json(json!({"id": id}))),
+            Ok(id) => {
+                // write-through: the diary survives the daemon (0022 §8) — a life's
+                // work history is memory, not process state
+                if let Some(store) = &app.pg {
+                    let node_scope = u.nodes[0].scope.clone();
+                    if let Err(e) = store.save_run(&node_scope, &u.runs[&id]) {
+                        eprintln!("orrethd · postgres run write-through failed for {id}: {e}");
+                    }
+                }
+                (StatusCode::CREATED, Json(json!({"id": id})))
+            }
             Err(_) => (StatusCode::FORBIDDEN,
                        Json(json!({"error": "run rejected — resident-signed or nothing"}))),
         }
