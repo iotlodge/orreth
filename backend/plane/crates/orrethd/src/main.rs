@@ -188,6 +188,20 @@ async fn main() {
         }
     }
 
+    // the queue returns too (0022 §8): staged escalations, granted leases, and the
+    // names agents joined under all outlive the process — the human gate never
+    // forgets what it was holding. Restored in submission order (seq).
+    let restored_requests = if let Some(store) = &pg_store {
+        let reqs = tokio::task::block_in_place(|| store.load_requests(&scope))
+            .expect("requests restore");
+        if !reqs.is_empty() {
+            println!("orrethd · restored {} request(s) from postgres", reqs.len());
+        }
+        reqs
+    } else {
+        Vec::new()
+    };
+
     let mut model_plane = model::ModelPlane::from_file(
         &arg("--models").unwrap_or_else(|| "profiles/model-registry.json".into()));
     // the meter survives the daemon (0019 §4): usage history is memory, not vapor
@@ -206,7 +220,7 @@ async fn main() {
         parent,
         horizon_days: dur_days(horizon),
         pg: pg_store,
-        requests: Mutex::new(Vec::new()),
+        requests: Mutex::new(restored_requests),
         children: Mutex::new(BTreeMap::new()),
         vitals: Mutex::new(BTreeMap::new()),
         organs: Mutex::new(BTreeMap::new()),
@@ -1068,15 +1082,28 @@ async fn organs_pin(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl
 }
 
 async fn requests_resolve(State(app): State<Arc<App>>, Json(body): Json<Value>) -> impl IntoResponse {
-    let mut q = app.requests.lock().unwrap();
-    let id = body["id"].as_str().unwrap_or("");
-    for r in q.iter_mut() {
-        if r["id"] == id {
-            r["status"] = body.get("status").cloned().unwrap_or(json!("done"));
-            if let Some(n) = body.get("result") { r["result"] = n.clone(); }
+    // the sync postgres client drives its own runtime — keep it off the async workers
+    tokio::task::spawn_blocking(move || {
+        // scope first, queue second — never hold both locks (universe→requests is the
+        // ordering elsewhere; inverting it here would be the deadlock)
+        let node_scope = app.universe.lock().unwrap().nodes[0].scope.clone();
+        let mut q = app.requests.lock().unwrap();
+        let id = body["id"].as_str().unwrap_or("").to_string();
+        for (seq, r) in q.iter_mut().enumerate() {
+            if r["id"] == id {
+                r["status"] = body.get("status").cloned().unwrap_or(json!("done"));
+                if let Some(n) = body.get("result") { r["result"] = n.clone(); }
+                // write-through: the queue survives the daemon (0022 §8) — a resolution
+                // (a lease, a denial, a human's answer) must not vanish in a crash
+                if let Some(store) = &app.pg {
+                    if let Err(e) = store.save_request(&node_scope, seq as i64, r) {
+                        eprintln!("orrethd · postgres request write-through failed for {id}: {e}");
+                    }
+                }
+            }
         }
-    }
-    (StatusCode::OK, Json(json!({"ok": true})))
+        (StatusCode::OK, Json(json!({"ok": true})))
+    }).await.unwrap()
 }
 
 async fn requests_list(State(app): State<Arc<App>>) -> Json<Value> {
@@ -1094,14 +1121,24 @@ async fn requests_submit(State(app): State<Arc<App>>, Json(mut req): Json<Value>
                 Json(json!({"error":
                     "the queue mints 'id' — name your subject in its own field (mind/name/did/to)"})));
     }
-    let mut q = app.requests.lock().unwrap();
-    // the id carries the submission second: the queue is in-memory, so a restarted daemon
-    // must never reissue an id a long-lived consumer (becky) has already seen
-    let at = now_iso();
-    let id = format!("req-{}-{}", q.len() + 1, orreth_node::ts_seconds(&at));
-    req["id"] = json!(id);
-    req["status"] = json!("pending");
-    req["at"] = json!(at);
-    q.push(req.clone());
-    (StatusCode::CREATED, Json(req))
+    // the sync postgres client drives its own runtime — keep it off the async workers
+    tokio::task::spawn_blocking(move || {
+        let node_scope = app.universe.lock().unwrap().nodes[0].scope.clone();
+        let mut q = app.requests.lock().unwrap();
+        // the id carries the submission second: even with the persisted queue, a daemon
+        // that lost its store must never reissue an id a long-lived consumer (becky) has seen
+        let at = now_iso();
+        let id = format!("req-{}-{}", q.len() + 1, orreth_node::ts_seconds(&at));
+        req["id"] = json!(id);
+        req["status"] = json!("pending");
+        req["at"] = json!(at);
+        q.push(req.clone());
+        // write-through: the HITL queue survives the daemon (0022 §8)
+        if let Some(store) = &app.pg {
+            if let Err(e) = store.save_request(&node_scope, (q.len() - 1) as i64, &req) {
+                eprintln!("orrethd · postgres request write-through failed for {id}: {e}");
+            }
+        }
+        (StatusCode::CREATED, Json(req))
+    }).await.unwrap()
 }

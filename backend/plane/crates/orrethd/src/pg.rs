@@ -53,7 +53,14 @@ impl PgRecords {
              CREATE INDEX IF NOT EXISTS records_distillations
                  ON records ((record->>'kind')) WHERE record->>'kind' = 'distillation';
              CREATE INDEX IF NOT EXISTS records_derived_from
-                 ON records USING GIN ((record->'derived_from'));",
+                 ON records USING GIN ((record->'derived_from'));
+             CREATE TABLE IF NOT EXISTS requests (
+                 node_scope  TEXT NOT NULL,
+                 seq         BIGINT NOT NULL,
+                 id          TEXT NOT NULL,
+                 request     JSONB NOT NULL,
+                 PRIMARY KEY (node_scope, id)
+             );",
         )?;
         Ok(Self { client: Mutex::new(client) })
     }
@@ -118,6 +125,37 @@ impl PgRecords {
     pub fn load_meters(&self, node_scope: &str) -> Result<Vec<Value>, postgres::Error> {
         let rows = self.client.lock().unwrap().query(
             "SELECT entry FROM meters WHERE node_scope = $1 ORDER BY seq",
+            &[&node_scope],
+        )?;
+        Ok(rows
+            .into_iter()
+            .map(|r| r.get::<_, postgres::types::Json<Value>>(0).0)
+            .collect())
+    }
+
+    /// Persist one queue entry (0022 §8) — the HITL queue survives the daemon: a staged
+    /// escalation, a granted lease, an agent's name must not vanish in a crash. Requests
+    /// MUTATE (pending → … → done), so this upserts; `seq` pins the queue order at first
+    /// insert and never changes after.
+    pub fn save_request(&self, node_scope: &str, seq: i64, request: &Value) -> Result<(), postgres::Error> {
+        self.client.lock().unwrap().execute(
+            "INSERT INTO requests (node_scope, seq, id, request)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT (node_scope, id) DO UPDATE SET request = EXCLUDED.request",
+            &[
+                &node_scope,
+                &seq,
+                &request["id"].as_str().unwrap(),
+                &postgres::types::Json(request),
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Exactly this node's queue, in submission order, for boot-restore.
+    pub fn load_requests(&self, node_scope: &str) -> Result<Vec<Value>, postgres::Error> {
+        let rows = self.client.lock().unwrap().query(
+            "SELECT request FROM requests WHERE node_scope = $1 ORDER BY seq",
             &[&node_scope],
         )?;
         Ok(rows
