@@ -80,6 +80,16 @@ def test_gather_routes_to_the_librarians_real_duty():
     assert any(a.get("template", "").startswith("gather") for a in c["asks"])
 
 
+def test_ask_the_universe_routes_to_the_self_dialog():
+    """0023 §3: the librarian asks HERSELF at her other seats — and the staging
+    confirmation is flow-control, so it travels verbatim, never voiced."""
+    r = parlor.answer("librarian", "ask the universe about Leadville winters", FACTS)
+    assert r.get("action") == "self-dialog" and r["topic"] == "Leadville winters"
+    assert r.get("verbatim") is True
+    c = parlor.card("librarian", FACTS)
+    assert any(a.get("template", "").startswith("ask the universe") for a in c["asks"])
+
+
 def test_librarian_tells_the_recall_ledger():
     """The immune system's ledger, in words — and an honest nothing when it's empty."""
     quiet = parlor.answer("librarian", "has anything been recalled?", FACTS)

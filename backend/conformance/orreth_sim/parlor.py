@@ -27,6 +27,12 @@ ROLES = {"becky": "becky · IAM", "vigil": "vigil · the Warden",
 # the librarian's gather ask, in the shapes callers actually type
 _GATHER = ("gather sourced knowledge on", "gather knowledge on", "gather on", "gather")
 
+# the self-dialog (0023 §3), in the shapes callers actually type: the librarian asks
+# HERSELF at every other seat — same mind, each floor's key, answers composed with
+# per-seat provenance and an honest horizon
+_ASK_SEATS = ("ask the universe about", "ask your seats about", "ask my seats about",
+              "ask the universe")
+
 # growing the universe, in the shapes callers actually type (the Shipyard)
 _GROW = ("create ecosystem", "add ecosystem", "grow ecosystem", "new ecosystem",
          "build ecosystem")
@@ -116,6 +122,7 @@ def _card_librarian(facts: dict) -> tuple[str, list]:
             "Ask me to gather, and it becomes memory; discredit a source, and I walk "
             "its lineage.",
             [{"label": "gather knowledge on…", "template": "gather sourced knowledge on "},
+             {"label": "ask the universe…", "template": "ask the universe about "},
              {"label": "what do you hold?", "ask": "what knowledge do you hold?"},
              {"label": "anything recalled?", "ask": "has anything been recalled?"}])
 
@@ -177,6 +184,16 @@ def answer(name: str, text: str, facts: dict) -> dict:
                     "action": "ecosystem", "eco": eco, "fields": fields,
                     "verbatim": True}
     if name == "librarian":
+        for p in _ASK_SEATS:
+            if t.startswith(p):
+                topic = (text or "").strip()[len(p):].strip().strip("?.!")
+                if topic:
+                    # flow-control travels VERBATIM: a staging confirmation is protocol
+                    return {"reply": f"asking my seats about “{topic}” — every floor's "
+                                     "librarian answers from what its own seat may read; "
+                                     "the composed answer names each seat and is honest "
+                                     "about the dark ones.",
+                            "action": "self-dialog", "topic": topic, "verbatim": True}
         for p in _GATHER:
             topic = (text or "").strip()[len(p):].strip() if t.startswith(p) else ""
             if t.startswith(p) and topic:

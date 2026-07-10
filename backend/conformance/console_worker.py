@@ -168,6 +168,156 @@ def lib_no_levers_token(scope: str) -> dict:
                               {"action": "write", "space": {"scope": scope}}])
 
 
+# the self-dialog (0023 §3): parlor ask id → composition state. The worker serves
+# BOTH sides of the conversation on one thread, so the asking seat NEVER blocks —
+# legs stage now, answers come home on later beats, like every other queue flow.
+_DIALOGS: dict = {}
+FLOOR_SCOPES: dict = {}                      # port → scope, refreshed by the main loop
+
+
+def start_self_dialog(home_port: int, home_scope: str, r: dict, topic: str,
+                      asked: str) -> None:
+    """0023 §3: the same mind asks its other seats. A leg stages on every OTHER known
+    floor; the parlor ask resolves on a later beat when the legs come home — or the
+    horizon closes over the seats that stayed dark. Nothing blocks; the queue is the
+    medium, and vigil sees every leg."""
+    legs = {}
+    for port, scope in sorted(FLOOR_SCOPES.items()):
+        if port == home_port:
+            continue
+        try:
+            leg = call(port, "POST", "/requests",
+                       {"kind": "librarian-ask", "from_seat": home_scope, "text": topic})
+            legs[port] = {"id": leg["id"], "scope": scope}
+        except Exception:
+            pass                             # a dark floor is horizon, not error
+    _DIALOGS[r["id"]] = {"home": home_port, "scope": home_scope, "topic": topic,
+                         "asked": asked, "session": str(r.get("session") or ""),
+                         "legs": legs, "deadline": time.time() + 20}
+    print(f"  ↳ self-dialog {r['id']}: {len(legs)} leg(s) staged for “{topic}”")
+
+
+def seat_knowledge(port: int, scope: str, topic: str) -> list:
+    """What THIS seat may read on a topic — her own floor, her own token, recalled
+    claims excluded (the dead never answer, 0022 §4)."""
+    from datetime import datetime, timedelta, timezone
+    _, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo", [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return []
+    words = {w for w in topic.lower().split() if len(w) > 2}
+    out, dead = [], set()
+    for h in r.get("hits", []):
+        if "knowledge" not in (h.get("tags") or []):
+            continue
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        if not isinstance(body, dict):
+            continue
+        claim = str(body.get("knowledge", ""))
+        text = (claim + " " + str(body.get("intent", ""))).lower()
+        if words and not any(w in text for w in words):
+            continue
+        # a recall kills the LINEAGE, not just its newest version (0014 §4 / 0022 §4):
+        # any recalled version puts the whole claim among the dead — an older
+        # untrusted original must never speak for a discredited line
+        if body.get("state") == "recalled":
+            dead.add(claim)
+        else:
+            out.append({"claim": claim, "ref": h["ref"]})
+    # versions of one claim are one claim — the newest ref speaks for its lineage
+    seen: set = set()
+    live = []
+    for entry in out:
+        if entry["claim"] not in seen and entry["claim"] not in dead:
+            seen.add(entry["claim"])
+            live.append(entry)
+    return live, len(dead)
+
+
+def on_seat_ask(port: int, scope: str, r: dict) -> None:
+    """The answering half of the self-dialog (0023 §3): this floor's seat retrieves
+    under its own authority, answers grounded, and the exchange lands seat-signed at
+    this floor — a synapse, never a hole. A floor never refuses its Librarian."""
+    topic = str(r.get("text") or "").strip()
+    seat_kp, seat_did = lib_seat(scope)
+    hits, n_dead = seat_knowledge(port, scope, topic)
+    reply = (f"{len(hits)} claim(s) held: " + " · ".join(h["claim"][:80] for h in hits[:3])
+             if hits else "nothing held here")
+    if n_dead:
+        reply += f" ({n_dead} recalled lineage(s) stay dead)"
+    body = {"self_dialog": {"topic": topic, "from_seat": r.get("from_seat", "?"),
+                            "reply": reply, "refs": [h["ref"] for h in hits[:5]]}}
+    rec = make_memory({"did": seat_did, "scope": scope}, seat_kp, scope, body,
+                      kind="semantic", tags=["librarian", "self-dialog"])
+    try:
+        call(port, "POST", "/records", rec)
+    except Exception:
+        pass
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "done",
+          "result": {"reply": reply, "seat": scope,
+                     "refs": [h["ref"] for h in hits[:5]]}})
+    print(f"  ↳ self-dialog leg answered at {scope}: {reply[:60]}…")
+
+
+def tend_self_dialogs() -> None:
+    """Compose and resolve every dialog whose legs are home — or whose horizon has
+    closed over the seats still dark. The composed answer names each seat it heard
+    and is HONEST about the rest (0023 §3): a fused answer never masquerades as
+    complete. The audience lands signed by the home seat."""
+    for ask_id, d in list(_DIALOGS.items()):
+        heard, waiting = [], []
+        for port, leg in d["legs"].items():
+            if "result" in leg:
+                heard.append(leg)
+                continue
+            try:
+                reqs = call(port, "GET", "/requests").get("requests", [])
+                match = next((q for q in reqs if q.get("id") == leg["id"]), None)
+                if match and match.get("status") == "done":
+                    leg["result"] = match.get("result") or {}
+                    heard.append(leg)
+                else:
+                    waiting.append(leg)
+            except Exception:
+                waiting.append(leg)
+        if waiting and time.time() < d["deadline"]:
+            continue
+        parts = [f"{l['result'].get('seat', l['scope'])} — {l['result'].get('reply', '')}"
+                 for l in heard]
+        dark = [l["scope"] for l in waiting]
+        reply = ("my seats on “" + d["topic"] + "”: "
+                 + ("  ⸱  ".join(parts) if parts else "no other seat is in reach")
+                 + (f"  ⸱  beyond this horizon: {', '.join(dark)} (dark this beat)"
+                    if dark else ""))
+        kp, did = lib_seat(d["scope"])
+        try:
+            call(d["home"], "POST", "/requests/resolve",
+                 {"id": ask_id, "status": "done",
+                  "result": {"reply": reply, "voiced": False, "by": did}})
+            body = parlor.audience_body("librarian", d["asked"], reply,
+                                        session=d["session"], voiced=False)
+            rec = make_memory({"did": did, "scope": d["scope"]}, kp, d["scope"], body,
+                              kind="episodic", tags=["parlor", "librarian"])
+            call(d["home"], "POST", "/records", rec)
+        except Exception as e:
+            print(f"    (self-dialog compose failed for {ask_id}: {e})")
+        _DIALOGS.pop(ask_id, None)
+        print(f"  ↳ self-dialog {ask_id}: composed from {len(heard)} seat(s)"
+              + (f", {len(dark)} dark" if dark else ""))
+
+
 def lib_charter(port: int, scope: str) -> None:
     """Lineage on the record (0023 §1): the librarian ROOT signs the seat roster; the
     floor's seat authors the memory carrying it. Sameness verifies under the root's
@@ -1218,6 +1368,9 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     asked = str(r.get("text") or "").strip()
     ans = parlor.answer(name, asked, facts)
     reply = ans["reply"]
+    if ans.get("action") == "self-dialog":  # 0023 §3 — the librarian asks her seats
+        start_self_dialog(port, scope, r, ans["topic"], asked)
+        return                              # resolves on a later beat, legs in hand
     if ans.get("action") == "gather":     # the librarian's real duty (0014), front-doored
         reply = gather(port, scope, ans["topic"])
     if ans.get("action") == "ecosystem":  # the shipyard's front door — staged, never direct
@@ -1314,6 +1467,7 @@ def main() -> None:
                 if port not in scopes:
                     scopes[port] = call(port, "GET", "/health")["scope"]
                 scope = scopes[port]
+                FLOOR_SCOPES[port] = scope    # the self-dialog's map of the world
                 for r in call(port, "GET", "/requests").get("requests", []):
                     key = (port, r.get("id"), r.get("at", ""), r.get("status"))
                     if key in handled:
@@ -1357,6 +1511,10 @@ def main() -> None:
                         elif r.get("kind") == "demo" and r.get("status") == "pending":
                             handled.add(key)
                             on_demo(port, r)
+                        elif (r.get("kind") == "librarian-ask"
+                              and r.get("status") == "pending"):
+                            handled.add(key)
+                            on_seat_ask(port, scope, r)
                         elif r.get("kind") == "recall" and r.get("status") == "pending":
                             handled.add(key)
                             print(f"  ↳ recall {r['id']}: walking knowledge from "
@@ -1390,7 +1548,9 @@ def main() -> None:
                         lib_charter(port, scope)
             except Exception as e:
                 scopes.pop(port, None)
+                FLOOR_SCOPES.pop(port, None)
                 print(f"  (floor :{port} unreachable…)", e)
+        tend_self_dialogs()                   # compose any dialog whose legs are home
         if beat_due:
             KEEPER.last_beat = time.time()
         time.sleep(2)
