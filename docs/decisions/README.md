@@ -313,6 +313,39 @@ including derived-memory chain verification).
 
 ## 🔧 Build phase — decisions as they arise
 
+### Locked 2026-07-10 (the Universe Brain session — Fable closed the design pass, JB locked four)
+*Vision capture: `../vision/the-universe-brain.md` (Memory · the Librarian · the Human · the
+Orreth-Agent). Eleven parked questions closed by the design-owner pass (R1–R11 in the doc);
+these four were JB-level and locked via AskUserQuestion:*
+
+- **Librarian identity: one lineage, per-seat keys.** A Librarian root chained to the universe
+  root, scope-bound did:key per seat, lineage proving sameness (becky's root→leaf pattern).
+  Per-seat compromise containment and revocation; the self-dialog signs which seat asked and
+  which answered.
+- **Plan approval: severity-routed lanes.** The human's ask is HITL on the *intent*; the *plan*
+  routes by marker severity — low auto-approves under a signed, canary-able gate policy;
+  medium = resident co-review + notify; high/critical = human gate (0012 quorum per class).
+- **Opt-out of exchange: future flow only.** Already-risen records stay; the apex's past never
+  rewrites. True pull-back is a governed tombstone action, never a toggle. (Companion
+  design-owner fix: composed answers over opted-out scopes are `derived-from-opted-out` —
+  short-TTL, excluded from distillation — so opt-out can't be defeated by asking.)
+- **Purge: the split model.** Personal-data purge rides consent machinery (solo-capable).
+  Operational poison purge = 2 co-signs + cooling-off, bars absolute — a solo universe can
+  quarantine instantly and forever but destroys only when quorum exists. Containment is never
+  blocked; destruction waits for humans, plural. The purge walk crosses the promotion boundary
+  (skills/distillations/profile claims revert or re-anchor — R10).
+
+### Locked 2026-07-10 (0022 — the Memory Construct close-out)
+- **The bytes-local posture: local-only by default.** Embeddings and reranking run
+  in-process on each node (local ONNX models, honest zeros on the steward's meter);
+  **record bytes never leave the node for indexing.** Hosted embedding/rerank APIs are an
+  explicit, per-universe, flagged opt-out that changes the universe's published privacy
+  posture. Discharges the embedding-source question pre-staged 2026-07-08. The dive's
+  design-owner closures (log-is-truth/index-is-projection · Shape A one-service-per-node
+  with named escape hatches · hybrid weighted-RRF in SQL + trust-weighted rerank ·
+  crypto-shred with mandatory projection eviction · Iroh push-up sync w/ JetStream
+  fallback · bi-temporal close-the-window) stand as `design/0022` §10.
+
 ### Locked 2026-07-08 (pgvector — Fable staged the options, JB locked)
 - **Prep now, design dive later.** The compose pg image moves `postgres:16` →
   `pgvector/pgvector:pg16` (same postgres, the `vector` extension present but dormant;
