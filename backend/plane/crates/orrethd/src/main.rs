@@ -48,10 +48,21 @@ struct App {
     /// This floor's own port, riding the beat — so one glass can steer to any floor
     /// it can see (the Console's plane-of-view transitions; JB 2026-07-07).
     port: u16,
+    /// Presence memo (0022 §8): the roster's expensive scans (records · runs · meter ·
+    /// requests) recompute only when one of those collections changes — every write
+    /// path bumps the epoch. Cheap live state (vitals, farm, stalls) is assembled
+    /// fresh on every render, so the picture equals a full scan (one world, one picture).
+    presence_epoch: std::sync::atomic::AtomicU64,
+    presence_memo: Mutex<(u64, Option<Arc<ScanProducts>>)>,
 }
 
 fn bump(app: &App, key: &str) {
     *app.vitals.lock().unwrap().entry(key.to_string()).or_insert(0) += 1;
+}
+
+/// A write landed somewhere the roster reads — the presence memo is stale.
+fn touch(app: &App) {
+    app.presence_epoch.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 }
 
 /// "%Y-%m-%dT%H:%M:%SZ" from the system clock (civil-from-days; no chrono).
@@ -225,6 +236,8 @@ async fn main() {
         vitals: Mutex::new(BTreeMap::new()),
         organs: Mutex::new(BTreeMap::new()),
         port,
+        presence_epoch: std::sync::atomic::AtomicU64::new(0),
+        presence_memo: Mutex::new((0, None)),
     });
 
     // the upward presence beat: every 5s tell the parent what this subtree holds,
@@ -329,6 +342,7 @@ async fn ingress(State(app): State<Arc<App>>, Json(record): Json<Value>) -> impl
                         eprintln!("orrethd · postgres write-through failed for {id}: {e}");
                     }
                 }
+                touch(&app);
                 (StatusCode::CREATED, Json(json!({"id": id})))
             }
             Err(WriteError::ClockViolation) => (
@@ -556,6 +570,7 @@ async fn model_meter(State(app): State<Arc<App>>, Json(req): Json<Value>) -> imp
         }
         m.meter_log.push(entry.clone());  // the roll-up's raw material — usage rises
         drop(m);
+        touch(&app);
         // write-through (0019 §4): the meter outlives the daemon, like the records do
         if let Some(store) = &app.pg {
             let node_scope = app.universe.lock().unwrap().nodes[0].scope.clone();
@@ -708,12 +723,103 @@ async fn runs_ingress(State(app): State<Arc<App>>, Json(run): Json<Value>) -> im
                         eprintln!("orrethd · postgres run write-through failed for {id}: {e}");
                     }
                 }
+                touch(&app);
                 (StatusCode::CREATED, Json(json!({"id": id})))
             }
             Err(_) => (StatusCode::FORBIDDEN,
                        Json(json!({"error": "run rejected — resident-signed or nothing"}))),
         }
     }).await.unwrap()
+}
+
+/// The scan-derived halves of the roster (0022 §8 presence caches): everything here is
+/// a pure function of (records · runs · meter_log · requests) — the four collections
+/// whose per-beat full scans the access-pattern inventory flagged. Recomputed at most
+/// once per write-epoch instead of on every beat.
+struct ScanProducts {
+    /// subject → (llm calls, usd) from the meter log — honest zeros included (0019 §4)
+    spend: BTreeMap<String, (i64, f64)>,
+    /// agent → (runs, successes, tokens, last_seen) from the signed diary (0005)
+    per_agent: BTreeMap<String, (i64, i64, i64, String)>,
+    /// did → name from COMPLETED joins only (key proven + human-admitted, the hardened
+    /// door): a squatter's pending claim never names anyone on this roster
+    names: BTreeMap<String, String>,
+    /// per organ family: earliest (occurred_at, author) claim · distinct authors · count
+    cha: (Option<(String, String)>, BTreeSet<String>, i64),
+    lib: (Option<(String, String)>, BTreeSet<String>, i64),
+    ada: (Option<(String, String)>, BTreeSet<String>, i64),
+    leases: usize,
+    gathers: usize,
+}
+
+/// Serve the memo if the world hasn't changed; otherwise pay the scans once and stamp
+/// the result with the epoch read BEFORE scanning — a write racing the scan leaves the
+/// stamp behind the current epoch, so the next render recomputes. Staleness never sticks.
+fn scan_products(app: &App) -> Arc<ScanProducts> {
+    let epoch = app.presence_epoch.load(std::sync::atomic::Ordering::Relaxed);
+    if let (e, Some(p)) = &*app.presence_memo.lock().unwrap() {
+        if *e == epoch { return p.clone(); }
+    }
+    let (per_agent, cha, lib, ada) = {
+        let u = app.universe.lock().unwrap();
+        let mut per: BTreeMap<String, (i64, i64, i64, String)> = BTreeMap::new();
+        for r in u.runs.values() {
+            let a = r["agent"].as_str().unwrap_or("?").to_string();
+            let e = per.entry(a).or_insert((0, 0, 0, String::new()));
+            e.0 += 1;
+            if r["outcome"] == "success" { e.1 += 1; }
+            e.2 += r["cost"]["tokens"].as_i64().unwrap_or(0);
+            let at = r["occurred_at"].as_str().unwrap_or("");
+            if at > e.3.as_str() { e.3 = at.to_string(); }
+        }
+        let mut cha: (Option<(String, String)>, BTreeSet<String>, i64) = (None, BTreeSet::new(), 0);
+        let mut lib: (Option<(String, String)>, BTreeSet<String>, i64) = (None, BTreeSet::new(), 0);
+        let mut ada: (Option<(String, String)>, BTreeSet<String>, i64) = (None, BTreeSet::new(), 0);
+        for rec in u.nodes[0].records.values() {
+            let tags = rec.get("tags").and_then(Value::as_array);
+            let has = |t: &str| tags.is_some_and(|ts| ts.iter().any(|x| x == t));
+            let claim = |slot: &mut (Option<(String, String)>, BTreeSet<String>, i64)| {
+                slot.2 += 1;
+                if let Some(a) = rec["author"].as_str() {
+                    slot.1.insert(a.to_string());
+                    let at = rec["occurred_at"].as_str().unwrap_or("").to_string();
+                    // ties on occurred_at break by author, so the winner is deterministic
+                    if slot.0.as_ref().map_or(true, |(t, d)| (at.as_str(), a) < (t.as_str(), d.as_str())) {
+                        slot.0 = Some((at, a.to_string()));
+                    }
+                }
+            };
+            if has("service") { claim(&mut cha); }
+            if has("knowledge") { claim(&mut lib); }
+            if has("mind") { claim(&mut ada); }
+        }
+        (per, cha, lib, ada)
+    };
+    let spend = {
+        let m = app.model.lock().unwrap();
+        let mut s: BTreeMap<String, (i64, f64)> = BTreeMap::new();
+        for e in &m.meter_log {
+            if let Some(sub) = e["subject"].as_str() {
+                let en = s.entry(sub.to_string()).or_insert((0, 0.0));
+                en.0 += 1;
+                en.1 += e["usd"].as_f64().unwrap_or(0.0);
+            }
+        }
+        s
+    };
+    let (names, leases, gathers) = {
+        let q = app.requests.lock().unwrap();
+        let names: BTreeMap<String, String> = q.iter()
+            .filter(|r| r["kind"] == "join" && r["status"] == "done")
+            .filter_map(|r| Some((r["did"].as_str()?.to_string(), r["name"].as_str()?.to_string())))
+            .collect();
+        (names,
+         q.iter().filter(|r| r["kind"] == "join" && r["status"] == "done").count(),
+         q.iter().filter(|r| r["kind"] == "gather" && r["status"] == "done").count())
+    };
+    let products = Arc::new(ScanProducts { spend, per_agent, names, cha, lib, ada, leases, gathers });
+    *app.presence_memo.lock().unwrap() = (epoch, Some(products.clone()));
+    products
 }
 
 /// The roster, alive. RESIDENTS are the organs every tier is staffed with (0000 §2):
@@ -723,38 +829,14 @@ async fn runs_ingress(State(app): State<Arc<App>>, Json(run): Json<Value>) -> im
 /// The leased agents on THIS floor, read from the signed diary (0005). Shared by
 /// `/presence` and the upward beat, so a parent's roster matches the floor's own.
 fn local_workforce(app: &App) -> Vec<Value> {
-    let u = app.universe.lock().unwrap();
-    let scope = u.nodes[0].scope.clone();
-    // per-agent USD from the model meter (0016) — what each agent COSTS, not just its tokens
-    let mut cost: BTreeMap<String, f64> = BTreeMap::new();
-    for e in &app.model.lock().unwrap().meter_log {
-        if let Some(s) = e["subject"].as_str() {
-            *cost.entry(s.to_string()).or_insert(0.0) += e["usd"].as_f64().unwrap_or(0.0);
-        }
-    }
-    let mut per: BTreeMap<String, (i64, i64, i64, String)> = BTreeMap::new();
-    for r in u.runs.values() {
-        let a = r["agent"].as_str().unwrap_or("?").to_string();
-        let e = per.entry(a).or_insert((0, 0, 0, String::new()));
-        e.0 += 1;
-        if r["outcome"] == "success" { e.1 += 1; }
-        e.2 += r["cost"]["tokens"].as_i64().unwrap_or(0);
-        let at = r["occurred_at"].as_str().unwrap_or("");
-        if at > e.3.as_str() { e.3 = at.to_string(); }
-    }
-    // names an agent gave when it joined — so the roster shows "scout", not a did:key
-    // prefix. Only COMPLETED joins bind (key proven + human-admitted, the hardened
-    // door): a squatter's pending claim never names anyone on this roster.
-    let names: BTreeMap<String, String> = app.requests.lock().unwrap().iter()
-        .filter(|r| r["kind"] == "join" && r["status"] == "done")
-        .filter_map(|r| Some((r["did"].as_str()?.to_string(), r["name"].as_str()?.to_string())))
-        .collect();
+    let scope = app.universe.lock().unwrap().nodes[0].scope.clone();
+    let p = scan_products(app);
     let now = now_iso();
-    per.into_iter().map(|(agent,(runs,ok,tok,last))| {
+    p.per_agent.iter().map(|(agent, (runs, ok, tok, last))| {
         let idle = orreth_node::ts_seconds(&now)
-                 - orreth_node::ts_seconds(if last.is_empty() { &now } else { &last });
-        let usd = *cost.get(&agent).unwrap_or(&0.0);
-        json!({"agent": agent, "name": names.get(&agent), "role":"workforce",
+                 - orreth_node::ts_seconds(if last.is_empty() { &now } else { last });
+        let usd = p.spend.get(agent).map(|s| s.1).unwrap_or(0.0);
+        json!({"agent": agent, "name": p.names.get(agent), "role":"workforce",
                "scope": scope, "runs": runs, "success": ok,
                "tokens": tok, "usd": (usd*1e6).round()/1e6, "last_seen": last,
                "state": if idle < 120 { "thinking" } else { "idle" }})
@@ -769,69 +851,33 @@ fn local_workforce(app: &App) -> Vec<Value> {
 /// fallback stays honest, never silently picks). Shared by /presence and the upward
 /// beat — one roster for rail + orrery.
 fn residents(app: &App) -> Vec<Value> {
-    let u = app.universe.lock().unwrap();
-    let leaf = u.nodes[0].scope.rsplit('/').next().unwrap_or("").to_string();
-    let memories = u.nodes[0].records.len();
-    let floors = u.nodes[0].floors.len();
-    let root = u.trust_root.clone();
-    // earliest (occurred_at, author) claim per tag, plus distinct-author counts
-    let (mut cha, mut lib, mut ada) =
-        (None::<(String, String)>, None::<(String, String)>, None::<(String, String)>);
-    let (mut cha_authors, mut lib_authors, mut ada_authors) =
-        (BTreeSet::new(), BTreeSet::new(), BTreeSet::new());
-    let (mut worldlines, mut knowledge, mut mindlines) = (0i64, 0i64, 0i64);
-    for rec in u.nodes[0].records.values() {
-        let tags = rec.get("tags").and_then(Value::as_array);
-        let has = |t: &str| tags.is_some_and(|ts| ts.iter().any(|x| x == t));
-        let claim = |slot: &mut Option<(String, String)>, authors: &mut BTreeSet<String>| {
-            if let Some(a) = rec["author"].as_str() {
-                authors.insert(a.to_string());
-                let at = rec["occurred_at"].as_str().unwrap_or("").to_string();
-                // ties on occurred_at break by author, so the winner is deterministic
-                if slot.as_ref().map_or(true, |(t, d)| (at.as_str(), a) < (t.as_str(), d.as_str())) {
-                    *slot = Some((at, a.to_string()));
-                }
-            }
-        };
-        if has("service") {
-            worldlines += 1;
-            claim(&mut cha, &mut cha_authors);
-        }
-        if has("knowledge") {
-            knowledge += 1;
-            claim(&mut lib, &mut lib_authors);
-        }
-        if has("mind") {
-            mindlines += 1;
-            claim(&mut ada, &mut ada_authors);
-        }
-    }
-    drop(u);
-    let (leases, gathers) = {
-        let q = app.requests.lock().unwrap();
-        (q.iter().filter(|r| r["kind"] == "join" && r["status"] == "done").count(),
-         q.iter().filter(|r| r["kind"] == "gather" && r["status"] == "done").count())
+    let (leaf, memories, floors, root) = {
+        let u = app.universe.lock().unwrap();
+        (u.nodes[0].scope.rsplit('/').next().unwrap_or("").to_string(),
+         u.nodes[0].records.len(),
+         u.nodes[0].floors.len(),
+         u.trust_root.clone())
     };
+    // the expensive halves (claims · counts · spend · queue tallies) ride the
+    // write-epoch memo (0022 §8); farm, stalls, and vitals stay live — they're small
+    let p = scan_products(app);
+    let (cha, cha_authors) = (p.cha.0.clone(), &p.cha.1);
+    let (lib, lib_authors) = (p.lib.0.clone(), &p.lib.1);
+    let (ada, ada_authors) = (p.ada.0.clone(), &p.ada.1);
+    let (worldlines, knowledge, mindlines) = (p.cha.2, p.lib.2, p.ada.2);
+    let (leases, gathers) = (p.leases, p.gathers);
+    let spend = &p.spend;
     let (serving, tool_calls) = {
         let f = app.farm.lock().unwrap();
         (f.services.values().filter(|s| s["state"] == "serving").count(), f.meter_log.len())
     };
-    // every resident wears its meter — the honest zero included (0019 §4): per-DID
-    // llm calls/usd from the meter log, plus the stable's headcount for ada
-    let (n_stalls, minds_live, spend) = {
+    // ada's headcount stays live from the stable (small); per-DID spend rides the memo
+    let (n_stalls, minds_live) = {
         let m = app.model.lock().unwrap();
         let live = m.stalls.values()
             .filter(|s| matches!(s["state"].as_str(), Some("available") | Some("canaried")))
             .count();
-        let mut spend: BTreeMap<String, (i64, f64)> = BTreeMap::new();
-        for e in &m.meter_log {
-            if let Some(s) = e["subject"].as_str() {
-                let en = spend.entry(s.to_string()).or_insert((0, 0.0));
-                en.0 += 1;
-                en.1 += e["usd"].as_f64().unwrap_or(0.0);
-            }
-        }
-        (m.stalls.len(), live, spend)
+        (m.stalls.len(), live)
     };
     let llm = |did: Option<&str>| -> (i64, f64) {
         did.and_then(|d| spend.get(d))
@@ -1102,6 +1148,7 @@ async fn requests_resolve(State(app): State<Arc<App>>, Json(body): Json<Value>) 
                 }
             }
         }
+        touch(&app);
         (StatusCode::OK, Json(json!({"ok": true})))
     }).await.unwrap()
 }
@@ -1139,6 +1186,7 @@ async fn requests_submit(State(app): State<Arc<App>>, Json(mut req): Json<Value>
                 eprintln!("orrethd · postgres request write-through failed for {id}: {e}");
             }
         }
+        touch(&app);
         (StatusCode::CREATED, Json(req))
     }).await.unwrap()
 }
