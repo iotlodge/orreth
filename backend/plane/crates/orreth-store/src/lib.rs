@@ -90,4 +90,22 @@ impl BodyStore {
         let path = Self::path(scope_root, record_id);
         self.rt.block_on(self.store.head(&path)).is_ok()
     }
+
+    /// Every body held under a tenant prefix — the orphan sweep's census (0022 §8;
+    /// JB-approved 2026-07-10: orphan-sweep scope only). Read-only. Returns stored
+    /// object names (record ids with ':' flattened to '_', exactly as put_body writes
+    /// them). CAUTION for callers: in a SHARED bucket, another tier's bodies appear
+    /// here too — sweep only a store this node exclusively owns.
+    pub fn list_bodies(&self, scope_root: &str) -> Result<Vec<String>, StoreError> {
+        let prefix = ObjPath::from(format!("bodies/{scope_root}"));
+        let listing = self
+            .rt
+            .block_on(self.store.list_with_delimiter(Some(&prefix)))
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        Ok(listing
+            .objects
+            .into_iter()
+            .filter_map(|o| o.location.filename().map(|f| f.to_string()))
+            .collect())
+    }
 }

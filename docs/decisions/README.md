@@ -335,6 +335,15 @@ these four were JB-level and locked via AskUserQuestion:*
   blocked; destruction waits for humans, plural. The purge walk crosses the promotion boundary
   (skills/distillations/profile claims revert or re-anchor — R10).
 
+### Locked 2026-07-10 (covenant rule 9 — orreth-store, the governed delete's census)
+- **Orphan-sweep scope approved by JB** (AskUserQuestion): `orreth-store` gains a read-only
+  `list_bodies(scope_root)` census; deletion uses the crate's existing `delete_body` (built
+  2026-07-02 as the tombstone's storage-layer twin). The sweep erases ONLY bodies no live
+  record references, is **opt-in per node** (`--sweep-orphans`) because a shared bucket
+  would make another tier's bodies look like orphans, and is enabled on the dev rig's
+  per-container volumes. Expired drop-class bodies + the tombstone-stub read path land
+  with the Purge dive (spoonful 5), where they belong.
+
 ### Locked 2026-07-10 (0022 — the Memory Construct close-out)
 - **The bytes-local posture: local-only by default.** Embeddings and reranking run
   in-process on each node (local ONNX models, honest zeros on the steward's meter);

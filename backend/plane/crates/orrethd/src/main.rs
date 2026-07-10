@@ -199,6 +199,39 @@ async fn main() {
         }
     }
 
+    // the orphan sweep (0022 §8; JB-approved 2026-07-10, orphan scope only): bodies
+    // that NO live record references — leftovers of interrupted writes — are
+    // physically erased. A referenced body is never touched. OPT-IN (--sweep-orphans)
+    // because in a shared bucket another tier's bodies would look like orphans here;
+    // enable it only where this node exclusively owns its store (the dev rig's
+    // per-container volumes qualify).
+    if std::env::args().any(|a| a == "--sweep-orphans") {
+        if let Some(bs) = &universe.body_store {
+            let root = orreth_node::scope_root(&scope);
+            let live: BTreeSet<String> = universe.nodes[0]
+                .records
+                .keys()
+                .map(|id| id.replace(':', "_"))
+                .collect();
+            match tokio::task::block_in_place(|| bs.list_bodies(&root)) {
+                Ok(stored) => {
+                    let mut swept = 0u64;
+                    for name in stored {
+                        if !live.contains(&name)
+                            && tokio::task::block_in_place(|| bs.delete_body(&root, &name)).is_ok()
+                        {
+                            swept += 1;
+                        }
+                    }
+                    if swept > 0 {
+                        println!("orrethd · orphan sweep: {swept} unreferenced bod(ies) erased");
+                    }
+                }
+                Err(e) => eprintln!("orrethd · orphan sweep skipped: {e:?}"),
+            }
+        }
+    }
+
     // the queue returns too (0022 §8): staged escalations, granted leases, and the
     // names agents joined under all outlive the process — the human gate never
     // forgets what it was holding. Restored in submission order (seq).
