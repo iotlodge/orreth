@@ -60,6 +60,20 @@ impl PgRecords {
                  id          TEXT NOT NULL,
                  request     JSONB NOT NULL,
                  PRIMARY KEY (node_scope, id)
+             );
+             CREATE TABLE IF NOT EXISTS meter_archive (
+                 node_scope  TEXT NOT NULL,
+                 seq         BIGINT NOT NULL,
+                 entry       JSONB NOT NULL,
+                 PRIMARY KEY (node_scope, seq)
+             );
+             CREATE TABLE IF NOT EXISTS meter_totals (
+                 node_scope  TEXT NOT NULL,
+                 subject     TEXT NOT NULL,
+                 calls       BIGINT NOT NULL,
+                 tokens      BIGINT NOT NULL,
+                 usd         DOUBLE PRECISION NOT NULL,
+                 PRIMARY KEY (node_scope, subject)
              );",
         )?;
         Ok(Self { client: Mutex::new(client) })
@@ -119,6 +133,71 @@ impl PgRecords {
             &[&node_scope, &postgres::types::Json(entry)],
         )?;
         Ok(())
+    }
+
+    /// The meter's metabolism (0022 §8): fold entries older than the hot window into
+    /// per-subject totals, ARCHIVE the raw — usage history is memory, not vapor
+    /// (0019 §4) — and clear them from the hot table so boot-restore stays bounded.
+    /// Returns how many entries rotated. 30 days is the v1 dial; the TierProfile owns
+    /// it when profiles grow a meter block. Entries without a subject or a timestamp
+    /// (lifecycle warnings) stay hot — they are findings, not usage.
+    pub fn rotate_meters(&self, node_scope: &str) -> Result<u64, postgres::Error> {
+        let mut client = self.client.lock().unwrap();
+        let mut tx = client.transaction()?;
+        let cutoff = "to_char(now() at time zone 'UTC' - interval '30 days', \
+                      'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"')";
+        tx.execute(
+            &format!(
+                "INSERT INTO meter_totals (node_scope, subject, calls, tokens, usd)
+                 SELECT node_scope, entry->>'subject', count(*),
+                        COALESCE(sum((entry->>'tokens')::bigint), 0),
+                        COALESCE(sum((entry->>'usd')::double precision), 0)
+                 FROM meters
+                 WHERE node_scope = $1 AND entry->>'subject' IS NOT NULL
+                   AND entry->>'at' < {cutoff}
+                 GROUP BY node_scope, entry->>'subject'
+                 ON CONFLICT (node_scope, subject) DO UPDATE SET
+                     calls  = meter_totals.calls  + EXCLUDED.calls,
+                     tokens = meter_totals.tokens + EXCLUDED.tokens,
+                     usd    = meter_totals.usd    + EXCLUDED.usd"
+            ),
+            &[&node_scope],
+        )?;
+        tx.execute(
+            &format!(
+                "INSERT INTO meter_archive (node_scope, seq, entry)
+                 SELECT node_scope, seq, entry FROM meters
+                 WHERE node_scope = $1 AND entry->>'subject' IS NOT NULL
+                   AND entry->>'at' < {cutoff}
+                 ON CONFLICT (node_scope, seq) DO NOTHING"
+            ),
+            &[&node_scope],
+        )?;
+        let n = tx.execute(
+            &format!(
+                "DELETE FROM meters
+                 WHERE node_scope = $1 AND entry->>'subject' IS NOT NULL
+                   AND entry->>'at' < {cutoff}"
+            ),
+            &[&node_scope],
+        )?;
+        tx.commit()?;
+        Ok(n)
+    }
+
+    /// The folded cold-window totals per subject, for boot-restore seeding.
+    pub fn load_meter_totals(
+        &self,
+        node_scope: &str,
+    ) -> Result<Vec<(String, i64, i64, f64)>, postgres::Error> {
+        let rows = self.client.lock().unwrap().query(
+            "SELECT subject, calls, tokens, usd FROM meter_totals WHERE node_scope = $1",
+            &[&node_scope],
+        )?;
+        Ok(rows
+            .into_iter()
+            .map(|r| (r.get(0), r.get(1), r.get(2), r.get(3)))
+            .collect())
     }
 
     /// This node's meter history, for boot-restore.

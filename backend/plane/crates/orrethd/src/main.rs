@@ -215,8 +215,23 @@ async fn main() {
 
     let mut model_plane = model::ModelPlane::from_file(
         &arg("--models").unwrap_or_else(|| "profiles/model-registry.json".into()));
-    // the meter survives the daemon (0019 §4): usage history is memory, not vapor
+    // the meter survives the daemon (0019 §4): usage history is memory, not vapor —
+    // and it has a metabolism (0022 §8): entries past the 30d hot window fold into
+    // per-subject totals and archive at boot; totals + hot log = one honest meter
     if let Some(store) = &pg_store {
+        match tokio::task::block_in_place(|| store.rotate_meters(&scope)) {
+            Ok(n) if n > 0 =>
+                println!("orrethd · rotated {n} meter entr(ies) into totals + archive"),
+            Ok(_) => {}
+            Err(e) => eprintln!("orrethd · meter rotation failed: {e}"),
+        }
+        let totals = tokio::task::block_in_place(|| store.load_meter_totals(&scope))
+            .unwrap_or_default();
+        if !totals.is_empty() {
+            println!("orrethd · restored {} meter total(s) from postgres", totals.len());
+        }
+        model_plane.meter_totals =
+            totals.into_iter().map(|(s, c, t, u)| (s, (c, t, u))).collect();
         let meters = tokio::task::block_in_place(|| store.load_meters(&scope))
             .unwrap_or_default();
         if !meters.is_empty() {
@@ -798,6 +813,10 @@ fn scan_products(app: &App) -> Arc<ScanProducts> {
     let spend = {
         let m = app.model.lock().unwrap();
         let mut s: BTreeMap<String, (i64, f64)> = BTreeMap::new();
+        // the folded cold window seeds the counts; the hot log rides on top (0022 §8)
+        for (sub, (calls, _tokens, usd)) in &m.meter_totals {
+            s.insert(sub.clone(), (*calls, *usd));
+        }
         for e in &m.meter_log {
             if let Some(sub) = e["subject"].as_str() {
                 let en = s.entry(sub.to_string()).or_insert((0, 0.0));

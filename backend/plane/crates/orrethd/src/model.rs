@@ -31,6 +31,10 @@ pub struct ModelPlane {
     pub ledger: BTreeMap<String, i64>,
     /// the meter: every authorize/reconcile on the record — vigil's tap and the usage roll-up.
     pub meter_log: Vec<Value>,
+    /// subject -> (calls, tokens, usd) folded from meter entries past the hot window
+    /// (0022 §8 rotation). Totals + hot log = the same honest all-time meter (0019 §4);
+    /// the raw cold entries live on in the meter_archive table, never vapor.
+    pub meter_totals: BTreeMap<String, (i64, i64, f64)>,
 }
 
 pub enum Resolved {
@@ -46,7 +50,7 @@ impl ModelPlane {
             .and_then(|s| serde_json::from_str(&s).ok())
             .unwrap_or_default();
         Self { registry: raw, stalls: BTreeMap::new(), ledger: BTreeMap::new(),
-               meter_log: Vec::new() }
+               meter_log: Vec::new(), meter_totals: BTreeMap::new() }
     }
 
     /// First serviceable candidate: available serves before canaried (a rookie on canary
@@ -240,9 +244,13 @@ impl ModelPlane {
         *remaining
     }
 
-    /// The Cortex-style usage view: totals per subject from the meter log.
+    /// The Cortex-style usage view: totals per subject — the folded cold window (0022 §8
+    /// rotation) seeds the counts, the hot log rides on top. Same all-time truth.
     pub fn usage(&self) -> Value {
         let mut per: BTreeMap<String, (i64, f64, i64)> = BTreeMap::new();
+        for (s, (calls, tokens, usd)) in &self.meter_totals {
+            per.insert(s.clone(), (*tokens, *usd, *calls));
+        }
         for m in &self.meter_log {
             if let Some(s) = m.get("subject").and_then(Value::as_str) {
                 let e = per.entry(s.to_string()).or_insert((0, 0.0, 0));
