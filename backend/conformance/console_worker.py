@@ -125,6 +125,70 @@ def grant_lease(did: str) -> dict:
 JOINDOOR = JoinDesk(grant=grant_lease)
 
 
+# ---------------------------------------------------------------- the librarian's seats (0023 §1–§2)
+
+# One mind, many seats (JB lock 2026-07-10): a librarian ROOT plus a scope-bound seat
+# per floor — lineage through becky's chain proves sameness; one nerve severable at a
+# time. The pre-seat librarian.seed IS the field seat (0023 §9 — grandfathered).
+LIB_NEST = HOME / "residents" / "librarian"
+
+
+def _lib_keypair(name: str) -> crypto.KeyPair:
+    LIB_NEST.mkdir(parents=True, exist_ok=True)
+    p = LIB_NEST / f"{name}.seed"
+    if p.exists():
+        return crypto.KeyPair(p.read_bytes())
+    kp = crypto.KeyPair()
+    p.write_bytes(kp.seed)
+    p.chmod(0o600)
+    return kp
+
+
+LIB_ROOT = _lib_keypair("root")
+LIB_ROOT_DID = crypto.did_key_for(LIB_ROOT.public)
+_LIB_SEATS: dict = {SCOPE: LIB}              # the field seat, grandfathered
+
+
+def lib_seat(scope: str):
+    """The librarian's seat at a floor — the same mind, this floor's key (0023 §1)."""
+    kp = _LIB_SEATS.get(scope)
+    if kp is None:
+        kp = _lib_keypair("seat-" + scope.replace("/", "~"))
+        _LIB_SEATS[scope] = kp
+    return kp, crypto.did_key_for(kp.public)
+
+
+def lib_no_levers_token(scope: str) -> dict:
+    """0023 §2: the widest read, a write for her own duties — and NOTHING else. No
+    govern, no transfer, no issue: the levers' absence is the structure. (Write-kind
+    narrowing waits on a contracts/v0 Grant extension — rule 9, JB's call to make.)"""
+    _, did = lib_seat(scope)
+    return _ROOT.issue_token(did, scope,
+                             [{"action": "retrieve", "space": {"scope": scope}},
+                              {"action": "write", "space": {"scope": scope}}])
+
+
+def lib_charter(port: int, scope: str) -> None:
+    """Lineage on the record (0023 §1): the librarian ROOT signs the seat roster; the
+    floor's seat authors the memory carrying it. Sameness verifies under the root's
+    own key — proven, never claimed. Rewrites only when the roster changes."""
+    roster = {"librarian_root": LIB_ROOT_DID,
+              "seats": {s: crypto.did_key_for(k.public)
+                        for s, k in sorted(_LIB_SEATS.items())}}
+    signed = {"roster": roster, "sig": LIB_ROOT.sign(LIB_ROOT_DID, roster)}
+    marker = LIB_NEST / "charter.json"
+    if marker.exists() and json.loads(marker.read_text()) == signed:
+        return
+    kp, did = lib_seat(scope)
+    rec = make_memory({"did": did, "scope": scope}, kp, scope,
+                      {"librarian_seat_charter": signed}, kind="semantic",
+                      tags=["librarian", "seat-charter"])
+    call(port, "POST", "/records", rec)
+    marker.write_text(json.dumps(signed, indent=1, sort_keys=True))
+    print(f"  ↳ librarian seat charter on the record — root {LIB_ROOT_DID[:22]}…, "
+          f"{len(roster['seats'])} seat(s)")
+
+
 def call(port: int, method: str, path: str, payload=None):
     req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", method=method,
         data=json.dumps(payload).encode() if payload is not None else None,
@@ -764,10 +828,11 @@ def recall_walk(port: int, scope: str, source_did: str, reason: str) -> str:
 
     if not source_did:
         return "nothing to recall — the discredited service carried no source DID"
-    token = _ROOT.issue_token(LIB_DID, "u:demo", [{"action": "retrieve", "space": "self"}])
+    seat_kp, seat_did = lib_seat(scope)       # her seat at THIS floor (0023 §1)
+    token = _ROOT.issue_token(seat_did, "u:demo", [{"action": "retrieve", "space": "self"}])
     frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
     r = call(port, "POST", "/retrieve", {
-        "query": {"requester": LIB_DID, "subject": {"cohort": {"scope": scope}},
+        "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
                   "space": "self", "time": {"from": frm}, "intent": "recall",
                   "budget": {"cost": 8}, "auth": "biscuit-sim"},
         "token": token, "requester_scope": scope})
@@ -797,7 +862,7 @@ def recall_walk(port: int, scope: str, source_did: str, reason: str) -> str:
         new_body = {**bodies[ref], "state": "recalled", "recall_reason": reason,
                     "recalled_source": source_did, "at": NOW()}
         tags = sorted({*tags_of.get(ref, []), "knowledge", "recalled"} - {"gathered"})
-        rec = make_memory({"did": LIB_DID, "scope": scope}, LIB, scope, new_body,
+        rec = make_memory({"did": seat_did, "scope": scope}, seat_kp, scope, new_body,
                           kind="semantic", tags=list(tags))
         rec["derived_from"] = [ref]
         call(port, "POST", "/records", rec)
@@ -813,14 +878,15 @@ def gather(port: int, scope: str, text: str) -> str:
                 "Plant one in the Farm tab (Tavily preset).")
     t0 = time.time()
     results = tavily(text)
-    call(port, "POST", "/farm/meter", {"name": src["name"], "caller": LIB_DID,
+    seat_kp, seat_did = lib_seat(scope)       # her seat at THIS floor (0023 §1)
+    call(port, "POST", "/farm/meter", {"name": src["name"], "caller": seat_did,
                                        "ms": int((time.time() - t0) * 1000)})
-    agent = {"did": LIB_DID, "scope": scope}
+    agent = {"did": seat_did, "scope": scope}
     for r in results:
         body = {"knowledge": f"{r['title']} — {r['content'][:120]}",
                 "source": {"did": src["did"], "ref": r.get("url", "")},
                 "state": "untrusted", "intent": text}
-        rec = make_memory(agent, LIB, scope, body, kind="semantic",
+        rec = make_memory(agent, seat_kp, scope, body, kind="semantic",
                           tags=["knowledge", "gathered"],
                           provenance_class="ingested-archive")
         call(port, "POST", "/records", rec)
@@ -985,21 +1051,30 @@ SHIPYARD = Shipyard()
 _PIN_FAILED: set = set()                     # (port, organ): grumble once, not every beat
 
 
-def pin_organs(port: int) -> None:
+def pin_organs(port: int, floor: str) -> None:
     """Authority beats archaeology (the stricter R1): becky mints each organ an
     identity token, the floor verifies its chain against the pinned root, and the
     roster stops mining records for that organ's DID. Idempotent every beat, so a
-    restarted daemon is re-pinned within seconds — like the replant, for identity."""
+    restarted daemon is re-pinned within seconds — like the replant, for identity.
+    The librarian pins her SEAT for this floor (0023 §1): the same mind, this
+    floor's key, carried on her no-levers token."""
     try:
         pins = call(port, "GET", "/organs").get("pins", {})
     except Exception:
         return
-    for organ, did in (("charlotte", CHA_DID), ("librarian", LIB_DID), ("ada", ADA_DID)):
+    _, seat_did = lib_seat(floor)
+    organs = (
+        ("charlotte", CHA_DID,
+         lambda: _BECKY.issue_token(CHA_DID, SCOPE, [{"action": "retrieve", "space": "self"}])),
+        ("librarian", seat_did, lambda: lib_no_levers_token(floor)),
+        ("ada", ADA_DID,
+         lambda: _BECKY.issue_token(ADA_DID, SCOPE, [{"action": "retrieve", "space": "self"}])),
+    )
+    for organ, did, mint in organs:
         if pins.get(organ) == did:
             continue
         try:
-            token = _BECKY.issue_token(did, SCOPE, [{"action": "retrieve", "space": "self"}])
-            call(port, "POST", "/organs/pin", {"organ": organ, "token": token})
+            call(port, "POST", "/organs/pin", {"organ": organ, "token": mint()})
             _PIN_FAILED.discard((port, organ))
             print(f"  ↳ pinned {organ} → {did[:22]}… on :{port} (becky-chained)")
         except Exception as e:
@@ -1010,15 +1085,18 @@ def pin_organs(port: int) -> None:
 
 # ---------------------------------------------------------------- the parlor (0020)
 
-RESIDENT_KEYS = {"charlotte": (CHA, CHA_DID), "ada": (ADA, ADA_DID),
-                 "librarian": (LIB, LIB_DID)}
+RESIDENT_KEYS = {"charlotte": (CHA, CHA_DID), "ada": (ADA, ADA_DID)}
 
 
-def resident_key(name: str):
+def resident_key(name: str, scope: str = SCOPE):
     """The signing self behind a parlor seat — becky's door and her parlor chair are
-    one identity. Unembodied organs return (None, None): they receive, never sign."""
+    one identity. The librarian signs under her SEAT for the floor being served
+    (0023 §1): the same mind, this floor's key. Unembodied organs return
+    (None, None): they receive, never sign."""
     if name == "becky":
         return _BECKY.kp, _BECKY.did
+    if name == "librarian":
+        return lib_seat(scope)
     return RESIDENT_KEYS.get(name, (None, None))
 
 
@@ -1130,7 +1208,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     facts = parlor_facts(port, scope)
     if r.get("verb") == "card":
         c = parlor.card(name, facts)
-        _, did = resident_key(name)
+        _, did = resident_key(name, scope)
         if did:
             c["did"] = did
         call(port, "POST", "/requests/resolve",
@@ -1148,7 +1226,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
               "text": f"grow e:{ans['eco']}"
                       + (f" with field(s) {', '.join(ans['fields'])}" if ans["fields"]
                          else " — sailing alone")})
-    kp, did = resident_key(name)
+    kp, did = resident_key(name, scope)
     voiced = None
     # descriptive answers may be voiced; actions and flow-control words never are —
     # a governed thought phrases facts, it does not rewrite protocol
@@ -1307,7 +1385,9 @@ def main() -> None:
                 if beat_due:
                     KEEPER.tend(port, scope)
                     WRANGLER.sync(port, scope)
-                    pin_organs(port)
+                    pin_organs(port, scope)
+                    if scope == SCOPE:
+                        lib_charter(port, scope)
             except Exception as e:
                 scopes.pop(port, None)
                 print(f"  (floor :{port} unreachable…)", e)
