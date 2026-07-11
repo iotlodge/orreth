@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import re
 
+from . import markers
 from .identity import NOW
 
 RESIDENTS = ("becky", "vigil", "steward", "governance", "charlotte", "librarian", "ada")
@@ -184,6 +185,15 @@ def answer(name: str, text: str, facts: dict) -> dict:
                     "action": "ecosystem", "eco": eco, "fields": fields,
                     "verbatim": True}
     if name == "librarian":
+        rem = markers.parse_remember(text)
+        if rem is not None:                   # 0024 §4 — the human's marker
+            words, weight = rem
+            # flow-control travels VERBATIM: a confirmation is protocol, never voiced
+            return {"reply": f"remembered as a {weight} moment — “{words}” lands as a "
+                             "life-event marker, signed and derived from this very "
+                             "audience. the auto lane (R6): your ask was the approval.",
+                    "action": "remember", "note": words, "weight": weight,
+                    "verbatim": True}
         for p in _ASK_SEATS:
             if t.startswith(p):
                 topic = (text or "").strip()[len(p):].strip().strip("?.!")

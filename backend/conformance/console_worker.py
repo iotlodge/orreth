@@ -69,7 +69,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import crypto, parlor, shipyard
+from orreth_sim import crypto, markers, parlor, shipyard
 from orreth_sim.identity import NOW, Becky, Nanda
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -1010,7 +1010,7 @@ def recall_walk(port: int, scope: str, source_did: str, reason: str) -> str:
     # refs already annotated by a prior recall version stay annotated — idempotent
     already = {d for e in entries if bodies[e["ref"]].get("state") == "recalled"
                for d in e["derived_from"]}
-    recalled = 0
+    recalled, recall_ids = 0, []
     for ref in tainted_refs(entries, source_did):
         if ref in already or bodies[ref].get("state") == "recalled":
             continue
@@ -1021,7 +1021,18 @@ def recall_walk(port: int, scope: str, source_did: str, reason: str) -> str:
                           kind="semantic", tags=list(tags))
         rec["derived_from"] = [ref]
         call(port, "POST", "/records", rec)
+        recall_ids.append(rec["id"])
         recalled += 1
+    if recall_ids:
+        # 0024 §2: the resident that did the duty grades it — a recall is a HIGH
+        # change (the human already held this gate at the discredit approval)
+        mk = markers.make_marker({"did": seat_did, "scope": scope}, seat_kp, scope,
+                                 recall_ids, reason=f"recall: {reason}",
+                                 change_severity="high")
+        try:
+            call(port, "POST", "/records", mk)
+        except Exception as e:
+            print(f"    (recall marker write failed: {e})")
     return (f"recalled {recalled} entr(ies) traced to {source_did} — "
             "annotated, never rewritten; the lineage is intact")
 
@@ -1404,6 +1415,18 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
             call(port, "POST", "/records", rec)
         except Exception as e:
             print(f"    (audience write failed: {e})")
+        if ans.get("action") == "remember":   # 0024 §4 — the human's marker, auto lane
+            mk = markers.make_marker({"did": did, "scope": scope}, kp, scope,
+                                     [rec["id"]],
+                                     reason="the human asked to remember",
+                                     life_event=ans.get("weight", "minor"),
+                                     quoted=ans.get("note", ""))
+            try:
+                call(port, "POST", "/records", mk)
+                print(f"  ↳ marker · life_event={ans.get('weight', 'minor')} on the "
+                      f"auto lane (R6) — {mk['id'][:18]}…")
+            except Exception as e:
+                print(f"    (marker write failed: {e})")
     print(f"  ↳ parlor · {name} received “{asked[:48]}”" + (" · voiced" if voiced else ""))
 
 

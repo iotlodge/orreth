@@ -44,7 +44,7 @@ scales from one floor to a world-spread universe.
 - **"No change" means no operational change.** Her CapabilityToken carries `retrieve`
   (wide) and `write` scoped to **her own duties' record kinds only**: knowledge
   admission (0014 gather, quarantined at 0.0000), corroboration/recall versions, profile
-  stewardship (0024, the Human Profile), markers she is entitled to place, and her
+  stewardship (the Human Profile dive), markers she is entitled to place (0024), and her
   parlor answers. **No `govern`, no `transfer`, no `issue`, no standard-authoring** —
   ever. A human's change request rides *through* her to the owning resident (becky ·
   charlotte · ada · steward) as a queue entry she stages but cannot decide.

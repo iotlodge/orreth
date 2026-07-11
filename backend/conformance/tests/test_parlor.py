@@ -80,6 +80,18 @@ def test_gather_routes_to_the_librarians_real_duty():
     assert any(a.get("template", "").startswith("gather") for a in c["asks"])
 
 
+def test_remember_this_routes_to_a_life_event_marker():
+    """0024 §4: the human's "remember this" becomes a quoted life-event marker on the
+    auto lane — the ask IS the approval, the confirmation travels verbatim, and the
+    human's own words pick the weight (default minor)."""
+    r = parlor.answer("librarian", "remember this: the brain shipped today as substantial",
+                      FACTS)
+    assert r.get("action") == "remember" and r.get("verbatim") is True
+    assert r["note"] == "the brain shipped today" and r["weight"] == "substantial"
+    r2 = parlor.answer("librarian", "remember this: toast with cocoa", FACTS)
+    assert r2["weight"] == "minor" and r2["note"] == "toast with cocoa"
+
+
 def test_ask_the_universe_routes_to_the_self_dialog():
     """0023 §3: the librarian asks HERSELF at her other seats — and the staging
     confirmation is flow-control, so it travels verbatim, never voiced."""

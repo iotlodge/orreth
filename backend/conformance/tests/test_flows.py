@@ -134,6 +134,40 @@ def test_memory_rises_pruned_with_provenance(world):
     assert world.field_prod.records[fid]["keep_class"] == "keep-raw"
 
 
+def test_markers_grade_without_touching(world):
+    """0024 §1–§3: a marker derives from what it marks, carries a family and a reason,
+    the marked record never changes — and the R6 lanes route by graded severity."""
+    from orreth_sim import markers
+    ident, kp = world.agents["prod-1"]
+    marked = world.field_prod.write(make_memory(ident, kp, ident["scope"],
+                                                {"event": "the brain shipped"}))
+    before = dict(world.field_prod.records[marked])
+    mk = markers.make_marker(ident, kp, ident["scope"], [marked],
+                             reason="a day worth grading",
+                             change_severity="high", life_event="substantial",
+                             quoted="remember this day")
+    mid = world.field_prod.write(mk)
+    rec = world.field_prod.records[mid]
+    assert marked in rec["derived_from"]                       # annotation, on the chain
+    assert world.field_prod.records[marked] == before          # ...never a mutation
+    # the lanes (R6, JB lock): low auto · medium co-review · high/critical human
+    assert markers.lane_for("low") == "auto"
+    assert markers.lane_for("medium") == "co-review+notify"
+    assert markers.lane_for("high") == "human"
+    assert markers.lane_for("critical") == "human+quorum"
+    import pytest as _pytest
+    with _pytest.raises(ValueError):
+        markers.lane_for("whatever")                           # ungraded never auto-rides
+    with _pytest.raises(ValueError):
+        markers.make_marker(ident, kp, ident["scope"], [], reason="x",
+                            change_severity="low")             # must derive
+    with _pytest.raises(ValueError):
+        markers.make_marker(ident, kp, ident["scope"], [marked], reason="x")
+    with _pytest.raises(ValueError):                           # at least one family
+        markers.make_marker(ident, kp, ident["scope"], [marked], reason="",
+                            life_event="minor")                # and always a why
+
+
 def test_exchange_hold_stays_home(world):
     """0023 §4 (Universe-Brain locks): a class dialed 'hold' on the exchange never
     rides a distillation up — it distills HOME. Residency, never reach; and the
