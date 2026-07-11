@@ -1019,7 +1019,10 @@ fn residents(app: &App) -> Vec<Value> {
                "vitals": {"floors": floors, "beats up": vital("beats_up"),
                           "llm calls": 0, "llm usd": 0}}),
     ];
-    if serving > 0 || worldlines > 0 {
+    // a PINNED organ is a resident wherever its pin holds (rule 7 — one world, one
+    // picture): the row shows with honest zeros on a quiet floor. Evidence-gating
+    // remains only for the mined fallback, where archaeology is all we have.
+    if serving > 0 || worldlines > 0 || cha_pin.is_some() {
         let (c_c, c_u) = llm(cha_did.as_deref());
         let mut c = json!({"agent": format!("charlotte·{leaf}"), "name": "charlotte",
             "role": "charlotte · farm keeper", "state": "tending",
@@ -1034,7 +1037,7 @@ fn residents(app: &App) -> Vec<Value> {
         }
         out.push(c);
     }
-    if knowledge > 0 {
+    if knowledge > 0 || lib_pin.is_some() {
         let (l_c, l_u) = llm(lib_did.as_deref());
         let mut l = json!({"agent": format!("librarian·{leaf}"), "name": "librarian",
             "role": "librarian · knowledge", "state": "gathering",
@@ -1049,7 +1052,7 @@ fn residents(app: &App) -> Vec<Value> {
         }
         out.push(l);
     }
-    if n_stalls > 0 || mindlines > 0 {
+    if n_stalls > 0 || mindlines > 0 || ada_pin.is_some() {
         let (a_c, a_u) = llm(ada_did.as_deref());
         let mut a = json!({"agent": format!("ada·{leaf}"), "name": "ada",
             "role": "ada · the wrangler", "state": "syncing",

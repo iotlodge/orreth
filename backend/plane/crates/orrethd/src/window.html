@@ -410,6 +410,9 @@
   .wsp .row .amber{border:1px solid #c90;color:#fc3;border-radius:999px;
     font-size:.58rem;padding:.02em .5em;margin-left:.4rem}
   .wsp .doc{font:.72rem/1.5 var(--mono);color:var(--blue);white-space:pre-wrap;overflow-wrap:anywhere}
+  .pdrop{margin:.5rem 1.1rem;padding:.5rem .8rem;border:1px dashed var(--hair2);border-radius:8px;
+    font:.66rem var(--mono);color:var(--faint);text-align:center;cursor:default}
+  .pdrop.hot{border-color:var(--brass);color:var(--brass)}
   .phd{display:flex;align-items:center;gap:.7rem;padding:.85rem 1.1rem;border-bottom:1px solid var(--hair)}
   .phd .rd{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
   .phd .nm{font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.2em;
@@ -617,6 +620,8 @@
     <span class="x" onclick="closeParlor()" style="margin-left:0">✕</span></div>
   <div class="pdid" id="p-did"></div>
   <div class="pws" id="p-ws" style="display:none"></div>
+  <div class="pdrop" id="p-drop" style="display:none"
+    title="upload is an ask — admitted signed, quarantined at 0.0000 (0029)">⇪ drop a document — the upload is an ask</div>
   <div class="pth" id="p-thread"></div>
   <div class="pchips" id="p-chips"></div>
   <div class="pin"><input id="p-in" placeholder="ask — the resident fetches, you never read raw">
@@ -1278,6 +1283,7 @@ function openParlor(name){
   $("p-did").textContent=""; $("p-chips").innerHTML="";
   $("p-expand").style.display="none"; $("p-ws").style.display="none";
   $("p-ws").innerHTML=""; $("parlor").classList.remove("full");
+  $("p-drop").style.display="none";
   $("p-thread").innerHTML=`<div class="msg reply wait">${name} is coming to the parlor…</div>`;
   $("parlor").classList.add("on"); $("p-in").focus();
   document.body.classList.add("parlor-open"); parlorRefit();
@@ -1317,6 +1323,7 @@ function parlorSay(text){
 function parlorCard(card){
   if(!card||!PA)return;
   $("p-expand").style.display=card.workspace?"":"none";   /* the card declares the room (0028) */
+  $("p-drop").style.display=(card.accepts||[]).includes("upload")?"":"none"; /* ...and who takes files (0029) */
   $("p-did").textContent=card.did||(card.voiced===false?"an unembodied organ — its seat is reserved (0015)":"");
   if(card.greeting)parlorLine("reply",card.greeting,card.role||"");
   const asks=card.asks||[];
@@ -1377,6 +1384,27 @@ async function parlorPoll(){
     $("p-thread").querySelectorAll(".wait").forEach(e=>e.remove());
 }
 $("p-in").addEventListener("keydown",e=>{if(e.key==="Enter")parlorSay()});
+
+/* ── the drop zone (0029): upload is an ask — no side door for files. The bars
+      (256KB · txt/md/json/csv/pdf/png/jpg) are enforced by the floor; the same
+      precheck here just spares the wire a doomed payload. ── */
+const DROP_TYPES=["txt","md","json","csv","pdf","png","jpg","jpeg"];
+["dragover","dragleave","drop"].forEach(ev=>$("p-drop").addEventListener(ev,e=>{
+  e.preventDefault();e.stopPropagation();
+  $("p-drop").classList.toggle("hot",ev==="dragover");
+  if(ev!=="drop")return;
+  const f=e.dataTransfer.files&&e.dataTransfer.files[0]; if(!f||!PA)return;
+  const ext=(f.name.split(".").pop()||"").toLowerCase();
+  if(f.size>256*1024||!DROP_TYPES.includes(ext)){
+    parlorLine("reply","request cannot be served under this capability");return}
+  const rd=new FileReader();
+  rd.onload=()=>{
+    parlorLine("mine",`⇪ ${f.name} (${f.size} bytes)`); parlorWait();
+    parlorPost({verb:"upload",filename:f.name,mime:f.type||"",
+      data_b64:String(rd.result).split(",",2)[1]||""});
+  };
+  rd.readAsDataURL(f);
+}));
 
 $("qchips").innerHTML=["build strategies for cold-weather architecture",
   "PCI-DSS controls for payment services","recent advances in retrieval-augmented agents"]

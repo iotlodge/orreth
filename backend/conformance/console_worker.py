@@ -36,6 +36,11 @@ here in cognition (the plane verifies, never signs):
     reads the receipts (rollups, markers, parked intents), and proposes a sibling
     version of a behavioral asset; governance computes the kind by DIFF and grades
     the lane — a nudge adopts loud on medium, a rewrite waits for the human.
+  · upload    — multimodal admission (0029): a file enters as an ask (verb
+    "upload" to the librarian, bars 256KB · txt/md/json/csv/pdf/png/jpg). The
+    artifact lands signed (ingested-archive); text-bearing formats extract to
+    quarantined knowledge; formats needing an eye are admitted dark and their
+    extraction intent PARKS — the retry list for the day a vision mind saddles.
   · join      — becky's door, HARDENED (JB's lock 2026-07-07): an agent asks to
     join; becky challenges it to sign a nonce (key control proven, names bind to
     real keys), stages the join for the HUMAN gate (0012 — consequence waits), and
@@ -1870,6 +1875,19 @@ def resident_key(name: str, scope: str = SCOPE):
     return RESIDENT_KEYS.get(name, (None, None))
 
 
+class _WireNode:
+    """A write-only shim (0029): the admission logic speaks `node.write`; the
+    wire's write is POST /records. Reads never pass through here — the sim node
+    it mimics stays the reference implementation."""
+
+    def __init__(self, port: int, scope: str):
+        self.port, self.scope = port, scope
+
+    def write(self, rec: dict) -> str:
+        call(self.port, "POST", "/records", rec)
+        return rec["id"]
+
+
 def parlor_facts(port: int, scope: str) -> dict:
     """What the resident may read before it answers — its floor's governed state.
     The human never sees any of this raw; only the composed answer travels."""
@@ -1984,6 +2002,51 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done", "result": {"card": c}})
         print(f"  ↳ parlor · {name}'s card handed to the caller")
+        return
+    if r.get("verb") == "upload":             # 0029 §2 — a file enters as an ask
+        if name != "librarian":
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"reply": f"{name} does not receive files — hand them "
+                                      "to the librarian; upload is her ask."}})
+            return
+        import base64 as _b64
+        seat_kp, seat_did = lib_seat(scope)
+        filename = str(r.get("filename") or "unnamed")
+        try:
+            data = _b64.b64decode(str(r.get("data_b64") or ""), validate=True)
+        except Exception:
+            data = b""
+        try:
+            from orreth_sim import artifacts
+            from orreth_sim.node import Refusal as _Refusal
+            try:
+                receipt = artifacts.admit_upload(
+                    _WireNode(port, scope), {"did": seat_did, "scope": scope},
+                    seat_kp, filename, str(r.get("mime") or ""), data)
+            except _Refusal:
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "denied",
+                      "result": {"reply": "request cannot be served under this "
+                                          "capability"}})
+                print(f"  ↳ upload refused at the bars — {filename}")
+                return
+            reply = (f"“{filename}” admitted — extracted to knowledge, quarantined "
+                     f"at 0.0000 [{receipt['extraction'][:18]}…]"
+                     if receipt["status"] == "extracted" else
+                     f"“{filename}” admitted dark — no eye saddled yet; the "
+                     f"extraction intent is parked (0014) and will be read the day "
+                     f"a vision mind joins the Stable")
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"reply": reply, **receipt}})
+            print(f"  ↳ upload · {filename}: {receipt['status']} — "
+                  f"artifact {receipt['artifact'][:18]}…")
+        except Exception as e:
+            print(f"    (upload admission failed: {e})")
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"reply": "the admission stumbled — try again"}})
         return
     if r.get("verb") == "workspace":          # 0028 §1 — the room is an ask too
         if name == "librarian":               # the richest room reads more state

@@ -352,6 +352,17 @@ these four were JB-level and locked via AskUserQuestion:*
   per-container volumes. Expired drop-class bodies + the tombstone-stub read path land
   with the Purge dive (spoonful 5), where they belong.
 
+### Locked 2026-07-11 (0029 — Multimodal Capability, AskUserQuestion)
+- **Upload bars, v0**: 256KB · txt/md/json/csv/pdf/png/jpg — oversized or foreign
+  types get the uniform refusal. Bars are floor policy and may loosen later.
+- **Dark formats: admit + park.** An artifact needing an eye lands signed and
+  honestly dark, and the Librarian parks an extraction intent (0014 — failure is
+  fuel): when a vision mind saddles on the Stable, the parked list IS the retry
+  list. The universe keeps what you hand it and remembers it owes you the reading.
+- **The keyless floor ships now; the eye saddles at JB's gate.** Deterministic
+  extraction for text-bearing formats this spoonful; a real vision/OCR mind is
+  JB's staging act through ada (0019), on his spend, whenever he chooses.
+
 ### Locked 2026-07-11 (0028 — Workspaces & the Improvement Engine, AskUserQuestion)
 - **All four embodied residents get workspaces** (librarian, becky, charlotte, ada) —
   the card declares the room, the glass renders four typed panel kinds blind, and the

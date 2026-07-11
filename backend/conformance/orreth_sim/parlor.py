@@ -93,6 +93,8 @@ def card(name: str, facts: dict) -> dict:
     greeting, asks = _CARDS[name](facts)
     return {"resident": name, "scope": scope, "role": ROLES[name],
             "voiced": name in EMBODIED, "workspace": name in EMBODIED,
+            # upload is an ask, and the card declares who receives files (0029 §2)
+            "accepts": ["upload"] if name == "librarian" else [],
             "greeting": greeting, "asks": asks}
 
 

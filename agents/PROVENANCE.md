@@ -163,14 +163,15 @@ descent onto e:retail and breadcrumb ascent verified in Chrome, zero JS errors.
 | Demo | `../backend/conformance/demo_workforce.py` | **Fable 5** | NEW: three SDK agents join at the hardened gate (wren RETURNS — same seed, same DID; reboot ≠ death) and each works one chassis objective on RuleThink with a real floor-reading skill — scribe-signed RunRecords, ships in orbit, honest $0 vitals |
 | Reel | `../scripts/demo.sh`, `../backend/conformance/console_worker.py`, `../backend/plane/crates/orrethd/src/window.html` | **Fable 5** | `crew` on the reel and the Console's 🎬 chips; window.html also gains spectator guards (a photograph never goes stale — heard_at dimming and beat-age lines skip under ORRETH_DEMO) |
 
-### The Universe Brain, spoonfuls 1–7 (0022–0028) — 2026-07-10/11, on main (no quarantine: Fable 5 authored)
+### The Universe Brain, spoonfuls 1–8 (0022–0029) — 2026-07-10/11, on main (no quarantine: Fable 5 authored)
 
-One dive, seven spoonfuls, all Fable 5: the Memory Construct's Phase 1 (0022 §8 —
+One dive, eight spoonfuls, all Fable 5: the Memory Construct's Phase 1 (0022 §8 —
 runs/requests persistence, presence memo, meter metabolism, orphan sweep), the
 Librarian's seats + self-dialog + exchange dial + citations (0023), markers & the
 severity lanes (0024), the Human Profile (0025), the Purge's governance (0026),
-the Fingertip (0027 — thought.graph made concrete), and Workspaces & the
-Improvement Engine (0028 — rooms in the glass, a gardener for the assets).
+the Fingertip (0027 — thought.graph made concrete), Workspaces & the Improvement
+Engine (0028 — rooms in the glass, a gardener for the assets), and Multimodal
+Capability (0029 — upload-is-an-ask, the parked eye, the pinned-organ roster fix).
 
 | Area | File | Author model | Notes |
 |---|---|---|---|
@@ -185,7 +186,10 @@ Improvement Engine (0028 — rooms in the glass, a gardener for the assets).
 | Sim · workspaces | `../backend/conformance/orreth_sim/parlor.py` | **Fable 5** | (0028) card declares the room; four rooms compose typed panels (stat · bars · list · doc); medium+ wears amber (0024 badge) |
 | Glass | `../backend/plane/crates/orrethd/src/window.html` | **Fable 5** | (0028) ⛶ full-screen parlor, blind panel renderer with escaping, amber chips |
 | Worker | `../backend/conformance/console_worker.py` | **Fable 5** | (0027) objective/sliver kinds, HITL question leg, entitlement asks, review markers, monitor beat · (0028) workspace verb, improver beat, governance grading, lane routing |
-| Tests | `../backend/conformance/tests/test_flows.py`, `test_parlor.py`, `test_fingertip.py`, `test_improver.py` | **Fable 5** | suite 110/110 through spoonful 7 |
+| Sim · artifacts | `../backend/conformance/orreth_sim/artifacts.py` | **Fable 5** | NEW (0029): upload bars (one refusal face), artifact + extraction records with lineage, the parked eye, `read-document` skill |
+| Plane · roster | `../backend/plane/crates/orrethd/src/main.rs` | **Fable 5** | (0029) pinned organs always show their row — honest zeros on quiet floors (rule-7 fix, JB 2026-07-11) |
+| Glass · drop zone | `../backend/plane/crates/orrethd/src/window.html` | **Fable 5** | (0029) card-declared drop zone; client precheck mirrors the floor's bars |
+| Tests | `../backend/conformance/tests/test_flows.py`, `test_parlor.py`, `test_fingertip.py`, `test_improver.py`, `test_artifacts.py` | **Fable 5** | suite 114/114 through spoonful 8 |
 
 ### Orrery residents (Opus 4.8, quarantined) — 2026-07-05, branch `opus/orrery-residents`
 
