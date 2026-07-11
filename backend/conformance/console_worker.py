@@ -69,7 +69,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import crypto, markers, parlor, shipyard
+from orreth_sim import crypto, markers, parlor, profile, shipyard
 from orreth_sim.identity import NOW, Becky, Nanda
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -243,6 +243,77 @@ def seat_knowledge(port: int, scope: str, topic: str) -> list:
             seen.add(entry["claim"])
             live.append(entry)
     return live, len(dead)
+
+
+def profile_claims(port: int, scope: str):
+    """The live portrait at this floor (0025): every profile claim, withdrawals
+    applied — a withdrawn claim never answers (lineage-death, reused)."""
+    _, seat_did = lib_seat(scope)
+    from datetime import datetime, timedelta, timezone
+    token = _ROOT.issue_token(seat_did, "u:demo", [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return []
+    bodies = {}
+    for h in r.get("hits", []):
+        if "profile" not in (h.get("tags") or []):
+            continue
+        try:
+            b = call(port, "GET", f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        if isinstance(b, dict):
+            bodies[h["ref"]] = b
+    dead = profile.withdrawn_refs(bodies)
+    return [(ref, b["profile"]) for ref, b in bodies.items()
+            if "claim" in (b.get("profile") or {}) and ref not in dead]
+
+
+def profile_read(port: int, scope: str) -> str:
+    """Compose the portrait, provenance labeled (0025 §4): the strokes you painted,
+    then the strokes I painted — every one wearing its receipt."""
+    claims = profile_claims(port, scope)
+    if not claims:
+        return ("your profile is a blank page — assert with “my profile: …”, or let "
+                "moments you ask me to remember become observations.")
+    yours = [(r, c) for r, c in claims if c.get("asserted_by") == "human"]
+    mine = [(r, c) for r, c in claims if c.get("asserted_by") == "librarian"]
+    parts = []
+    if yours:
+        parts.append("you told me: " + " · ".join(
+            f"{c['claim']} [{r.split(':')[-1][:8]}]" for r, c in yours[:6]))
+    if mine:
+        parts.append("I observed (untrusted until corroborated): " + " · ".join(
+            f"{c['claim']} [{r.split(':')[-1][:8]}]" for r, c in mine[:6]))
+    return "  ⸱  ".join(parts)
+
+
+def profile_forget(port: int, scope: str, topic: str) -> str:
+    """Consent withdrawn (0025 §3): a withdrawal record silences each matching claim.
+    THAT you forgot is on the record; WHAT you forgot stops speaking."""
+    seat_kp, seat_did = lib_seat(scope)
+    words = {w for w in topic.lower().split() if len(w) > 2}
+    hushed = 0
+    for ref, c in profile_claims(port, scope):
+        text = str(c.get("claim", "")).lower()
+        if words and not any(w in text for w in words):
+            continue
+        rec = profile.make_withdrawal({"did": seat_did, "scope": scope},
+                                      seat_kp, scope, ref)
+        try:
+            call(port, "POST", "/records", rec)
+            hushed += 1
+        except Exception as e:
+            print(f"    (withdrawal write failed: {e})")
+    return (f"consent withdrawn — {hushed} claim(s) on “{topic}” go silent; the "
+            "withdrawal itself is on the record" if hushed
+            else f"nothing in your profile matches “{topic}” — nothing to withdraw")
 
 
 def on_seat_ask(port: int, scope: str, r: dict) -> None:
@@ -1389,6 +1460,10 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         return                              # resolves on a later beat, legs in hand
     if ans.get("action") == "gather":     # the librarian's real duty (0014), front-doored
         reply = gather(port, scope, ans["topic"])
+    if ans.get("action") == "profile-read":    # 0025 §4 — the portrait, labeled
+        reply = profile_read(port, scope)
+    if ans.get("action") == "profile-forget":  # 0025 §3 — consent withdrawn
+        reply = profile_forget(port, scope, ans["topic"])
     if ans.get("action") == "ecosystem":  # the shipyard's front door — staged, never direct
         call(port, "POST", "/requests",
              {"kind": "ecosystem", "eco": ans["eco"], "fields": ans["fields"],
@@ -1425,8 +1500,28 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                 call(port, "POST", "/records", mk)
                 print(f"  ↳ marker · life_event={ans.get('weight', 'minor')} on the "
                       f"auto lane (R6) — {mk['id'][:18]}…")
+                # 0025 §2: a weighty moment becomes an OBSERVATION — the Librarian's
+                # stroke on the portrait, entering untrusted, its evidence named
+                if ans.get("weight") in ("major", "substantial"):
+                    obs = profile.make_claim(
+                        {"did": did, "scope": scope}, kp, scope,
+                        f"a {ans['weight']} moment: {ans.get('note', '')}",
+                        asserted_by="librarian", inferred_from=mk["id"])
+                    call(port, "POST", "/records", obs)
+                    print(f"  ↳ profile · observation inferred (untrusted) — "
+                          f"{obs['id'][:18]}…")
             except Exception as e:
                 print(f"    (marker write failed: {e})")
+        if ans.get("action") == "profile-assert":  # 0025 §2 — the sovereign stroke
+            mk = profile.make_claim({"did": did, "scope": scope}, kp, scope,
+                                    ans["claim"], asserted_by="human",
+                                    quoted=ans["claim"])
+            mk["derived_from"] = [rec["id"]]      # the ask is the provenance
+            try:
+                call(port, "POST", "/records", mk)
+                print(f"  ↳ profile · human assertion (trusted) — {mk['id'][:18]}…")
+            except Exception as e:
+                print(f"    (profile write failed: {e})")
     print(f"  ↳ parlor · {name} received “{asked[:48]}”" + (" · voiced" if voiced else ""))
 
 

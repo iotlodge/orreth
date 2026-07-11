@@ -80,6 +80,18 @@ def test_gather_routes_to_the_librarians_real_duty():
     assert any(a.get("template", "").startswith("gather") for a in c["asks"])
 
 
+def test_profile_asks_route_sovereign_read_and_forget():
+    """0025: assert (sovereign, verbatim), read (the portrait), forget (consent) —
+    three asks, three actions, all flow-control."""
+    a = parlor.answer("librarian", "my profile: I toast with cocoa, never whiskey", FACTS)
+    assert a.get("action") == "profile-assert" and a.get("verbatim") is True
+    assert a["claim"] == "I toast with cocoa, never whiskey"
+    r = parlor.answer("librarian", "what do you know about me?", FACTS)
+    assert r.get("action") == "profile-read"
+    f = parlor.answer("librarian", "forget about me: whiskey", FACTS)
+    assert f.get("action") == "profile-forget" and f["topic"] == "whiskey"
+
+
 def test_remember_this_routes_to_a_life_event_marker():
     """0024 §4: the human's "remember this" becomes a quoted life-event marker on the
     auto lane — the ask IS the approval, the confirmation travels verbatim, and the

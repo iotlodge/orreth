@@ -168,6 +168,36 @@ def test_markers_grade_without_touching(world):
                             life_event="minor")                # and always a why
 
 
+def test_profile_provenance_ladder_and_withdrawal(world):
+    """0025 §2–§3: the human enters trusted, the Librarian enters untrusted with
+    evidence named — and a withdrawal silences the claim (lineage-death, reused)."""
+    from orreth_sim import profile
+    ident, kp = world.agents["prod-1"]
+    yours = profile.make_claim(ident, kp, ident["scope"], "toasts with cocoa",
+                               asserted_by="human", quoted="my profile: cocoa")
+    yid = world.field_prod.write(yours)
+    import json as _json
+    import base64 as _b64
+    def _body(rid):
+        raw = world.field_prod.records[rid]["body"]
+        return _json.loads(_b64.urlsafe_b64decode(raw + "=" * (-len(raw) % 4)))
+    assert _body(yid)["profile"]["state"] == "trusted"          # sovereign
+    mine = profile.make_claim(ident, kp, ident["scope"], "prefers mornings",
+                              asserted_by="librarian", inferred_from=yid)
+    mid = world.field_prod.write(mine)
+    assert _body(mid)["profile"]["state"] == "untrusted"        # probation
+    assert yid in world.field_prod.records[mid]["derived_from"]  # evidence named
+    import pytest as _pytest
+    with _pytest.raises(ValueError):                            # no evidence, no belief
+        profile.make_claim(ident, kp, ident["scope"], "x", asserted_by="librarian")
+    wd = profile.make_withdrawal(ident, kp, ident["scope"], yid)
+    world.field_prod.write(wd)
+    bodies = {rid: _body(rid) for rid in world.field_prod.records
+              if "profile" in (world.field_prod.records[rid].get("tags") or [])}
+    assert yid in profile.withdrawn_refs(bodies)                # silenced
+    assert mid not in profile.withdrawn_refs(bodies)            # the rest still speaks
+
+
 def test_exchange_hold_stays_home(world):
     """0023 §4 (Universe-Brain locks): a class dialed 'hold' on the exchange never
     rides a distillation up — it distills HOME. Residency, never reach; and the

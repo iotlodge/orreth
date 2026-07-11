@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import re
 
-from . import markers
+from . import markers, profile
 from .identity import NOW
 
 RESIDENTS = ("becky", "vigil", "steward", "governance", "charlotte", "librarian", "ada")
@@ -185,6 +185,20 @@ def answer(name: str, text: str, facts: dict) -> dict:
                     "action": "ecosystem", "eco": eco, "fields": fields,
                     "verbatim": True}
     if name == "librarian":
+        claim = profile.parse_assert(text)
+        if claim is not None:                 # 0025 §2 — the sovereign stroke
+            return {"reply": f"noted, sovereign and signed — “{claim}” enters your "
+                             "profile as YOUR assertion (trusted). assert again to "
+                             "correct; “forget about me: …” withdraws.",
+                    "action": "profile-assert", "claim": claim, "verbatim": True}
+        topic = profile.parse_forget(text)
+        if topic is not None:                 # 0025 §3 — consent withdrawn
+            return {"reply": f"withdrawing consent on “{topic}” — matching claims go "
+                             "silent now; their bytes meet the purge when it lands.",
+                    "action": "profile-forget", "topic": topic, "verbatim": True}
+        if profile.parse_read(text):          # 0025 §4 — the portrait, provenance labeled
+            return {"reply": "reading your profile…", "action": "profile-read",
+                    "verbatim": True}
         rem = markers.parse_remember(text)
         if rem is not None:                   # 0024 §4 — the human's marker
             words, weight = rem
