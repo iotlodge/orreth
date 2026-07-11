@@ -750,6 +750,46 @@ def test_tombstone_annotates_never_rewrites(world):
     assert rid not in fid
 
 
+# ---------------------------------------------------------------- 0026: the purge, governed
+def test_purge_holds_below_quorum_and_seal_derives(world):
+    """0026 §2–§3: the operational hold states its bar plainly (bars are absolute,
+    0012 §5); a seal derives from the refs it darkens, carries its reason, and the
+    node admits it signed — annotation, never mutation."""
+    from orreth_sim import purge
+    assert purge.held_message() == ("held: quorum 1 of 2 — containment active; "
+                                    "destruction waits for humans, plural")
+    ident, kp = world.agents["prod-1"]
+    marked = world.field_prod.write(make_memory(ident, kp, ident["scope"],
+                                                {"knowledge": "plausible but wrong"}))
+    before = dict(world.field_prod.records[marked])
+    seal = purge.make_seal(ident, kp, ident["scope"], [marked],
+                           reason="operational purge staged", request_id="req-9")
+    sid = world.field_prod.write(seal)
+    rec = world.field_prod.records[sid]
+    assert marked in rec["derived_from"]                    # derives from what it darkens
+    assert set(rec["tags"]) == {"seal", "purge"}
+    assert world.field_prod.records[marked] == before       # containment, never mutation
+    with pytest.raises(ValueError):
+        purge.make_seal(ident, kp, ident["scope"], [], reason="no refs named")
+    with pytest.raises(ValueError):
+        purge.make_seal(ident, kp, ident["scope"], [marked], reason="")
+
+
+def test_purge_dark_sets_and_immune_memory():
+    """0026 §3/§5: sealed refs are dark (reversible — never conflated with the purged
+    set); the recall trail left on the record is the door's immune memory."""
+    from orreth_sim import purge
+    bodies = {
+        "r1": {"knowledge": "k", "state": "recalled", "recalled_source": "did:key:zBad"},
+        "r2": {"seal": {"refs": ["r3", "r4"], "reason": "staged purge"}},
+        "r3": {"knowledge": "x", "state": "untrusted"},
+        "r5": "not-a-dict-body",
+    }
+    assert purge.sealed_refs(bodies) == {"r3", "r4"}
+    assert purge.discredited_dids(bodies) == {"did:key:zBad"}
+    assert purge.sealed_refs({}) == set() and purge.discredited_dids({}) == set()
+
+
 # ---------------------------------------------------------------- 0014: the knowledge loop
 def test_knowledge_admitted_quarantined_promoted_on_receipts(world):
     """The world speaks at 0.0000; promotion is earned; versions are time."""

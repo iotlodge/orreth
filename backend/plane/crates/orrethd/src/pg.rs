@@ -61,6 +61,13 @@ impl PgRecords {
                  request     JSONB NOT NULL,
                  PRIMARY KEY (node_scope, id)
              );
+             CREATE TABLE IF NOT EXISTS purged (
+                 node_scope  TEXT NOT NULL,
+                 id          TEXT NOT NULL,
+                 at          TEXT NOT NULL,
+                 reason      TEXT NOT NULL,
+                 PRIMARY KEY (node_scope, id)
+             );
              CREATE TABLE IF NOT EXISTS meter_archive (
                  node_scope  TEXT NOT NULL,
                  seq         BIGINT NOT NULL,
@@ -133,6 +140,34 @@ impl PgRecords {
             &[&node_scope, &postgres::types::Json(entry)],
         )?;
         Ok(())
+    }
+
+    /// The purge survives the daemon (0026 §1): a restart must never resurrect
+    /// readability. The stub row sheds its body pointers in the same breath — the
+    /// signed stub remains; the bytes are already gone from the store.
+    pub fn save_purged(&self, node_scope: &str, id: &str, at: &str, reason: &str)
+                       -> Result<(), postgres::Error> {
+        let mut client = self.client.lock().unwrap();
+        client.execute(
+            "INSERT INTO purged (node_scope, id, at, reason) VALUES ($1, $2, $3, $4)
+             ON CONFLICT (node_scope, id) DO NOTHING",
+            &[&node_scope, &id, &at, &reason],
+        )?;
+        client.execute(
+            "UPDATE records SET record = (record - 'body') - 'body_ref'
+             WHERE node_scope = $1 AND id = $2",
+            &[&node_scope, &id],
+        )?;
+        Ok(())
+    }
+
+    /// Exactly this node's purge stubs, for boot-restore.
+    pub fn load_purged(&self, node_scope: &str) -> Result<Vec<String>, postgres::Error> {
+        let rows = self.client.lock().unwrap().query(
+            "SELECT id FROM purged WHERE node_scope = $1",
+            &[&node_scope],
+        )?;
+        Ok(rows.into_iter().map(|r| r.get(0)).collect())
     }
 
     /// The meter's metabolism (0022 §8): fold entries older than the hot window into

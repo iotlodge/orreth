@@ -15,6 +15,12 @@ here in cognition (the plane verifies, never signs):
     gate, charlotte hands the recall to the queue and the librarian re-versions
     every entry from that source — and everything derived from those — to
     'recalled'. Annotate-never-rewrite; the poison visibly dead in the Window.
+  · purge     — the split model (0026): "forget about me" tombstones what the
+    withdrawal silenced through the plane's one door (the subject's consent IS
+    the quorum for their own data); an operational purge (kind "purge") SEALS
+    its refs at machine speed and HOLDS — quorum 1 of 2, bars absolute (0012 §5);
+    destruction waits for humans, plural. And the door remembers the infection:
+    gather refuses a source the universe has recalled.
   · join      — becky's door, HARDENED (JB's lock 2026-07-07): an agent asks to
     join; becky challenges it to sign a nonce (key control proven, names bind to
     real keys), stages the join for the HUMAN gate (0012 — consequence waits), and
@@ -69,7 +75,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import crypto, markers, parlor, profile, shipyard
+from orreth_sim import crypto, markers, parlor, profile, purge, shipyard
 from orreth_sim.identity import NOW, Becky, Nanda
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -197,9 +203,11 @@ def start_self_dialog(home_port: int, home_scope: str, r: dict, topic: str,
     print(f"  ↳ self-dialog {r['id']}: {len(legs)} leg(s) staged for “{topic}”")
 
 
-def seat_knowledge(port: int, scope: str, topic: str) -> list:
+def seat_knowledge(port: int, scope: str, topic: str):
     """What THIS seat may read on a topic — her own floor, her own token, recalled
-    claims excluded (the dead never answer, 0022 §4)."""
+    claims excluded (the dead never answer, 0022 §4) and sealed refs held dark
+    (0026 §3: containment, not death — a staged purge stops the poison answering
+    while destruction waits for the humans)."""
     from datetime import datetime, timedelta, timezone
     _, seat_did = lib_seat(scope)
     token = _ROOT.issue_token(seat_did, "u:demo", [{"action": "retrieve", "space": "self"}])
@@ -213,9 +221,10 @@ def seat_knowledge(port: int, scope: str, topic: str) -> list:
     except Exception:
         return []
     words = {w for w in topic.lower().split() if len(w) > 2}
-    out, dead = [], set()
+    rows, sealed = [], set()
     for h in r.get("hits", []):
-        if "knowledge" not in (h.get("tags") or []):
+        tags = set(h.get("tags") or [])
+        if not tags & {"knowledge", "seal"}:
             continue
         try:
             body = call(port, "GET",
@@ -224,9 +233,18 @@ def seat_knowledge(port: int, scope: str, topic: str) -> list:
             continue
         if not isinstance(body, dict):
             continue
+        if "seal" in tags:
+            sealed |= set((body.get("seal") or {}).get("refs") or [])
+            continue
         claim = str(body.get("knowledge", ""))
         text = (claim + " " + str(body.get("intent", ""))).lower()
         if words and not any(w in text for w in words):
+            continue
+        rows.append((h["ref"], body, claim))
+    out, dead, n_sealed = [], set(), 0
+    for ref, body, claim in rows:
+        if ref in sealed:
+            n_sealed += 1                     # dark, not dead — the seal is reversible
             continue
         # a recall kills the LINEAGE, not just its newest version (0014 §4 / 0022 §4):
         # any recalled version puts the whole claim among the dead — an older
@@ -234,7 +252,7 @@ def seat_knowledge(port: int, scope: str, topic: str) -> list:
         if body.get("state") == "recalled":
             dead.add(claim)
         else:
-            out.append({"claim": claim, "ref": h["ref"]})
+            out.append({"claim": claim, "ref": ref})
     # versions of one claim are one claim — the newest ref speaks for its lineage
     seen: set = set()
     live = []
@@ -242,7 +260,7 @@ def seat_knowledge(port: int, scope: str, topic: str) -> list:
         if entry["claim"] not in seen and entry["claim"] not in dead:
             seen.add(entry["claim"])
             live.append(entry)
-    return live, len(dead)
+    return live, len(dead), n_sealed
 
 
 def profile_claims(port: int, scope: str):
@@ -294,12 +312,29 @@ def profile_read(port: int, scope: str) -> str:
     return "  ⸱  ".join(parts)
 
 
+def shred_claim(port: int, ref: str, reason: str) -> bool:
+    """The plane's one door (0026 §1), becky-keyed: erasure is HER lever — the
+    librarian keeps none (0023 §2). The core strips the stub and the bytes stop
+    existing; the purged set persists, so a restart never resurrects readability."""
+    token = _ROOT.issue_token(_BECKY.did, "u:demo",
+                              [{"action": "govern", "space": "self"}])
+    try:
+        call(port, "POST", "/tombstone",
+             {"record_id": ref, "token": token, "reason": reason})
+        return True
+    except Exception as e:
+        print(f"    (the tombstone door held: {e})")
+        return False
+
+
 def profile_forget(port: int, scope: str, topic: str) -> str:
-    """Consent withdrawn (0025 §3): a withdrawal record silences each matching claim.
-    THAT you forgot is on the record; WHAT you forgot stops speaking."""
+    """Consent withdrawn (0025 §3), now with its physical step (0026 §2): a
+    withdrawal silences each matching claim, then the worker walks it through the
+    tombstone door — the subject's own consent IS the quorum for their own data.
+    THAT you forgot stays on the record; WHAT you forgot stops existing."""
     seat_kp, seat_did = lib_seat(scope)
     words = {w for w in topic.lower().split() if len(w) > 2}
-    hushed = 0
+    hushed = shredded = 0
     for ref, c in profile_claims(port, scope):
         text = str(c.get("claim", "")).lower()
         if words and not any(w in text for w in words):
@@ -311,8 +346,12 @@ def profile_forget(port: int, scope: str, topic: str) -> str:
             hushed += 1
         except Exception as e:
             print(f"    (withdrawal write failed: {e})")
-    return (f"consent withdrawn — {hushed} claim(s) on “{topic}” go silent; the "
-            "withdrawal itself is on the record" if hushed
+            continue                          # no silence, no shred — consent first
+        if shred_claim(port, ref, "consent withdrawn (0026 §2, the consent path)"):
+            shredded += 1
+    return (f"consent withdrawn — {hushed} claim(s) on “{topic}” go silent, "
+            f"{shredded} bod(ies) erased through the door; the stubs and the "
+            "withdrawal stay on the record" if hushed
             else f"nothing in your profile matches “{topic}” — nothing to withdraw")
 
 
@@ -322,11 +361,13 @@ def on_seat_ask(port: int, scope: str, r: dict) -> None:
     this floor — a synapse, never a hole. A floor never refuses its Librarian."""
     topic = str(r.get("text") or "").strip()
     seat_kp, seat_did = lib_seat(scope)
-    hits, n_dead = seat_knowledge(port, scope, topic)
+    hits, n_dead, n_sealed = seat_knowledge(port, scope, topic)
     reply = (f"{len(hits)} claim(s) held: " + " · ".join(h["claim"][:80] for h in hits[:3])
              if hits else "nothing held here")
     if n_dead:
         reply += f" ({n_dead} recalled lineage(s) stay dead)"
+    if n_sealed:
+        reply += f" ({n_sealed} sealed ref(s) held dark — a purge is staged)"
     body = {"self_dialog": {"topic": topic, "from_seat": r.get("from_seat", "?"),
                             "reply": reply, "refs": [h["ref"] for h in hits[:5]]}}
     rec = make_memory({"did": seat_did, "scope": scope}, seat_kp, scope, body,
@@ -1043,18 +1084,12 @@ def tavily(q: str, n: int = 3) -> list:
     return json.loads(urllib.request.urlopen(req).read())["results"]
 
 
-def recall_walk(port: int, scope: str, source_did: str, reason: str) -> str:
-    """The librarian's 0014 §4 duty, on the wire: fetch the floor's knowledge under
-    her OWN authority (humans never read; organs do), walk source + derived_from
-    lineage, and version every tainted entry to 'recalled' — annotate-never-rewrite,
-    the poison visibly dead in the Window."""
+def floor_knowledge(port: int, scope: str):
+    """The librarian's harvest of her OWN floor (0014 §4 · 0026): every
+    knowledge-tagged record with its body in hand — her seat, her token; humans
+    never read. Returns (entries, bodies, tags_of), keyed by ref."""
     from datetime import datetime, timedelta, timezone
-
-    from orreth_sim.librarian import tainted_refs
-
-    if not source_did:
-        return "nothing to recall — the discredited service carried no source DID"
-    seat_kp, seat_did = lib_seat(scope)       # her seat at THIS floor (0023 §1)
+    _, seat_did = lib_seat(scope)             # her seat at THIS floor (0023 §1)
     token = _ROOT.issue_token(seat_did, "u:demo", [{"action": "retrieve", "space": "self"}])
     frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
     r = call(port, "POST", "/retrieve", {
@@ -1078,6 +1113,20 @@ def recall_walk(port: int, scope: str, source_did: str, reason: str) -> str:
                         "derived_from": h.get("derived_from") or []})
         bodies[h["ref"]] = body
         tags_of[h["ref"]] = tags
+    return entries, bodies, tags_of
+
+
+def recall_walk(port: int, scope: str, source_did: str, reason: str) -> str:
+    """The librarian's 0014 §4 duty, on the wire: fetch the floor's knowledge under
+    her OWN authority (humans never read; organs do), walk source + derived_from
+    lineage, and version every tainted entry to 'recalled' — annotate-never-rewrite,
+    the poison visibly dead in the Window."""
+    from orreth_sim.librarian import tainted_refs
+
+    if not source_did:
+        return "nothing to recall — the discredited service carried no source DID"
+    seat_kp, seat_did = lib_seat(scope)       # her seat at THIS floor (0023 §1)
+    entries, bodies, tags_of = floor_knowledge(port, scope)
     # refs already annotated by a prior recall version stay annotated — idempotent
     already = {d for e in entries if bodies[e["ref"]].get("state") == "recalled"
                for d in e["derived_from"]}
@@ -1113,6 +1162,22 @@ def gather(port: int, scope: str, text: str) -> str:
     if src is None:
         return ("nothing gathered — the Farm has no serving search source. "
                 "Plant one in the Farm tab (Tavily preset).")
+    # the door remembers the infection (0026 §5): a source the universe recalled
+    # does not re-enter the record — refused at admission, loudly, on the record
+    _, bodies, _ = floor_knowledge(port, scope)
+    if src.get("did") in purge.discredited_dids(bodies):
+        seat_kp, seat_did = lib_seat(scope)
+        note = make_memory({"did": seat_did, "scope": scope}, seat_kp, scope,
+                           {"immune": {"refused_source": src["did"],
+                                       "service": src["name"], "intent": text}},
+                           kind="semantic", tags=["librarian", "immune-refusal"])
+        try:
+            call(port, "POST", "/records", note)
+        except Exception as e:
+            print(f"    (immune-refusal write failed: {e})")
+        return (f"refused at the door — {src['name']} was recalled on this floor; "
+                "a discredited source does not re-enter the record (0026 §5). "
+                "the refusal itself is on the record.")
     t0 = time.time()
     results = tavily(text)
     seat_kp, seat_did = lib_seat(scope)       # her seat at THIS floor (0023 §1)
@@ -1128,6 +1193,37 @@ def gather(port: int, scope: str, text: str) -> str:
                           provenance_class="ingested-archive")
         call(port, "POST", "/records", rec)
     return f"admitted to the Window — {len(results)} finding(s) via {src['name']}, quarantined at 0.0000"
+
+
+def on_purge(port: int, scope: str, r: dict) -> None:
+    """The operational path (0026 §2): destruction STAGES AND HOLDS. Bars are
+    absolute (0012 §5) — below two control-entitled humans nothing executes; a
+    solo universe can contain forever but destroy only when quorum exists. The
+    seal lands first (0026 §3): the named refs stop answering the moment the
+    purge stages, however long the humans take."""
+    from orreth_sim.librarian import tainted_refs
+    seat_kp, seat_did = lib_seat(scope)
+    refs = [x for x in (r.get("refs") or []) if x]
+    if not refs and r.get("source_did"):      # a purge may name a source instead —
+        entries, _, _ = floor_knowledge(port, scope)
+        refs = tainted_refs(entries, r["source_did"])  # its whole lineage seals
+    if not refs:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "denied",
+              "result": "nothing to seal — a purge names refs or a source"})
+        return
+    reason = str(r.get("reason") or r.get("text") or "operational purge staged")
+    seal = purge.make_seal({"did": seat_did, "scope": scope}, seat_kp, scope,
+                           refs, reason=reason, request_id=str(r.get("id") or ""))
+    try:
+        call(port, "POST", "/records", seal)
+    except Exception as e:
+        print(f"    (seal write failed: {e})")
+    msg = purge.held_message(1)
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "staged",
+          "result": {"held": msg, "sealed": len(refs), "seal": seal["id"]}})
+    print(f"  ↳ purge {r['id']}: {len(refs)} ref(s) sealed — {msg}")
 
 
 # ---------------------------------------------------------------- the shipyard (0009→wire)
@@ -1647,6 +1743,10 @@ def main() -> None:
                             call(port, "POST", "/requests/resolve",
                                  {"id": r["id"], "status": "done", "result": result})
                             print(f"    ✓ {result}")
+                        elif r.get("kind") == "purge" and r.get("status") == "pending":
+                            handled.add(key)
+                            print(f"  ↳ purge {r['id']}: staging containment on {scope}")
+                            on_purge(port, scope, r)
                     except urllib.error.HTTPError as e:
                         # The floor ANSWERED — a refusal, not a dead wire (probe()'s
                         # law). One poison request must never silence the residents:

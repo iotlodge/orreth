@@ -232,6 +232,19 @@ async fn main() {
         }
     }
 
+    // the purge returns with the records (0026 §1): readability never resurrects —
+    // the bytes are already gone; the stubs stay hidden from retrieval forever
+    if let Some(store) = &pg_store {
+        let purged = tokio::task::block_in_place(|| store.load_purged(&scope))
+            .expect("purged restore");
+        if !purged.is_empty() {
+            println!("orrethd · restored {} purge stub(s) from postgres", purged.len());
+        }
+        for id in purged {
+            universe.purged.insert(id);
+        }
+    }
+
     // the queue returns too (0022 §8): staged escalations, granted leases, and the
     // names agents joined under all outlive the process — the human gate never
     // forgets what it was holding. Restored in submission order (seq).
@@ -305,6 +318,7 @@ async fn main() {
         .route("/health", get(health))
         .route("/records", post(ingress))
         .route("/records/:id/body", get(body))
+        .route("/tombstone", post(tombstone_ingress))
         .route("/retrieve", post(egress))
         .route("/standards", get(standards))
         .route("/window", get(window))
@@ -402,6 +416,41 @@ async fn ingress(State(app): State<Arc<App>>, Json(record): Json<Value>) -> impl
                 Json(json!({"error": "record rejected — Sourced or nothing"})),
             ),
         }
+    })
+    .await
+    .unwrap()
+}
+
+/// The purge's one door (0026 §1): a becky-chained capability or the uniform refusal.
+/// The engine is the core's tombstone — stub stripped, bytes physically gone,
+/// readability ends now and stays ended (the purged set persists and boot-restores).
+/// The gravest act in an append-only universe happens only here, only tokened.
+async fn tombstone_ingress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let id = req["record_id"].as_str().unwrap_or("").to_string();
+        let ok = { app.universe.lock().unwrap().verify_token(&req["token"]).is_ok() };
+        if id.is_empty() || !ok {
+            bump(&app, "refusals");
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        let mut u = app.universe.lock().unwrap();
+        if !u.nodes[0].records.contains_key(&id) {
+            bump(&app, "refusals"); // absent and unauthorized wear one face
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        u.tombstone(0, &id);
+        let node_scope = u.nodes[0].scope.clone();
+        drop(u);
+        if let Some(store) = &app.pg {
+            let reason = req["reason"].as_str().unwrap_or("purged").to_string();
+            if let Err(e) = store.save_purged(&node_scope, &id, &now_iso(), &reason) {
+                eprintln!("orrethd · purge write-through failed for {id}: {e}");
+            }
+        }
+        touch(&app);
+        (StatusCode::OK, Json(json!({"ok": true, "stub": true})))
     })
     .await
     .unwrap()

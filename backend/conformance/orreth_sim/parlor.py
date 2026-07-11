@@ -194,7 +194,8 @@ def answer(name: str, text: str, facts: dict) -> dict:
         topic = profile.parse_forget(text)
         if topic is not None:                 # 0025 §3 — consent withdrawn
             return {"reply": f"withdrawing consent on “{topic}” — matching claims go "
-                             "silent now; their bytes meet the purge when it lands.",
+                             "silent now and their bytes leave the store (0026); the "
+                             "signed stubs stay: THAT you forgot is on the record.",
                     "action": "profile-forget", "topic": topic, "verbatim": True}
         if profile.parse_read(text):          # 0025 §4 — the portrait, provenance labeled
             return {"reply": "reading your profile…", "action": "profile-read",
