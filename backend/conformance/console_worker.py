@@ -29,6 +29,13 @@ here in cognition (the plane verifies, never signs):
     asks the human mid-flow (kind "question", 0012 — silence is denial); a target
     beyond the token gets an entitlement ask, never a silent skip. The standing
     portfolio monitor beats on the universe floor — an immortal job (R8).
+  · workspace — the resident's room (0028): verb "workspace" on the parlor queue
+    returns typed panels (stat · bars · list · doc) composed from state the
+    resident may read; the glass renders blind, medium+ markers wear amber (0024).
+  · improvement — the engine (0028): one improver stands on the universe floor,
+    reads the receipts (rollups, markers, parked intents), and proposes a sibling
+    version of a behavioral asset; governance computes the kind by DIFF and grades
+    the lane — a nudge adopts loud on medium, a rewrite waits for the human.
   · join      — becky's door, HARDENED (JB's lock 2026-07-07): an agent asks to
     join; becky challenges it to sign a nonce (key control proven, names bind to
     real keys), stages the join for the HUMAN gate (0012 — consequence waits), and
@@ -83,7 +90,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import crypto, fingertip, markers, parlor, profile, purge, shipyard
+from orreth_sim import crypto, fingertip, improver, markers, parlor, profile, purge, shipyard
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -361,6 +368,43 @@ def profile_forget(port: int, scope: str, topic: str) -> str:
             f"{shredded} bod(ies) erased through the door; the stubs and the "
             "withdrawal stay on the record" if hushed
             else f"nothing in your profile matches “{topic}” — nothing to withdraw")
+
+
+def recent_markers(port: int, scope: str, keep: int = 8) -> list:
+    """The moments the record keeps (0024), composed for the librarian's room —
+    severity rides with each row so the glass can wear the amber badge."""
+    from datetime import datetime, timedelta, timezone
+    _, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo", [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return []
+    out = []
+    for h in r.get("hits", []):
+        if "marker" not in (h.get("tags") or []):
+            continue
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        m = (body or {}).get("marker") or {}
+        if not m:
+            continue
+        fam = (f"change · {m['change_severity']}" if m.get("change_severity")
+               else f"moment · {m.get('life_event', '?')}")
+        out.append({"text": (m.get("quoted") or m.get("reason") or "")[:80],
+                    "meta": f"{fam} · {str(h.get('occurred_at', ''))[:10]}",
+                    "severity": m.get("change_severity") or
+                                ("medium" if m.get("life_event") == "substantial"
+                                 else "")})
+    return out[-keep:]
 
 
 def on_seat_ask(port: int, scope: str, r: dict) -> None:
@@ -1465,6 +1509,160 @@ def monitor_beat(port: int) -> None:
         print(f"    (monitor observation refused: {e})")
 
 
+# ---------------------------------------------------------------- the improver (0028)
+
+IMP = _seed("improver")                      # the improvement engine — one, universe floor
+IMP_DID = crypto.did_key_for(IMP.public)
+GOV = _seed("governance")                    # governance's first duty: the grade
+GOV_DID = crypto.did_key_for(GOV.public)
+ASSET_NAME = "fingertip-default"
+_IMPROVER_LAST = 0.0
+IMPROVER_EVERY = int(os.environ.get("ORRETH_IMPROVER_EVERY", "600"))
+SUCCESS_FLOOR = 90                           # below this, the receipts earn a nudge
+
+
+def wire_assets(port: int, tag: str) -> list[tuple[str, dict, list]]:
+    """The asset ledger as the improver may read it — its own token, bodies in
+    hand, oldest first. Returns (ref, body, derived_from) rows."""
+    from datetime import datetime, timedelta, timezone
+    token = _ROOT.issue_token(IMP_DID, "u:demo", [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": IMP_DID, "subject": {"cohort": {"scope": "u:demo"}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": "u:demo"})
+    except Exception:
+        return []
+    rows = []
+    for h in r.get("hits", []):
+        tags = h.get("tags") or []
+        if tag not in tags or ASSET_NAME not in tags:
+            continue
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        if isinstance(body, dict):
+            rows.append((h["ref"], body, h.get("derived_from") or [],
+                         h.get("occurred_at", "")))
+    rows.sort(key=lambda x: x[3])
+    return [(ref, body, dl) for ref, body, dl, _ in rows]
+
+
+def improver_beat(port: int) -> None:
+    """One improver on the universe floor (0028, JB lock 2026-07-11): a standing
+    incarnation reading the risen evidence. It PROPOSES; governance grades; the
+    lanes route. One open proposal per asset — the lane holds until it resolves."""
+    global _IMPROVER_LAST
+    if time.time() - _IMPROVER_LAST < IMPROVER_EVERY:
+        return
+    _IMPROVER_LAST = time.time()             # set early — a failing beat never hot-loops
+    scope = UNIVERSE_SCOPE
+    me = {"did": IMP_DID, "scope": scope}
+    actives = wire_assets(port, "asset")
+    if not actives:
+        genesis = improver.make_asset(me, IMP, scope, name=ASSET_NAME,
+                                      profile={"max_cycles": 2, "max_obs": 3})
+        try:
+            call(port, "POST", "/records", genesis)
+            print(f"  ↳ the improver plants the genesis asset — {genesis['id'][:18]}…")
+        except Exception as e:
+            print(f"    (genesis asset write failed: {e})")
+        return
+    adopted_from = {d for _, _, dl in actives for d in dl}
+    if any(rid not in adopted_from for rid, _, _ in wire_assets(port, "asset-proposal")):
+        return                               # a proposal already waits — no storms
+    try:
+        ru = call(port, "GET", "/rollup")
+    except Exception:
+        return
+    rate = int(ru.get("success_rate", 100))
+    if rate >= SUCCESS_FLOOR:
+        return                               # healthy assets are left alone
+    rid, body, _ = actives[-1]
+    base = dict((body.get("asset") or {}).get("profile") or {})
+    prof = dict(base)
+    prof["max_cycles"] = min(int(prof.get("max_cycles", 2)) + 1, 5)
+    if prof == base:
+        return                               # the dial is at its stop — nothing to propose
+    proposal = improver.make_asset(me, IMP, scope, name=ASSET_NAME, profile=prof,
+                                   derived_from=[rid], tag="asset-proposal")
+    try:
+        call(port, "POST", "/records", proposal)
+        call(port, "POST", "/requests",
+             {"kind": "improvement", "proposal": proposal["id"],
+              "text": f"the improver proposes a new {ASSET_NAME}: success "
+                      f"{rate}% < {SUCCESS_FLOOR}% — a bounded nudge, receipts attached"})
+        print(f"  ↳ the improver proposes: {ASSET_NAME} at {rate}% — "
+              f"{proposal['id'][:18]}…")
+    except Exception as e:
+        print(f"    (improvement proposal failed: {e})")
+
+
+def on_improvement(port: int, scope: str, r: dict, *, approved: bool = False) -> None:
+    """Governance's duty (0028, JB lock): the change kind is COMPUTED by diffing
+    versions, never declared; the grade is a marker on the record; the lanes
+    route — medium adopts with a loud record, high waits for the human. An
+    approved request is the human's word: adopt, citing the proposal."""
+    pid = str(r.get("proposal") or "")
+    actives = wire_assets(port, "asset")
+    props = {ref: body for ref, body, _ in wire_assets(port, "asset-proposal")}
+    if pid not in props or not actives:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "denied",
+              "result": "no such proposal, or no active asset to succeed"})
+        return
+    gov = {"did": GOV_DID, "scope": scope}
+    new_prof = (props[pid].get("asset") or {}).get("profile") or {}
+    if approved:                             # the human opened the high lane
+        adopted = improver.make_asset(gov, GOV, scope, name=ASSET_NAME,
+                                      profile=new_prof, adopted_from=pid,
+                                      derived_from=[pid])
+        call(port, "POST", "/records", adopted)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"adopted": adopted["id"],
+                         "lane": "high — the human approved"}})
+        print(f"  ↳ improvement adopted on the human's word — {adopted['id'][:18]}…")
+        return
+    old_prof = (actives[-1][1].get("asset") or {}).get("profile") or {}
+    if new_prof == old_prof:                 # a no-op is not a proposal — refuse, never hold
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "denied",
+              "result": "the proposal changes nothing — no lane to ride"})
+        return
+    kind = improver.classify_change(old_prof, new_prof)
+    sev = improver.LANES[kind]
+    mk = markers.make_marker(gov, GOV, scope, [pid],
+                             reason=f"improvement proposal for {ASSET_NAME}: {kind}",
+                             change_severity=sev)
+    try:
+        call(port, "POST", "/records", mk)
+    except Exception as e:
+        print(f"    (grade marker write failed: {e})")
+    if sev == "high":
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"held": "a rewrite waits for the human (R6) — resolve me "
+                                 "with status approved to adopt",
+                         "kind": kind, "marker": mk["id"]}})
+        print(f"  ↳ improvement held on the high lane: {kind} — the gate waits")
+        return
+    adopted = improver.make_asset(gov, GOV, scope, name=ASSET_NAME,
+                                  profile=new_prof, adopted_from=pid,
+                                  derived_from=[pid, mk["id"]])
+    call(port, "POST", "/records", adopted)
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "done",
+          "result": {"adopted": adopted["id"], "kind": kind, "marker": mk["id"],
+                     "lane": "medium — co-review + notify"}})
+    print(f"  ↳ improvement adopted on the medium lane ({kind}) — "
+          f"{adopted['id'][:18]}… · co-review rides behind (R6)")
+
+
 # ---------------------------------------------------------------- the shipyard (0009→wire)
 
 UNIVERSE_SCOPE = "u:demo"
@@ -1787,6 +1985,16 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
              {"id": r["id"], "status": "done", "result": {"card": c}})
         print(f"  ↳ parlor · {name}'s card handed to the caller")
         return
+    if r.get("verb") == "workspace":          # 0028 §1 — the room is an ask too
+        if name == "librarian":               # the richest room reads more state
+            facts["profile_text"] = profile_read(port, scope)
+            facts["markers"] = recent_markers(port, scope)
+        ws = parlor.workspace(name, facts)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"workspace": ws or {"resident": name, "panels": []}}})
+        print(f"  ↳ parlor · {name}'s room composed for the caller")
+        return
     asked = str(r.get("text") or "").strip()
     ans = parlor.answer(name, asked, facts)
     reply = ans["reply"]
@@ -1993,6 +2201,11 @@ def main() -> None:
                         elif r.get("kind") == "sliver" and r.get("status") == "pending":
                             handled.add(key)
                             on_sliver(port, scope, r)
+                        elif r.get("kind") == "improvement" and \
+                                r.get("status") in ("pending", "approved"):
+                            handled.add(key)
+                            on_improvement(port, scope, r,
+                                           approved=r.get("status") == "approved")
                     except urllib.error.HTTPError as e:
                         # The floor ANSWERED — a refusal, not a dead wire (probe()'s
                         # law). One poison request must never silence the residents:
@@ -2017,6 +2230,7 @@ def main() -> None:
                         lib_charter(port, scope)
                     if scope == UNIVERSE_SCOPE:
                         monitor_beat(port)    # the standing job beats like an organ
+                        improver_beat(port)   # and the improver reads the receipts
 
             except Exception as e:
                 scopes.pop(port, None)

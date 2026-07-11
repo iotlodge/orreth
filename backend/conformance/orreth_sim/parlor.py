@@ -92,7 +92,8 @@ def card(name: str, facts: dict) -> dict:
                 "greeting": f"no one by the name “{name}” is in residence on this floor."}
     greeting, asks = _CARDS[name](facts)
     return {"resident": name, "scope": scope, "role": ROLES[name],
-            "voiced": name in EMBODIED, "greeting": greeting, "asks": asks}
+            "voiced": name in EMBODIED, "workspace": name in EMBODIED,
+            "greeting": greeting, "asks": asks}
 
 
 def _card_becky(facts: dict) -> tuple[str, list]:
@@ -332,6 +333,117 @@ def _organ_reply(name: str, facts: dict) -> str:
                        "tightened below, never loosened."),
     }
     return lines[name] + " I have no voice yet — my seat in the parlor is reserved (0015)."
+
+
+# ---------------------------------------------------------------- the workspaces (0028)
+
+def workspace(name: str, facts: dict) -> dict | None:
+    """The resident's room (0028 §1): typed panels composed from state the
+    resident may read — stat · bars · list · doc — rendered blind by the glass.
+    The room is an ask like any other; a resident without one returns None."""
+    if name not in EMBODIED:
+        return None
+    return {"resident": name, "panels": _ROOMS[name](facts)}
+
+
+def _sev(items):
+    """0024's badge, discharged: medium and above wear amber in the glass."""
+    return [{**i, "amber": i.get("severity") in ("medium", "high", "critical")}
+            for i in items]
+
+
+def _room_librarian(facts: dict) -> list[dict]:
+    v = _vitals(facts, "librarian")
+    walks = [r for r in facts.get("requests") or [] if r.get("kind") == "recall"]
+    return [
+        {"kind": "stat", "title": "the shelf",
+         "items": [{"label": "knowledge held", "value": v.get("knowledge held", 0)},
+                   {"label": "gathers", "value": v.get("gathers", 0)},
+                   {"label": "recall walks", "value": len(walks)}]},
+        {"kind": "doc", "title": "the portrait (0025)",
+         "text": facts.get("profile_text") or
+                 "a blank page — assert with “my profile: …” and it fills."},
+        {"kind": "list", "title": "moments & markers (0024)",
+         "items": _sev(facts.get("markers") or
+                       [{"text": "no moments marked yet", "meta": "", "severity": ""}])},
+    ]
+
+
+def _room_becky(facts: dict) -> list[dict]:
+    reqs = facts.get("requests") or []
+    joins = [r for r in reqs if r.get("kind") == "join"]
+    kinds: dict[str, int] = {}
+    for r in reqs:
+        kinds[r.get("kind", "?")] = kinds.get(r.get("kind", "?"), 0) + 1
+    waiting = [r for r in reqs if r.get("status") in ("pending", "staged")]
+    return [
+        {"kind": "stat", "title": "the door",
+         "items": [{"label": "leases granted",
+                    "value": sum(1 for r in joins if r.get("status") == "done")},
+                   {"label": "waiting at the gate", "value": len(waiting)},
+                   {"label": "asks in all", "value": len(reqs)}]},
+        {"kind": "bars", "title": "the queue by kind",
+         "items": [{"label": k, "value": n} for k, n in
+                   sorted(kinds.items(), key=lambda x: -x[1])[:8]]},
+        {"kind": "list", "title": "waiting for you (0012)",
+         "items": _sev([{"text": str(r.get("text") or r.get("kind", "?"))[:80],
+                         "meta": f"{r.get('kind', '?')} · {r.get('status', '?')}",
+                         "severity": "medium" if r.get("status") == "staged" else ""}
+                        for r in waiting[:8]] or
+                       [{"text": "nothing waits — the gate is quiet", "meta": ""}])},
+    ]
+
+
+def _room_charlotte(facts: dict) -> list[dict]:
+    farm = _farm(facts)
+    return [
+        {"kind": "stat", "title": "the shed",
+         "items": [{"label": "services", "value": len(farm)},
+                   {"label": "serving",
+                    "value": sum(1 for s in farm if s.get("state") == "serving")},
+                   {"label": "quarantined",
+                    "value": sum(1 for s in farm if s.get("state") == "quarantined")}]},
+        {"kind": "bars", "title": "governed calls",
+         "items": [{"label": s["name"], "value": int(s.get("calls") or 0)}
+                   for s in sorted(farm, key=lambda s: -int(s.get("calls") or 0))[:8]]},
+        {"kind": "list", "title": "the roster",
+         "items": _sev([{"text": s["name"],
+                         "meta": f"{s.get('kind', '?')} · {s.get('state', '?')}",
+                         "severity": "medium" if s.get("state") == "quarantined" else ""}
+                        for s in farm] or
+                       [{"text": "nothing planted — this world consumes nothing",
+                         "meta": ""}])},
+    ]
+
+
+def _room_ada(facts: dict) -> list[dict]:
+    stalls = _stalls(facts)
+    usage = facts.get("usage") or []
+    usd = sum(float(u.get("usd") or 0) for u in usage)
+    return [
+        {"kind": "stat", "title": "the stable",
+         "items": [{"label": "stalls", "value": len(stalls)},
+                   {"label": "live", "value": sum(1 for s in stalls if
+                                                  s.get("state") in ("available", "canaried"))},
+                   {"label": "spent", "value": f"${usd:.4f}"}]},
+        {"kind": "bars", "title": "thought on the meter",
+         "items": [{"label": str(u.get("subject") or u.get("caller") or "?")[:24],
+                    "value": int(u.get("calls") or 0)} for u in
+                   sorted(usage, key=lambda u: -int(u.get("calls") or 0))[:8]]},
+        {"kind": "list", "title": "the pasture calendar",
+         "items": _sev([{"text": s["id"],
+                         "meta": f"{s.get('class', '?')} · {s.get('state', '?')}"
+                                 + (f" · expires {str(s['expires_at'])[:10]}"
+                                    if s.get("expires_at") else ""),
+                         "severity": "medium" if s.get("state") == "deprecated" else ""}
+                        for s in stalls] or
+                       [{"text": "none saddled — the legacy registry still routes",
+                         "meta": ""}])},
+    ]
+
+
+_ROOMS = {"librarian": _room_librarian, "becky": _room_becky,
+          "charlotte": _room_charlotte, "ada": _room_ada}
 
 
 # ---------------------------------------------------------------- the audience record

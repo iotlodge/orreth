@@ -143,3 +143,44 @@ def test_the_audience_lands_signed():
                       kind="episodic", tags=["parlor", "charlotte"])
     assert rec["tags"] == ["parlor", "charlotte"]
     assert rec["author"] == did and rec["signature"]
+
+
+# ---------------------------------------------------------------- 0028: the workspaces
+def test_the_card_declares_the_room_and_only_the_embodied_have_one():
+    """0028 §1: the glass shows the expand handle only when the card declares it —
+    a new resident brings its room without a line of Console code."""
+    for name in parlor.RESIDENTS:
+        c = parlor.card(name, FACTS)
+        assert c["workspace"] is (name in parlor.EMBODIED)
+    assert parlor.workspace("vigil", FACTS) is None      # no room, honestly
+
+
+def test_rooms_compose_typed_panels_rendered_blind():
+    """Four rooms, four typed kinds — stat · bars · list · doc — composed from
+    state the resident may read; the glass knows the kinds, never the residents."""
+    kinds = {"stat", "bars", "list", "doc"}
+    for name in parlor.EMBODIED:
+        ws = parlor.workspace(name, FACTS)
+        assert ws["resident"] == name and ws["panels"]
+        for p in ws["panels"]:
+            assert p["kind"] in kinds and p["title"]
+            if p["kind"] == "doc":
+                assert isinstance(p["text"], str)
+            else:
+                assert isinstance(p["items"], list)
+
+
+def test_medium_and_above_wear_amber():
+    """0024's badge, discharged: the severity chip rides the row; medium+ is
+    amber so pending co-review is visible at a glance."""
+    facts = dict(FACTS, markers=[
+        {"text": "a quiet note", "meta": "moment · minor", "severity": ""},
+        {"text": "a recall walked", "meta": "change · high", "severity": "high"}])
+    ws = parlor.workspace("librarian", facts)
+    moments = next(p for p in ws["panels"] if "moments" in p["title"])
+    ambers = [i for i in moments["items"] if i.get("amber")]
+    assert len(ambers) == 1 and ambers[0]["text"] == "a recall walked"
+    # charlotte's quarantined service wears it too
+    ws2 = parlor.workspace("charlotte", FACTS)
+    roster = next(p for p in ws2["panels"] if p["title"] == "the roster")
+    assert any(i.get("amber") for i in roster["items"])

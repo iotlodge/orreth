@@ -352,6 +352,19 @@ these four were JB-level and locked via AskUserQuestion:*
   per-container volumes. Expired drop-class bodies + the tombstone-stub read path land
   with the Purge dive (spoonful 5), where they belong.
 
+### Locked 2026-07-11 (0028 — Workspaces & the Improvement Engine, AskUserQuestion)
+- **All four embodied residents get workspaces** (librarian, becky, charlotte, ada) —
+  the card declares the room, the glass renders four typed panel kinds blind, and the
+  room is fetched via the parlor queue like any ask (never a privileged path).
+- **Improvement lanes grade by kind, and the improver never grades itself**: a
+  parameter nudge (cycles, rungs, thresholds) grades **medium** — co-review + notify,
+  adopted with a loud record; a persona/prompt/shape rewrite grades **high** — it
+  waits for the human. The change kind is COMPUTED by diffing versions (the governance
+  seat authors the grade), never declared by the proposer.
+- **One improver stands on the universe floor** — a single standing incarnation
+  (R8/0027 machinery) reading the subtree's risen evidence; one open proposal per
+  asset, no proposal storms.
+
 ### Locked 2026-07-11 (0027 — the Fingertip, AskUserQuestion)
 - **The human's request IS the top node.** A human-submitted objective rides the request
   queue; the assembled outcome resolves that request, and the human reading it is the

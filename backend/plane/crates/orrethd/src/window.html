@@ -390,6 +390,26 @@
     box-shadow:-18px 0 48px rgba(0,0,0,.55);display:flex;flex-direction:column;
     transform:translateX(102%);transition:transform .22s ease}
   .parlor.on{transform:none}
+  /* ── THE WORKSPACE (0028): the dialog grown up — the card declares the room,
+        ⛶ pulls the pane wide, and panels render blind: stat · bars · list · doc ── */
+  .parlor.full{width:min(1100px,100vw)}
+  .pws{padding:.7rem 1.1rem;border-bottom:1px solid var(--hair);overflow-y:auto;max-height:52%;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.8rem}
+  .wsp{border:1px solid var(--hair);border-radius:10px;padding:.7rem .9rem;background:rgba(255,255,255,.02)}
+  .wsp .wt{font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.18em;
+    color:var(--brass);font-size:.72rem;margin-bottom:.5rem}
+  .wsp .tile{display:inline-block;margin:.15rem .9rem .15rem 0}
+  .wsp .tile .v{font:800 1.5rem/1.1 system-ui;color:var(--star)}
+  .wsp .tile .l{font:.6rem var(--mono);color:var(--faint)}
+  .wsp .bar{display:flex;align-items:center;gap:.5rem;margin:.28rem 0;font:.66rem var(--mono)}
+  .wsp .bar .bl{flex:0 0 9rem;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .wsp .bar .bv{height:.55rem;background:var(--blue);border-radius:3px;min-width:2px}
+  .wsp .bar .bn{color:var(--faint)}
+  .wsp .row{margin:.3rem 0;font:.68rem var(--mono);color:var(--blue)}
+  .wsp .row .rm{color:var(--faint);margin-left:.4rem}
+  .wsp .row .amber{border:1px solid #c90;color:#fc3;border-radius:999px;
+    font-size:.58rem;padding:.02em .5em;margin-left:.4rem}
+  .wsp .doc{font:.72rem/1.5 var(--mono);color:var(--blue);white-space:pre-wrap;overflow-wrap:anywhere}
   .phd{display:flex;align-items:center;gap:.7rem;padding:.85rem 1.1rem;border-bottom:1px solid var(--hair)}
   .phd .rd{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
   .phd .nm{font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.2em;
@@ -591,8 +611,12 @@
 <!-- THE PARLOR (0020): the audience room — humans ask; residents fetch -->
 <div class="parlor" id="parlor">
   <div class="phd"><span class="rd" id="p-dot"></span><span class="nm" id="p-name">—</span>
-    <span class="fl" id="p-floor"></span><span class="x" onclick="closeParlor()">✕</span></div>
+    <span class="fl" id="p-floor"></span>
+    <span class="x" id="p-expand" onclick="parlorRoom()" style="display:none;margin-left:auto"
+      title="the workspace — the resident's own room (0028)">⛶</span>
+    <span class="x" onclick="closeParlor()" style="margin-left:0">✕</span></div>
   <div class="pdid" id="p-did"></div>
+  <div class="pws" id="p-ws" style="display:none"></div>
   <div class="pth" id="p-thread"></div>
   <div class="pchips" id="p-chips"></div>
   <div class="pin"><input id="p-in" placeholder="ask — the resident fetches, you never read raw">
@@ -1252,6 +1276,8 @@ function openParlor(name){
   $("p-name").textContent=name; $("p-floor").textContent=floorScope||"";
   $("p-dot").style.background=RESCOL[name]||"var(--dim)";
   $("p-did").textContent=""; $("p-chips").innerHTML="";
+  $("p-expand").style.display="none"; $("p-ws").style.display="none";
+  $("p-ws").innerHTML=""; $("parlor").classList.remove("full");
   $("p-thread").innerHTML=`<div class="msg reply wait">${name} is coming to the parlor…</div>`;
   $("parlor").classList.add("on"); $("p-in").focus();
   document.body.classList.add("parlor-open"); parlorRefit();
@@ -1259,7 +1285,7 @@ function openParlor(name){
   PA.timer=setInterval(parlorPoll,1500);
 }
 function closeParlor(){if(PA&&PA.timer)clearInterval(PA.timer);PA=null;
-  $("parlor").classList.remove("on");document.body.classList.remove("parlor-open");parlorRefit()}
+  $("parlor").classList.remove("on","full");document.body.classList.remove("parlor-open");parlorRefit()}
 function parlorRefit(){ // after the pane slides, re-fit whatever measures itself in px
   setTimeout(()=>{const d=$("drawer");
     if(d&&d.dataset.state!=="closed"){layout();scrub()}},340)}
@@ -1290,6 +1316,7 @@ function parlorSay(text){
 }
 function parlorCard(card){
   if(!card||!PA)return;
+  $("p-expand").style.display=card.workspace?"":"none";   /* the card declares the room (0028) */
   $("p-did").textContent=card.did||(card.voiced===false?"an unembodied organ — its seat is reserved (0015)":"");
   if(card.greeting)parlorLine("reply",card.greeting,card.role||"");
   const asks=card.asks||[];
@@ -1301,6 +1328,37 @@ function parlorCard(card){
     else if(a.ask)parlorSay(a.ask);
   });
 }
+/* ── THE WORKSPACE (0028): the room is an ask like any other — the resident
+      composes typed panels from state IT may read; this renderer knows the four
+      kinds and nothing about any resident. Record-derived text is escaped. ── */
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function parlorRoom(){
+  if(!PA)return; const p=$("parlor"), on=!p.classList.contains("full");
+  p.classList.toggle("full",on);
+  $("p-ws").style.display=on?"grid":"none";
+  if(on){$("p-ws").innerHTML='<div class="wsp"><div class="wt">the room is being composed…</div></div>';
+    parlorPost({verb:"workspace"})}
+}
+function renderRoom(ws){
+  if(!PA)return; const el=$("p-ws");
+  if(el.style.display==="none")return;               /* the caller closed the room already */
+  const panels=(ws&&ws.panels)||[];
+  if(!panels.length){el.innerHTML='<div class="wsp"><div class="wt">no room declared</div></div>';return}
+  el.innerHTML=panels.map(p=>{
+    let body="";
+    if(p.kind==="stat")body=(p.items||[]).map(i=>
+      `<span class="tile"><div class="v">${esc(i.value)}</div><div class="l">${esc(i.label)}</div></span>`).join("");
+    else if(p.kind==="bars"){const mx=Math.max(1,...(p.items||[]).map(i=>+i.value||0));
+      body=(p.items||[]).map(i=>`<div class="bar"><span class="bl" title="${esc(i.label)}">${esc(i.label)}</span>`+
+        `<span class="bv" style="width:${Math.round(58*(+i.value||0)/mx)}%"></span>`+
+        `<span class="bn">${esc(i.value)}</span></div>`).join("")}
+    else if(p.kind==="list")body=(p.items||[]).map(i=>
+      `<div class="row">${esc(i.text)}${i.meta?`<span class="rm">${esc(i.meta)}</span>`:""}`+
+      `${i.amber?`<span class="amber">${esc(i.severity||"co-review")}</span>`:""}</div>`).join("");
+    else if(p.kind==="doc")body=`<div class="doc">${esc(p.text)}</div>`;
+    return `<div class="wsp"><div class="wt">${esc(p.title)}</div>${body}</div>`;
+  }).join("");
+}
 async function parlorPoll(){
   if(!PA)return;
   let q; try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{return}
@@ -1310,6 +1368,7 @@ async function parlorPoll(){
     PA.seen.add(r.id);
     const v=r.result||{};
     if(v.card)parlorCard(v.card);
+    else if(v.workspace)renderRoom(v.workspace);
     else if(v.reply)parlorLine("reply",v.reply,
       (v.voiced?"a governed thought · metered under my DID":"answered from the record")
       +(v.by?" · "+String(v.by).slice(0,26)+"…":""));

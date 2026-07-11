@@ -163,13 +163,14 @@ descent onto e:retail and breadcrumb ascent verified in Chrome, zero JS errors.
 | Demo | `../backend/conformance/demo_workforce.py` | **Fable 5** | NEW: three SDK agents join at the hardened gate (wren RETURNS — same seed, same DID; reboot ≠ death) and each works one chassis objective on RuleThink with a real floor-reading skill — scribe-signed RunRecords, ships in orbit, honest $0 vitals |
 | Reel | `../scripts/demo.sh`, `../backend/conformance/console_worker.py`, `../backend/plane/crates/orrethd/src/window.html` | **Fable 5** | `crew` on the reel and the Console's 🎬 chips; window.html also gains spectator guards (a photograph never goes stale — heard_at dimming and beat-age lines skip under ORRETH_DEMO) |
 
-### The Universe Brain, spoonfuls 1–6 (0022–0027) — 2026-07-10/11, on main (no quarantine: Fable 5 authored)
+### The Universe Brain, spoonfuls 1–7 (0022–0028) — 2026-07-10/11, on main (no quarantine: Fable 5 authored)
 
-One dive, six spoonfuls, all Fable 5: the Memory Construct's Phase 1 (0022 §8 —
+One dive, seven spoonfuls, all Fable 5: the Memory Construct's Phase 1 (0022 §8 —
 runs/requests persistence, presence memo, meter metabolism, orphan sweep), the
 Librarian's seats + self-dialog + exchange dial + citations (0023), markers & the
 severity lanes (0024), the Human Profile (0025), the Purge's governance (0026),
-and the Fingertip (0027 — thought.graph made concrete).
+the Fingertip (0027 — thought.graph made concrete), and Workspaces & the
+Improvement Engine (0028 — rooms in the glass, a gardener for the assets).
 
 | Area | File | Author model | Notes |
 |---|---|---|---|
@@ -180,8 +181,11 @@ and the Fingertip (0027 — thought.graph made concrete).
 | Plane | `../backend/plane/crates/orrethd/src/main.rs`, `pg.rs` | **Fable 5** | 0022 §8 persistence + `/tombstone` door (token-guarded, uniform refusal) + `purged` table with boot-restore |
 | Worker | `../backend/conformance/console_worker.py` | **Fable 5** | seats, self-dialog legs, profile routes, marker writes, consent-path shred, purge stage-and-hold+seal, gather immunity |
 | Sim · fingertip | `../backend/conformance/orreth_sim/fingertip.py` | **Fable 5** | NEW (0027): workflow templates (refused-at-save, human-at-the-top gate), Orchestration (stamp → dispatch → review → assemble), sliver contract, PortfolioMonitor standing job |
-| Worker | `../backend/conformance/console_worker.py` | **Fable 5** | (0027) objective/sliver kinds on the queue, HITL question leg, entitlement asks on dispatch-miss, review markers, monitor beat |
-| Tests | `../backend/conformance/tests/test_flows.py`, `test_parlor.py`, `test_fingertip.py` | **Fable 5** | suite 102/102 through spoonful 6 |
+| Sim · improver | `../backend/conformance/orreth_sim/improver.py` | **Fable 5** | NEW (0028): versioned assets (siblings, never successors), evidence with receipts, kind-by-diff grading, lanes route adoption, no-op refused |
+| Sim · workspaces | `../backend/conformance/orreth_sim/parlor.py` | **Fable 5** | (0028) card declares the room; four rooms compose typed panels (stat · bars · list · doc); medium+ wears amber (0024 badge) |
+| Glass | `../backend/plane/crates/orrethd/src/window.html` | **Fable 5** | (0028) ⛶ full-screen parlor, blind panel renderer with escaping, amber chips |
+| Worker | `../backend/conformance/console_worker.py` | **Fable 5** | (0027) objective/sliver kinds, HITL question leg, entitlement asks, review markers, monitor beat · (0028) workspace verb, improver beat, governance grading, lane routing |
+| Tests | `../backend/conformance/tests/test_flows.py`, `test_parlor.py`, `test_fingertip.py`, `test_improver.py` | **Fable 5** | suite 110/110 through spoonful 7 |
 
 ### Orrery residents (Opus 4.8, quarantined) — 2026-07-05, branch `opus/orrery-residents`
 
