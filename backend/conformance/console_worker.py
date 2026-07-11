@@ -21,6 +21,14 @@ here in cognition (the plane verifies, never signs):
     its refs at machine speed and HOLDS — quorum 1 of 2, bars absolute (0012 §5);
     destruction waits for humans, plural. And the door remembers the infection:
     gather refuses a source the universe has recalled.
+  · objective — the fingertip (0027): an objective lands at a floor, the
+    orchestration seat plans HIGH and dispatches slivers DOWN the request queue
+    (one intent, a budget slice, refs — never the whole); floors' fingertips carry
+    them (kind "sliver"), review grades every return with a critic marker (0024),
+    and the resolution of YOUR request is the completion confirmation. One sliver
+    asks the human mid-flow (kind "question", 0012 — silence is denial); a target
+    beyond the token gets an entitlement ask, never a silent skip. The standing
+    portfolio monitor beats on the universe floor — an immortal job (R8).
   · join      — becky's door, HARDENED (JB's lock 2026-07-07): an agent asks to
     join; becky challenges it to sign a nonce (key control proven, names bind to
     real keys), stages the join for the HUMAN gate (0012 — consequence waits), and
@@ -75,8 +83,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import crypto, markers, parlor, profile, purge, shipyard
-from orreth_sim.identity import NOW, Becky, Nanda
+from orreth_sim import crypto, fingertip, markers, parlor, profile, purge, shipyard
+from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
 from smoke_orrethd import root_keypair
@@ -1226,6 +1234,237 @@ def on_purge(port: int, scope: str, r: dict) -> None:
     print(f"  ↳ purge {r['id']}: {len(refs)} ref(s) sealed — {msg}")
 
 
+# ---------------------------------------------------------------- the fingertip (0027)
+
+ORCH = _seed("orchestrator")                 # the orchestration seat — one self, persisted
+ORCH_DID = crypto.did_key_for(ORCH.public)
+MON = _seed("monitor")                       # the standing portfolio monitor (JB lock)
+MON_DID = crypto.did_key_for(MON.public)
+_OBJECTIVES: dict = {}                       # objective req id → flow state
+_MONITOR_LAST = 0.0
+MONITOR_EVERY = 600                          # the monitor's own cadence, not the beat's
+
+
+def finger_seat(scope: str):
+    """The floor's fingertip and its scribe — two selves that survive the process
+    (0002 §1). The scribe authors the RunRecords: nothing grades its own yardstick."""
+    fkp = _seed("fingertip-" + scope.replace("/", "~"))
+    skp = _seed("fingertip-scribe-" + scope.replace("/", "~"))
+    return fkp, crypto.did_key_for(fkp.public), skp, crypto.did_key_for(skp.public)
+
+
+def _req(port: int, req_id: str) -> dict | None:
+    try:
+        rows = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        return None
+    return next((x for x in rows if x.get("id") == req_id), None)
+
+
+def on_objective(port: int, scope: str, r: dict) -> None:
+    """0027 §2: the objective lands; the orchestration seat plans HIGH and
+    dispatches slivers DOWN the request queue — no new transport, human-visible,
+    vigil-seen. Entitlement is the token (JB lock 2026-07-11): a target outside
+    the orchestration's authority gets a staged entitlement ask, never a silent
+    skip. One sliver asks the human first (0027 §8) — consequence waits."""
+    text = str(r.get("text") or "").strip() or "an unnamed objective"
+    goal = crypto.content_hash({"objective": text, "req": r["id"]})
+    targets = [x for x in (r.get("seats") or []) if x] or \
+        [s for p, s in sorted(FLOOR_SCOPES.items())
+         if s != scope and is_within(s, scope)]
+    legs, dark = {}, []
+    share = max(int(r.get("budget") or 2400) // max(len(targets) + 1, 1), 60)
+    for target in targets:
+        t_port = next((p for p, s in FLOOR_SCOPES.items() if s == target), None)
+        if t_port is None:
+            dark.append({"seat": target, "why": "no such floor on the wire"})
+            continue
+        if not fingertip.dispatch_allowed(scope, target):
+            try:                              # refuse AND ask — the flow degrades honestly
+                ask = call(t_port, "POST", "/requests",
+                           {"kind": "entitlement", "of": goal,
+                            "text": f"orchestration at {scope} asks leave to "
+                                    f"dispatch a sliver of “{text[:60]}”"})
+                dark.append({"seat": target, "ask": ask.get("id")})
+            except Exception:
+                dark.append({"seat": target, "why": "unreachable"})
+            continue
+        sliver = fingertip.make_sliver(
+            goal, f"carry this sliver of the objective at your seat: {text}", share)
+        leg = call(t_port, "POST", "/requests",
+                   {"kind": "sliver", "of": goal, "sliver": sliver,
+                    "text": sliver["intent"][:120]})
+        legs[t_port] = {"id": leg["id"], "seat": target}
+    q = call(port, "POST", "/requests",
+             {"kind": "question", "of": goal,
+              "text": f"the flow asks (0027 §8): where shall “{text[:48]}” deploy? "
+                      "resolve me with your answer — silence is denial"})
+    _OBJECTIVES[r["id"]] = {"home": port, "scope": scope, "goal": goal, "text": text,
+                            "legs": legs, "dark": dark, "question": q["id"],
+                            "iac": None, "share": share,
+                            "deadline": time.time() + 180}
+    print(f"  ↳ objective {r['id']}: {len(legs)} sliver(s) dispatched, "
+          f"{len(dark)} dark, one question waits for you")
+
+
+def on_sliver(port: int, scope: str, r: dict) -> None:
+    """The bottom of the graph (0027 §3): the floor's fingertip carries its sliver —
+    the deterministic keyless floor for now; models join via the stable when the
+    floor is fueled. Scratch evaporates (R7): what lands is the scribe-signed
+    RunRecord (author ≠ agent, 0005) and the outcome memory that rides up."""
+    sliver = r.get("sliver") or {}
+    intent = str(sliver.get("intent") or r.get("text") or "").strip()
+    fkp, fdid, skp, sdid = finger_seat(scope)
+    answer = f"sliver carried at {scope}: {intent[:140]}"
+    run = {
+        "id": crypto.content_hash({"i": intent, "c": 1, "at": NOW(), "a": fdid}),
+        "agent": fdid, "scope": scope,
+        "goal_hash": str(sliver.get("of") or crypto.content_hash({"intent": intent})),
+        "occurred_at": NOW(), "outcome": "success",
+        "scores": [{"objective": "objective-met", "score": 1.0}],
+        "cost": {"tokens": 0, "model_calls": 0},
+        "author": sdid,
+    }
+    run["sig"] = skp.sign(sdid, {k: run[k] for k in
+                                 ("id", "agent", "scope", "goal_hash", "occurred_at")})
+    try:
+        call(port, "POST", "/runs", run)
+    except Exception as e:
+        print(f"    (run record refused: {e})")
+    outcome = make_memory({"did": fdid, "scope": scope}, fkp, scope,
+                          {"outcome": {"sliver": r.get("id"), "of": sliver.get("of"),
+                                       "status": "done", "answer": answer,
+                                       "cycles": 1}},
+                          kind="semantic", tags=["sliver-outcome"])
+    try:
+        call(port, "POST", "/records", outcome)
+    except Exception as e:
+        print(f"    (outcome write failed: {e})")
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "done",
+          "result": {"answer": answer, "outcome": outcome["id"], "cycles": 1,
+                     "status": "done"}})
+    print(f"  ↳ sliver at {scope}: done — outcome {outcome['id'][:18]}…")
+
+
+def tend_objectives() -> None:
+    """Compose and resolve every objective whose branches are terminal — or whose
+    horizon closed. Review rides altitude (0027 §6): the orchestration seat grades
+    each return with a critic marker BEFORE it enters the assembly, and the
+    resolution of the human's request is the only completion confirmation."""
+    for rid, st in list(_OBJECTIVES.items()):
+        try:
+            _tend_objective(rid, st)
+        except Exception as e:
+            print(f"    (objective {rid} tending hiccup: {e})")
+
+
+def _tend_objective(rid: str, st: dict) -> None:
+    home, scope = st["home"], st["scope"]
+    if st["iac"] is None:
+        q = _req(home, st["question"])
+        if q is not None and q.get("status") == "done":
+            res = q.get("result")
+            word = str((res or {}).get("answer") if isinstance(res, dict) else res or "")
+            sliver = fingertip.make_sliver(
+                st["goal"], f"provision infrastructure for “{st['text'][:60]}” — "
+                            f"the human answered: {word[:80]}", st["share"])
+            leg = call(home, "POST", "/requests",
+                       {"kind": "sliver", "of": st["goal"], "sliver": sliver,
+                        "text": sliver["intent"][:120]})
+            st["iac"] = {"id": leg["id"], "seat": scope}
+        elif q is not None and q.get("status") in ("denied", "expired"):
+            st["iac"] = {"denied": True}      # silence never approves (0012)
+    pending_question = st["iac"] is None
+    watch = list(st["legs"].items())
+    if st["iac"] and "id" in st["iac"]:
+        watch.append((home, st["iac"]))
+    branches, open_legs = [], 0
+    for port, leg in watch:
+        req = _req(port, leg["id"])
+        if req is None or req.get("status") == "pending":
+            open_legs += 1
+            continue
+        res = req.get("result") if isinstance(req.get("result"), dict) else {}
+        branches.append({"sliver": leg["id"], "seat": leg["seat"],
+                         "status": res.get("status", "done"),
+                         "answer": res.get("answer", ""),
+                         "cycles": res.get("cycles"),
+                         "outcome": res.get("outcome", "")})
+    if (open_legs or pending_question) and time.time() < st["deadline"]:
+        return                                # branches still riding; the queue is patient
+    me = {"did": ORCH_DID, "scope": scope}
+    for b in branches:                        # the dispatching seat grades every return
+        if not b["outcome"] or "severity" in b:
+            continue
+        b["severity"] = fingertip.review_severity(b["status"], b.get("cycles"))
+        mk = markers.make_marker(me, ORCH, scope, [b["outcome"]],
+                                 reason=f"review of sliver at {b['seat']}: "
+                                        f"{b['status']}",
+                                 change_severity=b["severity"])
+        try:
+            call(home, "POST", "/records", mk)
+            b["marker"] = mk["id"]
+        except Exception as e:
+            print(f"    (review marker write failed: {e})")
+    if pending_question:
+        waiting = ["iac — the question expired; silence is denial"]
+    elif st["iac"] and st["iac"].get("denied"):
+        waiting = ["iac — denied by the human"]
+    elif st["iac"] and not any(b["sliver"] == st["iac"]["id"] for b in branches):
+        waiting = ["iac — still riding at the horizon"]
+    else:
+        waiting = []
+    done = bool(branches) and all(b["status"] == "done" for b in branches) \
+        and not waiting and not st["dark"]
+    assembly = {"objective": st["text"], "goal_hash": st["goal"],
+                "branches": branches,
+                "verification": "complete" if done else "partial",
+                **({"dark": st["dark"]} if st["dark"] else {}),
+                **({"waiting": waiting} if waiting else {})}
+    rec = make_memory(me, ORCH, scope, {"objective_outcome": assembly},
+                      kind="semantic", tags=["objective-outcome"])
+    try:
+        call(home, "POST", "/records", rec)
+    except Exception as e:
+        print(f"    (objective outcome write failed: {e})")
+    call(home, "POST", "/requests/resolve",
+         {"id": rid, "status": "done",
+          "result": {"assembly": assembly, "record": rec["id"]}})
+    del _OBJECTIVES[rid]
+    print(f"  ↳ objective {rid} assembled: {assembly['verification']} — "
+          f"{len(branches)} branch(es), your request is the confirmation")
+
+
+def monitor_beat(port: int) -> None:
+    """The standing portfolio monitor (0027, JB lock 2026-07-11): an immortal job
+    beating like an organ (R8) — no completion condition exists. Aggregates only,
+    the sibling-benchmark law (0005). Its factory-RL duty waits for spoonful 7."""
+    global _MONITOR_LAST
+    if time.time() - _MONITOR_LAST < MONITOR_EVERY:
+        return
+    try:
+        ru = call(port, "GET", "/rollup")
+        topo = call(port, "GET", "/topology")
+    except Exception:
+        return
+    obs = {"portfolio": {"floors": len(topo.get("children") or []),
+                         "memories": ru.get("memories", 0),
+                         "runs": ru.get("runs", 0),
+                         "success_rate": ru.get("success_rate", 0),
+                         "usd": ru.get("usd", 0)}}
+    rec = make_memory({"did": MON_DID, "scope": "u:demo"}, MON, "u:demo", obs,
+                      kind="episodic", tags=["portfolio-observation", "standing"])
+    try:
+        call(port, "POST", "/records", rec)
+        _MONITOR_LAST = time.time()
+        print(f"  ↳ the monitor beats: {obs['portfolio']['floors']} branch(es), "
+              f"{obs['portfolio']['memories']} memories, "
+              f"{obs['portfolio']['success_rate']}% success")
+    except Exception as e:
+        print(f"    (monitor observation refused: {e})")
+
+
 # ---------------------------------------------------------------- the shipyard (0009→wire)
 
 UNIVERSE_SCOPE = "u:demo"
@@ -1747,6 +1986,13 @@ def main() -> None:
                             handled.add(key)
                             print(f"  ↳ purge {r['id']}: staging containment on {scope}")
                             on_purge(port, scope, r)
+                        elif r.get("kind") == "objective" and r.get("status") == "pending":
+                            handled.add(key)
+                            print(f"  ↳ objective {r['id']}: planning high on {scope}")
+                            on_objective(port, scope, r)
+                        elif r.get("kind") == "sliver" and r.get("status") == "pending":
+                            handled.add(key)
+                            on_sliver(port, scope, r)
                     except urllib.error.HTTPError as e:
                         # The floor ANSWERED — a refusal, not a dead wire (probe()'s
                         # law). One poison request must never silence the residents:
@@ -1769,11 +2015,15 @@ def main() -> None:
                     pin_organs(port, scope)
                     if scope == SCOPE:
                         lib_charter(port, scope)
+                    if scope == UNIVERSE_SCOPE:
+                        monitor_beat(port)    # the standing job beats like an organ
+
             except Exception as e:
                 scopes.pop(port, None)
                 FLOOR_SCOPES.pop(port, None)
                 print(f"  (floor :{port} unreachable…)", e)
         tend_self_dialogs()                   # compose any dialog whose legs are home
+        tend_objectives()                     # review and assemble what rode back up
         if beat_due:
             KEEPER.last_beat = time.time()
         time.sleep(2)

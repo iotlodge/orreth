@@ -352,6 +352,21 @@ these four were JB-level and locked via AskUserQuestion:*
   per-container volumes. Expired drop-class bodies + the tombstone-stub read path land
   with the Purge dive (spoonful 5), where they belong.
 
+### Locked 2026-07-11 (0027 — the Fingertip, AskUserQuestion)
+- **The human's request IS the top node.** A human-submitted objective rides the request
+  queue; the assembled outcome resolves that request, and the human reading it is the
+  completion confirmation. No orchestration incarnation ever confirms its own completion
+  — nothing grades its own yardstick, at the top least of all (0005).
+- **Cross-ecosystem dispatch-miss: refuse AND ask.** A dispatch whose becky-chained
+  authority does not cover the target is refused uniformly (a prober learns nothing,
+  0002 §4) — and the orchestration stages a human-visible entitlement ask in the
+  target's queue. The branch parks until granted or expired; silence is denial
+  (locked 2026-07-02). The flow degrades honestly instead of dying.
+- **The first standing incarnation is the portfolio monitor** on the universe floor
+  (R8's immortal job, beating like an organ): it reviews the floors' rollups each
+  beat-window and writes observation memories. Its factory-RL duty waits for
+  spoonful 7 (0011's improvement engine), where the boundary with vigil gets designed.
+
 ### Locked 2026-07-10 (0022 — the Memory Construct close-out)
 - **The bytes-local posture: local-only by default.** Embeddings and reranking run
   in-process on each node (local ONNX models, honest zeros on the steward's meter);
