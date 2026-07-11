@@ -132,6 +132,11 @@
       "default": "state-changing",
       "description": "What intra-field signals persist as memory (0010 §1, locked 2026-07-02): transport by default, state-changes always land, 'full' for REAL/regulated universes. The first concrete wild-vs-REAL dial. vigil sees signal volume/shape as metadata regardless."
     },
+    "exchange": {
+      "type": "object",
+      "description": "0023 §4 (Universe-Brain locks, 2026-07-10): the per-class exchange dial — 'up' rides distillations to the parent; 'hold' stays home. Residency, never reach: the Librarian's pull crosses this wall on request, non-refusably. Future-flow only — what rose before the dial turned, stays risen. Cost/token/performance/security lanes are floors, not classes here, and can never be held.",
+      "additionalProperties": { "enum": ["up", "hold"] }
+    },
     "join_default": {
       "enum": ["fully-joined", "floors-only", "observe-only", "decoupled"],
       "description": "The join spectrum default for children (floors compelled for the joined)."

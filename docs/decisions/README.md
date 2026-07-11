@@ -335,6 +335,14 @@ these four were JB-level and locked via AskUserQuestion:*
   blocked; destruction waits for humans, plural. The purge walk crosses the promotion boundary
   (skills/distillations/profile claims revert or re-anchor — R10).
 
+### Landed 2026-07-10 (covenant rule 9 — the TierProfile `exchange` block)
+- **contracts/v0/tier-profile.schema.json gains the optional `exchange` dial** (per-class
+  `up`/`hold`), specified verbatim in `design/0023 §4` which JB read and blessed the same
+  day ("Dive looks right — give the Librarian her seats") — the blessing is the rule-9
+  approval trail. Backward compatible (optional property); enforced in the reference
+  simulator (hold distills home, never rides up); wire steward + Console toggles on the
+  build ledger.
+
 ### Locked 2026-07-10 (covenant rule 9 — orreth-store, the governed delete's census)
 - **Orphan-sweep scope approved by JB** (AskUserQuestion): `orreth-store` gains a read-only
   `list_bodies(scope_root)` census; deletion uses the crate's existing `delete_body` (built

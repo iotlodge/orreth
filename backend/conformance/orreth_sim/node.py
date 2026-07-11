@@ -178,14 +178,24 @@ class HarnessNode:
                 return "keep-raw" if rule["action"] == "keep-raw" else "distilled-raw-retained"
         return "distilled-raw-retained"
 
-    def run_distillation(self) -> dict | None:
-        """The steward's ingress pass (0003 §4): distill what floors didn't pin, push UP."""
-        if not self.undistilled:
-            return None
-        ids = list(self.undistilled)
-        self.undistilled.clear()
+    def _held_back(self, rec: dict) -> bool:
+        """The exchange dial (0023 §4, Universe-Brain locks 2026-07-10): a record whose
+        class — its kind or any tag — is dialed 'hold' never rides a distillation up.
+        Residency, never reach: the Librarian's cross-seat pull ignores this wall by
+        design. Cost/security lanes are floors, not records here, and cannot be held."""
+        exchange = self.profile.get("exchange") or {}
+        if not exchange:
+            return False
+        names = {rec.get("kind", "")} | set(rec.get("tags") or [])
+        return any(exchange.get(n) == "hold" for n in names)
+
+    def _distill(self, ids: list, push: bool) -> dict:
+        """One distillation over one cohort — written home always, pushed UP only
+        when the exchange dial allows (0023 §4)."""
         times = sorted(self.records[i]["occurred_at"] for i in ids)
         body = {"summary": f"distilled {len(ids)} records at {self.scope}", "count": len(ids)}
+        if not push:
+            body["exchange"] = "hold"        # held home — the dial, visible in the body
         dist = {
             "id": crypto.content_hash({"body": body, "derived_from": ids}),
             "kind": "distillation",
@@ -204,7 +214,7 @@ class HarnessNode:
         }
         dist["signature"] = self.steward_kp.sign(self.steward["did"], _sig_subset(dist))
         self.write(dist)
-        if self.parent is not None:
+        if push and self.parent is not None:
             env = {
                 "payload_hash": dist["id"],
                 "payload_type": "https://orreth.ai/contracts/v0/memory-record.schema.json",
@@ -216,6 +226,23 @@ class HarnessNode:
             validate(env, "signed-record.schema.json#/$defs/SignedRecord")
             self.parent.write(dist)  # PUSH up — the parent verifies for itself
         return dist
+
+    def run_distillation(self) -> dict | None:
+        """The steward's ingress pass (0003 §4): distill what floors didn't pin, push UP.
+        Classes dialed 'hold' on the exchange (0023 §4) distill HOME and never rise —
+        future-flow only; what rose before the dial turned, stays risen."""
+        if not self.undistilled:
+            return None
+        ids = list(self.undistilled)
+        self.undistilled.clear()
+        held = [i for i in ids if self._held_back(self.records[i])]
+        rising = [i for i in ids if i not in set(held)]
+        made = None
+        if held:
+            made = self._distill(held, push=False)
+        if rising:
+            made = self._distill(rising, push=True)
+        return made
 
     # ---- 0005: run records + the monoidal roll-up -----------------------------------
     def record_run(self, run: dict) -> str:

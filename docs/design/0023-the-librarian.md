@@ -129,17 +129,22 @@ DID) only when the floor is fueled — 0020 §4 unchanged, now with citations ma
 
 ## 7. Mechanism — the build phases this dive unlocks
 
-1. **Seats + the no-levers token**: librarian root under becky; per-seat did:key at
-   provisioning; capability minted with the §2 grant shape; existing field seed
-   grandfathered as the field seat.
-2. **The self-dialog on the wire**: `librarian-ask` queue kind + the answering worker
-   path (fetch under own token → resident-signed answer record → resolve); the
-   `derived-from-opted-out` class + TTL + distillation exclusion; access records +
-   vigil visibility for every leg.
-3. **The exchange block**: TierProfile schema delta + roll-up path enforcement (a
-   `hold` class's records never ride a distillation up) + the Console toggles.
-4. **Planner v1**: deterministic routing rules (1→2→3→4 as fallthrough); meaning axis
-   arrives with 0022 Phase 2; citations enforced at the parlor answer assembly.
+1. **Seats + the no-levers token** ✅ *landed 2026-07-10 (7ed945d)*: librarian root +
+   per-floor did:key seats, becky-chained; field seed grandfathered; root-signed seat
+   charter on the record; Shipyard-grown floors seat themselves on discovery.
+2. **The self-dialog on the wire** ✅ *landed 2026-07-10 (48d2112)*: `librarian-ask`
+   legs across every floor, async composition with per-seat provenance + honest
+   horizon; **lineage-death enforced** — a recalled claim's older versions never
+   speak. *(The `derived-from-opted-out` synthesis class activates when an exchange
+   opt-out first exists on a live floor — the wire's next step.)*
+3. **The exchange block** ✅ *reference landed 2026-07-10*: TierProfile `exchange`
+   schema delta (rule 9, covered by this dive's blessing) + sim distillation
+   enforcement — a `hold` class distills HOME and never rides up
+   (`test_exchange_hold_stays_home`). *Remaining on the build ledger: the wire
+   steward honoring the dial + the Console opt-in/out toggles.*
+4. **Planner v1** ✅ *landed 2026-07-10*: deterministic routing
+   (local → cross-seat → gather), citations at answer assembly (each seat's segment
+   wears its refs); the meaning axis arrives with 0022 Phase 2.
 
 ## 8. Honest boundaries
 

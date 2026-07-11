@@ -294,8 +294,13 @@ def tend_self_dialogs() -> None:
                 waiting.append(leg)
         if waiting and time.time() < d["deadline"]:
             continue
+        def _cite(leg: dict) -> str:
+            # the faithfulness gate at assembly (0023 §5): claims wear their receipts
+            refs = leg["result"].get("refs") or []
+            short = ", ".join(r.split(":")[-1][:8] for r in refs[:3])
+            return f" [refs: {short}]" if short else ""
         parts = [f"{l['result'].get('seat', l['scope'])} — {l['result'].get('reply', '')}"
-                 for l in heard]
+                 + _cite(l) for l in heard]
         dark = [l["scope"] for l in waiting]
         reply = ("my seats on “" + d["topic"] + "”: "
                  + ("  ⸱  ".join(parts) if parts else "no other seat is in reach")

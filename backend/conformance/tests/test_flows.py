@@ -134,6 +134,28 @@ def test_memory_rises_pruned_with_provenance(world):
     assert world.field_prod.records[fid]["keep_class"] == "keep-raw"
 
 
+def test_exchange_hold_stays_home(world):
+    """0023 §4 (Universe-Brain locks): a class dialed 'hold' on the exchange never
+    rides a distillation up — it distills HOME. Residency, never reach; and the
+    open classes keep rising exactly as before."""
+    ident, kp = world.agents["prod-1"]
+    world.field_prod.profile["exchange"] = {"diary": "hold"}
+    held = world.field_prod.write(make_memory(ident, kp, ident["scope"],
+                                              {"event": "a private day"}, tags=["diary"]))
+    open_ = world.field_prod.write(make_memory(ident, kp, ident["scope"],
+                                               {"event": "a shared lesson"},
+                                               tags=["knowledge"]))
+    dist = world.field_prod.run_distillation()          # returns the RISING cohort
+    assert open_ in dist["derived_from"] and held not in dist["derived_from"]
+    assert dist["id"] in world.eco_cloud.records        # the open cohort rose
+    # the held cohort distilled home: covered locally, and NOTHING deriving from it
+    # ever reached the parent
+    local = [r for r in world.field_prod.records.values()
+             if r.get("kind") == "distillation" and held in (r.get("derived_from") or [])]
+    assert local, "the held class still gets its home distillation"
+    assert all(d["id"] not in world.eco_cloud.records for d in local)
+
+
 # ---------------------------------------------------------------- flow 3: retrieval UP
 def _token(world, agent="prod-1", audience="u:demo", grants=None, **kw):
     ident, _ = world.agents[agent]
