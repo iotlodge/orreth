@@ -9,7 +9,7 @@ mechanisms land.*
 | # | Guide | What it teaches | Status |
 |---|---|---|---|
 | 01 | [The Librarian & the Residents](01-the-librarian-and-the-residents.md) | The flows, by example: every ask you can speak into the parlor, what comes back, and what lands on the record | ✅ first edition |
-| 02 | The Universe Operator's Manual | Build and manage a universe: the rig, floors, joining, growing ecosystems from chat, the human gates, budgets and meters | ⏳ queued (after spoonful 8) |
+| 02 | [The Universe Operator's Manual](02-the-universe-operators-manual.md) | Build and manage a universe: the rig, floors, what survives what, the human gates, growing ecosystems, budgets, knobs, and triage | ✅ first edition |
 | 03 | The Resident Field Guide | Each resident's duties, keys, and lanes — becky, the librarian, charlotte, ada, vigil, steward, governance, the monitor, the improver | ⏳ queued |
 | 04 | Building Agents on Orreth | The SDK: join at the door, persist your self, think through the gateway, leave RunRecords — the chassis and the fingertip | ⏳ queued |
 
