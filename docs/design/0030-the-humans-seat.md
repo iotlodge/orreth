@@ -99,7 +99,7 @@ ledger/status/report path.
 
 | # | Spoonful | Nature |
 |---|---|---|
-| 1 | The plan gate + the intention rename (sliver → intention, everywhere) | mechanism |
+| 1 | The plan gate + the intention rename (sliver → intention, everywhere) | ✅ landed 2026-07-12 — proven by a human's click in the glass; the question-answer control joins the inbox in spoonful 2 |
 | 2 | The Objective ledger (a VIEW over records that already exist — no new store) | glass + worker |
 | 3 | Place-as-spine: URL scope, surviving conversations, labeled surfaces, scoped tabs, cascade affordances | glass |
 | 4 | Spacetime legibility: beads, notations, milestones, the apex story | glass |

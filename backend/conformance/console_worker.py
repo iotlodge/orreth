@@ -21,14 +21,15 @@ here in cognition (the plane verifies, never signs):
     its refs at machine speed and HOLDS — quorum 1 of 2, bars absolute (0012 §5);
     destruction waits for humans, plural. And the door remembers the infection:
     gather refuses a source the universe has recalled.
-  · objective — the fingertip (0027): an objective lands at a floor, the
-    orchestration seat plans HIGH and dispatches slivers DOWN the request queue
-    (one intent, a budget slice, refs — never the whole); floors' fingertips carry
-    them (kind "sliver"), review grades every return with a critic marker (0024),
-    and the resolution of YOUR request is the completion confirmation. One sliver
-    asks the human mid-flow (kind "question", 0012 — silence is denial); a target
-    beyond the token gets an entitlement ask, never a silent skip. The standing
-    portfolio monitor beats on the universe floor — an immortal job (R8).
+  · objective — the ladder (0027 · 0030): Objective · Intention · Observation ·
+    Thought. An objective lands and is CURATED into a plan that STAGES at the
+    human's gate — origin plans always wait for their human (0030 §3). Approval
+    fans intentions DOWN the request queue (one intent, a budget slice, refs —
+    never the whole); floors' fingertips carry them (kind "intention"), review
+    grades every return with a critic marker (0024), and the resolution of YOUR
+    request is the completion confirmation. One intention asks the human mid-flow
+    (kind "question" — silence is denial); a seat beyond the token gets an
+    entitlement ask, never a silent skip. The portfolio monitor beats on — R8.
   · workspace — the resident's room (0028): verb "workspace" on the parlor queue
     returns typed panels (stat · bars · list · doc) composed from state the
     resident may read; the glass renders blind, medium+ markers wear amber (0024).
@@ -1310,65 +1311,110 @@ def _req(port: int, req_id: str) -> dict | None:
     return next((x for x in rows if x.get("id") == req_id), None)
 
 
-def on_objective(port: int, scope: str, r: dict) -> None:
-    """0027 §2: the objective lands; the orchestration seat plans HIGH and
-    dispatches slivers DOWN the request queue — no new transport, human-visible,
-    vigil-seen. Entitlement is the token (JB lock 2026-07-11): a target outside
-    the orchestration's authority gets a staged entitlement ask, never a silent
-    skip. One sliver asks the human first (0027 §8) — consequence waits."""
+_PLANS: dict = {}                            # objective req id → the curated plan
+
+
+def curate_plan(port: int, scope: str, r: dict) -> dict:
+    """0030 §3: the orchestration seat curates the objective into a PLAN — the
+    intentions, their seats and budget slices, and the question the flow will ask —
+    BEFORE anything moves. The plan is what stages for the human."""
     text = str(r.get("text") or "").strip() or "an unnamed objective"
     goal = crypto.content_hash({"objective": text, "req": r["id"]})
     targets = [x for x in (r.get("seats") or []) if x] or \
         [s for p, s in sorted(FLOOR_SCOPES.items())
          if s != scope and is_within(s, scope)]
-    legs, dark = {}, []
     share = max(int(r.get("budget") or 2400) // max(len(targets) + 1, 1), 60)
+    intentions, dark = [], []
     for target in targets:
-        t_port = next((p for p, s in FLOOR_SCOPES.items() if s == target), None)
-        if t_port is None:
+        if next((p for p, s in FLOOR_SCOPES.items() if s == target), None) is None:
             dark.append({"seat": target, "why": "no such floor on the wire"})
             continue
+        entry = {"seat": target, "budget": {"tokens": share},
+                 "intent": f"carry this intention of the objective at your seat: {text}"}
         if not fingertip.dispatch_allowed(scope, target):
+            entry["beyond_token"] = True     # honest in the plan: it will ask leave
+        intentions.append(entry)
+    return {"objective": text, "goal": goal, "intentions": intentions, "dark": dark,
+            "question": f"the flow asks (0027 §8): where shall “{text[:48]}” deploy? "
+                        "resolve me with your answer — silence is denial",
+            "share": share}
+
+
+def on_objective(port: int, scope: str, r: dict) -> None:
+    """The plan gate (0030 §3, JB canon 2026-07-12): the objective is curated and
+    STAGED — the plan lands as a signed record, the request holds at the human's
+    gate, and NOTHING fans. Origin plans always wait for their human."""
+    plan = curate_plan(port, scope, r)
+    me = {"did": ORCH_DID, "scope": scope}
+    rec = make_memory(me, ORCH, scope, {"plan": plan}, kind="semantic", tags=["plan"])
+    try:
+        call(port, "POST", "/records", rec)
+    except Exception as e:
+        print(f"    (plan record write failed: {e})")
+    _PLANS[r["id"]] = plan
+    beyond = sum(1 for i in plan["intentions"] if i.get("beyond_token"))
+    summary = (f"{len(plan['intentions'])} intention(s) → "
+               + ", ".join(i["seat"].split("/")[-1] for i in plan["intentions"][:6])
+               + " · asks you 1 question"
+               + (f" · {beyond} beyond this token (will ask leave)" if beyond else ""))
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "staged",
+          "result": {"plan_summary": summary, "plan": plan, "plan_record": rec["id"],
+                     "held": "the plan waits for you — approve to fan (0030 §3)"}})
+    print(f"  ↳ objective {r['id']}: plan staged — {summary}")
+
+
+def on_objective_approved(port: int, scope: str, r: dict) -> None:
+    """The human's word arrived (0030 §3): the approved plan fans — intentions
+    ride the queue down, the question stages, the tending begins. Entitlement is
+    the token (JB lock 2026-07-11): a seat beyond it gets an ask, never a skip."""
+    plan = _PLANS.pop(r["id"], None) or curate_plan(port, scope, r)
+    legs, dark = {}, list(plan["dark"])
+    for entry in plan["intentions"]:
+        target = entry["seat"]
+        t_port = next((p for p, s in FLOOR_SCOPES.items() if s == target), None)
+        if t_port is None:
+            dark.append({"seat": target, "why": "floor went dark since staging"})
+            continue
+        if entry.get("beyond_token"):
             try:                              # refuse AND ask — the flow degrades honestly
                 ask = call(t_port, "POST", "/requests",
-                           {"kind": "entitlement", "of": goal,
-                            "text": f"orchestration at {scope} asks leave to "
-                                    f"dispatch a sliver of “{text[:60]}”"})
+                           {"kind": "entitlement", "of": plan["goal"],
+                            "text": f"orchestration at {scope} asks leave to dispatch "
+                                    f"an intention of “{plan['objective'][:60]}”"})
                 dark.append({"seat": target, "ask": ask.get("id")})
             except Exception:
                 dark.append({"seat": target, "why": "unreachable"})
             continue
-        sliver = fingertip.make_sliver(
-            goal, f"carry this sliver of the objective at your seat: {text}", share)
+        work = fingertip.make_intention(plan["goal"], entry["intent"],
+                                        entry["budget"]["tokens"])
         leg = call(t_port, "POST", "/requests",
-                   {"kind": "sliver", "of": goal, "sliver": sliver,
-                    "text": sliver["intent"][:120]})
+                   {"kind": "intention", "of": plan["goal"], "intention": work,
+                    "text": work["intent"][:120]})
         legs[t_port] = {"id": leg["id"], "seat": target}
     q = call(port, "POST", "/requests",
-             {"kind": "question", "of": goal,
-              "text": f"the flow asks (0027 §8): where shall “{text[:48]}” deploy? "
-                      "resolve me with your answer — silence is denial"})
-    _OBJECTIVES[r["id"]] = {"home": port, "scope": scope, "goal": goal, "text": text,
-                            "legs": legs, "dark": dark, "question": q["id"],
-                            "iac": None, "share": share,
+             {"kind": "question", "of": plan["goal"], "text": plan["question"]})
+    _OBJECTIVES[r["id"]] = {"home": port, "scope": scope, "goal": plan["goal"],
+                            "text": plan["objective"], "legs": legs, "dark": dark,
+                            "question": q["id"], "iac": None, "share": plan["share"],
                             "deadline": time.time() + 180}
-    print(f"  ↳ objective {r['id']}: {len(legs)} sliver(s) dispatched, "
+    print(f"  ↳ objective {r['id']} approved: {len(legs)} intention(s) fanned, "
           f"{len(dark)} dark, one question waits for you")
 
 
-def on_sliver(port: int, scope: str, r: dict) -> None:
-    """The bottom of the graph (0027 §3): the floor's fingertip carries its sliver —
-    the deterministic keyless floor for now; models join via the stable when the
-    floor is fueled. Scratch evaporates (R7): what lands is the scribe-signed
-    RunRecord (author ≠ agent, 0005) and the outcome memory that rides up."""
-    sliver = r.get("sliver") or {}
-    intent = str(sliver.get("intent") or r.get("text") or "").strip()
+def on_intention(port: int, scope: str, r: dict) -> None:
+    """The bottom of the graph (0027 §3 · 0030): the floor's fingertip carries its
+    intention — the deterministic keyless floor for now; models join via the stable
+    when the floor is fueled. Scratch evaporates (R7): what lands is the
+    scribe-signed RunRecord (author ≠ agent, 0005) and the outcome that rides up."""
+    work = r.get("intention") or r.get("sliver") or {}   # old rows keep their word
+    intent = str(work.get("intent") or r.get("text") or "").strip()
     fkp, fdid, skp, sdid = finger_seat(scope)
-    answer = f"sliver carried at {scope}: {intent[:140]}"
+    answer = f"intention carried at {scope}: {intent[:140]}"
     run = {
         "id": crypto.content_hash({"i": intent, "c": 1, "at": NOW(), "a": fdid}),
         "agent": fdid, "scope": scope,
-        "goal_hash": str(sliver.get("of") or crypto.content_hash({"intent": intent})),
+        "goal_hash": str(work.get("of") or crypto.content_hash({"intent": intent})),
         "occurred_at": NOW(), "outcome": "success",
         "scores": [{"objective": "objective-met", "score": 1.0}],
         "cost": {"tokens": 0, "model_calls": 0},
@@ -1381,10 +1427,10 @@ def on_sliver(port: int, scope: str, r: dict) -> None:
     except Exception as e:
         print(f"    (run record refused: {e})")
     outcome = make_memory({"did": fdid, "scope": scope}, fkp, scope,
-                          {"outcome": {"sliver": r.get("id"), "of": sliver.get("of"),
+                          {"outcome": {"intention": r.get("id"), "of": work.get("of"),
                                        "status": "done", "answer": answer,
                                        "cycles": 1}},
-                          kind="semantic", tags=["sliver-outcome"])
+                          kind="semantic", tags=["intention-outcome"])
     try:
         call(port, "POST", "/records", outcome)
     except Exception as e:
@@ -1393,7 +1439,7 @@ def on_sliver(port: int, scope: str, r: dict) -> None:
          {"id": r["id"], "status": "done",
           "result": {"answer": answer, "outcome": outcome["id"], "cycles": 1,
                      "status": "done"}})
-    print(f"  ↳ sliver at {scope}: done — outcome {outcome['id'][:18]}…")
+    print(f"  ↳ intention at {scope}: done — outcome {outcome['id'][:18]}…")
 
 
 def tend_objectives() -> None:
@@ -1415,12 +1461,12 @@ def _tend_objective(rid: str, st: dict) -> None:
         if q is not None and q.get("status") == "done":
             res = q.get("result")
             word = str((res or {}).get("answer") if isinstance(res, dict) else res or "")
-            sliver = fingertip.make_sliver(
+            work = fingertip.make_intention(
                 st["goal"], f"provision infrastructure for “{st['text'][:60]}” — "
                             f"the human answered: {word[:80]}", st["share"])
             leg = call(home, "POST", "/requests",
-                       {"kind": "sliver", "of": st["goal"], "sliver": sliver,
-                        "text": sliver["intent"][:120]})
+                       {"kind": "intention", "of": st["goal"], "intention": work,
+                        "text": work["intent"][:120]})
             st["iac"] = {"id": leg["id"], "seat": scope}
         elif q is not None and q.get("status") in ("denied", "expired"):
             st["iac"] = {"denied": True}      # silence never approves (0012)
@@ -1435,7 +1481,7 @@ def _tend_objective(rid: str, st: dict) -> None:
             open_legs += 1
             continue
         res = req.get("result") if isinstance(req.get("result"), dict) else {}
-        branches.append({"sliver": leg["id"], "seat": leg["seat"],
+        branches.append({"intention": leg["id"], "seat": leg["seat"],
                          "status": res.get("status", "done"),
                          "answer": res.get("answer", ""),
                          "cycles": res.get("cycles"),
@@ -1448,7 +1494,7 @@ def _tend_objective(rid: str, st: dict) -> None:
             continue
         b["severity"] = fingertip.review_severity(b["status"], b.get("cycles"))
         mk = markers.make_marker(me, ORCH, scope, [b["outcome"]],
-                                 reason=f"review of sliver at {b['seat']}: "
+                                 reason=f"review of intention at {b['seat']}: "
                                         f"{b['status']}",
                                  change_severity=b["severity"])
         try:
@@ -1460,7 +1506,7 @@ def _tend_objective(rid: str, st: dict) -> None:
         waiting = ["iac — the question expired; silence is denial"]
     elif st["iac"] and st["iac"].get("denied"):
         waiting = ["iac — denied by the human"]
-    elif st["iac"] and not any(b["sliver"] == st["iac"]["id"] for b in branches):
+    elif st["iac"] and not any(b["intention"] == st["iac"]["id"] for b in branches):
         waiting = ["iac — still riding at the horizon"]
     else:
         waiting = []
@@ -2259,11 +2305,15 @@ def main() -> None:
                             on_purge(port, scope, r)
                         elif r.get("kind") == "objective" and r.get("status") == "pending":
                             handled.add(key)
-                            print(f"  ↳ objective {r['id']}: planning high on {scope}")
+                            print(f"  ↳ objective {r['id']}: curating the plan on {scope}")
                             on_objective(port, scope, r)
-                        elif r.get("kind") == "sliver" and r.get("status") == "pending":
+                        elif r.get("kind") == "objective" and r.get("status") == "approved":
                             handled.add(key)
-                            on_sliver(port, scope, r)
+                            on_objective_approved(port, scope, r)
+                        elif r.get("kind") in ("intention", "sliver") \
+                                and r.get("status") == "pending":
+                            handled.add(key)
+                            on_intention(port, scope, r)
                         elif r.get("kind") == "improvement" and \
                                 r.get("status") in ("pending", "approved"):
                             handled.add(key)

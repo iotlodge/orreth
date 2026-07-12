@@ -1062,14 +1062,18 @@ async function loadReq(){
     $("reqlist").innerHTML= q.length? q.slice().reverse().map(r=>{
       const jgate=r.kind==="join"&&r.status==="staged";
       const egate=r.kind==="ecosystem"&&r.status==="staged";
+      const ogate=r.kind==="objective"&&r.status==="staged";  /* the plan gate (0030 §3) */
       const note=jgate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`
-        :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`:"";
+        :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`
+        :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`:"";
       return `<div class="req"><span class="kind">${r.kind||"request"}</span>
        <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
        ${jgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">admit</button>
         <button class="sbtn no" onclick="joinDecide('${r.id}',false)">turn away</button>`
        :egate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">launch</button>
         <button class="sbtn no" onclick="joinDecide('${r.id}',false)">scrap</button>`
+       :ogate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">fan the plan</button>
+        <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
        :`<span class="st">${r.status}</span>`}</div>`;}).join("")
       : `<div class="quiet">nothing waiting — a calm universe.</div>`;
     $("asklog").innerHTML= q.filter(r=>r.kind==="gather").length?

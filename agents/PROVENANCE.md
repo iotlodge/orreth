@@ -191,6 +191,15 @@ Capability (0029 — upload-is-an-ask, the parked eye, the pinned-organ roster f
 | Glass · drop zone | `../backend/plane/crates/orrethd/src/window.html` | **Fable 5** | (0029) card-declared drop zone; client precheck mirrors the floor's bars |
 | Tests | `../backend/conformance/tests/test_flows.py`, `test_parlor.py`, `test_fingertip.py`, `test_improver.py`, `test_artifacts.py` | **Fable 5** | suite 114/114 through spoonful 8 |
 
+### The Human's Seat (0030) — 2026-07-12, on main (no quarantine: Fable 5 authored)
+
+| Area | File | Author model | Notes |
+|---|---|---|---|
+| Design | `../docs/design/0030-the-humans-seat.md` | **Fable 5** | the vision-sync dive: O·I·O·T ladder canon, the plan gate, the seat |
+| Sim + worker | `../backend/conformance/orreth_sim/fingertip.py`, `console_worker.py` | **Fable 5** | sp1: plan gate (curate → stage → human approves → fan; plan lands as a signed record), sliver→intention rename w/ wire read-compat |
+| Glass | `../backend/plane/crates/orrethd/src/window.html` | **Fable 5** | sp1: the objective gate — plan summary + "fan the plan"/"decline" at the human's queue |
+| Tests | `../backend/conformance/tests/test_fingertip.py` | **Fable 5** | gate test (nothing fans unapproved); suite 115/115 |
+
 ### Orrery residents (Opus 4.8, quarantined) — 2026-07-05, branch `opus/orrery-residents`
 
 **The swap boundary.** Everything below was authored by **Opus 4.8** after the safeguard

@@ -1,14 +1,19 @@
 # PROVENANCE: authored by Fable 5 (claude-fable-5), 2026-07-11 — 0027, the Fingertip
-"""The Fingertip (0027): thought.graph made concrete — the universe IS the node graph.
+# 0030 §3 (2026-07-12): the plan gate — origin plans wait for their human; and the
+# ladder's word is INTENTION (Objective · Intention · Observation · Thought).
+"""The Fingertip (0027 · 0030): thought.graph made concrete — the universe IS the
+node graph, and the ladder is Objective · Intention · Observation · Thought.
 
-An objective arrives at a tier; the orchestration incarnation AT that tier plans;
-slivers ride down (one intent, a budget slice, citation refs — never the whole);
-the chassis executes at the bottom; the dispatching seat grades what returns with
-critic markers (0024, deferral discharged); and the human's request is the top —
-no orchestrator ever confirms its own completion (JB lock 2026-07-11). Templates
-are versioned artifacts in memory, factory-maintained; standing jobs are the same
-incarnations with no completion condition (R8). Scratch evaporates by design (R7):
-what lands is RunRecords, outcomes, and what the floors' KeepRules pin.
+An objective arrives at a tier; the orchestration incarnation AT that tier curates
+it into a PLAN — and the plan is HITL-approved before any intention fans (0030 §3:
+origin plans always wait for their human). Intentions ride down (one intent, a
+budget slice, citation refs — never the whole); the chassis executes observations
+at the bottom; the dispatching seat grades what returns with critic markers (0024);
+and the human's request is the top — no orchestrator ever confirms its own
+completion (JB lock 2026-07-11). Templates are versioned artifacts in memory,
+factory-maintained; standing jobs are the same incarnations with no completion
+condition (R8). Scratch evaporates by design (R7): what lands is RunRecords,
+outcomes, and what the floors' KeepRules pin.
 """
 from __future__ import annotations
 
@@ -29,7 +34,7 @@ def _content(spec: dict) -> dict:
             ("version", "scope", "title", "standing", "nodes", "edges", "narrative")}
 
 
-def workflow_template(scope: str, *, name: str, slivers: list[dict],
+def workflow_template(scope: str, *, name: str, intentions: list[dict],
                       standing: bool = False) -> dict:
     """A universe-level workflow as a GraphSpec-shaped artifact (R8): nodes are
     SEATS with altitude, edges carry dispatch DOWN and review UP, the narrative
@@ -37,12 +42,12 @@ def workflow_template(scope: str, *, name: str, slivers: list[dict],
     objective's request is the top node (JB lock 2026-07-11). Standing templates
     loop review→objective on the beat instead: no completion condition — an organ.
 
-    slivers: [{"id", "intent", "seat": scope | "home", "ask_human": optional}]
+    intentions: [{"id", "intent", "seat": scope | "home", "ask_human": optional}]
     """
     finger_nodes = [{"id": s["id"], "kind": "seat", "role": "fingertip",
                      "altitude": s.get("seat", "home"), "intent": s["intent"],
                      **({"ask_human": s["ask_human"]} if s.get("ask_human") else {})}
-                    for s in slivers]
+                    for s in intentions]
     nodes = [{"id": "objective", "kind": "seat", "role": "orchestrator", "altitude": "home"},
              *finger_nodes,
              {"id": "review", "kind": "seat", "role": "review", "altitude": "home"}]
@@ -64,9 +69,9 @@ def workflow_template(scope: str, *, name: str, slivers: list[dict],
     ref = lambda e: f"{e['from']}→{e['to']}"  # noqa: E731 — narrative edge naming
     narrative = [
         {"text": f"The objective lands at {scope}; its orchestration incarnation "
-                 f"plans high and dispatches {len(finger_nodes)} sliver(s) down.",
+                 f"plans high and dispatches {len(finger_nodes)} intention(s) down.",
          "nodes": ["objective"], "edges": [ref(e) for e in dispatch]},
-        *[{"text": f"Sliver {n['id']} rides to {n['altitude']} carrying one intent, "
+        *[{"text": f"Intention {n['id']} rides to {n['altitude']} carrying one intent, "
                    "a budget slice, and citation refs — never the whole.",
            "nodes": [n["id"]], "edges": [f"{n['id']}→review"]} for n in finger_nodes],
         top_sentence,
@@ -122,10 +127,10 @@ def save_template(node, spec: dict) -> str:
     return node.write(rec)
 
 
-def make_sliver(objective_hash: str, intent: str, budget_tokens: int,
+def make_intention(objective_hash: str, intent: str, budget_tokens: int,
                 refs: list | None = None) -> dict:
-    """What rides down — and ALL that rides down (0027 §3): one intent, a budget
-    slice, citation refs. Never the plan, never the siblings, never the why."""
+    """What rides down — and ALL that rides down (0027 §3 · 0030): one intent, a
+    budget slice, citation refs. Never the plan, never the siblings, never the why."""
     return {"of": objective_hash, "intent": intent,
             "budget": {"tokens": int(budget_tokens)}, "refs": list(refs or [])}
 
@@ -138,7 +143,7 @@ def dispatch_allowed(audience: str, target_scope: str) -> bool:
 
 def review_severity(status: str, cycles: int | None) -> str:
     """The reviewing seat's grade (0024 lanes): clean first-cycle DONE is a low;
-    a DONE that needed correction is a medium; an unfinished sliver is a high —
+    a DONE that needed correction is a medium; an unfinished intention is a high —
     the human's lane, because unfinished work is where the risk lives."""
     if status == "done":
         return "low" if (cycles or 1) <= 1 else "medium"
@@ -161,26 +166,48 @@ class Orchestration:
         [self.surface] = factory.stamp(home, becky, arch, 1, generation=gen,
                                        budget_tokens=budget_tokens)
         self.goal = crypto.content_hash({"objective": objective})
-        self.answers: dict[str, str] = {}   # HITL: sliver id -> the human's word
-        self.branches: dict[str, dict] = {} # sliver id -> terminal branch state
+        self.answers: dict[str, str] = {}   # HITL: intention id -> the human's word
+        self.branches: dict[str, dict] = {} # intention id -> terminal branch state
+
+    # ---- the plan gate (0030 §3) ----------------------------------------------------
+    def plan(self) -> dict:
+        """The curated plan, readable: what would fan, where, and what it will ask
+        the human mid-flow. This is what STAGES — origin plans always wait for
+        their human (JB canon 2026-07-12)."""
+        fingers = [n for n in self.template["nodes"] if n.get("role") == "fingertip"]
+        share = max(self.surface.budget_left // max(len(fingers), 1), 60)
+        return {"objective": self.objective, "goal_hash": self.goal,
+                "intentions": [{"id": n["id"], "seat": n["altitude"],
+                                "intent": n["intent"],
+                                **({"asks_you": n["ask_human"]}
+                                   if n.get("ask_human") else {}),
+                                "budget": {"tokens": share}} for n in fingers]}
 
     # ---- HITL inside the flow (0027 §8) --------------------------------------------
     def questions(self) -> list[dict]:
         """What waits for the human right now — consequence waits (0012)."""
-        return [{"sliver": n["id"], "question": n["ask_human"]}
+        return [{"intention": n["id"], "question": n["ask_human"]}
                 for n in self.template["nodes"]
                 if n.get("ask_human") and n["id"] not in self.answers]
 
-    def answer_human(self, sliver_id: str, text: str) -> None:
+    def answer_human(self, intention_id: str, text: str) -> None:
         """The human's word arrives; the parked branch may dispatch on the next run."""
-        self.answers[sliver_id] = text
+        self.answers[intention_id] = text
 
     # ---- the flow ------------------------------------------------------------------
-    def run(self, seats: dict, beckys: dict, think, skills: dict | None = None) -> dict:
+    def run(self, seats: dict, beckys: dict, think, skills: dict | None = None,
+            *, plan_approved: bool = False) -> dict:
         """seats: scope -> node — the universe construct IS the node graph. Each
-        sliver becomes a fingertip chassis at its seat; results ride up; the
+        intention becomes a fingertip chassis at its seat; results ride up; the
         dispatching seat grades every return on the record. Re-runnable: finished
-        branches stay finished (the resume shape, like the self-dialog's)."""
+        branches stay finished (the resume shape, like the self-dialog's).
+
+        THE GATE COMES FIRST (0030 §3): without the human's approval of the plan,
+        nothing fans — the staged plan is returned instead. Consequence waits."""
+        if not plan_approved:
+            return {"status": "staged", "plan": self.plan(),
+                    "held": "the plan waits for its human (0030 §3) — origin "
+                            "plans always wait"}
         fingers = [n for n in self.template["nodes"] if n.get("role") == "fingertip"]
         share = max(self.surface.budget_left // max(len(fingers), 1), 60)
         me = {"did": self.surface.identity["did"], "scope": self.home.scope}
@@ -188,7 +215,7 @@ class Orchestration:
             if n["id"] in self.branches and \
                     self.branches[n["id"]].get("status") not in ("waiting-human", "dark"):
                 continue                                   # finished stays finished
-            branch: dict = {"sliver": n["id"], "seat": n["altitude"]}
+            branch: dict = {"intention": n["id"], "seat": n["altitude"]}
             if n.get("ask_human") and n["id"] not in self.answers:
                 branch["status"] = "waiting-human"          # consequence waits (0012)
                 branch["question"] = n["ask_human"]
@@ -203,45 +230,45 @@ class Orchestration:
                 branch["entitlement_ask"] = self.home.write(make_memory(
                     me, self.surface.kp, self.home.scope,
                     {"entitlement_ask": {"of": self.goal, "target": n["altitude"],
-                                         "sliver": n["id"]}},
+                                         "intention": n["id"]}},
                     kind="semantic", tags=["entitlement-ask"]))
                 self.branches[n["id"]] = branch
                 continue
             intent = n["intent"] if n["id"] not in self.answers else \
                 f"{n['intent']} — the human answered: {self.answers[n['id']]}"
-            sliver = make_sliver(self.goal, intent, share, refs=n.get("refs"))
-            branch.update(self._fingertip(target, beckys[target.scope], sliver, n,
+            work = make_intention(self.goal, intent, share, refs=n.get("refs"))
+            branch.update(self._fingertip(target, beckys[target.scope], work, n,
                                           think, skills or {}))
             # review rides altitude (0027 §6): the DISPATCHING seat grades the
             # return — author ≠ agent, on the record, lanes route what follows
             severity = review_severity(branch["status"], branch.get("cycles"))
             mk = markers.make_marker(me, self.surface.kp, self.home.scope,
                                      [branch["outcome"]],
-                                     reason=f"review of sliver {n['id']}: "
+                                     reason=f"review of intention {n['id']}: "
                                             f"{branch['status']}",
                                      change_severity=severity)
             branch["severity"], branch["marker"] = severity, self.home.write(mk)
             self.branches[n["id"]] = branch
         return self._assemble(me)
 
-    def _fingertip(self, target, becky, sliver: dict, n: dict, think,
+    def _fingertip(self, target, becky, work: dict, n: dict, think,
                    skills: dict) -> dict:
         """The bottom of the graph: a stamped fingertip runs the chassis on its
-        sliver. Scratch evaporates (R7); RunRecords land per cycle (chassis law);
-        the outcome memory is what rides up."""
+        intention — the observations happen here (0030's third rung). Scratch
+        evaporates (R7); RunRecords land per cycle; the outcome rides up."""
         [fsurf] = factory.stamp(target, becky, self.surface.identity, 1,
                                 generation=f"finger-{n['id']}",
-                                budget_tokens=sliver["budget"]["tokens"])
-        res = Chassis(fsurf, think, skills=skills, max_cycles=2).run(sliver["intent"])
+                                budget_tokens=work["budget"]["tokens"])
+        res = Chassis(fsurf, think, skills=skills, max_cycles=2).run(work["intent"])
         outcome = make_memory({"did": fsurf.identity["did"], "scope": target.scope},
                               fsurf.kp, target.scope,
-                              {"outcome": {"sliver": n["id"], "of": sliver["of"],
+                              {"outcome": {"intention": n["id"], "of": work["of"],
                                            "status": res["status"],
                                            "answer": res.get("answer", ""),
                                            "cycles": res.get("cycles")}},
-                              kind="semantic", tags=["sliver-outcome"])
+                              kind="semantic", tags=["intention-outcome"])
         rid = target.write(outcome)
-        factory.retire(target, fsurf.identity)          # the sliver was the life
+        factory.retire(target, fsurf.identity)          # the intention was the life
         return {"status": res["status"], "answer": res.get("answer", ""),
                 "cycles": res.get("cycles"), "outcome": rid}
 
@@ -255,9 +282,9 @@ class Orchestration:
         assembly = {"objective": self.objective, "goal_hash": self.goal,
                     "branches": branches,
                     "verification": "complete" if done else "partial",
-                    **({"waiting_on_human": [b["sliver"] for b in waiting]}
+                    **({"waiting_on_human": [b["intention"] for b in waiting]}
                        if waiting else {}),
-                    **({"dark": [b["sliver"] for b in dark]} if dark else {})}
+                    **({"dark": [b["intention"] for b in dark]} if dark else {})}
         rec = make_memory(me, self.surface.kp, self.home.scope,
                           {"objective_outcome": assembly}, kind="semantic",
                           tags=["objective-outcome"])
