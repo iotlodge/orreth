@@ -298,6 +298,11 @@
   .think .fl{flex:1;color:var(--faint)} .think .n{width:6.5rem;text-align:right;color:var(--dim)}
   .think .u{width:5rem;text-align:right;color:var(--brass)}
   .think.resident .nm::after{content:" · resident";color:var(--faint)}
+  .floorsec{font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.18em;
+    color:var(--dim);font-size:.68rem;margin:.9rem 0 .4rem}
+  .floorsec.here{color:var(--brass)}
+  .cascade{font:.66rem var(--mono);color:var(--faint);display:inline-flex;align-items:center;
+    gap:.4em;margin-left:.8rem;cursor:pointer}
   /* the objective ledger (0030 §4) */
   .obj .row{margin:.3rem 0;font:.68rem var(--mono);color:var(--blue)}
   .obj .row .rm{color:var(--faint);margin-left:.45rem}
@@ -550,6 +555,7 @@
         <select id="pf-transport"><option value="streamable-http">streamable-http</option><option value="rest">rest</option><option value="sse">sse</option></select>
         <input id="pf-endpoint" placeholder="endpoint · https://…" style="flex:3;min-width:260px">
         <button class="go" onclick="plantTool()">Plant →</button>
+      <label class="cascade"><input type="checkbox" id="pf-cascade"> also plant on every floor below</label>
       </div>
       <textarea id="pf-manifest" placeholder='declared tools (JSON, optional — MCP servers are enumerated live): [{"name":"search","description":"…"}]'></textarea>
       <div class="chips"><span class="qchip" onclick="presetTavily()">🌱 Tavily search (preset)</span></div>
@@ -561,7 +567,7 @@
     <div class="section">awaiting your decision</div>
     <div id="farmpending"><div class="quiet">nothing staged.</div></div>
     <div class="section">the toolshed</div>
-    <div class="farmgrid" id="farmroster"></div>
+    <div id="farmroster"></div>
     <div class="quiet" id="farmempty" style="margin-top:.4rem">no services planted yet — this world consumes nothing.</div>
   </div>
 
@@ -575,6 +581,7 @@
         <select id="sf-route"><option value="litellm-direct">litellm-direct (your keys)</option><option value="openrouter">openrouter</option></select>
         <select id="sf-class"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option><option value="xhigh">xhigh</option></select>
         <button class="go" onclick="saddleMind()">Saddle →</button>
+      <label class="cascade"><input type="checkbox" id="sf-cascade"> also saddle on every floor below</label>
       </div>
       <div class="chips"><span class="qchip" onclick="presetSaddle('anthropic/claude-sonnet-4-6','medium')">🐎 Sonnet (medium)</span>
         <span class="qchip" onclick="presetSaddle('anthropic/claude-haiku-4-5-20251001','low')">🐎 Haiku (low)</span>
@@ -589,7 +596,7 @@
     <div class="section">the pasture calendar · next 90 days</div>
     <div class="pasture" id="pasture"><span class="quiet">no announced expiries — a calm pasture.</span></div>
     <div class="section">the stalls</div>
-    <div class="farmgrid" id="stableroster"></div>
+    <div id="stableroster"></div>
     <div class="quiet" id="stableempty" style="margin-top:.4rem">no minds saddled yet — the legacy registry file still routes.</div>
     <div class="section">who is thinking · usage across the whole subtree</div>
     <div id="whothinks"><div class="quiet">no governed thoughts metered yet.</div></div>
@@ -597,7 +604,7 @@
 
   <!-- REQUESTS -->
   <div class="view hide" id="v-req">
-    <div class="section" style="margin-top:0">requests &amp; approvals · the human's queue</div>
+    <div class="section" style="margin-top:0">requests &amp; approvals · the human's queue — at <span class="place" style="color:var(--brass)">…</span></div>
     <div id="reqlist"><div class="quiet">nothing waiting — a calm universe.</div></div>
   </div>
 
@@ -606,7 +613,7 @@
        origin; state it, approve the plan, answer what the flow asks, and read
        the report — this week's or the one from thirty days ago. -->
   <div class="view hide" id="v-obj">
-    <div class="section" style="margin-top:0">the objective ledger · you are the origin of every objective</div>
+    <div class="section" style="margin-top:0">the objective ledger · you are the origin — at <span class="place" style="color:var(--brass)">…</span></div>
     <div class="ask-in" style="margin-top:.6rem">
       <input id="obj-in" placeholder="build X · acquire knowledge of Y · check on Z — the universe plans; you approve">
       <button onclick="submitObjective()">State it →</button>
@@ -622,6 +629,7 @@
   <div class="view hide" id="v-ask">
     <div class="ask-box">
       <div class="prompt">Ask the universe.</div>
+      <div class="hint">this ask lands at <span class="place" style="color:var(--brass)">…</span></div>
       <div class="hint">command the librarian to gather sourced, verified knowledge — it becomes memory in the Window.</div>
       <div class="ask-in">
         <input id="ask" placeholder="gather sourced knowledge on…">
@@ -699,11 +707,48 @@ let CRUMBS=[];                     /* [{label, base}] — the trail behind this 
 function floorReset(){
   topoCache=null;presCache=null;farmCache=[];laneSig="";floorScope=null;
   const O=$("orrery");if(O)O.dataset.sig="";
-  if(typeof closeParlor==="function")closeParlor();
+  /* the conversation SURVIVES navigation (0030 §4): the parlor is pinned to the
+     floor where it opened — its own base, its own label — and rides along. */
 }
 function floorSet(base){
-  API=base;floorReset();renderCrumbs();tick();
+  API=base;floorReset();renderCrumbs();tick();syncHash(true);
   if(!$("v-uni").classList.contains("hide"))setTimeout(scrub,300);
+}
+/* ── the URL carries the place (0030 §4): back and bookmarks work ── */
+let APPLYING=false;
+function syncHash(push){
+  if(APPLYING)return;
+  const port=API?new URL(API).port:location.port;
+  const tab=document.querySelector(".tab.on");
+  const h=`#f=${port}&v=${tab?tab.dataset.v:"uni"}`;
+  if(location.hash===h)return;
+  if(push)history.pushState(null,"",h);else history.replaceState(null,"",h);
+}
+function applyHash(){
+  APPLYING=true;
+  try{
+    const f=(location.hash.match(/[#&]f=(\d+)/)||[])[1];
+    const v=(location.hash.match(/[#&]v=(\w+)/)||[])[1];
+    const here=API?new URL(API).port:location.port;
+    if(f&&f!==here){CRUMBS=[];API=f===location.port?"":`${location.protocol}//${location.hostname}:${f}`;
+      floorReset();renderCrumbs();tick();
+      if(!$("v-uni").classList.contains("hide"))setTimeout(scrub,300)}
+    if(v&&typeof vmap!=="undefined"){
+      const t=document.querySelector(`.tab[data-v="${vmap[v]||v}"]`);
+      if(t&&!t.classList.contains("on"))t.click();
+    }
+  }finally{APPLYING=false}
+}
+window.addEventListener("popstate",applyHash);
+async function cascadeBelow(body){
+  /* the cascade affordance (0030 §4): the SAME ask, posted to every floor below —
+     each floor's own queue, each floor's own human gate; nothing is imposed */
+  const ports=[]; const walk=n=>{if(!n)return;(n.children||[]).forEach(c=>{if(c.port)ports.push(c.port);walk(c)})};
+  walk(topoCache);
+  for(const port of ports){
+    try{await fetch(`${location.protocol}//${location.hostname}:${port}/requests`,
+      {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)})}catch{}
+  }
 }
 function floorGo(scopeEnc){
   const n=findNode(decodeURIComponent(scopeEnc));
@@ -737,6 +782,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));
   ["uni","obj","pulse","farm","stable","req","ask"].forEach(v=>$("v-"+v).classList.toggle("hide",v!==t.dataset.v));
   if(t.dataset.v==="uni"){const O=$("orrery");if(O)O.dataset.sig="";renderOrrery();scrub()}
+  if(typeof syncHash==="function")syncHash(false);   /* the tab rides the URL too */
 });
 
 /* ── the world: /topology heartbeats assembled — what this floor knows below it ── */
@@ -1004,6 +1050,7 @@ async function pulse(){
   try{
     const h=await(await fetch(api("/health"))).json(); $("scope").textContent=h.scope;
     floorScope=h.scope;
+    document.querySelectorAll(".place").forEach(e=>e.textContent=h.scope);  /* every surface names its place (0030 §4) */
     const ro=await(await fetch(api("/rollup"))).json();
     $("hpulse").innerHTML=`<span class="live">live</span> · ${h.scope}<br>`+
       `<b>${ro.memories}</b> memories · <b>${ro.runs}</b> runs · <b>${money(ro.usd)}</b> spent`;
@@ -1153,7 +1200,9 @@ async function loadFarm(){
     }).join("") : `<div class="quiet">nothing staged.</div>`;
     const live=farmCache.filter(s=>s.state!=="decommissioned");
     $("farmempty").style.display=live.length?"none":"";
-    $("farmroster").innerHTML=live.map(s=>{
+    const groups={};live.forEach(s=>(groups[s.floor||"?"]=groups[s.floor||"?"]||[]).push(s));
+    const order=Object.keys(groups).sort((a,b)=>(a===f.scope?-1:b===f.scope?1:a.localeCompare(b)));
+    const svcCard=s=>{
       const tools=(s.manifest||[]).map(t=>t.name).join(" · ")||"—";
       return `<div class="svc"><div class="hd"><span class="nm" title="${s.did}">${s.name}</span>
         <span class="schip ${s.state}">${s.state}</span></div>
@@ -1165,7 +1214,10 @@ async function loadFarm(){
         ${s.state==="quarantined"?`<br><span style="color:var(--red)">came back changed — decide above</span>`:""}</div>
         <div class="acts"><button class="sbtn no" onclick="farmDecom('${s.name}',false)">decommission</button>
         <button class="sbtn no" onclick="farmDecom('${s.name}',true)" title="decommission AND discredit the source — stages the 0014 §4 knowledge recall">decom + discredit</button></div></div>`;
-    }).join("");
+    };
+    $("farmroster").innerHTML=order.map(fl=>
+      `<div class="floorsec${fl===f.scope?" here":""}">${fl===f.scope?"this floor · ":""}${fl}</div><div class="farmgrid">`
+      +groups[fl].map(svcCard).join("")+`</div>`).join("");
   }catch{}
 }
 async function farmDecide(id,ok){
@@ -1184,7 +1236,11 @@ async function plantTool(){
       body:JSON.stringify({kind:"service",action:"plant",name,svc_kind:$("pf-kind").value,
         transport:$("pf-transport").value,endpoint,manifest,text:`plant ${name}`})});
     if(!r.ok){err.textContent=`the daemon refused: ${r.status}`;return}
+    if($("pf-cascade")&&$("pf-cascade").checked)await cascadeBelow({kind:"service",action:"plant",
+      name,svc_kind:$("pf-kind").value,transport:$("pf-transport").value,endpoint,manifest,
+      text:`plant ${name} (cascaded from above)`});
     $("pf-name").value=$("pf-endpoint").value=$("pf-manifest").value="";
+    if($("pf-cascade"))$("pf-cascade").checked=false;
     loadFarm();
   }catch{err.textContent="unreachable — is the daemon up? (scripts/dev.sh status)"}
 }
@@ -1253,7 +1309,9 @@ async function loadStable(){
       : `<span class="quiet" style="position:absolute;left:1rem;top:22px">no announced expiries — a calm pasture.</span>`;
     // the stalls
     $("stableempty").style.display=live.length?"none":"";
-    $("stableroster").innerHTML=live.map(s=>{
+    const sgroups={};live.forEach(s=>(sgroups[s.floor||"?"]=sgroups[s.floor||"?"]||[]).push(s));
+    const sorder=Object.keys(sgroups).sort((a,b)=>(a===st.scope?-1:b===st.scope?1:a.localeCompare(b)));
+    const stallCard=s=>{
       const p=(s.manifest||{}).pricing||{};
       const mt=v=>v?("$"+(parseFloat(v)*1e6).toFixed(2)):"—";
       return `<div class="svc"><div class="hd"><span class="nm" title="${s.did}">${s.id}</span>
@@ -1265,7 +1323,10 @@ async function loadStable(){
         ${s.expires_at?`<br><span style="color:${(new Date(String(s.expires_at).slice(0,10))-now)/day<=30?"var(--red)":"var(--brass)"}">expires ${String(s.expires_at).slice(0,10)}</span>`:""}
         ${s.state==="deprecated"?`<br><span style="color:var(--red)">the deal moved or the clock ran — decide above</span>`:""}</div>
         <div class="acts"><button class="sbtn no" onclick="stableRetire('${s.id}')">retire</button></div></div>`;
-    }).join("");
+    };
+    $("stableroster").innerHTML=sorder.map(fl=>
+      `<div class="floorsec${fl===st.scope?" here":""}">${fl===st.scope?"this floor · ":""}${fl}</div><div class="farmgrid">`
+      +sgroups[fl].map(stallCard).join("")+`</div>`).join("");
     // who is thinking — every metered identity across the subtree, usd-sorted
     const usage=(st.usage||[]).slice().sort((a,b)=>(b.usd||0)-(a.usd||0));
     $("whothinks").innerHTML= usage.length? usage.map(u=>{
@@ -1287,7 +1348,11 @@ async function saddleMind(){
       body:JSON.stringify({kind:"mind",action:"saddle",mind:id,route:$("sf-route").value,
         class:$("sf-class").value,text:`saddle ${id} (${$("sf-class").value})`})});
     if(!r.ok){err.textContent=`the daemon refused: ${r.status}`;return}
+    if($("sf-cascade")&&$("sf-cascade").checked)await cascadeBelow({kind:"mind",action:"saddle",
+      mind:id,route:$("sf-route").value,class:$("sf-class").value,
+      text:`saddle ${id} (cascaded from above)`});
     $("sf-id").value="";
+    if($("sf-cascade"))$("sf-cascade").checked=false;
     loadStable();
   }catch{err.textContent="unreachable — is the daemon up? (scripts/dev.sh status)"}
 }
@@ -1312,8 +1377,11 @@ const RESCOL={becky:"var(--brass)",vigil:"var(--viol)",steward:"var(--blue)",
 let PA=null;                              /* {name, session, seen, timer} — one audience */
 function openParlor(name){
   if(!name)return; closeParlor();
-  PA={name,session:"pa-"+Math.random().toString(36).slice(2,10),seen:new Set(),timer:null};
-  $("p-name").textContent=name; $("p-floor").textContent=floorScope||"";
+  /* the audience is OF a place (0030 §4): base and floor pin at open, so the
+     conversation survives however far the human navigates afterwards */
+  PA={name,base:API,floor:floorScope||"",session:"pa-"+Math.random().toString(36).slice(2,10),
+      seen:new Set(),timer:null};
+  $("p-name").textContent=name; $("p-floor").textContent=PA.floor;
   $("p-dot").style.background=RESCOL[name]||"var(--dim)";
   $("p-did").textContent=""; $("p-chips").innerHTML="";
   $("p-expand").style.display="none"; $("p-ws").style.display="none";
@@ -1333,7 +1401,7 @@ function parlorRefit(){ // after the pane slides, re-fit whatever measures itsel
 async function parlorPost(extra){
   if(!PA)return;
   try{
-    const r=await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+    const r=await fetch((PA.base||"")+"/requests",{method:"POST",headers:{"content-type":"application/json"},
       body:JSON.stringify({kind:"parlor",to:PA.name,session:PA.session,
         text:extra.text||`${extra.verb||"say"} · ${PA.name}`,...extra})});
     if(!r.ok)parlorLine("reply","the door is sealed — a spectator may watch this world turn, never speak into it.");
@@ -1403,7 +1471,7 @@ function renderRoom(ws){
 }
 async function parlorPoll(){
   if(!PA)return;
-  let q; try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{return}
+  let q; try{q=(await(await fetch((PA.base||"")+"/requests")).json()).requests||[]}catch{return}
   const mine=q.filter(r=>r.kind==="parlor"&&r.session===PA.session);
   for(const r of mine){
     if(r.status!=="done"||PA.seen.has(r.id))continue;
@@ -1636,9 +1704,9 @@ window.addEventListener("resize",()=>{if(!$("v-uni").classList.contains("hide"))
   const O=$("orrery");if(O)O.dataset.sig="";renderOrrery();scrub()}});
 
 /* deep-link a view (#v=uni|pulse|req|ask; "window" stays an alias) */
-const vparam=(location.hash.match(/[#&]v=(\w+)/)||[])[1];
 const vmap={window:"uni",universe:"uni"};
-if(vparam){const t=document.querySelector(`.tab[data-v="${vmap[vparam]||vparam}"]`); if(t)t.click();}
+applyHash();                            /* the URL is the place — honor it at first light */
+syncHash(false);
 
 /* ── THE OBJECTIVE LEDGER (0030 §4, spoonful 2): the human's full loop in the
       glass — state it, approve the plan, answer what the flow asks, read the

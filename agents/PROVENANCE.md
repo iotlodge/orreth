@@ -197,7 +197,7 @@ Capability (0029 — upload-is-an-ask, the parked eye, the pinned-organ roster f
 |---|---|---|---|
 | Design | `../docs/design/0030-the-humans-seat.md` | **Fable 5** | the vision-sync dive: O·I·O·T ladder canon, the plan gate, the seat |
 | Sim + worker | `../backend/conformance/orreth_sim/fingertip.py`, `console_worker.py` | **Fable 5** | sp1: plan gate (curate → stage → human approves → fan; plan lands as a signed record), sliver→intention rename w/ wire read-compat |
-| Glass | `../backend/plane/crates/orrethd/src/window.html` | **Fable 5** | sp1: the objective gate — plan summary + "fan the plan"/"decline" at the human's queue · sp2: the Objectives tab — state it, staged plans, answer-in-the-card, reports with severity chips; renders only from /requests; mid-answer outranks the refresh |
+| Glass | `../backend/plane/crates/orrethd/src/window.html` | **Fable 5** | sp1: the objective gate — plan summary + "fan the plan"/"decline" at the human's queue · sp2: the Objectives tab — state it, staged plans, answer-in-the-card, reports with severity chips; renders only from /requests; mid-answer outranks the refresh · sp3: place-as-spine — URL carries floor+tab (popstate honored), the parlor pins its floor and survives navigation, every surface names its place, Farm/Stable sectioned by floor, cascade-below checkboxes |
 | Tests | `../backend/conformance/tests/test_fingertip.py` | **Fable 5** | gate test (nothing fans unapproved); suite 115/115 |
 
 ### Orrery residents (Opus 4.8, quarantined) — 2026-07-05, branch `opus/orrery-residents`
