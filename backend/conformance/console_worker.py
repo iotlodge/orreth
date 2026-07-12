@@ -1461,6 +1461,7 @@ def _tend_objective(rid: str, st: dict) -> None:
         if q is not None and q.get("status") == "done":
             res = q.get("result")
             word = str((res or {}).get("answer") if isinstance(res, dict) else res or "")
+            st["answer_word"] = word          # the human's word rides into the report
             work = fingertip.make_intention(
                 st["goal"], f"provision infrastructure for “{st['text'][:60]}” — "
                             f"the human answered: {word[:80]}", st["share"])
@@ -1515,6 +1516,8 @@ def _tend_objective(rid: str, st: dict) -> None:
     assembly = {"objective": st["text"], "goal_hash": st["goal"],
                 "branches": branches,
                 "verification": "complete" if done else "partial",
+                **({"question_answer": st["answer_word"]}
+                   if st.get("answer_word") else {}),
                 **({"dark": st["dark"]} if st["dark"] else {}),
                 **({"waiting": waiting} if waiting else {})}
     rec = make_memory(me, ORCH, scope, {"objective_outcome": assembly},

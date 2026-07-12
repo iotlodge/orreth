@@ -298,6 +298,19 @@
   .think .fl{flex:1;color:var(--faint)} .think .n{width:6.5rem;text-align:right;color:var(--dim)}
   .think .u{width:5rem;text-align:right;color:var(--brass)}
   .think.resident .nm::after{content:" · resident";color:var(--faint)}
+  /* the objective ledger (0030 §4) */
+  .obj .row{margin:.3rem 0;font:.68rem var(--mono);color:var(--blue)}
+  .obj .row .rm{color:var(--faint);margin-left:.45rem}
+  .obj .sev{border:1px solid var(--hair2);color:var(--dim);border-radius:999px;
+    font-size:.58rem;padding:.02em .5em;margin-left:.45rem}
+  .obj .sev.amber{border-color:#c90;color:#fc3}
+  .obj .obj-verdict{font:.66rem var(--mono);color:var(--faint);margin:.35rem 0}
+  .obj .obj-verdict.ok{color:var(--near)}
+  .obj .obj-q{margin:.5rem 0;padding:.5rem .7rem;border:1px dashed var(--brassdim);
+    border-radius:8px;font:.68rem var(--mono);color:var(--brass)}
+  .obj .qa{display:flex;gap:.5rem;margin-top:.4rem}
+  .obj .qa input{flex:1;font:.68rem var(--mono);color:var(--star);background:rgba(255,255,255,.04);
+    border:1px solid var(--hair2);border-radius:6px;padding:.35em .6em}
   .sbtn{font:.68rem var(--mono);color:var(--dim);border:1px solid var(--hair2);border-radius:6px;
     padding:.3em .8em;cursor:pointer;background:transparent}
   .sbtn:hover{color:var(--star);border-color:var(--brassdim)}
@@ -468,6 +481,7 @@
   <span id="crumbs"></span>
   <div class="tabs">
     <span class="tab on" data-v="uni">Universe</span>
+    <span class="tab" data-v="obj">Objectives<span class="badge" id="obj-badge"></span></span>
     <span class="tab" data-v="pulse">Pulse</span>
     <span class="tab" data-v="farm">Farm<span class="badge" id="farm-badge"></span></span>
     <span class="tab" data-v="stable">Stable<span class="badge" id="stable-badge"></span></span>
@@ -588,6 +602,23 @@
   </div>
 
   <!-- ASK -->
+  <!-- THE OBJECTIVE LEDGER (0030 §4): the artifact of artifacts — you are the
+       origin; state it, approve the plan, answer what the flow asks, and read
+       the report — this week's or the one from thirty days ago. -->
+  <div class="view hide" id="v-obj">
+    <div class="section" style="margin-top:0">the objective ledger · you are the origin of every objective</div>
+    <div class="ask-in" style="margin-top:.6rem">
+      <input id="obj-in" placeholder="build X · acquire knowledge of Y · check on Z — the universe plans; you approve">
+      <button onclick="submitObjective()">State it →</button>
+    </div>
+    <div class="formerr" id="obj-err"></div>
+    <div class="steps"><span><span class="num">①</span>a plan stages — origin plans wait for you</span>
+      <span><span class="num">②</span>your word fans the intentions down the floors</span>
+      <span><span class="num">③</span>the report is yours forever — every artifact linked</span></div>
+    <div class="section">your objectives</div>
+    <div id="objlist"><div class="quiet">no objectives yet — state one above.</div></div>
+  </div>
+
   <div class="view hide" id="v-ask">
     <div class="ask-box">
       <div class="prompt">Ask the universe.</div>
@@ -704,7 +735,7 @@ const money=u=>u>=0.01?"$"+u.toFixed(2):u>0?"$"+u.toFixed(5):"$0";
 /* view switching */
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));
-  ["uni","pulse","farm","stable","req","ask"].forEach(v=>$("v-"+v).classList.toggle("hide",v!==t.dataset.v));
+  ["uni","obj","pulse","farm","stable","req","ask"].forEach(v=>$("v-"+v).classList.toggle("hide",v!==t.dataset.v));
   if(t.dataset.v==="uni"){const O=$("orrery");if(O)O.dataset.sig="";renderOrrery();scrub()}
 });
 
@@ -1609,7 +1640,77 @@ const vparam=(location.hash.match(/[#&]v=(\w+)/)||[])[1];
 const vmap={window:"uni",universe:"uni"};
 if(vparam){const t=document.querySelector(`.tab[data-v="${vmap[vparam]||vparam}"]`); if(t)t.click();}
 
-function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable()}
+/* ── THE OBJECTIVE LEDGER (0030 §4, spoonful 2): the human's full loop in the
+      glass — state it, approve the plan, answer what the flow asks, read the
+      report. Renders ONLY from /requests — no privileged path, nothing new. ── */
+async function submitObjective(){
+  const t=$("obj-in").value.trim(); if(!t)return;
+  try{
+    const r=await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({kind:"objective",text:t})});
+    if(!r.ok){$("obj-err").textContent=`the daemon refused (${r.status})`;return}
+    $("obj-in").value="";$("obj-err").textContent="";loadObjectives();
+  }catch{$("obj-err").textContent="unreachable — is the daemon up? (scripts/dev.sh status)"}
+}
+async function objAnswer(qid){
+  const el=$("qa-"+qid); const t=(el?el.value:"").trim(); if(!t)return;
+  await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({id:qid,status:"done",result:{answer:t}})});
+  loadObjectives();
+}
+function sevChip(s){if(!s)return"";
+  const amber=["medium","high","critical"].includes(s);
+  return `<span class="sev ${amber?"amber":""}">${esc(s)}</span>`}
+async function loadObjectives(){
+  /* a human mid-answer outranks the refresh — the re-render must never eat
+     their words (found by the human walk, 0030's standing rule) */
+  const busy=document.activeElement;
+  if(busy&&busy.id&&busy.id.startsWith("qa-"))return;
+  let q;try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{return}
+  const objs=q.filter(r=>r.kind==="objective");
+  const questions=q.filter(r=>r.kind==="question");
+  const waitingOnYou=objs.filter(r=>r.status==="staged").length
+    +questions.filter(r=>r.status==="pending").length;
+  const badge=$("obj-badge"); if(badge)badge.textContent=waitingOnYou?` (${waitingOnYou})`:"";
+  $("objlist").innerHTML= objs.length? objs.slice().reverse().map(r=>{
+    const res=r.result||{};
+    const goal=(res.assembly||{}).goal_hash||(res.plan||{}).goal||"";
+    const openQs=questions.filter(x=>x.of===goal&&x.status==="pending");
+    let body="";
+    if(r.status==="staged"&&res.plan){
+      body=((res.plan.intentions||[]).map(i=>
+        `<div class="row">→ <b>${esc(i.seat)}</b><span class="rm">${esc((i.intent||"").slice(0,90))}</span>`+
+        `${i.beyond_token?'<span class="sev amber">will ask leave</span>':""}</div>`).join(""))
+        +`<div class="row rm">…and it will ask you: ${esc((res.plan.question||"").slice(0,110))}</div>`
+        +`<div style="margin-top:.4rem"><button class="sbtn ok" onclick="joinDecide('${r.id}',true)">fan the plan</button> `
+        +`<button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button></div>`;
+    }else if(r.status==="approved"){
+      body=`<div class="row rm">fanned — ${((res.plan||{}).intentions||[]).length} intention(s) riding the floors; the assembly comes home when they do…</div>`;
+    }else if(r.status==="done"&&res.assembly){
+      const a=res.assembly;
+      body=`<div class="obj-verdict ${a.verification==="complete"?"ok":""}">verification · ${esc(a.verification)}</div>`
+        +(a.branches||[]).map(b=>
+          `<div class="row">→ <b>${esc(b.seat)}</b> ${esc(b.status)}${sevChip(b.severity)}`+
+          `<span class="rm">${esc((b.answer||"").slice(0,80))}</span></div>`).join("")
+        +(a.question_answer?`<div class="row rm">you answered: ${esc(a.question_answer)}</div>`:"")
+        +((a.dark||[]).length?`<div class="row rm">dark: ${a.dark.map(d=>esc(d.seat||d)).join(", ")}</div>`:"")
+        +((a.waiting||[]).length?`<div class="row rm">waiting: ${a.waiting.map(w=>esc(w)).join("; ")}</div>`:"")
+        +`<div class="row rm">the report record · ${esc((res.record||"").slice(0,34))}…</div>`;
+    }else if(r.status==="denied"){
+      body=`<div class="row rm">declined — nothing fanned; the record keeps that you chose.</div>`;
+    }
+    const qhtml=openQs.map(x=>
+      `<div class="obj-q">the flow asks: ${esc((x.text||"").slice(0,140))}`+
+      `<div class="qa"><input id="qa-${x.id}" placeholder="your answer — silence is denial">`+
+      `<button class="sbtn ok" onclick="objAnswer('${x.id}')">answer</button></div></div>`).join("");
+    return `<div class="req obj"><span class="kind">objective</span>
+     <span class="txt">${esc(r.text||"")}<div class="sub">${r.id} · ${(r.at||"").slice(0,19).replace("T"," ")}</div>
+     ${body}${qhtml}</span><span class="st">${r.status}</span></div>`;
+  }).join("") : `<div class="quiet">no objectives yet — state one above; a plan will stage for your approval.</div>`;
+}
+$("obj-in").addEventListener("keydown",e=>{if(e.key==="Enter")submitObjective()});
+
+function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable();loadObjectives()}
 tick();setInterval(tick,4000);          /* the console breathes */
 if(window.ORRETH_DEMO){                 /* the spectator's ribbon — honest about the frame */
   const b=document.createElement("div");
