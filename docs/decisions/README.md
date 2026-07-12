@@ -352,6 +352,23 @@ these four were JB-level and locked via AskUserQuestion:*
   per-container volumes. Expired drop-class bodies + the tombstone-stub read path land
   with the Purge dive (spoonful 5), where they belong.
 
+### Locked 2026-07-12 (0030 — The Human's Seat; JB's interoperability session, in his words)
+- **The ladder is canon: Objective · Intention · Observation · Thought.** Humans are
+  the ONLY origin of Objectives; residents originate Intentions inside approved
+  plans; workforce originates Observations; minds originate Thoughts. Tiered like
+  the real world; each rung reviews the rung below.
+- **The plan gate**: an Objective is curated into a plan and **HITL-approved before
+  any intention fans**. V0: origin plans always wait for their human.
+- **An Objective is an artifact of artifacts** — everything done, made, decisioned,
+  discovered — with live status and a full report recallable forever (30 days later
+  is one click, because it was never anything but signed records).
+- **The glass is the human's seat**: every surface renders FROM the human's place
+  and says so; humans don't multithread and never should have to.
+- **The data scheme (OIOT indexing) is JB's — held, no action** until he reveals
+  and locks it; contracts/record-shape changes are a rule-9 approval moment.
+- **Standing rule**: every spoonful is proven as a human in the glass (browser
+  walk) before it is called done. Curl proofs are no longer the finish line.
+
 ### Locked 2026-07-11 (0029 — Multimodal Capability, AskUserQuestion)
 - **Upload bars, v0**: 256KB · txt/md/json/csv/pdf/png/jpg — oversized or foreign
   types get the uniform refusal. Bars are floor policy and may loosen later.
