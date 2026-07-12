@@ -1907,6 +1907,34 @@ def pin_organs(port: int, floor: str) -> None:
                 print(f"    (pin {organ} on :{port} refused: {e} — mined fallback stands)")
 
 
+# ---------------------------------------------------------------- the window's eyes (0030 §4)
+
+WIN = _seed("window-viewer")                 # the glass's read-only self, persisted
+WIN_DID = crypto.did_key_for(WIN.public)
+_WINDOW_PINNED: set = set()
+
+
+def window_charter(port: int, scope: str) -> None:
+    """The glass's own eyes (0030 §4): becky mints the window a READ-ONLY viewer
+    capability and pins it on the floor — so a human at :PORT/window sees their
+    floor's spacetime bare, no CLI ceremony. Idempotent per boot, like the organ
+    pins; the pane still holds no privileged path — this IS a capability."""
+    if (port, scope) in _WINDOW_PINNED:
+        return
+    segs = scope.split("/")
+    tiers = ["/".join(segs[:i + 1]) for i in range(len(segs))][::-1]  # deepest first
+    token = _ROOT.issue_token(WIN_DID, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    cfg = {"requester": WIN_DID, "token": token, "requester_scope": scope,
+           "tiers": tiers}
+    try:
+        call(port, "POST", "/window/cfg", {"cfg": cfg})
+        _WINDOW_PINNED.add((port, scope))
+        print(f"  ↳ the window sees (0030): viewer capability pinned on :{port}")
+    except Exception:
+        pass                                  # an older daemon — the CLI path still works
+
+
 # ---------------------------------------------------------------- the parlor (0020)
 
 RESIDENT_KEYS = {"charlotte": (CHA, CHA_DID), "ada": (ADA, ADA_DID)}
@@ -2342,6 +2370,7 @@ def main() -> None:
                     KEEPER.tend(port, scope)
                     WRANGLER.sync(port, scope)
                     pin_organs(port, scope)
+                    window_charter(port, scope)
                     if scope == SCOPE:
                         lib_charter(port, scope)
                     if scope == UNIVERSE_SCOPE:

@@ -102,7 +102,7 @@ ledger/status/report path.
 | 1 | The plan gate + the intention rename (sliver → intention, everywhere) | ✅ landed 2026-07-12 — proven by a human's click in the glass; the question-answer control joins the inbox in spoonful 2 |
 | 2 | The Objective ledger (a VIEW over records that already exist — no new store) | ✅ landed 2026-07-12 — full loop proven as a human: state → staged plan → fan → answer in the card → the report with severities and your answer; the walk caught two real bugs (hardcoded view switcher; the refresh eating a mid-typed answer) |
 | 3 | Place-as-spine: URL scope, surviving conversations, labeled surfaces, scoped tabs, cascade affordances | ✅ landed 2026-07-12 — proven as a human: the URL carries floor+tab (back/bookmark work), the parlor survives navigation pinned to its floor, Requests/Objectives/Ask name their place, Farm/Stable sectioned by floor with this-floor first, cascade checkboxes fan the same ask to every floor's own gate |
-| 4 | Spacetime legibility: beads, notations, milestones, the apex story | glass |
+| 4 | Spacetime legibility: beads, notations, milestones, the apex story | ✅ landed 2026-07-12 — the window lives BARE (worker-pinned viewer capability, no CLI ceremony); lanes = ancestry + self + every descendant (sealed only for true siblings); beads ride their own scope's lane; markers (amber ◆) and milestones (brass ○) never fold into clusters; click pins the card; and the hashchange-reload bug that killed conversations on Back is fixed |
 | — | The data scheme (the index made first-class) | **JB's reveal — its own dive** |
 
 **Standing rule, effective now:** every spoonful is proven **as a human in the

@@ -45,6 +45,9 @@ struct App {
     /// Organ DIDs pinned at join (the R1 door, closed): becky mints the token, the
     /// plane verifies its chain against the pinned root — authority beats archaeology.
     organs: Mutex<BTreeMap<String, String>>,
+    /// The glass's own capability (0030 §4): a worker-pinned, chain-verified
+    /// read-only viewer cfg, so a human at :PORT/window sees their floor bare.
+    window_cfg: Mutex<Value>,
     /// This floor's own port, riding the beat — so one glass can steer to any floor
     /// it can see (the Console's plane-of-view transitions; JB 2026-07-07).
     port: u16,
@@ -296,6 +299,7 @@ async fn main() {
         children: Mutex::new(BTreeMap::new()),
         vitals: Mutex::new(BTreeMap::new()),
         organs: Mutex::new(BTreeMap::new()),
+        window_cfg: Mutex::new(Value::Null),
         port,
         presence_epoch: std::sync::atomic::AtomicU64::new(0),
         presence_memo: Mutex::new((0, None)),
@@ -343,6 +347,8 @@ async fn main() {
         .route("/requests", get(requests_list))
         .route("/requests", post(requests_submit))
         .route("/requests/resolve", post(requests_resolve))
+        .route("/window/cfg", get(window_cfg_get))
+        .route("/window/cfg", post(window_cfg_pin))
         .route("/organs", get(organs_list))
         .route("/organs/pin", post(organs_pin))
         .with_state(app);
@@ -1214,6 +1220,28 @@ async fn organs_list(State(app): State<Arc<App>>) -> Json<Value> {
 /// floor verifies the chain against its pinned trust root (0006) — the same math
 /// as every lease — and the roster stops mining archaeology for that organ.
 /// Re-pinning is idempotent; a rotated organ is one more becky-minted pin away.
+/// The window's eyes (0030 §4): becky's worker pins a READ-ONLY viewer capability —
+/// chain-verified like an organ pin — and the pane still holds no privileged path:
+/// what it serves IS a capability, minted by the only authority that mints.
+async fn window_cfg_pin(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let ok = { app.universe.lock().unwrap().verify_token(&req["cfg"]["token"]).is_ok() };
+        if !ok || req["cfg"]["requester"].as_str().unwrap_or("").is_empty() {
+            bump(&app, "refusals"); // the uniform refusal — a bad chain learns nothing
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        *app.window_cfg.lock().unwrap() = req["cfg"].clone();
+        (StatusCode::OK, Json(json!({"ok": true})))
+    })
+    .await
+    .unwrap()
+}
+
+async fn window_cfg_get(State(app): State<Arc<App>>) -> Json<Value> {
+    Json(app.window_cfg.lock().unwrap().clone())
+}
+
 async fn organs_pin(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
     tokio::task::spawn_blocking(move || {
         let organ = req["organ"].as_str().unwrap_or("").to_string();

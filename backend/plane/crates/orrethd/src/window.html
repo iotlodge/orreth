@@ -348,6 +348,15 @@
   .star.svc:hover{transform:translate(-50%,-50%) rotate(45deg) scale(1.9)}
   /* ── console polish (2026-07-08): calm until drift ── */
   /* crowding at the NOW edge: co-located events fold into one marker, honest count */
+  .star.mk{border-radius:2px;transform:translate(-50%,-50%) rotate(45deg);
+    background:#fc3;box-shadow:0 0 9px 1px rgba(255,204,51,.55)}
+  .star.mk:hover{transform:translate(-50%,-50%) rotate(45deg) scale(1.9)}
+  .star.ms{background:transparent;border:2px solid var(--brass);
+    box-shadow:0 0 9px 1px rgba(212,175,55,.45)}
+  .lgd{font:.6rem var(--mono);color:var(--faint);margin-left:auto;padding-right:.8rem}
+  .lgd i{font-style:normal} .lgd .l-mk{color:#fc3} .lgd .l-ms{color:var(--brass)}
+  .star.cluster.c-mk{border-color:#fc3} .star.cluster.c-mk .cnt{color:#fc3}
+  .star.cluster.c-ms{border-color:var(--brass);border-width:2px}
   .star.cluster{background:var(--deep);border:1px solid var(--brass);
     box-shadow:0 0 10px 2px rgba(212,169,96,.45)}
   .star .cnt{position:absolute;left:50%;top:-12px;transform:translateX(-50%);
@@ -512,6 +521,7 @@
         <span class="grip" id="dgrip">⌃</span>
         <span>the spacetime window</span>
         <span class="dhint" id="dhint">pull up — every memory, in time</span>
+        <span class="lgd">● memory · <i class="l-mk">◆</i> marker · <i class="l-ms">○</i> milestone · ◇ service · ×n cluster · click pins the card</span>
         <span class="down" id="ddown" onclick="drawerDown(event)" title="lower the window">⌄</span>
       </div>
       <div class="skybar">
@@ -692,10 +702,23 @@ if(window.ORRETH_DEMO){
   };
 }
 /* robust: pull the t= capability from the hash regardless of other params (e.g. &v=) */
-const cfg=(()=>{try{const m=location.hash.match(/[#&]t=([^&]+)/);
+let cfg=(()=>{try{const m=location.hash.match(/[#&]t=([^&]+)/);
   return m?JSON.parse(atob(m[1])):(window.ORRETH_DEMO_CFG||null)}
   catch{return window.ORRETH_DEMO_CFG||null}})();
-window.addEventListener("hashchange",()=>location.reload()); /* new token → new console */
+const HASH_CFG=cfg;                 /* a capability handed in the hash rules its home floor */
+async function loadCfg(){
+  /* the window's eyes (0030 §4): the worker pins a read-only viewer capability on
+     every floor, so the glass sees bare — no CLI ceremony. Hash tokens still win. */
+  if(cfg)return;
+  try{const c=await(await fetch(api("/window/cfg"))).json();
+    if(c&&c.token)cfg=c}catch{}
+}
+const TOKEN_PARAM=(location.hash.match(/[#&]t=([^&]+)/)||[])[1]||"";
+window.addEventListener("hashchange",()=>{ /* only a NEW capability reboots the console —
+  place/tab hash moves (0030 §4) must never cost the human their open conversations */
+  const t=(location.hash.match(/[#&]t=([^&]+)/)||[])[1]||"";
+  if(t!==TOKEN_PARAM)location.reload();
+});
 const $=id=>document.getElementById(id);
 /* ── one glass, every floor (JB 2026-07-07): every call rides a switchable base.
    "" = the floor that served this page; a click on any world re-aims the glass at
@@ -706,6 +729,7 @@ const api=p=>API+p;
 let CRUMBS=[];                     /* [{label, base}] — the trail behind this view */
 function floorReset(){
   topoCache=null;presCache=null;farmCache=[];laneSig="";floorScope=null;
+  cfg=(!API&&HASH_CFG)?HASH_CFG:null;loadCfg();   /* each floor pins its own viewer cfg */
   const O=$("orrery");if(O)O.dataset.sig="";
   /* the conversation SURVIVES navigation (0030 §4): the parlor is pinned to the
      floor where it opened — its own base, its own label — and rides along. */
@@ -1580,9 +1604,17 @@ const tiers=()=>cfg?.tiers?[...cfg.tiers].reverse():["u:demo","u:demo/e:cloud","
 let bandGeo=[];
 function layout(){
   const S=sky(); S.querySelectorAll(".band,.dust").forEach(e=>e.remove());
-  const T=tiers();
-  /* sibling worlds from topology: visible as SEALED lanes — the pane may know THAT
-     they exist (presence rolls up, 0005) but never WHAT they hold (capability, 0002) */
+  const anc=tiers();
+  /* the world THIS floor may see (0030 §4): its ancestry above, itself, and every
+     descendant below — the same subtree the orrery and roster show (rule 7). */
+  const here=floorScope||anc[anc.length-1];
+  const T=[...anc];
+  const dwalk=(n,on)=>{if(!n)return;const hit=on||n.scope===here;
+    if(hit&&!T.includes(n.scope))T.push(n.scope);
+    (n.children||[]).forEach(c=>dwalk(c,hit))};
+  dwalk(topoCache,false);
+  /* sibling worlds stay SEALED lanes — the pane may know THAT they exist
+     (presence rolls up, 0005) but never WHAT they hold (capability, 0002) */
   const others=[]; const walk=n=>{if(!n)return;
     if(!T.includes(n.scope))others.push(n.scope);(n.children||[]).forEach(walk)};
   walk(topoCache); others.sort();
@@ -1621,7 +1653,9 @@ function bandForAge(days){
 let seq=0;
 async function scrub(){
   const days=scrubToDays(+$("scrub").value);$("days").textContent=days;
-  if(!cfg)return;const from=new Date(Date.now()-days*DAY),mine=++seq;
+  if(!cfg)await loadCfg();          /* self-healing: fetch the pinned eyes if we have none */
+  if(!cfg){$("count").textContent="no viewer capability pinned yet — is the worker up?";return}
+  const from=new Date(Date.now()-days*DAY),mine=++seq;
   const res=await fetch(api("/retrieve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({query:{requester:cfg.requester,subject:SUBJ(),space:"self",
       time:{from:iso(from)},intent:"recall",budget:{cost:4},auth:"biscuit-sim"},
@@ -1634,12 +1668,18 @@ async function scrub(){
      Co-located beads (the NOW edge crowds — heartbeats pile up there) fold into one
      cluster marker with an honest count; hover reads the whole bucket. */
   const span=Date.now()-from.getTime(),W=S.clientWidth,X0=182,X1=W-26,perBand={},bins={};
+  const laneOf={};bandGeo.forEach((g,i)=>laneOf[g.scope]=i);
   for(const h of r.hits){const age=(new Date(h.occurred_at)-from.getTime())/span;
-    const g=bandForAge((Date.now()-new Date(h.occurred_at))/DAY);
-    const bi=bandGeo.indexOf(g);perBand[bi]=(perBand[bi]||0)+1;
+    const bi=laneOf[h.scope]!=null?laneOf[h.scope]
+      :bandGeo.indexOf(bandForAge((Date.now()-new Date(h.occurred_at))/DAY));
+    const g=bandGeo[bi];perBand[bi]=(perBand[bi]||0)+1;
     const x=Math.max(X0,Math.min(X1,X0+(X1-X0)*age));
-    const key=bi+":"+Math.round(x/14);          /* one bucket ≈ one star's footprint */
-    (bins[key]=bins[key]||{g,bi,bx:+key.split(":")[1],xs:[],items:[]});
+    /* graded kinds never fold into the pile (0030 §4): a marker or a milestone
+       keeps its own face however crowded the NOW edge gets */
+    const tg=h.tags||[];
+    const kind=tg.includes("marker")?"mk":(tg.includes("plan")||tg.includes("objective-outcome"))?"ms":tg.includes("service")?"svc":"mem";
+    const key=bi+":"+Math.round(x/14)+":"+kind;  /* one bucket ≈ one star's footprint, per kind */
+    (bins[key]=bins[key]||{g,bi,kind,bx:+key.split(":")[1],xs:[],items:[]});
     bins[key].xs.push(x);bins[key].items.push({h,age});}
   for(const b of Object.values(bins)){
     const x=b.xs.reduce((a,c)=>a+c,0)/b.xs.length,g=b.g;
@@ -1647,19 +1687,26 @@ async function scrub(){
     if(b.items.length===1){
       const {h,age}=b.items[0];
       s.className="star "+fclass(h.fidelity);
-      if((h.tags||[]).includes("service"))s.className="star svc"; /* a worldline event (0018 §4) */
+      const tg=h.tags||[];
+      if(tg.includes("service"))s.className="star svc";      /* a worldline event (0018 §4) */
+      if(tg.includes("marker"))s.className="star mk";        /* a moment graded (0024) */
+      if(tg.includes("plan")||tg.includes("objective-outcome"))
+        s.className="star ms";                               /* an objective milestone (0030) */
       const sz=5+3*Math.max(0,age);s.style.width=s.style.height=sz+"px";
       s.style.top=(g.top+g.h*.58+((b.bx%3)-1)*7)+"px";
       s.onmouseenter=()=>showLeader(s,h);
+      s.onclick=e=>{e.stopPropagation();showLeader(s,h);leader().dataset.pin="1"};
     }else{
-      s.className="star cluster";
+      s.className="star cluster"+(b.kind!=="mem"?" c-"+b.kind:"");
       const sz=Math.min(13,8+b.items.length);s.style.width=s.style.height=sz+"px";
       s.style.top=(g.top+g.h*.58)+"px";
       s.innerHTML=`<span class="cnt">×${b.items.length}</span>`;
       s.onmouseenter=()=>showLeaderCluster(s,b.items);
+      s.onclick=e=>{e.stopPropagation();showLeaderCluster(s,b.items);leader().dataset.pin="1"};
     }
     s.style.left=x+"px";
-    s.onmouseleave=()=>leader().classList.remove("on");S.appendChild(s)}
+    s.onmouseleave=()=>{if(!leader().dataset.pin)leader().classList.remove("on")};S.appendChild(s)}
+  S.onclick=()=>{delete leader().dataset.pin;leader().classList.remove("on")};
   bandGeo.forEach((g,i)=>{const el=$("bc-"+i);if(el)el.textContent="· "+(perBand[i]||0)});
   $("count").textContent=`${r.hits.length} memor${r.hits.length===1?"y":"ies"} · ${r.verification}`;
   if(r.remainder){const n=document.createElement("div");n.className="remnote";
