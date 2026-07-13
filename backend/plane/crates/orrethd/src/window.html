@@ -438,6 +438,30 @@
   .wsp .row .amber{border:1px solid #c90;color:#fc3;border-radius:999px;
     font-size:.58rem;padding:.02em .5em;margin-left:.4rem}
   .wsp .doc{font:.72rem/1.5 var(--mono);color:var(--blue);white-space:pre-wrap;overflow-wrap:anywhere}
+  /* ── THE VISIBLE MIND (0031 §6): the choreography arrives COMPOSED (nodes ·
+        edges · narrative, the 0008 bijection) and renders blind; the walk opens
+        a seat — what rode down, what it cost, who graded it, what came back ── */
+  .walk{margin-top:.5rem;border:1px solid var(--hair2);border-radius:8px;padding:.55rem .6rem;background:rgba(255,255,255,.015)}
+  .wgraph{position:relative;width:100%}
+  .wgraph svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .wgraph svg line{stroke:var(--hair2);stroke-width:.6;vector-effect:non-scaling-stroke}
+  .wgraph svg line.hl{stroke:var(--brass)}
+  .gnode{position:absolute;transform:translate(-50%,-50%);font:.66rem var(--mono);color:var(--dim);
+    border:1px solid var(--hair2);border-radius:7px;padding:.22rem .45rem;background:rgba(11,14,22,.95);
+    max-width:32%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;z-index:1}
+  .gnode.done{color:var(--near);border-color:rgba(127,209,168,.45)}
+  .gnode.dark{color:var(--red);border-color:rgba(232,154,143,.5)}
+  .gnode.waiting-human,.gnode.parked{color:var(--brass);border-color:var(--brassdim)}
+  .gnode.human{color:var(--star);border-color:var(--brassdim)}
+  .gnode.sel,.gnode.hl{color:var(--star);border-color:var(--brass)}
+  .gnode.finger{cursor:pointer}
+  .gsev{display:inline-block;margin-left:.3rem;font-size:.6rem;color:var(--brass)}
+  .gnarr{margin-top:.4rem}
+  .gnarr div{font:.66rem/1.5 var(--mono);color:var(--faint)}
+  .gnarr div:hover{color:var(--dim)}
+  .gdetail{margin-top:.4rem;border-top:1px dashed var(--hair2);padding-top:.4rem;
+    font:.68rem/1.55 var(--mono);color:var(--dim);white-space:pre-wrap;overflow-wrap:anywhere}
+  .wtoggle{cursor:pointer;color:var(--brass)} .wtoggle:hover{color:var(--star)}
   .pdrop{margin:.5rem 1.1rem;padding:.5rem .8rem;border:1px dashed var(--hair2);border-radius:8px;
     font:.66rem var(--mono);color:var(--faint);text-align:center;cursor:default}
   .pdrop.hot{border-color:var(--brass);color:var(--brass)}
@@ -1495,6 +1519,7 @@ function renderRoom(ws){
       `<div class="row">${esc(i.text)}${i.meta?`<span class="rm">${esc(i.meta)}</span>`:""}`+
       `${i.amber?`<span class="amber">${esc(i.severity||"co-review")}</span>`:""}</div>`).join("");
     else if(p.kind==="doc")body=`<div class="doc">${esc(p.text)}</div>`;
+    else if(p.kind==="graph")body=renderGraph(p,"ws",false); /* the fifth kind (0031 §6) */
     return `<div class="wsp"><div class="wt">${esc(p.title)}</div>${body}</div>`;
   }).join("");
 }
@@ -1781,6 +1806,61 @@ async function objAnswer(qid){
 function sevChip(s){if(!s)return"";
   const amber=["medium","high","critical"].includes(s);
   return `<span class="sev ${amber?"amber":""}">${esc(s)}</span>`}
+/* ── the visible mind (0031 §6): the graph is COMPOSED by the seat that owns the
+      flow (nodes · edges · narrative, the 0008 §3 bijection — checked by test,
+      never re-derived here) and rendered BLIND, the workspace law (0020). ── */
+const WALKOPEN=new Set(), WALKSEL=new Map(), MARKCACHE=new Map();
+function walkToggle(id){WALKOPEN.has(id)?WALKOPEN.delete(id):WALKOPEN.add(id);loadObjectives()}
+function gpos(g){ /* deterministic layout in % space: objective | fingers | review | human */
+  const fingers=g.nodes.filter(n=>n.role==="fingertip");
+  const H=Math.max(fingers.length,1);
+  const pos={objective:[10,50],review:[74,50],human:[93,50]};
+  fingers.forEach((f,i)=>pos[f.id]=[42,(100*(i+.5))/H]);
+  return pos;
+}
+function renderGraph(g,reqId,interactive){
+  if(!g||!g.nodes)return"";
+  const pos=gpos(g);
+  const px=Math.max(96,g.nodes.filter(n=>n.role==="fingertip").length*48);
+  const lines=g.edges.map(e=>{const a=pos[e.from],b=pos[e.to];
+    return a&&b?`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" data-e="${esc(e.from)}→${esc(e.to)}"/>`:""}).join("");
+  const chips=g.nodes.map(n=>{const p=pos[n.id];if(!p)return"";
+    const lbl=n.role==="orchestrator"?"objective":n.role==="review"?"review":n.role==="human"?"you":
+      (n.altitude||n.id).split("/").pop()+(n.status?` · ${n.status}`:"");
+    const cls=`gnode ${n.role==="fingertip"?"finger":""} ${n.status||""} ${n.role==="human"?"human":""} ${interactive&&WALKSEL.get(reqId)===n.id?"sel":""}`;
+    const click=interactive&&n.role==="fingertip"?` onclick="walkSel('${reqId}','${n.id}')"`:"";
+    return `<div class="${cls}" data-n="${n.id}" style="left:${p[0]}%;top:${p[1]}%" title="${esc(n.intent||"")}"${click}>${esc(lbl)}${n.severity&&n.severity!=="low"?`<span class="gsev">◆ ${esc(n.severity)}</span>`:""}</div>`}).join("");
+  const narr=(g.narrative||[]).map(s=>
+    `<div onmouseenter="walkHl(this,1)" onmouseleave="walkHl(this,0)" data-nodes="${esc((s.nodes||[]).join(","))}" data-edges="${esc((s.edges||[]).join(","))}">${esc(s.text)}</div>`).join("");
+  return `<div class="walk"><div class="wgraph" style="height:${px}px">
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none">${lines}</svg>${chips}</div>
+    <div class="gnarr">${narr}</div>${interactive?walkDetail(reqId,g):""}</div>`;
+}
+function walkHl(el,on){
+  const box=el.closest(".walk");if(!box)return;
+  const ns=(el.dataset.nodes||"").split(",").filter(Boolean),es=(el.dataset.edges||"").split(",").filter(Boolean);
+  box.querySelectorAll(".gnode").forEach(n=>n.classList.toggle("hl",on&&ns.includes(n.dataset.n)));
+  box.querySelectorAll("line").forEach(l=>l.classList.toggle("hl",on&&es.includes(l.dataset.e)));
+}
+function walkSel(reqId,nid){WALKSEL.set(reqId,nid);loadObjectives()}
+function walkDetail(reqId,g){
+  const nid=WALKSEL.get(reqId);
+  if(!nid)return`<div class="gdetail">click a seat — what rode down, what it cost, who graded it, what came back.</div>`;
+  const n=g.nodes.find(x=>x.id===nid);if(!n)return"";
+  const mk=n.marker?MARKCACHE.get(n.marker):null;
+  if(n.marker&&!MARKCACHE.has(n.marker))fetchMarker(n.marker);
+  return `<div class="gdetail"><b>${esc((n.altitude||"").split("/").pop())}</b> — the walk of the work
+WHAT RODE DOWN: “${esc(n.intent||"?")}”${n.budget?` · a budget slice of ${n.budget} tokens`:""} — and nothing else: never the plan, never the siblings (0027 §3).
+THE CYCLES: ${n.cycles??"?"} cycle(s) on the record — scratch evaporated by law (R7); the RunRecord is the thought that mattered.
+THE GRADE: ${n.severity?esc(n.severity):"ungraded"}${mk?` — “${esc(mk)}”`:""} · authored by the dispatching seat, never the agent (0005).
+THE OUTCOME: ${n.answer?`“${esc(String(n.answer).slice(0,160))}”`:"—"}${n.outcome?`
+records · outcome ${esc(String(n.outcome).slice(0,30))}…${n.marker?` · marker ${esc(String(n.marker).slice(0,30))}…`:""}`:""}</div>`;
+}
+async function fetchMarker(id){
+  try{const b=await(await fetch(api("/records/"+encodeURIComponent(id)+"/body"))).json();
+    MARKCACHE.set(id,(b.marker||{}).reason||"");loadObjectives();
+  }catch{MARKCACHE.set(id,"")}
+}
 async function loadObjectives(){
   /* a human mid-answer outranks the refresh — the re-render must never eat
      their words (found by the human walk, 0030's standing rule) */
@@ -1802,6 +1882,8 @@ async function loadObjectives(){
         `<div class="row">→ <b>${esc(i.seat)}</b><span class="rm">${esc((i.intent||"").slice(0,90))}</span>`+
         `${i.beyond_token?'<span class="sev amber">will ask leave</span>':""}</div>`).join(""))
         +`<div class="row rm">…and it will ask you: ${esc((res.plan.question||"").slice(0,110))}</div>`
+        +(res.graph?`<div class="row wtoggle" onclick="walkToggle('${r.id}')">⤳ ${WALKOPEN.has(r.id)?"close the choreography":"see the choreography — what you are approving"}</div>`:"")
+        +(res.graph&&WALKOPEN.has(r.id)?renderGraph(res.graph,r.id,false):"")
         +`<div style="margin-top:.4rem"><button class="sbtn ok" onclick="joinDecide('${r.id}',true)">fan the plan</button> `
         +`<button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button></div>`;
     }else if(r.status==="approved"){
@@ -1815,7 +1897,9 @@ async function loadObjectives(){
         +(a.question_answer?`<div class="row rm">you answered: ${esc(a.question_answer)}</div>`:"")
         +((a.dark||[]).length?`<div class="row rm">dark: ${a.dark.map(d=>esc(d.seat||d)).join(", ")}</div>`:"")
         +((a.waiting||[]).length?`<div class="row rm">waiting: ${a.waiting.map(w=>esc(w)).join("; ")}</div>`:"")
-        +`<div class="row rm">the report record · ${esc((res.record||"").slice(0,34))}…</div>`;
+        +`<div class="row rm">the report record · ${esc((res.record||"").slice(0,34))}…</div>`
+        +(res.graph?`<div class="row wtoggle" onclick="walkToggle('${r.id}')">⤳ ${WALKOPEN.has(r.id)?"close the walk":"walk the work — how each seat thought"}</div>`:"")
+        +(res.graph&&WALKOPEN.has(r.id)?renderGraph(res.graph,r.id,true):"");
     }else if(r.status==="denied"){
       body=`<div class="row rm">declined — nothing fanned; the record keeps that you chose.</div>`;
     }

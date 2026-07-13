@@ -198,3 +198,54 @@ def test_origin_plans_wait_for_their_human(world):
                    for r in world.field_prod.records.values()) # nothing landed below
     out = orch.run(seats, world.beckys, _tidy_think, plan_approved=True)
     assert out["verification"] == "complete"                   # the human's word fans it
+
+
+# ---------------------------------------------------------------- 0031 §6 — the visible mind
+
+
+def _bijection_holds(g):
+    """0008 §3's discipline, applied to the composed graph: the narrative names
+    every node and every edge — sentences and picture never disagree."""
+    ids = sorted(n["id"] for n in g["nodes"])
+    named_n = sorted({n for s in g["narrative"] for n in s.get("nodes", [])})
+    edges = sorted(f"{e['from']}→{e['to']}" for e in g["edges"])
+    named_e = sorted({e for s in g["narrative"] for e in s.get("edges", [])})
+    return ids == named_n and edges == named_e
+
+
+def test_choreography_is_the_plan_made_visible():
+    plan = {"objective": "check on the fleet",
+            "intentions": [{"seat": "u:demo/e:cloud", "intent": "look at cloud",
+                            "budget": {"tokens": 300}},
+                           {"seat": "u:demo/e:retail", "intent": "look at retail",
+                            "budget": {"tokens": 300}, "beyond_token": True}]}
+    g = fingertip.choreography(plan)
+    assert g["kind"] == "graph" and _bijection_holds(g)
+    roles = [n["role"] for n in g["nodes"]]
+    assert roles == ["orchestrator", "fingertip", "fingertip", "review", "human"]
+    assert g["nodes"][2]["beyond_token"] is True
+    assert "status" not in g["nodes"][1]          # unlit before anything runs
+    assert "ask leave" in g["narrative"][2]["text"]
+
+
+def test_choreography_lights_what_ran_and_keeps_every_branch():
+    """One world, one picture (rule 7): branch state lights the seats, and a
+    mid-flow leg (the iac after the human's answer) still shows."""
+    plan = {"objective": "check on the fleet",
+            "intentions": [{"seat": "u:demo/e:cloud", "intent": "look",
+                            "budget": {"tokens": 300}}]}
+    branches = [{"seat": "u:demo/e:cloud", "status": "done", "cycles": 1,
+                 "severity": "low", "marker": "m1", "outcome": "o1",
+                 "answer": "all well"},
+                {"seat": "u:demo", "status": "done", "cycles": 1,
+                 "severity": "medium", "marker": "m2", "outcome": "o2",
+                 "answer": "provisioned"}]
+    g = fingertip.choreography(plan, branches, question_answer="all floors")
+    assert _bijection_holds(g)
+    fingers = [n for n in g["nodes"] if n["role"] == "fingertip"]
+    assert len(fingers) == 2                      # the mid-flow leg is not dropped
+    assert fingers[0]["status"] == "done" and fingers[0]["severity"] == "low"
+    assert fingers[0]["marker"] == "m1" and fingers[0]["outcome"] == "o1"
+    assert fingers[1]["intent"] == "dispatched mid-flow, on the human's answer"
+    assert "graded low by the dispatching seat" in g["narrative"][1]["text"]
+    assert "You answered: “all floors”." in g["narrative"][-1]["text"]

@@ -127,6 +127,78 @@ def save_template(node, spec: dict) -> str:
     return node.write(rec)
 
 
+def choreography(plan: dict, branches: list | None = None, *,
+                 question_answer: str | None = None) -> dict:
+    """The visible mind (0031 §6): the flow's choreography as DATA — nodes, edges,
+    and a narrative in bijection (0008 §3's discipline), composed by the seat that
+    owns the flow and rendered BLIND by the glass. Before approval it is the plan
+    made visible; after assembly the same picture, lit by what actually ran —
+    one world, one picture (rule 7): every branch shows, the mid-flow legs too."""
+    remaining = list(branches or [])
+
+    def claim(seat: str) -> dict:
+        for i, b in enumerate(remaining):
+            if b.get("seat") == seat:
+                return remaining.pop(i)
+        return {}
+
+    fingers = []
+    for n, entry in enumerate(plan.get("intentions") or [], 1):
+        b = claim(entry.get("seat", "?"))
+        fingers.append({"id": f"i{n}", "kind": "seat", "role": "fingertip",
+                        "altitude": entry.get("seat", "?"),
+                        "intent": entry.get("intent", ""),
+                        "budget": (entry.get("budget") or {}).get("tokens"),
+                        **({"beyond_token": True} if entry.get("beyond_token") else {}),
+                        **({"status": b["status"]} if b.get("status") else {}),
+                        **({"severity": b["severity"]} if b.get("severity") else {}),
+                        **({"cycles": b["cycles"]} if b.get("cycles") is not None else {}),
+                        **({"marker": b["marker"]} if b.get("marker") else {}),
+                        **({"outcome": b["outcome"]} if b.get("outcome") else {}),
+                        **({"answer": b["answer"]} if b.get("answer") else {})})
+    for b in remaining:                       # mid-flow legs (the iac after an answer)
+        n = len(fingers) + 1
+        fingers.append({"id": f"i{n}", "kind": "seat", "role": "fingertip",
+                        "altitude": b.get("seat", "?"),
+                        "intent": "dispatched mid-flow, on the human's answer",
+                        **({"status": b["status"]} if b.get("status") else {}),
+                        **({"severity": b["severity"]} if b.get("severity") else {}),
+                        **({"cycles": b["cycles"]} if b.get("cycles") is not None else {}),
+                        **({"marker": b["marker"]} if b.get("marker") else {}),
+                        **({"outcome": b["outcome"]} if b.get("outcome") else {}),
+                        **({"answer": b["answer"]} if b.get("answer") else {})})
+    nodes = [{"id": "objective", "kind": "seat", "role": "orchestrator"},
+             *fingers,
+             {"id": "review", "kind": "seat", "role": "review"},
+             {"id": "human", "kind": "seat", "role": "human"}]
+    dispatch = [{"from": "objective", "to": f["id"]} for f in fingers]
+    report = [{"from": f["id"], "to": "review"} for f in fingers]
+    close = [{"from": "review", "to": "human", "when": "assembled"}]
+    ref = lambda e: f"{e['from']}→{e['to']}"  # noqa: E731 — narrative edge naming
+    narrative = [
+        {"text": f"The objective lands; its orchestration seat plans high and "
+                 f"dispatches {len(fingers)} intention(s) down.",
+         "nodes": ["objective"], "edges": [ref(e) for e in dispatch]},
+        *[{"text": f"Intention {f['id']} rides to {f['altitude']} carrying one "
+                   "intent and a budget slice — never the plan, never the siblings"
+                   + (". It will ask leave — beyond this token."
+                      if f.get("beyond_token") else ".")
+                   + (f" It returned {f['status']}"
+                      + (f", graded {f['severity']} by the dispatching seat"
+                         if f.get("severity") else "") + "."
+                      if f.get("status") else ""),
+           "nodes": [f["id"]], "edges": [f"{f['id']}→review"]} for f in fingers],
+        {"text": "REVIEW assembles what returned and hands it UP: the human's "
+                 "request is the top node, and its resolution is the only "
+                 "completion confirmation."
+                 + (f" You answered: “{question_answer}”." if question_answer else ""),
+         "nodes": ["review", "human"], "edges": ["review→human"]},
+    ]
+    return {"kind": "graph", "title": str(plan.get("objective", ""))[:80],
+            "nodes": nodes, "edges": dispatch + report + close,
+            "narrative": narrative}
+
+
 def make_intention(objective_hash: str, intent: str, budget_tokens: int,
                 refs: list | None = None) -> dict:
     """What rides down — and ALL that rides down (0027 §3 · 0030): one intent, a

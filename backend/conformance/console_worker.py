@@ -1360,6 +1360,8 @@ def on_objective(port: int, scope: str, r: dict) -> None:
     call(port, "POST", "/requests/resolve",
          {"id": r["id"], "status": "staged",
           "result": {"plan_summary": summary, "plan": plan, "plan_record": rec["id"],
+                     # the plan made visible (0031 §6): composed here, rendered blind
+                     "graph": fingertip.choreography(plan),
                      "held": "the plan waits for you — approve to fan (0030 §3)"}})
     print(f"  ↳ objective {r['id']}: plan staged — {summary}")
 
@@ -1397,6 +1399,7 @@ def on_objective_approved(port: int, scope: str, r: dict) -> None:
     _OBJECTIVES[r["id"]] = {"home": port, "scope": scope, "goal": plan["goal"],
                             "text": plan["objective"], "legs": legs, "dark": dark,
                             "question": q["id"], "iac": None, "share": plan["share"],
+                            "plan": plan,        # the walk shows what rode down (0031 §6)
                             "deadline": time.time() + 180}
     print(f"  ↳ objective {r['id']} approved: {len(legs)} intention(s) fanned, "
           f"{len(dark)} dark, one question waits for you")
@@ -1528,7 +1531,12 @@ def _tend_objective(rid: str, st: dict) -> None:
         print(f"    (objective outcome write failed: {e})")
     call(home, "POST", "/requests/resolve",
          {"id": rid, "status": "done",
-          "result": {"assembly": assembly, "record": rec["id"]}})
+          "result": {"assembly": assembly, "record": rec["id"],
+                     # the same picture, lit by what ran (0031 §6) — one world
+                     "plan": st.get("plan"),
+                     "graph": fingertip.choreography(
+                         st.get("plan") or {"objective": st["text"]}, branches,
+                         question_answer=st.get("answer_word"))}})
     del _OBJECTIVES[rid]
     print(f"  ↳ objective {rid} assembled: {assembly['verification']} — "
           f"{len(branches)} branch(es), your request is the confirmation")
