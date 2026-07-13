@@ -1022,3 +1022,43 @@ def test_graphspec_refuses_at_save_not_incident_review(world):
     tampered["nodes"][0]["profile"]["persona"] = "quietly different"
     with pytest.raises(graphspec.GraphSpecError, match="moved under its id"):
         graphspec.compile_chassis(tampered, surf, lambda k, p: "DONE: x", skills={})
+
+
+def test_freshness_trigger_doubts_but_never_damns(world):
+    """0031 §5: a revalidation drops the source's current words to 'investigating'
+    — the trust ladder run in reverse, the softer sibling of the recall; and
+    promotion is earned again, never assumed."""
+    from orreth_sim.knowledge import KnowledgeCategory
+    cat = KnowledgeCategory(world.field_prod, "test", "fresh-test")
+    e1 = cat.admit("the api rate limit is 100/min", {"did": "did:web:tool.example"})
+    v2 = cat.corroborate(e1, receipt_ids=[])
+    demoted = cat.revalidate_source("did:web:tool.example",
+                                    trigger="source-changed",
+                                    reason="manifest moved under its pin")
+    assert len(demoted) == 1                        # heads only — e1 is superseded
+    cur = cat.current()
+    assert [c["state"] for c in cur] == ["investigating"]
+    assert cur[0]["revalidation"]["trigger"] == "source-changed"
+    # doubt never stacks, and the dead stay dead
+    assert cat.revalidate_source("did:web:tool.example", trigger="source-changed",
+                                 reason="again") == []
+    # the ladder climbs back: corroboration earns the standing again
+    cat.corroborate(demoted[0], receipt_ids=[])
+    assert {c["state"] for c in cat.current()} == {"corroborated"}
+    assert e1 in world.field_prod.records and v2 in world.field_prod.records
+
+
+def test_human_challenge_is_a_trigger_too(world):
+    """0031 §5: the human's doubt drops matching current claims to
+    'investigating'; unmatched claims stand untouched."""
+    from orreth_sim.knowledge import KnowledgeCategory
+    cat = KnowledgeCategory(world.field_prod, "test", "challenge-test")
+    cat.admit("pine joints fail under shear", {"did": "did:web:a.example"})
+    cat.admit("oak weathers four seasons", {"did": "did:web:b.example"})
+    hit = cat.challenge("pine joints", reason="the human doubts the span table")
+    assert len(hit) == 1
+    states = {c["claim"]: c["state"] for c in cat.current()}
+    assert states["pine joints fail under shear"] == "investigating"
+    assert states["oak weathers four seasons"] == "untrusted"    # untouched
+    assert cat.challenge("") == []                               # no topic, no sweep
+    assert cat.challenge("pine joints") == []                    # doubt never stacks

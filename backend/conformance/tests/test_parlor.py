@@ -236,3 +236,28 @@ def test_package_text_reads_the_gate():
     text = parlor.package_text(pkg)
     assert "rewrite" in text and "WHAT CHANGED" in text and "ROLLBACK" in text
     assert "shorter" in text and "lineage cites the active version" in text
+
+
+# ---------------------------------------------------------------- freshness (0031 §5)
+
+
+def test_librarian_challenge_and_domain_doors():
+    facts = {"scope": "u:demo"}
+    ch = parlor.answer("librarian", "challenge pine joint spans", facts)
+    assert ch["action"] == "challenge" and ch["topic"] == "pine joint spans"
+    assert ch["verbatim"] is True and "doubted, not damned" in ch["reply"].lower()
+    d = parlor.answer("librarian", "show domain packages", facts)
+    assert d["action"] == "domain" and d["topic"] == ""
+    one = parlor.answer("librarian", "show domain timber framing", facts)
+    assert one["action"] == "domain" and one["topic"] == "timber framing"
+
+
+def test_librarian_room_carries_the_domain_shelf():
+    facts = {"scope": "u:demo", "residents": [],
+             "domains": [{"topic": "timber framing",
+                          "meta": "3 current of 5 version(s) · investigating 1",
+                          "doubted": True}]}
+    ws = parlor.workspace("librarian", facts)
+    panel = next(p for p in ws["panels"] if "domain packages" in p["title"])
+    assert panel["items"][0]["amber"] is True       # doubt wears amber (0024)
+    assert "investigating 1" in panel["items"][0]["meta"]

@@ -751,6 +751,17 @@ class FarmKeeper:
                          {"kind": "service", "action": "reapprove", "name": svc["name"],
                           "text": f"{svc['name']} came back CHANGED — re-approve its new manifest?"})
                     print(f"  ↳ {svc['name']} quarantined — its manifest changed while it was gone")
+                    # trust wears a review date (0031 §5): a changed manifest is a
+                    # freshness trigger — charlotte fires the signal, the librarian
+                    # walks; the source is doubted, not damned (that gate is 0026's)
+                    if svc.get("did"):
+                        try:
+                            note = revalidate_walk(
+                                port, scope, svc["did"], "source-changed",
+                                f"{svc['name']} came back changed — the pin caught it")
+                            print(f"    ↳ {note}")
+                        except Exception as e:
+                            print(f"    (revalidation walk failed: {e})")
 
     def replant(self, port: int, scope: str, present: set) -> None:
         """The daemon may die; the toolshed doesn't. The ledger re-seeds live state,
@@ -1213,6 +1224,124 @@ def recall_walk(port: int, scope: str, source_did: str, reason: str) -> str:
             print(f"    (recall marker write failed: {e})")
     return (f"recalled {recalled} entr(ies) traced to {source_did} — "
             "annotated, never rewritten; the lineage is intact")
+
+
+def revalidate_walk(port: int, scope: str, source_did: str, trigger: str,
+                    reason: str) -> str:
+    """A freshness trigger fired (0031 §5): the librarian DOUBTS the source — she
+    does not damn it. Current heads traced to it drop to 'investigating' with the
+    trigger named; the medium lane (0024) makes it visible, never blocking.
+    Idempotent: doubt never stacks, and the dead stay dead."""
+    from orreth_sim.librarian import tainted_refs
+    if not source_did:
+        return "nothing to revalidate — no source DID"
+    seat_kp, seat_did = lib_seat(scope)
+    entries, bodies, tags_of = floor_knowledge(port, scope)
+    superseded = {d for e in entries for d in e["derived_from"]}
+    new_ids = []
+    for ref in tainted_refs(entries, source_did):
+        if ref in superseded:
+            continue                          # heads only — history is not re-reviewed
+        b = bodies.get(ref) or {}
+        if b.get("state") in ("recalled", "investigating"):
+            continue
+        new_body = {**b, "state": "investigating",
+                    "revalidation": {"trigger": trigger, "reason": reason,
+                                     "at": NOW()}}
+        rec = make_memory({"did": seat_did, "scope": scope}, seat_kp, scope,
+                          new_body, kind="semantic",
+                          tags=sorted({*tags_of.get(ref, []), "knowledge"}))
+        rec["derived_from"] = [ref]
+        call(port, "POST", "/records", rec)
+        new_ids.append(rec["id"])
+    if new_ids:
+        mk = markers.make_marker({"did": seat_did, "scope": scope}, seat_kp, scope,
+                                 new_ids,
+                                 reason=f"revalidation ({trigger}): {reason}",
+                                 change_severity="medium")
+        try:
+            call(port, "POST", "/records", mk)
+        except Exception as e:
+            print(f"    (revalidation marker write failed: {e})")
+    return (f"{len(new_ids)} entr(ies) dropped to investigating — {trigger}; "
+            "promotion is earned again, never assumed")
+
+
+def challenge_walk(port: int, scope: str, topic: str) -> str:
+    """The human's doubt is a trigger too (0031 §5): current claims matching the
+    topic drop to 'investigating', quoting the challenge — verbatim discipline."""
+    t = (topic or "").strip().lower()
+    if not t:
+        return "a challenge names a topic — say: challenge <topic>"
+    seat_kp, seat_did = lib_seat(scope)
+    entries, bodies, tags_of = floor_knowledge(port, scope)
+    superseded = {d for e in entries for d in e["derived_from"]}
+    new_ids = []
+    for e in entries:
+        ref = e["ref"]
+        if ref in superseded:
+            continue
+        b = bodies.get(ref) or {}
+        claim = str(b.get("claim") or b.get("knowledge") or "")
+        if t not in claim.lower() or b.get("state") in ("recalled", "investigating"):
+            continue
+        new_body = {**b, "state": "investigating",
+                    "revalidation": {"trigger": "human-challenge",
+                                     "reason": f"the human challenged: “{topic}”",
+                                     "at": NOW()}}
+        rec = make_memory({"did": seat_did, "scope": scope}, seat_kp, scope,
+                          new_body, kind="semantic",
+                          tags=sorted({*tags_of.get(ref, []), "knowledge"}))
+        rec["derived_from"] = [ref]
+        call(port, "POST", "/records", rec)
+        new_ids.append(rec["id"])
+    if new_ids:
+        mk = markers.make_marker({"did": seat_did, "scope": scope}, seat_kp, scope,
+                                 new_ids,
+                                 reason=f"human challenge: “{topic}”",
+                                 change_severity="medium")
+        try:
+            call(port, "POST", "/records", mk)
+        except Exception as e:
+            print(f"    (challenge marker write failed: {e})")
+        print(f"  ↳ challenge on “{topic}”: {len(new_ids)} claim(s) to investigating")
+    return (f"{len(new_ids)} claim(s) matching “{topic}” dropped to investigating — "
+            "doubted, not damned; corroboration earns them back"
+            if new_ids else
+            f"no current claims match “{topic}” — nothing to doubt")
+
+
+def domain_packages(port: int, scope: str, topic: str = "") -> list[dict]:
+    """The domain package as a VIEW over records that already exist (0031 §5 ·
+    0030 SP2's law): per intent — every claim wearing its state, every source
+    named, nothing stored twice."""
+    entries, bodies, _ = floor_knowledge(port, scope)
+    superseded = {d for e in entries for d in e["derived_from"]}
+    domains: dict[str, dict] = {}
+    for e in entries:
+        ref = e["ref"]
+        b = bodies.get(ref) or {}
+        key = str(b.get("intent") or b.get("category") or "uncategorized")
+        d = domains.setdefault(key, {"topic": key, "states": {}, "sources": set(),
+                                     "versions": 0, "current": 0})
+        d["versions"] += 1
+        if (b.get("source") or {}).get("did"):
+            d["sources"].add(b["source"]["did"])
+        if ref not in superseded:
+            d["current"] += 1
+            st = str(b.get("state") or "?")
+            d["states"][st] = d["states"].get(st, 0) + 1
+    rows = []
+    for d in sorted(domains.values(), key=lambda x: x["topic"]):
+        if topic and topic.lower() not in d["topic"].lower():
+            continue
+        states = " · ".join(f"{k} {v}" for k, v in sorted(d["states"].items()))
+        rows.append({"topic": d["topic"][:60],
+                     "meta": f"{d['current']} current of {d['versions']} version(s) · "
+                             f"{states or 'no states'} · {len(d['sources'])} source(s)",
+                     "doubted": bool(d["states"].get("investigating")
+                                     or d["states"].get("recalled"))})
+    return rows
 
 
 def gather(port: int, scope: str, text: str) -> str:
@@ -2327,6 +2456,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         if name == "librarian":               # the richest room reads more state
             facts["profile_text"] = profile_read(port, scope)
             facts["markers"] = recent_markers(port, scope)
+            facts["domains"] = domain_packages(port, scope)  # 0031 §5
         ws = parlor.workspace(name, facts)
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
@@ -2341,6 +2471,13 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         return                              # resolves on a later beat, legs in hand
     if ans.get("action") == "gather":     # the librarian's real duty (0014), front-doored
         reply = gather(port, scope, ans["topic"])
+    if ans.get("action") == "challenge":  # the human's doubt is a trigger (0031 §5)
+        reply = challenge_walk(port, scope, ans["topic"])
+    if ans.get("action") == "domain":     # the package, a view over the record (0031 §5)
+        rows = domain_packages(port, scope, ans.get("topic", ""))
+        reply = ("; ".join(f"{d['topic']} — {d['meta']}" for d in rows[:6])
+                 or "no domains yet — a gather starts one; say “gather sourced "
+                    "knowledge on …” and the package grows from the record.")
     if ans.get("action") == "asset-walk":     # the smith walks a lineage (0031 §4)
         reply = wire_walk_reply(universe_port(port), ans["asset"])
     if ans.get("action") == "asset-feedback":  # the feedback door (0031 §4)

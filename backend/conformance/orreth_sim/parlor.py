@@ -43,6 +43,11 @@ _GROW = ("create ecosystem", "add ecosystem", "grow ecosystem", "new ecosystem",
 _WALK = ("show asset", "walk asset", "asset walk for")
 _FEEDBACK = ("feedback on", "feedback for")
 
+# the librarian's freshness doors (0031 §5), in the shapes callers actually type
+_CHALLENGE = ("challenge knowledge on", "challenge")
+_DOMAIN = ("show domain packages", "show domains", "domain packages",
+           "show domain", "domain package for")
+
 
 def parse_feedback(text: str):
     """“feedback on prompt-plan: too wordy under pressure” → (name, words)."""
@@ -144,6 +149,8 @@ def _card_librarian(facts: dict) -> tuple[str, list]:
             "its lineage.",
             [{"label": "gather knowledge on…", "template": "gather sourced knowledge on "},
              {"label": "ask the universe…", "template": "ask the universe about "},
+             {"label": "domain packages", "ask": "show domain packages"},
+             {"label": "challenge…", "template": "challenge "},
              {"label": "what do you hold?", "ask": "what knowledge do you hold?"},
              {"label": "anything recalled?", "ask": "has anything been recalled?"}])
 
@@ -253,6 +260,21 @@ def answer(name: str, text: str, facts: dict) -> dict:
                                      "the composed answer names each seat and is honest "
                                      "about the dark ones.",
                             "action": "self-dialog", "topic": topic, "verbatim": True}
+        for p in _DOMAIN:                     # 0031 §5 — the package, recallable
+            if t.startswith(p):
+                topic = (text or "").strip()[len(p):].strip().strip("?.!")
+                return {"reply": f"composing the domain package{f' for “{topic}”' if topic else 's'} — "
+                                 "every claim wearing its state, every source named.",
+                        "action": "domain", "topic": topic, "verbatim": True}
+        for p in _CHALLENGE:                  # 0031 §5 — the human's doubt is a trigger
+            if t.startswith(p):
+                topic = (text or "").strip()[len(p):].strip().strip("?.!")
+                if topic:
+                    # flow-control travels VERBATIM: a staging confirmation is protocol
+                    return {"reply": f"challenging “{topic}” — matching claims drop to "
+                                     "investigating until corroboration earns them "
+                                     "back. Doubted, not damned; nothing rewritten.",
+                            "action": "challenge", "topic": topic, "verbatim": True}
         for p in _GATHER:
             topic = (text or "").strip()[len(p):].strip() if t.startswith(p) else ""
             if t.startswith(p) and topic:
@@ -474,6 +496,12 @@ def _room_librarian(facts: dict) -> list[dict]:
          "items": [{"label": "knowledge held", "value": v.get("knowledge held", 0)},
                    {"label": "gathers", "value": v.get("gathers", 0)},
                    {"label": "recall walks", "value": len(walks)}]},
+        {"kind": "list", "title": "the domain packages (0031 §5)",
+         "items": _sev([{"text": d.get("topic") or "uncategorized",
+                         "meta": d.get("meta", ""),
+                         "severity": "medium" if d.get("doubted") else ""}
+                        for d in facts.get("domains") or []] or
+                       [{"text": "no domains yet — a gather starts one", "meta": ""}])},
         {"kind": "doc", "title": "the portrait (0025)",
          "text": facts.get("profile_text") or
                  "a blank page — assert with “my profile: …” and it fills."},

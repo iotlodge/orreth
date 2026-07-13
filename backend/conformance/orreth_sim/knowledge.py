@@ -61,10 +61,8 @@ class KnowledgeCategory:
                             "corroborated_by": receipt_ids},
                            derived_from=[entry_id])
 
-    # ---- the recall: by source, through the lineage (0014 §4) ----------------------------
-    def recall_source(self, source_did: str, reason: str) -> list[str]:
-        """Every entry from the source, and every version derived from those — re-versioned
-        to 'recalled'. Nothing rewritten; the poison visibly dead."""
+    # ---- the lineage walk: a source's words, and everything derived from them ------------
+    def _tainted(self, source_did: str) -> set[str]:
         entries = self.entries()
         tainted = {eid for eid, b in entries.items()
                    if b.get("source", {}).get("did") == source_did}
@@ -77,8 +75,14 @@ class KnowledgeCategory:
                                               for d in rec.get("derived_from", [])):
                     tainted.add(eid)
                     grew = True
+        return tainted
+
+    # ---- the recall: by source, through the lineage (0014 §4) ----------------------------
+    def recall_source(self, source_did: str, reason: str) -> list[str]:
+        """Every entry from the source, and every version derived from those — re-versioned
+        to 'recalled'. Nothing rewritten; the poison visibly dead."""
         recalled = []
-        for eid in sorted(tainted):
+        for eid in sorted(self._tainted(source_did)):
             body = self._body(self.node.records[eid])
             if body.get("state") == "recalled":
                 continue
@@ -86,6 +90,47 @@ class KnowledgeCategory:
                                          "recall_reason": reason},
                                         derived_from=[eid]))
         return recalled
+
+    # ---- freshness: trust wears a review date (0031 §5) -----------------------------------
+    def _heads(self) -> dict[str, dict]:
+        """Current (non-superseded) entries — the only versions a review touches."""
+        entries = self.entries()
+        superseded = {d for rid in entries
+                      for d in self.node.records[rid].get("derived_from", [])}
+        return {rid: b for rid, b in entries.items() if rid not in superseded}
+
+    def _demote(self, targets: dict[str, dict], trigger: str, reason: str) -> list[str]:
+        out = []
+        for eid in sorted(targets):
+            body = targets[eid]
+            if body.get("state") in ("recalled", "investigating"):
+                continue                      # dead stays dead; a review never stacks
+            out.append(self._write({**body, "state": "investigating",
+                                    "revalidation": {"trigger": trigger,
+                                                     "reason": reason}},
+                                   derived_from=[eid]))
+        return out
+
+    def revalidate_source(self, source_did: str, *, trigger: str,
+                          reason: str) -> list[str]:
+        """A freshness trigger fired (0031 §5): the source is DOUBTED, not damned —
+        its current words, and everything derived from them, drop to
+        'investigating'. The trust ladder run in reverse, annotate-never-rewrite;
+        promotion is earned again, never assumed."""
+        heads, tainted = self._heads(), self._tainted(source_did)
+        return self._demote({eid: b for eid, b in heads.items() if eid in tainted},
+                            trigger, reason)
+
+    def challenge(self, topic: str, *,
+                  reason: str = "the human challenged it") -> list[str]:
+        """The human's doubt is a trigger too (0031 §5): matching current claims
+        drop to 'investigating' until corroboration earns them back."""
+        t = (topic or "").strip().lower()
+        if not t:
+            return []
+        return self._demote({eid: b for eid, b in self._heads().items()
+                             if t in str(b.get("claim", "")).lower()},
+                            "human-challenge", reason)
 
     # ---- reading: current view + as-of-T (versions are time) ------------------------------
     def entries(self) -> dict[str, dict]:
