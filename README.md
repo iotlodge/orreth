@@ -24,57 +24,71 @@ flowchart TD
 
 ---
 
-## Status
+## Status — the timeline
 
-🟢 **Design phase complete (2026-07-02) · the universe runs (2026-07-03).** All fourteen dives
-(`0000`–`0013`) are drafted and **every decision in the ledger is locked** (`docs/decisions/`). The
-**Python reference simulator** proves the whole model — 38 tests: three flows, the two-clock rule
-(lived memory cannot be backdated), the roll-up monoid, the resolver fold, factories with birth
-certificates, HITL quorums (bars are absolute), the provisioner rendering the League template.
+🟢 **Thirty-three dives (`0000`–`0032`), every landed decision locked** (`docs/decisions/` +
+each dive's own ledger). The **Python reference simulator** proves the whole model — **132
+tests** — and the **Rust plane** runs it: six crates at `backend/plane/`, conformance-green
+against fixtures derived from the reference (byte-for-byte canonicalization, Python-signed
+Ed25519 verifying in Rust). **`orrethd`** — one binary, tier as a profile — with trust-root
+pinning, tamper-evident object-store bodies, and Postgres write-through. **One laptop = one
+universe:** `scripts/dev.sh start` assembles the tree; the daemon serves its own glass at
+`/window` (every render a governed, tokened query); `scripts/demo.sh` rolls the reel. The
+full tour: [`docs/demos.md`](docs/demos.md) · the operator's path: [`docs/guides/`](docs/guides/).
 
-**The Rust plane is live.** Six crates at `backend/plane/`, conformance-green against fixtures derived
-from the reference (byte-for-byte canonicalization, same content hashes, Python-signed Ed25519 verifying
-in Rust). **`orrethd`** — one binary, tier as a profile — serves the gateway over HTTP with **trust-root
-pinning** (a self-issued token, however well signed, is refused), object-store bodies (tamper-evident;
-tombstones are physical erasure), and Postgres write-through (a restarted daemon restores its records
-*and its high-water mark*).
+- **2026-07-01 — the name.** **Orreth** locked; `orreth.ai` registered.
+- **2026-07-02 — design phase complete.** Fourteen foundation dives (`0000`–`0013`): identity
+  as the immortal thread, the retrieval contract, pruning as metabolism, the two clocks, the
+  roll-up monoid, becky's capability chain, the cascade resolver, factories with birth
+  certificates, HITL quorums where **bars are absolute**, the custodian reckoning.
+- **2026-07-03 — the universe runs.** The Rust plane conformance-green; three tiers on one
+  laptop; the first Window opens in the daemon's own glass.
+- **2026-07-04 — the universe thinks.** The Model Plane (0016) meters the first governed
+  thought; the Knowledge Loop (0014) admits the world quarantined at 0.0000 and promotes on
+  receipts; the chassis (0015) runs its one immutable loop — the breaker parks failure as a
+  knowledge assignment. Failure is fuel.
+- **2026-07-05 — services become residents of history.** The Tool Farm (0018): every tool an
+  identity with a worldline, hash-pinned by **charlotte**; a changed manifest walks the
+  rug-pull door (CVE-2025-54136's move, refused structurally, proven live).
+- **2026-07-07/08 — minds, audiences, and a growing world.** The Stable (0019): minds as
+  identities with deals pinned by **ada**; the universal meter — every resident's cognition
+  on the record, honest zeros shown. The Parlor (0020): the interoperability law — *agents,
+  authorized, see data; humans must ask*. The recall walk lands on the wire (0014 §4, the
+  poisoned almanac visibly dead). The Shipyard (0021): a universe that grows by conversation —
+  ask becky for an ecosystem, real containers join the orrery. Persistent lifeforce agents
+  re-join as the same selves through becky's door (0017).
+- **2026-07-10/11 — the brain dives.** The Universe-Brain marathon: eight designs blessed and
+  live in two days, fifteen JB locks. The Memory Construct (0022 — the signed log is the
+  truth; every index a rebuildable projection; Phase 1 live). The Librarian (0023 — one mind,
+  many seats, zero levers). Markers & the severity lanes (0024 — 100% of change graded; low
+  auto-approves, high waits for the human). The Human Profile (0025 — your assertions enter
+  trusted; the machine's beliefs about you enter untrusted). The Purge (0026 — governed
+  erasure: containment at machine speed, destruction waits for humans, plural). The Fingertip
+  (0027 — thought.graph concrete: the universe construct IS the node graph). Workspaces & the
+  Improvement Engine (0028 — the glass grows rooms; one standing improver proposes siblings,
+  never silent successors). Multimodal (0029 — upload is an ask; formats needing an eye are
+  admitted honestly dark). Guides 01–02 ship; **demo.orreth.ai** refreshed with the dive.
+- **2026-07-12 — the human takes their seat.** 0030: the four-rung ladder as canon —
+  **Objective · Intention · Observation · Thought**, humans the only origin of Objectives —
+  the plan gate (origin plans always wait for their human), the Objective ledger (an
+  artifact of artifacts, recallable forever), place-as-spine navigation, a legible spacetime
+  window. Every spoonful proven **as a human in the glass** — the standing rule since.
+- **2026-07-13 — the mind becomes visible, and the universe gains a smith.** 0031: **grace
+  the smith** embodies the improvement engine — prompts leave the code and become versioned
+  assets on one shelf; proposals carry approval packages; the human adopts or declines at the
+  gate, and a decline releases the lane. The choreography renders (composed by the seat that
+  owns the flow, drawn blind by the glass) and the **walk of the work** opens every seat:
+  what rode down, what it cost, who graded it, what came back — every line ending in a record
+  hash. The metabolism lands: trust wears a review date — freshness triggers drop doubted
+  knowledge to `investigating` (the rug-pull door now doubts; the human's challenge is a
+  trigger too), and domain packages read as views over the record. 0032 (**the Serials
+  Desk** — continuous acquisition: subscriptions as the human's standing word; the desk
+  delivers, it never decides) drafted the same day, with article 04 — *The End of the Context
+  Window* — finally written for the hero image that waited for it.
 
-**One laptop = one universe:** `docker compose -f infrastructure/compose.yaml up` assembles the tree —
-universe → ecosystem → field, floors pulled down at boot, retrieval escalating deep-time remainders UP
-across containers. And the first **Window** exists: the daemon serves its own glass at `/window` — an
-observatory console where every render is a governed, tokened query (no privileged pane path). Live
-demos in `backend/conformance/`: `demo_digital_life.py` (the life outlives the process, the machine
-boundary, and the daemon), `demo_spacetime_window.py` (one query, three tiers), `demo_open_window.py`.
-**The demo reel** — `scripts/demo.sh` — indexes them all and grows with every dive; `scripts/demo.sh
-farm` tells 0018's whole story in ninety seconds, ending with a rug pull caught at the gate. Every
-story also rolls from the Console (Ask tab → 🎬 the reel), and the reel replays — each story clears
-its own stage the governed way. The full tour: [`docs/demos.md`](docs/demos.md).
-
-**The universe thinks (2026-07-04).** The Model Plane (0016) is live — LiteLLM through the floors,
-plane-held budgets, model lifecycle (no call ever lands on a retired model), first governed call
-metered end to end. The Knowledge Loop (0014) runs: external knowledge admitted quarantined at
-0.0000 through identified sources (did:web:tavily.com was the first), promoted on receipts,
-recalled through the derived_from lineage. And Orreth.agent's chassis (0015) took its first
-governed thought: one immutable loop, parallel nucleus, deterministic 0014 knowledge beside
-metered reasoning, breaker-parks-as-knowledge-intent. CI green on every push (private remote,
-iotlodge/orreth).
-
-**The world's services become residents of history (2026-07-05).** The **Tool Farm** (0018) is
-live: every tool/MCP an agent consumes is now an **identity with a worldline** — planted through
-the human's queue, probed and hash-pinned by **charlotte** (the farm keeper), earning `serving`
-through heartbeats, dropped by silence (the SPIFFE lesson: leases expire, nothing needs revoking),
-and **quarantined the instant it comes back with a changed manifest** (the rug-pull door,
-CVE-2025-54136's move, refused structurally — verified live against a mutating MCP stub). Every
-lifecycle transition is a keeper-signed MemoryRecord in the spacetime window; the Console grew a
-**Farm tab** (plant · approve · decommission, per floor), farm plots on the orrery, and worldline
-diamonds among the stars. The librarian's *Ask* now consumes only governed, metered, identified
-sources — and the Window finally shows what the librarian gathers (the pane's cut is the floor's
-subtree, not one worldline).
-
-The brand name **Orreth** is locked; **`orreth.ai` registered 2026-07-01**. Next: chassis
-maturation (GraphSpec compile, per-cycle RunRecords, the parked→librarian→retry circuit closing
-automatically), the pane growing beyond the first glass (usage + outage-survival views), pgvector
-retrieval, and the League (PG-1) — the funnel's Play step.
+**Next:** the aperture (0031 spoonful 2 — waits on JB's data-scheme reveal, by design) ·
+building 0032 once blessed · guides 03–04 · the meaning axis (0022 Phase 2: hybrid retrieval,
+where the reactivation signal lands) · the League (PG-1), the funnel's Play step.
 
 ---
 
@@ -126,17 +140,23 @@ orreth/
 │   │   ├── Orreth-the-end-of-the-context-window.(png|svg) ← article 04 hero: the block as lanes, floors as bedrock, a context window drawn to scale
 │   │   ├── FUTURE-the-conductor-and-the-field.md   ← the EH-tier vision (+ image)
 │   │   └── EH-FRONTEND-the-cross-field-pane.md     ← the EH single-pane sketch (+ image)
-│   ├── design/                ← the fourteen dives, 0000–0013 — ALL drafted, every decision locked
+│   ├── design/                ← the dives, 0000–0032 — the vision made buildable, one keystone at a time
 │   │   └── README.md          ← the dive sequence + index (start here for the how)
-│   ├── decisions/             ← the ledger — closed 2026-07-02; build-phase decisions appended as they arise
+│   ├── decisions/             ← the ledger — foundation closed 2026-07-02; build-phase locks live in each dive
 │   │   └── README.md
-│   └── articles/              ← LinkedIn pieces — local only, kept OUT of git (marketing/feedback iteration)
-├── contracts/                 ← the wire contracts (v0 JSON Schemas — validated by both implementations)
+│   ├── guides/                ← the operator's path (01 Librarian flows · 02 Operator's Manual · more coming)
+│   └── articles/              ← the LinkedIn series (01–03 published; 04–06 drafted) + assets
+├── contracts/                 ← the wire contracts (v0 JSON Schemas — validated by both implementations; rule 9: sacred)
+├── agents/
+│   ├── PROVENANCE.md          ← the authorship ledger — every model's work named, quarantines recorded
+│   ├── orreth-agent-sdk/      ← the FieldClient SDK — persistent identities that re-join as the same self
+│   └── flavors/               ← lifeforce agents (prototype · LangGraph · AgentField sentinel)
 ├── backend/
-│   ├── conformance/           ← the Python reference simulator (38 tests) + fixtures + live demos
+│   ├── conformance/           ← the Python reference simulator (132 tests) + console worker + live demos
 │   └── plane/                 ← the Rust plane: 6 crates + orrethd (the daemon) — conformance-green
 ├── infrastructure/            ← compose.yaml — one laptop, one universe, one command
-└── (frontend/ — reserved; the Window's first pane currently ships inside orrethd at /window)
+├── scripts/                   ← dev.sh (the rig) · demo.sh (the reel)
+└── (frontend/ — reserved; the Window's glass ships inside orrethd at /window)
 ```
 
 **Start here:** `docs/vision/FUTURE-the-orreth.md` is the full vision. `docs/design/` is where
