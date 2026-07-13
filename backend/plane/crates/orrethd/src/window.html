@@ -149,6 +149,7 @@
   .res.charlotte{background:#8fd6b0;color:rgba(143,214,176,.7)}
   .res.librarian{background:#e8c98f;color:rgba(232,201,143,.6)}
   .res.ada{background:#d99cc4;color:rgba(217,156,196,.7)}
+  .res.grace{background:#e89a6b;color:rgba(232,154,107,.7)} /* the smith's ember (0031) */
   @media(prefers-reduced-motion:reduce){.res{animation:none!important}}
   .reslegend{position:absolute;left:1.1rem;bottom:.6rem;font:.64rem var(--mono);color:var(--faint);
     display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;max-width:52%}
@@ -875,7 +876,7 @@ function plots(list,r,scope){
 /* organ dots: residents on the innermost shell */
 const RESKEY={"becky · IAM":"becky","vigil · the Warden":"vigil","steward · memory":"steward",
   "governance":"governance","charlotte · farm keeper":"charlotte","librarian · knowledge":"librarian",
-  "ada · the wrangler":"ada"};
+  "ada · the wrangler":"ada","grace · the smith":"grace"};
 const reskey=r=>RESKEY[r]||"governance";
 function organs(list,r,scope){
   return shell(list||[],r,6,26,a=>      // cap 6 = the full organ roster
@@ -1165,9 +1166,11 @@ async function loadReq(){
       const jgate=r.kind==="join"&&r.status==="staged";
       const egate=r.kind==="ecosystem"&&r.status==="staged";
       const ogate=r.kind==="objective"&&r.status==="staged";  /* the plan gate (0030 §3) */
+      const igate=r.kind==="improvement"&&r.status==="staged"; /* the smith's gate (0031 §4) */
       const note=jgate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`
         :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`
-        :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`:"";
+        :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`
+        :igate?`<div class="sub" style="color:var(--near);white-space:pre-wrap">${(r.result||{}).package_text||"a rewrite waits for your word (R6)"}</div>`:"";
       return `<div class="req"><span class="kind">${r.kind||"request"}</span>
        <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
        ${jgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">admit</button>
@@ -1175,6 +1178,8 @@ async function loadReq(){
        :egate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">launch</button>
         <button class="sbtn no" onclick="joinDecide('${r.id}',false)">scrap</button>`
        :ogate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">fan the plan</button>
+        <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
+       :igate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">adopt</button>
         <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
        :`<span class="st">${r.status}</span>`}</div>`;}).join("")
       : `<div class="quiet">nothing waiting — a calm universe.</div>`;

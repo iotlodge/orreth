@@ -17,7 +17,7 @@ outcomes, and what the floors' KeepRules pin.
 """
 from __future__ import annotations
 
-from . import crypto, factory, markers
+from . import crypto, factory, improver, markers
 from .chassis import Chassis
 from .identity import is_within
 from .node import make_memory
@@ -259,7 +259,17 @@ class Orchestration:
         [fsurf] = factory.stamp(target, becky, self.surface.identity, 1,
                                 generation=f"finger-{n['id']}",
                                 budget_tokens=work["budget"]["tokens"])
-        res = Chassis(fsurf, think, skills=skills, max_cycles=2).run(work["intent"])
+        # the shelf speaks at dispatch (0031 §4): the chassis runs under the HOME
+        # floor's active asset versions — an adoption changes the next run, not
+        # just the record. No asset yet → the genesis defaults, unchanged.
+        beh = improver.resolve_behavior(self.home)
+        prof = beh["profile"]
+        res = Chassis(fsurf, think, skills=skills,
+                      persona=str(prof.get("persona", "")),
+                      max_cycles=int(prof.get("max_cycles", 2)),
+                      max_obs=int(prof.get("max_obs", 3)),
+                      plan_template=beh["plan_template"],
+                      critic_template=beh["critic_template"]).run(work["intent"])
         outcome = make_memory({"did": fsurf.identity["did"], "scope": target.scope},
                               fsurf.kp, target.scope,
                               {"outcome": {"intention": n["id"], "of": work["of"],

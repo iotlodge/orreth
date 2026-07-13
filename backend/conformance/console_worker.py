@@ -1575,9 +1575,11 @@ IMPROVER_EVERY = int(os.environ.get("ORRETH_IMPROVER_EVERY", "600"))
 SUCCESS_FLOOR = 90                           # below this, the receipts earn a nudge
 
 
-def wire_assets(port: int, tag: str) -> list[tuple[str, dict, list]]:
+def wire_assets(port: int, tag: str,
+                name: str | None = None) -> list[tuple[str, dict, list, list]]:
     """The asset ledger as the improver may read it — its own token, bodies in
-    hand, oldest first. Returns (ref, body, derived_from) rows."""
+    hand, oldest first. Returns (ref, body, derived_from, tags) rows; name=None
+    reads the whole shelf (0031 §4), a name narrows to one asset's chain."""
     from datetime import datetime, timedelta, timezone
     token = _ROOT.issue_token(IMP_DID, "u:demo", [{"action": "retrieve", "space": "self"}])
     frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -1592,7 +1594,7 @@ def wire_assets(port: int, tag: str) -> list[tuple[str, dict, list]]:
     rows = []
     for h in r.get("hits", []):
         tags = h.get("tags") or []
-        if tag not in tags or ASSET_NAME not in tags:
+        if tag not in tags or (name is not None and name not in tags):
             continue
         try:
             body = call(port, "GET",
@@ -1600,10 +1602,10 @@ def wire_assets(port: int, tag: str) -> list[tuple[str, dict, list]]:
         except Exception:
             continue
         if isinstance(body, dict):
-            rows.append((h["ref"], body, h.get("derived_from") or [],
+            rows.append((h["ref"], body, h.get("derived_from") or [], tags,
                          h.get("occurred_at", "")))
-    rows.sort(key=lambda x: x[3])
-    return [(ref, body, dl) for ref, body, dl, _ in rows]
+    rows.sort(key=lambda x: x[4])
+    return [(ref, body, dl, tags) for ref, body, dl, tags, _ in rows]
 
 
 def improver_beat(port: int) -> None:
@@ -1616,18 +1618,33 @@ def improver_beat(port: int) -> None:
     _IMPROVER_LAST = time.time()             # set early — a failing beat never hot-loops
     scope = UNIVERSE_SCOPE
     me = {"did": IMP_DID, "scope": scope}
-    actives = wire_assets(port, "asset")
+    actives = wire_assets(port, "asset", name=ASSET_NAME)
     if not actives:
         genesis = improver.make_asset(me, IMP, scope, name=ASSET_NAME,
                                       profile={"max_cycles": 2, "max_obs": 3})
         try:
             call(port, "POST", "/records", genesis)
-            print(f"  ↳ the improver plants the genesis asset — {genesis['id'][:18]}…")
+            print(f"  ↳ the smith plants the genesis asset — {genesis['id'][:18]}…")
         except Exception as e:
             print(f"    (genesis asset write failed: {e})")
         return
-    adopted_from = {d for _, _, dl in actives for d in dl}
-    if any(rid not in adopted_from for rid, _, _ in wire_assets(port, "asset-proposal")):
+    # the prompt shelf plants beside it (0031 §4): the chassis constants become
+    # version one — from here a prompt change is a rewrite the human gates
+    from orreth_sim.chassis import _CRITIC, _PLAN
+    for pname, text in (("prompt-plan", _PLAN), ("prompt-critic", _CRITIC)):
+        if not wire_assets(port, "asset", name=pname):
+            g = improver.make_asset(me, IMP, scope, name=pname,
+                                    profile={"template": text})
+            try:
+                call(port, "POST", "/records", g)
+                print(f"  ↳ the smith shelves {pname} v1 — the prompt leaves the code")
+            except Exception as e:
+                print(f"    ({pname} genesis failed: {e})")
+    closed = {d for _, _, dl, _ in actives for d in dl}
+    closed |= {d for _, _, dl, _ in wire_assets(port, "asset-decline",
+                                                name=ASSET_NAME) for d in dl}
+    if any(rid not in closed
+           for rid, _, _, _ in wire_assets(port, "asset-proposal", name=ASSET_NAME)):
         return                               # a proposal already waits — no storms
     try:
         ru = call(port, "GET", "/rollup")
@@ -1636,62 +1653,143 @@ def improver_beat(port: int) -> None:
     rate = int(ru.get("success_rate", 100))
     if rate >= SUCCESS_FLOOR:
         return                               # healthy assets are left alone
-    rid, body, _ = actives[-1]
+    rid, body, _, _ = actives[-1]
     base = dict((body.get("asset") or {}).get("profile") or {})
     prof = dict(base)
     prof["max_cycles"] = min(int(prof.get("max_cycles", 2)) + 1, 5)
     if prof == base:
         return                               # the dial is at its stop — nothing to propose
+    # the human's words ride as evidence (0031 §4): feedback is never an
+    # auto-trigger, but a proposal MUST carry what the human said
+    fb_refs = [ref for ref, _, _, _ in
+               wire_assets(port, "asset-feedback", name=ASSET_NAME)][-5:]
     proposal = improver.make_asset(me, IMP, scope, name=ASSET_NAME, profile=prof,
-                                   derived_from=[rid], tag="asset-proposal")
+                                   derived_from=[rid, *fb_refs], tag="asset-proposal")
     try:
         call(port, "POST", "/records", proposal)
         call(port, "POST", "/requests",
              {"kind": "improvement", "proposal": proposal["id"],
-              "text": f"the improver proposes a new {ASSET_NAME}: success "
+              "text": f"the smith proposes a new {ASSET_NAME}: success "
                       f"{rate}% < {SUCCESS_FLOOR}% — a bounded nudge, receipts attached"})
-        print(f"  ↳ the improver proposes: {ASSET_NAME} at {rate}% — "
+        print(f"  ↳ the smith proposes: {ASSET_NAME} at {rate}% — "
               f"{proposal['id'][:18]}…")
     except Exception as e:
         print(f"    (improvement proposal failed: {e})")
 
 
-def on_improvement(port: int, scope: str, r: dict, *, approved: bool = False) -> None:
-    """Governance's duty (0028, JB lock): the change kind is COMPUTED by diffing
+def wire_receipts(port: int, refs: list) -> list[dict]:
+    """Receipts resolved to readable lines (0031 §4) — the wire's mirror of the
+    sim's approval_package walk: the human reads receipts, never raw refs."""
+    out = []
+    for ref in refs[:8]:
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(ref, safe='')}/body")
+        except Exception:
+            out.append({"ref": ref, "what": "a record beyond this floor"})
+            continue
+        if not isinstance(body, dict):
+            out.append({"ref": ref, "what": "cited evidence"})
+        elif "asset" in body:
+            out.append({"ref": ref, "what": "the version this proposal succeeds"})
+        elif "feedback" in body:
+            quoted = str((body.get("feedback") or {}).get("quoted") or "")[:80]
+            out.append({"ref": ref, "what": f"the human's words: “{quoted}”"})
+        elif "marker" in body:
+            why = str((body.get("marker") or {}).get("reason") or "")[:80]
+            out.append({"ref": ref, "what": f"a graded review — {why}"})
+        elif "parked_intent" in body:
+            out.append({"ref": ref, "what": "a parked intent — the breaker fired"})
+        else:
+            out.append({"ref": ref, "what": "cited evidence"})
+    return out
+
+
+def wire_package(port: int, pid: str) -> dict | None:
+    """The approval package from the wire's records (0031 §4): the computed
+    diff, the receipts, the rollback that never left. `_profile` rides inside
+    for adoption and is stripped before the package travels."""
+    props = {ref: (body, dl, tags) for ref, body, dl, tags
+             in wire_assets(port, "asset-proposal")}
+    if pid not in props:
+        return None
+    body, dl, tags = props[pid]
+    name = str((body.get("asset") or {}).get("name") or
+               next((t for t in tags if t != "asset-proposal"), ASSET_NAME))
+    new_prof = (body.get("asset") or {}).get("profile") or {}
+    actives = wire_assets(port, "asset", name=name)
+    old_prof = (actives[-1][1].get("asset") or {}).get("profile") or {} \
+        if actives else {}
+    changed = sorted(k for k in set(old_prof) | set(new_prof)
+                     if old_prof.get(k) != new_prof.get(k))
+    kind = improver.classify_change(old_prof, new_prof) if changed else "no-op"
+    return {"asset": name, "kind": kind,
+            "lane": improver.LANES.get(kind, "refused"),
+            "changed": {k: {"from": old_prof.get(k), "to": new_prof.get(k)}
+                        for k in changed},
+            "receipts": wire_receipts(port, dl),
+            "rollback": actives[-1][0] if actives else None,
+            "checks": {"no_op": not changed,
+                       "cites_active": bool(actives and actives[-1][0] in dl)},
+            "_profile": new_prof}
+
+
+def on_improvement(port: int, scope: str, r: dict, *, approved: bool = False,
+                   declined: bool = False) -> None:
+    """Governance's duty (0028 · 0031 §4): the change kind is COMPUTED by diffing
     versions, never declared; the grade is a marker on the record; the lanes
-    route — medium adopts with a loud record, high waits for the human. An
-    approved request is the human's word: adopt, citing the proposal."""
+    route — medium adopts with a loud record, high waits for the human. Approved
+    is the human's word: adopt, citing the proposal. Denied is a word too: the
+    decline derives from the proposal and the lane opens again — a refusal never
+    dams the river."""
     pid = str(r.get("proposal") or "")
-    actives = wire_assets(port, "asset")
-    props = {ref: body for ref, body, _ in wire_assets(port, "asset-proposal")}
-    if pid not in props or not actives:
-        call(port, "POST", "/requests/resolve",
-             {"id": r["id"], "status": "denied",
-              "result": "no such proposal, or no active asset to succeed"})
-        return
+    pkg = wire_package(port, pid)
     gov = {"did": GOV_DID, "scope": scope}
-    new_prof = (props[pid].get("asset") or {}).get("profile") or {}
+    if pkg is None:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"refused": "no such proposal on the shelf"}})
+        return
+    name, new_prof = pkg["asset"], pkg.pop("_profile")
+
+    def close_lane(reason: str) -> str:
+        dec = make_memory(gov, GOV, scope,
+                          {"decline": {"asset": name, "proposal": pid,
+                                       "reason": reason}},
+                          kind="semantic", tags=["asset-decline", name])
+        dec["derived_from"] = [pid]
+        call(port, "POST", "/records", dec)
+        return dec["id"]
+
+    if declined:                             # the human's no is a record too (0031 §4)
+        did_ = close_lane("declined by the human")
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"declined": did_, "asset": name,
+                         "lane": "the human declined — the lane opens"}})
+        print(f"  ↳ improvement declined by the human — {name}'s lane opens")
+        return
     if approved:                             # the human opened the high lane
-        adopted = improver.make_asset(gov, GOV, scope, name=ASSET_NAME,
+        adopted = improver.make_asset(gov, GOV, scope, name=name,
                                       profile=new_prof, adopted_from=pid,
                                       derived_from=[pid])
         call(port, "POST", "/records", adopted)
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
-              "result": {"adopted": adopted["id"],
+              "result": {"adopted": adopted["id"], "asset": name,
                          "lane": "high — the human approved"}})
         print(f"  ↳ improvement adopted on the human's word — {adopted['id'][:18]}…")
         return
-    old_prof = (actives[-1][1].get("asset") or {}).get("profile") or {}
-    if new_prof == old_prof:                 # a no-op is not a proposal — refuse, never hold
+    if pkg["checks"]["no_op"]:               # a no-op is refused AND its lane closed
+        did_ = close_lane("no-op — the proposal changes nothing")
         call(port, "POST", "/requests/resolve",
-             {"id": r["id"], "status": "denied",
-              "result": "the proposal changes nothing — no lane to ride"})
+             {"id": r["id"], "status": "done",
+              "result": {"refused": "the proposal changes nothing — no lane to ride",
+                         "declined": did_}})
         return
-    kind = improver.classify_change(old_prof, new_prof)
-    sev = improver.LANES[kind]
+    kind, sev = pkg["kind"], improver.LANES[pkg["kind"]]
     mk = markers.make_marker(gov, GOV, scope, [pid],
-                             reason=f"improvement proposal for {ASSET_NAME}: {kind}",
+                             reason=f"improvement proposal for {name}: {kind}",
                              change_severity=sev)
     try:
         call(port, "POST", "/records", mk)
@@ -1700,12 +1798,13 @@ def on_improvement(port: int, scope: str, r: dict, *, approved: bool = False) ->
     if sev == "high":
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "staged",
-              "result": {"held": "a rewrite waits for the human (R6) — resolve me "
-                                 "with status approved to adopt",
-                         "kind": kind, "marker": mk["id"]}})
+              "result": {"held": "a rewrite waits for the human (R6) — adopt or "
+                                 "decline at the gate",
+                         "kind": kind, "marker": mk["id"], "package": pkg,
+                         "package_text": parlor.package_text(pkg)}})
         print(f"  ↳ improvement held on the high lane: {kind} — the gate waits")
         return
-    adopted = improver.make_asset(gov, GOV, scope, name=ASSET_NAME,
+    adopted = improver.make_asset(gov, GOV, scope, name=name,
                                   profile=new_prof, adopted_from=pid,
                                   derived_from=[pid, mk["id"]])
     call(port, "POST", "/records", adopted)
@@ -1715,6 +1814,82 @@ def on_improvement(port: int, scope: str, r: dict, *, approved: bool = False) ->
                      "lane": "medium — co-review + notify"}})
     print(f"  ↳ improvement adopted on the medium lane ({kind}) — "
           f"{adopted['id'][:18]}… · co-review rides behind (R6)")
+
+
+def wire_shelf(port: int) -> list[dict]:
+    """The one shelf from the wire (0031 §4): every behavioral asset by name —
+    versions, the active head, open proposals, the human's feedback count."""
+    rows: dict[str, dict] = {}
+    closed: dict[str, set] = {}
+
+    def row(name: str) -> dict:
+        return rows.setdefault(name, {"name": name, "versions": 0, "proposals": 0,
+                                      "feedback": 0, "active": None, "open": None})
+
+    for tag, key in (("asset", "versions"), ("asset-proposal", "proposals"),
+                     ("asset-feedback", "feedback"), ("asset-decline", None)):
+        for ref, body, dl, tags in wire_assets(port, tag):
+            name = next((t for t in tags if t != tag), None) or \
+                str((body.get("asset") or {}).get("name") or "?")
+            rw = row(name)
+            if key:
+                rw[key] += 1
+            if tag == "asset":
+                rw["active"] = ref            # oldest-first: the last write wins
+            if tag in ("asset", "asset-decline"):
+                closed.setdefault(name, set()).update(dl)
+    for ref, _body, _dl, tags in wire_assets(port, "asset-proposal"):
+        name = next((t for t in tags if t != "asset-proposal"), "?")
+        if ref not in closed.get(name, set()):
+            row(name)["open"] = ref
+    return sorted(rows.values(), key=lambda x: x["name"])
+
+
+def wire_walk_reply(port: int, name: str) -> str:
+    """The version walk, composed for the parlor (0031 §4): oldest → active, the
+    keys each version changed, and whether a proposal carried it in."""
+    rows = wire_assets(port, "asset", name=name)
+    if not rows:
+        return (f"nothing on the shelf under “{name}” — say “show the shelf” for "
+                "what stands.")
+    lines, prev = [], {}
+    for i, (ref, body, _dl, _tags) in enumerate(rows, 1):
+        a = body.get("asset") or {}
+        prof = a.get("profile") or {}
+        changed = sorted(k for k in set(prev) | set(prof)
+                         if prev.get(k) != prof.get(k))
+        lines.append(f"v{i} [{ref[:14]}…] "
+                     + ("genesis" if i == 1 else "changed " + (", ".join(changed)
+                                                               or "nothing"))
+                     + (" · adopted from a proposal" if a.get("adopted_from") else ""))
+        prev = prof
+    return (f"{name}, {len(rows)} version(s), oldest to active: " + "; ".join(lines)
+            + ". every version a sibling — the old ones never die.")
+
+
+def wire_feedback(port: int, scope: str, name: str, words: str) -> None:
+    """The feedback door on the wire (0031 §4): grace signs the human's words
+    VERBATIM, derived from the asset's active version — evidence her next beat
+    must carry. Evidence, never an auto-trigger (v0)."""
+    me = {"did": IMP_DID, "scope": scope}
+    rec = make_memory(me, IMP, scope,
+                      {"feedback": {"asset": name, "quoted": (words or "")[:400]}},
+                      kind="semantic", tags=["asset-feedback", name])
+    actives = wire_assets(port, "asset", name=name)
+    if actives:
+        rec["derived_from"] = [actives[-1][0]]
+    try:
+        call(port, "POST", "/records", rec)
+        print(f"  ↳ feedback on {name} shelved verbatim — {rec['id'][:18]}…")
+    except Exception as e:
+        print(f"    (feedback write failed: {e})")
+
+
+def universe_port(fallback: int) -> int:
+    """One workshop, the universe floor (0028 lock · 0031 §4): grace's shelf
+    lives at the apex, whichever floor received the ask."""
+    return next((p for p, s in FLOOR_SCOPES.items() if s == UNIVERSE_SCOPE),
+                fallback)
 
 
 # ---------------------------------------------------------------- the shipyard (0009→wire)
@@ -1894,6 +2069,11 @@ def pin_organs(port: int, floor: str) -> None:
         ("ada", ADA_DID,
          lambda: _BECKY.issue_token(ADA_DID, SCOPE, [{"action": "retrieve", "space": "self"}])),
     )
+    if floor == UNIVERSE_SCOPE:              # one workshop, the universe floor (0031 §4)
+        organs += (
+            ("grace", IMP_DID,
+             lambda: _BECKY.issue_token(IMP_DID, SCOPE,
+                                        [{"action": "retrieve", "space": "self"}])),)
     for organ, did, mint in organs:
         if pins.get(organ) == did:
             continue
@@ -1937,7 +2117,8 @@ def window_charter(port: int, scope: str) -> None:
 
 # ---------------------------------------------------------------- the parlor (0020)
 
-RESIDENT_KEYS = {"charlotte": (CHA, CHA_DID), "ada": (ADA, ADA_DID)}
+RESIDENT_KEYS = {"charlotte": (CHA, CHA_DID), "ada": (ADA, ADA_DID),
+                 "grace": (IMP, IMP_DID)}    # the smith IS the improver (0031 §4)
 
 
 def resident_key(name: str, scope: str = SCOPE):
@@ -2071,6 +2252,15 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     and the exchange lands signed in the Window. Humans never read; they are answered."""
     name = str(r.get("to") or "").strip().lower()
     facts = parlor_facts(port, scope)
+    if name == "grace":                       # the smith reads her shelf (0031 §4)
+        u_port = universe_port(port)
+        facts["shelf"] = wire_shelf(u_port)
+        facts["requests"] = [x for x in facts.get("requests") or []]
+        held = [x for x in facts["requests"]
+                if x.get("kind") == "improvement" and x.get("status") == "staged"]
+        res = held[-1].get("result") if held else None
+        if isinstance(res, dict) and res.get("package_text"):
+            facts["package_text"] = res["package_text"]
     if r.get("verb") == "card":
         c = parlor.card(name, facts)
         _, did = resident_key(name, scope)
@@ -2143,6 +2333,11 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         return                              # resolves on a later beat, legs in hand
     if ans.get("action") == "gather":     # the librarian's real duty (0014), front-doored
         reply = gather(port, scope, ans["topic"])
+    if ans.get("action") == "asset-walk":     # the smith walks a lineage (0031 §4)
+        reply = wire_walk_reply(universe_port(port), ans["asset"])
+    if ans.get("action") == "asset-feedback":  # the feedback door (0031 §4)
+        wire_feedback(universe_port(port), UNIVERSE_SCOPE,
+                      ans["asset"], ans.get("note", ""))
     if ans.get("action") == "profile-read":    # 0025 §4 — the portrait, labeled
         reply = profile_read(port, scope)
     if ans.get("action") == "profile-forget":  # 0025 §3 — consent withdrawn
@@ -2262,7 +2457,8 @@ def on_demo(port: int, r: dict) -> None:
 
 def main() -> None:
     print(f"console worker · librarian {LIB_DID[:20]}… · charlotte {CHA_DID[:20]}… "
-          f"· ada {ADA_DID[:20]}… · becky's door on :{JOIN_PORT} · tending floors {FLOORS}")
+          f"· ada {ADA_DID[:20]}… · grace {IMP_DID[:20]}… · becky's door on "
+          f":{JOIN_PORT} · tending floors {FLOORS}")
     handled: set[tuple] = set()               # (port, id, at, status): each step acted once
     scopes: dict[int, str] = {}
     SHIPYARD.replant()                        # hulls the rig lost come back before the round
@@ -2346,10 +2542,11 @@ def main() -> None:
                             handled.add(key)
                             on_intention(port, scope, r)
                         elif r.get("kind") == "improvement" and \
-                                r.get("status") in ("pending", "approved"):
+                                r.get("status") in ("pending", "approved", "denied"):
                             handled.add(key)
                             on_improvement(port, scope, r,
-                                           approved=r.get("status") == "approved")
+                                           approved=r.get("status") == "approved",
+                                           declined=r.get("status") == "denied")
                     except urllib.error.HTTPError as e:
                         # The floor ANSWERED — a refusal, not a dead wire (probe()'s
                         # law). One poison request must never silence the residents:

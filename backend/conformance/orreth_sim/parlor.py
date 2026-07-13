@@ -17,13 +17,14 @@ import re
 from . import markers, profile
 from .identity import NOW
 
-RESIDENTS = ("becky", "vigil", "steward", "governance", "charlotte", "librarian", "ada")
-EMBODIED = ("becky", "charlotte", "librarian", "ada")   # hold keys; sign their audiences
+RESIDENTS = ("becky", "vigil", "steward", "governance", "charlotte", "librarian",
+             "ada", "grace")
+EMBODIED = ("becky", "charlotte", "librarian", "ada", "grace")  # hold keys; sign their audiences
 
 ROLES = {"becky": "becky · IAM", "vigil": "vigil · the Warden",
          "steward": "steward · memory", "governance": "governance",
          "charlotte": "charlotte · farm keeper", "librarian": "librarian · knowledge",
-         "ada": "ada · the wrangler"}
+         "ada": "ada · the wrangler", "grace": "grace · the smith"}
 
 # the librarian's gather ask, in the shapes callers actually type
 _GATHER = ("gather sourced knowledge on", "gather knowledge on", "gather on", "gather")
@@ -37,6 +38,22 @@ _ASK_SEATS = ("ask the universe about", "ask your seats about", "ask my seats ab
 # growing the universe, in the shapes callers actually type (the Shipyard)
 _GROW = ("create ecosystem", "add ecosystem", "grow ecosystem", "new ecosystem",
          "build ecosystem")
+
+# the smith's doors (0031 §4), in the shapes callers actually type
+_WALK = ("show asset", "walk asset", "asset walk for")
+_FEEDBACK = ("feedback on", "feedback for")
+
+
+def parse_feedback(text: str):
+    """“feedback on prompt-plan: too wordy under pressure” → (name, words)."""
+    t = (text or "").strip()
+    low = t.lower()
+    for p in _FEEDBACK:
+        if low.startswith(p) and ":" in t:
+            head, words = t[len(p):].split(":", 1)
+            if head.strip() and words.strip():
+                return head.strip().lower(), words.strip()
+    return None
 
 
 def parse_grow(text: str):
@@ -142,6 +159,20 @@ def _card_ada(facts: dict) -> tuple[str, list]:
              {"label": "what expires soon?", "ask": "what expires soon?"}])
 
 
+def _card_grace(facts: dict) -> tuple[str, list]:
+    rows = facts.get("shelf") or []
+    open_p = sum(1 for r in rows if r.get("open"))
+    return (f"I keep the workshop, on the universe floor — {len(rows)} asset(s) on the "
+            f"shelf, {open_p} proposal(s) open. Prompts, profiles, and workflows are "
+            "versioned data here: I propose from receipts, governance grades by diff, "
+            "and the high lane waits for you. Your feedback lands verbatim and I must "
+            "carry it.",
+            [{"label": "show the shelf", "ask": "show the shelf"},
+             {"label": "walk an asset…", "template": "show asset "},
+             {"label": "leave feedback…", "template": "feedback on "},
+             {"label": "what waits for me?", "ask": "what waits for me?"}])
+
+
 def _card_organ(name: str):
     def make(facts: dict) -> tuple[str, list]:
         return (_organ_reply(name, facts),
@@ -150,7 +181,7 @@ def _card_organ(name: str):
 
 
 _CARDS = {"becky": _card_becky, "charlotte": _card_charlotte,
-          "librarian": _card_librarian, "ada": _card_ada,
+          "librarian": _card_librarian, "ada": _card_ada, "grace": _card_grace,
           "vigil": _card_organ("vigil"), "steward": _card_organ("steward"),
           "governance": _card_organ("governance")}
 
@@ -231,6 +262,31 @@ def answer(name: str, text: str, facts: dict) -> dict:
         if "recall" in t or "discredit" in t or "poison" in t:
             return {"reply": _librarian_recalls(facts)}
         return {"reply": _librarian_reply(facts)}
+    if name == "grace":
+        fb = parse_feedback(text)
+        if fb is not None:                    # 0031 §4 — the feedback door
+            asset, words = fb
+            # flow-control travels VERBATIM: a confirmation is protocol, never voiced
+            return {"reply": f"on the record — “{words}” lands verbatim against "
+                             f"{asset}'s active version, signed and derived from it. "
+                             "I must carry it as evidence on my next beat; adoption "
+                             "still rides the lanes.",
+                    "action": "asset-feedback", "asset": asset, "note": words,
+                    "verbatim": True}
+        for p in _WALK:
+            if t.startswith(p):
+                walked = (text or "").strip()[len(p):].strip().strip("?.!").lower()
+                if walked:
+                    return {"reply": f"walking {walked.split()[0]} — oldest to "
+                                     "active, every version a sibling: evidence → "
+                                     "proposal → grade → adoption.",
+                            "action": "asset-walk", "asset": walked.split()[0],
+                            "verbatim": True}
+        if "wait" in t:
+            return {"reply": _grace_waiting(facts)}
+        if "shelf" in t or "asset" in t:
+            return {"reply": _grace_shelf(facts)}
+        return {"reply": _grace_reply(facts)}
     if name == "becky":
         return {"reply": _becky_reply(t, facts)}
     if name == "charlotte":
@@ -319,6 +375,62 @@ def _librarian_recalls(facts: dict) -> str:
            if isinstance(r.get("result"), str) else "walk pending")
         for r in done) or "a walk is in progress"
     return f"{len(walks)} recall walk(s) on this floor: {lines}."
+
+
+def _grace_shelf(facts: dict) -> str:
+    rows = facts.get("shelf") or []
+    if not rows:
+        return ("the shelf is bare — genesis assets plant on my first beat; from "
+                "then on, every change is a sibling on the record.")
+    lines = "; ".join(
+        f"{r['name']} — {r.get('versions', 0)} version(s)"
+        + (", a proposal holds the lane" if r.get("open") else "")
+        + (f", {r['feedback']} feedback" if r.get("feedback") else "")
+        for r in rows)
+    return (f"{len(rows)} asset(s) on the shelf: {lines}. say “show asset <name>” "
+            "and I walk its lineage.")
+
+
+def _grace_waiting(facts: dict) -> str:
+    held = [r for r in facts.get("requests") or []
+            if r.get("kind") == "improvement" and r.get("status") == "staged"]
+    if not held:
+        return ("nothing waits on the high lane — the shelf is at peace. medium "
+                "nudges adopt loud; rewrites stop here for you.")
+    lines = "; ".join(str(r.get("text") or r.get("id", "?"))[:80] for r in held)
+    return (f"{len(held)} proposal(s) wait for your word: {lines}. approve in the "
+            "inbox and the adoption cites your gate; decline and the lane opens.")
+
+
+def _grace_reply(facts: dict) -> str:
+    rows = facts.get("shelf") or []
+    open_p = sum(1 for r in rows if r.get("open"))
+    return (f"the workshop: {len(rows)} asset(s), {open_p} proposal(s) open. I read "
+            "the receipts — rollups, markers, parked intents, your words — and "
+            "propose siblings, never silent successors. governance grades by diff; "
+            "the lanes route; you hold the high one.")
+
+
+def package_text(pkg: dict) -> str:
+    """The approval package, readable (0031 §4): what changed · why · rollback ·
+    checks — composed for the room's doc panel and the decision inbox. The human
+    reviews a checked candidate, never raw factory output."""
+    if not pkg:
+        return "nothing staged."
+    ch = "; ".join(f"{k}: {v['from']!r} → {v['to']!r}"[:90]
+                   for k, v in (pkg.get("changed") or {}).items()) or "nothing"
+    why = "; ".join(r["what"] for r in (pkg.get("receipts") or [])[:5]) \
+        or "no receipts cited"
+    checks = ("no-op — refused, no lane to ride"
+              if (pkg.get("checks") or {}).get("no_op") else
+              "diff computed, lineage cites the active version"
+              if (pkg.get("checks") or {}).get("cites_active") else
+              "diff computed — does not cite the active version")
+    return (f"{pkg.get('asset', '?')} — a {pkg.get('kind', '?')} on the "
+            f"{pkg.get('lane', '?')} lane.\nWHAT CHANGED: {ch}.\nWHY: {why}.\n"
+            f"ROLLBACK: the prior version stands"
+            + (f" ({str(pkg.get('rollback'))[:18]}…)" if pkg.get("rollback") else "")
+            + f".\nCHECKS: {checks}.")
 
 
 def _organ_reply(name: str, facts: dict) -> str:
@@ -444,8 +556,41 @@ def _room_ada(facts: dict) -> list[dict]:
     ]
 
 
+def _room_grace(facts: dict) -> list[dict]:
+    rows = facts.get("shelf") or []
+    held = [r for r in facts.get("requests") or []
+            if r.get("kind") == "improvement" and r.get("status") == "staged"]
+    return [
+        {"kind": "stat", "title": "the workshop",
+         "items": [{"label": "assets on the shelf", "value": len(rows)},
+                   {"label": "open proposals",
+                    "value": sum(1 for r in rows if r.get("open"))},
+                   {"label": "waiting for you", "value": len(held)},
+                   {"label": "your feedback",
+                    "value": sum(int(r.get("feedback") or 0) for r in rows)}]},
+        {"kind": "bars", "title": "versions by asset",
+         "items": [{"label": r["name"], "value": int(r.get("versions") or 0)}
+                   for r in sorted(rows,
+                                   key=lambda x: -int(x.get("versions") or 0))[:8]]},
+        {"kind": "list", "title": "the shelf",
+         "items": _sev([{"text": r["name"],
+                         "meta": f"{r.get('versions', 0)} version(s)"
+                                 + (" · lane holds" if r.get("open") else "")
+                                 + (f" · {r['feedback']} feedback"
+                                    if r.get("feedback") else ""),
+                         "severity": "medium" if r.get("open") else ""}
+                        for r in rows] or
+                       [{"text": "a bare shelf — genesis plants on my first beat",
+                         "meta": ""}])},
+        {"kind": "doc", "title": "the approval package",
+         "text": facts.get("package_text") or
+                 "nothing staged — when a rewrite waits, what changed, why, and "
+                 "the rollback all read here before you sign."},
+    ]
+
+
 _ROOMS = {"librarian": _room_librarian, "becky": _room_becky,
-          "charlotte": _room_charlotte, "ada": _room_ada}
+          "charlotte": _room_charlotte, "ada": _room_ada, "grace": _room_grace}
 
 
 # ---------------------------------------------------------------- the audience record

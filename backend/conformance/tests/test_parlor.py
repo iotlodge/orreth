@@ -184,3 +184,55 @@ def test_medium_and_above_wear_amber():
     ws2 = parlor.workspace("charlotte", FACTS)
     roster = next(p for p in ws2["panels"] if p["title"] == "the roster")
     assert any(i.get("amber") for i in roster["items"])
+
+
+# ---------------------------------------------------------------- grace (0031 §4)
+
+
+def test_grace_wears_the_smiths_card():
+    facts = {"scope": "u:demo",
+             "shelf": [{"name": "prompt-plan", "versions": 1, "open": "p1",
+                        "feedback": 0}]}
+    c = parlor.card("grace", facts)
+    assert c["voiced"] and c["workspace"] and c["role"] == "grace · the smith"
+    labels = [a["label"] for a in c["asks"]]
+    assert "show the shelf" in labels and "leave feedback…" in labels
+
+
+def test_grace_walks_and_receives_feedback_verbatim():
+    facts = {"scope": "u:demo", "shelf": []}
+    walk = parlor.answer("grace", "show asset prompt-plan", facts)
+    assert walk["action"] == "asset-walk" and walk["asset"] == "prompt-plan"
+    assert walk["verbatim"] is True           # flow-control is never voiced
+    fb = parlor.answer("grace", "feedback on prompt-plan: too wordy under pressure",
+                       facts)
+    assert fb["action"] == "asset-feedback" and fb["asset"] == "prompt-plan"
+    assert fb["note"] == "too wordy under pressure" and fb["verbatim"] is True
+    assert "too wordy under pressure" in fb["reply"]     # the words, quoted back
+
+
+def test_grace_room_composes_the_workshop():
+    facts = {"scope": "u:demo",
+             "shelf": [{"name": "fingertip-default", "versions": 2, "open": "p1",
+                        "feedback": 1, "active": "a2"}],
+             "requests": [{"kind": "improvement", "status": "staged",
+                           "text": "a rewrite waits"}],
+             "package_text": "prompt-plan — a rewrite on the high lane."}
+    ws = parlor.workspace("grace", facts)
+    kinds = [p["kind"] for p in ws["panels"]]
+    assert kinds == ["stat", "bars", "list", "doc"]
+    stat = {i["label"]: i["value"] for i in ws["panels"][0]["items"]}
+    assert stat["waiting for you"] == 1 and stat["your feedback"] == 1
+    row = ws["panels"][2]["items"][0]
+    assert row["amber"] is True               # a held lane wears amber (0024)
+    assert "high lane" in ws["panels"][3]["text"]
+
+
+def test_package_text_reads_the_gate():
+    pkg = {"asset": "prompt-plan", "kind": "rewrite", "lane": "high",
+           "changed": {"template": {"from": "a", "to": "b"}},
+           "receipts": [{"ref": "r1", "what": "the human's words: “shorter”"}],
+           "rollback": "aaaa1111", "checks": {"no_op": False, "cites_active": True}}
+    text = parlor.package_text(pkg)
+    assert "rewrite" in text and "WHAT CHANGED" in text and "ROLLBACK" in text
+    assert "shorter" in text and "lineage cites the active version" in text

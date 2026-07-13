@@ -43,9 +43,14 @@ class Chassis:
 
     def __init__(self, surface, think, *, persona: str = "", skills: dict | None = None,
                  max_cycles: int = 3, max_obs: int = 3, klass: str = "low",
-                 ladder: list[str] | None = None):
+                 ladder: list[str] | None = None, plan_template: str | None = None,
+                 critic_template: str | None = None):
         self.surface, self.think = surface, think
         self.persona, self.skills = persona, skills or {}
+        # 0031 §4: the prompts are behavior, and behavior arrives as data — the
+        # shelf's active versions ride in here; the constants are only the genesis
+        self.plan_template = plan_template or _PLAN
+        self.critic_template = critic_template or _CRITIC
         self.max_cycles, self.max_obs, self.klass = max_cycles, max_obs, klass
         self.ladder = list(ladder) if ladder else None   # rungs of doubt → altitude
         self.trace: list[dict] = []               # the loop, on the record
@@ -61,7 +66,7 @@ class Chassis:
             budget_before = self.surface.budget_left
             observations = self._plan(intent, feedback, klass)
             results = self._nucleus(observations, klass)      # parallel, least-privilege
-            verdict = self.think(klass, _CRITIC.format(
+            verdict = self.think(klass, self.critic_template.format(
                 persona=self.persona, intent=intent,
                 results="\n".join(f"- [{k}] {q} → {r}" for k, q, r in results)))
             done = verdict.strip().upper().startswith("DONE")
@@ -75,7 +80,7 @@ class Chassis:
         return self._park(intent, feedback)                   # the breaker doesn't fail
 
     def _plan(self, intent: str, feedback: str, klass: str) -> list[tuple[str, str]]:
-        raw = self.think(klass, _PLAN.format(
+        raw = self.think(klass, self.plan_template.format(
             persona=self.persona, intent=intent, feedback=feedback,
             skills=", ".join(self.skills) or "none", max_obs=self.max_obs))
         obs = []

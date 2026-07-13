@@ -1073,6 +1073,16 @@ fn residents(app: &App) -> Vec<Value> {
         }
         out.push(a);
     }
+    // grace, the smith (0031 §4): pin-only residency — no mined fallback, so the
+    // workshop appears exactly where becky's chain put it (rule 7, one picture).
+    if let Some(gra_pin) = pins.get("grace").cloned() {
+        let (g_c, g_u) = llm(Some(gra_pin.as_str()));
+        out.push(json!({"agent": format!("grace·{leaf}"), "name": "grace",
+            "role": "grace · the smith", "state": "improving",
+            "did": gra_pin, "pinned": true,
+            "blurb": "keeps the workshop; proposes from receipts, never grades her own",
+            "vitals": {"llm calls": g_c, "llm usd": g_u}}));
+    }
     out
 }
 
