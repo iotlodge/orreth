@@ -1898,6 +1898,7 @@ async function loadObjectives(){
         +((a.dark||[]).length?`<div class="row rm">dark: ${a.dark.map(d=>esc(d.seat||d)).join(", ")}</div>`:"")
         +((a.waiting||[]).length?`<div class="row rm">waiting: ${a.waiting.map(w=>esc(w)).join("; ")}</div>`:"")
         +`<div class="row rm">the report record · ${esc((res.record||"").slice(0,34))}…</div>`
+        +(a.coordinate_citations?`<div class="row rm">the coordinate · ${a.coordinate_citations} record(s) across the floors cite this objective (0033)</div>`:"")
         +(res.graph?`<div class="row wtoggle" onclick="walkToggle('${r.id}')">⤳ ${WALKOPEN.has(r.id)?"close the walk":"walk the work — how each seat thought"}</div>`:"")
         +(res.graph&&WALKOPEN.has(r.id)?renderGraph(res.graph,r.id,true):"");
     }else if(r.status==="denied"){

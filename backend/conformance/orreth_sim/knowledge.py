@@ -34,9 +34,11 @@ class KnowledgeCategory:
     def __init__(self, node, intent: str, slug: str):
         self.node, self.intent, self.slug = node, intent, slug
 
-    def _write(self, body: dict, derived_from: list[str] | None = None) -> str:
+    def _write(self, body: dict, derived_from: list[str] | None = None,
+               extra_tags: list[str] | None = None) -> str:
         rec = make_memory(self.node.steward, self.node.steward_kp, self.node.scope,
-                          body, kind="semantic", tags=["knowledge", self.slug],
+                          body, kind="semantic",
+                          tags=["knowledge", self.slug, *(extra_tags or [])],
                           provenance_class="ingested-archive"
                           if body.get("state") == "untrusted" else "lived")
         if derived_from:
@@ -44,14 +46,17 @@ class KnowledgeCategory:
         return self.node.write(rec)
 
     # ---- admission: quarantined, always (0014 §3) ---------------------------------------
-    def admit(self, claim: str, source: dict, *, generation: int = 1) -> str:
-        """The world speaks; we file it at 0.0000 and remember who said it."""
+    def admit(self, claim: str, source: dict, *, generation: int = 1,
+              extra_tags: list[str] | None = None) -> str:
+        """The world speaks; we file it at 0.0000 and remember who said it.
+        extra_tags (0033 §4): knowledge commissioned by an objective carries its
+        coordinate — the loop joins the ladder."""
         return self._write({
             "category": self.slug, "claim": claim,
             "source": {"did": source["did"], "ref": source.get("ref", "")},
             "state": "untrusted", "confidence": 0.0,
             "generation": generation, "admitted_at": NOW(),
-        })
+        }, extra_tags=extra_tags)
 
     # ---- promotion: earned, with receipts -------------------------------------------------
     def corroborate(self, entry_id: str, receipt_ids: list[str]) -> str:

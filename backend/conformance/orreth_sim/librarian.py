@@ -52,20 +52,25 @@ def parked_intents(node) -> list[tuple[str, dict]]:
 
 
 def tend(node, gather) -> list[KnowledgeCategory]:
-    """Sweep the lot. `gather(intent) -> [{claim, source_did, ref}]` — the world, identified."""
+    """Sweep the lot. `gather(intent) -> [{claim, source_did, ref}]` — the world,
+    identified. 0033 §4: the parked intent's coordinate is INHERITED — the
+    knowledge a failure commissioned knows which objective it serves."""
     built = []
     for rid, body in parked_intents(node):
         intent = body["parked_intent"]
+        coord = [t for t in (node.records[rid].get("tags") or [])
+                 if t.startswith(("of:", "via:"))]
         slug = "kb-" + str(abs(hash(intent)) % 99999)
         cat = KnowledgeCategory(node, intent, slug)
-        ids = [cat.admit(f["claim"], {"did": f["source_did"], "ref": f.get("ref", "")})
+        ids = [cat.admit(f["claim"], {"did": f["source_did"], "ref": f.get("ref", "")},
+                         extra_tags=coord)
                for f in gather(intent)]
         if len(ids) > 1:                                  # a second voice earns promotion
             cat.corroborate(ids[0], receipt_ids=ids[1:])
         marker = make_memory(node.steward, node.steward_kp, node.scope,
                              {"handled_intent": intent, "category": slug,
                               "admitted": len(ids)},
-                             kind="semantic", tags=["librarian-handled"])
+                             kind="semantic", tags=["librarian-handled", *coord])
         marker["derived_from"] = [rid]                    # the assignment, receipted
         node.write(marker)
         built.append(cat)

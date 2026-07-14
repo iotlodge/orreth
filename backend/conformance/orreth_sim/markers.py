@@ -33,10 +33,12 @@ def lane_for(change_severity: str) -> str:
 
 def make_marker(agent: dict, kp, scope: str, derived_from: list, *, reason: str,
                 change_severity: str | None = None, life_event: str | None = None,
-                quoted: str | None = None) -> dict:
+                quoted: str | None = None, extra_tags: list | None = None) -> dict:
     """A marker record (0024 §1): derives from ≥1 marked record, carries at least one
     family, and always says why. Rides kind=semantic + the 'marker' tag — no contract
-    change; the 0022 tags index already serves it. The marked record never changes."""
+    change; the 0022 tags index already serves it. The marked record never changes.
+    extra_tags (0033 §4): the coordinate rides along — a review marker knows which
+    objective and intention it graded."""
     if not derived_from:
         raise ValueError("a marker derives from what it marks — derived_from is required")
     if change_severity is None and life_event is None:
@@ -55,7 +57,7 @@ def make_marker(agent: dict, kp, scope: str, derived_from: list, *, reason: str,
     if quoted is not None:
         marker["quoted"] = quoted
     rec = make_memory(agent, kp, scope, {"marker": marker},
-                      kind="semantic", tags=["marker"])
+                      kind="semantic", tags=["marker", *(extra_tags or [])])
     rec["derived_from"] = list(derived_from)
     return rec
 

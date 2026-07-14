@@ -61,11 +61,15 @@ def test_template_is_a_versioned_artifact_in_memory(world):
 
 # ---------------------------------------------------------------- the intention contract
 def test_intention_carries_the_intention_and_nothing_else():
-    """0027 §3 · 0030: one intent, a budget slice, citation refs — never the plan,
-    never the siblings, never the why."""
+    """0027 §3 · 0030 · 0033 §4: one intent, a budget slice, citation refs, and its
+    own content-address — never the plan, never the siblings, never the why. The
+    id is the hash OF the other four fields: it provably smuggles nothing."""
+    from orreth_sim import crypto
     s = fingertip.make_intention("sha256:goal", "test the widget", 300, ["sha256:ref1"])
-    assert set(s) == {"of", "intent", "budget", "refs"}
+    assert set(s) == {"id", "of", "intent", "budget", "refs"}
     assert s["budget"] == {"tokens": 300}
+    assert s["id"] == crypto.content_hash({k: s[k] for k in
+                                           ("of", "intent", "budget", "refs")})
 
 
 def test_review_severity_rides_the_lanes():
@@ -249,3 +253,69 @@ def test_choreography_lights_what_ran_and_keeps_every_branch():
     assert fingers[1]["intent"] == "dispatched mid-flow, on the human's answer"
     assert "graded low by the dispatching seat" in g["narrative"][1]["text"]
     assert "You answered: “all floors”." in g["narrative"][-1]["text"]
+
+
+# ---------------------------------------------------------------- 0033 sp3 — the coordinate, soft
+
+
+def test_the_coordinate_rides_every_record_of_the_work(world):
+    """0033 §4: outcomes, review markers, and the assembly all wear of:/via: tags —
+    'every record that served objective O' becomes an index lookup, not a walk."""
+    spec = fingertip.workflow_template(
+        "u:demo", name="coord-run",
+        intentions=[{"id": "look", "intent": "survey the floor",
+                     "seat": "u:demo/e:cloud/f:prod"}])
+    orch = fingertip.Orchestration(world.universe, world.becky, spec,
+                                   "know the state of things", budget_tokens=1200)
+    seats = {n.scope: n for n in (world.field_prod, world.eco_cloud)}
+    out = orch.run(seats, world.beckys, _tidy_think, plan_approved=True)
+    goal = out["goal_hash"]
+    # the seat's outcome carries both axes
+    outcome = next(r for r in world.field_prod.records.values()
+                   if "intention-outcome" in r.get("tags", []))
+    of_tags = [t for t in outcome["tags"] if t.startswith("of:")]
+    via_tags = [t for t in outcome["tags"] if t.startswith("via:")]
+    assert of_tags == [f"of:{goal}"] and len(via_tags) == 1
+    # the review marker at home carries the same coordinate
+    mark = next(r for r in world.universe.records.values()
+                if "marker" in r.get("tags", []))
+    assert f"of:{goal}" in mark["tags"] and via_tags[0] in mark["tags"]
+    # the assembly carries the objective axis
+    assembly = next(r for r in world.universe.records.values()
+                    if "objective-outcome" in r.get("tags", []))
+    assert f"of:{goal}" in assembly["tags"]
+    # THE LOOKUP: the whole family by objective — a tag match, not a recursion
+    family_home = fingertip.by_coordinate(world.universe, objective=goal)
+    family_seat = fingertip.by_coordinate(world.field_prod, objective=goal)
+    assert len(family_home) >= 2 and len(family_seat) >= 1
+    # ...and by single intention
+    iid = via_tags[0].split("via:", 1)[1]
+    assert fingertip.by_coordinate(world.field_prod, intention=iid)
+
+
+def test_parked_failure_and_its_knowledge_inherit_the_coordinate(world):
+    """0033 §4 through 0014: a breaker's parked intent carries the coordinate, and
+    the knowledge the librarian gathers for it INHERITS the same tags — the
+    knowledge loop joins the ladder."""
+    from orreth_sim import librarian
+    from orreth_sim.agent_surface import join_workforce
+    from orreth_sim.chassis import Chassis
+    f = world.field_prod
+    b_prod = world.beckys["u:demo/e:cloud/f:prod"]
+    surf = join_workforce(f, b_prod)
+    coord = fingertip.coordinate_tags("sha256:" + "a" * 64, "sha256:" + "b" * 64)
+    res = Chassis(surf, lambda k, p: "RETRY: missing data", max_cycles=1,
+                  coordinate=coord).run("an unsolvable ask")
+    assert res["status"] == "parked"
+    parked = f.records[res["record"]]
+    assert set(coord) <= set(parked["tags"])
+    # the librarian tends the lot; the commissioned knowledge wears the same axes
+    librarian.tend(f, lambda intent: [
+        {"claim": "the missing fact", "source_did": "did:web:src.example"}])
+    entry = next(r for r in f.records.values()
+                 if "knowledge" in r.get("tags", [])
+                 and set(coord) <= set(r.get("tags", [])))
+    assert entry is not None
+    handled = next(r for r in f.records.values()
+                   if "librarian-handled" in r.get("tags", []))
+    assert set(coord) <= set(handled["tags"])

@@ -44,13 +44,17 @@ class Chassis:
     def __init__(self, surface, think, *, persona: str = "", skills: dict | None = None,
                  max_cycles: int = 3, max_obs: int = 3, klass: str = "low",
                  ladder: list[str] | None = None, plan_template: str | None = None,
-                 critic_template: str | None = None):
+                 critic_template: str | None = None,
+                 coordinate: list[str] | None = None):
         self.surface, self.think = surface, think
         self.persona, self.skills = persona, skills or {}
         # 0031 §4: the prompts are behavior, and behavior arrives as data — the
         # shelf's active versions ride in here; the constants are only the genesis
         self.plan_template = plan_template or _PLAN
         self.critic_template = critic_template or _CRITIC
+        # 0033 §4: the coordinate rides in as ready-made tags — what this seat
+        # parks knows which objective and intention commissioned the failure
+        self.coordinate = list(coordinate or [])
         self.max_cycles, self.max_obs, self.klass = max_cycles, max_obs, klass
         self.ladder = list(ladder) if ladder else None   # rungs of doubt → altitude
         self.trace: list[dict] = []               # the loop, on the record
@@ -132,5 +136,5 @@ class Chassis:
             node.steward, node.steward_kp, node.scope,
             {"parked_intent": intent, "missing": feedback.strip(),
              "handoff": "knowledge-acquisition"},
-            kind="semantic", tags=["parked", "knowledge-intent"]))
+            kind="semantic", tags=["parked", "knowledge-intent", *self.coordinate]))
         return {"status": "parked", "record": rid, "cycles": self.max_cycles}

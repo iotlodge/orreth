@@ -202,9 +202,36 @@ def choreography(plan: dict, branches: list | None = None, *,
 def make_intention(objective_hash: str, intent: str, budget_tokens: int,
                 refs: list | None = None) -> dict:
     """What rides down — and ALL that rides down (0027 §3 · 0030): one intent, a
-    budget slice, citation refs. Never the plan, never the siblings, never the why."""
-    return {"of": objective_hash, "intent": intent,
-            "budget": {"tokens": int(budget_tokens)}, "refs": list(refs or [])}
+    budget slice, citation refs. Never the plan, never the siblings, never the why.
+    0033 §4 (the coordinate, soft): the intention is content-addressed — the
+    ladder's second rung gains the identity every record below it will cite."""
+    msg = {"of": objective_hash, "intent": intent,
+           "budget": {"tokens": int(budget_tokens)}, "refs": list(refs or [])}
+    return {"id": crypto.content_hash(msg), **msg}
+
+
+def coordinate_tags(of: str | None = None, via: str | None = None) -> list[str]:
+    """The ladder's axes as tags (0033 §4, the soft landing): `of:<objective>` ·
+    `via:<intention>` — index lookups today, the contracts freeze at Phase D's
+    gate. Records cite only hashes they already hold at write time; nothing is
+    invented after the fact."""
+    tags = []
+    if of:
+        tags.append(f"of:{of}")
+    if via:
+        tags.append(f"via:{via}")
+    return tags
+
+
+def by_coordinate(node, *, objective: str | None = None,
+                  intention: str | None = None) -> dict[str, dict]:
+    """The index lookup the coordinate exists for: every record that served an
+    objective (or a single intention) — a tag match, not a lineage recursion."""
+    want = set(coordinate_tags(objective, intention))
+    if not want:
+        return {}
+    return {rid: r for rid, r in node.records.items()
+            if want <= set(r.get("tags") or [])}
 
 
 def dispatch_allowed(audience: str, target_scope: str) -> bool:
@@ -318,7 +345,8 @@ class Orchestration:
                                      [branch["outcome"]],
                                      reason=f"review of intention {n['id']}: "
                                             f"{branch['status']}",
-                                     change_severity=severity)
+                                     change_severity=severity,
+                                     extra_tags=coordinate_tags(self.goal, work["id"]))
             branch["severity"], branch["marker"] = severity, self.home.write(mk)
             self.branches[n["id"]] = branch
         return self._assemble(me)
@@ -336,19 +364,21 @@ class Orchestration:
         # just the record. No asset yet → the genesis defaults, unchanged.
         beh = improver.resolve_behavior(self.home)
         prof = beh["profile"]
+        coord = coordinate_tags(work["of"], work.get("id"))
         res = Chassis(fsurf, think, skills=skills,
                       persona=str(prof.get("persona", "")),
                       max_cycles=int(prof.get("max_cycles", 2)),
                       max_obs=int(prof.get("max_obs", 3)),
                       plan_template=beh["plan_template"],
-                      critic_template=beh["critic_template"]).run(work["intent"])
+                      critic_template=beh["critic_template"],
+                      coordinate=coord).run(work["intent"])
         outcome = make_memory({"did": fsurf.identity["did"], "scope": target.scope},
                               fsurf.kp, target.scope,
                               {"outcome": {"intention": n["id"], "of": work["of"],
                                            "status": res["status"],
                                            "answer": res.get("answer", ""),
                                            "cycles": res.get("cycles")}},
-                              kind="semantic", tags=["intention-outcome"])
+                              kind="semantic", tags=["intention-outcome", *coord])
         rid = target.write(outcome)
         factory.retire(target, fsurf.identity)          # the intention was the life
         return {"status": res["status"], "answer": res.get("answer", ""),
@@ -369,7 +399,7 @@ class Orchestration:
                     **({"dark": [b["intention"] for b in dark]} if dark else {})}
         rec = make_memory(me, self.surface.kp, self.home.scope,
                           {"objective_outcome": assembly}, kind="semantic",
-                          tags=["objective-outcome"])
+                          tags=["objective-outcome", *coordinate_tags(self.goal)])
         assembly["record"] = self.home.write(rec)
         return assembly
 

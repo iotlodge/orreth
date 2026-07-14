@@ -1226,6 +1226,27 @@ def recall_walk(port: int, scope: str, source_did: str, reason: str) -> str:
             "annotated, never rewritten; the lineage is intact")
 
 
+def coordinate_citations(port: int, scope: str, goal: str) -> int:
+    """0033 §4 on the wire: how many records at this floor cite the objective's
+    coordinate — a tag lookup over an index the floors already serve (0022 GIN),
+    never a lineage recursion. Read under the librarian's seat, as ever."""
+    from datetime import datetime, timedelta, timezone
+    _, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return 0
+    tag = f"of:{goal}"
+    return sum(1 for h in r.get("hits", []) if tag in (h.get("tags") or []))
+
+
 def revalidate_walk(port: int, scope: str, source_did: str, trigger: str,
                     reason: str) -> str:
     """A freshness trigger fired (0031 §5): the librarian DOUBTS the source — she
@@ -1475,7 +1496,8 @@ def on_objective(port: int, scope: str, r: dict) -> None:
     gate, and NOTHING fans. Origin plans always wait for their human."""
     plan = curate_plan(port, scope, r)
     me = {"did": ORCH_DID, "scope": scope}
-    rec = make_memory(me, ORCH, scope, {"plan": plan}, kind="semantic", tags=["plan"])
+    rec = make_memory(me, ORCH, scope, {"plan": plan}, kind="semantic",
+                      tags=["plan", *fingertip.coordinate_tags(plan["goal"])])
     try:
         call(port, "POST", "/records", rec)
     except Exception as e:
@@ -1522,7 +1544,7 @@ def on_objective_approved(port: int, scope: str, r: dict) -> None:
         leg = call(t_port, "POST", "/requests",
                    {"kind": "intention", "of": plan["goal"], "intention": work,
                     "text": work["intent"][:120]})
-        legs[t_port] = {"id": leg["id"], "seat": target}
+        legs[t_port] = {"id": leg["id"], "seat": target, "iid": work["id"]}
     q = call(port, "POST", "/requests",
              {"kind": "question", "of": plan["goal"], "text": plan["question"]})
     _OBJECTIVES[r["id"]] = {"home": port, "scope": scope, "goal": plan["goal"],
@@ -1562,7 +1584,10 @@ def on_intention(port: int, scope: str, r: dict) -> None:
                           {"outcome": {"intention": r.get("id"), "of": work.get("of"),
                                        "status": "done", "answer": answer,
                                        "cycles": 1}},
-                          kind="semantic", tags=["intention-outcome"])
+                          kind="semantic",
+                          tags=["intention-outcome",
+                                *fingertip.coordinate_tags(work.get("of"),
+                                                           work.get("id"))])
     try:
         call(port, "POST", "/records", outcome)
     except Exception as e:
@@ -1600,7 +1625,7 @@ def _tend_objective(rid: str, st: dict) -> None:
             leg = call(home, "POST", "/requests",
                        {"kind": "intention", "of": st["goal"], "intention": work,
                         "text": work["intent"][:120]})
-            st["iac"] = {"id": leg["id"], "seat": scope}
+            st["iac"] = {"id": leg["id"], "seat": scope, "iid": work["id"]}
         elif q is not None and q.get("status") in ("denied", "expired"):
             st["iac"] = {"denied": True}      # silence never approves (0012)
     pending_question = st["iac"] is None
@@ -1615,6 +1640,7 @@ def _tend_objective(rid: str, st: dict) -> None:
             continue
         res = req.get("result") if isinstance(req.get("result"), dict) else {}
         branches.append({"intention": leg["id"], "seat": leg["seat"],
+                         "iid": leg.get("iid"),
                          "status": res.get("status", "done"),
                          "answer": res.get("answer", ""),
                          "cycles": res.get("cycles"),
@@ -1629,7 +1655,9 @@ def _tend_objective(rid: str, st: dict) -> None:
         mk = markers.make_marker(me, ORCH, scope, [b["outcome"]],
                                  reason=f"review of intention at {b['seat']}: "
                                         f"{b['status']}",
-                                 change_severity=b["severity"])
+                                 change_severity=b["severity"],
+                                 extra_tags=fingertip.coordinate_tags(
+                                     st["goal"], b.get("iid")))
         try:
             call(home, "POST", "/records", mk)
             b["marker"] = mk["id"]
@@ -1653,11 +1681,18 @@ def _tend_objective(rid: str, st: dict) -> None:
                 **({"dark": st["dark"]} if st["dark"] else {}),
                 **({"waiting": waiting} if waiting else {})}
     rec = make_memory(me, ORCH, scope, {"objective_outcome": assembly},
-                      kind="semantic", tags=["objective-outcome"])
+                      kind="semantic",
+                      tags=["objective-outcome",
+                            *fingertip.coordinate_tags(st["goal"])])
     try:
         call(home, "POST", "/records", rec)
     except Exception as e:
         print(f"    (objective outcome write failed: {e})")
+    # 0033 §4, the index made visible: how many records across the floors cite
+    # this objective's coordinate — a tag lookup, not a lineage recursion
+    assembly["coordinate_citations"] = sum(
+        coordinate_citations(p, s, st["goal"])
+        for p, s in sorted(FLOOR_SCOPES.items()))
     call(home, "POST", "/requests/resolve",
          {"id": rid, "status": "done",
           "result": {"assembly": assembly, "record": rec["id"],
