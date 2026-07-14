@@ -45,7 +45,10 @@ here in cognition (the plane verifies, never signs):
     news (§3): a subscribed ref re-speaking with changed content admits AND
     drops its old head to investigating (superseded-at-source, the pair named);
     a ref the sweep no longer carries is noted vanished — absence is a finding,
-    never an action. The desk never decides.
+    never an action. The desk never decides. The charter coupling (§4): an
+    acquisition-shaped plan offers "…and keep it fresh" at its gate — checked
+    and approved, the SAME word fans the plan and opens the subscription; the
+    domain package names its supply line.
   · upload    — multimodal admission (0029): a file enters as an ask (verb
     "upload" to the librarian, bars 256KB · txt/md/json/csv/pdf/png/jpg). The
     artifact lands signed (ingested-archive); text-bearing formats extract to
@@ -1633,7 +1636,9 @@ def challenge_walk(port: int, scope: str, topic: str) -> str:
 def domain_packages(port: int, scope: str, topic: str = "") -> list[dict]:
     """The domain package as a VIEW over records that already exist (0031 §5 ·
     0030 SP2's law): per intent — every claim wearing its state, every source
-    named, nothing stored twice."""
+    named, nothing stored twice. The package names its subscription (0032 §4) —
+    the package and its supply line, one picture."""
+    subs = wire_subscriptions(port, scope)
     entries, bodies, _ = floor_knowledge(port, scope)
     superseded = {d for e in entries for d in e["derived_from"]}
     domains: dict[str, dict] = {}
@@ -1657,7 +1662,8 @@ def domain_packages(port: int, scope: str, topic: str = "") -> list[dict]:
         states = " · ".join(f"{k} {v}" for k, v in sorted(d["states"].items()))
         rows.append({"topic": d["topic"][:60],
                      "meta": f"{d['current']} current of {d['versions']} version(s) · "
-                             f"{states or 'no states'} · {len(d['sources'])} source(s)",
+                             f"{states or 'no states'} · {len(d['sources'])} source(s)"
+                             + serials.named_supply(subs, d["topic"]),
                      "doubted": bool(d["states"].get("investigating")
                                      or d["states"].get("recalled"))})
     return rows
@@ -1806,19 +1812,50 @@ def on_objective(port: int, scope: str, r: dict) -> None:
                + ", ".join(i["seat"].split("/")[-1] for i in plan["intentions"][:6])
                + " · asks you 1 question"
                + (f" · {beyond} beyond this token (will ask leave)" if beyond else ""))
+    # the charter coupling (0032 §4): an acquisition-shaped objective offers
+    # "…and keep it fresh" on its plan — plainly worded, unchecked by default;
+    # one approval moment, both consequences legible
+    offer = serials.keep_fresh_offer(plan["objective"])
     call(port, "POST", "/requests/resolve",
          {"id": r["id"], "status": "staged",
           "result": {"plan_summary": summary, "plan": plan, "plan_record": rec["id"],
                      # the plan made visible (0031 §6): composed here, rendered blind
                      "graph": fingertip.choreography(plan),
+                     **({"keep_fresh_offer": offer} if offer else {}),
                      "held": "the plan waits for you — approve to fan (0030 §3)"}})
-    print(f"  ↳ objective {r['id']}: plan staged — {summary}")
+    print(f"  ↳ objective {r['id']}: plan staged — {summary}"
+          + (f" · offers to keep “{offer['topic'][:40]}” fresh" if offer else ""))
 
 
 def on_objective_approved(port: int, scope: str, r: dict) -> None:
     """The human's word arrived (0030 §3): the approved plan fans — intentions
     ride the queue down, the question stages, the tending begins. Entitlement is
-    the token (JB lock 2026-07-11): a seat beyond it gets an ask, never a skip."""
+    the token (JB lock 2026-07-11): a seat beyond it gets an ask, never a skip.
+    The charter coupling (0032 §4): when the human checked "…and keep it fresh",
+    the SAME word opens the subscription — one approval moment, both
+    consequences; the record still mints on its own worldline, deriving from
+    this very approval."""
+    res = r.get("result") or {}
+    offer = res.get("keep_fresh_offer")
+    if res.get("keep_fresh") and offer:
+        want = serials.slug(offer["topic"])
+        standing = any(s.get("posture") == "deliver"
+                       and serials.slug(s.get("topic", "")) == want
+                       for s in wire_subscriptions(port, scope))
+        if standing:
+            print(f"  ↳ the desk already keeps “{offer['topic'][:40]}” fresh — "
+                  "one subscription, never two")
+        else:
+            seat_kp, seat_did = lib_seat(scope)
+            rec = serials.make_subscription({"did": seat_did, "scope": scope},
+                                            seat_kp, scope, topic=offer["topic"],
+                                            approved_ref=str(r.get("id") or ""))
+            try:
+                call(port, "POST", "/records", rec)
+                print(f"  ↳ the plan fans AND the desk opens — “{offer['topic'][:40]}” "
+                      f"kept fresh on the same word ({rec['id'][:18]}…)")
+            except Exception as e:
+                print(f"    (charter-coupled subscription failed: {e})")
     plan = _PLANS.pop(r["id"], None) or curate_plan(port, scope, r)
     legs, dark = {}, list(plan["dark"])
     for entry in plan["intentions"]:

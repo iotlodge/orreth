@@ -256,6 +256,26 @@ def test_doubt_never_stacks_on_an_investigating_head(world):
     assert third["changed"] == 1 and len(third["dropped"]) == 1
 
 
+def test_the_charter_coupling_offer_and_the_named_supply_line():
+    """0032 §4: an acquisition-shaped objective offers "…and keep it fresh" —
+    never pressed on a plan it doesn't fit; the domain package names its
+    deliver-posture subscription, and a paused desk is not a supply line."""
+    offer = serials.keep_fresh_offer("acquire knowledge of strawbale insulation")
+    assert offer["topic"] == "strawbale insulation"
+    assert "every 100 beats" in offer["terms"]
+    assert serials.keep_fresh_offer("Acquire knowledge on Building Codes")["topic"] \
+        == "Building Codes"
+    assert serials.keep_fresh_offer("build a shed") is None
+    assert serials.keep_fresh_offer("acquire knowledge of ") is None
+    subs = [{"topic": "strawbale insulation", "posture": "deliver",
+             "cadence_beats": 100}]
+    assert serials.named_supply(subs, "strawbale insulation") \
+        == " · kept fresh — every 100 beats"
+    assert serials.named_supply(subs, "unrelated topic") == ""
+    assert serials.named_supply([{**subs[0], "posture": "cancelled"}],
+                                "strawbale insulation") == ""
+
+
 def test_a_dead_lineages_utterance_repeats_never_rewrites(world):
     """Content-addressed admission: the exact utterance the universe already
     holds (a recalled lineage's original) counts as a repeat — never a

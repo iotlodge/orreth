@@ -1194,7 +1194,7 @@ async function loadReq(){
       const ugate=r.kind==="subscription"&&r.status==="staged"; /* the desk's gate (0032 §1) */
       const note=jgate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`
         :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`
-        :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`
+        :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`+kfOffer(r)
         :igate?`<div class="sub" style="color:var(--near);white-space:pre-wrap">${(r.result||{}).package_text||"a rewrite waits for your word (R6)"}</div>`
         :ugate?`<div class="sub" style="color:var(--near)">a standing spend — ${(r.result||{}).terms||"terms readable at the gate"}</div>`:"";
       return `<div class="req"><span class="kind">${r.kind||"request"}</span>
@@ -1203,8 +1203,8 @@ async function loadReq(){
         <button class="sbtn no" onclick="joinDecide('${r.id}',false)">turn away</button>`
        :egate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">launch</button>
         <button class="sbtn no" onclick="joinDecide('${r.id}',false)">scrap</button>`
-       :ogate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">fan the plan</button>
-        <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
+       :ogate?`<button class="sbtn ok" onclick="objDecide('${r.id}',true)">fan the plan</button>
+        <button class="sbtn no" onclick="objDecide('${r.id}',false)">decline</button>`
        :igate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">adopt</button>
         <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
        :ugate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">open the subscription</button>
@@ -1224,6 +1224,24 @@ async function joinDecide(id,ok){
   await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({id,status:ok?"approved":"denied"})});
   loadReq();
+}
+/* the charter coupling (0032 §4): the checked "…and keep it fresh" line rides
+   the SAME approval — one moment, both consequences legible. KF holds the
+   human's check across the console's breaths (the WALKOPEN pattern). */
+const KF=new Set();
+function kfToggle(id){KF.has(id)?KF.delete(id):KF.add(id)}
+const kfOffer=r=>{const o=(r.result||{}).keep_fresh_offer;
+  return o?`<div class="sub" style="color:var(--near)"><label><input type="checkbox" ${KF.has(r.id)?"checked":""} onchange="kfToggle('${r.id}')"> …and keep “${esc(o.topic)}” fresh — ${esc(o.terms)} · a standing spend (0032)</label></div>`:""};
+async function objDecide(id,ok){
+  const body={id,status:ok?"approved":"denied"};
+  if(ok&&KF.has(id)){
+    let q=[];try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{}
+    const r=q.find(x=>x.id===id);
+    body.result={...((r||{}).result||{}),keep_fresh:true};
+  }
+  await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify(body)});
+  KF.delete(id);loadReq();loadObjectives();
 }
 async function submitAsk(){
   const t=$("ask").value.trim(); if(!t)return;
@@ -1888,8 +1906,9 @@ async function loadObjectives(){
         +`<div class="row rm">…and it will ask you: ${esc((res.plan.question||"").slice(0,110))}</div>`
         +(res.graph?`<div class="row wtoggle" onclick="walkToggle('${r.id}')">⤳ ${WALKOPEN.has(r.id)?"close the choreography":"see the choreography — what you are approving"}</div>`:"")
         +(res.graph&&WALKOPEN.has(r.id)?renderGraph(res.graph,r.id,false):"")
-        +`<div style="margin-top:.4rem"><button class="sbtn ok" onclick="joinDecide('${r.id}',true)">fan the plan</button> `
-        +`<button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button></div>`;
+        +(res.keep_fresh_offer?`<div class="row"><label><input type="checkbox" ${KF.has(r.id)?"checked":""} onchange="kfToggle('${r.id}')"> …and keep “${esc(res.keep_fresh_offer.topic)}” fresh — ${esc(res.keep_fresh_offer.terms)} · a standing spend (0032)</label></div>`:"")
+        +`<div style="margin-top:.4rem"><button class="sbtn ok" onclick="objDecide('${r.id}',true)">fan the plan</button> `
+        +`<button class="sbtn no" onclick="objDecide('${r.id}',false)">decline</button></div>`;
     }else if(r.status==="approved"){
       body=`<div class="row rm">fanned — ${((res.plan||{}).intentions||[]).length} intention(s) riding the floors; the assembly comes home when they do…</div>`;
     }else if(r.status==="done"&&res.assembly){

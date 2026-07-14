@@ -98,6 +98,39 @@ def set_posture(node, agent: dict, kp, topic: str, posture: str, *,
     return node.write(rec)
 
 
+# ---------------------------------------------------------------- the charter coupling (0032 §4)
+
+_ACQUIRE = ("acquire knowledge of ", "acquire knowledge on ",
+            "acquire knowledge about ")
+
+
+def keep_fresh_offer(objective_text: str) -> dict | None:
+    """0032 §4: an acquisition-shaped objective (0030's ladder — "acquire
+    knowledge of Y") may carry the offer "…and keep it fresh" on its staged
+    plan, plainly worded, unchecked by default (§8's proposal). None for every
+    other shape — the offer is never pressed on a plan it doesn't fit."""
+    t = (objective_text or "").strip()
+    low = t.lower()
+    for p in _ACQUIRE:
+        if low.startswith(p):
+            topic = t[len(p):].strip().strip("?.!")
+            if topic:
+                return {"topic": topic,
+                        "terms": "every 100 beats · 4 call(s) per delivery"}
+    return None
+
+
+def named_supply(subs: list[dict], domain_topic: str) -> str:
+    """0032 §4: the domain package names its subscription — the package and its
+    supply line, one picture. Empty when no deliver-posture subscription stands
+    for the topic (a paused desk is not a supply line)."""
+    want = slug(domain_topic)
+    for s in subs:
+        if s.get("posture") == "deliver" and slug(s.get("topic", "")) == want:
+            return f" · kept fresh — every {s.get('cadence_beats', '?')} beats"
+    return ""
+
+
 # ---------------------------------------------------------------- the delivery beat (0032 §2)
 
 def is_due(sub: dict, waited_beats: int, delivered_before: bool) -> bool:
