@@ -170,6 +170,39 @@ def resolution_fidelity(node, distillation_id: str) -> float:
     return round(alive / len(refs), 4)
 
 
+def contract_fidelity(node, distillation_id: str) -> dict | None:
+    """0033 sp2's yardstick: did the intolerables survive the climb? For a
+    distillation carrying a distortion contract, the fraction of contract-named
+    keys whose values were carried — each citing a source that still resolves
+    (a stub resolves: the VALUE survived even where the bytes left; that is the
+    contract doing its job). None when no contract applies."""
+    rec, state = resolve(node, distillation_id)
+    if state != "live" or rec.get("kind") != "distillation":
+        return None
+    body = _body(rec)
+    contract, preserved = body.get("contract"), body.get("preserved") or {}
+    if not contract:
+        return None
+    keys = sorted(set(contract.get("must_preserve") or [])
+                  | set(contract.get("prohibited_loss") or []))
+    if not keys:
+        return {"fidelity": 1.0, "keys": {}}
+    live_sources = [s for s in (resolve(node, r)[0]
+                                for r in rec.get("derived_from", []))
+                    if s is not None and "body" in s]
+    detail = {}
+    for key in keys:
+        entries = preserved.get(key) or []
+        cited = sum(1 for e in entries if resolve(node, e.get("ref", ""))[1] != "missing")
+        in_sources = any(key in _body(s) for s in live_sources)
+        # carried-and-cited holds; never-present holds vacuously; present-but-dropped fails
+        held = (len(entries) > 0 and cited == len(entries)) or \
+               (len(entries) == 0 and not in_sources)
+        detail[key] = {"carried": len(entries), "cited": cited, "held": held}
+    held_n = sum(1 for k in keys if detail[k]["held"])
+    return {"fidelity": round(held_n / len(keys), 4), "keys": detail}
+
+
 def context_efficiency(node, *, goal_hash: str | None = None) -> dict:
     """Decision value per token transmitted (0027's restraint, as a number):
     outcome scores over aperture cost, from RunRecords that already exist.

@@ -29,6 +29,11 @@ class FloorViolation(Exception):
     pass
 
 
+class DistortionViolation(Exception):
+    """0033 §5: a distillation that loses what its contract names intolerable is
+    refused at save — never discovered at incident review (0008's law, kept)."""
+
+
 class ClockViolation(Exception):
     """Lived memory below the scope's high-water mark — you cannot quietly write yourself a past (0004 §1)."""
 
@@ -63,6 +68,10 @@ class HarnessNode:
         self.undistilled: list[str] = []
         self.inherited_floors: dict[str, dict] = {} # match-hash -> KeepRule (non-loosenable)
         self.local_floors: dict[str, dict] = {}
+        # 0033 §5 — distortion contracts: tag -> {must_preserve, prohibited_loss,
+        # may_compress, distortion_bound}. Rides record BODIES (schema untouched —
+        # the hard landing into method waits at the rule-9 gate, Phase D)
+        self.distortion_contracts: dict[str, dict] = {}
         self.access_log: list[dict] = []
         self.high_water: str | None = None          # the scope's universe-time frontier (0004 §1)
         self.runs: dict[str, dict] = {}             # ContentHash -> RunRecord (0005)
@@ -161,6 +170,8 @@ class HarnessNode:
                 self.high_water = record["occurred_at"]
         record["received_at"] = NOW()               # gateway stamp — physics, nobody's claim
         record["keep_class"] = self._classify(record)
+        if record.get("kind") == "distillation":
+            self._check_distortion(record)          # refused at save, never at review (0033 §5)
         self.records[record["id"]] = record
         # each layer distills what rises to it — including children's distillations;
         # only this node's OWN distillations are exempt (they're the output, not the input)
@@ -178,6 +189,29 @@ class HarnessNode:
                 return "keep-raw" if rule["action"] == "keep-raw" else "distilled-raw-retained"
         return "distilled-raw-retained"
 
+    def _check_distortion(self, dist: dict) -> None:
+        """The distortion save-gate (0033 §5): judged against THIS node's registered
+        contracts — never the writer's honesty. Every contract-named key present in
+        a locally-resolvable source must appear in the distillation's preserved map.
+        Sources this node cannot resolve are skipped (a pushed-up distillation is
+        the child's signed work — the harness measures its fidelity instead)."""
+        sources = [self.records[r] for r in dist.get("derived_from", [])
+                   if r in self.records]
+        if not sources:
+            return
+        contract = self._effective_contract(sources)
+        if contract is None:
+            return
+        preserved = _decode_body(dist).get("preserved") or {}
+        for key in self._carried_keys(contract):
+            for src in sources:
+                src_body = _decode_body(src)
+                if (key in src_body or key in (src_body.get("preserved") or {})) \
+                        and key not in preserved:
+                    raise DistortionViolation(
+                        f"distillation loses '{key}' — named by contract, present in "
+                        f"{src['id'][:18]}…, absent from the carry; refused at save")
+
     def _held_back(self, rec: dict) -> bool:
         """The exchange dial (0023 §4, Universe-Brain locks 2026-07-10): a record whose
         class — its kind or any tag — is dialed 'hold' never rides a distillation up.
@@ -189,11 +223,64 @@ class HarnessNode:
         names = {rec.get("kind", "")} | set(rec.get("tags") or [])
         return any(exchange.get(n) == "hold" for n in names)
 
+    def set_distortion_contract(self, tag: str, contract: dict) -> None:
+        """0033 §5: what forgetting is allowed to cost, per record class. Keys:
+        must_preserve · prohibited_loss (both carried-or-refused) · may_compress ·
+        distortion_bound. '*' matches every cohort."""
+        self.distortion_contracts[tag] = dict(contract)
+
+    def _effective_contract(self, sources: list[dict]) -> dict | None:
+        """The tightest applicable contract for a cohort: the union of every
+        contract whose tag matches any source — tighten-only, like the floors."""
+        matched = [c for tag, c in self.distortion_contracts.items()
+                   if tag == "*" or any(tag in (s.get("tags") or []) for s in sources)]
+        if not matched:
+            return None
+        merged: dict = {"must_preserve": [], "prohibited_loss": [], "may_compress": []}
+        bounds = []
+        for c in matched:
+            for k in ("must_preserve", "prohibited_loss", "may_compress"):
+                merged[k] = sorted(set(merged[k]) | set(c.get(k) or []))
+            if "distortion_bound" in c:
+                bounds.append(float(c["distortion_bound"]))
+        if bounds:
+            merged["distortion_bound"] = min(bounds)   # the tightest bound wins
+        return merged
+
+    @staticmethod
+    def _carried_keys(contract: dict) -> list[str]:
+        return sorted(set(contract.get("must_preserve") or [])
+                      | set(contract.get("prohibited_loss") or []))
+
     def _distill(self, ids: list, push: bool) -> dict:
         """One distillation over one cohort — written home always, pushed UP only
-        when the exchange dial allows (0023 §4)."""
+        when the exchange dial allows (0023 §4). Under a distortion contract
+        (0033 §5) the intolerables are CARRIED, each value citing its source —
+        and they re-carry through every higher distillation, so what must survive
+        survives to the apex."""
         times = sorted(self.records[i]["occurred_at"] for i in ids)
         body = {"summary": f"distilled {len(ids)} records at {self.scope}", "count": len(ids)}
+        sources = [self.records[i] for i in ids]
+        contract = self._effective_contract(sources)
+        # the contracted CLASS rides up with the distillation — and only it, so a
+        # contract keeps matching at every higher tier without dragging unrelated
+        # tags (knowledge, parked…) into flows that key on them
+        contract_tags = sorted(t for t in self.distortion_contracts
+                               if t != "*" and any(t in (s.get("tags") or [])
+                                                   for s in sources))
+        if contract is not None:
+            preserved: dict[str, list] = {}
+            for src in sources:
+                src_body = _decode_body(src)
+                for key in self._carried_keys(contract):
+                    if key in src_body:
+                        preserved.setdefault(key, []).append(
+                            {"ref": src["id"], "value": src_body[key]})
+                # chain survival: a source distillation's carried values re-carry
+                for key, entries in (src_body.get("preserved") or {}).items():
+                    preserved.setdefault(key, []).extend(entries)
+            body["contract"] = contract
+            body["preserved"] = preserved
         if not push:
             body["exchange"] = "hold"        # held home — the dial, visible in the body
         dist = {
@@ -214,6 +301,7 @@ class HarnessNode:
                        "model": "deterministic-sim"},
             "window": {"from": times[0], "to": times[-1]},
             "redactions": [],
+            **({"tags": contract_tags} if contract_tags else {}),
         }
         dist["signature"] = self.steward_kp.sign(self.steward["did"], _sig_subset(dist))
         self.write(dist)
@@ -458,6 +546,12 @@ def _covering_grant(token: dict, action: str) -> dict:
         if g["action"] == action:
             return g
     raise AuthzError(f"no grant covers '{action}'")
+
+
+def _decode_body(rec: dict) -> dict:
+    """A record's body, decoded — {} when the bytes have left (tombstoned)."""
+    import json
+    return json.loads(crypto._b64d(rec["body"]).decode()) if "body" in rec else {}
 
 
 def make_memory(author: dict, kp, scope: str, body: dict, *, kind: str = "episodic",

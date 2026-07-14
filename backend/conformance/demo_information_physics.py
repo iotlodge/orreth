@@ -95,6 +95,30 @@ def main() -> None:
           f"{it.entropy(sharpened):.2f} bits — the second modality was worth "
           f"{it.information_gain(dist_id, sharpened):.2f} bits (0029's gate, as math)")
 
+    # ---- the contract act: the intolerables survive the climb (0033 sp2) -----------
+    print("\n" + "─" * 76)
+    f.set_distortion_contract("medication", {
+        "must_preserve": ["dosage", "timing"], "prohibited_loss": ["prescriber"],
+        "may_compress": ["narrative"], "distortion_bound": 0.0})
+    meds = [f.write(make_memory(f.steward, f.steward_kp, f.scope,
+                                {"dosage": f"{d}mg", "timing": "morning",
+                                 "prescriber": "dr. hale",
+                                 "narrative": "a long bedside conversation " * 10},
+                                kind="episodic", tags=["medication"]))
+            for d in (10, 20)]
+    d1 = f._distill(meds, push=False)
+    d2 = f._distill([d1["id"]], push=False)       # the next tier up
+    for rid in meds:                               # every raw byte leaves on schedule
+        f.tombstone(rid, by=f.steward["did"], reason="retention schedule")
+    cf = it.contract_fidelity(f, d2["id"])
+    carried = {e["value"] for e in it._body(d2)["preserved"]["dosage"]}
+    print("  the contract · two medication records distilled TWICE, then every raw")
+    print(f"                 byte purged — and the top still reads dosage {sorted(carried)},")
+    print(f"                 contract fidelity {cf['fidelity']:.1f}: the intolerables survive")
+    print("                 the climb, each value citing its honest stub (0033 §5)")
+    print("  the refusal  · a distillation that DROPS a contract-named key is refused")
+    print("                 at save — never discovered at incident review")
+
     print("\n" + "═" * 76)
     print("  entropy is a dial, not a decay — the governance sets it; the log proves it")
     print("═" * 76)

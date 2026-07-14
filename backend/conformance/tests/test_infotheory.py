@@ -144,3 +144,89 @@ def test_corroboration_counts_voices_not_echoes(world):
     claim = ci["claims"][0]
     assert claim["receipts"] == 2 and claim["independent_voices"] == 1
     assert claim["echo"] is True and ci["echoes_detected"] == 1
+
+
+# ---------------------------------------------------------------- 0033 sp2 — distortion contracts
+
+
+MED_CONTRACT = {"must_preserve": ["dosage", "timing"],
+                "prohibited_loss": ["prescriber"],
+                "may_compress": ["narrative"], "distortion_bound": 0.0}
+
+
+def _med(node, i):
+    return _mem(node, {"dosage": f"{i * 10}mg", "timing": "morning",
+                       "prescriber": "dr. hale",
+                       "narrative": "a long conversational account " * 10},
+                tags=["medication"])[0]
+
+
+def test_contract_carries_the_intolerables(world):
+    """0033 §5: under a contract, the named values ride the distillation — each
+    citing its source — while the narrative compresses away."""
+    f = world.field_prod
+    f.set_distortion_contract("medication", MED_CONTRACT)
+    ids = [_med(f, i) for i in (1, 2)]
+    dist = f._distill(ids, push=False)
+    body = it._body(dist)
+    assert body["contract"]["prohibited_loss"] == ["prescriber"]
+    assert {e["value"] for e in body["preserved"]["dosage"]} == {"10mg", "20mg"}
+    assert all(e["ref"] in ids for e in body["preserved"]["dosage"])
+    assert "narrative" not in body["preserved"]          # compressible stays compressed
+    cf = it.contract_fidelity(f, dist["id"])
+    assert cf["fidelity"] == 1.0
+
+
+def test_lossy_distillation_is_refused_at_save(world):
+    """The save-gate (0033 §5): a distillation that drops a contract-named key —
+    judged against the NODE's law, not the writer's honesty — never lands."""
+    from orreth_sim.node import DistortionViolation, _sig_subset
+    from orreth_sim import crypto as c
+    f = world.field_prod
+    f.set_distortion_contract("medication", MED_CONTRACT)
+    src = _med(f, 3)
+    body = {"summary": "careless distillation", "count": 1}    # no carry, no contract
+    dist = {
+        "id": c.content_hash({"body": body, "derived_from": [src]}),
+        "kind": "distillation", "scope": f.scope, "author": f.steward["did"],
+        "occurred_at": f._universe_now(), "provenance_class": "lived",
+        "body": c._b64e(c.canonical(body)), "retention": "active",
+        "visibility": {"tenancy": "tenant-private", "mobility": "branch-bound"},
+        "derived_from": [src],
+        "method": {"steward": f.steward["did"],
+                   "rubric": {"id": c.content_hash({"rubric": "sim-v0"}),
+                              "version": "0.0.1"},
+                   "model": "deterministic-sim"},
+        "window": {"from": "2026-01-01T00:00:00Z", "to": "2026-01-02T00:00:00Z"},
+        "redactions": [],
+    }
+    dist["signature"] = f.steward_kp.sign(f.steward["did"], _sig_subset(dist))
+    with pytest.raises(DistortionViolation, match="refused at save"):
+        f.write(dist)
+
+
+def test_intolerables_survive_the_climb_and_the_purge(world):
+    """The money assertion: distill → re-distill → tombstone every raw — and the
+    dosage still reads at the top, every value citing an honest stub."""
+    f = world.field_prod
+    f.set_distortion_contract("medication", MED_CONTRACT)
+    ids = [_med(f, i) for i in (1, 2)]
+    d1 = f._distill(ids, push=False)
+    d2 = f._distill([d1["id"]], push=False)              # the next tier up, same node
+    body2 = it._body(d2)
+    assert {e["value"] for e in body2["preserved"]["dosage"]} == {"10mg", "20mg"}
+    for rid in ids:                                       # the schedule fires on ALL raw
+        f.tombstone(rid, by=f.steward["did"], reason="retention schedule")
+    cf = it.contract_fidelity(f, d2["id"])
+    assert cf["fidelity"] == 1.0                          # stubs resolve; values survived
+    assert it.resolution_fidelity(f, d1["id"]) == 0.0     # ...though the bytes are gone
+
+
+def test_uncontracted_cohorts_distill_as_before(world):
+    """No contract, no ceremony — the metabolism unchanged where no law applies."""
+    f = world.field_prod
+    a, _ = _mem(f, {"obs": "plain"})
+    dist = f._distill([a], push=False)
+    body = it._body(dist)
+    assert "contract" not in body and "preserved" not in body
+    assert it.contract_fidelity(f, dist["id"]) is None
