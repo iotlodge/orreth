@@ -20,6 +20,24 @@ first application. The dives below are re-ordered around that center. The 6 use-
 > failure into knowledge-acquisition intents; Master+swarm as teacher-auditor with a measured
 > gap — see `../vision/orreth-agent-the-chassis.md`).
 
+## The build order (set 2026-07-14 — JB delegated sequencing to the design owner)
+
+> **A — the science gets legs:** 0033 sp1 (infotheory harness) → sp2 (distortion contracts)
+> → sp3 (the coordinate, soft — tags only). No locks needed; starts on JB's word.
+> **B — the desk opens:** 0032 sp1–4 (deliveries born citing coordinates; delivery-value = 0033's
+> information gain — the first organ consuming the physics).
+> **C — the playing begins:** 0034 sp1 (continuity template + label canon — *the second brain
+> stands*) → sp2 (consent & delegation; survivorship still held) → sp3 (the Mirror) → sp4 (the
+> Brain Glass, wearing the harness numbers).
+> **D — the one rule-9 gate, everything together:** the coordinate's hard landing into
+> contracts/v0 + **0031 sp2 (the aperture)** + review_interval dial + β-per-tier — one JB
+> session, per-field approval, against months of soft-landed evidence.
+> **E — the last key element:** 0022 Phase 2 (the meaning axis) — built last so the hybrid
+> ranker consumes coordinates and aperture scores instead of being rebuilt for them.
+> **Alongside, never blocking:** the article campaign (`../articles/visibility-campaign.md`).
+> **Parked with named gates:** survivorship (own dive) · clinical universe (needs a partner) ·
+> failing-runs lens (needs Phase 2) · glass warts (fold into Brain Glass).
+
 ## The dive sequence
 
 Ordered by leverage — each unlocks the next.
