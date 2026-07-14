@@ -72,7 +72,10 @@ here in cognition (the plane verifies, never signs):
   · ecosystem — the Shipyard (0009's provisioner, on the wire): "create ecosystem
     foo with fields bar, baz" in becky's parlor drafts a launch plan, stages it for
     the human (growing the universe is consequential — 0012), and on approval the
-    dock crew launches REAL containers on the rig's network. New floors pull their
+    dock crew launches REAL containers on the rig's network. A NAMED TEMPLATE
+    (0034: "create continuity ecosystem …") dresses every profile in the plan —
+    the floor is born wearing the dignity vector, the retention regime (0033 §5
+    contracts), and the label canon; the worker plants its CHARTER on the record. New floors pull their
     parent's floors at boot and beat into the orrery by themselves; the ledger
     (~/.orreth/shipyard/) replants hulls the rig lost, and the worker tends every
     dynamic floor's queue like the composed three.
@@ -108,7 +111,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import crypto, fingertip, improver, markers, parlor, profile, purge, serials, shipyard
+from orreth_sim import (continuity, crypto, fingertip, improver, markers, parlor,
+                        profile, purge, serials, shipyard)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -285,7 +289,8 @@ def seat_knowledge(port: int, scope: str, topic: str):
         if body.get("state") == "recalled":
             dead.add(claim)
         else:
-            out.append({"claim": claim, "ref": ref})
+            out.append({"claim": claim, "ref": ref,
+                        "state": str(body.get("state") or "")})
     # versions of one claim are one claim — the newest ref speaks for its lineage
     seen: set = set()
     live = []
@@ -432,7 +437,12 @@ def on_seat_ask(port: int, scope: str, r: dict) -> None:
     topic = str(r.get("text") or "").strip()
     seat_kp, seat_did = lib_seat(scope)
     hits, n_dead, n_sealed = seat_knowledge(port, scope, topic)
-    reply = (f"{len(hits)} claim(s) held: " + " · ".join(h["claim"][:80] for h in hits[:3])
+    # the label canon (0034 §3), structural: each claim is spoken in the shape
+    # its STATE allows — a mind cannot upgrade confidence the substrate
+    # doesn't hold. Honest speech is not a template perk; it is the canon.
+    reply = (f"{len(hits)} claim(s) held: " + " · ".join(
+        continuity.speak_claim(h.get("state", ""), h["claim"][:80]) or ""
+        for h in hits[:3])
              if hits else "nothing held here")
     if n_dead:
         reply += f" ({n_dead} recalled lineage(s) stay dead)"
@@ -533,6 +543,46 @@ def call(port: int, method: str, path: str, payload=None):
     with urllib.request.urlopen(req, timeout=8) as r:
         b = r.read()
         return json.loads(b) if b[:1] in (b"{", b"[") else b
+
+
+_CHARTERED: set[str] = set()          # scopes whose continuity charter stands
+
+
+def continuity_charter(port: int, scope: str) -> None:
+    """0034 §7 sp1: a floor born wearing the continuity template gets its
+    CHARTER on the record — config-as-memory (R8): the vector, the regime, the
+    label canon, legible to the glass and to every resident. Planted once; the
+    wire is checked before writing, so restarts never double-charter."""
+    if scope in _CHARTERED:
+        return
+    spec = SHIPYARD.ledger().get(str(port)) or {}
+    if spec.get("template") != continuity.TEMPLATE:
+        _CHARTERED.add(scope)                 # not a continuity floor — settled
+        return
+    from datetime import datetime, timedelta, timezone
+    seat_kp, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return                                # the floor is still waking — next beat
+    if any("continuity-charter" in (h.get("tags") or []) for h in r.get("hits", [])):
+        _CHARTERED.add(scope)                 # the charter already stands
+        return
+    rec = continuity.make_charter({"did": seat_did, "scope": scope}, seat_kp, scope)
+    try:
+        call(port, "POST", "/records", rec)
+        _CHARTERED.add(scope)
+        print(f"  ↳ the continuity charter lands at {scope} — the floor's law is "
+              f"on its own record ({rec['id'][:18]}…)")
+    except Exception as e:
+        print(f"    (continuity charter write failed: {e})")
 
 
 # ---------------------------------------------------------------- the farm keeper (0018)
@@ -2468,7 +2518,8 @@ class Shipyard:
             try:
                 p = shipyard.plan(UNIVERSE_SCOPE, r.get("eco", ""),
                                   r.get("fields") or [],
-                                  {4500, 4501, 4502, *self.floors()}, TRUST_ROOT)
+                                  {4500, 4501, 4502, *self.floors()}, TRUST_ROOT,
+                                  template=r.get("template"))
             except ValueError as e:
                 call(port, "POST", "/requests/resolve",
                      {"id": r["id"], "status": "denied", "result": {"note": str(e)}})
@@ -2486,7 +2537,8 @@ class Shipyard:
                 try:
                     p = shipyard.plan(UNIVERSE_SCOPE, r.get("eco", ""),
                                       r.get("fields") or [],
-                                      {4500, 4501, 4502, *self.floors()}, TRUST_ROOT)
+                                      {4500, 4501, 4502, *self.floors()}, TRUST_ROOT,
+                                      template=r.get("template"))
                 except ValueError as e:
                     call(port, "POST", "/requests/resolve",
                          {"id": r["id"], "status": "denied", "result": {"note": str(e)}})
@@ -2499,6 +2551,8 @@ class Shipyard:
                                          ("kind", "name", "scope", "port", "container",
                                           "parent_container", "profile_file")}
                 led[str(eco["port"])]["parent_port"] = 4500
+                if eco.get("template"):        # the floor remembers its law (0034)
+                    led[str(eco["port"])]["template"] = eco["template"]
                 launched.append(f"{eco['scope']} :{eco['port']}")
                 for m in p["fields"]:
                     m = {**m, "parent_port": eco["port"]}
@@ -2510,6 +2564,8 @@ class Shipyard:
                                            ("kind", "name", "scope", "port", "container",
                                             "parent_container", "profile_file")}
                     led[str(m["port"])]["parent_port"] = eco["port"]
+                    if m.get("template"):
+                        led[str(m["port"])]["template"] = m["template"]
                     launched.append(f"{m['scope']} :{m['port']}")
             else:
                 failed = out
@@ -2872,9 +2928,11 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     if ans.get("action") == "ecosystem":  # the shipyard's front door — staged, never direct
         call(port, "POST", "/requests",
              {"kind": "ecosystem", "eco": ans["eco"], "fields": ans["fields"],
+              **({"template": ans["template"]} if ans.get("template") else {}),
               "text": f"grow e:{ans['eco']}"
                       + (f" with field(s) {', '.join(ans['fields'])}" if ans["fields"]
-                         else " — sailing alone")})
+                         else " — sailing alone")
+                      + (f" · {ans['template']} template" if ans.get("template") else "")})
     kp, did = resident_key(name, scope)
     voiced = None
     # descriptive answers may be voiced; actions and flow-control words never are —
@@ -3100,6 +3158,7 @@ def main() -> None:
                     KEEPER.tend(port, scope)
                     WRANGLER.sync(port, scope)
                     serials_beat(port, scope)  # the desk sweeps on the beat (0032 §2)
+                    continuity_charter(port, scope)  # a template floor gets its law (0034)
                     pin_organs(port, scope)
                     window_charter(port, scope)
                     if scope == SCOPE:

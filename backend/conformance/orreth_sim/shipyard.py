@@ -15,8 +15,11 @@ from __future__ import annotations
 
 import re
 
+from . import continuity
+
 BASE_PORT = 4503                      # 4500-4502 belong to the composed rig
 _SLUG = re.compile(r"^[a-z][a-z0-9-]{0,23}$")
+TEMPLATES = {continuity.TEMPLATE: continuity.overlay}   # 0009's named templates
 
 
 def valid_name(name: str) -> bool:
@@ -69,32 +72,41 @@ def _profile(scope: str, label: str, *, is_leaf: bool, raw: str, horizon: str,
 
 
 def plan(universe_scope: str, name: str, fields: list[str], used_ports: set[int],
-         trust_root: str) -> dict:
+         trust_root: str, template: str | None = None) -> dict:
     """The launch plan: one ecosystem hull + its field moons, ports and containers
-    named, profiles generated — everything the dock crew needs, nothing executed."""
+    named, profiles generated — everything the dock crew needs, nothing executed.
+    A named template (0009 · 0034) is RENDERED here: the overlay dresses every
+    profile in the plan — the provisioner renders it, the floor is born wearing
+    its law."""
     if not valid_name(name):
         raise ValueError(f"'{name}' cannot sail — names are lowercase-kebab, ≤24 chars")
     for f in fields:
         if not valid_name(f):
             raise ValueError(f"field '{f}' cannot sail — names are lowercase-kebab")
+    if template is not None and template not in TEMPLATES:
+        raise ValueError(f"no template named '{template}' — the yard knows: "
+                         + ", ".join(sorted(TEMPLATES)))
+    dress = TEMPLATES.get(template or "", lambda p: p)
     ports = allocate_ports(1 + len(fields), used_ports)
     eco = {
         "kind": "ecosystem", "name": name,
         "scope": f"{universe_scope}/e:{name}",
         "port": ports[0], "container": f"orreth-dyn-e-{name}",
         "parent_container": None,                    # the composed universe
-        "profile": eco_profile(universe_scope, name, trust_root),
+        "profile": dress(eco_profile(universe_scope, name, trust_root)),
         "profile_file": f"dyn-e-{name}.json",
+        **({"template": template} if template else {}),
     }
     moons = [{
         "kind": "field", "name": f,
         "scope": f"{eco['scope']}/f:{f}",
         "port": p, "container": f"orreth-dyn-e-{name}-f-{f}",
         "parent_container": eco["container"],
-        "profile": field_profile(eco["scope"], f, trust_root),
+        "profile": dress(field_profile(eco["scope"], f, trust_root)),
         "profile_file": f"dyn-e-{name}-f-{f}.json",
+        **({"template": template} if template else {}),
     } for f, p in zip(fields, ports[1:])]
     return {"eco": eco, "fields": moons,
-            "summary": f"e:{name} on :{ports[0]}"
+            "summary": (f"a {template} " if template else "") + f"e:{name} on :{ports[0]}"
                        + (f" with field(s) {', '.join(f'{f}:{p}' for f, p in zip(fields, ports[1:]))}"
                           if fields else " — sailing alone (fields can join later)")}

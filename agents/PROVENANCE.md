@@ -379,3 +379,10 @@ design doc 0017.
 3. **Sentinel framing** — read in full: every probe *attempts* a violation and passes
    only when the universe refuses it; it detects and files, never enforces. Framing holds.
 4. **RuleThink stub** — acknowledged; fine as the keyless floor, `GovernedThink` is the mind.
+
+## Fable 5 net-new files — 2026-07-14 (0034 sp1, the continuity template)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/continuity.py` | Fable 5 (claude-fable-5) | 0034 §2/§3/§6 — the continuity template's organs (dignity vector, retention regime as 0033 §5 contracts, label canon composer); banner in file |
+| `backend/conformance/tests/test_continuity.py` | Fable 5 (claude-fable-5) | the template's conformance tests; banner in file |

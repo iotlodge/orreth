@@ -95,6 +95,24 @@ def parse_grow(text: str):
     return None
 
 
+_TEMPLATES = ("continuity",)          # 0009's named templates the parlor knows
+
+
+def grow_template(text: str):
+    """“create continuity ecosystem foo …” → ("continuity", the same ask with
+    the template word lifted out) — parse_grow keeps its shape; the template
+    rides beside it (0034 §7 sp1)."""
+    t = (text or "").strip()
+    low = t.lower()
+    for tpl in _TEMPLATES:
+        for p in _GROW:
+            head, _, tail = p.partition(" ecosystem")
+            marked = f"{head} {tpl} ecosystem"
+            if low.startswith(marked):
+                return tpl, head + " ecosystem" + t[len(marked):]
+    return None, t
+
+
 def _vitals(facts: dict, name: str) -> dict:
     for r in facts.get("residents") or []:
         if r.get("name") == name:
@@ -212,7 +230,8 @@ def answer(name: str, text: str, facts: dict) -> dict:
         return {"reply": f"no one by the name “{name}” is in residence on this floor."}
     t = (text or "").strip().lower()
     if name == "becky":
-        grown = parse_grow(text)
+        tpl, plain = grow_template(text)      # 0034 §7 sp1 — a named template rides
+        grown = parse_grow(plain)
         if grown is not None:
             eco, fields = grown
             # flow-control replies travel VERBATIM — a governed voice may phrase
@@ -230,9 +249,13 @@ def answer(name: str, text: str, facts: dict) -> dict:
             return {"reply": f"staging e:{eco}"
                              + (f" with field(s) {', '.join(fields)}" if fields
                                 else " — sailing alone")
+                             + (f", wearing the {tpl} template — its floors are born "
+                                "with the regime, the vector, and the label canon"
+                                if tpl else "")
                              + ". the shipyard drafts the plan; consequence waits for "
                                "you at the gate (0012).",
                     "action": "ecosystem", "eco": eco, "fields": fields,
+                    **({"template": tpl} if tpl else {}),
                     "verbatim": True}
     if name == "librarian":
         claim = profile.parse_assert(text)
