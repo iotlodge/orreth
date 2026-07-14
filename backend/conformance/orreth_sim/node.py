@@ -203,6 +203,9 @@ class HarnessNode:
             "author": self.steward["did"],
             "occurred_at": self._universe_now(),
             "provenance_class": "lived",
+            # the id commits to the body — store what was committed (0033's harness
+            # found the drop: a distillation without its bytes reads as a stub)
+            "body": crypto._b64e(crypto.canonical(body)),
             "retention": "active",
             "visibility": {"tenancy": "tenant-private", "mobility": "branch-bound"},
             "derived_from": ids,

@@ -178,7 +178,7 @@ the Brain Glass, 0034).
 
 | # | Spoonful | Nature |
 |---|---|---|
-| 1 | **The harness** — infotheory.py + tests + the entropy-removal demo (reel story) | pure functions over existing records; zero contract touch |
+| 1 | **The harness** — infotheory.py + tests + the entropy-removal demo (reel story) | ✅ landed 2026-07-14 — `orreth_sim/infotheory.py` (entropy · information gain · reconstruction entropy w/ live/stub/missing walk · mortal-world counterfactual · distillation ratio · resolution fidelity · context efficiency w/ deterministic runs counted apart · provenance completeness where a stub IS a complete answer · corroboration voices-vs-echoes) + 8 tests (140/140 suite) + `scripts/demo.sh physics` — the headline table live: the mortal staircase climbs 0→64 bits while orreth holds at 0→16, every bit accounted for. **The harness caught a real defect on day one:** `_distill` hashed its body into the record id but never stored it — distillations were body-less (read honestly as stubs). Fixed: the id commits to the body, so the body is stored |
 | 2 | **Distortion contracts** — the Distillation record extension + refused-at-save on prohibited_loss + QA scoring against d(·,·) | 0003 extension; steward-side |
 | 3 | **The coordinate, soft** — ladder axes as tags on new records (fingertip/chassis/librarian cite objective/intention hashes they already hold); index lookups in the sim + wire | no contract change; proves the shape the hard landing will freeze |
 | 4 | **The coordinate, hard + the aperture** — contracts/v0 record-shape lock, and 0031 spoonful 2 lands against it (context_hash widens; RunRecord semantics per 0005/0007) | **JB's rule-9 approval moment — both at once, one gate** |

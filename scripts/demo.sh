@@ -19,6 +19,8 @@
 #                                   the lineage and the poison dies visibly
 #   scripts/demo.sh gate            0006/0012 · the hardened join door: proof of
 #                                   key, then a human — an imposter is found out
+#   scripts/demo.sh physics         0033 · entropy is a dial, not a decay — pure
+#                                   sim, no rig: two worlds age one history
 #   scripts/demo.sh window          0008 · seed a biography and open the Console
 #
 # Most demos want the rig up first: scripts/dev.sh start
@@ -44,6 +46,7 @@ case "${1:-list}" in
   recall)    run demo_recall.py "$FIELD" ;;
   gate)      run demo_joindoor.py "$FIELD" ;;
   crew)      run demo_workforce.py "$FIELD" ;;
+  physics)   run demo_information_physics.py ;;
   window)    "$ROOT/scripts/dev.sh" window ;;
   list|*)
     echo "the Orreth demo reel — scripts/demo.sh <name>   (rig first: scripts/dev.sh start)"
@@ -65,6 +68,8 @@ case "${1:-list}" in
     echo "              key and waits for the human; an imposter is found out"
     echo "  crew        0006/0015 · the field takes on hands — three SDK agents join at"
     echo "              the gate (wren returns as the same self) and work on the record"
+    echo "  physics     0033 · entropy is a dial, not a decay — one history ages in two"
+    echo "              worlds; the mortal staircase climbs, orreth holds at the contract"
     echo "  window      0008 · seed a biography and open the Console"
     ;;
 esac
