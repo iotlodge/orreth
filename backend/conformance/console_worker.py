@@ -96,7 +96,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import crypto, fingertip, improver, markers, parlor, profile, purge, shipyard
+from orreth_sim import crypto, fingertip, improver, markers, parlor, profile, purge, serials, shipyard
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -1224,6 +1224,100 @@ def recall_walk(port: int, scope: str, source_did: str, reason: str) -> str:
             print(f"    (recall marker write failed: {e})")
     return (f"recalled {recalled} entr(ies) traced to {source_did} — "
             "annotated, never rewritten; the lineage is intact")
+
+
+def wire_subscriptions(port: int, scope: str) -> list[dict]:
+    """The serials desk's ledger from the wire (0032 §1): current head per topic,
+    read under the librarian's seat — cancelled shown with its posture."""
+    from datetime import datetime, timedelta, timezone
+    _, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return []
+    rows, superseded = [], set()
+    for h in r.get("hits", []):
+        if "subscription" not in (h.get("tags") or []):
+            continue
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        if isinstance(body, dict) and "subscription" in body:
+            rows.append((h["ref"], body["subscription"],
+                         h.get("derived_from") or [], h.get("occurred_at", "")))
+            superseded.update(h.get("derived_from") or [])
+    rows.sort(key=lambda x: x[3])
+    return [{"id": ref, **sub} for ref, sub, _, _ in rows if ref not in superseded]
+
+
+def wire_unsubscribe(port: int, scope: str, topic: str) -> str:
+    """Retired on the record (0032 §1): a cancelled sibling derives from the head.
+    Stopping a spend needs no gate — starting one did."""
+    want = serials.slug(topic)
+    head = next((s for s in wire_subscriptions(port, scope)
+                 if serials.slug(s.get("topic", "")) == want), None)
+    if head is None:
+        return f"nothing on the desk under “{topic}” — say “show the desk” for what stands"
+    seat_kp, seat_did = lib_seat(scope)
+    body = {"subscription": {**{k: v for k, v in head.items() if k != "id"},
+                             "posture": "cancelled",
+                             "reason": "the human closed it"}}
+    rec = make_memory({"did": seat_did, "scope": scope}, seat_kp, scope, body,
+                      kind="semantic",
+                      tags=["subscription", serials.slug(head.get("topic", ""))])
+    rec["derived_from"] = [head["id"]]
+    try:
+        call(port, "POST", "/records", rec)
+    except Exception as e:
+        return f"the cancellation stumbled: {e}"
+    print(f"  ↳ subscription to “{head.get('topic')}” cancelled — on the worldline")
+    return (f"the subscription to “{head.get('topic')}” is cancelled — a new "
+            "version on its worldline, never an absence")
+
+
+def on_subscription(port: int, scope: str, r: dict, *, approved: bool = False,
+                    declined: bool = False) -> None:
+    """0032 §1: a standing spend is a consequence — the ask STAGES with its terms
+    readable, and only the human's word mints the subscription record."""
+    topic = str(r.get("topic") or r.get("text") or "").strip()
+    seat_kp, seat_did = lib_seat(scope)
+    if declined:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"declined": True,
+                         "reply": f"the subscription to “{topic}” was declined — "
+                                  "nothing opens, and the record keeps that you chose"}})
+        print(f"  ↳ subscription to “{topic}” declined at the gate")
+        return
+    if approved:                              # the human's word opens the desk
+        rec = serials.make_subscription({"did": seat_did, "scope": scope},
+                                        seat_kp, scope, topic=topic,
+                                        approved_ref=str(r.get("id") or ""))
+        call(port, "POST", "/records", rec)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"subscription": rec["id"], "topic": topic,
+                         "terms": "every 100 beats · 4 call(s) per delivery",
+                         "lane": "opened on the human's word"}})
+        print(f"  ↳ subscription OPENED: “{topic}” — {rec['id'][:18]}…")
+        return
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "staged",
+          "result": {"held": "a standing spend waits for you (0032 §1) — open "
+                             "or decline at the gate",
+                     "topic": topic,
+                     "terms": "every 100 beats · 4 call(s) per delivery · "
+                              "serving sources only · admits quarantined"}})
+    print(f"  ↳ subscription to “{topic}” staged — the gate waits")
 
 
 def coordinate_citations(port: int, scope: str, goal: str) -> int:
@@ -2424,6 +2518,8 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     and the exchange lands signed in the Window. Humans never read; they are answered."""
     name = str(r.get("to") or "").strip().lower()
     facts = parlor_facts(port, scope)
+    if name == "librarian":                   # the desk answers her card too (0032)
+        facts["subscriptions"] = wire_subscriptions(port, scope)
     if name == "grace":                       # the smith reads her shelf (0031 §4)
         u_port = universe_port(port)
         facts["shelf"] = wire_shelf(u_port)
@@ -2492,6 +2588,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
             facts["profile_text"] = profile_read(port, scope)
             facts["markers"] = recent_markers(port, scope)
             facts["domains"] = domain_packages(port, scope)  # 0031 §5
+            facts["subscriptions"] = wire_subscriptions(port, scope)  # 0032 §1
         ws = parlor.workspace(name, facts)
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
@@ -2508,6 +2605,12 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         reply = gather(port, scope, ans["topic"])
     if ans.get("action") == "challenge":  # the human's doubt is a trigger (0031 §5)
         reply = challenge_walk(port, scope, ans["topic"])
+    if ans.get("action") == "subscribe":  # 0032 §1 — the standing spend stages
+        call(port, "POST", "/requests",
+             {"kind": "subscription", "topic": ans["topic"],
+              "text": f"subscribe to “{ans['topic']}” — a standing delivery"})
+    if ans.get("action") == "unsubscribe":  # 0032 §1 — retired on the record
+        reply = wire_unsubscribe(port, scope, ans["topic"])
     if ans.get("action") == "domain":     # the package, a view over the record (0031 §5)
         rows = domain_packages(port, scope, ans.get("topic", ""))
         reply = ("; ".join(f"{d['topic']} — {d['meta']}" for d in rows[:6])
@@ -2727,6 +2830,12 @@ def main() -> None:
                             on_improvement(port, scope, r,
                                            approved=r.get("status") == "approved",
                                            declined=r.get("status") == "denied")
+                        elif r.get("kind") == "subscription" and \
+                                r.get("status") in ("pending", "approved", "denied"):
+                            handled.add(key)
+                            on_subscription(port, scope, r,
+                                            approved=r.get("status") == "approved",
+                                            declined=r.get("status") == "denied")
                     except urllib.error.HTTPError as e:
                         # The floor ANSWERED — a refusal, not a dead wire (probe()'s
                         # law). One poison request must never silence the residents:

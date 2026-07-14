@@ -48,6 +48,13 @@ _CHALLENGE = ("challenge knowledge on", "challenge")
 _DOMAIN = ("show domain packages", "show domains", "domain packages",
            "show domain", "domain package for")
 
+# the serials desk (0032 §1), in the shapes callers actually type
+_SUBSCRIBE = ("subscribe to", "subscribe")
+_UNSUBSCRIBE = ("unsubscribe from", "unsubscribe", "cancel subscription to",
+                "cancel the subscription to")
+_DESK = ("show the desk", "the serials desk", "show subscriptions",
+         "what do you watch")
+
 
 def parse_feedback(text: str):
     """“feedback on prompt-plan: too wordy under pressure” → (name, words)."""
@@ -149,6 +156,8 @@ def _card_librarian(facts: dict) -> tuple[str, list]:
             "its lineage.",
             [{"label": "gather knowledge on…", "template": "gather sourced knowledge on "},
              {"label": "ask the universe…", "template": "ask the universe about "},
+             {"label": "subscribe…", "template": "subscribe to "},
+             {"label": "the serials desk", "ask": "show the desk"},
              {"label": "domain packages", "ask": "show domain packages"},
              {"label": "challenge…", "template": "challenge "},
              {"label": "what do you hold?", "ask": "what knowledge do you hold?"},
@@ -260,6 +269,29 @@ def answer(name: str, text: str, facts: dict) -> dict:
                                      "the composed answer names each seat and is honest "
                                      "about the dark ones.",
                             "action": "self-dialog", "topic": topic, "verbatim": True}
+        for p in _UNSUBSCRIBE:                # 0032 §1 — retired on the record
+            if t.startswith(p):
+                topic = (text or "").strip()[len(p):].strip().strip("?.!")
+                if topic:
+                    return {"reply": f"cancelling the subscription to “{topic}” — "
+                                     "a new version on its worldline, never an "
+                                     "absence. Stopping a spend needs no gate.",
+                            "action": "unsubscribe", "topic": topic,
+                            "verbatim": True}
+        for p in _SUBSCRIBE:                  # 0032 §1 — a standing spend STAGES
+            if t.startswith(p):
+                topic = (text or "").strip()[len(p):].strip().strip("?.!")
+                if topic:
+                    # flow-control travels VERBATIM: a staging confirmation is protocol
+                    return {"reply": f"staging a subscription to “{topic}” — a "
+                                     "standing spend is a consequence, and "
+                                     "consequence waits for you at the gate (0012). "
+                                     "Approve it and the desk delivers on the beat.",
+                            "action": "subscribe", "topic": topic,
+                            "verbatim": True}
+        for p in _DESK:
+            if t.startswith(p):
+                return {"reply": _librarian_desk(facts)}
         for p in _DOMAIN:                     # 0031 §5 — the package, recallable
             if t.startswith(p):
                 topic = (text or "").strip()[len(p):].strip().strip("?.!")
@@ -399,6 +431,23 @@ def _librarian_recalls(facts: dict) -> str:
     return f"{len(walks)} recall walk(s) on this floor: {lines}."
 
 
+def _librarian_desk(facts: dict) -> str:
+    """The serials desk, in words (0032 §1): every subscription's terms and
+    posture — retired ones included, because cancelled is a state."""
+    subs = facts.get("subscriptions") or []
+    if not subs:
+        return ("the desk is empty — say “subscribe to <topic>” and a standing "
+                "subscription stages for your approval; the desk delivers on "
+                "the beat once you open it.")
+    lines = "; ".join(
+        f"{s.get('topic', '?')} — {s.get('posture', '?')}"
+        + (f", every {s.get('cadence_beats', '?')} beats"
+           if s.get("posture") == "deliver" else "")
+        for s in subs)
+    return (f"the desk holds {len(subs)} subscription(s): {lines}. the delivery "
+            "beat arrives with the next spoonful — the terms already stand.")
+
+
 def _grace_shelf(facts: dict) -> str:
     rows = facts.get("shelf") or []
     if not rows:
@@ -496,6 +545,17 @@ def _room_librarian(facts: dict) -> list[dict]:
          "items": [{"label": "knowledge held", "value": v.get("knowledge held", 0)},
                    {"label": "gathers", "value": v.get("gathers", 0)},
                    {"label": "recall walks", "value": len(walks)}]},
+        {"kind": "list", "title": "the serials desk (0032)",
+         "items": _sev([{"text": s.get("topic", "?"),
+                         "meta": f"{s.get('posture', '?')}"
+                                 + (f" · every {s.get('cadence_beats', '?')} beats"
+                                    f" · {((s.get('budget') or {}).get('calls', '?'))}"
+                                    " call(s)/delivery"
+                                    if s.get("posture") == "deliver" else ""),
+                         "severity": "medium" if s.get("posture") == "deliver" else ""}
+                        for s in facts.get("subscriptions") or []] or
+                       [{"text": "an empty desk — “subscribe to <topic>” starts one",
+                         "meta": ""}])},
         {"kind": "list", "title": "the domain packages (0031 §5)",
          "items": _sev([{"text": d.get("topic") or "uncategorized",
                          "meta": d.get("meta", ""),
