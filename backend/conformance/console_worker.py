@@ -41,7 +41,11 @@ here in cognition (the plane verifies, never signs):
   · serials   — the desk's beat (0032): due subscriptions re-gather through
     charlotte's SERVING roster only, dedup against the shelf, admit the new
     quarantined with the subscription's lineage, and the delivery note lands —
-    a quiet issue logs, news wears the medium marker. The desk never decides.
+    a quiet issue logs, news wears the medium marker. The difference is the
+    news (§3): a subscribed ref re-speaking with changed content admits AND
+    drops its old head to investigating (superseded-at-source, the pair named);
+    a ref the sweep no longer carries is noted vanished — absence is a finding,
+    never an action. The desk never decides.
   · upload    — multimodal admission (0029): a file enters as an ask (verb
     "upload" to the librarian, bars 256KB · txt/md/json/csv/pdf/png/jpg). The
     artifact lands signed (ingested-archive); text-bearing formats extract to
@@ -1324,8 +1328,10 @@ def wire_unsubscribe(port: int, scope: str, topic: str) -> str:
 def on_subscription(port: int, scope: str, r: dict, *, approved: bool = False,
                     declined: bool = False) -> None:
     """0032 §1: a standing spend is a consequence — the ask STAGES with its terms
-    readable, and only the human's word mints the subscription record."""
+    readable, and only the human's word mints the subscription record. The
+    cadence is a dial on the record (§8): the ask may carry the human's own."""
     topic = str(r.get("topic") or r.get("text") or "").strip()
+    cadence = int(r.get("cadence") or 100)
     seat_kp, seat_did = lib_seat(scope)
     if declined:
         call(port, "POST", "/requests/resolve",
@@ -1338,21 +1344,23 @@ def on_subscription(port: int, scope: str, r: dict, *, approved: bool = False,
     if approved:                              # the human's word opens the desk
         rec = serials.make_subscription({"did": seat_did, "scope": scope},
                                         seat_kp, scope, topic=topic,
+                                        cadence_beats=cadence,
                                         approved_ref=str(r.get("id") or ""))
         call(port, "POST", "/records", rec)
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
               "result": {"subscription": rec["id"], "topic": topic,
-                         "terms": "every 100 beats · 4 call(s) per delivery",
+                         "terms": f"every {cadence} beats · 4 call(s) per delivery",
                          "lane": "opened on the human's word"}})
-        print(f"  ↳ subscription OPENED: “{topic}” — {rec['id'][:18]}…")
+        print(f"  ↳ subscription OPENED: “{topic}” every {cadence} beats — "
+              f"{rec['id'][:18]}…")
         return
     call(port, "POST", "/requests/resolve",
          {"id": r["id"], "status": "staged",
           "result": {"held": "a standing spend waits for you (0032 §1) — open "
                              "or decline at the gate",
                      "topic": topic,
-                     "terms": "every 100 beats · 4 call(s) per delivery · "
+                     "terms": f"every {cadence} beats · 4 call(s) per delivery · "
                               "serving sources only · admits quarantined"}})
     print(f"  ↳ subscription to “{topic}” staged — the gate waits")
 
@@ -1422,13 +1430,17 @@ def serials_beat(port: int, scope: str) -> None:
                      "ref": x.get("url", ""), "source_did": src["did"]}
                     for x in results]
         superseded = {d for e in entries for d in e["derived_from"]}
-        held = [str(bodies[e["ref"]].get("knowledge", "")) for e in entries
+        held = [{"id": e["ref"],
+                 "claim": str(bodies[e["ref"]].get("knowledge", "")),
+                 "ref": str((bodies[e["ref"]].get("source") or {}).get("ref", "")),
+                 "source_did": str((bodies[e["ref"]].get("source") or {}).get("did", ""))}
+                for e in entries
                 if e["ref"] not in superseded
                 and bodies[e["ref"]].get("intent") == topic
                 and bodies[e["ref"]].get("state") != "recalled"]
-        parts = serials.dedup(findings, held)
-        admitted, fresh = [], []
-        for f in parts["new"]:
+        parts = serials.dedup(findings, held, source_did=src["did"])
+
+        def admit(f: dict) -> str | None:
             body = {"knowledge": f["claim"],
                     "source": {"did": f["source_did"], "ref": f["ref"]},
                     "state": "untrusted", "intent": topic,
@@ -1443,11 +1455,46 @@ def serials_beat(port: int, scope: str) -> None:
             except urllib.error.HTTPError:
                 # content-addressed: this exact utterance already stands (a dead
                 # lineage's original, say) — a repeat, never a re-write
+                return None
+            return rec["id"]
+
+        admitted, fresh = [], []
+        for f in parts["new"]:
+            rid = admit(f)
+            (fresh.append(f), admitted.append(rid)) if rid \
+                else parts["repeat"].append(f)
+        parts["new"] = fresh
+        # §3: change at the source is doubt at the shelf — the new claim admits
+        # (its own record, its own state), the OLD head drops to investigating
+        # via the revalidation walk's shape, superseded-at-source, pair named.
+        # Nothing auto-supersedes; the doubt is idempotent.
+        changed, dropped = [], 0
+        for f in parts["changed"]:
+            rid = admit(f)
+            if rid is None:
                 parts["repeat"].append(f)
                 continue
-            fresh.append(f)
-            admitted.append(rec["id"])
-        parts["new"] = fresh
+            admitted.append(rid)
+            changed.append(f)
+            for old in f.get("supersedes") or []:
+                ob = bodies.get(old) or {}
+                if ob.get("state") in ("recalled", "investigating"):
+                    continue
+                nb = {**ob, "state": "investigating",
+                      "revalidation": {"trigger": "superseded-at-source",
+                                       "reason": f"“{topic}” changed at its source "
+                                                 f"({f['ref']}) — superseded by {rid}",
+                                       "at": NOW()}}
+                sib = make_memory({"did": seat_did, "scope": scope}, seat_kp,
+                                  scope, nb, kind="semantic",
+                                  tags=sorted({*_t.get(old, []), "knowledge"}))
+                sib["derived_from"] = [old]
+                try:
+                    call(port, "POST", "/records", sib)
+                    dropped += 1
+                except Exception as e:
+                    print(f"    (supersede drop failed: {e})")
+        parts["changed"] = changed
         st["issue"] += 1
         note = serials.make_delivery_note({"did": seat_did, "scope": scope},
                                           seat_kp, scope, s, issue=st["issue"],
@@ -1458,18 +1505,23 @@ def serials_beat(port: int, scope: str) -> None:
             print(f"    (delivery note write failed: {e})")
         delivery = {"changed": parts["changed"], "vanished": parts["vanished"]}
         if serials.news(delivery):
-            mk = markers.make_marker({"did": seat_did, "scope": scope}, seat_kp,
-                                     scope, [note["id"]],
-                                     reason=f"the desk delivered news on “{topic}”",
-                                     change_severity="medium")
+            mk = markers.make_marker(
+                {"did": seat_did, "scope": scope}, seat_kp, scope, [note["id"]],
+                reason=f"the desk delivered news on “{topic}”: "
+                       f"{len(parts['changed'])} changed at source · "
+                       f"{len(parts['vanished'])} vanished",
+                change_severity="medium")
             try:
                 call(port, "POST", "/records", mk)
             except Exception as e:
                 print(f"    (delivery marker write failed: {e})")
         st["waited"], st["delivered"] = 0, True
         print(f"  ↳ the desk delivers issue {st['issue']} on “{topic}”: "
-              f"{len(parts['new'])} new · {len(parts['repeat'])} repeated — "
-              f"{'NEWS on the medium lane' if serials.news(delivery) else 'a quiet issue, logged'}")
+              f"{len(parts['new'])} new · {len(parts['repeat'])} repeated"
+              + (f" · {len(parts['changed'])} changed ({dropped} head(s) to "
+                 f"investigating)" if parts["changed"] else "")
+              + (f" · {len(parts['vanished'])} vanished" if parts["vanished"] else "")
+              + f" — {'NEWS on the medium lane' if serials.news(delivery) else 'a quiet issue, logged'}")
 
 
 def coordinate_citations(port: int, scope: str, goal: str) -> int:
@@ -2762,6 +2814,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     if ans.get("action") == "subscribe":  # 0032 §1 — the standing spend stages
         call(port, "POST", "/requests",
              {"kind": "subscription", "topic": ans["topic"],
+              **({"cadence": ans["cadence"]} if ans.get("cadence") else {}),
               "text": f"subscribe to “{ans['topic']}” — a standing delivery"})
     if ans.get("action") == "unsubscribe":  # 0032 §1 — retired on the record
         reply = wire_unsubscribe(port, scope, ans["topic"])

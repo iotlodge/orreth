@@ -58,6 +58,11 @@ def test_the_desk_doors_stage_and_cancel_verbatim():
     assert "building codes — deliver" in desk["reply"]
     # the ledger travels verbatim — a governed thought never rewrites the lane
     assert desk["verbatim"] is True
+    # the cadence is a dial on the record (0032 §8): the human's own words set it
+    dial = parlor.answer("librarian",
+                         "subscribe to bitcoin price every 10 beats", facts)
+    assert dial["topic"] == "bitcoin price" and dial["cadence"] == 10
+    assert "every 10 beats" in dial["reply"]
 
 
 def test_the_desk_panel_in_her_room():
@@ -145,6 +150,110 @@ def test_news_wears_medium_and_the_note_carries_every_column():
     assert serials.news({"vanished": ["a clause is gone"]})
     parts = serials.dedup([{"claim": "x"}], [])
     assert set(parts) == {"new", "repeat", "changed", "vanished"}
+
+
+def test_changed_at_source_admits_and_drops_the_old_head(world):
+    """0032 §3: same source, same ref, different content — the new claim admits
+    quarantined (its own record), the OLD head drops to 'investigating' with
+    trigger superseded-at-source and the pair named. Nothing auto-supersedes."""
+    f = world.field_prod
+    topic = "timber joinery standards"
+    me = _open_sub(f, topic)
+    old = make_memory(me, f.steward_kp, f.scope,
+                      {"knowledge": "the code allows 12mm dowels",
+                       "source": {"did": "did:web:codes.example", "ref": "u://1"},
+                       "state": "untrusted", "intent": topic},
+                      kind="semantic", tags=["knowledge"])
+    f.write(old)
+    report = serials.sweep(f, me, f.steward_kp, f.scope, topic=topic,
+                           findings=[{"claim": "the code now requires 16mm dowels",
+                                      "ref": "u://1",
+                                      "source_did": "did:web:codes.example"}],
+                           source_did="did:web:codes.example")
+    assert report["changed"] == 1 and report["arrived"] == 0
+    assert report["marker"] is not None           # news — the medium lane
+    # the new word stands as its own quarantined record
+    import json as _json
+    from orreth_sim import crypto as _crypto
+    new_id = report["admitted"][0]
+    nb = _json.loads(_crypto._b64d(f.records[new_id]["body"]).decode())
+    assert nb["state"] == "untrusted"
+    # the old head dropped — the walk's shape, the pair named
+    assert len(report["dropped"]) == 1
+    sib = f.records[report["dropped"][0]]
+    assert sib["derived_from"] == [old["id"]]
+    sb = _json.loads(_crypto._b64d(sib["body"]).decode())
+    assert sb["state"] == "investigating"
+    assert sb["revalidation"]["trigger"] == "superseded-at-source"
+    assert new_id in sb["revalidation"]["reason"]
+    # the note names the pair too
+    note = serials.deliveries(f, topic)[-1]
+    assert note["changed"][0]["supersedes"] == [old["id"]]
+
+
+def test_vanished_is_a_finding_never_an_action(world):
+    """0032 §2: a ref the sweep no longer carries is noted on the delivery —
+    absence is a finding; no head drops, nothing is touched."""
+    f = world.field_prod
+    topic = "timber joinery standards"
+    me = _open_sub(f, topic)
+    old = make_memory(me, f.steward_kp, f.scope,
+                      {"knowledge": "scarf joints span the ridge",
+                       "source": {"did": "did:web:codes.example", "ref": "u://gone"},
+                       "state": "untrusted", "intent": topic},
+                      kind="semantic", tags=["knowledge"])
+    f.write(old)
+    report = serials.sweep(f, me, f.steward_kp, f.scope, topic=topic,
+                           findings=[{"claim": "a fresh clause on purlins",
+                                      "ref": "u://new",
+                                      "source_did": "did:web:codes.example"}],
+                           source_did="did:web:codes.example")
+    assert report["vanished"] == 1 and report["marker"] is not None
+    note = serials.deliveries(f, topic)[-1]
+    assert note["vanished"][0]["claim"] == "scarf joints span the ridge"
+    # noted, never acted on: the old head has no new version
+    assert not any(old["id"] in r.get("derived_from", [])
+                   for r in f.records.values())
+    # and a voice from ANOTHER source never counts vanished (only the
+    # subscribed voice can go quiet)
+    other = make_memory(me, f.steward_kp, f.scope,
+                        {"knowledge": "an unrelated word",
+                         "source": {"did": "did:web:elsewhere", "ref": "u://x"},
+                         "state": "untrusted", "intent": topic},
+                        kind="semantic", tags=["knowledge"])
+    f.write(other)
+    report2 = serials.sweep(f, me, f.steward_kp, f.scope, topic=topic,
+                            findings=[{"claim": "a fresh clause on purlins",
+                                       "ref": "u://new",
+                                       "source_did": "did:web:codes.example"}],
+                            source_did="did:web:codes.example")
+    vanished2 = [v["claim"] for v in serials.deliveries(f, topic)[-1]["vanished"]]
+    assert "an unrelated word" not in vanished2
+
+
+def test_doubt_never_stacks_on_an_investigating_head(world):
+    """The walk's idempotence, kept (0031 §5): a head already investigating is
+    not re-dropped when its ref changes again — the new word still admits."""
+    f = world.field_prod
+    topic = "timber joinery standards"
+    me = _open_sub(f, topic)
+    first = serials.sweep(f, me, f.steward_kp, f.scope, topic=topic,
+                          findings=[{"claim": "v1 of the clause", "ref": "u://1",
+                                     "source_did": "did:web:codes.example"}],
+                          source_did="did:web:codes.example")
+    assert first["arrived"] == 1
+    second = serials.sweep(f, me, f.steward_kp, f.scope, topic=topic,
+                           findings=[{"claim": "v2 of the clause", "ref": "u://1",
+                                      "source_did": "did:web:codes.example"}],
+                           source_did="did:web:codes.example")
+    assert second["changed"] == 1 and len(second["dropped"]) == 1
+    third = serials.sweep(f, me, f.steward_kp, f.scope, topic=topic,
+                          findings=[{"claim": "v3 of the clause", "ref": "u://1",
+                                     "source_did": "did:web:codes.example"}],
+                          source_did="did:web:codes.example")
+    # v3 contradicts v2 (a live head) — one drop; the v1 head, already
+    # investigating, is never doubted twice
+    assert third["changed"] == 1 and len(third["dropped"]) == 1
 
 
 def test_a_dead_lineages_utterance_repeats_never_rewrites(world):

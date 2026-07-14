@@ -281,13 +281,24 @@ def answer(name: str, text: str, facts: dict) -> dict:
         for p in _SUBSCRIBE:                  # 0032 §1 — a standing spend STAGES
             if t.startswith(p):
                 topic = (text or "").strip()[len(p):].strip().strip("?.!")
+                # the cadence is a dial on the record (0032 §8): the human may
+                # say "… every N beats"; unsaid, the desk's default stands
+                cadence = None
+                m = re.search(r"\s+every\s+(\d+)\s+beats?$", topic,
+                              flags=re.IGNORECASE)
+                if m:
+                    cadence = int(m.group(1))
+                    topic = topic[:m.start()].strip()
                 if topic:
                     # flow-control travels VERBATIM: a staging confirmation is protocol
                     return {"reply": f"staging a subscription to “{topic}” — a "
                                      "standing spend is a consequence, and "
                                      "consequence waits for you at the gate (0012). "
-                                     "Approve it and the desk delivers on the beat.",
+                                     "Approve it and the desk delivers on the beat"
+                                     + (f", every {cadence} beats" if cadence else "")
+                                     + ".",
                             "action": "subscribe", "topic": topic,
+                            **({"cadence": cadence} if cadence else {}),
                             "verbatim": True}
         for p in _DESK:
             if t.startswith(p):
@@ -445,10 +456,14 @@ def _last_issue(facts: dict) -> dict:
 
 def _issue_words(d: dict) -> str:
     n = d.get("issue", "?")
+    bits = [f"{len(d.get('arrived') or [])} new", f"{d.get('repeated', 0)} repeated"]
+    if d.get("changed"):
+        bits.append(f"{len(d['changed'])} changed at source")
+    if d.get("vanished"):
+        bits.append(f"{len(d['vanished'])} vanished")
     quiet = not (d.get("changed") or d.get("vanished"))
-    return (f"issue {n} landed: {len(d.get('arrived') or [])} new · "
-            f"{d.get('repeated', 0)} repeated"
-            + ("" if quiet else " · NEWS on the note"))
+    return (f"issue {n} landed: " + " · ".join(bits)
+            + ("" if quiet else " — NEWS"))
 
 
 def _librarian_desk(facts: dict) -> str:
