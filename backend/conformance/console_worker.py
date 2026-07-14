@@ -2,7 +2,8 @@
 # Fable 5 (claude-fable-5) — 0018, the Tool Farm · 2026-07-05;
 # ada's stable duties added by Fable 5 (claude-fable-5) — 0019, the Stable · 2026-07-06;
 # the parlor desk added by Fable 5 (claude-fable-5) — 0020, the Parlor · 2026-07-07;
-# per-request quarantine in the round by Fable 5 (claude-fable-5) — 2026-07-08
+# per-request quarantine in the round by Fable 5 (claude-fable-5) — 2026-07-08;
+# the serials desk & its delivery beat by Fable 5 (claude-fable-5) — 0032 · 2026-07-14
 """The console worker — cognition behind the human's queue (0014 · 0006 · 0018 · 0019 · 0020).
 
 Watches every floor's request queue and carries the residents' duties, keys staying
@@ -37,6 +38,10 @@ here in cognition (the plane verifies, never signs):
     reads the receipts (rollups, markers, parked intents), and proposes a sibling
     version of a behavioral asset; governance computes the kind by DIFF and grades
     the lane — a nudge adopts loud on medium, a rewrite waits for the human.
+  · serials   — the desk's beat (0032): due subscriptions re-gather through
+    charlotte's SERVING roster only, dedup against the shelf, admit the new
+    quarantined with the subscription's lineage, and the delivery note lands —
+    a quiet issue logs, news wears the medium marker. The desk never decides.
   · upload    — multimodal admission (0029): a file enters as an ask (verb
     "upload" to the librarian, bars 256KB · txt/md/json/csv/pdf/png/jpg). The
     artifact lands signed (ingested-archive); text-bearing formats extract to
@@ -1259,6 +1264,38 @@ def wire_subscriptions(port: int, scope: str) -> list[dict]:
     return [{"id": ref, **sub} for ref, sub, _, _ in rows if ref not in superseded]
 
 
+def wire_deliveries(port: int, scope: str, want_slug: str | None = None) -> list[dict]:
+    """The desk's sweep history from the wire (0032 §2): every delivery note,
+    oldest first, read under the librarian's seat — the worldline sweep by sweep."""
+    from datetime import datetime, timedelta, timezone
+    _, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return []
+    rows = []
+    for h in r.get("hits", []):
+        tags = h.get("tags") or []
+        if "delivery" not in tags or (want_slug and want_slug not in tags):
+            continue
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        if isinstance(body, dict) and "delivery" in body:
+            rows.append((h.get("occurred_at", ""), h["ref"], body["delivery"]))
+    rows.sort(key=lambda x: x[0])
+    return [{"id": ref, **d} for _, ref, d in rows]
+
+
 def wire_unsubscribe(port: int, scope: str, topic: str) -> str:
     """Retired on the record (0032 §1): a cancelled sibling derives from the head.
     Stopping a spend needs no gate — starting one did."""
@@ -1318,6 +1355,121 @@ def on_subscription(port: int, scope: str, r: dict, *, approved: bool = False,
                      "terms": "every 100 beats · 4 call(s) per delivery · "
                               "serving sources only · admits quarantined"}})
     print(f"  ↳ subscription to “{topic}” staged — the gate waits")
+
+
+# the desk's live memory (0032 §2): beats waited and last issue per (port, slug).
+# The notes on the record are the durable history; a restarted worker re-seeds
+# from the wire — a subscription with notes waits a fresh cadence, one with none
+# gets its first issue on the next sweep (the desk starts you on the current issue).
+_DESK: dict[tuple[int, str], dict] = {}
+
+
+def serials_beat(port: int, scope: str) -> None:
+    """The desk's standing duty (0032 §2), riding the worker's beat like the
+    improver's — zero new residents, the librarian's seat does the sweeping. Due
+    subscriptions re-gather through charlotte's SERVING roster only (a recalled
+    source is refused at the door, 0026 §5), dedup against the shelf, admit only
+    the new — quarantined at 0.0000, the subscription named in the lineage — and
+    write one signed delivery note. Quiet = log; news wears the medium marker.
+    The desk delivers; it never decides."""
+    try:
+        subs = wire_subscriptions(port, scope)
+    except Exception:
+        return
+    for s in subs:
+        topic = str(s.get("topic", ""))
+        key = (port, serials.slug(topic))
+        if s.get("posture") != "deliver":
+            _DESK.pop(key, None)              # paused/cancelled: never due (0009)
+            continue
+        st = _DESK.get(key)
+        if st is None:
+            notes = wire_deliveries(port, scope, key[1])
+            st = _DESK[key] = {"waited": 0, "delivered": bool(notes),
+                               "issue": int(notes[-1].get("issue", len(notes))
+                                            if notes else 0)}
+        else:
+            st["waited"] += 1
+        if not serials.is_due(s, st["waited"], st["delivered"]):
+            continue
+        src = farm_search_source(port)
+        if src is None:
+            continue                          # no serving voice — the sub keeps waiting
+        seat_kp, seat_did = lib_seat(scope)
+        entries, bodies, _t = floor_knowledge(port, scope)
+        if src.get("did") in purge.discredited_dids(bodies):
+            # the door remembers the infection (0026 §5) — refused, on the record
+            note = make_memory({"did": seat_did, "scope": scope}, seat_kp, scope,
+                               {"immune": {"refused_source": src["did"],
+                                           "service": src["name"],
+                                           "intent": f"delivery: {topic}"}},
+                               kind="semantic", tags=["librarian", "immune-refusal"])
+            try:
+                call(port, "POST", "/records", note)
+            except Exception as e:
+                print(f"    (immune-refusal write failed: {e})")
+            st["waited"] = 0                  # the refusal was this sweep's outcome
+            print(f"  ↳ the desk refused at the door — “{topic}” from a recalled source")
+            continue
+        t0 = time.time()
+        results = tavily(topic)               # one call — under the 4-call ceiling
+        try:
+            call(port, "POST", "/farm/meter", {"name": src["name"], "caller": seat_did,
+                                               "ms": int((time.time() - t0) * 1000)})
+        except Exception as e:
+            print(f"    (delivery meter failed: {e})")
+        findings = [{"claim": f"{x['title']} — {x['content'][:120]}",
+                     "ref": x.get("url", ""), "source_did": src["did"]}
+                    for x in results]
+        superseded = {d for e in entries for d in e["derived_from"]}
+        held = [str(bodies[e["ref"]].get("knowledge", "")) for e in entries
+                if e["ref"] not in superseded
+                and bodies[e["ref"]].get("intent") == topic
+                and bodies[e["ref"]].get("state") != "recalled"]
+        parts = serials.dedup(findings, held)
+        admitted, fresh = [], []
+        for f in parts["new"]:
+            body = {"knowledge": f["claim"],
+                    "source": {"did": f["source_did"], "ref": f["ref"]},
+                    "state": "untrusted", "intent": topic,
+                    "subscription": s["id"]}
+            rec = make_memory({"did": seat_did, "scope": scope}, seat_kp, scope,
+                              body, kind="semantic",
+                              tags=["knowledge", "delivered", key[1]],
+                              provenance_class="ingested-archive")
+            rec["derived_from"] = [s["id"]]
+            try:
+                call(port, "POST", "/records", rec)
+            except urllib.error.HTTPError:
+                # content-addressed: this exact utterance already stands (a dead
+                # lineage's original, say) — a repeat, never a re-write
+                parts["repeat"].append(f)
+                continue
+            fresh.append(f)
+            admitted.append(rec["id"])
+        parts["new"] = fresh
+        st["issue"] += 1
+        note = serials.make_delivery_note({"did": seat_did, "scope": scope},
+                                          seat_kp, scope, s, issue=st["issue"],
+                                          parts=parts, calls=1)
+        try:
+            call(port, "POST", "/records", note)
+        except Exception as e:
+            print(f"    (delivery note write failed: {e})")
+        delivery = {"changed": parts["changed"], "vanished": parts["vanished"]}
+        if serials.news(delivery):
+            mk = markers.make_marker({"did": seat_did, "scope": scope}, seat_kp,
+                                     scope, [note["id"]],
+                                     reason=f"the desk delivered news on “{topic}”",
+                                     change_severity="medium")
+            try:
+                call(port, "POST", "/records", mk)
+            except Exception as e:
+                print(f"    (delivery marker write failed: {e})")
+        st["waited"], st["delivered"] = 0, True
+        print(f"  ↳ the desk delivers issue {st['issue']} on “{topic}”: "
+              f"{len(parts['new'])} new · {len(parts['repeat'])} repeated — "
+              f"{'NEWS on the medium lane' if serials.news(delivery) else 'a quiet issue, logged'}")
 
 
 def coordinate_citations(port: int, scope: str, goal: str) -> int:
@@ -2520,6 +2672,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     facts = parlor_facts(port, scope)
     if name == "librarian":                   # the desk answers her card too (0032)
         facts["subscriptions"] = wire_subscriptions(port, scope)
+        facts["deliveries"] = wire_deliveries(port, scope)
     if name == "grace":                       # the smith reads her shelf (0031 §4)
         u_port = universe_port(port)
         facts["shelf"] = wire_shelf(u_port)
@@ -2589,6 +2742,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
             facts["markers"] = recent_markers(port, scope)
             facts["domains"] = domain_packages(port, scope)  # 0031 §5
             facts["subscriptions"] = wire_subscriptions(port, scope)  # 0032 §1
+            facts["deliveries"] = wire_deliveries(port, scope)  # 0032 §2
         ws = parlor.workspace(name, facts)
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
@@ -2855,6 +3009,7 @@ def main() -> None:
                 if beat_due:
                     KEEPER.tend(port, scope)
                     WRANGLER.sync(port, scope)
+                    serials_beat(port, scope)  # the desk sweeps on the beat (0032 §2)
                     pin_organs(port, scope)
                     window_charter(port, scope)
                     if scope == SCOPE:

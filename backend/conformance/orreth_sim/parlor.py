@@ -291,7 +291,10 @@ def answer(name: str, text: str, facts: dict) -> dict:
                             "verbatim": True}
         for p in _DESK:
             if t.startswith(p):
-                return {"reply": _librarian_desk(facts)}
+                # the ledger travels VERBATIM: cadence, posture, and the lane are
+                # terms of record — a governed thought must never rewrite them
+                # (the voiced-reply lesson, held since 0020)
+                return {"reply": _librarian_desk(facts), "verbatim": True}
         for p in _DOMAIN:                     # 0031 §5 — the package, recallable
             if t.startswith(p):
                 topic = (text or "").strip()[len(p):].strip().strip("?.!")
@@ -431,21 +434,42 @@ def _librarian_recalls(facts: dict) -> str:
     return f"{len(walks)} recall walk(s) on this floor: {lines}."
 
 
+def _last_issue(facts: dict) -> dict:
+    """The newest delivery note per topic, from the notes the caller may read —
+    the desk speaks its sweeps (0032 §2)."""
+    last: dict = {}
+    for d in facts.get("deliveries") or []:
+        last[str(d.get("topic", ""))] = d     # oldest first — the last write wins
+    return last
+
+
+def _issue_words(d: dict) -> str:
+    n = d.get("issue", "?")
+    quiet = not (d.get("changed") or d.get("vanished"))
+    return (f"issue {n} landed: {len(d.get('arrived') or [])} new · "
+            f"{d.get('repeated', 0)} repeated"
+            + ("" if quiet else " · NEWS on the note"))
+
+
 def _librarian_desk(facts: dict) -> str:
-    """The serials desk, in words (0032 §1): every subscription's terms and
-    posture — retired ones included, because cancelled is a state."""
+    """The serials desk, in words (0032 §1–§2): every subscription's terms,
+    posture, and latest issue — retired ones included, because cancelled is a
+    state."""
     subs = facts.get("subscriptions") or []
     if not subs:
         return ("the desk is empty — say “subscribe to <topic>” and a standing "
                 "subscription stages for your approval; the desk delivers on "
                 "the beat once you open it.")
+    last = _last_issue(facts)
     lines = "; ".join(
         f"{s.get('topic', '?')} — {s.get('posture', '?')}"
         + (f", every {s.get('cadence_beats', '?')} beats"
            if s.get("posture") == "deliver" else "")
+        + (f" ({_issue_words(last[s.get('topic', '?')])})"
+           if s.get("topic", "?") in last else "")
         for s in subs)
-    return (f"the desk holds {len(subs)} subscription(s): {lines}. the delivery "
-            "beat arrives with the next spoonful — the terms already stand.")
+    return (f"the desk holds {len(subs)} subscription(s): {lines}. deliveries "
+            "ride the beat — a quiet issue logs, news wears the medium marker.")
 
 
 def _grace_shelf(facts: dict) -> str:
@@ -551,7 +575,9 @@ def _room_librarian(facts: dict) -> list[dict]:
                                  + (f" · every {s.get('cadence_beats', '?')} beats"
                                     f" · {((s.get('budget') or {}).get('calls', '?'))}"
                                     " call(s)/delivery"
-                                    if s.get("posture") == "deliver" else ""),
+                                    if s.get("posture") == "deliver" else "")
+                                 + (f" · {_issue_words(_last_issue(facts)[s.get('topic', '?')])}"
+                                    if s.get("topic", "?") in _last_issue(facts) else ""),
                          "severity": "medium" if s.get("posture") == "deliver" else ""}
                         for s in facts.get("subscriptions") or []] or
                        [{"text": "an empty desk — “subscribe to <topic>” starts one",
