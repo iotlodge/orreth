@@ -103,6 +103,106 @@ def test_the_parlor_hears_the_template():
     assert ans2["action"] == "ecosystem" and "template" not in ans2
 
 
+def test_the_role_bundles_hold_the_law():
+    """0034 §4: six roles, domain-scoped — a caregiver sees routines and
+    medication, never journals; NO bundle ever carries the sealed classes, and
+    the technician never touches memory content."""
+    assert set(continuity.ROLE_BUNDLES) == {"partner", "caregiver", "clinician",
+                                            "guardian", "emergency", "technician"}
+    care = continuity.ROLE_BUNDLES["caregiver"]["domains"]
+    assert care == ["routines", "medication"] and "journals" not in care
+    for role, b in continuity.ROLE_BUNDLES.items():
+        assert "sealed" not in b["domains"]
+    assert continuity.ROLE_BUNDLES["technician"]["domains"] == ["telemetry"]
+
+
+def test_consent_is_dynamic_windowed_and_revocable(world):
+    """0034 §4: purpose-, modality-, time-bound, revocable — a worldline whose
+    head rules; the token gate mints nothing without a live consent."""
+    f = world.field_prod
+    me = {"did": f.steward["did"], "scope": f.scope}
+    rec = continuity.make_consent(me, f.steward_kp, f.scope,
+                                  purpose="help with medication",
+                                  role="caregiver", holder="did:key:zCare",
+                                  window_days=30, approved_ref="req-9")
+    f.write(rec)
+    rows = [{"id": rid, "consent": _body(r)["consent"],
+             "derived_from": r.get("derived_from") or [], "at": r["received_at"]}
+            for rid, r in f.records.items() if "consent" in r.get("tags", [])]
+    heads = continuity.consent_heads(rows)
+    assert len(heads) == 1 and heads[0]["posture"] == "granted"
+    now = heads[0]["window"]["from"]
+    assert continuity.may_read(heads, "caregiver", "medication", now)
+    assert not continuity.may_read(heads, "caregiver", "journals", now)
+    terms = continuity.token_terms(heads, "caregiver", f.scope, now)
+    assert terms["expiry"] == heads[0]["window"]["until"]
+    assert terms["grants"] == [{"action": "retrieve", "space": {"scope": f.scope}}]
+    # past the window, the same consent mints nothing — time bounds the word
+    assert continuity.token_terms(heads, "caregiver", f.scope,
+                                  "2099-01-01T00:00:00Z") is None
+    # revocation: a sibling on the worldline — the head flips, nothing vanishes
+    sib = make_memory(me, f.steward_kp, f.scope,
+                      continuity.revoke_body(heads[0], "circumstances changed"),
+                      kind="semantic", tags=["consent"])
+    sib["derived_from"] = [heads[0]["id"]]
+    f.write(sib)
+    rows = [{"id": rid, "consent": _body(r)["consent"],
+             "derived_from": r.get("derived_from") or [], "at": r["received_at"]}
+            for rid, r in f.records.items() if "consent" in r.get("tags", [])]
+    heads = continuity.consent_heads(rows)
+    assert len(heads) == 1 and heads[0]["posture"] == "revoked"
+    assert continuity.token_terms(heads, "caregiver", f.scope, now) is None
+    assert rec["id"] in f.records                        # history intact
+
+
+def test_safer_mode_is_a_posture():
+    """0034 §4: the template's default consents recording; an explicit revoked
+    head drops the organ to safer mode; a later granted head restores it."""
+    now = "2026-07-14T00:00:00Z"
+    win = {"from": "2026-07-01T00:00:00Z", "until": "2026-08-01T00:00:00Z"}
+    assert continuity.recording_allowed([], "conversation", now)      # default on
+    revoked = {"modalities": ["conversation"], "posture": "revoked"}
+    assert not continuity.recording_allowed([revoked], "conversation", now)
+    assert continuity.recording_allowed([revoked], "photo", now)      # scoped
+    regranted = {"modalities": ["conversation"], "posture": "granted",
+                 "window": win}
+    assert continuity.recording_allowed([revoked, regranted], "conversation", now)
+    assert not continuity.recording_allowed(
+        [revoked, regranted], "conversation", "2099-01-01T00:00:00Z")  # window ends
+
+
+def test_beckys_consent_doors():
+    """0034 §4 at the card: a grant STAGES verbatim with its bundle readable;
+    revocation and safer mode act NOW; the ledger speaks its worldlines."""
+    grant = parlor.answer("becky",
+                          "grant caregiver access to help with medication for 14 days",
+                          {"scope": "u:demo"})
+    assert grant["action"] == "consent-grant" and grant["role"] == "caregiver"
+    assert grant["days"] == 14 and grant["purpose"] == "help with medication"
+    assert grant["verbatim"] is True
+    assert "routines · medication" in grant["reply"]
+    assert "the sealed never delegates" in grant["reply"]
+    rev = parlor.answer("becky", "revoke caregiver access", {"scope": "u:demo"})
+    assert rev["action"] == "consent-revoke" and rev["role"] == "caregiver"
+    stop = parlor.answer("becky", "stop recording conversations", {"scope": "u:demo"})
+    assert stop["action"] == "consent-revoke" and stop["modality"] == "conversation"
+    assert "safer mode" in stop["reply"]
+    resume = parlor.answer("becky", "resume recording conversations",
+                           {"scope": "u:demo"})
+    assert resume["action"] == "consent-grant" and resume["modality"] == "conversation"
+    assert "gate" in resume["reply"]      # resuming a recording is a consequence
+    ledger = parlor.answer("becky", "show consents",
+                           {"scope": "u:demo",
+                            "consents": [{"role": "caregiver", "holder": "did:key:zC",
+                                          "posture": "granted",
+                                          "window": {"until": "2026-08-13T00:00:00Z"},
+                                          "domains": ["routines", "medication"],
+                                          "purpose": "help with medication"}]})
+    assert ledger["verbatim"] is True
+    assert "caregiver" in ledger["reply"] and "granted" in ledger["reply"]
+    assert "until 2026-08-13" in ledger["reply"]
+
+
 def test_the_charter_is_config_as_memory(world):
     """R8: the floor's law on its own record — template, vector, regime, canon,
     legible to the glass and to every resident."""

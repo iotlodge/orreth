@@ -123,6 +123,140 @@ def apply(node) -> None:
         node.set_distortion_contract(tag, row["contract"])
 
 
+# ---------------------------------------------------------------- consent & delegation (0034 §4)
+
+# The role vocabulary: entitlement bundles over MEMORY DOMAINS — 0013's
+# governed-principal machinery serves the enforcement; the bundles are the new
+# artifact. A caregiver sees routines and medication support, never journals;
+# NO role's bundle ever includes the sealed classes (0026's seal outranks
+# every delegation), and no role decides AS the person (0030 — the human is
+# the origin, in this universe above all).
+ROLE_BUNDLES = {
+    "partner": {"domains": ["routines", "medication", "episodic",
+                            "relationships"],
+                "note": "the fullest bundle short of the person's own"},
+    "caregiver": {"domains": ["routines", "medication"],
+                  "note": "coordination, never journals"},
+    "clinician": {"domains": ["medication", "observations"],
+                  "note": "the clinical slice only"},
+    "guardian": {"domains": ["routines", "medication", "consents"],
+                 "note": "may also read the consent ledger itself"},
+    "emergency": {"domains": ["medication", "identity", "location"],
+                  "note": "what a responder needs at the door, nothing more"},
+    "technician": {"domains": ["telemetry"],
+                   "note": "the machine's health, never memory content"},
+}
+
+MODALITIES = ("conversation", "photo", "audio", "location", "document")
+
+
+def _slug(text: str) -> str:
+    import re
+    return "consent-" + re.sub(r"[^a-z0-9]+", "-", (text or "").lower()).strip("-")[:40]
+
+
+def make_consent(agent: dict, kp, scope: str, *, purpose: str,
+                 role: str | None = None, holder: str = "",
+                 modalities: list | None = None, window_days: int = 30,
+                 approved_ref: str = "", posture: str = "granted") -> dict:
+    """Consent as dynamic state (0034 §4): purpose-, modality-, and time-bound,
+    revocable — a signed record on its own worldline, minted only from the
+    human's word (0012: access to a person's memory is a consequence). A role
+    consent carries its bundle's domains verbatim, so the grant is legible on
+    the record; the token becky later mints stays contracts/v0-exact — the
+    consent ledger governs WHAT she may mint and UNTIL WHEN, never the token's
+    shape (rule 9 untouched)."""
+    if role is not None and role not in ROLE_BUNDLES:
+        raise ValueError(f"unknown role: {role!r} — the vocabulary knows: "
+                         + ", ".join(sorted(ROLE_BUNDLES)))
+    for m in modalities or []:
+        if m not in MODALITIES:
+            raise ValueError(f"unknown modality: {m!r}")
+    from datetime import datetime, timedelta, timezone
+    frm = datetime.now(timezone.utc)
+    body = {"consent": {
+        "purpose": purpose,
+        **({"role": role, "holder": holder,
+            "domains": list(ROLE_BUNDLES[role]["domains"])} if role else {}),
+        **({"modalities": list(modalities)} if modalities else {}),
+        "window": {"from": frm.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                   "until": (frm + timedelta(days=int(window_days)))
+                   .strftime("%Y-%m-%dT%H:%M:%SZ")},
+        "posture": posture, "approved": approved_ref,
+    }}
+    return make_memory(agent, kp, scope, body, kind="semantic",
+                       tags=["consent", _slug(role or "-".join(modalities or []))])
+
+
+def consent_key(c: dict) -> str:
+    """One worldline per subject: the role (+holder) or the modality set."""
+    return _slug((c.get("role") or "") + (c.get("holder") or "")
+                 or "-".join(c.get("modalities") or []))
+
+
+def consent_heads(rows: list[dict]) -> list[dict]:
+    """Current head per consent worldline from (id, consent, derived_from,
+    at)-shaped rows, oldest first — revoked shown with its posture, because
+    withdrawn is a state, never an absence (the 0032 idiom, kept)."""
+    superseded = {d for r in rows for d in r.get("derived_from") or []}
+    return [{"id": r["id"], **r["consent"]} for r in rows
+            if r["id"] not in superseded]
+
+
+def revoke_body(head: dict, reason: str = "") -> dict:
+    """The revocation sibling: same worldline, posture revoked — immediate,
+    ungated (stopping access is safe; the record keeps it honest)."""
+    return {"consent": {**{k: v for k, v in head.items() if k != "id"},
+                        "posture": "revoked",
+                        **({"reason": reason} if reason else {})}}
+
+
+def _in_window(c: dict, now: str) -> bool:
+    w = c.get("window") or {}
+    return str(w.get("from", "")) <= now <= str(w.get("until", "~"))
+
+
+def recording_allowed(heads: list[dict], modality: str, now: str) -> bool:
+    """Safer mode (0034 §4): degradation is a posture. The template's default
+    consents recording (a second brain exists to remember); an explicit REVOKED
+    head for the modality drops the organ to safer mode — recording stops. A
+    later granted head (in window) restores it. Recall of already-consented
+    history follows its own grant: nothing here erases; that door is 0026's."""
+    verdict = True
+    for c in heads:
+        if modality not in (c.get("modalities") or []):
+            continue
+        if c.get("posture") == "revoked":
+            verdict = False
+        elif c.get("posture") == "granted" and _in_window(c, now):
+            verdict = True
+    return verdict
+
+
+def may_read(heads: list[dict], role: str, domain: str, now: str) -> bool:
+    """Delegated authority, checked: the role holds a granted, in-window
+    consent whose bundle carries the domain. Sealed classes never delegate —
+    structurally absent from every bundle."""
+    return any(c.get("role") == role and c.get("posture") == "granted"
+               and _in_window(c, now) and domain in (c.get("domains") or [])
+               for c in heads)
+
+
+def token_terms(heads: list[dict], role: str, scope: str, now: str) -> dict | None:
+    """What becky MAY mint for a role holder (covenant 3: she alone mints):
+    a contracts/v0-exact grant — retrieve on this scope — expiring with the
+    consent window. None when no live consent stands: no consent, no token."""
+    live = [c for c in heads
+            if c.get("role") == role and c.get("posture") == "granted"
+            and _in_window(c, now)]
+    if not live:
+        return None
+    until = min(str((c.get("window") or {}).get("until", "~")) for c in live)
+    return {"grants": [{"action": "retrieve", "space": {"scope": scope}}],
+            "expiry": until,
+            "domains": sorted({d for c in live for d in c.get("domains") or []})}
+
+
 def make_charter(agent: dict, kp, scope: str) -> dict:
     """Config-as-memory (R8): the floor's own record carries its law — the
     template named, the vector, the regime, the canon. The glass reads the

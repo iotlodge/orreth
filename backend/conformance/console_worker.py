@@ -49,6 +49,12 @@ here in cognition (the plane verifies, never signs):
     acquisition-shaped plan offers "…and keep it fresh" at its gate — checked
     and approved, the SAME word fans the plan and opens the subscription; the
     domain package names its supply line.
+  · consent   — 0034 §4: granting a ROLE access to a person's memory (or
+    resuming a recording) STAGES at the human's gate with its bundle readable;
+    revocation acts NOW — safety never waits. Consent withdrawn drops the
+    parlor's recorder to SAFER MODE: exchanges are answered, never written;
+    what was recorded under consent stays readable under its own grant. becky
+    keeps the ledger — the sealed never delegates.
   · upload    — multimodal admission (0029): a file enters as an ask (verb
     "upload" to the librarian, bars 256KB · txt/md/json/csv/pdf/png/jpg). The
     artifact lands signed (ingested-archive); text-bearing formats extract to
@@ -543,6 +549,129 @@ def call(port: int, method: str, path: str, payload=None):
     with urllib.request.urlopen(req, timeout=8) as r:
         b = r.read()
         return json.loads(b) if b[:1] in (b"{", b"[") else b
+
+
+def wire_consents(port: int, scope: str) -> list[dict]:
+    """The consent ledger from the wire (0034 §4): current head per worldline,
+    read under the librarian's seat — revoked shown with its posture."""
+    from datetime import datetime, timedelta, timezone
+    _, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return []
+    rows = []
+    for h in r.get("hits", []):
+        if "consent" not in (h.get("tags") or []):
+            continue
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        if isinstance(body, dict) and "consent" in body:
+            rows.append({"id": h["ref"], "consent": body["consent"],
+                         "derived_from": h.get("derived_from") or [],
+                         "at": h.get("occurred_at", "")})
+    rows.sort(key=lambda x: x["at"])
+    return continuity.consent_heads(rows)
+
+
+def _consent_head(port: int, scope: str, *, role: str | None = None,
+                  modality: str | None = None) -> dict | None:
+    for c in wire_consents(port, scope):
+        if role and c.get("role") == role:
+            return c
+        if modality and modality in (c.get("modalities") or []):
+            return c
+    return None
+
+
+def write_revocation(port: int, scope: str, *, role: str | None = None,
+                     modality: str | None = None, reason: str = "") -> str:
+    """Revocation acts NOW (0034 §4): stopping access — or recording — is safe
+    and never waits at a gate. A standing head gets a revoked sibling; a
+    modality with no head gets a fresh revoked worldline (the template's
+    default consented recording, explicitly withdrawn). becky authors: consent
+    is the door-keeper's ledger."""
+    me = {"did": _BECKY.did, "scope": scope}
+    head = _consent_head(port, scope, role=role, modality=modality)
+    if head is not None:
+        rec = make_memory(me, _BECKY.kp, scope,
+                          continuity.revoke_body(head, reason), kind="semantic",
+                          tags=["consent",
+                                continuity.consent_key({k: v for k, v in head.items()
+                                                        if k != "id"})])
+        rec["derived_from"] = [head["id"]]
+    elif modality is not None:
+        rec = continuity.make_consent(me, _BECKY.kp, scope, purpose=reason or
+                                      "the human said stop",
+                                      modalities=[modality], posture="revoked")
+    else:
+        return f"no {role} access stands — nothing to revoke"
+    try:
+        call(port, "POST", "/records", rec)
+    except Exception as e:
+        return f"the revocation stumbled: {e}"
+    what = role and f"{role} access" or f"{modality} recording"
+    print(f"  ↳ consent REVOKED on {scope}: {what} — immediate, on the worldline")
+    return f"{what} revoked — immediate, on the record"
+
+
+def on_consent(port: int, scope: str, r: dict, *, approved: bool = False,
+               declined: bool = False) -> None:
+    """0034 §4 at the gate: GRANTING access to a person's memory — or resuming
+    a recording — is a consequence; the ask stages with its bundle readable,
+    and only the human's word mints the consent record (0012). becky signs:
+    she keeps every door."""
+    role = r.get("role") or None
+    modality = r.get("modality") or None
+    purpose = str(r.get("purpose") or "")
+    days = int(r.get("days") or 30)
+    me = {"did": _BECKY.did, "scope": scope}
+    if declined:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"declined": True,
+                         "reply": "declined — no access opens, and the record "
+                                  "keeps that you chose"}})
+        print(f"  ↳ consent declined at the gate ({role or modality})")
+        return
+    if approved:
+        rec = continuity.make_consent(me, _BECKY.kp, scope, purpose=purpose,
+                                      role=role, holder=str(r.get("holder") or ""),
+                                      modalities=[modality] if modality else None,
+                                      window_days=days,
+                                      approved_ref=str(r.get("id") or ""))
+        head = _consent_head(port, scope, role=role, modality=modality)
+        if head is not None:                  # one worldline per subject (0032's idiom)
+            rec["derived_from"] = [head["id"]]
+        call(port, "POST", "/records", rec)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"consent": rec["id"],
+                         "reply": f"opened on your word — "
+                                  f"{role or modality}, a {days}-day window"}})
+        print(f"  ↳ consent OPENED: {role or modality} — {rec['id'][:18]}…")
+        return
+    b = continuity.ROLE_BUNDLES.get(role or "", {})
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "staged",
+          "result": {"held": "access to a person's memory is a consequence — "
+                             "open or decline at the gate (0034 §4)",
+                     "terms": (f"{role}: {' · '.join(b.get('domains', []))} — "
+                               f"{b.get('note', '')} · {days}-day window"
+                               if role else
+                               f"resume {modality} recording · {days}-day window")
+                     + " · the sealed never delegates"}})
+    print(f"  ↳ consent ask staged ({role or modality}) — the gate waits")
 
 
 _CHARTERED: set[str] = set()          # scopes whose continuity charter stands
@@ -2818,6 +2947,8 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     if name == "librarian":                   # the desk answers her card too (0032)
         facts["subscriptions"] = wire_subscriptions(port, scope)
         facts["deliveries"] = wire_deliveries(port, scope)
+    if name == "becky":                       # the door-keeper's ledger (0034 §4)
+        facts["consents"] = wire_consents(port, scope)
     if name == "grace":                       # the smith reads her shelf (0031 §4)
         u_port = universe_port(port)
         facts["shelf"] = wire_shelf(u_port)
@@ -2933,6 +3064,21 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                       + (f" with field(s) {', '.join(ans['fields'])}" if ans["fields"]
                          else " — sailing alone")
                       + (f" · {ans['template']} template" if ans.get("template") else "")})
+    if ans.get("action") == "consent-grant":  # 0034 §4 — access stages (0012)
+        call(port, "POST", "/requests",
+             {"kind": "consent",
+              **({"role": ans["role"], "purpose": ans.get("purpose", ""),
+                  "days": ans.get("days", 30)} if ans.get("role") else
+                 {"modality": ans["modality"]}),
+              "text": (f"grant {ans['role']} access"
+                       + (f" — “{ans.get('purpose', '')}”" if ans.get("purpose")
+                          else "")
+                       if ans.get("role") else
+                       f"resume {ans['modality']} recording")})
+    if ans.get("action") == "consent-revoke":  # 0034 §4 — safety acts NOW
+        reply = write_revocation(port, scope, role=ans.get("role"),
+                                 modality=ans.get("modality"),
+                                 reason="the human withdrew consent")
     kp, did = resident_key(name, scope)
     voiced = None
     # descriptive answers may be voiced; actions and flow-control words never are —
@@ -2940,9 +3086,19 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     if kp is not None and not ans.get("action") and not ans.get("verbatim"):
         voiced = governed_voice(port, name, did, asked, reply)
     final = voiced or reply
+    # safer mode (0034 §4): consent withdrawn ⇒ the parlor's recorder falls
+    # quiet — the exchange is still ANSWERED, never written. Recall of what was
+    # recorded under consent follows its own grant; nothing here erases.
+    recordable = continuity.recording_allowed(wire_consents(port, scope),
+                                              "conversation", NOW())
+    if kp is not None and not recordable:
+        final += "  ⸱  (unrecorded — conversation consent is withdrawn; safer mode)"
     call(port, "POST", "/requests/resolve",
          {"id": r["id"], "status": "done",
           "result": {"reply": final, "voiced": bool(voiced), "by": did}})
+    if kp is not None and not recordable:
+        print(f"  ↳ parlor · {name} answered UNRECORDED at {scope} — safer mode (0034 §4)")
+        return
     if kp is not None:                    # embodied residents sign the audience
         body = parlor.audience_body(name, asked, final,
                                     session=str(r.get("session") or ""),
@@ -3138,6 +3294,12 @@ def main() -> None:
                             on_subscription(port, scope, r,
                                             approved=r.get("status") == "approved",
                                             declined=r.get("status") == "denied")
+                        elif r.get("kind") == "consent" and \
+                                r.get("status") in ("pending", "approved", "denied"):
+                            handled.add(key)
+                            on_consent(port, scope, r,
+                                       approved=r.get("status") == "approved",
+                                       declined=r.get("status") == "denied")
                     except urllib.error.HTTPError as e:
                         # The floor ANSWERED — a refusal, not a dead wire (probe()'s
                         # law). One poison request must never silence the residents:

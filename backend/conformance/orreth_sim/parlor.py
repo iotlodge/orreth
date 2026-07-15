@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import re
 
-from . import markers, profile
+from . import continuity, markers, profile
 from .identity import NOW
 
 RESIDENTS = ("becky", "vigil", "steward", "governance", "charlotte", "librarian",
@@ -153,7 +153,10 @@ def _card_becky(facts: dict) -> tuple[str, list]:
             "grow this universe: ask me for a new ecosystem, and the shipyard lays a hull.",
             [{"label": "who holds a lease?", "ask": "who holds a lease on this floor?"},
              {"label": "how does joining work?", "ask": "how does an agent join this floor?"},
-             {"label": "grow an ecosystem…", "template": "create ecosystem "}])
+             {"label": "grow an ecosystem…", "template": "create ecosystem "},
+             {"label": "grant access…", "template": "grant caregiver access to "},
+             {"label": "the consent ledger", "ask": "show consents"},
+             {"label": "stop recording…", "template": "stop recording conversation"}])
 
 
 def _card_charlotte(facts: dict) -> tuple[str, list]:
@@ -230,6 +233,47 @@ def answer(name: str, text: str, facts: dict) -> dict:
         return {"reply": f"no one by the name “{name}” is in residence on this floor."}
     t = (text or "").strip().lower()
     if name == "becky":
+        # consent & delegation (0034 §4): granting access to a person's memory
+        # is a consequence — it STAGES; revoking is safety — it acts NOW.
+        # Every consent word travels VERBATIM: access terms are protocol.
+        m = re.match(r"^grant\s+([a-z]+)\s+access"
+                     r"(?:\s+to\s+(.*?))?(?:\s+for\s+(\d+)\s+days?)?$", t)
+        if m and m.group(1) in continuity.ROLE_BUNDLES:
+            role, purpose, days = m.group(1), (m.group(2) or "").strip(), \
+                int(m.group(3) or 30)
+            b = continuity.ROLE_BUNDLES[role]
+            return {"reply": f"staging {role} access — {' · '.join(b['domains'])} "
+                             f"({b['note']}), a {days}-day window"
+                             + (f", purpose: “{purpose}”" if purpose else "")
+                             + ". access to a person's memory is a consequence — "
+                               "the gate waits for you (0012). the sealed never "
+                               "delegates.",
+                    "action": "consent-grant", "role": role, "purpose": purpose,
+                    "days": days, "verbatim": True}
+        m = re.match(r"^revoke\s+([a-z]+)\s+access$", t)
+        if m and m.group(1) in continuity.ROLE_BUNDLES:
+            return {"reply": f"revoking {m.group(1)} access NOW — a new version on "
+                             "its worldline, never an absence. stopping access is "
+                             "safe; what was shared under consent follows its own "
+                             "grant.",
+                    "action": "consent-revoke", "role": m.group(1),
+                    "verbatim": True}
+        m = re.match(r"^stop\s+recording\s+([a-z]+?)s?$", t)
+        if m and m.group(1) in continuity.MODALITIES:
+            return {"reply": f"safer mode — {m.group(1)} recording stops NOW, on "
+                             "the record. what was recorded under consent remains, "
+                             "readable under its own grant (0034 §4).",
+                    "action": "consent-revoke", "modality": m.group(1),
+                    "verbatim": True}
+        m = re.match(r"^resume\s+recording\s+([a-z]+?)s?$", t)
+        if m and m.group(1) in continuity.MODALITIES:
+            return {"reply": f"staging: resume {m.group(1)} recording — recording "
+                             "is a consequence, and consequence waits for you at "
+                             "the gate (0012).",
+                    "action": "consent-grant", "modality": m.group(1),
+                    "verbatim": True}
+        if t.startswith(("show consents", "the consent ledger", "show the consent")):
+            return {"reply": _becky_consents(facts), "verbatim": True}
         tpl, plain = grow_template(text)      # 0034 §7 sp1 — a named template rides
         grown = parse_grow(plain)
         if grown is not None:
@@ -487,6 +531,28 @@ def _issue_words(d: dict) -> str:
     quiet = not (d.get("changed") or d.get("vanished"))
     return (f"issue {n} landed: " + " · ".join(bits)
             + ("" if quiet else " — NEWS"))
+
+
+def _becky_consents(facts: dict) -> str:
+    """The consent ledger, in words (0034 §4): every worldline's head — role or
+    modality, posture, window, purpose. Revoked shown revoked: withdrawn is a
+    state, never an absence."""
+    heads = facts.get("consents") or []
+    if not heads:
+        return ("no consents stand — say “grant caregiver access to <purpose>” "
+                "(it stages at your gate) or “stop recording conversations” "
+                "(safer mode, immediate). the sealed never delegates.")
+    lines = "; ".join(
+        (f"{c.get('role')} ({c.get('holder') or 'unnamed'})" if c.get("role")
+         else " + ".join(c.get("modalities") or ["?"]))
+        + f" — {c.get('posture', '?')}"
+        + (f", until {str((c.get('window') or {}).get('until', ''))[:10]}"
+           if c.get("posture") == "granted" else "")
+        + (f" · {' · '.join(c.get('domains') or [])}" if c.get("domains") else "")
+        + (f" · “{c.get('purpose', '')}”" if c.get("purpose") else "")
+        for c in heads)
+    return (f"{len(heads)} consent worldline(s): {lines}. grants stage at the "
+            "gate; revocation is immediate — stopping access is safe.")
 
 
 def _librarian_desk(facts: dict) -> str:
