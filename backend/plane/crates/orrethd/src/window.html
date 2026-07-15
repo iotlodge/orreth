@@ -164,31 +164,20 @@
     letter-spacing:.03em;margin-top:.15rem;text-transform:none;font-variant:normal}
   .olegend{position:absolute;right:1.1rem;bottom:.6rem;font:.66rem var(--mono);color:var(--faint)}
   .olegend .b{color:var(--brass)}
-  /* ── the Brain Glass (0034 §5): the fourth projection — the same beats,
-       laid out like a mind. Legibility, not neuroscience; JB tunes the map. ── */
+  /* ── the Brain Glass (0034 §5): the fourth projection — a translucent 3D
+       mind in the void, the same beats rendered as neural fire. Rule 7. ── */
   .brainwrap{position:absolute;inset:0;display:none}
   #v-uni[data-proj="brain"] .brainwrap{display:block}
   #v-uni[data-proj="brain"] .oo,#v-uni[data-proj="brain"] .olegend,
   #v-uni[data-proj="brain"] .reslegend{display:none}
-  .bsvg{position:absolute;inset:0;width:100%;height:100%}
-  .bshell{fill:rgba(120,140,190,.045);stroke:rgba(150,170,220,.4);stroke-width:.4}
-  .bfold{fill:none;stroke:rgba(150,170,220,.13);stroke-width:.3}
-  .bglow{pointer-events:none}
-  .blab{font:600 2px var(--mono);fill:rgba(190,205,235,.6);letter-spacing:.35px;text-transform:uppercase}
-  .blab2{font:1.7px var(--mono);fill:rgba(150,165,200,.45)}
-  .bnode{cursor:pointer}
-  .bnode text{font:2.1px var(--mono);fill:#cfd6e4}
-  .bnode .bc{fill:rgba(126,166,255,.75);stroke:rgba(190,210,255,.6);stroke-width:.25}
-  .bnode .bf{fill:rgba(126,166,255,.45)}
-  .borg{fill:var(--brass,#d4a960);opacity:.85;cursor:pointer}
-  .bfire{animation:bfire 2.4s ease-out forwards;pointer-events:none}
-  @keyframes bfire{0%{opacity:.9}100%{opacity:0}}
-  .baxon{stroke:rgba(212,169,96,.4);stroke-width:.35;stroke-dasharray:1.3 1.7}
-  .btoggle{position:absolute;left:1.1rem;bottom:.6rem;font:.66rem var(--mono);
+  #bcanvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
+  .btoggle{position:absolute;left:1.1rem;top:.6rem;font:.66rem var(--mono);
     color:var(--faint);cursor:pointer;z-index:6}
   .btoggle b{color:var(--brass)}
-  .bcore{position:absolute;left:50%;bottom:2.4rem;transform:translateX(-50%);
-    font:.66rem var(--mono);color:var(--faint);text-align:center;pointer-events:none}
+  .bcore{position:absolute;left:50%;bottom:2.9rem;transform:translateX(-50%);
+    font:.66rem var(--mono);color:var(--faint);text-align:center;pointer-events:none;z-index:5}
+  .bhint{position:absolute;font:.7rem var(--mono);color:#ffd9a0;pointer-events:none;
+    text-shadow:0 0 6px rgba(0,0,0,.9);z-index:5;display:none}
   .oleaf{position:absolute;left:50%;top:72%;transform:translate(-50%,0);
     font:.75rem/1.9 var(--mono);color:var(--faint);text-align:center;white-space:nowrap}
   #ocard{position:absolute;z-index:9;width:290px;background:rgba(11,18,38,.98);
@@ -986,98 +975,267 @@ const alertOf=n=>!!n&&(((n.pending||0)>0)
   ||((n.stable||[]).some(s=>s.state==="deprecated"))
   ||((n.farm||[]).some(s=>s.state==="quarantined")));
 const nodeSig=n=>[n.scope,Math.min(n.agents||0,5),(n.agents||0)>5,farmSig(n.farm),resSig(n.residents),alertOf(n)];
-/* ── the Brain Glass (0034 §5): rule 7's fourth projection — rendered from
-     the SAME topoCache the orrery reads, on the same breath; never a second
-     truth. Ecosystems land in regions (JB tunes the map), fields cluster like
-     gyri, organs sit on the functional anatomy, and FIRING is the delta
-     between beats: memory formation glows where the record landed. ── */
-const BREGIONS={
-  prefrontal:{x:27,y:22,lab:"prefrontal",sub:"governance · consent"},
-  parietal:{x:50,y:13,lab:"parietal",sub:"environment"},
-  occipital:{x:76,y:24,lab:"occipital",sub:"sensory"},
-  temporal:{x:40,y:47,lab:"temporal",sub:"memory"},
-  limbic:{x:53,y:32,lab:"limbic",sub:"identity · relationships"},
-  cerebellar:{x:74,y:53,lab:"cerebellar",sub:"procedure"}};
+/* ── the Brain Glass (0034 §5, v2 — JB's concept art is the spec): a
+     TRANSLUCENT 3D MIND in the void. The glass volume is a rotating point
+     cloud with fresnel edge-light (two hemispheres, gyri, cerebellum, stem);
+     the SAME topoCache the orrery reads places every floor as an ember
+     cluster inside the anatomy, the heartbeat chain streaks child→parent as
+     golden signals, and each breath's new memories BURST where they landed.
+     Rule 7: a fourth projection of one truth — the mind, watched thinking. ── */
+const BR3={prefrontal:[.82,.30,0],parietal:[.05,.72,0],occipital:[-.82,.22,0],
+  temporal:[.12,-.30,.58],limbic:[.08,.06,0],cerebellar:[-.62,-.52,0]};
 const BORGAN={becky:"prefrontal",governance:"prefrontal",grace:"prefrontal",
   vigil:"parietal",charlotte:"occipital",librarian:"temporal",steward:"temporal",
   ada:"cerebellar"};
 const BECO={care:"limbic",retail:"occipital",cloud:"parietal"};
-const bregOf=n=>BECO[n]||["prefrontal","parietal","occipital","temporal",
-  "limbic","cerebellar"][[...n].reduce((a,c)=>a+c.charCodeAt(0),0)%6];
+const bhash=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
+const bregOf=n=>BECO[n]||Object.keys(BR3)[bhash(n)%6];
 let BRAINMODE=false; const BPREV={};
+let BG=null;                                 /* the glass runtime */
 function brainToggle(){
   BRAINMODE=!BRAINMODE;
   $("v-uni").dataset.proj=BRAINMODE?"brain":"orrery";
   $("btoggle").innerHTML=`projection: <b>${BRAINMODE?"brain":"orrery"}</b> · click for ${BRAINMODE?"orrery":"brain"}`;
-  renderBrain();
+  if(BRAINMODE){bgInit();renderBrain();BG.on=true;requestAnimationFrame(bgFrame)}
+  else if(BG)BG.on=false;
 }
-function renderBrain(){
+function bgInit(){
+  if(BG)return;
   const B=$("brainwrap");
-  if(!B||!BRAINMODE||$("v-uni").classList.contains("hide"))return;
-  const t=topoCache;
-  if(!t){B.innerHTML=`<div class="oleaf">the daemon is dark — no mind to draw</div>`;return}
-  /* the firing: what moved since the last breath — and the glow that stays */
-  const fires=[]; const walk=n=>{if(!n)return;
-    const prev=BPREV[n.scope]; BPREV[n.scope]=n.records;
-    if(prev!==undefined&&n.records>prev)fires.push({scope:n.scope,d:n.records-prev});
-    (n.children||[]).forEach(walk)}; walk(t);
-  const at={}, load={};                      /* scope → [x,y] · region → records */
-  Object.keys(BREGIONS).forEach(r=>load[r]=0);
-  load.temporal+=t.records||0;               /* the floor's own record lives in memory */
-  const ecos=t.children||[];
-  let nodes="";
-  ecos.forEach((e,i)=>{
-    const reg=bregOf(e.scope.split(":").pop()), R=BREGIONS[reg];
-    const jx=((i%3)-1)*7, jy=(i%2?4:-3);
-    const x=R.x+jx, y=R.y+6+jy, r=Math.min(4,1.6+Math.log2(1+(e.records||0))*.4);
-    at[e.scope]=[x,y]; load[reg]+=e.records||0;
-    nodes+=`<g class="bnode" onclick="floorGo('${encodeURIComponent(e.scope)}')">
-      <line class="bfold" x1="${x}" y1="${y}" x2="${R.x}" y2="${R.y}"/>
-      <circle class="bc" cx="${x}" cy="${y}" r="${r}"/>
-      <text x="${x+r+.8}" y="${y+.7}">${e.scope.split(":").pop()}</text></g>`;
-    (e.children||[]).forEach((f,j)=>{        /* fields cluster like gyri */
-      const a=(j/Math.max(e.children.length,1))*6.28, fx=x+Math.cos(a)*(r+2.4),
-        fy=y+Math.sin(a)*(r+2.4);
-      at[f.scope]=[fx,fy]; load[reg]+=f.records||0;
-      nodes+=`<g class="bnode" onclick="floorGo('${encodeURIComponent(f.scope)}')">
-        <circle class="bf" cx="${fx}" cy="${fy}" r="1"/>
-        <text x="${fx+1.6}" y="${fy+.6}" style="font-size:1.6px;opacity:.7">${f.scope.split(":").pop()}</text></g>`;});
+  B.innerHTML=`<canvas id="bcanvas"></canvas><div class="bhint" id="bhint"></div>
+    <div class="bcore" id="bcore"></div>`;
+  /* the glass volume: fibonacci-sampled hemispheres with gyral perturbation */
+  const pts=[],folds=[];
+  const surf=(u,v,side)=>{                   /* u,v on unit sphere → brain surface */
+    const th=Math.acos(1-2*u), ph=6.28318*v;
+    let nx=Math.sin(th)*Math.cos(ph), ny=Math.cos(th), nz=Math.sin(th)*Math.sin(ph);
+    const bump=.055*Math.sin(7*th+3*ph)+.05*Math.sin(11*ph+2*th)+.04*Math.sin(5*th-7*ph);
+    const r=1+bump;
+    return {x:nx*1.34*r,y:ny*.90*r+.06,z:(nz*.52*r+ .30)*side,
+            nx,ny,nz:nz*side};
+  };
+  for(const side of[-1,1])for(let i=0;i<1150;i++){
+    const p=surf((i+.5)/1150,i/1.61803398875%1,side);
+    if(p.y<-.62&&p.x<-.1)continue;           /* clear room for cerebellum/stem */
+    pts.push(p);
+  }
+  const plasma=[];                           /* the glass MASS: soft interior light */
+  for(let i=0;plasma.length<40&&i<400;i++){const h=bhash("pl"+i);
+    const x=((h%89)/89-.5)*2.5,y=(((h>>3)%83)/83-.5)*1.7+.06,
+      z=(((h>>6)%79)/79-.5)*1.6;
+    if((x/1.25)**2+(y/.8)**2+(z/.78)**2>1)continue;   /* mass stays inside the form */
+    plasma.push({x,y,z,r:.17+((h>>9)%7)*.03});}
+  for(let i=0;i<240;i++){                    /* cerebellum: finely ridged blob */
+    const u=(i+.5)/240,v=i/1.61803398875%1;
+    const th=Math.acos(1-2*u),ph=6.28318*v;
+    const nx=Math.sin(th)*Math.cos(ph),ny=Math.cos(th),nz=Math.sin(th)*Math.sin(ph);
+    const r=1+.05*Math.sin(14*ph)+.03*Math.sin(9*th);
+    pts.push({x:-.62+nx*.40*r,y:-.52+ny*.26*r,z:nz*.44*r,nx,ny,nz});
+  }
+  for(let i=0;i<50;i++){                     /* the stem, descending */
+    const t=i/50,a=6.28318*(i%10)/10,r=.10-.04*t;
+    pts.push({x:-.28-.12*t+Math.cos(a)*r,y:-.62-.42*t,z:Math.sin(a)*r,
+              nx:Math.cos(a),ny:0,nz:Math.sin(a)});
+  }
+  for(let f=0;f<96;f++){                     /* gyri flow front-to-back, wormlike */
+    const side=f%2?1:-1,line=[];
+    let u=.12+.76*((f*.61803)%1),v=(f*.377)%1;
+    for(let s=0;s<14;s++){
+      line.push(surf(u,v,side));
+      u+=.028;v+=.012*Math.sin(f*2.7+s*1.1);
+    }
+    folds.push(line);
+  }
+  for(let m=0;m<3;m++){                      /* the medial walls — the hemisphere line */
+    for(const side of[-1,1]){const line=[];
+      for(let s=0;s<=16;s++){const a=.25+s/16*2.6;
+        line.push({x:Math.cos(a)*(1.05-m*.12),y:Math.sin(a)*(.72-m*.09)+.06,
+                   z:side*.045,medial:true});}
+      folds.push(line);}
+  }
+  for(let c=0;c<6;c++){                      /* cerebellar stripes (concept 3) */
+    const line=[];
+    for(let s=0;s<=12;s++){const a=s/12*6.283;
+      line.push({x:-.62+Math.cos(a)*.40,y:-.52+(c-2.5)*.075,
+                 z:Math.sin(a)*.44,medial:false});}
+    folds.push(line);
+  }
+  /* federation axons (concept 2): filaments leaving the skull */
+  const axons=[];
+  for(let a=0;a<7;a++){const ph=.45+a*.9,line=[];
+    for(let s=0;s<8;s++){const t=1+s*.09;
+      line.push({x:Math.cos(ph)*1.18*t,y:.1+Math.sin(ph*2.3)*.7*t*.5,
+                 z:Math.sin(ph)*.9*t*(a%2?1:-1)});}
+    axons.push(line);}
+  BG={pts,folds,axons,plasma,ang:2.35,drag:null,parts:[],flashes:[],clusters:[],hit:[],
+      last:0,on:false,emit:0};
+  const cv=$("bcanvas");
+  cv.addEventListener("mousedown",e=>{BG.drag={x:e.clientX,a:BG.ang};cv.style.cursor="grabbing"});
+  addEventListener("mousemove",e=>{if(BG.drag)BG.ang=BG.drag.a+(e.clientX-BG.drag.x)*.008;
+    else bgHover(e)});
+  addEventListener("mouseup",()=>{BG.drag=null;cv.style.cursor="grab"});
+  cv.addEventListener("click",e=>{const h=bgNear(e);if(h&&h.scope)floorGo(encodeURIComponent(h.scope))});
+}
+function bgNear(e){
+  const r=$("bcanvas").getBoundingClientRect();
+  const mx=e.clientX-r.left,my=e.clientY-r.top;
+  let best=null,bd=18*18;
+  for(const h of BG.hit){const d=(h.sx-mx)**2+(h.sy-my)**2;
+    if(d<bd){bd=d;best=h}}
+  return best;
+}
+function bgHover(e){
+  const el=$("bhint");if(!el||!BG||!BG.on)return;
+  const h=bgNear(e),r=$("bcanvas").getBoundingClientRect();
+  if(h){el.style.display="block";el.style.left=(h.sx+r.left- r.left+12)+"px";
+    el.style.top=(h.sy+8)+"px";
+    el.textContent=`${h.name} · ${h.records}m — ${h.region}`;}
+  else el.style.display="none";
+}
+/* topology → clusters (the planets and moons BECOME the active regions) */
+function renderBrain(){
+  if(!BRAINMODE||!BG)return;
+  const t=topoCache;if(!t)return;
+  const cl=[],deltas=[];
+  const place=(n,region,depth)=>{
+    const R=BR3[region],h=bhash(n.scope);
+    const j=.14+.05*depth;
+    const p=[R[0]+((h%97)/97-.5)*j*2,R[1]+(((h>>3)%89)/89-.5)*j*2,
+             (region==="temporal"?(h%2?1:-1)*Math.abs(R[2]):R[2])+(((h>>6)%83)/83-.5)*j];
+    const prev=BPREV[n.scope];BPREV[n.scope]=n.records;
+    if(prev!==undefined&&n.records>prev)deltas.push({p,d:n.records-prev});
+    cl.push({p,scope:n.scope,name:n.scope.split(/[:/]/).pop(),region,
+             records:n.records||0,req:0,parent:null});
+    return cl[cl.length-1];
+  };
+  const core=place(t,"limbic",0);core.name=t.scope;
+  (t.children||[]).forEach(e=>{
+    const eco=place(e,bregOf(e.scope.split(":").pop()),1);eco.parent=core;
+    (e.children||[]).forEach(f=>{place(f,eco.region,2).parent=eco;});
   });
-  /* the organs on the functional anatomy — the same roster the orrery shows */
-  let organsSvg=""; (t.residents||[]).forEach((a,i)=>{
-    const key=reskey(a.role), reg=BORGAN[key]||"limbic", R=BREGIONS[reg];
-    const ang=(i/Math.max((t.residents||[]).length,1))*6.28;
-    const ox=R.x+Math.cos(ang)*3.4, oy=R.y-2+Math.sin(ang)*2.2;
-    organsSvg+=`<circle class="borg" cx="${ox}" cy="${oy}" r=".8"
-      onclick="openParlor('${a.name||""}')"><title>${a.role} — ${reg}</title></circle>`;});
-  /* region glows: where light accumulates is what this universe does with
-     its life (JB's hypothesis, framed as legibility) */
-  let glows="",labels="";
-  Object.entries(BREGIONS).forEach(([r,R])=>{
-    const op=Math.min(.5,.05*Math.log2(1+(load[r]||0)));
-    glows+=`<circle class="bglow" cx="${R.x}" cy="${R.y+3}" r="12"
-      fill="rgba(212,169,96,${op.toFixed(3)})"/>`;
-    labels+=`<text class="blab" x="${R.x}" y="${R.y-3.4}" text-anchor="middle">${R.lab}</text>
-      <text class="blab2" x="${R.x}" y="${R.y-1.2}" text-anchor="middle">${R.sub}</text>`;});
-  /* firing: a flash where each new record landed this breath */
-  let flash="";
-  fires.forEach(f=>{const p=at[f.scope]||[BREGIONS.temporal.x,BREGIONS.temporal.y+3];
-    flash+=`<circle class="bfire" cx="${p[0]}" cy="${p[1]}" r="${2+Math.min(3,f.d*.5)}"
-      fill="none" stroke="rgba(212,169,96,.85)" stroke-width=".5"/>`;});
-  B.innerHTML=`<svg class="bsvg" viewBox="0 0 100 70" preserveAspectRatio="xMidYMid meet">
-    <path class="bshell" d="M 20,44 C 12,38 10,26 18,17 C 26,8 44,4 58,6 C 74,8 88,14 91,26
-      C 93,34 90,41 84,45 C 86,50 83,56 75,58 C 72,63 62,65 57,61 C 50,66 38,65 32,59
-      C 25,58 20,52 20,44 Z"/>
-    <path class="bshell" d="M 62,57 C 64,52 76,51 82,55 C 83,61 72,66 64,63 C 62,61 61,59 62,57 Z"/>
-    <path class="bshell" d="M 57,61 C 56,65 54,68 52,71 L 58,71 C 59,67 59,64 60,61 Z"/>
-    <path class="bfold" d="M 24,30 C 34,22 48,20 60,22 M 30,40 C 40,34 52,33 64,36
-      M 36,14 C 46,10 58,10 68,13 M 66,42 C 72,38 80,36 86,32"/>
-    <line class="baxon" x1="88" y1="22" x2="99" y2="14"/>
-    <text class="blab2" x="99" y="12" text-anchor="end">federation · 0022 phase 3</text>
-    ${glows}${labels}${nodes}${organsSvg}${flash}
-  </svg>
-  <div class="bcore">${t.scope} — the same beats as the orrery, laid out like a mind ·
-    a projection, never a second truth (rule 7) · firing = this breath's new memories</div>`;
+  (t.residents||[]).forEach(a=>{             /* organs shimmer on the anatomy */
+    const reg=BORGAN[reskey(a.role)]||"limbic",R=BR3[reg],h=bhash(a.name||a.role);
+    cl.push({p:[R[0]+((h%53)/53-.5)*.2,R[1]+(((h>>2)%47)/47-.5)*.16,
+      (reg==="temporal"?(h%2?1:-1)*Math.abs(R[2]):R[2])],organ:true,
+      scope:null,name:a.role,region:reg,records:0});
+  });
+  BG.clusters=cl;
+  deltas.forEach(d=>{                        /* memory formation: the burst */
+    BG.flashes.push({p:d.p,age:0,mag:Math.min(4,1+d.d*.4)});
+    for(let i=0;i<Math.min(10,3+d.d*2);i++)bgSpawn(d.p,null,1.6);
+  });
+  $("bcore").textContent=`${t.scope} — the mind, watched thinking · the same beats as the orrery, `+
+    `a projection, never a second truth (rule 7) · gold = the heartbeat chain · bursts = this breath's new memories`;
+}
+function bgSpawn(from,to,speed){
+  BG.parts.push({a:from.slice?from.slice():from,b:to,t:0,
+    sp:(speed||1)*(.35+Math.random()*.25),trail:[]});
+}
+function bgFrame(ts){
+  if(!BG||!BG.on)return;
+  if($("v-uni").classList.contains("hide")||document.hidden){requestAnimationFrame(bgFrame);return}
+  const cv=$("bcanvas"),W=cv.clientWidth,H=cv.clientHeight;
+  if(cv.width!==W*2){cv.width=W*2;cv.height=H*2}
+  const g=cv.getContext("2d");g.setTransform(2,0,0,2,0,0);
+  const dt=Math.min(.06,(ts-BG.last)/1000||.016);BG.last=ts;
+  if(!BG.drag)BG.ang+=dt*.14;
+  /* the heartbeat chain: every live floor signals its parent, on a stagger */
+  BG.emit-=dt;
+  if(BG.emit<=0){BG.emit=.5;
+    const c=BG.clusters.filter(c=>c.parent&&Math.random()<.4);
+    c.forEach(c2=>bgSpawn(c2.p,c2.parent.p,1));}
+  /* project */
+  const S=Math.min(W,H)*.34,cx=W/2,cy=H/2-8,F=3.4,tilt=-.22;
+  const ca=Math.cos(BG.ang),sa=Math.sin(BG.ang),ct=Math.cos(tilt),st=Math.sin(tilt);
+  const proj=p=>{const x=p.x??p[0],y=p.y??p[1],z=p.z??p[2];
+    const rx=x*ca+z*sa,rz=-x*sa+z*ca;
+    const ry=y*ct-rz*st,rz2=y*st+rz*ct;
+    const k=F/(F-rz2);
+    return [cx+rx*k*S,cy-ry*k*S,rz2,k];};
+  g.clearRect(0,0,W,H);
+  const bgr=g.createRadialGradient(cx,cy,0,cx,cy,Math.max(W,H)*.7);
+  bgr.addColorStop(0,"rgba(24,18,66,.85)");bgr.addColorStop(1,"rgba(8,7,22,0)");
+  g.fillStyle=bgr;g.fillRect(0,0,W,H);
+  g.globalCompositeOperation="lighter";
+  /* the glass MASS: soft interior plasma — the volume reads translucent */
+  for(const p of BG.plasma){
+    const q=proj(p);const R=p.r*S*q[3];
+    const gr=g.createRadialGradient(q[0],q[1],0,q[0],q[1],R);
+    gr.addColorStop(0,"rgba(84,96,255,.075)");gr.addColorStop(1,"rgba(60,60,220,0)");
+    g.fillStyle=gr;g.beginPath();g.arc(q[0],q[1],R,0,6.283);g.fill();
+  }
+  /* federation axons — faint reach beyond the skull */
+  g.lineWidth=.9;
+  BG.axons.forEach(l=>{g.beginPath();
+    l.forEach((p,i)=>{const q=proj(p);i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])});
+    g.strokeStyle="rgba(90,120,255,.16)";g.stroke();});
+  /* gyral folds — the bright squiggles the glass is made of; the medial
+     walls run warmer (concept 1's hot center line) */
+  BG.folds.forEach(l=>{g.beginPath();
+    l.forEach((p,i)=>{const q=proj(p);i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])});
+    g.strokeStyle=l[0].medial?"rgba(168,130,255,.30)":"rgba(108,145,255,.22)";
+    g.lineWidth=l[0].medial?1.7:1.4;g.stroke();});
+  /* the glass shell: fresnel points — edges bright, faces dim = translucency */
+  for(const p of BG.pts){
+    const q=proj(p);
+    const nz=Math.abs((p.nx??0)*sa*-1+(p.nz??0)*ca);   /* normal toward viewer */
+    const fres=Math.pow(1-Math.min(nz,1),2.0);
+    const a=.10+.58*fres,r=(.9+1.5*fres)*q[3];
+    g.fillStyle=`rgba(${110+90*fres|0},${140+70*fres|0},255,${a.toFixed(3)})`;
+    g.fillRect(q[0]-r/2,q[1]-r/2,r,r);
+  }
+  /* the embers: every floor of the universe, alight where it lives */
+  BG.hit=[];
+  for(const c of BG.clusters){
+    const q=proj(c.p);
+    if(c.organ){
+      const tw=.5+.5*Math.sin(ts*.003+bhash(c.name));
+      g.fillStyle=`rgba(212,169,96,${(.25+.3*tw).toFixed(2)})`;
+      g.beginPath();g.arc(q[0],q[1],1.6*q[3],0,6.283);g.fill();
+      continue;
+    }
+    const mag=Math.min(1, .18+.16*Math.log2(1+c.records)/3);
+    const R=(5+13*mag)*q[3];
+    const gr=g.createRadialGradient(q[0],q[1],0,q[0],q[1],R);
+    gr.addColorStop(0,`rgba(255,236,200,${(.75*mag+.15).toFixed(2)})`);
+    gr.addColorStop(.35,`rgba(255,185,105,${(.42*mag).toFixed(2)})`);
+    gr.addColorStop(1,"rgba(255,150,60,0)");
+    g.fillStyle=gr;g.beginPath();g.arc(q[0],q[1],R,0,6.283);g.fill();
+    BG.hit.push({sx:q[0],sy:q[1],scope:c.scope,name:c.name,records:c.records,region:c.region});
+  }
+  /* the signals: golden fire along the heartbeat chain */
+  for(let i=BG.parts.length-1;i>=0;i--){
+    const s=BG.parts[i];s.t+=dt*s.sp;
+    if(s.t>=1){BG.parts.splice(i,1);continue}
+    let px,py,pz;
+    if(s.b){                                  /* curved path child → parent */
+      const m=[(s.a[0]+s.b[0])/2,(s.a[1]+s.b[1])/2+.35,(s.a[2]+s.b[2])/2];
+      const u=s.t,v=1-u;
+      px=v*v*s.a[0]+2*u*v*m[0]+u*u*s.b[0];
+      py=v*v*s.a[1]+2*u*v*m[1]+u*u*s.b[1];
+      pz=v*v*s.a[2]+2*u*v*m[2]+u*u*s.b[2];
+    }else{                                    /* a burst: radiate and fade */
+      const h=bhash(i+"b"),d=[.4*Math.sin(h),.4*Math.cos(h>>2),.3*Math.sin(h>>4)];
+      px=s.a[0]+d[0]*s.t;py=s.a[1]+d[1]*s.t;pz=s.a[2]+d[2]*s.t;
+    }
+    s.trail.unshift([px,py,pz]);if(s.trail.length>7)s.trail.pop();
+    g.beginPath();
+    s.trail.forEach((p,j)=>{const q=proj(p);j?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])});
+    g.strokeStyle=`rgba(255,200,120,${(.5*(1-s.t)).toFixed(2)})`;g.lineWidth=1.3;g.stroke();
+    const q=proj([px,py,pz]);
+    g.fillStyle=`rgba(255,246,224,${(.9*(1-s.t*.6)).toFixed(2)})`;
+    g.beginPath();g.arc(q[0],q[1],2.1*q[3],0,6.283);g.fill();
+  }
+  /* the bursts: memory formation, flaring where the record landed */
+  for(let i=BG.flashes.length-1;i>=0;i--){
+    const f=BG.flashes[i];f.age+=dt;
+    if(f.age>1.6){BG.flashes.splice(i,1);continue}
+    const q=proj(f.p),R=(6+30*f.age*f.mag)*q[3],a=.55*(1-f.age/1.6);
+    g.strokeStyle=`rgba(255,210,130,${a.toFixed(2)})`;g.lineWidth=1.6;
+    g.beginPath();g.arc(q[0],q[1],R,0,6.283);g.stroke();
+  }
+  g.globalCompositeOperation="source-over";
+  requestAnimationFrame(bgFrame);
 }
 function renderOrrery(){
   const O=$("orrery"); if(!O||$("v-uni").classList.contains("hide"))return;
