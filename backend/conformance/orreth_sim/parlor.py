@@ -692,6 +692,15 @@ def _room_librarian(facts: dict) -> list[dict]:
                          "severity": "medium" if d.get("doubted") else ""}
                         for d in facts.get("domains") or []] or
                        [{"text": "no domains yet — a gather starts one", "meta": ""}])},
+        {"kind": "list", "title": "the mirror (0034)",
+         "items": _sev([{"text": i.get("resident", "?"),
+                         "meta": f"{i.get('exchanges', 0)} exchange(s) · "
+                                 f"{len(i.get('repeats') or [])} repeated ask(s) · "
+                                 f"{i.get('friction', 0)} friction",
+                         "severity": "medium" if i.get("friction") else ""}
+                        for i in facts.get("interop") or []] or
+                       [{"text": "no reflections yet — the mirror reads the "
+                                 "audiences on its beat", "meta": ""}])},
         {"kind": "doc", "title": "the portrait (0025)",
          "text": facts.get("profile_text") or
                  "a blank page — assert with “my profile: …” and it fills."},

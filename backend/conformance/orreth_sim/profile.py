@@ -45,10 +45,11 @@ def parse_forget(text: str):
 def make_claim(agent: dict, kp, scope: str, claim: str, *, asserted_by: str,
                quoted: str | None = None, inferred_from: str | None = None) -> dict:
     """A profile claim with its provenance and its rung on the ladder (0025 §2):
-    the human enters trusted, the Librarian enters untrusted — always."""
-    if asserted_by not in ("human", "librarian"):
+    the human enters trusted; the Librarian — and the Mirror (0034 sp3) —
+    enter untrusted, always, and every inference names its evidence."""
+    if asserted_by not in ("human", "librarian", "mirror"):
         raise ValueError(f"unknown asserter: {asserted_by!r}")
-    if asserted_by == "librarian" and not inferred_from:
+    if asserted_by != "human" and not inferred_from:
         raise ValueError("an inference names its evidence — inferred_from is required")
     body: dict = {"profile": {"claim": claim, "asserted_by": asserted_by,
                               "state": "trusted" if asserted_by == "human"

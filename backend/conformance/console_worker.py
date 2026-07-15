@@ -49,6 +49,11 @@ here in cognition (the plane verifies, never signs):
     acquisition-shaped plan offers "…and keep it fresh" at its gate — checked
     and approved, the SAME word fans the plan and opens the subscription; the
     domain package names its supply line.
+  · mirror    — 0034 sp3, JB's seed: a standing assessor (its own self, no seat,
+    no voice) reads the Human↔Resident audiences each beat and updates BOTH
+    sides — profile observations (untrusted, evidenced) and friction onto
+    grace's shelf — with the interop ledger as receipt. Assessor ≠ assessed
+    (0005); safer-mode exchanges were never written, so consent bounds it too.
   · consent   — 0034 §4: granting a ROLE access to a person's memory (or
     resuming a recording) STAGES at the human's gate with its bundle readable;
     revocation acts NOW — safety never waits. Consent withdrawn drops the
@@ -117,8 +122,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import (continuity, crypto, fingertip, improver, markers, parlor,
-                        profile, purge, serials, shipyard)
+from orreth_sim import (continuity, crypto, fingertip, improver, markers, mirror,
+                        parlor, profile, purge, serials, shipyard)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -346,6 +351,7 @@ def profile_read(port: int, scope: str) -> str:
                 "moments you ask me to remember become observations.")
     yours = [(r, c) for r, c in claims if c.get("asserted_by") == "human"]
     mine = [(r, c) for r, c in claims if c.get("asserted_by") == "librarian"]
+    mirrored = [(r, c) for r, c in claims if c.get("asserted_by") == "mirror"]
     parts = []
     if yours:
         parts.append("you told me: " + " · ".join(
@@ -353,6 +359,10 @@ def profile_read(port: int, scope: str) -> str:
     if mine:
         parts.append("I observed (untrusted until corroborated): " + " · ".join(
             f"{c['claim']} [{r.split(':')[-1][:8]}]" for r, c in mine[:6]))
+    if mirrored:                              # 0034 sp3 — the mirror's strokes, labeled
+        parts.append("the mirror noticed (untrusted, from your conversations): "
+                     + " · ".join(f"{c['claim']} [{r.split(':')[-1][:8]}]"
+                                  for r, c in mirrored[:6]))
     return "  ⸱  ".join(parts)
 
 
@@ -672,6 +682,160 @@ def on_consent(port: int, scope: str, r: dict, *, approved: bool = False,
                                f"resume {modality} recording · {days}-day window")
                      + " · the sealed never delegates"}})
     print(f"  ↳ consent ask staged ({role or modality}) — the gate waits")
+
+
+# ---------------------------------------------------------------- the Mirror (0034 sp3)
+
+MIR = _seed("mirror")                 # the assessor — its own self, no seat, no voice
+MIR_DID = crypto.did_key_for(MIR.public)
+_MIRROR_LAST = 0.0
+MIRROR_EVERY = int(os.environ.get("ORRETH_MIRROR_EVERY", "600"))
+
+
+def wire_audiences(port: int, scope: str) -> list[dict]:
+    """Every Human↔Resident exchange on this floor's record — what the Mirror
+    may read. Exchanges answered under safer mode were never written; consent
+    bounds the reflection (0034 §4)."""
+    from datetime import datetime, timedelta, timezone
+    _, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return []
+    out = []
+    for h in r.get("hits", []):
+        if "parlor" not in (h.get("tags") or []):
+            continue
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        if isinstance(body, dict) and "parlor" in body:
+            out.append({"ref": h["ref"], "resident": str(body.get("parlor") or "?"),
+                        "asked": str(body.get("asked") or ""),
+                        "reply": str(body.get("reply") or ""),
+                        "author": h.get("author", ""),
+                        "at": h.get("occurred_at", "")})
+    out.sort(key=lambda x: x["at"])
+    return out
+
+
+def wire_interop(port: int, scope: str) -> list[dict]:
+    """The interoperability ledger from the wire: current head per resident."""
+    from datetime import datetime, timedelta, timezone
+    _, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return []
+    rows = []
+    for h in r.get("hits", []):
+        if "mirror" not in (h.get("tags") or []):
+            continue
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        if isinstance(body, dict) and "interop" in body:
+            rows.append({"id": h["ref"], "interop": body["interop"],
+                         "derived_from": h.get("derived_from") or [],
+                         "at": h.get("occurred_at", "")})
+    rows.sort(key=lambda x: x["at"])
+    return mirror.interop_heads(rows)
+
+
+def mirror_beat() -> None:
+    """The Mirror's standing duty (0034 sp3), one reflection per round across
+    every floor in reach: read the audiences since the last reflection, sort
+    them (identity, never meaning), and write BOTH sides — profile
+    observations (untrusted, evidenced, 0025) and friction onto grace's shelf
+    (0031 §4) — with the interop ledger as the receipt. Assessor ≠ assessed
+    (0005): the Mirror authors everything and is the subject of nothing."""
+    global _MIRROR_LAST
+    if time.time() - _MIRROR_LAST < MIRROR_EVERY:
+        return
+    _MIRROR_LAST = time.time()               # set early — a failing beat never hot-loops
+    for p, s in sorted(FLOOR_SCOPES.items()):
+        try:
+            _mirror_floor(p, s)
+        except Exception as e:
+            print(f"    (the mirror clouded at {s}: {e})")
+
+
+def _mirror_floor(port: int, scope: str) -> None:
+    audiences = wire_audiences(port, scope)
+    if not audiences:
+        return
+    heads = {h.get("resident"): h for h in wire_interop(port, scope)}
+    known = {str(c.get("claim", "")) for _, c in profile_claims(port, scope)
+             if c.get("asserted_by") == "mirror"}
+    me = {"did": MIR_DID, "scope": scope}
+    residents = sorted({a["resident"] for a in audiences})
+    for name in residents:
+        prev = heads.get(name)
+        since = str((prev or {}).get("window", {}).get("to", ""))
+        mine = [a for a in audiences if a["resident"] == name]
+        if not any(a["at"] > since for a in mine):
+            continue                          # nothing new to reflect for this seat
+        # the relationship is CUMULATIVE — the sweep re-reads the whole story,
+        # so a question repeated across sweeps is still a repeat; the watermark
+        # only decides whether a new sibling is owed
+        stats = mirror.assess(mine, mirror_did=MIR_DID).get(name)
+        if not stats:
+            continue
+        window = {"from": mine[0]["at"], "to": mine[-1]["at"]}
+        rec = mirror.make_interop(me, MIR, scope, name, stats, window=window,
+                                  prev=(prev or {}).get("id"))
+        try:
+            call(port, "POST", "/records", rec)
+        except Exception as e:
+            print(f"    (interop write failed: {e})")
+            continue
+        for words in mirror.observations(name, stats):
+            if words in known:
+                continue                      # an observation is made once
+            obs = profile.make_claim(me, MIR, scope, words,
+                                     asserted_by="mirror", inferred_from=rec["id"])
+            try:
+                call(port, "POST", "/records", obs)
+                known.add(words)
+            except Exception as e:
+                print(f"    (mirror observation write failed: {e})")
+        note = mirror.friction_note(name, stats)
+        if note and len(stats["friction"]) <= int((prev or {}).get("friction", 0)):
+            note = None                       # friction files only when it GROWS
+        if note:
+            u_port = universe_port(port)
+            fb = make_memory({"did": MIR_DID, "scope": UNIVERSE_SCOPE}, MIR,
+                             UNIVERSE_SCOPE,
+                             {"feedback": {"asset": f"parlor-{name}",
+                                           "quoted": note, "by": "mirror"}},
+                             kind="semantic",
+                             tags=["asset-feedback", f"parlor-{name}"])
+            fb["derived_from"] = [rec["id"]]
+            try:
+                call(u_port, "POST", "/records", fb)
+            except Exception as e:
+                print(f"    (mirror friction write failed: {e})")
+        print(f"  ↳ the mirror reflects at {scope}: {name} — "
+              f"{stats['exchanges']} exchange(s), {len(stats['repeats'])} repeat(s), "
+              f"{len(stats['friction'])} friction — both sides updated")
 
 
 _CHARTERED: set[str] = set()          # scopes whose continuity charter stands
@@ -2379,8 +2543,11 @@ def wire_receipts(port: int, refs: list) -> list[dict]:
         elif "asset" in body:
             out.append({"ref": ref, "what": "the version this proposal succeeds"})
         elif "feedback" in body:
-            quoted = str((body.get("feedback") or {}).get("quoted") or "")[:80]
-            out.append({"ref": ref, "what": f"the human's words: “{quoted}”"})
+            fb = body.get("feedback") or {}
+            quoted = str(fb.get("quoted") or "")[:80]
+            who = "the mirror's finding" if fb.get("by") == "mirror" \
+                else "the human's words"
+            out.append({"ref": ref, "what": f"{who}: “{quoted}”"})
         elif "marker" in body:
             why = str((body.get("marker") or {}).get("reason") or "")[:80]
             out.append({"ref": ref, "what": f"a graded review — {why}"})
@@ -3019,6 +3186,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
             facts["domains"] = domain_packages(port, scope)  # 0031 §5
             facts["subscriptions"] = wire_subscriptions(port, scope)  # 0032 §1
             facts["deliveries"] = wire_deliveries(port, scope)  # 0032 §2
+            facts["interop"] = wire_interop(port, scope)  # 0034 sp3 — the mirror
         ws = parlor.workspace(name, facts)
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
@@ -3328,6 +3496,7 @@ def main() -> None:
                     if scope == UNIVERSE_SCOPE:
                         monitor_beat(port)    # the standing job beats like an organ
                         improver_beat(port)   # and the improver reads the receipts
+                        mirror_beat()         # the mirror reflects every floor (0034 sp3)
 
             except Exception as e:
                 scopes.pop(port, None)
