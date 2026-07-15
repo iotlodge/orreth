@@ -78,6 +78,12 @@ def test_the_provisioner_renders_the_template():
         assert prof["distortion_contracts"]["identity"]["distortion_bound"] == 0.0
         assert prof["label_canon"]["recalled"] == "never spoken as memory"
         assert prof["memory"]["distilled_retention"] == "P3650D"
+        # 0034 §5 — the Brain Glass is a template property, a fourth
+        # projection under rule 7; the region map is JB's to tune
+        assert prof["layout"] == "brain"
+        assert set(prof["brain_regions"]) == {"prefrontal", "temporal",
+                                              "parietal", "occipital",
+                                              "cerebellar", "limbic"}
     # a plain plan is untouched — the template never leaks
     plain = shipyard.plan("u:demo", "plain", [], set(), "did:web:test")
     assert "template" not in plain["eco"]

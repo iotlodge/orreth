@@ -164,6 +164,31 @@
     letter-spacing:.03em;margin-top:.15rem;text-transform:none;font-variant:normal}
   .olegend{position:absolute;right:1.1rem;bottom:.6rem;font:.66rem var(--mono);color:var(--faint)}
   .olegend .b{color:var(--brass)}
+  /* ── the Brain Glass (0034 §5): the fourth projection — the same beats,
+       laid out like a mind. Legibility, not neuroscience; JB tunes the map. ── */
+  .brainwrap{position:absolute;inset:0;display:none}
+  #v-uni[data-proj="brain"] .brainwrap{display:block}
+  #v-uni[data-proj="brain"] .oo,#v-uni[data-proj="brain"] .olegend,
+  #v-uni[data-proj="brain"] .reslegend{display:none}
+  .bsvg{position:absolute;inset:0;width:100%;height:100%}
+  .bshell{fill:rgba(120,140,190,.045);stroke:rgba(150,170,220,.4);stroke-width:.4}
+  .bfold{fill:none;stroke:rgba(150,170,220,.13);stroke-width:.3}
+  .bglow{pointer-events:none}
+  .blab{font:600 2px var(--mono);fill:rgba(190,205,235,.6);letter-spacing:.35px;text-transform:uppercase}
+  .blab2{font:1.7px var(--mono);fill:rgba(150,165,200,.45)}
+  .bnode{cursor:pointer}
+  .bnode text{font:2.1px var(--mono);fill:#cfd6e4}
+  .bnode .bc{fill:rgba(126,166,255,.75);stroke:rgba(190,210,255,.6);stroke-width:.25}
+  .bnode .bf{fill:rgba(126,166,255,.45)}
+  .borg{fill:var(--brass,#d4a960);opacity:.85;cursor:pointer}
+  .bfire{animation:bfire 2.4s ease-out forwards;pointer-events:none}
+  @keyframes bfire{0%{opacity:.9}100%{opacity:0}}
+  .baxon{stroke:rgba(212,169,96,.4);stroke-width:.35;stroke-dasharray:1.3 1.7}
+  .btoggle{position:absolute;left:1.1rem;bottom:.6rem;font:.66rem var(--mono);
+    color:var(--faint);cursor:pointer;z-index:6}
+  .btoggle b{color:var(--brass)}
+  .bcore{position:absolute;left:50%;bottom:2.4rem;transform:translateX(-50%);
+    font:.66rem var(--mono);color:var(--faint);text-align:center;pointer-events:none}
   .oleaf{position:absolute;left:50%;top:72%;transform:translate(-50%,0);
     font:.75rem/1.9 var(--mono);color:var(--faint);text-align:center;white-space:nowrap}
   #ocard{position:absolute;z-index:9;width:290px;background:rgba(11,18,38,.98);
@@ -539,6 +564,9 @@
     <div class="orrery" id="orrery">
       <div class="olegend"><span class="b">━</span> policy rains down the beams · hover any world or organ</div>
       <div class="reslegend" id="reslegend"></div>
+      <div class="btoggle" id="btoggle" onclick="brainToggle()"
+           title="the Brain Glass (0034) — the same beats, laid out like a mind; a projection, never a second truth (rule 7)">projection: <b>orrery</b> · click for brain</div>
+      <div class="brainwrap" id="brainwrap"></div>
       <div id="ocard"></div>
     </div>
     <div class="drawer" id="drawer" data-state="closed">
@@ -838,7 +866,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
 let topoCache=null,laneSig="";
 async function world(){
   try{topoCache=await(await fetch(api("/topology"))).json()}catch{topoCache=null}
-  renderWorldRail(); renderOrrery(); refreshCounters();
+  renderWorldRail(); renderOrrery(); renderBrain(); refreshCounters();
   // topology can land after the first scrub — redraw lanes when the world grows
   const scopes=[]; const w=n=>{if(!n)return;scopes.push(n.scope);(n.children||[]).forEach(w)}; w(topoCache);
   const sig=scopes.sort().join("|");
@@ -958,6 +986,99 @@ const alertOf=n=>!!n&&(((n.pending||0)>0)
   ||((n.stable||[]).some(s=>s.state==="deprecated"))
   ||((n.farm||[]).some(s=>s.state==="quarantined")));
 const nodeSig=n=>[n.scope,Math.min(n.agents||0,5),(n.agents||0)>5,farmSig(n.farm),resSig(n.residents),alertOf(n)];
+/* ── the Brain Glass (0034 §5): rule 7's fourth projection — rendered from
+     the SAME topoCache the orrery reads, on the same breath; never a second
+     truth. Ecosystems land in regions (JB tunes the map), fields cluster like
+     gyri, organs sit on the functional anatomy, and FIRING is the delta
+     between beats: memory formation glows where the record landed. ── */
+const BREGIONS={
+  prefrontal:{x:27,y:22,lab:"prefrontal",sub:"governance · consent"},
+  parietal:{x:50,y:13,lab:"parietal",sub:"environment"},
+  occipital:{x:76,y:24,lab:"occipital",sub:"sensory"},
+  temporal:{x:40,y:47,lab:"temporal",sub:"memory"},
+  limbic:{x:53,y:32,lab:"limbic",sub:"identity · relationships"},
+  cerebellar:{x:74,y:53,lab:"cerebellar",sub:"procedure"}};
+const BORGAN={becky:"prefrontal",governance:"prefrontal",grace:"prefrontal",
+  vigil:"parietal",charlotte:"occipital",librarian:"temporal",steward:"temporal",
+  ada:"cerebellar"};
+const BECO={care:"limbic",retail:"occipital",cloud:"parietal"};
+const bregOf=n=>BECO[n]||["prefrontal","parietal","occipital","temporal",
+  "limbic","cerebellar"][[...n].reduce((a,c)=>a+c.charCodeAt(0),0)%6];
+let BRAINMODE=false; const BPREV={};
+function brainToggle(){
+  BRAINMODE=!BRAINMODE;
+  $("v-uni").dataset.proj=BRAINMODE?"brain":"orrery";
+  $("btoggle").innerHTML=`projection: <b>${BRAINMODE?"brain":"orrery"}</b> · click for ${BRAINMODE?"orrery":"brain"}`;
+  renderBrain();
+}
+function renderBrain(){
+  const B=$("brainwrap");
+  if(!B||!BRAINMODE||$("v-uni").classList.contains("hide"))return;
+  const t=topoCache;
+  if(!t){B.innerHTML=`<div class="oleaf">the daemon is dark — no mind to draw</div>`;return}
+  /* the firing: what moved since the last breath — and the glow that stays */
+  const fires=[]; const walk=n=>{if(!n)return;
+    const prev=BPREV[n.scope]; BPREV[n.scope]=n.records;
+    if(prev!==undefined&&n.records>prev)fires.push({scope:n.scope,d:n.records-prev});
+    (n.children||[]).forEach(walk)}; walk(t);
+  const at={}, load={};                      /* scope → [x,y] · region → records */
+  Object.keys(BREGIONS).forEach(r=>load[r]=0);
+  load.temporal+=t.records||0;               /* the floor's own record lives in memory */
+  const ecos=t.children||[];
+  let nodes="";
+  ecos.forEach((e,i)=>{
+    const reg=bregOf(e.scope.split(":").pop()), R=BREGIONS[reg];
+    const jx=((i%3)-1)*7, jy=(i%2?4:-3);
+    const x=R.x+jx, y=R.y+6+jy, r=Math.min(4,1.6+Math.log2(1+(e.records||0))*.4);
+    at[e.scope]=[x,y]; load[reg]+=e.records||0;
+    nodes+=`<g class="bnode" onclick="floorGo('${encodeURIComponent(e.scope)}')">
+      <line class="bfold" x1="${x}" y1="${y}" x2="${R.x}" y2="${R.y}"/>
+      <circle class="bc" cx="${x}" cy="${y}" r="${r}"/>
+      <text x="${x+r+.8}" y="${y+.7}">${e.scope.split(":").pop()}</text></g>`;
+    (e.children||[]).forEach((f,j)=>{        /* fields cluster like gyri */
+      const a=(j/Math.max(e.children.length,1))*6.28, fx=x+Math.cos(a)*(r+2.4),
+        fy=y+Math.sin(a)*(r+2.4);
+      at[f.scope]=[fx,fy]; load[reg]+=f.records||0;
+      nodes+=`<g class="bnode" onclick="floorGo('${encodeURIComponent(f.scope)}')">
+        <circle class="bf" cx="${fx}" cy="${fy}" r="1"/>
+        <text x="${fx+1.6}" y="${fy+.6}" style="font-size:1.6px;opacity:.7">${f.scope.split(":").pop()}</text></g>`;});
+  });
+  /* the organs on the functional anatomy — the same roster the orrery shows */
+  let organsSvg=""; (t.residents||[]).forEach((a,i)=>{
+    const key=reskey(a.role), reg=BORGAN[key]||"limbic", R=BREGIONS[reg];
+    const ang=(i/Math.max((t.residents||[]).length,1))*6.28;
+    const ox=R.x+Math.cos(ang)*3.4, oy=R.y-2+Math.sin(ang)*2.2;
+    organsSvg+=`<circle class="borg" cx="${ox}" cy="${oy}" r=".8"
+      onclick="openParlor('${a.name||""}')"><title>${a.role} — ${reg}</title></circle>`;});
+  /* region glows: where light accumulates is what this universe does with
+     its life (JB's hypothesis, framed as legibility) */
+  let glows="",labels="";
+  Object.entries(BREGIONS).forEach(([r,R])=>{
+    const op=Math.min(.5,.05*Math.log2(1+(load[r]||0)));
+    glows+=`<circle class="bglow" cx="${R.x}" cy="${R.y+3}" r="12"
+      fill="rgba(212,169,96,${op.toFixed(3)})"/>`;
+    labels+=`<text class="blab" x="${R.x}" y="${R.y-3.4}" text-anchor="middle">${R.lab}</text>
+      <text class="blab2" x="${R.x}" y="${R.y-1.2}" text-anchor="middle">${R.sub}</text>`;});
+  /* firing: a flash where each new record landed this breath */
+  let flash="";
+  fires.forEach(f=>{const p=at[f.scope]||[BREGIONS.temporal.x,BREGIONS.temporal.y+3];
+    flash+=`<circle class="bfire" cx="${p[0]}" cy="${p[1]}" r="${2+Math.min(3,f.d*.5)}"
+      fill="none" stroke="rgba(212,169,96,.85)" stroke-width=".5"/>`;});
+  B.innerHTML=`<svg class="bsvg" viewBox="0 0 100 70" preserveAspectRatio="xMidYMid meet">
+    <path class="bshell" d="M 20,44 C 12,38 10,26 18,17 C 26,8 44,4 58,6 C 74,8 88,14 91,26
+      C 93,34 90,41 84,45 C 86,50 83,56 75,58 C 72,63 62,65 57,61 C 50,66 38,65 32,59
+      C 25,58 20,52 20,44 Z"/>
+    <path class="bshell" d="M 62,57 C 64,52 76,51 82,55 C 83,61 72,66 64,63 C 62,61 61,59 62,57 Z"/>
+    <path class="bshell" d="M 57,61 C 56,65 54,68 52,71 L 58,71 C 59,67 59,64 60,61 Z"/>
+    <path class="bfold" d="M 24,30 C 34,22 48,20 60,22 M 30,40 C 40,34 52,33 64,36
+      M 36,14 C 46,10 58,10 68,13 M 66,42 C 72,38 80,36 86,32"/>
+    <line class="baxon" x1="88" y1="22" x2="99" y2="14"/>
+    <text class="blab2" x="99" y="12" text-anchor="end">federation · 0022 phase 3</text>
+    ${glows}${labels}${nodes}${organsSvg}${flash}
+  </svg>
+  <div class="bcore">${t.scope} — the same beats as the orrery, laid out like a mind ·
+    a projection, never a second truth (rule 7) · firing = this breath's new memories</div>`;
+}
 function renderOrrery(){
   const O=$("orrery"); if(!O||$("v-uni").classList.contains("hide"))return;
   const t=topoCache;

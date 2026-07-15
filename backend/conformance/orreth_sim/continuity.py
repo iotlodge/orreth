@@ -61,6 +61,19 @@ RETENTION_REGIME = {
     },
 }
 
+# §5 — the Brain Glass: the functional placement table, PROPOSED (JB tunes
+# the anatomy). Brain layout is a template property (0009) and the glass's
+# fourth projection under rule 7 — the same heartbeat data, never a second
+# truth. The claim is legibility, not neuroscience.
+BRAIN_REGIONS = {
+    "prefrontal": "governance & consent — becky, governance, grace's gate",
+    "temporal": "memory — the librarian, the steward, the record",
+    "parietal": "environment — vigil's watch",
+    "occipital": "sensory — charlotte's farm, the gathers",
+    "cerebellar": "procedure — ada's stable, the routines",
+    "limbic": "identity & relationships — the profile, the parlor",
+}
+
 # §3 — authority types ride as tags on existing claims; no new schema, the
 # GIN indexes already serve them (0022).
 AUTHORITY_TYPES = ("human-stated", "human-confirmed", "caregiver-supplied",
@@ -112,7 +125,9 @@ def overlay(profile: dict) -> dict:
                        "distilled_retention": "P3650D"},
             "distortion_contracts": {k: dict(v["contract"])
                                      for k, v in RETENTION_REGIME.items()},
-            "label_canon": dict(LABEL_CANON)}
+            "label_canon": dict(LABEL_CANON),
+            "layout": "brain",
+            "brain_regions": dict(BRAIN_REGIONS)}
 
 
 def apply(node) -> None:
