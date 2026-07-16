@@ -165,7 +165,16 @@ detection, by identity not meaning · nothing auto-supersedes.
   the ask stands.
 - **The delivery-note lane**: quiet = log, news = medium, and NO automatic
   escalation in v0 — a persistently changing source stays on the medium lane
-  until evidence argues otherwise.
+  until evidence argues otherwise. **Planned revisit (JB + design owner,
+  2026-07-15), post-Phase-D: "news wears the lane of what it touches"** —
+  escalation keys on consequence, never frequency: (a) a doubted head CITED
+  by an active objective's coordinate → escalates by citation count (the
+  0033 coordinate makes the blast radius countable); (b) news touching a
+  zero-distortion contracted class (medication, identity — 0034) → high;
+  (c) bare persistence → stays medium and flows to grace as re-sourcing
+  EVIDENCE (0028's lane, not the siren's). Frequency-based escalation is
+  rejected on principle: alarm fatigue is the failure mode that kills a
+  lane system.
 - **Auto-offer "keep it fresh"**: on every acquisition-shaped objective,
   plainly worded, unchecked by default — opt-in per plan.
 - **The subscription quota**: the human gate IS the quota in v0; a Tier
