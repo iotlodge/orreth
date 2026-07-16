@@ -45,7 +45,8 @@ class Chassis:
                  max_cycles: int = 3, max_obs: int = 3, klass: str = "low",
                  ladder: list[str] | None = None, plan_template: str | None = None,
                  critic_template: str | None = None,
-                 coordinate: list[str] | None = None):
+                 coordinate: list[str] | None = None,
+                 aperture: str | None = None):
         self.surface, self.think = surface, think
         self.persona, self.skills = persona, skills or {}
         # 0031 §4: the prompts are behavior, and behavior arrives as data — the
@@ -59,6 +60,9 @@ class Chassis:
         self.ladder = list(ladder) if ladder else None   # rungs of doubt → altitude
         self.trace: list[dict] = []               # the loop, on the record
         self._ctx = None                          # ResolvedContext id — the law, pinned
+        # 0031 §2 (the Phase D gate): when the dispatching seat cut an aperture,
+        # every RunRecord pins THE WHOLE OPENING — which cites the law within it
+        self.aperture = aperture
 
     # ---- the fixed loop ---------------------------------------------------------------
     def run(self, intent: str) -> dict:
@@ -113,7 +117,7 @@ class Chassis:
         the roll-up's raw material, and the presence layer's heartbeat."""
         node = self.surface.node
         if self._ctx is None:
-            self._ctx = resolver.resolve(node)["id"]
+            self._ctx = self.aperture or resolver.resolve(node)["id"]
         run = {
             "id": crypto.content_hash({"i": intent, "c": cycle, "at": NOW(),
                                        "a": self.surface.identity["did"]}),

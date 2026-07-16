@@ -80,6 +80,59 @@ def test_review_severity_rides_the_lanes():
     assert fingertip.review_severity("parked", 2) == "high"
 
 
+# ---------------------------------------------------------------- the Phase D gate
+def test_the_gate_apertures_pin_runs_and_the_coordinate_is_hard(world):
+    """0031 §2 + 0033 §4 at the gate (JB approvals 2026-07-15): the dispatching
+    seat cuts a signed APERTURE per intention — everything by reference, the law
+    cited within — every RunRecord pins it, and the outcome's COORDINATE is a
+    first-class field: 'every Thought that served Objective O' is a field
+    lookup, not a lineage recursion."""
+    spec = fingertip.workflow_template(
+        "u:demo", name="gate-proof",
+        intentions=[{"id": "probe", "intent": "measure the thing",
+                     "seat": "u:demo/e:cloud/f:prod"}])
+    orch = fingertip.Orchestration(world.universe, world.becky, spec,
+                                   "prove the gate", budget_tokens=1200)
+    seats = {n.scope: n for n in (world.field_prod, world.eco_cloud)}
+    out = orch.run(seats, world.beckys, _tidy_think, plan_approved=True)
+    assert out["verification"] == "complete"
+    # the aperture: assembled at dispatch, signed by the DISPATCHING seat,
+    # written at the dispatcher's floor
+    aps = [r for r in world.universe.records.values()
+           if "aperture" in r.get("tags", [])]
+    assert len(aps) == 1
+    ap = aps[0]
+    import json as _json
+    from orreth_sim import crypto as _crypto
+    a = _json.loads(_crypto._b64d(ap["body"]).decode())["aperture"]
+    assert a["seat"] == orch.surface.identity["did"]     # the dispatcher signed
+    assert a["task"]["intent"] == "measure the thing"
+    from orreth_sim import resolver as _resolver
+    # the law cited within is the resolver's own deterministic address — same
+    # cascade ⇒ same hash, recomputable on demand (0007's law-as-lookup)
+    assert a["law"] == _resolver.resolve(world.field_prod)["id"]
+    assert a["behavior"]["profile"] and len(a["behavior"]["prompts"]) == 2
+    # every RunRecord pins the whole opening (context_hash, widened semantics)
+    runs = [r for r in world.field_prod.runs.values()
+            if r.get("context_hash") == ap["id"]]
+    assert runs, "no RunRecord pinned the aperture"
+    # the coordinate is HARD: the outcome's address is a field, and the lookup
+    # needs no tags and no recursion
+    outcome = next(r for r in world.field_prod.records.values()
+                   if "intention-outcome" in r.get("tags", []))
+    assert outcome["coordinate"]["objective"] == orch.goal
+    assert outcome["coordinate"]["intention"]            # the delegated unit, cited
+    assert ap["coordinate"] == {"objective": orch.goal,
+                                "intention": outcome["coordinate"]["intention"]}
+    hard = [r for r in world.field_prod.records.values()
+            if (r.get("coordinate") or {}).get("objective") == orch.goal]
+    assert outcome in hard
+    # and the assembly at home carries its address too
+    assembly = next(r for r in world.universe.records.values()
+                    if "objective-outcome" in r.get("tags", []))
+    assert assembly["coordinate"] == {"objective": orch.goal}
+
+
 # ---------------------------------------------------------------- the flow, end to end
 def test_objective_dispatches_reviews_and_assembles(world):
     """The universe plans high, works low, reviews on the way back up — intentions

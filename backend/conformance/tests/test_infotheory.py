@@ -169,7 +169,9 @@ def test_contract_carries_the_intolerables(world):
     ids = [_med(f, i) for i in (1, 2)]
     dist = f._distill(ids, push=False)
     body = it._body(dist)
-    assert body["contract"]["prohibited_loss"] == ["prescriber"]
+    # the contract is METHOD since the Phase D gate (JB 2026-07-15) — pinned
+    # so the grader can't drift; the body carries the preserved values
+    assert dist["method"]["contract"]["prohibited_loss"] == ["prescriber"]
     assert {e["value"] for e in body["preserved"]["dosage"]} == {"10mg", "20mg"}
     assert all(e["ref"] in ids for e in body["preserved"]["dosage"])
     assert "narrative" not in body["preserved"]          # compressible stays compressed

@@ -118,16 +118,21 @@ def overlay(profile: dict) -> dict:
     Everything rides the profile JSON; the plane reads it as data (no core
     changes), and the charter on the floor makes it legible in the record."""
     return {**profile,
-            "template": TEMPLATE,
             "objective": [dict(o) for o in OBJECTIVE_VECTOR],
             "memory": {**profile.get("memory", {}),
                        "raw_retention": "P30D",
-                       "distilled_retention": "P3650D"},
-            "distortion_contracts": {k: dict(v["contract"])
-                                     for k, v in RETENTION_REGIME.items()},
-            "label_canon": dict(LABEL_CANON),
-            "layout": "brain",
-            "brain_regions": dict(BRAIN_REGIONS)}
+                       "distilled_retention": "P3650D",
+                       # 0031 §5's dial, landed at the Phase D gate: nothing
+                       # stays trusted forever on a continuity floor
+                       "review_interval": "P30D"},
+            # the template block — contracts/v0-legal since the Phase D gate
+            # (JB approval 2026-07-15): the declaration of record, one field
+            "template": {"name": TEMPLATE,
+                         "layout": "brain",
+                         "brain_regions": dict(BRAIN_REGIONS),
+                         "label_canon": dict(LABEL_CANON),
+                         "distortion_contracts": {k: dict(v["contract"])
+                                                  for k, v in RETENTION_REGIME.items()}}}
 
 
 def apply(node) -> None:

@@ -17,7 +17,7 @@ outcomes, and what the floors' KeepRules pin.
 """
 from __future__ import annotations
 
-from . import crypto, factory, improver, markers
+from . import crypto, factory, improver, markers, resolver
 from .chassis import Chassis
 from .identity import is_within
 from .node import make_memory
@@ -212,8 +212,8 @@ def make_intention(objective_hash: str, intent: str, budget_tokens: int,
 
 def coordinate_tags(of: str | None = None, via: str | None = None) -> list[str]:
     """The ladder's axes as tags (0033 §4, the soft landing): `of:<objective>` ·
-    `via:<intention>` — index lookups today, the contracts freeze at Phase D's
-    gate. Records cite only hashes they already hold at write time; nothing is
+    `via:<intention>` — index lookups; kept valid beside the hard field below.
+    Records cite only hashes they already hold at write time; nothing is
     invented after the fact."""
     tags = []
     if of:
@@ -221,6 +221,38 @@ def coordinate_tags(of: str | None = None, via: str | None = None) -> list[str]:
     if via:
         tags.append(f"via:{via}")
     return tags
+
+
+def coordinate(objective: str | None = None, intention: str | None = None,
+               observation: str | None = None, thought: str | None = None) -> dict:
+    """The coordinate, HARD (0033 §4 — the Phase D gate, JB approval
+    2026-07-15): the record's address in the ladder as a first-class field,
+    contracts/v0-legal. Rides unsigned beside derived_from, matching that
+    posture; the signature-subset widening is its own future question."""
+    return {k: v for k, v in (("objective", objective), ("intention", intention),
+                              ("observation", observation), ("thought", thought))
+            if v}
+
+
+def make_aperture(agent: dict, kp, scope: str, *, of: str, for_agent: str,
+                  law: str, task: dict, behavior: dict,
+                  knowledge: list | None = None, output: dict | None = None,
+                  objective: str | None = None) -> dict:
+    """The aperture (0031 §2 — landed at the Phase D gate): the context envelope
+    made first-class. Assembled at dispatch, signed by the DISPATCHING seat,
+    content-addressed, everything by reference — what the mind could see, on
+    the record. RunRecords pin it (context_hash, semantics widened at the
+    gate); same aperture ⇒ the same run is re-cuttable."""
+    body = {"aperture": {
+        "of": of, "seat": agent["did"], "agent": for_agent, "law": law,
+        "task": dict(task), "behavior": dict(behavior),
+        "knowledge": list(knowledge or []),
+        **({"output": dict(output)} if output else {}),
+    }}
+    rec = make_memory(agent, kp, scope, body, kind="semantic",
+                      tags=["aperture", *coordinate_tags(objective, of)])
+    rec["coordinate"] = coordinate(objective=objective, intention=of)
+    return rec
 
 
 def by_coordinate(node, *, objective: str | None = None,
@@ -365,13 +397,28 @@ class Orchestration:
         beh = improver.resolve_behavior(self.home)
         prof = beh["profile"]
         coord = coordinate_tags(work["of"], work.get("id"))
+        # the aperture (0031 §2, the gate): the dispatching seat assembles and
+        # signs the whole opening BEFORE the mind runs — everything by reference
+        ap = make_aperture({"did": self.surface.identity["did"],
+                            "scope": self.home.scope},
+                           self.surface.kp, self.home.scope,
+                           of=work["id"], for_agent=fsurf.identity["did"],
+                           law=resolver.resolve(target)["id"],
+                           task={"intent": work["intent"],
+                                 "budget": dict(work["budget"])},
+                           behavior={"profile": crypto.content_hash(prof),
+                                     "prompts": [crypto.content_hash({"t": beh["plan_template"]}),
+                                                 crypto.content_hash({"t": beh["critic_template"]})]},
+                           knowledge=list(work.get("refs") or []),
+                           objective=work["of"])
+        ap_id = self.home.write(ap)
         res = Chassis(fsurf, think, skills=skills,
                       persona=str(prof.get("persona", "")),
                       max_cycles=int(prof.get("max_cycles", 2)),
                       max_obs=int(prof.get("max_obs", 3)),
                       plan_template=beh["plan_template"],
                       critic_template=beh["critic_template"],
-                      coordinate=coord).run(work["intent"])
+                      coordinate=coord, aperture=ap_id).run(work["intent"])
         outcome = make_memory({"did": fsurf.identity["did"], "scope": target.scope},
                               fsurf.kp, target.scope,
                               {"outcome": {"intention": n["id"], "of": work["of"],
@@ -379,6 +426,8 @@ class Orchestration:
                                            "answer": res.get("answer", ""),
                                            "cycles": res.get("cycles")}},
                               kind="semantic", tags=["intention-outcome", *coord])
+        outcome["coordinate"] = coordinate(objective=work["of"],
+                                           intention=work.get("id"))
         rid = target.write(outcome)
         factory.retire(target, fsurf.identity)          # the intention was the life
         return {"status": res["status"], "answer": res.get("answer", ""),
@@ -400,6 +449,7 @@ class Orchestration:
         rec = make_memory(me, self.surface.kp, self.home.scope,
                           {"objective_outcome": assembly}, kind="semantic",
                           tags=["objective-outcome", *coordinate_tags(self.goal)])
+        rec["coordinate"] = coordinate(objective=self.goal)
         assembly["record"] = self.home.write(rec)
         return assembly
 

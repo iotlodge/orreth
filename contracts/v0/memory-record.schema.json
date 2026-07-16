@@ -1,155 +1,406 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://orreth.ai/contracts/v0/memory-record.schema.json",
-  "title": "MemoryRecord",
-  "description": "The atom of the fabric (0001 §1) with visibility facets (0002 §2), retention (0001 §5, 0003), and the Distillation extension (0003 §2). Append-only, content-addressed, DID-signed.",
-  "type": "object",
-  "properties": {
-    "id": { "$ref": "common.schema.json#/$defs/ContentHash" },
-    "kind": { "enum": ["episodic", "semantic", "procedural", "distillation"] },
-    "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
-    "author": { "$ref": "common.schema.json#/$defs/DID" },
-    "signature": { "$ref": "common.schema.json#/$defs/Sig" },
-    "occurred_at": { "$ref": "common.schema.json#/$defs/UniverseTime", "description": "The author's SIGNED claim of when in the universe's life this happened (0004 §1). Monotonic per scope for 'lived' records — you cannot quietly write yourself a past." },
-    "received_at": { "$ref": "common.schema.json#/$defs/WallClock", "description": "Gateway-stamped at ingest — physics, nobody's claim. NOT part of the signed content." },
-    "provenance_class": {
-      "enum": ["lived", "ingested-archive"],
-      "default": "lived",
-      "description": "Signed. 'lived' = the universe's own biography (high-water enforced); 'ingested-archive' = backfilled history, honestly labeled — the window renders both, never confuses them (0004 §1)."
-    },
-    "supersedes": { "$ref": "common.schema.json#/$defs/ContentHash" },
-    "body": { "type": "string", "description": "Compressed blob (headroom CCR), base64; ORIGINAL retrievable via body_ref." },
-    "body_ref": { "type": "string", "format": "uri", "description": "Signed pointer to full detail at the owning tier — the apex holds pointers, not blobs (0003 §3)." },
-    "embedding_ref": { "type": "string", "description": "Vector store reference for semantic retrieval." },
-    "provenance": {
-      "type": "object",
-      "properties": {
-        "run_id": { "type": "string" },
-        "model": { "type": "string" },
-        "source_record": { "$ref": "common.schema.json#/$defs/ContentHash" }
-      },
-      "additionalProperties": true
-    },
-    "retention": { "$ref": "#/$defs/RetentionState" },
-    "visibility": { "$ref": "#/$defs/Visibility" },
-    "keep_class": {
-      "enum": ["keep-raw", "distilled-raw-retained", "distilled-raw-dropped", "tombstoned"],
-      "description": "Pruning lifecycle class (0003 §1). Every transition is a signed pruning record."
-    },
-    "derived_from": {
-      "type": "array",
-      "items": { "$ref": "common.schema.json#/$defs/ContentHash" },
-      "description": "Distillation only: the signed chain to every input (0003 §2). Verified(derived) = chain verification."
-    },
-    "method": {
-      "type": "object",
-      "description": "Distillation only: pinned so the grader can't drift (0003 §2).",
-      "properties": {
-        "steward": { "$ref": "common.schema.json#/$defs/DID" },
-        "rubric": { "$ref": "common.schema.json#/$defs/StandardRef" },
-        "model": { "type": "string" },
-        "prompt_version": { "$ref": "common.schema.json#/$defs/SemVer" }
-      },
-      "required": ["steward", "rubric", "model"],
-      "additionalProperties": false
-    },
-    "window": { "$ref": "common.schema.json#/$defs/TimeWindow", "description": "Distillation only: the spacetime slice compressed." },
-    "cohort": { "$ref": "common.schema.json#/$defs/Selector", "description": "Distillation only: whose memories it summarizes." },
-    "redactions": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/RedactionMarker" },
-      "description": "Distillation only: tombstoned inputs — annotate, never rewrite (locked 2026-07-01)."
-    },
-    "tags": { "type": "array", "items": { "type": "string" } }
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://orreth.ai/contracts/v0/memory-record.schema.json",
+ "title": "MemoryRecord",
+ "description": "The atom of the fabric (0001 §1) with visibility facets (0002 §2), retention (0001 §5, 0003), and the Distillation extension (0003 §2). Append-only, content-addressed, DID-signed.",
+ "type": "object",
+ "properties": {
+  "id": {
+   "$ref": "common.schema.json#/$defs/ContentHash"
   },
-  "required": ["id", "kind", "scope", "author", "signature", "occurred_at", "retention", "visibility"],
-  "allOf": [
-    {
-      "if": { "properties": { "kind": { "const": "distillation" } } },
-      "then": { "required": ["derived_from", "method", "window"] }
+  "kind": {
+   "enum": [
+    "episodic",
+    "semantic",
+    "procedural",
+    "distillation"
+   ]
+  },
+  "scope": {
+   "$ref": "common.schema.json#/$defs/ScopePath"
+  },
+  "author": {
+   "$ref": "common.schema.json#/$defs/DID"
+  },
+  "signature": {
+   "$ref": "common.schema.json#/$defs/Sig"
+  },
+  "occurred_at": {
+   "$ref": "common.schema.json#/$defs/UniverseTime",
+   "description": "The author's SIGNED claim of when in the universe's life this happened (0004 §1). Monotonic per scope for 'lived' records — you cannot quietly write yourself a past."
+  },
+  "received_at": {
+   "$ref": "common.schema.json#/$defs/WallClock",
+   "description": "Gateway-stamped at ingest — physics, nobody's claim. NOT part of the signed content."
+  },
+  "provenance_class": {
+   "enum": [
+    "lived",
+    "ingested-archive"
+   ],
+   "default": "lived",
+   "description": "Signed. 'lived' = the universe's own biography (high-water enforced); 'ingested-archive' = backfilled history, honestly labeled — the window renders both, never confuses them (0004 §1)."
+  },
+  "supersedes": {
+   "$ref": "common.schema.json#/$defs/ContentHash"
+  },
+  "body": {
+   "type": "string",
+   "description": "Compressed blob (headroom CCR), base64; ORIGINAL retrievable via body_ref."
+  },
+  "body_ref": {
+   "type": "string",
+   "format": "uri",
+   "description": "Signed pointer to full detail at the owning tier — the apex holds pointers, not blobs (0003 §3)."
+  },
+  "embedding_ref": {
+   "type": "string",
+   "description": "Vector store reference for semantic retrieval."
+  },
+  "provenance": {
+   "type": "object",
+   "properties": {
+    "run_id": {
+     "type": "string"
+    },
+    "model": {
+     "type": "string"
+    },
+    "source_record": {
+     "$ref": "common.schema.json#/$defs/ContentHash"
     }
-  ],
-  "$defs": {
-    "RetentionState": {
-      "oneOf": [
-        { "const": "active" },
-        {
-          "type": "object",
-          "properties": {
-            "tombstoned": {
-              "type": "object",
-              "properties": {
-                "by": { "$ref": "common.schema.json#/$defs/DID" },
-                "policy_ref": { "$ref": "common.schema.json#/$defs/StandardRef" },
-                "reason": { "type": "string" },
-                "at": { "$ref": "common.schema.json#/$defs/WallClock", "description": "A legal/control-plane act — wall-clock (0004 §1)." },
-                "signature": { "$ref": "common.schema.json#/$defs/Sig" }
-              },
-              "required": ["by", "policy_ref", "reason", "at", "signature"],
-              "additionalProperties": false
-            }
-          },
-          "required": ["tombstoned"],
-          "additionalProperties": false
-        }
-      ]
+   },
+   "additionalProperties": true
+  },
+  "retention": {
+   "$ref": "#/$defs/RetentionState"
+  },
+  "visibility": {
+   "$ref": "#/$defs/Visibility"
+  },
+  "keep_class": {
+   "enum": [
+    "keep-raw",
+    "distilled-raw-retained",
+    "distilled-raw-dropped",
+    "tombstoned"
+   ],
+   "description": "Pruning lifecycle class (0003 §1). Every transition is a signed pruning record."
+  },
+  "derived_from": {
+   "type": "array",
+   "items": {
+    "$ref": "common.schema.json#/$defs/ContentHash"
+   },
+   "description": "Distillation only: the signed chain to every input (0003 §2). Verified(derived) = chain verification."
+  },
+  "method": {
+   "type": "object",
+   "description": "Distillation only: pinned so the grader can't drift (0003 §2).",
+   "properties": {
+    "steward": {
+     "$ref": "common.schema.json#/$defs/DID"
     },
-    "Visibility": {
-      "type": "object",
-      "description": "The three facets the use cases demand (0002 §2).",
-      "properties": {
-        "tenancy": { "enum": ["tenant-private", "portfolio"] },
-        "mobility": { "enum": ["branch-bound", "portable"], "default": "branch-bound" },
-        "consent": {
-          "oneOf": [
-            { "const": "active" },
-            {
-              "type": "object",
-              "properties": {
-                "consented_for": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
-              },
-              "required": ["consented_for"],
-              "additionalProperties": false
-            }
-          ]
-        }
-      },
-      "required": ["tenancy", "mobility"],
-      "additionalProperties": false
+    "rubric": {
+     "$ref": "common.schema.json#/$defs/StandardRef"
     },
-    "RedactionMarker": {
-      "type": "object",
-      "properties": {
-        "tombstone_ref": { "$ref": "common.schema.json#/$defs/ContentHash" },
-        "at": { "$ref": "common.schema.json#/$defs/WallClock" },
-        "policy_ref": { "$ref": "common.schema.json#/$defs/StandardRef" },
-        "sig": { "$ref": "common.schema.json#/$defs/Sig" }
-      },
-      "required": ["tombstone_ref", "at", "policy_ref", "sig"],
-      "additionalProperties": false
+    "model": {
+     "type": "string"
     },
-    "Promotion": {
-      "type": "object",
-      "description": "A governed re-scope upward — never an automatic copy (0001 §2). to_scope must be a strict ancestor of from_scope; sibling crossing requires the human-gated global step.",
-      "properties": {
-        "memory": { "$ref": "common.schema.json#/$defs/ContentHash" },
-        "from_scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
-        "to_scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
-        "lane": { "enum": ["auto", "human"] },
-        "approved_by": { "$ref": "common.schema.json#/$defs/DID" },
-        "evidence": {
-          "type": "object",
-          "properties": {
-            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-            "supporting_records": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/ContentHash" } }
-          },
-          "additionalProperties": true
-        },
-        "signature": { "$ref": "common.schema.json#/$defs/Sig" },
-        "created_at": { "$ref": "common.schema.json#/$defs/WallClock", "description": "Promotion is a governed control-plane act — wall-clock (0004 §1)." }
+    "prompt_version": {
+     "$ref": "common.schema.json#/$defs/SemVer"
+    },
+    "contract": {
+     "type": "object",
+     "description": "0033 §5, promoted from the body at the Phase D gate (JB approval 2026-07-15): what forgetting is allowed to cost — the rubric become a distortion function. The pinned truth; readers fall back to body-carried contracts for records written before the gate.",
+     "properties": {
+      "must_preserve": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "description": "Decision-critical keys — loss is REFUSED at save."
       },
-      "required": ["memory", "from_scope", "to_scope", "lane", "approved_by", "signature", "created_at"],
-      "additionalProperties": false
+      "may_compress": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "prohibited_loss": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "description": "The intolerables (dosage · timing · authority · consent state)."
+      },
+      "distortion_bound": {
+       "type": "number",
+       "minimum": 0,
+       "description": "Measured against the sealed QA sample (0003's 1-in-N, with a yardstick)."
+      },
+      "objective_binding": {
+       "type": "string",
+       "description": "WHOSE decisions this representation must stay sufficient for."
+      }
+     },
+     "additionalProperties": false
     }
+   },
+   "required": [
+    "steward",
+    "rubric",
+    "model"
+   ],
+   "additionalProperties": false
+  },
+  "window": {
+   "$ref": "common.schema.json#/$defs/TimeWindow",
+   "description": "Distillation only: the spacetime slice compressed."
+  },
+  "cohort": {
+   "$ref": "common.schema.json#/$defs/Selector",
+   "description": "Distillation only: whose memories it summarizes."
+  },
+  "redactions": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/RedactionMarker"
+   },
+   "description": "Distillation only: tombstoned inputs — annotate, never rewrite (locked 2026-07-01)."
+  },
+  "tags": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "coordinate": {
+   "type": "object",
+   "description": "0033 §4, hardened at the Phase D gate (JB approval 2026-07-15): the record's address in the ladder — cited at write, never invented after the fact. Identity, scope, and the two clocks remain the canon fields beside it. Rides UNSIGNED beside derived_from/tags (the signature-subset widening is queued as its own future question). The soft of:/via: tags remain valid for index lookups.",
+   "properties": {
+    "objective": {
+     "$ref": "common.schema.json#/$defs/ContentHash",
+     "description": "The human's origin artifact (0030)."
+    },
+    "intention": {
+     "$ref": "common.schema.json#/$defs/ContentHash",
+     "description": "The delegated unit it served — absent for organ beats."
+    },
+    "observation": {
+     "$ref": "common.schema.json#/$defs/ContentHash",
+     "description": "The chassis act / admission that produced it."
+    },
+    "thought": {
+     "$ref": "common.schema.json#/$defs/ContentHash",
+     "description": "The metered model call (RunRecord), when cognition occurred."
+    }
+   },
+   "additionalProperties": false
   }
+ },
+ "required": [
+  "id",
+  "kind",
+  "scope",
+  "author",
+  "signature",
+  "occurred_at",
+  "retention",
+  "visibility"
+ ],
+ "allOf": [
+  {
+   "if": {
+    "properties": {
+     "kind": {
+      "const": "distillation"
+     }
+    }
+   },
+   "then": {
+    "required": [
+     "derived_from",
+     "method",
+     "window"
+    ]
+   }
+  }
+ ],
+ "$defs": {
+  "RetentionState": {
+   "oneOf": [
+    {
+     "const": "active"
+    },
+    {
+     "type": "object",
+     "properties": {
+      "tombstoned": {
+       "type": "object",
+       "properties": {
+        "by": {
+         "$ref": "common.schema.json#/$defs/DID"
+        },
+        "policy_ref": {
+         "$ref": "common.schema.json#/$defs/StandardRef"
+        },
+        "reason": {
+         "type": "string"
+        },
+        "at": {
+         "$ref": "common.schema.json#/$defs/WallClock",
+         "description": "A legal/control-plane act — wall-clock (0004 §1)."
+        },
+        "signature": {
+         "$ref": "common.schema.json#/$defs/Sig"
+        }
+       },
+       "required": [
+        "by",
+        "policy_ref",
+        "reason",
+        "at",
+        "signature"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "tombstoned"
+     ],
+     "additionalProperties": false
+    }
+   ]
+  },
+  "Visibility": {
+   "type": "object",
+   "description": "The three facets the use cases demand (0002 §2).",
+   "properties": {
+    "tenancy": {
+     "enum": [
+      "tenant-private",
+      "portfolio"
+     ]
+    },
+    "mobility": {
+     "enum": [
+      "branch-bound",
+      "portable"
+     ],
+     "default": "branch-bound"
+    },
+    "consent": {
+     "oneOf": [
+      {
+       "const": "active"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "consented_for": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         },
+         "minItems": 1
+        }
+       },
+       "required": [
+        "consented_for"
+       ],
+       "additionalProperties": false
+      }
+     ]
+    }
+   },
+   "required": [
+    "tenancy",
+    "mobility"
+   ],
+   "additionalProperties": false
+  },
+  "RedactionMarker": {
+   "type": "object",
+   "properties": {
+    "tombstone_ref": {
+     "$ref": "common.schema.json#/$defs/ContentHash"
+    },
+    "at": {
+     "$ref": "common.schema.json#/$defs/WallClock"
+    },
+    "policy_ref": {
+     "$ref": "common.schema.json#/$defs/StandardRef"
+    },
+    "sig": {
+     "$ref": "common.schema.json#/$defs/Sig"
+    }
+   },
+   "required": [
+    "tombstone_ref",
+    "at",
+    "policy_ref",
+    "sig"
+   ],
+   "additionalProperties": false
+  },
+  "Promotion": {
+   "type": "object",
+   "description": "A governed re-scope upward — never an automatic copy (0001 §2). to_scope must be a strict ancestor of from_scope; sibling crossing requires the human-gated global step.",
+   "properties": {
+    "memory": {
+     "$ref": "common.schema.json#/$defs/ContentHash"
+    },
+    "from_scope": {
+     "$ref": "common.schema.json#/$defs/ScopePath"
+    },
+    "to_scope": {
+     "$ref": "common.schema.json#/$defs/ScopePath"
+    },
+    "lane": {
+     "enum": [
+      "auto",
+      "human"
+     ]
+    },
+    "approved_by": {
+     "$ref": "common.schema.json#/$defs/DID"
+    },
+    "evidence": {
+     "type": "object",
+     "properties": {
+      "confidence": {
+       "type": "number",
+       "minimum": 0,
+       "maximum": 1
+      },
+      "supporting_records": {
+       "type": "array",
+       "items": {
+        "$ref": "common.schema.json#/$defs/ContentHash"
+       }
+      }
+     },
+     "additionalProperties": true
+    },
+    "signature": {
+     "$ref": "common.schema.json#/$defs/Sig"
+    },
+    "created_at": {
+     "$ref": "common.schema.json#/$defs/WallClock",
+     "description": "Promotion is a governed control-plane act — wall-clock (0004 §1)."
+    }
+   },
+   "required": [
+    "memory",
+    "from_scope",
+    "to_scope",
+    "lane",
+    "approved_by",
+    "signature",
+    "created_at"
+   ],
+   "additionalProperties": false
+  }
+ }
 }

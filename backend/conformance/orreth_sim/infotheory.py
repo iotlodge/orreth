@@ -180,7 +180,10 @@ def contract_fidelity(node, distillation_id: str) -> dict | None:
     if state != "live" or rec.get("kind") != "distillation":
         return None
     body = _body(rec)
-    contract, preserved = body.get("contract"), body.get("preserved") or {}
+    # method-first (the Phase D gate promoted the contract, 0033 §5); records
+    # written before the gate still carry it in the body — both stay readable
+    contract = (rec.get("method") or {}).get("contract") or body.get("contract")
+    preserved = body.get("preserved") or {}
     if not contract:
         return None
     keys = sorted(set(contract.get("must_preserve") or [])

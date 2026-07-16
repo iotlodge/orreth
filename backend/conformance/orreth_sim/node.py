@@ -279,7 +279,6 @@ class HarnessNode:
                 # chain survival: a source distillation's carried values re-carry
                 for key, entries in (src_body.get("preserved") or {}).items():
                     preserved.setdefault(key, []).extend(entries)
-            body["contract"] = contract
             body["preserved"] = preserved
         if not push:
             body["exchange"] = "hold"        # held home — the dial, visible in the body
@@ -298,7 +297,10 @@ class HarnessNode:
             "derived_from": ids,
             "method": {"steward": self.steward["did"],
                        "rubric": {"id": crypto.content_hash({"rubric": "sim-v0"}), "version": "0.0.1"},
-                       "model": "deterministic-sim"},
+                       "model": "deterministic-sim",
+                       # 0033 §5, promoted at the Phase D gate (JB 2026-07-15):
+                       # the contract is METHOD — pinned so the grader can't drift
+                       **({"contract": contract} if contract is not None else {})},
             "window": {"from": times[0], "to": times[-1]},
             "redactions": [],
             **({"tags": contract_tags} if contract_tags else {}),

@@ -1,158 +1,400 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://orreth.ai/contracts/v0/tier-profile.schema.json",
-  "title": "TierProfile",
-  "description": "The dials that make one node (orrethd) a Universe, Ecosystem, or Field (0000 §1). This v0 carries every dial already locked by decisions (retention 0003, TTLs 0006, QA sample, judge sampling 0001, cadence); the 0004 narrative spec will refine, not redefine. tier_label is FRIENDLY DISPLAY ONLY — wire contracts never branch on it.",
-  "type": "object",
-  "properties": {
-    "tier_label": { "type": "string", "description": "Display name (e.g. 'universe', 'ecosystem', 'field', or anything a customer likes). Never used for logic." },
-    "scope": { "$ref": "common.schema.json#/$defs/ScopePath" },
-    "parent_endpoint": { "type": "string", "format": "uri", "description": "Absent ⇒ apex. PUSH up / PULL down; a parent never reaches in." },
-    "is_leaf": { "type": "boolean", "description": "true ⇒ children are Agents (a Field); false ⇒ children are Harnesses." },
-    "clock": {
-      "type": "object",
-      "description": "The two-clock model (0004 §1, locked 2026-07-02): meaning runs on universe-time; security and money run on wall-clock. Memory dials below are universe-time; token TTLs, heartbeats, co-signs are wall-clock.",
-      "properties": {
-        "mode": { "enum": ["wall", "declared"], "description": "'declared' ⇒ the universe asserts its own now (bursty sims welcome); 'wall' ⇒ universe-time tracks physical time 1:1." },
-        "high_water_scope": { "$ref": "common.schema.json#/$defs/ScopePath", "description": "Monotonicity enforced per this scope (default: this profile's own scope). Lived records below the high-water mark are rejected — backdating is structurally detectable." },
-        "dilation_hint": { "type": "number", "exclusiveMinimum": 0, "description": "Display/ops only (pane scrubber, cost projection) — never logic." }
-      },
-      "required": ["mode"],
-      "additionalProperties": false
-    },
-    "confidence_prior": {
-      "type": "array",
-      "description": "The tier's weak Beta prior [alpha, beta] for rolled-score confidence (0005 §3, locked 2026-07-02). Applied ONCE at the report edge — never stored in bundles. Default uniform (1,1).",
-      "items": { "type": "number", "exclusiveMinimum": 0 },
-      "minItems": 2,
-      "maxItems": 2,
-      "default": [1, 1]
-    },
-    "objective": {
-      "type": "array",
-      "description": "The objective vector (0004 §3, locked 2026-07-02) — what 'good' means at this tier; the dial the governance loop steers by. Shape locked here; scoring semantics land in 0005. A 'floor: true' objective never trades off.",
-      "items": {
-        "type": "object",
-        "properties": {
-          "objective": { "type": "string" },
-          "weight": { "type": "number", "minimum": 0, "maximum": 1 },
-          "floor": { "type": "boolean", "default": false }
-        },
-        "required": ["objective", "weight"],
-        "additionalProperties": false
-      },
-      "minItems": 1
-    },
-    "retention_classes": {
-      "type": "object",
-      "description": "Compliance retention per record class (0004 §4, locked 2026-07-02): min = keep-at-least (SOX/books-and-records), max = keep-at-most (GDPR/consent). Cascade enforces each direction independently, tighten-only (min may rise, max may fall). Legal hold = a governed, temporary min of 'forever' on a scope. Bounds the metabolism dials in 'memory'.",
-      "patternProperties": {
-        "^[a-z][a-z0-9-]*$": {
-          "type": "object",
-          "properties": {
-            "min": { "oneOf": [{ "$ref": "common.schema.json#/$defs/Duration" }, { "const": "forever" }], "description": "Deleting earlier than this is the violation. 'forever' = legal hold." },
-            "max": { "oneOf": [{ "$ref": "common.schema.json#/$defs/Duration" }, { "const": "forever" }], "description": "Keeping longer than this is the violation." }
-          },
-          "minProperties": 1,
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    "memory": {
-      "type": "object",
-      "properties": {
-        "raw_retention": { "$ref": "common.schema.json#/$defs/Duration", "description": "UNIVERSE-TIME (0004 §1). Starting leans: P90D field · per-floors eco." },
-        "distilled_retention": {
-          "oneOf": [{ "$ref": "common.schema.json#/$defs/Duration" }, { "const": "forever" }],
-          "description": "Starting leans: P13M eco · forever at apex."
-        },
-        "qa_sample_rate": {
-          "type": "number", "minimum": 0, "maximum": 1,
-          "description": "Sealed 1-in-N raw kept past horizon to measure distillation loss (locked 2026-07-01). Leans: 0.01 field · 0.001 eco."
-        }
-      },
-      "required": ["raw_retention", "distilled_retention", "qa_sample_rate"],
-      "additionalProperties": false
-    },
-    "retrieval": {
-      "type": "object",
-      "properties": {
-        "time_budget": { "$ref": "common.schema.json#/$defs/Budget", "description": "The per-tier escalation gate (0002 §3)." },
-        "horizon": {
-          "oneOf": [{ "$ref": "common.schema.json#/$defs/Duration" }, { "const": "forever" }],
-          "description": "How far back this tier serves before delegating up. 'forever' = the apex: no time restriction — all of spacetime."
-        }
-      },
-      "required": ["time_budget", "horizon"],
-      "additionalProperties": false
-    },
-    "steward": {
-      "type": "object",
-      "properties": {
-        "token_budget": { "$ref": "common.schema.json#/$defs/Budget" },
-        "cadence": { "$ref": "common.schema.json#/$defs/Duration" },
-        "on_budget_exhaustion": {
-          "const": "degrade-to-floors-and-flag",
-          "description": "Locked 2026-07-01: floors never stop; surge distills coarsely; quality-drift signal raised; never backpressure ingestion."
-        }
-      },
-      "required": ["token_budget", "cadence", "on_budget_exhaustion"],
-      "additionalProperties": false
-    },
-    "tokens": {
-      "type": "object",
-      "properties": {
-        "workforce_ttl": { "$ref": "common.schema.json#/$defs/Duration", "description": "Starting lean: P1D." },
-        "resident_ttl": { "$ref": "common.schema.json#/$defs/Duration", "description": "Starting lean: P30D." }
-      },
-      "required": ["workforce_ttl", "resident_ttl"],
-      "additionalProperties": false
-    },
-    "model_gateway": {
-      "type": "object",
-      "properties": {
-        "judge_sample_rate": {
-          "type": "number", "minimum": 0, "maximum": 1,
-          "description": "model_judge steady-state sampling (locked: 1-in-N steady, 1.0 forced during canary)."
-        },
-        "default_model_tier": { "type": "string" },
-        "routing": { "enum": ["litellm", "openrouter", "direct"], "description": "How this layer reaches models. No agent calls a model ungoverned." }
-      },
-      "required": ["judge_sample_rate", "routing"],
-      "additionalProperties": false
-    },
-    "stamp_quota": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Max live incarnations stamped into this scope (0011). Where 0013 §8's trust-tier hard scale caps become mechanical — a self-serve anonymous universe gets a small number; verified tiers raise it. Absent ⇒ no cap (self-hosted / fully verified)."
-    },
-    "signal_capture": {
-      "enum": ["none", "state-changing", "full"],
-      "default": "state-changing",
-      "description": "What intra-field signals persist as memory (0010 §1, locked 2026-07-02): transport by default, state-changes always land, 'full' for REAL/regulated universes. The first concrete wild-vs-REAL dial. vigil sees signal volume/shape as metadata regardless."
-    },
-    "exchange": {
-      "type": "object",
-      "description": "0023 §4 (Universe-Brain locks, 2026-07-10): the per-class exchange dial — 'up' rides distillations to the parent; 'hold' stays home. Residency, never reach: the Librarian's pull crosses this wall on request, non-refusably. Future-flow only — what rose before the dial turned, stays risen. Cost/token/performance/security lanes are floors, not classes here, and can never be held.",
-      "additionalProperties": { "enum": ["up", "hold"] }
-    },
-    "join_default": {
-      "enum": ["fully-joined", "floors-only", "observe-only", "decoupled"],
-      "description": "The join spectrum default for children (floors compelled for the joined)."
-    },
-    "trust_root": {
-      "type": "object",
-      "properties": {
-        "mode": { "enum": ["did-web", "pinned"], "description": "did-web = resolvable under orreth.ai; pinned = out-of-band root for self-hosted/air-gapped (locked 2026-07-01)." },
-        "root": { "type": "string", "description": "did:web DID or pinned root key, per mode." }
-      },
-      "required": ["mode", "root"],
-      "additionalProperties": false
-    },
-    "version": { "$ref": "common.schema.json#/$defs/SemVer" },
-    "signature": { "$ref": "common.schema.json#/$defs/Sig" }
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://orreth.ai/contracts/v0/tier-profile.schema.json",
+ "title": "TierProfile",
+ "description": "The dials that make one node (orrethd) a Universe, Ecosystem, or Field (0000 §1). This v0 carries every dial already locked by decisions (retention 0003, TTLs 0006, QA sample, judge sampling 0001, cadence); the 0004 narrative spec will refine, not redefine. tier_label is FRIENDLY DISPLAY ONLY — wire contracts never branch on it.",
+ "type": "object",
+ "properties": {
+  "tier_label": {
+   "type": "string",
+   "description": "Display name (e.g. 'universe', 'ecosystem', 'field', or anything a customer likes). Never used for logic."
   },
-  "required": ["tier_label", "scope", "is_leaf", "clock", "objective", "memory", "retrieval", "steward", "tokens", "model_gateway", "join_default", "trust_root", "version", "signature"],
-  "additionalProperties": false
+  "scope": {
+   "$ref": "common.schema.json#/$defs/ScopePath"
+  },
+  "parent_endpoint": {
+   "type": "string",
+   "format": "uri",
+   "description": "Absent ⇒ apex. PUSH up / PULL down; a parent never reaches in."
+  },
+  "is_leaf": {
+   "type": "boolean",
+   "description": "true ⇒ children are Agents (a Field); false ⇒ children are Harnesses."
+  },
+  "clock": {
+   "type": "object",
+   "description": "The two-clock model (0004 §1, locked 2026-07-02): meaning runs on universe-time; security and money run on wall-clock. Memory dials below are universe-time; token TTLs, heartbeats, co-signs are wall-clock.",
+   "properties": {
+    "mode": {
+     "enum": [
+      "wall",
+      "declared"
+     ],
+     "description": "'declared' ⇒ the universe asserts its own now (bursty sims welcome); 'wall' ⇒ universe-time tracks physical time 1:1."
+    },
+    "high_water_scope": {
+     "$ref": "common.schema.json#/$defs/ScopePath",
+     "description": "Monotonicity enforced per this scope (default: this profile's own scope). Lived records below the high-water mark are rejected — backdating is structurally detectable."
+    },
+    "dilation_hint": {
+     "type": "number",
+     "exclusiveMinimum": 0,
+     "description": "Display/ops only (pane scrubber, cost projection) — never logic."
+    }
+   },
+   "required": [
+    "mode"
+   ],
+   "additionalProperties": false
+  },
+  "confidence_prior": {
+   "type": "array",
+   "description": "The tier's weak Beta prior [alpha, beta] for rolled-score confidence (0005 §3, locked 2026-07-02). Applied ONCE at the report edge — never stored in bundles. Default uniform (1,1).",
+   "items": {
+    "type": "number",
+    "exclusiveMinimum": 0
+   },
+   "minItems": 2,
+   "maxItems": 2,
+   "default": [
+    1,
+    1
+   ]
+  },
+  "objective": {
+   "type": "array",
+   "description": "The objective vector (0004 §3, locked 2026-07-02) — what 'good' means at this tier; the dial the governance loop steers by. Shape locked here; scoring semantics land in 0005. A 'floor: true' objective never trades off.",
+   "items": {
+    "type": "object",
+    "properties": {
+     "objective": {
+      "type": "string"
+     },
+     "weight": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+     },
+     "floor": {
+      "type": "boolean",
+      "default": false
+     }
+    },
+    "required": [
+     "objective",
+     "weight"
+    ],
+    "additionalProperties": false
+   },
+   "minItems": 1
+  },
+  "retention_classes": {
+   "type": "object",
+   "description": "Compliance retention per record class (0004 §4, locked 2026-07-02): min = keep-at-least (SOX/books-and-records), max = keep-at-most (GDPR/consent). Cascade enforces each direction independently, tighten-only (min may rise, max may fall). Legal hold = a governed, temporary min of 'forever' on a scope. Bounds the metabolism dials in 'memory'.",
+   "patternProperties": {
+    "^[a-z][a-z0-9-]*$": {
+     "type": "object",
+     "properties": {
+      "min": {
+       "oneOf": [
+        {
+         "$ref": "common.schema.json#/$defs/Duration"
+        },
+        {
+         "const": "forever"
+        }
+       ],
+       "description": "Deleting earlier than this is the violation. 'forever' = legal hold."
+      },
+      "max": {
+       "oneOf": [
+        {
+         "$ref": "common.schema.json#/$defs/Duration"
+        },
+        {
+         "const": "forever"
+        }
+       ],
+       "description": "Keeping longer than this is the violation."
+      }
+     },
+     "minProperties": 1,
+     "additionalProperties": false
+    }
+   },
+   "additionalProperties": false
+  },
+  "memory": {
+   "type": "object",
+   "properties": {
+    "raw_retention": {
+     "$ref": "common.schema.json#/$defs/Duration",
+     "description": "UNIVERSE-TIME (0004 §1). Starting leans: P90D field · per-floors eco."
+    },
+    "distilled_retention": {
+     "oneOf": [
+      {
+       "$ref": "common.schema.json#/$defs/Duration"
+      },
+      {
+       "const": "forever"
+      }
+     ],
+     "description": "Starting leans: P13M eco · forever at apex."
+    },
+    "qa_sample_rate": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1,
+     "description": "Sealed 1-in-N raw kept past horizon to measure distillation loss (locked 2026-07-01). Leans: 0.01 field · 0.001 eco."
+    },
+    "review_interval": {
+     "$ref": "common.schema.json#/$defs/Duration",
+     "description": "0031 §5, dial landed at the Phase D gate (JB approval 2026-07-15): UNIVERSE-TIME. Nothing stays trusted forever — claims older than this earn the revalidation walk. Absent ⇒ trust does not age by clock (event triggers only)."
+    }
+   },
+   "required": [
+    "raw_retention",
+    "distilled_retention",
+    "qa_sample_rate"
+   ],
+   "additionalProperties": false
+  },
+  "retrieval": {
+   "type": "object",
+   "properties": {
+    "time_budget": {
+     "$ref": "common.schema.json#/$defs/Budget",
+     "description": "The per-tier escalation gate (0002 §3)."
+    },
+    "horizon": {
+     "oneOf": [
+      {
+       "$ref": "common.schema.json#/$defs/Duration"
+      },
+      {
+       "const": "forever"
+      }
+     ],
+     "description": "How far back this tier serves before delegating up. 'forever' = the apex: no time restriction — all of spacetime."
+    }
+   },
+   "required": [
+    "time_budget",
+    "horizon"
+   ],
+   "additionalProperties": false
+  },
+  "steward": {
+   "type": "object",
+   "properties": {
+    "token_budget": {
+     "$ref": "common.schema.json#/$defs/Budget"
+    },
+    "cadence": {
+     "$ref": "common.schema.json#/$defs/Duration"
+    },
+    "on_budget_exhaustion": {
+     "const": "degrade-to-floors-and-flag",
+     "description": "Locked 2026-07-01: floors never stop; surge distills coarsely; quality-drift signal raised; never backpressure ingestion."
+    }
+   },
+   "required": [
+    "token_budget",
+    "cadence",
+    "on_budget_exhaustion"
+   ],
+   "additionalProperties": false
+  },
+  "tokens": {
+   "type": "object",
+   "properties": {
+    "workforce_ttl": {
+     "$ref": "common.schema.json#/$defs/Duration",
+     "description": "Starting lean: P1D."
+    },
+    "resident_ttl": {
+     "$ref": "common.schema.json#/$defs/Duration",
+     "description": "Starting lean: P30D."
+    }
+   },
+   "required": [
+    "workforce_ttl",
+    "resident_ttl"
+   ],
+   "additionalProperties": false
+  },
+  "model_gateway": {
+   "type": "object",
+   "properties": {
+    "judge_sample_rate": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1,
+     "description": "model_judge steady-state sampling (locked: 1-in-N steady, 1.0 forced during canary)."
+    },
+    "default_model_tier": {
+     "type": "string"
+    },
+    "routing": {
+     "enum": [
+      "litellm",
+      "openrouter",
+      "direct"
+     ],
+     "description": "How this layer reaches models. No agent calls a model ungoverned."
+    }
+   },
+   "required": [
+    "judge_sample_rate",
+    "routing"
+   ],
+   "additionalProperties": false
+  },
+  "stamp_quota": {
+   "type": "integer",
+   "minimum": 0,
+   "description": "Max live incarnations stamped into this scope (0011). Where 0013 §8's trust-tier hard scale caps become mechanical — a self-serve anonymous universe gets a small number; verified tiers raise it. Absent ⇒ no cap (self-hosted / fully verified)."
+  },
+  "signal_capture": {
+   "enum": [
+    "none",
+    "state-changing",
+    "full"
+   ],
+   "default": "state-changing",
+   "description": "What intra-field signals persist as memory (0010 §1, locked 2026-07-02): transport by default, state-changes always land, 'full' for REAL/regulated universes. The first concrete wild-vs-REAL dial. vigil sees signal volume/shape as metadata regardless."
+  },
+  "exchange": {
+   "type": "object",
+   "description": "0023 §4 (Universe-Brain locks, 2026-07-10): the per-class exchange dial — 'up' rides distillations to the parent; 'hold' stays home. Residency, never reach: the Librarian's pull crosses this wall on request, non-refusably. Future-flow only — what rose before the dial turned, stays risen. Cost/token/performance/security lanes are floors, not classes here, and can never be held.",
+   "additionalProperties": {
+    "enum": [
+     "up",
+     "hold"
+    ]
+   }
+  },
+  "join_default": {
+   "enum": [
+    "fully-joined",
+    "floors-only",
+    "observe-only",
+    "decoupled"
+   ],
+   "description": "The join spectrum default for children (floors compelled for the joined)."
+  },
+  "trust_root": {
+   "type": "object",
+   "properties": {
+    "mode": {
+     "enum": [
+      "did-web",
+      "pinned"
+     ],
+     "description": "did-web = resolvable under orreth.ai; pinned = out-of-band root for self-hosted/air-gapped (locked 2026-07-01)."
+    },
+    "root": {
+     "type": "string",
+     "description": "did:web DID or pinned root key, per mode."
+    }
+   },
+   "required": [
+    "mode",
+    "root"
+   ],
+   "additionalProperties": false
+  },
+  "version": {
+   "$ref": "common.schema.json#/$defs/SemVer"
+  },
+  "signature": {
+   "$ref": "common.schema.json#/$defs/Sig"
+  },
+  "aperture": {
+   "type": "object",
+   "description": "0033 §8's restraint dial, landed at the Phase D gate (JB approval 2026-07-15): the Information Bottleneck's β — how much restraint this deployment demands of every context aperture cut on its floors. Governance, not physics.",
+   "properties": {
+    "beta": {
+     "type": "number",
+     "minimum": 0
+    }
+   },
+   "additionalProperties": false
+  },
+  "template": {
+   "type": "object",
+   "description": "0009/0034, landed at the Phase D gate (JB approval 2026-07-15): the named template this profile was dressed by — the declaration of record. Legalizes the 0034 sp1 overlay; the plane reads it as data, the glass reads it as law.",
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "layout": {
+     "type": "string",
+     "description": "e.g. 'brain' — the Brain Glass projection hint (0034 §5)."
+    },
+    "brain_regions": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "label_canon": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "distortion_contracts": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "properties": {
+       "must_preserve": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "may_compress": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "prohibited_loss": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "distortion_bound": {
+        "type": "number",
+        "minimum": 0
+       }
+      },
+      "additionalProperties": false
+     }
+    }
+   },
+   "additionalProperties": false
+  }
+ },
+ "required": [
+  "tier_label",
+  "scope",
+  "is_leaf",
+  "clock",
+  "objective",
+  "memory",
+  "retrieval",
+  "steward",
+  "tokens",
+  "model_gateway",
+  "join_default",
+  "trust_root",
+  "version",
+  "signature"
+ ],
+ "additionalProperties": false
 }

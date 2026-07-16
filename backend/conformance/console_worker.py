@@ -2145,6 +2145,7 @@ def on_objective(port: int, scope: str, r: dict) -> None:
     me = {"did": ORCH_DID, "scope": scope}
     rec = make_memory(me, ORCH, scope, {"plan": plan}, kind="semantic",
                       tags=["plan", *fingertip.coordinate_tags(plan["goal"])])
+    rec["coordinate"] = fingertip.coordinate(objective=plan["goal"])  # hard (the gate)
     try:
         call(port, "POST", "/records", rec)
     except Exception as e:
@@ -2219,9 +2220,26 @@ def on_objective_approved(port: int, scope: str, r: dict) -> None:
             continue
         work = fingertip.make_intention(plan["goal"], entry["intent"],
                                         entry["budget"]["tokens"])
+        # the aperture (0031 §2, the gate): the dispatching seat signs the whole
+        # opening — the wire's law is the human-approved plan record; behavior
+        # pins are the shelf's active version (the shelf speaks at dispatch)
+        _, fdid, _, _ = finger_seat(target)
+        actives = wire_assets(universe_port(port), "asset", name=ASSET_NAME)
+        ap = fingertip.make_aperture(
+            {"did": ORCH_DID, "scope": scope}, ORCH, scope,
+            of=work["id"], for_agent=fdid,
+            law=str((r.get("result") or {}).get("plan_record") or plan["goal"]),
+            task={"intent": work["intent"], "budget": dict(work["budget"])},
+            behavior={"profile": actives[-1][0] if actives else "genesis"},
+            knowledge=list(work.get("refs") or []),
+            objective=plan["goal"])
+        try:
+            call(port, "POST", "/records", ap)
+        except Exception as e:
+            print(f"    (aperture write failed: {e})")
         leg = call(t_port, "POST", "/requests",
                    {"kind": "intention", "of": plan["goal"], "intention": work,
-                    "text": work["intent"][:120]})
+                    "aperture": ap["id"], "text": work["intent"][:120]})
         legs[t_port] = {"id": leg["id"], "seat": target, "iid": work["id"]}
     q = call(port, "POST", "/requests",
              {"kind": "question", "of": plan["goal"], "text": plan["question"]})
@@ -2250,6 +2268,8 @@ def on_intention(port: int, scope: str, r: dict) -> None:
         "occurred_at": NOW(), "outcome": "success",
         "scores": [{"objective": "objective-met", "score": 1.0}],
         "cost": {"tokens": 0, "model_calls": 0},
+        # the run pins the whole opening when one was cut (the gate, 0031 §2)
+        **({"context_hash": str(r["aperture"])} if r.get("aperture") else {}),
         "author": sdid,
     }
     run["sig"] = skp.sign(sdid, {k: run[k] for k in
@@ -2266,6 +2286,8 @@ def on_intention(port: int, scope: str, r: dict) -> None:
                           tags=["intention-outcome",
                                 *fingertip.coordinate_tags(work.get("of"),
                                                            work.get("id"))])
+    outcome["coordinate"] = fingertip.coordinate(objective=work.get("of"),
+                                                 intention=work.get("id"))
     try:
         call(port, "POST", "/records", outcome)
     except Exception as e:

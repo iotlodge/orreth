@@ -58,36 +58,40 @@ def test_the_regime_is_law_on_the_substrate(world):
     assert {e["value"] for e in body["preserved"]["relationship"]} \
         == {"your neighbor", "your sister"}
     assert "narrative" not in body["preserved"]          # the compressible compresses
-    assert body["contract"]["distortion_bound"] == 0.0   # λ≈0 — who people are survives
+    assert dist["method"]["contract"]["distortion_bound"] == 0.0   # λ≈0, pinned in METHOD (the gate)
 
 
 def test_the_provisioner_renders_the_template():
     """0034 §7 sp1: plan(template="continuity") dresses every profile — the
     dignity vector (summing to 1.0, unsupported-memory heaviest), the regime,
     the canon; an unknown template is refused by name."""
+    from orreth_sim.schemas import validate
     p = shipyard.plan("u:demo", "care", ["home"], set(), "did:web:test",
                       template="continuity")
     assert p["summary"].startswith("a continuity e:care")
     for spec in (p["eco"], p["fields"][0]):
         prof = spec["profile"]
         assert spec["template"] == "continuity"
-        assert prof["template"] == "continuity"
         weights = [o["weight"] for o in prof["objective"]]
         assert abs(sum(weights) - 1.0) < 1e-9
         assert prof["objective"][0]["objective"] == "unsupported-memory-rate"
-        assert prof["distortion_contracts"]["identity"]["distortion_bound"] == 0.0
-        assert prof["label_canon"]["recalled"] == "never spoken as memory"
         assert prof["memory"]["distilled_retention"] == "P3650D"
-        # 0034 §5 — the Brain Glass is a template property, a fourth
-        # projection under rule 7; the region map is JB's to tune
-        assert prof["layout"] == "brain"
-        assert set(prof["brain_regions"]) == {"prefrontal", "temporal",
-                                              "parietal", "occipital",
-                                              "cerebellar", "limbic"}
+        # the Phase D gate (JB 2026-07-15): the dials and the template block
+        # are contracts/v0-LEGAL — the overlaid profile validates whole
+        validate(prof, "tier-profile.schema.json")
+        assert prof["memory"]["review_interval"] == "P30D"
+        t = prof["template"]
+        assert t["name"] == "continuity" and t["layout"] == "brain"
+        assert t["distortion_contracts"]["identity"]["distortion_bound"] == 0.0
+        assert t["label_canon"]["recalled"] == "never spoken as memory"
+        assert set(t["brain_regions"]) == {"prefrontal", "temporal",
+                                           "parietal", "occipital",
+                                           "cerebellar", "limbic"}
     # a plain plan is untouched — the template never leaks
     plain = shipyard.plan("u:demo", "plain", [], set(), "did:web:test")
     assert "template" not in plain["eco"]
     assert "template" not in plain["eco"]["profile"]
+    validate(plain["eco"]["profile"], "tier-profile.schema.json")
     with pytest.raises(ValueError):
         shipyard.plan("u:demo", "x", [], set(), "did:web:test", template="bogus")
 
