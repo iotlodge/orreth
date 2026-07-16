@@ -165,16 +165,22 @@ structural, composed from record state · the Mirror lands here as spoonful 3 ·
 brain layout is a template property, a fourth projection under rule 7 · the
 three concept images move to `docs/vision/` as brain-glass concept art.
 
-**OPEN (JB's locks after reading):**
-- **Survivorship & inheritance** — the gravest new governance question canon has
-  faced; the §4 options need JB's deliberate lock (own dive?).
-- **The region map** — the functional placement table is proposed; JB tunes the
-  anatomy.
-- **Sequencing against 0032/0033** — proposed order: 0033 sp1–3 → 0034 sp1 →
-  0032 build (the desk serves the continuity universe's revalidation needs
-  beautifully) → 0034 sp2–4 → 0033 sp4 (the rule-9 gate) with 0031's aperture.
-- **The first resident of the continuity universe** — the librarian wears it, or
-  a new embodied companion earns a name at JB's gate (the christening pattern).
+**Locked by JB (2026-07-15):**
+- **Survivorship & inheritance** — ITS OWN DIVE: mortality gets a full design
+  doc (seal · succession · crypto-shred · per-domain mix, studied against
+  0012's quorum thinking) staged for JB's deliberate lock. Nothing builds
+  until then; the §4 options stand as the dive's starting slate.
+- **The first resident** — the librarian wears the continuity seat: her seats
+  already serve e:care/f:home through the label canon. A dedicated companion
+  may be christened at JB's gate when the Mirror's evidence earns it a name.
+- **Sequencing** — satisfied as built (Phase A → B → C, the gate last).
+
+**Still open, queued after the current lists (JB, 2026-07-15):**
+- **The region map & "Tuning the mind"** — JB tunes the anatomy, brightness,
+  colors, resting angle at a dedicated session; paired with the STRETCH GOAL:
+  a universe whose topology is ORGANIZED like brain anatomy (the three memory
+  layers mapped to the tissue) so the orrery and the Brain Glass are one
+  living thing seen as world and as mind.
 
 ---
 

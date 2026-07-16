@@ -159,17 +159,19 @@ asks · cadence in beats, not wall-clock (rule 9 untouched) · same-source
 repetition never promotes (0014 applied) · contradiction v0 is same-ref-changed
 detection, by identity not meaning · nothing auto-supersedes.
 
-**OPEN (JB's locks after reading):**
-- **The default cadence and per-delivery budget** — proposed: 100 beats ·
-  4 calls; dials on the subscription record, not the tier profile.
-- **The delivery-note lane** — proposed: quiet deliveries low (log), news
-  medium; may a *persistently* changing source escalate to high on its own?
-- **Auto-offer "keep it fresh"** — on every acquisition plan, or only when the
-  human asks? (Proposed: offered on every acquisition-shaped objective, plainly
-  worded, unchecked by default.)
-- **The subscription quota** — how many standing subscriptions may a floor
-  carry before the ask escalates? (Proposed: a Tier Profile concern for the day
-  it matters; v0 relies on the human gate.)
+**Locked by JB (2026-07-15):**
+- **The default cadence and budget**: 100 beats · 4 calls per delivery — the
+  dials live on the subscription record, and the human's "every N beats" on
+  the ask stands.
+- **The delivery-note lane**: quiet = log, news = medium, and NO automatic
+  escalation in v0 — a persistently changing source stays on the medium lane
+  until evidence argues otherwise.
+- **Auto-offer "keep it fresh"**: on every acquisition-shaped objective,
+  plainly worded, unchecked by default — opt-in per plan.
+- **The subscription quota**: the human gate IS the quota in v0; a Tier
+  Profile cap waits for the day it matters.
+- **Design-owner calls confirmed** (no veto): the first issue arrives with
+  the subscription · the desk ledger travels verbatim · the cadence dial.
 
 ---
 
