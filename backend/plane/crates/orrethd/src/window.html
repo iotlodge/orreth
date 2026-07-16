@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Orreth · Console</title>
 <style>
-  :root{--void:#080D1C;--deep:#0B1226;--hair:#1C2947;--hair2:#2A3960;
+  /* color-scheme:dark — the UA's own widgets (scrollbars above all) render dark
+     in EVERY container, present and future; the recurring light-scrollbar bug
+     was the class, this is the cure (JB's catch ×2, 2026-07-15) */
+  :root{color-scheme:dark;--void:#080D1C;--deep:#0B1226;--hair:#1C2947;--hair2:#2A3960;
     --star:#EAEFFA;--dim:#8894B4;--faint:#4B5678;--brass:#D4A960;--brassdim:#8a6f42;
     --near:#7FD1A8;--blue:#9FB6E8;--red:#E89A8F;--viol:#B79CE8;
     --mono:ui-monospace,"SF Mono",Menlo,monospace;--serif:Palatino,Georgia,serif}
@@ -68,6 +71,7 @@
   /* one glass, every floor: worlds are doors, and the trail climbs back */
   .trow{cursor:pointer} .trow:hover .tn{color:var(--star)}
   #crumbs{font:.7rem var(--mono);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .over{font:.58rem var(--mono);color:var(--faint);margin-left:.55rem;letter-spacing:.02em}
   #crumbs .crumb{color:var(--brass);cursor:pointer} #crumbs .crumb:hover{filter:brightness(1.2)}
   #crumbs .csep{color:var(--faint);margin:0 .35em} #crumbs .cnow{color:var(--faint)}
   .who{min-width:0;flex:1} .who .id{font:.73rem/1.25 var(--mono);color:var(--star);
@@ -396,7 +400,20 @@
   @media(prefers-reduced-motion:reduce){.alertring,.moon.ripple,.planet.ripple{animation:none!important}}
 
   /* ── REQUESTS + ASK ── */
-  #v-req,#v-ask{padding:1.6rem;overflow-y:auto}
+  #v-req,#v-ask,#v-obj{padding:1.6rem;overflow-y:auto}
+  /* the human's queue, triaged (JB 2026-07-15): waiting on you · in flight ·
+     settled — bands, kind chips, and drawers for the record */
+  .qband{font:.72rem var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--dim);margin:1.3rem 0 .5rem;display:flex;align-items:center;gap:.6rem}
+  .qband b{color:var(--brass)}
+  .qband .n{color:var(--faint)}
+  .qchips{display:flex;flex-wrap:wrap;gap:.35rem;margin:.6rem 0 .2rem}
+  .qchip{font:.68rem var(--mono);color:var(--dim);border:1px solid var(--hair);
+    border-radius:999px;padding:.14rem .6rem;cursor:pointer;user-select:none}
+  .qchip.on{color:var(--brass);border-color:var(--brass)}
+  .qgroup{font:.72rem var(--mono);color:var(--dim);border:1px solid var(--hair);
+    border-radius:8px;padding:.45rem .8rem;margin:.3rem 0;cursor:pointer;user-select:none}
+  .qgroup b{color:var(--ink)} .qgroup .n{color:var(--faint)}
   .ask-box{max-width:760px}
   .ask-box .prompt{font-family:var(--serif);font-size:1.2rem;color:var(--star);margin-bottom:.4rem}
   .ask-box .hint{font:.78rem var(--mono);color:var(--faint);margin-bottom:1rem}
@@ -516,7 +533,7 @@
     main{grid-template-columns:1fr}
     .rail{display:none}
     #v-pulse{padding:1.1rem}
-    #v-farm,#v-stable,#v-req,#v-ask{padding:.9rem}
+    #v-farm,#v-stable,#v-req,#v-ask,#v-obj{padding:.9rem}
     .lower{grid-template-columns:1fr;gap:1.4rem}
     .farmgrid{grid-template-columns:1fr}
     .reslegend{max-width:92%}
@@ -530,7 +547,7 @@
 </head>
 <body>
 <header>
-  <div class="crest"><span class="r">ORRETH</span><span class="u">console · <b id="scope">…</b></span></div>
+  <div class="crest"><span class="r">ORRETH</span><span class="u">console · <b id="scope">…</b></span><span id="over" class="over" title="era.commits+hash — climbs with every push; display only, never logic"></span></div>
   <span id="crumbs"></span>
   <div class="tabs">
     <span class="tab on" data-v="uni">Universe</span>
@@ -1380,6 +1397,7 @@ const SUBJ=()=>floorScope?{cohort:{scope:floorScope}}:"self";
 async function pulse(){
   try{
     const h=await(await fetch(api("/health"))).json(); $("scope").textContent=h.scope;
+    if(h.version)$("over").textContent=h.version;   /* the soft version note */
     floorScope=h.scope;
     document.querySelectorAll(".place").forEach(e=>e.textContent=h.scope);  /* every surface names its place (0030 §4) */
     const ro=await(await fetch(api("/rollup"))).json();
@@ -1461,42 +1479,80 @@ const ago=t=>{const s=(Date.now()-new Date(t))/1e3;
 /* a pending ask nothing serves is VISIBLE governance, not a mystery (0018 §7) */
 const staleNote=r=>r.status==="pending"&&Date.now()-new Date(r.at)>12e3?
   `<div class="sub" style="color:var(--red)">…no keeper answering — is the join door open? (scripts/dev.sh start)</div>`:"";
+function reqRow(r){
+  /* one request, rendered — the gates (0012: consequence waits) keep their
+     buttons wherever the row appears */
+  const jgate=r.kind==="join"&&r.status==="staged";
+  const egate=r.kind==="ecosystem"&&r.status==="staged";
+  const ogate=r.kind==="objective"&&r.status==="staged";  /* the plan gate (0030 §3) */
+  const igate=r.kind==="improvement"&&r.status==="staged"; /* the smith's gate (0031 §4) */
+  const ugate=r.kind==="subscription"&&r.status==="staged"; /* the desk's gate (0032 §1) */
+  const cgate=r.kind==="consent"&&r.status==="staged"; /* the consent gate (0034 §4) */
+  const note=jgate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`
+    :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`
+    :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`+kfOffer(r)
+    :igate?`<div class="sub" style="color:var(--near);white-space:pre-wrap">${(r.result||{}).package_text||"a rewrite waits for your word (R6)"}</div>`
+    :ugate?`<div class="sub" style="color:var(--near)">a standing spend — ${(r.result||{}).terms||"terms readable at the gate"}</div>`
+    :cgate?`<div class="sub" style="color:var(--near)">access to your memory — ${(r.result||{}).terms||"the bundle readable at the gate"}</div>`:"";
+  return `<div class="req"><span class="kind">${r.kind||"request"}</span>
+   <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
+   ${jgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">admit</button>
+    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">turn away</button>`
+   :egate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">launch</button>
+    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">scrap</button>`
+   :ogate?`<button class="sbtn ok" onclick="objDecide('${r.id}',true)">fan the plan</button>
+    <button class="sbtn no" onclick="objDecide('${r.id}',false)">decline</button>`
+   :igate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">adopt</button>
+    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
+   :ugate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">open the subscription</button>
+    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
+   :cgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">open the access</button>
+    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
+   :`<span class="st">${r.status}</span>`}</div>`;
+}
+/* the triage (JB 2026-07-15): the queue banded by what it needs from you —
+   WAITING ON YOU (staged gates + open questions) · IN FLIGHT (the round is
+   tending) · SETTLED (the record, in per-kind drawers). Kind chips filter
+   every band; drawer state survives the console's breaths (WALKOPEN idiom). */
+let REQKIND="all"; const REQOPEN=new Set();
+function reqKind(k){REQKIND=k;loadReq()}
+function reqOpen(k){REQOPEN.has(k)?REQOPEN.delete(k):REQOPEN.add(k);loadReq()}
 async function loadReq(){
   try{
     const q=(await(await fetch(api("/requests"))).json()).requests||[];
-    $("req-badge").textContent=q.length?`(${q.length})`:"";
-    /* the gates (0012 — consequence waits): a STAGED join has proven its key; a
-       STAGED ecosystem is a drafted launch plan. Admit / launch, or turn away /
-       scrap. Every other request renders as before. */
-    $("reqlist").innerHTML= q.length? q.slice().reverse().map(r=>{
-      const jgate=r.kind==="join"&&r.status==="staged";
-      const egate=r.kind==="ecosystem"&&r.status==="staged";
-      const ogate=r.kind==="objective"&&r.status==="staged";  /* the plan gate (0030 §3) */
-      const igate=r.kind==="improvement"&&r.status==="staged"; /* the smith's gate (0031 §4) */
-      const ugate=r.kind==="subscription"&&r.status==="staged"; /* the desk's gate (0032 §1) */
-      const cgate=r.kind==="consent"&&r.status==="staged"; /* the consent gate (0034 §4) */
-      const note=jgate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`
-        :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`
-        :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`+kfOffer(r)
-        :igate?`<div class="sub" style="color:var(--near);white-space:pre-wrap">${(r.result||{}).package_text||"a rewrite waits for your word (R6)"}</div>`
-        :ugate?`<div class="sub" style="color:var(--near)">a standing spend — ${(r.result||{}).terms||"terms readable at the gate"}</div>`
-        :cgate?`<div class="sub" style="color:var(--near)">access to your memory — ${(r.result||{}).terms||"the bundle readable at the gate"}</div>`:"";
-      return `<div class="req"><span class="kind">${r.kind||"request"}</span>
-       <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
-       ${jgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">admit</button>
-        <button class="sbtn no" onclick="joinDecide('${r.id}',false)">turn away</button>`
-       :egate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">launch</button>
-        <button class="sbtn no" onclick="joinDecide('${r.id}',false)">scrap</button>`
-       :ogate?`<button class="sbtn ok" onclick="objDecide('${r.id}',true)">fan the plan</button>
-        <button class="sbtn no" onclick="objDecide('${r.id}',false)">decline</button>`
-       :igate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">adopt</button>
-        <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
-       :ugate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">open the subscription</button>
-        <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
-       :cgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">open the access</button>
-        <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
-       :`<span class="st">${r.status}</span>`}</div>`;}).join("")
-      : `<div class="quiet">nothing waiting — a calm universe.</div>`;
+    const isWaiting=r=>r.status==="staged"||(r.kind==="question"&&r.status==="pending");
+    const isSettled=r=>r.status==="done"||r.status==="denied";
+    const wait=q.filter(isWaiting).reverse(),
+          settled=q.filter(isSettled).reverse(),
+          flight=q.filter(r=>!isWaiting(r)&&!isSettled(r)).reverse();
+    /* the badge counts what WAITS ON YOU — the number that matters */
+    $("req-badge").textContent=wait.length?`(${wait.length})`:"";
+    const kinds={};q.forEach(r=>{const k=r.kind||"request";kinds[k]=(kinds[k]||0)+1});
+    const chips=`<div class="qchips"><span class="qchip ${REQKIND==="all"?"on":""}"
+      onclick="reqKind('all')">all · ${q.length}</span>`+
+      Object.entries(kinds).sort().map(([k,n])=>`<span class="qchip ${REQKIND===k?"on":""}"
+      onclick="reqKind('${k}')">${k} · ${n}</span>`).join("")+`</div>`;
+    const keep=r=>REQKIND==="all"||(r.kind||"request")===REQKIND;
+    const band=(title,rows,empty)=>`<div class="qband"><b>${title}</b>
+      <span class="n">· ${rows.length}</span></div>`+
+      (rows.length?rows.map(reqRow).join(""):`<div class="quiet">${empty}</div>`);
+    /* settled: per-kind drawers — the record kept, never in your face */
+    const sk={};settled.filter(keep).forEach(r=>{const k=r.kind||"request";
+      (sk[k]=sk[k]||[]).push(r)});
+    const drawers=Object.entries(sk).sort().map(([k,rows])=>{
+      const open=REQOPEN.has(k);
+      return `<div class="qgroup" onclick="reqOpen('${k}')">${open?"▾":"▸"}
+        <b>${k}</b> <span class="n">· ${rows.length} settled — ${open?"click to close":"click to open"}</span></div>`
+        +(open?rows.slice(0,40).map(reqRow).join("")
+          +(rows.length>40?`<div class="quiet">+${rows.length-40} older — the record keeps every one</div>`:""):"");
+    }).join("")||`<div class="quiet">nothing settled yet.</div>`;
+    $("reqlist").innerHTML=chips
+      +band("waiting on you — consequence waits (0012)",wait.filter(keep),
+            "nothing waits on you — a calm universe.")
+      +band("in flight — the round is tending",flight.filter(keep),
+            "nothing in flight.")
+      +`<div class="qband"><b>settled — the record keeps every word</b>
+        <span class="n">· ${settled.filter(keep).length}</span></div>`+drawers;
     $("asklog").innerHTML= q.filter(r=>r.kind==="gather").length?
       q.filter(r=>r.kind==="gather").slice().reverse().map(r=>
       `<div class="req"><span class="kind">gather</span><span class="txt">${r.text}

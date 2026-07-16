@@ -15,8 +15,12 @@ FIELD=4502
 
 rootpub() {  # keep the seed and infrastructure/.env in lockstep, always
   RP=$(cd "$CONF" && uv run python smoke_orrethd.py root-pub)
-  echo "ORRETH_ROOT_PUB=$RP" > "$ROOT/infrastructure/.env"
-  echo "· root: ${RP:0:20}… (env synced)"
+  # the version: era (VERSION file, bumped reflectively) . commit-count + short
+  # hash — climbs with every push on its own, honest provenance in the glass
+  OV="v$(cat "$ROOT/VERSION" 2>/dev/null || echo 0.0).$(git -C "$ROOT" rev-list --count HEAD 2>/dev/null || echo 0)+$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo dev)"
+  { echo "ORRETH_ROOT_PUB=$RP"; echo "ORRETH_VERSION=$OV"; } > "$ROOT/infrastructure/.env"
+  export ORRETH_VERSION="$OV"
+  echo "· root: ${RP:0:20}… (env synced) · $OV"
 }
 
 joindoor() {  # becky answers joins + the librarian answers Asks — the floor's cognition

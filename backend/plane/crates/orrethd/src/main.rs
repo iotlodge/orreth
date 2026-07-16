@@ -393,6 +393,9 @@ async fn health(State(app): State<Arc<App>>) -> Json<Value> {
         "records": u.nodes[0].records.len(),
         "high_water": u.nodes[0].high_water,
         "bodies": u.body_store.is_some(),
+        // the version rides the rig's env (dev.sh derives it from git) — the
+        // glass wears it as a soft note; display only, never logic
+        "version": std::env::var("ORRETH_VERSION").unwrap_or_else(|_| "dev".into()),
     }))
 }
 

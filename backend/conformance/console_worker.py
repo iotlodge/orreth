@@ -2819,6 +2819,7 @@ class Shipyard:
         return self._docker(
             "run", "-d", "--name", spec["container"], "--network", RIG_NET,
             "--restart", "unless-stopped",
+            "-e", f"ORRETH_VERSION={os.environ.get('ORRETH_VERSION', 'dev')}",
             "-v", f"{PROFILES_DIR}:/profiles:ro",
             "-v", f"{spec['container']}-bodies:/data/bodies",
             "-p", f"{port}:{port}",
