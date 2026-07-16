@@ -1135,7 +1135,10 @@ function bgFrame(ts){
   if(!BG||!BG.on)return;
   if($("v-uni").classList.contains("hide")||document.hidden){requestAnimationFrame(bgFrame);return}
   const cv=$("bcanvas"),W=cv.clientWidth,H=cv.clientHeight;
-  if(cv.width!==W*2){cv.width=W*2;cv.height=H*2}
+  /* BOTH dimensions — the spacetime drawer changes height alone, and a
+     width-only check left the buffer squashed into the new space (JB's
+     catch, 2026-07-15) */
+  if(cv.width!==W*2||cv.height!==H*2){cv.width=W*2;cv.height=H*2}
   const g=cv.getContext("2d");g.setTransform(2,0,0,2,0,0);
   const dt=Math.min(.06,(ts-BG.last)/1000||.016);BG.last=ts;
   if(!BG.drag)BG.ang+=dt*.14;
