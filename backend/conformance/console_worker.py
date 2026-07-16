@@ -561,6 +561,60 @@ def call(port: int, method: str, path: str, payload=None):
         return json.loads(b) if b[:1] in (b"{", b"[") else b
 
 
+def open_ask(port: int, match: dict) -> bool:
+    """Is this question already waiting at the gate? The dedup for re-staging
+    duties (ada's drift, charlotte's rug-pull): a rig restart resets the
+    daemon's live state and the duty re-fires — but the queue SURVIVES (0022
+    §8), so without this guard every restart multiplies the same ask. One
+    question, one card, however many times the world re-notices it."""
+    try:
+        rows = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        return False
+    return any(r.get("status") in ("pending", "staged")
+               and all(r.get(k) == v for k, v in match.items())
+               for r in rows)
+
+
+_GATE_SWEPT: set[int] = set()
+
+
+def collapse_gate_duplicates(port: int) -> None:
+    """One-time housekeeping per worker session: the duplicates already staged
+    by the pre-guard era collapse to the NEWEST copy per (kind, action,
+    subject) — the older ones resolve done with an honest note. The worker
+    tidies only its own re-staged duties; the human's asks are never touched."""
+    if port in _GATE_SWEPT:
+        return
+    _GATE_SWEPT.add(port)
+    try:
+        rows = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        _GATE_SWEPT.discard(port)
+        return
+    groups: dict[tuple, list] = {}
+    for r in rows:
+        if r.get("status") != "staged" or r.get("kind") not in ("mind", "service"):
+            continue
+        if r.get("action") not in ("reapprove",):
+            continue
+        key = (r["kind"], r.get("action"), r.get("mind") or r.get("name"))
+        groups.setdefault(key, []).append(r)
+    for key, dupes in groups.items():
+        dupes.sort(key=lambda r: str(r.get("at", "")))
+        for r in dupes[:-1]:                  # every copy but the newest
+            try:
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "done",
+                      "result": {"superseded": "a newer copy of this ask stands "
+                                               "— collapsed by the gate's dedup"}})
+            except Exception:
+                pass
+        if len(dupes) > 1:
+            print(f"  ↳ gate tidied: {len(dupes) - 1} duplicate {key[0]} ask(s) "
+                  f"for {key[2]} collapsed — the newest stands")
+
+
 def wire_consents(port: int, scope: str) -> list[dict]:
     """The consent ledger from the wire (0034 §4): current head per worldline,
     read under the librarian's seat — revoked shown with its posture."""
@@ -1102,9 +1156,12 @@ class FarmKeeper:
                 else:                            # the rug-pull door (0018 §2)
                     worldline(port, scope, back, "manifest-changed",
                               pinned=back["manifest_hash"], seen=back.get("proposed_hash"))
-                    call(port, "POST", "/requests",
-                         {"kind": "service", "action": "reapprove", "name": svc["name"],
-                          "text": f"{svc['name']} came back CHANGED — re-approve its new manifest?"})
+                    if not open_ask(port, {"kind": "service", "action": "reapprove",
+                                           "name": svc["name"]}):
+                        call(port, "POST", "/requests",
+                             {"kind": "service", "action": "reapprove", "name": svc["name"],
+                              "proposed_hash": back.get("proposed_hash"),
+                              "text": f"{svc['name']} came back CHANGED — re-approve its new manifest?"})
                     print(f"  ↳ {svc['name']} quarantined — its manifest changed while it was gone")
                     # trust wears a review date (0031 §5): a changed manifest is a
                     # freshness trigger — charlotte fires the signal, the librarian
@@ -1442,9 +1499,12 @@ class Wrangler:
                     mindline(port, scope, out, "manifest-drift",
                              pinned=out.get("manifest_hash"),
                              seen=out.get("proposed_hash"))
-                    call(port, "POST", "/requests",
-                         {"kind": "mind", "action": "reapprove", "mind": mid,
-                          "text": f"{mid}'s deal moved under its pin — re-approve the new terms?"})
+                    if not open_ask(port, {"kind": "mind", "action": "reapprove",
+                                           "mind": mid}):
+                        call(port, "POST", "/requests",
+                             {"kind": "mind", "action": "reapprove", "mind": mid,
+                              "proposed_hash": out.get("proposed_hash"),
+                              "text": f"{mid}'s deal moved under its pin — re-approve the new terms?"})
                     print(f"  ↳ {mid} drifted — the deal changed; held for your decision")
                     continue
                 s = out                        # freshest expires_at for the EOL check
@@ -3508,6 +3568,7 @@ def main() -> None:
                         except Exception:
                             pass                 # resting state can wait a cycle
                 if beat_due:
+                    collapse_gate_duplicates(port)  # pre-guard-era noise, tidied once
                     KEEPER.tend(port, scope)
                     WRANGLER.sync(port, scope)
                     serials_beat(port, scope)  # the desk sweeps on the beat (0032 §2)
