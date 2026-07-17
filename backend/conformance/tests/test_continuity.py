@@ -362,6 +362,128 @@ def test_beckys_testament_doors():
     assert "no testament stands" in empty["reply"]
 
 
+def test_silence_only_contains():
+    """0035 §8 lock 1: silence justifies living within the window,
+    unresponsive past it, sealed past twice it — and NEVER more; a universe
+    with no history has no basis to seal."""
+    v = continuity.silence_verdict
+    base = "2026-07-01T00:00:00Z"
+    assert v(21, base, "2026-07-10T00:00:00Z") == "living"       # day 9
+    assert v(21, base, "2026-07-25T00:00:00Z") == "unresponsive"  # day 24
+    assert v(21, base, "2026-08-20T00:00:00Z") == "sealed"        # day 50
+    # the rig dial scales a testament-day; the LAW stays days
+    assert v(2, "2026-07-01T00:00:00Z", "2026-07-01T00:00:25Z",
+             unit_secs=10) == "unresponsive"                      # 25s ≈ day 2.5
+    assert v(2, "2026-07-01T00:00:00Z", "2026-07-01T00:00:45Z",
+             unit_secs=10) == "sealed"                            # 45s ≈ day 4.5
+    assert v(21, "", "2026-08-20T00:00:00Z") == "living"          # no history
+
+
+def test_the_passage_walks_legal_edges():
+    """0035 §3: the machine takes no shortcuts and the closed states never
+    reopen — sealed is reversible, attested aborts to sealed (one voice) or
+    living (a heartbeat), and only sealed reaches the attestation gate."""
+    ok = continuity.may_transition
+    assert ok("living", "unresponsive") and ok("unresponsive", "sealed")
+    assert ok("unresponsive", "living") and ok("sealed", "living")
+    assert ok("sealed", "attested")
+    assert ok("attested", "sealed") and ok("attested", "living")
+    assert ok("attested", "executed") and ok("executed", "legacy")
+    assert not ok("living", "sealed")          # no shortcut past the reach-out
+    assert not ok("living", "attested")        # a living universe is never dead
+    assert not ok("unresponsive", "attested")
+    assert not ok("executed", "living")        # a closed worldline never reopens
+    assert not ok("legacy", "living")
+    assert not ok("sealed", "executed")        # nothing executes without attestation
+    assert continuity.passage_state(None) == "living"
+    assert continuity.seal_active({"state": "sealed"})
+    assert continuity.seal_active({"state": "attested"})
+    assert not continuity.seal_active({"state": "living"})
+    assert continuity.may_stage_attestation({"state": "sealed"})
+    assert not continuity.may_stage_attestation({"state": "living"})
+    assert not continuity.may_stage_attestation(None)
+
+
+def test_passage_records_ride_one_worldline(world):
+    """0035 §3: every transition a sibling naming its trigger — the machine
+    is legible forever; an unknown state is refused by name."""
+    f = world.field_prod
+    me = {"did": f.steward["did"], "scope": f.scope}
+    first = continuity.make_passage(me, f.steward_kp, f.scope, "unresponsive",
+                                    reason="silence past the window")
+    f.write(first)
+
+    def heads():
+        rows = [{"id": rid, "passage": _body(r)["passage"],
+                 "derived_from": r.get("derived_from") or [],
+                 "at": r["received_at"]}
+                for rid, r in f.records.items()
+                if "passage" in r.get("tags", [])]
+        rows.sort(key=lambda x: x["at"])
+        return continuity.passage_heads(rows)
+
+    h = heads()
+    assert len(h) == 1 and h[0]["state"] == "unresponsive"
+    sealed = continuity.make_passage(me, f.steward_kp, f.scope, "sealed",
+                                     reason="still silent — contained")
+    sealed["derived_from"] = [h[0]["id"]]
+    f.write(sealed)
+    h = heads()
+    assert len(h) == 1 and h[0]["state"] == "sealed"
+    att = continuity.make_passage(me, f.steward_kp, f.scope, "attested",
+                                  reason="quorum 2 at the gate",
+                                  evidence=["artifact-cert"],
+                                  attestors=["did:key:zE", "did:key:zW"],
+                                  cooling_until="2026-08-01T00:00:00Z")
+    att["derived_from"] = [h[0]["id"]]
+    f.write(att)
+    h = heads()
+    assert h[0]["state"] == "attested"
+    assert h[0]["evidence"] == ["artifact-cert"]
+    assert h[0]["cooling_until"] == "2026-08-01T00:00:00Z"
+    assert first["id"] in f.records            # every transition kept
+    with pytest.raises(ValueError):
+        continuity.make_passage(me, f.steward_kp, f.scope, "buried",
+                                reason="no such state")
+
+
+def test_beckys_passage_doors():
+    """0035 §3 at the card: the passage speaks its state; an attestation
+    STAGES with evidence and roster readable (never on words alone); the
+    abort acts NOW — one voice saves."""
+    living = parlor.answer("becky", "show the passage", {"scope": "u:demo"})
+    assert living["verbatim"] is True and "LIVING" in living["reply"]
+    sealed = parlor.answer("becky", "show the passage",
+                           {"scope": "u:demo",
+                            "passage": [{"state": "sealed",
+                                         "reason": "still silent"}]})
+    assert "SEALED" in sealed["reply"] and "one heartbeat unseals" \
+        in sealed["reply"]
+    att = parlor.answer("becky", "show the passage",
+                        {"scope": "u:demo",
+                         "passage": [{"state": "attested",
+                                      "reason": "quorum 2 at the gate",
+                                      "cooling_until": "2026-08-01T00:00:00Z"}]})
+    assert "ATTESTED" in att["reply"] and "cooling until 2026-08-01" \
+        in att["reply"]
+    ask = parlor.answer(
+        "becky",
+        "attest death: evidence artifact-death-certificate — "
+        "executor did:key:zExec, witness did:key:zWit",
+        {"scope": "u:demo"})
+    assert ask["action"] == "attest-death" and ask["verbatim"] is True
+    assert ask["evidence"] == ["artifact-death-certificate"]
+    assert ask["attestors"] == ["did:key:zExec", "did:key:zWit"]
+    assert ask["registry"] is False
+    assert "cooling-off" in ask["reply"] and "heartbeat" in ask["reply"]
+    naked = parlor.answer("becky", "attest death: executor did:key:zExec",
+                          {"scope": "u:demo"})
+    assert "action" not in naked and "evidence" in naked["reply"]
+    ab = parlor.answer("becky", "abort the attestation", {"scope": "u:demo"})
+    assert ab["action"] == "attestation-abort" and "one voice saves" \
+        in ab["reply"]
+
+
 def test_the_charter_is_config_as_memory(world):
     """R8: the floor's law on its own record — template, vector, regime, canon,
     legible to the glass and to every resident."""

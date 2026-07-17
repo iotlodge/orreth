@@ -854,6 +854,287 @@ def on_testament(port: int, scope: str, r: dict, *, approved: bool = False,
     print("  ↳ testament staged — the gate waits")
 
 
+# ---------------------------------------------------------------- the passage (0035 §3)
+
+_PASSAGE_LAST = 0.0
+PASSAGE_EVERY = int(os.environ.get("ORRETH_PASSAGE_EVERY", "60"))
+# a testament-day in seconds — a RIG dial for proving the machine, never law
+SILENCE_UNIT = int(os.environ.get("ORRETH_SILENCE_UNIT", "86400"))
+
+# death-administration asks are not heartbeats — v0 honesty: the executor
+# speaks through the same glass until 0012's signer registry lands, so the
+# passage's own administration must not read as its human returning
+_NOT_A_HEARTBEAT = ("attest death", "abort the attestation",
+                    "abort attestation", "show the passage", "show passage")
+
+
+def wire_passage(port: int, scope: str) -> list[dict]:
+    """The passage worldline from the wire (0035 §3): every transition kept,
+    the head ruling — the machine is legible forever."""
+    from datetime import datetime, timedelta, timezone
+    _, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return []
+    rows = []
+    for h in r.get("hits", []):
+        if "passage" not in (h.get("tags") or []):
+            continue
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        if isinstance(body, dict) and "passage" in body:
+            rows.append({"id": h["ref"], "passage": body["passage"],
+                         "derived_from": h.get("derived_from") or [],
+                         "at": h.get("occurred_at", "")})
+    rows.sort(key=lambda x: x["at"])
+    return continuity.passage_heads(rows)
+
+
+# silence must be OBSERVED, never inferred: the watch floors its verdict at
+# its own boot (a watcher that just woke has watched nothing), and the worker
+# stamps its own hand each time it answers a living human — the ranked
+# retrieve is the recover-after-restart source, never the primary signal.
+_WATCH_BOOT = time.time()
+_HUMAN_HAND: dict[str, float] = {}
+
+
+def _wall(ts: float) -> str:
+    from datetime import datetime, timezone
+    return datetime.fromtimestamp(ts, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def last_human_act(port: int, scope: str) -> str:
+    """The heartbeat signal: the newest parlor exchange that is the HUMAN
+    living in their universe — death-administration asks excluded, safer-mode
+    exchanges never written (consent bounds this watch too) — floored at the
+    watch's own boot and at the worker's first-hand record of answering."""
+    acts = [a["at"] for a in wire_audiences(port, scope)
+            if not str(a.get("asked") or "").strip().lower()
+            .startswith(_NOT_A_HEARTBEAT)]
+    acts.append(_wall(_WATCH_BOOT))
+    if scope in _HUMAN_HAND:
+        acts.append(_wall(_HUMAN_HAND[scope]))
+    return max(acts)
+
+
+# the beat's own hand, per scope: (state, wall-clock, record id) — the ranked
+# retrieve can trail a fresh write, and a machine that trusts a stale mirror
+# repeats itself (the 0032 re-staging dedup lesson, third organ to learn it).
+# Worker-local and lost on restart: one transient duplicate pair after a
+# restart is the honest cost, and the record keeps it. A dedicated tag-indexed
+# read is the queued improvement.
+_PASSAGE_HAND: dict[str, tuple[str, float, str]] = {}
+
+
+def write_passage(port: int, scope: str, state: str, reason: str, *,
+                  evidence: list | None = None, attestors: list | None = None,
+                  cooling_until: str = "", prev: dict | None = None) -> dict:
+    """One transition, becky-signed, deriving from the head it supersedes."""
+    me = {"did": _BECKY.did, "scope": scope}
+    rec = continuity.make_passage(me, _BECKY.kp, scope, state, reason=reason,
+                                  evidence=evidence, attestors=attestors,
+                                  cooling_until=cooling_until)
+    if prev is not None:
+        rec["derived_from"] = [prev["id"]]
+    call(port, "POST", "/records", rec)
+    _PASSAGE_HAND[scope] = (state, time.time(), rec["id"])
+    print(f"  ↳ the passage: {scope} → {state.upper()} — {reason}")
+    return {"id": rec["id"], **json.loads(crypto._b64d(rec["body"]).decode())["passage"]}
+
+
+def passage_now(port: int, scope: str) -> tuple[str, dict | None]:
+    """The machine's current state and head: the wire's word, corrected by
+    our own hand when the index trails a fresh write — every door consults
+    THIS, so no gate is ever refused (or opened) by a stale mirror."""
+    heads = wire_passage(port, scope)
+    head = heads[-1] if heads else None
+    state = continuity.passage_state(head)
+    hand = _PASSAGE_HAND.get(scope)
+    if hand and hand[0] != state and time.time() - hand[1] < 300:
+        return hand[0], {"id": hand[2], "state": hand[0]}
+    return state, head
+
+
+def _post_reachout(port: int) -> None:
+    """One question, one card (the 0032 dedup idiom): a reach-out already
+    pending is never doubled, however many beats pass unanswered."""
+    try:
+        rows = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        rows = []
+    if any(r.get("kind") == "passage" and r.get("status") == "pending"
+           for r in rows):
+        return
+    call(port, "POST", "/requests",
+         {"kind": "passage",
+          "text": "the universe reached out — silence past your window; "
+                  "a word from you answers (0035 §3)"})
+
+
+def _resolve_reachouts(port: int, reply: str) -> None:
+    """The reach-out was answered: every pending passage ask closes with the
+    honest sentence — nothing was lost."""
+    try:
+        rows = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        return
+    for r in rows:
+        if r.get("kind") == "passage" and r.get("status") == "pending":
+            try:
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "done",
+                      "result": {"reply": reply}})
+            except Exception:
+                pass
+
+
+def abort_attestation(port: int, scope: str) -> str:
+    """One voice saves (0012 §3): an attested death returns to SEALED — the
+    universe stays contained, and the record keeps that someone spoke."""
+    state, head = passage_now(port, scope)
+    if state != "attested":
+        return "no attestation runs — nothing to abort"
+    write_passage(port, scope, "sealed",
+                  "an entitled voice aborted the attestation — one voice saves",
+                  prev=head)
+    return ("the attestation is aborted — the universe returns to SEALED, "
+            "contained and reversible; the record keeps that you spoke")
+
+
+def passage_beat() -> None:
+    """The silence watch (0035 §3), one sweep per round across every floor
+    with a standing testament: silence may only CONTAIN — reach out at the
+    window, seal at twice the window, and never more. A heartbeat reverses
+    everything reversible. Detection stages, never decides (0013 §3)."""
+    global _PASSAGE_LAST
+    if time.time() - _PASSAGE_LAST < PASSAGE_EVERY:
+        return
+    _PASSAGE_LAST = time.time()              # set early — a failing beat never hot-loops
+    for p, s in sorted(FLOOR_SCOPES.items()):
+        try:
+            _passage_floor(p, s)
+        except Exception as e:
+            print(f"    (the passage watch stumbled at {s}: {e})")
+
+
+def _passage_floor(port: int, scope: str) -> None:
+    tst = [h for h in wire_testaments(port, scope)
+           if h.get("posture") == "standing"]
+    if not tst:
+        return                                # no standing word — nothing watches
+    state, head = passage_now(port, scope)
+    if state in ("executed", "legacy"):
+        return                                # a closed worldline never reopens
+    days = int((tst[-1].get("silence_window") or {}).get("days", 30))
+    verdict = continuity.silence_verdict(days, last_human_act(port, scope),
+                                         NOW(), unit_secs=SILENCE_UNIT)
+    if state == "attested":
+        if verdict == "living":               # the loudest abort is a heartbeat
+            write_passage(port, scope, "living",
+                          "a heartbeat aborted the attestation — the loudest "
+                          "abort; the seal lifts, nothing was lost", prev=head)
+            _resolve_reachouts(port, "a heartbeat answered — the human "
+                                     "returned; the attestation is aborted")
+        return                                # the cooling-off runs; sp3 completes it
+    if verdict == "living":
+        if state in ("unresponsive", "sealed"):
+            write_passage(port, scope, "living",
+                          "a heartbeat answered — the seal lifts, nothing "
+                          "was lost", prev=head)
+            _resolve_reachouts(port, "a heartbeat answered — the human "
+                                     "returned; the seal lifts, nothing was lost")
+        return
+    if verdict == "unresponsive" and state == "living":
+        head = write_passage(port, scope, "unresponsive",
+                             "silence past the window — the seats ask after "
+                             "their human", prev=head)
+        _post_reachout(port)
+        return
+    if verdict == "sealed" and state in ("living", "unresponsive"):
+        if state == "living":                 # the machine takes no shortcuts
+            head = write_passage(port, scope, "unresponsive",
+                                 "silence past the window — the seats ask "
+                                 "after their human", prev=head)
+            _post_reachout(port)
+        write_passage(port, scope, "sealed",
+                      "still silent — contained at machine speed, "
+                      "reversible, loud; one heartbeat unseals", prev=head)
+
+
+def on_attestation(port: int, scope: str, r: dict, *, approved: bool = False,
+                   declined: bool = False) -> None:
+    """0035 §3 at the gravest gate: the ask stages with its evidence and
+    roster readable; approval only STARTS the cooling-off — approved-but-held
+    (0012 §3) — and the guards re-check at the door, because this gate above
+    all must never be right by accident."""
+    evidence = [str(e) for e in r.get("evidence") or []]
+    attestors = [str(a) for a in r.get("attestors") or []]
+    registry = bool(r.get("registry"))
+    if declined:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"declined": True,
+                         "reply": "declined — the universe stays sealed, and "
+                                  "the record keeps that you chose"}})
+        print("  ↳ attestation declined at the gate — the universe stays sealed")
+        return
+    tst = [h for h in wire_testaments(port, scope)
+           if h.get("posture") == "standing"]
+    state, head = passage_now(port, scope)
+    if approved:
+        if not tst or not continuity.may_stage_attestation({"state": state}) \
+                or not continuity.attestation_met(tst[-1], attestors, evidence,
+                                                  registry=registry):
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"refused": "the bar is no longer met — the "
+                                        "universe must be SEALED and quorum 2 "
+                                        "must stand against the testament's "
+                                        "roster (0035 §8)"}})
+            print("  ↳ attestation REFUSED at the door — the bar moved")
+            return
+        from datetime import datetime, timedelta, timezone
+        until = (datetime.now(timezone.utc)
+                 + timedelta(seconds=continuity.ATTESTATION_COOLING_DAYS
+                             * SILENCE_UNIT)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        write_passage(port, scope, "attested",
+                      "death attested at the gate — quorum 2 against the "
+                      "roster; the cooling-off runs",
+                      evidence=evidence, attestors=attestors,
+                      cooling_until=until, prev=head)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"reply": f"attested — the cooling-off runs until "
+                                  f"{until}. the universe stays contained; "
+                                  "one voice returns it to sealed, a "
+                                  "heartbeat to living (0035 §3)"}})
+        print(f"  ↳ attestation STANDS — cooling until {until}")
+        return
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "staged",
+          "result": {"held": "a death at the gate — the gravest consequence "
+                             "waits for you (0035 §3)",
+                     "terms": "evidence " + (", ".join(evidence) or "none")
+                              + " · attestors " + (", ".join(attestors) or "none")
+                              + (" · registry evidence" if registry else "")
+                              + f" · approval starts a "
+                                f"{continuity.ATTESTATION_COOLING_DAYS}-day "
+                                "cooling-off — any entitled voice aborts; a "
+                                "heartbeat aborts everything"}})
+    print("  ↳ attestation staged — the gravest gate waits")
+
+
 # ---------------------------------------------------------------- the Mirror (0034 sp3)
 
 MIR = _seed("mirror")                 # the assessor — its own self, no seat, no voice
@@ -3316,6 +3597,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     if name == "becky":                       # the door-keeper's ledger (0034 §4)
         facts["consents"] = wire_consents(port, scope)
         facts["testament"] = wire_testaments(port, scope)  # the last word (0035)
+        facts["passage"] = wire_passage(port, scope)       # and the machine's state
     if name == "grace":                       # the smith reads her shelf (0031 §4)
         u_port = universe_port(port)
         facts["shelf"] = wire_shelf(u_port)
@@ -3458,6 +3740,30 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                                     for d, f in ans["fates"].items()))})
     if ans.get("action") == "testament-revoke":  # 0035 §2 — withdrawal acts NOW
         reply = write_testament_revocation(port, scope)
+    if ans.get("action") == "attest-death":   # 0035 §3 — the gravest gate
+        tst = [h for h in wire_testaments(port, scope)
+               if h.get("posture") == "standing"]
+        pstate, _ = passage_now(port, scope)
+        if not tst:
+            reply = ("no testament stands — the operational path is the only "
+                     "door (0026 §2), and it waits for humans, plural")
+        elif not continuity.may_stage_attestation({"state": pstate}):
+            reply = (f"the universe is {pstate.upper()} — only a SEALED "
+                     "universe may be attested dead (0035 §3)")
+        elif not continuity.attestation_met(tst[-1], ans["attestors"],
+                                            ans["evidence"],
+                                            registry=ans.get("registry", False)):
+            reply = ("the bar is not met — quorum 2: the executor + evidence "
+                     "+ a named witness (or registry evidence), against the "
+                     "testament's roster (0035 §8)")
+        else:
+            call(port, "POST", "/requests",
+                 {"kind": "attestation", "evidence": ans["evidence"],
+                  "attestors": ans["attestors"],
+                  "registry": ans.get("registry", False),
+                  "text": "attest death — the gravest gate (0035 §3)"})
+    if ans.get("action") == "attestation-abort":  # one voice saves — acts NOW
+        reply = abort_attestation(port, scope)
     kp, did = resident_key(name, scope)
     voiced = None
     # descriptive answers may be voiced; actions and flow-control words never are —
@@ -3475,6 +3781,8 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     call(port, "POST", "/requests/resolve",
          {"id": r["id"], "status": "done",
           "result": {"reply": final, "voiced": bool(voiced), "by": did}})
+    if not asked.strip().lower().startswith(_NOT_A_HEARTBEAT):
+        _HUMAN_HAND[scope] = time.time()      # first-hand: a living human spoke
     if kp is not None and not recordable:
         print(f"  ↳ parlor · {name} answered UNRECORDED at {scope} — safer mode (0034 §4)")
         return
@@ -3685,6 +3993,12 @@ def main() -> None:
                             on_testament(port, scope, r,
                                          approved=r.get("status") == "approved",
                                          declined=r.get("status") == "denied")
+                        elif r.get("kind") == "attestation" and \
+                                r.get("status") in ("pending", "approved", "denied"):
+                            handled.add(key)
+                            on_attestation(port, scope, r,
+                                           approved=r.get("status") == "approved",
+                                           declined=r.get("status") == "denied")
                     except urllib.error.HTTPError as e:
                         # The floor ANSWERED — a refusal, not a dead wire (probe()'s
                         # law). One poison request must never silence the residents:
@@ -3715,6 +4029,7 @@ def main() -> None:
                         monitor_beat(port)    # the standing job beats like an organ
                         improver_beat(port)   # and the improver reads the receipts
                         mirror_beat()         # the mirror reflects every floor (0034 sp3)
+                        passage_beat()        # the silence watch — contain, never execute (0035 §3)
 
             except Exception as e:
                 scopes.pop(port, None)

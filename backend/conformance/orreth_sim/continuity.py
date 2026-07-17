@@ -413,6 +413,114 @@ def narrowed_ok(old: dict, new: dict) -> bool:
     return True
 
 
+# ---------------------------------------------------------------- the passage (0035 §3)
+
+# The states a universe walks when its human goes quiet. EXECUTED and LEGACY
+# are declared here so the edges can be law today; the walk that reaches them
+# is spoonful 3's. Silence may only CONTAIN (§8 lock 1): the only edges
+# silence drives are living→unresponsive→sealed — everything past SEALED
+# takes attested death, and everything before EXECUTED reverses.
+PASSAGE_STATES = ("living", "unresponsive", "sealed", "attested",
+                  "executed", "legacy")
+
+# The legal edges. A missing pair is a refused transition — most notably
+# nothing leaves EXECUTED or LEGACY toward the living (a closed worldline
+# never reopens, §5) and nothing reaches ATTESTED except from SEALED (a
+# living universe cannot be attested dead).
+_PASSAGE_EDGES = {
+    ("living", "unresponsive"),       # silence past the window — reach out
+    ("unresponsive", "sealed"),       # still silent — contain, reversibly
+    ("unresponsive", "living"),       # the reach-out was answered
+    ("sealed", "living"),             # one heartbeat unseals
+    ("sealed", "attested"),           # quorum 2 + evidence, at the gate
+    ("attested", "sealed"),           # an entitled voice aborts — one voice saves
+    ("attested", "living"),           # the loudest abort is a heartbeat
+    ("attested", "executed"),         # cooling-off passed, no voice — sp3's walk
+    ("executed", "legacy"),           # the standing state — sp4's door
+}
+
+# The cooling-off on an attested death (0012 §3: approved-but-held), a named
+# default in days — probate-shaped. Design-owner call, JB may veto; a future
+# testament field may carry it per-universe.
+ATTESTATION_COOLING_DAYS = 7
+
+
+def may_transition(current: str, nxt: str) -> bool:
+    """The edge law, pure: the passage walks its machine and nothing else —
+    no shortcut from living to sealed, no return from the closed states."""
+    return (current, nxt) in _PASSAGE_EDGES
+
+
+def silence_verdict(silence_days: int, last_act_at: str, now: str,
+                    *, unit_secs: int = 86400) -> str:
+    """§8 lock 1, pure: what silence alone may justify. Within the window —
+    living; past it — unresponsive (the seats reach out, and the reach-out
+    gets a full window of its own to be answered); past twice the window —
+    sealed. Never more: execution is attestation's alone. `unit_secs` scales
+    a testament-day for the rig (a dial, never law); no acts on record reads
+    as living — a universe with no history has no basis to seal."""
+    if not last_act_at:
+        return "living"
+    from datetime import datetime
+    fmt = "%Y-%m-%dT%H:%M:%SZ"
+    try:
+        quiet = (datetime.strptime(now, fmt)
+                 - datetime.strptime(last_act_at[:20].rstrip("Z") + "Z", fmt)
+                 ).total_seconds()
+    except ValueError:
+        return "living"
+    window = max(int(silence_days), 1) * int(unit_secs)
+    if quiet < window:
+        return "living"
+    if quiet < 2 * window:
+        return "unresponsive"
+    return "sealed"
+
+
+def make_passage(agent: dict, kp, scope: str, state: str, *, reason: str,
+                 evidence: list | None = None, attestors: list | None = None,
+                 cooling_until: str = "") -> dict:
+    """A passage transition on the record (0035 §3): one worldline per
+    universe, a sibling per transition, each naming what drove it — the
+    machine is legible forever. Detection stages, never decides (0013 §3):
+    every record here names a trigger a human can audit."""
+    if state not in PASSAGE_STATES:
+        raise ValueError(f"unknown passage state: {state!r}")
+    body = {"passage": {
+        "state": state, "reason": reason,
+        **({"evidence": list(evidence)} if evidence else {}),
+        **({"attestors": list(attestors)} if attestors else {}),
+        **({"cooling_until": cooling_until} if cooling_until else {}),
+    }}
+    return make_memory(agent, kp, scope, body, kind="semantic",
+                       tags=["passage"])
+
+
+def passage_heads(rows: list[dict]) -> list[dict]:
+    """The current head from (id, passage, derived_from, at)-shaped rows,
+    oldest first — the worldline idiom, third organ this dive."""
+    superseded = {d for r in rows for d in r.get("derived_from") or []}
+    return [{"id": r["id"], **r["passage"]} for r in rows
+            if r["id"] not in superseded]
+
+
+def passage_state(head: dict | None) -> str:
+    """No passage worldline yet — the universe is living."""
+    return (head or {}).get("state", "living")
+
+
+def seal_active(head: dict | None) -> bool:
+    """0026 §3's semantics, worn by the passage: SEALED and ATTESTED are
+    contained states — reversible, never conflated with destruction."""
+    return passage_state(head) in ("sealed", "attested")
+
+
+def may_stage_attestation(head: dict | None) -> bool:
+    """A living universe cannot be attested dead: only SEALED may move to the
+    attestation gate. The guard is structural, not procedural."""
+    return passage_state(head) == "sealed"
+
+
 def make_charter(agent: dict, kp, scope: str) -> dict:
     """Config-as-memory (R8): the floor's own record carries its law — the
     template named, the vector, the regime, the canon. The glass reads the

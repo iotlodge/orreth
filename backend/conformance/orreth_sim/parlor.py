@@ -188,7 +188,8 @@ def _card_becky(facts: dict) -> tuple[str, list]:
              {"label": "the consent ledger", "ask": "show consents"},
              {"label": "stop recording…", "template": "stop recording conversation"},
              {"label": "my testament…", "template": "testament: "},
-             {"label": "the testament", "ask": "show testament"}])
+             {"label": "the testament", "ask": "show testament"},
+             {"label": "the passage", "ask": "show the passage"}])
 
 
 def _card_charlotte(facts: dict) -> tuple[str, list]:
@@ -304,6 +305,50 @@ def answer(name: str, text: str, facts: dict) -> dict:
                                "gate waits for you (0012). unnamed domains "
                                "seal; silence may only contain (0035 §8).",
                     "action": "testament-stage", **tst, "verbatim": True}
+        # the passage (0035 §3): silence may only contain. Attesting a death
+        # STAGES an escalation (the gravest gate); aborting one acts NOW —
+        # one voice saves. v0 honesty: the executor speaks through this same
+        # glass until 0012's signer registry lands; the words travel VERBATIM.
+        if t.startswith(("show the passage", "the passage", "show passage")):
+            return {"reply": _becky_passage(facts), "verbatim": True}
+        if t.startswith(("abort the attestation", "abort attestation")):
+            return {"reply": "aborting the attestation NOW — one voice saves "
+                             "(0012 §3). the universe returns to SEALED, "
+                             "contained and reversible; the record keeps who "
+                             "spoke.",
+                    "action": "attestation-abort", "verbatim": True}
+        am = re.match(r"^attest\s+death:?\s+(.+)$", (text or "").strip(),
+                      flags=re.IGNORECASE)
+        if am:
+            abody = am.group(1)
+            evidence = [e.rstrip(",.;—") for e in
+                        re.findall(r"evidence\s+(\S+)", abody,
+                                   flags=re.IGNORECASE)]
+            ex = re.search(r"executor\s+(\S+)", abody, flags=re.IGNORECASE)
+            wits = [w.rstrip(",.;—") for w in
+                    re.findall(r"witness(?:es)?\s+(\S+)", abody,
+                               flags=re.IGNORECASE)]
+            registry = bool(re.search(r"\bregistry\b", abody,
+                                      flags=re.IGNORECASE))
+            attestors = ([ex.group(1).rstrip(",.;—")] if ex else []) + wits
+            if not evidence:
+                return {"reply": "an attestation needs evidence — a death is "
+                                 "never declared on words alone (0035 §3). "
+                                 "say: attest death: evidence <artifact> — "
+                                 "executor did:key:…, witness did:key:….",
+                        "verbatim": True}
+            return {"reply": "staging the attestation — evidence "
+                             + ", ".join(evidence)
+                             + (f"; attestors {', '.join(attestors)}"
+                                if attestors else "; no attestors named")
+                             + ". the gravest gate: quorum 2 against the "
+                               "testament's roster, and approval only starts "
+                               "the cooling-off — any entitled voice aborts, "
+                               "and the loudest abort is a heartbeat "
+                               "(0035 §3).",
+                    "action": "attest-death", "evidence": evidence,
+                    "attestors": attestors, "registry": registry,
+                    "verbatim": True}
         # consent & delegation (0034 §4): granting access to a person's memory
         # is a consequence — it STAGES; revoking is safety — it acts NOW.
         # Every consent word travels VERBATIM: access terms are protocol.
@@ -652,6 +697,37 @@ def _becky_testament(facts: dict) -> str:
               "silence window — silence may only contain; only attested death "
               "executes, and the loudest abort is a heartbeat (0035 §3). "
               "revocable to your last day.")
+
+
+def _becky_passage(facts: dict) -> str:
+    """The passage, in words (0035 §3): the state, what drove it, and what the
+    machine may do next — spoken so the gravest states are never a surprise."""
+    heads = facts.get("passage") or []
+    state = heads[-1].get("state", "living") if heads else "living"
+    reason = heads[-1].get("reason", "") if heads else ""
+    lines = {
+        "living": "the universe is LIVING — your word is recent, nothing "
+                  "watches but the clock. silence past your window would "
+                  "reach out first, seal second, and never more (0035 §8).",
+        "unresponsive": "the universe is UNRESPONSIVE — the seats have "
+                        "reached out; a full window of silence more and it "
+                        "seals, reversibly. any word from you answers.",
+        "sealed": "the universe is SEALED — contained at machine speed, "
+                  "reversible, loud. one heartbeat unseals; only attested "
+                  "death (quorum 2 + evidence, at the gate) moves further.",
+        "attested": "a death is ATTESTED — the cooling-off runs. any "
+                    "entitled voice aborts back to sealed; a heartbeat "
+                    "aborts everything. nothing executes until the window "
+                    "passes in silence.",
+        "executed": "the fates have EXECUTED — the walk is on the record.",
+        "legacy": "the universe is LEGACY — the archive speaks about, "
+                  "never as.",
+    }
+    extra = ""
+    if state == "attested" and heads and heads[-1].get("cooling_until"):
+        extra = f" cooling until {heads[-1]['cooling_until'][:16]}Z."
+    return lines[state] + (f" (last transition: {reason})" if reason else "") \
+        + extra
 
 
 def _librarian_desk(facts: dict) -> str:
