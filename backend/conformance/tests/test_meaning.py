@@ -6,10 +6,32 @@ Mirror's meaning-aware assessor (0034 sp3). Local model, bytes never leave."""
 import pytest
 
 from orreth_sim import meaning, mirror
+from orreth_sim.schemas import SchemaError, validate
 
-pytestmark = pytest.mark.skipif(meaning.embedder() is None,
+needs_axis = pytest.mark.skipif(meaning.embedder() is None,
                                 reason="the meaning axis is dark on this "
                                        "node — consumers degrade to identity")
+
+
+def test_the_meaning_facet_is_contract_legal():
+    """0022 §4's contract delta, JB's rule-9 approval 2026-07-17: the facet is
+    OPTIONAL and additive — a query without it validates untouched, one with
+    it validates whole, and a malformed one refuses at the schema."""
+    q = {"requester": "did:key:z6MkTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST",
+         "subject": "self", "space": "self",
+         "time": {"from": "2026-01-01T00:00:00Z"},
+         "intent": "recall", "budget": {"cost": 4}, "auth": "biscuit-sim"}
+    validate(q, "retrieval.schema.json#/$defs/Query")          # an old client
+    validate({**q, "meaning": {"text": "when do I take my pills", "k": 5}},
+             "retrieval.schema.json#/$defs/Query")             # a new one
+    validate({**q, "meaning": {"text": "just the text"}},
+             "retrieval.schema.json#/$defs/Query")             # k optional
+    with pytest.raises(SchemaError):
+        validate({**q, "meaning": {"k": 5}},                   # text required
+                 "retrieval.schema.json#/$defs/Query")
+    with pytest.raises(SchemaError):
+        validate({**q, "meaning": {"text": "x", "vector": [1]}},  # nothing extra
+                 "retrieval.schema.json#/$defs/Query")
 
 
 def _rows():
@@ -25,6 +47,7 @@ def _rows():
     ]
 
 
+@needs_axis
 def test_the_hybrid_ranks_by_meaning_and_the_dead_rank_dead():
     """0022 §4: a question finds what it MEANS, not what it spells — and
     `recalled` never surfaces unless the query asks for the dead, and then
@@ -41,6 +64,7 @@ def test_the_hybrid_ranks_by_meaning_and_the_dead_rank_dead():
     assert dead[0]["standing"] == 0.0               # visible, and labeled
 
 
+@needs_axis
 def test_standing_outranks_relevance_alone():
     """0022 §4: the industry reranks by relevance; Orreth reranks by
     STANDING — an investigating claim yields to a trusted one of equal
@@ -60,6 +84,7 @@ def test_standing_outranks_relevance_alone():
         meaning.standing_weight("trusted")
 
 
+@needs_axis
 def test_the_aperture_and_the_coordinate_pull():
     """Phase E's reason to be built LAST: the ranker consumes what the gate
     made hard — an aperture pin (0031) or coordinate kinship (0033) pulls a
@@ -84,6 +109,7 @@ def test_the_aperture_and_the_coordinate_pull():
     assert react[0]["id"] == "r-med"                # 0031 §5, discharged
 
 
+@needs_axis
 def test_cross_source_contradiction_speaks_where_numbers_disagree():
     """0032 §3's deferral, discharged at meaning-v1: same subject by cosine,
     different sources, numbers that disagree — and only there; one voice
@@ -108,6 +134,7 @@ def test_cross_source_contradiction_speaks_where_numbers_disagree():
     assert meaning.contradiction_pairs([claims[0]]) == []
 
 
+@needs_axis
 def test_the_mirror_hears_meaning():
     """0034 sp3's stated wait, ended: three phrasings, one worry — the Mirror
     counts them as one ask with the meaning axis, and honestly cannot without

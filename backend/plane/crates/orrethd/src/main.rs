@@ -57,6 +57,11 @@ struct App {
     /// fresh on every render, so the picture equals a full scan (one world, one picture).
     presence_epoch: std::sync::atomic::AtomicU64,
     presence_memo: Mutex<(u64, Option<Arc<ScanProducts>>)>,
+    /// The meaning axis's query embedder (0022 §4 Phase 2): a LOCALHOST door
+    /// on the node machine — bytes-local (§10) at machine granularity on the
+    /// dev rig; the in-process fastembed-rs landing is the named production
+    /// step. Unreachable ⇒ the axis is dark and hit order stands, honestly.
+    embed_url: String,
 }
 
 fn bump(app: &App, key: &str) {
@@ -303,6 +308,8 @@ async fn main() {
         port,
         presence_epoch: std::sync::atomic::AtomicU64::new(0),
         presence_memo: Mutex::new((0, None)),
+        embed_url: std::env::var("ORRETH_EMBED_URL")
+            .unwrap_or_else(|_| "http://host.docker.internal:4562/embed".into()),
     });
 
     // the upward presence beat: every 5s tell the parent what this subtree holds,
@@ -324,6 +331,8 @@ async fn main() {
         .route("/records/:id/body", get(body))
         .route("/tombstone", post(tombstone_ingress))
         .route("/retrieve", post(egress))
+        .route("/embeddings", post(embeddings_ingress))
+        .route("/embeddings/missing", post(embeddings_missing))
         .route("/standards", get(standards))
         .route("/window", get(window))
         .route("/model/authorize", post(model_authorize))
@@ -457,12 +466,131 @@ async fn tombstone_ingress(State(app): State<Arc<App>>, Json(req): Json<Value>) 
             if let Err(e) = store.save_purged(&node_scope, &id, &now_iso(), &reason) {
                 eprintln!("orrethd · purge write-through failed for {id}: {e}");
             }
+            // the purge reaches the projection (0026 §1's hard rule): a shred
+            // that misses the vector index is not a purge
+            if let Err(e) = store.evict_embedding(&node_scope, &id) {
+                eprintln!("orrethd · embedding eviction failed for {id}: {e}");
+            }
         }
         touch(&app);
         (StatusCode::OK, Json(json!({"ok": true, "stub": true})))
     })
     .await
     .unwrap()
+}
+
+/// The vector projection's write door (0022 §4 Phase 2, JB's rule-9 approval
+/// 2026-07-17): becky-chained token, uniform refusal — the steward's sweep
+/// pushes vectors computed where the bytes live; nothing here reads content.
+async fn embeddings_ingress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let id = req["record_id"].as_str().unwrap_or("").to_string();
+        let ok = { app.universe.lock().unwrap().verify_token(&req["token"]).is_ok() };
+        if id.is_empty() || !ok {
+            bump(&app, "refusals");
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        let (known, node_scope) = {
+            let u = app.universe.lock().unwrap();
+            (u.nodes[0].records.contains_key(&id), u.nodes[0].scope.clone())
+        };
+        if !known {
+            bump(&app, "refusals"); // absent and unauthorized wear one face
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        let vec: Vec<f32> = req["vector"].as_array().map(|a| {
+            a.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect()
+        }).unwrap_or_default();
+        if let Some(store) = &app.pg {
+            if let Err(e) = store.save_embedding(&node_scope, &id, &vec) {
+                eprintln!("orrethd · embedding write failed for {id}: {e}");
+            }
+        }
+        (StatusCode::OK, Json(json!({"ok": true})))
+    })
+    .await
+    .unwrap()
+}
+
+/// The sweep's worklist: which accepted records the projection has not yet
+/// embedded. Token-guarded like every projection door; purged stubs never appear.
+async fn embeddings_missing(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let ok = { app.universe.lock().unwrap().verify_token(&req["token"]).is_ok() };
+        if !ok {
+            bump(&app, "refusals");
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        let node_scope = { app.universe.lock().unwrap().nodes[0].scope.clone() };
+        let limit = req["limit"].as_i64().unwrap_or(32).clamp(1, 256);
+        let missing = app.pg.as_ref()
+            .and_then(|s| s.missing_embeddings(&node_scope, limit).ok())
+            .unwrap_or_default();
+        (StatusCode::OK, Json(json!({"missing": missing})))
+    })
+    .await
+    .unwrap()
+}
+
+/// The meaning rerank (0022 §4, the trust-weighted hybrid ON THE WIRE): runs
+/// over exactly the hits the node authorized and served — never a second read
+/// path. Fuses the cosine rank with the incoming newest-first rank (weighted
+/// RRF), multiplies by STANDING (fidelity), and `recalled` ranks dead. A dark
+/// axis (no vectors, no embedder) leaves the order untouched, honestly.
+fn apply_meaning(app: &App, req: &Value, mut result: Value) -> Value {
+    let Some(text) = req["query"]["meaning"]["text"].as_str().filter(|t| !t.is_empty()) else {
+        return result;
+    };
+    let k = req["query"]["meaning"]["k"].as_u64().unwrap_or(5) as usize;
+    let Some(hits) = result["hits"].as_array().cloned() else { return result };
+    if hits.is_empty() { return result; }
+    // the query embeds at the node machine's local door — bytes-local (§10)
+    let qv: Vec<f32> = match ureq::post(&app.embed_url)
+        .timeout(std::time::Duration::from_secs(4))
+        .send_json(&json!({"texts": [text]}))
+        .ok()
+        .and_then(|r| r.into_json::<Value>().ok())
+    {
+        Some(v) => v["vectors"][0].as_array().map(|a| {
+            a.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect()
+        }).unwrap_or_default(),
+        None => Vec::new(),
+    };
+    if qv.is_empty() { return result; }
+    let refs: Vec<String> = hits.iter()
+        .filter_map(|h| h["ref"].as_str().map(String::from)).collect();
+    let node_scope = { app.universe.lock().unwrap().nodes[0].scope.clone() };
+    let sims: std::collections::BTreeMap<String, f64> = app.pg.as_ref()
+        .and_then(|s| s.cosine_for(&node_scope, &refs, &qv).ok())
+        .unwrap_or_default().into_iter().collect();
+    if sims.is_empty() { return result; }
+    let mut sim_order: Vec<usize> = (0..hits.len()).collect();
+    sim_order.sort_by(|a, b| {
+        let sa = hits[*a]["ref"].as_str().and_then(|r| sims.get(r)).copied().unwrap_or(-1.0);
+        let sb = hits[*b]["ref"].as_str().and_then(|r| sims.get(r)).copied().unwrap_or(-1.0);
+        sb.partial_cmp(&sa).unwrap_or(std::cmp::Ordering::Equal)
+    });
+    let standing = |f: &str| match f {
+        "verified" => 1.0, "distilled" => 0.8,
+        "distilled-raw-expired" => 0.5, "untrusted" => 0.6,
+        "recalled" => 0.0, _ => 0.6,
+    };
+    let mut scored: Vec<(f64, Value)> = Vec::new();
+    for (recency_pos, h) in hits.iter().enumerate() {
+        let sim_pos = sim_order.iter().position(|i| *i == recency_pos).unwrap_or(hits.len());
+        let fused = 1.0 / (60.0 + sim_pos as f64 + 1.0)
+            + 0.5 / (60.0 + recency_pos as f64 + 1.0);
+        let w = standing(h["fidelity"].as_str().unwrap_or(""));
+        if w == 0.0 { continue; }             // recalled ranks dead (0022 §4)
+        scored.push((fused * w, h.clone()));
+    }
+    scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+    result["hits"] = json!(scored.into_iter().take(k.max(1)).map(|(_, h)| h)
+        .collect::<Vec<_>>());
+    result
 }
 
 async fn body(State(app): State<Arc<App>>, UrlPath(id): UrlPath<String>) -> impl IntoResponse {
@@ -543,7 +671,7 @@ async fn egress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl Int
             age_days <= app.horizon_days
         };
         if covered || app.parent.is_none() {
-            return (StatusCode::OK, Json(local));
+            return (StatusCode::OK, Json(apply_meaning(&app, &req, local)));
         }
         let spent = local["provenance"]["budget_spent"]["cost"].as_i64().unwrap_or(1);
         let remaining = req["query"]["budget"]["cost"].as_i64().unwrap_or(1).max(1) - spent;
@@ -552,7 +680,7 @@ async fn egress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl Int
             let mut out = local;
             out["verification"] = json!("partial");
             out["remainder"] = json!({"not_served": {"from": req["query"]["time"]["from"]}});
-            return (StatusCode::OK, Json(out));
+            return (StatusCode::OK, Json(apply_meaning(&app, &req, out)));
         }
         let mut fwd = req.clone();
         fwd["query"]["budget"]["cost"] = json!(remaining);
@@ -560,7 +688,10 @@ async fn egress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl Int
         match ureq::post(&format!("{parent_url}/retrieve")).send_json(&fwd) {
             Ok(resp) => {
                 let upstream: Value = resp.into_json().unwrap_or_else(|_| json!({}));
-                (StatusCode::OK, Json(merge_results(local, upstream)))
+                // the meaning rerank runs AFTER the merge, over the fused set —
+                // each tier already reranked its own; the asking tier owns the
+                // final order it serves its caller
+                (StatusCode::OK, Json(apply_meaning(&app, &req, merge_results(local, upstream))))
             }
             Err(_) => {
                 // parent refused or unreachable ≡ un-served coverage — the shape never
@@ -568,7 +699,7 @@ async fn egress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl Int
                 let mut out = local;
                 out["verification"] = json!("partial");
                 out["remainder"] = json!({"not_served": {"from": req["query"]["time"]["from"]}});
-                (StatusCode::OK, Json(out))
+                (StatusCode::OK, Json(apply_meaning(&app, &req, out)))
             }
         }
     })

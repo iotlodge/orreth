@@ -13,6 +13,10 @@ use std::sync::Mutex;
 
 pub struct PgRecords {
     client: Mutex<postgres::Client>,
+    /// The meaning axis's projection is OPTIONAL (0022 §1: every index is a
+    /// rebuildable projection): a pg without the vector extension leaves the
+    /// axis dark on the wire — never an error, never a second truth.
+    vectors: bool,
 }
 
 impl PgRecords {
@@ -83,7 +87,113 @@ impl PgRecords {
                  PRIMARY KEY (node_scope, subject)
              );",
         )?;
-        Ok(Self { client: Mutex::new(client) })
+        // 0022 §4 Phase 2 (JB's rule-9 approval 2026-07-17): the vector
+        // projection. NULL embedding = "looked, nothing to embed" — the sweep
+        // never revisits it. A pg without pgvector leaves `vectors` false.
+        let vectors = client
+            .batch_execute(
+                "CREATE EXTENSION IF NOT EXISTS vector;
+                 CREATE TABLE IF NOT EXISTS embeddings (
+                     node_scope  TEXT NOT NULL,
+                     id          TEXT NOT NULL,
+                     embedding   vector(384),
+                     PRIMARY KEY (node_scope, id)
+                 );
+                 CREATE INDEX IF NOT EXISTS embeddings_hnsw
+                     ON embeddings USING hnsw (embedding vector_cosine_ops);",
+            )
+            .map(|_| true)
+            .unwrap_or_else(|e| {
+                eprintln!("orrethd · the meaning axis stays dark (no pgvector): {e}");
+                false
+            });
+        Ok(Self { client: Mutex::new(client), vectors })
+    }
+
+    fn vec_literal(v: &[f32]) -> String {
+        let mut s = String::with_capacity(v.len() * 10 + 2);
+        s.push('[');
+        for (i, x) in v.iter().enumerate() {
+            if i > 0 { s.push(','); }
+            s.push_str(&format!("{x}"));
+        }
+        s.push(']');
+        s
+    }
+
+    /// Store one record's vector — or a NULL marker when there was nothing to
+    /// embed (a purged stub, an empty body): the sweep moves on, honestly.
+    pub fn save_embedding(&self, node_scope: &str, id: &str, vec: &[f32])
+                          -> Result<(), postgres::Error> {
+        if !self.vectors { return Ok(()); }
+        let mut client = self.client.lock().unwrap();
+        if vec.is_empty() {
+            client.execute(
+                "INSERT INTO embeddings (node_scope, id, embedding)
+                 VALUES ($1, $2, NULL) ON CONFLICT (node_scope, id) DO NOTHING",
+                &[&node_scope, &id],
+            )?;
+        } else {
+            client.execute(
+                &format!(
+                    "INSERT INTO embeddings (node_scope, id, embedding)
+                     VALUES ($1, $2, '{}'::vector)
+                     ON CONFLICT (node_scope, id) DO UPDATE
+                         SET embedding = EXCLUDED.embedding",
+                    Self::vec_literal(vec)
+                ),
+                &[&node_scope, &id],
+            )?;
+        }
+        Ok(())
+    }
+
+    /// Records this node accepted that the projection has not yet embedded —
+    /// the sweep's worklist. Purged stubs are never on it (0026 §1: a purge
+    /// that misses the vector index is not a purge; they never enter it).
+    pub fn missing_embeddings(&self, node_scope: &str, limit: i64)
+                              -> Result<Vec<String>, postgres::Error> {
+        if !self.vectors { return Ok(Vec::new()); }
+        let rows = self.client.lock().unwrap().query(
+            "SELECT r.id FROM records r
+             LEFT JOIN embeddings e ON e.node_scope = r.node_scope AND e.id = r.id
+             LEFT JOIN purged p     ON p.node_scope = r.node_scope AND p.id = r.id
+             WHERE r.node_scope = $1 AND e.id IS NULL AND p.id IS NULL
+             ORDER BY r.occurred_at DESC LIMIT $2",
+            &[&node_scope, &limit],
+        )?;
+        Ok(rows.into_iter().map(|r| r.get(0)).collect())
+    }
+
+    /// The purge reaches the projection (0026 §1, the stated hard rule): a
+    /// shredded record's vector is evicted in the same breath as its bytes.
+    pub fn evict_embedding(&self, node_scope: &str, id: &str)
+                           -> Result<(), postgres::Error> {
+        if !self.vectors { return Ok(()); }
+        self.client.lock().unwrap().execute(
+            "UPDATE embeddings SET embedding = NULL
+             WHERE node_scope = $1 AND id = $2",
+            &[&node_scope, &id],
+        )?;
+        Ok(())
+    }
+
+    /// Cosine similarity of the query vector against exactly the given ids —
+    /// the meaning rerank runs over the set THE NODE AUTHORIZED, never a
+    /// second read path.
+    pub fn cosine_for(&self, node_scope: &str, ids: &[String], qv: &[f32])
+                      -> Result<Vec<(String, f64)>, postgres::Error> {
+        if !self.vectors || ids.is_empty() || qv.is_empty() { return Ok(Vec::new()); }
+        let rows = self.client.lock().unwrap().query(
+            &format!(
+                "SELECT id, 1 - (embedding <=> '{}'::vector) AS sim
+                 FROM embeddings
+                 WHERE node_scope = $1 AND id = ANY($2) AND embedding IS NOT NULL",
+                Self::vec_literal(qv)
+            ),
+            &[&node_scope, &ids],
+        )?;
+        Ok(rows.into_iter().map(|r| (r.get(0), r.get(1))).collect())
     }
 
     /// Persist the STORED form of an accepted record, keyed by the ACCEPTING node —

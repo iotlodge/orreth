@@ -1251,6 +1251,102 @@ def on_attestation(port: int, scope: str, r: dict, *, approved: bool = False,
     print("  ↳ attestation staged — the gravest gate waits")
 
 
+# ---------------------------------------------------------------- the meaning axis (0022 Phase 2)
+
+EMBED_PORT = int(os.environ.get("ORRETH_EMBED_PORT", "4562"))
+_EMBED_LAST = 0.0
+EMBED_EVERY = int(os.environ.get("ORRETH_EMBED_EVERY", "90"))
+
+
+def embed_door() -> None:
+    """The node machine's local embedder (0022 §10, bytes-local at machine
+    granularity on the dev rig — the in-process fastembed-rs landing is the
+    named production step). Bound wide so the container bridge can reach it;
+    it embeds text and holds nothing — no record ever passes through it."""
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    class H(BaseHTTPRequestHandler):
+        def do_POST(self):
+            ln = int(self.headers.get("content-length") or 0)
+            try:
+                data = json.loads(self.rfile.read(ln) or b"{}")
+                vecs = meaning.embed([str(t) for t in data.get("texts") or []]) or []
+            except Exception:
+                vecs = []
+            out = json.dumps({"vectors": vecs}).encode()
+            self.send_response(200)
+            self.send_header("content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(out)
+
+        def log_message(self, *a):              # the door is quiet
+            pass
+
+    try:
+        ThreadingHTTPServer(("0.0.0.0", EMBED_PORT), H).serve_forever()
+    except OSError as e:
+        print(f"  (the embed door could not open on :{EMBED_PORT}: {e})")
+
+
+def _body_text(body) -> str:
+    """The string leaves of a record body, joined — what a record MEANS to the
+    axis. Bounded; structure is the coordinate's job, not the vector's."""
+    out: list[str] = []
+
+    def walk(v):
+        if isinstance(v, str):
+            out.append(v)
+        elif isinstance(v, dict):
+            for x in v.values():
+                walk(x)
+        elif isinstance(v, list):
+            for x in v:
+                walk(x)
+    walk(body)
+    return " ".join(out)[:2000]
+
+
+def embed_beat(port: int, scope: str) -> None:
+    """The projection sweep (0022 §4): embed what the node accepted but the
+    vector index lacks — computed HERE, where the bytes live, pushed through
+    the becky-guarded door. A dark axis sweeps nothing; a bodyless record
+    gets the NULL marker and is never revisited."""
+    global _EMBED_LAST
+    if time.time() - _EMBED_LAST < EMBED_EVERY:
+        return
+    _EMBED_LAST = time.time()                 # set early — a failing sweep never hot-loops
+    if meaning.embedder() is None:
+        return
+    token = _ROOT.issue_token(_BECKY.did, "u:demo",
+                              [{"action": "govern", "space": "self"}])
+    try:
+        missing = call(port, "POST", "/embeddings/missing",
+                       {"token": token, "limit": 64}).get("missing", [])
+    except Exception:
+        return
+    if not missing:
+        return
+    done = skipped = 0
+    for rid in missing:
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(rid, safe='')}/body")
+            text = _body_text(body).strip()
+        except Exception:
+            text = ""
+        vec = (meaning.embed([text]) or [[]])[0] if text else []
+        try:
+            call(port, "POST", "/embeddings",
+                 {"record_id": rid, "vector": vec, "token": token})
+            done += 1 if vec else 0
+            skipped += 0 if vec else 1
+        except Exception:
+            pass
+    print(f"  ↳ the meaning axis: {scope} — {done} embedded"
+          + (f" · {skipped} marked bodyless" if skipped else "")
+          + f" ({len(missing)} swept)")
+
+
 # ---------------------------------------------------------------- the Mirror (0034 sp3)
 
 MIR = _seed("mirror")                 # the assessor — its own self, no seat, no voice
@@ -4015,6 +4111,7 @@ def main() -> None:
           f":{JOIN_PORT} · tending floors {FLOORS}")
     handled: set[tuple] = set()               # (port, id, at, status): each step acted once
     scopes: dict[int, str] = {}
+    threading.Thread(target=embed_door, daemon=True).start()  # the meaning axis's door (0022 Ph2)
     SHIPYARD.replant()                        # hulls the rig lost come back before the round
     while True:
         beat_due = time.time() - KEEPER.last_beat >= BEAT_EVERY
@@ -4146,6 +4243,7 @@ def main() -> None:
                     KEEPER.tend(port, scope)
                     WRANGLER.sync(port, scope)
                     serials_beat(port, scope)  # the desk sweeps on the beat (0032 §2)
+                    embed_beat(port, scope)   # the vector projection fills (0022 Ph2)
                     continuity_charter(port, scope)  # a template floor gets its law (0034)
                     pin_organs(port, scope)
                     window_charter(port, scope)

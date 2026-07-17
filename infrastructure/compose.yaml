@@ -33,6 +33,10 @@ services:
     restart: unless-stopped
     environment:
       ORRETH_VERSION: ${ORRETH_VERSION:-dev}
+      # the meaning axis's query embedder (0022 Phase 2): the node machine's
+      # localhost door, served by the worker — bytes-local (0022 §10)
+      ORRETH_EMBED_URL: http://host.docker.internal:4562/embed
+    extra_hosts: ["host.docker.internal:host-gateway"]
     command: ["--profile", "/profiles/demo-universe.json", "--bind", "0.0.0.0", "--port", "4500",
               "--store-dir", "/data/bodies", "--root-pub", "${ORRETH_ROOT_PUB}",
               "--pg", "postgres://postgres:orreth@pg:5432/postgres", "--sweep-orphans"]
@@ -48,6 +52,10 @@ services:
     restart: unless-stopped
     environment:
       ORRETH_VERSION: ${ORRETH_VERSION:-dev}
+      # the meaning axis's query embedder (0022 Phase 2): the node machine's
+      # localhost door, served by the worker — bytes-local (0022 §10)
+      ORRETH_EMBED_URL: http://host.docker.internal:4562/embed
+    extra_hosts: ["host.docker.internal:host-gateway"]
     command: ["--profile", "/profiles/demo-eco.json", "--bind", "0.0.0.0", "--port", "4501",
               "--store-dir", "/data/bodies", "--root-pub", "${ORRETH_ROOT_PUB}",
               "--parent", "http://universe:4500",
@@ -65,6 +73,10 @@ services:
     restart: unless-stopped
     environment:
       ORRETH_VERSION: ${ORRETH_VERSION:-dev}
+      # the meaning axis's query embedder (0022 Phase 2): the node machine's
+      # localhost door, served by the worker — bytes-local (0022 §10)
+      ORRETH_EMBED_URL: http://host.docker.internal:4562/embed
+    extra_hosts: ["host.docker.internal:host-gateway"]
     command: ["--profile", "/profiles/demo-field.json", "--bind", "0.0.0.0", "--port", "4502",
               "--store-dir", "/data/bodies", "--root-pub", "${ORRETH_ROOT_PUB}",
               "--parent", "http://eco-cloud:4501",

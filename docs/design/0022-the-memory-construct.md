@@ -199,9 +199,28 @@ fastembed-rs) · BM25 extension · hybrid RRF query + trust-weighted rerank behi
 > reading-glasses worry counted as one ask, 3×, in the portrait) · demo
 > `scripts/demo.sh meaning` · 5 tests, 192/192. **THE RULE-9 GATE PASSED
 > 2026-07-17 (JB, via AskUserQuestion): `Query.meaning` (optional `{text, k}`
-> facet) + `embedding_ref` population are APPROVED into contracts/v0** — the
-> wire build (pgvector + BM25 + hybrid RRF in the plane, uniform refusal and
-> budget-miss ≡ authz-miss on the new path) is next.
+> facet) + `embedding_ref` population are APPROVED into contracts/v0.**
+> **THE WIRE LANDED the same day:** the contract facet (optional, additive —
+> schema-tested both ways) · pgvector live (the image JB staged 2026-07-08,
+> awake at last: `embeddings` table + HNSW cosine, an optional projection —
+> a vector-less pg leaves the axis dark, never an error) · the becky-guarded
+> `/embeddings` + `/embeddings/missing` doors (uniform refusal, absent ≡
+> unauthorized) · the worker's projection sweep embeds where the bytes live
+> and marks the bodyless NULL, never revisiting · **the meaning rerank runs
+> in orrethd OVER EXACTLY THE HITS THE NODE AUTHORIZED AND SERVED** — the
+> sacred core untouched: fused RRF (cosine × newest-first) × standing by
+> fidelity, `recalled` ranks dead, after the cross-tier merge · **the purge
+> reaches the projection** (0026 §1's hard rule: eviction rides the same
+> breath as `/tombstone`) · a dark axis (door down, no vectors) leaves hit
+> order untouched, honestly. **PROVEN ON THE WIRE**: "how do you build walls
+> out of packed soil?" — zero shared words — surfaced the `rammed earth
+> construction` self-dialog records from 1,207 hits at u:demo, and a forged
+> token on the meaning path drew the one refusal sentence. 193/193.
+> *Remaining, named: fastembed-rs in-process (the query embedder currently
+> rides the node machine's worker door) · BM25 lexical rank at the wire ·
+> vector-first candidate generation beyond the served set · the Hit.fidelity
+> enum wart (the wire already speaks `untrusted`/`recalled`; the contract
+> enum does not yet — a future JB cut).*
 
 Phase 3 (federation): Iroh transport under the existing push-up flow; offline-child
 resync test (kill a field for a day; watch it reconcile).

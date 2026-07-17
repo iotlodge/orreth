@@ -29,7 +29,17 @@
         "time": { "$ref": "common.schema.json#/$defs/TimeWindow" },
         "intent": { "enum": ["recall", "analyze", "interview"] },
         "budget": { "$ref": "common.schema.json#/$defs/Budget" },
-        "auth": { "type": "string", "description": "Serialized CapabilityToken (biscuit on the wire, 0006 §3)." }
+        "auth": { "type": "string", "description": "Serialized CapabilityToken (biscuit on the wire, 0006 §3)." },
+        "meaning": {
+          "type": "object",
+          "description": "The meaning axis (0022 §4 Phase 2; JB's rule-9 approval 2026-07-17): OPTIONAL semantic intent, additive — an old client never sends it. When present, hits are reranked meaning-first OVER THE SET THE NODE AUTHORIZED AND SERVED (ordered by fused meaning rank instead of newest-first); authorization, budgets, and the uniform refusal are untouched, and `recalled` ranks dead. Embeddings are computed where the bytes live (0022 §10, bytes-local).",
+          "properties": {
+            "text": { "type": "string", "minLength": 1 },
+            "k": { "type": "integer", "minimum": 1, "maximum": 50 }
+          },
+          "required": ["text"],
+          "additionalProperties": false
+        }
       },
       "required": ["requester", "subject", "space", "time", "intent", "budget", "auth"],
       "additionalProperties": false
