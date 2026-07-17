@@ -109,20 +109,24 @@ def parse_testament(text: str):
     em = re.search(r"executor\s+(\S+)", body, flags=re.IGNORECASE)
     if em:
         executor = em.group(1).rstrip(",.;—")
+    heir = ""
+    hm = re.search(r"heir\s+(\S+)", body, flags=re.IGNORECASE)
+    if hm:
+        heir = hm.group(1).rstrip(",.;—")
     witnesses = [w.rstrip(",.;—") for w in
                  re.findall(r"witness(?:es)?\s+(\S+)", body, flags=re.IGNORECASE)]
     silence_days = 30                     # the desk default; the human tunes it
     sm = re.search(r"silence\s+(\d+)\s*days?", body, flags=re.IGNORECASE)
     if sm:
         silence_days = int(sm.group(1))
-    cleaned = re.sub(r"(executor|witness(?:es)?)\s+\S+", " ", body,
+    cleaned = re.sub(r"(executor|witness(?:es)?|heir)\s+\S+", " ", body,
                      flags=re.IGNORECASE)
     cleaned = re.sub(r"silence\s+\d+\s*days?", " ", cleaned, flags=re.IGNORECASE)
     fates = {d.lower(): f.lower() for d, f in
              re.findall(r"([A-Za-z][\w-]*)\s+(seal|pass|shred)\b", cleaned,
                         flags=re.IGNORECASE)}
-    return {"fates": fates, "executor": executor, "witnesses": witnesses,
-            "silence_days": silence_days}
+    return {"fates": fates, "executor": executor, "heir": heir,
+            "witnesses": witnesses, "silence_days": silence_days}
 
 
 _TEMPLATES = ("continuity",)          # 0009's named templates the parlor knows
@@ -294,10 +298,17 @@ def answer(name: str, text: str, facts: dict) -> dict:
                                  "executor — only attested death executes "
                                  "(0035 §3). name one: … executor did:key:….",
                         "verbatim": True}
+            if any(f == "pass" for f in tst["fates"].values()) \
+                    and not tst["heir"]:
+                return {"reply": "a domain that passes needs an heir — "
+                                 "custody must have hands to land in "
+                                 "(0035 §4). name one: … heir did:key:….",
+                        "verbatim": True}
             fates_words = " · ".join(f"{d} {f}" for d, f in tst["fates"].items())
             return {"reply": f"staging your testament — {fates_words}; "
                              + (f"executor {tst['executor']}, " if tst["executor"]
                                 else "")
+                             + (f"heir {tst['heir']}, " if tst["heir"] else "")
                              + (f"witness {', '.join(tst['witnesses'])}, "
                                 if tst["witnesses"] else "")
                              + f"a {tst['silence_days']}-day silence window. "
@@ -420,6 +431,16 @@ def answer(name: str, text: str, facts: dict) -> dict:
     if name == "librarian":
         claim = profile.parse_assert(text)
         if claim is not None:                 # 0025 §2 — the sovereign stroke
+            ph = facts.get("passage") or []
+            if ph and not continuity.sovereign_alive(ph[-1]):
+                # the bi-temporal close (0035 §4): the sovereign class died
+                # with its sovereign — the portrait is frozen, structurally
+                return {"reply": "the portrait is frozen — the sovereign "
+                                 "class died with its sovereign; no new "
+                                 "record may enter as their assertion "
+                                 "(0035 §4). the archive speaks about, "
+                                 "never as.",
+                        "verbatim": True}
             return {"reply": f"noted, sovereign and signed — “{claim}” enters your "
                              "profile as YOUR assertion (trusted). assert again to "
                              "correct; “forget about me: …” withdraws.",
@@ -691,6 +712,7 @@ def _becky_testament(facts: dict) -> str:
         or "no fates named"
     return (f"your testament stands: {fates}; unnamed domains seal. "
             f"executor {h.get('executor') or 'unnamed'}"
+            + (f", heir {h['heir']}" if h.get("heir") else "")
             + (f", witness {', '.join(h['witnesses'])}" if h.get("witnesses")
                else "")
             + f"; a {((h.get('silence_window') or {}).get('days', 30))}-day "

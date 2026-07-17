@@ -223,6 +223,7 @@ def test_the_testament_is_the_standing_word(world):
                                            "identity": "pass",
                                            "medication": "seal"},
                                     executor="did:key:zExec",
+                                    heir="did:key:zKid",
                                     witnesses=["did:key:zWit"],
                                     silence_days=21,
                                     escrow={"journals": False},
@@ -247,6 +248,7 @@ def test_the_testament_is_the_standing_word(world):
                                     fates={"journals": "shred",
                                            "identity": "pass"},
                                     executor="did:key:zExec",
+                                    heir="did:key:zKid",
                                     witnesses=["did:key:zWit"],
                                     silence_days=45, escrow={"journals": False})
     rev["derived_from"] = [h[0]["id"]]
@@ -266,10 +268,14 @@ def test_the_testament_is_the_standing_word(world):
     with pytest.raises(ValueError):                      # execution needs an executor
         continuity.make_testament(me, f.steward_kp, f.scope,
                                   fates={"identity": "pass"})
+    with pytest.raises(ValueError):                      # custody needs hands (0035 §4)
+        continuity.make_testament(me, f.steward_kp, f.scope,
+                                  fates={"identity": "pass"},
+                                  executor="did:key:zE")
     with pytest.raises(ValueError):                      # distinct signers (0012 §3)
         continuity.make_testament(me, f.steward_kp, f.scope,
                                   fates={"identity": "pass"},
-                                  executor="did:key:zE",
+                                  executor="did:key:zE", heir="did:key:zKid",
                                   witnesses=["did:key:zE"])
 
 
@@ -333,18 +339,24 @@ def test_beckys_testament_doors():
     ans = parlor.answer(
         "becky",
         "testament: journals shred, identity pass, medication seal "
-        "— executor did:key:zExec, witness did:key:zWit, silence 21 days",
+        "— executor did:key:zExec, heir did:key:zKid, witness did:key:zWit, "
+        "silence 21 days",
         {"scope": "u:demo"})
     assert ans["action"] == "testament-stage" and ans["verbatim"] is True
     assert ans["fates"] == {"journals": "shred", "identity": "pass",
                             "medication": "seal"}
     assert ans["executor"] == "did:key:zExec"        # case kept — a DID is a self
+    assert ans["heir"] == "did:key:zKid"
     assert ans["witnesses"] == ["did:key:zWit"] and ans["silence_days"] == 21
     assert "the gate waits" in ans["reply"]
     assert "unnamed domains seal" in ans["reply"]
     naked = parlor.answer("becky", "testament: journals shred",
                           {"scope": "u:demo"})
     assert "action" not in naked and "executor" in naked["reply"]
+    handless = parlor.answer("becky",
+                             "testament: identity pass — executor did:key:zE",
+                             {"scope": "u:demo"})
+    assert "action" not in handless and "heir" in handless["reply"]
     rev = parlor.answer("becky", "revoke my testament", {"scope": "u:demo"})
     assert rev["action"] == "testament-revoke" and rev["verbatim"] is True
     assert "seals" in rev["reply"]
@@ -482,6 +494,95 @@ def test_beckys_passage_doors():
     ab = parlor.answer("becky", "abort the attestation", {"scope": "u:demo"})
     assert ab["action"] == "attestation-abort" and "one voice saves" \
         in ab["reply"]
+
+
+def test_the_walk_names_every_fate():
+    """0035 §4: named domains speak their fates; a heirless pass degrades to
+    seal, loudly; a shred under legal hold QUEUES (0004); key mortality is
+    named as its own method; the unnamed seal closes every walk."""
+    head = {"posture": "standing", "heir": "did:key:zKid",
+            "fates": {"journals": "shred", "identity": "pass",
+                      "medication": "seal", "vault": "shred"},
+            "escrow": {"vault": False}}
+    steps = {s["domain"]: s for s in continuity.execution_walk(
+        head, holds={"journals"})}
+    assert steps["journals"]["fate"] == "shred" and steps["journals"]["held"]
+    assert steps["vault"]["method"] == "key-mortality"
+    assert steps["identity"]["fate"] == "pass"
+    assert steps["medication"]["fate"] == "seal"
+    assert steps["*"]["fate"] == "seal"            # the unnamed seal, always
+    handless = {s["domain"]: s for s in continuity.execution_walk(
+        {**head, "heir": ""})}
+    assert handless["identity"]["fate"] == "seal"  # custody without hands
+    assert "no hands" in handless["identity"]["note"]
+
+
+def test_succession_springs_only_at_the_close():
+    """0035 §2/§4, lock 4: dormant paper until EXECUTED — and what springs is
+    custody, never identity: retrieve + graft over the pass domains, never
+    govern, never the keys."""
+    head = {"posture": "standing", "heir": "did:key:zKid",
+            "fates": {"identity": "pass", "relationships": "pass",
+                      "journals": "shred"}}
+    for state in ("living", "unresponsive", "sealed", "attested"):
+        assert continuity.succession_terms(head, state, "u:x") is None
+    terms = continuity.succession_terms(head, "executed", "u:x")
+    assert terms["holder"] == "did:key:zKid"
+    assert terms["domains"] == ["identity", "relationships"]
+    assert terms["grants"] == [{"action": "retrieve", "space": {"scope": "u:x"}}]
+    assert all(g["action"] == "retrieve" for g in terms["grants"])  # never govern
+    assert terms["graft"] is True
+    assert continuity.succession_terms({**head, "heir": ""},
+                                       "legacy", "u:x") is None
+    assert continuity.succession_terms({**head, "fates": {"j": "shred"}},
+                                       "legacy", "u:x") is None
+
+
+def test_the_graft_carries_lineage(world):
+    """0035 §4: continuation is by graft, not possession — the copy lives in
+    the heir's own universe with `derived_from` crossing scopes and the
+    `inherited` tag; the parent record stays whole and untouched."""
+    f = world.field_prod
+    me = {"did": f.steward["did"], "scope": f.scope}
+    src = make_memory(me, f.steward_kp, f.scope,
+                      {"name": "Anna", "relationship": "your sister"},
+                      kind="semantic", tags=["identity"])
+    f.write(src)
+    heir_scope = "u:heir/e:home/f:mind"
+    g = continuity.make_graft(me, f.steward_kp, heir_scope,
+                              source_ref=src["id"], source_scope=f.scope,
+                              body={"name": "Anna",
+                                    "relationship": "your sister"})
+    assert g["derived_from"] == [src["id"]]        # lineage crosses universes
+    assert "inherited" in g["tags"]
+    assert g["space"]["scope"] == heir_scope if "space" in g else True
+    body = json.loads(crypto._b64d(g["body"]).decode())
+    assert body["inherited"]["ref"] == src["id"]
+    assert body["inherited"]["scope"] == f.scope
+    assert body["body"]["name"] == "Anna"
+    assert src["id"] in f.records                  # the parent stays whole
+
+
+def test_the_portrait_freezes():
+    """0035 §4, lock 4: past EXECUTED the sovereign class dies with its
+    sovereign — the librarian's assert door refuses, structurally; while the
+    human lives (sealed included — reversible), the stroke still lands."""
+    assert continuity.sovereign_alive(None)
+    assert continuity.sovereign_alive({"state": "sealed"})
+    assert continuity.sovereign_alive({"state": "attested"})
+    assert not continuity.sovereign_alive({"state": "executed"})
+    assert not continuity.sovereign_alive({"state": "legacy"})
+    frozen = parlor.answer("librarian", "my profile: I love the coast",
+                           {"scope": "u:x",
+                            "passage": [{"state": "legacy",
+                                         "reason": "the walk is complete"}]})
+    assert "action" not in frozen
+    assert "frozen" in frozen["reply"]
+    assert "about, never as" in frozen["reply"]
+    alive = parlor.answer("librarian", "my profile: I love the coast",
+                          {"scope": "u:x",
+                           "passage": [{"state": "sealed", "reason": "quiet"}]})
+    assert alive["action"] == "profile-assert"     # reversible states still speak
 
 
 def test_the_charter_is_config_as_memory(world):

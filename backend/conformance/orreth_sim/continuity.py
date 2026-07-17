@@ -286,7 +286,8 @@ FATES = ("seal", "pass", "shred")
 
 
 def make_testament(agent: dict, kp, scope: str, *, fates: dict,
-                   executor: str = "", witnesses: list | None = None,
+                   executor: str = "", heir: str = "",
+                   witnesses: list | None = None,
                    silence_days: int = 30, disclosure: dict | None = None,
                    escrow: dict | None = None, approved_ref: str = "",
                    posture: str = "standing") -> dict:
@@ -313,12 +314,16 @@ def make_testament(agent: dict, kp, scope: str, *, fates: dict,
     if any(f in ("pass", "shred") for f in (fates or {}).values()) and not executor:
         raise ValueError("a testament that passes or shreds needs an executor "
                          "— only attested death executes (0035 §3)")
+    if any(f == "pass" for f in (fates or {}).values()) and not heir:
+        raise ValueError("a domain that passes needs an heir — custody must "
+                         "have hands to land in (0035 §4)")
     if executor and executor in witnesses:
         raise ValueError("the executor cannot witness their own attestation — "
                          "distinct signers (0012 §3)")
     body = {"testament": {
         "fates": dict(fates or {}),
         "executor": executor,
+        "heir": heir,
         "witnesses": witnesses,
         "silence_window": {"days": int(silence_days)},
         "disclosure": dict(disclosure or {}),
@@ -519,6 +524,74 @@ def may_stage_attestation(head: dict | None) -> bool:
     """A living universe cannot be attested dead: only SEALED may move to the
     attestation gate. The guard is structural, not procedural."""
     return passage_state(head) == "sealed"
+
+
+# ---------------------------------------------------------------- the execution walks (0035 §4)
+
+def sovereign_alive(head: dict | None) -> bool:
+    """The bi-temporal close (§4, lock 4): past EXECUTED, the sovereign class
+    dies with its sovereign — no new record may ever again enter as the
+    dead's assertion, and the portrait freezes."""
+    return passage_state(head) not in ("executed", "legacy")
+
+
+def execution_walk(head: dict | None, *, holds: frozenset | set = frozenset()
+                   ) -> list[dict]:
+    """The fate map rendered into steps (§4), pure: named domains speak their
+    fates; a heirless pass degrades to seal, loudly (old words minted before
+    the heir was law — custody without hands lands nowhere); a shred under a
+    legal hold QUEUES, it does not die (0004: governed min:∞ outranks); the
+    unnamed seal closes every walk — the universe assumes nothing."""
+    steps = []
+    fates = (head or {}).get("fates") or {}
+    heir = (head or {}).get("heir") or ""
+    for domain in sorted(fates):
+        fate = fates[domain]
+        step = {"domain": domain, "fate": fate}
+        if fate == "shred":
+            step["method"] = shred_method(head, domain)
+            if domain in holds:
+                step["held"] = True
+        if fate == "pass" and not heir:
+            step = {"domain": domain, "fate": "seal",
+                    "note": "custody had no hands — sealed instead"}
+        steps.append(step)
+    steps.append({"domain": "*", "fate": "seal",
+                  "note": "the unnamed seal — the universe assumes nothing "
+                          "about the unspoken"})
+    return steps
+
+
+def succession_terms(head: dict | None, state: str, scope: str) -> dict | None:
+    """The pre-signed grant SPRINGS only at the close (§2): dormant paper
+    until EXECUTED. Custody, never identity (lock 4): the heir receives
+    retrieve over the pass domains and graft rights — never govern, never
+    the keys, never the voice. The token becky mints stays contracts/v0-exact
+    (rule 9 untouched)."""
+    if state not in ("executed", "legacy"):
+        return None
+    heir = (head or {}).get("heir") or ""
+    domains = sorted(d for d, f in ((head or {}).get("fates") or {}).items()
+                     if f == "pass")
+    if not heir or not domains:
+        return None
+    return {"holder": heir,
+            "grants": [{"action": "retrieve", "space": {"scope": scope}}],
+            "domains": domains, "graft": True}
+
+
+def make_graft(agent: dict, kp, heir_scope: str, *, source_ref: str,
+               source_scope: str, body: dict | None = None) -> dict:
+    """Continuation is by graft, not possession (§4, lock 4): a granted
+    record copied into the heir's OWN living universe with lineage —
+    `derived_from` crossing universes, provenance `inherited` on the tag.
+    The parent's universe stays whole, closed, provable."""
+    g = {"inherited": {"ref": source_ref, "scope": source_scope},
+         "body": dict(body or {})}
+    rec = make_memory(agent, kp, heir_scope, g, kind="semantic",
+                      tags=["inherited"])
+    rec["derived_from"] = [source_ref]
+    return rec
 
 
 def make_charter(agent: dict, kp, scope: str) -> dict:

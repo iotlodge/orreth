@@ -803,6 +803,7 @@ def on_testament(port: int, scope: str, r: dict, *, approved: bool = False,
     included."""
     fates = {str(k): str(v) for k, v in (r.get("fates") or {}).items()}
     executor = str(r.get("executor") or "")
+    heir = str(r.get("heir") or "")
     witnesses = [str(w) for w in r.get("witnesses") or []]
     silence_days = int(r.get("silence_days") or 30)
     me = {"did": _BECKY.did, "scope": scope}
@@ -817,7 +818,7 @@ def on_testament(port: int, scope: str, r: dict, *, approved: bool = False,
     if approved:
         try:
             rec = continuity.make_testament(me, _BECKY.kp, scope, fates=fates,
-                                            executor=executor,
+                                            executor=executor, heir=heir,
                                             witnesses=witnesses,
                                             silence_days=silence_days,
                                             approved_ref=str(r.get("id") or ""))
@@ -846,6 +847,7 @@ def on_testament(port: int, scope: str, r: dict, *, approved: bool = False,
                              "— speak or decline at the gate (0035 §2)",
                      "terms": f"{fates_words} · unnamed domains seal"
                               + (f" · executor {executor}" if executor else "")
+                              + (f" · heir {heir}" if heir else "")
                               + (f" · witness {', '.join(witnesses)}"
                                  if witnesses else "")
                               + f" · {silence_days}-day silence window · "
@@ -1046,7 +1048,11 @@ def _passage_floor(port: int, scope: str) -> None:
                           "abort; the seal lifts, nothing was lost", prev=head)
             _resolve_reachouts(port, "a heartbeat answered — the human "
                                      "returned; the attestation is aborted")
-        return                                # the cooling-off runs; sp3 completes it
+            return
+        until = str((head or {}).get("cooling_until") or "")
+        if until and until <= NOW():          # passed in silence — the walk (0035 §4)
+            execute_estate(port, scope, tst[-1], head)
+        return
     if verdict == "living":
         if state in ("unresponsive", "sealed"):
             write_passage(port, scope, "living",
@@ -1070,6 +1076,76 @@ def _passage_floor(port: int, scope: str) -> None:
         write_passage(port, scope, "sealed",
                       "still silent — contained at machine speed, "
                       "reversible, loud; one heartbeat unseals", prev=head)
+
+
+def _domain_refs(port: int, scope: str, domain: str) -> list[str]:
+    """Every record wearing the domain's tag — what a domain's fate walks
+    over. Rides the same ranked read as the rest of the wire (the queued
+    tag-indexed improvement applies here above all)."""
+    from datetime import datetime, timedelta, timezone
+    _, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=3650)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return []
+    return [h["ref"] for h in r.get("hits", [])
+            if domain in (h.get("tags") or [])]
+
+
+def execute_estate(port: int, scope: str, tst: dict, head: dict) -> None:
+    """The fates walk (0035 §4): the cooling-off passed in silence, so the
+    machine crosses its one irreversible line — domain by domain, every step
+    an estate record, becky-signed, legible forever. Seal stands; custody
+    springs (the grant is consulted at becky's door — sp4's parlor); the
+    governed shred goes through 0026's tombstone door and the stubs survive;
+    key mortality needs no door at all. Then LEGACY: the universe keeps."""
+    head = write_passage(port, scope, "executed",
+                         "the cooling-off passed in silence — the fates walk",
+                         prev=head)
+    me = {"did": _BECKY.did, "scope": scope}
+    for step in continuity.execution_walk(tst):
+        fate, domain = step["fate"], step["domain"]
+        if step.get("held"):
+            outcome = ("the shred order queues behind the legal hold — "
+                       "it does not die (0004)")
+        elif fate == "shred" and step.get("method") == "key-mortality":
+            outcome = ("shredded by key mortality — the keys died with "
+                       "their keeper; no door needed to open")
+        elif fate == "shred":
+            refs = _domain_refs(port, scope, domain)
+            n = sum(1 for ref in refs
+                    if shred_claim(port, ref,
+                                   f"the testament's word: {domain} shreds"))
+            outcome = (f"{n} record(s) through the tombstone door — "
+                       "the stubs survive; the estate can prove what it "
+                       "destroyed (0026)")
+        elif fate == "pass":
+            terms = continuity.succession_terms(tst, "executed", scope)
+            outcome = (f"custody springs for {terms['holder']} — retrieve + "
+                       "graft rights over " + ", ".join(terms["domains"])
+                       + "; never govern, never the keys, never the voice"
+                       if terms else "custody had no hands — sealed instead")
+        else:
+            outcome = step.get("note",
+                               "sealed standing — reads only through the "
+                               "survivors' door")
+        rec = make_memory(me, _BECKY.kp, scope,
+                          {"estate": {**step, "outcome": outcome}},
+                          kind="semantic", tags=["estate"])
+        try:
+            call(port, "POST", "/records", rec)
+        except Exception as e:
+            print(f"    (an estate step stumbled at {domain}: {e})")
+        print(f"  ↳ the estate: {domain} → {fate} — {outcome}")
+    write_passage(port, scope, "legacy",
+                  "the walk is complete — the universe keeps", prev=head)
 
 
 def on_attestation(port: int, scope: str, r: dict, *, approved: bool = False,
@@ -3594,6 +3670,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     if name == "librarian":                   # the desk answers her card too (0032)
         facts["subscriptions"] = wire_subscriptions(port, scope)
         facts["deliveries"] = wire_deliveries(port, scope)
+        facts["passage"] = wire_passage(port, scope)  # the frozen portrait (0035 §4)
     if name == "becky":                       # the door-keeper's ledger (0034 §4)
         facts["consents"] = wire_consents(port, scope)
         facts["testament"] = wire_testaments(port, scope)  # the last word (0035)
@@ -3733,6 +3810,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         call(port, "POST", "/requests",
              {"kind": "testament", "fates": ans["fates"],
               "executor": ans.get("executor", ""),
+              "heir": ans.get("heir", ""),
               "witnesses": ans.get("witnesses") or [],
               "silence_days": ans.get("silence_days", 30),
               "text": "testament: "
