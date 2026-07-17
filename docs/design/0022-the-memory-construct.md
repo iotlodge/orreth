@@ -197,9 +197,11 @@ fastembed-rs) · BM25 extension · hybrid RRF query + trust-weighted rerank behi
 > disagree by the numbers; the paraphrase case stays honestly deferred) · **the
 > Mirror hears meaning** (0034 sp3 — proven live on u:demo: three phrasings of the
 > reading-glasses worry counted as one ask, 3×, in the portrait) · demo
-> `scripts/demo.sh meaning` · 5 tests, 192/192. **Remaining for the wire — the
-> rule-9 gate**: the `Query.meaning` facet + `embedding_ref` into contracts/v0,
-> pgvector/BM25 in the plane; lands only with JB's per-field approval.
+> `scripts/demo.sh meaning` · 5 tests, 192/192. **THE RULE-9 GATE PASSED
+> 2026-07-17 (JB, via AskUserQuestion): `Query.meaning` (optional `{text, k}`
+> facet) + `embedding_ref` population are APPROVED into contracts/v0** — the
+> wire build (pgvector + BM25 + hybrid RRF in the plane, uniform refusal and
+> budget-miss ≡ authz-miss on the new path) is next.
 
 Phase 3 (federation): Iroh transport under the existing push-up flow; offline-child
 resync test (kill a field for a day; watch it reconcile).
