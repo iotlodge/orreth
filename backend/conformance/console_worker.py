@@ -122,8 +122,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import (continuity, crypto, fingertip, improver, markers, mirror,
-                        parlor, profile, purge, serials, shipyard)
+from orreth_sim import (continuity, crypto, fingertip, improver, markers,
+                        meaning, mirror, parlor, profile, purge, serials,
+                        shipyard)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -1364,7 +1365,11 @@ def _mirror_floor(port: int, scope: str) -> None:
         # the relationship is CUMULATIVE — the sweep re-reads the whole story,
         # so a question repeated across sweeps is still a repeat; the watermark
         # only decides whether a new sibling is owed
-        stats = mirror.assess(mine, mirror_did=MIR_DID).get(name)
+        # the meaning axis (0022 Phase 2): differently-worded asks that mean
+        # the same thing are one ask — local ONNX, bytes never leave (§10);
+        # a dark axis degrades to identity inside assess, honestly
+        stats = mirror.assess(mine, mirror_did=MIR_DID,
+                              meaning=meaning).get(name)
         if not stats:
             continue
         window = {"from": mine[0]["at"], "to": mine[-1]["at"]}

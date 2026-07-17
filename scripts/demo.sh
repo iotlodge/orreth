@@ -47,6 +47,7 @@ case "${1:-list}" in
   gate)      run demo_joindoor.py "$FIELD" ;;
   crew)      run demo_workforce.py "$FIELD" ;;
   physics)   run demo_information_physics.py ;;
+  meaning)   run demo_meaning_axis.py ;;
   window)    "$ROOT/scripts/dev.sh" window ;;
   list|*)
     echo "the Orreth demo reel — scripts/demo.sh <name>   (rig first: scripts/dev.sh start)"
@@ -70,6 +71,8 @@ case "${1:-list}" in
     echo "              the gate (wren returns as the same self) and work on the record"
     echo "  physics     0033 · entropy is a dial, not a decay — one history ages in two"
     echo "              worlds; the mortal staircase climbs, orreth holds at the contract"
+    echo "  meaning     0022 · retrieval's second sense — meaning not spelling, standing"
+    echo "              over relevance, the dead rank dead, the mirror hears one worry"
     echo "  window      0008 · seed a biography and open the Console"
     ;;
 esac

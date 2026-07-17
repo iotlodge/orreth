@@ -185,6 +185,21 @@ Phase 1 (correctness debts, before any new capability — all from the inventory
 Phase 2 (the meaning axis): pgvector live (`embedding_ref` populated at ingest via
 fastembed-rs) · BM25 extension · hybrid RRF query + trust-weighted rerank behind
 `Query.meaning` · conformance tests: uniform refusal + remainder honesty on the new path.
+> **Phase 2 SIM-FIRST LANDED 2026-07-17 (Phase E of the build order — built last, as
+> designed, so it consumes hard coordinates and aperture scores):**
+> `orreth_sim/meaning.py` — fastembed local ONNX under the §10 bytes-local lock
+> (`ORRETH_MEANING=off` darkens the axis; every consumer degrades to identity,
+> honestly) · hybrid weighted-RRF (vector × BM25 × recency × coordinate kinship ×
+> aperture proximity) · the trust-weighted rerank of §4, verbatim: standing over
+> relevance, **`recalled` ranks dead** (surfaced only when asked, then labeled) ·
+> three stated waits ENDED: the reactivation rerank (0031 §5) · cross-source
+> contradiction at meaning-v1 (0032 §3 — same subject by cosine, values that
+> disagree by the numbers; the paraphrase case stays honestly deferred) · **the
+> Mirror hears meaning** (0034 sp3 — proven live on u:demo: three phrasings of the
+> reading-glasses worry counted as one ask, 3×, in the portrait) · demo
+> `scripts/demo.sh meaning` · 5 tests, 192/192. **Remaining for the wire — the
+> rule-9 gate**: the `Query.meaning` facet + `embedding_ref` into contracts/v0,
+> pgvector/BM25 in the plane; lands only with JB's per-field approval.
 
 Phase 3 (federation): Iroh transport under the existing push-up flow; offline-child
 resync test (kill a field for a day; watch it reconcile).

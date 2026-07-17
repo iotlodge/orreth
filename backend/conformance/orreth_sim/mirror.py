@@ -19,8 +19,11 @@ authored (a mirror that assesses its own reflections is a hall of mirrors).
 Exchanges answered under safer mode (0034 §4) were never written — the Mirror
 honestly cannot see them; consent bounds the reflection too.
 
-Deterministic v0: the sorting is identity and counting, never meaning — the
-meaning-axis assessor waits for 0022 Phase 2, stated plainly."""
+The sorting was identity and counting alone until 0022 Phase 2 landed the
+meaning axis (Phase E): `assess` now takes an optional `meaning` module and
+clusters differently-worded asks that mean the same thing before counting
+repeats — and when the axis is dark it degrades to identity, exactly the v0
+behavior, honestly kept."""
 from __future__ import annotations
 
 import re
@@ -44,11 +47,14 @@ def norm_ask(text: str) -> str:
     return re.sub(r"[^a-z0-9 ]+", "", (text or "").lower()).strip()
 
 
-def assess(audiences: list[dict], *, mirror_did: str = "") -> dict:
-    """The sweep's sorting, pure (identity, never meaning): per resident —
-    exchanges counted, repeated asks found (the same question returning is the
-    signal continuity care runs on), recurring words surfaced, unmet replies
-    tallied as friction. Rows the Mirror itself authored are ignored (0005).
+def assess(audiences: list[dict], *, mirror_did: str = "",
+           meaning=None) -> dict:
+    """The sweep's sorting, pure: per resident — exchanges counted, repeated
+    asks found (the same question returning is the signal continuity care
+    runs on), recurring words surfaced, unmet replies tallied as friction.
+    With the meaning axis (0022 Phase 2), asks that MEAN the same thing are
+    one ask however they are worded — the most-asked phrasing speaks for the
+    cluster. Rows the Mirror itself authored are ignored (0005).
     audiences: [{ref, resident, asked, reply, author?}]."""
     per: dict[str, dict] = {}
     for a in audiences:
@@ -70,9 +76,17 @@ def assess(audiences: list[dict], *, mirror_did: str = "") -> dict:
             row["friction"].append(a.get("ref", ""))
     out = {}
     for name, row in per.items():
+        asks = row["asks"]
+        if meaning is not None and len(asks) > 1:
+            keys = list(asks)
+            merged: dict[str, int] = {}
+            for c in meaning.repeats_by_meaning(keys, tau=0.75):
+                rep = max((keys[i] for i in c), key=lambda a: asks[a])
+                merged[rep] = sum(asks[keys[i]] for i in c)
+            asks = merged
         out[name] = {
             "exchanges": row["exchanges"],
-            "repeats": sorted(((a, n) for a, n in row["asks"].items() if n >= 2),
+            "repeats": sorted(((a, n) for a, n in asks.items() if n >= 2),
                               key=lambda x: -x[1]),
             "topics": sorted(((w, n) for w, n in row["words"].items() if n >= 3),
                              key=lambda x: -x[1]),

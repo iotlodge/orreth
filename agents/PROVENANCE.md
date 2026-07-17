@@ -393,3 +393,11 @@ design doc 0017.
 |---|---|---|
 | `backend/conformance/orreth_sim/mirror.py` | Fable 5 (claude-fable-5) | 0034 sp3 — the assessment flow over audiences (assess/observations/friction_note/interop ledger); assessor ≠ assessed (0005); banner in file |
 | `backend/conformance/tests/test_mirror.py` | Fable 5 (claude-fable-5) | the Mirror's conformance tests; banner in file |
+
+## Fable 5 net-new files — 2026-07-17 (0022 Phase 2, the meaning axis — Phase E)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/meaning.py` | Fable 5 (claude-fable-5) | 0022 §4 — the meaning axis: local fastembed ONNX (bytes-local, JB's §10 lock), hybrid weighted-RRF, trust-weighted rerank (`recalled` ranks dead), coordinate/aperture pulls, cross-source contradiction v1, repeats-by-meaning; banner in file |
+| `backend/conformance/demo_meaning_axis.py` | Fable 5 (claude-fable-5) | the meaning demo — retrieval's second sense, five scenes, pure sim; banner in file |
+| `backend/conformance/tests/test_meaning.py` | Fable 5 (claude-fable-5) | the axis's conformance tests (skip honestly when the axis is dark); banner in file |
