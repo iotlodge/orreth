@@ -869,7 +869,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
 });
 
 /* ── the world: /topology heartbeats assembled — what this floor knows below it ── */
-let topoCache=null,laneSig="";
+let topoCache=null,laneSig="",LEGACYF=false; /* legacy: the mind held, no fire (0035 §6) */
 async function world(){
   try{topoCache=await(await fetch(api("/topology"))).json()}catch{topoCache=null}
   renderWorldRail(); renderOrrery(); renderBrain(); refreshCounters();
@@ -1137,11 +1137,14 @@ function renderBrain(){
       scope:null,name:a.role,region:reg,records:0});
   });
   BG.clusters=cl;
-  deltas.forEach(d=>{                        /* memory formation: the burst */
+  if(!LEGACYF)deltas.forEach(d=>{            /* memory formation: the burst */
     BG.flashes.push({p:d.p,age:0,mag:Math.min(4,1+d.d*.4)});
     for(let i=0;i<Math.min(10,3+d.d*2);i++)bgSpawn(d.p,null,1.6);
   });
-  $("bcore").textContent=`${t.scope} — the mind, watched thinking · the same beats as the orrery, `+
+  $("bcore").textContent=LEGACYF
+    ?`${t.scope} — the shape of a mind, held · LEGACY: the universe keeps — no fire, `+
+     `a constellation of what was kept · the archive speaks about, never as (0035 §6)`
+    :`${t.scope} — the mind, watched thinking · the same beats as the orrery, `+
     `a projection, never a second truth (rule 7) · gold = the heartbeat chain · bursts = this breath's new memories`;
 }
 function bgSpawn(from,to,speed){
@@ -1158,10 +1161,11 @@ function bgFrame(ts){
   if(cv.width!==W*2||cv.height!==H*2){cv.width=W*2;cv.height=H*2}
   const g=cv.getContext("2d");g.setTransform(2,0,0,2,0,0);
   const dt=Math.min(.06,(ts-BG.last)/1000||.016);BG.last=ts;
-  if(!BG.drag)BG.ang+=dt*.14;
+  /* legacy (0035 §6): the mind turns slowly, kept — and there is no fire */
+  if(!BG.drag)BG.ang+=dt*(LEGACYF?.03:.14);
   /* the heartbeat chain: every live floor signals its parent, on a stagger */
   BG.emit-=dt;
-  if(BG.emit<=0){BG.emit=.5;
+  if(BG.emit<=0&&!LEGACYF){BG.emit=.5;
     const c=BG.clusters.filter(c=>c.parent&&Math.random()<.4);
     c.forEach(c2=>bgSpawn(c2.p,c2.parent.p,1));}
   /* project */
@@ -1209,17 +1213,24 @@ function bgFrame(ts){
   for(const c of BG.clusters){
     const q=proj(c.p);
     if(c.organ){
-      const tw=.5+.5*Math.sin(ts*.003+bhash(c.name));
-      g.fillStyle=`rgba(212,169,96,${(.25+.3*tw).toFixed(2)})`;
+      const tw=LEGACYF?.15:.5+.5*Math.sin(ts*.003+bhash(c.name));
+      g.fillStyle=LEGACYF?`rgba(190,205,255,.28)`
+        :`rgba(212,169,96,${(.25+.3*tw).toFixed(2)})`;
       g.beginPath();g.arc(q[0],q[1],1.6*q[3],0,6.283);g.fill();
       continue;
     }
     const mag=Math.min(1, .18+.16*Math.log2(1+c.records)/3);
     const R=(5+13*mag)*q[3];
     const gr=g.createRadialGradient(q[0],q[1],0,q[0],q[1],R);
+    if(LEGACYF){                             /* embers cooled to a constellation */
+      gr.addColorStop(0,`rgba(220,230,255,${(.55*mag+.12).toFixed(2)})`);
+      gr.addColorStop(.35,`rgba(165,185,255,${(.28*mag).toFixed(2)})`);
+      gr.addColorStop(1,"rgba(130,150,255,0)");
+    }else{
     gr.addColorStop(0,`rgba(255,236,200,${(.75*mag+.15).toFixed(2)})`);
     gr.addColorStop(.35,`rgba(255,185,105,${(.42*mag).toFixed(2)})`);
     gr.addColorStop(1,"rgba(255,150,60,0)");
+    }
     g.fillStyle=gr;g.beginPath();g.arc(q[0],q[1],R,0,6.283);g.fill();
     BG.hit.push({sx:q[0],sy:q[1],scope:c.scope,name:c.name,records:c.records,region:c.region});
   }
@@ -1528,6 +1539,9 @@ function reqOpen(k){REQOPEN.has(k)?REQOPEN.delete(k):REQOPEN.add(k);loadReq()}
 async function loadReq(){
   try{
     const q=(await(await fetch(api("/requests"))).json()).requests||[];
+    /* the survivors' door (0035 §6): the walk leaves a settled `legacy`
+       request behind — the glass reads it and the brain goes still */
+    LEGACYF=q.some(r=>r.kind==="legacy");
     const isWaiting=r=>r.status==="staged"||(r.kind==="question"&&r.status==="pending");
     const isSettled=r=>r.status==="done"||r.status==="denied";
     const wait=q.filter(isWaiting).reverse(),

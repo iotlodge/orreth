@@ -580,6 +580,57 @@ def succession_terms(head: dict | None, state: str, scope: str) -> dict | None:
             "domains": domains, "graft": True}
 
 
+# ---------------------------------------------------------------- the survivors' door (0035 §5–§6)
+
+def speak_legacy(state: str, claim: str, *, hints: int = 0,
+                 sources: list | None = None) -> str | None:
+    """The legacy register (0035 §5): the label canon's last row — the archive
+    speaks ABOUT, never AS. First person dies with the person: every shape
+    opens from the record, none from a voice; the recalled stay unspoken,
+    doubly. Structural, like speak_claim — a mind cannot resurrect a register
+    the substrate closed."""
+    c = (claim or "").strip()
+    if state in ("verified", "trusted", "human-confirmed"):
+        return f"the record holds: {c}"
+    if state == "corroborated":
+        named = ", ".join(str(s) for s in (sources or [])[:3]) or "the record"
+        return f"the record holds: {c} — {named} show(s) this"
+    if state == "investigating":
+        return f"the record was re-checking this when it closed: {c}"
+    if state == "recalled":
+        return None
+    n = max(int(hints), 1)
+    return f"the record suggests, unproven: {c} ({n} hint(s), never confirmed)"
+
+
+def survivors_door(head: dict | None, state: str, scope: str) -> str:
+    """The survivors' door, in words (0035 §6): who may still read a legacy
+    universe, composed from the testament — the heir's custody over the pass
+    domains, the disclosure map's named doors, and the honest close for
+    everything else: grief is not an entitlement (§5)."""
+    if state not in ("executed", "legacy"):
+        return ("the universe is living — the survivors' door opens only in "
+                "legacy (0035 §6); while its human lives, consent governs "
+                "(0034 §4)")
+    lines = []
+    terms = succession_terms(head, state, scope)
+    if terms:
+        lines.append(f"custody stands for {terms['holder']} — retrieve + "
+                     "graft over " + ", ".join(terms["domains"])
+                     + " (never govern, never the keys, never the voice)")
+    for domain, dids in sorted(((head or {}).get("disclosure") or {}).items()):
+        if dids:
+            lines.append(f"{domain} — readable to {', '.join(dids)}")
+    if not lines:
+        return ("the survivors' door is closed — no custody stands and the "
+                "disclosure map is empty; the universe keeps, unread. grief "
+                "is not an entitlement (0035 §5)")
+    return ("the survivors' door: " + "; ".join(lines)
+            + ". every other domain is closed — the disclosure map is the "
+              "dead's consent, fixed; heirs narrow, never widen (0035 §8). "
+              "the archive speaks about, never as.")
+
+
 def make_graft(agent: dict, kp, heir_scope: str, *, source_ref: str,
                source_scope: str, body: dict | None = None) -> dict:
     """Continuation is by graft, not possession (§4, lock 4): a granted

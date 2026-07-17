@@ -577,12 +577,86 @@ def test_the_portrait_freezes():
                             "passage": [{"state": "legacy",
                                          "reason": "the walk is complete"}]})
     assert "action" not in frozen
-    assert "frozen" in frozen["reply"]
+    # sp4's read-only guard speaks first; the frozen-portrait law stands
+    # behind it for any assert shape the broad guard misses
+    assert "read-only" in frozen["reply"] or "frozen" in frozen["reply"]
     assert "about, never as" in frozen["reply"]
     alive = parlor.answer("librarian", "my profile: I love the coast",
                           {"scope": "u:x",
                            "passage": [{"state": "sealed", "reason": "quiet"}]})
     assert alive["action"] == "profile-assert"     # reversible states still speak
+
+
+def test_the_archive_speaks_about_never_as():
+    """0035 §5: the legacy register — first person dies with the person;
+    every shape opens from the record, none from a voice; the recalled stay
+    unspoken, doubly."""
+    say = continuity.speak_legacy
+    assert say("trusted", "she loved the coast") \
+        == "the record holds: she loved the coast"
+    corr = say("corroborated", "the trip happened in May",
+               sources=["the photos"])
+    assert corr.startswith("the record holds:") and "the photos" in corr
+    hedged = say("untrusted", "the address changed", hints=2)
+    assert hedged.startswith("the record suggests, unproven:")
+    assert "never confirmed" in hedged
+    assert say("investigating", "the dosage moved") \
+        .startswith("the record was re-checking this when it closed:")
+    assert say("recalled", "a poisoned claim") is None
+    for state in ("trusted", "corroborated", "untrusted", "investigating"):
+        spoken = say(state, "a fact", sources=["s"])
+        assert not spoken.startswith(("I ", "you ", "You "))
+
+
+def test_the_survivors_door_composes_from_the_word():
+    """0035 §6: custody first, the disclosure map's named doors second, and
+    the honest close for everything else — grief is not an entitlement; while
+    the human lives, consent governs."""
+    head = {"posture": "standing", "heir": "did:key:zKid",
+            "fates": {"identity": "pass", "journals": "shred"},
+            "disclosure": {"medication": ["did:key:zDoc"], "episodic": []}}
+    alive = continuity.survivors_door(head, "sealed", "u:x")
+    assert "opens only in legacy" in alive
+    door = continuity.survivors_door(head, "legacy", "u:x")
+    assert "custody stands for did:key:zKid" in door
+    assert "identity" in door and "never govern" in door
+    assert "medication — readable to did:key:zDoc" in door
+    assert "episodic" not in door                 # an empty entry is no door
+    assert "heirs narrow, never widen" in door
+    closed = continuity.survivors_door({"posture": "standing", "fates": {}},
+                                       "legacy", "u:x")
+    assert "grief is not an entitlement" in closed
+
+
+def test_legacy_is_read_only():
+    """0035 §6: past EXECUTED every mutating door answers with one sentence —
+    the archive keeps, never spends, admits nothing new; the read doors still
+    answer, because legacy is not a tomb with the lights cut."""
+    legacy_facts = {"scope": "u:x",
+                    "passage": [{"state": "legacy",
+                                 "reason": "the walk is complete"}],
+                    "testament": [{"posture": "standing",
+                                   "heir": "did:key:zKid",
+                                   "fates": {"identity": "pass"},
+                                   "executor": "did:key:zE",
+                                   "silence_window": {"days": 6}}]}
+    for ask in ("testament: journals shred — executor did:key:zE",
+                "grant caregiver access to help", "resume recording conversation",
+                "create ecosystem again"):
+        r = parlor.answer("becky", ask, legacy_facts)
+        assert "read-only" in r["reply"] and "action" not in r, ask
+    for ask in ("subscribe to the news", "gather knowledge on tides",
+                "remember this: a moment", "my profile: I love the coast",
+                "challenge the address"):
+        r = parlor.answer("librarian", ask, legacy_facts)
+        assert "read-only" in r["reply"] and "action" not in r, ask
+    # the read doors stay open
+    shown = parlor.answer("becky", "show testament", legacy_facts)
+    assert "identity pass" in shown["reply"]
+    door = parlor.answer("becky", "the survivors' door", legacy_facts)
+    assert "custody stands for did:key:zKid" in door["reply"]
+    passage = parlor.answer("becky", "show the passage", legacy_facts)
+    assert "LEGACY" in passage["reply"]
 
 
 def test_the_charter_is_config_as_memory(world):

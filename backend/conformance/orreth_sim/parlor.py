@@ -193,7 +193,8 @@ def _card_becky(facts: dict) -> tuple[str, list]:
              {"label": "stop recording…", "template": "stop recording conversation"},
              {"label": "my testament…", "template": "testament: "},
              {"label": "the testament", "ask": "show testament"},
-             {"label": "the passage", "ask": "show the passage"}])
+             {"label": "the passage", "ask": "show the passage"},
+             {"label": "the survivors' door", "ask": "the survivors' door"}])
 
 
 def _card_charlotte(facts: dict) -> tuple[str, list]:
@@ -269,7 +270,37 @@ def answer(name: str, text: str, facts: dict) -> dict:
     if name not in RESIDENTS:
         return {"reply": f"no one by the name “{name}” is in residence on this floor."}
     t = (text or "").strip().lower()
+    # the survivors' door (0035 §6): past EXECUTED the archive is read-only —
+    # it keeps, it never spends, and nothing new enters. The guard is one
+    # sentence at every mutating door, structural like the label canon.
+    ph = facts.get("passage") or []
+    legacy = bool(ph) and not continuity.sovereign_alive(ph[-1])
+    _LEGACY_REPLY = {"reply": "the universe is legacy — the archive is "
+                              "read-only: it keeps, it never spends, and "
+                              "nothing new enters (0035 §6). the archive "
+                              "speaks about, never as.",
+                     "verbatim": True}
+    if legacy and name == "becky" and (
+            t.startswith(("grant ", "resume ", "testament", "my testament",
+                          "write testament", "set testament"))
+            or parse_grow(text) is not None
+            or grow_template(text)[0] is not None):
+        return dict(_LEGACY_REPLY)
+    if legacy and name == "librarian" and t.startswith(
+            ("my profile:", "forget about me", "remember this", "subscribe",
+             "gather", "challenge", "ask the universe", "ask your seats",
+             "ask my seats")):
+        return dict(_LEGACY_REPLY)
     if name == "becky":
+        # the survivors' door, spoken (0035 §6)
+        if t.startswith(("the survivors' door", "the survivors door",
+                         "who may read", "the survivor's door")):
+            tst = facts.get("testament") or []
+            state = (ph[-1].get("state", "living") if ph else "living")
+            return {"reply": continuity.survivors_door(
+                        tst[-1] if tst else None, state,
+                        facts.get("scope", "")),
+                    "verbatim": True}
         # the testament (0035 §2): the human's standing word about the end.
         # Writing one ARMS future consequence — it STAGES; revoking it is
         # safe — it acts NOW. Every word travels VERBATIM: fates are protocol.

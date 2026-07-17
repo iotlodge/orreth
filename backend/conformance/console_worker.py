@@ -909,6 +909,10 @@ def wire_passage(port: int, scope: str) -> list[dict]:
 # retrieve is the recover-after-restart source, never the primary signal.
 _WATCH_BOOT = time.time()
 _HUMAN_HAND: dict[str, float] = {}
+# floors whose walk has completed: the organs REST there — a legacy universe
+# doesn't dream, it keeps (0035 §6; 0009's hibernation, final application).
+# Repopulated by the passage sweep on restart.
+_LEGACY_FLOORS: set[str] = set()
 
 
 def _wall(ts: float) -> str:
@@ -1037,6 +1041,9 @@ def _passage_floor(port: int, scope: str) -> None:
         return                                # no standing word — nothing watches
     state, head = passage_now(port, scope)
     if state in ("executed", "legacy"):
+        if scope not in _LEGACY_FLOORS:       # the organs rest here (0035 §6)
+            _LEGACY_FLOORS.add(scope)
+            _mark_legacy(port)                # the glass's signal, healed
         return                                # a closed worldline never reopens
     days = int((tst[-1].get("silence_window") or {}).get("days", 30))
     verdict = continuity.silence_verdict(days, last_human_act(port, scope),
@@ -1146,6 +1153,38 @@ def execute_estate(port: int, scope: str, tst: dict, head: dict) -> None:
         print(f"  ↳ the estate: {domain} → {fate} — {outcome}")
     write_passage(port, scope, "legacy",
                   "the walk is complete — the universe keeps", prev=head)
+    _LEGACY_FLOORS.add(scope)
+    _mark_legacy(port)
+
+
+def _mark_legacy(port: int) -> None:
+    """The glass's quiet signal (0035 §6), healed idempotently: a legacy
+    floor always carries one settled `legacy` request — the console reads
+    requests every breath, so the brain cools to a constellation and the
+    header learns the state. The record of truth stays the passage worldline;
+    this is a mirror of it, never a second truth."""
+    try:
+        rows = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        return
+    if not any(r.get("kind") == "legacy" for r in rows):
+        try:
+            call(port, "POST", "/requests",
+                 {"kind": "legacy",
+                  "text": "the universe keeps — legacy; the archive speaks "
+                          "about, never as (0035 §6)"})
+            rows = call(port, "GET", "/requests").get("requests", [])
+        except Exception:
+            return
+    for r in rows:
+        if r.get("kind") == "legacy" and r.get("status") == "pending":
+            try:
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "done",
+                      "result": {"reply": "the walk is complete — the "
+                                          "universe keeps"}})
+            except Exception:
+                pass
 
 
 def on_attestation(port: int, scope: str, r: dict, *, approved: bool = False,
@@ -1306,6 +1345,8 @@ def mirror_beat() -> None:
 
 
 def _mirror_floor(port: int, scope: str) -> None:
+    if scope in _LEGACY_FLOORS:
+        return                                # the Mirror never assesses the dead (0035 §5)
     audiences = wire_audiences(port, scope)
     if not audiences:
         return
@@ -2259,6 +2300,8 @@ def serials_beat(port: int, scope: str) -> None:
     the new — quarantined at 0.0000, the subscription named in the lineage — and
     write one signed delivery note. Quiet = log; news wears the medium marker.
     The desk delivers; it never decides."""
+    if scope in _LEGACY_FLOORS:
+        return                                # a legacy universe never spends (0035 §6)
     try:
         subs = wire_subscriptions(port, scope)
     except Exception:
