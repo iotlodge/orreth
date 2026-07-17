@@ -1016,6 +1016,27 @@ let BGAIN=localStorage.getItem("orreth-gain")||"living";
 const gainF=()=>({off:0,calm:.4,living:1,storm:1.7}[BGAIN]??1);
 let BRAINQ={count:0,kinds:[],oldest:0};      /* the synapse gap's pressure (HITL) */
 let BFEED={seen:new Set(),last:0,ticker:[],primed:false};
+const BCLEFT=[1.42,.52,0];                   /* where consequence waits (0036 §1.2) */
+/* the flow grammar (0036 §1.3): asks DESCEND cool and thin toward the cleft;
+   answers RISE warm toward the core — a healthy universe reads as circulation */
+let REQSTATE={},REQPRIMED=false;
+function reqFlow(q){
+  if(!BG||!BG.on||gainF()<=0||LEGACYF){q.forEach(r=>REQSTATE[r.id]=r.status);REQPRIMED=true;return}
+  for(const r of q){
+    const prev=REQSTATE[r.id];
+    if(REQPRIMED&&prev===undefined&&["pending","staged"].includes(r.status)){
+      BG.parts.push({a:[BCLEFT[0]*.3,1.35,.15],b:BCLEFT,t:0,sp:.55,trail:[],
+        hue:"cool",thin:true});
+      btick(`an ask arrives — ${r.kind||"request"}, descending to wait`);
+    }
+    if(REQPRIMED&&prev&&prev!=="done"&&r.status==="done"&&BG.core){
+      BG.parts.push({a:BCLEFT,b:BG.core.p,t:0,sp:.5,trail:[]});
+      if(BGAIN==="storm")btick(`answered — ${r.kind||"request"} rises to the record`);
+    }
+    REQSTATE[r.id]=r.status;
+  }
+  REQPRIMED=true;
+}
 function gainCycle(){
   BGAIN=GAINS[(GAINS.indexOf(BGAIN)+1)%GAINS.length];
   localStorage.setItem("orreth-gain",BGAIN);
@@ -1023,10 +1044,19 @@ function gainCycle(){
 }
 function brainToggle(){
   BRAINMODE=!BRAINMODE;
+  localStorage.setItem("orreth-proj",BRAINMODE?"brain":"orrery");
   $("v-uni").dataset.proj=BRAINMODE?"brain":"orrery";
   $("btoggle").innerHTML=`projection: <b>${BRAINMODE?"brain":"orrery"}</b> · click for ${BRAINMODE?"orrery":"brain"}`;
   if(BRAINMODE){bgInit();renderBrain();brainFeed();BG.on=true;requestAnimationFrame(bgFrame)}
   else if(BG)BG.on=false;
+}
+/* the brain is the HERO view (JB's 0036 §5 call, 2026-07-17: "it's just so
+   so very pretty") — the Universe opens as the mind; the orrery is the chart,
+   one click back, and the human's last choice is remembered. */
+let BOOTPROJ=false;
+function bootProjection(){
+  if(BOOTPROJ)return;BOOTPROJ=true;
+  if((localStorage.getItem("orreth-proj")||"brain")==="brain"&&!BRAINMODE)brainToggle();
 }
 function bgInit(){
   if(BG)return;
@@ -1035,6 +1065,10 @@ function bgInit(){
     <div class="bcore" id="bcore"></div>
     <div id="bgain" onclick="gainCycle()" title="the gain dial (0036): how loudly the one truth renders — off · calm · living · storm"
       style="position:absolute;top:.55rem;right:.8rem;font-size:.72rem;letter-spacing:.08em;color:var(--brass);cursor:pointer;z-index:5">gain: <b>${BGAIN}</b></div>
+    <div id="breplay" onclick="brainReplay()" title="the replay scrub (0036 §4): the last hour of fire at 60× — operators watch the backup FORM, not just its aftermath"
+      style="position:absolute;top:2rem;right:.8rem;font-size:.72rem;letter-spacing:.08em;color:var(--brass);cursor:pointer;z-index:5">↻ replay 60×</div>
+    <div id="bfull" onclick="$('brainwrap').requestFullscreen&&$('brainwrap').requestFullscreen()" title="fullscreen — the operator's instrument"
+      style="position:absolute;top:3.45rem;right:.8rem;font-size:.8rem;color:var(--brass);cursor:pointer;z-index:5">⛶</div>
     <div id="bticker" style="position:absolute;left:.9rem;bottom:2.4rem;font-size:.72rem;line-height:1.5;color:var(--near,#cdd6ee);opacity:.85;pointer-events:none;z-index:4;text-shadow:0 1px 4px rgba(0,0,0,.8)"></div>`;
   /* the glass volume: fibonacci-sampled hemispheres with gyral perturbation */
   const pts=[],folds=[];
@@ -1139,11 +1173,18 @@ function renderBrain(){
              (region==="temporal"?(h%2?1:-1)*Math.abs(R[2]):R[2])+(((h>>6)%83)/83-.5)*j];
     const prev=BPREV[n.scope];BPREV[n.scope]=n.records;
     if(prev!==undefined&&n.records>prev)deltas.push({p,d:n.records-prev});
+    /* metabolism (0036 §1.5): governed thought costs — the tissue that is
+       thinking runs WARM for a few breaths; honest zeros stay cool */
+    const uk="$"+n.scope,pu=BPREV[uk];BPREV[uk]=n.usd||0;
+    const hot=pu!==undefined&&(n.usd||0)>pu;
+    if(hot&&BGAIN==="storm")btick(`${n.scope.split(/[:/]/).pop()} thinks — the meter moves`);
+    const held=(BG&&BG.clusters.find(c=>c.scope===n.scope)||{}).hotUntil||0;
     /* depth = the memory LAYER (0003, the pyramid): fields hold the raw and
        brief, ecos the distilling, the core the long-kept — the tissue's
        character below renders exactly that (JB's memory-levels lens, 0036) */
     cl.push({p,scope:n.scope,name:n.scope.split(/[:/]/).pop(),region,
-             records:n.records||0,req:0,parent:null,depth});
+             records:n.records||0,req:0,parent:null,depth,
+             hotUntil:hot?Date.now()+12000:held});
     return cl[cl.length-1];
   };
   const core=place(t,"limbic",0);core.name=t.scope;
@@ -1221,6 +1262,30 @@ function bEvent(h){
     BG.flashes.push({p:cl.p,age:0,mag:1.5,hue:"gold"});
     btick(`a moment marked at ${cl.name}`);
   }
+}
+/* ── the replay scrub (0036 §4): the drawer's records, replayed as fire —
+   the last hour at 60×. The data was always there; this is time, scrubbed. ── */
+let BREPLAY=null;
+async function brainReplay(){
+  const btn=$("breplay");
+  if(BREPLAY){BREPLAY=null;if(btn)btn.innerHTML="↻ replay 60×";
+    btick("the replay ends — now is now again");return}
+  if(!cfg||!BG)return;
+  let r;try{
+    r=await(await fetch(api("/retrieve"),{method:"POST",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({query:{requester:cfg.requester,subject:SUBJ(),
+        space:"self",time:{from:iso(new Date(Date.now()-60*60*1000))},
+        intent:"recall",budget:{cost:6},auth:"biscuit-sim"},
+        token:cfg.token,requester_scope:cfg.requester_scope})})).json();
+  }catch{return}
+  const hits=(r.hits||[]).filter(h=>h.occurred_at)
+    .sort((a,b)=>a.occurred_at<b.occurred_at?-1:1);
+  if(!hits.length){btick("a quiet hour — nothing to replay");return}
+  const t0=new Date(hits[0].occurred_at).getTime();
+  BREPLAY={q:hits.map(h=>({h,due:Date.now()+600+(new Date(h.occurred_at)-t0)/60}))};
+  if(btn)btn.innerHTML="■ replaying the hour…";
+  btick(`replaying ${hits.length} record(s) — the last hour at 60×`);
 }
 async function brainFeed(){
   if(!BRAINMODE||!cfg||gainF()<=0)return;
@@ -1314,7 +1379,9 @@ function bgFrame(ts){
     const lv=c.depth===2?.72+.28*Math.sin(ts*.006+bhash(c.scope||c.name))
             :c.depth===1?.88+.12*Math.sin(ts*.0025+bhash(c.scope||c.name))
             :.96+.04*Math.sin(ts*.0012);
-    const mag=Math.min(1, (.18+.16*Math.log2(1+c.records)/3)*lv);
+    const heat=c.hotUntil&&Date.now()<c.hotUntil
+      ?Math.min(1,(c.hotUntil-Date.now())/12000):0;    /* the meter's warmth, fading */
+    const mag=Math.min(1, (.18+.16*Math.log2(1+c.records)/3)*lv*(1+.35*heat));
     const R=(5+13*mag)*q[3];
     const gr=g.createRadialGradient(q[0],q[1],0,q[0],q[1],R);
     if(LEGACYF){                             /* embers cooled to a constellation */
@@ -1322,8 +1389,8 @@ function bgFrame(ts){
       gr.addColorStop(.35,`rgba(165,185,255,${(.28*mag).toFixed(2)})`);
       gr.addColorStop(1,"rgba(130,150,255,0)");
     }else{
-    gr.addColorStop(0,`rgba(255,236,200,${(.75*mag+.15).toFixed(2)})`);
-    gr.addColorStop(.35,`rgba(255,185,105,${(.42*mag).toFixed(2)})`);
+    gr.addColorStop(0,`rgba(255,${236-56*heat|0},${200-90*heat|0},${(.75*mag+.15).toFixed(2)})`);
+    gr.addColorStop(.35,`rgba(255,${185-45*heat|0},${105-45*heat|0},${(.42*mag).toFixed(2)})`);
     gr.addColorStop(1,"rgba(255,150,60,0)");
     }
     g.fillStyle=gr;g.beginPath();g.arc(q[0],q[1],R,0,6.283);g.fill();
@@ -1353,11 +1420,13 @@ function bgFrame(ts){
                                   `rgba(205,225,255,${(.8*(1-s.t*.6)*flick).toFixed(2)})`]
       :s.hue==="violet"?[`rgba(190,150,255,${(.5*(1-s.t)).toFixed(2)})`,
                          `rgba(225,205,255,${(.85*(1-s.t*.6)).toFixed(2)})`]
+      :s.hue==="cool"?[`rgba(120,170,255,${(.4*(1-s.t)).toFixed(2)})`,
+                       `rgba(180,210,255,${(.7*(1-s.t*.6)).toFixed(2)})`]
       :[`rgba(255,200,120,${(.5*(1-s.t)).toFixed(2)})`,
         `rgba(255,246,224,${(.9*(1-s.t*.6)).toFixed(2)})`];
     g.beginPath();
     s.trail.forEach((p,j)=>{const q=proj(p);j?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])});
-    g.strokeStyle=tr;g.lineWidth=1.3;g.stroke();
+    g.strokeStyle=tr;g.lineWidth=s.thin?.9:1.3;g.stroke();
     const q=proj([px,py,pz]);
     g.fillStyle=td;
     g.beginPath();g.arc(q[0],q[1],2.1*q[3],0,6.283);g.fill();
@@ -1379,7 +1448,7 @@ function bgFrame(ts){
      the brighter the pressure ring and the slower the ache. Never a klaxon:
      an ache, calm and amber — and one click opens the queue. ── */
   if(BRAINQ.count>0&&gainF()>0&&!LEGACYF){
-    const CLEFT=[1.42,.52,0];
+    const CLEFT=BCLEFT;
     const qc=proj(CLEFT);
     const n=Math.min(BRAINQ.count,14);
     for(let i=0;i<n;i++){
@@ -1403,6 +1472,13 @@ function bgFrame(ts){
     BG.hit.push({sx:qc[0],sy:qc[1],req:true,
       name:`consequence waits — ${BRAINQ.count} at the gate`});
   }
+  /* the replay drains on the frame clock — scrubbed time becomes fire */
+  if(BREPLAY){
+    while(BREPLAY.q.length&&BREPLAY.q[0].due<=Date.now())bEvent(BREPLAY.q.shift().h);
+    if(!BREPLAY.q.length){BREPLAY=null;const btn=$("breplay");
+      if(btn)btn.innerHTML="↻ replay 60×";
+      btick("the replay ends — now is now again");}
+  }
   /* the ticker (0036 §1.7): the quiet caption of what just flashed */
   const tk=$("bticker");
   if(tk){
@@ -1418,6 +1494,7 @@ function bgFrame(ts){
 function renderOrrery(){
   const O=$("orrery"); if(!O||$("v-uni").classList.contains("hide"))return;
   const t=topoCache;
+  if(t)bootProjection();                     /* the mind greets first (0036 §5) */
   const sig=t?JSON.stringify([nodeSig(t),(t.children||[]).map(c=>
     [nodeSig(c),(c.children||[]).map(nodeSig)])]):"none";
   if(O.dataset.sig===sig)return; O.dataset.sig=sig;
@@ -1694,6 +1771,7 @@ async function loadReq(){
     {const w=q.filter(isWaiting);
      BRAINQ={count:w.length,kinds:[...new Set(w.map(r=>r.kind))],
        oldest:w.length?Math.max(...w.map(r=>(Date.now()-new Date(r.at||Date.now()))/60000)):0};}
+    reqFlow(q);                              /* the circulation, read live (0036 §1.3) */
     const isSettled=r=>r.status==="done"||r.status==="denied";
     const wait=q.filter(isWaiting).reverse(),
           settled=q.filter(isSettled).reverse(),

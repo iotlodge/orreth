@@ -645,6 +645,11 @@ async fn egress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl Int
                             if let Some(df) = rec.get("derived_from") {
                                 h["derived_from"] = df.clone();
                             }
+                            // the kind rides too (0036: the Living Brain reads
+                            // consolidation off it) — same enrichment family as tags
+                            if let Some(k) = rec.get("kind") {
+                                h["kind"] = k.clone();
+                            }
                             h["tags"] = tags;
                         }
                     }
