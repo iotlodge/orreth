@@ -95,6 +95,36 @@ def parse_grow(text: str):
     return None
 
 
+def parse_testament(text: str):
+    """“testament: journals shred, identity pass — executor did:key:zE, witness
+    did:key:zW, silence 21 days” → {fates, executor, witnesses, silence_days},
+    or None when the ask is not a testament. Parsed on the RAW text: DIDs keep
+    their case; fates and domains fold to lower (0035 §2)."""
+    m = re.match(r"^(?:my |the |write (?:my )?|set (?:my )?)?testament:?\s+(.+)$",
+                 (text or "").strip(), flags=re.IGNORECASE)
+    if not m:
+        return None
+    body = m.group(1)
+    executor = ""
+    em = re.search(r"executor\s+(\S+)", body, flags=re.IGNORECASE)
+    if em:
+        executor = em.group(1).rstrip(",.;—")
+    witnesses = [w.rstrip(",.;—") for w in
+                 re.findall(r"witness(?:es)?\s+(\S+)", body, flags=re.IGNORECASE)]
+    silence_days = 30                     # the desk default; the human tunes it
+    sm = re.search(r"silence\s+(\d+)\s*days?", body, flags=re.IGNORECASE)
+    if sm:
+        silence_days = int(sm.group(1))
+    cleaned = re.sub(r"(executor|witness(?:es)?)\s+\S+", " ", body,
+                     flags=re.IGNORECASE)
+    cleaned = re.sub(r"silence\s+\d+\s*days?", " ", cleaned, flags=re.IGNORECASE)
+    fates = {d.lower(): f.lower() for d, f in
+             re.findall(r"([A-Za-z][\w-]*)\s+(seal|pass|shred)\b", cleaned,
+                        flags=re.IGNORECASE)}
+    return {"fates": fates, "executor": executor, "witnesses": witnesses,
+            "silence_days": silence_days}
+
+
 _TEMPLATES = ("continuity",)          # 0009's named templates the parlor knows
 
 
@@ -156,7 +186,9 @@ def _card_becky(facts: dict) -> tuple[str, list]:
              {"label": "grow an ecosystem…", "template": "create ecosystem "},
              {"label": "grant access…", "template": "grant caregiver access to "},
              {"label": "the consent ledger", "ask": "show consents"},
-             {"label": "stop recording…", "template": "stop recording conversation"}])
+             {"label": "stop recording…", "template": "stop recording conversation"},
+             {"label": "my testament…", "template": "testament: "},
+             {"label": "the testament", "ask": "show testament"}])
 
 
 def _card_charlotte(facts: dict) -> tuple[str, list]:
@@ -233,6 +265,45 @@ def answer(name: str, text: str, facts: dict) -> dict:
         return {"reply": f"no one by the name “{name}” is in residence on this floor."}
     t = (text or "").strip().lower()
     if name == "becky":
+        # the testament (0035 §2): the human's standing word about the end.
+        # Writing one ARMS future consequence — it STAGES; revoking it is
+        # safe — it acts NOW. Every word travels VERBATIM: fates are protocol.
+        if t.startswith(("revoke my testament", "revoke the testament",
+                         "revoke testament")):
+            return {"reply": "revoking your testament NOW — a new version on "
+                             "its worldline, never an absence. without a "
+                             "standing word every domain seals, hibernated — "
+                             "the least irreversible act (0035 §8).",
+                    "action": "testament-revoke", "verbatim": True}
+        if t.startswith(("show testament", "show my testament",
+                         "the testament")):
+            return {"reply": _becky_testament(facts), "verbatim": True}
+        tst = parse_testament(text)
+        if tst is not None:
+            if not tst["fates"]:
+                return {"reply": "a testament names fates — say: testament: "
+                                 "journals shred, identity pass, medication "
+                                 "seal — executor did:key:…, witness "
+                                 "did:key:…, silence 30 days. unnamed domains "
+                                 "seal.",
+                        "verbatim": True}
+            if any(f in ("pass", "shred") for f in tst["fates"].values()) \
+                    and not tst["executor"]:
+                return {"reply": "a testament that passes or shreds needs an "
+                                 "executor — only attested death executes "
+                                 "(0035 §3). name one: … executor did:key:….",
+                        "verbatim": True}
+            fates_words = " · ".join(f"{d} {f}" for d, f in tst["fates"].items())
+            return {"reply": f"staging your testament — {fates_words}; "
+                             + (f"executor {tst['executor']}, " if tst["executor"]
+                                else "")
+                             + (f"witness {', '.join(tst['witnesses'])}, "
+                                if tst["witnesses"] else "")
+                             + f"a {tst['silence_days']}-day silence window. "
+                               "the last standing word is a consequence — the "
+                               "gate waits for you (0012). unnamed domains "
+                               "seal; silence may only contain (0035 §8).",
+                    "action": "testament-stage", **tst, "verbatim": True}
         # consent & delegation (0034 §4): granting access to a person's memory
         # is a consequence — it STAGES; revoking is safety — it acts NOW.
         # Every consent word travels VERBATIM: access terms are protocol.
@@ -553,6 +624,34 @@ def _becky_consents(facts: dict) -> str:
         for c in heads)
     return (f"{len(heads)} consent worldline(s): {lines}. grants stage at the "
             "gate; revocation is immediate — stopping access is safe.")
+
+
+def _becky_testament(facts: dict) -> str:
+    """The last standing word, in words (0035 §2): the head's fates, roster,
+    and silence window — or the honest default when none stands. Revoked shown
+    revoked: a withdrawn word is a state, never an absence."""
+    heads = facts.get("testament") or []
+    if not heads:
+        return ("no testament stands — every domain seals, hibernated, the "
+                "least irreversible act (0035 §8): the universe assumes "
+                "nothing about the unspoken. say “testament: journals shred, "
+                "identity pass — executor did:key:…” and your standing word "
+                "stages at the gate.")
+    h = heads[-1]
+    if h.get("posture") != "standing":
+        return ("your testament is revoked — a state on the worldline, never "
+                "an absence. every domain seals until you speak again; "
+                "silence may only contain (0035 §8).")
+    fates = " · ".join(f"{d} {f}" for d, f in (h.get("fates") or {}).items()) \
+        or "no fates named"
+    return (f"your testament stands: {fates}; unnamed domains seal. "
+            f"executor {h.get('executor') or 'unnamed'}"
+            + (f", witness {', '.join(h['witnesses'])}" if h.get("witnesses")
+               else "")
+            + f"; a {((h.get('silence_window') or {}).get('days', 30))}-day "
+              "silence window — silence may only contain; only attested death "
+              "executes, and the loudest abort is a heartbeat (0035 §3). "
+              "revocable to your last day.")
 
 
 def _librarian_desk(facts: dict) -> str:

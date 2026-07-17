@@ -213,6 +213,155 @@ def test_beckys_consent_doors():
     assert "until 2026-08-13" in ledger["reply"]
 
 
+def test_the_testament_is_the_standing_word(world):
+    """0035 §2: the human's word about the end — a worldline whose head rules,
+    revisable to the last day; the §8 locks refuse at mint, loudly."""
+    f = world.field_prod
+    me = {"did": f.steward["did"], "scope": f.scope}
+    rec = continuity.make_testament(me, f.steward_kp, f.scope,
+                                    fates={"journals": "shred",
+                                           "identity": "pass",
+                                           "medication": "seal"},
+                                    executor="did:key:zExec",
+                                    witnesses=["did:key:zWit"],
+                                    silence_days=21,
+                                    escrow={"journals": False},
+                                    approved_ref="req-35")
+    f.write(rec)
+
+    def heads():
+        rows = [{"id": rid, "testament": _body(r)["testament"],
+                 "derived_from": r.get("derived_from") or [],
+                 "at": r["received_at"]}
+                for rid, r in f.records.items()
+                if "testament" in r.get("tags", [])]
+        rows.sort(key=lambda x: x["at"])
+        return continuity.testament_heads(rows)
+
+    h = heads()
+    assert len(h) == 1 and h[0]["posture"] == "standing"
+    assert h[0]["silence_window"]["days"] == 21
+    assert h[0]["escrow"] == {"journals": False}
+    # a revision is a sibling — the head flips, history stays
+    rev = continuity.make_testament(me, f.steward_kp, f.scope,
+                                    fates={"journals": "shred",
+                                           "identity": "pass"},
+                                    executor="did:key:zExec",
+                                    witnesses=["did:key:zWit"],
+                                    silence_days=45, escrow={"journals": False})
+    rev["derived_from"] = [h[0]["id"]]
+    f.write(rev)
+    h = heads()
+    assert len(h) == 1 and h[0]["silence_window"]["days"] == 45
+    assert rec["id"] in f.records                        # history intact
+    # the §8 locks, refused at mint by name
+    with pytest.raises(ValueError):                      # unknown fate
+        continuity.make_testament(me, f.steward_kp, f.scope,
+                                  fates={"journals": "burn"})
+    with pytest.raises(ValueError):                      # lock 5: unescrowed only shreds
+        continuity.make_testament(me, f.steward_kp, f.scope,
+                                  fates={"journals": "pass"},
+                                  executor="did:key:zE",
+                                  escrow={"journals": False})
+    with pytest.raises(ValueError):                      # execution needs an executor
+        continuity.make_testament(me, f.steward_kp, f.scope,
+                                  fates={"identity": "pass"})
+    with pytest.raises(ValueError):                      # distinct signers (0012 §3)
+        continuity.make_testament(me, f.steward_kp, f.scope,
+                                  fates={"identity": "pass"},
+                                  executor="did:key:zE",
+                                  witnesses=["did:key:zE"])
+
+
+def test_fates_default_to_seal_and_the_unnamed_seal():
+    """0035 §8 locks 1 · 2: no testament seals, an unnamed domain seals, a
+    revoked word seals — the universe assumes nothing about the unspoken; and
+    the only dead-man shred is key mortality."""
+    assert continuity.fate_of(None, "journals") == "seal"
+    head = {"posture": "standing", "fates": {"journals": "shred"},
+            "escrow": {"journals": False}}
+    assert continuity.fate_of(head, "journals") == "shred"
+    assert continuity.fate_of(head, "identity") == "seal"      # unnamed seals
+    assert continuity.fate_of({**head, "posture": "revoked"},
+                              "journals") == "seal"            # withdrawn word
+    assert continuity.shred_method(head, "journals") == "key-mortality"
+    assert continuity.shred_method(head, "episodic") == "governed"
+    assert continuity.shred_method(None, "journals") == "governed"
+
+
+def test_the_attestation_bar_is_quorum_two():
+    """0035 §8 lock 3: executor + evidence + one named witness (or registry
+    evidence as the second voice) — below the bar nothing executes, ever."""
+    head = {"posture": "standing", "executor": "did:key:zE",
+            "witnesses": ["did:key:zW"]}
+    assert continuity.may_attest(head, "did:key:zE")
+    assert continuity.may_attest(head, "did:key:zW")
+    assert not continuity.may_attest(head, "did:key:zX")
+    assert not continuity.may_attest(None, "did:key:zE")
+    ev = ["artifact-death-certificate"]
+    assert not continuity.attestation_met(head, ["did:key:zE"], ev)   # alone
+    assert not continuity.attestation_met(head, ["did:key:zE",
+                                                 "did:key:zW"], [])   # no evidence
+    assert not continuity.attestation_met(head, ["did:key:zW"], ev)   # no executor
+    assert continuity.attestation_met(head, ["did:key:zE", "did:key:zW"], ev)
+    assert continuity.attestation_met(head, ["did:key:zE"], ev, registry=True)
+    assert not continuity.attestation_met({**head, "posture": "revoked"},
+                                          ["did:key:zE", "did:key:zW"], ev)
+
+
+def test_heirs_narrow_never_widen():
+    """0035 §8 lock 4: the disclosure map is the dead's consent, fixed — heirs
+    may close doors, never open them; absent an entry, the door is closed."""
+    old = {"episodic": ["did:key:zKid", "did:key:zSib"],
+           "identity": ["did:key:zKid"]}
+    assert continuity.narrowed_ok(old, {"episodic": ["did:key:zKid"]})
+    assert continuity.narrowed_ok(old, {})                     # closing narrows
+    assert not continuity.narrowed_ok(old, {"journals": ["did:key:zKid"]})
+    assert not continuity.narrowed_ok(old, {"identity": ["did:key:zKid",
+                                                         "did:key:zNew"]})
+    head = {"posture": "standing", "disclosure": old}
+    assert continuity.may_read_legacy(head, "did:key:zKid", "episodic")
+    assert not continuity.may_read_legacy(head, "did:key:zNew", "episodic")
+    assert not continuity.may_read_legacy(head, "did:key:zKid", "journals")
+    assert not continuity.may_read_legacy(None, "did:key:zKid", "episodic")
+
+
+def test_beckys_testament_doors():
+    """0035 §2 at the card: the standing word STAGES verbatim with its fates
+    readable; a word that must execute refuses without an executor; revocation
+    acts NOW; the ledger speaks the head — or the honest default."""
+    ans = parlor.answer(
+        "becky",
+        "testament: journals shred, identity pass, medication seal "
+        "— executor did:key:zExec, witness did:key:zWit, silence 21 days",
+        {"scope": "u:demo"})
+    assert ans["action"] == "testament-stage" and ans["verbatim"] is True
+    assert ans["fates"] == {"journals": "shred", "identity": "pass",
+                            "medication": "seal"}
+    assert ans["executor"] == "did:key:zExec"        # case kept — a DID is a self
+    assert ans["witnesses"] == ["did:key:zWit"] and ans["silence_days"] == 21
+    assert "the gate waits" in ans["reply"]
+    assert "unnamed domains seal" in ans["reply"]
+    naked = parlor.answer("becky", "testament: journals shred",
+                          {"scope": "u:demo"})
+    assert "action" not in naked and "executor" in naked["reply"]
+    rev = parlor.answer("becky", "revoke my testament", {"scope": "u:demo"})
+    assert rev["action"] == "testament-revoke" and rev["verbatim"] is True
+    assert "seals" in rev["reply"]
+    shown = parlor.answer("becky", "show testament",
+                          {"scope": "u:demo",
+                           "testament": [{"posture": "standing",
+                                          "fates": {"journals": "shred"},
+                                          "executor": "did:key:zExec",
+                                          "witnesses": ["did:key:zWit"],
+                                          "silence_window": {"days": 21}}]})
+    assert shown["verbatim"] is True
+    assert "journals shred" in shown["reply"] and "21-day" in shown["reply"]
+    assert "only attested death executes" in shown["reply"]
+    empty = parlor.answer("becky", "show testament", {"scope": "u:demo"})
+    assert "no testament stands" in empty["reply"]
+
+
 def test_the_charter_is_config_as_memory(world):
     """R8: the floor's law on its own record — template, vector, regime, canon,
     legible to the glass and to every resident."""

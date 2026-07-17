@@ -1488,12 +1488,14 @@ function reqRow(r){
   const igate=r.kind==="improvement"&&r.status==="staged"; /* the smith's gate (0031 §4) */
   const ugate=r.kind==="subscription"&&r.status==="staged"; /* the desk's gate (0032 §1) */
   const cgate=r.kind==="consent"&&r.status==="staged"; /* the consent gate (0034 §4) */
+  const tgate=r.kind==="testament"&&r.status==="staged"; /* the last standing word (0035 §2) */
   const note=jgate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`
     :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`
     :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`+kfOffer(r)
     :igate?`<div class="sub" style="color:var(--near);white-space:pre-wrap">${(r.result||{}).package_text||"a rewrite waits for your word (R6)"}</div>`
     :ugate?`<div class="sub" style="color:var(--near)">a standing spend — ${(r.result||{}).terms||"terms readable at the gate"}</div>`
-    :cgate?`<div class="sub" style="color:var(--near)">access to your memory — ${(r.result||{}).terms||"the bundle readable at the gate"}</div>`:"";
+    :cgate?`<div class="sub" style="color:var(--near)">access to your memory — ${(r.result||{}).terms||"the bundle readable at the gate"}</div>`
+    :tgate?`<div class="sub" style="color:var(--near)">the last standing word — ${(r.result||{}).terms||"the fates readable at the gate"}</div>`:"";
   return `<div class="req"><span class="kind">${r.kind||"request"}</span>
    <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
    ${jgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">admit</button>
@@ -1507,6 +1509,8 @@ function reqRow(r){
    :ugate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">open the subscription</button>
     <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
    :cgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">open the access</button>
+    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
+   :tgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">let it stand</button>
     <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
    :`<span class="st">${r.status}</span>`}</div>`;
 }

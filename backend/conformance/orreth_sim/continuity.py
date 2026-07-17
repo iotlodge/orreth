@@ -277,6 +277,142 @@ def token_terms(heads: list[dict], role: str, scope: str, now: str) -> dict | No
             "domains": sorted({d for c in live for d in c.get("domains") or []})}
 
 
+# ---------------------------------------------------------------- the testament (0035)
+
+# 0035 §2 — the human's standing word about the end. The fates a domain may be
+# told: seal (read-only legacy — the default, and the fate of the unnamed),
+# pass (custody, never identity), shred (crypto-erasure through 0026's doors).
+FATES = ("seal", "pass", "shred")
+
+
+def make_testament(agent: dict, kp, scope: str, *, fates: dict,
+                   executor: str = "", witnesses: list | None = None,
+                   silence_days: int = 30, disclosure: dict | None = None,
+                   escrow: dict | None = None, approved_ref: str = "",
+                   posture: str = "standing") -> dict:
+    """The testament (0035 §2): a config-as-memory record on the human's own
+    worldline — per-domain fate map, roster, silence window, disclosure map —
+    staged at 0012's gate while the human lives (arming future consequence IS
+    a consequence), revised as siblings with the head winning, revocable to
+    the last day. The §8 locks are validated at mint, loudly:
+    an unescrowed vault cannot be sealed readable or passed (its keys die with
+    their keeper — lock 5); a fate that must one day EXECUTE needs an executor,
+    because only attested death executes (locks 1 · 3); and the executor never
+    witnesses their own attestation (distinct signers, 0012 §3)."""
+    witnesses = list(witnesses or [])
+    for domain, fate in (fates or {}).items():
+        if fate not in FATES:
+            raise ValueError(f"unknown fate: {fate!r} for {domain!r} — a domain "
+                             "may " + " · ".join(FATES))
+    for domain, esc in (escrow or {}).items():
+        if esc is False and (fates or {}).get(domain) != "shred":
+            raise ValueError(f"{domain!r} is unescrowed — its keys die with "
+                             "their keeper, so it can only shred (key "
+                             "mortality); seal-readable and pass need escrow "
+                             "(0035 §8 lock 5)")
+    if any(f in ("pass", "shred") for f in (fates or {}).values()) and not executor:
+        raise ValueError("a testament that passes or shreds needs an executor "
+                         "— only attested death executes (0035 §3)")
+    if executor and executor in witnesses:
+        raise ValueError("the executor cannot witness their own attestation — "
+                         "distinct signers (0012 §3)")
+    body = {"testament": {
+        "fates": dict(fates or {}),
+        "executor": executor,
+        "witnesses": witnesses,
+        "silence_window": {"days": int(silence_days)},
+        "disclosure": dict(disclosure or {}),
+        "escrow": dict(escrow or {}),
+        "posture": posture, "approved": approved_ref,
+    }}
+    return make_memory(agent, kp, scope, body, kind="semantic",
+                       tags=["testament"])
+
+
+def testament_heads(rows: list[dict]) -> list[dict]:
+    """One worldline per human: the head from (id, testament, derived_from,
+    at)-shaped rows, oldest first — a revoked head shown revoked, because a
+    withdrawn word is a state, never an absence (the 0032 idiom, kept)."""
+    superseded = {d for r in rows for d in r.get("derived_from") or []}
+    return [{"id": r["id"], **r["testament"]} for r in rows
+            if r["id"] not in superseded]
+
+
+def revoke_testament_body(head: dict) -> dict:
+    """Revocable to the last day (0035 §2): the revocation sibling — same
+    worldline, posture revoked, immediate and ungated (withdrawing a future
+    consequence is safe). Without a standing word, every domain seals — the
+    least irreversible act (§8 lock 2)."""
+    return {"testament": {**{k: v for k, v in head.items() if k != "id"},
+                          "posture": "revoked"}}
+
+
+def fate_of(head: dict | None, domain: str) -> str:
+    """§8 locks 1 · 2, pure: no testament — or a revoked one — seals; a named
+    domain speaks its fate; an unnamed domain seals. The universe assumes
+    nothing about the unspoken, and silence may only contain."""
+    if not head or head.get("posture") != "standing":
+        return "seal"
+    return (head.get("fates") or {}).get(domain, "seal")
+
+
+def shred_method(head: dict | None, domain: str) -> str:
+    """§8 lock 5, pure: an escrowed domain shreds GOVERNED (attested death +
+    cooling-off + 0026's doors, stubs survive); an unescrowed one shreds by
+    KEY MORTALITY — mathematics, no detector needs to be right about death."""
+    if head and (head.get("escrow") or {}).get(domain) is False:
+        return "key-mortality"
+    return "governed"
+
+
+def may_attest(head: dict | None, did: str) -> bool:
+    """The roster gate: only the named may stage a death — the executor or a
+    witness. Detection stages, never decides (0013 §3); this gate is about
+    who may even STAGE."""
+    if not head or head.get("posture") != "standing":
+        return False
+    return did == head.get("executor") or did in (head.get("witnesses") or [])
+
+
+def attestation_met(head: dict | None, attestors: list, evidence_refs: list,
+                    *, registry: bool = False) -> bool:
+    """§8 lock 3, pure: quorum 2 turns SEALED into ATTESTED — the executor +
+    an evidence artifact (0029) + one named witness, or registry evidence
+    standing as the second voice. Below the bar nothing executes, ever
+    (bars are absolute, 0012 §5) — and approval only STARTS the cooling-off,
+    where any entitled voice aborts."""
+    if not head or head.get("posture") != "standing":
+        return False
+    if not head.get("executor") or head["executor"] not in (attestors or []):
+        return False
+    if not evidence_refs:
+        return False
+    return registry or any(w in (attestors or [])
+                           for w in head.get("witnesses") or [])
+
+
+def may_read_legacy(head: dict | None, did: str, domain: str) -> bool:
+    """The survivors' door (0035 §6): the disclosure map IS the dead's consent,
+    fixed at close. Absent an entry, the door is closed — grief is not an
+    entitlement (§5)."""
+    if not head:
+        return False
+    return did in ((head.get("disclosure") or {}).get(domain) or [])
+
+
+def narrowed_ok(old: dict, new: dict) -> bool:
+    """§8 lock 4, pure: heirs narrow, never widen — every door the new map
+    holds must already stand in the old. The dead's consent is not
+    renegotiable (the testament is a floor; tighten-only, applied to
+    inheritance)."""
+    for domain, dids in (new or {}).items():
+        if domain not in (old or {}):
+            return False
+        if not set(dids) <= set(old[domain]):
+            return False
+    return True
+
+
 def make_charter(agent: dict, kp, scope: str) -> dict:
     """Config-as-memory (R8): the floor's own record carries its law — the
     template named, the vector, the regime, the canon. The glass reads the

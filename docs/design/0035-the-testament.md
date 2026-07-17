@@ -3,8 +3,9 @@
 *Design draft — proposed by Fable 5 (design owner), commissioned by JB's 2026-07-15
 lock in 0034 §8: survivorship gets its own dive, for gravity. The 0034 §4 slate
 (seal · succession · crypto-shred · per-domain mix) is the starting ground, studied
-here against 0012's quorum thinking and 0026's erasure doors. **Nothing builds
-until JB locks §8 — deliberately.** This document exists to stage that lock.*
+here against 0012's quorum thinking and 0026's erasure doors. **All five §8
+decisions locked by JB 2026-07-17** (via AskUserQuestion, deliberately, every one
+on the recommended path) — the spoonfuls may begin.*
 
 ---
 
@@ -167,53 +168,33 @@ the enterprise burns, the continuity mind breathes, the legacy keeps.
 
 | # | Spoonful | Nature |
 |---|---|---|
-| 1 | **The testament record** — `continuity.py` organs: fate map · roster · silence window · disclosure map; sibling revisions, head wins; becky's card doors (staging at the gate; revocation acts now); pure gates `fate_of` / `may_attest` / `may_read_legacy` | sim + card |
+| 1 | **The testament record** — `continuity.py` organs: fate map · roster · silence window · disclosure map; sibling revisions, head wins; becky's card doors (staging at the gate; revocation acts now); pure gates `fate_of` / `may_attest` / `may_read_legacy` | ✅ landed 2026-07-17 — `continuity.py` grows the §2 organs with every §8 lock refused at mint, loudly (unknown fate by name · unescrowed-only-shreds · pass/shred need an executor · the executor never witnesses their own attestation) · pure gates: `fate_of` (no testament, a revoked one, and the unnamed all SEAL — locks 1·2) · `shred_method` (governed vs key-mortality — lock 5) · `attestation_met` (quorum 2: executor + evidence + witness-or-registry — lock 3) · `may_read_legacy`/`narrowed_ok` (heirs narrow, never widen — lock 4) · becky's card gains the doors: the standing word STAGES verbatim with its fates readable, a word that must execute refuses without an executor, revocation acts NOW, the ledger speaks the head or the honest default · wire: kind `testament` staged→approved mints becky-signed on one worldline / declined records the choice · glass tgate "let it stand" · **proven as a human on u:demo**: spoke the word at becky's card → the gate held it ("silence may only contain; only attested death executes") → let it stand → asked for the ledger and the record answered: "your testament stands … revocable to your last day." 5 tests, 176/176 |
 | 2 | **The passage** — the worker's silence watch (reach-out → seal, reversible, loud) · the heartbeat unseal · the attestation door (0029 evidence artifact + entitled attestations → staged escalation, quorum + cooling-off per the lock) | worker + wire |
 | 3 | **The execution walks** — per domain: seal-standing · succession grant springs + graft-with-lineage · governed shred through 0026's doors · the worldline close, the portrait frozen | the gravest code |
 | 4 | **The survivors' door** — the legacy register in the label canon · parlor read-only for the entitled · the legacy Brain Glass (the constellation) · hibernated economics | glass + canon |
 
-## 8. Decisions — staged for JB's deliberate lock
+## 8. Decisions — **all five locked by JB, 2026-07-17** (via AskUserQuestion; every lock on the recommended path)
 
-1. **Silence's one power.**
-   (a) ☆ **Seal only** — reversible containment; execution always requires
-   attestation. Keeps 0012 §4 whole at final stakes.
-   (b) Seal, then auto-execute the testament after a long stand-off window —
-   the human's own word eventually acts on silence alone; but a machine still,
-   in the end, decides a death.
-   (c) No automatic action at all — a vulnerable human's unattended universe
-   stays open to whoever walks in; the seal exists precisely for them.
-2. **The default absent a testament.**
-   (a) ☆ **Seal forever, hibernated**; an executor-shaped petition may later
-   ride the operational path (0026 §2: humans plural, cooling-off). Least
-   irreversible; assumes nothing about the unspoken.
-   (b) Shred after N years — privacy-maximal, but destroys what a family may
-   have treasured, on no one's word.
-   (c) Custodian discretion — invents an authority the canon promises doesn't
-   exist (0013 §6).
-3. **The attestation bar.**
-   (a) ☆ **Executor + evidence artifact + one named witness (or registry
-   evidence) = quorum 2, then cooling-off.** 0012's spirit at final stakes;
-   reachable for a small family.
-   (b) Executor alone with evidence — a single human over the gravest
-   transition.
-   (c) Quorum 3 — bars are absolute (0012 §5), so a small family may find
-   legacy structurally unavailable; honest, but harsh where tenderness is due.
-4. **What succession passes.**
-   (a) ☆ **Custody, never identity** — the worldline closes, heirs narrow and
-   never widen, continuation is by graft-with-lineage into the heir's own
-   living universe.
-   (b) Full root transfer — the universe keeps living under a new sovereign;
-   the dead's `trusted` class persists under someone else's control and the
-   portrait can be amended by the living. Named plainly: impersonation by
-   inheritance.
-5. **The vault's mortality (escrow).**
-   (a) ☆ **Per-domain election in the testament**: escrowed (all governed fates
-   available) vs unescrowed (mathematical shred, no detector needed). The
-   continuity template defaults escrowed — its human is the person most likely
-   to lose a passphrase in life; the Vaulted Brain offers both.
-   (b) Always escrowed — the platform can always, in principle, be compelled.
-   (c) Never escrowed — a lost passphrase during life means the continuity
-   patient loses their own past; the exact person this template serves.
+1. **Silence's one power → seal only.** Reversible containment; execution
+   always requires attestation. 0012 §4 stays whole at final stakes; a
+   machine never decides a death.
+2. **The default absent a testament → seal forever, hibernated.** The least
+   irreversible act; assumes nothing about the unspoken. An executor-shaped
+   petition may later ride the operational path (0026 §2: humans plural,
+   cooling-off).
+3. **The attestation bar → quorum 2, then cooling-off.** Executor + evidence
+   artifact + one named witness (or registry evidence standing as the second
+   voice). 0012's spirit at final stakes, reachable for a small family; any
+   entitled voice aborts during the window.
+4. **Succession passes custody, never identity.** The worldline closes, the
+   portrait freezes, heirs narrow and never widen the disclosure map;
+   continuation is by graft-with-lineage into the heir's own living universe.
+   Full root transfer rejected by name: impersonation by inheritance.
+5. **The vault's mortality → per-domain election.** The testament chooses per
+   domain: escrowed (all governed fates available) vs unescrowed (mathematical
+   shred — no detector needs to be right). The continuity template defaults
+   escrowed — its human is the person most likely to lose a passphrase in
+   life; the Vaulted Brain offers both.
 
 ---
 

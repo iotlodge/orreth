@@ -738,6 +738,122 @@ def on_consent(port: int, scope: str, r: dict, *, approved: bool = False,
     print(f"  ↳ consent ask staged ({role or modality}) — the gate waits")
 
 
+def wire_testaments(port: int, scope: str) -> list[dict]:
+    """The last standing word from the wire (0035 §2): the testament
+    worldline's head, read under the librarian's seat — revoked shown with
+    its posture, because a withdrawn word is a state, never an absence."""
+    from datetime import datetime, timedelta, timezone
+    _, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return []
+    rows = []
+    for h in r.get("hits", []):
+        if "testament" not in (h.get("tags") or []):
+            continue
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        if isinstance(body, dict) and "testament" in body:
+            rows.append({"id": h["ref"], "testament": body["testament"],
+                         "derived_from": h.get("derived_from") or [],
+                         "at": h.get("occurred_at", "")})
+    rows.sort(key=lambda x: x["at"])
+    return continuity.testament_heads(rows)
+
+
+def write_testament_revocation(port: int, scope: str) -> str:
+    """Revocation acts NOW (0035 §2): withdrawing a future consequence is safe
+    and never waits at a gate. The standing head gets a revoked sibling —
+    without a standing word, every domain seals (§8 lock 2). becky authors:
+    the testament is the door-keeper's ledger."""
+    heads = [h for h in wire_testaments(port, scope)
+             if h.get("posture") == "standing"]
+    if not heads:
+        return "no testament stands — nothing to revoke; every domain seals"
+    head = heads[-1]
+    rec = make_memory({"did": _BECKY.did, "scope": scope}, _BECKY.kp, scope,
+                      continuity.revoke_testament_body(head), kind="semantic",
+                      tags=["testament"])
+    rec["derived_from"] = [head["id"]]
+    try:
+        call(port, "POST", "/records", rec)
+    except Exception as e:
+        return f"the revocation stumbled: {e}"
+    print(f"  ↳ testament REVOKED on {scope} — immediate, on the worldline")
+    return ("your testament is revoked — immediate, on the record; every "
+            "domain seals until you speak again")
+
+
+def on_testament(port: int, scope: str, r: dict, *, approved: bool = False,
+                 declined: bool = False) -> None:
+    """0035 §2 at the gate: writing a testament ARMS future consequence — the
+    ask stages with its fates readable, and only the human's word mints the
+    standing record (0012). becky signs: she keeps every door, this one
+    included."""
+    fates = {str(k): str(v) for k, v in (r.get("fates") or {}).items()}
+    executor = str(r.get("executor") or "")
+    witnesses = [str(w) for w in r.get("witnesses") or []]
+    silence_days = int(r.get("silence_days") or 30)
+    me = {"did": _BECKY.did, "scope": scope}
+    if declined:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"declined": True,
+                         "reply": "declined — no word stands, every domain "
+                                  "seals, and the record keeps that you chose"}})
+        print("  ↳ testament declined at the gate")
+        return
+    if approved:
+        try:
+            rec = continuity.make_testament(me, _BECKY.kp, scope, fates=fates,
+                                            executor=executor,
+                                            witnesses=witnesses,
+                                            silence_days=silence_days,
+                                            approved_ref=str(r.get("id") or ""))
+        except ValueError as e:              # the §8 locks refuse at mint, loudly
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"refused": str(e)}})
+            print(f"  ↳ testament REFUSED at mint: {e}")
+            return
+        heads = [h for h in wire_testaments(port, scope)
+                 if h.get("posture") == "standing"]
+        if heads:                             # one worldline per human (0032's idiom)
+            rec["derived_from"] = [heads[-1]["id"]]
+        call(port, "POST", "/records", rec)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"testament": rec["id"],
+                         "reply": "your testament stands on your word — "
+                                  "revocable to your last day"}})
+        print(f"  ↳ testament STANDS: {rec['id'][:18]}…")
+        return
+    fates_words = " · ".join(f"{d} {f}" for d, f in fates.items()) or "no fates"
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "staged",
+          "result": {"held": "the last standing word arms future consequence "
+                             "— speak or decline at the gate (0035 §2)",
+                     "terms": f"{fates_words} · unnamed domains seal"
+                              + (f" · executor {executor}" if executor else "")
+                              + (f" · witness {', '.join(witnesses)}"
+                                 if witnesses else "")
+                              + f" · {silence_days}-day silence window · "
+                                "silence may only contain; only attested "
+                                "death executes"}})
+    print("  ↳ testament staged — the gate waits")
+
+
 # ---------------------------------------------------------------- the Mirror (0034 sp3)
 
 MIR = _seed("mirror")                 # the assessor — its own self, no seat, no voice
@@ -3199,6 +3315,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         facts["deliveries"] = wire_deliveries(port, scope)
     if name == "becky":                       # the door-keeper's ledger (0034 §4)
         facts["consents"] = wire_consents(port, scope)
+        facts["testament"] = wire_testaments(port, scope)  # the last word (0035)
     if name == "grace":                       # the smith reads her shelf (0031 §4)
         u_port = universe_port(port)
         facts["shelf"] = wire_shelf(u_port)
@@ -3330,6 +3447,17 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         reply = write_revocation(port, scope, role=ans.get("role"),
                                  modality=ans.get("modality"),
                                  reason="the human withdrew consent")
+    if ans.get("action") == "testament-stage":  # 0035 §2 — the last word STAGES
+        call(port, "POST", "/requests",
+             {"kind": "testament", "fates": ans["fates"],
+              "executor": ans.get("executor", ""),
+              "witnesses": ans.get("witnesses") or [],
+              "silence_days": ans.get("silence_days", 30),
+              "text": "testament: "
+                      + (" · ".join(f"{d} {f}"
+                                    for d, f in ans["fates"].items()))})
+    if ans.get("action") == "testament-revoke":  # 0035 §2 — withdrawal acts NOW
+        reply = write_testament_revocation(port, scope)
     kp, did = resident_key(name, scope)
     voiced = None
     # descriptive answers may be voiced; actions and flow-control words never are —
@@ -3551,6 +3679,12 @@ def main() -> None:
                             on_consent(port, scope, r,
                                        approved=r.get("status") == "approved",
                                        declined=r.get("status") == "denied")
+                        elif r.get("kind") == "testament" and \
+                                r.get("status") in ("pending", "approved", "denied"):
+                            handled.add(key)
+                            on_testament(port, scope, r,
+                                         approved=r.get("status") == "approved",
+                                         declined=r.get("status") == "denied")
                     except urllib.error.HTTPError as e:
                         # The floor ANSWERED — a refusal, not a dead wire (probe()'s
                         # law). One poison request must never silence the residents:
