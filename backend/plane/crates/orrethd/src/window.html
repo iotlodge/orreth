@@ -65,9 +65,9 @@
     70%{box-shadow:0 0 0 6px transparent;opacity:.75}100%{box-shadow:0 0 0 0 transparent;opacity:1}}
   .orb.watching{color:var(--viol)} .orb.thinking{color:var(--near)} .orb.distilling{color:var(--blue)}
   @media(prefers-reduced-motion:reduce){.orb{animation:none!important}}
-  /* the universe holds its breath while you look — orbits pause under the cursor,
-     so a hover card can actually be caught (JB 2026-07-07) */
-  .orrery:hover .orb,.orrery:hover .cr,.orrery:hover .sphere::after{animation-play-state:paused}
+  /* the universe never stops turning — the 2026-07-07 hover-pause was undone
+     on JB's call (2026-07-17): a world that freezes when watched reads wrong.
+     Hover cards ride the motion now. */
   /* one glass, every floor: worlds are doors, and the trail climbs back */
   .trow{cursor:pointer} .trow:hover .tn{color:var(--star)}
   #crumbs{font:.7rem var(--mono);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1009,18 +1009,33 @@ const bhash=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
 const bregOf=n=>BECO[n]||Object.keys(BR3)[bhash(n)%6];
 let BRAINMODE=false; const BPREV={};
 let BG=null;                                 /* the glass runtime */
+/* ── the Living Brain (0036): physiology over anatomy. The GAIN dial scales
+   how loudly the one truth renders — never WHICH truths render (rule 7). ── */
+const GAINS=["off","calm","living","storm"];
+let BGAIN=localStorage.getItem("orreth-gain")||"living";
+const gainF=()=>({off:0,calm:.4,living:1,storm:1.7}[BGAIN]??1);
+let BRAINQ={count:0,kinds:[],oldest:0};      /* the synapse gap's pressure (HITL) */
+let BFEED={seen:new Set(),last:0,ticker:[],primed:false};
+function gainCycle(){
+  BGAIN=GAINS[(GAINS.indexOf(BGAIN)+1)%GAINS.length];
+  localStorage.setItem("orreth-gain",BGAIN);
+  const g=$("bgain");if(g)g.innerHTML=`gain: <b>${BGAIN}</b>`;
+}
 function brainToggle(){
   BRAINMODE=!BRAINMODE;
   $("v-uni").dataset.proj=BRAINMODE?"brain":"orrery";
   $("btoggle").innerHTML=`projection: <b>${BRAINMODE?"brain":"orrery"}</b> · click for ${BRAINMODE?"orrery":"brain"}`;
-  if(BRAINMODE){bgInit();renderBrain();BG.on=true;requestAnimationFrame(bgFrame)}
+  if(BRAINMODE){bgInit();renderBrain();brainFeed();BG.on=true;requestAnimationFrame(bgFrame)}
   else if(BG)BG.on=false;
 }
 function bgInit(){
   if(BG)return;
   const B=$("brainwrap");
   B.innerHTML=`<canvas id="bcanvas"></canvas><div class="bhint" id="bhint"></div>
-    <div class="bcore" id="bcore"></div>`;
+    <div class="bcore" id="bcore"></div>
+    <div id="bgain" onclick="gainCycle()" title="the gain dial (0036): how loudly the one truth renders — off · calm · living · storm"
+      style="position:absolute;top:.55rem;right:.8rem;font-size:.72rem;letter-spacing:.08em;color:var(--brass);cursor:pointer;z-index:5">gain: <b>${BGAIN}</b></div>
+    <div id="bticker" style="position:absolute;left:.9rem;bottom:2.4rem;font-size:.72rem;line-height:1.5;color:var(--near,#cdd6ee);opacity:.85;pointer-events:none;z-index:4;text-shadow:0 1px 4px rgba(0,0,0,.8)"></div>`;
   /* the glass volume: fibonacci-sampled hemispheres with gyral perturbation */
   const pts=[],folds=[];
   const surf=(u,v,side)=>{                   /* u,v on unit sphere → brain surface */
@@ -1091,7 +1106,9 @@ function bgInit(){
   addEventListener("mousemove",e=>{if(BG.drag)BG.ang=BG.drag.a+(e.clientX-BG.drag.x)*.008;
     else bgHover(e)});
   addEventListener("mouseup",()=>{BG.drag=null;cv.style.cursor="grab"});
-  cv.addEventListener("click",e=>{const h=bgNear(e);if(h&&h.scope)floorGo(encodeURIComponent(h.scope))});
+  cv.addEventListener("click",e=>{const h=bgNear(e);
+    if(h&&h.req){const t=document.querySelector('.tab[data-v="req"]');if(t)t.click();return}
+    if(h&&h.scope)floorGo(encodeURIComponent(h.scope))});
 }
 function bgNear(e){
   const r=$("bcanvas").getBoundingClientRect();
@@ -1106,7 +1123,8 @@ function bgHover(e){
   const h=bgNear(e),r=$("bcanvas").getBoundingClientRect();
   if(h){el.style.display="block";el.style.left=(h.sx+r.left- r.left+12)+"px";
     el.style.top=(h.sy+8)+"px";
-    el.textContent=`${h.name} · ${h.records}m — ${h.region}`;}
+    el.textContent=h.req?`${h.name} · the synapse only a human can fire — click to open the queue`
+      :`${h.name} · ${h.records}m — ${h.region}`;}
   else el.style.display="none";
 }
 /* topology → clusters (the planets and moons BECOME the active regions) */
@@ -1121,8 +1139,11 @@ function renderBrain(){
              (region==="temporal"?(h%2?1:-1)*Math.abs(R[2]):R[2])+(((h>>6)%83)/83-.5)*j];
     const prev=BPREV[n.scope];BPREV[n.scope]=n.records;
     if(prev!==undefined&&n.records>prev)deltas.push({p,d:n.records-prev});
+    /* depth = the memory LAYER (0003, the pyramid): fields hold the raw and
+       brief, ecos the distilling, the core the long-kept — the tissue's
+       character below renders exactly that (JB's memory-levels lens, 0036) */
     cl.push({p,scope:n.scope,name:n.scope.split(/[:/]/).pop(),region,
-             records:n.records||0,req:0,parent:null});
+             records:n.records||0,req:0,parent:null,depth});
     return cl[cl.length-1];
   };
   const core=place(t,"limbic",0);core.name=t.scope;
@@ -1137,10 +1158,12 @@ function renderBrain(){
       scope:null,name:a.role,region:reg,records:0});
   });
   BG.clusters=cl;
-  if(!LEGACYF)deltas.forEach(d=>{            /* memory formation: the burst */
+  BG.core=core;                              /* the long-term tissue — climbs land here */
+  if(!LEGACYF&&gainF()>0)deltas.forEach(d=>{ /* memory formation: the burst */
     BG.flashes.push({p:d.p,age:0,mag:Math.min(4,1+d.d*.4)});
     for(let i=0;i<Math.min(10,3+d.d*2);i++)bgSpawn(d.p,null,1.6);
   });
+  brainFeed();                               /* the physiology reads the record (0036) */
   $("bcore").textContent=LEGACYF
     ?`${t.scope} — the shape of a mind, held · LEGACY: the universe keeps — no fire, `+
      `a constellation of what was kept · the archive speaks about, never as (0035 §6)`
@@ -1150,6 +1173,71 @@ function renderBrain(){
 function bgSpawn(from,to,speed){
   BG.parts.push({a:from.slice?from.slice():from,b:to,t:0,
     sp:(speed||1)*(.35+Math.random()*.25),trail:[]});
+}
+/* ── the Living Brain's feed (0036 §2): the SAME records and requests the
+   glass already reads, diffed each breath into physiology. Rule 7 absolute:
+   every light below is a record or a request you can click through to. ── */
+function bclusterOf(scope){
+  let best=BG&&BG.core;if(!BG)return null;
+  for(const c of BG.clusters)if(c.scope&&scope&&scope.startsWith(c.scope)
+    &&(!best||c.scope.length>best.scope.length))best=c;
+  return best;
+}
+function btick(words){
+  BFEED.ticker.unshift({words,at:Date.now()});
+  BFEED.ticker=BFEED.ticker.slice(0,8);
+}
+function bEvent(h){
+  const tags=h.tags||[],cl=bclusterOf(h.scope)||BG.core;if(!cl)return;
+  const g=gainF();if(g<=0)return;
+  const ext=(h.source||"").startsWith("did:web:");   /* beyond the rig = beyond the skull */
+  if(tags.includes("knowledge")){
+    /* a provenance beam (0036 §1.1): knowledge enters — from OUTSIDE the
+       skull when the source is a did:web stranger — wearing the trust ladder */
+    const quarantined=h.fidelity==="untrusted";
+    const dir=[cl.p[0]||.001,cl.p[1],cl.p[2]||.001];
+    const L=Math.hypot(dir[0],dir[1],dir[2])||1;
+    const from=ext?[dir[0]/L*2.5,dir[1]/L*2.5+.3,dir[2]/L*2.5]
+                  :[dir[0]*.3,-1.15,dir[2]*.3];      /* internal: rises from the stem */
+    BG.parts.push({a:from,b:cl.p,t:0,sp:.5,trail:[],
+      hue:quarantined?"quar":"gold",flick:quarantined});
+    btick(`${ext?"the world":"within"} ⟶ ${cl.name}: knowledge, ${quarantined?"quarantined":h.fidelity}`);
+  }else if(h.kind==="distillation"||tags.includes("distillation")){
+    /* consolidation (0036 §1.4 + JB's memory-levels lens): many raws become
+       one distilled and the light CLIMBS a layer — the diaries rolling up */
+    for(let i=0;i<4*g;i++){const j=.25;
+      BG.parts.push({a:[cl.p[0]+(Math.random()-.5)*j,cl.p[1]+(Math.random()-.5)*j,
+        cl.p[2]+(Math.random()-.5)*j],b:cl.p,t:0,sp:.8,trail:[],hue:"violet"});}
+    if(BG.core&&cl!==BG.core)
+      BG.parts.push({a:cl.p,b:BG.core.p,t:0,sp:.3,trail:[],hue:"violet"});
+    btick(`${cl.name}: distilled — the layer keeps less and knows more`);
+  }else if(tags.includes("estate")||tags.includes("passage")){
+    BG.flashes.push({p:BR3.prefrontal,age:0,mag:2,hue:"violet"});
+    btick(`the passage moved at ${cl.name} — consequence, on the record`);
+  }else if(tags.includes("parlor")){
+    BG.flashes.push({p:BR3.limbic,age:0,mag:1.2,hue:"warm"});
+    if(BGAIN==="storm")btick(`an audience at ${cl.name}`);
+  }else if(tags.includes("marker")){
+    BG.flashes.push({p:cl.p,age:0,mag:1.5,hue:"gold"});
+    btick(`a moment marked at ${cl.name}`);
+  }
+}
+async function brainFeed(){
+  if(!BRAINMODE||!cfg||gainF()<=0)return;
+  if(Date.now()-BFEED.last<4000)return;      /* the same 4s breath as everything */
+  BFEED.last=Date.now();
+  let r;try{
+    r=await(await fetch(api("/retrieve"),{method:"POST",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({query:{requester:cfg.requester,subject:SUBJ(),
+        space:"self",time:{from:iso(new Date(Date.now()-15*60*1000))},
+        intent:"recall",budget:{cost:4},auth:"biscuit-sim"},
+        token:cfg.token,requester_scope:cfg.requester_scope})})).json();
+  }catch{return}
+  const fresh=(r.hits||[]).filter(h=>h.ref&&!BFEED.seen.has(h.ref));
+  fresh.forEach(h=>BFEED.seen.add(h.ref));
+  if(!BFEED.primed){BFEED.primed=true;return} /* the first read primes; history is not news */
+  fresh.slice(0,Math.ceil(8*gainF())).forEach(bEvent);
 }
 function bgFrame(ts){
   if(!BG||!BG.on)return;
@@ -1163,9 +1251,10 @@ function bgFrame(ts){
   const dt=Math.min(.06,(ts-BG.last)/1000||.016);BG.last=ts;
   /* legacy (0035 §6): the mind turns slowly, kept — and there is no fire */
   if(!BG.drag)BG.ang+=dt*(LEGACYF?.03:.14);
-  /* the heartbeat chain: every live floor signals its parent, on a stagger */
+  /* the heartbeat chain: every live floor signals its parent, on a stagger —
+     the GAIN dial (0036) scales the traffic's loudness, never its truth */
   BG.emit-=dt;
-  if(BG.emit<=0&&!LEGACYF){BG.emit=.5;
+  if(BG.emit<=0&&!LEGACYF&&gainF()>0){BG.emit=.5/gainF();
     const c=BG.clusters.filter(c=>c.parent&&Math.random()<.4);
     c.forEach(c2=>bgSpawn(c2.p,c2.parent.p,1));}
   /* project */
@@ -1219,7 +1308,13 @@ function bgFrame(ts){
       g.beginPath();g.arc(q[0],q[1],1.6*q[3],0,6.283);g.fill();
       continue;
     }
-    const mag=Math.min(1, .18+.16*Math.log2(1+c.records)/3);
+    /* the memory-levels lens (0036 + JB's pyramid, 0003): the tissue's
+       character IS its layer — fields flicker fast (raw, working memory),
+       ecos hold steadier (distilling), the core barely breathes (long-kept) */
+    const lv=c.depth===2?.72+.28*Math.sin(ts*.006+bhash(c.scope||c.name))
+            :c.depth===1?.88+.12*Math.sin(ts*.0025+bhash(c.scope||c.name))
+            :.96+.04*Math.sin(ts*.0012);
+    const mag=Math.min(1, (.18+.16*Math.log2(1+c.records)/3)*lv);
     const R=(5+13*mag)*q[3];
     const gr=g.createRadialGradient(q[0],q[1],0,q[0],q[1],R);
     if(LEGACYF){                             /* embers cooled to a constellation */
@@ -1250,11 +1345,21 @@ function bgFrame(ts){
       px=s.a[0]+d[0]*s.t;py=s.a[1]+d[1]*s.t;pz=s.a[2]+d[2]*s.t;
     }
     s.trail.unshift([px,py,pz]);if(s.trail.length>7)s.trail.pop();
+    /* the fire wears its provenance (0036): gold = the chain and the proven ·
+       pale flickering blue = quarantined arrivals (unproven light) · violet =
+       consolidation, the diaries climbing a layer */
+    const flick=s.flick?(.55+.45*Math.sin(ts*.02+i*3)):1;
+    const [tr,td]=s.hue==="quar"?[`rgba(150,195,255,${(.45*(1-s.t)*flick).toFixed(2)})`,
+                                  `rgba(205,225,255,${(.8*(1-s.t*.6)*flick).toFixed(2)})`]
+      :s.hue==="violet"?[`rgba(190,150,255,${(.5*(1-s.t)).toFixed(2)})`,
+                         `rgba(225,205,255,${(.85*(1-s.t*.6)).toFixed(2)})`]
+      :[`rgba(255,200,120,${(.5*(1-s.t)).toFixed(2)})`,
+        `rgba(255,246,224,${(.9*(1-s.t*.6)).toFixed(2)})`];
     g.beginPath();
     s.trail.forEach((p,j)=>{const q=proj(p);j?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])});
-    g.strokeStyle=`rgba(255,200,120,${(.5*(1-s.t)).toFixed(2)})`;g.lineWidth=1.3;g.stroke();
+    g.strokeStyle=tr;g.lineWidth=1.3;g.stroke();
     const q=proj([px,py,pz]);
-    g.fillStyle=`rgba(255,246,224,${(.9*(1-s.t*.6)).toFixed(2)})`;
+    g.fillStyle=td;
     g.beginPath();g.arc(q[0],q[1],2.1*q[3],0,6.283);g.fill();
   }
   /* the bursts: memory formation, flaring where the record landed */
@@ -1262,8 +1367,50 @@ function bgFrame(ts){
     const f=BG.flashes[i];f.age+=dt;
     if(f.age>1.6){BG.flashes.splice(i,1);continue}
     const q=proj(f.p),R=(6+30*f.age*f.mag)*q[3],a=.55*(1-f.age/1.6);
-    g.strokeStyle=`rgba(255,210,130,${a.toFixed(2)})`;g.lineWidth=1.6;
+    g.strokeStyle=f.hue==="violet"?`rgba(190,150,255,${a.toFixed(2)})`
+      :f.hue==="warm"?`rgba(255,170,150,${a.toFixed(2)})`
+      :`rgba(255,210,130,${a.toFixed(2)})`;
+    g.lineWidth=1.6;
     g.beginPath();g.arc(q[0],q[1],R,0,6.283);g.stroke();
+  }
+  /* ── the synapse gap (0036 §1.2): HITL made anatomical. A staged request is
+     a signal that traveled and STOPPED — sparks orbit a cleft short of the
+     prefrontal (governance) and wait; the more that wait, and the longer,
+     the brighter the pressure ring and the slower the ache. Never a klaxon:
+     an ache, calm and amber — and one click opens the queue. ── */
+  if(BRAINQ.count>0&&gainF()>0&&!LEGACYF){
+    const CLEFT=[1.42,.52,0];
+    const qc=proj(CLEFT);
+    const n=Math.min(BRAINQ.count,14);
+    for(let i=0;i<n;i++){
+      const a=ts*.0009+i*6.283/n, r=.16+.025*(i%3);
+      const p=[CLEFT[0]+Math.cos(a)*r,CLEFT[1]+Math.sin(a*1.3)*r*.6,
+               Math.sin(a)*r];
+      const s=proj(p);
+      g.fillStyle=`rgba(255,196,110,${(.5+.4*Math.sin(ts*.004+i)).toFixed(2)})`;
+      g.beginPath();g.arc(s[0],s[1],1.8*s[3],0,6.283);g.fill();
+    }
+    const press=Math.min(1,BRAINQ.count/12), agef=Math.min(1,BRAINQ.oldest/30);
+    const throb=.55+.45*Math.sin(ts*.0028);
+    const R=(14+26*press)*qc[3];
+    g.strokeStyle=`rgba(255,${188-40*agef|0},${96-30*agef|0},${(.28+.5*press*throb).toFixed(2)})`;
+    g.lineWidth=1.6+2.4*press;
+    g.beginPath();g.arc(qc[0],qc[1],R,0,6.283);g.stroke();
+    /* the gap itself: a signal stopped short of the tissue, waiting for a hand */
+    const gp=proj([CLEFT[0]-.28,CLEFT[1]-.06,0]);
+    g.strokeStyle=`rgba(255,210,140,${(.35*throb).toFixed(2)})`;g.lineWidth=1.1;
+    g.beginPath();g.moveTo(gp[0],gp[1]);g.lineTo(qc[0]-R*.7,qc[1]);g.stroke();
+    BG.hit.push({sx:qc[0],sy:qc[1],req:true,
+      name:`consequence waits — ${BRAINQ.count} at the gate`});
+  }
+  /* the ticker (0036 §1.7): the quiet caption of what just flashed */
+  const tk=$("bticker");
+  if(tk){
+    const keep=BGAIN==="storm"?6:BGAIN==="living"?3:0;
+    tk.innerHTML=BFEED.ticker.slice(0,keep).map(e=>{
+      const age=(Date.now()-e.at)/1000, o=Math.max(0,1-age/14);
+      return o>0?`<div style="opacity:${o.toFixed(2)}">${e.words}</div>`:"";
+    }).join("");
   }
   g.globalCompositeOperation="source-over";
   requestAnimationFrame(bgFrame);
@@ -1543,6 +1690,10 @@ async function loadReq(){
        request behind — the glass reads it and the brain goes still */
     LEGACYF=q.some(r=>r.kind==="legacy");
     const isWaiting=r=>r.status==="staged"||(r.kind==="question"&&r.status==="pending");
+    /* the synapse gap's pressure (0036 §1.2): what waits, and for how long */
+    {const w=q.filter(isWaiting);
+     BRAINQ={count:w.length,kinds:[...new Set(w.map(r=>r.kind))],
+       oldest:w.length?Math.max(...w.map(r=>(Date.now()-new Date(r.at||Date.now()))/60000)):0};}
     const isSettled=r=>r.status==="done"||r.status==="denied";
     const wait=q.filter(isWaiting).reverse(),
           settled=q.filter(isSettled).reverse(),
