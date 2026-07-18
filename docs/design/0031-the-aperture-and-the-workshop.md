@@ -2,7 +2,8 @@
 
 *Design draft — proposed by Fable 5 (design owner), from JB's context/data/memory
 session (2026-07-13), adapting an outside architecture review (ChatGPT 5.6, two
-documents under `tmp/`, never tracked in git; no Orreth code or design was shared —
+documents, never tracked in git — retired to `archive/` 2026-07-18 after this
+audit absorbed them; no Orreth code or design was shared —
 only the Librarian's name traveled). This document first AUDITS that review against
 canon 0000–0030, then designs the three organs JB asked for: context that descends
 with receipts, self-improvement the human can hold in their hands, and a mind the
@@ -163,6 +164,15 @@ CHECKS         refused-at-save results — validation runs BEFORE the gate, the 
 ROLLBACK       the sibling law IS the plan: the prior version never died; re-adopting it is one record
 ```
 
+*The rubric CHECKS grows into — the archived review's six validation layers
+(`archive/iac_universe_knowledge_acquisition_and_continuous_improvement.md` §15),
+kept here as the checklist for when the future test bench (§2) builds: structural
+(schema · dependencies resolve) · knowledge (evidence-backed, provenance whole) ·
+policy (no conflict with higher law, no authority escalation) · security (no
+permission widening, no boundary crossing) · operational (executes; failure modes
+and rollback exist) · simulation (sandboxed against the prior version — the bench
+itself). v0 CHECKS covers the first five in spirit; the sixth is the bench's job.*
+
 ### The doors (parlor verbs, 0020's pattern — new flows, zero core changes)
 
 - **`show asset <name>`** — the version walk: oldest → active, each version's diff
@@ -198,6 +208,16 @@ ROLLBACK       the sibling law IS the plan: the prior version never died; re-ado
   minted, sources admitted, provenance whole — **is** the review's "Knowledge
   Domain Package." Recallable forever, rendered from records that already exist.
   No new store (0030 SP2's law, kept).
+
+*Held vocabulary: the archived review proposed a first-class Discovery object
+(`archive/iac_universe_knowledge_acquisition_and_continuous_improvement.md` §8);
+canon deliberately disperses that function — markers (0024), the improver's
+evidence (0028), the freshness triggers above, the serials desk's
+difference-is-news (0032). Its category list survives as shared vocabulary for
+those organs' tags, so the dispersed parts speak one language: opportunity ·
+risk · improvement · gap · defect · contradiction · new knowledge · deprecated
+knowledge · policy conflict · skill deficiency · procedure failure · security /
+performance / cost / quality concern.*
 
 ## 6. The visible mind — the walk of the work
 

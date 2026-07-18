@@ -2,7 +2,8 @@
 
 *Design draft — proposed by Fable 5 (design owner), from JB's reveal session
 (2026-07-14), companion to 0033 (the physics this universe runs on). Source: the
-second JB × ChatGPT 5.6 document (`tmp/`, untracked) + JB's three brain concept
+second JB × ChatGPT 5.6 document (untracked — retired to `archive/` 2026-07-18
+after this audit absorbed it) + JB's three brain concept
 images, audited against canon 0000–0033. This is the dive where "we'll finally
 get to build the second brain" gets its true form — and its most humane one.
 Nothing builds until JB locks §8.*

@@ -3,7 +3,8 @@
 *Design draft — proposed by Fable 5 (design owner), from JB's reveal session
 (2026-07-14). This is the dive 0030 §2 held a socket for: the data scheme, arriving
 as it should have — theory first, record-shape second. Source material: JB × ChatGPT
-5.6 (two documents in `tmp/`, never tracked; the outside model saw only
+5.6 (two documents, never tracked — retired to `archive/` 2026-07-18 after this
+audit absorbed them; the outside model saw only
 demo.orreth.ai and jsbarth.com/projects/orreth), audited here against canon
 0000–0032 and expanded where the design owner judged it needed. Nothing in §7
 builds until JB locks §9 — and the coordinate (§4) is a contracts-adjacent change:
@@ -173,6 +174,20 @@ already exist — no new stores, no cognition, pure functions over the log:
 Spoonful 1 lands the module + tests; the reel gains an *information physics*
 story; the glass can later wear the numbers (beads with DIV chips — deferred to
 the Brain Glass, 0034).
+
+*For the day the chips build — the archived source's suggested approximations
+(`archive/orreth_information_theory_architecture.md` §12/§10/§11), kept here
+because canon carries them nowhere else. They are starting points, never gates
+(rule 4: measures inform, lanes decide):*
+
+```text
+DIV             = relevance × authority × confidence × consequence × novelty
+                  × temporal applicability − context cost − privacy cost − security risk
+context utility = outcome relevance × information gain × source authority
+                  × confidence × freshness × policy applicability ÷ token cost
+information_metrics (per record): entropy · novelty · objective_relevance
+                  · authority · confidence · consequence · sensitivity · retrieval_cost
+```
 
 ## 7. The spoonfuls
 

@@ -46,3 +46,7 @@ cdk.out/
 site/
 infrastructure/cdk/cdk.out/
 infrastructure/cdk/.venv/
+
+# the archive — retired working papers, kept for provenance, never tracked
+# (see archive/README.md; canon cites these where it audited them)
+archive/
