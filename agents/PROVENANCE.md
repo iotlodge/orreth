@@ -415,3 +415,10 @@ design doc 0017.
 |---|---|---|
 | `backend/conformance/orreth_sim/stacks.py` | Fable 5 (claude-fable-5) | 0038 §1–§2 — the one-truth law by construction: ingest once, project (rebuildable/disposable), retrieve with a relevance floor, answer with citations; eco assets planted versioned; banner in file |
 | `backend/conformance/tests/test_stacks.py` | Fable 5 (claude-fable-5) | sp1 conformance: one record per document · rebuild-identical projection · the purge's reach · cited answers · honest unknowns; banner in file |
+
+## Fable 5 net-new files — 2026-07-22 (0038 sp2, the Dispatcher)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/dispatcher.py` | Fable 5 (claude-fable-5) | 0038 §3 — the reflex: deterministic classify, rules-as-data standard, loud fallback, choices-as-records (the RL substrate); banner in file |
+| `backend/conformance/tests/test_dispatcher.py` | Fable 5 (claude-fable-5) | sp2 conformance: standard plants once · shapes deterministic · loud fallback with both truths · signed choice ledger; banner in file |

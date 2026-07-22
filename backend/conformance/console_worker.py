@@ -3773,19 +3773,22 @@ def on_estate_adopt(port: int, scope: str, r: dict, *, approved: bool = False,
           f"{len(failed)} miss(es)")
 
 
-def wire_stacks_ask(port: int, scope: str, q: str) -> str:
-    """The naive row answers on the wire (0038 sp1): read this floor's stacks
-    documents with the seat's own authority, regrow the projection from the
-    log (rebuildable, therefore honest), and answer with citations."""
+def _stacks_node(port: int, scope: str):
+    """The log's face on the wire: stacks documents AND the routing standard,
+    read with the seat's own authority; writes POST back to the floor."""
     from datetime import datetime, timedelta, timezone
 
-    from orreth_sim import stacks
+    seat_kp, seat_did = lib_seat(scope)
 
-    class _N:                                 # a projection needs only the log's face
-        pass
+    class _N:
+        def __init__(self):
+            self.records, self.scope = {}, scope
+
+        def write(self, rec):
+            call(port, "POST", "/records", rec)
+            self.records[rec["id"]] = dict(rec, received_at=rec["occurred_at"])
+            return rec["id"]
     n = _N()
-    n.records, n.scope = {}, scope
-    _, seat_did = lib_seat(scope)
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
     frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -3796,10 +3799,12 @@ def wire_stacks_ask(port: int, scope: str, q: str) -> str:
                       "budget": {"cost": 8}, "auth": "biscuit-sim"},
             "token": token, "requester_scope": scope})
     except Exception:
-        return "the stacks are unreachable — try again on the next beat"
+        return None, seat_kp, seat_did
     for h in r.get("hits", []):
         tags = h.get("tags") or []
-        if "stacks" not in tags or "document" not in tags:
+        wanted = ("stacks" in tags and "document" in tags) \
+            or "routing-standard" in tags or "dispatch" in tags
+        if not wanted:
             continue
         try:
             body = call(port, "GET",
@@ -3808,12 +3813,50 @@ def wire_stacks_ask(port: int, scope: str, q: str) -> str:
             continue
         if isinstance(body, dict):
             n.records[h["ref"]] = {"tags": tags,
+                                   "received_at": h.get("occurred_at", ""),
                                    "body": crypto._b64e(crypto.canonical(body))}
+    return n, seat_kp, seat_did
+
+
+def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
+    """The ask path, whole (0038 sp1+sp2): the DISPATCHER routes first — its
+    choice a signed record, an unbuilt row falling to the baseline loudly —
+    then the chosen row's projection regrows from the log and answers with
+    citations."""
+    from orreth_sim import dispatcher, stacks
+    n, seat_kp, seat_did = _stacks_node(port, scope)
+    if n is None:
+        return "the stacks are unreachable — try again on the next beat"
+    me = {"did": seat_did, "scope": scope}
+    dispatcher.plant_standard(n, me, seat_kp)     # genesis once; shelf from then on
+    d = dispatcher.dispatch(n, me, seat_kp, q, origin=origin)
     proj = stacks.project(n)
     a = stacks.answer(n, proj, q)
     cites = " · ".join(f"{c['doc']} [{c['ref'][:18]}…] {c['score']}"
                        for c in a["citations"][:3])
-    return a["answer"] + (f" — citations: {cites}" if cites else "")
+    return (f"⚡ the dispatcher chose «{d['flavor']}» — {d['why']} "
+            f"[choice {d['record'][:18]}…] · " + a["answer"]
+            + (f" — citations: {cites}" if cites else ""))
+
+
+def wire_stacks_routing(port: int, scope: str) -> str:
+    """The organ's ledger, in words: the standard's rules and the newest
+    choices — 'why did this go there?' answered from the record."""
+    from orreth_sim import dispatcher
+    n, _, _ = _stacks_node(port, scope)
+    if n is None:
+        return "the stacks are unreachable — try again on the next beat"
+    std = dispatcher.standard(n)
+    rules = " · ".join(f"{r['when']} → {r['route']}" for r in std.get("rules", []))
+    led = dispatcher.choices(n, 4)
+    recent = "; ".join(f"“{c['ask'][:40]}” → {c['flavor']}"
+                       + (f" (wanted {c['wanted']})" if c.get("wanted") else "")
+                       for c in led) or "no choices yet — ask, and the ledger fills"
+    return (f"the routing standard v{std.get('version', '?')} (a versioned asset "
+            f"— I tend it, the lanes gate changes): {rules}; default → "
+            f"{std.get('default', 'naive')}; rows breathing: "
+            f"{', '.join(std.get('built', []))}. recent choices: {recent}. "
+            "every choice is a record — walk any of them in the window.")
 
 
 def wire_estate_template(port: int, subject: str) -> str:
@@ -4372,19 +4415,40 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                      "estate” first and the walk stages for you (0037 §7).")
     if ans.get("action") == "estate-template":  # 0037 §4 — the yaml, recallable
         reply = wire_estate_template(universe_port(port), ans["subject"])
-    if ans.get("action") == "stacks-ingest":  # 0038 §1 — once, through the gateway
-        seat_kp, seat_did = lib_seat(scope)
-        rec = make_memory({"did": seat_did, "scope": scope}, seat_kp, scope,
-                          {"stacks_document": {"name": ans["doc"],
-                                               "text": ans["text_body"][:4000]}},
-                          kind="semantic", tags=["stacks", "document", ans["doc"]])
-        try:
-            call(port, "POST", "/records", rec)
-            print(f"  ↳ stacks shelve — “{ans['doc']}” [{rec['id'][:18]}…]")
-        except Exception as e:
-            reply = f"the shelving stumbled at the record — {e}"
-    if ans.get("action") == "stacks-ask":     # 0038 sp1 — the baseline answers
-        reply = wire_stacks_ask(port, scope, ans["q"])
+    if ans.get("action") in ("stacks-ingest", "stacks-ask", "stacks-routing"):
+        # one mind, many seats (0023 — JB's catch 2026-07-22): from a foreign
+        # floor the ask RIDES TO HER RAG SEAT — same DID lineage, the origin
+        # scope pinned into the choice record so the hop is on the record
+        rag_port, rag_scope = next(
+            ((p, s) for p, s in FLOOR_SCOPES.items() if "/e:rag/" in s),
+            (None, None))
+        if rag_port is None:
+            reply = ("my rag seat is not standing — the stacks' floor is dark; "
+                     "the shipyard can regrow it")
+        else:
+            origin = scope if scope != rag_scope else ""
+            via = (" — carried from my seat at " + scope if origin else "")
+            if ans["action"] == "stacks-ingest":   # 0038 §1 — once, at her seat
+                seat_kp, seat_did = lib_seat(rag_scope)
+                rec = make_memory({"did": seat_did, "scope": rag_scope}, seat_kp,
+                                  rag_scope,
+                                  {"stacks_document": {"name": ans["doc"],
+                                                       "text": ans["text_body"][:4000],
+                                                       **({"origin": origin}
+                                                          if origin else {})}},
+                                  kind="semantic",
+                                  tags=["stacks", "document", ans["doc"]])
+                try:
+                    call(rag_port, "POST", "/records", rec)
+                    print(f"  ↳ stacks shelve — “{ans['doc']}” "
+                          f"[{rec['id'][:18]}…]{via}")
+                except Exception as e:
+                    reply = f"the shelving stumbled at the record — {e}"
+            elif ans["action"] == "stacks-ask":
+                reply = wire_stacks_ask(rag_port, rag_scope, ans["q"],
+                                        origin=origin) + via
+            else:
+                reply = wire_stacks_routing(rag_port, rag_scope) + via
     if ans.get("action") == "domain":     # the package, a view over the record (0031 §5)
         rows = domain_packages(port, scope, ans.get("topic", ""))
         reply = ("; ".join(f"{d['topic']} — {d['meta']}" for d in rows[:6])

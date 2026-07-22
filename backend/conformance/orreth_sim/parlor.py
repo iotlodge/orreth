@@ -216,12 +216,15 @@ def _card_librarian(facts: dict) -> tuple[str, list]:
                 "answers with citations you can walk (0038 §1).",
                 [{"label": "shelve a document…", "template": "shelve "},
                  {"label": "ask the stacks…", "template": "ask the stacks "},
+                 {"label": "how do you route?", "ask": "how do you route?"},
                  {"label": "what do you hold?", "ask": "what knowledge do you hold?"}])
     return (f"I gather from identified sources — {v.get('knowledge held', 0)} piece(s) of "
             "sourced knowledge in the Window, every one quarantined until corroborated. "
             "Ask me to gather, and it becomes memory; discredit a source, and I walk "
             "its lineage.",
             [{"label": "gather knowledge on…", "template": "gather sourced knowledge on "},
+             {"label": "ask the stacks…", "template": "ask the stacks "},
+             {"label": "how do you route?", "ask": "how do you route?"},
              {"label": "ask the universe…", "template": "ask the universe about "},
              {"label": "subscribe…", "template": "subscribe to "},
              {"label": "the serials desk", "ask": "show the desk"},
@@ -585,21 +588,29 @@ def answer(name: str, text: str, facts: dict) -> dict:
                                      "investigating until corroboration earns them "
                                      "back. Doubted, not damned; nothing rewritten.",
                             "action": "challenge", "topic": topic, "verbatim": True}
-        if "/e:rag" in facts.get("scope", ""):   # the stacks' floors (0038 sp1)
-            m = re.match(r"^shelve\s+([\w.-]+)\s*:\s*(.+)$", (text or "").strip(),
-                         flags=re.IGNORECASE | re.DOTALL)
-            if m:
-                return {"reply": f"shelving “{m.group(1).lower()}” — ONE signed "
-                                 "record through the gateway; every stack "
-                                 "projects from it, none keeps a copy (0038 §1).",
-                        "action": "stacks-ingest", "doc": m.group(1).lower(),
-                        "text_body": m.group(2).strip(), "verbatim": True}
-            for p in ("ask the stacks", "ask stacks"):
-                if t.startswith(p):
-                    q = (text or "").strip()[len(p):].strip(" :?.!")
-                    if q:
-                        return {"reply": "walking the naive row…",
-                                "action": "stacks-ask", "q": q, "verbatim": True}
+        # the stacks' doors — EVERYWHERE the librarian sits (0023: one mind,
+        # many seats — JB's catch 2026-07-22: the same DID must not make a
+        # human travel; from a foreign seat the ask rides to her rag seat
+        # with its origin on the record)
+        m = re.match(r"^shelve\s+([\w.-]+)\s*:\s*(.+)$", (text or "").strip(),
+                     flags=re.IGNORECASE | re.DOTALL)
+        if m:
+            return {"reply": f"shelving “{m.group(1).lower()}” — ONE signed "
+                             "record through the gateway at my rag seat; "
+                             "every stack projects from it, none keeps a copy "
+                             "(0038 §1).",
+                    "action": "stacks-ingest", "doc": m.group(1).lower(),
+                    "text_body": m.group(2).strip(), "verbatim": True}
+        if t.startswith(("how do you route", "show the routing",
+                         "the routing standard")):
+            return {"reply": "reading the standard…",
+                    "action": "stacks-routing", "verbatim": True}
+        for p in ("ask the stacks", "ask stacks"):
+            if t.startswith(p):
+                q = (text or "").strip()[len(p):].strip(" :?.!")
+                if q:
+                    return {"reply": "dispatching…",
+                            "action": "stacks-ask", "q": q, "verbatim": True}
         for p in _GATHER:
             topic = (text or "").strip()[len(p):].strip() if t.startswith(p) else ""
             if t.startswith(p) and topic:
@@ -608,6 +619,15 @@ def answer(name: str, text: str, facts: dict) -> dict:
                         "action": "gather", "topic": topic}
         if "recall" in t or "discredit" in t or "poison" in t:
             return {"reply": _librarian_recalls(facts)}
+        # a plain QUESTION at any seat flows through the Dispatcher by DEFAULT
+        # (0038 §3 — put/get is universal; JB's catch 2026-07-22: no prefix
+        # ceremony for humans). Questions about HER stay hers.
+        if " you " not in f" {t} " and (
+                t.endswith("?") or t.split(" ", 1)[0] in (
+                    "what", "what's", "how", "why", "when", "where", "who",
+                    "which", "is", "are", "does", "do", "can")):
+            return {"reply": "dispatching…", "action": "stacks-ask",
+                    "q": (text or "").strip(), "verbatim": True}
         return {"reply": _librarian_reply(facts)}
     if name == "grace":
         fb = parse_feedback(text)
