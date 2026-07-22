@@ -3823,15 +3823,15 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
     choice a signed record, an unbuilt row falling to the baseline loudly —
     then the chosen row's projection regrows from the log and answers with
     citations."""
-    from orreth_sim import dispatcher, stacks
+    from orreth_sim import dispatcher, rivals, stacks
     n, seat_kp, seat_did = _stacks_node(port, scope)
     if n is None:
         return "the stacks are unreachable — try again on the next beat"
     me = {"did": seat_did, "scope": scope}
     dispatcher.plant_standard(n, me, seat_kp)     # genesis once; shelf from then on
-    d = dispatcher.dispatch(n, me, seat_kp, q, origin=origin)
-    proj = stacks.project(n)
-    a = stacks.answer(n, proj, q)
+    d = dispatcher.dispatch(n, me, seat_kp, q, origin=origin,
+                            built=list(rivals.RETRIEVERS))
+    a = rivals.answer_as(n, d["flavor"], q)
     cites = " · ".join(f"{c['doc']} [{c['ref'][:18]}…] {c['score']}"
                        for c in a["citations"][:3])
     return (f"⚡ the dispatcher chose «{d['flavor']}» — {d['why']} "

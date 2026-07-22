@@ -422,3 +422,10 @@ design doc 0017.
 |---|---|---|
 | `backend/conformance/orreth_sim/dispatcher.py` | Fable 5 (claude-fable-5) | 0038 §3 — the reflex: deterministic classify, rules-as-data standard, loud fallback, choices-as-records (the RL substrate); banner in file |
 | `backend/conformance/tests/test_dispatcher.py` | Fable 5 (claude-fable-5) | sp2 conformance: standard plants once · shapes deterministic · loud fallback with both truths · signed choice ledger; banner in file |
+
+## Fable 5 net-new files — 2026-07-22 (0038 sp3, the rivals)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/rivals.py` | Fable 5 (claude-fable-5) | 0038 §2 — rerank · graph (edges carry their chunk's provenance) · hybrid; one answer_as door; banner in file |
+| `backend/conformance/tests/test_rivals.py` | Fable 5 (claude-fable-5) | sp3 conformance: walking beats distance on relational asks · precision sharpens · one truth across every row; banner in file |

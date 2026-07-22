@@ -79,7 +79,8 @@ def classify(ask: str) -> list[str]:
 
 
 def dispatch(node, librarian: dict, librarian_kp, ask: str, *,
-             kind: str = "get", origin: str = "") -> dict:
+             kind: str = "get", origin: str = "",
+             built: list | None = None) -> dict:
     """One ask through the reflex: classify → the standard's first matching
     rule → the flavor — falling to the baseline LOUDLY when the chosen row is
     not yet built. The choice lands as a signed record, always."""
@@ -89,7 +90,9 @@ def dispatch(node, librarian: dict, librarian_kp, ask: str, *,
                  if r.get("when") in shapes), None)
     chosen = rule["route"] if rule else std.get("default", "naive")
     why = rule["why"] if rule else "no shape matched — the baseline serves"
-    built = std.get("built") or ["naive"]
+    # the rows standing NOW — the caller's truth; the standard's genesis list
+    # is the fallback (v2 of the asset rides the lanes as the rows earn it)
+    built = built or std.get("built") or ["naive"]
     fallback = None
     if chosen not in built:
         fallback = chosen
