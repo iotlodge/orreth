@@ -313,6 +313,19 @@ including derived-memory chain verification).
 
 ## 🔧 Build phase — decisions as they arise
 
+### Locked 2026-07-22 (0038 — the Stacks: seven rows of the library — seed dialog + AskUserQuestion, all recommended)
+- **Proving-ground-then-promote**: the seven RAG flavors compete on the record; winners
+  join the librarian's planner, losers retire honorably. **Naive is the baseline control.**
+- **One truth, seven projections**: ingestion once through the gateway; every field derives
+  its index from the signed log; the purge's projection-eviction reaches all seven.
+- **Graph rides a Postgres projection first** (0022 Shape A holds); dedicated graph infra
+  must be EARNED by standings evidence and arrives via allen at JB's gate.
+- **The Dispatcher**: an unembodied organ in the put/get path — after the gateway, never
+  around it — routing by a versioned standard the librarian tends; the organ enforces,
+  the resident learns; every choice a record.
+- **Corpus: both** (dogfood + reference set) · **promotion = a named strategy in the
+  routing standard** (code-landing = separate rule-9 gate) · **spoonful cut as proposed**.
+
 ### Locked 2026-07-22 (0037 — the Estate: allen, the cloud architect — AskUserQuestion, all on the recommended paths)
 - **allen is an embodied tier: a universe-parented FIELD.** The provisioner gains the
   allowance (fields may parent directly off the universe); no decorative one-field eco.
