@@ -210,6 +210,13 @@ def _card_charlotte(facts: dict) -> tuple[str, list]:
 
 def _card_librarian(facts: dict) -> tuple[str, list]:
     v = _vitals(facts, "librarian")
+    if "/e:rag" in facts.get("scope", ""):    # her seat in the stacks (0038)
+        return ("this is a row of the stacks — hand me a document and it lands "
+                "ONCE as a signed record; ask, and this row's projection "
+                "answers with citations you can walk (0038 §1).",
+                [{"label": "shelve a document…", "template": "shelve "},
+                 {"label": "ask the stacks…", "template": "ask the stacks "},
+                 {"label": "what do you hold?", "ask": "what knowledge do you hold?"}])
     return (f"I gather from identified sources — {v.get('knowledge held', 0)} piece(s) of "
             "sourced knowledge in the Window, every one quarantined until corroborated. "
             "Ask me to gather, and it becomes memory; discredit a source, and I walk "
@@ -578,6 +585,21 @@ def answer(name: str, text: str, facts: dict) -> dict:
                                      "investigating until corroboration earns them "
                                      "back. Doubted, not damned; nothing rewritten.",
                             "action": "challenge", "topic": topic, "verbatim": True}
+        if "/e:rag" in facts.get("scope", ""):   # the stacks' floors (0038 sp1)
+            m = re.match(r"^shelve\s+([\w.-]+)\s*:\s*(.+)$", (text or "").strip(),
+                         flags=re.IGNORECASE | re.DOTALL)
+            if m:
+                return {"reply": f"shelving “{m.group(1).lower()}” — ONE signed "
+                                 "record through the gateway; every stack "
+                                 "projects from it, none keeps a copy (0038 §1).",
+                        "action": "stacks-ingest", "doc": m.group(1).lower(),
+                        "text_body": m.group(2).strip(), "verbatim": True}
+            for p in ("ask the stacks", "ask stacks"):
+                if t.startswith(p):
+                    q = (text or "").strip()[len(p):].strip(" :?.!")
+                    if q:
+                        return {"reply": "walking the naive row…",
+                                "action": "stacks-ask", "q": q, "verbatim": True}
         for p in _GATHER:
             topic = (text or "").strip()[len(p):].strip() if t.startswith(p) else ""
             if t.startswith(p) and topic:

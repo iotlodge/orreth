@@ -1437,6 +1437,15 @@ function bgFrame(ts){
       ?Math.min(1,(c.hotUntil-Date.now())/12000):0;    /* the meter's warmth, fading */
     const mag=Math.min(1, (.18+.16*Math.log2(1+c.records)/3)*lv*(1+.35*heat));
     const R=(5+13*mag)*q[3];
+    /* rule 7, in spirit (JB's catch 2026-07-22): a newborn region is PRESENT
+       but a dim anonymous ember is unfindable — depth-1 tissue (ecos, and
+       fields off the universe) whispers its name; the busy are found by their
+       fire, the quiet by their name */
+    if(c.depth===1&&BGAIN!=="off"){
+      g.fillStyle=`rgba(138,147,166,${(.3+.35*mag).toFixed(2)})`;
+      g.font=`${Math.max(8,9*q[3]).toFixed(0)}px ui-monospace,monospace`;
+      g.fillText(c.name,q[0]+R+4,q[1]+3);
+    }
     const gr=g.createRadialGradient(q[0],q[1],0,q[0],q[1],R);
     if(LEGACYF){                             /* embers cooled to a constellation */
       gr.addColorStop(0,`rgba(220,230,255,${(.55*mag+.12).toFixed(2)})`);

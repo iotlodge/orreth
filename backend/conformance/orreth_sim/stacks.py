@@ -1,0 +1,135 @@
+# PROVENANCE: Fable 5 (claude-fable-5) — 0038, the Stacks · 2026-07-22
+"""The Stacks (0038) spoonful 1: the baseline breathes.
+
+The one-truth law, enforced by construction: ingestion happens ONCE through the
+gateway — a signed MemoryRecord is the document's only truth. The naive stack
+holds no documents; it holds a PROJECTION (chunks + vectors) derived from the
+log, rebuildable and therefore disposable: tear it down, regrow it, the same
+answers return. A record that leaves the log stops speaking in the projection
+at the next rebuild — the purge's reach (0026), kept.
+
+Every answer carries CITATIONS — record ids the caller may walk. The sim's
+embedder is a deterministic bag-of-hashed-ngrams (honest, local, reproducible);
+the wire rides 0022 Phase 2's fastembed under the same contract.
+
+The eco assets (chunking policy · embedding standard · prompt template) are
+versioned data on the shelf (0031) — the commonality, factored UP; a field is
+its delta, and naive's delta is deliberately NOTHING: the baseline control
+every rival must beat on the record (locked 2026-07-22).
+"""
+from __future__ import annotations
+
+import json
+import math
+import re
+
+from . import crypto, improver
+from .node import make_memory
+
+# ---------------------------------------------------------------- the eco assets
+ECO_ASSETS = {
+    "stacks-chunking": {"chunk_chars": 280, "overlap_chars": 40,
+                        "note": "the shared knife — every stack cuts alike"},
+    "stacks-embedding": {"dim": 512, "method": "hashed-ngram (sim) / fastembed (wire)",
+                         "note": "one standard, every projection comparable"},
+    "stacks-prompt": {"template": "Answer ONLY from the cited passages. Cite "
+                                  "every claim by [ref]. Unknown → say so.",
+                      "note": "the shared voice — grounded, cited, honest"},
+}
+
+
+def plant_eco_assets(node, librarian: dict, librarian_kp) -> list[str]:
+    """The commonality, factored up (0038 §2): three assets at the eco scope,
+    versioned on the shelf under the librarian's signature — grace may propose
+    revisions; every field inherits by the cascade, none carries its own copy."""
+    out = []
+    for name, profile in ECO_ASSETS.items():
+        if improver.active_asset(node, name):
+            continue                          # genesis plants once; siblings later
+        rec = improver.make_asset(librarian, librarian_kp, node.scope,
+                                  name=name, profile=profile)
+        out.append(node.write(rec))
+    return out
+
+
+def _chunking(node) -> dict:
+    row = improver.active_asset(node, "stacks-chunking")
+    return improver._profile_of(row[1]) if row else ECO_ASSETS["stacks-chunking"]
+
+
+# ---------------------------------------------------------------- the one truth
+
+def ingest(node, librarian: dict, librarian_kp, name: str, text: str) -> str:
+    """ONCE, through the gateway: the document lands as a signed MemoryRecord —
+    quarantine, provenance, and the purge all apply because it is memory like
+    any other. No stack ever holds a second copy of the truth."""
+    if not (text or "").strip():
+        raise ValueError("an empty document is not a document")
+    body = {"stacks_document": {"name": name, "text": text}}
+    rec = make_memory(librarian, librarian_kp, node.scope, body, kind="semantic",
+                      tags=["stacks", "document", name])
+    return node.write(rec)
+
+
+# ---------------------------------------------------------------- the projection
+
+def _embed(text: str, dim: int = 512) -> list[float]:
+    """Deterministic sim embedding: hashed word-and-bigram bag, L2-normalized.
+    Honest and reproducible — the wire swaps in fastembed under the same shape."""
+    v = [0.0] * dim
+    words = re.findall(r"[a-z0-9]+", (text or "").lower())
+    for i, w in enumerate(words):
+        for tok in (w, " ".join(words[i:i + 2])):
+            h = int(crypto.content_hash({"t": tok})[7:23], 16)
+            v[h % dim] += 1.0
+    n = math.sqrt(sum(x * x for x in v)) or 1.0
+    return [x / n for x in v]
+
+
+def project(node) -> dict:
+    """The naive stack's whole body: chunks + vectors DERIVED from the log.
+    Rebuildable, therefore disposable — this function IS the field."""
+    pol = _chunking(node)
+    size, ov = int(pol["chunk_chars"]), int(pol["overlap_chars"])
+    chunks = []
+    for rid, r in sorted(node.records.items()):
+        tags = r.get("tags") or []
+        if "document" not in tags or "stacks" not in tags:
+            continue
+        doc = json.loads(crypto._b64d(r["body"]).decode()).get("stacks_document") or {}
+        text, name = doc.get("text", ""), doc.get("name", "?")
+        i = 0
+        while i < len(text):
+            piece = text[i:i + size]
+            chunks.append({"ref": rid, "doc": name, "at": i, "text": piece,
+                           "vec": _embed(piece)})
+            i += max(1, size - ov)
+    return {"flavor": "naive", "chunks": chunks, "policy": pol}
+
+
+def retrieve(projection: dict, query: str, k: int = 4) -> list[dict]:
+    """Cosine over the projection — the baseline: no rerank, no graph, no
+    tricks. Hits carry their refs; authorization stayed at the gateway."""
+    qv = _embed(query)
+    scored = [(sum(a * b for a, b in zip(qv, c["vec"])), c)
+              for c in projection.get("chunks", [])]
+    scored.sort(key=lambda x: -x[0])
+    return [{"ref": c["ref"], "doc": c["doc"], "at": c["at"],
+             "text": c["text"], "score": round(s, 4)}
+            for s, c in scored[:k] if s > 0.2]   # the relevance floor —
+    # a baseline that answers everything answers nothing honestly
+
+
+def answer(node, projection: dict, query: str) -> dict:
+    """The grounded reply: extractive in the sim (deterministic — the wire may
+    voice it through a governed thought), every claim wearing its citation.
+    An empty retrieval answers honestly — the prompt standard's law."""
+    hits = retrieve(projection, query)
+    if not hits:
+        return {"answer": "the stacks hold nothing on this — an honest unknown "
+                          "(the prompt standard forbids invention)",
+                "citations": [], "flavor": "naive"}
+    lines = [f"“{h['text'][:160].strip()}” [{h['ref'][:18]}…]" for h in hits[:2]]
+    return {"answer": " · ".join(lines), "flavor": "naive",
+            "citations": [{"ref": h["ref"], "doc": h["doc"], "score": h["score"]}
+                          for h in hits]}

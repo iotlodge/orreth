@@ -3773,6 +3773,49 @@ def on_estate_adopt(port: int, scope: str, r: dict, *, approved: bool = False,
           f"{len(failed)} miss(es)")
 
 
+def wire_stacks_ask(port: int, scope: str, q: str) -> str:
+    """The naive row answers on the wire (0038 sp1): read this floor's stacks
+    documents with the seat's own authority, regrow the projection from the
+    log (rebuildable, therefore honest), and answer with citations."""
+    from datetime import datetime, timedelta, timezone
+
+    from orreth_sim import stacks
+
+    class _N:                                 # a projection needs only the log's face
+        pass
+    n = _N()
+    n.records, n.scope = {}, scope
+    _, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return "the stacks are unreachable — try again on the next beat"
+    for h in r.get("hits", []):
+        tags = h.get("tags") or []
+        if "stacks" not in tags or "document" not in tags:
+            continue
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        if isinstance(body, dict):
+            n.records[h["ref"]] = {"tags": tags,
+                                   "body": crypto._b64e(crypto.canonical(body))}
+    proj = stacks.project(n)
+    a = stacks.answer(n, proj, q)
+    cites = " · ".join(f"{c['doc']} [{c['ref'][:18]}…] {c['score']}"
+                       for c in a["citations"][:3])
+    return a["answer"] + (f" — citations: {cites}" if cites else "")
+
+
 def wire_estate_template(port: int, subject: str) -> str:
     """The yaml, recallable by a human (0037 §4) — read back from the newest
     template asset for the subject."""
@@ -4329,6 +4372,19 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                      "estate” first and the walk stages for you (0037 §7).")
     if ans.get("action") == "estate-template":  # 0037 §4 — the yaml, recallable
         reply = wire_estate_template(universe_port(port), ans["subject"])
+    if ans.get("action") == "stacks-ingest":  # 0038 §1 — once, through the gateway
+        seat_kp, seat_did = lib_seat(scope)
+        rec = make_memory({"did": seat_did, "scope": scope}, seat_kp, scope,
+                          {"stacks_document": {"name": ans["doc"],
+                                               "text": ans["text_body"][:4000]}},
+                          kind="semantic", tags=["stacks", "document", ans["doc"]])
+        try:
+            call(port, "POST", "/records", rec)
+            print(f"  ↳ stacks shelve — “{ans['doc']}” [{rec['id'][:18]}…]")
+        except Exception as e:
+            reply = f"the shelving stumbled at the record — {e}"
+    if ans.get("action") == "stacks-ask":     # 0038 sp1 — the baseline answers
+        reply = wire_stacks_ask(port, scope, ans["q"])
     if ans.get("action") == "domain":     # the package, a view over the record (0031 §5)
         rows = domain_packages(port, scope, ans.get("topic", ""))
         reply = ("; ".join(f"{d['topic']} — {d['meta']}" for d in rows[:6])
