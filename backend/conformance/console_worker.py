@@ -3518,19 +3518,34 @@ def wire_estate(port: int) -> dict:
         if s:
             workloads.setdefault(s, {})[k] = v
     plan: dict = {}
-    if tmpl_hits:                             # the newest picture stands in the room
-        newest = max(tmpl_hits, key=lambda h: h.get("occurred_at", ""))
+    deployed_stacks: list = []
+    newest_planned: dict = {}
+    for h in sorted(tmpl_hits, key=lambda h: h.get("occurred_at", ""))[-6:]:
         try:
             body = call(port, "GET",
-                        f"/records/{urllib.parse.quote(newest['ref'], safe='')}/body")
-            prof = ((body or {}).get("asset") or {}).get("profile") or {}
-            if prof.get("resources"):
-                plan = {"subject": prof.get("subject", "?"),
-                        "yaml": prof.get("yaml", ""),
-                        "dag": estate._dag_for(prof.get("subject", "?"),
-                                               prof["resources"], "planned")}
+                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
         except Exception:
-            pass
+            continue
+        prof = ((body or {}).get("asset") or {}).get("profile") or {}
+        if not prof.get("resources"):
+            continue
+        if prof.get("deployed"):
+            deployed_stacks.append(prof)
+        else:
+            newest_planned = prof
+    if deployed_stacks:                       # THE ESTATE — what the universe sees
+        seen: dict = {}
+        for p in deployed_stacks:             # newest template per stack wins
+            seen[p.get("stack", p.get("subject", "?"))] = p
+        adopted = len(seen)                   # stacks under governance, not receipts
+        plan = {"subject": "the estate", "deployed": True,
+                "yaml": list(seen.values())[-1].get("yaml", ""),
+                "dag": estate.estate_dag(list(seen.values()), "deployed")}
+    elif newest_planned:                      # the newest blueprint stands alone
+        plan = {"subject": newest_planned.get("subject", "?"),
+                "yaml": newest_planned.get("yaml", ""),
+                "dag": estate._dag_for(newest_planned.get("subject", "?"),
+                                       newest_planned["resources"], "planned")}
     return {"adopted": adopted, "gate_open": bool(adopted),
             "policy": policy, "workloads": workloads, "answers": answers,
             "plan": plan}
@@ -3648,6 +3663,114 @@ def wire_estate_preview(port: int, ask: str) -> str:
             "answer(s) from estate policy). the picture and the yaml stand in "
             "my room; the template is on the record forever. applying it is "
             "another conversation — at the gate.")
+
+
+ADOPT_STACKS = ("OrrethDemoStack", "JsbarthPipelineStack")
+
+
+def _aws_cli(args: list, *, raw: bool = False):
+    """The toolroom's one hand (0037 §5, v0): the aws CLI, invoked read-only
+    under the jb_support profile with ambient AWS keys STRIPPED — custody is
+    the profile's, never the process environment's. Full farm residency for
+    local binaries (probe = version, pin = binary hash) is Farm-dive work."""
+    import subprocess
+    env = {k: v for k, v in os.environ.items() if not k.startswith("AWS_")}
+    env["AWS_PROFILE"] = "jb_support"
+    cmd = ["aws", *args] + ([] if raw else ["--output", "json"])
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=90,
+                           env=env)
+    except Exception as e:
+        return None, str(e)[:200]
+    if p.returncode != 0:
+        return None, (p.stderr or p.stdout or "cli error")[:200]
+    if raw:
+        return (p.stdout or "").strip(), None
+    try:
+        return json.loads(p.stdout or "null"), None
+    except Exception:
+        return (p.stdout or "").strip(), None
+
+
+def on_estate_adopt(port: int, scope: str, r: dict, *, approved: bool = False,
+                    declined: bool = False) -> None:
+    """The brownfield walk (0037 §7, the acceptance gate's key): READ-ONLY —
+    describe, fetch templates, attest; never mutate. It stages first (the
+    first touch of the real estate is a consequence of trust); the human's
+    word runs it; the receipts open the gate."""
+    from orreth_sim import estate, improver
+    if declined:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"declined": True,
+                         "reply": "the adoption was declined — the gate stands, "
+                                  "and the record keeps that you chose"}})
+        print("  ↳ estate adoption declined at the gate")
+        return
+    if not approved:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"held": "the first touch of the real estate waits for "
+                                 "you (0037 §7) — READ-ONLY: describe stacks, "
+                                 "fetch templates, attest. never mutate.",
+                         "stacks": list(ADOPT_STACKS)}})
+        print("  ↳ estate adoption staged — the gate waits")
+        return
+    ver, verr = _aws_cli(["--version"], raw=True)
+    me = {"did": ALLEN_DID, "scope": UNIVERSE_SCOPE}
+    walked: list = []
+    failed: list = []
+    for stack in ADOPT_STACKS:
+        tpl, err = _aws_cli(["cloudformation", "get-template", "--stack-name",
+                             stack, "--query", "TemplateBody"])
+        if err or not isinstance(tpl, dict):
+            failed.append(f"{stack}: {err or 'no template body'}")
+            continue
+        resources = estate.parse_template_resources(tpl)
+        phys, _ = _aws_cli(["cloudformation", "describe-stack-resources",
+                            "--stack-name", stack,
+                            "--query", "StackResources[].[LogicalResourceId,"
+                                       "PhysicalResourceId]"])
+        pmap = {row[0]: row[1] for row in (phys or []) if len(row) == 2}
+        for res in resources:
+            if pmap.get(res["id"]):
+                res["properties"]["physical"] = str(pmap[res["id"]])[:48]
+        subject = estate._slug(stack)
+        asset = improver.make_asset(
+            me, ALLEN, UNIVERSE_SCOPE, name=f"template-{subject}",
+            profile={"yaml": json.dumps(tpl, indent=1)[:32000], "stack": stack,
+                     "subject": subject, "resources": resources,
+                     "deployed": True, "tool": ver or "aws-cli"})
+        try:
+            call(port, "POST", "/records", asset)
+            walked.append({"stack": stack, "n": len(resources)})
+            print(f"  ↳ allen adopts {stack} — {len(resources)} resource(s), "
+                  f"template {asset['id'][:18]}…")
+        except Exception as e:
+            failed.append(f"{stack}: record write — {e}")
+    if walked:
+        adoption = make_memory(
+            me, ALLEN, UNIVERSE_SCOPE,
+            {"estate_adoption": {"stacks": [w["stack"] for w in walked],
+                                 "posture": "read-only",
+                                 "tool": ver or "aws-cli",
+                                 "resources": sum(w["n"] for w in walked)}},
+            kind="semantic", tags=["estate", "estate-adopted"])
+        call(port, "POST", "/records", adoption)
+    reply = (("the estate is adopted — "
+              + ", ".join(f"{w['stack']} ({w['n']} resource(s))" for w in walked)
+              + f", read-only, attested under {ver or 'the cli'}. THE "
+                "ACCEPTANCE GATE OPENS: create may now stage, through the "
+                "charter, at the gate (0037 §7).")
+             if walked else "the walk could not see the estate — nothing "
+                            "adopted, the gate stands.")
+    if failed:
+        reply += " honest misses: " + "; ".join(failed)
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "done", "result": {"reply": reply,
+          "walked": walked, "failed": failed}})
+    print(f"  ↳ estate adoption complete — {len(walked)} stack(s), "
+          f"{len(failed)} miss(es)")
 
 
 def wire_estate_template(port: int, subject: str) -> str:
@@ -3821,6 +3944,41 @@ class Shipyard:
 
 
 SHIPYARD = Shipyard()
+
+ALLEN_FIELD_PORT = 4510
+
+
+def ensure_allen_floor() -> None:
+    """allen's BODY on the wire (0037 §1, locked §8.3): a field parented
+    directly off the universe — no eco between. His floor rides the shipyard's
+    own machinery: profile from the plain field shape, spec in the durable
+    ledger (the replant tends it forever after), the hull beating into :4500
+    so the orrery and the Brain finally SHOW the embodied tier (rule 7 —
+    JB's walk finding 2026-07-22: 'if allen is a field off Universe, why
+    can't we see it')."""
+    led = SHIPYARD.ledger()
+    if str(ALLEN_FIELD_PORT) in led:
+        return                                # the ledger tends it from here
+    try:
+        base = json.loads((PROFILES_DIR / "dyn-e-retail-f-pos.json").read_text())
+    except Exception as e:
+        print(f"    (allen floor: no base profile — {e})")
+        return
+    base["scope"] = "u:demo/f:allen"
+    base["clock"]["high_water_scope"] = "u:demo/f:allen"
+    spec = {"container": "orreth-field-allen", "port": ALLEN_FIELD_PORT,
+            "parent_port": 4500, "scope": "u:demo/f:allen",
+            "profile_file": "dyn-f-allen.json", "profile": base}
+    ok, out = SHIPYARD._launch_one(spec)
+    if ok:
+        led[str(ALLEN_FIELD_PORT)] = {k: spec[k] for k in
+                                      ("container", "port", "parent_port",
+                                       "scope", "profile_file")}
+        SHIPYARD.save(led)
+        print(f"  ↳ allen's field stands — u:demo/f:allen on :{ALLEN_FIELD_PORT}, "
+              "parented to the universe itself (0037 §8.3)")
+    else:
+        print(f"    (allen floor launch failed: {out[:120]})")
 
 
 # ---------------------------------------------------------------- the organ pins (R1)
@@ -4149,6 +4307,26 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         reply = wire_estate_create(universe_port(port), ans["ask"])
     if ans.get("action") == "estate-preview":  # 0037 §4 — plan is free
         reply = wire_estate_preview(universe_port(port), ans["ask"])
+    if ans.get("action") == "estate-adopt":   # 0037 §7 — the first touch stages
+        call(port, "POST", "/requests",
+             {"kind": "estate-adopt",
+              "text": "adopt the estate — READ-ONLY walk of "
+                      + " + ".join(ADOPT_STACKS) + ": describe, fetch "
+                      "templates, attest; never mutate. the receipts open the "
+                      "acceptance gate (0037 §7)"})
+    if ans.get("action") == "estate-decide":  # the human's word, spoken (0037 §7)
+        staged = [x for x in call(port, "GET", "/requests").get("requests", [])
+                  if x.get("kind") == "estate-adopt"
+                  and x.get("status") == "staged"]
+        if staged:
+            call(port, "POST", "/requests/resolve",
+                 {"id": staged[-1]["id"],
+                  "status": "approved" if ans.get("ok") else "denied"})
+            print(f"  ↳ estate adoption {'APPROVED' if ans.get('ok') else 'denied'} "
+                  "by the human's spoken word")
+        else:
+            reply = ("nothing stands at the gate to decide — say “adopt the "
+                     "estate” first and the walk stages for you (0037 §7).")
     if ans.get("action") == "estate-template":  # 0037 §4 — the yaml, recallable
         reply = wire_estate_template(universe_port(port), ans["subject"])
     if ans.get("action") == "domain":     # the package, a view over the record (0031 §5)
@@ -4351,6 +4529,7 @@ def main() -> None:
     scopes: dict[int, str] = {}
     threading.Thread(target=embed_door, daemon=True).start()  # the meaning axis's door (0022 Ph2)
     SHIPYARD.replant()                        # hulls the rig lost come back before the round
+    ensure_allen_floor()                      # the embodied tier stands visible (0037 §8.3)
     while True:
         beat_due = time.time() - KEEPER.last_beat >= BEAT_EVERY
         for port in [*FLOORS, *SHIPYARD.floors()]:
@@ -4440,6 +4619,12 @@ def main() -> None:
                                 r.get("status") in ("pending", "approved", "denied"):
                             handled.add(key)
                             on_subscription(port, scope, r,
+                                            approved=r.get("status") == "approved",
+                                            declined=r.get("status") == "denied")
+                        elif r.get("kind") == "estate-adopt" and \
+                                r.get("status") in ("pending", "approved", "denied"):
+                            handled.add(key)
+                            on_estate_adopt(port, scope, r,
                                             approved=r.get("status") == "approved",
                                             declined=r.get("status") == "denied")
                         elif r.get("kind") == "consent" and \

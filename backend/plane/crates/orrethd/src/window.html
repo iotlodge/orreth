@@ -455,7 +455,9 @@
   .parlor.full{width:min(1100px,100vw)}
   .pws{padding:.7rem 1.1rem;border-bottom:1px solid var(--hair);overflow-y:auto;max-height:52%;
     display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.8rem}
-  .wsp{border:1px solid var(--hair);border-radius:10px;padding:.7rem .9rem;background:rgba(255,255,255,.02)}
+  .wsp{border:1px solid var(--hair);border-radius:10px;padding:.7rem .9rem;background:rgba(255,255,255,.02);
+    display:flex;flex-direction:column;min-height:0}
+  .wsp>*:not(.wt){min-height:0}
   .wsp .wt{font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.18em;
     color:var(--brass);font-size:.72rem;margin-bottom:.5rem}
   .wsp .tile{display:inline-block;margin:.15rem .9rem .15rem 0}
@@ -488,6 +490,46 @@
   .gnode.sel,.gnode.hl{color:var(--star);border-color:var(--brass)}
   .gnode.finger{cursor:pointer}
   .gsev{display:inline-block;margin-left:.3rem;font-size:.6rem;color:var(--brass)}
+  /* the estate's cards (0037 §4/§7): a human reads the estate by COLOR first —
+     category band left, type beneath the name, physical id as the meta whisper */
+  .gcard{position:absolute;transform:translate(-50%,-50%);font:.62rem var(--mono);
+    color:var(--dim);border:1px solid var(--hair2);border-left:3px solid var(--hair2);
+    border-radius:6px;padding:.28rem .5rem;background:rgba(11,14,22,.96);z-index:1;
+    max-width:26%;overflow:hidden;display:flex;flex-direction:column;gap:.06rem}
+  .gcard .gc-cat{font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+  .gcard .gc-id{color:var(--star);white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+  .gcard .gc-type{font-size:.56rem;color:var(--faint);white-space:nowrap;
+    text-overflow:ellipsis;overflow:hidden}
+  .gcard.network{border-left-color:#7fb3e8}.gcard.network .gc-cat{color:#7fb3e8}
+  .gcard.compute{border-left-color:#e8b27f}.gcard.compute .gc-cat{color:#e8b27f}
+  .gcard.data{border-left-color:#8fd6b0}.gcard.data .gc-cat{color:#8fd6b0}
+  .gcard.service{border-left-color:#b79ce8}.gcard.service .gc-cat{color:#b79ce8}
+  .gcard.operations{border-left-color:#e8c98f}.gcard.operations .gc-cat{color:#e8c98f}
+  .gcard.identity{border-left-color:#e88f8f}.gcard.identity .gc-cat{color:#e88f8f}
+  .gcard.platform{border-left-color:var(--faint)}
+  .gcard.stackcard{border-style:dashed;background:rgba(11,14,22,.85)}
+  .gcard.hl{border-color:var(--brass)}
+  .wgraph svg line.contains{stroke-dasharray:3 3;opacity:.45}
+  .wgraph svg line.depends{stroke:rgba(127,179,232,.55)}
+  .glegend{display:flex;gap:.7rem;flex-wrap:wrap;font:.58rem var(--mono);
+    color:var(--faint);margin-top:.35rem;align-items:center}
+  .glegend .rd{display:inline-block;width:.5rem;height:.5rem;border-radius:2px;
+    margin-right:.25rem;vertical-align:middle}
+  /* the room's tools (0037): detach · copy · export — small, quiet, human's */
+  .wtools{float:right;display:inline-flex;gap:.35rem}
+  .wtool{font:.6rem var(--mono);color:var(--faint);border:1px solid var(--hair2);
+    border-radius:5px;padding:.06rem .4rem;cursor:pointer;user-select:none}
+  .wtool:hover{color:var(--star);border-color:var(--brassdim)}
+  /* the template, colored (0037): keys · strings · numbers · comments — the
+     code FILLS its card (JB's catch: a fixed cap left the horizontal bar
+     floating mid-panel over dead space), and the bars sit at the card's edge */
+  .doc.code{white-space:pre;overflow:auto;font:.66rem/1.55 var(--mono);
+    flex:1;min-height:0;max-height:70vh}
+  /* the pinned room's graph scrolls inside its card, like the template —
+     the picture never floats over a neighbor; ⛶ is the full view */
+  .gscroll{flex:1;min-height:0;overflow:auto;max-height:70vh}
+  .doc.code .hk{color:#7fb3e8}.doc.code .hs{color:#8fd6b0}
+  .doc.code .hn{color:#e8b27f}.doc.code .hc{color:var(--faint);font-style:italic}
   .gnarr{margin-top:.4rem}
   .gnarr div{font:.66rem/1.5 var(--mono);color:var(--faint)}
   .gnarr div:hover{color:var(--dim)}
@@ -720,6 +762,17 @@
   </div>
 </main>
 
+<!-- the workspace modal (0037): a panel detached into a window — pan, zoom, export -->
+<div id="wsmodal" style="display:none;position:fixed;inset:0;z-index:80;background:rgba(5,7,12,.82);
+  align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+  <div style="width:min(94vw,1500px);height:min(90vh,950px);background:#0b0e16;border:1px solid var(--hair2);
+    border-radius:10px;display:flex;flex-direction:column;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:.6rem;padding:.55rem .9rem;border-bottom:1px solid var(--hair2)">
+      <b id="wsm-title" style="font:.72rem var(--mono);color:var(--dim);letter-spacing:.06em"></b>
+      <span id="wsm-tools" class="wtools" style="margin-left:auto"></span></div>
+    <div id="wsm-body" style="flex:1;overflow:auto;position:relative;cursor:grab;padding:.8rem"></div>
+  </div>
+</div>
 <!-- THE PARLOR (0020): the audience room — humans ask; residents fetch -->
 <div class="parlor" id="parlor">
   <div class="phd"><span class="rd" id="p-dot"></span><span class="nm" id="p-name">—</span>
@@ -1727,6 +1780,7 @@ function reqRow(r){
   const cgate=r.kind==="consent"&&r.status==="staged"; /* the consent gate (0034 §4) */
   const tgate=r.kind==="testament"&&r.status==="staged"; /* the last standing word (0035 §2) */
   const agate=r.kind==="attestation"&&r.status==="staged"; /* the gravest gate (0035 §3) */
+  const dgate=r.kind==="estate-adopt"&&r.status==="staged"; /* the acceptance gate's key (0037 §7) */
   const note=jgate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`
     :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`
     :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`+kfOffer(r)
@@ -1734,7 +1788,8 @@ function reqRow(r){
     :ugate?`<div class="sub" style="color:var(--near)">a standing spend — ${(r.result||{}).terms||"terms readable at the gate"}</div>`
     :cgate?`<div class="sub" style="color:var(--near)">access to your memory — ${(r.result||{}).terms||"the bundle readable at the gate"}</div>`
     :tgate?`<div class="sub" style="color:var(--near)">the last standing word — ${(r.result||{}).terms||"the fates readable at the gate"}</div>`
-    :agate?`<div class="sub" style="color:var(--red)">a death at the gate — ${(r.result||{}).terms||"evidence and roster readable at the gate"}</div>`:"";
+    :agate?`<div class="sub" style="color:var(--red)">a death at the gate — ${(r.result||{}).terms||"evidence and roster readable at the gate"}</div>`
+    :dgate?`<div class="sub" style="color:var(--near)">the first touch of the real estate — READ-ONLY: ${((r.result||{}).stacks||[]).join(" + ")||"describe · fetch · attest"}; your word opens allen's eyes and the acceptance gate</div>`:"";
   return `<div class="req"><span class="kind">${r.kind||"request"}</span>
    <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
    ${jgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">admit</button>
@@ -1753,6 +1808,8 @@ function reqRow(r){
     <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
    :agate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">start the cooling-off</button>
     <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
+   :dgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">open allen's eyes</button>
+    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">not yet</button>`
    :`<span class="st">${r.status}</span>`}</div>`;
 }
 /* the triage (JB 2026-07-15): the queue banded by what it needs from you —
@@ -2119,13 +2176,15 @@ function parlorRoom(){
   if(on){$("p-ws").innerHTML='<div class="wsp"><div class="wt">the room is being composed…</div></div>';
     parlorPost({verb:"workspace"})}
 }
+let WSPANELS=[];                              /* the room's panels, exportable (0037) */
 function renderRoom(ws){
   if(!PA)return; const el=$("p-ws");
   if(el.style.display==="none")return;               /* the caller closed the room already */
   const panels=(ws&&ws.panels)||[];
+  WSPANELS=panels;
   if(!panels.length){el.innerHTML='<div class="wsp"><div class="wt">no room declared</div></div>';return}
-  el.innerHTML=panels.map(p=>{
-    let body="";
+  el.innerHTML=panels.map((p,pi)=>{
+    let body="",tools="";
     if(p.kind==="stat")body=(p.items||[]).map(i=>
       `<span class="tile"><div class="v">${esc(i.value)}</div><div class="l">${esc(i.label)}</div></span>`).join("");
     else if(p.kind==="bars"){const mx=Math.max(1,...(p.items||[]).map(i=>+i.value||0));
@@ -2135,11 +2194,122 @@ function renderRoom(ws){
     else if(p.kind==="list")body=(p.items||[]).map(i=>
       `<div class="row">${esc(i.text)}${i.meta?`<span class="rm">${esc(i.meta)}</span>`:""}`+
       `${i.amber?`<span class="amber">${esc(i.severity||"co-review")}</span>`:""}</div>`).join("");
-    else if(p.kind==="doc")body=`<div class="doc">${esc(p.text)}</div>`;
-    else if(p.kind==="graph")body=renderGraph(p,"ws",false); /* the fifth kind (0031 §6) */
-    return `<div class="wsp"><div class="wt">${esc(p.title)}</div>${body}</div>`;
+    else if(p.kind==="doc"){
+      body=`<div class="doc${p.code?" code":""}">${p.code?hlCode(p.text):esc(p.text)}</div>`;
+      if(p.code)tools=`<span class="wtool" onclick="wsModal(${pi})" title="open large">⛶</span>
+        <span class="wtool" onclick="wsCopy(${pi})" title="copy to clipboard">copy</span>
+        <span class="wtool" onclick="wsDownload(${pi})" title="download">⇩</span>`;
+    }
+    else if(p.kind==="graph"){ /* the fifth kind (0031 §6) — pinned rooms scroll
+      the picture inside the card (JB's catch); ⛶ opens the full view */
+      body=`<div class="gscroll">${renderGraph(p,"ws",false)}</div>`;
+      tools=`<span class="wtool" onclick="wsModal(${pi})" title="open large — pan and zoom">⛶</span>
+        <span class="wtool" onclick="wsExport(${pi},'svg')" title="export SVG">svg</span>
+        <span class="wtool" onclick="wsExport(${pi},'png')" title="export PNG">png</span>`;
+    }
+    return `<div class="wsp"><div class="wt">${esc(p.title)}<span class="wtools">${tools}</span></div>${body}</div>`;
   }).join("");
 }
+/* ── syntax color for templates (0037, JB's ask): keys · strings · numbers ·
+      comments — a tiny honest highlighter, yaml and json alike ── */
+function hlCode(t){
+  return esc(t).split("\n").map(line=>{
+    const ci=line.indexOf("#");
+    let code=line,com="";
+    if(ci>=0&&line.slice(0,ci).split("&quot;").length%2===1){code=line.slice(0,ci);com=`<span class="hc">${line.slice(ci)}</span>`}
+    code=code
+      .replace(/(&quot;[^&]*?&quot;)(\s*:)/g,'<span class="hk">$1</span>$2')
+      .replace(/^(\s*)([A-Za-z_][\w.-]*)(\s*:)/,'$1<span class="hk">$2</span>$3')
+      .replace(/(:\s*)(&quot;.*?&quot;)/g,'$1<span class="hs">$2</span>')
+      .replace(/(:\s*)(-?\d+\.?\d*)(\s*,?\s*)$/,'$1<span class="hn">$2</span>$3')
+      .replace(/\b(true|false|null)\b/g,'<span class="hn">$1</span>');
+    return code+com;
+  }).join("\n");
+}
+async function wsCopy(pi){const p=WSPANELS[pi]||{};
+  try{await navigator.clipboard.writeText(p.text||"");}catch{}
+}
+function wsDownload(pi){const p=WSPANELS[pi]||{};
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([p.text||""],{type:"text/plain"}));
+  a.download=p.filename||"orreth-template.yaml";a.click();URL.revokeObjectURL(a.href);
+}
+/* ── the DAG as a document (0037, JB's ask): a pure-SVG rendering — cards,
+      bands, typed edges, legend — exportable as SVG or rasterized to PNG ── */
+const CATCOL={network:"#7fb3e8",compute:"#e8b27f",data:"#8fd6b0",service:"#b79ce8",
+  operations:"#e8c98f",identity:"#e88f8f",platform:"#8a93a6"};
+function svgOfDag(g){
+  const pos=gposDag(g),W=1600,CW=170,CH=52;
+  const rows=Math.max(...Object.values(g.nodes.reduce((a,n)=>{const x=Math.round((pos[n.id]||[0,0])[0]);a[x]=(a[x]||0)+1;return a},{})),1);
+  const H=Math.max(420,rows*(CH+34))+60;
+  const P=id=>{const p=pos[id]||[50,50];return[40+(W-80)*p[0]/100,20+(H-90)*p[1]/100]};
+  const edges=g.edges.map(e=>{const a=P(e.from),b=P(e.to);
+    const st=e.kind==="contains"?'stroke="#5a6478" stroke-dasharray="5 5" opacity="0.5"':'stroke="#7fb3e8" opacity="0.75"';
+    return `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" ${st} stroke-width="1.1"/>`}).join("");
+  const cards=g.nodes.map(n=>{const[x,y]=P(n.id),c=CATCOL[n.category||"service"]||CATCOL.service;
+    const dash=n.role==="stack"?' stroke-dasharray="4 3"':"";
+    return `<g transform="translate(${x-CW/2},${y-CH/2})">
+      <rect width="${CW}" height="${CH}" rx="7" fill="#10141f" stroke="#2a3040"${dash}/>
+      <rect width="3.5" height="${CH}" rx="1.7" fill="${c}"/>
+      <text x="12" y="15" font-family="monospace" font-size="8.5" fill="${c}" letter-spacing="1">${esc((n.role==="stack"?"STACK":(n.category||"")).toUpperCase())}</text>
+      <text x="12" y="30" font-family="monospace" font-size="11" fill="#e8ecf4">${esc(String(n.id).slice(0,24))}</text>
+      <text x="12" y="44" font-family="monospace" font-size="8.5" fill="#8a93a6">${esc(String(n.type||"").replace("AWS::","").slice(0,30))}</text></g>`}).join("");
+  const legend=Object.entries(CATCOL).map(([k,c],i)=>
+    `<rect x="${40+i*130}" y="${H-26}" width="9" height="9" rx="2" fill="${c}"/>
+     <text x="${54+i*130}" y="${H-17}" font-family="monospace" font-size="10" fill="#8a93a6">${k}</text>`).join("");
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    <rect width="${W}" height="${H}" fill="#0b0e16"/>
+    <text x="40" y="${H-44}" font-family="monospace" font-size="11" fill="#8a93a6">${esc(g.subject||"the estate")} — ${g.nodes.length} node(s) · ${g.edges.length} edge(s) · orreth 0037</text>
+    ${edges}${cards}${legend}</svg>`;
+}
+function wsExport(pi,fmt){
+  const g=WSPANELS[pi];if(!g||!g.nodes)return;
+  const svg=svgOfDag(g),name=(g.subject||"estate-dag").replace(/\s+/g,"-");
+  if(fmt==="svg"){
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));
+    a.download=name+".svg";a.click();URL.revokeObjectURL(a.href);return;
+  }
+  const img=new Image();
+  img.onload=()=>{
+    const c=document.createElement("canvas");
+    c.width=img.width*2;c.height=img.height*2;
+    const x=c.getContext("2d");x.scale(2,2);x.drawImage(img,0,0);
+    const a=document.createElement("a");a.href=c.toDataURL("image/png");
+    a.download=name+".png";a.click();
+  };
+  img.src="data:image/svg+xml;base64,"+btoa(unescape(encodeURIComponent(svg)));
+}
+/* ── the modal (0037, JB's ask): the picture or the template, detached into a
+      window a human can pan, zoom, copy, and take with them ── */
+let WSM={z:1,tx:0,ty:0,drag:null};
+function wsModal(pi){
+  const p=WSPANELS[pi];if(!p)return;
+  WSM={z:1,tx:0,ty:0,drag:null};
+  const m=$("wsmodal");m.style.display="flex";
+  $("wsm-title").textContent=p.title||"";
+  const isG=p.kind==="graph";
+  $("wsm-tools").innerHTML=(isG
+    ?`<span class="wtool" onclick="wsmZoom(1.25)">+</span><span class="wtool" onclick="wsmZoom(0.8)">−</span>
+      <span class="wtool" onclick="wsmReset()">reset</span>
+      <span class="wtool" onclick="wsExport(${pi},'svg')">svg</span>
+      <span class="wtool" onclick="wsExport(${pi},'png')">png</span>`
+    :`<span class="wtool" onclick="wsCopy(${pi})">copy</span>
+      <span class="wtool" onclick="wsDownload(${pi})">⇩ download</span>`)
+    +`<span class="wtool" onclick="$('wsmodal').style.display='none'">✕ close</span>`;
+  $("wsm-body").innerHTML=isG
+    ?`<div id="wsm-pan" style="transform-origin:0 0">${renderGraph(p,"wsm",false)}</div>`
+    :`<div class="doc code" style="max-height:none">${hlCode(p.text)}</div>`;
+  if(isG){const b=$("wsm-body");
+    b.onwheel=e=>{e.preventDefault();wsmZoom(e.deltaY<0?1.12:0.9)};
+    b.onmousedown=e=>{WSM.drag=[e.clientX-WSM.tx,e.clientY-WSM.ty]};
+    b.onmousemove=e=>{if(WSM.drag){WSM.tx=e.clientX-WSM.drag[0];WSM.ty=e.clientY-WSM.drag[1];wsmApply()}};
+    b.onmouseup=b.onmouseleave=()=>{WSM.drag=null};
+  }
+}
+function wsmApply(){const p=$("wsm-pan");if(p)p.style.transform=`translate(${WSM.tx}px,${WSM.ty}px) scale(${WSM.z})`}
+function wsmZoom(f){WSM.z=Math.min(3,Math.max(0.35,WSM.z*f));wsmApply()}
+function wsmReset(){WSM={z:1,tx:0,ty:0,drag:null};wsmApply()}
 async function parlorPoll(){
   if(!PA)return;
   let q; try{q=(await(await fetch((PA.base||"")+"/requests")).json()).requests||[]}catch{return}
@@ -2449,21 +2619,33 @@ function gposDag(g){ /* the estate's layout (0037 §4): columns by dependency de
 }
 function renderGraph(g,reqId,interactive){
   if(!g||!g.nodes)return"";
-  const pos=g.layout==="dag"?gposDag(g):gpos(g);
-  const px=Math.max(96,g.nodes.filter(n=>n.role==="fingertip").length*48);
+  const dag=g.layout==="dag";
+  const pos=dag?gposDag(g):gpos(g);
+  const rows=dag?Math.max(...Object.values(g.nodes.reduce((a,n)=>{const x=Math.round((pos[n.id]||[0,0])[0]);a[x]=(a[x]||0)+1;return a},{})),1):0;
+  const px=dag?Math.max(150,rows*64):Math.max(96,g.nodes.filter(n=>n.role==="fingertip").length*48);
   const lines=g.edges.map(e=>{const a=pos[e.from],b=pos[e.to];
-    return a&&b?`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" data-e="${esc(e.from)}→${esc(e.to)}"/>`:""}).join("");
+    return a&&b?`<line class="${esc(e.kind||"")}" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" data-e="${esc(e.from)}→${esc(e.to)}"/>`:""}).join("");
   const chips=g.nodes.map(n=>{const p=pos[n.id];if(!p)return"";
+    if(dag){ /* the estate's cards (0037): category band, name, type, meta */
+      const cat=n.category||"service";
+      return `<div class="gcard ${cat} ${n.role==="stack"?"stackcard":""}" data-n="${n.id}" style="left:${p[0]}%;top:${p[1]}%" title="${esc(n.type||"")}${n.meta?" — "+esc(n.meta):""}${n.stack?" · "+esc(n.stack):""}">
+        <span class="gc-cat">${esc(n.role==="stack"?"stack · "+(n.status||""):cat)}</span>
+        <span class="gc-id">${esc(n.id)}</span>
+        ${n.type&&n.role!=="stack"?`<span class="gc-type">${esc(String(n.type).replace("AWS::",""))}</span>`:""}</div>`;
+    }
     const lbl=n.role==="orchestrator"?"objective":n.role==="review"?"review":n.role==="human"?"you":
       (n.altitude||n.id).split("/").pop()+(n.status?` · ${n.status}`:"");
     const cls=`gnode ${n.role==="fingertip"?"finger":""} ${n.status||""} ${n.role==="human"?"human":""} ${interactive&&WALKSEL.get(reqId)===n.id?"sel":""}`;
     const click=interactive&&n.role==="fingertip"?` onclick="walkSel('${reqId}','${n.id}')"`:"";
     return `<div class="${cls}" data-n="${n.id}" style="left:${p[0]}%;top:${p[1]}%" title="${esc(n.intent||"")}"${click}>${esc(lbl)}${n.severity&&n.severity!=="low"?`<span class="gsev">◆ ${esc(n.severity)}</span>`:""}</div>`}).join("");
+  const legend=dag?`<div class="glegend"><span>— depends on</span><span>┄ contains</span>`+
+    [["network","#7fb3e8"],["compute","#e8b27f"],["data","#8fd6b0"],["service","#b79ce8"],["operations","#e8c98f"],["identity","#e88f8f"]]
+    .map(([k,c])=>`<span><span class="rd" style="background:${c}"></span>${k}</span>`).join("")+`</div>`:"";
   const narr=(g.narrative||[]).map(s=>
     `<div onmouseenter="walkHl(this,1)" onmouseleave="walkHl(this,0)" data-nodes="${esc((s.nodes||[]).join(","))}" data-edges="${esc((s.edges||[]).join(","))}">${esc(s.text)}</div>`).join("");
   return `<div class="walk"><div class="wgraph" style="height:${px}px">
     <svg viewBox="0 0 100 100" preserveAspectRatio="none">${lines}</svg>${chips}</div>
-    <div class="gnarr">${narr}</div>${interactive?walkDetail(reqId,g):""}</div>`;
+    ${legend}<div class="gnarr">${narr}</div>${interactive?walkDetail(reqId,g):""}</div>`;
 }
 function walkHl(el,on){
   const box=el.closest(".walk");if(!box)return;

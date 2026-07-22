@@ -303,20 +303,105 @@ def _yaml_for(stack: str, resources: list[dict], charter: dict,
     return "\n".join(lines) + "\n"
 
 
-def _dag_for(subject: str, resources: list[dict], status: str) -> dict:
-    """The picture (0037 §4): layout `dag` — the glass lays columns by
-    dependency depth. Every node is a resource; the human approves what they
-    can SEE."""
+# AWS service token → the card's category (the CortexObserver bar, 2026-07-22):
+# a human reads the estate by COLOR before they read a single type string.
+_CATEGORIES = {
+    "EC2": "network", "ElasticLoadBalancingV2": "network", "Route53": "network",
+    "CloudFront": "network", "GlobalAccelerator": "network",
+    "Lambda": "compute", "ECS": "compute", "Batch": "compute", "EKS": "compute",
+    "S3": "data", "DynamoDB": "data", "RDS": "data", "ElastiCache": "data",
+    "ApiGateway": "service", "ApiGatewayV2": "service", "SNS": "service",
+    "SQS": "service", "Events": "service",
+    "CodePipeline": "operations", "CodeBuild": "operations",
+    "CodeStarNotifications": "operations", "CloudWatch": "operations",
+    "Logs": "operations", "SSM": "operations",
+    "CloudFormation": "platform", "CDK": "platform",
+    "IAM": "identity", "KMS": "identity", "ACM": "identity",
+    "CertificateManager": "identity", "SecretsManager": "identity",
+}
+
+
+def category_of(rtype: str) -> str:
+    svc = rtype.split("::")[1] if "::" in (rtype or "") else (rtype or "")
+    return _CATEGORIES.get(svc, "service")
+
+
+def parse_template_resources(template: dict) -> list[dict]:
+    """A CloudFormation template's Resources → the graph shape: explicit
+    DependsOn plus Ref/GetAtt-implied edges — the REAL dependency graph,
+    derived from the template's own truth, never drawn by hand (rule 7)."""
+    res = (template or {}).get("Resources") or {}
+
+    def _refs(obj, acc: set) -> None:
+        if isinstance(obj, dict):
+            if "Ref" in obj and isinstance(obj["Ref"], str):
+                acc.add(obj["Ref"])
+            ga = obj.get("Fn::GetAtt")
+            if isinstance(ga, list) and ga:
+                acc.add(str(ga[0]))
+            elif isinstance(ga, str):
+                acc.add(ga.split(".")[0])
+            for v in obj.values():
+                _refs(v, acc)
+        elif isinstance(obj, list):
+            for v in obj:
+                _refs(v, acc)
+
+    out = []
+    for rid, r in res.items():
+        dep = r.get("DependsOn") or []
+        if isinstance(dep, str):
+            dep = [dep]
+        implied: set = set()
+        _refs(r.get("Properties"), implied)
+        deps = sorted({d for d in [*dep, *implied] if d in res and d != rid})
+        out.append({"id": rid, "type": r.get("Type", "?"), "depends_on": deps,
+                    "properties": {}})
+    return out
+
+
+def _dag_for(subject: str, resources: list[dict], status: str,
+             stack: str | None = None) -> dict:
+    """The picture (0037 §4): layout `dag` — layered by dependency depth.
+    Nodes wear their CATEGORY (color), type, and stack; a stack node CONTAINS
+    its resources (faint edges), dependencies run solid. The human approves —
+    and later reads — what they can SEE."""
     nodes = [{"id": r["id"], "role": "fingertip", "altitude": r["id"],
-              "status": status} for r in resources]
-    edges = [{"from": d, "to": r["id"]} for r in resources
+              "status": status, "type": r.get("type", ""),
+              "category": category_of(r.get("type", "")),
+              **({"stack": stack} if stack else {}),
+              "meta": " · ".join(f"{k}: {v}" for k, v in
+                                 sorted((r.get("properties") or {}).items())[:2])}
+             for r in resources]
+    edges = [{"from": d, "to": r["id"], "kind": "depends"} for r in resources
              for d in r.get("depends_on") or []]
+    if stack:
+        nodes.append({"id": stack, "role": "stack", "altitude": stack,
+                      "status": status, "category": "platform", "type": "stack"})
+        edges += [{"from": stack, "to": r["id"], "kind": "contains"}
+                  for r in resources if not r.get("depends_on")]
     return {"layout": "dag", "subject": subject, "nodes": nodes, "edges": edges,
-            "narrative": [{"text": f"«{subject}» — {len(nodes)} resource(s), "
-                                   f"{status}; every property traces to the "
-                                   "charter or the ask",
+            "narrative": [{"text": f"«{subject}» — {len(resources)} resource(s), "
+                                   f"{status}",
                            "nodes": [n["id"] for n in nodes],
                            "edges": [f"{e['from']}→{e['to']}" for e in edges]}]}
+
+
+def estate_dag(stacks: list[dict], status: str = "deployed") -> dict:
+    """THE ESTATE in one picture (0037 §7): every adopted stack and its
+    resources, merged — stack nodes contain, dependencies run within. This is
+    the deployed DAG the universe finally sees."""
+    nodes: list = []
+    edges: list = []
+    narrative: list = []
+    for s in stacks:
+        d = _dag_for(s.get("subject", s.get("stack", "?")),
+                     s.get("resources") or [], status, stack=s.get("stack"))
+        nodes += d["nodes"]
+        edges += d["edges"]
+        narrative += d["narrative"]
+    return {"layout": "dag", "subject": "the estate", "nodes": nodes,
+            "edges": edges, "narrative": narrative}
 
 
 def preview(node, allen: dict, allen_kp, ask: str, *, env: str = "prod",

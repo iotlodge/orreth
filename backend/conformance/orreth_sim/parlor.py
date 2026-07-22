@@ -258,13 +258,15 @@ def _card_allen(facts: dict) -> tuple[str, list]:
             f"under governance; the acceptance gate is {gate}. Humans speak "
             "objectives at my door; agents speak intentions or observations, "
             "each with its ancestry — and every apply waits for a human.",
-            [{"label": "the estate", "ask": "show the estate"},
-             {"label": "plan… (free)", "template": "plan "},
-             {"label": "the charter", "ask": "show the charter"},
-             {"label": "answer a question…", "template": "answer "},
-             {"label": "a template…", "template": "show template for "},
-             {"label": "who may speak to you?", "ask": "who may speak to you?"},
-             {"label": "how do you work?", "ask": "how do you work?"}])
+            ([{"label": "adopt the estate", "ask": "adopt the estate"}]
+             if not est.get("gate_open") else [])
+            + [{"label": "the estate", "ask": "show the estate"},
+               {"label": "plan… (free)", "template": "plan "},
+               {"label": "the charter", "ask": "show the charter"},
+               {"label": "answer a question…", "template": "answer "},
+               {"label": "a template…", "template": "show template for "},
+               {"label": "who may speak to you?", "ask": "who may speak to you?"},
+               {"label": "how do you work?", "ask": "how do you work?"}])
 
 
 def _card_organ(name: str):
@@ -648,6 +650,27 @@ def answer(name: str, text: str, facts: dict) -> dict:
                     "verbatim": True}
         if t.startswith(("show the charter", "the charter", "show charter")):
             return {"reply": _allen_charter(facts), "verbatim": True}
+        # the human's word, spoken in the audience (JB's walk finding
+        # 2026-07-22): approval typed at allen's door is the SAME human word as
+        # the inbox button — one gate, two handles, for humans deep in several
+        # objectives at once
+        if re.match(r"^(i\s+)?(approve|deny|decline)\b.*\badoption\b", t):
+            ok = "approve" in t
+            return {"reply": ("your word is the key — the walk begins: "
+                              "READ-ONLY, described and attested, never "
+                              "mutated. the receipts land in my room "
+                              "(0037 §7)." if ok else
+                              "declined, on the record — the gate stands and "
+                              "the estate stays untouched."),
+                    "action": "estate-decide", "ok": ok, "verbatim": True}
+        # the brownfield walk (0037 §7): the first touch of the real estate —
+        # READ-ONLY, and still a consequence of trust: it stages at the gate
+        if t.startswith(("adopt the estate", "adopt estate", "walk the estate")):
+            return {"reply": "staging the adoption — the first touch of the "
+                             "real estate, READ-ONLY: I describe, I fetch "
+                             "templates, I never mutate. your approval opens "
+                             "my eyes; the receipts open the gate (0037 §7).",
+                    "action": "estate-adopt", "verbatim": True}
         # PLAN IS FREE (§8.4): the preview runs with the gate still standing —
         # no consequence; the charter still interrogates (never a wrong picture)
         if t.startswith(("plan ", "plan:", "preview ")):
@@ -1195,10 +1218,17 @@ def _room_allen(facts: dict) -> list[dict]:
             if str(r.get("kind", "")).startswith("estate")]
     plan = est.get("plan") or {}
     plan_panels = ([{"kind": "graph",
-                     "title": f"the planned DAG — «{plan.get('subject', '?')}» "
-                              "(0037 §4)",
+                     "title": (f"the deployed DAG — «{plan.get('subject', '?')}» "
+                               "— what the universe sees (0037 §7)"
+                               if plan.get("deployed") else
+                               f"the planned DAG — «{plan.get('subject', '?')}» "
+                               "(0037 §4)"),
                      **(plan.get("dag") or {})},
-                    {"kind": "doc",
+                    {"kind": "doc", "code": True,
+                     "filename": "orreth-"
+                                 + re.sub(r"[^a-z0-9]+", "-",
+                                          str(plan.get("subject", "template"))
+                                          .lower()).strip("-") + ".yaml",
                      "title": f"the template — recallable forever "
                               f"(orreth-{plan.get('subject', '?')})",
                      "text": plan.get("yaml") or ""}]

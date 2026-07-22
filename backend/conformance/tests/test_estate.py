@@ -184,7 +184,8 @@ def test_charter_answers_become_template_properties():
     # the planned DAG: the policy depends on its bucket; the human sees it
     dag = plan["dag"]
     assert dag["layout"] == "dag"
-    assert {"from": "bucketMain", "to": "bucketPolicy"} in dag["edges"]
+    assert {"from": "bucketMain", "to": "bucketPolicy",
+            "kind": "depends"} in dag["edges"]
     assert all(n["status"] == "planned" for n in dag["nodes"])
 
 
@@ -213,6 +214,34 @@ def test_the_diff_is_news():
             if "estate-drift" in (r.get("tags") or [])]
     assert news and news[0]["author"] == allen["did"]
     assert all(n["status"] == "deployed" for n in drifted["dag"]["nodes"])
+
+
+def test_template_parsing_derives_the_real_graph():
+    """The adoption walk's parser (0037 §7): DependsOn plus Ref/GetAtt-implied
+    edges from the template's own truth — never drawn by hand."""
+    tpl = {"Resources": {
+        "Bucket": {"Type": "AWS::S3::Bucket"},
+        "Dist": {"Type": "AWS::CloudFront::Distribution",
+                 "Properties": {"Origin": {"Fn::GetAtt": ["Bucket", "DomainName"]}}},
+        "Record": {"Type": "AWS::Route53::RecordSet", "DependsOn": "Dist",
+                   "Properties": {"Alias": {"Ref": "Dist"}}},
+        "Role": {"Type": "AWS::IAM::Role"}}}
+    rs = {r["id"]: r for r in estate.parse_template_resources(tpl)}
+    assert rs["Dist"]["depends_on"] == ["Bucket"]       # GetAtt-implied
+    assert rs["Record"]["depends_on"] == ["Dist"]       # explicit + Ref, deduped
+    assert rs["Role"]["depends_on"] == []
+    assert estate.category_of("AWS::CloudFront::Distribution") == "network"
+    assert estate.category_of("AWS::IAM::Role") == "identity"
+    assert estate.category_of("AWS::CodePipeline::Pipeline") == "operations"
+    # the merged estate: stack nodes contain, dependencies run within
+    dag = estate.estate_dag([{"stack": "OrrethDemoStack", "subject": "demo",
+                              "resources": list(rs.values())}])
+    kinds = {e["kind"] for e in dag["edges"]}
+    assert kinds == {"depends", "contains"}
+    stack_node = next(n for n in dag["nodes"] if n["role"] == "stack")
+    assert stack_node["id"] == "OrrethDemoStack"
+    cats = {n["id"]: n.get("category") for n in dag["nodes"]}
+    assert cats["Bucket"] == "data" and cats["Record"] == "network"
 
 
 def test_charter_is_a_versioned_asset():
