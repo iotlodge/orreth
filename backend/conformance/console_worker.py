@@ -3467,6 +3467,7 @@ def wire_estate(port: int) -> dict:
     answers: dict = {}
     adopted = 0
     charter_rows = 0
+    tmpl_hits: list = []
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": ALLEN_DID,
@@ -3481,6 +3482,8 @@ def wire_estate(port: int) -> dict:
                 adopted += 1
             if estate.CHARTER_NAME in tags:
                 charter_rows += 1
+            if any(str(t).startswith("template-") for t in tags):
+                tmpl_hits.append(h)
             if "estate-charter" not in tags:
                 continue
             try:
@@ -3514,8 +3517,23 @@ def wire_estate(port: int) -> dict:
     for (k, s), v in answers.items():
         if s:
             workloads.setdefault(s, {})[k] = v
+    plan: dict = {}
+    if tmpl_hits:                             # the newest picture stands in the room
+        newest = max(tmpl_hits, key=lambda h: h.get("occurred_at", ""))
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(newest['ref'], safe='')}/body")
+            prof = ((body or {}).get("asset") or {}).get("profile") or {}
+            if prof.get("resources"):
+                plan = {"subject": prof.get("subject", "?"),
+                        "yaml": prof.get("yaml", ""),
+                        "dag": estate._dag_for(prof.get("subject", "?"),
+                                               prof["resources"], "planned")}
+        except Exception:
+            pass
     return {"adopted": adopted, "gate_open": bool(adopted),
-            "policy": policy, "workloads": workloads, "answers": answers}
+            "policy": policy, "workloads": workloads, "answers": answers,
+            "plan": plan}
 
 
 def wire_charter_answer(port: int, key: str, answer: str,
@@ -3547,18 +3565,15 @@ def wire_charter_answer(port: int, key: str, answer: str,
     return None
 
 
-def wire_estate_create(port: int, ask: str) -> str:
-    """A deployment ask, read against the charter FOR ITS SUBJECT (0037 §3):
-    gaps come back as the interrogation — questions carrying offered defaults
-    from history, never silent inheritance; a clean charter stages the plan."""
+def _wire_gaps(est: dict, subject: str) -> tuple[dict, dict]:
+    """Per-subject charter resolution over wire answers (0037 §3): the
+    workload's own word wins, estate policy underlies, history is offered in
+    the question — never silently inherited."""
     from orreth_sim import estate
-    est = wire_estate(port)
-    subject = (ask or "").strip().lower()
-    qs_all = estate.CHARTER_GENESIS["questions"]
     have = est.get("answers") or {}
-    gaps = {}
-    pinned = {}
-    for k, q in qs_all.items():
+    gaps: dict = {}
+    pinned: dict = {}
+    for k, q in estate.CHARTER_GENESIS["questions"].items():
         own = have.get((k, subject))
         policy = have.get((k, ""))
         if own:
@@ -3570,12 +3585,26 @@ def wire_estate_create(port: int, ask: str) -> str:
             offer = (f' (last time: “{prior[-1]["answer"]}” for '
                      f'«{prior[-1]["subject"]}» — reuse?)') if prior else ""
             gaps[k] = q + offer
+    return gaps, pinned
+
+
+def _interrogation(subject: str, gaps: dict) -> str:
+    qtext = " · ".join(f"{k} — {q}" for k, q in gaps.items())
+    return (f"the charter interrogates «{subject}» before a prod plan "
+            f"compiles (0037 §3) — {len(gaps)} question(s): {qtext}. "
+            f"answer with “answer <question> for {subject}: <words>” — or "
+            "“… for the estate: …” to set policy for everything.")
+
+
+def wire_estate_create(port: int, ask: str) -> str:
+    """A deployment ask — the CONSEQUENCE path: interrogated, and a clean
+    charter stages the plan toward the gate (0012)."""
+    from orreth_sim import estate
+    est = wire_estate(port)
+    subject = estate._slug(ask)
+    gaps, pinned = _wire_gaps(est, subject)
     if gaps:
-        qtext = " · ".join(f"{k} — {q}" for k, q in gaps.items())
-        return (f"the charter interrogates «{subject}» before a prod plan "
-                f"compiles (0037 §3) — {len(gaps)} question(s): {qtext}. "
-                f"answer with “answer <question> for {subject}: <words>” — or "
-                "“… for the estate: …” to set policy for everything.")
+        return _interrogation(subject, gaps)
     call(port, "POST", "/requests",
          {"kind": "estate-plan",
           "text": f"the estate plans: “{ask}” — charter satisfied "
@@ -3585,6 +3614,53 @@ def wire_estate_create(port: int, ask: str) -> str:
     return (f"the charter is satisfied for «{subject}» — the plan stages with "
             "its answers pinned, and consequence waits for you at the gate "
             "(0012).")
+
+
+def wire_estate_preview(port: int, ask: str) -> str:
+    """PLAN IS FREE (§8.4): no gate, no consequence — the charter still
+    interrogates (never a wrong picture). A clean preview compiles resources,
+    yaml, and the planned DAG; the template lands as a recallable asset under
+    allen's signature, and the room holds the picture."""
+    from orreth_sim import estate, improver
+    est = wire_estate(port)
+    subject = estate._slug(ask)
+    gaps, pinned = _wire_gaps(est, subject)
+    if gaps:
+        return _interrogation(subject, gaps)
+    resources = estate._resources_for(ask, pinned)
+    stack = f"orreth-{subject}"
+    yaml = estate._yaml_for(stack, resources, pinned, subject)
+    me = {"did": ALLEN_DID, "scope": UNIVERSE_SCOPE}
+    asset = improver.make_asset(me, ALLEN, UNIVERSE_SCOPE,
+                                name=f"template-{subject}",
+                                profile={"yaml": yaml, "stack": stack,
+                                         "subject": subject,
+                                         "resources": resources})
+    try:
+        call(port, "POST", "/records", asset)
+        print(f"  ↳ allen drafts {stack} — template asset {asset['id'][:18]}…")
+    except Exception as e:
+        print(f"    (template asset write failed: {e})")
+    kinds = ", ".join(r["type"].split("::")[-1] for r in resources)
+    return (f"planned, free of consequence (§8.4): {stack} — {len(resources)} "
+            f"resource(s) ({kinds}), every property traced to the charter "
+            f"({sum(1 for v in pinned.values() if v['scope'] == 'estate-policy')} "
+            "answer(s) from estate policy). the picture and the yaml stand in "
+            "my room; the template is on the record forever. applying it is "
+            "another conversation — at the gate.")
+
+
+def wire_estate_template(port: int, subject: str) -> str:
+    """The yaml, recallable by a human (0037 §4) — read back from the newest
+    template asset for the subject."""
+    from orreth_sim import estate
+    rows = wire_assets(port, "asset", name=f"template-{estate._slug(subject)}")
+    if not rows:
+        return (f"no template stands for «{subject}» — say “plan <what you "
+                "want>” and I draft one, free of consequence (§8.4).")
+    prof = ((rows[-1][1].get("asset") or {}).get("profile")) or {}
+    return (f"the template for «{subject}» ({prof.get('stack', '?')}):\n"
+            + (prof.get("yaml") or "")[:480])
 
 
 # ---------------------------------------------------------------- the shipyard (0009→wire)
@@ -4071,6 +4147,10 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
             reply = err
     if ans.get("action") == "estate-create":  # 0037 §3 — the in-ask interrogation
         reply = wire_estate_create(universe_port(port), ans["ask"])
+    if ans.get("action") == "estate-preview":  # 0037 §4 — plan is free
+        reply = wire_estate_preview(universe_port(port), ans["ask"])
+    if ans.get("action") == "estate-template":  # 0037 §4 — the yaml, recallable
+        reply = wire_estate_template(universe_port(port), ans["subject"])
     if ans.get("action") == "domain":     # the package, a view over the record (0031 §5)
         rows = domain_packages(port, scope, ans.get("topic", ""))
         reply = ("; ".join(f"{d['topic']} — {d['meta']}" for d in rows[:6])

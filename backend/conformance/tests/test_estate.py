@@ -137,6 +137,84 @@ def test_answers_bind_to_subjects_and_policy_underlies():
     assert "rag-corpus" in e.value.questions["rto"]
 
 
+def _charter_up(fld, allen, allen_kp, subject="rag-corpus"):
+    estate.answer_gap(fld, allen, allen_kp, "residency", "us-west-2",
+                      "did:key:zjb", subject=estate.ESTATE)
+    for key, words in (("data_classification", "internal"),
+                       ("rto", "4 hours"), ("rpo", "24 hours"),
+                       ("interoperability", "api only"),
+                       ("caching", "none"),
+                       ("retention", "7 years, then crypto-shred")):
+        estate.answer_gap(fld, allen, allen_kp, key, words, "did:key:zjb",
+                          subject=subject)
+
+
+def test_plan_is_free_but_never_wrong():
+    """PLAN IS FREE (§8.4): the preview runs with the acceptance gate still
+    STANDING — no consequence, no gate. But never a wrong picture: with charter
+    gaps the preview refuses exactly like the compile would."""
+    _, fld, _, allen, allen_kp = _estate_field()
+    assert not estate.create_unlocked(fld)         # the gate stands…
+    with pytest.raises(estate.CharterGaps):        # …and the charter still asks
+        estate.preview(fld, allen, allen_kp, "an s3 bucket for the corpus",
+                       subject="rag-corpus")
+    _charter_up(fld, allen, allen_kp)
+    plan = estate.preview(fld, allen, allen_kp, "an s3 bucket for the corpus",
+                          subject="rag-corpus")
+    assert plan["stack"] == "orreth-rag-corpus" and not estate.create_unlocked(fld)
+
+
+def test_charter_answers_become_template_properties():
+    """The point of the plan (0037 §4): 'deploy it correctly' is compilation —
+    classification closes public access and turns on encryption, retention
+    becomes a lifecycle rule, and the full charter rides the yaml's Metadata."""
+    _, fld, _, allen, allen_kp = _estate_field()
+    _charter_up(fld, allen, allen_kp)
+    plan = estate.preview(fld, allen, allen_kp, "an s3 bucket for the corpus",
+                          subject="rag-corpus")
+    bucket = next(r for r in plan["resources"] if r["type"] == "AWS::S3::Bucket")
+    assert bucket["properties"]["Encryption"] == "SSE-KMS"
+    assert bucket["properties"]["PublicAccessBlock"] == "ALL"
+    assert "7 years" in bucket["properties"]["Lifecycle"]
+    assert "OrrethCharter" in plan["yaml"] and "us-west-2" in plan["yaml"]
+    assert "estate-policy" in plan["yaml"]          # the answer's scope travels
+    # the template is a recallable asset under allen's signature
+    row = improver_active(fld, "template-rag-corpus")
+    assert row and row[1]["author"] == allen["did"]
+    # the planned DAG: the policy depends on its bucket; the human sees it
+    dag = plan["dag"]
+    assert dag["layout"] == "dag"
+    assert {"from": "bucketMain", "to": "bucketPolicy"} in dag["edges"]
+    assert all(n["status"] == "planned" for n in dag["nodes"])
+
+
+def improver_active(node, name):
+    from orreth_sim import improver
+    return improver.active_asset(node, name)
+
+
+def test_the_diff_is_news():
+    """The second DAG (0037 §4): the as-built reconciled against the blueprint.
+    A faithful deployment matches quietly; a resource that materialized
+    differently lands as a signed drift record — news, never a footnote."""
+    _, fld, _, allen, allen_kp = _estate_field()
+    _charter_up(fld, allen, allen_kp)
+    plan = estate.preview(fld, allen, allen_kp, "an s3 bucket for the corpus",
+                          subject="rag-corpus")
+    faithful = estate.reconcile(fld, allen, allen_kp, "rag-corpus",
+                                plan["resources"])
+    assert faithful["match"] and not faithful["diff"]
+    mutated = [dict(r, properties=dict(r["properties"], Encryption="NONE"))
+               if r["id"] == "bucketMain" else r for r in plan["resources"]]
+    drifted = estate.reconcile(fld, allen, allen_kp, "rag-corpus", mutated)
+    assert not drifted["match"] and any("changed: bucketMain" in d
+                                        for d in drifted["diff"])
+    news = [r for r in fld.records.values()
+            if "estate-drift" in (r.get("tags") or [])]
+    assert news and news[0]["author"] == allen["did"]
+    assert all(n["status"] == "deployed" for n in drifted["dag"]["nodes"])
+
+
 def test_charter_is_a_versioned_asset():
     """The question set is data on the shelf (0031's shape): genesis plants under
     allen's signature, and the active version's questions govern the compile."""
@@ -179,6 +257,29 @@ def test_charter_speaks_in_the_parlor():
     texts = [i["text"] for i in charter_panel["items"]]
     assert any("estate policy" in x for x in texts) \
         and any("rag-corpus" in x for x in texts)
+
+
+def test_plan_door_is_free_and_template_recallable():
+    """The parlor's plan door (0037 §4): “plan <ask>” rides as estate-preview
+    even with the acceptance gate STANDING (plan is free); “show template for
+    <subject>” recalls the yaml; the room carries the picture when one stands."""
+    facts = {"scope": "u:demo", "estate": {"adopted": 0, "gate_open": False}}
+    p = parlor.answer("allen", "plan an s3 bucket for the corpus", facts)
+    assert p.get("action") == "estate-preview" \
+        and p["ask"] == "an s3 bucket for the corpus"
+    tm = parlor.answer("allen", "show template for rag-corpus", facts)
+    assert tm.get("action") == "estate-template" and tm["subject"] == "rag-corpus"
+    dag = {"layout": "dag", "nodes": [{"id": "bucketMain", "role": "fingertip",
+                                       "status": "planned"}], "edges": [],
+           "narrative": []}
+    rich = {"scope": "u:demo",
+            "estate": {"adopted": 0, "gate_open": False,
+                       "plan": {"subject": "rag-corpus", "yaml": "Resources: …",
+                                "dag": dag}}}
+    ws = parlor.workspace("allen", rich)
+    assert ws["panels"][0]["kind"] == "graph" \
+        and ws["panels"][0]["layout"] == "dag"
+    assert "template" in ws["panels"][1]["title"]
 
 
 def test_allen_receives_in_the_parlor():

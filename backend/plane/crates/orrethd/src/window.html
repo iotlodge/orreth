@@ -2435,9 +2435,21 @@ function gpos(g){ /* deterministic layout in % space: objective | fingers | revi
   fingers.forEach((f,i)=>pos[f.id]=[42,(100*(i+.5))/H]);
   return pos;
 }
+function gposDag(g){ /* the estate's layout (0037 §4): columns by dependency depth */
+  const depth={},inc={};
+  g.edges.forEach(e=>{(inc[e.to]=inc[e.to]||[]).push(e.from)});
+  const d=id=>depth[id]!==undefined?depth[id]
+    :(depth[id]=0, depth[id]=(inc[id]||[]).length?1+Math.max(...inc[id].map(d)):0);
+  g.nodes.forEach(n=>d(n.id));
+  const cols={};g.nodes.forEach(n=>{(cols[depth[n.id]]=cols[depth[n.id]]||[]).push(n.id)});
+  const D=Object.keys(cols).length||1,pos={};
+  Object.entries(cols).forEach(([c,ids])=>ids.forEach((id,i)=>
+    pos[id]=[100*(+c+.5)/D,100*(i+.5)/ids.length]));
+  return pos;
+}
 function renderGraph(g,reqId,interactive){
   if(!g||!g.nodes)return"";
-  const pos=gpos(g);
+  const pos=g.layout==="dag"?gposDag(g):gpos(g);
   const px=Math.max(96,g.nodes.filter(n=>n.role==="fingertip").length*48);
   const lines=g.edges.map(e=>{const a=pos[e.from],b=pos[e.to];
     return a&&b?`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" data-e="${esc(e.from)}→${esc(e.to)}"/>`:""}).join("");

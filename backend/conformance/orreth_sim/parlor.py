@@ -259,11 +259,12 @@ def _card_allen(facts: dict) -> tuple[str, list]:
             "objectives at my door; agents speak intentions or observations, "
             "each with its ancestry — and every apply waits for a human.",
             [{"label": "the estate", "ask": "show the estate"},
+             {"label": "plan… (free)", "template": "plan "},
              {"label": "the charter", "ask": "show the charter"},
              {"label": "answer a question…", "template": "answer "},
+             {"label": "a template…", "template": "show template for "},
              {"label": "who may speak to you?", "ask": "who may speak to you?"},
-             {"label": "how do you work?", "ask": "how do you work?"},
-             {"label": "what waits for me?", "ask": "what waits at your gate?"}])
+             {"label": "how do you work?", "ask": "how do you work?"}])
 
 
 def _card_organ(name: str):
@@ -647,6 +648,18 @@ def answer(name: str, text: str, facts: dict) -> dict:
                     "verbatim": True}
         if t.startswith(("show the charter", "the charter", "show charter")):
             return {"reply": _allen_charter(facts), "verbatim": True}
+        # PLAN IS FREE (§8.4): the preview runs with the gate still standing —
+        # no consequence; the charter still interrogates (never a wrong picture)
+        if t.startswith(("plan ", "plan:", "preview ")):
+            ask_words = (text or "").strip().split(None, 1)
+            if len(ask_words) > 1 and ask_words[1].strip():
+                return {"reply": "reading the ask against the charter…",
+                        "action": "estate-preview", "ask": ask_words[1].strip(),
+                        "verbatim": True}
+        m = re.match(r"^show (?:the )?template for\s+(.+?)\s*$", t)
+        if m:
+            return {"reply": "fetching the template…", "action": "estate-template",
+                    "subject": m.group(1).strip("?.!"), "verbatim": True}
         est = facts.get("estate") or {}
         if ("create" in t or "deploy" in t) and est.get("gate_open"):
             # the interrogation happens INSIDE the ask, anchored to its subject —
@@ -1180,7 +1193,17 @@ def _room_allen(facts: dict) -> list[dict]:
     est = facts.get("estate") or {}
     reqs = [r for r in facts.get("requests") or []
             if str(r.get("kind", "")).startswith("estate")]
-    return [
+    plan = est.get("plan") or {}
+    plan_panels = ([{"kind": "graph",
+                     "title": f"the planned DAG — «{plan.get('subject', '?')}» "
+                              "(0037 §4)",
+                     **(plan.get("dag") or {})},
+                    {"kind": "doc",
+                     "title": f"the template — recallable forever "
+                              f"(orreth-{plan.get('subject', '?')})",
+                     "text": plan.get("yaml") or ""}]
+                   if plan.get("dag") else [])
+    return plan_panels + [
         {"kind": "stat", "title": "the estate",
          "items": [{"label": "stacks under governance",
                     "value": int(est.get("adopted") or 0)},

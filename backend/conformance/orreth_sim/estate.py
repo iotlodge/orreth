@@ -233,18 +233,129 @@ def gap_analysis(node, env: str, subject: str) -> dict:
             "gaps": list(gaps), "questions": gaps, "answers": answers}
 
 
+# ---------------------------------------------------------------- the planner (0037 §4)
+# v0 shapes the planner recognizes — CloudFormation grammar, grown by evidence.
+# The point of the plan: THE CHARTER ANSWERS BECOME TEMPLATE PROPERTIES —
+# "deploy it correctly" is not advice, it is compilation.
+_CATALOG = (
+    (("s3", "bucket", "corpus", "store", "object"), "AWS::S3::Bucket", "bucket"),
+    (("queue", "sqs"), "AWS::SQS::Queue", "queue"),
+    (("table", "dynamo", "database"), "AWS::DynamoDB::Table", "table"),
+    (("api", "service", "endpoint"), "AWS::ApiGateway::RestApi", "api"),
+)
+
+
+def _slug(s: str) -> str:
+    import re as _re
+    return _re.sub(r"[^a-z0-9]+", "-", (s or "").lower()).strip("-")[:48] or "workload"
+
+
+def _resources_for(ask: str, charter: dict) -> list[dict]:
+    """The ask's shapes, dressed by the charter: classification closes public
+    access and turns on encryption; retention becomes a lifecycle rule;
+    residency rides as the region. Unrecognized asks get one generic stack
+    member — honest, and the catalog grows from evidence."""
+    low = (ask or "").lower()
+    kinds = [(t, short) for words, t, short in _CATALOG
+             if any(w in low for w in words)] or [("AWS::CloudFormation::Stack",
+                                                   "stack")]
+    cls = (charter.get("data_classification") or {}).get("answer", "")
+    keep = (charter.get("retention") or {}).get("answer", "")
+    out: list[dict] = []
+    for t, short in kinds:
+        rid = f"{short}Main"
+        out.append({"id": rid, "type": t, "depends_on": [],
+                    "properties": {
+                        **({"PublicAccessBlock": "ALL", "Encryption": "SSE-KMS"}
+                           if t == "AWS::S3::Bucket" and "public" not in cls.lower()
+                           else {}),
+                        **({"Lifecycle": keep} if keep and t == "AWS::S3::Bucket"
+                           else {})}})
+        if t == "AWS::S3::Bucket":
+            out.append({"id": f"{short}Policy", "type": "AWS::S3::BucketPolicy",
+                        "depends_on": [rid],
+                        "properties": {"Classification": cls or "unclassified"}})
+    return out
+
+
+def _yaml_for(stack: str, resources: list[dict], charter: dict,
+              subject: str) -> str:
+    """The template, recallable by a human forever — CloudFormation yaml with
+    the charter pinned in Metadata: the answers travel WITH the artifact."""
+    lines = [f"# {stack} — planned by allen (0037 §4); the charter rides below",
+             "AWSTemplateFormatVersion: '2010-09-09'",
+             f"Description: {subject} — every property below traces to a "
+             "charter answer or the ask itself",
+             "Metadata:",
+             "  OrrethCharter:"]
+    for k, v in sorted(charter.items()):
+        lines.append(f"    {k}: \"{v.get('answer', '')}\"  # {v.get('scope', '?')}")
+    lines.append("Resources:")
+    for r in resources:
+        lines.append(f"  {r['id']}:")
+        lines.append(f"    Type: {r['type']}")
+        if r.get("depends_on"):
+            lines.append(f"    DependsOn: [{', '.join(r['depends_on'])}]")
+        if r.get("properties"):
+            lines.append("    Properties:")
+            for pk, pv in sorted(r["properties"].items()):
+                lines.append(f"      {pk}: \"{pv}\"")
+    return "\n".join(lines) + "\n"
+
+
+def _dag_for(subject: str, resources: list[dict], status: str) -> dict:
+    """The picture (0037 §4): layout `dag` — the glass lays columns by
+    dependency depth. Every node is a resource; the human approves what they
+    can SEE."""
+    nodes = [{"id": r["id"], "role": "fingertip", "altitude": r["id"],
+              "status": status} for r in resources]
+    edges = [{"from": d, "to": r["id"]} for r in resources
+             for d in r.get("depends_on") or []]
+    return {"layout": "dag", "subject": subject, "nodes": nodes, "edges": edges,
+            "narrative": [{"text": f"«{subject}» — {len(nodes)} resource(s), "
+                                   f"{status}; every property traces to the "
+                                   "charter or the ask",
+                           "nodes": [n["id"] for n in nodes],
+                           "edges": [f"{e['from']}→{e['to']}" for e in edges]}]}
+
+
+def preview(node, allen: dict, allen_kp, ask: str, *, env: str = "prod",
+            subject: str | None = None) -> dict:
+    """PLAN IS FREE (§8.4): no gate, no consequence — but never a wrong picture:
+    the charter still interrogates, because a plan without its answers would be
+    the incorrect deployment drawn confidently. A clean preview compiles the
+    resources, the yaml (registered as a recallable template asset under
+    allen's signature), and the planned DAG."""
+    subject = _slug(subject or ask)
+    ga = gap_analysis(node, env, subject)
+    if ga["gaps"]:
+        raise CharterGaps(env, ga["questions"])
+    resources = _resources_for(ask, ga["answers"])
+    stack = f"orreth-{subject}"
+    yaml = _yaml_for(stack, resources, ga["answers"], subject)
+    asset = improver.make_asset(allen, allen_kp, node.scope,
+                                name=f"template-{subject}",
+                                profile={"yaml": yaml, "stack": stack,
+                                         "subject": subject, "env": env,
+                                         "resources": resources})
+    node.write(asset)
+    return {"subject": subject, "env": env, "ask": (ask or "").strip(),
+            "stack": stack, "resources": resources, "yaml": yaml,
+            "template_ref": asset["id"], "charter": ga["answers"],
+            "dag": _dag_for(subject, resources, "planned")}
+
+
 def stage_create(node, ask: str, *, env: str = "prod",
                  subject: str | None = None) -> dict:
-    """A greenfield Create, asked. Behind the acceptance gate it refuses with
-    the gate's own words; past the gate the charter interrogates FOR THIS
-    SUBJECT — a plan with gaps cannot compile for its rung (refused-at-compile,
-    the GraphSpec shape). A clean charter stages toward 0012 with the answers
-    (and their scopes) PINNED to the plan."""
+    """A greenfield Create, asked — the CONSEQUENCE path. Behind the acceptance
+    gate it refuses with the gate's own words; past the gate the preview
+    compiles (charter-interrogated) and the plan stages toward 0012 with the
+    answers and the picture PINNED — you approve what you can see."""
     if not create_unlocked(node):
         raise GateStands("the acceptance gate stands (0037 §8.7): the estate "
                          "adopts before it creates — the brownfield walk has "
                          "not completed")
-    subject = (subject or (ask or "").strip()).strip().lower()
+    subject = _slug(subject or ask)
     ga = gap_analysis(node, env, subject)
     if ga["gaps"]:
         raise CharterGaps(env, ga["questions"])
@@ -252,3 +363,29 @@ def stage_create(node, ask: str, *, env: str = "prod",
             "subject": subject, "charter": ga["answers"],
             "note": "the charter is satisfied — consequence waits at the gate "
                     "(0012); the plan carries its answers pinned (0037 §3)"}
+
+
+def reconcile(node, allen: dict, allen_kp, subject: str,
+              deployed: list[dict]) -> dict:
+    """The second DAG (0037 §4): the as-built against the blueprint. THE DIFF
+    IS NEWS — a resource that materialized differently than approved lands as
+    a signed record wearing the medium marker's weight, never a footnote."""
+    subject = _slug(subject)
+    row = improver.active_asset(node, f"template-{subject}")
+    planned = (improver._profile_of(row[1]) if row else {}).get("resources") or []
+    p_ids = {r["id"]: r for r in planned}
+    d_ids = {r["id"]: r for r in deployed}
+    diff = ([f"missing: {i}" for i in p_ids if i not in d_ids]
+            + [f"unplanned: {i}" for i in d_ids if i not in p_ids]
+            + [f"changed: {i}" for i in p_ids
+               if i in d_ids and (p_ids[i].get("type") != d_ids[i].get("type")
+                                  or p_ids[i].get("properties") !=
+                                  d_ids[i].get("properties"))])
+    if diff:
+        node.write(make_memory(
+            allen, allen_kp, node.scope,
+            {"estate_drift": {"subject": subject, "diff": diff,
+                              "severity": "medium", "at": NOW()}},
+            kind="episodic", tags=["estate", "estate-drift", subject]))
+    return {"subject": subject, "match": not diff, "diff": diff,
+            "dag": _dag_for(subject, deployed, "deployed")}
