@@ -259,6 +259,8 @@ def _card_allen(facts: dict) -> tuple[str, list]:
             "objectives at my door; agents speak intentions or observations, "
             "each with its ancestry — and every apply waits for a human.",
             [{"label": "the estate", "ask": "show the estate"},
+             {"label": "the charter", "ask": "show the charter"},
+             {"label": "answer a question…", "template": "answer "},
              {"label": "who may speak to you?", "ask": "who may speak to you?"},
              {"label": "how do you work?", "ask": "how do you work?"},
              {"label": "what waits for me?", "ask": "what waits at your gate?"}])
@@ -614,6 +616,44 @@ def answer(name: str, text: str, facts: dict) -> dict:
     if name == "ada":
         return {"reply": _ada_reply(t, facts)}
     if name == "allen":
+        # the human seat answers a question FOR a subject (0037 §3, reworked on
+        # JB's walk finding 2026-07-22): an answer is a property of a workload —
+        # or deliberate estate policy, spoken as such. The answer is protocol:
+        # it lands verbatim, signed, recalled with its subject forever.
+        m = re.match(r"^answer\s+([a-z_]+)\s+for\s+(.+?)\s*:\s*(.+)$",
+                     (text or "").strip(), flags=re.IGNORECASE)
+        if m:
+            key, subj, words = (m.group(1).lower(), m.group(2).strip(),
+                                m.group(3).strip())
+            if subj.lower() in ("the estate", "estate", "everything"):
+                return {"reply": f"estate policy, on the record — “{words}” "
+                                 f"answers {key} for EVERYTHING I build, unless "
+                                 "a workload speaks for itself. deliberate, "
+                                 "signed, revisable (0037 §3).",
+                        "action": "estate-answer", "key": key, "answer": words,
+                        "subject": "", "verbatim": True}
+            return {"reply": f"on the record — “{words}” answers {key} for "
+                             f"«{subj.lower()}», signed and recalled whenever "
+                             "that workload returns (0037 §3).",
+                    "action": "estate-answer", "key": key, "answer": words,
+                    "subject": subj.lower(), "verbatim": True}
+        if re.match(r"^answer\s+([a-z_]+)\s*:", (text or "").strip(),
+                    flags=re.IGNORECASE):
+            return {"reply": "an answer needs a subject — a question belongs to "
+                             "a workload, never to the air (0037 §3). say: "
+                             "“answer <question> for <workload>: <words>” — or "
+                             "“answer <question> for the estate: <words>” to "
+                             "set deliberate policy for everything.",
+                    "verbatim": True}
+        if t.startswith(("show the charter", "the charter", "show charter")):
+            return {"reply": _allen_charter(facts), "verbatim": True}
+        est = facts.get("estate") or {}
+        if ("create" in t or "deploy" in t) and est.get("gate_open"):
+            # the interrogation happens INSIDE the ask, anchored to its subject —
+            # the worker runs the gap analysis and speaks the questions
+            return {"reply": "reading the ask against the charter…",
+                    "action": "estate-create", "ask": (text or "").strip(),
+                    "verbatim": True}
         return {"reply": _allen_reply(t, facts), "verbatim": True}
     return {"reply": _organ_reply(name, facts)}
 
@@ -716,6 +756,36 @@ def _allen_reply(t: str, facts: dict) -> str:
             "the gate " + ("is open." if gate_open else "stands — adoption "
             "first.") + " every apply waits for a human, forever until a lock "
             "says otherwise.")
+
+
+def _allen_charter(facts: dict) -> str:
+    """The charter, in words (0037 §3, subject-anchored): estate policy first
+    (deliberate, applies to everything), then each workload's own answers. No
+    question is 'open' in the air — questions arrive INSIDE a deployment ask,
+    for its subject, at its rung: prod owes all, staging two, dev none."""
+    est = facts.get("estate") or {}
+    policy = est.get("policy") or {}
+    workloads = est.get("workloads") or {}
+    lines = []
+    if policy:
+        lines.append("ESTATE POLICY (everything I build): "
+                     + "; ".join(f"{k} — “{a.get('answer', '')}”"
+                                 for k, a in policy.items()))
+    for subj, answers in workloads.items():
+        lines.append(f"«{subj}»: "
+                     + "; ".join(f"{k} — “{a.get('answer', '')}”"
+                                 for k, a in answers.items()))
+    head = ("the deployment charter: seven questions every prod workload must "
+            "answer — classification · rto · rpo · interoperability · caching · "
+            "residency · retention. dev owes nothing; staging owes two; the "
+            "questions arrive with each deployment ask, for its subject. ")
+    if not lines:
+        return head + ("nothing answered yet — the first prod ask will "
+                       "interrogate, and “answer <question> for the estate: …” "
+                       "sets policy for everything ahead of it.")
+    return head + " · ".join(lines) + \
+        ". a workload's own word wins; estate policy applies beneath it; " \
+        "history is offered, never inherited silently (0037 §3)."
 
 
 def _librarian_reply(facts: dict) -> str:
@@ -1123,6 +1193,18 @@ def _room_allen(facts: dict) -> list[dict]:
                  "ancestry, no entry. plan is free; apply waits for a human at "
                  "the gate, and four classes take two signers: IAM · network · "
                  "data-store replacement · cross-account."},
+        {"kind": "list", "title": "the deployment charter (0037 §3)",
+         "items": _sev([{"text": f"estate policy · {k}",
+                         "meta": f"“{a.get('answer', '')}” — everything I build",
+                         "severity": ""}
+                        for k, a in (est.get("policy") or {}).items()]
+                       + [{"text": f"«{subj}» · {k}",
+                           "meta": f"“{a.get('answer', '')}”", "severity": ""}
+                          for subj, ans in (est.get("workloads") or {}).items()
+                          for k, a in ans.items()] or
+                       [{"text": "no answers on record — questions arrive with "
+                                 "each deployment ask, for its subject",
+                         "meta": "prod owes seven · staging two · dev none"}])},
         {"kind": "list", "title": "at the gate",
          "items": _sev([{"text": str(r.get("text") or r.get("kind", "?"))[:80],
                          "meta": f"{r.get('kind', '?')} · {r.get('status', '?')}",

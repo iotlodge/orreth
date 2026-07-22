@@ -105,6 +105,19 @@ residents.** Every gap the human keeps answering by hand — classification agai
 again — is a resident waiting to be designed. The org chart grows exactly where the
 questions pile up, from evidence instead of guesswork.
 
+> **The subject anchor (JB's walk finding, 2026-07-22 — reworked the same day).**
+> An answer is a property of a **workload** — the bucket, the repo — never of the
+> universe: sp2's first cut stored answers floor-globally, and the glass exposed the
+> flattening (seven subject-less questions reading as homework in docker land). The
+> corrected model, now structural: every answer binds to a **subject**; *"answer
+> \<question\> for the estate: …"* is a deliberate speech act that sets policy for
+> everything, auto-applying beneath any workload's own word; another workload's
+> history is **offered in the question** ("last time: `internal` for «rag-corpus» —
+> reuse?"), never silently inherited. And a human never meets a question except
+> **inside a deployment ask**, anchored to its subject, at its rung — the room shows
+> what is answered (policy · per-workload), the inbox reserves itself for
+> consequence, and dev owes nothing, ever.
+
 ## 4. The two DAGs and the Estate — the blueprint and the building
 
 allen must at any time produce a **live, beautiful DAG** — and there are always two:
@@ -216,7 +229,7 @@ reconciles — proven as a human, per the standing rule.
 | # | Spoonful | Nature |
 |---|---|---|
 | 1 | **The embodied field & the typed door** — the universe-parent allowance in the provisioner; allen joins the roster (EMBODIED; the field DID signs as him); his parlor card; typed speech enforced at the door: humans speak Objectives, agent asks carry walkable Objective lineage or meet a TEACHING refusal (deliberately not the uniform authz shape — the door teaches the ladder; 0002 §4 keeps protecting retrieval) | ✅ landed 2026-07-22, same day as the locks — `estate.py` (the door: agent objectives refused with the law in the message · lineage must be walkable · the acceptance gate refuses Create with its own words) + `provisioner.staff_field` (one-hop chain, root-verified; the template schema's hard landing staged for a later rule-9 gate, the 0033 soft-first pattern) + the parlor seat (card/replies verbatim — the door and gate are law, and a governed voice never rewrites law) + the wire (pin-only residency like the smith, `surveying`, sky-blue in the glass, parietal on the brain) — **198/198** (was 193) · **proven on the wire**: the card landed signed under his own DID with honest zeros; a human asked *"create me an S3 bucket"* and the gate answered *"I adopt before I create (0037 §8.7)"* verbatim; dollars ride the Budget shape's `cost` axis (contracts/v0 untouched) |
-| 2 | **The deployment charter** — the charter as a versioned asset; gap analysis at compile (prod refuses with gaps); gaps ride the HITL card as questions to the human seat; answers land as memory and are recalled on the next ask | the interrogation |
+| 2 | **The deployment charter** — the charter as a versioned asset; gap analysis at compile (prod refuses with gaps); gaps ride the HITL card as questions to the human seat; answers land as memory and are recalled on the next ask | ✅ landed 2026-07-22, same day — the charter is a **versioned asset planted under allen's own signature** (0031's shape: grace may propose revisions through the lanes; the questions are DATA) · seven genesis questions (classification · rto · rpo · interoperability · caching · residency · retention) with the **environment ladder** (sandbox owes nothing, staging two, prod all) · `CharterGaps` = refused-at-compile carrying the open questions — they ARE the HITL card's text · answers land signed with the question they answer and who spoke, and **compound**: the second ask re-asks nothing · conversational doors: *"show the charter"* · *"answer &lt;key&gt;: &lt;words&gt;"* · a satisfied create stages `estate-plan` toward 0012 with answers pinned — **202/202** · **proven on the wire**: the charter planted at first look (`sha256:1287423…`), *"show the charter"* spoke 7 open; *"answer data_classification: internal — universe records only"* landed signed (`sha256:4b11863…`); the read-back said **1 answered · 6 open** with provenance — the charter visibly shortened · **HONEST WART, caught by JB in the glass and reworked the same day**: the first cut stored answers floor-globally and the room showed subject-less prod questions as ambient homework — the SUBJECT ANCHOR (§3 amendment) landed in its place: answers bind to workloads, *"for the estate"* is deliberate policy, history is offered ("reuse?") never inherited, legacy subject-less records skipped rather than reinterpreted; re-proven live — estate policy `residency: us-west-2` landed and the charter read back as policy + workloads, no to-do list |
 | 3 | **The two DAGs & the Estate** — the planned DAG on the approval card (approve the picture and the change-set as one artifact); the deployed DAG reconciled from the resource graph; planned-vs-deployed diff lands as news; the Estate view with recallable yaml assets | the blueprint and the building |
 | 4 | **The hands & the first walk** — the toolroom (CLI as a farm service with a worldline); custody tokens with dollar budgets; **brownfield adoption**: OrrethDemoStack + jsbarth-pipeline observed read-only, attested, rendered, registered — the acceptance gate passes and the demo stack becomes visible to the universe | the proof |
 

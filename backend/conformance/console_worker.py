@@ -3446,6 +3446,147 @@ def universe_port(fallback: int) -> int:
                 fallback)
 
 
+# ---------------------------------------------------------------- the estate (0037)
+
+_CHARTER_PLANTED = False
+
+
+def wire_estate(port: int) -> dict:
+    """The architect reads his estate with his OWN authority (the parlor law):
+    the charter's recalled answers, the open questions against the prod rung,
+    and the acceptance gate's honest state. Plants the genesis charter asset on
+    the first look — from then on the questions are data on the shelf."""
+    global _CHARTER_PLANTED
+    from datetime import datetime, timedelta, timezone
+
+    from orreth_sim import estate, improver
+    me = {"did": ALLEN_DID, "scope": UNIVERSE_SCOPE}
+    token = _ROOT.issue_token(ALLEN_DID, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    answers: dict = {}
+    adopted = 0
+    charter_rows = 0
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": ALLEN_DID,
+                      "subject": {"cohort": {"scope": UNIVERSE_SCOPE}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": UNIVERSE_SCOPE})
+        hits = sorted(r.get("hits", []), key=lambda h: h.get("occurred_at", ""))
+        for h in hits:
+            tags = h.get("tags") or []
+            if "estate-adopted" in tags:
+                adopted += 1
+            if estate.CHARTER_NAME in tags:
+                charter_rows += 1
+            if "estate-charter" not in tags:
+                continue
+            try:
+                body = call(port, "GET",
+                            f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+            except Exception:
+                continue
+            b = (body or {}).get("charter_answer") or {}
+            # subject-less bodies predate the subject model (the 2026-07-22
+            # rework) — skipped, never reinterpreted as estate policy; the
+            # record stays whole in the window, as ever
+            if b.get("key") and "subject" in b:
+                answers[(b["key"], b.get("subject", ""))] = {
+                    "answer": b.get("answer", ""), "by": b.get("by", ""),
+                    "subject": b.get("subject", "")}
+    except Exception:
+        pass
+    if not charter_rows and not _CHARTER_PLANTED:
+        _CHARTER_PLANTED = True              # once per boot — the read lags a beat
+        genesis = improver.make_asset(me, ALLEN, UNIVERSE_SCOPE,
+                                      name=estate.CHARTER_NAME,
+                                      profile=estate.CHARTER_GENESIS)
+        try:
+            call(port, "POST", "/records", genesis)
+            print(f"  ↳ allen plants the charter — {genesis['id'][:18]}… "
+                  "(a versioned asset; grace may propose revisions)")
+        except Exception as e:
+            print(f"    (charter genesis write failed: {e})")
+    policy = {k: v for (k, s), v in answers.items() if s == ""}
+    workloads: dict = {}
+    for (k, s), v in answers.items():
+        if s:
+            workloads.setdefault(s, {})[k] = v
+    return {"adopted": adopted, "gate_open": bool(adopted),
+            "policy": policy, "workloads": workloads, "answers": answers}
+
+
+def wire_charter_answer(port: int, key: str, answer: str,
+                        subject: str) -> str | None:
+    """The human seat answers a question FOR a subject (0037 §3): a workload's
+    name, or "" for deliberate estate policy. Lands allen-signed with the
+    question, the subject, and who spoke — v0 honesty: the caller is the human
+    seat, unsigned until 0012's registry."""
+    from orreth_sim import estate
+    qs = estate.CHARTER_GENESIS["questions"]
+    if key not in qs:
+        return ("that is not a charter question — the charter asks: "
+                + " · ".join(qs))
+    me = {"did": ALLEN_DID, "scope": UNIVERSE_SCOPE}
+    rec = make_memory(me, ALLEN, UNIVERSE_SCOPE,
+                      {"charter_answer": {"key": key, "question": qs[key],
+                                          "answer": (answer or "")[:400],
+                                          "subject": (subject or "")[:120],
+                                          "by": "the human seat (v0 — unsigned "
+                                                "until 0012's registry)"}},
+                      kind="semantic", tags=["estate", "estate-charter", key])
+    try:
+        call(port, "POST", "/records", rec)
+        print(f"  ↳ charter answer lands — {key} for "
+              f"«{subject or 'the estate'}»: “{answer[:40]}” [{rec['id'][:18]}…]")
+    except Exception as e:
+        print(f"    (charter answer write failed: {e})")
+        return "the answer stumbled at the record — try again"
+    return None
+
+
+def wire_estate_create(port: int, ask: str) -> str:
+    """A deployment ask, read against the charter FOR ITS SUBJECT (0037 §3):
+    gaps come back as the interrogation — questions carrying offered defaults
+    from history, never silent inheritance; a clean charter stages the plan."""
+    from orreth_sim import estate
+    est = wire_estate(port)
+    subject = (ask or "").strip().lower()
+    qs_all = estate.CHARTER_GENESIS["questions"]
+    have = est.get("answers") or {}
+    gaps = {}
+    pinned = {}
+    for k, q in qs_all.items():
+        own = have.get((k, subject))
+        policy = have.get((k, ""))
+        if own:
+            pinned[k] = {**own, "scope": "workload"}
+        elif policy:
+            pinned[k] = {**policy, "scope": "estate-policy"}
+        else:
+            prior = [v for (kk, s), v in have.items() if kk == k and s]
+            offer = (f' (last time: “{prior[-1]["answer"]}” for '
+                     f'«{prior[-1]["subject"]}» — reuse?)') if prior else ""
+            gaps[k] = q + offer
+    if gaps:
+        qtext = " · ".join(f"{k} — {q}" for k, q in gaps.items())
+        return (f"the charter interrogates «{subject}» before a prod plan "
+                f"compiles (0037 §3) — {len(gaps)} question(s): {qtext}. "
+                f"answer with “answer <question> for {subject}: <words>” — or "
+                "“… for the estate: …” to set policy for everything.")
+    call(port, "POST", "/requests",
+         {"kind": "estate-plan",
+          "text": f"the estate plans: “{ask}” — charter satisfied "
+                  f"({sum(1 for v in pinned.values() if v['scope'] == 'estate-policy')} "
+                  "from estate policy); the planned DAG and apply wait for a "
+                  "human (0012)"})
+    return (f"the charter is satisfied for «{subject}» — the plan stages with "
+            "its answers pinned, and consequence waits for you at the gate "
+            "(0012).")
+
+
 # ---------------------------------------------------------------- the shipyard (0009→wire)
 
 UNIVERSE_SCOPE = "u:demo"
@@ -3828,9 +3969,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         facts["testament"] = wire_testaments(port, scope)  # the last word (0035)
         facts["passage"] = wire_passage(port, scope)       # and the machine's state
     if name == "allen":                       # the architect reads his estate (0037)
-        adopted = [x for x in facts.get("requests") or []
-                   if x.get("kind") == "estate-adopt" and x.get("status") == "done"]
-        facts["estate"] = {"adopted": len(adopted), "gate_open": bool(adopted)}
+        facts["estate"] = wire_estate(universe_port(port))
     if name == "grace":                       # the smith reads her shelf (0031 §4)
         u_port = universe_port(port)
         facts["shelf"] = wire_shelf(u_port)
@@ -3925,6 +4064,13 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
               "text": f"subscribe to “{ans['topic']}” — a standing delivery"})
     if ans.get("action") == "unsubscribe":  # 0032 §1 — retired on the record
         reply = wire_unsubscribe(port, scope, ans["topic"])
+    if ans.get("action") == "estate-answer":  # 0037 §3 — the human seat answers
+        err = wire_charter_answer(universe_port(port), ans["key"], ans["answer"],
+                                  ans.get("subject", ""))
+        if err:
+            reply = err
+    if ans.get("action") == "estate-create":  # 0037 §3 — the in-ask interrogation
+        reply = wire_estate_create(universe_port(port), ans["ask"])
     if ans.get("action") == "domain":     # the package, a view over the record (0031 §5)
         rows = domain_packages(port, scope, ans.get("topic", ""))
         reply = ("; ".join(f"{d['topic']} — {d['meta']}" for d in rows[:6])
