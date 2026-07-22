@@ -131,6 +131,26 @@ def provision(template: dict, name: str, *, trust_tier: str = "anonymous") -> Pr
     return prov
 
 
+def staff_field(prov: ProvisionedUniverse, template: dict, name: str, *,
+                trust_tier: str = "anonymous") -> HarnessNode:
+    """The 0037 §8.3 allowance (locked 2026-07-22): a field parented DIRECTLY
+    off the universe — staff of the universe, as becky and vigil are; no
+    decorative eco. Same chain math, one hop shorter: becky@field delegates
+    straight from the root. The template schema's hard landing (universe-level
+    fields in topology) is staged for a later rule-9 gate; this is the soft
+    landing, in code the way the coordinate landed in tags (0033)."""
+    f_scope = f"u:{prov.name}/f:{name}"
+    b_f = Becky(f_scope, prov.nanda, parent=prov.becky)
+    fld = HarnessNode(_profile(template, "field", "field", f_scope, leaf=True,
+                               parent=f"mem://u:{prov.name}", root_did=prov.becky.did,
+                               trust_tier=trust_tier), b_f, prov.nanda,
+                      parent=prov.universe)
+    fld.pull_standards()
+    prov.fields[name], prov.beckys[f_scope] = fld, b_f
+    prov.surfaces[name] = []
+    return fld
+
+
 # ---- the first three templates (locked 2026-07-02: League · Second Brain · Company) ----
 
 def league_template() -> dict:

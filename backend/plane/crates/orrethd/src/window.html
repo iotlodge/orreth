@@ -154,6 +154,7 @@
   .res.librarian{background:#e8c98f;color:rgba(232,201,143,.6)}
   .res.ada{background:#d99cc4;color:rgba(217,156,196,.7)}
   .res.grace{background:#e89a6b;color:rgba(232,154,107,.7)} /* the smith's ember (0031) */
+  .res.allen{background:#8fb8d9;color:rgba(143,184,217,.7)} /* the architect's sky (0037) */
   @media(prefers-reduced-motion:reduce){.res{animation:none!important}}
   .reslegend{position:absolute;left:1.1rem;bottom:.6rem;font:.64rem var(--mono);color:var(--faint);
     display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;max-width:52%}
@@ -934,7 +935,7 @@ function plots(list,r,scope){
 /* organ dots: residents on the innermost shell */
 const RESKEY={"becky · IAM":"becky","vigil · the Warden":"vigil","steward · memory":"steward",
   "governance":"governance","charlotte · farm keeper":"charlotte","librarian · knowledge":"librarian",
-  "ada · the wrangler":"ada","grace · the smith":"grace"};
+  "ada · the wrangler":"ada","grace · the smith":"grace","allen · cloud architect":"allen"};
 const reskey=r=>RESKEY[r]||"governance";
 function organs(list,r,scope){
   return shell(list||[],r,6,26,a=>      // cap 6 = the full organ roster
@@ -1003,7 +1004,7 @@ const BR3={prefrontal:[.82,.30,0],parietal:[.05,.72,0],occipital:[-.82,.22,0],
   temporal:[.12,-.30,.58],limbic:[.08,.06,0],cerebellar:[-.62,-.52,0]};
 const BORGAN={becky:"prefrontal",governance:"prefrontal",grace:"prefrontal",
   vigil:"parietal",charlotte:"occipital",librarian:"temporal",steward:"temporal",
-  ada:"cerebellar"};
+  ada:"cerebellar",allen:"parietal"};  /* spatial reasoning — the estate's region (0037) */
 const BECO={care:"limbic",retail:"occipital",cloud:"parietal"};
 const bhash=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
 const bregOf=n=>BECO[n]||Object.keys(BR3)[bhash(n)%6];
@@ -1568,9 +1569,10 @@ function renderOrrery(){
     (n.residents||[]).forEach(a=>seen.add(reskey(a.role)));(n.children||[]).forEach(collect)};
   collect(t);
   const L=$("reslegend");
-  if(L){const order=["becky","vigil","steward","governance","charlotte","librarian","ada"];
+  if(L){const order=["becky","vigil","steward","governance","charlotte","librarian","ada","grace","allen"];
     const col={becky:"var(--brass)",vigil:"var(--viol)",steward:"var(--blue)",
-      governance:"var(--near)",charlotte:"#8fd6b0",librarian:"#e8c98f",ada:"#d99cc4"};
+      governance:"var(--near)",charlotte:"#8fd6b0",librarian:"#e8c98f",ada:"#d99cc4",
+      grace:"#e89a6b",allen:"#8fb8d9"};
     L.innerHTML=`<span style="color:var(--faint)">organs alive:</span>`+order.filter(k=>seen.has(k))
       .map(k=>`<span class="rl"><span class="rd" style="background:${col[k]}"></span>${k}</span>`).join("");}
 }

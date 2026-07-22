@@ -401,3 +401,10 @@ design doc 0017.
 | `backend/conformance/orreth_sim/meaning.py` | Fable 5 (claude-fable-5) | 0022 §4 — the meaning axis: local fastembed ONNX (bytes-local, JB's §10 lock), hybrid weighted-RRF, trust-weighted rerank (`recalled` ranks dead), coordinate/aperture pulls, cross-source contradiction v1, repeats-by-meaning; banner in file |
 | `backend/conformance/demo_meaning_axis.py` | Fable 5 (claude-fable-5) | the meaning demo — retrieval's second sense, five scenes, pure sim; banner in file |
 | `backend/conformance/tests/test_meaning.py` | Fable 5 (claude-fable-5) | the axis's conformance tests (skip honestly when the axis is dark); banner in file |
+
+## Fable 5 net-new files — 2026-07-22 (0037 sp1, the Estate — the resident stands)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/estate.py` | Fable 5 (claude-fable-5) | 0037 §1–§2 — allen's typed door (0030 enforced: agent objectives refused, lineage walkable or no entry) + the acceptance gate (adopts before he creates, locked 2026-07-22); banner in file |
+| `backend/conformance/tests/test_estate.py` | Fable 5 (claude-fable-5) | sp1 conformance: universe-parent allowance (one-hop chain), the teaching refusals, the gate, the parlor seat; banner in file |

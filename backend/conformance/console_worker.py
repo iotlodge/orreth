@@ -164,6 +164,8 @@ CHA = _seed("charlotte")                     # charlotte, the farm keeper (0018 
 CHA_DID = crypto.did_key_for(CHA.public)
 ADA = _seed("ada")                           # ada, the wrangler (0019 §3)
 ADA_DID = crypto.did_key_for(ADA.public)
+ALLEN = _seed("allen")                       # allen, the cloud architect (0037 §1)
+ALLEN_DID = crypto.did_key_for(ALLEN.public)
 
 # becky, chained from the pinned root — the only authority that can mint a joining lease
 _NANDA = Nanda()
@@ -3632,6 +3634,11 @@ def pin_organs(port: int, floor: str) -> None:
         organs += (
             ("grace", IMP_DID,
              lambda: _BECKY.issue_token(IMP_DID, SCOPE,
+                                        [{"action": "retrieve", "space": "self"}])),
+            # allen, staff of the universe (0037 §8.3): pin-only, like the smith;
+            # his universe-parented field on the wire lands with the toolroom (sp4)
+            ("allen", ALLEN_DID,
+             lambda: _BECKY.issue_token(ALLEN_DID, SCOPE,
                                         [{"action": "retrieve", "space": "self"}])),)
     for organ, did, mint in organs:
         if pins.get(organ) == did:
@@ -3677,7 +3684,8 @@ def window_charter(port: int, scope: str) -> None:
 # ---------------------------------------------------------------- the parlor (0020)
 
 RESIDENT_KEYS = {"charlotte": (CHA, CHA_DID), "ada": (ADA, ADA_DID),
-                 "grace": (IMP, IMP_DID)}    # the smith IS the improver (0031 §4)
+                 "grace": (IMP, IMP_DID),    # the smith IS the improver (0031 §4)
+                 "allen": (ALLEN, ALLEN_DID)}  # the architect (0037)
 
 
 def resident_key(name: str, scope: str = SCOPE):
@@ -3819,6 +3827,10 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         facts["consents"] = wire_consents(port, scope)
         facts["testament"] = wire_testaments(port, scope)  # the last word (0035)
         facts["passage"] = wire_passage(port, scope)       # and the machine's state
+    if name == "allen":                       # the architect reads his estate (0037)
+        adopted = [x for x in facts.get("requests") or []
+                   if x.get("kind") == "estate-adopt" and x.get("status") == "done"]
+        facts["estate"] = {"adopted": len(adopted), "gate_open": bool(adopted)}
     if name == "grace":                       # the smith reads her shelf (0031 §4)
         u_port = universe_port(port)
         facts["shelf"] = wire_shelf(u_port)
@@ -4107,8 +4119,8 @@ def on_demo(port: int, r: dict) -> None:
 
 def main() -> None:
     print(f"console worker · librarian {LIB_DID[:20]}… · charlotte {CHA_DID[:20]}… "
-          f"· ada {ADA_DID[:20]}… · grace {IMP_DID[:20]}… · becky's door on "
-          f":{JOIN_PORT} · tending floors {FLOORS}")
+          f"· ada {ADA_DID[:20]}… · grace {IMP_DID[:20]}… · allen {ALLEN_DID[:20]}… "
+          f"· becky's door on :{JOIN_PORT} · tending floors {FLOORS}")
     handled: set[tuple] = set()               # (port, id, at, status): each step acted once
     scopes: dict[int, str] = {}
     threading.Thread(target=embed_door, daemon=True).start()  # the meaning axis's door (0022 Ph2)

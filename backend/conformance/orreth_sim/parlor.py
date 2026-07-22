@@ -18,13 +18,14 @@ from . import continuity, markers, profile
 from .identity import NOW
 
 RESIDENTS = ("becky", "vigil", "steward", "governance", "charlotte", "librarian",
-             "ada", "grace")
-EMBODIED = ("becky", "charlotte", "librarian", "ada", "grace")  # hold keys; sign their audiences
+             "ada", "grace", "allen")
+EMBODIED = ("becky", "charlotte", "librarian", "ada", "grace", "allen")  # hold keys; sign their audiences
 
 ROLES = {"becky": "becky · IAM", "vigil": "vigil · the Warden",
          "steward": "steward · memory", "governance": "governance",
          "charlotte": "charlotte · farm keeper", "librarian": "librarian · knowledge",
-         "ada": "ada · the wrangler", "grace": "grace · the smith"}
+         "ada": "ada · the wrangler", "grace": "grace · the smith",
+         "allen": "allen · cloud architect"}
 
 # the librarian's gather ask, in the shapes callers actually type
 _GATHER = ("gather sourced knowledge on", "gather knowledge on", "gather on", "gather")
@@ -248,6 +249,21 @@ def _card_grace(facts: dict) -> tuple[str, list]:
              {"label": "what waits for me?", "ask": "what waits for me?"}])
 
 
+def _card_allen(facts: dict) -> tuple[str, list]:
+    est = facts.get("estate") or {}
+    n = int(est.get("adopted") or 0)
+    gate = ("open — the estate has been walked" if est.get("gate_open")
+            else "standing — I adopt before I create (0037)")
+    return (f"I keep the estate — the world this universe runs on. {n} stack(s) "
+            f"under governance; the acceptance gate is {gate}. Humans speak "
+            "objectives at my door; agents speak intentions or observations, "
+            "each with its ancestry — and every apply waits for a human.",
+            [{"label": "the estate", "ask": "show the estate"},
+             {"label": "who may speak to you?", "ask": "who may speak to you?"},
+             {"label": "how do you work?", "ask": "how do you work?"},
+             {"label": "what waits for me?", "ask": "what waits at your gate?"}])
+
+
 def _card_organ(name: str):
     def make(facts: dict) -> tuple[str, list]:
         return (_organ_reply(name, facts),
@@ -257,6 +273,7 @@ def _card_organ(name: str):
 
 _CARDS = {"becky": _card_becky, "charlotte": _card_charlotte,
           "librarian": _card_librarian, "ada": _card_ada, "grace": _card_grace,
+          "allen": _card_allen,
           "vigil": _card_organ("vigil"), "steward": _card_organ("steward"),
           "governance": _card_organ("governance")}
 
@@ -596,6 +613,8 @@ def answer(name: str, text: str, facts: dict) -> dict:
         return {"reply": _charlotte_reply(t, facts)}
     if name == "ada":
         return {"reply": _ada_reply(t, facts)}
+    if name == "allen":
+        return {"reply": _allen_reply(t, facts), "verbatim": True}
     return {"reply": _organ_reply(name, facts)}
 
 
@@ -654,6 +673,49 @@ def _ada_reply(t: str, facts: dict) -> str:
     roster = (", ".join(f"{s['id']} ({s.get('class', '?')} · {s['state']})" for s in stalls)
               if stalls else "none saddled yet — the legacy registry still routes")
     return f"the stable holds {len(stalls)} stall(s): {roster}. I pin the deal, not the name."
+
+
+def _allen_reply(t: str, facts: dict) -> str:
+    """The architect's replies are protocol (verbatim): the door and the gate
+    are law, and a governed voice must never rewrite law (the 0020 lesson)."""
+    est = facts.get("estate") or {}
+    n = int(est.get("adopted") or 0)
+    gate_open = bool(est.get("gate_open"))
+    if "speak" in t or "door" in t or "who may" in t or "talk" in t:
+        return ("the typed door (0030, enforced): a HUMAN speaks objectives — "
+                "plain words, and every one enters gap analysis before anything "
+                "else happens. an AGENT speaks intentions or observations, each "
+                "carrying lineage to a human objective — no ancestry, no entry. "
+                "nobody builds infrastructure because a machine wanted it.")
+    if "how" in t or "work" in t or "apply" in t or "plan" in t:
+        return ("plan is free — I diff and show you the picture; apply is a "
+                "consequence and waits for a human at the gate (0012), every "
+                "time. IAM, network, data-store replacement, and cross-account "
+                "changes take two signers (0037 §8.5). every apply carries its "
+                "reverse, and my spend rides a dollar-budgeted lease.")
+    if "gate" in t or "wait" in t or "adopt" in t:
+        return (("the acceptance gate is open — the estate has been walked, "
+                 f"{n} stack(s) attested read-only; greenfield create may stage.")
+                if gate_open else
+                "the acceptance gate stands (0037 §8.7): I adopt before I "
+                "create. the brownfield walk — the demo stack and the pipeline, "
+                "observed read-only — has not completed; until it does, no "
+                "create may even stage.")
+    if "create" in t or "deploy" in t or "bucket" in t or "stack" in t \
+            or "estate" in t:
+        if not gate_open:
+            return ("the estate holds nothing under governance yet — the "
+                    "acceptance gate stands: I adopt before I create (0037 "
+                    "§8.7). the first walk is read-only: observe, attest, "
+                    "render the deployed graph, register the templates.")
+        return (f"the estate: {n} stack(s) under governance, every one adopted "
+                "read-only with receipts. ask me to plan and I show the "
+                "picture; the charter interrogates before any plan compiles.")
+    return (f"I keep the estate — dev is the laptop, prod is code, and the road "
+            f"between them runs through my door. {n} stack(s) under governance; "
+            "the gate " + ("is open." if gate_open else "stands — adoption "
+            "first.") + " every apply waits for a human, forever until a lock "
+            "says otherwise.")
 
 
 def _librarian_reply(facts: dict) -> str:
@@ -1044,8 +1106,36 @@ def _room_grace(facts: dict) -> list[dict]:
     ]
 
 
+def _room_allen(facts: dict) -> list[dict]:
+    est = facts.get("estate") or {}
+    reqs = [r for r in facts.get("requests") or []
+            if str(r.get("kind", "")).startswith("estate")]
+    return [
+        {"kind": "stat", "title": "the estate",
+         "items": [{"label": "stacks under governance",
+                    "value": int(est.get("adopted") or 0)},
+                   {"label": "the acceptance gate",
+                    "value": "open" if est.get("gate_open") else "standing"},
+                   {"label": "estate asks", "value": len(reqs)}]},
+        {"kind": "doc", "title": "the typed door (0030 · 0037 §2)",
+         "text": "humans speak objectives; agents speak intentions or "
+                 "observations, each with lineage to a human objective — no "
+                 "ancestry, no entry. plan is free; apply waits for a human at "
+                 "the gate, and four classes take two signers: IAM · network · "
+                 "data-store replacement · cross-account."},
+        {"kind": "list", "title": "at the gate",
+         "items": _sev([{"text": str(r.get("text") or r.get("kind", "?"))[:80],
+                         "meta": f"{r.get('kind', '?')} · {r.get('status', '?')}",
+                         "severity": "medium" if r.get("status") == "staged" else ""}
+                        for r in reqs[:8]] or
+                       [{"text": "nothing waits — the estate is quiet; the "
+                                 "brownfield walk opens the gate", "meta": ""}])},
+    ]
+
+
 _ROOMS = {"librarian": _room_librarian, "becky": _room_becky,
-          "charlotte": _room_charlotte, "ada": _room_ada, "grace": _room_grace}
+          "charlotte": _room_charlotte, "ada": _room_ada, "grace": _room_grace,
+          "allen": _room_allen}
 
 
 # ---------------------------------------------------------------- the audience record

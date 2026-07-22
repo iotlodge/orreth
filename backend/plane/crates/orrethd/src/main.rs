@@ -1222,6 +1222,18 @@ fn residents(app: &App) -> Vec<Value> {
             "blurb": "keeps the workshop; proposes from receipts, never grades her own",
             "vitals": {"llm calls": g_c, "llm usd": g_u}}));
     }
+    // allen, the cloud architect (0037 §1): pin-only residency, like the smith —
+    // the estate appears exactly where becky's chain put it (rule 7). His body is
+    // a tier: the universe-parented field stands in the sim; the wire's floor
+    // lands with the toolroom (sp4).
+    if let Some(al_pin) = pins.get("allen").cloned() {
+        let (al_c, al_u) = llm(Some(al_pin.as_str()));
+        out.push(json!({"agent": format!("allen·{leaf}"), "name": "allen",
+            "role": "allen · cloud architect", "state": "surveying",
+            "did": al_pin, "pinned": true,
+            "blurb": "keeps the estate; adopts before he creates, plans before he applies",
+            "vitals": {"llm calls": al_c, "llm usd": al_u}}));
+    }
     out
 }
 

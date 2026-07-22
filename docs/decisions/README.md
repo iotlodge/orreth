@@ -313,6 +313,29 @@ including derived-memory chain verification).
 
 ## 🔧 Build phase — decisions as they arise
 
+### Locked 2026-07-22 (0037 — the Estate: allen, the cloud architect — AskUserQuestion, all on the recommended paths)
+- **allen is an embodied tier: a universe-parented FIELD.** The provisioner gains the
+  allowance (fields may parent directly off the universe); no decorative one-field eco.
+  He joins becky and vigil as staff of the universe — control plane above, incarnation
+  workforce below, master of cloud only.
+- **Charter gaps route to the human seat** while specialist residents don't yet exist —
+  prod never blocks; answers land as memory and are reused on later asks; every
+  hand-answered gap is evidence for which resident to design next.
+- **Plan-and-propose first.** Every Apply is human-fired at the gate. Graduating low
+  blast-radius classes to auto-apply is a LATER, revisable lock — earned by record,
+  never by declaration.
+- **Co-sign classes: all four.** IAM changes · network topology · data-store
+  delete/replace · cross-account stack sets — distinct-signer quorum (0012) on Apply.
+- **Spend rides the lease token.** The dollar budget lives in
+  `CapabilityToken.constraints.budget` — authority and allowance one artifact,
+  attenuation-only, budget-miss ≡ authz-miss kept uniform.
+- **Brownfield adoption is the acceptance gate.** The read-only walk (OrrethDemoStack +
+  jsbarth-pipeline observed, attested, deployed-DAG rendered, templates registered as
+  assets) must complete before greenfield Create unlocks.
+- *Earlier in the same session (the seed):* charter-gap routing (above) and
+  draft-now sequencing — 0037 drafted ahead of design 2 (the seven RAG variants),
+  which becomes allen's first agent customer.
+
 ### Locked 2026-07-10 (the Universe Brain session — Fable closed the design pass, JB locked four)
 *Vision capture: `../vision/the-universe-brain.md` (Memory · the Librarian · the Human · the
 Orreth-Agent). Eleven parked questions closed by the design-owner pass (R1–R11 in the doc);
