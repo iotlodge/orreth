@@ -5,7 +5,7 @@ Under test: the registry plants once as a versioned Canon asset wearing the
 charter's attributes; classification reads tags floors-first; THE PRIVACY
 FLOOR holds at projection time — a sovereign record never chunks no matter
 what else it wears; dispatch stays retrievable; the census rolls the shelf."""
-from orreth_sim import canon, provisioner, stacks
+from orreth_sim import canon, improver, provisioner, stacks
 from orreth_sim.node import make_memory
 
 
@@ -135,3 +135,59 @@ def test_metabolism_hears_usage_and_measures_loss():
     reports = [x for x in fld.records.values()
                if "metabolism-report" in (x.get("tags") or [])]
     assert reports                                 # tuning is evidence now
+
+
+def test_the_mentor_graduates_the_mentee():
+    """0039 sp4 — the finale: crystallize at the smart tier, canary at the
+    cheap one under full observation, the standings speak, and graduation is
+    EARNED — or refused honestly. Never silently dumber."""
+    fld, lib, kp = _floor()
+    stacks.plant_eco_assets(fld, lib, kp)
+    canon.plant_registry(fld, lib, kp)
+    skill = canon.crystallize(fld, lib, kp,
+                              objective="summarize a floor's week",
+                              craft={"steps": ["gather the week's records",
+                                               "distill by score", "cite"]},
+                              rubric={"min_score": 0.8, "n": 3},
+                              proven_tier="high")
+    # a short canary refuses — the mentor keeps the work
+    canon.canary_run(fld, lib, kp, skill, tier="low", score=0.9)
+    early = canon.graduate(fld, lib, kp, skill, mentee_tier="low")
+    assert early["graduated"] is False and "not earned" in early["why"]
+    # the full canary clears the rubric — the ceremony
+    canon.canary_run(fld, lib, kp, skill, tier="low", score=0.85)
+    canon.canary_run(fld, lib, kp, skill, tier="low", score=0.88)
+    verdict = canon.graduate(fld, lib, kp, skill, mentee_tier="low")
+    assert verdict["graduated"] is True and verdict["mean"] > 0.8
+    row = improver.active_asset(fld, skill)
+    assert improver._profile_of(row[1])["proven_tier"] == "low"   # the sibling serves
+    grads = [r for r in fld.records.values()
+             if "graduation" in (r.get("tags") or [])]
+    assert len(grads) == 2                        # the refusal AND the ceremony,
+    # both on the record — graduation by evidence, demotion by evidence, forever
+
+
+def test_pointer_law_and_demotion_close_the_constitution():
+    """0039 §6 + §4.4 made real before WHOLE: the pointer's hash handshake
+    catches a swapped warehouse; drift demotes the skill back to the mentor —
+    both on the record."""
+    fld, lib, kp = _floor()
+    stacks.plant_eco_assets(fld, lib, kp)
+    canon.plant_registry(fld, lib, kp)
+    pid = canon.make_pointer(fld, lib, kp, name="ml-training-set",
+                             uri="s3://orreth-ml/train-v1.parquet",
+                             content_hash="sha256:abc123",
+                             meta={"rows": 1000000, "class": "artifact-pointer"})
+    assert canon.verify_pointer(fld, pid, "sha256:abc123")
+    assert not canon.verify_pointer(fld, pid, "sha256:SWAPPED")   # the rug-pull, caught
+    # bulk never enters the mind: the pointer projects (metadata), not a corpus
+    sk = canon.crystallize(fld, lib, kp, objective="tag the corpus",
+                           craft={"steps": ["read", "tag"]},
+                           rubric={"min_score": 0.8, "n": 1})
+    canon.canary_run(fld, lib, kp, sk, tier="low", score=0.9)
+    assert canon.graduate(fld, lib, kp, sk, mentee_tier="low")["graduated"]
+    d = canon.demote(fld, lib, kp, sk, evidence="drift: scores fell to 0.55 "
+                                                "over the last cohort")
+    assert d["demoted"] and improver._profile_of(
+        improver.active_asset(fld, sk)[1])["proven_tier"] == "high"
+    assert any("demotion" in (r.get("tags") or []) for r in fld.records.values())

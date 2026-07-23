@@ -621,6 +621,9 @@ def answer(name: str, text: str, facts: dict) -> dict:
                     "action": "stacks-routing", "verbatim": True}
         # the Canon census (0039 sp1): the genome's roll call — every versioned
         # entry the universe lives by, and the privacy floor, human-readable
+        if t.startswith(("run the graduation", "graduate the mentee")):
+            return {"reply": "the ceremony begins…", "action": "graduation",
+                    "verbatim": True}
         if t.startswith(("show the canon", "the canon", "canon census")):
             return {"reply": "taking the census…", "action": "canon-census",
                     "verbatim": True}

@@ -233,3 +233,146 @@ def metabolism_beat(node, librarian: dict, librarian_kp) -> dict:
     node.write(make_memory(librarian, librarian_kp, node.scope, report,
                            kind="episodic", tags=["metabolism-report"]))
     return report["metabolism_report"]
+
+
+# ------------------------------------------------- the graduation (0039 §4, sp4)
+
+def crystallize(node, mentor: dict, mentor_kp, *, objective: str, craft: dict,
+                rubric: dict, proven_tier: str = "high") -> str:
+    """THE MENTOR'S CRAFT (0039 §4): an objective mastered at the smart tier
+    becomes a skill on the Canon's shelf — 0001's crystallized memory, carrying
+    its acceptance rubric and the tier it was PROVEN at. From here the 0010 law
+    guards it: it never silently serves at a tier the rubric hasn't cleared."""
+    import re as _re
+    slug = _re.sub(r"[^a-z0-9]+", "-", objective.lower()).strip("-")[:40]
+    rec = improver.make_asset(mentor, mentor_kp, node.scope,
+                              name=f"skill-{slug}",
+                              profile={"objective": objective, "craft": craft,
+                                       "rubric": {"min_score": float(rubric.get("min_score", 0.8)),
+                                                  "n": int(rubric.get("n", 3))},
+                                       "proven_tier": proven_tier})
+    node.write(rec)
+    return f"skill-{slug}"
+
+
+def canary_run(node, mentee: dict, mentee_kp, skill_name: str, *,
+               tier: str, score: float) -> str:
+    """One canary pass at the MENTEE's tier, on the record — full observation,
+    0011's probation posture. The score arrives from the judge's grading (sim:
+    the caller carries it; the wire rides the model gateway's judge)."""
+    from .identity import NOW
+    from .node import make_memory
+    body = {"canary": {"skill": skill_name, "tier": tier,
+                       "score": round(float(score), 4), "at": NOW()}}
+    return node.write(make_memory(mentee, mentee_kp, node.scope, body,
+                                  kind="episodic", tags=["canary", skill_name]))
+
+
+def graduate(node, mentor: dict, mentor_kp, skill_name: str, *,
+             mentee_tier: str) -> dict:
+    """THE CEREMONY: the standings speak — canary runs at the mentee's tier
+    against the rubric. Cleared → a NEW skill version proven at the cheap tier
+    (a sibling, never a silent successor) + the graduation on the record.
+    Short → an honest refusal; the mentor keeps the work. Never silently
+    dumber — 0010's oldest promise, extended to lifecycles."""
+    import json as _json
+
+    from . import crypto as _c
+    from .identity import NOW
+    from .node import make_memory
+    row = improver.active_asset(node, skill_name)
+    if row is None:
+        raise ValueError(f"no skill named {skill_name} on the shelf")
+    prof = improver._profile_of(row[1])
+    rubric = prof.get("rubric") or {}
+    runs = []
+    for r in node.records.values():
+        if skill_name in (r.get("tags") or []) and "canary" in (r.get("tags") or []):
+            b = _json.loads(_c._b64d(r["body"]).decode()).get("canary") or {}
+            if b.get("tier") == mentee_tier:
+                runs.append(float(b.get("score", 0)))
+    need_n, floor_ = int(rubric.get("n", 3)), float(rubric.get("min_score", 0.8))
+    mean = sum(runs) / len(runs) if runs else 0.0
+    if len(runs) < need_n or mean < floor_:
+        verdict = {"graduated": False, "tier": mentee_tier, "runs": len(runs),
+                   "mean": round(mean, 4), "rubric": rubric,
+                   "why": f"the mentee has not earned it — {len(runs)}/{need_n} "
+                          f"run(s), mean {mean:.2f} vs floor {floor_:.2f}; the "
+                          "mentor keeps the work (0010: never silently dumber)"}
+    else:
+        sibling = improver.make_asset(mentor, mentor_kp, node.scope,
+                                      name=skill_name,
+                                      profile={**prof, "proven_tier": mentee_tier},
+                                      derived_from=[row[0]])
+        node.write(sibling)
+        verdict = {"graduated": True, "tier": mentee_tier, "runs": len(runs),
+                   "mean": round(mean, 4), "rubric": rubric,
+                   "version": sibling["id"],
+                   "why": f"the rubric cleared at the mentee's tier — mean "
+                          f"{mean:.2f} over {len(runs)} watched run(s); the "
+                          "cheap tier serves, the graduation is on the record"}
+    node.write(make_memory(mentor, mentor_kp, node.scope,
+                           {"graduation": {**verdict, "skill": skill_name,
+                                           "at": NOW()}},
+                           kind="episodic", tags=["graduation", skill_name]))
+    return verdict
+
+
+# ------------------------------------------------- the pointer law's door (0039 §6)
+
+def make_pointer(node, author: dict, author_kp, *, name: str, uri: str,
+                 content_hash: str, meta: dict | None = None,
+                 derived_from: list | None = None) -> str:
+    """BULK NEVER ENTERS THE MIND (0039 §6): the artifact-pointer record —
+    signed pointer + content hash + metadata + lineage; the mass rests in its
+    class-allocated store. The hash is the handshake: the warehouse can never
+    quietly swap the goods."""
+    from .node import make_memory
+    if not uri or not content_hash:
+        raise ValueError("a pointer names its store AND its hash — or it points at fog")
+    body = {"artifact_pointer": {"name": name, "uri": uri,
+                                 "content_hash": content_hash,
+                                 "meta": dict(meta or {})}}
+    rec = make_memory(author, author_kp, node.scope, body, kind="semantic",
+                      tags=["artifact-pointer", name])
+    if derived_from:
+        rec["derived_from"] = list(derived_from)
+    return node.write(rec)
+
+
+def verify_pointer(node, pointer_id: str, actual_hash: str) -> bool:
+    """The handshake at fetch time: the goods must match the signed hash —
+    a swap is a rug-pull, loud, never silent."""
+    import json as _json
+
+    from . import crypto as _c
+    r = node.records.get(pointer_id)
+    if r is None:
+        return False
+    b = _json.loads(_c._b64d(r["body"]).decode()).get("artifact_pointer") or {}
+    return bool(actual_hash) and actual_hash == b.get("content_hash")
+
+
+def demote(node, mentor: dict, mentor_kp, skill_name: str, *,
+           evidence: str) -> dict:
+    """DEMOTION BY EVIDENCE (0039 §4.4): drift at the mentee's tier re-opens
+    the Canon entry — a sibling version proven back at the mentor's tier, the
+    demotion on the record beside the graduation. The loop runs both ways,
+    forever."""
+    from .identity import NOW
+    from .node import make_memory
+    row = improver.active_asset(node, skill_name)
+    if row is None:
+        raise ValueError(f"no skill named {skill_name}")
+    prof = improver._profile_of(row[1])
+    sibling = improver.make_asset(mentor, mentor_kp, node.scope, name=skill_name,
+                                  profile={**prof, "proven_tier": "high",
+                                           "demoted_from": row[0]},
+                                  derived_from=[row[0]])
+    node.write(sibling)
+    node.write(make_memory(mentor, mentor_kp, node.scope,
+                           {"demotion": {"skill": skill_name,
+                                         "evidence": evidence[:300],
+                                         "back_to": "high", "at": NOW()}},
+                           kind="episodic", tags=["demotion", skill_name]))
+    return {"demoted": True, "back_to": "high", "version": sibling["id"]}

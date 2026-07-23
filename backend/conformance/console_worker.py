@@ -4719,6 +4719,32 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                                         origin=origin) + via
             else:
                 reply = wire_stacks_routing(rag_port, rag_scope) + via
+    if ans.get("action") == "graduation":     # 0039 sp4 — the ceremony, on the wire
+        from orreth_sim import canon as _cn
+        n2, kp2, did2 = _stacks_node(*next(
+            ((p, s2) for p, s2 in FLOOR_SCOPES.items()
+             if s2.endswith("/e:rag/f:naive")), (None, None)) or (None, None))
+        if n2 is None:
+            reply = "the stacks' floor is dark — no ground for a ceremony"
+        else:
+            me2 = {"did": did2, "scope": n2.scope}
+            sk = _cn.crystallize(n2, me2, kp2,
+                                 objective="summarize a floor's week",
+                                 craft={"steps": ["gather the week's records",
+                                                  "distill by score", "cite"]},
+                                 rubric={"min_score": 0.8, "n": 3},
+                                 proven_tier="high")
+            for sc in (0.9, 0.85, 0.88):      # sim-judge v0, honestly labeled —
+                _cn.canary_run(n2, me2, kp2, sk, tier="low", score=sc)
+            v = _cn.graduate(n2, me2, kp2, sk, mentee_tier="low")
+            reply = (f"🎓 THE GRADUATION — «{sk}» crystallized at the smart tier, "
+                     f"canaried {v['runs']}× at «{v['tier']}» (sim-judge v0 — live "
+                     f"minds saddle next), mean {v['mean']:.2f} vs rubric "
+                     f"{v['rubric']['min_score']}: "
+                     + ("GRADUATED — the cheap tier serves, the sibling version "
+                        f"is on the shelf [{v['version'][:18]}…]. never silently "
+                        "dumber — earned, on the record."
+                        if v["graduated"] else v["why"]))
     if ans.get("action") == "canon-census":   # 0039 sp1 — the genome's roll call
         from orreth_sim import canon
         rows = wire_assets(universe_port(port), "asset")
