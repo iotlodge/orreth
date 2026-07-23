@@ -429,3 +429,10 @@ design doc 0017.
 |---|---|---|
 | `backend/conformance/orreth_sim/rivals.py` | Fable 5 (claude-fable-5) | 0038 §2 — rerank · graph (edges carry their chunk's provenance) · hybrid; one answer_as door; banner in file |
 | `backend/conformance/tests/test_rivals.py` | Fable 5 (claude-fable-5) | sp3 conformance: walking beats distance on relational asks · precision sharpens · one truth across every row; banner in file |
+
+## Fable 5 net-new files — 2026-07-22 (0038 sp4 part 2, the tournament)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/tournament.py` | Fable 5 (claude-fable-5) | 0038 §4/§6 — the last three flows (honest eye · tactic-within · decompose-recompose) · 0033 grading · 0005 standings · promotion as PROPOSAL; banner in file |
+| `backend/conformance/tests/test_tournament.py` | Fable 5 (claude-fable-5) | sp4 conformance: seven rows one door · deterministic grading · floors flagged · promotion carries evidence never enactment; banner in file |

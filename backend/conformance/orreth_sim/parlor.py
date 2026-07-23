@@ -224,6 +224,7 @@ def _card_librarian(facts: dict) -> tuple[str, list]:
             "its lineage.",
             [{"label": "gather knowledge on…", "template": "gather sourced knowledge on "},
              {"label": "ask the stacks…", "template": "ask the stacks "},
+             {"label": "run the tournament", "ask": "run the tournament"},
              {"label": "how do you route?", "ask": "how do you route?"},
              {"label": "ask the universe…", "template": "ask the universe about "},
              {"label": "subscribe…", "template": "subscribe to "},
@@ -618,6 +619,15 @@ def answer(name: str, text: str, facts: dict) -> dict:
                          "the routing standard")):
             return {"reply": "reading the standard…",
                     "action": "stacks-routing", "verbatim": True}
+        # THE TOURNAMENT (0038 sp4): one question, seven rows, receipts side
+        # by side — graded by the science, ranked by the standings, and the
+        # first promotion PROPOSED to the human's gate, never enacted
+        m = re.match(r"^(?:run\s+)?the\s+tournament(?:\s*[:on]*\s+(.+))?$", t)
+        if m or t.startswith("run the tournament"):
+            q = (m.group(1) if m and m.group(1) else "").strip(" ?.!")
+            return {"reply": "the rows take their marks…",
+                    "action": "stacks-tournament",
+                    **({"q": q} if q else {}), "verbatim": True}
         for p in ("ask the stacks", "ask stacks"):
             if t.startswith(p):
                 q = (text or "").strip()[len(p):].strip(" :?.!")

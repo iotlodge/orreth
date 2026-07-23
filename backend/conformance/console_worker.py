@@ -3839,6 +3839,106 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
             + (f" — citations: {cites}" if cites else ""))
 
 
+def wire_stacks_tournament(port: int, scope: str, q: str = "") -> str:
+    """THE TOURNAMENT on the wire (0038 sp4 — and the demo JB asked for):
+    one question through all seven rows, graded, ranked, the result landed as
+    a signed record — and the first PROMOTION staged at the human's gate as a
+    proper improvement, never enacted by the machine."""
+    from orreth_sim import tournament
+    n, seat_kp, seat_did = _stacks_node(port, scope)
+    if n is None:
+        return "the stacks are unreachable — try again on the next beat"
+    questions = [q] if q else [
+        "how are rammed earth walls connected to the seasons?",
+        "what exactly protects walls from rain?",
+        "compare rammed earth and lime plaster"]
+    r = tournament.run(n, questions)
+    me = {"did": seat_did, "scope": scope}
+    n.write(make_memory(me, seat_kp, scope,
+                        {"stacks_tournament": {"standings": r["standings"],
+                                               "champion": r["champion"],
+                                               "rounds": len(r["rounds"])}},
+                        kind="episodic", tags=["stacks", "tournament"]))
+    p = tournament.promotion_proposal(r)
+    try:
+        board_txt = "\n".join(f"  {s['flavor']}: {s['mean']:.2f} over {s['n']}"
+                              + (f" · ⚑ {'; '.join(s['floors'])}" if s["floors"]
+                                 else "") for s in r["standings"])
+        call(universe_port(port), "POST", "/requests",
+             {"kind": "improvement", "standard_v2": dict(p, version="2"),
+              "text": f"THE FIRST PROMOTION — routing-standard v2 from the "
+                      f"tournament: default → «{p['default']}», all seven rows "
+                      "built. the tournament argues, you sign (0012)",
+              "package": f"STANDINGS ({len(r['rounds'])} round(s)):\n{board_txt}"
+                         f"\nCHANGE: default naive → {p['default']}; built "
+                         f"grows to all seven.\nROLLBACK: v1 stands behind it, "
+                         "versioned as ever."})
+    except Exception:
+        pass
+    board = " · ".join(
+        f"{s['flavor']} {s['mean']:.2f}"
+        + (f" ⚑{len(s['floors'])}" if s["floors"] else "")
+        for s in r["standings"])
+    win = "; ".join(f"“{rd['question'][:40]}…” → {rd['winner']}"
+                    for rd in r["rounds"])
+    return (f"🏁 THE TOURNAMENT — {len(r['rounds'])} round(s), seven rows each: "
+            f"{board}. round winners: {win}. champion: «{r['champion']}». "
+            "the standings are on the record; the first PROMOTION (standard v2, "
+            "default → champion) waits at your gate — the tournament argues, "
+            "you sign (0012).")
+
+
+def on_standard_promotion(port: int, scope: str, r: dict, *,
+                          approved: bool = False, declined: bool = False) -> None:
+    """The first promotion's gate (0038 sp4 — repaired after JB's approval had
+    nowhere to land): staged with the standings readable; the human's word
+    ADOPTS routing-standard v2 as a real versioned asset at the rag seat —
+    v1 standing behind it, never erased. Declined waits for fatter evidence."""
+    from orreth_sim import improver
+    if declined:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"declined": True,
+                         "reply": "the promotion waits for fatter evidence — "
+                                  "shelve more, run more tournaments; the "
+                                  "record keeps that you chose"}})
+        print("  ↳ standard v2 declined — the tournament argues again later")
+        return
+    if not approved:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"package_text": r.get("package", ""),
+                         "note": "the first promotion waits for you (0012)"}})
+        print("  ↳ standard v2 staged — the gate waits")
+        return
+    rag_port, rag_scope = next(
+        ((p, s) for p, s in FLOOR_SCOPES.items()
+         if s.endswith("/e:rag/f:naive")), (None, None))
+    if rag_port is None:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"reply": "the rag floor is dark — v2 cannot land; "
+                                  "regrow the floor and run the tournament again"}})
+        return
+    seat_kp, seat_did = lib_seat(rag_scope)
+    v2 = dict(r.get("standard_v2") or {})
+    v2.pop("evidence", None)
+    asset = improver.make_asset({"did": seat_did, "scope": rag_scope}, seat_kp,
+                                rag_scope, name="routing-standard", profile=v2)
+    try:
+        call(rag_port, "POST", "/records", asset)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"reply": f"routing-standard v2 ADOPTED on your word — "
+                                  f"default «{v2.get('default')}», all seven "
+                                  "rows built; v1 stands behind it, versioned "
+                                  f"as ever [{asset['id'][:18]}…]"}})
+        print(f"  ↳ STANDARD v2 ADOPTED — default «{v2.get('default')}» "
+              f"[{asset['id'][:18]}…]")
+    except Exception as e:
+        print(f"    (v2 adoption failed: {e})")
+
+
 def wire_stacks_routing(port: int, scope: str) -> str:
     """The organ's ledger, in words: the standard's rules and the newest
     choices — 'why did this go there?' answered from the record."""
@@ -4541,6 +4641,13 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                                         origin=origin) + via
             else:
                 reply = wire_stacks_routing(rag_port, rag_scope) + via
+    if ans.get("action") == "stacks-tournament":  # 0038 sp4 — the demo itself
+        rag_port, rag_scope = next(
+            ((p, s) for p, s in FLOOR_SCOPES.items()
+             if s.endswith("/e:rag/f:naive")), (None, None))
+        reply = (wire_stacks_tournament(rag_port, rag_scope, ans.get("q", ""))
+                 if rag_port else "the stacks' floor is dark — the shipyard "
+                                  "can regrow it")
     if ans.get("action") == "domain":     # the package, a view over the record (0031 §5)
         rows = domain_packages(port, scope, ans.get("topic", ""))
         reply = ("; ".join(f"{d['topic']} — {d['meta']}" for d in rows[:6])
@@ -4821,6 +4928,13 @@ def main() -> None:
                                 and r.get("status") == "pending":
                             handled.add(key)
                             on_intention(port, scope, r)
+                        elif r.get("kind") == "improvement" and \
+                                r.get("standard_v2") and \
+                                r.get("status") in ("pending", "approved", "denied"):
+                            handled.add(key)
+                            on_standard_promotion(port, scope, r,
+                                                  approved=r.get("status") == "approved",
+                                                  declined=r.get("status") == "denied")
                         elif r.get("kind") == "improvement" and \
                                 r.get("status") in ("pending", "approved", "denied"):
                             handled.add(key)
