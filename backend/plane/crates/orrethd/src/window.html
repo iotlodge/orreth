@@ -155,6 +155,36 @@
   .res.ada{background:#d99cc4;color:rgba(217,156,196,.7)}
   .res.grace{background:#e89a6b;color:rgba(232,154,107,.7)} /* the smith's ember (0031) */
   .res.allen{background:#8fb8d9;color:rgba(143,184,217,.7)} /* the architect's sky (0037) */
+  /* ── the rail, reborn (2026-07-23): dots for tiers, a breath of data ── */
+  .trow.t2{display:flex;align-items:center;gap:.45rem;position:relative;
+    border-left:1px solid rgba(120,135,165,.14);margin-left:.55rem;padding-top:.28rem;padding-bottom:.28rem}
+  .trow.t2.me{border-left-color:var(--brassdim)}
+  .trow.t2 .tdot{width:8px;height:8px;border-radius:50%;background:var(--td);
+    box-shadow:0 0 8px 1px color-mix(in srgb,var(--td) 55%,transparent);flex:none}
+  .trow.t2 .tdot.core{width:11px;height:11px}
+  .trow.t2 .tdot.fld{width:6px;height:6px;opacity:.85}
+  .trow.t2 .tn{flex:none}
+  .trow.t2 .tbar{flex:1;height:3px;border-radius:2px;background:rgba(120,135,165,.12);
+    overflow:hidden;margin:0 .2rem}
+  .trow.t2 .tbar i{display:block;height:100%;border-radius:2px;opacity:.55}
+  .trow.t2 .tc{flex:none;font-size:.6rem;opacity:.75}
+  .trow.t2:hover{background:rgba(212,169,96,.05)}
+  /* ── the medallions: faces to know (2026-07-23) ── */
+  .agent.res2{display:flex;align-items:center}
+  .medal{width:30px;height:30px;flex:none;border-radius:50%;margin-right:.55rem;
+    border:1px solid color-mix(in srgb,var(--mc) 55%,transparent);
+    background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--mc) 16%,transparent),rgba(11,14,22,.9) 70%);
+    display:inline-flex;align-items:center;justify-content:center;
+    box-shadow:0 0 10px -2px color-mix(in srgb,var(--mc) 45%,transparent)}
+  .medal svg{width:17px;height:19px}
+  .agent.res2:hover .medal{box-shadow:0 0 14px -1px var(--mc)}
+  /* ── the workforce, gathered by floor ── */
+  .wfgrp{display:flex;align-items:center;gap:.45rem;margin:.55rem 0 .15rem;
+    font:.62rem var(--mono);color:var(--dim)}
+  .wfgrp .tdot{width:7px;height:7px;border-radius:50%;background:var(--td);flex:none;
+    box-shadow:0 0 7px 1px color-mix(in srgb,var(--td) 50%,transparent)}
+  .wfgrp b{color:var(--star);font-weight:600}
+  .wfgrp span:last-child{margin-left:auto;color:var(--faint)}
   @media(prefers-reduced-motion:reduce){.res{animation:none!important}}
   .reslegend{position:absolute;left:1.1rem;bottom:.6rem;font:.64rem var(--mono);color:var(--faint);
     display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;max-width:52%}
@@ -943,10 +973,17 @@ function renderWorldRail(){
         if(L===2)agg.eco++;else if(L>=3)agg.field++;agg.agents+=n.agents||0}
       (n.children||[]).forEach(c=>walk(c,d+1))};
     walk(t,0);
-    html+=rows.map(({n,d})=>`<div class="trow${d===0?" me":""}" style="padding-left:${1.1+d*.85}rem"
-      onclick="floorGo('${encodeURIComponent(n.scope)}')" title="step onto ${n.scope.split("/").pop()} — the view from that floor">
-      <span class="tn">${d?"└ ":""}${n.scope.split("/").pop()}</span>
-      <span class="tc">${n.records}m · ${n.agents}a</span></div>`).join("");
+    const maxm=Math.max(1,...rows.map(({n})=>n.records||0));
+    html+=rows.map(({n,d})=>{const nm=n.scope.split("/").pop();
+      const eco=n.scope.split("/").find(x=>x.startsWith("e:"))||nm;
+      const col=d===0?"var(--brass)":ecoColor(eco.startsWith("e:")?eco:nm);
+      const bw=Math.round(100*Math.log2(1+(n.records||0))/Math.log2(1+maxm));
+      return `<div class="trow t2${d===0?" me":""}" style="--td:${col};padding-left:${.6+d*.95}rem"
+      onclick="floorGo('${encodeURIComponent(n.scope)}')" title="step onto ${nm}">
+      <span class="tdot${d===0?" core":d===1?" eco":" fld"}"></span>
+      <span class="tn">${nm}</span>
+      <span class="tbar"><i style="width:${bw}%;background:${col}"></i></span>
+      <span class="tc">${n.records}m·${n.agents}a</span></div>`}).join("");
     const s=(n,w)=>`<b>${n}</b> ${w}${n===1?"":"s"}`;
     html+=`<div class="tsum">below this floor: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"field")} · ${s(agg.agents,"agent")}</div>`;
     if(bl)bl.innerHTML=`the world below: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"field")} · ${s(agg.agents,"agent")} — every one signed in`;
@@ -1101,6 +1138,11 @@ function brainToggle(){
   localStorage.setItem("orreth-proj",BRAINMODE?"brain":"orrery");
   $("v-uni").dataset.proj=BRAINMODE?"brain":"orrery";
   $("btoggle").innerHTML=`projection: <b>${BRAINMODE?"brain":"orrery"}</b> · click for ${BRAINMODE?"orrery":"brain"}`;
+  const oc2=$("ocanvas");                    /* one sky at a time (rule 7): the
+     constellation sleeps when the mind wakes — cleared AND hidden, never a
+     stale frame above the tissue */
+  if(oc2){oc2.style.display=BRAINMODE?"none":"";
+    if(BRAINMODE){const g2=oc2.getContext("2d");g2&&g2.clearRect(0,0,oc2.width,oc2.height)}}
   if(BRAINMODE){bgInit();renderBrain();brainFeed();BG.on=true;requestAnimationFrame(bgFrame)}
   else if(BG)BG.on=false;
 }
@@ -1554,6 +1596,231 @@ function bgFrame(ts){
   g.globalCompositeOperation="source-over";
   requestAnimationFrame(bgFrame);
 }
+/* ══ THE CONSTELLATION (the Orrery, third body — JB's ask 2026-07-23):
+      a true 3D system on the Brain's own hand-rolled projection — no library,
+      one bloodline. Ecosystems ride INCLINED orbital planes (the declutter:
+      hash-spread tilts, no two planes alike), fields are moons, staff fields
+      orbit the core itself on a steep plane. Drag orbits the camera, wheel
+      breathes the zoom, shift-drag pans, double-click flies to a body,
+      click steps onto the floor, hover speaks the card. Rule 7 throughout:
+      every light is the topology's own truth, read live each frame. ══ */
+const OV={yaw:.62,pitch:.42,zoom:1,px:0,py:0,drag:null,focus:null,on:false,
+  fyaw:null,t0:performance.now()};
+const OPAL=["#8fd6b0","#b79ce8","#7fb3e8","#e8c98f","#d99cc4","#e89a6b","#9fd6d0"];
+const ecoColor=n=>OPAL[bhash(n)%OPAL.length];
+function ovRot(p){ /* camera: yaw about Y, pitch about X — the Brain's turn */
+  const cy=Math.cos(OV.yaw),sy=Math.sin(OV.yaw),cp=Math.cos(OV.pitch),sp=Math.sin(OV.pitch);
+  const x=p[0]*cy+p[2]*sy, z1=-p[0]*sy+p[2]*cy;
+  return [x, p[1]*cp-z1*sp, p[1]*sp+z1*cp];
+}
+function ovBasis(name,steep){ /* an eco's orbital plane: tilt + node from its name */
+  const h=bhash(name), tilt=(steep?1.15:.30+.5*((h>>4)%97)/97), node=(h%360)*Math.PI/180;
+  const cn=Math.cos(node),sn=Math.sin(node),ct=Math.cos(tilt),st=Math.sin(tilt);
+  return {u:[cn,0,sn], v:[-sn*ct,st,cn*ct]};
+}
+function ovWorld(t,now){ /* topology → bodies + rings, positions from time itself */
+  const bodies=[],rings=[]; const T=(now-OV.t0)/1000;
+  bodies.push({scope:t.scope,name:t.scope,kind:"core",p:[0,0,0],R:26,
+    color:"#d4a960",n:t});
+  const kids=t.children||[];
+  const ecos=kids.filter(c=>(c.scope.split("/").pop()||"").startsWith("e:"));
+  const staff=kids.filter(c=>!(c.scope.split("/").pop()||"").startsWith("e:"));
+  const place=(list,R0,gap,parentP,steepAll)=>list.forEach((e,i)=>{
+    const nm=e.scope.split("/").pop(), B=ovBasis(nm,steepAll), R=R0+i*gap;
+    const th=T*2*Math.PI/(70+18*i)+bhash(nm)%7;
+    const p=[parentP[0]+B.u[0]*R*Math.cos(th)+B.v[0]*R*Math.sin(th),
+             parentP[1]+B.u[1]*R*Math.cos(th)+B.v[1]*R*Math.sin(th),
+             parentP[2]+B.u[2]*R*Math.cos(th)+B.v[2]*R*Math.sin(th)];
+    const isEco=nm.startsWith("e:");
+    const col=isEco?ecoColor(nm):"#bcd0e8";
+    rings.push({c:parentP,B,R,color:col,eco:e.scope});
+    bodies.push({scope:e.scope,name:nm,kind:isEco?"eco":"field",p,
+      R:isEco?11:6.5,color:col,n:e});
+    (e.children||[]).forEach((f,j)=>{
+      const fn=f.scope.split("/").pop(), FB=ovBasis(fn+nm,false);
+      const fR=(OV.focus===e.scope?34:20)+j*(OV.focus===e.scope?13:8);
+      const fth=T*2*Math.PI/(16+5*j)+bhash(fn)%7;
+      const fp=[p[0]+FB.u[0]*fR*Math.cos(fth)+FB.v[0]*fR*Math.sin(fth),
+                p[1]+FB.u[1]*fR*Math.cos(fth)+FB.v[1]*fR*Math.sin(fth),
+                p[2]+FB.u[2]*fR*Math.cos(fth)+FB.v[2]*fR*Math.sin(fth)];
+      rings.push({c:p,B:FB,R:fR,color:col,eco:e.scope,thin:true});
+      bodies.push({scope:f.scope,name:fn,kind:"moon",p:fp,R:4.5,color:col,n:f,
+        parent:e.scope});});
+  });
+  place(ecos,118,34,[0,0,0],false);
+  place(staff,72,20,[0,0,0],true);            /* staff of the universe — steep, close */
+  return {bodies,rings};
+}
+let OVHIT=[];
+function ovFrame(){
+  if(!OV.on)return;
+  const O=$("orrery"),C=$("ocanvas");
+  if(!C||BRAINMODE||$("v-uni").classList.contains("hide")||document.hidden){
+    requestAnimationFrame(ovFrame);return}
+  const t=topoCache; const g=C.getContext("2d");
+  const W=O.clientWidth,H=O.clientHeight;
+  if(C.width!==W*2||C.height!==H*2){C.width=W*2;C.height=H*2;
+    C.style.width=W+"px";C.style.height=H+"px"}
+  g.setTransform(2,0,0,2,0,0); g.clearRect(0,0,W,H);
+  if(!t){requestAnimationFrame(ovFrame);return}
+  const now=performance.now(); const FOV=560;
+  if(OV.fyaw!=null){OV.yaw+=(OV.fyaw-OV.yaw)*.06;
+    if(Math.abs(OV.fyaw-OV.yaw)<.004)OV.fyaw=null}
+  const P=p=>{const r=ovRot(p),s=FOV/(FOV+r[2]);
+    return [W/2+r[0]*s*OV.zoom+OV.px, H/2+r[1]*s*OV.zoom+OV.py, s*OV.zoom, r[2]]};
+  const {bodies,rings}=ovWorld(t,now);
+  /* faint starfield breath */
+  for(let i=0;i<26;i++){const h=bhash("st"+i);
+    g.fillStyle=`rgba(160,175,205,${.05+.05*Math.sin(now/1900+h)})`;
+    g.fillRect((h%W),(h>>3)%H,1.4,1.4)}
+  /* rings: sampled, depth-split alpha — the 3D reads from the rings first */
+  rings.forEach(rg=>{
+    if(OV.focus&&rg.eco!==OV.focus&&!rg.thin&&rg.eco!==OV.focus)g.globalAlpha=.35;
+    const N=72; let prev=null;
+    for(let k=0;k<=N;k++){const th=k/N*2*Math.PI;
+      const p=[rg.c[0]+rg.B.u[0]*rg.R*Math.cos(th)+rg.B.v[0]*rg.R*Math.sin(th),
+               rg.c[1]+rg.B.u[1]*rg.R*Math.cos(th)+rg.B.v[1]*rg.R*Math.sin(th),
+               rg.c[2]+rg.B.u[2]*rg.R*Math.cos(th)+rg.B.v[2]*rg.R*Math.sin(th)];
+      const q=P(p);
+      if(prev){g.strokeStyle=rg.color;
+        g.globalAlpha*= 1; g.lineWidth=rg.thin?.5:.8;
+        const a=(q[3]+prev[3])/2; g.globalAlpha=(rg.thin?.10:.16)+ (a<0?.10:0)
+          *( OV.focus&&rg.eco!==OV.focus?0.4:1);
+        g.beginPath();g.moveTo(prev[0],prev[1]);g.lineTo(q[0],q[1]);g.stroke();
+        g.globalAlpha=1;}
+      prev=q;}
+    g.globalAlpha=1;});
+  /* memory rising: motes drifting inward along eco→core (the flows, whispered) */
+  bodies.filter(b=>b.kind==="eco").forEach(b=>{
+    for(let m=0;m<2;m++){const ph=((now/2600)+m*.5+bhash(b.name)%10/10)%1;
+      const p=[b.p[0]*(1-ph),b.p[1]*(1-ph),b.p[2]*(1-ph)]; const q=P(p);
+      g.fillStyle=`rgba(212,169,96,${.30*(1-ph)*q[2]})`;
+      g.beginPath();g.arc(q[0],q[1],1.2*q[2],0,6.283);g.fill();}});
+  /* bodies far→near, with glow, labels, alert rings, quiet-dimming */
+  OVHIT=[];
+  const drawn=bodies.map(b=>({b,q:P(b.p)})).sort((x,y)=>y.q[3]-x.q[3]);
+  drawn.forEach(({b,q})=>{
+    const n=b.n||{}; const dim=OV.focus&&b.kind!=="core"
+      &&b.scope!==OV.focus&&b.parent!==OV.focus?0.35:1;
+    const age=n.heard_at?(Date.now()-new Date(n.heard_at))/1e3:0;
+    const quiet=age>60?.5:1;
+    const r=b.R*q[2];
+    const gr=g.createRadialGradient(q[0],q[1],0,q[0],q[1],r*2.2);
+    gr.addColorStop(0,b.color); gr.addColorStop(.45,b.color+"88");
+    gr.addColorStop(1,"rgba(0,0,0,0)");
+    g.globalAlpha=(b.kind==="core"?.95:.9)*dim*quiet;
+    g.fillStyle=gr; g.beginPath();g.arc(q[0],q[1],r*2.2,0,6.283);g.fill();
+    g.fillStyle=b.color; g.beginPath();g.arc(q[0],q[1],r*.62,0,6.283);g.fill();
+    if(b.kind==="core"){const pu=1+.05*Math.sin(now/900);
+      g.strokeStyle="rgba(212,169,96,.35)";g.lineWidth=1;
+      g.beginPath();g.arc(q[0],q[1],r*1.5*pu,0,6.283);g.stroke();}
+    const pend=(n.pending||0);
+    if(pend){g.strokeStyle=`rgba(212,169,96,${.5+.4*Math.sin(now/500)})`;
+      g.lineWidth=1.4;g.beginPath();g.arc(q[0],q[1],r+5,0,6.283);g.stroke();}
+    /* the quiet are found by their name (the Brain's lesson, kept) */
+    if(b.kind!=="moon"||q[2]>0.9||OV.focus===b.parent){
+      g.globalAlpha=(b.kind==="core"?.9:.75)*dim;
+      g.fillStyle=b.kind==="core"?"#d4a960":"#aab6cc";
+      g.font=`${b.kind==="core"?11:b.kind==="eco"?10.5:9}px ui-monospace,monospace`;
+      const lbl=b.kind==="core"?b.name
+        :`${b.name}${n.agents?` · ${n.agents}a`:""}${n.records?` · ${n.records}m`:""}`;
+      g.fillText(lbl,q[0]+r+6,q[1]+3);}
+    g.globalAlpha=1;
+    /* THE ASSOCIATION (JB's law of the orrery, restored 2026-07-23): every
+       body wears its PEOPLE — organ dots in their colors (click → audience),
+       workforce sparks, farm-plot diamonds — the reason this view exists */
+    const n2=b.n||{};
+    if(q[2]>0.8*Math.min(1,1/OV.zoom)||b.kind==="core"){
+      const res=(n2.residents||[]); const rr=r+9;
+      res.slice(0,9).forEach((a,i)=>{   /* the full roster — nine faces, none sliced */
+        const th=now/2400+i*2*Math.PI/Math.max(res.length,1);
+        const rx=q[0]+rr*Math.cos(th), ry=q[1]+rr*.45*Math.sin(th)- (b.kind==="core"?0:1);
+        const cc=MEDCOL[reskey(a.role)]||"#8a93a6";
+        g.globalAlpha=.95*dim; g.fillStyle=cc;
+        g.beginPath();g.arc(rx,ry,2.6*Math.min(q[2],1.4),0,6.283);g.fill();
+        g.globalAlpha=.35*dim; g.beginPath();g.arc(rx,ry,4.6*Math.min(q[2],1.4),0,6.283);g.fill();
+        g.globalAlpha=1;
+        OVHIT.push({x:rx,y:ry,r:7,scope:b.scope,kind:"res",name:a.name,role:a.role});});
+      const wf=Math.min(n2.agents||0,7); const wr=rr+8;
+      for(let i2=0;i2<wf;i2++){const th=now/1100+i2*2*Math.PI/wf;
+        const wx=q[0]+wr*Math.cos(th), wy=q[1]+wr*.42*Math.sin(th);
+        g.globalAlpha=.75*dim; g.fillStyle="#cfd8ea";
+        g.beginPath();g.arc(wx,wy,1.3,0,6.283);g.fill();g.globalAlpha=1;}
+      const farm=(n2.farm||[]).filter(s2=>s2.state!=="decommissioned").slice(0,6);
+      const fr=wr+8;
+      farm.forEach((s2,i2)=>{const th=now/3600+i2*2*Math.PI/Math.max(farm.length,1);
+        const fx=q[0]+fr*Math.cos(th), fy=q[1]+fr*.4*Math.sin(th);
+        g.save();g.translate(fx,fy);g.rotate(Math.PI/4);
+        g.globalAlpha=(s2.state==="serving"?.9:.6)*dim;
+        g.fillStyle=s2.state==="quarantined"?"#e88f8f":"#d4a960";
+        g.fillRect(-2.2,-2.2,4.4,4.4);g.restore();g.globalAlpha=1;});
+    }
+    OVHIT.push({x:q[0],y:q[1],r:Math.max(r+6,10),scope:b.scope,kind:b.kind});});
+  requestAnimationFrame(ovFrame);
+}
+function ovPick(ev){const C=$("ocanvas"),rc=C.getBoundingClientRect();
+  const x=ev.clientX-rc.left,y=ev.clientY-rc.top;
+  let best=null,bd=1e9;
+  OVHIT.forEach(h=>{const d=Math.hypot(h.x-x,h.y-y);
+    if(d<h.r&&d<bd){bd=d;best=h}});
+  return {best,x,y};
+}
+function ovWire(){const C=$("ocanvas"); if(!C||C.dataset.wired)return; C.dataset.wired=1;
+  C.addEventListener("mousedown",e=>{OV.drag={x:e.clientX,y:e.clientY,
+    yaw:OV.yaw,pitch:OV.pitch,px:OV.px,py:OV.py,pan:e.shiftKey,moved:false}});
+  window.addEventListener("mousemove",e=>{
+    if(OV.drag){const dx=e.clientX-OV.drag.x,dy=e.clientY-OV.drag.y;
+      if(Math.abs(dx)+Math.abs(dy)>3)OV.drag.moved=true;
+      if(OV.drag.pan){OV.px=OV.drag.px+dx;OV.py=OV.drag.py+dy}
+      else{OV.yaw=OV.drag.yaw+dx*.008;
+        OV.pitch=Math.max(-1.3,Math.min(1.3,OV.drag.pitch+dy*.008))}
+      return}
+    if(e.target===C){const {best,x,y}=ovPick(e);
+      C.style.cursor=best?"pointer":"grab";
+      if(best&&best.kind==="res"){ocResFill(best,x,y)}
+      else if(best){ocFill(best.scope,x,y)}else ocOff();}});
+  window.addEventListener("mouseup",()=>{OV.drag&&setTimeout(()=>OV.drag=null,0)});
+  C.addEventListener("click",e=>{if(OV.drag&&OV.drag.moved)return;
+    const {best}=ovPick(e); if(!best)return;
+    if(best.kind==="res"){openParlor(best.name||"");return}
+    if(best.kind!=="core")floorGo(encodeURIComponent(best.scope));});
+  C.addEventListener("dblclick",e=>{const {best}=ovPick(e);
+    if(best&&best.kind==="eco"){OV.focus=OV.focus===best.scope?null:best.scope;
+      OV.fyaw=OV.yaw+.0001;}
+    else if(!best){OV.focus=null;OV.zoom=1;OV.px=OV.py=0;}});
+  C.addEventListener("wheel",e=>{e.preventDefault();
+    OV.zoom=Math.max(.45,Math.min(3.2,OV.zoom*(e.deltaY<0?1.09:.92)))},{passive:false});
+}
+function ocResFill(h,x,y){ /* a resident's card, canvas-fed — the association spoken */
+  const O=$("orrery"),c=$("ocard"); const n=findNode(h.scope)||{};
+  const a=(n.residents||[]).find(r=>r.name===h.name)||{};
+  const vit=Object.entries(a.vitals||{}).slice(0,3)
+    .map(([k,v])=>`<span class="k">${k} </span>${v}`).join(" · ");
+  c.innerHTML=`<div class="t">${a.role||h.role||h.name}</div>
+    <div>${a.blurb||""}</div>${vit?`<div>${vit}</div>`:""}
+    <div class="k" style="margin-top:.2rem">resident of ${h.scope} · click — open an audience</div>`;
+  let cx=x+16; const o=O.getBoundingClientRect();
+  if(cx+300>o.width)cx=Math.max(8,x-320);
+  c.style.left=cx+"px";c.style.top=Math.max(10,Math.min(o.height-90,y))+"px";
+  c.classList.add("on");
+}
+function ocFill(scope,x,y){ /* the hover card, canvas-fed */
+  const O=$("orrery"),c=$("ocard"); const n=findNode(scope)||{};
+  const drift=((n.stable||[]).filter(s=>s.state==="deprecated").length)
+    +((n.farm||[]).filter(s=>s.state==="quarantined").length);
+  const age=(n.heard_at&&!window.ORRETH_DEMO)?Math.round((Date.now()-new Date(n.heard_at))/1e3):null;
+  c.innerHTML=`<div class="t">${n.scope||scope}</div>
+    <div><span class="k">memories </span>${n.records||0} · <span class="k">thoughts </span>${n.runs||0}</div>
+    <div><span class="k">agents </span>${n.agents||0} · <span class="k">spend </span>${money(n.usd||0)}</div>
+    ${n.pending?`<div style="color:var(--brass)"><span class="k">needs you </span>${n.pending} waiting</div>`:""}
+    ${drift?`<div style="color:var(--brass)"><span class="k">drift </span>${drift} at the gate</div>`:""}
+    ${age!=null?`<div><span class="k">beat </span>${age<=20?`live · ${age}s ago`:`<span style="color:var(--red)">quiet — ${age}s</span>`}</div>`:""}
+    <div class="k" style="margin-top:.2rem">click — step onto the floor · double-click — fly to it</div>`;
+  let cx=x+18; const o=O.getBoundingClientRect();
+  if(cx+300>o.width)cx=Math.max(8,x-330);
+  c.style.left=cx+"px";c.style.top=Math.max(10,Math.min(o.height-96,y))+"px";
+  c.classList.add("on");
+}
 function renderOrrery(){
   const O=$("orrery"); if(!O||$("v-uni").classList.contains("hide"))return;
   const t=topoCache;
@@ -1565,7 +1832,8 @@ function renderOrrery(){
   const W=O.clientWidth,H=O.clientHeight,R=Math.min(W,H)/2;
   const wrap=document.createElement("div");wrap.className="oo";
   wrap.style.cssText="position:absolute;inset:0";
-  if(!t){wrap.innerHTML=`<div class="oleaf">the daemon is dark — no world to draw</div>`;
+  if(!t){const c0=$("ocanvas");if(c0)c0.style.display="none";OV.on=false;
+    wrap.innerHTML=`<div class="oleaf">the daemon is dark — no world to draw</div>`;
     O.appendChild(wrap);return}
   const ecos=t.children||[], RE=Math.max(120,Math.min(R*.64,230));
   let html=`<div class="anchor" style="left:50%;top:50%">`;
@@ -1589,43 +1857,24 @@ function renderOrrery(){
         <div class="beam" style="width:${RE-16}px"></div>
         <div class="sat" style="transform:translate(${RE}px,0)">
           <div class="cr" style="animation-duration:${per}s">${inner}</div></div></div>`;
+    const c1=$("ocanvas");if(c1)c1.style.display="none";OV.on=false;
     wrap.innerHTML=html+`</div>
       <div class="oleaf">the view from the bottom floor — the universe console watches every orbit</div>`;
     O.appendChild(wrap); return;
   }
-  const up=(CRUMBS.length||t.parent_port)?` onclick="floorUp()" style="cursor:pointer" title="climb to the floor above"`:"";
-  html+=`<div class="sphere"${up} onmouseenter="oc(event,'${encodeURIComponent(t.scope)}')" onmouseleave="ocOff()"></div>
-    <div class="corelabel">${t.scope}<span class="sub"><span class="lc" data-scope="${encodeURIComponent(t.scope)}" data-k="records">${t.records}</span> memories · the universal record${up?" · click to climb":""}</span></div>
-    ${organs(t.residents,50,t.scope)}${plots(t.farm,66,t.scope)}`;
-  {
-    html+=`<div class="ring" style="width:${2*RE}px;height:${2*RE}px"></div>`;
-    ecos.forEach((e,i)=>{
-      const per=46+i*9, ph=-(i/ecos.length)*per, fields=e.children||[];
-      // push fields out far enough that each field's three shells clear the eco planet
-      const RM=58+10*Math.max(0,fields.length-1);
-      let inner=fields.length?`<div class="ring" style="width:${2*RM}px;height:${2*RM}px"></div>`:"";
-      fields.forEach((f,j)=>{
-        const mper=13+j*5, mph=-(j/fields.length)*mper;
-        // three concentric shells around the field — organs inner, workforce middle,
-        // tools outer — each a rigid evenly-spaced ring, capped with +N overflow
-        inner+=`<div class="orb" style="animation-duration:${mper}s;animation-delay:${mph}s">
-          <div class="sat" style="transform:translate(${RM}px,0)">
-            <div class="cr" style="animation-duration:${mper}s;animation-delay:${mph}s" data-body="${encodeURIComponent(f.scope)}">
-              <div class="moon" data-scope="${encodeURIComponent(f.scope)}" onclick="floorGo('${encodeURIComponent(f.scope)}')" onmouseenter="oc(event,'${encodeURIComponent(f.scope)}')" onmouseleave="ocOff()"></div>
-              ${alertOf(f)?`<div class="alertring" style="width:24px;height:24px"></div>`:""}
-              <div class="blabel" style="top:14px">${f.scope.split("/").pop()}${f.agents?` · <span class="lc" data-scope="${encodeURIComponent(f.scope)}" data-k="agents">${f.agents}</span>`:""}</div>
-              ${organs(f.residents,18,f.scope)}${ships(f.agents||0,29,f.scope)}${plots(f.farm,40,f.scope)}</div></div></div>`});
-      html+=`<div class="orb" style="animation-duration:${per}s;animation-delay:${ph}s">
-        <div class="beam" style="width:${RE-16}px;animation-delay:${i*1.9}s"></div>
-        <div class="sat" style="transform:translate(${RE}px,0)">
-          <div class="cr" style="animation-duration:${per}s;animation-delay:${ph}s" data-body="${encodeURIComponent(e.scope)}">
-            <div class="planet" data-scope="${encodeURIComponent(e.scope)}" onclick="floorGo('${encodeURIComponent(e.scope)}')" onmouseenter="oc(event,'${encodeURIComponent(e.scope)}')" onmouseleave="ocOff()"></div>
-            ${alertOf(e)?`<div class="alertring" style="width:38px;height:38px"></div>`:""}
-            <div class="blabel" style="top:20px">${e.scope.split("/").pop()}</div>
-            ${organs(e.residents,18,e.scope)}${plots(e.farm,30,e.scope)}${inner}</div></div></div>`});
-  }
-  html+=`</div>`;
-  wrap.innerHTML=html; O.appendChild(wrap);
+  /* THE CONSTELLATION takes the sky (2026-07-23): the eco'd universe renders
+     on the canvas engine — 3D planes, fly-to, the card on hover. The DOM
+     orbits remain only for the leaf console above. */
+  let C=$("ocanvas");
+  if(!C){C=document.createElement("canvas");C.id="ocanvas";
+    C.style.cssText="position:absolute;inset:0;cursor:grab;z-index:4";
+    O.appendChild(C);ovWire();}
+  O.appendChild($("ocard"));                 /* the card rides above the sky */
+  C.style.display="";
+  if(!OV.on){OV.on=true;requestAnimationFrame(ovFrame)}
+  const hint=document.createElement("div");hint.className="oo oleaf";
+  hint.textContent="drag — orbit · wheel — zoom · shift-drag — pan · double-click — fly to an ecosystem · click — step onto a floor";
+  O.appendChild(hint);
   // organ legend: role → color, only for roles present somewhere in the tree
   const seen=new Set(); const collect=n=>{if(!n)return;
     (n.residents||[]).forEach(a=>seen.add(reskey(a.role)));(n.children||[]).forEach(collect)};
@@ -1721,8 +1970,17 @@ async function roster(){
     let html=`<div class="grp"><span>residents · the organs</span><span>${p.residents.length}</span></div>`;
     for(const a of p.residents) html+=agentRow(a,true);
     html+=`<div class="grp"><span>workforce</span><span>${p.workforce.length}</span></div>`;
-    html+= p.workforce.length? p.workforce.map(a=>agentRow(a,false)).join("")
-         : `<div class="empty">no leased agents have acted yet — a quiet field</div>`;
+    if(p.workforce.length){
+      const grps={};
+      p.workforce.forEach(a=>{(grps[a.scope||"workforce"]=grps[a.scope||"workforce"]||[]).push(a)});
+      html+=Object.keys(grps).sort().map(sc=>{const g2=grps[sc];
+        const nm=sc.split("/").pop(), eco=sc.split("/").find(x=>x.startsWith("e:"))||nm;
+        const usd=g2.reduce((t2,a)=>t2+(a.usd||0),0);
+        return `<div class="wfgrp" style="--td:${ecoColor(eco.startsWith("e:")?eco:nm)}">
+          <span class="tdot eco"></span><b>${nm}</b>
+          <span>${g2.length} agent${g2.length===1?"":"s"} · ${money(usd)}</span></div>`
+          +g2.map(a=>agentRow(a,false)).join("")}).join("");
+    }else html+=`<div class="empty">no leased agents have acted yet — a quiet field</div>`;
     r.innerHTML=html;
     // feed: latest workforce activity
     const evs=p.workforce.filter(a=>a.last_seen).sort((x,y)=>y.last_seen.localeCompare(x.last_seen));
@@ -1762,12 +2020,27 @@ async function renderStrip(){
     s.title=`${h.occurred_at} · ${h.fidelity}`;el.appendChild(s)});
   const a1=document.createElement("div");a1.className="ax";a1.style.left="10px";a1.textContent=iso(from).slice(0,7)+" · deep past";el.appendChild(a1);
 }
+const MEDAL={becky:'<circle cx="9" cy="7" r="3.2"/><path d="M9 10v6M9 13h3M9 15.5h2"/>',
+  vigil:'<path d="M2 12c3-4.5 11-4.5 14 0c-3 4.5-11 4.5-14 0z"/><circle cx="9" cy="12" r="2"/>',
+  steward:'<path d="M9 4l6 12H3z"/><path d="M6.2 10h5.6"/>',
+  governance:'<path d="M9 4v12M4 7h10M5.5 7l-2 4h4zM14.5 7l-2 4h4z"/>',
+  charlotte:'<path d="M9 16c0-6 2.5-9 6-10c-.5 5-2.5 8-6 10zM9 16c0-4.5-2-7.5-5-8.5c.4 4 2 6.8 5 8.5z"/>',
+  librarian:'<path d="M9 5c-2-1.4-4.5-1.4-6 0v10c1.5-1.4 4-1.4 6 0c2-1.4 4.5-1.4 6 0V5c-1.5-1.4-4-1.4-6 0zM9 5v10"/>',
+  ada:'<path d="M4 15V9a5 5 0 0 1 10 0v6M6.5 15v-2M11.5 15v-2"/>',
+  grace:'<path d="M4 8h7l3-2v5l-3-2H8v7H6v-7H4z"/>',
+  allen:'<path d="M5 13a3.2 3.2 0 1 1 .6-6.3A4.2 4.2 0 0 1 13.8 8A2.6 2.6 0 0 1 13 13z"/>'};
+const MEDCOL={becky:"#d4a960",vigil:"#b79ce8",steward:"#9fb6e8",governance:"#7fd1a8",
+  charlotte:"#8fd6b0",librarian:"#e8c98f",ada:"#d99cc4",grace:"#e89a6b",allen:"#8fb8d9"};
+function medallion(role){const k=reskey(role),c=MEDCOL[k]||"#8a93a6";
+  return `<span class="medal" style="--mc:${c}"><svg viewBox="0 0 18 20" fill="none"
+    stroke="${c}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${MEDAL[k]||""}</svg></span>`}
 function agentRow(a,resident){
   const sub = resident? `<div class="sub">${a.blurb||""}</div>`
     : `<div class="sub">${a.runs} run${a.runs===1?"":"s"} · ${a.runs?Math.round(100*a.success/a.runs):0}% · ${a.tokens} tok · <span class="cost">${money(a.usd||0)}</span></div>`;
   /* residents receive callers (0020): a click opens an audience in the parlor */
   const speak=resident?` speakable" onclick="openParlor('${a.name||""}')" title="open an audience — you ask, ${a.name} fetches`:"";
-  return `<div class="agent${speak}"><span class="orb ${a.state}"></span>
+  const face=resident?medallion(a.role):"";
+  return `<div class="agent${resident?" res2":""}${speak}">${face}<span class="orb ${a.state}"></span>
     <span class="who"><span class="id">${resident?a.role:(a.name||short(a.agent))}</span>
     ${resident?"":`<span class="role">${a.scope?a.scope.split("/").pop():"workforce"}</span>`}${sub}</span></div>`;
 }
