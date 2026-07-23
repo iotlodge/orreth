@@ -313,6 +313,30 @@ including derived-memory chain verification).
 
 ## 🔧 Build phase — decisions as they arise
 
+### Locked 2026-07-23 (0039 — the Chronicle and the Canon: Phase 2's constitution)
+- **Two books, one mind — the house names**: the Chronicle (JB's Purpose Data — the
+  O·I·O·T ladder, DAG-hard, walkable forever) and the Canon (JB's Orreth Data —
+  policies/prompts/skills/standards as forever-versioned assets); coupled in THE loop
+  (Chronicle evidence → Canon proposals → human gates → the Canon governs the next
+  Chronicle).
+- **The charter IS the storage map**: Chronicle record classes carry allen's charter
+  attributes (RTO · RPO · Criticality · DataClassification · retention min/max); in
+  prod the IAC allocates stores per class — records retention as provisioned physics.
+- **The metabolism hears usage**: recall-frequency joins 0005 scores as a distillation
+  input; the dials (thresholds, windows, cadence) are Canon assets, Human and
+  Agent+HITL editable, tuned on 0033's measured information loss.
+- **Graduation requires the canary**: mentor crystallizes at the smart tier; the
+  toolbox proves its rubric AT the mentee's tier under full observation before the
+  cheap tier serves — 0010's never-silently-dumber, extended to lifecycles.
+- **Memory, not RPC**: cross-field/eco sharing reads risen records at the common
+  ancestor (provenance, trust, and score ride along); monitoring and future telemetry
+  are Chronicle readers.
+- **The pointer law**: bulk never enters the mind — the artifact-pointer class holds
+  signed pointer+hash+metadata+lineage; mass rests in class-allocated stores.
+- **The projection privacy floor**: profile & consent · testament & passage · purge
+  stubs & key custody never enter a projection; dispatch/meter internals remain
+  retrievable. The exclusion list itself lives in the Canon, human-gated.
+
 ### Locked 2026-07-22 (0038 — the Stacks: seven rows of the library — seed dialog + AskUserQuestion, all recommended)
 - **Proving-ground-then-promote**: the seven RAG flavors compete on the record; winners
   join the librarian's planner, losers retire honorably. **Naive is the baseline control.**
