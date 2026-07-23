@@ -436,3 +436,10 @@ design doc 0017.
 |---|---|---|
 | `backend/conformance/orreth_sim/tournament.py` | Fable 5 (claude-fable-5) | 0038 §4/§6 — the last three flows (honest eye · tactic-within · decompose-recompose) · 0033 grading · 0005 standings · promotion as PROPOSAL; banner in file |
 | `backend/conformance/tests/test_tournament.py` | Fable 5 (claude-fable-5) | sp4 conformance: seven rows one door · deterministic grading · floors flagged · promotion carries evidence never enactment; banner in file |
+
+## Fable 5 net-new files — 2026-07-23 (0039 sp1, the two books stand)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/canon.py` | Fable 5 (claude-fable-5) | 0039 §2/§7 — the record-class registry as a Canon asset (charter attributes per class); floors-first classification; the privacy floor; the census; banner in file |
+| `backend/conformance/tests/test_canon.py` | Fable 5 (claude-fable-5) | sp1 conformance: registry once · floors-first · the smuggle test · the census; banner in file |

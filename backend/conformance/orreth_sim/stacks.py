@@ -106,7 +106,13 @@ def project(node) -> dict:
     for r in node.records.values():
         if "knowledge" in (r.get("tags") or []):
             superseded.update(r.get("derived_from") or [])
+    from . import canon
     for rid, r in sorted(node.records.items()):
+        # THE PRIVACY FLOOR (0039 §7, locked 2026-07-23): floors apply BEFORE
+        # any projection sees a byte — a sovereign record never chunks, no
+        # matter what else it wears
+        if not canon.retrievable(node, r):
+            continue
         tags = r.get("tags") or []
         if "document" in tags and "stacks" in tags:
             doc = json.loads(crypto._b64d(r["body"]).decode()).get("stacks_document") or {}

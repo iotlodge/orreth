@@ -4689,6 +4689,27 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                                         origin=origin) + via
             else:
                 reply = wire_stacks_routing(rag_port, rag_scope) + via
+    if ans.get("action") == "canon-census":   # 0039 sp1 — the genome's roll call
+        from orreth_sim import canon
+        rows = wire_assets(universe_port(port), "asset")
+        seen: dict = {}
+        for ref, body, dl, tags in rows:
+            name = next((t for t in tags if t != "asset"), "?")
+            seen[name] = seen.get(name, 0) + 1
+        rag_port2 = next((p for p, s in FLOOR_SCOPES.items()
+                          if s.endswith("/e:rag/f:naive")), None)
+        if rag_port2:
+            for ref, body, dl, tags in wire_assets(rag_port2, "asset"):
+                name = next((t for t in tags if t != "asset"), "?")
+                seen[name] = seen.get(name, 0) + 1
+        floor_list = [c for c, v in canon.CLASSES_V1["classes"].items()
+                      if not v["retrievable"]]
+        entries = "; ".join(f"{n} ({v} version(s))"
+                            for n, v in sorted(seen.items())) or "an empty shelf"
+        reply = (f"THE CANON — the genome's roll call: {len(seen)} entry(ies): "
+                 f"{entries}. the privacy floor (0039 §7, yours to gate): "
+                 + " · ".join(floor_list) + " never enter a projection. every "
+                 "entry versioned; changing any is a proposal at your gate.")
     if ans.get("action") == "stacks-tournament":  # 0038 sp4 — the demo itself
         rag_port, rag_scope = next(
             ((p, s) for p, s in FLOOR_SCOPES.items()
