@@ -43,6 +43,8 @@ STANDARD_V1 = {
 }
 
 _SHAPES = (
+    ("temporal", re.compile(r"\b(as of|since|before|after)\s+\d{4}-\d{2}-\d{2}\b|"
+                            r"\bwhat changed\b|\bhistory of\b")),
     ("media", re.compile(r"\b(image|photo|picture|video|audio|diagram|png|jpg)\b")),
     ("relational", re.compile(r"\b(relate[ds]?|relationship|connect(?:ed|ion)?s?|"
                               r"between|depends? on|linked?|who knows)\b")),

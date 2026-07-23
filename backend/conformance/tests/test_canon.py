@@ -66,3 +66,35 @@ def test_census_rolls_the_shelf():
     assert {"record-classes", "stacks-chunking", "stacks-embedding",
             "stacks-prompt"} <= names
     assert all(e["versions"] >= 1 for e in canon.census(fld))
+
+def test_chronicle_joins_the_rows_with_time():
+    """0039 sp2: the universe's own life is retrievable — class-gated, cited,
+    each chunk stamped with its moment; the time dial walks the timeline and
+    timeless chunks stand aside; the floor still wins over everything."""
+    from orreth_sim import dispatcher
+    fld, lib, kp = _floor()
+    stacks.plant_eco_assets(fld, lib, kp)
+    canon.plant_registry(fld, lib, kp)
+    old = make_memory(lib, kp, fld.scope,
+                      {"objective": {"text": "adopt the estate stacks and open "
+                                             "the acceptance gate"}},
+                      kind="episodic", tags=["objective", "estate"],
+                      occurred_at="2026-07-20T10:00:00Z",
+                      provenance_class="ingested-archive")
+    fld.write(old)
+    new = make_memory(lib, kp, fld.scope,
+                      {"observation": {"note": "the estate stacks tournament "
+                                               "crowned the graph row"}},
+                      kind="episodic", tags=["observation", "estate"],
+                      occurred_at="2026-07-22T22:00:00Z",
+                      provenance_class="ingested-archive")
+    fld.write(new)
+    proj = stacks.project(fld)
+    hits = stacks.retrieve(proj, "what happened with the estate stacks?")
+    assert {h["doc"] for h in hits} >= {"objective", "observation"}
+    # the time dial: since excludes the old; as-of excludes the new
+    since = stacks.retrieve(proj, "estate stacks since 2026-07-21")
+    assert since and all(h["doc"] == "observation" for h in since)
+    asof = stacks.retrieve(proj, "estate stacks as of 2026-07-21")
+    assert asof and all(h["doc"] == "objective" for h in asof)
+    assert "temporal" in dispatcher.classify("estate since 2026-07-21")

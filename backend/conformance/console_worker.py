@@ -3811,6 +3811,15 @@ def _stacks_node(port: int, scope: str):
             except Exception:
                 continue
             if isinstance(body, dict):
+                # the echo guard (0039 sp2): the stacks' own machinery-talk —
+                # dispatch choices, asks-about-asking — never answers a world
+                # question; real conversations (allen, becky, the markers) do
+                asked = str((body.get("parlor") and body.get("asked")) or "")
+                if asked.lower().startswith(("ask the stacks", "run the tournament",
+                                             "how do you route", "show the",
+                                             "the tournament", "what does the "
+                                             "universe know")):
+                    continue
                 n.records[h["ref"]] = {"tags": tags,
                                        "received_at": h.get("occurred_at", ""),
                                        "derived_from": h.get("derived_from") or [],
@@ -3831,7 +3840,23 @@ def _stacks_node(port: int, scope: str):
                           "intent": "recall", "budget": {"cost": 8},
                           "auth": "biscuit-sim"},
                 "token": token, "requester_scope": UNIVERSE_SCOPE})
-            _keep(u_port, r2.get("hits", []), lambda t: "knowledge" in t)
+            from orreth_sim import canon as _canon
+            cand = [h for h in r2.get("hits", [])
+                    if "knowledge" in (h.get("tags") or [])
+                    or (_canon.class_of({"tags": h.get("tags") or []})
+                        .startswith("chronicle-")
+                        and "asset" not in (h.get("tags") or [])
+                        and "dispatch" not in (h.get("tags") or []))]
+            # stratified cap: conversations, markers, and objectives board
+            # FIRST — the run-record flood never drowns the human's voice
+            pri = lambda h: 0 if any(t in ("parlor", "marker", "objective")
+                                     for t in (h.get("tags") or [])) else 1
+            cand.sort(key=lambda h: (pri(h), h.get("occurred_at", "")),
+                      reverse=False)
+            cand.sort(key=lambda h: h.get("occurred_at", ""), reverse=True)
+            cand.sort(key=pri)
+            _keep(u_port, cand[:120], lambda t: True)   # newest 120 — the cap
+            # is honest: a standing projection with a rebuild beat is sp3+
         except Exception:
             pass
     return n, seat_kp, seat_did
@@ -3850,6 +3875,8 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
     dispatcher.plant_standard(n, me, seat_kp)     # genesis once; shelf from then on
     d = dispatcher.dispatch(n, me, seat_kp, q, origin=origin,
                             built=list(rivals.RETRIEVERS))
+    n.records.pop(d["record"], None)   # an ask never cites its OWN routing —
+    # the choice persists on the wire; it just doesn't answer itself
     a = rivals.answer_as(n, d["flavor"], q)
     cites = " · ".join(f"{c['doc']} [{c['ref'][:18]}…] {c['score']}"
                        for c in a["citations"][:3])

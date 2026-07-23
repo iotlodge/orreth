@@ -94,6 +94,41 @@ _TRUST = {"corroborated": 1.0, "promoted": 1.0, "untrusted": 0.4,
           "investigating": 0.15, "recalled": 0.0}
 
 
+def _chronicle_text(body: dict, depth: int = 0) -> str:
+    """A chronicle record's human-legible face: the string fields that carry
+    meaning (text · intent · why · reply · note · claim …), flattened — the
+    ladder speaks in its own words, never in raw structure."""
+    if depth > 3 or not isinstance(body, dict):
+        return ""
+    keep = ("text", "intent", "why", "reply", "asked", "note", "claim", "ask",
+            "objective", "words", "flavor", "rule", "name", "topic",
+            "parlor", "resident", "to")
+    out = []
+    for k, v in body.items():
+        if isinstance(v, str) and (k in keep and len(v) > 2):
+            out.append(v)
+        elif isinstance(v, dict):
+            out.append(_chronicle_text(v, depth + 1))
+    return " · ".join(x for x in out if x)
+
+
+# time as a retrieval dial (0039 sp2): "as of <date>" · "since <date>" —
+# the spacetime window and the stacks join hands
+_TIME_RX = re.compile(r"\b(as of|since|before|after)\s+(\d{4}-\d{2}-\d{2})\b",
+                      re.IGNORECASE)
+
+
+def parse_time(query: str):
+    """The ask's temporal clause, if any → (mode, iso-date, cleaned-query)."""
+    m = _TIME_RX.search(query or "")
+    if not m:
+        return None, None, query
+    mode = {"as of": "asof", "before": "asof",
+            "since": "since", "after": "since"}[m.group(1).lower()]
+    cleaned = (query[:m.start()] + query[m.end():]).strip()
+    return mode, m.group(2), cleaned or query
+
+
 def project(node) -> dict:
     """The stack's whole body: chunks + vectors DERIVED from the log —
     shelved documents AND the librarian's gathered knowledge (head versions
@@ -123,6 +158,23 @@ def project(node) -> dict:
                 chunks.append({"ref": rid, "doc": name, "at": i, "text": piece,
                                "vec": _embed(piece), "trust": 1.0})
                 i += max(1, size - ov)
+        elif "asset" not in tags and "dispatch" not in tags \
+                and canon.class_of(r).startswith("chronicle-"):
+            # dispatch stays retrievable (the routing door, the window) but
+            # never chunks into world-answers — machinery-talk is not memory
+            # THE CHRONICLE JOINS THE ROWS (0039 sp2): the universe's own life —
+            # objectives, intentions, observations, thoughts, choices — becomes
+            # retrievable, class-gated, each chunk stamped with ITS MOMENT
+            b = json.loads(crypto._b64d(r["body"]).decode())
+            text = _chronicle_text(b)
+            if not text:
+                continue
+            cls = canon.class_of(r)
+            chunks.append({"ref": rid, "doc": cls.replace("chronicle-", ""),
+                           "at": 0, "text": text[:size * 2],
+                           "vec": _embed(text[:size * 2]), "trust": 0.9,
+                           "state": None,
+                           "when": r.get("occurred_at", "")})
         elif "knowledge" in tags and rid not in superseded:
             b = json.loads(crypto._b64d(r["body"]).decode())
             # both dialects: the sim's {claim, category} and the wire's
@@ -147,9 +199,18 @@ def project(node) -> dict:
 def retrieve(projection: dict, query: str, k: int = 4) -> list[dict]:
     """Cosine over the projection — the baseline: no rerank, no graph, no
     tricks. Hits carry their refs; authorization stayed at the gateway."""
-    qv = _embed(query)
+    mode, iso, cleaned = parse_time(query)
+    qv = _embed(cleaned)
     scored = []
     for c in projection.get("chunks", []):
+        if mode:                             # time is a dial (0039 sp2): a
+            w = (c.get("when") or "")[:10]   # temporal ask walks the timeline —
+            if not w:                        # timeless chunks stand aside
+                continue
+            if mode == "asof" and w > iso:
+                continue
+            if mode == "since" and w < iso:
+                continue
         raw = sum(a * b for a, b in zip(qv, c["vec"]))
         if raw <= 0.2:                       # the relevance floor gates on the
             continue                         # RAW match — does it speak to the ask?
