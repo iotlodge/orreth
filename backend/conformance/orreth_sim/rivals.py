@@ -123,6 +123,7 @@ def answer_as(node, flavor: str, query: str) -> dict:
     """One door for every built row: retrieve by flavor, answer with citations
     — the shape the Dispatcher routes into and the standings will grade."""
     hits = RETRIEVERS[flavor](node, query)
+    stacks.record_recalls(node, hits)
     if not hits:
         return {"answer": "the stacks hold nothing on this — an honest unknown",
                 "citations": [], "flavor": flavor}

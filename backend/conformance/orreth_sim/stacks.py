@@ -224,11 +224,26 @@ def retrieve(projection: dict, query: str, k: int = 4) -> list[dict]:
             for s, c in scored[:k]]
 
 
+def record_recalls(node, hits: list) -> None:
+    """THE USAGE TAP (0039 sp3, locked: usage is evidence): every retrieval
+    that surfaces a record warms it — the metabolism hears what the universe
+    actually reaches for, and the recalled stay low and warm."""
+    rec = getattr(node, "recalls", None)
+    if rec is None:
+        rec = node.recalls = {}
+    from .identity import NOW
+    for h in hits:
+        e = rec.setdefault(h["ref"], {"n": 0})
+        e["n"] += 1
+        e["last"] = NOW()
+
+
 def answer(node, projection: dict, query: str) -> dict:
     """The grounded reply: extractive in the sim (deterministic — the wire may
     voice it through a governed thought), every claim wearing its citation.
     An empty retrieval answers honestly — the prompt standard's law."""
     hits = retrieve(projection, query)
+    record_recalls(node, hits)
     if not hits:
         return {"answer": "the stacks hold nothing on this — an honest unknown "
                           "(the prompt standard forbids invention)",

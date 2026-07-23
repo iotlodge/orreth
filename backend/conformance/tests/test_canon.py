@@ -98,3 +98,40 @@ def test_chronicle_joins_the_rows_with_time():
     asof = stacks.retrieve(proj, "estate stacks as of 2026-07-21")
     assert asof and all(h["doc"] == "objective" for h in asof)
     assert "temporal" in dispatcher.classify("estate since 2026-07-21")
+
+
+def test_metabolism_hears_usage_and_measures_loss():
+    """0039 sp3: the dialed metabolism — a cold record past its class window
+    distills; a RECALLED record stays warm and low; the distillation's
+    information loss is measured (0033) and the report lands on the record."""
+    fld, lib, kp = _floor()
+    stacks.plant_eco_assets(fld, lib, kp)
+    canon.plant_registry(fld, lib, kp)
+    canon.plant_dials(fld, lib, kp)
+    fld.undistilled.clear()                       # only our subjects on the bench
+    cold = make_memory(lib, kp, fld.scope,
+                       {"observation": {"note": "the retail floor idled all "
+                                                "spring"}},
+                       kind="episodic", tags=["observation", "retail"],
+                       occurred_at="2026-05-01T10:00:00Z",
+                       provenance_class="ingested-archive")
+    warm = make_memory(lib, kp, fld.scope,
+                       {"observation": {"note": "the care floor greets its "
+                                                "human each morning"}},
+                       kind="episodic", tags=["observation", "care"],
+                       occurred_at="2026-05-01T11:00:00Z",
+                       provenance_class="ingested-archive")
+    fld.write(cold)
+    fld.write(warm)
+    # the tap: retrieval warms the warm one
+    proj = stacks.project(fld)
+    stacks.answer(fld, proj, "care floor greets its human each morning")
+    assert fld.recalls and warm["id"] in fld.recalls
+    r = canon.metabolism_beat(fld, lib, kp)
+    assert r["distilled"] >= 1 and r["kept_warm"] >= 1
+    assert cold["id"] not in fld.undistilled      # the cold rose
+    assert warm["id"] in fld.undistilled          # the recalled stays low
+    assert "loss_bits" in r and r["distillation"]
+    reports = [x for x in fld.records.values()
+               if "metabolism-report" in (x.get("tags") or [])]
+    assert reports                                 # tuning is evidence now

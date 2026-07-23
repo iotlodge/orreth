@@ -3873,6 +3873,9 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
         return "the stacks are unreachable — try again on the next beat"
     me = {"did": seat_did, "scope": scope}
     dispatcher.plant_standard(n, me, seat_kp)     # genesis once; shelf from then on
+    from orreth_sim import canon as _cn
+    _cn.plant_registry(n, me, seat_kp)            # the two books stand (0039 sp1)
+    _cn.plant_dials(n, me, seat_kp)               # the metabolism's dials (sp3)
     d = dispatcher.dispatch(n, me, seat_kp, q, origin=origin,
                             built=list(rivals.RETRIEVERS))
     n.records.pop(d["record"], None)   # an ask never cites its OWN routing —
