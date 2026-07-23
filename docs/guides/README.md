@@ -12,6 +12,7 @@ mechanisms land.*
 | 02 | [The Universe Operator's Manual](02-the-universe-operators-manual.md) | Build and manage a universe: the rig, floors, what survives what, the human gates, growing ecosystems, budgets, knobs, and triage | ✅ first edition |
 | 03 | The Resident Field Guide | Each resident's duties, keys, and lanes — becky, the librarian, charlotte, ada, vigil, steward, governance, the monitor, the improver | ⏳ queued |
 | 04 | Building Agents on Orreth | The SDK: join at the door, persist your self, think through the gateway, leave RunRecords — the chassis and the fingertip | ⏳ queued |
+| 05 | [The Seven Rows of the Library](05-the-seven-rows.md) | The Stacks, working: seven RAG variants over one truth, the Dispatcher that routes between them, one door for humans and agents, and why O·I·O·T-in-time lets knowledge be stored and retrieved in ways a single database never could | ✅ first edition |
 
 ## The house rules the guides assume
 

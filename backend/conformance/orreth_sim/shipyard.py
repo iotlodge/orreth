@@ -110,3 +110,32 @@ def plan(universe_scope: str, name: str, fields: list[str], used_ports: set[int]
             "summary": (f"a {template} " if template else "") + f"e:{name} on :{ports[0]}"
                        + (f" with field(s) {', '.join(f'{f}:{p}' for f, p in zip(fields, ports[1:]))}"
                           if fields else " — sailing alone (fields can join later)")}
+
+
+def join_plan(universe_scope: str, name: str, fields: list[str],
+              used_ports: set[int], trust_root: str, eco_port: int) -> dict:
+    """The field-join door (0038 sp4 — JB's gate catch 2026-07-22: the yard
+    only knew whole ecosystems, and "fields can join later" had no door; a
+    second hull on a standing scope would be two truths). New moons for a
+    STANDING eco: same shapes, same gate — nothing relaunched, nothing doubled."""
+    if not valid_name(name):
+        raise ValueError(f"'{name}' cannot sail — names are lowercase-kebab")
+    for f in fields:
+        if not valid_name(f):
+            raise ValueError(f"field '{f}' cannot sail — names are lowercase-kebab")
+    if not fields:
+        raise ValueError("a join names at least one field")
+    eco_scope = f"{universe_scope}/e:{name}"
+    eco_container = f"orreth-dyn-e-{name}"
+    ports = allocate_ports(len(fields), used_ports)
+    moons = [{
+        "kind": "field", "name": f,
+        "scope": f"{eco_scope}/f:{f}",
+        "port": p, "container": f"orreth-dyn-e-{name}-f-{f}",
+        "parent_container": eco_container, "parent_port": eco_port,
+        "profile": field_profile(eco_scope, f, trust_root),
+        "profile_file": f"dyn-e-{name}-f-{f}.json",
+    } for f, p in zip(fields, ports)]
+    return {"eco": name, "eco_scope": eco_scope, "fields": moons,
+            "summary": f"field(s) {', '.join(f'{f}:{p}' for f, p in zip(fields, ports))} "
+                       f"join the STANDING e:{name} (:{eco_port}) — nothing doubled"}

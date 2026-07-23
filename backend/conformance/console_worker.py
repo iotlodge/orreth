@@ -3934,11 +3934,96 @@ class Shipyard:
             "--root-pub", root_keypair().public,
             "--parent", parent, "--pg", RIG_PG)
 
+    def on_field_join(self, port: int, r: dict) -> bool:
+        """The field-join door (0038 sp4 — JB's gate catch): moons for a
+        STANDING eco — planned against its real port, staged at the gate,
+        launched into its hull's parentage, durable in the ledger. Nothing
+        relaunched, nothing doubled."""
+        status = r.get("status")
+        eco = str(r.get("eco") or "").strip()
+        fields = [str(f) for f in (r.get("fields") or [])]
+        eco_port = next((p for p, s in FLOOR_SCOPES.items()
+                         if s == f"{UNIVERSE_SCOPE}/e:{eco}"), None)
+        if status == "pending":
+            if eco_port is None:
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "denied",
+                      "result": {"note": f"no standing e:{eco} to join — grow "
+                                         "the ecosystem first"}})
+                return True
+            used = {4500, 4501, 4502, *self.floors(),
+                    *(int(p) for p in FLOOR_SCOPES)}
+            try:
+                p = shipyard.join_plan(UNIVERSE_SCOPE, eco, fields, used,
+                                       TRUST_ROOT, eco_port)
+            except ValueError as e:
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "denied", "result": {"note": str(e)}})
+                return True
+            self.plans[r["id"]] = p
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "staged",
+                  "result": {"plan": p["summary"],
+                             "note": "consequence waits for you (0012)"}})
+            print(f"  ↳ shipyard staged join: {p['summary']}")
+            return False
+        if status == "approved":
+            p = self.plans.pop(r["id"], None)
+            if p is None:
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "denied",
+                      "result": {"note": "the drafted plan was lost to a restart "
+                                         "— ask again and the yard redrafts"}})
+                return True
+            led = self.ledger()
+            landed, missed = [], []
+            for m in p["fields"]:
+                ok, out = self._launch_one(m)
+                if ok:
+                    led[str(m["port"])] = {k: m[k] for k in
+                                           ("container", "port", "parent_container",
+                                            "parent_port", "scope", "profile_file")}
+                    landed.append(f"{m['name']}:{m['port']}")
+                else:
+                    missed.append(f"{m['name']}: {out[:60]}")
+            self.save(led)
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"reply": f"joined the standing e:{eco}: "
+                                      + (", ".join(landed) or "nothing")
+                                      + (f"; missed: {'; '.join(missed)}"
+                                         if missed else "")}})
+            print(f"  ↳ shipyard join complete — {len(landed)} moon(s), "
+                  f"{len(missed)} miss(es)")
+            return True
+        if status == "denied":
+            self.plans.pop(r["id"], None)
+            return True
+        return False
+
     def on_request(self, port: int, r: dict) -> bool:
         """Mirrors the farm gate: stage on pending, launch on approved.
         Returns True when the request reached a resting state."""
         status = r.get("status")
         if status == "pending":
+            # the living-hull guard (0038 sp4 — the :4511 incident, 2026-07-22):
+            # a whole-ecosystem plan for a STANDING scope would rm -f the living
+            # hull and rebirth it elsewhere. Refuse at the plan; the join door
+            # is the honest path for growth.
+            eco_scope = f"{UNIVERSE_SCOPE}/e:{r.get('eco', '')}"
+            standing = any(s.get("scope") == eco_scope
+                           for s in self.ledger().values()) \
+                or eco_scope in FLOOR_SCOPES.values()
+            if standing:
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "denied",
+                      "result": {"note": f"e:{r.get('eco', '')} already sails — "
+                                         "a second hull would cut down the "
+                                         "living one. say “add fields … to "
+                                         f"ecosystem {r.get('eco', '')}” (the "
+                                         "join door, 0038 sp4)"}})
+                print(f"  ↳ shipyard REFUSED a duplicate hull for {eco_scope}")
+                return True
             try:
                 p = shipyard.plan(UNIVERSE_SCOPE, r.get("eco", ""),
                                   r.get("fields") or [],
@@ -4400,6 +4485,12 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                       + " + ".join(ADOPT_STACKS) + ": describe, fetch "
                       "templates, attest; never mutate. the receipts open the "
                       "acceptance gate (0037 §7)"})
+    if ans.get("action") == "field-join":     # 0038 sp4 — moons for a standing eco
+        call(port, "POST", "/requests",
+             {"kind": "field-join", "eco": ans["eco"], "fields": ans["fields"],
+              "text": f"field(s) {', '.join(ans['fields'])} ask to join the "
+                      f"standing e:{ans['eco']} — moons only, nothing doubled "
+                      "(0038 sp4)"})
     if ans.get("action") == "estate-decide":  # the human's word, spoken (0037 §7)
         staged = [x for x in call(port, "GET", "/requests").get("requests", [])
                   if x.get("kind") == "estate-adopt"
@@ -4420,7 +4511,8 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         # floor the ask RIDES TO HER RAG SEAT — same DID lineage, the origin
         # scope pinned into the choice record so the hop is on the record
         rag_port, rag_scope = next(
-            ((p, s) for p, s in FLOOR_SCOPES.items() if "/e:rag/" in s),
+            ((p, s) for p, s in FLOOR_SCOPES.items()
+             if s.endswith("/e:rag/f:naive")),   # the LOG lives at the naive row
             (None, None))
         if rag_port is None:
             reply = ("my rag seat is not standing — the stacks' floor is dark; "
@@ -4741,6 +4833,10 @@ def main() -> None:
                             on_subscription(port, scope, r,
                                             approved=r.get("status") == "approved",
                                             declined=r.get("status") == "denied")
+                        elif r.get("kind") == "field-join" and \
+                                r.get("status") in ("pending", "approved", "denied"):
+                            if SHIPYARD.on_field_join(port, r):
+                                handled.add(key)
                         elif r.get("kind") == "estate-adopt" and \
                                 r.get("status") in ("pending", "approved", "denied"):
                             handled.add(key)

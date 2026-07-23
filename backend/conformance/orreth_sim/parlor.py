@@ -464,6 +464,19 @@ def answer(name: str, text: str, facts: dict) -> dict:
                     "verbatim": True}
         if t.startswith(("show consents", "the consent ledger", "show the consent")):
             return {"reply": _becky_consents(facts), "verbatim": True}
+        # the field-join door (0038 sp4 — "fields can join later", finally true):
+        # new moons for a STANDING eco, staged at the same gate, nothing doubled
+        jm = re.match(r"^add\s+fields?\s+(.+?)\s+to\s+(?:ecosystem\s+|eco\s+)?"
+                      r"([a-z0-9-]+)\s*$", t)
+        if jm:
+            jf = [f.strip() for f in re.split(r",|\s+and\s+", jm.group(1))
+                  if f.strip()]
+            return {"reply": f"staging field(s) {', '.join(jf)} to join the "
+                             f"STANDING e:{jm.group(2)} — the shipyard drafts "
+                             "moons only, nothing doubled; consequence waits "
+                             "for you at the gate (0012).",
+                    "action": "field-join", "eco": jm.group(2), "fields": jf,
+                    "verbatim": True}
         tpl, plain = grow_template(text)      # 0034 §7 sp1 — a named template rides
         grown = parse_grow(plain)
         if grown is not None:
