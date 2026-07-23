@@ -3800,21 +3800,40 @@ def _stacks_node(port: int, scope: str):
             "token": token, "requester_scope": scope})
     except Exception:
         return None, seat_kp, seat_did
-    for h in r.get("hits", []):
-        tags = h.get("tags") or []
-        wanted = ("stacks" in tags and "document" in tags) \
-            or "routing-standard" in tags or "dispatch" in tags
-        if not wanted:
-            continue
+    def _keep(src_port, hits, want):
+        for h in hits:
+            tags = h.get("tags") or []
+            if not want(tags):
+                continue
+            try:
+                body = call(src_port, "GET",
+                            f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+            except Exception:
+                continue
+            if isinstance(body, dict):
+                n.records[h["ref"]] = {"tags": tags,
+                                       "received_at": h.get("occurred_at", ""),
+                                       "derived_from": h.get("derived_from") or [],
+                                       "body": crypto._b64e(crypto.canonical(body))}
+    _keep(port, r.get("hits", []),
+          lambda t: ("stacks" in t and ("document" in t or "tournament" in t))
+          or "routing-standard" in t or "dispatch" in t or "knowledge" in t)
+    # THE ROWS MEET THE REAL MEMORY (JB-locked 2026-07-22): the librarian's
+    # GATHERED knowledge lives on the universe's floors — a second read brings
+    # it into the projection, trust and lineage riding with it
+    u_port = universe_port(port)
+    if u_port != port:
         try:
-            body = call(port, "GET",
-                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+            r2 = call(u_port, "POST", "/retrieve", {
+                "query": {"requester": seat_did,
+                          "subject": {"cohort": {"scope": UNIVERSE_SCOPE}},
+                          "space": "self", "time": {"from": frm},
+                          "intent": "recall", "budget": {"cost": 8},
+                          "auth": "biscuit-sim"},
+                "token": token, "requester_scope": UNIVERSE_SCOPE})
+            _keep(u_port, r2.get("hits", []), lambda t: "knowledge" in t)
         except Exception:
-            continue
-        if isinstance(body, dict):
-            n.records[h["ref"]] = {"tags": tags,
-                                   "received_at": h.get("occurred_at", ""),
-                                   "body": crypto._b64e(crypto.canonical(body))}
+            pass
     return n, seat_kp, seat_did
 
 
@@ -3937,6 +3956,34 @@ def on_standard_promotion(port: int, scope: str, r: dict, *,
               f"[{asset['id'][:18]}…]")
     except Exception as e:
         print(f"    (v2 adoption failed: {e})")
+
+
+def wire_stacks_panel(port: int) -> dict:
+    """The Stacks panel's facts (0038 §6): the standard's word, the newest
+    standings, and the choice ledger's pulse — composed for the room."""
+    import json as _json
+
+    from orreth_sim import crypto as _c
+    from orreth_sim import dispatcher
+    rag_port, rag_scope = next(
+        ((p, s) for p, s in FLOOR_SCOPES.items()
+         if s.endswith("/e:rag/f:naive")), (None, None))
+    if rag_port is None:
+        return {}
+    n, _, _ = _stacks_node(rag_port, rag_scope)
+    if n is None:
+        return {}
+    std = dispatcher.standard(n)
+    standings = []
+    for r in sorted(n.records.values(), key=lambda x: x.get("received_at", "")):
+        if "tournament" in (r.get("tags") or []):
+            b = _json.loads(_c._b64d(r["body"]).decode()).get("stacks_tournament") or {}
+            standings = b.get("standings") or standings
+    return {"version": std.get("version", "?"), "default": std.get("default"),
+            "built": std.get("built") or [], "standings": standings,
+            "choices": len(dispatcher.choices(n, 50)),
+            "knowledge_chunks": sum(1 for r in n.records.values()
+                                    if "knowledge" in (r.get("tags") or []))}
 
 
 def wire_stacks_routing(port: int, scope: str) -> str:
@@ -4540,6 +4587,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         return
     if r.get("verb") == "workspace":          # 0028 §1 — the room is an ask too
         if name == "librarian":               # the richest room reads more state
+            facts["stacks"] = wire_stacks_panel(port)   # the seven rows (0038)
             facts["profile_text"] = profile_read(port, scope)
             facts["markers"] = recent_markers(port, scope)
             facts["domains"] = domain_packages(port, scope)  # 0031 §5

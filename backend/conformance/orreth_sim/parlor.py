@@ -1129,7 +1129,22 @@ def _sev(items):
 def _room_librarian(facts: dict) -> list[dict]:
     v = _vitals(facts, "librarian")
     walks = [r for r in facts.get("requests") or [] if r.get("kind") == "recall"]
-    return [
+    stx = facts.get("stacks") or {}
+    stacks_panels = ([
+        {"kind": "stat", "title": "the stacks (0038) — seven rows, one truth",
+         "items": [{"label": "routing standard", "value": f"v{stx.get('version', '?')}"},
+                   {"label": "default row", "value": stx.get("default", "?")},
+                   {"label": "rows breathing", "value": len(stx.get("built") or [])},
+                   {"label": "choices on record", "value": stx.get("choices", 0)},
+                   {"label": "knowledge in the rows",
+                    "value": stx.get("knowledge_chunks", 0)}]},
+        {"kind": "bars", "title": "the standings — the tournament's word",
+         "items": [{"label": s["flavor"], "value": int(100 * s["mean"])}
+                   for s in (stx.get("standings") or [])[:7]] or
+                  [{"label": "no tournament yet — “run the tournament” starts one",
+                    "value": 0}]},
+    ] if stx else [])
+    return stacks_panels + [
         {"kind": "stat", "title": "the shelf",
          "items": [{"label": "knowledge held", "value": v.get("knowledge held", 0)},
                    {"label": "gathers", "value": v.get("gathers", 0)},

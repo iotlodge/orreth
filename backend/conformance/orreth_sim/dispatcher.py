@@ -89,7 +89,7 @@ def dispatch(node, librarian: dict, librarian_kp, ask: str, *,
     rule = next((r for r in std.get("rules", [])
                  if r.get("when") in shapes), None)
     chosen = rule["route"] if rule else std.get("default", "naive")
-    why = rule["why"] if rule else "no shape matched — the baseline serves"
+    why = rule["why"] if rule else "no shape matched — the default row serves"
     # the rows standing NOW — the caller's truth; the standard's genesis list
     # is the fallback (v2 of the asset rides the lanes as the rows earn it)
     built = built or std.get("built") or ["naive"]

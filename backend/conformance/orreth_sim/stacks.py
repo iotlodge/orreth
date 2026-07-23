@@ -86,24 +86,55 @@ def _embed(text: str, dim: int = 512) -> list[float]:
     return [x / n for x in v]
 
 
+# the trust law, carried into every projection (0038 — "the rows meet the real
+# memory", JB-locked 2026-07-22): gathered knowledge joins the stacks WEARING
+# its state — corroborated speaks fully, quarantined speaks dampened and
+# labeled, investigating barely, and RECALLED IS DEAD (0022's law, kept)
+_TRUST = {"corroborated": 1.0, "promoted": 1.0, "untrusted": 0.4,
+          "investigating": 0.15, "recalled": 0.0}
+
+
 def project(node) -> dict:
-    """The naive stack's whole body: chunks + vectors DERIVED from the log.
-    Rebuildable, therefore disposable — this function IS the field."""
+    """The stack's whole body: chunks + vectors DERIVED from the log —
+    shelved documents AND the librarian's gathered knowledge (head versions
+    only, trust-weighted). Rebuildable, therefore disposable — this function
+    IS the field."""
     pol = _chunking(node)
     size, ov = int(pol["chunk_chars"]), int(pol["overlap_chars"])
     chunks = []
+    superseded: set = set()
+    for r in node.records.values():
+        if "knowledge" in (r.get("tags") or []):
+            superseded.update(r.get("derived_from") or [])
     for rid, r in sorted(node.records.items()):
         tags = r.get("tags") or []
-        if "document" not in tags or "stacks" not in tags:
-            continue
-        doc = json.loads(crypto._b64d(r["body"]).decode()).get("stacks_document") or {}
-        text, name = doc.get("text", ""), doc.get("name", "?")
-        i = 0
-        while i < len(text):
-            piece = text[i:i + size]
-            chunks.append({"ref": rid, "doc": name, "at": i, "text": piece,
-                           "vec": _embed(piece)})
-            i += max(1, size - ov)
+        if "document" in tags and "stacks" in tags:
+            doc = json.loads(crypto._b64d(r["body"]).decode()).get("stacks_document") or {}
+            text, name = doc.get("text", ""), doc.get("name", "?")
+            i = 0
+            while i < len(text):
+                piece = text[i:i + size]
+                chunks.append({"ref": rid, "doc": name, "at": i, "text": piece,
+                               "vec": _embed(piece), "trust": 1.0})
+                i += max(1, size - ov)
+        elif "knowledge" in tags and rid not in superseded:
+            b = json.loads(crypto._b64d(r["body"]).decode())
+            # both dialects: the sim's {claim, category} and the wire's
+            # gathered {knowledge, intent} — one law over both
+            claim = b.get("claim") or b.get("knowledge") or ""
+            state = b.get("state", "untrusted")
+            w = _TRUST.get(state, 0.4)
+            if not claim or w <= 0:
+                continue                     # recalled is DEAD — it never speaks
+            src = str((b.get("source") or {}).get("did") or
+                      (b.get("source") or {}).get("ref") or "?")[-16:]
+            doc = f"{b.get('category') or b.get('intent') or 'knowledge'} · {src}"
+            i = 0
+            while i < len(claim):            # long findings meet the same knife
+                piece = claim[i:i + size]
+                chunks.append({"ref": rid, "doc": doc, "at": i, "text": piece,
+                               "vec": _embed(piece), "trust": w, "state": state})
+                i += max(1, size - ov)
     return {"flavor": "naive", "chunks": chunks, "policy": pol}
 
 
@@ -111,13 +142,19 @@ def retrieve(projection: dict, query: str, k: int = 4) -> list[dict]:
     """Cosine over the projection — the baseline: no rerank, no graph, no
     tricks. Hits carry their refs; authorization stayed at the gateway."""
     qv = _embed(query)
-    scored = [(sum(a * b for a, b in zip(qv, c["vec"])), c)
-              for c in projection.get("chunks", [])]
-    scored.sort(key=lambda x: -x[0])
+    scored = []
+    for c in projection.get("chunks", []):
+        raw = sum(a * b for a, b in zip(qv, c["vec"]))
+        if raw <= 0.2:                       # the relevance floor gates on the
+            continue                         # RAW match — does it speak to the ask?
+        scored.append((raw * c.get("trust", 1.0), c))
+    scored.sort(key=lambda x: -x[0])         # …and TRUST orders the rank: the
+    # corroborated outrank the quarantined saying the same thing; recalled
+    # never entered the projection at all
     return [{"ref": c["ref"], "doc": c["doc"], "at": c["at"],
-             "text": c["text"], "score": round(s, 4)}
-            for s, c in scored[:k] if s > 0.2]   # the relevance floor —
-    # a baseline that answers everything answers nothing honestly
+             "text": c["text"], "score": round(s, 4),
+             **({"state": c["state"]} if c.get("state") else {})}
+            for s, c in scored[:k]]
 
 
 def answer(node, projection: dict, query: str) -> dict:
@@ -129,7 +166,11 @@ def answer(node, projection: dict, query: str) -> dict:
         return {"answer": "the stacks hold nothing on this — an honest unknown "
                           "(the prompt standard forbids invention)",
                 "citations": [], "flavor": "naive"}
-    lines = [f"“{h['text'][:160].strip()}” [{h['ref'][:18]}…]" for h in hits[:2]]
+    lines = [f"“{h['text'][:160].strip()}”"
+             + (f" ⟨{h['state']}⟩" if h.get("state") not in (None, "corroborated",
+                                                             "promoted") else "")
+             + f" [{h['ref'][:18]}…]" for h in hits[:2]]
     return {"answer": " · ".join(lines), "flavor": "naive",
-            "citations": [{"ref": h["ref"], "doc": h["doc"], "score": h["score"]}
+            "citations": [{"ref": h["ref"], "doc": h["doc"], "score": h["score"],
+                           **({"state": h["state"]} if h.get("state") else {})}
                           for h in hits]}

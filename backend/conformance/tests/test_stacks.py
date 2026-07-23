@@ -46,6 +46,34 @@ def test_one_truth_and_cited_answers():
     assert none["citations"] == [] and "honest" in none["answer"]
 
 
+def test_the_rows_meet_the_real_memory():
+    """JB's lock (2026-07-22): gathered knowledge joins the projections wearing
+    its trust — corroborated outranks quarantined, quarantined answers wear
+    their state label, superseded versions are silent, and RECALLED IS DEAD."""
+    from orreth_sim import knowledge
+    fld, lib, kp = _floor()
+    stacks.plant_eco_assets(fld, lib, kp)
+    cat = knowledge.KnowledgeCategory(fld, "gathering on walls", "walls")
+    good = cat.admit("compacted soil walls moderate indoor heat in cold "
+                     "weather homes", {"did": "did:web:trusted.example"})
+    cat.corroborate(good, ["receipt-1"])          # head = corroborated
+    shaky = cat.admit("cold weather homes lose most heat through walls",
+                      {"did": "did:web:unknown.example"})
+    dead = cat.admit("walls of straw hold the most heat of all",
+                     {"did": "did:web:poison.example"})
+    cat.recall_source("did:web:poison.example", "fabricated findings")
+    proj = stacks.project(fld)
+    hits = stacks.retrieve(proj, "how do walls hold heat in cold weather homes?")
+    assert hits and hits[0]["state"] == "corroborated"       # trust ranks first
+    assert any(h.get("state") == "untrusted" for h in hits)  # quarantine speaks…
+    a = stacks.answer(fld, proj, "cold weather homes heat loss walls")
+    assert "⟨untrusted⟩" in a["answer"]                      # …but wears its label
+    texts = " ".join(h["text"] for h in hits)
+    assert "straw" not in texts                              # recalled is DEAD
+    assert good not in [h["ref"] for h in hits
+                        if h["ref"] == dead]                 # (sanity on refs)
+
+
 def test_projection_rebuilds_and_purge_reaches():
     """Disposable by design: regrown equals original; a record gone from the
     log is gone from the next rebuild — the purge reaches every stack."""
