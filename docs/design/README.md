@@ -93,3 +93,8 @@ Ordered by leverage — each unlocks the next.
 2. JB reacts / pushes back on the open decisions (vision-owner's call).
 3. Lock the decisions → record them in `../decisions/`.
 4. Only then does code get written against the blessed spec.
+5. When the dive closes WHOLE (built, proven as a human in the glass), the closing
+   commit bumps `/VERSION` to the dive's era — `0.39` for 0039. The console wears the
+   era (`dev.sh` derives `ORRETH_VERSION` from it), so a close without its bump leaves
+   the glass claiming an older world. Standing rule since 2026-07-24, after the third
+   out-of-band correction.

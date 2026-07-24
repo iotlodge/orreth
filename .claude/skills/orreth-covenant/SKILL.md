@@ -72,6 +72,10 @@ process — mayflies in a universe designed for living things. Review caught it
 - PROVENANCE banner on new files, ledger updated?
 - Right branch? Quarantined work unpushed?
 - README / design docs updated where behavior changed?
+- Dive closed WHOLE (built + proven)? → `VERSION` bumped to that dive's era **in the
+  closing commit** (0.39 for 0039). `dev.sh` derives the console's version whisper from
+  it; a stale era means the glass lies about what world it is. Caught out-of-band three
+  times before this line existed (last: 2026-07-24, v0.35 worn by a forty-dive world).
 
 ## When unsure
 
