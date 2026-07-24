@@ -177,7 +177,30 @@ Recommended **yes, as a later spoonful**, door designed now: an agent invokes
 a flow only by name + lineage, through the same gates, never authoring in the
 Lab itself in v1.
 
-## 8. Decisions — flagged, to be locked when the build un-parks
+## 8. The worked example — the Trading Desk (JB, 2026-07-23)
+
+In CortexObserver, JB's team built a Trading Desk: three named agents (equities
+· options · crypto) running near-identical, genuinely radical LangGraph flows —
+cloned and maintained in triplicate, craft wired into every box, analysis
+detailed enough to impress any human who watched. It was three crafted
+performances.
+
+In Orreth, the same desk is **one Flow, saved once** in the Lab — *analyze the
+market; detect gaps; plan positions; the critic challenges; the judge decides;
+the grader scores* — with an Objective slot. Three desks = **three
+objectives**. The first options run finds the planner lacking options craft:
+the lack parks, the librarian gathers, the skill crystallizes through the
+human's gate, canaries, serves — **the options desk teaches itself its own
+specialty, on the record** (§ north star, end to end). The detailed analysis is
+the walk of the work — every seat, grade, citation, and cost, recallable
+forever — and the desks improve without re-wiring because the standings feed
+the lanes.
+
+> The difference in one line: **CortexObserver ran impressive flows; Orreth
+> grows the institution that makes flows impressive.** One sentence, three
+> objectives, and a universe that learns the craft.
+
+## 9. Decisions — flagged, to be locked when the build un-parks
 
 1. The four-faculty taxonomy and v1 roster (§1) — or a leaner six-node start
    with the rest arriving as the first aftermarket packages (proving the
@@ -192,7 +215,7 @@ Lab itself in v1.
 7. Dev packaging: one-hull faculty mode (the RAG precedent) so a laptop
    carries the whole Faculty.
 
-## 9. The spoonfuls (proposed — sized for after the stamp)
+## 10. The spoonfuls (proposed — sized for after the stamp)
 
 | # | Spoonful | Nature |
 |---|---|---|
