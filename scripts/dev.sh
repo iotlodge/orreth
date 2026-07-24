@@ -34,7 +34,8 @@ case "${1:-}" in
   stop)    pkill -f console_worker.py 2>/dev/null || true
            # dynamic hulls (the Shipyard) ride the rig's network — down together;
            # the worker's replant relaunches them from ~/.orreth/shipyard on start
-           docker ps -aq --filter name=orreth-dyn- | xargs docker rm -f 2>/dev/null || true
+           docker ps -aq --filter name=orreth-dyn- --filter name=orreth-field- \
+             | xargs docker rm -f 2>/dev/null || true
            $COMPOSE down ;;
   restart) "$0" stop; rootpub; $COMPOSE up --build -d; sleep 3; joindoor; "$0" status ;;
   status)  $COMPOSE ps --format '  {{.Name}}\t{{.Status}}' 2>/dev/null || true
