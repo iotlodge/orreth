@@ -474,3 +474,10 @@ Flagged, not fixed (pre-existing, 0038 sp4): `on_standard_promotion` plants v2
 without `adopted_from`/`derived_from` — an orphan in the lineage walk; queued for a
 later pass. sp3's detection core (fingerprint, cut, lag/reconcile, staged findings)
 reviewed sound. 232/232 conformance tests green after the fixes.
+
+## Fable 5 net-new files — 2026-07-25 (0042 sp1, the Deed — the shelf and the family)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/deed.py` | Fable 5 (claude-fable-5) | 0042 §1–§5 — effect classes as one Canon asset (T0–T3 ceremony locked); the record family intent→authorization→attempt→receipt→observation→reconciliation→closure, chained and signed; observer ≠ actor refused (0005 grown up); the epoch clasp on every attempt (0041); idempotency remembers across deeds; compensation only on a fresh human word, itself a deed; banner in file |
+| `backend/conformance/tests/test_deed.py` | Fable 5 (claude-fable-5) | sp1 conformance: shelf plants once · whisper floor both directions · full family in order · sole-witness refusal · wrong world won't close · gate-then-epoch · the key remembers · priced compensation; banner in file |

@@ -59,7 +59,7 @@ leverage-first; each step names its gate.
 > demo.orreth.ai refresh with the 0.41 moment — the epoch hashes in the glass, the
 > drift card, the revert story (snapshot → cdk deploy w/ context flags → re-upload
 > the brain video; the deploy PRUNES /media/).
-> **4 — the next dive: n The Deed** (reserved above, triaged + locked by JB
+> **4 — the next dive: 0042 The Deed** (reserved above, triaged + locked by JB
 > 2026-07-25): draft → JB's locks → spoonfuls. The effect protocol — effect classes
 > as Canon assets, ceremony priced by class, the record family
 > intent → authorization → attempt → receipt → independent observation →
