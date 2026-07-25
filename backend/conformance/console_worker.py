@@ -3773,6 +3773,33 @@ def on_estate_adopt(port: int, scope: str, r: dict, *, approved: bool = False,
           f"{len(failed)} miss(es)")
 
 
+def _recalls_path(scope: str) -> Path:
+    nest = HOME / "stacks" / scope.replace("/", "~")
+    nest.mkdir(parents=True, exist_ok=True)
+    return nest / "recalls.json"
+
+
+def recalls_load(scope: str) -> dict:
+    """THE PERSISTENT USAGE TAP (wire-honesty sp1, 2026-07-25): 0039 locked
+    'usage is evidence' — but a per-request projection forgot its warmth with
+    every request. The tap now survives the process the way the meter does:
+    the nest holds it, every node wakes with it, the metabolism hears it."""
+    p = _recalls_path(scope)
+    try:
+        return json.loads(p.read_text()) if p.exists() else {}
+    except Exception:
+        return {}
+
+
+def recalls_save(scope: str, node) -> None:
+    rec = getattr(node, "recalls", None)
+    if rec:
+        try:
+            _recalls_path(scope).write_text(json.dumps(rec))
+        except Exception:
+            pass
+
+
 def _stacks_node(port: int, scope: str):
     """The log's face on the wire: stacks documents AND the routing standard,
     read with the seat's own authority; writes POST back to the floor."""
@@ -3788,7 +3815,24 @@ def _stacks_node(port: int, scope: str):
             call(port, "POST", "/records", rec)
             self.records[rec["id"]] = dict(rec, received_at=rec["occurred_at"])
             return rec["id"]
+
+        def _distill(self, ids, push=False):
+            """The metabolism's hand on the wire (wire-honesty sp2): one
+            distillation record, derived_from committed, POSTed home — the
+            summarizer is the honest v0 scaffold; the schedule, dials, tap,
+            and measured loss are the real machinery."""
+            body = {"summary": f"distilled {len(ids)} records at {self.scope}",
+                    "count": len(ids), "exchange": "hold",
+                    "method": {"model": "deterministic-sim",
+                               "rubric": "wire-metabolism-v0"}}
+            rec = make_memory(self._me, self._kp, self.scope, body,
+                              kind="distillation",
+                              tags=["distillation", "metabolism"])
+            rec["derived_from"] = list(ids)   # rides unsigned beside tags (0033)
+            self.write(rec)
+            return {"id": rec["id"]}
     n = _N()
+    n.recalls = recalls_load(scope)   # the tap survives the process (sp1)
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
     frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -3822,11 +3866,16 @@ def _stacks_node(port: int, scope: str):
                     continue
                 n.records[h["ref"]] = {"tags": tags,
                                        "received_at": h.get("occurred_at", ""),
+                                       # the true clock rides too — the
+                                       # metabolism ages by occurred_at (sp2)
+                                       "occurred_at": h.get("occurred_at", ""),
                                        "derived_from": h.get("derived_from") or [],
                                        "body": crypto._b64e(crypto.canonical(body))}
     _keep(port, r.get("hits", []),
           lambda t: ("stacks" in t and ("document" in t or "tournament" in t))
-          or "routing-standard" in t or "dispatch" in t or "knowledge" in t)
+          or "routing-standard" in t or "dispatch" in t or "knowledge" in t
+          or "distillation" in t or "distillation-dials" in t
+          or "metabolism-report" in t)   # the metabolism reads its own past (sp2)
     # THE ROWS MEET THE REAL MEMORY (JB-locked 2026-07-22): the librarian's
     # GATHERED knowledge lives on the universe's floors — a second read brings
     # it into the projection, trust and lineage riding with it
@@ -3859,6 +3908,22 @@ def _stacks_node(port: int, scope: str):
             # is honest: a standing projection with a rebuild beat is sp3+
         except Exception:
             pass
+    # the metabolism's ground (wire-honesty sp2): the projection carries what
+    # canon.metabolism_beat needs — ONE law, both grounds. undistilled = dialed
+    # classes not yet inside any distillation's lineage; the beat metabolizes
+    # what the projection can see (the caps above are its honest horizon)
+    n._me, n._kp = {"did": seat_did, "scope": scope}, seat_kp
+    from orreth_sim import canon as _cnm
+    _away: set = set()
+    for _r in n.records.values():
+        if "distillation" in (_r.get("tags") or []):
+            _away.update(_r.get("derived_from") or [])
+    _dialed = set((_cnm.dials(n).get("classes") or {}).keys())
+    n.undistilled = [rid for rid, _r in n.records.items()
+                     if rid not in _away
+                     and "distillation" not in (_r.get("tags") or [])
+                     and "metabolism-report" not in (_r.get("tags") or [])
+                     and _cnm.class_of(_r) in _dialed]
     return n, seat_kp, seat_did
 
 
@@ -3867,7 +3932,7 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
     choice a signed record, an unbuilt row falling to the baseline loudly —
     then the chosen row's projection regrows from the log and answers with
     citations."""
-    from orreth_sim import dispatcher, rivals, stacks
+    from orreth_sim import dispatcher, stacks, tournament
     n, seat_kp, seat_did = _stacks_node(port, scope)
     if n is None:
         return "the stacks are unreachable — try again on the next beat"
@@ -3876,11 +3941,15 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
     from orreth_sim import canon as _cn
     _cn.plant_registry(n, me, seat_kp)            # the two books stand (0039 sp1)
     _cn.plant_dials(n, me, seat_kp)               # the metabolism's dials (sp3)
+    # ALL SEVEN rows stand on the wire — v2's word ("built grows to all seven")
+    # finally honored here; caught live 2026-07-25 when the freshly-promoted
+    # «router» default met a four-row door
     d = dispatcher.dispatch(n, me, seat_kp, q, origin=origin,
-                            built=list(rivals.RETRIEVERS))
+                            built=list(tournament.ALL_RETRIEVERS))
     n.records.pop(d["record"], None)   # an ask never cites its OWN routing —
     # the choice persists on the wire; it just doesn't answer itself
-    a = rivals.answer_as(n, d["flavor"], q)
+    a = tournament.answer_as(n, d["flavor"], q)
+    recalls_save(scope, n)             # what this ask warmed, kept (sp1)
     cites = " · ".join(f"{c['doc']} [{c['ref'][:18]}…] {c['score']}"
                        for c in a["citations"][:3])
     return (f"⚡ the dispatcher chose «{d['flavor']}» — {d['why']} "
@@ -3902,6 +3971,7 @@ def wire_stacks_tournament(port: int, scope: str, q: str = "") -> str:
         "what exactly protects walls from rain?",
         "compare rammed earth and lime plaster"]
     r = tournament.run(n, questions)
+    recalls_save(scope, n)             # seven rows' worth of warmth, kept (sp1)
     me = {"did": seat_did, "scope": scope}
     n.write(make_memory(me, seat_kp, scope,
                         {"stacks_tournament": {"standings": r["standings"],
@@ -3988,6 +4058,50 @@ def on_standard_promotion(port: int, scope: str, r: dict, *,
         print(f"    (v2 adoption failed: {e})")
 
 
+_METAB_LAST = 0.0
+_METAB_STATE: dict = {}          # the beat's last numbers — the room reads them
+METABOLISM_EVERY = int(os.environ.get("ORRETH_METABOLISM_EVERY", "900"))
+
+
+def metabolism_wire_beat() -> None:
+    """THE SCHEDULED METABOLISM (wire-honesty sp2, 2026-07-25): 0039's
+    metabolism_beat — the SAME sim function, one law on both grounds — runs on
+    the worker's clock against the rag floor's projection. Due-window records
+    without recent recall distill; the recalled stay warm (the sp1 tap feeds
+    this); every forgetting lands a report with its measured loss in bits.
+    The dials stay Canon assets; only the heartbeat lives here."""
+    global _METAB_LAST
+    if time.time() - _METAB_LAST < METABOLISM_EVERY:
+        return
+    rag = next(((p, s) for p, s in FLOOR_SCOPES.items()
+                if s.endswith("/e:rag/f:naive")), None)
+    if rag is None:
+        return          # the floor isn't known yet — retry next round, free
+    _METAB_LAST = time.time()   # the cadence burns only when ground exists
+    rag_port, rag_scope = rag
+    try:
+        from orreth_sim import canon as _cn
+        n, kp, did = _stacks_node(rag_port, rag_scope)
+        if n is None:
+            return
+        rep = _cn.metabolism_beat(n, {"did": did, "scope": rag_scope}, kp)
+        recalls_save(rag_scope, n)
+        global _METAB_STATE
+        _METAB_STATE = {"kept_warm": rep.get("kept_warm", 0),
+                        "distilled": rep.get("distilled", 0),
+                        "loss": float(rep.get("loss_bits", 0.0))}
+        if rep.get("distilled"):
+            print(f"  ↳ the metabolism beats (wire): {rep['distilled']} "
+                  f"distilled · {rep.get('kept_warm', 0)} kept warm · loss "
+                  f"{_METAB_STATE['loss']:.2f} bits "
+                  f"[{str(rep.get('distillation', ''))[:18]}…]")
+        else:
+            print(f"  ↳ the metabolism beats (wire): nothing due · "
+                  f"{rep.get('kept_warm', 0)} kept warm — usage is evidence")
+    except Exception as e:
+        print(f"    (metabolism beat stumbled: {e})")
+
+
 def wire_stacks_panel(port: int) -> dict:
     """The Stacks panel's facts (0038 §6): the standard's word, the newest
     standings, and the choice ledger's pulse — composed for the room."""
@@ -4009,11 +4123,22 @@ def wire_stacks_panel(port: int) -> dict:
         if "tournament" in (r.get("tags") or []):
             b = _json.loads(_c._b64d(r["body"]).decode()).get("stacks_tournament") or {}
             standings = b.get("standings") or standings
+    tap = recalls_load(rag_scope)
+    metab = dict(_METAB_STATE)
+    for r in sorted(n.records.values(), key=lambda x: x.get("received_at", "")):
+        if "metabolism-report" in (r.get("tags") or []):
+            b = _json.loads(_c._b64d(r["body"]).decode()).get("metabolism_report") or {}
+            metab = {"kept_warm": b.get("kept_warm", 0),
+                     "distilled": b.get("distilled", 0),
+                     "loss": float(b.get("loss_bits", 0.0))}
     return {"version": std.get("version", "?"), "default": std.get("default"),
             "built": std.get("built") or [], "standings": standings,
             "choices": len(dispatcher.choices(n, 50)),
             "knowledge_chunks": sum(1 for r in n.records.values()
-                                    if "knowledge" in (r.get("tags") or []))}
+                                    if "knowledge" in (r.get("tags") or [])),
+            "warm": len(tap),
+            "touches": sum(int(e.get("n", 0)) for e in tap.values()),
+            "metabolism": metab}
 
 
 def wire_stacks_routing(port: int, scope: str) -> str:
@@ -5130,6 +5255,7 @@ def main() -> None:
                     if scope == UNIVERSE_SCOPE:
                         monitor_beat(port)    # the standing job beats like an organ
                         improver_beat(port)   # and the improver reads the receipts
+                        metabolism_wire_beat()  # forgetting on schedule (sp2)
                         mirror_beat()         # the mirror reflects every floor (0034 sp3)
                         passage_beat()        # the silence watch — contain, never execute (0035 §3)
 

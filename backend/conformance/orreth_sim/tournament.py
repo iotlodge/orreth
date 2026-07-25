@@ -80,6 +80,7 @@ def answer_as(node, flavor: str, query: str) -> dict:
     if flavor in rivals.RETRIEVERS:
         return rivals.answer_as(node, flavor, query)
     hits = ALL_RETRIEVERS[flavor](node, query)
+    stacks.record_recalls(node, hits)   # the flow rows warm the tap too (sp1)
     if not hits:
         note = (" (no media on the shelf — the eye awaits a vision mind, 0029)"
                 if flavor == "multimodal" else "")

@@ -56,6 +56,26 @@ def test_dispatch_routes_and_falls_back_loudly():
     assert all(r["author"] == lib["did"] for r in recs)      # signed, always
 
 
+def test_unbuilt_default_falls_to_the_baseline_loudly():
+    """Caught live 2026-07-25: v2 promoted «router» to default while a caller
+    still stood four rows — the default itself must survive the built check,
+    the baseline (naive) is the LAST floor, and the fall stays on the record."""
+    fld, lib, kp = _floor()
+    dispatcher.plant_standard(fld, lib, kp)
+    # a plain ask (no shape) rides the default — which is absent here
+    d = dispatcher.dispatch(fld, lib, kp, "how do walls hold heat?",
+                            built=["naive", "rerank"])
+    # genesis default IS naive, so force the sharper case: rule-chosen absent
+    # AND the standard's default absent from built
+    d2 = dispatcher.dispatch(fld, lib, kp, "how do the stages connect between "
+                                           "the two stacks?",
+                             built=["rerank"])
+    assert d2["flavor"] == "naive"            # the last floor serves
+    assert d2["wanted"] == "graph"            # the first want is kept
+    assert "does not stand here either" in d2["why"]
+    assert d["flavor"] == "naive"             # plain ask, default built — quiet
+
+
 def test_put_side_names_only_breathing_rows():
     fld, lib, kp = _floor()
     dispatcher.plant_standard(fld, lib, kp)

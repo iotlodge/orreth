@@ -101,6 +101,14 @@ def dispatch(node, librarian: dict, librarian_kp, ask: str, *,
         chosen = std.get("default", "naive")
         why += (f"; «{fallback}» is not yet built — falling to the baseline, "
                 "on the record")
+    if chosen not in built:
+        # the DEFAULT itself may be absent where this ask landed (caught live
+        # 2026-07-25: v2 made «router» the default while a caller still stood
+        # four rows) — the baseline is the LAST floor, and the fall stays loud
+        fallback = fallback or chosen
+        chosen = "naive"
+        why += (f"; the default «{fallback}» does not stand here either — "
+                "the baseline row serves, on the record")
     body = {"dispatch": {"kind": kind, "ask": (ask or "")[:200],
                          **({"origin": origin} if origin else {}),
                          "shapes": shapes, "flavor": chosen,
