@@ -4263,7 +4263,102 @@ def _cut_epoch(port: int, scope: str, fp: dict) -> str | None:
           + (f"{len(changed)} change(s) " if old.get("id")
              else "the machine takes its first name ")
           + f"[{rec['id'][:18]}…]")
+    # drift class 2 (0041 sp3): a standing chain moved its Canon with no
+    # adoption near it — genesis cuts never accuse (no chain stood before)
+    if old.get("id") and any(k.startswith("assets.") for k in changed) \
+            and not _recent_gate_word(port):
+        _stage_drift(port, scope, changed,
+                     "the Canon moved with no adoption behind it")
     return rec["id"]
+
+
+# ------------------------------------------------ 0041 sp3 · drift is news
+LAG_WINDOW = int(os.environ.get("ORRETH_LAG_WINDOW", "900"))
+_LAG: dict = {}          # scope → {"t": first_seen, "staged": bool}
+
+
+_ADOPTION_KINDS = ("improvement", "estate-adopt", "field-join")
+
+
+def _recent_gate_word(port: int) -> bool:
+    """A CANON ADOPTION resolved near the change (0041 sp3, v1 named coarse in
+    the dive): only the gates that actually move Canon assets count —
+    improvement (routing standards, dials, skills, prompts), estate-adopt,
+    field-join. A parlor ask is NOT an adoption, so a busy universe never
+    hides drift behind ordinary conversation. When the gate is unreadable we
+    NEVER accuse in the dark — the finer asset-name ↔ request match is future
+    work, flagged, not faked."""
+    try:
+        items = call(universe_port(port), "GET", "/requests")
+        items = items if isinstance(items, list) else (
+            items.get("requests") or items.get("items") or [])
+    except Exception:
+        return True
+    now = time.time()
+    for r in items:
+        if not isinstance(r, dict) or r.get("status") != "done":
+            continue
+        if r.get("kind") not in _ADOPTION_KINDS:
+            continue
+        try:
+            ts = int(str(r.get("id", "")).rsplit("-", 1)[1])
+        except Exception:
+            continue
+        if now - ts < 2 * EPOCH_EVERY:
+            return True
+    return False
+
+
+def _stage_drift(port: int, scope: str, changed: dict, why: str) -> None:
+    """DRIFT stages a finding (0041 §4, locked: detection wears no levers) —
+    the diff rides the card; the human's gate decides; the revert door is sp4."""
+    diff = "\n".join(
+        f"  {k}: {str((v or {}).get('from'))[:24]} → {str((v or {}).get('to'))[:24]}"
+        for k, v in list(changed.items())[:8])
+    try:
+        call(universe_port(port), "POST", "/requests", {
+            "kind": "drift",
+            "text": f"DRIFT at {scope} — {why}",
+            "package": f"THE DIFF:\n{diff}\n"
+                       "No adoption stood behind this change (0041 sp3). "
+                       "Acknowledge to keep the finding; the revert door "
+                       "arrives with sp4."})
+        print(f"  ↳ DRIFT staged at {scope}: {why} — the gate holds the diff")
+    except Exception as e:
+        print(f"    (drift staging stumbled: {e})")
+
+
+def _reconcile(scope: str) -> None:
+    """LAG vs convergence (0041 §4): the point swearing under an older epoch
+    is amber and expected to converge; a lag that will not converge inside
+    its window gets loud at the gate."""
+    try:
+        declared = json.loads(_epoch_nest(scope).read_text()).get("id")
+        att = json.loads(_attest_nest(scope).read_text())
+    except Exception:
+        return
+    sworn = att.get("epoch")
+    if not declared or not sworn:
+        return
+    if sworn == declared:
+        if scope in _LAG:
+            _LAG.pop(scope, None)
+            print(f"  ↳ the lag converged at {scope} — the point swears "
+                  "under the standing epoch")
+        return
+    st = _LAG.setdefault(scope, {"t": time.time(), "staged": False})
+    age = time.time() - st["t"]
+    if age < LAG_WINDOW:
+        print(f"  ↳ the point LAGS at {scope}: sworn [{str(sworn)[7:15]}…] "
+              f"vs law [{str(declared)[7:15]}…] — amber, converging")
+    elif not st["staged"]:
+        st["staged"] = True
+        port = next((p for p, s in FLOOR_SCOPES.items() if s == scope), None)
+        if port:
+            _stage_drift(port, scope,
+                         {"attested.epoch": {"from": sworn, "to": declared}},
+                         f"the point's oath would not converge in "
+                         f"{LAG_WINDOW}s")
 
 
 def epoch_beat() -> None:
@@ -4285,6 +4380,7 @@ def epoch_beat() -> None:
             eid = _cut_epoch(port, scope, _machine_fingerprint(port, scope))
             if eid:
                 floor_heads[scope] = eid
+            _reconcile(scope)                # lag vs law, every beat (sp3)
         except Exception:
             continue
     if u_port is None:
@@ -4293,6 +4389,7 @@ def epoch_beat() -> None:
         fp = _machine_fingerprint(u_port, UNIVERSE_SCOPE)
         fp["floors"] = floor_heads           # the roll-up cites the floors' heads
         _cut_epoch(u_port, UNIVERSE_SCOPE, fp)
+        _reconcile(UNIVERSE_SCOPE)
     except Exception:
         pass
 
@@ -4374,6 +4471,7 @@ def attest_beat() -> None:
                               tags=["attestation"])
             call(port, "POST", "/records", rec)
             nest.write_text(json.dumps({"loaded_hash": loaded_hash,
+                                        "loaded": seen["loaded"],
                                         "at": NOW(), "id": rec["id"],
                                         "epoch": declared}))
             why = "the loading changed" if not fresh else "the standing word"
@@ -4429,6 +4527,34 @@ def metabolism_wire_beat() -> None:
         print(f"    (metabolism beat stumbled: {e})")
 
 
+def on_drift(port: int, scope: str, r: dict, *,
+             approved: bool = False, declined: bool = False) -> None:
+    """The drift finding's gate (0041 sp3): every resolution lands somewhere
+    honest — no button ever no-ops (the promotion-had-nowhere-to-land lesson,
+    2026-07-23). The revert door arrives with sp4; until then acknowledgment
+    keeps the finding, dismissal keeps the record."""
+    if approved:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"reply": "acknowledged on your word — the diff "
+                                  "stands on the record; the revert door "
+                                  "arrives with sp4"}})
+        print(f"  ↳ drift acknowledged at the gate ({r.get('id')})")
+        return
+    if declined:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"reply": "dismissed — the finding remains walkable "
+                                  "in the Chronicle"}})
+        print(f"  ↳ drift dismissed at the gate ({r.get('id')})")
+        return
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "staged",
+          "result": {"package_text": r.get("package", ""),
+                     "note": "detection stages, never enforces (0041)"}})
+    print(f"  ↳ drift staged — the gate holds the diff ({r.get('id')})")
+
+
 def wire_stacks_panel(port: int) -> dict:
     """The Stacks panel's facts (0038 §6): the standard's word, the newest
     standings, and the choice ledger's pulse — composed for the room."""
@@ -4472,13 +4598,21 @@ def wire_stacks_panel(port: int) -> dict:
 
 def _attest_short(scope: str) -> str:
     """The point's last sworn loading, glass-sized: an age — or its absence,
-    visible (0041 §3: a silent point is never assumed fine)."""
+    visible (0041 §3: a silent point is never assumed fine). A stale oath
+    wears its LAG in the open (sp3)."""
     try:
         head = json.loads(_attest_nest(scope).read_text())
         from datetime import datetime, timezone
         at = datetime.fromisoformat(str(head.get("at", "")).replace("Z", "+00:00"))
         mins = int((datetime.now(timezone.utc) - at).total_seconds() // 60)
-        return f"{mins}m ago" if mins < 120 else f"{mins // 60}h ago"
+        age = f"{mins}m ago" if mins < 120 else f"{mins // 60}h ago"
+        try:
+            declared = json.loads(_epoch_nest(scope).read_text()).get("id")
+            if head.get("epoch") and declared and head["epoch"] != declared:
+                return f"{age} · LAGS"
+        except Exception:
+            pass
+        return age
     except Exception:
         return "no word yet"
 
@@ -5584,6 +5718,12 @@ def main() -> None:
                             on_estate_adopt(port, scope, r,
                                             approved=r.get("status") == "approved",
                                             declined=r.get("status") == "denied")
+                        elif r.get("kind") == "drift" and \
+                                r.get("status") in ("pending", "approved", "denied"):
+                            handled.add(key)
+                            on_drift(port, scope, r,
+                                     approved=r.get("status") == "approved",
+                                     declined=r.get("status") == "denied")
                         elif r.get("kind") == "consent" and \
                                 r.get("status") in ("pending", "approved", "denied"):
                             handled.add(key)

@@ -2065,6 +2065,7 @@ function reqRow(r){
   const agate=r.kind==="attestation"&&r.status==="staged"; /* the gravest gate (0035 §3) */
   const dgate=r.kind==="estate-adopt"&&r.status==="staged"; /* the acceptance gate's key (0037 §7) */
   const fgate=r.kind==="field-join"&&r.status==="staged"; /* moons for a standing eco (0038 sp4) */
+  const rgate=r.kind==="drift"&&r.status==="staged"; /* drift is news (0041 sp3) */
   const note=jgate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`
     :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`
     :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`+kfOffer(r)
@@ -2074,7 +2075,8 @@ function reqRow(r){
     :tgate?`<div class="sub" style="color:var(--near)">the last standing word — ${(r.result||{}).terms||"the fates readable at the gate"}</div>`
     :agate?`<div class="sub" style="color:var(--red)">a death at the gate — ${(r.result||{}).terms||"evidence and roster readable at the gate"}</div>`
     :dgate?`<div class="sub" style="color:var(--near)">the first touch of the real estate — READ-ONLY: ${((r.result||{}).stacks||[]).join(" + ")||"describe · fetch · attest"}; your word opens allen's eyes and the acceptance gate</div>`
-    :fgate?`<div class="sub" style="color:var(--near)">the yard drafted moons only: ${(r.result||{}).plan||""} — nothing relaunched, nothing doubled</div>`:"";
+    :fgate?`<div class="sub" style="color:var(--near)">the yard drafted moons only: ${(r.result||{}).plan||""} — nothing relaunched, nothing doubled</div>`
+    :rgate?`<div class="sub" style="color:var(--amber,#e8b34a);white-space:pre-wrap">${(r.result||{}).package_text||"the machine changed with no adoption behind it — the diff readable at the gate"}</div>`:"";
   return `<div class="req"><span class="kind">${r.kind||"request"}</span>
    <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
    ${jgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">admit</button>
@@ -2097,6 +2099,8 @@ function reqRow(r){
     <button class="sbtn no" onclick="joinDecide('${r.id}',false)">not yet</button>`
    :fgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">let them join</button>
     <button class="sbtn no" onclick="joinDecide('${r.id}',false)">not yet</button>`
+   :rgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">acknowledge</button>
+    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">dismiss</button>`
    :`<span class="st">${r.status}</span>`}</div>`;
 }
 /* the triage (JB 2026-07-15): the queue banded by what it needs from you —
