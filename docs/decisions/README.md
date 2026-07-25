@@ -313,6 +313,18 @@ including derived-memory chain verification).
 
 ## 🔧 Build phase — decisions as they arise
 
+### Locked 2026-07-25 (0041 The Epoch — drafted and locked the same day the trio closed)
+- **Granularity**: per-floor epochs + a universe roll-up citing the floors' heads.
+- **Cut trigger**: beat-detected diff — one organ notices both gated adoptions and
+  undeclared change (the latter being the dive's reason to exist).
+- **Attestation cadence**: on change + ~6h standing re-attestation (a Canon dial) —
+  silence becomes visible, never assumed fine.
+- **Drift law**: stage + human gate, revert-to-sibling offered as the pre-authorized
+  easy yes; **auto-revert REFUSED** — detection never enforces (0012's law held).
+- Mechanism (design owner): floor-seat signing in dev (governance DID is the prod
+  path) · v1 machine scope = Canon heads + plane version/profile + farm/stable
+  ledger pointers.
+
 ### Locked 2026-07-25 (the outside-review triage — Sol 5.6's eight loops, taken as ore, not as law)
 *JB commissioned an independent review (ChatGPT Sol 5.6 high, read-only from the repo);
 both documents live verbatim in `../outside/`. Fable triaged; JB locked all three calls
