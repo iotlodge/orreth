@@ -4520,6 +4520,167 @@ def attest_beat() -> None:
             continue
 
 
+# ------------------------------------------- 0042 sp3 · the publish deed
+DEED_SITE = "https://demo.orreth.ai"
+
+
+def _deed_rec(author_kp, author_did: str, scope: str, role: str,
+              body: dict) -> dict:
+    """One family record, the sim's grammar exactly (0042 §2): body under the
+    role's key, tags ["deed", role] — one walk, either ground."""
+    return make_memory({"did": author_did, "scope": scope}, author_kp, scope,
+                       {role: body}, kind="episodic", tags=["deed", role])
+
+
+def _site_bucket() -> str | None:
+    out, err = _aws_cli(["cloudformation", "list-stack-resources",
+                         "--stack-name", "OrrethDemoStack",
+                         "--query", "StackResourceSummaries[?ResourceType=="
+                                    "'AWS::S3::Bucket'].PhysicalResourceId"])
+    return out[0] if isinstance(out, list) and out else None
+
+
+def on_publish(port: int, scope: str, r: dict, *,
+               approved: bool = False, declined: bool = False) -> None:
+    """THE SECOND CLASS (0042 sp3): outbound-publish, T2 witnessed. The card
+    stages with the artifact pinned; the human's word is the authorization;
+    allen's seat attempts ONE gated write through the toolroom's hand (the
+    0037 read-only posture opens exactly this far, exactly here); the
+    LIBRARIAN's seat — a different self — fetches back through the public
+    door and the hashes speak. A clean world closes; a swapped one stages the
+    unpublish as ANOTHER publish card walking this same family (the
+    compensating deed, priced). Ceremony above a whisper, receipts verbatim,
+    trusted never."""
+    art = r.get("artifact") or "first-deed.json"
+    content = r.get("content") or ""
+    comp = bool(r.get("comp"))
+    if declined:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"reply": "the word was no — nothing left the universe"}})
+        return
+    if not approved:
+        seat_kp, seat_did = lib_seat(UNIVERSE_SCOPE)
+        intent = _deed_rec(ALLEN, ALLEN_DID, UNIVERSE_SCOPE, "intent",
+                           {"effect": "outbound-publish",
+                            "change": ("unpublish " if comp else "publish ")
+                                      + f"/deeds/{art}",
+                            "objective": r.get("text", "")[:140], "at": NOW()})
+        call(port, "POST", "/records", intent)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"package_text":
+                         (f"UNPUBLISH /deeds/{art} — the walk-back of a deed "
+                          "whose world went wrong."
+                          if comp else
+                          f"PUBLISH /deeds/{art} to {DEED_SITE} — T2 witnessed "
+                          "(0042): your word authorizes, allen attempts under "
+                          "the standing epoch, the librarian's seat fetches it "
+                          "back through the public door, and the hashes decide. "
+                          "Nothing moves without you."),
+                         "deed": intent["id"],
+                         "note": "the intent stands on the record"}})
+        print(f"  ↳ publish staged — the gate holds /deeds/{art} ({r['id']})")
+        return
+    # ------------------------------------------------ the walk, on your word
+    seat_kp, seat_did = lib_seat(UNIVERSE_SCOPE)
+    deed_id = ((r.get("result") or {}).get("deed")) or "?"
+    fail = lambda why: call(port, "POST", "/requests/resolve",
+                            {"id": r["id"], "status": "done",
+                             "result": {"reply": f"the walk stopped honestly — {why}",
+                                        "resolved_at": NOW()}})
+    epoch = None
+    try:
+        epoch = json.loads(_epoch_nest(UNIVERSE_SCOPE).read_text()).get("id")
+    except Exception:
+        pass
+    if not epoch:
+        return fail("no epoch stands — the attempt names the machine (0041) or it floats free")
+    bucket = _site_bucket()
+    if not bucket:
+        return fail("the estate would not name the site bucket")
+    key = crypto.content_hash({"artifact": art, "content": content})
+    auth = _deed_rec(seat_kp, seat_did, UNIVERSE_SCOPE, "authorization",
+                     {"deed": deed_id, "authority": f"the human's word at {r['id']}",
+                      "budget": 1.0, "window_s": 3600, "key": key, "at": NOW()})
+    call(port, "POST", "/records", auth)
+    if comp:
+        out, err = _aws_cli(["s3", "rm", f"s3://{bucket}/deeds/{art}"], raw=True)
+    else:
+        tmp = HOME / "tmp" / art
+        tmp.parent.mkdir(parents=True, exist_ok=True)
+        tmp.write_text(content)
+        out, err = _aws_cli(["s3", "cp", str(tmp), f"s3://{bucket}/deeds/{art}",
+                             "--content-type", "application/json",
+                             "--cache-control", "no-cache"], raw=True)
+    attempt = _deed_rec(ALLEN, ALLEN_DID, UNIVERSE_SCOPE, "attempt",
+                        {"deed": deed_id, "key": key, "epoch": epoch,
+                         "manifests": {"bucket": bucket, "path": f"deeds/{art}",
+                                       "comp": comp}, "at": NOW()})
+    call(port, "POST", "/records", attempt)
+    if err:
+        return fail(f"the hand was refused: {err[:140]}")
+    call(port, "POST", "/records",
+         _deed_rec(ALLEN, ALLEN_DID, UNIVERSE_SCOPE, "receipt",
+                   {"deed": deed_id, "acknowledged": {"cli": (out or "ok")[:200]},
+                    "at": NOW()}))
+    fetched_hash, status = None, "unreachable"
+    for _ in range(3):                     # the world settles, briefly (class dial)
+        try:
+            with urllib.request.urlopen(f"{DEED_SITE}/deeds/{art}",
+                                        timeout=8) as resp:
+                fetched_hash = crypto.content_hash(
+                    {"artifact": art, "content": resp.read().decode()})
+                status = "found"
+                break
+        except Exception as e:
+            status = str(e)[:60]
+            time.sleep(4)
+    call(port, "POST", "/records",
+         _deed_rec(seat_kp, seat_did, UNIVERSE_SCOPE, "observation",
+                   {"deed": deed_id, "found": {"status": status,
+                                               "hash": fetched_hash}, "at": NOW()}))
+    holds = (status != "found") if comp else (fetched_hash == key)
+    recon = {"deed": deed_id, "holds": holds,
+             "expected": ("absent" if comp else key),
+             "observed": {"status": status, "hash": fetched_hash}, "at": NOW()}
+    if not holds and not comp:
+        recon["staged"] = {"compensation": "stage the unpublish at the gate",
+                           "note": "staged, never enacted (0042 §5, locked)"}
+    call(port, "POST", "/records",
+         _deed_rec(seat_kp, seat_did, UNIVERSE_SCOPE, "reconciliation", recon))
+    if holds:
+        call(port, "POST", "/records",
+             _deed_rec(ALLEN, ALLEN_DID, UNIVERSE_SCOPE, "closure",
+                       {"deed": deed_id, "holds": True,
+                        "uncertainty": "the fetch-back seat is separated, not "
+                                       "independent (0042 §4)", "at": NOW()}))
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"reply": ("UNPUBLISHED on your word — the public door "
+                                   "no longer answers, the family closed."
+                                   if comp else
+                                   f"PUBLISHED and WITNESSED — {DEED_SITE}/deeds/{art} "
+                                   "fetched back by the librarian's seat, hashes "
+                                   "matched, the family closed whole."),
+                         "deed": deed_id, "resolved_at": NOW()}})
+        print(f"  ↳ DEED closed whole — /deeds/{art} ({'gone' if comp else 'live'}), "
+              f"witnessed ({r['id']})")
+        return
+    call(port, "POST", "/requests",
+         {"kind": "publish", "comp": True, "artifact": art,
+          "text": f"the world went wrong for /deeds/{art} — "
+                  f"observed {status}; the walk-back waits for your word"})
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "done",
+          "result": {"reply": f"the world disagrees — expected the artifact "
+                              f"{'gone' if comp else 'live and matching'}, found "
+                              f"{status}. A wrong world does not close: the "
+                              "unpublish is STAGED at your gate.",
+                     "deed": deed_id, "resolved_at": NOW()}})
+    print(f"  ↳ deed reconciliation FAILED for /deeds/{art} — compensation staged")
+
+
 _METAB_LAST = 0.0
 _METAB_STATE: dict = {}          # the beat's last numbers — the room reads them
 METABOLISM_EVERY = int(os.environ.get("ORRETH_METABOLISM_EVERY", "900"))
@@ -5812,6 +5973,12 @@ def main() -> None:
                                         approved=r.get("status") == "approved",
                                         declined=r.get("status") == "denied"):
                                 handled.add(key)
+                        elif r.get("kind") == "publish" and \
+                                r.get("status") in ("pending", "approved", "denied"):
+                            handled.add(key)
+                            on_publish(port, scope, r,
+                                       approved=r.get("status") == "approved",
+                                       declined=r.get("status") == "denied")
                         elif r.get("kind") == "consent" and \
                                 r.get("status") in ("pending", "approved", "denied"):
                             handled.add(key)

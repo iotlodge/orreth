@@ -488,3 +488,10 @@ reviewed sound. 232/232 conformance tests green after the fixes.
 |---|---|---|
 | `backend/conformance/orreth_sim/estate.py` | Fable 5 (claude-fable-5) | sp2 — `apply_deed`: the estate create walks the family (gate + charter refusals unchanged · human word opens consequence · template hash = the idempotency key · epoch clasp · distinct-seat observation · 0037 §4 diff = the reference reconciliation · wrong world stays open, compensation staged) |
 | `backend/conformance/orreth_sim/deed.py` | Fable 5 (claude-fable-5) | sp2 fix — intent carries its OPENING ordinal (two same-worded intents in one second are two deeds; the content-address collision, canary's lesson applied) — caught by sp2's own conformance test before it ever ran live |
+
+## Fable 5 — 2026-07-25 (0042 sp3, the second class — outbound publishing, live)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | sp3 — `on_publish`: the T2 witnessed walk on the wire (card stages with the intent pinned · the human's word = authorization citing the request · allen's seat attempts ONE gated write via the toolroom hand under the standing epoch · receipt verbatim · the LIBRARIAN's seat fetch-backs through the public door · hashes reconcile · closure or the unpublish STAGED as another publish card walking the same family). PROVEN LIVE: req-330 → https://demo.orreth.ai/deeds/first-deed.json, witnessed, closed whole. Honest boundary: the live failure/compensation walk is sp4's subject (machinery coded, sim-proven). |
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | sp3 — pgate: "publish it / walk it back / not this" + the card's package readable at the gate (serves on next rebuild) |
