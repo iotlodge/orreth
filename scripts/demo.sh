@@ -44,6 +44,7 @@ case "${1:-list}" in
   stable)    run demo_stable.py "$FIELD" ;;
   parlor)    run demo_parlor.py "$FIELD" ;;
   recall)    run demo_recall.py "$FIELD" ;;
+  drift)     run demo_drift.py ;;   # 0041: drift → card → key → silence → parity
   gate)      run demo_joindoor.py "$FIELD" ;;
   crew)      run demo_workforce.py "$FIELD" ;;
   physics)   run demo_information_physics.py ;;

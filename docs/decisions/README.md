@@ -365,6 +365,33 @@ via AskUserQuestion — the recommended path on each.*
   construction with unpriced ceremony would kill the seed-to-WHOLE-in-a-day metabolism
   that makes Orreth alive.
 
+### OPEN — parked 2026-07-25 (write-time content-address re-hashing in `orreth-node`)
+*Named during the 0041/0042 close (Fable, surfaced by the drift drill's parity
+handshake); JB asked that it not be lost. Awaits a deliberate rule-9 session.*
+
+- **What holds today**: (1) the record id rides the SIGNED subset on both grounds —
+  a record whose id differs from what its author signed fails signature
+  verification at the door; (2) `test_parity.py` (10 tests) pins SDK ↔ sim
+  canonical bytes; (3) `demo_drift.py`'s closing handshake re-hashes a body AS THE
+  RUST PLANE SERVES IT with Python's canonical bytes and fails loudly on mismatch
+  — a live cross-ground check on every reel run.
+- **The gap**: the signature proves the *author's claim* of the id, not that
+  id == content_hash(body). The plane does not independently recompute
+  content-addresses at write time — a divergent or buggy author could sign a wrong
+  id and the store would keep the body under that name. Tamper-evidence exists on
+  read-back, not at ingest.
+- **The proposed change (NOT approved, NOT built)**: `orreth-node` recomputes
+  `content_hash(body)` at ingest and refuses mismatches — wearing the ONE refusal
+  face (rule 4). Costs to weigh: a hash per write on the hot path, and the Rust
+  canonicalizer becoming load-bearing for acceptance (a parity bug would refuse
+  honest records — loud, which is the right failure direction).
+- **Why parked**: `orreth-node` is a sacred crate (covenant rule 9) — this changes
+  only with JB's explicit approval for this specific change, in its own sitting.
+- **Revisit BEFORE**: any second trust domain joins (0013's descendants /
+  multiverse handshake) — cross-domain verification leans on content-addresses
+  being *true*, not merely *claimed*; and before any external-facing record
+  ingestion door opens.
+
 ### Locked 2026-07-23 (0039 — the Chronicle and the Canon: Phase 2's constitution)
 - **Two books, one mind — the house names**: the Chronicle (JB's Purpose Data — the
   O·I·O·T ladder, DAG-hard, walkable forever) and the Canon (JB's Orreth Data —

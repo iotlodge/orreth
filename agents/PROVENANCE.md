@@ -501,3 +501,9 @@ reviewed sound. 232/232 conformance tests green after the fixes.
 | File | Author | Note |
 |---|---|---|
 | `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | sp4 — the VERIFY door (`verify: true` on the publish card: re-observe a standing deed through the public door, no hand moves) + the mismatch reply names the differing bytes. PROVEN LIVE, the full loop: first-deed.json SWAPPED out-of-band by an outside hand → verify walk CAUGHT the differing hashes → unpublish STAGED (req-332) → JB's fresh word → walked back, absence witnessed, comp deed closed → published anew (fresh family) on JB's second word. T0's quiet floor sim-proven (sp1); the glass wears the deed's gates (pgate). |
+
+## Fable 5 net-new files — 2026-07-25 (the drift drill joins the reel)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/demo_drift.py` | Fable 5 (claude-fable-5) | The 0041 drill, repeatable: rogue write → the epoch beat stages the card → the human's key (glass click or the runner's word) → the sibling restored → THE SILENCE asserted (an obeyed word must stage nothing — fails loudly if the accusation loop returns) → THE PARITY HANDSHAKE (rule 6 live: Rust-served body re-hashed by Python's canonical bytes must equal its id). First run 2026-07-25: whole, exit 0. Banner in file. Companion: the parked rule-9 question (write-time re-hashing in orreth-node) recorded in docs/decisions. |
