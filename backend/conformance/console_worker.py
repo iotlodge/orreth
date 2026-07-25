@@ -3379,7 +3379,8 @@ def on_improvement(port: int, scope: str, r: dict, *, approved: bool = False,
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
               "result": {"adopted": adopted["id"], "asset": name,
-                         "lane": "high — the human approved"}})
+                         "lane": "high — the human approved",
+                         "resolved_at": NOW()}})
         print(f"  ↳ improvement adopted on the human's word — {adopted['id'][:18]}…")
         return
     if pkg["checks"]["no_op"]:               # a no-op is refused AND its lane closed
@@ -3413,7 +3414,8 @@ def on_improvement(port: int, scope: str, r: dict, *, approved: bool = False,
     call(port, "POST", "/requests/resolve",
          {"id": r["id"], "status": "done",
           "result": {"adopted": adopted["id"], "kind": kind, "marker": mk["id"],
-                     "lane": "medium — co-review + notify"}})
+                     "lane": "medium — co-review + notify",
+                     "resolved_at": NOW()}})
     print(f"  ↳ improvement adopted on the medium lane ({kind}) — "
           f"{adopted['id'][:18]}… · co-review rides behind (R6)")
 
@@ -3816,7 +3818,8 @@ def on_estate_adopt(port: int, scope: str, r: dict, *, approved: bool = False,
         reply += " honest misses: " + "; ".join(failed)
     call(port, "POST", "/requests/resolve",
          {"id": r["id"], "status": "done", "result": {"reply": reply,
-          "walked": walked, "failed": failed}})
+          "walked": walked, "failed": failed,
+          **({"resolved_at": NOW()} if walked else {})}})
     print(f"  ↳ estate adoption complete — {len(walked)} stack(s), "
           f"{len(failed)} miss(es)")
 
@@ -4100,7 +4103,8 @@ def on_standard_promotion(port: int, scope: str, r: dict, *,
               "result": {"reply": f"routing-standard v2 ADOPTED on your word — "
                                   f"default «{v2.get('default')}», all seven "
                                   "rows built; v1 stands behind it, versioned "
-                                  f"as ever [{asset['id'][:18]}…]"}})
+                                  f"as ever [{asset['id'][:18]}…]",
+                         "resolved_at": NOW()}})
         print(f"  ↳ STANDARD v2 ADOPTED — default «{v2.get('default')}» "
               f"[{asset['id'][:18]}…]")
     except Exception as e:
@@ -4247,15 +4251,19 @@ def _cut_epoch(port: int, scope: str, fp: dict) -> str | None:
             if a.get(k) != b.get(k):
                 changed[f"{zone}.{k}"] = {"from": a.get(k), "to": b.get(k)}
     seat_kp, seat_did = lib_seat(scope)
+    reverted = _PENDING_REVERT.pop(scope, None)   # a revert just landed here?
     body = {"canon_epoch": {"scope": scope, "organ": "governance",
                             "parent": old.get("id"),
                             "rollback_parent": old.get("id"),
+                            **({"revert_of": reverted} if reverted else {}),
                             **fp, "changed": changed, "cut_at": NOW()}}
     rec = make_memory({"did": seat_did, "scope": scope}, seat_kp, scope, body,
                       kind="semantic", tags=["canon-epoch"])
     try:
         call(port, "POST", "/records", rec)
     except Exception:
+        if reverted:
+            _PENDING_REVERT[scope] = reverted    # the citation survives the refusal
         return old.get("id")                     # the wire refused — hold the head
     nest.write_text(json.dumps({"id": rec["id"], "fp_hash": fp_hash,
                                 "fp": fp, "at": NOW()}))
@@ -4277,17 +4285,27 @@ LAG_WINDOW = int(os.environ.get("ORRETH_LAG_WINDOW", "900"))
 _LAG: dict = {}          # scope → {"t": first_seen, "staged": bool}
 
 
-_ADOPTION_KINDS = ("improvement", "estate-adopt", "field-join")
+_ADOPTION_KINDS = ("improvement", "estate-adopt", "field-join", "drift")
+#  a resolved drift is a human's word on the Canon (revert OR leave-it) — the
+#  restored/kept head that follows it is adopted, not fresh drift (0041 sp4)
+_PENDING_REVERT: dict = {}   # scope → the revert the next epoch cut must cite
+_REVERT_WAITS: set = set()   # scopes whose approved revert waits for a dark floor
 
 
 def _recent_gate_word(port: int) -> bool:
     """A CANON ADOPTION resolved near the change (0041 sp3, v1 named coarse in
     the dive): only the gates that actually move Canon assets count —
     improvement (routing standards, dials, skills, prompts), estate-adopt,
-    field-join. A parlor ask is NOT an adoption, so a busy universe never
-    hides drift behind ordinary conversation. When the gate is unreadable we
-    NEVER accuse in the dark — the finer asset-name ↔ request match is future
-    work, flagged, not faked."""
+    field-join, a human's word on a drift card. A parlor ask is NOT an
+    adoption, so a busy universe never hides drift behind ordinary
+    conversation. The word is dated by `result.resolved_at` — the moment it
+    LANDED — never by the card's submission second: a gate is allowed to wait
+    for its human (the req-322 lesson, 2026-07-25 — dating the word by
+    submission turned one slow click into a self-accusing loop that re-adopted
+    the very drift it was born to catch). Cards from before the stamp fall
+    back to the submission second. When the gate is unreadable we NEVER accuse
+    in the dark — the finer asset-name ↔ request match is future work,
+    flagged, not faked."""
     try:
         items = call(universe_port(port), "GET", "/requests")
         items = items if isinstance(items, list) else (
@@ -4300,10 +4318,20 @@ def _recent_gate_word(port: int) -> bool:
             continue
         if r.get("kind") not in _ADOPTION_KINDS:
             continue
-        try:
-            ts = int(str(r.get("id", "")).rsplit("-", 1)[1])
-        except Exception:
-            continue
+        ts = None
+        landed = (r.get("result") or {}).get("resolved_at")
+        if landed:
+            try:
+                from datetime import datetime
+                ts = datetime.fromisoformat(
+                    str(landed).replace("Z", "+00:00")).timestamp()
+            except Exception:
+                ts = None
+        if ts is None:
+            try:
+                ts = int(str(r.get("id", "")).rsplit("-", 1)[1])
+            except Exception:
+                continue
         if now - ts < 2 * EPOCH_EVERY:
             return True
     return False
@@ -4311,18 +4339,28 @@ def _recent_gate_word(port: int) -> bool:
 
 def _stage_drift(port: int, scope: str, changed: dict, why: str) -> None:
     """DRIFT stages a finding (0041 §4, locked: detection wears no levers) —
-    the diff rides the card; the human's gate decides; the revert door is sp4."""
+    the diff rides the card; the human's gate decides. The `from` head of each
+    changed asset IS the pre-drift head: it rides the card as the revert target
+    (sp4), so the human's yes restores the signed machine without walking a
+    single chain."""
     diff = "\n".join(
         f"  {k}: {str((v or {}).get('from'))[:24]} → {str((v or {}).get('to'))[:24]}"
         for k, v in list(changed.items())[:8])
+    restore = {k.split(".", 1)[1]: (v or {}).get("from")
+               for k, v in changed.items()
+               if k.startswith("assets.") and (v or {}).get("from")}
     try:
         call(universe_port(port), "POST", "/requests", {
-            "kind": "drift",
+            "kind": "drift", "scope": scope, "restore": restore,
             "text": f"DRIFT at {scope} — {why}",
             "package": f"THE DIFF:\n{diff}\n"
                        "No adoption stood behind this change (0041 sp3). "
-                       "Acknowledge to keep the finding; the revert door "
-                       "arrives with sp4."})
+                       + ("Revert restores the signed machine as a new sibling "
+                          "(nothing deleted); leaving it keeps the change and "
+                          "the finding on record."
+                          if restore else
+                          "This is an attestation lag — it converges when the "
+                          "point next loads; nothing to restore.")})
         print(f"  ↳ DRIFT staged at {scope}: {why} — the gate holds the diff")
     except Exception as e:
         print(f"    (drift staging stumbled: {e})")
@@ -4528,31 +4566,81 @@ def metabolism_wire_beat() -> None:
 
 
 def on_drift(port: int, scope: str, r: dict, *,
-             approved: bool = False, declined: bool = False) -> None:
-    """The drift finding's gate (0041 sp3): every resolution lands somewhere
-    honest — no button ever no-ops (the promotion-had-nowhere-to-land lesson,
-    2026-07-23). The revert door arrives with sp4; until then acknowledgment
-    keeps the finding, dismissal keeps the record."""
-    if approved:
-        call(port, "POST", "/requests/resolve",
-             {"id": r["id"], "status": "done",
-              "result": {"reply": "acknowledged on your word — the diff "
-                                  "stands on the record; the revert door "
-                                  "arrives with sp4"}})
-        print(f"  ↳ drift acknowledged at the gate ({r.get('id')})")
-        return
+             approved: bool = False, declined: bool = False) -> bool:
+    """The drift finding's gate (0041 sp4 — the revert): the human's YES
+    restores the signed machine. Each drifted asset's PRE-DRIFT head is
+    re-adopted as a NEW sibling (never a deletion, the versioned shelf's law) —
+    the revert epoch that follows cites both parents. LEAVE-IT keeps the change
+    and the finding on record. Auto-revert stays REFUSED (0041 §5): detection
+    stages, a human turns the key, the revert is merely the easiest yes.
+    The revert's resolution carries `resolved_at` — the word dated when it
+    LANDS, so the next cut reads an obeyed human, never fresh drift. Returns
+    False only when the approval must wait for a dark floor's beat."""
+    target = r.get("scope") or scope
+    restore = r.get("restore") or {}
     if declined:
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
-              "result": {"reply": "dismissed — the finding remains walkable "
-                                  "in the Chronicle"}})
-        print(f"  ↳ drift dismissed at the gate ({r.get('id')})")
-        return
+              "result": {"reply": "left as it stands — the change holds and the "
+                                  "finding remains walkable in the Chronicle"}})
+        print(f"  ↳ drift left standing at the gate ({r.get('id')})")
+        return True
+    if approved:
+        if not restore:
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"reply": "nothing to restore — an attestation lag "
+                                      "converges when the point next loads; the "
+                                      "finding stays on record"}})
+            print(f"  ↳ drift ack (lag, no revert) ({r.get('id')})")
+            return True
+        t_port = next((p for p, s in FLOOR_SCOPES.items() if s == target), None)
+        if t_port is None:
+            # a dark floor never eats the human's word (the no-op-button law):
+            # the approval stands unresolved and the round retries each pass
+            if target not in _REVERT_WAITS:
+                _REVERT_WAITS.add(target)
+                print(f"  ↳ the revert waits at {r.get('id')} — {target} is "
+                      "dark; the word stands until the floor beats")
+            return False
+        _REVERT_WAITS.discard(target)
+        seat_kp, seat_did = lib_seat(target)
+        restored = []
+        for name, from_ref in restore.items():
+            try:
+                body = call(t_port, "GET",
+                            f"/records/{urllib.parse.quote(from_ref, safe='')}/body")
+                prof = (body or {}).get("asset", {}).get("profile") \
+                    if isinstance(body, dict) else None
+                if prof is None:
+                    continue
+                sib = improver.make_asset({"did": seat_did, "scope": target},
+                                          seat_kp, target, name=name,
+                                          profile=prof, adopted_from=from_ref)
+                call(t_port, "POST", "/records", sib)
+                restored.append(f"{name} → [{sib['id'][:14]}…]")
+            except Exception as e:
+                print(f"    (revert of {name} stumbled: {e})")
+        if restored:
+            _PENDING_REVERT[target] = {"restored_to": list(restore.values()),
+                                       "at": NOW()}
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"reply": "REVERTED on your word — the signed machine "
+                                  "stands again as a new sibling (the drifted "
+                                  "version is not erased, only outranked): "
+                                  + "; ".join(restored)
+                                  + ". the next epoch cites both parents.",
+                         "resolved_at": NOW()}})
+        print(f"  ↳ REVERT at {target}: {len(restored)} head(s) restored as "
+              f"siblings on your word ({r.get('id')})")
+        return True
     call(port, "POST", "/requests/resolve",
          {"id": r["id"], "status": "staged",
           "result": {"package_text": r.get("package", ""),
                      "note": "detection stages, never enforces (0041)"}})
     print(f"  ↳ drift staged — the gate holds the diff ({r.get('id')})")
+    return True
 
 
 def wire_stacks_panel(port: int) -> dict:
@@ -5720,10 +5808,10 @@ def main() -> None:
                                             declined=r.get("status") == "denied")
                         elif r.get("kind") == "drift" and \
                                 r.get("status") in ("pending", "approved", "denied"):
-                            handled.add(key)
-                            on_drift(port, scope, r,
-                                     approved=r.get("status") == "approved",
-                                     declined=r.get("status") == "denied")
+                            if on_drift(port, scope, r,
+                                        approved=r.get("status") == "approved",
+                                        declined=r.get("status") == "denied"):
+                                handled.add(key)
                         elif r.get("kind") == "consent" and \
                                 r.get("status") in ("pending", "approved", "denied"):
                             handled.add(key)
@@ -5781,7 +5869,15 @@ def main() -> None:
             except Exception as e:
                 scopes.pop(port, None)
                 FLOOR_SCOPES.pop(port, None)
-                print(f"  (floor :{port} unreachable…)", e)
+                # name the true thrower — "unreachable" once blamed a healthy
+                # floor for a beat organ's stumble (the 432 lesson, 2026-07-25)
+                tb = getattr(e, "__traceback__", None)
+                site = "?"
+                while tb is not None:
+                    if tb.tb_frame.f_code.co_filename.endswith("console_worker.py"):
+                        site = f"{tb.tb_frame.f_code.co_name}:{tb.tb_lineno}"
+                    tb = tb.tb_next
+                print(f"  (floor :{port} stumbled at {site}…)", e)
         tend_self_dialogs()                   # compose any dialog whose legs are home
         tend_objectives()                     # review and assemble what rode back up
         if beat_due:

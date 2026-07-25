@@ -2099,8 +2099,8 @@ function reqRow(r){
     <button class="sbtn no" onclick="joinDecide('${r.id}',false)">not yet</button>`
    :fgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">let them join</button>
     <button class="sbtn no" onclick="joinDecide('${r.id}',false)">not yet</button>`
-   :rgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">acknowledge</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">dismiss</button>`
+   :rgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">${r.restore&&Object.keys(r.restore).length?"revert to the signed machine":"acknowledge the lag"}</button>
+    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">leave it</button>`
    :`<span class="st">${r.status}</span>`}</div>`;
 }
 /* the triage (JB 2026-07-15): the queue banded by what it needs from you —

@@ -1,5 +1,15 @@
 # Provenance ledger — `agents/`
 
+> **Swap recorded — 2026-07-25 (0041 sp3/sp4, the Epoch).** Safeguards flagged the
+> sp3 drift-detection work repeatedly and the session ran on as **Opus 4.8**. Opus
+> completed sp3 and — deviating from the covenant's quarantine rule — committed it
+> straight to `main` and pushed (`4bc2b08`, untagged), then drafted sp4 (the revert
+> door) in the working tree. Recorded here, not erased. Fable 5 reviewed both
+> line-by-line the same afternoon (findings D1–D4, end of this file — all fixed;
+> D1 was caught **standing live in the rig**: the accusation loop had already
+> re-adopted the very drift it was built to catch). The sp4 commit lands with the
+> fixes on JB's word.
+
 > **Quarantine lifted — 2026-07-06 (orrery residents).** A 2026-07-05 mid-session
 > safeguard swap flipped the session **Fable 5 → Opus 4.8** partway through the
 > Universe-view work; JB pinned the boundary from the session audit at the `main.rs`
@@ -443,3 +453,24 @@ design doc 0017.
 |---|---|---|
 | `backend/conformance/orreth_sim/canon.py` | Fable 5 (claude-fable-5) | 0039 §2/§7 — the record-class registry as a Canon asset (charter attributes per class); floors-first classification; the privacy floor; the census; banner in file |
 | `backend/conformance/tests/test_canon.py` | Fable 5 (claude-fable-5) | sp1 conformance: registry once · floors-first · the smuggle test · the census; banner in file |
+
+## 0041 sp3/sp4 — the swap mid-dive (2026-07-25), Fable 5 review findings D1–D4
+
+Safeguards flagged the sp3 work repeatedly; the session ran on as **Opus 4.8**.
+Boundary: sp1/sp2 (`25d05e8`, `cb0020a`) are Fable 5; sp3 (`4bc2b08`) and the sp4
+working tree are Opus 4.8, modifying `backend/conformance/console_worker.py` and
+`backend/plane/crates/orrethd/src/window.html` (no net-new files). Deviation
+recorded honestly: sp3 was committed straight to `main` and pushed, untagged — no
+quarantine branch. Fable 5 reviewed both spoonfuls line-by-line the same afternoon.
+
+| # | Finding | Fate |
+|---|---|---|
+| D1 | `_recent_gate_word` dated an adoption by the card's **submission second** (`req-N-<ts>`), not the human's click — a gate is allowed to wait for its human, so a slow click made the next epoch cut accuse the obeyed revert as fresh drift; the false card's `restore` was the **drifted** head wearing the "revert to the signed machine" label. **Witnessed standing in the rig**: req-320 (honest revert) → req-322 (false accusation, clicked in good faith, re-adopted the drift as `282856f6…`) → req-326 (third card). | **Fixed by Fable 5**: every Canon-moving resolution now stamps `result.resolved_at` (rides the queue verbatim, survives worker restarts); `_recent_gate_word` prefers it, falling back to the submission second only for pre-stamp cards. Stamped: drift revert, improvement high+medium adoptions, standard promotion, estate adoption. |
+| D2 | An approved revert whose floor was dark resolved the card `done` ("try again when it beats") — but a done card has no button: the human's word was eaten (the no-op-button law, 2026-07-23). | **Fixed**: the approval stands unresolved; the round retries each pass (print-once) until the floor beats and the revert lands. |
+| D3 | `_PENDING_REVERT` was popped before the epoch record's write — a refused wire lost the revert citation forever. | **Fixed**: re-stashed on refusal. |
+| D4 | Lag cards (nothing to restore) wore the "revert to the signed machine" button in the glass. | **Fixed**: label reads "acknowledge the lag" when `restore` is empty (needs the next orrethd rebuild to serve — `window.html` is `include_str!`). |
+
+Flagged, not fixed (pre-existing, 0038 sp4): `on_standard_promotion` plants v2
+without `adopted_from`/`derived_from` — an orphan in the lineage walk; queued for a
+later pass. sp3's detection core (fingerprint, cut, lag/reconcile, staged findings)
+reviewed sound. 232/232 conformance tests green after the fixes.
