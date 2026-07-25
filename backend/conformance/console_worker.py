@@ -1961,6 +1961,54 @@ def governed_ping(port: int, mid: str, klass: str) -> dict | None:
         return None
 
 
+def governed_thought(port: int, mid: str, klass: str, prompt: str, *,
+                     max_tokens: int = 400) -> dict | None:
+    """A REAL governed thought (wire-honesty sp3, 2026-07-25): governed_ping's
+    exact law — authorize → execute PINNED to the named mind → meter under the
+    plane — with a working prompt instead of a ping. Returns
+    {text, tokens, usd, model} or None when the ground is missing (no litellm,
+    no key, no stall) so callers fall back HONESTLY, never silently."""
+    try:
+        import litellm  # noqa: F401
+    except Exception:
+        return None
+    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY")
+            or os.environ.get("OPENROUTER_API_KEY")):
+        return None
+    try:
+        token = _BECKY.issue_token(ADA_DID, SCOPE,
+                                   [{"action": "retrieve", "space": "self"}],
+                                   budget={"tokens": 50000})
+        est = max_tokens + len(prompt) // 3
+        grant = call(port, "POST", "/model/authorize",
+                     {"token": token, "class": klass, "est_tokens": est,
+                      "model": mid})
+        model = executable(port, grant["model"])
+        if model is None:                 # honest refund — authorized, no key here
+            call(port, "POST", "/model/meter",
+                 {"subject": grant["subject"], "est_tokens": est, "tokens": 0,
+                  "usd": 0, "model": grant["model"], "class": klass})
+            return None
+        import litellm
+        resp = litellm.completion(model=model,
+                                  messages=[{"role": "user", "content": prompt}],
+                                  max_tokens=max_tokens)
+        text = (resp.choices[0].message.content or "").strip()
+        tokens = resp.usage.total_tokens
+        try:
+            usd = litellm.completion_cost(completion_response=resp)
+        except Exception:
+            usd = 0.0
+        call(port, "POST", "/model/meter",
+             {"subject": grant["subject"], "est_tokens": est, "tokens": tokens,
+              "usd": round(usd, 6), "model": grant["model"], "class": klass})
+        return {"text": text, "tokens": tokens, "usd": usd,
+                "model": grant["model"]}
+    except Exception as e:
+        print(f"    (governed thought stumbled: {e})")
+        return None
+
+
 class Wrangler:
     """Ada's round: probe staged saddles, attest approvals, canary rookie minds,
     sync the market for drift and expiries, stage recommendations, re-saddle after
@@ -4058,6 +4106,97 @@ def on_standard_promotion(port: int, scope: str, r: dict, *,
         print(f"    (v2 adoption failed: {e})")
 
 
+MENTEE_MIND = "anthropic/claude-haiku-4-5-20251001"  # low · the universe's stable
+JUDGE_MIND = "anthropic/claude-sonnet-5"             # medium · f:prod's stable
+
+
+def _live_graduation(n2, u_port: int, k: int = 3):
+    """THE LIVE JUDGE (wire-honesty sp3; deals locked by JB 2026-07-25): the
+    MENTEE (haiku, low class, the universe's stable) executes the craft on the
+    floor's REAL records; the JUDGE (sonnet-5, medium class, f:prod's stable —
+    another floor's mind, judge ≠ mentee, genuine independence) scores each run
+    against the rubric, strict JSON. Every token authorized and metered under
+    the plane. Returns (scores, judge_notes, usd_total, label); None when the
+    ground is missing so the caller falls back to the honestly-labeled sim
+    judge. A partial run returns partial — the refusal path stays real."""
+    import re as _re
+    from orreth_sim import stacks as _st
+    prod_port = next((p for p, s in FLOOR_SCOPES.items()
+                      if s.endswith("/e:cloud/f:prod")), None)
+    if prod_port is None:
+        return None
+    try:
+        chunks = (_st.project(n2) or {}).get("chunks") or []
+    except Exception:
+        chunks = []
+    lines = []
+    for c in chunks:
+        t = str(c.get("text", ""))[:200].strip().replace("\n", " ")
+        if t:
+            lines.append(f"· [{c.get('doc', '?')}] {t}")
+        if len(lines) >= 12:
+            break
+    if len(lines) < 3:
+        return None                    # too little ground for an honest canary
+    corpus = "\n".join(lines)
+    label = (f"LIVE — mentee {MENTEE_MIND.split('/')[-1]} · "
+             f"judge {JUDGE_MIND.split('/')[-1]}, another floor's mind")
+    scores, notes, usd = [], [], 0.0
+    for i in range(k):
+        m = governed_thought(
+            u_port, MENTEE_MIND, "low",
+            "You are the mentee mind at the «low» tier of a governed universe, "
+            "on a canary run for the skill \"summarize a floor's week\". The "
+            "craft: gather the week's records · distill by score · cite. "
+            "Summarize the records below in 4-6 sentences, citing at least 3 "
+            "by their [bracketed] names. Use ONLY these records.\n\nRECORDS:\n"
+            + corpus, max_tokens=300)
+        if m is None:
+            break
+        usd += m["usd"]
+        j = governed_thought(
+            prod_port, JUDGE_MIND, "medium",
+            "You are an INDEPENDENT judge at the «medium» tier grading a "
+            "mentee's canary run for the skill \"summarize a floor's week\". "
+            "Rubric: faithful to the provided records ONLY · at least 3 "
+            "[bracketed] citations · no invented facts · clear prose. Reply "
+            "with STRICT JSON only — begin your reply with the { character, "
+            "no preamble, no code fences: {\"score\": 0.00, \"why\": \"one "
+            "short sentence\"}.\n\nRECORDS GIVEN TO THE MENTEE:\n" + corpus
+            + "\n\nMENTEE'S SUMMARY:\n" + m["text"], max_tokens=200)
+        if j is None:
+            break
+        usd += j["usd"]
+        sc = None
+        try:
+            got = json.loads(_re.search(r"\{.*\}", j["text"], _re.S).group(0))
+            sc = max(0.0, min(1.0, float(got.get("score", 0.0))))
+            why = str(got.get("why", ""))[:120]
+        except Exception:
+            # a truncated reply may still carry its number — read it first
+            m2 = _re.search(r'"score"\s*:\s*([0-9.]+)', j["text"])
+            if m2:
+                sc = max(0.0, min(1.0, float(m2.group(1))))
+                why = "the judge's sentence was cut short; the score survived"
+        if sc is None:
+            # JUDGE-FAILURE IS NOT MENTEE-FAILURE (JB's ceremony caught it,
+            # 2026-07-25): an unjudgeable run is VOIDED — named, never scored.
+            # The rubric still demands n JUDGED runs, so voids cost the
+            # ceremony honestly without slandering the mentee.
+            notes.append(f"run {i + 1}: the judge's verdict was lost — "
+                         "voided, not scored")
+            print(f"  ↳ live canary {i + 1}/{k}: the mentee spoke "
+                  f"({m['tokens']} tok) — the judge's verdict was LOST; voided")
+            continue
+        scores.append(sc)
+        notes.append(f"“{why}” ({sc:.2f})")
+        print(f"  ↳ live canary {i + 1}/{k}: the mentee spoke "
+              f"({m['tokens']} tok), the judge scored {sc:.2f}")
+    if not scores:
+        return None
+    return scores, notes, usd, label
+
+
 _METAB_LAST = 0.0
 _METAB_STATE: dict = {}          # the beat's last numbers — the room reads them
 METABOLISM_EVERY = int(os.environ.get("ORRETH_METABOLISM_EVERY", "900"))
@@ -4853,23 +4992,39 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
             reply = "the stacks' floor is dark — no ground for a ceremony"
         else:
             me2 = {"did": did2, "scope": n2.scope}
-            sk = _cn.crystallize(n2, me2, kp2,
-                                 objective="summarize a floor's week",
-                                 craft={"steps": ["gather the week's records",
-                                                  "distill by score", "cite"]},
-                                 rubric={"min_score": 0.8, "n": 3},
-                                 proven_tier="high")
-            for sc in (0.9, 0.85, 0.88):      # sim-judge v0, honestly labeled —
-                _cn.canary_run(n2, me2, kp2, sk, tier="low", score=sc)
+            try:
+                sk = _cn.crystallize(n2, me2, kp2,
+                                     objective="summarize a floor's week",
+                                     craft={"steps": ["gather the week's records",
+                                                      "distill by score", "cite"]},
+                                     rubric={"min_score": 0.8, "n": 3},
+                                     proven_tier="high")
+            except Exception:
+                sk = "skill-summarize-a-floor-s-week"   # already on the shelf —
+                # the same craft content-addresses to the same asset (0039)
+            live = _live_graduation(n2, universe_port(port))
+            if live is not None:
+                scores, notes, usd, label = live
+                for sc in scores:
+                    _cn.canary_run(n2, me2, kp2, sk, tier="low", score=sc)
+            else:
+                notes, usd = [], 0.0
+                label = "sim-judge v0 — no live ground (keys/stalls); honestly labeled"
+                for sc in (0.9, 0.85, 0.88):
+                    _cn.canary_run(n2, me2, kp2, sk, tier="low", score=sc)
             v = _cn.graduate(n2, me2, kp2, sk, mentee_tier="low")
+            said = ("; the judge's word: " + " · ".join(notes[:2])) if notes else ""
             reply = (f"🎓 THE GRADUATION — «{sk}» crystallized at the smart tier, "
-                     f"canaried {v['runs']}× at «{v['tier']}» (sim-judge v0 — live "
-                     f"minds saddle next), mean {v['mean']:.2f} vs rubric "
+                     f"canaried {v['runs']}× at «{v['tier']}» ({label}), "
+                     f"mean {v['mean']:.2f} vs rubric "
                      f"{v['rubric']['min_score']}: "
                      + ("GRADUATED — the cheap tier serves, the sibling version "
                         f"is on the shelf [{v['version'][:18]}…]. never silently "
                         "dumber — earned, on the record."
-                        if v["graduated"] else v["why"]))
+                        if v["graduated"] else v["why"])
+                     + said
+                     + (f" · the ceremony cost ${usd:.4f} on the meter"
+                        if usd else ""))
     if ans.get("action") == "canon-census":   # 0039 sp1 — the genome's roll call
         from orreth_sim import canon
         rows = wire_assets(universe_port(port), "asset")

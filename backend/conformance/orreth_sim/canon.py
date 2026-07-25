@@ -259,11 +259,18 @@ def canary_run(node, mentee: dict, mentee_kp, skill_name: str, *,
                tier: str, score: float) -> str:
     """One canary pass at the MENTEE's tier, on the record — full observation,
     0011's probation posture. The score arrives from the judge's grading (sim:
-    the caller carries it; the wire rides the model gateway's judge)."""
+    the caller carries it; the wire rides the model gateway's judge). Each run
+    carries its ORDINAL — two same-scored runs in the same second are two
+    runs, not one (the content-address collision, caught live 2026-07-25 when
+    a real judge scored 0.90 twice and the ceremony counted 2/3)."""
     from .identity import NOW
     from .node import make_memory
+    prior = sum(1 for r in node.records.values()
+                if skill_name in (r.get("tags") or [])
+                and "canary" in (r.get("tags") or []))
     body = {"canary": {"skill": skill_name, "tier": tier,
-                       "score": round(float(score), 4), "at": NOW()}}
+                       "score": round(float(score), 4),
+                       "run": prior + 1, "at": NOW()}}
     return node.write(make_memory(mentee, mentee_kp, node.scope, body,
                                   kind="episodic", tags=["canary", skill_name]))
 

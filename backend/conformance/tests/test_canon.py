@@ -137,6 +137,24 @@ def test_metabolism_hears_usage_and_measures_loss():
     assert reports                                 # tuning is evidence now
 
 
+def test_same_second_same_score_canaries_are_distinct_runs():
+    """Caught live 2026-07-25: a REAL judge scored 0.90 twice in one second —
+    identical bodies content-addressed to one record and the ceremony counted
+    2/3. Each canary carries its ordinal now; three runs are three records."""
+    fld, lib, kp = _floor()
+    stacks.plant_eco_assets(fld, lib, kp)
+    canon.plant_registry(fld, lib, kp)
+    sk = canon.crystallize(fld, lib, kp, objective="fold the week",
+                           craft={"steps": ["fold"]},
+                           rubric={"min_score": 0.8, "n": 3},
+                           proven_tier="high")
+    ids = {canon.canary_run(fld, lib, kp, sk, tier="low", score=0.9)
+           for _ in range(3)}
+    assert len(ids) == 3                       # three runs, three records
+    v = canon.graduate(fld, lib, kp, sk, mentee_tier="low")
+    assert v["runs"] == 3 and v["graduated"]   # the count is honest now
+
+
 def test_the_mentor_graduates_the_mentee():
     """0039 sp4 — the finale: crystallize at the smart tier, canary at the
     cheap one under full observation, the standings speak, and graduation is
