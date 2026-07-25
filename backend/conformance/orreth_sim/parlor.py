@@ -1153,7 +1153,9 @@ def _room_librarian(facts: dict) -> list[dict]:
                    {"label": "beat · kept warm",
                     "value": (stx.get("metabolism") or {}).get("kept_warm", 0)},
                    {"label": "beat · distilled",
-                    "value": (stx.get("metabolism") or {}).get("distilled", 0)}]
+                    "value": (stx.get("metabolism") or {}).get("distilled", 0)},
+                   {"label": "the epoch (0041)",
+                    "value": stx.get("epoch", "not yet named")}]
                   + ([{"label": "bits lost at the last beat",
                        "value": f"{(stx.get('metabolism') or {}).get('loss', 0.0):.1f}"}]
                      if (stx.get("metabolism") or {}).get("distilled") else [])},

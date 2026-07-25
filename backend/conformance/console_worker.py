@@ -4197,6 +4197,105 @@ def _live_graduation(n2, u_port: int, k: int = 3):
     return scores, notes, usd, label
 
 
+# ------------------------------------------------------------- 0041 · the epoch
+EPOCH_EVERY = int(os.environ.get("ORRETH_EPOCH_EVERY", "300"))
+_EPOCH_LAST = 0.0
+
+
+def _epoch_nest(scope: str) -> Path:
+    nest = HOME / "epochs" / scope.replace("/", "~")
+    nest.mkdir(parents=True, exist_ok=True)
+    return nest / "head.json"
+
+
+def _machine_fingerprint(port: int, scope: str) -> dict:
+    """The scope's machine, as content (0041 §1, v1 scope as locked): active
+    Canon asset heads + the plane's edition + worldline POINTERS — the farm
+    and stable keep their own books; the epoch cites where they stood."""
+    heads: dict = {}
+    for ref, body, dl, tags in wire_assets(port, "asset"):
+        name = next((t for t in tags if t != "asset"), None)
+        if name:
+            heads[name] = ref        # rows ride oldest-first — last write is head
+    try:
+        plane = {"version": call(port, "GET", "/health").get("version", "?")}
+    except Exception:
+        plane = {"version": "unreachable"}
+    worldlines = {"farm": crypto.content_hash(ledger_load(scope)),
+                  "stable": crypto.content_hash(stable_ledger_load(scope))}
+    return {"assets": heads, "plane": plane, "worldlines": worldlines}
+
+
+def _cut_epoch(port: int, scope: str, fp: dict) -> str | None:
+    """Cut only when the fingerprint moved (0041 §2 — a noticing, never a
+    ceremony). Returns the standing epoch id, fresh or held."""
+    nest = _epoch_nest(scope)
+    old: dict = {}
+    try:
+        old = json.loads(nest.read_text()) if nest.exists() else {}
+    except Exception:
+        pass
+    fp_hash = crypto.content_hash(fp)
+    if old.get("fp_hash") == fp_hash:
+        return old.get("id")                     # the machine holds — no news
+    changed: dict = {}
+    for zone in ("assets", "plane", "worldlines", "floors"):
+        a = (old.get("fp") or {}).get(zone) or {}
+        b = fp.get(zone) or {}
+        for k in sorted(set(a) | set(b)):
+            if a.get(k) != b.get(k):
+                changed[f"{zone}.{k}"] = {"from": a.get(k), "to": b.get(k)}
+    seat_kp, seat_did = lib_seat(scope)
+    body = {"canon_epoch": {"scope": scope, "organ": "governance",
+                            "parent": old.get("id"),
+                            "rollback_parent": old.get("id"),
+                            **fp, "changed": changed, "cut_at": NOW()}}
+    rec = make_memory({"did": seat_did, "scope": scope}, seat_kp, scope, body,
+                      kind="semantic", tags=["canon-epoch"])
+    try:
+        call(port, "POST", "/records", rec)
+    except Exception:
+        return old.get("id")                     # the wire refused — hold the head
+    nest.write_text(json.dumps({"id": rec["id"], "fp_hash": fp_hash,
+                                "fp": fp, "at": NOW()}))
+    print(f"  ↳ the epoch turns at {scope}: "
+          + (f"{len(changed)} change(s) " if old.get("id")
+             else "the machine takes its first name ")
+          + f"[{rec['id'][:18]}…]")
+    return rec["id"]
+
+
+def epoch_beat() -> None:
+    """THE CUT on the beat (0041 sp1; locked 2026-07-25: beat-detected diff,
+    per-floor epochs + a universe roll-up citing the floors' heads). Which
+    machine is this floor right now? — answered by a hash, on a chain."""
+    global _EPOCH_LAST
+    if time.time() - _EPOCH_LAST < EPOCH_EVERY:
+        return
+    if not FLOOR_SCOPES:
+        return
+    _EPOCH_LAST = time.time()
+    u_port, floor_heads = None, {}
+    for port, scope in sorted(FLOOR_SCOPES.items()):
+        if scope == UNIVERSE_SCOPE:
+            u_port = port
+            continue
+        try:
+            eid = _cut_epoch(port, scope, _machine_fingerprint(port, scope))
+            if eid:
+                floor_heads[scope] = eid
+        except Exception:
+            continue
+    if u_port is None:
+        return
+    try:
+        fp = _machine_fingerprint(u_port, UNIVERSE_SCOPE)
+        fp["floors"] = floor_heads           # the roll-up cites the floors' heads
+        _cut_epoch(u_port, UNIVERSE_SCOPE, fp)
+    except Exception:
+        pass
+
+
 _METAB_LAST = 0.0
 _METAB_STATE: dict = {}          # the beat's last numbers — the room reads them
 METABOLISM_EVERY = int(os.environ.get("ORRETH_METABOLISM_EVERY", "900"))
@@ -4277,7 +4376,25 @@ def wire_stacks_panel(port: int) -> dict:
                                     if "knowledge" in (r.get("tags") or [])),
             "warm": len(tap),
             "touches": sum(int(e.get("n", 0)) for e in tap.values()),
-            "metabolism": metab}
+            "metabolism": metab,
+            "epoch": _epoch_short(rag_scope)}
+
+
+def _epoch_short(scope: str) -> str:
+    """The floor's standing epoch, glass-sized: 8 hash chars + an age."""
+    try:
+        head = json.loads(_epoch_nest(scope).read_text())
+    except Exception:
+        return "not yet named"
+    hid = str(head.get("id", "")).replace("sha256:", "")[:8]
+    try:
+        from datetime import datetime, timezone
+        at = datetime.fromisoformat(str(head.get("at", "")).replace("Z", "+00:00"))
+        mins = int((datetime.now(timezone.utc) - at).total_seconds() // 60)
+        age = f"{mins}m" if mins < 120 else f"{mins // 60}h"
+    except Exception:
+        age = "?"
+    return f"{hid} · {age}"
 
 
 def wire_stacks_routing(port: int, scope: str) -> str:
@@ -5411,6 +5528,7 @@ def main() -> None:
                         monitor_beat(port)    # the standing job beats like an organ
                         improver_beat(port)   # and the improver reads the receipts
                         metabolism_wire_beat()  # forgetting on schedule (sp2)
+                        epoch_beat()          # the machine keeps its name (0041)
                         mirror_beat()         # the mirror reflects every floor (0034 sp3)
                         passage_beat()        # the silence watch — contain, never execute (0035 §3)
 
