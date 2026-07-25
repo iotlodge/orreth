@@ -474,3 +474,51 @@ def reconcile(node, allen: dict, allen_kp, subject: str,
             kind="episodic", tags=["estate", "estate-drift", subject]))
     return {"subject": subject, "match": not diff, "diff": diff,
             "dag": _dag_for(subject, deployed, "deployed")}
+
+
+# ---------------------------------------------- allen swears his deeds (0042 sp2)
+
+def apply_deed(node, allen: dict, allen_kp, observer: dict, observer_kp,
+               gatekeeper: dict, gatekeeper_kp, ask: str, *,
+               human_word: bool, epoch: str, objective: str,
+               deployed: list[dict], env: str = "prod",
+               subject: str | None = None) -> dict:
+    """THE FIRST WALKER FORMALIZED (0042 sp2): the estate apply walks the
+    family. The acceptance gate and the charter speak first (0037 — their
+    refusals ride out unchanged); the human's word opens the consequence; the
+    pinned plan's template hash IS the idempotency key ("one plan-hash, one
+    apply" — the class's declaration made real); allen attempts under the
+    standing epoch (0041's clasp); a DIFFERENT seat observes the estate; the
+    planned-vs-deployed diff (0037 §4) is the reference reconciliation; a
+    clean world closes at the gate, a wrong one stays open with compensation
+    staged — nothing walks back without a fresh human word."""
+    from . import deed as _deed
+    staged = stage_create(node, ask, env=env, subject=subject)   # gate + charter
+    if not human_word:
+        raise GateStands("consequence waits at the gate (0012) — the apply "
+                         "moves on a human's word alone (0042 §2)")
+    prev = preview(node, allen, allen_kp, ask, env=env, subject=subject)
+    _deed.plant_classes(node, allen, allen_kp)     # genesis-fallback, once
+    d = _deed.open_deed(node, allen, allen_kp, effect="estate-apply",
+                        change=staged["ask"], objective=objective)
+    _deed.authorize(node, gatekeeper, gatekeeper_kp, d, budget=25.0,
+                    window_s=3600, idempotency_key=prev["template_ref"])
+    _deed.attempt(node, allen, allen_kp, d, epoch=epoch,
+                  manifests={"stack": prev["stack"],
+                             "template": prev["template_ref"],
+                             "resources": len(prev["resources"])})
+    _deed.receipt(node, allen, allen_kp, d,
+                  acknowledged={"stack": prev["stack"],
+                                "status": "CREATE_COMPLETE"})
+    _deed.observe(node, observer, observer_kp, d,
+                  found={"resources": deployed})
+    er = reconcile(node, allen, allen_kp, prev["subject"], deployed)
+    v = _deed.reconcile(node, observer, observer_kp, d,
+                        expected={"resources": prev["resources"]})
+    if v["holds"]:
+        _deed.close(node, allen, allen_kp, d,
+                    uncertainty="the describe-read is separated, not "
+                                "independent (0042 §4) — one laptop, one "
+                                "supervisor")
+    return {"deed": d, "subject": prev["subject"], "stack": prev["stack"],
+            "holds": v["holds"], "diff": er["diff"]}

@@ -121,3 +121,78 @@ def test_compensation_waits_for_the_human_and_is_itself_a_deed():
     comp = deed.compensate(fld, actor, akp, d, human_word=True, objective="obj-1")
     assert dict(deed.walk(fld, d))["compensation"]            # on the record
     assert dict(deed.walk(fld, comp))["intent"] == comp       # a fresh family opens
+
+
+# ---------------------------------------------- allen swears his deeds (sp2)
+
+def _estate_apply_floor():
+    from orreth_sim import estate
+    prov = provisioner.provision(provisioner.second_brain_template(), "t")
+    fld = provisioner.staff_field(prov, provisioner.second_brain_template(), "estate")
+    b = prov.beckys["u:t/f:estate"]
+    allen, akp = b.issue_identity("instance", "u:t/f:estate", resident=True)
+    obs, okp = b.issue_identity("instance", "u:t/f:estate", resident=True)
+    gate, gkp = b.issue_identity("instance", "u:t/f:estate", resident=True)
+    return estate, fld, (allen, akp), (obs, okp), (gate, gkp)
+
+
+def test_the_acceptance_gate_speaks_before_any_deed():
+    estate, fld, (allen, akp), (obs, okp), (gate, gkp) = _estate_apply_floor()
+    with pytest.raises(estate.GateStands):        # 0037's refusal, unchanged
+        estate.apply_deed(fld, allen, akp, obs, okp, gate, gkp,
+                          "create me an S3 bucket", human_word=True,
+                          epoch="sha256:aa", objective="obj-1",
+                          deployed=[], env="sandbox")
+
+
+def test_allen_swears_a_clean_apply_and_the_key_holds():
+    estate, fld, (allen, akp), (obs, okp), (gate, gkp) = _estate_apply_floor()
+    estate.record_adoption(fld, allen, akp, ["OrrethDemoStack"])
+    plan = estate.preview(fld, allen, akp, "create me an S3 bucket",
+                          env="sandbox")          # plan is free — the picture first
+    out = estate.apply_deed(fld, allen, akp, obs, okp, gate, gkp,
+                            "create me an S3 bucket", human_word=True,
+                            epoch="sha256:aa", objective="obj-1",
+                            deployed=plan["resources"], env="sandbox")
+    assert out["holds"] and not out["diff"]
+    roles = [r for r, _ in deed.walk(fld, out["deed"])]
+    assert roles == ["intent", "authorization", "attempt", "receipt",
+                     "observation", "reconciliation", "closure"]
+    with pytest.raises(ValueError):               # one plan-hash, one apply
+        estate.apply_deed(fld, allen, akp, obs, okp, gate, gkp,
+                          "create me an S3 bucket", human_word=True,
+                          epoch="sha256:bb", objective="obj-1",
+                          deployed=plan["resources"], env="sandbox")
+
+
+def test_a_drifted_apply_stays_open_with_compensation_staged():
+    estate, fld, (allen, akp), (obs, okp), (gate, gkp) = _estate_apply_floor()
+    estate.record_adoption(fld, allen, akp, ["OrrethDemoStack"])
+    plan = estate.preview(fld, allen, akp, "create me an S3 bucket",
+                          env="sandbox")
+    drifted = [dict(r, properties={**r.get("properties", {}), "rogue": True})
+               for r in plan["resources"]]
+    out = estate.apply_deed(fld, allen, akp, obs, okp, gate, gkp,
+                            "create me an S3 bucket", human_word=True,
+                            epoch="sha256:aa", objective="obj-1",
+                            deployed=drifted, env="sandbox")
+    assert not out["holds"] and out["diff"]       # the diff is news (0037 §4)
+    fam = dict(deed.walk(fld, out["deed"]))
+    assert "closure" not in fam                   # a wrong world does not close
+    assert any("estate-drift" in (r.get("tags") or [])
+               for r in fld.records.values())     # the reference reconciliation spoke
+    comp = deed.compensate(fld, allen, akp, out["deed"], human_word=True,
+                           objective="obj-1")
+    assert dict(deed.walk(fld, comp))["intent"] == comp
+
+
+def test_no_human_word_no_consequence():
+    estate, fld, (allen, akp), (obs, okp), (gate, gkp) = _estate_apply_floor()
+    estate.record_adoption(fld, allen, akp, ["OrrethDemoStack"])
+    with pytest.raises(estate.GateStands):
+        estate.apply_deed(fld, allen, akp, obs, okp, gate, gkp,
+                          "create me an S3 bucket", human_word=False,
+                          epoch="sha256:aa", objective="obj-1",
+                          deployed=[], env="sandbox")
+    assert not any("deed" in (r.get("tags") or [])
+                   for r in fld.records.values())  # no family began

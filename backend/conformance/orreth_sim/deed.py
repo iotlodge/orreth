@@ -124,8 +124,14 @@ def open_deed(node, actor: dict, kp, *, effect: str, change: str,
     if cls.get("tier") == "T0":
         raise ValueError("a whisper-class deed carries no family — "
                          "deed_note() is its whole ceremony (0042 §3)")
+    # the opening ordinal: two same-worded intents in the same second are two
+    # deeds, not one (the content-address collision, canary's lesson 2026-07-25)
+    prior = sum(1 for r in node.records.values()
+                if "deed" in (r.get("tags") or [])
+                and "intent" in (r.get("tags") or []))
     body = {"intent": {"effect": effect, "change": change,
-                       "objective": objective, "at": NOW()}}
+                       "objective": objective, "opening": prior + 1,
+                       "at": NOW()}}
     return node.write(make_memory(actor, kp, node.scope, body,
                                   kind="episodic", tags=["deed", "intent"]))
 

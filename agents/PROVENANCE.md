@@ -481,3 +481,10 @@ reviewed sound. 232/232 conformance tests green after the fixes.
 |---|---|---|
 | `backend/conformance/orreth_sim/deed.py` | Fable 5 (claude-fable-5) | 0042 §1–§5 — effect classes as one Canon asset (T0–T3 ceremony locked); the record family intent→authorization→attempt→receipt→observation→reconciliation→closure, chained and signed; observer ≠ actor refused (0005 grown up); the epoch clasp on every attempt (0041); idempotency remembers across deeds; compensation only on a fresh human word, itself a deed; banner in file |
 | `backend/conformance/tests/test_deed.py` | Fable 5 (claude-fable-5) | sp1 conformance: shelf plants once · whisper floor both directions · full family in order · sole-witness refusal · wrong world won't close · gate-then-epoch · the key remembers · priced compensation; banner in file |
+
+## Fable 5 — 2026-07-25 (0042 sp2, allen swears his deeds)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/estate.py` | Fable 5 (claude-fable-5) | sp2 — `apply_deed`: the estate create walks the family (gate + charter refusals unchanged · human word opens consequence · template hash = the idempotency key · epoch clasp · distinct-seat observation · 0037 §4 diff = the reference reconciliation · wrong world stays open, compensation staged) |
+| `backend/conformance/orreth_sim/deed.py` | Fable 5 (claude-fable-5) | sp2 fix — intent carries its OPENING ordinal (two same-worded intents in one second are two deeds; the content-address collision, canary's lesson applied) — caught by sp2's own conformance test before it ever ran live |
