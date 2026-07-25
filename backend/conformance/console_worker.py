@@ -4554,6 +4554,7 @@ def on_publish(port: int, scope: str, r: dict, *,
     art = r.get("artifact") or "first-deed.json"
     content = r.get("content") or ""
     comp = bool(r.get("comp"))
+    verify = bool(r.get("verify"))     # re-observe a standing deed — no hand moves
     if declined:
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
@@ -4563,7 +4564,8 @@ def on_publish(port: int, scope: str, r: dict, *,
         seat_kp, seat_did = lib_seat(UNIVERSE_SCOPE)
         intent = _deed_rec(ALLEN, ALLEN_DID, UNIVERSE_SCOPE, "intent",
                            {"effect": "outbound-publish",
-                            "change": ("unpublish " if comp else "publish ")
+                            "change": ("unpublish " if comp else
+                                       "verify " if verify else "publish ")
                                       + f"/deeds/{art}",
                             "objective": r.get("text", "")[:140], "at": NOW()})
         call(port, "POST", "/records", intent)
@@ -4573,6 +4575,10 @@ def on_publish(port: int, scope: str, r: dict, *,
                          (f"UNPUBLISH /deeds/{art} — the walk-back of a deed "
                           "whose world went wrong."
                           if comp else
+                          f"VERIFY /deeds/{art} — re-observe the standing deed "
+                          "through the public door; no hand moves, the hashes "
+                          "speak, a wrong world stages its walk-back."
+                          if verify else
                           f"PUBLISH /deeds/{art} to {DEED_SITE} — T2 witnessed "
                           "(0042): your word authorizes, allen attempts under "
                           "the standing epoch, the librarian's seat fetches it "
@@ -4604,7 +4610,9 @@ def on_publish(port: int, scope: str, r: dict, *,
                      {"deed": deed_id, "authority": f"the human's word at {r['id']}",
                       "budget": 1.0, "window_s": 3600, "key": key, "at": NOW()})
     call(port, "POST", "/records", auth)
-    if comp:
+    if verify:
+        out, err = "no hand moved — observation only (0042 sp4)", None
+    elif comp:
         out, err = _aws_cli(["s3", "rm", f"s3://{bucket}/deeds/{art}"], raw=True)
     else:
         tmp = HOME / "tmp" / art
@@ -4616,7 +4624,8 @@ def on_publish(port: int, scope: str, r: dict, *,
     attempt = _deed_rec(ALLEN, ALLEN_DID, UNIVERSE_SCOPE, "attempt",
                         {"deed": deed_id, "key": key, "epoch": epoch,
                          "manifests": {"bucket": bucket, "path": f"deeds/{art}",
-                                       "comp": comp}, "at": NOW()})
+                                       "comp": comp, "verify": verify},
+                         "at": NOW()})
     call(port, "POST", "/records", attempt)
     if err:
         return fail(f"the hand was refused: {err[:140]}")
@@ -4660,6 +4669,9 @@ def on_publish(port: int, scope: str, r: dict, *,
               "result": {"reply": ("UNPUBLISHED on your word — the public door "
                                    "no longer answers, the family closed."
                                    if comp else
+                                   f"VERIFIED — /deeds/{art} still is what the "
+                                   "deed swore; the hashes agree, the family closed."
+                                   if verify else
                                    f"PUBLISHED and WITNESSED — {DEED_SITE}/deeds/{art} "
                                    "fetched back by the librarian's seat, hashes "
                                    "matched, the family closed whole."),
@@ -4674,9 +4686,12 @@ def on_publish(port: int, scope: str, r: dict, *,
     call(port, "POST", "/requests/resolve",
          {"id": r["id"], "status": "done",
           "result": {"reply": f"the world disagrees — expected the artifact "
-                              f"{'gone' if comp else 'live and matching'}, found "
-                              f"{status}. A wrong world does not close: the "
-                              "unpublish is STAGED at your gate.",
+                              f"{'gone' if comp else 'live and matching'}; the door "
+                              + (f"answered with DIFFERENT bytes "
+                                 f"[{str(fetched_hash)[7:19]}…]" if status == "found"
+                                 else f"said: {status}")
+                              + ". A wrong world does not close: the "
+                                "unpublish is STAGED at your gate.",
                      "deed": deed_id, "resolved_at": NOW()}})
     print(f"  ↳ deed reconciliation FAILED for /deeds/{art} — compensation staged")
 

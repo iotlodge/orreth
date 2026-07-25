@@ -495,3 +495,9 @@ reviewed sound. 232/232 conformance tests green after the fixes.
 |---|---|---|
 | `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | sp3 — `on_publish`: the T2 witnessed walk on the wire (card stages with the intent pinned · the human's word = authorization citing the request · allen's seat attempts ONE gated write via the toolroom hand under the standing epoch · receipt verbatim · the LIBRARIAN's seat fetch-backs through the public door · hashes reconcile · closure or the unpublish STAGED as another publish card walking the same family). PROVEN LIVE: req-330 → https://demo.orreth.ai/deeds/first-deed.json, witnessed, closed whole. Honest boundary: the live failure/compensation walk is sp4's subject (machinery coded, sim-proven). |
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | sp3 — pgate: "publish it / walk it back / not this" + the card's package readable at the gate (serves on next rebuild) |
+
+## Fable 5 — 2026-07-25 (0042 sp4, compensation and the priced ceremony — the dive closes whole)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | sp4 — the VERIFY door (`verify: true` on the publish card: re-observe a standing deed through the public door, no hand moves) + the mismatch reply names the differing bytes. PROVEN LIVE, the full loop: first-deed.json SWAPPED out-of-band by an outside hand → verify walk CAUGHT the differing hashes → unpublish STAGED (req-332) → JB's fresh word → walked back, absence witnessed, comp deed closed → published anew (fresh family) on JB's second word. T0's quiet floor sim-proven (sp1); the glass wears the deed's gates (pgate). |
