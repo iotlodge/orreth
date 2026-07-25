@@ -183,3 +183,23 @@ lifecycle-synergy discussion (the original third piece).*
 the Canon so it knows how to be itself; the loop between them so tomorrow's
 universe is better than today's — and a human's hand on every consequential
 page.* 🥂
+
+---
+
+## Amendment — 2026-07-25 · certificates are contextual evidence
+
+*Adopted by JB from the outside-review triage (`../outside/ORRETH_CHRONICLE_MIND_CANON_MACHINE.md`,
+loop 7's genuinely-new increment). Design text now; builds with the wire-honesty pass.*
+
+A graduation is not a permanent blessing — it is a **certificate binding a
+context**: this exact craft × the manifests and model deal it ran under × the
+serving tier × the rubric it proved × a **validity window**. Therefore:
+
+- **expiry is the default** — a certificate that reaches the end of its window
+  un-revalidated does not fail silently: the mentee's service drops back to the
+  mentor tier LOUDLY (a record, a marker, a visible cost), never a quiet decay;
+- **revalidation rides the serials desk** — a shifted dependency (model deal,
+  tool manifest, upstream standard) fires the same `faculty-shifted` doubt that
+  flows already carry (0040 §5), and a fresh canary re-earns the window;
+- demotion and refusal remain exactly as proven in this dive; the amendment
+  adds only the clock. Never silently dumber — now with an expiration date.

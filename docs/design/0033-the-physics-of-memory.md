@@ -242,3 +242,24 @@ bounded by contract* — scientifically defensible, never mystical.
 *Shannon showed how to move a message through noise without losing it. Orreth is
 what happens when a whole organization decides its history deserves the same
 guarantee — and the guarantee gets a meter.* 🥂
+
+---
+
+## Amendment — 2026-07-25 · the dissent clause
+
+*Adopted by JB from the outside-review triage (`../outside/ORRETH_CHRONICLE_MIND_CANON_MACHINE.md`,
+loop 4's adoptable kernel). Design text now; the contract-field addition rides the
+rule-9 gate when built.*
+
+A distortion contract's survival terms extend beyond facts to **disagreement**:
+
+- a contract MAY — and for record classes that carried decision-bearing
+  disagreement MUST — name the **contradictory voices that remain separately
+  visible** through distillation; consensus may compress, dissent that decisions
+  leaned on may not be averaged away;
+- **uncertainty bounds may never silently narrow** under distillation — a
+  distilled record is at most as confident as its sources, and a narrowing is a
+  contract violation refused at save like any other;
+- the strongest summary is not always the consensus: sometimes the honest
+  memory is that the institution did not agree, and the metabolism must be able
+  to keep saying so at every altitude.

@@ -302,3 +302,26 @@ acquisition confirmed core-and-needed, queued as its own dive.
 *The seat let the human stand anywhere in time. The Workshop puts the levers in
 their hands; the aperture proves what every mind was given; the walk shows what
 every mind did with it. Nothing thinks in the dark anymore.* 🥂
+
+---
+
+## Amendment — 2026-07-25 · the adversarial-evidence requirement
+
+*Adopted by JB from the outside-review triage — though the hole it closes is one
+the review itself did not name: the **argument layer**. The proposer of a Canon
+change assembles its own evidence package, and a selectively-true package sails
+through independent grading, because the grade evaluates what is presented.
+(Applies equally to 0028's improvement engine — approval packages are one shape.)*
+
+Every proposal's approval package MUST carry its **refute-search**:
+
+- what was searched for that would refute the proposal — which floors, which
+  record classes, which time range;
+- what was found — including, explicitly, *nothing*;
+- contradicting evidence found is PRESENTED in the package, not summarized away
+  (the dissent clause of 0033 applied at the gate).
+
+A package arriving without its refute-search is **refused at the gate as
+incomplete** — not graded low; refused, the way a violating distillation is
+refused at save. Nothing grades its own yardstick; now nothing argues from only
+its own exhibits either.

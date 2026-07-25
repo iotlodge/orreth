@@ -313,6 +313,46 @@ including derived-memory chain verification).
 
 ## 🔧 Build phase — decisions as they arise
 
+### Locked 2026-07-25 (the outside-review triage — Sol 5.6's eight loops, taken as ore, not as law)
+*JB commissioned an independent review (ChatGPT Sol 5.6 high, read-only from the repo);
+both documents live verbatim in `../outside/`. Fable triaged; JB locked all three calls
+via AskUserQuestion — the recommended path on each.*
+
+- **Adopted — two reserved dives**: **0041 The Epoch** (CanonEpoch as signed
+  machine-state snapshot · enforcement-point attestation on the beat · drift-is-news
+  generalized from allen's reconcile · revert-to-sibling as first pre-authorized
+  containment posture · the constitution-of-the-constitution paragraph · schema leaves
+  room for the multiverse handshake) and **0042 The Deed** (effect classes as Canon
+  assets with **ceremony priced by class** · the intent→authorization→attempt→receipt→
+  independent-observation→reconciliation→closure record family · first proof: allen's
+  apply formalized; second: real outbound publishing · honest boundary: dev observation
+  is *separated*, not *independent*).
+- **Adopted — three amendments, landed same day**: 0033 gains **the dissent clause**
+  (consequential disagreement survives distillation; uncertainty bounds never silently
+  narrow) · 0039 gains **certificate windows** (graduation = contextual evidence with
+  expiry-by-default; revalidation rides the serials desk; lapse demotes LOUDLY) ·
+  0031/0028 gain **the adversarial-evidence requirement** (every approval package
+  carries its refute-search or is refused as incomplete — Fable's own addition: the
+  review defended the crypto and world layers but left the *argument layer* open).
+- **Adopted — one discussion owed to JB before any drafting**: **the Mandate**
+  (objective homeostasis) — four completion states (work complete ≠ artifact accepted ≠
+  objective satisfied ≠ objective maintained) · standing objectives · **purpose as a
+  lease** (mandates age into safe posture on silence — 0035's law extended to purpose) ·
+  **the attention budget** (JB's attention as a metered resource; standing automation
+  earned through evidence at explicit boundaries).
+- **Sequence**: the wire-honesty trio FIRST (live-judge graduation · scheduled
+  metabolism beat · persistent recall tap — closing the scaffold-vs-claim gap the
+  review's own §12 named), then 0041, then 0042, then the Mandate dive.
+- **Parked, with reasons**: full belief-view machinery (epistemology theater until the
+  Mirror demands it) · the dream/rehearsal loop (meaningless until epochs exist; then
+  it is the canary grown up) · full causal-credit machinery (canary + tournament ARE our
+  controlled experiments; only attribution-confidence classes on proposals get adopted) ·
+  the liveness constitution beyond revert-to-sibling (designs when the Custodian tier
+  becomes real).
+- **Declined**: adopting the eight loops wholesale — a year of constitutional
+  construction with unpriced ceremony would kill the seed-to-WHOLE-in-a-day metabolism
+  that makes Orreth alive.
+
 ### Locked 2026-07-23 (0039 — the Chronicle and the Canon: Phase 2's constitution)
 - **Two books, one mind — the house names**: the Chronicle (JB's Purpose Data — the
   O·I·O·T ladder, DAG-hard, walkable forever) and the Canon (JB's Orreth Data —
