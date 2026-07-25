@@ -3998,6 +3998,7 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
     # the choice persists on the wire; it just doesn't answer itself
     a = tournament.answer_as(n, d["flavor"], q)
     recalls_save(scope, n)             # what this ask warmed, kept (sp1)
+    attest_note(port, scope, n)        # what this ask LOADED, noted (0041 sp2)
     cites = " · ".join(f"{c['doc']} [{c['ref'][:18]}…] {c['score']}"
                        for c in a["citations"][:3])
     return (f"⚡ the dispatcher chose «{d['flavor']}» — {d['why']} "
@@ -4296,6 +4297,93 @@ def epoch_beat() -> None:
         pass
 
 
+# --------------------------------------------------- 0041 sp2 · the attestation
+ATTEST_EVERY = int(os.environ.get("ORRETH_ATTEST_EVERY", "21600"))  # ~6h, locked
+_LOADED: dict = {}      # scope → {"port", "loaded": {name: head}, "at"} — what
+#                         the organs ACTUALLY resolved at their standard doors
+
+
+def attest_note(port: int, scope: str, node) -> None:
+    """The loading, noticed (0041 §3): whenever an organ acts through the
+    projection — the dispatcher routes, the metabolism turns, a ceremony runs —
+    the heads it ACTUALLY held are noted here. The Canon declaring v2 makes
+    nothing law; loading it does."""
+    heads: dict = {}
+    for rid, r in node.records.items():
+        tags = r.get("tags") or []
+        if "asset" not in tags:
+            continue
+        name = next((t for t in tags if t != "asset"), None)
+        if not name:
+            continue
+        held = heads.get(name)
+        if held is None or (r.get("received_at", "") >
+                            node.records.get(held, {}).get("received_at", "")):
+            heads[name] = rid
+    if heads:
+        _LOADED[scope] = {"port": port, "loaded": heads, "at": NOW()}
+
+
+def _attest_nest(scope: str) -> Path:
+    nest = HOME / "epochs" / scope.replace("/", "~")
+    nest.mkdir(parents=True, exist_ok=True)
+    return nest / "attest.json"
+
+
+def attest_beat() -> None:
+    """THE ATTESTATION on the beat (0041 sp2; locked: on change + a slow
+    standing re-attest, so a silent point becomes VISIBLY silent). Each record
+    carries the epoch this point believes governs it AND the heads it truly
+    loaded — sp3's reconcile reads the gap between them."""
+    for scope, seen in list(_LOADED.items()):
+        try:
+            nest = _attest_nest(scope)
+            last: dict = {}
+            try:
+                last = json.loads(nest.read_text()) if nest.exists() else {}
+            except Exception:
+                pass
+            loaded_hash = crypto.content_hash(seen["loaded"])
+            fresh = last.get("loaded_hash") == loaded_hash
+            recent = False
+            try:
+                from datetime import datetime, timezone
+                at = datetime.fromisoformat(
+                    str(last.get("at", "")).replace("Z", "+00:00"))
+                recent = ((datetime.now(timezone.utc) - at).total_seconds()
+                          < ATTEST_EVERY)
+            except Exception:
+                pass
+            if fresh and recent:
+                continue                    # unchanged and young — diff-quiet
+            declared = None
+            try:
+                declared = json.loads(
+                    _epoch_nest(scope).read_text()).get("id")
+            except Exception:
+                pass
+            port = seen["port"]
+            seat_kp, seat_did = lib_seat(scope)
+            body = {"attestation": {
+                "scope": scope, "point": "console-worker",
+                "point_code": os.environ.get("ORRETH_VERSION", "dev"),
+                "epoch": declared, "loaded": seen["loaded"],
+                "at": NOW()}}
+            rec = make_memory({"did": seat_did, "scope": scope}, seat_kp,
+                              scope, body, kind="semantic",
+                              tags=["attestation"])
+            call(port, "POST", "/records", rec)
+            nest.write_text(json.dumps({"loaded_hash": loaded_hash,
+                                        "at": NOW(), "id": rec["id"],
+                                        "epoch": declared}))
+            why = "the loading changed" if not fresh else "the standing word"
+            print(f"  ↳ the point attests at {scope}: "
+                  f"{len(seen['loaded'])} head(s) loaded — {why} "
+                  f"[{rec['id'][:18]}…]")
+        except Exception:
+            continue
+
+
 _METAB_LAST = 0.0
 _METAB_STATE: dict = {}          # the beat's last numbers — the room reads them
 METABOLISM_EVERY = int(os.environ.get("ORRETH_METABOLISM_EVERY", "900"))
@@ -4324,6 +4412,7 @@ def metabolism_wire_beat() -> None:
             return
         rep = _cn.metabolism_beat(n, {"did": did, "scope": rag_scope}, kp)
         recalls_save(rag_scope, n)
+        attest_note(rag_port, rag_scope, n)    # the dials it turned under (sp2)
         global _METAB_STATE
         _METAB_STATE = {"kept_warm": rep.get("kept_warm", 0),
                         "distilled": rep.get("distilled", 0),
@@ -4377,7 +4466,21 @@ def wire_stacks_panel(port: int) -> dict:
             "warm": len(tap),
             "touches": sum(int(e.get("n", 0)) for e in tap.values()),
             "metabolism": metab,
-            "epoch": _epoch_short(rag_scope)}
+            "epoch": _epoch_short(rag_scope),
+            "attested": _attest_short(rag_scope)}
+
+
+def _attest_short(scope: str) -> str:
+    """The point's last sworn loading, glass-sized: an age — or its absence,
+    visible (0041 §3: a silent point is never assumed fine)."""
+    try:
+        head = json.loads(_attest_nest(scope).read_text())
+        from datetime import datetime, timezone
+        at = datetime.fromisoformat(str(head.get("at", "")).replace("Z", "+00:00"))
+        mins = int((datetime.now(timezone.utc) - at).total_seconds() // 60)
+        return f"{mins}m ago" if mins < 120 else f"{mins // 60}h ago"
+    except Exception:
+        return "no word yet"
 
 
 def _epoch_short(scope: str) -> str:
@@ -5130,6 +5233,8 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                 for sc in (0.9, 0.85, 0.88):
                     _cn.canary_run(n2, me2, kp2, sk, tier="low", score=sc)
             v = _cn.graduate(n2, me2, kp2, sk, mentee_tier="low")
+            attest_note(next((p for p, s2 in FLOOR_SCOPES.items()
+                              if s2 == n2.scope), 0), n2.scope, n2)  # sp2
             said = ("; the judge's word: " + " · ".join(notes[:2])) if notes else ""
             reply = (f"🎓 THE GRADUATION — «{sk}» crystallized at the smart tier, "
                      f"canaried {v['runs']}× at «{v['tier']}» ({label}), "
@@ -5529,6 +5634,7 @@ def main() -> None:
                         improver_beat(port)   # and the improver reads the receipts
                         metabolism_wire_beat()  # forgetting on schedule (sp2)
                         epoch_beat()          # the machine keeps its name (0041)
+                        attest_beat()         # and proves what it loaded (0041)
                         mirror_beat()         # the mirror reflects every floor (0034 sp3)
                         passage_beat()        # the silence watch — contain, never execute (0035 §3)
 

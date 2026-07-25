@@ -490,8 +490,9 @@
   .wsp>*:not(.wt){min-height:0}
   .wsp .wt{font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.18em;
     color:var(--brass);font-size:.72rem;margin-bottom:.5rem}
-  .wsp .tile{display:inline-block;margin:.15rem .9rem .15rem 0}
-  .wsp .tile .v{font:800 1.5rem/1.1 system-ui;color:var(--star)}
+  .wsp .tile{display:inline-block;margin:.2rem .9rem .2rem 0;vertical-align:top}
+  .wsp .tile .v{font:800 1.15rem/1.25 system-ui;color:var(--star)}
+  .wsp .tile .v.vs{font:700 .8rem/1.5 var(--mono)}  /* long values whisper (JB, 2026-07-25) */
   .wsp .tile .l{font:.6rem var(--mono);color:var(--faint)}
   .wsp .bar{display:flex;align-items:center;gap:.5rem;margin:.28rem 0;font:.66rem var(--mono)}
   .wsp .bar .bl{flex:0 0 9rem;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2472,7 +2473,7 @@ function renderRoom(ws){
   el.innerHTML=panels.map((p,pi)=>{
     let body="",tools="";
     if(p.kind==="stat")body=(p.items||[]).map(i=>
-      `<span class="tile"><div class="v">${esc(i.value)}</div><div class="l">${esc(i.label)}</div></span>`).join("");
+      `<span class="tile"><div class="v${String(i.value).length>8?" vs":""}">${esc(i.value)}</div><div class="l">${esc(i.label)}</div></span>`).join("");
     else if(p.kind==="bars"){const mx=Math.max(1,...(p.items||[]).map(i=>+i.value||0));
       body=(p.items||[]).map(i=>`<div class="bar"><span class="bl" title="${esc(i.label)}">${esc(i.label)}</span>`+
         `<span class="bv" style="width:${Math.round(58*(+i.value||0)/mx)}%"></span>`+

@@ -1145,8 +1145,9 @@ def _room_librarian(facts: dict) -> list[dict]:
                    {"label": "rows breathing", "value": len(stx.get("built") or [])},
                    {"label": "choices on record", "value": stx.get("choices", 0)},
                    {"label": "knowledge in the rows",
-                    "value": stx.get("knowledge_chunks", 0)},
-                   {"label": "records warm (the tap)",
+                    "value": stx.get("knowledge_chunks", 0)}]},
+        {"kind": "stat", "title": "the organs' pulse — the tap · the beat · the epoch",
+         "items": [{"label": "records warm (the tap)",
                     "value": stx.get("warm", 0)},
                    {"label": "recall touches, all time",
                     "value": stx.get("touches", 0)},
@@ -1155,7 +1156,9 @@ def _room_librarian(facts: dict) -> list[dict]:
                    {"label": "beat · distilled",
                     "value": (stx.get("metabolism") or {}).get("distilled", 0)},
                    {"label": "the epoch (0041)",
-                    "value": stx.get("epoch", "not yet named")}]
+                    "value": stx.get("epoch", "not yet named")},
+                   {"label": "the point attested",
+                    "value": stx.get("attested", "no word yet")}]
                   + ([{"label": "bits lost at the last beat",
                        "value": f"{(stx.get('metabolism') or {}).get('loss', 0.0):.1f}"}]
                      if (stx.get("metabolism") or {}).get("distilled") else [])},
