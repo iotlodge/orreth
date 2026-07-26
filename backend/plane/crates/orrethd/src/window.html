@@ -490,6 +490,10 @@
   .wsp>*:not(.wt){min-height:0}
   .wsp .wt{font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.18em;
     color:var(--brass);font-size:.72rem;margin-bottom:.5rem}
+  /* the panel body is ONE flex item — children keep their natural flow (a
+     direct flex child is blockified and shrinkable: the librarian's dense
+     room read as text-on-text, JB's catch 2026-07-26); squeezed, it scrolls */
+  .wsp .pb{min-height:0;overflow-y:auto}
   .wsp .tile{display:inline-block;margin:.2rem .9rem .2rem 0;vertical-align:top}
   .wsp .tile .v{font:800 1.15rem/1.25 system-ui;color:var(--star)}
   .wsp .tile .v.vs{font:700 .8rem/1.5 var(--mono)}  /* long values whisper (JB, 2026-07-25) */
@@ -502,7 +506,8 @@
   .wsp .row .rm{color:var(--faint);margin-left:.4rem}
   .wsp .row .amber{border:1px solid #c90;color:#fc3;border-radius:999px;
     font-size:.58rem;padding:.02em .5em;margin-left:.4rem}
-  .wsp .doc{font:.72rem/1.5 var(--mono);color:var(--blue);white-space:pre-wrap;overflow-wrap:anywhere}
+  .wsp .doc{font:.72rem/1.5 var(--mono);color:var(--blue);white-space:pre-wrap;
+    overflow-wrap:anywhere;min-height:0;overflow-y:auto}
   /* ── THE VISIBLE MIND (0031 §6): the choreography arrives COMPOSED (nodes ·
         edges · narrative, the 0008 bijection) and renders blind; the walk opens
         a seat — what rode down, what it cost, who graded it, what came back ── */
@@ -2480,15 +2485,15 @@ function renderRoom(ws){
   if(!panels.length){el.innerHTML='<div class="wsp"><div class="wt">no room declared</div></div>';return}
   el.innerHTML=panels.map((p,pi)=>{
     let body="",tools="";
-    if(p.kind==="stat")body=(p.items||[]).map(i=>
-      `<span class="tile"><div class="v${String(i.value).length>8?" vs":""}">${esc(i.value)}</div><div class="l">${esc(i.label)}</div></span>`).join("");
+    if(p.kind==="stat")body=`<div class="pb">`+(p.items||[]).map(i=>
+      `<span class="tile"><div class="v${String(i.value).length>8?" vs":""}">${esc(i.value)}</div><div class="l">${esc(i.label)}</div></span>`).join("")+`</div>`;
     else if(p.kind==="bars"){const mx=Math.max(1,...(p.items||[]).map(i=>+i.value||0));
-      body=(p.items||[]).map(i=>`<div class="bar"><span class="bl" title="${esc(i.label)}">${esc(i.label)}</span>`+
+      body=`<div class="pb">`+(p.items||[]).map(i=>`<div class="bar"><span class="bl" title="${esc(i.label)}">${esc(i.label)}</span>`+
         `<span class="bv" style="width:${Math.round(58*(+i.value||0)/mx)}%"></span>`+
-        `<span class="bn">${esc(i.value)}</span></div>`).join("")}
-    else if(p.kind==="list")body=(p.items||[]).map(i=>
+        `<span class="bn">${esc(i.value)}</span></div>`).join("")+`</div>`}
+    else if(p.kind==="list")body=`<div class="pb">`+(p.items||[]).map(i=>
       `<div class="row">${esc(i.text)}${i.meta?`<span class="rm">${esc(i.meta)}</span>`:""}`+
-      `${i.amber?`<span class="amber">${esc(i.severity||"co-review")}</span>`:""}</div>`).join("");
+      `${i.amber?`<span class="amber">${esc(i.severity||"co-review")}</span>`:""}</div>`).join("")+`</div>`;
     else if(p.kind==="doc"){
       body=`<div class="doc${p.code?" code":""}">${p.code?hlCode(p.text):esc(p.text)}</div>`;
       if(p.code)tools=`<span class="wtool" onclick="wsModal(${pi})" title="open large">⛶</span>

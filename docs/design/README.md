@@ -44,21 +44,17 @@ first application. The dives below are re-ordered around that center. The 6 use-
 Written down so any session — any model — can pick this up cold. Order is
 leverage-first; each step names its gate.
 
-> **1 — the rig wears its era (JB's hand, then a check):** JB rebuilds the rig;
-> the glass then serves the v0.41 whisper and the honest lag-card label (D4).
-> EXPECT a wave of "the epoch turns" across every floor right after — the machine
-> noticing its own new plane edition (`plane.version` in the fingerprint). That is
-> the Epoch working, NOT drift: the accusation check keys on `assets.*` only.
-> **2 — the Epoch earns its harness (hardening, small spoonfuls, no locks needed):**
-> `demo_drift.py` for the reel (inject → card → revert → silence, repeatable by a
-> human) · lift the epoch/drift/revert machinery into `orreth_sim` with conformance
-> tests (today it is wire-proven only — the named boundary) · the 0038 orphan-lineage
-> fix (`on_standard_promotion` adopts without `adopted_from`) · the universe-scope
-> lag card gap (a universe-level oath that will not converge has no port to stage at).
-> **3 — the campaign sees the new machine (before Show HN, Tue Jul 28):**
-> demo.orreth.ai refresh with the 0.41 moment — the epoch hashes in the glass, the
-> drift card, the revert story (snapshot → cdk deploy w/ context flags → re-upload
-> the brain video; the deploy PRUNES /media/).
+> **1 — the rig wears its era — DONE 2026-07-26** (rebuilt; the glass serves the
+> 0.42 whisper, the pgate, and the honest lag-card label).
+> **2 — the Epoch earns its harness — DONE 2026-07-26 except one gap:**
+> `demo_drift.py` shipped 07-25 (`demo.sh drift`) · the machinery lifted into
+> `orreth_sim/epoch.py` with conformance tests (suite 244→254, THE SILENCE held) ·
+> the 0038 orphan-lineage fix landed (the card carries `proposal_ref`, the adoption
+> names it). **REMAINING: the universe-scope lag card gap** (a universe-level oath
+> that will not converge has no port to stage at).
+> **3 — the campaign sees the new machine — DONE 2026-07-26:** demo.orreth.ai
+> serves the v0.42 moment; the deploy prune of /deeds/ + /media/ is RETIRED
+> (exclude in the stack, proven on the deploy itself).
 > **4 — the next dive: 0042 The Deed** (reserved above, triaged + locked by JB
 > 2026-07-25): draft → JB's locks → spoonfuls. The effect protocol — effect classes
 > as Canon assets, ceremony priced by class, the record family
@@ -67,8 +63,14 @@ leverage-first; each step names its gate.
 > walks the shape); second class: real outbound publishing.
 > **Alongside, never blocking:** allen's standing TODOs (AWS-docs supply line ·
 > walk receipts on his floor · DAG polish · Daylight Glass · the rig's provisioning
-> lifecycle as his proving ground) · librarian card/tile readability wart ·
+> lifecycle as his proving ground) · ~~librarian card/tile readability wart~~
+> (FIXED 2026-07-26 — a 0037-era flex regression blockified the stat tiles;
+> panel bodies now wrap and scroll) ·
 > guides 03 (Resident Field Guide) + 04 (Building Agents/SDK).
+> **The standing register:** [the-honest-boundary.md](the-honest-boundary.md) —
+> claims with evidence named, partials, and parks in one place (seeded
+> 2026-07-26 from the outside poster's §12). A dive that moves a row updates
+> the register in its closing commit.
 > **Parked, awaiting JB's stamp:** 0040 The Faculty & the Agent Lab (built only when
 > Orreth is "stamped ready to test") · the Mandate discussion (objective homeostasis
 > + attention budget).
