@@ -4025,11 +4025,12 @@ def wire_stacks_tournament(port: int, scope: str, q: str = "") -> str:
     r = tournament.run(n, questions)
     recalls_save(scope, n)             # seven rows' worth of warmth, kept (sp1)
     me = {"did": seat_did, "scope": scope}
-    n.write(make_memory(me, seat_kp, scope,
-                        {"stacks_tournament": {"standings": r["standings"],
-                                               "champion": r["champion"],
-                                               "rounds": len(r["rounds"])}},
-                        kind="episodic", tags=["stacks", "tournament"]))
+    ev = make_memory(me, seat_kp, scope,
+                     {"stacks_tournament": {"standings": r["standings"],
+                                            "champion": r["champion"],
+                                            "rounds": len(r["rounds"])}},
+                     kind="episodic", tags=["stacks", "tournament"])
+    n.write(ev)
     p = tournament.promotion_proposal(r)
     try:
         board_txt = "\n".join(f"  {s['flavor']}: {s['mean']:.2f} over {s['n']}"
@@ -4037,6 +4038,9 @@ def wire_stacks_tournament(port: int, scope: str, q: str = "") -> str:
                                  else "") for s in r["standings"])
         call(universe_port(port), "POST", "/requests",
              {"kind": "improvement", "standard_v2": dict(p, version="2"),
+              # the card carries its evidence — the adoption names it, so a
+              # promoted standard is never an orphan on the shelf
+              "proposal_ref": ev["id"],
               "text": f"THE FIRST PROMOTION — routing-standard v2 from the "
                       f"tournament: default → «{p['default']}», all seven rows "
                       "built. the tournament argues, you sign (0012)",
@@ -4094,8 +4098,13 @@ def on_standard_promotion(port: int, scope: str, r: dict, *,
     seat_kp, seat_did = lib_seat(rag_scope)
     v2 = dict(r.get("standard_v2") or {})
     v2.pop("evidence", None)
+    # lineage: the adoption names the tournament's standings record (legacy
+    # cards without a ref plant as before — old resolved words stay honest)
+    pref = str(r.get("proposal_ref") or "") or None
     asset = improver.make_asset({"did": seat_did, "scope": rag_scope}, seat_kp,
-                                rag_scope, name="routing-standard", profile=v2)
+                                rag_scope, name="routing-standard", profile=v2,
+                                adopted_from=pref,
+                                derived_from=[pref] if pref else None)
     try:
         call(rag_port, "POST", "/records", asset)
         call(port, "POST", "/requests/resolve",
