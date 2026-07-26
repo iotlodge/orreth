@@ -11,7 +11,37 @@
   :root{color-scheme:dark;--void:#080D1C;--deep:#0B1226;--hair:#1C2947;--hair2:#2A3960;
     --star:#EAEFFA;--dim:#8894B4;--faint:#4B5678;--brass:#D4A960;--brassdim:#8a6f42;
     --near:#7FD1A8;--blue:#9FB6E8;--red:#E89A8F;--viol:#B79CE8;
+    --scrim:rgba(5,7,12,.82);--tip:rgba(11,18,38,.88);
+    --tickshadow:0 1px 4px rgba(0,0,0,.8);
     --mono:ui-monospace,"SF Mono",Menlo,monospace;--serif:Palatino,Georgia,serif}
+  /* ── THE DAYLIGHT GLASS (JB's ask 2026-07-22 · built 2026-07-26): the same
+        glass in daylight — paper, ink, bronze. Never an inversion: the night
+        view is additive light, the day view is ink-wash on warm paper. DOM
+        reads these vars; every canvas color lives in THEMES (JS). ── */
+  :root[data-theme="light"]{color-scheme:light;
+    --void:#F1EDE2;--deep:#E9E3D3;--hair:#D6CDB8;--hair2:#BFB499;
+    --star:#262C3D;--dim:#5D6377;--faint:#A09880;--brass:#9C721D;--brassdim:#C7AE74;
+    --near:#237A50;--blue:#3D5C9F;--red:#B0503F;--viol:#6C4BB0;
+    --scrim:rgba(74,64,38,.30);--tip:rgba(252,249,241,.94);
+    --tickshadow:0 1px 4px rgba(255,255,255,.85)}
+  [data-theme="light"] body{background:radial-gradient(1400px 700px at 82% -8%,rgba(61,92,159,.05),transparent 62%),var(--void)}
+  [data-theme="light"] .drawer{box-shadow:0 -14px 34px rgba(96,80,40,.16)}
+  [data-theme="light"] .parlor{box-shadow:-18px 0 48px rgba(96,80,40,.14)}
+  [data-theme="light"] #ocard{background:rgba(252,249,241,.98);box-shadow:0 10px 34px rgba(96,80,40,.24)}
+  [data-theme="light"] #leader .card2{background:rgba(252,249,241,.98)}
+  [data-theme="light"] .bhint{color:#7d5a10;text-shadow:0 0 6px rgba(255,255,255,.9)}
+  [data-theme="light"] .gnode{background:rgba(252,250,244,.95)}
+  [data-theme="light"] .gcard{background:rgba(252,250,244,.96)}
+  [data-theme="light"] .wsp{background:rgba(255,255,255,.5)}
+  [data-theme="light"] .walk{background:rgba(255,255,255,.45)}
+  [data-theme="light"] .doc.code .hk{color:#2c5aa0}
+  [data-theme="light"] .doc.code .hs{color:#1f7a4d}
+  [data-theme="light"] .doc.code .hn{color:#a1611f}
+  [data-theme="light"] .obj .sev.amber,[data-theme="light"] .wsp .row .amber{border-color:#9a7b00;color:#7a6000}
+  [data-theme="light"] .ask-in button{color:#faf6ec}
+  [data-theme="light"] .dust{background:#c6bba0}
+  .daybtn{cursor:pointer;color:var(--dim);font-size:.95rem;user-select:none;padding:0 .3rem}
+  .daybtn:hover{color:var(--brass)}
   *{box-sizing:border-box;margin:0;scrollbar-width:thin;scrollbar-color:var(--hair) transparent}
   html,body{height:100%;overflow:hidden}
   /* scrollbars wear the theme: hairline thumb on a void track, never the browser's chrome */
@@ -637,6 +667,7 @@
     <span class="tab" data-v="req">Requests<span class="badge" id="req-badge"></span></span>
     <span class="tab" data-v="ask">Ask</span>
   </div>
+  <span class="daybtn" id="daybtn" onclick="themeFlip()" title="the Daylight Glass — flip the light">☀</span>
   <div class="pulse" id="hpulse"><span class="quiet">reaching the daemon…</span></div>
 </header>
 
@@ -799,9 +830,9 @@
 </main>
 
 <!-- the workspace modal (0037): a panel detached into a window — pan, zoom, export -->
-<div id="wsmodal" style="display:none;position:fixed;inset:0;z-index:80;background:rgba(5,7,12,.82);
+<div id="wsmodal" style="display:none;position:fixed;inset:0;z-index:80;background:var(--scrim);
   align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
-  <div style="width:min(94vw,1500px);height:min(90vh,950px);background:#0b0e16;border:1px solid var(--hair2);
+  <div style="width:min(94vw,1500px);height:min(90vh,950px);background:var(--deep);border:1px solid var(--hair2);
     border-radius:10px;display:flex;flex-direction:column;overflow:hidden">
     <div style="display:flex;align-items:center;gap:.6rem;padding:.55rem .9rem;border-bottom:1px solid var(--hair2)">
       <b id="wsm-title" style="font:.72rem var(--mono);color:var(--dim);letter-spacing:.06em"></b>
@@ -913,6 +944,85 @@ function applyHash(){
   }finally{APPLYING=false}
 }
 window.addEventListener("popstate",applyHash);
+/* ── THE DAYLIGHT GLASS: every canvas color, both lights. The night brain is
+      additive fire ("lighter"); the day brain is ink-wash on paper ("multiply")
+      — bronze embers, indigo glass, the same truth wearing the other light.
+      Draw code reads PAL at frame time, so the flip is live mid-orbit. ── */
+/* daylight ink: the night's glow-hues, shaded toward pigment — pastels that
+   burn on black turn to smudge on paper unless they deepen */
+const shade=c=>{if(!/^#[0-9a-fA-F]{6}$/.test(c))return c;
+  const n=parseInt(c.slice(1),16),f=.56,
+  h=v=>((v*f)|0).toString(16).padStart(2,"0");
+  return "#"+h(n>>16&255)+h(n>>8&255)+h(n&255)};
+const THEMES={
+ dark:{
+  bcomp:"lighter",
+  obody:c=>c,oringA:1,
+  bneb0:"rgba(24,18,66,.85)",bneb1:"rgba(8,7,22,0)",
+  bplas0:"rgba(84,96,255,.075)",bplas1:"rgba(60,60,220,0)",
+  baxon:"rgba(90,120,255,.16)",
+  bfoldM:"rgba(168,130,255,.30)",bfold:"rgba(108,145,255,.22)",
+  bpt:(f,a)=>`rgba(${110+90*f|0},${140+70*f|0},255,${a})`,
+  blegacy:"rgba(190,205,255,.28)",
+  bember:a=>`rgba(212,169,96,${a})`,
+  blbl:a=>`rgba(138,147,166,${a})`,
+  bleg0:a=>`rgba(220,230,255,${a})`,bleg1:a=>`rgba(165,185,255,${a})`,
+  bleg2:"rgba(130,150,255,0)",
+  bfire0:(h,a)=>`rgba(255,${236-56*h|0},${200-90*h|0},${a})`,
+  bfire1:(h,a)=>`rgba(255,${185-45*h|0},${105-45*h|0},${a})`,
+  bfire2:"rgba(255,150,60,0)",
+  bsig:{quar:["150,195,255","205,225,255"],violet:["190,150,255","225,205,255"],
+        cool:["120,170,255","180,210,255"],gold:["255,200,120","255,246,224"]},
+  bburst:{violet:"190,150,255",warm:"255,170,150",gold:"255,210,130"},
+  bgapDot:a=>`rgba(255,196,110,${a})`,
+  bgapRing:(f,a)=>`rgba(255,${188-40*f|0},${96-30*f|0},${a})`,
+  bgapLine:a=>`rgba(255,210,140,${a})`,
+  ospeck:a=>`rgba(160,175,205,${a})`,
+  omote:a=>`rgba(212,169,96,${a})`,
+  oring:"rgba(212,169,96,.35)",
+  opend:a=>`rgba(212,169,96,${a})`,
+  olblCore:"#d4a960",olbl:"#aab6cc",owf:"#cfd8ea",
+  ofarmQ:"#e88f8f",ofarmOk:"#d4a960",
+  svgBg:"#0b0e16",svgCard:"#10141f",svgStroke:"#2a3040",
+  svgText:"#e8ecf4",svgMeta:"#8a93a6",svgEdge:"#5a6478",svgDep:"#7fb3e8"},
+ light:{
+  bcomp:"multiply",
+  obody:shade,oringA:1.9,
+  bneb0:"rgba(203,208,232,.60)",bneb1:"rgba(241,237,226,0)",
+  bplas0:"rgba(118,128,198,.11)",bplas1:"rgba(150,150,220,0)",
+  baxon:"rgba(70,90,170,.22)",
+  bfoldM:"rgba(118,78,188,.36)",bfold:"rgba(74,99,178,.30)",
+  bpt:(f,a)=>`rgba(${90-40*f|0},${105-45*f|0},${200-30*f|0},${a})`,
+  blegacy:"rgba(120,132,170,.35)",
+  bember:a=>`rgba(158,112,26,${a})`,
+  blbl:a=>`rgba(95,100,120,${a})`,
+  bleg0:a=>`rgba(90,105,160,${a})`,bleg1:a=>`rgba(110,125,180,${a})`,
+  bleg2:"rgba(130,150,200,0)",
+  bfire0:(h,a)=>`rgba(${190-30*h|0},${132-40*h|0},30,${a})`,
+  bfire1:(h,a)=>`rgba(${172-40*h|0},${106-35*h|0},22,${a})`,
+  bfire2:"rgba(150,100,20,0)",
+  bsig:{quar:["55,105,180","30,80,150"],violet:["115,70,190","85,45,150"],
+        cool:["60,100,180","40,75,150"],gold:["185,130,25","140,95,15"]},
+  bburst:{violet:"120,75,190",warm:"180,85,60",gold:"165,120,25"},
+  bgapDot:a=>`rgba(175,120,25,${a})`,
+  bgapRing:(f,a)=>`rgba(${175-20*f|0},${120-30*f|0},25,${a})`,
+  bgapLine:a=>`rgba(160,110,20,${a})`,
+  ospeck:a=>`rgba(110,105,88,${a})`,
+  omote:a=>`rgba(158,112,26,${a})`,
+  oring:"rgba(158,112,26,.45)",
+  opend:a=>`rgba(158,112,26,${a})`,
+  olblCore:"#8a6318",olbl:"#4a5268",owf:"#5b657f",
+  ofarmQ:"#b0503f",ofarmOk:"#9c721d",
+  svgBg:"#f4f0e5",svgCard:"#fbf9f2",svgStroke:"#c9bfa6",
+  svgText:"#252b3c",svgMeta:"#6a7080",svgEdge:"#8b8268",svgDep:"#3d5c9f"}};
+let PAL=THEMES.dark;
+function themeApply(m){PAL=THEMES[m]||THEMES.dark;
+  document.documentElement.dataset.theme=m;
+  const b=$("daybtn");if(b){b.textContent=m==="light"?"☾":"☀";
+    b.title=m==="light"?"back to the night glass":"the Daylight Glass — flip the light"}
+  try{localStorage.setItem("orreth-theme",m)}catch{}}
+function themeFlip(){themeApply(document.documentElement.dataset.theme==="light"?"dark":"light")}
+themeApply((()=>{try{return localStorage.getItem("orreth-theme")||"dark"}catch{return "dark"}})());
 async function cascadeBelow(body){
   /* the cascade affordance (0030 §4): the SAME ask, posted to every floor below —
      each floor's own queue, each floor's own human gate; nothing is imposed */
@@ -1171,7 +1281,7 @@ function bgInit(){
       style="position:absolute;top:2rem;right:.8rem;font-size:.72rem;letter-spacing:.08em;color:var(--brass);cursor:pointer;z-index:5">↻ replay 60×</div>
     <div id="bfull" onclick="$('brainwrap').requestFullscreen&&$('brainwrap').requestFullscreen()" title="fullscreen — the operator's instrument"
       style="position:absolute;top:3.45rem;right:.8rem;font-size:.8rem;color:var(--brass);cursor:pointer;z-index:5">⛶</div>
-    <div id="bticker" style="position:absolute;left:.9rem;bottom:2.4rem;font-size:.72rem;line-height:1.5;color:var(--near,#cdd6ee);opacity:.85;pointer-events:none;z-index:4;text-shadow:0 1px 4px rgba(0,0,0,.8)"></div>`;
+    <div id="bticker" style="position:absolute;left:.9rem;bottom:2.4rem;font-size:.72rem;line-height:1.5;color:var(--near,#cdd6ee);opacity:.85;pointer-events:none;z-index:4;text-shadow:var(--tickshadow)"></div>`;
   /* the glass volume: fibonacci-sampled hemispheres with gyral perturbation */
   const pts=[],folds=[];
   const surf=(u,v,side)=>{                   /* u,v on unit sphere → brain surface */
@@ -1434,26 +1544,26 @@ function bgFrame(ts){
     return [cx+rx*k*S,cy-ry*k*S,rz2,k];};
   g.clearRect(0,0,W,H);
   const bgr=g.createRadialGradient(cx,cy,0,cx,cy,Math.max(W,H)*.7);
-  bgr.addColorStop(0,"rgba(24,18,66,.85)");bgr.addColorStop(1,"rgba(8,7,22,0)");
+  bgr.addColorStop(0,PAL.bneb0);bgr.addColorStop(1,PAL.bneb1);
   g.fillStyle=bgr;g.fillRect(0,0,W,H);
-  g.globalCompositeOperation="lighter";
+  g.globalCompositeOperation=PAL.bcomp;
   /* the glass MASS: soft interior plasma — the volume reads translucent */
   for(const p of BG.plasma){
     const q=proj(p);const R=p.r*S*q[3];
     const gr=g.createRadialGradient(q[0],q[1],0,q[0],q[1],R);
-    gr.addColorStop(0,"rgba(84,96,255,.075)");gr.addColorStop(1,"rgba(60,60,220,0)");
+    gr.addColorStop(0,PAL.bplas0);gr.addColorStop(1,PAL.bplas1);
     g.fillStyle=gr;g.beginPath();g.arc(q[0],q[1],R,0,6.283);g.fill();
   }
   /* federation axons — faint reach beyond the skull */
   g.lineWidth=.9;
   BG.axons.forEach(l=>{g.beginPath();
     l.forEach((p,i)=>{const q=proj(p);i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])});
-    g.strokeStyle="rgba(90,120,255,.16)";g.stroke();});
+    g.strokeStyle=PAL.baxon;g.stroke();});
   /* gyral folds — the bright squiggles the glass is made of; the medial
      walls run warmer (concept 1's hot center line) */
   BG.folds.forEach(l=>{g.beginPath();
     l.forEach((p,i)=>{const q=proj(p);i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])});
-    g.strokeStyle=l[0].medial?"rgba(168,130,255,.30)":"rgba(108,145,255,.22)";
+    g.strokeStyle=l[0].medial?PAL.bfoldM:PAL.bfold;
     g.lineWidth=l[0].medial?1.7:1.4;g.stroke();});
   /* the glass shell: fresnel points — edges bright, faces dim = translucency */
   for(const p of BG.pts){
@@ -1461,7 +1571,7 @@ function bgFrame(ts){
     const nz=Math.abs((p.nx??0)*sa*-1+(p.nz??0)*ca);   /* normal toward viewer */
     const fres=Math.pow(1-Math.min(nz,1),2.0);
     const a=.10+.58*fres,r=(.9+1.5*fres)*q[3];
-    g.fillStyle=`rgba(${110+90*fres|0},${140+70*fres|0},255,${a.toFixed(3)})`;
+    g.fillStyle=PAL.bpt(fres,a.toFixed(3));
     g.fillRect(q[0]-r/2,q[1]-r/2,r,r);
   }
   /* the embers: every floor of the universe, alight where it lives */
@@ -1470,8 +1580,8 @@ function bgFrame(ts){
     const q=proj(c.p);
     if(c.organ){
       const tw=LEGACYF?.15:.5+.5*Math.sin(ts*.003+bhash(c.name));
-      g.fillStyle=LEGACYF?`rgba(190,205,255,.28)`
-        :`rgba(212,169,96,${(.25+.3*tw).toFixed(2)})`;
+      g.fillStyle=LEGACYF?PAL.blegacy
+        :PAL.bember((.25+.3*tw).toFixed(2));
       g.beginPath();g.arc(q[0],q[1],1.6*q[3],0,6.283);g.fill();
       continue;
     }
@@ -1490,19 +1600,19 @@ function bgFrame(ts){
        fields off the universe) whispers its name; the busy are found by their
        fire, the quiet by their name */
     if(c.depth===1&&BGAIN!=="off"){
-      g.fillStyle=`rgba(138,147,166,${(.3+.35*mag).toFixed(2)})`;
+      g.fillStyle=PAL.blbl((.3+.35*mag).toFixed(2));
       g.font=`${Math.max(8,9*q[3]).toFixed(0)}px ui-monospace,monospace`;
       g.fillText(c.name,q[0]+R+4,q[1]+3);
     }
     const gr=g.createRadialGradient(q[0],q[1],0,q[0],q[1],R);
     if(LEGACYF){                             /* embers cooled to a constellation */
-      gr.addColorStop(0,`rgba(220,230,255,${(.55*mag+.12).toFixed(2)})`);
-      gr.addColorStop(.35,`rgba(165,185,255,${(.28*mag).toFixed(2)})`);
-      gr.addColorStop(1,"rgba(130,150,255,0)");
+      gr.addColorStop(0,PAL.bleg0((.55*mag+.12).toFixed(2)));
+      gr.addColorStop(.35,PAL.bleg1((.28*mag).toFixed(2)));
+      gr.addColorStop(1,PAL.bleg2);
     }else{
-    gr.addColorStop(0,`rgba(255,${236-56*heat|0},${200-90*heat|0},${(.75*mag+.15).toFixed(2)})`);
-    gr.addColorStop(.35,`rgba(255,${185-45*heat|0},${105-45*heat|0},${(.42*mag).toFixed(2)})`);
-    gr.addColorStop(1,"rgba(255,150,60,0)");
+    gr.addColorStop(0,PAL.bfire0(heat,(.75*mag+.15).toFixed(2)));
+    gr.addColorStop(.35,PAL.bfire1(heat,(.42*mag).toFixed(2)));
+    gr.addColorStop(1,PAL.bfire2);
     }
     g.fillStyle=gr;g.beginPath();g.arc(q[0],q[1],R,0,6.283);g.fill();
     BG.hit.push({sx:q[0],sy:q[1],scope:c.scope,name:c.name,records:c.records,region:c.region});
@@ -1527,14 +1637,15 @@ function bgFrame(ts){
        pale flickering blue = quarantined arrivals (unproven light) · violet =
        consolidation, the diaries climbing a layer */
     const flick=s.flick?(.55+.45*Math.sin(ts*.02+i*3)):1;
-    const [tr,td]=s.hue==="quar"?[`rgba(150,195,255,${(.45*(1-s.t)*flick).toFixed(2)})`,
-                                  `rgba(205,225,255,${(.8*(1-s.t*.6)*flick).toFixed(2)})`]
-      :s.hue==="violet"?[`rgba(190,150,255,${(.5*(1-s.t)).toFixed(2)})`,
-                         `rgba(225,205,255,${(.85*(1-s.t*.6)).toFixed(2)})`]
-      :s.hue==="cool"?[`rgba(120,170,255,${(.4*(1-s.t)).toFixed(2)})`,
-                       `rgba(180,210,255,${(.7*(1-s.t*.6)).toFixed(2)})`]
-      :[`rgba(255,200,120,${(.5*(1-s.t)).toFixed(2)})`,
-        `rgba(255,246,224,${(.9*(1-s.t*.6)).toFixed(2)})`];
+    const sg=PAL.bsig[s.hue==="quar"||s.hue==="violet"||s.hue==="cool"?s.hue:"gold"];
+    const [tr,td]=s.hue==="quar"?[`rgba(${sg[0]},${(.45*(1-s.t)*flick).toFixed(2)})`,
+                                  `rgba(${sg[1]},${(.8*(1-s.t*.6)*flick).toFixed(2)})`]
+      :s.hue==="violet"?[`rgba(${sg[0]},${(.5*(1-s.t)).toFixed(2)})`,
+                         `rgba(${sg[1]},${(.85*(1-s.t*.6)).toFixed(2)})`]
+      :s.hue==="cool"?[`rgba(${sg[0]},${(.4*(1-s.t)).toFixed(2)})`,
+                       `rgba(${sg[1]},${(.7*(1-s.t*.6)).toFixed(2)})`]
+      :[`rgba(${sg[0]},${(.5*(1-s.t)).toFixed(2)})`,
+        `rgba(${sg[1]},${(.9*(1-s.t*.6)).toFixed(2)})`];
     g.beginPath();
     s.trail.forEach((p,j)=>{const q=proj(p);j?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])});
     g.strokeStyle=tr;g.lineWidth=s.thin?.9:1.3;g.stroke();
@@ -1547,9 +1658,7 @@ function bgFrame(ts){
     const f=BG.flashes[i];f.age+=dt;
     if(f.age>1.6){BG.flashes.splice(i,1);continue}
     const q=proj(f.p),R=(6+30*f.age*f.mag)*q[3],a=.55*(1-f.age/1.6);
-    g.strokeStyle=f.hue==="violet"?`rgba(190,150,255,${a.toFixed(2)})`
-      :f.hue==="warm"?`rgba(255,170,150,${a.toFixed(2)})`
-      :`rgba(255,210,130,${a.toFixed(2)})`;
+    g.strokeStyle=`rgba(${PAL.bburst[f.hue==="violet"?"violet":f.hue==="warm"?"warm":"gold"]},${a.toFixed(2)})`;
     g.lineWidth=1.6;
     g.beginPath();g.arc(q[0],q[1],R,0,6.283);g.stroke();
   }
@@ -1567,18 +1676,18 @@ function bgFrame(ts){
       const p=[CLEFT[0]+Math.cos(a)*r,CLEFT[1]+Math.sin(a*1.3)*r*.6,
                Math.sin(a)*r];
       const s=proj(p);
-      g.fillStyle=`rgba(255,196,110,${(.5+.4*Math.sin(ts*.004+i)).toFixed(2)})`;
+      g.fillStyle=PAL.bgapDot((.5+.4*Math.sin(ts*.004+i)).toFixed(2));
       g.beginPath();g.arc(s[0],s[1],1.8*s[3],0,6.283);g.fill();
     }
     const press=Math.min(1,BRAINQ.count/12), agef=Math.min(1,BRAINQ.oldest/30);
     const throb=.55+.45*Math.sin(ts*.0028);
     const R=(14+26*press)*qc[3];
-    g.strokeStyle=`rgba(255,${188-40*agef|0},${96-30*agef|0},${(.28+.5*press*throb).toFixed(2)})`;
+    g.strokeStyle=PAL.bgapRing(agef,(.28+.5*press*throb).toFixed(2));
     g.lineWidth=1.6+2.4*press;
     g.beginPath();g.arc(qc[0],qc[1],R,0,6.283);g.stroke();
     /* the gap itself: a signal stopped short of the tissue, waiting for a hand */
     const gp=proj([CLEFT[0]-.28,CLEFT[1]-.06,0]);
-    g.strokeStyle=`rgba(255,210,140,${(.35*throb).toFixed(2)})`;g.lineWidth=1.1;
+    g.strokeStyle=PAL.bgapLine((.35*throb).toFixed(2));g.lineWidth=1.1;
     g.beginPath();g.moveTo(gp[0],gp[1]);g.lineTo(qc[0]-R*.7,qc[1]);g.stroke();
     BG.hit.push({sx:qc[0],sy:qc[1],req:true,
       name:`consequence waits — ${BRAINQ.count} at the gate`});
@@ -1677,7 +1786,7 @@ function ovFrame(){
   const {bodies,rings}=ovWorld(t,now);
   /* faint starfield breath */
   for(let i=0;i<26;i++){const h=bhash("st"+i);
-    g.fillStyle=`rgba(160,175,205,${.05+.05*Math.sin(now/1900+h)})`;
+    g.fillStyle=PAL.ospeck(.05+.05*Math.sin(now/1900+h));
     g.fillRect((h%W),(h>>3)%H,1.4,1.4)}
   /* rings: sampled, depth-split alpha — the 3D reads from the rings first */
   rings.forEach(rg=>{
@@ -1688,10 +1797,10 @@ function ovFrame(){
                rg.c[1]+rg.B.u[1]*rg.R*Math.cos(th)+rg.B.v[1]*rg.R*Math.sin(th),
                rg.c[2]+rg.B.u[2]*rg.R*Math.cos(th)+rg.B.v[2]*rg.R*Math.sin(th)];
       const q=P(p);
-      if(prev){g.strokeStyle=rg.color;
+      if(prev){g.strokeStyle=PAL.obody(rg.color);
         g.globalAlpha*= 1; g.lineWidth=rg.thin?.5:.8;
-        const a=(q[3]+prev[3])/2; g.globalAlpha=(rg.thin?.10:.16)+ (a<0?.10:0)
-          *( OV.focus&&rg.eco!==OV.focus?0.4:1);
+        const a=(q[3]+prev[3])/2; g.globalAlpha=Math.min(1,((rg.thin?.10:.16)+ (a<0?.10:0)
+          *( OV.focus&&rg.eco!==OV.focus?0.4:1))*PAL.oringA);
         g.beginPath();g.moveTo(prev[0],prev[1]);g.lineTo(q[0],q[1]);g.stroke();
         g.globalAlpha=1;}
       prev=q;}
@@ -1700,7 +1809,7 @@ function ovFrame(){
   bodies.filter(b=>b.kind==="eco").forEach(b=>{
     for(let m=0;m<2;m++){const ph=((now/2600)+m*.5+bhash(b.name)%10/10)%1;
       const p=[b.p[0]*(1-ph),b.p[1]*(1-ph),b.p[2]*(1-ph)]; const q=P(p);
-      g.fillStyle=`rgba(212,169,96,${.30*(1-ph)*q[2]})`;
+      g.fillStyle=PAL.omote(.30*(1-ph)*q[2]);
       g.beginPath();g.arc(q[0],q[1],1.2*q[2],0,6.283);g.fill();}});
   /* bodies far→near, with glow, labels, alert rings, quiet-dimming */
   OVHIT=[];
@@ -1710,23 +1819,23 @@ function ovFrame(){
       &&b.scope!==OV.focus&&b.parent!==OV.focus?0.35:1;
     const age=n.heard_at?(Date.now()-new Date(n.heard_at))/1e3:0;
     const quiet=age>60?.5:1;
-    const r=b.R*q[2];
+    const r=b.R*q[2], bcol=PAL.obody(b.color);
     const gr=g.createRadialGradient(q[0],q[1],0,q[0],q[1],r*2.2);
-    gr.addColorStop(0,b.color); gr.addColorStop(.45,b.color+"88");
-    gr.addColorStop(1,"rgba(0,0,0,0)");
+    gr.addColorStop(0,bcol); gr.addColorStop(.45,bcol+"88");
+    gr.addColorStop(1,bcol+"00");   /* fade in the body's own hue — no dark halo in either light */
     g.globalAlpha=(b.kind==="core"?.95:.9)*dim*quiet;
     g.fillStyle=gr; g.beginPath();g.arc(q[0],q[1],r*2.2,0,6.283);g.fill();
-    g.fillStyle=b.color; g.beginPath();g.arc(q[0],q[1],r*.62,0,6.283);g.fill();
+    g.fillStyle=bcol; g.beginPath();g.arc(q[0],q[1],r*.62,0,6.283);g.fill();
     if(b.kind==="core"){const pu=1+.05*Math.sin(now/900);
-      g.strokeStyle="rgba(212,169,96,.35)";g.lineWidth=1;
+      g.strokeStyle=PAL.oring;g.lineWidth=1;
       g.beginPath();g.arc(q[0],q[1],r*1.5*pu,0,6.283);g.stroke();}
     const pend=(n.pending||0);
-    if(pend){g.strokeStyle=`rgba(212,169,96,${.5+.4*Math.sin(now/500)})`;
+    if(pend){g.strokeStyle=PAL.opend(.5+.4*Math.sin(now/500));
       g.lineWidth=1.4;g.beginPath();g.arc(q[0],q[1],r+5,0,6.283);g.stroke();}
     /* the quiet are found by their name (the Brain's lesson, kept) */
     if(b.kind!=="moon"||q[2]>0.9||OV.focus===b.parent){
       g.globalAlpha=(b.kind==="core"?.9:.75)*dim;
-      g.fillStyle=b.kind==="core"?"#d4a960":"#aab6cc";
+      g.fillStyle=b.kind==="core"?PAL.olblCore:PAL.olbl;
       g.font=`${b.kind==="core"?11:b.kind==="eco"?10.5:9}px ui-monospace,monospace`;
       const lbl=b.kind==="core"?b.name
         :`${b.name}${n.agents?` · ${n.agents}a`:""}${n.records?` · ${n.records}m`:""}`;
@@ -1741,7 +1850,7 @@ function ovFrame(){
       res.slice(0,9).forEach((a,i)=>{   /* the full roster — nine faces, none sliced */
         const th=now/2400+i*2*Math.PI/Math.max(res.length,1);
         const rx=q[0]+rr*Math.cos(th), ry=q[1]+rr*.45*Math.sin(th)- (b.kind==="core"?0:1);
-        const cc=MEDCOL[reskey(a.role)]||"#8a93a6";
+        const cc=PAL.obody(MEDCOL[reskey(a.role)]||"#8a93a6");
         g.globalAlpha=.95*dim; g.fillStyle=cc;
         g.beginPath();g.arc(rx,ry,2.6*Math.min(q[2],1.4),0,6.283);g.fill();
         g.globalAlpha=.35*dim; g.beginPath();g.arc(rx,ry,4.6*Math.min(q[2],1.4),0,6.283);g.fill();
@@ -1750,7 +1859,7 @@ function ovFrame(){
       const wf=Math.min(n2.agents||0,7); const wr=rr+8;
       for(let i2=0;i2<wf;i2++){const th=now/1100+i2*2*Math.PI/wf;
         const wx=q[0]+wr*Math.cos(th), wy=q[1]+wr*.42*Math.sin(th);
-        g.globalAlpha=.75*dim; g.fillStyle="#cfd8ea";
+        g.globalAlpha=.75*dim; g.fillStyle=PAL.owf;
         g.beginPath();g.arc(wx,wy,1.3,0,6.283);g.fill();g.globalAlpha=1;}
       const farm=(n2.farm||[]).filter(s2=>s2.state!=="decommissioned").slice(0,6);
       const fr=wr+8;
@@ -1758,7 +1867,7 @@ function ovFrame(){
         const fx=q[0]+fr*Math.cos(th), fy=q[1]+fr*.4*Math.sin(th);
         g.save();g.translate(fx,fy);g.rotate(Math.PI/4);
         g.globalAlpha=(s2.state==="serving"?.9:.6)*dim;
-        g.fillStyle=s2.state==="quarantined"?"#e88f8f":"#d4a960";
+        g.fillStyle=s2.state==="quarantined"?PAL.ofarmQ:PAL.ofarmOk;
         g.fillRect(-2.2,-2.2,4.4,4.4);g.restore();g.globalAlpha=1;});
     }
     OVHIT.push({x:q[0],y:q[1],r:Math.max(r+6,10),scope:b.scope,kind:b.kind});});
@@ -2544,22 +2653,22 @@ function svgOfDag(g){
   const H=Math.max(420,rows*(CH+34))+60;
   const P=id=>{const p=pos[id]||[50,50];return[40+(W-80)*p[0]/100,20+(H-90)*p[1]/100]};
   const edges=g.edges.map(e=>{const a=P(e.from),b=P(e.to);
-    const st=e.kind==="contains"?'stroke="#5a6478" stroke-dasharray="5 5" opacity="0.5"':'stroke="#7fb3e8" opacity="0.75"';
+    const st=e.kind==="contains"?`stroke="${PAL.svgEdge}" stroke-dasharray="5 5" opacity="0.5"`:`stroke="${PAL.svgDep}" opacity="0.75"`;
     return `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" ${st} stroke-width="1.1"/>`}).join("");
   const cards=g.nodes.map(n=>{const[x,y]=P(n.id),c=CATCOL[n.category||"service"]||CATCOL.service;
     const dash=n.role==="stack"?' stroke-dasharray="4 3"':"";
     return `<g transform="translate(${x-CW/2},${y-CH/2})">
-      <rect width="${CW}" height="${CH}" rx="7" fill="#10141f" stroke="#2a3040"${dash}/>
+      <rect width="${CW}" height="${CH}" rx="7" fill="${PAL.svgCard}" stroke="${PAL.svgStroke}"${dash}/>
       <rect width="3.5" height="${CH}" rx="1.7" fill="${c}"/>
       <text x="12" y="15" font-family="monospace" font-size="8.5" fill="${c}" letter-spacing="1">${esc((n.role==="stack"?"STACK":(n.category||"")).toUpperCase())}</text>
-      <text x="12" y="30" font-family="monospace" font-size="11" fill="#e8ecf4">${esc(String(n.id).slice(0,24))}</text>
-      <text x="12" y="44" font-family="monospace" font-size="8.5" fill="#8a93a6">${esc(String(n.type||"").replace("AWS::","").slice(0,30))}</text></g>`}).join("");
+      <text x="12" y="30" font-family="monospace" font-size="11" fill="${PAL.svgText}">${esc(String(n.id).slice(0,24))}</text>
+      <text x="12" y="44" font-family="monospace" font-size="8.5" fill="${PAL.svgMeta}">${esc(String(n.type||"").replace("AWS::","").slice(0,30))}</text></g>`}).join("");
   const legend=Object.entries(CATCOL).map(([k,c],i)=>
     `<rect x="${40+i*130}" y="${H-26}" width="9" height="9" rx="2" fill="${c}"/>
-     <text x="${54+i*130}" y="${H-17}" font-family="monospace" font-size="10" fill="#8a93a6">${k}</text>`).join("");
+     <text x="${54+i*130}" y="${H-17}" font-family="monospace" font-size="10" fill="${PAL.svgMeta}">${k}</text>`).join("");
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-    <rect width="${W}" height="${H}" fill="#0b0e16"/>
-    <text x="40" y="${H-44}" font-family="monospace" font-size="11" fill="#8a93a6">${esc(g.subject||"the estate")} — ${g.nodes.length} node(s) · ${g.edges.length} edge(s) · orreth 0037</text>
+    <rect width="${W}" height="${H}" fill="${PAL.svgBg}"/>
+    <text x="40" y="${H-44}" font-family="monospace" font-size="11" fill="${PAL.svgMeta}">${esc(g.subject||"the estate")} — ${g.nodes.length} node(s) · ${g.edges.length} edge(s) · orreth 0037</text>
     ${edges}${cards}${legend}</svg>`;
 }
 function wsExport(pi,fmt){
@@ -3033,7 +3142,7 @@ if(window.ORRETH_DEMO){                 /* the spectator's ribbon — honest abo
   const b=document.createElement("div");
   b.style.cssText="position:fixed;bottom:10px;right:14px;z-index:99;font:.68rem var(--mono);"+
     "color:var(--brass);border:1px solid var(--brassdim);border-radius:999px;"+
-    "padding:.3em .9em;background:rgba(11,18,38,.88);pointer-events:none";
+    "padding:.3em .9em;background:var(--tip);pointer-events:none";
   b.textContent=`spectator · a captured moment of a live universe · ${window.ORRETH_DEMO.at||""}`;
   document.body.appendChild(b);
 }

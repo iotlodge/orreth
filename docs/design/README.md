@@ -65,7 +65,10 @@ leverage-first; each step names its gate.
 > walk receipts on his floor · DAG polish · Daylight Glass · the rig's provisioning
 > lifecycle as his proving ground) · ~~librarian card/tile readability wart~~
 > (FIXED 2026-07-26 — a 0037-era flex regression blockified the stat tiles;
-> panel bodies now wrap and scroll) ·
+> panel bodies now wrap and scroll) · ~~Daylight Glass~~ (BUILT 2026-07-26 —
+> one glass, two lights: ☀/☾ in the header; the day brain is ink-wash on
+> paper via `multiply`, the day orrery a hand-drawn chart; every canvas color
+> in one THEMES object, night pixel-faithful) ·
 > guides 03 (Resident Field Guide) + 04 (Building Agents/SDK).
 > **The standing register:** [the-honest-boundary.md](the-honest-boundary.md) —
 > claims with evidence named, partials, and parks in one place (seeded
