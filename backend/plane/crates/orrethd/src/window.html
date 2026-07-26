@@ -957,7 +957,7 @@ const shade=c=>{if(!/^#[0-9a-fA-F]{6}$/.test(c))return c;
 const THEMES={
  dark:{
   bcomp:"lighter",
-  obody:c=>c,oringA:1,
+  obody:c=>c,oringA:1,oglowA:1,osun:"#d4a960",
   bneb0:"rgba(24,18,66,.85)",bneb1:"rgba(8,7,22,0)",
   bplas0:"rgba(84,96,255,.075)",bplas1:"rgba(60,60,220,0)",
   baxon:"rgba(90,120,255,.16)",
@@ -987,7 +987,7 @@ const THEMES={
   svgText:"#e8ecf4",svgMeta:"#8a93a6",svgEdge:"#5a6478",svgDep:"#7fb3e8"},
  light:{
   bcomp:"multiply",
-  obody:shade,oringA:1.9,
+  obody:shade,oringA:1.9,oglowA:.5,osun:"#c0912f",  /* the sun is never pigment — it is the light */
   bneb0:"rgba(203,208,232,.60)",bneb1:"rgba(241,237,226,0)",
   bplas0:"rgba(118,128,198,.11)",bplas1:"rgba(150,150,220,0)",
   baxon:"rgba(70,90,170,.22)",
@@ -1722,6 +1722,27 @@ function bgFrame(ts){
 const OV={yaw:.62,pitch:.42,zoom:1,px:0,py:0,drag:null,focus:null,on:false,
   fyaw:null,t0:performance.now()};
 const OPAL=["#8fd6b0","#b79ce8","#7fb3e8","#e8c98f","#d99cc4","#e89a6b","#9fd6d0"];
+/* bodies with faces (JB's ask 2026-07-26): planets, not shaded circles —
+   lit from the upper-left like the rail's marbles, limb-darkened, one
+   specular breath; the core is a radiant sun, center-lit, no terminator.
+   The same physics reads in both lights. */
+const mixc=(c,t,f)=>{if(!/^#[0-9a-fA-F]{6}$/.test(c))return c;
+  const n=parseInt(c.slice(1),16),m=parseInt(t.slice(1),16),
+  h=(a,b)=>((a+(b-a)*f)|0).toString(16).padStart(2,"0");
+  return "#"+h(n>>16&255,m>>16&255)+h(n>>8&255,m>>8&255)+h(n&255,m&255)};
+function drawPlanet(g,x,y,r,c){
+  const gr=g.createRadialGradient(x-r*.34,y-r*.38,r*.08,x,y,r);
+  gr.addColorStop(0,mixc(c,"#ffffff",.55));gr.addColorStop(.42,c);
+  gr.addColorStop(1,mixc(c,"#0a0d18",.62));
+  g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,6.283);g.fill();
+  const sp=g.createRadialGradient(x-r*.42,y-r*.45,0,x-r*.42,y-r*.45,r*.5);
+  sp.addColorStop(0,"rgba(255,255,255,.5)");sp.addColorStop(1,"rgba(255,255,255,0)");
+  g.fillStyle=sp;g.beginPath();g.arc(x,y,r,0,6.283);g.fill();}
+function drawSun(g,x,y,r,c){
+  const gr=g.createRadialGradient(x,y,0,x,y,r);
+  gr.addColorStop(0,mixc(c,"#ffffff",.72));gr.addColorStop(.55,c);
+  gr.addColorStop(1,mixc(c,"#000000",.28));
+  g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,6.283);g.fill();}
 const ecoColor=n=>OPAL[bhash(n)%OPAL.length];
 function ovRot(p){ /* camera: yaw about Y, pitch about X — the Brain's turn */
   const cy=Math.cos(OV.yaw),sy=Math.sin(OV.yaw),cp=Math.cos(OV.pitch),sp=Math.sin(OV.pitch);
@@ -1819,13 +1840,15 @@ function ovFrame(){
       &&b.scope!==OV.focus&&b.parent!==OV.focus?0.35:1;
     const age=n.heard_at?(Date.now()-new Date(n.heard_at))/1e3:0;
     const quiet=age>60?.5:1;
-    const r=b.R*q[2], bcol=PAL.obody(b.color);
+    const r=b.R*q[2], bcol=b.kind==="core"?PAL.osun:PAL.obody(b.color);
     const gr=g.createRadialGradient(q[0],q[1],0,q[0],q[1],r*2.2);
     gr.addColorStop(0,bcol); gr.addColorStop(.45,bcol+"88");
     gr.addColorStop(1,bcol+"00");   /* fade in the body's own hue — no dark halo in either light */
-    g.globalAlpha=(b.kind==="core"?.95:.9)*dim*quiet;
+    g.globalAlpha=(b.kind==="core"?.95:.9)*dim*quiet*PAL.oglowA;
     g.fillStyle=gr; g.beginPath();g.arc(q[0],q[1],r*2.2,0,6.283);g.fill();
-    g.fillStyle=bcol; g.beginPath();g.arc(q[0],q[1],r*.62,0,6.283);g.fill();
+    g.globalAlpha=(b.kind==="core"?.95:.9)*dim*quiet;
+    if(b.kind==="core")drawSun(g,q[0],q[1],r*.8,bcol);
+    else drawPlanet(g,q[0],q[1],r*.8,bcol);
     if(b.kind==="core"){const pu=1+.05*Math.sin(now/900);
       g.strokeStyle=PAL.oring;g.lineWidth=1;
       g.beginPath();g.arc(q[0],q[1],r*1.5*pu,0,6.283);g.stroke();}

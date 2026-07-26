@@ -529,3 +529,9 @@ reviewed sound. 232/232 conformance tests green after the fixes.
 | File | Author | Note |
 |---|---|---|
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | JB's 2026-07-22 ask built: a light theme for the whole Console INCLUDING the orrery and the Brain. Never an inversion — the night view is additive light (`lighter`), the day view is ink-wash on warm paper (`multiply`): indigo glass, bronze embers, sepia orbit lines, pigment-shaded bodies (`shade()` deepens the night's glow-hues — pastels that burn on black smudge on paper). Architecture: 13 CSS vars gain a `[data-theme="light"]` twin + ~20 targeted overrides; every canvas color lifted into ONE `THEMES` object (`PAL`), read at frame time so the flip is live mid-orbit; ☀/☾ in the header, choice kept in localStorage. Self-tested in Chrome view by view (brain · orrery · spacetime drawer · requests · rooms), night regression confirmed pixel-faithful. |
+
+## Fable 5 — 2026-07-26 (bodies with faces — the orrery grows planets)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | JB's verdict on the daylight orrery ("just ok — objects should be realistic, like the original's planets and moons") answered: canvas bodies are now lit SPHERES — upper-left key light matching the rail's CSS marbles, limb darkening, one specular breath (`drawPlanet`); the core is a radiant center-lit sun (`drawSun`) that is NEVER pigment-shaded — it is the light (`PAL.osun`: gold by night, rich gold by day). Atmospheric glow rides a per-theme dial (`oglowA`). Verified in Chrome both lights; night core renders byte-identical values. |
