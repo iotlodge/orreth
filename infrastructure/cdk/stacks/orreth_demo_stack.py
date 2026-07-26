@@ -81,7 +81,9 @@ class OrrethDemoStack(Stack):
                     targets.CloudFrontTarget(distribution)),
             )
 
-        # ship the captured moment; every deploy invalidates the edge cache
+        # ship the captured moment; every deploy invalidates the edge cache.
+        # /deeds/ and /media/ are published to the bucket out-of-band (the 0042
+        # publish door, campaign videos) — excluded so prune never eats them.
         s3deploy.BucketDeployment(
             self,
             "DeploySite",
@@ -89,6 +91,7 @@ class OrrethDemoStack(Stack):
             destination_bucket=bucket,
             distribution=distribution,
             distribution_paths=["/*"],
+            exclude=["deeds/*", "media/*"],
         )
 
         CfnOutput(self, "CloudFrontDomain", value=distribution.distribution_domain_name)
