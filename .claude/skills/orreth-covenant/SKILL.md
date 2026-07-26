@@ -76,6 +76,10 @@ process — mayflies in a universe designed for living things. Review caught it
   closing commit** (0.39 for 0039). `dev.sh` derives the console's version whisper from
   it; a stale era means the glass lies about what world it is. Caught out-of-band three
   times before this line existed (last: 2026-07-24, v0.35 worn by a forty-dive world).
+- Did this work move a row of `docs/design/the-honest-boundary.md` — prove a claim,
+  narrow a partial, unpark a park? → the register updates **in the same closing
+  commit** (JB's lock, 2026-07-26). A register that lags lies with confidence; a
+  claim not on that page with evidence named is a claim we do not make.
 
 ## When unsure
 
