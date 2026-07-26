@@ -507,3 +507,12 @@ reviewed sound. 232/232 conformance tests green after the fixes.
 | File | Author | Note |
 |---|---|---|
 | `backend/conformance/demo_drift.py` | Fable 5 (claude-fable-5) | The 0041 drill, repeatable: rogue write → the epoch beat stages the card → the human's key (glass click or the runner's word) → the sibling restored → THE SILENCE asserted (an obeyed word must stage nothing — fails loudly if the accusation loop returns) → THE PARITY HANDSHAKE (rule 6 live: Rust-served body re-hashed by Python's canonical bytes must equal its id). First run 2026-07-25: whole, exit 0. Banner in file. Companion: the parked rule-9 question (write-time re-hashing in orreth-node) recorded in docs/decisions. |
+
+## Fable 5 — 2026-07-26 (road step 2 — the epoch's laws enter the sim; the 0038 orphan ends)
+
+| File | Author | Note |
+|---|---|---|
+| `infrastructure/cdk/stacks/orreth_demo_stack.py` | Fable 5 (claude-fable-5) | The demo deploy stops eating the world's memory: `exclude=["deeds/*", "media/*"]` on the BucketDeployment — what the universe published (first-deed.json, the campaign films) rides out every prune. First protected deploy verified live 2026-07-26. |
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | The orphan-lineage fix (0038-era, flagged at 0041's close): the tournament's improvement card now carries `proposal_ref` — the standings record it argued from — and `on_standard_promotion` plants v2 with `adopted_from`/`derived_from` naming it. A promoted standard is never an orphan; legacy cards without the ref plant as before, their resolved words untouched. |
+| `backend/conformance/orreth_sim/epoch.py` | Fable 5 (claude-fable-5) | NET-NEW — 0041's machinery as the executable spec: the fingerprint, the cut (genesis/turned/held), the gate word dated by its landing (the req-322 law), drift-wears-no-levers, revert-to-sibling on a human's word only, lag amber-then-loud-once, the roll-up citing its floors. The head lives on the shelf itself; every clock is explicit. Banner in file. |
+| `backend/conformance/tests/test_epoch.py` | Fable 5 (claude-fable-5) | NET-NEW — ten conformance tests, THE SILENCE after a cited revert among them (the drill's assertion, now suite-held). Suite 244→254. Banner in file. |

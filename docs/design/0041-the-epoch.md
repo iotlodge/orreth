@@ -148,6 +148,15 @@ name, some attestation must load, and some human must have signed.
 | 3 | **Drift is news** — reconcile, lag vs drift, the staged finding and the card; proven live by adopting a tournament promotion and catching the attestation lag converge | the mirror turns on ourselves |
 | 4 | **The revert** — rollback_parent walked at a human's gate, siblings never deletions, the revert epoch citing both parents; proven live by reverting the routing standard and watching the dispatcher obey | the first pre-authorized posture |
 
+**Road step 2 (2026-07-26)** — the machinery's laws lifted into
+`orreth_sim/epoch.py` under conformance (`tests/test_epoch.py`, suite 244→254):
+genesis never accuses · a held machine cuts nothing · the word is dated by its
+landing · drift wears no levers · the sibling never erases · THE SILENCE after
+a cited revert · lag is loud once · the roll-up cites its floors. The 0038
+orphan fixed the same morning: the tournament card carries its evidence record
+(`proposal_ref`) and the adoption names it — a promoted standard keeps its
+lineage.
+
 ---
 
 *Forty dives taught the universe to remember, to argue, to forget with a meter, and
