@@ -30,14 +30,25 @@ joindoor() {  # becky answers joins + the librarian answers Asks — the floor's
 }
 
 case "${1:-}" in
-  start)   rootpub; $COMPOSE up --build -d; sleep 3; joindoor; "$0" status ;;
+  start)   rootpub; $COMPOSE up --build -d
+           docker image prune -f >/dev/null 2>&1 || true   # superseded layers die quietly (the jsbarth disk fire's lesson)
+           sleep 3; joindoor; "$0" status ;;
   stop)    pkill -f console_worker.py 2>/dev/null || true
            # dynamic hulls (the Shipyard) ride the rig's network — down together;
            # the worker's replant relaunches them from ~/.orreth/shipyard on start
            docker ps -aq --filter name=orreth-dyn- --filter name=orreth-field- \
              | xargs docker rm -f 2>/dev/null || true
            $COMPOSE down ;;
-  restart) "$0" stop; rootpub; $COMPOSE up --build -d; sleep 3; joindoor; "$0" status ;;
+  restart) "$0" stop; rootpub; $COMPOSE up --build -d
+           docker image prune -f >/dev/null 2>&1 || true
+           sleep 3; joindoor; "$0" status ;;
+  clean)   # deliberate deep clean (2026-07-30, after the jsbarth 100%-disk fire):
+           # dangling images + build cache trimmed to a warm 15GB. NEVER volumes
+           # (pg holds the universe's memory) and NEVER -a image prunes here —
+           # this laptop hosts other projects whose stopped images would vanish.
+           docker image prune -f
+           docker builder prune -f --keep-storage=15GB
+           docker system df ;;
   status)  $COMPOSE ps --format '  {{.Name}}\t{{.Status}}' 2>/dev/null || true
            dyn=""; [ -f "$HOME/.orreth/shipyard/floors.json" ] && \
              dyn=$(python3 -c 'import json,sys;print(" ".join(sorted(json.load(open(sys.argv[1])))))' "$HOME/.orreth/shipyard/floors.json" 2>/dev/null)
@@ -54,5 +65,5 @@ case "${1:-}" in
            (cd "$ROOT/agents/flavors/$d" && \
              uv run --with pyyaml --with langgraph --with cryptography \
                python run.py --field "http://127.0.0.1:$FIELD" "$mode") ;;
-  *) echo "usage: scripts/dev.sh start|stop|restart|status|logs|window|agent [flavor] [--once|--forever]" ;;
+  *) echo "usage: scripts/dev.sh start|stop|restart|status|logs|window|clean|agent [flavor] [--once|--forever]" ;;
 esac
