@@ -18,14 +18,16 @@ from . import continuity, markers, profile
 from .identity import NOW
 
 RESIDENTS = ("becky", "vigil", "steward", "governance", "charlotte", "librarian",
-             "ada", "grace", "allen")
-EMBODIED = ("becky", "charlotte", "librarian", "ada", "grace", "allen")  # hold keys; sign their audiences
+             "ada", "grace", "allen", "vera")
+EMBODIED = ("becky", "charlotte", "librarian", "ada", "grace", "allen",
+            "vera")  # hold keys; sign their audiences
 
 ROLES = {"becky": "becky · IAM", "vigil": "vigil · the Warden",
          "steward": "steward · memory", "governance": "governance",
          "charlotte": "charlotte · farm keeper", "librarian": "librarian · knowledge",
          "ada": "ada · the wrangler", "grace": "grace · the smith",
-         "allen": "allen · cloud architect"}
+         "allen": "allen · cloud architect",
+         "vera": "vera · the astronomer"}
 
 # the librarian's gather ask, in the shapes callers actually type
 _GATHER = ("gather sourced knowledge on", "gather knowledge on", "gather on", "gather")
@@ -280,6 +282,23 @@ def _card_allen(facts: dict) -> tuple[str, list]:
                {"label": "how do you work?", "ask": "how do you work?"}])
 
 
+def _card_vera(facts: dict) -> tuple[str, list]:
+    vs = facts.get("verdicts") or []
+    dial = facts.get("dial", "glance")
+    judged = (f"{len(vs)} work(s) under verdict, mean "
+              f"{round(sum(float(v.get('score', 0)) for v in vs) / len(vs), 2)}"
+              if vs else "nothing judged yet")
+    return (f"I keep the Observatory — I measure what this universe actually "
+            f"does, never what it claims. The dial stands at «{dial}»; "
+            f"{judged}. My judges are always another floor's minds, my "
+            "findings stage at your gate wearing no levers, and my own cost "
+            "is my first exhibit (0043).",
+            [{"label": "the standings", "ask": "show the standings"},
+             {"label": "your own cost", "ask": "what has your watching cost?"},
+             {"label": "the dial", "ask": "where does the dial stand?"},
+             {"label": "what do you measure?", "ask": "what do you measure?"}])
+
+
 def _card_organ(name: str):
     def make(facts: dict) -> tuple[str, list]:
         return (_organ_reply(name, facts),
@@ -289,7 +308,7 @@ def _card_organ(name: str):
 
 _CARDS = {"becky": _card_becky, "charlotte": _card_charlotte,
           "librarian": _card_librarian, "ada": _card_ada, "grace": _card_grace,
-          "allen": _card_allen,
+          "allen": _card_allen, "vera": _card_vera,
           "vigil": _card_organ("vigil"), "steward": _card_organ("steward"),
           "governance": _card_organ("governance")}
 
@@ -764,7 +783,53 @@ def answer(name: str, text: str, facts: dict) -> dict:
                     "action": "estate-create", "ask": (text or "").strip(),
                     "verbatim": True}
         return {"reply": _allen_reply(t, facts), "verbatim": True}
+    if name == "vera":
+        return {"reply": _vera_reply(t, facts)}
     return {"reply": _organ_reply(name, facts)}
+
+
+def _vera_reply(t: str, facts: dict) -> str:
+    """The astronomer's grounded answers (0043 §2): standings, her own cost,
+    the dial — measured numbers only, never claims. The voice may phrase;
+    the facts are the facts."""
+    vs = facts.get("verdicts") or []
+    dial = facts.get("dial", "glance")
+    fl = facts.get("flight") or {}
+    if "dial" in t:
+        depth = {"glance": "series and counters only — free",
+                 "watch": "spans and distributions — a deeper read, still free",
+                 "assay": "the examiner beats: sampled work, commissioned "
+                          "judges, metered to the decimal"}[dial] \
+            if dial in ("glance", "watch", "assay") else "unknown"
+        return (f"the dial stands at «{dial}» — {depth}. depth costs money "
+                "and says so (0043 §5).")
+    if "cost" in t or "exhibit" in t or "spent" in t or "spend" in t:
+        toks = sum(int((v.get("cost") or {}).get("tokens", 0)) for v in vs)
+        usd = sum(float((v.get("cost") or {}).get("usd", 0)) for v in vs)
+        return (f"my own cost is my first exhibit: {len(vs)} commissioned "
+                f"verdict(s), {toks} token(s)"
+                + (f", ${round(usd, 6)}" if usd else "")
+                + " — every one metered under my DID. the Observatory's "
+                  "price is always one of its instruments.")
+    if "standing" in t or "score" in t or "judged" in t or "verdict" in t:
+        if not vs:
+            return ("nothing stands under verdict yet — the examiner beats "
+                    "only at «assay», and no completed work has been sampled.")
+        mean = round(sum(float(v.get("score", 0)) for v in vs) / len(vs), 2)
+        low = min(vs, key=lambda v: float(v.get("score", 1)))
+        return (f"{len(vs)} work(s) under verdict, mean {mean}; the lowest "
+                f"scored {low.get('score')} — “{str(low.get('why', ''))[:80]}”. "
+                "every verdict is another floor's mind, signed; degradations "
+                "stage at your gate and I hold no levers.")
+    judged = (f"{len(vs)} verdict(s) on the shelf" if vs
+              else "no verdicts yet")
+    heard = (f"; the flight recorder holds {fl.get('thoughts', 0)} thought(s) "
+             f"and {fl.get('refusals', 0)} refusal(s) — instrument readings, "
+             "not testimony" if fl else "")
+    return (f"I measure what this universe actually does: every governed "
+            f"thought, tool call, span, and gate-wait, at dial «{dial}» — "
+            f"{judged}{heard}. my judges are always another floor's minds, "
+            "and my findings wear no levers (0043).")
 
 
 def _becky_reply(t: str, facts: dict) -> str:
@@ -1372,9 +1437,42 @@ def _room_allen(facts: dict) -> list[dict]:
     ]
 
 
+def _room_vera(facts: dict) -> list[dict]:
+    """The astronomer's room (0043 sp2): her verdicts, her dial, her own cost
+    — typed panels only; the instrument GLASS is sp3's canvas, not this room.
+    Every number here names its tier: verdicts are testimony, flight counts
+    are instrument readings and say so."""
+    vs = facts.get("verdicts") or []
+    fl = facts.get("flight") or {}
+    toks = sum(int((v.get("cost") or {}).get("tokens", 0)) for v in vs)
+    mean = round(sum(float(v.get("score", 0)) for v in vs) / len(vs), 2) \
+        if vs else None
+    return [
+        {"kind": "stat", "title": "the observatory",
+         "items": [{"label": "dial", "value": facts.get("dial", "glance")},
+                   {"label": "works under verdict", "value": len(vs)},
+                   {"label": "mean score", "value": mean if mean is not None
+                    else "—"},
+                   {"label": "my own cost (tokens)", "value": toks}]},
+        {"kind": "list", "title": "recent verdicts — another floor's minds",
+         "items": _sev([{"text": f"{v.get('score', '?')} — "
+                                 f"{str(v.get('why', ''))[:64]}",
+                         "meta": f"judge: {str(v.get('judge_floor', '?'))} · "
+                                 f"{(v.get('cost') or {}).get('tokens', 0)} tok",
+                         "severity": "medium"
+                         if float(v.get("score", 1)) < 0.55 else ""}
+                        for v in vs[-8:]])},
+        {"kind": "doc", "title": "the flight recorder (tier two)",
+         "text": (f"{fl.get('thoughts', 0)} governed thought(s) · "
+                  f"{fl.get('refusals', 0)} refusal(s) on the book — "
+                  "instrument reading, not testimony (0043 §3). "
+                  "The instrument room itself arrives with sp3.")},
+    ]
+
+
 _ROOMS = {"librarian": _room_librarian, "becky": _room_becky,
           "charlotte": _room_charlotte, "ada": _room_ada, "grace": _room_grace,
-          "allen": _room_allen}
+          "allen": _room_allen, "vera": _room_vera}
 
 
 # ---------------------------------------------------------------- the audience record

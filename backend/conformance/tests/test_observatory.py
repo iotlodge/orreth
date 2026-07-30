@@ -297,6 +297,20 @@ def test_log_truth_rebuilds_from_the_log_and_instruments_wear_their_label():
     assert s.read("farm.call_ms")["label"] == observatory.INSTRUMENT_LABEL
 
 
+def test_watch_reads_deeper_from_the_same_shelf():
+    """0043 §5: the watch depth is a deeper READ, never a new collection —
+    percentiles over the raw points the glance already keeps, the tier and
+    its label riding the answer like every other read."""
+    s = observatory.Series()
+    s.ingest([observatory.reading(f"2026-07-30T10:{m:02d}:00Z",
+                                  "plane.thought_ms", v, tier="instrument")
+              for m, v in ((1, 100), (2, 200), (3, 300), (4, 400))])
+    d = observatory.percentiles(s, "plane.thought_ms")
+    assert d["n"] == 4 and d["min"] == 100 and d["max"] == 400
+    assert d["quantiles"] == {"p50": 250.0, "p95": 385.0}
+    assert d["label"] == observatory.INSTRUMENT_LABEL
+
+
 # ------------------------------------------------------------------ the recorder
 def test_the_flight_recorder_sweeps_without_double_counting(world):
     """sp1 assembled: the four taps into one Series on the beat — a call metered

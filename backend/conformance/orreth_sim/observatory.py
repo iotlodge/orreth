@@ -328,6 +328,29 @@ class Series:
                 "points": points}
 
 
+def percentiles(series: "Series", metric: str, *, labels: dict | None = None,
+                qs: tuple = (0.5, 0.95)) -> dict:
+    """The WATCH depth (0043 §5): distributions and percentiles read from the
+    raw shelf the glance already keeps — a deeper read, never a new
+    collection, so turning the dial up costs reading, not gathering. Linear
+    interpolation between ranks; the answer carries the series' tier and
+    label like every other read."""
+    base = series.read(metric, labels=labels)
+    vals = sorted(p["value"] for p in base["points"])
+    out = dict(base, resolution="percentiles")
+    del out["points"]
+    if not vals:
+        return {**out, "n": 0, "quantiles": {}}
+    quant = {}
+    for q in qs:
+        pos = q * (len(vals) - 1)
+        lo, hi = int(pos), min(int(pos) + 1, len(vals) - 1)
+        quant[f"p{int(q * 100)}"] = round(
+            vals[lo] + (vals[hi] - vals[lo]) * (pos - lo), 4)
+    return {**out, "n": len(vals), "min": vals[0], "max": vals[-1],
+            "quantiles": quant}
+
+
 class FlightRecorder:
     """sp1's assembled face: the four taps, swept on the beat into one Series.
     Cursors keep counters honest across sweeps (a call metered once is a call

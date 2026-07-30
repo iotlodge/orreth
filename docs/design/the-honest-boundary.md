@@ -23,13 +23,14 @@ with confidence.
 |---|---|
 | One recursive binary runs any tier; profiles supply behavior | the dev rig: universe :4500 · eco :4501 · field :4502 + shipyard-grown floors, one `orrethd` |
 | Python reference and Rust plane agree byte-for-byte on canonical content | `agents/orreth-agent-sdk/tests/test_parity.py` (10/10) + the drill's parity handshake (`demo.sh drift`) |
-| The full sim model is executable and conformance-held | `backend/conformance/tests/` — 265 tests green (2026-07-30) |
+| The full sim model is executable and conformance-held | `backend/conformance/tests/` — 274 tests green (2026-07-30) |
 | Identity survives the process; joining is governed; leases chain to a pinned root | 0002/0006/0012 machinery + covenant rules 1/3; the join door on the reel |
 | Refusal wears one face; the plane meters but never sees the prompt | covenant rules 4/5; uniform-refusal fixtures in the conformance suite |
-| The Canon has a fingerprint on a chain; drift stages, never enacts; the revert is a sibling | 0041 live proof (req-326) + `orreth_sim/epoch.py` / `tests/test_epoch.py` (THE SILENCE suite-held) + `demo.sh drift` repeatable |
+| The Canon has a fingerprint on a chain; drift stages, never enacts; the revert is a sibling | 0041 live proof (req-326) + `orreth_sim/epoch.py` / `tests/test_epoch.py` (THE SILENCE suite-held) + `demo.sh drift` repeatable; universe-scope lag reconciles after the roll-up cut (`_reconcile(UNIVERSE_SCOPE)`, verified in-code 2026-07-30 — the 0041 road's "no port to stage at" gap closed with the road-step-2 work) |
 | No external consequence is complete on the executor's word alone | 0042 live proof: https://demo.orreth.ai/deeds/first-deed.json — published, tampered, caught, walked back, restored; the artifact carries its own story |
 | Improvement is proposed, never self-adopted; promotions keep lineage | 0031 lanes + tournament promotion receipts (req-287); orphan-lineage fix 2026-07-26 (`proposal_ref` on the card) |
-| Every governed thought — and every refusal — lands on a flight recorder: latency, model, tokens, cost, taxonomy; series distill with MEASURED loss under a declared retention law, log-truth rebuildable, instrument readings labeled as such | 0043 sp1 (2026-07-30): `orreth_sim/observatory.py` + `tests/test_observatory.py` (11 tests); live: charlotte's voiced reply put a real `no-local-key` refusal AND the successful thought (301 tok · 2447 ms) on `~/.orreth/observatory/flight.jsonl` on its first flight |
+| Every governed thought — and every refusal — lands on a flight recorder: latency, model, tokens, cost, taxonomy; series distill with MEASURED loss under a declared retention law, log-truth rebuildable, instrument readings labeled as such | 0043 sp1 (2026-07-30): `orreth_sim/observatory.py` + `tests/test_observatory.py` (12 tests); live: charlotte's voiced reply put a real `no-local-key` refusal AND the successful thought (301 tok · 2447 ms) on `~/.orreth/observatory/flight.jsonl` on its first flight |
+| Completed work is assayed by another floor's mind — verdicts signed author ≠ executor, degradations stage as cards wearing no levers, and the examiner's own cost is metered under its own DID (pinned: never a silently cheaper judge) | 0043 sp2 (2026-07-30): `orreth_sim/vera.py` + `tests/test_vera.py` (8 tests); live: sonnet-5 (f:prod's stable) judged 13 real completed works — mean 0.14, correctly measuring the deterministic-scaffold outcomes this register already named in prose — a degradation card staged pending at the gate, and vera's parlor voice priced her own watching: 7,239 tokens, $0.02131, under her DID |
 
 ## 2. Reference-proven or intentionally partial (from the poster's §12, now ours)
 
@@ -41,7 +42,6 @@ with confidence.
 | Embedder and projections degrade honestly when unavailable; production-scale rebuild unproven | pgvector projection live (0022 Phase 2); purge reaches the projection | a rebuild drill: drop a projection, rebuild from the log, diff |
 | The dev rig proves the institution on one machine; federation, hosted custody, DR, multi-tenant need their own operational evidence | honest; nothing pretends otherwise | 0013 handshake + custodian tier + an operational runbook with receipts |
 | Write-time re-hash: orreth-node trusts the author-signed id at ingest, never recomputes hash(body) | OPEN rule-9 question, parked in `../decisions/` | revisit BEFORE 0013 or any external ingestion door |
-| Universe-scope lag card: a universe-level oath that will not converge has no port to stage at | wire gap, named on the road (0041 step 2), still open | small wire spoonful |
 
 ## 3. Designed or deliberately parked (each behind a named gate)
 

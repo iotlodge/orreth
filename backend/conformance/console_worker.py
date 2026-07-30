@@ -125,7 +125,7 @@ from dotenv import load_dotenv
 
 from orreth_sim import (continuity, crypto, fingertip, improver, markers,
                         meaning, mirror, observatory, parlor, profile, purge,
-                        serials, shipyard)
+                        serials, shipyard, vera)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -167,6 +167,8 @@ ADA = _seed("ada")                           # ada, the wrangler (0019 §3)
 ADA_DID = crypto.did_key_for(ADA.public)
 ALLEN = _seed("allen")                       # allen, the cloud architect (0037 §1)
 ALLEN_DID = crypto.did_key_for(ALLEN.public)
+VERA = _seed("vera")                         # vera, the astronomer (0043 §2)
+VERA_DID = crypto.did_key_for(VERA.public)
 
 # becky, chained from the pinned root — the only authority that can mint a joining lease
 _NANDA = Nanda()
@@ -2047,12 +2049,15 @@ def governed_ping(port: int, mid: str, klass: str) -> dict | None:
 
 
 def governed_thought(port: int, mid: str, klass: str, prompt: str, *,
-                     max_tokens: int = 400) -> dict | None:
+                     max_tokens: int = 400, as_did: str | None = None) -> dict | None:
     """A REAL governed thought (wire-honesty sp3, 2026-07-25): governed_ping's
     exact law — authorize → execute PINNED to the named mind → meter under the
     plane — with a working prompt instead of a ping. Returns
     {text, tokens, usd, model} or None when the ground is missing (no litellm,
-    no key, no stall) so callers fall back HONESTLY, never silently."""
+    no key, no stall) so callers fall back HONESTLY, never silently.
+    as_did (0043 sp2): whose meter the thought rides — vera's commissions are
+    metered under HER did (her own cost is her first exhibit); ada's canary
+    lineage remains the default."""
     try:
         import litellm  # noqa: F401
     except Exception:
@@ -2060,8 +2065,9 @@ def governed_thought(port: int, mid: str, klass: str, prompt: str, *,
     if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY")
             or os.environ.get("OPENROUTER_API_KEY")):
         return None
+    did = as_did or ADA_DID
     try:
-        token = _BECKY.issue_token(ADA_DID, SCOPE,
+        token = _BECKY.issue_token(did, SCOPE,
                                    [{"action": "retrieve", "space": "self"}],
                                    budget={"tokens": 50000})
         est = max_tokens + len(prompt) // 3
@@ -2073,7 +2079,7 @@ def governed_thought(port: int, mid: str, klass: str, prompt: str, *,
             call(port, "POST", "/model/meter",
                  {"subject": grant["subject"], "est_tokens": est, "tokens": 0,
                   "usd": 0, "model": grant["model"], "class": klass})
-            FLIGHT.refuse(ADA_DID, klass, "no-local-key")
+            FLIGHT.refuse(did, klass, "no-local-key")
             return None
         import litellm
         t0 = time.perf_counter()
@@ -2090,13 +2096,13 @@ def governed_thought(port: int, mid: str, klass: str, prompt: str, *,
         call(port, "POST", "/model/meter",
              {"subject": grant["subject"], "est_tokens": est, "tokens": tokens,
               "usd": round(usd, 6), "model": grant["model"], "class": klass})
-        FLIGHT.note(caller=ADA_DID, klass=klass, model=grant["model"],
+        FLIGHT.note(caller=did, klass=klass, model=grant["model"],
                     tokens=tokens, usd=usd, ms=ms)
         return {"text": text, "tokens": tokens, "usd": usd,
                 "model": grant["model"]}
     except Exception as e:
         print(f"    (governed thought stumbled: {e})")
-        FLIGHT.refuse(ADA_DID, klass, "stumbled")
+        FLIGHT.refuse(did, klass, "stumbled")
         return None
 
 
@@ -5344,6 +5350,11 @@ def pin_organs(port: int, floor: str) -> None:
             # his universe-parented field on the wire lands with the toolroom (sp4)
             ("allen", ALLEN_DID,
              lambda: _BECKY.issue_token(ALLEN_DID, SCOPE,
+                                        [{"action": "retrieve", "space": "self"}])),
+            # vera, the astronomer (0043 §2): one observatory, the universe
+            # floor — the improver's precedent; her judges live elsewhere
+            ("vera", VERA_DID,
+             lambda: _BECKY.issue_token(VERA_DID, SCOPE,
                                         [{"action": "retrieve", "space": "self"}])),)
     for organ, did, mint in organs:
         if pins.get(organ) == did:
@@ -5390,7 +5401,8 @@ def window_charter(port: int, scope: str) -> None:
 
 RESIDENT_KEYS = {"charlotte": (CHA, CHA_DID), "ada": (ADA, ADA_DID),
                  "grace": (IMP, IMP_DID),    # the smith IS the improver (0031 §4)
-                 "allen": (ALLEN, ALLEN_DID)}  # the architect (0037)
+                 "allen": (ALLEN, ALLEN_DID),  # the architect (0037)
+                 "vera": (VERA, VERA_DID)}   # the astronomer (0043 §2)
 
 
 def resident_key(name: str, scope: str = SCOPE):
@@ -5540,6 +5552,18 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         facts["passage"] = wire_passage(port, scope)       # and the machine's state
     if name == "allen":                       # the architect reads his estate (0037)
         facts["estate"] = wire_estate(universe_port(port))
+    if name == "vera":                        # the astronomer reads her observatory (0043)
+        u_port = universe_port(port)
+        facts["dial"] = OBS_DIAL
+        rows = wire_assets(u_port, "verdict")
+        facts["verdicts"] = [(b or {}).get("assay") or {}
+                             for _, b, _, _ in rows]   # whole shelf — her
+        #   exhibit counts everything; the room's panels window for display
+        s = FLIGHT.recorder.series
+        facts["flight"] = {
+            "thoughts": len(s.read("plane.thoughts")["points"]),
+            "refusals": len(s.read("plane.refusals")["points"]),
+            "note": observatory.INSTRUMENT_LABEL}
     if name == "grace":                       # the smith reads her shelf (0031 §4)
         u_port = universe_port(port)
         facts["shelf"] = wire_shelf(u_port)
@@ -5971,9 +5995,140 @@ def on_demo(port: int, r: dict) -> None:
 
 # ---------------------------------------------------------------- the round
 
+# --------------------------------------------------- 0043 sp2 · vera's assay beat
+OBS_DIAL = os.environ.get("ORRETH_OBS_DIAL", "glance")   # glance · watch · assay
+ASSAY_EVERY = int(os.environ.get("ORRETH_ASSAY_EVERY", "300"))
+_ASSAY_LAST = 0.0
+
+
+def _judge_seat(scope: str):
+    """The judge's floor seat — a persisted self whose key signs what its
+    floor's mind scored (the sim bench's wire twin; author ≠ executor)."""
+    kp = _seed("judge-" + scope.replace("/", "~"))
+    return {"did": crypto.did_key_for(kp.public), "scope": scope}, kp
+
+
+def _parse_verdict(text: str):
+    """The strict-JSON dance (the 0041-era live-judge lesson): a truncated
+    verdict may still carry its number; an unparseable one is VOIDED —
+    named, never scored, never blamed on the work."""
+    import re as _re
+    try:
+        got = json.loads(_re.search(r"\{.*\}", text, _re.S).group(0))
+        return (max(0.0, min(1.0, float(got.get("score", 0.0)))),
+                str(got.get("why", ""))[:120])
+    except Exception:
+        m = _re.search(r'"score"\s*:\s*([0-9.]+)', text)
+        if m:
+            return (max(0.0, min(1.0, float(m.group(1)))),
+                    "the judge's sentence was cut short; the score survived")
+    return None, None
+
+
+def _stage_assay_card(port: int, card: dict) -> None:
+    """Detection wears no levers (0043 §2 law 3): the degradation stages at
+    the human's gate with its yardstick, standing, and evidence — one open
+    card per floor holds until the human decides."""
+    try:
+        reqs = call(port, "GET", "/requests").get("requests", [])
+        if any(r.get("kind") == "assay" and r.get("status") in ("pending", "staged")
+               and r.get("scope") == card["scope"] for r in reqs):
+            return
+        call(port, "POST", "/requests", {
+            "kind": "assay", "to": "human", "scope": card["scope"],
+            "text": f"ASSAY at {card['scope']} — {card['why']}",
+            "package": "THE STANDING:\n" + json.dumps(card["standing"], indent=1)
+                       + "\nEVIDENCE:\n"
+                       + "\n".join(f"· {e[:44]}…" for e in card["evidence"][:6])
+                       + "\nvera measures; humans move (0043 §2 — no levers)."})
+        print(f"  🔭 assay DEGRADATION staged at {card['scope']}: {card['why']}")
+    except Exception as e:
+        print(f"    (assay staging stumbled: {e})")
+
+
+def assay_beat(u_port: int) -> None:
+    """The Examiner (0043 §6), dial-gated: only at «assay» does vera sample
+    completed work and commission a judge — another floor's mind, metered
+    under HER did (her own cost is her first exhibit), the verdict signed by
+    the judge's seat onto the shelf, standings aggregated, degradations
+    staged as cards. At glance and watch the examiner rests, free and quiet."""
+    global _ASSAY_LAST
+    if OBS_DIAL != "assay" or time.time() - _ASSAY_LAST < ASSAY_EVERY:
+        return
+    _ASSAY_LAST = time.time()
+    judged: set = set()
+    for _, _, dl, _ in wire_assets(u_port, "assay"):
+        judged.update(dl)
+    work = [(ref, body) for tag in ("intention-outcome", "objective-outcome")
+            for ref, body, _, _ in wire_assets(u_port, tag)
+            if ref not in judged][:2]
+    if not work:
+        return
+    prod_port = next((p for p, s in FLOOR_SCOPES.items()
+                      if s.endswith("/e:cloud/f:prod")), None)
+    if prod_port is None:      # law 2's hard edge: no outside bench → refuse
+        print("  🔭 assay: no judge beyond this floor — refusing, "
+              "never self-grading")
+        return
+    judge_scope = FLOOR_SCOPES[prod_port]
+    seat, jkp = _judge_seat(judge_scope)
+    for ref, body in work:
+        o = body.get("outcome") or body.get("objective_outcome") or {}
+        j = governed_thought(
+            prod_port, JUDGE_MIND, "medium",
+            "You are an INDEPENDENT judge at the «medium» tier assaying a "
+            "completed piece of governed work. Rubric: " + vera.DEFAULT_RUBRIC
+            + ". Reply with STRICT JSON only — begin with the { character, no "
+            "preamble, no code fences: {\"score\": 0.00, \"why\": \"one short "
+            "sentence\"}.\n\nTHE COMPLETED WORK:\n" + json.dumps(o)[:900],
+            max_tokens=160, as_did=VERA_DID)
+        if j is None:
+            print("  🔭 assay: the judge's ground is missing — "
+                  "the beat rests honestly")
+            return
+        sc, why = _parse_verdict(j["text"])
+        if sc is None:
+            print("  🔭 assay: the judge's verdict was LOST — voided, "
+                  "never scored")
+            continue
+        rec = vera.make_verdict(
+            seat, jkp, UNIVERSE_SCOPE, of=ref, work_floor=UNIVERSE_SCOPE,
+            judge_floor=judge_scope, rubric=vera.DEFAULT_RUBRIC,
+            rubric_declared=False, score=sc, why=why,
+            cost={"tokens": j["tokens"], "usd": round(j["usd"], 6)})
+        try:
+            call(u_port, "POST", "/records", rec)
+        except Exception as e:
+            print(f"    (verdict write failed: {e})")
+            continue
+        print(f"  🔭 assay: [{ref[:18]}…] scored {sc:.2f} — “{why[:56]}” · "
+              f"{j['tokens']} tok under vera's meter")
+    rows = wire_assets(u_port, "verdict")
+    per: dict = {}
+    for vref, b, _, _ in rows:
+        a = (b or {}).get("assay") or {}
+        s = per.setdefault(a.get("work_floor", "?"),
+                           {"scores": [], "humans": 0, "refs": []})
+        s["scores"].append(float(a.get("score", 0.0)))
+        s["refs"].append(vref)
+        if a.get("judge_floor") == "human":
+            s["humans"] += 1
+    stand = {}
+    for fl, s in per.items():
+        n, half = len(s["scores"]), len(s["scores"]) // 2
+        stand[fl] = {"n": n, "mean": round(sum(s["scores"]) / n, 4),
+                     "trend": round(sum(s["scores"][half:]) / (n - half)
+                                    - sum(s["scores"][:half]) / half, 4)
+                     if n >= 4 else None,
+                     "humans": s["humans"], "refs": s["refs"]}
+    for card in vera.degradations(stand):
+        _stage_assay_card(u_port, card)
+
+
 def main() -> None:
     print(f"console worker · librarian {LIB_DID[:20]}… · charlotte {CHA_DID[:20]}… "
           f"· ada {ADA_DID[:20]}… · grace {IMP_DID[:20]}… · allen {ALLEN_DID[:20]}… "
+          f"· vera {VERA_DID[:20]}… (dial: {OBS_DIAL}) "
           f"· becky's door on :{JOIN_PORT} · tending floors {FLOORS}")
     handled: set[tuple] = set()               # (port, id, at, status): each step acted once
     scopes: dict[int, str] = {}
@@ -6155,6 +6310,7 @@ def main() -> None:
                         mirror_beat()         # the mirror reflects every floor (0034 sp3)
                         passage_beat()        # the silence watch — contain, never execute (0035 §3)
                         FLIGHT.beat()         # the Observatory's pulse (0043 sp1)
+                        assay_beat(port)      # the Examiner, dial-gated (0043 sp2)
 
             except Exception as e:
                 scopes.pop(port, None)
