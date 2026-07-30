@@ -1284,6 +1284,25 @@ def embed_door() -> None:
             self.end_headers()
             self.wfile.write(out)
 
+        def do_GET(self):
+            """The instrument room's supply door (0043 sp3): the composed
+            observatory payload, CORS-open so the glass on any floor's port
+            can drink it — instrument data behind the worker's own door, the
+            plane untouched (rule 9)."""
+            if self.path.split("?")[0] != "/observatory":
+                self.send_response(404)
+                self.end_headers()
+                return
+            try:
+                out = json.dumps(compose_observatory()).encode()
+            except Exception as e:
+                out = json.dumps({"error": str(e)[:120]}).encode()
+            self.send_response(200)
+            self.send_header("content-type", "application/json")
+            self.send_header("access-control-allow-origin", "*")
+            self.end_headers()
+            self.wfile.write(out)
+
         def log_message(self, *a):              # the door is quiet
             pass
 
@@ -1934,6 +1953,7 @@ class FlightBook:
     def __init__(self) -> None:
         self.call_log: list[dict] = []
         self.recorder = observatory.FlightRecorder()
+        self.last_beat: str | None = None    # G1: the watcher's own pulse
 
     def _land(self, row: dict) -> None:
         self.call_log.append(row)
@@ -1985,7 +2005,8 @@ class FlightBook:
     def beat(self) -> None:
         """Sweep fresh rows into the series and distill — the Observatory's
         pulse. Quiet when nothing new flew."""
-        n = self.recorder.sweep(now=NOW(), gateways=[self])
+        self.last_beat = NOW()
+        n = self.recorder.sweep(now=self.last_beat, gateways=[self])
         if n:
             s = self.recorder.series
             thoughts = len(s.read("plane.thoughts")["points"])
@@ -6103,10 +6124,22 @@ def assay_beat(u_port: int) -> None:
             continue
         print(f"  🔭 assay: [{ref[:18]}…] scored {sc:.2f} — “{why[:56]}” · "
               f"{j['tokens']} tok under vera's meter")
+    _, stand = _wire_verdict_standings(u_port)
+    for card in vera.degradations(stand):
+        _stage_assay_card(u_port, card)
+
+
+def _wire_verdict_standings(u_port: int) -> tuple[list, dict]:
+    """The verdicts and their standings, read off the shelf — one aggregation
+    serving both the beat's cards and the instrument room (sp3)."""
     rows = wire_assets(u_port, "verdict")
-    per: dict = {}
+    compact, per = [], {}
     for vref, b, _, _ in rows:
         a = (b or {}).get("assay") or {}
+        compact.append({"score": a.get("score"), "why": str(a.get("why", ""))[:90],
+                        "judge_floor": a.get("judge_floor", "?"),
+                        "work_floor": a.get("work_floor", "?"),
+                        "cost": a.get("cost") or {}})
         s = per.setdefault(a.get("work_floor", "?"),
                            {"scores": [], "humans": 0, "refs": []})
         s["scores"].append(float(a.get("score", 0.0)))
@@ -6121,8 +6154,130 @@ def assay_beat(u_port: int) -> None:
                                     - sum(s["scores"][:half]) / half, 4)
                      if n >= 4 else None,
                      "humans": s["humans"], "refs": s["refs"]}
-    for card in vera.degradations(stand):
-        _stage_assay_card(u_port, card)
+    return compact, stand
+
+
+_OBS_CACHE: dict = {"at": 0.0, "payload": {}}
+
+
+def compose_observatory() -> dict:
+    """The instrument room's supply line (0043 sp3): ONE payload, every panel,
+    every number wearing its tier — log-truth where the books are the log
+    (verdicts, gates, farm, stable, epochs, the rows), the instrument label
+    where the recorder's clock is the source. Cached a few seconds; the glass
+    breathes at its own pace. G1 rides here: the recorder's own last-beat age
+    is the first number in the payload — the watcher shows its pulse."""
+    if time.time() - _OBS_CACHE["at"] < 5 and _OBS_CACHE["payload"]:
+        return _OBS_CACHE["payload"]
+    s = FLIGHT.recorder.series
+    now = NOW()
+
+    def _age(iso: str | None) -> int | None:
+        if not iso:
+            return None
+        try:
+            from datetime import datetime
+            return max(0, int(
+                (datetime.fromisoformat(now.replace("Z", "+00:00"))
+                 - datetime.fromisoformat(iso.replace("Z", "+00:00"))
+                 ).total_seconds()))
+        except Exception:
+            return None
+
+    def _series_total(metric: str) -> float:
+        raw = sum(p["value"] for p in s.read(metric)["points"])
+        sealed = sum(p["sum"] for p in s.read(metric, resolution="hourly")["points"])
+        return round(raw + sealed, 6)
+
+    def _hourly(metric: str) -> list[dict]:
+        buckets: dict[str, float] = {}
+        for p in s.read(metric, resolution="hourly")["points"]:
+            buckets[p["at"]] = buckets.get(p["at"], 0) + p["sum"]
+        for p in s.read(metric)["points"]:
+            h = p["at"][:13] + ":00:00Z"
+            buckets[h] = buckets.get(h, 0) + p["value"]
+        return [{"at": k, "sum": round(v, 6)}
+                for k, v in sorted(buckets.items())][-48:]
+
+    taxa: dict[str, int] = {}
+    for p in s.read("plane.refusals")["points"]:
+        t = p["labels"].get("taxon", "?")
+        taxa[t] = taxa.get(t, 0) + 1
+    u_port = universe_port(JOIN_PORT)
+    gates, gate_counts = [], {"pending": 0, "staged": 0, "decided": 0}
+    for port, scope in sorted(FLOOR_SCOPES.items()):
+        try:
+            for r in call(port, "GET", "/requests").get("requests", []):
+                st = r.get("status", "")
+                if st in ("pending", "staged"):
+                    gate_counts[st] += 1
+                    gates.append({"floor": scope, "kind": r.get("kind", "?"),
+                                  "age_s": _age(r.get("at")),
+                                  "text": str(r.get("text", ""))[:80]})
+                else:
+                    gate_counts["decided"] += 1
+        except Exception:
+            continue
+    gates.sort(key=lambda g: -(g["age_s"] or 0))
+    farm_rows, stalls = [], []
+    for port, scope in sorted(FLOOR_SCOPES.items()):
+        try:
+            for f in call(port, "GET", "/farm").get("services", []):
+                if f.get("floor") == scope:
+                    farm_rows.append({"floor": scope, "name": f.get("name"),
+                                      "state": f.get("state"),
+                                      "calls": int(f.get("calls") or 0)})
+        except Exception:
+            pass
+        try:
+            for st_ in call(port, "GET", "/stable").get("stalls", []):
+                if st_.get("floor") == scope:
+                    stalls.append({"floor": scope, "id": st_.get("id"),
+                                   "class": st_.get("class"),
+                                   "state": st_.get("state")})
+        except Exception:
+            pass
+    verdicts, stand = [], {}
+    try:
+        verdicts, stand = _wire_verdict_standings(u_port)
+    except Exception:
+        pass
+    try:
+        rows_panel = wire_stacks_panel(u_port) or {}
+    except Exception:
+        rows_panel = {}
+    payload = {
+        "at": now,
+        "dial": {"position": OBS_DIAL, "assay_every_s": ASSAY_EVERY,
+                 "sample_per_beat": 2,
+                 "price": {"glance": "free", "watch": "free — a deeper read",
+                           "assay": "metered under vera's DID"}[OBS_DIAL]
+                 if OBS_DIAL in ("glance", "watch", "assay") else "?"},
+        "recorder": {"last_beat": FLIGHT.last_beat,
+                     "age_s": _age(FLIGHT.last_beat),
+                     "rows": len(FLIGHT.call_log)},
+        "flight": {"label": observatory.INSTRUMENT_LABEL,
+                   "thoughts": len(s.read("plane.thoughts")["points"])
+                   + int(sum(p["count"] for p in
+                             s.read("plane.thoughts", resolution="hourly")["points"])),
+                   "refusals": taxa,
+                   "tokens": _series_total("plane.tokens"),
+                   "usd": _series_total("plane.usd"),
+                   "tokens_hourly": _hourly("plane.tokens"),
+                   "ms": observatory.percentiles(s, "plane.thought_ms")},
+        "assay": {"verdicts": verdicts, "standings": stand,
+                  "cost": {"tokens": sum(int((v.get("cost") or {})
+                                             .get("tokens", 0)) for v in verdicts),
+                           "usd": round(sum(float((v.get("cost") or {})
+                                                  .get("usd", 0)) for v in verdicts), 6)}},
+        "gates": {"open": gates[:20], "counts": gate_counts},
+        "farm": farm_rows, "stable": stalls,
+        "epochs": {scope: _epoch_short(scope)
+                   for _, scope in sorted(FLOOR_SCOPES.items())},
+        "rows": rows_panel,
+    }
+    _OBS_CACHE.update(at=time.time(), payload=payload)
+    return payload
 
 
 def main() -> None:

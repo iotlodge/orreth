@@ -185,9 +185,32 @@ Panels, loaded generously (JB: load the views):
 |---|---|---|
 | 1 | **The flight recorder** — plane + farm taps, fingertip spans, gate ages; the series projection and its retention/distillation law · **LANDED 2026-07-30**: `orreth_sim/observatory.py` (readings · four taps · Series · FlightRecorder) + taps in `model_plane`/`farm`/`fingertip`/`hitl` + the worker's `FlightBook` wire twin (ledger-seeded, aged honestly) · 265/265 · live: the first voiced reply put a real `no-local-key` refusal and its successful thought on the book | the senses |
 | 2 | **vera and the assay loop** — the resident, the Examiner beat, judge independence, human verdicts, the dial · **LANDED 2026-07-30**: `orreth_sim/vera.py` (the four laws structural: bench never on the work's floor · refusal over self-grading · degradation CARDS · cost metered under her DID, PINNED — no silently cheaper judge) + `observatory.percentiles` (the watch depth) + the wire (vera seeded/pinned at the universe floor — the improver's precedent, builder's call; `assay_beat` dial-gated, default glance; judge = sonnet-5 from f:prod's stable signing via its floor seat; her parlor card) · 274/274 · proven live on the rig | the judgment |
-| 3 | **The instrument room** — the Observatory glass, both lights, first canvas the seven rows (the RAG observatory lands here) | the seeing |
+| 3 | **The instrument room** — the Observatory glass, both lights, first canvas the seven rows (the RAG observatory lands here) · **LANDED 2026-07-30**: the 🔭 Observatory tab — six hand-rolled panels (cognition/flight-recorder · vera's standings w/ score strip · gate-wait ages · the seven rows · farm & stable · governance/epochs), every panel wearing its TIER chip, supplied by ONE composed payload from the worker's own door (:4562, CORS-open, the plane untouched — rule 9); the recorder's pulse breathes in the header (G1) and an unreachable door turns the room dark LOUDLY; per-canvas PNG on double-click (G9); proven in Chrome in BOTH lights — the first render surfaced a purge that had waited 19 days at its gate, unseen until this panel existed | the seeing |
 | 4 | **The experiment** — A/B arms as epochs, dispatcher split, standings, the promotion gate; proven on the rows | the argument |
 | 5 | **The whole rig** *(committed, per JB's lock)* — every floor wearing instruments, the universe-level rollup, the Observatory watching the Observatory's own cost | the universe examines itself whole |
+
+## 11. The gaps the build found — a standing audit (JB's directive, 2026-07-30)
+
+*"Really don't want gaps in monitoring and visibility."* This section is the
+Observatory watching itself: every gap the build exposes gets a row HERE, in
+the design, with its closing spoonful named — never just a session note. A
+gap without a named home is a gap we are choosing to keep, and we don't.
+
+| # | Gap | Why it matters | Home |
+|---|---|---|---|
+| G1 | **The watcher's own pulse.** The recorder lives inside the worker; a dead worker takes the Observatory dark *silently* — the one failure a monitoring organ must never have | who watches the watcher | ✓ **visible half CLOSED sp3**: the pulse breathes in the room's header (brass · amber >45s · dark >150s), and an unreachable door turns the WHOLE room into "THE WATCHER HAS NO PULSE", loudly. The daemon-side dead-man (a floor noticing worker silence) rides sp5 |
+| G2 | **Durable summaries.** Wire hourly/daily summaries rebuild from the 7-day book; instrument history older than the book's horizon leaves the wire projection entirely (declared, but a cliff) | long-baseline curves (distillation loss over months) need the pyramid to persist | sp5 — persist distilled tiers beside the book, same declared retention |
+| G3 | **Wire taps beyond the plane.** Farm calls, gate-wait ages, and flow spans are sim-proven but were wire-dark after sp1/sp2 | the design promised four senses; the wire had one | ✓ **gate-waits + farm/stable CLOSED sp3** (the observatory door composes them from books that already exist — and the first render showed a purge that had waited 19 days, unseen); wire flow spans ride sp5 |
+| G4 | **The dial is invisible and env-only.** No one can SEE what depth the universe is paying for, and changing it is an operator act, not a governed one | depth costs money and says so — but only if it can be seen | ✓ **visibility CLOSED sp3** (dial + price posture in the room's header); the governed dial-change (a staged request, a human's word) rides sp4 with the experiment's controls |
+| G5 | **The assay budget is implicit** (sample cap per beat, no declared ceiling) | §5 promises "a budget the meter shows to the decimal" | ✓ **shown sp3** (sample-per-beat + assay cadence in the header; vera's cumulative spend on her panel); a declared per-day ceiling lands with sp4 |
+| G6 | **Wire rubrics are always the default.** Objectives on the wire declare no rubric; every verdict says `rubric_declared: false` honestly | assays should judge against what the objective ASKED | sp4 — the experiment needs declared rubrics anyway; the objective request gains an optional rubric field |
+| G7 | **The wire bench is fixed** (f:prod's stable, the graduation precedent) — correct but unchosen | judge diversity once more floors hold minds | sp5 — bench selection across serving stables, still never the work's floor |
+| G8 | **Alerting beyond the glass.** A degradation card staged at an unopened Console is a tree falling in an empty forest; gate-expiry-is-denial bounds the harm but does not notify | the last mile of visibility | PARKED, named: the Console is the surface today; out-of-band push (the parlor's channels, a webhook door) is its own small dive after 0043 — it touches identity and consent, not just plumbing |
+| G9 | **Panel export.** §8 promises SVG/PNG export like the estate DAG | receipts leave the glass | ✓ **per-instrument PNG landed sp3** (double-click any canvas keeps it); full-view SVG rides sp5 polish |
+
+The law of this table: **found → written → homed**. When a row closes, it
+moves to the spoonful table's landing notes; when a new gap surfaces — in
+build, in review, in JB's use — it enters here first.
 
 ---
 
