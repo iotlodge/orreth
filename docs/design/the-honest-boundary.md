@@ -23,12 +23,13 @@ with confidence.
 |---|---|
 | One recursive binary runs any tier; profiles supply behavior | the dev rig: universe :4500 · eco :4501 · field :4502 + shipyard-grown floors, one `orrethd` |
 | Python reference and Rust plane agree byte-for-byte on canonical content | `agents/orreth-agent-sdk/tests/test_parity.py` (10/10) + the drill's parity handshake (`demo.sh drift`) |
-| The full sim model is executable and conformance-held | `backend/conformance/tests/` — 254 tests green (2026-07-26) |
+| The full sim model is executable and conformance-held | `backend/conformance/tests/` — 265 tests green (2026-07-30) |
 | Identity survives the process; joining is governed; leases chain to a pinned root | 0002/0006/0012 machinery + covenant rules 1/3; the join door on the reel |
 | Refusal wears one face; the plane meters but never sees the prompt | covenant rules 4/5; uniform-refusal fixtures in the conformance suite |
 | The Canon has a fingerprint on a chain; drift stages, never enacts; the revert is a sibling | 0041 live proof (req-326) + `orreth_sim/epoch.py` / `tests/test_epoch.py` (THE SILENCE suite-held) + `demo.sh drift` repeatable |
 | No external consequence is complete on the executor's word alone | 0042 live proof: https://demo.orreth.ai/deeds/first-deed.json — published, tampered, caught, walked back, restored; the artifact carries its own story |
 | Improvement is proposed, never self-adopted; promotions keep lineage | 0031 lanes + tournament promotion receipts (req-287); orphan-lineage fix 2026-07-26 (`proposal_ref` on the card) |
+| Every governed thought — and every refusal — lands on a flight recorder: latency, model, tokens, cost, taxonomy; series distill with MEASURED loss under a declared retention law, log-truth rebuildable, instrument readings labeled as such | 0043 sp1 (2026-07-30): `orreth_sim/observatory.py` + `tests/test_observatory.py` (11 tests); live: charlotte's voiced reply put a real `no-local-key` refusal AND the successful thought (301 tok · 2447 ms) on `~/.orreth/observatory/flight.jsonl` on its first flight |
 
 ## 2. Reference-proven or intentionally partial (from the poster's §12, now ours)
 

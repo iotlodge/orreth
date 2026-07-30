@@ -3,7 +3,8 @@
 # ada's stable duties added by Fable 5 (claude-fable-5) — 0019, the Stable · 2026-07-06;
 # the parlor desk added by Fable 5 (claude-fable-5) — 0020, the Parlor · 2026-07-07;
 # per-request quarantine in the round by Fable 5 (claude-fable-5) — 2026-07-08;
-# the serials desk & its delivery beat by Fable 5 (claude-fable-5) — 0032 · 2026-07-14
+# the serials desk & its delivery beat by Fable 5 (claude-fable-5) — 0032 · 2026-07-14;
+# the flight recorder's wire twin by Fable 5 (claude-fable-5) — 0043 sp1 · 2026-07-30
 """The console worker — cognition behind the human's queue (0014 · 0006 · 0018 · 0019 · 0020).
 
 Watches every floor's request queue and carries the residents' duties, keys staying
@@ -123,8 +124,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from orreth_sim import (continuity, crypto, fingertip, improver, markers,
-                        meaning, mirror, parlor, profile, purge, serials,
-                        shipyard)
+                        meaning, mirror, observatory, parlor, profile, purge,
+                        serials, shipyard)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -1916,6 +1917,84 @@ def recommend(old: dict, stalls: list, catalog: list) -> dict | None:
             "modalities": best.get("modalities", []), "created": best.get("created")}
 
 
+class FlightBook:
+    """0043 sp1, the flight recorder's wire twin: every governed thought the
+    worker fires — canary, working thought, or the parlor's voice — lands one
+    row here beside the plane's meter. Latency and the refusal taxonomy are the
+    worker's own clock and book (instrument readings, never testimony; outside,
+    refusal keeps its one face — rule 4); tokens and dollars remain log-truth,
+    rebuildable from the daemon's signed meter. The book seeds from
+    ~/.orreth/observatory/flight.jsonl like charlotte's ledger and AGES by the
+    series' declared hourly horizon — even the monitoring ages honestly."""
+
+    HOME = os.path.expanduser("~/.orreth/observatory")
+
+    def __init__(self) -> None:
+        self.call_log: list[dict] = []
+        self.recorder = observatory.FlightRecorder()
+
+    def _land(self, row: dict) -> None:
+        self.call_log.append(row)
+        try:
+            os.makedirs(self.HOME, exist_ok=True)
+            with open(os.path.join(self.HOME, "flight.jsonl"), "a") as f:
+                f.write(json.dumps(row, sort_keys=True) + "\n")
+        except Exception:
+            pass                          # the book is an instrument, never a gate
+
+    def note(self, *, caller: str, klass: str, model: str, tokens: int,
+             usd: float, ms: int) -> None:
+        self._land({"caller": caller, "class": klass, "model": model,
+                    "tokens": tokens, "usd": round(usd, 6), "ms": ms,
+                    "at": NOW()})
+
+    def refuse(self, caller: str, klass: str, taxon: str) -> None:
+        self._land({"refusal": taxon, "caller": caller, "class": klass,
+                    "at": NOW()})
+
+    def replant(self) -> None:
+        """The ledger seeds, the worker holds live state: re-ingest rows still
+        inside the declared horizon; what has aged out leaves the book — the
+        compaction IS the retention law, applied to the recorder's own file."""
+        path = os.path.join(self.HOME, "flight.jsonl")
+        if not os.path.exists(path):
+            return
+        from datetime import datetime, timedelta, timezone
+        horizon = self.recorder.series.retention["hourly"]
+        floor_at = (datetime.now(timezone.utc)
+                    - timedelta(seconds=horizon)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        kept = []
+        try:
+            with open(path) as f:
+                for line in f:
+                    try:
+                        row = json.loads(line)
+                    except Exception:
+                        continue
+                    if row.get("at", "") >= floor_at:
+                        kept.append(row)
+            self.call_log = kept
+            with open(path, "w") as f:
+                for row in kept:
+                    f.write(json.dumps(row, sort_keys=True) + "\n")
+        except Exception:
+            pass
+
+    def beat(self) -> None:
+        """Sweep fresh rows into the series and distill — the Observatory's
+        pulse. Quiet when nothing new flew."""
+        n = self.recorder.sweep(now=NOW(), gateways=[self])
+        if n:
+            s = self.recorder.series
+            thoughts = len(s.read("plane.thoughts")["points"])
+            refusals = len(s.read("plane.refusals")["points"])
+            print(f"  🔭 flight recorder: {n} fresh reading(s) — "
+                  f"{thoughts} thought(s), {refusals} refusal(s) on the book")
+
+
+FLIGHT = FlightBook()
+
+
 def governed_ping(port: int, mid: str, klass: str) -> dict | None:
     """One tiny real thought through ada's OWN gateway — authorize, call, meter, all
     under her DID, PINNED to the rookie mind so the canary exercises the stall it
@@ -1943,11 +2022,14 @@ def governed_ping(port: int, mid: str, klass: str) -> dict | None:
             call(port, "POST", "/model/meter",
                  {"subject": grant["subject"], "est_tokens": est, "tokens": 0, "usd": 0,
                   "model": grant["model"], "class": klass})
+            FLIGHT.refuse(ADA_DID, klass, "no-local-key")
             return None
         import litellm
+        t0 = time.perf_counter()
         resp = litellm.completion(model=model,
                                   messages=[{"role": "user", "content": "ping"}],
                                   max_tokens=1)
+        ms = int((time.perf_counter() - t0) * 1000)
         tokens = resp.usage.total_tokens
         try:
             usd = litellm.completion_cost(completion_response=resp)
@@ -1956,8 +2038,11 @@ def governed_ping(port: int, mid: str, klass: str) -> dict | None:
         call(port, "POST", "/model/meter",
              {"subject": grant["subject"], "est_tokens": est, "tokens": tokens,
               "usd": round(usd, 6), "model": grant["model"], "class": klass})
+        FLIGHT.note(caller=ADA_DID, klass=klass, model=grant["model"],
+                    tokens=tokens, usd=usd, ms=ms)
         return {"model": grant["model"], "tokens": tokens}
     except Exception:
+        FLIGHT.refuse(ADA_DID, klass, "stumbled")
         return None
 
 
@@ -1988,11 +2073,14 @@ def governed_thought(port: int, mid: str, klass: str, prompt: str, *,
             call(port, "POST", "/model/meter",
                  {"subject": grant["subject"], "est_tokens": est, "tokens": 0,
                   "usd": 0, "model": grant["model"], "class": klass})
+            FLIGHT.refuse(ADA_DID, klass, "no-local-key")
             return None
         import litellm
+        t0 = time.perf_counter()
         resp = litellm.completion(model=model,
                                   messages=[{"role": "user", "content": prompt}],
                                   max_tokens=max_tokens)
+        ms = int((time.perf_counter() - t0) * 1000)
         text = (resp.choices[0].message.content or "").strip()
         tokens = resp.usage.total_tokens
         try:
@@ -2002,10 +2090,13 @@ def governed_thought(port: int, mid: str, klass: str, prompt: str, *,
         call(port, "POST", "/model/meter",
              {"subject": grant["subject"], "est_tokens": est, "tokens": tokens,
               "usd": round(usd, 6), "model": grant["model"], "class": klass})
+        FLIGHT.note(caller=ADA_DID, klass=klass, model=grant["model"],
+                    tokens=tokens, usd=usd, ms=ms)
         return {"text": text, "tokens": tokens, "usd": usd,
                 "model": grant["model"]}
     except Exception as e:
         print(f"    (governed thought stumbled: {e})")
+        FLIGHT.refuse(ADA_DID, klass, "stumbled")
         return None
 
 
@@ -5403,7 +5494,9 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
                 call(port, "POST", "/model/meter",
                      {"subject": did, "est_tokens": est, "tokens": 0, "usd": 0,
                       "model": grant["model"], "class": klass})
+                FLIGHT.refuse(did, klass, "no-local-key")
                 continue
+            t0 = time.perf_counter()
             resp = litellm.completion(
                 model=model, max_tokens=160,
                 messages=[{"role": "system", "content":
@@ -5412,6 +5505,7 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
                            "in the facts below. Never invent numbers or names.\n\nFACTS:\n"
                            + grounded},
                           {"role": "user", "content": question}])
+            ms = int((time.perf_counter() - t0) * 1000)
             tokens = resp.usage.total_tokens
             try:
                 usd = litellm.completion_cost(completion_response=resp)
@@ -5420,10 +5514,13 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
             call(port, "POST", "/model/meter",
                  {"subject": did, "est_tokens": est, "tokens": tokens,
                   "usd": round(usd, 6), "model": grant["model"], "class": klass})
+            FLIGHT.note(caller=did, klass=klass, model=grant["model"],
+                        tokens=tokens, usd=usd, ms=ms)
             out = (resp.choices[0].message.content or "").strip()
             if out:
                 return out
         except Exception:
+            FLIGHT.refuse(did, klass, "stumbled")
             continue
     return None
 
@@ -5882,6 +5979,7 @@ def main() -> None:
     scopes: dict[int, str] = {}
     threading.Thread(target=embed_door, daemon=True).start()  # the meaning axis's door (0022 Ph2)
     SHIPYARD.replant()                        # hulls the rig lost come back before the round
+    FLIGHT.replant()                          # the recorder's book seeds, aged honestly (0043 sp1)
     ensure_allen_floor()                      # the embodied tier stands visible (0037 §8.3)
     while True:
         beat_due = time.time() - KEEPER.last_beat >= BEAT_EVERY
@@ -6056,6 +6154,7 @@ def main() -> None:
                         attest_beat()         # and proves what it loaded (0041)
                         mirror_beat()         # the mirror reflects every floor (0034 sp3)
                         passage_beat()        # the silence watch — contain, never execute (0035 §3)
+                        FLIGHT.beat()         # the Observatory's pulse (0043 sp1)
 
             except Exception as e:
                 scopes.pop(port, None)

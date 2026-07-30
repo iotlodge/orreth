@@ -131,12 +131,15 @@ class Farm:
                                 reason=reason, discredit=discredit)
 
     # ---- the meter: volume and shape, never payloads (0016 §6) -------------------------
-    def meter(self, name: str, caller: str, *, ms: int = 0) -> None:
+    def meter(self, name: str, caller: str, *, ms: int = 0, ok: bool = True) -> None:
+        """0043 sp1: the outcome rides the entry — error RATE per worldline is a
+        flight-recorder series, and rug-pull correlation falls out for free."""
         svc = self.services[name]
         if svc["state"] != "serving":
             raise IllegalTransition("only a serving service is consumed")
         svc["calls"] += 1
-        self.meter_log.append({"at": NOW(), "service": name, "caller": caller, "ms": ms})
+        self.meter_log.append({"at": NOW(), "service": name, "caller": caller,
+                               "ms": ms, "ok": ok})
 
     def usage(self) -> list[dict]:
         return [{"service": s["name"], "state": s["state"], "calls": s["calls"],

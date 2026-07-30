@@ -56,6 +56,9 @@ class EscalationQueue:
         self.policy, self.entitled, self.nanda = gate_policy, entitled, nanda
         self.items: dict[str, dict] = {}
         self.expired_signals = 0            # vigil's tap: an unattended queue is a finding
+        self.decisions: list[dict] = []     # 0043 sp1: the queue's own book — a rejection's
+        #   clock lives here because the escalation contract holds no decided stamp;
+        #   the Observatory reads it as an instrument reading, never as testimony
 
     def stage(self, action_class: str, action: dict, *, scope: str, staged_by: str,
               staged_by_kp, evidence: list[str] | None = None, now: str) -> dict:
@@ -121,6 +124,7 @@ class EscalationQueue:
         if esc["state"] not in ("pending", "approved"):
             raise AuthzError(f"cannot reject state '{esc['state']}'")
         esc["state"] = "rejected"
+        self.decisions.append({"id": esc_id, "outcome": "rejected", "at": now})
         return esc
 
     def _sweep_one(self, esc: dict, now: str) -> None:

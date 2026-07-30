@@ -75,23 +75,43 @@ class LiveGateway:
             return self.parent.resolve(klass)                   # the miss climbs
         raise ModelSunset(f"class '{klass}' has no living model at any tier")
 
+    # ---- the flight recorder's refusal taxonomy (0043 sp1): the gateway's own book -----
+    def _refuse(self, surface, klass: str, taxon: str) -> None:
+        """Recorded HERE, in the meter's book only — outside, refusal keeps its
+        one face (rule 4): the exception that rides out is unchanged."""
+        self.call_log.append({"refusal": taxon, "caller": surface.identity["did"],
+                              "class": klass, "at": NOW()})
+
     # ---- the call: budget-gated, class-resolved, fully metered --------------------------
     def call(self, surface, klass: str, messages: list[dict], *, pinned: bool = False,
              max_tokens: int = 300) -> dict:
         est = max_tokens + sum(len(m.get("content", "")) // 3 for m in messages)
         if est > surface.budget_left:
             if pinned:
+                self._refuse(surface, klass, "pinned-unaffordable")
                 raise BudgetExceeded("pinned class unaffordable — never silently dumber")
             order = ["xhigh", "high", "medium", "low"]
             lower = [k for k in order[order.index(klass) + 1:] if k in self.allowed] \
                 if klass in order else []
             if not lower:
+                self._refuse(surface, klass, "budget-exhausted")
                 raise BudgetExceeded("budget exhausted at the floor class")
             return self.call(surface, lower[0], messages, max_tokens=max_tokens)
 
-        model = self.resolve(klass)
+        try:
+            model = self.resolve(klass)
+        except BudgetExceeded:
+            self._refuse(surface, klass, "class-outside-floors")
+            raise
+        except ModelSunset:
+            self._refuse(surface, klass, "model-sunset")
+            raise
+        import time
+
         import litellm
+        t0 = time.perf_counter()
         resp = litellm.completion(model=model, messages=messages, max_tokens=max_tokens)
+        ms = int((time.perf_counter() - t0) * 1000)
         usage = resp.usage
         try:
             usd = litellm.completion_cost(completion_response=resp)
@@ -103,6 +123,7 @@ class LiveGateway:
             "caller": surface.identity["did"], "class": klass, "model": model,
             "tokens": tokens, "prompt_tokens": usage.prompt_tokens,
             "completion_tokens": usage.completion_tokens, "usd": round(usd, 6),
+            "ms": ms,                                       # the flight recorder (0043 sp1)
             "at": NOW(),
         }
         self.call_log.append(meter)                             # rolls up via RunRecords (0005)

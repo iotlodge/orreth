@@ -183,7 +183,7 @@ Panels, loaded generously (JB: load the views):
 
 | # | Spoonful | Nature |
 |---|---|---|
-| 1 | **The flight recorder** — plane + farm taps, fingertip spans, gate ages; the series projection and its retention/distillation law | the senses |
+| 1 | **The flight recorder** — plane + farm taps, fingertip spans, gate ages; the series projection and its retention/distillation law · **LANDED 2026-07-30**: `orreth_sim/observatory.py` (readings · four taps · Series · FlightRecorder) + taps in `model_plane`/`farm`/`fingertip`/`hitl` + the worker's `FlightBook` wire twin (ledger-seeded, aged honestly) · 265/265 · live: the first voiced reply put a real `no-local-key` refusal and its successful thought on the book | the senses |
 | 2 | **vera and the assay loop** — the resident, the Examiner beat, judge independence, human verdicts, the dial | the judgment |
 | 3 | **The instrument room** — the Observatory glass, both lights, first canvas the seven rows (the RAG observatory lands here) | the seeing |
 | 4 | **The experiment** — A/B arms as epochs, dispatcher split, standings, the promotion gate; proven on the rows | the argument |

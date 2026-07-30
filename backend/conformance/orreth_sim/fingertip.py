@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from . import crypto, factory, improver, markers, resolver
 from .chassis import Chassis
-from .identity import is_within
+from .identity import NOW, is_within
 from .node import make_memory
 
 VERSION = "0.1.0"
@@ -155,7 +155,8 @@ def choreography(plan: dict, branches: list | None = None, *,
                         **({"cycles": b["cycles"]} if b.get("cycles") is not None else {}),
                         **({"marker": b["marker"]} if b.get("marker") else {}),
                         **({"outcome": b["outcome"]} if b.get("outcome") else {}),
-                        **({"answer": b["answer"]} if b.get("answer") else {})})
+                        **({"answer": b["answer"]} if b.get("answer") else {}),
+                        **({"span": b["span"]} if b.get("span") else {})})
     for b in remaining:                       # mid-flow legs (the iac after an answer)
         n = len(fingers) + 1
         fingers.append({"id": f"i{n}", "kind": "seat", "role": "fingertip",
@@ -166,7 +167,8 @@ def choreography(plan: dict, branches: list | None = None, *,
                         **({"cycles": b["cycles"]} if b.get("cycles") is not None else {}),
                         **({"marker": b["marker"]} if b.get("marker") else {}),
                         **({"outcome": b["outcome"]} if b.get("outcome") else {}),
-                        **({"answer": b["answer"]} if b.get("answer") else {})})
+                        **({"answer": b["answer"]} if b.get("answer") else {}),
+                        **({"span": b["span"]} if b.get("span") else {})})
     nodes = [{"id": "objective", "kind": "seat", "role": "orchestrator"},
              *fingers,
              {"id": "review", "kind": "seat", "role": "review"},
@@ -368,8 +370,15 @@ class Orchestration:
             intent = n["intent"] if n["id"] not in self.answers else \
                 f"{n['intent']} — the human answered: {self.answers[n['id']]}"
             work = make_intention(self.goal, intent, share, refs=n.get("refs"))
+            # the span (0043 sp1): start/end/status riding the branch — the
+            # choreography record the glass already draws gains a stopwatch
+            import time as _time
+            started, t0 = NOW(), _time.perf_counter()
             branch.update(self._fingertip(target, beckys[target.scope], work, n,
                                           think, skills or {}))
+            branch["span"] = {"started": started, "ended": NOW(),
+                              "ms": int((_time.perf_counter() - t0) * 1000),
+                              "status": branch["status"]}
             # review rides altitude (0027 §6): the DISPATCHING seat grades the
             # return — author ≠ agent, on the record, lanes route what follows
             severity = review_severity(branch["status"], branch.get("cycles"))
