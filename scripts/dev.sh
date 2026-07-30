@@ -48,6 +48,7 @@ case "${1:-}" in
            # this laptop hosts other projects whose stopped images would vanish.
            docker image prune -f
            docker builder prune -f --keep-storage=15GB
+           docker buildx prune -f --keep-storage=15GB   # Desktop keeps a second builder
            docker system df ;;
   status)  $COMPOSE ps --format '  {{.Name}}\t{{.Status}}' 2>/dev/null || true
            dyn=""; [ -f "$HOME/.orreth/shipyard/floors.json" ] && \
