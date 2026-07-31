@@ -365,6 +365,31 @@ via AskUserQuestion — the recommended path on each.*
   construction with unpriced ceremony would kill the seed-to-WHOLE-in-a-day metabolism
   that makes Orreth alive.
 
+### Locked 2026-07-31 (0043 post-close — the Bell, and the rubric's field; JB: "we do need these")
+*Fable explained the Observatory's honest remainder (0043 §11's parked rows); JB
+confirmed both as committed work, sequenced behind a Console/UI discussion he
+queued first.*
+
+- **THE BELL — the notification dive is COMMITTED.** The daemon-side dead-man
+  (G1's remainder) and out-of-band alerting (G8) are ONE dive, because they
+  share a channel: a dead worker cannot open the Console for you, so detecting
+  the death without a way to *say it* just moves the silence one layer out.
+  Shape agreed in principle: a small witness INDEPENDENT of the worker
+  (watching the recorder's pulse and the oldest gate-wait ages) + a **governed
+  notification door** — the channel registered as a farm service with its own
+  DID and pinned manifest (0018's discipline), consent recorded in becky's
+  ledger (0034: who may be contacted, on which channel, about what), messages
+  content-minimal (pointers, never payloads — a card title can leak scope
+  names), every send on the record (0042's outbound-consequence posture).
+  **Timing lock: after the campaign week, BEFORE any universe runs unattended
+  for someone who is not JB** — monitoring exists "to assess the Universes we
+  are going to create," and a bell nobody hears is not monitoring.
+- **G6's GLASS FIELD is COMMITTED**: the objective composer gains an optional
+  "judge this by…" rubric input, so a human (not curl) can declare the
+  yardstick; the proof is the first real objective returning a
+  `rubric_declared: true` verdict. A small rider — lands on JB's word after
+  the queued Console/UI discussion.
+
 ### OPEN — parked 2026-07-25 (write-time content-address re-hashing in `orreth-node`)
 *Named during the 0041/0042 close (Fable, surfaced by the drift drill's parity
 handshake); JB asked that it not be lost. Awaits a deliberate rule-9 session.*
