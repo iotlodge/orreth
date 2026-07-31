@@ -586,3 +586,9 @@ reviewed sound. 232/232 conformance tests green after the fixes.
 | `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | THE WHOLE RIG: the examiner round-robins every tended floor (ceiling closing mid-round, G5 at rig scale) · `_judge_bench` (G7 — chosen among serving medium stalls, f:prod first, never the work's floor) · `_persist_summaries`/replant reload + book compaction (G2 live: 22 sealed hours, the book trimmed to unsealed rows, the recorder's cursor kept honest) · `dial.json` (G10 — proven by kill-restart both ways) · the wire flow's stopwatch riding the SIGNED intention-outcome record · the rollup + flow blocks in the observatory payload — the Observatory watching the Observatory's own cost, always. |
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The room's header carries the rig whole: "watching 19 floor(s), whole (sp5)" beside the declared ceiling; cognition gains the flow-span percentiles (log-truth). |
 | `VERSION` | Fable 5 (claude-fable-5) | 0.42 → 0.43 in the closing commit — the glass whispers the true era (the covenant's line, kept). |
+
+## Fable 5 — 2026-07-31 (guide 06 — the Observatory's companion)
+
+| File | Author | Note |
+|---|---|---|
+| `docs/guides/06-the-observatory-reading-the-instruments.md` | Fable 5 (claude-fable-5) | NET-NEW — the human's guide to what the universe measures and what it is telling them: the two-tier chips as the one law to read everything by, the dial and its price, the room panel by panel (with the live stories that proved each — the 19-day purge, the scaffold scores, the false drift accusation and why "leave it" was right), the gate cards and what each click does, vigil/vera/Mirror kept separate, the nest and its honest aging, and the on-the-record list of what is NOT watched. Written the night 0043 closed, while the instruments were warm. |
