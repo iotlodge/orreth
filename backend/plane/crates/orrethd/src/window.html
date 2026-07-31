@@ -3104,7 +3104,8 @@ function renderObservatory(){
   const d=obsCache;if(!d)return;
   $("obs-dial").textContent=d.dial.position;
   $("obs-price").textContent=` · ${d.dial.price} · assay beat ${d.dial.assay_every_s}s · sample ${d.dial.sample_per_beat}/beat`
-    +(d.dial.ceiling_tokens?` · spent ${fmtTok(d.dial.spent_today||0)}/${fmtTok(d.dial.ceiling_tokens)} tok today (the declared ceiling, G5)`:"");
+    +(d.dial.ceiling_tokens?` · spent ${fmtTok(d.dial.spent_today||0)}/${fmtTok(d.dial.ceiling_tokens)} tok today (the declared ceiling, G5)`:"")
+    +(d.rollup?` · watching ${d.rollup.floors_watched} floor(s), whole (sp5)`:"");
   const ra=d.recorder.age_s;
   dot.className="pdot"+(ra==null||ra>150?" dark":ra>45?" amber":"");
   age.textContent=ra==null?"the recorder has not beaten yet":
@@ -3121,7 +3122,8 @@ function renderObservatory(){
       <span><span class="n">${fl.thoughts}</span><span class="c">governed thoughts</span></span>
       <span><span class="n">${fmtTok(fl.tokens)}</span><span class="c">tokens</span></span>
       <span><span class="n">$${(+fl.usd).toFixed(4)}</span><span class="c">metered spend</span></span>
-      <span><span class="n">${fl.ms&&fl.ms.quantiles&&fl.ms.quantiles.p50!=null?fl.ms.quantiles.p50+"·"+fl.ms.quantiles.p95:"—"}</span><span class="c">ms p50·p95</span></span></div>
+      <span><span class="n">${fl.ms&&fl.ms.quantiles&&fl.ms.quantiles.p50!=null?fl.ms.quantiles.p50+"·"+fl.ms.quantiles.p95:"—"}</span><span class="c">ms p50·p95</span></span>
+      <span><span class="n">${d.flow&&d.flow.p50_ms!=null?d.flow.p50_ms+"·"+d.flow.p95_ms:"—"}</span><span class="c">flow span ms (log-truth)</span></span></div>
     <canvas class="ocanvas" id="obs-spark" title="tokens per hour — double-click to keep the PNG (G9)"></canvas>
     <div class="otaxa">${taxN?Object.entries(fl.refusals).map(([t,n])=>`<span>${esc(t)} ×${n}</span>`).join(""):`<span>no refusals on the book</span>`}
       <span title="rule 4: outside, refusal wears one face — the taxonomy lives only in this book">one face outside</span></div></div>

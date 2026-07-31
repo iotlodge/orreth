@@ -349,3 +349,28 @@ def test_the_flight_recorder_sweeps_without_double_counting(world):
     assert len(s.read("flow.span_ms")["points"]) == 1
     assert len(s.read("gate.wait_s")["points"]) == 1   # decided: once, ever
     assert len(s.read("gate.wait_age_s")["points"]) == 2   # the gauge breathes
+
+
+def test_the_pyramid_survives_the_process():
+    """G2 (0043 sp5): dump → load carries the distilled tiers whole — reads
+    equal, tiers kept, and the monotone law survives the reload: a reloaded
+    seal refuses a backdated reading exactly like a lived one, while the
+    unsealed present ingests freely."""
+    a = observatory.Series()
+    a.ingest([observatory.reading(f"2026-07-30T{h:02d}:10:00Z", "plane.tokens",
+                                  v, tier="log-truth")
+              for h, v in ((9, 100), (10, 300))])
+    a.distill(now="2026-07-31T00:00:00Z")
+    b = observatory.Series.load(a.dump())
+    assert b.read("plane.tokens", resolution="hourly") == \
+        a.read("plane.tokens", resolution="hourly")
+    assert b.read("plane.tokens", resolution="daily") == \
+        a.read("plane.tokens", resolution="daily")
+    assert b.tiers == a.tiers
+    assert a.dump()["sealed_until"] == "2026-07-30T11:00:00Z"
+    with pytest.raises(observatory.BackdatedReading):
+        b.ingest([observatory.reading("2026-07-30T09:59:00Z", "plane.tokens",
+                                      1, tier="log-truth")])
+    b.ingest([observatory.reading("2026-07-31T00:05:00Z", "plane.tokens", 50,
+                                  tier="log-truth")])       # the present flows on
+    assert b.read("plane.tokens")["points"][0]["value"] == 50

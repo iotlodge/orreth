@@ -576,3 +576,13 @@ reviewed sound. 232/232 conformance tests green after the fixes.
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The gates grow buttons: experiment ("open the split" / "adopt the winner" / decline) and dial ("turn it" / "leave it") join the request queue's gate grammar; the Observatory gains the experiment panel (arms as machine-named bars with n·mean·share) and the header shows the declared ceiling (G5). |
 | `backend/conformance/orreth_sim/parlor.py` | Fable 5 (claude-fable-5) | vera's "set the dial to …" — protocol words, verbatim, staging an action; the card gains the turn template. |
 | `docs/design/0043-the-observatory.md` | Fable 5 (claude-fable-5) | §11: G4/G5 closed, G6 landed (honest caveat: first rubric'd objective still to run), G10 FOUND at the close — the turned dial does not survive the worker's restart; homed to sp5. |
+
+## Fable 5 — 2026-07-31 (0043 sp5 — the whole rig: the dive closes WHOLE, era 0.43)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/observatory.py` | Fable 5 (claude-fable-5) | G2's law: `Series.sealed_until()/dump()/load()` — the distilled pyramid as portable state; a reloaded seal refuses backdated readings exactly like a lived one (the monotone law survives the process). |
+| `backend/conformance/tests/test_observatory.py` | Fable 5 (claude-fable-5) | "the pyramid survives the process" — dump→load reads equal, tiers kept, seals honored, the present flows on. Suite 282→283. |
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | THE WHOLE RIG: the examiner round-robins every tended floor (ceiling closing mid-round, G5 at rig scale) · `_judge_bench` (G7 — chosen among serving medium stalls, f:prod first, never the work's floor) · `_persist_summaries`/replant reload + book compaction (G2 live: 22 sealed hours, the book trimmed to unsealed rows, the recorder's cursor kept honest) · `dial.json` (G10 — proven by kill-restart both ways) · the wire flow's stopwatch riding the SIGNED intention-outcome record · the rollup + flow blocks in the observatory payload — the Observatory watching the Observatory's own cost, always. |
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The room's header carries the rig whole: "watching 19 floor(s), whole (sp5)" beside the declared ceiling; cognition gains the flow-span percentiles (log-truth). |
+| `VERSION` | Fable 5 (claude-fable-5) | 0.42 → 0.43 in the closing commit — the glass whispers the true era (the covenant's line, kept). |

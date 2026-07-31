@@ -303,6 +303,39 @@ class Series:
             dropped["daily"] += len(gone)
         return dropped
 
+    # ---- G2 (0043 sp5): the pyramid survives the process --------------------------------
+    def sealed_until(self) -> str | None:
+        """The end of the newest sealed hour — the horizon below which raw
+        rows are redundant with the summaries that hold them."""
+        hours = [h for by in self.hourly.values() for h in by]
+        return _iso(max(hours) + HOUR) if hours else None
+
+    def dump(self) -> dict:
+        """The distilled tiers as portable state: retention, tiers, and every
+        summary — NOT the raw (the raw's book is its own ledger). A restart
+        reloads this and the monotone law still holds: a reloaded seal
+        refuses backdated readings exactly like a lived one."""
+        flat = lambda shelf: [[m, [list(p) for p in lbl], b, s]  # noqa: E731
+                              for (m, lbl), by in shelf.items()
+                              for b, s in sorted(by.items())]
+        return {"retention": dict(self.retention), "tiers": dict(self.tiers),
+                "hourly": flat(self.hourly), "daily": flat(self.daily),
+                "sealed_until": self.sealed_until()}
+
+    @classmethod
+    def load(cls, state: dict) -> "Series":
+        """A Series standing where its dump left it — summaries whole, seals
+        honored, ready to ingest the unsealed present."""
+        s = cls(retention=state.get("retention"))
+        s.tiers = dict(state.get("tiers") or {})
+        for shelf, rows in (("hourly", state.get("hourly") or []),
+                            ("daily", state.get("daily") or [])):
+            dest = getattr(s, shelf)
+            for m, lbl, b, summ in rows:
+                key = (m, tuple(tuple(p) for p in lbl))
+                dest.setdefault(key, {})[float(b)] = dict(summ)
+        return s
+
     def read(self, metric: str, *, resolution: str = "raw",
              labels: dict | None = None) -> dict:
         """What the glass will drink (sp3): every answer declares its tier, and

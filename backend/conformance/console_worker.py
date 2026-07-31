@@ -1954,6 +1954,7 @@ class FlightBook:
         self.call_log: list[dict] = []
         self.recorder = observatory.FlightRecorder()
         self.last_beat: str | None = None    # G1: the watcher's own pulse
+        self._sealed_count = 0               # G2: persist when a new hour seals
 
     def _land(self, row: dict) -> None:
         self.call_log.append(row)
@@ -1974,10 +1975,39 @@ class FlightBook:
         self._land({"refusal": taxon, "caller": caller, "class": klass,
                     "at": NOW()})
 
+    def _persist_summaries(self) -> None:
+        """G2 (0043 sp5): the distilled tiers outlive the process — the dump
+        lands beside the book, and the book COMPACTS to its unsealed rows
+        (what a sealed hour holds, the summary now holds; the raw row was
+        redundant with its own distillate)."""
+        s = self.recorder.series
+        try:
+            os.makedirs(self.HOME, exist_ok=True)
+            with open(os.path.join(self.HOME, "summaries.json"), "w") as f:
+                json.dump(s.dump(), f)
+            su = s.sealed_until()
+            if su:
+                kept = [r for r in self.call_log if r.get("at", "") >= su]
+                if len(kept) < len(self.call_log):
+                    self.call_log = kept
+                    self.recorder._cursor[(id(self), "calls")] = len(kept)
+                    with open(os.path.join(self.HOME, "flight.jsonl"), "w") as f:
+                        for row in kept:
+                            f.write(json.dumps(row, sort_keys=True) + "\n")
+        except Exception:
+            pass                          # the book is an instrument, never a gate
+
     def replant(self) -> None:
-        """The ledger seeds, the worker holds live state: re-ingest rows still
-        inside the declared horizon; what has aged out leaves the book — the
-        compaction IS the retention law, applied to the recorder's own file."""
+        """The ledger seeds, the worker holds live state: the distilled tiers
+        reload whole (G2), then the book's rows re-ingest — only what stands
+        ABOVE the sealed horizon and inside the declared retention; what has
+        aged or already distilled leaves the book. The compaction IS the
+        retention law, applied to the recorder's own file."""
+        try:
+            with open(os.path.join(self.HOME, "summaries.json")) as f:
+                self.recorder.series = observatory.Series.load(json.load(f))
+        except Exception:
+            pass
         path = os.path.join(self.HOME, "flight.jsonl")
         if not os.path.exists(path):
             return
@@ -1985,6 +2015,7 @@ class FlightBook:
         horizon = self.recorder.series.retention["hourly"]
         floor_at = (datetime.now(timezone.utc)
                     - timedelta(seconds=horizon)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        floor_at = max(floor_at, self.recorder.series.sealed_until() or "")
         kept = []
         try:
             with open(path) as f:
@@ -2004,13 +2035,27 @@ class FlightBook:
 
     def beat(self) -> None:
         """Sweep fresh rows into the series and distill — the Observatory's
-        pulse. Quiet when nothing new flew."""
+        pulse. Quiet when nothing new flew. A new sealed hour persists the
+        pyramid (G2); a backdated row is refused, never fatal."""
         self.last_beat = NOW()
-        n = self.recorder.sweep(now=self.last_beat, gateways=[self])
+        try:
+            n = self.recorder.sweep(now=self.last_beat, gateways=[self])
+        except observatory.BackdatedReading as e:
+            print(f"  🔭 the book held a backdated row — refused, "
+                  f"the monotone law holds: {e}")
+            return
+        s = self.recorder.series
+        sealed = sum(len(by) for by in s.hourly.values())
+        if sealed != self._sealed_count:
+            self._sealed_count = sealed
+            self._persist_summaries()
         if n:
-            s = self.recorder.series
-            thoughts = len(s.read("plane.thoughts")["points"])
-            refusals = len(s.read("plane.refusals")["points"])
+            thoughts = len(s.read("plane.thoughts")["points"]) + int(sum(
+                p["count"] for p in
+                s.read("plane.thoughts", resolution="hourly")["points"]))
+            refusals = len(s.read("plane.refusals")["points"]) + int(sum(
+                p["count"] for p in
+                s.read("plane.refusals", resolution="hourly")["points"]))
             print(f"  🔭 flight recorder: {n} fresh reading(s) — "
                   f"{thoughts} thought(s), {refusals} refusal(s) on the book")
 
@@ -3106,6 +3151,7 @@ def on_intention(port: int, scope: str, r: dict) -> None:
     scribe-signed RunRecord (author ≠ agent, 0005) and the outcome that rides up."""
     work = r.get("intention") or r.get("sliver") or {}   # old rows keep their word
     intent = str(work.get("intent") or r.get("text") or "").strip()
+    started, t0 = NOW(), time.perf_counter()  # the wire flow's stopwatch (0043 sp5)
     fkp, fdid, skp, sdid = finger_seat(scope)
     answer = f"intention carried at {scope}: {intent[:140]}"
     run = {
@@ -3128,7 +3174,12 @@ def on_intention(port: int, scope: str, r: dict) -> None:
     outcome = make_memory({"did": fdid, "scope": scope}, fkp, scope,
                           {"outcome": {"intention": r.get("id"), "of": work.get("of"),
                                        "status": "done", "answer": answer,
-                                       "cycles": 1}},
+                                       "cycles": 1,
+                                       # the span rides the SIGNED record —
+                                       # log-truth by construction (0043 sp5)
+                                       "span": {"started": started, "ended": NOW(),
+                                                "ms": int((time.perf_counter()
+                                                           - t0) * 1000)}}},
                           kind="semantic",
                           tags=["intention-outcome",
                                 *fingertip.coordinate_tags(work.get("of"),
@@ -6065,9 +6116,19 @@ def on_demo(port: int, r: dict) -> None:
 # ---------------------------------------------------------------- the round
 
 # --------------------------------------------------- 0043 sp2 · vera's assay beat
-# the dial is RUNTIME state (G4): booted from env, turned by a human's word
-# at the gate — never silently. glance · watch · assay.
-OBS = {"dial": os.environ.get("ORRETH_OBS_DIAL", "glance")}
+def _dial_load() -> str | None:
+    try:
+        with open(os.path.join(FlightBook.HOME, "dial.json")) as f:
+            d = json.load(f).get("dial")
+            return d if d in ("glance", "watch", "assay") else None
+    except Exception:
+        return None
+
+
+# the dial is RUNTIME state (G4) and the WORD persists (G10, 0043 sp5): the
+# nest outlives the process — a governed turn survives a restart; the env is
+# the genesis default only. glance · watch · assay.
+OBS = {"dial": _dial_load() or os.environ.get("ORRETH_OBS_DIAL", "glance")}
 ASSAY_EVERY = int(os.environ.get("ORRETH_ASSAY_EVERY", "300"))
 _ASSAY_LAST = 0.0
 
@@ -6345,10 +6406,17 @@ def on_dial(port: int, r: dict, *, approved: bool, declined: bool) -> None:
         return
     if approved:
         was, OBS["dial"] = OBS["dial"], want
+        try:                              # G10: the word outlives the process
+            os.makedirs(FlightBook.HOME, exist_ok=True)
+            with open(os.path.join(FlightBook.HOME, "dial.json"), "w") as f:
+                json.dump({"dial": want, "turned_at": NOW()}, f)
+        except Exception:
+            pass
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
               "result": {"dial": want, "was": was}})
-        print(f"  🔭 the dial turns on your word: «{was}» → «{want}»")
+        print(f"  🔭 the dial turns on your word: «{was}» → «{want}» — "
+              "and the word persists (G10)")
     elif declined:
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
@@ -6414,6 +6482,28 @@ def experiment_beat(u_port: int) -> None:
         _exps_save(exps)
 
 
+def _judge_bench(work_scope: str) -> tuple[int, str] | None:
+    """G7 (0043 sp5): the bench CHOSEN, not hardwired — among floors that
+    hold a serving medium mind, never the work's own floor (law 2). f:prod
+    first (its deals are JB-locked), then any qualifying floor in
+    deterministic order; None when no outside bench stands."""
+    cands = []
+    for p, s in sorted(FLOOR_SCOPES.items()):
+        if s == work_scope:
+            continue
+        try:
+            stalls = call(p, "GET", "/stable").get("stalls", [])
+        except Exception:
+            continue
+        if any(st.get("floor") == s and st.get("class") == "medium"
+               and st.get("state") in ("available", "canaried")
+               for st in stalls):
+            cands.append((p, s))
+    prod = next(((p, s) for p, s in cands
+                 if s.endswith("/e:cloud/f:prod")), None)
+    return prod or (cands[0] if cands else None)
+
+
 def _assay_floor(port: int, scope: str) -> None:
     """One floor through the examiner: sample unjudged completed work, judge
     with the objective's DECLARED rubric where one was noted (G6, labeled),
@@ -6427,13 +6517,12 @@ def _assay_floor(port: int, scope: str) -> None:
             if ref not in judged][:2]
     if not work:
         return
-    prod_port = next((p for p, s in FLOOR_SCOPES.items()
-                      if s.endswith("/e:cloud/f:prod") and s != scope), None)
-    if prod_port is None:      # law 2's hard edge: no outside bench → refuse
+    bench = _judge_bench(scope)
+    if bench is None:          # law 2's hard edge: no outside bench → refuse
         print("  🔭 assay: no judge beyond this floor — refusing, "
               "never self-grading")
         return
-    judge_scope = FLOOR_SCOPES[prod_port]
+    prod_port, judge_scope = bench
     seat, jkp = _judge_seat(judge_scope)
     rubrics = _rubrics_load()
     for ref, body in work:
@@ -6490,14 +6579,17 @@ def assay_beat(u_port: int) -> None:
         print(f"  🔭 assay: the declared ceiling holds — {spent}/"
               f"{ASSAY_CEILING} tokens today; the examiner rests (G5)")
         return
-    targets = [(u_port, UNIVERSE_SCOPE)]
-    for name, e in _exps_load().items():
-        if e.get("state") == "running":
-            p = next((p for p, s in FLOOR_SCOPES.items()
-                      if s == e["floor"]), None)
-            if p:
-                targets.append((p, e["floor"]))
+    # THE WHOLE RIG (sp5, JB's lock): every tended floor wears the examiner —
+    # the universe first, then each floor in order; quiet floors cost one
+    # read; the ceiling and the dial bound the spend
+    targets = [(u_port, UNIVERSE_SCOPE)] + [
+        (p, s) for p, s in sorted(FLOOR_SCOPES.items())
+        if s != UNIVERSE_SCOPE]
     for port, scope in targets:
+        if _vera_spent_today() >= ASSAY_CEILING:
+            print(f"  🔭 assay: the ceiling closed mid-round at {scope} — "
+                  "the rest of the rig waits for tomorrow (G5)")
+            break
         try:
             _assay_floor(port, scope)
         except Exception as ex:
@@ -6622,6 +6714,16 @@ def compose_observatory() -> dict:
         rows_panel = wire_stacks_panel(u_port) or {}
     except Exception:
         rows_panel = {}
+    # the wire flow's spans (sp5): read off the SIGNED outcome records
+    spans = []
+    try:
+        for _, b, _, _ in wire_assets(u_port, "intention-outcome"):
+            ms = ((b.get("outcome") or {}).get("span") or {}).get("ms")
+            if ms is not None:
+                spans.append(int(ms))
+    except Exception:
+        pass
+    spans.sort()
     payload = {
         "at": now,
         "dial": {"position": OBS["dial"], "assay_every_s": ASSAY_EVERY,
@@ -6663,6 +6765,14 @@ def compose_observatory() -> dict:
         "epochs": {scope: _epoch_short(scope)
                    for _, scope in sorted(FLOOR_SCOPES.items())},
         "rows": rows_panel,
+        "flow": {"n": len(spans),
+                 "p50_ms": spans[len(spans) // 2] if spans else None,
+                 "p95_ms": spans[int(len(spans) * 0.95)] if spans else None},
+        # THE ROLLUP (sp5): the whole rig in one line — and the Observatory
+        # watching the Observatory's own cost, always one of its instruments
+        "rollup": {"floors_watched": len(FLOOR_SCOPES),
+                   "observatory_cost_today": {"tokens": _vera_spent_today(),
+                                              "ceiling": ASSAY_CEILING}},
     }
     _OBS_CACHE.update(at=time.time(), payload=payload)
     return payload
