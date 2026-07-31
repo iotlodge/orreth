@@ -653,6 +653,43 @@
     .ask-box{padding:0}
   }
 
+  /* ── THE GATE BELL (Console/UI pass, JB 2026-07-31): the gates come to the
+        glass — a quiet chip in the sky, mini-cards in the audience — so being
+        the human the gates wait for never costs you the living view. One wait
+        list, three faces (the Requests badge is the third). ── */
+  .ofull{position:absolute;right:.8rem;top:.55rem;font-size:.8rem;
+    color:var(--brass);cursor:pointer;z-index:6}
+  #v-uni[data-proj="brain"] .ofull{display:none}  /* the brain has its own ⛶ */
+  .gatebell{position:absolute;right:1rem;bottom:3.1rem;z-index:7;cursor:pointer;
+    font:.72rem var(--mono);color:var(--brass);background:var(--tip);
+    border:1px solid var(--brassdim);border-radius:14px;padding:.28rem .7rem;
+    display:flex;align-items:center;gap:.4rem;user-select:none}
+  .gatebell .bdot{width:8px;height:8px;border-radius:50%;background:var(--brass);
+    animation:obreathe 2.2s ease-in-out infinite}
+  .gatepop{position:absolute;right:1rem;bottom:5.6rem;z-index:8;width:23rem;
+    max-width:86%;max-height:60%;overflow-y:auto;background:var(--tip);
+    border:1px solid var(--hair2);border-radius:10px;padding:.6rem .7rem;
+    box-shadow:0 10px 34px rgba(0,0,0,.45)}
+  [data-theme="light"] .gatepop{box-shadow:0 10px 30px rgba(96,80,40,.25)}
+  .gpophd{display:flex;justify-content:space-between;align-items:baseline;
+    font:.68rem var(--mono);color:var(--dim);margin-bottom:.2rem}
+  .gpophd .lnk{color:var(--brass);cursor:pointer}
+  .mgate{border:1px solid var(--hair);border-radius:8px;padding:.45rem .55rem;
+    margin:.35rem 0;font-size:.78rem}
+  .mgate .mk{font:.62rem var(--mono);color:var(--brass);
+    border:1px solid var(--brassdim);border-radius:8px;padding:.02rem .4rem;
+    margin-right:.4rem;white-space:nowrap}
+  .mgate .mt{color:var(--star)}
+  .mgate .acts{display:flex;gap:.4rem;margin-top:.4rem;align-items:center}
+  .mgate .acts input{flex:1;min-width:0;background:var(--void);
+    border:1px solid var(--hair2);border-radius:6px;color:var(--star);
+    font-size:.75rem;padding:.25rem .4rem}
+  .mgate .quiet2{font-size:.68rem;color:var(--faint);margin-top:.3rem}
+  .pgate{border-top:1px solid var(--hair);padding:.3rem .6rem;max-height:11rem;
+    overflow-y:auto;flex:0 0 auto}
+  .pgate .ph{font:.64rem var(--mono);color:var(--dim);letter-spacing:.06em;
+    margin:.2rem 0}
+
   /* ── THE OBSERVATORY (0043 sp3): the instrument room. Hand-rolled panels in
         both lights; every panel wears the TIER that feeds it — testimony
         (log-truth) or instrument reading. The recorder's own pulse breathes
@@ -729,8 +766,15 @@
       <div class="reslegend" id="reslegend"></div>
       <div class="btoggle" id="btoggle" onclick="brainToggle()"
            title="the Brain Glass (0034) — the same beats, laid out like a mind; a projection, never a second truth (rule 7)">projection: <b>orrery</b> · click for brain</div>
+      <div class="ofull" onclick="$('orrery').requestFullscreen&&$('orrery').requestFullscreen()"
+           title="fullscreen — the whole sky (the gates' bell rides along)">⛶</div>
       <div class="brainwrap" id="brainwrap"></div>
       <div id="ocard"></div>
+      <!-- THE GATE BELL (Console/UI pass, JB 2026-07-31): consequence comes to
+           the glass — decide without leaving the living view -->
+      <div class="gatebell" id="gatebell" style="display:none" onclick="gatePop()"
+           title="the gates wait — consequence waits for you (0012); click to decide without leaving the glass"></div>
+      <div class="gatepop" id="gatepop" style="display:none"></div>
     </div>
     <div class="drawer" id="drawer" data-state="closed">
       <div class="dhandle" onclick="drawerCycle()" title="the spacetime window — pull up">
@@ -913,6 +957,8 @@
   <div class="pdrop" id="p-drop" style="display:none"
     title="upload is an ask — admitted signed, quarantined at 0.0000 (0029)">⇪ drop a document — the upload is an ask</div>
   <div class="pth" id="p-thread"></div>
+  <div class="pgate" id="p-gate" style="display:none"
+       title="what waits on you, right here in the audience — the same gates as the Requests tab"></div>
   <div class="pchips" id="p-chips"></div>
   <div class="pin"><input id="p-in" placeholder="ask — the resident fetches, you never read raw">
     <button onclick="parlorSay()">Speak →</button></div>
@@ -2339,6 +2385,8 @@ async function loadReq(){
           flight=q.filter(r=>!isWaiting(r)&&!isSettled(r)).reverse();
     /* the badge counts what WAITS ON YOU — the number that matters */
     $("req-badge").textContent=wait.length?`(${wait.length})`:"";
+    GATEWAIT=wait;renderGates();  /* the same number rings the bell in the sky
+      and fills the audience strip — one wait list, three faces */
     const kinds={};q.forEach(r=>{const k=r.kind||"request";kinds[k]=(kinds[k]||0)+1});
     const chips=`<div class="qchips"><span class="qchip ${REQKIND==="all"?"on":""}"
       onclick="reqKind('all')">all · ${q.length}</span>`+
@@ -2379,6 +2427,67 @@ async function joinDecide(id,ok){
     body:JSON.stringify({id,status:ok?"approved":"denied"})});
   loadReq();
 }
+/* ── the gate bell + the audience strip (Console/UI pass, JB 2026-07-31):
+      one wait list, three faces — the Requests badge, a chip floating in the
+      sky (orrery AND brain), and mini-cards inside the parlor while you talk.
+      Deciding here IS the same door (joinDecide / resolve) — the glass never
+      has to be left to be the human the gates wait for. ── */
+let GATEWAIT=[],GPOP=false;
+const GOKNO={dial:["turn it","leave it"],experiment:["open the split","decline"],
+  drift:["revert / acknowledge","leave it"],improvement:["adopt","decline"],
+  join:["admit","turn away"],ecosystem:["launch","scrap"],
+  objective:["fan the plan","decline"],subscription:["open it","decline"],
+  consent:["open the access","decline"],testament:["let it stand","decline"],
+  attestation:["start the cooling-off","decline"],
+  "estate-adopt":["open allen's eyes","not yet"],
+  "field-join":["let them join","not yet"],publish:["publish it","not this"],
+  assay:["acknowledge","leave it"]};
+function miniGate(r,pfx){
+  const t=(r.text||r.kind||"").slice(0,110);
+  if(r.kind==="question")return `<div class="mgate"><span class="mk">question</span><span class="mt">${esc(t)}</span>
+    <div class="acts"><input id="${pfx}${r.id}" placeholder="your answer — silence is denial"
+      onkeydown="if(event.key==='Enter')mgAnswer('${r.id}','${pfx}')">
+    <button class="sbtn ok" onclick="mgAnswer('${r.id}','${pfx}')">answer</button></div></div>`;
+  const lb=(r.kind==="experiment"&&r.phase==="promotion")?["adopt the winner","decline"]
+    :(GOKNO[r.kind]||["approve","decline"]);
+  const held=((r.result||{}).held)||((r.result||{}).package_text)||"";
+  return `<div class="mgate"><span class="mk">${esc(r.kind||"gate")}</span><span class="mt">${esc(t)}</span>
+    ${held?`<div class="quiet2">${esc(String(held).slice(0,150))}</div>`:""}
+    <div class="acts"><button class="sbtn ok" onclick="joinDecide('${r.id}',true)">${lb[0]}</button>
+    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">${lb[1]}</button></div></div>`;
+}
+async function mgAnswer(id,pfx){
+  const el=$(pfx+id);const t=(el?el.value:"").trim();if(!t)return;
+  await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({id,status:"done",result:{answer:t}})});
+  loadReq();
+}
+function gatePop(){GPOP=!GPOP;renderGates()}
+function renderGates(){
+  const bell=$("gatebell"),pop=$("gatepop");
+  if(bell&&pop){
+    bell.style.display=GATEWAIT.length?"flex":"none";
+    bell.innerHTML=`<span class="bdot"></span>⚑ ${GATEWAIT.length} waiting`;
+    if(!GATEWAIT.length)GPOP=false;
+    pop.style.display=(GPOP&&GATEWAIT.length)?"block":"none";
+    if(GPOP&&GATEWAIT.length)pop.innerHTML=
+      `<div class="gpophd"><span>consequence waits (0012)</span>
+        <span class="lnk" onclick="GPOP=false;document.querySelector('.tab[data-v=req]').click()">the full queue →</span></div>`
+      +GATEWAIT.slice(0,4).map(r=>miniGate(r,"gq-")).join("")
+      +(GATEWAIT.length>4?`<div class="quiet2" style="text-align:center">+ ${GATEWAIT.length-4} more in the queue</div>`:"");
+  }
+  const pg=$("p-gate");
+  if(pg){
+    const on=PA&&$("parlor").classList.contains("on");
+    pg.style.display=(on&&GATEWAIT.length)?"block":"none";
+    if(on&&GATEWAIT.length)pg.innerHTML=
+      `<div class="ph">THE GATE — WAITING ON YOU · ${GATEWAIT.length}</div>`
+      +GATEWAIT.slice(0,3).map(r=>miniGate(r,"pq-")).join("");
+  }
+}
+/* the sky resizes honestly when fullscreen comes and goes */
+document.addEventListener("fullscreenchange",()=>{
+  const O=$("orrery");if(O)O.dataset.sig="";renderOrrery()});
 /* the charter coupling (0032 §4): the checked "…and keep it fresh" line rides
    the SAME approval — one moment, both consequences legible. KF holds the
    human's check across the console's breaths (the WALKOPEN pattern). */
@@ -2621,6 +2730,7 @@ function openParlor(name){
   document.body.classList.add("parlor-open"); parlorRefit();
   parlorPost({verb:"card"});
   PA.timer=setInterval(parlorPoll,1500);
+  renderGates();               /* what waits on you rides into the audience */
 }
 function closeParlor(){if(PA&&PA.timer)clearInterval(PA.timer);PA=null;
   $("parlor").classList.remove("on","full");document.body.classList.remove("parlor-open");parlorRefit()}
