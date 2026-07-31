@@ -4451,7 +4451,10 @@ LAG_WINDOW = int(os.environ.get("ORRETH_LAG_WINDOW", "900"))
 _LAG: dict = {}          # scope → {"t": first_seen, "staged": bool}
 
 
-_ADOPTION_KINDS = ("improvement", "estate-adopt", "field-join", "drift")
+_ADOPTION_KINDS = ("improvement", "estate-adopt", "field-join", "drift",
+                   "experiment")   # 0043 sp4's promotion IS an adoption — the
+#   first live rollout taught the watchdog its missing word (JB left the
+#   honest false accusation on record, 2026-07-30)
 #  a resolved drift is a human's word on the Canon (revert OR leave-it) — the
 #  restored/kept head that follows it is adopted, not fresh drift (0041 sp4)
 _PENDING_REVERT: dict = {}   # scope → the revert the next epoch cut must cite

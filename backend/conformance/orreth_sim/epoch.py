@@ -31,9 +31,12 @@ _ZONES = ("assets", "plane", "worldlines", "floors")
 
 #  the gates that actually move Canon (0041 sp3): improvement (standards,
 #  dials, skills, prompts), estate-adopt, field-join, a human's word on a
-#  drift card — a parlor ask is NOT an adoption, so a busy universe never
-#  hides drift behind ordinary conversation
-ADOPTION_KINDS = ("improvement", "estate-adopt", "field-join", "drift")
+#  drift card, and the experiment's promotion (0043 sp4 — learned the hard
+#  way: the first live rollout was falsely accused because the watchdog's
+#  vocabulary was one word short) — a parlor ask is NOT an adoption, so a
+#  busy universe never hides drift behind ordinary conversation
+ADOPTION_KINDS = ("improvement", "estate-adopt", "field-join", "drift",
+                  "experiment")
 
 
 def _body(r: dict) -> dict:

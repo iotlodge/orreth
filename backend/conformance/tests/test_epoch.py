@@ -163,3 +163,18 @@ def test_the_universe_cites_its_floors():
     assert cut["turned"]
     assert "floors.u:t/e:life/f:desk" in cut["changed"]
     assert cut["drift"] is None      # a floor's turn is never asset drift here
+
+
+def test_the_epoch_knows_the_experiments_word():
+    """0043 sp4's lesson, made law: an experiment's promotion IS an adoption —
+    the Canon moving behind an approved rollout accuses no one. The first
+    live rollout was falsely accused because this word was missing; JB left
+    the honest accusation on record and the vocabulary grew."""
+    fld, seat, kp = _floor()
+    _plant(fld, seat, kp)
+    epoch.cut_epoch(fld, seat, kp, requests=[], now=1000.0)
+    _plant(fld, seat, kp, default="hybrid")          # the Canon moves…
+    word = _word(kind="experiment", landed=1400)     # …behind a clicked rollout
+    cut = epoch.cut_epoch(fld, seat, kp, now=1500.0, requests=[word])
+    assert cut["turned"] and cut["drift"] is None    # recognized, quiet
+    assert "assets.routing-standard" in cut["changed"]
