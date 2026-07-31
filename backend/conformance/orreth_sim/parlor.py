@@ -296,6 +296,7 @@ def _card_vera(facts: dict) -> tuple[str, list]:
             [{"label": "the standings", "ask": "show the standings"},
              {"label": "your own cost", "ask": "what has your watching cost?"},
              {"label": "the dial", "ask": "where does the dial stand?"},
+             {"label": "turn the dial…", "template": "set the dial to "},
              {"label": "what do you measure?", "ask": "what do you measure?"}])
 
 
@@ -784,6 +785,15 @@ def answer(name: str, text: str, facts: dict) -> dict:
                     "verbatim": True}
         return {"reply": _allen_reply(t, facts), "verbatim": True}
     if name == "vera":
+        # G4 (0043 §5): the dial is a GOVERNED choice — the words are
+        # protocol, they stage and travel verbatim; only the gate turns it
+        m = re.match(r"^(?:set|turn)\s+the\s+dial\s+to\s+(glance|watch|assay)\b",
+                     t)
+        if m:
+            return {"reply": f"staging the turn to «{m.group(1)}» — depth "
+                             "costs money and says so (0043 §5); the gate "
+                             "waits for you, and I hold no levers.",
+                    "action": "dial-set", "dial": m.group(1), "verbatim": True}
         return {"reply": _vera_reply(t, facts)}
     return {"reply": _organ_reply(name, facts)}
 

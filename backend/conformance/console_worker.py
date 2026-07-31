@@ -2996,6 +2996,8 @@ def on_objective(port: int, scope: str, r: dict) -> None:
     except Exception as e:
         print(f"    (plan record write failed: {e})")
     _PLANS[r["id"]] = plan
+    if r.get("rubric"):                # G6: the objective's declared yardstick —
+        rubric_note(plan["goal"], str(r["rubric"]))  # the assay judges by IT
     beyond = sum(1 for i in plan["intentions"] if i.get("beyond_token"))
     summary = (f"{len(plan['intentions'])} intention(s) → "
                + ", ".join(i["seat"].split("/")[-1] for i in plan["intentions"][:6])
@@ -3292,20 +3294,22 @@ IMPROVER_EVERY = int(os.environ.get("ORRETH_IMPROVER_EVERY", "600"))
 SUCCESS_FLOOR = 90                           # below this, the receipts earn a nudge
 
 
-def wire_assets(port: int, tag: str,
-                name: str | None = None) -> list[tuple[str, dict, list, list]]:
+def wire_assets(port: int, tag: str, name: str | None = None, *,
+                scope: str = "u:demo") -> list[tuple[str, dict, list, list]]:
     """The asset ledger as the improver may read it — its own token, bodies in
     hand, oldest first. Returns (ref, body, derived_from, tags) rows; name=None
-    reads the whole shelf (0031 §4), a name narrows to one asset's chain."""
+    reads the whole shelf (0031 §4), a name narrows to one asset's chain.
+    scope (0043 sp4): a floor beyond the universe — the assay and the
+    experiment read where the work actually lives."""
     from datetime import datetime, timedelta, timezone
     token = _ROOT.issue_token(IMP_DID, "u:demo", [{"action": "retrieve", "space": "self"}])
     frm = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
-            "query": {"requester": IMP_DID, "subject": {"cohort": {"scope": "u:demo"}},
+            "query": {"requester": IMP_DID, "subject": {"cohort": {"scope": scope}},
                       "space": "self", "time": {"from": frm}, "intent": "recall",
                       "budget": {"cost": 8}, "auth": "biscuit-sim"},
-            "token": token, "requester_scope": "u:demo"})
+            "token": token, "requester_scope": scope})
     except Exception:
         return []
     rows = []
@@ -4113,6 +4117,25 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
     # ALL SEVEN rows stand on the wire — v2's word ("built grows to all seven")
     # finally honored here; caught live 2026-07-25 when the freshly-promoted
     # «router» default met a four-row door
+    # THE EXPERIMENT (0043 sp4): one running split may stand on this floor —
+    # the unit's hash picks the arm, the arm's variant stands as the
+    # PROJECTION's head for this ask alone (the shelf untouched), and the
+    # answer wears the arm's tag for the standings' log join
+    arm = None
+    exp = running_experiment(scope)
+    if exp:
+        from orreth_sim import experiment as exp_lib
+        ename, e = exp
+        label = exp_lib.assign({"share": e["share"]}, q)
+        av = e["arms"][label]
+        vrec = n.records.get(av["variant"])
+        if vrec is not None:
+            n.records["synthetic:arm-head"] = dict(
+                vrec, tags=["asset", "routing-standard"],
+                received_at="9999-12-31T00:00:00Z")   # in-memory only — never written
+            arm = {"label": label, "machine": av["machine"],
+                   "tag": f"arm:{av['machine'].split(':', 1)[-1][:12]}",
+                   "of": e["record"]}
     d = dispatcher.dispatch(n, me, seat_kp, q, origin=origin,
                             built=list(tournament.ALL_RETRIEVERS))
     n.records.pop(d["record"], None)   # an ask never cites its OWN routing —
@@ -4120,10 +4143,26 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
     a = tournament.answer_as(n, d["flavor"], q)
     recalls_save(scope, n)             # what this ask warmed, kept (sp1)
     attest_note(port, scope, n)        # what this ask LOADED, noted (0041 sp2)
+    if arm:                            # the work wears its arm (0043 sp4, law 4)
+        wk = make_memory(me, seat_kp, scope,
+                         {"outcome": {"intention": "stacks-ask",
+                                      "of": arm["of"], "status": "done",
+                                      "answer": a["answer"][:400],
+                                      "cycles": 1}},
+                         kind="episodic",
+                         tags=["intention-outcome", "stacks-answer",
+                               arm["tag"]])
+        try:
+            call(port, "POST", "/records", wk)
+        except Exception:
+            pass
     cites = " · ".join(f"{c['doc']} [{c['ref'][:18]}…] {c['score']}"
                        for c in a["citations"][:3])
     return (f"⚡ the dispatcher chose «{d['flavor']}» — {d['why']} "
-            f"[choice {d['record'][:18]}…] · " + a["answer"]
+            f"[choice {d['record'][:18]}…]"
+            + (f" · 🧪 arm «{arm['label']}» "
+               f"[{arm['machine'].split(':', 1)[-1][:12]}] served" if arm else "")
+            + " · " + a["answer"]
             + (f" — citations: {cites}" if cites else ""))
 
 
@@ -5575,7 +5614,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         facts["estate"] = wire_estate(universe_port(port))
     if name == "vera":                        # the astronomer reads her observatory (0043)
         u_port = universe_port(port)
-        facts["dial"] = OBS_DIAL
+        facts["dial"] = OBS["dial"]
         rows = wire_assets(u_port, "verdict")
         facts["verdicts"] = [(b or {}).get("assay") or {}
                              for _, b, _, _ in rows]   # whole shelf — her
@@ -5897,6 +5936,12 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                   "text": "attest death — the gravest gate (0035 §3)"})
     if ans.get("action") == "attestation-abort":  # one voice saves — acts NOW
         reply = abort_attestation(port, scope)
+    if ans.get("action") == "dial-set":       # G4: depth is a governed choice
+        call(port, "POST", "/requests",
+             {"kind": "dial", "dial": ans["dial"],
+              "text": f"turn the observatory dial «{OBS['dial']}» → "
+                      f"«{ans['dial']}» — depth costs money and says so "
+                      "(0043 §5)"})
     kp, did = resident_key(name, scope)
     voiced = None
     # descriptive answers may be voiced; actions and flow-control words never are —
@@ -6017,7 +6062,9 @@ def on_demo(port: int, r: dict) -> None:
 # ---------------------------------------------------------------- the round
 
 # --------------------------------------------------- 0043 sp2 · vera's assay beat
-OBS_DIAL = os.environ.get("ORRETH_OBS_DIAL", "glance")   # glance · watch · assay
+# the dial is RUNTIME state (G4): booted from env, turned by a human's word
+# at the gate — never silently. glance · watch · assay.
+OBS = {"dial": os.environ.get("ORRETH_OBS_DIAL", "glance")}
 ASSAY_EVERY = int(os.environ.get("ORRETH_ASSAY_EVERY", "300"))
 _ASSAY_LAST = 0.0
 
@@ -6067,38 +6114,333 @@ def _stage_assay_card(port: int, card: dict) -> None:
         print(f"    (assay staging stumbled: {e})")
 
 
-def assay_beat(u_port: int) -> None:
-    """The Examiner (0043 §6), dial-gated: only at «assay» does vera sample
-    completed work and commission a judge — another floor's mind, metered
-    under HER did (her own cost is her first exhibit), the verdict signed by
-    the judge's seat onto the shelf, standings aggregated, degradations
-    staged as cards. At glance and watch the examiner rests, free and quiet."""
-    global _ASSAY_LAST
-    if OBS_DIAL != "assay" or time.time() - _ASSAY_LAST < ASSAY_EVERY:
+# ---- G5: the declared ceiling — a budget the meter shows, then ENFORCES ---------------
+ASSAY_CEILING = int(os.environ.get("ORRETH_ASSAY_DAILY_TOKENS", "25000"))
+
+
+def _vera_spent_today() -> int:
+    """Log-truth from the flight book: vera's metered tokens since UTC
+    midnight — restart-proof, because the book is."""
+    today = NOW()[:10]
+    return sum(int(r.get("tokens") or 0) for r in FLIGHT.call_log
+               if r.get("caller") == VERA_DID
+               and str(r.get("at", "")).startswith(today))
+
+
+# ---- G6: the objective's declared yardstick, kept where the assay can find it ----------
+def _rubrics_load() -> dict:
+    try:
+        with open(os.path.join(FlightBook.HOME, "rubrics.json")) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def rubric_note(goal: str, rubric: str) -> None:
+    rows = _rubrics_load()
+    rows[goal] = rubric[:300]
+    try:
+        os.makedirs(FlightBook.HOME, exist_ok=True)
+        with open(os.path.join(FlightBook.HOME, "rubrics.json"), "w") as f:
+            json.dump(rows, f, indent=1)
+    except Exception:
+        pass
+
+
+# ---- 0043 sp4 · the experiment: A/B where each arm is a MACHINE ------------------------
+def _exps_load() -> dict:
+    try:
+        with open(os.path.join(FlightBook.HOME, "experiments.json")) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _exps_save(rows: dict) -> None:
+    try:
+        os.makedirs(FlightBook.HOME, exist_ok=True)
+        with open(os.path.join(FlightBook.HOME, "experiments.json"), "w") as f:
+            json.dump(rows, f, indent=1)
+    except Exception:
+        pass
+
+
+def _arm_short(machine: str) -> str:
+    return machine.split(":", 1)[-1][:12]
+
+
+def _rag_floor() -> tuple[int | None, str | None]:
+    return next(((p, s) for p, s in FLOOR_SCOPES.items()
+                 if s.endswith("/e:rag/f:naive")), (None, None))
+
+
+def running_experiment(scope: str) -> tuple[str, dict] | None:
+    """The one running experiment on this floor, if any — the ask path's
+    single question."""
+    for name, e in _exps_load().items():
+        if e.get("state") == "running" and e.get("floor") == scope:
+            return name, e
+    return None
+
+
+def on_experiment(port: int, scope: str, r: dict, *, approved: bool,
+                  declined: bool) -> bool:
+    """The experiment's gates (0043 §7): the split STAGES with its arms
+    previewed as named machines (plan is free); the human's word opens it;
+    the promotion phase adopts the winner with the 0038 lineage law — or the
+    word is no, and history remains."""
+    from orreth_sim import experiment as exp_lib
+    phase = r.get("phase") or "open"
+    name = str(r.get("name") or f"exp-{r.get('id', '?')}")
+    exps = _exps_load()
+    rag_port, rag_scope = _rag_floor()
+    if r.get("status") == "pending" and phase == "open":
+        if rag_port is None:
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"refused": "the rows' floor is dark — no ground "
+                                        "for an experiment"}})
+            return True
+        if any(e.get("state") == "running" for e in exps.values()):
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"refused": "one experiment at a time — the "
+                                        "running split concludes first"}})
+            return True
+        share_b = float(r.get("share_b") or 0.5)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"held": "the split waits for you (0012) — each arm "
+                                 "is a NAMED machine (0043 §7)",
+                         "package_text": f"EXPERIMENT «{name}» on routing-standard\n"
+                                    f"arm a — the standing Canon (control)\n"
+                                    f"arm b — challenger {json.dumps(r.get('challenger') or {})}\n"
+                                    f"split a:{1 - share_b:.0%} b:{share_b:.0%} · "
+                                    f"min {int(r.get('min_n') or 3)} verdict(s)/arm\n"
+                                    "each arm's fingerprint is cut at open; every "
+                                    "answer wears its arm; the conclusion is a "
+                                    "promotion card at THIS gate, never an act."}})
+        return False
+    if r.get("status") == "pending" and phase == "promotion":
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"held": "the winner waits for your word — the rollout "
+                                 "is a signed constitutional act (0043 §7)",
+                         "package_text": str(r.get("package") or "")}})
+        return False
+    if approved and phase == "open":
+        n, kp, did = _stacks_node(rag_port, rag_scope)
+        if n is None:
+            return False
+        me = {"did": did, "scope": rag_scope}
+        from orreth_sim import dispatcher as _dsp
+        _dsp.plant_standard(n, me, kp)
+        head = improver.active_asset(n, "routing-standard")
+        control = head[0]
+        prof = dict(improver._profile_of(head[1]),
+                    **(r.get("challenger") or {}))
+        prof["version"] = f"{improver._profile_of(head[1]).get('version', '?')}-candidate"
+        chal = improver.make_asset(me, kp, rag_scope, name="routing-standard",
+                                   profile=prof, tag="asset-variant",
+                                   derived_from=[control])
+        n.write(chal)
+        share_b = float(r.get("share_b") or 0.5)
+        arms, arm_recs = {}, []
+        for label, ref in (("a", control), ("b", chal["id"])):
+            m = exp_lib.arm_machine(n, asset="routing-standard", variant=ref)
+            rec = make_memory(me, kp, rag_scope,
+                              {"experiment_arm": {"experiment": name,
+                                                  "arm": label,
+                                                  "asset": "routing-standard",
+                                                  "variant": ref, **m}},
+                              kind="semantic", tags=["experiment-arm", name])
+            rec["derived_from"] = [ref]
+            n.write(rec)
+            arms[label] = {"variant": ref, "machine": m["machine"],
+                           "record": rec["id"]}
+            arm_recs.append(rec["id"])
+        decl = make_memory(me, kp, rag_scope, {"experiment": {
+            "name": name, "asset": "routing-standard",
+            "arms": {a: {"variant": v["variant"], "machine": v["machine"]}
+                     for a, v in arms.items()},
+            "policy": {"kind": "hash-split", "unit": "ask",
+                       "share": {"a": round(1 - share_b, 4), "b": share_b}},
+            "min_n": int(r.get("min_n") or 3), "declared_at": NOW()}},
+            kind="semantic", tags=["experiment", name])
+        decl["derived_from"] = arm_recs
+        n.write(decl)
+        exps[name] = {"state": "running", "asset": "routing-standard",
+                      "floor": rag_scope, "arms": arms,
+                      "share": {"a": round(1 - share_b, 4), "b": share_b},
+                      "min_n": int(r.get("min_n") or 3),
+                      "record": decl["id"], "opened_at": NOW()}
+        _exps_save(exps)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"opened": name,
+                         "arms": {a: v["machine"] for a, v in arms.items()},
+                         "declaration": decl["id"]}})
+        print(f"  🧪 experiment «{name}» OPEN on {rag_scope} — "
+              f"a[{_arm_short(arms['a']['machine'])}] vs "
+              f"b[{_arm_short(arms['b']['machine'])}], the split live")
+        return True
+    if approved and phase == "promotion":
+        e = exps.get(name)
+        if not e or e.get("state") != "concluded":
+            return True
+        n, kp, did = _stacks_node(rag_port, rag_scope)
+        if n is None:
+            return False
+        me = {"did": did, "scope": rag_scope}
+        win = e["arms"][e["card"]["winner"]]
+        sib = improver.make_asset(
+            me, kp, rag_scope, name="routing-standard",
+            profile=improver._profile_of(n.records[win["variant"]]),
+            adopted_from=win["variant"],
+            derived_from=[win["variant"], e["record"]])
+        n.write(sib)
+        e["state"], e["adopted"] = "adopted", sib["id"]
+        _exps_save(exps)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"adopted": sib["id"], "winner": e["card"]["winner"],
+                         "machine": win["machine"]}})
+        print(f"  🧪 «{name}» ADOPTED — arm {e['card']['winner']} "
+              f"[{_arm_short(win['machine'])}] is the head; the loser stays "
+              "on the shelf, outranked (0038's lineage law)")
+        return True
+    if declined:
+        e = exps.get(name)
+        if e and e.get("state") in ("running", "concluded"):
+            e["state"] = "declined"
+            _exps_save(exps)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"declined": name, "note": "history remains; nothing "
+                                                   "serves that was not already serving"}})
+        print(f"  🧪 «{name}» declined — the standing Canon serves alone")
+        return True
+    return False
+
+
+def on_dial(port: int, r: dict, *, approved: bool, declined: bool) -> None:
+    """G4 discharged: the dial is a GOVERNED choice — the ask stages,
+    consequence waits, and only the human's word turns it. The turn is
+    runtime (the boot default stays the committed glance)."""
+    want = str(r.get("dial") or "").strip().lower()
+    if r.get("status") == "pending":
+        if want not in ("glance", "watch", "assay"):
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"refused": f"no dial position named «{want}»"}})
+            return
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"held": f"turn the dial «{OBS['dial']}» → «{want}» — "
+                                 "depth costs money and says so (0043 §5); "
+                                 "the gate waits for you"}})
         return
-    _ASSAY_LAST = time.time()
+    if approved:
+        was, OBS["dial"] = OBS["dial"], want
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"dial": want, "was": was}})
+        print(f"  🔭 the dial turns on your word: «{was}» → «{want}»")
+    elif declined:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"declined": want, "dial": OBS["dial"]}})
+        print(f"  🔭 dial change declined — «{OBS['dial']}» holds")
+
+
+def experiment_beat(u_port: int) -> None:
+    """Standings by the LOG JOIN on the wire (verdict → work → arm tag), and
+    the conclusion staged as a promotion card the moment every arm clears
+    min_n — a card at the gate, never an act."""
+    exps = _exps_load()
+    changed = False
+    for name, e in exps.items():
+        if e.get("state") != "running":
+            continue
+        p = next((p for p, s in FLOOR_SCOPES.items() if s == e["floor"]), None)
+        if p is None:
+            continue
+        short = {f"arm:{_arm_short(a['machine'])}": label
+                 for label, a in e["arms"].items()}
+        arm_of = {}
+        for ref, _, _, tags in wire_assets(p, "stacks-answer", scope=e["floor"]):
+            t = next((x for x in tags if x in short), None)
+            if t:
+                arm_of[ref] = short[t]
+        stand = {label: {"n": 0, "scores": []} for label in e["arms"]}
+        for _, b, dl, _ in wire_assets(p, "verdict", scope=e["floor"]):
+            label = arm_of.get((dl or [""])[0])
+            if label:
+                stand[label]["n"] += 1
+                stand[label]["scores"].append(
+                    float((b.get("assay") or {}).get("score", 0.0)))
+        for s in stand.values():
+            s["mean"] = round(sum(s["scores"]) / s["n"], 4) if s["n"] else None
+            del s["scores"]
+        if e.get("live_standings") != stand:
+            e["live_standings"] = stand
+            changed = True
+        if all(s["n"] >= e["min_n"] for s in stand.values()):
+            winner = max(stand, key=lambda a: stand[a]["mean"])
+            e["state"] = "concluded"
+            e["card"] = {"winner": winner, "standings": stand}
+            changed = True
+            try:
+                call(u_port, "POST", "/requests", {
+                    "kind": "experiment", "phase": "promotion", "name": name,
+                    "text": f"EXPERIMENT «{name}» concluded — arm {winner} "
+                            f"[{_arm_short(e['arms'][winner]['machine'])}] wins",
+                    "package": "THE STANDINGS:\n" + json.dumps(stand, indent=1)
+                               + f"\nwinner: arm {winner} · machine "
+                               + e["arms"][winner]["machine"]
+                               + f"\nevidence: declaration {e['record'][:22]}… "
+                               "+ the arm records + every verdict on the floor\n"
+                               "approve → the winner becomes the head "
+                               "(adopted_from + derived_from name the variant "
+                               "AND the experiment); deny → history remains."})
+                print(f"  🧪 «{name}» CONCLUDED — arm {winner} leads; the "
+                      "promotion card waits at the gate (never an act)")
+            except Exception as ex:
+                print(f"    (promotion staging stumbled: {ex})")
+    if changed:
+        _exps_save(exps)
+
+
+def _assay_floor(port: int, scope: str) -> None:
+    """One floor through the examiner: sample unjudged completed work, judge
+    with the objective's DECLARED rubric where one was noted (G6, labeled),
+    the default labeled default otherwise; verdicts land on the work's floor;
+    degradations stage there too."""
     judged: set = set()
-    for _, _, dl, _ in wire_assets(u_port, "assay"):
+    for _, _, dl, _ in wire_assets(port, "assay", scope=scope):
         judged.update(dl)
     work = [(ref, body) for tag in ("intention-outcome", "objective-outcome")
-            for ref, body, _, _ in wire_assets(u_port, tag)
+            for ref, body, _, _ in wire_assets(port, tag, scope=scope)
             if ref not in judged][:2]
     if not work:
         return
     prod_port = next((p for p, s in FLOOR_SCOPES.items()
-                      if s.endswith("/e:cloud/f:prod")), None)
+                      if s.endswith("/e:cloud/f:prod") and s != scope), None)
     if prod_port is None:      # law 2's hard edge: no outside bench → refuse
         print("  🔭 assay: no judge beyond this floor — refusing, "
               "never self-grading")
         return
     judge_scope = FLOOR_SCOPES[prod_port]
     seat, jkp = _judge_seat(judge_scope)
+    rubrics = _rubrics_load()
     for ref, body in work:
         o = body.get("outcome") or body.get("objective_outcome") or {}
+        declared = rubrics.get(str(o.get("of") or ""))
+        rubric = declared or vera.DEFAULT_RUBRIC
         j = governed_thought(
             prod_port, JUDGE_MIND, "medium",
             "You are an INDEPENDENT judge at the «medium» tier assaying a "
-            "completed piece of governed work. Rubric: " + vera.DEFAULT_RUBRIC
+            "completed piece of governed work. Rubric: " + rubric
             + ". Reply with STRICT JSON only — begin with the { character, no "
             "preamble, no code fences: {\"score\": 0.00, \"why\": \"one short "
             "sentence\"}.\n\nTHE COMPLETED WORK:\n" + json.dumps(o)[:900],
@@ -6113,26 +6455,57 @@ def assay_beat(u_port: int) -> None:
                   "never scored")
             continue
         rec = vera.make_verdict(
-            seat, jkp, UNIVERSE_SCOPE, of=ref, work_floor=UNIVERSE_SCOPE,
-            judge_floor=judge_scope, rubric=vera.DEFAULT_RUBRIC,
-            rubric_declared=False, score=sc, why=why,
+            seat, jkp, scope, of=ref, work_floor=scope,
+            judge_floor=judge_scope, rubric=rubric,
+            rubric_declared=bool(declared), score=sc, why=why,
             cost={"tokens": j["tokens"], "usd": round(j["usd"], 6)})
         try:
-            call(u_port, "POST", "/records", rec)
+            call(port, "POST", "/records", rec)
         except Exception as e:
             print(f"    (verdict write failed: {e})")
             continue
         print(f"  🔭 assay: [{ref[:18]}…] scored {sc:.2f} — “{why[:56]}” · "
-              f"{j['tokens']} tok under vera's meter")
-    _, stand = _wire_verdict_standings(u_port)
+              f"{j['tokens']} tok under vera's meter"
+              + (" · declared rubric" if declared else ""))
+    _, stand = _wire_verdict_standings(port, scope=scope)
     for card in vera.degradations(stand):
-        _stage_assay_card(u_port, card)
+        _stage_assay_card(port, card)
 
 
-def _wire_verdict_standings(u_port: int) -> tuple[list, dict]:
+def assay_beat(u_port: int) -> None:
+    """The Examiner (0043 §6), dial-gated: only at «assay» does vera sample
+    completed work and commission judges — metered under HER did, under the
+    DECLARED daily ceiling (G5: the budget the meter shows, then enforces).
+    The universe floor always; any floor with a running experiment joins the
+    round. Then the experiments' standings turn."""
+    global _ASSAY_LAST
+    if OBS["dial"] != "assay" or time.time() - _ASSAY_LAST < ASSAY_EVERY:
+        return
+    _ASSAY_LAST = time.time()
+    spent = _vera_spent_today()
+    if spent >= ASSAY_CEILING:
+        print(f"  🔭 assay: the declared ceiling holds — {spent}/"
+              f"{ASSAY_CEILING} tokens today; the examiner rests (G5)")
+        return
+    targets = [(u_port, UNIVERSE_SCOPE)]
+    for name, e in _exps_load().items():
+        if e.get("state") == "running":
+            p = next((p for p, s in FLOOR_SCOPES.items()
+                      if s == e["floor"]), None)
+            if p:
+                targets.append((p, e["floor"]))
+    for port, scope in targets:
+        try:
+            _assay_floor(port, scope)
+        except Exception as ex:
+            print(f"    (assay stumbled at {scope}: {ex})")
+    experiment_beat(u_port)
+
+
+def _wire_verdict_standings(port: int, *, scope: str = "u:demo") -> tuple[list, dict]:
     """The verdicts and their standings, read off the shelf — one aggregation
     serving both the beat's cards and the instrument room (sp3)."""
-    rows = wire_assets(u_port, "verdict")
+    rows = wire_assets(port, "verdict", scope=scope)
     compact, per = [], {}
     for vref, b, _, _ in rows:
         a = (b or {}).get("assay") or {}
@@ -6248,11 +6621,23 @@ def compose_observatory() -> dict:
         rows_panel = {}
     payload = {
         "at": now,
-        "dial": {"position": OBS_DIAL, "assay_every_s": ASSAY_EVERY,
+        "dial": {"position": OBS["dial"], "assay_every_s": ASSAY_EVERY,
                  "sample_per_beat": 2,
+                 "ceiling_tokens": ASSAY_CEILING,          # G5: declared…
+                 "spent_today": _vera_spent_today(),       # …and shown
                  "price": {"glance": "free", "watch": "free — a deeper read",
-                           "assay": "metered under vera's DID"}[OBS_DIAL]
-                 if OBS_DIAL in ("glance", "watch", "assay") else "?"},
+                           "assay": "metered under vera's DID"}[OBS["dial"]]
+                 if OBS["dial"] in ("glance", "watch", "assay") else "?"},
+        "experiments": [{"name": k, "state": e.get("state"),
+                         "floor": e.get("floor"),
+                         "share": e.get("share"), "min_n": e.get("min_n"),
+                         "arms": {a: _arm_short(v["machine"])
+                                  for a, v in (e.get("arms") or {}).items()},
+                         "standings": e.get("live_standings") or
+                         (e.get("card") or {}).get("standings") or {},
+                         **({"winner": e["card"]["winner"]}
+                            if e.get("card") else {})}
+                        for k, e in _exps_load().items()],
         "recorder": {"last_beat": FLIGHT.last_beat,
                      "age_s": _age(FLIGHT.last_beat),
                      "rows": len(FLIGHT.call_log)},
@@ -6283,7 +6668,7 @@ def compose_observatory() -> dict:
 def main() -> None:
     print(f"console worker · librarian {LIB_DID[:20]}… · charlotte {CHA_DID[:20]}… "
           f"· ada {ADA_DID[:20]}… · grace {IMP_DID[:20]}… · allen {ALLEN_DID[:20]}… "
-          f"· vera {VERA_DID[:20]}… (dial: {OBS_DIAL}) "
+          f"· vera {VERA_DID[:20]}… (dial: {OBS['dial']}) "
           f"· becky's door on :{JOIN_PORT} · tending floors {FLOORS}")
     handled: set[tuple] = set()               # (port, id, at, status): each step acted once
     scopes: dict[int, str] = {}
@@ -6429,6 +6814,19 @@ def main() -> None:
                             on_attestation(port, scope, r,
                                            approved=r.get("status") == "approved",
                                            declined=r.get("status") == "denied")
+                        elif r.get("kind") == "experiment" and \
+                                r.get("status") in ("pending", "approved", "denied"):
+                            if on_experiment(port, scope, r,
+                                             approved=r.get("status") == "approved",
+                                             declined=r.get("status") == "denied") \
+                                    or r.get("status") == "pending":
+                                handled.add(key)
+                        elif r.get("kind") == "dial" and \
+                                r.get("status") in ("pending", "approved", "denied"):
+                            handled.add(key)
+                            on_dial(port, r,
+                                    approved=r.get("status") == "approved",
+                                    declined=r.get("status") == "denied")
                     except urllib.error.HTTPError as e:
                         # The floor ANSWERED — a refusal, not a dead wire (probe()'s
                         # law). One poison request must never silence the residents:

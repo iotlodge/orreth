@@ -2266,6 +2266,8 @@ function reqRow(r){
   const fgate=r.kind==="field-join"&&r.status==="staged"; /* moons for a standing eco (0038 sp4) */
   const rgate=r.kind==="drift"&&r.status==="staged"; /* drift is news (0041 sp3) */
   const pgate=r.kind==="publish"&&r.status==="staged"; /* the deed's gate (0042 sp3) */
+  const xgate=r.kind==="experiment"&&r.status==="staged"; /* arms are machines (0043 §7) */
+  const lgate=r.kind==="dial"&&r.status==="staged"; /* depth is a governed choice (0043 §5) */
   const note=jgate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`
     :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`
     :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`+kfOffer(r)
@@ -2277,7 +2279,9 @@ function reqRow(r){
     :dgate?`<div class="sub" style="color:var(--near)">the first touch of the real estate — READ-ONLY: ${((r.result||{}).stacks||[]).join(" + ")||"describe · fetch · attest"}; your word opens allen's eyes and the acceptance gate</div>`
     :fgate?`<div class="sub" style="color:var(--near)">the yard drafted moons only: ${(r.result||{}).plan||""} — nothing relaunched, nothing doubled</div>`
     :rgate?`<div class="sub" style="color:var(--amber,#e8b34a);white-space:pre-wrap">${(r.result||{}).package_text||"the machine changed with no adoption behind it — the diff readable at the gate"}</div>`
-    :pgate?`<div class="sub" style="color:var(--near);white-space:pre-wrap">${(r.result||{}).package_text||"an outbound deed waits for your word (0042)"}</div>`:"";
+    :pgate?`<div class="sub" style="color:var(--near);white-space:pre-wrap">${(r.result||{}).package_text||"an outbound deed waits for your word (0042)"}</div>`
+    :xgate?`<div class="sub" style="color:var(--near);white-space:pre-wrap">${(r.result||{}).package_text||r.package||"each arm is a named machine; the split waits for your word (0043 §7)"}</div>`
+    :lgate?`<div class="sub" style="color:var(--near)">${((r.result||{}).held)||"depth costs money and says so — the turn waits for your word (0043 §5)"}</div>`:"";
   return `<div class="req"><span class="kind">${r.kind||"request"}</span>
    <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
    ${jgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">admit</button>
@@ -2304,6 +2308,10 @@ function reqRow(r){
     <button class="sbtn no" onclick="joinDecide('${r.id}',false)">leave it</button>`
    :pgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">${r.comp?"walk it back":"publish it"}</button>
     <button class="sbtn no" onclick="joinDecide('${r.id}',false)">not this</button>`
+   :xgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">${r.phase==="promotion"?"adopt the winner":"open the split"}</button>
+    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
+   :lgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">turn it</button>
+    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">leave it</button>`
    :`<span class="st">${r.status}</span>`}</div>`;
 }
 /* the triage (JB 2026-07-15): the queue banded by what it needs from you —
@@ -3095,7 +3103,8 @@ function renderObservatory(){
     return}
   const d=obsCache;if(!d)return;
   $("obs-dial").textContent=d.dial.position;
-  $("obs-price").textContent=` · ${d.dial.price} · assay beat ${d.dial.assay_every_s}s · sample ${d.dial.sample_per_beat}/beat`;
+  $("obs-price").textContent=` · ${d.dial.price} · assay beat ${d.dial.assay_every_s}s · sample ${d.dial.sample_per_beat}/beat`
+    +(d.dial.ceiling_tokens?` · spent ${fmtTok(d.dial.spent_today||0)}/${fmtTok(d.dial.ceiling_tokens)} tok today (the declared ceiling, G5)`:"");
   const ra=d.recorder.age_s;
   dot.className="pdot"+(ra==null||ra>150?" dark":ra>45?" amber":"");
   age.textContent=ra==null?"the recorder has not beaten yet":
@@ -3124,6 +3133,15 @@ function renderObservatory(){
       :`<div class="onote">nothing under verdict — the examiner beats only at «assay»</div>`}
     <canvas class="ocanvas" id="obs-scores" style="height:44px" title="judge-score distribution, 0→1 — double-click to keep the PNG"></canvas>
     <div class="onote">her own cost: ${as.cost.tokens} tok · $${(+as.cost.usd).toFixed(5)} — metered under vera's DID; findings stage at your gate wearing no levers</div></div>
+  <div class="opanel"><div class="pt"><b>the experiment · arms are machines</b>${tier("log")}</div>
+    ${(d.experiments||[]).length?(d.experiments||[]).map(e=>
+      `<div class="ogate"><span class="k">🧪 ${esc(e.name)} · ${esc(e.state)}${e.winner?` · winner: arm ${esc(e.winner)}`:""}</span><span class="a">min ${e.min_n}/arm</span></div>`
+      +Object.entries(e.arms||{}).map(([l,m])=>{const s=(e.standings||{})[l]||{};
+        return `<div class="obar"><span class="lbl" title="the arm IS this fingerprint">arm ${esc(l)} · ${esc(m)}</span>
+          <span class="track"><span class="fill${s.mean!=null&&s.mean<0.55?" low":""}" style="width:${Math.round((s.mean||0)*100)}%"></span></span>
+          <span class="val">${s.mean!=null?(+s.mean).toFixed(2):"—"} · n${s.n||0} · ${Math.round(((e.share||{})[l]||0)*100)}%</span></div>`}).join("")).join("")
+      :`<div class="onote">no experiment stands — two Canon variants, a declared split, a human at both doors (0043 §7)</div>`}
+    <div class="onote">each arm IS a cryptographically named machine; the rollout is a signed constitutional act — the promotion card waits at your gate</div></div>
   <div class="opanel"><div class="pt"><b>gate-wait · how long consequence has waited</b>${tier("log")}</div>
     ${(d.gates.open||[]).slice(0,8).map(x=>`<div class="ogate"><span class="k" title="${esc(x.text)}">${esc(x.kind)} · ${esc(x.floor.split("/").pop())}</span><span class="a${(x.age_s||0)>86400?" old":""}">${fmtAge(x.age_s)}</span></div>`).join("")||`<div class="onote">no consequence waits — every gate is clear</div>`}
     <div class="onote">${d.gates.counts.pending} pending · ${d.gates.counts.staged} staged · ${d.gates.counts.decided} decided${(d.gates.open||[]).length>8?` · showing the 8 oldest of ${(d.gates.open||[]).length}`:""}</div></div>
