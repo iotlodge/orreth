@@ -2464,13 +2464,18 @@ async function mgAnswer(id,pfx){
 }
 function gatePop(){GPOP=!GPOP;renderGates()}
 function renderGates(){
+  /* a human mid-answer outranks the refresh — the re-render must never eat
+     their words (0030's standing rule, kept at `qa-` since the human walk;
+     refound at THESE gates by JB's hand, 2026-08-02): while an answer is
+     being typed, its surface holds still — each face guards its own prefix */
+  const busy=(document.activeElement&&document.activeElement.id)||"";
   const bell=$("gatebell"),pop=$("gatepop");
   if(bell&&pop){
     bell.style.display=GATEWAIT.length?"flex":"none";
     bell.innerHTML=`<span class="bdot"></span>⚑ ${GATEWAIT.length} waiting`;
     if(!GATEWAIT.length)GPOP=false;
     pop.style.display=(GPOP&&GATEWAIT.length)?"block":"none";
-    if(GPOP&&GATEWAIT.length)pop.innerHTML=
+    if(GPOP&&GATEWAIT.length&&!busy.startsWith("gq-"))pop.innerHTML=
       `<div class="gpophd"><span>consequence waits (0012)</span>
         <span class="lnk" onclick="GPOP=false;document.querySelector('.tab[data-v=req]').click()">the full queue →</span></div>`
       +GATEWAIT.slice(0,4).map(r=>miniGate(r,"gq-")).join("")
@@ -2480,7 +2485,7 @@ function renderGates(){
   if(pg){
     const on=PA&&$("parlor").classList.contains("on");
     pg.style.display=(on&&GATEWAIT.length)?"block":"none";
-    if(on&&GATEWAIT.length)pg.innerHTML=
+    if(on&&GATEWAIT.length&&!busy.startsWith("pq-"))pg.innerHTML=
       `<div class="ph">THE GATE — WAITING ON YOU · ${GATEWAIT.length}</div>`
       +GATEWAIT.slice(0,3).map(r=>miniGate(r,"pq-")).join("");
   }
