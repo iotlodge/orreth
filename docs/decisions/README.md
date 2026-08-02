@@ -389,6 +389,10 @@ queued first.*
   yardstick; the proof is the first real objective returning a
   `rubric_declared: true` verdict. A small rider — lands on JB's word after
   the queued Console/UI discussion.
+  **· PROOF RAN 2026-08-02**: "one honest line per stall, each named with its
+  pin state" — typed at the composer, carried on the record, and the assay
+  judged the work against it (0.12: "no per-stall breakdown… given"). The
+  declared yardstick measurably changed the judgment. G6 closed whole.
 
 ### OPEN — parked 2026-07-25 (write-time content-address re-hashing in `orreth-node`)
 *Named during the 0041/0042 close (Fable, surfaced by the drift drill's parity

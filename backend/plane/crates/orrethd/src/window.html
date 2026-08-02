@@ -185,6 +185,7 @@
   .res.ada{background:#d99cc4;color:rgba(217,156,196,.7)}
   .res.grace{background:#e89a6b;color:rgba(232,154,107,.7)} /* the smith's ember (0031) */
   .res.allen{background:#8fb8d9;color:rgba(143,184,217,.7)} /* the architect's sky (0037) */
+  .res.vera{background:#8e93dd;color:rgba(142,147,221,.7)} /* the astronomer's night (0043) */
   /* ── the rail, reborn (2026-07-23): dots for tiers, a breath of data ── */
   .trow.t2{display:flex;align-items:center;gap:.45rem;position:relative;
     border-left:1px solid rgba(120,135,165,.14);margin-left:.55rem;padding-top:.28rem;padding-bottom:.28rem}
@@ -666,6 +667,12 @@
     display:flex;align-items:center;gap:.4rem;user-select:none}
   .gatebell .bdot{width:8px;height:8px;border-radius:50%;background:var(--brass);
     animation:obreathe 2.2s ease-in-out infinite}
+  /* the count ROSE — three chimes. NOT `.ring`: that name is the orrery's
+     alert ring (one namespace — the 0020 `.res` lesson, relearned here) */
+  .gatebell.bellring{animation:gring .8s ease-out 3}
+  @keyframes gring{0%{transform:scale(1);box-shadow:0 0 0 0 var(--brassdim)}
+    45%{transform:scale(1.14);box-shadow:0 0 0 10px transparent}
+    100%{transform:scale(1);box-shadow:0 0 0 0 transparent}}
   .gatepop{position:absolute;right:1rem;bottom:5.6rem;z-index:8;width:23rem;
     max-width:86%;max-height:60%;overflow-y:auto;background:var(--tip);
     border:1px solid var(--hair2);border-radius:10px;padding:.6rem .7rem;
@@ -901,6 +908,11 @@
     <div class="ask-in" style="margin-top:.6rem">
       <input id="obj-in" placeholder="build X · acquire knowledge of Y · check on Z — the universe plans; you approve">
       <button onclick="submitObjective()">State it →</button>
+    </div>
+    <!-- G6 (0043 §11): the human's yardstick, declared at the origin — the assay
+         judges the work by IT, and the verdict says so on the record -->
+    <div class="ask-in" style="margin-top:.35rem">
+      <input id="obj-rubric" placeholder="judge this by… — optional; your yardstick becomes the assay's rubric, and every verdict names it (0043)">
     </div>
     <div class="formerr" id="obj-err"></div>
     <div class="steps"><span><span class="num">①</span>a plan stages — origin plans wait for you</span>
@@ -1249,7 +1261,8 @@ function plots(list,r,scope){
 /* organ dots: residents on the innermost shell */
 const RESKEY={"becky · IAM":"becky","vigil · the Warden":"vigil","steward · memory":"steward",
   "governance":"governance","charlotte · farm keeper":"charlotte","librarian · knowledge":"librarian",
-  "ada · the wrangler":"ada","grace · the smith":"grace","allen · cloud architect":"allen"};
+  "ada · the wrangler":"ada","grace · the smith":"grace","allen · cloud architect":"allen",
+  "vera · the astronomer":"vera"};
 const reskey=r=>RESKEY[r]||"governance";
 function organs(list,r,scope){
   return shell(list||[],r,6,26,a=>      // cap 6 = the full organ roster
@@ -2126,7 +2139,7 @@ function renderOrrery(){
     (n.residents||[]).forEach(a=>seen.add(reskey(a.role)));(n.children||[]).forEach(collect)};
   collect(t);
   const L=$("reslegend");
-  if(L){const order=["becky","vigil","steward","governance","charlotte","librarian","ada","grace","allen"];
+  if(L){const order=["becky","vigil","steward","governance","charlotte","librarian","ada","grace","allen","vera"];
     const col={becky:"var(--brass)",vigil:"var(--viol)",steward:"var(--blue)",
       governance:"var(--near)",charlotte:"#8fd6b0",librarian:"#e8c98f",ada:"#d99cc4",
       grace:"#e89a6b",allen:"#8fb8d9"};
@@ -2274,9 +2287,11 @@ const MEDAL={becky:'<circle cx="9" cy="7" r="3.2"/><path d="M9 10v6M9 13h3M9 15.
   librarian:'<path d="M9 5c-2-1.4-4.5-1.4-6 0v10c1.5-1.4 4-1.4 6 0c2-1.4 4.5-1.4 6 0V5c-1.5-1.4-4-1.4-6 0zM9 5v10"/>',
   ada:'<path d="M4 15V9a5 5 0 0 1 10 0v6M6.5 15v-2M11.5 15v-2"/>',
   grace:'<path d="M4 8h7l3-2v5l-3-2H8v7H6v-7H4z"/>',
-  allen:'<path d="M5 13a3.2 3.2 0 1 1 .6-6.3A4.2 4.2 0 0 1 13.8 8A2.6 2.6 0 0 1 13 13z"/>'};
+  allen:'<path d="M5 13a3.2 3.2 0 1 1 .6-6.3A4.2 4.2 0 0 1 13.8 8A2.6 2.6 0 0 1 13 13z"/>',
+  vera:'<path d="M3.5 12a5.5 5.5 0 0 1 11 0"/><path d="M9 7.5L12.8 3.6"/><path d="M3.5 12h11M5.5 12v4.5M12.5 12v4.5"/><path d="M13.6 5.2h2.4M14.8 4v2.4"/>'};
 const MEDCOL={becky:"#d4a960",vigil:"#b79ce8",steward:"#9fb6e8",governance:"#7fd1a8",
-  charlotte:"#8fd6b0",librarian:"#e8c98f",ada:"#d99cc4",grace:"#e89a6b",allen:"#8fb8d9"};
+  charlotte:"#8fd6b0",librarian:"#e8c98f",ada:"#d99cc4",grace:"#e89a6b",allen:"#8fb8d9",
+  vera:"#8e93dd"};
 function medallion(role){const k=reskey(role),c=MEDCOL[k]||"#8a93a6";
   return `<span class="medal" style="--mc:${c}"><svg viewBox="0 0 18 20" fill="none"
     stroke="${c}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${MEDAL[k]||""}</svg></span>`}
@@ -2328,36 +2343,14 @@ function reqRow(r){
     :pgate?`<div class="sub" style="color:var(--near);white-space:pre-wrap">${(r.result||{}).package_text||"an outbound deed waits for your word (0042)"}</div>`
     :xgate?`<div class="sub" style="color:var(--near);white-space:pre-wrap">${(r.result||{}).package_text||r.package||"each arm is a named machine; the split waits for your word (0043 §7)"}</div>`
     :lgate?`<div class="sub" style="color:var(--near)">${((r.result||{}).held)||"depth costs money and says so — the turn waits for your word (0043 §5)"}</div>`:"";
+  /* one grammar, one door (the polish pass): every staged gate's verbs come
+     from gateWords, every click rides gateGo — this row can never disagree
+     with the bell or the audience strip again */
+  const w=r.status==="staged"?gateWords(r):null;
   return `<div class="req"><span class="kind">${r.kind||"request"}</span>
    <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
-   ${jgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">admit</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">turn away</button>`
-   :egate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">launch</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">scrap</button>`
-   :ogate?`<button class="sbtn ok" onclick="objDecide('${r.id}',true)">fan the plan</button>
-    <button class="sbtn no" onclick="objDecide('${r.id}',false)">decline</button>`
-   :igate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">adopt</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
-   :ugate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">open the subscription</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
-   :cgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">open the access</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
-   :tgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">let it stand</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
-   :agate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">start the cooling-off</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
-   :dgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">open allen's eyes</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">not yet</button>`
-   :fgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">let them join</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">not yet</button>`
-   :rgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">${r.restore&&Object.keys(r.restore).length?"revert to the signed machine":"acknowledge the lag"}</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">leave it</button>`
-   :pgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">${r.comp?"walk it back":"publish it"}</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">not this</button>`
-   :xgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">${r.phase==="promotion"?"adopt the winner":"open the split"}</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">decline</button>`
-   :lgate?`<button class="sbtn ok" onclick="joinDecide('${r.id}',true)">turn it</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">leave it</button>`
+   ${w?`<button class="sbtn ok" onclick="gateGo('${r.id}',true,'${r.kind}')">${w[0]}</button>
+    <button class="sbtn no" onclick="gateGo('${r.id}',false,'${r.kind}')">${w[1]}</button>`
    :`<span class="st">${r.status}</span>`}</div>`;
 }
 /* the triage (JB 2026-07-15): the queue banded by what it needs from you —
@@ -2432,29 +2425,40 @@ async function joinDecide(id,ok){
       sky (orrery AND brain), and mini-cards inside the parlor while you talk.
       Deciding here IS the same door (joinDecide / resolve) — the glass never
       has to be left to be the human the gates wait for. ── */
-let GATEWAIT=[],GPOP=false;
-const GOKNO={dial:["turn it","leave it"],experiment:["open the split","decline"],
-  drift:["revert / acknowledge","leave it"],improvement:["adopt","decline"],
-  join:["admit","turn away"],ecosystem:["launch","scrap"],
-  objective:["fan the plan","decline"],subscription:["open it","decline"],
+let GATEWAIT=[],GPOP=false,GATEN=0;
+/* ONE grammar for every gate's words (the drift the first pass accepted, now
+   healed): reqRow, the bell's popover, and the audience strip all read THIS
+   map — a kind's verbs can never disagree between faces again. Dynamic kinds
+   are functions of the request; unknown kinds fall back approve/decline. */
+const GATE_WORDS={join:["admit","turn away"],ecosystem:["launch","scrap"],
+  objective:["fan the plan","decline"],improvement:["adopt","decline"],
+  subscription:["open the subscription","decline"],
   consent:["open the access","decline"],testament:["let it stand","decline"],
   attestation:["start the cooling-off","decline"],
   "estate-adopt":["open allen's eyes","not yet"],
-  "field-join":["let them join","not yet"],publish:["publish it","not this"],
-  assay:["acknowledge","leave it"]};
+  "field-join":["let them join","not yet"],
+  assay:["acknowledge","leave it"],dial:["turn it","leave it"],
+  drift:r=>[r.restore&&Object.keys(r.restore).length?"revert to the signed machine":"acknowledge the lag","leave it"],
+  publish:r=>[r.comp?"walk it back":"publish it","not this"],
+  experiment:r=>[r.phase==="promotion"?"adopt the winner":"open the split","decline"]};
+function gateWords(r){const w=GATE_WORDS[r.kind];
+  return w?(typeof w==="function"?w(r):w):null}
+/* …and ONE door per kind: the objective's word carries the keep-fresh
+   coupling (0032 §4) through objDecide — the bell must never route it
+   through the plain resolve and silently drop the human's checked line */
+function gateGo(id,ok,kind){return kind==="objective"?objDecide(id,ok):joinDecide(id,ok)}
 function miniGate(r,pfx){
   const t=(r.text||r.kind||"").slice(0,110);
   if(r.kind==="question")return `<div class="mgate"><span class="mk">question</span><span class="mt">${esc(t)}</span>
     <div class="acts"><input id="${pfx}${r.id}" placeholder="your answer — silence is denial"
       onkeydown="if(event.key==='Enter')mgAnswer('${r.id}','${pfx}')">
     <button class="sbtn ok" onclick="mgAnswer('${r.id}','${pfx}')">answer</button></div></div>`;
-  const lb=(r.kind==="experiment"&&r.phase==="promotion")?["adopt the winner","decline"]
-    :(GOKNO[r.kind]||["approve","decline"]);
+  const lb=gateWords(r)||["approve","decline"];
   const held=((r.result||{}).held)||((r.result||{}).package_text)||"";
   return `<div class="mgate"><span class="mk">${esc(r.kind||"gate")}</span><span class="mt">${esc(t)}</span>
     ${held?`<div class="quiet2">${esc(String(held).slice(0,150))}</div>`:""}
-    <div class="acts"><button class="sbtn ok" onclick="joinDecide('${r.id}',true)">${lb[0]}</button>
-    <button class="sbtn no" onclick="joinDecide('${r.id}',false)">${lb[1]}</button></div></div>`;
+    <div class="acts"><button class="sbtn ok" onclick="gateGo('${r.id}',true,'${r.kind}')">${lb[0]}</button>
+    <button class="sbtn no" onclick="gateGo('${r.id}',false,'${r.kind}')">${lb[1]}</button></div></div>`;
 }
 async function mgAnswer(id,pfx){
   const el=$(pfx+id);const t=(el?el.value:"").trim();if(!t)return;
@@ -2473,6 +2477,9 @@ function renderGates(){
   if(bell&&pop){
     bell.style.display=GATEWAIT.length?"flex":"none";
     bell.innerHTML=`<span class="bdot"></span>⚑ ${GATEWAIT.length} waiting`;
+    if(GATEWAIT.length>GATEN){bell.classList.remove("bellring");void bell.offsetWidth;
+      bell.classList.add("bellring")}  /* more waits than a beat ago — chime */
+    GATEN=GATEWAIT.length;
     if(!GATEWAIT.length)GPOP=false;
     pop.style.display=(GPOP&&GATEWAIT.length)?"block":"none";
     if(GPOP&&GATEWAIT.length&&!busy.startsWith("gq-"))pop.innerHTML=
@@ -2490,9 +2497,15 @@ function renderGates(){
       +GATEWAIT.slice(0,3).map(r=>miniGate(r,"pq-")).join("");
   }
 }
-/* the sky resizes honestly when fullscreen comes and goes */
+/* the sky resizes honestly when fullscreen comes and goes — and the bell
+   follows the human in: brainwrap's fullscreen excludes its siblings, so
+   the bell + popover board it for the stay and come home to the orrery */
 document.addEventListener("fullscreenchange",()=>{
-  const O=$("orrery");if(O)O.dataset.sig="";renderOrrery()});
+  const O=$("orrery");if(O)O.dataset.sig="";
+  const B=$("brainwrap"),bell=$("gatebell"),pop=$("gatepop");
+  if(O&&B&&bell&&pop){const into=document.fullscreenElement===B?B:O;
+    if(bell.parentElement!==into){into.appendChild(bell);into.appendChild(pop)}}
+  renderOrrery()});
 /* the charter coupling (0032 §4): the checked "…and keep it fresh" line rides
    the SAME approval — one moment, both consequences legible. KF holds the
    human's check across the console's breaths (the WALKOPEN pattern). */
@@ -2716,7 +2729,8 @@ async function stableDecide(id,ok){
    name; a new resident brings new flows with zero Console changes. Transport is
    the same request queue every other human intent rides — no new doors. ── */
 const RESCOL={becky:"var(--brass)",vigil:"var(--viol)",steward:"var(--blue)",
-  governance:"var(--near)",charlotte:"#8fd6b0",librarian:"#e8c98f",ada:"#d99cc4"};
+  governance:"var(--near)",charlotte:"#8fd6b0",librarian:"#e8c98f",ada:"#d99cc4",
+  grace:"#e89a6b",allen:"#8fb8d9",vera:"#8e93dd"};
 let PA=null;                              /* {name, session, seen, timer} — one audience */
 function openParlor(name){
   if(!name)return; closeParlor();
@@ -3327,11 +3341,13 @@ syncHash(false);
       report. Renders ONLY from /requests — no privileged path, nothing new. ── */
 async function submitObjective(){
   const t=$("obj-in").value.trim(); if(!t)return;
+  const rb=($("obj-rubric")?$("obj-rubric").value:"").trim();
   try{
     const r=await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({kind:"objective",text:t})});
+      body:JSON.stringify(rb?{kind:"objective",text:t,rubric:rb}:{kind:"objective",text:t})});
     if(!r.ok){$("obj-err").textContent=`the daemon refused (${r.status})`;return}
-    $("obj-in").value="";$("obj-err").textContent="";loadObjectives();
+    $("obj-in").value="";if($("obj-rubric"))$("obj-rubric").value="";
+    $("obj-err").textContent="";loadObjectives();
   }catch{$("obj-err").textContent="unreachable — is the daemon up? (scripts/dev.sh status)"}
 }
 async function objAnswer(qid){
@@ -3443,6 +3459,7 @@ async function loadObjectives(){
         `<div class="row">→ <b>${esc(i.seat)}</b><span class="rm">${esc((i.intent||"").slice(0,90))}</span>`+
         `${i.beyond_token?'<span class="sev amber">will ask leave</span>':""}</div>`).join(""))
         +`<div class="row rm">…and it will ask you: ${esc((res.plan.question||"").slice(0,110))}</div>`
+        +(r.rubric?`<div class="row rm">judged by — “${esc(String(r.rubric).slice(0,110))}” · your yardstick rides every verdict (0043 G6)</div>`:"")
         +(res.graph?`<div class="row wtoggle" onclick="walkToggle('${r.id}')">⤳ ${WALKOPEN.has(r.id)?"close the choreography":"see the choreography — what you are approving"}</div>`:"")
         +(res.graph&&WALKOPEN.has(r.id)?renderGraph(res.graph,r.id,false):"")
         +(res.keep_fresh_offer?`<div class="row"><label><input type="checkbox" ${KF.has(r.id)?"checked":""} onchange="kfToggle('${r.id}')"> …and keep “${esc(res.keep_fresh_offer.topic)}” fresh — ${esc(res.keep_fresh_offer.terms)} · a standing spend (0032)</label></div>`:"")
@@ -3476,6 +3493,7 @@ async function loadObjectives(){
   }).join("") : `<div class="quiet">no objectives yet — state one above; a plan will stage for your approval.</div>`;
 }
 $("obj-in").addEventListener("keydown",e=>{if(e.key==="Enter")submitObjective()});
+$("obj-rubric").addEventListener("keydown",e=>{if(e.key==="Enter")submitObjective()});
 
 function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable();loadObjectives();loadObservatory()}
 tick();setInterval(tick,4000);          /* the console breathes */

@@ -208,8 +208,9 @@ voice.
   distillate). *Even the monitoring ages honestly* — the same metabolism law
   as every other memory in the universe.
 - **`dial.json`** — your standing word on the dial.
-- **`rubrics.json`** — declared yardsticks by objective (state an objective
-  with a `rubric` and the assay judges by *it*, marked `rubric_declared`).
+- **`rubrics.json`** — declared yardsticks by objective: the "judge this by…"
+  field under the objective composer. State a yardstick there and the assay
+  judges the work by *it*, the verdict marked `rubric_declared: true`.
 - **`experiments.json`** — every experiment's state, arms, and standings.
 
 All of it survives restarts; the ledger seeds, the worker holds live state,
@@ -226,8 +227,10 @@ The gap register (`../design/0043-the-observatory.md` §11) is standing law:
   dive (it touches identity and consent, not just plumbing).
 - **The daemon does not notice a dead worker** — only the glass does (the
   pulse, loudly). A second witness rides the same future dive.
-- **Declared rubrics are landed but young** — until an objective states one,
-  every verdict honestly says `rubric_declared: false`.
+- **Declared rubrics are optional** — an objective without one is judged by
+  the default rubric and its verdict honestly says `rubric_declared: false`.
+  (The path is proven: the first declared yardstick scored a vague report
+  0.12 for failing exactly what the human asked for.)
 
 If you find a gap not on that register, it goes there first — a gap without a
 named home is a gap being chosen, and we don't.

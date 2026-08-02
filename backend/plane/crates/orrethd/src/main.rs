@@ -1234,6 +1234,18 @@ fn residents(app: &App) -> Vec<Value> {
             "blurb": "keeps the estate; adopts before he creates, plans before he applies",
             "vitals": {"llm calls": al_c, "llm usd": al_u}}));
     }
+    // vera, the astronomer (0043 §2): pin-only residency — one observatory, the
+    // universe floor. Pinned since sp2, seated in the roster only now: JB found
+    // her invisible in the glass (2026-08-02) — a resident a human cannot find
+    // is a door that does not exist.
+    if let Some(ve_pin) = pins.get("vera").cloned() {
+        let (ve_c, ve_u) = llm(Some(ve_pin.as_str()));
+        out.push(json!({"agent": format!("vera·{leaf}"), "name": "vera",
+            "role": "vera · the astronomer", "state": "measuring",
+            "did": ve_pin, "pinned": true,
+            "blurb": "keeps the observatory; measures the work, never grades her own floor",
+            "vitals": {"llm calls": ve_c, "llm usd": ve_u}}));
+    }
     out
 }
 
