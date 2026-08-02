@@ -123,9 +123,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import (continuity, crypto, fingertip, improver, markers,
-                        meaning, mirror, node, observatory, parlor, profile,
-                        purge, serials, shipyard, vera)
+from orreth_sim import (bell as bell_mod, continuity, crypto, fingertip,
+                        improver, markers, meaning, mirror, node, observatory,
+                        parlor, profile, purge, serials, shipyard, vera)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -168,7 +168,9 @@ ADA_DID = crypto.did_key_for(ADA.public)
 ALLEN = _seed("allen")                       # allen, the cloud architect (0037 §1)
 ALLEN_DID = crypto.did_key_for(ALLEN.public)
 VERA = _seed("vera")                         # vera, the astronomer (0043 §2)
+BELL = _seed("bell")                         # the bell — the last mile (0044 §2)
 VERA_DID = crypto.did_key_for(VERA.public)
+BELL_DID = crypto.did_key_for(BELL.public)
 
 # becky, chained from the pinned root — the only authority that can mint a joining lease
 _NANDA = Nanda()
@@ -701,6 +703,9 @@ def on_consent(port: int, scope: str, r: dict, *, approved: bool = False,
     a recording — is a consequence; the ask stages with its bundle readable,
     and only the human's word mints the consent record (0012). becky signs:
     she keeps every door."""
+    if r.get("bell"):                         # the bell's grant (0044 sp2)
+        on_bell_consent(port, scope, r, approved=approved, declined=declined)
+        return
     role = r.get("role") or None
     modality = r.get("modality") or None
     purpose = str(r.get("purpose") or "")
@@ -6600,6 +6605,185 @@ def witness_transcribe(port: int, scope: str, r: dict) -> None:
         print(f"    (witness transcription failed: {e})")
 
 
+# ---------------------------------------------------------------- the bell (0044 sp2)
+
+_BELL_SENDER = "bell@jsbarth.com"            # L-A as amended by JB 2026-08-02
+_BELL_ENDPOINT = "jonathan_barth@ymail.com"  # named on the card; JB's word opens it
+_CONSOLE_URL = "http://localhost:4500/window#f=4500&v=req"
+_BELL: "bell_mod.Bell | None" = None
+
+
+def _ses_send(payload: dict) -> None:
+    """L-A: SES carries the ring, from the domain-verified sender. The payload
+    reaching here already passed the bell's door — content-minimal by
+    construction, and the door's laws, not this function, are the guarantee."""
+    text = ("kind: {kind}\nscope: {scope}\nsubject: {subject}\nage: {age}\n"
+            "the Console has the card: {pointer}\n\n"
+            "— the bell · every send on the record (0044)").format(
+        **{k: str(payload.get(k, "—")) for k in
+           ("kind", "scope", "subject", "age", "pointer")})
+    env = {k: v for k, v in os.environ.items()
+           if k not in ("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY",
+                        "AWS_SESSION_TOKEN")}
+    subprocess.run(
+        ["aws", "sesv2", "send-email", "--profile", "jb_support",
+         "--region", "us-east-1", "--from-email-address", _BELL_SENDER,
+         "--destination", json.dumps({"ToAddresses": [payload["endpoint"]]}),
+         "--content", json.dumps({"Simple": {
+             "Subject": {"Data": f"🔔 orreth · {payload.get('kind')} at "
+                                 f"{payload.get('scope')}"},
+             "Body": {"Text": {"Data": text}}}})],
+        check=True, capture_output=True, timeout=30, env=env)
+
+
+def _bell_state_load() -> dict:
+    try:
+        with open(os.path.join(FlightBook.HOME, "bell.json")) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _bell_state_save(b: "bell_mod.Bell") -> None:
+    rows = {f"{k}|{s}": {"at": v["at"], "ring": v["ring"]["id"],
+                         "repeats": v["repeats"]}
+            for (k, s), v in b.rung.items()}
+    with open(os.path.join(FlightBook.HOME, "bell.json"), "w") as f:
+        json.dump(rows, f)
+
+
+def _bell_service(port: int) -> "bell_mod.Bell":
+    """The bell as a standing resident: one DID, one pinned manifest (landed
+    idempotently — content-addressed), the cooldown book reloaded so law 6
+    survives the process (the ledger-seeds pattern)."""
+    global _BELL
+    if _BELL is None:
+        me = {"did": BELL_DID, "scope": UNIVERSE_SCOPE}
+        manifest = bell_mod.make_manifest(me, BELL, UNIVERSE_SCOPE,
+                                          transport="ses", sender=_BELL_SENDER)
+        try:
+            call(port, "POST", "/records", manifest)
+        except Exception:
+            pass                              # the pin re-lands next start
+        _BELL = bell_mod.Bell(
+            me, BELL, UNIVERSE_SCOPE, manifest, transport=_ses_send,
+            cooldown_s=int(os.environ.get("ORRETH_BELL_COOLDOWN_S", "3600")))
+        for k, row in _bell_state_load().items():
+            kind, _, subject = k.partition("|")
+            _BELL.rung[(kind, subject)] = {"at": row["at"],
+                                           "ring": {"id": row["ring"]},
+                                           "repeats": row.get("repeats", 0)}
+    return _BELL
+
+
+def _bell_consent_head(port: int) -> dict | None:
+    """The standing grant off the shelf — rows come oldest-first, the last
+    posture wins (revoked is a state, never an absence; the bell's own door
+    then refuses it one-faced)."""
+    head = None
+    for _, b, _, _ in wire_assets(port, "consent-bell"):
+        if isinstance(b, dict) and isinstance(b.get("consent"), dict):
+            head = b["consent"]
+    return head
+
+
+def ring_bell(port: int, request: dict) -> dict:
+    """Any organ's ring request meets the door (0044 §3). Refusals wear the
+    one face; a served ring lands record-then-wire and the outcome always."""
+    b = _bell_service(port)
+    out = b.ring(request, _bell_consent_head(port), at=NOW())
+    if "ring" in out:
+        for rec in (out["ring"], out["delivery"]):
+            try:
+                call(port, "POST", "/records", rec)
+            except Exception as e:
+                print(f"    (bell record write failed: {e})")
+        _bell_state_save(b)
+        print(f"  🔔 the bell rings: {request.get('kind')} · "
+              f"{request.get('subject')} → {out['outcome']} "
+              f"({out['ring']['id'][:18]}…)")
+    return out
+
+
+def _age_of(at: str | None) -> str:
+    try:
+        s = bell_mod._seconds_between(str(at), NOW())
+    except Exception:
+        return "—"
+    return f"{s/3600:.1f}h" if s >= 3600 else f"{int(s)}s"
+
+
+def first_sound(port: int) -> None:
+    """The grant's echo: the bell's first ring is REAL news — the standing
+    witness card if one waits, else the grant itself as its own subject."""
+    q = call(port, "GET", "/requests").get("requests", [])
+    w = next((x for x in q if x.get("kind") == "witness"
+              and x.get("status") == "staged"), None)
+    req = ({"kind": "witness", "scope": UNIVERSE_SCOPE, "subject": w["id"],
+            "age": _age_of(w.get("at")), "pointer": _CONSOLE_URL} if w else
+           {"kind": "witness", "scope": UNIVERSE_SCOPE, "subject": "first-sound",
+            "age": "0s", "pointer": _CONSOLE_URL})
+    ring_bell(port, req)
+
+
+def on_bell_consent(port: int, scope: str, r: dict, *, approved: bool,
+                    declined: bool) -> None:
+    """The bell's grant rides the consent gate (0034's door, the bell's
+    purpose): staged with its terms readable; opened only on the human's
+    word; declined stays on the record. The first ring answers the grant."""
+    if declined:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"declined": True,
+                         "reply": "declined — the bell stays silent, and the "
+                                  "record keeps that you chose"}})
+        print("  🔕 bell consent declined — the last mile stays closed")
+        return
+    if approved:
+        me = {"did": BELL_DID, "scope": scope}
+        rec = bell_mod.make_ring_consent(
+            me, BELL, scope, endpoint=_BELL_ENDPOINT,
+            kinds=["witness", "gate-age", "tamper"],
+            approved_ref=str(r.get("id") or ""))
+        call(port, "POST", "/records", rec)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"consent": rec["id"],
+                         "reply": f"the last mile opens on your word — "
+                                  f"{_BELL_ENDPOINT}, witness · gate-age · "
+                                  f"tamper, a 90-day window (0044)"}})
+        print(f"  🔔 bell consent OPENED — {rec['id'][:18]}…")
+        first_sound(port)
+        return
+    if r.get("status") == "pending":
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"held": "reaching you beyond the glass is a "
+                                 "consequence — open or decline (0044 §2)",
+                         "terms": f"endpoint {_BELL_ENDPOINT} · kinds "
+                                  f"witness/gate-age/tamper · cooldown "
+                                  f"{int(os.environ.get('ORRETH_BELL_COOLDOWN_S', '3600'))//60}min "
+                                  f"per subject · content-minimal · every "
+                                  f"send on the record"}})
+
+
+def bell_beat(port: int) -> None:
+    """The bell tends its own door (0044 sp2): with no standing grant and no
+    open card, it ASKS — a human's word opens the last mile, never code."""
+    if _bell_consent_head(port) is not None:
+        return
+    q = call(port, "GET", "/requests").get("requests", [])
+    if any(x.get("kind") == "consent" and x.get("bell")
+           and x.get("status") in ("pending", "staged") for x in q):
+        return
+    call(port, "POST", "/requests", {
+        "kind": "consent", "bell": True,
+        "text": f"the bell asks: may it reach {_BELL_ENDPOINT} beyond the "
+                f"glass? witness · gate-age · tamper rings only — revocable, "
+                f"content-minimal, every send on the record (0044 §2)"})
+    print("  🔔 the bell asks at the gate — the last mile waits for a word")
+
+
 def assay_beat(u_port: int) -> None:
     """The Examiner (0043 §6), dial-gated: only at «assay» does vera sample
     completed work and commission judges — metered under HER did, under the
@@ -7018,6 +7202,7 @@ def main() -> None:
                         passage_beat()        # the silence watch — contain, never execute (0035 §3)
                         FLIGHT.beat()         # the Observatory's pulse (0043 sp1)
                         assay_beat(port)      # the Examiner, dial-gated (0043 sp2)
+                        bell_beat(port)       # the bell tends its door (0044 sp2)
 
             except Exception as e:
                 scopes.pop(port, None)
