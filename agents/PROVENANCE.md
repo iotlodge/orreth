@@ -613,3 +613,10 @@ reviewed sound. 232/232 conformance tests green after the fixes.
 | `backend/plane/crates/orrethd/src/main.rs` | Fable 5 (claude-fable-5) | **G11 (JB's find, 2026-08-02)**: vera has been becky-pinned to the universe floor since 0043 sp2, but the roster never got her row — the one resident who answers performance questions was undiscoverable in the glass. Her pin-only residency block (the grace/allen pattern): "vera · the astronomer · measuring — keeps the observatory; measures the work, never grades her own floor." Proven the human way: rail row clicked cold, audience opened, the dial turned «assay» → «watch» through it. |
 | `docs/design/0043-the-observatory.md` | Fable 5 (claude-fable-5) | §11: G6 closed whole with the proof quoted; G11 entered and closed same sitting (found → written → homed, the law kept). |
 | `docs/decisions/README.md` · `docs/design/the-honest-boundary.md` · `docs/guides/06-...` | Fable 5 (claude-fable-5) | The G6 decision's proof clause satisfied on the record; the register row moves in the same commit (JB's lock); the guide now names the composer field and the proven path. |
+
+## Fable 5 — 2026-08-02 (0044 The Bell — designed and blessed in one sitting)
+
+| File | Author | Note |
+|---|---|---|
+| `docs/design/0044-the-bell.md` | Fable 5 (claude-fable-5) | NET-NEW — the dive design: the witness (daemon-side dead-man, absence-only, signed obituaries with author ≠ subject) + the bell (farm resident with a DID, consent in becky's ledger, content-minimal, record-before-wire, cooldown, never moves a clock) + the ring grammar and founding subscribers. JB's three locks taken same sitting, all recommended paths: SES email v1 · 0042's verify beat folds in as `tamper` · 90s witness threshold. |
+| `docs/design/README.md` | Fable 5 (claude-fable-5) | The road gains 0044's row — designed + blessed, four spoonfuls queued. |
