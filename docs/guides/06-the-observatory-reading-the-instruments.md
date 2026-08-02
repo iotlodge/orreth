@@ -208,6 +208,9 @@ voice.
   distillate). *Even the monitoring ages honestly* — the same metabolism law
   as every other memory in the universe.
 - **`dial.json`** — your standing word on the dial.
+- **`bell.json`** — the bell's standing rings (0044): one row per
+  (kind · subject), so a repeat inside the cooldown ages into the standing
+  ring instead of reaching your inbox again.
 - **`rubrics.json`** — declared yardsticks by objective: the "judge this by…"
   field under the objective composer. State a yardstick there and the assay
   judges the work by *it*, the verdict marked `rubric_declared: true`.
@@ -222,11 +225,19 @@ if the nest burned.
 The gap register (`../design/0043-the-observatory.md` §11) is standing law:
 *found → written → homed*. The honest edges as of this edition:
 
-- **No out-of-band alerting.** A card at an unopened Console notifies no one;
-  gate-expiry-is-denial bounds the harm. The push channel is its own future
-  dive (it touches identity and consent, not just plumbing).
-- **The daemon does not notice a dead worker** — only the glass does (the
-  pulse, loudly). A second witness rides the same future dive.
+- ~~No out-of-band alerting~~ — **THE BELL stands (0044)**: witness ·
+  gate-age · tamper rings reach your inbox under your standing consent,
+  content-minimal (kind · scope · subject · age · pointer, never bodies),
+  every send on the record before the wire, one ring per subject per
+  cooldown. The room's header shows the bell's own state (rung · resting).
+  Quality news still waits for the glass — vera's cards do not ring.
+- ~~The daemon does not notice a dead worker~~ — **THE WITNESS stands
+  (0044)**: ninety seconds of silence and the daemon's own book speaks,
+  glass or no glass; the risen worker transcribes the obituary and rings.
+  The honest residue: the bell itself rides the worker, so a universe that
+  never rises again has its witness card but no ring — the absence of
+  expected rings is the residual signal, and the fully external watcher is
+  a named deferral (0044 §6).
 - **Declared rubrics are optional** — an objective without one is judged by
   the default rubric and its verdict honestly says `rubric_declared: false`.
   (The path is proven: the first declared yardstick scored a vague report

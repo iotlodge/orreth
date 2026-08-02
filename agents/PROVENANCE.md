@@ -647,3 +647,14 @@ reviewed sound. 232/232 conformance tests green after the fixes.
 | `docs/design/0044-the-bell.md` | Fable 5 (claude-fable-5) | sp3 landing note + the dive's gap register begun (B1 · B2, both closed same sitting). |
 
 Proven live, JB's inbox the witness thrice over: the outside hand swapped first-deed.json on the open web and the watchman caught it inside one window ("observed found [7da99904…]"), staged req-407, rang tamper, and the true bytes were restored; gate-age rang for req-16 at f:prod — twenty-two days of waiting, rung exactly once.
+
+## Fable 5 — 2026-08-02 (0044 sp4 — the whole: the dive closes, era 0.44)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | The risen worker RINGS the death it could not ring while dead — once per rise, subject = the floor so law 6 bites across episodes; the aged-repeat now persists (a held ring's +1 outlives the process); `_bell_room_view` in the observatory payload — the room watches its own alarm. |
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The room's header carries the bell's state: "the bell: rung — last ring Nm ago (+N aged in)". |
+| `VERSION` | Fable 5 (claude-fable-5) | 0.43 → 0.44 in the closing commit — the covenant's line, kept. |
+| `docs/design/0044-the-bell.md` · `docs/design/README.md` · `docs/design/the-honest-boundary.md` · `docs/guides/06-...` | Fable 5 (claude-fable-5) | The dive CLOSED WHOLE with its receipts; the register's stale bullets struck through honestly (the daemon DOES notice a dead worker now; out-of-band alerting STANDS); B3 named open — the ring waits for a resurrection, the dead-man's dead-man is a deferral with a home. |
+
+The closing proof, verbatim: killed 23:17:30Z (Console closed) → the witness spoke 23:18:59Z → the rise rang JB's inbox; killed again 23:19:04Z → the witness spoke → THE BELL HELD ("aged into the standing ring (+1), the wire stays quiet"). Two deaths, one email. Designed, locked, and proven in one day.

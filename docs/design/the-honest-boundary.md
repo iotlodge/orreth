@@ -23,7 +23,8 @@ with confidence.
 |---|---|
 | One recursive binary runs any tier; profiles supply behavior | the dev rig: universe :4500 · eco :4501 · field :4502 + shipyard-grown floors, one `orrethd` |
 | Python reference and Rust plane agree byte-for-byte on canonical content | `agents/orreth-agent-sdk/tests/test_parity.py` (10/10) + the drill's parity handshake (`demo.sh drift`) |
-| The full sim model is executable and conformance-held | `backend/conformance/tests/` — 283 tests green (2026-07-31) |
+| The full sim model is executable and conformance-held | `backend/conformance/tests/` — 291 tests green (2026-08-02) |
+| The universe notices its own death without a reader and tells its human beyond the glass — under standing consent, content-minimal, record-before-wire, cooldown-bounded | 0044 (2026-08-02): the witness kill-proven Console-closed (the daemon's book spoke at 98s, later 89s); the bell's first ring in JB's real inbox (five fields only, from a one-click consent that minted a signed grant); a tampered public deed caught by the standing verify inside one window and rung; two deaths in one hour = ONE email (the second held, aged +1). The residue is NAMED: the ring waits for a resurrection (0044 §6 B3) |
 | Identity survives the process; joining is governed; leases chain to a pinned root | 0002/0006/0012 machinery + covenant rules 1/3; the join door on the reel |
 | Refusal wears one face; the plane meters but never sees the prompt | covenant rules 4/5; uniform-refusal fixtures in the conformance suite |
 | The Canon has a fingerprint on a chain; drift stages, never enacts; the revert is a sibling | 0041 live proof (req-326) + `orreth_sim/epoch.py` / `tests/test_epoch.py` (THE SILENCE suite-held) + `demo.sh drift` repeatable; universe-scope lag reconciles after the roll-up cut (`_reconcile(UNIVERSE_SCOPE)`, verified in-code 2026-07-30 — the 0041 road's "no port to stage at" gap closed with the road-step-2 work) |

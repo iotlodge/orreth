@@ -6579,6 +6579,7 @@ def witness_pulse(port: int) -> None:
 
 
 _WITNESSED: set[str] = set()                  # cards transcribed this life
+_RANG_THIS_RISE = False                       # one witness ring per resurrection (0044 sp4)
 
 
 def witness_transcribe(port: int, scope: str, r: dict) -> None:
@@ -6600,6 +6601,16 @@ def witness_transcribe(port: int, scope: str, r: dict) -> None:
         call(port, "POST", "/records", rec)
         print(f"  🔔 witness {r['id']}: the silence transcribed to the Chronicle "
               f"({rec['id'][:22]}…) — the card waits for the human")
+        # the whole (0044 sp4): the risen worker RINGS the death it could not
+        # ring while dead — once per rise, and the subject is the FLOOR, so a
+        # second death inside the window ages into the standing ring (law 6)
+        global _RANG_THIS_RISE
+        if not _RANG_THIS_RISE:
+            _RANG_THIS_RISE = True
+            ring_bell(port, {"kind": "witness", "scope": scope,
+                             "subject": f"the worker at {scope}",
+                             "age": _age_of(r.get("at")),
+                             "pointer": _CONSOLE_URL})
     except Exception as e:
         _WITNESSED.discard(r["id"])
         print(f"    (witness transcription failed: {e})")
@@ -6702,6 +6713,11 @@ def ring_bell(port: int, request: dict) -> dict:
         print(f"  🔔 the bell rings: {request.get('kind')} · "
               f"{request.get('subject')} → {out['outcome']} "
               f"({out['ring']['id'][:18]}…)")
+    elif "aged_into" in out:
+        _bell_state_save(b)                   # the repeat OUTLIVES the process too
+        print(f"  🔕 the bell holds: {request.get('kind')} · "
+              f"{request.get('subject')} aged into the standing ring "
+              f"(+{out['repeats']}) — the wire stays quiet (law 6)")
     return out
 
 
@@ -6719,7 +6735,8 @@ def first_sound(port: int) -> None:
     q = call(port, "GET", "/requests").get("requests", [])
     w = next((x for x in q if x.get("kind") == "witness"
               and x.get("status") == "staged"), None)
-    req = ({"kind": "witness", "scope": UNIVERSE_SCOPE, "subject": w["id"],
+    req = ({"kind": "witness", "scope": UNIVERSE_SCOPE,
+            "subject": f"the worker at {UNIVERSE_SCOPE}",
             "age": _age_of(w.get("at")), "pointer": _CONSOLE_URL} if w else
            {"kind": "witness", "scope": UNIVERSE_SCOPE, "subject": "first-sound",
             "age": "0s", "pointer": _CONSOLE_URL})
@@ -6955,6 +6972,29 @@ def _wire_verdict_standings(port: int, *, scope: str = "u:demo") -> tuple[list, 
 _OBS_CACHE: dict = {"at": 0.0, "payload": {}}
 
 
+def _bell_room_view() -> dict:
+    """The bell's own state for the room (0044 sp4): consent posture, the
+    standing rings, rung-or-resting — read from the ledger seeds, cheap."""
+    rows = _bell_state_load()
+    last = (max(rows.values(), key=lambda v: v.get("at", ""))
+            if rows else None)
+    consent = None
+    try:
+        consent = _bell_consent_head(4500)
+    except Exception:
+        pass
+    cooldown = int(os.environ.get("ORRETH_BELL_COOLDOWN_S", "3600"))
+    state = ("silent — no standing grant"
+             if not consent or consent.get("posture") != "granted"
+             else "rung" if last and _age_seconds(last["at"]) < cooldown
+             else "resting")
+    return {"state": state,
+            "consent": (consent or {}).get("posture") or "none",
+            "last": last and {"at": last["at"],
+                              "repeats": last.get("repeats", 0)},
+            "standing_rings": len(rows), "cooldown_s": cooldown}
+
+
 def compose_observatory() -> dict:
     """The instrument room's supply line (0043 sp3): ONE payload, every panel,
     every number wearing its tier — log-truth where the books are the log
@@ -7100,6 +7140,9 @@ def compose_observatory() -> dict:
         "rollup": {"floors_watched": len(FLOOR_SCOPES),
                    "observatory_cost_today": {"tokens": _vera_spent_today(),
                                               "ceiling": ASSAY_CEILING}},
+        # THE BELL (0044 sp4): the room watches the last mile too — the
+        # Observatory would be dishonest if its own alarm could fail unseen
+        "bell": _bell_room_view(),
     }
     _OBS_CACHE.update(at=time.time(), payload=payload)
     return payload

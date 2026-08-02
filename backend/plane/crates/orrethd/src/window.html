@@ -3235,7 +3235,8 @@ function renderObservatory(){
   $("obs-dial").textContent=d.dial.position;
   $("obs-price").textContent=` · ${d.dial.price} · assay beat ${d.dial.assay_every_s}s · sample ${d.dial.sample_per_beat}/beat`
     +(d.dial.ceiling_tokens?` · spent ${fmtTok(d.dial.spent_today||0)}/${fmtTok(d.dial.ceiling_tokens)} tok today (the declared ceiling, G5)`:"")
-    +(d.rollup?` · watching ${d.rollup.floors_watched} floor(s), whole (sp5)`:"");
+    +(d.rollup?` · watching ${d.rollup.floors_watched} floor(s), whole (sp5)`:"")
+    +(d.bell?` · the bell: ${d.bell.state}${d.bell.last?` — last ring ${fmtAge((Date.now()-new Date(d.bell.last.at))/1000)} ago${d.bell.last.repeats?` (+${d.bell.last.repeats} aged in)`:""}`:""} (0044)`:"");
   const ra=d.recorder.age_s;
   dot.className="pdot"+(ra==null||ra>150?" dark":ra>45?" amber":"");
   age.textContent=ra==null?"the recorder has not beaten yet":
