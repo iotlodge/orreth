@@ -620,3 +620,12 @@ reviewed sound. 232/232 conformance tests green after the fixes.
 |---|---|---|
 | `docs/design/0044-the-bell.md` | Fable 5 (claude-fable-5) | NET-NEW — the dive design: the witness (daemon-side dead-man, absence-only, signed obituaries with author ≠ subject) + the bell (farm resident with a DID, consent in becky's ledger, content-minimal, record-before-wire, cooldown, never moves a clock) + the ring grammar and founding subscribers. JB's three locks taken same sitting, all recommended paths: SES email v1 · 0042's verify beat folds in as `tamper` · 90s witness threshold. |
 | `docs/design/README.md` | Fable 5 (claude-fable-5) | The road gains 0044's row — designed + blessed, four spoonfuls queued. |
+
+## Fable 5 — 2026-08-02 (0044 sp1 — the witness takes its watch)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/plane/crates/orrethd/src/main.rs` | Fable 5 (claude-fable-5) | The witness: `worker_pulse` (the touch, carrying nothing; a return closes the open episode) + the watch loop (10s tick; 90s threshold, env may lengthen never silence; one card per episode; the finding staged in the daemon's own book with pg write-through — it exists whether or not any glass ever opens). First-tick bug caught by the kill test: the sync pg client on the async runtime poisoned the requests lock; healed with the submit door's `spawn_blocking` law, violation named in a comment. |
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | `witness_pulse` on every universe pass; `witness_transcribe` — the two-tier completion: the daemon's stamped card IS the testimony, the risen worker transcribes it verbatim into a signed Chronicle record (vera as the observatory's scribe, source named in the body), the card left staged for the human. |
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | `witness` gate words — "acknowledge — seen" / "leave it standing". |
+| `docs/design/0044-the-bell.md` | Fable 5 (claude-fable-5) | sp1 landing note with the kill-proof timeline (19:50:29Z killed → 19:52:14Z the book spoke, Console closed → the risen worker transcribed). |

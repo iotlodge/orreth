@@ -124,8 +124,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from orreth_sim import (continuity, crypto, fingertip, improver, markers,
-                        meaning, mirror, observatory, parlor, profile, purge,
-                        serials, shipyard, vera)
+                        meaning, mirror, node, observatory, parlor, profile,
+                        purge, serials, shipyard, vera)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -6564,6 +6564,42 @@ def _assay_floor(port: int, scope: str) -> None:
         _stage_assay_card(port, card)
 
 
+def witness_pulse(port: int) -> None:
+    """0044 sp1 — the worker's touch, stamped by the DAEMON. The pulse carries
+    nothing; absence is the only message the witness relays."""
+    try:
+        call(port, "POST", "/worker/pulse", {})
+    except Exception:
+        pass
+
+
+_WITNESSED: set[str] = set()                  # cards transcribed this life
+
+
+def witness_transcribe(port: int, scope: str, r: dict) -> None:
+    """0044 sp1, the two-tier completion (0043's decisions-book precedent):
+    the DAEMON's stamped card IS the testimony; a returned worker only
+    transcribes it into the signed Chronicle, verbatim, saying so. vera signs
+    as the observatory's scribe — the card stays STAGED for the human."""
+    if r["id"] in _WITNESSED:
+        return
+    _WITNESSED.add(r["id"])
+    body = {"witness": {"card": r["id"], "at": r.get("at"),
+                        "silent_s": r.get("silent_s"),
+                        "threshold_s": r.get("threshold_s"),
+                        "text": str(r.get("text", ""))[:200],
+                        "transcribed_from": "the daemon's book (0044 sp1)"}}
+    try:
+        rec = node.make_memory({"did": VERA_DID, "scope": scope}, VERA, scope,
+                               body, tags=["witness", "observatory"])
+        call(port, "POST", "/records", rec)
+        print(f"  🔔 witness {r['id']}: the silence transcribed to the Chronicle "
+              f"({rec['id'][:22]}…) — the card waits for the human")
+    except Exception as e:
+        _WITNESSED.discard(r["id"])
+        print(f"    (witness transcription failed: {e})")
+
+
 def assay_beat(u_port: int) -> None:
     """The Examiner (0043 §6), dial-gated: only at «assay» does vera sample
     completed work and commission judges — metered under HER did, under the
@@ -6797,6 +6833,8 @@ def main() -> None:
                     scopes[port] = call(port, "GET", "/health")["scope"]
                 scope = scopes[port]
                 FLOOR_SCOPES[port] = scope    # the self-dialog's map of the world
+                if scope == UNIVERSE_SCOPE:
+                    witness_pulse(port)       # the witness hears a living worker (0044 sp1)
                 for r in call(port, "GET", "/requests").get("requests", []):
                     key = (port, r.get("id"), r.get("at", ""), r.get("status"))
                     if key in handled:
@@ -6834,6 +6872,9 @@ def main() -> None:
                         elif r.get("kind") == "parlor" and r.get("status") == "pending":
                             handled.add(key)
                             on_parlor(port, scope, r)
+                        elif r.get("kind") == "witness" and r.get("status") == "staged":
+                            handled.add(key)
+                            witness_transcribe(port, scope, r)
                         elif r.get("kind") == "ecosystem":
                             if SHIPYARD.on_request(port, r) or r.get("status") == "staged":
                                 handled.add(key)

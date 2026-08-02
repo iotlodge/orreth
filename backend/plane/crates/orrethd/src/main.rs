@@ -36,6 +36,12 @@ struct App {
     /// Human requests: asks + HITL. Unsigned intents (inputs, not memories);
     /// cognition executes them with authority and the results become signed memories.
     requests: Mutex<Vec<Value>>,
+    /// 0044 sp1 — the witness's one fact: when the worker last touched us.
+    /// Seeded with the daemon's own start, so a universe that never had a
+    /// worker still gets its obituary. The witness observes absence only.
+    worker_pulse: Mutex<std::time::Instant>,
+    /// one card per silence episode — the bell must not become noise (law 6)
+    witness_open: Mutex<bool>,
     /// Presence flows UP (0000 §1): children heartbeat their subtree summaries here.
     /// A parent learns the world below without ever reaching into it.
     children: Mutex<BTreeMap<String, Value>>,
@@ -301,6 +307,8 @@ async fn main() {
         horizon_days: dur_days(horizon),
         pg: pg_store,
         requests: Mutex::new(restored_requests),
+        worker_pulse: Mutex::new(std::time::Instant::now()),
+        witness_open: Mutex::new(false),
         children: Mutex::new(BTreeMap::new()),
         vitals: Mutex::new(BTreeMap::new()),
         organs: Mutex::new(BTreeMap::new()),
@@ -356,15 +364,58 @@ async fn main() {
         .route("/requests", get(requests_list))
         .route("/requests", post(requests_submit))
         .route("/requests/resolve", post(requests_resolve))
+        .route("/worker/pulse", post(worker_pulse))
         .route("/window/cfg", get(window_cfg_get))
         .route("/window/cfg", post(window_cfg_pin))
         .route("/organs", get(organs_list))
         .route("/organs/pin", post(organs_pin))
-        .with_state(app);
+        .with_state(app.clone());
 
     let router = router.layer(axum::middleware::from_fn(cors));
 
     let bind = arg("--bind").unwrap_or_else(|| "127.0.0.1".to_string()); // 0.0.0.0 in containers
+    // 0044 sp1 — THE WITNESS: a dead-man's watch that does not live inside the
+    // thing it watches. Silence past the threshold stages the finding in the
+    // daemon's own book (pg write-through): it exists whether or not any glass
+    // ever opens. The env may LENGTHEN the threshold, never silence it (L-C).
+    let witness_app = app.clone();
+    let threshold = std::env::var("ORRETH_WITNESS_SILENCE_S").ok()
+        .and_then(|v| v.parse::<u64>().ok()).map(|v| v.max(90)).unwrap_or(90);
+    tokio::spawn(async move {
+        let mut tick = tokio::time::interval(std::time::Duration::from_secs(10));
+        loop {
+            tick.tick().await;
+            let silent = witness_app.worker_pulse.lock().unwrap().elapsed().as_secs();
+            if silent < threshold { continue; }
+            {
+                let mut open = witness_app.witness_open.lock().unwrap();
+                if *open { continue; }
+                *open = true;
+            }
+            // the sync postgres client drives its own runtime — keep it off the
+            // async workers (the submit door's law; its violation here poisoned
+            // the requests lock on the witness's very first word, 2026-08-02)
+            let wa = witness_app.clone();
+            let _ = tokio::task::spawn_blocking(move || {
+                // scope first, queue second — the resolve door's locking law
+                let node_scope = wa.universe.lock().unwrap().nodes[0].scope.clone();
+                let at = now_iso();
+                let mut q = wa.requests.lock().unwrap();
+                let id = format!("req-{}-{}", q.len() + 1, orreth_node::ts_seconds(&at));
+                let card = json!({"id": id, "kind": "witness", "status": "staged", "at": at,
+                    "text": format!("THE WORKER HAS NO PULSE — silent {silent}s (threshold \
+                        {threshold}s); the universe's cognition is not tending (0044 sp1)"),
+                    "silent_s": silent, "threshold_s": threshold});
+                q.push(card.clone());
+                if let Some(store) = &wa.pg {
+                    if let Err(e) = store.save_request(&node_scope, (q.len() - 1) as i64, &card) {
+                        eprintln!("orrethd · witness write-through failed for {id}: {e}");
+                    }
+                }
+                eprintln!("orrethd · the witness speaks: worker silent {silent}s (≥{threshold}s) — {id}");
+            }).await;
+        }
+    });
     let listener = tokio::net::TcpListener::bind((bind.as_str(), port)).await.unwrap();
     println!("orrethd · scope={scope} · tier_label={} · listening on {bind}:{port}",
              profile["tier_label"].as_str().unwrap_or("?"));
@@ -1456,6 +1507,15 @@ async fn requests_resolve(State(app): State<Arc<App>>, Json(body): Json<Value>) 
         touch(&app);
         (StatusCode::OK, Json(json!({"ok": true})))
     }).await.unwrap()
+}
+
+/// 0044 sp1 — the worker's touch. The pulse carries nothing: absence is the
+/// only message the witness will ever relay. A returning pulse closes the
+/// open silence episode so the NEXT death gets its own card.
+async fn worker_pulse(State(app): State<Arc<App>>) -> Json<Value> {
+    *app.worker_pulse.lock().unwrap() = std::time::Instant::now();
+    let returned = std::mem::replace(&mut *app.witness_open.lock().unwrap(), false);
+    Json(json!({"heard": true, "returned": returned}))
 }
 
 async fn requests_list(State(app): State<Arc<App>>) -> Json<Value> {
