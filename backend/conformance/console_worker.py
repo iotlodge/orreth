@@ -6784,6 +6784,113 @@ def bell_beat(port: int) -> None:
     print("  🔔 the bell asks at the gate — the last mile waits for a word")
 
 
+# ------------------------------------------- 0044 sp3 · the subscribers
+
+_VERIFY_LAST = 0.0
+VERIFY_EVERY = int(os.environ.get("ORRETH_VERIFY_EVERY_S", "3600"))
+_GATE_AGE_H = float(os.environ.get("ORRETH_BELL_GATE_AGE_H", "48"))
+
+
+def _age_seconds(at) -> float:
+    try:
+        return bell_mod._seconds_between(str(at), NOW())
+    except Exception:
+        return 0.0
+
+
+def _standing_deeds(port: int) -> dict:
+    """The published estate per path: the LAST attempt wins (the shelf is
+    oldest-first) — comp=True means deliberately gone, and gone things are
+    not verified in v1."""
+    last: dict[str, dict] = {}
+    for _, b, _, _ in wire_assets(port, "attempt"):
+        a = b.get("attempt") if isinstance(b, dict) else None
+        m = (a or {}).get("manifests") or {}
+        if m.get("path"):
+            last[m["path"]] = a
+    return {p: a for p, a in last.items()
+            if not (a.get("manifests") or {}).get("comp")}
+
+
+def verify_beat(port: int) -> None:
+    """0042's deferral, standing at last (L-B): observation-only — no hand
+    moves, so no word is asked just to LOOK. Every standing deed is fetched
+    back and compared to its sworn key; the observation lands either way.
+    Only a wrong world wakes the human: a tamper ring + the walk-back card
+    at the gate (staged, never enacted — 0042 §5 holds)."""
+    global _VERIFY_LAST
+    if time.time() - _VERIFY_LAST < VERIFY_EVERY:
+        return
+    _VERIFY_LAST = time.time()
+    seat_kp, seat_did = lib_seat(UNIVERSE_SCOPE)
+    for path, a in _standing_deeds(port).items():
+        art = path.split("/", 1)[1] if "/" in path else path
+        expected = a.get("key")
+        fetched, status = None, "unreachable"
+        try:
+            with urllib.request.urlopen(f"{DEED_SITE}/{path}",
+                                        timeout=8) as resp:
+                fetched = crypto.content_hash(
+                    {"artifact": art, "content": resp.read().decode()})
+                status = "found"
+        except Exception as e:
+            status = str(e)[:60]
+        holds = fetched == expected
+        call(port, "POST", "/records",
+             _deed_rec(seat_kp, seat_did, UNIVERSE_SCOPE, "observation",
+                       {"deed": a.get("deed"), "standing": True,
+                        "found": {"status": status, "hash": fetched},
+                        "holds": holds, "at": NOW()}))
+        if holds:
+            continue
+        print(f"  ⚠ the standing verify DISAGREES for /{path} — "
+              f"observed {status} [{str(fetched)[7:19]}…]")
+        q = call(port, "GET", "/requests").get("requests", [])
+        if not any(x.get("kind") == "publish" and x.get("comp")
+                   and x.get("artifact") == art
+                   and x.get("status") in ("pending", "staged") for x in q):
+            call(port, "POST", "/requests",
+                 {"kind": "publish", "comp": True, "artifact": art,
+                  "text": f"the standing verify found /{path} altered — "
+                          f"the walk-back waits for your word (0042 · 0044 sp3)"})
+        ring_bell(port, {"kind": "tamper", "scope": UNIVERSE_SCOPE,
+                         "subject": f"/{path}", "age": _age_of(a.get("at")),
+                         "pointer": _CONSOLE_URL})
+
+
+def gate_age_beat(port: int) -> None:
+    """Consequence that has waited past the declared age rings ONCE — the
+    oldest card only, at most one gate-age ring a day: the pointer leads to
+    the whole queue, and a bell that lists every gate is noise (law 6).
+    witness cards are excluded — that kind already has its own voice."""
+    b = _bell_service(port)
+    for (kind, _), v in b.rung.items():
+        if kind == "gate-age" and _age_seconds(v["at"]) < 86400:
+            return
+    # the whole rig's queues — the bell must agree with the room's gate-wait
+    # panel (rule 7, one picture): aged consequence on ANY floor is the news
+    old: list[tuple[dict, str]] = []
+    for p in set([*FLOORS, *SHIPYARD.floors()]):
+        try:
+            scope = FLOOR_SCOPES.get(p) or call(p, "GET", "/health")["scope"]
+            for x in call(p, "GET", "/requests").get("requests", []):
+                if ((x.get("status") == "staged"
+                     or (x.get("kind") == "question"
+                         and x.get("status") == "pending"))
+                        and x.get("kind") != "witness"
+                        and _age_seconds(x.get("at")) >= _GATE_AGE_H * 3600):
+                    old.append((x, scope))
+        except Exception:
+            continue
+    if not old:
+        return
+    oldest, where = min(old, key=lambda t: str(t[0].get("at") or ""))
+    ring_bell(port, {"kind": "gate-age", "scope": where,
+                     "subject": f"{oldest['id']} at {where}",
+                     "age": _age_of(oldest.get("at")),
+                     "pointer": _CONSOLE_URL})
+
+
 def assay_beat(u_port: int) -> None:
     """The Examiner (0043 §6), dial-gated: only at «assay» does vera sample
     completed work and commission judges — metered under HER did, under the
@@ -7017,8 +7124,10 @@ def main() -> None:
                     scopes[port] = call(port, "GET", "/health")["scope"]
                 scope = scopes[port]
                 FLOOR_SCOPES[port] = scope    # the self-dialog's map of the world
-                if scope == UNIVERSE_SCOPE:
-                    witness_pulse(port)       # the witness hears a living worker (0044 sp1)
+                # EVERY tended door hears the pulse (0044 sp3's G-find): each
+                # floor's daemon keeps its own witness, so a universe-only
+                # pulse left 19 honest obituaries for a worker that lived
+                witness_pulse(port)
                 for r in call(port, "GET", "/requests").get("requests", []):
                     key = (port, r.get("id"), r.get("at", ""), r.get("status"))
                     if key in handled:
@@ -7203,6 +7312,8 @@ def main() -> None:
                         FLIGHT.beat()         # the Observatory's pulse (0043 sp1)
                         assay_beat(port)      # the Examiner, dial-gated (0043 sp2)
                         bell_beat(port)       # the bell tends its door (0044 sp2)
+                        verify_beat(port)     # the deed watchman, standing (0044 sp3 · L-B)
+                        gate_age_beat(port)   # aged consequence rings once (0044 sp3)
 
             except Exception as e:
                 scopes.pop(port, None)
