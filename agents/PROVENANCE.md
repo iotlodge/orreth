@@ -693,3 +693,12 @@ Proven as a human in the glass: fingertip-default v2→v3 (max_obs 3→4, note c
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | "⚑ stage a release" on Canon objects (the chronicle editor stays refused there); `release` gate words; +JB's find mid-proof: reqRow now shares the bell's approve/decline FALLBACK for staged kinds outside the map — staged means waiting on a word, and a card with no way to answer is a gate with no handle. |
 
 Proven both ways with JB at the glass: the wordless fingerprint widening ACCUSED (req-416, acknowledged); the first firmware release CUT BY JB'S OWN CLICK (req-417 — assay-judge learns to quote the yardstick it judged by), the machine renamed ff728ca5 → a8c4cd1b, the watchdog silent on the ceremony path alone.
+
+## Fable 5 — 2026-08-03 (0045 sp4 — the applied graph, the argument, and the rows' shelf)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | The wearers map (declared, the code's own structure); the ROWS' floor joins the registry — JB's "should I see skills?" exposed the one-floor read while the crystallized skill (v2), the 11-version routing standard, record-classes, and distillation-dials lived at e:rag; objects carry their floor and port, arguable there. |
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The ⟟ applied-craft view (words → wearers, edges); the declared rubrics open a reader (JB's find); ⚖ "open an argument" stages a real 0043 experiment from the object; cross-floor bodies fetched from the object's own port. |
+
+Probe-proven: req-418 ("does the router still deserve the head?") armed and staged at the gate — arms as named machines, the split waiting on the human.

@@ -3227,7 +3227,8 @@ function renderGov(){
   const el=$("gov-list");if(!el||!GOVD||!GOVD.objects)return;
   const cats=["all",...Object.keys(GOVD.counts||{}).sort()];
   $("gov-cats").innerHTML=cats.map(c=>`<span class="qchip ${GOVCAT===c?"on":""}"
-    onclick="govCat('${c}')">${c}${c==="all"?` · ${GOVD.objects.length}`:` · ${GOVD.counts[c]||0}`}</span>`).join("");
+    onclick="govCat('${c}')">${c}${c==="all"?` · ${GOVD.objects.length}`:` · ${GOVD.counts[c]||0}`}</span>`).join("")
+    +`<span class="qchip" onclick="govGraph()">⟟ the applied craft — who wears what</span>`;
   $("gov-lens").innerHTML=[["all","both lifecycles"],["canon","canon · the firmware"],
     ["chronicle","chronicle · the adaptive craft"]].map(([l,t])=>
     `<span class="qchip ${GOVLENS===l?"on":""}" onclick="govLens('${l}')">${t}</span>`).join("");
@@ -3242,13 +3243,61 @@ function renderGov(){
     ||`<div class="quiet">nothing matches — the craft is elsewhere.</div>`)
     +(((GOVCAT==="all"||GOVCAT==="rubrics")&&(GOVD.rubrics||[]).length)?
       `<div class="qband"><b>declared rubrics — the humans' yardsticks (0043 G6)</b><span class="n">· ${GOVD.rubrics.length}</span></div>`
-      +GOVD.rubrics.map(r=>`<div class="gvrow"><span class="nm">${esc(r.goal)}</span>
+      +GOVD.rubrics.map((r,i)=>`<div class="gvrow" onclick="govRubric(${i})"><span class="nm">${esc(r.goal)}</span>
         <span class="meta" style="white-space:normal">“${esc(r.text.slice(0,70))}”</span></div>`).join(""):"");
 }
-async function govBody(ref){
-  const b=await(await fetch(UREC+"/records/"+encodeURIComponent(ref)+"/body")).json();
+async function govBody(ref,port){
+  const base=port?`${location.protocol}//${location.hostname}:${port}`:UREC;
+  const b=await(await fetch(base+"/records/"+encodeURIComponent(ref)+"/body")).json();
   if(b&&b.firmware)return b.firmware.text;
   return typeof b==="string"?b:JSON.stringify(b,null,1);
+}
+/* the declared rubrics read like everything else (JB's find, 2026-08-03) */
+function govRubric(i){
+  const r=(GOVD.rubrics||[])[i];if(!r)return;
+  GOVSEL=null;renderGov();
+  const R=$("gov-read");R.classList.remove("hide");
+  R.innerHTML=`<div class="pt"><b>a declared rubric</b>
+      <span class="lc chr" style="margin-left:.5rem">the human's yardstick (0043 G6)</span></div>
+    <div class="quiet2" style="margin:.3rem 0">declared at the objective composer — the assay judges the work by THESE words, and the verdict says so (rubric_declared: true)</div>
+    <div class="quiet2">objective goal · ${esc(r.goal)}</div>
+    <pre>${esc(r.text)}</pre>`;
+}
+/* the applied craft (0045 sp4): who wears what — the words on one side,
+   the organs and flows that wear them on the other */
+function govGraph(){
+  GOVSEL=null;renderGov();
+  const R=$("gov-read");R.classList.remove("hide");
+  const rows=GOVD.objects.filter(o=>(o.wearers||[]).length);
+  const H=Math.max(rows.length*46+40,200);
+  let y=30,svg="";
+  rows.forEach(o=>{
+    const wy=y;
+    svg+=`<text x="12" y="${y}" fill="var(--brass)" font-size="12" font-family="monospace">${esc(o.name)}</text>`;
+    (o.wearers||[]).forEach((w,j)=>{
+      svg+=`<line x1="215" y1="${wy-4}" x2="300" y2="${y-4}" stroke="var(--brassdim)" stroke-width="1" opacity=".6"/>
+        <text x="305" y="${y}" fill="var(--near)" font-size="11" font-family="monospace">${esc(w)}</text>`;
+      y+=22;
+    });
+    if(!(o.wearers||[]).length)y+=22;
+    y+=24;
+  });
+  R.innerHTML=`<div class="pt"><b>the applied craft</b>
+      <span class="quiet2" style="margin-left:.6rem">who wears what — the words on the left, the organs and flows that wear them on the right; a projection, never a second truth</span></div>
+    <svg viewBox="0 0 720 ${H}" style="width:100%;min-height:${Math.min(H,560)}px">${svg}</svg>`;
+}
+/* the argument (0045 sp4): one click on an arguable object stages a real
+   0043 experiment — arms as named machines, the split on the human's word */
+async function govArgue(name){
+  $("gov-ref").textContent="staging the argument…";
+  try{
+    const r=await(await fetch(UREC+"/requests",{method:"POST",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({kind:"experiment",name:`craft-${name}-ab`,
+        text:`an argument from the craft room: does “${name}” still deserve its head? (0045 sp4)`})})).json();
+    $("gov-ref").textContent=`the argument stands at your gate (${r.id}) — arms as named machines; your word opens the split`;
+    loadReq();
+  }catch(e){$("gov-ref").textContent="the door would not open: "+e}
 }
 function govOpen(name){
   GOVSEL=name;renderGov();
@@ -3261,8 +3310,11 @@ function govOpen(name){
       `<span class="gvv" onclick="govVer('${esc(name)}',${i})">v${i+1}${i===o.refs.length-1?" · head":""}</span>`).join("")}
       ${o.versions>1?`<span class="gvv" onclick="govDiff('${esc(name)}')">⇄ diff head vs prior</span>`:""}
       ${o.lifecycle==="chronicle"?`<span class="gvv" onclick="govEdit('${esc(name)}')">✎ propose an edit — lands on your word</span>`:""}
-      ${o.lifecycle==="canon"?`<span class="gvv" onclick="govRelease('${esc(name)}')">⚑ stage a release — the machine takes a new name</span>`:""}</div>
+      ${o.lifecycle==="canon"?`<span class="gvv" onclick="govRelease('${esc(name)}')">⚑ stage a release — the machine takes a new name</span>`:""}
+      ${o.argue?`<span class="gvv" onclick="govArgue('${esc(name)}')">⚖ open an argument — arms as named machines</span>`:""}</div>
     ${o.lifecycle==="canon"?`<div class="quiet2">CANON: a change is a RELEASE — staged at your gate, cut on your word, the machine renamed (0041 · 0045 sp3)</div>`:""}
+    ${o.at?`<div class="quiet2">lives at ${esc(o.at)} — the registry reads across the floors</div>`:""}
+    ${(o.wearers||[]).length?`<div class="quiet2">worn by · ${o.wearers.map(esc).join(" · ")}</div>`:""}
     <div class="quiet2" id="gov-ref"></div><pre id="gov-body">reading the record…</pre>`;
   govVer(name,o.refs.length-1);
 }
@@ -3270,13 +3322,13 @@ async function govVer(name,i){
   const o=GOVD.objects.find(x=>x.name===name);if(!o)return;
   document.querySelectorAll("#gov-vers .gvv").forEach((e,j)=>e.classList.toggle("on",j===i));
   $("gov-ref").textContent=o.refs[i];
-  try{$("gov-body").textContent=await govBody(o.refs[i])}
+  try{$("gov-body").textContent=await govBody(o.refs[i],o.port)}
   catch(e){$("gov-body").textContent="the record would not open: "+e}
 }
 async function govDiff(name){
   const o=GOVD.objects.find(x=>x.name===name);if(!o||o.refs.length<2)return;
-  const [a,b]=await Promise.all([govBody(o.refs[o.refs.length-2]),
-                                 govBody(o.refs[o.refs.length-1])]);
+  const [a,b]=await Promise.all([govBody(o.refs[o.refs.length-2],o.port),
+                                 govBody(o.refs[o.refs.length-1],o.port)]);
   const A=a.split("\n"),B=b.split("\n"),sa=new Set(A),sb=new Set(B);
   $("gov-ref").textContent=`v${o.refs.length-1} → v${o.refs.length} (head) — the lines that moved`;
   $("gov-body").innerHTML='<div class="gvdiff">'

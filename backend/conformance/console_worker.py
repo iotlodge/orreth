@@ -7219,6 +7219,22 @@ def _craft_category(name: str, tags: list) -> str:
     return "prompts"
 
 
+# the applied craft (0045 sp4): who wears each word — declared from the
+# code's own structure, the honest v1 of the graph's edges
+_WEARERS = {
+    "assay-judge": ["vera · every assay verdict, at the chosen bench"],
+    "graduation-mentee": ["the graduation ceremony · the mentee at «low»"],
+    "graduation-judge": ["the graduation ceremony · the independent judge"],
+    "resident-voice": ["every resident's voiced audience reply"],
+    "fingertip-default": ["every fingertip flow · the thought's default shape"],
+    "prompt-plan": ["the chassis · the planner stage"],
+    "prompt-critic": ["the chassis · the critic stage"],
+    "charter-deployment": ["allen · the estate's deployment charter"],
+    "routing-standard": ["the rows' dispatcher · every routed ask at e:rag"],
+    "bell": ["the bell · every ring's transport"],
+}
+
+
 def compose_governance() -> dict:
     """The registry (0045 law 1): a PROJECTION over the signed shelves —
     one payload, worldlines collapsed, every object wearing its lifecycle.
@@ -7237,7 +7253,8 @@ def compose_governance() -> dict:
     for name, refs in sorted(fw.items()):
         objects.append({"name": name, "category": "prompts",
                         "lifecycle": "canon", "versions": len(refs),
-                        "head": refs[-1], "refs": refs})
+                        "head": refs[-1], "refs": refs,
+                        "wearers": _WEARERS.get(name, [])})
     # the Chronicle shelf — grace's assets, grouped by their name tag
     sh: dict[str, dict] = {}
     for ref, b, _, t in wire_assets(port, "asset"):
@@ -7252,7 +7269,32 @@ def compose_governance() -> dict:
                         "category": _craft_category(name, row["tags"]),
                         "lifecycle": "chronicle",
                         "versions": len(row["refs"]),
-                        "head": row["refs"][-1], "refs": row["refs"]})
+                        "head": row["refs"][-1], "refs": row["refs"],
+                        "wearers": _WEARERS.get(name,
+                                   ["allen · a deployment shape"]
+                                   if name.startswith("template-") else [])})
+    # the rows' floor joins the registry (0045 sp4): the argument machinery
+    # lives at e:rag, so its craft shows HERE with the argue door open.
+    # (The full-rig shelf sweep is a named gap — one floor at a time.)
+    try:
+        rag_port, rag_scope = _rag_floor()
+        if rag_port:
+            rg: dict[str, dict] = {}
+            for ref, b, _, t in wire_assets(rag_port, "asset", scope=rag_scope):
+                nm = next((x for x in (t or []) if x not in
+                           ("asset", "asset-variant", "adopted")), None)
+                if nm:
+                    rg.setdefault(nm, {"refs": [], "tags": t})["refs"].append(ref)
+            for nm, row in sorted(rg.items()):
+                objects.append({"name": nm,
+                                "category": _craft_category(nm, row["tags"]),
+                                "lifecycle": "chronicle", "at": rag_scope,
+                                "versions": len(row["refs"]),
+                                "head": row["refs"][-1], "refs": row["refs"],
+                                "argue": True, "port": rag_port,
+                                "wearers": _WEARERS.get(nm, [])})
+    except Exception:
+        pass
     # charters and manifests — records already on the shelf
     for tag, cat in (("charter", "charters"), ("bell-manifest", "manifests")):
         seen: dict[str, list] = {}
