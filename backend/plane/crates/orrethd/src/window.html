@@ -2486,6 +2486,7 @@ const GATE_WORDS={join:["admit","turn away"],ecosystem:["launch","scrap"],
   assay:["acknowledge","leave it"],dial:["turn it","leave it"],
   witness:["acknowledge — seen","leave it standing"],
   release:["cut the release — a new name","decline"],
+  commission:["welcome it — seen","leave it standing"],
   drift:r=>[r.restore&&Object.keys(r.restore).length?"revert to the signed machine":"acknowledge the lag","leave it"],
   publish:r=>[r.comp?"walk it back":"publish it","not this"],
   experiment:r=>[r.phase==="promotion"?"adopt the winner":"open the split","decline"]};
@@ -3259,7 +3260,8 @@ function renderGov(){
   const cats=["all",...Object.keys(GOVD.counts||{}).sort()];
   $("gov-cats").innerHTML=cats.map(c=>`<span class="qchip ${GOVCAT===c?"on":""}"
     onclick="govCat('${c}')">${c}${c==="all"?` · ${GOVD.objects.length}`:` · ${GOVD.counts[c]||0}`}</span>`).join("")
-    +`<span class="qchip" onclick="govGraph()">⟟ the applied craft — who wears what</span>`;
+    +`<span class="qchip" onclick="govGraph()">⟟ the applied craft — who wears what</span>`
+    +`<span class="qchip" onclick="govCommission()">🏭 commission — the machine builds craft on your word</span>`;
   $("gov-lens").innerHTML=[["all","both lifecycles"],["canon","canon · the firmware"],
     ["chronicle","chronicle · the adaptive craft"]].map(([l,t])=>
     `<span class="qchip ${GOVLENS===l?"on":""}" onclick="govLens('${l}')">${t}</span>`).join("");
@@ -3436,6 +3438,45 @@ async function govReleaseStage(name){
         if(m)m.textContent="the release STANDS AT YOUR GATE — the bell carries "
           +"it; your word there cuts the machine's new name. "+((x.result||{}).held||"");
         loadReq();return;
+      }
+    }catch{}
+  }
+}
+/* the commission (0045 sp6): the human's click births craft through the
+   machine's own organs — librarian gathers, factory drafts, v1 stands */
+function govCommission(){
+  GOVSEL=null;renderGov();
+  const R=$("gov-read");R.classList.remove("hide");
+  R.innerHTML=`<div class="pt"><b>🏭 the commission</b>
+      <span class="quiet2" style="margin-left:.6rem">state what you need; the librarian gathers, the factory drafts a metered thought, and v1 stands in the registry with its whole birth on the record</span></div>
+    <div class="qchips" id="gov-ck">${["skill","prompt","policy"].map((k,i)=>
+      `<span class="qchip ${i===0?"on":""}" onclick="document.querySelectorAll('#gov-ck .qchip').forEach(x=>x.classList.remove('on'));this.classList.add('on')">${k}</span>`).join("")}</div>
+    <textarea id="gov-ed" spellcheck="false" placeholder="what shall the machine build? e.g. a skill for onboarding a LangGraph flow onto the supply line"
+      style="width:100%;min-height:7rem;background:var(--deep);color:var(--near);border:1px solid var(--hair2);border-radius:8px;font:.74rem var(--mono);padding:.6rem;margin-top:.4rem"></textarea>
+    <button class="sbtn ok" style="margin-top:.4rem" onclick="govCommissionGo()">commission it — my word</button>
+    <div class="quiet2" id="gov-edmsg" style="margin-top:.4rem"></div>`;
+}
+async function govCommissionGo(){
+  const t=($("gov-ed")||{}).value.trim();if(!t)return;
+  const k=(document.querySelector("#gov-ck .qchip.on")||{}).textContent||"skill";
+  $("gov-edmsg").textContent="the librarian goes gathering; the factory warms — this takes a minute…";
+  let rid=null;
+  try{
+    const r=await(await fetch(UREC+"/requests",{method:"POST",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({kind:"commission",craft_kind:k,text:t})})).json();
+    rid=r.id;
+  }catch(e){$("gov-edmsg").textContent="the door would not open: "+e;return}
+  for(let i=0;i<90;i++){
+    await new Promise(z=>setTimeout(z,1500));
+    try{
+      const q=(await(await fetch(UREC+"/requests")).json()).requests||[];
+      const x=q.find(v=>v.id===rid);
+      if(x&&(x.status==="staged"||x.status==="done")){
+        const m=$("gov-edmsg");
+        if(m)m.textContent=((x.result||{}).held||(x.result||{}).reply||"done")
+          +" — the card rides the bell; the registry has re-read.";
+        loadGovernance();loadReq();return;
       }
     }catch{}
   }

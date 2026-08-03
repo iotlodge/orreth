@@ -718,3 +718,13 @@ Proven: the flow's record named v2 — the sha of the release JB cut — and a d
 | File | Author | Note |
 |---|---|---|
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | JB: "active services in Farm but not in brain or orrery." The data always flowed (all four f:prod MCP stalls ride the heartbeat chain); the 3D sky drew farm diamonds only when a moon faced the camera (the depth gate) and the brain drew none. Now: diamonds UNGATED on every body ("a tool that serves deserves to be seen from anywhere"), tool counts in the body labels (`· Nt`), a hover card naming service · state · calls · pinned manifest, and brass diamonds orbiting each ember in the brain. |
+
+## Fable 5 — 2026-08-03 (0045 sp6 — the commission: the dive closes whole, era 0.45)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | `on_commission` — the human's click births craft through the machine's own organs: librarian gathers (live tavily), factory drafts at a chosen bench (metered; one honest redraft when a draft comes back empty — printed, never silent; the debug pass also caught my own local-import typo hiding behind the void message), grace lands v1 with `commissioned_by` + `born_of` named, the card waits at the gate. |
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | 🏭 the commission composer (kind chips · objective · one-word button) + `commission` gate words. |
+| `VERSION` · docs | Fable 5 (claude-fable-5) | 0.44 → 0.45 in the closing commit; the road, the register, and the design closed with their receipts — the covenant's lines, kept. |
+
+The closing proof: skill-orreth-langgraph-onboard v1 STANDS — the first wire-born skill of the universe floor, its whole birth walkable, its welcome click left standing for JB's own hand.

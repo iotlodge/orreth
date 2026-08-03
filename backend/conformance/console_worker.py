@@ -6891,6 +6891,90 @@ def on_bell_consent(port: int, scope: str, r: dict, *, approved: bool,
                                   f"send on the record"}})
 
 
+def on_commission(port: int, scope: str, r: dict) -> None:
+    """0045 sp6 — THE COMMISSION (law 6): the human's click births craft
+    through the machine's own organs — the librarian gathers, the factory
+    drafts (a metered thought at a chosen bench), grace lands v1 with the
+    whole ancestry named, and the finished work WAITS AT THE GATE for the
+    human's welcome. The bell carries the card in-glass; out-of-band
+    commission rings await a consent widening (one row, behind consent —
+    law 3 kept)."""
+    rid = str(r.get("id") or "")
+    want = str(r.get("text") or "").strip()
+    ckind = str(r.get("craft_kind") or "skill")
+
+    def done(reply):
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "done", "result": {"reply": reply}})
+
+    if not want:
+        return done("a commission with no objective refuses loudly. "
+                    "Nothing created")
+    print(f"  🏭 commission {rid}: “{want[:64]}” — the librarian goes gathering")
+    knowledge = gather(port, scope, want)
+    bench = _judge_bench(scope)
+    if bench is None:
+        return done("no bench holds a serving medium mind — the factory "
+                    "rests honestly. Nothing created")
+    draft = governed_thought(
+        bench[0], JUDGE_MIND, "medium",
+        "You are the FACTORY of a governed universe drafting a reusable "
+        f"{ckind}. The human's commission: \"{want}\". The librarian "
+        "gathered:\n" + str(knowledge)[:1200] + "\n\nReply with STRICT JSON "
+        "only — begin with the { character, no preamble, no code fences: "
+        "{\"name\": \"kebab-short-name\", \"steps\": [\"3 to 5 short "
+        "imperative steps\"], \"text\": \"the craft's working prompt, 2-3 "
+        "sentences\"}",
+        max_tokens=600)
+    import re as _re6
+    prof = None
+    for _attempt in range(2):                 # the factory redrafts ONCE (honest
+        if draft and draft.get("text"):       # resilience, never a silent loop)
+            try:
+                prof = json.loads(_re6.search(r"\{.*\}", draft["text"],
+                                              _re6.S).group(0))
+                break
+            except Exception:
+                prof = None
+        if _attempt == 0:
+            print("    (the factory's first draft came back empty — redrafting once)")
+            draft = governed_thought(
+                bench[0], JUDGE_MIND, "medium",
+                f"Draft a reusable {ckind} for: \"{want}\". Reply with STRICT "
+                "JSON only, begin with the {{ character: {\"name\": "
+                "\"kebab-short-name\", \"steps\": [\"3 to 5 short imperative "
+                "steps\"], \"text\": \"the working prompt, 2-3 sentences\"}",
+                max_tokens=600)
+    if not isinstance(prof, dict):
+        print(f"    (the factory's draft, verbatim head: "
+              f"{draft['text'][:160]!r})" if draft else
+              "    (the factory returned NO thought — the bench refused)")
+        return done("the factory's draft was LOST — voided, never landed; "
+                    "commission again")
+    name = f"{ckind}-" + _re6.sub(
+        r"[^a-z0-9]+", "-", str(prof.get("name") or want).lower()).strip("-")[:40]
+    body = {"asset": {"name": name,
+                      "profile": {"objective": want,
+                                  "steps": prof.get("steps"),
+                                  "text": prof.get("text")},
+                      "commissioned_by": f"the human's word at {rid} "
+                                         f"(0045 sp6 — the commission)",
+                      "born_of": str(knowledge)[:220]}}
+    rec = node.make_memory({"did": IMP_DID, "scope": scope}, IMP, scope,
+                           body, kind="semantic", tags=["asset", name])
+    call(port, "POST", "/records", rec)
+    _GOV_CACHE["at"] = 0.0
+    call(port, "POST", "/requests/resolve",
+         {"id": rid, "status": "staged",
+          "result": {"held": f"THE {ckind.upper()} STANDS — “{name}” v1 in "
+                             f"the registry ({rec['id'][:16]}…), born of the "
+                             f"librarian's gathering and the factory's "
+                             f"metered draft. Welcome it, or leave it standing",
+                     "record": rec["id"], "name": name}})
+    print(f"  🏭 commission {rid}: “{name}” v1 STANDS — the gate waits "
+          f"for the welcome")
+
+
 def on_release(port: int, scope: str, r: dict) -> None:
     """0045 sp3 — CANON CHANGE = EPOCH RELEASE (JB's lock): the firmware
     edit stages a release showing blue (the standing machine) and green
@@ -7634,6 +7718,19 @@ def main() -> None:
                                 r.get("status") in ("pending", "approved", "denied"):
                             handled.add(key)
                             on_release(port, scope, r)
+                        elif r.get("kind") == "commission":
+                            if r.get("status") == "pending":
+                                handled.add(key)
+                                on_commission(port, scope, r)
+                            elif r.get("status") in ("approved", "denied"):
+                                handled.add(key)
+                                call(port, "POST", "/requests/resolve",
+                                     {"id": r["id"], "status": "done",
+                                      "result": {"reply":
+                                          "welcomed — the craft serves"
+                                          if r["status"] == "approved" else
+                                          "left standing — the craft stays, "
+                                          "unwelcomed, on the record"}})
                         elif r.get("kind") == "ecosystem":
                             if SHIPYARD.on_request(port, r) or r.get("status") == "staged":
                                 handled.add(key)
