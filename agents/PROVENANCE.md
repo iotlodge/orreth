@@ -702,3 +702,13 @@ Proven both ways with JB at the glass: the wordless fingerprint widening ACCUSED
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The ⟟ applied-craft view (words → wearers, edges); the declared rubrics open a reader (JB's find); ⚖ "open an argument" stages a real 0043 experiment from the object; cross-floor bodies fetched from the object's own port. |
 
 Probe-proven: req-418 ("does the router still deserve the head?") armed and staged at the gate — arms as named machines, the split waiting on the human.
+
+## Fable 5 — 2026-08-03 (0045 sp5 — the supply line: LangGraph drinks from the registry)
+
+| File | Author | Note |
+|---|---|---|
+| `agents/orreth-agent-sdk/orreth_agent/craft.py` | Fable 5 (claude-fable-5) | NET-NEW — `acquire()` under law 8's riders: one resolution carried through the run; the citizen DID; `on_dark="refuse"|"stale"` with stale servings LABELED; ⟦slot⟧ rendering; the arm always visible. Banner in file. |
+| `agents/orreth-agent-sdk/examples/langgraph_supply_line.py` | Fable 5 (claude-fable-5) | NET-NEW — a real LangGraph StateGraph whose only Orreth touch is the acquire call; its run record names the exact word that drove it. Banner in file. |
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | The `/craft` door: head or pinned (off-worldline pins refuse), arm by DID hash when an argument runs (visible — no secret splits), servings on the instrument tier (servings.jsonl, the flight recorder's precedent). Lease enforcement = named hardening gap. |
+
+Proven: the flow's record named v2 — the sha of the release JB cut — and a darkened registry served the cached copy LABELED stale: true.

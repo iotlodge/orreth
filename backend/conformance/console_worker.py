@@ -1295,13 +1295,22 @@ def embed_door() -> None:
             any floor's port can drink them — behind the worker's own door,
             the plane untouched (rule 9)."""
             route = self.path.split("?")[0]
-            if route not in ("/observatory", "/governance"):
+            if route not in ("/observatory", "/governance", "/craft"):
                 self.send_response(404)
                 self.end_headers()
                 return
             try:
-                out = json.dumps(compose_governance() if route == "/governance"
-                                 else compose_observatory()).encode()
+                if route == "/craft":
+                    qs = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query)
+                    out = json.dumps(craft_serve(
+                        (qs.get("name") or [""])[0],
+                        (qs.get("did") or ["anonymous-consumer"])[0],
+                        pin=(qs.get("pin") or [None])[0])).encode()
+                else:
+                    out = json.dumps(compose_governance()
+                                     if route == "/governance"
+                                     else compose_observatory()).encode()
             except Exception as e:
                 out = json.dumps({"error": str(e)[:120]}).encode()
             self.send_response(200)
@@ -7233,6 +7242,64 @@ _WEARERS = {
     "routing-standard": ["the rows' dispatcher · every routed ask at e:rag"],
     "bell": ["the bell · every ring's transport"],
 }
+
+
+def craft_serve(name: str, did: str, *, pin: str | None = None) -> dict:
+    """The supply line's door (0045 sp5, law 8): resolve craft by name —
+    head or pinned — for an external consumer. If an argument is running
+    on this craft, the consumer draws an ARM by its own DID (deterministic,
+    visible in the reply — no secret experiments). Every serving lands on
+    the instrument tier (servings.jsonl — the flight recorder's precedent:
+    telemetry, not testimony)."""
+    if not name:
+        return {"error": "name required"}
+    port = 4500
+    refs, lifecycle, texts = [], None, {}
+    for ref, b, _, _ in wire_assets(port, "firmware"):
+        f = (b or {}).get("firmware") or {}
+        if f.get("name") == name:
+            refs.append(ref)
+            texts[ref] = f.get("text")
+            lifecycle = "canon"
+    if not refs:
+        for ref, b, _, t in wire_assets(port, "asset"):
+            nm = next((x for x in (t or []) if x not in
+                       ("asset", "asset-variant", "adopted")), None)
+            if nm == name:
+                refs.append(ref)
+                texts[ref] = (b or {}).get("asset", {}).get("profile")
+                lifecycle = "chronicle"
+    if not refs:
+        return {"error": f"the shelf holds no craft named {name!r}"}
+    ref = pin if (pin and pin in refs) else refs[-1]
+    if pin and pin not in refs:
+        return {"error": "the pinned version is not on this worldline"}
+    arm = None
+    try:
+        exp = next((e for e in _exps_load().values()
+                    if e.get("state") == "running"
+                    and name in json.dumps(e)[:500]), None)
+        if exp is not None:
+            arm = "a" if int(crypto.content_hash({"d": did})[10:12], 16) % 2 == 0 \
+                else "b"
+    except Exception:
+        pass
+    out = {"name": name, "ref": ref, "version": refs.index(ref) + 1,
+           "lifecycle": lifecycle}
+    body = texts.get(ref)
+    if isinstance(body, str):
+        out["text"] = body
+    elif body is not None:
+        out["profile"] = body
+    if arm:
+        out["arm"] = arm                      # visible — never a secret split
+    try:
+        with open(os.path.join(FlightBook.HOME, "servings.jsonl"), "a") as f:
+            f.write(json.dumps({"at": NOW(), "name": name, "ref": ref,
+                                "did": did[:48], "arm": arm}) + "\n")
+    except Exception:
+        pass
+    return out
 
 
 def compose_governance() -> dict:
