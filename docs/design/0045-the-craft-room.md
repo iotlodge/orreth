@@ -61,6 +61,16 @@ organ of Orreth managed, visibly, from the human's seat.
 7. **Scale is a design constraint, not a hope.** Categories, lifecycle
    lenses, search, and collapsed worldlines keep the room legible at
    thousands of objects.
+8. **The craft is served, not copied** (JB's addition, 2026-08-03).
+   External flows — LangGraph and kin, keeping their own deterministic
+   shape — ACQUIRE craft by reference through the SDK under a lease:
+   `head` (moves with adoptions) or `pinned` (exact version; advancing a
+   pin is a governed act — the Canon/Chronicle split as a consumer
+   contract). The door may serve an experiment arm when an argument
+   stands (deterministic split by caller DID — an external flow joins a
+   governed A/B without changing shape). Every serving is on the record;
+   refusals wear the one face; rule 5 holds — the craft is data on the
+   log, and the thinking stays on the caller's side.
 
 ## 3. The room (the glass)
 
@@ -102,7 +112,8 @@ first place humans author records through the glass at volume.
 | 2 | **The editors & the one law** — propose-a-sibling from the glass, one-motion human word; Canon objects refuse the Chronicle door and point to the release; the re-hash question revisited on the record | edit a real Chronicle prompt as a human: sibling + lineage + word in one motion; the old version stands behind it; an attempted silent save refuses loudly |
 | 3 | **The Canon release** — the release ceremony from the room: stage a Canon change → a new named machine cut on the human's word → attestation + watchdog stay honest; Blue/Green = two standing machines, gated cutover | change a Canon object as a human; watch the epoch's name move ONLY through the ceremony; the watchdog accuses any other path |
 | 4 | **The applied graph & the argument** — the brain-grammar craft overlay (who wears what, live); "open an argument" from any object → a 0043 experiment with arms as named machines | the graph shows a real prompt's wearers; one click opens a real A/B on a real asset, split on JB's word |
-| 5 | **The commission** — create-button → objective → librarian gathers → factory builds → grace stages → the bell rings → v1 in the registry | JB commissions a real skill from the glass and is rung when it stands, its whole birth walkable on the record |
+| 5 | **The supply line** — the SDK acquire door (law 8): resolve craft by name under a lease, head or pinned, arm-serving when an argument stands, servings on the record; the applied graph gains EXTERNAL wearers | a real LangGraph flow acquires a governed prompt by reference — its shape unchanged — and wears an experiment arm without knowing; the run's record names the exact version that drove it |
+| 6 | **The commission** — create-button → objective → librarian gathers → factory builds → grace stages → the bell rings → v1 in the registry | JB commissions a real skill from the glass and is rung when it stands, its whole birth walkable on the record |
 
 ## 6. Gap register (§11 law, standing)
 
