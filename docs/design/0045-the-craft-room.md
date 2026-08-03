@@ -71,6 +71,14 @@ organ of Orreth managed, visibly, from the human's seat.
    governed A/B without changing shape). Every serving is on the record;
    refusals wear the one face; rule 5 holds — the craft is data on the
    log, and the thinking stays on the caller's side.
+   **And the principle is general** (JB, same day): it applies to the
+   Farm, the Stable, and Skills alike — the SDK serves Orreth's
+   *gateways, inventories, and registries* as infrastructure à la carte.
+   Nobody is forced onto `orreth.agent`; it is one honest consumer of
+   the doors, not the toll booth. Wherever the consumer stands, the CRUD
+   itself always lands in the one place — the firmware and the brain's
+   signed shelves — which is exactly why every consumer inherits the
+   governance for free.
 
 ## 3. The room (the glass)
 
