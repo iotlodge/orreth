@@ -658,3 +658,9 @@ Proven live, JB's inbox the witness thrice over: the outside hand swapped first-
 | `docs/design/0044-the-bell.md` · `docs/design/README.md` · `docs/design/the-honest-boundary.md` · `docs/guides/06-...` | Fable 5 (claude-fable-5) | The dive CLOSED WHOLE with its receipts; the register's stale bullets struck through honestly (the daemon DOES notice a dead worker now; out-of-band alerting STANDS); B3 named open — the ring waits for a resurrection, the dead-man's dead-man is a deferral with a home. |
 
 The closing proof, verbatim: killed 23:17:30Z (Console closed) → the witness spoke 23:18:59Z → the rise rang JB's inbox; killed again 23:19:04Z → the witness spoke → THE BELL HELD ("aged into the standing ring (+1), the wire stays quiet"). Two deaths, one email. Designed, locked, and proven in one day.
+
+## Fable 5 — 2026-08-03 (0045 The Craft Room — designed on JB's CRUD objectives)
+
+| File | Author | Note |
+|---|---|---|
+| `docs/design/0045-the-craft-room.md` | Fable 5 (claude-fable-5) | NET-NEW — the week's largest item designed from JB's machine-of-machines brief: the trust gap named (the machine shows its work but hides its craft), seven laws (registry-as-projection · two lifecycles one law of change · the human's edit wears grace's grammar · readable craft · the argument first-class · commissioned creation · scale as constraint), the «Governance» room replacing Ask, five spoonfuls. Three JB locks taken at design time, all recommended: Canon change = epoch release (0041's ceremony IS the firmware lifecycle) · human edits = one-motion sibling proposals · Ask retires. |
