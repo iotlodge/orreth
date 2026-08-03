@@ -79,6 +79,21 @@ organ of Orreth managed, visibly, from the human's seat.
    itself always lands in the one place — the firmware and the brain's
    signed shelves — which is exactly why every consumer inherits the
    governance for free.
+   **Law 8's four riders** (the architect's what's-missing pass,
+   2026-08-03):
+   - *A consumer is a citizen*: an external flow persists its keypair and
+     re-joins as the same self (rule 1 — the F1 mayfly lesson, kept at
+     this door too). Identity is what makes "LangGraph agents live
+     forever" true instead of ironic.
+   - *One run, one resolution*: the SDK resolves craft at flow start and
+     carries it through the run; the run's record names the version. We
+     never inject nondeterminism into a deterministic flow.
+   - *Declared failure posture*: unreachable registry → serve the cached
+     signed copy LABELED stale, or refuse — the consumer declares which,
+     per acquire. Never silent staleness.
+   - *No secret experiments on strangers*: arm-serving is opt-in at the
+     lease. Inside your own universe it is governance; across a boundary
+     without consent it is something else.
 
 ## 3. The room (the glass)
 
@@ -116,7 +131,7 @@ first place humans author records through the glass at volume.
 
 | # | Spoonful | Proof |
 |---|---|---|
-| 1 | **The registry & the room** — `/governance` payload; the tab replaces Ask (gather/dispatch duties formally moved to residents/parlor); categories × lenses × search; readers + lineage timelines + diffs, scale-ready | every prompt, skill, policy, rubric, and charter on the rig visible and diffable as a human; the Ask tab gone with nothing orphaned |
+| 1 | **The registry & the room** — `/governance` payload; the tab replaces Ask (gather/dispatch duties formally moved to residents/parlor); categories × lenses × search; readers + lineage timelines + diffs, scale-ready. **AND THE CANON EXTRACTION** (the architect's find, 2026-08-03): the residents' driving prompts live today as string literals in worker code — invisible firmware. They are lifted into signed Canon records the epoch manifest names, or the room reproduces the exact trust gap it exists to close, behind nicer glass | every prompt, skill, policy, rubric, and charter on the rig visible and diffable as a human — INCLUDING the residents' own firmware; the Ask tab gone with nothing orphaned |
 | 2 | **The editors & the one law** — propose-a-sibling from the glass, one-motion human word; Canon objects refuse the Chronicle door and point to the release; the re-hash question revisited on the record | edit a real Chronicle prompt as a human: sibling + lineage + word in one motion; the old version stands behind it; an attempted silent save refuses loudly |
 | 3 | **The Canon release** — the release ceremony from the room: stage a Canon change → a new named machine cut on the human's word → attestation + watchdog stay honest; Blue/Green = two standing machines, gated cutover | change a Canon object as a human; watch the epoch's name move ONLY through the ceremony; the watchdog accuses any other path |
 | 4 | **The applied graph & the argument** — the brain-grammar craft overlay (who wears what, live); "open an argument" from any object → a 0043 experiment with arms as named machines | the graph shows a real prompt's wearers; one click opens a real A/B on a real asset, split on JB's word |
