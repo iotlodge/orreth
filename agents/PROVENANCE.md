@@ -683,3 +683,13 @@ Proven as a human: vera's actual judge prompt read in the glass wearing CANON �
 | `docs/decisions/README.md` | Fable 5 (claude-fable-5) | The write-time re-hash park REVISITED on the record as promised: the park holds — glass-authored records are worker-minted and hash-correct by construction; the trigger stays external ingestion (0013). |
 
 Proven as a human in the glass: fingertip-default v2→v3 (max_obs 3→4, note carried), the diff showing the authority line verbatim; assay-judge refused with the release pointer; a malformed body refused loudly.
+
+## Fable 5 — 2026-08-03 (0045 sp3 — the Canon release: the machine renamed by the human's hand)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | The fingerprint covers the FIRMWARE (the machine's name cites its own driving words — the widening deliberately drew the watchdog's accusation as the negative proof); `on_release` — Canon's only change door: staged with BLUE and GREEN named on the card, the human's word lands the becky-signed sibling (`released_by` verbatim), the craft cache flushes, and the forced beat cuts the new name with the word standing; "release" joins `_ADOPTION_KINDS`. |
+| `backend/conformance/orreth_sim/epoch.py` | Fable 5 (claude-fable-5) | "release" joins the sim's adoption vocabulary — Canon change = epoch release (JB's lock). Suite 291 green. |
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | "⚑ stage a release" on Canon objects (the chronicle editor stays refused there); `release` gate words; +JB's find mid-proof: reqRow now shares the bell's approve/decline FALLBACK for staged kinds outside the map — staged means waiting on a word, and a card with no way to answer is a gate with no handle. |
+
+Proven both ways with JB at the glass: the wordless fingerprint widening ACCUSED (req-416, acknowledged); the first firmware release CUT BY JB'S OWN CLICK (req-417 — assay-judge learns to quote the yardstick it judged by), the machine renamed ff728ca5 → a8c4cd1b, the watchdog silent on the ceremony path alone.

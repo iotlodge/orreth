@@ -4539,7 +4539,19 @@ def _machine_fingerprint(port: int, scope: str) -> dict:
         plane = {"version": "unreachable"}
     worldlines = {"farm": crypto.content_hash(ledger_load(scope)),
                   "stable": crypto.content_hash(stable_ledger_load(scope))}
-    return {"assets": heads, "plane": plane, "worldlines": worldlines}
+    fp = {"assets": heads, "plane": plane, "worldlines": worldlines}
+    # 0045 sp3 — the machine's name covers its own FIRMWARE: the Canon
+    # extraction made the driving words records; the fingerprint now cites
+    # their heads, so a firmware change moves the name (Canon = release)
+    if scope == UNIVERSE_SCOPE:
+        fw: dict = {}
+        for ref, b, _, _ in wire_assets(port, "firmware"):
+            f = (b or {}).get("firmware") or {}
+            if f.get("name"):
+                fw[f["name"]] = ref
+        if fw:
+            fp["firmware"] = fw
+    return fp
 
 
 def _cut_epoch(port: int, scope: str, fp: dict) -> str | None:
@@ -4596,7 +4608,8 @@ LAG_WINDOW = int(os.environ.get("ORRETH_LAG_WINDOW", "900"))
 _LAG: dict = {}          # scope → {"t": first_seen, "staged": bool}
 
 
-_ADOPTION_KINDS = ("improvement", "estate-adopt", "field-join", "drift",
+_ADOPTION_KINDS = ("release",                 # Canon change = epoch release (0045 sp3)
+                   "improvement", "estate-adopt", "field-join", "drift",
                    "experiment")   # 0043 sp4's promotion IS an adoption — the
 #   first live rollout taught the watchdog its missing word (JB left the
 #   honest false accusation on record, 2026-07-30)
@@ -6869,6 +6882,74 @@ def on_bell_consent(port: int, scope: str, r: dict, *, approved: bool,
                                   f"send on the record"}})
 
 
+def on_release(port: int, scope: str, r: dict) -> None:
+    """0045 sp3 — CANON CHANGE = EPOCH RELEASE (JB's lock): the firmware
+    edit stages a release showing blue (the standing machine) and green
+    (the would-be head); the human's word lands the record, and the next
+    beat cuts the new name WITH that word standing — the watchdog stays
+    quiet only on this path. becky signs firmware, as at genesis."""
+    rid = str(r.get("id") or "")
+    name = str(r.get("name") or "")
+
+    def done(reply, **kw):
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "done", "result": {"reply": reply, **kw}})
+
+    heads = _craft_heads(port)
+    if name not in heads or heads[name][0] != "canon":
+        return done(f"“{name}” is not Canon firmware — the chronicle door "
+                    f"(✎ propose an edit) is its path. Nothing changed")
+    head = heads[name][1]
+    text = str(r.get("text") or "")
+    if not text.strip():
+        return done("a release with no words refuses loudly. Nothing changed")
+    if r.get("status") == "pending":
+        try:
+            eid = json.loads(_epoch_nest(UNIVERSE_SCOPE).read_text()).get("id", "?")
+        except Exception:
+            eid = "?"
+        import re as _re3
+        preview = node.make_memory({"did": _BECKY.did, "scope": scope},
+                                   _BECKY.kp, scope,
+                                   {"firmware": {"name": name, "text": text}},
+                                   kind="semantic", tags=["preview"])
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "staged",
+              "result": {"held": f"BLUE stands: epoch {str(eid)[:19]}… · GREEN "
+                                 f"waits: “{name}” would head at "
+                                 f"{preview['id'][:19]}… — your word cuts the "
+                                 f"release and the machine takes a new name "
+                                 f"(0041 · 0045 sp3)"}})
+        print(f"  ⚑ release staged: “{name}” — blue stands, green waits ({rid})")
+        return
+    if r.get("status") == "denied":
+        return done("declined — the machine keeps its name, and the record "
+                    "keeps that you chose")
+    if r.get("status") != "approved":
+        return
+    import re as _re4
+    body = {"firmware": {"name": name, "text": text,
+                         "slots": sorted(set(_re4.findall(r"⟦(\w+)⟧", text))),
+                         "released_by": f"the human's word at {rid} (0045 sp3)"}}
+    if r.get("note"):
+        body["firmware"]["note"] = str(r["note"])[:200]
+    rec = node.make_memory({"did": _BECKY.did, "scope": scope}, _BECKY.kp,
+                           scope, body, kind="semantic",
+                           tags=["canon", "firmware", "prompt", f"fw-{name}"])
+    rec["derived_from"] = [head]
+    call(port, "POST", "/records", rec)
+    _CRAFT_CACHE["at"] = 0.0                  # the worker re-reads its firmware
+    _GOV_CACHE["at"] = 0.0
+    global _EPOCH_LAST
+    _EPOCH_LAST = 0.0                         # the cut comes on the next beat
+    print(f"  ⚑ RELEASE: “{name}” → {rec['id'][:18]}… — the machine's name "
+          f"moves on the next beat, the word standing")
+    done(f"THE RELEASE IS CUT — “{name}” wears its new words "
+         f"({rec['id'][:16]}…) and the machine takes a new name on the next "
+         f"beat, your word standing behind it (the watchdog stays quiet only "
+         f"on this path)", record=rec["id"])
+
+
 def bell_beat(port: int) -> None:
     """The bell tends its own door (0044 sp2): with no standing grant and no
     open card, it ASKS — a human's word opens the last mile, never code."""
@@ -7440,6 +7521,10 @@ def main() -> None:
                         elif r.get("kind") == "craft-edit" and r.get("status") == "pending":
                             handled.add(key)
                             on_craft_edit(port, scope, r)
+                        elif r.get("kind") == "release" and \
+                                r.get("status") in ("pending", "approved", "denied"):
+                            handled.add(key)
+                            on_release(port, scope, r)
                         elif r.get("kind") == "ecosystem":
                             if SHIPYARD.on_request(port, r) or r.get("status") == "staged":
                                 handled.add(key)

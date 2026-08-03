@@ -36,7 +36,8 @@ _ZONES = ("assets", "plane", "worldlines", "floors")
 #  vocabulary was one word short) — a parlor ask is NOT an adoption, so a
 #  busy universe never hides drift behind ordinary conversation
 ADOPTION_KINDS = ("improvement", "estate-adopt", "field-join", "drift",
-                  "experiment")
+                  "experiment",
+                  "release")     # Canon change = epoch release (0045 sp3, JB's lock)
 
 
 def _body(r: dict) -> dict:
