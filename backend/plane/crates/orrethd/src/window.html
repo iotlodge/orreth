@@ -1753,6 +1753,18 @@ function bgFrame(ts){
     gr.addColorStop(1,PAL.bfire2);
     }
     g.fillStyle=gr;g.beginPath();g.arc(q[0],q[1],R,0,6.283);g.fill();
+    /* the tools at this tissue (JB's find, 2026-08-03): serving stalls as
+       brass diamonds orbiting the ember — the farm visible in the mind too */
+    if(c.scope&&!LEGACYF){
+      const fnode=findNode(c.scope);
+      const fsvc=((fnode||{}).farm||[]).filter(s=>s.state!=="decommissioned").slice(0,4);
+      fsvc.forEach((s,i)=>{const th=ts/4200+i*2*Math.PI/Math.max(fsvc.length,1);
+        const fx=q[0]+(R+6)*Math.cos(th), fy=q[1]+(R+6)*.5*Math.sin(th);
+        g.save();g.translate(fx,fy);g.rotate(Math.PI/4);
+        g.globalAlpha=s.state==="serving"?.85:.45;
+        g.fillStyle=PAL.bember(".9");
+        g.fillRect(-2.1,-2.1,4.2,4.2);g.restore();g.globalAlpha=1;});
+    }
     BG.hit.push({sx:q[0],sy:q[1],scope:c.scope,name:c.name,records:c.records,region:c.region});
   }
   /* the signals: golden fire along the heartbeat chain */
@@ -1998,8 +2010,9 @@ function ovFrame(){
       g.globalAlpha=(b.kind==="core"?.9:.75)*dim;
       g.fillStyle=b.kind==="core"?PAL.olblCore:PAL.olbl;
       g.font=`${b.kind==="core"?11:b.kind==="eco"?10.5:9}px ui-monospace,monospace`;
+      const nt=(n.farm||[]).filter(s=>s.state!=="decommissioned").length;
       const lbl=b.kind==="core"?b.name
-        :`${b.name}${n.agents?` · ${n.agents}a`:""}${n.records?` · ${n.records}m`:""}`;
+        :`${b.name}${n.agents?` · ${n.agents}a`:""}${n.records?` · ${n.records}m`:""}${nt?` · ${nt}t`:""}`;
       g.fillText(lbl,q[0]+r+6,q[1]+3);}
     g.globalAlpha=1;
     /* THE ASSOCIATION (JB's law of the orrery, restored 2026-07-23): every
@@ -2022,14 +2035,21 @@ function ovFrame(){
         const wx=q[0]+wr*Math.cos(th), wy=q[1]+wr*.42*Math.sin(th);
         g.globalAlpha=.75*dim; g.fillStyle=PAL.owf;
         g.beginPath();g.arc(wx,wy,1.3,0,6.283);g.fill();g.globalAlpha=1;}
-      const farm=(n2.farm||[]).filter(s2=>s2.state!=="decommissioned").slice(0,6);
-      const fr=wr+8;
+    }
+    /* farm plots draw UNGATED (JB's find, 2026-08-03: the MCP stalls at
+       f:prod flickered with the moon's orbit behind the depth gate — a
+       tool that serves deserves to be seen from anywhere) */
+    const farm=((b.n||{}).farm||[]).filter(s2=>s2.state!=="decommissioned").slice(0,6);
+    if(farm.length){
+      const fr=r+9+(((b.n||{}).residents||[]).length?17:0);
       farm.forEach((s2,i2)=>{const th=now/3600+i2*2*Math.PI/Math.max(farm.length,1);
         const fx=q[0]+fr*Math.cos(th), fy=q[1]+fr*.4*Math.sin(th);
         g.save();g.translate(fx,fy);g.rotate(Math.PI/4);
-        g.globalAlpha=(s2.state==="serving"?.9:.6)*dim;
+        g.globalAlpha=(s2.state==="serving"?.95:.6)*dim;
         g.fillStyle=s2.state==="quarantined"?PAL.ofarmQ:PAL.ofarmOk;
-        g.fillRect(-2.2,-2.2,4.4,4.4);g.restore();g.globalAlpha=1;});
+        g.fillRect(-2.8,-2.8,5.6,5.6);g.restore();g.globalAlpha=1;
+        OVHIT.push({x:fx,y:fy,r:8,scope:b.scope,kind:"plot",
+                    name:s2.name,state:s2.state});});
     }
     OVHIT.push({x:q[0],y:q[1],r:Math.max(r+6,10),scope:b.scope,kind:b.kind});});
   requestAnimationFrame(ovFrame);
@@ -2054,6 +2074,7 @@ function ovWire(){const C=$("ocanvas"); if(!C||C.dataset.wired)return; C.dataset
     if(e.target===C){const {best,x,y}=ovPick(e);
       C.style.cursor=best?"pointer":"grab";
       if(best&&best.kind==="res"){ocResFill(best,x,y)}
+      else if(best&&best.kind==="plot"){ocPlotFill(best,x,y)}
       else if(best){ocFill(best.scope,x,y)}else ocOff();}});
   window.addEventListener("mouseup",()=>{OV.drag&&setTimeout(()=>OV.drag=null,0)});
   C.addEventListener("click",e=>{if(OV.drag&&OV.drag.moved)return;
@@ -2066,6 +2087,16 @@ function ovWire(){const C=$("ocanvas"); if(!C||C.dataset.wired)return; C.dataset
     else if(!best){OV.focus=null;OV.zoom=1;OV.px=OV.py=0;}});
   C.addEventListener("wheel",e=>{e.preventDefault();
     OV.zoom=Math.max(.45,Math.min(3.2,OV.zoom*(e.deltaY<0?1.09:.92)))},{passive:false});
+}
+function ocPlotFill(h,x,y){ /* a tool's card, canvas-fed (JB's find, 2026-08-03) */
+  const n=findNode(h.scope)||{};
+  const s=(n.farm||[]).find(v=>v.name===h.name)||{};
+  const c=$("ocard");if(!c)return;
+  c.innerHTML=`<b>${esc(h.name||"a tool")}</b> · ${esc(s.state||h.state||"?")}
+    <div class="sub">${esc(h.scope)} · ${s.transport||"?"} · ${s.calls||0} call(s)
+    ${s.manifest_hash?` · pinned ${String(s.manifest_hash).slice(7,17)}…`:""}</div>`;
+  c.style.left=Math.min(x+18,($("orrery").clientWidth-300))+"px";
+  c.style.top=(y+8)+"px";c.style.display="block";
 }
 function ocResFill(h,x,y){ /* a resident's card, canvas-fed — the association spoken */
   const O=$("orrery"),c=$("ocard"); const n=findNode(h.scope)||{};

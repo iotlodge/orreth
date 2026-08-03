@@ -712,3 +712,9 @@ Probe-proven: req-418 ("does the router still deserve the head?") armed and stag
 | `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | The `/craft` door: head or pinned (off-worldline pins refuse), arm by DID hash when an argument runs (visible — no secret splits), servings on the instrument tier (servings.jsonl, the flight recorder's precedent). Lease enforcement = named hardening gap. |
 
 Proven: the flow's record named v2 — the sha of the release JB cut — and a darkened registry served the cached copy LABELED stale: true.
+
+## Fable 5 — 2026-08-03 (the farm becomes visible in the sky and the mind — JB's find)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | JB: "active services in Farm but not in brain or orrery." The data always flowed (all four f:prod MCP stalls ride the heartbeat chain); the 3D sky drew farm diamonds only when a moon faced the camera (the depth gate) and the brain drew none. Now: diamonds UNGATED on every body ("a tool that serves deserves to be seen from anywhere"), tool counts in the body labels (`· Nt`), a hover card naming service · state · calls · pinned manifest, and brass diamonds orbiting each ember in the brain. |
