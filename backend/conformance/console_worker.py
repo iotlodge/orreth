@@ -1290,16 +1290,18 @@ def embed_door() -> None:
             self.wfile.write(out)
 
         def do_GET(self):
-            """The instrument room's supply door (0043 sp3): the composed
-            observatory payload, CORS-open so the glass on any floor's port
-            can drink it — instrument data behind the worker's own door, the
-            plane untouched (rule 9)."""
-            if self.path.split("?")[0] != "/observatory":
+            """The instrument room's supply door (0043 sp3) and the craft
+            room's (0045 sp1): composed payloads, CORS-open so the glass on
+            any floor's port can drink them — behind the worker's own door,
+            the plane untouched (rule 9)."""
+            route = self.path.split("?")[0]
+            if route not in ("/observatory", "/governance"):
                 self.send_response(404)
                 self.end_headers()
                 return
             try:
-                out = json.dumps(compose_observatory()).encode()
+                out = json.dumps(compose_governance() if route == "/governance"
+                                 else compose_observatory()).encode()
             except Exception as e:
                 out = json.dumps({"error": str(e)[:120]}).encode()
             self.send_response(200)
@@ -2117,6 +2119,100 @@ def governed_ping(port: int, mid: str, klass: str) -> dict | None:
     except Exception:
         FLIGHT.refuse(ADA_DID, klass, "stumbled")
         return None
+
+
+# ---------------------------------------------------------------- the canon firmware (0045 sp1)
+# THE CANON EXTRACTION: the residents' driving words leave the code. These
+# literals are GENESIS SEEDS only — on start they land as signed Canon
+# records (becky signs: the trust root vouches for the build), and runtime
+# READS the record's head. A firmware change is a new record, never a code
+# edit (law 2); slots are ⟦named⟧ so the record reads clean to a human.
+FIRMWARE = {
+    "assay-judge":
+        "You are an INDEPENDENT judge at the «medium» tier assaying a "
+        "completed piece of governed work. Rubric: ⟦rubric⟧. Reply with "
+        "STRICT JSON only — begin with the { character, no preamble, no "
+        "code fences: {\"score\": 0.00, \"why\": \"one short sentence\"}."
+        "\n\nTHE COMPLETED WORK:\n⟦work⟧",
+    "graduation-mentee":
+        "You are the mentee mind at the «low» tier of a governed universe, "
+        "on a canary run for the skill \"⟦skill⟧\". The craft: ⟦steps⟧. "
+        "Summarize the records below in 4-6 sentences, citing at least 3 "
+        "by their [bracketed] names. Use ONLY these records.\n\nRECORDS:\n⟦corpus⟧",
+    "graduation-judge":
+        "You are an INDEPENDENT judge at the «medium» tier grading a "
+        "mentee's canary run for the skill \"⟦skill⟧\". Rubric: faithful "
+        "to the provided records ONLY · at least 3 [bracketed] citations · "
+        "no invented facts · clear prose. Reply with STRICT JSON only — "
+        "begin your reply with the { character, no preamble, no code "
+        "fences: {\"score\": 0.00, \"why\": \"one short sentence\"}."
+        "\n\nRECORDS GIVEN TO THE MENTEE:\n⟦corpus⟧\n\nMENTEE'S SUMMARY:\n⟦summary⟧",
+    "resident-voice":
+        "You are ⟦name⟧, a resident organ of the Orreth floor ⟦scope⟧. "
+        "Answer the caller in at most three short sentences, grounded ONLY "
+        "in the facts below. Never invent numbers or names.\n\nFACTS:\n⟦facts⟧",
+}
+
+
+def craft_render(text: str, **slots) -> str:
+    for k, v in slots.items():
+        text = text.replace("⟦" + k + "⟧", str(v))
+    return text
+
+
+_CANON_SEEDED = False
+_CRAFT_CACHE: dict = {"at": 0.0, "rows": {}}
+
+
+def canon_seed(port: int) -> None:
+    """Idempotent, once per life: any firmware name without a record on the
+    shelf lands its genesis seed — signed by becky, tagged canon."""
+    global _CANON_SEEDED
+    if _CANON_SEEDED:
+        return
+    _CANON_SEEDED = True
+    try:
+        have = set()
+        for _, b, _, _ in wire_assets(port, "firmware"):
+            f = (b or {}).get("firmware") or {}
+            if f.get("name"):
+                have.add(f["name"])
+        import re as _re2
+        for name, text in FIRMWARE.items():
+            if name in have:
+                continue
+            body = {"firmware": {
+                "name": name, "text": text,
+                "slots": sorted(set(_re2.findall(r"⟦(\w+)⟧", text))),
+                "extracted_from": "console_worker.py — the Canon extraction "
+                                  "(0045 sp1); the literal is genesis only"}}
+            rec = node.make_memory({"did": _BECKY.did, "scope": UNIVERSE_SCOPE},
+                                   _BECKY.kp, UNIVERSE_SCOPE, body,
+                                   kind="semantic",
+                                   tags=["canon", "firmware", "prompt",
+                                         f"fw-{name}"])
+            call(port, "POST", "/records", rec)
+            print(f"  📜 canon: firmware “{name}” extracted to the shelf "
+                  f"({rec['id'][:18]}…)")
+    except Exception as e:
+        _CANON_SEEDED = False                 # the next beat may retry
+        print(f"    (canon seed stumbled: {e})")
+
+
+def craft(port: int, name: str) -> str:
+    """The worker reads its own firmware from the Canon — the record's head
+    is the truth; the literal serves only when the shelf cannot answer."""
+    if time.time() - _CRAFT_CACHE["at"] > 60:
+        rows: dict = {}
+        try:
+            for _, b, _, _ in wire_assets(port, "firmware"):
+                f = (b or {}).get("firmware") or {}
+                if f.get("name"):
+                    rows[f["name"]] = f["text"]   # oldest-first: head wins
+            _CRAFT_CACHE.update(at=time.time(), rows=rows)
+        except Exception:
+            _CRAFT_CACHE["at"] = time.time()
+    return _CRAFT_CACHE["rows"].get(name) or FIRMWARE[name]
 
 
 def governed_thought(port: int, mid: str, klass: str, prompt: str, *,
@@ -4372,25 +4468,18 @@ def _live_graduation(n2, u_port: int, k: int = 3):
     for i in range(k):
         m = governed_thought(
             u_port, MENTEE_MIND, "low",
-            "You are the mentee mind at the «low» tier of a governed universe, "
-            "on a canary run for the skill \"summarize a floor's week\". The "
-            "craft: gather the week's records · distill by score · cite. "
-            "Summarize the records below in 4-6 sentences, citing at least 3 "
-            "by their [bracketed] names. Use ONLY these records.\n\nRECORDS:\n"
-            + corpus, max_tokens=300)
+            craft_render(craft(u_port, "graduation-mentee"),
+                         skill="summarize a floor's week",
+                         steps="gather the week's records · distill by score · cite",
+                         corpus=corpus), max_tokens=300)
         if m is None:
             break
         usd += m["usd"]
         j = governed_thought(
             prod_port, JUDGE_MIND, "medium",
-            "You are an INDEPENDENT judge at the «medium» tier grading a "
-            "mentee's canary run for the skill \"summarize a floor's week\". "
-            "Rubric: faithful to the provided records ONLY · at least 3 "
-            "[bracketed] citations · no invented facts · clear prose. Reply "
-            "with STRICT JSON only — begin your reply with the { character, "
-            "no preamble, no code fences: {\"score\": 0.00, \"why\": \"one "
-            "short sentence\"}.\n\nRECORDS GIVEN TO THE MENTEE:\n" + corpus
-            + "\n\nMENTEE'S SUMMARY:\n" + m["text"], max_tokens=200)
+            craft_render(craft(u_port, "graduation-judge"),
+                         skill="summarize a floor's week",
+                         corpus=corpus, summary=m["text"]), max_tokens=200)
         if j is None:
             break
         usd += j["usd"]
@@ -5631,10 +5720,9 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
             resp = litellm.completion(
                 model=model, max_tokens=160,
                 messages=[{"role": "system", "content":
-                           f"You are {name}, a resident organ of the Orreth floor {SCOPE}. "
-                           "Answer the caller in at most three short sentences, grounded ONLY "
-                           "in the facts below. Never invent numbers or names.\n\nFACTS:\n"
-                           + grounded},
+                           craft_render(craft(port, "resident-voice"),
+                                        name=name, scope=SCOPE,
+                                        facts=grounded)},
                           {"role": "user", "content": question}])
             ms = int((time.perf_counter() - t0) * 1000)
             tokens = resp.usage.total_tokens
@@ -6536,11 +6624,8 @@ def _assay_floor(port: int, scope: str) -> None:
         rubric = declared or vera.DEFAULT_RUBRIC
         j = governed_thought(
             prod_port, JUDGE_MIND, "medium",
-            "You are an INDEPENDENT judge at the «medium» tier assaying a "
-            "completed piece of governed work. Rubric: " + rubric
-            + ". Reply with STRICT JSON only — begin with the { character, no "
-            "preamble, no code fences: {\"score\": 0.00, \"why\": \"one short "
-            "sentence\"}.\n\nTHE COMPLETED WORK:\n" + json.dumps(o)[:900],
+            craft_render(craft(u_port, "assay-judge"), rubric=rubric,
+                         work=json.dumps(o)[:900]),
             max_tokens=160, as_did=VERA_DID)
         if j is None:
             print("  🔭 assay: the judge's ground is missing — "
@@ -6972,6 +7057,87 @@ def _wire_verdict_standings(port: int, *, scope: str = "u:demo") -> tuple[list, 
 _OBS_CACHE: dict = {"at": 0.0, "payload": {}}
 
 
+# ---------------------------------------------------------------- the craft room (0045 sp1)
+_GOV_CACHE: dict = {"at": 0.0, "payload": None}
+
+
+def _craft_category(name: str, tags: list) -> str:
+    """A heuristic v1 (honest: sp2's editors will let type be DECLARED):
+    firmware and known names sort themselves; the rest read as prompts."""
+    n, t = name.lower(), set(tags or [])
+    if "firmware" in t or "prompt" in t:
+        return "prompts"
+    if "skill" in n:
+        return "skills"
+    if "standard" in n or "policy" in n or "routing" in n:
+        return "policies"
+    if "charter" in n:
+        return "charters"
+    if n.startswith("template-"):
+        return "manifests"                    # allen's IAC — deployment shapes
+    return "prompts"
+
+
+def compose_governance() -> dict:
+    """The registry (0045 law 1): a PROJECTION over the signed shelves —
+    one payload, worldlines collapsed, every object wearing its lifecycle.
+    Bodies are not carried here; the glass reads them through the records
+    door, so the index stays light at thousands of objects."""
+    if time.time() - _GOV_CACHE["at"] < 10 and _GOV_CACHE["payload"]:
+        return _GOV_CACHE["payload"]
+    port = 4500
+    objects: list = []
+    # the Canon firmware — one worldline per name, oldest-first, head last
+    fw: dict[str, list] = {}
+    for ref, b, _, t in wire_assets(port, "firmware"):
+        f = (b or {}).get("firmware") or {}
+        if f.get("name"):
+            fw.setdefault(f["name"], []).append(ref)
+    for name, refs in sorted(fw.items()):
+        objects.append({"name": name, "category": "prompts",
+                        "lifecycle": "canon", "versions": len(refs),
+                        "head": refs[-1], "refs": refs})
+    # the Chronicle shelf — grace's assets, grouped by their name tag
+    sh: dict[str, dict] = {}
+    for ref, b, _, t in wire_assets(port, "asset"):
+        name = next((x for x in (t or []) if x not in
+                     ("asset", "asset-variant", "adopted")), None)
+        if not name:
+            continue
+        row = sh.setdefault(name, {"refs": [], "tags": t})
+        row["refs"].append(ref)
+    for name, row in sorted(sh.items()):
+        objects.append({"name": name,
+                        "category": _craft_category(name, row["tags"]),
+                        "lifecycle": "chronicle",
+                        "versions": len(row["refs"]),
+                        "head": row["refs"][-1], "refs": row["refs"]})
+    # charters and manifests — records already on the shelf
+    for tag, cat in (("charter", "charters"), ("bell-manifest", "manifests")):
+        seen: dict[str, list] = {}
+        for ref, b, _, t in wire_assets(port, tag):
+            key = next((x for x in (t or []) if x != tag), tag)
+            seen.setdefault(key, []).append(ref)
+        for name, refs in sorted(seen.items()):
+            objects.append({"name": name, "category": cat,
+                            "lifecycle": "canon" if cat == "manifests"
+                            else "chronicle",
+                            "versions": len(refs), "head": refs[-1],
+                            "refs": refs})
+    # declared rubrics — short, carried inline from the nest
+    rubrics = [{"goal": k[:20] + "…", "text": v}
+               for k, v in _rubrics_load().items()]
+    counts: dict = {}
+    for o in objects:
+        counts[o["category"]] = counts.get(o["category"], 0) + 1
+    payload = {"at": NOW(), "objects": objects, "rubrics": rubrics,
+               "counts": counts,
+               "note": "a projection over the signed log — never a second "
+                       "truth (0045 law 1)"}
+    _GOV_CACHE.update(at=time.time(), payload=payload)
+    return payload
+
+
 def _bell_room_view() -> dict:
     """The bell's own state for the room (0044 sp4): consent posture, the
     standing rings, rung-or-resting — read from the ledger seeds, cheap."""
@@ -7355,6 +7521,7 @@ def main() -> None:
                         FLIGHT.beat()         # the Observatory's pulse (0043 sp1)
                         assay_beat(port)      # the Examiner, dial-gated (0043 sp2)
                         bell_beat(port)       # the bell tends its door (0044 sp2)
+                        canon_seed(port)      # the firmware stands as records (0045 sp1)
                         verify_beat(port)     # the deed watchman, standing (0044 sp3 · L-B)
                         gate_age_beat(port)   # aged consequence rings once (0044 sp3)
 

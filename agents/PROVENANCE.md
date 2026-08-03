@@ -664,3 +664,12 @@ The closing proof, verbatim: killed 23:17:30Z (Console closed) → the witness s
 | File | Author | Note |
 |---|---|---|
 | `docs/design/0045-the-craft-room.md` | Fable 5 (claude-fable-5) | NET-NEW — the week's largest item designed from JB's machine-of-machines brief: the trust gap named (the machine shows its work but hides its craft), seven laws (registry-as-projection · two lifecycles one law of change · the human's edit wears grace's grammar · readable craft · the argument first-class · commissioned creation · scale as constraint), the «Governance» room replacing Ask, five spoonfuls. Three JB locks taken at design time, all recommended: Canon change = epoch release (0041's ceremony IS the firmware lifecycle) · human edits = one-motion sibling proposals · Ask retires. |
+
+## Fable 5 — 2026-08-03 (0045 sp1 — the registry: the machine's craft becomes readable)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | THE CANON EXTRACTION: the four LLM firmware prompts leave the code as ⟦slotted⟧ templates (FIRMWARE = genesis seeds only), land as becky-signed Canon records on first beat (`canon_seed`, idempotent), and the worker READS its own firmware from the shelf (`craft()` + `craft_render`, 60s cache, literal fallback only when the shelf cannot answer) — all four call sites refit. `compose_governance` — the registry as a light index (worldlines collapsed per name across firmware · grace's assets · charters · manifests · declared rubrics), served CORS-open at `/governance` beside `/observatory`. |
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | «Governance» replaces Ask: category chips × lifecycle lenses (canon · the firmware / chronicle · the adaptive craft) × live search; the shelf as worldline rows; the reader (record hash, version chips, rendered text) and the diff (the lines that moved, adds green, removals struck). The reel rehomed to Pulse ids-intact; submitAsk/asklog/qchips retired with comments naming the successor; two init breaks from the retirement (the tab array's dead "ask", a top-level write to a removed element) surfaced by the glass's own errors and healed. |
+
+Proven as a human: vera's actual judge prompt read in the glass wearing CANON — the firmware no longer hidden; fingertip-default v1→v2 diffed showing the improver's real adopted change (max_cycles 2→5, adopted_from named). 12 objects · 7 prompts · 1 charter · 4 manifests · JB's declared yardstick under its own heading.

@@ -462,7 +462,26 @@
   @media(prefers-reduced-motion:reduce){.alertring,.moon.ripple,.planet.ripple{animation:none!important}}
 
   /* ── REQUESTS + ASK ── */
-  #v-req,#v-ask,#v-obj{padding:1.6rem;overflow-y:auto}
+  #v-req,#v-gov,#v-obj{padding:1.6rem;overflow-y:auto}
+  /* the craft room (0045 sp1) */
+  .gov-split{display:grid;grid-template-columns:minmax(300px,36%) 1fr;gap:1rem;margin-top:.8rem}
+  .gvrow{border:1px solid var(--hair);border-radius:8px;padding:.5rem .7rem;margin-bottom:.4rem;
+    cursor:pointer;display:flex;gap:.6rem;align-items:baseline}
+  .gvrow:hover,.gvrow.on{border-color:var(--brass)}
+  .gvrow .nm{font-weight:600}
+  .gvrow .lc{font:.6rem var(--mono);letter-spacing:.08em;border:1px solid var(--brassdim);
+    border-radius:9px;padding:.05rem .45rem;color:var(--brass);white-space:nowrap}
+  .gvrow .lc.chr{border-color:var(--hair2);color:var(--dim)}
+  .gvrow .meta{margin-left:auto;font:.66rem var(--mono);color:var(--dim);white-space:nowrap}
+  #gov-read{border:1px solid var(--hair);border-radius:10px;padding:.9rem 1rem;
+    overflow:auto;max-height:72vh;align-self:start}
+  #gov-read pre{white-space:pre-wrap;font:.74rem var(--mono);color:var(--near);
+    background:var(--deep);border-radius:8px;padding:.7rem;overflow-x:auto;margin-top:.5rem}
+  .gvv{cursor:pointer;border:1px solid var(--hair2);border-radius:9px;padding:.1rem .5rem;
+    font:.66rem var(--mono);margin-right:.3rem;display:inline-block}
+  .gvv.on{border-color:var(--brass);color:var(--brass)}
+  .gvdiff div{font:.72rem var(--mono);white-space:pre-wrap}
+  .gvdiff .add{color:#7fd1a8}.gvdiff .del{color:#d98c8c;text-decoration:line-through}
   /* the human's queue, triaged (JB 2026-07-15): waiting on you · in flight ·
      settled — bands, kind chips, and drawers for the record */
   .qband{font:.72rem var(--mono);letter-spacing:.14em;text-transform:uppercase;
@@ -643,7 +662,7 @@
     main{grid-template-columns:1fr}
     .rail{display:none}
     #v-pulse{padding:1.1rem}
-    #v-farm,#v-stable,#v-req,#v-ask,#v-obj{padding:.9rem}
+    #v-farm,#v-stable,#v-req,#v-gov,#v-obj{padding:.9rem}
     .lower{grid-template-columns:1fr;gap:1.4rem}
     .farmgrid{grid-template-columns:1fr}
     .reslegend{max-width:92%}
@@ -756,7 +775,7 @@
     <span class="tab" data-v="farm">Farm<span class="badge" id="farm-badge"></span></span>
     <span class="tab" data-v="stable">Stable<span class="badge" id="stable-badge"></span></span>
     <span class="tab" data-v="req">Requests<span class="badge" id="req-badge"></span></span>
-    <span class="tab" data-v="ask">Ask</span>
+    <span class="tab" data-v="gov">Governance</span>
   </div>
   <span class="daybtn" id="daybtn" onclick="themeFlip()" title="the Daylight Glass — flip the light">☀</span>
   <div class="pulse" id="hpulse"><span class="quiet">reaching the daemon…</span></div>
@@ -806,6 +825,12 @@
 
   <!-- PULSE -->
   <div class="view hide" id="v-pulse">
+    <!-- the reel rode here when Ask retired (0045 sp1) — stories beside the
+         vital signs; ids unchanged so the projector's wiring still fits -->
+    <div class="section" style="margin-top:0">🎬 the reel — true stories, told against this live rig</div>
+    <div class="hint">each one runs the real thing: identities minted, gates held, memories signed. one story at a time.</div>
+    <div class="chips" id="reel"></div>
+    <pre id="reelout" class="hide"></pre>
     <div class="hero"><span class="big" id="hero-n">—</span>
       <span class="cap" id="hero-c">the universe, at a glance</span></div>
     <div class="belowline" id="below"></div>
@@ -922,26 +947,18 @@
     <div id="objlist"><div class="quiet">no objectives yet — state one above.</div></div>
   </div>
 
-  <div class="view hide" id="v-ask">
-    <div class="ask-box">
-      <div class="prompt">Ask the universe.</div>
-      <div class="hint">this ask lands at <span class="place" style="color:var(--brass)">…</span></div>
-      <div class="hint">command the librarian to gather sourced, verified knowledge — it becomes memory in the Window.</div>
-      <div class="ask-in">
-        <input id="ask" placeholder="gather sourced knowledge on…">
-        <button onclick="submitAsk()">Dispatch →</button>
-      </div>
-      <div class="formerr" id="askerr"></div>
-      <div class="steps"><span><span class="num">①</span>you dispatch an ask</span>
-        <span><span class="num">②</span>the librarian gathers from identified sources</span>
-        <span><span class="num">③</span>sourced memories land in the Window · quarantined until corroborated</span></div>
-      <div class="chips" id="qchips"></div>
-      <div class="section">dispatched</div>
-      <div id="asklog"><div class="quiet">no dispatches yet.</div></div>
-      <div class="section">🎬 the reel — true stories, told against this live rig</div>
-      <div class="hint">each one runs the real thing: identities minted, gates held, memories signed. one story at a time.</div>
-      <div class="chips" id="reel"></div>
-      <pre id="reelout" class="hide"></pre>
+  <!-- THE CRAFT ROOM (0045 sp1): what drives the machine, readable. The Ask
+       tab retires here — gathering belongs to the librarian's audience now;
+       this room shows the driving NLP: Canon firmware and Chronicle craft,
+       worldlines, readers, diffs. A projection, never a second truth. -->
+  <div class="view hide" id="v-gov">
+    <div class="section" style="margin-top:0">the craft room · what drives the machine, readable — every word versioned, nothing silently overwritten (0045)</div>
+    <div class="qchips" id="gov-cats"></div>
+    <div class="qchips" id="gov-lens"></div>
+    <div class="ask-in" style="margin-top:.4rem"><input id="gov-q" placeholder="search the craft — names, categories"></div>
+    <div class="gov-split">
+      <div id="gov-list"><div class="quiet">the shelves are being read…</div></div>
+      <div id="gov-read" class="hide"></div>
     </div>
   </div>
 </main>
@@ -1182,7 +1199,7 @@ const money=u=>u>=0.01?"$"+u.toFixed(2):u>0?"$"+u.toFixed(5):"$0";
 /* view switching */
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));
-  ["uni","obj","pulse","obs","farm","stable","req","ask"].forEach(v=>$("v-"+v).classList.toggle("hide",v!==t.dataset.v));
+  ["uni","obj","pulse","obs","farm","stable","req","gov"].forEach(v=>$("v-"+v).classList.toggle("hide",v!==t.dataset.v));
   if(t.dataset.v==="uni"){const O=$("orrery");if(O)O.dataset.sig="";renderOrrery();scrub()}
   if(t.dataset.v==="obs")loadObservatory();   /* the instrument room wakes on entry (0043 sp3) */
   if(typeof syncHash==="function")syncHash(false);   /* the tab rides the URL too */
@@ -2406,13 +2423,8 @@ async function loadReq(){
             "nothing in flight.")
       +`<div class="qband"><b>settled — the record keeps every word</b>
         <span class="n">· ${settled.filter(keep).length}</span></div>`+drawers;
-    $("asklog").innerHTML= q.filter(r=>r.kind==="gather").length?
-      q.filter(r=>r.kind==="gather").slice().reverse().map(r=>
-      `<div class="req"><span class="kind">gather</span><span class="txt">${r.text}
-       <div class="sub">${r.id} · dispatched ${(r.at||"").slice(11,19)}</div>
-       ${typeof r.result==="string"?`<div class="sub" style="color:var(--near)">${r.result}</div>`:""}${staleNote(r)}</span>
-       <span class="st">${r.status}</span></div>`).join("")
-      : `<div class="quiet">no dispatches yet.</div>`;
+    /* the asklog retired with the Ask tab (0045 sp1) — gathers live in the
+       Requests bands like every other kind */
   }catch{}
 }
 async function joinDecide(id,ok){
@@ -2525,16 +2537,8 @@ async function objDecide(id,ok){
     body:JSON.stringify(body)});
   KF.delete(id);loadReq();loadObjectives();
 }
-async function submitAsk(){
-  const t=$("ask").value.trim(); if(!t)return;
-  try{
-    const r=await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({kind:"gather",text:t})});
-    if(!r.ok){$("askerr").textContent=`the daemon refused the ask (${r.status})`;return}
-    $("ask").value="";$("askerr").textContent="";
-  }catch{$("askerr").textContent="unreachable — is the daemon up? (scripts/dev.sh status)";return}
-  loadReq();
-}
+/* submitAsk retired with the Ask tab (0045 sp1) — gathering is the
+   librarian's audience now; the kind="gather" door itself still stands */
 
 /* ── the farm (0018): plant · approve · tend · decom — services as identities ── */
 let farmCache=[];
@@ -2982,9 +2986,7 @@ const DROP_TYPES=["txt","md","json","csv","pdf","png","jpg","jpeg"];
   rd.readAsDataURL(f);
 }));
 
-$("qchips").innerHTML=["build strategies for cold-weather architecture",
-  "PCI-DSS controls for payment services","recent advances in retrieval-augmented agents"]
-  .map(q=>`<span class="qchip" onclick="$('ask').value=this.textContent">${q}</span>`).join("");
+/* the ask suggestions retired with their tab (0045 sp1) */
 
 /* ── the reel: run a demo from the glass. The queue carries the ask; the worker
       rolls the story in a side thread and the transcript lands as the result. ── */
@@ -3206,6 +3208,75 @@ window.addEventListener("resize",()=>{if(!$("v-uni").classList.contains("hide"))
       beat turns the room dark, loudly — the one failure a monitoring organ
       must never have is silence about itself. ── */
 const OBSD=`${location.protocol}//${location.hostname}:4562`;
+/* ── THE CRAFT ROOM (0045 sp1) — lives ABOVE applyHash's first call (the
+      1:35 lesson): the registry is a projection over the signed shelves;
+      bodies are read through the universe's records door on open. ── */
+const UREC=`${location.protocol}//${location.hostname}:4500`;
+let GOVD=null,GOVCAT="all",GOVLENS="all",GOVSEL=null;
+async function loadGovernance(){
+  try{GOVD=await(await fetch(OBSD+"/governance")).json();renderGov()}
+  catch{GOVD=null}
+}
+function govCat(c){GOVCAT=c;renderGov()}
+function govLens(l){GOVLENS=l;renderGov()}
+function renderGov(){
+  const el=$("gov-list");if(!el||!GOVD||!GOVD.objects)return;
+  const cats=["all",...Object.keys(GOVD.counts||{}).sort()];
+  $("gov-cats").innerHTML=cats.map(c=>`<span class="qchip ${GOVCAT===c?"on":""}"
+    onclick="govCat('${c}')">${c}${c==="all"?` · ${GOVD.objects.length}`:` · ${GOVD.counts[c]||0}`}</span>`).join("");
+  $("gov-lens").innerHTML=[["all","both lifecycles"],["canon","canon · the firmware"],
+    ["chronicle","chronicle · the adaptive craft"]].map(([l,t])=>
+    `<span class="qchip ${GOVLENS===l?"on":""}" onclick="govLens('${l}')">${t}</span>`).join("");
+  const q=(($("gov-q")||{}).value||"").toLowerCase();
+  const rows=GOVD.objects.filter(o=>(GOVCAT==="all"||o.category===GOVCAT)
+    &&(GOVLENS==="all"||o.lifecycle===GOVLENS)
+    &&(!q||o.name.toLowerCase().includes(q)||o.category.includes(q)));
+  el.innerHTML=(rows.map(o=>`<div class="gvrow ${GOVSEL===o.name?"on":""}" onclick="govOpen('${esc(o.name)}')">
+      <span class="nm">${esc(o.name)}</span>
+      <span class="lc ${o.lifecycle==="chronicle"?"chr":""}">${o.lifecycle==="canon"?"CANON":"chronicle"}</span>
+      <span class="meta">${o.category} · v${o.versions}</span></div>`).join("")
+    ||`<div class="quiet">nothing matches — the craft is elsewhere.</div>`)
+    +(((GOVCAT==="all"||GOVCAT==="rubrics")&&(GOVD.rubrics||[]).length)?
+      `<div class="qband"><b>declared rubrics — the humans' yardsticks (0043 G6)</b><span class="n">· ${GOVD.rubrics.length}</span></div>`
+      +GOVD.rubrics.map(r=>`<div class="gvrow"><span class="nm">${esc(r.goal)}</span>
+        <span class="meta" style="white-space:normal">“${esc(r.text.slice(0,70))}”</span></div>`).join(""):"");
+}
+async function govBody(ref){
+  const b=await(await fetch(UREC+"/records/"+encodeURIComponent(ref)+"/body")).json();
+  if(b&&b.firmware)return b.firmware.text;
+  return typeof b==="string"?b:JSON.stringify(b,null,1);
+}
+function govOpen(name){
+  GOVSEL=name;renderGov();
+  const o=GOVD.objects.find(x=>x.name===name);if(!o)return;
+  const R=$("gov-read");R.classList.remove("hide");
+  R.innerHTML=`<div class="pt"><b>${esc(name)}</b>
+      <span class="lc ${o.lifecycle==="chronicle"?"chr":""}" style="margin-left:.5rem">${o.lifecycle==="canon"?"CANON — a release moves the machine's name":"chronicle — proposals at grace's gate"}</span></div>
+    <div class="quiet2" style="margin:.3rem 0">${o.category} · ${o.versions} version(s) — the worldline, oldest first; nothing here was ever silently overwritten</div>
+    <div id="gov-vers" style="margin:.45rem 0">${o.refs.map((r,i)=>
+      `<span class="gvv" onclick="govVer('${esc(name)}',${i})">v${i+1}${i===o.refs.length-1?" · head":""}</span>`).join("")}
+      ${o.versions>1?`<span class="gvv" onclick="govDiff('${esc(name)}')">⇄ diff head vs prior</span>`:""}</div>
+    <div class="quiet2" id="gov-ref"></div><pre id="gov-body">reading the record…</pre>`;
+  govVer(name,o.refs.length-1);
+}
+async function govVer(name,i){
+  const o=GOVD.objects.find(x=>x.name===name);if(!o)return;
+  document.querySelectorAll("#gov-vers .gvv").forEach((e,j)=>e.classList.toggle("on",j===i));
+  $("gov-ref").textContent=o.refs[i];
+  try{$("gov-body").textContent=await govBody(o.refs[i])}
+  catch(e){$("gov-body").textContent="the record would not open: "+e}
+}
+async function govDiff(name){
+  const o=GOVD.objects.find(x=>x.name===name);if(!o||o.refs.length<2)return;
+  const [a,b]=await Promise.all([govBody(o.refs[o.refs.length-2]),
+                                 govBody(o.refs[o.refs.length-1])]);
+  const A=a.split("\n"),B=b.split("\n"),sa=new Set(A),sb=new Set(B);
+  $("gov-ref").textContent=`v${o.refs.length-1} → v${o.refs.length} (head) — the lines that moved`;
+  $("gov-body").innerHTML='<div class="gvdiff">'
+    +A.filter(l=>!sb.has(l)).map(l=>`<div class="del">− ${esc(l)}</div>`).join("")
+    +B.map(l=>sa.has(l)?`<div>  ${esc(l)}</div>`:`<div class="add">＋ ${esc(l)}</div>`).join("")+"</div>";
+}
+document.addEventListener("input",e=>{if(e.target&&e.target.id==="gov-q")renderGov()});
 let obsCache=null,obsDark=null;  /* this whole block lives ABOVE applyHash's first
    call, deliberately: a #v=obs deep-link clicks the tab during initial evaluation,
    and anything declared below that moment is a dead zone (the 1:35 lesson) */
@@ -3497,7 +3568,7 @@ async function loadObjectives(){
 $("obj-in").addEventListener("keydown",e=>{if(e.key==="Enter")submitObjective()});
 $("obj-rubric").addEventListener("keydown",e=>{if(e.key==="Enter")submitObjective()});
 
-function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable();loadObjectives();loadObservatory()}
+function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable();loadObjectives();loadObservatory();loadGovernance()}
 tick();setInterval(tick,4000);          /* the console breathes */
 if(window.ORRETH_DEMO){                 /* the spectator's ribbon — honest about the frame */
   const b=document.createElement("div");
