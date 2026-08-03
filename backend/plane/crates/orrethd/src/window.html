@@ -3255,7 +3255,9 @@ function govOpen(name){
     <div class="quiet2" style="margin:.3rem 0">${o.category} · ${o.versions} version(s) — the worldline, oldest first; nothing here was ever silently overwritten</div>
     <div id="gov-vers" style="margin:.45rem 0">${o.refs.map((r,i)=>
       `<span class="gvv" onclick="govVer('${esc(name)}',${i})">v${i+1}${i===o.refs.length-1?" · head":""}</span>`).join("")}
-      ${o.versions>1?`<span class="gvv" onclick="govDiff('${esc(name)}')">⇄ diff head vs prior</span>`:""}</div>
+      ${o.versions>1?`<span class="gvv" onclick="govDiff('${esc(name)}')">⇄ diff head vs prior</span>`:""}
+      ${o.lifecycle==="chronicle"?`<span class="gvv" onclick="govEdit('${esc(name)}')">✎ propose an edit — lands on your word</span>`:""}</div>
+    ${o.lifecycle==="canon"?`<div class="quiet2">a change here is a RELEASE and moves the machine's name — the ceremony arrives (0045 sp3)</div>`:""}
     <div class="quiet2" id="gov-ref"></div><pre id="gov-body">reading the record…</pre>`;
   govVer(name,o.refs.length-1);
 }
@@ -3275,6 +3277,43 @@ async function govDiff(name){
   $("gov-body").innerHTML='<div class="gvdiff">'
     +A.filter(l=>!sb.has(l)).map(l=>`<div class="del">− ${esc(l)}</div>`).join("")
     +B.map(l=>sa.has(l)?`<div>  ${esc(l)}</div>`:`<div class="add">＋ ${esc(l)}</div>`).join("")+"</div>";
+}
+/* the editor (0045 sp2): a human's edit is a sibling adopted on the same
+   click — one motion, the one law of change; Canon has no editor here */
+function govEdit(name){
+  const body=$("gov-body");if(!body)return;
+  const cur=body.textContent;
+  body.outerHTML=`<div id="gov-body">
+    <textarea id="gov-ed" spellcheck="false" style="width:100%;min-height:13rem;background:var(--deep);color:var(--near);border:1px solid var(--hair2);border-radius:8px;font:.74rem var(--mono);padding:.6rem">${esc(cur)}</textarea>
+    <div class="ask-in" style="margin:.4rem 0"><input id="gov-note" placeholder="a note for the worldline — why this change (optional)"></div>
+    <button class="sbtn ok" onclick="govEditLand('${esc(name)}')">land it — my word, one motion</button>
+    <button class="sbtn no" onclick="govOpen('${esc(name)}')">never mind</button>
+    <div class="quiet2" id="gov-edmsg" style="margin-top:.4rem"></div></div>`;
+}
+async function govEditLand(name){
+  const t=($("gov-ed")||{}).value||"",note=(($("gov-note")||{}).value||"").trim();
+  $("gov-edmsg").textContent="landing on your word…";
+  let rid=null;
+  try{
+    const r=await(await fetch(UREC+"/requests",{method:"POST",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({kind:"craft-edit",name,text:t,note})})).json();
+    rid=r.id;
+  }catch(e){$("gov-edmsg").textContent="the door would not open: "+e;return}
+  for(let i=0;i<24;i++){
+    await new Promise(z=>setTimeout(z,700));
+    try{
+      const q=(await(await fetch(UREC+"/requests")).json()).requests||[];
+      const x=q.find(v=>v.id===rid);
+      if(x&&x.status==="done"){
+        const say=(x.result||{}).reply||"done";
+        await loadGovernance();govOpen(name);
+        const m=$("gov-ref");if(m)m.textContent=say;
+        return;
+      }
+    }catch{}
+  }
+  const m=$("gov-edmsg");if(m)m.textContent="the word is still walking — see Requests";
 }
 document.addEventListener("input",e=>{if(e.target&&e.target.id==="gov-q")renderGov()});
 let obsCache=null,obsDark=null;  /* this whole block lives ABOVE applyHash's first

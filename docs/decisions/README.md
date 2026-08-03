@@ -398,6 +398,16 @@ queued first.*
 *Named during the 0041/0042 close (Fable, surfaced by the drift drill's parity
 handshake); JB asked that it not be lost. Awaits a deliberate rule-9 session.*
 
+**Revisited on the record 2026-08-03 (0045 sp2 — the first human authoring
+door at the glass).** Verdict: THE PARK HOLDS, and the new door does not
+widen the gap — a human's craft-edit never hand-crafts a record: the WORKER
+mints it (`node.make_memory` computes the id from the body it is signing),
+so glass-authored records are hash-correct by construction, like every
+record the worker has ever minted. The gap remains exactly what it was:
+EXTERNAL authors at a future ingestion door (0013 handshake; 0045 sp5's
+supply line is read-only and does not open one). The trigger stands
+unchanged: before any door admits records minted outside our own scribes.
+
 - **What holds today**: (1) the record id rides the SIGNED subset on both grounds —
   a record whose id differs from what its author signed fails signature
   verification at the door; (2) `test_parity.py` (10 tests) pins SDK ↔ sim

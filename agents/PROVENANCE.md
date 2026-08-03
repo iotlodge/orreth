@@ -673,3 +673,13 @@ The closing proof, verbatim: killed 23:17:30Z (Console closed) → the witness s
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | «Governance» replaces Ask: category chips × lifecycle lenses (canon · the firmware / chronicle · the adaptive craft) × live search; the shelf as worldline rows; the reader (record hash, version chips, rendered text) and the diff (the lines that moved, adds green, removals struck). The reel rehomed to Pulse ids-intact; submitAsk/asklog/qchips retired with comments naming the successor; two init breaks from the retirement (the tab array's dead "ask", a top-level write to a removed element) surfaced by the glass's own errors and healed. |
 
 Proven as a human: vera's actual judge prompt read in the glass wearing CANON — the firmware no longer hidden; fingertip-default v1→v2 diffed showing the improver's real adopted change (max_cycles 2→5, adopted_from named). 12 objects · 7 prompts · 1 charter · 4 manifests · JB's declared yardstick under its own heading.
+
+## Fable 5 — 2026-08-03 (0045 sp2 — the editors & the one law of change)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | `on_craft_edit` — the one law at the glass door: the human's edit rides a `craft-edit` request (the click IS the word), grace signs the sibling with the human's authority named in the body (`"the human's word at req-…"`), `adopted_from` + `derived_from` carry the lineage, and the head moves. Canon names refuse toward the release (sp3); malformed bodies refuse loudly; every refusal ends "Nothing changed." `_craft_heads` maps the shelves for the door. |
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The editor: "✎ propose an edit — lands on your word" on Chronicle objects only (Canon shows the release pointer instead); textarea + worldline note + one-motion land button; polls the word home and re-opens the object with its new head. |
+| `docs/decisions/README.md` | Fable 5 (claude-fable-5) | The write-time re-hash park REVISITED on the record as promised: the park holds — glass-authored records are worker-minted and hash-correct by construction; the trigger stays external ingestion (0013). |
+
+Proven as a human in the glass: fingertip-default v2→v3 (max_obs 3→4, note carried), the diff showing the authority line verbatim; assay-judge refused with the release pointer; a malformed body refused loudly.

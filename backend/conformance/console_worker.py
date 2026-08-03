@@ -7061,6 +7061,66 @@ _OBS_CACHE: dict = {"at": 0.0, "payload": {}}
 _GOV_CACHE: dict = {"at": 0.0, "payload": None}
 
 
+def _craft_heads(port: int) -> dict:
+    """name -> (lifecycle, head_ref) off the shelves — the editor's map."""
+    heads: dict = {}
+    for ref, b, _, _ in wire_assets(port, "firmware"):
+        f = (b or {}).get("firmware") or {}
+        if f.get("name"):
+            heads[f["name"]] = ("canon", ref)
+    for ref, _, _, t in wire_assets(port, "asset"):
+        name = next((x for x in (t or []) if x not in
+                     ("asset", "asset-variant", "adopted")), None)
+        if name:
+            heads[name] = ("chronicle", ref)
+    return heads
+
+
+def on_craft_edit(port: int, scope: str, r: dict) -> None:
+    """0045 sp2 — THE ONE LAW OF CHANGE at the glass door: a human's edit
+    lands as a versioned sibling with lineage, adopted on the same click
+    (one motion — the request IS the word; grace signs as the shelf's
+    keeper and the body names the human's authority). Canon refuses toward
+    the release; a bad shape refuses loudly; nothing saves outside the
+    grammar."""
+    rid = str(r.get("id") or "")
+
+    def done(reply, **kw):
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "done", "result": {"reply": reply, **kw}})
+
+    name = str(r.get("name") or "")
+    heads = _craft_heads(port)
+    if name not in heads:
+        return done(f"the shelf holds no craft named “{name}” — nothing changed")
+    lifecycle, head = heads[name]
+    if lifecycle == "canon":
+        return done("CANON refuses the chronicle door — this word is firmware: "
+                    "a change is a RELEASE and moves the machine's name "
+                    "(0041 · 0045 sp3). Nothing changed")
+    try:
+        parsed = json.loads(str(r.get("text") or ""))
+    except Exception as e:
+        return done("the edit refuses loudly — the body must be valid JSON "
+                    f"({str(e)[:60]}). Nothing changed")
+    if isinstance(parsed, dict) and isinstance(parsed.get("asset"), dict):
+        parsed = parsed["asset"].get("profile", parsed["asset"])
+    body = {"asset": {"name": name, "profile": parsed, "adopted_from": head,
+                      "authority": f"the human's word at {rid} — edit and "
+                                   f"word in one motion (0045 sp2)"}}
+    if r.get("note"):
+        body["asset"]["note"] = str(r["note"])[:200]
+    rec = node.make_memory({"did": IMP_DID, "scope": scope}, IMP, scope,
+                           body, kind="semantic", tags=["asset", name])
+    rec["derived_from"] = [head]
+    call(port, "POST", "/records", rec)
+    _GOV_CACHE["at"] = 0.0                    # the room re-reads at once
+    print(f"  ✎ craft-edit {rid}: “{name}” — the human's sibling stands "
+          f"({rec['id'][:18]}…), the old version behind it")
+    done(f"landed on your word — “{name}” wears a new head with its "
+         f"lineage; the old version stands behind it", record=rec["id"])
+
+
 def _craft_category(name: str, tags: list) -> str:
     """A heuristic v1 (honest: sp2's editors will let type be DECLARED):
     firmware and known names sort themselves; the rest read as prompts."""
@@ -7377,6 +7437,9 @@ def main() -> None:
                         elif r.get("kind") == "witness" and r.get("status") == "staged":
                             handled.add(key)
                             witness_transcribe(port, scope, r)
+                        elif r.get("kind") == "craft-edit" and r.get("status") == "pending":
+                            handled.add(key)
+                            on_craft_edit(port, scope, r)
                         elif r.get("kind") == "ecosystem":
                             if SHIPYARD.on_request(port, r) or r.get("status") == "staged":
                                 handled.add(key)
