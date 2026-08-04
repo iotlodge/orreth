@@ -728,3 +728,9 @@ Proven: the flow's record named v2 — the sha of the release JB cut — and a d
 | `VERSION` · docs | Fable 5 (claude-fable-5) | 0.44 → 0.45 in the closing commit; the road, the register, and the design closed with their receipts — the covenant's lines, kept. |
 
 The closing proof: skill-orreth-langgraph-onboard v1 STANDS — the first wire-born skill of the universe floor, its whole birth walkable, its welcome click left standing for JB's own hand.
+
+## Fable 5 — 2026-08-03 (the reader unfolds — JB's find on the template soup)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | JB: the CRUD reader renders JSON fine until an embedded yaml string turns to escaped soup. Now: `govPretty` lifts long/multiline string fields out of the structure as labeled unfolded blocks with real newlines, display-unescaping double-encoded payloads; the editor, release, and diff read the TRUE raw body (`GOVRAW`), never a scrape of the pretty view — the one-law parse holds. |

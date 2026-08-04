@@ -3279,12 +3279,46 @@ function renderGov(){
       +GOVD.rubrics.map((r,i)=>`<div class="gvrow" onclick="govRubric(${i})"><span class="nm">${esc(r.goal)}</span>
         <span class="meta" style="white-space:normal">“${esc(r.text.slice(0,70))}”</span></div>`).join(""):"");
 }
-async function govBody(ref,port){
+async function govFetch(ref,port){
   const base=port?`${location.protocol}//${location.hostname}:${port}`:UREC;
-  const b=await(await fetch(base+"/records/"+encodeURIComponent(ref)+"/body")).json();
+  return await(await fetch(base+"/records/"+encodeURIComponent(ref)+"/body")).json();
+}
+async function govBody(ref,port){
+  const b=await govFetch(ref,port);
   if(b&&b.firmware)return b.firmware.text;
   return typeof b==="string"?b:JSON.stringify(b,null,1);
 }
+/* the reader unfolds (JB's find, 2026-08-03): an embedded template string
+   rendered as escaped soup is unreadable — long or multiline string fields
+   lift out of the structure and read as labeled blocks, real newlines */
+function govPretty(b){
+  if(b&&b.firmware)return b.firmware.text;
+  if(typeof b==="string")return b;
+  const folds=[];
+  const walk=o=>{
+    if(o&&typeof o==="object"){
+      for(const k of Object.keys(o)){
+        const v=o[k];
+        if(typeof v==="string"&&(v.length>240||v.includes("\n"))){
+          folds.push([k,v]);
+          o[k]=`⟪${k} — ${v.split("\n").length} line(s), unfolded below⟫`;
+        }else walk(v);
+      }
+    }
+  };
+  let copy;try{copy=JSON.parse(JSON.stringify(b))}catch{return JSON.stringify(b,null,1)}
+  walk(copy);
+  let out=JSON.stringify(copy,null,1);
+  for(const [k,v] of folds){
+    /* double-encoded payloads (a yaml dumped INTO a json string) show their
+       escapes as soup — unescape for DISPLAY only; the true body is untouched */
+    const dv=((v.match(/\n/g)||[]).length<2&&v.includes("\\n"))
+      ?v.replace(/\\n/g,"\n").replace(/\\"/g,'"'):v;
+    out+=`\n\n────────── ${k}, unfolded ──────────\n${dv}`;
+  }
+  return out;
+}
+let GOVRAW="";
 /* the declared rubrics read like everything else (JB's find, 2026-08-03) */
 function govRubric(i){
   const r=(GOVD.rubrics||[])[i];if(!r)return;
@@ -3355,13 +3389,18 @@ async function govVer(name,i){
   const o=GOVD.objects.find(x=>x.name===name);if(!o)return;
   document.querySelectorAll("#gov-vers .gvv").forEach((e,j)=>e.classList.toggle("on",j===i));
   $("gov-ref").textContent=o.refs[i];
-  try{$("gov-body").textContent=await govBody(o.refs[i],o.port)}
-  catch(e){$("gov-body").textContent="the record would not open: "+e}
+  try{
+    const b=await govFetch(o.refs[i],o.port);
+    GOVRAW=(b&&b.firmware)?b.firmware.text
+      :(typeof b==="string"?b:JSON.stringify(b,null,1));
+    $("gov-body").textContent=govPretty(b);
+  }catch(e){$("gov-body").textContent="the record would not open: "+e}
 }
 async function govDiff(name){
   const o=GOVD.objects.find(x=>x.name===name);if(!o||o.refs.length<2)return;
-  const [a,b]=await Promise.all([govBody(o.refs[o.refs.length-2],o.port),
-                                 govBody(o.refs[o.refs.length-1],o.port)]);
+  const [a,b]=await Promise.all(
+    [o.refs[o.refs.length-2],o.refs[o.refs.length-1]]
+      .map(async ref=>govPretty(await govFetch(ref,o.port))));
   const A=a.split("\n"),B=b.split("\n"),sa=new Set(A),sb=new Set(B);
   $("gov-ref").textContent=`v${o.refs.length-1} → v${o.refs.length} (head) — the lines that moved`;
   $("gov-body").innerHTML='<div class="gvdiff">'
@@ -3372,7 +3411,7 @@ async function govDiff(name){
    click — one motion, the one law of change; Canon has no editor here */
 function govEdit(name){
   const body=$("gov-body");if(!body)return;
-  const cur=body.textContent;
+  const cur=GOVRAW||body.textContent;   /* the editor edits the TRUE body */
   body.outerHTML=`<div id="gov-body">
     <textarea id="gov-ed" spellcheck="false" style="width:100%;min-height:13rem;background:var(--deep);color:var(--near);border:1px solid var(--hair2);border-radius:8px;font:.74rem var(--mono);padding:.6rem">${esc(cur)}</textarea>
     <div class="ask-in" style="margin:.4rem 0"><input id="gov-note" placeholder="a note for the worldline — why this change (optional)"></div>
@@ -3409,7 +3448,7 @@ async function govEditLand(name){
    blue and green named; the human's word there cuts the machine's new name */
 function govRelease(name){
   const body=$("gov-body");if(!body)return;
-  const cur=body.textContent;
+  const cur=GOVRAW||body.textContent;   /* the release edits the TRUE text */
   body.outerHTML=`<div id="gov-body">
     <textarea id="gov-ed" spellcheck="false" style="width:100%;min-height:13rem;background:var(--deep);color:var(--near);border:1px solid var(--brassdim);border-radius:8px;font:.74rem var(--mono);padding:.6rem">${esc(cur)}</textarea>
     <div class="ask-in" style="margin:.4rem 0"><input id="gov-note" placeholder="the release note — why the firmware changes (optional)"></div>
