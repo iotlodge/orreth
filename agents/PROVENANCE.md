@@ -734,3 +734,10 @@ The closing proof: skill-orreth-langgraph-onboard v1 STANDS — the first wire-b
 | File | Author | Note |
 |---|---|---|
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | JB: the CRUD reader renders JSON fine until an embedded yaml string turns to escaped soup. Now: `govPretty` lifts long/multiline string fields out of the structure as labeled unfolded blocks with real newlines, display-unescaping double-encoded payloads; the editor, release, and diff read the TRUE raw body (`GOVRAW`), never a scrape of the pretty view — the one-law parse holds. |
+
+## Fable 5 — 2026-08-03 (0046 The Residents Learn to Listen — designed, prioritized by JB)
+
+| File | Author | Note |
+|---|---|---|
+| `docs/design/0046-the-residents-learn-to-listen.md` | Fable 5 (claude-fable-5) | NET-NEW — the little dive from JB's own testing: the parlor routes keywords, it does not listen. The efficient shape reuses everything: the voiced lane becomes the default ear, grounding kits ride the cached composers (/governance is the cross-scope library card), scope-honesty ships as a resident-voice firmware RELEASE through 0045's own ceremony, persona waits for Profiles at zero future cost. Two spoonfuls; JB's exact failing questions are the proof script. |
+| `docs/design/README.md` | Fable 5 (claude-fable-5) | The road gains 0046's row — prioritized ahead of Farm/Stable on JB's word: core interoperability before tuning. |
