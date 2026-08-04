@@ -755,3 +755,12 @@ The closing proof: skill-orreth-langgraph-onboard v1 STANDS — the first wire-b
 | File | Author | Note |
 |---|---|---|
 | `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | The root cause was one line: `governed_voice` returned None on every floor but one — the parlors never HAD a voice, they had a single-floor privilege. The gate fell (authorization stays per-floor and honest); `_listen_kit` grounds every resident from the cached composers — the 0045 registry first (the cross-scope library card), vera's observatory numbers, charlotte's farm roster, allen's estate — with the old status card demoted to labeled context; the resident-voice firmware reads from the universe floor; the voice breathes at 240 tokens. Proven with JB's exact failing questions: both residents named both real skills across two floors, in their own voices, metered under their own DIDs. |
+
+## Fable 5 — 2026-08-04 (0046 sp2 — the referral release: the dive closes whole, era 0.46)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | The kit gains the charters roster — sp2's first proof showed the released sentence aiming at organs instead of residents; a resident can only refer BY NAME if it knows who keeps what. |
+| `VERSION` · docs | Fable 5 (claude-fable-5) | 0.45 → 0.46 in the closing commit; design, road, and register closed with the receipts. The release itself (resident-voice v2, req-446) was cut by JB's own click — the machine renamed, the watchdog silent. |
+
+The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM and its services… you'll want to ask her directly."

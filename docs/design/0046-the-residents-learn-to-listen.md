@@ -1,8 +1,8 @@
 # 0046 — The Residents Learn to Listen
 
-*Drafted 2026-08-03 · Fable 5 with JB · status: DESIGNED — a little dive,
-prioritized by JB ahead of Farm/Stable ("core interoperability, not
-tuning"); build next session*
+*Drafted 2026-08-03 · Fable 5 with JB · status: **CLOSED WHOLE 2026-08-04,
+era 0.46** — the little dive delivered: both spoonfuls proven in one
+morning, sp2's release cut by JB's own hand*
 
 ## 1. The seed (JB, 2026-08-03, found by his own testing)
 
@@ -50,7 +50,7 @@ The insight that keeps this dive LITTLE: nothing new is invented.
 | # | Spoonful | Proof |
 |---|---|---|
 | 1 | **The default ear** — non-protocol input → the voiced lane for EVERY embodied resident; grounding kits wired from the cached composers; templates demoted to no-mind fallback; max_tokens raised for real answers · **LANDED 2026-08-04**: the ROOT CAUSE was one line — `governed_voice` gated the voice to a single floor's port, so every other parlor fell back to canned cards forever; the gate fell, `_listen_kit` grounds every resident from the CACHED composers (the registry first — the cross-scope library card — plus vera's observatory, charlotte's farm, allen's estate; the status card demoted to labeled context), the firmware reads from the universe floor, max_tokens 160→240 · **PROVEN WITH JB'S EXACT QUESTIONS**: the librarian answered "list all skills on the shelves" by NAMING BOTH REAL SKILLS across two floors and offering her gather in the same breath; grace named them from the smith's seat — voiced=True, metered under their own DIDs | JB's exact failing questions, verbatim — both answered truthfully from the registry's cross-scope truth, each in their own charter's voice — ✓ RAN |
-| 2 | **The referral release** — the scope-honesty sentence released into `resident-voice` through the Canon ceremony (staged, blue/green, the human's word, the machine renamed); cross-charter questions refer by name | ask vera about the farm: she answers what her instruments honestly show and refers to charlotte by name; the release's lineage readable in the Craft Room |
+| 2 | **The referral release** — the scope-honesty sentence released into `resident-voice` through the Canon ceremony (staged, blue/green, the human's word, the machine renamed); cross-charter questions refer by name · **LANDED 2026-08-04**: JB's click cut the release (req-446 — resident-voice v2, the machine renamed, watchdog silent); the first proof exposed the missing half — the sentence without a ROSTER referred to organs, not residents — so the kit gained the charters map ("charlotte keeps the FARM…"), and the re-ask landed the design's exact words: **"That's charlotte's charter — she keeps the FARM and its services… you'll want to ask her directly"** | ask vera about the farm: refusal in one sentence + referral BY NAME — ✓ RAN, the release JB's own |
 
 ## 4. Gap register (§11 law, standing)
 

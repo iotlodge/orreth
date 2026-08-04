@@ -5714,7 +5714,15 @@ def _listen_kit(name: str, port: int, scope: str, facts: dict,
     cross-scope library card (0045); the status card rides as context,
     never as the whole truth. ≤ ~2,000 chars."""
     u = universe_port(port)
-    bits: list[str] = []
+    bits: list[str] = [
+        "THE RESIDENTS AND THEIR CHARTERS (refer by NAME when a question "
+        "is theirs): becky keeps identity and every door · vigil keeps "
+        "detection · steward keeps memory's metabolism · governance keeps "
+        "the floors' law · charlotte keeps the FARM (tools, services, MCP "
+        "stalls) · librarian keeps knowledge and the gathers · ada keeps "
+        "the STABLE (minds, models) · grace keeps the workshop (craft "
+        "proposals) · allen keeps the cloud estate · vera keeps the "
+        "observatory (measurement, verdicts, the dial)"]
     try:
         g = compose_governance()
         cats: dict = {}
