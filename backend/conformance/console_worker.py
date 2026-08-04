@@ -5707,6 +5707,53 @@ def executable(port: int, model: str) -> str | None:
     return model if need and os.environ.get(need) else None
 
 
+def _listen_kit(name: str, port: int, scope: str, facts: dict,
+                card: str) -> str:
+    """0046 sp1 — the grounding kit: what this resident may honestly speak
+    from, composed from the CACHED composers. The registry is the
+    cross-scope library card (0045); the status card rides as context,
+    never as the whole truth. ≤ ~2,000 chars."""
+    u = universe_port(port)
+    bits: list[str] = []
+    try:
+        g = compose_governance()
+        cats: dict = {}
+        for o in g.get("objects", []):
+            cats.setdefault(o["category"], []).append(
+                f"{o['name']} v{o['versions']}")
+        bits.append("THE REGISTRY (the craft across the floors — 0045): "
+                    + " · ".join(f"{c}: {', '.join(v[:8])}"
+                                 for c, v in sorted(cats.items())))
+        if g.get("rubrics"):
+            bits.append(f"declared rubrics on file: {len(g['rubrics'])}")
+    except Exception:
+        pass
+    if name == "vera":
+        try:
+            o = compose_observatory()
+            bits.append(f"THE OBSERVATORY: dial {o['dial']['position']} · "
+                        f"spent {o['dial'].get('spent_today', 0)} of "
+                        f"{o['dial'].get('ceiling_tokens', 0)} tok today · "
+                        f"the bell {o.get('bell', {}).get('state', '?')}")
+        except Exception:
+            pass
+    if name == "charlotte":
+        try:
+            svc = call(u, "GET", "/farm").get("services", [])
+            bits.append("THE FARM: " + " · ".join(
+                f"{s.get('name')}({s.get('state')}, {s.get('calls', 0)} calls)"
+                for s in svc[:10]))
+        except Exception:
+            pass
+    if name == "allen":
+        est_facts = facts.get("estate")
+        if est_facts:
+            bits.append("THE ESTATE: " + str(est_facts)[:300])
+    kit = "\n".join(bits)[:2000]
+    return (kit + "\n\nYOUR STATUS CARD (context, not the whole truth):\n"
+            + str(card)[:400])
+
+
 def governed_voice(port: int, name: str, did: str, question: str, grounded: str) -> str | None:
     """The resident phrases its grounded answer with one governed thought —
     authorize, think, meter, all under its own DID (0019 §4). The facts travel INTO
@@ -5721,10 +5768,11 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
     if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY")
             or os.environ.get("OPENROUTER_API_KEY")):
         return None
-    if port != JOIN_PORT:
-        return None                       # the voice stays at the parlor's home floor
-                                          # (the canary ping travels — governed_ping)
-    est = 260
+    # 0046 sp1 — THE EAR IS EVERY FLOOR'S: the old one-floor gate left every
+    # other parlor answering in canned cards (JB's find — "the parlor routes
+    # keywords, it does not listen"). Authorization stays per-floor and
+    # honest; execution was always worker-local.
+    est = 380
     for klass in ("low", "medium", "high"):
         try:
             token = _BECKY.issue_token(did, SCOPE, [{"action": "retrieve", "space": "self"}],
@@ -5740,9 +5788,10 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
                 continue
             t0 = time.perf_counter()
             resp = litellm.completion(
-                model=model, max_tokens=160,
+                model=model, max_tokens=240,
                 messages=[{"role": "system", "content":
-                           craft_render(craft(port, "resident-voice"),
+                           craft_render(craft(universe_port(port),
+                                              "resident-voice"),
                                         name=name, scope=SCOPE,
                                         facts=grounded)},
                           {"role": "user", "content": question}])
@@ -6116,7 +6165,8 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     # descriptive answers may be voiced; actions and flow-control words never are —
     # a governed thought phrases facts, it does not rewrite protocol
     if kp is not None and not ans.get("action") and not ans.get("verbatim"):
-        voiced = governed_voice(port, name, did, asked, reply)
+        voiced = governed_voice(port, name, did, asked,
+                                _listen_kit(name, port, scope, facts, reply))
     final = voiced or reply
     # safer mode (0034 §4): consent withdrawn ⇒ the parlor's recorder falls
     # quiet — the exchange is still ANSWERED, never written. Recall of what was

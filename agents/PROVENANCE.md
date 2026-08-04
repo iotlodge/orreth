@@ -749,3 +749,9 @@ The closing proof: skill-orreth-langgraph-onboard v1 STANDS — the first wire-b
 | `docs/articles/07-the-library-that-argues.md` | Fable 5 (claude-fable-5) | The dangling question answered with a minutes-fresh receipt (a real gather run for the sentence: 3 findings quarantined at 0.0000); the live successor argument named (routing-ab-2, running — "the library doesn't stop arguing because it won once"). |
 | `docs/articles/07-img-the-rag-observatory.png` | Fable 5 (claude-fable-5) | NET-NEW hero image: the night-glass Observatory — the seven rows scored, routing-ab adopted beside routing-ab-2 RUNNING, vera's standings with her own metered cost, the machines' names, the gate-waits. The article in one frame. |
 | `VERSION` | Fable 5 (claude-fable-5) | The 0045 closing commit's bump wrote to the wrong directory (a cwd slip); the era file catches up to 0.45 — the whisper corrects on the next rig restart. |
+
+## Fable 5 — 2026-08-04 (0046 sp1 — the default ear: the residents listen)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | The root cause was one line: `governed_voice` returned None on every floor but one — the parlors never HAD a voice, they had a single-floor privilege. The gate fell (authorization stays per-floor and honest); `_listen_kit` grounds every resident from the cached composers — the 0045 registry first (the cross-scope library card), vera's observatory numbers, charlotte's farm roster, allen's estate — with the old status card demoted to labeled context; the resident-voice firmware reads from the universe floor; the voice breathes at 240 tokens. Proven with JB's exact failing questions: both residents named both real skills across two floors, in their own voices, metered under their own DIDs. |
