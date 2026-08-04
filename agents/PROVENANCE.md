@@ -741,3 +741,11 @@ The closing proof: skill-orreth-langgraph-onboard v1 STANDS — the first wire-b
 |---|---|---|
 | `docs/design/0046-the-residents-learn-to-listen.md` | Fable 5 (claude-fable-5) | NET-NEW — the little dive from JB's own testing: the parlor routes keywords, it does not listen. The efficient shape reuses everything: the voiced lane becomes the default ear, grounding kits ride the cached composers (/governance is the cross-scope library card), scope-honesty ships as a resident-voice firmware RELEASE through 0045's own ceremony, persona waits for Profiles at zero future cost. Two spoonfuls; JB's exact failing questions are the proof script. |
 | `docs/design/README.md` | Fable 5 (claude-fable-5) | The road gains 0046's row — prioritized ahead of Farm/Stable on JB's word: core interoperability before tuning. |
+
+## Fable 5 — 2026-08-04 (article 07 press-ready + the era file catches up)
+
+| File | Author | Note |
+|---|---|---|
+| `docs/articles/07-the-library-that-argues.md` | Fable 5 (claude-fable-5) | The dangling question answered with a minutes-fresh receipt (a real gather run for the sentence: 3 findings quarantined at 0.0000); the live successor argument named (routing-ab-2, running — "the library doesn't stop arguing because it won once"). |
+| `docs/articles/07-img-the-rag-observatory.png` | Fable 5 (claude-fable-5) | NET-NEW hero image: the night-glass Observatory — the seven rows scored, routing-ab adopted beside routing-ab-2 RUNNING, vera's standings with her own metered cost, the machines' names, the gate-waits. The article in one frame. |
+| `VERSION` | Fable 5 (claude-fable-5) | The 0045 closing commit's bump wrote to the wrong directory (a cwd slip); the era file catches up to 0.45 — the whisper corrects on the next rig restart. |
