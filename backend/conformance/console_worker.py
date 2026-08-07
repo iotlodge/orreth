@@ -2174,6 +2174,20 @@ FIRMWARE = {
         "Your previous reply was not a valid verdict: ⟦error⟧. Reply again "
         "with STRICT JSON only — begin with the { character, no preamble, "
         "no code fences: {\"score\": 0.00, \"why\": \"one short sentence\"}.",
+    # 0047 sp3 (the studio comprehends): genesis at its birth dive, like all
+    # firmware — later changes take the release ceremony.
+    "understand-objective":
+        "You are the studio, the comprehension seat of a governed universe. "
+        "Read the OBJECTIVE and the REGISTRY below, then reply with STRICT "
+        "JSON only — begin with the { character, no preamble, no code "
+        "fences: {\"reading\": \"what the ask IS, in 1-2 plain sentences\", "
+        "\"domains\": [\"the floors or charters this touches, by name\"], "
+        "\"needs\": [\"the knowledge or skills the work requires\"], "
+        "\"gaps\": [\"what the registry does NOT hold for it — empty if "
+        "nothing\"], \"confidence\": 0.0}. Ground every name in the "
+        "registry below; invent nothing.\n\nOBJECTIVE:\n⟦objective⟧\n\n"
+        "DECLARED RUBRIC (may be empty):\n⟦rubric⟧\n\n"
+        "THE REGISTRY (the universe's library card):\n⟦registry⟧",
 }
 
 
@@ -3176,12 +3190,30 @@ def on_objective(port: int, scope: str, r: dict) -> None:
     # "…and keep it fresh" on its plan — plainly worded, unchecked by default;
     # one approval moment, both consequences legible
     offer = serials.keep_fresh_offer(plan["objective"])
+    # 0047 sp3 — the studio reads: an understand leg rides the queue (0027 §2:
+    # dispatch is a governed request) and the plan card carries the reading —
+    # or, honestly, its absence. The gate never WAITS on the studio: the card
+    # stages now, the reading arrives when the mind answers (studio_tend).
+    leg = None
+    try:
+        leg = call(port, "POST", "/requests", {
+            "kind": "understand", "of": r["id"],
+            "objective": plan["objective"], "rubric": str(r.get("rubric") or ""),
+            "text": f"the studio reads: {plan['objective'][:64]}"})["id"]
+    except Exception as e:
+        print(f"    (understand leg failed to post: {e})")
     call(port, "POST", "/requests/resolve",
          {"id": r["id"], "status": "staged",
           "result": {"plan_summary": summary, "plan": plan, "plan_record": rec["id"],
                      # the plan made visible (0031 §6): composed here, rendered blind
                      "graph": fingertip.choreography(plan),
                      **({"keep_fresh_offer": offer} if offer else {}),
+                     "understanding": ({"state": "asked", "leg": leg,
+                                        "asked_at": NOW()} if leg else
+                                       {"state": "dark",
+                                        "note": "the studio could not be "
+                                                "asked — staged without a "
+                                                "reading"}),
                      "held": "the plan waits for you — approve to fan (0030 §3)"}})
     print(f"  ↳ objective {r['id']}: plan staged — {summary}"
           + (f" · offers to keep “{offer['topic'][:40]}” fresh" if offer else ""))
@@ -7262,6 +7294,52 @@ def gate_age_beat(port: int) -> None:
                      "pointer": _CONSOLE_URL})
 
 
+# ---- 0047 sp3 · the studio's readings ride onto the plan cards ------------------------
+STUDIO_DARK_S = int(os.environ.get("ORRETH_STUDIO_DARK_S", "90"))
+
+
+def studio_tend(port: int) -> None:
+    """The plan card carries what the universe UNDERSTOOD — or its honest
+    absence (0047 sp3). The gate never waits on the studio: cards stage
+    instantly; this beat attaches the reading when the mind answers, and
+    past the deadline labels the silence dark. A late reading still lands
+    while the card stands at the gate (dark → read is an upgrade, never a
+    rewrite of history — the leg's own record keeps the times)."""
+    try:
+        reqs = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        return
+    by_id = {q.get("id"): q for q in reqs}
+    for r in reqs:
+        if r.get("kind") != "objective" or r.get("status") != "staged":
+            continue
+        u = (r.get("result") or {}).get("understanding") or {}
+        if u.get("state") not in ("asked", "dark") or not u.get("leg"):
+            continue
+        leg = by_id.get(u["leg"])
+        if (leg and leg.get("status") == "done"
+                and (leg.get("result") or {}).get("understanding")):
+            read = dict(leg["result"]["understanding"])
+            read.setdefault("state", "read")
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "staged",
+                  "result": {**(r.get("result") or {}), "understanding": read}})
+            print(f"  🧠 the studio read {r['id']}: "
+                  f"“{str(read.get('reading', read.get('why', '')))[:64]}”"
+                  + (f" · confidence {read.get('confidence')}"
+                     if "confidence" in read else ""))
+        elif (u.get("state") == "asked"
+              and _age_seconds(u.get("asked_at")) > STUDIO_DARK_S):
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "staged",
+                  "result": {**(r.get("result") or {}),
+                             "understanding": {**u, "state": "dark",
+                                               "note": "the studio is dark — "
+                                                       "staged without a "
+                                                       "reading"}}})
+            print(f"  🧠 the studio stayed dark for {r['id']} — the card says so")
+
+
 def assay_beat(u_port: int) -> None:
     """The Examiner (0043 §6), dial-gated: only at «assay» does vera sample
     completed work and commission judges — metered under HER did, under the
@@ -7416,6 +7494,8 @@ _WEARERS = {
     "resident-voice": ["every resident's voiced audience reply"],
     "verdict-reask": ["vera's judge · the one typed re-ask before any void "
                       "(0047 sp1)"],
+    "understand-objective": ["the studio · every objective's reading at the "
+                             "plan gate (0047 sp3)"],
     "fingertip-default": ["every fingertip flow · the thought's default shape"],
     "prompt-plan": ["the chassis · the planner stage"],
     "prompt-critic": ["the chassis · the critic stage"],
@@ -7971,6 +8051,7 @@ def main() -> None:
                         passage_beat()        # the silence watch — contain, never execute (0035 §3)
                         FLIGHT.beat()         # the Observatory's pulse (0043 sp1)
                         assay_beat(port)      # the Examiner, dial-gated (0043 sp2)
+                        studio_tend(port)     # readings ride the plan cards (0047 sp3)
                         bell_beat(port)       # the bell tends its door (0044 sp2)
                         canon_seed(port)      # the firmware stands as records (0045 sp1)
                         verify_beat(port)     # the deed watchman, standing (0044 sp3 · L-B)

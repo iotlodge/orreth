@@ -2360,6 +2360,18 @@ const ago=t=>{const s=(Date.now()-new Date(t))/1e3;
 /* a pending ask nothing serves is VISIBLE governance, not a mystery (0018 §7) */
 const staleNote=r=>r.status==="pending"&&Date.now()-new Date(r.at)>12e3?
   `<div class="sub" style="color:var(--red)">…no keeper answering — is the join door open? (scripts/dev.sh start)</div>`:"";
+/* 0047 sp3 — what the universe UNDERSTOOD, on the plan card: the studio's
+   reading, its honest absence (dark), or its honest failure (parked) */
+function studioNote(r){
+  const u=((r.result||{}).understanding)||{};
+  if(u.state==="read")return `<div class="sub" style="color:var(--near)">🧠 the universe understood: ${u.reading||""}`
+    +(Array.isArray(u.gaps)&&u.gaps.length?` · <span style="color:var(--amber,#e8b34a)">gaps: ${u.gaps.slice(0,3).join("; ")}</span>`:"")
+    +(typeof u.confidence==="number"?` · confidence ${u.confidence}`:"")+`</div>`;
+  if(u.state==="asked")return `<div class="sub" style="color:var(--dim,#888)">🧠 the studio is reading…</div>`;
+  if(u.state==="dark")return `<div class="sub" style="color:var(--amber,#e8b34a)">🧠 ${u.note||"the studio is dark — staged without a reading"}</div>`;
+  if(u.state==="parked")return `<div class="sub" style="color:var(--amber,#e8b34a)">🧠 the studio could not produce a typed reading — ${u.why||"parked"}</div>`;
+  return "";
+}
 function reqRow(r){
   /* one request, rendered — the gates (0012: consequence waits) keep their
      buttons wherever the row appears */
@@ -2379,7 +2391,7 @@ function reqRow(r){
   const lgate=r.kind==="dial"&&r.status==="staged"; /* depth is a governed choice (0043 §5) */
   const note=jgate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`
     :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`
-    :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`+kfOffer(r)
+    :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`+studioNote(r)+kfOffer(r)
     :igate?`<div class="sub" style="color:var(--near);white-space:pre-wrap">${(r.result||{}).package_text||"a rewrite waits for your word (R6)"}</div>`
     :ugate?`<div class="sub" style="color:var(--near)">a standing spend — ${(r.result||{}).terms||"terms readable at the gate"}</div>`
     :cgate?`<div class="sub" style="color:var(--near)">access to your memory — ${(r.result||{}).terms||"the bundle readable at the gate"}</div>`
