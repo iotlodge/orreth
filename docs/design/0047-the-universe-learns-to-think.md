@@ -6,7 +6,7 @@ seed the same day. Status: DRAFTED — awaiting JB's locks (§9). -->
 
 *Drafted 2026-08-07 · Fable 5 with JB · status: **BUILDING — locks 1+2
 approved as recommended (JB, 2026-08-07: the `nooa` engine pinned-and-jacketed;
-the studio as one seat on the universe floor) · sp1 LANDED+PROVEN the same day
+the studio as one seat on the universe floor) · sp1+sp2 LANDED+PROVEN the same day
 · locks 3–6 open (§9)**. Companions: `0008` (GraphSpec — the plan's type), `0012` (gates),
 `0014` (the knowledge loop), `0015` (the chassis + the parking lot), `0016`/`0019`
 (the plane and the universal meter), `0027` (the fingertip — the only executor),
@@ -315,7 +315,7 @@ comprehend ≈ `medium`, plan ≈ `high`/`xhigh`, gap-check ≈ `medium` — eac
 | # | Spoonful | Proof |
 |---|---|---|
 | 1 | **Typed thoughts** — structured, validated returns on the existing `governed_thought` seam: vera's verdicts and the critic's markers become typed (validation failure re-prompts; LOST becomes impossible); no new dependencies · **LANDED 2026-08-07** (locks 1+2 approved same day): `orreth_sim/typed.py` — the law (strict parse → ONE re-ask carrying the named error → the honest breaker, attempts counted); vera's raw `speak` bench lane (every ask metered BEFORE it is spoken, voids counted in `out["voided"]`, `asks` on the signed verdict); the chassis critic sim+SDK (a faceless word earns one re-ask, then an honest RETRY — never a guessed DONE); wire: `verdict-reask` firmware genesis-seeded at its birth (the 0045 extraction's precedent — later changes take the ceremony) + `_assay_floor`'s re-ask lane; suite 291→304 · **TWO FINDS ON THE LIVE ROUND**: (1) the first real assay since the Canon extraction LIT a latent 0045 break — `craft(u_port, …)` with no `u_port` in `_assay_floor`'s scope — fixed in the same spoonful; (2) the hardened examiner then measured the pre-0047 planner honestly: the deterministic legs scored **0.03 against the objective's own declared rubric** ("fails to name real numbers from the floors' own records") — the dive's thesis, read off the instrument sp1 just hardened | **PROVEN**: conformance — malformed→re-ask→typed with BOTH asks charged and `asks: 2` on the record; void only AFTER a real re-ask; the meter refusing mid-re-ask halts the beat loudly · LIVE — a real 6-verdict round, **zero LOST**, sonnet-5 bench at f:prod, 5 verdicts under the objective's declared rubric, `asks: 1` on today's signed records (the judges dressed their words right first ask — the malformed lane stands suite-proven, labeled honestly) — ✓ RAN |
-| 2 | **The jacket and the bench** — `OrrethMind` in the SDK (identity · governed client · craft-fed docstrings · scribe per method · sandbox) + the capability bench in conformance (stub-`think` deterministic; live-fire per class) | the bench green on the stub; one live-fired method authorized, metered, and scribed under the mind's own DID |
+| 2 | **The jacket and the bench** — `OrrethMind` in the SDK (identity · governed client · craft-fed docstrings · scribe per method · sandbox) + the capability bench in conformance (stub-`think` deterministic; live-fire per class) · **LANDED 2026-08-07**: `orreth_agent/mind.py` — `@generation(klass, craft, returns)` methods with `...` bodies; the jacket's deliberate INVERSION of NOOA: the prompt is not the docstring but a REFERENCE — the words live on the governed shelf (law 6/law 8, one run one resolution, unfilled ⟦slots⟧ refuse before any model); the sp1 typed law kept at this door (one named-error re-ask, then PARK + raise — never a guess); one scribe RunRecord per method call with `context_hash` pinning the craft version (client.diary gains the param, additive); engines refuse honestly (`nooa` names lock 1/lock 3 — the CodeAct cell waits for the sandbox posture) · the bench = `tests/test_mind.py` (10 laws, stub-deterministic; SDK suite 10→20) + `examples/mind_livefire.py` the live twin · **TWO MORE STANDING FINDS**: (1) **the unfueled lease** — `grant_lease` minted join leases with NO token budget, so no joined citizen's own cognition could EVER clear `/model/authorize`; every governed thought to date rode worker-minted organ tokens — fixed: the lease now carries a declared budget (`ORRETH_JOIN_LEASE_TOKENS`, default 50k, debited and reconciled by the plane); (2) **the poisoned ledger** (→ gap register — rule 9 holds, untouched) | **PROVEN**: bench green on the stub · LIVE: scout-mind joined through becky's gate as the SAME persisted self across three process lives (rule 1 visible in the queue), acquired `assay-judge` by reference, and one generation method ran the whole law — authorize (medium → sonnet-5) → litellm on this side's keys → meter under the mind's OWN did: **279 tokens, $0.001102, remaining 49,721 of its 50,000-token lease** — verdict TYPED (0.15, the judge refusing the test work's unverifiable figures — the yardstick held), the scribe's RunRecord accepted (`runs: 1, success: 1` on the presence; meter, roster, and presence one picture) — ✓ RAN |
 | 3 | **The studio comprehends** — the mind's first duty: Objective → typed Understanding, read from the live registry by reference; the plan card carries it | as a human: compose an Objective and see, at the gate, what the universe *understood* before a single leg runs |
 | 4 | **The planner authors** — plan() returns GraphSpec through `check()`; the fingertip executes it; `curate_plan()` demoted to labeled fallback | a real Objective planned by the mind, refused-at-save exercised (a bad plan refused loudly), the walk of the work naming the spec's hash |
 
@@ -340,6 +340,16 @@ its replacement).
   the round refuses — then the 300s cadence is spent. Honest, but a wasted
   round on every restart. Home: a small hardening (wait for the map, or
   don't consume the cadence on a refusal) — not sp1's scope.
+- **The poisoned ledger** (found 2026-08-07, sp2's live-fire): the plane's
+  `model.rs debit()` initializes a subject's budget ledger **on first
+  sight** (`or_insert(token_budget)`) and never re-reads a later, better
+  token — a subject first seen under a bad lease is stuck at 0 until the
+  daemon restarts (sp2's proof needed a hull restart to clear scout-mind's
+  entry). Home: `orreth-node`-adjacent core (**rule 9 — untouched, waits
+  for JB's explicit word**); the honest fix candidates: re-initialize when
+  a newly VERIFIED token carries a larger budget, or age ledger entries
+  with the lease. Until then: a refused first authorize under a bad token
+  costs that identity its mind until the floor's daemon recycles.
 
 ---
 

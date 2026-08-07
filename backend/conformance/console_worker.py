@@ -179,8 +179,15 @@ _BECKY = Becky(SCOPE, _NANDA, parent=_ROOT)
 
 
 def grant_lease(did: str) -> dict:
-    """A retrieve-self lease for a joining agent — attenuated to this floor, root-chained."""
-    return _BECKY.issue_token(did, SCOPE, [{"action": "retrieve", "space": "self"}])
+    """A retrieve-self lease for a joining agent — attenuated to this floor,
+    root-chained, and FUELED (0047 sp2's find): the lease carries a declared
+    token budget, because a citizen whose lease cannot clear /model/authorize
+    has a mind in name only (0019 — every resident's cognition through the
+    gateway). The plane debits up front and reconciles after; the number is
+    declared here, never an honor system."""
+    return _BECKY.issue_token(did, SCOPE, [{"action": "retrieve", "space": "self"}],
+                              budget={"tokens": int(os.environ.get(
+                                  "ORRETH_JOIN_LEASE_TOKENS", "50000"))})
 
 
 # the desk at the door: challenge → prove → human gate → lease (JB's lock 2026-07-07)

@@ -176,7 +176,11 @@ class FieldClient:
 
     # ---- the diary (0005: signed, scribe-authored, never self-attested) ------------------
     def diary(self, intent: str, *, cycle: int, done: bool, tokens: int = 0,
-              model_calls: int = 0, score: float | None = None) -> None:
+              model_calls: int = 0, score: float | None = None,
+              context_hash: str | None = None) -> bool:
+        """context_hash (0047 sp2): the exact craft version this cycle thought
+        with — the mind's every method call pins its words. Returns whether
+        the floor accepted the record."""
         run = {
             "id": content_hash({"i": intent, "c": cycle, "at": now_iso(), "a": self.did}),
             "agent": self.did, "scope": self.scope,
@@ -185,10 +189,12 @@ class FieldClient:
             "scores": [{"objective": "objective-met",
                         "score": score if score is not None else (1.0 if done else 0.0)}],
             "cost": {"tokens": max(tokens, 0), "model_calls": model_calls},
+            **({"context_hash": context_hash} if context_hash else {}),
             "author": self.scribe_did,
         }
         run["sig"] = self.scribe.sign(self.scribe_did, {k: run[k] for k in RUN_SIG_KEYS})
-        self._call("POST", "/runs", run)
+        status, _ = self._call("POST", "/runs", run)
+        return status == 201
 
     def park(self, intent: str, missing: str) -> str | None:
         """The breaker doesn't fail — the unsolved objective becomes fuel (0014)."""
