@@ -2160,6 +2160,13 @@ FIRMWARE = {
         "You are ⟦name⟧, a resident organ of the Orreth floor ⟦scope⟧. "
         "Answer the caller in at most three short sentences, grounded ONLY "
         "in the facts below. Never invent numbers or names.\n\nFACTS:\n⟦facts⟧",
+    # 0047 sp1 (typed thoughts): NEW firmware enters as genesis at its birth
+    # dive — the 0045 extraction's own precedent; changing it later takes
+    # the release ceremony like everything Canon.
+    "verdict-reask":
+        "Your previous reply was not a valid verdict: ⟦error⟧. Reply again "
+        "with STRICT JSON only — begin with the { character, no preamble, "
+        "no code fences: {\"score\": 0.00, \"why\": \"one short sentence\"}.",
 }
 
 
@@ -6698,36 +6705,59 @@ def _assay_floor(port: int, scope: str) -> None:
     prod_port, judge_scope = bench
     seat, jkp = _judge_seat(judge_scope)
     rubrics = _rubrics_load()
+    # the Canon shelf lives at the apex (0028 · 0045 sp1) — resolved HERE:
+    # the extraction left craft(u_port, …) with no u_port in this scope, a
+    # break that sat unlit until 0047 sp1's proof round ran the first real
+    # assay since the extraction
+    u_port = universe_port(port)
     for ref, body in work:
         o = body.get("outcome") or body.get("objective_outcome") or {}
         declared = rubrics.get(str(o.get("of") or ""))
         rubric = declared or vera.DEFAULT_RUBRIC
-        j = governed_thought(
-            prod_port, JUDGE_MIND, "medium",
-            craft_render(craft(u_port, "assay-judge"), rubric=rubric,
-                         work=json.dumps(o)[:900]),
-            max_tokens=160, as_did=VERA_DID)
-        if j is None:
-            print("  🔭 assay: the judge's ground is missing — "
-                  "the beat rests honestly")
-            return
-        sc, why = _parse_verdict(j["text"])
+        prompt = craft_render(craft(u_port, "assay-judge"), rubric=rubric,
+                              work=json.dumps(o)[:900])
+        # 0047 sp1 — the typed re-ask: a badly dressed word earns ONE more
+        # ask carrying the named error (Canon: verdict-reask); a void
+        # survives only as the breaker AFTER the re-ask, counted
+        asks, toks, usd = 0, 0, 0.0
+        sc = why = None
+        feedback = ""
+        while asks < 2:
+            j = governed_thought(prod_port, JUDGE_MIND, "medium",
+                                 prompt + feedback, max_tokens=160,
+                                 as_did=VERA_DID)
+            if j is None:
+                if asks == 0:
+                    print("  🔭 assay: the judge's ground is missing — "
+                          "the beat rests honestly")
+                    return
+                break                 # ground fell mid-re-ask: void, counted
+            asks += 1
+            toks += j["tokens"]
+            usd += j["usd"]
+            sc, why = _parse_verdict(j["text"])
+            if sc is not None:
+                break
+            feedback = "\n\n" + craft_render(
+                craft(u_port, "verdict-reask"),
+                error="the reply did not parse as the strict JSON verdict")
         if sc is None:
-            print("  🔭 assay: the judge's verdict was LOST — voided, "
-                  "never scored")
+            print(f"  🔭 assay: the judge's verdict was LOST after {asks} "
+                  f"ask(s) — voided honestly, {toks} tok still counted")
             continue
         rec = vera.make_verdict(
             seat, jkp, scope, of=ref, work_floor=scope,
             judge_floor=judge_scope, rubric=rubric,
             rubric_declared=bool(declared), score=sc, why=why,
-            cost={"tokens": j["tokens"], "usd": round(j["usd"], 6)})
+            cost={"tokens": toks, "usd": round(usd, 6)}, asks=asks)
         try:
             call(port, "POST", "/records", rec)
         except Exception as e:
             print(f"    (verdict write failed: {e})")
             continue
         print(f"  🔭 assay: [{ref[:18]}…] scored {sc:.2f} — “{why[:56]}” · "
-              f"{j['tokens']} tok under vera's meter"
+              f"{toks} tok under vera's meter"
+              + (" · typed on the re-ask" if asks > 1 else "")
               + (" · declared rubric" if declared else ""))
     _, stand = _wire_verdict_standings(port, scope=scope)
     for card in vera.degradations(stand):
@@ -7377,6 +7407,8 @@ _WEARERS = {
     "graduation-mentee": ["the graduation ceremony · the mentee at «low»"],
     "graduation-judge": ["the graduation ceremony · the independent judge"],
     "resident-voice": ["every resident's voiced audience reply"],
+    "verdict-reask": ["vera's judge · the one typed re-ask before any void "
+                      "(0047 sp1)"],
     "fingertip-default": ["every fingertip flow · the thought's default shape"],
     "prompt-plan": ["the chassis · the planner stage"],
     "prompt-critic": ["the chassis · the critic stage"],

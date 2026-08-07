@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 
-from . import crypto, resolver
+from . import crypto, resolver, typed
 from .identity import NOW
 from .node import make_memory
 
@@ -74,17 +74,27 @@ class Chassis:
             budget_before = self.surface.budget_left
             observations = self._plan(intent, feedback, klass)
             results = self._nucleus(observations, klass)      # parallel, least-privilege
-            verdict = self.think(klass, self.critic_template.format(
+            critic_prompt = self.critic_template.format(
                 persona=self.persona, intent=intent,
-                results="\n".join(f"- [{k}] {q} → {r}" for k, q, r in results)))
-            done = verdict.strip().upper().startswith("DONE")
+                results="\n".join(f"- [{k}] {q} → {r}" for k, q, r in results))
+            verdict = self.think(klass, critic_prompt)
+            parsed = typed.parse_critic(verdict)
+            if parsed is None:
+                # 0047 sp1 — the typed re-ask: the contract named ONCE, never
+                # a guess; a word that fails twice is an honest RETRY, so the
+                # loop retries or parks but never invents a DONE
+                verdict = self.think(klass,
+                                     critic_prompt + "\n\n" + typed.CRITIC_REASK)
+                parsed = typed.parse_critic(verdict)
+            done, word = parsed if parsed is not None else (
+                False, "the critic's word wore neither face twice — "
+                       "honest retry, never a guess")
             self.trace.append({"cycle": cycle, "class": klass,
                                "observations": len(results), "verdict": verdict[:60]})
             self._record(intent, cycle, done, budget_before - self.surface.budget_left)
             if done:
-                return {"status": "done", "answer": verdict.split(":", 1)[1].strip(),
-                        "cycles": cycle}
-            feedback = f"Prior attempt lacked: {verdict.split(':', 1)[-1].strip()}\n"
+                return {"status": "done", "answer": word, "cycles": cycle}
+            feedback = f"Prior attempt lacked: {word}\n"
         return self._park(intent, feedback)                   # the breaker doesn't fail
 
     def _plan(self, intent: str, feedback: str, klass: str) -> list[tuple[str, str]]:

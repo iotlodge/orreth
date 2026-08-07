@@ -31,6 +31,22 @@ Observations gathered:
 If the objective is answerable NOW, reply exactly: DONE: <the answer, one paragraph>.
 Otherwise reply exactly: RETRY: <what is missing, one line>."""
 
+_CRITIC_REASK = ("Your last reply wore neither face. Reply again with exactly "
+                 "one line — either: DONE: <the answer> or: RETRY: <what is "
+                 "missing>.")
+
+
+def _parse_critic(text: str):
+    """0047 sp1 (typed thoughts — the sim's `typed.parse_critic`, twin): the
+    critic's word wears exactly one of two faces, and the word after the
+    colon is the point. (done, word) or None — a bare DONE with nothing
+    after it is not an answer."""
+    import re
+    m = re.match(r"\s*(DONE|RETRY)\s*:\s*(\S.*)\s*$", text or "", re.I | re.S)
+    if not m:
+        return None
+    return m.group(1).upper() == "DONE", m.group(2).strip()
+
 
 class Chassis:
     """The architecture never changes; objective, persona, skills, cadence are the profile."""
@@ -51,21 +67,30 @@ class Chassis:
             c0 = getattr(self.think, "last_calls", 0)       # the roll-ups must add up (0005)
             observations = self._plan(intent, memory, feedback)
             results = self._nucleus(observations)
-            verdict = self.think(self.klass, _CRITIC.format(
+            critic_prompt = _CRITIC.format(
                 persona=self.persona, intent=intent,
-                results="\n".join(f"- [{k}] {q} → {r}" for k, q, r in results)))
-            done = verdict.strip().upper().startswith("DONE")
+                results="\n".join(f"- [{k}] {q} → {r}" for k, q, r in results))
+            verdict = self.think(self.klass, critic_prompt)
+            parsed = _parse_critic(verdict)
+            if parsed is None:
+                # 0047 sp1 — the typed re-ask: the contract named ONCE, never
+                # a guess; a word that fails twice is an honest RETRY
+                verdict = self.think(self.klass,
+                                     critic_prompt + "\n\n" + _CRITIC_REASK)
+                parsed = _parse_critic(verdict)
+            done, word = parsed if parsed is not None else (
+                False, "the critic's word wore neither face twice — "
+                       "honest retry, never a guess")
             self.trace.append({"cycle": cycle, "observations": len(results),
                                "verdict": verdict[:80]})
             self.client.diary(intent, cycle=cycle, done=done,
                               tokens=getattr(self.think, "last_tokens", 0) - t0,
                               model_calls=getattr(self.think, "last_calls", 0) - c0)
             if done:
-                answer = verdict.split(":", 1)[1].strip()
-                self.client.remember({"objective": intent, "answer": answer},
+                self.client.remember({"objective": intent, "answer": word},
                                      kind="episodic", tags=["objective", "answered"])
-                return {"status": "done", "answer": answer, "cycles": cycle}
-            feedback = f"Prior attempt lacked: {verdict.split(':', 1)[-1].strip()}\n"
+                return {"status": "done", "answer": word, "cycles": cycle}
+            feedback = f"Prior attempt lacked: {word}\n"
         self.client.park(intent, feedback.strip())
         return {"status": "parked", "cycles": self.max_cycles}
 

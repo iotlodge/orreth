@@ -36,7 +36,7 @@ from __future__ import annotations
 
 import json as _json
 
-from . import crypto, factory
+from . import crypto, factory, typed
 from .agent_surface import BudgetExceeded
 from .node import make_memory
 
@@ -100,15 +100,17 @@ def pick_bench(benches: dict[str, dict], *, work_floor: str) -> tuple[str, dict]
 def make_verdict(judge_seat: dict, judge_kp, scope: str, *, of: str,
                  work_floor: str, judge_floor: str, rubric: str,
                  rubric_declared: bool, score: float, why: str,
-                 cost: dict) -> dict:
+                 cost: dict, asks: int = 1) -> dict:
     """A signed Chronicle record under the JUDGE'S authorship — author ≠
     executor by construction, the rubric named, the default rubric honestly
-    labeled as default, the commission's cost on the record (law 4)."""
+    labeled as default, the commission's cost on the record (law 4) — and,
+    since 0047 sp1, how many asks the word took: a verdict that needed the
+    typed re-ask says so forever."""
     body = {"assay": {
         "of": of, "work_floor": work_floor, "judge_floor": judge_floor,
         "rubric": rubric, "rubric_declared": rubric_declared,
         "score": round(max(0.0, min(1.0, float(score))), 4),
-        "why": str(why)[:200], "cost": dict(cost),
+        "why": str(why)[:200], "cost": dict(cost), "asks": int(asks),
     }}
     rec = make_memory(judge_seat, judge_kp, scope, body, kind="semantic",
                       tags=["assay", "verdict"])
@@ -223,8 +225,14 @@ class Vera:
                    dial: str, rubrics: dict[str, str] | None = None,
                    sample: int = 3) -> dict:
         """One turn of the examiner, gated by the dial. benches:
-        {floor_scope: {"seat": ident, "kp": kp, "think": fn(work, rubric) ->
-        {"score", "why"}}} — the judge's floor signs, vera's meter pays."""
+        {floor_scope: {"seat": ident, "kp": kp, ...}} where the judge speaks
+        through ONE of two lanes — "think": fn(work, rubric) -> {"score",
+        "why"} (the pre-typed lane), or, since 0047 sp1, "speak": fn(work,
+        rubric, feedback) -> str (the RAW lane: the word arrives as text and
+        is held to the typed contract — a badly dressed word earns ONE
+        re-ask with the error named; only then is it voided, counted, in
+        out["voided"]). The judge's floor signs, vera's meter pays — every
+        ask metered BEFORE it is spoken, re-asks included."""
         if dial not in DIAL:
             raise ValueError(f"no dial position named '{dial}'")
         if dial != "assay":
@@ -232,7 +240,7 @@ class Vera:
                     "note": "the examiner rests — series and counters only; "
                             "depth costs money and this depth is free"}
         out: dict = {"dial": dial, "assayed": 0, "verdicts": [],
-                     "refused": [], "cost": {"tokens": 0}}
+                     "refused": [], "voided": [], "cost": {"tokens": 0}}
         for rid, work in sample_completed(work_node, limit=sample):
             bench = pick_bench(benches, work_floor=work_node.scope)
             if bench is None:
@@ -243,32 +251,52 @@ class Vera:
                                        "the assay refuses, never self-grades"})
                 continue
             judge_floor, judge = bench
-            try:
-                # the meter FIRST (law 4): her DID, her budget, her exhibit —
-                # and PINNED (0016's floor): a squeezed budget halts the beat
-                # loudly rather than seat a silently cheaper judge
-                charge = self.home.model_gateway.call(
-                    self.surface, "standard", EST_TOKENS, pinned=True)
-            except BudgetExceeded:
-                out["halted"] = ("the meter said no — depth costs money, "
-                                 "and the dial's budget is spent")
-                break
             body = _body(work)
             goal = (body.get("outcome") or body.get("objective_outcome")
                     or {}).get("of") or ""
             rubric = (rubrics or {}).get(goal)
             declared = rubric is not None
-            verdict_word = judge["think"](body, rubric or DEFAULT_RUBRIC)
+            law = rubric or DEFAULT_RUBRIC
+            spent = {"tokens": 0}
+
+            def _charge(_spent=spent):
+                # the meter FIRST (law 4): her DID, her budget, her exhibit —
+                # and PINNED (0016's floor): a squeezed budget halts the beat
+                # loudly rather than seat a silently cheaper judge
+                c = self.home.model_gateway.call(
+                    self.surface, "standard", EST_TOKENS, pinned=True)
+                _spent["tokens"] += c["charged"]
+
+            try:
+                if "speak" in judge:
+                    def _ask(feedback, _j=judge, _b=body, _law=law):
+                        _charge()
+                        return _j["speak"](_b, _law, feedback)
+                    got = typed.typed_verdict(_ask)
+                    if got["status"] != "typed":
+                        out["voided"].append({"of": rid, "asks": got["asks"],
+                                              "status": got["status"]})
+                        out["cost"]["tokens"] += spent["tokens"]
+                        continue
+                    score, why, asks = got["score"], got["why"], got["asks"]
+                else:
+                    _charge()
+                    w = judge["think"](body, law)
+                    score, why, asks = w.get("score", 0.0), w.get("why", ""), 1
+            except BudgetExceeded:
+                out["halted"] = ("the meter said no — depth costs money, "
+                                 "and the dial's budget is spent")
+                out["cost"]["tokens"] += spent["tokens"]
+                break
             rec = make_verdict(
                 judge["seat"], judge["kp"], work_node.scope, of=rid,
                 work_floor=work_node.scope, judge_floor=judge_floor,
-                rubric=rubric or DEFAULT_RUBRIC, rubric_declared=declared,
-                score=verdict_word.get("score", 0.0),
-                why=verdict_word.get("why", ""),
-                cost={"tokens": charge["charged"]})
+                rubric=law, rubric_declared=declared,
+                score=score, why=why,
+                cost={"tokens": spent["tokens"]}, asks=asks)
             out["verdicts"].append(work_node.write(rec))
             out["assayed"] += 1
-            out["cost"]["tokens"] += charge["charged"]
+            out["cost"]["tokens"] += spent["tokens"]
         stand = standings(work_node)
         out["standings"] = stand
         out["findings"] = degradations(stand)
