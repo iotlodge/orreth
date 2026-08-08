@@ -133,20 +133,40 @@ dive, one line:
 Three doors, one law: **every Objective is a governed request**, whoever or
 whatever composes it.
 
-- **The human, live** — the composer (0030). The origin plan waits for its
-  human, exactly as today.
-- **The schedule** — a standing incarnation (0027 §4): the charter is approved
-  **once** at a human gate; instances then flow on the beat, each metered
-  within the charter's budget, each on the record.
-- **The trigger** — a watched condition stages an Objective the way the
-  serials desk stages a delivery and the Observatory stages a finding
-  (0032/0043): the condition fires, the Objective lands in the queue wearing
-  its cause, and detection wears no levers — consequential instances still
-  gate.
+*(The vectors below wear JB's clarification, 2026-08-07 — recorded verbatim
+so sp6 builds on the right frame.)*
 
-An Objective may be **assigned** — to a resident (its charter checked; outside
-charter, the 0046 referral law answers honestly and names who keeps it) or to a
-citizen agent (entitlement checked at dispatch, refusals uniform).
+- **The Objective — the human's ask of a Resident.** Humans ask for things of
+  the residents; the objective is work, addressed to the universe or to a
+  named resident (charter honesty — outside charter, the 0046 referral law
+  answers and names who keeps it). The composer door (0030); built and
+  proven through sp5.
+- **The Schedule — the machine's standing duty.** Specific to
+  Objective/Resident: an Objective ASSIGNED to a machine, whose charter is
+  approved **once** at the human's gate — after which the MACHINE owns the
+  cadence. Each instance runs under the resident's/agent's own name and
+  meter, inside the charter's declared budget. This is 0027 §4's standing
+  incarnation given its door: never a human re-asking on a timer.
+- **The Trigger — the reflex arc.** An event/condition fires a REFLEX whose
+  response is one of three shapes: an **observation** (a finding lands on
+  the record), an **escalation** (a card stages, the bell rings — detection
+  wears no levers), or an **action** (a governed act within standing
+  authority; consequence still gates). An Objective is one possible
+  response, never the definition. The universe's hard-wired reflexes —
+  vigil's detections, the 0044 witness, the 0041 drift watchdog, the serials
+  desk's revalidate — are this arc's precedents; sp6 makes the trigger a
+  first-class, human-authorable artifact: "when X, then Y", governed like
+  all craft.
+
+**A2A is the queue, not a door** (JB's fourth vector, named — it is inherent
+and this paragraph makes the claim explicit): DID-asks-DID is the universe's
+one transport. 0027 §2 made dispatch a governed request, and every vector
+above rides it — the orchestrator's legs answered by the studio, vera
+commissioning another floor's judge, cross-ecosystem dispatch on becky-chained
+entitlement (0027 §7). Every A2A ask is tokened, budgeted, human-visible in
+the queue, and refused in one face. No new mechanism exists or is needed;
+what sp6 adds are the two missing *senders* (the schedule's machine, the
+trigger's reflex), not a new wire.
 
 ```mermaid
 flowchart TB
