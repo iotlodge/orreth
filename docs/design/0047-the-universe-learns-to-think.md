@@ -4,10 +4,14 @@
 NOOA deep-dive session (arXiv:2607.20709, NVIDIA-NeMo/labs-OO-Agents) and JB's
 seed the same day. Status: DRAFTED — awaiting JB's locks (§9). -->
 
-*Drafted 2026-08-07 · Fable 5 with JB · status: **BUILDING — locks 1+2
-approved as recommended (JB, 2026-08-07: the `nooa` engine pinned-and-jacketed;
-the studio as one seat on the universe floor) · sp1–sp5 LANDED+PROVEN the same day — the north star closed
-· locks 3–6 open (§9)**. Companions: `0008` (GraphSpec — the plan's type), `0012` (gates),
+*Drafted 2026-08-07 · Fable 5 with JB · status: **CLOSED WHOLE 2026-08-08,
+era 0.47** — six spoonfuls in two days: typed thoughts · the jacket and the
+bench · the studio reads · the planner authors · the gap loop closes (0040's
+north star) · the standing doors on JB's clarified vectors. Locks 1+2+4+6
+landed by JB's word; lock 3 (sandbox posture — before any CodeAct lane) and
+lock 5 (the worker flavor — its own future dive) stand PARKED WITH NAMED
+GATES; the poisoned-ledger fix waits on rule 9 with JB's budget-lifecycle
+architecture recorded in §11. Companions: `0008` (GraphSpec — the plan's type), `0012` (gates),
 `0014` (the knowledge loop), `0015` (the chassis + the parking lot), `0016`/`0019`
 (the plane and the universal meter), `0027` (the fingertip — the only executor),
 `0030` (the human's seat, the plan gate), `0040` (the Faculty — its north star is
@@ -346,7 +350,7 @@ comprehend ≈ `medium`, plan ≈ `high`/`xhigh`, gap-check ≈ `medium` — eac
 | # | Spoonful | Proof |
 |---|---|---|
 | 5 | **The gap loop closes** — GapReport → acquisition objective → librarian gathers → commission crystallizes → canary → the replan finds the craft waiting · **LANDED 2026-08-07**: `fingertip.gap_offer()` — a reading that names a lack OFFERS to grow the craft, plainly worded, unchecked by default (0032 §4's one-approval-moment precedent, kept exactly: the 🌱 checkbox beside the keep-fresh one); the checked word fires ONE COMMISSION PER GAP through 0045 law 6's whole standing loop (librarian gathers at the live tavily stall → factory drafts at the chosen bench → grace lands v1 with `born_of` naming the objective → the newborn WAITS at the human's gate); the welcome serves it into the registry; canary rides the standing 0039 graduation machinery (not separately exercised here — the law stands); suite 306→307 | **0040'S NORTH-STAR WALK, END TO END, EVERY JOINT ON THE RECORD**: the sp3 objective re-composed ("summarize retail week + translate to Spanish") → the reading named the lack → the card offered → ONE human word approved plan AND growth → three commissions ran whole → **`skill-translate-to-spanish` · `skill-retail-floor-records` · `skill-translation-faithfulness-check` all v1, welcomed, SERVING** → the SAME ask re-composed: the reading now GROUNDS ITS DOMAINS IN THE NEWBORN SKILLS, the translation gap GONE, **confidence 0.45 → 0.7** — and the detector refined rather than retired: finer gaps named, the offer standing again. The universe grew the hands it needed, and its next reading held them — ✓ RAN (the closing card left at JB's gate) |
-| 6 | **The standing doors** — schedule and trigger objectives; the standing charter approved once at the gate, instances metered within it; assignment to a resident/agent with charter/entitlement honesty | a scheduled Objective delivering on the beat with no human click after the charter; a trigger firing one from a watched condition |
+| 6 | **The standing doors** — schedule and trigger objectives; the standing charter approved once at the gate, instances metered within it; assignment to a resident/agent with charter/entitlement honesty · **LANDED 2026-08-08 on JB's clarified vectors (§5)**: `orreth_sim/standing.py` — the cadence law (due · resting-at-ceiling, never silent), the reflex condition vocabulary (record-tagged v1; an unreadable condition never fires), the response taxonomy (observe | escalate | act, refused at DECLARATION); the worker's two gates (`standing-charter` · `reflex` — malformed refuses at the gate) and two beats (`schedule_beat` · `reflex_beat`); instance objectives are NORMAL governed objectives approved by the charter's standing word VISIBLY in the queue; reflexes hear only records landing AFTER their approval — never a replay storm; suite 307→311 | **PROVEN LIVE, BOTH SENDERS**: the charter staged with its terms readable ("every 45s · 1200 tokens/instance · at most 2, then RESTS"), approved with ONE word → instance 1/2 and 2/2 fired on the machine's own cadence, each approved by the charter's word with ZERO further clicks, fanned and assembled → **the charter RESTED at its ceiling with the renewal card at the gate** · all three reflex shapes fired on REAL records: OBSERVED twice (findings signed onto the record from the instances' plans), ESCALATED once on assembly (the card staged, the bell rang, no lever moved), ACTED once (a governed gather posted to the queue, provenance named) — ✓ RAN, and the dive CLOSES WHOLE |
 
 **Parked, named**: the worker flavor (§9.5) · the Lab's glass and the Faculty
 package (0040, still awaiting its stamp — the studio is its first organ, not

@@ -7488,6 +7488,286 @@ def studio_tend(port: int) -> None:
                       "the fallback stands, labeled")
 
 
+# ---- 0047 sp6 · the standing doors: the schedule and the reflex -----------------------
+from orreth_sim import standing as standing_law  # noqa: E402
+
+
+def _standing_load(name: str) -> dict:
+    try:
+        with open(os.path.join(FlightBook.HOME, name + ".json")) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _standing_save(name: str, rows: dict) -> None:
+    try:
+        os.makedirs(FlightBook.HOME, exist_ok=True)
+        with open(os.path.join(FlightBook.HOME, name + ".json"), "w") as f:
+            json.dump(rows, f, indent=1)
+    except Exception:
+        pass
+
+
+def _reflex_seat(scope: str):
+    kp = _seed("reflex-" + scope.replace("/", "~"))
+    return {"did": crypto.did_key_for(kp.public), "scope": scope}, kp
+
+
+def on_standing_charter(port: int, scope: str, r: dict, *, approved: bool,
+                        declined: bool) -> None:
+    """The Schedule (0047 sp6, JB's vector): an Objective ASSIGNED to a
+    machine — the charter approved ONCE, then the MACHINE owns the cadence.
+    Malformed charters refuse at the gate, never at firing time."""
+    rid = str(r.get("id") or "")
+    if r.get("status") == "pending":
+        try:
+            every = max(int(r.get("every_s") or 0), 30)
+            budget = int(r.get("budget") or 1200)
+            cap = max(int(r.get("max_instances") or 3), 1)
+            text = str(r.get("text") or "").strip()
+            who = str(r.get("assigned_to") or "the orchestrator").strip()
+            assert text
+        except Exception:
+            call(port, "POST", "/requests/resolve",
+                 {"id": rid, "status": "done",
+                  "result": {"refused": "a charter declares text, every_s, "
+                                        "budget, max_instances — refused"}})
+            return
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "staged",
+              "result": {"held": "the machine's standing duty waits for your "
+                                 "ONE word — then it owns the cadence",
+                         "terms": f"“{text[:64]}” · assigned to {who} · every "
+                                  f"{every}s · {budget} tokens/instance · at "
+                                  f"most {cap} instance(s), then the charter "
+                                  "RESTS at this gate for renewal"}})
+        return
+    if approved:
+        rows = _standing_load("charters")
+        rows[rid] = {"text": str(r.get("text")), "assigned_to":
+                     str(r.get("assigned_to") or "the orchestrator"),
+                     "every_s": max(int(r.get("every_s") or 0), 30),
+                     "budget": int(r.get("budget") or 1200),
+                     "max_instances": max(int(r.get("max_instances") or 3), 1),
+                     "rubric": str(r.get("rubric") or ""),
+                     "active": True, "fired": 0}
+        _standing_save("charters", rows)
+        seat = {"did": ORCH_DID, "scope": scope}
+        rec = node.make_memory(seat, ORCH, scope,
+                               {"standing_charter": {**rows[rid], "id": rid,
+                                                     "approved_by": "the human's word"}},
+                               kind="semantic", tags=["standing-charter"])
+        try:
+            call(port, "POST", "/records", rec)
+        except Exception:
+            pass
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "done",
+              "result": {"reply": "the charter stands — the machine owns the "
+                                  "cadence now; it rests at this gate when "
+                                  "its instances are spent"}})
+        print(f"  🕰 charter {rid} STANDS: “{str(r.get('text'))[:56]}” — "
+              "the machine's duty, the human's one word behind it")
+    elif declined:
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "done",
+              "result": {"reply": "unchartered, on the record"}})
+
+
+def on_reflex(port: int, scope: str, r: dict, *, approved: bool,
+              declined: bool) -> None:
+    """The Trigger (0047 sp6, JB's vector): the reflex arc — when X, then Y,
+    Y wearing exactly observe | escalate | act. An unreadable reflex refuses
+    at DECLARATION, never surprises at firing."""
+    rid = str(r.get("id") or "")
+    if r.get("status") == "pending":
+        try:
+            assert (r.get("when") or {}).get("kind") == "record-tagged"
+            assert (r.get("when") or {}).get("tag")
+            standing_law.reflex_response({"then": r.get("then")}, "sha256:probe")
+        except Exception as e:
+            call(port, "POST", "/requests/resolve",
+                 {"id": rid, "status": "done",
+                  "result": {"refused": f"the reflex could not be read: {e}"}})
+            return
+        then = r.get("then") or {}
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "staged",
+              "result": {"held": "a reflex waits for your word — when it "
+                                 "fires, it answers with "
+                                 f"{then.get('shape')} (0047 sp6)",
+                         "terms": f"when a record tagged "
+                                  f"“{(r.get('when') or {}).get('tag')}” lands"
+                                  f" → {then.get('shape')}"}})
+        return
+    if approved:
+        rows = _standing_load("reflexes")
+        rows[rid] = {"when": r.get("when"), "then": r.get("then"),
+                     "active": True, "last_seen": NOW()}
+        _standing_save("reflexes", rows)
+        seat, kp = _reflex_seat(scope)
+        rec = node.make_memory(seat, kp, scope,
+                               {"reflex": {**rows[rid], "id": rid,
+                                           "approved_by": "the human's word"}},
+                               kind="semantic", tags=["reflex"])
+        try:
+            call(port, "POST", "/records", rec)
+        except Exception:
+            pass
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "done",
+              "result": {"reply": "the reflex is live — it hears only what "
+                                  "lands AFTER this word, never history"}})
+        print(f"  ⚡ reflex {rid} LIVE: when “{(r.get('when') or {}).get('tag')}”"
+              f" → {(r.get('then') or {}).get('shape')}")
+    elif declined:
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "done",
+              "result": {"reply": "no reflex, on the record"}})
+
+
+def schedule_beat(port: int) -> None:
+    """The machine's cadence (0047 sp6): due charters fire instance
+    objectives — each a NORMAL governed objective in the visible queue,
+    approved by the charter's standing word, metered inside its budget —
+    and a spent charter RESTS with a renewal card, never a silent stop."""
+    rows = _standing_load("charters")
+    if not rows:
+        return
+    changed = False
+    for cid, ch in rows.items():
+        if standing_law.charter_resting(ch) and not ch.get("rest_carded"):
+            try:
+                call(port, "POST", "/requests", {
+                    "kind": "assay", "to": "human",
+                    "text": f"the charter {cid} spent its "
+                            f"{ch['max_instances']} instance(s) — it RESTS; "
+                            "renew it with a new charter at this gate"})
+                ch["rest_carded"], changed = True, True
+                print(f"  🕰 charter {cid} RESTS — instances spent, the "
+                      "renewal is yours")
+            except Exception:
+                pass
+            continue
+        if standing_law.charter_due(ch, time.time()):
+            try:
+                inst = call(port, "POST", "/requests", {
+                    "kind": "objective", "text": ch["text"],
+                    "charter": cid, "budget": ch["budget"],
+                    **({"rubric": ch["rubric"]} if ch.get("rubric") else {})})
+                ch["fired"] = int(ch.get("fired", 0)) + 1
+                ch["last_fired_s"] = time.time()
+                changed = True
+                print(f"  🕰 charter {cid} fires instance {ch['fired']}/"
+                      f"{ch['max_instances']}: {inst['id']}")
+            except Exception as e:
+                print(f"    (charter instance failed to post: {e})")
+    if changed:
+        _standing_save("charters", rows)
+    # the charter's standing word approves its own staged instances —
+    # visibly, in the queue, exactly where a human's word would sit
+    try:
+        reqs = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        return
+    for q in reqs:
+        if (q.get("kind") == "objective" and q.get("status") == "staged"
+                and q.get("charter") in rows
+                and rows[q["charter"]].get("active")):
+            call(port, "POST", "/requests/resolve",
+                 {"id": q["id"], "status": "approved",
+                  "result": {**(q.get("result") or {}),
+                             "approved_by": f"the charter's word ({q['charter']})"}})
+            print(f"  🕰 instance {q['id']} approved by the charter's "
+                  "standing word — no human click, exactly as chartered")
+
+
+def reflex_beat(port: int) -> None:
+    """The reflex arc (0047 sp6): active reflexes hear NEW records wearing
+    their tag and answer in their declared shape — observation, escalation
+    (the bell, never a lever), or a governed act posted to the queue."""
+    rows = _standing_load("reflexes")
+    if not rows:
+        return
+    scope = FLOOR_SCOPES.get(port) or UNIVERSE_SCOPE
+    changed = False
+    for rid, rx in rows.items():
+        if not rx.get("active"):
+            continue
+        tag = (rx.get("when") or {}).get("tag")
+        where = (rx.get("when") or {}).get("scope") or scope
+        try:
+            rows2 = call(port, "POST", "/retrieve", {
+                "query": {"requester": IMP_DID,
+                          "subject": {"cohort": {"scope": where}},
+                          "space": "self", "time": {"from": rx["last_seen"]},
+                          "intent": "recall", "budget": {"cost": 8},
+                          "auth": "biscuit-sim"},
+                "token": _ROOT.issue_token(IMP_DID, "u:demo",
+                                           [{"action": "retrieve",
+                                             "space": "self"}]),
+                "requester_scope": where}).get("hits", [])
+        except Exception:
+            continue
+        fresh = [h for h in rows2
+                 if tag in (h.get("tags") or [])
+                 and str(h.get("occurred_at", "")) > str(rx["last_seen"])][:3]
+        for h in fresh:
+            try:
+                out = standing_law.reflex_response(
+                    {"id": rid, "then": rx.get("then")}, h["ref"])
+            except ValueError as e:
+                print(f"    (reflex {rid} unreadable at fire: {e})")
+                continue
+            if out["shape"] == "observe":
+                seat, kp = _reflex_seat(scope)
+                rec = node.make_memory(
+                    seat, kp, scope,
+                    {"reflex_observation": {"reflex": rid, "of": h["ref"],
+                                            "note": out["note"]}},
+                    kind="semantic", tags=["reflex-observation"])
+                rec["derived_from"] = [h["ref"]]
+                try:
+                    call(port, "POST", "/records", rec)
+                    print(f"  ⚡ reflex {rid} OBSERVED [{h['ref'][:18]}…] — "
+                          "a finding on the record")
+                except Exception as e:
+                    print(f"    (reflex observation refused: {e})")
+            elif out["shape"] == "escalate":
+                try:
+                    card = call(port, "POST", "/requests", {
+                        "kind": "reflex-escalation",
+                        "text": f"⚡ {out['text']} — [{h['ref'][:22]}…]"})
+                    call(port, "POST", "/requests/resolve",
+                         {"id": card["id"], "status": "staged",
+                          "result": {"held": "a reflex escalated — detection "
+                                             "wears no levers; the word is "
+                                             "yours"}})
+                    ring_bell(port, {"kind": "reflex", "scope": scope,
+                                     "subject": out["text"][:60],
+                                     "pointer": _CONSOLE_URL})
+                    print(f"  ⚡ reflex {rid} ESCALATED — the card stages, "
+                          "the bell rings, no lever moves")
+                except Exception as e:
+                    print(f"    (reflex escalation stumbled: {e})")
+            elif out["shape"] == "act":
+                try:
+                    act = dict(out["request"])
+                    act["text"] = (str(act.get("text") or "")
+                                   + f" (reflex {rid}, of {h['ref'][:22]}…)")
+                    acted = call(port, "POST", "/requests", act)
+                    print(f"  ⚡ reflex {rid} ACTED — a governed "
+                          f"{act.get('kind')} posted: {acted['id']}")
+                except Exception as e:
+                    print(f"    (reflex act refused: {e})")
+            if str(h.get("occurred_at", "")) > str(rx["last_seen"]):
+                rx["last_seen"] = h["occurred_at"]
+                changed = True
+    if changed:
+        _standing_save("reflexes", rows)
+
+
 def assay_beat(u_port: int) -> None:
     """The Examiner (0043 §6), dial-gated: only at «assay» does vera sample
     completed work and commission judges — metered under HER did, under the
@@ -8164,6 +8444,19 @@ def main() -> None:
                             on_dial(port, r,
                                     approved=r.get("status") == "approved",
                                     declined=r.get("status") == "denied")
+                        elif r.get("kind") == "standing-charter" and \
+                                r.get("status") in ("pending", "approved", "denied"):
+                            handled.add(key)
+                            on_standing_charter(
+                                port, scope, r,
+                                approved=r.get("status") == "approved",
+                                declined=r.get("status") == "denied")
+                        elif r.get("kind") == "reflex" and \
+                                r.get("status") in ("pending", "approved", "denied"):
+                            handled.add(key)
+                            on_reflex(port, scope, r,
+                                      approved=r.get("status") == "approved",
+                                      declined=r.get("status") == "denied")
                     except urllib.error.HTTPError as e:
                         # The floor ANSWERED — a refusal, not a dead wire (probe()'s
                         # law). One poison request must never silence the residents:
@@ -8202,6 +8495,8 @@ def main() -> None:
                         FLIGHT.beat()         # the Observatory's pulse (0043 sp1)
                         assay_beat(port)      # the Examiner, dial-gated (0043 sp2)
                         studio_tend(port)     # readings ride the plan cards (0047 sp3)
+                        schedule_beat(port)   # the machine's cadence (0047 sp6)
+                        reflex_beat(port)     # the reflex arc (0047 sp6)
                         bell_beat(port)       # the bell tends its door (0044 sp2)
                         canon_seed(port)      # the firmware stands as records (0045 sp1)
                         verify_beat(port)     # the deed watchman, standing (0044 sp3 · L-B)
