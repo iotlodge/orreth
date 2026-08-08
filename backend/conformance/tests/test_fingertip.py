@@ -372,3 +372,44 @@ def test_parked_failure_and_its_knowledge_inherit_the_coordinate(world):
     handled = next(r for r in f.records.values()
                    if "librarian-handled" in r.get("tags", []))
     assert set(coord) <= set(handled["tags"])
+
+
+# ---------------------------------------------------------------- 0047 sp4 · author_plan
+def test_the_mind_proposes_and_the_law_disposes():
+    """0047 sp4: a well-shaped mind plan is priced by the LAW (never the mind),
+    entitlement marked honestly, and the plan carries the spec hash the walk
+    will name — a template that survives check_workflow."""
+    floors = ["u:demo/e:cloud/f:prod", "u:demo/e:retail"]
+    plan = fingertip.author_plan(
+        "u:demo", req_id="req-1", objective="summarize the week",
+        proposals=[{"seat": "u:demo/e:cloud/f:prod",
+                    "intent": "gather the prod floor's week"},
+                   {"seat": "u:demo/e:retail",
+                    "intent": "gather the retail week"}],
+        floors=floors, budget=2400)
+    assert len(plan["intentions"]) == 2 and plan["dark"] == []
+    assert all(i["budget"]["tokens"] == 800 for i in plan["intentions"])
+    assert plan["spec"].startswith("sha256:")          # the walk's name
+    assert all(not i.get("beyond_token") for i in plan["intentions"])
+    # beyond the token: honest marking, never a silent skip
+    wide = fingertip.author_plan(
+        "u:demo/e:cloud", req_id="req-2", objective="x",
+        proposals=[{"seat": "u:demo/e:retail", "intent": "reach sideways"}],
+        floors=["u:demo/e:retail"])
+    assert wide["intentions"][0]["beyond_token"] is True
+
+
+def test_a_bad_mind_plan_is_refused_at_save():
+    """Empty, malformed, unknown-seat, duplicated-seat, and own-floor plans
+    all refuse LOUDLY before anything stages — the fallback stands."""
+    floors = ["u:demo/e:retail"]
+    for bad in ([],                                            # empty
+                [{"seat": "u:demo/e:retail"}],                 # no intent
+                ["just a string"],                             # not a dict
+                [{"seat": "u:demo/e:ghost", "intent": "x"}],   # unknown seat
+                [{"seat": "u:demo/e:retail", "intent": "a"},
+                 {"seat": "u:demo/e:retail", "intent": "b"}],  # duplicated
+                [{"seat": "u:demo", "intent": "grade myself"}]):  # own floor
+        with pytest.raises(fingertip.WorkflowError):
+            fingertip.author_plan("u:demo", req_id="r", objective="o",
+                                  proposals=bad, floors=floors)

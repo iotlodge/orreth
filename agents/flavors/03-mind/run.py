@@ -39,14 +39,47 @@ FIELD = "http://localhost:4502"        # the bench: where a medium mind serves
 REGISTRY = "http://localhost:4562"     # the library card (0045 sp1)
 
 
+def _plan_contract(raw: str) -> dict:
+    """The draft's typed contract (0047 sp4), enforced at the jacket so a
+    badly dressed plan earns the named-error re-ask BEFORE it ever reaches
+    the worker's save gate: {"intentions": [{"seat", "intent"}...], "why"}."""
+    import re as _re
+    m = _re.search(r"\{.*\}", raw or "", _re.S)
+    if not m:
+        raise ValueError("no JSON object found in the reply")
+    try:
+        got = json.loads(m.group(0))
+    except Exception as e:
+        raise ValueError(f"the JSON did not parse ({e})") from e
+    rows = got.get("intentions")
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("\"intentions\" must be a non-empty list")
+    for i, p in enumerate(rows):
+        if (not isinstance(p, dict) or not str(p.get("seat") or "").strip()
+                or not str(p.get("intent") or "").strip()):
+            raise ValueError(f"intentions[{i}] is not "
+                             "{\"seat\": str, \"intent\": str} shaped")
+    return {"intentions": [{"seat": str(p["seat"]).strip(),
+                            "intent": str(p["intent"]).strip()} for p in rows],
+            "why": str(got.get("why") or "")}
+
+
 class StudioMind(OrrethMind):
-    """One duty: read an Objective against the registry, typed."""
+    """Two duties: read an Objective against the registry, then draft its
+    plan — seats and intents only; the worker prices and the save gate
+    decides (the mind proposes, the law disposes)."""
 
     @generation(klass="medium", craft="understand-objective",
                 returns={"reading": str, "domains": list, "needs": list,
                          "gaps": list, "confidence": float})
     def understand(self, objective, rubric, registry):
         """The comprehension — the prompt is the shelf's (law 6)."""
+        ...
+
+    @generation(klass="medium", craft="plan-objective",
+                returns=_plan_contract)
+    def plan(self, objective, rubric, reading, seats):
+        """The draft — semantic decomposition only, never money."""
         ...
 
 
@@ -85,31 +118,52 @@ def registry_digest(*, limit: int = 1600) -> str:
 
 
 def tend_once(mind: StudioMind, client: FieldClient) -> bool:
-    """One pass of the studio's duty: answer the oldest unanswered
-    understand leg. True when a leg was served (read or honestly parked)."""
+    """One pass of the studio's duties: answer the oldest unanswered
+    understand or plan-draft leg. True when a leg was served (answered or
+    honestly parked)."""
     try:
         reqs = _get(UNIVERSE + "/requests").get("requests", [])
     except Exception:
         return False
     legs = [r for r in reqs
-            if r.get("kind") == "understand" and r.get("status") == "pending"]
+            if r.get("kind") in ("understand", "plan-draft")
+            and r.get("status") == "pending"]
     if not legs:
         return False
     leg = legs[0]
+    if leg["kind"] == "understand":
+        try:
+            reading = mind.understand(
+                str(leg.get("objective") or leg.get("text") or ""),
+                str(leg.get("rubric") or ""),
+                registry_digest())
+            out = {**reading, "state": "read",
+                   "craft": mind._crafts["understand-objective"].ref,
+                   "by": client.did}
+            print(f"· read {leg['id']}: “{reading['reading'][:72]}” "
+                  f"(confidence {reading['confidence']})")
+        except MindParked as e:
+            out = {"state": "parked", "why": str(e), "by": client.did}
+            print(f"· PARKED {leg['id']}: {e}")
+        _post(UNIVERSE, "/requests/resolve",
+              {"id": leg["id"], "status": "done",
+               "result": {"understanding": out}})
+        return True
+    # ---- plan-draft (0047 sp4): seats and intents only — never money
+    seats = "\n".join(str(s) for s in (leg.get("seats") or []))
     try:
-        reading = mind.understand(str(leg.get("objective") or leg.get("text") or ""),
-                                  str(leg.get("rubric") or ""),
-                                  registry_digest())
-        out = {**reading, "state": "read",
-               "craft": mind._crafts["understand-objective"].ref,
+        draft = mind.plan(str(leg.get("objective") or ""),
+                          str(leg.get("rubric") or ""),
+                          str(leg.get("reading") or ""), seats)
+        out = {**draft, "craft": mind._crafts["plan-objective"].ref,
                "by": client.did}
-        print(f"· read {leg['id']}: “{reading['reading'][:72]}” "
-              f"(confidence {reading['confidence']})")
+        print(f"· drafted {leg['id']}: {len(draft['intentions'])} intention(s)"
+              + (f" — {draft['why'][:64]}" if draft.get("why") else ""))
     except MindParked as e:
         out = {"state": "parked", "why": str(e), "by": client.did}
         print(f"· PARKED {leg['id']}: {e}")
     _post(UNIVERSE, "/requests/resolve",
-          {"id": leg["id"], "status": "done", "result": {"understanding": out}})
+          {"id": leg["id"], "status": "done", "result": {"plan": out}})
     return True
 
 
@@ -123,7 +177,10 @@ def main() -> int:
     print("· joining — the gate may wait for a human …")
     client.join()
     print(f"· lease held on {client.scope} — benching here, seat at u:demo")
-    mind = StudioMind(client, GovernedThink(client, max_tokens=400))
+    # 800 tokens: a plan is a longer word than a reading — the sp4 proof's
+    # first draft TRUNCATED at 400 and parked honestly; the ceiling is the
+    # contract's room to breathe, not a cost cap (the meter is the cap)
+    mind = StudioMind(client, GovernedThink(client, max_tokens=800))
     while True:
         served = tend_once(mind, client)
         if a.once and served:

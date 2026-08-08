@@ -2188,6 +2188,21 @@ FIRMWARE = {
         "registry below; invent nothing.\n\nOBJECTIVE:\n⟦objective⟧\n\n"
         "DECLARED RUBRIC (may be empty):\n⟦rubric⟧\n\n"
         "THE REGISTRY (the universe's library card):\n⟦registry⟧",
+    # 0047 sp4 (the planner authors): genesis at its birth dive.
+    "plan-objective":
+        "You are the studio, the planning seat of a governed universe. Using "
+        "your READING and the SEATS roster below, decompose the OBJECTIVE "
+        "into intentions — one per seat that should carry a piece, ONLY "
+        "seats from the roster, each intent one plain imperative sentence "
+        "scoped to that seat. Fewer, sharper legs beat broad fan-out; never "
+        "invent a seat; never assign the orchestrating floor itself. Reply "
+        "with STRICT JSON only — begin with the { character, no preamble, "
+        "no code fences: {\"intentions\": [{\"seat\": "
+        "\"exact-scope-from-roster\", \"intent\": \"one sentence of "
+        "work\"}], \"why\": \"one sentence on the decomposition\"}."
+        "\n\nOBJECTIVE:\n⟦objective⟧\n\nDECLARED RUBRIC:\n⟦rubric⟧\n\n"
+        "YOUR READING:\n⟦reading⟧\n\nSEATS (the only legal values for "
+        "\"seat\"):\n⟦seats⟧",
 }
 
 
@@ -3214,6 +3229,11 @@ def on_objective(port: int, scope: str, r: dict) -> None:
                                         "note": "the studio could not be "
                                                 "asked — staged without a "
                                                 "reading"}),
+                     # 0047 sp4: every card DECLARES who planned it — the
+                     # arithmetic fallback wears its label until (unless) the
+                     # studio's plan survives the save gate and takes over
+                     "planned_by": {"state": "fallback",
+                                    "label": PLAN_FALLBACK_LABEL},
                      "held": "the plan waits for you — approve to fan (0030 §3)"}})
     print(f"  ↳ objective {r['id']}: plan staged — {summary}"
           + (f" · offers to keep “{offer['topic'][:40]}” fresh" if offer else ""))
@@ -3248,7 +3268,12 @@ def on_objective_approved(port: int, scope: str, r: dict) -> None:
                       f"kept fresh on the same word ({rec['id'][:18]}…)")
             except Exception as e:
                 print(f"    (charter-coupled subscription failed: {e})")
-    plan = _PLANS.pop(r["id"], None) or curate_plan(port, scope, r)
+    # 0047 sp4 — the CARD is the truth the human approved (rule 7, one
+    # picture): the fan uses the plan the card showed, mind-authored or
+    # fallback; re-curating is the last resort of a cardless resurrection
+    plan = ((r.get("result") or {}).get("plan")
+            or _PLANS.get(r["id"]) or curate_plan(port, scope, r))
+    _PLANS.pop(r["id"], None)
     legs, dark = {}, list(plan["dark"])
     for entry in plan["intentions"]:
         target = entry["seat"]
@@ -7297,6 +7322,11 @@ def gate_age_beat(port: int) -> None:
 # ---- 0047 sp3 · the studio's readings ride onto the plan cards ------------------------
 STUDIO_DARK_S = int(os.environ.get("ORRETH_STUDIO_DARK_S", "90"))
 
+# 0047 sp4 · lock 4 — the arithmetic planner's honest label (wording awaits
+# JB's word; this is the design owner's proposal, one string to re-cut)
+PLAN_FALLBACK_LABEL = ("planned by arithmetic, not a mind — the budget split "
+                       "evenly across the floors; the studio has not answered")
+
 
 def studio_tend(port: int) -> None:
     """The plan card carries what the universe UNDERSTOOD — or its honest
@@ -7309,35 +7339,132 @@ def studio_tend(port: int) -> None:
         reqs = call(port, "GET", "/requests").get("requests", [])
     except Exception:
         return
+    scope = FLOOR_SCOPES.get(port) or UNIVERSE_SCOPE
     by_id = {q.get("id"): q for q in reqs}
     for r in reqs:
         if r.get("kind") != "objective" or r.get("status") != "staged":
             continue
-        u = (r.get("result") or {}).get("understanding") or {}
-        if u.get("state") not in ("asked", "dark") or not u.get("leg"):
+        res = r.get("result") or {}
+        u = res.get("understanding") or {}
+        pb = res.get("planned_by") or {}
+        if u.get("state") == "asked" and u.get("leg"):
+            leg = by_id.get(u["leg"])
+            if (leg and leg.get("status") == "done"
+                    and (leg.get("result") or {}).get("understanding")):
+                read = dict(leg["result"]["understanding"])
+                read.setdefault("state", "read")
+                # 0047 sp4 — the chain: a mind that has READ may now PLAN.
+                # The draft leg carries the reading and the legal seats; the
+                # card declares "drafting" while the fallback keeps standing
+                update = {**res, "understanding": read}
+                if read["state"] == "read" and pb.get("state") == "fallback":
+                    seats = [s for p, s in sorted(FLOOR_SCOPES.items())
+                             if s != scope]
+                    try:
+                        draft = call(port, "POST", "/requests", {
+                            "kind": "plan-draft", "of": r["id"],
+                            "objective": (res.get("plan") or {}).get("objective")
+                                          or r.get("text") or "",
+                            "rubric": str(r.get("rubric") or ""),
+                            "reading": read.get("reading") or "",
+                            "seats": seats,
+                            "text": f"the studio drafts the plan for {r['id']}"})["id"]
+                        update["planned_by"] = {"state": "drafting",
+                                                "leg": draft,
+                                                "asked_at": NOW(),
+                                                "label": PLAN_FALLBACK_LABEL}
+                    except Exception as e:
+                        print(f"    (plan-draft leg failed to post: {e})")
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "staged", "result": update})
+                print(f"  🧠 the studio read {r['id']}: "
+                      f"“{str(read.get('reading', read.get('why', '')))[:64]}”"
+                      + (f" · confidence {read.get('confidence')}"
+                         if "confidence" in read else ""))
+            elif _age_seconds(u.get("asked_at")) > STUDIO_DARK_S:
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "staged",
+                      "result": {**res,
+                                 "understanding": {**u, "state": "dark",
+                                                   "note": "the studio is dark — "
+                                                           "staged without a "
+                                                           "reading"}}})
+                print(f"  🧠 the studio stayed dark for {r['id']} — the card says so")
             continue
-        leg = by_id.get(u["leg"])
-        if (leg and leg.get("status") == "done"
-                and (leg.get("result") or {}).get("understanding")):
-            read = dict(leg["result"]["understanding"])
-            read.setdefault("state", "read")
-            call(port, "POST", "/requests/resolve",
-                 {"id": r["id"], "status": "staged",
-                  "result": {**(r.get("result") or {}), "understanding": read}})
-            print(f"  🧠 the studio read {r['id']}: "
-                  f"“{str(read.get('reading', read.get('why', '')))[:64]}”"
-                  + (f" · confidence {read.get('confidence')}"
-                     if "confidence" in read else ""))
-        elif (u.get("state") == "asked"
-              and _age_seconds(u.get("asked_at")) > STUDIO_DARK_S):
-            call(port, "POST", "/requests/resolve",
-                 {"id": r["id"], "status": "staged",
-                  "result": {**(r.get("result") or {}),
-                             "understanding": {**u, "state": "dark",
-                                               "note": "the studio is dark — "
-                                                       "staged without a "
-                                                       "reading"}}})
-            print(f"  🧠 the studio stayed dark for {r['id']} — the card says so")
+        # ---- sp4: the draft returns — the save gate decides, never the mind
+        if pb.get("state") == "drafting" and pb.get("leg"):
+            leg = by_id.get(pb["leg"])
+            done = (leg and leg.get("status") == "done"
+                    and (leg.get("result") or {}).get("plan"))
+            if done:
+                draft = leg["result"]["plan"]
+                if draft.get("state") == "parked":
+                    call(port, "POST", "/requests/resolve",
+                         {"id": r["id"], "status": "staged",
+                          "result": {**res, "planned_by": {
+                              "state": "parked", "why": draft.get("why", ""),
+                              "label": PLAN_FALLBACK_LABEL}}})
+                    print(f"  🗺 the studio's plan for {r['id']} PARKED — "
+                          "the fallback stands, labeled")
+                    continue
+                try:
+                    newplan = fingertip.author_plan(
+                        scope, req_id=r["id"],
+                        objective=(res.get("plan") or {}).get("objective")
+                                   or r.get("text") or "",
+                        proposals=draft.get("intentions"),
+                        floors=[s for p, s in FLOOR_SCOPES.items()],
+                        budget=int(r.get("budget") or 2400))
+                except fingertip.WorkflowError as e:
+                    call(port, "POST", "/requests/resolve",
+                         {"id": r["id"], "status": "staged",
+                          "result": {**res, "planned_by": {
+                              "state": "refused", "why": str(e),
+                              "label": PLAN_FALLBACK_LABEL}}})
+                    print(f"  🗺 the studio's plan for {r['id']} REFUSED AT "
+                          f"SAVE: {e} — the fallback stands, labeled")
+                    continue
+                me = {"did": ORCH_DID, "scope": scope}
+                rec = make_memory(me, ORCH, scope, {"plan": newplan},
+                                  kind="semantic",
+                                  tags=["plan",
+                                        *fingertip.coordinate_tags(newplan["goal"])])
+                rec["coordinate"] = fingertip.coordinate(objective=newplan["goal"])
+                if res.get("plan_record"):
+                    rec["derived_from"] = [res["plan_record"]]   # lineage, never rewrite
+                try:
+                    call(port, "POST", "/records", rec)
+                except Exception as e:
+                    print(f"    (mind-plan record write failed: {e})")
+                beyond = sum(1 for i in newplan["intentions"]
+                             if i.get("beyond_token"))
+                summary = (f"{len(newplan['intentions'])} intention(s) → "
+                           + ", ".join(i["seat"].split("/")[-1]
+                                       for i in newplan["intentions"][:6])
+                           + " · asks you 1 question"
+                           + (f" · {beyond} beyond this token (will ask leave)"
+                              if beyond else ""))
+                _PLANS[r["id"]] = newplan
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "staged",
+                      "result": {**res, "plan": newplan, "plan_record": rec["id"],
+                                 "plan_summary": summary,
+                                 "graph": fingertip.choreography(newplan),
+                                 "planned_by": {"state": "mind",
+                                                "spec": newplan["spec"],
+                                                "by": draft.get("by", ""),
+                                                "why": draft.get("why", ""),
+                                                "label": "planned by the studio"}}})
+                print(f"  🗺 the studio PLANNED {r['id']}: {summary} · "
+                      f"spec {newplan['spec'][:22]}… — the fallback retires")
+            elif _age_seconds(pb.get("asked_at")) > STUDIO_DARK_S:
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "staged",
+                      "result": {**res, "planned_by": {
+                          "state": "fallback", "label": PLAN_FALLBACK_LABEL,
+                          "note": "the studio read but never planned"}}})
+                print(f"  🗺 the studio read but never planned {r['id']} — "
+                      "the fallback stands, labeled")
 
 
 def assay_beat(u_port: int) -> None:
@@ -7496,6 +7623,8 @@ _WEARERS = {
                       "(0047 sp1)"],
     "understand-objective": ["the studio · every objective's reading at the "
                              "plan gate (0047 sp3)"],
+    "plan-objective": ["the studio · every objective's draft plan at the "
+                       "gate (0047 sp4)"],
     "fingertip-default": ["every fingertip flow · the thought's default shape"],
     "prompt-plan": ["the chassis · the planner stage"],
     "prompt-critic": ["the chassis · the critic stage"],

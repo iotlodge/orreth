@@ -2372,6 +2372,17 @@ function studioNote(r){
   if(u.state==="parked")return `<div class="sub" style="color:var(--amber,#e8b34a)">🧠 the studio could not produce a typed reading — ${u.why||"parked"}</div>`;
   return "";
 }
+/* 0047 sp4 — every plan card DECLARES who planned it: the studio's spec, or
+   the arithmetic fallback wearing its honest label (lock 4) */
+function planNote(r){
+  const p=((r.result||{}).planned_by)||{};
+  if(p.state==="mind")return `<div class="sub" style="color:var(--near)">🗺 ${p.label||"planned by the studio"} · spec ${(p.spec||"").slice(0,22)}…${p.why?` · ${p.why}`:""}</div>`;
+  if(p.state==="drafting")return `<div class="sub" style="color:var(--dim,#888)">🗺 the studio is drafting the plan… (the fallback stands meanwhile)</div>`;
+  if(p.state==="refused")return `<div class="sub" style="color:var(--amber,#e8b34a)">🗺 the studio's plan was REFUSED at save — ${p.why||""} · ${p.label||""}</div>`;
+  if(p.state==="parked")return `<div class="sub" style="color:var(--amber,#e8b34a)">🗺 the studio could not produce a typed plan · ${p.label||""}</div>`;
+  if(p.state==="fallback")return `<div class="sub" style="color:var(--amber,#e8b34a)">🗺 ${p.label||"planned by arithmetic"}${p.note?` — ${p.note}`:""}</div>`;
+  return "";
+}
 function reqRow(r){
   /* one request, rendered — the gates (0012: consequence waits) keep their
      buttons wherever the row appears */
@@ -2391,7 +2402,7 @@ function reqRow(r){
   const lgate=r.kind==="dial"&&r.status==="staged"; /* depth is a governed choice (0043 §5) */
   const note=jgate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`
     :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`
-    :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`+studioNote(r)+kfOffer(r)
+    :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`+studioNote(r)+planNote(r)+kfOffer(r)
     :igate?`<div class="sub" style="color:var(--near);white-space:pre-wrap">${(r.result||{}).package_text||"a rewrite waits for your word (R6)"}</div>`
     :ugate?`<div class="sub" style="color:var(--near)">a standing spend — ${(r.result||{}).terms||"terms readable at the gate"}</div>`
     :cgate?`<div class="sub" style="color:var(--near)">access to your memory — ${(r.result||{}).terms||"the bundle readable at the gate"}</div>`

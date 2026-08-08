@@ -127,6 +127,63 @@ def save_template(node, spec: dict) -> str:
     return node.write(rec)
 
 
+def author_plan(scope: str, *, req_id: str, objective: str,
+                proposals: list, floors: list[str], budget: int = 2400,
+                allowed=None, min_share: int = 60) -> dict:
+    """0047 sp4 — the mind proposes, the law disposes. Semantic decomposition
+    belongs to the studio; pricing, entitlement, and the save gate stay
+    deterministic — money is never the mind's to invent. proposals:
+    [{"seat": scope, "intent": sentence}] from the studio's typed plan;
+    floors: the real seats on the wire. Refuses loudly (WorkflowError) on an
+    empty plan, a malformed proposal, an unknown or duplicated seat, the
+    orchestrator's own floor, or a template that fails check_workflow —
+    refused at save, never at incident review. The returned plan is
+    wire-shaped (curate_plan's exact keys) and additionally carries "spec" —
+    the workflow template's content hash the walk of the work will name."""
+    allowed = allowed or dispatch_allowed
+    if not isinstance(proposals, list) or not proposals:
+        raise WorkflowError("the mind proposed no intentions — an empty plan "
+                            "is refused at save")
+    entries, seen = [], set()
+    for i, p in enumerate(proposals):
+        seat = str((p or {}).get("seat") or "").strip() if isinstance(p, dict) else ""
+        intent = str((p or {}).get("intent") or "").strip() if isinstance(p, dict) else ""
+        if not seat or not intent:
+            raise WorkflowError(f"proposal {i + 1} is not seat+intent shaped — "
+                                "refused at save")
+        if seat == scope:
+            raise WorkflowError("the orchestrator's own floor is the assembly "
+                                "seat, never a leg — refused at save")
+        if seat in seen:
+            raise WorkflowError(f"seat {seat} proposed twice — one leg per "
+                                "seat; refused at save")
+        if seat not in floors:
+            raise WorkflowError(f"no floor named {seat} stands on this wire — "
+                                "refused at save")
+        seen.add(seat)
+        entries.append({"seat": seat, "intent": intent})
+    share = max(int(budget) // (len(entries) + 1), min_share)
+    intentions = []
+    for e in entries:
+        entry = {"seat": e["seat"], "budget": {"tokens": share},
+                 "intent": e["intent"]}
+        if not allowed(scope, e["seat"]):
+            entry["beyond_token"] = True     # honest in the plan: it will ask leave
+        intentions.append(entry)
+    spec = workflow_template(
+        scope, name=f"objective-{req_id[:24]}",
+        intentions=[{"id": f"i{n + 1}", "intent": e["intent"], "seat": e["seat"]}
+                    for n, e in enumerate(entries)])
+    check_workflow(spec)                     # the mind's plan survives the law or dies here
+    goal = crypto.content_hash({"objective": objective, "req": req_id})
+    return {"objective": objective, "goal": goal, "intentions": intentions,
+            "dark": [], "spec": spec["id"],
+            "question": f"the flow asks (0027 §8): where shall "
+                        f"“{objective[:48]}” deploy? resolve me with your "
+                        "answer — silence is denial",
+            "share": share}
+
+
 def choreography(plan: dict, branches: list | None = None, *,
                  question_answer: str | None = None) -> dict:
     """The visible mind (0031 §6): the flow's choreography as DATA — nodes, edges,
