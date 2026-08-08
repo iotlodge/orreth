@@ -2402,7 +2402,7 @@ function reqRow(r){
   const lgate=r.kind==="dial"&&r.status==="staged"; /* depth is a governed choice (0043 §5) */
   const note=jgate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`
     :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`
-    :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`+studioNote(r)+planNote(r)+kfOffer(r)
+    :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`+studioNote(r)+planNote(r)+gapOffer(r)+kfOffer(r)
     :igate?`<div class="sub" style="color:var(--near);white-space:pre-wrap">${(r.result||{}).package_text||"a rewrite waits for your word (R6)"}</div>`
     :ugate?`<div class="sub" style="color:var(--near)">a standing spend — ${(r.result||{}).terms||"terms readable at the gate"}</div>`
     :cgate?`<div class="sub" style="color:var(--near)">access to your memory — ${(r.result||{}).terms||"the bundle readable at the gate"}</div>`
@@ -2585,16 +2585,24 @@ const KF=new Set();
 function kfToggle(id){KF.has(id)?KF.delete(id):KF.add(id)}
 const kfOffer=r=>{const o=(r.result||{}).keep_fresh_offer;
   return o?`<div class="sub" style="color:var(--near)"><label><input type="checkbox" ${KF.has(r.id)?"checked":""} onchange="kfToggle('${r.id}')"> …and keep “${esc(o.topic)}” fresh — ${esc(o.terms)} · a standing spend (0032)</label></div>`:""};
+/* 0047 sp5 — the gap is fuel: a reading that named a lack offers to GROW the
+   craft; one approval moment, both consequences legible (0032 §4 kept) */
+const GC=new Set();
+function gcToggle(id){GC.has(id)?GC.delete(id):GC.add(id)}
+const gapOffer=r=>{const o=(r.result||{}).gap_offer;
+  return o?`<div class="sub" style="color:var(--near)"><label><input type="checkbox" ${GC.has(r.id)?"checked":""} onchange="gcToggle('${r.id}')"> 🌱 …and grow the craft this reading lacked: ${esc((o.gaps||[]).join("; "))} — ${esc(o.terms)}</label></div>`:""};
 async function objDecide(id,ok){
   const body={id,status:ok?"approved":"denied"};
-  if(ok&&KF.has(id)){
+  if(ok&&(KF.has(id)||GC.has(id))){
     let q=[];try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{}
     const r=q.find(x=>x.id===id);
-    body.result={...((r||{}).result||{}),keep_fresh:true};
+    body.result={...((r||{}).result||{}),
+      ...(KF.has(id)?{keep_fresh:true}:{}),
+      ...(GC.has(id)?{grow_craft:true}:{})};
   }
   await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify(body)});
-  KF.delete(id);loadReq();loadObjectives();
+  KF.delete(id);GC.delete(id);loadReq();loadObjectives();
 }
 /* submitAsk retired with the Ask tab (0045 sp1) — gathering is the
    librarian's audience now; the kind="gather" door itself still stands */

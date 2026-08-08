@@ -184,6 +184,23 @@ def author_plan(scope: str, *, req_id: str, objective: str,
             "share": share}
 
 
+def gap_offer(reading: dict) -> dict | None:
+    """0047 sp5 (law 7 — the gap is fuel, mechanically): when the studio's
+    reading names gaps, the plan card carries the offer to GROW the missing
+    craft — plainly worded, unchecked by default (0032 §4's one-approval-
+    moment precedent, kept: the human's single word approves the plan AND,
+    only if checked, commissions the lack). None when the reading names
+    nothing — the offer is never pressed on a plan it doesn't fit."""
+    gaps = [str(g).strip() for g in (reading or {}).get("gaps") or []
+            if str(g).strip()]
+    if not gaps:
+        return None
+    return {"gaps": gaps[:3],
+            "terms": "one commission per gap — the librarian gathers, the "
+                     "factory drafts, and the newborn craft WAITS at your "
+                     "gate (0045 law 6)"}
+
+
 def choreography(plan: dict, branches: list | None = None, *,
                  question_answer: str | None = None) -> dict:
     """The visible mind (0031 §6): the flow's choreography as DATA — nodes, edges,

@@ -413,3 +413,19 @@ def test_a_bad_mind_plan_is_refused_at_save():
         with pytest.raises(fingertip.WorkflowError):
             fingertip.author_plan("u:demo", req_id="r", objective="o",
                                   proposals=bad, floors=floors)
+
+
+# ---------------------------------------------------------------- 0047 sp5 · the gap offer
+def test_the_gap_offer_rides_only_a_reading_that_names_a_lack():
+    """0047 sp5 (law 7): gaps become a plainly-worded offer, capped and
+    unchecked by default; a gapless reading carries NO offer — never pressed
+    on a plan it doesn't fit (0032 §4's precedent, kept)."""
+    o = fingertip.gap_offer({"gaps": ["no translation skill in the registry",
+                                      "  ", "no retail manifest",
+                                      "a third", "a fourth beyond the cap"]})
+    assert o["gaps"] == ["no translation skill in the registry",
+                         "no retail manifest", "a third"]      # capped at 3, blanks dropped
+    assert "commission" in o["terms"] and "gate" in o["terms"]
+    assert fingertip.gap_offer({"gaps": []}) is None
+    assert fingertip.gap_offer({}) is None
+    assert fingertip.gap_offer(None) is None

@@ -3274,6 +3274,22 @@ def on_objective_approved(port: int, scope: str, r: dict) -> None:
     plan = ((r.get("result") or {}).get("plan")
             or _PLANS.get(r["id"]) or curate_plan(port, scope, r))
     _PLANS.pop(r["id"], None)
+    # 0047 sp5 — the human's word grows the hands: the checked gap offer
+    # fires one commission per named lack (0045 law 6's whole loop — gather,
+    # draft, stage; the newborn craft still WAITS at the human's gate)
+    _res = r.get("result") or {}
+    _goffer = _res.get("gap_offer")
+    if _res.get("grow_craft") and _goffer:
+        for _g in _goffer.get("gaps", []):
+            try:
+                _cr = call(port, "POST", "/requests", {
+                    "kind": "commission", "craft_kind": "skill",
+                    "born_of": r["id"],
+                    "text": f"grow the craft this objective lacked "
+                            f"(born of {r['id']}): {_g}"})
+                print(f"  🌱 gap → commission {_cr['id']}: “{_g[:64]}”")
+            except Exception as e:
+                print(f"    (gap commission failed to post: {e})")
     legs, dark = {}, list(plan["dark"])
     for entry in plan["intentions"]:
         target = entry["seat"]
@@ -7357,6 +7373,11 @@ def studio_tend(port: int) -> None:
                 # The draft leg carries the reading and the legal seats; the
                 # card declares "drafting" while the fallback keeps standing
                 update = {**res, "understanding": read}
+                # 0047 sp5 — the gap is fuel: a reading that names a lack
+                # offers to GROW the craft, unchecked by default (0032 §4)
+                goffer = fingertip.gap_offer(read)
+                if goffer:
+                    update["gap_offer"] = goffer
                 if read["state"] == "read" and pb.get("state") == "fallback":
                     seats = [s for p, s in sorted(FLOOR_SCOPES.items())
                              if s != scope]

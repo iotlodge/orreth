@@ -6,7 +6,7 @@ seed the same day. Status: DRAFTED — awaiting JB's locks (§9). -->
 
 *Drafted 2026-08-07 · Fable 5 with JB · status: **BUILDING — locks 1+2
 approved as recommended (JB, 2026-08-07: the `nooa` engine pinned-and-jacketed;
-the studio as one seat on the universe floor) · sp1–sp4 LANDED+PROVEN the same day
+the studio as one seat on the universe floor) · sp1–sp5 LANDED+PROVEN the same day — the north star closed
 · locks 3–6 open (§9)**. Companions: `0008` (GraphSpec — the plan's type), `0012` (gates),
 `0014` (the knowledge loop), `0015` (the chassis + the parking lot), `0016`/`0019`
 (the plane and the universal meter), `0027` (the fingertip — the only executor),
@@ -325,7 +325,7 @@ comprehend ≈ `medium`, plan ≈ `high`/`xhigh`, gap-check ≈ `medium` — eac
 
 | # | Spoonful | Proof |
 |---|---|---|
-| 5 | **The gap loop closes** — GapReport → acquisition objective → librarian gathers → commission crystallizes → canary → the replan finds the craft waiting | 0040's north-star walk, end to end, proven as a human: an Objective the universe *couldn't* do, done — every joint on the record |
+| 5 | **The gap loop closes** — GapReport → acquisition objective → librarian gathers → commission crystallizes → canary → the replan finds the craft waiting · **LANDED 2026-08-07**: `fingertip.gap_offer()` — a reading that names a lack OFFERS to grow the craft, plainly worded, unchecked by default (0032 §4's one-approval-moment precedent, kept exactly: the 🌱 checkbox beside the keep-fresh one); the checked word fires ONE COMMISSION PER GAP through 0045 law 6's whole standing loop (librarian gathers at the live tavily stall → factory drafts at the chosen bench → grace lands v1 with `born_of` naming the objective → the newborn WAITS at the human's gate); the welcome serves it into the registry; canary rides the standing 0039 graduation machinery (not separately exercised here — the law stands); suite 306→307 | **0040'S NORTH-STAR WALK, END TO END, EVERY JOINT ON THE RECORD**: the sp3 objective re-composed ("summarize retail week + translate to Spanish") → the reading named the lack → the card offered → ONE human word approved plan AND growth → three commissions ran whole → **`skill-translate-to-spanish` · `skill-retail-floor-records` · `skill-translation-faithfulness-check` all v1, welcomed, SERVING** → the SAME ask re-composed: the reading now GROUNDS ITS DOMAINS IN THE NEWBORN SKILLS, the translation gap GONE, **confidence 0.45 → 0.7** — and the detector refined rather than retired: finer gaps named, the offer standing again. The universe grew the hands it needed, and its next reading held them — ✓ RAN (the closing card left at JB's gate) |
 | 6 | **The standing doors** — schedule and trigger objectives; the standing charter approved once at the gate, instances metered within it; assignment to a resident/agent with charter/entitlement honesty | a scheduled Objective delivering on the beat with no human click after the charter; a trigger firing one from a watched condition |
 
 **Parked, named**: the worker flavor (§9.5) · the Lab's glass and the Faculty
