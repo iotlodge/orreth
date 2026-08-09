@@ -2540,6 +2540,14 @@ def farm_search_source(port: int) -> dict | None:
 
 
 def tavily(q: str, n: int = 3) -> list:
+    # ORRETH_SEARCH_OFF: the dev thrift dial (JB's word, 2026-08-09, after a
+    # 1,000-credit August — three stale 0032 demo subscriptions swept real
+    # searches every ~17 min for weeks). Set it in .env and restart: every
+    # caller gets the honestly-labeled placeholder; no live spend anywhere.
+    if os.environ.get("ORRETH_SEARCH_OFF"):
+        return [{"title": f"(search dark — ORRETH_SEARCH_OFF) placeholder finding on {q}",
+                 "content": "the live web is off by the human's dial; unset the env to spend again",
+                 "url": "local://demo"}]
     if not os.environ.get("TAVILY_API_KEY"):
         return [{"title": f"(no TAVILY_API_KEY) placeholder finding on {q}",
                  "content": "set the key to gather real sourced knowledge", "url": "local://demo"}]
