@@ -122,10 +122,14 @@ flowchart TB
   subgraph L5["the knowledge loop (0014)"]
     EXT["the world — sources AS identities"] --> QUAR["admitted QUARANTINED at 0.0000<br/>promoted only on receipts"]
   end
-  THUMB["the human's thumb (0048 — SEEDED 2026-08-09)<br/>👍 a signed quiet verdict · 👎 + text READ by the studio<br/>and routed into these same lanes"]
-  THUMB -.-> V
-  THUMB -.-> IMP
-  THUMB -.-> COMM
+  subgraph L6["the thumb loop (0048 — CLOSED WHOLE 2026-08-09)"]
+    THUMB["the human's thumb on every reply & resolved objective<br/>👍 a signed quiet verdict · 👎 + words quoted VERBATIM"] --> RTE["the studio ROUTES the words (typed lane, never guessed):<br/>craft → workshop evidence · gap → commission ·<br/>charter → referral · execution → repair objective<br/>wearing the human's words as its RUBRIC"]
+    RTE --> CLOSEC["closure: the outcome named back<br/>on the author's own queue — always a card"]
+  end
+  THUMB --> V
+  RTE --> IMP
+  RTE --> COMM
+  THUMB -.->|"human vs examiner on the SAME work —<br/>news behind min-n, cards never levers"| V
   REL & COMM & QUAR --> SHELF[("THE SHELF / THE REGISTRY (0045)<br/>craft served by REFERENCE, never copied — law 8")]
   BEAT --> SHELF
   SHELF -->|"the next run finds better hands"| NEXT["the next Objective"]

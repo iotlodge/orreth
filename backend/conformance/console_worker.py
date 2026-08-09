@@ -8029,6 +8029,91 @@ def feedback_beat(port: int) -> None:
         print(f"  🧭 feedback [{fb['id'][:18]}…] {outcome.upper()}"
               + (f" → {ref[:22]}…" if ref else "")
               + (f" — {why[:64]}" if why else ""))
+        # sp4 (L3) — CLOSURE: the outcome always lands as a card on the
+        # author's own queue; the bell decides for itself under STANDING
+        # consent (0044's one law — no new grant, no new machinery).
+        try:
+            card = call(port, "POST", "/requests", {
+                "kind": "feedback-closure", "of": fb["id"],
+                "text": f"💬 your 👎 was heard — {outcome}"
+                        + (f" → {ref[:22]}…" if ref else "")
+                        + (f": {why[:110]}" if why else "")})
+            call(port, "POST", "/requests/resolve",
+                 {"id": card["id"], "status": "done",
+                  "result": {"reply": "the outcome, named back to your word",
+                             "feedback": fb["id"], "outcome": outcome,
+                             **({"ref": ref} if ref else {})}})
+            ring_bell(port, {"kind": "feedback-closure", "scope": scope,
+                             "subject": f"your feedback: {outcome}",
+                             "pointer": _CONSOLE_URL})
+        except Exception as e:
+            print(f"    (closure card stumbled: {e})")
+
+
+# sp4 — the calibration's own cadence and memory: whole-rig verdict sweeps
+# are priced work, so they ride a slow beat; the state prints only when it
+# CHANGES, and one open finding bars a second (no storms — 0028's precedent).
+CAL_EVERY = 120
+_CAL_LAST = 0.0
+_CAL_STATE: tuple = ()
+
+
+def calibration_beat(port: int) -> None:
+    """0048 sp4 (L2): the human's thumbs are ground truth for the examiner —
+    where both judged the SAME work, the disagreement is the news, behind
+    min-n so one thumb never indicts vera. A finding is a staged card citing
+    its widest gaps; detection wears no levers (0043 law 3)."""
+    global _CAL_LAST, _CAL_STATE
+    if time.time() - _CAL_LAST < CAL_EVERY:
+        return
+    _CAL_LAST = time.time()                  # set early — never hot-loop
+    rows: list[dict] = []
+    for p, s in sorted(FLOOR_SCOPES.items()):
+        try:
+            for _, body, _, _tags in wire_assets(p, "verdict", scope=s):
+                a = (body or {}).get("assay") or {}
+                if a.get("of"):
+                    rows.append({"of": a["of"],
+                                 "score": float(a.get("score") or 0.0),
+                                 "human": a.get("judge_floor") == "human"})
+        except Exception:
+            continue                          # a dark floor never stops the sweep
+    out = thumb_mod.calibration(rows)
+    state = (out["pairs"], out["mean_gap"], out["news"])
+    if state != _CAL_STATE:
+        _CAL_STATE = state
+        print(f"  ⚖ calibration: {out['pairs']} pair(s) of {out['min_n']} · "
+              f"mean gap {out['mean_gap']}"
+              + (" — NEWS" if out["news"] else " — the tongue is held"))
+    if not out["news"]:
+        return
+    try:
+        reqs = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        return
+    if any(q.get("kind") == "calibration" and q.get("status") == "staged"
+           for q in reqs):
+        return                                # one argument at a time
+    ex = " · ".join(f"[{p['of'][:14]}…] human {p['human']} vs examiner "
+                    f"{p['examiner']}" for p in out["sample"][:3])
+    try:
+        card = call(port, "POST", "/requests", {
+            "kind": "calibration",
+            "text": f"⚖ the human and the examiner disagree — "
+                    f"{out['pairs']} shared work(s), mean gap "
+                    f"{out['mean_gap']} (bar {out['bar']}): {ex}"})
+        call(port, "POST", "/requests/resolve",
+             {"id": card["id"], "status": "staged",
+              "result": {"held": "the yardsticks argue — a card, never a "
+                                 "lever; the word is yours",
+                         "calibration": out}})
+        ring_bell(port, {"kind": "calibration", "scope": UNIVERSE_SCOPE,
+                         "subject": f"human vs examiner: gap {out['mean_gap']}",
+                         "pointer": _CONSOLE_URL})
+        print(f"  ⚖ calibration finding STAGED: {card['id']} — the bell "
+              "carries it, no lever moves")
+    except Exception as e:
+        print(f"    (calibration card stumbled: {e})")
 
 
 def assay_beat(u_port: int) -> None:
@@ -8766,6 +8851,7 @@ def main() -> None:
                         schedule_beat(port)   # the machine's cadence (0047 sp6)
                         reflex_beat(port)     # the reflex arc (0047 sp6)
                         feedback_beat(port)   # the words go back in (0048 sp3)
+                        calibration_beat(port)  # human vs examiner (0048 sp4)
                         bell_beat(port)       # the bell tends its door (0044 sp2)
                         canon_seed(port)      # the firmware stands as records (0045 sp1)
                         verify_beat(port)     # the deed watchman, standing (0044 sp3 · L-B)

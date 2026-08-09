@@ -3837,9 +3837,14 @@ async function fetchMarker(id){
    tick, so the thumb's view-state lives here — the RECORD of the judgment
    lives on the floor's shelf, where it always did */
 const TH={};                       /* of → {st:chips|ask|heard|gone, req} */
+let THUMBED={};                    /* sp4: the RECORD decides after a reload —
+                                      thumb requests already ride the queue,
+                                      so a judged record never re-grows chips */
 function thumbHtml(of){
   if(!of)return "";
-  const t=TH[of]||{st:"chips"};
+  let t=TH[of];
+  if(!t&&THUMBED[of])t=THUMBED[of].up?{st:"gone"}:{st:"heard",req:THUMBED[of].req};
+  t=t||{st:"chips"};
   if(t.st==="gone")return "";
   if(t.st==="heard")return `<div class="theard">heard — on the record${t.req?" · "+t.req:""}</div>`;
   if(t.st==="ask")return `<div class="thumbs"><span class="td-in">`
@@ -3867,6 +3872,8 @@ async function loadObjectives(){
   const busy=document.activeElement;
   if(busy&&busy.id&&(busy.id.startsWith("qa-")||busy.id.startsWith("td-")))return;
   let q;try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{return}
+  THUMBED={};q.forEach(r=>{if(r.kind==="thumb"&&r.status==="done"&&r.of)
+    THUMBED[r.of]={up:!!r.up,req:r.id}});
   const objs=q.filter(r=>r.kind==="objective");
   const questions=q.filter(r=>r.kind==="question");
   const waitingOnYou=objs.filter(r=>r.status==="staged").length

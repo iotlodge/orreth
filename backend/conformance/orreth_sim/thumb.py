@@ -110,6 +110,46 @@ def resolve_feedback(seat: dict, kp, scope: str, feedback: dict, *, outcome: str
     return res
 
 
+# sp4 — the calibration (L2, JB's lock): the human's thumbs are ground
+# truth for the examiner, but ONE thumb never indicts vera — the law holds
+# its tongue below the declared minimum of overlapping pairs, and speaks
+# only when the mean gap crosses the declared bar. News is a card, never
+# a lever (0043 law 3, inherited whole).
+MIN_CAL_N = 5
+CAL_BAR = 0.4
+
+
+def calibration(rows: list[dict], *, min_n: int = MIN_CAL_N,
+                bar: float = CAL_BAR) -> dict:
+    """Human vs examiner on the SAME work: rows are decoded verdicts
+    {of, score, human}. A pair is a work judged by BOTH; scores on the same
+    side average first. Returns {pairs, mean_gap, news, sample} — news only
+    at min_n pairs AND mean gap >= bar; the sample names the widest gaps so
+    the card can cite its evidence."""
+    hum: dict[str, list[float]] = {}
+    mach: dict[str, list[float]] = {}
+    for r in rows:
+        of = str(r.get("of") or "")
+        if not of:
+            continue
+        side = hum if r.get("human") else mach
+        side.setdefault(of, []).append(float(r.get("score") or 0.0))
+    pairs = []
+    for of, hs in hum.items():
+        ms = mach.get(of)
+        if not ms:
+            continue
+        h, m = sum(hs) / len(hs), sum(ms) / len(ms)
+        pairs.append({"of": of, "human": round(h, 4), "examiner": round(m, 4),
+                      "gap": round(abs(h - m), 4)})
+    n = len(pairs)
+    mean_gap = round(sum(p["gap"] for p in pairs) / n, 4) if n else 0.0
+    return {"pairs": n, "min_n": int(min_n), "bar": float(bar),
+            "mean_gap": mean_gap,
+            "news": bool(n >= min_n and mean_gap >= bar),
+            "sample": sorted(pairs, key=lambda p: -p["gap"])[:5]}
+
+
 def open_feedback(node) -> list[dict]:
     """The unanswered words: every open feedback record with no resolution
     deriving from it — oldest first, nothing silently dropped. This list is

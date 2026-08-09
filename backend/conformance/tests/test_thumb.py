@@ -166,6 +166,40 @@ def test_the_wire_twin_row_resolves_too(world):
                                outcome="commissioned", ref="req-9")
 
 
+def test_one_thumb_never_indicts_the_examiner():
+    """sp4 (L2): below the declared minimum of overlapping pairs the
+    calibration holds its tongue — even at maximum disagreement."""
+    rows = []
+    for i in range(4):                                   # 4 pairs, gap 1.0
+        rows += [{"of": f"sha256:w{i}", "score": 1.0, "human": True},
+                 {"of": f"sha256:w{i}", "score": 0.0, "human": False}]
+    out = thumb.calibration(rows)
+    assert out["pairs"] == 4 and out["mean_gap"] == 1.0
+    assert out["news"] is False                          # the tongue is held
+    rows += [{"of": "sha256:w4", "score": 1.0, "human": True},
+             {"of": "sha256:w4", "score": 0.0, "human": False}]
+    out = thumb.calibration(rows)
+    assert out["pairs"] == 5 and out["news"] is True     # the fifth pair speaks
+    assert out["sample"][0]["gap"] == 1.0
+
+
+def test_agreement_is_quiet_and_unpaired_is_no_pair():
+    """sp4: five agreeing pairs are NOT news; a work judged by only one side
+    never pairs; same-side scores average before the gap is taken."""
+    rows = []
+    for i in range(5):
+        rows += [{"of": f"sha256:a{i}", "score": 0.8, "human": True},
+                 {"of": f"sha256:a{i}", "score": 0.7, "human": False}]
+    rows.append({"of": "sha256:lonely", "score": 0.0, "human": True})
+    out = thumb.calibration(rows)
+    assert out["pairs"] == 5 and out["news"] is False
+    two = thumb.calibration([
+        {"of": "sha256:x", "score": 1.0, "human": True},
+        {"of": "sha256:x", "score": 0.0, "human": True},   # human mean = 0.5
+        {"of": "sha256:x", "score": 0.5, "human": False}])
+    assert two["pairs"] == 1 and two["mean_gap"] == 0.0
+
+
 def test_resolution_refuses_dishonesty(world):
     """No silent discard: an unknown outcome refuses; a consequence outcome
     without what it spawned refuses; declined and parked without their why

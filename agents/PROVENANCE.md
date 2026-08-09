@@ -786,3 +786,12 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 | `backend/conformance/orreth_sim/thumb.py` + `tests/test_thumb.py` | Fable 5 (claude-fable-5) | ROUTES/OUTCOME_FOR (the craft route lands EVIDENCE — "proposed" would overclaim under 0031 §4) · route_contract (a real route or a named error) · the wire-twin row resolves through the same law; suite 317→320. |
 | `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | classify-feedback firmware (genesis) · CHARTERS_ROSTER one source for both ears · wire_open_feedback + feedback_beat: read → route → land → resolution sibling; repair objectives carry the human's words as their RUBRIC (0043 G6); dark studio = open words, said once, never dropped. |
 | `agents/flavors/03-mind/run.py` | Fable 5 (claude-fable-5) | The studio's third duty: classify(quoted, context, charters) under the typed route contract, served on the same tend loop. |
+
+## Fable 5 — 2026-08-09 (0048 sp4 — the closure & the calibration: the dive closes whole, era 0.48)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/thumb.py` + `tests/test_thumb.py` | Fable 5 (claude-fable-5) | calibration() under L2's law — one thumb never indicts the examiner; proven in suite (322) and LIVE at the exact boundary: 4 pairs at gap 0.8625 held their tongue, the 5th made news. |
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | The closure card on every routed 👎 (L3: cards always; the bell refused one-faced under the existing grant's kinds — consent never invented) + the whole-rig calibration_beat (throttled, one open finding, cards never levers). |
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The sp2 wart closed: THUMBED reads the queue's own thumb requests, so a reload shows "heard — on the record" where the human already judged — the record decides, not session memory. |
+| `VERSION` · register · road · atlas | Fable 5 (claude-fable-5) | 0.47 → 0.48 in the closing commit; the honest-boundary gained the 0048 row with its named gaps; the atlas's thumb loop went seeded → standing under its own now-standing maintenance law. |

@@ -6,9 +6,10 @@
      before we start eating our own dogfood"), ahead of Farm + Stable, which
      follow as likely the last adjustments before the proofs. -->
 
-**Status: 🟢 BLESSED (JB, 2026-08-09) — triaged FIRST, the gate before
-dogfooding; all four §8 locks landed the same morning, each on the
-recommended path. Spoonfuls begin on JB's word.**
+**Status: 👍 CLOSED WHOLE 2026-08-09, era 0.48 — seeded, triaged first,
+blessed, and all four spoonfuls built + proven live IN ONE DAY, with JB's
+own 👎 riding the proof: his sentence became a staged repair objective
+wearing his words as its rubric. The gate before dogfooding stands.**
 
 ## 1. The seed — JB's words
 
@@ -181,7 +182,24 @@ decoupling precedent); no rule-9 territory.
 4. **The closure + calibration** — outcome-to-author cards; human-vs-vera
    disagreement findings behind min-n. Proven as a human in the glass
    (0030's standing rule) — JB thumbs a real reply down and watches his
-   sentence become a staged proposal.
+   sentence become a staged proposal. **LANDED + PROVEN LIVE 2026-08-09 —
+   THE DIVE CLOSES WHOLE.** Closure (L3): every routed 👎 now lands a
+   `feedback-closure` card on the author's own queue — proven: "💬 your 👎
+   was heard — repair-staged → req-559" — and the bell decided for ITSELF:
+   the standing 0044 grant names its kinds, these are not among them, so it
+   refused one-faced (cards always, consent never invented — the lock kept
+   to the letter). Calibration (L2): `thumb.calibration` (suite 320→322) +
+   the whole-rig `calibration_beat` (throttled, one open finding at a time)
+   — proven live at the exact boundary: FOUR contrarian pairs at mean gap
+   0.8625 and the law said "the tongue is held"; the FIFTH pair spoke —
+   "5 pair(s) of 5 · mean gap 0.806 — NEWS" — and ⚖ req-564 staged citing
+   its three widest gaps, approve/decline and no lever. The sp2 wart
+   closed: the glass now reads the queue's own thumb requests (`THUMBED`),
+   so a reload shows "heard — on the record" where the human already
+   judged — the record decides, not session memory. And the compounding
+   frame: the closure-proof 👎 became repair objective req-559, which the
+   studio READ, PLANNED across the RAG floors, and offered to GROW craft
+   for — a thumb becoming the whole 0047 pipeline's input, unprompted.
 
 ## 8. The locks — ALL FOUR LANDED (JB, 2026-08-09, each on the recommended path)
 
