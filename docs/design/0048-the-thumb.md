@@ -126,7 +126,16 @@ decoupling precedent); no rule-9 territory.
 
 1. **The record** — thumb/feedback record shapes in the sim + conformance
    laws (one-record-by-hash, signed-seat-only, marker grammar, resolution
-   required).
+   required). **LANDED 2026-08-09** — `orreth_sim/thumb.py` +
+   `tests/test_thumb.py` (6 laws; suite 311→317): the 👍 verdict rides
+   0043's `make_human_grading` unchanged (same shelf, same shape — the
+   standings counted it beside the judges' on the first test), the 👎's
+   words are quoted VERBATIM in a feedback record deriving from the judged
+   record AND its own verdict, a wordless no is a verdict alone, the marked
+   record provably never changes, and `open_feedback` — the unanswered-words
+   inbox sp3 will read — empties only on a resolution sibling naming its
+   outcome (consequence outcomes name what they spawned; declined/parked owe
+   their why; a non-feedback record refuses to be "resolved" at all).
 2. **The chips** — glass + worker doors: 👍 fades/records, 👎 opens the
    dialog, the card shows "heard — on the record" with the request id.
 3. **The routing** — the studio's read leg + the four routes + honest

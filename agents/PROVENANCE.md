@@ -764,3 +764,10 @@ The closing proof: skill-orreth-langgraph-onboard v1 STANDS — the first wire-b
 | `VERSION` · docs | Fable 5 (claude-fable-5) | 0.45 → 0.46 in the closing commit; design, road, and register closed with the receipts. The release itself (resident-voice v2, req-446) was cut by JB's own click — the machine renamed, the watchdog silent. |
 
 The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM and its services… you'll want to ask her directly."
+
+## Fable 5 — 2026-08-09 (0048 sp1 — the record: the thumb's shapes and laws, sim-first)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/thumb.py` | Fable 5 (claude-fable-5) | The human answers back, as records: the 👍 verdict IS a 0043 human grading (same shelf, same shape — zero new verdict machinery), the 👎's words become a feedback record quoting the human verbatim under 0024's derives-never-mutates grammar, and feedback is a request that RESOLVES — outcomes named, whys owed, nothing silently dropped. |
+| `backend/conformance/tests/test_thumb.py` | Fable 5 (claude-fable-5) | Six laws under conformance (suite 311→317): quiet-word-loud-on-record · no anonymous thumbs · verbatim feedback + marked-record-never-changes · wordless no · the inbox empties only on resolution · resolution refuses dishonesty. |
