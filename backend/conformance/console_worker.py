@@ -8091,9 +8091,20 @@ def calibration_beat(port: int) -> None:
         reqs = call(port, "GET", "/requests").get("requests", [])
     except Exception:
         return
-    if any(q.get("kind") == "calibration" and q.get("status") == "staged"
-           for q in reqs):
+    cals = [q for q in reqs if q.get("kind") == "calibration"]
+    if any(q.get("status") == "staged" for q in cals):
         return                                # one argument at a time
+    # JB's find (2026-08-09, minutes after the first live card): approving
+    # the finding immediately birthed its twin — the shelf still disagreed
+    # and this guard watched only STAGED cards. The human's word now
+    # SETTLES the argument: a new card stages only when the argument
+    # itself has changed (new pairs, or a moved gap).
+    last = max(cals, key=lambda q: str(q.get("at", "")), default=None)
+    if last is not None:
+        prev = (last.get("result") or {}).get("calibration") or {}
+        if (prev.get("pairs"), prev.get("mean_gap")) == \
+                (out["pairs"], out["mean_gap"]):
+            return                            # the same argument, already worded
     ex = " · ".join(f"[{p['of'][:14]}…] human {p['human']} vs examiner "
                     f"{p['examiner']}" for p in out["sample"][:3])
     try:
