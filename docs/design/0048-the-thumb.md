@@ -138,6 +138,24 @@ decoupling precedent); no rule-9 territory.
    their why; a non-feedback record refuses to be "resolved" at all).
 2. **The chips** — glass + worker doors: 👍 fades/records, 👎 opens the
    dialog, the card shows "heard — on the record" with the request id.
+   **LANDED + PROVEN AS A HUMAN IN THE GLASS 2026-08-09** — the worker grew
+   `human_seat(scope)` (a persistent per-floor key minted like the
+   librarian's — no anonymous thumbs even in v0; request-side signing stays
+   the register's named 0012 partial) and the `on_thumb` door (no gate — a
+   thumb IS the human's word); the parlor builds its exchange record BEFORE
+   the resolve so the id rides the result (an unrecorded answer — safer
+   mode, unembodied — honestly offers no thumb); the glass wears the chips
+   on BOTH L1 surfaces. Proven live on the rig: a 👍 on the librarian's
+   voiced reply faded from view and landed verdict `6e6f796d…` (score 1.0,
+   zero cost); a 👎 on a genuinely poor answer (dispatcher internals instead
+   of naming f:pos) opened the dialog and landed verdict `ef1c8c43…` +
+   feedback `6233a5a7…` quoting the words VERBATIM, state open; a 👎 on
+   resolved objective req-491's report record landed `c5ac5813…` +
+   `86fe8921…`, the card answering in place: "heard — on the record ·
+   req-534". Honest wart, named: the chips' view-state is per-session — a
+   reload shows chips again on already-judged records (the record never
+   duplicates the harm; a second thumb is a second verdict). The read-side
+   fix belongs to sp3/sp4, which read the shelf anyway.
 3. **The routing** — the studio's read leg + the four routes + honest
    parking; proposals/commissions land at real gates.
 4. **The closure + calibration** — outcome-to-author cards; human-vs-vera

@@ -533,6 +533,15 @@
   /* ── THE WORKSPACE (0028): the dialog grown up — the card declares the room,
         ⛶ pulls the pane wide, and panels render blind: stat · bars · list · doc ── */
   .parlor.full{width:min(1100px,100vw)}
+  /* the thumbs (0048 sp2): judgment, not authorship — 👍 fades from view,
+     never from the record; 👎 opens the small dialog under the thumb */
+  .thumbs{display:flex;gap:.55em;align-items:center;margin:.15rem 0 .3rem}
+  .tchip{cursor:pointer;font:.82rem var(--mono);opacity:.45;transition:opacity .15s,transform .15s}
+  .tchip:hover{opacity:1;transform:scale(1.18)}
+  .thumbs.fade{opacity:0;transition:opacity .8s}
+  .theard{color:var(--dim);font:.66rem var(--mono);margin:.15rem 0 .3rem}
+  .td-in{display:flex;gap:.35em;flex:1;min-width:0}
+  .td-in input{flex:1;min-width:0;background:var(--deep);color:var(--near);border:1px solid var(--hair2);border-radius:6px;font:.7rem var(--mono);padding:.25em .5em}
   .pws{padding:.7rem 1.1rem;border-bottom:1px solid var(--hair);overflow-y:auto;max-height:52%;
     display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.8rem}
   .wsp{border:1px solid var(--hair);border-radius:10px;padding:.7rem .9rem;background:rgba(255,255,255,.02);
@@ -3013,6 +3022,40 @@ function wsModal(pi){
 function wsmApply(){const p=$("wsm-pan");if(p)p.style.transform=`translate(${WSM.tx}px,${WSM.ty}px) scale(${WSM.z})`}
 function wsmZoom(f){WSM.z=Math.min(3,Math.max(0.35,WSM.z*f));wsmApply()}
 function wsmReset(){WSM={z:1,tx:0,ty:0,drag:null};wsmApply()}
+/* ── THE THUMB (0048 sp2): the human answers back. A thumb judges ONE record
+      by hash and rides the same request queue as every other human word —
+      👍 lands a quiet signed verdict and fades from view (never from the
+      record); 👎 opens the small dialog, and the words go back into the
+      machine: heard — on the record. ── */
+async function thumbPost(url,of,up,text){
+  try{const r=await(await fetch(url,{method:"POST",
+    headers:{"content-type":"application/json"},
+    body:JSON.stringify({kind:"thumb",of,up,text,
+      text_summary:(up?"👍 the quiet word":"👎 "+(text||"").slice(0,80))})})).json();
+    return r.id||"";}catch{return ""}
+}
+function thumbRow(of,base){
+  const d=document.createElement("div");d.className="thumbs";
+  const up=document.createElement("span");up.className="tchip";up.textContent="👍";
+  up.title="OK — a quiet signed verdict; it fades from view, never from the record";
+  const dn=document.createElement("span");dn.className="tchip";dn.textContent="👎";
+  dn.title="not OK — say why; your words go back into the machine";
+  up.onclick=()=>{thumbPost((base||"")+"/requests",of,true,"");
+    d.classList.add("fade");setTimeout(()=>d.remove(),850)};
+  dn.onclick=()=>{
+    d.innerHTML="";const w=document.createElement("span");w.className="td-in";
+    const i=document.createElement("input");i.id="td-p-"+of.slice(7,19);
+    i.placeholder="what was wrong? your words become the record";
+    const b=document.createElement("button");b.className="sbtn no";b.textContent="send";
+    b.onclick=async()=>{const t=i.value.trim();
+      d.className="theard";d.textContent="heard — on the record…";
+      const rid=await thumbPost((base||"")+"/requests",of,false,t);
+      d.textContent="heard — on the record"+(rid?" · "+rid:"")};
+    i.addEventListener("keydown",e=>{if(e.key==="Enter")b.onclick()});
+    w.appendChild(i);w.appendChild(b);d.appendChild(w);i.focus();
+  };
+  d.appendChild(up);d.appendChild(dn);return d;
+}
 async function parlorPoll(){
   if(!PA)return;
   let q; try{q=(await(await fetch((PA.base||"")+"/requests")).json()).requests||[]}catch{return}
@@ -3023,9 +3066,13 @@ async function parlorPoll(){
     const v=r.result||{};
     if(v.card)parlorCard(v.card);
     else if(v.workspace)renderRoom(v.workspace);
-    else if(v.reply)parlorLine("reply",v.reply,
+    else if(v.reply){parlorLine("reply",v.reply,
       (v.voiced?"a governed thought · metered under my DID":"answered from the record")
       +(v.by?" · "+String(v.by).slice(0,26)+"…":""));
+      /* the exchange landed signed → it can be judged (0048 sp2); an
+         unrecorded answer offers no thumb — nothing stands to mark */
+      if(v.exchange){const th=$("p-thread");
+        th.appendChild(thumbRow(v.exchange,PA.base));th.scrollTop=th.scrollHeight}}
   }
   if(!mine.some(r=>r.status!=="done"))
     $("p-thread").querySelectorAll(".wait").forEach(e=>e.remove());
@@ -3786,11 +3833,39 @@ async function fetchMarker(id){
     MARKCACHE.set(id,(b.marker||{}).reason||"");loadObjectives();
   }catch{MARKCACHE.set(id,"")}
 }
+/* the thumb on a resolved Objective (0048 sp2): the list re-renders on the
+   tick, so the thumb's view-state lives here — the RECORD of the judgment
+   lives on the floor's shelf, where it always did */
+const TH={};                       /* of → {st:chips|ask|heard|gone, req} */
+function thumbHtml(of){
+  if(!of)return "";
+  const t=TH[of]||{st:"chips"};
+  if(t.st==="gone")return "";
+  if(t.st==="heard")return `<div class="theard">heard — on the record${t.req?" · "+t.req:""}</div>`;
+  if(t.st==="ask")return `<div class="thumbs"><span class="td-in">`
+    +`<input id="td-${of.slice(7,19)}" placeholder="what was wrong? your words become the record"`
+    +` onkeydown="if(event.key==='Enter')thumbSend('${of}')">`
+    +`<button class="sbtn no" onclick="thumbSend('${of}')">send</button></span></div>`;
+  return `<div class="thumbs"><span class="tchip" onclick="thumbUp('${of}')" `
+    +`title="OK — a quiet signed verdict; it fades from view, never from the record">👍</span>`
+    +`<span class="tchip" onclick="thumbDown('${of}')" title="not OK — say why; `
+    +`your words go back into the machine">👎</span></div>`;
+}
+function thumbUp(of){TH[of]={st:"gone"};thumbPost(api("/requests"),of,true,"");loadObjectives()}
+function thumbDown(of){TH[of]={st:"ask"};loadObjectives();
+  setTimeout(()=>{const i=$("td-"+of.slice(7,19));if(i)i.focus()},60)}
+async function thumbSend(of){
+  const i=$("td-"+of.slice(7,19));const words=(i?i.value:"").trim();
+  if(i)i.blur();                   /* or the busy-guard would hold the render */
+  TH[of]={st:"heard",req:""};loadObjectives();
+  const rid=await thumbPost(api("/requests"),of,false,words);
+  TH[of]={st:"heard",req:rid};loadObjectives();
+}
 async function loadObjectives(){
   /* a human mid-answer outranks the refresh — the re-render must never eat
      their words (found by the human walk, 0030's standing rule) */
   const busy=document.activeElement;
-  if(busy&&busy.id&&busy.id.startsWith("qa-"))return;
+  if(busy&&busy.id&&(busy.id.startsWith("qa-")||busy.id.startsWith("td-")))return;
   let q;try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{return}
   const objs=q.filter(r=>r.kind==="objective");
   const questions=q.filter(r=>r.kind==="question");
@@ -3825,6 +3900,7 @@ async function loadObjectives(){
         +((a.dark||[]).length?`<div class="row rm">dark: ${a.dark.map(d=>esc(d.seat||d)).join(", ")}</div>`:"")
         +((a.waiting||[]).length?`<div class="row rm">waiting: ${a.waiting.map(w=>esc(w)).join("; ")}</div>`:"")
         +`<div class="row rm">the report record · ${esc((res.record||"").slice(0,34))}…</div>`
+        +thumbHtml(res.record||"")
         +(a.coordinate_citations?`<div class="row rm">the coordinate · ${a.coordinate_citations} record(s) across the floors cite this objective (0033)</div>`:"")
         +(res.graph?`<div class="row wtoggle" onclick="walkToggle('${r.id}')">⤳ ${WALKOPEN.has(r.id)?"close the walk":"walk the work — how each seat thought"}</div>`:"")
         +(res.graph&&WALKOPEN.has(r.id)?renderGraph(res.graph,r.id,true):"");

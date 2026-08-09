@@ -771,3 +771,10 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 |---|---|---|
 | `backend/conformance/orreth_sim/thumb.py` | Fable 5 (claude-fable-5) | The human answers back, as records: the 👍 verdict IS a 0043 human grading (same shelf, same shape — zero new verdict machinery), the 👎's words become a feedback record quoting the human verbatim under 0024's derives-never-mutates grammar, and feedback is a request that RESOLVES — outcomes named, whys owed, nothing silently dropped. |
 | `backend/conformance/tests/test_thumb.py` | Fable 5 (claude-fable-5) | Six laws under conformance (suite 311→317): quiet-word-loud-on-record · no anonymous thumbs · verbatim feedback + marked-record-never-changes · wordless no · the inbox empties only on resolution · resolution refuses dishonesty. |
+
+## Fable 5 — 2026-08-09 (0048 sp2 — the chips: both surfaces wear the thumb, proven live)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | `human_seat(scope)` (persistent per-floor key — no anonymous thumbs in v0) + the `on_thumb` door (gateless — a thumb IS the human's word) + the parlor builds its exchange record before the resolve so the judged id rides the result; safer-mode and unembodied answers honestly offer no thumb. |
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The chips on both L1 surfaces: parlor replies (append-once DOM, 👍 fades in .85s) and resolved Objectives (view-state map surviving the 4s tick; `td-` inputs join the qa- busy-guard so the re-render never eats the human's words). Proven in Chrome: fade, dialog, and "heard — on the record · req-534" in place. |

@@ -125,7 +125,8 @@ from dotenv import load_dotenv
 
 from orreth_sim import (bell as bell_mod, continuity, crypto, fingertip,
                         improver, markers, meaning, mirror, node, observatory,
-                        parlor, profile, purge, serials, shipyard, vera)
+                        parlor, profile, purge, serials, shipyard,
+                        thumb as thumb_mod, vera)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -224,6 +225,22 @@ def lib_seat(scope: str):
     if kp is None:
         kp = _lib_keypair("seat-" + scope.replace("/", "~"))
         _LIB_SEATS[scope] = kp
+    return kp, crypto.did_key_for(kp.public)
+
+
+_HUMAN_SEATS: dict[str, crypto.KeyPair] = {}
+
+
+def human_seat(scope: str):
+    """The human's seat at a floor (0048 sp2): the glass IS the seat until
+    0012's signer registry lands — one persistent key per floor, minted and
+    kept like the librarian's, so a thumb is never anonymous even in v0.
+    Request-side human acts stay honestly unsigned (the register's named
+    partial); the RECORDS a thumb lands do not."""
+    kp = _HUMAN_SEATS.get(scope)
+    if kp is None:
+        kp = _lib_keypair("human-seat-" + scope.replace("/", "~"))
+        _HUMAN_SEATS[scope] = kp
     return kp, crypto.did_key_for(kp.public)
 
 
@@ -5918,6 +5935,41 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
     return None
 
 
+def on_thumb(port: int, scope: str, r: dict) -> None:
+    """0048 sp2: the human's thumb arrives at the door — judgment, never
+    authorship. The sim's laws do the judging (one record by hash, a seated
+    signer, 👍 a quiet verdict on vera's shelf, 👎 + words a feedback record
+    quoting the human verbatim); this door only signs with the floor's human
+    seat, lands the records, and answers the law's own promise: heard — on
+    the record. A thumb needs no gate — it IS the human's word."""
+    of = str(r.get("of") or "").strip()
+    up = bool(r.get("up"))
+    words = str(r.get("text") or "")
+    kp, did = human_seat(scope)
+    try:
+        verdict, fb = thumb_mod.make_thumb({"did": did, "scope": scope}, kp,
+                                           scope, of=of, up=up, text=words)
+    except ValueError as e:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done", "result": {"refused": str(e)}})
+        print(f"  ✋ thumb {r.get('id')} refused: {e}")
+        return
+    for rec in (verdict, fb):
+        if rec is None:
+            continue
+        try:
+            call(port, "POST", "/records", rec)
+        except Exception as e:
+            print(f"    (thumb record write failed: {e})")
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "done",
+          "result": {"reply": "heard — on the record", "verdict": verdict["id"],
+                     **({"feedback": fb["id"]} if fb is not None else {})}})
+    print(f"  {'👍' if up else '👎'} thumb on [{of[:18]}…] — verdict "
+          f"{verdict['id'][:18]}…"
+          + (f" · feedback {fb['id'][:18]}…" if fb is not None else ""))
+
+
 def on_parlor(port: int, scope: str, r: dict) -> None:
     """An audience: the caller asks, the resident fetches with its own authority,
     and the exchange lands signed in the Window. Humans never read; they are answered."""
@@ -6278,20 +6330,26 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                                               "conversation", NOW())
     if kp is not None and not recordable:
         final += "  ⸱  (unrecorded — conversation consent is withdrawn; safer mode)"
-    call(port, "POST", "/requests/resolve",
-         {"id": r["id"], "status": "done",
-          "result": {"reply": final, "voiced": bool(voiced), "by": did}})
-    if not asked.strip().lower().startswith(_NOT_A_HEARTBEAT):
-        _HUMAN_HAND[scope] = time.time()      # first-hand: a living human spoke
-    if kp is not None and not recordable:
-        print(f"  ↳ parlor · {name} answered UNRECORDED at {scope} — safer mode (0034 §4)")
-        return
-    if kp is not None:                    # embodied residents sign the audience
+    # 0048 sp2: the exchange record is built BEFORE the resolve so its id can
+    # ride the result — a thumb judges ONE record by hash, so an exchange that
+    # will never land (safer mode, unembodied organ) honestly offers no thumb.
+    rec = None
+    if kp is not None and recordable:
         body = parlor.audience_body(name, asked, final,
                                     session=str(r.get("session") or ""),
                                     voiced=bool(voiced))
         rec = make_memory({"did": did, "scope": scope}, kp, scope, body,
                           kind="episodic", tags=["parlor", name])
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "done",
+          "result": {"reply": final, "voiced": bool(voiced), "by": did,
+                     **({"exchange": rec["id"]} if rec is not None else {})}})
+    if not asked.strip().lower().startswith(_NOT_A_HEARTBEAT):
+        _HUMAN_HAND[scope] = time.time()      # first-hand: a living human spoke
+    if kp is not None and not recordable:
+        print(f"  ↳ parlor · {name} answered UNRECORDED at {scope} — safer mode (0034 §4)")
+        return
+    if rec is not None:                   # embodied residents sign the audience
         try:
             call(port, "POST", "/records", rec)
         except Exception as e:
@@ -8323,6 +8381,9 @@ def main() -> None:
                         elif r.get("kind") == "parlor" and r.get("status") == "pending":
                             handled.add(key)
                             on_parlor(port, scope, r)
+                        elif r.get("kind") == "thumb" and r.get("status") == "pending":
+                            handled.add(key)
+                            on_thumb(port, scope, r)
                         elif r.get("kind") == "witness" and r.get("status") == "staged":
                             handled.add(key)
                             witness_transcribe(port, scope, r)
