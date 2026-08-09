@@ -116,6 +116,56 @@ def test_feedback_resolves_and_the_inbox_empties(world):
     assert thumb.open_feedback(node) == []               # answered, not vanished
 
 
+def test_the_route_contract_never_guesses():
+    """sp3: the classify contract parses only a real route — prose refuses,
+    an invented route refuses, and a good word types cleanly (trimmed,
+    case-folded) with its why and target intact."""
+    got = thumb.route_contract(
+        ' {"route": " Gap ", "why": "the skill is missing", '
+        '"target": "skill-translate-to-spanish"}')
+    assert got == {"route": "gap", "why": "the skill is missing",
+                   "target": "skill-translate-to-spanish"}
+    with pytest.raises(ValueError):
+        thumb.route_contract("I think this is probably a craft problem")
+    with pytest.raises(ValueError):
+        thumb.route_contract('{"route": "vibes", "why": "?", "target": ""}')
+    with pytest.raises(ValueError):
+        thumb.route_contract('{"why": "no route named"}')
+
+
+def test_every_route_lands_an_honest_outcome(world):
+    """sp3: the route map is total over ROUTES; every landing word is in the
+    vocabulary AND must name what it spawned (no ref, no claim) — including
+    the craft route's deliberately modest "evidenced" (0031 §4: feedback is
+    never an auto-trigger, so "proposed" would overclaim)."""
+    assert set(thumb.OUTCOME_FOR) == set(thumb.ROUTES)
+    for word in thumb.OUTCOME_FOR.values():
+        assert word in thumb.OUTCOMES and word in thumb._NEEDS_REF
+    assert thumb.OUTCOME_FOR["craft"] == "evidenced"
+    human, kp = _human(world)
+    _, fb = thumb.make_thumb(human, kp, "u:demo", of="sha256:r", up=False,
+                             text="the voice answered in the wrong shape")
+    with pytest.raises(ValueError):                      # a landing names its ref
+        thumb.resolve_feedback(human, kp, "u:demo", fb, outcome="evidenced")
+    res = thumb.resolve_feedback(human, kp, "u:demo", fb,
+                                 outcome="repair-staged", ref="req-7")
+    assert thumb._body(res)["feedback"]["outcome"] == "repair-staged"
+
+
+def test_the_wire_twin_row_resolves_too(world):
+    """sp3: the worker sweeps DECODED rows off the wire — a {id, of} row
+    resolves through the same law; a rowless dict still refuses."""
+    human, kp = _human(world)
+    res = thumb.resolve_feedback(human, kp, "u:demo",
+                                 {"id": "sha256:fb", "of": "sha256:judged"},
+                                 outcome="commissioned", ref="req-9")
+    b = thumb._body(res)["feedback"]
+    assert b["of"] == "sha256:judged" and res["derived_from"] == ["sha256:fb"]
+    with pytest.raises(ValueError):
+        thumb.resolve_feedback(human, kp, "u:demo", {"id": "x"},
+                               outcome="commissioned", ref="req-9")
+
+
 def test_resolution_refuses_dishonesty(world):
     """No silent discard: an unknown outcome refuses; a consequence outcome
     without what it spawned refuses; declined and parked without their why

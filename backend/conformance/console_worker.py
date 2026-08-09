@@ -2220,6 +2220,23 @@ FIRMWARE = {
         "\n\nOBJECTIVE:\n⟦objective⟧\n\nDECLARED RUBRIC:\n⟦rubric⟧\n\n"
         "YOUR READING:\n⟦reading⟧\n\nSEATS (the only legal values for "
         "\"seat\"):\n⟦seats⟧",
+    # 0048 sp3 (the routing): genesis at its birth dive, like all firmware.
+    "classify-feedback":
+        "You are the studio, the comprehension seat of a governed universe. "
+        "A human pressed 👎 on the JUDGED WORK and said why (quoted below). "
+        "Classify the lack into exactly ONE route: \"craft\" — the answer's "
+        "shape, tone, or driving craft is defective; \"gap\" — knowledge or "
+        "a skill is missing; \"charter\" — the wrong keeper answered (name "
+        "the right one from the roster); \"execution\" — the work ran but "
+        "its outcome is wrong and a repair is owed. Reply with STRICT JSON "
+        "only — begin with the { character, no preamble, no code fences: "
+        "{\"route\": \"craft|gap|charter|execution\", \"why\": \"one plain "
+        "sentence the human will read back\", \"target\": \"the craft "
+        "object, the missing skill, the right keeper, or the objective to "
+        "repair — one short name or phrase\"}.\n\n"
+        "THE HUMAN'S WORDS:\n⟦quoted⟧\n\n"
+        "THE JUDGED WORK (context):\n⟦context⟧\n\n"
+        "THE CHARTERS (who keeps what):\n⟦charters⟧",
 }
 
 
@@ -5819,6 +5836,18 @@ def executable(port: int, model: str) -> str | None:
     return model if need and os.environ.get(need) else None
 
 
+# 0046's roster, one source: the listen kit grounds referrals in it and the
+# 0048 classify leg routes charter mismatches by it — two ears, one truth.
+CHARTERS_ROSTER = (
+    "becky keeps identity and every door · vigil keeps "
+    "detection · steward keeps memory's metabolism · governance keeps "
+    "the floors' law · charlotte keeps the FARM (tools, services, MCP "
+    "stalls) · librarian keeps knowledge and the gathers · ada keeps "
+    "the STABLE (minds, models) · grace keeps the workshop (craft "
+    "proposals) · allen keeps the cloud estate · vera keeps the "
+    "observatory (measurement, verdicts, the dial)")
+
+
 def _listen_kit(name: str, port: int, scope: str, facts: dict,
                 card: str) -> str:
     """0046 sp1 — the grounding kit: what this resident may honestly speak
@@ -5828,13 +5857,7 @@ def _listen_kit(name: str, port: int, scope: str, facts: dict,
     u = universe_port(port)
     bits: list[str] = [
         "THE RESIDENTS AND THEIR CHARTERS (refer by NAME when a question "
-        "is theirs): becky keeps identity and every door · vigil keeps "
-        "detection · steward keeps memory's metabolism · governance keeps "
-        "the floors' law · charlotte keeps the FARM (tools, services, MCP "
-        "stalls) · librarian keeps knowledge and the gathers · ada keeps "
-        "the STABLE (minds, models) · grace keeps the workshop (craft "
-        "proposals) · allen keeps the cloud estate · vera keeps the "
-        "observatory (measurement, verdicts, the dial)"]
+        "is theirs): " + CHARTERS_ROSTER]
     try:
         g = compose_governance()
         cats: dict = {}
@@ -7834,6 +7857,180 @@ def reflex_beat(port: int) -> None:
         _standing_save("reflexes", rows)
 
 
+# 0048 sp3 — the routing's live memory: feedback id → its classify leg (this
+# process). The durable guard is the resolution record itself: a routed
+# feedback is never open again; a restart merely re-asks an unanswered leg.
+_FEEDBACK_LEGS: dict[str, str] = {}
+_FEEDBACK_DARK: set[str] = set()
+
+
+def wire_open_feedback(port: int, scope: str) -> list[dict]:
+    """The unanswered words from the wire — sp1's open_feedback, wire twin:
+    open feedback records with no resolution deriving from them, read under
+    the librarian's seat like the desk's ledger (0032 §1's pattern)."""
+    from datetime import datetime, timedelta, timezone
+    _, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=90)).strftime(
+        "%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 8}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return []
+    rows, resolved = [], set()
+    for h in r.get("hits", []):
+        tags = h.get("tags") or []
+        if "feedback" not in tags:
+            continue
+        if "resolution" in tags:
+            resolved.update(h.get("derived_from") or [])
+            continue
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        fb = (body or {}).get("feedback") or {}
+        if fb.get("state") == "open":
+            rows.append({"id": h["ref"], "at": h.get("occurred_at", ""), **fb})
+    rows.sort(key=lambda x: x["at"])
+    return [x for x in rows if x["id"] not in resolved]
+
+
+def feedback_beat(port: int) -> None:
+    """0048 sp3 — the words go back into the machine: each open feedback is
+    READ by the studio (the typed route — one re-ask upstream, honest park)
+    and lands at the organ that can answer it; the resolution sibling names
+    what the words became (OUTCOME_FOR — the craft route lands EVIDENCE,
+    0031 §4, never an auto-proposal). The mind proposes; every consequential
+    landing still waits at a human gate. V1 sweeps the universe floor — the
+    glass posts thumbs there; the whole-rig sweep is a named gap."""
+    scope = UNIVERSE_SCOPE
+    open_rows = wire_open_feedback(port, scope)
+    if not open_rows:
+        return
+    try:
+        reqs = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        return
+    by_id = {q.get("id"): q for q in reqs}
+    me = {"did": ORCH_DID, "scope": scope}
+    reg_names: set[str] = set()
+    try:
+        reg_names = {o["name"] for o in compose_governance().get("objects", [])}
+    except Exception:
+        pass
+    for fb in open_rows[:2]:                  # two words a beat — no storms
+        leg = by_id.get(_FEEDBACK_LEGS.get(fb["id"], ""))
+        if leg is None:
+            try:
+                judged = call(port, "GET", "/records/"
+                              + urllib.parse.quote(str(fb.get("of") or ""),
+                                                   safe="") + "/body")
+            except Exception:
+                judged = {}
+            try:
+                leg_id = call(port, "POST", "/requests", {
+                    "kind": "classify-feedback", "of": fb["id"],
+                    "quoted": fb.get("quoted", ""),
+                    "context": str(judged)[:600],
+                    "charters": CHARTERS_ROSTER,
+                    "text": "the studio reads the human's words on "
+                            f"[{fb['id'][:18]}…]"})["id"]
+                _FEEDBACK_LEGS[fb["id"]] = leg_id
+                print(f"  🧭 feedback [{fb['id'][:18]}…] → the studio reads "
+                      f"({leg_id})")
+            except Exception as e:
+                print(f"    (classify leg failed to post: {e})")
+            continue
+        if leg.get("status") != "done":
+            if (_age_seconds(leg.get("at")) > STUDIO_DARK_S
+                    and fb["id"] not in _FEEDBACK_DARK):
+                _FEEDBACK_DARK.add(fb["id"])  # honest, once: the word WAITS
+                print(f"  🧭 the studio is dark for [{fb['id'][:18]}…] — "
+                      "the human's words stay open, never dropped")
+            continue
+        route = (leg.get("result") or {}).get("route") or {}
+        why = str(route.get("why") or "")
+        target = str(route.get("target") or "")
+        outcome, ref = "", ""
+        if route.get("state") == "parked" or not route.get("route"):
+            outcome = "parked"
+            why = why or "the mind could not type the lack — the words wait"
+        elif route["route"] == "gap":
+            try:
+                ref = call(port, "POST", "/requests", {
+                    "kind": "commission", "craft_kind": "skill",
+                    "born_of": fb["id"],
+                    "text": "grow the craft the human's words found lacking "
+                            f"(born of [{fb['id'][:18]}…]): {target or why}"})["id"]
+            except Exception as e:
+                print(f"    (feedback commission failed: {e})")
+                continue
+        elif route["route"] == "execution":
+            try:
+                ref = call(port, "POST", "/requests", {
+                    "kind": "objective", "born_of": fb["id"],
+                    "text": f"repair — {target or 'the judged work'}",
+                    # the human's own words become the yardstick (0043 G6)
+                    "rubric": str(fb.get("quoted") or "")[:200]})["id"]
+            except Exception as e:
+                print(f"    (repair objective failed to post: {e})")
+                continue
+        elif route["route"] == "charter":
+            note = make_memory(me, ORCH, scope,
+                               {"referral": {"of": fb["id"], "keeper": target,
+                                             "note": why}},
+                               kind="semantic", tags=["feedback-referral"])
+            note["derived_from"] = [fb["id"]]
+            try:
+                call(port, "POST", "/records", note)
+                ref = note["id"]
+            except Exception as e:
+                print(f"    (referral note failed to land: {e})")
+                continue
+        elif route["route"] == "craft":
+            # 0031 §4's own door: the words land VERBATIM as evidence against
+            # the named craft — the smith must carry them, never auto-adopt.
+            name = target if target in reg_names else "resident-voice"
+            evid = make_memory(me, ORCH, scope,
+                               {"feedback": {"asset": name,
+                                             "quoted": str(fb.get("quoted")
+                                                           or "")[:400]}},
+                               kind="semantic", tags=["asset-feedback", name])
+            evid["derived_from"] = [fb["id"]]
+            try:
+                call(port, "POST", "/records", evid)
+                ref = evid["id"]
+                if name != target:
+                    why = (why + " — landed against «resident-voice», the "
+                           f"speaking craft (no registry object named "
+                           f"“{target}”)").strip(" —")
+            except Exception as e:
+                print(f"    (craft evidence failed to land: {e})")
+                continue
+        if not outcome:
+            outcome = thumb_mod.OUTCOME_FOR[route["route"]]
+        try:
+            res_rec = thumb_mod.resolve_feedback(
+                me, ORCH, scope, {"id": fb["id"], "of": fb.get("of", "")},
+                outcome=outcome, ref=ref, why=why)
+            call(port, "POST", "/records", res_rec)
+        except Exception as e:
+            print(f"    (feedback resolution failed: {e})")
+            continue
+        _FEEDBACK_LEGS.pop(fb["id"], None)
+        _FEEDBACK_DARK.discard(fb["id"])
+        print(f"  🧭 feedback [{fb['id'][:18]}…] {outcome.upper()}"
+              + (f" → {ref[:22]}…" if ref else "")
+              + (f" — {why[:64]}" if why else ""))
+
+
 def assay_beat(u_port: int) -> None:
     """The Examiner (0043 §6), dial-gated: only at «assay» does vera sample
     completed work and commission judges — metered under HER did, under the
@@ -7992,6 +8189,8 @@ _WEARERS = {
                              "plan gate (0047 sp3)"],
     "plan-objective": ["the studio · every objective's draft plan at the "
                        "gate (0047 sp4)"],
+    "classify-feedback": ["the studio · every 👎's words read and routed "
+                          "(0048 sp3)"],
     "fingertip-default": ["every fingertip flow · the thought's default shape"],
     "prompt-plan": ["the chassis · the planner stage"],
     "prompt-critic": ["the chassis · the critic stage"],
@@ -8566,6 +8765,7 @@ def main() -> None:
                         studio_tend(port)     # readings ride the plan cards (0047 sp3)
                         schedule_beat(port)   # the machine's cadence (0047 sp6)
                         reflex_beat(port)     # the reflex arc (0047 sp6)
+                        feedback_beat(port)   # the words go back in (0048 sp3)
                         bell_beat(port)       # the bell tends its door (0044 sp2)
                         canon_seed(port)      # the firmware stands as records (0045 sp1)
                         verify_beat(port)     # the deed watchman, standing (0044 sp3 · L-B)

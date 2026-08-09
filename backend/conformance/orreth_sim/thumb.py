@@ -16,9 +16,41 @@ import json as _json
 from . import crypto, vera
 from .node import make_memory
 
-OUTCOMES = ("adopted", "commissioned", "referred", "repaired", "declined", "parked")
-_NEEDS_REF = ("adopted", "commissioned", "referred", "repaired")
+OUTCOMES = ("adopted", "evidenced", "commissioned", "referred",
+            "repair-staged", "repaired", "declined", "parked")
+_NEEDS_REF = ("adopted", "evidenced", "commissioned", "referred",
+              "repair-staged", "repaired")
 _NEEDS_WHY = ("declined", "parked")
+
+# sp3 — the four routes and what a landing may honestly claim: the craft
+# route lands EVIDENCE in the workshop (0031 §4: feedback is never an
+# auto-trigger, so "proposed" would overclaim); the gap route lands a real
+# commission; the charter route lands a referral; the execution route lands
+# a repair objective STAGED at the human's gate, not a repair done.
+ROUTES = ("craft", "gap", "charter", "execution")
+OUTCOME_FOR = {"craft": "evidenced", "gap": "commissioned",
+               "charter": "referred", "execution": "repair-staged"}
+
+
+def route_contract(raw: str) -> dict:
+    """The classify leg's typed contract (0048 sp3): {"route": one of
+    ROUTES, "why": one sentence the human will read, "target": the object,
+    skill, keeper, or objective the route needs}. Strict — a malformed word
+    earns the jacket's one re-ask upstream, then parks; this law never
+    guesses a route."""
+    import re as _re
+    m = _re.search(r"\{.*\}", raw or "", _re.S)
+    if not m:
+        raise ValueError("no JSON object found in the reply")
+    try:
+        got = _json.loads(m.group(0))
+    except Exception as e:
+        raise ValueError(f"the JSON did not parse ({e})") from e
+    route = str(got.get("route") or "").strip().lower()
+    if route not in ROUTES:
+        raise ValueError(f'"route" must be one of {ROUTES}')
+    return {"route": route, "why": str(got.get("why") or ""),
+            "target": str(got.get("target") or "")}
 
 UP_WORD = "the human's quiet yes — 👍"
 DOWN_WORD = "the human's no — 👎"
@@ -58,6 +90,8 @@ def resolve_feedback(seat: dict, kp, scope: str, feedback: dict, *, outcome: str
     outcome names what it spawned, a declined or parked one owes its why.
     Never a mutation, never silence."""
     fbody = _body(feedback).get("feedback") or {}
+    if not fbody and feedback.get("id") and feedback.get("of"):
+        fbody = {"of": feedback["of"]}     # a decoded row from the wire twin
     if not fbody:
         raise ValueError("only a feedback record resolves — this is not one")
     if outcome not in OUTCOMES:

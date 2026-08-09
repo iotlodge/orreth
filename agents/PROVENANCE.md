@@ -778,3 +778,11 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 |---|---|---|
 | `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | `human_seat(scope)` (persistent per-floor key — no anonymous thumbs in v0) + the `on_thumb` door (gateless — a thumb IS the human's word) + the parlor builds its exchange record before the resolve so the judged id rides the result; safer-mode and unembodied answers honestly offer no thumb. |
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The chips on both L1 surfaces: parlor replies (append-once DOM, 👍 fades in .85s) and resolved Objectives (view-state map surviving the 4s tick; `td-` inputs join the qa- busy-guard so the re-render never eats the human's words). Proven in Chrome: fade, dialog, and "heard — on the record · req-534" in place. |
+
+## Fable 5 — 2026-08-09 (0048 sp3 — the routing: the words go back into the machine)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/thumb.py` + `tests/test_thumb.py` | Fable 5 (claude-fable-5) | ROUTES/OUTCOME_FOR (the craft route lands EVIDENCE — "proposed" would overclaim under 0031 §4) · route_contract (a real route or a named error) · the wire-twin row resolves through the same law; suite 317→320. |
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | classify-feedback firmware (genesis) · CHARTERS_ROSTER one source for both ears · wire_open_feedback + feedback_beat: read → route → land → resolution sibling; repair objectives carry the human's words as their RUBRIC (0043 G6); dark studio = open words, said once, never dropped. |
+| `agents/flavors/03-mind/run.py` | Fable 5 (claude-fable-5) | The studio's third duty: classify(quoted, context, charters) under the typed route contract, served on the same tend loop. |

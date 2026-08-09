@@ -64,10 +64,32 @@ def _plan_contract(raw: str) -> dict:
             "why": str(got.get("why") or "")}
 
 
+_ROUTES = ("craft", "gap", "charter", "execution")
+
+
+def _route_contract(raw: str) -> dict:
+    """The classify leg's typed contract (0048 sp3): a real route or a named
+    error — this jacket never guesses a lane for the human's words."""
+    import re as _re
+    m = _re.search(r"\{.*\}", raw or "", _re.S)
+    if not m:
+        raise ValueError("no JSON object found in the reply")
+    try:
+        got = json.loads(m.group(0))
+    except Exception as e:
+        raise ValueError(f"the JSON did not parse ({e})") from e
+    route = str(got.get("route") or "").strip().lower()
+    if route not in _ROUTES:
+        raise ValueError(f'"route" must be one of {_ROUTES}')
+    return {"route": route, "why": str(got.get("why") or ""),
+            "target": str(got.get("target") or "")}
+
+
 class StudioMind(OrrethMind):
-    """Two duties: read an Objective against the registry, then draft its
-    plan — seats and intents only; the worker prices and the save gate
-    decides (the mind proposes, the law disposes)."""
+    """Three duties: read an Objective against the registry, draft its plan
+    (seats and intents only; the worker prices and the save gate decides —
+    the mind proposes, the law disposes), and route a human's 👎 words to
+    the organ that can answer them (0048 sp3)."""
 
     @generation(klass="medium", craft="understand-objective",
                 returns={"reading": str, "domains": list, "needs": list,
@@ -80,6 +102,12 @@ class StudioMind(OrrethMind):
                 returns=_plan_contract)
     def plan(self, objective, rubric, reading, seats):
         """The draft — semantic decomposition only, never money."""
+        ...
+
+    @generation(klass="medium", craft="classify-feedback",
+                returns=_route_contract)
+    def classify(self, quoted, context, charters):
+        """The routing — the human's words, typed into a lane."""
         ...
 
 
@@ -126,11 +154,28 @@ def tend_once(mind: StudioMind, client: FieldClient) -> bool:
     except Exception:
         return False
     legs = [r for r in reqs
-            if r.get("kind") in ("understand", "plan-draft")
+            if r.get("kind") in ("understand", "plan-draft",
+                                 "classify-feedback")
             and r.get("status") == "pending"]
     if not legs:
         return False
     leg = legs[0]
+    if leg["kind"] == "classify-feedback":    # 0048 sp3 — the human's words
+        try:
+            route = mind.classify(str(leg.get("quoted") or ""),
+                                  str(leg.get("context") or ""),
+                                  str(leg.get("charters") or ""))
+            out = {**route, "state": "routed",
+                   "craft": mind._crafts["classify-feedback"].ref,
+                   "by": client.did}
+            print(f"· routed {leg['id']}: {route['route']} — "
+                  f"{route['why'][:64]}")
+        except MindParked as e:
+            out = {"state": "parked", "why": str(e), "by": client.did}
+            print(f"· PARKED {leg['id']}: {e}")
+        _post(UNIVERSE, "/requests/resolve",
+              {"id": leg["id"], "status": "done", "result": {"route": out}})
+        return True
     if leg["kind"] == "understand":
         try:
             reading = mind.understand(

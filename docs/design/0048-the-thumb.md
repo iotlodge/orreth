@@ -157,7 +157,27 @@ decoupling precedent); no rule-9 territory.
    duplicates the harm; a second thumb is a second verdict). The read-side
    fix belongs to sp3/sp4, which read the shelf anyway.
 3. **The routing** — the studio's read leg + the four routes + honest
-   parking; proposals/commissions land at real gates.
+   parking; proposals/commissions land at real gates. **LANDED + PROVEN
+   LIVE 2026-08-09, WITH JB'S OWN HAND IN THE PROOF** — `classify-feedback`
+   firmware (genesis, ⟦quoted⟧·⟦context⟧·⟦charters⟧ — the 0046 roster now
+   ONE constant serving both ears), the studio's third generation method
+   (typed route contract: a real route or a named error, never a guessed
+   lane), and the worker's `feedback_beat` (wire twin of the sp1 inbox, two
+   words a beat, universe floor v1 — whole-rig sweep a named gap). The
+   craft route lands the words VERBATIM as workshop evidence through 0031
+   §4's own door — outcome **"evidenced"**, deliberately modest, because
+   feedback is never an auto-trigger and "proposed" would overclaim. Live:
+   the sp2 parlor 👎 routed **craft → EVIDENCED** ("the reply buried the
+   direct answer (f:pos) under dispatcher internals"); the sp2 objective 👎
+   routed **execution → REPAIR-STAGED → req-540**, the human's words riding
+   as the repair's RUBRIC (0043 G6); and mid-proof JB himself pressed 👎 in
+   the live glass ("Would expect Librarian to be a basic chat resident
+   also…") — his words swept within a beat, routed execution, and
+   **req-543 "repair — librarian's basic chat-answering dispatch" staged at
+   his gate wearing his sentence as the yardstick**. The dark posture
+   proven en route: while the studio's rejoin waited at becky's gate, the
+   beat said once "the human's words stay open, never dropped" — and kept
+   its word. Suite 317→320.
 4. **The closure + calibration** — outcome-to-author cards; human-vs-vera
    disagreement findings behind min-n. Proven as a human in the glass
    (0030's standing rule) — JB thumbs a real reply down and watches his
