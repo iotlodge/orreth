@@ -7345,12 +7345,20 @@ def _standing_deeds(port: int) -> dict:
             if not (a.get("manifests") or {}).get("comp")}
 
 
+# blindness ≠ betrayal (JB's find, 2026-08-10): consecutive failed LOOKS per
+# path; the tamper card requires SIGHT of a wrong world, never a dark wire.
+_VERIFY_BLIND: dict[str, int] = {}
+VERIFY_BLIND_LOOKS = 3
+
+
 def verify_beat(port: int) -> None:
     """0042's deferral, standing at last (L-B): observation-only — no hand
     moves, so no word is asked just to LOOK. Every standing deed is fetched
     back and compared to its sworn key; the observation lands either way.
-    Only a wrong world wakes the human: a tamper ring + the walk-back card
-    at the gate (staged, never enacted — 0042 §5 holds)."""
+    Only a wrong world SEEN wakes the human: a tamper ring + the walk-back
+    card at the gate (staged, never enacted — 0042 §5 holds). A wire that
+    would not answer is the observer's own condition — noted without a
+    lever after patient looks, never dressed as a tamper."""
     global _VERIFY_LAST
     if time.time() - _VERIFY_LAST < VERIFY_EVERY:
         return
@@ -7375,7 +7383,34 @@ def verify_beat(port: int) -> None:
                         "found": {"status": status, "hash": fetched},
                         "holds": holds, "at": NOW()}))
         if holds:
+            _VERIFY_BLIND.pop(path, None)     # sighted and true — all clear
             continue
+        if status != "found":
+            # JB's find (2026-08-10, req-579): a network hiccup left the
+            # watchman BLIND and this path judged blindness as betrayal —
+            # an UNPUBLISH card staged for an intact deed. A failed
+            # observation is not an observation of a wrong world (0042 §4):
+            # blindness speaks in its own words, wears no lever, and only
+            # after patient looks — the tamper path below needs SIGHT.
+            n = _VERIFY_BLIND[path] = _VERIFY_BLIND.get(path, 0) + 1
+            print(f"  👁 the standing verify is BLIND for /{path} "
+                  f"(look {n}): {status}")
+            if n == VERIFY_BLIND_LOOKS:
+                try:
+                    card = call(port, "POST", "/requests", {
+                        "kind": "verify-blind",
+                        "text": f"👁 the standing verify cannot SEE /{path} "
+                                f"({n} looks — last: {status}). The observer "
+                                "is blind, NOT the deed altered — check the "
+                                "wire; the watchman keeps looking."})
+                    call(port, "POST", "/requests/resolve",
+                         {"id": card["id"], "status": "done",
+                          "result": {"reply": "a note, never a lever — "
+                                              "nothing is known to be wrong"}})
+                except Exception as e:
+                    print(f"    (blind note stumbled: {e})")
+            continue
+        _VERIFY_BLIND.pop(path, None)         # SIGHTED, and the world is wrong
         print(f"  ⚠ the standing verify DISAGREES for /{path} — "
               f"observed {status} [{str(fetched)[7:19]}…]")
         q = call(port, "GET", "/requests").get("requests", [])
