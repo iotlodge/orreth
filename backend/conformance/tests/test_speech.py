@@ -104,6 +104,18 @@ def test_the_journey_speaks_plain():
                    "3 working")
 
 
+def test_the_reins_speak_plain():
+    """0051 sp2 (rule 11): the cancel reply names what finished and what
+    stopped and points at the record; the resting words promise
+    reversibility — a rest is never a death."""
+    got = speech.render(speech.SENTENCES["cancel-reply"], finished=2, stopped=3)
+    assert got.startswith("stopped at the next safe boundary — 2 piece(s)")
+    assert "on the record" in got
+    assert "reversible" in speech.SENTENCES["charter-rest-reply"]
+    assert "reversible" in speech.SENTENCES["reflex-rest-reply"]
+    assert speech.SENTENCES["cancel-leg"] == "cancelled — the origin withdrew"
+
+
 def test_the_persona_is_craft_too():
     """sp3: the tester rides the same shelf as the tested — quinn's persona
     carries the strict contract and the two slots her jacket fills, and she

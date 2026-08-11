@@ -63,6 +63,12 @@ process — mayflies in a universe designed for living things. Review caught it
     JB review before merging. Never claim another model's authorship — JB verifies
     attribution against audit logs, and false records get corrected publicly.
 
+11. **The human can always stop what the machine manages** (0051 · JB's lock 2026-08-11).
+    Every managed objective, standing duty, and reflex offers a governed cancel/rest;
+    cancellation is a first-class recorded act, never a deletion; in-flight work stops
+    at the next safe boundary and says what it left undone. Anything new the machine
+    manages ships WITH its stop, from day one — a lever the human lacks is a defect.
+
 ## Before you finish — the drift checklist
 
 - Do identities persist and re-join as the same self?

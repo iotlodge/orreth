@@ -827,3 +827,11 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 | `orreth_sim/speech.py` + `tests/test_speech.py` | Fable 5 (claude-fable-5) | Fourteen journey sentences (suite 332): the lock-4 label retired by JB's word (req-622) — no "arithmetic, not a mind" survives the test; journey-word explains both buttons; journey-declined extracted parity-true. |
 | `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | PLAN_FALLBACK_LABEL constant deleted — five use sites speak from the shelf; the /sentences door serves active heads over genesis so the glass and the worker share ONE voice. |
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | say()/journey()/leafName() + the monitor line: the state ladder as a strip with the current stage glowing, floors leaf-named with paths on hover, the report line human. Proven live on req-624, staged through resolved. |
+
+## Fable 5 — 2026-08-11 (0051 sp2 — the Reins: covenant rule 11, proven on all four vectors)
+
+| File | Author | Note |
+|---|---|---|
+| `.claude/skills/orreth-covenant/SKILL.md` | Fable 5 (claude-fable-5), at JB's lock | RULE 11: the human can always stop what the machine manages — cancel/rest governed and recorded, never a deletion; stop at the next safe boundary with what-was-left-undone said. A lever the human lacks is a defect. |
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | on_objective_cancel (legs stopped at the boundary, finished answers kept and labeled, the cancellation record under the HUMAN seat) + on_standing_rest (charters and reflexes rest reversibly). Proven: 18 legs stopped mid-flight; the charter and a reflex rested — the reflex from the glass lever itself. |
+| `orreth_sim/speech.py` + `tests/test_speech.py` · `window.html` | Fable 5 (claude-fable-5) | Six rein sentences (suite 333) · the stop button on working objectives · rest levers on standing duties and watchers. |

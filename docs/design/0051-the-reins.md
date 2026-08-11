@@ -115,6 +115,23 @@ The mind that reads every ask becomes visible (allen's pattern):
 2. **sp2 — the Reins**: cancel/rest across the four vectors + the
    cancellation record; **covenant rule 11 lands at JB's lock** (the
    covenant file changes only with his word — the lock IS the word).
+   **LANDED + PROVEN LIVE 2026-08-11 — both locks on the recommended
+   paths, RULE 11 IN THE COVENANT.** The plane accepted the `cancelled`
+   posture without a rule-9 touch (probed before a line was written). All
+   four vectors proven: a mid-flight cancel stopped **18 fanned legs at the
+   next safe boundary** — every leg resolved "cancelled — the origin
+   withdrew", the flow's question died with it (visible on its card), the
+   close-out spoke plain ("0 pieces had finished, 18 stopped; what was left
+   undone is on the record"), and the cancellation record landed signed
+   under the HUMAN seat, all 18 undone intents named. The charter rested
+   ("reversible by a new word; instances it already fired keep their own
+   lives" — req-506 active:false). The reflex rested **from the glass
+   lever itself** — "rest this watcher" clicked as the human, req-503
+   active:false with `rested_at` on the state — the Tavily hand-edit
+   became a door. Working objectives now always wear "stop this — cancel
+   at the next safe boundary" (rule 11: a lever the human lacks is a
+   defect). Suite 332→333; six rein sentences on the shelf, tunable at
+   gates like all speech.
 3. **sp3 — the words back**: the voice line on gate cards; decline-with-
    words routes through 0048's loop.
 4. **sp4 — the studio's face + the grade**: card, parlor seat, rail

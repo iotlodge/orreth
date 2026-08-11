@@ -78,6 +78,18 @@ SENTENCES = {
     "journey-monitor":
         "Orreth is tending ⟦n⟧ objective(s) — ⟦waiting⟧ waiting on you · "
         "⟦working⟧ working",
+    # ---- the Reins (0051 sp2, covenant rule 11): the stop, in plain words ---
+    "cancel-reply":
+        "stopped at the next safe boundary — ⟦finished⟧ piece(s) had already "
+        "finished (their answers are kept), ⟦stopped⟧ stopped; what was left "
+        "undone is on the record",
+    "cancel-leg": "cancelled — the origin withdrew",
+    "cancel-leg-kept": "completed before your cancel",
+    "cancel-nothing": "nothing to stop — this objective already came to rest",
+    "charter-rest-reply":
+        "the duty rests — reversible by a new word; instances it already "
+        "fired keep their own lives",
+    "reflex-rest-reply": "the watcher rests — reversible by a new word",
 }
 
 # 0050 sp3 — the UAT personas (0049 §3): the tester is craft too, tuned at

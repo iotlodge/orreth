@@ -6033,6 +6033,118 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
     return None
 
 
+def on_objective_cancel(port: int, scope: str, r: dict) -> None:
+    """0051 sp2 — covenant rule 11 at the objective: the human's stop is a
+    governed act ON the queue. Staged work cancels without fanning;
+    executing work stops at the next safe boundary — pending legs resolve
+    «the origin withdrew», finished answers are KEPT and labeled, and the
+    close-out says what was left undone. The cancellation record lands
+    under the HUMAN seat; nothing is deleted, nothing rolls back by itself
+    (reversal is the deed family's craft — 0042, offered never assumed)."""
+    rid = str(r.get("id") or "")
+    target = str(r.get("of") or "")
+
+    def done(reply, **kw):
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "done", "result": {"reply": reply, **kw}})
+
+    try:
+        reqs = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        return done("the queue would not answer — nothing changed")
+    t = next((x for x in reqs if x.get("id") == target), None)
+    if t is None or t.get("status") in ("done", "denied", "cancelled"):
+        return done(sentence(port, "cancel-nothing"))
+    res = t.get("result") or {}
+    finished, stopped, undone = [], [], []
+    st = _OBJECTIVES.get(target)
+    if t.get("status") == "approved" and st is not None:
+        for t_port, leg in (st.get("legs") or {}).items():
+            try:
+                lr = next((x for x in call(t_port, "GET", "/requests")
+                           .get("requests", [])
+                           if x.get("id") == leg["id"]), None)
+            except Exception:
+                lr = None
+            if lr is not None and lr.get("status") in ("pending", "staged"):
+                try:
+                    call(t_port, "POST", "/requests/resolve",
+                         {"id": leg["id"], "status": "cancelled",
+                          "result": {"reply": sentence(port, "cancel-leg")}})
+                except Exception:
+                    pass
+                stopped.append(leg["seat"])
+            else:
+                finished.append(leg["seat"])
+        undone = [i.get("intent", "")[:80]
+                  for i in (st.get("plan") or {}).get("intentions", [])
+                  if i.get("seat") in stopped]
+        if st.get("question"):
+            try:      # the flow's question dies with it — silence was denial
+                call(port, "POST", "/requests/resolve",
+                     {"id": st["question"], "status": "cancelled",
+                      "result": {"reply": sentence(port, "cancel-leg")}})
+            except Exception:
+                pass
+        _OBJECTIVES.pop(target, None)
+    kp_h, did_h = human_seat(scope)
+    rec = make_memory({"did": did_h, "scope": scope}, kp_h, scope,
+                      {"cancellation": {"of": target,
+                                        "objective": str(t.get("text") or "")[:200],
+                                        "finished": finished,
+                                        "stopped": stopped,
+                                        "left_undone": undone, "at": NOW()}},
+                      kind="semantic", tags=["cancellation"])
+    if res.get("plan_record"):
+        rec["derived_from"] = [res["plan_record"]]
+    try:
+        call(port, "POST", "/records", rec)
+    except Exception as e:
+        print(f"    (cancellation record failed: {e})")
+    reply = sentence(port, "cancel-reply", finished=len(finished),
+                     stopped=len(stopped))
+    call(port, "POST", "/requests/resolve",
+         {"id": target, "status": "cancelled",
+          "result": {**res, "reply": reply,
+                     "cancelled": {"finished": finished, "stopped": stopped,
+                                   "left_undone": undone,
+                                   "record": rec["id"]}}})
+    done(reply, record=rec["id"])
+    print(f"  ✋ objective {target} CANCELLED by the human's word — "
+          f"{len(finished)} finished · {len(stopped)} stopped")
+
+
+def on_standing_rest(port: int, scope: str, r: dict) -> None:
+    """0051 sp2 — rule 11 at the standing doors: a duty or a watcher the
+    human approved always offers its REST. Reversible by a new word,
+    recorded under the human seat, never a deletion."""
+    rid = str(r.get("id") or "")
+    target = str(r.get("of") or "")
+    kind = "reflexes" if r.get("kind") == "reflex-rest" else "charters"
+
+    def done(reply):
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "done", "result": {"reply": reply}})
+
+    rows = _standing_load(kind)
+    if target not in rows:
+        return done(f"nothing standing under {target} — nothing changed")
+    rows[target]["active"] = False
+    rows[target]["rested_at"] = NOW()
+    _standing_save(kind, rows)
+    kp_h, did_h = human_seat(scope)
+    rec = make_memory({"did": did_h, "scope": scope}, kp_h, scope,
+                      {"rest": {"of": target, "kind": kind[:-1], "at": NOW()}},
+                      kind="semantic", tags=["cancellation", "rest"])
+    try:
+        call(port, "POST", "/records", rec)
+    except Exception as e:
+        print(f"    (rest record failed: {e})")
+    singular = "reflex" if kind == "reflexes" else "charter"
+    done(sentence(port, f"{singular}-rest-reply"))
+    print(f"  ✋ {singular} {target} RESTED by the human's word")
+
+
 def on_thumb(port: int, scope: str, r: dict) -> None:
     """0048 sp2: the human's thumb arrives at the door — judgment, never
     authorship. The sim's laws do the judging (one record by hash, a seated
@@ -8808,6 +8920,14 @@ def main() -> None:
                         elif r.get("kind") == "thumb" and r.get("status") == "pending":
                             handled.add(key)
                             on_thumb(port, scope, r)
+                        elif r.get("kind") == "objective-cancel" and \
+                                r.get("status") == "pending":
+                            handled.add(key)
+                            on_objective_cancel(port, scope, r)
+                        elif r.get("kind") in ("charter-rest", "reflex-rest") \
+                                and r.get("status") == "pending":
+                            handled.add(key)
+                            on_standing_rest(port, scope, r)
                         elif r.get("kind") == "witness" and r.get("status") == "staged":
                             handled.add(key)
                             witness_transcribe(port, scope, r)

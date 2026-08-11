@@ -2441,11 +2441,28 @@ function reqRow(r){
      decline here, exactly as the bell gives it — staged means WAITING ON A
      WORD, and a card with no way to answer is a gate with no handle */
   const w=r.status==="staged"?(gateWords(r)||["approve","decline"]):null;
+  /* the Reins (0051 sp2, rule 11): a standing duty or watcher the human
+     approved always offers its REST — reversible, recorded, never a delete */
+  const rest=(r.kind==="standing-charter"||r.kind==="reflex")
+    &&(r.status==="approved"||r.status==="done");
   return `<div class="req"><span class="kind">${r.kind||"request"}</span>
    <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
    ${w?`<button class="sbtn ok" onclick="gateGo('${r.id}',true,'${r.kind}')">${w[0]}</button>
     <button class="sbtn no" onclick="gateGo('${r.id}',false,'${r.kind}')">${w[1]}</button>`
+   :rest?`<span class="st">${r.status}</span> <button class="sbtn no" onclick="restIt('${r.kind}','${r.id}')">${r.kind==="reflex"?"rest this watcher":"rest this duty"}</button>`
    :`<span class="st">${r.status}</span>`}</div>`;
+}
+async function restIt(kind,id){
+  await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({kind:kind==="reflex"?"reflex-rest":"charter-rest",of:id,
+      text:(kind==="reflex"?"rest this watcher":"rest this duty")+" — the human's word (rule 11)"})});
+  loadReq();
+}
+async function objCancel(id){
+  await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({kind:"objective-cancel",of:id,
+      text:"stop this — the human's word (rule 11)"})});
+  loadObjectives();
 }
 /* the triage (JB 2026-07-15): the queue banded by what it needs from you —
    WAITING ON YOU (staged gates + open questions) · IN FLIGHT (the round is
@@ -3946,7 +3963,8 @@ async function loadObjectives(){
         +`<div style="margin-top:.4rem"><button class="sbtn ok" onclick="objDecide('${r.id}',true)">fan the plan</button> `
         +`<button class="sbtn no" onclick="objDecide('${r.id}',false)">decline</button></div>`;
     }else if(r.status==="approved"){
-      body="";                       /* the Journey strip carries the working word */
+      /* rule 11: working work always offers its stop */
+      body=`<div style="margin-top:.35rem"><button class="sbtn no" onclick="objCancel('${r.id}')">stop this — cancel at the next safe boundary</button></div>`;
     }else if(r.status==="done"&&res.assembly){
       const a=res.assembly;
       body=`<div class="obj-verdict ${a.verification==="complete"?"ok":""}">verification · ${esc(a.verification)}</div>`
