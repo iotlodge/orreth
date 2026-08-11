@@ -122,6 +122,7 @@ flowchart TB
   subgraph L5["the knowledge loop (0014)"]
     EXT["the world — sources AS identities"] --> QUAR["admitted QUARANTINED at 0.0000<br/>promoted only on receipts"]
   end
+  UAT["the UAT personas (0050 — quinn walks daily):<br/>real objectives read as a STRANGER,<br/>every friction a thumb with words"] --> THUMB
   subgraph L6["the thumb loop (0048 — CLOSED WHOLE 2026-08-09)"]
     THUMB["the human's thumb on every reply & resolved objective<br/>👍 a signed quiet verdict · 👎 + words quoted VERBATIM"] --> RTE["the studio ROUTES the words (typed lane, never guessed):<br/>craft → workshop evidence · gap → commission ·<br/>charter → referral · execution → repair objective<br/>wearing the human's words as its RUBRIC"]
     RTE --> CLOSEC["closure: the outcome named back<br/>on the author's own queue — always a card"]

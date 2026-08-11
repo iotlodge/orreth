@@ -36,6 +36,12 @@ class ResolvedCraft:
         self.lifecycle = d.get("lifecycle")
         self.text = d.get("text")
         self.profile = d.get("profile")
+        # 0050 sp3: a chronicle asset whose profile IS a template renders
+        # like firmware — the persona/sentence shelf serves minds too
+        if self.text is None and isinstance(self.profile, dict):
+            t = self.profile.get("template")
+            if isinstance(t, str):
+                self.text = t
         self.arm = d.get("arm")
         self.stale = stale
 

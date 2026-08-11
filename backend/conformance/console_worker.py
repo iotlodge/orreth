@@ -3702,7 +3702,7 @@ def improver_beat(port: int) -> None:
     global _SENTENCES_PLANTED
     if not _SENTENCES_PLANTED:
         allthere = True
-        for sname, stext in speech.SENTENCES.items():
+        for sname, stext in {**speech.SENTENCES, **speech.PERSONAS}.items():
             if wire_assets(port, "asset", name=sname):
                 continue
             g = improver.make_asset(me, IMP, scope, name=sname,

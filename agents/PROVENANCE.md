@@ -810,3 +810,12 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 | `backend/conformance/orreth_sim/speech.py` + `tests/test_speech.py` | Fable 5 (claude-fable-5) | OUTCOME_SPOKEN (total over the thumb's outcomes, suite-held) + the born-human pair fragment; 13 v2 rewrites landed as shelf siblings via the door, never code. |
 | `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | `_work_glimpse` — the calibration card shows the judged WORK, not the hash; closure speaks OUTCOME_SPOKEN. |
 | `orreth_sim/epoch.py` + `tests/test_epoch.py` + worker `_ADOPTION_KINDS` | Fable 5 (claude-fable-5) | The find: the pass drew two honest drift accusations — `craft-edit` was the missing adoption word. Vocabulary grown in sim and worker with the lesson-test (suite 328→330); both accusations LEFT ON RECORD, 0043's precedent honored. |
+
+## Fable 5 — 2026-08-11 (0050 sp3 — quinn, the first UAT persona: the dive closes whole, era 0.50)
+
+| File | Author | Note |
+|---|---|---|
+| `agents/flavors/04-uat/run.py` | Fable 5 (claude-fable-5) | quinn the newcomer — persistent self, persona acquired from the shelf by reference, walks real objectives through the human's own doors, judges every screen as a stranger under a typed contract, files frictions through the thumb. Her first walk: both cards CONFUSING, 12 frictions, incl. JB's own lock-4 label. First triage found the first defect in her own reporter (the 480-char cap) — fixed. |
+| `orreth_agent/craft.py` + `tests/test_craft_profile.py` | Fable 5 (claude-fable-5) | The supply line learns the persona shelf: a chronicle asset whose profile IS a template renders like firmware (SDK 20→22). |
+| `orreth_sim/speech.py` + `tests/test_speech.py` · worker | Fable 5 (claude-fable-5) | PERSONAS on the shelf beside the sentences — the tester is craft too, tuned at the same gates. |
+| `VERSION` · register · road · atlas | Fable 5 (claude-fable-5) | 0.48 → 0.50 in the closing commit; the register row with its named gaps; the atlas's loops gain the walking persona. |

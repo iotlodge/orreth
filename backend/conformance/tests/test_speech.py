@@ -87,6 +87,17 @@ def test_every_outcome_has_its_spoken_sentence():
                    "the examiner said 0.1")
 
 
+def test_the_persona_is_craft_too():
+    """sp3: the tester rides the same shelf as the tested — quinn's persona
+    carries the strict contract and the two slots her jacket fills, and she
+    is forbidden the machine's jargon by her own text."""
+    p = speech.PERSONAS["uat-persona-quinn"]
+    assert "⟦surface⟧" in p and "⟦context⟧" in p
+    assert "STRICT JSON" in p and "frictions" in p
+    got = speech.render(p, surface="a card", context="the approval gate")
+    assert "a card" in got and "the approval gate" in got
+
+
 def test_the_refusal_family_is_structurally_absent():
     """0002 §4: refusal wears ONE face. No sentence on this shelf may be a
     refusal — it arrives later as a single guarded object, never piecemeal."""

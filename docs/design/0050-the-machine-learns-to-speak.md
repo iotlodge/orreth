@@ -6,8 +6,9 @@
      (0046), the universe learned to think (0047), the human answered back
      (0048) — now the machine learns to speak to strangers. -->
 
-**Status: 🟢 OPENED 2026-08-11 — locks L1/L3 landed (JB, recommended paths);
-spoonfuls begin on JB's word.**
+**Status: 🗣 CLOSED WHOLE 2026-08-11, era 0.50 — opened, three spoonfuls
+built and proven, and the tuning engine LIVE, all in one day. quinn walks
+daily from here; the season improves itself while it runs.**
 
 ## 1. The one-line brief
 
@@ -104,6 +105,26 @@ never bare hashes.
    channel); the architect's triage table (0049 J3) lands: receipt →
    defect | craft edit | design change | named gap. Proven when the
    persona's first REAL receipt routes to a staged craft-edit at JB's gate.
+   **LANDED + PROVEN LIVE 2026-08-11 — quinn's first walk wounded the
+   machine truly.** `agents/flavors/04-uat/run.py` — quinn the newcomer:
+   persistent self, welcomed at becky's gate, her persona ACQUIRED from the
+   shelf by reference (the supply line learned that a chronicle template
+   renders like firmware — SDK 20→22); she composed a real objective, read
+   the approval card as a stranger (CONFUSING — six frictions), approved at
+   her own gate, read the close-out (CONFUSING — six more, one delight),
+   and filed 👎 req-618. The loop served her end-to-end: the studio
+   classified her words and filed them as EVIDENCE against the craft.
+   **The proof, adjusted honestly:** her wounds hit GLASS literals, not
+   wave-1 shelf sentences — so the first triage's craft-edit lane holds an
+   honest ZERO, and the other three lanes filled instead: one DEFECT
+   (my own walker's 480-char cap swallowed nine of her twelve frictions —
+   the reporter must never truncate the report; fixed), three DESIGN
+   CHANGES staged at JB's gate as req-622 (quinn flagged JB's own lock-4
+   label as "confusing poetic phrasing" — only his word moves it; «staged»
+   unexplained; raw scope paths), and one NAMED GAP (the objective card's
+   sentences are glass-side — the wave-2 extraction folds into the Journey
+   dive, which rebuilds that card anyway). The instrument works: a persona
+   found what the builder could not see, including the builder's own words.
 
 ## 4. What this dive does NOT do (honest boundary)
 
