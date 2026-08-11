@@ -59,6 +59,19 @@ never bare hashes.
    old literal on first render) · unfilled-slot refusal · genesis-only
    literals. Proven when the glass looks IDENTICAL and the registry shows
    the new family — the invisible extraction, 0045 sp1's precedent.
+   **LANDED + PROVEN 2026-08-11** — `orreth_sim/speech.py` (13 templates:
+   calibration · verify blind/tamper · closure + its two fragments · reflex
+   escalation · thumb reply · dispatcher note) + `tests/test_speech.py`
+   (6 laws, suite 322→328): every genesis template parity-tested against
+   the literal it replaced; an unfilled slot refuses BY NAME; extra facts
+   never break speech; the refusal family structurally absent. The worker
+   grew `sentence()` — ONE voice from the universe shelf, cached 60s,
+   genesis speaking loudly when an edited head refuses its slots — and the
+   improver plants the sentences beside the prompts. Live: 13 «the sentence
+   leaves the code» plantings on one beat, the registry showing the family
+   at v1, and a fresh thumb answered "heard — on the record" byte-identical
+   from the shelf. Conditional fragments proved the design call: the
+   deciding stays code, the words stay shelf.
 2. **sp2 — the plain-speech pass.** The wounded cards rewritten as v2
    siblings THROUGH the craft-edit door: the calibration card (shows the
    judged works and the words, says what approve/decline each do), the

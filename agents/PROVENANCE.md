@@ -795,3 +795,10 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 | `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | The closure card on every routed 👎 (L3: cards always; the bell refused one-faced under the existing grant's kinds — consent never invented) + the whole-rig calibration_beat (throttled, one open finding, cards never levers). |
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The sp2 wart closed: THUMBED reads the queue's own thumb requests, so a reload shows "heard — on the record" where the human already judged — the record decides, not session memory. |
 | `VERSION` · register · road · atlas | Fable 5 (claude-fable-5) | 0.47 → 0.48 in the closing commit; the honest-boundary gained the 0048 row with its named gaps; the atlas's thumb loop went seeded → standing under its own now-standing maintenance law. |
+
+## Fable 5 — 2026-08-11 (0050 sp1 — the shelf: the machine's sentences leave the code)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/speech.py` + `tests/test_speech.py` | Fable 5 (claude-fable-5) | 13 wave-1 sentence templates (gate cards + parlor notes) with ⟦slot⟧ facts, parity-tested byte-for-byte against the literals they replace; strict render refuses unfilled slots by name; the refusal family structurally absent (0002 §4). Suite 322→328. |
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | `sentence()` — one voice from the universe shelf (cached, genesis fallback that speaks loudly, never silently); the improver plants sentences beside the prompts; seven call sites (calibration · verify pair · closure · reflex escalation · thumb reply · dispatcher note) now speak from the shelf. Proven live: 13 plantings, registry family at v1, byte-identical render. |

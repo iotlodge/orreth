@@ -126,7 +126,7 @@ from dotenv import load_dotenv
 from orreth_sim import (bell as bell_mod, continuity, crypto, fingertip,
                         improver, markers, meaning, mirror, node, observatory,
                         parlor, profile, purge, serials, shipyard,
-                        thumb as thumb_mod, vera)
+                        speech, thumb as thumb_mod, vera)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -3579,9 +3579,54 @@ IMP_DID = crypto.did_key_for(IMP.public)
 GOV = _seed("governance")                    # governance's first duty: the grade
 GOV_DID = crypto.did_key_for(GOV.public)
 ASSET_NAME = "fingertip-default"
+_SENTENCES_PLANTED = False                   # 0050 sp1 — once per process
 _IMPROVER_LAST = 0.0
 IMPROVER_EVERY = int(os.environ.get("ORRETH_IMPROVER_EVERY", "600"))
 SUCCESS_FLOOR = 90                           # below this, the receipts earn a nudge
+
+
+# 0050 sp1 — the machine's speech served from the shelf: ONE voice for every
+# floor (the universe shelf), cached a beat's breath; the genesis literal in
+# orreth_sim.speech is the honest fallback — an edited sentence that refuses
+# its slots never breaks a card, it just lets genesis speak and says so.
+_SENTENCE_CACHE: dict[str, tuple[float, str | None]] = {}
+SENTENCE_TTL = 60.0
+
+
+def _sentence_active(u_port: int, name: str) -> str | None:
+    """The shelf's current head for a sentence asset — newest non-superseded
+    row's template (the craft-edit door's sibling semantics, read-side)."""
+    now = time.time()
+    hit = _SENTENCE_CACHE.get(name)
+    if hit and now - hit[0] < SENTENCE_TTL:
+        return hit[1]
+    tmpl = None
+    try:
+        rows = wire_assets(u_port, "asset", name=name)
+        superseded = {d for _, _, dl, _ in rows for d in dl}
+        for rid, body, _, _t in reversed(rows):
+            if rid in superseded:
+                continue
+            tmpl = ((body.get("asset") or {}).get("profile") or {}).get("template")
+            break
+    except Exception:
+        tmpl = None                           # a dark wire never mutes a card
+    _SENTENCE_CACHE[name] = (now, tmpl)
+    return tmpl
+
+
+def sentence(port: int, name: str, **slots) -> str:
+    """Render the machine's sentence «name» with its facts: the shelf's head
+    if it stands and fills, else genesis — loudly, never silently."""
+    genesis = speech.SENTENCES[name]
+    tmpl = _sentence_active(universe_port(port), name) or genesis
+    try:
+        return speech.render(tmpl, **slots)
+    except ValueError as e:
+        if tmpl != genesis:
+            print(f"  🗣 sentence «{name}» head refused ({e}) — genesis speaks")
+            return speech.render(genesis, **slots)
+        raise
 
 
 def wire_assets(port: int, tag: str, name: str | None = None, *,
@@ -3651,6 +3696,25 @@ def improver_beat(port: int) -> None:
                 print(f"  ↳ the smith shelves {pname} v1 — the prompt leaves the code")
             except Exception as e:
                 print(f"    ({pname} genesis failed: {e})")
+    # 0050 sp1 — the machine's SPEECH plants beside the prompts: every wave-1
+    # sentence becomes an asset on the shelf, editable at the gates like any
+    # craft; the code literal is genesis and fallback, never the living word.
+    global _SENTENCES_PLANTED
+    if not _SENTENCES_PLANTED:
+        allthere = True
+        for sname, stext in speech.SENTENCES.items():
+            if wire_assets(port, "asset", name=sname):
+                continue
+            g = improver.make_asset(me, IMP, scope, name=sname,
+                                    profile={"template": stext})
+            try:
+                call(port, "POST", "/records", g)
+                print(f"  🗣 the shelf takes «{sname}» v1 — the sentence "
+                      "leaves the code")
+            except Exception as e:
+                allthere = False
+                print(f"    ({sname} genesis failed: {e})")
+        _SENTENCES_PLANTED = allthere
     closed = {d for _, _, dl, _ in actives for d in dl}
     closed |= {d for _, _, dl, _ in wire_assets(port, "asset-decline",
                                                 name=ASSET_NAME) for d in dl}
@@ -4448,8 +4512,8 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
             pass
     cites = " · ".join(f"{c['doc']} [{c['ref'][:18]}…] {c['score']}"
                        for c in a["citations"][:3])
-    return (f"⚡ the dispatcher chose «{d['flavor']}» — {d['why']} "
-            f"[choice {d['record'][:18]}…]"
+    return (sentence(port, "note-dispatcher", flavor=d["flavor"],
+                     why=d["why"], choice=d["record"][:18])
             + (f" · 🧪 arm «{arm['label']}» "
                f"[{arm['machine'].split(':', 1)[-1][:12]}] served" if arm else "")
             + " · " + a["answer"]
@@ -5986,7 +6050,8 @@ def on_thumb(port: int, scope: str, r: dict) -> None:
             print(f"    (thumb record write failed: {e})")
     call(port, "POST", "/requests/resolve",
          {"id": r["id"], "status": "done",
-          "result": {"reply": "heard — on the record", "verdict": verdict["id"],
+          "result": {"reply": sentence(port, "reply-thumb-heard"),
+                     "verdict": verdict["id"],
                      **({"feedback": fb["id"]} if fb is not None else {})}})
     print(f"  {'👍' if up else '👎'} thumb on [{of[:18]}…] — verdict "
           f"{verdict['id'][:18]}…"
@@ -7399,14 +7464,12 @@ def verify_beat(port: int) -> None:
                 try:
                     card = call(port, "POST", "/requests", {
                         "kind": "verify-blind",
-                        "text": f"👁 the standing verify cannot SEE /{path} "
-                                f"({n} looks — last: {status}). The observer "
-                                "is blind, NOT the deed altered — check the "
-                                "wire; the watchman keeps looking."})
+                        "text": sentence(port, "card-verify-blind",
+                                         path=path, looks=n, error=status)})
                     call(port, "POST", "/requests/resolve",
                          {"id": card["id"], "status": "done",
-                          "result": {"reply": "a note, never a lever — "
-                                              "nothing is known to be wrong"}})
+                          "result": {"reply": sentence(
+                              port, "card-verify-blind-reply")}})
                 except Exception as e:
                     print(f"    (blind note stumbled: {e})")
             continue
@@ -7419,8 +7482,7 @@ def verify_beat(port: int) -> None:
                    and x.get("status") in ("pending", "staged") for x in q):
             call(port, "POST", "/requests",
                  {"kind": "publish", "comp": True, "artifact": art,
-                  "text": f"the standing verify found /{path} altered — "
-                          f"the walk-back waits for your word (0042 · 0044 sp3)"})
+                  "text": sentence(port, "card-verify-tamper", path=path)})
         ring_bell(port, {"kind": "tamper", "scope": UNIVERSE_SCOPE,
                          "subject": f"/{path}", "age": _age_of(a.get("at")),
                          "pointer": _CONSOLE_URL})
@@ -7862,12 +7924,13 @@ def reflex_beat(port: int) -> None:
                 try:
                     card = call(port, "POST", "/requests", {
                         "kind": "reflex-escalation",
-                        "text": f"⚡ {out['text']} — [{h['ref'][:22]}…]"})
+                        "text": sentence(port, "card-reflex-escalation",
+                                         event=out["text"],
+                                         ref=h["ref"][:22])})
                     call(port, "POST", "/requests/resolve",
                          {"id": card["id"], "status": "staged",
-                          "result": {"held": "a reflex escalated — detection "
-                                             "wears no levers; the word is "
-                                             "yours"}})
+                          "result": {"held": sentence(
+                              port, "card-reflex-escalation-held")}})
                     ring_bell(port, {"kind": "reflex", "scope": scope,
                                      "subject": out["text"][:60],
                                      "pointer": _CONSOLE_URL})
@@ -8070,12 +8133,16 @@ def feedback_beat(port: int) -> None:
         try:
             card = call(port, "POST", "/requests", {
                 "kind": "feedback-closure", "of": fb["id"],
-                "text": f"💬 your 👎 was heard — {outcome}"
-                        + (f" → {ref[:22]}…" if ref else "")
-                        + (f": {why[:110]}" if why else "")})
+                "text": sentence(port, "card-feedback-closure",
+                                 outcome=outcome)
+                        + (sentence(port, "card-feedback-closure-ref",
+                                    ref=ref[:22]) if ref else "")
+                        + (sentence(port, "card-feedback-closure-why",
+                                    why=why[:110]) if why else "")})
             call(port, "POST", "/requests/resolve",
                  {"id": card["id"], "status": "done",
-                  "result": {"reply": "the outcome, named back to your word",
+                  "result": {"reply": sentence(
+                                 port, "card-feedback-closure-reply"),
                              "feedback": fb["id"], "outcome": outcome,
                              **({"ref": ref} if ref else {})}})
             ring_bell(port, {"kind": "feedback-closure", "scope": scope,
@@ -8145,13 +8212,12 @@ def calibration_beat(port: int) -> None:
     try:
         card = call(port, "POST", "/requests", {
             "kind": "calibration",
-            "text": f"⚖ the human and the examiner disagree — "
-                    f"{out['pairs']} shared work(s), mean gap "
-                    f"{out['mean_gap']} (bar {out['bar']}): {ex}"})
+            "text": sentence(port, "card-calibration", pairs=out["pairs"],
+                             mean_gap=out["mean_gap"], bar=out["bar"],
+                             examples=ex)})
         call(port, "POST", "/requests/resolve",
              {"id": card["id"], "status": "staged",
-              "result": {"held": "the yardsticks argue — a card, never a "
-                                 "lever; the word is yours",
+              "result": {"held": sentence(port, "card-calibration-held"),
                          "calibration": out}})
         ring_bell(port, {"kind": "calibration", "scope": UNIVERSE_SCOPE,
                          "subject": f"human vs examiner: gap {out['mean_gap']}",
