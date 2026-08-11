@@ -835,3 +835,10 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 | `.claude/skills/orreth-covenant/SKILL.md` | Fable 5 (claude-fable-5), at JB's lock | RULE 11: the human can always stop what the machine manages — cancel/rest governed and recorded, never a deletion; stop at the next safe boundary with what-was-left-undone said. A lever the human lacks is a defect. |
 | `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | on_objective_cancel (legs stopped at the boundary, finished answers kept and labeled, the cancellation record under the HUMAN seat) + on_standing_rest (charters and reflexes rest reversibly). Proven: 18 legs stopped mid-flight; the charter and a reflex rested — the reflex from the glass lever itself. |
 | `orreth_sim/speech.py` + `tests/test_speech.py` · `window.html` | Fable 5 (claude-fable-5) | Six rein sentences (suite 333) · the stop button on working objectives · rest levers on standing duties and watchers. |
+
+## Fable 5 — 2026-08-11 (0051 sp3 — the words back: every gate takes a reply)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | The gate-word door: words land signed under the HUMAN seat with either decision; a decline's words birth open feedback into 0048's loop — no verdict minted (a request is not a graded record). |
+| `orreth_sim/speech.py` + `tests/test_speech.py` · `window.html` | Fable 5 (claude-fable-5) | Three voice-line sentences (suite 334) · gw-/gwo- inputs on every staged gate, joined to the busy-guard law on all surfaces. Proven whole: a declined plan's reason was read true by the studio, evidenced, and the closure returned. |

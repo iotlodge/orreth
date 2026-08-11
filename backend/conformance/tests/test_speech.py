@@ -133,3 +133,12 @@ def test_the_refusal_family_is_structurally_absent():
     for name in speech.SENTENCES:
         assert "refus" not in name.lower()
     assert not any("cannot be served" in t for t in speech.SENTENCES.values())
+
+
+def test_the_gate_takes_words_back():
+    """0051 sp3: the voice line's promise is on the shelf — an approval's
+    words ride the record, a decline's words become fuel through the loop."""
+    assert "fuel" in speech.SENTENCES["gate-word-placeholder"]
+    assert "record" in speech.SENTENCES["gate-word-approved-reply"]
+    d = speech.SENTENCES["gate-word-declined-reply"]
+    assert "thumbs-down" in d and "your queue" in d

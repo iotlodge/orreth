@@ -6145,6 +6145,51 @@ def on_standing_rest(port: int, scope: str, r: dict) -> None:
     print(f"  ✋ {singular} {target} RESTED by the human's word")
 
 
+def on_gate_word(port: int, scope: str, r: dict) -> None:
+    """0051 sp3 — the words back: a decision may carry the human's words.
+    They land as a signed record under the HUMAN seat either way; a
+    DECLINED gate's words additionally birth an open feedback record, so
+    the 0048 loop reads and routes them exactly like a 👎 — a declined
+    plan with a reason becomes fuel, never silence. No verdict is minted
+    (a request is not a graded record); the words are the payload."""
+    rid = str(r.get("id") or "")
+    target = str(r.get("of") or "")
+    decision = str(r.get("decision") or "").strip().lower()
+    words = str(r.get("text") or "").strip()
+
+    def done(reply):
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "done", "result": {"reply": reply}})
+
+    if not target or not words:
+        return done("no words arrived — nothing landed")
+    kp_h, did_h = human_seat(scope)
+    rec = make_memory({"did": did_h, "scope": scope}, kp_h, scope,
+                      {"gate_word": {"of": target, "decision": decision,
+                                     "quoted": words}},
+                      kind="semantic", tags=["gate-word"])
+    try:
+        call(port, "POST", "/records", rec)
+    except Exception as e:
+        print(f"    (gate-word record failed: {e})")
+    if decision == "denied":
+        fb = make_memory({"did": did_h, "scope": scope}, kp_h, scope,
+                         {"feedback": {"of": target, "quoted": words,
+                                       "state": "open",
+                                       "source": "gate-decline"}},
+                         kind="semantic", tags=["feedback", "gate-word"])
+        fb["derived_from"] = [rec["id"]]
+        try:
+            call(port, "POST", "/records", fb)
+            print(f"  🗣 gate-word on {target} (declined) — the words enter "
+                  f"the loop as feedback [{fb['id'][:18]}…]")
+        except Exception as e:
+            print(f"    (gate-word feedback failed: {e})")
+        return done(sentence(port, "gate-word-declined-reply"))
+    print(f"  🗣 gate-word on {target} ({decision}) — on the record")
+    done(sentence(port, "gate-word-approved-reply"))
+
+
 def on_thumb(port: int, scope: str, r: dict) -> None:
     """0048 sp2: the human's thumb arrives at the door — judgment, never
     authorship. The sim's laws do the judging (one record by hash, a seated
@@ -8920,6 +8965,10 @@ def main() -> None:
                         elif r.get("kind") == "thumb" and r.get("status") == "pending":
                             handled.add(key)
                             on_thumb(port, scope, r)
+                        elif r.get("kind") == "gate-word" and \
+                                r.get("status") == "pending":
+                            handled.add(key)
+                            on_gate_word(port, scope, r)
                         elif r.get("kind") == "objective-cancel" and \
                                 r.get("status") == "pending":
                             handled.add(key)

@@ -90,6 +90,15 @@ SENTENCES = {
         "the duty rests — reversible by a new word; instances it already "
         "fired keep their own lives",
     "reflex-rest-reply": "the watcher rests — reversible by a new word",
+    # ---- the words back (0051 sp3): every gate takes a reply ----------------
+    "gate-word-placeholder":
+        "add words to your decision (optional — a declined gate's words "
+        "become fuel)",
+    "gate-word-approved-reply":
+        "your words ride the record beside your approval",
+    "gate-word-declined-reply":
+        "your words route like a thumbs-down — the studio reads them, and "
+        "what they become comes back to your queue",
 }
 
 # 0050 sp3 — the UAT personas (0049 §3): the tester is craft too, tuned at

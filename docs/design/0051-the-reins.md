@@ -134,6 +134,22 @@ The mind that reads every ask becomes visible (allen's pattern):
    gates like all speech.
 3. **sp3 — the words back**: the voice line on gate cards; decline-with-
    words routes through 0048's loop.
+   **LANDED + PROVEN LIVE 2026-08-11.** Every staged gate — the queue's
+   cards AND the objective card — wears the voice line ("add words to your
+   decision (optional — a declined gate's words become fuel)", itself shelf
+   craft); the `gw-`/`gwo-` inputs joined the busy-guard law on every
+   surface so the tick never eats a typed word. The worker's `gate-word`
+   door lands the words as a signed record under the HUMAN seat either way;
+   a DECLINE's words additionally birth open feedback — deliberately no
+   verdict (a request is not a graded record; the words are the payload).
+   Proven whole in the glass: a mind-planned briefing declined with "three
+   RAG floors is too many — one summarizing seat would do" → the words
+   entered the loop within a beat → the studio read them TRUE ("three
+   separate RAG summarization floors when one seat should consolidate") →
+   EVIDENCED against the craft → the closure card returned to the queue in
+   the machine's own new voice. Suite 333→334. The design's "words shown on
+   the decided card forever" rides the Objective Report (A5) — the records
+   carry them now; the view comes with the report.
 4. **sp4 — the studio's face + the grade**: card, parlor seat, rail
    presence — then **quinn re-walks the same objective family and the
    friction counts are compared, before vs after**: the dive's closing

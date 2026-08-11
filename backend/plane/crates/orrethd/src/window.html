@@ -2447,7 +2447,8 @@ function reqRow(r){
     &&(r.status==="approved"||r.status==="done");
   return `<div class="req"><span class="kind">${r.kind||"request"}</span>
    <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
-   ${w?`<button class="sbtn ok" onclick="gateGo('${r.id}',true,'${r.kind}')">${w[0]}</button>
+   ${w?`<span class="td-in" style="margin:.2rem 0;display:flex"><input id="gw-${r.id}" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></span>
+    <button class="sbtn ok" onclick="gateGo('${r.id}',true,'${r.kind}')">${w[0]}</button>
     <button class="sbtn no" onclick="gateGo('${r.id}',false,'${r.kind}')">${w[1]}</button>`
    :rest?`<span class="st">${r.status}</span> <button class="sbtn no" onclick="restIt('${r.kind}','${r.id}')">${r.kind==="reflex"?"rest this watcher":"rest this duty"}</button>`
    :`<span class="st">${r.status}</span>`}</div>`;
@@ -2472,6 +2473,10 @@ let REQKIND="all"; const REQOPEN=new Set();
 function reqKind(k){REQKIND=k;loadReq()}
 function reqOpen(k){REQOPEN.has(k)?REQOPEN.delete(k):REQOPEN.add(k);loadReq()}
 async function loadReq(){
+  /* 0051 sp3: a human adding words to a decision outranks the refresh —
+     the gw- voice lines join the qa-/td- law */
+  const bz=document.activeElement;
+  if(bz&&bz.id&&bz.id.startsWith("gw-"))return;
   try{
     const q=(await(await fetch(api("/requests"))).json()).requests||[];
     /* the survivors' door (0035 §6): the walk leaves a settled `legacy`
@@ -2555,7 +2560,15 @@ function gateWords(r){const w=GATE_WORDS[r.kind];
 /* …and ONE door per kind: the objective's word carries the keep-fresh
    coupling (0032 §4) through objDecide — the bell must never route it
    through the plain resolve and silently drop the human's checked line */
-function gateGo(id,ok,kind){return kind==="objective"?objDecide(id,ok):joinDecide(id,ok)}
+function gateGo(id,ok,kind){
+  /* 0051 sp3 — the words back: a decision may carry the human's words;
+     a declined gate's words route like a 👎 (the worker's door decides) */
+  const gw=$("gw-"+id),word=gw?gw.value.trim():"";
+  if(word)fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({kind:"gate-word",of:id,decision:ok?"approved":"denied",
+      text:word,text_summary:ok?"words beside an approval":"words beside a decline"})});
+  return kind==="objective"?objDecide(id,ok):joinDecide(id,ok);
+}
 function miniGate(r,pfx){
   const t=(r.text||r.kind||"").slice(0,110);
   if(r.kind==="question")return `<div class="mgate"><span class="mk">question</span><span class="mt">${esc(t)}</span>
@@ -2591,7 +2604,7 @@ function renderGates(){
     GATEN=GATEWAIT.length;
     if(!GATEWAIT.length)GPOP=false;
     pop.style.display=(GPOP&&GATEWAIT.length)?"block":"none";
-    if(GPOP&&GATEWAIT.length&&!busy.startsWith("gq-"))pop.innerHTML=
+    if(GPOP&&GATEWAIT.length&&!busy.startsWith("gq-")&&!busy.startsWith("gw-"))pop.innerHTML=
       `<div class="gpophd"><span>consequence waits (0012)</span>
         <span class="lnk" onclick="GPOP=false;document.querySelector('.tab[data-v=req]').click()">the full queue →</span></div>`
       +GATEWAIT.slice(0,4).map(r=>miniGate(r,"gq-")).join("")
@@ -2601,7 +2614,7 @@ function renderGates(){
   if(pg){
     const on=PA&&$("parlor").classList.contains("on");
     pg.style.display=(on&&GATEWAIT.length)?"block":"none";
-    if(on&&GATEWAIT.length&&!busy.startsWith("pq-"))pg.innerHTML=
+    if(on&&GATEWAIT.length&&!busy.startsWith("pq-")&&!busy.startsWith("gw-"))pg.innerHTML=
       `<div class="ph">THE GATE — WAITING ON YOU · ${GATEWAIT.length}</div>`
       +GATEWAIT.slice(0,3).map(r=>miniGate(r,"pq-")).join("");
   }
@@ -2629,6 +2642,10 @@ function gcToggle(id){GC.has(id)?GC.delete(id):GC.add(id)}
 const gapOffer=r=>{const o=(r.result||{}).gap_offer;
   return o?`<div class="sub" style="color:var(--near)"><label><input type="checkbox" ${GC.has(r.id)?"checked":""} onchange="gcToggle('${r.id}')"> 🌱 …and grow the craft this reading lacked: ${esc((o.gaps||[]).join("; "))} — ${esc(o.terms)}</label></div>`:""};
 async function objDecide(id,ok){
+  const gwo=$("gwo-"+id),word=gwo?gwo.value.trim():"";
+  if(word)fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({kind:"gate-word",of:id,decision:ok?"approved":"denied",
+      text:word,text_summary:ok?"words beside an approval":"words beside a decline"})});
   const body={id,status:ok?"approved":"denied"};
   if(ok&&(KF.has(id)||GC.has(id))){
     let q=[];try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{}
@@ -3932,7 +3949,8 @@ async function loadObjectives(){
   /* a human mid-answer outranks the refresh — the re-render must never eat
      their words (found by the human walk, 0030's standing rule) */
   const busy=document.activeElement;
-  if(busy&&busy.id&&(busy.id.startsWith("qa-")||busy.id.startsWith("td-")))return;
+  if(busy&&busy.id&&(busy.id.startsWith("qa-")||busy.id.startsWith("td-")
+      ||busy.id.startsWith("gwo-")))return;
   let q;try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{return}
   THUMBED={};q.forEach(r=>{if(r.kind==="thumb"&&r.status==="done"&&r.of)
     THUMBED[r.of]={up:!!r.up,req:r.id}});
@@ -3960,6 +3978,7 @@ async function loadObjectives(){
         +(res.graph?`<div class="row wtoggle" onclick="walkToggle('${r.id}')">⤳ ${WALKOPEN.has(r.id)?"close the choreography":"see the choreography — what you are approving"}</div>`:"")
         +(res.graph&&WALKOPEN.has(r.id)?renderGraph(res.graph,r.id,false):"")
         +(res.keep_fresh_offer?`<div class="row"><label><input type="checkbox" ${KF.has(r.id)?"checked":""} onchange="kfToggle('${r.id}')"> …and keep “${esc(res.keep_fresh_offer.topic)}” fresh — ${esc(res.keep_fresh_offer.terms)} · a standing spend (0032)</label></div>`:"")
+        +`<div class="td-in" style="margin-top:.35rem"><input id="gwo-${r.id}" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></div>`
         +`<div style="margin-top:.4rem"><button class="sbtn ok" onclick="objDecide('${r.id}',true)">fan the plan</button> `
         +`<button class="sbtn no" onclick="objDecide('${r.id}',false)">decline</button></div>`;
     }else if(r.status==="approved"){
