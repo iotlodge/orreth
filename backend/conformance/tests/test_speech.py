@@ -87,6 +87,23 @@ def test_every_outcome_has_its_spoken_sentence():
                    "the examiner said 0.1")
 
 
+def test_the_journey_speaks_plain():
+    """0051 sp1: the fallback label retires the lock-4 poetry BY JB'S WORD
+    (req-622) — no 'arithmetic, not a mind' survives; the waiting stage
+    explains BOTH buttons; the declined line extracts the glass literal
+    byte-for-byte (parity); the monitor line counts in human words."""
+    lbl = speech.SENTENCES["plan-fallback-label"]
+    assert "arithmetic" not in lbl and "fallback plan" in lbl
+    w = speech.SENTENCES["journey-word"]
+    assert "approve" in w and "decline" in w
+    assert speech.SENTENCES["journey-declined"] == \
+        "declined — nothing fanned; the record keeps that you chose."
+    got = speech.render(speech.SENTENCES["journey-monitor"],
+                        n=5, waiting=2, working=3)
+    assert got == ("Orreth is tending 5 objective(s) — 2 waiting on you · "
+                   "3 working")
+
+
 def test_the_persona_is_craft_too():
     """sp3: the tester rides the same shelf as the tested — quinn's persona
     carries the strict contract and the two slots her jacket fills, and she

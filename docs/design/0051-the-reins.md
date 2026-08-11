@@ -94,6 +94,24 @@ The mind that reads every ask becomes visible (allen's pattern):
 
 1. **sp1 — the Journey**: the strip on the card, wave-2 sentences on the
    shelf, plain status vocabulary, leaf-named floors, the monitored set.
+   **LANDED + PROVEN LIVE 2026-08-11.** Fourteen journey sentences on the
+   shelf (suite 331→332): the lock-4 label RETIRED by JB's own word — the
+   constant deleted, five use sites speaking «plan-fallback-label» from the
+   shelf; «journey-declined» extracted parity-true; the rest born plain.
+   The worker grew the `/sentences` door (active heads over genesis — the
+   glass renders from the SAME shelf the worker speaks from, one voice on
+   both faces), and the glass grew `say()`/`journey()`/`leafName()` + the
+   monitor line. Proven whole on a real objective (req-624): the staged
+   card wore `asked → read and understood → planned →` into the GLOWING
+   "waiting on you — approve sends the work to the floors; decline stops it
+   here and keeps the record" (req-622's «staged» demand, answered
+   forever); floors leaf-named (`naive · rag`, raw paths on hover only);
+   "Orreth is tending 1 objective(s) — 1 waiting on you · 0 working" above
+   the ledger; approved → resolved → the strip closed `done — the report
+   below is yours` with the observatory's promise trailing and the report
+   line human. Polish noted for sp4's grade: a card resolved before its
+   reading lands still says "being read" — the honest late-reading label
+   is quinn's to demand.
 2. **sp2 — the Reins**: cancel/rest across the four vectors + the
    cancellation record; **covenant rule 11 lands at JB's lock** (the
    covenant file changes only with his word — the lock IS the word).

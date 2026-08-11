@@ -819,3 +819,11 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 | `orreth_agent/craft.py` + `tests/test_craft_profile.py` | Fable 5 (claude-fable-5) | The supply line learns the persona shelf: a chronicle asset whose profile IS a template renders like firmware (SDK 20→22). |
 | `orreth_sim/speech.py` + `tests/test_speech.py` · worker | Fable 5 (claude-fable-5) | PERSONAS on the shelf beside the sentences — the tester is craft too, tuned at the same gates. |
 | `VERSION` · register · road · atlas | Fable 5 (claude-fable-5) | 0.48 → 0.50 in the closing commit; the register row with its named gaps; the atlas's loops gain the walking persona. |
+
+## Fable 5 — 2026-08-11 (0051 sp1 — the Journey: the objective's life in plain words)
+
+| File | Author | Note |
+|---|---|---|
+| `orreth_sim/speech.py` + `tests/test_speech.py` | Fable 5 (claude-fable-5) | Fourteen journey sentences (suite 332): the lock-4 label retired by JB's word (req-622) — no "arithmetic, not a mind" survives the test; journey-word explains both buttons; journey-declined extracted parity-true. |
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | PLAN_FALLBACK_LABEL constant deleted — five use sites speak from the shelf; the /sentences door serves active heads over genesis so the glass and the worker share ONE voice. |
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | say()/journey()/leafName() + the monitor line: the state ladder as a strip with the current stage glowing, floors leaf-named with paths on hover, the report line human. Proven live on req-624, staged through resolved. |

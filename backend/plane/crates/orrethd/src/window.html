@@ -542,6 +542,16 @@
   .theard{color:var(--dim);font:.66rem var(--mono);margin:.15rem 0 .3rem}
   .td-in{display:flex;gap:.35em;flex:1;min-width:0}
   .td-in input{flex:1;min-width:0;background:var(--deep);color:var(--near);border:1px solid var(--hair2);border-radius:6px;font:.7rem var(--mono);padding:.25em .5em}
+  /* the Journey (0051 sp1): the objective's life as a strip — the current
+     stage glows; the words come from the shelf, never hardcoded truth */
+  .jry{display:flex;flex-wrap:wrap;gap:.3em;align-items:center;margin:.3rem 0 .35rem;font:.66rem var(--mono)}
+  .jst{border:1px solid var(--hair);border-radius:999px;padding:.12em .6em;color:var(--dim);white-space:nowrap;max-width:34em;overflow:hidden;text-overflow:ellipsis}
+  .jst.jdone{color:var(--near);border-color:var(--hair2)}
+  .jst.jnow{color:var(--brass);border-color:var(--brass);box-shadow:0 0 8px rgba(212,169,96,.35);white-space:normal;max-width:none}
+  .jst.jdim{color:var(--faint)}
+  .jst.jwarn{color:#e8b34a;border-color:#8a6f42}
+  .jst.jend{color:var(--red);border-color:var(--hair2)}
+  .jsep{color:var(--faint)}
   .pws{padding:.7rem 1.1rem;border-bottom:1px solid var(--hair);overflow-y:auto;max-height:52%;
     display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.8rem}
   .wsp{border:1px solid var(--hair);border-radius:10px;padding:.7rem .9rem;background:rgba(255,255,255,.02);
@@ -953,6 +963,7 @@
       <span><span class="num">②</span>your word fans the intentions down the floors</span>
       <span><span class="num">③</span>the report is yours forever — every artifact linked</span></div>
     <div class="section">your objectives</div>
+    <div id="obj-monitor" class="quiet2" style="margin:.3rem 0 .5rem"></div>
     <div id="objlist"><div class="quiet">no objectives yet — state one above.</div></div>
   </div>
 
@@ -3833,6 +3844,40 @@ async function fetchMarker(id){
     MARKCACHE.set(id,(b.marker||{}).reason||"");loadObjectives();
   }catch{MARKCACHE.set(id,"")}
 }
+/* ── THE JOURNEY (0051 sp1): the glass speaks from the SAME shelf the worker
+      does — /sentences serves active heads, genesis beneath; the literals
+      here are last-resort fallbacks for a dark door, never the living word */
+let SENT={};
+async function loadSentences(){
+  try{SENT=((await(await fetch(OBSD+"/sentences")).json()).sentences)||{}}catch{}
+}
+loadSentences();setInterval(loadSentences,300000);
+function say(name,slots,fallback){
+  let t=SENT[name]||fallback||"";
+  for(const k in (slots||{}))t=t.split("⟦"+k+"⟧").join(String(slots[k]));
+  return t.replace(/⟦\w+⟧/g,"—");
+}
+function leafName(s){
+  const p=String(s||"").split("/"),l=(p[p.length-1]||String(s)).replace(/^[feu]:/,"");
+  const up=p.length>2?(p[p.length-2]||"").replace(/^[fe]:/,""):"";
+  return `<span title="${esc(s)}">${esc(l)}${up?`<span class="rm"> · ${esc(up)}</span>`:""}</span>`;
+}
+function journey(r){
+  const res=r.result||{},u=res.understanding||{},legs=((res.plan||{}).intentions||[]).length;
+  const steps=[];const add=(txt,cls)=>steps.push(`<span class="jst ${cls}">${esc(txt)}</span>`);
+  add(say("journey-composed",{},"asked"),"jdone");
+  if(u.state==="read")add(say("journey-understood",{},"read and understood"),"jdone");
+  else if(u.state==="dark")add(say("journey-understood-dark",{},"staged without a reading"),"jwarn");
+  else add(say("journey-understood-waiting",{},"being read"),r.status==="staged"?"jdim":"jdone");
+  if(res.plan)add(say("journey-planned",{},"planned"),"jdone");
+  if(r.status==="staged")add(say("journey-word",{},"waiting on you — approve sends the work to the floors; decline stops it here"),"jnow");
+  else if(r.status==="approved")add(say("journey-working",{n:legs},"working"),"jnow");
+  else if(r.status==="done"){add(say("journey-resolved",{},"done — the report below is yours"),"jdone");
+    add(say("journey-assayed-later",{},"the observatory will grade this work in time"),"jdim");}
+  else if(r.status==="denied")add(say("journey-declined",{},"declined — nothing fanned; the record keeps that you chose."),"jend");
+  else if(r.status==="cancelled")add(say("journey-cancelled",{},"cancelled by your word"),"jend");
+  return `<div class="jry">${steps.join('<span class="jsep">→</span>')}</div>`;
+}
 /* the thumb on a resolved Objective (0048 sp2): the list re-renders on the
    tick, so the thumb's view-state lives here — the RECORD of the judgment
    lives on the floor's shelf, where it always did */
@@ -3879,6 +3924,11 @@ async function loadObjectives(){
   const waitingOnYou=objs.filter(r=>r.status==="staged").length
     +questions.filter(r=>r.status==="pending").length;
   const badge=$("obj-badge"); if(badge)badge.textContent=waitingOnYou?` (${waitingOnYou})`:"";
+  const mon=$("obj-monitor");
+  if(mon){const w=objs.filter(r=>r.status==="staged").length,
+    g=objs.filter(r=>r.status==="approved").length;
+    mon.textContent=(w+g)?say("journey-monitor",{n:w+g,waiting:w,working:g},
+      `Orreth is tending ${w+g} objective(s) — ${w} waiting on you · ${g} working`):"";}
   $("objlist").innerHTML= objs.length? objs.slice().reverse().map(r=>{
     const res=r.result||{};
     const goal=(res.assembly||{}).goal_hash||(res.plan||{}).goal||"";
@@ -3886,7 +3936,7 @@ async function loadObjectives(){
     let body="";
     if(r.status==="staged"&&res.plan){
       body=((res.plan.intentions||[]).map(i=>
-        `<div class="row">→ <b>${esc(i.seat)}</b><span class="rm">${esc((i.intent||"").slice(0,90))}</span>`+
+        `<div class="row">→ <b>${leafName(i.seat)}</b><span class="rm">${esc((i.intent||"").slice(0,90))}</span>`+
         `${i.beyond_token?'<span class="sev amber">will ask leave</span>':""}</div>`).join(""))
         +`<div class="row rm">…and it will ask you: ${esc((res.plan.question||"").slice(0,110))}</div>`
         +(r.rubric?`<div class="row rm">judged by — “${esc(String(r.rubric).slice(0,110))}” · your yardstick rides every verdict (0043 G6)</div>`:"")
@@ -3896,23 +3946,23 @@ async function loadObjectives(){
         +`<div style="margin-top:.4rem"><button class="sbtn ok" onclick="objDecide('${r.id}',true)">fan the plan</button> `
         +`<button class="sbtn no" onclick="objDecide('${r.id}',false)">decline</button></div>`;
     }else if(r.status==="approved"){
-      body=`<div class="row rm">fanned — ${((res.plan||{}).intentions||[]).length} intention(s) riding the floors; the assembly comes home when they do…</div>`;
+      body="";                       /* the Journey strip carries the working word */
     }else if(r.status==="done"&&res.assembly){
       const a=res.assembly;
       body=`<div class="obj-verdict ${a.verification==="complete"?"ok":""}">verification · ${esc(a.verification)}</div>`
         +(a.branches||[]).map(b=>
-          `<div class="row">→ <b>${esc(b.seat)}</b> ${esc(b.status)}${sevChip(b.severity)}`+
+          `<div class="row">→ <b>${leafName(b.seat)}</b> ${esc(b.status)}${sevChip(b.severity)}`+
           `<span class="rm">${esc((b.answer||"").slice(0,80))}</span></div>`).join("")
         +(a.question_answer?`<div class="row rm">you answered: ${esc(a.question_answer)}</div>`:"")
         +((a.dark||[]).length?`<div class="row rm">dark: ${a.dark.map(d=>esc(d.seat||d)).join(", ")}</div>`:"")
         +((a.waiting||[]).length?`<div class="row rm">waiting: ${a.waiting.map(w=>esc(w)).join("; ")}</div>`:"")
-        +`<div class="row rm">the report record · ${esc((res.record||"").slice(0,34))}…</div>`
+        +`<div class="row rm">${say("journey-report-line",{short:(res.record||"").slice(0,18)},"the full report is saved on the record")}</div>`
         +thumbHtml(res.record||"")
         +(a.coordinate_citations?`<div class="row rm">the coordinate · ${a.coordinate_citations} record(s) across the floors cite this objective (0033)</div>`:"")
         +(res.graph?`<div class="row wtoggle" onclick="walkToggle('${r.id}')">⤳ ${WALKOPEN.has(r.id)?"close the walk":"walk the work — how each seat thought"}</div>`:"")
         +(res.graph&&WALKOPEN.has(r.id)?renderGraph(res.graph,r.id,true):"");
     }else if(r.status==="denied"){
-      body=`<div class="row rm">declined — nothing fanned; the record keeps that you chose.</div>`;
+      body="";                       /* the Journey strip carries the declined word */
     }
     const qhtml=openQs.map(x=>
       `<div class="obj-q">the flow asks: ${esc((x.text||"").slice(0,140))}`+
@@ -3920,7 +3970,7 @@ async function loadObjectives(){
       `<button class="sbtn ok" onclick="objAnswer('${x.id}')">answer</button></div></div>`).join("");
     return `<div class="req obj"><span class="kind">objective</span>
      <span class="txt">${esc(r.text||"")}<div class="sub">${r.id} · ${(r.at||"").slice(0,19).replace("T"," ")}</div>
-     ${body}${qhtml}</span><span class="st">${r.status}</span></div>`;
+     ${journey(r)}${body}${qhtml}</span><span class="st">${r.status}</span></div>`;
   }).join("") : `<div class="quiet">no objectives yet — state one above; a plan will stage for your approval.</div>`;
 }
 $("obj-in").addEventListener("keydown",e=>{if(e.key==="Enter")submitObjective()});

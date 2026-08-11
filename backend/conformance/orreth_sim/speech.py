@@ -51,6 +51,33 @@ SENTENCES = {
     # ---- born human (0050 sp2 — genesis entered already plain) --------------
     "card-calibration-pair":
         "«⟦work⟧» — you said ⟦human⟧, the examiner said ⟦examiner⟧",
+    # ---- the Journey (0051 sp1): an objective's life in plain words ---------
+    # Born plain, except two EXTRACTIONS: «journey-declined» carries the old
+    # glass literal (parity), and «plan-fallback-label» retires JB's lock-4
+    # poetry BY HIS OWN WORD (req-622, approved 2026-08-11 — quinn's find).
+    "plan-fallback-label":
+        "a simple fallback plan — the budget was split evenly across the "
+        "floors because the studio hasn't answered yet; a mind's plan may "
+        "still replace it before you decide",
+    "journey-composed": "asked",
+    "journey-understood": "read and understood",
+    "journey-understood-waiting": "being read",
+    "journey-understood-dark": "staged without a reading — the studio was dark",
+    "journey-planned": "planned",
+    "journey-word":
+        "waiting on you — approve sends the work to the floors; decline "
+        "stops it here and keeps the record",
+    "journey-working": "working — ⟦n⟧ piece(s) riding the floors",
+    "journey-resolved": "done — the report below is yours",
+    "journey-assayed-later": "the observatory will grade this work in time",
+    "journey-declined":
+        "declined — nothing fanned; the record keeps that you chose.",
+    "journey-cancelled":
+        "cancelled by your word — what was left undone is on the record",
+    "journey-report-line": "the full report is saved on the record (⟦short⟧…)",
+    "journey-monitor":
+        "Orreth is tending ⟦n⟧ objective(s) — ⟦waiting⟧ waiting on you · "
+        "⟦working⟧ working",
 }
 
 # 0050 sp3 — the UAT personas (0049 §3): the tester is craft too, tuned at

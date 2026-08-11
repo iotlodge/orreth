@@ -1319,12 +1319,20 @@ def embed_door() -> None:
             any floor's port can drink them — behind the worker's own door,
             the plane untouched (rule 9)."""
             route = self.path.split("?")[0]
-            if route not in ("/observatory", "/governance", "/craft"):
+            if route not in ("/observatory", "/governance", "/craft",
+                             "/sentences"):
                 self.send_response(404)
                 self.end_headers()
                 return
             try:
-                if route == "/craft":
+                if route == "/sentences":
+                    # 0051 sp1 — the glass renders from the SAME shelf the
+                    # worker speaks from: active heads where they stand,
+                    # genesis where they don't (one voice, both faces)
+                    out = json.dumps({"sentences": {
+                        n: (_sentence_active(4500, n) or g)
+                        for n, g in speech.SENTENCES.items()}}).encode()
+                elif route == "/craft":
                     qs = urllib.parse.parse_qs(
                         urllib.parse.urlparse(self.path).query)
                     out = json.dumps(craft_serve(
@@ -3275,7 +3283,7 @@ def on_objective(port: int, scope: str, r: dict) -> None:
                      # arithmetic fallback wears its label until (unless) the
                      # studio's plan survives the save gate and takes over
                      "planned_by": {"state": "fallback",
-                                    "label": PLAN_FALLBACK_LABEL},
+                                    "label": sentence(port, "plan-fallback-label")},
                      "held": "the plan waits for you — approve to fan (0030 §3)"}})
     print(f"  ↳ objective {r['id']}: plan staged — {summary}"
           + (f" · offers to keep “{offer['topic'][:40]}” fresh" if offer else ""))
@@ -7527,10 +7535,9 @@ def gate_age_beat(port: int) -> None:
 # ---- 0047 sp3 · the studio's readings ride onto the plan cards ------------------------
 STUDIO_DARK_S = int(os.environ.get("ORRETH_STUDIO_DARK_S", "90"))
 
-# 0047 sp4 · lock 4 — the arithmetic planner's honest label (wording awaits
-# JB's word; this is the design owner's proposal, one string to re-cut)
-PLAN_FALLBACK_LABEL = ("planned by arithmetic, not a mind — the budget split "
-                       "evenly across the floors; the studio has not answered")
+# The 0047 lock-4 label retired 0051 sp1 (req-622, JB's word): it now lives
+# on the shelf as «plan-fallback-label» — quinn called the old words poetry,
+# and the human who wrote them agreed. Use sites speak via sentence().
 
 
 def studio_tend(port: int) -> None:
@@ -7582,7 +7589,7 @@ def studio_tend(port: int) -> None:
                         update["planned_by"] = {"state": "drafting",
                                                 "leg": draft,
                                                 "asked_at": NOW(),
-                                                "label": PLAN_FALLBACK_LABEL}
+                                                "label": sentence(port, "plan-fallback-label")}
                     except Exception as e:
                         print(f"    (plan-draft leg failed to post: {e})")
                 call(port, "POST", "/requests/resolve",
@@ -7613,7 +7620,7 @@ def studio_tend(port: int) -> None:
                          {"id": r["id"], "status": "staged",
                           "result": {**res, "planned_by": {
                               "state": "parked", "why": draft.get("why", ""),
-                              "label": PLAN_FALLBACK_LABEL}}})
+                              "label": sentence(port, "plan-fallback-label")}}})
                     print(f"  🗺 the studio's plan for {r['id']} PARKED — "
                           "the fallback stands, labeled")
                     continue
@@ -7630,7 +7637,7 @@ def studio_tend(port: int) -> None:
                          {"id": r["id"], "status": "staged",
                           "result": {**res, "planned_by": {
                               "state": "refused", "why": str(e),
-                              "label": PLAN_FALLBACK_LABEL}}})
+                              "label": sentence(port, "plan-fallback-label")}}})
                     print(f"  🗺 the studio's plan for {r['id']} REFUSED AT "
                           f"SAVE: {e} — the fallback stands, labeled")
                     continue
@@ -7671,7 +7678,7 @@ def studio_tend(port: int) -> None:
                 call(port, "POST", "/requests/resolve",
                      {"id": r["id"], "status": "staged",
                       "result": {**res, "planned_by": {
-                          "state": "fallback", "label": PLAN_FALLBACK_LABEL,
+                          "state": "fallback", "label": sentence(port, "plan-fallback-label"),
                           "note": "the studio read but never planned"}}})
                 print(f"  🗺 the studio read but never planned {r['id']} — "
                       "the fallback stands, labeled")
