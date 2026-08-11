@@ -5756,6 +5756,28 @@ def ensure_allen_floor() -> None:
 _PIN_FAILED: set = set()                     # (port, organ): grumble once, not every beat
 
 
+_STUDIO_DID: str | None = None
+
+
+def _studio_did() -> str | None:
+    """The studio's DID from its own join at becky's gate — the worker
+    NEVER holds its key (rule 1: a self is its own); the pin attests the
+    identity the gate already proved (0051 sp4)."""
+    global _STUDIO_DID
+    if _STUDIO_DID:
+        return _STUDIO_DID
+    try:
+        rows = call(JOIN_PORT, "GET", "/requests").get("requests", [])
+    except Exception:
+        return None
+    for q in reversed(rows):
+        if (q.get("kind") == "join" and q.get("name") == "studio"
+                and q.get("status") in ("approved", "done") and q.get("did")):
+            _STUDIO_DID = q["did"]
+            return _STUDIO_DID
+    return None
+
+
 def pin_organs(port: int, floor: str) -> None:
     """Authority beats archaeology (the stricter R1): becky mints each organ an
     identity token, the floor verifies its chain against the pinned root, and the
@@ -5790,6 +5812,15 @@ def pin_organs(port: int, floor: str) -> None:
             ("vera", VERA_DID,
              lambda: _BECKY.issue_token(VERA_DID, SCOPE,
                                         [{"action": "retrieve", "space": "self"}])),)
+        # the studio takes its face (0051 sp4): the mind that reads every
+        # ask joins the residents' rail — its KEY stays with its own citizen
+        # process; the pin attests what becky's gate already proved
+        sdid = _studio_did()
+        if sdid:
+            organs += (("studio", sdid,
+                        lambda d=sdid: _BECKY.issue_token(
+                            d, SCOPE, [{"action": "retrieve",
+                                        "space": "self"}])),)
     for organ, did, mint in organs:
         if pins.get(organ) == did:
             continue
@@ -6253,6 +6284,19 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
             "thoughts": len(s.read("plane.thoughts")["points"]),
             "refusals": len(s.read("plane.refusals")["points"]),
             "note": observatory.INSTRUMENT_LABEL}
+    if name == "studio":                      # the reader's own exhibits (0051 sp4)
+        u_port = universe_port(port)
+        try:
+            _rq = call(u_port, "GET", "/requests").get("requests", [])
+        except Exception:
+            _rq = []
+        _rs = [(q.get("result") or {}).get("understanding") or {}
+               for q in _rq
+               if q.get("kind") == "understand" and q.get("status") == "done"]
+        facts["readings"] = [u for u in reversed(_rs) if u.get("reading")][:5]
+        _sd = _studio_did()
+        if _sd:
+            facts["did"] = _sd
     if name == "grace":                       # the smith reads her shelf (0031 §4)
         u_port = universe_port(port)
         facts["shelf"] = wire_shelf(u_port)

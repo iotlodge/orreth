@@ -106,11 +106,16 @@ at the prioritization session.
 | A6 | **The one inbox** — everything waiting on the human, prioritized, ages visible, safe bulk decisions, **approvals that belong together PACKAGED as one word** (JB's find) | BASE | P2 |
 
 ### Thread B — Human-focused navigation & fluidity
+**PROMOTED 2026-08-11 — JB's own walk, verbatim: "Find myself clicking and
+scrolling reading this and that as I navigate between objective, requests,
+etc.. no reading panes in either and why should I bounce around and and
+and.. (frustration)." The reading-room dive (B1+B3+A6) opens IMMEDIATELY
+after 0051 closes.**
 | # | Item | Tag | P |
 |---|---|---|---|
-| B1 | **Purpose-first navigation** — a human layer over the organ tabs: *Ask · Approve · Watch · Review · Govern*; **tab redundancy audited by the UAT personas — improve, change, or remove** | BASE | P2 |
+| B1 | **Purpose-first navigation + THE READING PANE** — one place to stand: a persistent detail pane beside every list (objectives, requests) so nothing requires a tab-bounce; the human layer *Ask · Approve · Watch · Review · Govern* over the organ tabs; **tab redundancy audited — improve, change, or remove** | BASE | **P1 — next dive** |
 | B2 | **Lists** — humans curate worklists of objectives: create, order, watch as a set, report as a set | BASE | P2 |
-| B3 | **Every mention is a door** — any id/name anywhere → the thing itself; breadcrumbs; human-term search | BASE | P2 |
+| B3 | **Every mention is a door** — any id/name anywhere → the thing itself; breadcrumbs; human-term search | BASE | **P1 — next dive** |
 | B4 | **Metrics everywhere they help** — state/progress/performance numbers wherever a human persona says they'd help them understand; the personas decide where, beyond JB's own list | BASE | P2 |
 | B5 | **The first ten minutes** — onboarding, hover-explains, the glossary, the guided first objective | CRAFT | P3 |
 

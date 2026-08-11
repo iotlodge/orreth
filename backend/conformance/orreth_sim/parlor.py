@@ -18,7 +18,11 @@ from . import continuity, markers, profile
 from .identity import NOW
 
 RESIDENTS = ("becky", "vigil", "steward", "governance", "charlotte", "librarian",
-             "ada", "grace", "allen", "vera")
+             "ada", "grace", "allen", "vera", "studio")
+# 0051 sp4: the studio's KEY lives with its own citizen process (rule 1 —
+# the worker never signs as another self), so its audiences answer from the
+# record like governance's; its voiced seat is a named gap until the studio
+# process grows a parlor leg.
 EMBODIED = ("becky", "charlotte", "librarian", "ada", "grace", "allen",
             "vera")  # hold keys; sign their audiences
 
@@ -27,7 +31,8 @@ ROLES = {"becky": "becky · IAM", "vigil": "vigil · the Warden",
          "charlotte": "charlotte · farm keeper", "librarian": "librarian · knowledge",
          "ada": "ada · the wrangler", "grace": "grace · the smith",
          "allen": "allen · cloud architect",
-         "vera": "vera · the astronomer"}
+         "vera": "vera · the astronomer",
+         "studio": "studio · the reader of asks"}
 
 # the librarian's gather ask, in the shapes callers actually type
 _GATHER = ("gather sourced knowledge on", "gather knowledge on", "gather on", "gather")
@@ -300,6 +305,22 @@ def _card_vera(facts: dict) -> tuple[str, list]:
              {"label": "what do you measure?", "ask": "what do you measure?"}])
 
 
+def _card_studio(facts: dict) -> tuple[str, list]:
+    rs = facts.get("readings") or []
+    latest = rs[0] if rs else None
+    stat = (f"I have read {len(rs)} recent ask(s); the latest I understood "
+            f"as “{str(latest.get('reading', ''))[:80]}” with confidence "
+            f"{latest.get('confidence', '?')}"
+            if latest else "no asks have needed my reading yet")
+    return (f"I am the studio — I read every objective before it reaches "
+            f"your gate and draft its plan; the card you approve carries MY "
+            f"understanding, and the law decides what I only propose. "
+            f"{stat}. My thoughts are metered under my own name.",
+            [{"label": "your last reading", "ask": "what did you read last?"},
+             {"label": "your confidence", "ask": "how confident are you?"},
+             {"label": "what do you do?", "ask": "what do you do here?"}])
+
+
 def _card_organ(name: str):
     def make(facts: dict) -> tuple[str, list]:
         return (_organ_reply(name, facts),
@@ -309,7 +330,7 @@ def _card_organ(name: str):
 
 _CARDS = {"becky": _card_becky, "charlotte": _card_charlotte,
           "librarian": _card_librarian, "ada": _card_ada, "grace": _card_grace,
-          "allen": _card_allen, "vera": _card_vera,
+          "allen": _card_allen, "vera": _card_vera, "studio": _card_studio,
           "vigil": _card_organ("vigil"), "steward": _card_organ("steward"),
           "governance": _card_organ("governance")}
 
@@ -323,6 +344,37 @@ def answer(name: str, text: str, facts: dict) -> dict:
     if name not in RESIDENTS:
         return {"reply": f"no one by the name “{name}” is in residence on this floor."}
     t = (text or "").strip().lower()
+    # 0051 sp4 — the studio's audience: grounded in its own readings, never
+    # improvised; the mind that reads your asks answers about ITS reading.
+    if name == "studio":
+        rs = facts.get("readings") or []
+        if "confiden" in t:
+            if not rs:
+                return {"reply": "I have no recent readings to be confident "
+                                 "about — ask me after your next objective."}
+            cs = [r.get("confidence") for r in rs if r.get("confidence") is not None]
+            return {"reply": f"across my last {len(cs)} reading(s) my "
+                             f"confidence ran {min(cs)}–{max(cs)}; low numbers "
+                             "mean the registry lacked the craft your ask "
+                             "needed — each gap I name can be grown."}
+        if "read" in t or "understand" in t or "understood" in t:
+            if not rs:
+                return {"reply": "nothing has needed my reading yet — state "
+                                 "an objective and I will read it before it "
+                                 "reaches your gate."}
+            r0 = rs[0]
+            gaps = r0.get("gaps") or []
+            return {"reply": f"your last ask I understood as: "
+                             f"“{str(r0.get('reading', ''))[:160]}” "
+                             f"(confidence {r0.get('confidence', '?')})"
+                             + (f" — and I named what was missing: "
+                                f"{'; '.join(str(g)[:60] for g in gaps[:2])}"
+                                if gaps else " — nothing was missing")}
+        return {"reply": "I read every objective before it reaches your gate "
+                         "and draft its plan — the card you approve carries "
+                         "my understanding; the law disposes what I only "
+                         "propose (0047). Ask me what I read last, or how "
+                         "confident I am."}
     # the survivors' door (0035 §6): past EXECUTED the archive is read-only —
     # it keeps, it never spends, and nothing new enters. The guard is one
     # sentence at every mutating door, structural like the label canon.

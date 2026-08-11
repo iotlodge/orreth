@@ -6,8 +6,10 @@
      this dive gives them the reins: see the whole journey, stop anything,
      answer back, and know the mind by its face. -->
 
-**Status: 🟢 OPENED 2026-08-11 — four spoonfuls; locks stage at their
-spoonfuls. quinn grades the close.**
+**Status: 🎠 CLOSED WHOLE 2026-08-11, era 0.51 — opened, four spoonfuls
+built and proven, RULE 11 IN THE COVENANT, all in one day. quinn graded the
+close: her original wounds HEALED (the «staged» complaint became a delight),
+and the next layer she exposed is already threaded into the season.**
 
 ## 1. The one-line brief
 
@@ -154,6 +156,28 @@ The mind that reads every ask becomes visible (allen's pattern):
    presence — then **quinn re-walks the same objective family and the
    friction counts are compared, before vs after**: the dive's closing
    number is hers, not ours.
+   **LANDED + PROVEN 2026-08-11 — THE DIVE CLOSES WHOLE.** The studio
+   joined the residents: pinned on the universe floor with the DID its own
+   join proved (the worker never touches its key — rule 1 held; its voiced
+   seat is a NAMED GAP until the studio process grows a parlor leg), a
+   calling card carrying its charter and true ledger, and a grounded
+   audience: "your last ask I understood as… and I named what was missing…"
+   **The grade came with a lesson in instrument honesty:** quinn's first
+   re-walk graded a SYNTHETIC OLD CARD — her surface builders were stale
+   mirrors of the pre-Journey glass. Fixed the only honest way: her eye now
+   reads from the SAME /sentences shelf the glass renders from. The honest
+   re-walk: her original wounds HEALED — «staged»-unexplained became her
+   DELIGHT ("liked: the plain-language framing '[waiting on you —
+   approve…]'"), the lock-4 poetry gone (her only note on the new label:
+   "a mind" is itself jargon — now a gate-tunable word), the report-hash
+   line passed clean. And she exposed the NEXT layer, each wound threaded:
+   req-ids-as-headers → the reading-room dive; journey stage words + "a
+   mind" → shelf tuning; the arithmetic legs' own text + the 0027 §8
+   question → wave-2 extraction; "fan the plan" unexplained · "iac" ·
+   "verification partial" → the glossary/craft pass. Her friction COUNT is
+   capped by her own contract (6 per surface) — the honest measure is the
+   healed list, not the number; noted for her v2. The raw-count lesson and
+   the stale-mirror lesson both stand on the record.
 
 ## 8. Convergence
 

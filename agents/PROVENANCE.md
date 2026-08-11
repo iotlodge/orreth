@@ -842,3 +842,11 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 |---|---|---|
 | `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | The gate-word door: words land signed under the HUMAN seat with either decision; a decline's words birth open feedback into 0048's loop — no verdict minted (a request is not a graded record). |
 | `orreth_sim/speech.py` + `tests/test_speech.py` · `window.html` | Fable 5 (claude-fable-5) | Three voice-line sentences (suite 334) · gw-/gwo- inputs on every staged gate, joined to the busy-guard law on all surfaces. Proven whole: a declined plan's reason was read true by the studio, evidenced, and the closure returned. |
+
+## Fable 5 — 2026-08-11 (0051 sp4 — the studio's face + quinn's grade: the dive closes whole, era 0.51)
+
+| File | Author | Note |
+|---|---|---|
+| `orreth_sim/parlor.py` · worker | Fable 5 (claude-fable-5) | The studio joins the residents: card, grounded audience from its own readings, pinned with the DID its own join proved — the worker never touches its key (rule 1); its voiced seat a named gap. |
+| `agents/flavors/04-uat/run.py` | Fable 5 (claude-fable-5) | The instrument-honesty lesson: quinn's first re-walk graded a stale mirror; her eye now reads from the SAME /sentences shelf the glass renders from. Her grade: the original wounds HEALED — «staged» became her delight — and the next layer threaded into the season. |
+| `VERSION` · register · road · atlas · 0049 | Fable 5 (claude-fable-5) | 0.50 → 0.51; the reins row with named gaps; rule 11 in the atlas's trust spine; thread B promoted by JB's own frustration — the reading-room dive is next. |

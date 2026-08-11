@@ -88,13 +88,47 @@ def _post(base: str, path: str, payload: dict) -> dict:
         return json.load(r)
 
 
+_SENT: dict = {}
+
+
+def _sent(name: str, fallback: str, **slots) -> str:
+    """quinn's eye reads from the SAME shelf the glass renders from
+    (0051 sp4 — the first re-walk graded a synthetic OLD card because her
+    surface builders were stale mirrors; the instrument must see what the
+    human sees, so the words come from the /sentences door, live)."""
+    global _SENT
+    if not _SENT:
+        try:
+            _SENT = _get("http://localhost:4562/sentences").get("sentences", {})
+        except Exception:
+            _SENT = {}
+    t = _SENT.get(name) or fallback
+    for k, v in slots.items():
+        t = t.replace("⟦" + k + "⟧", str(v))
+    return t
+
+
+def _leaf(s: str) -> str:
+    """Floors as the glass names them: leaf · parent, never the raw path."""
+    p = str(s or "").split("/")
+    leaf = (p[-1] if p else str(s)).split(":")[-1]
+    up = p[-2].split(":")[-1] if len(p) > 2 else ""
+    return f"{leaf} · {up}" if up else leaf
+
+
 def _card_surface(r: dict) -> str:
     """The approval card as the GLASS shows it — quinn sees what a human
     sees, nothing more (the naive eye reads renderings, not records)."""
     res = r.get("result") or {}
     plan, u = res.get("plan") or {}, res.get("understanding") or {}
     pb = res.get("planned_by") or {}
-    lines = [f"objective · {r.get('text', '')}", f"{r.get('id')} · staged"]
+    lines = [f"objective · {r.get('text', '')}", f"{r.get('id')} · staged",
+             "journey: asked → "
+             + ("read and understood" if u.get("state") == "read"
+                else "being read") + " → planned → ["
+             + _sent("journey-word", "waiting on you — approve sends the "
+                     "work to the floors; decline stops it here and keeps "
+                     "the record") + "]"]
     if u.get("reading"):
         lines.append(f"🧠 the universe understood: {u['reading']}"
                      + (f" · gaps: {'; '.join(u.get('gaps') or [])}"
@@ -104,13 +138,16 @@ def _card_surface(r: dict) -> str:
     if pb.get("label"):
         lines.append(f"🗺 {pb['label']}")
     for i in (plan.get("intentions") or [])[:6]:
-        lines.append(f"→ {i.get('seat')} — {i.get('intent', '')[:90]}")
+        lines.append(f"→ {_leaf(i.get('seat'))} — {i.get('intent', '')[:90]}")
     if plan.get("question"):
         lines.append(f"…and it will ask you: {plan['question'][:110]}")
     off = res.get("keep_fresh_offer")
     if off:
         lines.append(f"…and keep “{off.get('topic')}” fresh — "
                      f"{off.get('terms')} · a standing spend (0032)")
+    lines.append("[input: " + _sent("gate-word-placeholder",
+                                    "add words to your decision (optional)")
+                 + "]")
     lines.append("[buttons: fan the plan · decline]")
     return "\n".join(lines)
 
@@ -120,13 +157,19 @@ def _closeout_surface(r: dict) -> str:
     res = r.get("result") or {}
     a = res.get("assembly") or {}
     lines = [f"objective · {r.get('text', '')}", f"{r.get('id')} · done",
+             "journey: asked → read → planned → ["
+             + _sent("journey-resolved", "done — the report below is yours")
+             + "] → " + _sent("journey-assayed-later",
+                              "the observatory will grade this work in time"),
              f"verification · {a.get('verification', '?')}"]
     for b in (a.get("branches") or [])[:6]:
-        lines.append(f"→ {b.get('seat')} {b.get('status')} — "
+        lines.append(f"→ {_leaf(b.get('seat'))} {b.get('status')} — "
                      f"{str(b.get('answer', ''))[:80]}")
     if a.get("waiting"):
         lines.append("waiting: " + "; ".join(a["waiting"]))
-    lines.append(f"the report record · {str(res.get('record', ''))[:34]}…")
+    lines.append(_sent("journey-report-line",
+                       "the full report is saved on the record (⟦short⟧…)",
+                       short=str(res.get("record", ""))[:18]))
     if a.get("coordinate_citations"):
         lines.append(f"the coordinate · {a['coordinate_citations']} "
                      "record(s) across the floors cite this objective (0033)")

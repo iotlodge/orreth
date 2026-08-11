@@ -70,6 +70,7 @@ flowchart LR
   SELF --> CAP["capability tokens (0006)<br/>attenuation-only, chained to the root"]
   CAP --> LAW["the resolved law (0007)<br/>floors tighten-only · content-addressed context —<br/>every run pins the context_hash it ran under"]
   LAW --> ACT["EVERY ACT<br/>authorized · metered under its own DID (0019) ·<br/>scribe-signed, author ≠ agent (0005) —<br/>nothing grades its own yardstick"]
+  ACT --> STOP["the human can always STOP what the machine manages<br/>(covenant rule 11 — 0051): cancel/rest governed + recorded,<br/>never a deletion; a lever the human lacks is a defect"]
   ACT --> REF["refusal wears ONE face (0002 §4)<br/>authz-miss ≡ budget-miss ≡ missing record —<br/>a prober learns nothing"]
   ACT --> EPOCH["the machine has a NAME (0041)<br/>the CanonEpoch — drift is news,<br/>the revert is a sibling, never a deletion"]
   ACT --> DEED["external consequence (0042)<br/>never complete on the actor's word alone —<br/>effect classes price the ceremony"]
