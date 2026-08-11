@@ -802,3 +802,11 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 |---|---|---|
 | `backend/conformance/orreth_sim/speech.py` + `tests/test_speech.py` | Fable 5 (claude-fable-5) | 13 wave-1 sentence templates (gate cards + parlor notes) with ⟦slot⟧ facts, parity-tested byte-for-byte against the literals they replace; strict render refuses unfilled slots by name; the refusal family structurally absent (0002 §4). Suite 322→328. |
 | `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | `sentence()` — one voice from the universe shelf (cached, genesis fallback that speaks loudly, never silently); the improver plants sentences beside the prompts; seven call sites (calibration · verify pair · closure · reflex escalation · thumb reply · dispatcher note) now speak from the shelf. Proven live: 13 plantings, registry family at v1, byte-identical render. |
+
+## Fable 5 — 2026-08-11 (0050 sp2 — the plain-speech pass: the machine's new voice, and the watchdog's honest accusation)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/conformance/orreth_sim/speech.py` + `tests/test_speech.py` | Fable 5 (claude-fable-5) | OUTCOME_SPOKEN (total over the thumb's outcomes, suite-held) + the born-human pair fragment; 13 v2 rewrites landed as shelf siblings via the door, never code. |
+| `backend/conformance/console_worker.py` | Fable 5 (claude-fable-5) | `_work_glimpse` — the calibration card shows the judged WORK, not the hash; closure speaks OUTCOME_SPOKEN. |
+| `orreth_sim/epoch.py` + `tests/test_epoch.py` + worker `_ADOPTION_KINDS` | Fable 5 (claude-fable-5) | The find: the pass drew two honest drift accusations — `craft-edit` was the missing adoption word. Vocabulary grown in sim and worker with the lesson-test (suite 328→330); both accusations LEFT ON RECORD, 0043's precedent honored. |

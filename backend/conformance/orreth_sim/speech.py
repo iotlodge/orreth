@@ -48,6 +48,27 @@ SENTENCES = {
     # ---- the parlor's system notes ------------------------------------------
     "note-dispatcher":
         "⚡ the dispatcher chose «⟦flavor⟧» — ⟦why⟧ [choice ⟦choice⟧…]",
+    # ---- born human (0050 sp2 — genesis entered already plain) --------------
+    "card-calibration-pair":
+        "«⟦work⟧» — you said ⟦human⟧, the examiner said ⟦examiner⟧",
+}
+
+# 0050 sp2 — how an outcome is SAID to the human who caused it: the routing's
+# machine words (thumb.OUTCOME_FOR and kin) translated for the closure card.
+# Total over thumb.OUTCOMES, suite-held — a new outcome without its sentence
+# is a conformance failure, never a card mumbling machine-speak.
+OUTCOME_SPOKEN = {
+    "repair-staged": "a repair objective now waits for your approval",
+    "commissioned": "Orreth is building the skill you found missing — "
+                    "it will wait for your welcome",
+    "evidenced": "your words were filed as evidence toward improving "
+                 "that craft",
+    "referred": "you were pointed to the keeper whose charter it is",
+    "parked": "Orreth could not classify it yet — your words stay open, "
+              "never dropped",
+    "adopted": "the change you argued for was adopted",
+    "repaired": "the repair completed",
+    "declined": "it was declined, with the reason on the record",
 }
 
 

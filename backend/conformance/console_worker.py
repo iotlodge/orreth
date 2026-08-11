@@ -4812,6 +4812,9 @@ _LAG: dict = {}          # scope → {"t": first_seen, "staged": bool}
 
 _ADOPTION_KINDS = ("release",                 # Canon change = epoch release (0045 sp3)
                    "improvement", "estate-adopt", "field-join", "drift",
+                   "craft-edit",  # the one-motion door: the request IS the
+                   #  human's word (0045 sp2) — learned 0050 sp2 when the
+                   #  plain-speech siblings drew the honest accusation
                    "experiment")   # 0043 sp4's promotion IS an adoption — the
 #   first live rollout taught the watchdog its missing word (JB left the
 #   honest false accusation on record, 2026-07-30)
@@ -8134,7 +8137,8 @@ def feedback_beat(port: int) -> None:
             card = call(port, "POST", "/requests", {
                 "kind": "feedback-closure", "of": fb["id"],
                 "text": sentence(port, "card-feedback-closure",
-                                 outcome=outcome)
+                                 outcome=speech.OUTCOME_SPOKEN.get(outcome,
+                                                                   outcome))
                         + (sentence(port, "card-feedback-closure-ref",
                                     ref=ref[:22]) if ref else "")
                         + (sentence(port, "card-feedback-closure-why",
@@ -8207,8 +8211,25 @@ def calibration_beat(port: int) -> None:
         if (prev.get("pairs"), prev.get("mean_gap")) == \
                 (out["pairs"], out["mean_gap"]):
             return                            # the same argument, already worded
-    ex = " · ".join(f"[{p['of'][:14]}…] human {p['human']} vs examiner "
-                    f"{p['examiner']}" for p in out["sample"][:3])
+    # sp2 (0050): the card shows the WORK, not the hash — a glimpse of each
+    # disputed piece rides the pair fragment; the words live on the shelf
+    def _work_glimpse(of: str) -> str:
+        try:
+            b = call(port, "GET", "/records/"
+                     + urllib.parse.quote(of, safe="") + "/body") or {}
+        except Exception:
+            return of[:20] + "…"              # unreadable — the hash, honestly
+        for path_keys in (("outcome", "answer"), ("objective_outcome",
+                                                  "objective"),
+                          ("exchange", "reply"), ("audience", "asked")):
+            v = (b.get(path_keys[0]) or {})
+            if isinstance(v, dict) and v.get(path_keys[1]):
+                return str(v[path_keys[1]])[:60]
+        return str(b)[:60]
+    ex = " · ".join(sentence(port, "card-calibration-pair",
+                             work=_work_glimpse(p["of"]),
+                             human=p["human"], examiner=p["examiner"])
+                    for p in out["sample"][:3])
     try:
         card = call(port, "POST", "/requests", {
             "kind": "calibration",

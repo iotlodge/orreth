@@ -37,7 +37,11 @@ _ZONES = ("assets", "plane", "worldlines", "floors")
 #  busy universe never hides drift behind ordinary conversation
 ADOPTION_KINDS = ("improvement", "estate-adopt", "field-join", "drift",
                   "experiment",
-                  "release")     # Canon change = epoch release (0045 sp3, JB's lock)
+                  "release",     # Canon change = epoch release (0045 sp3, JB's lock)
+                  "craft-edit")  # the one-motion door: the request IS the
+#  human's word (0045 sp2), so a sentence/asset edit through it is an
+#  adoption by definition — learned 0050 sp2, when thirteen plain-speech
+#  siblings drew an honest accusation exactly as «experiment» once did
 
 
 def _body(r: dict) -> dict:

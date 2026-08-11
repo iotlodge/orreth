@@ -178,3 +178,19 @@ def test_the_epoch_knows_the_experiments_word():
     cut = epoch.cut_epoch(fld, seat, kp, now=1500.0, requests=[word])
     assert cut["turned"] and cut["drift"] is None    # recognized, quiet
     assert "assets.routing-standard" in cut["changed"]
+
+
+def test_the_epoch_knows_the_craft_edits_word():
+    """0050 sp2's lesson, made law: a craft-edit through the one-motion door
+    IS an adoption — the request is the human's word (0045 sp2), so thirteen
+    plain-speech sentence siblings must accuse no one. The first plain-speech
+    pass was honestly accused because this word was missing; the accusation
+    stayed on record and the vocabulary grew — «experiment»'s exact lesson,
+    relearned for speech."""
+    fld, seat, kp = _floor()
+    _plant(fld, seat, kp)
+    epoch.cut_epoch(fld, seat, kp, requests=[], now=1000.0)
+    _plant(fld, seat, kp, default="hybrid")          # the Canon moves…
+    word = _word(kind="craft-edit", landed=1400)     # …behind a one-motion edit
+    cut = epoch.cut_epoch(fld, seat, kp, now=1500.0, requests=[word])
+    assert cut["turned"] and cut["drift"] is None    # recognized, quiet

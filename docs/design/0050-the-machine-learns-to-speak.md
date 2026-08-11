@@ -79,6 +79,24 @@ never bare hashes.
    the walk-back, the join, the commission welcome, the charter/reflex
    cards — and the parlor's dispatcher notes (G4: «hybrid — no shape
    matched» never again). Proven by a naive walk, before/after, in Chrome.
+   **LANDED + PROVEN LIVE 2026-08-11.** Thirteen v2 siblings through the
+   one-motion door in one sitting (req-593…605, lineage kept, old versions
+   standing behind); `OUTCOME_SPOKEN` total over the thumb's vocabulary
+   (suite-held — a new outcome without its sentence is a conformance
+   failure); the calibration card now shows THE WORK: a new `_work_glimpse`
+   feeds the born-human pair fragment, so the live card read *«survey the
+   state of every floor…» — you said 1.0, the examiner said 0.1* where a
+   hash used to sit, under a held-note that explains both buttons and
+   promises no settings move. The closure spoke whole: "Your thumbs-down
+   was read and acted on: your words were filed as evidence toward
+   improving that craft… Orreth's reading of your words: …". **The find:
+   the watchdog honestly ACCUSED the pass** — thirteen moved heads, no
+   adoption the epoch could see, two drift cards staged. The missing word
+   was `craft-edit` (the one-motion request IS the human's word): it joined
+   ADOPTION_KINDS in worker AND sim with its lesson-test
+   (`test_the_epoch_knows_the_craft_edits_word`, suite 328→330), and both
+   accusations were LEFT ON RECORD — «experiment»'s 0043 lesson, relearned
+   for speech, honored the same way.
 3. **sp3 — the first UAT persona.** One human-skilled walker agent
    (flavors pattern, own DID, joins at becky's gate) wearing a persona
    craft record; walks one real objective family daily; files every

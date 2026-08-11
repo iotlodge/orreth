@@ -75,6 +75,18 @@ def test_an_unfilled_slot_refuses_by_name():
     assert speech.render("plain words", unused="x") == "plain words"
 
 
+def test_every_outcome_has_its_spoken_sentence():
+    """sp2: the closure card never mumbles machine-speak — OUTCOME_SPOKEN is
+    total over the thumb's outcome vocabulary, and the pair fragment (born
+    human) renders a stranger-readable line."""
+    from orreth_sim import thumb
+    assert set(speech.OUTCOME_SPOKEN) == set(thumb.OUTCOMES)
+    got = speech.render(speech.SENTENCES["card-calibration-pair"],
+                        work="the week's health note", human=1.0, examiner=0.1)
+    assert got == ("«the week's health note» — you said 1.0, "
+                   "the examiner said 0.1")
+
+
 def test_the_refusal_family_is_structurally_absent():
     """0002 §4: refusal wears ONE face. No sentence on this shelf may be a
     refusal — it arrives later as a single guarded object, never piecemeal."""
