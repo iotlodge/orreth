@@ -46,6 +46,7 @@ with confidence.
 
 | Boundary | Where it stands | The gate that moves it |
 |---|---|---|
+| A human runs the machine from ONE seat — everything waiting decidable in one place, every mention a door | 0052 (2026-08-12): mechanics proven live — master-detail inbox, in-pane decisions with the human's words, linkified doors, the record-reader — but the vision owner's lived verdict stayed "rather unusable": legible furniture atop an undifferentiated card soup | 0053: the two books worn on every card + a real Chronicle purpose beneath; the seat re-walked then |
 | Several cognition paths are deterministic scaffolds or simulated judges; the plane correctly authorizes and meters while execution stays cognition-side | intentional v0 posture; the LIVE judge exists (mentee haiku · judge sonnet, another floor's mind) but falls back to the honestly-labeled sim judge when ground is thin | widen live-judge coverage; keep the fallback labeled |
 | The wire objective fingertip proves choreography + receipts more strongly than open-ended autonomous work | true; the walks are real but the flows are composed | harder, less-scripted Objectives through the fingertip, receipts unchanged |
 | Request-status transitions are persisted but unsigned — signer-registry work unfinished | named in the worker itself ("by the human seat (v0 — unsigned until 0012's registry)") | 0012 registry build |

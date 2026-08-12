@@ -906,3 +906,10 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 | `agents/flavors/04-uat/web.py` | Fable 5 (claude-fable-5) | Her eye learned patience: the Universe view animates forever, so a timed-out screenshot retries without the virtual-time budget — the uni room rendered and was judged for the first time. And her report card confesses its edge instead of silently cutting the tail; every finding prints to her own log as found. |
 
 Her second walk (req-694): **Stable 0 findings, Pulse 0 findings** (both were all-jargon rooms); the uni view rendered; the dev leak, "Plant"/"Saddle", charlotte/ada by name, worldline/manifest-hash all gone from her list. What remains is the deeper layer — Universe/Objectives/Observatory vocabulary and a VISIBLE sidebar legend (tooltips are hover-only; a screenshot can't see them, and neither does a newcomer until told) — named for the season's organ dives.
+
+## Fable 5 — 2026-08-12 (the course correction — Orreth, and what Orreth does)
+
+| File | Author | Note |
+|---|---|---|
+| `docs/design/0053-the-first-purpose.md` | Fable 5 (claude-fable-5) | The season's course correction, landed on JB's word ("we have to do something different before we trash Orreth"). One line: a real purpose writing a real Chronicle, the two books visible on every card, memory proven against it. Three steps — one thin Trading Desk (reports only, never execution) · Chronicle/Machine chips from 0039's own classes with a purpose-first Inbox · the memory program (census, the live metabolism beat, JB's ten questions scored weekly). Four locks staged. |
+| `0049` · `0052` · `VERSION` · register · road | Fable 5 (claude-fable-5) | 0049 suspended to a reference map; 0052 closed AS-IS at era 0.52 with the honest verdict on its face ("rather unusable" — legible furniture atop an undifferentiated card soup); the register carries the one-seat claim as an intentional partial gated on 0053. |

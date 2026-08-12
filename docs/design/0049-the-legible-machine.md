@@ -6,7 +6,11 @@
      Capabilities pull · Farm/Stable/Pulse depth · the central-control law).
      Status: CHARTER v2 — for the prioritization session; nothing locked. -->
 
-**Status: 🧭 CHARTER v2 — 2026-08-11, awaiting the prioritization session.**
+**Status: ⏸ SUSPENDED TO A REFERENCE MAP — 2026-08-12, JB's course
+correction ("we have to do something different before we trash Orreth").
+The threads stay named; none run. The season narrows to
+[0053 — The First Purpose](0053-the-first-purpose.md); threads re-enter
+only where its three steps demand them.**
 
 ## 1. The frame — JB's north star, verbatim
 

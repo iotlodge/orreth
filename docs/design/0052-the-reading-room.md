@@ -7,8 +7,14 @@
      around and and and.. (frustration)." The dive's one promise: the
      bouncing ends. -->
 
-**Status: 🟢 OPENED 2026-08-11 — three spoonfuls + the judge's walk; the
-closing judge is JB's own hands.**
+**Status: 🔒 CLOSED AS-IS 2026-08-12, era 0.52 — at JB's course-correction
+word, not his delight. The mechanics stand proven (master-detail inbox,
+in-pane decisions with words, every mention a door, the record-reader);
+his lived verdict stayed "rather unusable" — legible furniture atop an
+undifferentiated card soup. The lesson and the answer live in
+[0053 — The First Purpose](0053-the-first-purpose.md): the two books worn
+on every card, a real Chronicle purpose beneath them. No more polish
+rounds in this room.**
 
 ## 1. The one-line brief
 
