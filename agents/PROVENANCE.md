@@ -888,3 +888,11 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 | File | Author | Note |
 |---|---|---|
 | `window.html` | Fable 5 (claude-fable-5) | JB's finds: archive clicks opened the OVERLAY while the in-flow pane kept the old selection — two surfaces, stale views. Inside the Inbox every request click now lands in the one in-flow pane, and a chosen archive item is never overridden by the waiting-list default. The tiny inputs grew to multi-line textareas — a human answer takes the room it needs. |
+
+## Fable 5 — 2026-08-12 (quinn's eyes — the UAT persona looks at the REAL glass)
+
+| File | Author | Note |
+|---|---|---|
+| `orreth_agent/chassis.py` | Fable 5 (claude-fable-5) | GovernedThink accepts content parts — a governed EYE is metered like a governed thought; same authorize→execute→meter, image or not. |
+| `agents/flavors/04-uat/web.py` | Fable 5 (claude-fable-5) | quinn-web: headless Chrome renders each Console view; her shelf persona judges the SCREENSHOT under her own DID and lease; the whole list lands as one uat-report. First walk: 8 rooms, 25 findings — including the class only rendered pages show (truncated text, dev-console leakage, identical rows, insider vocabulary across Farm/Stable/Governance) and the uni view timing out for a headless eye (a finding in itself). |
+| `console_worker.py` · `window.html` | Fable 5 (claude-fable-5) | The uat-report door; JB's three finds fixed: tab switches close the overlay, the Objectives twin-pane redundancy removed, ONE decision layout everywhere (words above, buttons beneath, inside the card) with the answer box multi-line. |

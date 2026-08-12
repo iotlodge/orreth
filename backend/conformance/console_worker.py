@@ -9031,6 +9031,15 @@ def main() -> None:
                         elif r.get("kind") == "thumb" and r.get("status") == "pending":
                             handled.add(key)
                             on_thumb(port, scope, r)
+                        elif r.get("kind") == "uat-report" and \
+                                r.get("status") == "pending":
+                            handled.add(key)
+                            call(port, "POST", "/requests/resolve",
+                                 {"id": r["id"], "status": "done",
+                                  "result": {"reply": "received — the "
+                                             "architect triages every line"}})
+                            print(f"  👁 uat-report {r['id']}: "
+                                  f"{str(r.get('text') or '')[:100]}")
                         elif r.get("kind") == "gate-word" and \
                                 r.get("status") == "pending":
                             handled.add(key)

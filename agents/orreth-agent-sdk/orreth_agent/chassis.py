@@ -162,14 +162,19 @@ class GovernedThink:
         self.client, self.max_tokens = client, max_tokens
         self.last_tokens, self.last_calls = 0, 0
 
-    def __call__(self, klass: str, prompt: str) -> str:
+    def __call__(self, klass: str, prompt: str, *, content=None) -> str:
+        """content (0052 — quinn's eyes): an optional litellm content-parts
+        list (text + image parts) replacing the plain prompt in the message;
+        `prompt` still sizes the estimate. Same authorize → execute → meter,
+        image or not — a governed eye is metered like a governed thought."""
         import litellm                                            # optional extra: [governed]
-        est = self.max_tokens + len(prompt) // 3
+        est = self.max_tokens + len(prompt) // 3 + (1500 if content else 0)
         grant = self.client.authorize(klass, est)
         if not grant or "model" not in grant:
             raise PermissionError("the plane refused this class under the current lease")
         resp = litellm.completion(model=grant["model"],
-                                  messages=[{"role": "user", "content": prompt}],
+                                  messages=[{"role": "user",
+                                             "content": content or prompt}],
                                   max_tokens=self.max_tokens)
         tokens = resp.usage.total_tokens
         try:
