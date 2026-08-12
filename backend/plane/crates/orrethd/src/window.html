@@ -810,6 +810,50 @@
   .ogate .k{color:var(--star);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ogate .a{font-family:var(--mono);color:var(--brass);flex:0 0 auto}
   .ogate .a.old{color:var(--red)}
+
+  /* ── 0054 sp4 · the capabilities pull — worlds atop Orreth (L-C v1) ── */
+  #cappull{position:fixed;right:0;top:34%;z-index:61;writing-mode:vertical-rl;background:var(--deep);
+    border:1px solid var(--brassdim);border-right:none;border-radius:8px 0 0 8px;color:var(--brass);
+    padding:.85rem .35rem;font-size:.62rem;letter-spacing:.32em;cursor:pointer;user-select:none;
+    text-transform:uppercase;opacity:.85}
+  #cappull:hover{opacity:1;background:var(--hair)}
+  #capworld{position:fixed;top:0;right:-82%;width:80%;height:100%;z-index:60;background:var(--void);
+    border-left:1px solid var(--hair2);transition:right .28s ease;display:flex;flex-direction:column;
+    overflow:hidden;box-shadow:-18px 0 48px var(--scrim)}
+  #capworld.capopen{right:0}
+  #caphead{display:flex;align-items:center;gap:.8rem;padding:.9rem 1.4rem;border-bottom:1px solid var(--hair)}
+  #caphead b{color:var(--brass);letter-spacing:.14em;font-size:.72rem;text-transform:uppercase}
+  #capbody{flex:1;overflow-y:auto;padding:1.1rem 1.6rem 3rem}
+  .dk-world{font-size:.85rem;margin-bottom:.6rem}
+  .dk-law{color:var(--faint);font-size:.68rem;margin-top:.15rem}
+  .dk-pick{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;margin:.5rem 0}
+  .dk-dl{margin-left:auto;color:var(--brass);font-size:.72rem;text-decoration:none;
+    border:1px solid var(--brassdim);border-radius:6px;padding:.3rem .6rem}
+  .dk-dl:hover{background:var(--hair)}
+  .dk-hero{display:flex;gap:.8rem;align-items:center;margin:.5rem 0 .3rem;font-size:.85rem}
+  .dk-badge{border:1px solid;border-radius:6px;padding:.18rem .55rem;font-size:.78rem;letter-spacing:.06em}
+  .dk-tgt{color:var(--star)}
+  .dk-pend{color:var(--brass);font-size:.66rem;border:1px dashed var(--brassdim);border-radius:5px;padding:.12rem .4rem}
+  .dk-dq{color:var(--red);font-size:.7rem;margin:.25rem 0}
+  .dk-strip{display:flex;flex-wrap:wrap;gap:.3rem;margin:.45rem 0 .6rem}
+  .dk-dot{color:var(--near);font-size:.62rem;border:1px solid var(--hair);border-radius:5px;padding:.1rem .35rem}
+  .dk-dot i{color:var(--dim);font-style:normal;margin-left:.25rem}
+  .dk-chart{width:100%;max-width:960px;display:block;background:var(--deep);border:1px solid var(--hair);
+    border-radius:8px;margin:.3rem 0;padding:.2rem}
+  .dk-tabs{display:flex;gap:.35rem;flex-wrap:wrap;margin:.7rem 0 .5rem}
+  .dk-tab{background:var(--deep);border:1px solid var(--hair);color:var(--dim);border-radius:6px;
+    padding:.3rem .65rem;font-size:.72rem;cursor:pointer}
+  .dk-tab.on{color:var(--brass);border-color:var(--brassdim)}
+  .dk-md{max-width:960px;font-size:.82rem;line-height:1.55;color:var(--star)}
+  .dk-md h2{color:var(--brass);font-size:.95rem;margin:.9rem 0 .35rem;border-bottom:1px solid var(--hair);padding-bottom:.25rem}
+  .dk-md h3{color:var(--brass);font-size:.85rem;margin:.8rem 0 .3rem}
+  .dk-md h4{color:var(--dim);font-size:.78rem;margin:.6rem 0 .25rem}
+  .dk-md p{margin:.28rem 0}
+  .dk-md ul{margin:.3rem 0 .3rem 1.2rem}
+  .dk-md li{margin:.18rem 0}
+  .dk-md code{background:var(--deep);border:1px solid var(--hair);border-radius:4px;padding:0 .25rem;font-size:.92em}
+  .dk-md hr{border:none;border-top:1px solid var(--hair);margin:.8rem 0}
+  .dk-sp{height:.3rem}
 </style>
 </head>
 <body>
@@ -1061,6 +1105,14 @@
      anything anywhere, it opens HERE; the list never scrolls away; deciding
      and speaking happen where you read. One rail, one attention: the parlor
      takes precedence when you visit someone; the reader returns after. -->
+<!-- ── 0054 sp4 · the capabilities pull: applied-purpose worlds atop Orreth ── -->
+<div id="cappull" onclick="capToggle()" title="the capabilities — applied-purpose worlds installed atop Orreth">📈 capabilities</div>
+<div id="capworld">
+  <div id="caphead"><b>THE CAPABILITIES · WORLDS ATOP ORRETH</b>
+    <span class="dim" style="font-size:.68rem">applied purposes, installed — the Machine below, the worlds above</span>
+    <button class="dk-tab" style="margin-left:auto" onclick="capToggle()">✕ close</button></div>
+  <div id="capbody"></div>
+</div>
 <div class="parlor rdr" id="reader">
   <div class="phd"><span class="rdr-crumb" id="rdr-back" onclick="readerBack()" style="display:none" title="back — reading is a walk, and walks retrace">←</span><span class="nm" id="rdr-title" style="white-space:normal">—</span>
     <span class="x" onclick="readerClose()" style="margin-left:auto">✕</span></div>
@@ -3626,6 +3678,100 @@ window.addEventListener("resize",()=>{if(!$("v-uni").classList.contains("hide"))
       beat turns the room dark, loudly — the one failure a monitoring organ
       must never have is silence about itself. ── */
 const OBSD=`${location.protocol}//${location.hostname}:4562`;
+
+/* ── 0054 sp4 · the capabilities pull — one lever, one world (L-C v1).
+      The desk view drinks /desk on the worker's door: reports, stages, and
+      charts PROJECTED from f:charles's records (rule 7) — the glass never
+      holds a second truth, and the full artifacts ride the bundle. ── */
+let DESK=null,DKTAB="polished",DKIDX=0;
+function capToggle(){const w=$("capworld");w.classList.toggle("capopen");
+  if(!w.classList.contains("capopen"))return;
+  if(!DESK)loadDesk();else renderDesk();}
+async function loadDesk(){
+  $("capbody").innerHTML=`<div class="dim" style="padding:2rem">the desk is being read from its records…</div>`;
+  try{DESK=await (await fetch(`${OBSD}/desk`)).json()}
+  catch(e){$("capbody").innerHTML=`<div class="dim" style="padding:2rem">the desk's door did not answer — is the worker awake?</div>`;return}
+  renderDesk();}
+function dkEsc(s){return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function dkMd(t){
+  const lines=dkEsc(t).split("\n");let out="",inList=false;
+  for(const ln of lines){
+    if(/^\s*[-*] /.test(ln)){if(!inList){out+="<ul>";inList=true}out+=`<li>${ln.replace(/^\s*[-*] /,"")}</li>`;continue}
+    if(inList){out+="</ul>";inList=false}
+    if(/^### /.test(ln))out+=`<h4>${ln.slice(4)}</h4>`;
+    else if(/^## /.test(ln))out+=`<h3>${ln.slice(3)}</h3>`;
+    else if(/^# /.test(ln))out+=`<h2>${ln.slice(2)}</h2>`;
+    else if(/^---+$/.test(ln.trim()))out+="<hr>";
+    else if(ln.trim()==="")out+="<div class='dk-sp'></div>";
+    else out+=`<p>${ln}</p>`}
+  if(inList)out+="</ul>";
+  return out.replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>")}
+function dkSection(md,head){
+  const parts=("\n"+md).split(/\n(?=## )/);
+  return parts.find(x=>x.toLowerCase().startsWith("## "+head.toLowerCase()))||""}
+function dkBadge(r){const c={buy:"var(--near)",overweight:"var(--near)",hold:"var(--brass)",
+  underweight:"var(--red)",sell:"var(--red)"}[String(r||"").toLowerCase()]||"var(--dim)";
+  return `<span class="dk-badge" style="border-color:${c};color:${c}">${dkEsc(r||"—")}</span>`}
+function dkChart(rep){
+  const P=(rep.charts||{}).price_series||[];if(!P.length)return `<div class="dim">no chart series on the record — the bundle carries them</div>`;
+  const IS=(rep.charts||{}).indicator_series||{};
+  const W=920,H=210,pad=34;
+  const closes=P.map(p=>p.close);
+  const s50=(IS.close_50_sma||[]).map(x=>x.value),s200=(IS.close_200_sma||[]).map(x=>x.value);
+  const all=[...closes,...s50,...s200].filter(v=>v!=null);
+  const lo=Math.min(...all),hi=Math.max(...all);
+  const X=i=>pad+i*(W-pad-8)/((P.length-1)||1),Y=v=>H-18-(v-lo)*(H-36)/((hi-lo)||1);
+  const line=(vals,col,w)=>{const pts=vals.map((v,i)=>v==null?null:`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).filter(Boolean).join(" ");
+    return `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="${w}"/>`};
+  const rsi=(IS.rsi||[]).map(x=>x.value);
+  const RY=v=>v==null?null:52-(v/100)*44;
+  const rpts=rsi.map((v,i)=>v==null?null:`${X(i).toFixed(1)},${RY(v).toFixed(1)}`).filter(Boolean).join(" ");
+  return `<svg viewBox="0 0 ${W} ${H}" class="dk-chart">
+    <text x="${pad}" y="14" fill="var(--dim)" font-size="10">${dkEsc(rep.ticker)} · last ${P.length} sessions · close ${(+closes.at(-1)).toFixed(2)} · high ${hi.toFixed(2)} · low ${lo.toFixed(2)}</text>
+    ${line(closes,"var(--star)",1.6)}${line(s50,"var(--brass)",1)}${line(s200,"var(--viol)",1)}
+    <text x="${W-170}" y="14" fill="var(--brass)" font-size="10">— 50 sma</text>
+    <text x="${W-95}" y="14" fill="var(--viol)" font-size="10">— 200 sma</text></svg>
+  <svg viewBox="0 0 ${W} 58" class="dk-chart">
+    <text x="${pad}" y="12" fill="var(--dim)" font-size="10">rsi ${rsi.at(-1)==null?"—":(+rsi.at(-1)).toFixed(1)} · 70/30 rails dashed</text>
+    <line x1="${pad}" y1="${RY(70)}" x2="${W-8}" y2="${RY(70)}" stroke="var(--hair)" stroke-dasharray="3 3"/>
+    <line x1="${pad}" y1="${RY(30)}" x2="${W-8}" y2="${RY(30)}" stroke="var(--hair)" stroke-dasharray="3 3"/>
+    <polyline points="${rpts}" fill="none" stroke="var(--blue)" stroke-width="1.2"/></svg>`}
+const DKTABS=[["polished","Full Report"],["overview","Overview"],["delta","Δ vs Prior"],["market","Market"],
+  ["sentiment","Sentiment"],["news","News"],["fundamentals","Fundamentals"],["debate","Debates"]];
+function renderDesk(){
+  const B=$("capbody");if(!DESK)return;
+  const reps=DESK.reports||[];
+  const world=(DESK.worlds||[])[0]||{};
+  if(!reps.length){B.innerHTML=`<div class="dim" style="padding:2rem">${world.emoji||"📈"} the desk stands, but no report is on the record yet — approve charles's next walk and the first one lands here</div>`;return}
+  DKIDX=Math.min(DKIDX,reps.length-1);
+  const rep=reps[DKIDX];
+  const pick=reps.map((r,i)=>`<button class="dk-tab${i===DKIDX?" on":""}" onclick="DKIDX=${i};renderDesk()">${dkEsc(r.ticker)} · ${dkEsc(r.date)}</button>`).join("");
+  const strip=(rep.stages||[]).map(x=>`<span class="dk-dot" title="${dkEsc(x.digest)}">✓<i>${dkEsc(x.stage)}</i></span>`).join("");
+  const dq=(rep.data_quality_errors||[]).length?`<div class="dk-dq">⚠ ${rep.data_quality_errors.length} data source(s) were dark this run — the report says so honestly</div>`:"";
+  const md=rep.markdown||"";
+  const sect=h=>{const x=dkSection(md,h);return x?dkMd(x):`<p class="dim">(this section did not land in the polished report — the full artifacts ride the bundle ⬇)</p>`};
+  const bodies={polished:dkMd(md),
+    overview:dkMd([dkSection(md,"Final Decision"),dkSection(md,"Why"),dkSection(md,"Risks")].filter(Boolean).join("\n\n")),
+    delta:sect("Delta vs Prior"),market:sect("Market"),sentiment:sect("Sentiment"),
+    news:sect("News"),fundamentals:sect("Fundamentals"),debate:sect("Debate")};
+  B.innerHTML=`
+   <div class="dk-world">${world.emoji||"📈"} <b>${dkEsc(world.name||"the Trading Desk")}</b>
+     <span class="dim"> · ${dkEsc(world.resident||"")} · ${dkEsc(world.floor||"")}</span>
+     <div class="dk-law">${dkEsc(world.law||"")}</div></div>
+   <div class="dk-pick">${pick}
+     <a class="dk-dl" href="${OBSD}/desk/bundle?name=charles-${dkEsc(rep.ticker)}-${dkEsc(rep.date)}" download>⬇ download the bundle — the full 15-file report</a></div>
+   <div class="dk-hero">${dkBadge(rep.rating)}
+     <span class="dk-tgt">target ${dkEsc(rep.decision?.price_target??"—")}</span>
+     <span class="dim">· ${dkEsc(rep.decision?.time_horizon||"")}</span>
+     ${rep.outcome_pending?`<span class="dk-pend" title="the reflection loop will grade this call against what the market actually did">outcome pending</span>`:""}</div>
+   ${dq}
+   <div class="dk-strip">${strip}</div>
+   ${dkChart(rep)}
+   <div class="dk-tabs">${DKTABS.map(([k,l])=>`<button class="dk-tab${DKTAB===k?" on":""}" onclick="DKTAB='${k}';renderDesk()">${l}</button>`).join("")}</div>
+   <div class="dk-md">${bodies[DKTAB]||""}</div>`;}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("capworld").classList.contains("capopen"))capToggle()});
+if(location.hash.includes("cap"))setTimeout(capToggle,600);   // pull deep-link: #…&cap=1
+
 /* ── THE CRAFT ROOM (0045 sp1) — lives ABOVE applyHash's first call (the
       1:35 lesson): the registry is a projection over the signed shelves;
       bodies are read through the universe's records door on open. ── */

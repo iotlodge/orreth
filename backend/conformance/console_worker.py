@@ -1313,6 +1313,90 @@ _EMBED_LAST = 0.0
 EMBED_EVERY = int(os.environ.get("ORRETH_EMBED_EVERY", "90"))
 
 
+DESK_PORT, DESK_SCOPE = 4520, "u:demo/e:desk/f:charles"
+
+
+def compose_desk() -> dict:
+    """0054 sp4 — the desk's supply door: reports, stages, and charts
+    composed from f:charles's OWN records (rule 7 — the glass drinks a
+    projection of records, never a second truth). Charts dereference the
+    artifact pointer at this door; their bulk never lived in a record."""
+    from datetime import datetime, timedelta, timezone
+    _, seat_did = lib_seat(DESK_SCOPE)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc) - timedelta(days=120)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    r = call(DESK_PORT, "POST", "/retrieve", {
+        "query": {"requester": seat_did, "subject": {"cohort": {"scope": DESK_SCOPE}},
+                  "space": "self", "time": {"from": frm}, "intent": "recall",
+                  "budget": {"cost": 64}, "auth": "biscuit-sim"},
+        "token": token, "requester_scope": DESK_SCOPE})
+    reports, stages, charts_ptr = [], {}, {}
+    for h in r.get("hits", []):
+        tags = h.get("tags") or []
+        if "desk" not in tags:
+            continue
+        try:
+            body = call(DESK_PORT, "GET",
+                        f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
+        except Exception:
+            continue
+        if not isinstance(body, dict):
+            continue
+        key = (body.get("ticker"), body.get("date"))
+        if "report" in tags and body.get("report"):
+            reports.append({"ticker": body.get("ticker"), "date": body.get("date"),
+                            "rating": body.get("rating"),
+                            "markdown": str(body.get("report", ""))[:60000],
+                            "decision": body.get("decision") or {},
+                            "outcome_pending": bool(body.get("outcome_pending")),
+                            "data_quality_errors": body.get("data_quality_errors") or [],
+                            "ref": h["ref"], "at": h.get("occurred_at", "")})
+        elif "stage" in tags and body.get("stage"):
+            stages.setdefault(key, []).append(
+                {"stage": body["stage"], "at": h.get("occurred_at", ""),
+                 "digest": str(body.get("digest", ""))[:160]})
+        elif "charts" in tags and isinstance(body.get("artifact_pointer"), dict):
+            charts_ptr[key] = body["artifact_pointer"]
+    reports.sort(key=lambda x: x.get("at", ""), reverse=True)
+    seen = set()
+    keep = []
+    for rep in reports:                      # newest report per (ticker, date)
+        key = (rep["ticker"], rep["date"])
+        if key in seen:
+            continue
+        seen.add(key)
+        latest = {}                          # one strip per walk: latest per stage
+        for s in sorted(stages.get(key, []), key=lambda s: s["at"]):
+            latest[s["stage"]] = s
+        rep["stages"] = sorted(latest.values(), key=lambda s: s["at"])
+        rep["charts"] = {}
+        ptr = charts_ptr.get(key)
+        if ptr and ptr.get("path"):
+            try:
+                base = Path(ptr["path"])
+                rep["charts"] = {
+                    "price_series": json.loads((base / "price_series.json").read_text()),
+                    "indicator_series": json.loads((base / "indicator_series.json").read_text()),
+                    "sha256": ptr.get("sha256", "")}
+            except Exception:
+                rep["charts"] = {}
+        keep.append(rep)
+    return {"worlds": [{"key": "trading-desk", "name": "the Trading Desk",
+                        "emoji": "📈", "resident": "charles", "floor": DESK_SCOPE,
+                        "law": "the desk observes and reports — it never executes a trade"}],
+            "reports": keep[:10]}
+
+
+def desk_bundle_bytes(name: str) -> bytes | None:
+    """The bundle door: the ZIP the walk wrote, served by exact name only."""
+    import re as _re
+    if not _re.fullmatch(r"charles-[A-Z.\-]{1,12}-\d{4}-\d{2}-\d{2}", name):
+        return None
+    p = Path(__file__).resolve().parents[2] / "tmp" / f"{name}.zip"
+    return p.read_bytes() if p.exists() else None
+
+
 def embed_door() -> None:
     """The node machine's local embedder (0022 §10, bytes-local at machine
     granularity on the dev rig — the in-process fastembed-rs landing is the
@@ -1354,8 +1438,24 @@ def embed_door() -> None:
             any floor's port can drink them — behind the worker's own door,
             the plane untouched (rule 9)."""
             route = self.path.split("?")[0]
+            if route == "/desk/bundle":
+                # 0054 sp4 — the bundle door: the ZIP by exact name only
+                qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+                blob = desk_bundle_bytes((qs.get("name") or [""])[0])
+                if blob is None:
+                    self.send_response(404)
+                    self.end_headers()
+                    return
+                self.send_response(200)
+                self.send_header("content-type", "application/zip")
+                self.send_header("content-disposition",
+                                 f'attachment; filename="{(qs.get("name") or [""])[0]}.zip"')
+                self.send_header("access-control-allow-origin", "*")
+                self.end_headers()
+                self.wfile.write(blob)
+                return
             if route not in ("/observatory", "/governance", "/craft",
-                             "/sentences"):
+                             "/sentences", "/desk"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -1374,6 +1474,8 @@ def embed_door() -> None:
                         (qs.get("name") or [""])[0],
                         (qs.get("did") or ["anonymous-consumer"])[0],
                         pin=(qs.get("pin") or [None])[0])).encode()
+                elif route == "/desk":
+                    out = json.dumps(compose_desk()).encode()
                 else:
                     out = json.dumps(compose_governance()
                                      if route == "/governance"

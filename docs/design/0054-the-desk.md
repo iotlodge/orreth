@@ -158,6 +158,29 @@ a trade. The compliance disclaimer rides every report as policy craft.**
    rating badge, price + indicator charts, per-stage progress strip
    riding real records, the meter visible. (Its HOME — plain view vs
    the first world in a minimal Capabilities pull — is JB's lock L-C.)
+   **LANDED + SCREENSHOT-PROVEN 2026-08-12.** The Capabilities pull
+   exists (L-C v1): a brass lever on the glass's right edge — "the
+   Machine below, the worlds above" — sliding open the portal with the
+   Trading Desk as its first installed world; `#…&cap=1` deep-links it
+   open. The desk view drinks a NEW supply door (`GET :4562/desk`,
+   the observatory/governance pattern): reports, stages, and charts
+   composed from f:charles's OWN records via the librarian's seat
+   (rule 7 — the glass never holds a second truth; charts dereference
+   the artifact pointer at the door, their bulk never lived in a
+   record). In the frame: report picker · rating badge (color by call)
+   · target + horizon + the outcome-pending chip · the ⚠ dark-sources
+   line when data_quality says so · the 15-stage strip, each ✓ a real
+   record with its digest on hover · the price chart with 50/200-SMA
+   overlays + RSI with 70/30 rails, hand-rolled SVG from the pointer's
+   series · the eight tabs slicing the polished report's own sections ·
+   **⬇ the bundle door** (`GET :4562/desk/bundle?name=…`, exact-name
+   only, traversal refused 404) serving the 15-file ZIP. Build lesson
+   on record: a cwd-relative edit inside a background task failed
+   silently and the rebuild shipped without it — absolute paths in
+   backgrounded file edits, always. Honest notes: the analyst tabs
+   slice the POLISHED report (the full transcripts ride the bundle);
+   the pull is one lever + one world by design — install/create and
+   more worlds arrive with the pull's own dive.
 5. **sp5 — the standing word + the loop**: the watchlist as a 0032
    subscription (default: market-close weekdays, refresh mode — news
    re-runs, the rest reuses, ~70% cheaper); the reflection beat (5-day

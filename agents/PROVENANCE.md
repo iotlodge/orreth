@@ -937,3 +937,10 @@ Her second walk (req-694): **Stable 0 findings, Pulse 0 findings** (both were al
 | `agents/flavors/05-desk/pipeline.py` | Fable 5 (claude-fable-5) | The sixteen stages as charles's governed walk: shelf craft by ref, sonnet/opus per L-D, the Farm's door for data, gather under the ceiling for news, a signed record per stage, the bundle in the sample's exact shape. An empty reply retries once then confesses. |
 | `agents/flavors/05-desk/run.py` | Fable 5 (claude-fable-5) | --analyze: the desk-run plan gate up front — the walk waits for a human's word; silence is a no and says so. |
 | `console_worker.py` | Fable 5 (claude-fable-5) | gather() speaks typed findings on the queue path (note + title/content/url) — the desk's analysts read content, not admission counts; parlor prose and quarantine unchanged. |
+
+## Fable 5 — 2026-08-12 (0054 sp4 — the desk's glass: the first world atop Orreth)
+
+| File | Author | Note |
+|---|---|---|
+| `window.html` | Fable 5 (claude-fable-5) | The Capabilities pull (L-C v1): a right-edge lever sliding open the portal of applied-purpose worlds — one lever, one world, the Trading Desk. Report picker, rating badge, outcome-pending chip, the 15-stage strip from real records, hand-rolled SVG price/RSI charts from the pointer's series, eight tabs slicing the polished report, the bundle download. Deep-link #…&cap=1. |
+| `console_worker.py` | Fable 5 (claude-fable-5) | The desk's supply door (GET :4562/desk): reports, stages (deduped latest-per-stage), and charts composed from f:charles's records via the librarian's seat — rule 7, no second truth; charts dereference the pointer at the door. The bundle door (GET :4562/desk/bundle) serves the ZIP by exact name only; traversal 404s. |
