@@ -944,3 +944,13 @@ Her second walk (req-694): **Stable 0 findings, Pulse 0 findings** (both were al
 |---|---|---|
 | `window.html` | Fable 5 (claude-fable-5) | The Capabilities pull (L-C v1): a right-edge lever sliding open the portal of applied-purpose worlds — one lever, one world, the Trading Desk. Report picker, rating badge, outcome-pending chip, the 15-stage strip from real records, hand-rolled SVG price/RSI charts from the pointer's series, eight tabs slicing the polished report, the bundle download. Deep-link #…&cap=1. |
 | `console_worker.py` | Fable 5 (claude-fable-5) | The desk's supply door (GET :4562/desk): reports, stages (deduped latest-per-stage), and charts composed from f:charles's records via the librarian's seat — rule 7, no second truth; charts dereference the pointer at the door. The bundle door (GET :4562/desk/bundle) serves the ZIP by exact name only; traversal 404s. |
+
+## Fable 5 — 2026-08-12 (0054 sp5 — the standing word and the loop)
+
+| File | Author | Note |
+|---|---|---|
+| `console_worker.py` | Fable 5 (claude-fable-5) | The desk-watch doors: starting a standing walk stages with its terms readable and waits for the human; STOPPING is immediate and gateless (rule 11) — a cancelled posture is a sibling record, never an erasure. The supply door carries the watches; the world names its port. |
+| `orreth_sim/desk.py` | Fable 5 (claude-fable-5) | The 21st asset: charles-trading-reflection — the bookkeeper's words, on the shelf like all the rest. |
+| `agents/flavors/05-desk/pipeline.py` | Fable 5 (claude-fable-5) | Refresh mode (reuse under an honest banner; news always re-runs; degrades to full when the prior predates sections) · the report record carries its sections · grade_pending: outcome_pending reports graded against realized return vs SPY through the Farm's door, one lesson per report, graded_early said plainly. |
+| `agents/flavors/05-desk/run.py` | Fable 5 (claude-fable-5) | --tend: read the standing word from the wire, walk when due UNDER it (no per-run gate), rest when already walked, reflect when ripe. |
+| `window.html` | Fable 5 (claude-fable-5) | The standing word on the desk's wall with one-click stop — rule 11 visible in the room. |

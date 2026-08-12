@@ -1316,6 +1316,54 @@ EMBED_EVERY = int(os.environ.get("ORRETH_EMBED_EVERY", "90"))
 DESK_PORT, DESK_SCOPE = 4520, "u:demo/e:desk/f:charles"
 
 
+def on_desk_watch(port: int, scope: str, r: dict) -> None:
+    """0054 sp5 — the watchlist as the human's STANDING WORD (0032's law on
+    the desk): starting a standing walk is staged and waits for the human;
+    STOPPING one is immediate — rule 11, the human can always stop what the
+    machine manages, and stopping never needs a gate. The word is a signed
+    record on the desk's floor; a cancel is a sibling, never an erasure."""
+    seat_kp, seat_did = lib_seat(DESK_SCOPE)
+    agent = {"did": seat_did, "scope": DESK_SCOPE}
+    ticker = str(r.get("ticker") or "").upper()[:12]
+    if r.get("action") == "cancel" and r.get("status") == "pending":
+        rec = make_memory(agent, seat_kp, DESK_SCOPE,
+                          {"desk_watch": {"ticker": ticker, "posture": "cancelled",
+                                          "stopped_by": "the human's word",
+                                          "request": str(r.get("id") or "")}},
+                          kind="semantic", tags=["desk-watch", ticker])
+        call(DESK_PORT, "POST", "/records", rec)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": f"stopped by the human's word — charles's standing walk on "
+                        f"{ticker} rests (rule 11: stopping never needs a gate)"})
+        print(f"  ↳ desk-watch {r['id']}: {ticker} STOPPED on the human's word")
+        return
+    if r.get("status") == "pending":
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"note": "consequence waits for you (0012)",
+                         "terms": f"charles walks {ticker} every weekday at market close "
+                                  f"in refresh mode — ≤3 searches under the daily ceiling "
+                                  f"+ ~12 governed thoughts per walk under his own lease; "
+                                  f"standing until you stop it, and stopping never needs "
+                                  f"a gate"}})
+        print(f"  ↳ desk-watch {r['id']}: {ticker} staged — the human holds the word")
+        return
+    if r.get("status") == "approved":
+        rec = make_memory(agent, seat_kp, DESK_SCOPE,
+                          {"desk_watch": {"ticker": ticker,
+                                          "cadence": "weekdays-market-close",
+                                          "refresh": True, "posture": "walk",
+                                          "approved": str(r.get("id") or "")}},
+                          kind="semantic", tags=["desk-watch", ticker])
+        call(DESK_PORT, "POST", "/records", rec)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": f"the standing word stands — charles walks {ticker} every "
+                        f"weekday at the close until you stop it"})
+        print(f"  ↳ desk-watch {r['id']}: {ticker} — the standing word stands")
+
+
 def compose_desk() -> dict:
     """0054 sp4 — the desk's supply door: reports, stages, and charts
     composed from f:charles's OWN records (rule 7 — the glass drinks a
@@ -1331,10 +1379,10 @@ def compose_desk() -> dict:
                   "space": "self", "time": {"from": frm}, "intent": "recall",
                   "budget": {"cost": 64}, "auth": "biscuit-sim"},
         "token": token, "requester_scope": DESK_SCOPE})
-    reports, stages, charts_ptr = [], {}, {}
+    reports, stages, charts_ptr, watches = [], {}, {}, []
     for h in r.get("hits", []):
         tags = h.get("tags") or []
-        if "desk" not in tags:
+        if "desk" not in tags and "desk-watch" not in tags:
             continue
         try:
             body = call(DESK_PORT, "GET",
@@ -1358,6 +1406,10 @@ def compose_desk() -> dict:
                  "digest": str(body.get("digest", ""))[:160]})
         elif "charts" in tags and isinstance(body.get("artifact_pointer"), dict):
             charts_ptr[key] = body["artifact_pointer"]
+        elif "desk-watch" in tags and isinstance(body.get("desk_watch"), dict):
+            w = dict(body["desk_watch"])
+            w["at"] = h.get("occurred_at", "")
+            watches.append(w)
     reports.sort(key=lambda x: x.get("at", ""), reverse=True)
     seen = set()
     keep = []
@@ -1382,8 +1434,13 @@ def compose_desk() -> dict:
             except Exception:
                 rep["charts"] = {}
         keep.append(rep)
-    return {"worlds": [{"key": "trading-desk", "name": "the Trading Desk",
+    heads = {}
+    for w in sorted(watches, key=lambda x: x.get("at", "")):
+        heads[w.get("ticker")] = w                # latest word per ticker wins
+    return {"watches": list(heads.values()),
+            "worlds": [{"key": "trading-desk", "name": "the Trading Desk",
                         "emoji": "📈", "resident": "charles", "floor": DESK_SCOPE,
+                        "port": DESK_PORT,
                         "law": "the desk observes and reports — it never executes a trade"}],
             "reports": keep[:10]}
 
@@ -9267,6 +9324,10 @@ def main() -> None:
                         elif r.get("kind") == "thumb" and r.get("status") == "pending":
                             handled.add(key)
                             on_thumb(port, scope, r)
+                        elif r.get("kind") == "desk-watch" and \
+                                r.get("status") in ("pending", "approved"):
+                            handled.add(key)
+                            on_desk_watch(port, scope, r)
                         elif r.get("kind") == "uat-report" and \
                                 r.get("status") == "pending":
                             handled.add(key)

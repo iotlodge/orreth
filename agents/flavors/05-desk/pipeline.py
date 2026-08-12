@@ -93,7 +93,7 @@ def _think(fn, klass: str, prompt: str) -> str:
 
 
 def run(client, think_med, think_high, think_fmt, ticker: str, date: str,
-        say=print) -> dict:
+        say=print, refresh: bool = False) -> dict:
     """The whole walk. Returns {bundle, decision, rating, report_ref}."""
     from orreth_agent.craft import acquire
 
@@ -155,20 +155,37 @@ def run(client, think_med, think_high, think_fmt, ticker: str, date: str,
         record(name, out)
         return out
 
-    reports = {
-        "market": analyst("market-analyst",
+    prior_sections = (prior_report or {}).get("sections") or {}
+    if refresh and prior_sections:
+        # the cheap path (L-B): market/sentiment/fundamentals REUSE the prior
+        # walk's work under an honest banner; news ALWAYS re-runs — staleness
+        # in news is a wrong answer, staleness in a balance sheet is a banner
+        banner = (f"_(reused from the {prior_report.get('date', '?')} walk — "
+                  f"refresh mode; news re-ran fresh)_\n\n")
+        reports = {k: banner + str(prior_sections.get(k, ""))
+                   for k in ("market", "sentiment", "fundamentals")}
+        for k in ("market", "sentiment", "fundamentals"):
+            record(f"{k}-analyst" if k != "sentiment" else "social-analyst",
+                   f"reused from {prior_report.get('date', '?')} (refresh)")
+        reports["news"] = analyst("news-analyst",
+                                  f"Ticker: {ticker} · Date: {date}\n\nCOMPANY NEWS:\n"
+                                  + _findings_text(news) + "\n\nMACRO NEWS:\n"
+                                  + _findings_text(macro))
+    else:
+        reports = {
+            "market": analyst("market-analyst",
                           f"Ticker: {ticker} · Date: {date}\n\nINDICATORS:\n{ind_txt}\n\n"
                           f"LAST {len(rows)} SESSIONS (OHLCV):\n{tape}"),
-        "sentiment": analyst("social-analyst",
-                             f"Ticker: {ticker} · Date: {date}\n\nSOCIAL FINDINGS:\n"
-                             + _findings_text(social)),
-        "news": analyst("news-analyst",
-                        f"Ticker: {ticker} · Date: {date}\n\nCOMPANY NEWS:\n"
-                        + _findings_text(news) + "\n\nMACRO NEWS:\n" + _findings_text(macro)),
-        "fundamentals": analyst("fundamentals-analyst",
-                                f"Ticker: {ticker} · Date: {date}\n\nFUNDAMENTALS:\n{fund_txt}\n\n"
-                                f"STATEMENTS:\n{stmts}\n\nINSIDER:\n{insider}"),
-    }
+            "sentiment": analyst("social-analyst",
+                                 f"Ticker: {ticker} · Date: {date}\n\nSOCIAL FINDINGS:\n"
+                                 + _findings_text(social)),
+            "news": analyst("news-analyst",
+                            f"Ticker: {ticker} · Date: {date}\n\nCOMPANY NEWS:\n"
+                            + _findings_text(news) + "\n\nMACRO NEWS:\n" + _findings_text(macro)),
+            "fundamentals": analyst("fundamentals-analyst",
+                                    f"Ticker: {ticker} · Date: {date}\n\nFUNDAMENTALS:\n{fund_txt}\n\n"
+                                    f"STATEMENTS:\n{stmts}\n\nINSIDER:\n{insider}"),
+        }
     block = (f"MARKET:\n{_clip(reports['market'], 2500)}\n\n"
              f"SENTIMENT:\n{_clip(reports['sentiment'], 2000)}\n\n"
              f"NEWS:\n{_clip(reports['news'], 2500)}\n\n"
@@ -300,9 +317,78 @@ def run(client, think_med, think_high, think_fmt, ticker: str, date: str,
                     kind="episodic", tags=["desk", "charts", ticker])
     client.remember({"report": polished, "decision": decision, "ticker": ticker,
                      "date": date, "rating": decision.get("rating"),
-                     "outcome_pending": True,
+                     "outcome_pending": True, "refresh": refresh,
+                     "sections": {k: _clip(v, 8000) for k, v in reports.items()},
                      "data_quality_errors": dark[:6]},
                     kind="episodic", tags=["desk", "report", ticker, date])
     say(f"· the report is on the record; the bundle stands at {bundle}")
     return {"bundle": str(bundle), "zip": str(zpath),
             "rating": decision.get("rating"), "decision": decision}
+
+
+def grade_pending(client, think_med, say=print) -> int:
+    """The reflection beat (0054 sp5): every report still wearing
+    outcome_pending past the holding window gets graded against what the
+    market ACTUALLY did — realized return vs SPY over the same window, one
+    governed thought, one lesson on the record. The next walk's
+    retrieve-context recalls it. A grade before the full window says so
+    (graded_early) and keeps its lesson provisional. Returns lessons written."""
+    import os
+    from datetime import date as _date
+    from orreth_agent.craft import acquire
+
+    holding = int(os.environ.get("ORRETH_DESK_HOLDING_DAYS", "7"))
+    did, port = client.did, int(client.base.rsplit(":", 1)[1])
+    hits = client.recall(days=365).get("hits", [])
+    reports, reflected = [], set()
+    for h in hits:
+        body = client.body_of(h["ref"]) or {}
+        if body.get("report") and body.get("outcome_pending"):
+            reports.append((h["ref"], body))
+        if body.get("reflection") and body.get("report_ref"):
+            reflected.add(body["report_ref"])
+    wrote = 0
+    for ref, rep in reports:
+        if ref in reflected:
+            continue
+        ticker, rdate = rep.get("ticker"), rep.get("date")
+        try:
+            elapsed = (_date.today() - _date.fromisoformat(rdate)).days
+        except Exception:
+            continue
+        if elapsed < holding and not os.environ.get("ORRETH_DESK_GRADE_NOW"):
+            continue
+        rows = _tool("get_stock_data", ticker, did, port).get("rows", [])
+        spy = _tool("get_stock_data", "SPY", did, port).get("rows", [])
+        def _entry_latest(rr):
+            ent = next((x["close"] for x in rr if x["date"] >= rdate), None)
+            return ent, (rr[-1]["close"] if rr else None)
+        e1, l1 = _entry_latest(rows)
+        e2, l2 = _entry_latest(spy)
+        if not all((e1, l1, e2, l2)):
+            say(f"  · {ticker} {rdate}: the tape would not answer — grading waits")
+            continue
+        ret = 100 * (l1 - e1) / e1
+        spy_ret = 100 * (l2 - e2) / e2
+        alpha = ret - spy_ret
+        early = elapsed < holding
+        craft = acquire("charles-trading-reflection", did=did)
+        thesis = str((rep.get("decision") or {}).get("investment_thesis", ""))[:500]
+        word = _think(think_med, "medium",
+                      craft.text + f"\n\nDECISION ({rdate}): {rep.get('rating')} on "
+                      f"{ticker} · entry close {e1}\nTHESIS DIGEST: {thesis}\n\n"
+                      f"WHAT HAPPENED ({elapsed} day(s) elapsed"
+                      f"{' — GRADED EARLY, before the full window' if early else ''}):\n"
+                      f"{ticker} return {ret:+.2f}% · SPY {spy_ret:+.2f}% · "
+                      f"alpha {alpha:+.2f}%")
+        client.remember({"reflection": word, "ticker": ticker, "date": rdate,
+                         "report_ref": ref, "return_pct": round(ret, 2),
+                         "spy_return_pct": round(spy_ret, 2),
+                         "alpha_pct": round(alpha, 2), "graded_early": early,
+                         "elapsed_days": elapsed},
+                        kind="episodic", tags=["desk", "reflection", ticker])
+        say(f"  ✦ reflection on {ticker} {rdate}: {ret:+.2f}% vs SPY "
+            f"{spy_ret:+.2f}% (α {alpha:+.2f}%){' · graded early' if early else ''} "
+            "— the lesson is on the record")
+        wrote += 1
+    return wrote

@@ -60,12 +60,68 @@ def main() -> int:
     ap.add_argument("--once", action="store_true")
     ap.add_argument("--analyze", metavar="TICKER")
     ap.add_argument("--date", default=None)
+    ap.add_argument("--refresh", action="store_true",
+                    help="analyze in refresh mode (reuse the prior walk's analysts)")
+    ap.add_argument("--tend", action="store_true",
+                    help="tend the standing word: walk when due, reflect when ripe")
     args = ap.parse_args()
 
     client = FieldClient(args.field, "charles", role="workforce")
     print(f"· charles is {client.did[:28]}… — the same self, every morning")
     client.join()
     print(f"· lease held on {client.scope} — the desk's own floor")
+
+    if args.tend:
+        # ── sp5: the standing word, tended (0032 on the desk) ──────────
+        # The human approved the watch ONCE at the gate; each due walk runs
+        # UNDER that standing consent — no fresh gate, cancellable anytime
+        # (rule 11), and every walk still lands as records like any other.
+        import json as _j
+        import os as _o
+        import time as _t
+        import urllib.request as _u
+        from orreth_agent.chassis import GovernedThink
+        import pipeline
+        tm, th, tf = (GovernedThink(client, max_tokens=1500),
+                      GovernedThink(client, max_tokens=1600),
+                      GovernedThink(client, max_tokens=2400))
+        def _watches():
+            try:
+                with _u.urlopen("http://localhost:4562/desk", timeout=8) as r:
+                    return _j.load(r).get("watches", [])
+            except Exception:
+                return []
+        def _walked_today(tk, day):
+            for h in client.recall(days=7).get("hits", []):
+                b = client.body_of(h["ref"]) or {}
+                if b.get("report") and b.get("ticker") == tk and b.get("date") == day:
+                    return True
+            return False
+        while True:
+            today = _t.strftime("%Y-%m-%d")
+            due_now = bool(_o.environ.get("ORRETH_DESK_DUE_NOW"))
+            for w in _watches():
+                if w.get("posture") != "walk":
+                    continue
+                tk = w.get("ticker")
+                weekday = _t.gmtime().tm_wday < 5
+                at_close = _t.gmtime().tm_hour >= 20
+                if not (due_now or (weekday and at_close)):
+                    continue
+                if _walked_today(tk, today):
+                    print(f"· {tk} already walked today — the standing word rests")
+                    continue
+                print(f"· the standing word ({w.get('approved', '?')}) is due — "
+                      f"walking {tk} in refresh mode, no fresh gate needed")
+                out = pipeline.run(client, tm, th, tf, tk, today,
+                                   refresh=bool(w.get("refresh")))
+                print(f"· the walk is whole: {out['rating']} — {out['bundle']}")
+            graded = pipeline.grade_pending(client, tm)
+            if graded:
+                print(f"· {graded} lesson(s) written to the record")
+            if args.once:
+                return 0
+            _t.sleep(300)
 
     if args.analyze:
         import time as _t
@@ -79,7 +135,7 @@ def main() -> int:
                            GovernedThink(client, max_tokens=1500),
                            GovernedThink(client, max_tokens=1600),
                            GovernedThink(client, max_tokens=2400),
-                           ticker, date)
+                           ticker, date, refresh=args.refresh)
         print(f"· the walk is whole: {out['rating']} — bundle at {out['bundle']}")
         return 0
 

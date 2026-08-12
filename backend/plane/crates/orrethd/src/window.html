@@ -3736,6 +3736,18 @@ function dkChart(rep){
     <line x1="${pad}" y1="${RY(70)}" x2="${W-8}" y2="${RY(70)}" stroke="var(--hair)" stroke-dasharray="3 3"/>
     <line x1="${pad}" y1="${RY(30)}" x2="${W-8}" y2="${RY(30)}" stroke="var(--hair)" stroke-dasharray="3 3"/>
     <polyline points="${rpts}" fill="none" stroke="var(--blue)" stroke-width="1.2"/></svg>`}
+function dkWatchLine(rep){
+  const w=(DESK.watches||[]).find(x=>x.ticker===rep.ticker);
+  if(!w)return "";
+  if(w.posture==="walk")return `<div class="dk-law">🕰 the standing word: ${dkEsc(w.ticker)} · weekdays at the close · refresh mode — <a href="#" onclick="deskStop('${dkEsc(w.ticker)}');return false" style="color:var(--red)">stop it</a> <span class="dim">(stopping never needs a gate — rule 11)</span></div>`;
+  return `<div class="dk-law">🕰 the standing walk on ${dkEsc(w.ticker)} is STOPPED by the human's word — stage a new watch to resume</div>`}
+async function deskStop(tk){
+  const port=((DESK.worlds||[])[0]||{}).port||4520;
+  try{await fetch(`${location.protocol}//${location.hostname}:${port}/requests`,{method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({kind:"desk-watch",action:"cancel",ticker:tk,
+      text:`stop charles's standing walk on ${tk}`})})}catch(e){}
+  DESK=null;setTimeout(loadDesk,2600)}
 const DKTABS=[["polished","Full Report"],["overview","Overview"],["delta","Δ vs Prior"],["market","Market"],
   ["sentiment","Sentiment"],["news","News"],["fundamentals","Fundamentals"],["debate","Debates"]];
 function renderDesk(){
@@ -3757,7 +3769,7 @@ function renderDesk(){
   B.innerHTML=`
    <div class="dk-world">${world.emoji||"📈"} <b>${dkEsc(world.name||"the Trading Desk")}</b>
      <span class="dim"> · ${dkEsc(world.resident||"")} · ${dkEsc(world.floor||"")}</span>
-     <div class="dk-law">${dkEsc(world.law||"")}</div></div>
+     <div class="dk-law">${dkEsc(world.law||"")}</div>${dkWatchLine(rep)}</div>
    <div class="dk-pick">${pick}
      <a class="dk-dl" href="${OBSD}/desk/bundle?name=charles-${dkEsc(rep.ticker)}-${dkEsc(rep.date)}" download>⬇ download the bundle — the full 15-file report</a></div>
    <div class="dk-hero">${dkBadge(rep.rating)}

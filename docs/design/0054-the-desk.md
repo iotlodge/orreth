@@ -186,6 +186,31 @@ a trade. The compliance disclaimer rides every report as policy craft.**
    re-runs, the rest reuses, ~70% cheaper); the reflection beat (5-day
    outcome vs SPY → reflection records the next run recalls). This
    spoonful feeds 0053 sp3 — the memory program eats what it grows.
+   **LANDED + PROVEN LIVE 2026-08-12, every law walked.** The watch is
+   the human's STANDING WORD (0032 on the desk): staged with its terms
+   readable ("charles walks NVDA every weekday at market close … ≤3
+   searches under the ceiling … standing until you stop it"), approved
+   once, minted as a signed record on f:charles; **stopping is
+   immediate and gateless** (rule 11 — proven: cancel → posture
+   `cancelled` on the wire in one motion → restored by a fresh staged
+   word). The glass wears it: "🕰 the standing word … — stop it
+   (stopping never needs a gate)". charles TENDS the word himself
+   (`--tend`): due at the close on weekdays, walk under the standing
+   consent — no per-run gate — and **the dedupe held live** ("already
+   walked today — the standing word rests"). **The reflection beat
+   ran whole**: the morning's Overweight graded against the tape
+   through the Farm's own door (return vs SPY, alpha, `graded_early`
+   flagged honestly on a same-day grade), ONE lesson on the record —
+   and the very next walk's retrieve-context read **"prior report:
+   yes · 1 lesson(s)"**: the learning loop is CLOSED. That walk also
+   produced the first REAL delta — compare-to-prior fired against the
+   prior report and reconciled like an analyst ("same-day re-run/
+   refinement, not a new trading day"; caught a trailing-EPS
+   discrepancy the first walk missed). Honest notes: the refresh-REUSE
+   arm degrades to a full walk when the prior record predates
+   `sections` (as it did) — tomorrow's standing walk is its first live
+   exercise; the reflection craft is the 21st shelf asset
+   (charles-trading-reflection), planted like all the rest.
 
 ## 5. The locks staged for JB
 
