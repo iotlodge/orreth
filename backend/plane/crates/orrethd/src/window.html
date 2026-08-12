@@ -929,22 +929,22 @@
 
   <!-- THE FARM -->
   <div class="view hide" id="v-farm">
-    <div class="section" style="margin-top:0">the farm · services this world consumes — planted on <span id="farm-floor" style="color:var(--brass)">…</span></div>
+    <div class="section" style="margin-top:0">the farm · the tools and services agents may use — add one, watch its health, retire it · managed at <span id="farm-floor" style="color:var(--brass)">…</span></div>
     <div class="plantform">
       <div class="row">
         <input id="pf-name" placeholder="name · com.tavily/search" style="flex:2;min-width:200px">
         <select id="pf-kind"><option value="mcp">mcp</option><option value="http">http</option><option value="feed">feed</option></select>
         <select id="pf-transport"><option value="streamable-http">streamable-http</option><option value="rest">rest</option><option value="sse">sse</option></select>
         <input id="pf-endpoint" placeholder="endpoint · https://…" style="flex:3;min-width:260px">
-        <button class="go" onclick="plantTool()">Plant →</button>
+        <button class="go" onclick="plantTool()">Add this tool →</button>
       <label class="cascade"><input type="checkbox" id="pf-cascade"> also plant on every floor below</label>
       </div>
-      <textarea id="pf-manifest" placeholder='declared tools (JSON, optional — MCP servers are enumerated live): [{"name":"search","description":"…"}]'></textarea>
+      <textarea id="pf-manifest" placeholder='optional — what the tool offers; tool servers (MCP) are discovered automatically. Advanced: paste a JSON tool list like [{"name":"search","description":"…"}]'></textarea>
       <div class="chips"><span class="qchip" onclick="presetTavily()">🌱 Tavily search (preset)</span></div>
       <div class="formerr" id="pf-err"></div>
-      <div class="steps"><span><span class="num">①</span>you plant — charlotte probes it and pins its manifest hash</span>
-        <span><span class="num">②</span>you approve — probation begins; heartbeats earn serving</span>
-        <span><span class="num">③</span>every move lands on its worldline in the Window</span></div>
+      <div class="steps"><span><span class="num">①</span>you add it — the farm keeper tests it and pins its exact fingerprint, so it can never be silently swapped</span>
+        <span><span class="num">②</span>you approve — new tools start on probation; steady health earns full service</span>
+        <span><span class="num">③</span>every change to a tool is recorded forever — nothing is silently forgotten</span></div>
     </div>
     <div class="section">awaiting your decision</div>
     <div id="farmpending"><div class="quiet">nothing staged.</div></div>
@@ -955,23 +955,23 @@
 
   <!-- THE STABLE (0019) -->
   <div class="view hide" id="v-stable">
-    <div class="section" style="margin-top:0">the stable · minds this world thinks through — saddled on <span id="stable-floor" style="color:var(--brass)">…</span></div>
+    <div class="section" style="margin-top:0">the stable · the AI models this world may think with — connect one, approve it, watch its costs · managed at <span id="stable-floor" style="color:var(--brass)">…</span></div>
     <div class="ladder" id="ladder"></div>
     <div class="plantform">
       <div class="row">
-        <input id="sf-id" placeholder="model id · anthropic/claude-sonnet-4-6" style="flex:2;min-width:220px">
-        <select id="sf-route"><option value="litellm-direct">litellm-direct (your keys)</option><option value="openrouter">openrouter</option></select>
+        <input id="sf-id" placeholder="the model’s exact name from your provider, e.g. anthropic/claude-sonnet-4-6" style="flex:2;min-width:220px">
+        <select id="sf-route"><option value="litellm-direct">direct — your own API keys (default)</option><option value="openrouter">openrouter</option></select>
         <select id="sf-class"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option><option value="xhigh">xhigh</option></select>
-        <button class="go" onclick="saddleMind()">Saddle →</button>
+        <button class="go" onclick="saddleMind()">Connect this model →</button>
       <label class="cascade"><input type="checkbox" id="sf-cascade"> also saddle on every floor below</label>
       </div>
       <div class="chips"><span class="qchip" onclick="presetSaddle('anthropic/claude-sonnet-4-6','medium')">🐎 Sonnet (medium)</span>
         <span class="qchip" onclick="presetSaddle('anthropic/claude-haiku-4-5-20251001','low')">🐎 Haiku (low)</span>
         <span class="qchip" onclick="presetSaddle('openai/gpt-4o-mini','low')">🐎 gpt-4o-mini (low)</span></div>
       <div class="formerr" id="sf-err"></div>
-      <div class="steps"><span><span class="num">①</span>you saddle — ada probes the catalog and pins the DEAL (pricing · context)</span>
-        <span><span class="num">②</span>you approve — canary begins; governed beats earn available</span>
-        <span><span class="num">③</span>drift and expiries come back to you as decisions, never outages</span></div>
+      <div class="steps"><span><span class="num">①</span>you connect — the stable keeper checks the model and pins its exact terms (price and context size)</span>
+        <span><span class="num">②</span>you approve — new models start on trial; steady results earn full use</span>
+        <span><span class="num">③</span>price changes and expirations come back to YOU as choices, never as outages</span></div>
     </div>
     <div class="section">awaiting your decision</div>
     <div id="stablepending"><div class="quiet">nothing staged.</div></div>
@@ -1016,13 +1016,13 @@
        this room shows the driving NLP: Canon firmware and Chronicle craft,
        worldlines, readers, diffs. A projection, never a second truth. -->
   <div class="view hide" id="v-gov">
-    <div class="section" style="margin-top:0">the craft room · what drives the machine, readable — every word versioned, nothing silently overwritten (0045)</div>
+    <div class="section" style="margin-top:0">the craft room · the prompts, skills, and rules the machine runs on — read any of them, edit what may be edited; every change keeps its history</div>
     <div class="qchips" id="gov-cats"></div>
     <div class="qchips" id="gov-lens"></div>
     <div class="ask-in" style="margin-top:.4rem"><input id="gov-q" placeholder="search the craft — names, categories"></div>
     <div class="gov-split">
       <div id="gov-list"><div class="quiet">the shelves are being read…</div></div>
-      <div id="gov-read" class="hide"></div>
+      <div id="gov-read" class="hide"></div><div id="gov-hint" class="quiet" style="padding:1rem">select an item on the left — its full text opens here, with its history and its editors</div>
     </div>
   </div>
 </main>
@@ -1308,11 +1308,11 @@ function renderWorldRail(){
       const col=d===0?"var(--brass)":ecoColor(eco.startsWith("e:")?eco:nm);
       const bw=Math.round(100*Math.log2(1+(n.records||0))/Math.log2(1+maxm));
       return `<div class="trow t2${d===0?" me":""}" style="--td:${col};padding-left:${.6+d*.95}rem"
-      onclick="floorGo('${encodeURIComponent(n.scope)}')" title="step onto ${nm}">
+      onclick="floorGo('${encodeURIComponent(n.scope)}')" title="${d===0?"this universe":d===1?"an ecosystem":"a floor"} · ${n.records||0} memories · ${n.agents||0} agent(s) · click to step onto it">
       <span class="tdot${d===0?" core":d===1?" eco":" fld"}"></span>
       <span class="tn">${nm}</span>
       <span class="tbar"><i style="width:${bw}%;background:${col}"></i></span>
-      <span class="tc">${n.records}m·${n.agents}a</span></div>`}).join("");
+      <span class="tc" title="${n.records||0} memories · ${n.agents||0} agent(s)">${n.records}m·${n.agents}a</span></div>`}).join("");
     const s=(n,w)=>`<b>${n}</b> ${w}${n===1?"":"s"}`;
     html+=`<div class="tsum">below this floor: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"field")} · ${s(agg.agents,"agent")}</div>`;
     if(bl)bl.innerHTML=`the world below: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"field")} · ${s(agg.agents,"agent")} — every one signed in`;
@@ -2435,7 +2435,7 @@ const ago=t=>{const s=(Date.now()-new Date(t))/1e3;
   return s<90?`${s|0}s ago`:s<5400?`${s/60|0}m ago`:`${s/3600|0}h ago`};
 /* a pending ask nothing serves is VISIBLE governance, not a mystery (0018 §7) */
 const staleNote=r=>r.status==="pending"&&Date.now()-new Date(r.at)>12e3?
-  `<div class="sub" style="color:var(--red)">…no keeper answering — is the join door open? (scripts/dev.sh start)</div>`:"";
+  `<div class="sub" style="color:var(--red)">…the machine hasn't picked this up yet — it may be waking; it keeps trying on its own</div>`:"";
 /* 0047 sp3 — what the universe UNDERSTOOD, on the plan card: the studio's
    reading, its honest absence (dark), or its honest failure (parked) */
 function studioNote(r){
@@ -2613,7 +2613,7 @@ async function renderInboxDetail(){
   let extra="";
   if(r.kind==="question"&&r.status==="pending")   /* one home: answer HERE */
     extra=`<div class="obj-q" style="margin-top:.45rem">your answer, right here (take the room you need):
-      <div class="qa" style="align-items:flex-start"><textarea id="qa-${r.id}" rows="3" placeholder="your answer — silence is denial"></textarea>
+      <div class="qa" style="align-items:flex-start"><textarea id="qa-${r.id}" rows="3" placeholder="your answer — if nobody answers before this expires, that counts as a no"></textarea>
       <button class="sbtn ok" onclick="objAnswer('${r.id}')">answer</button></div></div>`;
   el.innerHTML=(r.kind==="objective"
     ?objCard(r,q.filter(x=>x.kind==="question"),true)
@@ -2691,7 +2691,7 @@ function gateGo(id,ok,kind){
 function miniGate(r,pfx){
   const t=(r.text||r.kind||"").slice(0,110);
   if(r.kind==="question")return `<div class="mgate"><span class="mk">question</span><span class="mt">${esc(t)}</span>
-    <div class="acts"><input id="${pfx}${r.id}" placeholder="your answer — silence is denial"
+    <div class="acts"><input id="${pfx}${r.id}" placeholder="your answer — if nobody answers before this expires, that counts as a no"
       onkeydown="if(event.key==='Enter')mgAnswer('${r.id}','${pfx}')">
     <button class="sbtn ok" onclick="mgAnswer('${r.id}','${pfx}')">answer</button></div></div>`;
   const lb=gateWords(r)||["approve","decline"];
@@ -2895,7 +2895,7 @@ async function loadStable(){
       const lane=live.filter(s=>s.class===k);
       return `<div class="lane"><span class="cls">${k}</span>${lane.length?lane.map(s=>
         `<span class="mchip"><span class="st" style="background:${dot[s.state]||"var(--dim)"}"></span>${s.id} · ${s.route}</span>`).join("")
-        :`<span class="mchip" style="opacity:.5">legacy registry routes this class</span>`}</div>`;}).join("");
+        :`<span class="mchip" style="opacity:.5">no model connected for this class yet — built-in routing answers meanwhile</span>`}</div>`;}).join("");
     // the pasture calendar: 90 days of announced expiries
     const day=864e5, now=Date.now();
     const eols=live.filter(s=>s.expires_at).map(s=>({s,d:(new Date(String(s.expires_at).slice(0,10))-now)/day}))
@@ -3642,10 +3642,10 @@ function renderGov(){
   const cats=["all",...Object.keys(GOVD.counts||{}).sort()];
   $("gov-cats").innerHTML=cats.map(c=>`<span class="qchip ${GOVCAT===c?"on":""}"
     onclick="govCat('${c}')">${c}${c==="all"?` · ${GOVD.objects.length}`:` · ${GOVD.counts[c]||0}`}</span>`).join("")
-    +`<span class="qchip" onclick="govGraph()">⟟ the applied craft — who wears what</span>`
-    +`<span class="qchip" onclick="govCommission()">🏭 commission — the machine builds craft on your word</span>`;
-  $("gov-lens").innerHTML=[["all","both lifecycles"],["canon","canon · the firmware"],
-    ["chronicle","chronicle · the adaptive craft"]].map(([l,t])=>
+    +`<span class="qchip" onclick="govGraph()">who uses what →</span>`
+    +`<span class="qchip" onclick="govCommission()">🏭 ask for a new skill — the machine researches, drafts it, and waits for your approval</span>`;
+  $("gov-lens").innerHTML=[["all","everything"],["canon","firmware (changing it is a formal release)"],
+    ["chronicle","everyday craft (editable at will, history kept)"]].map(([l,t])=>
     `<span class="qchip ${GOVLENS===l?"on":""}" onclick="govLens('${l}')">${t}</span>`).join("");
   const q=(($("gov-q")||{}).value||"").toLowerCase();
   const rows=GOVD.objects.filter(o=>(GOVCAT==="all"||o.category===GOVCAT)
@@ -3653,8 +3653,8 @@ function renderGov(){
     &&(!q||o.name.toLowerCase().includes(q)||o.category.includes(q)));
   el.innerHTML=(rows.map(o=>`<div class="gvrow ${GOVSEL===o.name?"on":""}" onclick="govOpen('${esc(o.name)}')">
       <span class="nm">${esc(o.name)}</span>
-      <span class="lc ${o.lifecycle==="chronicle"?"chr":""}">${o.lifecycle==="canon"?"CANON":"chronicle"}</span>
-      <span class="meta">${o.category} · v${o.versions}</span></div>`).join("")
+      <span class="lc ${o.lifecycle==="chronicle"?"chr":""}">${o.lifecycle==="canon"?"firmware":"editable"}</span>
+      <span class="meta">${o.category} · v${o.versions}${(o.wearers&&o.wearers.length)?` · used by ${esc(String(o.wearers[0]).slice(0,60))}`:""}</span></div>`).join("")
     ||`<div class="quiet">nothing matches — the craft is elsewhere.</div>`)
     +(((GOVCAT==="all"||GOVCAT==="rubrics")&&(GOVD.rubrics||[]).length)?
       `<div class="qband"><b>declared rubrics — the humans' yardsticks (0043 G6)</b><span class="n">· ${GOVD.rubrics.length}</span></div>`
@@ -3705,7 +3705,7 @@ let GOVRAW="";
 function govRubric(i){
   const r=(GOVD.rubrics||[])[i];if(!r)return;
   GOVSEL=null;renderGov();
-  const R=$("gov-read");R.classList.remove("hide");
+  const R=$("gov-read");R.classList.remove("hide");const gh=$("gov-hint");if(gh)gh.style.display="none";
   R.innerHTML=`<div class="pt"><b>a declared rubric</b>
       <span class="lc chr" style="margin-left:.5rem">the human's yardstick (0043 G6)</span></div>
     <div class="quiet2" style="margin:.3rem 0">declared at the objective composer — the assay judges the work by THESE words, and the verdict says so (rubric_declared: true)</div>
@@ -3716,7 +3716,7 @@ function govRubric(i){
    the organs and flows that wear them on the other */
 function govGraph(){
   GOVSEL=null;renderGov();
-  const R=$("gov-read");R.classList.remove("hide");
+  const R=$("gov-read");R.classList.remove("hide");const gh=$("gov-hint");if(gh)gh.style.display="none";
   const rows=GOVD.objects.filter(o=>(o.wearers||[]).length);
   const H=Math.max(rows.length*46+40,200);
   let y=30,svg="";
@@ -3751,7 +3751,7 @@ async function govArgue(name){
 function govOpen(name){
   GOVSEL=name;renderGov();
   const o=GOVD.objects.find(x=>x.name===name);if(!o)return;
-  const R=$("gov-read");R.classList.remove("hide");
+  const R=$("gov-read");R.classList.remove("hide");const gh=$("gov-hint");if(gh)gh.style.display="none";
   R.innerHTML=`<div class="pt"><b>${esc(name)}</b>
       <span class="lc ${o.lifecycle==="chronicle"?"chr":""}" style="margin-left:.5rem">${o.lifecycle==="canon"?"CANON — a release moves the machine's name":"chronicle — proposals at grace's gate"}</span></div>
     <div class="quiet2" style="margin:.3rem 0">${o.category} · ${o.versions} version(s) — the worldline, oldest first; nothing here was ever silently overwritten</div>
@@ -3867,7 +3867,7 @@ async function govReleaseStage(name){
    machine's own organs — librarian gathers, factory drafts, v1 stands */
 function govCommission(){
   GOVSEL=null;renderGov();
-  const R=$("gov-read");R.classList.remove("hide");
+  const R=$("gov-read");R.classList.remove("hide");const gh=$("gov-hint");if(gh)gh.style.display="none";
   R.innerHTML=`<div class="pt"><b>🏭 the commission</b>
       <span class="quiet2" style="margin-left:.6rem">state what you need; the librarian gathers, the factory drafts a metered thought, and v1 stands in the registry with its whole birth on the record</span></div>
     <div class="qchips" id="gov-ck">${["skill","prompt","policy"].map((k,i)=>
@@ -4272,7 +4272,7 @@ function objCard(r,questions,inPane){
     }
     const qhtml=openQs.map(x=>inPane
       ?`<div class="obj-q">the flow asks: ${esc((x.text||"").slice(0,140))}`+
-       `<div class="qa"><input id="qa-${x.id}" placeholder="your answer — silence is denial">`+
+       `<div class="qa"><input id="qa-${x.id}" placeholder="your answer — if nobody answers before this expires, that counts as a no">`+
        `<button class="sbtn ok" onclick="objAnswer('${x.id}')">answer</button></div></div>`
       :`<div class="obj-q">the flow asks: ${esc((x.text||"").slice(0,120))} `+
        `<span class="lnk" onclick="goInbox('${x.id}')">answer in the Inbox →</span></div>`).join("");

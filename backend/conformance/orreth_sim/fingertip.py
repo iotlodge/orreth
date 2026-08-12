@@ -178,9 +178,7 @@ def author_plan(scope: str, *, req_id: str, objective: str,
     goal = crypto.content_hash({"objective": objective, "req": req_id})
     return {"objective": objective, "goal": goal, "intentions": intentions,
             "dark": [], "spec": spec["id"],
-            "question": f"the flow asks (0027 §8): where shall "
-                        f"“{objective[:48]}” deploy? resolve me with your "
-                        "answer — silence is denial",
+            "question": "Before this work runs, one thing needs your answer: where should the results of “" + objective[:140] + "” be delivered? Answer below — if no one answers in time, the plan treats silence as a no and moves on without it.",
             "share": share}
 
 

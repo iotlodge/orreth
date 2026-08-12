@@ -3225,8 +3225,7 @@ def curate_plan(port: int, scope: str, r: dict) -> dict:
             entry["beyond_token"] = True     # honest in the plan: it will ask leave
         intentions.append(entry)
     return {"objective": text, "goal": goal, "intentions": intentions, "dark": dark,
-            "question": f"the flow asks (0027 §8): where shall “{text[:48]}” deploy? "
-                        "resolve me with your answer — silence is denial",
+            "question": "Before this work runs, one thing needs your answer: where should the results of “" + text[:140] + "” be delivered? Answer below — if no one answers in time, the plan treats silence as a no and moves on without it.",
             "share": share}
 
 
@@ -3509,11 +3508,11 @@ def _tend_objective(rid: str, st: dict) -> None:
         except Exception as e:
             print(f"    (review marker write failed: {e})")
     if pending_question:
-        waiting = ["iac — the question expired; silence is denial"]
+        waiting = ["the deployment question expired unanswered — treated as a no"]
     elif st["iac"] and st["iac"].get("denied"):
-        waiting = ["iac — denied by the human"]
+        waiting = ["the deployment question — you answered no"]
     elif st["iac"] and not any(b["intention"] == st["iac"]["id"] for b in branches):
-        waiting = ["iac — still riding at the horizon"]
+        waiting = ["the deployment answer is still being carried out"]
     else:
         waiting = []
     done = bool(branches) and all(b["status"] == "done" for b in branches) \

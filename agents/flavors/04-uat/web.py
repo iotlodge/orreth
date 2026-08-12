@@ -54,19 +54,23 @@ def _post(base: str, path: str, payload: dict) -> dict:
 
 
 def shoot(view: str) -> str | None:
-    """One view, rendered by real Chrome, returned as base64 PNG."""
+    """One view, rendered by real Chrome, returned as base64 PNG. The
+    universe view animates forever, so virtual time never settles there —
+    the second attempt shoots without it (her first walk's own finding)."""
     out = Path(tempfile.mkdtemp()) / f"{view}.png"
-    try:
-        subprocess.run(
-            [CHROME, "--headless=new", f"--screenshot={out}",
-             "--window-size=1512,900", "--hide-scrollbars",
-             "--virtual-time-budget=9000", "--disable-gpu",
-             f"{UNIVERSE}/window#f=4500&v={view}"],
-            capture_output=True, timeout=60)
-        if out.exists() and out.stat().st_size > 10000:
-            return base64.b64encode(out.read_bytes()).decode()
-    except Exception as e:
-        print(f"· the eye failed on «{view}»: {e}")
+    for budget in ("--virtual-time-budget=9000", None):
+        args = [CHROME, "--headless=new", f"--screenshot={out}",
+                "--window-size=1512,900", "--hide-scrollbars",
+                "--disable-gpu"]
+        if budget:
+            args.append(budget)
+        args.append(f"{UNIVERSE}/window#f=4500&v={view}")
+        try:
+            subprocess.run(args, capture_output=True, timeout=45)
+            if out.exists() and out.stat().st_size > 10000:
+                return base64.b64encode(out.read_bytes()).decode()
+        except Exception as e:
+            print(f"· the eye blinked on «{view}» ({'timed' if budget else 'plain'}): {e}")
     return None
 
 
@@ -121,9 +125,14 @@ def main() -> int:
             continue
         fr = judge(think, persona, shot, ctx)
         print(f"· quinn looked at «{view}»: {len(fr)} friction(s)")
+        for x in fr:
+            print(f"   · {x}")
         findings.extend(f"[{view}] {x}" for x in fr)
         time.sleep(1)
-    body = " · ".join(findings)[:3800] or "no frictions — the rooms read clean"
+    body = " · ".join(findings) or "no frictions — the rooms read clean"
+    if len(body) > 3800:                       # the card has edges; the cut confesses
+        body = body[:3680] + " · (…the card's edge cut the tail — the FULL list "
+        body += "is in the walker's own log, every line printed as found)"
     out = _post(UNIVERSE, "/requests",
                 {"kind": "uat-report", "text": f"👁 quinn-web walked "
                  f"{len(VIEWS)} rooms with real eyes — {len(findings)} "
