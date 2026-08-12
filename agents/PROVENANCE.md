@@ -876,3 +876,9 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 |---|---|---|
 | `window.html` | Fable 5 (claude-fable-5) | JB's three finds: map(reqRow) passed the array INDEX as inPane — raw JSON polluted every list card after the first (fixed); #v-inbox had no overflow rule in a window that never scrolls — frozen under his hand (fixed); rows verified clean. |
 | `console_worker.py` | Fable 5 (claude-fable-5) | The drift flood: a lag with NOTHING to restore asked the human for a word anyway. Now a lag is a NOTE — self-resolved, one per scope per hour; true drift (a restore exists) alone stages. Fourteen standing lag cards swept; zero true drift was found beneath them. |
+
+## Fable 5 — 2026-08-12 (0052 sp4 — the room rebuilt to the judge's eye, at JB's two locks)
+
+| File | Author | Note |
+|---|---|---|
+| `window.html` | Fable 5 (claude-fable-5) | Master-detail (JB's lock): compact list LEFT, the reading pane RIGHT in-flow, both always visible — select a row, read and decide beside it; questions answer right in the pane. The Requests tab RETIRED (JB's lock): the full queue lives as the Inbox's archive drawer; the Objectives tab keeps composing and reports but its waiting cards point at the one home. Tabs 9→8. |

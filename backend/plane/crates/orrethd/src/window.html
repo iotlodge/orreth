@@ -253,9 +253,18 @@
   #ocard.on{opacity:1}
   #ocard .t{color:var(--brass)} #ocard .k{color:var(--faint)}
 
-  /* ── THE INBOX (0052 sp3) — every view carries its OWN scroll; this one
-        arrived without it and froze under JB's hand (his find) ── */
-  #v-inbox{padding:1.6rem 2.4rem;overflow-y:auto}
+  /* ── THE INBOX (0052 sp3/sp4) — master-detail to the judge's eye (JB's
+        lock 2026-08-12): compact list LEFT, the reading pane RIGHT, in-flow,
+        both always visible; nothing slides over anything ── */
+  #v-inbox{padding:1.2rem 1.6rem;display:flex;flex-direction:column;overflow:hidden}
+  .inbwrap{display:flex;gap:1.1rem;flex:1;min-height:0;margin-top:.4rem}
+  .inbleft{flex:0 0 37%;min-width:0;overflow-y:auto;padding-right:.4rem}
+  .inbright{flex:1;min-width:0;overflow-y:auto;border-left:1px solid var(--hair);padding-left:1.1rem}
+  .inbrow{border:1px solid var(--hair);border-radius:10px;padding:.5rem .7rem;margin:.35rem 0;cursor:pointer}
+  .inbrow:hover{border-color:var(--brassdim)}
+  .inbrow.on{border-color:var(--brass);background:var(--deep)}
+  .inbrow .t{font:.78rem system-ui;color:var(--star);display:block;margin:.15rem 0}
+  .inbrow .m{font:.62rem var(--mono);color:var(--faint)}
 
   /* ── PULSE ── */
   #v-pulse{padding:2rem 2.4rem;overflow-y:auto;display:flex;flex-direction:column}
@@ -814,7 +823,6 @@
     <span class="tab" data-v="obs">Observatory</span>
     <span class="tab" data-v="farm">Farm<span class="badge" id="farm-badge"></span></span>
     <span class="tab" data-v="stable">Stable<span class="badge" id="stable-badge"></span></span>
-    <span class="tab" data-v="req">Requests<span class="badge" id="req-badge"></span></span>
     <span class="tab" data-v="gov">Governance</span>
   </div>
   <span class="daybtn" id="daybtn" onclick="themeFlip()" title="the Daylight Glass — flip the light">☀</span>
@@ -870,10 +878,15 @@
   <div class="view hide" id="v-inbox">
     <div class="section" style="margin-top:0">the inbox · everything waiting on you, one place — at <span class="place" style="color:var(--brass)">…</span></div>
     <div id="inbox-monitor" class="quiet2" style="margin:.3rem 0 .5rem"></div>
-    <div id="inboxlist"><div class="quiet">nothing waits on you — a calm universe.</div></div>
-    <div class="qband" style="margin-top:.8rem"><b>settled with you — what your word touched</b>
-      <span class="lnk" onclick="INBSETTLED=!INBSETTLED;loadReq()" id="inb-toggle" style="cursor:pointer">· show</span></div>
-    <div id="inbsettled"></div>
+    <div class="inbwrap">
+      <div class="inbleft">
+        <div id="inboxlist"><div class="quiet">nothing waits on you — a calm universe.</div></div>
+        <div class="qband" style="margin-top:.8rem;cursor:pointer" onclick="INBARCH=!INBARCH;loadReq()">
+          <b>the archive — everything, every word</b> <span class="lnk" id="inb-arch-t">· show</span></div>
+        <div id="reqlist" style="display:none"></div>
+      </div>
+      <div class="inbright" id="inb-detail"><div class="quiet">select a row — the reading pane holds it here, beside the list</div></div>
+    </div>
   </div>
 
   <div class="view hide" id="v-pulse">
@@ -971,10 +984,7 @@
   </div>
 
   <!-- REQUESTS -->
-  <div class="view hide" id="v-req">
-    <div class="section" style="margin-top:0">requests &amp; approvals · the human's queue — at <span class="place" style="color:var(--brass)">…</span></div>
-    <div id="reqlist"><div class="quiet">nothing waiting — a calm universe.</div></div>
-  </div>
+  <!-- the Requests view retired into the Inbox's archive (0052 sp4, JB's lock 2026-08-12) -->
 
   <!-- ASK -->
   <!-- THE OBJECTIVE LEDGER (0030 §4): the artifact of artifacts — you are the
@@ -1263,7 +1273,7 @@ const money=u=>u>=0.01?"$"+u.toFixed(2):u>0?"$"+u.toFixed(5):"$0";
 /* view switching */
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));
-  ["uni","inbox","obj","pulse","obs","farm","stable","req","gov"].forEach(v=>$("v-"+v).classList.toggle("hide",v!==t.dataset.v));
+  ["uni","inbox","obj","pulse","obs","farm","stable","gov"].forEach(v=>$("v-"+v).classList.toggle("hide",v!==t.dataset.v));
   if(t.dataset.v==="uni"){const O=$("orrery");if(O)O.dataset.sig="";renderOrrery();scrub()}
   if(t.dataset.v==="obs")loadObservatory();   /* the instrument room wakes on entry (0043 sp3) */
   if(typeof syncHash==="function")syncHash(false);   /* the tab rides the URL too */
@@ -1555,7 +1565,7 @@ function bgInit(){
     else bgHover(e)});
   addEventListener("mouseup",()=>{BG.drag=null;cv.style.cursor="grab"});
   cv.addEventListener("click",e=>{const h=bgNear(e);
-    if(h&&h.req){const t=document.querySelector('.tab[data-v="req"]');if(t)t.click();return}
+    if(h&&h.req){const t=document.querySelector('.tab[data-v="inbox"]');if(t)t.click();return}
     if(h&&h.scope)floorGo(encodeURIComponent(h.scope))});
 }
 function bgNear(e){
@@ -2539,7 +2549,7 @@ async function loadReq(){
           settled=q.filter(isSettled).reverse(),
           flight=q.filter(r=>!isWaiting(r)&&!isSettled(r)).reverse();
     /* the badge counts what WAITS ON YOU — the number that matters */
-    $("req-badge").textContent=wait.length?`(${wait.length})`:"";
+    const rb=$("req-badge");if(rb)rb.textContent=wait.length?`(${wait.length})`:"";
     GATEWAIT=wait;renderGates();  /* the same number rings the bell in the sky
       and fills the audience strip — one wait list, three faces */
     const kinds={};q.forEach(r=>{const k=r.kind||"request";kinds[k]=(kinds[k]||0)+1});
@@ -2577,7 +2587,7 @@ async function loadReq(){
 /* ── THE ONE INBOX (0052 sp3): everything waiting on the human, one place —
       consequence first, then age; the SAME reqRow serves it (rule 7), so a
       row here decides and speaks exactly like anywhere else. ── */
-let INBSETTLED=false;
+let INBARCH=false,INBSEL=null;
 const KINDRANK={attestation:0,testament:1,consent:2,passage:2,
   publish:3,drift:3,release:3,witness:3,
   objective:4,improvement:4,experiment:4,commission:4,subscription:4,
@@ -2585,9 +2595,30 @@ const KINDRANK={attestation:0,testament:1,consent:2,passage:2,
   join:6,ecosystem:6,dial:6,question:7};
 function inbAge(r){const m=(Date.now()-new Date(r.at||Date.now()))/60000;
   return m<60?`${Math.round(m)}m`:m<1440?`${Math.round(m/60)}h`:`${Math.round(m/1440)}d`}
+function inbSelect(id){INBSEL=id;renderInboxDetail();
+  document.querySelectorAll(".inbrow").forEach(x=>x.classList.toggle("on",x.dataset.id===id))}
+function goInbox(id){INBSEL=id;
+  const t=document.querySelector('.tab[data-v="inbox"]');if(t)t.click();loadReq()}
+async function renderInboxDetail(){
+  const el=$("inb-detail");if(!el||!INBSEL)return;
+  const a=document.activeElement;         /* only a typing hand holds the pane */
+  if(a&&el.contains(a)&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA"))return;
+  let q;try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{return}
+  const r=q.find(x=>x.id===INBSEL);
+  if(!r){el.innerHTML=`<div class="quiet">settled and gone from the wait — the archive keeps it</div>`;return}
+  let extra="";
+  if(r.kind==="question"&&r.status==="pending")   /* one home: answer HERE */
+    extra=`<div class="obj-q">the flow asks — your answer, right here:
+      <div class="qa"><input id="qa-${r.id}" placeholder="your answer — silence is denial">
+      <button class="sbtn ok" onclick="objAnswer('${r.id}')">answer</button></div></div>`;
+  el.innerHTML=(r.kind==="objective"
+    ?objCard(r,q.filter(x=>x.kind==="question"),true)
+    :reqRow(r,true))+extra;
+  linkifyEl(el);
+}
 function renderInbox(q){
   const el=$("inboxlist");if(!el)return;
-  const bz=document.activeElement;      /* the same law: a typing hand holds */
+  const bz=document.activeElement;
   if(bz&&bz.id&&(bz.id.startsWith("gw-")||bz.id.startsWith("qa-")))return;
   const isWaiting=r=>r.status==="staged"||(r.kind==="question"&&r.status==="pending");
   const wait=q.filter(isWaiting).slice()
@@ -2596,37 +2627,19 @@ function renderInbox(q){
   const badge=$("inbox-badge");if(badge)badge.textContent=wait.length?` (${wait.length})`:"";
   const mon=$("inbox-monitor");
   if(mon)mon.textContent=wait.length
-    ?`${wait.length} thing(s) wait on your word — gravest first, then oldest; each row decides where it stands, or click it open in the pane`
-    :"";
-  /* compact rows: the decision and the voice line stand here; the EVIDENCE
-     lives one click away in the pane — deciding where you stand must never
-     mean scrolling through what the pane already holds */
-  const w2=r=>{const wds=r.status==="staged"?(gateWords(r)||["approve","decline"]):["answer","—"];
-    return `<div class="req clickable" onclick="paneReq('${r.id}',event)" title="open in the reading pane">
-     <span class="kind">${r.kind||"request"}</span>
-     <span class="txt">${esc((r.text||"").slice(0,180))}<div class="sub">${r.id} · waited ${inbAge(r)}</div>
-     ${r.status==="staged"?`<span class="td-in" style="margin:.2rem 0;display:flex"><input id="gw-${r.id}" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></span>`:""}</span>
-     ${r.status==="staged"
-       ?`<button class="sbtn ok" onclick="gateGo('${r.id}',true,'${r.kind}')">${(gateWords(r)||["approve"])[0]}</button>
-        <button class="sbtn no" onclick="gateGo('${r.id}',false,'${r.kind}')">${(gateWords(r)||["","decline"])[1]}</button>`
-       :`<span class="st">${r.status}</span>`}</div>`};
+    ?`${wait.length} thing(s) wait on your word — gravest first, then oldest; select a row and decide beside it`
+    :"nothing waits on you — a calm universe";
+  if(wait.length&&(!INBSEL||!wait.some(r=>r.id===INBSEL)))INBSEL=wait[0].id;
   el.innerHTML=wait.length
-    ?wait.map(w2).join("")
+    ?wait.map(r=>`<div class="inbrow${r.id===INBSEL?" on":""}" data-id="${r.id}" onclick="inbSelect('${r.id}')">
+       <span class="kind">${r.kind||"request"}</span><span class="m" style="float:right">waited ${inbAge(r)}</span>
+       <span class="t">${esc((r.text||"").slice(0,120))}</span>
+       <span class="m">${r.id}</span></div>`).join("")
     :`<div class="quiet">nothing waits on you — a calm universe.</div>`;
-  linkifyEl(el);
-  const st=$("inbsettled"),tg=$("inb-toggle");
-  if(tg)tg.textContent=INBSETTLED?"· hide":"· show";
-  if(st){
-    if(!INBSETTLED){st.innerHTML=""}
-    else{
-      const touched=q.filter(r=>["approved","denied","cancelled"].includes(r.status)
-          ||(r.kind==="feedback-closure"&&r.status==="done"))
-        .slice().sort((a,b)=>String(b.at||"").localeCompare(String(a.at||""))).slice(0,20);
-      st.innerHTML=touched.length?touched.map(r=>reqRow(r)).join("")
-        :`<div class="quiet">your word has touched nothing recently.</div>`;
-      linkifyEl(st);
-    }
-  }
+  const rl=$("reqlist"),tg=$("inb-arch-t");
+  if(tg)tg.textContent=INBARCH?"· hide":"· show";
+  if(rl)rl.style.display=INBARCH?"":"none";
+  renderInboxDetail();
 }
 async function joinDecide(id,ok){
   await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
@@ -2708,7 +2721,7 @@ function renderGates(){
     pop.style.display=(GPOP&&GATEWAIT.length)?"block":"none";
     if(GPOP&&GATEWAIT.length&&!busy.startsWith("gq-")&&!busy.startsWith("gw-"))pop.innerHTML=
       `<div class="gpophd"><span>consequence waits (0012)</span>
-        <span class="lnk" onclick="GPOP=false;document.querySelector('.tab[data-v=req]').click()">the full queue →</span></div>`
+        <span class="lnk" onclick="GPOP=false;document.querySelector('.tab[data-v=inbox]').click()">the inbox →</span></div>`
       +GATEWAIT.slice(0,4).map(r=>miniGate(r,"gq-")).join("")
       +(GATEWAIT.length>4?`<div class="quiet2" style="text-align:center">+ ${GATEWAIT.length-4} more in the queue</div>`:"");
   }
@@ -4226,9 +4239,11 @@ function objCard(r,questions,inPane){
         +(res.graph?`<div class="row wtoggle" onclick="walkToggle('${r.id}')">⤳ ${WALKOPEN.has(r.id)?"close the choreography":"see the choreography — what you are approving"}</div>`:"")
         +(res.graph&&WALKOPEN.has(r.id)?renderGraph(res.graph,r.id,false):"")
         +(res.keep_fresh_offer?`<div class="row"><label><input type="checkbox" ${KF.has(r.id)?"checked":""} onchange="kfToggle('${r.id}')"> …and keep “${esc(res.keep_fresh_offer.topic)}” fresh — ${esc(res.keep_fresh_offer.terms)} · a standing spend (0032)</label></div>`:"")
-        +`<div class="td-in" style="margin-top:.35rem"><input id="gwo-${r.id}" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></div>`
-        +`<div style="margin-top:.4rem"><button class="sbtn ok" onclick="objDecide('${r.id}',true)">fan the plan</button> `
-        +`<button class="sbtn no" onclick="objDecide('${r.id}',false)">decline</button></div>`;
+        +(inPane
+          ?`<div class="td-in" style="margin-top:.35rem"><input id="gwo-${r.id}" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></div>`
+           +`<div style="margin-top:.4rem"><button class="sbtn ok" onclick="objDecide('${r.id}',true)">fan the plan</button> `
+           +`<button class="sbtn no" onclick="objDecide('${r.id}',false)">decline</button></div>`
+          :`<div class="row" style="margin-top:.35rem"><span class="lnk" onclick="goInbox('${r.id}')">waiting on you — decide in the Inbox →</span></div>`);
     }else if(r.status==="approved"){
       /* rule 11: working work always offers its stop */
       body=`<div style="margin-top:.35rem"><button class="sbtn no" onclick="objCancel('${r.id}')">stop this — cancel at the next safe boundary</button></div>`;
@@ -4249,10 +4264,12 @@ function objCard(r,questions,inPane){
     }else if(r.status==="denied"){
       body="";                       /* the Journey strip carries the declined word */
     }
-    const qhtml=openQs.map(x=>
-      `<div class="obj-q">the flow asks: ${esc((x.text||"").slice(0,140))}`+
-      `<div class="qa"><input id="qa-${x.id}" placeholder="your answer — silence is denial">`+
-      `<button class="sbtn ok" onclick="objAnswer('${x.id}')">answer</button></div></div>`).join("");
+    const qhtml=openQs.map(x=>inPane
+      ?`<div class="obj-q">the flow asks: ${esc((x.text||"").slice(0,140))}`+
+       `<div class="qa"><input id="qa-${x.id}" placeholder="your answer — silence is denial">`+
+       `<button class="sbtn ok" onclick="objAnswer('${x.id}')">answer</button></div></div>`
+      :`<div class="obj-q">the flow asks: ${esc((x.text||"").slice(0,120))} `+
+       `<span class="lnk" onclick="goInbox('${x.id}')">answer in the Inbox →</span></div>`).join("");
     return `<div class="req obj${inPane?"":" clickable"}"${inPane?"":` onclick="paneObj('${r.id}',event)" title="open in the reading pane"`}><span class="kind">objective</span>
      <span class="txt">${esc(r.text||"")}<div class="sub">${r.id} · ${(r.at||"").slice(0,19).replace("T"," ")}</div>
      ${journey(r)}${body}${qhtml}</span><span class="st">${r.status}</span></div>`;
