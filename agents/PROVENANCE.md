@@ -856,3 +856,10 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 | File | Author | Note |
 |---|---|---|
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The reading pane: paneOpen/renderPane on the parlor's geometry with one-rail-one-attention precedence; objCard extracted so ONE builder serves list and pane (rule 7 for the glass); nearInput resolves inputs nearest the click so duplicate surfaces never steal words. Proven live: approve-from-pane and decline-with-words-from-pane both landed; the too-sticky busy-guard found and fixed in the walk. |
+
+## Fable 5 — 2026-08-12 (0052 sp2 — the doors: every mention opens in the pane)
+
+| File | Author | Note |
+|---|---|---|
+| `orreth_sim/speech.py` + `tests/test_speech.py` | Fable 5 (claude-fable-5) | Twelve reader sentences (suite 335): known record shapes read as prose; the unknown shape confesses; the miss speaks both truths. |
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | Text-node-only linkify (attributes never touched); the record-reader pane; breadcrumbs (fresh walk on list click, ← retraces); requests read in-pane show their raw result — full refs, every one a door. Proven live: queue → closure → full ref → "THE HUMAN'S WORDS" as a sentence. |

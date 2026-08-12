@@ -99,6 +99,38 @@ SENTENCES = {
     "gate-word-declined-reply":
         "your words route like a thumbs-down — the studio reads them, and "
         "what they become comes back to your queue",
+    # ---- the record-reader (0052 sp2): known shapes read as sentences -------
+    # The pane renders a record's MEANING first, in these words, with the
+    # honest structure beneath; an unknown shape says so and never fakes prose.
+    "reader-feedback":
+        "the human said: «⟦quoted⟧» — state: ⟦state⟧",
+    "reader-feedback-resolution":
+        "the human's words were answered: ⟦outcome⟧⟦why⟧",
+    "reader-assay":
+        "scored ⟦score⟧ — “⟦why⟧” (yardstick: ⟦rubric⟧)",
+    "reader-cancellation":
+        "stopped by the human's word — ⟦finished⟧ piece(s) had finished, "
+        "⟦stopped⟧ stopped; left undone: ⟦undone⟧",
+    "reader-gate-word":
+        "words the human left beside a ⟦decision⟧: «⟦quoted⟧»",
+    "reader-rest":
+        "a ⟦kind⟧ rested by the human's word",
+    "reader-referral":
+        "pointed to ⟦keeper⟧ — ⟦note⟧",
+    "reader-plan":
+        "a plan for “⟦objective⟧” — ⟦n⟧ intention(s), priced and gated",
+    "reader-outcome":
+        "the close-out of “⟦objective⟧” — verification ⟦verification⟧ "
+        "across ⟦n⟧ branch(es)",
+    "reader-audience":
+        "⟦name⟧ was asked «⟦asked⟧» and answered: «⟦reply⟧»",
+    "reader-unknown":
+        "a ⟦kind⟧ record — its shape has no reader yet; the structure below "
+        "is honest data, not prose",
+    "reader-miss":
+        "this floor's shelf does not hold ⟦ref⟧ — the reference may be "
+        "shortened for display, or the record lives on another floor (the "
+        "cross-floor door is a named gap)",
 }
 
 # 0050 sp3 — the UAT personas (0049 §3): the tester is craft too, tuned at

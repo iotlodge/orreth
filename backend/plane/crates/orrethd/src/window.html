@@ -560,6 +560,14 @@
   #rdr-body .req .sub{white-space:normal}
   .req.clickable,.obj.clickable{cursor:pointer}
   .req.clickable:hover,.obj.clickable:hover{border-color:var(--brassdim)}
+  /* the doors (0052 sp2): every mention opens in the pane */
+  .door{color:var(--blue);cursor:pointer;border-bottom:1px dotted var(--blue)}
+  .door:hover{color:var(--brass);border-bottom-color:var(--brass)}
+  .rdr-crumb{cursor:pointer;color:var(--dim);font:.7rem var(--mono);margin-right:.6em}
+  .rdr-crumb:hover{color:var(--brass)}
+  .rdr-sentence{font:.85rem var(--serif);color:var(--star);margin:.4rem 0 .6rem;line-height:1.5}
+  .rdr-meta{font:.66rem var(--mono);color:var(--dim);margin:.2rem 0}
+  .rdr-struct{font:.68rem var(--mono);color:var(--dim);white-space:pre-wrap;background:var(--deep);border:1px solid var(--hair);border-radius:8px;padding:.5rem .7rem;margin-top:.5rem;overflow-x:auto}
   .pws{padding:.7rem 1.1rem;border-bottom:1px solid var(--hair);overflow-y:auto;max-height:52%;
     display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.8rem}
   .wsp{border:1px solid var(--hair);border-radius:10px;padding:.7rem .9rem;background:rgba(255,255,255,.02);
@@ -1026,7 +1034,7 @@
      and speaking happen where you read. One rail, one attention: the parlor
      takes precedence when you visit someone; the reader returns after. -->
 <div class="parlor rdr" id="reader">
-  <div class="phd"><span class="nm" id="rdr-title" style="white-space:normal">—</span>
+  <div class="phd"><span class="rdr-crumb" id="rdr-back" onclick="readerBack()" style="display:none" title="back — reading is a walk, and walks retrace">←</span><span class="nm" id="rdr-title" style="white-space:normal">—</span>
     <span class="x" onclick="readerClose()" style="margin-left:auto">✕</span></div>
   <div class="pdid" id="rdr-sub"></div>
   <div class="pth" id="rdr-body"></div>
@@ -2464,8 +2472,10 @@ function reqRow(r,inPane){
      approved always offers its REST — reversible, recorded, never a delete */
   const rest=(r.kind==="standing-charter"||r.kind==="reflex")
     &&(r.status==="approved"||r.status==="done");
+  /* in the pane, the whole result shows — FULL refs, every one a door */
+  const raw=inPane&&r.result?`<div class="rdr-struct">${esc(JSON.stringify(r.result,null,1).slice(0,2500))}</div>`:"";
   return `<div class="req${inPane?"":" clickable"}"${inPane?"":` onclick="paneReq('${r.id}',event)" title="open in the reading pane"`}><span class="kind">${r.kind||"request"}</span>
-   <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
+   <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}${raw}</span>
    ${w?`<span class="td-in" style="margin:.2rem 0;display:flex"><input id="gw-${r.id}" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></span>
     <button class="sbtn ok" onclick="gateGo('${r.id}',true,'${r.kind}')">${w[0]}</button>
     <button class="sbtn no" onclick="gateGo('${r.id}',false,'${r.kind}')">${w[1]}</button>`
@@ -2541,6 +2551,7 @@ async function loadReq(){
             "nothing in flight.")
       +`<div class="qband"><b>settled — the record keeps every word</b>
         <span class="n">· ${settled.filter(keep).length}</span></div>`+drawers;
+    linkifyEl($("reqlist"));            /* every mention a door (0052 sp2) */
     /* the asklog retired with the Ask tab (0045 sp1) — gathers live in the
        Requests bands like every other kind */
   }catch{}
@@ -2914,7 +2925,7 @@ function parlorLine(cls,text,meta){
   const th=$("p-thread"); th.querySelectorAll(".wait").forEach(e=>e.remove());
   const d=document.createElement("div"); d.className="msg "+cls; d.textContent=text;
   if(meta){const m=document.createElement("span");m.className="mt";m.textContent=meta;d.appendChild(m)}
-  th.appendChild(d); th.scrollTop=th.scrollHeight;
+  th.appendChild(d); linkifyEl(d); th.scrollTop=th.scrollHeight;
 }
 function parlorWait(){
   const th=$("p-thread"); if(!PA||th.querySelector(".wait"))return;
@@ -3108,14 +3119,100 @@ function readerClose(){
     document.body.classList.remove("parlor-open");
 }
 function paneReq(id,ev){
-  if(ev&&ev.target.closest("button,input,a,label,.tchip,.qchip,.wtoggle"))return;
+  if(ev&&ev.target.closest("button,input,a,label,.tchip,.qchip,.wtoggle,.door"))return;
   if(PANE&&PANE.id===id)return;
+  TRAIL=[];                             /* a list click starts a fresh walk */
   readerOpen("request",id);
 }
 function paneObj(id,ev){
-  if(ev&&ev.target.closest("button,input,a,label,.tchip,.qchip,.wtoggle"))return;
+  if(ev&&ev.target.closest("button,input,a,label,.tchip,.qchip,.wtoggle,.door"))return;
   if(PANE&&PANE.id===id)return;
+  TRAIL=[];
   readerOpen("objective",id);
+}
+/* ── THE DOORS (0052 sp2): every mention opens in the pane. Text nodes only
+      — attributes are never touched, so ids inside handlers stay whole. ── */
+const DOOR_RX=/(req-\d+-\d+|sha256:[0-9a-f]{8,64})/g;
+function linkifyEl(root){
+  if(!root)return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+  const hits=[];let n;
+  while((n=w.nextNode())){
+    if(n.parentElement&&n.parentElement.closest(".door,input,textarea,script,button"))continue;
+    if(DOOR_RX.test(n.nodeValue)){hits.push(n)}DOOR_RX.lastIndex=0;
+  }
+  hits.forEach(t=>{
+    const frag=document.createDocumentFragment();
+    let last=0,m;DOOR_RX.lastIndex=0;
+    const s=t.nodeValue;
+    while((m=DOOR_RX.exec(s))){
+      frag.appendChild(document.createTextNode(s.slice(last,m.index)));
+      const d=document.createElement("span");d.className="door";
+      d.textContent=m[0];d.title="open in the reading pane";
+      const v=m[0];
+      d.onclick=e=>{e.stopPropagation();
+        v.startsWith("req-")?readerPush("request",v):readerPush("record",v)};
+      frag.appendChild(d);last=m.index+m[0].length;
+    }
+    frag.appendChild(document.createTextNode(s.slice(last)));
+    t.parentNode.replaceChild(frag,t);
+  });
+}
+/* breadcrumbs: reading is a walk, and walks retrace */
+let TRAIL=[];
+function readerPush(kind,id){
+  if(PANE)TRAIL.push(PANE);
+  if(TRAIL.length>12)TRAIL.shift();
+  readerOpen(kind,id);
+}
+function readerBack(){
+  const p=TRAIL.pop();
+  if(p){PANE=p;renderPane()}else readerClose();
+}
+/* the record-reader: known shapes read as sentences from the shelf; an
+   unknown shape confesses (honest structure, never fake prose) */
+const READERS={
+  feedback:b=>b.state==="resolved"
+    ?["reader-feedback-resolution",{outcome:b.outcome||"?",
+      why:b.why?" — "+b.why:""},"the human's words were answered"]
+    :["reader-feedback",{quoted:b.quoted||"",state:b.state||"?"},"the human's words"],
+  assay:b=>["reader-assay",{score:b.score,why:(b.why||"").slice(0,140),
+    rubric:(b.rubric||"").slice(0,60)},"a verdict"],
+  cancellation:b=>["reader-cancellation",{finished:(b.finished||[]).length,
+    stopped:(b.stopped||[]).length,
+    undone:(b.left_undone||[]).slice(0,3).join("; ")||"nothing"},"a cancellation"],
+  gate_word:b=>["reader-gate-word",{decision:b.decision||"decision",
+    quoted:b.quoted||""},"words at a gate"],
+  rest:b=>["reader-rest",{kind:b.kind||"duty"},"a rest"],
+  referral:b=>["reader-referral",{keeper:b.keeper||"?",note:b.note||""},"a referral"],
+  plan:b=>["reader-plan",{objective:(b.objective||"").slice(0,110),
+    n:(b.intentions||[]).length},"a plan"],
+  objective_outcome:b=>["reader-outcome",{objective:(b.objective||"").slice(0,110),
+    verification:b.verification||"?",n:(b.branches||[]).length},"a close-out"],
+  audience:b=>["reader-audience",{name:b.name||"a resident",
+    asked:(b.asked||"").slice(0,90),reply:(b.reply||b.answer||"").slice(0,160)},"an audience"],
+};
+async function renderRecordPane(ref){
+  let body=null;
+  try{const r=await fetch(api("/records/"+encodeURIComponent(ref)+"/body"));
+    if(r.ok)body=await r.json()}catch{}
+  $("rdr-sub").textContent=`record · ${ref.slice(0,34)}…`;
+  if(!body||!Object.keys(body).length){
+    $("rdr-title").textContent="a record this floor cannot show";
+    $("rdr-body").innerHTML=`<div class="rdr-meta">${esc(say("reader-miss",{ref:ref.slice(0,26)+"…"},"this floor's shelf does not hold "+ref.slice(0,26)+"…"))}</div>`;
+    return;
+  }
+  const key=Object.keys(body)[0], b=body[key]||{};
+  const rd=READERS[key];
+  let sent,title;
+  if(rd){const [name,slots,t]=rd(b);
+    sent=say(name,slots,"");title=t}
+  else{sent=say("reader-unknown",{kind:key},`a ${key} record`);title=`a ${key} record`}
+  $("rdr-title").textContent=title;
+  $("rdr-body").innerHTML=
+    `<div class="rdr-sentence">${esc(sent)}</div>`
+    +`<div class="rdr-struct">${esc(JSON.stringify(body,null,1).slice(0,3000))}</div>`;
+  linkifyEl($("rdr-body"));
 }
 async function renderPane(){
   if(!PANE)return;
@@ -3125,6 +3222,8 @@ async function renderPane(){
   if(a&&$("reader").contains(a)
       &&(a.tagName==="INPUT"||a.tagName==="TEXTAREA"))return;
   let q;try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{return}
+  const bk=$("rdr-back");if(bk)bk.style.display=TRAIL.length?"":"none";
+  if(PANE.kind==="record")return renderRecordPane(PANE.id);
   const r=q.find(x=>x.id===PANE.id);
   if(!r){$("rdr-title").textContent="gone from the queue";
     $("rdr-sub").textContent=PANE.id;$("rdr-body").innerHTML="";return}
@@ -3134,6 +3233,7 @@ async function renderPane(){
   $("rdr-body").innerHTML = PANE.kind==="objective"
     ? objCard(r,q.filter(x=>x.kind==="question"),true)
     : reqRow(r,true);
+  linkifyEl($("rdr-body"));             /* doors inside the pane too */
 }
 /* ── THE THUMB (0048 sp2): the human answers back. A thumb judges ONE record
       by hash and rides the same request queue as every other human word —
@@ -4037,6 +4137,7 @@ async function loadObjectives(){
   $("objlist").innerHTML= objs.length?
     objs.slice().reverse().map(r=>objCard(r,questions,false)).join("")
     : `<div class="quiet">no objectives yet — state one above; a plan will stage for your approval.</div>`;
+  linkifyEl($("objlist"));              /* every mention a door (0052 sp2) */
 }
 function objCard(r,questions,inPane){
   /* ONE builder for list and pane (0052 sp1, rule 7 for the glass) */

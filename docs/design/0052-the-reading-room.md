@@ -83,6 +83,24 @@ question the machine could have brought to you.
    elements, not pixels. Parlor precedence held: one rail, one attention.
 2. **sp2 — the doors**: linkify everywhere, the record-reader with its
    shape-sentences on the shelf, breadcrumbs.
+   **LANDED + PROVEN LIVE 2026-08-12.** The linkify pass walks TEXT NODES
+   only (attributes never touched — handler ids stay whole): every `req-…`
+   and `sha256:…` in the queue, the objectives, the pane, and the parlor's
+   lines is a door. Twelve reader sentences on the shelf (suite 334→335) —
+   feedback, verdicts, cancellations, gate-words, rests, referrals, plans,
+   close-outs, audiences — with the unknown shape CONFESSING ("no reader
+   yet; the structure below is honest data, not prose") and the miss
+   speaking both truths (shortened-for-display or another floor's shelf).
+   A request read in the pane shows its RAW RESULT — full refs, every one
+   a door — because display-truncated refs in card text open onto the
+   honest miss (a named limit: the full-ref doors live where full refs
+   live). Breadcrumbs: a list click starts a fresh walk, doors push, ←
+   retraces. Proven whole as the human: queue → closure card in pane
+   (where the walk found my sp1 decline had routed CHARTER → REFERRED —
+   "Allen was the wrong keeper", the studio reading the words exactly) →
+   the full feedback ref's door → **"THE HUMAN'S WORDS": the record read
+   as a sentence**, the structure honest beneath, req-675 inside it a
+   door onward, the breadcrumb ready back.
 3. **sp3 — the inbox**: the Inbox view, priority order, ages, the
    settled-with-you drawer.
 4. **The judge's walk**: quinn sweeps the cards for regressions, but the

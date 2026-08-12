@@ -142,3 +142,16 @@ def test_the_gate_takes_words_back():
     assert "record" in speech.SENTENCES["gate-word-approved-reply"]
     d = speech.SENTENCES["gate-word-declined-reply"]
     assert "thumbs-down" in d and "your queue" in d
+
+
+def test_the_record_reader_speaks_plain():
+    """0052 sp2: known record shapes read as sentences from the shelf; the
+    unknown shape confesses instead of faking prose."""
+    got = speech.render(speech.SENTENCES["reader-feedback"],
+                        quoted="too many clicks", state="open")
+    assert got == "the human said: «too many clicks» — state: open"
+    got = speech.render(speech.SENTENCES["reader-cancellation"],
+                        finished=0, stopped=18, undone="18 intents")
+    assert "0 piece(s) had finished, 18 stopped" in got
+    u = speech.SENTENCES["reader-unknown"]
+    assert "no reader yet" in u and "honest data" in u
