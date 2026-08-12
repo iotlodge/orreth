@@ -1323,8 +1323,22 @@ def embed_door() -> None:
     class H(BaseHTTPRequestHandler):
         def do_POST(self):
             ln = int(self.headers.get("content-length") or 0)
+            raw = self.rfile.read(ln) or b"{}"
+            if self.path.split("?")[0] == "/tool":
+                # 0054 sp2 — the farm's invoke door rides the worker's own
+                # server like /craft does: the plane never proxies tool bytes
+                try:
+                    out = json.dumps(tool_invoke(json.loads(raw))).encode()
+                except Exception as e:
+                    out = json.dumps({"error": str(e)[:140]}).encode()
+                self.send_response(200)
+                self.send_header("content-type", "application/json")
+                self.send_header("access-control-allow-origin", "*")
+                self.end_headers()
+                self.wfile.write(out)
+                return
             try:
-                data = json.loads(self.rfile.read(ln) or b"{}")
+                data = json.loads(raw)
                 vecs = meaning.embed([str(t) for t in data.get("texts") or []]) or []
             except Exception:
                 vecs = []
@@ -2611,13 +2625,49 @@ def tavily(q: str, n: int = 3) -> list:
         return [{"title": f"(search dark — ORRETH_SEARCH_OFF) placeholder finding on {q}",
                  "content": "the live web is off by the human's dial; unset the env to spend again",
                  "url": "local://demo"}]
+    # 0054 sp2 (JB's lock L-A) — the DECLARED daily ceiling, enforced at the
+    # one place every caller passes (G5's shape, vera's assay budget): a
+    # durable line per live search, counted since UTC midnight; past the
+    # ceiling the placeholder speaks honestly and nothing is spent.
+    if _search_spent_today() >= SEARCH_DAILY:
+        return [{"title": f"(search ceiling — {SEARCH_DAILY}/day reached) placeholder finding on {q}",
+                 "content": "the declared daily search spend is used up; it resets at UTC "
+                            "midnight — a standing spend is ceilinged, never an accident (0054 L-A)",
+                 "url": "local://ceiling"}]
     if not os.environ.get("TAVILY_API_KEY"):
         return [{"title": f"(no TAVILY_API_KEY) placeholder finding on {q}",
                  "content": "set the key to gather real sourced knowledge", "url": "local://demo"}]
     req = urllib.request.Request("https://api.tavily.com/search", method="POST",
         data=json.dumps({"api_key": os.environ["TAVILY_API_KEY"], "query": q,
                          "max_results": n}).encode(), headers={"Content-Type": "application/json"})
-    return json.loads(urllib.request.urlopen(req).read())["results"]
+    results = json.loads(urllib.request.urlopen(req).read())["results"]
+    _search_ledger_mark(q)
+    return results
+
+
+SEARCH_DAILY = int(os.environ.get("ORRETH_SEARCH_DAILY", "6"))
+_SEARCH_LEDGER = HOME / "farm" / "searches.jsonl"
+
+
+def _search_spent_today() -> int:
+    """Live searches since UTC midnight, from the durable ledger."""
+    if not _SEARCH_LEDGER.exists():
+        return 0
+    today = NOW()[:10]
+    n = 0
+    for ln in _SEARCH_LEDGER.read_text().splitlines():
+        try:
+            if json.loads(ln).get("at", "")[:10] == today:
+                n += 1
+        except Exception:
+            continue
+    return n
+
+
+def _search_ledger_mark(q: str) -> None:
+    _SEARCH_LEDGER.parent.mkdir(parents=True, exist_ok=True)
+    with _SEARCH_LEDGER.open("a") as f:
+        f.write(json.dumps({"at": NOW(), "q": q[:80]}) + "\n")
 
 
 def floor_knowledge(port: int, scope: str):
@@ -3124,6 +3174,58 @@ def domain_packages(port: int, scope: str, topic: str = "") -> list[dict]:
                      "doubted": bool(d["states"].get("investigating")
                                      or d["states"].get("recalled"))})
     return rows
+
+
+def tool_invoke(payload: dict) -> dict:
+    """0054 sp2 — the Farm's ONE invoke door (0018 finally callable): resolve
+    the SERVING service on the named floor, refuse the discredited at the
+    threshold (0026 §5), METER FIRST — the plane's refusal of a non-serving
+    service is the authorization, not telemetry — then execute against the
+    service's own endpoint (POST {endpoint}/call, the local-stall protocol)
+    and return the result. Bulk results never become records here (the
+    pointer law, 0039): the caller's own stage observations carry the digest
+    and the provenance. Every refusal wears the one face (rule 4)."""
+    REFUSED = {"error": "request cannot be served under this capability"}
+    service = str(payload.get("service") or "")
+    tool = str(payload.get("tool") or "")
+    args = payload.get("args") or {}
+    did = str(payload.get("did") or "anonymous-consumer")
+    port = int(payload.get("port") or 4520)
+    scope = FLOOR_SCOPES.get(port) or ""
+    try:
+        roster = (call(port, "GET", "/farm") or {}).get("services", [])
+    except Exception:
+        return REFUSED
+    svc = next((s for s in roster if s.get("name") == service
+                and s.get("state") == "serving"), None)
+    if not svc or not isinstance(svc.get("endpoint"), str):
+        return REFUSED
+    if tool not in {t.get("name") for t in (svc.get("manifest") or [])}:
+        return REFUSED                       # off the pinned manifest = not a tool
+    try:
+        _, bodies, _ = floor_knowledge(port, scope)
+        if svc.get("did") in purge.discredited_dids(bodies):
+            return REFUSED
+    except Exception:
+        pass
+    t0 = time.time()
+    try:                                     # the gate: a non-serving service 403s here
+        call(port, "POST", "/farm/meter",
+             {"name": service, "caller": did, "ms": 0})
+    except Exception:
+        return REFUSED
+    try:
+        req = urllib.request.Request(
+            svc["endpoint"].rstrip("/") + "/call", method="POST",
+            data=json.dumps({"tool": tool, "args": args}).encode(),
+            headers={"Content-Type": "application/json"})
+        out = json.loads(urllib.request.urlopen(req, timeout=45).read())
+    except Exception as e:
+        return {"error": f"the stall did not answer: {str(e)[:100]}"}
+    if isinstance(out, dict):
+        out["_served"] = {"service": service, "by": svc.get("did"),
+                          "ms": int((time.time() - t0) * 1000)}
+    return out
 
 
 def gather(port: int, scope: str, text: str) -> str:

@@ -921,3 +921,11 @@ Her second walk (req-694): **Stable 0 findings, Pulse 0 findings** (both were al
 | `orreth_sim/desk.py` | Fable 5 (claude-fable-5) | The desk's genesis: 16 reference prompts (AST-extracted verbatim, never retyped; the two inline ones made first-class) + 3 schema hints + the persona — 20 assets the improver's beat plants on the shelf; code literal is genesis and fallback, never the living word. |
 | `console_worker.py` | Fable 5 (claude-fable-5) | Becky-per-floor: a join-desk delegate per tended floor, each chained to the pinned root — grant_lease mints for the floor that was asked, not f:prod always. The planting loop takes desk craft beside sentences and personas. JoinDesk untouched; its proof-not-claims tests hold. |
 | `agents/flavors/05-desk/run.py` | Fable 5 (claude-fable-5) | charles's birth walk: joins u:demo/e:desk/f:charles through his own gate, acquires persona/pipeline/disclaimer from the shelf by ref, files his birth record citing them. |
+
+## Fable 5 — 2026-08-12 (0054 sp2 — the supply line: the Farm learns to serve a call)
+
+| File | Author | Note |
+|---|---|---|
+| `orreth_sim/tradingdata.py` | Fable 5 (claude-fable-5) | The reference's market-data machinery ported as INTENT: one snapshot per ticker per half-hour, retry ladder, honest darkness, six indicators in plain pandas, chart series in the bundle's exact shape; 12 reference calls consolidated to 8 tools. Pure machinery — no wire, no signing. |
+| `tradingdata_server.py` | Fable 5 (claude-fable-5) | The desk's keyless local stall: GET answers the keeper's heartbeats, POST /call executes the eight declared tools. |
+| `console_worker.py` | Fable 5 (claude-fable-5) | The Farm's FIRST invoke door (POST :4562/tool): serving-on-the-named-floor → discredit refused at the threshold → meter-first as the gate → execute at the stall; bulk never becomes records; every miss wears the one refusal face. And the L-A ceiling at tavily()'s chokepoint: durable per-day search ledger, default 6/day, honest placeholder past it — the Tavily lesson institutionalized. |

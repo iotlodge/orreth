@@ -97,6 +97,30 @@ a trade. The compliance disclaimer rides every report as policy craft.**
    machinery ported as intent) planted in the Farm; Tavily's three desk
    queries under the declared ceiling; every call a worldline record.
    Proof: 12 + 3 calls land metered on a real NVDA fetch.
+   **LANDED + PROVEN LIVE 2026-08-12.** The reference's 742-line
+   tradingdata became `orreth_sim/tradingdata.py` — the INTENT ported
+   (one snapshot per ticker per half-hour, everything slices from it;
+   retry ladder; honest darkness; indicators in plain pandas; the
+   reference's 12 calls consolidated to 8 tools) — wrapped by a keyless
+   local stall (`tradingdata_server.py` :4570) planted at charlotte's
+   gate with a STABLE did (`did:web:desk.local:tradingdata` — the
+   local-service DID-churn trap named by the map, dodged), manifest
+   pinned, probation earning serving on live beats. **The Farm's invoke
+   door finally exists** (`POST :4562/tool` — no such door anywhere
+   before): resolve serving on the named floor → refuse the discredited
+   at the threshold → METER FIRST (the plane's 403 is the authorization,
+   not telemetry) → execute at the stall → return; bulk never becomes
+   records (the pointer law); every miss wears the one refusal face
+   (rule 4 — proven: off-manifest tool and unknown service answer
+   identically). Proven live under charles's own DID: **8/8 tools
+   metered on the plane** (the cache visible in the wire: 1420ms fetch,
+   then 11ms slices); the desk's three Tavily queries via `gather` →
+   9 findings quarantined at 0.0000 on f:charles, metered. **The L-A
+   ceiling is law at the one chokepoint every caller passes**
+   (`tavily()`): a durable line per live search since UTC midnight,
+   default 6/day (`ORRETH_SEARCH_DAILY`); past it the placeholder
+   speaks honestly and the ledger gains no line — proven: the seventh
+   search spent nothing. Suite 330+5 green.
 3. **sp3 — the first report**: "@charles analyze NVDA" as an objective —
    plan gate up front, stages as intentions, every artifact a signed
    record; the delta retrieved via the time dial; the polished report +
