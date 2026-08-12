@@ -552,6 +552,14 @@
   .jst.jwarn{color:#e8b34a;border-color:#8a6f42}
   .jst.jend{color:var(--red);border-color:var(--hair2)}
   .jsep{color:var(--faint)}
+  /* the reading pane (0052 sp1): the parlor's geometry, the reader's purpose */
+  .rdr{width:min(560px,100vw)}
+  .rdr .pth{padding:.7rem .9rem;overflow-y:auto}
+  #rdr-body .req{flex-direction:column;align-items:stretch;gap:.3rem;cursor:default}
+  #rdr-body .req .txt{white-space:normal}
+  #rdr-body .req .sub{white-space:normal}
+  .req.clickable,.obj.clickable{cursor:pointer}
+  .req.clickable:hover,.obj.clickable:hover{border-color:var(--brassdim)}
   .pws{padding:.7rem 1.1rem;border-bottom:1px solid var(--hair);overflow-y:auto;max-height:52%;
     display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.8rem}
   .wsp{border:1px solid var(--hair);border-radius:10px;padding:.7rem .9rem;background:rgba(255,255,255,.02);
@@ -1011,6 +1019,17 @@
   <div class="pchips" id="p-chips"></div>
   <div class="pin"><input id="p-in" placeholder="ask — the resident fetches, you never read raw">
     <button onclick="parlorSay()">Speak →</button></div>
+</div>
+
+<!-- THE READING ROOM (0052 sp1): the pane that ends the bouncing — click
+     anything anywhere, it opens HERE; the list never scrolls away; deciding
+     and speaking happen where you read. One rail, one attention: the parlor
+     takes precedence when you visit someone; the reader returns after. -->
+<div class="parlor rdr" id="reader">
+  <div class="phd"><span class="nm" id="rdr-title" style="white-space:normal">—</span>
+    <span class="x" onclick="readerClose()" style="margin-left:auto">✕</span></div>
+  <div class="pdid" id="rdr-sub"></div>
+  <div class="pth" id="rdr-body"></div>
 </div>
 
 <script>
@@ -2403,7 +2422,7 @@ function planNote(r){
   if(p.state==="fallback")return `<div class="sub" style="color:var(--amber,#e8b34a)">🗺 ${p.label||"planned by arithmetic"}${p.note?` — ${p.note}`:""}</div>`;
   return "";
 }
-function reqRow(r){
+function reqRow(r,inPane){
   /* one request, rendered — the gates (0012: consequence waits) keep their
      buttons wherever the row appears */
   const jgate=r.kind==="join"&&r.status==="staged";
@@ -2445,7 +2464,7 @@ function reqRow(r){
      approved always offers its REST — reversible, recorded, never a delete */
   const rest=(r.kind==="standing-charter"||r.kind==="reflex")
     &&(r.status==="approved"||r.status==="done");
-  return `<div class="req"><span class="kind">${r.kind||"request"}</span>
+  return `<div class="req${inPane?"":" clickable"}"${inPane?"":` onclick="paneReq('${r.id}',event)" title="open in the reading pane"`}><span class="kind">${r.kind||"request"}</span>
    <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}</span>
    ${w?`<span class="td-in" style="margin:.2rem 0;display:flex"><input id="gw-${r.id}" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></span>
     <button class="sbtn ok" onclick="gateGo('${r.id}',true,'${r.kind}')">${w[0]}</button>
@@ -2563,7 +2582,7 @@ function gateWords(r){const w=GATE_WORDS[r.kind];
 function gateGo(id,ok,kind){
   /* 0051 sp3 — the words back: a decision may carry the human's words;
      a declined gate's words route like a 👎 (the worker's door decides) */
-  const gw=$("gw-"+id),word=gw?gw.value.trim():"";
+  const gw=nearInput("gw-",id),word=gw?gw.value.trim():"";
   if(word)fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({kind:"gate-word",of:id,decision:ok?"approved":"denied",
       text:word,text_summary:ok?"words beside an approval":"words beside a decline"})});
@@ -2642,7 +2661,7 @@ function gcToggle(id){GC.has(id)?GC.delete(id):GC.add(id)}
 const gapOffer=r=>{const o=(r.result||{}).gap_offer;
   return o?`<div class="sub" style="color:var(--near)"><label><input type="checkbox" ${GC.has(r.id)?"checked":""} onchange="gcToggle('${r.id}')"> 🌱 …and grow the craft this reading lacked: ${esc((o.gaps||[]).join("; "))} — ${esc(o.terms)}</label></div>`:""};
 async function objDecide(id,ok){
-  const gwo=$("gwo-"+id),word=gwo?gwo.value.trim():"";
+  const gwo=nearInput("gwo-",id),word=gwo?gwo.value.trim():"";
   if(word)fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({kind:"gate-word",of:id,decision:ok?"approved":"denied",
       text:word,text_summary:ok?"words beside an approval":"words beside a decline"})});
@@ -2859,7 +2878,7 @@ const RESCOL={becky:"var(--brass)",vigil:"var(--viol)",steward:"var(--blue)",
   grace:"#e89a6b",allen:"#8fb8d9",vera:"#8e93dd",studio:"#d4b483"};
 let PA=null;                              /* {name, session, seen, timer} — one audience */
 function openParlor(name){
-  if(!name)return; closeParlor();
+  if(!name)return; closeParlor();readerClose(); /* one rail, one attention (0052) */
   /* the audience is OF a place (0030 §4): base and floor pin at open, so the
      conversation survives however far the human navigates afterwards */
   PA={name,base:API,floor:floorScope||"",session:"pa-"+Math.random().toString(36).slice(2,10),
@@ -3067,6 +3086,55 @@ function wsModal(pi){
 function wsmApply(){const p=$("wsm-pan");if(p)p.style.transform=`translate(${WSM.tx}px,${WSM.ty}px) scale(${WSM.z})`}
 function wsmZoom(f){WSM.z=Math.min(3,Math.max(0.35,WSM.z*f));wsmApply()}
 function wsmReset(){WSM={z:1,tx:0,ty:0,drag:null};wsmApply()}
+/* ── THE READING ROOM (0052 sp1): one place to stand. paneOpen holds the
+      thing being attended to; the SAME builders render list and pane (rule
+      7 for the glass — two surfaces can never disagree); inputs resolve
+      NEAR the click so the pane and the list coexist without id wars. ── */
+let PANE=null;                            /* {kind:"objective"|"request", id} */
+function nearInput(pref,id){
+  const t=window.event&&window.event.target;
+  const s=(t&&t.closest&&t.closest("#rdr-body,.req,.obj"))||document;
+  return s.querySelector("[id='"+pref+id+"']")||document.getElementById(pref+id);
+}
+function readerOpen(kind,id){
+  closeParlor();                          /* one rail, one attention */
+  PANE={kind,id};
+  $("reader").classList.add("on");document.body.classList.add("parlor-open");
+  renderPane();
+}
+function readerClose(){
+  PANE=null;$("reader").classList.remove("on");
+  if(!$("parlor").classList.contains("on"))
+    document.body.classList.remove("parlor-open");
+}
+function paneReq(id,ev){
+  if(ev&&ev.target.closest("button,input,a,label,.tchip,.qchip,.wtoggle"))return;
+  if(PANE&&PANE.id===id)return;
+  readerOpen("request",id);
+}
+function paneObj(id,ev){
+  if(ev&&ev.target.closest("button,input,a,label,.tchip,.qchip,.wtoggle"))return;
+  if(PANE&&PANE.id===id)return;
+  readerOpen("objective",id);
+}
+async function renderPane(){
+  if(!PANE)return;
+  const a=document.activeElement;         /* a hand mid-word outranks the tick —
+     but only a TYPING hand: focus resting on a button must never freeze the
+     pane (found live: the pane stayed «staged» after its own approval) */
+  if(a&&$("reader").contains(a)
+      &&(a.tagName==="INPUT"||a.tagName==="TEXTAREA"))return;
+  let q;try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{return}
+  const r=q.find(x=>x.id===PANE.id);
+  if(!r){$("rdr-title").textContent="gone from the queue";
+    $("rdr-sub").textContent=PANE.id;$("rdr-body").innerHTML="";return}
+  /* human titles lead; ids demote to small doors (quinn's wound) */
+  $("rdr-title").textContent=(r.text||r.kind||"").slice(0,160);
+  $("rdr-sub").textContent=`${r.kind} · ${r.id} · ${r.status} · ${(r.at||"").slice(0,19).replace("T"," ")}`;
+  $("rdr-body").innerHTML = PANE.kind==="objective"
+    ? objCard(r,q.filter(x=>x.kind==="question"),true)
+    : reqRow(r,true);
+}
 /* ── THE THUMB (0048 sp2): the human answers back. A thumb judges ONE record
       by hash and rides the same request queue as every other human word —
       👍 lands a quiet signed verdict and fades from view (never from the
@@ -3791,7 +3859,7 @@ async function submitObjective(){
   }catch{$("obj-err").textContent="unreachable — is the daemon up? (scripts/dev.sh status)"}
 }
 async function objAnswer(qid){
-  const el=$("qa-"+qid); const t=(el?el.value:"").trim(); if(!t)return;
+  const el=nearInput("qa-",qid); const t=(el?el.value:"").trim(); if(!t)return;
   await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({id:qid,status:"done",result:{answer:t}})});
   loadObjectives();
@@ -3936,10 +4004,12 @@ function thumbHtml(of){
     +`your words go back into the machine">👎</span></div>`;
 }
 function thumbUp(of){TH[of]={st:"gone"};thumbPost(api("/requests"),of,true,"");loadObjectives()}
-function thumbDown(of){TH[of]={st:"ask"};loadObjectives();
-  setTimeout(()=>{const i=$("td-"+of.slice(7,19));if(i)i.focus()},60)}
+function thumbDown(of){TH[of]={st:"ask"};
+  const sc=(window.event&&window.event.target&&window.event.target.closest("#rdr-body,.obj"))||document;
+  loadObjectives();if(PANE)renderPane();
+  setTimeout(()=>{const i=sc.querySelector("[id='td-"+of.slice(7,19)+"']")||$("td-"+of.slice(7,19));if(i)i.focus()},80)}
 async function thumbSend(of){
-  const i=$("td-"+of.slice(7,19));const words=(i?i.value:"").trim();
+  const i=nearInput("td-",of.slice(7,19));const words=(i?i.value:"").trim();
   if(i)i.blur();                   /* or the busy-guard would hold the render */
   TH[of]={st:"heard",req:""};loadObjectives();
   const rid=await thumbPost(api("/requests"),of,false,words);
@@ -3964,7 +4034,12 @@ async function loadObjectives(){
     g=objs.filter(r=>r.status==="approved").length;
     mon.textContent=(w+g)?say("journey-monitor",{n:w+g,waiting:w,working:g},
       `Orreth is tending ${w+g} objective(s) — ${w} waiting on you · ${g} working`):"";}
-  $("objlist").innerHTML= objs.length? objs.slice().reverse().map(r=>{
+  $("objlist").innerHTML= objs.length?
+    objs.slice().reverse().map(r=>objCard(r,questions,false)).join("")
+    : `<div class="quiet">no objectives yet — state one above; a plan will stage for your approval.</div>`;
+}
+function objCard(r,questions,inPane){
+  /* ONE builder for list and pane (0052 sp1, rule 7 for the glass) */
     const res=r.result||{};
     const goal=(res.assembly||{}).goal_hash||(res.plan||{}).goal||"";
     const openQs=questions.filter(x=>x.of===goal&&x.status==="pending");
@@ -4005,15 +4080,14 @@ async function loadObjectives(){
       `<div class="obj-q">the flow asks: ${esc((x.text||"").slice(0,140))}`+
       `<div class="qa"><input id="qa-${x.id}" placeholder="your answer — silence is denial">`+
       `<button class="sbtn ok" onclick="objAnswer('${x.id}')">answer</button></div></div>`).join("");
-    return `<div class="req obj"><span class="kind">objective</span>
+    return `<div class="req obj${inPane?"":" clickable"}"${inPane?"":` onclick="paneObj('${r.id}',event)" title="open in the reading pane"`}><span class="kind">objective</span>
      <span class="txt">${esc(r.text||"")}<div class="sub">${r.id} · ${(r.at||"").slice(0,19).replace("T"," ")}</div>
      ${journey(r)}${body}${qhtml}</span><span class="st">${r.status}</span></div>`;
-  }).join("") : `<div class="quiet">no objectives yet — state one above; a plan will stage for your approval.</div>`;
 }
 $("obj-in").addEventListener("keydown",e=>{if(e.key==="Enter")submitObjective()});
 $("obj-rubric").addEventListener("keydown",e=>{if(e.key==="Enter")submitObjective()});
 
-function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable();loadObjectives();loadObservatory();loadGovernance()}
+function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable();loadObjectives();loadObservatory();loadGovernance();renderPane()}
 tick();setInterval(tick,4000);          /* the console breathes */
 if(window.ORRETH_DEMO){                 /* the spectator's ribbon — honest about the frame */
   const b=document.createElement("div");

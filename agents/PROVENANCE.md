@@ -850,3 +850,9 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 | `orreth_sim/parlor.py` · worker | Fable 5 (claude-fable-5) | The studio joins the residents: card, grounded audience from its own readings, pinned with the DID its own join proved — the worker never touches its key (rule 1); its voiced seat a named gap. |
 | `agents/flavors/04-uat/run.py` | Fable 5 (claude-fable-5) | The instrument-honesty lesson: quinn's first re-walk graded a stale mirror; her eye now reads from the SAME /sentences shelf the glass renders from. Her grade: the original wounds HEALED — «staged» became her delight — and the next layer threaded into the season. |
 | `VERSION` · register · road · atlas · 0049 | Fable 5 (claude-fable-5) | 0.50 → 0.51; the reins row with named gaps; rule 11 in the atlas's trust spine; thread B promoted by JB's own frustration — the reading-room dive is next. |
+
+## Fable 5 — 2026-08-12 (0052 sp1 — the pane: one place to stand)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The reading pane: paneOpen/renderPane on the parlor's geometry with one-rail-one-attention precedence; objCard extracted so ONE builder serves list and pane (rule 7 for the glass); nearInput resolves inputs nearest the click so duplicate surfaces never steal words. Proven live: approve-from-pane and decline-with-words-from-pane both landed; the too-sticky busy-guard found and fixed in the walk. |

@@ -67,6 +67,20 @@ question the machine could have brought to you.
 1. **sp1 — the pane**: the right-rail reader, `paneOpen`, objective and
    request rendering in-pane, decisions + voice lines working from the
    pane, parlor precedence law.
+   **LANDED + PROVEN LIVE 2026-08-12.** Rule 7 for the glass: ONE card
+   builder (`objCard`) and one row builder (`reqRow`) serve both list and
+   pane — the two surfaces can never disagree. The near-click law
+   (`nearInput`) resolves every voice-line/answer input NEAREST the click,
+   so the pane and the list coexist without id wars. Proven whole as the
+   human: an objective clicked open in the pane (human title leading, id
+   demoted to small metadata), a plan APPROVED from the pane (req-666 ran
+   to done), and a second plan DECLINED WITH WORDS typed into the pane's
+   own voice line — "the welcome note should be written by the humans…" —
+   the words entering the 0048 loop from the pane itself. Two live finds,
+   both fixed in the walk: the pane's busy-guard was too sticky (focus
+   resting on a BUTTON froze the refresh — now only a typing hand holds
+   the pane still), and pointer-fidelity taught the proof to target
+   elements, not pixels. Parlor precedence held: one rail, one attention.
 2. **sp2 — the doors**: linkify everywhere, the record-reader with its
    shape-sentences on the shelf, breadcrumbs.
 3. **sp3 — the inbox**: the Inbox view, priority order, ages, the
