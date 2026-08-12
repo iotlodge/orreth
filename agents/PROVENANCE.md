@@ -863,3 +863,9 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 |---|---|---|
 | `orreth_sim/speech.py` + `tests/test_speech.py` | Fable 5 (claude-fable-5) | Twelve reader sentences (suite 335): known record shapes read as prose; the unknown shape confesses; the miss speaks both truths. |
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | Text-node-only linkify (attributes never touched); the record-reader pane; breadcrumbs (fresh walk on list click, ← retraces); requests read in-pane show their raw result — full refs, every one a door. Proven live: queue → closure → full ref → "THE HUMAN'S WORDS" as a sentence. |
+
+## Fable 5 — 2026-08-12 (0052 sp3 — the one inbox)
+
+| File | Author | Note |
+|---|---|---|
+| `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The Inbox tab: everything waiting on the human in one place, gravest first then oldest, riding the Requests tab's own fetch (one wire read, one truth); rows compact — title, id-door, waited-age, voice line, levers — because deciding where you stand must never mean scrolling through evidence the pane already holds. Proven live: 29→28 on a decision from the row. |

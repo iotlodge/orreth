@@ -103,6 +103,23 @@ question the machine could have brought to you.
    door onward, the breadcrumb ready back.
 3. **sp3 — the inbox**: the Inbox view, priority order, ages, the
    settled-with-you drawer.
+   **LANDED + PROVEN LIVE 2026-08-12.** The Inbox tab stands first after
+   Universe with its live badge; everything waiting on the human — staged
+   gates and pending questions across EVERY kind — in one list, gravest
+   first (a declared kind-rank: attestation → testament → consent →
+   canon/external → objectives/improvements → joins → questions) then
+   oldest, each row wearing its waited-age. Rows ride the SAME one-truth
+   fetch as the Requests tab (renderInbox piggybacks loadReq — one wire
+   read, one truth) and went COMPACT in the walk's own finding: a drift
+   diff was towering the list, and deciding-where-you-stand must never
+   mean scrolling through evidence the pane already holds — title, id-door,
+   age, voice line, both levers; the pane one click away. Proven live: 29
+   things waiting became 28 the moment "leave it" was clicked from an inbox
+   row (the decision on the record, the count breathing); the settled-with-
+   you drawer toggles what the human's word touched. Honest note for the
+   judge: a pending QUESTION row opens in the pane but answers on its
+   objective's card still — the answer-in-inbox is the room's next polish
+   if JB's walk demands it.
 4. **The judge's walk**: quinn sweeps the cards for regressions, but the
    closing measure is **JB's own hands** — he felt the wound, so the dive
    closes only when the bouncing is gone for HIM. (quinn's eye cannot see
