@@ -1,0 +1,135 @@
+# 0054 — The Desk (charles comes home)
+
+<!-- PROVENANCE: Fable 5 (claude-fable-5) — designed 2026-08-12 on JB's word:
+     "I would like you to recreate the Trading desk of CortexObserver using
+     Orreth." Ground truth read first: the sample bundle at
+     tmp/charles-NVDA-2026-05-11 (the report IS lock L3, resolved by his own
+     zip) and a full architectural map of ~/PycharmProjects/CortexObserver
+     (LangGraph desk, 16 nodes, 15 prompts, watchlist cron, reflection loop). -->
+
+**Status: 🟡 DESIGNED 2026-08-12 — 0053 sp1 made concrete; awaiting JB's locks.**
+
+## 1. The brief
+
+Recreate CortexObserver's Trading desk **as Orreth objectives** — the
+0049 §4 bar inherited: equal or better, never lift-and-shift. @charles
+becomes a resident; his pipeline becomes a governed walk on the ladder;
+his report becomes the first real Chronicle; his watchlist becomes a
+standing word. The sample bundle (charles-NVDA-2026-05-11) is the
+deliverable's exact shape — headers verbatim, files one-to-one.
+
+**Boundary law restated: the desk observes and reports. It never executes
+a trade. The compliance disclaimer rides every report as policy craft.**
+
+## 2. What the reference taught (condensed)
+
+- **The pipeline (16 stages)**: retrieve context → fetch data → four
+  analysts (market/social/news/fundamentals) → bull/bear debate (cyclic)
+  → research manager → trader → three-way risk debate (cyclic) →
+  compare-to-prior → portfolio manager → persist. Two stages think at the
+  reasoning tier; the rest balanced.
+- **15 prompts**: 13 named skills + 2 inline ones (`compare_to_prior`,
+  `format_report`) whose exact section headers the tabs and the bundle
+  depend on. In CortexObserver the studio EDITS a DB prompt the code
+  never reads back — a wart; in Orreth the worker reads its own shelf
+  (0045), so editing craft IS editing behavior, structurally.
+- **Data**: yfinance (free, no key; flaky — the port carries the
+  one-snapshot-cache invariant, serial fetches, retry ladder, honest
+  `data_quality_errors`) + Tavily (3 calls/run: company news, macro news,
+  social sentiment) + optional Alpha Vantage (skipped v1).
+- **Liveness**: partial-persist after every stage so the glass fills as
+  the run breathes. In Orreth this is free and BETTER: every stage files
+  a signed record; the view is a projection of records (rule 7), not a
+  merged blob.
+- **The learning loop**: decisions wait `outcome_pending`; 5 days later
+  realized return vs SPY becomes a reflection; the next run recalls it.
+- **The delta**: each run loads the prior report and reconciles — in
+  Orreth this is a stacks retrieval with the time dial (0038/0039),
+  which makes 23_delta_vs_prior the memory program's first live test.
+
+## 3. The organ mapping (equal-or-better, named)
+
+| CortexObserver | Orreth organ | Better because |
+|---|---|---|
+| @charles (LangGraph agent) | a resident: persistent DID, joins at becky's gate, persona on the shelf | a self that survives the process (0002/0006); metered under his own name |
+| 15 prompts (13 file + 2 inline) | 15 craft assets on the shelf, per-desk named (`charles-…`) | versioned, gated, editable-with-history (0045/0031); the inline two become first-class |
+| tier registry (reasoning/balanced/fast) | the Stable's classes via ada (0019) | deals, canaries, price-drift cards; F2's class seam kept |
+| MCP tools (tradingdata, Tavily) | Farm services through the gateway (0018) | pinned manifests, worldlines, per-call meter; Tavily under the standing-spend law (0032 + the Tavily lesson) |
+| Command.result partial merge | every stage = a signed Chronicle record, glass reads records live | rule 7; nothing can disagree; each partial is provenance, not cache |
+| Memory Farm episodic + reflection | the Chronicle + scribe-signed observations (0005); reflections recalled next run | author ≠ agent on outcomes; the 0039 metabolism will digest it |
+| compare-to-prior (loads prior blob) | stacks retrieval, time dial, prior report cited by ref | the delta names its evidence; this IS the retrieval test |
+| watchlist cron (APScheduler) | 0032 standing subscription staged at 0012's gate | a recurring spend is the human's standing word — ceilinged, cancellable, visible |
+| ZIP bundle endpoint | bundle door: records + artifact-pointers (charts ride the pointer law, 0022/0039) | the bundle cites its records; charts' bulk never enters the mind |
+| report viewer (8 tabs) + workspace studio | the desk view in the glass; craft edits in Governance | tab shape ported verbatim; prompt tuning = craft-edit gates that actually bind |
+
+## 4. The spoonfuls
+
+1. **sp1 — charles joins**: the floor stands (proposed `u:demo/e:desk/
+   f:charles`, siblings reserved for charlene/chad); charles a resident
+   with persistent DID; his 15 prompts + disclaimer land as shelf craft;
+   the pipeline as a versioned plan template. Proof: his calling card in
+   the parlor, his craft in Governance, census clean.
+2. **sp2 — the supply line**: `tradingdata` (yfinance, the defensive
+   machinery ported as intent) planted in the Farm; Tavily's three desk
+   queries under the declared ceiling; every call a worldline record.
+   Proof: 12 + 3 calls land metered on a real NVDA fetch.
+3. **sp3 — the first report**: "@charles analyze NVDA" as an objective —
+   plan gate up front, stages as intentions, every artifact a signed
+   record; the delta retrieved via the time dial; the polished report +
+   decision.json + chart pointers; the bundle door serves the ZIP shape
+   byte-compatible with the sample. Proof: JB downloads the twin of his
+   own sample, every section citing its records.
+4. **sp4 — the desk glass**: the eight tabs (Full Report · Overview ·
+   Δ vs Prior · Market · Sentiment · News · Fundamentals · Debates),
+   rating badge, price + indicator charts, per-stage progress strip
+   riding real records, the meter visible. (Its HOME — plain view vs
+   the first world in a minimal Capabilities pull — is JB's lock L-C.)
+5. **sp5 — the standing word + the loop**: the watchlist as a 0032
+   subscription (default: market-close weekdays, refresh mode — news
+   re-runs, the rest reuses, ~70% cheaper); the reflection beat (5-day
+   outcome vs SPY → reflection records the next run recalls). This
+   spoonful feeds 0053 sp3 — the memory program eats what it grows.
+
+## 5. The locks staged for JB
+
+- **L-A — the supply line (0053 L2 made concrete)**: yfinance (free) +
+  Tavily at a declared ceiling (recommended: ≤ 6 searches/day ≈ 3/run ×
+  2 runs; hard dial stays). Alpha Vantage skipped v1. Ceiling number =
+  JB's word.
+- **L-B — the watchlist (0053 L1 made concrete)**: recommended start —
+  NVDA alone, weekdays at market close, refresh mode on.
+- **L-C — the desk's home in the glass**: a desk view now, the
+  Capabilities pull later — or a minimal pull v1 with the desk as its
+  first installed world. JB said he'd explain the pull's shape at its
+  dive; this lock is where he does.
+- **L-D — the desk's minds**: which saddled models carry `balanced` and
+  `reasoning` classes (the rig currently saddles haiku + gpt-4o-mini;
+  the reference used sonnet/opus tiers). Quality will show in the first
+  report either way; ada's deal gate is the door.
+- *(0053 L3 — the report's shape — RESOLVED by the sample bundle.
+  0053 L4 — the ten questions — still open, wanted after a week of runs.)*
+
+## 6. Honest boundary
+
+- One desk, one ticker to start; charlene/chad are a prompt-set away by
+  design (the agent-key seam kept), but not this dive.
+- Reports only, forever, on this rig. The disclaimer is non-negotiable
+  craft.
+- yfinance is flaky by nature; honesty rides `data_quality` — an analyst
+  with no data files the honest placeholder, never reasons over nothing.
+- The debate cycles run fixed rounds (1 research, 1 risk) as the
+  reference does; adaptive rounds are future craft.
+- The first reports' quality depends on what's saddled (L-D); we ship
+  honest, then tune craft at gates.
+
+## 7. Convergence
+
+| Organ | What it supplies |
+|---|---|
+| 0053 | the charter this dive serves — sp1 of the course correction |
+| 0027/0030 | the plan gate, the ladder the stages walk |
+| 0045/0050/0031 | the shelf his 15 prompts live on; craft-edit gates as the studio |
+| 0018/0019 | the Farm stall for tradingdata; ada's deals for the desk's minds |
+| 0032 | the watchlist as the human's standing word |
+| 0038/0039 | the time-dial delta; the classes his records wear; the metabolism that will digest them |
+| 0043/0005 | the yardstick when the ten questions arrive; scribe-signed outcomes |
