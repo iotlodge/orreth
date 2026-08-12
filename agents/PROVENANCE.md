@@ -869,3 +869,10 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 | File | Author | Note |
 |---|---|---|
 | `backend/plane/crates/orrethd/src/window.html` | Fable 5 (claude-fable-5) | The Inbox tab: everything waiting on the human in one place, gravest first then oldest, riding the Requests tab's own fetch (one wire read, one truth); rows compact — title, id-door, waited-age, voice line, levers — because deciding where you stand must never mean scrolling through evidence the pane already holds. Proven live: 29→28 on a decision from the row. |
+
+## Fable 5 — 2026-08-12 (the judge's walk — JB's verdict, three defects dead)
+
+| File | Author | Note |
+|---|---|---|
+| `window.html` | Fable 5 (claude-fable-5) | JB's three finds: map(reqRow) passed the array INDEX as inPane — raw JSON polluted every list card after the first (fixed); #v-inbox had no overflow rule in a window that never scrolls — frozen under his hand (fixed); rows verified clean. |
+| `console_worker.py` | Fable 5 (claude-fable-5) | The drift flood: a lag with NOTHING to restore asked the human for a word anyway. Now a lag is a NOTE — self-resolved, one per scope per hour; true drift (a restore exists) alone stages. Fourteen standing lag cards swept; zero true drift was found beneath them. |

@@ -253,6 +253,10 @@
   #ocard.on{opacity:1}
   #ocard .t{color:var(--brass)} #ocard .k{color:var(--faint)}
 
+  /* ── THE INBOX (0052 sp3) — every view carries its OWN scroll; this one
+        arrived without it and froze under JB's hand (his find) ── */
+  #v-inbox{padding:1.6rem 2.4rem;overflow-y:auto}
+
   /* ── PULSE ── */
   #v-pulse{padding:2rem 2.4rem;overflow-y:auto;display:flex;flex-direction:column}
   .hero{display:flex;align-items:baseline;gap:1.2rem;margin-bottom:1.8rem}
@@ -2546,7 +2550,7 @@ async function loadReq(){
     const keep=r=>REQKIND==="all"||(r.kind||"request")===REQKIND;
     const band=(title,rows,empty)=>`<div class="qband"><b>${title}</b>
       <span class="n">· ${rows.length}</span></div>`+
-      (rows.length?rows.map(reqRow).join(""):`<div class="quiet">${empty}</div>`);
+      (rows.length?rows.map(r=>reqRow(r)).join(""):`<div class="quiet">${empty}</div>`);
     /* settled: per-kind drawers — the record kept, never in your face */
     const sk={};settled.filter(keep).forEach(r=>{const k=r.kind||"request";
       (sk[k]=sk[k]||[]).push(r)});
@@ -2554,7 +2558,7 @@ async function loadReq(){
       const open=REQOPEN.has(k);
       return `<div class="qgroup" onclick="reqOpen('${k}')">${open?"▾":"▸"}
         <b>${k}</b> <span class="n">· ${rows.length} settled — ${open?"click to close":"click to open"}</span></div>`
-        +(open?rows.slice(0,40).map(reqRow).join("")
+        +(open?rows.slice(0,40).map(r=>reqRow(r)).join("")
           +(rows.length>40?`<div class="quiet">+${rows.length-40} older — the record keeps every one</div>`:""):"");
     }).join("")||`<div class="quiet">nothing settled yet.</div>`;
     $("reqlist").innerHTML=chips

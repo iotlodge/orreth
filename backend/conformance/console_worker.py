@@ -4877,6 +4877,9 @@ def _recent_gate_word(port: int) -> bool:
     return False
 
 
+_LAG_NOTED: dict = {}   # scope → last lag-note time (JB's find: notes, throttled)
+
+
 def _stage_drift(port: int, scope: str, changed: dict, why: str) -> None:
     """DRIFT stages a finding (0041 §4, locked: detection wears no levers) —
     the diff rides the card; the human's gate decides. The `from` head of each
@@ -4889,8 +4892,19 @@ def _stage_drift(port: int, scope: str, changed: dict, why: str) -> None:
     restore = {k.split(".", 1)[1]: (v or {}).get("from")
                for k, v in changed.items()
                if k.startswith("assets.") and (v or {}).get("from")}
+    # JB's find (2026-08-12, drowning in his own inbox): a lag with NOTHING
+    # to restore asks the human NOTHING — it is a NOTE, never a lever, and
+    # at most one per scope per hour. Only true drift (a restore exists)
+    # stages at the gate; 0041's lock — detection wears no levers — holds
+    # for the finding that actually needs a word.
+    is_lag = not restore
+    if is_lag:
+        last = _LAG_NOTED.get(scope, 0.0)
+        if time.time() - last < 3600:
+            return                        # the hour's note already stands
+        _LAG_NOTED[scope] = time.time()
     try:
-        call(universe_port(port), "POST", "/requests", {
+        card = call(universe_port(port), "POST", "/requests", {
             "kind": "drift", "scope": scope, "restore": restore,
             "text": f"DRIFT at {scope} — {why}",
             "package": f"THE DIFF:\n{diff}\n"
@@ -4901,7 +4915,15 @@ def _stage_drift(port: int, scope: str, changed: dict, why: str) -> None:
                           if restore else
                           "This is an attestation lag — it converges when the "
                           "point next loads; nothing to restore.")})
-        print(f"  ↳ DRIFT staged at {scope}: {why} — the gate holds the diff")
+        if is_lag:
+            call(universe_port(port), "POST", "/requests/resolve",
+                 {"id": card["id"], "status": "done",
+                  "result": {"reply": "a note for the record — the lag "
+                                      "converges on its own; nothing was "
+                                      "asked of you"}})
+            print(f"  ↳ lag NOTED at {scope}: {why} — no word asked")
+        else:
+            print(f"  ↳ DRIFT staged at {scope}: {why} — the gate holds the diff")
     except Exception as e:
         print(f"    (drift staging stumbled: {e})")
 
