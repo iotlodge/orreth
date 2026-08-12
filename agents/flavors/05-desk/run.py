@@ -27,16 +27,61 @@ UNIVERSE = "http://localhost:4500"
 FIELD_DEFAULT = "http://localhost:4520"                # f:charles (shipyard-allocated)
 
 
+def _gate(client, ticker: str, date: str, timeout: float = 600.0) -> bool:
+    """The plan gate up front (0027/0030): the walk is staged as a request in
+    the human's queue and NOTHING runs until a human approves — silence past
+    the timeout is a no, and says so."""
+    import time
+    _, made = client._call("POST", "/requests", {
+        "kind": "desk-run",
+        "text": (f"charles will walk {ticker} ({date}) — 8 data calls through the "
+                 f"Farm's door · ≤3 searches under the daily ceiling · ~15 governed "
+                 f"thoughts (2 at high) · the report lands as records + a bundle. "
+                 f"Reports only; never a trade.")})
+    rid = made.get("id")
+    print(f"· the walk waits at the gate ({rid}) — a human decides")
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        for r in client._call("GET", "/requests")[1].get("requests", []):
+            if r.get("id") == rid:
+                if r.get("status") == "approved":
+                    return True
+                if r.get("status") == "denied":
+                    print("· the human said no — the desk rests")
+                    return False
+        time.sleep(4)
+    print("· no answer at the gate — silence is a no; the desk rests")
+    return False
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--field", default=FIELD_DEFAULT)
     ap.add_argument("--once", action="store_true")
+    ap.add_argument("--analyze", metavar="TICKER")
+    ap.add_argument("--date", default=None)
     args = ap.parse_args()
 
     client = FieldClient(args.field, "charles", role="workforce")
     print(f"· charles is {client.did[:28]}… — the same self, every morning")
     client.join()
     print(f"· lease held on {client.scope} — the desk's own floor")
+
+    if args.analyze:
+        import time as _t
+        from orreth_agent.chassis import GovernedThink
+        import pipeline
+        ticker = args.analyze.upper()
+        date = args.date or _t.strftime("%Y-%m-%d")
+        if not _gate(client, ticker, date):
+            return 1
+        out = pipeline.run(client,
+                           GovernedThink(client, max_tokens=1500),
+                           GovernedThink(client, max_tokens=1600),
+                           GovernedThink(client, max_tokens=2400),
+                           ticker, date)
+        print(f"· the walk is whole: {out['rating']} — bundle at {out['bundle']}")
+        return 0
 
     persona = acquire("charles-trading-persona", did=client.did)
     pipeline = acquire("charles-trading-pipeline", did=client.did)

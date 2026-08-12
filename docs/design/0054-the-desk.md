@@ -127,6 +127,32 @@ a trade. The compliance disclaimer rides every report as policy craft.**
    decision.json + chart pointers; the bundle door serves the ZIP shape
    byte-compatible with the sample. Proof: JB downloads the twin of his
    own sample, every section citing its records.
+   **LANDED + PROVEN LIVE 2026-08-12 — the first real Chronicle.** The
+   sixteen stages as charles's OWN governed walk (`pipeline.py`): the
+   plan gate up front (a `desk-run` card the human approves; silence is
+   a no and says so), every prompt acquired from the shelf by ref, every
+   thought authorized+metered under his lease (sonnet medium, opus for
+   the two reasoning stages — L-D), every tool call through the Farm's
+   door, every search through gather under the ceiling, EVERY STAGE a
+   signed record on f:charles as it lands (rule 7 — no partial-persist
+   blob; the floor went 11 → 65 records). The bundle is the sample's
+   file-for-file twin (15 files, same names, same headers) at
+   `tmp/charles-NVDA-2026-08-12/` + `.zip`; the delta says "This run
+   establishes the baseline" honestly; `outcome_pending: true` on the
+   report record awaits sp5's reflection loop. **The proof beyond the
+   plan: the HONESTY CHAIN ran whole** — the day's search ceiling was
+   already spent, so news/sentiment came back as labeled placeholders,
+   the analysts declared thin ground, and the opus portfolio manager
+   CAPPED ITS OWN CONVICTION below Buy for exactly that reason,
+   prescribing a re-run after the UTC reset. The human's declared
+   constraint became the machine's reasoned caution, end to end. Two
+   live finds fixed in the walk: an empty model reply must retry once
+   then confess (never ride into a debate as an empty section), and the
+   queue's gather now returns TYPED findings beside its admission note
+   (the analysts read content, not counts; the records stay
+   quarantined). Deferred honestly: the delta reads his own recall (the
+   stacks' time dial joins at the memory program); the bundle download
+   button in the glass is sp4's.
 4. **sp4 — the desk glass**: the eight tabs (Full Report · Overview ·
    Δ vs Prior · Market · Sentiment · News · Fundamentals · Debates),
    rating badge, price + indicator charts, per-stage progress strip

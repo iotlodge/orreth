@@ -3228,11 +3228,15 @@ def tool_invoke(payload: dict) -> dict:
     return out
 
 
-def gather(port: int, scope: str, text: str) -> str:
+def gather(port: int, scope: str, text: str, want_results: bool = False):
+    """want_results (0054 sp3): the queue path returns TYPED findings beside
+    the admission note — the desk's analysts read content, not counts; the
+    parlor path keeps its prose. The records stay quarantined either way."""
     src = farm_search_source(port)
     if src is None:
-        return ("nothing gathered — the Farm has no serving search source. "
+        note = ("nothing gathered — the Farm has no serving search source. "
                 "Plant one in the Farm tab (Tavily preset).")
+        return {"note": note, "findings": []} if want_results else note
     # the door remembers the infection (0026 §5): a source the universe recalled
     # does not re-enter the record — refused at admission, loudly, on the record
     _, bodies, _ = floor_knowledge(port, scope)
@@ -3246,9 +3250,10 @@ def gather(port: int, scope: str, text: str) -> str:
             call(port, "POST", "/records", note)
         except Exception as e:
             print(f"    (immune-refusal write failed: {e})")
-        return (f"refused at the door — {src['name']} was recalled on this floor; "
+        note = (f"refused at the door — {src['name']} was recalled on this floor; "
                 "a discredited source does not re-enter the record (0026 §5). "
                 "the refusal itself is on the record.")
+        return {"note": note, "findings": []} if want_results else note
     t0 = time.time()
     results = tavily(text)
     seat_kp, seat_did = lib_seat(scope)       # her seat at THIS floor (0023 §1)
@@ -3263,7 +3268,13 @@ def gather(port: int, scope: str, text: str) -> str:
                           tags=["knowledge", "gathered"],
                           provenance_class="ingested-archive")
         call(port, "POST", "/records", rec)
-    return f"admitted to the Window — {len(results)} finding(s) via {src['name']}, quarantined at 0.0000"
+    note = f"admitted to the Window — {len(results)} finding(s) via {src['name']}, quarantined at 0.0000"
+    if want_results:
+        return {"note": note, "findings": [
+            {"title": str(f.get("title", ""))[:200],
+             "content": str(f.get("content", ""))[:700],
+             "url": str(f.get("url", ""))} for f in results]}
+    return note
 
 
 def on_purge(port: int, scope: str, r: dict) -> None:
@@ -9122,10 +9133,10 @@ def main() -> None:
                         if r.get("kind") == "gather" and r.get("status") == "pending":
                             handled.add(key)
                             print(f"  ↳ dispatch {r['id']}: gather “{r['text']}” on {scope}")
-                            result = gather(port, scope, r["text"])
+                            result = gather(port, scope, r["text"], want_results=True)
                             call(port, "POST", "/requests/resolve",
                                  {"id": r["id"], "status": "done", "result": result})
-                            print(f"    ✓ {result}")
+                            print(f"    ✓ {result.get('note', result) if isinstance(result, dict) else result}")
                         elif r.get("kind") == "join":
                             # the desk is its own dedup — it acts only on real transitions
                             act = joindesk_for(port, scope).tend(r)
