@@ -913,3 +913,11 @@ Her second walk (req-694): **Stable 0 findings, Pulse 0 findings** (both were al
 |---|---|---|
 | `docs/design/0053-the-first-purpose.md` | Fable 5 (claude-fable-5) | The season's course correction, landed on JB's word ("we have to do something different before we trash Orreth"). One line: a real purpose writing a real Chronicle, the two books visible on every card, memory proven against it. Three steps — one thin Trading Desk (reports only, never execution) · Chronicle/Machine chips from 0039's own classes with a purpose-first Inbox · the memory program (census, the live metabolism beat, JB's ten questions scored weekly). Four locks staged. |
 | `0049` · `0052` · `VERSION` · register · road | Fable 5 (claude-fable-5) | 0049 suspended to a reference map; 0052 closed AS-IS at era 0.52 with the honest verdict on its face ("rather unusable" — legible furniture atop an undifferentiated card soup); the register carries the one-seat claim as an intentional partial gated on 0053. |
+
+## Fable 5 — 2026-08-12 (0054 sp1 — charles is born on his own floor)
+
+| File | Author | Note |
+|---|---|---|
+| `orreth_sim/desk.py` | Fable 5 (claude-fable-5) | The desk's genesis: 16 reference prompts (AST-extracted verbatim, never retyped; the two inline ones made first-class) + 3 schema hints + the persona — 20 assets the improver's beat plants on the shelf; code literal is genesis and fallback, never the living word. |
+| `console_worker.py` | Fable 5 (claude-fable-5) | Becky-per-floor: a join-desk delegate per tended floor, each chained to the pinned root — grant_lease mints for the floor that was asked, not f:prod always. The planting loop takes desk craft beside sentences and personas. JoinDesk untouched; its proof-not-claims tests hold. |
+| `agents/flavors/05-desk/run.py` | Fable 5 (claude-fable-5) | charles's birth walk: joins u:demo/e:desk/f:charles through his own gate, acquires persona/pipeline/disclaimer from the shelf by ref, files his birth record citing them. |

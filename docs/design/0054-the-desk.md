@@ -7,7 +7,13 @@
      zip) and a full architectural map of ~/PycharmProjects/CortexObserver
      (LangGraph desk, 16 nodes, 15 prompts, watchlist cron, reflection loop). -->
 
-**Status: 🟡 DESIGNED 2026-08-12 — 0053 sp1 made concrete; awaiting JB's locks.**
+**Status: 🟢 OPENED 2026-08-12 — all four locks landed same day (AskUserQuestion,
+JB's hand): L-A yfinance + Tavily ≤6/day · L-B NVDA, weekdays at market
+close, refresh mode (first full run manual as sp3's proof) · L-C the
+minimal Capabilities pull v1, the desk its first installed world · L-D
+**sonnet carries balanced, opus carries the two reasoning stages**
+(research manager + portfolio manager — full reference parity, 2 opus
+calls/run). Building.**
 
 ## 1. The brief
 
@@ -69,6 +75,24 @@ a trade. The compliance disclaimer rides every report as policy craft.**
    with persistent DID; his 15 prompts + disclaimer land as shelf craft;
    the pipeline as a versioned plan template. Proof: his calling card in
    the parlor, his craft in Governance, census clean.
+   **LANDED + PROVEN LIVE 2026-08-12.** `e:desk :4511` + `f:charles
+   :4520` grown through the shipyard gate on an approved word (req-701 —
+   no file edited by hand; the dock crew wrote the profiles). The genesis
+   module `orreth_sim/desk.py` holds all 20 assets (16 prompts extracted
+   VERBATIM from the reference by AST + 3 schema hints + the persona);
+   the improver's beat planted every one on the universe shelf ("the
+   shelf takes «charles-…» v1" × 20) and the craft door serves them —
+   they stand in the Governance room, editable at gates from day one.
+   **The becky-per-floor law**: joins were hard-bound to f:prod
+   (JOIN_PORT + a module-level scope); becky's desk is now a DELEGATE
+   PER TENDED FLOOR, each chained to the same pinned root — same
+   challenge, same human gate, same proof-not-claims, only the minted
+   lease's floor changes (suite 330+5 green; JoinDesk untouched).
+   charles joined HIS OWN floor — "welcome to u:demo/e:desk/f:charles" —
+   the first lease this rig ever minted off f:prod, and his birth record
+   cites the exact craft refs he woke with. L-D honored: sonnet-5
+   (medium) + opus-5 (high) saddled at ada's gate on f:charles, deals
+   pinned in-catalog, canaries earned `available` for both.
 2. **sp2 — the supply line**: `tradingdata` (yfinance, the defensive
    machinery ported as intent) planted in the Farm; Tavily's three desk
    queries under the declared ceiling; every call a worldline record.

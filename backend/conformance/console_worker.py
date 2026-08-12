@@ -123,9 +123,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import (bell as bell_mod, continuity, crypto, fingertip,
-                        improver, markers, meaning, mirror, node, observatory,
-                        parlor, profile, purge, serials, shipyard,
+from orreth_sim import (bell as bell_mod, continuity, crypto, desk as desk_mod,
+                        fingertip, improver, markers, meaning, mirror, node,
+                        observatory, parlor, profile, purge, serials, shipyard,
                         speech, thumb as thumb_mod, vera)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
@@ -177,22 +177,43 @@ BELL_DID = crypto.did_key_for(BELL.public)
 _NANDA = Nanda()
 _ROOT = Becky("u:demo", _NANDA, universe_name="demo", kp=root_keypair())
 _BECKY = Becky(SCOPE, _NANDA, parent=_ROOT)
+_BECKYS: dict[str, Becky] = {SCOPE: _BECKY}
 
 
-def grant_lease(did: str) -> dict:
-    """A retrieve-self lease for a joining agent — attenuated to this floor,
+def becky_for(scope: str) -> Becky:
+    """0054 sp1 — becky's desk goes where the doors are: one delegate per
+    tended floor, each chained to the same pinned root (0006's law
+    unchanged — a lease never exceeds its floor, and the chain always
+    walks back to u:demo)."""
+    if scope not in _BECKYS:
+        _BECKYS[scope] = Becky(scope, _NANDA, parent=_ROOT)
+    return _BECKYS[scope]
+
+
+def grant_lease(did: str, scope: str = SCOPE) -> dict:
+    """A retrieve-self lease for a joining agent — attenuated to ITS floor,
     root-chained, and FUELED (0047 sp2's find): the lease carries a declared
     token budget, because a citizen whose lease cannot clear /model/authorize
     has a mind in name only (0019 — every resident's cognition through the
     gateway). The plane debits up front and reconciles after; the number is
     declared here, never an honor system."""
-    return _BECKY.issue_token(did, SCOPE, [{"action": "retrieve", "space": "self"}],
-                              budget={"tokens": int(os.environ.get(
-                                  "ORRETH_JOIN_LEASE_TOKENS", "50000"))})
+    return becky_for(scope).issue_token(
+        did, scope, [{"action": "retrieve", "space": "self"}],
+        budget={"tokens": int(os.environ.get(
+            "ORRETH_JOIN_LEASE_TOKENS", "50000"))})
 
 
 # the desk at the door: challenge → prove → human gate → lease (JB's lock 2026-07-07)
-JOINDOOR = JoinDesk(grant=grant_lease)
+JOINDOOR = JoinDesk(grant=grant_lease)          # f:prod's desk, the historic door
+_JOINDESKS: dict[int, JoinDesk] = {JOIN_PORT: JOINDOOR}
+
+
+def joindesk_for(port: int, scope: str) -> JoinDesk:
+    """0054 sp1 — a join desk per tended floor: same challenge, same human
+    gate, same proof-not-claims; only the minted lease's floor changes."""
+    if port not in _JOINDESKS:
+        _JOINDESKS[port] = JoinDesk(grant=lambda did, s=scope: grant_lease(did, s))
+    return _JOINDESKS[port]
 
 
 # ---------------------------------------------------------------- the librarian's seats (0023 §1–§2)
@@ -3709,7 +3730,8 @@ def improver_beat(port: int) -> None:
     global _SENTENCES_PLANTED
     if not _SENTENCES_PLANTED:
         allthere = True
-        for sname, stext in {**speech.SENTENCES, **speech.PERSONAS}.items():
+        for sname, stext in {**speech.SENTENCES, **speech.PERSONAS,
+                             **desk_mod.CRAFT}.items():
             if wire_assets(port, "asset", name=sname):
                 continue
             g = improver.make_asset(me, IMP, scope, name=sname,
@@ -9002,20 +9024,20 @@ def main() -> None:
                             call(port, "POST", "/requests/resolve",
                                  {"id": r["id"], "status": "done", "result": result})
                             print(f"    ✓ {result}")
-                        elif r.get("kind") == "join" and port == JOIN_PORT:
+                        elif r.get("kind") == "join":
                             # the desk is its own dedup — it acts only on real transitions
-                            act = JOINDOOR.tend(r)
+                            act = joindesk_for(port, scope).tend(r)
                             if act:
                                 status, result = act
                                 if status == "done":
-                                    result = {**result, "scope": SCOPE,
-                                              "granted_by": _BECKY.did}
+                                    result = {**result, "scope": scope,
+                                              "granted_by": becky_for(scope).did}
                                 call(port, "POST", "/requests/resolve",
                                      {"id": r["id"], "status": status, "result": result})
                                 who = r.get("name") or (r.get("did") or "?")[:22] + "…"
                                 print({"challenged": f"  ↳ join {r['id']}: challenged {who} at the door",
                                        "staged": f"  ↳ join {r['id']}: {who} proved its key — the door waits for you",
-                                       "done": f"    ✓ lease granted — welcome to {SCOPE}, {who}",
+                                       "done": f"    ✓ lease granted — welcome to {scope}, {who}",
                                        "denied": f"  ↳ join {r['id']}: {who} turned away — proof failed",
                                        }.get(status, f"  ↳ join {r['id']} → {status}"))
                         elif r.get("kind") == "service":
