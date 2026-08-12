@@ -882,3 +882,9 @@ The closing proof, verbatim: "That's charlotte's charter — she keeps the FARM 
 | File | Author | Note |
 |---|---|---|
 | `window.html` | Fable 5 (claude-fable-5) | Master-detail (JB's lock): compact list LEFT, the reading pane RIGHT in-flow, both always visible — select a row, read and decide beside it; questions answer right in the pane. The Requests tab RETIRED (JB's lock): the full queue lives as the Inbox's archive drawer; the Objectives tab keeps composing and reports but its waiting cards point at the one home. Tabs 9→8. |
+
+## Fable 5 — 2026-08-12 (the judge's second walk — two wounds, one root)
+
+| File | Author | Note |
+|---|---|---|
+| `window.html` | Fable 5 (claude-fable-5) | JB's finds: archive clicks opened the OVERLAY while the in-flow pane kept the old selection — two surfaces, stale views. Inside the Inbox every request click now lands in the one in-flow pane, and a chosen archive item is never overridden by the waiting-list default. The tiny inputs grew to multi-line textareas — a human answer takes the room it needs. |

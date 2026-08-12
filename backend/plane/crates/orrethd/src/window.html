@@ -555,6 +555,7 @@
   .theard{color:var(--dim);font:.66rem var(--mono);margin:.15rem 0 .3rem}
   .td-in{display:flex;gap:.35em;flex:1;min-width:0}
   .td-in input{flex:1;min-width:0;background:var(--deep);color:var(--near);border:1px solid var(--hair2);border-radius:6px;font:.7rem var(--mono);padding:.25em .5em}
+  .td-in textarea,.qa textarea{flex:1;min-width:0;background:var(--deep);color:var(--near);border:1px solid var(--hair2);border-radius:6px;font:.72rem var(--mono);padding:.35em .55em;resize:vertical;line-height:1.4}
   /* the Journey (0051 sp1): the objective's life as a strip — the current
      stage glows; the words come from the shelf, never hardcoded truth */
   .jry{display:flex;flex-wrap:wrap;gap:.3em;align-items:center;margin:.3rem 0 .35rem;font:.66rem var(--mono)}
@@ -2503,7 +2504,7 @@ function reqRow(r,inPane){
   const raw=inPane&&r.result?`<div class="rdr-struct">${esc(JSON.stringify(r.result,null,1).slice(0,2500))}</div>`:"";
   return `<div class="req${inPane?"":" clickable"}"${inPane?"":` onclick="paneReq('${r.id}',event)" title="open in the reading pane"`}><span class="kind">${r.kind||"request"}</span>
    <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}${raw}</span>
-   ${w?`<span class="td-in" style="margin:.2rem 0;display:flex"><input id="gw-${r.id}" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></span>
+   ${w?`<span class="td-in" style="margin:.2rem 0;display:flex"><textarea id="gw-${r.id}" rows="2" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></textarea></span>
     <button class="sbtn ok" onclick="gateGo('${r.id}',true,'${r.kind}')">${w[0]}</button>
     <button class="sbtn no" onclick="gateGo('${r.id}',false,'${r.kind}')">${w[1]}</button>`
    :rest?`<span class="st">${r.status}</span> <button class="sbtn no" onclick="restIt('${r.kind}','${r.id}')">${r.kind==="reflex"?"rest this watcher":"rest this duty"}</button>`
@@ -2608,8 +2609,8 @@ async function renderInboxDetail(){
   if(!r){el.innerHTML=`<div class="quiet">settled and gone from the wait — the archive keeps it</div>`;return}
   let extra="";
   if(r.kind==="question"&&r.status==="pending")   /* one home: answer HERE */
-    extra=`<div class="obj-q">the flow asks — your answer, right here:
-      <div class="qa"><input id="qa-${r.id}" placeholder="your answer — silence is denial">
+    extra=`<div class="obj-q">the flow asks — your answer, right here (take the room you need):
+      <div class="qa" style="align-items:flex-start"><textarea id="qa-${r.id}" rows="3" placeholder="your answer — silence is denial"></textarea>
       <button class="sbtn ok" onclick="objAnswer('${r.id}')">answer</button></div></div>`;
   el.innerHTML=(r.kind==="objective"
     ?objCard(r,q.filter(x=>x.kind==="question"),true)
@@ -2629,7 +2630,7 @@ function renderInbox(q){
   if(mon)mon.textContent=wait.length
     ?`${wait.length} thing(s) wait on your word — gravest first, then oldest; select a row and decide beside it`
     :"nothing waits on you — a calm universe";
-  if(wait.length&&(!INBSEL||!wait.some(r=>r.id===INBSEL)))INBSEL=wait[0].id;
+  if(!INBSEL||!q.some(r=>r.id===INBSEL))INBSEL=wait.length?wait[0].id:null;
   el.innerHTML=wait.length
     ?wait.map(r=>`<div class="inbrow${r.id===INBSEL?" on":""}" data-id="${r.id}" onclick="inbSelect('${r.id}')">
        <span class="kind">${r.kind||"request"}</span><span class="m" style="float:right">waited ${inbAge(r)}</span>
@@ -3204,13 +3205,15 @@ function readerClose(){
     document.body.classList.remove("parlor-open");
 }
 function paneReq(id,ev){
-  if(ev&&ev.target.closest("button,input,a,label,.tchip,.qchip,.wtoggle,.door"))return;
+  if(ev&&ev.target.closest("button,input,textarea,a,label,.tchip,.qchip,.wtoggle,.door"))return;
+  if(!$("v-inbox").classList.contains("hide")){inbSelect(id);return}  /* one home */
   if(PANE&&PANE.id===id)return;
   TRAIL=[];                             /* a list click starts a fresh walk */
   readerOpen("request",id);
 }
 function paneObj(id,ev){
-  if(ev&&ev.target.closest("button,input,a,label,.tchip,.qchip,.wtoggle,.door"))return;
+  if(ev&&ev.target.closest("button,input,textarea,a,label,.tchip,.qchip,.wtoggle,.door"))return;
+  if(!$("v-inbox").classList.contains("hide")){inbSelect(id);return}  /* one home */
   if(PANE&&PANE.id===id)return;
   TRAIL=[];
   readerOpen("objective",id);
@@ -4240,7 +4243,7 @@ function objCard(r,questions,inPane){
         +(res.graph&&WALKOPEN.has(r.id)?renderGraph(res.graph,r.id,false):"")
         +(res.keep_fresh_offer?`<div class="row"><label><input type="checkbox" ${KF.has(r.id)?"checked":""} onchange="kfToggle('${r.id}')"> …and keep “${esc(res.keep_fresh_offer.topic)}” fresh — ${esc(res.keep_fresh_offer.terms)} · a standing spend (0032)</label></div>`:"")
         +(inPane
-          ?`<div class="td-in" style="margin-top:.35rem"><input id="gwo-${r.id}" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></div>`
+          ?`<div class="td-in" style="margin-top:.35rem"><textarea id="gwo-${r.id}" rows="2" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></textarea></div>`
            +`<div style="margin-top:.4rem"><button class="sbtn ok" onclick="objDecide('${r.id}',true)">fan the plan</button> `
            +`<button class="sbtn no" onclick="objDecide('${r.id}',false)">decline</button></div>`
           :`<div class="row" style="margin-top:.35rem"><span class="lnk" onclick="goInbox('${r.id}')">waiting on you — decide in the Inbox →</span></div>`);
