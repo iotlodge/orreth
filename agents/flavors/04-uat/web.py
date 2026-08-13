@@ -42,7 +42,10 @@ VIEWS = [("inbox", "the Inbox — everything waiting on the human"),
          ("gov", "the Governance room — the machine's craft on its shelf"),
          ("farm", "the Farm — tools and services"),
          ("stable", "the Stable — minds and models"),
-         ("pulse", "the Pulse"), ("obs", "the Observatory")]
+         ("pulse", "the Pulse"), ("obs", "the Observatory"),
+         ("obs&cap=1", "the Capabilities landing — the portal of worlds atop Orreth"),
+         ("obs&cap=1&capw=trading-desk", "the Trading Desk — a world's rooms from its manifest"),
+         ("obs&cap=1&capw=crypto-desk", "the Crypto Desk — the second world, inherited whole")]
 
 
 def _post(base: str, path: str, payload: dict) -> dict:
