@@ -5627,6 +5627,9 @@ _ADOPTION_KINDS = ("release",                 # Canon change = epoch release (00
                    "craft-edit",  # the one-motion door: the request IS the
                    #  human's word (0045 sp2) — learned 0050 sp2 when the
                    #  plain-speech siblings drew the honest accusation
+                   "capability-verb",  # retire/reinstate plant manifest
+                   #  siblings behind a staged human word (0055) — learned
+                   #  2026-08-13 when the retire proof drew the accusation
                    "experiment")   # 0043 sp4's promotion IS an adoption — the
 #   first live rollout taught the watchdog its missing word (JB left the
 #   honest false accusation on record, 2026-07-30)
