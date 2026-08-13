@@ -9898,7 +9898,13 @@ def main() -> None:
                     if tb.tb_frame.f_code.co_filename.endswith("console_worker.py"):
                         site = f"{tb.tb_frame.f_code.co_name}:{tb.tb_lineno}"
                     tb = tb.tb_next
-                print(f"  (floor :{port} stumbled at {site}…)", e)
+                _dscopes = _down_load()
+                if FLOOR_SCOPES.get(port) in _dscopes or any(
+                        int(pp) == port for pp, vv in SHIPYARD.ledger().items()
+                        if vv.get("scope") in _dscopes):
+                    pass          # dark by the human's word — quiet, not broken
+                else:
+                    print(f"  (floor :{port} stumbled at {site}…)", e)
         tend_self_dialogs()                   # compose any dialog whose legs are home
         tend_objectives()                     # review and assemble what rode back up
         if beat_due:

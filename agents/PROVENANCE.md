@@ -1051,3 +1051,9 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 | File | Author | Note |
 |---|---|---|
 | `console_worker.py` | Fable 5 (claude-fable-5) | JB's two finds closed: the stumble spam (a worker knocking forever on a floor shut by the word) and the unreclaimed container (docker stop keeps the row — not his cost model). Now: THE DOWN-LEDGER — "shut by the human's word," durable on disk; stop-fully stops AND REMOVES the hull (docker ps -a drops); the round skips worded-down floors in silence; the janitor honors the ledger; start lifts the word, RECREATES an absent hull from the shipyard's spec (volumes + pg carry the memory), waits for health, then raises the crew. Proven whole: ps -a 4→3→4, zero stumbles, charlene home on recreated ground with both her reports intact. Mid-proof, JB's own start on the trading tile was honored by the same machinery — the system worked under his hand while it was being proven. |
+
+## Fable 5 — 2026-08-13 (0055 — one log, and a printer that knows the word)
+
+| File | Author | Note |
+|---|---|---|
+| `console_worker.py` | Fable 5 (claude-fable-5) | JB's report resolved as two truths: the stumbles he saw were a FROZEN log — my manual restarts had forked the worker's output to /tmp while he watched the rig's true file (~/.orreth/tmp/worker.log); and the quiet-skip guarded only the main round while other sweeps could still knock on a worded-down floor. Now the stumble PRINTER itself consults the down-ledger (one guard, every sweep), and the worker logs to the one true file again. Operational law on record: the worker's log is ~/.orreth/tmp/worker.log, always. |
