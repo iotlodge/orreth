@@ -42,10 +42,24 @@ VIEWS = [("inbox", "the Inbox — everything waiting on the human"),
          ("gov", "the Governance room — the machine's craft on its shelf"),
          ("farm", "the Farm — tools and services"),
          ("stable", "the Stable — minds and models"),
-         ("pulse", "the Pulse"), ("obs", "the Observatory"),
-         ("obs&cap=1", "the Capabilities landing — the portal of worlds atop Orreth"),
-         ("obs&cap=1&capw=trading-desk", "the Trading Desk — a world's rooms from its manifest"),
-         ("obs&cap=1&capw=crypto-desk", "the Crypto Desk — the second world, inherited whole")]
+         ("pulse", "the Pulse"), ("obs", "the Observatory")]
+
+
+def capability_views() -> list:
+    """Her eye follows DISCOVERY (0055): the landing plus every installed
+    world, read from the portal's own door — a dropped folder is under
+    the UAT walk from birth, and nothing is ever hardcoded again."""
+    views = [("obs&cap=1", "the Capabilities landing — the portal of worlds atop Orreth")]
+    try:
+        with urllib.request.urlopen("http://localhost:4562/desk", timeout=8) as r:
+            for w in json.load(r).get("worlds", []):
+                if w.get("retired"):
+                    continue
+                views.append((f"obs&cap=1&capw={w['key']}",
+                              f"{w.get('name', w['key'])} — a world's rooms from its manifest"))
+    except Exception:
+        pass
+    return views
 
 
 def _post(base: str, path: str, payload: dict) -> dict:
@@ -120,7 +134,7 @@ def main() -> int:
     think = GovernedThink(client, max_tokens=700)
     persona = acquire("uat-persona-quinn", did=client.did).text or ""
     findings: list[str] = []
-    for view, ctx in VIEWS:
+    for view, ctx in [*VIEWS, *capability_views()]:
         shot = shoot(view)
         if not shot:
             findings.append(f"[{view}] the view would not render for the eye "
@@ -138,7 +152,7 @@ def main() -> int:
         body += "is in the walker's own log, every line printed as found)"
     out = _post(UNIVERSE, "/requests",
                 {"kind": "uat-report", "text": f"👁 quinn-web walked "
-                 f"{len(VIEWS)} rooms with real eyes — {len(findings)} "
+                 f"{len(VIEWS) + len(capability_views())} rooms with real eyes — {len(findings)} "
                  f"friction(s): {body}"})
     print(f"· the report stands: {out.get('id')} — {len(findings)} finding(s)")
     return 0

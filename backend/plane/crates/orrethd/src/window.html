@@ -3836,10 +3836,11 @@ function dkCharts(rep){
 
 /* ── the landing: worlds organized, never a jump straight in ── */
 function dkState(w){
-  const c={running:"var(--near)",stopped:"var(--brass)","shut down":"var(--red)",declared:"var(--faint)"}[w.state]||"var(--faint)";
+  const c={running:"var(--near)",stopped:"var(--brass)","shut down":"var(--red)",retired:"var(--faint)",declared:"var(--faint)"}[w.state]||"var(--faint)";
   const tip={running:"the crew is up and answering — the watchlist is content, never the state",
     stopped:"paused by your word — the watchlist is PRESERVED; continue recovers everything",
     "shut down":"the crew is halted — start raises it; every record survives",
+    retired:"retired by your word — everything it ever made stays on the shelf; reinstate brings it back whole",
     declared:"declared but not yet governed by this rig"}[w.state]||"";
   const ann=w.state==="running"?(w.words_walking?` · ${w.words_walking} walk${w.words_walking===1?"":"s"}`:" · watchlist empty"):"";
   return `<span title="${dkEsc(tip)}" style="color:${c};font-size:.66rem;border:1px solid ${c};border-radius:5px;padding:.08rem .4rem">${dkEsc(w.state||"?")}${ann}</span>`}
@@ -3863,6 +3864,7 @@ function dkVerbs(w){
   if(w.state==="running"){v.push(["stop","⏸ stop"],["stop-fully","⏹ stop fully"])}
   if(w.state==="stopped"){v.push(["continue","▶ continue"],["stop-fully","⏹ stop fully"])}
   if(w.state==="shut down")v.push(["start","▶ start"]);
+  if(w.state==="retired")v.push(["reinstate","↩ reinstate"]);
   return v.map(([verb,label])=>`<button class="dk-tab" onclick="capVerb(event,'${dkEsc(w.key)}','${verb}',${w.port||4520})">${label}</button>`).join(" ")}
 async function capVerb(ev,key,verb,port){
   ev.stopPropagation();
@@ -3903,13 +3905,18 @@ function renderCap(){
       ${dkPendingVerb(w)}
       <div style="margin-top:.35rem">${w.pending_verb?"":dkVerbs(w)} <span style="color:var(--brass);font-size:.72rem">open →</span></div>
       <div class="dk-note dim" style="font-size:.68rem"></div></div></div>`;
+  const living=((DESK&&DESK.worlds)||[]).filter(w=>w.state!=="retired");
+  const gone=((DESK&&DESK.worlds)||[]).filter(w=>w.state==="retired");
   const groups={};
-  ((DESK&&DESK.worlds)||[]).forEach(w=>{const g=w.group||"other worlds";(groups[g]=groups[g]||[]).push(w)});
+  living.forEach(w=>{const g=w.group||"other worlds";(groups[g]=groups[g]||[]).push(w)});
   const html=Object.entries(groups).map(([g,ws])=>
     `<div class="dk-chtitle" style="margin:.7rem 0 .3rem;text-transform:uppercase;letter-spacing:.14em;font-size:.66rem;color:var(--brass)">${dkEsc(g)}</div>
      <div class="cap-grid">${ws.map(card).join("")}</div>`).join("");
+  const retSec=gone.length?(window._CAPSHOWRET
+    ?`<div class="dk-chtitle" style="margin:.9rem 0 .3rem;font-size:.66rem;color:var(--faint)">RETIRED — the shelf remembers · <a href="#" onclick="_CAPSHOWRET=false;renderCap();return false" style="color:var(--faint)">hide</a></div><div class="cap-grid">${gone.map(card).join("")}</div>`
+    :`<div class="dim" style="margin-top:.8rem;font-size:.7rem">· ${gone.length} retired world${gone.length===1?"":"s"} — <a href="#" onclick="_CAPSHOWRET=true;renderCap();return false" style="color:var(--brass)">show</a></div>`):"";
   B.innerHTML=`<div class="dim" style="font-size:.72rem;margin-bottom:.6rem">installed worlds — each one an applied purpose living atop the Machine; more arrive through install & create (their own dive)</div>
-    ${html||`<div class="dim">no worlds installed yet</div>`}`}
+    ${html||`<div class="dim">no living worlds — check the retired shelf below</div>`}${retSec}`}
 
 /* ── 0055 sp1 · THE PANEL WALKER — the glass renders a world's declared
       rooms BLIND (JB's L1: eleven kinds). The desk's bespoke renderer is

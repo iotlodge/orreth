@@ -1499,6 +1499,88 @@ def on_capability_verb(port: int, scope: str, r: dict) -> None:
                 _down_mark(scope_f, True)     # the word outlives the hull
         print("  > capability {}: SHUT DOWN".format(key))
         return
+    if verb == "retire":
+        if r.get("status") == "pending":
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "staged",
+                  "result": {"note": "consequence waits for you (0012)",
+                             "terms": f"retire {man['name']}: its crew halts, its "
+                                      f"floors are reclaimed, and the card leaves "
+                                      f"the landing — every record, report, and "
+                                      f"word it ever made stays on the shelf "
+                                      f"forever (append-only); reinstate brings "
+                                      f"it whole again"}})
+            print("  > capability {}: retire staged - the human holds the word".format(key))
+            return
+        if r.get("status") == "approved":
+            import subprocess
+            for c in man.get("crew", []):
+                if not c.get("shared"):
+                    subprocess.run(["pkill", "-f", c["match"]], capture_output=True)
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": f"{man['name']} is RETIRED - the Chronicle keeps "
+                            f"everything it ever was; reinstate brings it back whole"})
+            for sc, cont, hstate, shared in _world_hulls(man):
+                if shared:
+                    continue
+                if cont and hstate == "running":
+                    subprocess.run(["docker", "stop", cont], capture_output=True)
+                    subprocess.run(["docker", "rm", cont], capture_output=True)
+                _down_mark(sc, True)
+            rec = improver.make_asset({"did": IMP_DID, "scope": "u:demo"}, IMP,
+                                      "u:demo", name=f"capability-{key}",
+                                      profile={**man, "retired": NOW()})
+            call(4500, "POST", "/records", rec)
+            print("  > capability {}: RETIRED - the shelf remembers".format(key))
+            return
+    if verb == "reinstate":
+        if r.get("status") == "pending":
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "staged",
+                  "result": {"note": "consequence waits for you (0012)",
+                             "terms": f"reinstate {man['name']}: its floors and "
+                                      f"crew rise again and the card returns to "
+                                      f"the landing - everything it knew is "
+                                      f"still on the shelf"}})
+            return
+        if r.get("status") == "approved":
+            import subprocess
+            rec = improver.make_asset({"did": IMP_DID, "scope": "u:demo"}, IMP,
+                                      "u:demo", name=f"capability-{key}",
+                                      profile=dict(man))
+            call(4500, "POST", "/records", rec)
+            by_scope = {v.get("scope"): v for v in SHIPYARD.ledger().values()}
+            for sc, cont, hstate, shared in _world_hulls(man):
+                if shared:
+                    continue
+                _down_mark(sc, False)
+                if cont and hstate == "exited":
+                    subprocess.run(["docker", "start", cont], capture_output=True)
+                elif hstate == "absent" and by_scope.get(sc):
+                    try:
+                        SHIPYARD._launch_one(by_scope[sc])
+                    except Exception as e:
+                        print(f"    (hull recreate {sc} failed: {e})")
+            deadline = time.time() + 40
+            while time.time() < deadline:
+                try:
+                    call(man["port"], "GET", "/health")
+                    break
+                except Exception:
+                    time.sleep(3)
+            raised = []
+            for c in man.get("crew", []):
+                if not _crew_alive(c["match"]):
+                    _crew_spawn(c)
+                    raised.append(c["name"])
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": f"{man['name']} stands again - reinstated whole"
+                            + (f"; crew raised: {', '.join(raised)} - welcome "
+                               f"the resident at the join gate" if raised else "")})
+            print("  > capability {}: REINSTATED".format(key))
+            return
     if verb in ("continue", "start"):
         hulls_down = [sc for sc, cont, hstate, shared in _world_hulls(man)
                       if not shared and hstate != "running"]
@@ -1611,12 +1693,30 @@ for _k, _v in _DISCOVERED.items():
     _CAP_PLANT[f"capability-{_k}"] = _v["manifest"]
 
 
+def _cap_shelf_manifest(key: str) -> dict:
+    """The SHELF's head for a world's manifest — the living copy, where
+    retirement lives (the genesis is install-source, never state)."""
+    try:
+        rows = wire_assets(4500, "asset", name=f"capability-{key}")
+        if rows:
+            prof = (rows[-1][1].get("asset") or {}).get("profile")
+            if isinstance(prof, dict):
+                return prof
+    except Exception:
+        pass
+    return {}
+
+
 def capability_crew_boot() -> None:
     """The crew rises from the DISCOVERED manifests at worker start —
     dev.sh names no world; a world shut down by the word stays down."""
     down = _down_load()
     raised_matches = set()
     for key, man in CAP_GENESIS.items():
+        if _cap_shelf_manifest(key).get("retired"):
+            print(f"  ⚑ {key}: RETIRED by the word — the folder installs, "
+                  "the shelf governs; crew not raised")
+            continue
         if any(f.get("scope") in down for f in man.get("floors", [])
                if not f.get("shared")):
             print(f"  ⚑ {key}: rests shut down by the word — crew not raised")
@@ -1808,6 +1908,21 @@ def compose_desk(key: str = "trading-desk") -> dict:
             m["state"] = "declared"
             continue
         m.setdefault("group", gen.get("group"))
+        if m.get("retired"):
+            m["state"] = "retired"
+            m["pending_verb"] = None
+            try:
+                for q in call(4500, "GET", "/requests").get("requests", []):
+                    if q.get("kind") == "capability-verb" \
+                            and q.get("status") == "staged" \
+                            and q.get("key") == m.get("key"):
+                        m["pending_verb"] = {
+                            "id": q["id"], "verb": q.get("verb"),
+                            "terms": str((q.get("result") or {}).get("terms", ""))[:220]}
+                        break
+            except Exception:
+                pass
+            continue
         crew = {c["name"]: _crew_alive(c["match"]) for c in gen.get("crew", [])}
         words = _world_words(gen)
         walking = sum(1 for w in words.values() if w.get("posture") == "walk")

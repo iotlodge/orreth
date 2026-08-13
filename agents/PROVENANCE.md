@@ -1069,3 +1069,10 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 | File | Author | Note |
 |---|---|---|
 | `capabilities/*/genesis.py` (moved) · `console_worker.py` · `dev.sh` | Fable 5 (claude-fable-5) | The final seam: geneses moved OUT of the Machine into capabilities/; the Foundation sweeps the directory at boot — import-execute, vocabulary check, craft to the planting, crew raised with down-words honored and shared members deduped. ZERO by-name references remain in the worker (grep-proven); dev.sh names no world; watches resolve by the arriving door (a hardcoded-floor bug died in the refactor). The folder proof ran live: options-desk out → two discovered, the shelf's memory a faint declared card; home → three governed. Install is a dropped folder; the Machine below never learns who lives above. |
+
+## Fable 5 — 2026-08-13 (0055 — the final verb, and the eye that follows discovery)
+
+| File | Author | Note |
+|---|---|---|
+| `web.py` | Fable 5 (claude-fable-5) | quinn's capability views derive from the portal's own door — a dropped folder is under the UAT walk from birth; nothing hardcoded again. |
+| `console_worker.py` · `window.html` | Fable 5 (claude-fable-5) | THE RETIRE DOOR: staged with honest terms → crew halts, floors reclaimed, the manifest's retired sibling planted — the card moves to the landing's retired shelf and the Chronicle keeps everything forever. The boot honors the shelf over the folder ("the folder installs, the shelf governs" — proven through a restart). REINSTATE returns the world whole: sibling, hulls, health, crew, the resident through the gate. Proven live: retire → 3 hulls, boot-honored, reinstate → 4 hulls, chad home. The lifecycle template is complete: install → running → stop/continue → shut down/start → retire/reinstate. |

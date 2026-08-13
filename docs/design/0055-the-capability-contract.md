@@ -69,11 +69,18 @@ door a word arrives at. **The folder proof ran live**: move
 `options-desk/` out → the Foundation discovers two, the portal keeps the
 shelf's memory as a faint *declared* card (append-only, honest) → move
 it home → three governed worlds again. Install is a dropped folder.
-Still open, each small and named: the door's composer is desk-shaped
-worker code (a differently-shaped world brings its own) · the desk's
-word-kinds aren't yet a declared vocabulary · quinn's capability views
-are hardcoded · full retirement (the manifest's `retired` sibling) has
-no door yet.
+**quinn and the retire door: CLOSED 2026-08-13.** Her capability views
+now derive from discovery (a dropped folder is under the UAT walk from
+birth), and the lifecycle has its final verb: **retire** stages with its
+terms, halts the crew, reclaims the floors, and plants the manifest's
+`retired` sibling — the card moves to the landing's retired shelf,
+everything the world ever made stays forever, and **the boot honors the
+shelf over the folder** ("the folder installs, the shelf governs" —
+proven live through a worker restart). **reinstate** brings it back
+whole: sibling, hulls, health, crew, the resident through the gate.
+Deferred BY JB'S WORD to the first non-desk world's dive, where a second
+shape can teach the general form: the door's composer · the declared
+word-kind vocabulary. That dive pays this entry fee before it builds.
 
 ## 2b. The anatomy in the codebase (who compiles what)
 
