@@ -7,9 +7,16 @@
      product foundation can then agentically manage elements like
      infrastructure and the feature elements." -->
 
-**Status: 🧭 DESIGN — 2026-08-13; captures the vision + the contract shape.
-The desk (0054) is the hand-built prototype this contract extracts. Locks
-staged; nothing built until JB's word.**
+**Status: 🟢 OPENED 2026-08-13 — all four locks landed (AskUserQuestion,
+JB's hand): L1 ELEVEN panel kinds — the desk's six + 0028's four + a
+sortable TABLE (BI worlds will want it early) · L2 manifest = chronicle
+craft, the vocabulary canon · L3 stop rests the words always, processes
+on "fully" · L4 repo-local v1 — with JB's emphasis VERBATIM: "Orreth must
+be able to support bring your own package, it's kind of one of the big
+ones. We should track this when we start moving orreth to cloud" — BYOP
+is a first-class cloud-phase commitment on the 0042 trust machinery, not
+a footnote. His word on pace: "Let's NOT wait long on proving this out."
+Building.**
 
 ## 1. The frame — the Foundation and the worlds
 
