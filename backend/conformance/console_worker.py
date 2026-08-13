@@ -1647,7 +1647,7 @@ def compose_desk(key: str = "trading-desk") -> dict:
             pass
         m["state"] = ("dark" if crew and not all(crew.values())
                       else "tending" if walking
-                      else "stopped" if words else "resting")
+                      else "stopped" if words else "ready")
     return {"watches": list(heads.values()),
             "worlds": manifests,
             "reports": keep[:10]}

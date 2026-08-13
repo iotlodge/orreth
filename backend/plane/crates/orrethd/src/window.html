@@ -3820,8 +3820,14 @@ function dkCharts(rep){
 
 /* ── the landing: worlds organized, never a jump straight in ── */
 function dkState(w){
-  const c={tending:"var(--near)",resting:"var(--dim)",stopped:"var(--brass)",dark:"var(--red)",declared:"var(--faint)"}[w.state]||"var(--faint)";
-  return `<span style="color:${c};font-size:.66rem;border:1px solid ${c};border-radius:5px;padding:.08rem .4rem">${dkEsc(w.state||"?")}</span>`}
+  const c={tending:"var(--near)",ready:"var(--blue)",stopped:"var(--brass)",dark:"var(--red)",declared:"var(--faint)"}[w.state]||"var(--faint)";
+  const tip={tending:`standing walks are scheduled (${w.words_walking||0}) and the crew answers asks`,
+    ready:"the crew is up and answers asks now — no standing walks scheduled yet",
+    stopped:"standing walks stopped by your word — the crew still answers asks",
+    dark:"the crew is down — start raises it",
+    declared:"declared but not yet governed by this rig"}[w.state]||"";
+  const label=w.state==="tending"&&w.words_walking?`tending · ${w.words_walking} walk${w.words_walking===1?"":"s"}`:(w.state||"?");
+  return `<span title="${dkEsc(tip)}" style="color:${c};font-size:.66rem;border:1px solid ${c};border-radius:5px;padding:.08rem .4rem">${dkEsc(label)}</span>`}
 function dkPendingVerb(w){
   const pv=w.pending_verb;
   if(!pv)return "";
@@ -3840,7 +3846,7 @@ async function capDecide(ev,rid,port,statusWord){
 function dkVerbs(w){
   const v=[];
   if(w.state==="tending"){v.push(["stop","⏸ stop"],["stop-fully","⏹ stop fully"])}
-  if(w.state==="resting")v.push(["stop-fully","⏹ stop fully"]);   // no words walk — only the crew can rest
+  if(w.state==="ready")v.push(["stop-fully","⏹ stop fully"]);   // no words walk — only the crew can rest
   if(w.state==="stopped")v.push(["continue","▶ continue"]);
   if(w.state==="dark")v.push(["start","▶ start"]);
   return v.map(([verb,label])=>`<button class="dk-tab" onclick="capVerb(event,'${dkEsc(w.key)}','${verb}',${w.port||4520})">${label}</button>`).join(" ")}
@@ -3878,6 +3884,7 @@ function renderCap(){
       <div class="cap-emoji">${w.emoji||"📦"}</div>
       <div><b>${dkEsc(w.name)}</b> ${dkState(w)}<div class="dim" style="font-size:.7rem">${dkEsc(w.resident||"")} · ${dkEsc(w.floor||"")}</div>
       <div class="dk-law">${dkEsc(w.law||"")}</div>
+      ${w.state==="ready"?`<div class="dim" style="font-size:.68rem;margin-top:.2rem">answers asks now · no standing walks — watch a symbol inside to schedule one</div>`:""}
       ${dkPendingVerb(w)}
       <div style="margin-top:.35rem">${w.pending_verb?"":dkVerbs(w)} <span style="color:var(--brass);font-size:.72rem">open →</span></div>
       <div class="dk-note dim" style="font-size:.68rem"></div></div></div>`;

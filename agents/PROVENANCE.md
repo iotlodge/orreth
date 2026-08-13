@@ -1020,3 +1020,9 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 |---|---|---|
 | `console_worker.py` | Fable 5 (claude-fable-5) | JB's find: start/continue staged on the WORLD'S floor — a gate in a room the human never visits, so "nothing starts." The door now carries each world's staged verb; and a start with nothing to do (no stopped words, no dead crew) answers honestly on the spot instead of solemnly staging a no-op. |
 | `window.html` | Fable 5 (claude-fable-5) | The tile wears its staged verb with the TERMS and the decision beside it — let it stand / not now — the 0052 law (decide where you stand) applied to the portal; a tile with a pending verb offers no other verbs until the word lands. |
+
+## Fable 5 — 2026-08-13 (0055 — the states learn the human's language)
+
+| File | Author | Note |
+|---|---|---|
+| `console_worker.py` · `window.html` | Fable 5 (claude-fable-5) | JB's find: "resting" undersold a desk that answers asks instantly — the state is READY, said in blue, with the card explaining itself ("answers asks now · no standing walks — watch a symbol inside to schedule one"); tending wears its walk count; every chip carries a plain-words hover. quinn's "stopped vs resting unexplained" finding, closed by the human who hit it. |
