@@ -1086,3 +1086,9 @@ The closing proof was the human's: retire → reinstate on the Trading Desk, cle
 | File | Author | Note |
 |---|---|---|
 | `window.html` | Fable 5 (claude-fable-5) | The two books on every card face: 📖 chronicle / ⚙ machine chips (inbox rows, archive, the pane). The polarity is the design: the Machine enumerates its OWN housekeeping kinds; everything else is Chronicle by default — a new world's words are purpose-side untaught. The Inbox splits: purposes first, the machine's housekeeping folded into a counted drawer. The soup JB named in the course correction ("so many cards that I am not sure what area they are focused") now labels itself. |
+
+## Fable 5 — 2026-08-13 (0053/0054 — the in-flight truth: a silent card breeds re-asks)
+
+| File | Author | Note |
+|---|---|---|
+| `run.py` · `console_worker.py` · `window.html` | Fable 5 (claude-fable-5) | JB asked for MSFT and saw nothing — three gaps, all real: the tend beat was five minutes (now one — a human's ask deserves a minute); duplicate asks for one symbol now FOLD into a single walk (his own double-click taught it); and the desk shows the IN-FLIGHT truth — every ask's state (⏳ asked / 🚶 riding) and the walking strip filling live from stage records on the breathing glass, N/16 as they land. A card that says nothing breeds re-asks; now it never says nothing. |

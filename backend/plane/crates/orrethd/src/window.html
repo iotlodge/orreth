@@ -4036,8 +4036,15 @@ function renderWorld(man){
   const item=reps[DKIDX];
   const lab=(man.collection||{}).label||["ticker","date"];
   const pick=reps.length>1?`<div class="dk-pick">${reps.map((r,i)=>`<button class="dk-tab${i===DKIDX?" on":""}" onclick="DKIDX=${i};renderCap()">${lab.map(k=>dkEsc(r[k])).join(" · ")}</button>`).join("")}</div>`:"";
+  /* the in-flight truth (0053) — a silent card breeds re-asks: every ask's
+     state, and the walking strip filling LIVE as stage records land */
+  const askLines=((DESK.asks||[])).map(a=>`<div class="dk-law">${a.status==="riding"
+    ?`🚶 <b>${dkEsc(a.ticker)}</b> — the walk is running now; its stages land below as records`
+    :`⏳ <b>${dkEsc(a.ticker)}</b> — asked; the resident picks it up on the next beat (≤1 min)`}</div>`).join("");
+  const walkStrips=((DESK.walking||[])).map(w=>`<div class="dk-law">🚶 walking <b>${dkEsc(w.ticker)}</b> · ${w.stages.length}/16 stages on the record</div>
+    <div class="dk-strip">${w.stages.map(x=>`<span class="dk-dot" title="${dkEsc(x.digest||"")}">✓<i>${dkEsc(x.stage)}</i></span>`).join("")}</div>`).join("");
   const dq=(item.data_quality_errors||[]).length?`<div class="dk-dq">⚠ ${item.data_quality_errors.length} data source(s) were dark this run — the report says so honestly</div>`:"";
-  B.innerHTML=crumb+head+pick+dq+(man.view||[]).map((p,pi)=>dkPanel(p,pi,item)).join("");}
+  B.innerHTML=crumb+head+askLines+walkStrips+pick+dq+(man.view||[]).map((p,pi)=>dkPanel(p,pi,item)).join("");}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("capworld").classList.contains("capopen"))capToggle()});
 const _capw=location.hash.match(/capw=([a-z0-9-]+)/);if(_capw)CAPV=_capw[1];
 if(location.hash.includes("cap"))setTimeout(capToggle,600);   // deep-links: #…&cap=1 (the landing) · &capw=trading-desk (a world)

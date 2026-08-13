@@ -1947,8 +1947,30 @@ def compose_desk(key: str = "trading-desk") -> dict:
                       or (crew and not all(crew.values()))
                       else "stopped" if _world_posture(gen) == "paused"
                       else "running")
+    # 0053/0054 - the IN-FLIGHT truth (a card that says nothing breeds
+    # re-asks): the asks' states, and any walk whose stages are landing
+    # without a report yet - the strip fills live in the breathing glass
+    asks = []
+    try:
+        for q in call(dport, "GET", "/requests").get("requests", []):
+            if q.get("kind") == "desk-ask" and q.get("status") in ("pending", "riding"):
+                asks.append({"id": q["id"], "ticker": str(q.get("ticker", "")).upper(),
+                             "status": q["status"]})
+    except Exception:
+        pass
+    walking = []
+    report_keys = {(r["ticker"], r["date"]) for r in keep}
+    for key_td, st in stages.items():
+        if key_td in report_keys or not st:
+            continue
+        latest = {}
+        for x in sorted(st, key=lambda s: s["at"]):
+            latest[x["stage"]] = x
+        walking.append({"ticker": key_td[0], "date": key_td[1],
+                        "stages": sorted(latest.values(), key=lambda s: s["at"])})
     return {"watches": list(heads.values()),
             "worlds": manifests,
+            "asks": asks, "walking": walking,
             "reports": keep[:10]}
 
 

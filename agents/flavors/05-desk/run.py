@@ -147,13 +147,24 @@ def main() -> int:
                                    refresh=bool(w.get("refresh")), agent=args.name)
                 print(f"· the walk is whole: {out['rating']} — {out['bundle']}")
             # the human's own asks ride the queue: kind desk-ask, no second
-            # gate — the ask IS the human's word; charles rides it and the
-            # resolution points home
-            for r in client._call("GET", "/requests")[1].get("requests", []):
-                if r.get("kind") == "desk-ask" and r.get("status") == "pending":
-                    tk = str(r.get("ticker") or "").upper()[:8]
-                    if not tk:
-                        continue
+            # gate — the ask IS the human's word; duplicates for the same
+            # symbol FOLD into one walk (an unanswered card breeds re-asks —
+            # learned from the human's own double-click, 2026-08-13)
+            pend = [r for r in client._call("GET", "/requests")[1].get("requests", [])
+                    if r.get("kind") == "desk-ask" and r.get("status") == "pending"]
+            seen_tk = set()
+            for r in pend:
+                tk = str(r.get("ticker") or "").upper()[:8]
+                if not tk:
+                    continue
+                if tk in seen_tk:
+                    client._call("POST", "/requests/resolve",
+                                 {"id": r["id"], "status": "done",
+                                  "result": f"folded — one walk answers {tk} for "
+                                            f"every ask standing"})
+                    continue
+                seen_tk.add(tk)
+                if True:
                     client._call("POST", "/requests/resolve",
                                  {"id": r["id"], "status": "riding",
                                   "result": f"charles is walking {tk} on your word — "
@@ -171,7 +182,7 @@ def main() -> int:
                 print(f"· {graded} lesson(s) written to the record")
             if args.once:
                 return 0
-            _t.sleep(300)
+            _t.sleep(60)          # a human's ask deserves a minute, not five
 
     if args.analyze:
         import time as _t
