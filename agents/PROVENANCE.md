@@ -954,3 +954,13 @@ Her second walk (req-694): **Stable 0 findings, Pulse 0 findings** (both were al
 | `agents/flavors/05-desk/pipeline.py` | Fable 5 (claude-fable-5) | Refresh mode (reuse under an honest banner; news always re-runs; degrades to full when the prior predates sections) · the report record carries its sections · grade_pending: outcome_pending reports graded against realized return vs SPY through the Farm's door, one lesson per report, graded_early said plainly. |
 | `agents/flavors/05-desk/run.py` | Fable 5 (claude-fable-5) | --tend: read the standing word from the wire, walk when due UNDER it (no per-run gate), rest when already walked, reflect when ripe. |
 | `window.html` | Fable 5 (claude-fable-5) | The standing word on the desk's wall with one-click stop — rule 11 visible in the room. |
+
+## Fable 5 — 2026-08-12/13 (0054 — the reins, and the tabs made whole)
+
+| File | Author | Note |
+|---|---|---|
+| `window.html` | Fable 5 (claude-fable-5) | The desk's reins: watch ANY symbol (stages at the human's gate), stop it gateless, ask for a report now (the human's word is the approval) — JB's corrected law made glass. Tabs render the FULL artifacts from the record first, polished slices as fallback for old walks. |
+| `agents/flavors/05-desk/pipeline.py` · `run.py` | Fable 5 (claude-fable-5) | The record carries debates + delta beside its sections; the walk waits for its stall after a rig restart (the replant race caught live — refusals were the meter-gate working); dq list uncapped to 9; the tend loop answers desk-asks with no second gate and resolves them pointing home. |
+| `console_worker.py` | Fable 5 (claude-fable-5) | The supply door passes sections/debates/delta. |
+
+Proof from the human's own hands: JB typed PYPL into the reins and asked; charles walked it on his word alone (Hold), then the NVDA ask fully fed — 0 data-quality errors, complete artifacts on the wire.

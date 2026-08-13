@@ -1398,6 +1398,11 @@ def compose_desk() -> dict:
                             "markdown": str(body.get("report", ""))[:60000],
                             "decision": body.get("decision") or {},
                             "outcome_pending": bool(body.get("outcome_pending")),
+                            "sections": {k: str(v)[:12000] for k, v in
+                                         (body.get("sections") or {}).items()},
+                            "debates": {k: str(v)[:14000] for k, v in
+                                        (body.get("debates") or {}).items()},
+                            "delta": str(body.get("delta") or "")[:9000],
                             "data_quality_errors": body.get("data_quality_errors") or [],
                             "ref": h["ref"], "at": h.get("occurred_at", "")})
         elif "stage" in tags and body.get("stage"):

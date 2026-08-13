@@ -116,6 +116,26 @@ def main() -> int:
                 out = pipeline.run(client, tm, th, tf, tk, today,
                                    refresh=bool(w.get("refresh")))
                 print(f"· the walk is whole: {out['rating']} — {out['bundle']}")
+            # the human's own asks ride the queue: kind desk-ask, no second
+            # gate — the ask IS the human's word; charles rides it and the
+            # resolution points home
+            for r in client._call("GET", "/requests")[1].get("requests", []):
+                if r.get("kind") == "desk-ask" and r.get("status") == "pending":
+                    tk = str(r.get("ticker") or "").upper()[:8]
+                    if not tk:
+                        continue
+                    client._call("POST", "/requests/resolve",
+                                 {"id": r["id"], "status": "riding",
+                                  "result": f"charles is walking {tk} on your word — "
+                                            f"the report lands in the Capabilities pull"})
+                    print(f"· the human asked — walking {tk} now (no second gate)")
+                    out = pipeline.run(client, tm, th, tf, tk, today)
+                    client._call("POST", "/requests/resolve",
+                                 {"id": r["id"], "status": "done",
+                                  "result": f"{tk}: {out['rating']} — the report is in "
+                                            f"the Capabilities pull; the bundle is one "
+                                            f"click down"})
+                    print(f"· the ask is answered: {tk} {out['rating']}")
             graded = pipeline.grade_pending(client, tm)
             if graded:
                 print(f"· {graded} lesson(s) written to the record")

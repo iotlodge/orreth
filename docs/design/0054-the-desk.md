@@ -220,6 +220,12 @@ a trade. The compliance disclaimer rides every report as policy craft.**
   JB's word.
 - **L-B — the watchlist (0053 L1 made concrete)**: recommended start —
   NVDA alone, weekdays at market close, refresh mode on.
+  **CORRECTED BY JB'S OWN WORD 2026-08-12**: NVDA-alone was build
+  scaffolding he'd read as build-scoped all along — the PRODUCT law is
+  that **humans freely add, remove, and run symbols of their choosing**
+  (the reins deliver exactly this: watch/stop/ask from the glass, each
+  add staged at the human's gate, each stop gateless). The spend guard
+  is the SEARCH CEILING (L-A), never a symbol count.
 - **L-C — the desk's home in the glass**: a desk view now, the
   Capabilities pull later — or a minimal pull v1 with the desk as its
   first installed world. JB said he'd explain the pull's shape at its
@@ -230,6 +236,19 @@ a trade. The compliance disclaimer rides every report as policy craft.**
   report either way; ada's deal gate is the door.
 - *(0053 L3 — the report's shape — RESOLVED by the sample bundle.
   0053 L4 — the ten questions — still open, wanted after a week of runs.)*
+
+## 5b. The road JB named (2026-08-12, on the record for later)
+
+- **All three desks eventually** — charles (stocks) · charlene (crypto) ·
+  chad (options); the agent-key seam was kept for exactly this (one
+  pipeline, three prompt sets — each desk a sibling field of e:desk).
+- **Watchlists belong to the HUMAN's identity DID** — per-human lists,
+  for the day Orreth has multi-login. Out of scope until the cloud
+  phase; today the watch record's `approved: <request-id>` links each
+  standing word to the human word that made it, which is the honest
+  single-human form of the same idea.
+- JB's blessing on the shape: the desk as an ecosystem, charles as a
+  field of it — the pattern the other desks will follow.
 
 ## 6. Honest boundary
 

@@ -122,6 +122,21 @@ def run(client, think_med, think_high, think_fmt, ticker: str, date: str,
                                f"{len(lessons)} lesson(s)")
 
     # ── 2 · fetch data: the Farm's stall + the librarian's searches ───
+    # after a rig restart the stall re-earns serving through probation
+    # (~3 beats); a walk that starts inside that window would run dark for
+    # nothing — wait for the stall, say so, give up honestly at 75s
+    deadline = time.monotonic() + 75
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(f"http://localhost:{port}/farm", timeout=5) as fr:
+                states = {x.get("name"): x.get("state")
+                          for x in json.load(fr).get("services", [])}
+            if states.get(SERVICE) == "serving":
+                break
+            say(f"  · the stall is {states.get(SERVICE, 'absent')} — waiting for serving")
+        except Exception:
+            pass
+        time.sleep(8)
     data, dark = {}, []
     for t in ["get_stock_data", "get_indicators", "get_fundamentals",
               "get_balance_sheet", "get_cashflow", "get_income_statement",
@@ -135,7 +150,7 @@ def run(client, think_med, think_high, think_fmt, ticker: str, date: str,
     social = _ask(client, f"{ticker} reddit twitter stocktwits sentiment investor opinions")
     record("fetch-data", f"{8 - len(dark)}/8 tools · "
            f"{sum(len(x.get('findings', [])) for x in (news, macro, social))} findings",
-           data_quality_errors=dark[:6])
+           data_quality_errors=dark[:9])
 
     rows = data["get_stock_data"].get("rows", [])
     tape = "\n".join(f"{r['date']} o{r['open']} h{r['high']} l{r['low']} "
@@ -319,7 +334,10 @@ def run(client, think_med, think_high, think_fmt, ticker: str, date: str,
                      "date": date, "rating": decision.get("rating"),
                      "outcome_pending": True, "refresh": refresh,
                      "sections": {k: _clip(v, 8000) for k, v in reports.items()},
-                     "data_quality_errors": dark[:6]},
+                     "debates": {"research": _clip(research_debate, 12000),
+                                 "risk": _clip(risk_hist, 12000)},
+                     "delta": _clip(delta, 8000),
+                     "data_quality_errors": dark[:9]},
                     kind="episodic", tags=["desk", "report", ticker, date])
     say(f"· the report is on the record; the bundle stands at {bundle}")
     return {"bundle": str(bundle), "zip": str(zpath),

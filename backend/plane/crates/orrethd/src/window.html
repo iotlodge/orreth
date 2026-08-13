@@ -3737,10 +3737,28 @@ function dkChart(rep){
     <line x1="${pad}" y1="${RY(30)}" x2="${W-8}" y2="${RY(30)}" stroke="var(--hair)" stroke-dasharray="3 3"/>
     <polyline points="${rpts}" fill="none" stroke="var(--blue)" stroke-width="1.2"/></svg>`}
 function dkWatchLine(rep){
-  const w=(DESK.watches||[]).find(x=>x.ticker===rep.ticker);
-  if(!w)return "";
-  if(w.posture==="walk")return `<div class="dk-law">🕰 the standing word: ${dkEsc(w.ticker)} · weekdays at the close · refresh mode — <a href="#" onclick="deskStop('${dkEsc(w.ticker)}');return false" style="color:var(--red)">stop it</a> <span class="dim">(stopping never needs a gate — rule 11)</span></div>`;
-  return `<div class="dk-law">🕰 the standing walk on ${dkEsc(w.ticker)} is STOPPED by the human's word — stage a new watch to resume</div>`}
+  const rows=(DESK.watches||[]).map(w=>w.posture==="walk"
+    ?`<div class="dk-law">🕰 ${dkEsc(w.ticker)} · weekdays at the close · refresh — <a href="#" onclick="deskStop('${dkEsc(w.ticker)}');return false" style="color:var(--red)">stop it</a> <span class="dim">(stopping never needs a gate — rule 11)</span></div>`
+    :`<div class="dk-law">🕰 ${dkEsc(w.ticker)} — STOPPED by your word; watch it again below to resume</div>`).join("");
+  return rows+`<div class="dk-law" style="margin-top:.35rem">
+    <input id="dk-watch-in" placeholder="ticker (e.g. MSFT)" style="width:9rem" maxlength="8">
+    <button class="dk-tab" onclick="deskWatch()">🕰 watch it — stages at your gate</button>
+    <button class="dk-tab" onclick="deskAsk()">📄 ask charles for a report now — your word is the approval</button>
+    <span id="dk-reins-note" class="dim"></span></div>`}
+function _dkTicker(){const v=(($("dk-watch-in")||{}).value||"").toUpperCase().trim();
+  return /^[A-Z.]{1,8}$/.test(v)?v:null}
+async function _dkPost(payload,note){
+  const port=((DESK.worlds||[])[0]||{}).port||4520;
+  try{await fetch(`${location.protocol}//${location.hostname}:${port}/requests`,{method:"POST",
+    headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    $("dk-reins-note").textContent=note}catch(e){$("dk-reins-note").textContent="the door did not answer"}
+  setTimeout(()=>{DESK=null;loadDesk()},2600)}
+function deskWatch(){const t=_dkTicker();if(!t){$("dk-reins-note").textContent="a ticker is 1–8 letters";return}
+  _dkPost({kind:"desk-watch",ticker:t,text:`watch ${t} — the human asks for a standing walk`},
+          `${t} staged at your gate — approve it in the Inbox and the standing word stands`)}
+function deskAsk(){const t=_dkTicker();if(!t){$("dk-reins-note").textContent="a ticker is 1–8 letters";return}
+  _dkPost({kind:"desk-ask",ticker:t,text:`the human asks: charles, walk ${t} now — one report, on your queue`},
+          `the ask is on charles's queue — the report lands here when his walk is whole`)}
 async function deskStop(tk){
   const port=((DESK.worlds||[])[0]||{}).port||4520;
   try{await fetch(`${location.protocol}//${location.hostname}:${port}/requests`,{method:"POST",
@@ -3761,11 +3779,15 @@ function renderDesk(){
   const strip=(rep.stages||[]).map(x=>`<span class="dk-dot" title="${dkEsc(x.digest)}">✓<i>${dkEsc(x.stage)}</i></span>`).join("");
   const dq=(rep.data_quality_errors||[]).length?`<div class="dk-dq">⚠ ${rep.data_quality_errors.length} data source(s) were dark this run — the report says so honestly</div>`:"";
   const md=rep.markdown||"";
-  const sect=h=>{const x=dkSection(md,h);return x?dkMd(x):`<p class="dim">(this section did not land in the polished report — the full artifacts ride the bundle ⬇)</p>`};
+  const sect=h=>{const x=dkSection(md,h);return x?dkMd(x):`<p class="dim">(this walk's record predates the full-artifact fields — the bundle ⬇ carries everything)</p>`};
+  const art=(x,h)=>x&&String(x).trim()?dkMd(x):sect(h);   // FULL artifact first, polished slice as the fallback
+  const sec=rep.sections||{},deb=rep.debates||{};
   const bodies={polished:dkMd(md),
     overview:dkMd([dkSection(md,"Final Decision"),dkSection(md,"Why"),dkSection(md,"Risks")].filter(Boolean).join("\n\n")),
-    delta:sect("Delta vs Prior"),market:sect("Market"),sentiment:sect("Sentiment"),
-    news:sect("News"),fundamentals:sect("Fundamentals"),debate:sect("Debate")};
+    delta:art(rep.delta,"Delta vs Prior"),market:art(sec.market,"Market"),
+    sentiment:art(sec.sentiment,"Sentiment"),news:art(sec.news,"News"),
+    fundamentals:art(sec.fundamentals,"Fundamentals"),
+    debate:(deb.research||deb.risk)?dkMd("## Bull / Bear Researcher Debate\n\n"+(deb.research||"")+"\n\n## Risk Debate\n\n"+(deb.risk||"")):sect("Debate")};
   B.innerHTML=`
    <div class="dk-world">${world.emoji||"📈"} <b>${dkEsc(world.name||"the Trading Desk")}</b>
      <span class="dim"> · ${dkEsc(world.resident||"")} · ${dkEsc(world.floor||"")}</span>
