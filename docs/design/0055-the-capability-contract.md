@@ -93,7 +93,20 @@ JB's ask, made mechanism: the world's card carries its lifecycle.
   honestly on the spot. The world's posture is its own record
   (`desk_world`, head wins) on its own floor; the tend loop rests WHOLE
   while paused and recovers everything on continue.
-- Verbs are governed requests to the capability's own floor, and their
+- **Shut down reaches the INFRASTRUCTURE (JB's correction, 2026-08-13:
+  "the idea behind shut down is to save on infrastructure costs")**: a
+  capability declares its FLOORS like its crew — the eco shared, each
+  field its own — and stop-fully halts the world's own hulls (docker
+  stop; at cloud, the instance) while shared floors stand for the
+  siblings. Records survive by construction (pg + volumes); start raises
+  the hull first, waits for its health, then the crew, and the keepers
+  re-earn their stalls over the next beats. The janitor never outranks
+  the word: replant leaves an exited hull resting. Two ordering laws
+  earned live: a resolution must never die with the floor it rides
+  (resolve first, then stop), and **lifecycle words live on ground that
+  survives the world** — the universe floor — because a shut-down world
+  must still hear its start.
+- Verbs are governed requests riding the UNIVERSE floor, and their
   gates SURFACE ON THE TILE (the staged verb with its terms and the
   decision beside it) — a gate in a room the human never visits is
   indistinguishable from a broken button (JB's find).

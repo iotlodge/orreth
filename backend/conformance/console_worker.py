@@ -1357,6 +1357,30 @@ def _crew_spawn(c: dict) -> None:
                      stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
 
 
+def _hull_state(container: str) -> str:
+    """running | exited | absent — one docker question."""
+    import subprocess
+    r = subprocess.run(["docker", "inspect", "-f", "{{.State.Running}}",
+                        container], capture_output=True, text=True)
+    if r.returncode != 0:
+        return "absent"
+    return "running" if r.stdout.strip() == "true" else "exited"
+
+
+def _world_hulls(man: dict):
+    """The world's declared floors resolved to hulls via the shipyard ledger:
+    [(scope, container, state, shared)] — infrastructure as declared content."""
+    by_scope = {v.get("scope"): v for v in SHIPYARD.ledger().values()}
+    out = []
+    for f in man.get("floors", []):
+        spec = by_scope.get(f.get("scope")) or {}
+        cont = spec.get("container")
+        out.append((f.get("scope"), cont,
+                    _hull_state(cont) if cont else "absent",
+                    bool(f.get("shared"))))
+    return out
+
+
 def _world_words(man: dict):
     """The world's standing words: head-per-ticker desk-watch records."""
     heads = {}
@@ -1438,6 +1462,15 @@ def on_capability_verb(port: int, scope: str, r: dict) -> None:
                 continue
             subprocess.run(["pkill", "-f", c["match"]], capture_output=True)
             halted.append(c["name"])
+        to_stop = []
+        for scope_f, cont, hstate, shared in _world_hulls(man):
+            if shared:
+                kept.append(scope_f + " (floor)")
+                continue
+            if cont and hstate == "running":
+                to_stop.append(cont)
+                halted.append(scope_f + " (floor)")
+        # resolve FIRST — a resolution must never die with the floor it rides
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
               "result": f"{man['name']} is SHUT DOWN - its own crew halted "
@@ -1446,10 +1479,17 @@ def on_capability_verb(port: int, scope: str, r: dict) -> None:
                            f"({', '.join(kept)})" if kept else "")
                         + "; the watchlist and every record survive; start "
                           "raises it again (rule 11)"})
+        for cont in to_stop:
+            subprocess.run(["docker", "stop", cont], capture_output=True)
         print("  > capability {}: SHUT DOWN".format(key))
         return
     if verb in ("continue", "start"):
+        hulls_down = [sc for sc, cont, hstate, shared in _world_hulls(man)
+                      if not shared and hstate != "running"]
         needs = []
+        if hulls_down:
+            needs.append(f"raise the floor(s) ({', '.join(hulls_down)}) — "
+                         "records return with them")
         if posture == "paused":
             needs.append(f"resume the watchlist ({', '.join(walking) or 'empty'})")
         if dead:
@@ -1469,6 +1509,19 @@ def on_capability_verb(port: int, scope: str, r: dict) -> None:
             print("  > capability {}: {} staged - the human holds the word".format(key, verb))
             return
         if r.get("status") == "approved":
+            import subprocess
+            for sc, cont, hstate, shared in _world_hulls(man):
+                if not shared and cont and hstate == "exited":
+                    subprocess.run(["docker", "start", cont], capture_output=True)
+            deadline = time.time() + 40         # the floor answers before the crew rises
+            while time.time() < deadline:
+                if all(h[2] == "running" or h[3] for h in _world_hulls(man)):
+                    try:
+                        call(man["port"], "GET", "/health")
+                        break
+                    except Exception:
+                        pass
+                time.sleep(3)
             if posture == "paused":
                 _post_posture(man, "standing", str(r.get("id") or ""))
             raised = []
@@ -1545,11 +1598,14 @@ def compose_desk(key: str = "trading-desk") -> dict:
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
     frm = (datetime.now(timezone.utc) - timedelta(days=120)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    r = call(dport, "POST", "/retrieve", {
-        "query": {"requester": seat_did, "subject": {"cohort": {"scope": dscope}},
-                  "space": "self", "time": {"from": frm}, "intent": "recall",
-                  "budget": {"cost": 64}, "auth": "biscuit-sim"},
-        "token": token, "requester_scope": dscope})
+    try:
+        r = call(dport, "POST", "/retrieve", {
+            "query": {"requester": seat_did, "subject": {"cohort": {"scope": dscope}},
+                      "space": "self", "time": {"from": frm}, "intent": "recall",
+                      "budget": {"cost": 64}, "auth": "biscuit-sim"},
+            "token": token, "requester_scope": dscope})
+    except Exception:
+        r = {"hits": []}          # a shut-down floor: the card still serves
     reports, stages, charts_ptr, watches = [], {}, {}, []
     for h in r.get("hits", []):
         tags = h.get("tags") or []
@@ -1659,7 +1715,7 @@ def compose_desk(key: str = "trading-desk") -> dict:
         m["posture"] = _world_posture(gen)
         m["pending_verb"] = None
         try:
-            for q in call(gen.get("port", DESK_PORT), "GET",
+            for q in call(4500, "GET",
                           "/requests").get("requests", []):
                 if q.get("kind") == "capability-verb" and q.get("status") == "staged" \
                         and q.get("key") == m.get("key"):
@@ -1669,7 +1725,10 @@ def compose_desk(key: str = "trading-desk") -> dict:
                     break
         except Exception:
             pass
-        m["state"] = ("shut down" if crew and not all(crew.values())
+        own_hull_down = any(not sh and st != "running"
+                            for _s, _c, st, sh in _world_hulls(gen))
+        m["state"] = ("shut down" if own_hull_down
+                      or (crew and not all(crew.values()))
                       else "stopped" if _world_posture(gen) == "paused"
                       else "running")
     return {"watches": list(heads.values()),
@@ -6259,6 +6318,12 @@ class Shipyard:
                 continue
             except Exception:
                 pass
+            if _hull_state(spec.get("container", "")) == "exited":
+                # 0055 — the hull stands SHUT DOWN by the human's word;
+                # a janitor never outranks a shutdown (start raises it)
+                print(f"  ↳ shipyard: {spec.get('scope', '?')} rests shut "
+                      "down by the human's word — left resting")
+                continue
             try:                                   # one bad hull never sinks the round
                 ok, out = self._launch_one(spec)
             except Exception as e:

@@ -1039,3 +1039,9 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 |---|---|---|
 | `desk.py` · `crypto_desk.py` · `options_desk.py` · `dev.sh` | Fable 5 (claude-fable-5) | JB's find: shut down ONE desk killed all three. Two flaws stacked — charles's crew match ("05-desk/run.py") was a SUBSTRING of every sibling's command line, and pkill -f is a substring gun; and the shared data stall was halted by a single world's word, aging out every floor's lease. Now every tender's match is exclusive (proven pairwise: no match hides inside another) and the stall is marked SHARED. |
 | `console_worker.py` | Fable 5 (claude-fable-5) | The law: a shared crew member belongs to the RIG, never to one world — stop-fully halts only the world's own crew and says who stayed up for the siblings. Isolation proven live: crypto shut down alone; trading and options untouched; the stall breathing. |
+
+## Fable 5 — 2026-08-13 (0055 — shut down reaches the infrastructure)
+
+| File | Author | Note |
+|---|---|---|
+| the three geneses · `console_worker.py` · `window.html` · doc §4 | Fable 5 (claude-fable-5) | JB's correction: shut down that leaves the Docker count unchanged isn't shut down — the point is reclaiming infrastructure cost. Floors are now DECLARED like crew (the eco shared, each field its own); stop-fully halts the world's own hulls, start raises hull→health→crew; the janitor's replant bows to an exited hull (a shutdown outranks recovery). Two ordering laws from the live proof: resolve before you stop the floor the resolution rides, and lifecycle words live on the universe floor — ground that survives the world, so a shut-down desk can still hear its start. Proven whole: 4 hulls → 3 → 4, siblings untouched, records intact, charlene home through her gate. |

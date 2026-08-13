@@ -3837,7 +3837,7 @@ async function capDecide(ev,rid,port,statusWord){
   ev.stopPropagation();
   const host=ev.target.closest(".cap-card,.dk-world");
   const el=host?host.querySelector(".dk-note"):null;
-  try{await fetch(`${location.protocol}//${location.hostname}:${port}/requests/resolve`,{method:"POST",
+  try{await fetch(`/requests/resolve`,{method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({id:rid,status:statusWord})})}catch(e){}
   if(el)el.textContent=statusWord==="approved"?"your word stands — the world answers in a moment":"held back — nothing changes";
@@ -3850,11 +3850,11 @@ function dkVerbs(w){
   return v.map(([verb,label])=>`<button class="dk-tab" onclick="capVerb(event,'${dkEsc(w.key)}','${verb}',${w.port||4520})">${label}</button>`).join(" ")}
 async function capVerb(ev,key,verb,port){
   ev.stopPropagation();
-  // the note lands NEAREST the click (0052's duplicate-id law) — never on
-  // another world's card
+  // the note lands NEAREST the click (0052's duplicate-id law); the verb
+  // rides the UNIVERSE floor — a shut-down world must still hear its start
   const host=ev.target.closest(".cap-card,.dk-world");
   const el=host?host.querySelector(".dk-note"):$("dk-reins-note");
-  try{await fetch(`${location.protocol}//${location.hostname}:${port}/requests`,{method:"POST",
+  try{await fetch(`/requests`,{method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({kind:"capability-verb",verb,key,
       text:`${verb} the ${key} world — the human's word at the tile`})})}catch(e){}

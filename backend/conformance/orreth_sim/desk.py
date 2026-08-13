@@ -56,6 +56,8 @@ MANIFEST = {
  "door": "trading-desk",
  "group": "the Trading Desks",
  "verbs": {"words_kind": "desk-watch"},
+ "floors": [{"scope": "u:demo/e:desk", "shared": True},
+            {"scope": "u:demo/e:desk/f:charles"}],
  # the crew: EXECUTED FROM THIS GENESIS ONLY — the shelf's editable copy of
  # this manifest never runs commands (a craft-edit must never become
  # command injection; the repo is the trust boundary, JB's L4)
