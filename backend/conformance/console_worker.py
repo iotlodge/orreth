@@ -1357,6 +1357,26 @@ def _crew_spawn(c: dict) -> None:
                      stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
 
 
+_DOWN_LEDGER = HOME / "shipyard" / "down.json"
+
+
+def _down_load() -> dict:
+    try:
+        return json.loads(_DOWN_LEDGER.read_text())
+    except Exception:
+        return {}
+
+
+def _down_mark(scope: str, on: bool) -> None:
+    d = _down_load()
+    if on:
+        d[scope] = NOW()
+    else:
+        d.pop(scope, None)
+    _DOWN_LEDGER.parent.mkdir(parents=True, exist_ok=True)
+    _DOWN_LEDGER.write_text(json.dumps(d, indent=1))
+
+
 def _hull_state(container: str) -> str:
     """running | exited | absent — one docker question."""
     import subprocess
@@ -1481,6 +1501,10 @@ def on_capability_verb(port: int, scope: str, r: dict) -> None:
                           "raises it again (rule 11)"})
         for cont in to_stop:
             subprocess.run(["docker", "stop", cont], capture_output=True)
+            subprocess.run(["docker", "rm", cont], capture_output=True)
+        for scope_f, cont, hstate, shared in _world_hulls(man):
+            if not shared:
+                _down_mark(scope_f, True)     # the word outlives the hull
         print("  > capability {}: SHUT DOWN".format(key))
         return
     if verb in ("continue", "start"):
@@ -1510,9 +1534,18 @@ def on_capability_verb(port: int, scope: str, r: dict) -> None:
             return
         if r.get("status") == "approved":
             import subprocess
+            by_scope = {v.get("scope"): v for v in SHIPYARD.ledger().values()}
             for sc, cont, hstate, shared in _world_hulls(man):
-                if not shared and cont and hstate == "exited":
+                if shared:
+                    continue
+                _down_mark(sc, False)          # the word lifts before the hull
+                if cont and hstate == "exited":
                     subprocess.run(["docker", "start", cont], capture_output=True)
+                elif hstate == "absent" and by_scope.get(sc):
+                    try:                       # recreated from the ledger; the
+                        SHIPYARD._launch_one(by_scope[sc])   # volumes kept the bodies
+                    except Exception as e:
+                        print(f"    (hull recreate {sc} failed: {e})")
             deadline = time.time() + 40         # the floor answers before the crew rises
             while time.time() < deadline:
                 if all(h[2] == "running" or h[3] for h in _world_hulls(man)):
@@ -6318,11 +6351,10 @@ class Shipyard:
                 continue
             except Exception:
                 pass
-            if _hull_state(spec.get("container", "")) == "exited":
-                # 0055 — the hull stands SHUT DOWN by the human's word;
-                # a janitor never outranks a shutdown (start raises it)
-                print(f"  ↳ shipyard: {spec.get('scope', '?')} rests shut "
-                      "down by the human's word — left resting")
+            if spec.get("scope") in _down_load() \
+                    or _hull_state(spec.get("container", "")) == "exited":
+                # 0055 — shut down by the human's word (durable in the
+                # down-ledger); a janitor never outranks a shutdown
                 continue
             try:                                   # one bad hull never sinks the round
                 ok, out = self._launch_one(spec)
@@ -9582,7 +9614,12 @@ def main() -> None:
     ensure_allen_floor()                      # the embodied tier stands visible (0037 §8.3)
     while True:
         beat_due = time.time() - KEEPER.last_beat >= BEAT_EVERY
+        _down_now = _down_load()
+        _down_ports = {int(p) for p, v in SHIPYARD.ledger().items()
+                       if v.get("scope") in _down_now}
         for port in [*FLOORS, *SHIPYARD.floors()]:
+            if port in _down_ports:
+                continue                      # shut by the word — quiet, not broken
             try:
                 if port not in scopes:
                     scopes[port] = call(port, "GET", "/health")["scope"]

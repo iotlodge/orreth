@@ -1045,3 +1045,9 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 | File | Author | Note |
 |---|---|---|
 | the three geneses · `console_worker.py` · `window.html` · doc §4 | Fable 5 (claude-fable-5) | JB's correction: shut down that leaves the Docker count unchanged isn't shut down — the point is reclaiming infrastructure cost. Floors are now DECLARED like crew (the eco shared, each field its own); stop-fully halts the world's own hulls, start raises hull→health→crew; the janitor's replant bows to an exited hull (a shutdown outranks recovery). Two ordering laws from the live proof: resolve before you stop the floor the resolution rides, and lifecycle words live on the universe floor — ground that survives the world, so a shut-down desk can still hear its start. Proven whole: 4 hulls → 3 → 4, siblings untouched, records intact, charlene home through her gate. |
+
+## Fable 5 — 2026-08-13 (0055 — the reclaim made whole: the word outlives the hull)
+
+| File | Author | Note |
+|---|---|---|
+| `console_worker.py` | Fable 5 (claude-fable-5) | JB's two finds closed: the stumble spam (a worker knocking forever on a floor shut by the word) and the unreclaimed container (docker stop keeps the row — not his cost model). Now: THE DOWN-LEDGER — "shut by the human's word," durable on disk; stop-fully stops AND REMOVES the hull (docker ps -a drops); the round skips worded-down floors in silence; the janitor honors the ledger; start lifts the word, RECREATES an absent hull from the shipyard's spec (volumes + pg carry the memory), waits for health, then raises the crew. Proven whole: ps -a 4→3→4, zero stumbles, charlene home on recreated ground with both her reports intact. Mid-proof, JB's own start on the trading tile was honored by the same machinery — the system worked under his hand while it was being proven. |
