@@ -875,6 +875,12 @@
   .dk-table{border-collapse:collapse;font-size:.74rem;margin:.4rem 0}
   .dk-table th{color:var(--brass);text-align:left;padding:.25rem .7rem;border-bottom:1px solid var(--hair2);cursor:pointer;white-space:nowrap}
   .dk-table td{color:var(--star);padding:.22rem .7rem;border-bottom:1px solid var(--hair)}
+
+  /* ── 0053 sp2 · the two books' chips ── */
+  .bookchip{font-size:.58rem;border-radius:4px;padding:.05rem .32rem;margin-left:.3rem;
+    border:1px solid;letter-spacing:.04em;vertical-align:middle}
+  .bc{color:var(--near);border-color:var(--near);opacity:.85}
+  .bm{color:var(--faint);border-color:var(--hair2)}
 </style>
 </head>
 <body>
@@ -2581,7 +2587,7 @@ function reqRow(r,inPane,extraHtml){
   const decide=w?`<div class="td-in" style="margin:.35rem 0 0"><textarea id="gw-${r.id}" rows="2" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></textarea></div>
     <div style="margin-top:.35rem"><button class="sbtn ok" onclick="gateGo('${r.id}',true,'${r.kind}')">${w[0]}</button>
     <button class="sbtn no" onclick="gateGo('${r.id}',false,'${r.kind}')">${w[1]}</button></div>`:"";
-  return `<div class="req${inPane?"":" clickable"}"${inPane?"":` onclick="paneReq('${r.id}',event)" title="open in the reading pane"`}><span class="kind">${r.kind||"request"}</span>
+  return `<div class="req${inPane?"":" clickable"}"${inPane?"":` onclick="paneReq('${r.id}',event)" title="open in the reading pane"`}><span class="kind">${r.kind||"request"}</span>${bookChip(r.kind)}
    <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}${raw}${extraHtml||""}${decide}</span>
    ${rest?`<span class="st">${r.status}</span> <button class="sbtn no" onclick="restIt('${r.kind}','${r.id}')">${r.kind==="reflex"?"rest this watcher":"rest this duty"}</button>`
    :`<span class="st">${r.status}</span>`}</div>`;
@@ -2664,7 +2670,7 @@ async function loadReq(){
 /* ── THE ONE INBOX (0052 sp3): everything waiting on the human, one place —
       consequence first, then age; the SAME reqRow serves it (rule 7), so a
       row here decides and speaks exactly like anywhere else. ── */
-let INBARCH=false,INBSEL=null;
+let INBARCH=false,INBSEL=null,INBMACH=false,REQCACHE=null;
 const KINDRANK={attestation:0,testament:1,consent:2,passage:2,
   publish:3,drift:3,release:3,witness:3,
   objective:4,improvement:4,experiment:4,commission:4,subscription:4,
@@ -2695,23 +2701,36 @@ async function renderInboxDetail(){
 }
 function renderInbox(q){
   const el=$("inboxlist");if(!el)return;
+  REQCACHE=q;
   const bz=document.activeElement;
   if(bz&&bz.id&&(bz.id.startsWith("gw-")||bz.id.startsWith("qa-")))return;
   const isWaiting=r=>r.status==="staged"||(r.kind==="question"&&r.status==="pending");
   const wait=q.filter(isWaiting).slice()
     .sort((a,b)=>((KINDRANK[a.kind]??8)-(KINDRANK[b.kind]??8))
       ||String(a.at||"").localeCompare(String(b.at||"")));
+  /* 0053 sp2 — the two books split the list: YOUR PURPOSES stand first;
+     the Machine's own housekeeping folds into a drawer beneath */
+  const chron=wait.filter(r=>bookOf(r.kind)==="chronicle");
+  const mach=wait.filter(r=>bookOf(r.kind)==="machine");
   const badge=$("inbox-badge");if(badge)badge.textContent=wait.length?` (${wait.length})`:"";
   const mon=$("inbox-monitor");
   if(mon)mon.textContent=wait.length
-    ?`${wait.length} thing(s) wait on your word — gravest first, then oldest; select a row and decide beside it`
+    ?`${chron.length} on your purposes · ${mach.length} of the machine's own housekeeping — gravest first, then oldest`
     :"nothing waits on you — a calm universe";
-  if(!INBSEL||!q.some(r=>r.id===INBSEL))INBSEL=wait.length?wait[0].id:null;
-  el.innerHTML=wait.length
-    ?wait.map(r=>`<div class="inbrow${r.id===INBSEL?" on":""}" data-id="${r.id}" onclick="inbSelect('${r.id}')">
-       <span class="kind">${r.kind||"request"}</span><span class="m" style="float:right">waited ${inbAge(r)}</span>
+  if(!INBSEL||!q.some(r=>r.id===INBSEL))
+    INBSEL=chron.length?chron[0].id:(mach.length?mach[0].id:null);
+  const row=r=>`<div class="inbrow${r.id===INBSEL?" on":""}" data-id="${r.id}" onclick="inbSelect('${r.id}')">
+       <span class="kind">${r.kind||"request"}</span>${bookChip(r.kind)}<span class="m" style="float:right">waited ${inbAge(r)}</span>
        <span class="t">${esc((r.text||"").slice(0,120))}</span>
-       <span class="m">${r.id}</span></div>`).join("")
+       <span class="m">${r.id}</span></div>`;
+  const drawer=mach.length
+    ?`<div class="dim" style="margin:.6rem 0 .25rem;font-size:.7rem;letter-spacing:.08em">⚙ THE MACHINE'S OWN HOUSEKEEPING — ${mach.length} waiting · <a href="#" onclick="INBMACH=!INBMACH;renderInbox(REQCACHE||[]);return false" style="color:var(--brass)">${INBMACH?"fold":"open"}</a></div>`
+      +(INBMACH?mach.map(row).join(""):"")
+    :"";
+  el.innerHTML=(chron.length||mach.length)
+    ?(chron.map(row).join("")
+      +(chron.length?"":`<div class="quiet" style="padding:.4rem 0">nothing waits on your purposes — the drawer below holds the machine's own</div>`)
+      +drawer)
     :`<div class="quiet">nothing waits on you — a calm universe.</div>`;
   const rl=$("reqlist"),tg=$("inb-arch-t");
   if(tg)tg.textContent=INBARCH?"· hide":"· show";
@@ -2733,6 +2752,19 @@ let GATEWAIT=[],GPOP=false,GATEN=0;
    healed): reqRow, the bell's popover, and the audience strip all read THIS
    map — a kind's verbs can never disagree between faces again. Dynamic kinds
    are functions of the request; unknown kinds fall back approve/decline. */
+/* ── 0053 sp2 · THE TWO BOOKS on every card: the Machine names its OWN
+      housekeeping kinds (a closed list — the Foundation can enumerate
+      itself); EVERYTHING ELSE is the Chronicle by default, so a new
+      world's words are purpose-side from birth. "A card that cannot say
+      which book it belongs to is, by definition, the defect" (0053). ── */
+const MACHINE_KINDS=new Set(["join","witness","drift","service","mind","release",
+  "craft-edit","commission","ecosystem","field-join","estate-adopt","assay","dial",
+  "experiment","uat-report","reflex-escalation","charter-rest","reflex-rest",
+  "improvement","gate-word","purge","recall"]);
+function bookOf(kind){return MACHINE_KINDS.has(kind)?"machine":"chronicle"}
+function bookChip(kind){return bookOf(kind)==="machine"
+  ?`<span class="bookchip bm" title="the Machine's own housekeeping — Orreth tending Orreth">⚙ machine</span>`
+  :`<span class="bookchip bc" title="the Chronicle — your purposes moving through the machine">📖 chronicle</span>`}
 const GATE_WORDS={join:["admit","turn away"],ecosystem:["launch","scrap"],
   objective:["fan the plan","decline"],improvement:["adopt","decline"],
   subscription:["open the subscription","decline"],

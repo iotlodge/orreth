@@ -1080,3 +1080,9 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 ## Fable 5 — 2026-08-13 (0054 + 0055 — CLOSED WHOLE by JB's own hands, era 0.55)
 
 The closing proof was the human's: retire → reinstate on the Trading Desk, clean, no drift. The rites in this commit: both dive docs sealed with their eras · the road rows · VERSION 0.52 → 0.55 · two rows in the honest-boundary register (the purpose-through-Orreth claim with its named yardstick gate; the decoupling claim with its named entry fee) · the Capabilities layer added to the objective atlas. Nine human finds across the two dives, nine laws in the machine.
+
+## Fable 5 — 2026-08-13 (0053 sp2 — every card wears its book)
+
+| File | Author | Note |
+|---|---|---|
+| `window.html` | Fable 5 (claude-fable-5) | The two books on every card face: 📖 chronicle / ⚙ machine chips (inbox rows, archive, the pane). The polarity is the design: the Machine enumerates its OWN housekeeping kinds; everything else is Chronicle by default — a new world's words are purpose-side untaught. The Inbox splits: purposes first, the machine's housekeeping folded into a counted drawer. The soup JB named in the course correction ("so many cards that I am not sure what area they are focused") now labels itself. |

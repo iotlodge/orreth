@@ -70,6 +70,21 @@ This is days, not a dive, and it hands the human the missing language:
 **a card that cannot say which book it belongs to is, by definition, the
 defect.**
 
+**sp2 LANDED + PROVEN 2026-08-13.** Every card face (inbox rows, archive,
+the reading pane) wears its book: 📖 chronicle or ⚙ machine. The
+classification polarity is the design's quiet win: the Machine names its
+OWN housekeeping kinds (a closed, enumerable list — joins, witness,
+drift, service, mind, release, craft-edit, commission, floors, assay…)
+and EVERYTHING ELSE is the Chronicle by default — a new world's words
+are purpose-side from birth, untaught. The Inbox splits: your purposes
+stand first (gravest, then oldest); the machine's housekeeping folds
+into a drawer beneath with its count ("⚙ THE MACHINE'S OWN HOUSEKEEPING
+— N waiting · open"). Proven in one frame: a staged desk-watch (📖,
+standing first, decidable in the pane) over a folded drawer holding a
+staged join (⚙). Deferred honestly: bulk decisions on safe housekeeping
+kinds — with the drawer, the daily pain they solved has largely gone;
+they return if the drawer ever grows loud.
+
 ### sp3 — the memory program (the goal, named as the dive)
 
 After the desk has run for a week or two, the proven instruments point at
