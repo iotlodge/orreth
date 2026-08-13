@@ -3838,24 +3838,34 @@ async function capVerb(ev,key,verb,port){
     ?"staged at your gate — approve it in the Inbox and the world stands again"
     :"the world rests — stopping never needs a gate (rule 11)";
   const el=$("dk-reins-note");if(el)el.textContent=note;
-  setTimeout(()=>{DESK=null;loadDesk()},2800)}
+  setTimeout(()=>{DESK=null;(CAPV==="home"?loadDesk():renderCap())},2800)}
+async function openWorld(key){
+  $("capbody").innerHTML=`<div class="dim" style="padding:2rem">the world is being read from its records…</div>`;
+  try{const d=await (await fetch(`${OBSD}/desk?key=${encodeURIComponent(key)}`)).json();
+    d._key=key;DESK=d}catch(e){
+    $("capbody").innerHTML=`<div class="dim" style="padding:2rem">the world's door did not answer</div>`;return}
+  renderCap()}
 function renderCap(){
   if(CAPV!=="home"){
-    const man=((DESK&&DESK.worlds)||[]).find(w=>w.key===CAPV);
+    if(!DESK||DESK._key!==CAPV){openWorld(CAPV);return}
+    const man=(DESK.worlds||[]).find(w=>w.key===CAPV);
     if(man){renderWorld(man);return}
     CAPV="home"}
-  const B=$("capbody"),reps=(DESK&&DESK.reports)||[];
-  const cards=((DESK&&DESK.worlds)||[]).map(w=>{
-    const last=reps.find(r=>true);
-    return `<div class="cap-card" onclick="CAPV='${dkEsc(w.key)}';renderCap()">
+  if(DESK&&DESK._key){DESK=null;loadDesk();return}
+  const B=$("capbody");
+  const card=w=>`<div class="cap-card" onclick="CAPV='${dkEsc(w.key)}';renderCap()">
       <div class="cap-emoji">${w.emoji||"📦"}</div>
       <div><b>${dkEsc(w.name)}</b> ${dkState(w)}<div class="dim" style="font-size:.7rem">${dkEsc(w.resident||"")} · ${dkEsc(w.floor||"")}</div>
       <div class="dk-law">${dkEsc(w.law||"")}</div>
-      ${last?`<div class="dim" style="font-size:.7rem;margin-top:.3rem">latest: ${dkEsc(last.ticker)} · ${dkEsc(last.date)} · ${dkEsc(last.rating||"")}</div>`:""}
       <div style="margin-top:.35rem">${dkVerbs(w)} <span style="color:var(--brass);font-size:.72rem">open →</span></div>
-      <div id="dk-reins-note" class="dim" style="font-size:.68rem"></div></div></div>`}).join("");
+      <div id="dk-reins-note" class="dim" style="font-size:.68rem"></div></div></div>`;
+  const groups={};
+  ((DESK&&DESK.worlds)||[]).forEach(w=>{const g=w.group||"other worlds";(groups[g]=groups[g]||[]).push(w)});
+  const html=Object.entries(groups).map(([g,ws])=>
+    `<div class="dk-chtitle" style="margin:.7rem 0 .3rem;text-transform:uppercase;letter-spacing:.14em;font-size:.66rem;color:var(--brass)">${dkEsc(g)}</div>
+     <div class="cap-grid">${ws.map(card).join("")}</div>`).join("");
   B.innerHTML=`<div class="dim" style="font-size:.72rem;margin-bottom:.6rem">installed worlds — each one an applied purpose living atop the Machine; more arrive through install & create (their own dive)</div>
-    <div class="cap-grid">${cards||`<div class="dim">no worlds installed yet</div>`}</div>`}
+    ${html||`<div class="dim">no worlds installed yet</div>`}`}
 
 /* ── 0055 sp1 · THE PANEL WALKER — the glass renders a world's declared
       rooms BLIND (JB's L1: eleven kinds). The desk's bespoke renderer is
@@ -3872,7 +3882,7 @@ async function _dkPost(payload,note){
   try{await fetch(`${location.protocol}//${location.hostname}:${port}/requests`,{method:"POST",
     headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
     $("dk-reins-note").textContent=note}catch(e){$("dk-reins-note").textContent="the door did not answer"}
-  setTimeout(()=>{DESK=null;loadDesk()},2600)}
+  setTimeout(()=>{DESK=null;(CAPV==="home"?loadDesk():renderCap())},2600)}
 function capBtn(pi,bi){
   const pnl=(_CAPMAN.view||[])[pi],btn=(pnl.buttons||[])[bi];if(!btn)return;
   const vals={};let bad=null;
@@ -3890,7 +3900,7 @@ async function deskStop(tk){
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({kind:(((_CAPMAN||{}).verbs||{}).words_kind)||"desk-watch",action:"cancel",ticker:tk,
       text:`stop the standing walk on ${tk}`})})}catch(e){}
-  DESK=null;setTimeout(loadDesk,2600)}
+  DESK=null;setTimeout(()=>{CAPV==="home"?loadDesk():renderCap()},2600)}
 let DKSORT={col:null,dir:1};
 function dkTableSort(pi,col){DKSORT={col,dir:DKSORT.col===col?-DKSORT.dir:1};renderCap()}
 function dkPanel(p,pi,item){

@@ -93,12 +93,12 @@ def _think(fn, klass: str, prompt: str) -> str:
 
 
 def run(client, think_med, think_high, think_fmt, ticker: str, date: str,
-        say=print, refresh: bool = False) -> dict:
+        say=print, refresh: bool = False, agent: str = "charles") -> dict:
     """The whole walk. Returns {bundle, decision, rating, report_ref}."""
     from orreth_agent.craft import acquire
 
     did, port = client.did, int(client.base.rsplit(":", 1)[1])
-    craft = {n: acquire(f"charles-trading-{n}", did=did) for n in CRAFT}
+    craft = {n: acquire(f"{agent}-trading-{n}", did=did) for n in CRAFT}
     say(f"· {len(craft)} craft acquired from the shelf, every one by ref")
 
     def record(stage: str, digest: str, **extra):
@@ -294,7 +294,7 @@ def run(client, think_med, think_high, think_fmt, ticker: str, date: str,
 
     charts = {"price_series": data["get_chart_series"].get("price_series", []),
               "indicator_series": data["get_chart_series"].get("indicator_series", {})}
-    bundle = REPO / "tmp" / f"charles-{ticker}-{date}"
+    bundle = REPO / "tmp" / f"{agent}-{ticker}-{date}"
     (bundle / "charts").mkdir(parents=True, exist_ok=True)
     files = {
         "00_full_report.md": polished,

@@ -54,6 +54,7 @@ MANIFEST = {
  "port": 4520,
  "law": "the desk observes and reports — it never executes a trade",
  "door": "trading-desk",
+ "group": "the Trading Desks",
  "verbs": {"words_kind": "desk-watch"},
  # the crew: EXECUTED FROM THIS GENESIS ONLY — the shelf's editable copy of
  # this manifest never runs commands (a craft-edit must never become

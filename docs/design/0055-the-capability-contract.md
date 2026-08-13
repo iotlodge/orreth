@@ -130,8 +130,22 @@ re-stood) → stop-fully (crew HALTED, tile honestly DARK) → start (staged,
 approved, crew raised, charles back at his gate on one patient card) →
 the human's chosen state restored. The tile and the world header wear the
 state chip (tending · resting · stopped · dark) and exactly the verbs
-that state allows. Remaining in this dive: the SDK's `capability` module
-+ a SECOND WORLD to prove generality (charlene is the natural one).
+that state allows. **sp3 LANDED — THE SECOND WORLD PROVED THE CONTRACT, 2026-08-13.** charlene
+arrived as exactly what the contract promised: a prompt set (13 reference
+prompts, AST-verbatim) + a manifest + a field — **not one line of glass**.
+Her floor grew through the field-join door (:4521, the port her manifest
+predicted); her minds saddled and her stalls planted at four gates; her
+craft planted by the same beat as every sentence; her tend joined through
+HER OWN gate (becky-per-floor's second resident); and her first walk —
+"the human asks: charlene, walk BTC-USD" — ran the whole sixteen stages
+to an Overweight with her charts, her stages, her tabs all INHERITED.
+The landing groups the two tiles under THE TRADING DESKS; the door is
+per-world (?key=); the SDK's `capability.manifest()` guards the eleven
+kinds at build (suite 23). The human drove her within minutes (his own
+ETH ask on her queue). Live lesson: a GENERATED Python module must
+IMPORT-EXECUTE in its check, never merely parse — json.dumps spells
+`true`, and the worker crashed on it until caught. chad (options) is now
+a third prompt set away; ML/BI/ProdDev worlds have their pattern.
 
 The Trading Desk re-declared UNDER the contract — its view expressed as
 typed panels, its crew as a declaration, its verbs on the tile — with

@@ -988,3 +988,13 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 |---|---|---|
 | `orreth_sim/desk.py` · `console_worker.py` | Fable 5 (claude-fable-5) | The crew declared in GENESIS (commands never run from the shelf's editable copy — a craft-edit must never become command injection); the capability-verb doors: stop/stop-fully immediate and gateless (rule 11 over a whole world), continue/start staged with terms and enacted on approval — words re-stood, dead crew raised; the door names each world's state (tending · resting · stopped · dark) from crew liveness + standing words. |
 | `window.html` | Fable 5 (claude-fable-5) | The tile wears its state chip and its verbs; the world header too. Proven live in one sitting: stop → continue → stop → stop-fully (crew halted, tile DARK, honest) → start (staged, approved, crew raised, charles back on one patient card) → restored to the human's chosen state. |
+
+## Fable 5 — 2026-08-13 (0055 sp3 — the second world: charlene proves the contract)
+
+| File | Author | Note |
+|---|---|---|
+| `orreth_sim/crypto_desk.py` | Fable 5 (claude-fable-5) | charlene's genesis: 13 reference prompts (AST-verbatim), the shared machinery words carried from charles's, her persona, her MANIFEST — the desk's rooms inherited by contract. NOT ONE LINE OF GLASS. Lesson on record: json.dumps writes `true` — a generated Python module must IMPORT-EXECUTE in its check, not merely parse (the crash JB caught live). |
+| `console_worker.py` · `orreth_sim/desk.py` | Fable 5 (claude-fable-5) | Two-world genesis registry; the /desk door parameterized per world (?key=); worlds grouped (genesis overlay when a shelf head predates the field); the bundle door serves any resident's exact-shaped name. |
+| `pipeline.py` · `run.py` · `dev.sh` | Fable 5 (claude-fable-5) | One runner, any desk resident (--name/--world; craft prefix, bundle name); charlene joins the standing crew. |
+| `window.html` | Fable 5 (claude-fable-5) | The landing groups worlds under their headers; opening a world drinks its own door (?key=); reloads stay world-aware. |
+| `orreth_agent/capability.py` (+test) | Fable 5 (claude-fable-5) | The SDK's manifest builder: eleven canon panel kinds guarded at build; repo-local install documented; BYOP named as the cloud-phase door. SDK suite 23. |

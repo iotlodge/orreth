@@ -34,8 +34,9 @@ deskcrew() {  # 0054: the Trading desk's standing crew — the data stall + char
   pkill -f "05-desk/run.py" 2>/dev/null || true; sleep 0.3
   (cd "$CONF" && nohup uv run --with yfinance --with pandas     python -u tradingdata_server.py 4570 >"$TMPDIR/tradingdata.log" 2>&1 &)
   (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python -u agents/flavors/05-desk/run.py --tend >"$TMPDIR/charles.log" 2>&1 &)
-  echo "· the desk crew stands: stall :4570 + charles --tend (logs: $TMPDIR/{tradingdata,charles}.log)"
-  echo "  ⚠ charles waits at his join gate after every start — welcome him in the Inbox (f:charles)"
+  (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python -u agents/flavors/05-desk/run.py --tend --world crypto-desk     --name charlene --field http://localhost:4521 >"$TMPDIR/charlene.log" 2>&1 &)
+  echo "· the desk crew stands: stall :4570 + charles + charlene tending (logs in $TMPDIR/)"
+  echo "  ⚠ the residents wait at their join gates after every start — welcome them in the Inbox"
 }
 
 case "${1:-}" in

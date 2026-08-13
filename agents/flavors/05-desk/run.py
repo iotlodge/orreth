@@ -62,12 +62,14 @@ def main() -> int:
     ap.add_argument("--date", default=None)
     ap.add_argument("--refresh", action="store_true",
                     help="analyze in refresh mode (reuse the prior walk's analysts)")
+    ap.add_argument("--name", default="charles")
+    ap.add_argument("--world", default="trading-desk")
     ap.add_argument("--tend", action="store_true",
                     help="tend the standing word: walk when due, reflect when ripe")
     args = ap.parse_args()
 
-    client = FieldClient(args.field, "charles", role="workforce")
-    print(f"· charles is {client.did[:28]}… — the same self, every morning")
+    client = FieldClient(args.field, args.name, role="workforce")
+    print(f"· {args.name} is {client.did[:28]}… — the same self, every morning")
     if args.tend:
         # a standing crew member outlives a slow gate with ONE patient card,
         # never a flood: a single join request held open for hours, polled
@@ -99,7 +101,7 @@ def main() -> int:
                       GovernedThink(client, max_tokens=2400))
         def _watches():
             try:
-                with _u.urlopen("http://localhost:4562/desk", timeout=8) as r:
+                with _u.urlopen(f"http://localhost:4562/desk?key={args.world}", timeout=8) as r:
                     return _j.load(r).get("watches", [])
             except Exception:
                 return []
@@ -126,7 +128,7 @@ def main() -> int:
                 print(f"· the standing word ({w.get('approved', '?')}) is due — "
                       f"walking {tk} in refresh mode, no fresh gate needed")
                 out = pipeline.run(client, tm, th, tf, tk, today,
-                                   refresh=bool(w.get("refresh")))
+                                   refresh=bool(w.get("refresh")), agent=args.name)
                 print(f"· the walk is whole: {out['rating']} — {out['bundle']}")
             # the human's own asks ride the queue: kind desk-ask, no second
             # gate — the ask IS the human's word; charles rides it and the
@@ -141,7 +143,7 @@ def main() -> int:
                                   "result": f"charles is walking {tk} on your word — "
                                             f"the report lands in the Capabilities pull"})
                     print(f"· the human asked — walking {tk} now (no second gate)")
-                    out = pipeline.run(client, tm, th, tf, tk, today)
+                    out = pipeline.run(client, tm, th, tf, tk, today, agent=args.name)
                     client._call("POST", "/requests/resolve",
                                  {"id": r["id"], "status": "done",
                                   "result": f"{tk}: {out['rating']} — the report is in "
@@ -167,19 +169,19 @@ def main() -> int:
                            GovernedThink(client, max_tokens=1500),
                            GovernedThink(client, max_tokens=1600),
                            GovernedThink(client, max_tokens=2400),
-                           ticker, date, refresh=args.refresh)
+                           ticker, date, refresh=args.refresh, agent=args.name)
         print(f"· the walk is whole: {out['rating']} — bundle at {out['bundle']}")
         return 0
 
-    persona = acquire("charles-trading-persona", did=client.did)
-    pipeline = acquire("charles-trading-pipeline", did=client.did)
-    disclaimer = acquire("charles-trading-compliance-disclaimer", did=client.did)
+    persona = acquire(f"{args.name}-trading-persona", did=client.did)
+    pipeline = acquire(f"{args.name}-trading-pipeline", did=client.did)
+    disclaimer = acquire(f"{args.name}-trading-compliance-disclaimer", did=client.did)
     print(f"· craft acquired from the shelf: persona v{persona.version} "
           f"({persona.ref[:18]}…), pipeline v{pipeline.version}, "
           f"disclaimer v{disclaimer.version}")
 
     client.remember(
-        {"birth": "charles takes the desk",
+        {"birth": f"{args.name} takes the desk",
          "floor": client.scope,
          "persona_ref": persona.ref,
          "pipeline_ref": pipeline.ref,

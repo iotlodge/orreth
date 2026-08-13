@@ -123,7 +123,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import (bell as bell_mod, continuity, crypto, desk as desk_mod,
+from orreth_sim import (bell as bell_mod, continuity, crypto,
+                        crypto_desk as crypto_mod, desk as desk_mod,
                         fingertip, improver, markers, meaning, mirror, node,
                         observatory, parlor, profile, purge, serials, shipyard,
                         speech, thumb as thumb_mod, vera)
@@ -1316,7 +1317,8 @@ EMBED_EVERY = int(os.environ.get("ORRETH_EMBED_EVERY", "90"))
 DESK_PORT, DESK_SCOPE = 4520, "u:demo/e:desk/f:charles"
 
 
-CAP_GENESIS = {"trading-desk": desk_mod.MANIFEST}   # crew runs from CODE only
+CAP_GENESIS = {"trading-desk": desk_mod.MANIFEST,
+               "crypto-desk": crypto_mod.MANIFEST}   # crew runs from CODE only
 
 
 def _crew_alive(match: str) -> bool:
@@ -1478,28 +1480,30 @@ def on_desk_watch(port: int, scope: str, r: dict) -> None:
         print(f"  ↳ desk-watch {r['id']}: {ticker} — the standing word stands")
 
 
-def compose_desk() -> dict:
+def compose_desk(key: str = "trading-desk") -> dict:
     """0054 sp4 — the desk's supply door: reports, stages, and charts
     composed from f:charles's OWN records (rule 7 — the glass drinks a
     projection of records, never a second truth). Charts dereference the
     artifact pointer at this door; their bulk never lived in a record."""
     from datetime import datetime, timedelta, timezone
-    _, seat_did = lib_seat(DESK_SCOPE)
+    gen0 = CAP_GENESIS.get(key) or desk_mod.MANIFEST
+    dport, dscope = gen0.get("port", DESK_PORT), gen0.get("floor", DESK_SCOPE)
+    _, seat_did = lib_seat(dscope)
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
     frm = (datetime.now(timezone.utc) - timedelta(days=120)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    r = call(DESK_PORT, "POST", "/retrieve", {
-        "query": {"requester": seat_did, "subject": {"cohort": {"scope": DESK_SCOPE}},
+    r = call(dport, "POST", "/retrieve", {
+        "query": {"requester": seat_did, "subject": {"cohort": {"scope": dscope}},
                   "space": "self", "time": {"from": frm}, "intent": "recall",
                   "budget": {"cost": 64}, "auth": "biscuit-sim"},
-        "token": token, "requester_scope": DESK_SCOPE})
+        "token": token, "requester_scope": dscope})
     reports, stages, charts_ptr, watches = [], {}, {}, []
     for h in r.get("hits", []):
         tags = h.get("tags") or []
         if "desk" not in tags and "desk-watch" not in tags:
             continue
         try:
-            body = call(DESK_PORT, "GET",
+            body = call(dport, "GET",
                         f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
         except Exception:
             continue
@@ -1593,6 +1597,7 @@ def compose_desk() -> dict:
         if not gen:
             m["state"] = "declared"
             continue
+        m.setdefault("group", gen.get("group"))
         crew = {c["name"]: _crew_alive(c["match"]) for c in gen.get("crew", [])}
         words = _world_words(gen)
         walking = sum(1 for w in words.values() if w.get("posture") == "walk")
@@ -1609,7 +1614,7 @@ def compose_desk() -> dict:
 def desk_bundle_bytes(name: str) -> bytes | None:
     """The bundle door: the ZIP the walk wrote, served by exact name only."""
     import re as _re
-    if not _re.fullmatch(r"charles-[A-Z.\-]{1,12}-\d{4}-\d{2}-\d{2}", name):
+    if not _re.fullmatch(r"[a-z]{3,16}-[A-Z.\-]{1,12}-\d{4}-\d{2}-\d{2}", name):
         return None
     p = Path(__file__).resolve().parents[2] / "tmp" / f"{name}.zip"
     return p.read_bytes() if p.exists() else None
@@ -1693,7 +1698,10 @@ def embed_door() -> None:
                         (qs.get("did") or ["anonymous-consumer"])[0],
                         pin=(qs.get("pin") or [None])[0])).encode()
                 elif route == "/desk":
-                    out = json.dumps(compose_desk()).encode()
+                    qs = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query)
+                    out = json.dumps(compose_desk(
+                        (qs.get("key") or ["trading-desk"])[0])).encode()
                 else:
                     out = json.dumps(compose_governance()
                                      if route == "/governance"
@@ -4164,7 +4172,8 @@ def improver_beat(port: int) -> None:
     if not _SENTENCES_PLANTED:
         allthere = True
         for sname, stext in {**speech.SENTENCES, **speech.PERSONAS,
-                             **desk_mod.CRAFT}.items():
+                             **desk_mod.CRAFT, **crypto_mod.CRAFT,
+                             "capability-crypto-desk": crypto_mod.MANIFEST}.items():
             if wire_assets(port, "asset", name=sname):
                 continue
             g = improver.make_asset(me, IMP, scope, name=sname,
