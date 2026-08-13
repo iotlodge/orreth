@@ -998,3 +998,9 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 | `pipeline.py` · `run.py` · `dev.sh` | Fable 5 (claude-fable-5) | One runner, any desk resident (--name/--world; craft prefix, bundle name); charlene joins the standing crew. |
 | `window.html` | Fable 5 (claude-fable-5) | The landing groups worlds under their headers; opening a world drinks its own door (?key=); reloads stay world-aware. |
 | `orreth_agent/capability.py` (+test) | Fable 5 (claude-fable-5) | The SDK's manifest builder: eleven canon panel kinds guarded at build; repo-local install documented; BYOP named as the cloud-phase door. SDK suite 23. |
+
+## Fable 5 — 2026-08-13 (0055 — the manifest's governed door, proven whole)
+
+| File | Author | Note |
+|---|---|---|
+| `console_worker.py` | Fable 5 (claude-fable-5) | The discovery: the craft-edit door already took dict bodies, and craft-edit was already an adoption kind — last night's drift card fired because I never filed one. The landing: the canon vocabulary now GUARDS the door (a capability-* edit must stay a manifest the walker can render; a foreign panel kind refuses loudly — "changing what the glass can render is a RELEASE, not an edit"). Proven in three acts: the iframe refusal · the trading-desk head gaining its group THROUGH the gate with lineage · the epoch turning 21 changes later with ZERO drift cards — the governed path leaves no accusation behind. |

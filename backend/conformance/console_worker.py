@@ -1319,6 +1319,27 @@ DESK_PORT, DESK_SCOPE = 4520, "u:demo/e:desk/f:charles"
 
 CAP_GENESIS = {"trading-desk": desk_mod.MANIFEST,
                "crypto-desk": crypto_mod.MANIFEST}   # crew runs from CODE only
+CAP_PANEL_KINDS = {"tabs", "markdown", "chart", "strip", "controls", "download",
+                   "stat", "bars", "list", "doc", "table"}   # canon (0055 L1/L2)
+
+
+def cap_manifest_flaw(parsed) -> str | None:
+    """0055 — the vocabulary is CANON: a capability-* craft-edit must stay a
+    manifest the walker can render, or the edit refuses loudly. Returns the
+    flaw's name, or None when the shape holds."""
+    if not isinstance(parsed, dict):
+        return "the body must be a manifest object"
+    for k in ("key", "name", "view"):
+        if not parsed.get(k):
+            return f"the manifest is missing «{k}»"
+    if not isinstance(parsed["view"], list):
+        return "«view» must be a list of panels"
+    for pnl in parsed["view"]:
+        kind = (pnl or {}).get("kind")
+        if kind not in CAP_PANEL_KINDS:
+            return (f"panel kind «{kind}» is beyond the canon vocabulary — "
+                    "changing what the glass can render is a RELEASE, not an edit")
+    return None
 
 
 def _crew_alive(match: str) -> bool:
@@ -9055,6 +9076,10 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
                     f"({str(e)[:60]}). Nothing changed")
     if isinstance(parsed, dict) and isinstance(parsed.get("asset"), dict):
         parsed = parsed["asset"].get("profile", parsed["asset"])
+    if name.startswith("capability-"):
+        flaw = cap_manifest_flaw(parsed)
+        if flaw:
+            return done(f"the edit refuses loudly — {flaw}. Nothing changed")
     body = {"asset": {"name": name, "profile": parsed, "adopted_from": head,
                       "authority": f"the human's word at {rid} — edit and "
                                    f"word in one motion (0045 sp2)"}}
