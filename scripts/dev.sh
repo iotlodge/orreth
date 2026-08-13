@@ -25,15 +25,26 @@ rootpub() {  # keep the seed and infrastructure/.env in lockstep, always
 
 joindoor() {  # becky answers joins + the librarian answers Asks — the floor's cognition
   pkill -f "console_worker.py $FIELD" 2>/dev/null || true; sleep 0.3
-  (cd "$CONF" && nohup uv run python console_worker.py "$FIELD" >"$TMPDIR/worker.log" 2>&1 &)
+  (cd "$CONF" && ORRETH_JOIN_LEASE_TOKENS="${ORRETH_JOIN_LEASE_TOKENS:-250000}"     nohup uv run python console_worker.py "$FIELD" >"$TMPDIR/worker.log" 2>&1 &)
   echo "· becky's join door open on :$FIELD — agents may join; log: $TMPDIR/worker.log"
+}
+
+deskcrew() {  # 0054: the Trading desk's standing crew — the data stall + charles tending
+  pkill -f "tradingdata_server.py" 2>/dev/null || true
+  pkill -f "05-desk/run.py" 2>/dev/null || true; sleep 0.3
+  (cd "$CONF" && nohup uv run --with yfinance --with pandas     python tradingdata_server.py 4570 >"$TMPDIR/tradingdata.log" 2>&1 &)
+  (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python agents/flavors/05-desk/run.py --tend >"$TMPDIR/charles.log" 2>&1 &)
+  echo "· the desk crew stands: stall :4570 + charles --tend (logs: $TMPDIR/{tradingdata,charles}.log)"
+  echo "  ⚠ charles waits at his join gate after every start — welcome him in the Inbox (f:charles)"
 }
 
 case "${1:-}" in
   start)   rootpub; $COMPOSE up --build -d
            docker image prune -f >/dev/null 2>&1 || true   # superseded layers die quietly (the jsbarth disk fire's lesson)
-           sleep 3; joindoor; "$0" status ;;
+           sleep 3; joindoor; deskcrew; "$0" status ;;
   stop)    pkill -f console_worker.py 2>/dev/null || true
+           pkill -f tradingdata_server.py 2>/dev/null || true
+           pkill -f "05-desk/run.py" 2>/dev/null || true
            # dynamic hulls (the Shipyard) ride the rig's network — down together;
            # the worker's replant relaunches them from ~/.orreth/shipyard on start
            docker ps -aq --filter name=orreth-dyn- --filter name=orreth-field- \
@@ -41,7 +52,7 @@ case "${1:-}" in
            $COMPOSE down ;;
   restart) "$0" stop; rootpub; $COMPOSE up --build -d
            docker image prune -f >/dev/null 2>&1 || true
-           sleep 3; joindoor; "$0" status ;;
+           sleep 3; joindoor; deskcrew; "$0" status ;;
   clean)   # deliberate deep clean (2026-07-30, after the jsbarth 100%-disk fire):
            # dangling images + build cache trimmed to a warm 15GB. NEVER volumes
            # (pg holds the universe's memory) and NEVER -a image prunes here —
@@ -56,7 +67,12 @@ case "${1:-}" in
            for p in 4500 4501 4502 $dyn; do printf "  :%s  " "$p"
              curl -sf "http://127.0.0.1:$p/health" || printf dark; echo; done
            pgrep -f "console_worker.py $FIELD" >/dev/null \
-             && echo "  join door: OPEN (:$FIELD)" || echo "  join door: CLOSED — run scripts/dev.sh start" ;;
+             && echo "  join door: OPEN (:$FIELD)" || echo "  join door: CLOSED — run scripts/dev.sh start"
+           pgrep -f "tradingdata_server.py" >/dev/null \
+             && echo "  desk stall: SERVING (:4570)" || echo "  desk stall: DARK"
+           pgrep -f "05-desk/run.py" >/dev/null \
+             && echo "  charles: TENDING (walks at the close; asks anytime)" \
+             || echo "  charles: RESTING — run scripts/dev.sh start" ;;
   logs)    $COMPOSE logs -f --tail 40 ;;
   window)  joindoor; (cd "$CONF" && uv run python demo_open_window.py "$FIELD" 4500) ;;
   agent)   flavor="${2:-01-prototype}"; mode="${3:---once}"

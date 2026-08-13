@@ -854,6 +854,23 @@
   .dk-md code{background:var(--deep);border:1px solid var(--hair);border-radius:4px;padding:0 .25rem;font-size:.92em}
   .dk-md hr{border:none;border-top:1px solid var(--hair);margin:.8rem 0}
   .dk-sp{height:.3rem}
+
+  /* ── 0054 · the desk's charts (the reference's anatomy) + the landing ── */
+  .cap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.8rem}
+  .cap-card{display:flex;gap:.8rem;background:var(--deep);border:1px solid var(--hair);
+    border-radius:10px;padding:.9rem 1rem;cursor:pointer}
+  .cap-card:hover{border-color:var(--brassdim)}
+  .cap-emoji{font-size:1.6rem}
+  .dkwrap{position:relative;max-width:960px}
+  .dk-chtitle{font-size:.72rem;color:var(--star);margin:.5rem 0 .15rem;display:flex;gap:.8rem;align-items:baseline}
+  .dk-leg{font-size:.66rem;color:var(--dim)}
+  .dktip{position:absolute;top:26px;left:60px;display:none;pointer-events:none;z-index:6;
+    background:var(--deep);border:1px solid var(--hair2);border-radius:6px;
+    padding:.4rem .55rem;font-size:.68rem;line-height:1.45;min-width:150px;
+    box-shadow:0 6px 18px var(--scrim)}
+  .dk-pill{display:inline-flex;align-items:center;border-radius:999px;color:#fff;
+    font-weight:600;letter-spacing:.04em;padding:.22rem .75rem;font-size:.78rem}
+  .dk-px{font-size:1.05rem;color:var(--star);font-weight:600}
 </style>
 </head>
 <body>
@@ -3679,19 +3696,22 @@ window.addEventListener("resize",()=>{if(!$("v-uni").classList.contains("hide"))
       must never have is silence about itself. ── */
 const OBSD=`${location.protocol}//${location.hostname}:4562`;
 
-/* ── 0054 sp4 · the capabilities pull — one lever, one world (L-C v1).
-      The desk view drinks /desk on the worker's door: reports, stages, and
-      charts PROJECTED from f:charles's records (rule 7) — the glass never
-      holds a second truth, and the full artifacts ride the bundle. ── */
-let DESK=null,DKTAB="polished",DKIDX=0;
+/* ── 0054 sp4+sp5 · the capabilities pull — the portal of applied-purpose
+      worlds (L-C). A LANDING of world cards first (organized as they grow),
+      each opening into its own view. The desk's charts are CortexObserver's
+      own design hand-rolled — Recharts is React-bound and the glass is
+      dependency-free by law — same anatomy, same hues: dashed grid, price
+      axis, date axis, close line + translucent high/low band, legends, and
+      a live crosshair tooltip carrying every series at the cursor. ── */
+let DESK=null,DKTAB="polished",DKIDX=0,CAPV="home";
 function capToggle(){const w=$("capworld");w.classList.toggle("capopen");
   if(!w.classList.contains("capopen"))return;
-  if(!DESK)loadDesk();else renderDesk();}
+  if(!DESK)loadDesk();else renderCap();}
 async function loadDesk(){
-  $("capbody").innerHTML=`<div class="dim" style="padding:2rem">the desk is being read from its records…</div>`;
+  $("capbody").innerHTML=`<div class="dim" style="padding:2rem">the worlds are being read from their records…</div>`;
   try{DESK=await (await fetch(`${OBSD}/desk`)).json()}
-  catch(e){$("capbody").innerHTML=`<div class="dim" style="padding:2rem">the desk's door did not answer — is the worker awake?</div>`;return}
-  renderDesk();}
+  catch(e){$("capbody").innerHTML=`<div class="dim" style="padding:2rem">the door did not answer — is the worker awake?</div>`;return}
+  renderCap();}
 function dkEsc(s){return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
 function dkMd(t){
   const lines=dkEsc(t).split("\n");let out="",inList=false;
@@ -3709,33 +3729,106 @@ function dkMd(t){
 function dkSection(md,head){
   const parts=("\n"+md).split(/\n(?=## )/);
   return parts.find(x=>x.toLowerCase().startsWith("## "+head.toLowerCase()))||""}
-function dkBadge(r){const c={buy:"var(--near)",overweight:"var(--near)",hold:"var(--brass)",
-  underweight:"var(--red)",sell:"var(--red)"}[String(r||"").toLowerCase()]||"var(--dim)";
-  return `<span class="dk-badge" style="border-color:${c};color:${c}">${dkEsc(r||"—")}</span>`}
-function dkChart(rep){
-  const P=(rep.charts||{}).price_series||[];if(!P.length)return `<div class="dim">no chart series on the record — the bundle carries them</div>`;
-  const IS=(rep.charts||{}).indicator_series||{};
-  const W=920,H=210,pad=34;
-  const closes=P.map(p=>p.close);
-  const s50=(IS.close_50_sma||[]).map(x=>x.value),s200=(IS.close_200_sma||[]).map(x=>x.value);
-  const all=[...closes,...s50,...s200].filter(v=>v!=null);
-  const lo=Math.min(...all),hi=Math.max(...all);
-  const X=i=>pad+i*(W-pad-8)/((P.length-1)||1),Y=v=>H-18-(v-lo)*(H-36)/((hi-lo)||1);
-  const line=(vals,col,w)=>{const pts=vals.map((v,i)=>v==null?null:`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).filter(Boolean).join(" ");
-    return `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="${w}"/>`};
-  const rsi=(IS.rsi||[]).map(x=>x.value);
-  const RY=v=>v==null?null:52-(v/100)*44;
-  const rpts=rsi.map((v,i)=>v==null?null:`${X(i).toFixed(1)},${RY(v).toFixed(1)}`).filter(Boolean).join(" ");
-  return `<svg viewBox="0 0 ${W} ${H}" class="dk-chart">
-    <text x="${pad}" y="14" fill="var(--dim)" font-size="10">${dkEsc(rep.ticker)} · last ${P.length} sessions · close ${(+closes.at(-1)).toFixed(2)} · high ${hi.toFixed(2)} · low ${lo.toFixed(2)}</text>
-    ${line(closes,"var(--star)",1.6)}${line(s50,"var(--brass)",1)}${line(s200,"var(--viol)",1)}
-    <text x="${W-170}" y="14" fill="var(--brass)" font-size="10">— 50 sma</text>
-    <text x="${W-95}" y="14" fill="var(--viol)" font-size="10">— 200 sma</text></svg>
-  <svg viewBox="0 0 ${W} 58" class="dk-chart">
-    <text x="${pad}" y="12" fill="var(--dim)" font-size="10">rsi ${rsi.at(-1)==null?"—":(+rsi.at(-1)).toFixed(1)} · 70/30 rails dashed</text>
-    <line x1="${pad}" y1="${RY(70)}" x2="${W-8}" y2="${RY(70)}" stroke="var(--hair)" stroke-dasharray="3 3"/>
-    <line x1="${pad}" y1="${RY(30)}" x2="${W-8}" y2="${RY(30)}" stroke="var(--hair)" stroke-dasharray="3 3"/>
-    <polyline points="${rpts}" fill="none" stroke="var(--blue)" stroke-width="1.2"/></svg>`}
+
+/* ── the reference's exact tones (charts/palette.ts + gauge-badge.tsx) ── */
+const DKPAL={bull:"hsl(142 71% 45%)",bear:"hsl(0 72% 51%)",neutral:"hsl(217 91% 60%)",
+  warn:"hsl(38 92% 50%)",over:"hsl(142 50% 55%)",under:"hsl(20 85% 55%)",
+  series:["hsl(217 91% 60%)","hsl(280 65% 60%)","hsl(38 92% 50%)","hsl(142 71% 45%)","hsl(0 72% 51%)","hsl(199 89% 48%)"]};
+function dkBadge(r){const k=String(r||"").trim().toLowerCase();
+  const bg={buy:DKPAL.bull,overweight:DKPAL.over,hold:"var(--faint)",underweight:DKPAL.under,sell:DKPAL.bear}[k]||"var(--faint)";
+  return `<span class="dk-pill" style="background:${bg}">${dkEsc(r||"—")}</span>`}
+
+/* ── the chart engine ── */
+const _DKCH={};
+function dkNice(lo,hi,n){const span=(hi-lo)||1,step0=span/n,mag=Math.pow(10,Math.floor(Math.log10(step0)));
+  const step=[1,2,2.5,5,10].map(m=>m*mag).find(v=>v>=step0)||mag*10;
+  const a=Math.floor(lo/step)*step,ticks=[];for(let v=a;v<=hi+step*0.51;v+=step)ticks.push(v);return ticks}
+function dkPlot(id,spec){
+  const W=940,H=spec.height||220,L=56,R=12,T=14,B=22,dates=spec.dates||[];
+  if(!dates.length)return `<div class="dim">no series on the record — the bundle carries them</div>`;
+  let vals=[];(spec.series||[]).forEach(x=>vals.push(...x.vals.filter(v=>v!=null)));
+  if(spec.band){vals.push(...spec.band.lo.filter(v=>v!=null),...spec.band.hi.filter(v=>v!=null))}
+  const lo=Math.min(...vals),hi=Math.max(...vals),ticks=dkNice(lo,hi,4);
+  const ylo=Math.min(lo,ticks[0]),yhi=Math.max(hi,ticks[ticks.length-1]);
+  const X=i=>L+i*(W-L-R)/((dates.length-1)||1),Y=v=>T+(H-T-B)*(1-(v-ylo)/((yhi-ylo)||1));
+  const fmt=spec.fmt||(v=>Math.abs(v)>=1000?v.toFixed(0):v.toFixed(2));
+  let g="";
+  ticks.forEach(v=>{if(v<ylo-1e-9||v>yhi+1e-9)return;
+    g+=`<line x1="${L}" y1="${Y(v).toFixed(1)}" x2="${W-R}" y2="${Y(v).toFixed(1)}" stroke="var(--hair)" stroke-dasharray="3 3"/>`
+     +`<text x="${L-6}" y="${(Y(v)+3).toFixed(1)}" fill="var(--dim)" font-size="10" text-anchor="end">${fmt(v)}</text>`});
+  const xn=Math.min(6,dates.length);
+  for(let k=0;k<xn;k++){const i=Math.round(k*(dates.length-1)/((xn-1)||1));
+    g+=`<text x="${X(i).toFixed(1)}" y="${H-6}" fill="var(--dim)" font-size="10" text-anchor="middle">${dates[i].slice(5)}</text>`}
+  if(spec.band){let up="",dn="";
+    spec.band.hi.forEach((v,i)=>{if(v!=null)up+=`${up?"L":"M"}${X(i).toFixed(1)} ${Y(v).toFixed(1)} `});
+    for(let i=spec.band.lo.length-1;i>=0;i--){const v=spec.band.lo[i];if(v!=null)dn+=`L${X(i).toFixed(1)} ${Y(v).toFixed(1)} `}
+    if(up)g+=`<path d="${up}${dn}Z" fill="${spec.band.color}" fill-opacity="0.15" stroke="none"/>`}
+  (spec.series||[]).forEach(x=>{
+    const pts=x.vals.map((v,i)=>v==null?null:`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).filter(Boolean).join(" ");
+    g+=`<polyline points="${pts}" fill="none" stroke="${x.color}" stroke-width="${x.width||1.75}"/>`});
+  g+=`<line id="${id}-cx" x1="0" y1="${T}" x2="0" y2="${H-B}" stroke="var(--dim)" stroke-width="1" style="display:none"/>`;
+  _DKCH[id]={...spec,W,H,L,R,dates};
+  const legend=(spec.series||[]).map(x=>`<span style="color:${x.color}">— ${dkEsc(x.name)}</span>`).join(" · ");
+  return `<div class="dkwrap" id="${id}-wrap">
+    <div class="dk-chtitle">${dkEsc(spec.title||"")}<span class="dk-leg">${legend}</span></div>
+    <svg viewBox="0 0 ${W} ${H}" class="dk-chart" preserveAspectRatio="none"
+      onmousemove="dkHover(event,'${id}')" onmouseleave="dkLeave('${id}')">${g}</svg>
+    <div class="dktip" id="${id}-tip"></div></div>`}
+function dkHover(evt,id){const c=_DKCH[id];if(!c)return;
+  const svg=evt.currentTarget,r=svg.getBoundingClientRect();
+  const fx=(evt.clientX-r.left)/r.width*c.W;
+  let i=Math.round((fx-c.L)/((c.W-c.L-c.R)/((c.dates.length-1)||1)));
+  i=Math.max(0,Math.min(c.dates.length-1,i));
+  const X=c.L+i*(c.W-c.L-c.R)/((c.dates.length-1)||1);
+  const cx=document.getElementById(id+"-cx");cx.style.display="";cx.setAttribute("x1",X);cx.setAttribute("x2",X);
+  const tip=document.getElementById(id+"-tip");
+  let rows=`<b>${c.dates[i]}</b>`;
+  if(c.tip)rows+=c.tip(i);
+  else (c.series||[]).forEach(x=>{const v=x.vals[i];
+    rows+=`<div><span style="color:${x.color}">●</span> ${dkEsc(x.name)}: <b>${v==null?"—":(+v).toFixed(2)}</b></div>`});
+  tip.innerHTML=rows;tip.style.display="block";
+  const wrap=document.getElementById(id+"-wrap"),wr=wrap.getBoundingClientRect();
+  let px=(X/c.W)*r.width+14;if(px+170>wr.width)px=(X/c.W)*r.width-184;
+  tip.style.left=px+"px";tip.style.top="26px"}
+function dkLeave(id){const cx=document.getElementById(id+"-cx");if(cx)cx.style.display="none";
+  const tip=document.getElementById(id+"-tip");if(tip)tip.style.display="none"}
+function dkCharts(rep){
+  const P=(rep.charts||{}).price_series||[],IS=(rep.charts||{}).indicator_series||{};
+  if(!P.length)return `<div class="dim">no chart series on the record — the bundle carries them</div>`;
+  const dates=P.map(x=>x.date),iv=n=>{const m={};(IS[n]||[]).forEach(x=>m[x.date]=x.value);
+    return dates.map(d=>m[d]??null)};
+  const price=dkPlot("dkc-price",{title:`${rep.ticker} — close & daily range`,height:230,dates,
+    band:{lo:P.map(x=>x.low),hi:P.map(x=>x.high),color:DKPAL.neutral},
+    series:[{name:"close",color:DKPAL.neutral,vals:P.map(x=>x.close),width:2}],
+    tip:i=>{const r=P[i];return `<div>open <b>${r.open.toFixed(2)}</b> · high <b>${r.high.toFixed(2)}</b></div>
+      <div>low <b>${r.low.toFixed(2)}</b> · close <b>${r.close.toFixed(2)}</b></div>
+      <div class="dim">volume ${(r.volume/1e6).toFixed(1)}M</div>`}});
+  const trend=dkPlot("dkc-trend",{title:"Trend",height:170,dates,
+    series:[{name:"close_50_sma",color:DKPAL.series[0],vals:iv("close_50_sma")},
+            {name:"close_200_sma",color:DKPAL.series[1],vals:iv("close_200_sma")}]});
+  const mom=dkPlot("dkc-mom",{title:"Momentum & Volatility",height:170,dates,
+    series:[{name:"rsi",color:DKPAL.series[0],vals:iv("rsi")},
+            {name:"macd",color:DKPAL.series[1],vals:iv("macd")},
+            {name:"atr",color:DKPAL.series[2],vals:iv("atr")}]});
+  const boll=dkPlot("dkc-boll",{title:"Bollinger Bands",height:150,dates,
+    series:[{name:"boll",color:DKPAL.series[0],vals:iv("boll")}]});
+  return price+trend+mom+boll}
+
+/* ── the landing: worlds organized, never a jump straight in ── */
+function renderCap(){
+  if(CAPV!=="home"){renderDesk();return}
+  const B=$("capbody"),reps=(DESK&&DESK.reports)||[];
+  const cards=((DESK&&DESK.worlds)||[]).map(w=>{
+    const last=reps.find(r=>true);
+    return `<div class="cap-card" onclick="CAPV='${dkEsc(w.key)}';renderCap()">
+      <div class="cap-emoji">${w.emoji||"📦"}</div>
+      <div><b>${dkEsc(w.name)}</b><div class="dim" style="font-size:.7rem">${dkEsc(w.resident||"")} · ${dkEsc(w.floor||"")}</div>
+      <div class="dk-law">${dkEsc(w.law||"")}</div>
+      ${last?`<div class="dim" style="font-size:.7rem;margin-top:.3rem">latest: ${dkEsc(last.ticker)} · ${dkEsc(last.date)} · ${dkEsc(last.rating||"")}</div>`:""}
+      <div style="color:var(--brass);font-size:.72rem;margin-top:.35rem">open →</div></div></div>`}).join("");
+  B.innerHTML=`<div class="dim" style="font-size:.72rem;margin-bottom:.6rem">installed worlds — each one an applied purpose living atop the Machine; more arrive through install & create (their own dive)</div>
+    <div class="cap-grid">${cards||`<div class="dim">no worlds installed yet</div>`}</div>`}
+
 function dkWatchLine(rep){
   const rows=(DESK.watches||[]).map(w=>w.posture==="walk"
     ?`<div class="dk-law">🕰 ${dkEsc(w.ticker)} · weekdays at the close · refresh — <a href="#" onclick="deskStop('${dkEsc(w.ticker)}');return false" style="color:var(--red)">stop it</a> <span class="dim">(stopping never needs a gate — rule 11)</span></div>`
@@ -3772,15 +3865,18 @@ function renderDesk(){
   const B=$("capbody");if(!DESK)return;
   const reps=DESK.reports||[];
   const world=(DESK.worlds||[])[0]||{};
-  if(!reps.length){B.innerHTML=`<div class="dim" style="padding:2rem">${world.emoji||"📈"} the desk stands, but no report is on the record yet — approve charles's next walk and the first one lands here</div>`;return}
+  const crumb=`<div style="margin-bottom:.5rem"><a href="#" onclick="CAPV='home';renderCap();return false" style="color:var(--brass);font-size:.72rem;text-decoration:none">← worlds</a></div>`;
+  if(!reps.length){B.innerHTML=crumb+`<div class="dim" style="padding:2rem">${world.emoji||"📈"} the desk stands, but no report is on the record yet — ask charles below or approve his next walk</div>`;return}
   DKIDX=Math.min(DKIDX,reps.length-1);
   const rep=reps[DKIDX];
+  const P=(rep.charts||{}).price_series||[];
+  const lastPx=P.length?P[P.length-1].close.toFixed(2):null;
   const pick=reps.map((r,i)=>`<button class="dk-tab${i===DKIDX?" on":""}" onclick="DKIDX=${i};renderDesk()">${dkEsc(r.ticker)} · ${dkEsc(r.date)}</button>`).join("");
   const strip=(rep.stages||[]).map(x=>`<span class="dk-dot" title="${dkEsc(x.digest)}">✓<i>${dkEsc(x.stage)}</i></span>`).join("");
   const dq=(rep.data_quality_errors||[]).length?`<div class="dk-dq">⚠ ${rep.data_quality_errors.length} data source(s) were dark this run — the report says so honestly</div>`:"";
   const md=rep.markdown||"";
   const sect=h=>{const x=dkSection(md,h);return x?dkMd(x):`<p class="dim">(this walk's record predates the full-artifact fields — the bundle ⬇ carries everything)</p>`};
-  const art=(x,h)=>x&&String(x).trim()?dkMd(x):sect(h);   // FULL artifact first, polished slice as the fallback
+  const art=(x,h)=>x&&String(x).trim()?dkMd(x):sect(h);
   const sec=rep.sections||{},deb=rep.debates||{};
   const bodies={polished:dkMd(md),
     overview:dkMd([dkSection(md,"Final Decision"),dkSection(md,"Why"),dkSection(md,"Risks")].filter(Boolean).join("\n\n")),
@@ -3788,23 +3884,25 @@ function renderDesk(){
     sentiment:art(sec.sentiment,"Sentiment"),news:art(sec.news,"News"),
     fundamentals:art(sec.fundamentals,"Fundamentals"),
     debate:(deb.research||deb.risk)?dkMd("## Bull / Bear Researcher Debate\n\n"+(deb.research||"")+"\n\n## Risk Debate\n\n"+(deb.risk||"")):sect("Debate")};
-  B.innerHTML=`
+  B.innerHTML=crumb+`
    <div class="dk-world">${world.emoji||"📈"} <b>${dkEsc(world.name||"the Trading Desk")}</b>
      <span class="dim"> · ${dkEsc(world.resident||"")} · ${dkEsc(world.floor||"")}</span>
      <div class="dk-law">${dkEsc(world.law||"")}</div>${dkWatchLine(rep)}</div>
    <div class="dk-pick">${pick}
      <a class="dk-dl" href="${OBSD}/desk/bundle?name=charles-${dkEsc(rep.ticker)}-${dkEsc(rep.date)}" download>⬇ download the bundle — the full 15-file report</a></div>
    <div class="dk-hero">${dkBadge(rep.rating)}
+     ${lastPx?`<span class="dk-px">$${lastPx}</span>`:""}
      <span class="dk-tgt">target ${dkEsc(rep.decision?.price_target??"—")}</span>
      <span class="dim">· ${dkEsc(rep.decision?.time_horizon||"")}</span>
      ${rep.outcome_pending?`<span class="dk-pend" title="the reflection loop will grade this call against what the market actually did">outcome pending</span>`:""}</div>
    ${dq}
    <div class="dk-strip">${strip}</div>
-   ${dkChart(rep)}
+   ${dkCharts(rep)}
    <div class="dk-tabs">${DKTABS.map(([k,l])=>`<button class="dk-tab${DKTAB===k?" on":""}" onclick="DKTAB='${k}';renderDesk()">${l}</button>`).join("")}</div>
    <div class="dk-md">${bodies[DKTAB]||""}</div>`;}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("capworld").classList.contains("capopen"))capToggle()});
-if(location.hash.includes("cap"))setTimeout(capToggle,600);   // pull deep-link: #…&cap=1
+const _capw=location.hash.match(/capw=([a-z0-9-]+)/);if(_capw)CAPV=_capw[1];
+if(location.hash.includes("cap"))setTimeout(capToggle,600);   // deep-links: #…&cap=1 (the landing) · &capw=trading-desk (a world)
 
 /* ── THE CRAFT ROOM (0045 sp1) — lives ABOVE applyHash's first call (the
       1:35 lesson): the registry is a projection over the signed shelves;

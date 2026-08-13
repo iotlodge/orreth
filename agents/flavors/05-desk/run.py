@@ -68,7 +68,20 @@ def main() -> int:
 
     client = FieldClient(args.field, "charles", role="workforce")
     print(f"· charles is {client.did[:28]}… — the same self, every morning")
-    client.join()
+    if args.tend:
+        # a standing crew member outlives a slow gate: keep asking until a
+        # human welcomes him; every retry is a fresh challenge, never a claim
+        while True:
+            try:
+                client.join()
+                break
+            except Exception as e:
+                print(f"· the gate has not answered yet ({str(e)[:60]}…) — "
+                      "waiting to be welcomed in the Inbox; asking again")
+                import time as _tt
+                _tt.sleep(20)
+    else:
+        client.join()
     print(f"· lease held on {client.scope} — the desk's own floor")
 
     if args.tend:

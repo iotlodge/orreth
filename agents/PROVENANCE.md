@@ -964,3 +964,11 @@ Her second walk (req-694): **Stable 0 findings, Pulse 0 findings** (both were al
 | `console_worker.py` | Fable 5 (claude-fable-5) | The supply door passes sections/debates/delta. |
 
 Proof from the human's own hands: JB typed PYPL into the reins and asked; charles walked it on his word alone (Hold), then the NVDA ask fully fed — 0 data-quality errors, complete artifacts on the wire.
+
+## Fable 5 — 2026-08-13 (0054 — the desk finished: real charts, the crew, the landing)
+
+| File | Author | Note |
+|---|---|---|
+| `window.html` | Fable 5 (claude-fable-5) | The reference's charts hand-rolled (Recharts is React-bound; the glass stays dependency-free): dashed grid, price axis, date axis, close line + translucent high/low band, the three indicator panes (Trend · Momentum & Volatility · Bollinger), legends, and a live crosshair TOOLTIP carrying OHLCV and every series at the cursor — the reference's exact hues. The price stands large in the hero. The pull opens onto a WORLDS LANDING (cards, organized for growth); deep-links #cap=1 and #capw=trading-desk. The rating pill is the reference's gauge tones, filled. |
+| `scripts/dev.sh` | Fable 5 (claude-fable-5) | The desk crew is rig law: start/restart stand up the stall (:4570) and charles --tend beside the join door; stop sweeps them; status names them. The join door carries the desk-sized lease default. |
+| `agents/flavors/05-desk/run.py` | Fable 5 (claude-fable-5) | A standing crew member outlives a slow gate: tend mode retries the join until a human welcomes him — every retry a fresh challenge, never a claim. |
