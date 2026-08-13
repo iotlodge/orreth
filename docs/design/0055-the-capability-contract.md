@@ -58,10 +58,22 @@ charlotte's — requests, never code.
    hand for cold boot.
 6. **quinn's walk** — her capability views are hardcoded deep-links.
 
-Closing seams 1, 2, and 5 is one piece of work — **the discoverer**: a
-`capabilities/` directory the Foundation sweeps at boot (genesis found →
-craft planted → manifest registered → crew booted). After it, applying a
-desk-shaped package = dropping a folder. That is 0055's remaining build.
+**Seams 1, 2, and 5: CLOSED 2026-08-13 — THE DISCOVERER LANDED.** The
+Foundation sweeps `capabilities/<name>/genesis.py` at boot: each genesis
+import-executes, its manifest is vocabulary-checked, its craft joins the
+planting, its crew rises (down-words honored, shared members deduped) —
+and `dev.sh` names no world. **The worker holds ZERO by-name references**
+(the grep is the proof) — and the sweep killed a lurking bug on the way:
+watches had been writing to a hardcoded floor; worlds now resolve by the
+door a word arrives at. **The folder proof ran live**: move
+`options-desk/` out → the Foundation discovers two, the portal keeps the
+shelf's memory as a faint *declared* card (append-only, honest) → move
+it home → three governed worlds again. Install is a dropped folder.
+Still open, each small and named: the door's composer is desk-shaped
+worker code (a differently-shaped world brings its own) · the desk's
+word-kinds aren't yet a declared vocabulary · quinn's capability views
+are hardcoded · full retirement (the manifest's `retired` sibling) has
+no door yet.
 
 ## 2b. The anatomy in the codebase (who compiles what)
 

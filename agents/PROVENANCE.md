@@ -1063,3 +1063,9 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 | File | Author | Note |
 |---|---|---|
 | `window.html` | Fable 5 (claude-fable-5) | JB's find: a start's journey (approve → hull recreated → health → crew → the resident proving his key) outlives any one-shot refresh, so the tile froze mid-transition until a manual reload. The open portal now drinks fresh every ten seconds — the glass's standing law applied to the pull — held still only by a typing hand (0052), so the reins never lose a keystroke. The tile walks its own states now: shut down → running, no reload, ever. |
+
+## Fable 5 — 2026-08-13 (0055 — THE DISCOVERER: the Foundation forgets the worlds' names)
+
+| File | Author | Note |
+|---|---|---|
+| `capabilities/*/genesis.py` (moved) · `console_worker.py` · `dev.sh` | Fable 5 (claude-fable-5) | The final seam: geneses moved OUT of the Machine into capabilities/; the Foundation sweeps the directory at boot — import-execute, vocabulary check, craft to the planting, crew raised with down-words honored and shared members deduped. ZERO by-name references remain in the worker (grep-proven); dev.sh names no world; watches resolve by the arriving door (a hardcoded-floor bug died in the refactor). The folder proof ran live: options-desk out → two discovered, the shelf's memory a faint declared card; home → three governed. Install is a dropped folder; the Machine below never learns who lives above. |

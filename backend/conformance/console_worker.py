@@ -124,8 +124,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from orreth_sim import (bell as bell_mod, continuity, crypto,
-                        crypto_desk as crypto_mod, desk as desk_mod,
-                        options_desk as options_mod,
                         fingertip, improver, markers, meaning, mirror, node,
                         observatory, parlor, profile, purge, serials, shipyard,
                         speech, thumb as thumb_mod, vera)
@@ -1315,12 +1313,6 @@ _EMBED_LAST = 0.0
 EMBED_EVERY = int(os.environ.get("ORRETH_EMBED_EVERY", "90"))
 
 
-DESK_PORT, DESK_SCOPE = 4520, "u:demo/e:desk/f:charles"
-
-
-CAP_GENESIS = {"trading-desk": desk_mod.MANIFEST,
-               "crypto-desk": crypto_mod.MANIFEST,
-               "options-desk": options_mod.MANIFEST}   # crew runs from CODE only
 CAP_PANEL_KINDS = {"tabs", "markdown", "chart", "strip", "controls", "download",
                    "stat", "bars", "list", "doc", "table"}   # canon (0055 L1/L2)
 
@@ -1405,9 +1397,9 @@ def _world_words(man: dict):
     """The world's standing words: head-per-ticker desk-watch records."""
     heads = {}
     for _ref, body, _dl, _tags in wire_assets(
-            man.get("port", DESK_PORT),
+            man["port"],
             man.get("verbs", {}).get("words_kind", "desk-watch"),
-            scope=man.get("floor", DESK_SCOPE)):
+            scope=man["floor"]):
         w = body.get("desk_watch")
         if isinstance(w, dict):
             heads[w.get("ticker")] = w        # oldest-first: the head wins
@@ -1419,8 +1411,8 @@ def _world_posture(man: dict) -> str:
     standing or paused — the service's state, never the watchlist's."""
     rows = []
     for _ref, body, _dl, _tags in wire_assets(
-            man.get("port", DESK_PORT), "desk-world",
-            scope=man.get("floor", DESK_SCOPE)):
+            man["port"], "desk-world",
+            scope=man["floor"]):
         w = body.get("desk_world")
         if isinstance(w, dict):
             rows.append(w)
@@ -1571,22 +1563,95 @@ def on_capability_verb(port: int, scope: str, r: dict) -> None:
             print("  > capability {}: {} - the world runs".format(key, verb.upper()))
 
 
+CAPS_DIR = Path(__file__).resolve().parents[2] / "capabilities"
+
+
+def discover_capabilities() -> dict:
+    """0055 — THE DISCOVERER (L4, repo-local): the Foundation sweeps
+    capabilities/<name>/genesis.py at boot and never names a world in
+    code. Each genesis IMPORT-EXECUTES (the json-booleans lesson) and
+    contributes CRAFT + MANIFEST; a flawed manifest refuses loudly and
+    the sweep carries on. Install = drop a folder; uninstall = remove
+    it. Crew commands still run from THIS code path only — the repo is
+    the trust boundary."""
+    import importlib.util
+    found = {}
+    if not CAPS_DIR.exists():
+        return found
+    for d in sorted(CAPS_DIR.iterdir()):
+        g = d / "genesis.py"
+        if not d.is_dir() or not g.exists():
+            continue
+        try:
+            spec = importlib.util.spec_from_file_location(f"cap_{d.name}", g)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+        except Exception as e:
+            print(f"  (capability {d.name} failed to import-execute: {e})")
+            continue
+        man = getattr(mod, "MANIFEST", None)
+        if not isinstance(man, dict) or not man.get("key"):
+            print(f"  (capability {d.name}: no MANIFEST — skipped)")
+            continue
+        flaw = cap_manifest_flaw(man)
+        if flaw:
+            print(f"  (capability {d.name} refused: {flaw})")
+            continue
+        found[man["key"]] = {"manifest": man,
+                             "craft": dict(getattr(mod, "CRAFT", {}) or {})}
+        print(f"  ⚑ capability discovered: {man['key']} ({d.name})")
+    return found
+
+
+_DISCOVERED = discover_capabilities()
+CAP_GENESIS = {k: v["manifest"] for k, v in _DISCOVERED.items()}
+_CAP_PLANT: dict = {}
+for _k, _v in _DISCOVERED.items():
+    _CAP_PLANT.update(_v["craft"])
+    _CAP_PLANT[f"capability-{_k}"] = _v["manifest"]
+
+
+def capability_crew_boot() -> None:
+    """The crew rises from the DISCOVERED manifests at worker start —
+    dev.sh names no world; a world shut down by the word stays down."""
+    down = _down_load()
+    raised_matches = set()
+    for key, man in CAP_GENESIS.items():
+        if any(f.get("scope") in down for f in man.get("floors", [])
+               if not f.get("shared")):
+            print(f"  ⚑ {key}: rests shut down by the word — crew not raised")
+            continue
+        for c in man.get("crew", []):
+            if c["match"] in raised_matches or _crew_alive(c["match"]):
+                continue
+            _crew_spawn(c)
+            raised_matches.add(c["match"])
+            print(f"  ⚑ {key}: crew raised — {c['name']}")
+
+
 def on_desk_watch(port: int, scope: str, r: dict) -> None:
     """0054 sp5 — the watchlist as the human's STANDING WORD (0032's law on
     the desk): starting a standing walk is staged and waits for the human;
     STOPPING one is immediate — rule 11, the human can always stop what the
     machine manages, and stopping never needs a gate. The word is a signed
     record on the desk's floor; a cancel is a sibling, never an erasure."""
-    seat_kp, seat_did = lib_seat(DESK_SCOPE)
-    agent = {"did": seat_did, "scope": DESK_SCOPE}
+    man = next((m for m in CAP_GENESIS.values() if m.get("port") == port), None)
+    if not man:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "denied",
+              "result": "no world answers at this door"})
+        return
+    wscope, wport = man["floor"], man["port"]
+    seat_kp, seat_did = lib_seat(wscope)
+    agent = {"did": seat_did, "scope": wscope}
     ticker = str(r.get("ticker") or "").upper()[:12]
     if r.get("action") == "cancel" and r.get("status") == "pending":
-        rec = make_memory(agent, seat_kp, DESK_SCOPE,
+        rec = make_memory(agent, seat_kp, wscope,
                           {"desk_watch": {"ticker": ticker, "posture": "cancelled",
                                           "stopped_by": "the human's word",
                                           "request": str(r.get("id") or "")}},
                           kind="semantic", tags=["desk-watch", ticker])
-        call(DESK_PORT, "POST", "/records", rec)
+        call(wport, "POST", "/records", rec)
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
               "result": f"stopped by the human's word — charles's standing walk on "
@@ -1605,13 +1670,13 @@ def on_desk_watch(port: int, scope: str, r: dict) -> None:
         print(f"  ↳ desk-watch {r['id']}: {ticker} staged — the human holds the word")
         return
     if r.get("status") == "approved":
-        rec = make_memory(agent, seat_kp, DESK_SCOPE,
+        rec = make_memory(agent, seat_kp, wscope,
                           {"desk_watch": {"ticker": ticker,
                                           "cadence": "weekdays-market-close",
                                           "refresh": True, "posture": "walk",
                                           "approved": str(r.get("id") or "")}},
                           kind="semantic", tags=["desk-watch", ticker])
-        call(DESK_PORT, "POST", "/records", rec)
+        call(wport, "POST", "/records", rec)
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
               "result": f"the standing word stands — charles walks {ticker} every "
@@ -1625,8 +1690,11 @@ def compose_desk(key: str = "trading-desk") -> dict:
     projection of records, never a second truth). Charts dereference the
     artifact pointer at this door; their bulk never lived in a record."""
     from datetime import datetime, timedelta, timezone
-    gen0 = CAP_GENESIS.get(key) or desk_mod.MANIFEST
-    dport, dscope = gen0.get("port", DESK_PORT), gen0.get("floor", DESK_SCOPE)
+    gen0 = CAP_GENESIS.get(key) or (next(iter(CAP_GENESIS.values()))
+                                    if CAP_GENESIS else None)
+    if gen0 is None:
+        return {"worlds": [], "reports": [], "watches": []}
+    dport, dscope = gen0["port"], gen0["floor"]
     _, seat_did = lib_seat(dscope)
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
@@ -1733,7 +1801,7 @@ def compose_desk(key: str = "trading-desk") -> dict:
             byname[a["name"]] = prof          # oldest-first — the head wins
     manifests = list(byname.values())
     if not manifests:                         # genesis fallback — never a blank portal
-        manifests = [desk_mod.MANIFEST]
+        manifests = list(CAP_GENESIS.values())
     for m in manifests:                       # state from the CREW GENESIS + words
         gen = CAP_GENESIS.get(m.get("key"))
         if not gen:
@@ -4330,10 +4398,7 @@ def improver_beat(port: int) -> None:
     if not _SENTENCES_PLANTED:
         allthere = True
         for sname, stext in {**speech.SENTENCES, **speech.PERSONAS,
-                             **desk_mod.CRAFT, **crypto_mod.CRAFT,
-                             **options_mod.CRAFT,
-                             "capability-crypto-desk": crypto_mod.MANIFEST,
-                             "capability-options-desk": options_mod.MANIFEST}.items():
+                             **_CAP_PLANT}.items():
             if wire_assets(port, "asset", name=sname):
                 continue
             g = improver.make_asset(me, IMP, scope, name=sname,
@@ -9609,7 +9674,8 @@ def main() -> None:
     handled: set[tuple] = set()               # (port, id, at, status): each step acted once
     scopes: dict[int, str] = {}
     threading.Thread(target=embed_door, daemon=True).start()  # the meaning axis's door (0022 Ph2)
-    SHIPYARD.replant()                        # hulls the rig lost come back before the round
+    SHIPYARD.replant()
+    capability_crew_boot()                        # hulls the rig lost come back before the round
     FLIGHT.replant()                          # the recorder's book seeds, aged honestly (0043 sp1)
     ensure_allen_floor()                      # the embodied tier stands visible (0037 §8.3)
     while True:

@@ -29,21 +29,11 @@ joindoor() {  # becky answers joins + the librarian answers Asks — the floor's
   echo "· becky's join door open on :$FIELD — agents may join; log: $TMPDIR/worker.log"
 }
 
-deskcrew() {  # 0054: the Trading desk's standing crew — the data stall + charles tending
-  pkill -f "tradingdata_server.py" 2>/dev/null || true
-  pkill -f "05-desk/run.py" 2>/dev/null || true; sleep 0.3
-  (cd "$CONF" && nohup uv run --with yfinance --with pandas     python -u tradingdata_server.py 4570 >"$TMPDIR/tradingdata.log" 2>&1 &)
-  (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python -u agents/flavors/05-desk/run.py --tend --world trading-desk >"$TMPDIR/charles.log" 2>&1 &)
-  (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python -u agents/flavors/05-desk/run.py --tend --world crypto-desk     --name charlene --field http://localhost:4521 >"$TMPDIR/charlene.log" 2>&1 &)
-  (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python -u agents/flavors/05-desk/run.py --tend --world options-desk     --name chad --field http://localhost:4522 >"$TMPDIR/chad.log" 2>&1 &)
-  echo "· the desk crew stands: stall :4570 + charles + charlene + chad tending (logs in $TMPDIR/)"
-  echo "  ⚠ the residents wait at their join gates after every start — welcome them in the Inbox"
-}
 
 case "${1:-}" in
   start)   rootpub; $COMPOSE up --build -d
            docker image prune -f >/dev/null 2>&1 || true   # superseded layers die quietly (the jsbarth disk fire's lesson)
-           sleep 3; joindoor; deskcrew; "$0" status ;;
+           sleep 3; joindoor; "$0" status ;;
   stop)    pkill -f console_worker.py 2>/dev/null || true
            pkill -f tradingdata_server.py 2>/dev/null || true
            pkill -f "05-desk/run.py" 2>/dev/null || true
@@ -54,7 +44,7 @@ case "${1:-}" in
            $COMPOSE down ;;
   restart) "$0" stop; rootpub; $COMPOSE up --build -d
            docker image prune -f >/dev/null 2>&1 || true
-           sleep 3; joindoor; deskcrew; "$0" status ;;
+           sleep 3; joindoor; "$0" status ;;
   clean)   # deliberate deep clean (2026-07-30, after the jsbarth 100%-disk fire):
            # dangling images + build cache trimmed to a warm 15GB. NEVER volumes
            # (pg holds the universe's memory) and NEVER -a image prunes here —
@@ -70,11 +60,7 @@ case "${1:-}" in
              curl -sf "http://127.0.0.1:$p/health" || printf dark; echo; done
            pgrep -f "console_worker.py $FIELD" >/dev/null \
              && echo "  join door: OPEN (:$FIELD)" || echo "  join door: CLOSED — run scripts/dev.sh start"
-           pgrep -f "tradingdata_server.py" >/dev/null \
-             && echo "  desk stall: SERVING (:4570)" || echo "  desk stall: DARK"
-           pgrep -f "05-desk/run.py" >/dev/null \
-             && echo "  charles: TENDING (walks at the close; asks anytime)" \
-             || echo "  charles: RESTING — run scripts/dev.sh start" ;;
+           echo "  capabilities: discovered + crewed by the worker at boot (capabilities/*/genesis.py)" ;;
   logs)    $COMPOSE logs -f --tail 40 ;;
   window)  joindoor; (cd "$CONF" && uv run python demo_open_window.py "$FIELD" 4500) ;;
   agent)   flavor="${2:-01-prototype}"; mode="${3:---once}"
