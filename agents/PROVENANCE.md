@@ -972,3 +972,12 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 | `window.html` | Fable 5 (claude-fable-5) | The reference's charts hand-rolled (Recharts is React-bound; the glass stays dependency-free): dashed grid, price axis, date axis, close line + translucent high/low band, the three indicator panes (Trend · Momentum & Volatility · Bollinger), legends, and a live crosshair TOOLTIP carrying OHLCV and every series at the cursor — the reference's exact hues. The price stands large in the hero. The pull opens onto a WORLDS LANDING (cards, organized for growth); deep-links #cap=1 and #capw=trading-desk. The rating pill is the reference's gauge tones, filled. |
 | `scripts/dev.sh` | Fable 5 (claude-fable-5) | The desk crew is rig law: start/restart stand up the stall (:4570) and charles --tend beside the join door; stop sweeps them; status names them. The join door carries the desk-sized lease default. |
 | `agents/flavors/05-desk/run.py` | Fable 5 (claude-fable-5) | A standing crew member outlives a slow gate: tend mode retries the join until a human welcomes him — every retry a fresh challenge, never a claim. |
+
+## Fable 5 — 2026-08-13 (0055 sp1 — the manifest carries the desk: the acceptance passes)
+
+| File | Author | Note |
+|---|---|---|
+| `orreth_sim/desk.py` | Fable 5 (claude-fable-5) | The capability MANIFEST joins the genesis (22nd asset, the first dict-bodied craft): the card, the door, the lifecycle words, and the desk's rooms declared as typed panels — controls · download · stat · strip · chart · tabs. |
+| `console_worker.py` | Fable 5 (claude-fable-5) | The planting loop takes dict assets; the supply door composes PANEL-READY fields (derived tab markdown, last price) so the glass renders blind; the portal's world list reads capability-* manifests from the shelf, genesis as fallback — never a blank portal. |
+| `window.html` | Fable 5 (claude-fable-5) | THE PANEL WALKER: eleven kinds (JB's L1, table included, sortable) rendering any world's declared rooms; generic controls wire declared inputs/buttons to governed requests. `renderDesk` is RETIRED — the manifest carries the desk pixel-for-pixel; the acceptance test passes. |
+| `run.py` · `dev.sh` | Fable 5 (claude-fable-5) | The 41-card lesson: patience is ONE long-lived join request, not a retry flood — a single card held open for hours, polled; the stale flood swept as superseded. Crew logs unbuffered. |

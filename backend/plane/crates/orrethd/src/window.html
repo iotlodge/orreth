@@ -871,6 +871,10 @@
   .dk-pill{display:inline-flex;align-items:center;border-radius:999px;color:#fff;
     font-weight:600;letter-spacing:.04em;padding:.22rem .75rem;font-size:.78rem}
   .dk-px{font-size:1.05rem;color:var(--star);font-weight:600}
+
+  .dk-table{border-collapse:collapse;font-size:.74rem;margin:.4rem 0}
+  .dk-table th{color:var(--brass);text-align:left;padding:.25rem .7rem;border-bottom:1px solid var(--hair2);cursor:pointer;white-space:nowrap}
+  .dk-table td{color:var(--star);padding:.22rem .7rem;border-bottom:1px solid var(--hair)}
 </style>
 </head>
 <body>
@@ -3816,7 +3820,10 @@ function dkCharts(rep){
 
 /* ── the landing: worlds organized, never a jump straight in ── */
 function renderCap(){
-  if(CAPV!=="home"){renderDesk();return}
+  if(CAPV!=="home"){
+    const man=((DESK&&DESK.worlds)||[]).find(w=>w.key===CAPV);
+    if(man){renderWorld(man);return}
+    CAPV="home"}
   const B=$("capbody"),reps=(DESK&&DESK.reports)||[];
   const cards=((DESK&&DESK.worlds)||[]).map(w=>{
     const last=reps.find(r=>true);
@@ -3829,77 +3836,92 @@ function renderCap(){
   B.innerHTML=`<div class="dim" style="font-size:.72rem;margin-bottom:.6rem">installed worlds — each one an applied purpose living atop the Machine; more arrive through install & create (their own dive)</div>
     <div class="cap-grid">${cards||`<div class="dim">no worlds installed yet</div>`}</div>`}
 
-function dkWatchLine(rep){
-  const rows=(DESK.watches||[]).map(w=>w.posture==="walk"
+/* ── 0055 sp1 · THE PANEL WALKER — the glass renders a world's declared
+      rooms BLIND (JB's L1: eleven kinds). The desk's bespoke renderer is
+      retired; its manifest carries it now — the acceptance test, running. ── */
+let _CAPMAN=null;
+function dkGet(o,path){return String(path||"").split(".").reduce((x,k)=>x==null?x:x[k],o)}
+function dkSub(str,item){return String(str).replace(/\$([a-z_]+)/g,(m,k)=>String(item[k]??""))}
+function dkWatchLine(){
+  return (DESK.watches||[]).map(w=>w.posture==="walk"
     ?`<div class="dk-law">🕰 ${dkEsc(w.ticker)} · weekdays at the close · refresh — <a href="#" onclick="deskStop('${dkEsc(w.ticker)}');return false" style="color:var(--red)">stop it</a> <span class="dim">(stopping never needs a gate — rule 11)</span></div>`
-    :`<div class="dk-law">🕰 ${dkEsc(w.ticker)} — STOPPED by your word; watch it again below to resume</div>`).join("");
-  return rows+`<div class="dk-law" style="margin-top:.35rem">
-    <input id="dk-watch-in" placeholder="ticker (e.g. MSFT)" style="width:9rem" maxlength="8">
-    <button class="dk-tab" onclick="deskWatch()">🕰 watch it — stages at your gate</button>
-    <button class="dk-tab" onclick="deskAsk()">📄 ask charles for a report now — your word is the approval</button>
-    <span id="dk-reins-note" class="dim"></span></div>`}
-function _dkTicker(){const v=(($("dk-watch-in")||{}).value||"").toUpperCase().trim();
-  return /^[A-Z.]{1,8}$/.test(v)?v:null}
+    :`<div class="dk-law">🕰 ${dkEsc(w.ticker)} — STOPPED by your word; watch it again below to resume</div>`).join("")}
 async function _dkPost(payload,note){
-  const port=((DESK.worlds||[])[0]||{}).port||4520;
+  const port=(_CAPMAN||{}).port||4520;
   try{await fetch(`${location.protocol}//${location.hostname}:${port}/requests`,{method:"POST",
     headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
     $("dk-reins-note").textContent=note}catch(e){$("dk-reins-note").textContent="the door did not answer"}
   setTimeout(()=>{DESK=null;loadDesk()},2600)}
-function deskWatch(){const t=_dkTicker();if(!t){$("dk-reins-note").textContent="a ticker is 1–8 letters";return}
-  _dkPost({kind:"desk-watch",ticker:t,text:`watch ${t} — the human asks for a standing walk`},
-          `${t} staged at your gate — approve it in the Inbox and the standing word stands`)}
-function deskAsk(){const t=_dkTicker();if(!t){$("dk-reins-note").textContent="a ticker is 1–8 letters";return}
-  _dkPost({kind:"desk-ask",ticker:t,text:`the human asks: charles, walk ${t} now — one report, on your queue`},
-          `the ask is on charles's queue — the report lands here when his walk is whole`)}
+function capBtn(pi,bi){
+  const pnl=(_CAPMAN.view||[])[pi],btn=(pnl.buttons||[])[bi];if(!btn)return;
+  const vals={};let bad=null;
+  (pnl.inputs||[]).forEach(inp=>{let v=(($("dk-in-"+inp.id)||{}).value||"").trim();
+    if(inp.transform==="upper")v=v.toUpperCase();
+    if(inp.pattern&&!(new RegExp(inp.pattern)).test(v))bad=inp.id;
+    vals[inp.id]=v});
+  if(bad){$("dk-reins-note").textContent=`«${bad}» does not fit its pattern`;return}
+  const req={};for(const[k,v]of Object.entries(btn.request||{}))req[k]=dkSub(v,vals);
+  req.text=req.text||`the human asks: ${dkSub(btn.label,vals)}`;
+  _dkPost(req,dkSub(btn.note||"asked",vals))}
 async function deskStop(tk){
-  const port=((DESK.worlds||[])[0]||{}).port||4520;
+  const port=(_CAPMAN||{}).port||4520;
   try{await fetch(`${location.protocol}//${location.hostname}:${port}/requests`,{method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({kind:"desk-watch",action:"cancel",ticker:tk,
-      text:`stop charles's standing walk on ${tk}`})})}catch(e){}
+    body:JSON.stringify({kind:(((_CAPMAN||{}).verbs||{}).words_kind)||"desk-watch",action:"cancel",ticker:tk,
+      text:`stop the standing walk on ${tk}`})})}catch(e){}
   DESK=null;setTimeout(loadDesk,2600)}
-const DKTABS=[["polished","Full Report"],["overview","Overview"],["delta","Δ vs Prior"],["market","Market"],
-  ["sentiment","Sentiment"],["news","News"],["fundamentals","Fundamentals"],["debate","Debates"]];
-function renderDesk(){
-  const B=$("capbody");if(!DESK)return;
-  const reps=DESK.reports||[];
-  const world=(DESK.worlds||[])[0]||{};
+let DKSORT={col:null,dir:1};
+function dkTableSort(pi,col){DKSORT={col,dir:DKSORT.col===col?-DKSORT.dir:1};renderCap()}
+function dkPanel(p,pi,item){
+  switch(p.kind){
+  case "controls":{
+    const ins=(p.inputs||[]).map(x=>`<input id="dk-in-${dkEsc(x.id)}" placeholder="${dkEsc(x.placeholder||x.id)}" style="width:9rem" maxlength="12">`).join(" ");
+    const btns=(p.buttons||[]).map((b,bi)=>`<button class="dk-tab" onclick="capBtn(${pi},${bi})">${dkEsc(b.label)}</button>`).join(" ");
+    return `${p.watches?dkWatchLine():""}<div class="dk-law" style="margin-top:.35rem">${ins} ${btns} <span id="dk-reins-note" class="dim"></span></div>`}
+  case "download":
+    return `<div class="dk-pick" style="justify-content:flex-end"><a class="dk-dl" href="${OBSD}${dkSub(p.href,item)}" download>${dkEsc(p.label||"⬇ download")}</a></div>`;
+  case "stat":{
+    const cells=(p.fields||[]).map(f=>{const v=dkGet(item,f.src);
+      if(f.style==="pill")return dkBadge(v);
+      if(f.style==="price")return v==null?"":`<span class="dk-px">$${(+v).toFixed(2)}</span>`;
+      if(f.style==="pending")return v?`<span class="dk-pend" title="${dkEsc(f.title||"")}">outcome pending</span>`:"";
+      return v==null?"":`<span class="dim">${f.label?dkEsc(f.label)+" ":""}</span><b>${dkEsc(v)}</b>`;
+    }).filter(Boolean).join(" · ");
+    return `<div class="dk-hero">${cells}</div>`}
+  case "strip":
+    return `<div class="dk-strip">${(item[p.src]||[]).map(x=>`<span class="dk-dot" title="${dkEsc(x[p.title]||"")}">✓<i>${dkEsc(x[p.text]||"")}</i></span>`).join("")}</div>`;
+  case "chart":
+    return p.preset==="market"?dkCharts(item):`<div class="dim">(unknown chart preset «${dkEsc(p.preset)}» — the vocabulary is canon)</div>`;
+  case "tabs":{
+    const bar=(p.tabs||[]).map(t=>`<button class="dk-tab${DKTAB===t.key?" on":""}" onclick="DKTAB='${dkEsc(t.key)}';renderCap()">${dkEsc(t.label)}</button>`).join("");
+    const act=(p.tabs||[]).find(t=>t.key===DKTAB)||(p.tabs||[])[0]||{};
+    return `<div class="dk-tabs">${bar}</div><div class="dk-md">${dkMd(item[act.src]||"")}</div>`}
+  case "markdown":return `<div class="dk-md">${dkMd(item[p.src]||"")}</div>`;
+  case "doc":return `<div class="dk-md">${dkMd(item[p.src]||"")}</div>`;
+  case "list":return `<ul class="dk-md">${(item[p.src]||[]).map(x=>`<li>${dkEsc(typeof x==="object"?JSON.stringify(x):x)}</li>`).join("")}</ul>`;
+  case "bars":{
+    const rows=(item[p.src]||[]);const mx=Math.max(1,...rows.map(r=>+r.value||0));
+    return rows.map(r=>`<div class="dk-law">${dkEsc(r.label||"")} <span style="display:inline-block;background:var(--blue);height:.45rem;width:${(100*(+r.value||0)/mx).toFixed(0)}px"></span> ${dkEsc(r.value)}</div>`).join("")}
+  case "table":{
+    let rows=[...(item[p.src]||[])];const cols=p.columns||[];
+    if(DKSORT.col)rows.sort((a,b)=>((a[DKSORT.col]>b[DKSORT.col])?1:-1)*DKSORT.dir);
+    return `<div style="overflow-x:auto"><table class="dk-table"><tr>${cols.map(c=>`<th onclick="dkTableSort(${pi},'${dkEsc(c.key)}')">${dkEsc(c.label||c.key)}${DKSORT.col===c.key?(DKSORT.dir>0?" ↑":" ↓"):""}</th>`).join("")}</tr>${rows.map(r=>`<tr>${cols.map(c=>`<td>${dkEsc(r[c.key]??"")}</td>`).join("")}</tr>`).join("")}</table></div>`}
+  default:return `<div class="dim">(panel kind «${dkEsc(p.kind)}» is beyond the canon vocabulary)</div>`}}
+function renderWorld(man){
+  _CAPMAN=man;
+  const B=$("capbody"),reps=DESK.reports||[];
   const crumb=`<div style="margin-bottom:.5rem"><a href="#" onclick="CAPV='home';renderCap();return false" style="color:var(--brass);font-size:.72rem;text-decoration:none">← worlds</a></div>`;
-  if(!reps.length){B.innerHTML=crumb+`<div class="dim" style="padding:2rem">${world.emoji||"📈"} the desk stands, but no report is on the record yet — ask charles below or approve his next walk</div>`;return}
+  const head=`<div class="dk-world">${man.emoji||"📦"} <b>${dkEsc(man.name)}</b>
+     <span class="dim"> · ${dkEsc(man.resident||"")} · ${dkEsc(man.floor||"")}</span>
+     <div class="dk-law">${dkEsc(man.law||"")}</div></div>`;
+  if(!reps.length){B.innerHTML=crumb+head+((man.view||[]).filter(p=>p.kind==="controls").map((p)=>dkPanel(p,(man.view||[]).indexOf(p),{})).join(""))
+    +`<div class="dim" style="padding:1rem 0">no report on the record yet — ask below, or approve the next walk</div>`;return}
   DKIDX=Math.min(DKIDX,reps.length-1);
-  const rep=reps[DKIDX];
-  const P=(rep.charts||{}).price_series||[];
-  const lastPx=P.length?P[P.length-1].close.toFixed(2):null;
-  const pick=reps.map((r,i)=>`<button class="dk-tab${i===DKIDX?" on":""}" onclick="DKIDX=${i};renderDesk()">${dkEsc(r.ticker)} · ${dkEsc(r.date)}</button>`).join("");
-  const strip=(rep.stages||[]).map(x=>`<span class="dk-dot" title="${dkEsc(x.digest)}">✓<i>${dkEsc(x.stage)}</i></span>`).join("");
-  const dq=(rep.data_quality_errors||[]).length?`<div class="dk-dq">⚠ ${rep.data_quality_errors.length} data source(s) were dark this run — the report says so honestly</div>`:"";
-  const md=rep.markdown||"";
-  const sect=h=>{const x=dkSection(md,h);return x?dkMd(x):`<p class="dim">(this walk's record predates the full-artifact fields — the bundle ⬇ carries everything)</p>`};
-  const art=(x,h)=>x&&String(x).trim()?dkMd(x):sect(h);
-  const sec=rep.sections||{},deb=rep.debates||{};
-  const bodies={polished:dkMd(md),
-    overview:dkMd([dkSection(md,"Final Decision"),dkSection(md,"Why"),dkSection(md,"Risks")].filter(Boolean).join("\n\n")),
-    delta:art(rep.delta,"Delta vs Prior"),market:art(sec.market,"Market"),
-    sentiment:art(sec.sentiment,"Sentiment"),news:art(sec.news,"News"),
-    fundamentals:art(sec.fundamentals,"Fundamentals"),
-    debate:(deb.research||deb.risk)?dkMd("## Bull / Bear Researcher Debate\n\n"+(deb.research||"")+"\n\n## Risk Debate\n\n"+(deb.risk||"")):sect("Debate")};
-  B.innerHTML=crumb+`
-   <div class="dk-world">${world.emoji||"📈"} <b>${dkEsc(world.name||"the Trading Desk")}</b>
-     <span class="dim"> · ${dkEsc(world.resident||"")} · ${dkEsc(world.floor||"")}</span>
-     <div class="dk-law">${dkEsc(world.law||"")}</div>${dkWatchLine(rep)}</div>
-   <div class="dk-pick">${pick}
-     <a class="dk-dl" href="${OBSD}/desk/bundle?name=charles-${dkEsc(rep.ticker)}-${dkEsc(rep.date)}" download>⬇ download the bundle — the full 15-file report</a></div>
-   <div class="dk-hero">${dkBadge(rep.rating)}
-     ${lastPx?`<span class="dk-px">$${lastPx}</span>`:""}
-     <span class="dk-tgt">target ${dkEsc(rep.decision?.price_target??"—")}</span>
-     <span class="dim">· ${dkEsc(rep.decision?.time_horizon||"")}</span>
-     ${rep.outcome_pending?`<span class="dk-pend" title="the reflection loop will grade this call against what the market actually did">outcome pending</span>`:""}</div>
-   ${dq}
-   <div class="dk-strip">${strip}</div>
-   ${dkCharts(rep)}
-   <div class="dk-tabs">${DKTABS.map(([k,l])=>`<button class="dk-tab${DKTAB===k?" on":""}" onclick="DKTAB='${k}';renderDesk()">${l}</button>`).join("")}</div>
-   <div class="dk-md">${bodies[DKTAB]||""}</div>`;}
+  const item=reps[DKIDX];
+  const lab=(man.collection||{}).label||["ticker","date"];
+  const pick=reps.length>1?`<div class="dk-pick">${reps.map((r,i)=>`<button class="dk-tab${i===DKIDX?" on":""}" onclick="DKIDX=${i};renderCap()">${lab.map(k=>dkEsc(r[k])).join(" · ")}</button>`).join("")}</div>`:"";
+  const dq=(item.data_quality_errors||[]).length?`<div class="dk-dq">⚠ ${item.data_quality_errors.length} data source(s) were dark this run — the report says so honestly</div>`:"";
+  B.innerHTML=crumb+head+pick+dq+(man.view||[]).map((p,pi)=>dkPanel(p,pi,item)).join("");}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("capworld").classList.contains("capopen"))capToggle()});
 const _capw=location.hash.match(/capw=([a-z0-9-]+)/);if(_capw)CAPV=_capw[1];
 if(location.hash.includes("cap"))setTimeout(capToggle,600);   // deep-links: #…&cap=1 (the landing) · &capw=trading-desk (a world)

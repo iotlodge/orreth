@@ -112,6 +112,19 @@ the manifest's `retired` sibling; the Chronicle stays (append-only).
 
 ## 7. The migration proof (when built)
 
+**sp1 LANDED + THE ACCEPTANCE PASSED 2026-08-13.** The manifest exists as
+chronicle craft on the shelf (`capability-trading-desk` v1 — the first
+dict-bodied asset, planted by the same beat as every sentence); the
+portal's world list is composed FROM manifests (genesis fallback so the
+portal is never blank); the supply door serves panel-ready fields; and
+THE PANEL WALKER renders the desk's declared rooms blind — screenshot
+against the bespoke version: pixel-for-pixel, picker to charts to tabs.
+`renderDesk` no longer exists in the glass. Live lesson on the record:
+a "patient retry" that files a new join per cycle is a 41-card flood —
+patience is ONE long-lived request, held open and polled. Remaining in
+this dive: the tile lifecycle verbs (start · stop · continue per L3) and
+the SDK's `capability` module + a second world to prove generality.
+
 The Trading Desk re-declared UNDER the contract — its view expressed as
 typed panels, its crew as a declaration, its verbs on the tile — with
 zero behavior change. The desk stops being a special case the day the

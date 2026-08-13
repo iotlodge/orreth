@@ -1442,11 +1442,40 @@ def compose_desk() -> dict:
     heads = {}
     for w in sorted(watches, key=lambda x: x.get("at", "")):
         heads[w.get("ticker")] = w                # latest word per ticker wins
+    # 0055 sp1 — panel-ready fields composed at the DOOR (the glass renders
+    # blind): derived markdown per tab, the last price, honest fallbacks
+    def _slice(md, head):
+        parts = ("\n" + md).split("\n## ")
+        hit = next((x for x in parts if x.lower().startswith(head.lower())), None)
+        return ("## " + hit) if hit else ""
+    for rep in keep:
+        md = rep.get("markdown") or ""
+        sec, deb = rep.get("sections") or {}, rep.get("debates") or {}
+        miss = ("_(this walk's record predates the full-artifact fields — "
+                "the bundle carries everything)_")
+        rep["overview_md"] = "\n\n".join(x for x in (
+            _slice(md, "final decision"), _slice(md, "why"), _slice(md, "risks")) if x)
+        rep["delta_md"] = rep.get("delta") or _slice(md, "delta") or miss
+        for k in ("market", "sentiment", "news", "fundamentals"):
+            rep[f"{k}_md"] = sec.get(k) or _slice(md, k) or miss
+        rep["debate_md"] = (("## Bull / Bear Researcher Debate\n\n" + deb.get("research", "")
+                             + "\n\n## Risk Debate\n\n" + deb.get("risk", ""))
+                            if (deb.get("research") or deb.get("risk"))
+                            else (_slice(md, "debate") or miss))
+        P = (rep.get("charts") or {}).get("price_series") or []
+        rep["last_price"] = round(P[-1]["close"], 2) if P else None
+    byname = {}
+    for _ref, body, _dl, _tags in wire_assets(4500, "asset"):
+        a = body.get("asset") or {}
+        prof = a.get("profile") or {}
+        if (str(a.get("name", "")).startswith("capability-")
+                and isinstance(prof, dict) and prof.get("key")):
+            byname[a["name"]] = prof          # oldest-first — the head wins
+    manifests = list(byname.values())
+    if not manifests:                         # genesis fallback — never a blank portal
+        manifests = [desk_mod.MANIFEST]
     return {"watches": list(heads.values()),
-            "worlds": [{"key": "trading-desk", "name": "the Trading Desk",
-                        "emoji": "📈", "resident": "charles", "floor": DESK_SCOPE,
-                        "port": DESK_PORT,
-                        "law": "the desk observes and reports — it never executes a trade"}],
+            "worlds": manifests,
             "reports": keep[:10]}
 
 
@@ -4012,7 +4041,8 @@ def improver_beat(port: int) -> None:
             if wire_assets(port, "asset", name=sname):
                 continue
             g = improver.make_asset(me, IMP, scope, name=sname,
-                                    profile={"template": stext})
+                                    profile=(stext if isinstance(stext, dict)
+                                             else {"template": stext}))
             try:
                 call(port, "POST", "/records", g)
                 print(f"  🗣 the shelf takes «{sname}» v1 — the sentence "

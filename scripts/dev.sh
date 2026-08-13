@@ -32,8 +32,8 @@ joindoor() {  # becky answers joins + the librarian answers Asks — the floor's
 deskcrew() {  # 0054: the Trading desk's standing crew — the data stall + charles tending
   pkill -f "tradingdata_server.py" 2>/dev/null || true
   pkill -f "05-desk/run.py" 2>/dev/null || true; sleep 0.3
-  (cd "$CONF" && nohup uv run --with yfinance --with pandas     python tradingdata_server.py 4570 >"$TMPDIR/tradingdata.log" 2>&1 &)
-  (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python agents/flavors/05-desk/run.py --tend >"$TMPDIR/charles.log" 2>&1 &)
+  (cd "$CONF" && nohup uv run --with yfinance --with pandas     python -u tradingdata_server.py 4570 >"$TMPDIR/tradingdata.log" 2>&1 &)
+  (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python -u agents/flavors/05-desk/run.py --tend >"$TMPDIR/charles.log" 2>&1 &)
   echo "· the desk crew stands: stall :4570 + charles --tend (logs: $TMPDIR/{tradingdata,charles}.log)"
   echo "  ⚠ charles waits at his join gate after every start — welcome him in the Inbox (f:charles)"
 }

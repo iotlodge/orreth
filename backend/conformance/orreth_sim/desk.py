@@ -39,3 +39,56 @@ CRAFT = {
 }
 
 DEFAULT_INDICATORS = ["close_50_sma", "close_200_sma", "rsi", "macd", "boll", "atr"]
+
+
+# ── 0055 sp1: the capability manifest — the desk DECLARED to the portal.
+# Chronicle-class craft (JB's L2): the card, the rooms as typed panels the
+# glass renders blind, the door, the lifecycle words. Declarations, never
+# code — the acceptance test is this manifest carrying the desk whole.
+MANIFEST = {
+ "key": "trading-desk",
+ "name": "the Trading Desk",
+ "emoji": "📈",
+ "resident": "charles",
+ "floor": "u:demo/e:desk/f:charles",
+ "port": 4520,
+ "law": "the desk observes and reports — it never executes a trade",
+ "door": "trading-desk",
+ "verbs": {"words_kind": "desk-watch"},
+ "collection": {"label": ["ticker", "date"]},
+ "view": [
+  {"kind": "controls", "watches": True,
+   "inputs": [{"id": "ticker", "placeholder": "ticker (e.g. MSFT)",
+               "pattern": "^[A-Z.]{1,8}$", "transform": "upper"}],
+   "buttons": [
+    {"label": "🕰 watch it — stages at your gate",
+     "request": {"kind": "desk-watch", "ticker": "$ticker"},
+     "note": "$ticker staged at your gate — approve it in the Inbox and the standing word stands"},
+    {"label": "📄 ask charles for a report now — your word is the approval",
+     "request": {"kind": "desk-ask", "ticker": "$ticker"},
+     "note": "the ask is on charles's queue — the report lands here when his walk is whole"}]},
+  {"kind": "download",
+   "label": "⬇ download the bundle — the full 15-file report",
+   "href": "/desk/bundle?name=charles-$ticker-$date"},
+  {"kind": "stat", "fields": [
+    {"src": "rating", "style": "pill"},
+    {"src": "last_price", "style": "price"},
+    {"src": "decision.price_target", "label": "target"},
+    {"src": "decision.time_horizon"},
+    {"src": "outcome_pending", "style": "pending",
+     "title": "the reflection loop will grade this call against what the market actually did"}]},
+  {"kind": "strip", "src": "stages", "text": "stage", "title": "digest"},
+  {"kind": "chart", "preset": "market", "src": "charts"},
+  {"kind": "tabs", "tabs": [
+    {"key": "polished", "label": "Full Report", "src": "markdown"},
+    {"key": "overview", "label": "Overview", "src": "overview_md"},
+    {"key": "delta", "label": "Δ vs Prior", "src": "delta_md"},
+    {"key": "market", "label": "Market", "src": "market_md"},
+    {"key": "sentiment", "label": "Sentiment", "src": "sentiment_md"},
+    {"key": "news", "label": "News", "src": "news_md"},
+    {"key": "fundamentals", "label": "Fundamentals", "src": "fundamentals_md"},
+    {"key": "debate", "label": "Debates", "src": "debate_md"}]},
+ ],
+}
+CRAFT = dict(CRAFT)
+CRAFT["capability-trading-desk"] = MANIFEST
