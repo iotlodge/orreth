@@ -3707,10 +3707,26 @@ const OBSD=`${location.protocol}//${location.hostname}:4562`;
       dependency-free by law — same anatomy, same hues: dashed grid, price
       axis, date axis, close line + translucent high/low band, legends, and
       a live crosshair tooltip carrying every series at the cursor. ── */
-let DESK=null,DKTAB="polished",DKIDX=0,CAPV="home";
+let DESK=null,DKTAB="polished",DKIDX=0,CAPV="home",_CAPTIMER=null;
 function capToggle(){const w=$("capworld");w.classList.toggle("capopen");
-  if(!w.classList.contains("capopen"))return;
-  if(!DESK)loadDesk();else renderCap();}
+  if(!w.classList.contains("capopen")){
+    if(_CAPTIMER){clearInterval(_CAPTIMER);_CAPTIMER=null}
+    return}
+  if(!DESK)loadDesk();else renderCap();
+  // the open portal drinks fresh on its own — a start's whole journey
+  // (hull → health → crew → the gate) reaches the tile without a reload;
+  // only a typing hand holds the room still (0052's law)
+  if(!_CAPTIMER)_CAPTIMER=setInterval(capFresh,10000);}
+async function capFresh(){
+  if(!$("capworld").classList.contains("capopen"))return;
+  const a=document.activeElement;
+  if(a&&$("capworld").contains(a)&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA"))return;
+  try{
+    const url=CAPV==="home"?`${OBSD}/desk`:`${OBSD}/desk?key=${encodeURIComponent(CAPV)}`;
+    const d=await (await fetch(url)).json();
+    if(CAPV!=="home")d._key=CAPV;
+    DESK=d;renderCap();
+  }catch(e){}}
 async function loadDesk(){
   $("capbody").innerHTML=`<div class="dim" style="padding:2rem">the worlds are being read from their records…</div>`;
   try{DESK=await (await fetch(`${OBSD}/desk`)).json()}

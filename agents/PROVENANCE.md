@@ -1057,3 +1057,9 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 | File | Author | Note |
 |---|---|---|
 | `console_worker.py` | Fable 5 (claude-fable-5) | JB's report resolved as two truths: the stumbles he saw were a FROZEN log — my manual restarts had forked the worker's output to /tmp while he watched the rig's true file (~/.orreth/tmp/worker.log); and the quiet-skip guarded only the main round while other sweeps could still knock on a worded-down floor. Now the stumble PRINTER itself consults the down-ledger (one guard, every sweep), and the worker logs to the one true file again. Operational law on record: the worker's log is ~/.orreth/tmp/worker.log, always. |
+
+## Fable 5 — 2026-08-13 (0055 — the portal breathes)
+
+| File | Author | Note |
+|---|---|---|
+| `window.html` | Fable 5 (claude-fable-5) | JB's find: a start's journey (approve → hull recreated → health → crew → the resident proving his key) outlives any one-shot refresh, so the tile froze mid-transition until a manual reload. The open portal now drinks fresh every ten seconds — the glass's standing law applied to the pull — held still only by a typing hand (0052), so the reins never lose a keystroke. The tile walks its own states now: shut down → running, no reload, ever. |
