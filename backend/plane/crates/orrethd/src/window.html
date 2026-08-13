@@ -3863,7 +3863,7 @@ function dkVerbs(w){
   const v=[];
   if(w.state==="running"){v.push(["stop","⏸ stop"],["stop-fully","⏹ stop fully"])}
   if(w.state==="stopped"){v.push(["continue","▶ continue"],["stop-fully","⏹ stop fully"])}
-  if(w.state==="shut down")v.push(["start","▶ start"]);
+  if(w.state==="shut down")v.push(["start","▶ start"],["retire","🗄 retire"]);
   if(w.state==="retired")v.push(["reinstate","↩ reinstate"]);
   return v.map(([verb,label])=>`<button class="dk-tab" onclick="capVerb(event,'${dkEsc(w.key)}','${verb}',${w.port||4520})">${label}</button>`).join(" ")}
 async function capVerb(ev,key,verb,port){
@@ -3876,8 +3876,8 @@ async function capVerb(ev,key,verb,port){
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({kind:"capability-verb",verb,key,
       text:`${verb} the ${key} world — the human's word at the tile`})})}catch(e){}
-  const note=(verb==="continue"||verb==="start")
-    ?"staged at your gate — approve it in the Inbox and the world stands again"
+  const note=(verb==="continue"||verb==="start"||verb==="retire"||verb==="reinstate")
+    ?"staged — the terms will appear on this card in a moment; decide right here"
     :(verb==="stop-fully"?"the crew halts — the tile goes honestly dark in a moment"
       :"the world rests — stopping never needs a gate (rule 11)");
   if(el)el.textContent=note;
