@@ -76,17 +76,27 @@ rule 11) for free.
 
 JB's ask, made mechanism: the world's card carries its lifecycle.
 
-- **States**: `tending` (crew up, standing words active) · `resting`
-  (crew up, nothing due) · `stopped` (the human's word) · `dark` (crew
-  down — honest, never hidden).
-- **Verbs on the tile**: **start** (stage the crew + standing words —
-  gated, it's a spend) · **stop** (rule 11 — immediate, gateless, the
-  whole purpose rests) · **continue** (resume from the stopped word —
-  gated once, then standing again).
-- Verbs are governed requests to the capability's own floor — the
-  desk-watch cancel pattern generalized to the whole world. The
-  Foundation's crew-keeper enacts them on processes; the capability's
-  residents enact them on standing words.
+- **States — CORRECTED TO JB'S MODEL (2026-08-13, his words the law)**:
+  the state is the SERVICE'S, never the schedule's — "the watchlist is
+  content; it must never drive the state of the architecture."
+  `running` (crew up, answering; the watchlist is an annotation — "· N
+  walks" or "· watchlist empty") · `stopped` (paused by the human's
+  word; the watchlist PRESERVED whole) · `shut down` (crew halted;
+  every record survives). The original tending/resting law conflated
+  service with schedule — worse, it read cancelled-watch TOMBSTONES as
+  state; JB caught it live.
+- **Verbs**: **stop** (pause — gateless, rule 11; nothing walks, nothing
+  lost) · **continue** (resume continuous operation, RECOVERING the
+  preserved watchlist — staged with terms, resuming spend is a
+  consequence) · **stop fully** (shut down — gateless; the crew halts)
+  · **start** (raise a shut-down desk — staged). A no-op verb answers
+  honestly on the spot. The world's posture is its own record
+  (`desk_world`, head wins) on its own floor; the tend loop rests WHOLE
+  while paused and recovers everything on continue.
+- Verbs are governed requests to the capability's own floor, and their
+  gates SURFACE ON THE TILE (the staged verb with its terms and the
+  decision beside it) — a gate in a room the human never visits is
+  indistinguishable from a broken button (JB's find).
 
 ## 5. The Foundation manages the rest, agentically
 

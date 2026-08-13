@@ -99,22 +99,38 @@ def main() -> int:
         tm, th, tf = (GovernedThink(client, max_tokens=1500),
                       GovernedThink(client, max_tokens=3200),
                       GovernedThink(client, max_tokens=2400))
-        def _watches():
+        def _world():
             try:
                 with _u.urlopen(f"http://localhost:4562/desk?key={args.world}", timeout=8) as r:
-                    return _j.load(r).get("watches", [])
+                    d = _j.load(r)
+                me = next((w for w in d.get("worlds", []) if w.get("key") == args.world), {})
+                return d.get("watches", []), (me.get("posture") or "standing")
             except Exception:
-                return []
+                return [], "standing"
         def _walked_today(tk, day):
             for h in client.recall(days=7).get("hits", []):
                 b = client.body_of(h["ref"]) or {}
                 if b.get("report") and b.get("ticker") == tk and b.get("date") == day:
                     return True
             return False
+        said_paused = False
         while True:
             today = _t.strftime("%Y-%m-%d")
             due_now = bool(_o.environ.get("ORRETH_DESK_DUE_NOW"))
-            for w in _watches():
+            watches, posture = _world()
+            if posture == "paused":
+                # stopped by the human's word — the desk rests WHOLE: no
+                # walks, no asks, the watchlist preserved for continue
+                if not said_paused:
+                    print("· the desk is stopped by the human's word — resting "
+                          "whole; continue recovers everything")
+                    said_paused = True
+                if args.once:
+                    return 0
+                _t.sleep(60)
+                continue
+            said_paused = False
+            for w in watches:
                 if w.get("posture") != "walk":
                     continue
                 tk = w.get("ticker")

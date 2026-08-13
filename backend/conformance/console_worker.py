@@ -1370,12 +1370,38 @@ def _world_words(man: dict):
     return heads
 
 
+def _world_posture(man: dict) -> str:
+    """The world's OWN posture record (0055, JB's correction 2026-08-13):
+    standing or paused — the service's state, never the watchlist's."""
+    rows = []
+    for _ref, body, _dl, _tags in wire_assets(
+            man.get("port", DESK_PORT), "desk-world",
+            scope=man.get("floor", DESK_SCOPE)):
+        w = body.get("desk_world")
+        if isinstance(w, dict):
+            rows.append(w)
+    return (rows[-1].get("posture") if rows else "standing") or "standing"
+
+
+def _post_posture(man: dict, posture: str, rid: str) -> None:
+    seat_kp, seat_did = lib_seat(man["floor"])
+    rec = make_memory({"did": seat_did, "scope": man["floor"]}, seat_kp,
+                      man["floor"],
+                      {"desk_world": {"posture": posture,
+                                      "by": "the human's word",
+                                      "request": rid}},
+                      kind="semantic", tags=["desk-world", man["key"]])
+    call(man["port"], "POST", "/records", rec)
+
+
 def on_capability_verb(port: int, scope: str, r: dict) -> None:
-    """0055 sp2 (JB's L3): STOP rests every standing word immediately and
-    gateless (rule 11 over a whole world); STOP-FULLY also halts the crew;
-    CONTINUE/START stage at the gate (resuming is a spend) and on approval
-    re-mint the stopped words and raise dead crew. Crew commands come from
-    the GENESIS registry only - never from the shelf's editable copy."""
+    """0055, reshaped to JB's model (2026-08-13): the STATE is the service's
+    - running (crew up, answering) / stopped (paused by the human's word,
+    watchlist PRESERVED) / shut down (crew halted). The watchlist is
+    content, never state. STOP pauses in one gateless motion (rule 11) and
+    keeps every word for CONTINUE to recover; STOP-FULLY halts the crew;
+    START raises it; CONTINUE resumes continuous operation - staged with
+    its terms, because resuming spend is a consequence (L3)."""
     key = str(r.get("key") or "")
     verb = str(r.get("verb") or "")
     man = CAP_GENESIS.get(key)
@@ -1383,83 +1409,75 @@ def on_capability_verb(port: int, scope: str, r: dict) -> None:
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "denied", "result": "no such world"})
         return
-    seat_kp, seat_did = lib_seat(man["floor"])
-    agent = {"did": seat_did, "scope": man["floor"]}
     heads = _world_words(man)
+    walking = [tk for tk, w in heads.items() if w.get("posture") == "walk"]
+    posture = _world_posture(man)
+    dead = [c["name"] for c in man.get("crew", []) if not _crew_alive(c["match"])]
 
-    def rest_words():
-        n = 0
-        for tk, w in heads.items():
-            if w.get("posture") != "walk":
-                continue
-            rec = make_memory(agent, seat_kp, man["floor"],
-                              {"desk_watch": {"ticker": tk, "posture": "cancelled",
-                                              "stopped_by": "the human (world stop)",
-                                              "request": str(r.get("id") or "")}},
-                              kind="semantic", tags=["desk-watch", tk])
-            call(man["port"], "POST", "/records", rec)
-            n += 1
-        return n
-
-    if verb in ("stop", "stop-fully") and r.get("status") == "pending":
-        n = rest_words()
-        halted = []
-        if verb == "stop-fully":
-            import subprocess
-            for c in man.get("crew", []):
-                subprocess.run(["pkill", "-f", c["match"]], capture_output=True)
-                halted.append(c["name"])
-        note = "the world rests - {} standing word(s) stopped by your word".format(n)
-        if halted:
-            note += "; crew halted: " + ", ".join(halted)
-        note += " (rule 11: stopping never needs a gate)"
-        call(port, "POST", "/requests/resolve",
-             {"id": r["id"], "status": "done", "result": note})
-        print("  > capability {}: {} - {} word(s) rested".format(key, verb.upper(), n))
-        return
-    if verb in ("continue", "start"):
-        stopped = [tk for tk, w in heads.items() if w.get("posture") == "cancelled"]
-        dead = [c["name"] for c in man.get("crew", []) if not _crew_alive(c["match"])]
-        if r.get("status") == "pending" and not stopped and not dead:
+    if verb == "stop" and r.get("status") == "pending":
+        if posture == "paused":
             call(port, "POST", "/requests/resolve",
                  {"id": r["id"], "status": "done",
-                  "result": f"nothing to {verb} — {man['name']} already stands: "
-                            "no words are stopped and the whole crew is up"})
-            print(f"  > capability {key}: {verb} was a no-op — said so honestly")
+                  "result": f"{man['name']} is already stopped - continue resumes it"})
+            return
+        _post_posture(man, "paused", str(r.get("id") or ""))
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": f"{man['name']} is stopped - the watchlist "
+                        f"({', '.join(walking) or 'empty'}) is PRESERVED and "
+                        f"nothing walks until you continue "
+                        f"(rule 11: stopping never needs a gate)"})
+        print("  > capability {}: STOPPED (paused, words preserved)".format(key))
+        return
+    if verb == "stop-fully" and r.get("status") == "pending":
+        import subprocess
+        halted = []
+        for c in man.get("crew", []):
+            subprocess.run(["pkill", "-f", c["match"]], capture_output=True)
+            halted.append(c["name"])
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": f"{man['name']} is SHUT DOWN - crew halted "
+                        f"({', '.join(halted)}); the watchlist and every record "
+                        f"survive; start raises it again "
+                        f"(rule 11: stopping never needs a gate)"})
+        print("  > capability {}: SHUT DOWN".format(key))
+        return
+    if verb in ("continue", "start"):
+        needs = []
+        if posture == "paused":
+            needs.append(f"resume the watchlist ({', '.join(walking) or 'empty'})")
+        if dead:
+            needs.append(f"raise the crew ({', '.join(dead)})")
+        if not needs:
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": f"nothing to {verb} - {man['name']} is already running"})
             return
         if r.get("status") == "pending":
-            terms = ("resume {}: re-stand {} standing word(s) ({}) and raise {} "
-                     "crew ({}) - walks and their spend resume until you stop "
-                     "them").format(man["name"], len(stopped),
-                                    ", ".join(stopped) or "none",
-                                    len(dead), ", ".join(dead) or "none stopped")
             call(port, "POST", "/requests/resolve",
                  {"id": r["id"], "status": "staged",
                   "result": {"note": "consequence waits for you (0012)",
-                             "terms": terms}})
+                             "terms": f"{verb} {man['name']}: " + " and ".join(needs)
+                                      + " - continuous operation resumes (it survives "
+                                        "restarts and recovers its state) until you stop it"}})
             print("  > capability {}: {} staged - the human holds the word".format(key, verb))
             return
         if r.get("status") == "approved":
-            for tk in stopped:
-                rec = make_memory(agent, seat_kp, man["floor"],
-                                  {"desk_watch": {"ticker": tk,
-                                                  "cadence": "weekdays-market-close",
-                                                  "refresh": True, "posture": "walk",
-                                                  "approved": str(r.get("id") or "")}},
-                                  kind="semantic", tags=["desk-watch", tk])
-                call(man["port"], "POST", "/records", rec)
+            if posture == "paused":
+                _post_posture(man, "standing", str(r.get("id") or ""))
             raised = []
             for c in man.get("crew", []):
                 if not _crew_alive(c["match"]):
                     _crew_spawn(c)
                     raised.append(c["name"])
-            note = "the world stands again - {} word(s) re-stood".format(len(stopped))
-            if raised:
-                note += ("; crew raised: " + ", ".join(raised)
-                         + " - charles will wait at his join gate; welcome him")
             call(port, "POST", "/requests/resolve",
-                 {"id": r["id"], "status": "done", "result": note})
-            print("  > capability {}: {} - the world stands".format(key, verb.upper()))
+                 {"id": r["id"], "status": "done",
+                  "result": f"{man['name']} runs - continuous, its state recovered"
+                            + (f"; crew raised: {', '.join(raised)} - the resident "
+                               f"will wait at the join gate; welcome them"
+                               if raised else "")})
+            print("  > capability {}: {} - the world runs".format(key, verb.upper()))
 
 
 def on_desk_watch(port: int, scope: str, r: dict) -> None:
@@ -1633,6 +1651,7 @@ def compose_desk(key: str = "trading-desk") -> dict:
         walking = sum(1 for w in words.values() if w.get("posture") == "walk")
         m["crew_state"] = crew
         m["words_walking"] = walking
+        m["posture"] = _world_posture(gen)
         m["pending_verb"] = None
         try:
             for q in call(gen.get("port", DESK_PORT), "GET",
@@ -1645,9 +1664,9 @@ def compose_desk(key: str = "trading-desk") -> dict:
                     break
         except Exception:
             pass
-        m["state"] = ("dark" if crew and not all(crew.values())
-                      else "tending" if walking
-                      else "stopped" if words else "ready")
+        m["state"] = ("shut down" if crew and not all(crew.values())
+                      else "stopped" if _world_posture(gen) == "paused"
+                      else "running")
     return {"watches": list(heads.values()),
             "worlds": manifests,
             "reports": keep[:10]}

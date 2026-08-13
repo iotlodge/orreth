@@ -1026,3 +1026,9 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 | File | Author | Note |
 |---|---|---|
 | `console_worker.py` · `window.html` | Fable 5 (claude-fable-5) | JB's find: "resting" undersold a desk that answers asks instantly — the state is READY, said in blue, with the card explaining itself ("answers asks now · no standing walks — watch a symbol inside to schedule one"); tending wears its walk count; every chip carries a plain-words hover. quinn's "stopped vs resting unexplained" finding, closed by the human who hit it. |
+
+## Fable 5 — 2026-08-13 (0055 — the states corrected to JB's model)
+
+| File | Author | Note |
+|---|---|---|
+| `console_worker.py` · `run.py` · `window.html` · doc §4 | Fable 5 (claude-fable-5) | JB's correction, made law: "the watchlist is content; it must never drive the state of the architecture." The old law read cancelled-watch TOMBSTONES as state. Now: running / stopped (paused — watchlist PRESERVED, the tend loop rests whole, continue recovers everything) / shut down (crew halted, records survive) — the world's posture is its own record on its own floor; the watchlist is an annotation on the chip, never the chip. |
