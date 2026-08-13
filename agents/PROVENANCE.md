@@ -1032,3 +1032,10 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 | File | Author | Note |
 |---|---|---|
 | `console_worker.py` · `run.py` · `window.html` · doc §4 | Fable 5 (claude-fable-5) | JB's correction, made law: "the watchlist is content; it must never drive the state of the architecture." The old law read cancelled-watch TOMBSTONES as state. Now: running / stopped (paused — watchlist PRESERVED, the tend loop rests whole, continue recovers everything) / shut down (crew halted, records survive) — the world's posture is its own record on its own floor; the watchlist is an annotation on the chip, never the chip. |
+
+## Fable 5 — 2026-08-13 (0055 — one desk's off-switch, one desk's silence)
+
+| File | Author | Note |
+|---|---|---|
+| `desk.py` · `crypto_desk.py` · `options_desk.py` · `dev.sh` | Fable 5 (claude-fable-5) | JB's find: shut down ONE desk killed all three. Two flaws stacked — charles's crew match ("05-desk/run.py") was a SUBSTRING of every sibling's command line, and pkill -f is a substring gun; and the shared data stall was halted by a single world's word, aging out every floor's lease. Now every tender's match is exclusive (proven pairwise: no match hides inside another) and the stall is marked SHARED. |
+| `console_worker.py` | Fable 5 (claude-fable-5) | The law: a shared crew member belongs to the RIG, never to one world — stop-fully halts only the world's own crew and says who stayed up for the siblings. Isolation proven live: crypto shut down alone; trading and options untouched; the stall breathing. |

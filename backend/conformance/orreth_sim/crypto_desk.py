@@ -449,7 +449,7 @@ MANIFEST = {'key': 'crypto-desk',
  'law': 'the desk observes and reports — never a trade, never custody',
  'door': 'crypto-desk',
  'verbs': {'words_kind': 'desk-watch'},
- 'crew': [{'name': 'the data stall',
+ 'crew': [{'name': 'the data stall', 'shared': True,
            'match': 'tradingdata_server.py',
            'cmd': 'uv run --with yfinance --with pandas python -u '
                   'tradingdata_server.py 4570',

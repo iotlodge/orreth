@@ -1431,16 +1431,21 @@ def on_capability_verb(port: int, scope: str, r: dict) -> None:
         return
     if verb == "stop-fully" and r.get("status") == "pending":
         import subprocess
-        halted = []
+        halted, kept = [], []
         for c in man.get("crew", []):
+            if c.get("shared"):
+                kept.append(c["name"])     # the rig's, not this world's to halt
+                continue
             subprocess.run(["pkill", "-f", c["match"]], capture_output=True)
             halted.append(c["name"])
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
-              "result": f"{man['name']} is SHUT DOWN - crew halted "
-                        f"({', '.join(halted)}); the watchlist and every record "
-                        f"survive; start raises it again "
-                        f"(rule 11: stopping never needs a gate)"})
+              "result": f"{man['name']} is SHUT DOWN - its own crew halted "
+                        f"({', '.join(halted)})"
+                        + (f"; shared crew stays up for the other desks "
+                           f"({', '.join(kept)})" if kept else "")
+                        + "; the watchlist and every record survive; start "
+                          "raises it again (rule 11)"})
         print("  > capability {}: SHUT DOWN".format(key))
         return
     if verb in ("continue", "start"):

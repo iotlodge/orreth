@@ -433,7 +433,7 @@ MANIFEST = {'key': 'options-desk',
  'door': 'options-desk',
  'group': 'the Trading Desks',
  'verbs': {'words_kind': 'desk-watch'},
- 'crew': [{'name': 'the data stall',
+ 'crew': [{'name': 'the data stall', 'shared': True,
            'match': 'tradingdata_server.py',
            'cmd': 'uv run --with yfinance --with pandas python -u '
                   'tradingdata_server.py 4570',

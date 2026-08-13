@@ -33,7 +33,7 @@ deskcrew() {  # 0054: the Trading desk's standing crew — the data stall + char
   pkill -f "tradingdata_server.py" 2>/dev/null || true
   pkill -f "05-desk/run.py" 2>/dev/null || true; sleep 0.3
   (cd "$CONF" && nohup uv run --with yfinance --with pandas     python -u tradingdata_server.py 4570 >"$TMPDIR/tradingdata.log" 2>&1 &)
-  (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python -u agents/flavors/05-desk/run.py --tend >"$TMPDIR/charles.log" 2>&1 &)
+  (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python -u agents/flavors/05-desk/run.py --tend --world trading-desk >"$TMPDIR/charles.log" 2>&1 &)
   (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python -u agents/flavors/05-desk/run.py --tend --world crypto-desk     --name charlene --field http://localhost:4521 >"$TMPDIR/charlene.log" 2>&1 &)
   (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python -u agents/flavors/05-desk/run.py --tend --world options-desk     --name chad --field http://localhost:4522 >"$TMPDIR/chad.log" 2>&1 &)
   echo "· the desk crew stands: stall :4570 + charles + charlene + chad tending (logs in $TMPDIR/)"
