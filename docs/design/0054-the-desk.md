@@ -7,13 +7,11 @@
      zip) and a full architectural map of ~/PycharmProjects/CortexObserver
      (LangGraph desk, 16 nodes, 15 prompts, watchlist cron, reflection loop). -->
 
-**Status: 🟢 OPENED 2026-08-12 — all four locks landed same day (AskUserQuestion,
-JB's hand): L-A yfinance + Tavily ≤6/day · L-B NVDA, weekdays at market
-close, refresh mode (first full run manual as sp3's proof) · L-C the
-minimal Capabilities pull v1, the desk its first installed world · L-D
-**sonnet carries balanced, opus carries the two reasoning stages**
-(research manager + portfolio manager — full reference parity, 2 opus
-calls/run). Building.**
+**Status: ✅ CLOSED WHOLE 2026-08-13 by JB's own hands, era 0.54 — all five
+spoonfuls landed and proven live; the reference recreated as Orreth
+objectives (charles + charlene + chad, three desks under one contract);
+the human's nine testing finds each became law; his closing walk:
+retire → reinstate on the Trading Desk itself, clean, no drift.**
 
 ## 1. The brief
 

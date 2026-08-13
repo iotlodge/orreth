@@ -1076,3 +1076,7 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 |---|---|---|
 | `web.py` | Fable 5 (claude-fable-5) | quinn's capability views derive from the portal's own door — a dropped folder is under the UAT walk from birth; nothing hardcoded again. |
 | `console_worker.py` · `window.html` | Fable 5 (claude-fable-5) | THE RETIRE DOOR: staged with honest terms → crew halts, floors reclaimed, the manifest's retired sibling planted — the card moves to the landing's retired shelf and the Chronicle keeps everything forever. The boot honors the shelf over the folder ("the folder installs, the shelf governs" — proven through a restart). REINSTATE returns the world whole: sibling, hulls, health, crew, the resident through the gate. Proven live: retire → 3 hulls, boot-honored, reinstate → 4 hulls, chad home. The lifecycle template is complete: install → running → stop/continue → shut down/start → retire/reinstate. |
+
+## Fable 5 — 2026-08-13 (0054 + 0055 — CLOSED WHOLE by JB's own hands, era 0.55)
+
+The closing proof was the human's: retire → reinstate on the Trading Desk, clean, no drift. The rites in this commit: both dive docs sealed with their eras · the road rows · VERSION 0.52 → 0.55 · two rows in the honest-boundary register (the purpose-through-Orreth claim with its named yardstick gate; the decoupling claim with its named entry fee) · the Capabilities layer added to the objective atlas. Nine human finds across the two dives, nine laws in the machine.

@@ -171,3 +171,16 @@ will make alterations… nothing works perfectly out the gate; we're in new
 industry space, and the reports, views, sustained active state is what does
 the verification — outcome focused."* The proofs will move the base; the
 atlas moves with them, in the same commit.
+
+## The Capabilities layer (0054 · 0055 — added at their close, 2026-08-13)
+
+An Objective can now be a WORLD'S: the Capabilities pull is the portal of
+applied-purpose worlds atop the Machine. A capability = five declarations
+(floors · crew · craft · Chronicle · manifest) discovered from
+`capabilities/<key>/genesis.py`; its rooms are typed panels the glass
+renders blind; its tile carries the whole lifecycle (stop/continue ·
+stop-fully/start · retire/reinstate — the shelf remembers, and the boot
+obeys the shelf over the folder). Where a change lands: a world's WORDS →
+craft-edit at the gate; its VIEW → its manifest (chronicle craft); its
+LIFE → the tile's verbs (adoption-standing); its DATA → its own floors'
+records, projected by the door. The Foundation names no world.
