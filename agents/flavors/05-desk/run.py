@@ -97,7 +97,7 @@ def main() -> int:
         from orreth_agent.chassis import GovernedThink
         import pipeline
         tm, th, tf = (GovernedThink(client, max_tokens=1500),
-                      GovernedThink(client, max_tokens=1600),
+                      GovernedThink(client, max_tokens=3200),
                       GovernedThink(client, max_tokens=2400))
         def _watches():
             try:
@@ -167,7 +167,7 @@ def main() -> int:
             return 1
         out = pipeline.run(client,
                            GovernedThink(client, max_tokens=1500),
-                           GovernedThink(client, max_tokens=1600),
+                           GovernedThink(client, max_tokens=3200),
                            GovernedThink(client, max_tokens=2400),
                            ticker, date, refresh=args.refresh, agent=args.name)
         print(f"· the walk is whole: {out['rating']} — bundle at {out['bundle']}")

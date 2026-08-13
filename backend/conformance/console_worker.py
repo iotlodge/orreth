@@ -125,6 +125,7 @@ from dotenv import load_dotenv
 
 from orreth_sim import (bell as bell_mod, continuity, crypto,
                         crypto_desk as crypto_mod, desk as desk_mod,
+                        options_desk as options_mod,
                         fingertip, improver, markers, meaning, mirror, node,
                         observatory, parlor, profile, purge, serials, shipyard,
                         speech, thumb as thumb_mod, vera)
@@ -1318,7 +1319,8 @@ DESK_PORT, DESK_SCOPE = 4520, "u:demo/e:desk/f:charles"
 
 
 CAP_GENESIS = {"trading-desk": desk_mod.MANIFEST,
-               "crypto-desk": crypto_mod.MANIFEST}   # crew runs from CODE only
+               "crypto-desk": crypto_mod.MANIFEST,
+               "options-desk": options_mod.MANIFEST}   # crew runs from CODE only
 CAP_PANEL_KINDS = {"tabs", "markdown", "chart", "strip", "controls", "download",
                    "stat", "bars", "list", "doc", "table"}   # canon (0055 L1/L2)
 
@@ -4194,7 +4196,9 @@ def improver_beat(port: int) -> None:
         allthere = True
         for sname, stext in {**speech.SENTENCES, **speech.PERSONAS,
                              **desk_mod.CRAFT, **crypto_mod.CRAFT,
-                             "capability-crypto-desk": crypto_mod.MANIFEST}.items():
+                             **options_mod.CRAFT,
+                             "capability-crypto-desk": crypto_mod.MANIFEST,
+                             "capability-options-desk": options_mod.MANIFEST}.items():
             if wire_assets(port, "asset", name=sname):
                 continue
             g = improver.make_asset(me, IMP, scope, name=sname,

@@ -3824,20 +3824,26 @@ function dkState(w){
   return `<span style="color:${c};font-size:.66rem;border:1px solid ${c};border-radius:5px;padding:.08rem .4rem">${dkEsc(w.state||"?")}</span>`}
 function dkVerbs(w){
   const v=[];
-  if(w.state==="tending"||w.state==="resting"){v.push(["stop","⏸ stop"],["stop-fully","⏹ stop fully"])}
+  if(w.state==="tending"){v.push(["stop","⏸ stop"],["stop-fully","⏹ stop fully"])}
+  if(w.state==="resting")v.push(["stop-fully","⏹ stop fully"]);   // no words walk — only the crew can rest
   if(w.state==="stopped")v.push(["continue","▶ continue"]);
   if(w.state==="dark")v.push(["start","▶ start"]);
   return v.map(([verb,label])=>`<button class="dk-tab" onclick="capVerb(event,'${dkEsc(w.key)}','${verb}',${w.port||4520})">${label}</button>`).join(" ")}
 async function capVerb(ev,key,verb,port){
   ev.stopPropagation();
+  // the note lands NEAREST the click (0052's duplicate-id law) — never on
+  // another world's card
+  const host=ev.target.closest(".cap-card,.dk-world");
+  const el=host?host.querySelector(".dk-note"):$("dk-reins-note");
   try{await fetch(`${location.protocol}//${location.hostname}:${port}/requests`,{method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({kind:"capability-verb",verb,key,
       text:`${verb} the ${key} world — the human's word at the tile`})})}catch(e){}
   const note=(verb==="continue"||verb==="start")
     ?"staged at your gate — approve it in the Inbox and the world stands again"
-    :"the world rests — stopping never needs a gate (rule 11)";
-  const el=$("dk-reins-note");if(el)el.textContent=note;
+    :(verb==="stop-fully"?"the crew halts — the tile goes honestly dark in a moment"
+      :"the world rests — stopping never needs a gate (rule 11)");
+  if(el)el.textContent=note;
   setTimeout(()=>{DESK=null;(CAPV==="home"?loadDesk():renderCap())},2800)}
 async function openWorld(key){
   $("capbody").innerHTML=`<div class="dim" style="padding:2rem">the world is being read from its records…</div>`;
@@ -3858,7 +3864,7 @@ function renderCap(){
       <div><b>${dkEsc(w.name)}</b> ${dkState(w)}<div class="dim" style="font-size:.7rem">${dkEsc(w.resident||"")} · ${dkEsc(w.floor||"")}</div>
       <div class="dk-law">${dkEsc(w.law||"")}</div>
       <div style="margin-top:.35rem">${dkVerbs(w)} <span style="color:var(--brass);font-size:.72rem">open →</span></div>
-      <div id="dk-reins-note" class="dim" style="font-size:.68rem"></div></div></div>`;
+      <div class="dk-note dim" style="font-size:.68rem"></div></div></div>`;
   const groups={};
   ((DESK&&DESK.worlds)||[]).forEach(w=>{const g=w.group||"other worlds";(groups[g]=groups[g]||[]).push(w)});
   const html=Object.entries(groups).map(([g,ws])=>
@@ -3945,6 +3951,7 @@ function renderWorld(man){
   const head=`<div class="dk-world">${man.emoji||"📦"} <b>${dkEsc(man.name)}</b> ${dkState(man)}
      <span class="dim"> · ${dkEsc(man.resident||"")} · ${dkEsc(man.floor||"")}</span>
      <span style="margin-left:.6rem">${dkVerbs(man)}</span>
+     <span class="dk-note dim" style="font-size:.68rem;margin-left:.5rem"></span>
      <div class="dk-law">${dkEsc(man.law||"")}</div></div>`;
   if(!reps.length){B.innerHTML=crumb+head+((man.view||[]).filter(p=>p.kind==="controls").map((p)=>dkPanel(p,(man.view||[]).indexOf(p),{})).join(""))
     +`<div class="dim" style="padding:1rem 0">no report on the record yet — ask below, or approve the next walk</div>`;return}

@@ -64,13 +64,21 @@ def _findings_text(res: dict) -> str:
 
 
 def _parse_json(raw: str) -> dict:
-    m = re.search(r"\{.*\}", raw or "", re.S)
-    if m:
+    """The FIRST complete object wins — a greedy first-to-last-brace grab
+    breaks the moment the mind adds a note with braces after its JSON
+    (chad's first walk, 2026-08-13). raw_decode stops at the object's own
+    closing brace and ignores whatever trails."""
+    txt = raw or ""
+    start = txt.find("{")
+    while start != -1:
         try:
-            return json.loads(m.group(0))
+            obj, _ = json.JSONDecoder(strict=False).raw_decode(txt[start:])
+            if isinstance(obj, dict):
+                return obj
         except Exception:
             pass
-    return {"_raw": (raw or "")[:800]}
+        start = txt.find("{", start + 1)
+    return {"_raw": txt[:800]}
 
 
 def _md(title: str, ticker: str, date: str, body: str) -> str:
@@ -86,7 +94,13 @@ def _think(fn, klass: str, prompt: str) -> str:
     """One retry on an empty reply, then an honest placeholder — a silent
     None must never ride into a debate as an empty section."""
     for _ in (1, 2):
-        out = fn(klass, prompt)
+        try:
+            out = fn(klass, prompt)
+        except PermissionError:
+            # the lease ran dry mid-walk — the walk lands with the gap
+            # CONFESSED, never dies rich with its records orphaned
+            return ("(the lease could not afford this thought — the stage is "
+                    "honestly dark; the walk carries on with what it has)")
         if isinstance(out, str) and out.strip():
             return out
     return "(the mind returned nothing for this stage — the ground is thin, said honestly)"

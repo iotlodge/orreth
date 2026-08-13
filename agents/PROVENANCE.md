@@ -1004,3 +1004,12 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 | File | Author | Note |
 |---|---|---|
 | `console_worker.py` | Fable 5 (claude-fable-5) | The discovery: the craft-edit door already took dict bodies, and craft-edit was already an adoption kind — last night's drift card fired because I never filed one. The landing: the canon vocabulary now GUARDS the door (a capability-* edit must stay a manifest the walker can render; a foreign panel kind refuses loudly — "changing what the glass can render is a RELEASE, not an edit"). Proven in three acts: the iframe refusal · the trading-desk head gaining its group THROUGH the gate with lineage · the epoch turning 21 changes later with ZERO drift cards — the governed path leaves no accusation behind. |
+
+## Fable 5 — 2026-08-13 (0055 — the third world, and the walk that learned to finish)
+
+| File | Author | Note |
+|---|---|---|
+| `orreth_sim/options_desk.py` | Fable 5 (claude-fable-5) | chad's genesis: 13 reference prompts AST-verbatim, shared machinery carried, his persona, his manifest (⛓ · never a trade, never an exercise) — the third world, import-execute checked. |
+| `agents/flavors/05-desk/pipeline.py` · `run.py` | Fable 5 (claude-fable-5) | Three walk lessons from chad's verbosity: the FIRST complete JSON object wins (raw_decode, trailing braces ignored) · strict=False (a literal newline inside a model's string is prose, not poison) · the reasoning cap raised to 3200 — and a walk NEVER DIES RICH: a lease-refused thought lands as a confessed dark stage, the walk carries on with what it has. |
+| `window.html` | Fable 5 (claude-fable-5) | JB's landing find fixed: verb notes land NEAREST the click (the 0052 duplicate-id law — every card had the same note id, so every answer spoke on charles's card); verbs are state-honest (resting offers only stop-fully — no words walk to stop); stop-fully says what comes next. |
+| `console_worker.py` · `scripts/dev.sh` | Fable 5 (claude-fable-5) | Three-world registry + planting; chad joins the crew; the join door's default lease grows desk-sized (400k — chad's fourth walk died at its LAST thought on 250k). |

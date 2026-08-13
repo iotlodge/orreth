@@ -25,7 +25,7 @@ rootpub() {  # keep the seed and infrastructure/.env in lockstep, always
 
 joindoor() {  # becky answers joins + the librarian answers Asks — the floor's cognition
   pkill -f "console_worker.py $FIELD" 2>/dev/null || true; sleep 0.3
-  (cd "$CONF" && ORRETH_JOIN_LEASE_TOKENS="${ORRETH_JOIN_LEASE_TOKENS:-250000}"     nohup uv run python console_worker.py "$FIELD" >"$TMPDIR/worker.log" 2>&1 &)
+  (cd "$CONF" && ORRETH_JOIN_LEASE_TOKENS="${ORRETH_JOIN_LEASE_TOKENS:-400000}"     nohup uv run python console_worker.py "$FIELD" >"$TMPDIR/worker.log" 2>&1 &)
   echo "· becky's join door open on :$FIELD — agents may join; log: $TMPDIR/worker.log"
 }
 
@@ -35,7 +35,8 @@ deskcrew() {  # 0054: the Trading desk's standing crew — the data stall + char
   (cd "$CONF" && nohup uv run --with yfinance --with pandas     python -u tradingdata_server.py 4570 >"$TMPDIR/tradingdata.log" 2>&1 &)
   (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python -u agents/flavors/05-desk/run.py --tend >"$TMPDIR/charles.log" 2>&1 &)
   (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python -u agents/flavors/05-desk/run.py --tend --world crypto-desk     --name charlene --field http://localhost:4521 >"$TMPDIR/charlene.log" 2>&1 &)
-  echo "· the desk crew stands: stall :4570 + charles + charlene tending (logs in $TMPDIR/)"
+  (cd "$ROOT" && nohup uv run --with litellm --with cryptography     python -u agents/flavors/05-desk/run.py --tend --world options-desk     --name chad --field http://localhost:4522 >"$TMPDIR/chad.log" 2>&1 &)
+  echo "· the desk crew stands: stall :4570 + charles + charlene + chad tending (logs in $TMPDIR/)"
   echo "  ⚠ the residents wait at their join gates after every start — welcome them in the Inbox"
 }
 
