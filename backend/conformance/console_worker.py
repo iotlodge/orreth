@@ -2080,6 +2080,12 @@ def embed_door() -> None:
         def log_message(self, *a):              # the door is quiet
             pass
 
+        def handle(self):
+            try:
+                super().handle()
+            except (BrokenPipeError, ConnectionResetError):
+                pass          # the glass hung up mid-breath — quiet, not broken
+
     try:
         ThreadingHTTPServer(("0.0.0.0", EMBED_PORT), H).serve_forever()
     except OSError as e:

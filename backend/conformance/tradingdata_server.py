@@ -48,6 +48,12 @@ class H(BaseHTTPRequestHandler):
     def log_message(self, *a):                  # the stall is quiet
         pass
 
+    def handle(self):
+        try:
+            super().handle()
+        except (BrokenPipeError, ConnectionResetError):
+            pass              # a caller hung up mid-answer — quiet, not broken
+
 
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 4570
