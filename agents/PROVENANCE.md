@@ -1013,3 +1013,10 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 | `agents/flavors/05-desk/pipeline.py` · `run.py` | Fable 5 (claude-fable-5) | Three walk lessons from chad's verbosity: the FIRST complete JSON object wins (raw_decode, trailing braces ignored) · strict=False (a literal newline inside a model's string is prose, not poison) · the reasoning cap raised to 3200 — and a walk NEVER DIES RICH: a lease-refused thought lands as a confessed dark stage, the walk carries on with what it has. |
 | `window.html` | Fable 5 (claude-fable-5) | JB's landing find fixed: verb notes land NEAREST the click (the 0052 duplicate-id law — every card had the same note id, so every answer spoke on charles's card); verbs are state-honest (resting offers only stop-fully — no words walk to stop); stop-fully says what comes next. |
 | `console_worker.py` · `scripts/dev.sh` | Fable 5 (claude-fable-5) | Three-world registry + planting; chad joins the crew; the join door's default lease grows desk-sized (400k — chad's fourth walk died at its LAST thought on 250k). |
+
+## Fable 5 — 2026-08-13 (0055 — the gate comes to the tile)
+
+| File | Author | Note |
+|---|---|---|
+| `console_worker.py` | Fable 5 (claude-fable-5) | JB's find: start/continue staged on the WORLD'S floor — a gate in a room the human never visits, so "nothing starts." The door now carries each world's staged verb; and a start with nothing to do (no stopped words, no dead crew) answers honestly on the spot instead of solemnly staging a no-op. |
+| `window.html` | Fable 5 (claude-fable-5) | The tile wears its staged verb with the TERMS and the decision beside it — let it stand / not now — the 0052 law (decide where you stand) applied to the portal; a tile with a pending verb offers no other verbs until the word lands. |

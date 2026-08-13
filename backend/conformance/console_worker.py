@@ -1420,6 +1420,13 @@ def on_capability_verb(port: int, scope: str, r: dict) -> None:
     if verb in ("continue", "start"):
         stopped = [tk for tk, w in heads.items() if w.get("posture") == "cancelled"]
         dead = [c["name"] for c in man.get("crew", []) if not _crew_alive(c["match"])]
+        if r.get("status") == "pending" and not stopped and not dead:
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": f"nothing to {verb} — {man['name']} already stands: "
+                            "no words are stopped and the whole crew is up"})
+            print(f"  > capability {key}: {verb} was a no-op — said so honestly")
+            return
         if r.get("status") == "pending":
             terms = ("resume {}: re-stand {} standing word(s) ({}) and raise {} "
                      "crew ({}) - walks and their spend resume until you stop "
@@ -1626,6 +1633,18 @@ def compose_desk(key: str = "trading-desk") -> dict:
         walking = sum(1 for w in words.values() if w.get("posture") == "walk")
         m["crew_state"] = crew
         m["words_walking"] = walking
+        m["pending_verb"] = None
+        try:
+            for q in call(gen.get("port", DESK_PORT), "GET",
+                          "/requests").get("requests", []):
+                if q.get("kind") == "capability-verb" and q.get("status") == "staged" \
+                        and q.get("key") == m.get("key"):
+                    m["pending_verb"] = {
+                        "id": q["id"], "verb": q.get("verb"),
+                        "terms": str((q.get("result") or {}).get("terms", ""))[:220]}
+                    break
+        except Exception:
+            pass
         m["state"] = ("dark" if crew and not all(crew.values())
                       else "tending" if walking
                       else "stopped" if words else "resting")

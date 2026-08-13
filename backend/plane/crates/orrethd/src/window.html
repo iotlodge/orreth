@@ -3822,6 +3822,21 @@ function dkCharts(rep){
 function dkState(w){
   const c={tending:"var(--near)",resting:"var(--dim)",stopped:"var(--brass)",dark:"var(--red)",declared:"var(--faint)"}[w.state]||"var(--faint)";
   return `<span style="color:${c};font-size:.66rem;border:1px solid ${c};border-radius:5px;padding:.08rem .4rem">${dkEsc(w.state||"?")}</span>`}
+function dkPendingVerb(w){
+  const pv=w.pending_verb;
+  if(!pv)return "";
+  return `<div class="dk-law" style="margin-top:.3rem">⏳ <b>${dkEsc(pv.verb)}</b> staged — ${dkEsc(pv.terms||"terms at the gate")}
+    <button class="dk-tab" onclick="capDecide(event,'${dkEsc(pv.id)}',${w.port||4520},'approved')">let it stand</button>
+    <button class="dk-tab" onclick="capDecide(event,'${dkEsc(pv.id)}',${w.port||4520},'denied')">not now</button></div>`}
+async function capDecide(ev,rid,port,statusWord){
+  ev.stopPropagation();
+  const host=ev.target.closest(".cap-card,.dk-world");
+  const el=host?host.querySelector(".dk-note"):null;
+  try{await fetch(`${location.protocol}//${location.hostname}:${port}/requests/resolve`,{method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({id:rid,status:statusWord})})}catch(e){}
+  if(el)el.textContent=statusWord==="approved"?"your word stands — the world answers in a moment":"held back — nothing changes";
+  setTimeout(()=>{DESK=null;(CAPV==="home"?loadDesk():renderCap())},2800)}
 function dkVerbs(w){
   const v=[];
   if(w.state==="tending"){v.push(["stop","⏸ stop"],["stop-fully","⏹ stop fully"])}
@@ -3863,7 +3878,8 @@ function renderCap(){
       <div class="cap-emoji">${w.emoji||"📦"}</div>
       <div><b>${dkEsc(w.name)}</b> ${dkState(w)}<div class="dim" style="font-size:.7rem">${dkEsc(w.resident||"")} · ${dkEsc(w.floor||"")}</div>
       <div class="dk-law">${dkEsc(w.law||"")}</div>
-      <div style="margin-top:.35rem">${dkVerbs(w)} <span style="color:var(--brass);font-size:.72rem">open →</span></div>
+      ${dkPendingVerb(w)}
+      <div style="margin-top:.35rem">${w.pending_verb?"":dkVerbs(w)} <span style="color:var(--brass);font-size:.72rem">open →</span></div>
       <div class="dk-note dim" style="font-size:.68rem"></div></div></div>`;
   const groups={};
   ((DESK&&DESK.worlds)||[]).forEach(w=>{const g=w.group||"other worlds";(groups[g]=groups[g]||[]).push(w)});
@@ -3950,9 +3966,9 @@ function renderWorld(man){
   const crumb=`<div style="margin-bottom:.5rem"><a href="#" onclick="CAPV='home';renderCap();return false" style="color:var(--brass);font-size:.72rem;text-decoration:none">← worlds</a></div>`;
   const head=`<div class="dk-world">${man.emoji||"📦"} <b>${dkEsc(man.name)}</b> ${dkState(man)}
      <span class="dim"> · ${dkEsc(man.resident||"")} · ${dkEsc(man.floor||"")}</span>
-     <span style="margin-left:.6rem">${dkVerbs(man)}</span>
+     <span style="margin-left:.6rem">${man.pending_verb?"":dkVerbs(man)}</span>
      <span class="dk-note dim" style="font-size:.68rem;margin-left:.5rem"></span>
-     <div class="dk-law">${dkEsc(man.law||"")}</div></div>`;
+     <div class="dk-law">${dkEsc(man.law||"")}</div>${dkPendingVerb(man)}</div>`;
   if(!reps.length){B.innerHTML=crumb+head+((man.view||[]).filter(p=>p.kind==="controls").map((p)=>dkPanel(p,(man.view||[]).indexOf(p),{})).join(""))
     +`<div class="dim" style="padding:1rem 0">no report on the record yet — ask below, or approve the next walk</div>`;return}
   DKIDX=Math.min(DKIDX,reps.length-1);
