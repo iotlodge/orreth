@@ -3819,6 +3819,26 @@ function dkCharts(rep){
   return price+trend+mom+boll}
 
 /* ── the landing: worlds organized, never a jump straight in ── */
+function dkState(w){
+  const c={tending:"var(--near)",resting:"var(--dim)",stopped:"var(--brass)",dark:"var(--red)",declared:"var(--faint)"}[w.state]||"var(--faint)";
+  return `<span style="color:${c};font-size:.66rem;border:1px solid ${c};border-radius:5px;padding:.08rem .4rem">${dkEsc(w.state||"?")}</span>`}
+function dkVerbs(w){
+  const v=[];
+  if(w.state==="tending"||w.state==="resting"){v.push(["stop","⏸ stop"],["stop-fully","⏹ stop fully"])}
+  if(w.state==="stopped")v.push(["continue","▶ continue"]);
+  if(w.state==="dark")v.push(["start","▶ start"]);
+  return v.map(([verb,label])=>`<button class="dk-tab" onclick="capVerb(event,'${dkEsc(w.key)}','${verb}',${w.port||4520})">${label}</button>`).join(" ")}
+async function capVerb(ev,key,verb,port){
+  ev.stopPropagation();
+  try{await fetch(`${location.protocol}//${location.hostname}:${port}/requests`,{method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({kind:"capability-verb",verb,key,
+      text:`${verb} the ${key} world — the human's word at the tile`})})}catch(e){}
+  const note=(verb==="continue"||verb==="start")
+    ?"staged at your gate — approve it in the Inbox and the world stands again"
+    :"the world rests — stopping never needs a gate (rule 11)";
+  const el=$("dk-reins-note");if(el)el.textContent=note;
+  setTimeout(()=>{DESK=null;loadDesk()},2800)}
 function renderCap(){
   if(CAPV!=="home"){
     const man=((DESK&&DESK.worlds)||[]).find(w=>w.key===CAPV);
@@ -3829,10 +3849,11 @@ function renderCap(){
     const last=reps.find(r=>true);
     return `<div class="cap-card" onclick="CAPV='${dkEsc(w.key)}';renderCap()">
       <div class="cap-emoji">${w.emoji||"📦"}</div>
-      <div><b>${dkEsc(w.name)}</b><div class="dim" style="font-size:.7rem">${dkEsc(w.resident||"")} · ${dkEsc(w.floor||"")}</div>
+      <div><b>${dkEsc(w.name)}</b> ${dkState(w)}<div class="dim" style="font-size:.7rem">${dkEsc(w.resident||"")} · ${dkEsc(w.floor||"")}</div>
       <div class="dk-law">${dkEsc(w.law||"")}</div>
       ${last?`<div class="dim" style="font-size:.7rem;margin-top:.3rem">latest: ${dkEsc(last.ticker)} · ${dkEsc(last.date)} · ${dkEsc(last.rating||"")}</div>`:""}
-      <div style="color:var(--brass);font-size:.72rem;margin-top:.35rem">open →</div></div></div>`}).join("");
+      <div style="margin-top:.35rem">${dkVerbs(w)} <span style="color:var(--brass);font-size:.72rem">open →</span></div>
+      <div id="dk-reins-note" class="dim" style="font-size:.68rem"></div></div></div>`}).join("");
   B.innerHTML=`<div class="dim" style="font-size:.72rem;margin-bottom:.6rem">installed worlds — each one an applied purpose living atop the Machine; more arrive through install & create (their own dive)</div>
     <div class="cap-grid">${cards||`<div class="dim">no worlds installed yet</div>`}</div>`}
 
@@ -3911,8 +3932,9 @@ function renderWorld(man){
   _CAPMAN=man;
   const B=$("capbody"),reps=DESK.reports||[];
   const crumb=`<div style="margin-bottom:.5rem"><a href="#" onclick="CAPV='home';renderCap();return false" style="color:var(--brass);font-size:.72rem;text-decoration:none">← worlds</a></div>`;
-  const head=`<div class="dk-world">${man.emoji||"📦"} <b>${dkEsc(man.name)}</b>
+  const head=`<div class="dk-world">${man.emoji||"📦"} <b>${dkEsc(man.name)}</b> ${dkState(man)}
      <span class="dim"> · ${dkEsc(man.resident||"")} · ${dkEsc(man.floor||"")}</span>
+     <span style="margin-left:.6rem">${dkVerbs(man)}</span>
      <div class="dk-law">${dkEsc(man.law||"")}</div></div>`;
   if(!reps.length){B.innerHTML=crumb+head+((man.view||[]).filter(p=>p.kind==="controls").map((p)=>dkPanel(p,(man.view||[]).indexOf(p),{})).join(""))
     +`<div class="dim" style="padding:1rem 0">no report on the record yet — ask below, or approve the next walk</div>`;return}

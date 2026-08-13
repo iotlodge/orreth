@@ -121,9 +121,17 @@ THE PANEL WALKER renders the desk's declared rooms blind — screenshot
 against the bespoke version: pixel-for-pixel, picker to charts to tabs.
 `renderDesk` no longer exists in the glass. Live lesson on the record:
 a "patient retry" that files a new join per cycle is a 41-card flood —
-patience is ONE long-lived request, held open and polled. Remaining in
-this dive: the tile lifecycle verbs (start · stop · continue per L3) and
-the SDK's `capability` module + a second world to prove generality.
+patience is ONE long-lived request, held open and polled. **sp2 LANDED + PROVEN LIVE 2026-08-13 — the tile is the lever.** The crew
+is declared in GENESIS (commands never execute from the shelf's editable
+copy — a craft-edit must never become command injection; the repo is the
+trust boundary). The verbs ran their whole cycle in one sitting: stop
+(gateless, words rested) → continue (staged with terms, approved, words
+re-stood) → stop-fully (crew HALTED, tile honestly DARK) → start (staged,
+approved, crew raised, charles back at his gate on one patient card) →
+the human's chosen state restored. The tile and the world header wear the
+state chip (tending · resting · stopped · dark) and exactly the verbs
+that state allows. Remaining in this dive: the SDK's `capability` module
++ a SECOND WORLD to prove generality (charlene is the natural one).
 
 The Trading Desk re-declared UNDER the contract — its view expressed as
 typed panels, its crew as a declaration, its verbs on the tile — with

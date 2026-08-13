@@ -55,6 +55,17 @@ MANIFEST = {
  "law": "the desk observes and reports — it never executes a trade",
  "door": "trading-desk",
  "verbs": {"words_kind": "desk-watch"},
+ # the crew: EXECUTED FROM THIS GENESIS ONLY — the shelf's editable copy of
+ # this manifest never runs commands (a craft-edit must never become
+ # command injection; the repo is the trust boundary, JB's L4)
+ "crew": [
+  {"name": "the data stall", "match": "tradingdata_server.py",
+   "cmd": "uv run --with yfinance --with pandas python -u tradingdata_server.py 4570",
+   "cwd": "backend/conformance", "log": "tradingdata.log"},
+  {"name": "charles", "match": "05-desk/run.py",
+   "cmd": "uv run --with litellm --with cryptography python -u agents/flavors/05-desk/run.py --tend",
+   "cwd": ".", "log": "charles.log"},
+ ],
  "collection": {"label": ["ticker", "date"]},
  "view": [
   {"kind": "controls", "watches": True,

@@ -981,3 +981,10 @@ Proof from the human's own hands: JB typed PYPL into the reins and asked; charle
 | `console_worker.py` | Fable 5 (claude-fable-5) | The planting loop takes dict assets; the supply door composes PANEL-READY fields (derived tab markdown, last price) so the glass renders blind; the portal's world list reads capability-* manifests from the shelf, genesis as fallback — never a blank portal. |
 | `window.html` | Fable 5 (claude-fable-5) | THE PANEL WALKER: eleven kinds (JB's L1, table included, sortable) rendering any world's declared rooms; generic controls wire declared inputs/buttons to governed requests. `renderDesk` is RETIRED — the manifest carries the desk pixel-for-pixel; the acceptance test passes. |
 | `run.py` · `dev.sh` | Fable 5 (claude-fable-5) | The 41-card lesson: patience is ONE long-lived join request, not a retry flood — a single card held open for hours, polled; the stale flood swept as superseded. Crew logs unbuffered. |
+
+## Fable 5 — 2026-08-13 (0055 sp2 — the tile is the lifecycle lever)
+
+| File | Author | Note |
+|---|---|---|
+| `orreth_sim/desk.py` · `console_worker.py` | Fable 5 (claude-fable-5) | The crew declared in GENESIS (commands never run from the shelf's editable copy — a craft-edit must never become command injection); the capability-verb doors: stop/stop-fully immediate and gateless (rule 11 over a whole world), continue/start staged with terms and enacted on approval — words re-stood, dead crew raised; the door names each world's state (tending · resting · stopped · dark) from crew liveness + standing words. |
+| `window.html` | Fable 5 (claude-fable-5) | The tile wears its state chip and its verbs; the world header too. Proven live in one sitting: stop → continue → stop → stop-fully (crew halted, tile DARK, honest) → start (staged, approved, crew raised, charles back on one patient card) → restored to the human's chosen state. |
