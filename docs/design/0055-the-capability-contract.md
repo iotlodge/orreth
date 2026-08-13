@@ -28,14 +28,57 @@ portal where installed worlds live; the Machine below, the worlds above.
 This is 0053's two-book separation at the product level — the Foundation
 is Orreth; the capabilities are what Orreth *does*.
 
-## 2. The decoupling today (honest)
+## 2. The decoupling today (honest — re-audited 2026-08-13, after the
+three desks)
 
-The Trading Desk proved every organ a capability needs, but its seams are
-hand-tied: its view is coded INTO the glass (`renderDesk`), its supply
-door (`/desk`) is worker code, its crew is named in `dev.sh`, its
-lifecycle controls are bespoke (`desk-watch`/`desk-ask`). Perfect as a
-prototype; wrong as a pattern — a second capability today would mean
-editing the Foundation. The contract ends that.
+**What the contract carries now** (moved out of the Foundation since this
+section was first written): the card, the rooms, the reins, the states,
+the verbs, the crew, and the floors all live in THE MANIFEST — chronicle
+craft, edited at gates. The glass renders any world blind (the bespoke
+renderer is deleted); charlene and chad cost zero glass. Floors grow
+through the shipyard's doors, minds and stalls through ada's and
+charlotte's — requests, never code.
+
+**What is STILL hand-tied** (the honest seam list, each a named debt):
+
+1. **Genesis location** — the desks' prompts and manifests live in
+   `backend/conformance/orreth_sim/` — a package's words inside the
+   Machine's own directory. They belong in a capabilities dir (L4).
+2. **The install is a code edit** — the worker imports each genesis by
+   name (`CAP_GENESIS` + the planting-loop merge): three one-line edits
+   to Foundation code per new world. Small, but an edit is an edit.
+3. **The door's composer** — the report/stage/chart composition behind
+   `/desk?key=` is desk-shaped worker code. Any desk-shaped world rides
+   it free; a differently-shaped world would need its own composer.
+4. **The word-kinds** — `desk-watch`/`desk-ask`/`desk-world` handlers
+   are Foundation code (generic across the desks via the manifest's
+   `words_kind`, but not yet a declared vocabulary).
+5. **The rig boot** — the crew is declared in the manifest and the
+   verbs use it, but `dev.sh`'s `deskcrew()` still lists the tenders by
+   hand for cold boot.
+6. **quinn's walk** — her capability views are hardcoded deep-links.
+
+Closing seams 1, 2, and 5 is one piece of work — **the discoverer**: a
+`capabilities/` directory the Foundation sweeps at boot (genesis found →
+craft planted → manifest registered → crew booted). After it, applying a
+desk-shaped package = dropping a folder. That is 0055's remaining build.
+
+## 2b. The anatomy in the codebase (who compiles what)
+
+For the human who asks "is the Desk compiled? does it use orrethd?":
+
+| Layer | What it is | Compiled? |
+|---|---|---|
+| `orrethd` | ONE Rust binary; every floor — universe, eco, f:charles — is an instance of the SAME image with a different profile. The Desk's floors are shipyard-launched copies of it | Rust, once, for everyone |
+| the worker | the Foundation's host-side organs (becky's desks, charlotte, ada, the librarian, the shipyard, the doors on :4562) | Python, no build |
+| the glass | one window.html; the panel walker renders ANY manifest | none |
+| the SDK | FieldClient · GovernedThink · acquire · capability | Python, no build |
+| **the Desk (a package)** | **genesis data** (prompts + manifest — pure words, read once at planting) · **one runner** (`agents/flavors/05-desk/` — SDK-only imports, talks to the Foundation over HTTP doors alone) · **one keyless stall** · records + craft in the one substrate | **nothing — a package compiles nothing, links nothing, and never touches a Foundation import except the SDK** |
+
+The proof of the boundary: charles's process could run on another
+machine tomorrow — every conversation it has with the Foundation is
+already a network door. And the Foundation's binary has never heard the
+word "trading."
 
 ## 3. The contract — what a Capability IS
 
