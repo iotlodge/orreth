@@ -1092,3 +1092,10 @@ The closing proof was the human's: retire → reinstate on the Trading Desk, cle
 | File | Author | Note |
 |---|---|---|
 | `run.py` · `console_worker.py` · `window.html` | Fable 5 (claude-fable-5) | JB asked for MSFT and saw nothing — three gaps, all real: the tend beat was five minutes (now one — a human's ask deserves a minute); duplicate asks for one symbol now FOLD into a single walk (his own double-click taught it); and the desk shows the IN-FLIGHT truth — every ask's state (⏳ asked / 🚶 riding) and the walking strip filling live from stage records on the breathing glass, N/16 as they land. A card that says nothing breeds re-asks; now it never says nothing. |
+
+## Fable 5 — 2026-08-14 (0053 sp3 — the desks join the library: the wire that was never run)
+
+| File | Author | Note |
+|---|---|---|
+| `console_worker.py` | Fable 5 (claude-fable-5) | The projection now drinks every DISCOVERED world's chronicle (reports and reflections first, per-world cap, dark worlds skipped) unless its manifest opts out — JB's law: the librarian is the universe's obtainer; isolation (the risky-experiment door) is the one honored exception. |
+| `orreth_sim/stacks.py` | Fable 5 (claude-fable-5) | THE FIND, exposed by the human's own question: _chronicle_text flattens a KEEP-LIST of field names, and the desk's names (report · reflection · digest · rating · ticker · delta …) were never on it — a whole report flattened to NOTHING, admitted, classed, retrievable, and silent. Names matter, twice over. The desk's words join the list; his NVDA question now returns the actual decision text at score 1.0, cited. |

@@ -102,7 +102,12 @@ def _chronicle_text(body: dict, depth: int = 0) -> str:
         return ""
     keep = ("text", "intent", "why", "reply", "asked", "note", "claim", "ask",
             "objective", "words", "flavor", "rule", "name", "topic",
-            "parlor", "resident", "to")
+            "parlor", "resident", "to",
+            # the desks' words (0053 sp3 — names matter, and these were
+            # never on the list: a report flattened to NOTHING until the
+            # human's own question exposed it, 2026-08-14)
+            "report", "reflection", "digest", "rating", "ticker", "delta",
+            "executive_summary", "investment_thesis", "stage")
     out = []
     for k, v in body.items():
         if isinstance(v, str) and (k in keep and len(v) > 2):

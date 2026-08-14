@@ -5275,6 +5275,41 @@ def _stacks_node(port: int, scope: str):
             # is honest: a standing projection with a rebuild beat is sp3+
         except Exception:
             pass
+    # THE DESKS JOIN THE LIBRARY (0053 sp3, JB's strategic law 2026-08-14:
+    # "the Librarian is obtainer of knowledge for universe") - every
+    # DISCOVERED world's own chronicle flows into the projection unless its
+    # manifest opts out (isolate: the risky-experiment door; its memories
+    # stay off the universe's shelves by the human's own design). Reports
+    # and reflections ride FIRST; the stage flood never drowns them.
+    try:
+        for _wkey, _wman in CAP_GENESIS.items():
+            if _wman.get("isolate"):
+                continue                  # opted out - isolation honored
+            _wp, _ws = _wman.get("port"), _wman.get("floor")
+            if not _wp or not _ws or _wp == port:
+                continue
+            try:
+                _wr = call(_wp, "POST", "/retrieve", {
+                    "query": {"requester": seat_did,
+                              "subject": {"cohort": {"scope": _ws}},
+                              "space": "self", "time": {"from": frm},
+                              "intent": "recall", "budget": {"cost": 8},
+                              "auth": "biscuit-sim"},
+                    "token": token, "requester_scope": _ws})
+            except Exception:
+                continue                  # a dark or shut-down world skips
+            from orreth_sim import canon as _cnd
+            _wc = [h for h in _wr.get("hits", [])
+                   if _cnd.class_of({"tags": h.get("tags") or []})
+                       .startswith("chronicle-")
+                   and "asset" not in (h.get("tags") or [])]
+            _wpri = lambda h: (0 if any(t in ("report", "reflection")
+                                        for t in (h.get("tags") or [])) else 1)
+            _wc.sort(key=lambda h: h.get("occurred_at", ""), reverse=True)
+            _wc.sort(key=_wpri)
+            _keep(_wp, _wc[:60], lambda t: True)   # per-world cap, honest
+    except Exception:
+        pass
     # the metabolism's ground (wire-honesty sp2): the projection carries what
     # canon.metabolism_beat needs — ONE law, both grounds. undistilled = dialed
     # classes not yet inside any distillation's lineage; the beat metabolizes
