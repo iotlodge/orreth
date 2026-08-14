@@ -8126,7 +8126,16 @@ def witness_transcribe(port: int, scope: str, r: dict) -> None:
     """0044 sp1, the two-tier completion (0043's decisions-book precedent):
     the DAEMON's stamped card IS the testimony; a returned worker only
     transcribes it into the signed Chronicle, verbatim, saying so. vera signs
-    as the observatory's scribe — the card stays STAGED for the human."""
+    as the observatory's scribe.
+
+    AMENDED on JB's word (2026-08-14, the recycle-noise find): the card no
+    longer stands staged after the pulse has returned — by the time this
+    round reads it the worker is alive and beating this very floor, the
+    silence is in the signed Chronicle, and the ring fired once per rise.
+    A gate must wait only while its condition holds; recycle cards left
+    standing were teaching the human's eye to skip witness cards, which is
+    law 6's own definition of noise. The testimony survives in three books
+    (the daemon's, the Chronicle's, the bell's) — only the waiting ends."""
     if r["id"] in _WITNESSED:
         return
     _WITNESSED.add(r["id"])
@@ -8139,8 +8148,6 @@ def witness_transcribe(port: int, scope: str, r: dict) -> None:
         rec = node.make_memory({"did": VERA_DID, "scope": scope}, VERA, scope,
                                body, tags=["witness", "observatory"])
         call(port, "POST", "/records", rec)
-        print(f"  🔔 witness {r['id']}: the silence transcribed to the Chronicle "
-              f"({rec['id'][:22]}…) — the card waits for the human")
         # the whole (0044 sp4): the risen worker RINGS the death it could not
         # ring while dead — once per rise, and the subject is the FLOOR, so a
         # second death inside the window ages into the standing ring (law 6)
@@ -8151,6 +8158,16 @@ def witness_transcribe(port: int, scope: str, r: dict) -> None:
                              "subject": f"the worker at {scope}",
                              "age": _age_of(r.get("at")),
                              "pointer": _CONSOLE_URL})
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"reply": "the pulse returned — the silence stands in "
+                                  "the signed Chronicle "
+                                  f"({rec['id'][:22]}…) and the bell rang once "
+                                  "per rise; the witness withdraws its gate, "
+                                  "for a card must wait only while its "
+                                  "condition holds"}})
+        print(f"  🔔 witness {r['id']}: silence transcribed to the Chronicle "
+              f"({rec['id'][:22]}…) — pulse returned, gate withdrawn")
     except Exception as e:
         _WITNESSED.discard(r["id"])
         print(f"    (witness transcription failed: {e})")
