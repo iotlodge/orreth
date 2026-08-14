@@ -2041,7 +2041,7 @@ def embed_door() -> None:
                 self.wfile.write(blob)
                 return
             if route not in ("/observatory", "/governance", "/craft",
-                             "/sentences", "/desk"):
+                             "/sentences", "/desk", "/brain"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2065,6 +2065,8 @@ def embed_door() -> None:
                         urllib.parse.urlparse(self.path).query)
                     out = json.dumps(compose_desk(
                         (qs.get("key") or ["trading-desk"])[0])).encode()
+                elif route == "/brain":
+                    out = json.dumps(compose_brain()).encode()
                 else:
                     out = json.dumps(compose_governance()
                                      if route == "/governance"
@@ -9692,6 +9694,205 @@ def _bell_room_view() -> dict:
             "last": last and {"at": last["at"],
                               "repeats": last.get("repeats", 0)},
             "standing_rings": len(rows), "cooldown_s": cooldown}
+
+
+# ------------------------------------------------- the brain pull (0053 sp3)
+
+_BRAIN_CACHE: dict = {"at": 0.0, "payload": {}}
+_BRAIN_CENSUS: dict = {}      # scope → the last classified sweep, stamped
+BRAIN_CENSUS_EVERY = int(os.environ.get("ORRETH_BRAIN_CENSUS_EVERY", "300"))
+
+
+def _floor_census(port: int, scope: str) -> dict:
+    """One floor's memory classified by the Canon's own law (0039): tags in,
+    class_of out — counted, never read. Cached minutes and stamped, so the
+    glass never implies freshness it lacks. The retrieve is a WINDOW, not
+    the whole shelf: `classified` stands beside the heartbeat's true total
+    and the door confesses the difference."""
+    got = _BRAIN_CENSUS.get(scope)
+    if got and time.time() - got["at"] < BRAIN_CENSUS_EVERY:
+        return got
+    from datetime import datetime, timedelta, timezone
+    from orreth_sim import canon as _cn
+    _, seat_did = lib_seat(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc)
+           - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    hits: list = []
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did,
+                      "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm},
+                      "intent": "recall", "budget": {"cost": 8},
+                      "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+        hits = r.get("hits", [])
+    except Exception:
+        pass
+    classes: dict = {}
+    for h in hits:
+        cls = _cn.class_of({"tags": h.get("tags") or []})
+        classes[cls] = classes.get(cls, 0) + 1
+    got = {"at": time.time(), "classified": len(hits), "classes": classes,
+           "measured_at": NOW()}
+    _BRAIN_CENSUS[scope] = got
+    return got
+
+
+def compose_brain() -> dict:
+    """THE BRAIN PULL's supply line (0053 sp3 — JB's law, 2026-08-14: state
+    is TELEMETRY, never an NLP paraphrase). Instruments only, partitioned by
+    the ARCHITECTURE — universe → ecosystems → floors, read off the heartbeat
+    chain (rule 7) — and aggregated above. No capability is ever baked in:
+    a world appears solely as DATA ("tended by …", from its own manifest),
+    so the view renders any future world blind. NLP keeps the one seat it
+    earns — the yardstick panel shows SCORED RECALL RUNS of the shelf's
+    question set, because recall is the inherent ability instruments cannot
+    fake; the machine's size and spend are gauges, and gauges are read."""
+    if time.time() - _BRAIN_CACHE["at"] < 5 and _BRAIN_CACHE["payload"]:
+        return _BRAIN_CACHE["payload"]
+    now = NOW()
+    # which world tends which floor — discovery data, never a hardcoded name;
+    # shared floors belong to the rig and are attributed to no one world
+    tended: dict = {}
+    for wkey, man in CAP_GENESIS.items():
+        own = [man.get("floor")] + [f.get("scope")
+                                    for f in (man.get("floors") or [])
+                                    if not f.get("shared")]
+        for sc in own:
+            if sc:
+                tended[sc] = {"world": wkey,
+                              "name": man.get("name", wkey),
+                              "emoji": man.get("emoji", ""),
+                              "isolated": bool(man.get("isolate"))}
+    parts: list = []
+    total = 0
+    for port, scope in sorted(FLOOR_SCOPES.items(), key=lambda x: x[1]):
+        try:
+            h = call(port, "GET", "/health")
+        except Exception:
+            parts.append({"scope": scope, "state": "dark — no heartbeat"})
+            continue
+        cen = _floor_census(port, scope)
+        n = int(h.get("records") or 0)
+        total += n
+        parts.append({"scope": scope, "records": n,
+                      "high_water": h.get("high_water"),
+                      "classified": cen["classified"],
+                      "classes": cen["classes"],
+                      "census_at": cen["measured_at"],
+                      **({"tended_by": tended[scope]}
+                         if scope in tended else {}),
+                      "state": "alive"})
+    live = {p["scope"] for p in parts}
+    for scope in sorted(_down_load()):
+        if scope not in live:      # shut by the word — the hull is reclaimed,
+            parts.append({"scope": scope,       # the partition stays honest
+                          **({"tended_by": tended[scope]}
+                             if scope in tended else {}),
+                          "state": "shut down — the word stands"})
+    agg_classes: dict = {}
+    for p in parts:
+        for c, k in (p.get("classes") or {}).items():
+            agg_classes[c] = agg_classes.get(c, 0) + k
+    ecos: dict = {}
+    for p in parts:
+        seg = p["scope"].split("/")
+        if len(seg) >= 2:
+            e = "/".join(seg[:2])
+            ecos.setdefault(e, {"floors": 0, "records": 0})
+            ecos[e]["floors"] += 1
+            ecos[e]["records"] += int(p.get("records") or 0)
+    # cognition — the flight recorder's own meter, grouped by mind (always
+    # labeled) and by floor (where the tap stamped one)
+    s = FLIGHT.recorder.series
+    by_model: dict = {}
+    by_floor: dict = {}
+    usd_model: dict = {}
+    # live points AND sealed hours both wear their labels (the series is
+    # keyed by them) — the grouping is whole, not a live-window slice
+    for p in s.read("plane.tokens")["points"]:
+        m = p["labels"].get("model") or "?"
+        by_model[m] = by_model.get(m, 0) + p["value"]
+        fl = p["labels"].get("floor")
+        if fl:
+            by_floor[fl] = by_floor.get(fl, 0) + p["value"]
+    for p in s.read("plane.tokens", resolution="hourly")["points"]:
+        m = p["labels"].get("model") or "?"
+        by_model[m] = by_model.get(m, 0) + p["sum"]
+        fl = p["labels"].get("floor")
+        if fl:
+            by_floor[fl] = by_floor.get(fl, 0) + p["sum"]
+    for p in s.read("plane.usd")["points"]:
+        m = p["labels"].get("model") or "?"
+        usd_model[m] = usd_model.get(m, 0) + p["value"]
+    for p in s.read("plane.usd", resolution="hourly")["points"]:
+        m = p["labels"].get("model") or "?"
+        usd_model[m] = usd_model.get(m, 0) + p["sum"]
+    thoughts = len(s.read("plane.thoughts")["points"]) + int(sum(
+        p["count"] for p in
+        s.read("plane.thoughts", resolution="hourly")["points"]))
+    # retention — the dials as they actually stand on the metabolism's own
+    # ground: the shelf's active head where one exists, genesis where not
+    rag = next(((p, sc) for p, sc in FLOOR_SCOPES.items()
+                if sc.endswith("/e:rag/f:naive")), None)
+    dials, dials_src = None, "genesis defaults — no live floor read"
+    if rag:
+        try:
+            rows = wire_assets(rag[0], "asset", "distillation-dials",
+                               scope=rag[1])
+            if rows:
+                prof = (rows[-1][1].get("asset") or {}).get("profile") or {}
+                if prof.get("classes"):
+                    dials, dials_src = prof, "the shelf's active head"
+        except Exception:
+            pass
+    if dials is None:
+        from orreth_sim import canon as _cn
+        dials = _cn.DIALS_V1
+    # the yardstick — scored recall runs, rendered generically: whatever
+    # question set stands on the shelf, whatever runs stand on the record
+    runs: list = []
+    try:
+        for ref, b, _, _t in wire_assets(universe_port(JOIN_PORT),
+                                         "memory-standing")[-8:]:
+            runs.append({"ref": ref, "at": b.get("at") or "",
+                         "set": b.get("set") or "?",
+                         "asked": b.get("asked"), "scored": b.get("scored"),
+                         "mean": b.get("mean")})
+    except Exception:
+        pass
+    payload = {
+        "at": now,
+        "aggregate": {"floors": len(parts), "records": total,
+                      "classified": sum(int(p.get("classified") or 0)
+                                        for p in parts),
+                      "classes": agg_classes, "ecosystems": ecos},
+        "partitions": parts,
+        "cognition": {"thoughts": thoughts,
+                      "tokens_total": round(sum(by_model.values()), 2),
+                      "by_model": {k: round(v, 1) for k, v in sorted(
+                          by_model.items(), key=lambda x: -x[1])},
+                      "usd_by_model": {k: round(v, 6) for k, v in sorted(
+                          usd_model.items(), key=lambda x: -x[1])},
+                      "by_floor": {k: round(v, 1) for k, v in sorted(
+                          by_floor.items(), key=lambda x: -x[1])}},
+        "metabolism": {**_METAB_STATE, "every_s": METABOLISM_EVERY,
+                       "age_s": (int(time.time() - _METAB_LAST)
+                                 if _METAB_LAST else None),
+                       "tends": rag[1] if rag else None,
+                       "boundary": "the beat tends one floor today; the desk "
+                                   "floors await its extension — a named next"},
+        "retention": {"dials": dials.get("classes", {}), "source": dials_src},
+        "yardstick": {"runs": runs,
+                      "note": "state is read from instruments; RECALL is "
+                              "proven by questions — scored runs of the "
+                              "shelf's question set land here"},
+    }
+    _BRAIN_CACHE.update(at=time.time(), payload=payload)
+    return payload
 
 
 def compose_observatory() -> dict:
