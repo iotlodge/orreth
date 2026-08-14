@@ -1158,7 +1158,9 @@
 <div id="brainworld">
   <div id="brnhead"><b>THE BRAIN · WHAT THE MACHINE IS</b>
     <span class="dim" style="font-size:.68rem">capabilities are what it does — this is its memory, metabolism, and mind, by universe · ecosystem · floor</span>
-    <button class="dk-tab" style="margin-left:auto" onclick="brnToggle()">✕ close</button></div>
+    <button class="dk-tab" id="brn-fresh" style="margin-left:auto" onclick="brnRefresh()" title="read the instruments now — a lapsed census re-sweeps every floor, so this is where the cost lands">↻ refresh</button>
+    <button class="dk-tab" id="brn-mode" onclick="brnMode()" title="scheduled = re-read every 10s (a sweep's cost each breath) · manual = the instruments read only at your hand">breathing: manual</button>
+    <button class="dk-tab" onclick="brnToggle()">✕ close</button></div>
   <div id="brnbody"></div>
 </div>
 <div class="parlor rdr" id="reader">
@@ -4082,15 +4084,32 @@ if(location.hash.includes("cap"))setTimeout(capToggle,600);   // deep-links: #�
 /* one namespace, one law (0020): the Brain GLASS (0034) already owns
    brainToggle/renderBrain — the pull's symbols are brn*, colliding with
    nothing; only a literal brain=1 in the hash may open the pull */
-let BRN=null,_BRNTIMER=null;
+/* MANUAL BY DEFAULT (JB's word, 2026-08-14): each breath costs — health
+   on every floor, and a lapsed census re-sweeps them all. The cost spends
+   at the human's hand (↻), or on the 10s clock only when he opts in;
+   his choice survives in his own glass (localStorage, like the
+   projection) — a preference of the eye, never machine state. */
+let BRN=null,_BRNTIMER=null,BRNAUTO=localStorage.getItem("orreth-brn-auto")==="1";
 function brnToggle(){const w=$("brainworld");
   if(!w.classList.contains("capopen")&&$("capworld").classList.contains("capopen"))capToggle();
   w.classList.toggle("capopen");
   if(!w.classList.contains("capopen")){
     if(_BRNTIMER){clearInterval(_BRNTIMER);_BRNTIMER=null}
     return}
+  brnModeFace();
   if(!BRN)brnLoad();else brnRender();
-  if(!_BRNTIMER)_BRNTIMER=setInterval(brnFresh,10000);}
+  if(BRNAUTO&&!_BRNTIMER)_BRNTIMER=setInterval(brnFresh,10000);}
+function brnMode(){BRNAUTO=!BRNAUTO;
+  localStorage.setItem("orreth-brn-auto",BRNAUTO?"1":"0");
+  if(BRNAUTO){if(!_BRNTIMER)_BRNTIMER=setInterval(brnFresh,10000);brnFresh()}
+  else if(_BRNTIMER){clearInterval(_BRNTIMER);_BRNTIMER=null}
+  brnModeFace();if(BRN)brnRender();}
+function brnModeFace(){const b=$("brn-mode");
+  if(b)b.textContent=BRNAUTO?"breathing: 10s":"breathing: manual"}
+async function brnRefresh(){const b=$("brn-fresh");
+  if(b)b.textContent="↻ reading…";
+  try{BRN=await (await fetch(`${OBSD}/brain`)).json();brnRender()}catch(e){}
+  if(b)b.textContent="↻ refresh"}
 async function brnFresh(){
   if(!$("brainworld").classList.contains("capopen"))return;
   try{BRN=await (await fetch(`${OBSD}/brain`)).json();brnRender()}catch(e){}}
@@ -4161,7 +4180,7 @@ function brnRender(){
       +Y.runs.map(r=>`<tr><td style="font-family:var(--mono)">${dkEsc((r.at||"").slice(0,16))}</td><td>${dkEsc(r.set)}</td><td>${r.asked??"—"}</td><td>${r.scored??"—"}</td><td style="font-family:var(--mono)">${r.mean!=null?Number(r.mean).toFixed(2):"—"}</td></tr>`).join("")
       +`</table></div>`;
   else h+=`<div class="dim" style="font-size:.72rem">${dkEsc(Y.note||"no scored runs yet")}</div>`;
-  h+=`<div class="dim" style="font-size:.6rem;margin-top:1.2rem;color:var(--faint)">read at ${dkEsc(B.at||"")} — instruments breathe every 10s; the census sweeps on its own clock and wears its stamp</div>`;
+  h+=`<div class="dim" style="font-size:.6rem;margin-top:1.2rem;color:var(--faint)">read at ${dkEsc(B.at||"")} — ${BRNAUTO?"breathing every 10s; the census sweeps on its own clock and wears its stamp":"manual — the instruments read only at your hand (↻ above); the census sweeps when asked and wears its stamp"}</div>`;
   $("brnbody").innerHTML=h;}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("brainworld").classList.contains("capopen"))brnToggle()});
 if(/(^|[#&])brain=1/.test(location.hash))setTimeout(brnToggle,600);   // deep-link: LITERAL brain=1 only — "brain" alone belongs to the Glass
