@@ -424,8 +424,14 @@ async fn main() {
 
 /// The daemon carries its own glass — but the pane is a CLIENT of the retrieval
 /// contract (0008): every render is a tokened query; there is no privileged path.
-async fn window() -> axum::response::Html<&'static str> {
-    axum::response::Html(include_str!("window.html"))
+/// no-cache (2026-08-14): without the header, browsers cache the shell
+/// heuristically and a rebuilt glass hides behind a stale tab — a human was
+/// misled twice before this line existed. Revalidate every load; the door
+/// serves fresh bytes and a plain reload is always the truth.
+async fn window() -> ([(axum::http::HeaderName, &'static str); 1],
+                      axum::response::Html<&'static str>) {
+    ([(axum::http::header::CACHE_CONTROL, "no-cache")],
+     axum::response::Html(include_str!("window.html")))
 }
 
 /// One glass, every floor (JB 2026-07-07): the Console served by ANY floor reads and
