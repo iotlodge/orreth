@@ -4126,6 +4126,21 @@ async function brnRefresh(){
 async function brnFresh(){
   if(!$("brainworld").classList.contains("capopen")||_BRNBUSY)return;
   try{BRN=await (await fetch(`${OBSD}/brain`)).json();brnRender();brnStamp(true)}catch(e){}}
+/* running the TEST is a separate, cost-bearing act from reading the gauges
+   (JB's find: refresh looked like it should run the yardstick) — the click
+   files a card, the worker walks the run in its own thread, and the new
+   standing appends here on a later read */
+async function brnYard(){
+  const n=$("brn-yard-note"),b=$("brn-yard");
+  if(b)b.disabled=true;
+  try{
+    await fetch(`/requests`,{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({kind:"yardstick-run",
+        text:"one scored pass of the memory yardstick — the human's own click"})});
+    if(n){n.style.color="";n.textContent="the run is walking — ten questions, ten verdicts; minutes, not seconds. Press ↻ in a few minutes and the new row lands below."}
+  }catch(e){if(n){n.textContent="the ask did not land — is the floor awake?";n.style.color="var(--red)"}}
+  if(b)setTimeout(()=>{b.disabled=false},8000)}
 async function brnLoad(){
   $("brnbody").innerHTML=`<div class="dim" style="padding:2rem">the instruments are being read — first census can take a few breaths…</div>`;
   try{BRN=await (await fetch(`${OBSD}/brain`)).json()}
@@ -4188,6 +4203,9 @@ function brnRender(){
     +Object.entries(dl).map(([c,v])=>`<tr><td>${dkEsc(c)}</td><td style="font-family:var(--mono)">${v.recall_window_days??"—"}d</td><td>${v.rises?"yes":"no"}</td></tr>`).join("")
     +`</table></div><div class="dim" style="font-size:.6rem">dials read from ${dkEsc(R.source||"")}</div>`;
   h+=`<div class="brn-sec">the yardstick — recall proven by questions, scored on the record</div>`;
+  h+=`<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin:.3rem 0 .55rem">
+    <button class="dk-tab" id="brn-yard" onclick="brnYard()" title="ten questions ride the real ask lane; vera scores each under her declared ceiling — minutes, not seconds">📏 run the yardstick now</button>
+    <span class="dim" id="brn-yard-note" style="font-size:.66rem"></span></div>`;
   if((Y.runs||[]).length)
     h+=`<div style="overflow-x:auto"><table class="dk-table"><tr><th>when</th><th>set</th><th>asked</th><th>scored</th><th>mean</th></tr>`
       +Y.runs.map(r=>`<tr><td style="font-family:var(--mono)">${dkEsc((r.at||"").slice(0,16))}</td><td>${dkEsc(r.set)}</td><td>${r.asked??"—"}</td><td>${r.scored??"—"}</td><td style="font-family:var(--mono)">${r.mean!=null?Number(r.mean).toFixed(2):"—"}</td></tr>`).join("")

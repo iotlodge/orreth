@@ -9883,6 +9883,46 @@ def yardstick_run() -> bool:
 
 
 _YARD_RAN = False
+_YARD_WALKING = False
+
+
+def on_yardstick_request(port: int, r: dict) -> None:
+    """The human's own click asks for a run (JB's find: he pressed refresh
+    expecting the TEST to run — reading gauges and spending a run are
+    different acts, so the run gets its own button and its own card). The
+    walk takes minutes (ten asks, ten verdicts), so it rides its OWN thread
+    — the round keeps pulsing and the witness never mistakes a busy worker
+    for a dead one. One walk at a time; a second ask answers honestly."""
+    global _YARD_WALKING
+    if _YARD_WALKING:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"reply": "a yardstick run is already walking — its "
+                                  "standing lands in the brain pull when "
+                                  "scored"}})
+        return
+    _YARD_WALKING = True
+    print(f"  📏 the human asks for a yardstick run ({r['id']}) — "
+          "walking in its own thread")
+
+    def _walk():
+        global _YARD_WALKING
+        try:
+            ok = yardstick_run()
+            reply = ("the run stands — THE YARDSTICK in the brain pull "
+                     "holds the new row" if ok else
+                     "the run rested (unplanted set, held ceiling, or "
+                     "missing bench) — the worker's log names why")
+        except Exception as ex:
+            reply = f"the run stumbled: {str(ex)[:110]}"
+        finally:
+            _YARD_WALKING = False
+        try:
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done", "result": {"reply": reply}})
+        except Exception:
+            pass
+    threading.Thread(target=_walk, daemon=True).start()
 
 
 def yardstick_beat() -> None:
@@ -10363,6 +10403,10 @@ def main() -> None:
                         elif r.get("kind") == "witness" and r.get("status") == "staged":
                             handled.add(key)
                             witness_transcribe(port, scope, r)
+                        elif r.get("kind") == "yardstick-run" and \
+                                r.get("status") == "pending":
+                            handled.add(key)
+                            on_yardstick_request(port, r)
                         elif r.get("kind") == "craft-edit" and r.get("status") == "pending":
                             handled.add(key)
                             on_craft_edit(port, scope, r)
