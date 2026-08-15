@@ -10047,6 +10047,10 @@ def _compose_brain_locked() -> dict:
                           **({"tended_by": tended[scope]}
                              if scope in tended else {}),
                           "state": "shut down — the word stands"})
+    # one tree, one order (JB's find: shut-down floors appended at the tail
+    # sat outside their own ecosystem) — dark or alive, a floor stands in
+    # its branch
+    parts.sort(key=lambda p: p.get("scope") or "")
     agg_classes: dict = {}
     for p in parts:
         for c, k in (p.get("classes") or {}).items():

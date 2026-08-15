@@ -836,6 +836,9 @@
   .brn-part{border:1px solid var(--hair);border-radius:8px;padding:.55rem .75rem;margin:.4rem 0;
     background:var(--deep)}
   .brn-bar{height:7px;border-radius:4px;background:var(--brassdim)}
+  .brn-eco{border:1px solid var(--hair);border-radius:10px;padding:.6rem .85rem;margin:.55rem 0}
+  .brn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:.5rem}
+  .brn-grid .brn-part{margin:0}
   .dk-world{font-size:.85rem;margin-bottom:.6rem}
   .dk-law{color:var(--faint);font-size:.68rem;margin-top:.15rem}
   .dk-pick{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;margin:.5rem 0}
@@ -4146,14 +4149,14 @@ async function brnLoad(){
   try{BRN=await (await fetch(`${OBSD}/brain`)).json()}
   catch(e){$("brnbody").innerHTML=`<div class="dim" style="padding:2rem">the door did not answer — is the worker awake?</div>`;return}
   brnRender();}
-function brnBars(classes){
-  const rows=Object.entries(classes||{}).sort((a,b)=>b[1]-a[1]).slice(0,7);
+function brnBars(classes,maxrows,slim){
+  const rows=Object.entries(classes||{}).sort((a,b)=>b[1]-a[1]).slice(0,maxrows||7);
   if(!rows.length)return`<div class="dim" style="font-size:.64rem;margin-top:.2rem">census pending — the next sweep classifies this floor</div>`;
-  const top=rows[0][1]||1;
+  const top=rows[0][1]||1,L=slim?146:176,W=slim?150:210;
   return rows.map(([c,n])=>`<div style="display:flex;align-items:center;gap:.5rem;margin:.15rem 0">
-    <span style="flex:0 0 176px;font-size:.64rem;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dkEsc(c)}</span>
-    <div class="brn-bar" style="width:${Math.max(2,Math.round(n/top*210))}px"></div>
-    <span style="font-family:var(--mono);font-size:.64rem;color:var(--star)">${n.toLocaleString()}</span></div>`).join("")}
+    <span style="flex:0 0 ${L}px;font-size:.62rem;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dkEsc(c)}</span>
+    <div class="brn-bar" style="width:${Math.max(2,Math.round(n/top*W))}px"></div>
+    <span style="font-family:var(--mono);font-size:.62rem;color:var(--star)">${n.toLocaleString()}</span></div>`).join("")}
 function brnRender(){
   const B=BRN;if(!B)return;
   const A=B.aggregate||{},C=B.cognition||{},M=B.metabolism||{},R=B.retention||{},Y=B.yardstick||{};
@@ -4171,20 +4174,44 @@ function brnRender(){
       dot(e,`${(v.records||0).toLocaleString()} rec · ${v.floors} floor${v.floors===1?"":"s"}`)).join("")+`</div>`;
   h+=`<div class="brn-sec">the whole — every class across every floor</div>`+brnBars(A.classes);
   h+=`<div class="brn-sec">the partitions — universe → ecosystem → floor</div>`;
-  for(const p of (B.partitions||[])){
-    const d=Math.min(3,(p.scope||"").split("/").length-1);
-    const chips=[];
-    if(p.tended_by)chips.push(`<span class="dk-dot">${dkEsc(p.tended_by.emoji||"")} tended by <i>${dkEsc(p.tended_by.name)}</i></span>`);
-    if(p.tended_by&&p.tended_by.isolated)chips.push(`<span class="dk-dot" style="color:var(--brass)" title="the manifest opted out — this partition's memories never enter the universe's shelves">isolated by design</span>`);
-    if(p.state&&p.state!=="alive")chips.push(`<span class="dk-dot" style="color:var(--red)">${dkEsc(p.state)}</span>`);
-    h+=`<div class="brn-part" style="margin-left:${d*1.1}rem">
-      <div style="display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap">
-        <b style="color:var(--star);font-size:.78rem">${dkEsc(p.scope)}</b>
-        ${p.records!=null?`<span style="font-family:var(--mono);font-size:.68rem;color:var(--brass)">${p.records.toLocaleString()} records</span>`:""}
-        ${chips.join("")}</div>
-      ${p.classes?brnBars(p.classes):""}
-      ${p.classified!=null&&p.records!=null&&p.classified<p.records
-        ?`<div class="dim" style="font-size:.6rem;margin-top:.25rem">the census window classified ${p.classified.toLocaleString()} of ${p.records.toLocaleString()} — the total is the heartbeat's own number</div>`:""}
+  /* one tree, honestly grouped (JB's find: dark floors sat outside their
+     branch, and full-width rows read like a printout): the universe as the
+     hero card, then one bordered group per branch — the ecosystem's own
+     memory in its header, its floors as compact cards in a two-column
+     grid, dark or alive in their rightful place */
+  const chipOf=p=>{const c=[];
+    if(p.tended_by)c.push(`<span class="dk-dot">${dkEsc(p.tended_by.emoji||"")} tended by <i>${dkEsc(p.tended_by.name)}</i></span>`);
+    if(p.tended_by&&p.tended_by.isolated)c.push(`<span class="dk-dot" style="color:var(--brass)" title="the manifest opted out — this partition's memories never enter the universe's shelves">isolated by design</span>`);
+    if(p.state&&p.state!=="alive")c.push(`<span class="dk-dot" style="color:var(--red)">${dkEsc(p.state)}</span>`);
+    return c.join("")};
+  const cardOf=(p,slim)=>`<div class="brn-part">
+    <div style="display:flex;gap:.5rem;align-items:baseline;flex-wrap:wrap">
+      <b style="color:var(--star);font-size:.76rem" title="${dkEsc(p.scope)}">${dkEsc((p.scope||"").split("/").pop())}</b>
+      ${p.records!=null?`<span style="font-family:var(--mono);font-size:.66rem;color:var(--brass)">${p.records.toLocaleString()} rec</span>`:""}
+      ${chipOf(p)}</div>
+    ${p.classes?brnBars(p.classes,slim?5:7,slim):""}
+    ${p.classified!=null&&p.records!=null&&p.classified<p.records
+      ?`<div class="dim" style="font-size:.58rem;margin-top:.2rem">census classified ${p.classified.toLocaleString()} of ${p.records.toLocaleString()} — the total is the heartbeat's</div>`:""}</div>`;
+  const parts=(B.partitions||[]).slice().sort((a,b)=>(a.scope||"").localeCompare(b.scope||""));
+  const uni=parts.find(p=>((p.scope||"").split("/").length===1));
+  if(uni)h+=cardOf(uni,false);
+  const groups={};
+  for(const p of parts){const seg=(p.scope||"").split("/");
+    if(seg.length<2)continue;
+    const g=seg.slice(0,2).join("/");
+    (groups[g]=groups[g]||[]).push(p)}
+  for(const g of Object.keys(groups).sort()){
+    const rows=groups[g];
+    const head=rows.find(p=>p.scope===g);
+    const floors=rows.filter(p=>p.scope!==g);
+    const rec=rows.reduce((s,p)=>s+(p.records||0),0);
+    h+=`<div class="brn-eco">
+      <div style="display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap;margin-bottom:.3rem">
+        <b style="color:var(--brass);font-size:.74rem;letter-spacing:.05em">${dkEsc(g)}</b>
+        <span style="font-family:var(--mono);font-size:.64rem;color:var(--dim)">${rec.toLocaleString()} rec · ${rows.length} floor${rows.length===1?"":"s"}</span>
+        ${head?chipOf(head):""}</div>
+      ${head&&head.classes?brnBars(head.classes,4,true):""}
+      ${floors.length?`<div class="brn-grid" style="margin-top:.45rem">${floors.map(p=>cardOf(p,true)).join("")}</div>`:""}
     </div>`}
   h+=`<div class="brn-sec">cognition — the meter, by mind and by floor</div>`;
   const bm=C.by_model||{},um=C.usd_by_model||{},bf=C.by_floor||{};
