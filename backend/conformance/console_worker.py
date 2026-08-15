@@ -5346,16 +5346,19 @@ def _stacks_node(port: int, scope: str):
     return n, seat_kp, seat_did
 
 
-def _ask_self_knowledge(n, q: str) -> tuple[str, str]:
+def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
     """THE SELF-KNOWLEDGE STEP (0053 sp3 — the yardstick's find): some parts
     of a question are the MACHINE'S OWN STATE, not corpus text, and some
     references are indirect — both resolve from the machine's own record
     BEFORE retrieval, so the lane never guesses at what it already knows.
-    Returns (the query to retrieve with, the truth to speak first). All of
-    it is discovery data — no world, resident, or symbol is ever baked."""
+    Returns (the query to retrieve with, the truth to speak first, and
+    SETTLED — whether the record itself answered, so a weak retrieval must
+    stay silent rather than retract a true answer: vera's run-4 find, an
+    assert-then-confess reply reads as untrustworthy and IS). All of it is
+    discovery data — no world, resident, or symbol is ever baked."""
     import re as _re
     low = (q or "").lower()
-    pre, q2 = "", q
+    pre, q2, settled = "", q, False
     # (a) the isolation roster — manifest truth, never a retrieval
     if _re.search(r"\bopt(?:ed|s)?[-\s]?out\b|\bisolat(?:ed|ion|e)\b", low):
         iso = [m.get("name", k) for k, m in CAP_GENESIS.items()
@@ -5367,6 +5370,7 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str]:
                 "no ecosystem currently opts out of sharing; when one does, "
                 "its memories stay off the universe's shelves by design, and "
                 "this lane will name it without claiming to see inside. ")
+        settled = True
     # (b) the ticker ledger — reports carry their symbol; an indirect
     # reference ("the most-walked symbol") resolves by counting the record
     walks: dict = {}
@@ -5429,6 +5433,40 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str]:
             pre += (f"no memory outside the desk floors mentions {sym} — "
                     "locality holds; the desks' work stays on their own "
                     "ground. ")
+        settled = True
+    # (b3) the precise fact — a technical term plus a resolved symbol means
+    # the fact lives in a KNOWN report: quote its own sentence across walks,
+    # never a neighboring paragraph (Q1's ability: precision, not vicinity)
+    if sym:
+        want_terms = [t for t in _re.findall(r"[a-z]+(?:[-\s][a-z]+)?", low)
+                      if "-" in t] + \
+            [t for t in _re.findall(r"[a-z]{6,}", low)
+             if t not in ("symbol", "walked", "recently", "between",
+                          "reports", "records", "current", "mention",
+                          "memory", "shelves")]
+        quotes = []
+        for rid, r in sorted(n.records.items(),
+                             key=lambda x: x[1].get("occurred_at", ""),
+                             reverse=True):
+            if "report" not in (r.get("tags") or []):
+                continue
+            try:
+                body = json.loads(crypto._b64d(r["body"]).decode())
+            except Exception:
+                continue
+            if str(body.get("ticker") or "").upper() != sym:
+                continue
+            text = _body_text(body)
+            for s in _re.split(r"(?<=[.;])\s+", text):
+                if any(t in s.lower() for t in want_terms):
+                    quotes.append((r.get("occurred_at", "")[:10],
+                                   s.strip()[:180], rid))
+                    break                    # one sentence per walk
+        if quotes:
+            pre += ("from the reports themselves: " + " · ".join(
+                f"walk {when}: “{s}” [{rid[:18]}…]"
+                for when, s, rid in quotes[:2]) + ". ")
+            settled = True
     # (c) provenance — the newest report's own metadata, read, not retrieved
     if newest_report and _re.search(
             r"\bwho\s+(?:wrote|authored)\b|\bon which floor\b|"
@@ -5440,7 +5478,8 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str]:
         who = resident or (r.get("author", "")[:24] + "…")
         pre += (f"the most recent desk report{f' ({sym})' if sym else ''} was "
                 f"written by {who} on {home} at {when} [{rid[:18]}…]. ")
-    return q2, pre
+        settled = True
+    return q2, pre, settled
 
 
 def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
@@ -5482,7 +5521,7 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
             arm = {"label": label, "machine": av["machine"],
                    "tag": f"arm:{av['machine'].split(':', 1)[-1][:12]}",
                    "of": e["record"]}
-    q2, pre = _ask_self_knowledge(n, q)   # state resolves before retrieval
+    q2, pre, settled = _ask_self_knowledge(n, q)  # state resolves before retrieval
     d = dispatcher.dispatch(n, me, seat_kp, q2, origin=origin,
                             built=list(tournament.ALL_RETRIEVERS))
     n.records.pop(d["record"], None)   # an ask never cites its OWN routing —
@@ -5505,10 +5544,17 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
             pass
     cites = " · ".join(f"{c['doc']} [{c['ref'][:18]}…] {c['score']}"
                        for c in a["citations"][:3])
+    ans_txt = a["answer"]
+    if settled and a.get("confessed"):
+        # the record itself answered; a weak retrieval must not RETRACT a
+        # true answer (vera's run-4 find: assert-then-confess reads as
+        # untrustworthy and is) — the shelves simply say they add nothing
+        ans_txt = "the shelves add nothing stronger — the record itself answered above"
+        cites = ""
     # ANSWER FIRST (0053 sp3 — vera dinged replies that led with the
     # machinery's diary): what the machine knows of itself, then the
     # retrieved answer with citations, then the routing note at the tail
-    return (pre + a["answer"]
+    return (pre + ans_txt
             + (f" — citations: {cites}" if cites else "")
             + " · " + sentence(port, "note-dispatcher", flavor=d["flavor"],
                                why=d["why"], choice=d["record"][:18])
