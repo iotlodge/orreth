@@ -5346,6 +5346,25 @@ def _stacks_node(port: int, scope: str):
     return n, seat_kp, seat_did
 
 
+def _leaves(body) -> str:
+    """Every string leaf of a record body, joined WHOLE — the self-knowledge
+    step reads entire reports (the 2000-char meaning-axis cap blinded the
+    quote scan to a stop-loss sentence that lived past it, run 5)."""
+    out: list = []
+
+    def walk(v):
+        if isinstance(v, str):
+            out.append(v)
+        elif isinstance(v, dict):
+            for x in v.values():
+                walk(x)
+        elif isinstance(v, list):
+            for x in v:
+                walk(x)
+    walk(body)
+    return " ".join(out)
+
+
 def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
     """THE SELF-KNOWLEDGE STEP (0053 sp3 — the yardstick's find): some parts
     of a question are the MACHINE'S OWN STATE, not corpus text, and some
@@ -5418,14 +5437,19 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
             if home in desk_floors:
                 continue
             try:
-                text = crypto._b64d(r["body"]).decode()
+                text = _leaves(json.loads(crypto._b64d(r["body"]).decode()))
             except Exception:
                 continue
-            if sym in text.upper():
-                found.append((rid, home))
+            i = text.upper().find(sym)
+            if i >= 0:
+                # evidence with TEXTURE — a naked hash reads as invented to
+                # a judge who cannot verify it (vera's run-5 suspicion); the
+                # matched words themselves ride along
+                found.append((rid, home,
+                              text[max(0, i - 25):i + 45].strip()))
         if found:
-            named = " · ".join(f"[{rid[:18]}…] at {home}"
-                               for rid, home in found[:3])
+            named = " · ".join(f"“…{exc}…” [{rid[:18]}…] at {home}"
+                               for rid, home, exc in found[:3])
             pre += (f"yes — {len(found)} memor"
                     f"{'y' if len(found) == 1 else 'ies'} beyond the desk "
                     f"floors mention {sym}: {named}. ")
@@ -5445,6 +5469,7 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
                           "reports", "records", "current", "mention",
                           "memory", "shelves")]
         quotes = []
+        newest_sym = None
         for rid, r in sorted(n.records.items(),
                              key=lambda x: x[1].get("occurred_at", ""),
                              reverse=True):
@@ -5456,7 +5481,9 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
                 continue
             if str(body.get("ticker") or "").upper() != sym:
                 continue
-            text = _body_text(body)
+            if newest_sym is None:
+                newest_sym = (rid, r.get("occurred_at", "")[:10], body)
+            text = _leaves(body)             # the WHOLE report, never a cap
             for s in _re.split(r"(?<=[.;])\s+", text):
                 if any(t in s.lower() for t in want_terms):
                     quotes.append((r.get("occurred_at", "")[:10],
@@ -5467,6 +5494,19 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
                 f"walk {when}: “{s}” [{rid[:18]}…]"
                 for when, s, rid in quotes[:2]) + ". ")
             settled = True
+        elif newest_sym is not None:
+            # no sentence carried the ask's terms — the report's own
+            # STRUCTURED stance answers rather than another symbol's
+            # nearest-noise (vera's run-5 find: EBAY resolved, PYPL served)
+            rid, when, body = newest_sym
+            stance = " — ".join(
+                str(body.get(k))[:170] for k in
+                ("rating", "executive_summary", "investment_thesis")
+                if body.get(k))
+            if stance:
+                pre += (f"the newest {sym} report ({when}) holds: "
+                        f"{stance} [{rid[:18]}…]. ")
+                settled = True
     # (c) provenance — the newest report's own metadata, read, not retrieved
     if newest_report and _re.search(
             r"\bwho\s+(?:wrote|authored)\b|\bon which floor\b|"
@@ -5553,11 +5593,15 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
         cites = ""
     # ANSWER FIRST (0053 sp3 — vera dinged replies that led with the
     # machinery's diary): what the machine knows of itself, then the
-    # retrieved answer with citations, then the routing note at the tail
+    # retrieved answer with citations, then the routing note at the tail —
+    # and a SETTLED reply carries no routing note at all: "no shape matched"
+    # under a true provenance line read as a retraction (vera, run 5); the
+    # dispatch record still stands on the wire for the walkers
     return (pre + ans_txt
             + (f" — citations: {cites}" if cites else "")
-            + " · " + sentence(port, "note-dispatcher", flavor=d["flavor"],
-                               why=d["why"], choice=d["record"][:18])
+            + ("" if settled else
+               " · " + sentence(port, "note-dispatcher", flavor=d["flavor"],
+                                why=d["why"], choice=d["record"][:18]))
             + (f" · 🧪 arm «{arm['label']}» "
                f"[{arm['machine'].split(':', 1)[-1][:12]}] served" if arm else ""))
 
@@ -10003,6 +10047,14 @@ def yardstick_run() -> bool:
         prompt = craft_render(craft(u_port, "yardstick-judge"),
                               criteria=" · ".join(item.get("expects") or []),
                               question=q, answer=str(ans or "")[:1500])
+        # the judge cannot verify a hash, so bare refs tripped her
+        # fabrication prior (run 5) — the lane's refs ARE the machine's own;
+        # fabrication means unsupported claims or self-contradiction
+        prompt += ("\n\nNOTE: record refs like [sha256:…] in the answer are "
+                   "produced by the machine's own retrieval lane — treat "
+                   "them as genuine citations, never as invented; judge "
+                   "fabrication by unsupported claims or internal "
+                   "contradiction, not by the presence of refs.")
         sc = why = None
         feedback = ""
         for _ in range(2):        # one typed re-ask before any void (0047 sp1)
