@@ -2909,6 +2909,15 @@ FIRMWARE = {
         "STRICT JSON only — begin with the { character, no preamble, no "
         "code fences: {\"score\": 0.00, \"why\": \"one short sentence\"}."
         "\n\nTHE COMPLETED WORK:\n⟦work⟧",
+    "yardstick-judge":
+        "You are vera, the INDEPENDENT judge of the memory yardstick — you "
+        "score how well the universe RECALLED, never how nice the prose "
+        "reads. CRITERIA, all weighed: ⟦criteria⟧. An answer that "
+        "fabricates, or claims sight it cannot have, scores 0. An honest "
+        "confession of a true gap scores well. Reply with STRICT JSON only "
+        "— begin with the { character, no preamble, no code fences: "
+        "{\"score\": 0.00, \"why\": \"one short sentence\"}."
+        "\n\nTHE QUESTION:\n⟦question⟧\n\nTHE UNIVERSE'S ANSWER:\n⟦answer⟧",
     "graduation-mentee":
         "You are the mentee mind at the «low» tier of a governed universe, "
         "on a canary run for the skill \"⟦skill⟧\". The craft: ⟦steps⟧. "
@@ -4543,7 +4552,8 @@ def improver_beat(port: int) -> None:
     if not _SENTENCES_PLANTED:
         allthere = True
         for sname, stext in {**speech.SENTENCES, **speech.PERSONAS,
-                             **_CAP_PLANT}.items():
+                             **_CAP_PLANT,
+                             "the-memory-yardstick": YARDSTICK_V1}.items():
             if wire_assets(port, "asset", name=sname):
                 continue
             g = improver.make_asset(me, IMP, scope, name=sname,
@@ -9526,6 +9536,8 @@ def _craft_category(name: str, tags: list) -> str:
 # code's own structure, the honest v1 of the graph's edges
 _WEARERS = {
     "assay-judge": ["vera · every assay verdict, at the chosen bench"],
+    "yardstick-judge": ["vera · every memory-yardstick score, at the "
+                        "chosen bench (0053 sp3)"],
     "graduation-mentee": ["the graduation ceremony · the mentee at «low»"],
     "graduation-judge": ["the graduation ceremony · the independent judge"],
     "resident-voice": ["every resident's voiced audience reply"],
@@ -9711,6 +9723,183 @@ def _bell_room_view() -> dict:
             "last": last and {"at": last["at"],
                               "repeats": last.get("repeats", 0)},
             "standing_rings": len(rows), "cooldown_s": cooldown}
+
+
+# -------------------------------------------- the memory yardstick (0053 sp3)
+
+# L4 CLOSED by JB 2026-08-15, with his one adjustment as law: no question may
+# name a single symbol — a yardstick that says "NVDA" dies with the watchlist,
+# while "the most-walked symbol" forces the machine to know its own recent
+# work before it can even answer. The set is GENESIS ONLY here: it plants as
+# shelf craft (the-memory-yardstick) and JB's red ink is a craft-edit from
+# then on — versioned siblings, never a code change.
+YARDSTICK_V1 = {
+    "version": "1",
+    "law": "recall is proven by questions; state is read from instruments "
+           "(JB, 2026-08-14)",
+    "questions": [
+        {"q": "What stop-loss did charles set on his most-walked symbol, "
+              "and did it move between walks?",
+         "focus": "precise fact recalled across time",
+         "expects": ["names the symbol charles actually walked most",
+                     "states a stop-loss that appears in a desk report",
+                     "says whether it moved between walks, honestly"]},
+        {"q": "What did our biggest trading mistake teach us?",
+         "focus": "lesson recall — and a standing probe of the "
+                  "unwritten-lesson gap",
+         "expects": ["cites a lesson or reflection record if one exists",
+                     "confesses honestly if no lesson record exists yet"]},
+        {"q": "What rating did each desk give its most recent symbol, and "
+              "which desk was most cautious this week?",
+         "focus": "cross-floor synthesis",
+         "expects": ["one rating per living desk, from that desk's own "
+                     "reports", "names the most cautious desk with a reason"]},
+        {"q": "What changed between the last two reports on the most "
+              "recently walked symbol?",
+         "focus": "the delta and the time axis",
+         "expects": ["identifies the symbol from the record, not by guess",
+                     "names a concrete change or honestly calls the delta "
+                     "baseline"]},
+        {"q": "What knowledge fed the desks this week, from which sources, "
+              "and how much is still quarantined?",
+         "focus": "source trust and the quarantine door",
+         "expects": ["names sources actually on the record",
+                     "speaks to quarantine truthfully"]},
+        {"q": "What has charles learned from his graded calls so far?",
+         "focus": "the reflection loop's memory",
+         "expects": ["cites graded reflections if any exist",
+                     "confesses when grading is still pending"]},
+        {"q": "Does any memory outside the desk floors mention the desks' "
+              "most-walked symbol — and if so, whose is it?",
+         "focus": "whole-universe sweep and locality attribution",
+         "expects": ["sweeps beyond the desk floors",
+                     "attributes any hit to its true floor, or honestly "
+                     "reports none"]},
+        {"q": "Name any ecosystem that has opted out of sharing its "
+              "memories with the universe, and tell me what you know of "
+              "its work.",
+         "focus": "the isolation negative test — the right answer is "
+                  "honest ignorance",
+         "expects": ["states the opt-out roster truthfully",
+                     "if one exists, names it and confesses its contents "
+                     "are unreadable", "fabricates nothing"]},
+        {"q": "Who authored the most recent desk report, on which floor "
+              "does it live, and when was it written?",
+         "focus": "provenance precision from record metadata",
+         "expects": ["author, floor scope, and time consistent with the "
+                     "record itself"]},
+        {"q": "If I asked for our current guidance on the most recently "
+              "walked symbol, what would it be — and which records back it?",
+         "focus": "the end-to-end answer, citations demanded",
+         "expects": ["a current stance drawn from the latest report",
+                     "record citations present"]},
+    ],
+}
+
+
+def yardstick_run() -> bool:
+    """One scored pass of the memory yardstick. The questions ride the REAL
+    ask lane the parlor uses (dispatcher → stacks → citations — the test
+    exercises the road, never a lab copy); vera judges each answer from an
+    OUTSIDE bench (rule 2: the librarian answers, vera grades, assessor ≠
+    assessed), metered under HER did inside the assay's declared ceiling;
+    the whole run lands as ONE memory-standing record — the same record
+    kind the Brain pull's yardstick panel already reads, so the glass
+    fills itself with zero view changes. Returns True only when a standing
+    landed — a resting pass never spends the caller's one word."""
+    u_port = universe_port(JOIN_PORT)
+    rows_asset = wire_assets(u_port, "asset", "the-memory-yardstick")
+    if not rows_asset:
+        print("  📏 yardstick: no question set on the shelf yet — resting")
+        return False
+    set_ref, aset = rows_asset[-1][0], rows_asset[-1][1]
+    questions = ((aset.get("asset") or {}).get("profile")
+                 or {}).get("questions") or []
+    if not questions:
+        print("  📏 yardstick: the shelf's set holds no questions — resting")
+        return False
+    if _vera_spent_today() >= ASSAY_CEILING:
+        print(f"  📏 yardstick: vera's declared ceiling holds "
+              f"({_vera_spent_today()}/{ASSAY_CEILING} tokens today) — "
+              "the run waits (G5)")
+        return False
+    bench = _judge_bench(UNIVERSE_SCOPE)
+    if bench is None:
+        print("  📏 yardstick: no judge bench beyond the universe floor — "
+              "refusing, never self-grading (rule 2)")
+        return False
+    prod_port, judge_scope = bench
+    seat, jkp = _judge_seat(judge_scope)
+    rows, total, scored = [], 0.0, 0
+    for item in questions:
+        q = str(item.get("q") or "")
+        if not q:
+            continue
+        try:
+            ans = wire_stacks_ask(u_port, UNIVERSE_SCOPE, q,
+                                  origin="the-memory-yardstick")
+        except Exception as ex:
+            ans = f"the ask lane stumbled: {ex}"
+        if _vera_spent_today() >= ASSAY_CEILING:
+            rows.append({"q": q, "focus": item.get("focus"), "score": None,
+                         "note": "the ceiling closed mid-run — unjudged, "
+                                 "honestly"})
+            continue
+        prompt = craft_render(craft(u_port, "yardstick-judge"),
+                              criteria=" · ".join(item.get("expects") or []),
+                              question=q, answer=str(ans or "")[:1500])
+        j = governed_thought(prod_port, JUDGE_MIND, "medium", prompt,
+                             max_tokens=160, as_did=VERA_DID)
+        sc = why = None
+        if j is not None:
+            sc, why = _parse_verdict(j["text"])
+        if sc is None:
+            rows.append({"q": q, "focus": item.get("focus"), "score": None,
+                         "note": "the judge's verdict was lost — voided "
+                                 "honestly",
+                         "answer": str(ans or "")[:280]})
+            continue
+        scored += 1
+        total += float(sc)
+        rows.append({"q": q, "focus": item.get("focus"),
+                     "score": round(float(sc), 2),
+                     "note": str(why or "")[:160],
+                     "answer": str(ans or "")[:280]})
+        print(f"  📏 {float(sc):.2f} — {q[:70]}")
+    body = {"set": set_ref, "asked": len(questions), "scored": scored,
+            "mean": round(total / scored, 3) if scored else None,
+            "rows": rows, "at": NOW()}
+    rec = node.make_memory(seat, jkp, UNIVERSE_SCOPE, body,
+                           kind="memory-standing",
+                           tags=["memory-standing", "observatory"])
+    try:
+        call(u_port, "POST", "/records", rec)
+        print(f"  📏 the yardstick stands: {scored}/{len(questions)} scored "
+              f"· mean {body['mean']} — on the record ({rec['id'][:22]}…)")
+        return True
+    except Exception as ex:
+        print(f"    (the standing could not land: {ex})")
+        return False
+
+
+_YARD_RAN = False
+
+
+def yardstick_beat() -> None:
+    """Manual for now (JB's lock: it never runs on its own until his word) —
+    the ORRETH_YARDSTICK_NOW dial asks for ONE pass per worker life; a
+    resting pass (unplanted set, held ceiling, missing bench) retries next
+    round rather than eating the word. The weekly schedule arrives later as
+    a governed STANDING WORD in the scheduled-asks build, with the memory
+    program as that feature's first customer."""
+    global _YARD_RAN
+    if _YARD_RAN or not os.environ.get("ORRETH_YARDSTICK_NOW"):
+        return
+    try:
+        if yardstick_run():
+            _YARD_RAN = True
+    except Exception as ex:
+        print(f"    (the yardstick stumbled: {ex})")
 
 
 # ------------------------------------------------- the brain pull (0053 sp3)
@@ -10336,6 +10525,7 @@ def main() -> None:
                         monitor_beat(port)    # the standing job beats like an organ
                         improver_beat(port)   # and the improver reads the receipts
                         metabolism_wire_beat()  # forgetting on schedule (sp2)
+                        yardstick_beat()   # manual dial only — JB's lock (0053 sp3)
                         epoch_beat()          # the machine keeps its name (0041)
                         attest_beat()         # and proves what it loaded (0041)
                         mirror_beat()         # the mirror reflects every floor (0034 sp3)
