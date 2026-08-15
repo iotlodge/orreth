@@ -5492,16 +5492,21 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
                 newest_sym = (rid, r.get("occurred_at", "")[:10], body)
             text = _leaves(body)             # the WHOLE report, never a cap
             best = None
-            hyph = [t for t in want_terms if "-" in t]
+            # hyphen and space are one breath ("stop-loss" asks, "Stop
+            # Loss: 208" answers — run 7's whole stubbornness), and a bold
+            # line is a sentence wearing markdown, not scaffolding
+            norm = lambda s: _re.sub(r"[-\s]+", " ", s.lower())
+            hyph = [norm(t) for t in want_terms if "-" in t]
+            plain = [norm(t) for t in want_terms]
             for s in _re.split(r"(?<=[.;])\s+|\n+", text):
-                s = s.strip()
-                if len(s) < 12 or s.startswith(("---", "#", "*", "|")):
-                    continue                 # markdown scaffolding is not
-                #                              a sentence (run 6's junk quote)
-                if hyph and any(t in s.lower() for t in hyph):
+                s = s.strip().lstrip("*•# ").strip()
+                if len(s) < 12 or s.startswith(("---", "|")):
+                    continue                 # true scaffolding only
+                ns = norm(s)
+                if hyph and any(t in ns for t in hyph):
                     best = s                 # the technical term wins outright
                     break
-                if best is None and any(t in s.lower() for t in want_terms):
+                if best is None and any(t in ns for t in plain):
                     best = s
             if best:
                 quotes.append((r.get("occurred_at", "")[:10],
