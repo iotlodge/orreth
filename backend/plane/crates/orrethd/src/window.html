@@ -4144,6 +4144,22 @@ async function brnYard(){
     if(n){n.style.color="";n.textContent="the run is walking — ten questions, ten verdicts; minutes, not seconds. Press ↻ in a few minutes and the new row lands below."}
   }catch(e){if(n){n.textContent="the ask did not land — is the floor awake?";n.style.color="var(--red)"}}
   if(b)setTimeout(()=>{b.disabled=false},8000)}
+/* the standing word's reins: staging waits at the gate for the human's one
+   approval; resting is gateless and immediate (rule 11) */
+async function brnSched(action){
+  const n=$("brn-yard-note");
+  try{
+    await fetch(`/requests`,{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({kind:"scheduled-ask",what:"yardstick",
+        ...(action?{action}:{}),
+        text:action==="rest"
+          ?"rest the weekly yardstick schedule — the human's word"
+          :"stage the weekly yardstick schedule — ten questions, scored, every seven days"})});
+    if(n){n.style.color="";n.textContent=action==="rest"
+      ?"rested — immediate, no gate; the standings stay on the record"
+      :"staged — the terms wait in your Inbox; your one approval starts the weekly rhythm"}
+  }catch(e){if(n){n.textContent="the ask did not land — is the floor awake?";n.style.color="var(--red)"}}}
 async function brnLoad(){
   $("brnbody").innerHTML=`<div class="dim" style="padding:2rem">the instruments are being read — first census can take a few breaths…</div>`;
   try{BRN=await (await fetch(`${OBSD}/brain`)).json()}
@@ -4230,8 +4246,13 @@ function brnRender(){
     +Object.entries(dl).map(([c,v])=>`<tr><td>${dkEsc(c)}</td><td style="font-family:var(--mono)">${v.recall_window_days??"—"}d</td><td>${v.rises?"yes":"no"}</td></tr>`).join("")
     +`</table></div><div class="dim" style="font-size:.6rem">dials read from ${dkEsc(R.source||"")}</div>`;
   h+=`<div class="brn-sec">the yardstick — recall proven by questions, scored on the record</div>`;
+  const sch=Y.schedule||{};
   h+=`<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin:.3rem 0 .55rem">
     <button class="dk-tab" id="brn-yard" onclick="brnYard()" title="ten questions ride the real ask lane; vera scores each under her declared ceiling — minutes, not seconds">📏 run the yardstick now</button>
+    ${sch.standing
+      ?`<span class="dk-dot">standing<i>every ${sch.every_days}d${sch.next_due?` · next due ${dkEsc(sch.next_due)}`:""}</i></span>
+        <button class="dk-tab" onclick="brnSched('rest')" title="resting never needs a gate (rule 11) — the standings already taken stay on the record">rest the schedule</button>`
+      :`<button class="dk-tab" onclick="brnSched('')" title="staged for your one approval — weekly, under vera's declared ceiling, rest it anytime without a gate">⏰ stage the weekly schedule</button>`}
     <span class="dim" id="brn-yard-note" style="font-size:.66rem"></span></div>`;
   if((Y.runs||[]).length)
     h+=`<div style="overflow-x:auto"><table class="dk-table"><tr><th>when</th><th>set</th><th>asked</th><th>scored</th><th>mean</th></tr>`

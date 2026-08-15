@@ -10128,6 +10128,119 @@ def yardstick_run() -> bool:
 _YARD_RAN = False
 _YARD_WALKING = False
 _ROUTE_STAGED = False
+_SCHED_LAST_TRY = 0.0
+
+
+def _sched_head(u_port: int, what: str = "yardstick") -> dict | None:
+    """The newest scheduled-ask word for `what` — head wins, a rest is a
+    sibling, never an erasure (the desk-watch's law, generalized)."""
+    rows = [b.get("scheduled_ask") or {} for _, b, _, _t
+            in wire_assets(u_port, "scheduled-ask")
+            if (b.get("scheduled_ask") or {}).get("what") == what]
+    return rows[-1] if rows else None
+
+
+def on_scheduled_ask(port: int, scope: str, r: dict) -> None:
+    """SCHEDULED ASKS (0053 sp3 — the feature JB named, born with the memory
+    program as its first customer): a standing word that repeats a governed
+    ask on a cadence. Staging and approval follow the desk-watch's exact
+    law — the consequence waits for the human (0012), the word is a signed
+    record, resting is gateless and immediate (rule 11), and a rest is a
+    sibling on the record, never an erasure. v1 knows one ask: the
+    yardstick, weekly; residents' own scheduled asks extend `what` when
+    the Studio lands."""
+    u_port = universe_port(JOIN_PORT)
+    seat_kp, seat_did = lib_seat(UNIVERSE_SCOPE)
+    agent = {"did": seat_did, "scope": UNIVERSE_SCOPE}
+    what = str(r.get("what") or "yardstick")[:24]
+    if r.get("action") == "rest" and r.get("status") == "pending":
+        rec = make_memory(agent, seat_kp, UNIVERSE_SCOPE,
+                          {"scheduled_ask": {"what": what, "posture": "rested",
+                                             "stopped_by": "the human's word",
+                                             "request": str(r.get("id") or "")}},
+                          kind="semantic", tags=["scheduled-ask", what])
+        call(u_port, "POST", "/records", rec)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": f"rested by the human's word — the {what} schedule "
+                        "stops (rule 11: stopping never needs a gate); the "
+                        "standings already taken stay on the record"})
+        print(f"  ↳ scheduled-ask {r['id']}: {what} RESTED on the human's word")
+        return
+    if r.get("status") == "pending":
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"note": "consequence waits for you (0012)",
+                         "terms": f"the {what} runs WEEKLY — ten questions "
+                                  "through the real ask lane, ten verdicts "
+                                  "under vera's own did inside her declared "
+                                  "daily ceiling (~15k tokens per run); each "
+                                  "run lands one standing in the Brain pull; "
+                                  "standing until you rest it, and resting "
+                                  "never needs a gate"}})
+        print(f"  ↳ scheduled-ask {r['id']}: {what} staged — the human "
+              "holds the word")
+        return
+    if r.get("status") == "approved":
+        rec = make_memory(agent, seat_kp, UNIVERSE_SCOPE,
+                          {"scheduled_ask": {"what": what, "every_days": 7,
+                                             "posture": "standing",
+                                             "approved": str(r.get("id") or "")}},
+                          kind="semantic", tags=["scheduled-ask", what])
+        call(u_port, "POST", "/records", rec)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": f"the standing word stands — the {what} runs weekly "
+                        "until you rest it; its standings land in the Brain "
+                        "pull as they score"})
+        print(f"  ↳ scheduled-ask {r['id']}: {what} — the standing word stands")
+
+
+def scheduled_ask_beat() -> None:
+    """The runner honors the standing word: when the yardstick's schedule
+    stands and the last standing is older than its cadence, one run walks —
+    in its own thread, single-flight, under the same ceiling law as every
+    run. An hourly cooldown keeps a closed ceiling from becoming a busy
+    loop; the word outlives the process because the word is a record."""
+    global _SCHED_LAST_TRY, _YARD_WALKING
+    if _YARD_WALKING or time.time() - _SCHED_LAST_TRY < 3600:
+        return
+    u_port = universe_port(JOIN_PORT)
+    try:
+        head = _sched_head(u_port)
+    except Exception:
+        return
+    if not head or head.get("posture") != "standing":
+        return
+    _SCHED_LAST_TRY = time.time()
+    try:
+        stand = wire_assets(u_port, "memory-standing")
+        last_at = (stand[-1][1].get("at") or "") if stand else ""
+    except Exception:
+        return
+    from datetime import datetime, timedelta, timezone
+    due = True
+    if last_at:
+        try:
+            then = datetime.fromisoformat(last_at.replace("Z", "+00:00"))
+            due = (datetime.now(timezone.utc) - then) >= timedelta(
+                days=int(head.get("every_days") or 7))
+        except Exception:
+            pass
+    if not due:
+        return
+    _YARD_WALKING = True
+    print("  📏 the standing word is due — a scheduled yardstick run walks")
+
+    def _walk():
+        global _YARD_WALKING
+        try:
+            yardstick_run()
+        except Exception as ex:
+            print(f"    (the scheduled yardstick stumbled: {ex})")
+        finally:
+            _YARD_WALKING = False
+    threading.Thread(target=_walk, daemon=True).start()
 
 
 def stage_routing_revision() -> None:
@@ -10295,6 +10408,29 @@ def _floor_census(port: int, scope: str) -> dict:
     return got
 
 
+def _brain_schedule(runs: list) -> dict:
+    """The standing word's face for the glass: whether the weekly schedule
+    stands, and when the next run falls due — read from the word and the
+    standings themselves (the standings are their own clock)."""
+    try:
+        head = _sched_head(universe_port(JOIN_PORT))
+    except Exception:
+        head = None
+    if not head or head.get("posture") != "standing":
+        return {"standing": False}
+    out = {"standing": True, "every_days": int(head.get("every_days") or 7)}
+    if runs:
+        try:
+            from datetime import datetime, timedelta, timezone
+            then = datetime.fromisoformat(
+                str(runs[-1].get("at")).replace("Z", "+00:00"))
+            out["next_due"] = (then + timedelta(days=out["every_days"])
+                               ).strftime("%Y-%m-%dT%H:%MZ")
+        except Exception:
+            pass
+    return out
+
+
 def compose_brain() -> dict:
     """THE BRAIN PULL's supply line (0053 sp3 — JB's law, 2026-08-14: state
     is TELEMETRY, never an NLP paraphrase). Instruments only, partitioned by
@@ -10452,6 +10588,7 @@ def _compose_brain_locked() -> dict:
                                    "floors await its extension — a named next"},
         "retention": {"dials": dials.get("classes", {}), "source": dials_src},
         "yardstick": {"runs": runs,
+                      "schedule": _brain_schedule(runs),
                       "note": "state is read from instruments; RECALL is "
                               "proven by questions — scored runs of the "
                               "shelf's question set land here"},
@@ -10718,6 +10855,10 @@ def main() -> None:
                                 r.get("status") == "pending":
                             handled.add(key)
                             on_yardstick_request(port, r)
+                        elif r.get("kind") == "scheduled-ask" and \
+                                r.get("status") in ("pending", "approved"):
+                            handled.add(key)
+                            on_scheduled_ask(port, scope, r)
                         elif r.get("kind") == "craft-edit" and r.get("status") == "pending":
                             handled.add(key)
                             on_craft_edit(port, scope, r)
@@ -10889,6 +11030,7 @@ def main() -> None:
                         improver_beat(port)   # and the improver reads the receipts
                         metabolism_wire_beat()  # forgetting on schedule (sp2)
                         yardstick_beat()   # manual dial only — JB's lock (0053 sp3)
+                        scheduled_ask_beat()  # the standing word, honored weekly
                         stage_routing_revision()  # the yardstick's evidence rides the lane
                         epoch_beat()          # the machine keeps its name (0041)
                         attest_beat()         # and proves what it loaded (0041)
