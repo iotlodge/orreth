@@ -119,6 +119,13 @@ RETRIEVERS = {
 }
 
 
+# THE CONFESSION FLOOR (0053 sp3 — the yardstick's find, 2026-08-15): a weak
+# best match must never wear the answer's clothes. Below this floor the reply
+# LEADS with the honest miss and the hits ride demoted, named as nearest —
+# vera's law scores a true confession high and served noise zero.
+CONFESSION_FLOOR = 0.3
+
+
 def answer_as(node, flavor: str, query: str) -> dict:
     """One door for every built row: retrieve by flavor, answer with citations
     — the shape the Dispatcher routes into and the standings will grade."""
@@ -130,6 +137,12 @@ def answer_as(node, flavor: str, query: str) -> dict:
     lines = [f"“{h['text'][:160].strip()}”"
              + (f" ({h['pair']})" if h.get("pair") else "")
              + f" [{h['ref'][:18]}…]" for h in hits[:2]]
+    cites = [{"ref": h["ref"], "doc": h["doc"], "score": h["score"]}
+             for h in hits]
+    if hits[0]["score"] < CONFESSION_FLOOR:
+        return {"answer": "the shelves hold no strong answer to this — the "
+                          "NEAREST records, named as nearest and not as "
+                          "answers: " + " · ".join(lines),
+                "flavor": flavor, "citations": cites, "confessed": True}
     return {"answer": " · ".join(lines), "flavor": flavor,
-            "citations": [{"ref": h["ref"], "doc": h["doc"],
-                           "score": h["score"]} for h in hits]}
+            "citations": cites}

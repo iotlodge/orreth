@@ -50,6 +50,11 @@ _SHAPES = (
                               r"between|depends? on|linked?|who knows)\b")),
     ("multi-source", re.compile(r"\b(compare|across|versus|vs\.?|difference between|"
                                 r"both|all sources)\b")),
+    # the yardstick's find (0053 sp3): each-and-which asks span subjects —
+    # they decompose per subject and recompose, or they serve noise
+    ("comparative", re.compile(r"\beach\s+\w+\b|\bwhich\s+\w+\s+(?:was|is|gave|"
+                               r"has|did)\b|\bmost\s+\w+\s+(?:this|last)\s+week\b|"
+                               r"\bper\s+(?:desk|floor|world|resident)\b")),
     ("precision", re.compile(r"(\"[^\"]+\"|“[^”]+”|\bexact(?:ly)?\b|\bverbatim\b|"
                              r"\bword for word\b)")),
 )

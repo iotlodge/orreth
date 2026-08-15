@@ -5223,7 +5223,7 @@ def _stacks_node(port: int, scope: str):
             "token": token, "requester_scope": scope})
     except Exception:
         return None, seat_kp, seat_did
-    def _keep(src_port, hits, want):
+    def _keep(src_port, hits, want, home=None):
         for h in hits:
             tags = h.get("tags") or []
             if not want(tags):
@@ -5249,6 +5249,10 @@ def _stacks_node(port: int, scope: str):
                                        # metabolism ages by occurred_at (sp2)
                                        "occurred_at": h.get("occurred_at", ""),
                                        "derived_from": h.get("derived_from") or [],
+                                       # provenance rides with the record
+                                       # (0053 sp3): whose word, whose floor
+                                       "author": h.get("author", ""),
+                                       "home": home or scope,
                                        "body": crypto._b64e(crypto.canonical(body))}
     _keep(port, r.get("hits", []),
           lambda t: ("stacks" in t and ("document" in t or "tournament" in t))
@@ -5283,7 +5287,8 @@ def _stacks_node(port: int, scope: str):
                       reverse=False)
             cand.sort(key=lambda h: h.get("occurred_at", ""), reverse=True)
             cand.sort(key=pri)
-            _keep(u_port, cand[:120], lambda t: True)   # newest 120 — the cap
+            _keep(u_port, cand[:120], lambda t: True,
+                  home=UNIVERSE_SCOPE)                  # newest 120 — the cap
             # is honest: a standing projection with a rebuild beat is sp3+
         except Exception:
             pass
@@ -5319,7 +5324,7 @@ def _stacks_node(port: int, scope: str):
                                         for t in (h.get("tags") or [])) else 1)
             _wc.sort(key=lambda h: h.get("occurred_at", ""), reverse=True)
             _wc.sort(key=_wpri)
-            _keep(_wp, _wc[:60], lambda t: True)   # per-world cap, honest
+            _keep(_wp, _wc[:60], lambda t: True, home=_ws)  # per-world cap, honest
     except Exception:
         pass
     # the metabolism's ground (wire-honesty sp2): the projection carries what
@@ -5341,11 +5346,111 @@ def _stacks_node(port: int, scope: str):
     return n, seat_kp, seat_did
 
 
+def _ask_self_knowledge(n, q: str) -> tuple[str, str]:
+    """THE SELF-KNOWLEDGE STEP (0053 sp3 — the yardstick's find): some parts
+    of a question are the MACHINE'S OWN STATE, not corpus text, and some
+    references are indirect — both resolve from the machine's own record
+    BEFORE retrieval, so the lane never guesses at what it already knows.
+    Returns (the query to retrieve with, the truth to speak first). All of
+    it is discovery data — no world, resident, or symbol is ever baked."""
+    import re as _re
+    low = (q or "").lower()
+    pre, q2 = "", q
+    # (a) the isolation roster — manifest truth, never a retrieval
+    if _re.search(r"\bopt(?:ed|s)?[-\s]?out\b|\bisolat(?:ed|ion|e)\b", low):
+        iso = [m.get("name", k) for k, m in CAP_GENESIS.items()
+               if m.get("isolate")]
+        pre += (("the isolation roster, from the manifests themselves: "
+                 + ", ".join(iso) + " keep their memories off the universe's "
+                 "shelves — their contents are unreadable here by the "
+                 "human's own design. ") if iso else
+                "no ecosystem currently opts out of sharing; when one does, "
+                "its memories stay off the universe's shelves by design, and "
+                "this lane will name it without claiming to see inside. ")
+    # (b) the ticker ledger — reports carry their symbol; an indirect
+    # reference ("the most-walked symbol") resolves by counting the record
+    walks: dict = {}
+    newest_report = None
+    for rid, r in n.records.items():
+        tags = r.get("tags") or []
+        if "report" not in tags:
+            continue
+        try:
+            body = json.loads(crypto._b64d(r["body"]).decode())
+        except Exception:
+            continue
+        sym = str(body.get("ticker") or "").upper()
+        when = r.get("occurred_at", "")
+        if sym:
+            e = walks.setdefault(sym, {"n": 0, "last": ""})
+            e["n"] += 1
+            e["last"] = max(e["last"], when)
+        if newest_report is None or when > newest_report[1]:
+            newest_report = (rid, when, r, sym)
+    from orreth_sim import dispatcher as _dsp
+    sym = None
+    if walks and "comparative" not in _dsp.classify(q) and _re.search(
+            r"\bmost[-\s]?(?:walked|recent(?:ly)?(?:\s+walked)?)"
+            r"\b[^.?]{0,40}\bsymbol\b|\bmost[-\s]walked\b", low):
+        # a comparative ask spans SUBJECTS — resolving it to one symbol
+        # poisoned the per-desk question (vera's note, run 3); the
+        # resolver stands aside and lets the decomposing row work
+        top = sorted(walks.items(), key=lambda x: (-x[1]["n"], x[1]["last"]))[0]
+        latest = sorted(walks.items(), key=lambda x: x[1]["last"])[-1]
+        sym = (latest if "recent" in low else top)[0]
+        cnt = walks[sym]["n"]
+        pre += (f"that reference resolves on the record to {sym} "
+                f"({cnt} report{'s' if cnt != 1 else ''} on the shelves) — "
+                "what follows is what the shelves hold on it. ")
+        q2 = f"{q} {sym}"          # the literal joins the ask — lexical
+        #                            retrieval bites on the resolved name
+    # (b2) the locality sweep — "outside the desk floors" is an attribution
+    # question the projection itself answers: whose memory, on whose floor
+    if sym and _re.search(r"\b(?:outside|beyond)\b[^.?]{0,30}\bdesk", low):
+        desk_floors = {m.get("floor") for m in CAP_GENESIS.values()}
+        found = []
+        for rid, r in n.records.items():
+            home = r.get("home", "")
+            if home in desk_floors:
+                continue
+            try:
+                text = crypto._b64d(r["body"]).decode()
+            except Exception:
+                continue
+            if sym in text.upper():
+                found.append((rid, home))
+        if found:
+            named = " · ".join(f"[{rid[:18]}…] at {home}"
+                               for rid, home in found[:3])
+            pre += (f"yes — {len(found)} memor"
+                    f"{'y' if len(found) == 1 else 'ies'} beyond the desk "
+                    f"floors mention {sym}: {named}. ")
+        else:
+            pre += (f"no memory outside the desk floors mentions {sym} — "
+                    "locality holds; the desks' work stays on their own "
+                    "ground. ")
+    # (c) provenance — the newest report's own metadata, read, not retrieved
+    if newest_report and _re.search(
+            r"\bwho\s+(?:wrote|authored)\b|\bon which floor\b|"
+            r"\bwhen was\b[^.?]{0,40}\bwritten\b", low):
+        rid, when, r, sym = newest_report
+        home = r.get("home", "?")
+        resident = next((m.get("resident", "") for m in CAP_GENESIS.values()
+                         if m.get("floor") == home), "")
+        who = resident or (r.get("author", "")[:24] + "…")
+        pre += (f"the most recent desk report{f' ({sym})' if sym else ''} was "
+                f"written by {who} on {home} at {when} [{rid[:18]}…]. ")
+    return q2, pre
+
+
 def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
     """The ask path, whole (0038 sp1+sp2): the DISPATCHER routes first — its
     choice a signed record, an unbuilt row falling to the baseline loudly —
     then the chosen row's projection regrows from the log and answers with
-    citations."""
+    citations. Since 0053 sp3: the self-knowledge step resolves machine-state
+    and indirect references BEFORE retrieval, and the reply speaks ANSWER
+    FIRST — the routing note rides at the tail, because a human asked a
+    question, not for the machinery's diary."""
     from orreth_sim import dispatcher, stacks, tournament
     n, seat_kp, seat_did = _stacks_node(port, scope)
     if n is None:
@@ -5377,11 +5482,12 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
             arm = {"label": label, "machine": av["machine"],
                    "tag": f"arm:{av['machine'].split(':', 1)[-1][:12]}",
                    "of": e["record"]}
-    d = dispatcher.dispatch(n, me, seat_kp, q, origin=origin,
+    q2, pre = _ask_self_knowledge(n, q)   # state resolves before retrieval
+    d = dispatcher.dispatch(n, me, seat_kp, q2, origin=origin,
                             built=list(tournament.ALL_RETRIEVERS))
     n.records.pop(d["record"], None)   # an ask never cites its OWN routing —
     # the choice persists on the wire; it just doesn't answer itself
-    a = tournament.answer_as(n, d["flavor"], q)
+    a = tournament.answer_as(n, d["flavor"], q2)
     recalls_save(scope, n)             # what this ask warmed, kept (sp1)
     attest_note(port, scope, n)        # what this ask LOADED, noted (0041 sp2)
     if arm:                            # the work wears its arm (0043 sp4, law 4)
@@ -5399,12 +5505,15 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
             pass
     cites = " · ".join(f"{c['doc']} [{c['ref'][:18]}…] {c['score']}"
                        for c in a["citations"][:3])
-    return (sentence(port, "note-dispatcher", flavor=d["flavor"],
-                     why=d["why"], choice=d["record"][:18])
+    # ANSWER FIRST (0053 sp3 — vera dinged replies that led with the
+    # machinery's diary): what the machine knows of itself, then the
+    # retrieved answer with citations, then the routing note at the tail
+    return (pre + a["answer"]
+            + (f" — citations: {cites}" if cites else "")
+            + " · " + sentence(port, "note-dispatcher", flavor=d["flavor"],
+                               why=d["why"], choice=d["record"][:18])
             + (f" · 🧪 arm «{arm['label']}» "
-               f"[{arm['machine'].split(':', 1)[-1][:12]}] served" if arm else "")
-            + " · " + a["answer"]
-            + (f" — citations: {cites}" if cites else ""))
+               f"[{arm['machine'].split(':', 1)[-1][:12]}] served" if arm else ""))
 
 
 def wire_stacks_tournament(port: int, scope: str, q: str = "") -> str:
@@ -9848,11 +9957,20 @@ def yardstick_run() -> bool:
         prompt = craft_render(craft(u_port, "yardstick-judge"),
                               criteria=" · ".join(item.get("expects") or []),
                               question=q, answer=str(ans or "")[:1500])
-        j = governed_thought(prod_port, JUDGE_MIND, "medium", prompt,
-                             max_tokens=160, as_did=VERA_DID)
         sc = why = None
-        if j is not None:
+        feedback = ""
+        for _ in range(2):        # one typed re-ask before any void (0047 sp1)
+            j = governed_thought(prod_port, JUDGE_MIND, "medium",
+                                 prompt + feedback, max_tokens=160,
+                                 as_did=VERA_DID)
+            if j is None:
+                break
             sc, why = _parse_verdict(j["text"])
+            if sc is not None:
+                break
+            feedback = "\n\n" + craft_render(
+                craft(u_port, "verdict-reask"),
+                error="the reply did not parse as the strict JSON verdict")
         if sc is None:
             rows.append({"q": q, "focus": item.get("focus"), "score": None,
                          "note": "the judge's verdict was lost — voided "
@@ -9884,6 +10002,70 @@ def yardstick_run() -> bool:
 
 _YARD_RAN = False
 _YARD_WALKING = False
+_ROUTE_STAGED = False
+
+
+def stage_routing_revision() -> None:
+    """The yardstick's evidence becomes a GOVERNED routing proposal (0053
+    sp3): the first scored run put zeros on the record where question shapes
+    fell to the default row, so a revision rides the standard's own lane —
+    the ACTIVE standard read from the shelf, two rules added (temporal and
+    comparative asks earn their rows), staged as a standard_v2 improvement
+    at the human's gate. The dispatcher's lane law holds: a routing change
+    is a proposal on the lanes, never an edit to code."""
+    global _ROUTE_STAGED
+    if _ROUTE_STAGED:
+        return
+    u_port = universe_port(JOIN_PORT)
+    rows = wire_assets(u_port, "asset", "routing-standard")
+    if not rows:
+        return                        # no standard stands yet — retry later
+    active = (rows[-1][1].get("asset") or {}).get("profile") or {}
+    rules = list(active.get("rules") or [])
+    have = {r.get("when") for r in rules}
+    want = [r for r in (
+        {"when": "temporal", "route": "rerank",
+         "why": "what-changed asks walk the timeline and earn the second pass"},
+        {"when": "comparative", "route": "swarm",
+         "why": "each-and-which asks decompose per subject and recompose cited"},
+    ) if r["when"] not in have]
+    if not want:
+        _ROUTE_STAGED = True          # the standard already knows these shapes
+        return
+    try:                              # an open card at the gate is not re-filed
+        for x in call(u_port, "GET", "/requests").get("requests", []):
+            if x.get("kind") == "improvement" and x.get("standard_v2") \
+                    and x.get("status") in ("pending", "staged"):
+                _ROUTE_STAGED = True
+                return
+    except Exception:
+        return
+    stand = wire_assets(u_port, "memory-standing")
+    evidence = stand[-1][0] if stand else None
+    v_next = str(int(str(active.get("version", "1")).split("-")[0]) + 1)
+    # the new rules LEAD: first-match wins, and "between the last two
+    # reports" already trips the broad relational net — the specific
+    # shape must outrank the general one
+    prof = dict(active, version=v_next, rules=want + rules)
+    try:
+        call(u_port, "POST", "/requests",
+             {"kind": "improvement", "standard_v2": prof,
+              **({"proposal_ref": evidence} if evidence else {}),
+              "text": "routing-standard revision from the yardstick's first "
+                      "standing: temporal asks → rerank, comparative asks → "
+                      "swarm — the zeros on the record are the argument; "
+                      "the yardstick's next run is the proof. You sign (0012).",
+              "package": "CHANGE: two rules join the active standard — "
+                         "temporal→rerank ('what changed' asks fell to the "
+                         "default row) and comparative→swarm ('each desk / "
+                         "which was most' asks served noise, scored 0.00 on "
+                         f"the yardstick). ROLLBACK: v{active.get('version', '?')} "
+                         "stands behind it, versioned as ever."})
+        _ROUTE_STAGED = True
+        print("  🧭 the routing revision stands at the gate — temporal and "
+              "comparative asks await the human's word")
+    except Exception as ex:
+        print(f"    (the routing revision could not stage: {ex})")
 
 
 def on_yardstick_request(port: int, r: dict) -> None:
@@ -10582,6 +10764,7 @@ def main() -> None:
                         improver_beat(port)   # and the improver reads the receipts
                         metabolism_wire_beat()  # forgetting on schedule (sp2)
                         yardstick_beat()   # manual dial only — JB's lock (0053 sp3)
+                        stage_routing_revision()  # the yardstick's evidence rides the lane
                         epoch_beat()          # the machine keeps its name (0041)
                         attest_beat()         # and proves what it loaded (0041)
                         mirror_beat()         # the mirror reflects every floor (0034 sp3)

@@ -87,9 +87,15 @@ def answer_as(node, flavor: str, query: str) -> dict:
         return {"answer": "the stacks hold nothing on this — an honest unknown"
                           + note, "citations": [], "flavor": flavor}
     lines = [f"“{h['text'][:140].strip()}” [{h['ref'][:18]}…]" for h in hits[:2]]
+    cites = [{"ref": h["ref"], "doc": h["doc"], "score": h["score"]}
+             for h in hits]
+    if hits[0]["score"] < rivals.CONFESSION_FLOOR:   # the noise law (0053 sp3)
+        return {"answer": "the shelves hold no strong answer to this — the "
+                          "NEAREST records, named as nearest and not as "
+                          "answers: " + " · ".join(lines),
+                "flavor": flavor, "citations": cites, "confessed": True}
     return {"answer": " · ".join(lines), "flavor": flavor,
-            "citations": [{"ref": h["ref"], "doc": h["doc"],
-                           "score": h["score"]} for h in hits]}
+            "citations": cites}
 
 
 # ---------------------------------------------------------------- the science (0033)
