@@ -5431,11 +5431,18 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
     # question the projection itself answers: whose memory, on whose floor
     if sym and _re.search(r"\b(?:outside|beyond)\b[^.?]{0,30}\bdesk", low):
         desk_floors = {m.get("floor") for m in CAP_GENESIS.values()}
+        _machinery = {"dispatch", "memory-standing", "distillation", "asset",
+                      "witness", "metabolism-report"}
         found = []
         for rid, r in n.records.items():
             home = r.get("home", "")
             if home in desk_floors:
                 continue
+            if _machinery & set(r.get("tags") or []):
+                continue    # the echo guard reaches the sweep (0039 sp2's
+                #             law): the ask machinery's own diary — dispatch
+                #             choices, prior standings — never counts as a
+                #             MEMORY mentioning the symbol
             try:
                 text = _leaves(json.loads(crypto._b64d(r["body"]).decode()))
             except Exception:
@@ -5484,11 +5491,21 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
             if newest_sym is None:
                 newest_sym = (rid, r.get("occurred_at", "")[:10], body)
             text = _leaves(body)             # the WHOLE report, never a cap
-            for s in _re.split(r"(?<=[.;])\s+", text):
-                if any(t in s.lower() for t in want_terms):
-                    quotes.append((r.get("occurred_at", "")[:10],
-                                   s.strip()[:180], rid))
-                    break                    # one sentence per walk
+            best = None
+            hyph = [t for t in want_terms if "-" in t]
+            for s in _re.split(r"(?<=[.;])\s+|\n+", text):
+                s = s.strip()
+                if len(s) < 12 or s.startswith(("---", "#", "*", "|")):
+                    continue                 # markdown scaffolding is not
+                #                              a sentence (run 6's junk quote)
+                if hyph and any(t in s.lower() for t in hyph):
+                    best = s                 # the technical term wins outright
+                    break
+                if best is None and any(t in s.lower() for t in want_terms):
+                    best = s
+            if best:
+                quotes.append((r.get("occurred_at", "")[:10],
+                               best[:180], rid))
         if quotes:
             pre += ("from the reports themselves: " + " · ".join(
                 f"walk {when}: “{s}” [{rid[:18]}…]"
@@ -10054,12 +10071,17 @@ def yardstick_run() -> bool:
                    "produced by the machine's own retrieval lane — treat "
                    "them as genuine citations, never as invented; judge "
                    "fabrication by unsupported claims or internal "
-                   "contradiction, not by the presence of refs.")
+                   "contradiction, not by the presence of refs. Floor "
+                   "scopes in this universe are written u:<universe>/"
+                   "e:<ecosystem>/f:<field>, and a resident's field wears "
+                   "the resident's name (charles tends …/f:charles) — the "
+                   "name appearing in both is the architecture, not "
+                   "conflation.")
         sc = why = None
         feedback = ""
         for _ in range(2):        # one typed re-ask before any void (0047 sp1)
             j = governed_thought(prod_port, JUDGE_MIND, "medium",
-                                 prompt + feedback, max_tokens=160,
+                                 prompt + feedback, max_tokens=220,
                                  as_did=VERA_DID)
             if j is None:
                 break
