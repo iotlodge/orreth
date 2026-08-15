@@ -9905,6 +9905,7 @@ def yardstick_beat() -> None:
 # ------------------------------------------------- the brain pull (0053 sp3)
 
 _BRAIN_CACHE: dict = {"at": 0.0, "payload": {}}
+_BRAIN_LOCK = threading.Lock()   # single-flight: stacked clicks share ONE sweep
 _BRAIN_CENSUS: dict = {}      # scope → the last classified sweep, stamped
 BRAIN_CENSUS_EVERY = int(os.environ.get("ORRETH_BRAIN_CENSUS_EVERY", "300"))
 
@@ -9959,6 +9960,13 @@ def compose_brain() -> dict:
     fake; the machine's size and spend are gauges, and gauges are read."""
     if time.time() - _BRAIN_CACHE["at"] < 5 and _BRAIN_CACHE["payload"]:
         return _BRAIN_CACHE["payload"]
+    with _BRAIN_LOCK:              # a human's triple-click is one sweep, not three
+        return _compose_brain_locked()
+
+
+def _compose_brain_locked() -> dict:
+    if time.time() - _BRAIN_CACHE["at"] < 5 and _BRAIN_CACHE["payload"]:
+        return _BRAIN_CACHE["payload"]   # a waiter drinks what the leader built
     now = NOW()
     # which world tends which floor — discovery data, never a hardcoded name;
     # shared floors belong to the rig and are attributed to no one world

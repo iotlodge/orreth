@@ -1158,7 +1158,8 @@
 <div id="brainworld">
   <div id="brnhead"><b>THE BRAIN · WHAT THE MACHINE IS</b>
     <span class="dim" style="font-size:.68rem">capabilities are what it does — this is its memory, metabolism, and mind, by universe · ecosystem · floor</span>
-    <button class="dk-tab" id="brn-fresh" style="margin-left:auto" onclick="brnRefresh()" title="read the instruments now — a lapsed census re-sweeps every floor, so this is where the cost lands">↻ refresh</button>
+    <span class="dim" id="brn-stamp" style="margin-left:auto;font-size:.62rem"></span>
+    <button class="dk-tab" id="brn-fresh" onclick="brnRefresh()" title="read the instruments now — a lapsed census re-sweeps every floor, so this is where the cost lands">↻ refresh</button>
     <button class="dk-tab" id="brn-mode" onclick="brnMode()" title="scheduled = re-read every 10s (a sweep's cost each breath) · manual = the instruments read only at your hand">breathing: manual</button>
     <button class="dk-tab" onclick="brnToggle()">✕ close</button></div>
   <div id="brnbody"></div>
@@ -4106,13 +4107,25 @@ function brnMode(){BRNAUTO=!BRNAUTO;
   brnModeFace();if(BRN)brnRender();}
 function brnModeFace(){const b=$("brn-mode");
   if(b)b.textContent=BRNAUTO?"breathing: 10s":"breathing: manual"}
-async function brnRefresh(){const b=$("brn-fresh");
-  if(b)b.textContent="↻ reading…";
-  try{BRN=await (await fetch(`${OBSD}/brain`)).json();brnRender()}catch(e){}
-  if(b)b.textContent="↻ refresh"}
+/* the click must SHOW its work (JB's find: three refreshes, no visible
+   proof) — a stamp says when the last read landed, the button holds still
+   while one is in flight, and a dead door confesses instead of failing
+   silently */
+let _BRNBUSY=false;
+function brnStamp(ok){const s=$("brn-stamp");if(!s)return;
+  if(ok){s.textContent=`read ${new Date().toLocaleTimeString()}`;s.style.color=""}
+  else{s.textContent="the door did not answer — try again in a moment";s.style.color="var(--red)"}}
+async function brnRefresh(){
+  if(_BRNBUSY)return;
+  _BRNBUSY=true;const b=$("brn-fresh");
+  if(b){b.textContent="↻ reading…";b.disabled=true}
+  try{BRN=await (await fetch(`${OBSD}/brain`)).json();brnRender();brnStamp(true)}
+  catch(e){brnStamp(false)}
+  if(b){b.textContent="↻ refresh";b.disabled=false}
+  _BRNBUSY=false}
 async function brnFresh(){
-  if(!$("brainworld").classList.contains("capopen"))return;
-  try{BRN=await (await fetch(`${OBSD}/brain`)).json();brnRender()}catch(e){}}
+  if(!$("brainworld").classList.contains("capopen")||_BRNBUSY)return;
+  try{BRN=await (await fetch(`${OBSD}/brain`)).json();brnRender();brnStamp(true)}catch(e){}}
 async function brnLoad(){
   $("brnbody").innerHTML=`<div class="dim" style="padding:2rem">the instruments are being read — first census can take a few breaths…</div>`;
   try{BRN=await (await fetch(`${OBSD}/brain`)).json()}
