@@ -10436,7 +10436,15 @@ def compose_resident(name: str) -> dict:
                       "tokens": sum(int(a.get("tokens") or 0) for a in seats),
                       "usd": sum(float(a.get("usd") or 0) for a in seats),
                       "seats": len(seats)}
+    man = None
     if res is None and wf is None:
+        # the third truth: a resident with NO LEASE has no presence — but
+        # family waiting at the gate deserves a room most of all. The
+        # manifests know their residents; the room says exactly what the
+        # resident waits for (JB's PYPL lesson, made permanent).
+        man = next((m for m in CAP_GENESIS.values()
+                    if str(m.get("resident", "")).lower() == low), None)
+    if res is None and wf is None and man is None:
         return {"error": f"no resident named “{name}” stands in this universe"}
     interop = ""
     try:                       # the Mirror's current word, where one stands
@@ -10468,7 +10476,7 @@ def compose_resident(name: str) -> dict:
                                  "resident's reflection — it composes from "
                                  "real audiences (0034)",
         }
-    else:
+    elif wf is not None:
         runs = int(wf.get("runs") or 0)
         ok = int(wf.get("success") or 0)
         item = {
@@ -10489,6 +10497,43 @@ def compose_resident(name: str) -> dict:
                             {"label": "succeeded", "value": ok},
                             {"label": "tokens",
                              "value": int(wf.get("tokens") or 0)}],
+            "mirror": interop or "the Mirror has not yet written this "
+                                 "resident's reflection — it composes from "
+                                 "real audiences (0034)",
+        }
+    if res is None and wf is None and man is not None:
+        wport, wscope = man.get("port"), man.get("floor", "")
+        gate = False
+        recs = None
+        try:
+            gate = any(q.get("kind") == "join" and q.get("status") == "staged"
+                       for q in call(wport, "GET",
+                                     "/requests").get("requests", []))
+        except Exception:
+            pass
+        try:
+            recs = int(call(wport, "GET", "/health").get("records") or 0)
+        except Exception:
+            pass
+        item = {
+            "who": low,
+            "blurb": f"{man.get('emoji', '')} {man.get('name', '')}'s "
+                     f"resident · {wscope}",
+            "did": "his did stands in his own seeds — a self survives "
+                   "the process (0002)",
+            "state": ("⛩ WAITING AT THE GATE — his join is staged; approve "
+                      "it in the Inbox's housekeeping drawer and he wakes"
+                      if gate else "resting — no lease held; his tend "
+                      "files a patient join when he stirs"),
+            "spend": "— (no lease, no meter: a resting self spends nothing)",
+            "calls": "his runs live on his own floor — the worldline walk "
+                     "joins THE RELATIONS (0056 sp3)",
+            "age_line": (f"his floor holds {recs:,} records of his work"
+                         if recs is not None else
+                         "his floor is dark — the hull may be shut by "
+                         "the word"),
+            "vitals_bars": ([{"label": "records on his floor",
+                              "value": recs}] if recs else []),
             "mirror": interop or "the Mirror has not yet written this "
                                  "resident's reflection — it composes from "
                                  "real audiences (0034)",
