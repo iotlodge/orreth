@@ -4129,7 +4129,7 @@ function renderWorld(man){
   const askLines=((DESK.asks||[])).map(a=>`<div class="dk-law">${a.status==="riding"
     ?`🚶 <b>${dkEsc(a.ticker)}</b> — the walk is running now; its stages land below as records`
     :a.gated
-    ?`⛩ <b>${dkEsc(a.ticker)}</b> — asked, but <b>${dkEsc(man.resident||"the resident")}</b> waits at his OWN gate: approve his join in the Inbox's housekeeping drawer, and the walk begins`
+    ?`<span style="display:inline-block;color:var(--brass);border:1px dashed var(--brassdim);border-radius:6px;padding:.28rem .55rem;font-size:.78rem">⛩ <b>${dkEsc(a.ticker)}</b> — asked, and <b>${dkEsc(man.resident||"the resident")}</b> is being welcomed at his gate by your ask itself; the walk begins within a minute</span>`
     :`⏳ <b>${dkEsc(a.ticker)}</b> — asked; the resident picks it up on the next beat (≤1 min)`}</div>`).join("");
   const walkStrips=((DESK.walking||[])).map(w=>`<div class="dk-law">🚶 walking <b>${dkEsc(w.ticker)}</b> · ${w.stages.length}/16 stages on the record</div>
     <div class="dk-strip">${w.stages.map(x=>`<span class="dk-dot" title="${dkEsc(x.digest||"")}">✓<i>${dkEsc(x.stage)}</i></span>`).join("")}</div>`).join("");

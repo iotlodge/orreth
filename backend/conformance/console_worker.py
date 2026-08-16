@@ -7179,9 +7179,22 @@ def _listen_kit(name: str, port: int, scope: str, facts: dict,
     cross-scope library card (0045); the status card rides as context,
     never as the whole truth. ≤ ~2,000 chars."""
     u = universe_port(port)
+    roster = CHARTERS_ROSTER
+    try:
+        # the discovered worlds' residents join the roster as DATA (JB's
+        # find, 2026-08-14: vera referred a trading question to allen —
+        # the roster predated the desks; no name is ever baked)
+        _worlds = " · ".join(
+            f"{m.get('resident')} keeps {m.get('name')} "
+            f"({str(m.get('law', ''))[:48]})"
+            for m in CAP_GENESIS.values() if m.get("resident"))
+        if _worlds:
+            roster += " · " + _worlds
+    except Exception:
+        pass
     bits: list[str] = [
         "THE RESIDENTS AND THEIR CHARTERS (refer by NAME when a question "
-        "is theirs): " + CHARTERS_ROSTER]
+        "is theirs): " + roster]
     try:
         g = compose_governance()
         cats: dict = {}

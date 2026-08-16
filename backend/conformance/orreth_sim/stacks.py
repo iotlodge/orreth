@@ -107,7 +107,11 @@ def _chronicle_text(body: dict, depth: int = 0) -> str:
             # never on the list: a report flattened to NOTHING until the
             # human's own question exposed it, 2026-08-14)
             "report", "reflection", "digest", "rating", "ticker", "delta",
-            "executive_summary", "investment_thesis", "stage")
+            "executive_summary", "investment_thesis", "stage",
+            # the trader's plan speaks (2026-08-16 — Q1's cure: the numbers
+            # ride as strings inside plan/plan_text, named here)
+            "plan_text", "stop_loss", "entry_price", "price_target",
+            "action")
     out = []
     for k, v in body.items():
         if isinstance(v, str) and (k in keep and len(v) > 2):

@@ -346,6 +346,21 @@ def run(client, think_med, think_high, think_fmt, ticker: str, date: str,
                     kind="episodic", tags=["desk", "charts", ticker])
     client.remember({"report": polished, "decision": decision, "ticker": ticker,
                      "date": date, "rating": decision.get("rating"),
+                     # THE PLAN JOINS THE RECORD (0053 sp3's Q1 gap, cured
+                     # 2026-08-16): stop-loss and entry lived only in bundle
+                     # files — the record itself now speaks them, in a
+                     # sentence retrieval can bite on
+                     "plan": {k: str(v) for k, v in (
+                         ("action", proposal.get("action", "")),
+                         ("entry_price", proposal.get("entry_price", "")),
+                         ("stop_loss", proposal.get("stop_loss", "")),
+                         ("price_target", decision.get("price_target", "")))},
+                     "plan_text": (
+                         f"the trader's plan on {ticker} ({date}): action "
+                         f"{proposal.get('action', '?')} · entry "
+                         f"{proposal.get('entry_price', '?')} · stop-loss "
+                         f"{proposal.get('stop_loss', '?')} · price target "
+                         f"{decision.get('price_target', '?')}"),
                      "outcome_pending": True, "refresh": refresh,
                      "sections": {k: _clip(v, 8000) for k, v in reports.items()},
                      "debates": {"research": _clip(research_debate, 12000),
