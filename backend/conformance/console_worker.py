@@ -5764,27 +5764,27 @@ def on_standard_promotion(port: int, scope: str, r: dict, *,
                          "note": "the first promotion waits for you (0012)"}})
         print("  ↳ standard v2 staged — the gate waits")
         return
-    rag_port, rag_scope = next(
-        ((p, s) for p, s in FLOOR_SCOPES.items()
-         if s.endswith("/e:rag/f:naive")), (None, None))
-    if rag_port is None:
-        call(port, "POST", "/requests/resolve",
-             {"id": r["id"], "status": "done",
-              "result": {"reply": "the rag floor is dark — v2 cannot land; "
-                                  "regrow the floor and run the tournament again"}})
-        return
-    seat_kp, seat_did = lib_seat(rag_scope)
+    # THE STANDARD LANDS WHERE THE LANE READS (2026-08-16, JB's find —
+    # "all the recycles resulted in one of these"): eight of his true
+    # adoptions planted on the rag floor, 0038's original ground, while
+    # the ask lane has read the UNIVERSE's shelf since the stacks moved
+    # to the apex — so nothing his word planted was ever seen, and the
+    # honest re-stager filed again each recycle. The word was true; the
+    # target was a fossil.
+    u_land = universe_port(port)
+    seat_kp, seat_did = lib_seat(UNIVERSE_SCOPE)
     v2 = dict(r.get("standard_v2") or {})
     v2.pop("evidence", None)
     # lineage: the adoption names the tournament's standings record (legacy
     # cards without a ref plant as before — old resolved words stay honest)
     pref = str(r.get("proposal_ref") or "") or None
-    asset = improver.make_asset({"did": seat_did, "scope": rag_scope}, seat_kp,
-                                rag_scope, name="routing-standard", profile=v2,
+    asset = improver.make_asset({"did": seat_did, "scope": UNIVERSE_SCOPE},
+                                seat_kp, UNIVERSE_SCOPE,
+                                name="routing-standard", profile=v2,
                                 adopted_from=pref,
                                 derived_from=[pref] if pref else None)
     try:
-        call(rag_port, "POST", "/records", asset)
+        call(u_land, "POST", "/records", asset)
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
               "result": {"reply": f"routing-standard v2 ADOPTED on your word — "
@@ -10443,7 +10443,14 @@ def stage_routing_revision() -> None:
     rows = wire_assets(u_port, "asset", "routing-standard")
     if not rows:
         return                        # no standard stands yet — retry later
-    active = (rows[-1][1].get("asset") or {}).get("profile") or {}
+
+    def _ver(row):                    # the newest VERSION is the head — hit
+        p = (row[1].get("asset") or {}).get("profile") or {}   # order lies
+        try:
+            return int(str(p.get("version", "1")).split("-")[0])
+        except Exception:
+            return 1
+    active = (max(rows, key=_ver)[1].get("asset") or {}).get("profile") or {}
     rules = list(active.get("rules") or [])
     have = {r.get("when") for r in rules}
     want = [r for r in (
