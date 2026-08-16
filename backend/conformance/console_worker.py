@@ -1368,6 +1368,35 @@ def _crew_spawn(c: dict) -> None:
 _DOWN_LEDGER = HOME / "shipyard" / "down.json"
 
 
+_WELCOME_LEDGER = Path.home() / ".orreth" / "shipyard" / "welcomes.json"
+
+
+def _welcome_load() -> dict:
+    try:
+        return json.loads(_WELCOME_LEDGER.read_text())
+    except Exception:
+        return {}
+
+
+def _welcome_mark(did: str, scope: str, req_id: str) -> None:
+    """THE STANDING WELCOME (JB's tenth-recycle frustration, 2026-08-16:
+    "thought this was addressed already?"): the human's approval of a SELF
+    to a FLOOR is durable — the key is still proven afresh at every join
+    (the nonce challenge never sleeps), but the final click is remembered.
+    becky's book, beside the down-ledger; clearing the file rests it."""
+    d = _welcome_load()
+    d[f"{did}|{scope}"] = {"req": req_id, "at": NOW()}
+    try:
+        _WELCOME_LEDGER.parent.mkdir(parents=True, exist_ok=True)
+        _WELCOME_LEDGER.write_text(json.dumps(d, indent=1, sort_keys=True))
+    except Exception:
+        pass
+
+
+def _welcome_has(did: str, scope: str) -> dict | None:
+    return _welcome_load().get(f"{did}|{scope}")
+
+
 def _down_load() -> dict:
     try:
         return json.loads(_DOWN_LEDGER.read_text())
@@ -11343,6 +11372,10 @@ def main() -> None:
                                 if status == "done":
                                     result = {**result, "scope": scope,
                                               "granted_by": becky_for(scope).did}
+                                    # the human's click becomes durable —
+                                    # the same self rejoins across recycles
+                                    _welcome_mark(str(r.get("did") or ""),
+                                                  scope, r["id"])
                                 call(port, "POST", "/requests/resolve",
                                      {"id": r["id"], "status": status, "result": result})
                                 who = r.get("name") or (r.get("did") or "?")[:22] + "…"
@@ -11351,6 +11384,26 @@ def main() -> None:
                                        "done": f"    ✓ lease granted — welcome to {scope}, {who}",
                                        "denied": f"  ↳ join {r['id']}: {who} turned away — proof failed",
                                        }.get(status, f"  ↳ join {r['id']} → {status}"))
+                                if status == "staged":
+                                    # THE STANDING WELCOME: this proven self
+                                    # was welcomed to this floor by the
+                                    # human before — becky honors the word,
+                                    # visibly, where the click would sit
+                                    w = _welcome_has(str(r.get("did") or ""),
+                                                     scope)
+                                    if w:
+                                        call(port, "POST", "/requests/resolve",
+                                             {"id": r["id"],
+                                              "status": "approved",
+                                              "result": {**result,
+                                                         "approved_by":
+                                                         "your standing welcome "
+                                                         f"({w['req']}) — the same "
+                                                         "self, the same floor; "
+                                                         "the key proven afresh"}})
+                                        print(f"  ↳ join {r['id']}: {who} "
+                                              "re-welcomed by your standing "
+                                              "word — no click owed twice")
                         elif r.get("kind") == "service":
                             if KEEPER.on_service_request(port, scope, r) or r.get("status") == "staged":
                                 handled.add(key)
