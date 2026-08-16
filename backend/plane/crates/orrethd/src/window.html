@@ -4021,11 +4021,11 @@ function dkTableSort(pi,col){DKSORT={col,dir:DKSORT.col===col?-DKSORT.dir:1};ren
       world's own records (done · live-pulsing · pending). One engine,
       every flow — worlds declare theirs in manifests; the machine's own
       lanes draw with the same hand. ── */
-function dkFlow(nodes,edges,states){
+function dkFlow(nodes,edges,states,titles){
   const col={};nodes.forEach(n=>col[n]=0);
   for(let i=0;i<nodes.length;i++)edges.forEach(([a,b])=>{if((col[b]??0)<(col[a]??0)+1)col[b]=col[a]+1});
   const byCol={};nodes.forEach(n=>{(byCol[col[n]]=byCol[col[n]]||[]).push(n)});
-  const CW=150,NW=118,NH=24,PADX=12,PADY=14;
+  const CW=136,NW=112,NH=24,PADX=10,PADY=14;
   const ncols=Math.max(...nodes.map(n=>col[n]))+1;
   const nrows=Math.max(...Object.values(byCol).map(a=>a.length));
   const H=Math.max(110,nrows*(NH+18))+PADY*2,W=ncols*CW+PADX*2;
@@ -4033,7 +4033,11 @@ function dkFlow(nodes,edges,states){
   Object.entries(byCol).forEach(([c,arr])=>{arr.forEach((n,i)=>{
     pos[n]=[PADX+(+c)*CW,PADY+(H-2*PADY)*(i+0.5)/arr.length-NH/2]})});
   const st=n=>states[n]||"pending";
-  let s=`<div class="dk-chart" style="overflow-x:auto"><svg width="${W}" height="${H}" style="min-width:${W}px;display:block">`
+  // the WHOLE flow at one glance (usability find, 2026-08-16: fixed pixels
+  // under the chart family's 960px cap cut the walk mid-river) — viewBox
+  // scales to the room's full width; a floor keeps glyphs legible and the
+  // container scrolls only when the room is truly too small
+  let s=`<div class="dk-chart" style="overflow-x:auto;max-width:none"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:${Math.min(W,880)}px;display:block;height:auto">`
     +`<defs><marker id="dkarr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L8 4L0 8z" fill="var(--brassdim)"/></marker></defs>`;
   edges.forEach(([a,b])=>{const A=pos[a],B=pos[b];if(!A||!B)return;
     const x1=A[0]+NW,y1=A[1]+NH/2,x2=B[0],y2=B[1]+NH/2,mx=(x1+x2)/2;
@@ -4042,10 +4046,12 @@ function dkFlow(nodes,edges,states){
   nodes.forEach(n=>{const P=pos[n];if(!P)return;const S=st(n);
     const stroke=S==="done"?"var(--brassdim)":S==="live"?"var(--brass)":"var(--hair)";
     const txt=S==="pending"?"var(--faint)":S==="live"?"var(--brass)":"var(--star)";
+    const tip=(titles||{})[n];
     s+=`<g>`+(S==="live"
       ?`<rect x="${P[0]-2.5}" y="${P[1]-2.5}" width="${NW+5}" height="${NH+5}" rx="8" fill="none" stroke="var(--brass)" stroke-width="1"><animate attributeName="opacity" values="1;.2;1" dur="1.5s" repeatCount="indefinite"/></rect>`:"")
       +`<rect x="${P[0]}" y="${P[1]}" width="${NW}" height="${NH}" rx="6" fill="${S==="pending"?"transparent":"var(--deep)"}" stroke="${stroke}" stroke-width="1.1"/>`
-      +`<text x="${P[0]+NW/2}" y="${P[1]+NH/2+3.5}" text-anchor="middle" font-size="9" fill="${txt}" style="font-family:var(--mono)">${S==="done"?"✓ ":""}${dkEsc(n.replace(/-/g," "))}</text></g>`});
+      +(tip?`<title>${dkEsc(tip)}</title>`:"")
+      +`<text x="${P[0]+NW/2}" y="${P[1]+NH/2+3.5}" text-anchor="middle" font-size="${n.length>16?8:9}" fill="${txt}" style="font-family:var(--mono)">${S==="done"?"✓ ":""}${dkEsc(n.replace(/-/g," "))}</text></g>`});
   return s+`</svg></div>`}
 function dkPanel(p,pi,item){
   switch(p.kind){
@@ -4053,10 +4059,12 @@ function dkPanel(p,pi,item){
     const walk=(DESK.walking||[])[0];
     const src=walk?walk.stages:(item[p.src]||[]);
     const done=new Set(src.map(x=>x.stage||x));
-    const states={};(p.nodes||[]).forEach(nd=>{states[nd]=done.has(nd)?"done":"pending"});
+    const states={},titles={};
+    (p.nodes||[]).forEach(nd=>{states[nd]=done.has(nd)?"done":"pending"});
+    src.forEach(x=>{if(x&&x.stage&&x.digest)titles[x.stage]=x.digest});
     if(walk&&src.length){const cur=src[src.length-1];states[cur.stage||cur]="live"}
-    return `<div class="dk-chtitle" style="margin-top:.7rem">${dkEsc(p.label||"the flow")}${walk?` · 🚶 walking ${dkEsc(walk.ticker)} — live`:item&&item.date?` · the ${dkEsc(item.ticker||"")} walk of ${dkEsc(item.date)}`:""}</div>`
-      +dkFlow(p.nodes||[],p.edges||[],states)}
+    return `<div class="dk-chtitle" style="margin-top:.7rem">${dkEsc(p.label||"the flow")}${walk?` · 🚶 walking ${dkEsc(walk.ticker)} — live`:item&&item.date?` · the ${dkEsc(item.ticker||"")} walk of ${dkEsc(item.date)} — hover a stage for its digest`:""}</div>`
+      +dkFlow(p.nodes||[],p.edges||[],states,titles)}
   case "controls":{
     const ins=(p.inputs||[]).map(x=>`<input id="dk-in-${dkEsc(x.id)}" placeholder="${dkEsc(x.placeholder||x.id)}" style="width:9rem" maxlength="12">`).join(" ");
     const btns=(p.buttons||[]).map((b,bi)=>`<button class="dk-tab" onclick="capBtn(${pi},${bi})">${dkEsc(b.label)}</button>`).join(" ");
@@ -4288,7 +4296,7 @@ function brnRender(){
     const lst={"the ask":"done","dispatcher":"done","the answer":"done"};
     lst[L.flavor]="live";
     h+=`<div class="dim" style="font-size:.68rem;margin:.25rem 0">“${dkEsc(L.ask)}” → «${dkEsc(L.flavor)}» — ${dkEsc(L.why)} <span style="color:var(--faint)">(${dkEsc((L.at||"").slice(0,16))})</span></div>`;
-    h+=dkFlow(lnodes,ledges,lst);
+    h+=dkFlow(lnodes,ledges,lst,{[L.flavor]:L.why});
   }else h+=`<div class="dim" style="font-size:.7rem">no ask has walked the lane in this window yet — speak to a resident in the parlor, or run the yardstick below</div>`;
   h+=`<div class="brn-sec">metabolism &amp; retention — forgetting on schedule, loss on the record</div>`;
   h+=`<div class="dim" style="font-size:.72rem;margin:.3rem 0">beats every ${M.every_s??"—"}s`
