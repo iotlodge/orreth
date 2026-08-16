@@ -647,11 +647,19 @@ def collapse_gate_duplicates(port: int) -> None:
         return
     groups: dict[tuple, list] = {}
     for r in rows:
-        if r.get("status") != "staged" or r.get("kind") not in ("mind", "service"):
+        if r.get("status") != "staged" or r.get("kind") not in ("mind", "service",
+                                                               "join"):
             continue
-        if r.get("action") not in ("reapprove",):
-            continue
-        key = (r["kind"], r.get("action"), r.get("mind") or r.get("name"))
+        if r.get("kind") == "join":
+            # JB's find (2026-08-16): every recycle refiled charles's patient
+            # join — five staged cards for one welcome; the newest stands,
+            # the elders bow (one lease is all a resident ever needs)
+            key = ("join", r.get("did") or r.get("name")
+                   or str(r.get("text", ""))[:60])
+        else:
+            if r.get("action") not in ("reapprove",):
+                continue
+            key = (r["kind"], r.get("action"), r.get("mind") or r.get("name"))
         groups.setdefault(key, []).append(r)
     for key, dupes in groups.items():
         dupes.sort(key=lambda r: str(r.get("at", "")))
@@ -665,7 +673,7 @@ def collapse_gate_duplicates(port: int) -> None:
                 pass
         if len(dupes) > 1:
             print(f"  ↳ gate tidied: {len(dupes) - 1} duplicate {key[0]} ask(s) "
-                  f"for {key[2]} collapsed — the newest stands")
+                  f"for {key[-1]} collapsed — the newest stands")
 
 
 def wire_consents(port: int, scope: str) -> list[dict]:
@@ -1960,10 +1968,17 @@ def compose_desk(key: str = "trading-desk") -> dict:
     # without a report yet - the strip fills live in the breathing glass
     asks = []
     try:
-        for q in call(dport, "GET", "/requests").get("requests", []):
+        _reqs = call(dport, "GET", "/requests").get("requests", [])
+        # a card that cannot move must say what it waits for (JB's PYPL
+        # find): a staged join on this floor gates every pending ask
+        _gatewait = any(q.get("kind") == "join" and q.get("status") == "staged"
+                        for q in _reqs)
+        for q in _reqs:
             if q.get("kind") == "desk-ask" and q.get("status") in ("pending", "riding"):
                 asks.append({"id": q["id"], "ticker": str(q.get("ticker", "")).upper(),
-                             "status": q["status"]})
+                             "status": q["status"],
+                             **({"gated": True} if _gatewait
+                                and q["status"] == "pending" else {})})
     except Exception:
         pass
     walking = []

@@ -815,14 +815,14 @@
   #cappull{position:fixed;right:0;top:34%;z-index:61;writing-mode:vertical-rl;background:var(--deep);
     border:1px solid var(--brassdim);border-right:none;border-radius:8px 0 0 8px;color:var(--brass);
     padding:.85rem .35rem;font-size:.62rem;letter-spacing:.32em;cursor:pointer;user-select:none;
-    text-transform:uppercase;opacity:.85}
+    text-transform:uppercase;opacity:.95;box-shadow:-4px 0 14px var(--scrim),0 0 8px var(--brassdim)}
   #cappull:hover{opacity:1;background:var(--hair)}
   /* ── 0053 sp3 · the brain pull — what the machine IS (telemetry, never
         an NLP paraphrase); the capabilities pull is what it DOES ── */
   #brainpull{position:fixed;right:0;top:48%;z-index:61;writing-mode:vertical-rl;background:var(--deep);
     border:1px solid var(--brassdim);border-right:none;border-radius:8px 0 0 8px;color:var(--star);
     padding:.85rem .35rem;font-size:.62rem;letter-spacing:.32em;cursor:pointer;user-select:none;
-    text-transform:uppercase;opacity:.85}
+    text-transform:uppercase;opacity:.95;box-shadow:-4px 0 14px var(--scrim),0 0 8px var(--brassdim)}
   #brainpull:hover{opacity:1;background:var(--hair)}
   #capworld,#brainworld{position:fixed;top:0;right:-82%;width:80%;height:100%;z-index:60;background:var(--void);
     border-left:1px solid var(--hair2);transition:right .28s ease;display:flex;flex-direction:column;
@@ -4117,6 +4117,8 @@ function renderWorld(man){
      state, and the walking strip filling LIVE as stage records land */
   const askLines=((DESK.asks||[])).map(a=>`<div class="dk-law">${a.status==="riding"
     ?`🚶 <b>${dkEsc(a.ticker)}</b> — the walk is running now; its stages land below as records`
+    :a.gated
+    ?`⛩ <b>${dkEsc(a.ticker)}</b> — asked, but <b>${dkEsc(man.resident||"the resident")}</b> waits at his OWN gate: approve his join in the Inbox's housekeeping drawer, and the walk begins`
     :`⏳ <b>${dkEsc(a.ticker)}</b> — asked; the resident picks it up on the next beat (≤1 min)`}</div>`).join("");
   const walkStrips=((DESK.walking||[])).map(w=>`<div class="dk-law">🚶 walking <b>${dkEsc(w.ticker)}</b> · ${w.stages.length}/16 stages on the record</div>
     <div class="dk-strip">${w.stages.map(x=>`<span class="dk-dot" title="${dkEsc(x.digest||"")}">✓<i>${dkEsc(x.stage)}</i></span>`).join("")}</div>`).join("");
