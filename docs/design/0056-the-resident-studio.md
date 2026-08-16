@@ -7,7 +7,12 @@
      "if humans can just ask for these things through a Resident, why have
      this?" This charter is the answer to all three. -->
 
-**Status: 🧭 CHARTER — awaiting JB's locks.**
+**Status: 🔨 OPEN — all four locks landed by JB 2026-08-16:**
+**L1 = ALL TEN residents at once (his word over the recommended three:
+"the family whole from day one" — thinner rooms each, one template) ·
+L2 = both doors (rail card + parlor) · L3 = spend · runs/success ·
+last verdict · age · L4 = ANY question a resident answers (the standing
+word carries the question as data).**
 
 ## 1. The wound
 
