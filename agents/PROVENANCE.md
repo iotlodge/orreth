@@ -1149,3 +1149,9 @@ The closing proof was the human's: retire → reinstate on the Trading Desk, cle
 | File | Author | Note |
 |---|---|---|
 | `console_worker.py` · `window.html` | Fable 5 (claude-fable-5) | The family's rooms, one renderer: compose_resident answers by THREE truths in order — the presence roster (organs with live vitals), the architecture (a field wears its resident's name; seats on f:charles aggregate into charles's own room), and the manifests (family with no lease gets a room that says exactly what it waits for — JB's PYPL lesson made permanent law). The vitals a parent asks first lead; every deferral stands on the wall in plain words; the view travels as DATA through the same twelve-kind walker the worlds use. Doors: the ⌂ on every named rail row, the parlor's header, and addresses (#res=vera) because a room is a place. |
+
+## Fable 5 — 2026-08-16 (0056 sp2+sp3 — the rooms grow whole, at click speed)
+
+| File | Author | Note |
+|---|---|---|
+| `console_worker.py` · `window.html` | Fable 5 (claude-fable-5) | sp2: THE WORK (the desk residents' latest walk on the flow engine, vera's verdicts, the librarian's lane; the rest confess) and THE WORDS (the shelf by name and by the wearer registry, the mode law speaking — dev editable, prod read-only). sp3: THE SCHEDULES — the standing-word machinery grown to identities (what·resident·question): any question a resident answers repeats on a cadence (JB's L4), staged for one approval, fired down the parlor's own lane so the answer is a real audience on the record, the word itself the clock, rested gateless; THE MINDS from each floor's stable; THE RELATIONS as one small map on the flow engine. And the perf laws that kept it honest: the read law (tags first, bodies only for needed rows), the memo, the warming thread — a 45-second room and a 30-second landing both became a breath. |

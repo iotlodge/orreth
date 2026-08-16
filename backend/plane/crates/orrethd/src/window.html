@@ -4359,15 +4359,48 @@ async function resOpen(name){
   const R=d.resident||{};
   $("res-title").textContent=(R.name||name).toUpperCase();
   $("res-sub").textContent=`${R.blurb||""} · ${(R.did||"").slice(0,28)}… · mode ${R.mode||"dev"}`;
-  $("resbody").innerHTML=
-    (d.view||[]).map((p,pi)=>
+  const schedRows=((d.item&&d.item.schedules)||[]).map(s=>
+    `<div class="dk-law">«${dkEsc(s.question)}» · ${dkEsc(s.every)}
+      <button class="dk-tab" data-q="${dkEsc(s.question)}" onclick="resSchedRest('${dkEsc(name)}',this.dataset.q)" title="resting never needs a gate (rule 11)">rest it</button></div>`).join("");
+  let html=(d.view||[]).map((p,pi)=>
       (p.section?`<div class="brn-sec">${dkEsc(p.section)}</div>`:"")
-      +dkPanel(p,pi,d.item||{})).join("")
-    +(R.has_words&&R.mode!=="prod"
+      +dkPanel(p,pi,d.item||{})
+      +(p.src==="schedules"||p.src==="sched_note"
+        ?schedRows
+         +`<div style="margin:.45rem 0;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+           <input id="res-schedq" placeholder="a question ${dkEsc(name)} should answer on a cadence" style="width:22rem" maxlength="200">
+           <select id="res-schedd" class="dk-tab"><option value="1">daily</option><option value="7" selected>weekly</option><option value="30">monthly</option></select>
+           <button class="dk-tab" onclick="resSchedStage('${dkEsc(name)}')">⏰ stage it — your approval starts it</button>
+           <span class="dim" id="res-sched-note" style="font-size:.66rem"></span></div>`
+        :"")).join("");
+  html+=(R.has_words&&R.mode!=="prod"
       ?`<div style="margin:.6rem 0"><button class="dk-tab" onclick="resShelf()" title="the shelf's gated doors — every edit a versioned sibling">🛠 open the shelf — the Governance room</button></div>`
-      :"")
-    +`<div class="brn-sec">the rooms to come</div>
-      <div class="dim" style="font-size:.72rem">THE SCHEDULES (standing asks) · THE MINDS · THE RELATIONS — sp3 of 0056, said honestly</div>`}
+      :"");
+  $("resbody").innerHTML=html}
+/* the standing question's reins: staging waits for the human's one
+   approval; resting is gateless (rule 11) — any question the resident
+   answers may repeat on a cadence (JB's L4) */
+async function resSchedStage(who){
+  const q=(($("res-schedq")||{}).value||"").trim(),n=$("res-sched-note");
+  if(!q){if(n)n.textContent="write the question first";return}
+  try{
+    await fetch(`/requests`,{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({kind:"scheduled-ask",what:"resident-ask",
+        resident:who,question:q,
+        every_days:+(($("res-schedd")||{}).value||7),
+        text:`${who} answers «${q}» on a cadence — the human's standing question`})});
+    if(n){n.style.color="";n.textContent="staged — the terms wait in your Inbox; your one approval starts it"}
+  }catch(e){if(n){n.textContent="the ask did not land — is the floor awake?";n.style.color="var(--red)"}}}
+async function resSchedRest(who,q){
+  try{
+    await fetch(`/requests`,{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({kind:"scheduled-ask",what:"resident-ask",
+        action:"rest",resident:who,question:q,
+        text:`rest the standing question on ${who} — the human's word`})});
+  }catch(e){}
+  setTimeout(()=>resOpen(who),1500)}
 function resShelf(){resClose();
   location.hash=/v=[a-z]+/.test(location.hash)
     ?location.hash.replace(/v=[a-z]+/,"v=gov")

@@ -10258,13 +10258,24 @@ _ROUTE_STAGED = False
 _SCHED_LAST_TRY = 0.0
 
 
+def _sched_heads(u_port: int) -> dict:
+    """Every standing word's CURRENT head, by identity — (what, resident,
+    question) names an ask; head wins per identity, a rest is a sibling,
+    never an erasure (the desk-watch's law, generalized to the family)."""
+    heads: dict = {}
+    for _, b, _, _t in wire_assets(u_port, "scheduled-ask"):
+        sa = (b or {}).get("scheduled_ask") or {}
+        if sa.get("what"):
+            key = (sa.get("what"), sa.get("resident") or "",
+                   str(sa.get("question") or "")[:80])
+            heads[key] = sa                   # oldest-first — the head wins
+    return heads
+
+
 def _sched_head(u_port: int, what: str = "yardstick") -> dict | None:
-    """The newest scheduled-ask word for `what` — head wins, a rest is a
-    sibling, never an erasure (the desk-watch's law, generalized)."""
-    rows = [b.get("scheduled_ask") or {} for _, b, _, _t
-            in wire_assets(u_port, "scheduled-ask")
-            if (b.get("scheduled_ask") or {}).get("what") == what]
-    return rows[-1] if rows else None
+    """The yardstick's own word — the one identity with no resident."""
+    return _memo("sched-heads", 30, lambda: _sched_heads(u_port)).get(
+        (what, "", ""))
 
 
 def on_scheduled_ask(port: int, scope: str, r: dict) -> None:
@@ -10280,47 +10291,62 @@ def on_scheduled_ask(port: int, scope: str, r: dict) -> None:
     seat_kp, seat_did = lib_seat(UNIVERSE_SCOPE)
     agent = {"did": seat_did, "scope": UNIVERSE_SCOPE}
     what = str(r.get("what") or "yardstick")[:24]
+    resident = str(r.get("resident") or "")[:24].lower()
+    question = str(r.get("question") or "")[:200]
+    every = max(1, min(90, int(r.get("every_days") or 7)))
+    ident = {"what": what, **({"resident": resident} if resident else {}),
+             **({"question": question} if question else {})}
+    label = (f"{resident} answers «{question[:60]}»" if resident
+             else what)
     if r.get("action") == "rest" and r.get("status") == "pending":
         rec = make_memory(agent, seat_kp, UNIVERSE_SCOPE,
-                          {"scheduled_ask": {"what": what, "posture": "rested",
+                          {"scheduled_ask": {**ident, "posture": "rested",
                                              "stopped_by": "the human's word",
-                                             "request": str(r.get("id") or "")}},
+                                             "request": str(r.get("id") or ""),
+                                             "at": NOW()}},
                           kind="semantic", tags=["scheduled-ask", what])
         call(u_port, "POST", "/records", rec)
+        _MEMO.pop("sched-heads", None)
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
-              "result": f"rested by the human's word — the {what} schedule "
-                        "stops (rule 11: stopping never needs a gate); the "
-                        "standings already taken stay on the record"})
-        print(f"  ↳ scheduled-ask {r['id']}: {what} RESTED on the human's word")
+              "result": f"rested by the human's word — the schedule "
+                        f"({label}) stops (rule 11: stopping never needs a "
+                        "gate); what it already produced stays on the record"})
+        print(f"  ↳ scheduled-ask {r['id']}: {label} RESTED on the human's word")
         return
     if r.get("status") == "pending":
+        terms = (f"{resident} answers «{question}» every {every} day(s) — "
+                 "the ask rides the parlor's own lane, the exchange lands "
+                 "as a record, and the thought meters under the same gates "
+                 "as any audience; standing until you rest it, and resting "
+                 "never needs a gate"
+                 if resident else
+                 f"the {what} runs WEEKLY — ten questions through the real "
+                 "ask lane, ten verdicts under vera's own did inside her "
+                 "declared daily ceiling (~15k tokens per run); each run "
+                 "lands one standing in the Brain pull; standing until you "
+                 "rest it, and resting never needs a gate")
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "staged",
               "result": {"note": "consequence waits for you (0012)",
-                         "terms": f"the {what} runs WEEKLY — ten questions "
-                                  "through the real ask lane, ten verdicts "
-                                  "under vera's own did inside her declared "
-                                  "daily ceiling (~15k tokens per run); each "
-                                  "run lands one standing in the Brain pull; "
-                                  "standing until you rest it, and resting "
-                                  "never needs a gate"}})
-        print(f"  ↳ scheduled-ask {r['id']}: {what} staged — the human "
+                         "terms": terms}})
+        print(f"  ↳ scheduled-ask {r['id']}: {label} staged — the human "
               "holds the word")
         return
     if r.get("status") == "approved":
         rec = make_memory(agent, seat_kp, UNIVERSE_SCOPE,
-                          {"scheduled_ask": {"what": what, "every_days": 7,
+                          {"scheduled_ask": {**ident, "every_days": every,
                                              "posture": "standing",
-                                             "approved": str(r.get("id") or "")}},
+                                             "approved": str(r.get("id") or ""),
+                                             "at": NOW()}},
                           kind="semantic", tags=["scheduled-ask", what])
         call(u_port, "POST", "/records", rec)
+        _MEMO.pop("sched-heads", None)
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
-              "result": f"the standing word stands — the {what} runs weekly "
-                        "until you rest it; its standings land in the Brain "
-                        "pull as they score"})
-        print(f"  ↳ scheduled-ask {r['id']}: {what} — the standing word stands")
+              "result": f"the standing word stands — {label} every {every} "
+                        "day(s) until you rest it"})
+        print(f"  ↳ scheduled-ask {r['id']}: {label} — the standing word stands")
 
 
 def scheduled_ask_beat() -> None:
@@ -10330,44 +10356,76 @@ def scheduled_ask_beat() -> None:
     run. An hourly cooldown keeps a closed ceiling from becoming a busy
     loop; the word outlives the process because the word is a record."""
     global _SCHED_LAST_TRY, _YARD_WALKING
-    if _YARD_WALKING or time.time() - _SCHED_LAST_TRY < 3600:
-        return
-    u_port = universe_port(JOIN_PORT)
-    try:
-        head = _sched_head(u_port)
-    except Exception:
-        return
-    if not head or head.get("posture") != "standing":
+    if time.time() - _SCHED_LAST_TRY < 3600:
         return
     _SCHED_LAST_TRY = time.time()
+    u_port = universe_port(JOIN_PORT)
+    from datetime import datetime, timedelta, timezone
+
+    def _older_than(iso: str, days: int) -> bool:
+        if not iso:
+            return True
+        try:
+            then = datetime.fromisoformat(iso.replace("Z", "+00:00"))
+            return (datetime.now(timezone.utc) - then) >= timedelta(days=days)
+        except Exception:
+            return True
     try:
-        stand = wire_assets(u_port, "memory-standing")
-        last_at = (stand[-1][1].get("at") or "") if stand else ""
+        heads = _sched_heads(u_port)
     except Exception:
         return
-    from datetime import datetime, timedelta, timezone
-    due = True
-    if last_at:
-        try:
-            then = datetime.fromisoformat(last_at.replace("Z", "+00:00"))
-            due = (datetime.now(timezone.utc) - then) >= timedelta(
-                days=int(head.get("every_days") or 7))
-        except Exception:
-            pass
-    if not due:
-        return
-    _YARD_WALKING = True
-    print("  📏 the standing word is due — a scheduled yardstick run walks")
+    for (what, resident, _q), head in heads.items():
+        if head.get("posture") != "standing":
+            continue
+        every = int(head.get("every_days") or 7)
+        if what == "yardstick" and not resident:
+            if _YARD_WALKING:
+                continue
+            try:
+                stand = wire_assets(u_port, "memory-standing")
+                last_at = (stand[-1][1].get("at") or "") if stand else ""
+            except Exception:
+                continue
+            if not _older_than(last_at, every):
+                continue
+            _YARD_WALKING = True
+            print("  📏 the standing word is due — a scheduled yardstick "
+                  "run walks")
 
-    def _walk():
-        global _YARD_WALKING
-        try:
-            yardstick_run()
-        except Exception as ex:
-            print(f"    (the scheduled yardstick stumbled: {ex})")
-        finally:
-            _YARD_WALKING = False
-    threading.Thread(target=_walk, daemon=True).start()
+            def _walk():
+                global _YARD_WALKING
+                try:
+                    yardstick_run()
+                except Exception as ex:
+                    print(f"    (the scheduled yardstick stumbled: {ex})")
+                finally:
+                    _YARD_WALKING = False
+            threading.Thread(target=_walk, daemon=True).start()
+        elif resident and head.get("question"):
+            # a resident's standing question rides the parlor's OWN lane —
+            # the answer is a real audience on the record, and the word
+            # itself is the clock (a fired sibling carries last_fired)
+            if not _older_than(head.get("last_fired") or head.get("at", ""),
+                               every):
+                continue
+            try:
+                call(u_port, "POST", "/requests",
+                     {"kind": "parlor", "to": resident,
+                      "session": f"sched-{what}-{resident}",
+                      "text": head["question"]})
+                seat_kp, seat_did = lib_seat(UNIVERSE_SCOPE)
+                rec = make_memory({"did": seat_did, "scope": UNIVERSE_SCOPE},
+                                  seat_kp, UNIVERSE_SCOPE,
+                                  {"scheduled_ask": dict(
+                                      head, last_fired=NOW(), at=NOW())},
+                                  kind="semantic",
+                                  tags=["scheduled-ask", what])
+                call(u_port, "POST", "/records", rec)
+                _MEMO.pop("sched-heads", None)
+                print(f"  ⏰ the standing word fires: {resident} is asked "
+                      f"«{head['question'][:60]}» — the parlor lane carries it")
+            except Exception as ex:
+                print(f"    (a scheduled ask stumbled: {ex})")
 
 
 def stage_routing_revision() -> None:
@@ -10727,6 +10785,47 @@ def compose_resident(name: str) -> dict:
         if words else
         "no words on the shelf wear this resident's name yet — the craft "
         "census deepens with THE RELATIONS (0056 sp3)")
+    # ---- THE SCHEDULES (sp3): this resident's standing questions — any
+    # question they answer can repeat on a cadence (JB's L4)
+    schedules: list = []
+    try:
+        for (_w, rn, _q), h in _memo("sched-heads", 30,
+                                     lambda: _sched_heads(4500)).items():
+            if rn == low and h.get("posture") == "standing":
+                schedules.append({
+                    "question": str(h.get("question", ""))[:90],
+                    "every": f"every {h.get('every_days', 7)}d",
+                    "last": (h.get("last_fired") or "not yet fired")[:16]})
+    except Exception:
+        pass
+    item["schedules"] = schedules
+    item["sched_note"] = ("no standing questions yet — stage one below: "
+                          "any question this resident answers can repeat "
+                          "on a cadence, and your one approval starts it")
+    # ---- THE MINDS (sp3): the stable this resident saddles from
+    minds: list = []
+    mport = (wman or {}).get("port") or 4500
+    try:
+        for st in call(mport, "GET", "/stable").get("stalls", []):
+            minds.append({"mind": st.get("id"), "class": st.get("class"),
+                          "state": st.get("state")})
+    except Exception:
+        pass
+    item["minds"] = minds[:10]
+    # ---- THE RELATIONS (sp3): where the resident stands, one small map
+    home = (wman or {}).get("floor") or (wf or {}).get("scope") \
+        or UNIVERSE_SCOPE
+    _me_node = low
+    rel_nodes = [_me_node, home.split("/")[-1],
+                 f"{len(words)} words on the shelf",
+                 f"{len(minds)} minds at the stable"]
+    rel_edges = [[home.split("/")[-1], _me_node],
+                 [_me_node, f"{len(words)} words on the shelf"],
+                 [_me_node, f"{len(minds)} minds at the stable"]]
+    if wman:
+        rel_nodes.append(str(wman.get("name", "")))
+        rel_edges.append([str(wman.get("name", "")), _me_node])
+    item["rel_done"] = [{"stage": n} for n in rel_nodes]
     view = [
         {"kind": "stat",
          "section": "the vitals — the numbers a parent asks first",
@@ -10745,6 +10844,20 @@ def compose_resident(name: str) -> dict:
           if words else []),
         {"kind": "doc", "src": "words_note",
          **({} if words else {"section": "the words"})},
+        *([{"kind": "table", "src": "schedules",
+            "section": f"the schedules — {len(schedules)} standing",
+            "columns": [{"key": "question"}, {"key": "every"},
+                        {"key": "last", "label": "last fired"}]}]
+          if schedules else
+          [{"kind": "doc", "src": "sched_note",
+            "section": "the schedules — the standing questions"}]),
+        *([{"kind": "table", "src": "minds",
+            "section": f"the minds — the stable at {home.split('/')[-1]}",
+            "columns": [{"key": "mind"}, {"key": "class"},
+                        {"key": "state"}]}] if minds else []),
+        {"kind": "flow", "src": "rel_done", "live": False,
+         "section": "the relations — where I stand",
+         "nodes": rel_nodes, "edges": rel_edges},
     ]
     return {"resident": {"name": item["who"], "blurb": item["blurb"],
                          "did": item["did"], "mode": ORRETH_MODE,
