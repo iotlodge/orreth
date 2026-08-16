@@ -11384,26 +11384,50 @@ def main() -> None:
                                        "done": f"    ✓ lease granted — welcome to {scope}, {who}",
                                        "denied": f"  ↳ join {r['id']}: {who} turned away — proof failed",
                                        }.get(status, f"  ↳ join {r['id']} → {status}"))
-                                if status == "staged":
-                                    # THE STANDING WELCOME: this proven self
-                                    # was welcomed to this floor by the
-                                    # human before — becky honors the word,
-                                    # visibly, where the click would sit
-                                    w = _welcome_has(str(r.get("did") or ""),
-                                                     scope)
-                                    if w:
-                                        call(port, "POST", "/requests/resolve",
-                                             {"id": r["id"],
-                                              "status": "approved",
-                                              "result": {**result,
-                                                         "approved_by":
-                                                         "your standing welcome "
-                                                         f"({w['req']}) — the same "
-                                                         "self, the same floor; "
-                                                         "the key proven afresh"}})
-                                        print(f"  ↳ join {r['id']}: {who} "
-                                              "re-welcomed by your standing "
-                                              "word — no click owed twice")
+                            if r.get("status") == "staged":
+                                # the door waits — but the human's word may
+                                # already exist in TWO forms, and neither
+                                # owes a second click: THE STANDING WELCOME
+                                # (this self was approved to this floor
+                                # before), or THE ASK ITSELF (JB, 2026-08-16
+                                # — "am I doing it wrong?": a human asking a
+                                # resident for work IS the welcome). Either
+                                # way the key is re-proven on approval — the
+                                # desk challenges afresh across restarts,
+                                # so a lease never mints on a stale proof.
+                                _wj = _welcome_has(str(r.get("did") or ""),
+                                                   scope)
+                                _ask = None
+                                if not _wj:
+                                    _man4 = next(
+                                        (m for m in CAP_GENESIS.values()
+                                         if m.get("floor") == scope), None)
+                                    if _man4 and str(_man4.get(
+                                            "resident", "")).lower() == \
+                                            str(r.get("name", "")).lower():
+                                        _ask = next(
+                                            (q for q in call(
+                                                port, "GET", "/requests"
+                                             ).get("requests", [])
+                                             if q.get("kind") == "desk-ask"
+                                             and q.get("status") == "pending"),
+                                            None)
+                                if _wj or _ask:
+                                    call(port, "POST", "/requests/resolve",
+                                         {"id": r["id"],
+                                          "status": "approved",
+                                          "result": {**(r.get("result") or {}),
+                                                     "approved_by": (
+                                              "your standing welcome "
+                                              f"({_wj['req']}) — the same "
+                                              "self, the same floor"
+                                              if _wj else
+                                              f"your own ask ({_ask['id']}) "
+                                              "— asking a resident for work "
+                                              "IS the welcome")}})
+                                    print(f"  ↳ join {r['id']}: welcomed by "
+                                          "the human's own word — no second "
+                                          "click owed")
                         elif r.get("kind") == "service":
                             if KEEPER.on_service_request(port, scope, r) or r.get("status") == "staged":
                                 handled.add(key)
