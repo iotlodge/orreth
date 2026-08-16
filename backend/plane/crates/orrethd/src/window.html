@@ -4365,6 +4365,8 @@ async function resOpen(name){
     +`<div class="brn-sec">the rooms to come</div>
       <div class="dim" style="font-size:.72rem">THE WORK (the objective drawn live) · THE WORDS (firmware, mode-gated) · THE SCHEDULES (standing asks) · THE MINDS · THE RELATIONS — sp2 and sp3 of 0056, said honestly</div>`}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("resroom").classList.contains("capopen"))resClose()});
+const _resw=location.hash.match(/[#&]res=([a-z0-9_-]+)/i);
+if(_resw)setTimeout(()=>resOpen(_resw[1]),700);   // deep-link: #…&res=vera — a room is a place, and places have addresses
 
 /* ── THE CRAFT ROOM (0045 sp1) — lives ABOVE applyHash's first call (the
       1:35 lesson): the registry is a projection over the signed shelves;

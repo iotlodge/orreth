@@ -10415,8 +10415,27 @@ def compose_resident(name: str) -> dict:
                 if str(r.get("name", "")).lower() == low), None)
     wf = None
     if res is None:
-        wf = next((a for a in pres.get("workforce", [])
+        wfall = pres.get("workforce", [])
+        wf = next((a for a in wfall
                    if str(a.get("name") or "").lower() == low), None)
+        if wf is None:
+            # the architecture answers where the roster is silent: a
+            # resident's field wears the resident's name (…/f:charles) —
+            # every seat on that floor is one of the resident's own selves
+            seats = [a for a in wfall
+                     if str(a.get("scope") or "").split("/")[-1] == f"f:{low}"]
+            if seats:
+                wf = {"name": low, "agent": seats[0].get("agent"),
+                      "scope": seats[0].get("scope"),
+                      "state": seats[0].get("state"),
+                      "last_seen": max((a.get("last_seen") or ""
+                                        for a in seats), default=""),
+                      "runs": sum(int(a.get("runs") or 0) for a in seats),
+                      "success": sum(int(a.get("success") or 0)
+                                     for a in seats),
+                      "tokens": sum(int(a.get("tokens") or 0) for a in seats),
+                      "usd": sum(float(a.get("usd") or 0) for a in seats),
+                      "seats": len(seats)}
     if res is None and wf is None:
         return {"error": f"no resident named “{name}” stands in this universe"}
     interop = ""
@@ -10454,7 +10473,10 @@ def compose_resident(name: str) -> dict:
         ok = int(wf.get("success") or 0)
         item = {
             "who": str(wf.get("name") or name),
-            "blurb": f"workforce · {wf.get('scope', '')}",
+            "blurb": f"workforce · {wf.get('scope', '')}"
+                     + (f" · {wf['seats']} seat"
+                        f"{'s' if wf['seats'] != 1 else ''} on this floor"
+                        if wf.get("seats") else ""),
             "did": str(wf.get("agent") or ""),
             "state": str(wf.get("state") or ""),
             "spend": f"${float(wf.get('usd') or 0):.4f} lifetime · "
