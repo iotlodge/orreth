@@ -4067,7 +4067,7 @@ function dkFlow(nodes,edges,states,titles){
 function dkPanel(p,pi,item){
   switch(p.kind){
   case "flow":{
-    const walk=(DESK.walking||[])[0];
+    const walk=(p.live===false?null:((window.DESK&&DESK.walking)||[])[0]);
     const src=walk?walk.stages:(item[p.src]||[]);
     const done=new Set(src.map(x=>x.stage||x));
     const states={},titles={};
@@ -4360,10 +4360,18 @@ async function resOpen(name){
   $("res-title").textContent=(R.name||name).toUpperCase();
   $("res-sub").textContent=`${R.blurb||""} · ${(R.did||"").slice(0,28)}… · mode ${R.mode||"dev"}`;
   $("resbody").innerHTML=
-    `<div class="brn-sec">the vitals — the numbers a parent asks first</div>`
-    +(d.view||[]).map((p,pi)=>dkPanel(p,pi,d.item||{})).join("")
+    (d.view||[]).map((p,pi)=>
+      (p.section?`<div class="brn-sec">${dkEsc(p.section)}</div>`:"")
+      +dkPanel(p,pi,d.item||{})).join("")
+    +(R.has_words&&R.mode!=="prod"
+      ?`<div style="margin:.6rem 0"><button class="dk-tab" onclick="resShelf()" title="the shelf's gated doors — every edit a versioned sibling">🛠 open the shelf — the Governance room</button></div>`
+      :"")
     +`<div class="brn-sec">the rooms to come</div>
-      <div class="dim" style="font-size:.72rem">THE WORK (the objective drawn live) · THE WORDS (firmware, mode-gated) · THE SCHEDULES (standing asks) · THE MINDS · THE RELATIONS — sp2 and sp3 of 0056, said honestly</div>`}
+      <div class="dim" style="font-size:.72rem">THE SCHEDULES (standing asks) · THE MINDS · THE RELATIONS — sp3 of 0056, said honestly</div>`}
+function resShelf(){resClose();
+  location.hash=/v=[a-z]+/.test(location.hash)
+    ?location.hash.replace(/v=[a-z]+/,"v=gov")
+    :location.hash+"&v=gov"}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("resroom").classList.contains("capopen"))resClose()});
 const _resw=location.hash.match(/[#&]res=([a-z0-9_-]+)/i);
 if(_resw)setTimeout(()=>resOpen(_resw[1]),700);   // deep-link: #…&res=vera — a room is a place, and places have addresses

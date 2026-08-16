@@ -10541,18 +10541,117 @@ def compose_resident(name: str) -> dict:
     item["verdict_line"] = ("the assay grades work by floor, not yet by "
                             "name — the resident-level verdict joins with "
                             "THE RELATIONS (0056 sp3), said honestly")
+    # ---- THE WORK (sp2): the resident's own work, from the instruments
+    # that already know it — the desk residents' walks drawn by the flow
+    # engine, vera's verdicts, the librarian's lane; the rest confess
+    work_panels: list = []
+    wman = next((m for m in CAP_GENESIS.values()
+                 if str(m.get("resident", "")).lower() == low), None)
+    if wman is not None:
+        try:
+            dk = compose_desk(wman["key"])
+            walk = (dk.get("walking") or [None])[0]
+            rep = (dk.get("reports") or [{}])[0]
+            item["work_stages"] = (walk or rep or {}).get("stages") or []
+            item["recent_walks"] = [
+                f"{r.get('ticker', '?')} · {r.get('date', '?')} · "
+                f"{r.get('rating') or 'rating pending'}"
+                for r in (dk.get("reports") or [])[:6]] or \
+                ["no walks yet — the watchlist is the human's word"]
+            flowp = next((p for p in (_cap_shelf_manifest(wman["key"])
+                                      .get("view") or wman.get("view") or [])
+                          if p.get("kind") == "flow"), None)
+            if flowp:
+                work_panels.append({"kind": "flow", "src": "work_stages",
+                                    "live": False,
+                                    "section": "the work — " +
+                                    ("🚶 a walk rides now" if walk else
+                                     "the latest walk, stage by stage"),
+                                    "nodes": flowp.get("nodes"),
+                                    "edges": flowp.get("edges")})
+            work_panels.append({"kind": "list", "src": "recent_walks"})
+        except Exception:
+            pass
+    elif low == "vera":
+        try:
+            vs, _st = _wire_verdict_standings(4500)
+            item["verdicts"] = [{"score": v.get("score"),
+                                 "floor": v.get("work_floor"),
+                                 "why": v.get("why")} for v in vs[-8:]]
+            if item["verdicts"]:
+                work_panels.append({"kind": "table", "src": "verdicts",
+                                    "section": "the work — her last verdicts",
+                                    "columns": [{"key": "score"},
+                                                {"key": "floor"},
+                                                {"key": "why"}]})
+        except Exception:
+            pass
+    elif low == "librarian":
+        try:
+            rows = wire_assets(4500, "dispatch")[-8:]
+            item["asks"] = [
+                {"at": str((b.get("dispatch") or {}).get("at", ""))[:16],
+                 "route": (b.get("dispatch") or {}).get("flavor"),
+                 "ask": str((b.get("dispatch") or {}).get("ask", ""))[:70]}
+                for _r, b, _d, _t in rows]
+            if item["asks"]:
+                work_panels.append({"kind": "table", "src": "asks",
+                                    "section": "the work — the lane's "
+                                               "last walks",
+                                    "columns": [{"key": "at"},
+                                                {"key": "route"},
+                                                {"key": "ask"}]})
+        except Exception:
+            pass
+    if not work_panels:
+        item["work_note"] = ("this organ's work writes as records on the "
+                             "wire — its own feed joins as the instruments "
+                             "learn to name their author (0056 sp3)")
+        work_panels = [{"kind": "doc", "src": "work_note",
+                        "section": "the work"}]
+    # ---- THE WORDS (sp2): the firmware this resident wears — the desks'
+    # named craft and every canon word whose wearer registry names them;
+    # the mode law speaks here (dev editable at the gates · prod read-only)
+    words: list = []
+    try:
+        for wname, (lifecycle, _ref) in sorted(_craft_heads(4500).items()):
+            wear = " ".join(_WEARERS.get(wname, [])).lower()
+            if wname.lower().startswith(f"{low}-") or low in wear:
+                words.append({"word": wname, "lifecycle": lifecycle})
+    except Exception:
+        pass
+    item["words"] = words
+    item["words_note"] = (
+        ("READ-ONLY — this machine runs in PROD: a change is a RELEASE "
+         "(0045), and the studio doors are closed by the kernel's law"
+         if ORRETH_MODE == "prod" else
+         "editable in DEV at the shelf's gated doors — the Governance "
+         "room holds them; a CANON word still refuses toward the release")
+        if words else
+        "no words on the shelf wear this resident's name yet — the craft "
+        "census deepens with THE RELATIONS (0056 sp3)")
     view = [
-        {"kind": "stat", "fields": [
-            {"src": "spend", "label": "spend"},
-            {"src": "calls", "label": ""},
-            {"src": "state", "label": ""}]},
+        {"kind": "stat",
+         "section": "the vitals — the numbers a parent asks first",
+         "fields": [
+             {"src": "spend", "label": "spend"},
+             {"src": "calls", "label": ""},
+             {"src": "state", "label": ""}]},
         {"kind": "doc", "src": "age_line"},
         {"kind": "bars", "src": "vitals_bars"},
         {"kind": "doc", "src": "mirror"},
         {"kind": "doc", "src": "verdict_line"},
+        *work_panels,
+        *([{"kind": "table", "src": "words",
+            "section": f"the words — {len(words)} on the shelf",
+            "columns": [{"key": "word"}, {"key": "lifecycle"}]}]
+          if words else []),
+        {"kind": "doc", "src": "words_note",
+         **({} if words else {"section": "the words"})},
     ]
     return {"resident": {"name": item["who"], "blurb": item["blurb"],
-                         "did": item["did"], "mode": ORRETH_MODE},
+                         "did": item["did"], "mode": ORRETH_MODE,
+                         "has_words": bool(words)},
             "view": view, "item": item}
 
 
