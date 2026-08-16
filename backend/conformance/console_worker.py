@@ -2064,7 +2064,7 @@ def embed_door() -> None:
                 self.wfile.write(blob)
                 return
             if route not in ("/observatory", "/governance", "/craft",
-                             "/sentences", "/desk", "/brain"):
+                             "/sentences", "/desk", "/brain", "/resident"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2090,6 +2090,11 @@ def embed_door() -> None:
                         (qs.get("key") or ["trading-desk"])[0])).encode()
                 elif route == "/brain":
                     out = json.dumps(compose_brain()).encode()
+                elif route == "/resident":
+                    qs = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query)
+                    out = json.dumps(compose_resident(
+                        (qs.get("name") or [""])[0])).encode()
                 else:
                     out = json.dumps(compose_governance()
                                      if route == "/governance"
@@ -10390,6 +10395,98 @@ def yardstick_beat() -> None:
             _YARD_RAN = True
     except Exception as ex:
         print(f"    (the yardstick stumbled: {ex})")
+
+
+# --------------------------------------------- the resident's room (0056 sp1)
+
+def compose_resident(name: str) -> dict:
+    """0056 sp1 — a resident's ROOM, composed from instruments that already
+    exist (the charter's law: no new collection). ONE composer for the whole
+    family: the ten organs from the daemon's presence, and any workforce
+    resident through the same name door. The view travels as DATA — the
+    same twelve-kind vocabulary the worlds declare, rendered by the same
+    walker; residents and worlds converge on one glass grammar."""
+    try:
+        pres = call(4500, "GET", "/presence")
+    except Exception:
+        return {"error": "the presence door did not answer"}
+    low = (name or "").strip().lower()
+    res = next((r for r in pres.get("residents", [])
+                if str(r.get("name", "")).lower() == low), None)
+    wf = None
+    if res is None:
+        wf = next((a for a in pres.get("workforce", [])
+                   if str(a.get("name") or "").lower() == low), None)
+    if res is None and wf is None:
+        return {"error": f"no resident named “{name}” stands in this universe"}
+    interop = ""
+    try:                       # the Mirror's current word, where one stands
+        for row in wire_interop(4500, UNIVERSE_SCOPE):
+            who = str(row.get("resident") or row.get("mind") or "").lower()
+            if who == low:
+                interop = str(row.get("assessment") or row.get("standing")
+                              or row.get("text") or "")[:400]
+    except Exception:
+        pass
+    if res is not None:
+        v = res.get("vitals") or {}
+        calls = int(v.get("llm calls") or 0)
+        item = {
+            "who": str(res.get("role") or name),
+            "blurb": str(res.get("blurb") or ""),
+            "did": str(res.get("did") or ""),
+            "state": str(res.get("state") or ""),
+            "spend": f"${float(v.get('llm usd') or 0):.4f} lifetime",
+            "calls": f"{calls} governed thought{'s' if calls != 1 else ''}",
+            "age_line": "an organ of the kernel — as old as this universe "
+                        f"(era {os.environ.get('ORRETH_VERSION', 'v0.55')}); "
+                        "its firmware versions on the shelf",
+            "vitals_bars": [
+                {"label": k, "value": round(float(x), 4)}
+                for k, x in sorted(v.items())
+                if isinstance(x, (int, float))],
+            "mirror": interop or "the Mirror has not yet written this "
+                                 "resident's reflection — it composes from "
+                                 "real audiences (0034)",
+        }
+    else:
+        runs = int(wf.get("runs") or 0)
+        ok = int(wf.get("success") or 0)
+        item = {
+            "who": str(wf.get("name") or name),
+            "blurb": f"workforce · {wf.get('scope', '')}",
+            "did": str(wf.get("agent") or ""),
+            "state": str(wf.get("state") or ""),
+            "spend": f"${float(wf.get('usd') or 0):.4f} lifetime · "
+                     f"{int(wf.get('tokens') or 0):,} tokens",
+            "calls": f"{runs} run{'s' if runs != 1 else ''} · "
+                     f"{round(100 * ok / runs) if runs else 0}% whole",
+            "age_line": f"last seen {wf.get('last_seen') or '—'} — the full "
+                        "worldline walk joins with THE RELATIONS (0056 sp3)",
+            "vitals_bars": [{"label": "runs", "value": runs},
+                            {"label": "succeeded", "value": ok},
+                            {"label": "tokens",
+                             "value": int(wf.get("tokens") or 0)}],
+            "mirror": interop or "the Mirror has not yet written this "
+                                 "resident's reflection — it composes from "
+                                 "real audiences (0034)",
+        }
+    item["verdict_line"] = ("the assay grades work by floor, not yet by "
+                            "name — the resident-level verdict joins with "
+                            "THE RELATIONS (0056 sp3), said honestly")
+    view = [
+        {"kind": "stat", "fields": [
+            {"src": "spend", "label": "spend"},
+            {"src": "calls", "label": ""},
+            {"src": "state", "label": ""}]},
+        {"kind": "doc", "src": "age_line"},
+        {"kind": "bars", "src": "vitals_bars"},
+        {"kind": "doc", "src": "mirror"},
+        {"kind": "doc", "src": "verdict_line"},
+    ]
+    return {"resident": {"name": item["who"], "blurb": item["blurb"],
+                         "did": item["did"], "mode": ORRETH_MODE},
+            "view": view, "item": item}
 
 
 # ------------------------------------------------- the brain pull (0053 sp3)

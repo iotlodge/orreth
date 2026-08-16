@@ -824,13 +824,15 @@
     padding:.85rem .35rem;font-size:.62rem;letter-spacing:.32em;cursor:pointer;user-select:none;
     text-transform:uppercase;opacity:.95;box-shadow:-4px 0 14px var(--scrim),0 0 8px var(--brassdim)}
   #brainpull:hover{opacity:1;background:var(--hair)}
-  #capworld,#brainworld{position:fixed;top:0;right:-82%;width:80%;height:100%;z-index:60;background:var(--void);
+  #capworld,#brainworld,#resroom{position:fixed;top:0;right:-82%;width:80%;height:100%;z-index:60;background:var(--void);
     border-left:1px solid var(--hair2);transition:right .28s ease;display:flex;flex-direction:column;
     overflow:hidden;box-shadow:-18px 0 48px var(--scrim)}
-  #capworld.capopen,#brainworld.capopen{right:0}
-  #caphead,#brnhead{display:flex;align-items:center;gap:.8rem;padding:.9rem 1.4rem;border-bottom:1px solid var(--hair)}
-  #caphead b,#brnhead b{color:var(--brass);letter-spacing:.14em;font-size:.72rem;text-transform:uppercase}
-  #capbody,#brnbody{flex:1;overflow-y:auto;padding:1.1rem 1.6rem 3rem}
+  #capworld.capopen,#brainworld.capopen,#resroom.capopen{right:0}
+  #caphead,#brnhead,#reshead{display:flex;align-items:center;gap:.8rem;padding:.9rem 1.4rem;border-bottom:1px solid var(--hair)}
+  #caphead b,#brnhead b,#reshead b{color:var(--brass);letter-spacing:.14em;font-size:.72rem;text-transform:uppercase}
+  #capbody,#brnbody,#resbody{flex:1;overflow-y:auto;padding:1.1rem 1.6rem 3rem}
+  .roomdoor{margin-left:.35rem;opacity:.55;cursor:pointer;font-size:.8rem}
+  .roomdoor:hover{opacity:1;color:var(--brass)}
   .brn-sec{margin:1.1rem 0 .45rem;color:var(--brass);font-size:.68rem;letter-spacing:.16em;
     text-transform:uppercase;border-bottom:1px solid var(--hair);padding-bottom:.25rem}
   .brn-part{border:1px solid var(--hair);border-radius:8px;padding:.55rem .75rem;margin:.4rem 0;
@@ -1126,7 +1128,7 @@
 </div>
 <!-- THE PARLOR (0020): the audience room — humans ask; residents fetch -->
 <div class="parlor" id="parlor">
-  <div class="phd"><span class="rd" id="p-dot"></span><span class="nm" id="p-name">—</span>
+  <div class="phd"><span class="rd" id="p-dot"></span><span class="nm" id="p-name">—</span><span class="roomdoor" onclick="resOpen($('p-name').textContent)" title="this resident's room — vitals, and the rooms to come">⌂</span>
     <span class="fl" id="p-floor"></span>
     <span class="x" id="p-expand" onclick="parlorRoom()" style="display:none;margin-left:auto"
       title="the workspace — the resident's own room (0028)">⛶</span>
@@ -1158,6 +1160,13 @@
 <!-- ── 0053 sp3 · the brain pull: the state of the ACTIVE brain — instruments,
      partitioned by the architecture, aggregated above; never an NLP paraphrase ── -->
 <div id="brainpull" onclick="brnToggle()" title="the brain — what the machine IS: memory, metabolism, cognition, retention, read from its own instruments">🧠 brain</div>
+<!-- ── 0056 sp1 · the resident's room — the family's rooms, one renderer ── -->
+<div id="resroom">
+  <div id="reshead"><b id="res-title">THE RESIDENT'S ROOM</b>
+    <span class="dim" id="res-sub" style="font-size:.68rem"></span>
+    <button class="dk-tab" style="margin-left:auto" onclick="resClose()">✕ close</button></div>
+  <div id="resbody"></div>
+</div>
 <div id="brainworld">
   <div id="brnhead"><b>THE BRAIN · WHAT THE MACHINE IS</b>
     <span class="dim" style="font-size:.68rem">capabilities are what it does — this is its memory, metabolism, and mind, by universe · ecosystem · floor</span>
@@ -2531,8 +2540,10 @@ function agentRow(a,resident){
   /* residents receive callers (0020): a click opens an audience in the parlor */
   const speak=resident?` speakable" onclick="openParlor('${a.name||""}')" title="open an audience — you ask, ${a.name} fetches`:"";
   const face=resident?medallion(a.role):"";
+  /* 0056 sp1 — every named resident's row wears a door to their room */
+  const door=a.name?`<span class="roomdoor" onclick="event.stopPropagation();resOpen('${a.name}')" title="${a.name}'s room — vitals, and the rooms to come">⌂</span>`:"";
   return `<div class="agent${resident?" res2":""}${speak}">${face}<span class="orb ${a.state}"></span>
-    <span class="who"><span class="id">${resident?a.role:(a.name||short(a.agent))}</span>
+    <span class="who"><span class="id">${resident?a.role:(a.name||short(a.agent))}${door}</span>
     ${resident?"":`<span class="role">${a.scope?a.scope.split("/").pop():"workforce"}</span>`}${sub}</span></div>`;
 }
 
@@ -4327,6 +4338,33 @@ function brnRender(){
   $("brnbody").innerHTML=h;}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("brainworld").classList.contains("capopen"))brnToggle()});
 if(/(^|[#&])brain=1/.test(location.hash))setTimeout(brnToggle,600);   // deep-link: LITERAL brain=1 only — "brain" alone belongs to the Glass
+
+/* ── 0056 sp1 · the resident's room — ten rooms, one renderer: the view
+      arrives as DATA from the composer and the SAME panel walker draws it;
+      residents and worlds converge on one glass grammar. Doors: the ⌂ on
+      every rail row, and the parlor's header. ── */
+function resClose(){$("resroom").classList.remove("capopen")}
+async function resOpen(name){
+  if(!name)return;
+  if($("capworld").classList.contains("capopen"))capToggle();
+  if($("brainworld").classList.contains("capopen"))brnToggle();
+  $("resroom").classList.add("capopen");
+  $("res-title").textContent="THE RESIDENT'S ROOM";
+  $("res-sub").textContent="";
+  $("resbody").innerHTML=`<div class="dim" style="padding:2rem">the room is being composed from the instruments…</div>`;
+  let d;
+  try{d=await (await fetch(`${OBSD}/resident?name=${encodeURIComponent(name)}`)).json()}
+  catch(e){$("resbody").innerHTML=`<div class="dim" style="padding:2rem">the door did not answer — is the worker awake?</div>`;return}
+  if(d.error){$("resbody").innerHTML=`<div class="dim" style="padding:2rem">${dkEsc(d.error)}</div>`;return}
+  const R=d.resident||{};
+  $("res-title").textContent=(R.name||name).toUpperCase();
+  $("res-sub").textContent=`${R.blurb||""} · ${(R.did||"").slice(0,28)}… · mode ${R.mode||"dev"}`;
+  $("resbody").innerHTML=
+    `<div class="brn-sec">the vitals — the numbers a parent asks first</div>`
+    +(d.view||[]).map((p,pi)=>dkPanel(p,pi,d.item||{})).join("")
+    +`<div class="brn-sec">the rooms to come</div>
+      <div class="dim" style="font-size:.72rem">THE WORK (the objective drawn live) · THE WORDS (firmware, mode-gated) · THE SCHEDULES (standing asks) · THE MINDS · THE RELATIONS — sp2 and sp3 of 0056, said honestly</div>`}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("resroom").classList.contains("capopen"))resClose()});
 
 /* ── THE CRAFT ROOM (0045 sp1) — lives ABOVE applyHash's first call (the
       1:35 lesson): the registry is a projection over the signed shelves;
