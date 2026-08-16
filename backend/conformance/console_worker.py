@@ -1709,18 +1709,54 @@ for _k, _v in _DISCOVERED.items():
     _CAP_PLANT[f"capability-{_k}"] = _v["manifest"]
 
 
+def _cap_shelf_profiles() -> dict:
+    """Every capability-* profile off the shelf in ONE retrieve — bodies
+    fetched only for the manifest rows themselves (JB's 30-second landing,
+    2026-08-16: every compose fetched every asset's body on the whole
+    shelf to find three manifests). name -> profile, head wins."""
+    from datetime import datetime, timedelta, timezone
+    token = _ROOT.issue_token(IMP_DID, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc)
+           - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(4500, "POST", "/retrieve", {
+            "query": {"requester": IMP_DID,
+                      "subject": {"cohort": {"scope": "u:demo"}},
+                      "space": "self", "time": {"from": frm},
+                      "intent": "recall", "budget": {"cost": 8},
+                      "auth": "biscuit-sim"},
+            "token": token, "requester_scope": "u:demo"})
+    except Exception:
+        return {}
+    byname: dict = {}
+    for h in sorted(r.get("hits", []),
+                    key=lambda x: x.get("occurred_at", "")):
+        t = h.get("tags") or []
+        if "asset" not in t:
+            continue
+        name = next((x for x in t if str(x).startswith("capability-")), None)
+        if not name:
+            continue
+        try:
+            body = call(4500, "GET", "/records/"
+                        + urllib.parse.quote(h["ref"], safe="") + "/body")
+        except Exception:
+            continue
+        prof = ((body or {}).get("asset") or {}).get("profile")
+        if isinstance(prof, dict) and prof.get("key"):
+            byname[name] = prof               # oldest-first — the head wins
+    return byname
+
+
 def _cap_shelf_manifest(key: str) -> dict:
     """The SHELF's head for a world's manifest — the living copy, where
     retirement lives (the genesis is install-source, never state)."""
     try:
-        rows = wire_assets(4500, "asset", name=f"capability-{key}")
-        if rows:
-            prof = (rows[-1][1].get("asset") or {}).get("profile")
-            if isinstance(prof, dict):
-                return prof
+        return dict(_memo("cap-manifests", 30,
+                          _cap_shelf_profiles).get(f"capability-{key}") or {})
     except Exception:
-        pass
-    return {}
+        return {}
 
 
 def capability_crew_boot() -> None:
@@ -1908,13 +1944,7 @@ def compose_desk(key: str = "trading-desk") -> dict:
                             else (_slice(md, "debate") or miss))
         P = (rep.get("charts") or {}).get("price_series") or []
         rep["last_price"] = round(P[-1]["close"], 2) if P else None
-    byname = {}
-    for _ref, body, _dl, _tags in wire_assets(4500, "asset"):
-        a = body.get("asset") or {}
-        prof = a.get("profile") or {}
-        if (str(a.get("name", "")).startswith("capability-")
-                and isinstance(prof, dict) and prof.get("key")):
-            byname[a["name"]] = prof          # oldest-first — the head wins
+    byname = dict(_memo("cap-manifests", 30, _cap_shelf_profiles))
     manifests = list(byname.values())
     if not manifests:                         # genesis fallback — never a blank portal
         manifests = list(CAP_GENESIS.values())
@@ -2086,8 +2116,9 @@ def embed_door() -> None:
                 elif route == "/desk":
                     qs = urllib.parse.parse_qs(
                         urllib.parse.urlparse(self.path).query)
-                    out = json.dumps(compose_desk(
-                        (qs.get("key") or ["trading-desk"])[0])).encode()
+                    _dk = (qs.get("key") or ["trading-desk"])[0]
+                    out = json.dumps(_memo(f"deskdoor-{_dk}", 8,
+                                           lambda: compose_desk(_dk))).encode()
                 elif route == "/brain":
                     out = json.dumps(compose_brain()).encode()
                 elif route == "/resident":
@@ -10928,9 +10959,27 @@ def _compose_brain_locked() -> dict:
     # 2026-08-16): which route the newest question actually took
     lane = None
     try:
-        drows = wire_assets(universe_port(JOIN_PORT), "dispatch")
-        if drows:
-            dd = (drows[-1][1] or {}).get("dispatch") or {}
+        # ONE newest dispatch, ONE body — the old read fetched every
+        # dispatch record's body for a single row (JB's slow pull, 2026-08-16)
+        u_port = universe_port(JOIN_PORT)
+        token2 = _ROOT.issue_token(IMP_DID, "u:demo",
+                                   [{"action": "retrieve", "space": "self"}])
+        from datetime import datetime as _dt2, timedelta as _td2, timezone as _tz2
+        frm2 = (_dt2.now(_tz2.utc) - _td2(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        rr = call(u_port, "POST", "/retrieve", {
+            "query": {"requester": IMP_DID,
+                      "subject": {"cohort": {"scope": UNIVERSE_SCOPE}},
+                      "space": "self", "time": {"from": frm2},
+                      "intent": "recall", "budget": {"cost": 8},
+                      "auth": "biscuit-sim"},
+            "token": token2, "requester_scope": UNIVERSE_SCOPE})
+        dh = [h for h in rr.get("hits", [])
+              if "dispatch" in (h.get("tags") or [])]
+        if dh:
+            newest = max(dh, key=lambda h: h.get("occurred_at", ""))
+            body = call(u_port, "GET", "/records/"
+                        + urllib.parse.quote(newest["ref"], safe="") + "/body")
+            dd = (body or {}).get("dispatch") or {}
             lane = {"ask": str(dd.get("ask", ""))[:110],
                     "flavor": dd.get("flavor"), "rule": dd.get("rule"),
                     "why": str(dd.get("why", ""))[:120],
