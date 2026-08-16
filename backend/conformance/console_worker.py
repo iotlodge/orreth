@@ -9701,18 +9701,79 @@ _GOV_CACHE: dict = {"at": 0.0, "payload": None}
 
 
 def _craft_heads(port: int) -> dict:
-    """name -> (lifecycle, head_ref) off the shelves — the editor's map."""
+    """name -> (lifecycle, head_ref) off the shelves — the editor's map.
+    ONE retrieve, names read from TAGS; bodies are fetched only for the
+    few firmware rows whose names live inside (the 45-second room, 0056
+    sp2's find: hundreds of body round-trips to learn names the tags
+    already carried)."""
+    from datetime import datetime, timedelta, timezone
+    token = _ROOT.issue_token(IMP_DID, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc)
+           - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": IMP_DID,
+                      "subject": {"cohort": {"scope": "u:demo"}},
+                      "space": "self", "time": {"from": frm},
+                      "intent": "recall", "budget": {"cost": 8},
+                      "auth": "biscuit-sim"},
+            "token": token, "requester_scope": "u:demo"})
+    except Exception:
+        return {}
+    hits = sorted(r.get("hits", []), key=lambda h: h.get("occurred_at", ""))
     heads: dict = {}
-    for ref, b, _, _ in wire_assets(port, "firmware"):
-        f = (b or {}).get("firmware") or {}
-        if f.get("name"):
-            heads[f["name"]] = ("canon", ref)
-    for ref, _, _, t in wire_assets(port, "asset"):
-        name = next((x for x in (t or []) if x not in
-                     ("asset", "asset-variant", "adopted")), None)
-        if name:
-            heads[name] = ("chronicle", ref)
+    for h in hits:
+        t = h.get("tags") or []
+        if "firmware" in t:
+            try:
+                body = call(port, "GET", "/records/"
+                            + urllib.parse.quote(h["ref"], safe="") + "/body")
+                f = (body or {}).get("firmware") or {}
+                if f.get("name"):
+                    heads[f["name"]] = ("canon", h["ref"])
+            except Exception:
+                continue
+        elif "asset" in t:
+            name = next((x for x in t if x not in
+                         ("asset", "asset-variant", "adopted")), None)
+            if name:
+                heads[name] = ("chronicle", h["ref"])
     return heads
+
+
+_MEMO: dict = {}
+
+
+def _room_warm_loop() -> None:
+    """The rooms answer at a click because the worker warms their heavy
+    reads on ITS clock, not the human's (0056 sp2's find: a 45-second
+    first click). Its own thread — the round's pulses never wait on it."""
+    time.sleep(20)                       # let the boot flood pass first
+    while True:
+        for key, ttl, fn in (
+                ("craft-heads", 120, lambda: _craft_heads(4500)),
+                ("verdicts", 60, lambda: _wire_verdict_standings(4500)),
+                ("interop", 60, lambda: wire_interop(4500, UNIVERSE_SCOPE))):
+            try:
+                e = _MEMO.get(key)
+                if not e or time.time() - e[0] >= ttl * 0.8:
+                    _MEMO[key] = (time.time(), fn())
+            except Exception:
+                pass
+        time.sleep(45)
+
+
+def _memo(key: str, ttl: float, fn):
+    """A short-lived memo for the composers' heavy reads — the rooms answer
+    in a breath, and the truth is at most `ttl` seconds old, said nowhere
+    because every payload already wears its own clocks."""
+    e = _MEMO.get(key)
+    if e and time.time() - e[0] < ttl:
+        return e[1]
+    v = fn()
+    _MEMO[key] = (time.time(), v)
+    return v
 
 
 def on_craft_edit(port: int, scope: str, r: dict) -> None:
@@ -10448,7 +10509,8 @@ def compose_resident(name: str) -> dict:
         return {"error": f"no resident named “{name}” stands in this universe"}
     interop = ""
     try:                       # the Mirror's current word, where one stands
-        for row in wire_interop(4500, UNIVERSE_SCOPE):
+        for row in _memo("interop", 60,
+                         lambda: wire_interop(4500, UNIVERSE_SCOPE)):
             who = str(row.get("resident") or row.get("mind") or "").lower()
             if who == low:
                 interop = str(row.get("assessment") or row.get("standing")
@@ -10549,7 +10611,8 @@ def compose_resident(name: str) -> dict:
                  if str(m.get("resident", "")).lower() == low), None)
     if wman is not None:
         try:
-            dk = compose_desk(wman["key"])
+            dk = _memo(f"desk-{wman['key']}", 8,
+                       lambda: compose_desk(wman["key"]))
             walk = (dk.get("walking") or [None])[0]
             rep = (dk.get("reports") or [{}])[0]
             item["work_stages"] = (walk or rep or {}).get("stages") or []
@@ -10574,7 +10637,8 @@ def compose_resident(name: str) -> dict:
             pass
     elif low == "vera":
         try:
-            vs, _st = _wire_verdict_standings(4500)
+            vs, _st = _memo("verdicts", 60,
+                            lambda: _wire_verdict_standings(4500))
             item["verdicts"] = [{"score": v.get("score"),
                                  "floor": v.get("work_floor"),
                                  "why": v.get("why")} for v in vs[-8:]]
@@ -10614,7 +10678,9 @@ def compose_resident(name: str) -> dict:
     # the mode law speaks here (dev editable at the gates · prod read-only)
     words: list = []
     try:
-        for wname, (lifecycle, _ref) in sorted(_craft_heads(4500).items()):
+        for wname, (lifecycle, _ref) in sorted(
+                _memo("craft-heads", 120,
+                      lambda: _craft_heads(4500)).items()):
             wear = " ".join(_WEARERS.get(wname, [])).lower()
             if wname.lower().startswith(f"{low}-") or low in wear:
                 words.append({"word": wname, "lifecycle": lifecycle})
@@ -11066,6 +11132,7 @@ def main() -> None:
     handled: set[tuple] = set()               # (port, id, at, status): each step acted once
     scopes: dict[int, str] = {}
     threading.Thread(target=embed_door, daemon=True).start()  # the meaning axis's door (0022 Ph2)
+    threading.Thread(target=_room_warm_loop, daemon=True).start()  # the rooms stay a breath away (0056 sp2)
     SHIPYARD.replant()
     capability_crew_boot()                        # hulls the rig lost come back before the round
     FLIGHT.replant()                          # the recorder's book seeds, aged honestly (0043 sp1)
