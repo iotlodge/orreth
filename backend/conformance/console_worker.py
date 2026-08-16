@@ -1312,9 +1312,17 @@ EMBED_PORT = int(os.environ.get("ORRETH_EMBED_PORT", "4562"))
 _EMBED_LAST = 0.0
 EMBED_EVERY = int(os.environ.get("ORRETH_EMBED_EVERY", "90"))
 
+# DEV vs PROD (JB's kernel law, 2026-08-16): Orreth is the kernel, residents
+# are embedded firmware. In DEV the words that drive them are MUTABLE through
+# the studios' gated doors; in PROD the same doors are READ-ONLY and every
+# change rides the RELEASE ceremony (0045 sp3 — a firmware change moves the
+# machine's name). The mode is an attribute of the running machine, never a
+# per-edit decision.
+ORRETH_MODE = os.environ.get("ORRETH_MODE", "dev").strip().lower()
 
 CAP_PANEL_KINDS = {"tabs", "markdown", "chart", "strip", "controls", "download",
-                   "stat", "bars", "list", "doc", "table"}   # canon (0055 L1/L2)
+                   "stat", "bars", "list", "doc", "table",
+                   "flow"}   # canon (0055 L1/L2 · flow joined 2026-08-16)
 
 
 def cap_manifest_flaw(parsed) -> str | None:
@@ -9701,6 +9709,13 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
              {"id": rid, "status": "done", "result": {"reply": reply, **kw}})
 
     name = str(r.get("name") or "")
+    if ORRETH_MODE == "prod":
+        # the kernel law (JB, 2026-08-16): in PROD the residents' firmware
+        # is READ-ONLY at every studio door — a change rides the release
+        # ceremony or it does not ride at all
+        return done("PROD refuses the edit door — this machine runs in prod "
+                    "mode, where resident firmware is read-only and every "
+                    "change is a RELEASE (0045 sp3). Nothing changed")
     heads = _craft_heads(port)
     if name not in heads:
         return done(f"the shelf holds no craft named “{name}” — nothing changed")
@@ -10565,8 +10580,23 @@ def _compose_brain_locked() -> dict:
                          "mean": b.get("mean")})
     except Exception:
         pass
+    # the ask lane's last walk — the flow graph's live truth (JB's graphs,
+    # 2026-08-16): which route the newest question actually took
+    lane = None
+    try:
+        drows = wire_assets(universe_port(JOIN_PORT), "dispatch")
+        if drows:
+            dd = (drows[-1][1] or {}).get("dispatch") or {}
+            lane = {"ask": str(dd.get("ask", ""))[:110],
+                    "flavor": dd.get("flavor"), "rule": dd.get("rule"),
+                    "why": str(dd.get("why", ""))[:120],
+                    "at": dd.get("at", "")}
+    except Exception:
+        pass
     payload = {
         "at": now,
+        "mode": ORRETH_MODE,
+        "lane": lane,
         "aggregate": {"floors": len(parts), "records": total,
                       "classified": sum(int(p.get("classified") or 0)
                                         for p in parts),

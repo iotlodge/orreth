@@ -17,7 +17,10 @@ package is a named cloud-phase commitment riding the deed/trust machinery
 from __future__ import annotations
 
 PANEL_KINDS = {"tabs", "markdown", "chart", "strip", "controls", "download",
-               "stat", "bars", "list", "doc", "table"}
+               "stat", "bars", "list", "doc", "table",
+               "flow"}   # flow (2026-08-16): a declared DAG the glass draws
+#                          blind — nodes/edges in the manifest, live state
+#                          joined from the world's own records
 
 
 def manifest(*, key: str, name: str, emoji: str, resident: str, floor: str,

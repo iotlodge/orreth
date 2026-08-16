@@ -25,7 +25,9 @@ rootpub() {  # keep the seed and infrastructure/.env in lockstep, always
 
 joindoor() {  # becky answers joins + the librarian answers Asks — the floor's cognition
   pkill -f "console_worker.py $FIELD" 2>/dev/null || true; sleep 0.3
-  (cd "$CONF" && ORRETH_JOIN_LEASE_TOKENS="${ORRETH_JOIN_LEASE_TOKENS:-400000}"     nohup uv run python console_worker.py "$FIELD" >"$TMPDIR/worker.log" 2>&1 &)
+  (cd "$CONF" && ORRETH_JOIN_LEASE_TOKENS="${ORRETH_JOIN_LEASE_TOKENS:-400000}" \
+    ORRETH_MODE="${ORRETH_MODE:-dev}" \
+    nohup uv run python console_worker.py "$FIELD" >"$TMPDIR/worker.log" 2>&1 &)
   echo "· becky's join door open on :$FIELD — agents may join; log: $TMPDIR/worker.log"
 }
 

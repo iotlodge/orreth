@@ -11,4 +11,5 @@ def test_manifest_builds_and_guards():
     with pytest.raises(ValueError):
         manifest(key="x", name="X", emoji="✦", resident="r", floor="u:demo",
                  port=1, law="l", view=[{"kind": "iframe"}])
-    assert "table" in PANEL_KINDS and len(PANEL_KINDS) == 11
+    assert "table" in PANEL_KINDS and "flow" in PANEL_KINDS \
+        and len(PANEL_KINDS) == 12
