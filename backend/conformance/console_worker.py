@@ -9865,12 +9865,24 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
 
     name = str(r.get("name") or "")
     if ORRETH_MODE == "prod":
-        # the kernel law (JB, 2026-08-16): in PROD the residents' firmware
-        # is READ-ONLY at every studio door — a change rides the release
-        # ceremony or it does not ride at all
-        return done("PROD refuses the edit door — this machine runs in prod "
-                    "mode, where resident firmware is read-only and every "
-                    "change is a RELEASE (0045 sp3). Nothing changed")
+        # THE RAZOR (JB's taxonomy, 2026-08-17): if you can change it in
+        # prod, it is PURPOSE; if changing it requires a release, it is
+        # FIRMWARE. Capabilities are packaged purposes — their craft stays
+        # CRUD-able in prod through the gates, because purpose content is
+        # the human's domain. The RESIDENTS (the organs: becky, ada, vera,
+        # grace, allen…) are the kernel's firmware — read-only in prod,
+        # every change a RELEASE (0045 sp3). Data-driven, no name baked:
+        # a word belongs to a capability iff discovery says so.
+        _cap_prefixes = {str(m.get("resident", "")).lower()
+                         for m in CAP_GENESIS.values() if m.get("resident")}
+        _is_cap_word = (name.startswith("capability-")
+                        or any(name.lower().startswith(p + "-")
+                               for p in _cap_prefixes))
+        if not _is_cap_word:
+            return done("PROD refuses this door — this word is RESIDENT "
+                        "FIRMWARE, and in prod a change is a RELEASE "
+                        "(0045 sp3). Capability craft remains editable: "
+                        "purpose is the human's domain. Nothing changed")
     heads = _craft_heads(port)
     if name not in heads:
         return done(f"the shelf holds no craft named “{name}” — nothing changed")
