@@ -63,6 +63,49 @@ def main() -> None:
         (fx / "retrieve.json").write_text(r.read().decode())
     print("  captured /retrieve (730-day cut) → fixtures/retrieve.json")
 
+    # ── the era-0.56 doors (2026-08-17): the worker's composed surfaces —
+    # capabilities, brain, rooms, observatory — captured so the spectator's
+    # pulls and modals breathe the same photograph
+    def get2(path: str) -> dict:
+        with urllib.request.urlopen(f"http://127.0.0.1:4562{path}",
+                                    timeout=60) as r:
+            return json.loads(r.read())
+
+    for name, path in (("observatory", "/observatory"),
+                       ("governance", "/governance"),
+                       ("sentences", "/sentences"),
+                       ("brain", "/brain"),
+                       ("desk", "/desk")):
+        try:
+            (fx / f"{name}.json").write_text(json.dumps(get2(path)))
+            print(f"  captured :4562{path} → fixtures/{name}.json")
+        except Exception as e:
+            print(f"  ({path} did not answer — {e}; the room shows its honest miss)")
+    try:
+        landing = json.loads((fx / "desk.json").read_text())
+        specialists = []
+        for w in landing.get("worlds", []):
+            key = w.get("key")
+            if not key:
+                continue
+            (fx / f"desk-{key}.json").write_text(
+                json.dumps(get2(f"/desk?key={key}")))
+            print(f"  captured world «{key}»")
+            if w.get("resident"):
+                specialists.append(str(w["resident"]).lower())
+        pres = json.loads((fx / "presence.json").read_text())
+        names = [str(r.get("name", "")).lower()
+                 for r in pres.get("residents", []) if r.get("name")]
+        for n in sorted(set(names + specialists)):
+            try:
+                (fx / f"resident-{n}.json").write_text(
+                    json.dumps(get2(f"/resident?name={n}")))
+                print(f"  captured room «{n}»")
+            except Exception:
+                pass
+    except Exception as e:
+        print(f"  (the worlds/rooms sweep stumbled: {e})")
+
     at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%MZ")
     # the baked cfg drives lanes/tiers only; the token is a stone — nothing serves it
     cfg = {"token": "spectator", "requester": "spectator", "requester_scope": SCOPE,

@@ -1233,9 +1233,25 @@ if(window.ORRETH_DEMO){
              "/farm":"farm","/stable":"stable","/requests":"requests","/health":"health"};
   window.fetch=(url,opts)=>{
     /* absolute or relative, only the pathname decides the fixture (one-glass era) */
-    const path=new URL(String(url),location.href).pathname;
+    const u=new URL(String(url),location.href);
+    const path=u.pathname;
     const method=((opts&&opts.method)||"GET").toUpperCase();
     if(method==="GET"&&FIX[path])return realFetch(`fixtures/${FIX[path]}.json`);
+    /* the era-0.56 doors (2026-08-17): pulls, worlds, and rooms breathe the
+       same photograph — keyed fixtures where the door takes a name */
+    if(method==="GET"&&(path==="/observatory"||path==="/governance"||
+       path==="/sentences"||path==="/brain"))
+      return realFetch(`fixtures/${path.slice(1)}.json`);
+    if(method==="GET"&&path==="/desk"){
+      const k=u.searchParams.get("key");
+      return realFetch(k?`fixtures/desk-${k}.json`:"fixtures/desk.json")}
+    if(method==="GET"&&path==="/resident"){
+      const n=(u.searchParams.get("name")||"").toLowerCase();
+      return realFetch(`fixtures/resident-${n}.json`)}
+    if(method==="GET"&&path==="/craft")
+      return Promise.resolve(new Response(JSON.stringify(
+        {profile:{template:"(a spectator may walk every room — the shelf's own words stay home with the live universe)"},
+         lifecycle:"canon"}),{status:200}));
     if(method==="GET"&&path.startsWith("/records/"))
       return Promise.resolve(new Response("{}",{status:404}));
     if(method==="POST"&&path==="/retrieve")return realFetch("fixtures/retrieve.json");
