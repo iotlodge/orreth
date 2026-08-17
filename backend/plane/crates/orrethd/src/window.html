@@ -4026,6 +4026,104 @@ async function deskStop(tk){
   DESK=null;setTimeout(()=>{CAPV==="home"?loadDesk():renderCap()},2600)}
 let DKSORT={col:null,dir:1};
 function dkTableSort(pi,col){DKSORT={col,dir:DKSORT.col===col?-DKSORT.dir:1};renderCap()}
+/* ── THE CANVAS (0056v2 sp-A — the Commander correction, 2026-08-17):
+      the graph is a WORKSPACE, not an illustration. Hand-rolled and
+      dependency-free by law: a pannable/zoomable dotted-grid canvas of
+      NODE CARDS (icon · category eyebrow · bold name · description ·
+      status chip), elbow edges with kind-colors, dashed GROUP boxes,
+      a minimap, +/−/fit/fullscreen/lock — and a click on any node is a
+      door (the inspector rides sp-B). Judged against tmp/CO, not my
+      instincts. ── */
+const DKCV={};   // canvas id → {z, px, py, W, H, lock} — state survives re-renders
+function dkCvView(id){const s=DKCV[id];if(!s)return;
+  const svg=document.getElementById("cv-"+id);if(!svg)return;
+  const w=s.W/s.z,h=s.H/s.z;
+  svg.setAttribute("viewBox",`${s.px} ${s.py} ${w} ${h}`);
+  const mm=document.getElementById("cvmm-"+id);
+  if(mm){const sc=140/s.W;
+    mm.setAttribute("x",s.px*sc);mm.setAttribute("y",s.py*sc);
+    mm.setAttribute("width",w*sc);mm.setAttribute("height",h*sc)}}
+function dkCvZoom(id,f){const s=DKCV[id];if(!s)return;
+  const w0=s.W/s.z;s.z=Math.max(.35,Math.min(2.5,s.z*f));
+  const w1=s.W/s.z;s.px+=(w0-w1)/2;s.py+=(w0-w1)/2*(s.H/s.W);dkCvView(id)}
+function dkCvFit(id){const s=DKCV[id];if(!s)return;s.z=1;s.px=0;s.py=0;dkCvView(id)}
+function dkCvFull(id){const el=document.getElementById("cvbox-"+id);
+  if(el&&el.requestFullscreen)el.requestFullscreen()}
+function dkCvLock(id,btn){const s=DKCV[id];if(!s)return;s.lock=!s.lock;
+  if(btn)btn.style.color=s.lock?"var(--brass)":""}
+function dkCvDown(id,ev){const s=DKCV[id];if(!s||s.lock)return;
+  s.drag={x:ev.clientX,y:ev.clientY,px:s.px,py:s.py};
+  const mv=e=>{if(!s.drag)return;
+    const svg=document.getElementById("cv-"+id);if(!svg)return;
+    const r=svg.getBoundingClientRect(),k=(s.W/s.z)/r.width;
+    s.px=s.drag.px-(e.clientX-s.drag.x)*k;
+    s.py=s.drag.py-(e.clientY-s.drag.y)*k;dkCvView(id)};
+  const up=()=>{s.drag=null;removeEventListener("mousemove",mv);
+    removeEventListener("mouseup",up)};
+  addEventListener("mousemove",mv);addEventListener("mouseup",up)}
+const DKCV_KIND={flow:"var(--brassdim)",owns:"var(--dim)",
+  depends:"var(--blue,#4a7dbd)",exposes:"var(--brass)"};
+function dkCanvas(id,spec,states,titles){
+  // spec: {nodes:[id | {id,label,desc,icon,kind}], edges:[[a,b] | {from,to,kind,label}],
+  //        groups:[{label,nodes:[]}], h?} · states: id→done|live|pending|idle
+  const nodes=(spec.nodes||[]).map(n=>typeof n==="string"?{id:n}:n);
+  const edges=(spec.edges||[]).map(e=>Array.isArray(e)?{from:e[0],to:e[1]}:e);
+  const col={};nodes.forEach(n=>col[n.id]=0);
+  for(let i=0;i<nodes.length;i++)edges.forEach(e=>{
+    if((col[e.to]??0)<(col[e.from]??0)+1)col[e.to]=col[e.from]+1});
+  const byCol={};nodes.forEach(n=>{(byCol[col[n.id]]=byCol[col[n.id]]||[]).push(n)});
+  const NW=196,NH=58,CW=NW+64,RH=NH+26,PAD=26;
+  const ncols=Math.max(...nodes.map(n=>col[n.id]))+1;
+  const nrows=Math.max(...Object.values(byCol).map(a=>a.length));
+  const W=ncols*CW+PAD*2,H=Math.max(240,nrows*RH+PAD*2);
+  const pos={};Object.entries(byCol).forEach(([c,arr])=>{arr.forEach((n,i)=>{
+    pos[n.id]=[PAD+(+c)*CW,PAD+(H-2*PAD)*(i+.5)/arr.length-NH/2]})});
+  DKCV[id]=Object.assign(DKCV[id]||{},{W,H,z:DKCV[id]?.z||1,
+    px:DKCV[id]?.px||0,py:DKCV[id]?.py||0,lock:DKCV[id]?.lock||false});
+  const st=n=>(states||{})[n]||"pending";
+  let s=`<div id="cvbox-${id}" style="position:relative;background:var(--deep);border:1px solid var(--hair);border-radius:10px;overflow:hidden">`
+    +`<svg id="cv-${id}" width="100%" style="display:block;height:${Math.min(H,520)}px;cursor:grab" viewBox="0 0 ${W} ${H}" onmousedown="dkCvDown('${id}',event)">`
+    +`<defs><pattern id="cvdot-${id}" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="var(--hair)"/></pattern>`
+    +`<marker id="cvarr-${id}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="var(--brassdim)"/></marker></defs>`
+    +`<rect width="${W}" height="${H}" fill="url(#cvdot-${id})"/>`;
+  (spec.groups||[]).forEach(g=>{
+    const ps=(g.nodes||[]).map(n=>pos[n]).filter(Boolean);if(!ps.length)return;
+    const x0=Math.min(...ps.map(p=>p[0]))-12,y0=Math.min(...ps.map(p=>p[1]))-16,
+          x1=Math.max(...ps.map(p=>p[0]))+NW+12,y1=Math.max(...ps.map(p=>p[1]))+NH+12;
+    s+=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="10" fill="none" stroke="var(--brass)" stroke-width="1" stroke-dasharray="7 5" opacity=".55"/>`
+      +`<text x="${x0+8}" y="${y0-4}" font-size="9" fill="var(--brass)" opacity=".8" style="letter-spacing:.14em;text-transform:uppercase">${dkEsc(g.label||"")}</text>`});
+  edges.forEach(e=>{const A=pos[e.from],B=pos[e.to];if(!A||!B)return;
+    const x1=A[0]+NW,y1=A[1]+NH/2,x2=B[0],y2=B[1]+NH/2,mx=x1+(x2-x1)/2;
+    const hot=st(e.from)!=="pending"&&st(e.to)!=="pending";
+    const c=DKCV_KIND[e.kind]||(hot?"var(--brassdim)":"var(--hair)");
+    s+=`<path d="M${x1} ${y1} L${mx} ${y1} L${mx} ${y2} L${x2-3} ${y2}" fill="none" stroke="${c}" stroke-width="${hot?1.5:1.1}" marker-end="url(#cvarr-${id})"/>`;
+    if(e.label)s+=`<g><rect x="${mx-24}" y="${(y1+y2)/2-8}" width="48" height="15" rx="4" fill="var(--void)" stroke="${c}"/><text x="${mx}" y="${(y1+y2)/2+3}" text-anchor="middle" font-size="8" fill="${c}">${dkEsc(e.label)}</text></g>`});
+  nodes.forEach(n=>{const P=pos[n.id];if(!P)return;const S=st(n.id);
+    const stroke=S==="done"?"var(--brassdim)":S==="live"?"var(--brass)":"var(--hair)";
+    const tip=(titles||{})[n.id]||n.desc||"";
+    s+=`<g style="cursor:pointer" onclick="dkCvNode&&dkCvNode('${id}','${dkEsc(n.id)}')">`
+      +(S==="live"?`<rect x="${P[0]-3}" y="${P[1]-3}" width="${NW+6}" height="${NH+6}" rx="10" fill="none" stroke="var(--brass)"><animate attributeName="opacity" values="1;.25;1" dur="1.5s" repeatCount="indefinite"/></rect>`:"")
+      +`<rect x="${P[0]}" y="${P[1]}" width="${NW}" height="${NH}" rx="8" fill="var(--void)" stroke="${stroke}" stroke-width="1.2"/>`
+      +(S==="live"?`<rect x="${P[0]}" y="${P[1]}" width="${NW}" height="3" rx="1.5" fill="var(--brass)"/>`:"")
+      +(tip?`<title>${dkEsc(tip)}</title>`:"")
+      +`<text x="${P[0]+10}" y="${P[1]+15}" font-size="8" fill="var(--faint)" style="letter-spacing:.12em;text-transform:uppercase">${dkEsc(n.icon||"")} ${dkEsc(n.kind||"")}</text>`
+      +`<text x="${P[0]+10}" y="${P[1]+30}" font-size="10.5" font-weight="600" fill="${S==="pending"?"var(--dim)":"var(--star)"}">${dkEsc(n.label||n.id.replace(/-/g," "))}</text>`
+      +`<text x="${P[0]+10}" y="${P[1]+43}" font-size="8" fill="var(--faint)">${dkEsc((n.desc||"").slice(0,34))}</text>`
+      +`<g><rect x="${P[0]+10}" y="${P[1]+47}" width="${S==="live"?38:S==="done"?18:24}" height="9" rx="3" fill="var(--deep)" stroke="${stroke}"/><text x="${P[0]+14}" y="${P[1]+54}" font-size="7" fill="${S==="live"?"var(--brass)":"var(--dim)"}">${S==="live"?"running":S==="done"?"✓":"idle"}</text></g></g>`});
+  s+=`</svg>`
+    +`<div style="position:absolute;left:.6rem;bottom:.6rem;display:flex;flex-direction:column;gap:.25rem">`
+    +`<button class="dk-tab" style="padding:.1rem .45rem" onclick="dkCvZoom('${id}',1.25)">+</button>`
+    +`<button class="dk-tab" style="padding:.1rem .45rem" onclick="dkCvZoom('${id}',.8)">−</button>`
+    +`<button class="dk-tab" style="padding:.1rem .45rem" title="fit" onclick="dkCvFit('${id}')">⛶</button>`
+    +`<button class="dk-tab" style="padding:.1rem .45rem" title="fullscreen" onclick="dkCvFull('${id}')">⤢</button>`
+    +`<button class="dk-tab" style="padding:.1rem .45rem" title="lock the pan" onclick="dkCvLock('${id}',this)">🔒</button></div>`
+    +`<svg width="140" height="${Math.round(140*H/W)}" viewBox="0 0 140 ${Math.round(140*H/W)}" style="position:absolute;right:.6rem;bottom:.6rem;background:var(--void);border:1px solid var(--hair);border-radius:6px;opacity:.9">`
+    +nodes.map(n=>{const P=pos[n.id];if(!P)return"";const sc=140/W;
+      return `<rect x="${P[0]*sc}" y="${P[1]*sc}" width="${NW*sc}" height="${NH*sc}" rx="1" fill="${st(n.id)==="pending"?"var(--hair)":"var(--brassdim)"}"/>`}).join("")
+    +`<rect id="cvmm-${id}" x="0" y="0" width="140" height="${Math.round(140*H/W)}" fill="none" stroke="var(--brass)" stroke-width="1"/></svg>`
+    +`</div>`;
+  setTimeout(()=>dkCvView(id),30);
+  return s}
 /* ── the flow engine (JB's graphs, 2026-08-16) — a declared DAG drawn
       blind, hand-rolled and dependency-free like the desk charts: layered
       by longest-path, curves with arrowheads, live state joined from the
@@ -4071,11 +4169,13 @@ function dkPanel(p,pi,item){
     const src=walk?walk.stages:(item[p.src]||[]);
     const done=new Set(src.map(x=>x.stage||x));
     const states={},titles={};
-    (p.nodes||[]).forEach(nd=>{states[nd]=done.has(nd)?"done":"pending"});
+    (p.nodes||[]).forEach(nd=>{const nid=typeof nd==="string"?nd:nd.id;
+      states[nid]=done.has(nid)?"done":"pending"});
     src.forEach(x=>{if(x&&x.stage&&x.digest)titles[x.stage]=x.digest});
     if(walk&&src.length){const cur=src[src.length-1];states[cur.stage||cur]="live"}
+    const cid=("fl-"+(p.src||"flow")+"-"+pi).replace(/[^a-z0-9-]/gi,"");
     return `<div class="dk-chtitle" style="margin-top:.7rem">${dkEsc(p.label||"the flow")}${walk?` · 🚶 walking ${dkEsc(walk.ticker)} — live`:item&&item.date?` · the ${dkEsc(item.ticker||"")} walk of ${dkEsc(item.date)} — hover a stage for its digest`:""}</div>`
-      +dkFlow(p.nodes||[],p.edges||[],states,titles)}
+      +dkCanvas(cid,p,states,titles)}
   case "controls":{
     const ins=(p.inputs||[]).map(x=>`<input id="dk-in-${dkEsc(x.id)}" placeholder="${dkEsc(x.placeholder||x.id)}" style="width:9rem" maxlength="12">`).join(" ");
     const btns=(p.buttons||[]).map((b,bi)=>`<button class="dk-tab" onclick="capBtn(${pi},${bi})">${dkEsc(b.label)}</button>`).join(" ");
