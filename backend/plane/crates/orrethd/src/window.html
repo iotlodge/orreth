@@ -1350,8 +1350,11 @@ const THEMES={
   bfire1:(h,a)=>`rgba(255,${185-45*h|0},${105-45*h|0},${a})`,
   bfire2:"rgba(255,150,60,0)",
   bsig:{quar:["150,195,255","205,225,255"],violet:["190,150,255","225,205,255"],
-        cool:["120,170,255","180,210,255"],gold:["255,200,120","255,246,224"]},
-  bburst:{violet:"190,150,255",warm:"255,170,150",gold:"255,210,130"},
+        cool:["120,170,255","180,210,255"],gold:["255,200,120","255,246,224"],
+        cap:["110,225,175","200,248,222"]},
+  bburst:{violet:"190,150,255",warm:"255,170,150",gold:"255,210,130",
+          cap:"110,220,170",cool:"150,195,255"},
+  ocap:"110,220,170",
   bgapDot:a=>`rgba(255,196,110,${a})`,
   bgapRing:(f,a)=>`rgba(255,${188-40*f|0},${96-30*f|0},${a})`,
   bgapLine:a=>`rgba(255,210,140,${a})`,
@@ -1380,8 +1383,11 @@ const THEMES={
   bfire1:(h,a)=>`rgba(${172-40*h|0},${106-35*h|0},22,${a})`,
   bfire2:"rgba(150,100,20,0)",
   bsig:{quar:["55,105,180","30,80,150"],violet:["115,70,190","85,45,150"],
-        cool:["60,100,180","40,75,150"],gold:["185,130,25","140,95,15"]},
-  bburst:{violet:"120,75,190",warm:"180,85,60",gold:"165,120,25"},
+        cool:["60,100,180","40,75,150"],gold:["185,130,25","140,95,15"],
+        cap:["18,135,88","10,105,68"]},
+  bburst:{violet:"120,75,190",warm:"180,85,60",gold:"165,120,25",
+          cap:"16,130,84",cool:"60,100,180"},
+  ocap:"20,140,90",
   bgapDot:a=>`rgba(175,120,25,${a})`,
   bgapRing:(f,a)=>`rgba(${175-20*f|0},${120-30*f|0},25,${a})`,
   bgapLine:a=>`rgba(160,110,20,${a})`,
@@ -1595,6 +1601,30 @@ const BORGAN={becky:"prefrontal",governance:"prefrontal",grace:"prefrontal",
 const BECO={care:"limbic",retail:"occipital",cloud:"parietal"};
 const bhash=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
 const bregOf=n=>BECO[n]||Object.keys(BR3)[bhash(n)%6];
+/* ── the two kinds of life (the taxonomy made visible, 2026-08-17): the
+   glass learns which floors are CAPABILITY worlds from the /desk landing —
+   discovery data, never a name in code (0055). Firmware burns gold;
+   purpose burns jade, and its signals arrive FROM ABOVE the skull,
+   because capabilities live atop the machine. ── */
+let CAPMAP=null,_CAPMAPAT=0;
+function capMapFeed(){
+  if(CAPMAP&&Date.now()-_CAPMAPAT<60000)return;
+  _CAPMAPAT=Date.now();
+  fetch(`${OBSD}/desk`).then(r=>r.json()).then(d=>{
+    const m={};(d.worlds||[]).forEach(w=>{if(w.floor)
+      m[w.floor]={key:w.key,name:w.name||w.key,resident:w.resident,state:w.state}});
+    CAPMAP=m;}).catch(()=>{});
+}
+const capOf=s=>{if(!CAPMAP||!s)return null;
+  for(const f in CAPMAP)if(s===f||s.startsWith(f+"/"))return CAPMAP[f];
+  return null};
+/* every ember stays INSIDE the glass: clamp to the shell's interior
+   ellipsoid — region anchors plus deep jitter had floors poking through
+   the skull (JB's catch, 2026-08-17) */
+const bclamp=p=>{const dx=p[0],dy=p[1]-.06,dz=p[2];
+  const e=(dx/1.16)**2+(dy/.70)**2+(dz/.64)**2;
+  if(e>1){const k=.95/Math.sqrt(e);p[0]=dx*k;p[1]=.06+dy*k;p[2]=dz*k}
+  return p};
 let BRAINMODE=false; const BPREV={};
 let BG=null;                                 /* the glass runtime */
 /* ── the Living Brain (0036): physiology over anatomy. The GAIN dial scales
@@ -1647,9 +1677,13 @@ function brainToggle(){
    so very pretty") — the Universe opens as the mind; the orrery is the chart,
    one click back, and the human's last choice is remembered. */
 let BOOTPROJ=false;
+/* deep-link: #proj=orrery|brain overrides the remembered choice — read at
+   parse time, because the console's own hash router rewrites the hash */
+const FORCEDPROJ=(location.hash.match(/(?:^|[#&])proj=(orrery|brain)/)||[])[1];
 function bootProjection(){
   if(BOOTPROJ)return;BOOTPROJ=true;
-  if((localStorage.getItem("orreth-proj")||"brain")==="brain"&&!BRAINMODE)brainToggle();
+  const want=FORCEDPROJ||localStorage.getItem("orreth-proj")||"brain";
+  if(want==="brain"&&!BRAINMODE)brainToggle();
 }
 function bgInit(){
   if(BG)return;
@@ -1751,6 +1785,7 @@ function bgHover(e){
   if(h){el.style.display="block";el.style.left=(h.sx+r.left- r.left+12)+"px";
     el.style.top=(h.sy+8)+"px";
     el.textContent=h.req?`${h.name} · the synapse only a human can fire — click to open the queue`
+      :h.cap?`⚙ ${h.cap.name} · ${h.records}m — a world atop the machine (capability)`
       :`${h.name} · ${h.records}m — ${h.region}`;}
   else el.style.display="none";
 }
@@ -1758,14 +1793,15 @@ function bgHover(e){
 function renderBrain(){
   if(!BRAINMODE||!BG)return;
   const t=topoCache;if(!t)return;
+  capMapFeed();                              /* the worlds' floors, learned */
   const cl=[],deltas=[];
   const place=(n,region,depth)=>{
     const R=BR3[region],h=bhash(n.scope);
     const j=.14+.05*depth;
-    const p=[R[0]+((h%97)/97-.5)*j*2,R[1]+(((h>>3)%89)/89-.5)*j*2,
-             (region==="temporal"?(h%2?1:-1)*Math.abs(R[2]):R[2])+(((h>>6)%83)/83-.5)*j];
+    const p=bclamp([R[0]+((h%97)/97-.5)*j*2,R[1]+(((h>>3)%89)/89-.5)*j*2,
+             (region==="temporal"?(h%2?1:-1)*Math.abs(R[2]):R[2])+(((h>>6)%83)/83-.5)*j]);
     const prev=BPREV[n.scope];BPREV[n.scope]=n.records;
-    if(prev!==undefined&&n.records>prev)deltas.push({p,d:n.records-prev});
+    if(prev!==undefined&&n.records>prev)deltas.push({p,d:n.records-prev,scope:n.scope});
     /* metabolism (0036 §1.5): governed thought costs — the tissue that is
        thinking runs WARM for a few breaths; honest zeros stay cool */
     const uk="$"+n.scope,pu=BPREV[uk];BPREV[uk]=n.usd||0;
@@ -1777,6 +1813,7 @@ function renderBrain(){
        character below renders exactly that (JB's memory-levels lens, 0036) */
     cl.push({p,scope:n.scope,name:n.scope.split(/[:/]/).pop(),region,
              records:n.records||0,req:0,parent:null,depth,
+             cap:capOf(n.scope),             /* a world atop the machine */
              hotUntil:hot?Date.now()+12000:held});
     return cl[cl.length-1];
   };
@@ -1787,22 +1824,35 @@ function renderBrain(){
   });
   (t.residents||[]).forEach(a=>{             /* organs shimmer on the anatomy */
     const reg=BORGAN[reskey(a.role)]||"limbic",R=BR3[reg],h=bhash(a.name||a.role);
-    cl.push({p:[R[0]+((h%53)/53-.5)*.2,R[1]+(((h>>2)%47)/47-.5)*.16,
-      (reg==="temporal"?(h%2?1:-1)*Math.abs(R[2]):R[2])],organ:true,
+    cl.push({p:bclamp([R[0]+((h%53)/53-.5)*.2,R[1]+(((h>>2)%47)/47-.5)*.16,
+      (reg==="temporal"?(h%2?1:-1)*Math.abs(R[2]):R[2])]),organ:true,
       scope:null,name:a.role,region:reg,records:0});
   });
   BG.clusters=cl;
   BG.core=core;                              /* the long-term tissue — climbs land here */
   if(!LEGACYF&&gainF()>0)deltas.forEach(d=>{ /* memory formation: the burst */
-    BG.flashes.push({p:d.p,age:0,mag:Math.min(4,1+d.d*.4)});
-    for(let i=0;i<Math.min(10,3+d.d*2);i++)bgSpawn(d.p,null,1.6);
+    const w=capOf(d.scope);
+    if(w){ /* PURPOSE at work (the taxonomy visible): a world atop the
+              machine writes — jade fire descends from above the skull */
+      BG.flashes.push({p:d.p,age:0,mag:Math.min(4,1+d.d*.4),hue:"cap"});
+      const lift=[d.p[0]*1.35,1.55,d.p[2]*1.35];
+      for(let i=0;i<Math.min(7,2+d.d);i++)
+        BG.parts.push({a:[lift[0]+(Math.random()-.5)*.3,lift[1],
+          lift[2]+(Math.random()-.5)*.3],b:d.p,t:0,
+          sp:.45+Math.random()*.2,trail:[],hue:"cap"});
+      btick(`⚙ ${w.name} works — ${d.d} new memor${d.d===1?"y":"ies"}, a world atop the machine`);
+    }else{
+      BG.flashes.push({p:d.p,age:0,mag:Math.min(4,1+d.d*.4)});
+      for(let i=0;i<Math.min(10,3+d.d*2);i++)bgSpawn(d.p,null,1.6);
+    }
   });
   brainFeed();                               /* the physiology reads the record (0036) */
   $("bcore").textContent=LEGACYF
     ?`${t.scope} — the shape of a mind, held · LEGACY: the universe keeps — no fire, `+
      `a constellation of what was kept · the archive speaks about, never as (0035 §6)`
     :`${t.scope} — the mind, watched thinking · the same beats as the orrery, `+
-    `a projection, never a second truth (rule 7) · gold = the heartbeat chain · bursts = this breath's new memories`;
+    `a projection, never a second truth (rule 7) · gold = the machine (firmware) · `+
+    `jade = the worlds atop (capabilities) · blue = the clock's standing words · bursts = this breath's new memories`;
 }
 function bgSpawn(from,to,speed){
   BG.parts.push({a:from.slice?from.slice():from,b:to,t:0,
@@ -1848,9 +1898,29 @@ function bEvent(h){
   }else if(tags.includes("estate")||tags.includes("passage")){
     BG.flashes.push({p:BR3.prefrontal,age:0,mag:2,hue:"violet"});
     btick(`the passage moved at ${cl.name} — consequence, on the record`);
+  }else if(tags.includes("scheduled-ask")){
+    /* the clock strikes (0056's cron face, seen thinking): a standing word
+       fires with no hand on it — cool blue, the machine keeping its word */
+    BG.flashes.push({p:cl.p,age:0,mag:1.7,hue:"cool"});
+    btick(`⏰ the standing word fires at ${cl.name} — scheduled, no hand needed`);
+  }else if(tags.includes("memory-standing")){
+    BG.flashes.push({p:BR3.temporal,age:0,mag:2,hue:"cool"});
+    btick(`📏 the yardstick stands — the machine graded its own memory`);
+  }else if(capOf(h.scope)){
+    /* purpose on the record: any capability-floor record that isn't the
+       physics above — jade, descending from the world atop the machine */
+    const w=capOf(h.scope);
+    BG.parts.push({a:[cl.p[0]*1.35,1.55,cl.p[2]*1.35],b:cl.p,t:0,sp:.55,
+      trail:[],hue:"cap"});
+    if(tags.includes("report")){
+      BG.flashes.push({p:cl.p,age:0,mag:2.2,hue:"cap"});
+      btick(`⚙ ${w.name} reports — its word lands on the record`);
+    }else if(tags.includes("stage"))
+      btick(`⚙ ${w.name} walks a stage at ${cl.name}`);
+    else if(BGAIN==="storm")btick(`⚙ ${w.name} stirs at ${cl.name}`);
   }else if(tags.includes("parlor")){
     BG.flashes.push({p:BR3.limbic,age:0,mag:1.2,hue:"warm"});
-    if(BGAIN==="storm")btick(`an audience at ${cl.name}`);
+    btick(`a human's voice at ${cl.name} — an audience opens`);
   }else if(tags.includes("marker")){
     BG.flashes.push({p:cl.p,age:0,mag:1.5,hue:"gold"});
     btick(`a moment marked at ${cl.name}`);
@@ -1985,6 +2055,15 @@ function bgFrame(ts){
       g.font=`${Math.max(8,9*q[3]).toFixed(0)}px ui-monospace,monospace`;
       g.fillText(c.name,q[0]+R+4,q[1]+3);
     }
+    if(c.cap&&BGAIN!=="off"){ /* a world atop the machine: the jade band —
+         purpose reads different from firmware at a glance */
+      g.strokeStyle=`rgba(${PAL.ocap},${(.35+.3*mag).toFixed(2)})`;
+      g.lineWidth=1.1;
+      g.beginPath();g.ellipse(q[0],q[1],R+4.5,(R+4.5)*.42,0,0,6.283);g.stroke();
+      g.fillStyle=`rgba(${PAL.ocap},${(.4+.3*mag).toFixed(2)})`;
+      g.font=`${Math.max(8,8.5*q[3]).toFixed(0)}px ui-monospace,monospace`;
+      g.fillText(`⚙ ${c.cap.name}`,q[0]+R+6,q[1]+3);
+    }
     const gr=g.createRadialGradient(q[0],q[1],0,q[0],q[1],R);
     if(LEGACYF){                             /* embers cooled to a constellation */
       gr.addColorStop(0,PAL.bleg0((.55*mag+.12).toFixed(2)));
@@ -2008,7 +2087,8 @@ function bgFrame(ts){
         g.fillStyle=PAL.bember(".9");
         g.fillRect(-2.1,-2.1,4.2,4.2);g.restore();g.globalAlpha=1;});
     }
-    BG.hit.push({sx:q[0],sy:q[1],scope:c.scope,name:c.name,records:c.records,region:c.region});
+    BG.hit.push({sx:q[0],sy:q[1],scope:c.scope,name:c.name,records:c.records,
+      region:c.region,cap:c.cap});
   }
   /* the signals: golden fire along the heartbeat chain */
   for(let i=BG.parts.length-1;i>=0;i--){
@@ -2030,7 +2110,7 @@ function bgFrame(ts){
        pale flickering blue = quarantined arrivals (unproven light) · violet =
        consolidation, the diaries climbing a layer */
     const flick=s.flick?(.55+.45*Math.sin(ts*.02+i*3)):1;
-    const sg=PAL.bsig[s.hue==="quar"||s.hue==="violet"||s.hue==="cool"?s.hue:"gold"];
+    const sg=PAL.bsig[s.hue]||PAL.bsig.gold;
     const [tr,td]=s.hue==="quar"?[`rgba(${sg[0]},${(.45*(1-s.t)*flick).toFixed(2)})`,
                                   `rgba(${sg[1]},${(.8*(1-s.t*.6)*flick).toFixed(2)})`]
       :s.hue==="violet"?[`rgba(${sg[0]},${(.5*(1-s.t)).toFixed(2)})`,
@@ -2051,7 +2131,7 @@ function bgFrame(ts){
     const f=BG.flashes[i];f.age+=dt;
     if(f.age>1.6){BG.flashes.splice(i,1);continue}
     const q=proj(f.p),R=(6+30*f.age*f.mag)*q[3],a=.55*(1-f.age/1.6);
-    g.strokeStyle=`rgba(${PAL.bburst[f.hue==="violet"?"violet":f.hue==="warm"?"warm":"gold"]},${a.toFixed(2)})`;
+    g.strokeStyle=`rgba(${PAL.bburst[f.hue]||PAL.bburst.gold},${a.toFixed(2)})`;
     g.lineWidth=1.6;
     g.beginPath();g.arc(q[0],q[1],R,0,6.283);g.stroke();
   }
@@ -2174,13 +2254,14 @@ function ovWorld(t,now){ /* topology → bodies + rings, positions from time its
                 p[2]+FB.u[2]*fR*Math.cos(fth)+FB.v[2]*fR*Math.sin(fth)];
       rings.push({c:p,B:FB,R:fR,color:col,eco:e.scope,thin:true});
       bodies.push({scope:f.scope,name:fn,kind:"moon",p:fp,R:4.5,color:col,n:f,
-        parent:e.scope});});
+        parent:e.scope,cap:capOf(f.scope)});});
   });
   place(ecos,118,34,[0,0,0],false);
   place(staff,72,20,[0,0,0],true);            /* staff of the universe — steep, close */
   return {bodies,rings};
 }
 let OVHIT=[];
+let OACT={},OPREVR={};  /* the sky seen MOVING: per-body memory deltas → pulses */
 function ovFrame(){
   if(!OV.on)return;
   const O=$("orrery"),C=$("ocanvas");
@@ -2248,14 +2329,29 @@ function ovFrame(){
     const pend=(n.pending||0);
     if(pend){g.strokeStyle=PAL.opend(.5+.4*Math.sin(now/500));
       g.lineWidth=1.4;g.beginPath();g.arc(q[0],q[1],r+5,0,6.283);g.stroke();}
+    /* activity, the two kinds of life (2026-08-17): a body whose memory
+       grew pulses — firmware gold, a capability world jade */
+    if(b.kind!=="core"){
+      const pr=OPREVR[b.scope];OPREVR[b.scope]=n.records||0;
+      if(pr!==undefined&&(n.records||0)>pr)OACT[b.scope]=Date.now()+9000;
+    }
+    if(OACT[b.scope]&&Date.now()<OACT[b.scope]){
+      const ph=1-(OACT[b.scope]-Date.now())/9000, pulse=(ph*3)%1;
+      g.strokeStyle=`rgba(${b.cap?PAL.ocap:PAL.bburst.gold},${(.6*(1-pulse)*dim).toFixed(2)})`;
+      g.lineWidth=1.3;
+      g.beginPath();g.arc(q[0],q[1],r+4+pulse*15,0,6.283);g.stroke();}
+    if(b.cap){ /* the world band — purpose atop the machine, at a glance */
+      g.strokeStyle=`rgba(${PAL.ocap},${(.75*dim).toFixed(2)})`;g.lineWidth=1.1;
+      g.beginPath();g.ellipse(q[0],q[1],r*1.7,r*.65,-.5,0,6.283);g.stroke();}
     /* the quiet are found by their name (the Brain's lesson, kept) */
     if(b.kind!=="moon"||q[2]>0.9||OV.focus===b.parent){
       g.globalAlpha=(b.kind==="core"?.9:.75)*dim;
-      g.fillStyle=b.kind==="core"?PAL.olblCore:PAL.olbl;
+      g.fillStyle=b.kind==="core"?PAL.olblCore
+        :b.cap?`rgba(${PAL.ocap},.92)`:PAL.olbl;
       g.font=`${b.kind==="core"?11:b.kind==="eco"?10.5:9}px ui-monospace,monospace`;
       const nt=(n.farm||[]).filter(s=>s.state!=="decommissioned").length;
       const lbl=b.kind==="core"?b.name
-        :`${b.name}${n.agents?` · ${n.agents}a`:""}${n.records?` · ${n.records}m`:""}${nt?` · ${nt}t`:""}`;
+        :`${b.cap?"⚙ ":""}${b.name}${n.agents?` · ${n.agents}a`:""}${n.records?` · ${n.records}m`:""}${nt?` · ${nt}t`:""}`;
       g.fillText(lbl,q[0]+r+6,q[1]+3);}
     g.globalAlpha=1;
     /* THE ASSOCIATION (JB's law of the orrery, restored 2026-07-23): every
@@ -2374,6 +2470,7 @@ function ocFill(scope,x,y){ /* the hover card, canvas-fed */
 function renderOrrery(){
   const O=$("orrery"); if(!O||$("v-uni").classList.contains("hide"))return;
   const t=topoCache;
+  capMapFeed();                              /* which floors are worlds — learned */
   if(t)bootProjection();                     /* the mind greets first (0036 §5) */
   const sig=t?JSON.stringify([nodeSig(t),(t.children||[]).map(c=>
     [nodeSig(c),(c.children||[]).map(nodeSig)])]):"none";
@@ -2444,7 +2541,9 @@ function oc(ev,scopeEnc){
   const drift=((n.stable||[]).filter(s=>s.state==="deprecated").length)
     +((n.farm||[]).filter(s=>s.state==="quarantined").length);
   const age=(n.heard_at&&!window.ORRETH_DEMO)?Math.round((Date.now()-new Date(n.heard_at))/1e3):null;
+  const capw=capOf(n.scope||decodeURIComponent(scopeEnc));
   c.innerHTML=`<div class="t">${n.scope||decodeURIComponent(scopeEnc)}</div>
+    ${capw?`<div style="color:rgb(${PAL.ocap})">⚙ ${capw.name} — a world atop the machine (capability)</div>`:""}
     <div><span class="k">memories </span>${n.records||0} · <span class="k">thoughts </span>${n.runs||0}</div>
     <div><span class="k">agents </span>${n.agents||0} · <span class="k">spend </span>${money(n.usd||0)}</div>
     ${n.pending?`<div style="color:var(--brass)"><span class="k">needs you </span>${n.pending} decision${n.pending===1?"":"s"} waiting</div>`:""}
@@ -4539,10 +4638,16 @@ function brnRender(){
     h+=dkFlow(lnodes,ledges,lst,{[L.flavor]:L.why});
   }else h+=`<div class="dim" style="font-size:.7rem">no ask has walked the lane in this window yet — speak to a resident in the parlor, or run the yardstick below</div>`;
   h+=`<div class="brn-sec">metabolism &amp; retention — forgetting on schedule, loss on the record</div>`;
-  h+=`<div class="dim" style="font-size:.72rem;margin:.3rem 0">beats every ${M.every_s??"—"}s`
-    +(M.age_s!=null?` · last beat ${M.age_s}s ago`:" · no beat yet this run")
-    +` · tends <b style="color:var(--star)">${dkEsc(M.tends||"—")}</b></div>`;
+  h+=`<div class="dim" style="font-size:.72rem;margin:.3rem 0">one floor per breath, every ${M.every_s??"—"}s`
+    +(M.age_s!=null?` · last breath ${M.age_s}s ago`:" · no breath yet this run")
+    +(M.scope?` · last: <b style="color:var(--star)">${dkEsc(M.scope)}</b>`:"")
+    +(M.ring_ahead!=null?` · ring ahead: ${M.ring_ahead}`:"")+`</div>`;
   if(M.boundary)h+=`<div class="dim" style="font-size:.64rem;color:var(--faint);margin:.15rem 0 .4rem">${dkEsc(M.boundary)}</div>`;
+  const MF=M.floors||{};   /* the breaths of this run, floor by floor (0057 sp3) */
+  if(Object.keys(MF).length)
+    h+=`<div style="overflow-x:auto"><table class="dk-table"><tr><th>floor breathed this run</th><th>distilled</th><th>kept warm</th><th>loss (bits)</th><th>at</th></tr>`
+      +Object.entries(MF).map(([s,v])=>`<tr><td style="font-family:var(--mono)">${dkEsc(s)}</td><td>${v.distilled??0}</td><td>${v.kept_warm??0}</td><td>${(+(v.loss||0)).toFixed(2)}</td><td class="dim">${dkEsc((v.at||"").slice(5,16).replace("T"," "))}</td></tr>`).join("")
+      +`</table></div>`;
   const dl=R.dials||{};
   h+=`<div style="overflow-x:auto"><table class="dk-table"><tr><th>class</th><th>recall window</th><th>rises</th></tr>`
     +Object.entries(dl).map(([c,v])=>`<tr><td>${dkEsc(c)}</td><td style="font-family:var(--mono)">${v.recall_window_days??"—"}d</td><td>${v.rises?"yes":"no"}</td></tr>`).join("")
