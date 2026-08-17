@@ -6451,48 +6451,163 @@ def on_publish(port: int, scope: str, r: dict, *,
 
 
 _METAB_LAST = 0.0
-_METAB_STATE: dict = {}          # the beat's last numbers — the room reads them
+_METAB_STATE: dict = {}          # the last breath's numbers — the rooms read them
+_METAB_FLOORS: dict = {}         # scope → that floor's last breath (0057 sp1)
+_METAB_RING: list = []           # the round-robin — every floor gets its turn
 METABOLISM_EVERY = int(os.environ.get("ORRETH_METABOLISM_EVERY", "900"))
+METABOLISM_BATCH = int(os.environ.get("ORRETH_METABOLISM_BATCH", "200"))
+
+
+def _metab_node(port: int, scope: str):
+    """THE METABOLISM'S OWN GROUND (0057 sp1): one floor's records, tags-first
+    — class and age decide due-ness without a single body; bodies ride only
+    for the dials asset and the rows this breath will distill (the read law),
+    so the measured loss sees live links, never false stubs. Unlike
+    _stacks_node — the librarian's many-world projection — this ground never
+    leaves its floor: what distills here derived from here, and lands here.
+    parent/children/purged exist because the loss walker climbs the tree —
+    their absence on the stacks node ate every wire report since wire-honesty
+    week (9 distillations, 0 reports on rag, found 2026-08-17)."""
+    from datetime import datetime, timedelta, timezone
+    seat_kp, seat_did = lib_seat(scope)
+
+    class _M:
+        parent, children = None, ()
+
+        def __init__(self):
+            self.records, self.scope, self.purged = {}, scope, set()
+
+        def write(self, rec):
+            call(port, "POST", "/records", rec)
+            self.records[rec["id"]] = dict(rec, received_at=rec["occurred_at"])
+            return rec["id"]
+
+        def _distill(self, ids, push=False):
+            body = {"summary": f"distilled {len(ids)} records at {self.scope}",
+                    "count": len(ids), "exchange": "hold",
+                    "method": {"model": "deterministic-sim",
+                               "rubric": "wire-metabolism-v0"}}
+            rec = make_memory(self._me, self._kp, self.scope, body,
+                              kind="distillation",
+                              tags=["distillation", "metabolism"])
+            rec["derived_from"] = list(ids)   # rides unsigned beside tags (0033)
+            self.write(rec)
+            return {"id": rec["id"]}
+
+    n = _M()
+    n._me, n._kp = {"did": seat_did, "scope": scope}, seat_kp
+    n.recalls = recalls_load(scope)
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc)
+           - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did,
+                      "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm},
+                      "intent": "recall", "budget": {"cost": 8},
+                      "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return None
+    for h in r.get("hits", []):
+        n.records[h["ref"]] = {"tags": h.get("tags") or [],
+                               "received_at": h.get("occurred_at", ""),
+                               "occurred_at": h.get("occurred_at", ""),
+                               "derived_from": h.get("derived_from") or []}
+
+    def _with_body(ref):
+        row = n.records.get(ref)
+        if row is None or "body" in row:
+            return
+        try:
+            body = call(port, "GET",
+                        f"/records/{urllib.parse.quote(ref, safe='')}/body")
+        except Exception:
+            return
+        if isinstance(body, dict):
+            row["body"] = crypto._b64e(crypto.canonical(body))
+
+    from orreth_sim import canon as _cn
+    for rid, row in n.records.items():        # the dials speak with bodies
+        if "distillation-dials" in row["tags"]:
+            _with_body(rid)
+    away: set = set()
+    for row in n.records.values():
+        if "distillation" in row["tags"]:
+            away.update(row.get("derived_from") or [])
+    dialed = set((_cn.dials(n).get("classes") or {}).keys())
+    n.undistilled = [rid for rid, row in n.records.items()
+                     if rid not in away
+                     and "distillation" not in row["tags"]
+                     and "metabolism-report" not in row["tags"]
+                     and _cn.class_of(row) in dialed]
+    # the honest horizon: oldest first, one batch per breath — a floor of
+    # thousands digests across cycles, never in one gulp
+    n.undistilled.sort(key=lambda rid: n.records[rid].get("occurred_at", ""))
+    n.undistilled = n.undistilled[:METABOLISM_BATCH]
+    # bodies for the full lineage the loss will walk — a parent left tags-only
+    # scores as a false stub (u:demo's first breath read 96 phantom bits);
+    # links beyond the retrieve window stay the projection's confessed horizon
+    frontier, seen = list(n.undistilled), set()
+    while frontier:
+        rid = frontier.pop()
+        if rid in seen:
+            continue
+        seen.add(rid)
+        _with_body(rid)
+        row = n.records.get(rid)
+        if row:
+            frontier.extend(row.get("derived_from") or [])
+    return n
 
 
 def metabolism_wire_beat() -> None:
-    """THE SCHEDULED METABOLISM (wire-honesty sp2, 2026-07-25): 0039's
-    metabolism_beat — the SAME sim function, one law on both grounds — runs on
-    the worker's clock against the rag floor's projection. Due-window records
-    without recent recall distill; the recalled stay warm (the sp1 tap feeds
-    this); every forgetting lands a report with its measured loss in bits.
-    The dials stay Canon assets; only the heartbeat lives here."""
-    global _METAB_LAST
+    """THE UNIVERSAL METABOLISM (0057 sp1; wire-honesty sp2 grew into it):
+    0039's metabolism_beat — the SAME sim function, one law on both grounds —
+    now walks EVERY discovered floor round-robin, one floor per tick, each on
+    its own floor-local ground. Due-window records without recent recall
+    distill; the recalled stay warm (the tap feeds this); every forgetting
+    lands a report with its measured loss in bits. The dials stay Canon
+    assets, planted per floor on first touch; only the heartbeat lives here."""
+    global _METAB_LAST, _METAB_RING, _METAB_STATE
     if time.time() - _METAB_LAST < METABOLISM_EVERY:
         return
-    rag = next(((p, s) for p, s in FLOOR_SCOPES.items()
-                if s.endswith("/e:rag/f:naive")), None)
-    if rag is None:
-        return          # the floor isn't known yet — retry next round, free
+    if not FLOOR_SCOPES:
+        return          # no ground yet — retry next round, free
+    if not _METAB_RING:
+        _METAB_RING = [s for _, s in sorted(FLOOR_SCOPES.items())]
+    scope = _METAB_RING.pop(0)
+    port = next((p for p, s in FLOOR_SCOPES.items() if s == scope), None)
+    if port is None:
+        return          # the floor left the world mid-ring — next tick moves on
     _METAB_LAST = time.time()   # the cadence burns only when ground exists
-    rag_port, rag_scope = rag
     try:
         from orreth_sim import canon as _cn
-        n, kp, did = _stacks_node(rag_port, rag_scope)
+        n = _metab_node(port, scope)
         if n is None:
             return
-        rep = _cn.metabolism_beat(n, {"did": did, "scope": rag_scope}, kp)
-        recalls_save(rag_scope, n)
-        attest_note(rag_port, rag_scope, n)    # the dials it turned under (sp2)
-        global _METAB_STATE
-        _METAB_STATE = {"kept_warm": rep.get("kept_warm", 0),
+        _cn.plant_dials(n, n._me, n._kp)      # dials stand on first touch
+        rep = _cn.metabolism_beat(n, n._me, n._kp)
+        recalls_save(scope, n)
+        attest_note(port, scope, n)           # the dials it turned under
+        _METAB_STATE = {"scope": scope,
+                        "kept_warm": rep.get("kept_warm", 0),
                         "distilled": rep.get("distilled", 0),
                         "loss": float(rep.get("loss_bits", 0.0))}
+        _METAB_FLOORS[scope] = dict(_METAB_STATE, at=NOW())
         if rep.get("distilled"):
-            print(f"  ↳ the metabolism beats (wire): {rep['distilled']} "
-                  f"distilled · {rep.get('kept_warm', 0)} kept warm · loss "
+            print(f"  ↳ the metabolism breathes at {scope}: "
+                  f"{rep['distilled']} distilled · "
+                  f"{rep.get('kept_warm', 0)} kept warm · loss "
                   f"{_METAB_STATE['loss']:.2f} bits "
                   f"[{str(rep.get('distillation', ''))[:18]}…]")
         else:
-            print(f"  ↳ the metabolism beats (wire): nothing due · "
+            print(f"  ↳ the metabolism breathes at {scope}: nothing due · "
                   f"{rep.get('kept_warm', 0)} kept warm — usage is evidence")
     except Exception as e:
-        print(f"    (metabolism beat stumbled: {e})")
+        print(f"    (metabolism beat stumbled at {scope}: {e})")
 
 
 def on_drift(port: int, scope: str, r: dict, *,
@@ -11130,14 +11245,16 @@ def _compose_brain_locked() -> dict:
         p["count"] for p in
         s.read("plane.thoughts", resolution="hourly")["points"]))
     # retention — the dials as they actually stand on the metabolism's own
-    # ground: the shelf's active head where one exists, genesis where not
-    rag = next(((p, sc) for p, sc in FLOOR_SCOPES.items()
-                if sc.endswith("/e:rag/f:naive")), None)
+    # ground: the shelf's active head where one exists, genesis where not.
+    # Since 0057 sp1 dials stand per floor; the universe floor's head speaks
+    # for the glass, and each floor's own asset remains its local truth
+    uni = next(((p, sc) for p, sc in FLOOR_SCOPES.items()
+                if sc == UNIVERSE_SCOPE), None)
     dials, dials_src = None, "genesis defaults — no live floor read"
-    if rag:
+    if uni:
         try:
-            rows = wire_assets(rag[0], "asset", "distillation-dials",
-                               scope=rag[1])
+            rows = wire_assets(uni[0], "asset", "distillation-dials",
+                               scope=uni[1])
             if rows:
                 prof = (rows[-1][1].get("asset") or {}).get("profile") or {}
                 if prof.get("classes"):
@@ -11210,9 +11327,12 @@ def _compose_brain_locked() -> dict:
         "metabolism": {**_METAB_STATE, "every_s": METABOLISM_EVERY,
                        "age_s": (int(time.time() - _METAB_LAST)
                                  if _METAB_LAST else None),
-                       "tends": rag[1] if rag else None,
-                       "boundary": "the beat tends one floor today; the desk "
-                                   "floors await its extension — a named next"},
+                       "floors": {s: dict(v) for s, v in
+                                  sorted(_METAB_FLOORS.items())},
+                       "ring_ahead": len(_METAB_RING),
+                       "boundary": "one floor per breath, round-robin across "
+                                   "every discovered floor (0057 sp1); warmth "
+                                   "flows from the ask lane alone until sp2"},
         "retention": {"dials": dials.get("classes", {}), "source": dials_src},
         "yardstick": {"runs": runs,
                       "schedule": _brain_schedule(runs),
