@@ -841,6 +841,32 @@
   .brn-eco{border:1px solid var(--hair);border-radius:10px;padding:.6rem .85rem;margin:.55rem 0}
   .brn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:.5rem}
   .brn-grid .brn-part{margin:0}
+  /* ── 0056v2 sp-B · the resident MODAL (JB's release: "if a modal will be
+        better DO IT") — CO's exact shape: compact, centered, tabbed ── */
+  #rsm-back{position:fixed;inset:0;z-index:70;background:rgba(2,4,10,.66);display:none;
+    align-items:flex-start;justify-content:center;padding-top:7vh}
+  #rsm-back.on{display:flex}
+  .rsm{width:min(700px,94vw);max-height:84vh;overflow-y:auto;background:var(--void);
+    border:1px solid var(--hair2);border-radius:14px;box-shadow:0 24px 80px var(--scrim)}
+  .rsm-hd{display:flex;align-items:center;gap:.7rem;padding:.85rem 1.1rem;border-bottom:1px solid var(--hair)}
+  .rsm-av{width:38px;height:38px;border-radius:10px;background:var(--deep);border:1px solid var(--hair);
+    display:flex;align-items:center;justify-content:center;font-size:1.15rem}
+  .rsm-hd b{color:var(--brass);font-size:.95rem}
+  .rsm-hd .sub{color:var(--faint);font-size:.7rem}
+  .rsm-tabs{display:flex;gap:.15rem;padding:.35rem .8rem 0;border-bottom:1px solid var(--hair)}
+  .rsm-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--dim);
+    padding:.45rem .7rem;font-size:.74rem;cursor:pointer}
+  .rsm-tab.on{color:var(--star);border-bottom-color:var(--brass)}
+  .rsm-bd{padding:1rem 1.1rem 1.2rem}
+  .rsm-eyebrow{color:var(--faint);font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;margin:.75rem 0 .25rem}
+  .rsm-chip{display:inline-block;background:var(--deep);border:1px solid var(--hair);border-radius:5px;
+    padding:.14rem .45rem;font-size:.66rem;color:var(--dim);margin:.12rem .18rem .12rem 0;font-family:var(--mono)}
+  .rsm-qa{display:block;width:100%;text-align:left;background:var(--deep);border:1px solid var(--hair);
+    border-radius:7px;color:var(--star);padding:.5rem .7rem;font-size:.76rem;cursor:pointer;margin:.3rem 0}
+  .rsm-qa:hover{border-color:var(--brassdim)}
+  .rsm-job{border:1px solid var(--hair);border-radius:9px;padding:.55rem .7rem;margin:.4rem 0;background:var(--deep)}
+  .rsm-cron{font-family:var(--mono);font-size:.68rem;color:var(--dim)}
+  .rsm-act{color:#7dd087;border:1px solid #2c5533;border-radius:4px;font-size:.6rem;padding:.05rem .35rem}
   .dk-world{font-size:.85rem;margin-bottom:.6rem}
   .dk-law{color:var(--faint);font-size:.68rem;margin-top:.15rem}
   .dk-pick{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;margin:.5rem 0}
@@ -1160,7 +1186,17 @@
 <!-- ── 0053 sp3 · the brain pull: the state of the ACTIVE brain — instruments,
      partitioned by the architecture, aggregated above; never an NLP paraphrase ── -->
 <div id="brainpull" onclick="brnToggle()" title="the brain — what the machine IS: memory, metabolism, cognition, retention, read from its own instruments">🧠 brain</div>
-<!-- ── 0056 sp1 · the resident's room — the family's rooms, one renderer ── -->
+<!-- ── 0056v2 sp-B · the resident MODAL — CO's shape, Orreth's truth ── -->
+<div id="rsm-back" onclick="if(event.target===this)rsmClose()">
+  <div class="rsm">
+    <div class="rsm-hd"><div class="rsm-av" id="rsm-av">◉</div>
+      <div><b id="rsm-name">@—</b><div class="sub" id="rsm-sub"></div></div>
+      <button class="dk-tab" style="margin-left:auto" onclick="rsmClose()">✕</button></div>
+    <div class="rsm-tabs" id="rsm-tabs"></div>
+    <div class="rsm-bd" id="rsm-bd"></div>
+  </div>
+</div>
+<!-- ── 0056 sp1 · the resident's room — superseded by the modal, dormant ── -->
 <div id="resroom">
   <div id="reshead"><b id="res-title">THE RESIDENT'S ROOM</b>
     <span class="dim" id="res-sub" style="font-size:.68rem"></span>
@@ -2541,7 +2577,12 @@ function agentRow(a,resident){
   const speak=resident?` speakable" onclick="openParlor('${a.name||""}')" title="open an audience — you ask, ${a.name} fetches`:"";
   const face=resident?medallion(a.role):"";
   /* 0056 sp1 — every named resident's row wears a door to their room */
-  const door=a.name?`<span class="roomdoor" onclick="event.stopPropagation();resOpen('${a.name}')" title="${a.name}'s room — vitals, and the rooms to come">⌂</span>`:"";
+  /* the icon micro-toolbar (0056v2 sp-B, tmp/CO's roster anatomy): every
+     named row wears one-click doors into the modal's own tabs */
+  const door=a.name?[["info","ⓘ","who they are"],["graph","🕸","their flow"],
+    ["prompts","✎","their words — edit in place"],["metrics","📊","their vitals"],
+    ["schedule","🕐","their standing questions"]].map(([t,g,tt])=>
+    `<span class="roomdoor" onclick="event.stopPropagation();resOpen('${a.name}','${t}')" title="${a.name} — ${tt}">${g}</span>`).join(""):"";
   return `<div class="agent${resident?" res2":""}${speak}">${face}<span class="orb ${a.state}"></span>
     <span class="who"><span class="id">${resident?a.role:(a.name||short(a.agent))}${door}</span>
     ${resident?"":`<span class="role">${a.scope?a.scope.split("/").pop():"workforce"}</span>`}${sub}</span></div>`;
@@ -4476,7 +4517,129 @@ if(/(^|[#&])brain=1/.test(location.hash))setTimeout(brnToggle,600);   // deep-li
       residents and worlds converge on one glass grammar. Doors: the ⌂ on
       every rail row, and the parlor's header. ── */
 function resClose(){$("resroom").classList.remove("capopen")}
-async function resOpen(name){
+/* ── 0056v2 sp-B · THE RESIDENT MODAL — everything about a resident,
+      ≤2 clicks, edited IN PLACE (the Commander correction). Tabs in CO's
+      shape: Info · Graph · Prompts · Model · Metrics · Schedule. Prompts
+      save through the one-motion craft-edit lane (mode-gated; canon
+      refuses toward the release); Schedule wears the cron face — jobs
+      seen and edited THROUGH the resident that owns them (JB's word:
+      the views are for humans; agents just run code). ── */
+let RESM={name:"",tab:"info",data:null,word:"",prof:null,lifecycle:""};
+const RSM_TABS=[["info","ⓘ Info"],["graph","🕸 Graph"],["prompts","✎ Prompts"],
+  ["model","⚙ Model"],["metrics","📊 Metrics"],["schedule","🕐 Schedule"]];
+function rsmClose(){$("rsm-back").classList.remove("on")}
+async function resOpen(name,tab){
+  if(!name)return;
+  RESM={name:String(name).toLowerCase().replace(/^@/,"").split(" ")[0],
+        tab:tab||"info",data:null,word:"",prof:null,lifecycle:""};
+  $("rsm-back").classList.add("on");
+  $("rsm-name").textContent="@"+RESM.name;$("rsm-sub").textContent="";
+  $("rsm-av").textContent="◉";
+  $("rsm-tabs").innerHTML="";
+  $("rsm-bd").innerHTML=`<div class="dim" style="padding:1.4rem">composing from the instruments…</div>`;
+  let d;
+  try{d=await (await fetch(`${OBSD}/resident?name=${encodeURIComponent(RESM.name)}`)).json()}
+  catch(e){$("rsm-bd").innerHTML=`<div class="dim" style="padding:1.4rem">the door did not answer — is the worker awake?</div>`;return}
+  if(d.error){$("rsm-bd").innerHTML=`<div class="dim" style="padding:1.4rem">${dkEsc(d.error)}</div>`;return}
+  RESM.data=d;
+  const R=d.resident||{};
+  $("rsm-name").textContent="@"+RESM.name;
+  $("rsm-av").textContent=R.emoji||"◉";
+  $("rsm-sub").textContent=`${(R.name||"").replace(/^[a-z]+ · /,"")} · mode ${R.mode||"dev"}${R.world_name?` · tends ${R.world_name}`:""}`;
+  rsmRender()}
+function rsmTab(t){RESM.tab=t;rsmRender();
+  if(t==="prompts"&&!RESM.word){
+    const w=((RESM.data.item||{}).words||[])[0];
+    if(w)rsmWord(w.word)}}
+function rsmRender(){
+  const d=RESM.data;if(!d)return;
+  const item=d.item||{},R=d.resident||{};
+  $("rsm-tabs").innerHTML=RSM_TABS.map(([k,l])=>
+    `<button class="rsm-tab${RESM.tab===k?" on":""}" onclick="rsmTab('${k}')">${l}</button>`).join("");
+  let h="";
+  if(RESM.tab==="info"){
+    h=`<div class="rsm-eyebrow">specialization</div><div style="font-size:.85rem">${dkEsc(R.blurb||"")}</div>`
+     +`<div class="rsm-eyebrow">the mirror's reflection</div><div class="dim" style="font-size:.78rem;line-height:1.5">${dkEsc(item.mirror||"")}</div>`
+     +(item.words&&item.words.length
+       ?`<div class="rsm-eyebrow">the words this resident wears — ${item.words.length}</div>`
+        +item.words.slice(0,18).map(w=>`<span class="rsm-chip">✎ ${dkEsc(w.word)}</span>`).join("")
+       :"")
+     +`<div class="rsm-eyebrow">quick actions</div>`
+     +`<button class="rsm-qa" onclick="rsmClose();openParlor('${dkEsc(RESM.name)}')">Open an audience — you ask, ${dkEsc(RESM.name)} fetches</button>`
+     +(R.world?`<button class="rsm-qa" onclick="rsmClose();CAPV='${dkEsc(R.world)}';capToggle()">Open ${dkEsc(R.world_name||R.world)} — the world this resident tends</button>`:"")
+     +`<button class="rsm-qa" onclick="rsmTab('schedule')">Schedule a standing question — it repeats on your cadence</button>`}
+  else if(RESM.tab==="graph"){
+    const flows=(d.view||[]).filter(p=>p.kind==="flow");
+    h=flows.length?flows.map((p,pi)=>
+      (p.section?`<div class="rsm-eyebrow">${dkEsc(p.section)}</div>`:"")
+      +dkPanel(p,100+pi,item)).join("")
+     :`<div class="dim">no flow declared for this resident yet</div>`}
+  else if(RESM.tab==="prompts"){
+    const words=item.words||[];
+    const canon=RESM.lifecycle==="canon";
+    const prod=(R.mode==="prod");
+    h=words.length
+     ?`<div class="rsm-eyebrow">the word</div>
+       <select class="dk-tab" style="max-width:100%" onchange="rsmWord(this.value)">${words.map(w=>`<option${RESM.word===w.word?" selected":""}>${dkEsc(w.word)}</option>`).join("")}</select>
+       <div class="rsm-eyebrow">the text — ${canon?"CANON: read-only, a change is a RELEASE (0045)":prod?"PROD: read-only, the kernel's law":"editable; Save lands a versioned sibling in one motion"}</div>
+       <textarea id="rsm-prompt" style="width:100%;min-height:240px;background:var(--deep);color:var(--star);border:1px solid var(--hair);border-radius:8px;padding:.6rem;font-family:var(--mono);font-size:.72rem;line-height:1.45" ${canon||prod?"readonly":""}>${dkEsc(RESM.prof&&RESM.prof.template!=null?RESM.prof.template:RESM.prof?JSON.stringify(RESM.prof,null,1):"…loading…")}</textarea>
+       <div style="display:flex;gap:.6rem;align-items:center;margin-top:.5rem">
+         ${canon||prod?"":`<button class="dk-tab" onclick="rsmSave()">💾 Save Prompt — your word, one motion</button>`}
+         <span class="dim" id="rsm-savenote" style="font-size:.66rem"></span></div>`
+     :`<div class="dim">no words on the shelf wear this resident's name yet</div>`}
+  else if(RESM.tab==="model"){
+    const minds=item.minds||[];
+    h=`<div class="rsm-eyebrow">the stable this resident saddles from</div>`
+     +(minds.length?`<div style="overflow-x:auto"><table class="dk-table"><tr><th>mind</th><th>class</th><th>state</th></tr>${minds.map(m=>`<tr><td style="font-family:var(--mono)">${dkEsc(m.mind)}</td><td>${dkEsc(m.class)}</td><td>${dkEsc(m.state)}</td></tr>`).join("")}</table></div>`:`<div class="dim">no stalls on this floor</div>`)
+     +`<div class="dim" style="font-size:.68rem;margin-top:.6rem">the deals are ada's (0019) — a mind swap rides her gate; the picker joins when that door opens, said honestly</div>`}
+  else if(RESM.tab==="metrics"){
+    h=`<div class="dk-hero"><span class="dim">spend </span><b>${dkEsc(item.spend||"—")}</b> · <b>${dkEsc(item.calls||"—")}</b> · <b>${dkEsc(item.state||"—")}</b></div>`
+     +`<div class="dim" style="font-size:.7rem;margin:.3rem 0">${dkEsc(item.age_line||"")}</div>`
+     +((item.vitals_bars||[]).length?dkPanel({kind:"bars",src:"vitals_bars"},0,item):"")
+     +`<div class="dim" style="font-size:.68rem;margin-top:.5rem">${dkEsc(item.verdict_line||"")}</div>`}
+  else if(RESM.tab==="schedule"){
+    const jobs=item.schedules||[];
+    h=`<div style="display:flex;align-items:center;gap:.6rem"><div><b style="font-size:.85rem">Scheduled Jobs</b><div class="dim" style="font-size:.68rem">recurring standing questions for @${dkEsc(RESM.name)} — your approval starts each; resting never needs a gate</div></div>
+       <button class="dk-tab" style="margin-left:auto" onclick="$('rsm-newjob').style.display='block'">+ New Job</button></div>`
+     +jobs.map(s=>`<div class="rsm-job">
+        <div style="display:flex;gap:.5rem;align-items:baseline"><b style="font-size:.78rem">${dkEsc(s.question)}</b></div>
+        <div class="rsm-cron">every ${s.every_days}d · ${s.next?`next due ${dkEsc(s.next)}`:"awaiting its first fire"} · last: ${dkEsc(s.last)}</div>
+        <div style="display:flex;gap:.5rem;align-items:center;margin-top:.3rem"><span class="rsm-act">standing</span>
+          <button class="dk-tab" style="padding:.1rem .5rem" data-q="${dkEsc(s.question)}" onclick="rsmRest(this.dataset.q)" title="rule 11 — resting never needs a gate">⏸ rest it</button></div></div>`).join("")
+     +(jobs.length?"":`<div class="dim" style="font-size:.74rem;margin:.5rem 0">no standing questions yet — any question ${dkEsc(RESM.name)} answers can repeat on a cadence</div>`)
+     +`<div id="rsm-newjob" style="display:${jobs.length?"none":"block"};margin-top:.6rem;border:1px dashed var(--hair);border-radius:9px;padding:.6rem">
+        <input id="res-schedq" placeholder="a question ${dkEsc(RESM.name)} should answer on a cadence" style="width:100%;margin-bottom:.4rem" maxlength="200">
+        <select id="res-schedd" class="dk-tab"><option value="1">daily</option><option value="7" selected>weekly</option><option value="30">monthly</option></select>
+        <button class="dk-tab" onclick="resSchedStage('${dkEsc(RESM.name)}')">⏰ stage it — your approval starts it</button>
+        <span class="dim" id="res-sched-note" style="font-size:.66rem"></span></div>`}
+  $("rsm-bd").innerHTML=h}
+async function rsmWord(name){
+  RESM.word=name;
+  try{
+    const c=await (await fetch(`${OBSD}/craft?name=${encodeURIComponent(name)}`)).json();
+    RESM.prof=c.profile;RESM.lifecycle=c.lifecycle||"";
+  }catch(e){RESM.prof=null}
+  if(RESM.tab==="prompts")rsmRender()}
+async function rsmSave(){
+  const ta=$("rsm-prompt"),n=$("rsm-savenote");if(!ta)return;
+  let prof;
+  if(RESM.prof&&RESM.prof.template!=null)prof={...RESM.prof,template:ta.value};
+  else{try{prof=JSON.parse(ta.value)}catch(e){if(n){n.textContent="not valid JSON — the door will refuse; nothing sent";n.style.color="var(--red)"}return}}
+  try{
+    await fetch(`/requests`,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({kind:"craft-edit",name:RESM.word,
+        text:JSON.stringify(prof),note:"edited in the resident modal (0056v2)"})});
+    if(n){n.style.color="";n.textContent="landed — your word and the edit in one motion; a versioned sibling stands"}
+  }catch(e){if(n){n.textContent="the door did not answer";n.style.color="var(--red)"}}}
+async function rsmRest(q){
+  try{
+    await fetch(`/requests`,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({kind:"scheduled-ask",what:"resident-ask",action:"rest",
+        resident:RESM.name,question:q,
+        text:`rest the standing question on ${RESM.name} — the human's word`})});
+  }catch(e){}
+  setTimeout(()=>resOpen(RESM.name,"schedule"),1400)}
+async function resRoomOpen(name){
   if(!name)return;
   if($("capworld").classList.contains("capopen"))capToggle();
   if($("brainworld").classList.contains("capopen"))brnToggle();
@@ -4538,8 +4701,10 @@ function resShelf(){resClose();
     ?location.hash.replace(/v=[a-z]+/,"v=gov")
     :location.hash+"&v=gov"}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("resroom").classList.contains("capopen"))resClose()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("rsm-back").classList.contains("on"))rsmClose()});
 const _resw=location.hash.match(/[#&]res=([a-z0-9_-]+)/i);
-if(_resw)setTimeout(()=>resOpen(_resw[1]),700);   // deep-link: #…&res=vera — a room is a place, and places have addresses
+const _rtab=location.hash.match(/[#&]rtab=([a-z]+)/i);
+if(_resw)setTimeout(()=>resOpen(_resw[1],_rtab?_rtab[1]:undefined),700);   // deep-link: #…&res=vera&rtab=schedule
 
 /* ── THE CRAFT ROOM (0045 sp1) — lives ABOVE applyHash's first call (the
       1:35 lesson): the registry is a projection over the signed shelves;

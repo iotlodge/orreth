@@ -10838,12 +10838,23 @@ def compose_resident(name: str) -> dict:
     # question they answer can repeat on a cadence (JB's L4)
     schedules: list = []
     try:
+        from datetime import datetime as _dt3, timedelta as _td3
         for (_w, rn, _q), h in _memo("sched-heads", 30,
                                      lambda: _sched_heads(4500)).items():
             if rn == low and h.get("posture") == "standing":
+                ev = int(h.get("every_days") or 7)
+                nxt = ""
+                try:
+                    base = (h.get("last_fired") or h.get("at") or "")
+                    nxt = (_dt3.fromisoformat(base.replace("Z", "+00:00"))
+                           + _td3(days=ev)).strftime("%Y-%m-%d %H:%M")
+                except Exception:
+                    pass
                 schedules.append({
                     "question": str(h.get("question", ""))[:90],
-                    "every": f"every {h.get('every_days', 7)}d",
+                    "every_days": ev,
+                    "every": f"every {ev}d",
+                    "next": nxt,
                     "last": (h.get("last_fired") or "not yet fired")[:16]})
     except Exception:
         pass
@@ -10910,7 +10921,10 @@ def compose_resident(name: str) -> dict:
     ]
     return {"resident": {"name": item["who"], "blurb": item["blurb"],
                          "did": item["did"], "mode": ORRETH_MODE,
-                         "has_words": bool(words)},
+                         "has_words": bool(words),
+                         **({"world": wman.get("key"),
+                             "world_name": wman.get("name"),
+                             "emoji": wman.get("emoji")} if wman else {})},
             "view": view, "item": item}
 
 
