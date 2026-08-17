@@ -16,7 +16,16 @@ round-robin truth). BONUS FIND fixed en route: the wire beat had NEVER
 landed a report — `_N` lacked `parent`/`children`, so the loss walker
 crashed after every real distillation since wire-honesty week (rag: 9
 distillations, 0 reports); "every forgetting is measured" was silently
-false on the wire until today. sp2 next.**
+false on the wire until today. sp2 LANDED same day (proven live, three
+warmth lanes + the law honored: a human OPENING a desk report warms it
+at home through the door's `opened` beacon — the index serving itself
+never warms, a census is not a recall; the ask lane's hits warm ON THEIR
+HOME FLOOR via warm_homes — they had been warming the ask floor's tap
+where their home's metabolism never looks; the self-knowledge pre-pass's
+QUOTES are recalls too — a question answered FROM a report is that
+report being used; and the beat honors it all: a July-11 record due for
+a month, warmed by one touch, survived the next breath — 187 distilled
+around it, 1 kept warm). sp3 next: the glass.**
 
 ## 1. The disease and the cure
 

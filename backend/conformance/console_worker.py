@@ -2147,6 +2147,12 @@ def embed_door() -> None:
                     qs = urllib.parse.parse_qs(
                         urllib.parse.urlparse(self.path).query)
                     _dk = (qs.get("key") or ["trading-desk"])[0]
+                    # a human OPENING a report is usage (0057 sp2) — the
+                    # glass names the ref it unfolded; the index serving
+                    # itself never warms (a census is not a recall)
+                    _opened = (qs.get("opened") or [None])[0]
+                    if _opened and _dk in CAP_GENESIS:
+                        warm_taps(CAP_GENESIS[_dk].get("floor", ""), [_opened])
                     out = json.dumps(_memo(f"deskdoor-{_dk}", 8,
                                            lambda: compose_desk(_dk))).encode()
                 elif route == "/brain":
@@ -5268,6 +5274,39 @@ def recalls_save(scope: str, node) -> None:
             pass
 
 
+def warm_taps(scope: str, refs: list) -> None:
+    """One floor's tap, warmed directly (0057 sp2): for reads that happen
+    outside a projection — a human opening a desk report, a room serving a
+    record's body — the warmth still lands where the metabolism will hear it."""
+    if not refs:
+        return
+    tap = recalls_load(scope)
+    for ref in refs:
+        e = tap.setdefault(ref, {"n": 0})
+        e["n"] += 1
+        e["last"] = NOW()
+    try:
+        _recalls_path(scope).write_text(json.dumps(tap))
+    except Exception:
+        pass
+
+
+def warm_homes(n, scope: str, before: dict) -> None:
+    """THE WARMTH FLOWS HOME (0057 sp2): the librarian's projection carries
+    records from many homes, but a recall must warm the record on ITS OWN
+    floor's tap — the ask floor's file was warming universe and world records
+    in a place their home floor's metabolism never looks."""
+    by_home: dict = {}
+    for ref, e in (getattr(n, "recalls", None) or {}).items():
+        if e.get("n", 0) <= before.get(ref, 0):
+            continue                      # not warmed by this ask
+        home = (n.records.get(ref) or {}).get("home") or scope
+        if home != scope:
+            by_home.setdefault(home, []).append(ref)
+    for home, refs in by_home.items():
+        warm_taps(home, refs)
+
+
 def _stacks_node(port: int, scope: str):
     """The log's face on the wire: stacks documents AND the routing standard,
     read with the seat's own authority; writes POST back to the floor."""
@@ -5467,6 +5506,8 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
     import re as _re
     low = (q or "").lower()
     pre, q2, settled = "", q, False
+    cited: list = []          # refs this pre-pass QUOTED — they warm (0057 sp2)
+    n._sk_cited = cited
     # (a) the isolation roster — manifest truth, never a retrieval
     if _re.search(r"\bopt(?:ed|s)?[-\s]?out\b|\bisolat(?:ed|ion|e)\b", low):
         iso = [m.get("name", k) for k, m in CAP_GENESIS.items()
@@ -5546,6 +5587,7 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
         if found:
             named = " · ".join(f"“…{exc}…” [{rid[:18]}…] at {home}"
                                for rid, home, exc in found[:3])
+            cited += [rid for rid, _, _ in found[:3]]
             pre += (f"yes — {len(found)} memor"
                     f"{'y' if len(found) == 1 else 'ies'} beyond the desk "
                     f"floors mention {sym}: {named}. ")
@@ -5604,6 +5646,7 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
             pre += ("from the reports themselves: " + " · ".join(
                 f"walk {when}: “{s}” [{rid[:18]}…]"
                 for when, s, rid in quotes[:2]) + ". ")
+            cited += [rid for _, _, rid in quotes[:2]]
             settled = True
         elif newest_sym is not None:
             # no sentence carried the ask's terms — the report's own
@@ -5617,6 +5660,7 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
             if stance:
                 pre += (f"the newest {sym} report ({when}) holds: "
                         f"{stance} [{rid[:18]}…]. ")
+                cited.append(rid)
                 settled = True
     # (c) provenance — the newest report's own metadata, read, not retrieved
     if newest_report and _re.search(
@@ -5629,6 +5673,7 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
         who = resident or (r.get("author", "")[:24] + "…")
         pre += (f"the most recent desk report{f' ({sym})' if sym else ''} was "
                 f"written by {who} on {home} at {when} [{rid[:18]}…]. ")
+        cited.append(rid)
         settled = True
     return q2, pre, settled
 
@@ -5673,12 +5718,20 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
                    "tag": f"arm:{av['machine'].split(':', 1)[-1][:12]}",
                    "of": e["record"]}
     q2, pre, settled = _ask_self_knowledge(n, q)  # state resolves before retrieval
+    _tap0 = {r: e.get("n", 0)
+             for r, e in (getattr(n, "recalls", None) or {}).items()}
     d = dispatcher.dispatch(n, me, seat_kp, q2, origin=origin,
                             built=list(tournament.ALL_RETRIEVERS))
     n.records.pop(d["record"], None)   # an ask never cites its OWN routing —
     # the choice persists on the wire; it just doesn't answer itself
     a = tournament.answer_as(n, d["flavor"], q2)
+    # the pre-pass's quotes are recalls too (0057 sp2): a human's question
+    # answered FROM a report is that report being used
+    from orreth_sim import stacks as _stk
+    _stk.record_recalls(n, [{"ref": rid}
+                            for rid in getattr(n, "_sk_cited", [])])
     recalls_save(scope, n)             # what this ask warmed, kept (sp1)
+    warm_homes(n, scope, _tap0)        # …and warmed AT HOME (0057 sp2)
     attest_note(port, scope, n)        # what this ask LOADED, noted (0041 sp2)
     if arm:                            # the work wears its arm (0043 sp4, law 4)
         wk = make_memory(me, seat_kp, scope,
@@ -5730,8 +5783,11 @@ def wire_stacks_tournament(port: int, scope: str, q: str = "") -> str:
         "how are rammed earth walls connected to the seasons?",
         "what exactly protects walls from rain?",
         "compare rammed earth and lime plaster"]
+    _tap0 = {r0: e.get("n", 0)
+             for r0, e in (getattr(n, "recalls", None) or {}).items()}
     r = tournament.run(n, questions)
     recalls_save(scope, n)             # seven rows' worth of warmth, kept (sp1)
+    warm_homes(n, scope, _tap0)        # …and warmed AT HOME (0057 sp2)
     me = {"did": seat_did, "scope": scope}
     ev = make_memory(me, seat_kp, scope,
                      {"stacks_tournament": {"standings": r["standings"],

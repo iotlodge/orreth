@@ -3835,6 +3835,11 @@ let DESK=null,DKTAB="polished",DKIDX=0,DKDETAIL=false,CAPV="home",_CAPTIMER=null
 /* the command-first room (0056v2 sp-C): a row in the index OPENS its
    report's detail; the room never leads with a wall */
 function dkOpenReport(i){DKIDX=i;DKDETAIL=true;renderCap();
+  /* usage is evidence (0057 sp2): the human unfolding a report warms it
+     at home — fire-and-forget; the index serving itself never warms */
+  try{const rp=(typeof DESK!=="undefined"&&DESK&&DESK.reports||[])[i];
+    if(rp&&rp.ref&&CAPV&&CAPV!=="home")
+      fetch(`${OBSD}/desk?key=${encodeURIComponent(CAPV)}&opened=${encodeURIComponent(rp.ref)}`).catch(()=>{})}catch(e){}
   setTimeout(()=>{const el=document.getElementById("dk-detail");
     el&&el.scrollIntoView({behavior:"smooth",block:"start"})},80)}
 function capToggle(){const w=$("capworld");
