@@ -4072,12 +4072,26 @@ function dkCanvas(id,spec,states,titles){
   for(let i=0;i<nodes.length;i++)edges.forEach(e=>{
     if((col[e.to]??0)<(col[e.from]??0)+1)col[e.to]=col[e.from]+1});
   const byCol={};nodes.forEach(n=>{(byCol[col[n.id]]=byCol[col[n.id]]||[]).push(n)});
-  const NW=196,NH=58,CW=NW+64,RH=NH+26,PAD=26;
-  const ncols=Math.max(...nodes.map(n=>col[n.id]))+1;
-  const nrows=Math.max(...Object.values(byCol).map(a=>a.length));
-  const W=ncols*CW+PAD*2,H=Math.max(240,nrows*RH+PAD*2);
-  const pos={};Object.entries(byCol).forEach(([c,arr])=>{arr.forEach((n,i)=>{
-    pos[n.id]=[PAD+(+c)*CW,PAD+(H-2*PAD)*(i+.5)/arr.length-NH/2]})});
+  // THE SERPENT (the judge pass vs tmp/CO, 2026-08-17): a long river
+  // squeezed into one strip reads tiny — CO wraps its sixteen stages into
+  // BANDS five columns wide, cards big and readable, the flow snaking
+  // left→right then right→left like reading a page
+  const NW=196,NH=58,CW=NW+64,RH=NH+26,PAD=28,K=5;
+  const nlayers=Math.max(...nodes.map(n=>col[n.id]))+1;
+  const nbands=Math.ceil(nlayers/K);
+  const bandH=[],bandY=[];let yAcc=PAD;
+  for(let b=0;b<nbands;b++){
+    let mx=1;
+    for(let L=b*K;L<Math.min((b+1)*K,nlayers);L++)
+      mx=Math.max(mx,(byCol[L]||[]).length);
+    bandY[b]=yAcc;bandH[b]=mx*RH;yAcc+=bandH[b]+34}
+  const W=K*CW+PAD*2,H=Math.max(240,yAcc-34+PAD);
+  const pos={};Object.entries(byCol).forEach(([c,arr])=>{
+    const L=+c,b=Math.floor(L/K),idx=L%K,
+          xc=(b%2===0)?idx:(K-1-idx);
+    arr.forEach((n,i)=>{
+      pos[n.id]=[PAD+xc*CW,
+                 bandY[b]+(bandH[b]-arr.length*RH)/2+i*RH+(RH-NH)/2]})});
   DKCV[id]=Object.assign(DKCV[id]||{},{W,H,z:DKCV[id]?.z||1,
     px:DKCV[id]?.px||0,py:DKCV[id]?.py||0,lock:DKCV[id]?.lock||false});
   const st=n=>(states||{})[n]||"pending";
@@ -4093,11 +4107,29 @@ function dkCanvas(id,spec,states,titles){
     s+=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="10" fill="none" stroke="var(--brass)" stroke-width="1" stroke-dasharray="7 5" opacity=".55"/>`
       +`<text x="${x0+8}" y="${y0-4}" font-size="9" fill="var(--brass)" opacity=".8" style="letter-spacing:.14em;text-transform:uppercase">${dkEsc(g.label||"")}</text>`});
   edges.forEach(e=>{const A=pos[e.from],B=pos[e.to];if(!A||!B)return;
-    const x1=A[0]+NW,y1=A[1]+NH/2,x2=B[0],y2=B[1]+NH/2,mx=x1+(x2-x1)/2;
     const hot=st(e.from)!=="pending"&&st(e.to)!=="pending";
     const c=DKCV_KIND[e.kind]||(hot?"var(--brassdim)":"var(--hair)");
-    s+=`<path d="M${x1} ${y1} L${mx} ${y1} L${mx} ${y2} L${x2-3} ${y2}" fill="none" stroke="${c}" stroke-width="${hot?1.5:1.1}" marker-end="url(#cvarr-${id})"/>`;
-    if(e.label)s+=`<g><rect x="${mx-24}" y="${(y1+y2)/2-8}" width="48" height="15" rx="4" fill="var(--void)" stroke="${c}"/><text x="${mx}" y="${(y1+y2)/2+3}" text-anchor="middle" font-size="8" fill="${c}">${dkEsc(e.label)}</text></g>`});
+    let d,lx,ly;
+    if(Math.abs(B[1]-A[1])>NH+22){
+      // a band drop: leave the floor, cross the gap, enter the roof
+      const x1=A[0]+NW/2,y1=A[1]+NH,x2=B[0]+NW/2,y2=B[1],
+            gy=y1+(y2-y1)/2;
+      d=`M${x1} ${y1} L${x1} ${gy} L${x2} ${gy} L${x2} ${y2-3}`;
+      lx=(x1+x2)/2;ly=gy;
+    }else if(B[0]>=A[0]){
+      const x1=A[0]+NW,y1=A[1]+NH/2,x2=B[0],y2=B[1]+NH/2,
+            mx=x1+(x2-x1)/2;
+      d=`M${x1} ${y1} L${mx} ${y1} L${mx} ${y2} L${x2-3} ${y2}`;
+      lx=mx;ly=(y1+y2)/2;
+    }else{
+      // a reversed band flows right→left: exit the left, enter the right
+      const x1=A[0],y1=A[1]+NH/2,x2=B[0]+NW,y2=B[1]+NH/2,
+            mx=x1+(x2-x1)/2;
+      d=`M${x1} ${y1} L${mx} ${y1} L${mx} ${y2} L${x2+3} ${y2}`;
+      lx=mx;ly=(y1+y2)/2;
+    }
+    s+=`<path d="${d}" fill="none" stroke="${c}" stroke-width="${hot?1.5:1.1}" marker-end="url(#cvarr-${id})"/>`;
+    if(e.label)s+=`<g><rect x="${lx-24}" y="${ly-8}" width="48" height="15" rx="4" fill="var(--void)" stroke="${c}"/><text x="${lx}" y="${ly+3}" text-anchor="middle" font-size="8" fill="${c}">${dkEsc(e.label)}</text></g>`});
   nodes.forEach(n=>{const P=pos[n.id];if(!P)return;const S=st(n.id);
     const stroke=S==="done"?"var(--brassdim)":S==="live"?"var(--brass)":"var(--hair)";
     const tip=(titles||{})[n.id]||n.desc||"";
