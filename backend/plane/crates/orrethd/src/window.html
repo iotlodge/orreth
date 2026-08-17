@@ -2577,12 +2577,9 @@ function agentRow(a,resident){
   const speak=resident?` speakable" onclick="openParlor('${a.name||""}')" title="open an audience — you ask, ${a.name} fetches`:"";
   const face=resident?medallion(a.role):"";
   /* 0056 sp1 — every named resident's row wears a door to their room */
-  /* the icon micro-toolbar (0056v2 sp-B, tmp/CO's roster anatomy): every
-     named row wears one-click doors into the modal's own tabs */
-  const door=a.name?[["info","ⓘ","who they are"],["graph","🕸","their flow"],
-    ["prompts","✎","their words — edit in place"],["metrics","📊","their vitals"],
-    ["schedule","🕐","their standing questions"]].map(([t,g,tt])=>
-    `<span class="roomdoor" onclick="event.stopPropagation();resOpen('${a.name}','${t}')" title="${a.name} — ${tt}">${g}</span>`).join(""):"";
+  /* ONE door per row (JB's correction, 2026-08-17: five little icons
+     clutter the tile — humans click the tab they want inside) */
+  const door=a.name?`<span class="roomdoor" onclick="event.stopPropagation();resOpen('${a.name}')" title="${a.name} — the modal: info · graph · prompts · model · metrics · schedule">⚙</span>`:"";
   return `<div class="agent${resident?" res2":""}${speak}">${face}<span class="orb ${a.state}"></span>
     <span class="who"><span class="id">${resident?a.role:(a.name||short(a.agent))}${door}</span>
     ${resident?"":`<span class="role">${a.scope?a.scope.split("/").pop():"workforce"}</span>`}${sub}</span></div>`;
