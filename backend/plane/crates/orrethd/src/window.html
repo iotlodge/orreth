@@ -4084,8 +4084,8 @@ function dkCanvas(id,spec,states,titles){
     let mx=1;
     for(let L=b*K;L<Math.min((b+1)*K,nlayers);L++)
       mx=Math.max(mx,(byCol[L]||[]).length);
-    bandY[b]=yAcc;bandH[b]=mx*RH;yAcc+=bandH[b]+34}
-  const W=K*CW+PAD*2,H=Math.max(240,yAcc-34+PAD);
+    bandY[b]=yAcc;bandH[b]=mx*RH;yAcc+=bandH[b]+26}
+  const W=K*CW+PAD*2,H=Math.max(240,yAcc-26+PAD);
   const pos={};Object.entries(byCol).forEach(([c,arr])=>{
     const L=+c,b=Math.floor(L/K),idx=L%K,
           xc=(b%2===0)?idx:(K-1-idx);
@@ -4104,8 +4104,8 @@ function dkCanvas(id,spec,states,titles){
     const ps=(g.nodes||[]).map(n=>pos[n]).filter(Boolean);if(!ps.length)return;
     const x0=Math.min(...ps.map(p=>p[0]))-12,y0=Math.min(...ps.map(p=>p[1]))-16,
           x1=Math.max(...ps.map(p=>p[0]))+NW+12,y1=Math.max(...ps.map(p=>p[1]))+NH+12;
-    s+=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="10" fill="none" stroke="var(--brass)" stroke-width="1" stroke-dasharray="7 5" opacity=".55"/>`
-      +`<text x="${x0+8}" y="${y0-4}" font-size="9" fill="var(--brass)" opacity=".8" style="letter-spacing:.14em;text-transform:uppercase">${dkEsc(g.label||"")}</text>`});
+    s+=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="10" fill="none" stroke="var(--brass)" stroke-width="1" stroke-dasharray="7 5" opacity=".85" stroke-width="1.3"/>`
+      +`<text x="${x0+8}" y="${y0-5}" font-size="9.5" fill="var(--brass)" style="letter-spacing:.14em;text-transform:uppercase">${dkEsc(g.label||"")}</text>`});
   edges.forEach(e=>{const A=pos[e.from],B=pos[e.to];if(!A||!B)return;
     const hot=st(e.from)!=="pending"&&st(e.to)!=="pending";
     const c=DKCV_KIND[e.kind]||(hot?"var(--brassdim)":"var(--hair)");
@@ -4140,7 +4140,7 @@ function dkCanvas(id,spec,states,titles){
       +(tip?`<title>${dkEsc(tip)}</title>`:"")
       +`<text x="${P[0]+10}" y="${P[1]+15}" font-size="8" fill="var(--faint)" style="letter-spacing:.12em;text-transform:uppercase">${dkEsc(n.icon||"")} ${dkEsc(n.kind||"")}</text>`
       +`<text x="${P[0]+10}" y="${P[1]+30}" font-size="10.5" font-weight="600" fill="${S==="pending"?"var(--dim)":"var(--star)"}">${dkEsc(n.label||n.id.replace(/-/g," "))}</text>`
-      +`<text x="${P[0]+10}" y="${P[1]+43}" font-size="8" fill="var(--faint)">${dkEsc((n.desc||"").slice(0,34))}</text>`
+      +`<text x="${P[0]+10}" y="${P[1]+43}" font-size="8.5" fill="var(--dim)">${dkEsc((n.desc||"").slice(0,34))}</text>`
       +`<g><rect x="${P[0]+10}" y="${P[1]+47}" width="${S==="live"?38:S==="done"?18:24}" height="9" rx="3" fill="var(--deep)" stroke="${stroke}"/><text x="${P[0]+14}" y="${P[1]+54}" font-size="7" fill="${S==="live"?"var(--brass)":"var(--dim)"}">${S==="live"?"running":S==="done"?"✓":"idle"}</text></g></g>`});
   s+=`</svg>`
     +`<div style="position:absolute;left:.6rem;bottom:.6rem;display:flex;flex-direction:column;gap:.25rem">`
