@@ -7,12 +7,35 @@
      "if humans can just ask for these things through a Resident, why have
      this?" This charter is the answer to all three. -->
 
-**Status: 🔨 OPEN — all four locks landed by JB 2026-08-16:**
-**L1 = ALL TEN residents at once (his word over the recommended three:
-"the family whole from day one" — thinner rooms each, one template) ·
-L2 = both doors (rail card + parlor) · L3 = spend · runs/success ·
-last verdict · age · L4 = ANY question a resident answers (the standing
-word carries the question as data).**
+**Status: ✅ CLOSED WHOLE 2026-08-17 — era 0.56.** All four locks landed
+by JB 2026-08-16 (L1 = ALL TEN residents at once, his word over the
+recommended three · L2 = both doors · L3 = spend · runs/success · last
+verdict · age · L4 = ANY question a resident answers), and the dive was
+REFORGED mid-flight by his tough feedback of 2026-08-17 ("your views are
+like reading documents… I want what CortexObserver has") into **0056v2 —
+the Commander correction**, judged pass-by-pass against his own tmp/CO
+reference images and the live CortexObserver he opened:
+
+- **sp1–sp3 (the rooms)**: one composer, three truths (presence ·
+  architecture · manifests — family with no lease gets a room that says
+  exactly what it waits for); vitals, work, words, schedules, minds,
+  relations.
+- **v2 sp-A (the canvas)**: node-card DAGs on a pannable dotted grid,
+  serpentine bands, group boxes, minimap — declared in manifests, drawn
+  blind, live states pulsing as records land. His word: "very nice
+  graphs."
+- **v2 sp-B (the modal)**: Info · Graph · Prompts (edited IN PLACE
+  through the one-motion craft-edit lane; canon refuses toward the
+  release, prod read-only by the kernel's law) · Model · Metrics ·
+  Schedule (the cron face: objective + cadence + hour, next-due clocks,
+  gateless rest — jobs seen and edited THROUGH the resident that owns
+  them). One ⚙ door per roster row, his correction.
+- **v2 sp-C (command-first rooms)**: NEW ANALYSIS leads, how-it-works
+  folds into a declared story map, past reports become the pill-row
+  INDEX (the thirteenth canon panel kind) opening detail on demand. His
+  verdict: **"oh that's so much nicer."**
+
+The Objectives view demotes only by observed disuse — his lock stands.
 
 ## 1. The wound
 
