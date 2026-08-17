@@ -4597,18 +4597,26 @@ function rsmRender(){
   else if(RESM.tab==="schedule"){
     const jobs=item.schedules||[];
     h=`<div style="display:flex;align-items:center;gap:.6rem"><div><b style="font-size:.85rem">Scheduled Jobs</b><div class="dim" style="font-size:.68rem">recurring standing questions for @${dkEsc(RESM.name)} — your approval starts each; resting never needs a gate</div></div>
-       <button class="dk-tab" style="margin-left:auto" onclick="$('rsm-newjob').style.display='block'">+ New Job</button></div>`
+       <button class="dk-tab" style="margin-left:auto" onclick="rsmNewJob()">+ New Job</button></div>`
      +jobs.map(s=>`<div class="rsm-job">
         <div style="display:flex;gap:.5rem;align-items:baseline"><b style="font-size:.78rem">${dkEsc(s.question)}</b></div>
         <div class="rsm-cron">every ${s.every_days}d · ${s.next?`next due ${dkEsc(s.next)}`:"awaiting its first fire"} · last: ${dkEsc(s.last)}</div>
         <div style="display:flex;gap:.5rem;align-items:center;margin-top:.3rem"><span class="rsm-act">standing</span>
           <button class="dk-tab" style="padding:.1rem .5rem" data-q="${dkEsc(s.question)}" onclick="rsmRest(this.dataset.q)" title="rule 11 — resting never needs a gate">⏸ rest it</button></div></div>`).join("")
      +(jobs.length?"":`<div class="dim" style="font-size:.74rem;margin:.5rem 0">no standing questions yet — any question ${dkEsc(RESM.name)} answers can repeat on a cadence</div>`)
-     +`<div id="rsm-newjob" style="display:${jobs.length?"none":"block"};margin-top:.6rem;border:1px dashed var(--hair);border-radius:9px;padding:.6rem">
-        <input id="res-schedq" placeholder="a question ${dkEsc(RESM.name)} should answer on a cadence" style="width:100%;margin-bottom:.4rem" maxlength="200">
-        <select id="res-schedd" class="dk-tab"><option value="1">daily</option><option value="7" selected>weekly</option><option value="30">monthly</option></select>
-        <button class="dk-tab" onclick="resSchedStage('${dkEsc(RESM.name)}')">⏰ stage it — your approval starts it</button>
-        <span class="dim" id="res-sched-note" style="font-size:.66rem"></span></div>`}
+     +`<div id="rsm-newjob" style="display:${jobs.length?"none":"block"};margin-top:.6rem;border:1px dashed var(--brassdim);border-radius:9px;padding:.7rem">
+        <div class="rsm-eyebrow" style="margin-top:0">the objective — what should @${dkEsc(RESM.name)} answer, again and again?</div>
+        <textarea id="res-schedq" rows="2" placeholder="e.g. What changed in our world this week, and what deserves my eye?" style="width:100%;background:var(--void);color:var(--star);border:1px solid var(--hair);border-radius:7px;padding:.5rem;font-size:.76rem" maxlength="200" oninput="rsmCronEcho()"></textarea>
+        <div class="rsm-eyebrow">the schedule</div>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+          <select id="res-schedd" class="dk-tab" onchange="rsmCronEcho()"><option value="1">daily</option><option value="7" selected>weekly</option><option value="30">monthly</option></select>
+          <span class="dim" style="font-size:.7rem">at</span>
+          <select id="res-schedh" class="dk-tab" onchange="rsmCronEcho()">${Array.from({length:24},(_,i)=>`<option value="${i}"${i===8?" selected":""}>${String(i).padStart(2,"0")}:00</option>`).join("")}</select>
+          <span class="dim" style="font-size:.7rem">UTC</span></div>
+        <div class="rsm-cron" id="rsm-cronecho" style="margin:.45rem 0">≈ every 7 days · at 08:00 UTC — fires on the worker's round once due</div>
+        <div style="display:flex;gap:.6rem;align-items:center">
+          <button class="dk-tab" onclick="resSchedStage('${dkEsc(RESM.name)}')">⏰ stage it — your approval starts it</button>
+          <span class="dim" id="res-sched-note" style="font-size:.66rem"></span></div></div>`}
   $("rsm-bd").innerHTML=h}
 async function rsmWord(name){
   RESM.word=name;
@@ -4672,15 +4680,25 @@ async function resRoomOpen(name){
 /* the standing question's reins: staging waits for the human's one
    approval; resting is gateless (rule 11) — any question the resident
    answers may repeat on a cadence (JB's L4) */
+/* + New Job always ANSWERS the click (JB's find: with zero jobs the form
+   was already open, so the button did nothing — a dead button teaches
+   distrust): reveal, focus the objective, and say so */
+function rsmNewJob(){const f=$("rsm-newjob");if(!f)return;
+  f.style.display="block";
+  const q=$("res-schedq");if(q){q.focus();q.scrollIntoView({block:"center",behavior:"smooth"})}}
+function rsmCronEcho(){const e=$("rsm-cronecho");if(!e)return;
+  const d=+(($("res-schedd")||{}).value||7),h=+(($("res-schedh")||{}).value||8);
+  e.textContent=`≈ every ${d} day${d===1?"":"s"} · at ${String(h).padStart(2,"0")}:00 UTC — fires on the worker's round once due`}
 async function resSchedStage(who){
   const q=(($("res-schedq")||{}).value||"").trim(),n=$("res-sched-note");
-  if(!q){if(n)n.textContent="write the question first";return}
+  if(!q){if(n)n.textContent="write the objective first";return}
   try{
     await fetch(`/requests`,{method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({kind:"scheduled-ask",what:"resident-ask",
         resident:who,question:q,
         every_days:+(($("res-schedd")||{}).value||7),
+        at_hour:+(($("res-schedh")||{}).value??8),
         text:`${who} answers «${q}» on a cadence — the human's standing question`})});
     if(n){n.style.color="";n.textContent="staged — the terms wait in your Inbox; your one approval starts it"}
   }catch(e){if(n){n.textContent="the ask did not land — is the floor awake?";n.style.color="var(--red)"}}}

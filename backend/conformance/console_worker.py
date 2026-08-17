@@ -10336,6 +10336,12 @@ def on_scheduled_ask(port: int, scope: str, r: dict) -> None:
     resident = str(r.get("resident") or "")[:24].lower()
     question = str(r.get("question") or "")[:200]
     every = max(1, min(90, int(r.get("every_days") or 7)))
+    at_hour = None
+    try:
+        if r.get("at_hour") is not None and str(r.get("at_hour")) != "":
+            at_hour = max(0, min(23, int(r.get("at_hour"))))
+    except Exception:
+        pass
     ident = {"what": what, **({"resident": resident} if resident else {}),
              **({"question": question} if question else {})}
     label = (f"{resident} answers «{question[:60]}»" if resident
@@ -10357,11 +10363,12 @@ def on_scheduled_ask(port: int, scope: str, r: dict) -> None:
         print(f"  ↳ scheduled-ask {r['id']}: {label} RESTED on the human's word")
         return
     if r.get("status") == "pending":
-        terms = (f"{resident} answers «{question}» every {every} day(s) — "
-                 "the ask rides the parlor's own lane, the exchange lands "
-                 "as a record, and the thought meters under the same gates "
-                 "as any audience; standing until you rest it, and resting "
-                 "never needs a gate"
+        terms = (f"{resident} answers «{question}» every {every} day(s)"
+                 + (f" at {at_hour:02d}:00 UTC" if at_hour is not None else "")
+                 + " — the ask rides the parlor's own lane, the exchange "
+                 "lands as a record, and the thought meters under the same "
+                 "gates as any audience; standing until you rest it, and "
+                 "resting never needs a gate"
                  if resident else
                  f"the {what} runs WEEKLY — ten questions through the real "
                  "ask lane, ten verdicts under vera's own did inside her "
@@ -10378,6 +10385,8 @@ def on_scheduled_ask(port: int, scope: str, r: dict) -> None:
     if r.get("status") == "approved":
         rec = make_memory(agent, seat_kp, UNIVERSE_SCOPE,
                           {"scheduled_ask": {**ident, "every_days": every,
+                                             **({"at_hour": at_hour}
+                                                if at_hour is not None else {}),
                                              "posture": "standing",
                                              "approved": str(r.get("id") or ""),
                                              "at": NOW()}},
@@ -10450,6 +10459,9 @@ def scheduled_ask_beat() -> None:
             if not _older_than(head.get("last_fired") or head.get("at", ""),
                                every):
                 continue
+            if head.get("at_hour") is not None and \
+                    datetime.now(timezone.utc).hour < int(head["at_hour"]):
+                continue          # the job waits for its hour (the cron face)
             try:
                 call(u_port, "POST", "/requests",
                      {"kind": "parlor", "to": resident,
@@ -10850,10 +10862,13 @@ def compose_resident(name: str) -> dict:
                            + _td3(days=ev)).strftime("%Y-%m-%d %H:%M")
                 except Exception:
                     pass
+                ah = h.get("at_hour")
                 schedules.append({
                     "question": str(h.get("question", ""))[:90],
                     "every_days": ev,
-                    "every": f"every {ev}d",
+                    "every": f"every {ev}d"
+                             + (f" at {int(ah):02d}:00Z"
+                                if ah is not None else ""),
                     "next": nxt,
                     "last": (h.get("last_fired") or "not yet fired")[:16]})
     except Exception:
