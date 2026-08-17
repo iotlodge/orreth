@@ -11387,8 +11387,10 @@ def _compose_brain_locked() -> dict:
                                   sorted(_METAB_FLOORS.items())},
                        "ring_ahead": len(_METAB_RING),
                        "boundary": "one floor per breath, round-robin across "
-                                   "every discovered floor (0057 sp1); warmth "
-                                   "flows from the ask lane alone until sp2"},
+                                   "every discovered floor; usage warms from "
+                                   "the ask lane, opened reports, and quoted "
+                                   "answers — always at the record's home "
+                                   "(0057)"},
         "retention": {"dials": dials.get("classes", {}), "source": dials_src},
         "yardstick": {"runs": runs,
                       "schedule": _brain_schedule(runs),

@@ -7,7 +7,16 @@
      CRUD surface for MACHINE-level tasks — parked for the UI
      continuity/usability season, seed on record. -->
 
-**Status: OPEN — sp1 LANDED 2026-08-17 (proven live: 7 distinct floors
+**Status: ✅ CLOSED WHOLE 2026-08-17, era 0.57 — all three spoonfuls
+landed and proven live in one day; sp3's receipt: the 🧠 pull on the
+rebuilt rig rendering the standing worker's own first breath (u:demo ·
+187 distilled · 1 kept warm — the warmed victim honored — · loss 0.00 ·
+per-floor table · the round-robin cadence line), the dials from the
+shelf's active head, the yardstick untouched below. The boundary
+sentence updated in the same close: usage warms from the ask lane,
+opened reports, and quoted answers — always at the record's home.**
+
+**The spoonful record: sp1 LANDED 2026-08-17 (proven live: 7 distinct floors
 breathed — u:demo 6.5k-records ground ≤2.7s/breath, f:prod, e:cloud,
 e:retail, e:care, and f:charles answering the honest "nothing due" of a
 five-day-old floor; reports with measured loss on each floor's record;
