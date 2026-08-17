@@ -3815,7 +3815,12 @@ const OBSD=`${location.protocol}//${location.hostname}:4562`;
       dependency-free by law — same anatomy, same hues: dashed grid, price
       axis, date axis, close line + translucent high/low band, legends, and
       a live crosshair tooltip carrying every series at the cursor. ── */
-let DESK=null,DKTAB="polished",DKIDX=0,CAPV="home",_CAPTIMER=null;
+let DESK=null,DKTAB="polished",DKIDX=0,DKDETAIL=false,CAPV="home",_CAPTIMER=null;
+/* the command-first room (0056v2 sp-C): a row in the index OPENS its
+   report's detail; the room never leads with a wall */
+function dkOpenReport(i){DKIDX=i;DKDETAIL=true;renderCap();
+  setTimeout(()=>{const el=document.getElementById("dk-detail");
+    el&&el.scrollIntoView({behavior:"smooth",block:"start"})},80)}
 function capToggle(){const w=$("capworld");
   if(!w.classList.contains("capopen")&&$("brainworld").classList.contains("capopen"))brnToggle();
   w.classList.toggle("capopen");
@@ -4235,6 +4240,12 @@ function dkFlow(nodes,edges,states,titles){
 function dkPanel(p,pi,item){
   switch(p.kind){
   case "flow":{
+    const cid=("fl-"+(p.story?"story":"")+(p.src||"flow")+"-"+pi).replace(/[^a-z0-9-]/gi,"");
+    if(p.story){
+      // the story map (sp-C, CO's how-it-works): every node lit, the
+      // numbered edges telling the tale — folded until the human asks
+      const states={};(p.nodes||[]).forEach(nd=>{states[typeof nd==="string"?nd:nd.id]="done"});
+      return `<details style="margin:.7rem 0"><summary class="dk-chtitle" style="cursor:pointer;list-style:none">▸ ${dkEsc(p.label||"how it works")} — open the map</summary>${dkCanvas(cid,p,states,{})}</details>`}
     const walk=(p.live===false?null:((window.DESK&&DESK.walking)||[])[0]);
     const src=walk?walk.stages:(item[p.src]||[]);
     const done=new Set(src.map(x=>x.stage||x));
@@ -4243,13 +4254,27 @@ function dkPanel(p,pi,item){
       states[nid]=done.has(nid)?"done":"pending"});
     src.forEach(x=>{if(x&&x.stage&&x.digest)titles[x.stage]=x.digest});
     if(walk&&src.length){const cur=src[src.length-1];states[cur.stage||cur]="live"}
-    const cid=("fl-"+(p.src||"flow")+"-"+pi).replace(/[^a-z0-9-]/gi,"");
     return `<div class="dk-chtitle" style="margin-top:.7rem">${dkEsc(p.label||"the flow")}${walk?` · 🚶 walking ${dkEsc(walk.ticker)} — live`:item&&item.date?` · the ${dkEsc(item.ticker||"")} walk of ${dkEsc(item.date)} — hover a stage for its digest`:""}</div>`
       +dkCanvas(cid,p,states,titles)}
+  case "reports":{
+    const reps=(window.DESK&&DESK.reports)||[];
+    if(!reps.length)return `<div class="dim" style="font-size:.75rem;margin:.6rem 0">no report on the record yet — ask above, or approve the next walk</div>`;
+    return `<div class="dk-chtitle" style="margin-top:.8rem">${dkEsc(p.label||"past reports")} · ${reps.length} total</div>`
+      +`<div style="overflow-x:auto"><table class="dk-table"><tr><th></th><th>ticker</th><th>date</th><th>rating</th><th>the read</th></tr>`
+      +reps.map((r,i)=>`<tr style="cursor:pointer" onclick="dkOpenReport(${i})" title="open this report's full read">
+         <td>${(DKIDX===i&&DKDETAIL)?"▾":"▸"}</td>
+         <td style="font-family:var(--mono);font-weight:600">${dkEsc(r.ticker||"?")}</td>
+         <td style="font-family:var(--mono)">${dkEsc(r.date||"")}</td>
+         <td>${dkBadge(r.rating||"—")}</td>
+         <td class="dim" style="font-size:.7rem;max-width:34rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dkEsc(String(r.executive_summary||r.overview_md||"").replace(/[#*>\n]+/g," ").slice(0,110))}</td></tr>`).join("")
+      +`</table></div>`}
   case "controls":{
     const ins=(p.inputs||[]).map(x=>`<input id="dk-in-${dkEsc(x.id)}" placeholder="${dkEsc(x.placeholder||x.id)}" style="width:9rem" maxlength="12">`).join(" ");
     const btns=(p.buttons||[]).map((b,bi)=>`<button class="dk-tab" onclick="capBtn(${pi},${bi})">${dkEsc(b.label)}</button>`).join(" ");
-    return `${p.watches?dkWatchLine():""}<div class="dk-law" style="margin-top:.35rem">${ins} ${btns} <span id="dk-reins-note" class="dim"></span></div>`}
+    // the NEW ANALYSIS card (sp-C): the room LEADS with the ask
+    return `<div style="border:1px solid var(--hair);border-radius:10px;padding:.7rem .9rem;margin:.6rem 0;background:var(--deep)">
+      <div class="rsm-eyebrow" style="margin-top:0">✦ new analysis — your word is the approval</div>
+      ${p.watches?dkWatchLine():""}<div class="dk-law" style="margin-top:.35rem">${ins} ${btns} <span id="dk-reins-note" class="dim"></span></div></div>`}
   case "download":
     return `<div class="dk-pick" style="justify-content:flex-end"><a class="dk-dl" href="${OBSD}${dkSub(p.href,item)}" download>${dkEsc(p.label||"⬇ download")}</a></div>`;
   case "stat":{
@@ -4292,8 +4317,6 @@ function renderWorld(man){
     +`<div class="dim" style="padding:1rem 0">no report on the record yet — ask below, or approve the next walk</div>`;return}
   DKIDX=Math.min(DKIDX,reps.length-1);
   const item=reps[DKIDX];
-  const lab=(man.collection||{}).label||["ticker","date"];
-  const pick=reps.length>1?`<div class="dk-pick">${reps.map((r,i)=>`<button class="dk-tab${i===DKIDX?" on":""}" onclick="DKIDX=${i};renderCap()">${lab.map(k=>dkEsc(r[k])).join(" · ")}</button>`).join("")}</div>`:"";
   /* the in-flight truth (0053) — a silent card breeds re-asks: every ask's
      state, and the walking strip filling LIVE as stage records land */
   const askLines=((DESK.asks||[])).map(a=>`<div class="dk-law">${a.status==="riding"
@@ -4304,7 +4327,20 @@ function renderWorld(man){
   const walkStrips=((DESK.walking||[])).map(w=>`<div class="dk-law">🚶 walking <b>${dkEsc(w.ticker)}</b> · ${w.stages.length}/16 stages on the record</div>
     <div class="dk-strip">${w.stages.map(x=>`<span class="dk-dot" title="${dkEsc(x.digest||"")}">✓<i>${dkEsc(x.stage)}</i></span>`).join("")}</div>`).join("");
   const dq=(item.data_quality_errors||[]).length?`<div class="dk-dq">⚠ ${item.data_quality_errors.length} data source(s) were dark this run — the report says so honestly</div>`:"";
-  B.innerHTML=crumb+head+askLines+walkStrips+pick+dq+(man.view||[]).map((p,pi)=>dkPanel(p,pi,item)).join("");}
+  /* COMMAND-FIRST (0056v2 sp-C, judged vs tmp/CO's Trading Desk): the room
+     leads with the ask and the living canvas; the index rows open a
+     report's detail ON DEMAND — never a wall the human scrolls past */
+  const view=man.view||[];
+  const detailHtml=DKDETAIL
+    ?`<div id="dk-detail" style="border:1px solid var(--brassdim);border-radius:10px;padding:.8rem 1rem;margin:.7rem 0;background:var(--deep)">
+       <div style="display:flex;align-items:center;margin-bottom:.4rem"><b style="color:var(--brass)">${dkEsc(item.ticker||"")} · ${dkEsc(item.date||"")}</b>
+       <button class="dk-tab" style="margin-left:auto" onclick="DKDETAIL=false;renderCap()">✕ close report</button></div>
+       ${dq}${view.map((p,pi)=>p.detail?dkPanel(p,pi,item):"").join("")}</div>`:"";
+  let bodyHtml="";
+  view.forEach((p,pi)=>{if(p.detail)return;
+    bodyHtml+=dkPanel(p,pi,item);
+    if(p.kind==="reports")bodyHtml+=detailHtml});
+  B.innerHTML=crumb+head+askLines+walkStrips+bodyHtml;}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("capworld").classList.contains("capopen"))capToggle()});
 const _capw=location.hash.match(/capw=([a-z0-9-]+)/);if(_capw)CAPV=_capw[1];
 if(location.hash.includes("cap"))setTimeout(capToggle,600);   // deep-links: #…&cap=1 (the landing) · &capw=trading-desk (a world)

@@ -1330,7 +1330,8 @@ ORRETH_MODE = os.environ.get("ORRETH_MODE", "dev").strip().lower()
 
 CAP_PANEL_KINDS = {"tabs", "markdown", "chart", "strip", "controls", "download",
                    "stat", "bars", "list", "doc", "table",
-                   "flow"}   # canon (0055 L1/L2 · flow joined 2026-08-16)
+                   "flow",
+                   "reports"}   # canon (0055 L1/L2 · flow 08-16 · reports 08-17)
 
 
 def cap_manifest_flaw(parsed) -> str | None:

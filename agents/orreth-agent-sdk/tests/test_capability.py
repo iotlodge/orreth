@@ -12,4 +12,4 @@ def test_manifest_builds_and_guards():
         manifest(key="x", name="X", emoji="✦", resident="r", floor="u:demo",
                  port=1, law="l", view=[{"kind": "iframe"}])
     assert "table" in PANEL_KINDS and "flow" in PANEL_KINDS \
-        and len(PANEL_KINDS) == 12
+        and "reports" in PANEL_KINDS and len(PANEL_KINDS) == 13
