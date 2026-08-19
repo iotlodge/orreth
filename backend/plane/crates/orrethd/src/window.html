@@ -580,7 +580,37 @@
   @media(prefers-reduced-motion:reduce){.alertring,.moon.ripple,.planet.ripple{animation:none!important}}
 
   /* ── REQUESTS + ASK ── */
-  #v-req,#v-obj{padding:1.6rem;overflow-y:auto}
+  #v-req{padding:1.6rem;overflow-y:auto}
+  /* the objective ledger (regrouped 2026-08-19): compose long above,
+     master-detail below — the view never scrolls, the panes do (0052) */
+  #v-obj{padding:1.2rem 1.6rem;display:flex;flex-direction:column;overflow:hidden}
+  .objcompose{border:1px solid var(--hair);border-radius:12px;padding:.75rem .9rem;margin-top:.5rem}
+  .objcompose textarea{width:100%;min-height:4rem;resize:vertical;background:var(--deep);
+    color:var(--star);border:1px solid var(--hair2);border-radius:8px;
+    font:.85rem/1.5 var(--mono);padding:.6rem .8rem}
+  .objcompose textarea:focus{outline:none;border-color:var(--brass)}
+  .objrow2{display:flex;gap:.5rem;margin-top:.45rem;flex-wrap:wrap;align-items:center}
+  .objrow2 input{flex:1;min-width:240px;background:var(--deep);border:1px solid var(--hair2);
+    border-radius:8px;padding:.45rem .8rem;color:var(--star);font:.74rem var(--mono)}
+  .objrow2 input:focus{outline:none;border-color:var(--brass)}
+  .objgo{margin-left:auto;background:var(--brass);color:#1a1305;border:none;border-radius:8px;
+    padding:.5rem 1.2rem;font:700 .78rem var(--mono);cursor:pointer;white-space:nowrap}
+  .objgo:hover{filter:brightness(1.08)}
+  .objsplit{display:flex;gap:1.1rem;flex:1;min-height:0;margin-top:.6rem}
+  .objleft{flex:0 0 34%;min-width:0;overflow-y:auto;padding-right:.4rem}
+  .objright{flex:1;min-width:0;overflow-y:auto;border-left:1px solid var(--hair);
+    padding-left:1.1rem;padding-bottom:1rem}
+  @media(max-width:820px){.objsplit{flex-direction:column}
+    .objleft{flex:0 0 40%}.objright{border-left:none;padding-left:0;
+    border-top:1px solid var(--hair);padding-top:.8rem}}
+  .objrowi{border:1px solid var(--hair);border-radius:9px;padding:.45rem .65rem;margin:.32rem 0;cursor:pointer}
+  .objrowi:hover{border-color:var(--brassdim)}
+  .objrowi.on{border-color:var(--brass);background:var(--deep)}
+  .objrowi .t{font:.78rem system-ui;color:var(--star);display:block;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .objrowi .m{font:.62rem var(--mono);color:var(--faint);display:flex;gap:.45rem;
+    margin-top:.15rem;flex-wrap:wrap}
+  .objrowi .m .st2{color:var(--dim)}
   /* the craft room (0045 sp1 · regrouped 2026-08-19, JB's cleanup): the VIEW
      never scrolls — the shelf and the reader each carry their OWN scroll
      (0052's law), so what you clicked never scrolls away while you read it */
@@ -1272,24 +1302,35 @@
   <!-- THE OBJECTIVE LEDGER (0030 §4): the artifact of artifacts — you are the
        origin; state it, approve the plan, answer what the flow asks, and read
        the report — this week's or the one from thirty days ago. -->
+  <!-- THE OBJECTIVE LEDGER (regrouped 2026-08-19, JB's brief: "an amazing
+       friendly view on right and organized structure on the left" + a real
+       composer for long words + the logic dial): compose above, master-detail
+       below — the list never scrolls away from what you are reading. -->
   <div class="view hide" id="v-obj">
     <div class="section" style="margin-top:0">the objective ledger · you are the origin — at <span class="place" style="color:var(--brass)">…</span></div>
-    <div class="ask-in" style="margin-top:.6rem">
-      <input id="obj-in" placeholder="build X · acquire knowledge of Y · check on Z — the universe plans; you approve">
-      <button onclick="submitObjective()">State it →</button>
+    <div class="objcompose">
+      <textarea id="obj-in" rows="3" placeholder="ask in your own words — as long as it needs to be. build X · acquire knowledge of Y · check on Z… a plan stages for your approval, your word fans it down the floors, and the report is yours forever.   (⌘⏎ requests it)"></textarea>
+      <div class="objrow2">
+        <input id="obj-rubric" placeholder="judge this by… — optional; your yardstick becomes the assay's rubric, and every verdict names it (0043)">
+      </div>
+      <div class="objrow2" style="align-items:center">
+        <span class="quiet2">logic ·</span>
+        <span id="obj-effsel">
+          <span class="qchip" data-l="low" onclick="objEff('low')">low</span>
+          <span class="qchip on" data-l="medium" onclick="objEff('medium')">medium</span>
+          <span class="qchip" data-l="high" onclick="objEff('high')">high</span>
+          <span class="qchip" data-l="xhigh" onclick="objEff('xhigh')">xhigh</span>
+        </span>
+        <span class="quiet2" id="obj-effnote">medium — the balanced default; your choice rides the record</span>
+        <button class="objgo" onclick="submitObjective()">Request it →</button>
+      </div>
+      <div class="formerr" id="obj-err"></div>
     </div>
-    <!-- G6 (0043 §11): the human's yardstick, declared at the origin — the assay
-         judges the work by IT, and the verdict says so on the record -->
-    <div class="ask-in" style="margin-top:.35rem">
-      <input id="obj-rubric" placeholder="judge this by… — optional; your yardstick becomes the assay's rubric, and every verdict names it (0043)">
+    <div id="obj-monitor" class="quiet2" style="margin:.4rem 0 0"></div>
+    <div class="objsplit">
+      <div class="objleft" id="objlist"><div class="quiet">no objectives yet — request one above.</div></div>
+      <div class="objright" id="obj-read"><div class="quiet" style="padding:.6rem 0">select an objective — its whole life opens here: the journey, the plan, the questions, the report.</div></div>
     </div>
-    <div class="formerr" id="obj-err"></div>
-    <div class="steps"><span><span class="num">①</span>a plan stages — origin plans wait for you</span>
-      <span><span class="num">②</span>your word fans the intentions down the floors</span>
-      <span><span class="num">③</span>the report is yours forever — every artifact linked</span></div>
-    <div class="section">your objectives</div>
-    <div id="obj-monitor" class="quiet2" style="margin:.3rem 0 .5rem"></div>
-    <div id="objlist"><div class="quiet">no objectives yet — state one above.</div></div>
   </div>
 
   <!-- THE CRAFT ROOM (0045 sp1): what drives the machine, readable. The Ask
@@ -5658,13 +5699,28 @@ syncHash(false);
 /* ── THE OBJECTIVE LEDGER (0030 §4, spoonful 2): the human's full loop in the
       glass — state it, approve the plan, answer what the flow asks, read the
       report. Renders ONLY from /requests — no privileged path, nothing new. ── */
+/* the logic dial (JB's ask, 2026-08-19): the human names the depth of mind
+   their words deserve — low · medium · high · xhigh — and the word RIDES THE
+   RECORD with the objective. Today it is a declared field the card wears;
+   the Stable dive saddles the wider minds that make high/xhigh fully real. */
+let OBJEFF="medium";
+function objEff(l){OBJEFF=l;
+  document.querySelectorAll("#obj-effsel .qchip").forEach(x=>
+    x.classList.toggle("on",x.dataset.l===l));
+  const notes={low:"low — the cheapest mind that can carry it",
+    medium:"medium — the balanced default; your choice rides the record",
+    high:"high — a deeper mind where the Stable saddles one",
+    xhigh:"xhigh — the deepest reasoning; saddles fully with the Stable dive"};
+  const n=$("obj-effnote");if(n)n.textContent=notes[l]||"";}
 async function submitObjective(){
   const t=$("obj-in").value.trim(); if(!t)return;
   const rb=($("obj-rubric")?$("obj-rubric").value:"").trim();
   try{
     const r=await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify(rb?{kind:"objective",text:t,rubric:rb}:{kind:"objective",text:t})});
+      body:JSON.stringify({kind:"objective",text:t,effort:OBJEFF,
+        ...(rb?{rubric:rb}:{})})});
     if(!r.ok){$("obj-err").textContent=`the daemon refused (${r.status})`;return}
+    try{const made=await r.json();if(made&&made.id)OBJSEL=made.id}catch{}
     $("obj-in").value="";if($("obj-rubric"))$("obj-rubric").value="";
     $("obj-err").textContent="";loadObjectives();
   }catch{$("obj-err").textContent="unreachable — is the daemon up? (scripts/dev.sh status)"}
@@ -5845,11 +5901,38 @@ async function loadObjectives(){
     g=objs.filter(r=>r.status==="approved").length;
     mon.textContent=(w+g)?say("journey-monitor",{n:w+g,waiting:w,working:g},
       `Orreth is tending ${w+g} objective(s) — ${w} waiting on you · ${g} working`):"";}
+  /* the organized left (JB's brief: structure left, the friendly view right):
+     compact rows in three bands, evidence lives in the pane (0052's lesson) */
+  const newest=objs.slice().reverse();
+  if(!OBJSEL||!objs.some(r=>r.id===OBJSEL))
+    OBJSEL=(newest.find(r=>r.status==="staged")||newest[0]||{}).id||null;
+  const goalOf=r=>((r.result||{}).assembly||{}).goal_hash||((r.result||{}).plan||{}).goal||"";
+  const row=r=>{
+    const nq=questions.filter(x=>x.of===goalOf(r)&&x.status==="pending").length;
+    return `<div class="objrowi${r.id===OBJSEL?" on":""}" onclick="objSelect('${r.id}')">
+      <span class="t">${esc(r.text||"")}</span>
+      <span class="m"><span class="st2">${esc(r.status)}</span>${r.effort?`<span>· ${esc(r.effort)}</span>`:""}<span>· ${r.at?ago(r.at):""}</span>${nq?`<span style="color:var(--amber,#e8b34a)">· ${nq} question${nq===1?"":"s"} for you</span>`:""}</span></div>`};
+  const bands=[["waiting on your word",newest.filter(r=>r.status==="staged")],
+    ["working",newest.filter(r=>r.status==="approved"||r.status==="pending")],
+    ["settled — the record",newest.filter(r=>!["staged","approved","pending"].includes(r.status))]];
   $("objlist").innerHTML= objs.length?
-    objs.slice().reverse().map(r=>objCard(r,questions,false)).join("")
-    : `<div class="quiet">no objectives yet — state one above; a plan will stage for your approval.</div>`;
+    bands.map(([lbl,rows],gi)=>{
+      if(!rows.length)return"";
+      if(gi===2)return `<div class="qband" style="cursor:pointer;margin-top:.8rem" onclick="OBJARCH=!OBJARCH;loadObjectives()"><b>${lbl}</b><span class="n">· ${rows.length} ${OBJARCH?"▾":"▸"}</span></div>`
+        +(OBJARCH?rows.map(row).join(""):"");
+      return `<div class="qband" style="margin-top:.6rem"><b>${lbl}</b><span class="n">· ${rows.length}</span></div>`+rows.map(row).join("");
+    }).join("")
+    : `<div class="quiet">no objectives yet — request one above; a plan will stage for your approval.</div>`;
+  /* the friendly right: the ONE card builder, in-pane — decide, answer,
+     walk the work, thumb the report, all where you read it */
+  const sel=objs.find(r=>r.id===OBJSEL),R=$("obj-read");
+  if(R){R.innerHTML=sel?objCard(sel,questions,true)
+    :`<div class="quiet" style="padding:.6rem 0">select an objective — its whole life opens here: the journey, the plan, the questions, the report.</div>`;
+    linkifyEl(R)}
   linkifyEl($("objlist"));              /* every mention a door (0052 sp2) */
 }
+let OBJSEL=null,OBJARCH=false;
+function objSelect(id){OBJSEL=id;loadObjectives()}
 function objCard(r,questions,inPane){
   /* ONE builder for list and pane (0052 sp1, rule 7 for the glass) */
     const res=r.result||{};
@@ -5897,10 +5980,12 @@ function objCard(r,questions,inPane){
       :`<div class="obj-q">the flow asks: ${esc((x.text||"").slice(0,120))} `+
        `<span class="lnk" onclick="goInbox('${x.id}')">answer in the Inbox →</span></div>`).join("");
     return `<div class="req obj"><span class="kind">objective</span>
-     <span class="txt">${esc(r.text||"")}<div class="sub">${r.id} · ${(r.at||"").slice(0,19).replace("T"," ")}</div>
+     <span class="txt">${esc(r.text||"")}<div class="sub">${r.id} · ${(r.at||"").slice(0,19).replace("T"," ")}${r.effort?` · logic ${esc(r.effort)} — the human's word on the record`:""}</div>
      ${journey(r)}${body}${qhtml}</span><span class="st">${r.status}</span></div>`;
 }
-$("obj-in").addEventListener("keydown",e=>{if(e.key==="Enter")submitObjective()});
+/* long words compose in peace: Enter is a newline; ⌘⏎ (or ctrl+⏎) requests */
+$("obj-in").addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&(e.metaKey||e.ctrlKey))submitObjective()});
 $("obj-rubric").addEventListener("keydown",e=>{if(e.key==="Enter")submitObjective()});
 
 function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable();loadObjectives();loadObservatory();loadGovernance();loadPulseDoor();renderPane()}
