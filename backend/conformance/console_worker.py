@@ -2124,7 +2124,8 @@ def embed_door() -> None:
                 self.wfile.write(blob)
                 return
             if route not in ("/observatory", "/governance", "/craft",
-                             "/sentences", "/desk", "/brain", "/resident"):
+                             "/sentences", "/desk", "/brain", "/resident",
+                             "/pulse"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2157,6 +2158,8 @@ def embed_door() -> None:
                                            lambda: compose_desk(_dk))).encode()
                 elif route == "/brain":
                     out = json.dumps(compose_brain()).encode()
+                elif route == "/pulse":
+                    out = json.dumps(compose_pulse()).encode()
                 elif route == "/resident":
                     qs = urllib.parse.parse_qs(
                         urllib.parse.urlparse(self.path).query)
@@ -11210,6 +11213,202 @@ def _brain_schedule(runs: list) -> dict:
         except Exception:
             pass
     return out
+
+
+_PULSE_CACHE = {"at": 0.0, "payload": None}
+
+
+def compose_pulse() -> dict:
+    """THE PULSE's supply line (UI mini-dive tab 2, JB's brief 2026-08-19:
+    "nothing should happen in Orreth that isn't seen in this view"): what is
+    happening NOW, what stands NEXT, and cognition allocated MACHINE vs
+    WORLD — a projection over state the worker already holds (rule 7): the
+    flight recorder's own floor labels, the brain's tended map (shared law,
+    one picture), the standing shelf, the visible queue, the metabolism's
+    ring. No world is ever baked in — capabilities appear solely as
+    discovery data, exactly as the brain and governance doors learned."""
+    if time.time() - _PULSE_CACHE["at"] < 5 and _PULSE_CACHE["payload"]:
+        return _PULSE_CACHE["payload"]
+    now_s = time.time()
+    u_port = 4500
+    iso_s = lambda s: time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(s))
+    # which world tends which floor — the brain's own law, verbatim
+    tended: dict = {}
+    for wkey, man in CAP_GENESIS.items():
+        own = [man.get("floor")] + [f.get("scope")
+                                    for f in (man.get("floors") or [])
+                                    if not f.get("shared")]
+        for sc in own:
+            if sc:
+                tended[sc] = {"world": wkey, "name": man.get("name", wkey),
+                              "emoji": man.get("emoji", "")}
+    worlds = [{"key": k, "name": m.get("name") or k,
+               "emoji": m.get("emoji") or "",
+               "resident": str(m.get("resident") or "").lower()}
+              for k, m in sorted(CAP_GENESIS.items())]
+    # spend and thoughts allocated by floor → world, read off the SAME
+    # heartbeat chain the orrery draws (rule 7 — one world, one picture):
+    # every floor's own meter lands at its tended world, or at the machine
+    alloc = {"machine": {"runs": 0, "usd": 0.0},
+             "worlds": {k: {"runs": 0, "usd": 0.0} for k in CAP_GENESIS}}
+
+    def _lands(scope):
+        t = tended.get(scope)
+        return alloc["worlds"][t["world"]] if t else alloc["machine"]
+
+    def _walk(n):
+        row = _lands(n.get("scope"))
+        row["runs"] += int(n.get("runs") or 0)
+        row["usd"] += max(0.0, float(n.get("usd") or 0.0))
+        for c in (n.get("children") or []):
+            _walk(c)
+    try:
+        _walk(call(u_port, "GET", "/topology"))
+    except Exception:
+        pass
+    # STANDING — every word that will act without a fresh human click:
+    # scheduled asks, charters, reflexes, and the metabolism's next breath
+    standing: list = []
+    from datetime import datetime, timedelta, timezone
+
+    def _plus_days(iso_str, days):
+        try:
+            then = datetime.fromisoformat(str(iso_str).replace("Z", "+00:00"))
+        except Exception:
+            return "due now"
+        nx = then + timedelta(days=days)
+        return (nx.strftime("%Y-%m-%dT%H:%M:%SZ")
+                if nx > datetime.now(timezone.utc) else "due now")
+    res_world = {w["resident"]: w["key"] for w in worlds if w["resident"]}
+    try:
+        for (what, resident, _q), h in _sched_heads(u_port).items():
+            if h.get("posture") != "standing":
+                continue
+            every = int(h.get("every_days") or 7)
+            q = str(h.get("question") or "")
+            standing.append({
+                "kind": "schedule",
+                "label": what + (f" — “{q[:70]}”" if q else ""),
+                "owner": resident or "the machine",
+                "world": res_world.get(str(resident or "").lower()),
+                "every": f"every {every}d",
+                "next_at": _plus_days(h.get("last_fired")
+                                      or h.get("at") or "", every)})
+    except Exception:
+        pass
+    try:
+        for cid, ch in _standing_load("charters").items():
+            if not ch.get("active"):
+                continue
+            if standing_law.charter_resting(ch):
+                nxt = "resting — the renewal is at your gate"
+            else:
+                nxt_s = float(ch.get("last_fired_s") or 0) \
+                    + float(ch.get("every_s") or 0)
+                nxt = "due now" if nxt_s <= now_s else iso_s(nxt_s)
+            standing.append({
+                "kind": "charter",
+                "label": str(ch.get("text") or cid)[:90],
+                "owner": f"charter {cid}",
+                "every": f"{ch.get('fired', 0)}/{ch.get('max_instances')} instances",
+                "next_at": nxt})
+    except Exception:
+        pass
+    try:
+        for _rid, rx in _standing_load("reflexes").items():
+            if not rx.get("active"):
+                continue
+            w = rx.get("when") or {}
+            standing.append({
+                "kind": "reflex",
+                "label": f"on «{w.get('tag', '?')}» → "
+                         f"{(rx.get('then') or {}).get('shape', '?')}",
+                "owner": "the reflex arc", "every": "event-driven",
+                "next_at": "on watch"})
+    except Exception:
+        pass
+    # every world's own standing words (the desk-watch family): each ticker
+    # under a standing word runs on the world's beat — a dark floor reads
+    # as none, honestly, never a guess
+    for wkey, man in CAP_GENESIS.items():
+        try:
+            posture = _world_posture(man)
+            for ticker, w in _world_words(man).items():
+                if not ticker or (w.get("posture")
+                                  or "standing") != "standing":
+                    continue
+                standing.append({
+                    "kind": "watch",
+                    "label": f"{ticker} — the desk's report",
+                    "owner": str(man.get("resident") or wkey),
+                    "world": wkey,
+                    "every": "the world's beat",
+                    "next_at": ("standing" if posture == "standing"
+                                else f"world {posture}")})
+        except Exception:
+            pass
+    try:
+        nxt_scope = (_METAB_RING[0] if _METAB_RING
+                     else (sorted(FLOOR_SCOPES.values())[0]
+                           if FLOOR_SCOPES else None))
+        if nxt_scope:
+            last = _METAB_FLOORS.get(nxt_scope) or {}
+            standing.append({
+                "kind": "breath",
+                "label": f"the metabolism — {nxt_scope} breathes next"
+                         + (f" (last: {last.get('distilled', 0)} distilled · "
+                            f"{last.get('kept_warm', 0)} kept warm)"
+                            if last else ""),
+                "owner": "steward",
+                "world": (tended.get(nxt_scope) or {}).get("world"),
+                "every": f"one floor / {METABOLISM_EVERY}s",
+                "next_at": iso_s(max(_METAB_LAST + METABOLISM_EVERY, now_s))})
+    except Exception:
+        pass
+    # soonest first; event-driven watchers and resting words close the list
+    def _rank(r):
+        n = r["next_at"]
+        return (0, "") if n == "due now" \
+            else (1, n) if n[:2] == "20" else (2, r["label"])
+    standing.sort(key=_rank)
+    # HAPPENING NOW — the visible queue's live rows (0018 §7: a pending ask
+    # is visible governance, not a mystery)
+    inflight = {"waiting": 0, "moving": 0, "elderly": 0, "rows": []}
+    try:
+        reqs = call(u_port, "GET", "/requests").get("requests", [])
+        settled = {"done", "declined", "denied", "expired", "cancelled",
+                   "referred"}
+        live = [q for q in reqs if q.get("status") not in settled]
+
+        def _age_s(q):
+            try:
+                return now_s - datetime.fromisoformat(
+                    str(q.get("at") or "").replace("Z", "+00:00")).timestamp()
+            except Exception:
+                return 0.0
+        # an approved word older than two days is history wearing a live
+        # status — counted honestly, folded out of "now" (the Inbox archive
+        # holds the whole record)
+        fresh = [q for q in live
+                 if q.get("status") != "approved" or _age_s(q) < 172800]
+        inflight["elderly"] = len(live) - len(fresh)
+        inflight["waiting"] = sum(1 for q in fresh
+                                  if q.get("status") == "staged")
+        inflight["moving"] = len(fresh) - inflight["waiting"]
+        fresh.sort(key=lambda q: q.get("at") or "", reverse=True)
+        inflight["rows"] = [
+            {"id": q.get("id"), "kind": q.get("kind"),
+             "status": q.get("status"), "at": q.get("at"),
+             "text": str(q.get("text_summary") or q.get("text") or "")[:110]}
+            for q in fresh[:10]]
+    except Exception:
+        pass
+    payload = {"at": NOW(), "tended": tended, "worlds": worlds,
+               "alloc": alloc, "standing": standing, "inflight": inflight,
+               "note": "a projection over the machine's own state — "
+                       "never a second truth"}
+    _PULSE_CACHE.update(at=time.time(), payload=payload)
+    return payload
 
 
 def compose_brain() -> dict:

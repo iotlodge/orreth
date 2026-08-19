@@ -122,6 +122,10 @@
   .view{position:relative;overflow:hidden}
   /* !important: the hidden state must beat any per-view #id display rule — this
      specificity trap has bitten twice (#v-window, then #v-pulse). Never again. */
+  /* …and the GENERIC rule (found 2026-08-19): .hide existed only for .view,
+     so every non-view element wearing it (reelout, the old gov reader)
+     rendered as an empty bordered ghost. Hidden means hidden, everywhere. */
+  .hide{display:none!important}
   .view.hide{display:none!important}
   #v-uni{display:flex;flex-direction:column;position:relative}
 
@@ -267,7 +271,53 @@
   .inbrow .m{font:.62rem var(--mono);color:var(--faint)}
 
   /* ── PULSE ── */
-  #v-pulse{padding:2rem 2.4rem;overflow-y:auto;display:flex;flex-direction:column}
+  /* THE PULSE (regrouped 2026-08-19, JB's brief: happening now · standing
+     next · machine vs worlds — and the view never scrolls; each panel
+     carries its OWN scroll, the 0052 law again) */
+  #v-pulse{padding:1.2rem 1.6rem;overflow:hidden;display:flex;flex-direction:column}
+  #v-pulse .hero{margin-bottom:.4rem}
+  #v-pulse .hero .big{font-size:2.3rem}
+  #v-pulse .belowline{margin:-.2rem 0 .7rem}
+  #v-pulse .cards{gap:.7rem;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+  #v-pulse .card{padding:.8rem 1rem;border-radius:10px}
+  #v-pulse .card .n{font-size:1.7rem}
+  #v-pulse .card .n.date{font-size:1.15rem}
+  /* the two kinds of life, allocated: one bar per gauge — the machine in
+     brass, each world in its jade band (the orrery's own vocabulary) */
+  .palloc{margin:.7rem 0 0}
+  .palloc .arow{display:flex;align-items:center;gap:.7rem;margin:.3rem 0}
+  .palloc .alab{font:.62rem var(--mono);color:var(--faint);letter-spacing:.12em;
+    text-transform:uppercase;flex:0 0 4.5rem;text-align:right}
+  .palloc .abar{flex:1;display:flex;height:10px;border-radius:5px;overflow:hidden;
+    background:var(--hair)}
+  .palloc .abar span{height:100%}
+  .palloc .aleg{font:.64rem var(--mono);color:var(--dim);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;flex:2;min-width:0}
+  .pgrid{display:flex;gap:1.4rem;flex:1;min-height:0;margin-top:.8rem}
+  .pcol{flex:1;min-width:0;overflow-y:auto;padding-right:.4rem}
+  .psec{font:.7rem var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--dim);margin:.9rem 0 .4rem;display:flex;align-items:baseline;gap:.6rem}
+  .psec:first-child{margin-top:0}
+  .psec .pn{color:var(--faint);text-transform:none;letter-spacing:0}
+  .prow{display:flex;gap:.55rem;align-items:baseline;border:1px solid var(--hair);
+    border-radius:8px;padding:.4rem .6rem;margin:.3rem 0;cursor:default}
+  .prow.click{cursor:pointer} .prow.click:hover{border-color:var(--brassdim)}
+  .prow .pk{font:.6rem var(--mono);color:var(--brass);border:1px solid var(--brassdim);
+    border-radius:9px;padding:.05rem .45rem;white-space:nowrap;flex:0 0 auto}
+  .prow .pk.chr{border-color:var(--hair2);color:var(--dim)}
+  .prow .ptx{flex:1;min-width:0;font:.72rem var(--mono);color:var(--near);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .prow .ptx .quiet2{color:var(--faint)}
+  .prow .page{font:.64rem var(--mono);color:var(--faint);white-space:nowrap;flex:0 0 auto}
+  .prow .page.due{color:var(--amber,#e8b34a)}
+  .pfoot{flex:0 0 auto;margin-top:.7rem}
+  .pfoot .strip{height:76px;margin-top:.35rem}
+  @media(max-width:820px){#v-pulse{overflow-y:auto}
+    .pgrid{flex-direction:column}.pcol{overflow-y:visible;flex:0 0 auto}}
+  .sgrp{display:flex;align-items:center;gap:.5rem;font:.64rem var(--mono);
+    letter-spacing:.1em;text-transform:uppercase;color:var(--dim);
+    margin:.7rem 0 .25rem;border-bottom:1px solid var(--hair);padding-bottom:.25rem}
+  .sgrp b{color:var(--ink);font-weight:600} .sgrp .n{margin-left:auto;color:var(--faint)}
   .hero{display:flex;align-items:baseline;gap:1.2rem;margin-bottom:1.8rem}
   .hero .big{font:800 3.4rem/1 system-ui;letter-spacing:-.03em;
     background:linear-gradient(90deg,var(--star),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -1034,26 +1084,37 @@
     </div>
   </div>
 
+  <!-- THE PULSE (regrouped 2026-08-19): nothing happens in Orreth that this
+       view cannot see — occurring · occurred · scheduled, machine vs worlds.
+       One worker door (/pulse) supplies the new panels; hero/cards keep
+       their plane doors. The reel rides at the left column's foot. -->
   <div class="view hide" id="v-pulse">
-    <!-- the reel rode here when Ask retired (0045 sp1) — stories beside the
-         vital signs; ids unchanged so the projector's wiring still fits -->
-    <div class="section" style="margin-top:0">🎬 the reel — true stories, told against this live rig</div>
-    <div class="hint">each one runs the real thing: identities minted, gates held, memories signed. one story at a time.</div>
-    <div class="chips" id="reel"></div>
-    <pre id="reelout" class="hide"></pre>
     <div class="hero"><span class="big" id="hero-n">—</span>
       <span class="cap" id="hero-c">the universe, at a glance</span></div>
     <div class="belowline" id="below"></div>
     <div class="cards" id="cards"></div>
-    <div class="section" style="display:flex;justify-content:space-between;align-items:baseline">
-      <span>the living memory · last 2 years</span>
-      <span class="opentab" onclick="document.querySelector('.tab[data-v=uni]').click()">open the universe →</span></div>
-    <div class="strip" id="strip"><div class="nowline"><span class="cap">NOW</span></div></div>
-    <div class="lower">
-      <div><div class="section">recent activity</div>
-        <div class="feed" id="feed"><div class="quiet" style="padding:.5rem 0">the field is quiet…</div></div></div>
-      <div><div class="section">spend by agent</div>
-        <div id="spend"><div class="quiet" style="padding:.5rem 0">no spend yet</div></div></div>
+    <div class="palloc" id="palloc"></div>
+    <div class="pgrid">
+      <div class="pcol">
+        <div class="psec">happening now <span class="pn" id="pnow-n"></span></div>
+        <div id="pnow"><div class="quiet">reaching the queue…</div></div>
+        <div class="psec">standing — what runs next <span class="pn" id="psched-n"></span></div>
+        <div id="psched"><div class="quiet">…</div></div>
+        <div class="psec">🎬 the reel — true stories on this live rig</div>
+        <div class="chips" id="reel" style="margin-top:.2rem"></div>
+        <pre id="reelout" class="hide"></pre>
+      </div>
+      <div class="pcol">
+        <div class="psec">recent activity</div>
+        <div class="feed" id="feed"><div class="quiet" style="padding:.5rem 0">the field is quiet…</div></div>
+        <div class="psec">spend by identity · the machine and the worlds</div>
+        <div id="spend"><div class="quiet" style="padding:.5rem 0">no spend yet</div></div>
+      </div>
+    </div>
+    <div class="pfoot">
+      <div class="psec" style="margin:.2rem 0 0">the living memory · last 2 years
+        <span class="opentab" style="margin-left:auto" onclick="document.querySelector('.tab[data-v=uni]').click()">open the universe →</span></div>
+      <div class="strip" id="strip"><div class="nowline"><span class="cap">NOW</span></div></div>
     </div>
   </div>
 
@@ -1488,6 +1549,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   ["uni","inbox","obj","pulse","obs","farm","stable","gov"].forEach(v=>$("v-"+v).classList.toggle("hide",v!==t.dataset.v));
   if(t.dataset.v==="uni"){const O=$("orrery");if(O)O.dataset.sig="";renderOrrery();scrub()}
   if(t.dataset.v==="obs")loadObservatory();   /* the instrument room wakes on entry (0043 sp3) */
+  if(t.dataset.v==="pulse")loadPulseDoor();   /* the pulse's panels wake on entry too */
   if(typeof syncHash==="function")syncHash(false);   /* the tab rides the URL too */
 });
 
@@ -2668,24 +2730,116 @@ async function roster(){
           +g2.map(a=>agentRow(a,false)).join("")}).join("");
     }else html+=`<div class="empty">no leased agents have acted yet — a quiet field</div>`;
     r.innerHTML=html;
-    // feed: latest workforce activity
-    const evs=p.workforce.filter(a=>a.last_seen).sort((x,y)=>y.last_seen.localeCompare(x.last_seen));
-    $("feed").innerHTML= evs.length? evs.slice(0,10).map(a=>
-      `<div class="ev"><span class="dot"></span><span class="t">${a.last_seen.slice(11,19)}</span>
-       <span class="m">${a.name||short(a.agent)} · ${a.runs} thought${a.runs===1?"":"s"} · ${a.state} · ${money(a.usd||0)}</span></div>`).join("")
-      : `<div class="quiet" style="padding:.5rem 0">the field is quiet…</div>`;
     presCache=p;
-    // spend by agent — every identity on one meter, residents included; the honest
-    // zero SHOWS instead of being filtered out (0019 §4)
-    const spenders=[...p.residents.map(x=>({n:x.role,u:x.vitals?.["llm usd"]||0,
-        lab:`${x.vitals?.["llm calls"]||0} call${(x.vitals?.["llm calls"]||0)===1?"":"s"}`})),
-      ...p.workforce.map(a=>({n:a.name||short(a.agent),u:a.usd||0,lab:`${a.tokens||0} tok`}))];
-    const max=Math.max(1e-9,...spenders.map(x=>x.u||0));
-    $("spend").innerHTML= spenders.length? spenders.map(x=>
-      `<div class="bar"><div class="lab"><span>${x.n}</span><b>${x.lab} · ${money(x.u)}</b></div>
-       <div class="track"><div class="fill" style="width:${Math.round(100*(x.u||0)/max)}%"></div></div></div>`).join("")
-      : `<div class="quiet" style="padding:.5rem 0">no spend yet</div>`;
+    renderPulseSide();   /* feed + grouped spend live on the Pulse tab now */
   }catch{}
+}
+
+/* ── THE PULSE's new panels (regrouped 2026-08-19): one worker door supplies
+      happening-now, standing-next, and the machine-vs-worlds allocation; the
+      feed and the spend meter regroup by the SAME tended map the brain uses
+      (rule 7 — one world, one picture). ── */
+let PULSED=null,PSPENDALL=false;
+async function loadPulseDoor(){
+  if($("v-pulse").classList.contains("hide"))return;
+  try{PULSED=await(await fetch(OBSD+"/pulse")).json()}catch{PULSED=null}
+  renderPulsePanels();renderPulseSide();
+}
+const pWorldOf=sc=>{const t=(PULSED||{}).tended||{};if(!sc)return null;
+  const hit=t[sc];return hit?hit.world:null};
+const pWorldMeta=k=>((PULSED||{}).worlds||[]).find(w=>w.key===k)||{};
+/* the two kinds of life in the orrery's own vocabulary: brass = the machine,
+   jade bands = the worlds (S1116) */
+const PJADE=["#7fd1a8","#5fb890","#8fd6c4","#4fa07c"];
+function renderPulsePanels(){
+  const A=$("palloc");if(!A)return;
+  if(!PULSED){A.innerHTML=`<div class="quiet2">the pulse door is unreachable — is the worker tending? </div>`;return}
+  const a=PULSED.alloc||{machine:{},worlds:{}};
+  const fmt={runs:v=>String(Math.round(v)),usd:v=>money(v)};
+  A.innerHTML=[["runs","thoughts"],["usd","spend"]].map(([key,lbl])=>{
+    const segs=[["machine","⚙ the machine",a.machine[key]||0,"var(--brass)"]];
+    (PULSED.worlds||[]).forEach((w,i)=>{const v=(a.worlds[w.key]||{})[key]||0;
+      if(v>0)segs.push([w.key,`${w.emoji} ${w.name}`,v,PJADE[i%PJADE.length]])});
+    const tot=segs.reduce((t,s)=>t+s[2],0);
+    if(!tot)return"";
+    return `<div class="arow"><span class="alab">${lbl}</span>
+      <span class="abar">${segs.map(([k,l,v,c])=>
+        `<span style="width:${Math.max(1,100*v/tot).toFixed(1)}%;background:${c}" title="${esc(l)} · ${fmt[key](v)}"></span>`).join("")}</span>
+      <span class="aleg">${segs.map(([k,l,v,c])=>
+        `<b style="color:${c}">${esc(l)}</b> ${fmt[key](v)}`).join(" · ")}</span></div>`;
+  }).join("")||`<div class="quiet2">no metered work yet — a quiet machine</div>`;
+  const inf=PULSED.inflight||{rows:[]};
+  $("pnow-n").textContent=`· ${inf.moving||0} moving · ${inf.waiting||0} waiting on your word`
+    +((inf.elderly||0)?` · ${inf.elderly} older approved in the archive`:"");
+  $("pnow").innerHTML=(inf.rows||[]).length?inf.rows.map(r=>
+    `<div class="prow click" onclick="goInbox('${esc(r.id)}')">
+      <span class="pk ${r.status==="staged"?"":"chr"}">${esc(r.status)}</span>
+      <span class="ptx">${esc(r.kind)} · ${esc(r.text)}</span>
+      <span class="page">${r.at?ago(r.at):""}</span></div>`).join("")
+    :`<div class="quiet">nothing in flight — a calm universe.</div>`;
+  const st=PULSED.standing||[];
+  const KICON={schedule:"🕰 schedule",charter:"📜 charter",reflex:"⚡ reflex",breath:"🌬 breath",watch:"👁 watch"};
+  const nextFmt=n=>{if(n==="due now")return`<span class="page due">due now</span>`;
+    if(n&&n.slice(0,2)==="20"){const s=(new Date(n)-Date.now())/1e3;
+      const t=s<5400?`in ${Math.max(1,s/60|0)}m`:s<172800?`in ${s/3600|0}h`:`in ${s/86400|0}d`;
+      return`<span class="page">${t}</span>`}
+    return`<span class="page">${esc(n||"")}</span>`};
+  const byOwner={};st.forEach(r=>{byOwner[r.owner]=(byOwner[r.owner]||0)+1});
+  $("psched-n").textContent=`· ${st.length} standing (${Object.entries(byOwner).map(([o,n])=>`${o} ${n}`).join(" · ")})`;
+  $("psched").innerHTML=st.length?st.map(r=>{
+    const w=r.world?pWorldMeta(r.world):null;
+    return`<div class="prow"><span class="pk chr">${KICON[r.kind]||esc(r.kind)}</span>
+      <span class="ptx">${w?w.emoji+" ":""}${esc(r.label)} <span class="quiet2">· ${esc(r.owner)}${r.every?" · "+esc(r.every):""}</span></span>
+      ${nextFmt(r.next_at)}</div>`}).join("")
+    :`<div class="quiet">no standing words — the machine acts only on fresh clicks.</div>`;
+}
+function renderPulseSide(){
+  const p=presCache;if(!p)return;
+  const wchip=sc=>{const k=pWorldOf(sc);if(!k)return"";const w=pWorldMeta(k);
+    return w.emoji?` ${w.emoji}`:""};
+  const evs=p.workforce.filter(a=>a.last_seen).sort((x,y)=>y.last_seen.localeCompare(x.last_seen));
+  const F=$("feed");if(F)F.innerHTML= evs.length? evs.slice(0,14).map(a=>
+    `<div class="ev"><span class="dot"></span><span class="t" title="${esc(a.last_seen)}">${ago(a.last_seen)}</span>
+     <span class="m">${esc(a.name||short(a.agent))}${wchip(a.scope)} <span style="color:var(--faint)">· ${a.scope?esc(a.scope.split("/").pop()):"workforce"}</span> · ${a.runs} thought${a.runs===1?"":"s"} · ${a.state} · ${money(a.usd||0)}</span></div>`).join("")
+    : `<div class="quiet" style="padding:.5rem 0">the field is quiet…</div>`;
+  // spend, grouped by the tended map: the machine's organs first, then each
+  // world, then the field's workforce — sorted by spend, honest zeros kept
+  // (0019 §4: shown — the field's zeros fold behind one honest line)
+  const S=$("spend");if(!S)return;
+  const groups=[{k:"machine",lbl:"⚙ the machine — the organs",rows:
+      p.residents.map(x=>({n:x.role,u:x.vitals?.["llm usd"]||0,
+        lab:`${x.vitals?.["llm calls"]||0} call${(x.vitals?.["llm calls"]||0)===1?"":"s"}`}))}];
+  ((PULSED||{}).worlds||[]).forEach(w=>groups.push({k:w.key,lbl:`${w.emoji} ${w.name} · ${w.resident}`,rows:[]}));
+  groups.push({k:"field",lbl:"🧰 the field — leased workforce",rows:[]});
+  p.workforce.forEach(a=>{
+    const g=groups.find(x=>x.k===(pWorldOf(a.scope)||"field"));
+    g.rows.push({n:(a.name||short(a.agent))+(a.scope?` · ${a.scope.split("/").pop()}`:""),
+      u:a.usd||0,tok:a.tokens||0,lab:`${a.tokens||0} tok`})});
+  const max=Math.max(1e-9,...groups.flatMap(g=>g.rows.map(x=>x.u||0)));
+  const bar=x=>`<div class="bar"><div class="lab"><span>${esc(x.n)}</span><b>${x.lab} · ${money(x.u)}</b></div>
+     <div class="track"><div class="fill" style="width:${Math.round(100*(x.u||0)/max)}%"></div></div></div>`;
+  const wAlloc=k=>(((PULSED||{}).alloc||{}).worlds||{})[k]||{};
+  S.innerHTML=groups.map(g=>{
+    if(!g.rows.length){
+      /* a world whose spend is metered at its floor still SHOWS — the
+         heartbeat chain's number, honestly labeled (rule 7) */
+      const wu=wAlloc(g.k).usd||0;
+      return wu>0?`<div class="sgrp"><b>${g.lbl}</b><span class="n">${money(wu)}</span></div>
+        <div class="quiet2" style="margin:.15rem 0 .5rem">metered at the world's own floor — no per-agent rows on this rig</div>`:"";
+    }
+    g.rows.sort((a2,b2)=>(b2.u-a2.u)||((b2.tok||0)-(a2.tok||0))||a2.n.localeCompare(b2.n));
+    const usd=g.rows.reduce((t,x)=>t+(x.u||0),0);
+    let rows=g.rows,folded=0;
+    if(g.k==="field"&&!PSPENDALL){
+      const live=g.rows.filter(x=>(x.u||0)>0||(x.tok||0)>0);
+      folded=g.rows.length-live.length;
+      rows=live.length?live:g.rows.slice(0,3);
+    }
+    return`<div class="sgrp"><b>${g.lbl}</b><span class="n">${g.rows.length} · ${money(usd)}</span></div>`
+      +rows.map(bar).join("")
+      +(folded>0?`<div class="quiet2" style="cursor:pointer;margin:.2rem 0 .5rem" onclick="PSPENDALL=true;renderPulseSide()">· ${folded} more with honest zeros — show them</div>`:"")
+      +(g.k==="field"&&PSPENDALL&&folded===0&&g.rows.some(x=>!(x.u||x.tok))?`<div class="quiet2" style="cursor:pointer;margin:.2rem 0 .5rem" onclick="PSPENDALL=false;renderPulseSide()">· fold the zeros back</div>`:"");
+  }).join("")||`<div class="quiet" style="padding:.5rem 0">no spend yet</div>`;
 }
 
 /* the living-memory strip: a compact spacetime window, always on the dashboard */
@@ -5601,7 +5755,7 @@ function objCard(r,questions,inPane){
 $("obj-in").addEventListener("keydown",e=>{if(e.key==="Enter")submitObjective()});
 $("obj-rubric").addEventListener("keydown",e=>{if(e.key==="Enter")submitObjective()});
 
-function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable();loadObjectives();loadObservatory();loadGovernance();renderPane()}
+function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable();loadObjectives();loadObservatory();loadGovernance();loadPulseDoor();renderPane()}
 tick();setInterval(tick,4000);          /* the console breathes */
 if(window.ORRETH_DEMO){                 /* the spectator's ribbon — honest about the frame */
   const b=document.createElement("div");
