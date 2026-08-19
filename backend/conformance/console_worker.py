@@ -10262,6 +10262,22 @@ def compose_governance() -> dict:
                             else "chronicle",
                             "versions": len(refs), "head": refs[-1],
                             "refs": refs})
+    # THE WORLDS (0055 · JB's regroup, 2026-08-19): grouping is DATA — a
+    # word belongs to a capability iff discovery says so (the razor's own
+    # membership test); the glass groups by this field and never learns a
+    # world's name in code.
+    worlds = [{"key": k, "name": m.get("name") or k,
+               "emoji": m.get("emoji") or "",
+               "resident": str(m.get("resident") or "").lower()}
+              for k, m in sorted(CAP_GENESIS.items())]
+    for o in objects:
+        n = o["name"].lower()
+        w = next((w["key"] for w in worlds
+                  if n == f"capability-{w['key']}"
+                  or (w["resident"] and n.startswith(w["resident"] + "-"))),
+                 None)
+        if w:
+            o["world"] = w
     # declared rubrics — short, carried inline from the nest
     rubrics = [{"goal": k[:20] + "…", "text": v}
                for k, v in _rubrics_load().items()]
@@ -10269,7 +10285,7 @@ def compose_governance() -> dict:
     for o in objects:
         counts[o["category"]] = counts.get(o["category"], 0) + 1
     payload = {"at": NOW(), "objects": objects, "rubrics": rubrics,
-               "counts": counts,
+               "counts": counts, "worlds": worlds,
                "note": "a projection over the signed log — never a second "
                        "truth (0045 law 1)"}
     _GOV_CACHE.update(at=time.time(), payload=payload)

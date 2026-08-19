@@ -475,19 +475,49 @@
   @media(prefers-reduced-motion:reduce){.alertring,.moon.ripple,.planet.ripple{animation:none!important}}
 
   /* ── REQUESTS + ASK ── */
-  #v-req,#v-gov,#v-obj{padding:1.6rem;overflow-y:auto}
-  /* the craft room (0045 sp1) */
-  .gov-split{display:grid;grid-template-columns:minmax(300px,36%) 1fr;gap:1rem;margin-top:.8rem}
-  .gvrow{border:1px solid var(--hair);border-radius:8px;padding:.5rem .7rem;margin-bottom:.4rem;
-    cursor:pointer;display:flex;gap:.6rem;align-items:baseline}
-  .gvrow:hover,.gvrow.on{border-color:var(--brass)}
-  .gvrow .nm{font-weight:600}
+  #v-req,#v-obj{padding:1.6rem;overflow-y:auto}
+  /* the craft room (0045 sp1 · regrouped 2026-08-19, JB's cleanup): the VIEW
+     never scrolls — the shelf and the reader each carry their OWN scroll
+     (0052's law), so what you clicked never scrolls away while you read it */
+  #v-gov{padding:1.6rem;display:flex;flex-direction:column;overflow:hidden}
+  .gov-split{display:flex;gap:1.1rem;flex:1;min-height:0;margin-top:.6rem}
+  #gov-list{flex:0 0 37%;min-width:0;overflow-y:auto;padding-right:.4rem}
+  #gov-right{flex:1;min-width:0;overflow-y:auto;border-left:1px solid var(--hair);
+    padding-left:1.1rem}
+  @media(max-width:820px){.gov-split{flex-direction:column}
+    #gov-list{flex:0 0 44%}#gov-right{border-left:none;padding-left:0;
+    border-top:1px solid var(--hair);padding-top:.8rem}}
+  .gov-bar{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.5rem}
+  .gov-bar input{flex:1;min-width:220px;background:var(--deep);border:1px solid var(--hair2);
+    border-radius:8px;padding:.5rem .8rem;color:var(--star);font:.78rem var(--mono)}
+  .gov-bar input:focus{outline:none;border-color:var(--brass)}
+  .gov-bar .act{background:var(--brass);color:#1a1305;border:none;border-radius:8px;
+    padding:.5rem 1rem;font:700 .72rem var(--mono);cursor:pointer;white-space:nowrap}
+  .gov-bar .act:hover{filter:brightness(1.08)}
+  .gov-bar .act.ghost{background:none;color:var(--dim);border:1px solid var(--hair2)}
+  .gov-bar .act.ghost:hover{color:var(--star);border-color:var(--brassdim)}
+  /* a shelf section: one world, one fold — the estate legible at a glance */
+  .gvgrp{display:flex;align-items:center;gap:.55rem;border:1px solid var(--hair);
+    border-radius:9px;padding:.5rem .75rem;margin:.5rem 0 .25rem;cursor:pointer;
+    user-select:none;background:rgba(255,255,255,.015)}
+  .gvgrp:hover{border-color:var(--brassdim)}
+  .gvgrp .car{color:var(--dim);font:.6rem var(--mono);width:.8em}
+  .gvgrp .gname{font:.7rem var(--mono);letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gvgrp .n{font:.66rem var(--mono);color:var(--faint);margin-left:auto;white-space:nowrap}
+  .gvrow{border:1px solid var(--hair);border-radius:8px;padding:.4rem .65rem;margin:.3rem 0;
+    cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto auto;
+    gap:.55rem;align-items:center}
+  .gvrow:hover{border-color:var(--brassdim)}
+  .gvrow.on{border-color:var(--brass);background:var(--deep)}
+  .gvrow .nm{font-weight:600;font-size:.78rem;white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis}
   .gvrow .lc{font:.6rem var(--mono);letter-spacing:.08em;border:1px solid var(--brassdim);
     border-radius:9px;padding:.05rem .45rem;color:var(--brass);white-space:nowrap}
   .gvrow .lc.chr{border-color:var(--hair2);color:var(--dim)}
-  .gvrow .meta{margin-left:auto;font:.66rem var(--mono);color:var(--dim);white-space:nowrap}
-  #gov-read{border:1px solid var(--hair);border-radius:10px;padding:.9rem 1rem;
-    overflow:auto;max-height:72vh;align-self:start}
+  .gvrow .meta{font:.63rem var(--mono);color:var(--dim);white-space:nowrap;text-align:right}
+  #gov-read{padding:.2rem 0 1rem}
+  #gov-read .quiet2{overflow-wrap:anywhere}
   #gov-read pre{white-space:pre-wrap;font:.74rem var(--mono);color:var(--near);
     background:var(--deep);border-radius:8px;padding:.7rem;overflow-x:auto;margin-top:.5rem}
   .gvv{cursor:pointer;border:1px solid var(--hair2);border-radius:9px;padding:.1rem .5rem;
@@ -1131,12 +1161,19 @@
        worldlines, readers, diffs. A projection, never a second truth. -->
   <div class="view hide" id="v-gov">
     <div class="section" style="margin-top:0">the craft room · the prompts, skills, and rules the machine runs on — read any of them, edit what may be edited; every change keeps its history</div>
-    <div class="qchips" id="gov-cats"></div>
-    <div class="qchips" id="gov-lens"></div>
-    <div class="ask-in" style="margin-top:.4rem"><input id="gov-q" placeholder="search the craft — names, categories"></div>
+    <div class="gov-bar">
+      <input id="gov-q" placeholder="search the craft — names, categories">
+      <button class="act ghost" onclick="govGraph()" title="the applied craft — which organs and flows wear each word">who uses what</button>
+      <button class="act" onclick="govCommission()" title="the commission (0045 sp6) — the machine researches, drafts it, and waits for your approval">🏭 ask for new craft</button>
+    </div>
+    <div class="qchips" id="gov-cats" style="margin:.45rem 0 0"></div>
+    <div class="qchips" id="gov-lens" style="margin:.3rem 0 0"></div>
     <div class="gov-split">
       <div id="gov-list"><div class="quiet">the shelves are being read…</div></div>
-      <div id="gov-read" class="hide"></div><div id="gov-hint" class="quiet" style="padding:1rem">select an item on the left — its full text opens here, with its history and its editors</div>
+      <div id="gov-right">
+        <div id="gov-hint" class="quiet" style="padding:1rem 0">select an item on the left — its full text opens here, with its history and its editors; the pane holds while you scroll the shelf</div>
+        <div id="gov-read" class="hide"></div>
+      </div>
     </div>
   </div>
 </main>
@@ -4894,13 +4931,18 @@ async function loadGovernance(){
 }
 function govCat(c){GOVCAT=c;renderGov()}
 function govLens(l){GOVLENS=l;renderGov()}
+/* the shelves fold (JB's regroup, 2026-08-19): firmware first, then each
+   capability world under its own manifest's name, then the general craft —
+   the groups come from the DATA (0055: the glass learns no world by name).
+   A search opens every shelf it touches; a click holds one open. */
+let GOVFOLD=null;
+const govGrpKey=o=>o.world?"w:"+o.world:(o.lifecycle==="canon"?"fw":"gen");
+function govFold(k){if(GOVFOLD.has(k))GOVFOLD.delete(k);else GOVFOLD.add(k);renderGov()}
 function renderGov(){
   const el=$("gov-list");if(!el||!GOVD||!GOVD.objects)return;
   const cats=["all",...Object.keys(GOVD.counts||{}).sort()];
   $("gov-cats").innerHTML=cats.map(c=>`<span class="qchip ${GOVCAT===c?"on":""}"
-    onclick="govCat('${c}')">${c}${c==="all"?` · ${GOVD.objects.length}`:` · ${GOVD.counts[c]||0}`}</span>`).join("")
-    +`<span class="qchip" onclick="govGraph()">who uses what →</span>`
-    +`<span class="qchip" onclick="govCommission()">🏭 ask for a new skill — the machine researches, drafts it, and waits for your approval</span>`;
+    onclick="govCat('${c}')">${c}${c==="all"?` · ${GOVD.objects.length}`:` · ${GOVD.counts[c]||0}`}</span>`).join("");
   $("gov-lens").innerHTML=[["all","everything"],["canon","firmware (changing it is a formal release)"],
     ["chronicle","everyday craft (editable at will, history kept)"]].map(([l,t])=>
     `<span class="qchip ${GOVLENS===l?"on":""}" onclick="govLens('${l}')">${t}</span>`).join("");
@@ -4908,15 +4950,32 @@ function renderGov(){
   const rows=GOVD.objects.filter(o=>(GOVCAT==="all"||o.category===GOVCAT)
     &&(GOVLENS==="all"||o.lifecycle===GOVLENS)
     &&(!q||o.name.toLowerCase().includes(q)||o.category.includes(q)));
-  el.innerHTML=(rows.map(o=>`<div class="gvrow ${GOVSEL===o.name?"on":""}" onclick="govOpen('${esc(o.name)}')">
+  const shelves=[["fw","⚙","the machine — firmware"]]
+    .concat((GOVD.worlds||[]).map(w=>["w:"+w.key,w.emoji||"◈",`${w.name} · ${w.resident}`]))
+    .concat([["gen","🧰","general craft"]]);
+  if(GOVFOLD===null)GOVFOLD=new Set(["fw"]);
+  const rowHtml=o=>`<div class="gvrow ${GOVSEL===o.name?"on":""}" onclick="govOpen('${esc(o.name)}')"
+      title="${esc(o.name)}${(o.wearers&&o.wearers.length)?` — used by ${esc(String(o.wearers[0]))}`:""}">
       <span class="nm">${esc(o.name)}</span>
       <span class="lc ${o.lifecycle==="chronicle"?"chr":""}">${o.lifecycle==="canon"?"firmware":"editable"}</span>
-      <span class="meta">${o.category} · v${o.versions}${(o.wearers&&o.wearers.length)?` · used by ${esc(String(o.wearers[0]).slice(0,60))}`:""}</span></div>`).join("")
-    ||`<div class="quiet">nothing matches — the craft is elsewhere.</div>`)
-    +(((GOVCAT==="all"||GOVCAT==="rubrics")&&(GOVD.rubrics||[]).length)?
-      `<div class="qband"><b>declared rubrics — the humans' yardsticks (0043 G6)</b><span class="n">· ${GOVD.rubrics.length}</span></div>`
-      +GOVD.rubrics.map((r,i)=>`<div class="gvrow" onclick="govRubric(${i})"><span class="nm">${esc(r.goal)}</span>
-        <span class="meta" style="white-space:normal">“${esc(r.text.slice(0,70))}”</span></div>`).join(""):"");
+      <span class="meta">${o.category} · v${o.versions}</span></div>`;
+  let html=shelves.map(([k,em,label])=>{
+    const g=rows.filter(o=>govGrpKey(o)===k);
+    if(!g.length)return"";
+    const open=!!q||GOVFOLD.has(k);
+    return `<div class="gvgrp" onclick="govFold('${k}')"><span class="car">${open?"▾":"▸"}</span>
+        <span class="gname">${em} ${esc(label)}</span><span class="n">${g.length}</span></div>`
+      +(open?g.map(rowHtml).join(""):"");
+  }).join("");
+  const rub=GOVD.rubrics||[];
+  if((GOVCAT==="all"||GOVCAT==="rubrics")&&rub.length){
+    const open=GOVFOLD.has("rub");
+    html+=`<div class="gvgrp" onclick="govFold('rub')"><span class="car">${open?"▾":"▸"}</span>
+        <span class="gname">📏 declared rubrics — the humans' yardsticks</span><span class="n">${rub.length}</span></div>`
+      +(open?rub.map((r,i)=>`<div class="gvrow" onclick="govRubric(${i})" style="grid-template-columns:minmax(0,1fr)">
+        <span class="nm" style="font-weight:400">“${esc(r.text.slice(0,90))}”</span></div>`).join(""):"");
+  }
+  el.innerHTML=html||`<div class="quiet">nothing matches — the craft is elsewhere.</div>`;
 }
 async function govFetch(ref,port){
   const base=port?`${location.protocol}//${location.hostname}:${port}`:UREC;
@@ -5006,8 +5065,10 @@ async function govArgue(name){
   }catch(e){$("gov-ref").textContent="the door would not open: "+e}
 }
 function govOpen(name){
-  GOVSEL=name;renderGov();
+  GOVSEL=name;
   const o=GOVD.objects.find(x=>x.name===name);if(!o)return;
+  if(GOVFOLD)GOVFOLD.add(govGrpKey(o));   /* the selection's shelf never hides */
+  renderGov();
   const R=$("gov-read");R.classList.remove("hide");const gh=$("gov-hint");if(gh)gh.style.display="none";
   R.innerHTML=`<div class="pt"><b>${esc(name)}</b>
       <span class="lc ${o.lifecycle==="chronicle"?"chr":""}" style="margin-left:.5rem">${o.lifecycle==="canon"?"CANON — a release moves the machine's name":"chronicle — proposals at grace's gate"}</span></div>
