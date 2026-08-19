@@ -50,3 +50,16 @@ infrastructure/cdk/.venv/
 # the archive — retired working papers, kept for provenance, never tracked
 # (see archive/README.md; canon cites these where it audited them)
 archive/
+
+# tmp/ — local working bundles (desk report samples, concept images);
+# referenced by dives as local artifacts, never versioned
+tmp/
+
+# shipyard exhaust — floor profiles WRITTEN by the worker at plant time
+# (_launch_one; replants ride the file on disk). Runtime state, never source.
+backend/plane/profiles/dyn-*.json
+
+# memory-bank / assistant context files — excluded from commits by JB's
+# standing law (never deleted, never committed)
+CLAUDE.md
+CLAUDE-*.md

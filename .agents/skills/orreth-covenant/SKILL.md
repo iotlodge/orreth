@@ -1,0 +1,1 @@
+../../../.claude/skills/orreth-covenant/SKILL.md
