@@ -443,7 +443,9 @@
     display:flex;flex-direction:column}
   #drawer[data-state="peek"] .stwthread{display:none}
   .stwthread .tth{font:.66rem var(--mono);letter-spacing:.14em;text-transform:uppercase;
-    color:var(--dim);padding:.6rem 1rem .3rem}
+    color:var(--dim);padding:.6rem 1rem .3rem;display:flex;align-items:baseline;gap:.6rem}
+  .stwthread .tth .lnk{color:var(--brass);text-transform:none;letter-spacing:0}
+  .stwthread .tth .lnk:hover{color:var(--star)}
   #stw-thread{flex:1;min-height:0;overflow-y:auto;padding:.2rem 1rem .8rem;
     font:.76rem/1.6 var(--mono);display:flex;flex-direction:column;gap:.15rem}
   #stw-thread .msg{border:1px solid var(--hair);border-radius:10px;padding:.5rem .7rem;
@@ -1131,7 +1133,9 @@
           </div>
         </div>
         <div class="stwthread">
-          <div class="tth">the dialog · every ask and answer on the record</div>
+          <div class="tth">the dialog · every ask and answer on the record
+            <span class="lnk" style="margin-left:auto;cursor:pointer" onclick="stwClearDialog()"
+              title="clears this sheet only — every exchange stays signed on the record (the Inbox archive holds them)">✕ clear the sheet</span></div>
           <div id="stw-thread"><div class="quiet" style="padding:.5rem">nothing asked yet — frame a piece of spacetime and ask in your own words.</div></div>
         </div>
       </div>
@@ -4203,12 +4207,22 @@ async function stwAsk(){
   }
   if(wait)wait.textContent="still walking — the answer lands here when it arrives (the record keeps it either way)";
 }
-/* the dialog remembers: every past window-ask is on the record already */
+/* the dialog remembers: every past window-ask is on the record already.
+   "clear the sheet" (JB's ask, 2026-08-19) cuts the VIEW, never the record —
+   the cut mark lives in this browser alone; the Inbox archive keeps all. */
+function stwCut(){try{return localStorage.getItem("stw-cleared-at")||""}catch{return ""}}
+function stwClearDialog(){
+  try{localStorage.setItem("stw-cleared-at",new Date().toISOString())}catch{}
+  const th=$("stw-thread");if(th)th.innerHTML=
+    `<div class="quiet" style="padding:.5rem">a fresh sheet — every past exchange stays signed on the record (Inbox → the archive).</div>`;
+}
 async function stwHistory(){
   if(STWHISTDONE)return;STWHISTDONE=true;
   try{
+    const cut=stwCut();
     const q=(await(await fetch(UREC+"/requests")).json()).requests||[];
-    q.filter(x=>x.kind==="window-ask"&&x.status==="done").slice(-10)
+    q.filter(x=>x.kind==="window-ask"&&x.status==="done"&&(x.at||"")>cut)
+     .slice(-10)
      .forEach(x=>{stwLine("mine",x.text||"",(x.at||"").slice(0,16));stwAnswer(x)});
   }catch{}
 }
