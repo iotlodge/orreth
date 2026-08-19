@@ -399,6 +399,59 @@
   #leader .card2 .chip{font-size:.64rem;border:1px solid;border-radius:999px;padding:.05em .6em}
   #leader .card2 .body{color:var(--blue);border-top:1px solid var(--hair);margin-top:.5rem;padding-top:.5rem;overflow-wrap:anywhere;max-height:8rem;overflow:hidden}
   .remnote{position:absolute;bottom:.7rem;left:1rem;font:italic .72rem var(--mono);color:var(--red);opacity:.85}
+  /* ── the spacetime window, made interactive (mini-dive tab 3, 2026-08-19):
+        lanes are the two kinds of life (machine brass · world jade), the heat
+        is memory density, the brush frames FOCUS, and the bar beneath asks
+        the librarian about exactly what the window holds ── */
+  .stwmain{flex:1;display:flex;min-height:0}
+  .stwleft{flex:1;min-width:0;display:flex;flex-direction:column}
+  .stwleft .sky{overflow-y:auto}   /* a hundred worlds scroll; the frame holds */
+  .stwclasses{display:flex;flex-wrap:wrap;gap:.3rem;padding:.4rem 1rem 0}
+  .lrow{display:grid;grid-template-columns:170px 88px 1fr;gap:.6rem;align-items:center;
+    padding:.2rem .9rem .2rem 1rem;border-top:1px solid var(--hair);cursor:pointer}
+  .lrow:hover{background:rgba(127,140,180,.05)}
+  .lrow.on{box-shadow:inset 3px 0 0 var(--brass);background:rgba(212,169,96,.05)}
+  .lrow .lname{font-family:var(--serif);font-variant-caps:small-caps;letter-spacing:.14em;
+    font-size:.76rem;color:var(--brass);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lrow.world .lname{color:#4fa07c}
+  .lrow .lcnt{font:.6rem var(--mono);color:var(--faint);text-align:right;white-space:nowrap}
+  .lheat{position:relative;height:26px;color:var(--brass)}
+  .lrow.world .lheat{color:#4fa07c}
+  .lheat .cells{position:absolute;inset:4px 0;display:flex;gap:1px}
+  .lheat .cells i{flex:1;background:currentColor;border-radius:1px}
+  /* graded pins, prefixed (never bare mk/ms/svc — one namespace, 0020's law) */
+  .star.psvc{border-radius:2px;transform:translate(-50%,-50%) rotate(45deg);
+    background:var(--blue);box-shadow:0 0 6px 1px rgba(159,182,232,.5)}
+  .star.pmk{border-radius:2px;transform:translate(-50%,-50%) rotate(45deg);
+    background:#fc3;box-shadow:0 0 6px 1px rgba(255,204,51,.5)}
+  .star.pms{background:transparent;border:2px solid var(--brass);
+    box-shadow:0 0 6px 1px rgba(212,169,96,.45)}
+  .star.psvc:hover,.star.pmk:hover{transform:translate(-50%,-50%) rotate(45deg) scale(1.8)}
+  .stwfocus{position:absolute;top:0;bottom:0;background:rgba(212,169,96,.08);
+    border-left:1px solid var(--brass);border-right:1px solid var(--brass);
+    pointer-events:none;z-index:2;display:none}
+  .stwbar{display:flex;gap:.55rem;align-items:center;padding:.55rem 1rem;border-top:1px solid var(--hair)}
+  .stwbar input{flex:1;min-width:200px;background:var(--deep);border:1px solid var(--hair2);
+    border-radius:8px;padding:.55rem .9rem;color:var(--star);font:.8rem var(--mono)}
+  .stwbar input:focus{outline:none;border-color:var(--brass)}
+  .stwbar button{background:var(--brass);color:#1a1305;border:none;border-radius:8px;
+    padding:.55rem 1.1rem;font:700 .74rem var(--mono);cursor:pointer;white-space:nowrap}
+  .stwbar button:hover{filter:brightness(1.08)}
+  #stw-scope{font:.66rem var(--mono);color:var(--dim);padding:.15rem 1rem 0;min-height:1em}
+  #stw-scope .lnk{color:var(--brass);cursor:pointer}
+  .stwthread{flex:0 0 34%;min-width:0;border-left:1px solid var(--hair);
+    display:flex;flex-direction:column}
+  #drawer[data-state="peek"] .stwthread{display:none}
+  .stwthread .tth{font:.66rem var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--dim);padding:.6rem 1rem .3rem}
+  #stw-thread{flex:1;min-height:0;overflow-y:auto;padding:.2rem 1rem .8rem;
+    font:.76rem/1.6 var(--mono);display:flex;flex-direction:column;gap:.15rem}
+  #stw-thread .msg{border:1px solid var(--hair);border-radius:10px;padding:.5rem .7rem;
+    margin:.45rem 0;color:var(--near);overflow-wrap:anywhere;white-space:pre-wrap}
+  #stw-thread .msg.mine{border-color:var(--brassdim);color:var(--star)}
+  #stw-thread .msg .mt{display:block;font-size:.62rem;color:var(--faint);margin-top:.3rem;white-space:normal}
+  #stw-thread .cite{font:.62rem var(--mono);color:var(--blue);cursor:pointer;display:block;margin-top:.15rem}
+  #stw-thread .cite:hover{color:var(--star)}
 
   /* ── THE FARM (0018): services are identities with worldlines ── */
   #v-farm,#v-stable{padding:1.6rem;overflow-y:auto}
@@ -1045,12 +1098,17 @@
            title="the gates wait — consequence waits for you (0012); click to decide without leaving the glass"></div>
       <div class="gatepop" id="gatepop" style="display:none"></div>
     </div>
+    <!-- THE SPACETIME WINDOW, interactive (mini-dive tab 3, JB's brief
+         2026-08-19): the whole universe's memory in lanes — the worker
+         sweeps every floor through the librarian's seats — with a brush
+         that frames FOCUS and one bar of plain words beneath: whatever
+         the window holds is the scope of the question. -->
     <div class="drawer" id="drawer" data-state="closed">
       <div class="dhandle" onclick="drawerCycle()" title="the spacetime window — pull up">
         <span class="grip" id="dgrip">⌃</span>
         <span>the spacetime window</span>
-        <span class="dhint" id="dhint">pull up — every memory, in time</span>
-        <span class="lgd">● memory · <i class="l-mk">◆</i> marker · <i class="l-ms">○</i> milestone · ◇ service · ×n cluster · click pins the card</span>
+        <span class="dhint" id="dhint">pull up — every memory, in time; ask about what you frame</span>
+        <span class="lgd">heat = memory density · <i class="l-mk">◆</i> marker · <i class="l-ms">○</i> milestone · ◇ service · drag the heat to frame focus · click a lane to scope it</span>
         <span class="down" id="ddown" onclick="drawerDown(event)" title="lower the window">⌄</span>
       </div>
       <div class="skybar">
@@ -1058,10 +1116,24 @@
         <input type="range" id="scrub" min="1" max="100" value="60">
         <span class="lbl" id="count">—</span>
       </div>
-      <div class="sky" id="sky">
-        <div class="nowline"><span class="cap">NOW</span></div>
-        <div class="skynote">◄ deep past · distilled, never lost</div>
-        <div id="leader"><div class="line"></div><div class="dotend"></div><div class="card2"></div></div>
+      <div class="stwmain">
+        <div class="stwleft">
+          <div class="stwclasses" id="stw-classes"></div>
+          <div class="sky" id="sky">
+            <div class="nowline"><span class="cap">NOW</span></div>
+            <div class="stwfocus" id="stw-focus"></div>
+            <div id="leader"><div class="line"></div><div class="dotend"></div><div class="card2"></div></div>
+          </div>
+          <div id="stw-scope"></div>
+          <div class="stwbar">
+            <input id="stw-q" placeholder="ask about what the window holds — the librarian gathers across exactly this focus, and answers with citations">
+            <button onclick="stwAsk()">ask the window</button>
+          </div>
+        </div>
+        <div class="stwthread">
+          <div class="tth">the dialog · every ask and answer on the record</div>
+          <div id="stw-thread"><div class="quiet" style="padding:.5rem">nothing asked yet — frame a piece of spacetime and ask in your own words.</div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -3487,7 +3559,7 @@ function closeParlor(){if(PA&&PA.timer)clearInterval(PA.timer);PA=null;
   $("parlor").classList.remove("on","full");document.body.classList.remove("parlor-open");parlorRefit()}
 function parlorRefit(){ // after the pane slides, re-fit whatever measures itself in px
   setTimeout(()=>{const d=$("drawer");
-    if(d&&d.dataset.state!=="closed"){layout();scrub()}},340)}
+    if(d&&d.dataset.state!=="closed")scrub()},340)}
 async function parlorPost(extra){
   if(!PA)return;
   try{
@@ -3938,7 +4010,7 @@ function drawerSet(st){
   $("dgrip").textContent=st==="full"?"⌄":"⌃";
   $("dhint").textContent=st==="closed"?"pull up — every memory, in time"
     :st==="peek"?"pull higher for the full window":"the whole record, in time";
-  if(st!=="closed")setTimeout(()=>{layout();scrub()},380); // bands re-fit after the slide
+  if(st!=="closed")setTimeout(()=>{scrub();stwHistory()},380); // lanes re-fit after the slide; the dialog remembers
   if(up!==was)setTimeout(()=>{                  // the world re-centers in its new box
     const O=$("orrery");if(O){O.dataset.sig="";renderOrrery()}},380);
 }
@@ -3952,155 +4024,217 @@ function drawerDown(ev){
   drawerSet(st==="full"?"peek":"closed");
 }
 
-/* ── the spacetime window (one view) ── */
+/* ── THE SPACETIME WINDOW, interactive (mini-dive tab 3, 2026-08-19) ──
+   The old window retrieved through THIS floor's capability, so the universe
+   showed two records while its floors held twenty thousand — "kind of feels
+   broken" (JB). Now the worker sweeps EVERY floor through the librarian's
+   own seats (/spacetime — tags only, sampling confessed) and the glass
+   draws LANES: the apex, each machine ecosystem in brass, each capability
+   world in jade. The human frames FOCUS with the slider, a drag on the
+   heat, and lane clicks — and asks the window itself in plain words. */
 const sky=()=>$("sky"), leader=()=>$("leader");
 const fclass=f=>f==="verified"?"near":f==="distilled"?"blue":"red";
 const scrubToDays=v=>Math.round(Math.exp(Math.log(730)*v/100));
-const tiers=()=>cfg?.tiers?[...cfg.tiers].reverse():["u:demo","u:demo/e:cloud","u:demo/e:cloud/f:prod"];
-let bandGeo=[];
-function layout(){
-  const S=sky(); S.querySelectorAll(".band,.dust").forEach(e=>e.remove());
-  const anc=tiers();
-  /* the world THIS floor may see (0030 §4): its ancestry above, itself, and every
-     descendant below — the same subtree the orrery and roster show (rule 7). */
-  const here=floorScope||anc[anc.length-1];
-  const T=[...anc];
-  const dwalk=(n,on)=>{if(!n)return;const hit=on||n.scope===here;
-    if(hit&&!T.includes(n.scope))T.push(n.scope);
-    (n.children||[]).forEach(c=>dwalk(c,hit))};
-  dwalk(topoCache,false);
-  /* sibling worlds stay SEALED lanes — the pane may know THAT they exist
-     (presence rolls up, 0005) but never WHAT they hold (capability, 0002) */
-  const others=[]; const walk=n=>{if(!n)return;
-    if(!T.includes(n.scope))others.push(n.scope);(n.children||[]).forEach(walk)};
-  walk(topoCache); others.sort();
-  const H=S.clientHeight,top=4,usable=H-28,bh=usable/(T.length+others.length); bandGeo=[];
-  T.forEach((t,i)=>{const b=document.createElement("div");b.className="band"+(i===0?" apex":"");
-    b.style.top=(top+bh*i)+"px";b.style.height=bh+"px";
-    b.innerHTML=`<span class="name" style="left:${14+i*18}px">${t.split("/").pop()}<b id="bc-${i}"></b></span>`+
-      `<div class="lane"></div>`+
-      (i===0?`<span class="note">all-time memory · the apex holds what mattered</span>`:"");
-    S.insertBefore(b,S.firstChild);
-    bandGeo[i]={top:top+bh*i,h:bh,scope:t}});
-  others.forEach((t,j)=>{const b=document.createElement("div");b.className="band sealed";
-    b.style.top=(top+bh*(T.length+j))+"px";b.style.height=bh+"px";
-    b.innerHTML=`<span class="name" style="left:${14+(t.split("/").length-1)*18}px">${t.split("/").pop()}<b>· sealed</b></span>`+
-      `<div class="lane"></div>`+
-      (j===0?`<span class="note">other worlds turn here — beyond this capability, by design</span>`:"");
-    S.insertBefore(b,S.firstChild)});
-  for(let i=0;i<40;i++){const d=document.createElement("div");d.className="dust";
-    d.style.left=Math.random()*100+"%";d.style.top=Math.random()*100+"%";
-    d.style.opacity=.3+Math.random()*.4;S.appendChild(d)}
+let STWD=null,STWSEL=new Set(),STWF=null,STWDRAG=false;
+function stwX(at){if(!STWD)return null;
+  const t=new Date(at).getTime(),now=Date.now(),from=now-STWD.days*864e5;
+  return isFinite(t)?Math.max(0,Math.min(1,(t-from)/(now-from))):null}
+function stwRender(){
+  const S=sky();if(!S)return;
+  S.querySelectorAll(".lrow").forEach(e=>e.remove());
+  if(!STWD||!STWD.lanes){
+    $("count").textContent="the window door is unreachable — is the worker tending?";return}
+  const served=STWD.lanes.reduce((t,L)=>t+L.served,0),
+        total=STWD.lanes.reduce((t,L)=>t+L.total,0);
+  $("count").textContent=`${served.toLocaleString()} of ${total.toLocaleString()} memories drawn · tags only — a body travels only when you open it`;
+  $("stw-classes").innerHTML=Object.entries(STWD.classes||{})
+    .sort((a,b)=>b[1]-a[1]).slice(0,10).map(([c,n])=>
+    `<span class="qchip" title="a category of record (0039's own classes) — click to seed the ask" onclick="stwSeed('${esc(c)}')">${esc(c)} · ${n.toLocaleString()}</span>`).join("");
+  const max=Math.max(1,...STWD.lanes.flatMap(L=>L.buckets));
+  const frag=document.createDocumentFragment();
+  STWD.lanes.forEach(L=>{
+    const row=document.createElement("div");
+    row.className="lrow "+L.kind+(STWSEL.has(L.key)?" on":"");
+    row.title=`${L.floors.join(" · ")} — click to scope the ask to this lane`;
+    row.onclick=e=>{if(STWDRAG||e.target.closest(".star"))return;stwLane(L.key)};
+    row.innerHTML=`<span class="lname">${esc(L.label)}</span>
+      <span class="lcnt">${L.served===L.total?L.total.toLocaleString():L.served.toLocaleString()+" of "+L.total.toLocaleString()}</span>
+      <div class="lheat"><div class="cells">${L.buckets.map(n=>
+        `<i style="opacity:${n?(0.12+0.88*Math.sqrt(n/max)).toFixed(2):0}"></i>`).join("")}</div></div>`;
+    const heat=row.querySelector(".lheat");
+    /* co-located graded moments fold to ONE pin with an honest count —
+       the NOW edge crowds, and a pile of diamonds is a smear, not a sky */
+    const pinBins={};
+    (L.pins||[]).forEach(p=>{
+      const x=stwX(p.at);if(x==null)return;
+      const bx=Math.round(x*64)+":"+p.kind;
+      if(pinBins[bx]){pinBins[bx].n++;
+        pinBins[bx].el.title=`${pinBins[bx].n} graded moments here — hover reads the first`;return}
+      const s=document.createElement("div");
+      /* pin classes are PREFIXED — "svc" is the Farm's card class, and one
+         namespace means a bare name is a collision (the 40px-diamond bug) */
+      s.className="star "+(p.kind==="mk"?"pmk":p.kind==="ms"?"pms":"psvc");
+      s.style.left=(x*100)+"%";
+      s.style.top=["30%","52%","74%"][Math.round(x*64)%3];
+      s.style.width=s.style.height="7px";
+      s.onmouseenter=()=>showLeader(s,p);
+      s.onclick=e=>{e.stopPropagation();showLeader(s,p);leader().dataset.pin="1"};
+      s.onmouseleave=()=>{if(!leader().dataset.pin)leader().classList.remove("on")};
+      pinBins[bx]={el:s,n:1};
+      heat.appendChild(s)});
+    frag.appendChild(row)});
+  S.insertBefore(frag,$("stw-focus"));
+  stwFocusDraw();stwScopeLabel();
 }
-/* a memory rides the shallowest floor whose horizon still holds it (0002/0004):
-   the field serves its 90 days, the eco its year, the apex all of time — like the poster */
-function horizonFor(i){
-  const sc=bandGeo[i]?.scope;
-  const find=n=>{if(!n)return null;if(n.scope===sc)return n;
-    for(const c of n.children||[]){const r=find(c);if(r)return r}return null};
-  const n=topoCache?find(topoCache):null;
-  if(n&&n.horizon_days!=null&&isFinite(n.horizon_days)&&n.horizon_days<3e5)return n.horizon_days;
-  return i===bandGeo.length-1?90:395;      /* dev defaults below the apex */
+function stwLane(k){STWSEL.has(k)?STWSEL.delete(k):STWSEL.add(k);stwRender()}
+function stwSeed(c){const i=$("stw-q");
+  i.value=(i.value?i.value+" ":"")+`about «${c}» records`;i.focus()}
+function stwWindowRange(){
+  const now=Date.now(),from=now-((STWD&&STWD.days)||195)*864e5;
+  const a=STWF?from+STWF.a*(now-from):from,b=STWF?from+STWF.b*(now-from):now;
+  return {from:new Date(a).toISOString().slice(0,19)+"Z",
+          to:new Date(b).toISOString().slice(0,19)+"Z"}}
+function stwScopeLabel(){
+  const el=$("stw-scope");if(!el||!STWD)return;
+  const r=stwWindowRange();
+  const inScope=STWSEL.size?STWD.lanes.filter(L=>STWSEL.has(L.key)):STWD.lanes;
+  const served=inScope.reduce((t,L)=>t+L.served,0);
+  el.innerHTML=`in focus · ${r.from.slice(0,10)} → ${r.to.slice(0,10)} · `
+    +(STWSEL.size?inScope.map(L=>esc(L.label)).join(" · "):"every lane")
+    +` · ~${served.toLocaleString()} memories — the question's scope`
+    +((STWF||STWSEL.size)?` <span class="lnk" onclick="stwClear()">✕ clear the frame</span>`:"");
 }
-function bandForAge(days){
-  for(let i=bandGeo.length-1;i>0;i--){if(days<=horizonFor(i))return bandGeo[i]}
-  return bandGeo[0];
+function stwClear(){STWF=null;STWSEL.clear();stwRender()}
+function stwHeatRect(){const h=sky().querySelector(".lheat");
+  return h?h.getBoundingClientRect():null}
+function stwFocusDraw(){
+  const el=$("stw-focus");if(!el)return;
+  const hr=stwHeatRect();
+  if(!STWF||!hr){el.style.display="none";return}
+  const sr=sky().getBoundingClientRect(),L0=hr.left-sr.left;
+  el.style.display="block";
+  el.style.left=(L0+STWF.a*hr.width)+"px";
+  el.style.width=Math.max(2,(STWF.b-STWF.a)*hr.width)+"px";
 }
+/* the brush: drag across the heat to frame a slice of time */
+let _stwBrush=null;
+document.addEventListener("mousedown",e=>{
+  if(!e.target.closest||!e.target.closest("#sky .lheat"))return;
+  if(e.target.closest(".star"))return;
+  _stwBrush={x0:e.clientX,x1:e.clientX};STWDRAG=false;e.preventDefault()});
+document.addEventListener("mousemove",e=>{
+  if(!_stwBrush)return;_stwBrush.x1=e.clientX;
+  if(Math.abs(_stwBrush.x1-_stwBrush.x0)>8){STWDRAG=true;
+    const hr=stwHeatRect();if(hr){
+      const f=x=>Math.max(0,Math.min(1,(x-hr.left)/hr.width));
+      STWF={a:Math.min(f(_stwBrush.x0),f(_stwBrush.x1)),
+            b:Math.max(f(_stwBrush.x0),f(_stwBrush.x1))};
+      stwFocusDraw()}}});
+document.addEventListener("mouseup",()=>{
+  if(!_stwBrush)return;_stwBrush=null;
+  if(STWDRAG){stwScopeLabel();setTimeout(()=>{STWDRAG=false},50)}});
 let seq=0;
-async function scrub(){
+async function scrub(){          /* keeps its old name — every caller still fits */
   const days=scrubToDays(+$("scrub").value);$("days").textContent=days;
-  if(!cfg)await loadCfg();          /* self-healing: fetch the pinned eyes if we have none */
-  if(!cfg){$("count").textContent="no viewer capability pinned yet — is the worker up?";return}
-  const from=new Date(Date.now()-days*DAY),mine=++seq;
-  const res=await fetch(api("/retrieve"),{method:"POST",headers:{"content-type":"application/json"},
-    body:JSON.stringify({query:{requester:cfg.requester,subject:SUBJ(),space:"self",
-      time:{from:iso(from)},intent:"recall",budget:{cost:4},auth:"biscuit-sim"},
-      token:cfg.token,requester_scope:cfg.requester_scope})});
-  if(mine!==seq)return;layout();
-  if(!res.ok){$("count").textContent="capability refused";return}
-  const r=await res.json();
-  const S=sky();S.querySelectorAll(".star,.remnote").forEach(e=>e.remove());
-  /* beads on the wire: every memory rides its tier's lane, ordered by time.
-     Co-located beads (the NOW edge crowds — heartbeats pile up there) fold into one
-     cluster marker with an honest count; hover reads the whole bucket. */
-  const span=Date.now()-from.getTime(),W=S.clientWidth,X0=182,X1=W-26,perBand={},bins={};
-  const laneOf={};bandGeo.forEach((g,i)=>laneOf[g.scope]=i);
-  for(const h of r.hits){const age=(new Date(h.occurred_at)-from.getTime())/span;
-    const bi=laneOf[h.scope]!=null?laneOf[h.scope]
-      :bandGeo.indexOf(bandForAge((Date.now()-new Date(h.occurred_at))/DAY));
-    const g=bandGeo[bi];perBand[bi]=(perBand[bi]||0)+1;
-    const x=Math.max(X0,Math.min(X1,X0+(X1-X0)*age));
-    /* graded kinds never fold into the pile (0030 §4): a marker or a milestone
-       keeps its own face however crowded the NOW edge gets */
-    const tg=h.tags||[];
-    const kind=tg.includes("marker")?"mk":(tg.includes("plan")||tg.includes("objective-outcome"))?"ms":tg.includes("service")?"svc":"mem";
-    const key=bi+":"+Math.round(x/14)+":"+kind;  /* one bucket ≈ one star's footprint, per kind */
-    (bins[key]=bins[key]||{g,bi,kind,bx:+key.split(":")[1],xs:[],items:[]});
-    bins[key].xs.push(x);bins[key].items.push({h,age});}
-  for(const b of Object.values(bins)){
-    const x=b.xs.reduce((a,c)=>a+c,0)/b.xs.length,g=b.g;
-    const s=document.createElement("div");
-    if(b.items.length===1){
-      const {h,age}=b.items[0];
-      s.className="star "+fclass(h.fidelity);
-      const tg=h.tags||[];
-      if(tg.includes("service"))s.className="star svc";      /* a worldline event (0018 §4) */
-      if(tg.includes("marker"))s.className="star mk";        /* a moment graded (0024) */
-      if(tg.includes("plan")||tg.includes("objective-outcome"))
-        s.className="star ms";                               /* an objective milestone (0030) */
-      const sz=5+3*Math.max(0,age);s.style.width=s.style.height=sz+"px";
-      s.style.top=(g.top+g.h*.58+((b.bx%3)-1)*7)+"px";
-      s.onmouseenter=()=>showLeader(s,h);
-      s.onclick=e=>{e.stopPropagation();showLeader(s,h);leader().dataset.pin="1"};
-    }else{
-      s.className="star cluster"+(b.kind!=="mem"?" c-"+b.kind:"");
-      const sz=Math.min(13,8+b.items.length);s.style.width=s.style.height=sz+"px";
-      s.style.top=(g.top+g.h*.58)+"px";
-      s.innerHTML=`<span class="cnt">×${b.items.length}</span>`;
-      s.onmouseenter=()=>showLeaderCluster(s,b.items);
-      s.onclick=e=>{e.stopPropagation();showLeaderCluster(s,b.items);leader().dataset.pin="1"};
-    }
-    s.style.left=x+"px";
-    s.onmouseleave=()=>{if(!leader().dataset.pin)leader().classList.remove("on")};S.appendChild(s)}
-  S.onclick=()=>{delete leader().dataset.pin;leader().classList.remove("on")};
-  bandGeo.forEach((g,i)=>{const el=$("bc-"+i);if(el)el.textContent="· "+(perBand[i]||0)});
-  $("count").textContent=`${r.hits.length} memor${r.hits.length===1?"y":"ies"} · ${r.verification}`;
-  if(r.remainder){const n=document.createElement("div");n.className="remnote";
-    n.textContent=`before ${r.remainder.not_served.from.slice(0,10)}: un-served — this lease reaches no deeper`;S.appendChild(n)}
+  const mine=++seq;
+  let d=null;
+  try{d=await(await fetch(OBSD+"/spacetime?days="+days)).json()}catch{}
+  if(mine!==seq)return;
+  if(d&&!d.error)STWD=d;
+  stwRender();
 }
+/* ── the ask: whatever the window holds is the scope (JB's experience) ── */
+let STWPOLL=0,STWHISTDONE=false;
+function stwLine(cls,text,meta){
+  const th=$("stw-thread");if(!th)return null;
+  th.querySelectorAll(".quiet").forEach(e=>e.remove());
+  const d=document.createElement("div");d.className="msg "+cls;d.textContent=text;
+  if(meta){const m=document.createElement("span");m.className="mt";m.textContent=meta;d.appendChild(m)}
+  th.appendChild(d);th.scrollTop=th.scrollHeight;return d;
+}
+function stwAnswer(x){
+  const res=x.result||{};
+  const d=stwLine("reply",res.reply||"…",
+    res.voiced?"voiced — one governed metered thought under the librarian's DID"
+              :"grounded — deterministic, unvoiced");
+  if(!d)return;
+  (res.citations||[]).forEach((c,i)=>{
+    const s=document.createElement("span");s.className="cite";
+    s.textContent=`[${i+1}] ${String(c.at||"").slice(0,19)} · ${String(c.scope||"").split("/").pop()} · ${c.fidelity||"?"} · ${c["class"]||""}`;
+    s.title="open this record — sourced, on its own floor";
+    s.onclick=()=>stwCiteOpen(c);d.appendChild(s)});
+  if(typeof linkifyEl==="function")linkifyEl(d);
+  $("stw-thread").scrollTop=$("stw-thread").scrollHeight;
+}
+async function stwCiteOpen(c){
+  const L=((STWD||{}).lanes||[]).find(l=>(l.floors||[]).includes(c.scope));
+  const port=L&&L.ports?L.ports[c.scope]:4500;
+  let b=null;try{b=await govFetch(c.ref,port)}catch{}
+  stwLine("reply",(b?JSON.stringify(b,null,1).slice(0,600):"the body would not open — it may live at a deeper tier"),
+    `the record itself · ${c.ref} · ${c.scope}`);
+}
+async function stwAsk(){
+  const q=($("stw-q").value||"").trim();if(!q||!STWD)return;
+  $("stw-q").value="";
+  const r=stwWindowRange();
+  const lanes=STWSEL.size?STWD.lanes.filter(L=>STWSEL.has(L.key)):[];
+  const scopes=lanes.flatMap(L=>L.floors);
+  stwLine("mine",q,`${r.from.slice(0,10)} → ${r.to.slice(0,10)} · ${lanes.length?lanes.map(L=>L.label).join(" · "):"every lane"}`);
+  if($("drawer").dataset.state!=="full")drawerSet("full");  /* the dialog needs its room */
+  let rid=null;
+  try{
+    const res=await(await fetch(UREC+"/requests",{method:"POST",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({kind:"window-ask",text:q,from:r.from,to:r.to,scopes,
+        text_summary:`the window asks: ${q.slice(0,70)}`})})).json();
+    rid=res.id;
+  }catch(e){stwLine("reply","the door would not open — "+e);return}
+  const wait=stwLine("reply","the librarian walks the window — gathering across "
+    +(scopes.length||"every")+" floor(s)…");
+  const mine=++STWPOLL;
+  for(let i=0;i<60;i++){
+    await new Promise(z=>setTimeout(z,1500));
+    if(mine!==STWPOLL)return;
+    try{
+      const q2=(await(await fetch(UREC+"/requests")).json()).requests||[];
+      const x=q2.find(v=>v.id===rid);
+      if(x&&x.status==="done"){if(wait)wait.remove();stwAnswer(x);return}
+    }catch{}
+  }
+  if(wait)wait.textContent="still walking — the answer lands here when it arrives (the record keeps it either way)";
+}
+/* the dialog remembers: every past window-ask is on the record already */
+async function stwHistory(){
+  if(STWHISTDONE)return;STWHISTDONE=true;
+  try{
+    const q=(await(await fetch(UREC+"/requests")).json()).requests||[];
+    q.filter(x=>x.kind==="window-ask"&&x.status==="done").slice(-10)
+     .forEach(x=>{stwLine("mine",x.text||"",(x.at||"").slice(0,16));stwAnswer(x)});
+  }catch{}
+}
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&e.target&&e.target.id==="stw-q")stwAsk()});
+/* the pin's card: the moment read out — the body fetched from the pin's OWN
+   floor (the pins ride in from every world; api() would only reach this one) */
 async function showLeader(star,h){
-  const cls=fclass(h.fidelity),x=parseFloat(star.style.left),y=parseFloat(star.style.top);
-  const CARD=340,GAP=58,W=sky().clientWidth,H=sky().clientHeight,right=x>W*.5,L=leader();
+  const S=sky(),sr=S.getBoundingClientRect(),tr=star.getBoundingClientRect();
+  const x=tr.left-sr.left+tr.width/2,y=tr.top-sr.top+tr.height/2;
+  const cls=fclass(h.fidelity);
+  const CARD=340,GAP=58,W=S.clientWidth,H=S.clientHeight,right=x>W*.5,L=leader();
   const cy=Math.max(96,Math.min(H-100,y));   /* keep the card on the glass */
   const line=L.querySelector(".line"),card=L.querySelector(".card2"),dot=L.querySelector(".dotend");
-  card.innerHTML=`<div class="when">${h.occurred_at}</div>
-    <div style="margin:.35rem 0"><span class="chip" style="color:var(--${cls});border-color:currentColor">${h.fidelity}</span></div>
-    <div><span class="k">author </span>${short(h.source)}</div>
-    <div><span class="k">scope&nbsp;&nbsp;</span>${h.scope.split("/").pop()}</div>
+  card.innerHTML=`<div class="when">${esc(h.at||h.occurred_at||"")}</div>
+    <div style="margin:.35rem 0"><span class="chip" style="color:var(--${cls});border-color:currentColor">${esc(h.fidelity||"?")}</span>
+      ${(h.tags||[]).slice(0,4).map(t=>`<span class="chip" style="color:var(--dim);border-color:var(--hair2);margin-left:.3em">${esc(t)}</span>`).join("")}</div>
+    <div><span class="k">scope&nbsp;&nbsp;</span>${esc(String(h.scope||"").split("/").pop())}</div>
     <div class="body">reading body…</div>`;
   card.style.top=cy+"px";line.style.top=y+"px";line.style.height="1px";dot.style.top=y+"px";dot.style.left=x+"px";
   if(right){const left=Math.max(8,x-GAP-CARD);card.style.left=left+"px";line.style.left=(left+CARD)+"px";line.style.width=(x-(left+CARD))+"px";}
   else{const left=Math.min(W-CARD-8,x+GAP);card.style.left=left+"px";line.style.left=x+"px";line.style.width=(left-x)+"px";}
   L.classList.add("on");
-  const res=await fetch(api(`/records/${encodeURIComponent(h.ref)}/body`));
-  const b=card.querySelector(".body");if(b)b.textContent=res.ok?JSON.stringify(await res.json()):"body at a deeper tier";
-}
-/* a cluster's card: the bucket read out — times, fidelity, authors; no body fetch */
-function showLeaderCluster(star,items){
-  const x=parseFloat(star.style.left),y=parseFloat(star.style.top);
-  const CARD=340,GAP=58,W=sky().clientWidth,H=sky().clientHeight,right=x>W*.5,L=leader();
-  const cy=Math.max(96,Math.min(H-100,y));
-  const line=L.querySelector(".line"),card=L.querySelector(".card2"),dot=L.querySelector(".dotend");
-  const sorted=[...items].sort((a,b)=>a.h.occurred_at<b.h.occurred_at?-1:1);
-  const rows=sorted.slice(0,6).map(({h})=>{const cls=fclass(h.fidelity);
-    return `<div><span class="chip" style="color:var(--${cls});border-color:currentColor">${(h.tags||[]).includes("service")?"svc":h.fidelity}</span>
-      ${h.occurred_at.slice(11,19)} · <span class="k">${short(h.source)}</span></div>`}).join("");
-  card.innerHTML=`<div class="when">${items.length} memories · ${sorted[0].h.occurred_at.slice(0,19)} → ${sorted[sorted.length-1].h.occurred_at.slice(11,19)}</div>
-    ${rows}${items.length>6?`<div class="k">… and ${items.length-6} more in this bead</div>`:""}`;
-  card.style.top=cy+"px";line.style.top=y+"px";line.style.height="1px";dot.style.top=y+"px";dot.style.left=x+"px";
-  if(right){const left=Math.max(8,x-GAP-CARD);card.style.left=left+"px";line.style.left=(left+CARD)+"px";line.style.width=(x-(left+CARD))+"px";}
-  else{const left=Math.min(W-CARD-8,x+GAP);card.style.left=left+"px";line.style.left=x+"px";line.style.width=(left-x)+"px";}
-  L.classList.add("on");
+  let txt="body at a deeper tier";
+  try{const b=await govFetch(h.ref,h.port);txt=JSON.stringify(b).slice(0,500)}catch{}
+  const b2=card.querySelector(".body");if(b2)b2.textContent=txt;
 }
 $("scrub").addEventListener("input",scrub);
 window.addEventListener("resize",()=>{if(!$("v-uni").classList.contains("hide")){

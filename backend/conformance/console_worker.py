@@ -2125,7 +2125,7 @@ def embed_door() -> None:
                 return
             if route not in ("/observatory", "/governance", "/craft",
                              "/sentences", "/desk", "/brain", "/resident",
-                             "/pulse"):
+                             "/pulse", "/spacetime"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2160,6 +2160,11 @@ def embed_door() -> None:
                     out = json.dumps(compose_brain()).encode()
                 elif route == "/pulse":
                     out = json.dumps(compose_pulse()).encode()
+                elif route == "/spacetime":
+                    qs = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query)
+                    d = max(1, min(730, int((qs.get("days") or ["195"])[0])))
+                    out = json.dumps(compose_spacetime(d)).encode()
                 elif route == "/resident":
                     qs = urllib.parse.parse_qs(
                         urllib.parse.urlparse(self.path).query)
@@ -11411,6 +11416,264 @@ def compose_pulse() -> dict:
     return payload
 
 
+_STW_CACHE = {"at": 0.0, "key": "", "payload": None}
+
+
+def compose_spacetime(days: int) -> dict:
+    """THE SPACETIME WINDOW's supply line (mini-dive tab 3, JB's brief
+    2026-08-19: at the universe the window showed two records while the
+    librarian could read everything below — "kind of feels broken"): the
+    worker sweeps EVERY discovered floor through the librarian's own seats,
+    TAGS ONLY (the read law — bodies never travel in an index), and returns
+    the universe's memory as LANES × TIME BUCKETS. Lanes are the two kinds
+    of life, never one-per-floor: the apex, each machine ecosystem, each
+    capability world under its manifest's own name — a hundred ecosystems
+    fold to a legible sky. Sampling is CONFESSED per lane (served vs the
+    heartbeat's true total); graded moments (markers · milestones ·
+    services) keep their own faces as pins."""
+    key = str(days)
+    if (time.time() - _STW_CACHE["at"] < 20 and _STW_CACHE["key"] == key
+            and _STW_CACHE["payload"]):
+        return _STW_CACHE["payload"]
+    from datetime import datetime, timedelta, timezone
+    from orreth_sim import canon as _cn
+    frm = (datetime.now(timezone.utc) - timedelta(days=days)
+           ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm_ms = (datetime.now(timezone.utc) - timedelta(days=days)).timestamp()
+    span_s = max(1.0, days * 86400.0)
+    NB = 96
+    tended: dict = {}
+    for wkey, man in CAP_GENESIS.items():
+        own = [man.get("floor")] + [f.get("scope")
+                                    for f in (man.get("floors") or [])
+                                    if not f.get("shared")]
+        for sc in own:
+            if sc:
+                tended[sc] = {"world": wkey, "name": man.get("name", wkey),
+                              "emoji": man.get("emoji", "")}
+
+    def lane_for(scope: str):
+        t = tended.get(scope)
+        if t:
+            return ("w:" + t["world"], f"{t['emoji']} {t['name']}", "world")
+        seg = scope.split("/")
+        if len(seg) >= 2 and seg[1].startswith("e:"):
+            return ("e:" + seg[1][2:], seg[1], "machine")
+        if len(seg) == 2:
+            return (seg[1], seg[1], "machine")
+        return ("apex", scope, "machine")
+    lanes: dict = {}
+    for port, scope in sorted(FLOOR_SCOPES.items(), key=lambda x: x[1]):
+        try:
+            total = int(call(port, "GET", "/health").get("records") or 0)
+        except Exception:
+            continue
+        _, seat_did = lib_seat(scope)
+        token = _ROOT.issue_token(seat_did, "u:demo",
+                                  [{"action": "retrieve", "space": "self"}])
+        hits: list = []
+        try:
+            r = call(port, "POST", "/retrieve", {
+                "query": {"requester": seat_did,
+                          "subject": {"cohort": {"scope": scope}},
+                          "space": "self", "time": {"from": frm},
+                          "intent": "recall", "budget": {"cost": 8},
+                          "auth": "biscuit-sim"},
+                "token": token, "requester_scope": scope})
+            hits = r.get("hits", [])
+        except Exception:
+            pass
+        k, label, kind2 = lane_for(scope)
+        L = lanes.setdefault(k, {
+            "key": k, "label": label, "kind": kind2, "floors": [],
+            "ports": {}, "total": 0, "served": 0,
+            "buckets": [0] * NB, "verified": 0, "distilled": 0,
+            "classes": {}, "pins": []})
+        L["floors"].append(scope)
+        L["ports"][scope] = port
+        L["total"] += total
+        L["served"] += len(hits)
+        for h in hits:
+            try:
+                at_s = datetime.fromisoformat(
+                    str(h.get("occurred_at") or "").replace("Z", "+00:00")
+                ).timestamp()
+            except Exception:
+                continue
+            bi = int(max(0, min(NB - 1, (at_s - frm_ms) / span_s * NB)))
+            L["buckets"][bi] += 1
+            fid = h.get("fidelity")
+            if fid == "verified":
+                L["verified"] += 1
+            elif fid == "distilled":
+                L["distilled"] += 1
+            tg = h.get("tags") or []
+            cls = _cn.class_of({"tags": tg})
+            L["classes"][cls] = L["classes"].get(cls, 0) + 1
+            pin = ("mk" if "marker" in tg
+                   else "ms" if ("plan" in tg or "objective-outcome" in tg)
+                   else "svc" if "service" in tg else None)
+            if pin and len(L["pins"]) < 48:
+                L["pins"].append({"ref": h.get("ref"), "at": h.get("occurred_at"),
+                                  "scope": scope, "port": port, "kind": pin,
+                                  "fidelity": fid, "tags": tg[:6]})
+    rows = sorted(lanes.values(),
+                  key=lambda L: (0 if L["key"] == "apex" else
+                                 1 if L["kind"] == "machine" else 2,
+                                 -L["served"]))
+    classes_all: dict = {}
+    for L in rows:
+        for c, n in L["classes"].items():
+            classes_all[c] = classes_all.get(c, 0) + n
+    payload = {"at": NOW(), "days": days, "from": frm, "buckets_n": NB,
+               "lanes": rows, "classes": classes_all,
+               "note": "tags only — the read law; served/total confesses "
+                       "each lane's window; a projection, never a second "
+                       "truth (rule 7)"}
+    _STW_CACHE.update(at=time.time(), key=key, payload=payload)
+    return payload
+
+
+def on_window_ask(port: int, scope: str, r: dict) -> None:
+    """THE WINDOW SPEAKS (mini-dive tab 3): the human frames a piece of
+    spacetime — a time range, the lanes in focus — and asks in their own
+    words; the librarian gathers WITH HER OWN SEATS across exactly those
+    floors and that window (0023: one mind, many seats), reads bodies only
+    for the rows the answer needs (the read law), answers through one
+    governed metered thought under her DID when fueled (grounded and
+    labeled when not), and every citation warms at its HOME floor — a
+    quoted memory is a used memory (0057 sp2). The exchange lands signed,
+    consent honored, exactly as any audience."""
+    rid = str(r.get("id") or "")
+    asked = str(r.get("text") or "").strip()
+    w_from = str(r.get("from") or "")
+    w_to = str(r.get("to") or "")
+    want = [s for s in (r.get("scopes") or []) if isinstance(s, str)]
+    ports = {s: p for p, s in FLOOR_SCOPES.items()}
+    targets = [(ports[s], s) for s in want if s in ports] \
+        or sorted(FLOOR_SCOPES.items(), key=lambda x: x[1])
+    targets = targets[:10]
+    gathered: list = []
+    for fport, fscope in targets:
+        _, seat_did = lib_seat(fscope)
+        token = _ROOT.issue_token(seat_did, "u:demo",
+                                  [{"action": "retrieve", "space": "self"}])
+        try:
+            rr = call(fport, "POST", "/retrieve", {
+                "query": {"requester": seat_did,
+                          "subject": {"cohort": {"scope": fscope}},
+                          "space": "self",
+                          "time": {"from": w_from or "2020-01-01T00:00:00Z"},
+                          "intent": "recall", "budget": {"cost": 6},
+                          "auth": "biscuit-sim"},
+                "token": token, "requester_scope": fscope})
+        except Exception:
+            continue
+        for h in rr.get("hits", []):
+            at = str(h.get("occurred_at") or "")
+            if w_to and at > w_to:
+                continue
+            gathered.append({**h, "_port": fport, "_scope": fscope})
+    # graded moments lead, newest within each grade (stable two-pass sort);
+    # then a DIVERSITY pass — at most two rows per (class · hour · floor),
+    # so one heartbeat's cluster can never crowd the whole answer
+    from orreth_sim import canon as _cn
+    graded = lambda h: 0 if any(t in ("marker", "plan", "objective-outcome",
+                                      "objective", "parlor", "report",
+                                      "reflection")
+                                for t in (h.get("tags") or [])) else 1
+    gathered.sort(key=lambda h: str(h.get("occurred_at") or ""), reverse=True)
+    gathered.sort(key=graded)
+    top, seen_k, seen_cls = [], {}, {}
+    for h in gathered:
+        cls = _cn.class_of({"tags": h.get("tags") or []})
+        k2 = (cls, str(h.get("occurred_at") or "")[:13], h["_scope"])
+        # variety beats recency: two per (class · hour · floor), four per
+        # class overall — a floor of heartbeats can never crowd out the
+        # reports, knowledge, and dispatches living beside them
+        if seen_k.get(k2, 0) >= 2 or seen_cls.get(cls, 0) >= 4:
+            continue
+        seen_k[k2] = seen_k.get(k2, 0) + 1
+        seen_cls[cls] = seen_cls.get(cls, 0) + 1
+        top.append(h)
+        if len(top) >= 12:
+            break
+    # bodies ONLY for the rows the answer will read (the read law)
+    lines, citations, by_floor = [], [], {}
+    for i, h in enumerate(top[:8], 1):
+        body = ""
+        try:
+            b = call(h["_port"], "GET", "/records/"
+                     + urllib.parse.quote(str(h.get("ref")), safe="")
+                     + "/body")
+            body = json.dumps(b, sort_keys=True)[:280]
+        except Exception:
+            body = "(body at a deeper tier)"
+        cls = _cn.class_of({"tags": h.get("tags") or []})
+        lines.append(f"[{i}] {h.get('occurred_at')} · "
+                     f"{h['_scope'].split('/')[-1]} · {h.get('fidelity')} · "
+                     f"{cls} — {body}")
+        citations.append({"ref": h.get("ref"), "at": h.get("occurred_at"),
+                          "scope": h["_scope"], "fidelity": h.get("fidelity"),
+                          "class": cls})
+        by_floor.setdefault(h["_scope"], []).append(h.get("ref"))
+    for fscope, refs in by_floor.items():
+        try:
+            warm_taps(fscope, refs)      # a quoted memory is a used memory
+        except Exception:
+            pass
+    u_port = universe_port(port)
+    n_lanes = len({h['_scope'] for h in gathered}) or len(targets)
+    grounded = (
+        f"THE WINDOW IN FOCUS: {w_from[:10] or 'the deep past'} → "
+        f"{w_to[:10] or 'now'} · {len(gathered)} memories across "
+        f"{n_lanes} floor(s).\n"
+        + ("\n".join(lines) if lines
+           else "The window holds no memories under this focus — "
+                "say so plainly.")
+        + "\nAnswer from THESE memories only; cite them as [n]; name what "
+          "is verified vs distilled; confess what the window does not hold.")
+    kp, did = resident_key("librarian", scope)
+    voiced = None
+    if kp is not None and lines:
+        voiced = governed_voice(port, "librarian", did, asked, grounded)
+    reply = voiced or (
+        ("the window holds no memories under this focus — widen the time "
+         "range or open more lanes"
+         if not lines else
+         "grounded, unvoiced (no fuel on this floor) — the window's rows:\n"
+         + "\n".join(lines)))
+    recordable = True
+    try:
+        recordable = continuity.recording_allowed(
+            wire_consents(port, scope), "conversation", NOW())
+    except Exception:
+        pass
+    rec = None
+    if kp is not None and recordable:
+        body = parlor.audience_body("librarian", asked, reply,
+                                    session="spacetime-window",
+                                    voiced=bool(voiced))
+        rec = make_memory({"did": did, "scope": scope}, kp, scope, body,
+                          kind="episodic", tags=["parlor", "librarian",
+                                                 "window-ask"])
+    call(port, "POST", "/requests/resolve",
+         {"id": rid, "status": "done",
+          "result": {"reply": reply, "voiced": bool(voiced), "by": did,
+                     "citations": citations,
+                     "window": {"from": w_from, "to": w_to,
+                                "scopes": [s for _, s in targets]},
+                     **({"exchange": rec["id"]} if rec is not None else {})}})
+    if rec is not None:
+        try:
+            call(port, "POST", "/records", rec)
+        except Exception:
+            pass
+    _HUMAN_HAND[scope] = time.time()          # a living human framed spacetime
+    print(f"  🔭 window-ask · “{asked[:60]}” — {len(citations)} citation(s), "
+          f"{'voiced' if voiced else 'grounded'}")
+
+
 def compose_brain() -> dict:
     """THE BRAIN PULL's supply line (0053 sp3 — JB's law, 2026-08-14: state
     is TELEMETRY, never an NLP paraphrase). Instruments only, partitioned by
@@ -11885,6 +12148,10 @@ def main() -> None:
                         elif r.get("kind") == "parlor" and r.get("status") == "pending":
                             handled.add(key)
                             on_parlor(port, scope, r)
+                        elif r.get("kind") == "window-ask" and \
+                                r.get("status") == "pending":
+                            handled.add(key)
+                            on_window_ask(port, scope, r)
                         elif r.get("kind") == "thumb" and r.get("status") == "pending":
                             handled.add(key)
                             on_thumb(port, scope, r)
