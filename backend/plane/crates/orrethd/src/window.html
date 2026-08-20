@@ -1511,6 +1511,7 @@ function floorReset(){
   topoCache=null;presCache=null;farmCache=[];laneSig="";floorScope=null;
   cfg=(!API&&HASH_CFG)?HASH_CFG:null;loadCfg();   /* each floor pins its own viewer cfg */
   const O=$("orrery");if(O)O.dataset.sig="";
+  const W=$("world");if(W){delete W.dataset.sig;delete W.dataset.floor}  /* a crossing voids the held rail */
   /* the conversation SURVIVES navigation (0030 §4): the parlor is pinned to the
      floor where it opened — its own base, its own label — and rides along. */
 }
@@ -1639,9 +1640,15 @@ async function cascadeBelow(body){
       {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)})}catch{}
   }
 }
+let PENDING_GO=null;   /* a step whose topology hasn't landed yet — retried, never lost */
 function floorGo(scopeEnc){
   const n=findNode(decodeURIComponent(scopeEnc));
-  if(!n||!n.port)return;
+  if(!n||!n.port){
+    /* the silent death (found 2026-08-20): right after a floor change the
+       tree is stale for up to one beat, so the clicked scope may not be in
+       topoCache YET — the old code returned and the human's click vanished.
+       Now the step WAITS for the next topology and completes itself. */
+    PENDING_GO={s:scopeEnc,at:Date.now()};return}
   const base=`${location.protocol}//${location.hostname}:${n.port}`;
   const here=API||`${location.protocol}//${location.hostname}:${location.port}`;
   if(base===here)return;
@@ -1686,6 +1693,8 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
 let topoCache=null,laneSig="",LEGACYF=false; /* legacy: the mind held, no fire (0035 §6) */
 async function world(){
   try{topoCache=await(await fetch(api("/topology"))).json()}catch{topoCache=null}
+  if(PENDING_GO&&topoCache){const p=PENDING_GO;PENDING_GO=null;
+    if(Date.now()-p.at<6000)floorGo(p.s)}   /* a click retries one breath, never teleports later */
   renderWorldRail(); renderOrrery(); renderBrain(); refreshCounters();
   // topology can land after the first scrub — redraw lanes when the world grows
   const scopes=[]; const w=n=>{if(!n)return;scopes.push(n.scope);(n.children||[]).forEach(w)}; w(topoCache);
@@ -1704,7 +1713,7 @@ function railAncestors(scope){
   return parts.slice(0,-1).map((_,i)=>{
     const sc=parts.slice(0,i+1).join("/"),isParent=i===parts.length-2;
     return `<div class="trow t2 up" style="padding-left:${.6+i*.95}rem"
-      onclick="floorUp()" title="${sc} — ${isParent?"climb to the floor above":"the world above; each click climbs one floor"}">
+      onpointerdown="if(event.button===0)floorUp()" title="${sc} — ${isParent?"climb to the floor above":"the world above; each click climbs one floor"}">
       <span class="tdot core"></span>
       <span class="tn">${sc.split("/").pop()}</span>
       <span class="tc">▲ climb</span></div>`}).join("");
@@ -1728,7 +1737,7 @@ function renderWorldRail(){
       const col=d===0?"var(--brass)":ecoColor(eco.startsWith("e:")?eco:nm);
       const bw=Math.round(100*Math.log2(1+(n.records||0))/Math.log2(1+maxm));
       return `<div class="trow t2${d===0?" me":""}" style="--td:${col};padding-left:${.6+(d+ao)*.95}rem"
-      onclick="floorGo('${encodeURIComponent(n.scope)}')" title="${d===0?(ao?"this floor — where you stand":"this universe"):d===1?"an ecosystem":"a floor"} · ${n.records||0} memories · ${n.agents||0} agent(s) · click to step onto it">
+      onpointerdown="if(event.button===0)floorGo('${encodeURIComponent(n.scope)}')" title="${d===0?(ao?"this floor — where you stand":"this universe"):d===1?"an ecosystem":"a floor"} · ${n.records||0} memories · ${n.agents||0} agent(s) · click to step onto it">
       <span class="tdot${d===0?" core":d===1?" eco":" fld"}"></span>
       <span class="tn">${nm}</span>
       <span class="tbar"><i style="width:${bw}%;background:${col}"></i></span>
@@ -1748,7 +1757,22 @@ function renderWorldRail(){
     html+=`<div class="tsum">the bottom floor — ${t?`<b>${t.agents}</b> agent${t.agents===1?"":"s"} here`:"waking…"}</div>`;
     if(bl&&t)bl.innerHTML=`bottom floor · <b>${t.agents}</b> agent${t.agents===1?"":"s"} here`;
   }
+  /* THE CLICK-DEATH FIX (found 2026-08-20, JB stranded twice): every tick
+     rebuilt this innerHTML, so a click straddling the rebuild fired on a
+     node that no longer existed — navigation died silently, intermittently.
+     Three guards: rows navigate on pointerdown (fires on the ORIGINAL node,
+     before any rebuild can interleave), an unchanged rail never rewrites,
+     and a rail under the human's pointer HOLDS STILL until they leave. */
+  const here=String((t&&t.scope)||floorScope||"");
+  if(el.dataset.sig===html)return;
+  /* the hover-hold applies ONLY while the floor is unchanged — a held rail
+     across a floor change is a STALE rail whose every row misleads (the
+     second stranding, found 2026-08-20: the pointer lives over the rail
+     while navigating, so the hold froze the old world in place) */
+  if(el.dataset.sig&&el.dataset.floor===here&&el.matches&&el.matches(":hover"))return;
   el.innerHTML=html;
+  el.dataset.sig=html;
+  el.dataset.floor=here;
 }
 
 /* ── the orrery renderer: core sphere, ecosystems in orbit, fields as moons,
