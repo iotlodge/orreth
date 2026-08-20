@@ -1455,7 +1455,8 @@ if(window.ORRETH_DEMO){
     /* the era-0.56 doors (2026-08-17): pulls, worlds, and rooms breathe the
        same photograph — keyed fixtures where the door takes a name */
     if(method==="GET"&&(path==="/observatory"||path==="/governance"||
-       path==="/sentences"||path==="/brain"))
+       path==="/sentences"||path==="/brain"||path==="/pulse"||
+       path==="/spacetime"))   /* the mini-dive doors ride the photograph too */
       return realFetch(`fixtures/${path.slice(1)}.json`);
     if(method==="GET"&&path==="/desk"){
       const k=u.searchParams.get("key");
@@ -4234,6 +4235,9 @@ async function stwAsk(){
         text_summary:`the window asks: ${q.slice(0,70)}`})})).json();
     rid=res.id;
   }catch(e){stwLine("reply","the door would not open — "+e);return}
+  if(!rid){stwLine("reply",window.ORRETH_DEMO
+    ?"a spectator may watch this world turn — the window answers only on the live universe."
+    :"the door refused the ask — is the daemon up? (scripts/dev.sh status)");return}
   const wait=stwLine("reply","the librarian walks the window — gathering across "
     +(scopes.length||"every")+" floor(s)…");
   const mine=++STWPOLL;

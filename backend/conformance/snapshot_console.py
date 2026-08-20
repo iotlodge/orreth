@@ -75,7 +75,14 @@ def main() -> None:
                        ("governance", "/governance"),
                        ("sentences", "/sentences"),
                        ("brain", "/brain"),
-                       ("desk", "/desk")):
+                       ("desk", "/desk"),
+                       # the mini-dive doors (2026-08-19): the pulse's
+                       # happening-now/standing-next/allocation, and the
+                       # spacetime window's universe-wide lanes (52 days =
+                       # the slider's first light, so the photograph's
+                       # opening frame tells the truth)
+                       ("pulse", "/pulse"),
+                       ("spacetime", "/spacetime?days=52")):
         try:
             (fx / f"{name}.json").write_text(json.dumps(get2(path)))
             print(f"  captured :4562{path} → fixtures/{name}.json")
