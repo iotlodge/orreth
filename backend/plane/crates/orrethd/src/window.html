@@ -2868,7 +2868,21 @@ const SUBJ=()=>floorScope?{cohort:{scope:floorScope}}:"self";
 async function pulse(){
   try{
     const h=await(await fetch(api("/health"))).json(); $("scope").textContent=h.scope;
-    if(h.version)$("over").textContent=h.version;   /* the soft version note */
+    if(h.version){$("over").textContent=h.version;   /* the soft version note */
+      /* a stale tab is a lying tab (found 2026-08-20: the whisper shows the
+         RIG's version while the tab runs whatever JS it loaded hours ago —
+         JB tested a fix his tab had never met). When the rig is rebuilt
+         beneath an open tab, say so LOUDLY and offer the reload. */
+      if(!window.GLASSVER)window.GLASSVER=h.version;
+      else if(window.GLASSVER!==h.version&&!$("staleglass")){
+        const b=document.createElement("div");b.id="staleglass";
+        b.style.cssText="position:fixed;top:52px;left:50%;transform:translateX(-50%);"
+          +"z-index:99;font:700 .74rem var(--mono);color:#1a1305;background:var(--brass);"
+          +"border-radius:999px;padding:.5em 1.2em;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.45)";
+        b.textContent="⟳ the glass was rebuilt beneath this tab — click to wear the new one";
+        b.onclick=()=>location.reload();
+        document.body.appendChild(b);
+      }}
     floorScope=h.scope;
     document.querySelectorAll(".place").forEach(e=>e.textContent=h.scope);  /* every surface names its place (0030 §4) */
     const ro=await(await fetch(api("/rollup"))).json();
