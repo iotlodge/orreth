@@ -4163,7 +4163,8 @@ function stwRender(){
     $("count").textContent="the window door is unreachable — is the worker tending?";return}
   const served=STWD.lanes.reduce((t,L)=>t+L.served,0),
         total=STWD.lanes.reduce((t,L)=>t+L.total,0);
-  $("count").textContent=`${served.toLocaleString()} of ${total.toLocaleString()} memories drawn · tags only — a body travels only when you open it`;
+  $("count").textContent=`${served.toLocaleString()} of ${total.toLocaleString()} memories drawn · tags only — a body travels only when you open it`
+    +(STWD.waking?` — the world is waking: ${STWD.floors_reporting} of ${STWD.floors_expected} floors reporting; lanes fill as they beat`:"");
   $("stw-classes").innerHTML=Object.entries(STWD.classes||{})
     .sort((a,b)=>b[1]-a[1]).slice(0,10).map(([c,n])=>
     `<span class="qchip" title="a category of record (0039's own classes) — click to seed the ask" onclick="stwSeed('${esc(c)}')">${esc(c)} · ${n.toLocaleString()}</span>`).join("");
@@ -4173,7 +4174,7 @@ function stwRender(){
     const row=document.createElement("div");
     row.className="lrow "+L.kind+(STWSEL.has(L.key)?" on":"");
     row.title=`${L.floors.join(" · ")} — click to scope the ask to this lane`;
-    row.onclick=e=>{if(STWDRAG||e.target.closest(".star"))return;stwLane(L.key)};
+    row.onpointerdown=e=>{if(e.button!==0||STWDRAG||e.target.closest(".star")||e.target.closest(".lheat"))return;stwLane(L.key)};
     row.innerHTML=`<span class="lname">${esc(L.label)}</span>
       <span class="lcnt">${L.served===L.total?L.total.toLocaleString():L.served.toLocaleString()+" of "+L.total.toLocaleString()}</span>
       <div class="lheat"><div class="cells">${L.buckets.map(n=>
@@ -4250,15 +4251,30 @@ document.addEventListener("mousemove",e=>{
 document.addEventListener("mouseup",()=>{
   if(!_stwBrush)return;_stwBrush=null;
   if(STWDRAG){stwScopeLabel();setTimeout(()=>{STWDRAG=false},50)}});
-let seq=0;
+let seq=0,STWSIG="";
 async function scrub(){          /* keeps its old name — every caller still fits */
   const days=scrubToDays(+$("scrub").value);$("days").textContent=days;
   const mine=++seq;
   let d=null;
   try{d=await(await fetch(OBSD+"/spacetime?days="+days)).json()}catch{}
   if(mine!==seq)return;
-  if(d&&!d.error)STWD=d;
+  if(!d||d.error){if(!STWD)stwRender();return}
+  /* re-render ONLY when the data truly moved — an unchanged sky must never
+     rebuild its DOM under the human's pointer (the click-death law) */
+  const sig=d.days+"|"+(d.waking?"w":"")+"|"
+    +(d.lanes||[]).map(L=>L.key+":"+L.served+":"+L.total).join(",");
+  if(sig===STWSIG&&STWD)return;
+  STWSIG=sig;STWD=d;
   stwRender();
+}
+/* the window BREATHES while open (JB's find 2026-08-20: a drawer opened in
+   the worker's waking minute froze on one lane forever — nothing refetched) */
+function stwTick(){
+  const dr=$("drawer");
+  if(!dr||dr.dataset.state==="closed")return;
+  if($("v-uni").classList.contains("hide"))return;
+  if(_stwBrush)return;                 /* never mid-brush */
+  scrub();
 }
 /* ── the ask: whatever the window holds is the scope (JB's experience) ── */
 let STWPOLL=0,STWHISTDONE=false;
@@ -6063,7 +6079,7 @@ $("obj-in").addEventListener("keydown",e=>{
   if(e.key==="Enter"&&(e.metaKey||e.ctrlKey))submitObjective()});
 $("obj-rubric").addEventListener("keydown",e=>{if(e.key==="Enter")submitObjective()});
 
-function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable();loadObjectives();loadObservatory();loadGovernance();loadPulseDoor();renderPane()}
+function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable();loadObjectives();loadObservatory();loadGovernance();loadPulseDoor();stwTick();renderPane()}
 tick();setInterval(tick,4000);          /* the console breathes */
 if(window.ORRETH_DEMO){                 /* the spectator's ribbon — honest about the frame */
   const b=document.createElement("div");

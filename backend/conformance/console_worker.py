@@ -11432,8 +11432,8 @@ def compose_spacetime(days: int) -> dict:
     heartbeat's true total); graded moments (markers · milestones ·
     services) keep their own faces as pins."""
     key = str(days)
-    if (time.time() - _STW_CACHE["at"] < 20 and _STW_CACHE["key"] == key
-            and _STW_CACHE["payload"]):
+    if (time.time() - _STW_CACHE["at"] < _STW_CACHE.get("ttl", 20)
+            and _STW_CACHE["key"] == key and _STW_CACHE["payload"]):
         return _STW_CACHE["payload"]
     from datetime import datetime, timedelta, timezone
     from orreth_sim import canon as _cn
@@ -11525,12 +11525,29 @@ def compose_spacetime(days: int) -> dict:
     for L in rows:
         for c, n in L["classes"].items():
             classes_all[c] = classes_all.get(c, 0) + n
+    # THE WAKING CONFESSION (JB's find 2026-08-20: a drawer opened moments
+    # after a worker restart froze on one lane — the roster fills as floors
+    # beat, and an early sweep is honestly SPARSE): the door compares what
+    # it knows against the plane's own topology, says so, and refuses to
+    # cache a waking answer for long — the world fills in within breaths.
+    expected = 0
+    try:
+        def _cnt(n):
+            return 1 + sum(_cnt(c) for c in (n.get("children") or []))
+        expected = _cnt(call(4500, "GET", "/topology"))
+    except Exception:
+        pass
+    waking = expected > len(set(FLOOR_SCOPES.values()))
     payload = {"at": NOW(), "days": days, "from": frm, "buckets_n": NB,
                "lanes": rows, "classes": classes_all,
+               "waking": waking,
+               "floors_reporting": len(set(FLOOR_SCOPES.values())),
+               "floors_expected": expected,
                "note": "tags only — the read law; served/total confesses "
                        "each lane's window; a projection, never a second "
                        "truth (rule 7)"}
-    _STW_CACHE.update(at=time.time(), key=key, payload=payload)
+    _STW_CACHE.update(at=time.time(), key=key, payload=payload,
+                      ttl=3 if waking else 20)
     return payload
 
 
