@@ -41,6 +41,7 @@ cdk.out/
 *.log
 .smoke-root-seed
 .demo-life-seed
+.demo-scribe-seed
 
 # generated demo snapshot + cdk artifacts (0019 demo)
 site/

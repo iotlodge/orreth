@@ -13,6 +13,7 @@ import sys
 import webbrowser
 import urllib.request
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from orreth_sim import crypto
 from orreth_sim.identity import Becky, Nanda
@@ -22,6 +23,21 @@ from smoke_orrethd import root_keypair
 FIELD_PORT = sys.argv[1] if len(sys.argv) > 1 else "4502"
 UNI_PORT = sys.argv[2] if len(sys.argv) > 2 else "4500"
 SCOPE = "u:demo/e:cloud/f:prod"
+
+
+def _persistent(filename: str) -> crypto.KeyPair:
+    """Rule 1: a keypair is a self, and a self survives the process. The demo's
+    biographer and its scribe are the SAME selves at every opening — before this,
+    each `dev.sh window` minted a fresh mayfly, and 73 two-run orphans piled up
+    in f:prod's census (JB's find, 2026-08-20). The .demo-life-seed name was
+    already waiting in .gitignore; now it is earned."""
+    p = Path(__file__).parent / filename
+    if p.exists():
+        return crypto.KeyPair(seed=p.read_bytes())
+    kp = crypto.KeyPair()
+    p.write_bytes(kp.seed)
+    p.chmod(0o600)
+    return kp
 
 
 def post(port: str, rec: dict) -> None:
@@ -39,7 +55,7 @@ def ago(days: float) -> str:
 
 
 def main() -> None:
-    kp = crypto.KeyPair()
+    kp = _persistent(".demo-life-seed")
     agent = {"did": crypto.did_key_for(kp.public), "scope": SCOPE}
 
     # a biography scattered across spacetime: deep memories at the apex, recent at the field
@@ -55,7 +71,8 @@ def main() -> None:
 
     # seed a little LIFE so the roster rail breathes (v3): two steward-signed run records
     from orreth_sim.identity import NOW as _NOW
-    steward = crypto.KeyPair(); s_did = crypto.did_key_for(steward.public)
+    steward = _persistent(".demo-scribe-seed")
+    s_did = crypto.did_key_for(steward.public)
     for i, (oc, sc) in enumerate([("partial", 0.0), ("success", 1.0)]):
         run = {"id": crypto.content_hash({"c": i, "t": _NOW(), "a": agent["did"]}),
                "agent": agent["did"], "scope": SCOPE, "goal_hash": "sha256:demo-intent",

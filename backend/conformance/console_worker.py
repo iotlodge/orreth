@@ -119,6 +119,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -196,9 +197,18 @@ def grant_lease(did: str, scope: str = SCOPE) -> dict:
     token budget, because a citizen whose lease cannot clear /model/authorize
     has a mind in name only (0019 — every resident's cognition through the
     gateway). The plane debits up front and reconciles after; the number is
-    declared here, never an honor system."""
+    declared here, never an honor system.
+
+    And now TERMS IN TIME (JB's find, 2026-08-20 — the roster learns to
+    breathe): the expiry is real, not a hardcoded far-off year. A lapsed
+    lease is dormancy, never death — the self, its name, and its diary
+    survive, and the same governed door renews it."""
+    days = float(os.environ.get("ORRETH_JOIN_LEASE_DAYS", "30"))
+    expiry = (datetime.now(timezone.utc)
+              + timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
     return becky_for(scope).issue_token(
         did, scope, [{"action": "retrieve", "space": "self"}],
+        expiry=expiry,
         budget={"tokens": int(os.environ.get(
             "ORRETH_JOIN_LEASE_TOKENS", "50000"))})
 
@@ -12097,9 +12107,43 @@ def main() -> None:
                             act = joindesk_for(port, scope).tend(r)
                             if act:
                                 status, result = act
+                                if status == "staged":
+                                    # the capacity confession (JB's find,
+                                    # 2026-08-20): policy informs the gate,
+                                    # never decides it — the human's word
+                                    # stays the door (0012, rule 3)
+                                    cap = int(os.environ.get(
+                                        "ORRETH_FLOOR_CAPACITY", "20"))
+                                    try:
+                                        wf = call(port, "GET", "/presence"
+                                                  ).get("workforce", [])
+                                        present = sum(1 for a in wf
+                                                      if a.get("state") != "dormant")
+                                    except Exception:
+                                        present = None
+                                    if present is not None and present >= cap:
+                                        result = {**result, "capacity": {
+                                            "present": present, "allowed": cap,
+                                            "note": (f"the floor holds {present} "
+                                                     f"present of {cap} allowed — "
+                                                     "admitting one more exceeds its "
+                                                     "set capacity; your word still "
+                                                     "decides")}}
                                 if status == "done":
                                     result = {**result, "scope": scope,
                                               "granted_by": becky_for(scope).did}
+                                    # the lease's terms, legible beside the
+                                    # token — expiry is dormancy, never death
+                                    _c = (result.get("token") or {}).get(
+                                        "constraints", {}) if isinstance(
+                                        result.get("token"), dict) else {}
+                                    result["lease_terms"] = {
+                                        "expires": _c.get("expiry", ""),
+                                        "budget_tokens": (_c.get("budget") or {}
+                                                          ).get("tokens"),
+                                        "note": ("a lease with terms — re-joining "
+                                                 "renews it; the self, its name, "
+                                                 "and its diary survive")}
                                     # the human's click becomes durable —
                                     # the same self rejoins across recycles
                                     _welcome_mark(str(r.get("did") or ""),

@@ -226,6 +226,9 @@
     box-shadow:0 0 7px 1px color-mix(in srgb,var(--td) 50%,transparent)}
   .wfgrp b{color:var(--star);font-weight:600}
   .wfgrp span:last-child{margin-left:auto;color:var(--faint)}
+  .wfdorm{font:.62rem var(--mono);color:var(--faint);padding:.2rem 0 .2rem 1.1rem;
+    cursor:pointer;user-select:none}
+  .wfdorm:hover{color:var(--dim)}
   @media(prefers-reduced-motion:reduce){.res{animation:none!important}}
   .reslegend{position:absolute;left:1.1rem;bottom:.6rem;font:.64rem var(--mono);color:var(--faint);
     display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;max-width:52%}
@@ -1725,10 +1728,13 @@ function renderWorldRail(){
   if(t&&(t.children||[]).length){
     const anc=railAncestors(t.scope),ao=(t.scope||"").split("/").length-1;
     html+=anc;
-    const rows=[],agg={eco:0,field:0,agents:0};
+    const rows=[],agg={eco:0,field:0,agents:0,present:0,knowsP:true};
     const walk=(n,d)=>{rows.push({n,d});
       if(d>0){const L=n.scope.split("/").length;
-        if(L===2)agg.eco++;else if(L>=3)agg.field++;agg.agents+=n.agents||0}
+        if(L===2)agg.eco++;else if(L>=3)agg.field++;agg.agents+=n.agents||0;
+        /* present vs remembered (JB's find 2026-08-20): a beat without the
+           present count (an older photograph) keeps the old single number */
+        if(n.present==null)agg.knowsP=false;else agg.present+=n.present}
       (n.children||[]).forEach(c=>walk(c,d+1))};
     walk(t,0);
     const maxm=Math.max(1,...rows.map(({n})=>n.records||0));
@@ -1737,14 +1743,17 @@ function renderWorldRail(){
       const col=d===0?"var(--brass)":ecoColor(eco.startsWith("e:")?eco:nm);
       const bw=Math.round(100*Math.log2(1+(n.records||0))/Math.log2(1+maxm));
       return `<div class="trow t2${d===0?" me":""}" style="--td:${col};padding-left:${.6+(d+ao)*.95}rem"
-      onpointerdown="if(event.button===0)floorGo('${encodeURIComponent(n.scope)}')" title="${d===0?(ao?"this floor — where you stand":"this universe"):d===1?"an ecosystem":"a floor"} · ${n.records||0} memories · ${n.agents||0} agent(s) · click to step onto it">
+      onpointerdown="if(event.button===0)floorGo('${encodeURIComponent(n.scope)}')" title="${d===0?(ao?"this floor — where you stand":"this universe"):d===1?"an ecosystem":"a floor"} · ${n.records||0} memories · ${n.present!=null?`${n.present} present of ${n.agents||0} remembered`:`${n.agents||0} agent(s)`} · click to step onto it">
       <span class="tdot${d===0?" core":d===1?" eco":" fld"}"></span>
       <span class="tn">${nm}</span>
       <span class="tbar"><i style="width:${bw}%;background:${col}"></i></span>
-      <span class="tc" title="${n.records||0} memories · ${n.agents||0} agent(s)">${n.records}m·${n.agents}a</span></div>`}).join("");
+      <span class="tc" title="${n.records||0} memories · ${n.present!=null?`${n.present} present of ${n.agents||0} remembered`:`${n.agents||0} agent(s)`}">${n.records}m·${n.present??n.agents}a</span></div>`}).join("");
     const s=(n,w)=>`<b>${n}</b> ${w}${n===1?"":"s"}`;
-    html+=`<div class="tsum">below this floor: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"field")} · ${s(agg.agents,"agent")}</div>`;
-    if(bl)bl.innerHTML=`the world below: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"field")} · ${s(agg.agents,"agent")} — every one signed in`;
+    const aw=agg.knowsP
+      ?`<b>${agg.present}</b> present · <b>${agg.agents}</b> remembered`
+      :s(agg.agents,"agent");
+    html+=`<div class="tsum" title="present = active within the floor's horizon; remembered = every self the diary has ever heard — a dormant self keeps its name and seeds">below this floor: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"field")} · ${aw}</div>`;
+    if(bl)bl.innerHTML=`the world below: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"field")} · ${aw}${agg.knowsP?" — a dormant self keeps its name":""}`;
   }else{
     /* the bottom floor: ancestors still climbable — the same door, one law */
     const scope=(t&&t.scope)||floorScope||(cfg?.tiers?cfg.tiers[0]:"");
@@ -2900,23 +2909,32 @@ async function pulse(){
   }catch{$("hpulse").innerHTML=`<span style="color:var(--red)">daemon dark</span>`}
 }
 
+const DORMOPEN=new Set();   /* which floors' dormitories stand open (WALKOPEN idiom) */
+function dormToggle(sc){DORMOPEN.has(sc)?DORMOPEN.delete(sc):DORMOPEN.add(sc);roster()}
 async function roster(){
   try{
     const p=await(await fetch(api("/presence"))).json();
     const r=$("roster");
     let html=`<div class="grp"><span>residents · the organs</span><span>${p.residents.length}</span></div>`;
     for(const a of p.residents) html+=agentRow(a,true);
-    html+=`<div class="grp"><span>workforce</span><span>${p.workforce.length}</span></div>`;
+    /* present vs remembered (JB's find 2026-08-20): the awake stand in the open;
+       the dormant fold into a dormitory per floor — each still a self, seeds
+       kept, one governed re-join from waking */
+    const wfp=p.workforce.filter(a=>a.state!=="dormant").length;
+    html+=`<div class="grp"><span>workforce</span><span>${wfp} present · ${p.workforce.length} remembered</span></div>`;
     if(p.workforce.length){
       const grps={};
       p.workforce.forEach(a=>{(grps[a.scope||"workforce"]=grps[a.scope||"workforce"]||[]).push(a)});
       html+=Object.keys(grps).sort().map(sc=>{const g2=grps[sc];
         const nm=sc.split("/").pop(), eco=sc.split("/").find(x=>x.startsWith("e:"))||nm;
         const usd=g2.reduce((t2,a)=>t2+(a.usd||0),0);
+        const awake=g2.filter(a=>a.state!=="dormant"),dorm=g2.filter(a=>a.state==="dormant");
         return `<div class="wfgrp" style="--td:${ecoColor(eco.startsWith("e:")?eco:nm)}">
           <span class="tdot eco"></span><b>${nm}</b>
-          <span>${g2.length} agent${g2.length===1?"":"s"} · ${money(usd)}</span></div>`
-          +g2.map(a=>agentRow(a,false)).join("")}).join("");
+          <span>${awake.length} present${dorm.length?` · ${dorm.length} dormant`:""} · ${money(usd)}</span></div>`
+          +awake.map(a=>agentRow(a,false)).join("")
+          +(dorm.length?`<div class="wfdorm" onpointerdown="if(event.button===0)dormToggle('${sc}')" title="idle past the floor's horizon — still a self; a governed re-join wakes it">💤 ${dorm.length} dormant ${DORMOPEN.has(sc)?"▾":"▸"}</div>`
+            +(DORMOPEN.has(sc)?dorm.map(a=>agentRow(a,false)).join(""):""):"")}).join("");
     }else html+=`<div class="empty">no leased agents have acted yet — a quiet field</div>`;
     r.innerHTML=html;
     presCache=p;
@@ -3127,6 +3145,7 @@ function reqRow(r,inPane,extraHtml){
   const xgate=r.kind==="experiment"&&r.status==="staged"; /* arms are machines (0043 §7) */
   const lgate=r.kind==="dial"&&r.status==="staged"; /* depth is a governed choice (0043 §5) */
   const note=jgate?`<div class="sub" style="color:var(--near)">key proven — ${(r.did||"").slice(0,30)}… asks to enter as ${r.role||"workforce"}</div>`
+      +((r.result||{}).capacity?`<div class="sub" style="color:var(--amber,#e8b34a)">⚖ ${esc((r.result.capacity||{}).note||"")}</div>`:"")
     :egate?`<div class="sub" style="color:var(--near)">the shipyard drafted: ${(r.result||{}).plan||""}</div>`
     :ogate?`<div class="sub" style="color:var(--near)">the plan: ${(r.result||{}).plan_summary||"…"} — origin plans wait for you (0030)</div>`+studioNote(r)+planNote(r)+gapOffer(r)+kfOffer(r)
     :igate?`<div class="sub" style="color:var(--near);white-space:pre-wrap">${(r.result||{}).package_text||"a rewrite waits for your word (R6)"}</div>`

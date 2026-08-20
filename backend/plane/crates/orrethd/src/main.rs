@@ -31,6 +31,10 @@ struct App {
     /// PUSH up / PULL down (0000 §1): a child knows its parent; a parent never reaches in.
     parent: Option<String>,
     horizon_days: f64,
+    /// present vs remembered (JB's find, 2026-08-20): an agent idle past this many
+    /// days is DORMANT — still a self in the diary, no longer counted as present.
+    /// The census (`agents`) can only grow; this is the number that can breathe.
+    dormant_days: f64,
     /// Write-through persistence: the daemon may die; the records don't.
     pg: Option<pg::PgRecords>,
     /// Human requests: asks + HITL. Unsigned intents (inputs, not memories);
@@ -305,6 +309,8 @@ async fn main() {
         farm: Mutex::new(farm::Farm::new()),
         parent,
         horizon_days: dur_days(horizon),
+        dormant_days: std::env::var("ORRETH_DORMANT_DAYS").ok()
+            .and_then(|v| v.parse().ok()).unwrap_or(7.0),
         pg: pg_store,
         requests: Mutex::new(restored_requests),
         worker_pulse: Mutex::new(std::time::Instant::now()),
@@ -1135,6 +1141,7 @@ fn local_workforce(app: &App) -> Vec<Value> {
     let scope = app.universe.lock().unwrap().nodes[0].scope.clone();
     let p = scan_products(app);
     let now = now_iso();
+    let dormant_s = (app.dormant_days * 86400.0) as i64;
     p.per_agent.iter().map(|(agent, (runs, ok, tok, last))| {
         let idle = orreth_node::ts_seconds(&now)
                  - orreth_node::ts_seconds(if last.is_empty() { &now } else { last });
@@ -1142,7 +1149,9 @@ fn local_workforce(app: &App) -> Vec<Value> {
         json!({"agent": agent, "name": p.names.get(agent), "role":"workforce",
                "scope": scope, "runs": runs, "success": ok,
                "tokens": tok, "usd": (usd*1e6).round()/1e6, "last_seen": last,
-               "state": if idle < 120 { "thinking" } else { "idle" }})
+               "state": if idle < 120 { "thinking" }
+                        else if idle < dormant_s { "idle" }
+                        else { "dormant" }})
     }).collect()
 }
 
@@ -1357,15 +1366,21 @@ fn summary(app: &App) -> Value {
     let pending = app.requests.lock().unwrap().iter()
         .filter(|r| matches!(r["status"].as_str(), Some("pending") | Some("staged")))
         .count();
+    // present vs remembered (JB's find, 2026-08-20): `agents` is the diary census
+    // and can only grow; `present` counts the selves not dormant — the number
+    // that can honestly go DOWN. Both ride the beat; the glass shows both.
+    let workforce = local_workforce(app);
+    let present = workforce.iter().filter(|w| w["state"] != "dormant").count();
     // horizon rides the beat (serde maps a non-finite "forever" to null — the apex)
     json!({"scope": scope, "records": records, "runs": runs, "agents": agents,
+           "present": present,
            "port": app.port, "pending": pending,
            // the glass can climb: a child knows its parent (0000 §1) — hand the
            // window the parent's port so the orrery's center is a door UP too
            "parent_port": app.parent.as_ref().and_then(|p| p.trim_end_matches('/')
                .rsplit(':').next().and_then(|s| s.parse::<u16>().ok())),
            "usd": (usd * 1e6).round() / 1e6, "horizon_days": app.horizon_days,
-           "workforce": local_workforce(app), "farm": farm_roster,
+           "workforce": workforce, "farm": farm_roster,
            "stable": stable, "usage": usage,
            "pulse": {"memories": records, "runs": runs, "success": success,
                      "tokens": tokens, "usd": (usd * 1e6).round() / 1e6,
