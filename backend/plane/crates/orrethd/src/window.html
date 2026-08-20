@@ -191,6 +191,12 @@
   .res.allen{background:#8fb8d9;color:rgba(143,184,217,.7)} /* the architect's sky (0037) */
   .res.vera{background:#8e93dd;color:rgba(142,147,221,.7)} /* the astronomer's night (0043) */
   /* ── the rail, reborn (2026-07-23): dots for tiers, a breath of data ── */
+  /* the ancestors above this floor — the door home is ALWAYS in the tree */
+  .trow.up{cursor:pointer;opacity:.8}
+  .trow.up .tn{color:var(--dim)}
+  .trow.up:hover{opacity:1}
+  .trow.up:hover .tn,.trow.up:hover .tc{color:var(--brass)}
+  .trow.up .tc{color:var(--faint);font-size:.6rem;letter-spacing:.08em}
   .trow.t2{display:flex;align-items:center;gap:.45rem;position:relative;
     border-left:1px solid rgba(120,135,165,.14);margin-left:.55rem;padding-top:.28rem;padding-bottom:.28rem}
   .trow.t2.me{border-left-color:var(--brassdim)}
@@ -1643,6 +1649,11 @@ function floorGo(scopeEnc){
   floorSet(base);
 }
 function crumbTo(i){CRUMBS=CRUMBS.slice(0,i);const c=CRUMBS.pop();floorSet(c?c.base:"")}
+/* the viewer capability's ancestry, apex-first (restored 2026-08-20 — the
+   spacetime rework retired the old lane layout and took this helper with it,
+   stranding the orrery's leaf-console mid-render) */
+function tiers(){return cfg?.tiers?[...cfg.tiers].reverse()
+  :["u:demo","u:demo/e:cloud","u:demo/e:cloud/f:prod"]}
 function floorUp(){
   /* the orrery's center is a door UP: the trail behind us first, else the parent
      the beat announced (a child knows its parent — 0000 §1). The apex has no up. */
@@ -1681,11 +1692,30 @@ async function world(){
   const sig=scopes.sort().join("|");
   if(sig!==laneSig){laneSig=sig; if(!$("v-uni").classList.contains("hide"))scrub()}
 }
+/* the ancestors ABOVE this floor, derived from its own scope — a name
+   carries its lineage (u:demo/e:cloud names u:demo), so the door home
+   never depends on a walked trail or a raced viewer cfg. Found 2026-08-20:
+   arriving by URL (reload · restored session · bookmark) emptied CRUMBS
+   and the rail showed only the subtree — the human was STRANDED below
+   with no way back to the universe (JB's intermittent bug). */
+function railAncestors(scope){
+  const parts=String(scope||"").split("/");
+  if(parts.length<2)return "";
+  return parts.slice(0,-1).map((_,i)=>{
+    const sc=parts.slice(0,i+1).join("/"),isParent=i===parts.length-2;
+    return `<div class="trow t2 up" style="padding-left:${.6+i*.95}rem"
+      onclick="floorUp()" title="${sc} — ${isParent?"climb to the floor above":"the world above; each click climbs one floor"}">
+      <span class="tdot core"></span>
+      <span class="tn">${sc.split("/").pop()}</span>
+      <span class="tc">▲ climb</span></div>`}).join("");
+}
 function renderWorldRail(){
   const el=$("world"); if(!el)return;
   const t=topoCache;
   let html=`<div class="grp"><span>the world</span><span></span></div>`, bl=$("below");
   if(t&&(t.children||[]).length){
+    const anc=railAncestors(t.scope),ao=(t.scope||"").split("/").length-1;
+    html+=anc;
     const rows=[],agg={eco:0,field:0,agents:0};
     const walk=(n,d)=>{rows.push({n,d});
       if(d>0){const L=n.scope.split("/").length;
@@ -1697,8 +1727,8 @@ function renderWorldRail(){
       const eco=n.scope.split("/").find(x=>x.startsWith("e:"))||nm;
       const col=d===0?"var(--brass)":ecoColor(eco.startsWith("e:")?eco:nm);
       const bw=Math.round(100*Math.log2(1+(n.records||0))/Math.log2(1+maxm));
-      return `<div class="trow t2${d===0?" me":""}" style="--td:${col};padding-left:${.6+d*.95}rem"
-      onclick="floorGo('${encodeURIComponent(n.scope)}')" title="${d===0?"this universe":d===1?"an ecosystem":"a floor"} · ${n.records||0} memories · ${n.agents||0} agent(s) · click to step onto it">
+      return `<div class="trow t2${d===0?" me":""}" style="--td:${col};padding-left:${.6+(d+ao)*.95}rem"
+      onclick="floorGo('${encodeURIComponent(n.scope)}')" title="${d===0?(ao?"this floor — where you stand":"this universe"):d===1?"an ecosystem":"a floor"} · ${n.records||0} memories · ${n.agents||0} agent(s) · click to step onto it">
       <span class="tdot${d===0?" core":d===1?" eco":" fld"}"></span>
       <span class="tn">${nm}</span>
       <span class="tbar"><i style="width:${bw}%;background:${col}"></i></span>
@@ -1707,13 +1737,16 @@ function renderWorldRail(){
     html+=`<div class="tsum">below this floor: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"field")} · ${s(agg.agents,"agent")}</div>`;
     if(bl)bl.innerHTML=`the world below: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"field")} · ${s(agg.agents,"agent")} — every one signed in`;
   }else{
-    const chain=cfg?.tiers?[...cfg.tiers].reverse():[];
-    html+=chain.map((sc,i)=>{const me=i===chain.length-1;
-      return `<div class="trow${me?" me":" dim"}" style="padding-left:${1.1+i*.85}rem">
-      <span class="tn">${i?"└ ":""}${sc.split("/").pop()}${me?" ◂ you":""}</span>
-      <span class="tc">${me&&t?`${t.records}m · ${t.agents}a`:""}</span></div>`}).join("");
+    /* the bottom floor: ancestors still climbable — the same door, one law */
+    const scope=(t&&t.scope)||floorScope||(cfg?.tiers?cfg.tiers[0]:"");
+    html+=railAncestors(scope);
+    const me=String(scope||"").split("/").pop()||"…";
+    const ao=Math.max(0,String(scope||"").split("/").length-1);
+    html+=`<div class="trow t2 me" style="--td:var(--brass);padding-left:${.6+ao*.95}rem">
+      <span class="tdot fld"></span><span class="tn">${me} ◂ you</span>
+      <span class="tc">${t?`${t.records}m·${t.agents}a`:""}</span></div>`;
     html+=`<div class="tsum">the bottom floor — ${t?`<b>${t.agents}</b> agent${t.agents===1?"":"s"} here`:"waking…"}</div>`;
-    if(bl&&t)bl.innerHTML=`bottom floor · <b>${t.agents}</b> agent${t.agents===1?"":"s"} here · under ${chain.slice(0,-1).map(x=>x.split("/").pop()).join(" · ")||"—"}`;
+    if(bl&&t)bl.innerHTML=`bottom floor · <b>${t.agents}</b> agent${t.agents===1?"":"s"} here`;
   }
   el.innerHTML=html;
 }
