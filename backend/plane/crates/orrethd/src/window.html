@@ -3242,6 +3242,13 @@ async function loadReq(){
       consequence first, then age; the SAME reqRow serves it (rule 7), so a
       row here decides and speaks exactly like anywhere else. ── */
 let INBARCH=false,INBSEL=null,INBMACH=false,REQCACHE=null;
+/* the pane lets go what the hand just settled (JB's find, 2026-08-20): a
+   decided card's row leaves the waiting list, so the reading pane must
+   release it too — selection advances to the next thing waiting. Release
+   fires ONLY at the deciding act, never in the render loop, so an archive
+   record the human explicitly opened is never yanked away (the 284abe2
+   law: selection belongs to the human, not to the refresh). */
+function paneRelease(id){if(INBSEL===id)INBSEL=null;if(OBJSEL===id)OBJSEL=null}
 const KINDRANK={attestation:0,testament:1,consent:2,passage:2,
   publish:3,drift:3,release:3,witness:3,
   objective:4,improvement:4,experiment:4,commission:4,subscription:4,
@@ -3254,7 +3261,12 @@ function inbSelect(id){INBSEL=id;renderInboxDetail();
 function goInbox(id){INBSEL=id;
   const t=document.querySelector('.tab[data-v="inbox"]');if(t)t.click();loadReq()}
 async function renderInboxDetail(){
-  const el=$("inb-detail");if(!el||!INBSEL)return;
+  const el=$("inb-detail");if(!el)return;
+  if(!INBSEL){                            /* nothing held — the pane says so */
+    if(el.dataset.calm!=="1"){el.dataset.calm="1";
+      el.innerHTML=`<div class="quiet">nothing waits on you — a calm universe.</div>`}
+    return}
+  el.dataset.calm="";
   const a=document.activeElement;         /* only a typing hand holds the pane */
   if(a&&el.contains(a)&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA"))return;
   let q;try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{return}
@@ -3311,7 +3323,7 @@ function renderInbox(q){
 async function joinDecide(id,ok){
   await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({id,status:ok?"approved":"denied"})});
-  loadReq();
+  paneRelease(id);loadReq();
 }
 /* ── the gate bell + the audience strip (Console/UI pass, JB 2026-07-31):
       one wait list, three faces — the Requests badge, a chip floating in the
@@ -3381,7 +3393,7 @@ async function mgAnswer(id,pfx){
   const el=$(pfx+id);const t=(el?el.value:"").trim();if(!t)return;
   await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({id,status:"done",result:{answer:t}})});
-  loadReq();
+  paneRelease(id);loadReq();
 }
 function gatePop(){GPOP=!GPOP;renderGates()}
 function renderGates(){
@@ -3451,7 +3463,11 @@ async function objDecide(id,ok){
   }
   await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify(body)});
-  KF.delete(id);GC.delete(id);loadReq();loadObjectives();
+  KF.delete(id);GC.delete(id);
+  if(INBSEL===id)INBSEL=null;   /* the inbox tile leaves the wait either way */
+  if(!ok&&OBJSEL===id)OBJSEL=null; /* a declined plan folds to the record; an
+    approved one still stands in the working band — the pane follows its row */
+  loadReq();loadObjectives();
 }
 /* submitAsk retired with the Ask tab (0045 sp1) — gathering is the
    librarian's audience now; the kind="gather" door itself still stands */
@@ -3500,7 +3516,7 @@ async function loadFarm(){
 async function farmDecide(id,ok){
   await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({id,status:ok?"approved":"denied"})});
-  loadFarm();loadReq();
+  paneRelease(id);loadFarm();loadReq();
 }
 async function plantTool(){
   const err=$("pf-err");err.textContent="";
@@ -3642,7 +3658,7 @@ async function stableRetire(id){
 async function stableDecide(id,ok){
   await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({id,status:ok?"approved":"denied"})});
-  loadStable();loadReq();
+  paneRelease(id);loadStable();loadReq();
 }
 /* ── THE PARLOR (0020): the audience room. Humans never read the world — they ask
    it, and a resident fetches with its OWN authority. The resident's CALLING CARD
@@ -4563,6 +4579,7 @@ async function capDecide(ev,rid,port,statusWord){
   try{await fetch(`/requests/resolve`,{method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({id:rid,status:statusWord})})}catch(e){}
+  paneRelease(rid);
   if(el)el.textContent=statusWord==="approved"?"your word stands — the world answers in a moment":"held back — nothing changes";
   setTimeout(()=>{DESK=null;(CAPV==="home"?loadDesk():renderCap())},2800)}
 function dkVerbs(w){
@@ -5820,7 +5837,8 @@ async function objAnswer(qid){
   const el=nearInput("qa-",qid); const t=(el?el.value:"").trim(); if(!t)return;
   await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({id:qid,status:"done",result:{answer:t}})});
-  loadObjectives();
+  paneRelease(qid);loadReq();loadObjectives(); /* an answer given from the
+    inbox pane must refresh the inbox too, not just the objectives */
 }
 function sevChip(s){if(!s)return"";
   const amber=["medium","high","critical"].includes(s);
@@ -5996,7 +6014,12 @@ async function loadObjectives(){
      compact rows in three bands, evidence lives in the pane (0052's lesson) */
   const newest=objs.slice().reverse();
   if(!OBJSEL||!objs.some(r=>r.id===OBJSEL))
-    OBJSEL=(newest.find(r=>r.status==="staged")||newest[0]||{}).id||null;
+    /* auto-pick reaches only the LIVING bands — waiting first, then working;
+       a settled record enters the pane only by the human's own click, so a
+       just-declined plan can never re-haunt the reader (JB's find 2026-08-20) */
+    OBJSEL=(newest.find(r=>r.status==="staged")
+      ||newest.find(r=>r.status==="approved"||r.status==="pending")
+      ||{}).id||null;
   const goalOf=r=>((r.result||{}).assembly||{}).goal_hash||((r.result||{}).plan||{}).goal||"";
   const row=r=>{
     const nq=questions.filter(x=>x.of===goalOf(r)&&x.status==="pending").length;
