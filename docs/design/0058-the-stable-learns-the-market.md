@@ -1,5 +1,13 @@
 # 0058 — The Stable Learns the Market
 
+> **CLOSED WHOLE 2026-08-20, era 0.58** — all five spoonfuls built and proven
+> live in one day (c9f4032 · fbaf141 · 7e28501 · aaf18c6 + the rites). The
+> register row carries the evidence; the named seeds live in §5 and on the
+> road. En-route wounds settled: the denied-branch defect (a no that
+> retired), routing-ab-2's seventeen-day starvation (declined through its
+> own gate), and the drained-examiner find (the plane lease never renews —
+> the lease-renewal dive's seed).
+
 <!-- PROVENANCE: Fable 5 (claude-fable-5) — seeded 2026-08-20 from JB's brief
      ("full facelift giving it the respect it deserves") + his ChatGPT reference
      (tmp/model-farm-registry-architecture.md, context not command). -->
