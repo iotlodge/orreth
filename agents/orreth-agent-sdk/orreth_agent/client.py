@@ -163,9 +163,14 @@ class FieldClient:
         return out if status == 200 else None
 
     # ---- the governed mind (0016: the plane authorizes and meters; we execute) -----------
-    def authorize(self, klass: str, est_tokens: int) -> dict | None:
-        status, grant = self._call("POST", "/model/authorize",
-                                   {"token": self.token, "class": klass, "est_tokens": est_tokens})
+    def authorize(self, klass: str, est_tokens: int,
+                  pin: str | None = None) -> dict | None:
+        """`pin` (0058 sp2): narrow the class to one named mind — the plane's
+        existing `model` field; an assignment's pin rides through here."""
+        body = {"token": self.token, "class": klass, "est_tokens": est_tokens}
+        if pin:
+            body["model"] = pin
+        status, grant = self._call("POST", "/model/authorize", body)
         return grant if status == 200 else None
 
     def meter(self, grant: dict, *, klass: str, tokens: int, usd: float = 0.0, model: str = "") -> None:

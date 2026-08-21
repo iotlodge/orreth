@@ -110,6 +110,32 @@ def test_cache_answers_inside_ttl(tmp_path):
     assert calls["n"] == 0 and MIND in doc["entries"] and doc["stale"] is False
 
 
+def test_assignment_resolution_walks_subject_floor_universe():
+    """0058 §3.4 — the most specific word wins: subject, floor, universe."""
+    a = {"resident:becky": {"class": "high"},
+         "floor:u:demo/e:cloud/f:prod": {"class": "low", "pin": "acme/floor-mind"},
+         "universe": {"pin": "acme/law-mind"}}
+    r = market.resolve_assignment(a, "resident:becky", "u:demo/e:cloud/f:prod")
+    assert r["class"] == "high" and r["resolved_from"] == "resident:becky"
+    r = market.resolve_assignment(a, "resident:vigil", "u:demo/e:cloud/f:prod")
+    assert r["pin"] == "acme/floor-mind" and r["resolved_from"].startswith("floor:")
+    r = market.resolve_assignment(a, "capability:x", "u:demo/e:rag")
+    assert r["pin"] == "acme/law-mind" and r["resolved_from"] == "universe"
+    assert market.resolve_assignment({}, "resident:none") == {}
+
+
+def test_pin_for_honors_the_row_class():
+    """A stage that names its own class takes a pin only from a row that
+    matches it (or a whole-subject row naming no class at all)."""
+    a = {"capability:desk": {"class": "high", "pin": "acme/big"},
+         "universe": {"pin": "acme/law"}}
+    assert market.pin_for(a, "capability:desk", "high") == "acme/big"
+    assert market.pin_for(a, "capability:desk", "medium") == "acme/law"
+    a2 = {"capability:desk": {"pin": "acme/all"}}
+    assert market.pin_for(a2, "capability:desk", "low") == "acme/all"
+    assert market.pin_for({}, "capability:none", "low") is None
+
+
 def test_cache_is_json_on_disk(tmp_path):
     _doc(tmp_path, [("litellm-map", _src({MIND: {"provider": "acme"}}))])
     raw = json.loads((tmp_path / "market.json").read_text())

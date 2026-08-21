@@ -176,12 +176,15 @@ def tend_once(mind: StudioMind, client: FieldClient) -> bool:
         _post(UNIVERSE, "/requests/resolve",
               {"id": leg["id"], "status": "done", "result": {"route": out}})
         return True
+    # 0058 sp2 — effort IS class: the Logic dial the human turned rides the
+    # leg and overrides the jacket's declared medium; an absent dial keeps it
+    _klass = str(leg.get("effort") or "") or None
     if leg["kind"] == "understand":
         try:
             reading = mind.understand(
                 str(leg.get("objective") or leg.get("text") or ""),
                 str(leg.get("rubric") or ""),
-                registry_digest())
+                registry_digest(), _klass=_klass)
             out = {**reading, "state": "read",
                    "craft": mind._crafts["understand-objective"].ref,
                    "by": client.did}
@@ -199,7 +202,8 @@ def tend_once(mind: StudioMind, client: FieldClient) -> bool:
     try:
         draft = mind.plan(str(leg.get("objective") or ""),
                           str(leg.get("rubric") or ""),
-                          str(leg.get("reading") or ""), seats)
+                          str(leg.get("reading") or ""), seats,
+                          _klass=_klass)
         out = {**draft, "craft": mind._crafts["plan-objective"].ref,
                "by": client.did}
         print(f"· drafted {leg['id']}: {len(draft['intentions'])} intention(s)"

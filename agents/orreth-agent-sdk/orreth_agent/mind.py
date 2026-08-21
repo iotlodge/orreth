@@ -166,6 +166,10 @@ class OrrethMind:
         return self._crafts[name]
 
     def _run(self, g: Generation, args, kwargs):
+        # 0058 sp2 — effort IS class: a caller may override the declared
+        # klass per call (`_klass=`), so an objective's Logic dial rides its
+        # legs into the gateway instead of dying unread on the request
+        klass = kwargs.pop("_klass", None) or g.klass
         resolved = self._craft(g.craft)
         slots = dict(zip(g.slots, args))
         slots.update(kwargs)
@@ -182,7 +186,7 @@ class OrrethMind:
             ask_prompt = prompt if error is None else (
                 prompt + "\n\n" + _REASK.format(
                     error=error, shape=_shape_of(g.returns)))
-            raw = self.think(g.klass, ask_prompt)
+            raw = self.think(klass, ask_prompt)
             try:
                 value = _validate(g.returns, raw)
             except ValueError as e:

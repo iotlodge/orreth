@@ -2135,7 +2135,7 @@ def embed_door() -> None:
                 return
             if route not in ("/observatory", "/governance", "/craft",
                              "/sentences", "/desk", "/brain", "/resident",
-                             "/pulse", "/spacetime", "/market"):
+                             "/pulse", "/spacetime", "/market", "/assign"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2190,6 +2190,24 @@ def embed_door() -> None:
                         min_context=int(g("min_context")) if g("min_context") else None,
                         source=g("source"),
                         limit=max(1, min(400, int(g("limit") or "100"))))).encode()
+                elif route == "/assign":
+                    # 0058 sp2 — the allocation ledger, readable: whole map,
+                    # or one subject resolved by the law (worker-side, so a
+                    # runner never re-implements the order); pins=1 answers
+                    # per-class pins for a stage that names its own class
+                    qs = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query)
+                    g = lambda k: (qs.get(k) or [""])[0]
+                    a = assign_load()
+                    payload: dict = {"assignments": a}
+                    if g("subject"):
+                        payload["resolved"] = market.resolve_assignment(
+                            a, g("subject"), g("floor"))
+                        if g("pins"):
+                            payload["pins"] = {k: market.pin_for(
+                                a, g("subject"), k, g("floor"))
+                                for k in market.EFFORTS}
+                    out = json.dumps(payload).encode()
                 elif route == "/resident":
                     qs = urllib.parse.parse_qs(
                         urllib.parse.urlparse(self.path).query)
@@ -2768,6 +2786,38 @@ def stable_ledger_save(scope: str, data: dict) -> None:
     stable_ledger_path(scope).write_text(json.dumps(data, indent=1, sort_keys=True))
 
 
+def assign_path() -> Path:
+    nest = HOME / "stable"
+    nest.mkdir(parents=True, exist_ok=True)
+    return nest / "assignments.json"
+
+
+def assign_load() -> dict:
+    """The allocation ledger (0058 sp2): subject → {class?, pin?} — who uses
+    which mind, as a governed record. The resolution ORDER lives in
+    market.resolve_assignment (suite-held); this file is just the words."""
+    p = assign_path()
+    return json.loads(p.read_text()) if p.exists() else {}
+
+
+def assign_save(data: dict) -> None:
+    assign_path().write_text(json.dumps(data, indent=1, sort_keys=True))
+
+
+def _blast(stall: dict, mid: str, scope: str) -> dict:
+    """No retirement without a blast radius (0058 §3.5): who pins this mind,
+    what class it serves, how much thought it has answered — the decision's
+    own furniture, computed where the card is staged."""
+    a = assign_load()
+    pinned = sorted(k for k, v in a.items()
+                    if isinstance(v, dict) and v.get("pin") == mid)
+    return {"pinned_by": pinned, "class": stall.get("class"),
+            "calls": stall.get("calls", 0),
+            "note": (f"serves class {stall.get('class') or '?'} at {scope}"
+                     + (f" · pinned by {', '.join(pinned)}" if pinned else "")
+                     + f" · {stall.get('calls', 0) or 0} thought(s) answered")}
+
+
 def openrouter_catalog() -> list[dict]:
     """The market, read freely: OpenRouter's public list is INTEL for every stall,
     whatever route carries the call (0019 §1). Routing stays LiteLLM-direct on the
@@ -3254,9 +3304,18 @@ class Wrangler:
     def on_mind_request(self, port: int, scope: str, r: dict) -> bool:
         """Returns True when the request reached a resting state (done/denied)."""
         action, status, mid = r.get("action", "saddle"), r.get("status"), r.get("mind", "")
-        if status == "pending" and action in ("reapprove", "retire", "swap"):
-            # nothing to probe — consequence waits for the human (0012)
-            call(port, "POST", "/requests/resolve", {"id": r["id"], "status": "staged"})
+        if status == "pending" and action in ("reapprove", "retire", "swap",
+                                              "assign", "unassign"):
+            # nothing to probe — consequence waits for the human (0012);
+            # a mind decision stages WEARING its blast radius (0058 §3.5)
+            res = {}
+            if action in ("reapprove", "retire", "swap") and mid:
+                stall = next((s for s in self._local(port, scope)
+                              if s["id"] == mid), {})
+                res = {"blast": _blast(stall, mid, scope)}
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "staged",
+                  **({"result": res} if res else {})})
             return False
         if status == "pending" and action == "saddle":
             entry = next((c for c in openrouter_catalog() if c["id"] == mid), None)
@@ -3339,20 +3398,53 @@ class Wrangler:
                 led.pop(mid, None)
                 stable_ledger_save(scope, led)
                 print(f"  ↳ retired {mid} — sunset; never served again")
+            elif action == "assign":
+                # 0058 sp2 — allocation becomes a governed record: the
+                # human's word writes the ledger; the worldline remembers
+                sub = str(r.get("subject") or "")
+                if sub:
+                    a = assign_load()
+                    a[sub] = {**{k: r[k] for k in ("class", "pin")
+                                 if r.get(k)}, "at": NOW(), "req": r["id"]}
+                    assign_save(a)
+                    mindline(port, scope,
+                             {"id": r.get("pin") or r.get("class") or "",
+                              "state": "assigned"}, "assigned",
+                             subject=sub, klass=r.get("class") or "",
+                             pin=r.get("pin") or "")
+                    print(f"  ↳ assigned {sub} → "
+                          f"{r.get('pin') or r.get('class')} — the word stands")
+            elif action == "unassign":
+                sub = str(r.get("subject") or "")
+                a = assign_load()
+                if a.pop(sub, None) is not None:
+                    assign_save(a)
+                    mindline(port, scope, {"id": sub, "state": "unassigned"},
+                             "unassigned", subject=sub)
+                    print(f"  ↳ unassigned {sub} — the floor's own law resumes")
             call(port, "POST", "/requests/resolve", {"id": r["id"], "status": "done"})
             return True
         if status == "denied":
-            try:
-                out = call(port, "POST", "/stable/state",
-                           {"id": mid, "op": "retire", "reason": "denied at the gate"})
-                mindline(port, scope, out, "denied")
-            except Exception:
-                pass
-            led = stable_ledger_load(scope)
-            led.pop(mid, None)
-            stable_ledger_save(scope, led)
+            # 0058 sp2's find: this branch retired the mind WHATEVER the
+            # action was — denying a retire retired it anyway, denying a
+            # swap killed the old mind against the human's word. Only a
+            # denied SADDLE sunsets (it never served); every other denial
+            # leaves the stall exactly as it stood.
+            if action == "saddle":
+                try:
+                    out = call(port, "POST", "/stable/state",
+                               {"id": mid, "op": "retire", "reason": "denied at the gate"})
+                    mindline(port, scope, out, "denied")
+                except Exception:
+                    pass
+                led = stable_ledger_load(scope)
+                led.pop(mid, None)
+                stable_ledger_save(scope, led)
+                print(f"  ↳ denied {mid} — never served")
+            else:
+                print(f"  ↳ declined {action} on {mid or '(no mind)'} — "
+                      "nothing moved; the stall stands as it was")
             call(port, "POST", "/requests/resolve", {"id": r["id"], "status": "done"})
-            print(f"  ↳ denied {mid} — never served")
             return True
         return False
 
@@ -3415,7 +3507,8 @@ class Wrangler:
                     else " — no replacement found yet"
                 call(port, "POST", "/requests",
                      {"kind": "mind", "action": "swap", "mind": mid,
-                      "class": s.get("class"), "replacement": rec, "text": text})
+                      "class": s.get("class"), "replacement": rec, "text": text,
+                      "blast": _blast(s, mid, scope)})   # the radius rides the card
                 print(f"  ↳ {mid} is expiring — recommendation staged")
 
     def restable(self, port: int, scope: str, present: set) -> None:
@@ -4233,6 +4326,7 @@ def on_objective(port: int, scope: str, r: dict) -> None:
         leg = call(port, "POST", "/requests", {
             "kind": "understand", "of": r["id"],
             "objective": plan["objective"], "rubric": str(r.get("rubric") or ""),
+            "effort": str(r.get("effort") or ""),   # the dial rides the leg (0058 sp2)
             "text": f"the studio reads: {plan['objective'][:64]}"})["id"]
     except Exception as e:
         print(f"    (understand leg failed to post: {e})")
@@ -7458,12 +7552,20 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
     # keywords, it does not listen"). Authorization stays per-floor and
     # honest; execution was always worker-local.
     est = 380
-    for klass in ("low", "medium", "high"):
+    # 0058 sp2 — the assignment outranks the ladder: a human's governed word
+    # names this resident's class (the ladder narrows to it) or pins the very
+    # mind; a pinned miss falls to the grounded reply, never a substitute
+    _row = market.resolve_assignment(assign_load(), f"resident:{name}",
+                                     FLOOR_SCOPES.get(port, ""))
+    ladder = [_row["class"]] if _row.get("class") else ["low", "medium", "high"]
+    _pin = _row.get("pin")
+    for klass in ladder:
         try:
             token = _BECKY.issue_token(did, SCOPE, [{"action": "retrieve", "space": "self"}],
                                        budget={"tokens": 50000})
             grant = call(port, "POST", "/model/authorize",
-                         {"token": token, "class": klass, "est_tokens": est})
+                         {"token": token, "class": klass, "est_tokens": est,
+                          **({"model": _pin} if _pin else {})})
             model = executable(port, grant["model"])
             if model is None:             # honest refund: authorized, but no key to execute
                 call(port, "POST", "/model/meter",
@@ -9238,6 +9340,7 @@ def studio_tend(port: int) -> None:
                                           or r.get("text") or "",
                             "rubric": str(r.get("rubric") or ""),
                             "reading": read.get("reading") or "",
+                            "effort": str(r.get("effort") or ""),  # 0058 sp2
                             "seats": seats,
                             "text": f"the studio drafts the plan for {r['id']}"})["id"]
                         update["planned_by"] = {"state": "drafting",

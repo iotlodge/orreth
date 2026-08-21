@@ -241,6 +241,42 @@ def refresh(home: Path, openrouter: list | None = None, *,
     return doc
 
 
+# ---------------------------------------------------------------- assignments (0058 sp2)
+
+EFFORTS = ("low", "medium", "high", "xhigh")
+
+
+def resolve_assignment(assignments: dict, subject: str,
+                       floor_scope: str = "") -> dict:
+    """The allocation law (0058 §3.4): the most specific word wins — the
+    subject's own row, then its floor's, then the universe default (the LAW
+    at the apex). A row is {class?, pin?}; missing rungs fall through.
+    Pure — the worker owns the file, this owns the order."""
+    for key in ([subject]
+                + ([f"floor:{floor_scope}"] if floor_scope else [])
+                + ["universe"]):
+        row = assignments.get(key)
+        if isinstance(row, dict) and (row.get("class") or row.get("pin")):
+            return {**row, "resolved_from": key}
+    return {}
+
+
+def pin_for(assignments: dict, subject: str, klass: str,
+            floor_scope: str = "") -> str | None:
+    """A stage that already names its class asks only one question: does an
+    assignment pin THIS class to a named mind for me? Subject rows first,
+    floor, then universe — a pin applies only when its row's class matches
+    (or names no class at all, a whole-subject pin)."""
+    for key in ([subject]
+                + ([f"floor:{floor_scope}"] if floor_scope else [])
+                + ["universe"]):
+        row = assignments.get(key)
+        if isinstance(row, dict) and row.get("pin") \
+                and row.get("class") in (None, "", klass):
+            return str(row["pin"])
+    return None
+
+
 # ---------------------------------------------------------------- the search
 
 def search(doc: dict, q: str = "", provider: str = "", capability: str = "",

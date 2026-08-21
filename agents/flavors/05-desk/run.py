@@ -27,6 +27,27 @@ UNIVERSE = "http://localhost:4500"
 FIELD_DEFAULT = "http://localhost:4520"                # f:charles (shipyard-allocated)
 
 
+def _assigned(think, world: str):
+    """0058 sp2 — the stages keep their own classes; a human's ASSIGNMENT may
+    pin a class to a named mind. The worker's /assign door resolves the law
+    (subject → floor → universe) so no runner re-implements the order; an
+    unreachable door leaves the stages exactly as declared."""
+    import json as _j
+    import urllib.request as _u
+    try:
+        with _u.urlopen("http://localhost:4562/assign?"
+                        f"subject=capability:{world}&pins=1", timeout=4) as r:
+            pins = _j.load(r).get("pins") or {}
+    except Exception:
+        pins = {}
+    if not any(pins.values()):
+        return think
+
+    def call(klass, prompt, **kw):
+        return think(klass, prompt, pin=pins.get(klass), **kw)
+    return call
+
+
 def _gate(client, ticker: str, date: str, timeout: float = 600.0) -> bool:
     """The plan gate up front (0027/0030): the walk is staged as a request in
     the human's queue and NOTHING runs until a human approves — silence past
@@ -96,9 +117,9 @@ def main() -> int:
         import urllib.request as _u
         from orreth_agent.chassis import GovernedThink
         import pipeline
-        tm, th, tf = (GovernedThink(client, max_tokens=1500),
-                      GovernedThink(client, max_tokens=3200),
-                      GovernedThink(client, max_tokens=2400))
+        tm, th, tf = (_assigned(GovernedThink(client, max_tokens=1500), args.world),
+                      _assigned(GovernedThink(client, max_tokens=3200), args.world),
+                      _assigned(GovernedThink(client, max_tokens=2400), args.world))
         def _world():
             try:
                 with _u.urlopen(f"http://localhost:4562/desk?key={args.world}", timeout=8) as r:
@@ -192,10 +213,11 @@ def main() -> int:
         date = args.date or _t.strftime("%Y-%m-%d")
         if not _gate(client, ticker, date):
             return 1
+        _w = getattr(args, "world", "") or "trading-desk"
         out = pipeline.run(client,
-                           GovernedThink(client, max_tokens=1500),
-                           GovernedThink(client, max_tokens=3200),
-                           GovernedThink(client, max_tokens=2400),
+                           _assigned(GovernedThink(client, max_tokens=1500), _w),
+                           _assigned(GovernedThink(client, max_tokens=3200), _w),
+                           _assigned(GovernedThink(client, max_tokens=2400), _w),
                            ticker, date, refresh=args.refresh, agent=args.name)
         print(f"· the walk is whole: {out['rating']} — bundle at {out['bundle']}")
         return 0
