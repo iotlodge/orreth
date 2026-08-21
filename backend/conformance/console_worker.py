@@ -7559,6 +7559,18 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
                                      FLOOR_SCOPES.get(port, ""))
     ladder = [_row["class"]] if _row.get("class") else ["low", "medium", "high"]
     _pin = _row.get("pin")
+    # 0058 sp4 — a running ALLOCATION experiment outranks the standing word
+    # (the human declared AND opened it): the question's hash picks the arm,
+    # deterministically, and the answer will wear the arm's tag as work
+    _arm = None
+    _aexp = allocation_experiment_for(f"resident:{name}")
+    if _aexp:
+        from orreth_sim import experiment as exp_lib
+        _ename, _e = _aexp
+        _lbl = exp_lib.assign({"share": _e["share"]}, question)
+        _arm = {"name": _ename, "label": _lbl,
+                "machine": _e["arms"][_lbl]["machine"]}
+        _pin = _e["arms"][_lbl]["pin"]
     for klass in ladder:
         try:
             token = _BECKY.issue_token(did, SCOPE, [{"action": "retrieve", "space": "self"}],
@@ -7595,11 +7607,38 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
                         tokens=tokens, usd=usd, ms=ms)
             out = (resp.choices[0].message.content or "").strip()
             if out:
+                if _arm:
+                    _voice_armwork(port, name, question, out,
+                                   grant["model"], _arm)
                 return out
         except Exception:
             FLIGHT.refuse(did, klass, "stumbled")
             continue
     return None
+
+
+def _voice_armwork(port: int, name: str, question: str, reply: str,
+                   model: str, arm: dict) -> None:
+    """0058 sp4 — an experiment answer is WORK on the record: the reply lands
+    as an intention-outcome wearing its arm's tag, so vera's sampler judges
+    it UNCHANGED and the standings join verdict → work → arm (0043 law 4 —
+    never a side-table)."""
+    try:
+        u_p = universe_port(port)
+        skp, sdid = lib_seat(UNIVERSE_SCOPE)
+        wk = make_memory({"did": sdid, "scope": UNIVERSE_SCOPE}, skp,
+                         UNIVERSE_SCOPE,
+                         {"outcome": {"intention": "voice-ask", "who": name,
+                                      "question": question[:200],
+                                      "reply": reply[:400], "model": model,
+                                      "arm": arm["label"]}},
+                         kind="episodic",
+                         tags=["intention-outcome", "voice-work",
+                               f"arm:{arm['machine'].split(':', 1)[-1][:12]}",
+                               arm["name"]])
+        call(u_p, "POST", "/records", wk)
+    except Exception as ex:
+        print(f"    (arm work write failed: {ex})")
 
 
 def on_objective_cancel(port: int, scope: str, r: dict) -> None:
@@ -8403,10 +8442,23 @@ def _rag_floor() -> tuple[int | None, str | None]:
 
 
 def running_experiment(scope: str) -> tuple[str, dict] | None:
-    """The one running experiment on this floor, if any — the ask path's
-    single question."""
+    """The one running ROUTING experiment on this floor, if any — the stacks
+    ask path's single question. Allocation experiments (0058 sp4) never
+    answer here: their arms are minds, not retrievers."""
     for name, e in _exps_load().items():
-        if e.get("state") == "running" and e.get("floor") == scope:
+        if e.get("state") == "running" and e.get("floor") == scope \
+                and e.get("target") != "allocation":
+            return name, e
+    return None
+
+
+def allocation_experiment_for(subject: str) -> tuple[str, dict] | None:
+    """0058 sp4 — the voice path's single question: does a RUNNING
+    allocation experiment cover this subject? Its arms are pinned minds;
+    the deterministic split picks which one answers."""
+    for name, e in _exps_load().items():
+        if e.get("state") == "running" and e.get("target") == "allocation" \
+                and e.get("subject") == subject:
             return name, e
     return None
 
@@ -8422,6 +8474,92 @@ def on_experiment(port: int, scope: str, r: dict, *, approved: bool,
     name = str(r.get("name") or f"exp-{r.get('id', '?')}")
     exps = _exps_load()
     rag_port, rag_scope = _rag_floor()
+    # ── 0058 sp4 · ARMS WEAR ASSIGNMENTS: an allocation experiment's arms
+    # are pinned MINDS for one subject; same laws (declared split · min_n ·
+    # standings by the log join · promotion at the gate), mind-shaped body.
+    subject = str(r.get("subject") or "")
+    if subject and phase == "open":
+        if r.get("status") == "pending":
+            if any(e.get("state") == "running" for e in exps.values()):
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "done",
+                      "result": {"refused": "one experiment at a time — the "
+                                            "running split concludes first"}})
+                return True
+            a_pin, b_pin = str(r.get("arm_a") or ""), str(r.get("arm_b") or "")
+            if not a_pin or not b_pin:
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "done",
+                      "result": {"refused": "an allocation experiment argues "
+                                            "between two named minds (arm_a, arm_b)"}})
+                return True
+            share_b = float(r.get("share_b") or 0.5)
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "staged",
+                  "result": {"held": "the split waits for you (0012)",
+                             "package_text":
+                                 f"ALLOCATION EXPERIMENT «{name}» on {subject}\n"
+                                 f"arm a — {a_pin}\narm b — {b_pin}\n"
+                                 f"split a:{1 - share_b:.0%} b:{share_b:.0%} · "
+                                 f"min {int(r.get('min_n') or 2)} verdict(s)/arm\n"
+                                 "each answer wears its arm; vera judges under her "
+                                 "ceilings; the conclusion is a promotion card at "
+                                 "THIS gate — approving it lands the winning "
+                                 "ALLOCATION through the same governed ledger."}})
+            return False
+        if approved:
+            u_p = universe_port(port)
+            share_b = float(r.get("share_b") or 0.5)
+            arms, arm_recs = {}, []
+            for label, pin in (("a", str(r.get("arm_a"))), ("b", str(r.get("arm_b")))):
+                m = crypto.content_hash({"experiment": name, "subject": subject,
+                                         "pin": pin})
+                rec = make_memory({"did": ADA_DID, "scope": UNIVERSE_SCOPE}, ADA,
+                                  UNIVERSE_SCOPE,
+                                  {"experiment_arm": {"experiment": name,
+                                                      "arm": label,
+                                                      "subject": subject,
+                                                      "pin": pin, "machine": m}},
+                                  kind="semantic", tags=["experiment-arm", name])
+                try:
+                    call(u_p, "POST", "/records", rec)
+                except Exception:
+                    pass
+                arms[label] = {"pin": pin, "machine": m, "record": rec["id"]}
+                arm_recs.append(rec["id"])
+            decl = make_memory({"did": ADA_DID, "scope": UNIVERSE_SCOPE}, ADA,
+                               UNIVERSE_SCOPE, {"experiment": {
+                                   "name": name, "target": "allocation",
+                                   "subject": subject,
+                                   "arms": {a: {"pin": v["pin"],
+                                                "machine": v["machine"]}
+                                            for a, v in arms.items()},
+                                   "policy": {"kind": "hash-split",
+                                              "unit": "question",
+                                              "share": {"a": round(1 - share_b, 4),
+                                                        "b": share_b}},
+                                   "min_n": int(r.get("min_n") or 2),
+                                   "declared_at": NOW()}},
+                               kind="semantic", tags=["experiment", name])
+            decl["derived_from"] = arm_recs
+            try:
+                call(u_p, "POST", "/records", decl)
+            except Exception:
+                pass
+            exps[name] = {"state": "running", "target": "allocation",
+                          "subject": subject, "floor": UNIVERSE_SCOPE,
+                          "arms": arms,
+                          "share": {"a": round(1 - share_b, 4), "b": share_b},
+                          "min_n": int(r.get("min_n") or 2),
+                          "record": decl["id"], "opened_at": NOW()}
+            _exps_save(exps)
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"opened": name, "subject": subject,
+                             "arms": {a: v["pin"] for a, v in arms.items()}}})
+            print(f"  🧪 allocation experiment «{name}» OPEN on {subject} — "
+                  f"a[{arms['a']['pin']}] vs b[{arms['b']['pin']}], the split live")
+            return True
     if r.get("status") == "pending" and phase == "open":
         if rag_port is None:
             call(port, "POST", "/requests/resolve",
@@ -8516,6 +8654,31 @@ def on_experiment(port: int, scope: str, r: dict, *, approved: bool,
         e = exps.get(name)
         if not e or e.get("state") != "concluded":
             return True
+        if e.get("target") == "allocation":
+            # 0058 sp4 — one word, the allocation LANDS: the human approved
+            # the evidence; the winner writes the governed ledger exactly as
+            # an approved assign would (0032 §4: one moment, one consequence
+            # chain, both legible)
+            win = e["arms"][e["card"]["winner"]]
+            a = assign_load()
+            a[e["subject"]] = {"pin": win["pin"], "at": NOW(), "req": r["id"],
+                               "experiment": name}
+            assign_save(a)
+            mindline(port, e.get("floor") or UNIVERSE_SCOPE,
+                     {"id": win["pin"], "state": "assigned"}, "assigned",
+                     subject=e["subject"], pin=win["pin"],
+                     experiment=name, winner=e["card"]["winner"])
+            e["state"], e["adopted"] = "adopted", e["subject"]
+            _exps_save(exps)
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"adopted": e["subject"], "pin": win["pin"],
+                             "winner": e["card"]["winner"],
+                             "standings": e["card"]["standings"]}})
+            print(f"  🧪 «{name}» ADOPTED — {e['subject']} now rides "
+                  f"{win['pin']} (arm {e['card']['winner']} won on the "
+                  "record); the loser stays in the market, history whole")
+            return True
         n, kp, did = _stacks_node(rag_port, rag_scope)
         if n is None:
             return False
@@ -8603,7 +8766,10 @@ def experiment_beat(u_port: int) -> None:
         short = {f"arm:{_arm_short(a['machine'])}": label
                  for label, a in e["arms"].items()}
         arm_of = {}
-        for ref, _, _, tags in wire_assets(p, "stacks-answer", scope=e["floor"]):
+        # allocation arms' work wears "voice-work" (0058 sp4); routing arms'
+        # wears "stacks-answer" — same join, mind-shaped family
+        _fam = "voice-work" if e.get("target") == "allocation" else "stacks-answer"
+        for ref, _, _, tags in wire_assets(p, _fam, scope=e["floor"]):
             t = next((x for x in tags if x in short), None)
             if t:
                 arm_of[ref] = short[t]
