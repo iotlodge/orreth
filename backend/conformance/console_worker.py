@@ -11223,6 +11223,18 @@ def compose_resident(name: str) -> dict:
     except Exception:
         pass
     item["minds"] = minds[:10]
+    # ---- 0058 sp3: the mind-swap picker's ground — the resident's current
+    # assignment resolved by the law, and the floor's living stalls to pick
+    # from; the picker STAGES through ada's gate, never writes directly
+    _afloor = (wman or {}).get("floor") or UNIVERSE_SCOPE
+    item["mind_assignment"] = {
+        "subject": f"resident:{name}",
+        "floor": _afloor,
+        "resolved": market.resolve_assignment(
+            assign_load(), f"resident:{name}", _afloor),
+        "classes": list(market.EFFORTS),
+        "stalls": [m for m in minds if m.get("state")
+                   in ("available", "canaried", "deprecated")]}
     # ---- THE RELATIONS (sp3): where the resident stands, one small map
     home = (wman or {}).get("floor") or (wf or {}).get("scope") \
         or UNIVERSE_SCOPE
@@ -11677,6 +11689,86 @@ def compose_spacetime(days: int) -> dict:
     _STW_CACHE.update(at=time.time(), key=key, payload=payload,
                       ttl=3 if waking else 20)
     return payload
+
+
+_MARKET_CAPWORDS = {"vision": "vision", "image": "vision", "images": "vision",
+                    "see": "vision", "tools": "tools", "tool": "tools",
+                    "function": "tools", "functions": "tools",
+                    "reasoning": "reasoning", "reason": "reasoning",
+                    "thinking": "reasoning", "structured": "structured",
+                    "json": "structured", "schema": "structured"}
+
+
+def on_market_ask(port: int, scope: str, r: dict) -> None:
+    """0058 sp3 — ASK ADA about the market in plain words: the worker greps
+    the merged intel deterministically (capability words, a price ceiling, a
+    context floor, provider names, plain terms), and ada VOICES the
+    comparison through one governed thought under her own DID, citing the
+    entry ids she read. Intel is never authority — her answer is a reading
+    of the catalog; putting a mind to work still walks the saddle gate."""
+    import re as _re
+    question = str(r.get("text") or "")
+    ql = question.lower()
+    words = _re.findall(r"[a-z0-9./-]+", ql)
+    caps = sorted({_MARKET_CAPWORDS[w] for w in words if w in _MARKET_CAPWORDS})
+    m = _re.search(r"(?:under\s*)?\$\s*(\d+(?:\.\d+)?)(?:\s*(?:/|per)\s*m)?", ql)
+    max_price = float(m.group(1)) if m else None
+    m = _re.search(r"(\d+)\s*k\s*(?:ctx|context)", ql)
+    min_context = int(m.group(1)) * 1000 if m else None
+    doc = market.refresh(HOME / "stable", openrouter_catalog())
+    provs = {str(e.get("provider") or "").lower()
+             for e in (doc.get("entries") or {}).values()}
+    provider = next((w for w in words if w in provs), "")
+    # plain terms: the first leftover word that actually names minds
+    skip = set(_MARKET_CAPWORDS) | {provider} | {
+        "the", "a", "an", "which", "what", "who", "can", "could", "under",
+        "with", "for", "and", "or", "model", "models", "mind", "minds",
+        "llm", "llms", "that", "have", "has", "per", "in", "out", "cheap",
+        "cheapest", "best", "serve", "high", "low", "medium", "xhigh"}
+    q = ""
+    for w in words:
+        if len(w) > 3 and w not in skip \
+                and market.search(doc, q=w, limit=1)["total"]:
+            q = w
+            break
+    filters = {"q": q, "provider": provider, "max_price": max_price,
+               "min_context": min_context,
+               "capability": caps[0] if caps else ""}
+    hits = market.search(doc, q=q, provider=provider,
+                         capability=caps[0] if caps else "",
+                         max_price=max_price, min_context=min_context,
+                         limit=12)
+    if not hits["total"] and (q or provider):    # relax once, honestly
+        hits = market.search(doc, capability=caps[0] if caps else "",
+                             max_price=max_price, min_context=min_context,
+                             limit=12)
+    rows = hits["entries"]
+    per_m = lambda v: f"${v * 1e6:.2f}/M" if isinstance(v, (int, float)) else "—"
+    fact = lambda e: (
+        f"{e['id']} · in {per_m((e.get('pricing') or {}).get('prompt'))}"
+        f" · out {per_m((e.get('pricing') or {}).get('completion'))}"
+        f" · ctx {(e.get('context_length') or 0) // 1000}k"
+        f" · {'+'.join(k for k, v in (e.get('capabilities') or {}).items() if v) or 'caps unknown'}"
+        f" · eyes: {'+'.join(e.get('sources') or [])}"
+        + (" · access proven" if e.get("access") == "available" else "")
+        + (" · READ-ONLY (not wired)" if e.get("read_only") else ""))
+    facts = ("the market's matching intel (of "
+             f"{doc.get('total', 0)} minds known):\n"
+             + "\n".join(fact(e) for e in rows[:12])) if rows else \
+        "no minds in the market matched this framing — say so plainly."
+    voiced = governed_voice(port, "ada", ADA_DID, question, facts)
+    reply = voiced or (
+        "the stable keeper, grounded (no fueled voice on this floor): "
+        + (("the closest matches — " + " · ".join(e["id"] for e in rows[:5]))
+           if rows else "nothing in the market matches that framing")
+        + ". I pin the deal, not the name.")
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "done",
+          "result": {"reply": reply, "citations": [e["id"] for e in rows[:12]],
+                     "served": len(rows), "total": hits["total"],
+                     "filters": filters, "voiced": bool(voiced)}})
+    print(f"  ↳ ada read the market for {r['id']}: {hits['total']} match(es)"
+          + (" · voiced" if voiced else " · grounded"))
 
 
 def on_window_ask(port: int, scope: str, r: dict) -> None:
@@ -12335,6 +12427,10 @@ def main() -> None:
                                 r.get("status") == "pending":
                             handled.add(key)
                             on_window_ask(port, scope, r)
+                        elif r.get("kind") == "market-ask" and \
+                                r.get("status") == "pending":
+                            handled.add(key)
+                            on_market_ask(port, scope, r)
                         elif r.get("kind") == "thumb" and r.get("status") == "pending":
                             handled.add(key)
                             on_thumb(port, scope, r)

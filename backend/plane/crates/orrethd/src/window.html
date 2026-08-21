@@ -484,6 +484,71 @@
   .schip.candidate{color:var(--dim)} .schip.deprecated{color:var(--red)}
   .schip.sunset{color:var(--faint);opacity:.5}
   /* the ladder: one lane per class, its serving minds in resolution order */
+  /* 0058 sp3 — the stable's master-detail (the gov-split pattern, own names:
+     the one-namespace law): the view never scrolls, each pane owns its own */
+  #v-stable{padding:1.6rem;display:flex;flex-direction:column;overflow:hidden}
+  .stbltop{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+  .stblmode{display:flex;gap:.4rem}
+  .smode{font:.68rem var(--mono);letter-spacing:.08em;border:1px solid var(--hair2);
+    border-radius:999px;padding:.28rem .85rem;color:var(--dim);cursor:pointer;user-select:none}
+  .smode.on{border-color:var(--brass);color:var(--brass);background:var(--deep)}
+  .stblsplit{display:flex;gap:1.1rem;flex:1;min-height:0;margin-top:.6rem}
+  .stblleft{flex:0 0 44%;min-width:0;overflow-y:auto;padding-right:.4rem}
+  .stblread{flex:1;min-width:0;overflow-y:auto;border-left:1px solid var(--hair);padding-left:1.1rem}
+  @media(max-width:820px){.stblsplit{flex-direction:column}.stblleft{flex:0 0 46%}
+    .stblread{border-left:none;padding-left:0;border-top:1px solid var(--hair);padding-top:.8rem}}
+  .sechd{font:.64rem var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--dim);margin:.9rem 0 .3rem}
+  .strow{border:1px solid var(--hair);border-radius:8px;padding:.38rem .65rem;margin:.28rem 0;
+    cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:.5rem;
+    align-items:center;font:.72rem var(--mono)}
+  .strow:hover{border-color:var(--brassdim)}
+  .strow.on{border-color:var(--brass);background:var(--deep)}
+  .strow .dt{width:8px;height:8px;border-radius:50%;flex:none}
+  .strow .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--star)}
+  .strow .cl{color:var(--brass);font-size:.62rem;letter-spacing:.06em}
+  .strow .mx{color:var(--faint);font-size:.62rem;white-space:nowrap}
+  .stbform{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}
+  .stbform input[type=text],.stbform input:not([type]){flex:1;min-width:180px;background:var(--deep);
+    border:1px solid var(--hair2);border-radius:8px;padding:.42rem .6rem;color:var(--star);font:.72rem var(--mono)}
+  .stbform select{background:var(--deep);border:1px solid var(--hair2);border-radius:8px;
+    padding:.42rem .5rem;color:var(--star);font:.7rem var(--mono)}
+  .mktbar input{width:100%;background:var(--deep);border:1px solid var(--hair2);border-radius:8px;
+    padding:.5rem .8rem;color:var(--star);font:.76rem var(--mono)}
+  .mktbar input:focus,.stbform input:focus{outline:none;border-color:var(--brass)}
+  .mktchips{display:flex;gap:.35rem;flex-wrap:wrap;margin:.5rem 0}
+  .mkc{font:.62rem var(--mono);border:1px solid var(--hair2);border-radius:999px;
+    padding:.18rem .6rem;color:var(--dim);cursor:pointer;user-select:none}
+  .mkc.on{border-color:var(--brass);color:var(--brass);background:var(--deep)}
+  .mktrow{border:1px solid var(--hair);border-radius:8px;padding:.36rem .6rem;margin:.26rem 0;
+    cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:.5rem;
+    align-items:center;font:.7rem var(--mono)}
+  .mktrow:hover{border-color:var(--brassdim)}
+  .mktrow.on{border-color:var(--brass);background:var(--deep)}
+  .mktrow .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--star)}
+  .mktrow .px{color:var(--near);font-size:.64rem;white-space:nowrap}
+  .mktrow .cx{color:var(--faint);font-size:.62rem;white-space:nowrap}
+  .capb{display:inline-block;font:.56rem var(--mono);border:1px solid var(--hair2);
+    border-radius:4px;padding:0 .28em;margin-left:.2em;color:var(--dim)}
+  .capb.y{border-color:var(--brassdim);color:var(--brass)}
+  .roband{font:.58rem var(--mono);color:#d9a4a4;border:1px solid #d9a4a466;border-radius:5px;
+    padding:.06rem .4rem;white-space:nowrap}
+  .okband{font:.58rem var(--mono);color:var(--near);border:1px solid var(--near);border-radius:5px;
+    padding:.06rem .4rem;white-space:nowrap;opacity:.85}
+  .mktada{display:flex;gap:.45rem;align-items:flex-start}
+  .mktada textarea{flex:1;background:var(--deep);border:1px solid var(--hair2);border-radius:8px;
+    padding:.45rem .65rem;color:var(--star);font:.72rem var(--mono);resize:vertical}
+  .adaans{border:1px solid var(--hair);border-left:3px solid #d99cc4;border-radius:8px;
+    padding:.6rem .8rem;margin:.5rem 0;font-size:.76rem;line-height:1.55;white-space:pre-wrap}
+  .adaans .cites{margin-top:.4rem}
+  .adaans .cites .lnk{margin-right:.6rem;font:.64rem var(--mono)}
+  #taxpop{border:1px solid var(--hair);border-radius:10px;padding:.7rem .9rem;margin-top:.5rem;
+    background:var(--deep);font:.68rem var(--mono);line-height:1.7;color:var(--dim)}
+  #taxpop b{color:var(--brass);font-weight:600}
+  .strdeal{border:1px solid var(--hair);border-radius:9px;padding:.6rem .8rem;margin:.5rem 0;
+    font:.7rem var(--mono);line-height:1.7;color:var(--dim)}
+  .strdeal b{color:var(--star)}
+  .strdeal .k{color:var(--faint);display:inline-block;min-width:7.5em}
   .ladder{display:flex;flex-direction:column;gap:.3rem;margin:.4rem 0 .8rem}
   .ladder .lane{display:flex;align-items:center;gap:.6rem;font:.74rem var(--mono);flex-wrap:wrap}
   .ladder .cls{width:4.2rem;color:var(--brass);text-align:right}
@@ -1275,33 +1340,55 @@
 
   <!-- THE STABLE (0019) -->
   <div class="view hide" id="v-stable">
-    <div class="section" style="margin-top:0">the stable · the AI models this world may think with — connect one, approve it, watch its costs · managed at <span id="stable-floor" style="color:var(--brass)">…</span></div>
-    <div class="ladder" id="ladder"></div>
-    <div class="plantform">
-      <div class="row">
-        <input id="sf-id" placeholder="the model’s exact name from your provider, e.g. anthropic/claude-sonnet-4-6" style="flex:2;min-width:220px">
-        <select id="sf-route"><option value="litellm-direct">direct — your own API keys (default)</option><option value="openrouter">openrouter</option></select>
-        <select id="sf-class"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option><option value="xhigh">xhigh</option></select>
-        <button class="go" onclick="saddleMind()">Connect this model →</button>
-      <label class="cascade"><input type="checkbox" id="sf-cascade"> also saddle on every floor below</label>
-      </div>
-      <div class="chips"><span class="qchip" onclick="presetSaddle('anthropic/claude-sonnet-4-6','medium')">🐎 Sonnet (medium)</span>
-        <span class="qchip" onclick="presetSaddle('anthropic/claude-haiku-4-5-20251001','low')">🐎 Haiku (low)</span>
-        <span class="qchip" onclick="presetSaddle('openai/gpt-4o-mini','low')">🐎 gpt-4o-mini (low)</span></div>
-      <div class="formerr" id="sf-err"></div>
-      <div class="steps"><span><span class="num">①</span>you connect — the stable keeper checks the model and pins its exact terms (price and context size)</span>
-        <span><span class="num">②</span>you approve — new models start on trial; steady results earn full use</span>
-        <span><span class="num">③</span>price changes and expirations come back to YOU as choices, never as outages</span></div>
+    <!-- 0058 sp3 — the stable earns the canon master-detail (0052's law):
+         the view never scrolls; inventory left, reading pane right, and THE
+         MARKET (sp1's merged intel) as a second face of the same tab -->
+    <div class="stbltop">
+      <span class="section" style="margin:0;border:none;padding:0">the stable · minds under governance — at <span id="stable-floor" style="color:var(--brass)">…</span></span>
+      <span class="stblmode"><span class="smode on" id="smode-stable" onclick="stblMode('stable')">🐎 the stable</span><span class="smode" id="smode-market" onclick="stblMode('market')">🔭 the market <span id="mkt-n"></span></span></span>
+      <span class="lnk" style="margin-left:auto;font-size:.68rem" onclick="taxToggle()">key terms ▾</span>
     </div>
-    <div class="section">awaiting your decision</div>
-    <div id="stablepending"><div class="quiet">nothing staged.</div></div>
-    <div class="section">the pasture calendar · next 90 days</div>
-    <div class="pasture" id="pasture"><span class="quiet">no announced expiries — a calm pasture.</span></div>
-    <div class="section">the stalls</div>
-    <div id="stableroster"></div>
-    <div class="quiet" id="stableempty" style="margin-top:.4rem">no minds saddled yet — the legacy registry file still routes.</div>
-    <div class="section">who is thinking · usage across the whole subtree</div>
-    <div id="whothinks"><div class="quiet">no governed thoughts metered yet.</div></div>
+    <div id="taxpop" class="hide"></div>
+    <div class="stblsplit" id="stbl-main">
+      <div class="stblleft">
+        <div class="sechd">waiting on your word <span id="stbl-wait-n"></span></div>
+        <div id="stablepending"></div>
+        <div class="sechd">the classes — the names work asks for</div>
+        <div class="ladder" id="ladder"></div>
+        <div class="sechd">the stalls — saddled minds</div>
+        <div id="stableroster"></div>
+        <div class="sechd">the allocations — who uses what</div>
+        <div id="stblassign"></div>
+        <div class="sechd">the pasture · announced expiries, 90 days</div>
+        <div class="pasture" id="pasture"><span class="quiet">no announced expiries — a calm pasture.</span></div>
+        <div class="sechd">connect by exact name — for a mind the market does not list</div>
+        <div class="stbform">
+          <input id="sf-id" placeholder="provider/model, e.g. anthropic/claude-sonnet-4-6">
+          <select id="sf-route"><option value="litellm-direct">direct keys</option><option value="openrouter">openrouter</option></select>
+          <select id="sf-class"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option><option value="xhigh">xhigh</option></select>
+          <button class="sbtn ok" onclick="saddleMind()">connect →</button>
+          <label class="cascade"><input type="checkbox" id="sf-cascade"> every floor below</label>
+        </div>
+        <div class="formerr" id="sf-err"></div>
+      </div>
+      <div class="stblread" id="stbl-read"><div class="quiet">select a stall, a waiting decision, or an allocation — its whole story opens here.</div></div>
+    </div>
+    <div class="stblsplit hide" id="mkt-main">
+      <div class="stblleft">
+        <div class="mktbar">
+          <input id="mkt-q" placeholder="search 3,000 known minds — name, provider…" oninput="mktType()">
+        </div>
+        <div class="mktchips" id="mkt-chips"></div>
+        <div id="mkt-list"><div class="quiet">the market is loading…</div></div>
+        <div class="sechd">ask ada — plain words over the whole market</div>
+        <div class="mktada">
+          <textarea id="mkt-ada-q" rows="2" placeholder="e.g. which vision minds under $1/M could serve as a cheap eye?"></textarea>
+          <button class="sbtn ok" id="mkt-ada-go" onclick="mktAsk()">ask ada</button>
+        </div>
+        <div id="mkt-ada-a"></div>
+      </div>
+      <div class="stblread" id="mkt-read"><div class="quiet">select a mind from the market — its full intel opens here, and saddling it starts the governed walk: connect → your approval → trial → service.</div></div>
+    </div>
   </div>
 
   <!-- REQUESTS -->
@@ -3580,77 +3667,302 @@ const agentName=did=>{
   const w=(presCache.workforce||[]).find(x=>x.agent===did);
   return w?(w.name||short(did)):short(did);
 };
+/* ── 0058 sp3 — THE STABLE, master-detail: one inventory left, one reading
+      pane right (0052's law); THE MARKET as the tab's second face over sp1's
+      merged intel; assignments visible; every decision wears its furniture.
+      The click-death law holds: re-render only when the data truly moved,
+      and never under a typing hand. ── */
+let STBLV="stable",STBLSEL=null,STBLD=null,STBLQ=[],ASSIGNS={},STBLSIG="";
+let MKTD=null,MKTSEL=null,MKTF={q:"",capability:"",provider:"",max_price:"",access:false},
+    MKTTMR=null,MKTASKING=null,TAXOPEN=false;
+const STDOT={available:"var(--near)",canaried:"var(--blue)",candidate:"var(--dim)",
+  deprecated:"var(--red)",sunset:"var(--faint)"};
+const perM=v=>(typeof v==="number"&&v>0)?("$"+(v*1e6).toFixed(2)):(v?("$"+(parseFloat(v)*1e6).toFixed(2)):"—");
+function stblMode(m){STBLV=m;
+  $("smode-stable").classList.toggle("on",m==="stable");
+  $("smode-market").classList.toggle("on",m==="market");
+  $("stbl-main").classList.toggle("hide",m!=="stable");
+  $("mkt-main").classList.toggle("hide",m!=="market");
+  if(m==="market"&&!MKTD)mktSearch();
+}
+function taxToggle(){TAXOPEN=!TAXOPEN;const t=$("taxpop");t.classList.toggle("hide",!TAXOPEN);
+  if(TAXOPEN)t.innerHTML=`<b>key terms — the stable's names, mapped to the industry's</b> (0058)<br>
+   <b>a stall</b> = a deployment: a mind this floor may serve, its deal pinned, its lifecycle governed ·
+   <b>a class</b> = a virtual route: the stable name work asks for (low/medium/high/xhigh — the Logic dial's own words) ·
+   <b>the deal</b> = the pinned rate card: pricing, context, modalities — a byte moving is drift, held at your gate ·
+   <b>saddle → attest → canary → available</b> = configure → approve → verify → publish: birth is governed, service is earned ·
+   <b>an assignment</b> = an allocation: WHO uses which class or pinned mind — subject, then floor, then the universe's law ·
+   <b>the pasture</b> = the EOL calendar · <b>the mindline</b> = the audit worldline, signed by ada, never self-attested ·
+   <b>the market</b> = the registry's catalog: intel from five eyes, NEVER authority — nothing serves until saddled`}
+function stblSel(t,id){STBLSEL={t,id};STBLSIG="";loadStable()}
+function stlKey(s){return (s.floor||"?")+"|"+s.id}
 async function loadStable(){
   try{
+    const bz=document.activeElement;   /* a typing hand outranks the refresh */
+    if(bz&&bz.id&&["sf-id","mkt-q","mkt-ada-q"].includes(bz.id))return;
     const st=await(await fetch(api("/stable"))).json();
-    $("stable-floor").textContent=st.scope;
     const q=(await(await fetch(api("/requests"))).json()).requests||[];
+    let assigns={};try{assigns=(await(await fetch(OBSD+"/assign")).json()).assignments||{}}catch{}
+    STBLD=st;STBLQ=q;ASSIGNS=assigns;
     const waiting=q.filter(r=>r.kind==="mind"&&["staged","pending"].includes(r.status));
+    const sig=JSON.stringify([st.stalls,waiting.map(r=>[r.id,r.status]),assigns,STBLSEL,STBLV]);
+    if(sig===STBLSIG)return; STBLSIG=sig;
+    $("stable-floor").textContent=st.scope;
     $("stable-badge").textContent=waiting.length?`(${waiting.length})`:"";
-    $("stablepending").innerHTML= waiting.length? waiting.slice().reverse().map(r=>{
-      const v=r.result||{}, act=r.action||"saddle";
-      const sub=r.status!=="staged"?"ada is probing the catalog…":
-        act==="saddle"?`probed · ${v.in_catalog?"in the catalog":"manual manifest"} · pin ${(v.manifest_hash||"").slice(7,25)}…${v.expires_at?` · expires ${String(v.expires_at).slice(0,10)}`:""}`:
-        "consequence waits for you (0012)";
-      return `<div class="req"><span class="kind">${act}</span>
-       <span class="txt">${r.mind||""}<div class="sub">${r.text||""}</div><div class="sub">${sub}</div></span>
-       ${r.status==="staged"?`<button class="sbtn ok" onclick="stableDecide('${r.id}',true)">approve</button>
-        <button class="sbtn no" onclick="stableDecide('${r.id}',false)">deny</button>`:`<span class="st">${r.status}</span>`}</div>`;
-    }).join("") : `<div class="quiet">nothing staged.</div>`;
-    const stalls=(st.stalls||[]);
-    const live=stalls.filter(s=>s.state!=="sunset");
-    // the ladder: who answers each class, in resolution order
-    const dot={available:"var(--near)",canaried:"var(--blue)",candidate:"var(--dim)",
-      deprecated:"var(--red)",sunset:"var(--faint)"};
+    $("stbl-wait-n").textContent=waiting.length?`· ${waiting.length}`:"";
+    const live=(st.stalls||[]).filter(s=>s.state!=="sunset");
+    /* auto-pick: first waiting decision, else this floor's first stall —
+       an explicit selection always holds (the pane-release law's kin) */
+    const selOk=STBLSEL&&(
+      (STBLSEL.t==="req"&&q.some(r=>r.id===STBLSEL.id))||
+      (STBLSEL.t==="stall"&&live.some(s=>stlKey(s)===STBLSEL.id))||
+      (STBLSEL.t==="assign"&&ASSIGNS[STBLSEL.id]));
+    if(!selOk)STBLSEL=waiting.length?{t:"req",id:waiting[waiting.length-1].id}
+      :(live.length?{t:"stall",id:stlKey(live.find(s=>s.floor===st.scope)||live[0])}:null);
+    /* waiting — compact rows, decisions read in the PANE */
+    $("stablepending").innerHTML=waiting.length?waiting.slice().reverse().map(r=>
+      `<div class="strow${STBLSEL&&STBLSEL.t==="req"&&STBLSEL.id===r.id?" on":""}" onclick="stblSel('req','${r.id}')">
+        <span class="dt" style="background:${r.status==="staged"?"var(--brass)":"var(--dim)"}"></span>
+        <span class="nm">${esc(r.action||"saddle")} · ${esc(r.mind||r.subject||"")}</span>
+        <span class="cl">${r.status}</span><span class="mx">${r.at?ago(r.at):""}</span></div>`).join("")
+      :`<div class="quiet">nothing waits — a calm stable.</div>`;
+    /* the ladder — serving order per class, with allocation counts */
     $("ladder").innerHTML=["low","medium","high","xhigh"].map(k=>{
-      const lane=live.filter(s=>s.class===k);
-      return `<div class="lane"><span class="cls">${k}</span>${lane.length?lane.map(s=>
-        `<span class="mchip"><span class="st" style="background:${dot[s.state]||"var(--dim)"}"></span>${s.id} · ${s.route}</span>`).join("")
-        :`<span class="mchip" style="opacity:.5">no model connected for this class yet — built-in routing answers meanwhile</span>`}</div>`;}).join("");
-    // the pasture calendar: 90 days of announced expiries
-    const day=864e5, now=Date.now();
+      const lane=live.filter(s=>s.class===k),
+        na=Object.values(ASSIGNS).filter(a=>a&&a.class===k).length;
+      return `<div class="lane"><span class="cls">${k}${na?` <span title="${na} allocation(s) name this class">·${na}</span>`:""}</span>${lane.length?lane.map(s=>
+        `<span class="mchip" style="cursor:pointer" onclick="stblSel('stall','${stlKey(s)}')"><span class="st" style="background:${STDOT[s.state]||"var(--dim)"}"></span>${s.id.split("/").pop()}</span>`).join("")
+        :`<span class="mchip" style="opacity:.5">unserved — the registry file answers</span>`}</div>`}).join("");
+    /* the stalls — grouped by floor, compact; the pane holds the detail */
+    const grp={};live.forEach(s=>(grp[s.floor||"?"]=grp[s.floor||"?"]||[]).push(s));
+    $("stableroster").innerHTML=Object.keys(grp)
+      .sort((a,b)=>(a===st.scope?-1:b===st.scope?1:a.localeCompare(b))).map(fl=>
+      `<div class="floorsec${fl===st.scope?" here":""}">${fl===st.scope?"this floor · ":""}${fl}</div>`
+      +grp[fl].map(s=>`<div class="strow${STBLSEL&&STBLSEL.t==="stall"&&STBLSEL.id===stlKey(s)?" on":""}" onclick="stblSel('stall','${stlKey(s)}')">
+        <span class="dt" style="background:${STDOT[s.state]||"var(--dim)"}"></span>
+        <span class="nm">${esc(s.id)}</span><span class="cl">${esc(s.class||"")}</span>
+        <span class="mx">${s.calls||0}c${s.expires_at?" · ⌛":""}</span></div>`).join("")).join("")
+      ||`<div class="quiet">no minds saddled — the market is one tab away.</div>`;
+    /* the allocations — who uses what (0058 sp2's ledger, visible) */
+    const ak=Object.keys(ASSIGNS).sort();
+    $("stblassign").innerHTML=ak.length?ak.map(k=>{const a=ASSIGNS[k]||{};
+      return `<div class="strow${STBLSEL&&STBLSEL.t==="assign"&&STBLSEL.id===k?" on":""}" onclick="stblSel('assign','${esc(k)}')">
+        <span class="dt" style="background:var(--brass)"></span>
+        <span class="nm">${esc(k)}</span><span class="cl">${esc(a.class||"")}</span>
+        <span class="mx">${a.pin?"📌 "+esc(String(a.pin).split("/").pop()):""}</span></div>`}).join("")
+      :`<div class="quiet">no allocations — every caller rides its floor's own law (the ladder).</div>`;
+    /* the pasture — unchanged slim strip */
+    const day=864e5,now=Date.now();
     const eols=live.filter(s=>s.expires_at).map(s=>({s,d:(new Date(String(s.expires_at).slice(0,10))-now)/day}))
       .filter(x=>x.d>-1&&x.d<=90);
-    $("pasture").innerHTML= eols.length?
+    $("pasture").innerHTML=eols.length?
       `<div class="axis"></div><span class="tick" style="left:2%">now</span>
        <span class="tick" style="left:31%">+30d</span><span class="tick" style="left:63%">+60d</span>
        <span class="tick" style="right:2%">+90d</span>`+
       eols.map(({s,d})=>{const x=2+96*Math.max(0,Math.min(1,d/90));
         return `<div class="eol${d<=30?" burn":""}" style="left:${x}%" title="${s.id} · ${String(s.expires_at).slice(0,10)}"></div>
-          <span class="eollab" style="left:${x}%">${s.id.split("/").pop()} · ${String(s.expires_at).slice(5,10)}</span>`;}).join("")
-      : `<span class="quiet" style="position:absolute;left:1rem;top:22px">no announced expiries — a calm pasture.</span>`;
-    // the stalls
-    $("stableempty").style.display=live.length?"none":"";
-    const sgroups={};live.forEach(s=>(sgroups[s.floor||"?"]=sgroups[s.floor||"?"]||[]).push(s));
-    const sorder=Object.keys(sgroups).sort((a,b)=>(a===st.scope?-1:b===st.scope?1:a.localeCompare(b)));
-    const stallCard=s=>{
-      const p=(s.manifest||{}).pricing||{};
-      const mt=v=>v?("$"+(parseFloat(v)*1e6).toFixed(2)):"—";
-      return `<div class="svc"><div class="hd"><span class="nm" title="${s.did}">${s.id}</span>
-        <span class="schip ${s.state}">${s.state}</span></div>
-        <div class="meta"><b>${s.provider} · ${s.route} · ${s.class}</b> · saddled on ${(s.floor||"").split("/").pop()}<br>
-        ${mt(p.prompt)} / ${mt(p.completion)} per Mtok · ${(s.manifest||{}).context_length?((s.manifest.context_length/1000)|0)+"k ctx":"ctx —"}<br>
-        <span class="hash" title='${JSON.stringify(s.manifest||{}).replace(/'/g,"&#39;")}'>pin ${(s.manifest_hash||"").slice(7,25)}…</span>
-        · <b>${s.calls||0}</b> call(s) · synced <b>${s.last_synced?ago(s.last_synced):"never"}</b>
-        ${s.expires_at?`<br><span style="color:${(new Date(String(s.expires_at).slice(0,10))-now)/day<=30?"var(--red)":"var(--brass)"}">expires ${String(s.expires_at).slice(0,10)}</span>`:""}
-        ${s.state==="deprecated"?`<br><span style="color:var(--red)">the deal moved or the clock ran — decide above</span>`:""}</div>
-        <div class="acts"><button class="sbtn no" onclick="stableRetire('${s.id}')">retire</button></div></div>`;
-    };
-    $("stableroster").innerHTML=sorder.map(fl=>
-      `<div class="floorsec${fl===st.scope?" here":""}">${fl===st.scope?"this floor · ":""}${fl}</div><div class="farmgrid">`
-      +sgroups[fl].map(stallCard).join("")+`</div>`).join("");
-    // who is thinking — every metered identity across the subtree, usd-sorted
-    const usage=(st.usage||[]).slice().sort((a,b)=>(b.usd||0)-(a.usd||0));
-    $("whothinks").innerHTML= usage.length? usage.map(u=>{
-      const nm=agentName(u.subject), res=(presCache?.residents||[]).some(x=>x.did===u.subject);
-      return `<div class="think${res?" resident":""}"><span class="nm" title="${u.subject}">${nm}</span>
-        <span class="fl">${(u.floor||"").split("/").pop()}</span>
-        <span class="n">${(u.calls||0)} call${u.calls===1?"":"s"}</span>
-        <span class="n">${(u.tokens||0).toLocaleString()} tok</span>
-        <span class="u">${money(u.usd||0)}</span></div>`;}).join("")
-      : `<div class="quiet">no governed thoughts metered yet.</div>`;
+          <span class="eollab" style="left:${x}%">${s.id.split("/").pop()} · ${String(s.expires_at).slice(5,10)}</span>`}).join("")
+      :`<span class="quiet" style="position:absolute;left:1rem;top:22px">no announced expiries — a calm pasture.</span>`;
+    renderStblPane();
   }catch{}
 }
+function whoUses(mid,klass){
+  /* the blast radius, client-side: allocations pinning this mind, plus the
+     class it serves — the same truth the staged card wears (0058 §3.5) */
+  const pinned=Object.keys(ASSIGNS).filter(k=>(ASSIGNS[k]||{}).pin===mid);
+  const classed=Object.keys(ASSIGNS).filter(k=>!((ASSIGNS[k]||{}).pin)&&(ASSIGNS[k]||{}).class===klass);
+  return {pinned,classed};
+}
+function renderStblPane(){
+  const R=$("stbl-read");if(!R||!STBLSEL){if(R&&!STBLSEL)R.innerHTML=`<div class="quiet">select a stall, a waiting decision, or an allocation — its whole story opens here.</div>`;return}
+  const live=(STBLD?.stalls||[]).filter(s=>s.state!=="sunset");
+  if(STBLSEL.t==="stall"){
+    const s=live.find(x=>stlKey(x)===STBLSEL.id);if(!s){R.innerHTML=`<div class="quiet">gone from the stable — the worldline keeps it.</div>`;return}
+    const p=(s.manifest||{}).pricing||{},w=whoUses(s.id,s.class);
+    R.innerHTML=`<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+      <b style="font-size:.95rem">${esc(s.id)}</b><span class="schip ${s.state}">${s.state}</span>
+      <span class="cl" style="color:var(--brass);font:.68rem var(--mono)">class ${esc(s.class||"?")}</span></div>
+     <div class="dim" style="font:.66rem var(--mono);margin:.25rem 0">${esc(s.provider)} · ${esc(s.route)} · saddled on ${esc(s.floor||"")} · DID ${esc((s.did||"").slice(0,30))}…</div>
+     <div class="strdeal"><b>THE DEAL — pinned; a byte moving is drift at your gate</b><br>
+      <span class="k">prompt</span><b>${perM(p.prompt)}</b> / Mtok<br>
+      <span class="k">completion</span><b>${perM(p.completion)}</b> / Mtok<br>
+      <span class="k">context</span><b>${(s.manifest||{}).context_length?(((s.manifest.context_length/1000)|0)+"k"):"—"}</b><br>
+      <span class="k">modalities</span>${esc(((s.manifest||{}).modalities||[]).join(", ")||"—")}<br>
+      <span class="k">pin</span><span class="hash" title="${esc(JSON.stringify(s.manifest||{}))}">${esc((s.manifest_hash||"").slice(0,30))}…</span>
+      ${s.proposed_hash?`<br><span class="k" style="color:var(--red)">proposed</span><span style="color:var(--red)">${esc(String(s.proposed_hash).slice(0,30))}… — the deal moved; re-approval waits</span>`:""}</div>
+     <div class="strdeal"><b>THE LIFE</b><br>
+      <span class="k">thoughts</span><b>${s.calls||0}</b> answered<br>
+      <span class="k">synced</span>${s.last_synced?esc(ago(s.last_synced)):"never"}<br>
+      <span class="k">canary</span>${s.canary_beats||0} beat(s)<br>
+      ${s.expires_at?`<span class="k" style="color:var(--red)">expires</span><b style="color:var(--red)">${esc(String(s.expires_at).slice(0,10))}</b><br>`:""}
+      <span class="k">saddled</span>${esc(String(s.saddled_at||"").slice(0,10))}</div>
+     <div class="strdeal"><b>WHO LEANS ON IT — the blast radius before any word</b><br>
+      ${w.pinned.length?`pinned by: ${w.pinned.map(esc).join(" · ")}<br>`:""}
+      ${w.classed.length?`allocated to its class: ${w.classed.map(esc).join(" · ")}<br>`:""}
+      ${!w.pinned.length&&!w.classed.length?`no allocation names it — callers reach it through class ${esc(s.class||"?")} on its floor<br>`:""}</div>
+     <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">
+      <button class="sbtn no" onclick="stableRetire('${esc(s.id)}')">retire — stages for your word</button>
+      ${s.state==="deprecated"?`<button class="sbtn ok" onclick="stableReapprove('${esc(s.id)}')">re-approve the new deal</button>`:""}</div>`;
+    return;
+  }
+  if(STBLSEL.t==="req"){
+    const r=STBLQ.find(x=>x.id===STBLSEL.id);if(!r){R.innerHTML=`<div class="quiet">settled — the archive keeps it.</div>`;return}
+    const v=r.result||{},act=r.action||"saddle",bl=v.blast||r.blast;
+    const rep=r.replacement||{},old=live.find(x=>x.id===r.mind);
+    const dealRows=(m,label)=>{const pr=(m||{}).pricing||{};
+      return `<div class="strdeal"><b>${label}</b><br>
+       <span class="k">prompt</span>${perM(pr.prompt)} / Mtok<br>
+       <span class="k">completion</span>${perM(pr.completion)} / Mtok<br>
+       <span class="k">context</span>${(m||{}).context_length?(((m.context_length/1000)|0)+"k"):"—"}</div>`};
+    R.innerHTML=`<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+      <b style="font-size:.9rem">${esc(act)} · ${esc(r.mind||r.subject||"")}</b>
+      <span class="st">${esc(r.status)}</span></div>
+     <div class="dim" style="font-size:.74rem;margin:.3rem 0">${esc(r.text||"")}</div>
+     ${act==="saddle"&&r.status==="staged"?`<div class="strdeal"><b>ADA PROBED</b><br>
+       <span class="k">catalog</span>${v.in_catalog?"found — the deal below is the market's":"not listed — manual manifest"}<br>
+       <span class="k">pin</span>${esc((v.manifest_hash||"").slice(0,30))}…<br>
+       ${v.expires_at?`<span class="k">expires</span>${esc(String(v.expires_at).slice(0,10))}<br>`:""}
+       <span class="k">pricing</span>${perM((v.pricing||{}).prompt)} / ${perM((v.pricing||{}).completion)} per Mtok</div>`:""}
+     ${act==="swap"?dealRows(old&&old.manifest,"THE EXPIRING DEAL — "+esc(r.mind||""))
+       +dealRows(rep.manifest||rep,"ADA RECOMMENDS — "+esc(rep.id||"nothing found")+(rep.why?` · ${esc(rep.why)}`:"")):""}
+     ${act==="reapprove"&&old?dealRows(old.manifest,"THE PINNED DEAL")
+       +dealRows(old.proposed_manifest,"THE PROPOSED DEAL — what the market now says"):""}
+     ${bl?`<div class="strdeal"><b>THE BLAST RADIUS</b><br>${esc(bl.note||"")}</div>`:""}
+     ${r.status==="staged"?`<div style="display:flex;gap:.5rem;margin-top:.5rem">
+       <button class="sbtn ok" onclick="stableDecide('${r.id}',true)">${act==="swap"?"swap — no outage, by appointment":act==="retire"?"retire it":"approve"}</button>
+       <button class="sbtn no" onclick="stableDecide('${r.id}',false)">${act==="saddle"?"turn it away":"leave it as it stands"}</button></div>`
+      :`<div class="quiet" style="margin-top:.4rem">ada is tending it…</div>`}`;
+    return;
+  }
+  if(STBLSEL.t==="assign"){
+    const k=STBLSEL.id,a=ASSIGNS[k]||{};
+    R.innerHTML=`<b style="font-size:.9rem">${esc(k)}</b>
+     <div class="strdeal"><b>THE ALLOCATION</b><br>
+      ${a.class?`<span class="k">class</span><b>${esc(a.class)}</b><br>`:""}
+      ${a.pin?`<span class="k">pinned to</span><b>${esc(a.pin)}</b><br>`:""}
+      <span class="k">since</span>${esc(String(a.at||"").slice(0,16))}<br>
+      <span class="k">by</span>${esc(a.req||"")}</div>
+     <div class="dim" style="font-size:.7rem">resolution walks subject → floor → universe (0058 §3.4); releasing this returns the caller to its floor's own law.</div>
+     <button class="sbtn no" style="margin-top:.5rem" onclick="stblUnassign('${esc(k)}')">release — stages for your word</button>`;
+  }
+}
+async function stableReapprove(id){
+  await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({kind:"mind",action:"reapprove",mind:id,text:`re-approve ${id}'s new deal`})});
+  STBLSIG="";loadStable();
+}
+async function stblUnassign(sub){
+  await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({kind:"mind",action:"unassign",subject:sub,
+      text:`release the allocation on ${sub} — its floor's own law resumes`})});
+  STBLSIG="";loadStable();
+}
+/* ── THE MARKET — sp1's five-eyed intel, searchable; select → full intel →
+      saddle (the governed walk unchanged); ask ada in plain words ── */
+function mktType(){clearTimeout(MKTTMR);MKTTMR=setTimeout(()=>{MKTF.q=$("mkt-q").value.trim();mktSearch()},350)}
+function mktChip(k,v){MKTF[k]=(MKTF[k]===v?"":v);mktSearch()}
+function mktAccess(){MKTF.access=!MKTF.access;mktSearch()}
+async function mktSearch(){
+  try{
+    const p=new URLSearchParams();
+    if(MKTF.q)p.set("q",MKTF.q);if(MKTF.capability)p.set("capability",MKTF.capability);
+    if(MKTF.provider)p.set("provider",MKTF.provider);if(MKTF.max_price)p.set("max_price",MKTF.max_price);
+    p.set("limit","60");
+    MKTD=await(await fetch(OBSD+"/market?"+p)).json();
+  }catch{MKTD=null}
+  renderMkt();
+}
+function renderMkt(){
+  const L=$("mkt-list");if(!L)return;
+  if(!MKTD){L.innerHTML=`<div class="quiet">the market door is unreachable — is the worker tending?</div>`;return}
+  $("mkt-n").textContent=`· ${MKTD.total??"…"}`;
+  let rows=MKTD.entries||[];
+  if(MKTF.access)rows=rows.filter(e=>e.access==="available");
+  const caps=["tools","vision","reasoning","structured"];
+  const provs=["anthropic","openai","huggingface","bedrock","openrouter","mistral","gemini"];
+  $("mkt-chips").innerHTML=
+    caps.map(c=>`<span class="mkc${MKTF.capability===c?" on":""}" onclick="mktChip('capability','${c}')">${c}</span>`).join("")
+    +provs.map(c=>`<span class="mkc${MKTF.provider===c?" on":""}" onclick="mktChip('provider','${c}')">${c}</span>`).join("")
+    +["0.5","1","5"].map(c=>`<span class="mkc${MKTF.max_price===c?" on":""}" onclick="mktChip('max_price','${c}')">≤$${c}/M</span>`).join("")
+    +`<span class="mkc${MKTF.access?" on":""}" onclick="mktAccess()">access proven</span>`;
+  const cb=e=>caps.map(c=>`<span class="capb${(e.capabilities||{})[c]?" y":""}" title="${c}">${c[0].toUpperCase()}</span>`).join("");
+  L.innerHTML=rows.length?rows.map(e=>
+    `<div class="mktrow${MKTSEL===e.id?" on":""}" onclick="mktSel('${esc(e.id)}')">
+      <span class="nm">${esc(e.id)}${e.read_only?` <span class="roband">read-only</span>`:""}${e.access==="available"?` <span class="okband">✓</span>`:""}</span>
+      <span class="px">${perM((e.pricing||{}).prompt)}/M</span>
+      <span class="cx">${e.context_length?((e.context_length/1000)|0)+"k":"—"}</span>
+      <span class="cx">${cb(e)}</span></div>`).join("")
+    +(MKTD.total>rows.length?`<div class="quiet" style="padding:.3rem 0">${MKTD.total-rows.length} more match — narrow the search</div>`:"")
+    :`<div class="quiet">nothing matches this framing${MKTD.stale?" — and the market is STALE (no eye answered; the cache speaks)":""}.</div>`;
+  renderMktPane();
+}
+function mktSel(id){MKTSEL=id;renderMkt()}
+function renderMktPane(){
+  const R=$("mkt-read");if(!R)return;
+  const e=(MKTD?.entries||[]).find(x=>x.id===MKTSEL);
+  if(!e){R.innerHTML=`<div class="quiet">select a mind from the market — its full intel opens here, and saddling it starts the governed walk: connect → your approval → trial → service.</div>`;return}
+  const p=e.pricing||{},srcs=(e.sources||[]).join(" · ");
+  R.innerHTML=`<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+    <b style="font-size:.92rem">${esc(e.id)}</b>
+    ${e.read_only?`<span class="roband">read-only — not wired (AWS waits, by the pin)</span>`:""}
+    ${e.access==="available"?`<span class="okband">✓ access proven by this rig's key</span>`:""}
+    ${e.missing?`<span class="roband">missing ×${e.misses} — an eye lost sight of it</span>`:""}</div>
+   <div class="strdeal"><b>THE INTEL — from ${((e.sources||[]).length)} eye(s): ${esc(srcs)}</b><br>
+    <span class="k">prompt</span><b>${perM(p.prompt)}</b> / Mtok<br>
+    <span class="k">completion</span><b>${perM(p.completion)}</b> / Mtok<br>
+    <span class="k">context</span><b>${e.context_length?((e.context_length/1000)|0)+"k":"unknown"}</b><br>
+    <span class="k">capabilities</span>${Object.entries(e.capabilities||{}).filter(([,v])=>v).map(([kk])=>kk).join(", ")||"unverified"}<br>
+    ${e.serving_providers?`<span class="k">served by</span>${e.serving_providers} inference provider(s)<br>`:""}
+    ${e.expires_at?`<span class="k" style="color:var(--red)">announced EOL</span><b style="color:var(--red)">${esc(String(e.expires_at).slice(0,10))}</b><br>`:""}
+    <span class="k">seen</span>${esc(String(e.seen_at||"").slice(0,16))}</div>
+   <div class="dim" style="font-size:.68rem;margin:.4rem 0">intel is never authority (0058): saddling stages ada's probe and YOUR approval; the deal pins at attest; the canary earns service.</div>
+   ${e.read_only?`<div class="quiet">this provider is read-only on this rig — its live adapter is a named future dive.</div>`
+    :`<div class="stbform" style="margin-top:.4rem">
+     <select id="mkt-class"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option><option value="xhigh">xhigh</option></select>
+     <select id="mkt-route"><option value="litellm-direct">direct keys</option><option value="openrouter">openrouter</option></select>
+     <label class="cascade"><input type="checkbox" id="mkt-cascade"> every floor below</label>
+     <button class="sbtn ok" onclick="mktSaddle('${esc(e.id)}')">🐎 saddle it →</button></div>
+    <div class="formerr" id="mkt-err"></div>`}`;
+}
+async function mktSaddle(id){
+  const err=$("mkt-err");if(err)err.textContent="";
+  try{
+    const body={kind:"mind",action:"saddle",mind:id,route:$("mkt-route").value,
+      class:$("mkt-class").value,text:`saddle ${id} (${$("mkt-class").value}) — picked from the market`};
+    const r=await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify(body)});
+    if(!r.ok){if(err)err.textContent=`the daemon refused: ${r.status}`;return}
+    if($("mkt-cascade")&&$("mkt-cascade").checked)await cascadeBelow({...body,text:`saddle ${id} (cascaded from above)`});
+    if(err)err.textContent="staged — ada probes it now; your word decides in THE STABLE face";
+    STBLSIG="";
+  }catch{if(err)err.textContent="unreachable — is the daemon up?"}
+}
+async function mktAsk(){
+  const q=$("mkt-ada-q").value.trim();if(!q||MKTASKING)return;
+  const A=$("mkt-ada-a"),go=$("mkt-ada-go");
+  go.disabled=true;A.innerHTML=`<div class="adaans">🐴 ada reads the market…</div>`;
+  try{
+    const made=await(await fetch(api("/requests"),{method:"POST",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({kind:"market-ask",text:q})})).json();
+    MKTASKING=made.id;
+    for(let i=0;i<40;i++){
+      await new Promise(r2=>setTimeout(r2,3000));
+      const qs=(await(await fetch(api("/requests"))).json()).requests||[];
+      const r=qs.find(x=>x.id===made.id);
+      if(r&&r.status==="done"){
+        const v=r.result||{};
+        A.innerHTML=`<div class="adaans">${esc(v.reply||"")}
+          ${(v.citations||[]).length?`<div class="cites">reads: ${(v.citations||[]).map(c=>
+            `<span class="lnk" onclick="mktCite('${esc(c)}')">${esc(c)}</span>`).join("")}</div>`:""}
+          <div class="dim" style="font-size:.62rem;margin-top:.3rem">${v.voiced?"voiced — one governed thought under ada's DID, metered":"grounded — no fueled voice on this floor"} · ${v.total??0} match(es) read</div></div>`;
+        break;
+      }
+    }
+  }catch{A.innerHTML=`<div class="adaans">the ask stumbled — is the worker tending?</div>`}
+  MKTASKING=null;go.disabled=false;
+}
+function mktCite(id){$("mkt-q").value=id;MKTF.q=id;MKTSEL=id;mktSearch()}
 async function saddleMind(){
   const err=$("sf-err");err.textContent="";
   const id=$("sf-id").value.trim();
@@ -3668,7 +3980,6 @@ async function saddleMind(){
     loadStable();
   }catch{err.textContent="unreachable — is the daemon up? (scripts/dev.sh status)"}
 }
-function presetSaddle(id,klass){$("sf-id").value=id;$("sf-class").value=klass;$("sf-err").textContent=""}
 async function stableRetire(id){
   await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({kind:"mind",action:"retire",mind:id,text:`retire ${id}`})});
@@ -5254,10 +5565,26 @@ function rsmRender(){
          <span class="dim" id="rsm-savenote" style="font-size:.66rem"></span></div>`
      :`<div class="dim">no words on the shelf wear this resident's name yet</div>`}
   else if(RESM.tab==="model"){
-    const minds=item.minds||[];
-    h=`<div class="rsm-eyebrow">the stable this resident saddles from</div>`
-     +(minds.length?`<div style="overflow-x:auto"><table class="dk-table"><tr><th>mind</th><th>class</th><th>state</th></tr>${minds.map(m=>`<tr><td style="font-family:var(--mono)">${dkEsc(m.mind)}</td><td>${dkEsc(m.class)}</td><td>${dkEsc(m.state)}</td></tr>`).join("")}</table></div>`:`<div class="dim">no stalls on this floor</div>`)
-     +`<div class="dim" style="font-size:.68rem;margin-top:.6rem">the deals are ada's (0019) — a mind swap rides her gate; the picker joins when that door opens, said honestly</div>`}
+    /* 0058 sp3 — the door OPENED: the mind-swap picker the 0056 stub
+       promised. Current allocation resolved by the law; picking stages
+       kind:"mind" action:"assign" through ada's gate — never a direct write */
+    const minds=item.minds||[],ma=item.mind_assignment||{},res=ma.resolved||{};
+    const mine=res.resolved_from===ma.subject;
+    const cur=res.class||res.pin
+      ?`<b>${dkEsc(res.class||"(any class)")}</b>${res.pin?` · pinned to <b>${dkEsc(res.pin)}</b>`:""} — by ${dkEsc(res.resolved_from||"?")}${mine?"":" (inherited; assigning below overrides it for this resident alone)"}`
+      :`the ladder — low → medium → high, the floor's own law; no allocation names this resident`;
+    h=`<div class="rsm-eyebrow">the mind this resident thinks with</div>
+     <div style="font-size:.76rem;margin:.2rem 0 .6rem">${cur}</div>
+     <div class="rsm-eyebrow">reassign — stages at ada's gate, your word decides (0058)</div>
+     <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.3rem 0">
+      <select id="rsm-mclass" class="dk-tab"><option value="">class…</option>${(ma.classes||[]).map(c=>`<option${res.class===c?" selected":""}>${dkEsc(c)}</option>`).join("")}</select>
+      <select id="rsm-mpin" class="dk-tab" style="max-width:260px"><option value="">no pin — the class routes</option>${(ma.stalls||[]).map(m=>`<option value="${dkEsc(m.mind)}"${res.pin===m.mind?" selected":""}>${dkEsc(m.mind)} (${dkEsc(m.class)}·${dkEsc(m.state)})</option>`).join("")}</select>
+      <button class="dk-tab" onclick="rsmAssign()">📌 assign</button>
+      ${mine?`<button class="dk-tab" onclick="rsmUnassign()">release — the ladder resumes</button>`:""}</div>
+     <div class="dim" id="rsm-mindnote" style="font-size:.68rem;margin:.3rem 0"></div>
+     <div class="rsm-eyebrow" style="margin-top:.7rem">the stable at ${dkEsc((ma.floor||"").split("/").pop()||"this floor")}</div>
+     ${minds.length?`<div style="overflow-x:auto"><table class="dk-table"><tr><th>mind</th><th>class</th><th>state</th></tr>${minds.map(m=>`<tr><td style="font-family:var(--mono)">${dkEsc(m.mind)}</td><td>${dkEsc(m.class)}</td><td>${dkEsc(m.state)}</td></tr>`).join("")}</table></div>`:`<div class="dim">no stalls on this floor — the market (Stable tab) is one door away</div>`}
+     <div class="dim" style="font-size:.66rem;margin-top:.5rem">the deals stay ada's (0019): assignment resolves subject → floor → universe, and every change is a staged request with a worldline — never a silent write</div>`}
   else if(RESM.tab==="metrics"){
     h=`<div class="dk-hero"><span class="dim">spend </span><b>${dkEsc(item.spend||"—")}</b> · <b>${dkEsc(item.calls||"—")}</b> · <b>${dkEsc(item.state||"—")}</b></div>`
      +`<div class="dim" style="font-size:.7rem;margin:.3rem 0">${dkEsc(item.age_line||"")}</div>`
@@ -5305,6 +5632,27 @@ async function rsmSave(){
         text:JSON.stringify(prof),note:"edited in the resident modal (0056v2)"})});
     if(n){n.style.color="";n.textContent="landed — your word and the edit in one motion; a versioned sibling stands"}
   }catch(e){if(n){n.textContent="the door did not answer";n.style.color="var(--red)"}}}
+async function rsmAssign(){
+  /* 0058 sp3 — the picker stages through ada's gate: kind mind, action
+     assign; the ledger writes only on the human's approval */
+  const n=$("rsm-mindnote"),cls=$("rsm-mclass")?.value||"",pin=$("rsm-mpin")?.value||"";
+  if(!cls&&!pin){if(n)n.textContent="pick a class, a pin, or both — an empty word assigns nothing";return}
+  try{
+    await fetch(`/requests`,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({kind:"mind",action:"assign",
+        subject:`resident:${RESM.name}`,
+        ...(cls?{class:cls}:{}),...(pin?{pin}:{}),
+        text:`assign ${RESM.name}'s mind: ${cls||"(any class)"}${pin?" pinned to "+pin:""} — from the resident's room`})});
+    if(n)n.textContent="staged — ada holds it; your word decides in the Inbox or the Stable tab";
+  }catch(e){if(n)n.textContent="the door did not answer"}}
+async function rsmUnassign(){
+  const n=$("rsm-mindnote");
+  try{
+    await fetch(`/requests`,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({kind:"mind",action:"unassign",subject:`resident:${RESM.name}`,
+        text:`release ${RESM.name}'s allocation — the floor's own law resumes`})});
+    if(n)n.textContent="staged — the release waits for your word";
+  }catch(e){if(n)n.textContent="the door did not answer"}}
 async function rsmRest(q){
   try{
     await fetch(`/requests`,{method:"POST",headers:{"Content-Type":"application/json"},
