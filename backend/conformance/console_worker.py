@@ -125,9 +125,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from orreth_sim import (bell as bell_mod, continuity, crypto,
-                        fingertip, improver, markers, meaning, mirror, node,
-                        observatory, parlor, profile, purge, serials, shipyard,
-                        speech, thumb as thumb_mod, vera)
+                        fingertip, improver, market, markers, meaning, mirror,
+                        node, observatory, parlor, profile, purge, serials,
+                        shipyard, speech, thumb as thumb_mod, vera)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -2135,7 +2135,7 @@ def embed_door() -> None:
                 return
             if route not in ("/observatory", "/governance", "/craft",
                              "/sentences", "/desk", "/brain", "/resident",
-                             "/pulse", "/spacetime"):
+                             "/pulse", "/spacetime", "/market"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2175,6 +2175,21 @@ def embed_door() -> None:
                         urllib.parse.urlparse(self.path).query)
                     d = max(1, min(730, int((qs.get("days") or ["195"])[0])))
                     out = json.dumps(compose_spacetime(d)).encode()
+                elif route == "/market":
+                    # 0058 sp1 — the market's search door: intel, never
+                    # authority; refresh rides its own TTL + disk cache
+                    qs = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query)
+                    g = lambda k: (qs.get(k) or [""])[0]
+                    doc = market.refresh(HOME / "stable",
+                                         openrouter_catalog())
+                    out = json.dumps(market.search(
+                        doc, q=g("q"), provider=g("provider"),
+                        capability=g("capability"),
+                        max_price=float(g("max_price")) if g("max_price") else None,
+                        min_context=int(g("min_context")) if g("min_context") else None,
+                        source=g("source"),
+                        limit=max(1, min(400, int(g("limit") or "100"))))).encode()
                 elif route == "/resident":
                     qs = urllib.parse.parse_qs(
                         urllib.parse.urlparse(self.path).query)
@@ -12069,6 +12084,10 @@ def main() -> None:
     scopes: dict[int, str] = {}
     threading.Thread(target=embed_door, daemon=True).start()  # the meaning axis's door (0022 Ph2)
     threading.Thread(target=_room_warm_loop, daemon=True).start()  # the rooms stay a breath away (0056 sp2)
+    # 0058 sp1 — the market pre-warms off the boot path: the first glass open
+    # never waits on four provider round-trips; the TTL'd cache answers after
+    threading.Thread(target=lambda: market.refresh(
+        HOME / "stable", openrouter_catalog()), daemon=True).start()
     SHIPYARD.replant()
     capability_crew_boot()                        # hulls the rig lost come back before the round
     FLIGHT.replant()                          # the recorder's book seeds, aged honestly (0043 sp1)
