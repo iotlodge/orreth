@@ -82,7 +82,14 @@ def main() -> None:
                        # the slider's first light, so the photograph's
                        # opening frame tells the truth)
                        ("pulse", "/pulse"),
-                       ("spacetime", "/spacetime?days=52")):
+                       ("spacetime", "/spacetime?days=52"),
+                       # the era-0.58/0.59 doors (2026-08-21): the stable's
+                       # five-eyed market, the allocation ledgers, and the
+                       # farm's seed catalog — the photograph shows a real
+                       # answer for every pane's opening frame
+                       ("market", "/market?limit=60"),
+                       ("assign", "/assign"),
+                       ("seeds", "/seeds?q=search")):
         try:
             (fx / f"{name}.json").write_text(json.dumps(get2(path)))
             print(f"  captured :4562{path} → fixtures/{name}.json")

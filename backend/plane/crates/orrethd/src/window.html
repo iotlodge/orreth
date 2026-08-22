@@ -1579,7 +1579,10 @@ if(window.ORRETH_DEMO){
        same photograph — keyed fixtures where the door takes a name */
     if(method==="GET"&&(path==="/observatory"||path==="/governance"||
        path==="/sentences"||path==="/brain"||path==="/pulse"||
-       path==="/spacetime"))   /* the mini-dive doors ride the photograph too */
+       path==="/spacetime"||
+       /* the era-0.58/0.59 doors: the market of minds, the allocations,
+          and the seed catalog — one photograph answers every framing */
+       path==="/market"||path==="/assign"||path==="/seeds"))
       return realFetch(`fixtures/${path.slice(1)}.json`);
     if(method==="GET"&&path==="/desk"){
       const k=u.searchParams.get("key");
