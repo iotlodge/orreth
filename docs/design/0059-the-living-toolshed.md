@@ -1,5 +1,11 @@
 # 0059 — The Living Toolshed
 
+> **CLOSED WHOLE 2026-08-21, era 0.59** — all five spoonfuls built and proven
+> live in one day (6901e20 · f1323d5 · 154ad8a + the rites). The register row
+> carries the evidence; the parks of §4 stand named. En-route: the worker's
+> door learned the browser's preflight, and the playground's answer learned
+> to survive the tick.
+
 <!-- PROVENANCE: Fable 5 (claude-fable-5) — seeded 2026-08-21 from JB's brief
      ("Farm facelift, FULL control, the human-lifecycle lens — like the Stable"). -->
 
