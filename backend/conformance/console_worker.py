@@ -126,8 +126,8 @@ from dotenv import load_dotenv
 
 from orreth_sim import (bell as bell_mod, continuity, crypto,
                         fingertip, improver, market, markers, meaning, mirror,
-                        node, observatory, parlor, profile, purge, serials,
-                        shipyard, speech, thumb as thumb_mod, vera)
+                        node, observatory, parlor, profile, purge, seeds,
+                        serials, shipyard, speech, thumb as thumb_mod, vera)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -2135,7 +2135,8 @@ def embed_door() -> None:
                 return
             if route not in ("/observatory", "/governance", "/craft",
                              "/sentences", "/desk", "/brain", "/resident",
-                             "/pulse", "/spacetime", "/market", "/assign"):
+                             "/pulse", "/spacetime", "/market", "/assign",
+                             "/seeds"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2190,6 +2191,41 @@ def embed_door() -> None:
                         min_context=int(g("min_context")) if g("min_context") else None,
                         source=g("source"),
                         limit=max(1, min(400, int(g("limit") or "100"))))).encode()
+                elif route == "/seeds":
+                    # 0059 sp1 — the seed catalog's door: the market and the
+                    # rig in one answer; what already stands OUTRANKS what
+                    # could be planted
+                    qs = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query)
+                    _q = (qs.get("q") or [""])[0]
+                    _byname: dict = {}
+                    try:
+                        for s in call(4500, "GET", "/farm").get("services", []):
+                            if s.get("state") == "decommissioned":
+                                continue
+                            e = _byname.setdefault(s.get("name"), {
+                                "id": s.get("name"), "source": "toolshed",
+                                "state": s.get("state"),
+                                "kind": s.get("kind"),
+                                "tools": len(s.get("manifest") or []),
+                                "floors": []})
+                            e["floors"].append(
+                                (s.get("floor") or "").split("/")[-1])
+                    except Exception:
+                        pass
+                    _local = [{**e, "description":
+                               f"{e['kind']} · {e['tools']} tool(s) · "
+                               f"{e['state']} on {len(e['floors'])} floor(s)"}
+                              for e in _byname.values()]
+                    for _k, _g in CAP_GENESIS.items():
+                        for _t in (_g.get("tools") or []):
+                            _local.append({"id": _t.get("name"),
+                                           "source": f"capability:{_k}",
+                                           "description": str(_t.get(
+                                               "description") or "")[:160]})
+                    out = json.dumps(seeds.search(
+                        HOME / "farm", _q, local=_local,
+                        limit=max(1, min(60, int((qs.get("limit") or ["30"])[0]))))).encode()
                 elif route == "/assign":
                     # 0058 sp2 — the allocation ledger, readable: whole map,
                     # or one subject resolved by the law (worker-side, so a
