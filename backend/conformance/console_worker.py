@@ -219,14 +219,11 @@ def fuel_clause() -> dict:
     lump — spent once, then uniform silence until a human word; that posture
     drained vera to 419 of 50k and nobody was told. The default window is
     daily, the search ceiling's own grain (0054 L-A): one law shape, every
-    standing spend.
-
-    RULE-9 GATE (2026-08-22): contracts/v0 Budget does not yet know
-    renew_days — the amendment waits for JB's explicit word. Until it lands,
-    ORRETH_LEASE_RENEW_DAYS=0 keeps the mint schema-legal (the lump posture,
-    the wound still open); any nonzero value requires the amended contract."""
+    standing spend. The Budget contract learned renew_days on JB's explicit
+    word (2026-08-22, the rule-9 gate held and answered); renew_days=0 keeps
+    the old lump posture for anyone who wants it."""
     clause = {"tokens": int(os.environ.get("ORRETH_JOIN_LEASE_TOKENS", "50000"))}
-    days = float(os.environ.get("ORRETH_LEASE_RENEW_DAYS", "0"))
+    days = float(os.environ.get("ORRETH_LEASE_RENEW_DAYS", "1"))
     if days > 0:
         clause["renew_days"] = days
     return clause
@@ -9813,7 +9810,9 @@ def fuel_beat(port: int, scope: str) -> None:
         return
     if not isinstance(rows, list):
         return
-    cards = fuel_mod.drain_cards(rows, names=_did_names())
+    cards = fuel_mod.drain_cards(
+        rows, names=_did_names(),
+        now=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
     if not cards:
         return
     # one card per subject per WINDOW, whatever its fate — a decline is the

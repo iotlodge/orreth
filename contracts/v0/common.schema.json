@@ -113,7 +113,8 @@
       "properties": {
         "time_ms": { "type": "integer", "minimum": 0 },
         "cost": { "type": "number", "minimum": 0 },
-        "tokens": { "type": "integer", "minimum": 0 }
+        "tokens": { "type": "integer", "minimum": 0 },
+        "renew_days": { "type": "number", "minimum": 0, "description": "The fuel clause's window (2026-08-22, JB-approved): tokens is an ALLOWANCE per this many days, refilled by the plane at each window turn on the meter's record. Absent or 0 = a lifetime lump." }
       },
       "additionalProperties": false
     },

@@ -48,6 +48,17 @@ def test_unknown_fuel_never_cards():
     assert fuel.drain_cards([{"subject": "did:key:znew", "remaining": None}]) == []
 
 
+def test_a_turned_window_is_already_healed():
+    # the plane renews lazily at the next debit — a past renews_at means the
+    # next ask refills, so there is NOTHING to card (found live 2026-08-22:
+    # a 30s proof window drew fresh cards for a subject one ask from whole)
+    row = _row(100)
+    assert fuel.posture(row, now="2026-08-24T00:00:00Z") == "fueled"
+    assert fuel.drain_cards([row], now="2026-08-24T00:00:00Z") == []
+    # mid-window the drain still cards
+    assert fuel.posture(row, now="2026-08-22T12:00:00Z") == "drained"
+
+
 def test_the_window_is_the_dedup_key():
     # a new window's early drain is NEW news — the card key must move with it
     a = fuel.drain_cards([_row(0, window="2026-08-22T00:00:00Z")])[0]

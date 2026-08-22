@@ -18,10 +18,12 @@ from __future__ import annotations
 EST_FLOOR = 500
 
 
-def posture(row: dict) -> str:
+def posture(row: dict, now: str | None = None) -> str:
     """One /model/usage row -> its fuel posture.
 
-    fueled   — the lease clears a typical thought
+    fueled   — the lease clears a typical thought, OR its window has already
+               turned (the plane renews lazily at the next debit: a past
+               renews_at means the next ask refills — nothing to card)
     drained  — a renewing lease out of allowance mid-window (rests until
                renews_at; early drain is NEWS, not physics)
     lump-dry — the old clause: no window, out forever without a human word
@@ -34,18 +36,22 @@ def posture(row: dict) -> str:
         return "fueled"
     fuel = row.get("fuel") or {}
     if (fuel.get("renew_days") or 0) > 0:
+        renews_at = str(fuel.get("renews_at") or "")
+        if now and renews_at and renews_at <= now:
+            return "fueled"      # already healed — the ledger just hasn't been asked
         return "drained"
     return "lump-dry"
 
 
-def drain_cards(rows: list[dict], names: dict[str, str] | None = None) -> list[dict]:
+def drain_cards(rows: list[dict], names: dict[str, str] | None = None,
+                now: str | None = None) -> list[dict]:
     """The cards a drain watch should file — one per dry subject, keyed by its
     window so a NEW window's early drain cards again while the old decline
     stays honored. The card informs; the human's word stays the door (0012)."""
     names = names or {}
     cards = []
     for row in rows:
-        p = posture(row)
+        p = posture(row, now=now)
         if p not in ("drained", "lump-dry"):
             continue
         fuel = row.get("fuel") or {}
