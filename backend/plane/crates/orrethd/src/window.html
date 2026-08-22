@@ -5589,20 +5589,43 @@ async function brnYard(){
   }catch(e){if(n){n.textContent="the ask did not land — is the floor awake?";n.style.color="var(--red)"}}
   if(b)setTimeout(()=>{b.disabled=false},8000)}
 /* the standing word's reins: staging waits at the gate for the human's one
-   approval; resting is gateless and immediate (rule 11) */
-async function brnSched(action){
-  const n=$("brn-yard-note");
+   approval; resting is gateless and immediate (rule 11). Generalized to any
+   MACHINE task (the no-resident words) — one lane, every kernel word. */
+async function brnSched(action,what){
+  const n=$("brn-yard-note");what=what||"yardstick";
   try{
     await fetch(`/requests`,{method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({kind:"scheduled-ask",what:"yardstick",
+      body:JSON.stringify({kind:"scheduled-ask",what,
         ...(action?{action}:{}),
         text:action==="rest"
-          ?"rest the weekly yardstick schedule — the human's word"
-          :"stage the weekly yardstick schedule — ten questions, scored, every seven days"})});
+          ?`rest the ${what} schedule — the human's word`
+          :`stage the ${what} schedule — the machine's standing work, on the record`})});
     if(n){n.style.color="";n.textContent=action==="rest"
-      ?"rested — immediate, no gate; the standings stay on the record"
-      :"staged — the terms wait in your Inbox; your one approval starts the weekly rhythm"}
+      ?"rested — immediate, no gate; what it produced stays on the record"
+      :"staged — the terms wait in your Inbox; your one approval starts the rhythm"}
+  }catch(e){if(n){n.textContent="the ask did not land — is the floor awake?";n.style.color="var(--red)"}}}
+/* the cadence editor: an edit is a RE-STAGED sibling through the same gate —
+   the head wins on approval, and the old word stays on the record */
+let BRNCADWHAT=null;
+function brnCad(what,days,hour){
+  BRNCADWHAT=what;const row=$("brn-cadrow");if(!row)return;
+  row.style.display=row.style.display==="none"?"flex":"none";
+  $("brn-cadwhat").textContent=what;
+  $("brn-cad-days").value=days||7;
+  $("brn-cad-hour").value=hour==null?"":hour}
+async function brnCadSave(){
+  const n=$("brn-yard-note");if(!BRNCADWHAT)return;
+  const days=parseInt($("brn-cad-days").value,10)||7;
+  const hraw=$("brn-cad-hour").value;
+  try{
+    await fetch(`/requests`,{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({kind:"scheduled-ask",what:BRNCADWHAT,
+        every_days:days,...(hraw!==""?{at_hour:parseInt(hraw,10)}:{}),
+        text:`re-stage the ${BRNCADWHAT} schedule at every ${days} day(s)${hraw!==""?` at ${hraw}:00 UTC`:""} — a cadence edit through the same gate`})});
+    if(n){n.style.color="";n.textContent="the new cadence is staged — your approval in the Inbox makes it the head; the old word stays on the record"}
+    $("brn-cadrow").style.display="none";
   }catch(e){if(n){n.textContent="the ask did not land — is the floor awake?";n.style.color="var(--red)"}}}
 async function brnLoad(){
   $("brnbody").innerHTML=`<div class="dim" style="padding:2rem">the instruments are being read — first census can take a few breaths…</div>`;
@@ -5709,15 +5732,41 @@ function brnRender(){
   h+=`<div style="overflow-x:auto"><table class="dk-table"><tr><th>class</th><th>recall window</th><th>rises</th></tr>`
     +Object.entries(dl).map(([c,v])=>`<tr><td>${dkEsc(c)}</td><td style="font-family:var(--mono)">${v.recall_window_days??"—"}d</td><td>${v.rises?"yes":"no"}</td></tr>`).join("")
     +`</table></div><div class="dim" style="font-size:.6rem">dials read from ${dkEsc(R.source||"")}</div>`;
-  h+=`<div class="brn-sec">the yardstick — recall proven by questions, scored on the record</div>`;
-  const sch=Y.schedule||{};
-  h+=`<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin:.3rem 0 .55rem">
-    <button class="dk-tab" id="brn-yard" onclick="brnYard()" title="ten questions ride the real ask lane; vera scores each under her declared ceiling — minutes, not seconds">📏 run the yardstick now</button>
-    ${sch.standing
-      ?`<span class="dk-dot">standing<i>every ${sch.every_days}d${sch.next_due?` · next due ${dkEsc(sch.next_due)}`:""}</i></span>
-        <button class="dk-tab" onclick="brnSched('rest')" title="resting never needs a gate (rule 11) — the standings already taken stay on the record">rest the schedule</button>`
-      :`<button class="dk-tab" onclick="brnSched('')" title="staged for your one approval — weekly, under vera's declared ceiling, rest it anytime without a gate">⏰ stage the weekly schedule</button>`}
-    <span class="dim" id="brn-yard-note" style="font-size:.66rem"></span></div>`;
+  /* THE MACHINE'S TASKS (JB's tabled seed 2026-08-17, landed in the UI
+     season as promised): kernel-level standing work — the no-resident
+     words — in ONE place with the human's reins, beside the machine's
+     fixed rhythms (visible here, tuned at their own homes). CRUD rides
+     the SAME governed lane the resident Schedule tab proved. */
+  const MT=B.machine_tasks||{},mts=MT.tasks||[];
+  h+=`<div class="brn-sec">the machine's tasks — kernel-level standing work, the reins in your hand</div>`;
+  h+=`<div style="overflow-x:auto"><table class="dk-table"><tr><th>task</th><th>posture</th><th>cadence</th><th>next due</th><th style="text-align:right">reins</th></tr>`
+    +mts.map(t=>{
+      const standing=t.posture==="standing";
+      const cad=standing?`every ${t.every_days||7}d${t.at_hour!=null?` at ${String(t.at_hour).padStart(2,"0")}:00Z`:""}`:"—";
+      const chip=standing?`<span style="color:var(--brass)">standing</span>`
+        :t.posture==="rested"?`<span class="dim">rested</span>`
+        :`<span class="dim">unscheduled</span>`;
+      return `<tr><td style="font-family:var(--mono)">📏 ${dkEsc(t.what)}</td><td>${chip}</td>
+        <td style="font-family:var(--mono)">${dkEsc(cad)}</td>
+        <td style="font-family:var(--mono)">${dkEsc(t.next_due||"—")}</td>
+        <td style="text-align:right;white-space:nowrap">
+          ${t.runner?`<button class="dk-tab" id="brn-yard" onclick="brnYard()" title="ten questions ride the real ask lane; vera scores each under her declared ceiling — minutes, not seconds">▶ run now</button>`:""}
+          <button class="dk-tab" onclick="brnCad('${dkEsc(t.what)}',${t.every_days||7},${t.at_hour!=null?t.at_hour:"null"})" title="a cadence edit re-stages the word through the same gate — your approval in the Inbox makes it the head">✎ cadence</button>
+          ${standing?`<button class="dk-tab" onclick="brnSched('rest','${dkEsc(t.what)}')" title="resting never needs a gate (rule 11) — what it produced stays on the record">rest</button>`
+                    :`<button class="dk-tab" onclick="brnSched('','${dkEsc(t.what)}')" title="staged for your one approval; rest it anytime without a gate">⏰ schedule</button>`}
+        </td></tr>`}).join("")
+    +`</table></div>
+    <div id="brn-cadrow" class="dk-strip" style="display:none;margin:.4rem 0;align-items:center;gap:.5rem">
+      <span class="dim" style="font-size:.68rem">cadence for <b id="brn-cadwhat" style="color:var(--star)"></b>: every</span>
+      <input id="brn-cad-days" type="number" min="1" max="90" value="7" style="width:3.6rem">
+      <span class="dim" style="font-size:.68rem">day(s) · at</span>
+      <input id="brn-cad-hour" type="number" min="0" max="23" placeholder="—" style="width:3.2rem">
+      <span class="dim" style="font-size:.68rem">:00 UTC (blank = any hour)</span>
+      <button class="dk-tab" onclick="brnCadSave()">stage the change</button></div>
+    <span class="dim" id="brn-yard-note" style="font-size:.66rem"></span>`;
+  h+=(MT.rhythms||[]).map(r=>`<div class="dim" style="font-size:.66rem;margin:.25rem 0">${dkEsc(r.emoji||"")} <b style="color:var(--dim)">${dkEsc(r.name)}</b>${r.every_s?` — every ${r.every_s}s${r.age_s!=null?`, last breath ${r.age_s}s ago`:""}`:""} · ${dkEsc(r.note||"")}</div>`).join("");
+  if(MT.law)h+=`<div class="dim" style="font-size:.6rem;color:var(--faint);margin:.2rem 0 .5rem">${dkEsc(MT.law)}</div>`;
+  h+=`<div class="brn-sec">the yardstick's standings — recall proven by questions, scored on the record</div>`;
   if((Y.runs||[]).length)
     h+=`<div style="overflow-x:auto"><table class="dk-table"><tr><th>when</th><th>set</th><th>asked</th><th>scored</th><th>mean</th></tr>`
       +Y.runs.map(r=>`<tr><td style="font-family:var(--mono)">${dkEsc((r.at||"").slice(0,16))}</td><td>${dkEsc(r.set)}</td><td>${r.asked??"—"}</td><td>${r.scored??"—"}</td><td style="font-family:var(--mono)">${r.mean!=null?Number(r.mean).toFixed(2):"—"}</td></tr>`).join("")

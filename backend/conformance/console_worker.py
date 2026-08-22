@@ -2637,19 +2637,36 @@ def falloc_save(data: dict) -> None:
     falloc_path().write_text(json.dumps(data, indent=1, sort_keys=True))
 
 
-def _farm_blast(svc: dict, scope: str) -> dict:
+def _farm_blast(svc: dict, scope: str, port: int | None = None) -> dict:
     """No retirement (or rest) without a blast radius (0059 §2.7): who is
-    allocated to this tool, and how much thought has ridden it — the
-    decision's own furniture."""
+    allocated to this tool, WHO ACTUALLY LEANED on it lately (the meter-log
+    door, 2026-08-22 — the 0059 park paid: real caller DIDs, never a guess),
+    and how much thought has ridden it — the decision's own furniture."""
     a = falloc_load()
     allocated = sorted(k for k, v in a.items()
                        if isinstance(v, dict) and v.get("service") == svc.get("name"))
+    recent: list[dict] = []
+    if port is not None:
+        try:
+            rows = call(port, "GET", "/farm/callers").get(svc.get("name") or "", [])
+            names = _did_names()
+            recent = [{"caller": c.get("caller"),
+                       "name": names.get(str(c.get("caller")), ""),
+                       "calls": c.get("calls"), "last": c.get("last")}
+                      for c in rows[:8]]
+        except Exception:
+            pass
+    leaned = ", ".join((r["name"] or str(r["caller"])[:18] + "…")
+                       + f" ×{r['calls']}" for r in recent[:4])
     return {"allocated": allocated, "calls": svc.get("calls", 0),
             "tools": len(svc.get("manifest") or []),
+            "recent_callers": recent,
             "note": (f"{svc.get('calls', 0) or 0} call(s) answered · "
                      f"{len(svc.get('manifest') or [])} tool(s) pinned"
                      + (f" · allocated to {', '.join(allocated)}"
                         if allocated else " · no allocation names it")
+                     + (f" · leaned on by {leaned}" if leaned
+                        else " · no recorded caller this daemon-life")
                      + f" · source: {svc.get('source') or 'human'}")}
 
 
@@ -2840,7 +2857,7 @@ class FarmKeeper:
                 try:
                     svc = next((s for s in call(port, "GET", "/farm")["services"]
                                 if s.get("name") == name), {})
-                    res = {"blast": _farm_blast(svc, scope)}
+                    res = {"blast": _farm_blast(svc, scope, port=port)}
                 except Exception:
                     pass
             call(port, "POST", "/requests/resolve",
@@ -2955,6 +2972,23 @@ class FarmKeeper:
             call(port, "POST", "/requests/resolve", {"id": r["id"], "status": "done"})
             return True
         if status == "denied":
+            if action in ("rest", "resume", "decom", "reapprove",
+                          "allocate", "unallocate"):
+                # the 0058 denied-branch lesson, farm-shaped (found live
+                # 2026-08-22 when a declined REST decommissioned the
+                # service): the human's no is about the VERB, never the
+                # service — a declined rest keeps it serving, a declined
+                # resume keeps it resting, a declined decom leaves it
+                # standing. EXCEPTION kept deliberate: a denied reapprove
+                # after a rug-pull leaves the changed manifest quarantined
+                # exactly where the state machine already put it.
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "done",
+                      "result": {"note": f"declined — {name} stays as it "
+                                         "stands; your word was about the "
+                                         "verb, never the service"}})
+                print(f"  ↳ {action} of {name} declined — nothing moves")
+                return True
             try:
                 svc = call(port, "POST", "/farm/state", {"name": name, "op": "decom",
                                                          "reason": "denied at the gate"})
@@ -11931,6 +11965,57 @@ def _floor_census(port: int, scope: str) -> dict:
     return got
 
 
+def _machine_tasks(runs: list) -> dict:
+    """THE MACHINE'S OWN TASKS (JB's tabled seed 2026-08-17 — "humans will
+    need a place to CRUD machine level tasks" — built now that the UI season
+    he gated it on has closed): every NO-RESIDENT standing word in one place,
+    beside the machine's fixed rhythms. The reins ride the SAME governed lane
+    the resident Schedule tab proved: create/edit stage at the human's gate
+    (a cadence edit is a re-staged sibling — the head wins), rest is gateless
+    and immediate (rule 11). Residents' words live in their own rooms; the
+    kernel's live here — one home each, never two (rule 7)."""
+    tasks: list[dict] = []
+    try:
+        heads = _sched_heads(universe_port(JOIN_PORT))
+    except Exception:
+        heads = {}
+    for (what, resident, _q), head in sorted(heads.items()):
+        if resident:
+            continue
+        t = {"what": what, "posture": head.get("posture"),
+             "every_days": head.get("every_days"),
+             "at_hour": head.get("at_hour"), "since": head.get("at"),
+             "runner": what == "yardstick"}
+        if what == "yardstick" and runs and head.get("posture") == "standing":
+            try:
+                then = datetime.fromisoformat(
+                    str(runs[-1].get("at")).replace("Z", "+00:00"))
+                t["next_due"] = (then + timedelta(
+                    days=int(head.get("every_days") or 7))
+                    ).strftime("%Y-%m-%dT%H:%MZ")
+            except Exception:
+                pass
+        tasks.append(t)
+    if not any(t["what"] == "yardstick" for t in tasks):
+        tasks.append({"what": "yardstick", "posture": "unscheduled",
+                      "runner": True})
+    rhythms = [
+        {"name": "the metabolism", "emoji": "🫁",
+         "every_s": METABOLISM_EVERY,
+         "age_s": (int(time.time() - _METAB_LAST) if _METAB_LAST else None),
+         "note": ("one floor per breath, round-robin across every "
+                  "discovered floor; its dials are Canon assets planted "
+                  "per floor — tuned through the craft lane, never here")},
+        {"name": "the examiner", "emoji": "🔭",
+         "note": ("glance · watch · assay — the dial is a governed word "
+                  "that lives in the Observatory")},
+    ]
+    return {"tasks": tasks, "rhythms": rhythms,
+            "law": ("create and edit stage at your gate; resting is "
+                    "immediate (rule 11); the rhythms are firmware — "
+                    "visible here, tuned at their own homes")}
+
+
 def _brain_schedule(runs: list) -> dict:
     """The standing word's face for the glass: whether the weekly schedule
     stands, and when the next run falls due — read from the word and the
@@ -12760,6 +12845,7 @@ def _compose_brain_locked() -> dict:
                       "note": "state is read from instruments; RECALL is "
                               "proven by questions — scored runs of the "
                               "shelf's question set land here"},
+        "machine_tasks": _machine_tasks(runs),
     }
     _BRAIN_CACHE.update(at=time.time(), payload=payload)
     return payload

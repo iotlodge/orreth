@@ -171,4 +171,66 @@ impl Farm {
     pub fn roster(&self) -> Vec<Value> {
         self.services.values().cloned().collect()
     }
+
+    /// The meter-log door (2026-08-22 — 0059's named park paid): WHO leaned on
+    /// each service, folded from the meter's own entries — per service, each
+    /// distinct caller with its call count and last-seen. The blast radius on
+    /// a rest/decom card stops guessing at the long tail. Volume and shape,
+    /// never payloads (0016 §6) — a caller DID is already on the log.
+    pub fn recent_callers(&self) -> Value {
+        let mut per: BTreeMap<String, BTreeMap<String, (i64, String)>> = BTreeMap::new();
+        for m in &self.meter_log {
+            let (svc, caller) = (m["service"].as_str().unwrap_or(""),
+                                 m["caller"].as_str().unwrap_or(""));
+            if svc.is_empty() || caller.is_empty() {
+                continue;
+            }
+            let at = m["at"].as_str().unwrap_or("").to_string();
+            let e = per.entry(svc.to_string()).or_default()
+                .entry(caller.to_string()).or_insert((0, String::new()));
+            e.0 += 1;
+            if at > e.1 {
+                e.1 = at;
+            }
+        }
+        json!(per.into_iter().map(|(svc, callers)| {
+            let mut rows: Vec<Value> = callers.into_iter()
+                .map(|(c, (n, last))| json!({"caller": c, "calls": n, "last": last}))
+                .collect();
+            rows.sort_by(|a, b| b["last"].as_str().cmp(&a["last"].as_str()));
+            (svc, json!(rows))
+        }).collect::<BTreeMap<String, Value>>())
+    }
+}
+
+// ------------------------------------------------------- the callers' fold, suite-held
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_fold_names_who_leaned_and_when() {
+        let mut f = Farm::new();
+        f.services.insert("tavily-mcp".into(),
+                          json!({"state": "serving", "calls": 0}));
+        for (caller, at) in [("did:key:zcha", "t1"), ("did:key:zcha", "t3"),
+                             ("did:key:zdesk", "t2")] {
+            f.meter(&json!({"name": "tavily-mcp", "caller": caller}), at).unwrap();
+        }
+        let rc = f.recent_callers();
+        let rows = rc["tavily-mcp"].as_array().unwrap();
+        // most recent caller leads; counts and last-seen ride each row
+        assert_eq!(rows[0]["caller"], "did:key:zcha");
+        assert_eq!(rows[0]["calls"], 2);
+        assert_eq!(rows[0]["last"], "t3");
+        assert_eq!(rows[1]["caller"], "did:key:zdesk");
+    }
+
+    #[test]
+    fn a_resting_service_is_never_consumed() {
+        let mut f = Farm::new();
+        f.services.insert("t".into(), json!({"state": "resting", "calls": 0}));
+        assert!(f.meter(&json!({"name": "t", "caller": "c"}), "t1").is_err());
+        assert!(f.recent_callers()["t"].is_null());
+    }
 }

@@ -351,6 +351,7 @@ async fn main() {
         .route("/farm/state", post(farm_state))
         .route("/farm/hello", post(farm_hello))
         .route("/farm/meter", post(farm_meter))
+        .route("/farm/callers", get(farm_callers))
         .route("/stable", get(stable_list))
         .route("/stable/saddle", post(stable_saddle))
         .route("/stable/state", post(stable_state))
@@ -1011,6 +1012,12 @@ async fn farm_hello(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl
 }
 
 /// Every consumption on the record — volume and shape, never payloads (0016 §6).
+/// The meter-log door (2026-08-22 — 0059's named park): recent callers per
+/// service, folded plane-side — the blast radius reads WHO leaned, not a guess.
+async fn farm_callers(State(app): State<Arc<App>>) -> Json<Value> {
+    Json(app.farm.lock().unwrap().recent_callers())
+}
+
 async fn farm_meter(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
     let out = app.farm.lock().unwrap().meter(&req, &now_iso());
     match out {
