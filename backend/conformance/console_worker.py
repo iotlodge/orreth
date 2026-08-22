@@ -125,9 +125,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from orreth_sim import (bell as bell_mod, continuity, crypto,
-                        fingertip, improver, market, markers, meaning, mirror,
-                        node, observatory, parlor, profile, purge, seeds,
-                        serials, shipyard, speech, thumb as thumb_mod, vera)
+                        fingertip, fuel as fuel_mod, improver, market, markers,
+                        meaning, mirror, node, observatory, parlor, profile,
+                        purge, seeds, serials, shipyard, speech,
+                        thumb as thumb_mod, vera)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -208,9 +209,27 @@ def grant_lease(did: str, scope: str = SCOPE) -> dict:
               + timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
     return becky_for(scope).issue_token(
         did, scope, [{"action": "retrieve", "space": "self"}],
-        expiry=expiry,
-        budget={"tokens": int(os.environ.get(
-            "ORRETH_JOIN_LEASE_TOKENS", "50000"))})
+        expiry=expiry, budget=fuel_clause())
+
+
+def fuel_clause() -> dict:
+    """The lease's fuel terms (2026-08-22 — the lease learns to renew, 0058's
+    named wound): an ALLOWANCE per declared window, becky-signed into the
+    token's constraints and enforced at the plane. renew_days=0 is the old
+    lump — spent once, then uniform silence until a human word; that posture
+    drained vera to 419 of 50k and nobody was told. The default window is
+    daily, the search ceiling's own grain (0054 L-A): one law shape, every
+    standing spend.
+
+    RULE-9 GATE (2026-08-22): contracts/v0 Budget does not yet know
+    renew_days — the amendment waits for JB's explicit word. Until it lands,
+    ORRETH_LEASE_RENEW_DAYS=0 keeps the mint schema-legal (the lump posture,
+    the wound still open); any nonzero value requires the amended contract."""
+    clause = {"tokens": int(os.environ.get("ORRETH_JOIN_LEASE_TOKENS", "50000"))}
+    days = float(os.environ.get("ORRETH_LEASE_RENEW_DAYS", "0"))
+    if days > 0:
+        clause["renew_days"] = days
+    return clause
 
 
 # the desk at the door: challenge → prove → human gate → lease (JB's lock 2026-07-07)
@@ -3318,7 +3337,7 @@ def governed_ping(port: int, mid: str, klass: str) -> dict | None:
         return None
     try:
         token = _BECKY.issue_token(ADA_DID, SCOPE, [{"action": "retrieve", "space": "self"}],
-                                   budget={"tokens": 50000})
+                                   budget=fuel_clause())
         est = 40
         grant = call(port, "POST", "/model/authorize",
                      {"token": token, "class": klass, "est_tokens": est, "model": mid})
@@ -3528,7 +3547,7 @@ def governed_thought(port: int, mid: str, klass: str, prompt: str, *,
     try:
         token = _BECKY.issue_token(did, SCOPE,
                                    [{"action": "retrieve", "space": "self"}],
-                                   budget={"tokens": 50000})
+                                   budget=fuel_clause())
         est = max_tokens + len(prompt) // 3
         grant = call(port, "POST", "/model/authorize",
                      {"token": token, "class": klass, "est_tokens": est,
@@ -7880,7 +7899,7 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
     for klass in ladder:
         try:
             token = _BECKY.issue_token(did, SCOPE, [{"action": "retrieve", "space": "self"}],
-                                       budget={"tokens": 50000})
+                                       budget=fuel_clause())
             grant = call(port, "POST", "/model/authorize",
                          {"token": token, "class": klass, "est_tokens": est,
                           **({"model": _pin} if _pin else {})})
@@ -9758,6 +9777,110 @@ def gate_age_beat(port: int) -> None:
                      "subject": f"{oldest['id']} at {where}",
                      "age": _age_of(oldest.get("at")),
                      "pointer": _CONSOLE_URL})
+
+
+# ---- the drain watch (2026-08-22 — the lease learns to renew, 0058's wound) -----------
+
+def _did_names() -> dict[str, str]:
+    """The organs' DIDs by name — a drain card should say «vera», not a key
+    prefix. Built at call time (some DIDs stand up late); misses stay honest."""
+    names = {}
+    for var, who in (("LIB_DID", "the librarian"), ("CHA_DID", "charlotte"),
+                     ("ADA_DID", "ada"), ("ALLEN_DID", "allen"),
+                     ("VERA_DID", "vera"), ("BELL_DID", "the bell"),
+                     ("MIR_DID", "the mirror"), ("IMP_DID", "the improver"),
+                     ("GOV_DID", "grace"), ("ORCH_DID", "the orchestrator"),
+                     ("MON_DID", "the monitor"), ("WIN_DID", "the window")):
+        did = globals().get(var)
+        if did:
+            names[did] = who
+    sdid = _studio_did()
+    if sdid:
+        names[sdid] = "the studio"
+    return names
+
+
+def fuel_beat(port: int, scope: str) -> None:
+    """A subject that outran its window's allowance goes uniform-silent at the
+    gateway — vera wore that silence for DAYS while 'the ground is missing'
+    meant 'the examiner is broke'. This watch makes the silence loud: one
+    fuel card per subject per window at the human's gate. Approve replenishes
+    NOW through the plane's door; decline is honored until the window itself
+    turns (the plane refills it then — the card says when)."""
+    try:
+        rows = call(port, "GET", "/model/usage")
+    except Exception:
+        return
+    if not isinstance(rows, list):
+        return
+    cards = fuel_mod.drain_cards(rows, names=_did_names())
+    if not cards:
+        return
+    # one card per subject per WINDOW, whatever its fate — a decline is the
+    # human's word for that whole window, never a nag on the next beat
+    try:
+        reqs = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        return
+    seen = {(q.get("did"), q.get("window"))
+            for q in reqs if q.get("kind") == "fuel"}
+    for card in cards:
+        if (card["did"], card["window"]) in seen:
+            continue
+        call(port, "POST", "/requests", card)
+        print(f"  ⛽ fuel card: {card['text'][:100]}")
+
+
+def on_fuel_request(port: int, scope: str, r: dict) -> None:
+    """The fuel card's life at the gate: pending stages WEARING its evidence
+    (0012 — consequence waits for the human); approve calls the plane's
+    replenish door and says what happened; decline rests the subject until
+    its own window turns — recorded, never a shrug."""
+    did = str(r.get("did") or "")
+    status = r.get("status")
+    if status == "pending":
+        row = {}
+        try:
+            rows = call(port, "GET", "/model/usage")
+            row = next((u for u in rows if u.get("subject") == did), {})
+        except Exception:
+            pass
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"remaining": row.get("remaining"),
+                         "fuel": row.get("fuel"),
+                         "all_time": {"tokens": row.get("tokens"),
+                                      "usd": row.get("usd"),
+                                      "calls": row.get("calls")}}})
+        return
+    if status == "approved":
+        try:
+            out = call(port, "POST", "/model/replenish", {"subject": did})
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {**(r.get("result") or {}),
+                             "replenished": out.get("remaining"),
+                             "note": (f"refilled to {out.get('remaining')} by "
+                                      "the human's word — the window restarts "
+                                      "now, on the meter's record")}})
+            print(f"  ⛽ replenished {r.get('name') or did[:22]} → "
+                  f"{out.get('remaining')} tokens")
+        except Exception as e:
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"refused": f"the plane's door did not answer: {e}"}})
+        return
+    if status == "denied":
+        fuelrow = (r.get("result") or {}).get("fuel") or {}
+        when = fuelrow.get("renews_at")
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {**(r.get("result") or {}),
+                         "note": (f"the human let it rest — the lease refills "
+                                  f"itself when the window turns at {when}"
+                                  if when else
+                                  "the human let it rest — a lump lease stays "
+                                  "dry until a future word")}})
 
 
 # ---- 0047 sp3 · the studio's readings ride onto the plan cards ------------------------
@@ -12947,6 +13070,11 @@ def main() -> None:
                         elif r.get("kind") == "mind":
                             if WRANGLER.on_mind_request(port, scope, r) or r.get("status") == "staged":
                                 handled.add(key)
+                        elif r.get("kind") == "fuel" and \
+                                r.get("status") in ("pending", "approved",
+                                                    "denied"):
+                            handled.add(key)
+                            on_fuel_request(port, scope, r)
                         elif r.get("kind") == "parlor" and r.get("status") == "pending":
                             handled.add(key)
                             on_parlor(port, scope, r)
@@ -13164,6 +13292,7 @@ def main() -> None:
                     collapse_gate_duplicates(port)  # pre-guard-era noise, tidied once
                     KEEPER.tend(port, scope)
                     WRANGLER.sync(port, scope)
+                    fuel_beat(port, scope)    # a drained lease is loud (2026-08-22)
                     serials_beat(port, scope)  # the desk sweeps on the beat (0032 §2)
                     embed_beat(port, scope)   # the vector projection fills (0022 Ph2)
                     continuity_charter(port, scope)  # a template floor gets its law (0034)

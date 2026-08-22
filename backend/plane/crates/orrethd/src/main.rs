@@ -83,25 +83,17 @@ fn touch(app: &App) {
     app.presence_epoch.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 }
 
-/// "%Y-%m-%dT%H:%M:%SZ" from the system clock (civil-from-days; no chrono).
-fn now_iso() -> String {
-    let secs = std::time::SystemTime::now()
+/// Unix seconds from the system clock — the fuel windows' arithmetic.
+fn now_s() -> i64 {
+    std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
-        .as_secs() as i64;
-    let (days, rem) = (secs.div_euclid(86_400), secs.rem_euclid(86_400));
-    let z = days + 719_468;
-    let era = z.div_euclid(146_097);
-    let doe = z - era * 146_097;
-    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let (d, m) = (doy - (153 * mp + 2) / 5 + 1, if mp < 10 { mp + 3 } else { mp - 9 });
-    let y = yoe + era * 400 + if m <= 2 { 1 } else { 0 };
-    format!(
-        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
-        y, m, d, rem / 3_600, (rem / 60) % 60, rem % 60
-    )
+        .as_secs() as i64
+}
+
+/// "%Y-%m-%dT%H:%M:%SZ" from the system clock (civil-from-days; no chrono).
+fn now_iso() -> String {
+    model::iso_of(now_s())
 }
 
 fn arg(name: &str) -> Option<String> {
@@ -352,6 +344,7 @@ async fn main() {
         .route("/model/authorize", post(model_authorize))
         .route("/model/meter", post(model_meter))
         .route("/model/usage", get(model_usage))
+        .route("/model/replenish", post(model_replenish))
         .route("/model/state", post(model_state))
         .route("/farm", get(farm_list))
         .route("/farm/plant", post(farm_plant))
@@ -818,7 +811,8 @@ async fn model_authorize(State(app): State<Arc<App>>, Json(req): Json<Value>) ->
             }
         }
         let subject = token["subject"].as_str().unwrap_or("").to_string();
-        let budget = token["constraints"]["budget"]["tokens"].as_i64().unwrap_or(0);
+        // the whole fuel clause rides the verified token — allowance AND window
+        let budget = token["constraints"]["budget"].clone();
         let class = req["class"].as_str().unwrap_or("").to_string();
         let est = req["est_tokens"].as_i64().unwrap_or(0);
         // an optional pin names ONE mind (the canary's ping): it serves or it refuses —
@@ -827,7 +821,7 @@ async fn model_authorize(State(app): State<Arc<App>>, Json(req): Json<Value>) ->
         let mut m = app.model.lock().unwrap();
         match m.resolve(&class, pin.as_deref()) {
             model::Resolved::Model { model, deprecated } => {
-                match m.debit(&subject, budget, est) {
+                match m.debit(&subject, &budget, est, now_s(), &now_iso()) {
                     Ok(remaining) => (StatusCode::OK, Json(json!({
                         "model": model, "deprecated": deprecated,
                         "subject": subject, "est_tokens": est, "remaining": remaining }))),
@@ -891,6 +885,23 @@ async fn model_meter(State(app): State<Arc<App>>, Json(req): Json<Value>) -> imp
 
 async fn model_usage(State(app): State<Arc<App>>) -> Json<Value> {
     Json(app.model.lock().unwrap().usage())
+}
+
+/// The drain card's approve (the lease learns to renew, 2026-08-22): refill a
+/// subject's fuel to its allowance NOW and restart the window — the human's
+/// word, mediated by the worker's gate like the stable's own transitions
+/// (v0-unsigned, the register's confessed posture). The refill lands on the
+/// meter_log; a refusal here is a plain answer, not the uniform face — this
+/// door faces the keeper, never a prober.
+async fn model_replenish(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    let subject = req["subject"].as_str().unwrap_or("").to_string();
+    let mut m = app.model.lock().unwrap();
+    match m.replenish(&subject, now_s(), &now_iso()) {
+        Some(remaining) => (StatusCode::OK,
+                            Json(json!({"subject": subject, "remaining": remaining}))),
+        None => (StatusCode::NOT_FOUND,
+                 Json(json!({"error": "no fuel ledger stands under that subject"}))),
+    }
 }
 
 /// Dev-only lifecycle flip; becomes a governed escalation (0012 lanes) before any
