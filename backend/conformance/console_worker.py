@@ -1799,6 +1799,47 @@ def _cap_shelf_manifest(key: str) -> dict:
         return {}
 
 
+def capability_tools_intake(genesis: dict | None = None) -> int:
+    """0059 §2.6 — A CAPABILITY'S TOOLS ARE CITIZENS, NOT SHADOWS: a genesis
+    may declare `tools`; each walks to the SAME plant gate wearing
+    `source: capability:<key>` — the human's word still decides, vigil still
+    confesses, and probation is still earned. Idempotent: a name that already
+    stands (or already waits, or was ever refused into decommission) is
+    skipped with a plain line — the gate never re-asks what a human settled."""
+    stood = 0
+    try:
+        existing = {s.get("name")
+                    for s in call(4500, "GET", "/farm").get("services", [])}
+        asked = {r.get("name")
+                 for r in call(4500, "GET", "/requests").get("requests", [])
+                 if r.get("kind") == "service"
+                 and r.get("status") in ("pending", "staged")}
+    except Exception:
+        return 0
+    for key, g in (genesis or CAP_GENESIS).items():
+        for t in (g.get("tools") or []):
+            nm = str(t.get("name") or "")
+            if not nm:
+                continue
+            if nm in existing or nm in asked:
+                print(f"  ⚑ {key} declares {nm} — already stands or waits; "
+                      "the earlier word keeps its name")
+                continue
+            call(4500, "POST", "/requests", {
+                "kind": "service", "action": "plant", "name": nm,
+                "svc_kind": t.get("kind", "http"),
+                "endpoint": t.get("endpoint", ""),
+                "transport": t.get("transport", "rest"),
+                "manifest": t.get("manifest") or [],
+                "spend_guard": t.get("spend_guard", ""),
+                "source": f"capability:{key}",
+                "text": f"the capability «{key}» declares a tool: {nm} — "
+                        "the universe growing its own hands; your word decides"})
+            stood += 1
+            print(f"  ⚑ capability tool declared: {nm} (from {key}) — at the gate")
+    return stood
+
+
 def capability_crew_boot() -> None:
     """The crew rises from the DISCOVERED manifests at worker start —
     dev.sh names no world; a world shut down by the word stays down."""
@@ -2235,7 +2276,8 @@ def embed_door() -> None:
                         urllib.parse.urlparse(self.path).query)
                     g = lambda k: (qs.get(k) or [""])[0]
                     a = assign_load()
-                    payload: dict = {"assignments": a}
+                    payload: dict = {"assignments": a,
+                                     "tools": falloc_load()}  # 0059 §2.7
                     if g("subject"):
                         payload["resolved"] = market.resolve_assignment(
                             a, g("subject"), g("floor"))
@@ -2552,8 +2594,54 @@ def ledger_save(scope: str, data: dict) -> None:
     ledger_path(scope).write_text(json.dumps(data, indent=1, sort_keys=True))
 
 
+def falloc_path() -> Path:
+    nest = HOME / "farm"
+    nest.mkdir(parents=True, exist_ok=True)
+    return nest / "assignments.json"
+
+
+def falloc_load() -> dict:
+    """The tool allocation ledger (0059 §2.7): subject → {service, tool?} —
+    who prefers which serving tool, as a governed record. The resolution
+    ORDER lives in seeds.resolve_tool_assignment (suite-held)."""
+    p = falloc_path()
+    return json.loads(p.read_text()) if p.exists() else {}
+
+
+def falloc_save(data: dict) -> None:
+    falloc_path().write_text(json.dumps(data, indent=1, sort_keys=True))
+
+
+def _farm_blast(svc: dict, scope: str) -> dict:
+    """No retirement (or rest) without a blast radius (0059 §2.7): who is
+    allocated to this tool, and how much thought has ridden it — the
+    decision's own furniture."""
+    a = falloc_load()
+    allocated = sorted(k for k, v in a.items()
+                       if isinstance(v, dict) and v.get("service") == svc.get("name"))
+    return {"allocated": allocated, "calls": svc.get("calls", 0),
+            "tools": len(svc.get("manifest") or []),
+            "note": (f"{svc.get('calls', 0) or 0} call(s) answered · "
+                     f"{len(svc.get('manifest') or [])} tool(s) pinned"
+                     + (f" · allocated to {', '.join(allocated)}"
+                        if allocated else " · no allocation names it")
+                     + f" · source: {svc.get('source') or 'human'}")}
+
+
+def resolve_endpoint(ep: str) -> str:
+    """0059 §2.2 — A SECRET NEVER ENTERS A RECORD: an endpoint may be an
+    `env:NAME` indirection; the value lives only in the rig's environment and
+    resolves at the wire — never into a record, a ledger, or the glass."""
+    if str(ep).startswith("env:"):
+        return os.environ.get(str(ep)[4:], "")
+    return str(ep)
+
+
 def probe(endpoint: str) -> bool:
     """Alive = the server ANSWERED (any HTTP status); dead = the wire went quiet."""
+    endpoint = resolve_endpoint(endpoint)
+    if not endpoint:
+        return False
     try:
         urllib.request.urlopen(urllib.request.Request(endpoint, method="GET"), timeout=4)
         return True
@@ -2601,11 +2689,84 @@ def mcp_tools(endpoint: str) -> list | None:
         return None
 
 
+def mcp_call(endpoint: str, tool: str, args: dict) -> dict:
+    """0059 sp2 — the other half of mcp_tools: one governed tools/call over
+    streamable HTTP (initialize → call, SSE unwrapped, session kept). Raises
+    on a dead wire; a tool-level error comes back labeled, never invented."""
+    session = None
+
+    def rpc(body: dict):
+        nonlocal session
+        headers = {"Content-Type": "application/json",
+                   "Accept": "application/json, text/event-stream"}
+        if session:
+            headers["Mcp-Session-Id"] = session
+        req = urllib.request.Request(endpoint, method="POST",
+                                     data=json.dumps(body).encode(), headers=headers)
+        with urllib.request.urlopen(req, timeout=30) as r:
+            session = r.headers.get("Mcp-Session-Id") or session
+            raw = r.read().decode()
+        for line in raw.splitlines():
+            if line.startswith("data:"):
+                raw = line[5:].strip()
+                break
+        return json.loads(raw) if raw else {}
+
+    rpc({"jsonrpc": "2.0", "id": 1, "method": "initialize",
+         "params": {"protocolVersion": "2025-03-26", "capabilities": {},
+                    "clientInfo": {"name": "orreth-charlotte", "version": "0.1"}}})
+    try:
+        rpc({"jsonrpc": "2.0", "method": "notifications/initialized"})
+    except Exception:
+        pass
+    out = rpc({"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+               "params": {"name": tool, "arguments": args or {}}})
+    res = out.get("result") or {}
+    if out.get("error"):
+        return {"error": str(out["error"].get("message") or "the tool refused")[:200]}
+    content = res.get("content") or []
+    text = "\n".join(str(c.get("text") or "") for c in content
+                     if isinstance(c, dict) and c.get("type") == "text")
+    return {"content": content, "text": text[:4000],
+            "is_error": bool(res.get("isError"))}
+
+
 def fetch_manifest(svc: dict) -> list | None:
     """MCP servers are enumerated live; declared manifests stand for plain HTTP tools."""
     if svc.get("kind") == "mcp":
-        return mcp_tools(svc["endpoint"])
+        return mcp_tools(resolve_endpoint(svc["endpoint"]))
     return svc.get("manifest") or []
+
+
+def warden_checks(r: dict, manifest, alive: bool) -> dict:
+    """0059 §2.3 — vigil at the onboarding gate: content-blind checks staged
+    BESIDE the human's buttons; she confesses, she never decides."""
+    notes = []
+    ep = str(r.get("endpoint") or "")
+    if ep.startswith("env:"):
+        notes.append("✓ the endpoint is an env-indirection — the secret "
+                     "stays out of every record (0059 §2.2)")
+    else:
+        low = ep.lower()
+        if any(k in low for k in ("key=", "apikey", "api_key", "token=", "secret=")):
+            notes.append("⚠ the endpoint CARRIES A CREDENTIAL in its url — "
+                         "prefer env:NAME indirection; planted as-is, the "
+                         "secret would enter records and the glass")
+        if ep.startswith("http://") and not any(
+                h in ep for h in ("localhost", "127.0.0.1", "host.docker")):
+            notes.append("⚠ insecure scheme (http) to a non-local host")
+    declared = r.get("manifest") or []
+    if declared and manifest is not None and len(declared) != len(manifest):
+        notes.append(f"⚠ declared {len(declared)} tool(s); the probe saw "
+                     f"{len(manifest)} — the pin is what was SEEN")
+    if manifest is None and (r.get("svc_kind") or r.get("kind")) == "mcp":
+        notes.append("⚠ the MCP server did not enumerate its tools — "
+                     "the pin would be empty")
+    if not alive:
+        notes.append("⚠ the endpoint did not answer the probe")
+    notes.append(f"source: {r.get('source') or 'human'}")
+    return {"by": "vigil — the Warden (content-blind; stages, never enforces)",
+            "notes": notes}
 
 
 def service_did(req: dict) -> str:
@@ -2645,26 +2806,45 @@ class FarmKeeper:
     def on_service_request(self, port: int, scope: str, r: dict) -> bool:
         """Returns True when the request reached a resting state (done/denied)."""
         action, status, name = r.get("action", "plant"), r.get("status"), r.get("name", "")
-        if status == "pending" and action in ("decom", "reapprove"):
-            # nothing to probe — consequence waits for the human (0012)
-            call(port, "POST", "/requests/resolve", {"id": r["id"], "status": "staged"})
+        if status == "pending" and action in ("decom", "reapprove", "rest",
+                                              "resume", "allocate", "unallocate"):
+            # nothing to probe — consequence waits for the human (0012);
+            # a tool decision stages WEARING its blast radius (0059 §2.7)
+            res = {}
+            if action in ("decom", "reapprove", "rest") and name:
+                try:
+                    svc = next((s for s in call(port, "GET", "/farm")["services"]
+                                if s.get("name") == name), {})
+                    res = {"blast": _farm_blast(svc, scope)}
+                except Exception:
+                    pass
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "staged",
+                  **({"result": res} if res else {})})
             return False
         if status == "pending" and action == "plant":
             svc = {"name": name, "did": service_did(r), "kind": r.get("svc_kind", "http"),
                    "endpoint": r.get("endpoint", ""), "transport": r.get("transport", "rest"),
+                   "source": r.get("source") or "human",          # 0059: first-class
+                   "spend_guard": r.get("spend_guard") or "",
                    "manifest": r.get("manifest") or []}
             manifest = fetch_manifest(svc)
             alive = probe(svc["endpoint"]) if svc["endpoint"] else False
             svc["manifest"] = manifest or svc["manifest"]
             planted = call(port, "POST", "/farm/plant", svc)
+            warden = warden_checks(r, manifest, alive)   # vigil beside the buttons
             worldline(port, scope, planted, "planted",
-                      probed={"alive": alive, "tools": len(svc["manifest"])})
+                      probed={"alive": alive, "tools": len(svc["manifest"])},
+                      warden=warden["notes"])
             call(port, "POST", "/requests/resolve",
                  {"id": r["id"], "status": "staged",
                   "result": {"did": planted["did"], "manifest_hash": planted["manifest_hash"],
-                             "alive": alive, "tools": len(svc["manifest"])}})
+                             "alive": alive, "tools": len(svc["manifest"]),
+                             "warden": warden}})
             print(f"  ↳ staged planting {name}: alive={alive}, "
-                  f"{len(svc['manifest'])} tool(s), pinned {planted['manifest_hash'][:18]}…")
+                  f"{len(svc['manifest'])} tool(s), pinned {planted['manifest_hash'][:18]}…"
+                  + (" · the warden spoke" if any(
+                      n.startswith("⚠") for n in warden["notes"]) else ""))
             return False
         if status == "approved":
             if action in ("plant", "reapprove"):
@@ -2675,10 +2855,55 @@ class FarmKeeper:
                            {"name": name, "op": op, "manifest": manifest})
                 worldline(port, scope, svc, "attested" if op == "attest" else "re-attested")
                 led = ledger_load(scope)
-                led[name] = {k: svc[k] for k in ("name", "did", "kind", "endpoint",
-                                                 "transport", "manifest", "manifest_hash")}
+                led[name] = {k: svc.get(k) for k in ("name", "did", "kind", "endpoint",
+                                                     "transport", "manifest",
+                                                     "manifest_hash", "source",
+                                                     "spend_guard")}
                 ledger_save(scope, led)
                 print(f"  ↳ attested {name} — probation begins (beats earn serving)")
+            elif action == "rest":
+                # 0059 §2.4 — resting is the HUMAN'S word; the gateway's
+                # meter refuses it for free, and the keeper leaves it be
+                svc = call(port, "POST", "/farm/state",
+                           {"name": name, "op": "rest",
+                            "reason": r.get("reason", "the human's word")})
+                worldline(port, scope, svc, "resting",
+                          reason=r.get("reason", "the human's word"))
+                led = ledger_load(scope)
+                if name in led:
+                    led[name]["resting"] = True
+                    ledger_save(scope, led)
+                print(f"  ↳ {name} rests — the lease kept, nothing spent, "
+                      "resume when you say")
+            elif action == "resume":
+                svc = call(port, "POST", "/farm/state",
+                           {"name": name, "op": "resume"})
+                worldline(port, scope, svc, "resumed",
+                          note="service is re-earned through probation, never granted")
+                led = ledger_load(scope)
+                if name in led:
+                    led[name].pop("resting", None)
+                    ledger_save(scope, led)
+                print(f"  ↳ {name} resumes — probation begins; beats earn serving back")
+            elif action == "allocate":
+                # 0059 §2.7 — the human's word writes the tool ledger
+                sub = str(r.get("subject") or "")
+                if sub and r.get("service"):
+                    a = falloc_load()
+                    a[sub] = {"service": r["service"],
+                              **({"tool": r["tool"]} if r.get("tool") else {}),
+                              "at": NOW(), "req": r["id"]}
+                    falloc_save(a)
+                    worldline(port, scope, {"name": r["service"]},
+                              "allocated", subject=sub, tool=r.get("tool", ""))
+                    print(f"  ↳ allocated {sub} → {r['service']} — the word stands")
+            elif action == "unallocate":
+                sub = str(r.get("subject") or "")
+                a = falloc_load()
+                if a.pop(sub, None) is not None:
+                    falloc_save(a)
+                    worldline(port, scope, {"name": sub}, "unallocated", subject=sub)
+                    print(f"  ↳ unallocated {sub} — the floor's own walk resumes")
             elif action == "decom":
                 discredit = bool(r.get("discredit"))
                 svc = call(port, "POST", "/farm/state",
@@ -2731,6 +2956,8 @@ class FarmKeeper:
         self.replant(port, scope, {s["name"] for s in local})
         for svc in local:
             key, state = (port, svc["name"]), svc["state"]
+            if state == "resting":
+                continue     # the human's word — no probes, no drops, no spend
             if state in ("probation", "serving"):
                 if probe(svc["endpoint"]):
                     self.misses[key] = 0
@@ -2788,9 +3015,14 @@ class FarmKeeper:
                 call(port, "POST", "/farm/plant", svc)
                 call(port, "POST", "/farm/state",
                      {"name": name, "op": "attest", "manifest": svc.get("manifest", [])})
+                if svc.get("resting"):        # the human's word survives restarts
+                    call(port, "POST", "/farm/state",
+                         {"name": name, "op": "rest",
+                          "reason": "restored resting — the word outlives the daemon"})
                 worldline(port, scope, svc, "replanted",
                           note="daemon restarted; approval is durable in the ledger")
-                print(f"  ↳ replanted {name} after a daemon restart")
+                print(f"  ↳ replanted {name} after a daemon restart"
+                      + (" · still resting by the word" if svc.get("resting") else ""))
             except Exception as e:
                 print(f"    (replant {name} failed: {e})")
 
@@ -3570,14 +3802,25 @@ WRANGLER = Wrangler()
 # ---------------------------------------------------------------- the librarian (0014)
 
 def farm_search_source(port: int) -> dict | None:
-    """The Farm's serving search source, if any — gather consumes governed resources."""
+    """The Farm's serving search source — and the ALLOCATION outranks the
+    first-found (0059 §2.7): a floor or universe row naming a serving
+    service wins; the old walk stands where no word does."""
     try:
-        for s in call(port, "GET", "/farm")["services"]:
-            if s["state"] == "serving" and any(
-                    "search" in t.get("name", "") for t in s.get("manifest", [])):
-                return s
+        services = call(port, "GET", "/farm")["services"]
     except Exception:
-        pass
+        return None
+    row = seeds.resolve_tool_assignment(
+        falloc_load(), f"floor:{FLOOR_SCOPES.get(port, '')}")
+    if row.get("service"):
+        hit = next((s for s in services
+                    if s.get("name") == row["service"]
+                    and s.get("state") == "serving"), None)
+        if hit:
+            return hit
+    for s in services:
+        if s["state"] == "serving" and any(
+                "search" in t.get("name", "") for t in s.get("manifest", [])):
+            return s
     return None
 
 
@@ -4173,20 +4416,38 @@ def tool_invoke(payload: dict) -> dict:
             return REFUSED
     except Exception:
         pass
+    # 0059 §2.5 — SPEND RIDES ONE LEDGER: a service wearing the search guard
+    # counts against the SAME declared daily ceiling as the direct path
+    # (0054 L-A); the supply line confesses in its own voice, openly
+    if svc.get("spend_guard") == "search":
+        if os.environ.get("ORRETH_SEARCH_OFF"):
+            return {"error": "the live web is off by the human's dial "
+                             "(ORRETH_SEARCH_OFF) — nothing was spent"}
+        if _search_spent_today() >= SEARCH_DAILY:
+            return {"error": f"the declared daily search ceiling "
+                             f"({SEARCH_DAILY}/day) is spent — it resets at "
+                             "UTC midnight (0054 L-A); nothing was spent"}
     t0 = time.time()
     try:                                     # the gate: a non-serving service 403s here
         call(port, "POST", "/farm/meter",
              {"name": service, "caller": did, "ms": 0})
     except Exception:
         return REFUSED
+    ep = resolve_endpoint(svc["endpoint"])   # a secret resolves only at the wire
     try:
-        req = urllib.request.Request(
-            svc["endpoint"].rstrip("/") + "/call", method="POST",
-            data=json.dumps({"tool": tool, "args": args}).encode(),
-            headers={"Content-Type": "application/json"})
-        out = json.loads(urllib.request.urlopen(req, timeout=45).read())
+        if svc.get("kind") == "mcp":
+            # 0059 §2.8 — ONE door, every transport: tools/call for MCP
+            out = mcp_call(ep, tool, args)
+        else:
+            req = urllib.request.Request(
+                ep.rstrip("/") + "/call", method="POST",
+                data=json.dumps({"tool": tool, "args": args}).encode(),
+                headers={"Content-Type": "application/json"})
+            out = json.loads(urllib.request.urlopen(req, timeout=45).read())
     except Exception as e:
         return {"error": f"the stall did not answer: {str(e)[:100]}"}
+    if svc.get("spend_guard") == "search" and not out.get("error"):
+        _search_ledger_mark(f"{service}/{tool}")   # the one ledger, marked
     if isinstance(out, dict):
         out["_served"] = {"service": service, "by": svc.get("did"),
                           "ms": int((time.time() - t0) * 1000)}
@@ -12487,6 +12748,7 @@ def main() -> None:
         HOME / "stable", openrouter_catalog()), daemon=True).start()
     SHIPYARD.replant()
     capability_crew_boot()                        # hulls the rig lost come back before the round
+    capability_tools_intake()                     # declared tools walk to the gate (0059 §2.6)
     FLIGHT.replant()                          # the recorder's book seeds, aged honestly (0043 sp1)
     ensure_allen_floor()                      # the embodied tier stands visible (0037 §8.3)
     while True:

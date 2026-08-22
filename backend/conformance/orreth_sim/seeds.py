@@ -73,6 +73,21 @@ def registry_search(q: str, limit: int = 30, *, fetch=None) -> tuple[list, str]:
     return out, f"{len(out)} seed(s) the registry knows for “{q}”"
 
 
+def resolve_tool_assignment(assignments: dict, subject: str,
+                            floor_scope: str = "") -> dict:
+    """0059 §2.7 — the 0058 allocation law, farm-shaped: the most specific
+    word wins (subject → floor → universe). A row is {service, tool?}; it
+    names which SERVING tool a caller prefers. Pure — the worker owns the
+    ledger, this owns the order."""
+    for key in ([subject]
+                + ([f"floor:{floor_scope}"] if floor_scope else [])
+                + ["universe"]):
+        row = assignments.get(key)
+        if isinstance(row, dict) and row.get("service"):
+            return {**row, "resolved_from": key}
+    return {}
+
+
 def _qkey(q: str) -> str:
     return hashlib.sha256(q.strip().lower().encode()).hexdigest()[:16]
 

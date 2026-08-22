@@ -15,9 +15,12 @@ pub const PROBATION_BEATS: i64 = 3;
 fn legal(from: &str, to: &str) -> bool {
     match from {
         "proposed" => matches!(to, "probation" | "decommissioned"),
-        "probation" => matches!(to, "serving" | "dropped" | "quarantined" | "decommissioned"),
-        "serving" => matches!(to, "dropped" | "quarantined" | "decommissioned"),
+        "probation" => matches!(to, "serving" | "dropped" | "quarantined" | "resting" | "decommissioned"),
+        "serving" => matches!(to, "dropped" | "quarantined" | "resting" | "decommissioned"),
         "dropped" => matches!(to, "serving" | "quarantined" | "decommissioned"),
+        // resting (0059 §2.4): the HUMAN'S word, lease kept — distinct from
+        // dropped (the wire's silence). Resume re-earns through probation.
+        "resting" => matches!(to, "probation" | "decommissioned"),
         "quarantined" => matches!(to, "probation" | "decommissioned"),
         _ => false, // decommissioned is terminal — history remains
     }
@@ -53,6 +56,10 @@ impl Farm {
             "transport": req["transport"].as_str().unwrap_or("rest"),
             "manifest_hash": orreth_crypto::content_hash(&manifest),
             "manifest": manifest,
+            // 0059: a tool's SOURCE is a first-class fact (human · seed:<eye>
+            // · capability:<key>), and a standing-spend guard rides the record
+            "source": req["source"].as_str().unwrap_or("human"),
+            "spend_guard": req["spend_guard"].as_str().unwrap_or(""),
             "state": "proposed", "floor": floor,
             "planted_at": now, "last_seen": Value::Null, "beats": 0, "calls": 0,
         });
@@ -106,6 +113,12 @@ impl Farm {
             "expire" => {
                 svc["beats"] = json!(0);
                 ("dropped", json!({"reason": req["reason"].as_str().unwrap_or("missed heartbeats")}))
+            }
+            "rest" => ("resting",
+                       json!({"reason": req["reason"].as_str().unwrap_or("the human's word")})),
+            "resume" => {
+                svc["beats"] = json!(0);
+                ("probation", json!({}))    // service is re-earned, never granted
             }
             "decom" => ("decommissioned",
                         json!({"reason": req["reason"].as_str().unwrap_or(""),

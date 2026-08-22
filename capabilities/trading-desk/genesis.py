@@ -47,6 +47,10 @@ DEFAULT_INDICATORS = ["close_50_sma", "close_200_sma", "rsi", "macd", "boll", "a
 # code — the acceptance test is this manifest carrying the desk whole.
 MANIFEST = {
  "key": "trading-desk",
+ # 0059 §2.6 — the desk names its own hands: the data stall its crew launches
+ # IS this capability's tool; the Farm's gate still holds the word
+ "tools": [{"name": "local.desk/tradingdata", "kind": "http",
+            "endpoint": "http://localhost:4570", "transport": "rest"}],
  "name": "the Trading Desk",
  "emoji": "📈",
  "resident": "charles",

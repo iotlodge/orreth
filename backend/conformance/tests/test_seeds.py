@@ -68,6 +68,21 @@ def test_downed_wire_serves_the_last_good_answer(tmp_path):
     assert "wire is down" in out["note"]
 
 
+def test_tool_allocation_walks_subject_floor_universe():
+    """0059 §2.7 — the 0058 law, farm-shaped."""
+    a = {"resident:librarian": {"service": "tavily-mcp"},
+         "floor:u:demo/e:desk/f:charles": {"service": "tradingdata"},
+         "universe": {"service": "com.tavily/search", "tool": "search"}}
+    r = seeds.resolve_tool_assignment(a, "resident:librarian", "u:demo")
+    assert r["service"] == "tavily-mcp" and r["resolved_from"] == "resident:librarian"
+    r = seeds.resolve_tool_assignment(a, "capability:trading-desk",
+                                      "u:demo/e:desk/f:charles")
+    assert r["service"] == "tradingdata" and r["resolved_from"].startswith("floor:")
+    r = seeds.resolve_tool_assignment(a, "resident:vera", "u:demo/e:rag")
+    assert r["service"] == "com.tavily/search" and r["resolved_from"] == "universe"
+    assert seeds.resolve_tool_assignment({}, "resident:none") == {}
+
+
 def test_cache_is_json_on_disk(tmp_path):
     fetch = lambda url: _reg([("acme/search", "x", "1.0", "https://a", True)])
     seeds.search(tmp_path, "search", fetch=fetch)
