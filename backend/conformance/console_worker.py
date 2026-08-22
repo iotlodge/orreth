@@ -2125,6 +2125,15 @@ def embed_door() -> None:
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
     class H(BaseHTTPRequestHandler):
+        def do_OPTIONS(self):
+            # 0059 sp4 — the browser's preflight: a JSON POST from the glass
+            # asks permission first; the door says yes and holds nothing
+            self.send_response(204)
+            self.send_header("access-control-allow-origin", "*")
+            self.send_header("access-control-allow-methods", "GET, POST, OPTIONS")
+            self.send_header("access-control-allow-headers", "content-type")
+            self.end_headers()
+
         def do_POST(self):
             ln = int(self.headers.get("content-length") or 0)
             raw = self.rfile.read(ln) or b"{}"
@@ -12234,6 +12243,60 @@ def on_market_ask(port: int, scope: str, r: dict) -> None:
           + (" · voiced" if voiced else " · grounded"))
 
 
+def on_farm_ask(port: int, scope: str, r: dict) -> None:
+    """0059 sp4 — ASK CHARLOTTE in plain words: the worker greps the seed
+    catalog AND her own toolshed deterministically, and she voices the
+    reading through one governed thought under her own DID, citing what she
+    read. Intel is never authority — planting still walks the gate."""
+    question = str(r.get("text") or "")
+    _stop = {"what", "could", "give", "this", "that", "have", "already",
+             "universe", "with", "does", "which", "would", "should", "there",
+             "them", "then", "these", "about", "some", "tool", "tools",
+             "server", "servers", "need", "want"}
+    words = [w.strip("?,.!") for w in question.lower().split()
+             if len(w) > 3 and w.strip("?,.!") not in _stop][:6]
+    shed = []
+    try:
+        for s in call(4500, "GET", "/farm").get("services", []):
+            if s.get("state") == "decommissioned":
+                continue
+            shed.append(s)
+    except Exception:
+        pass
+    q = next((w for w in words), question[:40])
+    doc = seeds.search(HOME / "farm", q)
+    rows = doc.get("entries") or []
+    fact_seed = lambda e: (
+        f"SEED {e['id']} · {str(e.get('description') or '')[:120]}"
+        + (f" · {(len(e.get('remotes') or []))} remote(s)" if e.get("remotes") else "")
+        + (f" · v{e.get('version')}" if e.get("version") else ""))
+    fact_svc = lambda s: (
+        f"PLANTED {s['name']} · {s.get('kind')} · {s.get('state')} on "
+        f"{(s.get('floor') or '').split('/')[-1]} · tools: "
+        + (", ".join(t.get("name", "") for t in (s.get("manifest") or [])[:6]) or "none")
+        + (f" · source {s.get('source')}" if s.get("source") not in (None, "", "human") else ""))
+    facts = ("HER OWN SHED:\n" + "\n".join(fact_svc(s) for s in shed[:10])
+             + "\n\nTHE SEED CATALOG (intel, never authority):\n"
+             + "\n".join(fact_seed(e) for e in rows[:8]
+                         if e.get("source") == "mcp-registry"))
+    voiced = governed_voice(port, "charlotte", CHA_DID, question, facts)
+    reply = voiced or (
+        "the farm keeper, grounded (no fueled voice here): the shed holds "
+        + (", ".join(s["name"] for s in shed[:6]) or "nothing")
+        + "; the catalog offers "
+        + (", ".join(e["id"] for e in rows[:4]
+                     if e.get("source") == "mcp-registry") or "no match")
+        + ". The tool never wrote SOME PIG about itself.")
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "done",
+          "result": {"reply": reply,
+                     "citations": [e["id"] for e in rows[:8]
+                                   if e.get("source") == "mcp-registry"],
+                     "voiced": bool(voiced)}})
+    print(f"  ↳ charlotte read seeds+shed for {r['id']}"
+          + (" · voiced" if voiced else " · grounded"))
+
+
 def on_window_ask(port: int, scope: str, r: dict) -> None:
     """THE WINDOW SPEAKS (mini-dive tab 3): the human frames a piece of
     spacetime — a time range, the lanes in focus — and asks in their own
@@ -12895,6 +12958,10 @@ def main() -> None:
                                 r.get("status") == "pending":
                             handled.add(key)
                             on_market_ask(port, scope, r)
+                        elif r.get("kind") == "farm-ask" and \
+                                r.get("status") == "pending":
+                            handled.add(key)
+                            on_farm_ask(port, scope, r)
                         elif r.get("kind") == "thumb" and r.get("status") == "pending":
                             handled.add(key)
                             on_thumb(port, scope, r)

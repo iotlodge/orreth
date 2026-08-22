@@ -487,6 +487,10 @@
   /* 0058 sp3 — the stable's master-detail (the gov-split pattern, own names:
      the one-namespace law): the view never scrolls, each pane owns its own */
   #v-stable{padding:1.6rem;display:flex;flex-direction:column;overflow:hidden}
+  #v-farm{padding:1.6rem;display:flex;flex-direction:column;overflow:hidden}
+  #ftaxpop{border:1px solid var(--hair);border-radius:10px;padding:.7rem .9rem;margin-top:.5rem;
+    background:var(--deep);font:.68rem var(--mono);line-height:1.7;color:var(--dim)}
+  #ftaxpop b{color:var(--brass)}
   .stbltop{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
   .stblmode{display:flex;gap:.4rem}
   .smode{font:.68rem var(--mono);letter-spacing:.08em;border:1px solid var(--hair2);
@@ -1314,28 +1318,51 @@
 
   <!-- THE FARM -->
   <div class="view hide" id="v-farm">
-    <div class="section" style="margin-top:0">the farm · the tools and services agents may use — add one, watch its health, retire it · managed at <span id="farm-floor" style="color:var(--brass)">…</span></div>
-    <div class="plantform">
-      <div class="row">
-        <input id="pf-name" placeholder="name · com.tavily/search" style="flex:2;min-width:200px">
-        <select id="pf-kind"><option value="mcp">mcp</option><option value="http">http</option><option value="feed">feed</option></select>
-        <select id="pf-transport"><option value="streamable-http">streamable-http</option><option value="rest">rest</option><option value="sse">sse</option></select>
-        <input id="pf-endpoint" placeholder="endpoint · https://…" style="flex:3;min-width:260px">
-        <button class="go" onclick="plantTool()">Add this tool →</button>
-      <label class="cascade"><input type="checkbox" id="pf-cascade"> also plant on every floor below</label>
-      </div>
-      <textarea id="pf-manifest" placeholder='optional — what the tool offers; tool servers (MCP) are discovered automatically. Advanced: paste a JSON tool list like [{"name":"search","description":"…"}]'></textarea>
-      <div class="chips"><span class="qchip" onclick="presetTavily()">🌱 Tavily search (preset)</span></div>
-      <div class="formerr" id="pf-err"></div>
-      <div class="steps"><span><span class="num">①</span>you add it — the farm keeper tests it and pins its exact fingerprint, so it can never be silently swapped</span>
-        <span><span class="num">②</span>you approve — new tools start on probation; steady health earns full service</span>
-        <span><span class="num">③</span>every change to a tool is recorded forever — nothing is silently forgotten</span></div>
+    <!-- 0059 sp4 — the toolshed earns the canon master-detail; THE SEEDS
+         (the registry catalog) as the tab's second face; charlotte as the
+         playground beside the human -->
+    <div class="stbltop">
+      <span class="section" style="margin:0;border:none;padding:0">the farm · tools under governance — at <span id="farm-floor" style="color:var(--brass)">…</span></span>
+      <span class="stblmode"><span class="smode on" id="fmode-shed" onclick="farmMode('shed')">🧰 the toolshed</span><span class="smode" id="fmode-seeds" onclick="farmMode('seeds')">🌱 the seeds</span></span>
+      <span class="lnk" style="margin-left:auto;font-size:.68rem" onclick="ftaxToggle()">key terms ▾</span>
     </div>
-    <div class="section">awaiting your decision</div>
-    <div id="farmpending"><div class="quiet">nothing staged.</div></div>
-    <div class="section">the toolshed</div>
-    <div id="farmroster"></div>
-    <div class="quiet" id="farmempty" style="margin-top:.4rem">no services planted yet — this world consumes nothing.</div>
+    <div id="ftaxpop" class="hide"></div>
+    <div class="stblsplit" id="farm-main">
+      <div class="stblleft">
+        <div class="sechd">waiting on your word <span id="farm-wait-n"></span></div>
+        <div id="farmpending"></div>
+        <div class="sechd">the toolshed — planted services</div>
+        <div id="farmroster"></div>
+        <div class="sechd">the allocations — who prefers what</div>
+        <div id="farmalloc"></div>
+        <div class="sechd">plant by hand — for a tool the seeds do not list</div>
+        <div class="stbform">
+          <input id="pf-name" placeholder="name · com.vendor/tool">
+          <select id="pf-kind"><option value="mcp">mcp</option><option value="http">http</option><option value="feed">feed</option></select>
+          <input id="pf-endpoint" placeholder="endpoint · https://… or env:NAME (a secret stays out of records)">
+          <button class="sbtn ok" onclick="plantTool()">plant →</button>
+          <label class="cascade"><input type="checkbox" id="pf-cascade"> every floor below</label>
+        </div>
+        <textarea id="pf-manifest" class="hide"></textarea>
+        <div class="formerr" id="pf-err"></div>
+      </div>
+      <div class="stblread" id="farm-read"><div class="quiet">select a service or a waiting decision — its whole story opens here: the pinned tools, the life, who leans on it, and the playground.</div></div>
+    </div>
+    <div class="stblsplit hide" id="seeds-main">
+      <div class="stblleft">
+        <div class="mktbar">
+          <input id="sds-q" placeholder="search the seed catalog — the official MCP registry + this rig" oninput="sdsType()">
+        </div>
+        <div id="sds-list"><div class="quiet">ask the catalog — try “search”, “github”, “tavily”…</div></div>
+        <div class="sechd">ask charlotte — plain words over seeds and shed</div>
+        <div class="mktada">
+          <textarea id="sds-ada-q" rows="2" placeholder="e.g. what could give this universe eyes on arxiv papers?"></textarea>
+          <button class="sbtn ok" id="sds-ada-go" onclick="sdsAsk()">ask charlotte</button>
+        </div>
+        <div id="sds-ada-a"></div>
+      </div>
+      <div class="stblread" id="sds-read"><div class="quiet">select a seed — its intel opens here, and planting it starts the governed walk: plant → the warden speaks → your word → probation → serving.</div></div>
+    </div>
   </div>
 
   <!-- THE STABLE (0019) -->
@@ -3580,82 +3607,291 @@ async function objDecide(id,ok){
 
 /* ── the farm (0018): plant · approve · tend · decom — services as identities ── */
 let farmCache=[];
+/* ── 0059 sp4 — THE FARM, master-detail: the toolshed left, one reading pane
+      right; THE SEEDS (the registry catalog) as the tab's second face;
+      charlotte as the playground beside the human. The click-death and
+      pane-release laws hold as everywhere. ── */
+let FARMV="shed",FSEL=null,FDATA=null,FQ=[],FALLOC={},FSIG="";
+let SDSD=null,SDSSEL=null,SDSTMR=null,SDSASKING=null,FTAXOPEN=false;
+const FDOT={serving:"var(--near)",probation:"var(--blue)",proposed:"var(--dim)",
+  resting:"var(--brass)",dropped:"var(--red)",quarantined:"var(--red)",
+  decommissioned:"var(--faint)"};
+function farmMode(m){FARMV=m;
+  $("fmode-shed").classList.toggle("on",m==="shed");
+  $("fmode-seeds").classList.toggle("on",m==="seeds");
+  $("farm-main").classList.toggle("hide",m!=="shed");
+  $("seeds-main").classList.toggle("hide",m!=="seeds");
+}
+function ftaxToggle(){FTAXOPEN=!FTAXOPEN;const t=$("ftaxpop");t.classList.toggle("hide",!FTAXOPEN);
+  if(FTAXOPEN)t.innerHTML=`<b>key terms — the farm's names, mapped to the industry's</b> (0059)<br>
+   <b>the seed catalog</b> = the tool/MCP registry inventory: intel from the official MCP registry and this rig, NEVER authority ·
+   <b>a planting</b> = an onboarded tool or MCP server: identity, pinned manifest, governed lifecycle ·
+   <b>the manifest pin</b> = the tool contract charlotte SAW — a byte moving walks the rug-pull door ·
+   <b>plant → attest → probation → serving</b> = onboard → approve → verify → publish ·
+   <b>resting</b> = stopped by the HUMAN'S word, lease kept — where <b>dropped</b> is the wire's silence ·
+   <b>an allocation</b> = who prefers which serving tool (subject → floor → universe) ·
+   <b>source</b> = who brought it: human · seed:&lt;registry&gt; · capability:&lt;key&gt; — the universe growing its own hands ·
+   <b>env:NAME</b> = a secret never enters a record — the endpoint's value lives only in the rig's environment`}
+function farmSel(t,id){FSEL={t,id};FSIG="";loadFarm()}
+function fsvcKey(s){return (s.floor||"?")+"|"+s.name}
 async function loadFarm(){
   try{
+    const bz=document.activeElement;
+    if(bz&&bz.id&&["pf-name","pf-endpoint","sds-q","sds-ada-q","fp-args"].includes(bz.id))return;
     const f=await(await fetch(api("/farm"))).json(); farmCache=f.services||[];
-    $("farm-floor").textContent=f.scope;
     const q=(await(await fetch(api("/requests"))).json()).requests||[];
+    let alloc={};try{alloc=(await(await fetch(OBSD+"/assign")).json()).tools||{}}catch{}
+    FDATA=f;FQ=q;FALLOC=alloc;
     const waiting=q.filter(r=>r.kind==="service"&&["staged","pending"].includes(r.status));
+    const sig=JSON.stringify([f.services,waiting.map(r=>[r.id,r.status]),alloc,FSEL,FARMV]);
+    if(sig===FSIG)return; FSIG=sig;
+    $("farm-floor").textContent=f.scope;
     $("farm-badge").textContent=waiting.length?`(${waiting.length})`:"";
-    $("farmpending").innerHTML= waiting.length? waiting.slice().reverse().map(r=>{
-      const v=r.result||{}, act=r.action||"plant";
-      const sub=r.status!=="staged"?"charlotte is probing…":
-        act==="plant"?`probed · ${v.alive?"answering":"NOT answering"} · ${v.tools??0} tool(s) · pin ${(v.manifest_hash||"").slice(7,25)}…`:
-        "consequence waits for you (0012)";
-      return `<div class="req"><span class="kind">${act}</span>
-       <span class="txt">${r.name||r.text||""}<div class="sub">${sub}</div></span>
-       ${r.status==="staged"?`<button class="sbtn ok" onclick="farmDecide('${r.id}',true)">approve</button>
-        <button class="sbtn no" onclick="farmDecide('${r.id}',false)">deny</button>`:`<span class="st">${r.status}</span>`}</div>`;
-    }).join("") : `<div class="quiet">nothing staged.</div>`;
+    $("farm-wait-n").textContent=waiting.length?`· ${waiting.length}`:"";
     const live=farmCache.filter(s=>s.state!=="decommissioned");
-    $("farmempty").style.display=live.length?"none":"";
-    const groups={};live.forEach(s=>(groups[s.floor||"?"]=groups[s.floor||"?"]||[]).push(s));
-    const order=Object.keys(groups).sort((a,b)=>(a===f.scope?-1:b===f.scope?1:a.localeCompare(b)));
-    const svcCard=s=>{
-      const tools=(s.manifest||[]).map(t=>t.name).join(" · ")||"—";
-      return `<div class="svc"><div class="hd"><span class="nm" title="${s.did}">${s.name}</span>
-        <span class="schip ${s.state}">${s.state}</span></div>
-        <div class="meta"><b>${s.kind} · ${s.transport}</b> · planted on ${s.floor.split("/").pop()}<br>
-        ${s.endpoint||""}<br>
-        <span class="hash" title='${JSON.stringify(s.manifest||[]).replace(/'/g,"&#39;")}'>pin ${(s.manifest_hash||"").slice(7,25)}…</span>
-        · ${(s.manifest||[]).length} tool(s): ${tools}<br>
-        heard <b>${s.last_seen?ago(s.last_seen):"never"}</b> · <b>${s.calls||0}</b> call(s)
-        ${s.state==="quarantined"?`<br><span style="color:var(--red)">came back changed — decide above</span>`:""}</div>
-        <div class="acts"><button class="sbtn no" onclick="farmDecom('${s.name}',false)">decommission</button>
-        <button class="sbtn no" onclick="farmDecom('${s.name}',true)" title="decommission AND discredit the source — stages the 0014 §4 knowledge recall">decom + discredit</button></div></div>`;
-    };
-    $("farmroster").innerHTML=order.map(fl=>
-      `<div class="floorsec${fl===f.scope?" here":""}">${fl===f.scope?"this floor · ":""}${fl}</div><div class="farmgrid">`
-      +groups[fl].map(svcCard).join("")+`</div>`).join("");
+    const selOk=FSEL&&(
+      (FSEL.t==="req"&&q.some(r=>r.id===FSEL.id))||
+      (FSEL.t==="svc"&&live.some(s=>fsvcKey(s)===FSEL.id)));
+    if(!selOk)FSEL=waiting.length?{t:"req",id:waiting[waiting.length-1].id}
+      :(live.length?{t:"svc",id:fsvcKey(live.find(s=>s.floor===f.scope)||live[0])}:null);
+    $("farmpending").innerHTML=waiting.length?waiting.slice().reverse().map(r=>
+      `<div class="strow${FSEL&&FSEL.t==="req"&&FSEL.id===r.id?" on":""}" onclick="farmSel('req','${r.id}')">
+        <span class="dt" style="background:${r.status==="staged"?"var(--brass)":"var(--dim)"}"></span>
+        <span class="nm">${esc(r.action||"plant")} · ${esc(r.name||"")}</span>
+        <span class="cl">${r.status}</span><span class="mx">${r.at?ago(r.at):""}</span></div>`).join("")
+      :`<div class="quiet">nothing waits — a tended shed.</div>`;
+    const grp={};live.forEach(s=>(grp[s.floor||"?"]=grp[s.floor||"?"]||[]).push(s));
+    $("farmroster").innerHTML=Object.keys(grp)
+      .sort((a,b)=>(a===f.scope?-1:b===f.scope?1:a.localeCompare(b))).map(fl=>
+      `<div class="floorsec${fl===f.scope?" here":""}">${fl===f.scope?"this floor · ":""}${fl}</div>`
+      +grp[fl].map(s=>`<div class="strow${FSEL&&FSEL.t==="svc"&&FSEL.id===fsvcKey(s)?" on":""}" onclick="farmSel('svc','${esc(fsvcKey(s))}')">
+        <span class="dt" style="background:${FDOT[s.state]||"var(--dim)"}"></span>
+        <span class="nm">${esc(s.name)}${(s.source||"human")!=="human"?` <span class="capb y" title="source: ${esc(s.source)}">${esc((s.source||"").split(":")[0])}</span>`:""}</span>
+        <span class="cl">${esc(s.state)}</span>
+        <span class="mx">${(s.manifest||[]).length}t · ${s.calls||0}c</span></div>`).join("")).join("")
+      ||`<div class="quiet">no services planted — the seeds are one face away.</div>`;
+    const ak=Object.keys(FALLOC).sort();
+    $("farmalloc").innerHTML=ak.length?ak.map(k=>{const a=FALLOC[k]||{};
+      return `<div class="strow" onclick="farmUnallocate('${esc(k)}')" title="click to stage a release — the word decides">
+        <span class="dt" style="background:var(--brass)"></span>
+        <span class="nm">${esc(k)}</span><span class="cl">→ ${esc(a.service||"")}</span>
+        <span class="mx">${a.tool?esc(a.tool):""}</span></div>`}).join("")
+      :`<div class="quiet">no allocations — every caller walks its floor's own path.</div>`;
+    renderFarmPane();
   }catch{}
 }
+function farmWho(name){
+  const allocated=Object.keys(FALLOC).filter(k=>(FALLOC[k]||{}).service===name);
+  return allocated;
+}
+function topoPortOf(scope){
+  let hit=null;
+  const walk=n=>{if(!n)return;if(n.scope===scope)hit=n.port;(n.children||[]).forEach(walk)};
+  walk(topoCache);
+  return hit;
+}
+function renderFarmPane(){
+  const R=$("farm-read");if(!R)return;
+  if(!FSEL){R.innerHTML=`<div class="quiet">select a service or a waiting decision — its whole story opens here.</div>`;return}
+  const live=(FDATA?.services||[]).filter(s=>s.state!=="decommissioned");
+  if(FSEL.t==="svc"){
+    const s=live.find(x=>fsvcKey(x)===FSEL.id);if(!s){R.innerHTML=`<div class="quiet">gone from the shed — the worldline keeps it.</div>`;return}
+    const who=farmWho(s.name),envd=String(s.endpoint||"").startsWith("env:");
+    R.innerHTML=`<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+      <b style="font-size:.95rem">${esc(s.name)}</b><span class="schip ${s.state}">${s.state}</span>
+      ${(s.source||"human")!=="human"?`<span class="okband">${esc(s.source)}</span>`:""}
+      ${s.spend_guard?`<span class="roband" title="calls count against the declared daily ${esc(s.spend_guard)} ceiling — one ledger, every road">⛽ ${esc(s.spend_guard)}-guarded</span>`:""}</div>
+     <div class="dim" style="font:.66rem var(--mono);margin:.25rem 0">${esc(s.kind)} · ${esc(s.transport)} · on ${esc(s.floor||"")} · DID ${esc((s.did||"").slice(0,34))}…</div>
+     <div class="strdeal"><b>THE WIRE</b><br>
+      <span class="k">endpoint</span>${envd?`<b>${esc(s.endpoint)}</b> — the secret stays out of every record (0059)`:esc(s.endpoint||"—")}<br>
+      <span class="k">pin</span><span class="hash">${esc((s.manifest_hash||"").slice(0,30))}…</span>
+      ${s.proposed_hash?`<br><span class="k" style="color:var(--red)">proposed</span><span style="color:var(--red)">${esc(String(s.proposed_hash).slice(0,30))}… — it came back CHANGED; re-approval waits</span>`:""}</div>
+     <div class="strdeal"><b>THE TOOLS — pinned; what charlotte SAW</b><br>
+      ${(s.manifest||[]).map(t=>`<span style="color:var(--star)">${esc(t.name)}</span> <span class="dim">${esc(String(t.description||"").slice(0,90))}</span>`).join("<br>")||"— none pinned"}</div>
+     <div class="strdeal"><b>THE LIFE</b><br>
+      <span class="k">calls</span><b>${s.calls||0}</b> answered<br>
+      <span class="k">heard</span>${s.last_seen?esc(ago(s.last_seen)):"never"}<br>
+      <span class="k">beats</span>${s.beats||0}<br>
+      <span class="k">planted</span>${esc(String(s.planted_at||"").slice(0,10))}</div>
+     <div class="strdeal"><b>WHO LEANS ON IT</b><br>
+      ${who.length?`allocated to: ${who.map(esc).join(" · ")}<br>`:"no allocation names it — callers find it by its floor's walk<br>"}
+      source: ${esc(s.source||"human")}</div>
+     <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">
+      ${["serving","probation"].includes(s.state)?`<button class="sbtn no" onclick="farmRest('${esc(s.name)}')">⏸ rest — the lease kept, nothing spent</button>`:""}
+      ${s.state==="resting"?`<button class="sbtn ok" onclick="farmResume('${esc(s.name)}')">▶ resume — probation earns it back</button>`:""}
+      ${s.state==="quarantined"?`<button class="sbtn ok" onclick="farmReapprove('${esc(s.name)}')">re-approve the new manifest</button>`:""}
+      <button class="sbtn no" onclick="farmDecom('${esc(s.name)}',false)">decommission</button>
+      <button class="sbtn no" onclick="farmDecom('${esc(s.name)}',true)" title="AND discredit the source — stages the 0014 §4 knowledge recall">decom + discredit</button></div>
+     ${s.state==="serving"?`<div class="sechd" style="margin-top:.9rem">the playground — charlotte runs it through the one governed door</div>
+      <div class="stbform">
+       <select id="fp-tool">${(s.manifest||[]).map(t=>`<option>${esc(t.name)}</option>`).join("")}</select>
+       <button class="sbtn ok" onclick="farmPlay('${esc(s.name)}','${esc(s.floor||"")}')">▶ run it</button></div>
+      <textarea id="fp-args" rows="2" style="width:100%;margin-top:.35rem;background:var(--deep);border:1px solid var(--hair2);border-radius:8px;color:var(--star);font:.7rem var(--mono);padding:.45rem .6rem" placeholder='arguments as JSON — e.g. {"query":"orreth","max_results":2}'></textarea>
+      <div id="fp-out">${FPLAST&&FPLAST.id===s.name?FPLAST.html:""}</div>`:""}`;
+    return;
+  }
+  const r=FQ.find(x=>x.id===FSEL.id);if(!r){R.innerHTML=`<div class="quiet">settled — the archive keeps it.</div>`;return}
+  const v=r.result||{},act=r.action||"plant",w=v.warden||{},bl=v.blast;
+  R.innerHTML=`<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+    <b style="font-size:.9rem">${esc(act)} · ${esc(r.name||"")}</b><span class="st">${esc(r.status)}</span>
+    ${r.source&&r.source!=="human"?`<span class="okband">${esc(r.source)}</span>`:""}</div>
+   <div class="dim" style="font-size:.74rem;margin:.3rem 0">${esc(r.text||"")}</div>
+   ${act==="plant"&&r.status==="staged"?`<div class="strdeal"><b>CHARLOTTE PROBED</b><br>
+     <span class="k">answered</span>${v.alive?"yes":"<span style='color:var(--red)'>NO</span>"}<br>
+     <span class="k">tools seen</span>${v.tools??0}<br>
+     <span class="k">pin</span>${esc((v.manifest_hash||"").slice(0,30))}…</div>`:""}
+   ${(w.notes||[]).length?`<div class="strdeal" style="border-left:3px solid #b48ead"><b>${esc(w.by||"the warden")}</b><br>
+     ${(w.notes||[]).map(n=>`<span style="color:${n.startsWith("⚠")?"var(--amber,#e8b34a)":"var(--dim)"}">${esc(n)}</span>`).join("<br>")}</div>`:""}
+   ${bl?`<div class="strdeal"><b>THE BLAST RADIUS</b><br>${esc(bl.note||"")}${(bl.allocated||[]).length?`<br>allocated: ${bl.allocated.map(esc).join(" · ")}`:""}</div>`:""}
+   ${r.status==="staged"?`<div style="display:flex;gap:.5rem;margin-top:.5rem">
+     <button class="sbtn ok" onclick="farmDecide('${r.id}',true)">${act==="plant"?"plant it — probation begins":act==="rest"?"rest it":act==="resume"?"resume it":act==="decom"?"retire it":"approve"}</button>
+     <button class="sbtn no" onclick="farmDecide('${r.id}',false)">${act==="plant"?"turn it away":"leave it as it stands"}</button></div>`
+    :`<div class="quiet" style="margin-top:.4rem">charlotte is tending it…</div>`}`;
+}
+let FPLAST=null;   /* the playground's last answer SURVIVES the tick's re-render */
+function fpShow(name,html){
+  FPLAST={id:name,html};
+  const out=$("fp-out");if(out)out.innerHTML=html;
+}
+async function farmPlay(name,scope){
+  const tool=$("fp-tool")?.value||"",raw=$("fp-args")?.value.trim()||"";
+  let args={};if(raw){try{args=JSON.parse(raw)}catch{fpShow(name,`<div class="adaans">the arguments are not valid JSON — nothing was run</div>`);return}}
+  const port=topoPortOf(scope)||parseInt((API.match(/:(\d+)/)||[])[1]||"4500");
+  fpShow(name,`<div class="adaans">🧑‍🌾 charlotte runs ${esc(tool)} through the governed door…</div>`);
+  try{
+    const res=await(await fetch(OBSD+"/tool",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({service:name,tool,args,did:"did:key:the-playground",port})})).json();
+    fpShow(name,`<div class="adaans">${res.error?`<span style="color:var(--amber,#e8b34a)">${esc(res.error)}</span>`
+      :esc((res.text||JSON.stringify(res).slice(0,1200)))}
+      ${res._served?`<div class="dim" style="font-size:.62rem;margin-top:.3rem">served by ${esc(res._served.service)} · ${res._served.ms}ms · metered on the farm</div>`:""}</div>`);
+  }catch{fpShow(name,`<div class="adaans">the door did not answer — is the worker tending?</div>`)}
+}
+async function farmRest(name){await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+  body:JSON.stringify({kind:"service",action:"rest",name,text:`rest ${name} — the lease kept, nothing spent (rule 11's shape)`})});FSIG="";loadFarm()}
+async function farmResume(name){await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+  body:JSON.stringify({kind:"service",action:"resume",name,text:`resume ${name} — probation earns it back`})});FSIG="";loadFarm()}
+async function farmReapprove(name){await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+  body:JSON.stringify({kind:"service",action:"reapprove",name,text:`re-approve ${name}'s changed manifest`})});FSIG="";loadFarm()}
+async function farmUnallocate(sub){await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+  body:JSON.stringify({kind:"service",action:"unallocate",subject:sub,text:`release the allocation on ${sub}`})});FSIG="";loadFarm()}
 async function farmDecide(id,ok){
   await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({id,status:ok?"approved":"denied"})});
-  paneRelease(id);loadFarm();loadReq();
+  paneRelease(id);FSIG="";loadFarm();loadReq();
 }
 async function plantTool(){
   const err=$("pf-err");err.textContent="";
   const name=$("pf-name").value.trim(),endpoint=$("pf-endpoint").value.trim();
   if(!name||!endpoint){err.textContent="a service needs a name and an endpoint";return}
-  let manifest=[];const mraw=$("pf-manifest").value.trim();
-  if(mraw){try{manifest=JSON.parse(mraw)}catch{err.textContent="declared tools must be valid JSON";return}}
+  const kind=$("pf-kind").value;
   try{
+    const body={kind:"service",action:"plant",name,svc_kind:kind,
+      transport:kind==="mcp"?"streamable-http":"rest",endpoint,manifest:[],
+      text:`plant ${name}`};
     const r=await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({kind:"service",action:"plant",name,svc_kind:$("pf-kind").value,
-        transport:$("pf-transport").value,endpoint,manifest,text:`plant ${name}`})});
+      body:JSON.stringify(body)});
     if(!r.ok){err.textContent=`the daemon refused: ${r.status}`;return}
-    if($("pf-cascade")&&$("pf-cascade").checked)await cascadeBelow({kind:"service",action:"plant",
-      name,svc_kind:$("pf-kind").value,transport:$("pf-transport").value,endpoint,manifest,
-      text:`plant ${name} (cascaded from above)`});
-    $("pf-name").value=$("pf-endpoint").value=$("pf-manifest").value="";
+    if($("pf-cascade")&&$("pf-cascade").checked)await cascadeBelow({...body,text:`plant ${name} (cascaded from above)`});
+    $("pf-name").value=$("pf-endpoint").value="";
     if($("pf-cascade"))$("pf-cascade").checked=false;
-    loadFarm();
+    FSIG="";loadFarm();
   }catch{err.textContent="unreachable — is the daemon up? (scripts/dev.sh status)"}
-}
-function presetTavily(){
-  $("pf-name").value="com.tavily/search";$("pf-kind").value="http";
-  $("pf-transport").value="rest";$("pf-endpoint").value="https://api.tavily.com";
-  $("pf-manifest").value=JSON.stringify([{name:"search",
-    description:"Tavily web search — POST /search {query, max_results}",
-    schema:{query:"string",max_results:"int"}}]);
-  $("pf-err").textContent="";
 }
 async function farmDecom(name,discredit){
   await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({kind:"service",action:"decom",name,discredit,
       text:`decommission ${name}${discredit?" + discredit the source":""}`})});
-  loadFarm();
+  FSIG="";loadFarm();
+}
+/* ── THE SEEDS — the catalog face: the official registry + this rig ── */
+function sdsType(){clearTimeout(SDSTMR);SDSTMR=setTimeout(sdsSearch,400)}
+async function sdsSearch(){
+  const q=$("sds-q").value.trim();if(!q){$("sds-list").innerHTML=`<div class="quiet">ask the catalog — try “search”, “github”, “tavily”…</div>`;return}
+  $("sds-list").innerHTML=`<div class="quiet">the catalog is answering…</div>`;
+  try{SDSD=await(await fetch(OBSD+"/seeds?q="+encodeURIComponent(q))).json()}catch{SDSD=null}
+  renderSeeds();
+}
+function renderSeeds(){
+  const L=$("sds-list");if(!L)return;
+  if(!SDSD){L.innerHTML=`<div class="quiet">the seeds door is unreachable — is the worker tending?</div>`;return}
+  const rows=SDSD.entries||[];
+  L.innerHTML=(rows.length?rows.map(e=>{
+    const local=e.source==="toolshed",cap=String(e.source||"").startsWith("capability:");
+    return `<div class="mktrow${SDSSEL===e.id?" on":""}" onclick="sdsSel('${esc(e.id)}')">
+      <span class="nm">${esc(e.id)}${local?` <span class="okband">on this rig</span>`:cap?` <span class="okband">${esc(e.source)}</span>`:""}</span>
+      <span class="px">${e.version?("v"+esc(e.version)):""}</span>
+      <span class="cx">${(e.remotes||[]).length?`${(e.remotes||[]).length} remote(s)`:(local?esc(e.state||""):"")}</span>
+      <span class="cx">${local||cap?"":"registry"}</span></div>`}).join("")
+    :`<div class="quiet">nothing in the catalog matches${SDSD.stale?" — and the wire is DOWN (the cache spoke)":""}.</div>`)
+    +(SDSD.stale?`<div class="quiet" style="padding:.3rem 0">⚠ ${esc(SDSD.note||"stale")}</div>`:"");
+  renderSeedPane();
+}
+function sdsSel(id){SDSSEL=id;renderSeeds()}
+function renderSeedPane(){
+  const R=$("sds-read");if(!R)return;
+  const e=(SDSD?.entries||[]).find(x=>x.id===SDSSEL);
+  if(!e){R.innerHTML=`<div class="quiet">select a seed — its intel opens here, and planting it starts the governed walk.</div>`;return}
+  if(e.source==="toolshed"){
+    R.innerHTML=`<b style="font-size:.92rem">${esc(e.id)}</b> <span class="okband">already on this rig</span>
+     <div class="dim" style="margin:.3rem 0">${esc(e.description||"")}</div>
+     <div class="quiet">what already stands outranks what could be planted — find it in 🧰 the toolshed face.</div>`;
+    return;
+  }
+  const rem=(e.remotes||[])[0]||{},url=rem.url||"";
+  const smell=/key=|apikey|api_key|token=|secret=/i.test(url);
+  R.innerHTML=`<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+    <b style="font-size:.92rem">${esc(e.title||e.id)}</b>
+    ${e.latest?`<span class="okband">latest · v${esc(e.version||"?")}</span>`:""}
+    ${e.status&&e.status!=="active"?`<span class="roband">${esc(e.status)}</span>`:""}</div>
+   <div class="dim" style="font:.66rem var(--mono)">${esc(e.id)} · source: ${esc(e.source||"")}</div>
+   <div class="strdeal"><b>THE INTEL — the registry's word, never authority</b><br>
+    ${esc(e.description||"—")}<br>
+    ${(e.remotes||[]).map(rm=>`<span class="k">${esc(rm.type||"remote")}</span>${esc(rm.url||"")}`).join("<br>")||"<span class='dim'>no remotes — a package-only seed (its container deploy is allen's walk, parked in 0059)</span>"}
+    ${e.packages?`<br><span class="k">packages</span>${e.packages} (stdio — needs a body; allen's walk)`:""}</div>
+   ${(e.remotes||[]).length?`<div class="dim" style="font-size:.68rem;margin:.4rem 0">planting stages charlotte's probe and YOUR word; the manifest pins at attest; probation earns serving.${smell?`<br><span style="color:var(--amber,#e8b34a)">⚠ this remote's url smells of a credential — plant it as env:NAME instead (paste the url into .env first); the warden will confess either way</span>`:""}</div>
+   <div class="stbform">
+    <input id="sd-name" value="${esc(e.id.split("/").pop()||e.id)}" style="max-width:180px">
+    <input id="sd-endpoint" value="${esc(smell?"env:":url)}" placeholder="the remote url, or env:NAME">
+    <button class="sbtn ok" onclick="sdsPlant('${esc(e.id)}')">🌱 plant it →</button></div>
+   <div class="formerr" id="sd-err"></div>`:""}`;
+}
+async function sdsPlant(seedId){
+  const err=$("sd-err");if(err)err.textContent="";
+  const name=$("sd-name").value.trim(),endpoint=$("sd-endpoint").value.trim();
+  if(!name||!endpoint||endpoint==="env:"){if(err)err.textContent="a planting needs a name and a real endpoint (or a filled env:NAME)";return}
+  try{
+    await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({kind:"service",action:"plant",name,svc_kind:"mcp",
+        transport:"streamable-http",endpoint,manifest:[],source:"seed:mcp-registry",
+        text:`plant ${name} from the seed catalog (${seedId})`})});
+    if(err)err.textContent="staged — charlotte probes it; your word decides in 🧰 the toolshed face";
+    FSIG="";
+  }catch{if(err)err.textContent="the daemon did not answer"}
+}
+async function sdsAsk(){
+  const q=$("sds-ada-q").value.trim();if(!q||SDSASKING)return;
+  const A=$("sds-ada-a"),go=$("sds-ada-go");
+  go.disabled=true;A.innerHTML=`<div class="adaans">🧑‍🌾 charlotte reads the seeds and her shed…</div>`;
+  try{
+    const made=await(await fetch(api("/requests"),{method:"POST",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({kind:"farm-ask",text:q})})).json();
+    SDSASKING=made.id;
+    for(let i=0;i<40;i++){
+      await new Promise(r2=>setTimeout(r2,3000));
+      const qs=(await(await fetch(api("/requests"))).json()).requests||[];
+      const r=qs.find(x=>x.id===made.id);
+      if(r&&r.status==="done"){
+        const v=r.result||{};
+        A.innerHTML=`<div class="adaans">${esc(v.reply||"")}
+          ${(v.citations||[]).length?`<div class="cites">reads: ${(v.citations||[]).map(c=>
+            `<span class="lnk" onclick="$('sds-q').value='${esc(c)}';sdsSearch()">${esc(c)}</span>`).join("")}</div>`:""}
+          <div class="dim" style="font-size:.62rem;margin-top:.3rem">${v.voiced?"voiced — one governed thought under charlotte's DID, metered":"grounded — no fueled voice on this floor"}</div></div>`;
+        break;
+      }
+    }
+  }catch{A.innerHTML=`<div class="adaans">the ask stumbled — is the worker tending?</div>`}
+  SDSASKING=null;go.disabled=false;
 }
 
 /* ── the stable (0019): saddle · approve · canary · sync · swap — minds as identities ── */
