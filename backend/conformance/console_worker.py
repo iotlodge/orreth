@@ -1815,33 +1815,54 @@ def _cap_shelf_manifest(key: str) -> dict:
         return {}
 
 
+_CAP_TOOLS_SETTLED: set[tuple[str, str]] = set()
+
+
 def capability_tools_intake(genesis: dict | None = None) -> int:
     """0059 §2.6 — A CAPABILITY'S TOOLS ARE CITIZENS, NOT SHADOWS: a genesis
     may declare `tools`; each walks to the SAME plant gate wearing
     `source: capability:<key>` — the human's word still decides, vigil still
-    confesses, and probation is still earned. Idempotent: a name that already
-    stands (or already waits, or was ever refused into decommission) is
-    skipped with a plain line — the gate never re-asks what a human settled."""
+    confesses, and probation is still earned.
+
+    V2 (2026-08-22, JB's find — three restarts, three ghost cards): a
+    capability's tools belong at the capability's OWN floor (the genesis
+    names it), never at the universe — v1 asked u:demo while the real tool
+    SERVED on f:charles. And the idempotency must OUTLIVE the process: the
+    plane's roster is empty at boot (in-memory), so standing is read from
+    the floor's durable ledger, and «settled» is ANY plant ask for that
+    name on that floor whatever its fate — the queue survives restarts, so
+    a human's denial stays denied. The gate never re-asks what a human
+    settled. Re-invoked from the beat until every declaration has reached
+    a floor that answered (a world that wakes after the worker still gets
+    its ask, this life — not next boot's)."""
     stood = 0
-    try:
-        existing = {s.get("name")
-                    for s in call(4500, "GET", "/farm").get("services", [])}
-        asked = {r.get("name")
-                 for r in call(4500, "GET", "/requests").get("requests", [])
-                 if r.get("kind") == "service"
-                 and r.get("status") in ("pending", "staged")}
-    except Exception:
-        return 0
     for key, g in (genesis or CAP_GENESIS).items():
-        for t in (g.get("tools") or []):
-            nm = str(t.get("name") or "")
-            if not nm:
+        tools = [t for t in (g.get("tools") or []) if t.get("name")]
+        if not tools or all((key, str(t["name"])) in _CAP_TOOLS_SETTLED
+                            for t in tools):
+            continue
+        port = int(g.get("port") or 4500)
+        scope = str(g.get("floor") or UNIVERSE_SCOPE)
+        try:
+            roster = {s.get("name")
+                      for s in call(port, "GET", "/farm").get("services", [])}
+            settled = {r.get("name")
+                       for r in call(port, "GET", "/requests").get("requests", [])
+                       if r.get("kind") == "service"
+                       and str(r.get("action") or "plant") == "plant"}
+        except Exception:
+            continue          # the floor is still waking — the beat retries
+        standing = set(ledger_load(scope))    # the durable shed, replant's seed
+        for t in tools:
+            nm = str(t["name"])
+            if (key, nm) in _CAP_TOOLS_SETTLED:
                 continue
-            if nm in existing or nm in asked:
-                print(f"  ⚑ {key} declares {nm} — already stands or waits; "
-                      "the earlier word keeps its name")
+            _CAP_TOOLS_SETTLED.add((key, nm))
+            if nm in roster or nm in standing or nm in settled:
+                print(f"  ⚑ {key} declares {nm} — already stands or was "
+                      f"settled at {scope}; the earlier word keeps its name")
                 continue
-            call(4500, "POST", "/requests", {
+            call(port, "POST", "/requests", {
                 "kind": "service", "action": "plant", "name": nm,
                 "svc_kind": t.get("kind", "http"),
                 "endpoint": t.get("endpoint", ""),
@@ -1852,7 +1873,8 @@ def capability_tools_intake(genesis: dict | None = None) -> int:
                 "text": f"the capability «{key}» declares a tool: {nm} — "
                         "the universe growing its own hands; your word decides"})
             stood += 1
-            print(f"  ⚑ capability tool declared: {nm} (from {key}) — at the gate")
+            print(f"  ⚑ capability tool declared: {nm} (from {key}) — at "
+                  f"{scope}'s gate")
     return stood
 
 
@@ -13439,6 +13461,7 @@ def main() -> None:
                         calibration_beat(port)  # human vs examiner (0048 sp4)
                         bell_beat(port)       # the bell tends its door (0044 sp2)
                         canon_seed(port)      # the firmware stands as records (0045 sp1)
+                        capability_tools_intake()  # late-waking worlds still get their ask (V2)
                         verify_beat(port)     # the deed watchman, standing (0044 sp3 · L-B)
                         gate_age_beat(port)   # aged consequence rings once (0044 sp3)
 
