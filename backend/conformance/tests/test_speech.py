@@ -182,3 +182,19 @@ def test_the_wardens_nose_is_an_editable_list():
     assert pats == ["key=", "apikey", "api_key", "token=", "secret="]
     assert all("key=" in u for u in
                ["https://x.example/mcp?key=abc"] if any(p in u for p in pats))
+
+
+def test_wave_two_cards_speak_plain():
+    # wave 2 (2026-08-23): the remaining Inbox kinds in plain words — each
+    # card names its choices; design citations never enter a human's card
+    got = speech.render(speech.SENTENCES["card-charter-rest"],
+                        charter="charter-1", n=2)
+    assert "used all 2 run(s)" in got and "Approve to renew" in got
+    got = speech.render(speech.SENTENCES["card-dial-turn"],
+                        **{"from": "glance", "to": "assay"})
+    assert "«glance»" in got and "«assay»" in got and "real money" in got
+    for name in ("card-passage-reachout", "card-legacy-keeps",
+                 "card-attest-death"):
+        assert "§" not in speech.SENTENCES[name]   # citations stay in code
+    with pytest.raises(ValueError):
+        speech.render(speech.SENTENCES["card-mind-repin"])   # slot refused by name

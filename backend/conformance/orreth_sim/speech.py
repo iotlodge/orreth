@@ -73,6 +73,57 @@ SENTENCES = {
     # sentence, and her nose learns a new smell without a code change.
     "warden-credential-patterns":
         "key=, apikey, api_key, token=, secret=",
+    # ---- wave 2: the remaining Inbox kinds in PLAIN words (2026-08-23,
+    # JB: "we can't leave humans wondering what's going on") — every card
+    # names what it is, what each choice does, and what happens on silence;
+    # design-doc citations stay in the code, never in a human's card -------
+    "card-passage-reachout":
+        "Are you there? You have been quiet past the check-in window you "
+        "declared. Any word — even declining this card — counts as life "
+        "and keeps everything as it is; continued silence begins the "
+        "sealed pause you chose, which is reversible and deletes nothing.",
+    "card-legacy-keeps":
+        "This universe is kept as a legacy now: its memories can be read "
+        "and asked ABOUT, but nothing here will ever speak AS the person "
+        "again, and nothing changes without a keeper's word.",
+    "card-mind-repin":
+        "«⟦mind⟧» changed its pricing or terms since you approved it. The "
+        "terms you approved stay in force meanwhile; approving adopts the "
+        "new terms, declining leaves it set aside under the old pin — "
+        "nothing moves without your word.",
+    "card-service-repin":
+        "«⟦name⟧» came back changed — what it offers no longer matches "
+        "what you approved, so it is quarantined until your word: approve "
+        "to adopt its new shape, decline to leave it quarantined.",
+    "card-entitlement":
+        "Work for «⟦objective⟧» needs to run on a floor this plan's token "
+        "does not cover. Approve to allow that one dispatch from ⟦scope⟧; "
+        "decline and the plan completes without it, saying honestly what "
+        "it left out.",
+    "card-attest-death":
+        "Confirm a death — the gravest word this universe takes. Approval "
+        "starts the testament's execution only after the cooling-off, with "
+        "evidence and witnesses already checked; declining ends this "
+        "question and changes nothing. One voice can still abort at any "
+        "moment before execution.",
+    "card-dial-turn":
+        "Turn the examiner's depth from «⟦from⟧» to «⟦to⟧». Deeper "
+        "watching reads more and costs real money — the price is declared "
+        "as it spends; turning it back down is the same one-click word.",
+    "card-assay-degradation":
+        "The examiner measured falling quality at ⟦scope⟧: ⟦why⟧. This "
+        "card moves nothing by itself — the examiner measures, only "
+        "humans move; the evidence rides below.",
+    "card-charter-rest":
+        "Your standing duty ⟦charter⟧ used all ⟦n⟧ run(s) you allowed, so "
+        "it is resting — nothing more will run. Approve to renew it for "
+        "another round on the same terms; leave it resting and it stays "
+        "quiet.",
+    "card-smith-nudge":
+        "The improver proposes a small revision to «⟦asset⟧»: recent "
+        "success is ⟦rate⟧%, below the ⟦floor⟧% bar. The change is "
+        "bounded and its evidence is attached — approving adopts it, "
+        "declining keeps the current version.",
     "reply-thumb-heard":
         "heard — on the record",
     # ---- the parlor's system notes ------------------------------------------

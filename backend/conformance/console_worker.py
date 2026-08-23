@@ -1074,8 +1074,7 @@ def _post_reachout(port: int) -> None:
         return
     call(port, "POST", "/requests",
          {"kind": "passage",
-          "text": "the universe reached out — silence past your window; "
-                  "a word from you answers (0035 §3)"})
+          "text": sentence(port, "card-passage-reachout")})
 
 
 def _resolve_reachouts(port: int, reply: str) -> None:
@@ -1261,8 +1260,7 @@ def _mark_legacy(port: int) -> None:
         try:
             call(port, "POST", "/requests",
                  {"kind": "legacy",
-                  "text": "the universe keeps — legacy; the archive speaks "
-                          "about, never as (0035 §6)"})
+                  "text": sentence(port, "card-legacy-keeps")})
             rows = call(port, "GET", "/requests").get("requests", [])
         except Exception:
             return
@@ -3106,7 +3104,8 @@ class FarmKeeper:
                         call(port, "POST", "/requests",
                              {"kind": "service", "action": "reapprove", "name": svc["name"],
                               "proposed_hash": back.get("proposed_hash"),
-                              "text": f"{svc['name']} came back CHANGED — re-approve its new manifest?"})
+                              "text": sentence(port, "card-service-repin",
+                                               name=svc["name"])})
                     print(f"  ↳ {svc['name']} quarantined — its manifest changed while it was gone")
                     # trust wears a review date (0031 §5): a changed manifest is a
                     # freshness trigger — charlotte fires the signal, the librarian
@@ -3873,7 +3872,8 @@ class Wrangler:
                         call(port, "POST", "/requests",
                              {"kind": "mind", "action": "reapprove", "mind": mid,
                               "proposed_hash": out.get("proposed_hash"),
-                              "text": f"{mid}'s deal moved under its pin — re-approve the new terms?"})
+                              "text": sentence(port, "card-mind-repin",
+                                               mind=mid)})
                     print(f"  ↳ {mid} drifted — the deal changed; held for your decision")
                     continue
                 s = out                        # freshest expires_at for the EOL check
@@ -4843,8 +4843,9 @@ def on_objective_approved(port: int, scope: str, r: dict) -> None:
             try:                              # refuse AND ask — the flow degrades honestly
                 ask = call(t_port, "POST", "/requests",
                            {"kind": "entitlement", "of": plan["goal"],
-                            "text": f"orchestration at {scope} asks leave to dispatch "
-                                    f"an intention of “{plan['objective'][:60]}”"})
+                            "text": sentence(port, "card-entitlement",
+                                             objective=plan["objective"][:60],
+                                             scope=scope)})
                 dark.append({"seat": target, "ask": ask.get("id")})
             except Exception:
                 dark.append({"seat": target, "why": "unreachable"})
@@ -5306,8 +5307,8 @@ def improver_beat(port: int) -> None:
         call(port, "POST", "/records", proposal)
         call(port, "POST", "/requests",
              {"kind": "improvement", "proposal": proposal["id"],
-              "text": f"the smith proposes a new {ASSET_NAME}: success "
-                      f"{rate}% < {SUCCESS_FLOOR}% — a bounded nudge, receipts attached"})
+              "text": sentence(port, "card-smith-nudge", asset=ASSET_NAME,
+                               rate=rate, floor=SUCCESS_FLOOR)})
         print(f"  ↳ the smith proposes: {ASSET_NAME} at {rate}% — "
               f"{proposal['id'][:18]}…")
     except Exception as e:
@@ -8671,15 +8672,14 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                  {"kind": "attestation", "evidence": ans["evidence"],
                   "attestors": ans["attestors"],
                   "registry": ans.get("registry", False),
-                  "text": "attest death — the gravest gate (0035 §3)"})
+                  "text": sentence(port, "card-attest-death")})
     if ans.get("action") == "attestation-abort":  # one voice saves — acts NOW
         reply = abort_attestation(port, scope)
     if ans.get("action") == "dial-set":       # G4: depth is a governed choice
         call(port, "POST", "/requests",
              {"kind": "dial", "dial": ans["dial"],
-              "text": f"turn the observatory dial «{OBS['dial']}» → "
-                      f"«{ans['dial']}» — depth costs money and says so "
-                      "(0043 §5)"})
+              "text": sentence(port, "card-dial-turn",
+                               **{"from": OBS["dial"], "to": ans["dial"]})})
     kp, did = resident_key(name, scope)
     voiced = None
     # descriptive answers may be voiced; actions and flow-control words never are —
@@ -8859,11 +8859,12 @@ def _stage_assay_card(port: int, card: dict) -> None:
             return
         call(port, "POST", "/requests", {
             "kind": "assay", "to": "human", "scope": card["scope"],
-            "text": f"ASSAY at {card['scope']} — {card['why']}",
+            "text": sentence(port, "card-assay-degradation",
+                             scope=card["scope"], why=card["why"]),
             "package": "THE STANDING:\n" + json.dumps(card["standing"], indent=1)
                        + "\nEVIDENCE:\n"
                        + "\n".join(f"· {e[:44]}…" for e in card["evidence"][:6])
-                       + "\nvera measures; humans move (0043 §2 — no levers)."})
+})
         print(f"  🔭 assay DEGRADATION staged at {card['scope']}: {card['why']}")
     except Exception as e:
         print(f"    (assay staging stumbled: {e})")
@@ -10354,9 +10355,9 @@ def schedule_beat(port: int) -> None:
             try:
                 call(port, "POST", "/requests", {
                     "kind": "assay", "to": "human",
-                    "text": f"the charter {cid} spent its "
-                            f"{ch['max_instances']} instance(s) — it RESTS; "
-                            "renew it with a new charter at this gate"})
+                    "text": sentence(port, "card-charter-rest",
+                                     charter=cid,
+                                     n=ch["max_instances"])})
                 ch["rest_carded"], changed = True, True
                 print(f"  🕰 charter {cid} RESTS — instances spent, the "
                       "renewal is yours")
@@ -12964,7 +12965,7 @@ def _compose_brain_locked() -> dict:
             parts.append({"scope": scope,       # the partition stays honest
                           **({"tended_by": tended[scope]}
                              if scope in tended else {}),
-                          "state": "shut down — the word stands"})
+                          "state": "stopped by you — press start in its room to raise it"})
     # one tree, one order (JB's find: shut-down floors appended at the tail
     # sat outside their own ecosystem) — dark or alive, a floor stands in
     # its branch

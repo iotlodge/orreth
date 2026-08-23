@@ -465,15 +465,15 @@ MANIFEST = {'key': 'crypto-desk',
            'cwd': '.',
            'log': 'charlene.log'}],
  'collection': {'label': ['ticker', 'date']},
- 'view': [{'buttons': [{'label': '🕰 watch it — stages at your gate',
-               'note': '$ticker staged at your gate — approve it '
-                       'in the Inbox and the standing word stands',
+ 'view': [{'buttons': [{'label': '🕰 watch it daily — you approve once, a fresh report repeats',
+               'note': '$ticker is asking to join the daily watchlist '
+                       '— approve once in the Inbox and a fresh report '
+                       'arrives each day until you stop it',
                'request': {'kind': 'desk-watch',
                            'ticker': '$ticker'}},
-              {'label': '📄 ask charlene for a report now — your '
-                        'word is the approval',
-               'note': "the ask is on charlene's queue — the "
-                       'report lands here when his walk is whole',
+              {'label': '📄 report now — charlene runs one full analysis and files it here',
+               'note': 'charlene is on it — the finished report appears '
+                       'in this room; nothing else to confirm',
                'request': {'kind': 'desk-ask',
                            'ticker': '$ticker'}}],
   'inputs': [{'id': 'ticker',

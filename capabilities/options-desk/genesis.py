@@ -449,15 +449,15 @@ MANIFEST = {'key': 'options-desk',
            'cwd': '.',
            'log': 'chad.log'}],
  'collection': {'label': ['ticker', 'date']},
- 'view': [{'buttons': [{'label': '🕰 watch it — stages at your gate',
-               'note': '$ticker staged at your gate — approve it '
-                       'in the Inbox and the standing word stands',
+ 'view': [{'buttons': [{'label': '🕰 watch it daily — you approve once, a fresh report repeats',
+               'note': '$ticker is asking to join the daily watchlist '
+                       '— approve once in the Inbox and a fresh report '
+                       'arrives each day until you stop it',
                'request': {'kind': 'desk-watch',
                            'ticker': '$ticker'}},
-              {'label': '📄 ask charles for a report now — your '
-                        'word is the approval',
-               'note': "the ask is on charles's queue — the report "
-                       'lands here when his walk is whole',
+              {'label': '📄 report now — chad runs one full analysis and files it here',
+               'note': 'chad is on it — the finished report appears '
+                       'in this room; nothing else to confirm',
                'request': {'kind': 'desk-ask',
                            'ticker': '$ticker'}}],
   'inputs': [{'id': 'ticker',

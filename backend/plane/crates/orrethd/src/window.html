@@ -1329,9 +1329,10 @@
     <div id="ftaxpop" class="hide"></div>
     <div class="stblsplit" id="farm-main">
       <div class="stblleft">
-        <div class="sechd">waiting on your word <span id="farm-wait-n"></span></div>
+        <div class="sechd">needs your decision <span id="farm-wait-n"></span></div>
         <div id="farmpending"></div>
         <div class="sechd">the toolshed — planted services</div>
+        <div class="dim" style="font-size:.62rem;margin:-.15rem 0 .3rem">the same tool may stand on several floors — each floor keeps its own approved copy</div>
         <div id="farmroster"></div>
         <div class="sechd">the allocations — who prefers what</div>
         <div id="farmalloc"></div>
@@ -1378,7 +1379,7 @@
     <div id="taxpop" class="hide"></div>
     <div class="stblsplit" id="stbl-main">
       <div class="stblleft">
-        <div class="sechd">waiting on your word <span id="stbl-wait-n"></span></div>
+        <div class="sechd">needs your decision <span id="stbl-wait-n"></span></div>
         <div id="stablepending"></div>
         <div class="sechd">the classes — the names work asks for</div>
         <div class="ladder" id="ladder"></div>
@@ -3093,7 +3094,7 @@ function renderPulsePanels(){
         `<b style="color:${c}">${esc(l)}</b> ${fmt[key](v)}`).join(" · ")}</span></div>`;
   }).join("")||`<div class="quiet2">no metered work yet — a quiet machine</div>`;
   const inf=PULSED.inflight||{rows:[]};
-  $("pnow-n").textContent=`· ${inf.moving||0} moving · ${inf.waiting||0} waiting on your word`
+  $("pnow-n").textContent=`· ${inf.moving||0} moving · ${inf.waiting||0} needing your decision`
     +((inf.elderly||0)?` · ${inf.elderly} older approved in the archive`:"");
   $("pnow").innerHTML=(inf.rows||[]).length?inf.rows.map(r=>
     `<div class="prow click" onclick="goInbox('${esc(r.id)}')">
@@ -3662,7 +3663,7 @@ async function loadFarm(){
         <span class="dt" style="background:${r.status==="staged"?"var(--brass)":"var(--dim)"}"></span>
         <span class="nm">${esc(r.action||"plant")} · ${esc(r.name||"")}</span>
         <span class="cl">${r.status}</span><span class="mx">${r.at?ago(r.at):""}</span></div>`).join("")
-      :`<div class="quiet">nothing waits — a tended shed.</div>`;
+      :`<div class="quiet">nothing needs you right now — the toolshed is healthy.</div>`;
     const grp={};live.forEach(s=>(grp[s.floor||"?"]=grp[s.floor||"?"]||[]).push(s));
     $("farmroster").innerHTML=Object.keys(grp)
       .sort((a,b)=>(a===f.scope?-1:b===f.scope?1:a.localeCompare(b))).map(fl=>
@@ -3704,10 +3705,10 @@ function renderFarmPane(){
       <b style="font-size:.95rem">${esc(s.name)}</b><span class="schip ${s.state}">${s.state}</span>
       ${(s.source||"human")!=="human"?`<span class="okband">${esc(s.source)}</span>`:""}
       ${s.spend_guard?`<span class="roband" title="calls count against the declared daily ${esc(s.spend_guard)} ceiling — one ledger, every road">⛽ ${esc(s.spend_guard)}-guarded</span>`:""}</div>
-     <div class="dim" style="font:.66rem var(--mono);margin:.25rem 0">${esc(s.kind)} · ${esc(s.transport)} · on ${esc(s.floor||"")} · DID ${esc((s.did||"").slice(0,34))}…</div>
+     <div class="dim" style="font:.66rem var(--mono);margin:.25rem 0">${esc(s.kind)} · ${esc(s.transport)} · on ${esc(s.floor||"")} · <span title="its permanent identity in this universe — like a serial number that never changes">DID ${esc((s.did||"").slice(0,34))}…</span></div>
      <div class="strdeal"><b>THE WIRE</b><br>
       <span class="k">endpoint</span>${envd?`<b>${esc(s.endpoint)}</b> — the secret stays out of every record (0059)`:esc(s.endpoint||"—")}<br>
-      <span class="k">pin</span><span class="hash">${esc((s.manifest_hash||"").slice(0,30))}…</span>
+      <span class="k" title="the fingerprint of exactly what you approved — if the provider changes anything, the change is caught and held for your decision">pin</span><span class="hash">${esc((s.manifest_hash||"").slice(0,30))}…</span>
       ${s.proposed_hash?`<br><span class="k" style="color:var(--red)">proposed</span><span style="color:var(--red)">${esc(String(s.proposed_hash).slice(0,30))}… — it came back CHANGED; re-approval waits</span>`:""}</div>
      <div class="strdeal"><b>THE TOOLS — pinned; what charlotte SAW</b><br>
       ${(s.manifest||[]).map(t=>`<span style="color:var(--star)">${esc(t.name)}</span> <span class="dim">${esc(String(t.description||"").slice(0,90))}</span>`).join("<br>")||"— none pinned"}</div>
@@ -3725,7 +3726,7 @@ function renderFarmPane(){
       ${s.state==="quarantined"?`<button class="sbtn ok" onclick="farmReapprove('${esc(s.name)}')">re-approve the new manifest</button>`:""}
       <button class="sbtn no" onclick="farmDecom('${esc(s.name)}',false)">decommission</button>
       <button class="sbtn no" onclick="farmDecom('${esc(s.name)}',true)" title="AND discredit the source — stages the 0014 §4 knowledge recall">decom + discredit</button></div>
-     ${s.state==="serving"?`<div class="sechd" style="margin-top:.9rem">the playground — charlotte runs it through the one governed door</div>
+     ${s.state==="serving"?`<div class="sechd" style="margin-top:.9rem">the playground — try a tool here; charlotte runs it for you, metered and on the record</div>
       <div class="stbform">
        <select id="fp-tool">${(s.manifest||[]).map(t=>`<option>${esc(t.name)}</option>`).join("")}</select>
        <button class="sbtn" onclick="fpPropose('${esc(s.name)}')" title="charlotte reads the tool's PINNED schema and fills a sample below — every required field by its declared type; edit anything before running">✎ propose a test</button>
@@ -3961,7 +3962,7 @@ function taxToggle(){TAXOPEN=!TAXOPEN;const t=$("taxpop");t.classList.toggle("hi
   if(TAXOPEN)t.innerHTML=`<b>key terms — the stable's names, mapped to the industry's</b> (0058)<br>
    <b>a stall</b> = a deployment: a mind this floor may serve, its deal pinned, its lifecycle governed ·
    <b>a class</b> = a virtual route: the stable name work asks for (low/medium/high/xhigh — the Logic dial's own words) ·
-   <b>the deal</b> = the pinned rate card: pricing, context, modalities — a byte moving is drift, held at your gate ·
+   <b>the deal</b> = the rate card you approved: pricing, context, modalities — any change is caught and held for your decision ·
    <b>saddle → attest → canary → available</b> = configure → approve → verify → publish: birth is governed, service is earned ·
    <b>an assignment</b> = an allocation: WHO uses which class or pinned mind — subject, then floor, then the universe's law ·
    <b>the pasture</b> = the EOL calendar · <b>the mindline</b> = the audit worldline, signed by ada, never self-attested ·
@@ -4054,8 +4055,8 @@ function renderStblPane(){
     R.innerHTML=`<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
       <b style="font-size:.95rem">${esc(s.id)}</b><span class="schip ${s.state}">${s.state}</span>
       <span class="cl" style="color:var(--brass);font:.68rem var(--mono)">class ${esc(s.class||"?")}</span></div>
-     <div class="dim" style="font:.66rem var(--mono);margin:.25rem 0">${esc(s.provider)} · ${esc(s.route)} · saddled on ${esc(s.floor||"")} · DID ${esc((s.did||"").slice(0,30))}…</div>
-     <div class="strdeal"><b>THE DEAL — pinned; a byte moving is drift at your gate</b><br>
+     <div class="dim" style="font:.66rem var(--mono);margin:.25rem 0">${esc(s.provider)} · ${esc(s.route)} · saddled on ${esc(s.floor||"")} · <span title="its permanent identity in this universe — like a serial number that never changes">DID ${esc((s.did||"").slice(0,30))}…</span></div>
+     <div class="strdeal"><b>THE DEAL — the exact terms you approved</b> <span class="dim" style="font-size:.62rem">(if the provider changes anything, the change is caught and held for your decision)</span><br>
       <span class="k">prompt</span><b>${perM(p.prompt)}</b> / Mtok<br>
       <span class="k">completion</span><b>${perM(p.completion)}</b> / Mtok<br>
       <span class="k">context</span><b>${(s.manifest||{}).context_length?(((s.manifest.context_length/1000)|0)+"k"):"—"}</b><br>
@@ -4068,12 +4069,12 @@ function renderStblPane(){
       <span class="k">canary</span>${s.canary_beats||0} beat(s)<br>
       ${s.expires_at?`<span class="k" style="color:var(--red)">expires</span><b style="color:var(--red)">${esc(String(s.expires_at).slice(0,10))}</b><br>`:""}
       <span class="k">saddled</span>${esc(String(s.saddled_at||"").slice(0,10))}</div>
-     <div class="strdeal"><b>WHO LEANS ON IT — the blast radius before any word</b><br>
+     <div class="strdeal"><b>WHO LEANS ON IT — who would feel it if this went away</b><br>
       ${w.pinned.length?`pinned by: ${w.pinned.map(esc).join(" · ")}<br>`:""}
       ${w.classed.length?`allocated to its class: ${w.classed.map(esc).join(" · ")}<br>`:""}
       ${!w.pinned.length&&!w.classed.length?`no allocation names it — callers reach it through class ${esc(s.class||"?")} on its floor<br>`:""}</div>
      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">
-      <button class="sbtn no" onclick="stableRetire('${esc(s.id)}')">retire — stages for your word</button>
+      <button class="sbtn no" onclick="stableRetire('${esc(s.id)}')">retire — asks you first</button>
       ${s.state==="deprecated"?`<button class="sbtn ok" onclick="stableReapprove('${esc(s.id)}')">re-approve the new deal</button>`:""}</div>`;
     return;
   }
@@ -4115,7 +4116,7 @@ function renderStblPane(){
       <span class="k">since</span>${esc(String(a.at||"").slice(0,16))}<br>
       <span class="k">by</span>${esc(a.req||"")}</div>
      <div class="dim" style="font-size:.7rem">resolution walks subject → floor → universe (0058 §3.4); releasing this returns the caller to its floor's own law.</div>
-     <button class="sbtn no" style="margin-top:.5rem" onclick="stblUnassign('${esc(k)}')">release — stages for your word</button>`;
+     <button class="sbtn no" style="margin-top:.5rem" onclick="stblUnassign('${esc(k)}')">release — asks you first</button>`;
   }
 }
 async function stableReapprove(id){
@@ -5500,7 +5501,7 @@ function dkPanel(p,pi,item){
     const btns=(p.buttons||[]).map((b,bi)=>`<button class="dk-tab" onclick="capBtn(${pi},${bi})">${dkEsc(b.label)}</button>`).join(" ");
     // the NEW ANALYSIS card (sp-C): the room LEADS with the ask
     return `<div style="border:1px solid var(--hair);border-radius:10px;padding:.7rem .9rem;margin:.6rem 0;background:var(--deep)">
-      <div class="rsm-eyebrow" style="margin-top:0">✦ new analysis — your word is the approval</div>
+      <div class="rsm-eyebrow" style="margin-top:0">✦ new analysis — asking IS the approval; the finished report lands in this room</div>
       ${p.watches?dkWatchLine():""}<div class="dk-law" style="margin-top:.35rem">${ins} ${btns} <span id="dk-reins-note" class="dim"></span></div></div>`}
   case "download":
     return `<div class="dk-pick" style="justify-content:flex-end"><a class="dk-dl" href="${OBSD}${dkSub(p.href,item)}" download>${dkEsc(p.label||"⬇ download")}</a></div>`;
@@ -6731,7 +6732,7 @@ async function loadObjectives(){
     return `<div class="objrowi${r.id===OBJSEL?" on":""}" onclick="objSelect('${r.id}')">
       <span class="t">${esc(r.text||"")}</span>
       <span class="m"><span class="st2">${esc(r.status)}</span>${r.effort?`<span>· ${esc(r.effort)}</span>`:""}<span>· ${r.at?ago(r.at):""}</span>${nq?`<span style="color:var(--amber,#e8b34a)">· ${nq} question${nq===1?"":"s"} for you</span>`:""}</span></div>`};
-  const bands=[["waiting on your word",newest.filter(r=>r.status==="staged")],
+  const bands=[["needs your decision",newest.filter(r=>r.status==="staged")],
     ["working",newest.filter(r=>r.status==="approved"||r.status==="pending")],
     ["settled — the record",newest.filter(r=>!["staged","approved","pending"].includes(r.status))]];
   $("objlist").innerHTML= objs.length?
