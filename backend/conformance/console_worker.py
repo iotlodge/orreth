@@ -10395,24 +10395,52 @@ def wire_open_feedback(port: int, scope: str) -> list[dict]:
     return [x for x in rows if x["id"] not in resolved]
 
 
+_FEEDBACK_RING: list[int] = []
+
+
 def feedback_beat(port: int) -> None:
     """0048 sp3 — the words go back into the machine: each open feedback is
     READ by the studio (the typed route — one re-ask upstream, honest park)
     and lands at the organ that can answer it; the resolution sibling names
     what the words became (OUTCOME_FOR — the craft route lands EVIDENCE,
     0031 §4, never an auto-proposal). The mind proposes; every consequential
-    landing still waits at a human gate. V1 sweeps the universe floor — the
-    glass posts thumbs there; the whole-rig sweep is a named gap."""
-    scope = UNIVERSE_SCOPE
+    landing still waits at a human gate.
+
+    V2 (2026-08-22 — the 0048 named gap paid): the sweep walks the WHOLE
+    rig. A thumb posts to the floor of the record it judges (a 👎 on a desk
+    report lands at the desk), so the universe sweeps every beat (the
+    glass's default door) plus ONE tended floor per beat, round-robin — the
+    metabolism's own rhythm, so the cost stays flat however many floors
+    stand. One studio still reads every word; the resolution and the
+    closure land at the feedback's OWN floor, because the author's queue
+    is there."""
+    global _FEEDBACK_RING
+    _feedback_floor(port, port, UNIVERSE_SCOPE)
+    if not _FEEDBACK_RING:
+        _FEEDBACK_RING = [p for p, s in sorted(FLOOR_SCOPES.items())
+                          if s != UNIVERSE_SCOPE]
+    if not _FEEDBACK_RING:
+        return
+    p = _FEEDBACK_RING.pop(0)
+    s = FLOOR_SCOPES.get(p)
+    if s and s != UNIVERSE_SCOPE:
+        _feedback_floor(port, p, s)
+
+
+def _feedback_floor(u_port: int, port: int, scope: str) -> None:
+    """One floor's open words through the whole loop: read → route → resolve
+    → closure. The studio's legs and the organs' doors live at the universe
+    (u_port); the judged context, the resolution, and the closure card live
+    at the feedback's floor (port)."""
     open_rows = wire_open_feedback(port, scope)
     if not open_rows:
         return
     try:
-        reqs = call(port, "GET", "/requests").get("requests", [])
+        reqs = call(u_port, "GET", "/requests").get("requests", [])
     except Exception:
         return
     by_id = {q.get("id"): q for q in reqs}
-    me = {"did": ORCH_DID, "scope": scope}
+    me = {"did": ORCH_DID, "scope": UNIVERSE_SCOPE}
     reg_names: set[str] = set()
     try:
         reg_names = {o["name"] for o in compose_governance().get("objects", [])}
@@ -10428,7 +10456,7 @@ def feedback_beat(port: int) -> None:
             except Exception:
                 judged = {}
             try:
-                leg_id = call(port, "POST", "/requests", {
+                leg_id = call(u_port, "POST", "/requests", {
                     "kind": "classify-feedback", "of": fb["id"],
                     "quoted": fb.get("quoted", ""),
                     "context": str(judged)[:600],
@@ -10457,7 +10485,7 @@ def feedback_beat(port: int) -> None:
             why = why or "the mind could not type the lack — the words wait"
         elif route["route"] == "gap":
             try:
-                ref = call(port, "POST", "/requests", {
+                ref = call(u_port, "POST", "/requests", {
                     "kind": "commission", "craft_kind": "skill",
                     "born_of": fb["id"],
                     "text": "grow the craft the human's words found lacking "
@@ -10467,7 +10495,7 @@ def feedback_beat(port: int) -> None:
                 continue
         elif route["route"] == "execution":
             try:
-                ref = call(port, "POST", "/requests", {
+                ref = call(u_port, "POST", "/requests", {
                     "kind": "objective", "born_of": fb["id"],
                     "text": f"repair — {target or 'the judged work'}",
                     # the human's own words become the yardstick (0043 G6)
@@ -10476,13 +10504,13 @@ def feedback_beat(port: int) -> None:
                 print(f"    (repair objective failed to post: {e})")
                 continue
         elif route["route"] == "charter":
-            note = make_memory(me, ORCH, scope,
+            note = make_memory(me, ORCH, UNIVERSE_SCOPE,
                                {"referral": {"of": fb["id"], "keeper": target,
                                              "note": why}},
                                kind="semantic", tags=["feedback-referral"])
             note["derived_from"] = [fb["id"]]
             try:
-                call(port, "POST", "/records", note)
+                call(u_port, "POST", "/records", note)
                 ref = note["id"]
             except Exception as e:
                 print(f"    (referral note failed to land: {e})")
@@ -10491,14 +10519,14 @@ def feedback_beat(port: int) -> None:
             # 0031 §4's own door: the words land VERBATIM as evidence against
             # the named craft — the smith must carry them, never auto-adopt.
             name = target if target in reg_names else "resident-voice"
-            evid = make_memory(me, ORCH, scope,
+            evid = make_memory(me, ORCH, UNIVERSE_SCOPE,
                                {"feedback": {"asset": name,
                                              "quoted": str(fb.get("quoted")
                                                            or "")[:400]}},
                                kind="semantic", tags=["asset-feedback", name])
             evid["derived_from"] = [fb["id"]]
             try:
-                call(port, "POST", "/records", evid)
+                call(u_port, "POST", "/records", evid)
                 ref = evid["id"]
                 if name != target:
                     why = (why + " — landed against «resident-voice», the "
@@ -10510,8 +10538,11 @@ def feedback_beat(port: int) -> None:
         if not outcome:
             outcome = thumb_mod.OUTCOME_FOR[route["route"]]
         try:
+            # the resolution lands at the FEEDBACK'S floor — openness is a
+            # per-floor read, and the author's queue is there (V2)
+            me_f = {"did": ORCH_DID, "scope": scope}
             res_rec = thumb_mod.resolve_feedback(
-                me, ORCH, scope, {"id": fb["id"], "of": fb.get("of", "")},
+                me_f, ORCH, scope, {"id": fb["id"], "of": fb.get("of", "")},
                 outcome=outcome, ref=ref, why=why)
             call(port, "POST", "/records", res_rec)
         except Exception as e:
@@ -10526,24 +10557,27 @@ def feedback_beat(port: int) -> None:
         # author's own queue; the bell decides for itself under STANDING
         # consent (0044's one law — no new grant, no new machinery).
         try:
+            # the card lands on the feedback's floor (the author acts there);
+            # the sentences render from the universe's shelf, the one bell
+            # rings from its own home (V2)
             card = call(port, "POST", "/requests", {
                 "kind": "feedback-closure", "of": fb["id"],
-                "text": sentence(port, "card-feedback-closure",
+                "text": sentence(u_port, "card-feedback-closure",
                                  outcome=speech.OUTCOME_SPOKEN.get(outcome,
                                                                    outcome))
-                        + (sentence(port, "card-feedback-closure-ref",
+                        + (sentence(u_port, "card-feedback-closure-ref",
                                     ref=ref[:22]) if ref else "")
-                        + (sentence(port, "card-feedback-closure-why",
+                        + (sentence(u_port, "card-feedback-closure-why",
                                     why=why[:110]) if why else "")})
             call(port, "POST", "/requests/resolve",
                  {"id": card["id"], "status": "done",
                   "result": {"reply": sentence(
-                                 port, "card-feedback-closure-reply"),
+                                 u_port, "card-feedback-closure-reply"),
                              "feedback": fb["id"], "outcome": outcome,
                              **({"ref": ref} if ref else {})}})
-            ring_bell(port, {"kind": "feedback-closure", "scope": scope,
-                             "subject": f"your feedback: {outcome}",
-                             "pointer": _CONSOLE_URL})
+            ring_bell(u_port, {"kind": "feedback-closure", "scope": scope,
+                               "subject": f"your feedback: {outcome}",
+                               "pointer": _CONSOLE_URL})
         except Exception as e:
             print(f"    (closure card stumbled: {e})")
 
