@@ -4545,10 +4545,26 @@ const READERS={
     asked:(b.asked||"").slice(0,90),reply:(b.reply||b.answer||"").slice(0,160)},"an audience"],
 };
 async function renderRecordPane(ref){
-  let body=null;
+  let body=null,home="";
   try{const r=await fetch(api("/records/"+encodeURIComponent(ref)+"/body"));
     if(r.ok)body=await r.json()}catch{}
   $("rdr-sub").textContent=`record · ${ref.slice(0,34)}…`;
+  if(!body||!Object.keys(body).length){
+    /* the cross-floor door (2026-08-23 — 0052's named gap paid, JB's word:
+       "why can't we see the work?"): before confessing a miss, ask the
+       worker to walk EVERY floor's shelf; a found record says where it
+       lives, and a true miss explains itself in whole sentences */
+    try{const h=await(await fetch(`${OBSD}/record?ref=${encodeURIComponent(ref)}`)).json();
+      if(h&&h.body&&Object.keys(h.body).length){
+        body=h.body;
+        home=`this record lives on ${h.scope||"another floor"} — opened through the cross-floor door; the work happened there`;
+      }else if(h&&h.miss){
+        $("rdr-title").textContent="a record no door can open — and why";
+        $("rdr-body").innerHTML=`<div class="rdr-meta">${esc(h.miss)}</div>`;
+        return;
+      }
+    }catch{}
+  }
   if(!body||!Object.keys(body).length){
     $("rdr-title").textContent="a record this floor cannot show";
     $("rdr-body").innerHTML=`<div class="rdr-meta">${esc(say("reader-miss",{ref:ref.slice(0,26)+"…"},"this floor's shelf does not hold "+ref.slice(0,26)+"…"))}</div>`;
@@ -4562,7 +4578,8 @@ async function renderRecordPane(ref){
   else{sent=say("reader-unknown",{kind:key},`a ${key} record`);title=`a ${key} record`}
   $("rdr-title").textContent=title;
   $("rdr-body").innerHTML=
-    `<div class="rdr-sentence">${esc(sent)}</div>`
+    (home?`<div class="rdr-meta" style="color:var(--brass)">${esc(home)}</div>`:"")
+    +`<div class="rdr-sentence">${esc(sent)}</div>`
     +`<div class="rdr-struct">${esc(JSON.stringify(body,null,1).slice(0,3000))}</div>`;
   linkifyEl($("rdr-body"));
 }

@@ -178,7 +178,19 @@ def author_plan(scope: str, *, req_id: str, objective: str,
     goal = crypto.content_hash({"objective": objective, "req": req_id})
     return {"objective": objective, "goal": goal, "intentions": intentions,
             "dark": [], "spec": spec["id"],
-            "question": "Before this work runs, one thing needs your answer: where should the results of “" + objective[:140] + "” be delivered? Answer below — if no one answers in time, the plan treats silence as a no and moves on without it.",
+            # the honest question (2026-08-23): the work is not waiting — only
+            # the optional delivery step is; silence skips it, never approves
+            "question": f"Your request {req_id} — «" + objective[:120] + "» — "
+                        "is approved and already running; nothing waits on "
+                        "this. One optional step is yours to add: should the "
+                        "results also be delivered somewhere, or "
+                        "infrastructure provisioned for them? If yes, answer "
+                        f"with where — a floor like «{scope}», or plain "
+                        "words; your answer rides into that step exactly as "
+                        "you write it. If you say nothing for about 3 "
+                        "minutes, the plan simply skips the optional step "
+                        "(silence is never a yes) and the finished work "
+                        "still lands on your request's own card.",
             "share": share}
 
 

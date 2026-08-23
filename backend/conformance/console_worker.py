@@ -2224,7 +2224,7 @@ def embed_door() -> None:
             if route not in ("/observatory", "/governance", "/craft",
                              "/sentences", "/desk", "/brain", "/resident",
                              "/pulse", "/spacetime", "/market", "/assign",
-                             "/seeds"):
+                             "/seeds", "/record"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2257,6 +2257,16 @@ def embed_door() -> None:
                                            lambda: compose_desk(_dk))).encode()
                 elif route == "/brain":
                     out = json.dumps(compose_brain()).encode()
+                elif route == "/record":
+                    # the cross-floor record door (2026-08-23 — 0052's named
+                    # gap paid, JB's word: "why can't we see the work?"):
+                    # a full ref opens WHEREVER the record lives, and the
+                    # answer names its home floor. Walked only on a human's
+                    # click — never a beat.
+                    qs = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query)
+                    out = json.dumps(record_hunt(
+                        (qs.get("ref") or [""])[0])).encode()
                 elif route == "/pulse":
                     out = json.dumps(compose_pulse()).encode()
                 elif route == "/spacetime":
@@ -4665,9 +4675,26 @@ def curate_plan(port: int, scope: str, r: dict) -> dict:
         if not fingertip.dispatch_allowed(scope, target):
             entry["beyond_token"] = True     # honest in the plan: it will ask leave
         intentions.append(entry)
+    # the question wears its whole context (JB's word, 2026-08-23: "we can't
+    # leave humans wondering what's going on") — it names its objective, quotes
+    # the words that started it, says the work is NOT waiting, names the legal
+    # shape of an answer with an example, and tells the truth about silence
+    # and the clock. The old sentence implied the whole plan was blocked; only
+    # the optional delivery/provision step ever was.
+    born = str(r.get("rubric") or "").strip()
+    question = (
+        f"Your request {r['id']} — «{text[:120]}» — is approved and already "
+        "running; nothing waits on this. "
+        + (f"(It began with your words: “{born[:120]}”.) " if born else "")
+        + "One optional step is yours to add: should the results also be "
+          "delivered somewhere, or infrastructure provisioned for them? If "
+          f"yes, answer with where — a floor like «{scope}», or plain words; "
+          "your answer rides into that step exactly as you write it. If you "
+          "say nothing for about 3 minutes, the plan simply skips the "
+          "optional step (silence is never a yes) and the finished work "
+          "still lands on your request's own card.")
     return {"objective": text, "goal": goal, "intentions": intentions, "dark": dark,
-            "question": "Before this work runs, one thing needs your answer: where should the results of “" + text[:140] + "” be delivered? Answer below — if no one answers in time, the plan treats silence as a no and moves on without it.",
-            "share": share}
+            "question": question, "share": share}
 
 
 def on_objective(port: int, scope: str, r: dict) -> None:
@@ -4897,6 +4924,49 @@ def tend_objectives() -> None:
             print(f"    (objective {rid} tending hiccup: {e})")
 
 
+_QUESTION_REAP_S = 900     # a plan's clock is ~3 minutes; 15 makes it certain
+
+
+def question_reaper(port: int) -> None:
+    """The orphan sweep (JB's find, 2026-08-23): the objective machinery's
+    state lives in this process, so a restart can leave a plan's question
+    card begging for an answer no one will ever read. Any open question
+    whose goal no LIVING objective claims, older than the plan's own clock
+    by a wide margin, withdraws itself with honest words — a human should
+    never be left wondering at a card the machine has already moved past."""
+    try:
+        reqs = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        return
+    living = {st.get("goal") for st in _OBJECTIVES.values()}
+    for r in reqs:
+        if r.get("kind") != "question" or r.get("status") not in ("pending",
+                                                                  "staged"):
+            continue
+        goal = str(r.get("of") or "")
+        if not goal or goal in living or _age_seconds(r.get("at")) < _QUESTION_REAP_S:
+            continue
+        # name the parent when its settled card can be found — the human
+        # deserves the pointer, not just the shrug
+        parent = next((x for x in reqs if x.get("kind") == "objective"
+                       and ((x.get("result") or {}).get("assembly") or {}
+                            ).get("goal_hash") == goal), None)
+        story = (f"the plan behind it (your request {parent['id']}, "
+                 f"«{str(parent.get('text') or '')[:80]}») already finished — "
+                 "its own card carries the whole story"
+                 if parent else
+                 "the plan behind it is no longer running (it finished or "
+                 "was closed by a restart)")
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"withdrawn": (
+                  f"nothing to answer anymore — {story}. The optional step "
+                  "this question offered was skipped (silence is never a "
+                  "yes); nothing is owed here, and nothing was lost.")}})
+        print(f"  ↳ question {r['id']} reaped — its plan is gone; the card "
+              "explains itself")
+
+
 def _tend_objective(rid: str, st: dict) -> None:
     home, scope = st["home"], st["scope"]
     if st["iac"] is None:
@@ -4987,6 +5057,22 @@ def _tend_objective(rid: str, st: dict) -> None:
                      "graph": fingertip.choreography(
                          st.get("plan") or {"objective": st["text"]}, branches,
                          question_answer=st.get("answer_word"))}})
+    # a question dies with its parent (JB's find, 2026-08-23: a finished
+    # plan left its delivery question begging in the Inbox — answering a
+    # moot question is worse than no question): if the human never spoke,
+    # the card withdraws ITSELF with the whole story in plain words.
+    q = _req(home, st["question"])
+    if q is not None and q.get("status") in ("pending", "staged"):
+        call(home, "POST", "/requests/resolve",
+             {"id": st["question"], "status": "done",
+              "result": {"withdrawn": (
+                  f"nothing to answer anymore — the work this question served "
+                  f"(your request {rid}, «{st['text'][:80]}») has finished and "
+                  "its own card carries the whole story. The optional delivery "
+                  "step was skipped because no answer arrived in time (silence "
+                  "is never a yes); nothing more is owed here.")}})
+        print(f"  ↳ question {st['question']} withdrew itself — its work "
+              "finished unanswered")
     del _OBJECTIVES[rid]
     print(f"  ↳ objective {rid} assembled: {assembly['verification']} — "
           f"{len(branches)} branch(es), your request is the confirmation")
@@ -5390,7 +5476,7 @@ def wire_walk_reply(port: int, name: str) -> str:
         prof = a.get("profile") or {}
         changed = sorted(k for k in set(prev) | set(prof)
                          if prev.get(k) != prof.get(k))
-        lines.append(f"v{i} [{ref[:14]}…] "
+        lines.append(f"v{i} [{ref}] "
                      + ("genesis" if i == 1 else "changed " + (", ".join(changed)
                                                                or "nothing"))
                      + (" · adopted from a proposal" if a.get("adopted_from") else ""))
@@ -10339,11 +10425,15 @@ def reflex_beat(port: int) -> None:
                     print(f"    (reflex observation refused: {e})")
             elif out["shape"] == "escalate":
                 try:
+                    # the FULL ref rides both the text (the glass linkifies
+                    # and display-shortens it) and a field — a truncated id
+                    # baked into prose is a door that can never open (JB's
+                    # find, 2026-08-23: "why can't we see the work?")
                     card = call(port, "POST", "/requests", {
-                        "kind": "reflex-escalation",
+                        "kind": "reflex-escalation", "of": h["ref"],
                         "text": sentence(port, "card-reflex-escalation",
                                          event=out["text"],
-                                         ref=h["ref"][:22])})
+                                         ref=h["ref"])})
                     call(port, "POST", "/requests/resolve",
                          {"id": card["id"], "status": "staged",
                           "result": {"held": sentence(
@@ -10484,7 +10574,7 @@ def _feedback_floor(u_port: int, port: int, scope: str) -> None:
                     "context": str(judged)[:600],
                     "charters": CHARTERS_ROSTER,
                     "text": "the studio reads the human's words on "
-                            f"[{fb['id'][:18]}…]"})["id"]
+                            f"[{fb['id']}]"})["id"]
                 _FEEDBACK_LEGS[fb["id"]] = leg_id
                 print(f"  🧭 feedback [{fb['id'][:18]}…] → the studio reads "
                       f"({leg_id})")
@@ -10511,7 +10601,7 @@ def _feedback_floor(u_port: int, port: int, scope: str) -> None:
                     "kind": "commission", "craft_kind": "skill",
                     "born_of": fb["id"],
                     "text": "grow the craft the human's words found lacking "
-                            f"(born of [{fb['id'][:18]}…]): {target or why}"})["id"]
+                            f"(born of [{fb['id']}]): {target or why}"})["id"]
             except Exception as e:
                 print(f"    (feedback commission failed: {e})")
                 continue
@@ -10588,7 +10678,7 @@ def _feedback_floor(u_port: int, port: int, scope: str) -> None:
                                  outcome=speech.OUTCOME_SPOKEN.get(outcome,
                                                                    outcome))
                         + (sentence(u_port, "card-feedback-closure-ref",
-                                    ref=ref[:22]) if ref else "")
+                                    ref=ref) if ref else "")
                         + (sentence(u_port, "card-feedback-closure-why",
                                     why=why[:110]) if why else "")})
             call(port, "POST", "/requests/resolve",
@@ -12700,6 +12790,38 @@ def on_window_ask(port: int, scope: str, r: dict) -> None:
           f"{'voiced' if voiced else 'grounded'}")
 
 
+def record_hunt(ref: str) -> dict:
+    """The cross-floor record door (2026-08-23 — 0052's named gap paid): try
+    every tended floor's own shelf for the FULL ref — the universe first,
+    then each floor in order. A shortened ref is confessed as such: a cut id
+    can never open a door, which is why card authors now write refs whole.
+    An honest whole-rig miss names the two ways a record leaves the shelves
+    (the metabolism's distillation, a human's purge) instead of shrugging."""
+    ref = str(ref or "").strip()
+    if not ref:
+        return {"miss": "no reference given"}
+    if ref.endswith("…") or (ref.startswith("sha256:") and len(ref) < 71):
+        return {"miss": ("this reference is shortened — a cut id cannot open "
+                         "any door on any floor. Cards written after "
+                         "2026-08-23 carry the whole id; this one predates "
+                         "that law.")}
+    u_port = universe_port(JOIN_PORT)
+    for p in [u_port, *[x for x in sorted(FLOOR_SCOPES) if x != u_port]]:
+        try:
+            body = call(p, "GET", "/records/"
+                        + urllib.parse.quote(ref, safe="") + "/body")
+        except Exception:
+            continue
+        if body:
+            return {"ref": ref, "scope": FLOOR_SCOPES.get(p, ""), "port": p,
+                    "body": body}
+    return {"miss": ("no floor's shelf holds this record now — it may have "
+                     "been distilled by the metabolism (its summary lives on "
+                     "in its floor's distillation reports) or purged by a "
+                     "human's word; either way, that departure is itself on "
+                     "the record.")}
+
+
 def compose_brain() -> dict:
     """THE BRAIN PULL's supply line (0053 sp3 — JB's law, 2026-08-14: state
     is TELEMETRY, never an NLP paraphrase). Instruments only, partitioned by
@@ -13462,6 +13584,7 @@ def main() -> None:
                         bell_beat(port)       # the bell tends its door (0044 sp2)
                         canon_seed(port)      # the firmware stands as records (0045 sp1)
                         capability_tools_intake()  # late-waking worlds still get their ask (V2)
+                        question_reaper(port)  # moot questions withdraw themselves
                         verify_beat(port)     # the deed watchman, standing (0044 sp3 · L-B)
                         gate_age_beat(port)   # aged consequence rings once (0044 sp3)
 
