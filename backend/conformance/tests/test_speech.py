@@ -155,3 +155,30 @@ def test_the_record_reader_speaks_plain():
     assert "0 piece(s) had finished, 18 stopped" in got
     u = speech.SENTENCES["reader-unknown"]
     assert "no reader yet" in u and "honest data" in u
+
+
+def test_the_wardens_words_are_craft():
+    # policy-as-craft (2026-08-23, 0059's park): the checks are firmware,
+    # the confessions are shelf — and the mismatch sentence carries its
+    # facts as slots so an edit can never lie about the counts
+    got = speech.render(speech.SENTENCES["warden-manifest-mismatch"],
+                        declared=3, seen=0)
+    assert got == ("⚠ declared 3 tool(s); the probe saw 0 — the pin is "
+                   "what was SEEN")
+    assert speech.render(speech.SENTENCES["warden-source"],
+                         source="capability:trading-desk") == \
+        "source: capability:trading-desk"
+    # an unfilled slot refuses BY NAME — an edited sentence never guesses
+    with pytest.raises(ValueError):
+        speech.render(speech.SENTENCES["warden-manifest-mismatch"], declared=3)
+
+
+def test_the_wardens_nose_is_an_editable_list():
+    # the credential patterns are ONE comma-separated line the warden
+    # splits — a new smell is an edit at a gate, never a code change
+    pats = [p.strip() for p in
+            speech.SENTENCES["warden-credential-patterns"].split(",")
+            if p.strip()]
+    assert pats == ["key=", "apikey", "api_key", "token=", "secret="]
+    assert all("key=" in u for u in
+               ["https://x.example/mcp?key=abc"] if any(p in u for p in pats))

@@ -2812,33 +2812,40 @@ def fetch_manifest(svc: dict) -> list | None:
     return svc.get("manifest") or []
 
 
-def warden_checks(r: dict, manifest, alive: bool) -> dict:
+def warden_checks(port: int, r: dict, manifest, alive: bool) -> dict:
     """0059 §2.3 — vigil at the onboarding gate: content-blind checks staged
-    BESIDE the human's buttons; she confesses, she never decides."""
+    BESIDE the human's buttons; she confesses, she never decides.
+
+    POLICY-AS-CRAFT (2026-08-23 — 0059's named park paid): the CHECKS are
+    firmware — vigil never stops looking because someone edited a line —
+    but her WORDS and the credential patterns live on the speech shelf
+    (0050's lane): edit «warden-credential-in-url» and every future card
+    speaks the new sentence; edit «warden-credential-patterns» and her
+    nose learns a new smell. No code change, ever."""
     notes = []
     ep = str(r.get("endpoint") or "")
     if ep.startswith("env:"):
-        notes.append("✓ the endpoint is an env-indirection — the secret "
-                     "stays out of every record (0059 §2.2)")
+        notes.append(sentence(port, "warden-env-ok"))
     else:
         low = ep.lower()
-        if any(k in low for k in ("key=", "apikey", "api_key", "token=", "secret=")):
-            notes.append("⚠ the endpoint CARRIES A CREDENTIAL in its url — "
-                         "prefer env:NAME indirection; planted as-is, the "
-                         "secret would enter records and the glass")
+        patterns = [p.strip() for p in
+                    sentence(port, "warden-credential-patterns").split(",")
+                    if p.strip()]
+        if any(k in low for k in patterns):
+            notes.append(sentence(port, "warden-credential-in-url"))
         if ep.startswith("http://") and not any(
                 h in ep for h in ("localhost", "127.0.0.1", "host.docker")):
-            notes.append("⚠ insecure scheme (http) to a non-local host")
+            notes.append(sentence(port, "warden-insecure-scheme"))
     declared = r.get("manifest") or []
     if declared and manifest is not None and len(declared) != len(manifest):
-        notes.append(f"⚠ declared {len(declared)} tool(s); the probe saw "
-                     f"{len(manifest)} — the pin is what was SEEN")
+        notes.append(sentence(port, "warden-manifest-mismatch",
+                              declared=len(declared), seen=len(manifest)))
     if manifest is None and (r.get("svc_kind") or r.get("kind")) == "mcp":
-        notes.append("⚠ the MCP server did not enumerate its tools — "
-                     "the pin would be empty")
+        notes.append(sentence(port, "warden-no-tools"))
     if not alive:
-        notes.append("⚠ the endpoint did not answer the probe")
-    notes.append(f"source: {r.get('source') or 'human'}")
+        notes.append(sentence(port, "warden-dead-probe"))
+    notes.append(sentence(port, "warden-source",
+                          source=r.get("source") or "human"))
     return {"by": "vigil — the Warden (content-blind; stages, never enforces)",
             "notes": notes}
 
@@ -2906,7 +2913,7 @@ class FarmKeeper:
             alive = probe(svc["endpoint"]) if svc["endpoint"] else False
             svc["manifest"] = manifest or svc["manifest"]
             planted = call(port, "POST", "/farm/plant", svc)
-            warden = warden_checks(r, manifest, alive)   # vigil beside the buttons
+            warden = warden_checks(port, r, manifest, alive)   # vigil beside the buttons
             worldline(port, scope, planted, "planted",
                       probed={"alive": alive, "tools": len(svc["manifest"])},
                       warden=warden["notes"])

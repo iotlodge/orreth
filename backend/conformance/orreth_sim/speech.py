@@ -43,6 +43,36 @@ SENTENCES = {
         "⚡ ⟦event⟧ — [⟦ref⟧…]",
     "card-reflex-escalation-held":
         "a reflex escalated — detection wears no levers; the word is yours",
+    # ---- the warden's confessions at the plant gate (0059 §2.3 → craft,
+    # 2026-08-23 — policy-as-craft: the CHECKS are firmware, vigil never
+    # stops looking; her WORDS and the credential patterns live here, on
+    # the shelf, tunable at the gates like every sentence ------------------
+    "warden-env-ok":
+        "✓ the endpoint is an env-indirection — the secret stays out of "
+        "every record (0059 §2.2)",
+    "warden-credential-in-url":
+        "⚠ the endpoint CARRIES A CREDENTIAL in its url — prefer env:NAME "
+        "indirection; planted as-is, the secret would enter records and "
+        "the glass",
+    "warden-insecure-scheme":
+        "⚠ insecure scheme (http) to a non-local host — anything on the "
+        "path can read what rides this wire",
+    "warden-manifest-mismatch":
+        "⚠ declared ⟦declared⟧ tool(s); the probe saw ⟦seen⟧ — the pin is "
+        "what was SEEN",
+    "warden-no-tools":
+        "⚠ the MCP server did not enumerate its tools — the pin would be "
+        "empty, and an empty pin serves nothing",
+    "warden-dead-probe":
+        "⚠ the endpoint did not answer the probe — planted anyway, it "
+        "would stand dark until it does",
+    "warden-source":
+        "source: ⟦source⟧",
+    # the one POLICY LIST in the family: what smells like a credential in
+    # a url. Comma-separated; the warden splits it — edit it like a
+    # sentence, and her nose learns a new smell without a code change.
+    "warden-credential-patterns":
+        "key=, apikey, api_key, token=, secret=",
     "reply-thumb-heard":
         "heard — on the record",
     # ---- the parlor's system notes ------------------------------------------
