@@ -43,6 +43,13 @@ class Nanda:
     def active(self, did: str) -> bool:
         return self._e.get(did, {}).get("status") == "active"
 
+    def known(self, did: str) -> bool:
+        """Has this DID ever been registered (active OR revoked)? A did:key
+        is self-certifying — the key IS the id (the plane's own active()
+        law) — so a caller may register one on first sight; this guard
+        keeps a REVOKED did dead: never re-registered, never resurrected."""
+        return did in self._e
+
     def public(self, did: str) -> str:
         embedded = crypto.public_from_did(did)
         return embedded or self._e[did]["public"]

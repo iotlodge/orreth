@@ -157,7 +157,9 @@ class OrrethMind:
         self._craft_base = craft_base
         self._fetch = craft_fetch or (lambda name: acquire(
             name, did=client.did, base=craft_base,
-            pin=self.pins.get(name), on_dark=on_dark))
+            pin=self.pins.get(name), on_dark=on_dark,
+            # the citizen presents its lease at the supply door (0045 law 8)
+            token=getattr(client, "token", None)))
         self._crafts: dict = {}       # one run, one resolution (law 8)
 
     def _craft(self, name: str):

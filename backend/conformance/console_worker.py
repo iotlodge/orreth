@@ -2175,6 +2175,23 @@ def embed_door() -> None:
         def do_POST(self):
             ln = int(self.headers.get("content-length") or 0)
             raw = self.rfile.read(ln) or b"{}"
+            if self.path.split("?")[0] == "/craft":
+                # the supply line's LEASED lane (2026-08-23 — 0045 law 8):
+                # a token is a JSON blob, so the leased ask rides POST;
+                # the tokenless GET remains for dev grace, confessing
+                try:
+                    p = json.loads(raw)
+                except Exception:
+                    p = {}
+                out = json.dumps(craft_serve(
+                    str(p.get("name") or ""), str(p.get("did") or ""),
+                    pin=p.get("pin"), token=p.get("token"))).encode()
+                self.send_response(200)
+                self.send_header("content-type", "application/json")
+                self.send_header("access-control-allow-origin", "*")
+                self.end_headers()
+                self.wfile.write(out)
+                return
             if self.path.split("?")[0] == "/tool":
                 # 0054 sp2 — the farm's invoke door rides the worker's own
                 # server like /craft does: the plane never proxies tool bytes
@@ -11049,15 +11066,41 @@ _WEARERS = {
 }
 
 
-def craft_serve(name: str, did: str, *, pin: str | None = None) -> dict:
+def craft_serve(name: str, did: str, *, pin: str | None = None,
+                token: dict | None = None) -> dict:
     """The supply line's door (0045 sp5, law 8): resolve craft by name —
     head or pinned — for an external consumer. If an argument is running
     on this craft, the consumer draws an ARM by its own DID (deterministic,
     visible in the reply — no secret experiments). Every serving lands on
     the instrument tier (servings.jsonl — the flight recorder's precedent:
-    telemetry, not testimony)."""
+    telemetry, not testimony).
+
+    THE LEASE AT THE DOOR (2026-08-23 — 0045's named gap paid): a citizen
+    presents the SAME becky-chained lease that fuels its thoughts; the door
+    verifies the chain to the pinned root and that the token's subject IS
+    the claimant. In prod the door refuses without it — one face (0002 §4).
+    In dev an unleased ask still serves, wearing a LOUD confession, so the
+    transition never breaks a running flow silently."""
     if not name:
         return {"error": "name required"}
+    leased = False
+    if token:
+        try:
+            subj = str(token.get("subject") or "")
+            # a did:key is self-certifying — the key IS the id (the Rust
+            # plane's own active() law); first sight registers it so
+            # revocation keeps a handle, and a REVOKED did stays dead
+            # (known() guards against resurrection-by-re-registration)
+            if subj.startswith("did:key:z") and not _NANDA.known(subj):
+                _NANDA.register(subj, crypto.public_from_did(subj) or "")
+            _ROOT.verify_token(token)
+            if subj != did:
+                raise ValueError("subject mismatch")
+            leased = True
+        except Exception:
+            return {"error": "request cannot be served under this capability"}
+    elif ORRETH_MODE == "prod":
+        return {"error": "request cannot be served under this capability"}
     port = 4500
     refs, lifecycle, texts = [], None, {}
     for ref, b, _, _ in wire_assets(port, "firmware"):
@@ -11098,10 +11141,17 @@ def craft_serve(name: str, did: str, *, pin: str | None = None) -> dict:
         out["profile"] = body
     if arm:
         out["arm"] = arm                      # visible — never a secret split
+    out["leased"] = leased
+    if not leased:
+        out["ungated"] = ("served without a lease — dev grace only: in prod "
+                          "this door refuses without your becky-chained "
+                          "token, the same lease that fuels your thoughts "
+                          "(0045 law 8)")
     try:
         with open(os.path.join(FlightBook.HOME, "servings.jsonl"), "a") as f:
             f.write(json.dumps({"at": NOW(), "name": name, "ref": ref,
-                                "did": did[:48], "arm": arm}) + "\n")
+                                "did": did[:48], "arm": arm,
+                                "leased": leased}) + "\n")
     except Exception:
         pass
     return out
@@ -11145,9 +11195,36 @@ def compose_governance() -> dict:
                         "wearers": _WEARERS.get(name,
                                    ["allen · a deployment shape"]
                                    if name.startswith("template-") else [])})
+    # the ECO floor joins the registry (2026-08-23 — 0045's two-floor-sweep
+    # gap paid): 0038's commonality law homes shared eco assets on grace's
+    # shelf at e:cloud, and a registry that cannot see them is a library
+    # missing a wing. Each object wears its floor so the human knows WHERE
+    # the word lives. (The FULL-rig sweep stays honestly named — every
+    # floor joins one at a time, each with a reason, never a blind fan-out.)
+    try:
+        eco_port = next((p for p, s in FLOOR_SCOPES.items()
+                         if s == "u:demo/e:cloud"), None)
+        if eco_port:
+            ec: dict[str, dict] = {}
+            for ref, b, _, t in wire_assets(eco_port, "asset",
+                                            scope="u:demo/e:cloud"):
+                nm = next((x for x in (t or []) if x not in
+                           ("asset", "asset-variant", "adopted")), None)
+                if nm:
+                    ec.setdefault(nm, {"refs": [], "tags": t})["refs"].append(ref)
+            for nm, row in sorted(ec.items()):
+                objects.append({"name": nm,
+                                "category": _craft_category(nm, row["tags"]),
+                                "lifecycle": "chronicle",
+                                "at": "u:demo/e:cloud",
+                                "versions": len(row["refs"]),
+                                "head": row["refs"][-1], "refs": row["refs"],
+                                "port": eco_port,
+                                "wearers": _WEARERS.get(nm, [])})
+    except Exception:
+        pass
     # the rows' floor joins the registry (0045 sp4): the argument machinery
     # lives at e:rag, so its craft shows HERE with the argue door open.
-    # (The full-rig shelf sweep is a named gap — one floor at a time.)
     try:
         rag_port, rag_scope = _rag_floor()
         if rag_port:

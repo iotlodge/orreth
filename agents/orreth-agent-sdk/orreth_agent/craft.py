@@ -60,19 +60,36 @@ class ResolvedCraft:
 def acquire(name: str, *, did: str = "anonymous-consumer",
             base: str = "http://localhost:4562", pin: str | None = None,
             on_dark: str = "refuse",
-            cache_home: str = "~/.orreth/craft-cache") -> ResolvedCraft:
+            cache_home: str = "~/.orreth/craft-cache",
+            token: dict | None = None) -> ResolvedCraft:
     """Acquire craft by reference. Resolve ONCE per run and carry the
-    returned object; `pin` asks for an exact version ref instead of head."""
+    returned object; `pin` asks for an exact version ref instead of head.
+
+    THE LEASE AT THE DOOR (2026-08-23 — 0045 law 8): pass the SAME
+    becky-chained lease that fuels your thoughts (`client.token`) and the
+    ask rides the leased POST lane; the door verifies the chain and the
+    subject. Without it, prod refuses and dev serves wearing a loud
+    confession — a citizen presents its lease."""
     home = Path(os.path.expanduser(cache_home))
     home.mkdir(parents=True, exist_ok=True)
     cache = home / (urllib.parse.quote(name, safe="") + ".json")
     try:
-        q = (f"{base}/craft?name={urllib.parse.quote(name)}"
-             f"&did={urllib.parse.quote(did)}")
-        if pin:
-            q += f"&pin={urllib.parse.quote(pin)}"
-        with urllib.request.urlopen(q, timeout=6) as resp:
-            d = json.load(resp)
+        if token:
+            body = json.dumps({"name": name, "did": did,
+                               **({"pin": pin} if pin else {}),
+                               "token": token}).encode()
+            req = urllib.request.Request(
+                f"{base}/craft", data=body,
+                headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                d = json.load(resp)
+        else:
+            q = (f"{base}/craft?name={urllib.parse.quote(name)}"
+                 f"&did={urllib.parse.quote(did)}")
+            if pin:
+                q += f"&pin={urllib.parse.quote(pin)}"
+            with urllib.request.urlopen(q, timeout=6) as resp:
+                d = json.load(resp)
         if "error" in d:
             raise RuntimeError(d["error"])
         cache.write_text(json.dumps(d))
