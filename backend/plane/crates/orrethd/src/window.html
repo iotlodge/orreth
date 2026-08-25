@@ -1555,7 +1555,7 @@
   <div class="pgate" id="p-gate" style="display:none"
        title="what waits on you, right here in the audience — the same gates as the Requests tab"></div>
   <div class="pchips" id="p-chips"></div>
-  <div class="pin"><input id="p-in" placeholder="ask — the resident fetches, you never read raw">
+  <div class="pin"><input id="p-in" placeholder="ask in your own words — the resident does the looking and answers on the record">
     <button onclick="parlorSay()">Speak →</button></div>
 </div>
 
@@ -3079,13 +3079,14 @@ async function pulse(){
 }
 
 const DORMOPEN=new Set();   /* which floors' dormitories stand open (WALKOPEN idiom) */
+let RESBLURB={};            /* each resident's duty, for the parlor's greeting (req-1330) */
 function dormToggle(sc){DORMOPEN.has(sc)?DORMOPEN.delete(sc):DORMOPEN.add(sc);roster()}
 async function roster(){
   try{
     const p=await(await fetch(api("/presence"))).json();
     const r=$("roster");
     let html=`<div class="grp"><span>residents — the machine's own staff, one per duty · click one to talk</span><span>${p.residents.length}</span></div>`;
-    for(const a of p.residents) html+=agentRow(a,true);
+    for(const a of p.residents){if(a.name&&a.blurb)RESBLURB[a.name]=a.blurb;html+=agentRow(a,true)}
     /* present vs remembered (JB's find 2026-08-20): the awake stand in the open;
        the dormant fold into a dormitory per floor — each still a self, seeds
        kept, one governed re-join from waking */
@@ -4339,7 +4340,7 @@ function openParlor(name){
   $("p-expand").style.display="none"; $("p-ws").style.display="none";
   $("p-ws").innerHTML=""; $("parlor").classList.remove("full");
   $("p-drop").style.display="none";
-  $("p-thread").innerHTML=`<div class="msg reply wait">${name} is coming to the parlor…</div>`;
+  $("p-thread").innerHTML=`<div class="msg reply wait">${name} is coming…${RESBLURB[name]?` (${esc(RESBLURB[name])})`:""} ask in your own words below — the answer arrives here, cited and kept on the record.</div>`;
   $("parlor").classList.add("on"); $("p-in").focus();
   document.body.classList.add("parlor-open"); parlorRefit();
   parlorPost({verb:"card"});
@@ -5919,7 +5920,7 @@ async function resOpen(name,tab){
   const R=d.resident||{};
   $("rsm-name").textContent="@"+RESM.name;
   $("rsm-av").textContent=R.emoji||"◉";
-  $("rsm-sub").textContent=`${(R.name||"").replace(/^[a-z]+ · /,"")} · mode ${R.mode||"dev"}${R.world_name?` · tends ${R.world_name}`:""}`;
+  $("rsm-sub").textContent=`${(R.name||"").replace(/^[a-z]+ · /,"")} · ${(R.mode||"dev")==="prod"?"production — its words change only by release":"dev mode — its words are editable here"}${R.world_name?` · tends ${R.world_name}`:""}`;
   rsmRender()}
 function rsmTab(t){RESM.tab=t;rsmRender();
   if(t==="prompts"&&!RESM.word){
@@ -5939,9 +5940,9 @@ function rsmRender(){
         +item.words.slice(0,18).map(w=>`<span class="rsm-chip">✎ ${dkEsc(w.word)}</span>`).join("")
        :"")
      +`<div class="rsm-eyebrow">quick actions</div>`
-     +`<button class="rsm-qa" onclick="rsmClose();openParlor('${dkEsc(RESM.name)}')">Open an audience — you ask, ${dkEsc(RESM.name)} fetches</button>`
+     +`<button class="rsm-qa" onclick="rsmClose();openParlor('${dkEsc(RESM.name)}')">talk to ${dkEsc(RESM.name)} — ask in your own words; the answer is cited and kept</button>`
      +(R.world?`<button class="rsm-qa" onclick="rsmClose();CAPV='${dkEsc(R.world)}';capToggle()">Open ${dkEsc(R.world_name||R.world)} — the world this resident tends</button>`:"")
-     +`<button class="rsm-qa" onclick="rsmTab('schedule')">Schedule a standing question — it repeats on your cadence</button>`}
+     +`<button class="rsm-qa" onclick="rsmTab('schedule')">schedule a repeating question — you approve once; it runs on the schedule you set</button>`}
   else if(RESM.tab==="graph"){
     const flows=(d.view||[]).filter(p=>p.kind==="flow");
     h=flows.length?flows.map((p,pi)=>
@@ -6286,15 +6287,15 @@ function govOpen(name){
   renderGov();
   const R=$("gov-read");R.classList.remove("hide");const gh=$("gov-hint");if(gh)gh.style.display="none";
   R.innerHTML=`<div class="pt"><b>${esc(name)}</b>
-      <span class="lc ${o.lifecycle==="chronicle"?"chr":""}" style="margin-left:.5rem">${o.lifecycle==="canon"?"CANON — a release moves the machine's name":"chronicle — proposals at grace's gate"}</span></div>
-    <div class="quiet2" style="margin:.3rem 0">${o.category} · ${o.versions} version(s) — the worldline, oldest first; nothing here was ever silently overwritten</div>
+      <span class="lc ${o.lifecycle==="chronicle"?"chr":""}" style="margin-left:.5rem">${o.lifecycle==="canon"?"firmware — locked; a change becomes a new release":"editable — your edit lands as a new version, history kept"}</span></div>
+    <div class="quiet2" style="margin:.3rem 0">${o.category} · ${o.versions} version(s) below, oldest first — click one to read it; nothing here was ever silently overwritten</div>
     <div id="gov-vers" style="margin:.45rem 0">${o.refs.map((r,i)=>
-      `<span class="gvv" onclick="govVer('${esc(name)}',${i})">v${i+1}${i===o.refs.length-1?" · head":""}</span>`).join("")}
-      ${o.versions>1?`<span class="gvv" onclick="govDiff('${esc(name)}')">⇄ diff head vs prior</span>`:""}
+      `<span class="gvv" onclick="govVer('${esc(name)}',${i})">v${i+1}${i===o.refs.length-1?" · current":""}</span>`).join("")}
+      ${o.versions>1?`<span class="gvv" onclick="govDiff('${esc(name)}')">⇄ compare newest vs previous</span>`:""}
       ${o.lifecycle==="chronicle"?`<span class="gvv" onclick="govEdit('${esc(name)}')">✎ propose an edit — lands on your word</span>`:""}
-      ${o.lifecycle==="canon"?`<span class="gvv" onclick="govRelease('${esc(name)}')">⚑ stage a release — the machine takes a new name</span>`:""}
-      ${o.argue?`<span class="gvv" onclick="govArgue('${esc(name)}')">⚖ open an argument — arms as named machines</span>`:""}</div>
-    ${o.lifecycle==="canon"?`<div class="quiet2">CANON: a change is a RELEASE — staged at your gate, cut on your word, the machine renamed (0041 · 0045 sp3)</div>`:""}
+      ${o.lifecycle==="canon"?`<span class="gvv" onclick="govRelease('${esc(name)}')">⚑ stage a release — asks you first; nothing changes until you agree</span>`:""}
+      ${o.argue?`<span class="gvv" onclick="govArgue('${esc(name)}')">⚖ open an argument — two versions race, and you decide</span>`:""}</div>
+    ${o.lifecycle==="canon"?`<div class="quiet2">firmware: a change is a release — staged at your gate, adopted only on your word, and the machine's version name moves with it</div>`:""}
     ${o.at?`<div class="quiet2">lives at ${esc(o.at)} — the registry reads across the floors</div>`:""}
     ${(o.wearers||[]).length?`<div class="quiet2">worn by · ${o.wearers.map(esc).join(" · ")}</div>`:""}
     <div class="quiet2" id="gov-ref"></div><pre id="gov-body">reading the record…</pre>`;
@@ -6758,8 +6759,10 @@ function glossShow(key,ev){
   if(!c){c=document.createElement("div");c.id="glosscard";document.body.appendChild(c);
     document.addEventListener("pointerdown",e=>{
       if(!c.contains(e.target)&&!e.target.closest(".gw"))c.style.display="none"})}
-  c.innerHTML=`<b>${esc(key)}</b><div>${esc(GLOSS[key]||"")}</div>
-    <div class="gsrc">from the machine's own dictionary — a definition you can tune in Governance («gloss-${esc(key)}»)</div>`;
+  c.innerHTML=`<b>${esc(key)}</b><span class="lnk" style="float:right" onclick="$('glosscard').style.display='none'">✕ close</span>
+    <div class="gdef">${esc(GLOSS[key]||"")}</div>
+    <div class="gsrc">from the machine's own dictionary — dotted words here look up too; you can reword any definition in the Governance room</div>`;
+  glossifyEl(c.querySelector(".gdef"));   /* the definition's own words are doors (req-1330) */
   c.style.display="block";
   c.style.left=Math.max(8,Math.min((ev&&ev.clientX||40)-20,innerWidth-350))+"px";
   c.style.top=Math.min((ev&&ev.clientY||40)+16,innerHeight-150)+"px";

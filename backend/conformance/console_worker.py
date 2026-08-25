@@ -11885,9 +11885,9 @@ def compose_resident(name: str) -> dict:
                 {"label": k, "value": round(float(x), 4)}
                 for k, x in sorted(v.items())
                 if isinstance(x, (int, float))],
-            "mirror": interop or "the Mirror has not yet written this "
-                                 "resident's reflection — it composes from "
-                                 "real audiences (0034)",
+            "mirror": interop or "no reflection yet — the machine writes "
+                                 "one after real conversations with "
+                                 "this resident",
         }
     elif wf is not None:
         runs = int(wf.get("runs") or 0)
@@ -11904,15 +11904,15 @@ def compose_resident(name: str) -> dict:
                      f"{int(wf.get('tokens') or 0):,} tokens",
             "calls": f"{runs} run{'s' if runs != 1 else ''} · "
                      f"{round(100 * ok / runs) if runs else 0}% whole",
-            "age_line": f"last seen {wf.get('last_seen') or '—'} — the full "
-                        "worldline walk joins with THE RELATIONS (0056 sp3)",
+            "age_line": f"last seen {wf.get('last_seen') or '—'} — its full "
+                        "life story joins this room in a future season",
             "vitals_bars": [{"label": "runs", "value": runs},
                             {"label": "succeeded", "value": ok},
                             {"label": "tokens",
                              "value": int(wf.get("tokens") or 0)}],
-            "mirror": interop or "the Mirror has not yet written this "
-                                 "resident's reflection — it composes from "
-                                 "real audiences (0034)",
+            "mirror": interop or "no reflection yet — the machine writes "
+                                 "one after real conversations with "
+                                 "this resident",
         }
     if res is None and wf is None and man is not None:
         wport, wscope = man.get("port"), man.get("floor", "")
@@ -11939,21 +11939,21 @@ def compose_resident(name: str) -> dict:
                       if gate else "resting — no lease held; his tend "
                       "files a patient join when he stirs"),
             "spend": "— (no lease, no meter: a resting self spends nothing)",
-            "calls": "his runs live on his own floor — the worldline walk "
-                     "joins THE RELATIONS (0056 sp3)",
+            "calls": "his runs live on his own floor — their story joins "
+                     "this room in a future season",
             "age_line": (f"his floor holds {recs:,} records of his work"
                          if recs is not None else
                          "his floor is dark — the hull may be shut by "
                          "the word"),
             "vitals_bars": ([{"label": "records on his floor",
                               "value": recs}] if recs else []),
-            "mirror": interop or "the Mirror has not yet written this "
-                                 "resident's reflection — it composes from "
-                                 "real audiences (0034)",
+            "mirror": interop or "no reflection yet — the machine writes "
+                                 "one after real conversations with "
+                                 "this resident",
         }
-    item["verdict_line"] = ("the assay grades work by floor, not yet by "
-                            "name — the resident-level verdict joins with "
-                            "THE RELATIONS (0056 sp3), said honestly")
+    item["verdict_line"] = ("the examiner grades work by floor, not yet "
+                            "by name — a by-name verdict comes in a "
+                            "future season, said honestly")
     # ---- THE WORK (sp2): the resident's own work, from the instruments
     # that already know it — the desk residents' walks drawn by the flow
     # engine, vera's verdicts, the librarian's lane; the rest confess
@@ -12019,9 +12019,9 @@ def compose_resident(name: str) -> dict:
         except Exception:
             pass
     if not work_panels:
-        item["work_note"] = ("this organ's work writes as records on the "
-                             "wire — its own feed joins as the instruments "
-                             "learn to name their author (0056 sp3)")
+        item["work_note"] = ("this resident's work is filed as records as "
+                             "it happens — a live feed of it joins this "
+                             "room in a future season")
         work_panels = [{"kind": "doc", "src": "work_note",
                         "section": "the work"}]
     # ---- THE WORDS (sp2): the firmware this resident wears — the desks'
@@ -12045,8 +12045,8 @@ def compose_resident(name: str) -> dict:
          "editable in DEV at the shelf's gated doors — the Governance "
          "room holds them; a CANON word still refuses toward the release")
         if words else
-        "no words on the shelf wear this resident's name yet — the craft "
-        "census deepens with THE RELATIONS (0056 sp3)")
+        "no words on the shelf wear this resident's name yet — more of "
+        "the machine's craft gets named to its wearer over time")
     # ---- THE SCHEDULES (sp3): this resident's standing questions — any
     # question they answer can repeat on a cadence (JB's L4)
     schedules: list = []
