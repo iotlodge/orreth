@@ -1261,7 +1261,7 @@
       <div class="inbleft">
         <div id="inboxlist"><div class="quiet">nothing waits on you — a calm universe.</div></div>
         <div class="qband" style="margin-top:.8rem;cursor:pointer" onclick="INBARCH=!INBARCH;loadReq()">
-          <b>the archive — everything, every word</b> <span class="lnk" id="inb-arch-t">· show</span></div>
+          <b>the archive — every settled request, kept in full</b> <span class="lnk" id="inb-arch-t">· show</span></div>
         <div id="reqlist" style="display:none"></div>
       </div>
       <div class="inbright" id="inb-detail"><div class="quiet">select a row — the reading pane holds it here, beside the list</div></div>
@@ -1322,7 +1322,7 @@
          (the registry catalog) as the tab's second face; charlotte as the
          playground beside the human -->
     <div class="stbltop">
-      <span class="section" style="margin:0;border:none;padding:0">the farm · tools under governance — at <span id="farm-floor" style="color:var(--brass)">…</span></span>
+      <span class="section" style="margin:0;border:none;padding:0">the farm — the outside tools and services this world may use, each approved at your gate · at <span id="farm-floor" style="color:var(--brass)">…</span></span>
       <span class="stblmode"><span class="smode on" id="fmode-shed" onclick="farmMode('shed')">🧰 the toolshed</span><span class="smode" id="fmode-seeds" onclick="farmMode('seeds')">🌱 the seeds</span></span>
       <span class="lnk" style="margin-left:auto;font-size:.68rem" onclick="ftaxToggle()">key terms ▾</span>
     </div>
@@ -1372,7 +1372,7 @@
          the view never scrolls; inventory left, reading pane right, and THE
          MARKET (sp1's merged intel) as a second face of the same tab -->
     <div class="stbltop">
-      <span class="section" style="margin:0;border:none;padding:0">the stable · minds under governance — at <span id="stable-floor" style="color:var(--brass)">…</span></span>
+      <span class="section" style="margin:0;border:none;padding:0">the stable — the AI minds this world thinks with, each approved at your gate · at <span id="stable-floor" style="color:var(--brass)">…</span></span>
       <span class="stblmode"><span class="smode on" id="smode-stable" onclick="stblMode('stable')">🐎 the stable</span><span class="smode" id="smode-market" onclick="stblMode('market')">🔭 the market <span id="mkt-n"></span></span></span>
       <span class="lnk" style="margin-left:auto;font-size:.68rem" onclick="taxToggle()">key terms ▾</span>
     </div>
@@ -1383,11 +1383,11 @@
         <div id="stablepending"></div>
         <div class="sechd">the classes — the names work asks for</div>
         <div class="ladder" id="ladder"></div>
-        <div class="sechd">the stalls — saddled minds</div>
+        <div class="sechd">the stalls — the minds in service, each saddled to its provider</div>
         <div id="stableroster"></div>
         <div class="sechd">the allocations — who uses what</div>
         <div id="stblassign"></div>
-        <div class="sechd">the pasture · announced expiries, 90 days</div>
+        <div class="sechd">the pasture — announced end-of-life dates, next 90 days</div>
         <div class="pasture" id="pasture"><span class="quiet">no announced expiries — a calm pasture.</span></div>
         <div class="sechd">connect by exact name — for a mind the market does not list</div>
         <div class="stbform">
@@ -1431,22 +1431,22 @@
        composer for long words + the logic dial): compose above, master-detail
        below — the list never scrolls away from what you are reading. -->
   <div class="view hide" id="v-obj">
-    <div class="section" style="margin-top:0">the objective ledger · you are the origin — at <span class="place" style="color:var(--brass)">…</span></div>
+    <div class="section" style="margin-top:0">your objectives — every piece of work starts with your ask, and its report lands back here · at <span class="place" style="color:var(--brass)">…</span></div>
     <div class="objcompose">
-      <textarea id="obj-in" rows="3" placeholder="ask in your own words — as long as it needs to be. build X · acquire knowledge of Y · check on Z… a plan stages for your approval, your word fans it down the floors, and the report is yours forever.   (⌘⏎ requests it)"></textarea>
+      <textarea id="obj-in" rows="3" placeholder="ask in your own words — as long as it needs to be. build X · research Y · check on Z… the machine drafts a plan, waits for your approval, then does the work and files its report in the list below.   (⌘⏎ or the button sends it)"></textarea>
       <div class="objrow2">
-        <input id="obj-rubric" placeholder="judge this by… — optional; your yardstick becomes the assay's rubric, and every verdict names it (0043)">
+        <input id="obj-rubric" placeholder="judge this by… — optional. say what a good answer looks like, and every grade of this work will name your words as its measure">
       </div>
       <div class="objrow2" style="align-items:center">
-        <span class="quiet2">logic ·</span>
+        <span class="quiet2">logic — how hard the machine thinks ·</span>
         <span id="obj-effsel">
           <span class="qchip" data-l="low" onclick="objEff('low')">low</span>
           <span class="qchip on" data-l="medium" onclick="objEff('medium')">medium</span>
           <span class="qchip" data-l="high" onclick="objEff('high')">high</span>
           <span class="qchip" data-l="xhigh" onclick="objEff('xhigh')">xhigh</span>
         </span>
-        <span class="quiet2" id="obj-effnote">medium — the balanced default; your choice rides the record</span>
-        <button class="objgo" onclick="submitObjective()">Request it →</button>
+        <span class="quiet2" id="obj-effnote">medium — the balanced default; deeper thinking costs more and takes longer</span>
+        <button class="objgo" onclick="submitObjective()">Ask the machine →</button>
       </div>
       <div class="formerr" id="obj-err"></div>
     </div>
@@ -1518,7 +1518,7 @@
 <div id="cappull" onclick="capToggle()" title="the capabilities — applied-purpose worlds installed atop Orreth">📈 capabilities</div>
 <div id="capworld">
   <div id="caphead"><b>THE CAPABILITIES · WORLDS ATOP ORRETH</b>
-    <span class="dim" style="font-size:.68rem">applied purposes, installed — the Machine below, the worlds above</span>
+    <span class="dim" style="font-size:.68rem">the worlds you have installed — each one a working purpose built on the machine underneath</span>
     <button class="dk-tab" style="margin-left:auto" onclick="capToggle()">✕ close</button></div>
   <div id="capbody"></div>
 </div>
@@ -1868,10 +1868,11 @@ function renderWorldRail(){
       <span class="tc" title="${n.records||0} memories · ${n.present!=null?`${n.present} present of ${n.agents||0} remembered`:`${n.agents||0} agent(s)`}">${n.records}m·${n.present??n.agents}a</span></div>`}).join("");
     const s=(n,w)=>`<b>${n}</b> ${w}${n===1?"":"s"}`;
     const aw=agg.knowsP
-      ?`<b>${agg.present}</b> present · <b>${agg.agents}</b> remembered`
+      ?`<b>${agg.present}</b> ${agg.present===1?"agent":"agents"} awake now · <b>${agg.agents}</b> known in all`
       :s(agg.agents,"agent");
-    html+=`<div class="tsum" title="present = active within the floor's horizon; remembered = every self the diary has ever heard — a dormant self keeps its name and seeds">below this floor: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"field")} · ${aw}</div>`;
-    if(bl)bl.innerHTML=`the world below: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"field")} · ${aw}${agg.knowsP?" — a dormant self keeps its name":""}`;
+    html+=`<div class="tsum" title="awake = active within the floor's horizon; known = every self the diary has ever heard — a sleeping self keeps its name and seeds">inside this floor: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"working floor")} · ${aw}</div>`;
+    html+=`<div class="tsum" style="opacity:.8">e: an ecosystem · f: one working floor · each row's ⟨N⟩m·⟨N⟩a = memories held · agents present — click any name to step onto it</div>`;
+    if(bl)bl.innerHTML=`inside this floor: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"working floor")} · ${aw}${agg.knowsP?" — a sleeping agent keeps its name":""}`;
   }else{
     /* the bottom floor: ancestors still climbable — the same door, one law */
     const scope=(t&&t.scope)||floorScope||(cfg?.tiers?cfg.tiers[0]:"");
@@ -3033,13 +3034,13 @@ async function roster(){
   try{
     const p=await(await fetch(api("/presence"))).json();
     const r=$("roster");
-    let html=`<div class="grp"><span>residents · the organs</span><span>${p.residents.length}</span></div>`;
+    let html=`<div class="grp"><span>residents — the machine's own staff, one per duty · click one to talk</span><span>${p.residents.length}</span></div>`;
     for(const a of p.residents) html+=agentRow(a,true);
     /* present vs remembered (JB's find 2026-08-20): the awake stand in the open;
        the dormant fold into a dormitory per floor — each still a self, seeds
        kept, one governed re-join from waking */
     const wfp=p.workforce.filter(a=>a.state!=="dormant").length;
-    html+=`<div class="grp"><span>workforce</span><span>${wfp} present · ${p.workforce.length} remembered</span></div>`;
+    html+=`<div class="grp"><span>workforce — the hands that joined from outside</span><span>${wfp} awake · ${p.workforce.length} known</span></div>`;
     if(p.workforce.length){
       const grps={};
       p.workforce.forEach(a=>{(grps[a.scope||"workforce"]=grps[a.scope||"workforce"]||[]).push(a)});
@@ -3363,8 +3364,8 @@ async function loadReq(){
           +(rows.length>40?`<div class="quiet">+${rows.length-40} older — the record keeps every one</div>`:""):"");
     }).join("")||`<div class="quiet">nothing settled yet.</div>`;
     $("reqlist").innerHTML=chips
-      +band("waiting on you — consequence waits (0012)",wait.filter(keep),
-            "nothing waits on you — a calm universe.")
+      +band("waiting on you — nothing proceeds without your word",wait.filter(keep),
+            "nothing waiting here.")
       +band("in flight — the round is tending",flight.filter(keep),
             "nothing in flight.")
       +`<div class="qband"><b>settled — the record keeps every word</b>
@@ -3401,7 +3402,7 @@ async function renderInboxDetail(){
   const el=$("inb-detail");if(!el)return;
   if(!INBSEL){                            /* nothing held — the pane says so */
     if(el.dataset.calm!=="1"){el.dataset.calm="1";
-      el.innerHTML=`<div class="quiet">nothing waits on you — a calm universe.</div>`}
+      el.innerHTML=`<div class="quiet">when something needs your decision, it opens here by itself.</div>`}
     return}
   el.dataset.calm="";
   const a=document.activeElement;         /* only a typing hand holds the pane */
@@ -3436,7 +3437,7 @@ function renderInbox(q){
   const mon=$("inbox-monitor");
   if(mon)mon.textContent=wait.length
     ?`${chron.length} on your purposes · ${mach.length} of the machine's own housekeeping — gravest first, then oldest`
-    :"nothing waits on you — a calm universe";
+    :"nothing waiting — you are all caught up";
   if(!INBSEL||!q.some(r=>r.id===INBSEL))
     INBSEL=chron.length?chron[0].id:(mach.length?mach[0].id:null);
   const row=r=>`<div class="inbrow${r.id===INBSEL?" on":""}" data-id="${r.id}" onclick="inbSelect('${r.id}')">
@@ -3705,27 +3706,27 @@ function renderFarmPane(){
       <b style="font-size:.95rem">${esc(s.name)}</b><span class="schip ${s.state}">${s.state}</span>
       ${(s.source||"human")!=="human"?`<span class="okband">${esc(s.source)}</span>`:""}
       ${s.spend_guard?`<span class="roband" title="calls count against the declared daily ${esc(s.spend_guard)} ceiling — one ledger, every road">⛽ ${esc(s.spend_guard)}-guarded</span>`:""}</div>
-     <div class="dim" style="font:.66rem var(--mono);margin:.25rem 0">${esc(s.kind)} · ${esc(s.transport)} · on ${esc(s.floor||"")} · <span title="its permanent identity in this universe — like a serial number that never changes">DID ${esc((s.did||"").slice(0,34))}…</span></div>
-     <div class="strdeal"><b>THE WIRE</b><br>
-      <span class="k">endpoint</span>${envd?`<b>${esc(s.endpoint)}</b> — the secret stays out of every record (0059)`:esc(s.endpoint||"—")}<br>
-      <span class="k" title="the fingerprint of exactly what you approved — if the provider changes anything, the change is caught and held for your decision">pin</span><span class="hash">${esc((s.manifest_hash||"").slice(0,30))}…</span>
+     <div class="dim" style="font:.66rem var(--mono);margin:.25rem 0">${esc(s.kind)} · ${esc(s.transport)} · on ${esc(s.floor||"")} · DID ${esc((s.did||"").slice(0,34))}… <span style="opacity:.8">(its permanent name here — never reused, never renamed)</span></div>
+     <div class="strdeal"><b>THE WIRE — where it lives, and the exact shape you approved</b><br>
+      <span class="k">endpoint</span>${envd?`<b>${esc(s.endpoint)}</b> — a stand-in name; the real key never enters any record`:esc(s.endpoint||"—")}<br>
+      <span class="k">pin</span><span class="hash">${esc((s.manifest_hash||"").slice(0,30))}…</span> <span class="dim">— the fingerprint of what you approved; if the tool ever changes, you are asked again</span>
       ${s.proposed_hash?`<br><span class="k" style="color:var(--red)">proposed</span><span style="color:var(--red)">${esc(String(s.proposed_hash).slice(0,30))}… — it came back CHANGED; re-approval waits</span>`:""}</div>
-     <div class="strdeal"><b>THE TOOLS — pinned; what charlotte SAW</b><br>
+     <div class="strdeal"><b>THE TOOLS — what this service offers, exactly as probed</b><br>
       ${(s.manifest||[]).map(t=>`<span style="color:var(--star)">${esc(t.name)}</span> <span class="dim">${esc(String(t.description||"").slice(0,90))}</span>`).join("<br>")||"— none pinned"}</div>
-     <div class="strdeal"><b>THE LIFE</b><br>
-      <span class="k">calls</span><b>${s.calls||0}</b> answered<br>
-      <span class="k">heard</span>${s.last_seen?esc(ago(s.last_seen)):"never"}<br>
-      <span class="k">beats</span>${s.beats||0}<br>
-      <span class="k">planted</span>${esc(String(s.planted_at||"").slice(0,10))}</div>
-     <div class="strdeal"><b>WHO LEANS ON IT</b><br>
-      ${who.length?`allocated to: ${who.map(esc).join(" · ")}<br>`:"no allocation names it — callers find it by its floor's walk<br>"}
+     <div class="strdeal"><b>THE LIFE — what it has been doing</b><br>
+      <span class="k">calls</span><b>${s.calls||0}</b> answered so far<br>
+      <span class="k">heard</span>${s.last_seen?esc(ago(s.last_seen))+" — its heartbeat keeps it listed alive":"never"}<br>
+      <span class="k">beats</span>${s.beats||0} heartbeat(s) since planting<br>
+      <span class="k">planted</span>${esc(String(s.planted_at||"").slice(0,10))} — the day it was approved in</div>
+     <div class="strdeal"><b>WHO LEANS ON IT — who would feel it if this went away</b><br>
+      ${who.length?`allocated to: ${who.map(esc).join(" · ")}<br>`:"no one is pinned to it by rule — any resident on this floor may call it<br>"}
       source: ${esc(s.source||"human")}</div>
      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">
-      ${["serving","probation"].includes(s.state)?`<button class="sbtn no" onclick="farmRest('${esc(s.name)}')">⏸ rest — the lease kept, nothing spent</button>`:""}
-      ${s.state==="resting"?`<button class="sbtn ok" onclick="farmResume('${esc(s.name)}')">▶ resume — probation earns it back</button>`:""}
+      ${["serving","probation"].includes(s.state)?`<button class="sbtn no" onclick="farmRest('${esc(s.name)}')">⏸ rest — pause it; its place is kept and nothing is spent</button>`:""}
+      ${s.state==="resting"?`<button class="sbtn ok" onclick="farmResume('${esc(s.name)}')">▶ resume — it re-earns trust through a short trial</button>`:""}
       ${s.state==="quarantined"?`<button class="sbtn ok" onclick="farmReapprove('${esc(s.name)}')">re-approve the new manifest</button>`:""}
-      <button class="sbtn no" onclick="farmDecom('${esc(s.name)}',false)">decommission</button>
-      <button class="sbtn no" onclick="farmDecom('${esc(s.name)}',true)" title="AND discredit the source — stages the 0014 §4 knowledge recall">decom + discredit</button></div>
+      <button class="sbtn no" onclick="farmDecom('${esc(s.name)}',false)" title="asks you first — nothing happens without your approval">decommission — remove it from service; its history stays</button>
+      <button class="sbtn no" onclick="farmDecom('${esc(s.name)}',true)" title="asks you first — nothing happens without your approval">decom + discredit — remove it AND mark everything it ever supplied as suspect</button></div>
      ${s.state==="serving"?`<div class="sechd" style="margin-top:.9rem">the playground — try a tool here; charlotte runs it for you, metered and on the record</div>
       <div class="stbform">
        <select id="fp-tool">${(s.manifest||[]).map(t=>`<option>${esc(t.name)}</option>`).join("")}</select>
@@ -3794,7 +3795,7 @@ async function farmPlay(name,scope){
   const tool=$("fp-tool")?.value||"",raw=$("fp-args")?.value.trim()||"";
   let args={};if(raw){try{args=JSON.parse(raw)}catch{fpShow(name,`<div class="adaans">the arguments are not valid JSON — nothing was run</div>`);return}}
   const port=topoPortOf(scope)||parseInt((API.match(/:(\d+)/)||[])[1]||"4500");
-  fpShow(name,`<div class="adaans">🧑‍🌾 charlotte runs ${esc(tool)} through the governed door…</div>`);
+  fpShow(name,`<div class="adaans">🧑‍🌾 charlotte (the farm's keeper) runs ${esc(tool)} for you — metered, and on the record…</div>`);
   try{
     const res=await(await fetch(OBSD+"/tool",{method:"POST",headers:{"content-type":"application/json"},
       body:JSON.stringify({service:name,tool,args,did:"did:key:the-playground",port})})).json();
@@ -4055,26 +4056,26 @@ function renderStblPane(){
     R.innerHTML=`<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
       <b style="font-size:.95rem">${esc(s.id)}</b><span class="schip ${s.state}">${s.state}</span>
       <span class="cl" style="color:var(--brass);font:.68rem var(--mono)">class ${esc(s.class||"?")}</span></div>
-     <div class="dim" style="font:.66rem var(--mono);margin:.25rem 0">${esc(s.provider)} · ${esc(s.route)} · saddled on ${esc(s.floor||"")} · <span title="its permanent identity in this universe — like a serial number that never changes">DID ${esc((s.did||"").slice(0,30))}…</span></div>
-     <div class="strdeal"><b>THE DEAL — the exact terms you approved</b> <span class="dim" style="font-size:.62rem">(if the provider changes anything, the change is caught and held for your decision)</span><br>
+     <div class="dim" style="font:.66rem var(--mono);margin:.25rem 0">${esc(s.provider)} · ${esc(s.route)} · saddled on ${esc(s.floor||"")} · DID ${esc((s.did||"").slice(0,30))}… <span style="opacity:.8">(its permanent name here — never reused, never renamed)</span></div>
+     <div class="strdeal"><b>THE DEAL — the provider's terms, approved at your gate</b> <span class="dim" style="font-size:.62rem">(if the provider changes anything, the change is caught and held for your decision)</span><br>
       <span class="k">prompt</span><b>${perM(p.prompt)}</b> / Mtok<br>
       <span class="k">completion</span><b>${perM(p.completion)}</b> / Mtok<br>
-      <span class="k">context</span><b>${(s.manifest||{}).context_length?(((s.manifest.context_length/1000)|0)+"k"):"—"}</b><br>
-      <span class="k">modalities</span>${esc(((s.manifest||{}).modalities||[]).join(", ")||"—")}<br>
-      <span class="k">pin</span><span class="hash" title="${esc(JSON.stringify(s.manifest||{}))}">${esc((s.manifest_hash||"").slice(0,30))}…</span>
+      <span class="k">context</span><b>${(s.manifest||{}).context_length?(((s.manifest.context_length/1000)|0)+"k"):"not declared by the provider"}</b><br>
+      <span class="k">modalities</span>${esc(((s.manifest||{}).modalities||[]).join(", ")||"not declared by the provider")}<br>
+      <span class="k">pin</span><span class="hash" title="${esc(JSON.stringify(s.manifest||{}))}">${esc((s.manifest_hash||"").slice(0,30))}…</span> <span class="dim">— the deal's fingerprint; if a byte of it moves, you are asked again</span>
       ${s.proposed_hash?`<br><span class="k" style="color:var(--red)">proposed</span><span style="color:var(--red)">${esc(String(s.proposed_hash).slice(0,30))}… — the deal moved; re-approval waits</span>`:""}</div>
-     <div class="strdeal"><b>THE LIFE</b><br>
-      <span class="k">thoughts</span><b>${s.calls||0}</b> answered<br>
-      <span class="k">synced</span>${s.last_synced?esc(ago(s.last_synced)):"never"}<br>
-      <span class="k">canary</span>${s.canary_beats||0} beat(s)<br>
-      ${s.expires_at?`<span class="k" style="color:var(--red)">expires</span><b style="color:var(--red)">${esc(String(s.expires_at).slice(0,10))}</b><br>`:""}
-      <span class="k">saddled</span>${esc(String(s.saddled_at||"").slice(0,10))}</div>
+     <div class="strdeal"><b>THE LIFE — what it has been doing</b><br>
+      <span class="k">thoughts</span><b>${s.calls||0}</b> answered so far<br>
+      <span class="k">synced</span>${s.last_synced?esc(ago(s.last_synced))+" — last checked against the market":"never"}<br>
+      <span class="k">canary</span>${s.canary_beats||0} beat(s) — its supervised trial before full trust<br>
+      ${s.expires_at?`<span class="k" style="color:var(--red)">expires</span><b style="color:var(--red)">${esc(String(s.expires_at).slice(0,10))}</b> — the provider has announced this model's end<br>`:""}
+      <span class="k">saddled</span>${esc(String(s.saddled_at||"").slice(0,10))} — the day it entered service</div>
      <div class="strdeal"><b>WHO LEANS ON IT — who would feel it if this went away</b><br>
       ${w.pinned.length?`pinned by: ${w.pinned.map(esc).join(" · ")}<br>`:""}
       ${w.classed.length?`allocated to its class: ${w.classed.map(esc).join(" · ")}<br>`:""}
       ${!w.pinned.length&&!w.classed.length?`no allocation names it — callers reach it through class ${esc(s.class||"?")} on its floor<br>`:""}</div>
      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">
-      <button class="sbtn no" onclick="stableRetire('${esc(s.id)}')">retire — asks you first</button>
+      <button class="sbtn no" onclick="stableRetire('${esc(s.id)}')">retire — stages its removal for your approval; nothing changes until you agree</button>
       ${s.state==="deprecated"?`<button class="sbtn ok" onclick="stableReapprove('${esc(s.id)}')">re-approve the new deal</button>`:""}</div>`;
     return;
   }
@@ -5204,10 +5205,10 @@ async function capDecide(ev,rid,port,statusWord){
   setTimeout(()=>{DESK=null;(CAPV==="home"?loadDesk():renderCap())},2800)}
 function dkVerbs(w){
   const v=[];
-  if(w.state==="running"){v.push(["stop","⏸ stop"],["stop-fully","⏹ stop fully"])}
-  if(w.state==="stopped"){v.push(["continue","▶ continue"],["stop-fully","⏹ stop fully"])}
-  if(w.state==="shut down")v.push(["start","▶ start"],["retire","🗄 retire"]);
-  if(w.state==="retired")v.push(["reinstate","↩ reinstate"]);
+  if(w.state==="running"){v.push(["stop","⏸ stop — pause it; everything is kept"],["stop-fully","⏹ stop fully — halt its crew too"])}
+  if(w.state==="stopped"){v.push(["continue","▶ continue — pick up where it left off"],["stop-fully","⏹ stop fully — halt its crew too"])}
+  if(w.state==="shut down")v.push(["start","▶ start"],["retire","🗄 retire — asks you first; nothing is deleted"]);
+  if(w.state==="retired")v.push(["reinstate","↩ reinstate — bring it back as it was"]);
   return v.map(([verb,label])=>`<button class="dk-tab" onclick="capVerb(event,'${dkEsc(w.key)}','${verb}',${w.port||4520})">${label}</button>`).join(" ")}
 async function capVerb(ev,key,verb,port){
   ev.stopPropagation();
@@ -5222,7 +5223,7 @@ async function capVerb(ev,key,verb,port){
   const note=(verb==="continue"||verb==="start"||verb==="retire"||verb==="reinstate")
     ?"staged — the terms will appear on this card in a moment; decide right here"
     :(verb==="stop-fully"?"the crew halts — the tile goes honestly dark in a moment"
-      :"the world rests — stopping never needs a gate (rule 11)");
+      :"the world rests — stopping is always yours, no approval needed");
   if(el)el.textContent=note;
   setTimeout(()=>{DESK=null;(CAPV==="home"?loadDesk():renderCap())},2800)}
 async function openWorld(key){
@@ -5243,7 +5244,7 @@ function renderCap(){
       <div class="cap-emoji">${w.emoji||"📦"}</div>
       <div><b>${dkEsc(w.name)}</b> ${dkState(w)}<div class="dim" style="font-size:.7rem">${dkEsc(w.resident||"")} · ${dkEsc(w.floor||"")}</div>
       <div class="dk-law">${dkEsc(w.law||"")}</div>
-      ${w.state==="running"&&!w.words_walking?`<div class="dim" style="font-size:.68rem;margin-top:.2rem">answers asks now · watchlist empty — watch a symbol inside to schedule standing walks</div>`:""}
+      ${w.state==="running"&&!w.words_walking?`<div class="dim" style="font-size:.68rem;margin-top:.2rem">answers asks now · watchlist empty — open it and watch a symbol to get a fresh report on schedule</div>`:""}
       ${w.state==="stopped"?`<div class="dim" style="font-size:.68rem;margin-top:.2rem">paused — the watchlist (${dkEsc(((DESK._key===w.key?DESK.watches:null)||[]).filter(x=>x.posture==="walk").map(x=>x.ticker).join(", ")||"…")}) is preserved; continue recovers everything</div>`:""}
       ${dkPendingVerb(w)}
       <div style="margin-top:.35rem">${w.pending_verb?"":dkVerbs(w)} <span style="color:var(--brass);font-size:.72rem">open →</span></div>
@@ -5258,7 +5259,7 @@ function renderCap(){
   const retSec=gone.length?(window._CAPSHOWRET
     ?`<div class="dk-chtitle" style="margin:.9rem 0 .3rem;font-size:.66rem;color:var(--faint)">RETIRED — the shelf remembers · <a href="#" onclick="_CAPSHOWRET=false;renderCap();return false" style="color:var(--faint)">hide</a></div><div class="cap-grid">${gone.map(card).join("")}</div>`
     :`<div class="dim" style="margin-top:.8rem;font-size:.7rem">· ${gone.length} retired world${gone.length===1?"":"s"} — <a href="#" onclick="_CAPSHOWRET=true;renderCap();return false" style="color:var(--brass)">show</a></div>`):"";
-  B.innerHTML=`<div class="dim" style="font-size:.72rem;margin-bottom:.6rem">installed worlds — each one an applied purpose living atop the Machine; more arrive through install & create (their own dive)</div>
+  B.innerHTML=`<div class="dim" style="font-size:.72rem;margin-bottom:.6rem">installed worlds — each one a working purpose built on the machine underneath; click one to open its rooms</div>
     ${html||`<div class="dim">no living worlds — check the retired shelf below</div>`}${retSec}`}
 
 /* ── 0055 sp1 · THE PANEL WALKER — the glass renders a world's declared
@@ -5269,8 +5270,8 @@ function dkGet(o,path){return String(path||"").split(".").reduce((x,k)=>x==null?
 function dkSub(str,item){return String(str).replace(/\$([a-z_]+)/g,(m,k)=>String(item[k]??""))}
 function dkWatchLine(){
   return (DESK.watches||[]).map(w=>w.posture==="walk"
-    ?`<div class="dk-law">🕰 ${dkEsc(w.ticker)} · weekdays at the close · refresh — <a href="#" onclick="deskStop('${dkEsc(w.ticker)}');return false" style="color:var(--red)">stop it</a> <span class="dim">(stopping never needs a gate — rule 11)</span></div>`
-    :`<div class="dk-law">🕰 ${dkEsc(w.ticker)} — STOPPED by your word; watch it again below to resume</div>`).join("")}
+    ?`<div class="dk-law">🕰 ${dkEsc(w.ticker)} · weekdays at the close · refresh — <a href="#" onclick="deskStop('${dkEsc(w.ticker)}');return false" style="color:var(--red)">stop it</a> <span class="dim">(stopping is always yours — no approval needed)</span></div>`
+    :`<div class="dk-law">🕰 ${dkEsc(w.ticker)} — you stopped this one; watch it again below to resume</div>`).join("")}
 async function _dkPost(payload,note){
   const port=(_CAPMAN||{}).port||4520;
   try{await fetch(`${location.protocol}//${location.hostname}:${port}/requests`,{method:"POST",
@@ -6394,8 +6395,8 @@ const fmtAge=s=>{if(s==null)return"—";if(s<90)return s+"s";
   return (s/86400|0)+"d "+((s%86400)/3600|0)+"h"};
 const fmtTok=n=>n>=1e6?(n/1e6).toFixed(2)+"M":n>=1e3?(n/1e3).toFixed(1)+"k":""+Math.round(n);
 const tier=(t)=>t==="inst"
-  ?`<span class="tierchip inst" title="performance-derived — the recorder's own clock and book (0043 §3)">instrument reading, not testimony</span>`
-  :`<span class="tierchip log" title="rebuildable from signed books — the projection is never a second truth (rule 7)">log-truth</span>`;
+  ?`<span class="tierchip inst" title="measured live by the recorder's own clock — a reading, not a signed record">⏱ live reading</span>`
+  :`<span class="tierchip log" title="rebuilt straight from the machine's signed records — this panel can never disagree with the book">📖 from the signed books</span>`;
 function renderObservatory(){
   const g=$("obsgrid"),dot=$("obs-dot"),age=$("obs-age");
   if(obsDark){dot.className="pdot dark";age.textContent="THE OBSERVATORY IS DARK";
@@ -6405,10 +6406,10 @@ function renderObservatory(){
     return}
   const d=obsCache;if(!d)return;
   $("obs-dial").textContent=d.dial.position;
-  $("obs-price").textContent=` · ${d.dial.price} · assay beat ${d.dial.assay_every_s}s · sample ${d.dial.sample_per_beat}/beat`
-    +(d.dial.ceiling_tokens?` · spent ${fmtTok(d.dial.spent_today||0)}/${fmtTok(d.dial.ceiling_tokens)} tok today (the declared ceiling, G5)`:"")
-    +(d.rollup?` · watching ${d.rollup.floors_watched} floor(s), whole (sp5)`:"")
-    +(d.bell?` · the bell: ${d.bell.state}${d.bell.last?` — last ring ${fmtAge((Date.now()-new Date(d.bell.last.at))/1000)} ago${d.bell.last.repeats?` (+${d.bell.last.repeats} aged in)`:""}`:""} (0044)`:"");
+  $("obs-price").textContent=` · ${d.dial.price} · deep-checks run every ${d.dial.assay_every_s}s, ${d.dial.sample_per_beat} sample(s) each`
+    +(d.dial.ceiling_tokens?` · spent ${fmtTok(d.dial.spent_today||0)}/${fmtTok(d.dial.ceiling_tokens)} tok today of the ceiling you set`:"")
+    +(d.rollup?` · watching all ${d.rollup.floors_watched} floor(s)`:"")
+    +(d.bell?` · the bell (your out-of-app alarm): ${d.bell.state}${d.bell.last?` — last ring ${fmtAge((Date.now()-new Date(d.bell.last.at))/1000)} ago${d.bell.last.repeats?` (+${d.bell.last.repeats} aged in)`:""}`:""}`:"");
   const ra=d.recorder.age_s;
   dot.className="pdot"+(ra==null||ra>150?" dark":ra>45?" amber":"");
   age.textContent=ra==null?"the recorder has not beaten yet":
@@ -6429,32 +6430,32 @@ function renderObservatory(){
       <span><span class="n">${d.flow&&d.flow.p50_ms!=null?d.flow.p50_ms+"·"+d.flow.p95_ms:"—"}</span><span class="c">flow span ms (log-truth)</span></span></div>
     <canvas class="ocanvas" id="obs-spark" title="tokens per hour — double-click to keep the PNG (G9)"></canvas>
     <div class="otaxa">${taxN?Object.entries(fl.refusals).map(([t,n])=>`<span>${esc(t)} ×${n}</span>`).join(""):`<span>no refusals on the book</span>`}
-      <span title="rule 4: outside, refusal wears one face — the taxonomy lives only in this book">one face outside</span></div></div>
-  <div class="opanel"><div class="pt"><b>the assay · vera's standings</b>${tier("log")}</div>
+      <span title="outside this room every refusal looks identical on purpose — the detailed reasons live only in this book">one face outside</span></div></div>
+  <div class="opanel"><div class="pt"><b>vera's gradings — the machine's own examiner scores finished work, floor by floor</b>${tier("log")}</div>
     ${floors.length?floors.map(f=>{const s=stand[f];
       return `<div class="obar"><span class="lbl" title="${esc(f)}">${esc(f)}</span>
         <span class="track"><span class="fill${s.mean<0.55?" low":""}" style="width:${Math.round(s.mean*100)}%"></span></span>
         <span class="val">${s.mean.toFixed(2)} · n${s.n}${s.trend!=null?(s.trend<0?" ↘":" ↗")+Math.abs(s.trend).toFixed(2):""}${s.humans?" · 🖐"+s.humans:""}</span></div>`}).join("")
-      :`<div class="onote">nothing under verdict — the examiner beats only at «assay»</div>`}
+      :`<div class="onote">nothing graded yet — deep grading runs only when the dial above is set to «assay»</div>`}
     <canvas class="ocanvas" id="obs-scores" style="height:44px" title="judge-score distribution, 0→1 — double-click to keep the PNG"></canvas>
-    <div class="onote">her own cost: ${as.cost.tokens} tok · $${(+as.cost.usd).toFixed(5)} — metered under vera's DID; findings stage at your gate wearing no levers</div></div>
-  <div class="opanel"><div class="pt"><b>the experiment · arms are machines</b>${tier("log")}</div>
+    <div class="onote">her own cost: ${as.cost.tokens} tok · $${(+as.cost.usd).toFixed(5)} — billed to her own name; she can flag, never act — her findings wait at your gate</div></div>
+  <div class="opanel"><div class="pt"><b>the experiment — two rival versions racing, each exactly named</b>${tier("log")}</div>
     ${(d.experiments||[]).length?(d.experiments||[]).map(e=>
       `<div class="ogate"><span class="k">🧪 ${esc(e.name)} · ${esc(e.state)}${e.winner?` · winner: arm ${esc(e.winner)}`:""}</span><span class="a">min ${e.min_n}/arm</span></div>`
       +Object.entries(e.arms||{}).map(([l,m])=>{const s=(e.standings||{})[l]||{};
         return `<div class="obar"><span class="lbl" title="the arm IS this fingerprint">arm ${esc(l)} · ${esc(m)}</span>
           <span class="track"><span class="fill${s.mean!=null&&s.mean<0.55?" low":""}" style="width:${Math.round((s.mean||0)*100)}%"></span></span>
           <span class="val">${s.mean!=null?(+s.mean).toFixed(2):"—"} · n${s.n||0} · ${Math.round(((e.share||{})[l]||0)*100)}%</span></div>`}).join("")).join("")
-      :`<div class="onote">no experiment stands — two Canon variants, a declared split, a human at both doors (0043 §7)</div>`}
-    <div class="onote">each arm IS a cryptographically named machine; the rollout is a signed constitutional act — the promotion card waits at your gate</div></div>
-  <div class="opanel"><div class="pt"><b>gate-wait · how long consequence has waited</b>${tier("log")}</div>
+      :`<div class="onote">no experiment running — one starts when two versions race under a declared split, with you at both doors</div>`}
+    <div class="onote">each arm is an exactly-fingerprinted version of the machine; adopting the winner waits for your approval</div></div>
+  <div class="opanel"><div class="pt"><b>waiting at your gates — how long decisions have sat</b>${tier("log")}</div>
     ${(d.gates.open||[]).slice(0,8).map(x=>`<div class="ogate"><span class="k" title="${esc(x.text)}">${esc(x.kind)} · ${esc(x.floor.split("/").pop())}</span><span class="a${(x.age_s||0)>86400?" old":""}">${fmtAge(x.age_s)}</span></div>`).join("")||`<div class="onote">no consequence waits — every gate is clear</div>`}
     <div class="onote">${d.gates.counts.pending} pending · ${d.gates.counts.staged} staged · ${d.gates.counts.decided} decided${(d.gates.open||[]).length>8?` · showing the 8 oldest of ${(d.gates.open||[]).length}`:""}</div></div>
   <div class="opanel"><div class="pt"><b>the seven rows · the RAG observatory</b>${tier("log")}</div>
     ${rows.length?rows.map((r,i)=>`<div class="obar"><span class="lbl">${esc(r.flavor||"?")}</span>
       <span class="track"><span class="fill${(+r.mean||0)===0?" low":""}" style="width:${Math.round((+r.mean||0)/rowMax*100)}%${i===0?"":";opacity:.75"}"></span></span>
       <span class="val">${(+r.mean||0).toFixed(3)}</span></div>`).join("")
-      :`<div class="onote">the rows hold no standings this era — they land when the tournament races (0038)</div>`}
+      :`<div class="onote">the rows hold no standings this era — they land when the retrieval tournament races</div>`}
     <div class="onote">standard v${d.rows.version??"?"} · default «${esc(d.rows.default??"—")}» · epoch ${esc(d.rows.epoch||"—")}${d.rows.metabolism?` · metabolism kept ${d.rows.metabolism.kept_warm??0} warm, distilled ${d.rows.metabolism.distilled??0} (loss ${(+(d.rows.metabolism.loss||0)).toFixed(2)} bits)`:""}</div></div>
   <div class="opanel"><div class="pt"><b>farm &amp; stable · the keepers' books</b>${tier("log")}</div>
     ${(d.farm||[]).slice(0,6).map(f=>`<div class="ogate"><span class="k">${esc(f.name)} · ${esc(f.floor.split("/").pop())}</span><span class="a">${esc(f.state)} · ${f.calls} call(s)</span></div>`).join("")||`<div class="onote">nothing planted</div>`}

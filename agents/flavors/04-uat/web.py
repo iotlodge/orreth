@@ -92,10 +92,12 @@ def shoot(view: str) -> str | None:
 
 
 def judge(think: GovernedThink, persona: str, shot_b64: str,
-          context: str) -> list[str]:
+          context: str) -> list[str] | None:
     """The persona looks at the picture — a governed, metered vision
-    thought; a reply that will not parse is dropped honestly, never
-    guessed at."""
+    thought. A refusal or an unparseable reply returns None — A MUTE IS
+    NEVER A CLEAN ROOM (the 2026-08-25 verify walk printed a network
+    refusal as «0 friction(s)», indistinguishable from a spotless view);
+    only a PARSED empty list may say the room read clean."""
     prompt = (persona.replace("⟦surface⟧", "(the attached SCREENSHOT of the "
               "screen — judge the LAYOUT and the EXPERIENCE: crowding, "
               "redundancy, inconsistent placement of inputs and buttons, "
@@ -108,16 +110,16 @@ def judge(think: GovernedThink, persona: str, shot_b64: str,
              "image_url": {"url": f"data:image/png;base64,{shot_b64}"}}])
     except Exception as e:
         print(f"· the mind refused the picture: {e}")
-        return []
+        return None
     import re
     m = re.search(r"\{.*\}", raw or "", re.S)
     if not m:
-        return []
+        return None
     try:
         got = json.loads(m.group(0))
         return [str(x)[:220] for x in (got.get("frictions") or [])][:6]
     except Exception:
-        return []
+        return None
 
 
 def main() -> int:
@@ -141,6 +143,11 @@ def main() -> int:
                             "— itself a finding")
             continue
         fr = judge(think, persona, shot, ctx)
+        if fr is None:                     # a mute, confessed — never a clean room
+            findings.append(f"[{view}] the eye saw but no verdict came back "
+                            "— a refusal or an unreadable reply, NOT a clean room")
+            print(f"· quinn looked at «{view}»: NO VERDICT — a mute, not a clean room")
+            continue
         print(f"· quinn looked at «{view}»: {len(fr)} friction(s)")
         for x in fr:
             print(f"   · {x}")

@@ -56,7 +56,7 @@ MANIFEST = {
  "resident": "charles",
  "floor": "u:demo/e:desk/f:charles",
  "port": 4520,
- "law": "the desk observes and reports — it never executes a trade",
+ "law": "charles — this desk's analyst, a machine mind — observes and reports; never a trade, ever",
  "door": "trading-desk",
  "group": "the Trading Desks",
  "verbs": {"words_kind": "desk-watch"},
@@ -79,7 +79,7 @@ MANIFEST = {
    "inputs": [{"id": "ticker", "placeholder": "ticker (e.g. MSFT)",
                "pattern": "^[A-Z.]{1,8}$", "transform": "upper"}],
    "buttons": [
-    {"label": "🕰 watch it daily — you approve once, a fresh report repeats",
+    {"label": "🕰 watch it daily — one approval, then a fresh report lands here every weekday",
      "request": {"kind": "desk-watch", "ticker": "$ticker"},
      "note": "$ticker is asking to join the daily watchlist — approve it once in the Inbox and a fresh report arrives each day until you stop it"},
     {"label": "📄 report now — charles runs one full analysis and files it here",
@@ -97,7 +97,7 @@ MANIFEST = {
      "title": "the reflection loop will grade this call against what the market actually did"}]},
   {"kind": "strip", "detail": True, "src": "stages", "text": "stage", "title": "digest"},
   {"kind": "flow", "src": "stages",
-   "label": "the walk — sixteen stages as one governed flow, live as records land",
+   "label": "how one report is made — sixteen stages of analysis; each box lights up as its work lands. nothing to do here but watch",
    "nodes": [
     {"id": "retrieve-context", "kind": "context",
      "desc": "Prior decisions for this ticker, from memory."},
