@@ -219,27 +219,35 @@ def _card_librarian(facts: dict) -> tuple[str, list]:
     v = _vitals(facts, "librarian")
     if "/e:rag" in facts.get("scope", ""):    # her seat in the stacks (0038)
         return ("this is a row of the stacks — hand me a document and it lands "
-                "ONCE as a signed record; ask, and this row's projection "
-                "answers with citations you can walk (0038 §1).",
+                "ONCE as a signed record; ask, and this row answers with "
+                "citations you can follow to their source.",
                 [{"label": "shelve a document…", "template": "shelve "},
                  {"label": "ask the stacks…", "template": "ask the stacks "},
                  {"label": "how do you route?", "ask": "how do you route?"},
                  {"label": "what do you hold?", "ask": "what knowledge do you hold?"}])
-    return (f"I gather from identified sources — {v.get('knowledge held', 0)} piece(s) of "
-            "sourced knowledge in the Window, every one quarantined until corroborated. "
-            "Ask me to gather, and it becomes memory; discredit a source, and I walk "
-            "its lineage.",
-            [{"label": "gather knowledge on…", "template": "gather sourced knowledge on "},
-             {"label": "ask the stacks…", "template": "ask the stacks "},
-             {"label": "run the tournament", "ask": "run the tournament"},
+    return ("I am the librarian — I find and file everything this universe "
+            f"knows. I hold {v.get('knowledge held', 0)} piece(s) of sourced "
+            "knowledge; every new fact starts untrusted until it is proven, "
+            "every source keeps its name, and every answer I give is cited. "
+            "Ask me anything in your own words, or start from a shortcut "
+            "below.",
+            [{"label": "gather knowledge on… — I go find and file it",
+              "template": "gather sourced knowledge on "},
+             {"label": "ask the stacks… — search all we hold",
+              "template": "ask the stacks "},
+             {"label": "run the tournament — race the retrieval styles",
+              "ask": "run the tournament"},
              {"label": "how do you route?", "ask": "how do you route?"},
-             {"label": "ask the universe…", "template": "ask the universe about "},
-             {"label": "subscribe…", "template": "subscribe to "},
-             {"label": "the serials desk", "ask": "show the desk"},
-             {"label": "domain packages", "ask": "show domain packages"},
-             {"label": "challenge…", "template": "challenge "},
+             {"label": "ask the universe… — every floor answers",
+              "template": "ask the universe about "},
+             {"label": "subscribe… — fresh news on a topic, delivered",
+              "template": "subscribe to "},
+             {"label": "my standing deliveries", "ask": "show the desk"},
+             {"label": "what we know, by topic", "ask": "show domain packages"},
+             {"label": "challenge… — tell me a fact looks wrong",
+              "template": "challenge "},
              {"label": "what do you hold?", "ask": "what knowledge do you hold?"},
-             {"label": "anything recalled?", "ask": "has anything been recalled?"}])
+             {"label": "anything taken back?", "ask": "has anything been recalled?"}])
 
 
 def _card_ada(facts: dict) -> tuple[str, list]:

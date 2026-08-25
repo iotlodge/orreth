@@ -59,9 +59,12 @@
   @keyframes lensbreath{0%,100%{box-shadow:0 0 8px rgba(232,201,143,.14)}
     50%{box-shadow:0 0 20px rgba(232,201,143,.36)}}
   body.parlor-open #lens,body.cap-open #lens{display:none}
-  #glosscard{position:fixed;z-index:400;max-width:330px;background:var(--deep);
-    border:1px solid var(--brass);border-radius:10px;padding:.6rem .8rem;
-    font-size:.78rem;line-height:1.45;display:none;box-shadow:0 8px 30px rgba(0,0,0,.45)}
+  /* the card DOCKS above the Lens — a fixed teaching corner that never
+     covers what you were reading at the pointer (quinn's hands, req-1336) */
+  #glosscard{position:fixed;right:1rem;bottom:5.4rem;z-index:400;max-width:330px;
+    background:var(--deep);border:1px solid var(--brass);border-radius:10px;
+    padding:.6rem .8rem;font-size:.78rem;line-height:1.45;display:none;
+    box-shadow:0 8px 30px rgba(0,0,0,.45)}
   #glosscard b{color:var(--brass)}
   #glosscard .gsrc{margin-top:.4rem;font-size:.62rem;color:var(--faint)}
   *{box-sizing:border-box;margin:0;scrollbar-width:thin;scrollbar-color:var(--hair) transparent}
@@ -1550,7 +1553,7 @@
   <div class="pdid" id="p-did"></div>
   <div class="pws" id="p-ws" style="display:none"></div>
   <div class="pdrop" id="p-drop" style="display:none"
-    title="upload is an ask — admitted signed, quarantined at 0.0000 (0029)">⇪ drop a document — the upload is an ask</div>
+    title="the file lands as a signed record; what it teaches starts untrusted until proven">⇪ drop a document here — it is filed, and the resident reads it</div>
   <div class="pth" id="p-thread"></div>
   <div class="pgate" id="p-gate" style="display:none"
        title="what waits on you, right here in the audience — the same gates as the Requests tab"></div>
@@ -4365,7 +4368,7 @@ function parlorLine(cls,text,meta){
   const th=$("p-thread"); th.querySelectorAll(".wait").forEach(e=>e.remove());
   const d=document.createElement("div"); d.className="msg "+cls; d.textContent=text;
   if(meta){const m=document.createElement("span");m.className="mt";m.textContent=meta;d.appendChild(m)}
-  th.appendChild(d); linkifyEl(d); th.scrollTop=th.scrollHeight;
+  th.appendChild(d); linkifyEl(d); glossifyEl(d); th.scrollTop=th.scrollHeight;
 }
 function parlorWait(){
   const th=$("p-thread"); if(!PA||th.querySelector(".wait"))return;
@@ -4381,7 +4384,8 @@ function parlorCard(card){
   if(!card||!PA)return;
   $("p-expand").style.display=card.workspace?"":"none";   /* the card declares the room (0028) */
   $("p-drop").style.display=(card.accepts||[]).includes("upload")?"":"none"; /* ...and who takes files (0029) */
-  $("p-did").textContent=card.did||(card.voiced===false?"an unembodied organ — its seat is reserved (0015)":"");
+  $("p-did").textContent=card.did?`its permanent name — ${card.did}`
+    :(card.voiced===false?"an unembodied organ — it has no voice of its own yet":"");
   if(card.greeting)parlorLine("reply",card.greeting,card.role||"");
   const asks=card.asks||[];
   $("p-chips").innerHTML=asks.map((a,i)=>`<span class="qchip" data-i="${i}">${a.label}</span>`).join("");
@@ -6011,7 +6015,7 @@ function rsmRender(){
         <div style="display:flex;gap:.6rem;align-items:center">
           <button class="dk-tab" onclick="resSchedStage('${dkEsc(RESM.name)}')">⏰ stage it — your approval starts it</button>
           <span class="dim" id="res-sched-note" style="font-size:.66rem"></span></div></div>`}
-  $("rsm-bd").innerHTML=h}
+  $("rsm-bd").innerHTML=h;glossifyEl($("rsm-bd"))}
 async function rsmWord(name){
   RESM.word=name;
   try{
@@ -6298,7 +6302,9 @@ function govOpen(name){
     ${o.lifecycle==="canon"?`<div class="quiet2">firmware: a change is a release — staged at your gate, adopted only on your word, and the machine's version name moves with it</div>`:""}
     ${o.at?`<div class="quiet2">lives at ${esc(o.at)} — the registry reads across the floors</div>`:""}
     ${(o.wearers||[]).length?`<div class="quiet2">worn by · ${o.wearers.map(esc).join(" · ")}</div>`:""}
+    <div class="quiet2">below: the exact words the machine runs on — shown whole, because nothing here is hidden from you</div>
     <div class="quiet2" id="gov-ref"></div><pre id="gov-body">reading the record…</pre>`;
+  glossifyEl(R);                        /* the pane's own words are doors (0060) */
   govVer(name,o.refs.length-1);
 }
 async function govVer(name,i){
@@ -6716,7 +6722,7 @@ const GLOSS_ALIAS={memories:"memory",records:"memory",record:"memory",
   decom:"decommissioned",decommission:"decommissioned",
   quarantine:"quarantined",plant:"planted",watchlists:"watchlist",
   ecosystems:"ecosystem",assays:"assay",reflexes:"reflex",
-  yardsticks:"yardstick"};
+  yardsticks:"yardstick",releases:"release",released:"release"};
 function glossReady(){
   if(!Object.keys(GLOSS).length)return;
   const words=[...Object.keys(GLOSS),...Object.keys(GLOSS_ALIAS)]
@@ -6763,9 +6769,7 @@ function glossShow(key,ev){
     <div class="gdef">${esc(GLOSS[key]||"")}</div>
     <div class="gsrc">from the machine's own dictionary — dotted words here look up too; you can reword any definition in the Governance room</div>`;
   glossifyEl(c.querySelector(".gdef"));   /* the definition's own words are doors (req-1330) */
-  c.style.display="block";
-  c.style.left=Math.max(8,Math.min((ev&&ev.clientX||40)-20,innerWidth-350))+"px";
-  c.style.top=Math.min((ev&&ev.clientY||40)+16,innerHeight-150)+"px";
+  c.style.display="block";                /* docked bottom-right — it never covers the reading */
 }
 /* the welcome band: shown until dismissed; the ? brings it back */
 function welcomeDone(){try{localStorage.setItem("orreth-welcomed","1")}catch{};$("welcome").style.display="none"}

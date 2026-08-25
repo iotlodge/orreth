@@ -324,6 +324,10 @@ GLOSSARY = {
         "back",
     "gloss-canon":
         "the book of the machine itself — the versioned parts it runs on",
+    "gloss-release":
+        "the ceremony that changes the machine's own parts — the new "
+        "version is staged, you approve it, and the machine takes a new "
+        "version name; the old version stays behind it forever",
 }
 
 # 0050 sp3 — the UAT personas (0049 §3): the tester is craft too, tuned at
