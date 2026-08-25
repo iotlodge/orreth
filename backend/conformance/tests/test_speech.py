@@ -198,3 +198,21 @@ def test_wave_two_cards_speak_plain():
         assert "§" not in speech.SENTENCES[name]   # citations stay in code
     with pytest.raises(ValueError):
         speech.render(speech.SENTENCES["card-mind-repin"])   # slot refused by name
+
+
+def test_the_dictionary_is_craft(): 
+    # 0060 THE FIRST CONTACT: the glossary plants like any sentence — every
+    # entry is a plain, slotless definition a stranger could read; no entry
+    # cites a design doc, and every name wears the gloss- prefix the glass
+    # strips for display.
+    assert len(speech.GLOSSARY) >= 30
+    for name, text in speech.GLOSSARY.items():
+        assert name.startswith("gloss-"), name
+        assert text.strip(), name                    # never an empty word
+        assert "⟦" not in text, name                 # definitions carry no slots
+        assert "§" not in text and "0060" not in text, name   # no citations
+        assert len(text) < 240, name                 # a card, not an essay
+    # the words quinn's walks named live on the shelf
+    for w in ("floor", "agent", "did", "pin", "canary", "saddled",
+              "gate", "firmware", "craft", "epoch"):
+        assert f"gloss-{w}" in speech.GLOSSARY

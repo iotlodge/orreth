@@ -42,6 +42,17 @@
   [data-theme="light"] .dust{background:#c6bba0}
   .daybtn{cursor:pointer;color:var(--dim);font-size:.95rem;user-select:none;padding:0 .3rem}
   .daybtn:hover{color:var(--brass)}
+  /* 0060 — the first contact: the welcome band + the dictionary doors */
+  #welcome{padding:.45rem 1.4rem .55rem;font-size:.74rem;line-height:1.55;color:var(--dim);
+    border-bottom:1px solid var(--hair);background:color-mix(in srgb,var(--brass) 6%,transparent)}
+  #welcome b{color:var(--star)}
+  #welcome .wstop{margin-top:.12rem}
+  .gw{border-bottom:1px dotted var(--brass);cursor:help}
+  #glosscard{position:fixed;z-index:400;max-width:330px;background:var(--deep);
+    border:1px solid var(--brass);border-radius:10px;padding:.6rem .8rem;
+    font-size:.78rem;line-height:1.45;display:none;box-shadow:0 8px 30px rgba(0,0,0,.45)}
+  #glosscard b{color:var(--brass)}
+  #glosscard .gsrc{margin-top:.4rem;font-size:.62rem;color:var(--faint)}
   *{box-sizing:border-box;margin:0;scrollbar-width:thin;scrollbar-color:var(--hair) transparent}
   html,body{height:100%;overflow:hidden}
   /* scrollbars wear the theme: hairline thumb on a void track, never the browser's chrome */
@@ -1184,8 +1195,23 @@
     <span class="tab" data-v="gov">Governance</span>
   </div>
   <span class="daybtn" id="daybtn" onclick="themeFlip()" title="the Daylight Glass — flip the light">☀</span>
+  <span class="daybtn" id="helpbtn" onclick="welcomeShow()" title="first time here? — the 60-second read">?</span>
   <div class="pulse" id="hpulse"><span class="quiet">reaching the daemon…</span></div>
 </header>
+
+<!-- 0060 THE FIRST CONTACT — the welcome band: five stops in the canon's own
+     words, shown until dismissed; the ? in the header brings it back. A band,
+     never an overlay — it adds a row of words, it covers nothing. -->
+<div id="welcome" style="display:none">
+  <b>first time here? five things to know</b>
+  <span class="lnk" onclick="welcomeDone()" style="float:right">got it — don't show this again</span>
+  <div class="wstop">🌍 the left rail is the world — click any name to step onto that floor</div>
+  <div class="wstop">📥 the <b>Inbox</b> holds everything waiting on <i>your</i> decision — big things stop and wait until you decide</div>
+  <div class="wstop">🫂 <b>residents</b> are the machine's own staff — click a name to talk to one</div>
+  <div class="wstop">◈ <b>Capabilities</b> are installed worlds that do real work and file reports</div>
+  <div class="wstop">✎ start anything in <b>Objectives</b> — ask in your own words; a plan comes back for your approval</div>
+  <div class="wstop" style="opacity:.8">words with a dotted underline open the machine's own dictionary — click any of them</div>
+</div>
 
 <main>
   <div class="rail"><div id="world"></div><div id="roster"></div></div>
@@ -1837,7 +1863,7 @@ function railAncestors(scope){
     return `<div class="trow t2 up" style="padding-left:${.6+i*.95}rem"
       onpointerdown="if(event.button===0)floorUp()" title="${sc} — ${isParent?"climb to the floor above":"the world above; each click climbs one floor"}">
       <span class="tdot core"></span>
-      <span class="tn">${sc.split("/").pop()}</span>
+      <span class="tn">${sc.split("/").pop().replace(/^[ef]:/,"")}</span>
       <span class="tc">▲ climb</span></div>`}).join("");
 }
 function renderWorldRail(){
@@ -1864,7 +1890,7 @@ function renderWorldRail(){
       return `<div class="trow t2${d===0?" me":""}" style="--td:${col};padding-left:${.6+(d+ao)*.95}rem"
       onpointerdown="if(event.button===0)floorGo('${encodeURIComponent(n.scope)}')" title="${d===0?(ao?"this floor — where you stand":"this universe"):d===1?"an ecosystem":"a floor"} · ${n.records||0} memories · ${n.present!=null?`${n.present} present of ${n.agents||0} remembered`:`${n.agents||0} agent(s)`} · click to step onto it">
       <span class="tdot${d===0?" core":d===1?" eco":" fld"}"></span>
-      <span class="tn">${nm}</span>
+      <span class="tn">${nm.replace(/^[ef]:/,"")}</span>
       <span class="tbar"><i style="width:${bw}%;background:${col}"></i></span>
       <span class="tc" title="${n.records||0} memories · ${n.present!=null?`${n.present} present of ${n.agents||0} remembered`:`${n.agents||0} agent(s)`}">${n.records}m·${n.present??n.agents}a</span></div>`}).join("");
     const s=(n,w)=>`<b>${n}</b> ${w}${n===1?"":"s"}`;
@@ -1872,7 +1898,7 @@ function renderWorldRail(){
       ?`<b>${agg.present}</b> ${agg.present===1?"agent":"agents"} awake now · <b>${agg.agents}</b> known in all`
       :s(agg.agents,"agent");
     html+=`<div class="tsum" title="awake = active within the floor's horizon; known = every self the diary has ever heard — a sleeping self keeps its name and seeds">inside this floor: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"working floor")} · ${aw}</div>`;
-    html+=`<div class="tsum" style="opacity:.8">e: an ecosystem · f: one working floor · each row's ⟨N⟩m·⟨N⟩a = memories held · agents present — click any name to step onto it</div>`;
+    html+=`<div class="tsum" style="opacity:.8">the small numbers: memories · agents — click any name to step onto it</div>`;
     if(bl)bl.innerHTML=`inside this floor: ${s(agg.eco,"ecosystem")} · ${s(agg.field,"working floor")} · ${aw}${agg.knowsP?" — a sleeping agent keeps its name":""}`;
   }else{
     /* the bottom floor: ancestors still climbable — the same door, one law */
@@ -1881,7 +1907,7 @@ function renderWorldRail(){
     const me=String(scope||"").split("/").pop()||"…";
     const ao=Math.max(0,String(scope||"").split("/").length-1);
     html+=`<div class="trow t2 me" style="--td:var(--brass);padding-left:${.6+ao*.95}rem">
-      <span class="tdot fld"></span><span class="tn">${me} ◂ you</span>
+      <span class="tdot fld"></span><span class="tn">${me.replace(/^[ef]:/,"")} ◂ you</span>
       <span class="tc">${t?`${t.records}m·${t.agents}a`:""}</span></div>`;
     html+=`<div class="tsum">the bottom floor — ${t?`<b>${t.agents}</b> agent${t.agents===1?"":"s"} here`:"waking…"}</div>`;
     if(bl&&t)bl.innerHTML=`bottom floor · <b>${t.agents}</b> agent${t.agents===1?"":"s"} here`;
@@ -1902,6 +1928,7 @@ function renderWorldRail(){
   el.innerHTML=html;
   el.dataset.sig=html;
   el.dataset.floor=here;
+  el.querySelectorAll(".tsum").forEach(glossifyEl);   /* the legend's words are doors (0060) */
 }
 
 /* ── the orrery renderer: core sphere, ecosystems in orbit, fields as moons,
@@ -3016,7 +3043,7 @@ async function pulse(){
     document.querySelectorAll(".place").forEach(e=>e.textContent=h.scope);  /* every surface names its place (0030 §4) */
     const ro=await(await fetch(api("/rollup"))).json();
     $("hpulse").innerHTML=`<span class="live">live</span> · ${h.scope}<br>`+
-      `<b>${ro.memories}</b> memories · <b>${ro.runs}</b> runs · <b>${money(ro.usd)}</b> spent`;
+      `holds <b>${ro.memories}</b> memories · <b>${ro.runs}</b> pieces of work run · <b>${money(ro.usd)}</b> spent by the machine`;
     $("hero-n").textContent=ro.memories.toLocaleString();
     $("hero-c").innerHTML=`memories held at <b>${h.scope}</b> — every one signed, Sourced + Verified, and navigable across all of time`;
     $("cards").innerHTML=[
@@ -3375,6 +3402,7 @@ async function loadReq(){
       +`<div class="qband"><b>settled — the record keeps every word</b>
         <span class="n">· ${settled.filter(keep).length}</span></div>`+drawers;
     linkifyEl($("reqlist"));            /* every mention a door (0052 sp2) */
+    glossifyEl($("reqlist"));           /* every canon word a door (0060) */
     renderInbox(q);                     /* the one inbox rides the same truth (0052 sp3) */
     /* the asklog retired with the Ask tab (0045 sp1) — gathers live in the
        Requests bands like every other kind */
@@ -3422,7 +3450,7 @@ async function renderInboxDetail(){
   el.innerHTML=(r.kind==="objective"
     ?objCard(r,q.filter(x=>x.kind==="question"),true)
     :reqRow(r,true,extra));
-  linkifyEl(el);
+  linkifyEl(el);glossifyEl(el);
 }
 function renderInbox(q){
   const el=$("inboxlist");if(!el)return;
@@ -3686,7 +3714,7 @@ async function loadFarm(){
         <span class="nm">${esc(k)}</span><span class="cl">→ ${esc(a.service||"")}</span>
         <span class="mx">${a.tool?esc(a.tool):""}</span></div>`}).join("")
       :`<div class="quiet">no rules pin callers to tools here — anything on this floor may use any serving tool.</div>`;
-    renderFarmPane();
+    renderFarmPane();glossifyEl($("farm-read"));
   }catch{}
 }
 function farmWho(name){
@@ -4041,7 +4069,7 @@ async function loadStable(){
         return `<div class="eol${d<=30?" burn":""}" style="left:${x}%" title="${s.id} · ${String(s.expires_at).slice(0,10)}"></div>
           <span class="eollab" style="left:${x}%">${s.id.split("/").pop()} · ${String(s.expires_at).slice(5,10)}</span>`}).join("")
       :`<span class="quiet" style="position:absolute;left:1rem;top:22px">no announced expiries — a calm pasture.</span>`;
-    renderStblPane();
+    renderStblPane();glossifyEl($("stbl-read"));
   }catch{}
 }
 function whoUses(mid,klass){
@@ -4620,7 +4648,7 @@ async function renderRecordPane(ref){
     (home?`<div class="rdr-meta" style="color:var(--brass)">${esc(home)}</div>`:"")
     +`<div class="rdr-sentence">${esc(sent)}</div>`
     +`<div class="rdr-struct">${esc(JSON.stringify(body,null,1).slice(0,3000))}</div>`;
-  linkifyEl($("rdr-body"));
+  linkifyEl($("rdr-body"));glossifyEl($("rdr-body"));
 }
 async function renderPane(){
   if(!PANE)return;
@@ -4641,7 +4669,7 @@ async function renderPane(){
   $("rdr-body").innerHTML = PANE.kind==="objective"
     ? objCard(r,q.filter(x=>x.kind==="question"),true)
     : reqRow(r,true);
-  linkifyEl($("rdr-body"));             /* doors inside the pane too */
+  linkifyEl($("rdr-body"));glossifyEl($("rdr-body"));  /* doors inside the pane too */
 }
 /* ── THE THUMB (0048 sp2): the human answers back. A thumb judges ONE record
       by hash and rides the same request queue as every other human word —
@@ -5190,7 +5218,7 @@ function dkState(w){
     retired:"retired by your word — everything it ever made stays on the shelf; reinstate brings it back whole",
     declared:"declared but not yet governed by this rig"}[w.state]||"";
   const ann=w.state==="running"?(w.words_walking?` · ${w.words_walking} walk${w.words_walking===1?"":"s"}`:" · watchlist empty"):"";
-  const lab={"shut down":"shut down — not broken; start raises it",
+  const lab={"shut down":"shut down — not broken; press start to run it",
     stopped:"stopped — paused by you"}[w.state]||w.state||"?";
   return `<span title="${dkEsc(tip)}" style="color:${c};font-size:.66rem;border:1px solid ${c};border-radius:5px;padding:.08rem .4rem">${dkEsc(lab)}${ann}</span>`}
 function dkPendingVerb(w){
@@ -6470,6 +6498,7 @@ function renderObservatory(){
     ${Object.entries(d.epochs||{}).filter(([,v])=>v).slice(0,9).map(([sc,v])=>`<div class="ogate"><span class="k">${esc(sc)}</span><span class="a">${esc(v)}</span></div>`).join("")||`<div class="onote">no epochs cut yet</div>`}
     <div class="onote">cards open by kind: ${Object.entries(gatesK).map(([k,n])=>`${esc(k)} ×${n}`).join(" · ")||"none"} — detection wears no levers; the gate decides</div></div>`;
   obsSpark(fl.tokens_hourly||[]);obsScores(as.verdicts||[]);
+  glossifyEl(g);                        /* every canon word a door (0060) */
 }
 function obsCanvas(id){const c=$(id);if(!c)return null;
   const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
@@ -6640,7 +6669,8 @@ async function fetchMarker(id){
       here are last-resort fallbacks for a dark door, never the living word */
 let SENT={};
 async function loadSentences(){
-  try{SENT=((await(await fetch(OBSD+"/sentences")).json()).sentences)||{}}catch{}
+  try{const j=await(await fetch(OBSD+"/sentences")).json();
+    SENT=j.sentences||{};GLOSS=j.gloss||{};glossReady();glossStatic()}catch{}
 }
 loadSentences();setInterval(loadSentences,300000);
 function say(name,slots,fallback){
@@ -6648,6 +6678,73 @@ function say(name,slots,fallback){
   for(const k in (slots||{}))t=t.split("⟦"+k+"⟧").join(String(slots[k]));
   return t.replace(/⟦\w+⟧/g,"—");
 }
+/* ── 0060 THE FIRST CONTACT — every canon word is a door. The dictionary is
+      shelf craft (gloss-* assets, editable at the gates); the glass wraps the
+      FIRST occurrence of each word per render in a dotted door that opens a
+      small card where you stand. Text nodes only (0052's law) — attributes
+      and handlers are never touched. ── */
+let GLOSS={},GLOSS_RX=null;
+const GLOSS_ALIAS={memories:"memory",records:"memory",record:"memory",
+  floors:"floor",field:"floor",fields:"floor",agents:"agent",
+  residents:"resident",gates:"gate",epochs:"epoch",objectives:"objective",
+  worldlines:"worldline",stalls:"stall",leases:"lease",saddle:"saddled",
+  allocations:"allocation",metered:"meter",fingerprint:"pin",
+  decom:"decommissioned",decommission:"decommissioned",
+  quarantine:"quarantined",plant:"planted",watchlists:"watchlist",
+  ecosystems:"ecosystem",assays:"assay",reflexes:"reflex",
+  yardsticks:"yardstick"};
+function glossReady(){
+  if(!Object.keys(GLOSS).length)return;
+  const words=[...Object.keys(GLOSS),...Object.keys(GLOSS_ALIAS)]
+    .sort((a,b)=>b.length-a.length)
+    .map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"));
+  GLOSS_RX=new RegExp("\\b("+words.join("|")+")\\b","gi");
+}
+function glossifyEl(root){
+  if(!root||!GLOSS_RX)return;
+  const seen=new Set(),w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),hits=[];let n;
+  while((n=w.nextNode())){
+    if(n.parentElement&&n.parentElement.closest(".door,.gw,input,textarea,script,button,a,.tn"))continue;
+    GLOSS_RX.lastIndex=0;
+    if(GLOSS_RX.test(n.nodeValue))hits.push(n);
+  }
+  hits.forEach(t=>{
+    const s=t.nodeValue,frag=document.createDocumentFragment();
+    let last=0,m,wrapped=false;GLOSS_RX.lastIndex=0;
+    while((m=GLOSS_RX.exec(s))){
+      const raw=m[1],key=GLOSS_ALIAS[raw.toLowerCase()]||raw.toLowerCase();
+      if(!GLOSS[key]||seen.has(key))continue;    /* first occurrence per render */
+      seen.add(key);wrapped=true;
+      frag.appendChild(document.createTextNode(s.slice(last,m.index)));
+      const d=document.createElement("span");d.className="gw";
+      d.textContent=raw;d.title="a word from the machine's dictionary — click it";
+      d.onclick=e=>{e.stopPropagation();glossShow(key,e)};
+      frag.appendChild(d);last=m.index+raw.length;
+    }
+    if(!wrapped)return;
+    frag.appendChild(document.createTextNode(s.slice(last)));
+    t.parentNode.replaceChild(frag,t);
+  });
+}
+function glossStatic(){
+  document.querySelectorAll(".section,.sechd,.psec,#welcome,.tsum").forEach(el=>{
+    if(el.dataset.glossed)return;el.dataset.glossed="1";glossifyEl(el)});
+}
+function glossShow(key,ev){
+  let c=$("glosscard");
+  if(!c){c=document.createElement("div");c.id="glosscard";document.body.appendChild(c);
+    document.addEventListener("pointerdown",e=>{
+      if(!c.contains(e.target)&&!e.target.closest(".gw"))c.style.display="none"})}
+  c.innerHTML=`<b>${esc(key)}</b><div>${esc(GLOSS[key]||"")}</div>
+    <div class="gsrc">from the machine's own dictionary — a definition you can tune in Governance («gloss-${esc(key)}»)</div>`;
+  c.style.display="block";
+  c.style.left=Math.max(8,Math.min((ev&&ev.clientX||40)-20,innerWidth-350))+"px";
+  c.style.top=Math.min((ev&&ev.clientY||40)+16,innerHeight-150)+"px";
+}
+/* the welcome band: shown until dismissed; the ? brings it back */
+function welcomeDone(){try{localStorage.setItem("orreth-welcomed","1")}catch{};$("welcome").style.display="none"}
+function welcomeShow(){$("welcome").style.display="";glossStatic()}
+(function(){try{if(localStorage.getItem("orreth-welcomed")!=="1")$("welcome").style.display=""}catch{}})();
 function leafName(s){
   const p=String(s||"").split("/"),l=(p[p.length-1]||String(s)).replace(/^[feu]:/,"");
   const up=p.length>2?(p[p.length-2]||"").replace(/^[fe]:/,""):"";
@@ -6755,7 +6852,7 @@ async function loadObjectives(){
   const sel=objs.find(r=>r.id===OBJSEL),R=$("obj-read");
   if(R){R.innerHTML=sel?objCard(sel,questions,true)
     :`<div class="quiet" style="padding:.6rem 0">select an objective — its whole life opens here: the journey, the plan, the questions, the report.</div>`;
-    linkifyEl(R)}
+    linkifyEl(R);glossifyEl(R)}
   linkifyEl($("objlist"));              /* every mention a door (0052 sp2) */
 }
 let OBJSEL=null,OBJARCH=false;

@@ -214,6 +214,118 @@ SENTENCES = {
         "cross-floor door is a named gap)",
 }
 
+# 0060 — THE FIRST CONTACT: the machine's own dictionary. quinn's walks
+# reached the vocabulary floor (req-1241): the remaining frictions were the
+# canon words themselves meeting a stranger. The cure is not renaming the
+# canon — it is teaching it: every entry below plants as shelf craft
+# (editable at the gates like any sentence), and the glass makes each word
+# a door — click it anywhere, the definition opens where you stand.
+GLOSSARY = {
+    "gloss-universe":
+        "the whole world this console shows — every floor, agent, and "
+        "record under one set of rules",
+    "gloss-ecosystem":
+        "a wing of the universe grouping related floors; addresses write "
+        "it e:name",
+    "gloss-floor":
+        "one working room of the universe — agents live on it and "
+        "everything they do is filed on it; addresses write it f:name",
+    "gloss-agent":
+        "any working mind here — the machine's own staff or an outside "
+        "helper, each with its own identity and its own bill",
+    "gloss-resident":
+        "a built-in staff member of the machine, one per duty — click its "
+        "name to talk to it",
+    "gloss-workforce":
+        "outside minds that joined through the front gate and work under "
+        "a lease",
+    "gloss-memory":
+        "one signed record of something that happened — the universe "
+        "keeps its entire life this way, and nothing is silently rewritten",
+    "gloss-did":
+        "an identity card that cannot be forged or reused — every agent, "
+        "tool, and mind carries its own, for life",
+    "gloss-pin":
+        "the exact fingerprint of what you approved — if the thing ever "
+        "changes, the change is caught and you are asked again",
+    "gloss-lease":
+        "a time-boxed permission to be here and to spend — it expires "
+        "unless renewed",
+    "gloss-canary":
+        "a supervised trial — something newly approved works under watch "
+        "until it earns full trust",
+    "gloss-saddled":
+        "a mind made ready for work — its terms approved and pinned, its "
+        "stall standing",
+    "gloss-stall":
+        "one approved mind's place in the stable, with the terms you "
+        "approved pinned to it",
+    "gloss-pasture":
+        "the retirement calendar — announced end-of-life dates for minds "
+        "in service",
+    "gloss-planted":
+        "a tool approved into the farm — it starts on probation and earns "
+        "its place",
+    "gloss-probation":
+        "the earning period right after approval — watched closely until "
+        "it proves itself",
+    "gloss-quarantined":
+        "held aside because something changed or looked wrong — nothing "
+        "serves until your re-approval",
+    "gloss-decommissioned":
+        "removed from service by your word — its history stays on the "
+        "record forever",
+    "gloss-resting":
+        "paused by your word — its place is kept and nothing is spent "
+        "until you resume it",
+    "gloss-gate":
+        "a stopping point where the machine must wait for a human "
+        "decision — silence never approves",
+    "gloss-staged":
+        "written and waiting at a gate — nothing happens until someone "
+        "decides",
+    "gloss-firmware":
+        "the machine's own working parts — locked in daily use; changing "
+        "one issues a new release of the machine",
+    "gloss-craft":
+        "the words the machine runs on — prompts, rules, sentences; the "
+        "editable ones are yours to tune, and every version is kept",
+    "gloss-epoch":
+        "one exact, named version of the whole machine — a new name is "
+        "cut whenever anything changes",
+    "gloss-objective":
+        "a piece of work you asked for in your own words — it ends with a "
+        "report back to you",
+    "gloss-worldline":
+        "the full life story of one thing — every event it ever lived, on "
+        "the record",
+    "gloss-assay":
+        "a deep grading pass — the machine's own examiner scores finished "
+        "work, and her findings wait at your gate",
+    "gloss-yardstick":
+        "your own standard for judging work — every grade names the "
+        "yardstick it was measured by",
+    "gloss-reflex":
+        "a standing watch that reacts to an event by raising it to you — "
+        "it never acts on its own",
+    "gloss-metabolism":
+        "the routine that keeps memory healthy — old records compressed, "
+        "important ones kept warm, and every loss measured",
+    "gloss-watchlist":
+        "standing instructions to repeat work on a schedule — one "
+        "approval starts it, one click stops it",
+    "gloss-allocation":
+        "a rule naming who may use which mind or tool",
+    "gloss-meter":
+        "the running bill — every thought and call is counted against the "
+        "name that spent it",
+    "gloss-chronicle":
+        "the book of your purposes — what you asked for and what came "
+        "back",
+    "gloss-canon":
+        "the book of the machine itself — the versioned parts it runs on",
+}
+
 # 0050 sp3 — the UAT personas (0049 §3): the tester is craft too, tuned at
 # the same gates as the tested. quinn is the first: a newcomer who judges
 # every screen by the season's one question — could a stranger understand it?

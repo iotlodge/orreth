@@ -2250,7 +2250,12 @@ def embed_door() -> None:
                     # genesis where they don't (one voice, both faces)
                     out = json.dumps({"sentences": {
                         n: (_sentence_active(4500, n) or g)
-                        for n, g in speech.SENTENCES.items()}}).encode()
+                        for n, g in speech.SENTENCES.items()},
+                        # 0060 — the dictionary rides the same door, live
+                        # heads first: an edited definition speaks at once
+                        "gloss": {
+                        n[len("gloss-"):]: (_sentence_active(4500, n) or g)
+                        for n, g in speech.GLOSSARY.items()}}).encode()
                 elif route == "/craft":
                     qs = urllib.parse.parse_qs(
                         urllib.parse.urlparse(self.path).query)
@@ -5263,6 +5268,7 @@ def improver_beat(port: int) -> None:
     if not _SENTENCES_PLANTED:
         allthere = True
         for sname, stext in {**speech.SENTENCES, **speech.PERSONAS,
+                             **speech.GLOSSARY,          # 0060 — the dictionary is craft
                              **_CAP_PLANT,
                              "the-memory-yardstick": YARDSTICK_V1}.items():
             if wire_assets(port, "asset", name=sname):
