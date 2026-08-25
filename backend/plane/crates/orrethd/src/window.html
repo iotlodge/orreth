@@ -48,6 +48,17 @@
   #welcome b{color:var(--star)}
   #welcome .wstop{margin-top:.12rem}
   .gw{border-bottom:1px dotted var(--brass);cursor:help}
+  /* THE LENS — the librarian, one click from every room; her medallion gold */
+  #lens{position:fixed;right:1rem;bottom:2.4rem;z-index:300;display:flex;align-items:center;
+    gap:.45rem;padding:.42rem .85rem;border:1px solid #e8c98f;border-radius:999px;cursor:pointer;
+    background:var(--deep);color:#e8c98f;font:.74rem var(--mono);user-select:none;
+    animation:lensbreath 4.5s ease-in-out infinite}
+  #lens:hover{color:var(--star);animation:none;box-shadow:0 0 22px rgba(232,201,143,.5)}
+  #lens svg{width:15px;height:16px;stroke:#e8c98f;fill:none;stroke-width:1.3;
+    stroke-linecap:round;stroke-linejoin:round}
+  @keyframes lensbreath{0%,100%{box-shadow:0 0 8px rgba(232,201,143,.14)}
+    50%{box-shadow:0 0 20px rgba(232,201,143,.36)}}
+  body.parlor-open #lens,body.cap-open #lens{display:none}
   #glosscard{position:fixed;z-index:400;max-width:330px;background:var(--deep);
     border:1px solid var(--brass);border-radius:10px;padding:.6rem .8rem;
     font-size:.78rem;line-height:1.45;display:none;box-shadow:0 8px 30px rgba(0,0,0,.45)}
@@ -1211,6 +1222,17 @@
   <div class="wstop">◈ <b>Capabilities</b> are installed worlds that do real work and file reports</div>
   <div class="wstop">✎ start anything in <b>Objectives</b> — ask in your own words; a plan comes back for your approval</div>
   <div class="wstop" style="opacity:.8">words with a dotted underline open the machine's own dictionary — click any of them</div>
+</div>
+
+<!-- THE LENS (JB's ask, 2026-08-25): the librarian is the lens of the
+     universe's mind — she must never be scroll-distance away. One floating
+     door on every room, wearing her own medallion; it steps aside when the
+     parlor or reader holds the rail, and stays out of the capability worlds
+     (JB's exclusion). -->
+<div id="lens" onclick="openParlor('librarian')"
+     title="the librarian — the lens of the universe's mind. ask her anything: she finds it, cites it, and answers on the record">
+  <svg viewBox="0 0 18 20"><path d="M9 5c-2-1.4-4.5-1.4-6 0v10c1.5-1.4 4-1.4 6 0c2-1.4 4.5-1.4 6 0V5c-1.5-1.4-4-1.4-6 0zM9 5v10"/></svg>
+  ask the librarian
 </div>
 
 <main>
@@ -5084,6 +5106,7 @@ function dkOpenReport(i){DKIDX=i;DKDETAIL=true;renderCap();
 function capToggle(){const w=$("capworld");
   if(!w.classList.contains("capopen")&&$("brainworld").classList.contains("capopen"))brnToggle();
   w.classList.toggle("capopen");
+  document.body.classList.toggle("cap-open",w.classList.contains("capopen"));  /* the lens steps out of the worlds */
   if(!w.classList.contains("capopen")){
     if(_CAPTIMER){clearInterval(_CAPTIMER);_CAPTIMER=null}
     return}
