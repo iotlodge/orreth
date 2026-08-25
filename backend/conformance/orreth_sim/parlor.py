@@ -26,7 +26,7 @@ RESIDENTS = ("becky", "vigil", "steward", "governance", "charlotte", "librarian"
 EMBODIED = ("becky", "charlotte", "librarian", "ada", "grace", "allen",
             "vera")  # hold keys; sign their audiences
 
-ROLES = {"becky": "becky · IAM", "vigil": "vigil · the Warden",
+ROLES = {"becky": "becky · identity", "vigil": "vigil · the Warden",
          "steward": "steward · memory", "governance": "governance",
          "charlotte": "charlotte · farm keeper", "librarian": "librarian · knowledge",
          "ada": "ada · the wrangler", "grace": "grace · the smith",

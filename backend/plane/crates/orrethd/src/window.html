@@ -1261,7 +1261,7 @@
       <div class="inbleft">
         <div id="inboxlist"><div class="quiet">nothing waits on you — a calm universe.</div></div>
         <div class="qband" style="margin-top:.8rem;cursor:pointer" onclick="INBARCH=!INBARCH;loadReq()">
-          <b>the archive — every settled request, kept in full</b> <span class="lnk" id="inb-arch-t">· show</span></div>
+          <b>the archive — every settled request, kept in full</b> <span class="lnk" id="inb-arch-t">· show the full list here</span></div>
         <div id="reqlist" style="display:none"></div>
       </div>
       <div class="inbright" id="inb-detail"><div class="quiet">select a row — the reading pane holds it here, beside the list</div></div>
@@ -1308,6 +1308,7 @@
   <div class="view hide" id="v-obs">
     <div class="obshead">
       <span class="section" style="margin:0">the observatory · dial at <span class="odial" id="obs-dial">…</span><span class="onote" id="obs-price"></span></span>
+      <div class="dim" style="font-size:.68rem;margin:.15rem 0 0">a room for looking, not doing — every panel is a reading of what the machine has done; anything needing your decision waits in the Inbox, not here</div>
       <span class="opulse" id="obs-pulse" title="the watcher's own pulse (G1): the flight recorder's last beat — a monitoring organ must never go dark silently">
         <span class="pdot" id="obs-dot"></span><span id="obs-age">reaching the recorder…</span></span>
     </div>
@@ -1462,7 +1463,7 @@
        this room shows the driving NLP: Canon firmware and Chronicle craft,
        worldlines, readers, diffs. A projection, never a second truth. -->
   <div class="view hide" id="v-gov">
-    <div class="section" style="margin-top:0">the craft room · the prompts, skills, and rules the machine runs on — read any of them, edit what may be edited; every change keeps its history</div>
+    <div class="section" style="margin-top:0">the craft room — the prompts, skills, and rules the machine runs on. read any of them; the ones marked firmware are locked, everything else you may edit right here, and every change keeps its history</div>
     <div class="gov-bar">
       <input id="gov-q" placeholder="search the craft — names, categories">
       <button class="act ghost" onclick="govGraph()" title="the applied craft — which organs and flows wear each word">who uses what</button>
@@ -1473,7 +1474,7 @@
     <div class="gov-split">
       <div id="gov-list"><div class="quiet">the shelves are being read…</div></div>
       <div id="gov-right">
-        <div id="gov-hint" class="quiet" style="padding:1rem 0">select an item on the left — its full text opens here, with its history and its editors; the pane holds while you scroll the shelf</div>
+        <div id="gov-hint" class="quiet" style="padding:1rem 0">click any name on the left — its full text opens here to read. if it is editable craft, an edit box appears with it, and every past version stays behind the new one</div>
         <div id="gov-read" class="hide"></div>
       </div>
     </div>
@@ -1927,7 +1928,7 @@ function plots(list,r,scope){
     `<div class="plot ${s.state}" onmouseenter="ocPlot(event,'${encodeURIComponent(scope||"")}','${encodeURIComponent(s.name||"")}')" onmouseleave="ocOff()"></div>`);
 }
 /* organ dots: residents on the innermost shell */
-const RESKEY={"becky · IAM":"becky","vigil · the Warden":"vigil","steward · memory":"steward",
+const RESKEY={"becky · identity":"becky","vigil · the Warden":"vigil","steward · memory":"steward",
   "governance":"governance","charlotte · farm keeper":"charlotte","librarian · knowledge":"librarian",
   "ada · the wrangler":"ada","grace · the smith":"grace","allen · cloud architect":"allen",
   "vera · the astronomer":"vera"};
@@ -3211,13 +3212,16 @@ function agentRow(a,resident){
   /* 0056 sp1 — every named resident's row wears a door to their room */
   /* ONE door per row (JB's correction, 2026-08-17: five little icons
      clutter the tile — humans click the tab they want inside) */
-  const door=a.name?`<span class="roomdoor" onclick="event.stopPropagation();resOpen('${a.name}')" title="${a.name} — the modal: info · graph · prompts · model · metrics · schedule">⚙</span>`:"";
+  const door=a.name?`<span class="roomdoor" onclick="event.stopPropagation();resOpen('${a.name}')" title="open ${a.name}'s room — info · graph · prompts · model · metrics · schedule">⚙</span>`:"";
   return `<div class="agent${resident?" res2":""}${speak}">${face}<span class="orb ${a.state}"></span>
     <span class="who"><span class="id">${resident?a.role:(a.name||short(a.agent))}${door}</span>
     ${resident?"":`<span class="role">${a.scope?a.scope.split("/").pop():"workforce"}</span>`}${sub}</span></div>`;
 }
 
 /* ── requests + ask ── */
+/* the sha256: prefix is jargon on a human card — the label "pin"/"fingerprint"
+   already teaches; the value shows bare (the record keeps the full form) */
+const fpr=h=>String(h||"").replace(/^sha256:/,"");
 const ago=t=>{const s=(Date.now()-new Date(t))/1e3;
   return s<90?`${s|0}s ago`:s<5400?`${s/60|0}m ago`:`${s/3600|0}h ago`};
 /* a pending ask nothing serves is VISIBLE governance, not a mystery (0018 §7) */
@@ -3454,7 +3458,7 @@ function renderInbox(q){
       +drawer)
     :`<div class="quiet">nothing waits on you — a calm universe.</div>`;
   const rl=$("reqlist"),tg=$("inb-arch-t");
-  if(tg)tg.textContent=INBARCH?"· hide":"· show";
+  if(tg)tg.textContent=INBARCH?"· hide the list":"· show the full list here";
   if(rl)rl.style.display=INBARCH?"":"none";
   renderInboxDetail();
 }
@@ -3681,7 +3685,7 @@ async function loadFarm(){
         <span class="dt" style="background:var(--brass)"></span>
         <span class="nm">${esc(k)}</span><span class="cl">→ ${esc(a.service||"")}</span>
         <span class="mx">${a.tool?esc(a.tool):""}</span></div>`}).join("")
-      :`<div class="quiet">no allocations — every caller walks its floor's own path.</div>`;
+      :`<div class="quiet">no rules pin callers to tools here — anything on this floor may use any serving tool.</div>`;
     renderFarmPane();
   }catch{}
 }
@@ -3709,8 +3713,8 @@ function renderFarmPane(){
      <div class="dim" style="font:.66rem var(--mono);margin:.25rem 0">${esc(s.kind)} · ${esc(s.transport)} · on ${esc(s.floor||"")} · DID ${esc((s.did||"").slice(0,34))}… <span style="opacity:.8">(its permanent name here — never reused, never renamed)</span></div>
      <div class="strdeal"><b>THE WIRE — where it lives, and the exact shape you approved</b><br>
       <span class="k">endpoint</span>${envd?`<b>${esc(s.endpoint)}</b> — a stand-in name; the real key never enters any record`:esc(s.endpoint||"—")}<br>
-      <span class="k">pin</span><span class="hash">${esc((s.manifest_hash||"").slice(0,30))}…</span> <span class="dim">— the fingerprint of what you approved; if the tool ever changes, you are asked again</span>
-      ${s.proposed_hash?`<br><span class="k" style="color:var(--red)">proposed</span><span style="color:var(--red)">${esc(String(s.proposed_hash).slice(0,30))}… — it came back CHANGED; re-approval waits</span>`:""}</div>
+      <span class="k">pin</span><span class="hash">${esc(fpr(s.manifest_hash).slice(0,24))}…</span> <span class="dim">— the fingerprint of what you approved; if the tool ever changes, you are asked again</span>
+      ${s.proposed_hash?`<br><span class="k" style="color:var(--red)">proposed</span><span style="color:var(--red)">${esc(fpr(s.proposed_hash).slice(0,24))}… — it came back CHANGED; re-approval waits</span>`:""}</div>
      <div class="strdeal"><b>THE TOOLS — what this service offers, exactly as probed</b><br>
       ${(s.manifest||[]).map(t=>`<span style="color:var(--star)">${esc(t.name)}</span> <span class="dim">${esc(String(t.description||"").slice(0,90))}</span>`).join("<br>")||"— none pinned"}</div>
      <div class="strdeal"><b>THE LIFE — what it has been doing</b><br>
@@ -3725,8 +3729,8 @@ function renderFarmPane(){
       ${["serving","probation"].includes(s.state)?`<button class="sbtn no" onclick="farmRest('${esc(s.name)}')">⏸ rest — pause it; its place is kept and nothing is spent</button>`:""}
       ${s.state==="resting"?`<button class="sbtn ok" onclick="farmResume('${esc(s.name)}')">▶ resume — it re-earns trust through a short trial</button>`:""}
       ${s.state==="quarantined"?`<button class="sbtn ok" onclick="farmReapprove('${esc(s.name)}')">re-approve the new manifest</button>`:""}
-      <button class="sbtn no" onclick="farmDecom('${esc(s.name)}',false)" title="asks you first — nothing happens without your approval">decommission — remove it from service; its history stays</button>
-      <button class="sbtn no" onclick="farmDecom('${esc(s.name)}',true)" title="asks you first — nothing happens without your approval">decom + discredit — remove it AND mark everything it ever supplied as suspect</button></div>
+      <button class="sbtn no" onclick="farmDecom('${esc(s.name)}',false)">decommission — asks you first; its history stays</button>
+      <button class="sbtn no" onclick="farmDecom('${esc(s.name)}',true)">decom + discredit — asks you first; also marks everything it supplied as suspect</button></div>
      ${s.state==="serving"?`<div class="sechd" style="margin-top:.9rem">the playground — try a tool here; charlotte runs it for you, metered and on the record</div>
       <div class="stbform">
        <select id="fp-tool">${(s.manifest||[]).map(t=>`<option>${esc(t.name)}</option>`).join("")}</select>
@@ -3745,7 +3749,7 @@ function renderFarmPane(){
    ${act==="plant"&&r.status==="staged"?`<div class="strdeal"><b>CHARLOTTE PROBED</b><br>
      <span class="k">answered</span>${v.alive?"yes":"<span style='color:var(--red)'>NO</span>"}<br>
      <span class="k">tools seen</span>${v.tools??0}<br>
-     <span class="k">pin</span>${esc((v.manifest_hash||"").slice(0,30))}…</div>`:""}
+     <span class="k">pin</span>${esc(fpr(v.manifest_hash).slice(0,24))}…</div>`:""}
    ${(w.notes||[]).length?`<div class="strdeal" style="border-left:3px solid #b48ead"><b>${esc(w.by||"the warden")}</b><br>
      ${(w.notes||[]).map(n=>`<span style="color:${n.startsWith("⚠")?"var(--amber,#e8b34a)":"var(--dim)"}">${esc(n)}</span>`).join("<br>")}</div>`:""}
    ${bl?`<div class="strdeal"><b>THE BLAST RADIUS</b><br>${esc(bl.note||"")}${(bl.allocated||[]).length?`<br>allocated: ${bl.allocated.map(esc).join(" · ")}`:""}</div>`:""}
@@ -4006,7 +4010,7 @@ async function loadStable(){
         na=Object.values(ASSIGNS).filter(a=>a&&a.class===k).length;
       return `<div class="lane"><span class="cls">${k}${na?` <span title="${na} allocation(s) name this class">·${na}</span>`:""}</span>${lane.length?lane.map(s=>
         `<span class="mchip" style="cursor:pointer" onclick="stblSel('stall','${stlKey(s)}')"><span class="st" style="background:${STDOT[s.state]||"var(--dim)"}"></span>${s.id.split("/").pop()}</span>`).join("")
-        :`<span class="mchip" style="opacity:.5">unserved — the registry file answers</span>`}</div>`}).join("");
+        :`<span class="mchip" style="opacity:.5">not in service — known from the catalog only</span>`}</div>`}).join("");
     /* the stalls — grouped by floor, compact; the pane holds the detail */
     const grp={};live.forEach(s=>(grp[s.floor||"?"]=grp[s.floor||"?"]||[]).push(s));
     $("stableroster").innerHTML=Object.keys(grp)
@@ -4062,8 +4066,8 @@ function renderStblPane(){
       <span class="k">completion</span><b>${perM(p.completion)}</b> / Mtok<br>
       <span class="k">context</span><b>${(s.manifest||{}).context_length?(((s.manifest.context_length/1000)|0)+"k"):"not declared by the provider"}</b><br>
       <span class="k">modalities</span>${esc(((s.manifest||{}).modalities||[]).join(", ")||"not declared by the provider")}<br>
-      <span class="k">pin</span><span class="hash" title="${esc(JSON.stringify(s.manifest||{}))}">${esc((s.manifest_hash||"").slice(0,30))}…</span> <span class="dim">— the deal's fingerprint; if a byte of it moves, you are asked again</span>
-      ${s.proposed_hash?`<br><span class="k" style="color:var(--red)">proposed</span><span style="color:var(--red)">${esc(String(s.proposed_hash).slice(0,30))}… — the deal moved; re-approval waits</span>`:""}</div>
+      <span class="k">pin</span><span class="hash" title="${esc(JSON.stringify(s.manifest||{}))}">${esc(fpr(s.manifest_hash).slice(0,24))}…</span> <span class="dim">— the deal's fingerprint; if a byte of it moves, you are asked again</span>
+      ${s.proposed_hash?`<br><span class="k" style="color:var(--red)">proposed</span><span style="color:var(--red)">${esc(fpr(s.proposed_hash).slice(0,24))}… — the deal moved; re-approval waits</span>`:""}</div>
      <div class="strdeal"><b>THE LIFE — what it has been doing</b><br>
       <span class="k">thoughts</span><b>${s.calls||0}</b> answered so far<br>
       <span class="k">synced</span>${s.last_synced?esc(ago(s.last_synced))+" — last checked against the market":"never"}<br>
@@ -4094,7 +4098,7 @@ function renderStblPane(){
      <div class="dim" style="font-size:.74rem;margin:.3rem 0">${esc(r.text||"")}</div>
      ${act==="saddle"&&r.status==="staged"?`<div class="strdeal"><b>ADA PROBED</b><br>
        <span class="k">catalog</span>${v.in_catalog?"found — the deal below is the market's":"not listed — manual manifest"}<br>
-       <span class="k">pin</span>${esc((v.manifest_hash||"").slice(0,30))}…<br>
+       <span class="k">pin</span>${esc(fpr(v.manifest_hash).slice(0,24))}…<br>
        ${v.expires_at?`<span class="k">expires</span>${esc(String(v.expires_at).slice(0,10))}<br>`:""}
        <span class="k">pricing</span>${perM((v.pricing||{}).prompt)} / ${perM((v.pricing||{}).completion)} per Mtok</div>`:""}
      ${act==="swap"?dealRows(old&&old.manifest,"THE EXPIRING DEAL — "+esc(r.mind||""))
@@ -5186,7 +5190,9 @@ function dkState(w){
     retired:"retired by your word — everything it ever made stays on the shelf; reinstate brings it back whole",
     declared:"declared but not yet governed by this rig"}[w.state]||"";
   const ann=w.state==="running"?(w.words_walking?` · ${w.words_walking} walk${w.words_walking===1?"":"s"}`:" · watchlist empty"):"";
-  return `<span title="${dkEsc(tip)}" style="color:${c};font-size:.66rem;border:1px solid ${c};border-radius:5px;padding:.08rem .4rem">${dkEsc(w.state||"?")}${ann}</span>`}
+  const lab={"shut down":"shut down — not broken; start raises it",
+    stopped:"stopped — paused by you"}[w.state]||w.state||"?";
+  return `<span title="${dkEsc(tip)}" style="color:${c};font-size:.66rem;border:1px solid ${c};border-radius:5px;padding:.08rem .4rem">${dkEsc(lab)}${ann}</span>`}
 function dkPendingVerb(w){
   const pv=w.pending_verb;
   if(!pv)return "";
@@ -5271,7 +5277,7 @@ function dkSub(str,item){return String(str).replace(/\$([a-z_]+)/g,(m,k)=>String
 function dkWatchLine(){
   return (DESK.watches||[]).map(w=>w.posture==="walk"
     ?`<div class="dk-law">🕰 ${dkEsc(w.ticker)} · weekdays at the close · refresh — <a href="#" onclick="deskStop('${dkEsc(w.ticker)}');return false" style="color:var(--red)">stop it</a> <span class="dim">(stopping is always yours — no approval needed)</span></div>`
-    :`<div class="dk-law">🕰 ${dkEsc(w.ticker)} — you stopped this one; watch it again below to resume</div>`).join("")}
+    :`<div class="dk-law">🕰 ${dkEsc(w.ticker)} — you stopped this one; type ${dkEsc(w.ticker)} below and press watch to resume</div>`).join("")}
 async function _dkPost(payload,note){
   const port=(_CAPMAN||{}).port||4520;
   try{await fetch(`${location.protocol}//${location.hostname}:${port}/requests`,{method:"POST",
@@ -5487,7 +5493,7 @@ function dkPanel(p,pi,item){
       +dkCanvas(cid,p,states,titles)}
   case "reports":{
     const reps=(typeof DESK!=="undefined"&&DESK&&DESK.reports)||[];
-    if(!reps.length)return `<div class="dim" style="font-size:.75rem;margin:.6rem 0">no report on the record yet — ask above, or approve the next walk</div>`;
+    if(!reps.length)return `<div class="dim" style="font-size:.75rem;margin:.6rem 0">no report yet — ask above for one now, or approve a daily watch</div>`;
     return `<div class="dk-chtitle" style="margin-top:.8rem">${dkEsc(p.label||"past reports")} · ${reps.length} total</div>`
       +`<div style="overflow-x:auto"><table class="dk-table"><tr><th></th><th>ticker</th><th>date</th><th>rating</th><th>the read</th></tr>`
       +reps.map((r,i)=>`<tr style="cursor:pointer" onclick="dkOpenReport(${i})" title="open this report's full read">
@@ -5543,7 +5549,7 @@ function renderWorld(man){
      <span class="dk-note dim" style="font-size:.68rem;margin-left:.5rem"></span>
      <div class="dk-law">${dkEsc(man.law||"")}</div>${dkPendingVerb(man)}</div>`;
   if(!reps.length){B.innerHTML=crumb+head+((man.view||[]).filter(p=>p.kind==="controls").map((p)=>dkPanel(p,(man.view||[]).indexOf(p),{})).join(""))
-    +`<div class="dim" style="padding:1rem 0">no report on the record yet — ask below, or approve the next walk</div>`;return}
+    +`<div class="dim" style="padding:1rem 0">no report yet — ask below for one now, or approve a daily watch</div>`;return}
   DKIDX=Math.min(DKIDX,reps.length-1);
   const item=reps[DKIDX];
   /* the in-flight truth (0053) — a silent card breeds re-asks: every ask's
@@ -6101,8 +6107,8 @@ function renderGov(){
   const cats=["all",...Object.keys(GOVD.counts||{}).sort()];
   $("gov-cats").innerHTML=cats.map(c=>`<span class="qchip ${GOVCAT===c?"on":""}"
     onclick="govCat('${c}')">${c}${c==="all"?` · ${GOVD.objects.length}`:` · ${GOVD.counts[c]||0}`}</span>`).join("");
-  $("gov-lens").innerHTML=[["all","everything"],["canon","firmware (changing it is a formal release)"],
-    ["chronicle","everyday craft (editable at will, history kept)"]].map(([l,t])=>
+  $("gov-lens").innerHTML=[["all","everything"],["canon","firmware — the machine's own parts, locked; a change issues a new release"],
+    ["chronicle","your editable words — change freely, every version kept"]].map(([l,t])=>
     `<span class="qchip ${GOVLENS===l?"on":""}" onclick="govLens('${l}')">${t}</span>`).join("");
   const q=(($("gov-q")||{}).value||"").toLowerCase();
   const rows=GOVD.objects.filter(o=>(GOVCAT==="all"||o.category===GOVCAT)
@@ -6113,8 +6119,8 @@ function renderGov(){
     .concat([["gen","🧰","general craft"]]);
   if(GOVFOLD===null)GOVFOLD=new Set(["fw"]);
   const rowHtml=o=>`<div class="gvrow ${GOVSEL===o.name?"on":""}" onclick="govOpen('${esc(o.name)}')"
-      title="${esc(o.name)}${(o.wearers&&o.wearers.length)?` — used by ${esc(String(o.wearers[0]))}`:""}">
-      <span class="nm">${esc(o.name)}</span>
+      title="${esc(o.name)}">
+      <span class="nm">${esc(o.name)}${(o.wearers&&o.wearers.length)?`<span style="display:block;font-size:.62rem;color:var(--faint);font-weight:400">used by ${esc(String(o.wearers[0]))}</span>`:""}</span>
       <span class="lc ${o.lifecycle==="chronicle"?"chr":""}">${o.lifecycle==="canon"?"firmware":"editable"}</span>
       <span class="meta">${o.category} · v${o.versions}</span></div>`;
   let html=shelves.map(([k,em,label])=>{
@@ -6409,7 +6415,7 @@ function renderObservatory(){
   $("obs-price").textContent=` · ${d.dial.price} · deep-checks run every ${d.dial.assay_every_s}s, ${d.dial.sample_per_beat} sample(s) each`
     +(d.dial.ceiling_tokens?` · spent ${fmtTok(d.dial.spent_today||0)}/${fmtTok(d.dial.ceiling_tokens)} tok today of the ceiling you set`:"")
     +(d.rollup?` · watching all ${d.rollup.floors_watched} floor(s)`:"")
-    +(d.bell?` · the bell (your out-of-app alarm): ${d.bell.state}${d.bell.last?` — last ring ${fmtAge((Date.now()-new Date(d.bell.last.at))/1000)} ago${d.bell.last.repeats?` (+${d.bell.last.repeats} aged in)`:""}`:""}`:"");
+    +(d.bell?` · the bell (emails you when something needs you): ${d.bell.state}${d.bell.last?` — last ring ${fmtAge((Date.now()-new Date(d.bell.last.at))/1000)} ago${d.bell.last.repeats?` (+${d.bell.last.repeats} aged in)`:""}`:""}`:"");
   const ra=d.recorder.age_s;
   dot.className="pdot"+(ra==null||ra>150?" dark":ra>45?" amber":"");
   age.textContent=ra==null?"the recorder has not beaten yet":
@@ -6450,7 +6456,7 @@ function renderObservatory(){
     <div class="onote">each arm is an exactly-fingerprinted version of the machine; adopting the winner waits for your approval</div></div>
   <div class="opanel"><div class="pt"><b>waiting at your gates — how long decisions have sat</b>${tier("log")}</div>
     ${(d.gates.open||[]).slice(0,8).map(x=>`<div class="ogate"><span class="k" title="${esc(x.text)}">${esc(x.kind)} · ${esc(x.floor.split("/").pop())}</span><span class="a${(x.age_s||0)>86400?" old":""}">${fmtAge(x.age_s)}</span></div>`).join("")||`<div class="onote">no consequence waits — every gate is clear</div>`}
-    <div class="onote">${d.gates.counts.pending} pending · ${d.gates.counts.staged} staged · ${d.gates.counts.decided} decided${(d.gates.open||[]).length>8?` · showing the 8 oldest of ${(d.gates.open||[]).length}`:""}</div></div>
+    <div class="onote">${d.gates.counts.pending} pending · ${d.gates.counts.staged} staged · ${d.gates.counts.decided} decided${(d.gates.open||[]).length>8?` · showing the 8 oldest of ${(d.gates.open||[]).length}`:""} — each is answered from the Inbox, this panel only measures the wait</div></div>
   <div class="opanel"><div class="pt"><b>the seven rows · the RAG observatory</b>${tier("log")}</div>
     ${rows.length?rows.map((r,i)=>`<div class="obar"><span class="lbl">${esc(r.flavor||"?")}</span>
       <span class="track"><span class="fill${(+r.mean||0)===0?" low":""}" style="width:${Math.round((+r.mean||0)/rowMax*100)}%${i===0?"":";opacity:.75"}"></span></span>
@@ -6460,7 +6466,7 @@ function renderObservatory(){
   <div class="opanel"><div class="pt"><b>farm &amp; stable · the keepers' books</b>${tier("log")}</div>
     ${(d.farm||[]).slice(0,6).map(f=>`<div class="ogate"><span class="k">${esc(f.name)} · ${esc(f.floor.split("/").pop())}</span><span class="a">${esc(f.state)} · ${f.calls} call(s)</span></div>`).join("")||`<div class="onote">nothing planted</div>`}
     <div class="onote">${(d.stable||[]).length} stall(s): ${(d.stable||[]).map(s=>`${esc((s.id||"?").split("/").pop())} (${esc(s.class)}·${esc(s.state)})`).slice(0,5).join(" · ")||"—"}</div></div>
-  <div class="opanel"><div class="pt"><b>governance · the machine's names</b>${tier("log")}</div>
+  <div class="opanel"><div class="pt"><b>the machine's exact versions — one name cut each time it changed</b>${tier("log")}</div>
     ${Object.entries(d.epochs||{}).filter(([,v])=>v).slice(0,9).map(([sc,v])=>`<div class="ogate"><span class="k">${esc(sc)}</span><span class="a">${esc(v)}</span></div>`).join("")||`<div class="onote">no epochs cut yet</div>`}
     <div class="onote">cards open by kind: ${Object.entries(gatesK).map(([k,n])=>`${esc(k)} ×${n}`).join(" · ")||"none"} — detection wears no levers; the gate decides</div></div>`;
   obsSpark(fl.tokens_hourly||[]);obsScores(as.verdicts||[]);
@@ -6739,7 +6745,7 @@ async function loadObjectives(){
   $("objlist").innerHTML= objs.length?
     bands.map(([lbl,rows],gi)=>{
       if(!rows.length)return"";
-      if(gi===2)return `<div class="qband" style="cursor:pointer;margin-top:.8rem" onclick="OBJARCH=!OBJARCH;loadObjectives()"><b>${lbl}</b><span class="n">· ${rows.length} ${OBJARCH?"▾":"▸"}</span></div>`
+      if(gi===2)return `<div class="qband" style="cursor:pointer;margin-top:.8rem" onclick="OBJARCH=!OBJARCH;loadObjectives()"><b>settled — finished work, kept forever</b><span class="n">· ${rows.length} ${OBJARCH?"▾ click to fold":"▸ click to open"}</span></div>`
         +(OBJARCH?rows.map(row).join(""):"");
       return `<div class="qband" style="margin-top:.6rem"><b>${lbl}</b><span class="n">· ${rows.length}</span></div>`+rows.map(row).join("");
     }).join("")

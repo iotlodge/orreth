@@ -82,7 +82,7 @@ MANIFEST = {
     {"label": "🕰 watch it daily — one approval, then a fresh report lands here every weekday",
      "request": {"kind": "desk-watch", "ticker": "$ticker"},
      "note": "$ticker is asking to join the daily watchlist — approve it once in the Inbox and a fresh report arrives each day until you stop it"},
-    {"label": "📄 report now — charles runs one full analysis and files it here",
+    {"label": "📄 report now — charles runs one full analysis; the report lands in the list below",
      "request": {"kind": "desk-ask", "ticker": "$ticker"},
      "note": "charles is on it — the finished report appears in this room; nothing else to confirm"}]},
   {"kind": "download", "detail": True,

@@ -1229,22 +1229,22 @@ fn residents(app: &App) -> Vec<Value> {
 
     let (bk_c, bk_u) = llm(root.as_deref());
     let mut out = vec![
-        json!({"agent": format!("becky·{leaf}"), "name": "becky", "role": "becky · IAM",
+        json!({"agent": format!("becky·{leaf}"), "name": "becky", "role": "becky · identity",
                "state": "resident", "did": root,
-               "blurb": "issues every identity; the pinned trust root",
+               "blurb": "signs every agent and tool in — nothing joins without her word",
                "vitals": {"leases": leases, "llm calls": bk_c, "llm usd": bk_u}}),
         json!({"agent": format!("vigil·{leaf}"), "name": "vigil", "role": "vigil · the Warden",
                "state": "watching",
-               "blurb": "detection, content-blind; stages, never enforces",
+               "blurb": "watches every gate for tampering; can only raise a hand, never act",
                "vitals": {"beats heard": vital("beats_heard"), "refusals": vital("refusals"),
                           "llm calls": 0, "llm usd": 0}}),
         json!({"agent": format!("steward·{leaf}"), "name": "steward", "role": "steward · memory",
                "state": "distilling",
-               "blurb": "prunes and distills what the layer learns",
+               "blurb": "keeps memory healthy — compresses the old, keeps what matters",
                "vitals": {"memories": memories, "llm calls": 0, "llm usd": 0}}),
         json!({"agent": format!("governance·{leaf}"), "name": "governance", "role": "governance",
                "state": "resident",
-               "blurb": "arbitrates drift; guards the floors",
+               "blurb": "holds the rules; nothing changes without an approval it can show",
                "vitals": {"floors": floors, "beats up": vital("beats_up"),
                           "llm calls": 0, "llm usd": 0}}),
     ];
@@ -1256,7 +1256,7 @@ fn residents(app: &App) -> Vec<Value> {
         let mut c = json!({"agent": format!("charlotte·{leaf}"), "name": "charlotte",
             "role": "charlotte · farm keeper", "state": "tending",
             "did": cha_did,
-            "blurb": "probes, pins, and attests the toolshed; writes the worldlines",
+            "blurb": "keeps the outside tools — tests each one and tracks its whole life",
             "vitals": {"tools serving": serving, "tool calls": tool_calls,
                        "worldline events": worldlines, "llm calls": c_c, "llm usd": c_u}});
         if cha_pin.is_some() {
@@ -1271,7 +1271,7 @@ fn residents(app: &App) -> Vec<Value> {
         let mut l = json!({"agent": format!("librarian·{leaf}"), "name": "librarian",
             "role": "librarian · knowledge", "state": "gathering",
             "did": lib_did,
-            "blurb": "gathers from identified sources; admits quarantined",
+            "blurb": "finds and files knowledge; new facts start untrusted until proven",
             "vitals": {"gathers": gathers, "knowledge held": knowledge,
                        "llm calls": l_c, "llm usd": l_u}});
         if lib_pin.is_some() {
@@ -1286,7 +1286,7 @@ fn residents(app: &App) -> Vec<Value> {
         let mut a = json!({"agent": format!("ada·{leaf}"), "name": "ada",
             "role": "ada · the wrangler", "state": "syncing",
             "did": ada_did,
-            "blurb": "tends the stable; syncs the catalogs, pins the deals",
+            "blurb": "keeps the AI minds — watches their prices, terms, and retirements",
             "vitals": {"stalls": n_stalls, "minds live": minds_live,
                        "worldline events": mindlines, "llm calls": a_c, "llm usd": a_u}});
         if ada_pin.is_some() {
@@ -1303,7 +1303,7 @@ fn residents(app: &App) -> Vec<Value> {
         out.push(json!({"agent": format!("grace·{leaf}"), "name": "grace",
             "role": "grace · the smith", "state": "improving",
             "did": gra_pin, "pinned": true,
-            "blurb": "keeps the workshop; proposes from receipts, never grades her own",
+            "blurb": "tends the machine's own words; proposes improvements from evidence",
             "vitals": {"llm calls": g_c, "llm usd": g_u}}));
     }
     // allen, the cloud architect (0037 §1): pin-only residency, like the smith —
@@ -1315,7 +1315,7 @@ fn residents(app: &App) -> Vec<Value> {
         out.push(json!({"agent": format!("allen·{leaf}"), "name": "allen",
             "role": "allen · cloud architect", "state": "surveying",
             "did": al_pin, "pinned": true,
-            "blurb": "keeps the estate; adopts before he creates, plans before he applies",
+            "blurb": "manages the cloud infrastructure; always plans before changing anything",
             "vitals": {"llm calls": al_c, "llm usd": al_u}}));
     }
     // vera, the astronomer (0043 §2): pin-only residency — one observatory, the
@@ -1327,7 +1327,7 @@ fn residents(app: &App) -> Vec<Value> {
         out.push(json!({"agent": format!("vera·{leaf}"), "name": "vera",
             "role": "vera · the astronomer", "state": "measuring",
             "did": ve_pin, "pinned": true,
-            "blurb": "keeps the observatory; measures the work, never grades her own floor",
+            "blurb": "grades finished work — an examiner who can flag, never act",
             "vitals": {"llm calls": ve_c, "llm usd": ve_u}}));
     }
     out

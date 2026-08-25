@@ -472,7 +472,7 @@ MANIFEST = {'key': 'crypto-desk',
                        'arrives each day until you stop it',
                'request': {'kind': 'desk-watch',
                            'ticker': '$ticker'}},
-              {'label': '📄 report now — charlene runs one full analysis and files it here',
+              {'label': '📄 report now — charlene runs one full analysis; the report lands in the list below',
                'note': 'charlene is on it — the finished report appears '
                        'in this room; nothing else to confirm',
                'request': {'kind': 'desk-ask',
