@@ -1092,12 +1092,31 @@
     padding:.85rem .35rem;font-size:.62rem;letter-spacing:.32em;cursor:pointer;user-select:none;
     text-transform:uppercase;opacity:.95;box-shadow:-4px 0 14px var(--scrim),0 0 8px var(--brassdim)}
   #brainpull:hover{opacity:1;background:var(--hair)}
-  #capworld,#brainworld,#resroom{position:fixed;top:0;right:-82%;width:80%;height:100%;z-index:60;background:var(--void);
-    border-left:1px solid var(--hair2);transition:right .28s ease;display:flex;flex-direction:column;
+  #capworld,#brainworld,#resroom,#atlasworld{position:fixed;top:0;right:-82%;width:80%;height:100%;z-index:60;background:var(--void);
+    border-left:1px solid var(--hair2);transition:right .28s ease,width .28s ease;display:flex;flex-direction:column;
     overflow:hidden;box-shadow:-18px 0 48px var(--scrim)}
-  #capworld.capopen,#brainworld.capopen,#resroom.capopen{right:0}
-  #caphead,#brnhead,#reshead{display:flex;align-items:center;gap:.8rem;padding:.9rem 1.4rem;border-bottom:1px solid var(--hair)}
-  #caphead b,#brnhead b,#reshead b{color:var(--brass);letter-spacing:.14em;font-size:.72rem;text-transform:uppercase}
+  #capworld.capopen,#brainworld.capopen,#resroom.capopen,#atlasworld.capopen{right:0}
+  #atlasworld.atlfull{width:100%}
+  #caphead,#brnhead,#reshead,#atlhead{display:flex;align-items:center;gap:.8rem;padding:.9rem 1.4rem;border-bottom:1px solid var(--hair)}
+  #caphead b,#brnhead b,#reshead b,#atlhead b{color:var(--brass);letter-spacing:.14em;font-size:.72rem;text-transform:uppercase}
+  /* ── 0061 · the atlas: the pull, the lanes, the doors ── */
+  #atlaspull{position:fixed;right:0;top:62%;z-index:61;writing-mode:vertical-rl;background:var(--deep);
+    border:1px solid var(--brassdim);border-right:none;border-radius:8px 0 0 8px;color:#8fd6b0;
+    padding:.85rem .35rem;font-size:.62rem;letter-spacing:.32em;cursor:pointer;user-select:none;
+    text-transform:uppercase;opacity:.95;box-shadow:-4px 0 14px var(--scrim),0 0 8px var(--brassdim)}
+  #atlaspull:hover{opacity:1;background:var(--hair)}
+  #atlbody{flex:1;overflow:auto;position:relative;padding:12px}
+  .atlane{position:absolute;top:14px;font:.6rem var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--brass);opacity:.85}
+  .atlnode{position:absolute;width:206px;border:1px solid var(--hair2);border-radius:10px;background:var(--deep);
+    padding:.42rem .6rem;cursor:pointer;z-index:2;transition:box-shadow .15s}
+  .atlnode b{display:block;font-size:.72rem;color:var(--star)}
+  .atlnode span{display:block;font-size:.6rem;color:var(--faint);line-height:1.3;margin-top:.1rem}
+  .atlnode:hover{box-shadow:0 0 14px var(--brassdim)}
+  .atlnode.human{border-color:#7fd1a8}
+  .atlnode.organs{border-color:var(--brassdim)}
+  .atlnode.kernel{border-color:#8fb8d9}
+  .atlnode.worlds{border-color:#8fd6b0}
+  body.atlas-open #lens{display:none}
   #capbody,#brnbody,#resbody{flex:1;overflow-y:auto;padding:1.1rem 1.6rem 3rem}
   .roomdoor{margin-left:.35rem;opacity:.55;cursor:pointer;font-size:.8rem}
   .roomdoor:hover{opacity:1;color:var(--brass)}
@@ -1577,6 +1596,19 @@
 <!-- ── 0053 sp3 · the brain pull: the state of the ACTIVE brain — instruments,
      partitioned by the architecture, aggregated above; never an NLP paraphrase ── -->
 <div id="brainpull" onclick="brnToggle()" title="the brain — what the machine IS: memory, metabolism, cognition, retention, read from its own instruments">🧠 brain</div>
+<!-- ── 0061 · THE ATLAS pull: the machine's schematic, drawn live — the
+     shape is declared craft, the glow is measured, every box is a door ── -->
+<div id="atlaspull" onclick="atlToggle()" title="the atlas — the machine's schematic, drawn live: the governance loops, the installed worlds, and where YOU enter">🗺 atlas</div>
+<div id="atlasworld">
+  <div id="atlhead"><b>THE ATLAS · THE MACHINE'S SCHEMATIC, DRAWN LIVE</b>
+    <span class="dim" style="font-size:.66rem">the shape is declared; the glow is measured — no line lights that carried nothing this hour · every box opens its door</span>
+    <span class="qchip on" id="atl-hum" onclick="atlLens('hum')">🖐 the human</span>
+    <span class="qchip on" id="atl-gov" onclick="atlLens('gov')">⚙ governance</span>
+    <span class="qchip on" id="atl-cap" onclick="atlLens('cap')">◈ the worlds</span>
+    <button class="dk-tab" onclick="atlFull()" title="the full sheet — cover the rail too">⛶</button>
+    <button class="dk-tab" style="margin-left:auto" onclick="atlToggle()">✕ close</button></div>
+  <div id="atlbody"></div>
+</div>
 <!-- ── 0056v2 sp-B · the resident MODAL — CO's shape, Orreth's truth ── -->
 <div id="rsm-back" onclick="if(event.target===this)rsmClose()">
   <div class="rsm">
@@ -6734,7 +6766,7 @@ function glossifyEl(root){
   if(!root||!GLOSS_RX)return;
   const seen=new Set(),w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),hits=[];let n;
   while((n=w.nextNode())){
-    if(n.parentElement&&n.parentElement.closest(".door,.gw,input,textarea,script,button,a,.tn"))continue;
+    if(n.parentElement&&n.parentElement.closest(".door,.gw,input,textarea,script,button,a,.tn,.atlnode b"))continue;
     GLOSS_RX.lastIndex=0;
     if(GLOSS_RX.test(n.nodeValue))hits.push(n);
   }
@@ -6775,6 +6807,88 @@ function glossShow(key,ev){
 function welcomeDone(){try{localStorage.setItem("orreth-welcomed","1")}catch{};$("welcome").style.display="none"}
 function welcomeShow(){$("welcome").style.display="";glossStatic()}
 (function(){try{if(localStorage.getItem("orreth-welcomed")!=="1")$("welcome").style.display=""}catch{}})();
+/* ── 0061 THE ATLAS — the machine's schematic, drawn live. The SHAPE comes
+      from the /atlas door (declared shelf craft, live heads first) plus the
+      installed worlds' own manifests; the GLOW is measured request activity
+      (last hour) — no line lights that carried nothing. Lanes, not a layout
+      engine: the human · the staff · the kernel · the worlds. Every box is
+      a door (0052), and dictionary words inside dot as everywhere (0060). ── */
+let ATL=null,_ATLTIMER=null,ATLLENS={hum:true,gov:true,cap:true};
+function atlToggle(){const w=$("atlasworld");
+  if(!w.classList.contains("capopen")){
+    if($("capworld").classList.contains("capopen"))capToggle();
+    if($("brainworld").classList.contains("capopen"))brnToggle();}
+  w.classList.toggle("capopen");
+  document.body.classList.toggle("atlas-open",w.classList.contains("capopen"));
+  if(!w.classList.contains("capopen")){
+    if(_ATLTIMER){clearInterval(_ATLTIMER);_ATLTIMER=null}return}
+  atlLoad();if(!_ATLTIMER)_ATLTIMER=setInterval(atlLoad,15000);}
+function atlFull(){$("atlasworld").classList.toggle("atlfull");atlRender()}
+function atlLens(k){ATLLENS[k]=!ATLLENS[k];
+  $("atl-"+k).classList.toggle("on",ATLLENS[k]);atlRender()}
+async function atlLoad(){
+  try{ATL=await(await fetch(OBSD+"/atlas")).json()}catch{ATL=null}
+  atlRender()}
+function atlDoor(d){if(!d)return;
+  atlToggle();
+  if(d.res)resOpen(d.res);
+  else if(d.parlor)openParlor(d.parlor);
+  else if(d.world){capToggle();CAPV=d.world;renderCap()}
+  else if(d.view){const t=document.querySelector(`.tab[data-v="${d.view}"]`);if(t)t.click()}}
+function atlRender(){
+  const B=$("atlbody");if(!B||!$("atlasworld").classList.contains("capopen"))return;
+  if(!ATL){B.innerHTML=`<div class="dim" style="padding:2rem">the atlas door did not answer — is the worker tending?</div>`;return}
+  const nodes=[],edges=[];
+  if(ATLLENS.hum){(ATL.human.nodes||[]).forEach(n=>nodes.push(n));
+    (ATL.human.edges||[]).forEach(e=>edges.push(e))}
+  if(ATLLENS.gov){(ATL.governance.nodes||[]).forEach(n=>nodes.push(n));
+    (ATL.governance.edges||[]).forEach(e=>edges.push(e))}
+  const seen=new Set(),NODES=nodes.filter(n=>!seen.has(n.id)&&seen.add(n.id));
+  const byLane={human:[],organs:[],kernel:[],worlds:[]};
+  NODES.forEach(n=>{(byLane[n.lane]||byLane.kernel).push(n)});
+  const worlds=ATLLENS.cap?(ATL.capabilities||[]):[];
+  worlds.forEach(w=>byLane.worlds.push({id:"w:"+w.key,lane:"worlds",
+    label:`${w.emoji||"◈"} ${w.name||w.key}`,
+    sub:`${w.resident?w.resident+" · ":""}click to open its rooms`,
+    door:{world:w.key}}));
+  if(ATLLENS.cap&&ATLLENS.gov)worlds.forEach(w=>{
+    edges.push({from:"w:"+w.key,to:"the-plane",
+      label:"its crew thinks through the same metered door",
+      kinds:["desk-ask","desk-watch","capability-verb"]});
+    edges.push({from:"w:"+w.key,to:"the-record",
+      label:"its every stage filed like everything else",kinds:[]})});
+  const have=new Set([...NODES.map(n=>n.id),...byLane.worlds.map(n=>n.id)]);
+  const EDGES=edges.filter(e=>have.has(e.from)&&have.has(e.to));
+  /* geometry: four lanes as columns; rows stack; the sheet scrolls */
+  const lanes=[["human","where the human enters"],["organs","the machine's own staff"],
+    ["kernel","the kernel — the one set of doors"],["worlds","the installed worlds"]];
+  const liveLanes=lanes.filter(([k])=>byLane[k].length);
+  const colW=Math.max(250,Math.floor((B.clientWidth-36)/Math.max(1,liveLanes.length)));
+  const pos={};let H=90;
+  liveLanes.forEach(([k],ci)=>{byLane[k].forEach((n,ri)=>{
+    pos[n.id]={x:16+ci*colW,y:56+ri*96}});
+    H=Math.max(H,56+byLane[k].length*96)});
+  const act=ATL.activity||{};
+  const heat=e=>(e.kinds||[]).reduce((t,k)=>t+(act[k]||0),0);
+  const path=e=>{const a=pos[e.from],b=pos[e.to];if(!a||!b)return"";
+    const ltr=b.x>=a.x,x1=ltr?a.x+206:a.x,x2=ltr?b.x:b.x+206,
+      y1=a.y+24,y2=b.y+24,mx=(x1+x2)/2,h=heat(e);
+    return `<path d="M ${x1} ${y1} C ${mx} ${y1} ${mx} ${y2} ${x2} ${y2}" fill="none"
+      stroke="${h?"var(--brass)":"var(--hair2)"}" opacity="${h?.85:.4}"
+      stroke-width="${h?Math.min(1.4+Math.log2(1+h),4):1}">
+      <title>${esc(e.label||"")} — ${h?h+" in the last hour":"quiet this hour"}</title></path>`};
+  B.innerHTML=`<svg style="position:absolute;inset:12px;width:${Math.max(B.clientWidth-24,liveLanes.length*colW)}px;height:${H}px;z-index:1;overflow:visible">${EDGES.map(path).join("")}</svg>`
+    +liveLanes.map(([k,lbl],ci)=>`<div class="atlane" style="left:${16+ci*colW}px">${esc(lbl)}</div>`).join("")
+    +liveLanes.flatMap(([k])=>byLane[k]).map(n=>{const p=pos[n.id];
+      return `<div class="atlnode ${n.lane}" style="left:${p.x}px;top:${p.y}px"
+        onclick='atlDoor(${JSON.stringify(n.door||null)})'>
+        <b>${esc(n.label||n.id)}</b><span>${esc(n.sub||"")}</span></div>`}).join("")
+    +`<div style="position:relative;height:${H+30}px"></div>`;
+  glossifyEl(B);                       /* the map's own words are doors (0060) */
+}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"
+  &&$("atlasworld").classList.contains("capopen"))atlToggle()});
+if(location.hash.includes("atlas"))setTimeout(atlToggle,900);  // deep-link: #…&atlas=1
 function leafName(s){
   const p=String(s||"").split("/"),l=(p[p.length-1]||String(s)).replace(/^[feu]:/,"");
   const up=p.length>2?(p[p.length-2]||"").replace(/^[fe]:/,""):"";

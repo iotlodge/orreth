@@ -1203,3 +1203,9 @@ The closing proof was the human's: retire → reinstate on the Trading Desk, cle
 | File | Author | Note |
 |---|---|---|
 | `agents/flavors/04-uat/clicks.py` | Fable 5 (claude-fable-5) | quinn v2 — THE HANDS (0060's remaining half, named in web.py since birth): the same self re-joins and walks six scripted flows driving the host's own Chrome over CDP (playwright connect — no new browser downloads, the standing constraint). Mechanical truths assert BEFORE her eye is spent (a dead door is a finding all by itself); judged flows are governed vision thoughts under her lease; THE MUTE LAW holds. First walk: zero walker bugs, zero dead doors, zero mutes — welcome-dismiss survived a reload, floor-step renamed the header, and her hands found what view-walks never could: the Lens opens before the librarian's greeting arrives, the dictionary card lacks a close affordance, and a (0034) citation stands on the resident card (req-1330, 22 findings across 6 flows). |
+
+## Fable 5 — 2026-08-25 (0061 — The Living Atlas)
+
+| File | Author | Note |
+|---|---|---|
+| `orreth_sim/atlas.py` · `console_worker.py` · `window.html` | Fable 5 (claude-fable-5) | THE ATLAS LEAVES THE PAPER: the declared shape (governance + human flows) plants as shelf craft; the /atlas door serves live-heads-first composed with the manifests' own worlds; the glass renders four lanes with three lenses, measured edge-glow (UTC-lexical horizon — never mktime on wire clocks), ⛶, and every box a door. Proven: three lenses live by screenshot; organ→room and world→rooms door-clicks proven by CDP; suite 361. |

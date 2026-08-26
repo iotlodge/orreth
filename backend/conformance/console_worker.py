@@ -124,7 +124,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import (bell as bell_mod, continuity, crypto,
+from orreth_sim import (atlas, bell as bell_mod, continuity, crypto,
                         fingertip, fuel as fuel_mod, improver, market, markers,
                         meaning, mirror, node, observatory, parlor, profile,
                         purge, seeds, serials, shipyard, speech,
@@ -2239,7 +2239,7 @@ def embed_door() -> None:
             if route not in ("/observatory", "/governance", "/craft",
                              "/sentences", "/desk", "/brain", "/resident",
                              "/pulse", "/spacetime", "/market", "/assign",
-                             "/seeds", "/record"):
+                             "/seeds", "/record", "/atlas"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2256,6 +2256,8 @@ def embed_door() -> None:
                         "gloss": {
                         n[len("gloss-"):]: (_sentence_active(4500, n) or g)
                         for n, g in speech.GLOSSARY.items()}}).encode()
+                elif route == "/atlas":
+                    out = json.dumps(wire_atlas(4500)).encode()
                 elif route == "/craft":
                     qs = urllib.parse.parse_qs(
                         urllib.parse.urlparse(self.path).query)
@@ -5269,6 +5271,7 @@ def improver_beat(port: int) -> None:
         allthere = True
         for sname, stext in {**speech.SENTENCES, **speech.PERSONAS,
                              **speech.GLOSSARY,          # 0060 — the dictionary is craft
+                             **atlas.FLOWS,              # 0061 — the schematic is craft
                              **_CAP_PLANT,
                              "the-memory-yardstick": YARDSTICK_V1}.items():
             if wire_assets(port, "asset", name=sname):
@@ -7364,6 +7367,45 @@ def on_drift(port: int, scope: str, r: dict, *,
                      "note": "detection stages, never enforces (0041)"}})
     print(f"  ↳ drift staged — the gate holds the diff ({r.get('id')})")
     return True
+
+
+def wire_atlas(port: int) -> dict:
+    """0061 — the machine's schematic, drawn live: the SHAPE is declared
+    (live shelf heads first — the schematic is craft; genesis beneath),
+    the worlds come from their own manifests (the discoverer's law
+    extended to cartography), and the LIFE is measured from real request
+    activity in the last hour — never declared, so no edge glows that
+    did not carry something."""
+    def head(name: str) -> dict:
+        try:
+            p = craft_serve(name, "the-atlas-eye").get("profile")
+            if isinstance(p, dict) and p.get("nodes"):
+                return p
+        except Exception:
+            pass
+        return atlas.FLOWS[name]
+
+    caps = [{"key": m.get("key"), "name": m.get("name"),
+             "emoji": m.get("emoji", "◈"), "resident": m.get("resident", ""),
+             "floor": m.get("floor", ""), "law": m.get("law", "")}
+            for m in CAP_GENESIS.values()]
+    act: dict = {}
+    try:
+        rows = _memo("atlas-act", 30,
+                     lambda: call(port, "GET", "/requests").get("requests", []))
+        # the wire's clocks are UTC ISO — compare lexically, never via
+        # mktime (which would read them as local time and skew the hour)
+        horizon = time.strftime("%Y-%m-%dT%H:%M:%S",
+                                time.gmtime(time.time() - 3600))
+        for r in rows:
+            if str(r.get("at", ""))[:19] >= horizon:
+                k = str(r.get("kind") or "request")
+                act[k] = act.get(k, 0) + 1
+    except Exception:
+        pass
+    return {"governance": head("atlas-governance-flow"),
+            "human": head("atlas-human-flow"),
+            "capabilities": caps, "activity": act}
 
 
 def wire_stacks_panel(port: int) -> dict:
