@@ -89,7 +89,11 @@ def main() -> None:
                        # answer for every pane's opening frame
                        ("market", "/market?limit=60"),
                        ("assign", "/assign"),
-                       ("seeds", "/seeds?q=search")):
+                       ("seeds", "/seeds?q=search"),
+                       # 0061: the machine's schematic — the atlas pull
+                       # works statically (shape + last hour's measured glow
+                       # frozen honestly in the photograph)
+                       ("atlas", "/atlas")):
         try:
             (fx / f"{name}.json").write_text(json.dumps(get2(path)))
             print(f"  captured :4562{path} → fixtures/{name}.json")
