@@ -9902,7 +9902,10 @@ def on_release(port: int, scope: str, r: dict) -> None:
 
 
 # ------------------------------------------- 0062 sp2 · the container walk
-BODY_IMAGES = {"npm": "node:20-alpine"}       # JB's L3: known images only
+BODY_IMAGES = {"npm": "node:20-alpine",       # JB's L3: known images only
+               # the registry's python half (JB's word 2026-08-27): astral's
+               # official uv image carries uvx — the pypi twin of npx -y
+               "pypi": "ghcr.io/astral-sh/uv:python3.12-bookworm-slim"}
 _BODY_LEDGER = Path.home() / ".orreth" / "bodies.json"
 
 
@@ -9946,9 +9949,22 @@ def on_plant_body(port: int, scope: str, r: dict) -> None:
     led = _body_ledger()
     hostport = int(r.get("port") or 0) or (
         max([4590] + [int(v.get("port", 4590)) for v in led.values()]) + 1)
-    stdio_cmd = f"npx -y {pkg}{'@' + ver if ver else ''}"
-    bridge = (f"npx -y supergateway --stdio \"{stdio_cmd}\" "
-              f"--outputTransport streamableHttp --port 8000")
+    if reg == "pypi":
+        stdio_cmd = f"uvx {pkg}{'==' + ver if ver else ''}"
+        # the python bridge is mcp-proxy riding a PINNED mcp — the unpinned
+        # pair broke in the wild the week this landed (upstream drift; the
+        # pin is the cure until mcp-proxy heals) — and its Starlette mount
+        # serves ONLY at /mcp/ with the trailing slash, rehearsed live
+        # before this line was written
+        bridge = (f"uvx --with \"mcp==1.9.4\" mcp-proxy "
+                  f"--transport streamablehttp --host 0.0.0.0 --port 8000 "
+                  f"-- {stdio_cmd}")
+        mcp_path = "/mcp/"
+    else:
+        stdio_cmd = f"npx -y {pkg}{'@' + ver if ver else ''}"
+        bridge = (f"npx -y supergateway --stdio \"{stdio_cmd}\" "
+                  f"--outputTransport streamableHttp --port 8000")
+        mcp_path = "/mcp"
     if r.get("status") == "pending":
         call(port, "POST", "/requests/resolve",
              {"id": rid, "status": "staged",
@@ -10013,8 +10029,8 @@ def on_plant_body(port: int, scope: str, r: dict) -> None:
     deed_rec("receipt", {"deed": intent,
                          "acknowledged": {"container_id": run.stdout.strip()[:24]},
                          "at": NOW()}, attempt)
-    endpoint = f"http://127.0.0.1:{hostport}/mcp"
-    tools = None                               # the first boot fetches npm — patience
+    endpoint = f"http://127.0.0.1:{hostport}{mcp_path}"
+    tools = None                          # the first boot fetches its registry — patience
     for _ in range(30):
         tools = mcp_tools(endpoint)
         if tools:
