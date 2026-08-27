@@ -109,5 +109,5 @@ Every rung of the measure, met live:
 
 Honest remainder, on the register: the deeds ride `estate-apply` (the
 dev estate IS the laptop) until «body-run» earns its release ceremony;
-allen's voice speaks at u:demo, not yet at his unfueled hull; Azure and
+~~allen's voice speaks at u:demo~~ (paid 2026-08-27 — residents with home floors voice at home, the meter on their own books); Azure and
 Google are declared growth, not claims.

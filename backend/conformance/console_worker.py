@@ -8879,7 +8879,15 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     # descriptive answers may be voiced; actions and flow-control words never are —
     # a governed thought phrases facts, it does not rewrite protocol
     if kp is not None and not ans.get("action") and not ans.get("verbatim"):
-        voiced = governed_voice(port, name, did, asked,
+        # 0062's held seed, paid: a resident with a HOME floor thinks AT
+        # HOME — the authorize and the meter land on ITS floor's plane, so
+        # its spend shows on its own books (0019's meter, 0057's rhyme:
+        # usage lands where the subject lives). The asking floor still
+        # carries the exchange; an unfueled home falls through the ladder
+        # to the grounded reply, honest as ever.
+        vport = next((p for p, s in FLOOR_SCOPES.items()
+                      if s.endswith(f"/f:{name}")), port)
+        voiced = governed_voice(vport, name, did, asked,
                                 _listen_kit(name, port, scope, facts, reply))
     final = voiced or reply
     # safer mode (0034 §4): consent withdrawn ⇒ the parlor's recorder falls
