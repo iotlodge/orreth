@@ -313,14 +313,20 @@ def test_plan_door_is_free_and_template_recallable():
 
 def test_allen_receives_in_the_parlor():
     """The resident stands in the audience room: a card with his doors, honest
-    gate language while the estate is unwalked, and protocol that travels
-    verbatim — a governed voice never rewrites law."""
+    gate language while the estate is unwalked — and his catch-all is a
+    QUESTION, not protocol (0046's default-ear law, reached allen 2026-08-26
+    in 0062 sp1: one stale verbatim flag had silenced his voice since the
+    estate). His true PROTOCOL paths — answer/create/preview/adopt/charter —
+    still travel verbatim; a governed voice never rewrites law."""
     facts = {"scope": "u:demo", "estate": {"adopted": 0, "gate_open": False}}
     c = parlor.card("allen", facts)
     assert c["voiced"] and c["role"] == "allen · cloud architect"
     assert "acceptance gate" in c["greeting"]
     a = parlor.answer("allen", "create me an S3 bucket", facts)
-    assert "adopt before I create" in a["reply"] and a.get("verbatim")
+    assert "adopt before I create" in a["reply"] and not a.get("verbatim")
+    # protocol stays protocol: the charter's words still travel verbatim
+    p = parlor.answer("allen", "show the charter", facts)
+    assert p.get("verbatim")
     d = parlor.answer("allen", "who may speak to you?", facts)
     assert "humans alone" not in d["reply"] or True
     assert "objectives" in d["reply"] and "lineage" in d["reply"]

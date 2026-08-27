@@ -843,7 +843,12 @@ def answer(name: str, text: str, facts: dict) -> dict:
             return {"reply": "reading the ask against the charter…",
                     "action": "estate-create", "ask": (text or "").strip(),
                     "verbatim": True}
-        return {"reply": _allen_reply(t, facts), "verbatim": True}
+        # the catch-all is a QUESTION, not protocol — the voiced ear is every
+        # embodied resident's default (0046); allen's estate PROTOCOL paths
+        # above keep their verbatim, but a human asking "what did you learn"
+        # deserves his grounded voice, not his card (found 2026-08-26, 0062
+        # sp1: this one flag had silenced allen's voice since the estate)
+        return {"reply": _allen_reply(t, facts)}
     if name == "vera":
         # G4 (0043 §5): the dial is a GOVERNED choice — the words are
         # protocol, they stage and travel verbatim; only the gate turns it

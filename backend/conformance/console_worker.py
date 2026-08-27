@@ -8065,7 +8065,37 @@ def _listen_kit(name: str, port: int, scope: str, facts: dict,
         est_facts = facts.get("estate")
         if est_facts:
             bits.append("THE ESTATE: " + str(est_facts)[:300])
-    kit = "\n".join(bits)[:2000]
+    # 0062 sp1 — THE STUDY IS SPEAKABLE (the residents-keep-themselves law):
+    # a resident's standing supply lines and their freshest deliveries join
+    # its ground, read from the resident's HOME floor (an embodied field's
+    # study lives where its knowledge lands, wherever the asking hand
+    # stood). Ask any resident what it has learned lately and the answer
+    # speaks what the desk actually delivered — quarantined, sourced, never
+    # improvised.
+    try:
+        home_port, home_scope = next(
+            ((p, s) for p, s in FLOOR_SCOPES.items()
+             if s.endswith(f"/f:{name}") or s.endswith(f":{name}")),
+            (port, FLOOR_SCOPES.get(port, "")))
+        subs = wire_subscriptions(home_port, home_scope)
+        if subs:
+            bits.append("YOUR STANDING STUDY (deliveries land quarantined on "
+                        "your floor): " + " · ".join(
+                            f"“{str(s.get('topic', ''))[:70]}”"
+                            for s in subs[:4]))
+            entries, bodies, _t = floor_knowledge(home_port, home_scope)
+            fresh = [b for e in reversed(entries)
+                     for b in [bodies.get(e["ref"], {})]
+                     if isinstance(b, dict) and b.get("subscription")][:6]
+            if fresh:
+                bits.append("WHAT THE STUDY DELIVERED LATELY (each claim "
+                            "quarantined until proven — speak it as newly "
+                            "gathered, name it as this week's learning): "
+                            + " · ".join(str(f.get("knowledge", ""))[:180]
+                                         for f in fresh))
+    except Exception:
+        pass
+    kit = "\n".join(bits)[:2800]
     return (kit + "\n\nYOUR STATUS CARD (context, not the whole truth):\n"
             + str(card)[:400])
 
