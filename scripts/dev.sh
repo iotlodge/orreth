@@ -64,6 +64,52 @@ case "${1:-}" in
              && echo "  join door: OPEN (:$FIELD)" || echo "  join door: CLOSED — run scripts/dev.sh start"
            echo "  capabilities: discovered + crewed by the worker at boot (capabilities/*/genesis.py)" ;;
   logs)    $COMPOSE logs -f --tail 40 ;;
+  replant) # the down-ledger-honoring self-replant (2026-08-26, the morning the
+           # rig would not rise): HEAL QUIETLY, NEVER REBUILD, NEVER RESURRECT
+           # a floor the human darkened. Whole rig healthy → say so and leave.
+           # Docker dead → open the Desktop and wait, bounded. Then compose up
+           # WITHOUT --build (heal is not a build) and re-open the join door if
+           # closed. Hulls rise by their own unless-stopped policy, and the
+           # worker's boot replant tends the rest from the shipyard ledger —
+           # down.json's dark words honored (chad, charlene, the probe grave).
+           if curl -sf -m 4 "http://127.0.0.1:4500/health" >/dev/null 2>&1 \
+              && pgrep -f "console_worker.py $FIELD" >/dev/null; then
+             echo "· whole — nothing to replant"; exit 0; fi
+           if ! docker info >/dev/null 2>&1; then
+             echo "· docker is down — opening the Desktop"
+             # the REAL app nests inside the wrapper (found live 2026-08-26:
+             # after a quit, `open -a Docker` no-ops against the wrapper's
+             # ghost while the inner Desktop stays down) — open the inner
+             # app first, the wrapper only as a fallback
+             open "/Applications/Docker.app/Contents/MacOS/Docker Desktop.app" 2>/dev/null \
+               || open -a Docker 2>/dev/null || true
+             for i in $(seq 75); do
+               docker info >/dev/null 2>&1 && break
+               # a Desktop still tearing down swallows the first open — knock
+               # again mid-wait until the inner app's processes stand; the VM
+               # engine itself can take a couple of minutes after that
+               pgrep -f "Docker Desktop.app" >/dev/null \
+                 || open "/Applications/Docker.app/Contents/MacOS/Docker Desktop.app" 2>/dev/null || true
+               sleep 4
+             done
+           fi
+           docker info >/dev/null 2>&1 || {
+             echo "· docker never rose — replant refused"
+             # the stuck-Desktop reflex (found live 2026-08-26): a half-quit
+             # can leave the UI standing with a backend that never starts its
+             # VM — every later knock then no-ops against the standing ghost.
+             # Clear it, so the NEXT replant tick opens clean.
+             if pgrep -f "Docker Desktop.app" >/dev/null; then
+               echo "· a stuck Desktop stands without its engine — clearing it for the next tick"
+               pkill -f "Docker Desktop" 2>/dev/null || true
+               pkill -f "com.docker.backend" 2>/dev/null || true
+             fi
+             exit 1; }
+           $COMPOSE up -d 2>&1 | tail -2
+           sleep 3
+           pgrep -f "console_worker.py $FIELD" >/dev/null || joindoor
+           echo "· replanted $(date '+%Y-%m-%d %H:%M:%S') — the dark words stay dark"
+           "$0" status ;;
   window)  joindoor; (cd "$CONF" && uv run python demo_open_window.py "$FIELD" 4500) ;;
   agent)   flavor="${2:-01-prototype}"; mode="${3:---once}"
            case "$flavor" in 1|01|prototype) d=01-prototype;; 2|02|langgraph) d=02-langgraph;;
@@ -72,5 +118,5 @@ case "${1:-}" in
            (cd "$ROOT/agents/flavors/$d" && \
              uv run --with pyyaml --with langgraph --with cryptography \
                python run.py --field "http://127.0.0.1:$FIELD" "$mode") ;;
-  *) echo "usage: scripts/dev.sh start|stop|restart|status|logs|window|clean|agent [flavor] [--once|--forever]" ;;
+  *) echo "usage: scripts/dev.sh start|stop|restart|replant|status|logs|window|clean|agent [flavor] [--once|--forever]" ;;
 esac

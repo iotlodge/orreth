@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PROVENANCE: Fable 5 (claude-fable-5) — the self-replant's keeper · 2026-08-26
+     The down-ledger-honoring self-replant (seeded by the recycle lesson, paid
+     the morning the rig would not rise): launchd runs `dev.sh replant` at
+     login and every five minutes. The verb heals quietly — a healthy rig exits
+     in one breath; a dead Docker gets the Desktop opened and waited for; the
+     compose floors rise WITHOUT a rebuild; the join door re-opens; and no
+     floor the human darkened is ever resurrected (down.json holds the words).
+     Install:  cp infrastructure/com.orreth.replant.plist ~/Library/LaunchAgents/
+               launchctl load ~/Library/LaunchAgents/com.orreth.replant.plist
+     Remove:   launchctl unload ~/Library/LaunchAgents/com.orreth.replant.plist
+               rm ~/Library/LaunchAgents/com.orreth.replant.plist -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.orreth.replant</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/jb/PycharmProjects/orreth/scripts/dev.sh</string>
+    <string>replant</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>StartInterval</key><integer>300</integer>
+  <key>StandardOutPath</key><string>/Users/jb/.orreth/tmp/replant.log</string>
+  <key>StandardErrorPath</key><string>/Users/jb/.orreth/tmp/replant.log</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/Users/jb/.local/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>HOME</key><string>/Users/jb</string>
+  </dict>
+</dict>
+</plist>
