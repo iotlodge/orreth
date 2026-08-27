@@ -3471,6 +3471,18 @@ async function loadReq(){
       consequence first, then age; the SAME reqRow serves it (rule 7), so a
       row here decides and speaks exactly like anywhere else. ── */
 let INBARCH=false,INBSEL=null,INBMACH=false,REQCACHE=null;
+/* 0062 — THE ONE INBOX FINALLY MEANS IT (JB's own wound: cards staged at
+   another floor's gate were invisible from u:demo, and his approval could
+   not find them): the worker sweeps every tended floor's waiting cards;
+   foreign ones join this list wearing their floor, and a click steps onto
+   that floor to decide — the ask stays at its own gate, but no gate is
+   ever invisible again. */
+let INBFOREIGN=[];
+async function loadForeign(){
+  try{INBFOREIGN=((await(await fetch(OBSD+"/inbox")).json()).waiting)||[]}
+  catch{INBFOREIGN=[]}
+}
+loadForeign();setInterval(loadForeign,15000);
 /* the pane lets go what the hand just settled (JB's find, 2026-08-20): a
    decided card's row leaves the waiting list, so the reading pane must
    release it too — selection advances to the next thing waiting. Release
@@ -3517,7 +3529,12 @@ function renderInbox(q){
   const bz=document.activeElement;
   if(bz&&bz.id&&(bz.id.startsWith("gw-")||bz.id.startsWith("qa-")))return;
   const isWaiting=r=>r.status==="staged"||(r.kind==="question"&&r.status==="pending");
-  const wait=q.filter(isWaiting).slice()
+  /* the one inbox sees every floor (0062): foreign waiting cards merge in,
+     each wearing its floor; deciding happens at the card's own gate */
+  const seen=new Set(q.map(r=>r.id));
+  const away=(INBFOREIGN||[]).filter(f=>f.floor&&f.floor!==floorScope&&!seen.has(f.id))
+    .map(f=>({...f,_away:true}));
+  const wait=q.filter(isWaiting).slice().concat(away)
     .sort((a,b)=>((KINDRANK[a.kind]??8)-(KINDRANK[b.kind]??8))
       ||String(a.at||"").localeCompare(String(b.at||"")));
   /* 0053 sp2 — the two books split the list: YOUR PURPOSES stand first;
@@ -3526,12 +3543,19 @@ function renderInbox(q){
   const mach=wait.filter(r=>bookOf(r.kind)==="machine");
   const badge=$("inbox-badge");if(badge)badge.textContent=wait.length?` (${wait.length})`:"";
   const mon=$("inbox-monitor");
+  const awayN=wait.filter(r=>r._away).length;
   if(mon)mon.textContent=wait.length
-    ?`${chron.length} on your purposes · ${mach.length} of the machine's own housekeeping — gravest first, then oldest`
+    ?`${chron.length} on your purposes · ${mach.length} of the machine's own housekeeping${awayN?` · ${awayN} at other floors' gates (marked — one click steps you there)`:""} — gravest first, then oldest`
     :"nothing waiting — you are all caught up";
-  if(!INBSEL||!q.some(r=>r.id===INBSEL))
-    INBSEL=chron.length?chron[0].id:(mach.length?mach[0].id:null);
-  const row=r=>`<div class="inbrow${r.id===INBSEL?" on":""}" data-id="${r.id}" onclick="inbSelect('${r.id}')">
+  if(!INBSEL||!q.some(r=>r.id===INBSEL)){
+    const firstHome=l=>(l.find(r=>!r._away)||{}).id||null;
+    INBSEL=firstHome(chron)||firstHome(mach)}
+  const row=r=>r._away
+    ?`<div class="inbrow" data-id="${r.id}" onclick="floorGo('${encodeURIComponent(r.floor)}')" title="this card waits at ${esc(r.floor)} — click to step onto that floor and decide it there">
+       <span class="kind">${r.kind||"request"}</span>${bookChip(r.kind)}<span class="m" style="float:right">waited ${inbAge(r)}</span>
+       <span class="t">${esc((r.text||"").slice(0,120))}</span>
+       <span class="m">at <b style="color:var(--brass)">${esc(leafName(r.floor))}</b>'s gate — click to go decide · ${r.id}</span></div>`
+    :`<div class="inbrow${r.id===INBSEL?" on":""}" data-id="${r.id}" onclick="inbSelect('${r.id}')">
        <span class="kind">${r.kind||"request"}</span>${bookChip(r.kind)}<span class="m" style="float:right">waited ${inbAge(r)}</span>
        <span class="t">${esc((r.text||"").slice(0,120))}</span>
        <span class="m">${r.id}</span></div>`;
@@ -3975,14 +3999,30 @@ function renderSeedPane(){
    <div class="dim" style="font:.66rem var(--mono)">${esc(e.id)} · source: ${esc(e.source||"")}</div>
    <div class="strdeal"><b>THE INTEL — the registry's word, never authority</b><br>
     ${esc(e.description||"—")}<br>
-    ${(e.remotes||[]).map(rm=>`<span class="k">${esc(rm.type||"remote")}</span>${esc(rm.url||"")}`).join("<br>")||"<span class='dim'>no remotes — a package-only seed (its container deploy is allen's walk, parked in 0059)</span>"}
-    ${e.packages?`<br><span class="k">packages</span>${e.packages} (stdio — needs a body; allen's walk)`:""}</div>
+    ${(e.remotes||[]).map(rm=>`<span class="k">${esc(rm.type||"remote")}</span>${esc(rm.url||"")}`).join("<br>")||"<span class='dim'>no remotes — a package-only seed; it needs a body, and allen builds those</span>"}
+    ${(e.packages||[]).length?`<br><span class="k">packages</span>${(e.packages||[]).map(p=>`${esc(p.registry)}: ${esc(p.id)}${p.version?" v"+esc(p.version):""}`).join(" · ")}`:""}</div>
    ${(e.remotes||[]).length?`<div class="dim" style="font-size:.68rem;margin:.4rem 0">planting stages charlotte's probe and YOUR word; the manifest pins at attest; probation earns serving.${smell?`<br><span style="color:var(--amber,#e8b34a)">⚠ this remote's url smells of a credential — plant it as env:NAME instead (paste the url into .env first); the warden will confess either way</span>`:""}</div>
    <div class="stbform">
     <input id="sd-name" value="${esc(e.id.split("/").pop()||e.id)}" style="max-width:180px">
     <input id="sd-endpoint" value="${esc(smell?"env:":url)}" placeholder="the remote url, or env:NAME">
     <button class="sbtn ok" onclick="sdsPlant('${esc(e.id)}')">🌱 plant it →</button></div>
-   <div class="formerr" id="sd-err"></div>`:""}`;
+   <div class="formerr" id="sd-err"></div>`
+   :((e.packages||[]).length?`<div class="dim" style="font-size:.68rem;margin:.4rem 0">this seed runs as a command, not a wire — approve and <b>allen grows its body as a deed</b>: a known-image container bridges it onto the rig, then charlotte plants the wire, probes, pins, and probation begins. one word opens the whole road.</div>
+   <div class="stbform">
+    <input id="sd-name" value="${esc(e.id.split("/").pop()||e.id)}" style="max-width:180px">
+    <button class="sbtn ok" onclick="sdsGrow('${esc(e.id)}')">🏗 grow a body & plant →</button></div>
+   <div class="formerr" id="sd-err"></div>`:"")}`;
+}
+async function sdsGrow(seedId){
+  const err=$("sd-err");if(err)err.textContent="";
+  const e=(SDSD?.entries||[]).find(x=>x.id===seedId),p=((e||{}).packages||[])[0];
+  if(!p){if(err)err.textContent="this seed declares no package the walk can build";return}
+  const name=$("sd-name").value.trim()||seedId.split("/").pop();
+  await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({kind:"service",action:"plant-body",name,
+      registry:p.registry,package:p.id,version:p.version,
+      text:`grow a body for ${name} — ${p.registry}:${p.id}; allen builds it as a deed, charlotte plants the wire (0062)`})});
+  if(err)err.textContent="staged — the body waits for your word in this floor's Inbox";
 }
 async function sdsPlant(seedId){
   const err=$("sd-err");if(err)err.textContent="";

@@ -2239,7 +2239,7 @@ def embed_door() -> None:
             if route not in ("/observatory", "/governance", "/craft",
                              "/sentences", "/desk", "/brain", "/resident",
                              "/pulse", "/spacetime", "/market", "/assign",
-                             "/seeds", "/record", "/atlas"):
+                             "/seeds", "/record", "/atlas", "/inbox"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2258,6 +2258,8 @@ def embed_door() -> None:
                         for n, g in speech.GLOSSARY.items()}}).encode()
                 elif route == "/atlas":
                     out = json.dumps(wire_atlas(4500)).encode()
+                elif route == "/inbox":
+                    out = json.dumps(wire_inbox()).encode()
                 elif route == "/craft":
                     qs = urllib.parse.parse_qs(
                         urllib.parse.urlparse(self.path).query)
@@ -7369,6 +7371,33 @@ def on_drift(port: int, scope: str, r: dict, *,
     return True
 
 
+def wire_inbox() -> dict:
+    """0062's inbox cure (JB's own wound: his approval could not FIND the
+    cards — subscriptions staged at f:allen were invisible from u:demo):
+    the ONE inbox finally means it. Every tended floor's WAITING cards,
+    each wearing its floor and port; the glass merges them into the
+    universe Inbox, and a click steps onto the card's own floor to decide
+    — the ask stays at its own gate (the ghost-at-the-wrong-gate law),
+    but no gate is ever invisible again."""
+    def sweep():
+        rows = []
+        for p, sc in sorted(FLOOR_SCOPES.items()):
+            try:
+                q = call(p, "GET", "/requests").get("requests", [])
+            except Exception:
+                continue
+            for r in q:
+                if r.get("status") == "staged" or (
+                        r.get("kind") == "question"
+                        and r.get("status") == "pending"):
+                    rows.append({"floor": sc, "port": p, "id": r.get("id"),
+                                 "kind": r.get("kind"), "at": r.get("at"),
+                                 "status": r.get("status"),
+                                 "text": str(r.get("text") or "")[:200]})
+        return rows
+    return {"waiting": _memo("one-inbox", 10, sweep)}
+
+
 def wire_atlas(port: int) -> dict:
     """0061 — the machine's schematic, drawn live: the SHAPE is declared
     (live shelf heads first — the schematic is craft; genesis beneath),
@@ -9863,6 +9892,157 @@ def on_release(port: int, scope: str, r: dict) -> None:
          f"({rec['id'][:16]}…) and the machine takes a new name on the next "
          f"beat, your word standing behind it (the watchdog stays quiet only "
          f"on this path)", record=rec["id"])
+
+
+# ------------------------------------------- 0062 sp2 · the container walk
+BODY_IMAGES = {"npm": "node:20-alpine"}       # JB's L3: known images only
+_BODY_LEDGER = Path.home() / ".orreth" / "bodies.json"
+
+
+def _body_ledger() -> dict:
+    try:
+        return json.loads(_BODY_LEDGER.read_text())
+    except Exception:
+        return {}
+
+
+def on_plant_body(port: int, scope: str, r: dict) -> None:
+    """0062 sp2 — THE CONTAINER WALK: a package-only seed has no wire, so
+    allen GROWS ITS BODY as a deed (0042's family, class estate-apply — the
+    dev estate IS the laptop, his own charter words), and charlotte then
+    plants the bridged wire like any tool. Two keepers, one citizen: the
+    body's life on allen's worldline, the tool's on charlotte's ledger.
+    JB's L3 bounds the recipe: known images + declared commands only — an
+    unknown registry refuses at the gap-analysis, loudly."""
+    import hashlib as _hl
+    import re as _re6
+    rid = str(r.get("id") or "")
+
+    def done(reply, **kw):
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "done", "result": {"reply": reply, **kw}})
+
+    reg = str(r.get("registry") or "npm").lower()
+    pkg = str(r.get("package") or "").strip()
+    ver = str(r.get("version") or "").strip()
+    name = str(r.get("name") or (pkg.split("/")[-1] if pkg else "")).strip()
+    image = BODY_IMAGES.get(reg)
+    if not pkg or not name:
+        return done("a body needs a package and a name — nothing to build")
+    if image is None:                          # the gap-analysis refuses (L3)
+        return done(f"allen's gap-analysis refuses: “{reg}” names no image "
+                    f"this rig trusts (known: {', '.join(BODY_IMAGES)}) — "
+                    "the recipe's bounds are the human's lock, and an "
+                    "unknown registry does not pass them. Nothing built")
+    slugname = _re6.sub(r"[^a-z0-9-]+", "-", name.lower()).strip("-")[:24]
+    cont = f"orreth-body-{slugname}"
+    led = _body_ledger()
+    hostport = int(r.get("port") or 0) or (
+        max([4590] + [int(v.get("port", 4590)) for v in led.values()]) + 1)
+    stdio_cmd = f"npx -y {pkg}{'@' + ver if ver else ''}"
+    bridge = (f"npx -y supergateway --stdio \"{stdio_cmd}\" "
+              f"--outputTransport streamableHttp --port 8000")
+    if r.get("status") == "pending":
+        call(port, "POST", "/requests/resolve",
+             {"id": rid, "status": "staged",
+              "result": {"held": "a body waits for your word — approve and "
+                                 "allen builds it as a deed; decline and "
+                                 "nothing is built",
+                         "recipe": {"image": image, "bridge": bridge,
+                                    "container": cont, "port": hostport},
+                         "then": "charlotte plants the bridged wire, probes "
+                                 "and pins it, and probation begins — one "
+                                 "word opens the whole road"}})
+        print(f"  🏗 body-needed staged: “{name}” ({pkg}) — the gate waits")
+        return
+    if r.get("status") == "denied":
+        return done(f"declined — no body for “{name}”; the record keeps "
+                    "that you chose")
+    if r.get("status") != "approved":
+        return
+    a_kp, a_did = resident_key("allen", scope)
+    if a_kp is None:
+        return done("allen holds no key at this floor — the body walk "
+                    "needs its architect. Nothing built")
+    try:
+        eid = json.loads(_epoch_nest(UNIVERSE_SCOPE).read_text()).get("id", "")
+    except Exception:
+        eid = ""
+    actor = {"did": a_did, "scope": scope}
+    key = _hl.sha256(f"{image}|{bridge}|{cont}".encode()).hexdigest()[:24]
+
+    def deed_rec(role: str, body: dict, derived: str | None) -> str:
+        rec = node.make_memory(actor, a_kp, scope, {role: body},
+                               kind="episodic", tags=["deed", role,
+                                                      "body-walk", slugname])
+        if derived:
+            rec["derived_from"] = [derived]
+        call(port, "POST", "/records", rec)
+        return rec["id"]
+
+    intent = deed_rec("intent", {
+        "effect": "estate-apply", "change": f"grow a body for “{name}” — "
+        f"{image} bridging «{stdio_cmd}» to streamable-HTTP MCP on "
+        f":{hostport}", "objective": rid, "at": NOW()}, None)
+    auth = deed_rec("authorization", {
+        "deed": intent, "authority": f"the human's word at {rid}",
+        "budget": 0.0, "window_s": 600, "key": key, "at": NOW()}, intent)
+    subprocess.run(["docker", "rm", "-f", cont], capture_output=True)
+    run = subprocess.run(
+        ["docker", "run", "-d", "--name", cont, "--network", RIG_NET,
+         "--restart", "unless-stopped", "-p", f"{hostport}:8000",
+         image, "sh", "-lc", bridge],
+        capture_output=True, text=True, timeout=120)
+    attempt = deed_rec("attempt", {
+        "deed": intent, "manifests": {"image": image, "bridge": bridge,
+                                      "container": cont, "port": hostport},
+        "key": key, "epoch": eid, "at": NOW()}, auth)
+    if run.returncode != 0:
+        deed_rec("observation", {"deed": intent, "found": {
+            "alive": False, "error": (run.stderr or run.stdout)[:300]},
+            "at": NOW()}, attempt)
+        return done(f"the attempt failed and the deed says so — "
+                    f"{(run.stderr or run.stdout)[:200]}. Nothing serves")
+    deed_rec("receipt", {"deed": intent,
+                         "acknowledged": {"container_id": run.stdout.strip()[:24]},
+                         "at": NOW()}, attempt)
+    endpoint = f"http://127.0.0.1:{hostport}/mcp"
+    tools = None                               # the first boot fetches npm — patience
+    for _ in range(30):
+        tools = mcp_tools(endpoint)
+        if tools:
+            break
+        time.sleep(5)
+    deed_rec("observation", {"deed": intent, "found": {
+        "alive": bool(tools), "tools": len(tools or []),
+        "endpoint": endpoint}, "at": NOW()}, attempt)
+    led[cont] = {"port": hostport, "package": pkg, "planted": NOW()}
+    _BODY_LEDGER.parent.mkdir(parents=True, exist_ok=True)
+    _BODY_LEDGER.write_text(json.dumps(led, indent=1, sort_keys=True))
+    if not tools:
+        return done(f"the body stands but has not answered ({cont} on "
+                    f":{hostport}) — it may still be fetching its package; "
+                    "it will keep trying under its own restart, and the "
+                    "observation says honestly: dark, not serving",
+                    container=cont)
+    # the one-word road respects the plant's OWN probe: the ask files
+    # carrying the body-word's ref, charlotte probes and stages it like any
+    # plant, and the sweep sees «carried» on the STAGED card and lands the
+    # human's word — never approving past a probe that hasn't spoken
+    # (learned live 2026-08-27: an approve raced the stage and refused)
+    call(port, "POST", "/requests", {
+        "kind": "service", "action": "plant", "name": name,
+        "svc_kind": "mcp", "endpoint": endpoint, "transport": "mcp",
+        "carried": rid,
+        "text": f"plant {name} — the bridged wire of allen's body {cont} "
+                f"({len(tools)} tool(s) answered); the body word at {rid} "
+                "opens this whole road"})
+    print(f"  🏗 the body stands: {cont} :{hostport} — {len(tools)} tool(s); "
+          f"charlotte's plant rides the same word")
+    done(f"the body stands and answered — {len(tools)} tool(s) on the "
+         f"bridged wire; charlotte is planting it now (probation begins), "
+         "and the whole build is a deed on allen's worldline",
+         container=cont, tools=len(tools))
 
 
 def bell_beat(port: int) -> None:
@@ -13491,7 +13671,25 @@ def main() -> None:
                                           "the human's own word — no second "
                                           "click owed")
                         elif r.get("kind") == "service":
-                            if KEEPER.on_service_request(port, scope, r) or r.get("status") == "staged":
+                            if (r.get("action") == "plant-body"
+                                    and r.get("status") in ("pending",
+                                                            "approved",
+                                                            "denied")):
+                                handled.add(key)  # 0062 sp2 — the walk rides
+                                on_plant_body(port, scope, r)  # before the keeper
+                            elif (r.get("action") == "plant"
+                                  and r.get("status") == "staged"
+                                  and r.get("carried")):
+                                handled.add(key)  # the body-word lands NOW —
+                                call(port, "POST", "/requests/resolve",
+                                     {"id": r["id"], "status": "approved",
+                                      "note": "one word, one road — the "
+                                              "human's body approval at "
+                                              f"{r['carried']} carries"})
+                                print(f"  🏗 the carried word lands: "
+                                      f"{r.get('name')} approved by "
+                                      f"{r['carried']}")
+                            elif KEEPER.on_service_request(port, scope, r) or r.get("status") == "staged":
                                 handled.add(key)
                         elif r.get("kind") == "mind":
                             if WRANGLER.on_mind_request(port, scope, r) or r.get("status") == "staged":

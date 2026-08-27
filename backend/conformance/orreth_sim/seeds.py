@@ -61,7 +61,15 @@ def registry_search(q: str, limit: int = 30, *, fetch=None) -> tuple[list, str]:
             "version": s.get("version"),
             "remotes": [{"type": rm.get("type"), "url": rm.get("url")}
                         for rm in (s.get("remotes") or []) if rm.get("url")],
-            "packages": len(s.get("packages") or []),
+            # 0062 sp2 — a package seed keeps its IDENTITY, not just a count:
+            # the container walk needs the registry and the identifier to
+            # form a body recipe (known image + declared command, JB's L3)
+            "packages": [
+                {"registry": (p.get("registryType") or p.get("registry_type")
+                              or p.get("registry_name") or ""),
+                 "id": p.get("identifier") or "",
+                 "version": p.get("version") or ""}
+                for p in (s.get("packages") or []) if p.get("identifier")],
             "status": meta.get("status"),
             "latest": bool(meta.get("isLatest")),
             "source": "mcp-registry",
