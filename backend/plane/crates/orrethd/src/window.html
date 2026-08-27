@@ -3078,6 +3078,12 @@ function refreshCounters(){
    a human sees their layer and below) — self-only hid the librarian's knowledge, which
    is why "add knowledge" looked dead: admitted, resolved, and invisible. Never again. */
 let floorScope=null;
+/* the worker's console door (:4562) — declared HERE, above its first eager
+   user: loadForeign() fires at script eval, and a `const` living below that
+   call is a ReferenceError its catch swallows whole (found 2026-08-27:
+   fifteen seconds of false calm at u:demo on every fresh load — the human
+   stepped down to f:prod before the one inbox ever spoke). */
+const OBSD=`${location.protocol}//${location.hostname}:4562`;
 const SUBJ=()=>floorScope?{cohort:{scope:floorScope}}:"self";
 async function pulse(){
   try{
@@ -3477,10 +3483,18 @@ let INBARCH=false,INBSEL=null,INBMACH=false,REQCACHE=null;
    foreign ones join this list wearing their floor, and a click steps onto
    that floor to decide — the ask stays at its own gate, but no gate is
    ever invisible again. */
-let INBFOREIGN=[];
+let INBFOREIGN=[],OBJFOREIGN=[];
 async function loadForeign(){
-  try{INBFOREIGN=((await(await fetch(OBSD+"/inbox")).json()).waiting)||[]}
-  catch{INBFOREIGN=[]}
+  const was=INBFOREIGN.length+"·"+OBJFOREIGN.length;
+  try{const j=await(await fetch(OBSD+"/inbox")).json();
+    INBFOREIGN=j.waiting||[];OBJFOREIGN=j.objectives||[]}
+  catch{INBFOREIGN=[];OBJFOREIGN=[]}
+  /* the badge lights the moment the truth arrives — it never waits for the
+     next breath (the 15s-interval was the only painter before, so a fresh
+     tab sat falsely calm) */
+  if(was!==INBFOREIGN.length+"·"+OBJFOREIGN.length){
+    const paint=()=>{try{renderInbox(REQCACHE||[]);loadObjectives()}catch{}};
+    floorScope?paint():setTimeout(paint,1000);}
 }
 loadForeign();setInterval(loadForeign,15000);
 /* the pane lets go what the hand just settled (JB's find, 2026-08-20): a
@@ -3554,7 +3568,7 @@ function renderInbox(q){
     ?`<div class="inbrow" data-id="${r.id}" onclick="floorGo('${encodeURIComponent(r.floor)}')" title="this card waits at ${esc(r.floor)} — click to step onto that floor and decide it there">
        <span class="kind">${r.kind||"request"}</span>${bookChip(r.kind)}<span class="m" style="float:right">waited ${inbAge(r)}</span>
        <span class="t">${esc((r.text||"").slice(0,120))}</span>
-       <span class="m">at <b style="color:var(--brass)">${esc(leafName(r.floor))}</b>'s gate — click to go decide · ${r.id}</span></div>`
+       <span class="m">at <b style="color:var(--brass)">${leafName(r.floor)}</b>'s gate — click to go decide · ${r.id}</span></div>`
     :`<div class="inbrow${r.id===INBSEL?" on":""}" data-id="${r.id}" onclick="inbSelect('${r.id}')">
        <span class="kind">${r.kind||"request"}</span>${bookChip(r.kind)}<span class="m" style="float:right">waited ${inbAge(r)}</span>
        <span class="t">${esc((r.text||"").slice(0,120))}</span>
@@ -5161,7 +5175,8 @@ window.addEventListener("resize",()=>{if(!$("v-uni").classList.contains("hide"))
       tier. The dead-man is FIRST-CLASS (G1): an unreachable door or a stale
       beat turns the room dark, loudly — the one failure a monitoring organ
       must never have is silence about itself. ── */
-const OBSD=`${location.protocol}//${location.hostname}:4562`;
+/* OBSD (the :4562 door) is declared early, above its first eager user —
+   see the note beside floorScope */
 
 /* ── 0054 sp4+sp5 · the capabilities pull — the portal of applied-purpose
       worlds (L-C). A LANDING of world cards first (organized as they grow),
@@ -6996,15 +7011,26 @@ async function loadObjectives(){
   THUMBED={};q.forEach(r=>{if(r.kind==="thumb"&&r.status==="done"&&r.of)
     THUMBED[r.of]={up:!!r.up,req:r.id}});
   const objs=q.filter(r=>r.kind==="objective");
+  /* 0062's one-inbox law reaches the purposes too (JB's find, 2026-08-27:
+     u:demo showed NO objectives while seven lived at f:prod — the top of
+     the world must see every purpose below): other floors' living
+     objectives join this view wearing their floor; a click steps there */
+  const seenO=new Set(objs.map(r=>r.id));
+  const awayO=(OBJFOREIGN||[]).filter(f=>f.floor&&f.floor!==floorScope&&!seenO.has(f.id))
+    .map(f=>({...f,_away:true}));
   const questions=q.filter(r=>r.kind==="question");
+  const awayQn=(INBFOREIGN||[]).filter(f=>f.kind==="question"&&f.status==="pending"
+    &&f.floor&&f.floor!==floorScope).length;
   const waitingOnYou=objs.filter(r=>r.status==="staged").length
-    +questions.filter(r=>r.status==="pending").length;
+    +questions.filter(r=>r.status==="pending").length
+    +awayO.filter(r=>r.status==="staged").length+awayQn;
   const badge=$("obj-badge"); if(badge)badge.textContent=waitingOnYou?` (${waitingOnYou})`:"";
   const mon=$("obj-monitor");
   if(mon){const w=objs.filter(r=>r.status==="staged").length,
-    g=objs.filter(r=>r.status==="approved").length;
-    mon.textContent=(w+g)?say("journey-monitor",{n:w+g,waiting:w,working:g},
-      `Orreth is tending ${w+g} objective(s) — ${w} waiting on you · ${g} working`):"";}
+    g=objs.filter(r=>r.status==="approved").length,
+    awn=awayO.length?` · ${awayO.length} living at other floors (marked below — one click steps you there)`:"";
+    mon.textContent=((w+g)?say("journey-monitor",{n:w+g,waiting:w,working:g},
+      `Orreth is tending ${w+g} objective(s) — ${w} waiting on you · ${g} working`):"")+awn;}
   /* the organized left (JB's brief: structure left, the friendly view right):
      compact rows in three bands, evidence lives in the pane (0052's lesson) */
   const newest=objs.slice().reverse();
@@ -7021,15 +7047,22 @@ async function loadObjectives(){
     return `<div class="objrowi${r.id===OBJSEL?" on":""}" onclick="objSelect('${r.id}')">
       <span class="t">${esc(r.text||"")}</span>
       <span class="m"><span class="st2">${esc(r.status)}</span>${r.effort?`<span>· ${esc(r.effort)}</span>`:""}<span>· ${r.at?ago(r.at):""}</span>${nq?`<span style="color:var(--amber,#e8b34a)">· ${nq} question${nq===1?"":"s"} for you</span>`:""}</span></div>`};
-  const bands=[["needs your decision",newest.filter(r=>r.status==="staged")],
-    ["working",newest.filter(r=>r.status==="approved"||r.status==="pending")],
+  /* an away row is a signpost, not a record: it opens by stepping onto its
+     own floor — deciding stays at the objective's home gate */
+  const rowAway=r=>`<div class="objrowi" onclick="floorGo('${encodeURIComponent(r.floor)}')" title="this objective lives at ${esc(r.floor)} — click to step onto that floor">
+      <span class="t">${esc((r.text||"").slice(0,120))}</span>
+      <span class="m"><span class="st2">${esc(r.status)}</span><span>· at <b style="color:var(--brass)">${leafName(r.floor)}</b> — click to go</span><span>· ${r.at?ago(r.at):""}</span></span></div>`;
+  const bands=[["needs your decision",newest.filter(r=>r.status==="staged")
+      .concat(awayO.filter(r=>r.status==="staged"))],
+    ["working",newest.filter(r=>r.status==="approved"||r.status==="pending")
+      .concat(awayO.filter(r=>r.status==="approved"||r.status==="pending"))],
     ["settled — the record",newest.filter(r=>!["staged","approved","pending"].includes(r.status))]];
-  $("objlist").innerHTML= objs.length?
+  $("objlist").innerHTML= (objs.length||awayO.length)?
     bands.map(([lbl,rows],gi)=>{
       if(!rows.length)return"";
       if(gi===2)return `<div class="qband" style="cursor:pointer;margin-top:.8rem" onclick="OBJARCH=!OBJARCH;loadObjectives()"><b>settled — finished work, kept forever</b><span class="n">· ${rows.length} ${OBJARCH?"▾ click to fold":"▸ click to open"}</span></div>`
         +(OBJARCH?rows.map(row).join(""):"");
-      return `<div class="qband" style="margin-top:.6rem"><b>${lbl}</b><span class="n">· ${rows.length}</span></div>`+rows.map(row).join("");
+      return `<div class="qband" style="margin-top:.6rem"><b>${lbl}</b><span class="n">· ${rows.length}</span></div>`+rows.map(r=>r._away?rowAway(r):row(r)).join("");
     }).join("")
     : `<div class="quiet">no objectives yet — request one above; a plan will stage for your approval.</div>`;
   /* the friendly right: the ONE card builder, in-pane — decide, answer,

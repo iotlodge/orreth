@@ -7380,22 +7380,29 @@ def wire_inbox() -> dict:
     — the ask stays at its own gate (the ghost-at-the-wrong-gate law),
     but no gate is ever invisible again."""
     def sweep():
-        rows = []
+        waiting, objectives = [], []
         for p, sc in sorted(FLOOR_SCOPES.items()):
             try:
                 q = call(p, "GET", "/requests").get("requests", [])
             except Exception:
                 continue
             for r in q:
+                row = {"floor": sc, "port": p, "id": r.get("id"),
+                       "kind": r.get("kind"), "at": r.get("at"),
+                       "status": r.get("status"),
+                       "text": str(r.get("text") or "")[:200]}
                 if r.get("status") == "staged" or (
                         r.get("kind") == "question"
                         and r.get("status") == "pending"):
-                    rows.append({"floor": sc, "port": p, "id": r.get("id"),
-                                 "kind": r.get("kind"), "at": r.get("at"),
-                                 "status": r.get("status"),
-                                 "text": str(r.get("text") or "")[:200]})
-        return rows
-    return {"waiting": _memo("one-inbox", 10, sweep)}
+                    waiting.append(row)
+                # the purposes cross floors too (JB's find, 2026-08-27):
+                # a LIVING objective at any tended floor is visible from
+                # the top of the world — settled ones stay home
+                if r.get("kind") == "objective" and r.get("status") in (
+                        "staged", "approved", "pending"):
+                    objectives.append(row)
+        return {"waiting": waiting, "objectives": objectives}
+    return _memo("one-inbox", 10, sweep)
 
 
 def wire_atlas(port: int) -> dict:
