@@ -87,3 +87,27 @@ the architect who studied this week.
 - **L3 — known images only**: v1 recipes are declared image + command; no
   Dockerfile builds; allen's gap-analysis refuses an untrusted image.
 - **L4 — the name is JB's own phrase**: The Residents Keep Themselves.
+
+## CLOSED WHOLE — 2026-08-27, era 0.62
+
+Every rung of the measure, met live:
+
+- **sp1** (1c452ba): the law stated canon; allen's three study lines
+  opened on JB's word at his own floor and delivered within the hour;
+  asked *"what did you learn this week?"* he answered VOICED with that
+  week's real AWS news, confessed the quarantine in his own words, and
+  referred the deployment tail to charlotte by charter. The hunt paid
+  four standing finds — including the verbatim flag that had silenced
+  his voice since the estate was built.
+- **sp2** (da3aac2): the container walk — `orreth-body-everything`, the
+  first stdio citizen in this universe's history: one word → the
+  five-record deed on allen's worldline → the bridged body → 15 tools
+  pinned into probation. The one-Inbox cure rode the same commit.
+- **sp3**: `pulse-fetch`, **chosen live from the catalog's own intel**,
+  walked the identical road end to end and answered one governed
+  tools/call on the farm's meter — the closing rung.
+
+Honest remainder, on the register: the deeds ride `estate-apply` (the
+dev estate IS the laptop) until «body-run» earns its release ceremony;
+allen's voice speaks at u:demo, not yet at his unfueled hull; Azure and
+Google are declared growth, not claims.
