@@ -1111,6 +1111,9 @@
     padding:.42rem .6rem;cursor:pointer;z-index:2;transition:box-shadow .15s}
   .atlnode b{display:block;font-size:.72rem;color:var(--star)}
   .atlnode span{display:block;font-size:.6rem;color:var(--faint);line-height:1.3;margin-top:.1rem}
+  .atlnode{cursor:pointer}
+  .atlnode::after{content:"› open";position:absolute;right:.5rem;bottom:.25rem;font-size:.52rem;color:var(--faint)}
+  .atlnode:hover::after{color:var(--brass)}
   .atlnode:hover{box-shadow:0 0 14px var(--brassdim)}
   .atlnode.human{border-color:#7fd1a8}
   .atlnode.organs{border-color:var(--brassdim)}
@@ -1577,7 +1580,7 @@
   <div class="pgate" id="p-gate" style="display:none"
        title="what waits on you, right here in the audience — the same gates as the Requests tab"></div>
   <div class="pchips" id="p-chips"></div>
-  <div class="pin"><input id="p-in" placeholder="ask in your own words — the resident does the looking and answers on the record">
+  <div class="pin"><input id="p-in" placeholder="ask in your own words">
     <button onclick="parlorSay()">Speak →</button></div>
 </div>
 
@@ -1601,7 +1604,7 @@
 <div id="atlaspull" onclick="atlToggle()" title="the atlas — the machine's schematic, drawn live: the governance loops, the installed worlds, and where YOU enter">🗺 atlas</div>
 <div id="atlasworld">
   <div id="atlhead"><b>THE ATLAS · THE MACHINE'S SCHEMATIC, DRAWN LIVE</b>
-    <span class="dim" style="font-size:.66rem">the shape is declared; the glow is measured — no line lights that carried nothing this hour · every box opens its door</span>
+    <span class="dim" style="font-size:.66rem">every box is a part of the machine — click any box to open it · a line glows only when real work moved along it in the last hour</span>
     <span class="qchip on" id="atl-hum" onclick="atlLens('hum')">🖐 the human</span>
     <span class="qchip on" id="atl-gov" onclick="atlLens('gov')">⚙ governance</span>
     <span class="qchip on" id="atl-cap" onclick="atlLens('cap')">◈ the worlds</span>
@@ -3099,7 +3102,7 @@ async function pulse(){
         b.style.cssText="position:fixed;top:52px;left:50%;transform:translateX(-50%);"
           +"z-index:99;font:700 .74rem var(--mono);color:#1a1305;background:var(--brass);"
           +"border-radius:999px;padding:.5em 1.2em;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.45)";
-        b.textContent="⟳ the glass was rebuilt beneath this tab — click to wear the new one";
+        b.textContent="⟳ this page is running an older version — click to reload the new one; nothing you did is lost";
         b.onclick=()=>location.reload();
         document.body.appendChild(b);
       }}
@@ -3318,7 +3321,7 @@ const ago=t=>{const s=(Date.now()-new Date(t))/1e3;
   return s<90?`${s|0}s ago`:s<5400?`${s/60|0}m ago`:`${s/3600|0}h ago`};
 /* a pending ask nothing serves is VISIBLE governance, not a mystery (0018 §7) */
 const staleNote=r=>r.status==="pending"&&Date.now()-new Date(r.at)>12e3?
-  `<div class="sub" style="color:var(--red)">…the machine hasn't picked this up yet — it may be waking; it keeps trying on its own</div>`:"";
+  `<div class="sub" style="color:var(--red)">…no worker has answered this yet — it retries on its own, and nothing is lost while it waits</div>`:"";
 /* 0047 sp3 — what the universe UNDERSTOOD, on the plan card: the studio's
    reading, its honest absence (dark), or its honest failure (parked) */
 function studioNote(r){
@@ -3537,6 +3540,11 @@ async function renderInboxDetail(){
     :reqRow(r,true,extra));
   linkifyEl(el);glossifyEl(el);
 }
+/* a list row's text ends at a word, never mid-syllable — «silence is deni…»
+   read as a threat to quinn's stranger-eyes (v3); the pane holds the whole */
+const cutAt=(s,n)=>{s=String(s||"");if(s.length<=n)return esc(s);
+  const c=s.slice(0,n),i=c.lastIndexOf(" ");
+  return esc((i>60?c.slice(0,i):c)+" …")};
 function renderInbox(q){
   const el=$("inboxlist");if(!el)return;
   REQCACHE=q;
@@ -3567,11 +3575,11 @@ function renderInbox(q){
   const row=r=>r._away
     ?`<div class="inbrow" data-id="${r.id}" onclick="floorGo('${encodeURIComponent(r.floor)}')" title="this card waits at ${esc(r.floor)} — click to step onto that floor and decide it there">
        <span class="kind">${r.kind||"request"}</span>${bookChip(r.kind)}<span class="m" style="float:right">waited ${inbAge(r)}</span>
-       <span class="t">${esc((r.text||"").slice(0,120))}</span>
+       <span class="t">${cutAt(r.text,120)}</span>
        <span class="m">at <b style="color:var(--brass)">${leafName(r.floor)}</b>'s gate — click to go decide · ${r.id}</span></div>`
     :`<div class="inbrow${r.id===INBSEL?" on":""}" data-id="${r.id}" onclick="inbSelect('${r.id}')">
        <span class="kind">${r.kind||"request"}</span>${bookChip(r.kind)}<span class="m" style="float:right">waited ${inbAge(r)}</span>
-       <span class="t">${esc((r.text||"").slice(0,120))}</span>
+       <span class="t">${cutAt(r.text,120)}</span>
        <span class="m">${r.id}</span></div>`;
   const drawer=mach.length
     ?`<div class="dim" style="margin:.6rem 0 .25rem;font-size:.7rem;letter-spacing:.08em">⚙ THE MACHINE'S OWN HOUSEKEEPING — ${mach.length} waiting · <a href="#" onclick="INBMACH=!INBMACH;renderInbox(REQCACHE||[]);return false" style="color:var(--brass)">${INBMACH?"fold":"open"}</a></div>`
@@ -4433,7 +4441,7 @@ function openParlor(name){
   $("p-expand").style.display="none"; $("p-ws").style.display="none";
   $("p-ws").innerHTML=""; $("parlor").classList.remove("full");
   $("p-drop").style.display="none";
-  $("p-thread").innerHTML=`<div class="msg reply wait">${name} is coming…${RESBLURB[name]?` (${esc(RESBLURB[name])})`:""} ask in your own words below — the answer arrives here, cited and kept on the record.</div>`;
+  $("p-thread").innerHTML=`<div class="msg reply wait">${RESBLURB[name]?`${name} — ${esc(RESBLURB[name])}. `:`${name} is coming… `}ask anything in your own words below — for example, “what do we know about the trading desk?” — and the answer lands here with its sources named, kept for you to find again.</div>`;
   $("parlor").classList.add("on"); $("p-in").focus();
   document.body.classList.add("parlor-open"); parlorRefit();
   parlorPost({verb:"card"});
@@ -6015,7 +6023,7 @@ async function resOpen(name,tab){
   const R=d.resident||{};
   $("rsm-name").textContent="@"+RESM.name;
   $("rsm-av").textContent=R.emoji||"◉";
-  $("rsm-sub").textContent=`${(R.name||"").replace(/^[a-z]+ · /,"")} · ${(R.mode||"dev")==="prod"?"production — its words change only by release":"dev mode — its words are editable here"}${R.world_name?` · tends ${R.world_name}`:""}`;
+  $("rsm-sub").textContent=`${(R.name||"").replace(/^[a-z]+ · /,"")} — one of the machine's own staff · ${(R.mode||"dev")==="prod"?"in production its words change only by a release you approve":"this rig is a workshop, so its words are editable right here"}${R.world_name?` · tends ${R.world_name}`:""}`;
   rsmRender()}
 function rsmTab(t){RESM.tab=t;rsmRender();
   if(t==="prompts"&&!RESM.word){
@@ -6028,8 +6036,9 @@ function rsmRender(){
     `<button class="rsm-tab${RESM.tab===k?" on":""}" onclick="rsmTab('${k}')">${l}</button>`).join("");
   let h="";
   if(RESM.tab==="info"){
-    h=`<div class="rsm-eyebrow">specialization</div><div style="font-size:.85rem">${dkEsc(R.blurb||"")}</div>`
-     +`<div class="rsm-eyebrow">the mirror's reflection</div><div class="dim" style="font-size:.78rem;line-height:1.5">${dkEsc(item.mirror||"")}</div>`
+    h=`<div class="dim" style="font-size:.62rem;margin-bottom:.4rem">the tabs above · Graph = its connections, drawn · Prompts = the words it thinks with · Model = the AI mind it rides · Metrics = its work and spend · Schedule = its standing duties</div>`
+     +`<div class="rsm-eyebrow">specialization</div><div style="font-size:.85rem">${dkEsc(R.blurb||"")}</div>`
+     +`<div class="rsm-eyebrow">notes from past conversations</div><div class="dim" style="font-size:.78rem;line-height:1.5">${dkEsc(item.mirror||"")}</div>`
      +(item.words&&item.words.length
        ?`<div class="rsm-eyebrow">the words this resident wears — ${item.words.length}</div>`
         +item.words.slice(0,18).map(w=>`<span class="rsm-chip">✎ ${dkEsc(w.word)}</span>`).join("")
@@ -6037,7 +6046,7 @@ function rsmRender(){
      +`<div class="rsm-eyebrow">quick actions</div>`
      +`<button class="rsm-qa" onclick="rsmClose();openParlor('${dkEsc(RESM.name)}')">talk to ${dkEsc(RESM.name)} — ask in your own words; the answer is cited and kept</button>`
      +(R.world?`<button class="rsm-qa" onclick="rsmClose();CAPV='${dkEsc(R.world)}';capToggle()">Open ${dkEsc(R.world_name||R.world)} — the world this resident tends</button>`:"")
-     +`<button class="rsm-qa" onclick="rsmTab('schedule')">schedule a repeating question — you approve once; it runs on the schedule you set</button>`}
+     +`<button class="rsm-qa" onclick="rsmTab('schedule')">schedule a repeating question — the Schedule tab lets you pick how often; you approve once and it runs on that rhythm</button>`}
   else if(RESM.tab==="graph"){
     const flows=(d.view||[]).filter(p=>p.kind==="flow");
     h=flows.length?flows.map((p,pi)=>
@@ -6383,7 +6392,7 @@ function govOpen(name){
   const R=$("gov-read");R.classList.remove("hide");const gh=$("gov-hint");if(gh)gh.style.display="none";
   R.innerHTML=`<div class="pt"><b>${esc(name)}</b>
       <span class="lc ${o.lifecycle==="chronicle"?"chr":""}" style="margin-left:.5rem">${o.lifecycle==="canon"?"firmware — locked; a change becomes a new release":"editable — your edit lands as a new version, history kept"}</span></div>
-    <div class="quiet2" style="margin:.3rem 0">${o.category} · ${o.versions} version(s) below, oldest first — click one to read it; nothing here was ever silently overwritten</div>
+    <div class="quiet2" style="margin:.3rem 0">${o.category}${({prompts:" — words the machine thinks with",skills:" — how-to knowledge a mind can borrow",policies:" — standing rules the machine obeys",charters:" — a resident's standing duties",manifests:" — declared shapes: what a thing says it is"})[o.category]||""} · ${o.versions} version(s) below, oldest first — click one to read it; nothing here was ever silently overwritten</div>
     <div id="gov-vers" style="margin:.45rem 0">${o.refs.map((r,i)=>
       `<span class="gvv" onclick="govVer('${esc(name)}',${i})">v${i+1}${i===o.refs.length-1?" · current":""}</span>`).join("")}
       ${o.versions>1?`<span class="gvv" onclick="govDiff('${esc(name)}')">⇄ compare newest vs previous</span>`:""}
@@ -6401,7 +6410,7 @@ function govOpen(name){
 async function govVer(name,i){
   const o=GOVD.objects.find(x=>x.name===name);if(!o)return;
   document.querySelectorAll("#gov-vers .gvv").forEach((e,j)=>e.classList.toggle("on",j===i));
-  $("gov-ref").textContent=o.refs[i];
+  $("gov-ref").innerHTML=`<span title="${esc(o.refs[i])}">${esc(String(o.refs[i]).slice(0,21))}…</span> — this version's full name; every record is named by the fingerprint of its own words, so a name can never lie`;
   try{
     const b=await govFetch(o.refs[i],o.port);
     GOVRAW=(b&&b.firmware)?b.firmware.text
@@ -6920,7 +6929,7 @@ function atlRender(){
   const EDGES=edges.filter(e=>have.has(e.from)&&have.has(e.to));
   /* geometry: four lanes as columns; rows stack; the sheet scrolls */
   const lanes=[["human","where the human enters"],["organs","the machine's own staff"],
-    ["kernel","the kernel — the one set of doors"],["worlds","the installed worlds"]];
+    ["kernel","the machine's core"],["worlds","the installed worlds"]];
   const liveLanes=lanes.filter(([k])=>byLane[k].length);
   const colW=Math.max(250,Math.floor((B.clientWidth-36)/Math.max(1,liveLanes.length)));
   const pos={};let H=90;
@@ -7053,7 +7062,7 @@ async function loadObjectives(){
   /* an away row is a signpost, not a record: it opens by stepping onto its
      own floor — deciding stays at the objective's home gate */
   const rowAway=r=>`<div class="objrowi" onclick="floorGo('${encodeURIComponent(r.floor)}')" title="this objective lives at ${esc(r.floor)} — click to step onto that floor">
-      <span class="t">${esc((r.text||"").slice(0,120))}</span>
+      <span class="t">${cutAt(r.text,120)}</span>
       <span class="m"><span class="st2">${esc(r.status)}</span><span>· at <b style="color:var(--brass)">${leafName(r.floor)}</b> — click to go</span><span>· ${r.at?ago(r.at):""}</span></span></div>`;
   const bands=[["needs your decision",newest.filter(r=>r.status==="staged")
       .concat(awayO.filter(r=>r.status==="staged"))],

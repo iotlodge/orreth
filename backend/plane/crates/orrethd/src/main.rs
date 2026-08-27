@@ -1231,7 +1231,7 @@ fn residents(app: &App) -> Vec<Value> {
     let mut out = vec![
         json!({"agent": format!("becky·{leaf}"), "name": "becky", "role": "becky · identity",
                "state": "resident", "did": root,
-               "blurb": "signs every agent and tool in — nothing joins without her word",
+               "blurb": "checks every ask to join — agent or tool — and signs it in; nothing enters without her approval",
                "vitals": {"leases": leases, "llm calls": bk_c, "llm usd": bk_u}}),
         json!({"agent": format!("vigil·{leaf}"), "name": "vigil", "role": "vigil · the Warden",
                "state": "watching",

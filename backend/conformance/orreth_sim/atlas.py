@@ -24,7 +24,8 @@ Edge grammar:  from · to · label · kinds (the REQUEST KINDS whose real
 GOVERNANCE_FLOW = {
     "nodes": [
         {"id": "becky", "label": "becky", "lane": "organs",
-         "sub": "signs everyone in — nothing joins without her word",
+         "sub": "checks every ask to join and signs it in — nothing "
+                "enters without her approval",
          "door": {"res": "becky"}},
         {"id": "vigil", "label": "vigil", "lane": "organs",
          "sub": "watches for tampering; can only raise a hand",

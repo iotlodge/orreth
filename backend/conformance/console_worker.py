@@ -12261,9 +12261,9 @@ def compose_resident(name: str) -> dict:
                 {"label": k, "value": round(float(x), 4)}
                 for k, x in sorted(v.items())
                 if isinstance(x, (int, float))],
-            "mirror": interop or "no reflection yet — the machine writes "
-                                 "one after real conversations with "
-                                 "this resident",
+            "mirror": interop or "no notes yet — after someone talks "
+                                 "with this resident, what the machine "
+                                 "learned from the talk is written here",
         }
     elif wf is not None:
         runs = int(wf.get("runs") or 0)
@@ -12286,9 +12286,9 @@ def compose_resident(name: str) -> dict:
                             {"label": "succeeded", "value": ok},
                             {"label": "tokens",
                              "value": int(wf.get("tokens") or 0)}],
-            "mirror": interop or "no reflection yet — the machine writes "
-                                 "one after real conversations with "
-                                 "this resident",
+            "mirror": interop or "no notes yet — after someone talks "
+                                 "with this resident, what the machine "
+                                 "learned from the talk is written here",
         }
     if res is None and wf is None and man is not None:
         wport, wscope = man.get("port"), man.get("floor", "")
@@ -12323,9 +12323,9 @@ def compose_resident(name: str) -> dict:
                          "the word"),
             "vitals_bars": ([{"label": "records on his floor",
                               "value": recs}] if recs else []),
-            "mirror": interop or "no reflection yet — the machine writes "
-                                 "one after real conversations with "
-                                 "this resident",
+            "mirror": interop or "no notes yet — after someone talks "
+                                 "with this resident, what the machine "
+                                 "learned from the talk is written here",
         }
     item["verdict_line"] = ("the examiner grades work by floor, not yet "
                             "by name — a by-name verdict comes in a "

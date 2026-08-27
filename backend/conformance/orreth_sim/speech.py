@@ -228,8 +228,8 @@ GLOSSARY = {
         "a wing of the universe grouping related floors; addresses write "
         "it e:name",
     "gloss-floor":
-        "one working room of the universe — agents live on it and "
-        "everything they do is filed on it; addresses write it f:name",
+        "one working room of the universe — agents live and work on it, "
+        "and everything they do is filed on it",
     "gloss-agent":
         "any working mind here — the machine's own staff or an outside "
         "helper, each with its own identity and its own bill",
