@@ -57,23 +57,31 @@ def judge(think: GovernedThink, persona: str, shot_b64: str,
               "DELIVERED what its words promised: did the right thing open, "
               "does what opened explain itself, and would a newcomer know "
               "what to do next?)").replace("⟦context⟧", context))
-    try:
-        raw = think("medium", prompt, content=[
-            {"type": "text", "text": prompt},
-            {"type": "image_url",
-             "image_url": {"url": f"data:image/png;base64,{shot_b64}"}}])
-    except Exception as e:
-        print(f"· the mind refused the picture: {e}")
-        return None
     import re
-    m = re.search(r"\{.*\}", raw or "", re.S)
-    if not m:
-        return None
-    try:
-        got = json.loads(m.group(0))
-        return [str(x)[:220] for x in (got.get("frictions") or [])][:6]
-    except Exception:
-        return None
+    # one honest retry (quinn v3's lesson: three of six verdicts came back
+    # as prose and the walk read them as mutes — a second ask with a firmer
+    # shape line rescues a slipped format; a mute AFTER the retry stands)
+    for attempt in (1, 2):
+        ask = prompt if attempt == 1 else (
+            prompt + "\n\nAnswer ONLY with the JSON object "
+            '{"frictions": ["…", …]} — no prose around it.')
+        try:
+            raw = think("medium", ask, content=[
+                {"type": "text", "text": ask},
+                {"type": "image_url",
+                 "image_url": {"url": f"data:image/png;base64,{shot_b64}"}}])
+        except Exception as e:
+            print(f"· the mind refused the picture: {e}")
+            return None
+        m = re.search(r"\{.*\}", raw or "", re.S)
+        if not m:
+            continue
+        try:
+            got = json.loads(m.group(0))
+            return [str(x)[:220] for x in (got.get("frictions") or [])][:6]
+        except Exception:
+            continue
+    return None
 
 
 def open_view(page, view: str, settle_ms: int = 6000):
@@ -264,6 +272,88 @@ def main() -> int:
                                "— the step went nowhere a newcomer can see")
             else:
                 mechanical("floor-step", "the rail held no floor to step onto")
+
+            # ── flow 7 · THE ONE INBOX (0062's cure: no gate invisible) ──
+            # the worker's own door is the truth the glass must match: if
+            # cards wait at OTHER floors, the universe root must show them
+            walked += 1
+            try:
+                with urllib.request.urlopen(
+                        "http://localhost:4562/inbox", timeout=8) as r:
+                    foreign = [w for w in json.load(r).get("waiting", [])
+                               if w.get("floor") and w["floor"] != "u:demo"]
+            except Exception:
+                foreign = []
+            open_view(page, "inbox", settle_ms=6000)
+            away = page.locator('.inbrow[title^="this card waits at"]').first
+            if foreign and not (away.count() and away.is_visible()):
+                mechanical("one-inbox",
+                           f"{len(foreign)} card(s) wait at other floors' "
+                           "gates but the universe Inbox showed none of them")
+            elif not foreign:
+                print("· «one-inbox»: nothing waits at other floors today — "
+                      "the flow has nothing to walk")
+            else:
+                where = (away.get_attribute("title") or "")[:80]
+                away.click()
+                page.wait_for_timeout(5000)
+                pulse = page.locator("#hpulse").inner_text()
+                if foreign[0]["floor"].split("/")[-1].replace("f:", "") in pulse:
+                    judged("one-inbox", page,
+                           "you clicked a card marked as waiting at another "
+                           "floor's gate — the whole view stepped onto that "
+                           "floor. Do you understand where you are now and "
+                           "why, and could you decide the thing you came for?")
+                else:
+                    mechanical("one-inbox",
+                               f"the away card ({where}) was clicked but the "
+                               "header never named its floor — the step went "
+                               "nowhere a newcomer can see")
+
+            # ── flow 8 · THE ATLAS (her first walk — the 0061 seed paid) ──
+            walked += 1
+            open_view(page, "uni", settle_ms=4000)
+            pull = page.locator("#atlaspull")
+            if pull.count() and pull.is_visible():
+                pull.click()
+                page.wait_for_timeout(3000)
+                if page.locator("#atlasworld").is_visible():
+                    judged("the-atlas", page,
+                           "you clicked «🗺 atlas» and the machine drew a "
+                           "schematic of ITSELF — columns of boxes joined by "
+                           "curving lines. Can you tell what the columns "
+                           "mean, do the boxes explain themselves, and would "
+                           "you dare click one to learn more?")
+                else:
+                    mechanical("the-atlas",
+                               "the atlas pull was clicked and no schematic "
+                               "opened")
+
+                # ── flow 9 · A BOX IS A DOOR (allen joined today) ──
+                walked += 1
+                box = page.locator(".atlnode").filter(has_text="allen").first
+                if box.count():
+                    box.scroll_into_view_if_needed()
+                    box.click()
+                    page.wait_for_timeout(3000)
+                    if "on" in (page.locator("#rsm-back")
+                                .get_attribute("class") or ""):
+                        judged("atlas-box-door", page,
+                               "you clicked the box named «allen» in the "
+                               "machine's schematic — a card opened over it. "
+                               "Does it tell you who allen is, what he "
+                               "tends, and what you could do here?")
+                        page.keyboard.press("Escape")
+                    else:
+                        mechanical("atlas-box-door",
+                                   "allen's box was clicked and no room "
+                                   "opened — a box that is not a door")
+                else:
+                    mechanical("atlas-box-door",
+                               "the schematic held no box named allen — the "
+                               "newest flow-carrier is missing from the map")
+            else:
+                mechanical("the-atlas", "the atlas pull was not on the screen")
 
             page.close()
     finally:

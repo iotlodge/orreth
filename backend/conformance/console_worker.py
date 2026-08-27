@@ -2245,17 +2245,9 @@ def embed_door() -> None:
                 return
             try:
                 if route == "/sentences":
-                    # 0051 sp1 — the glass renders from the SAME shelf the
-                    # worker speaks from: active heads where they stand,
-                    # genesis where they don't (one voice, both faces)
-                    out = json.dumps({"sentences": {
-                        n: (_sentence_active(4500, n) or g)
-                        for n, g in speech.SENTENCES.items()},
-                        # 0060 — the dictionary rides the same door, live
-                        # heads first: an edited definition speaks at once
-                        "gloss": {
-                        n[len("gloss-"):]: (_sentence_active(4500, n) or g)
-                        for n, g in speech.GLOSSARY.items()}}).encode()
+                    # memo'd + pre-warmed — see wire_sentences (quinn v3's
+                    # dead door: a cold shelf scan starved the dictionary)
+                    out = json.dumps(wire_sentences()).encode()
                 elif route == "/atlas":
                     out = json.dumps(wire_atlas(4500)).encode()
                 elif route == "/inbox":
@@ -11294,6 +11286,26 @@ def _craft_heads(port: int) -> dict:
 _MEMO: dict = {}
 
 
+def _sentences_build() -> dict:
+    """0051 sp1 — the glass renders from the SAME shelf the worker speaks
+    from: active heads where they stand, genesis where they don't (one
+    voice, both faces); the dictionary rides along (0060)."""
+    return {"sentences": {
+        n: (_sentence_active(4500, n) or g)
+        for n, g in speech.SENTENCES.items()},
+        "gloss": {
+        n[len("gloss-"):]: (_sentence_active(4500, n) or g)
+        for n, g in speech.GLOSSARY.items()}}
+
+
+def wire_sentences() -> dict:
+    """Memo'd and pre-warmed on the worker's clock (quinn v3's dead door,
+    2026-08-27: the ~6s cold build left every fresh tab's dictionary dark
+    past a newcomer's patience — the first-contact surface must never
+    wait on a shelf scan)."""
+    return _memo("sentences-door", 120, _sentences_build)
+
+
 def _room_warm_loop() -> None:
     """The rooms answer at a click because the worker warms their heavy
     reads on ITS clock, not the human's (0056 sp2's find: a 45-second
@@ -11303,6 +11315,7 @@ def _room_warm_loop() -> None:
         for key, ttl, fn in (
                 ("craft-heads", 120, lambda: _craft_heads(4500)),
                 ("verdicts", 60, lambda: _wire_verdict_standings(4500)),
+                ("sentences-door", 120, _sentences_build),
                 ("interop", 60, lambda: wire_interop(4500, UNIVERSE_SCOPE))):
             try:
                 e = _MEMO.get(key)

@@ -3582,6 +3582,9 @@ function renderInbox(q){
       +(chron.length?"":`<div class="quiet" style="padding:.4rem 0">nothing waits on your purposes — the drawer below holds the machine's own</div>`)
       +drawer)
     :`<div class="quiet">nothing waits on you — a calm universe.</div>`;
+  glossifyEl(el);  /* the dictionary reaches the one inbox's own rows — an
+    all-away list held no dotted word at all (quinn v3's dead door); the gw
+    click stops its bubble, so a taught word never also steps the floor */
   const rl=$("reqlist"),tg=$("inb-arch-t");
   if(tg)tg.textContent=INBARCH?"· hide the list":"· show the full list here";
   if(rl)rl.style.display=INBARCH?"":"none";
