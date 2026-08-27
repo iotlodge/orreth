@@ -3925,27 +3925,91 @@ WRANGLER = Wrangler()
 
 # ---------------------------------------------------------------- the librarian (0014)
 
-def farm_search_source(port: int) -> dict | None:
+def farm_search_source(port: int, subject: str = "") -> dict | None:
     """The Farm's serving search source — and the ALLOCATION outranks the
-    first-found (0059 §2.7): a floor or universe row naming a serving
-    service wins; the old walk stands where no word does."""
+    first-found (0059 §2.7): the most specific word wins (a caller's own
+    subject row, then the floor, then the universe); the old walk stands
+    where no word does. An allocated row may also NAME THE TOOL — the
+    caller then rides that tool through the governed door instead of the
+    house search (JB's word, 2026-08-27: allen's docs study rides his own
+    aws-docs door)."""
     try:
         services = call(port, "GET", "/farm")["services"]
     except Exception:
         return None
     row = seeds.resolve_tool_assignment(
-        falloc_load(), f"floor:{FLOOR_SCOPES.get(port, '')}")
+        falloc_load(), subject or f"floor:{FLOOR_SCOPES.get(port, '')}",
+        FLOOR_SCOPES.get(port, ""))
     if row.get("service"):
         hit = next((s for s in services
                     if s.get("name") == row["service"]
                     and s.get("state") == "serving"), None)
         if hit:
+            if row.get("tool"):
+                hit = dict(hit)
+                hit["allocated_tool"] = row["tool"]
             return hit
     for s in services:
         if s["state"] == "serving" and any(
                 "search" in t.get("name", "") for t in s.get("manifest", [])):
             return s
     return None
+
+
+def _tool_query_args(manifest_row: dict, q: str, n: int = 3) -> dict:
+    """Charlotte's playground law, ridden by the desk: no thought spent
+    guessing what the PINNED schema already says. The question lands in
+    the schema's own query field (by common name, else the first required
+    string); a count field is honored when one is declared."""
+    props = ((manifest_row.get("schema") or {}).get("properties") or {})
+    qkey = next((k for k in ("search_phrase", "query", "q", "phrase", "text")
+                 if k in props), None)
+    if qkey is None:
+        req = (manifest_row.get("schema") or {}).get("required") or []
+        qkey = next((k for k in req
+                     if (props.get(k) or {}).get("type") == "string"),
+                    None) or "query"
+    args: dict = {qkey: q}
+    for k in ("limit", "max_results", "count"):
+        if k in props:
+            args[k] = n
+            break
+    return args
+
+
+def _tool_findings(res: dict) -> list:
+    """A governed tool's answer, read as findings [{title, content, url}]:
+    a JSON body holding a list of rows with url/title-ish fields is
+    honored row by row (the aws-docs search shape); anything else lands
+    as ONE honest text finding — never invented structure."""
+    out: list = []
+    for c in (res or {}).get("content") or []:
+        txt = c.get("text") if isinstance(c, dict) else None
+        if not txt and isinstance(c, dict):
+            txt = (c.get("resource") or {}).get("text")
+        if not txt:
+            continue
+        rows = None
+        try:
+            j = json.loads(txt)
+            for v in ([j] if isinstance(j, list)
+                      else list(j.values()) if isinstance(j, dict) else []):
+                if (isinstance(v, list) and v and isinstance(v[0], dict)
+                        and ("url" in v[0] or "title" in v[0])):
+                    rows = v
+                    break
+        except Exception:
+            pass
+        if rows:
+            for x in rows:
+                out.append({"title": str(x.get("title") or x.get("url") or "")[:160],
+                            "content": str(x.get("context") or x.get("content")
+                                           or x.get("snippet") or "")[:400],
+                            "url": str(x.get("url") or "")})
+        else:
+            out.append({"title": str(txt)[:80], "content": str(txt)[:400],
+                        "url": ""})
+    return out
 
 
 def tavily(q: str, n: int = 3) -> list:
@@ -4238,11 +4302,18 @@ def serials_beat(port: int, scope: str) -> None:
             st = _DESK[key] = {"waited": 0, "delivered": bool(notes),
                                "issue": int(notes[-1].get("issue", len(notes))
                                             if notes else 0)}
+            # the ledger's clock outlives the process (found 2026-08-27: the
+            # waited count was memory-only, so every rig restart re-zeroed a
+            # weekly line's wait — an often-restarted rig would NEVER owe
+            # it an issue); the last note's REAL age seeds the count
+            if notes:
+                st["waited"] = int(_age_seconds(notes[-1].get("at") or NOW())
+                                   / max(BEAT_EVERY, 1))
         else:
             st["waited"] += 1
         if not serials.is_due(s, st["waited"], st["delivered"]):
             continue
-        src = farm_search_source(port)
+        src = farm_search_source(port, subject=f"sub:{key[1]}")
         if src is None:
             continue                          # no serving voice — the sub keeps waiting
         seat_kp, seat_did = lib_seat(scope)
@@ -4262,7 +4333,24 @@ def serials_beat(port: int, scope: str) -> None:
             print(f"  ↳ the desk refused at the door — “{topic}” from a recalled source")
             continue
         t0 = time.time()
-        results = tavily(topic)               # one call — under the 4-call ceiling
+        tool = src.get("allocated_tool")
+        if tool and src.get("endpoint") and str(
+                src.get("transport", "")).startswith(("mcp", "streamable")):
+            # the sub's OWN allocation rides the governed door — the desk
+            # asks through the tool the human named, args from the pinned
+            # schema, and the house search is not spent (JB's word,
+            # 2026-08-27: allen studies AWS through the door he grew)
+            mrow = next((t for t in src.get("manifest") or []
+                         if t.get("name") == tool), {})
+            try:
+                results = _tool_findings(
+                    mcp_call(src["endpoint"], tool,
+                             _tool_query_args(mrow, topic)))
+            except Exception as e:
+                print(f"    (allocated gather failed — nothing admitted: {e})")
+                results = []
+        else:
+            results = tavily(topic)           # one call — under the 4-call ceiling
         try:
             call(port, "POST", "/farm/meter", {"name": src["name"], "caller": seat_did,
                                                "ms": int((time.time() - t0) * 1000)})
