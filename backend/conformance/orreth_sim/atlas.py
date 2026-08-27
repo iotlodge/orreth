@@ -50,6 +50,16 @@ GOVERNANCE_FLOW = {
         {"id": "charlotte", "label": "charlotte", "lane": "organs",
          "sub": "keeps the outside tools — tested and tracked",
          "door": {"res": "charlotte"}},
+        # 0062 made these two flow-carriers — declared here on JB's find
+        # (2026-08-27: "allen is a resident and is NOT in the Atlas?")
+        {"id": "allen", "label": "allen", "lane": "organs",
+         "sub": "grows what the universe needs — tool bodies and estates, "
+                "every act a deed",
+         "door": {"res": "allen"}},
+        {"id": "quinn", "label": "quinn", "lane": "organs",
+         "sub": "walks every room as a newcomer; what confuses her is "
+                "filed for fixing",
+         "door": {"view": "gov"}},
         {"id": "the-record", "label": "the signed record", "lane": "kernel",
          "sub": "everything that happens is filed here, forever",
          "door": {"view": "pulse"}},
@@ -88,6 +98,15 @@ GOVERNANCE_FLOW = {
          "label": "pins each mind's terms; drift is caught", "kinds": ["dial"]},
         {"from": "charlotte", "to": "the-farm-gate",
          "label": "probes, pins, and tends each tool", "kinds": ["service"]},
+        {"from": "allen", "to": "the-farm-gate",
+         "label": "grows a tool's body; charlotte plants the wire",
+         "kinds": ["service"]},
+        {"from": "allen", "to": "the-record",
+         "label": "every estate change a deed, start to finish",
+         "kinds": ["estate-adopt"]},
+        {"from": "quinn", "to": "the-gates",
+         "label": "her walk's confusions wait as filed reports",
+         "kinds": ["uat-report"]},
         {"from": "the-plane", "to": "the-record",
          "label": "every thought metered and filed", "kinds": []},
         {"from": "the-farm-gate", "to": "the-record",
