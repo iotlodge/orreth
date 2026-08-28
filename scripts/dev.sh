@@ -100,7 +100,9 @@ case "${1:-}" in
              curl -sf "http://127.0.0.1:$p/health" || printf dark; echo; done
            pgrep -f "console_worker.py $FIELD" >/dev/null \
              && echo "  join door: OPEN (:$FIELD)" || echo "  join door: CLOSED — run scripts/dev.sh start"
-           launchctl list 2>/dev/null | grep -q com.orreth.replant \
+           # no -q: under pipefail, grep -q's early exit SIGPIPEs launchctl
+           # and a loaded keeper reads as NOT LOADED (caught live 2026-08-28)
+           launchctl list 2>/dev/null | grep com.orreth.replant >/dev/null \
              && echo "  keeper: loaded — heals every 5 min, honors the down words" \
              || echo "  keeper: NOT LOADED — no self-healing (infrastructure/com.orreth.replant.plist)"
            echo "  capabilities: discovered + crewed by the worker at boot (capabilities/*/genesis.py)" ;;

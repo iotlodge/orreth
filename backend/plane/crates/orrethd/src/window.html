@@ -5345,9 +5345,15 @@ function dkState(w){
     retired:"retired by your word — everything it ever made stays on the shelf; reinstate brings it back whole",
     declared:"declared but not yet governed by this rig"}[w.state]||"";
   const ann=w.state==="running"?(w.words_walking?` · ${w.words_walking} walk${w.words_walking===1?"":"s"}`:" · watchlist empty"):"";
-  const lab={"shut down":"shut down — not broken; press start to run it",
+  /* pill words stay SHORT — one line in the card's text column; the ▶ start
+     button beneath and the hover tip carry the instruction, the pill only
+     the state (JB 2026-08-28: a wrapping badge reads unprofessional) */
+  const lab={"shut down":"shut down — not broken",
     stopped:"stopped — paused by you"}[w.state]||w.state||"?";
-  return `<span title="${dkEsc(tip)}" style="color:${c};font-size:.66rem;border:1px solid ${c};border-radius:5px;padding:.08rem .4rem">${dkEsc(lab)}${ann}</span>`}
+  /* inline-block: the pill wraps as ONE unit — its border never splits
+     across lines (JB's find 2026-08-28: a badge cut mid-sentence at the
+     card edge reads as broken, not styled) */
+  return `<span title="${dkEsc(tip)}" style="color:${c};font-size:.66rem;border:1px solid ${c};border-radius:5px;padding:.08rem .4rem;display:inline-block;white-space:nowrap">${dkEsc(lab)}${ann}</span>`}
 function dkPendingVerb(w){
   const pv=w.pending_verb;
   if(!pv)return "";
@@ -5403,7 +5409,7 @@ function renderCap(){
   const B=$("capbody");
   const card=w=>`<div class="cap-card" onclick="CAPV='${dkEsc(w.key)}';renderCap()">
       <div class="cap-emoji">${w.emoji||"📦"}</div>
-      <div><b>${dkEsc(w.name)}</b> ${dkState(w)}<div class="dim" style="font-size:.7rem">${dkEsc(w.resident||"")} · ${dkEsc(w.floor||"")}</div>
+      <div><b>${dkEsc(w.name)}</b><div style="margin:.15rem 0 .1rem">${dkState(w)}</div><div class="dim" style="font-size:.7rem">${dkEsc(w.resident||"")} · ${dkEsc(w.floor||"")}</div>
       <div class="dk-law">${dkEsc(w.law||"")}</div>
       ${w.state==="running"&&!w.words_walking?`<div class="dim" style="font-size:.68rem;margin-top:.2rem">answers asks now · watchlist empty — open it and watch a symbol to get a fresh report on schedule</div>`:""}
       ${w.state==="stopped"?`<div class="dim" style="font-size:.68rem;margin-top:.2rem">paused — the watchlist (${dkEsc(((DESK._key===w.key?DESK.watches:null)||[]).filter(x=>x.posture==="walk").map(x=>x.ticker).join(", ")||"…")}) is preserved; continue recovers everything</div>`:""}
