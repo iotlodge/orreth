@@ -2,8 +2,9 @@
 # Orreth dev universe — JB's one-command feedback rig (DOCKER-first).
 #   scripts/dev.sh start     compose up the tree + open becky's join door (agents can join)
 #   scripts/dev.sh window    seed a biography and open the Console (field :4502)
-#   scripts/dev.sh status    container + tier health + join door
-#   scripts/dev.sh stop      compose down                     restart = down + up --build
+#   scripts/dev.sh status    the honest inventory: spine + grown floors + tool bodies + doors
+#   scripts/dev.sh stop      the WHOLE rig rests (spine, hulls, bodies) and the keeper
+#                            honors the word until start lifts it     restart = stop + start
 #   scripts/dev.sh agent [flavor] [--once|--forever]   run a lifeforce agent into the field
 set -euo pipefail
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
@@ -12,6 +13,10 @@ export TMPDIR="$HOME/.orreth/tmp"; mkdir -p "$TMPDIR"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CONF="$ROOT/backend/conformance"; COMPOSE="docker compose -f $ROOT/infrastructure/compose.yaml"
 FIELD=4502
+# the rig-level down word (rule 11, paid 2026-08-28): stop writes it, the
+# keeper's replant honors it, start lifts it — down.json speaks per-floor,
+# this file speaks for the whole rig
+RIGDOWN="$HOME/.orreth/shipyard/rig-down"
 
 rootpub() {  # keep the seed and infrastructure/.env in lockstep, always
   RP=$(cd "$CONF" && uv run python smoke_orrethd.py root-pub)
@@ -37,20 +42,38 @@ joindoor() {  # becky answers joins + the librarian answers Asks — the floor's
 
 
 case "${1:-}" in
-  start)   rootpub; $COMPOSE up --build -d
+  start)   rm -f "$RIGDOWN"   # the human's word: rise
+           rootpub; $COMPOSE up --build -d
            docker image prune -f >/dev/null 2>&1 || true   # superseded layers die quietly (the jsbarth disk fire's lesson)
+           # wake the tool bodies the last stop rested — start, never re-run:
+           # their fetched packages live in the container, and nothing replants
+           # a removed body (~/.orreth/bodies.json only allocates ports).
+           # compose down killed their network, so each body's stale endpoint
+           # is force-cut and re-tied to the fresh net before it rises
+           # (RIG_NET in console_worker.py — the one street every hull shares)
+           for b in $(docker ps -a --filter name=orreth-body- --filter status=exited --format '{{.Names}}'); do
+             docker network disconnect -f orreth-demo-universe_default "$b" 2>/dev/null || true
+             docker network connect orreth-demo-universe_default "$b" 2>/dev/null || true
+             docker start "$b" >/dev/null 2>&1 && echo "· body wakes: $b" || echo "· body would not wake: $b"
+           done
            sleep 3; joindoor; "$0" status ;;
-  stop)    pkill -f console_worker.py 2>/dev/null || true
+  stop)    # the rig-level down word lands FIRST, so a keeper tick mid-stop
+           # cannot resurrect what the human is darkening
+           mkdir -p "$(dirname "$RIGDOWN")"
+           date -u +%Y-%m-%dT%H:%M:%SZ > "$RIGDOWN"
+           pkill -f console_worker.py 2>/dev/null || true
            pkill -f tradingdata_server.py 2>/dev/null || true
            pkill -f "05-desk/run.py" 2>/dev/null || true
            # dynamic hulls (the Shipyard) ride the rig's network — down together;
            # the worker's replant relaunches them from ~/.orreth/shipyard on start
            docker ps -aq --filter name=orreth-dyn- --filter name=orreth-field- \
              | xargs docker rm -f 2>/dev/null || true
+           # tool bodies REST, never removed — docker stop is the operator's
+           # word unless-stopped respects; start wakes them with their souls
+           docker ps -q --filter name=orreth-body- \
+             | xargs docker stop 2>/dev/null || true
            $COMPOSE down ;;
-  restart) "$0" stop; rootpub; $COMPOSE up --build -d
-           docker image prune -f >/dev/null 2>&1 || true
-           sleep 3; joindoor; "$0" status ;;
+  restart) "$0" stop; "$0" start ;;
   clean)   # deliberate deep clean (2026-07-30, after the jsbarth 100%-disk fire):
            # dangling images + build cache trimmed to a warm 15GB. NEVER volumes
            # (pg holds the universe's memory) and NEVER -a image prunes here —
@@ -59,13 +82,27 @@ case "${1:-}" in
            docker builder prune -f --keep-storage=15GB
            docker buildx prune -f --keep-storage=15GB   # Desktop keeps a second builder
            docker system df ;;
-  status)  $COMPOSE ps --format '  {{.Name}}\t{{.Status}}' 2>/dev/null || true
+  status)  # the honest inventory (2026-08-28): every container family the rig
+           # owns, each beside the ledger that governs it — no invisible parts
+           [ -f "$RIGDOWN" ] && \
+             echo "  ■ RIG DOWN by the human's word ($(cat "$RIGDOWN")) — scripts/dev.sh start lifts it"
+           echo "  spine (infrastructure/compose.yaml):"
+           $COMPOSE ps --format '    {{.Name}}\t{{.Status}}' 2>/dev/null || true
+           echo "  grown floors (~/.orreth/shipyard/floors.json — the worker replants):"
+           docker ps -a --filter name=orreth-dyn- --filter name=orreth-field- \
+             --format '    {{.Names}}\t{{.Status}}' 2>/dev/null | sort || true
+           echo "  tool bodies (~/.orreth/bodies.json — stop rests them, start wakes them):"
+           docker ps -a --filter name=orreth-body- \
+             --format '    {{.Names}}\t{{.Status}}' 2>/dev/null | sort || true
            dyn=""; [ -f "$HOME/.orreth/shipyard/floors.json" ] && \
              dyn=$(python3 -c 'import json,sys;print(" ".join(sorted(json.load(open(sys.argv[1])))))' "$HOME/.orreth/shipyard/floors.json" 2>/dev/null)
            for p in 4500 4501 4502 $dyn; do printf "  :%s  " "$p"
              curl -sf "http://127.0.0.1:$p/health" || printf dark; echo; done
            pgrep -f "console_worker.py $FIELD" >/dev/null \
              && echo "  join door: OPEN (:$FIELD)" || echo "  join door: CLOSED — run scripts/dev.sh start"
+           launchctl list 2>/dev/null | grep -q com.orreth.replant \
+             && echo "  keeper: loaded — heals every 5 min, honors the down words" \
+             || echo "  keeper: NOT LOADED — no self-healing (infrastructure/com.orreth.replant.plist)"
            echo "  capabilities: discovered + crewed by the worker at boot (capabilities/*/genesis.py)" ;;
   logs)    $COMPOSE logs -f --tail 40 ;;
   replant) # the down-ledger-honoring self-replant (2026-08-26, the morning the
@@ -76,6 +113,11 @@ case "${1:-}" in
            # closed. Hulls rise by their own unless-stopped policy, and the
            # worker's boot replant tends the rest from the shipyard ledger —
            # down.json's dark words honored (chad, charlene, the probe grave).
+           # The rig-level word outranks the healer (2026-08-28, the morning
+           # stop would not stick): a whole-rig stop is the human's, not a wound.
+           [ -f "$RIGDOWN" ] && {
+             echo "· the rig rests by the human's word ($(cat "$RIGDOWN")) — not replanting"
+             exit 0; }
            if curl -sf -m 4 "http://127.0.0.1:4500/health" >/dev/null 2>&1 \
               && pgrep -f "console_worker.py $FIELD" >/dev/null; then
              echo "· whole — nothing to replant"; exit 0; fi

@@ -6,6 +6,11 @@
      in one breath; a dead Docker gets the Desktop opened and waited for; the
      compose floors rise WITHOUT a rebuild; the join door re-opens; and no
      floor the human darkened is ever resurrected (down.json holds the words).
+     AbandonProcessGroup (2026-08-28, found live): without it, launchd sweeps
+     the job's process group with SIGKILL the moment replant exits — killing
+     the keeper-born worker seconds after its birth (nohup cannot stop a KILL;
+     the buffered log stayed 0 bytes, twice). The keeper must never eat the
+     mind it just raised.
      Install:  cp infrastructure/com.orreth.replant.plist ~/Library/LaunchAgents/
                launchctl load ~/Library/LaunchAgents/com.orreth.replant.plist
      Remove:   launchctl unload ~/Library/LaunchAgents/com.orreth.replant.plist
@@ -22,6 +27,7 @@
   </array>
   <key>RunAtLoad</key><true/>
   <key>StartInterval</key><integer>300</integer>
+  <key>AbandonProcessGroup</key><true/>
   <key>StandardOutPath</key><string>/Users/jb/.orreth/tmp/replant.log</string>
   <key>StandardErrorPath</key><string>/Users/jb/.orreth/tmp/replant.log</string>
   <key>EnvironmentVariables</key>

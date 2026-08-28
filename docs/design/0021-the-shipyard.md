@@ -50,6 +50,12 @@ pins protocol language).
   pins, all of it, automatically.
 - **Lifecycle**: `dev.sh stop` removes dynamic hulls with the rig (they ride its
   network); the ledger + replant bring them back on start. `dev.sh status` lists them.
+  Since 2026-08-28 `stop` also writes a rig-level down word
+  (`~/.orreth/shipyard/rig-down`) that the launchd keeper's `replant` honors — a
+  whole-rig stop is the human's word, never a wound to heal — and rests (never
+  removes) the `orreth-body-*` tool containers; `start` lifts the word, re-ties each
+  body to the fresh rig network, and wakes it. `dev.sh status` shows all three
+  container families beside the ledgers that govern them.
 
 ## §3 One glass, every floor
 
