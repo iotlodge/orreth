@@ -3507,7 +3507,11 @@ loadForeign();setInterval(loadForeign,15000);
    record the human explicitly opened is never yanked away (the 284abe2
    law: selection belongs to the human, not to the refresh). */
 function paneRelease(id){if(INBSEL===id)INBSEL=null;if(OBJSEL===id)OBJSEL=null}
-const KINDRANK={attestation:0,testament:1,consent:2,passage:2,
+/* the Inbox's triage order is a DIAL now (0063 sp1): the shelf's
+   dial-kindrank head arrives on the /sentences door and replaces this
+   literal, which stays as the genesis fallback (rule 7: it must match
+   orreth_sim/dials.py KINDRANK_GENESIS — the suite holds the parity) */
+let KINDRANK={attestation:0,testament:1,consent:2,passage:2,
   publish:3,drift:3,release:3,witness:3,fuel:3,
   objective:4,improvement:4,experiment:4,commission:4,subscription:4,
   "design-change":5,calibration:5,"estate-adopt":5,"field-join":5,
@@ -6398,7 +6402,7 @@ function govOpen(name){
   const R=$("gov-read");R.classList.remove("hide");const gh=$("gov-hint");if(gh)gh.style.display="none";
   R.innerHTML=`<div class="pt"><b>${esc(name)}</b>
       <span class="lc ${o.lifecycle==="chronicle"?"chr":""}" style="margin-left:.5rem">${o.lifecycle==="canon"?"firmware — locked; a change becomes a new release":"editable — your edit lands as a new version, history kept"}</span></div>
-    <div class="quiet2" style="margin:.3rem 0">${o.category}${({prompts:" — words the machine thinks with",skills:" — how-to knowledge a mind can borrow",policies:" — standing rules the machine obeys",charters:" — a resident's standing duties",manifests:" — declared shapes: what a thing says it is"})[o.category]||""} · ${o.versions} version(s) below, oldest first — click one to read it; nothing here was ever silently overwritten</div>
+    <div class="quiet2" style="margin:.3rem 0">${o.category}${({prompts:" — words the machine thinks with",skills:" — how-to knowledge a mind can borrow",policies:" — standing rules the machine obeys",charters:" — a resident's standing duties",manifests:" — declared shapes: what a thing says it is",dials:" — the machine's operating values: numbers and settings, never words"})[o.category]||""} · ${o.versions} version(s) below, oldest first — click one to read it; nothing here was ever silently overwritten</div>
     <div id="gov-vers" style="margin:.45rem 0">${o.refs.map((r,i)=>
       `<span class="gvv" onclick="govVer('${esc(name)}',${i})">v${i+1}${i===o.refs.length-1?" · current":""}</span>`).join("")}
       ${o.versions>1?`<span class="gvv" onclick="govDiff('${esc(name)}')">⇄ compare newest vs previous</span>`:""}
@@ -6806,7 +6810,9 @@ async function fetchMarker(id){
 let SENT={};
 async function loadSentences(){
   try{const j=await(await fetch(OBSD+"/sentences")).json();
-    SENT=j.sentences||{};GLOSS=j.gloss||{};glossReady();glossStatic()}catch{}
+    SENT=j.sentences||{};GLOSS=j.gloss||{};
+    if(j.dials&&j.dials.kindrank)KINDRANK=j.dials.kindrank;
+    glossReady();glossStatic()}catch{}
 }
 loadSentences();setInterval(loadSentences,300000);
 function say(name,slots,fallback){

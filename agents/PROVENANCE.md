@@ -1209,3 +1209,9 @@ The closing proof was the human's: retire → reinstate on the Trading Desk, cle
 | File | Author | Note |
 |---|---|---|
 | `orreth_sim/atlas.py` · `console_worker.py` · `window.html` | Fable 5 (claude-fable-5) | THE ATLAS LEAVES THE PAPER: the declared shape (governance + human flows) plants as shelf craft; the /atlas door serves live-heads-first composed with the manifests' own worlds; the glass renders four lanes with three lenses, measured edge-glow (UTC-lexical horizon — never mktime on wire clocks), ⛶, and every box a door. Proven: three lenses live by screenshot; organ→room and world→rooms door-clicks proven by CDP; suite 361. |
+
+## Fable 5 — 2026-08-28 (0063 sp1 — the dial registry)
+
+| File | Author | Note |
+|---|---|---|
+| `orreth_sim/dials.py` · `tests/test_dials.py` · `console_worker.py` · `window.html` | Fable 5 (claude-fable-5) | THE DYNAMIC UNIVERSE'S FIRST MACHINERY: operating values leave the code the way words did (the yardstick's genesis-only-then-craft law generalized to numbers). The declaration is firmware — name, type, unit, bounds, blast, why, horizon in dials.py; the VALUE is a dial-* asset in its own shelf drawer (L1's separation), turned through the one-motion craft-edit door. ONE memoized accessor (the sentence() idiom); read-side bounds law — a refusing head confesses and genesis serves. Proven live: three dials planted becky-signed; search-daily 6→2 took hold in 45s; a 999 head refused aloud; kindrank put questions first and reverted, lineage whole. Suite 365 (a rule-7 parity test pins the glass's KINDRANK literal to the registry). |

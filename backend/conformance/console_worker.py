@@ -124,7 +124,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import (atlas, bell as bell_mod, continuity, crypto,
+from orreth_sim import (atlas, bell as bell_mod, continuity, crypto, dials,
                         fingertip, fuel as fuel_mod, improver, market, markers,
                         meaning, mirror, node, observatory, parlor, profile,
                         purge, seeds, serials, shipyard, speech,
@@ -4021,8 +4021,9 @@ def tavily(q: str, n: int = 3) -> list:
     # one place every caller passes (G5's shape, vera's assay budget): a
     # durable line per live search, counted since UTC midnight; past the
     # ceiling the placeholder speaks honestly and nothing is spent.
-    if _search_spent_today() >= SEARCH_DAILY:
-        return [{"title": f"(search ceiling — {SEARCH_DAILY}/day reached) placeholder finding on {q}",
+    _ceil = dial_value("search-daily")       # the human's standing word (0063 sp1)
+    if _search_spent_today() >= _ceil:
+        return [{"title": f"(search ceiling — {_ceil}/day reached) placeholder finding on {q}",
                  "content": "the declared daily search spend is used up; it resets at UTC "
                             "midnight — a standing spend is ceilinged, never an accident (0054 L-A)",
                  "url": "local://ceiling"}]
@@ -4037,7 +4038,9 @@ def tavily(q: str, n: int = 3) -> list:
     return results
 
 
-SEARCH_DAILY = int(os.environ.get("ORRETH_SEARCH_DAILY", "6"))
+# the daily search ceiling is a DIAL now (0063 sp1) — dial_value("search-daily");
+# genesis rides ORRETH_SEARCH_DAILY in orreth_sim/dials.py, the standing value
+# lives on the shelf
 _SEARCH_LEDGER = HOME / "farm" / "searches.jsonl"
 
 
@@ -4631,9 +4634,10 @@ def tool_invoke(payload: dict) -> dict:
         if os.environ.get("ORRETH_SEARCH_OFF"):
             return {"error": "the live web is off by the human's dial "
                              "(ORRETH_SEARCH_OFF) — nothing was spent"}
-        if _search_spent_today() >= SEARCH_DAILY:
+        _ceil = dial_value("search-daily")
+        if _search_spent_today() >= _ceil:
             return {"error": f"the declared daily search ceiling "
-                             f"({SEARCH_DAILY}/day) is spent — it resets at "
+                             f"({_ceil}/day) is spent — it resets at "
                              "UTC midnight (0054 L-A); nothing was spent"}
     t0 = time.time()
     try:                                     # the gate: a non-serving service 403s here
@@ -5315,6 +5319,80 @@ def wire_assets(port: int, tag: str, name: str | None = None, *,
                          h.get("occurred_at", "")))
     rows.sort(key=lambda x: x[4])
     return [(ref, body, dl, tags) for ref, body, dl, tags, _ in rows]
+
+
+# ---- 0063 sp1 · the dial registry: values leave the code the way words did.
+# The declaration is firmware (orreth_sim/dials.py); the VALUE is a dial-*
+# asset on the shelf, turned through the one-motion craft-edit door. ONE
+# accessor, memoized like the sentences (the performance law); a head that
+# refuses its declaration confesses and genesis serves — loudly, never
+# silently. Effect horizon: within DIAL_TTL of a landed turn.
+_DIAL_CACHE: dict[str, tuple[float, object]] = {}
+DIAL_TTL = 60.0
+_DIALS_SEEDED = False
+
+
+def dial_seed(port: int) -> None:
+    """Idempotent, once per life (canon_seed's idiom): any declared dial
+    without a shelf head plants its GENESIS value as a dial-* asset —
+    becky signs (the trust root vouches for the build); every turn after
+    is the human's, through the door."""
+    global _DIALS_SEEDED
+    if _DIALS_SEEDED:
+        return
+    _DIALS_SEEDED = True
+    try:
+        have = {n for n in _craft_heads(port) if n.startswith("dial-")}
+        for short, d in dials.DIALS_V1.items():
+            name = f"dial-{short}"
+            if name in have:
+                continue
+            body = {"asset": {
+                "name": name, "profile": {"value": d["genesis"]},
+                "dial": {k: d[k] for k in
+                         ("unit", "governs", "blast", "why", "horizon")},
+                "extracted_from": "orreth_sim/dials.py — the dial registry "
+                                  "(0063 sp1): the declaration is firmware; "
+                                  "this VALUE is a machine operating value, "
+                                  "yours to turn at the gate"}}
+            rec = node.make_memory({"did": _BECKY.did, "scope": UNIVERSE_SCOPE},
+                                   _BECKY.kp, UNIVERSE_SCOPE, body,
+                                   kind="semantic", tags=["asset", name, "dial"])
+            call(port, "POST", "/records", rec)
+            print(f"  🎛 dial planted: “{name}” = {d['genesis']!r} "
+                  f"({rec['id'][:18]}…) — genesis; the gate owns it now")
+    except Exception as e:
+        _DIALS_SEEDED = False                 # the next beat may retry
+        print(f"    (dial seed stumbled: {e})")
+
+
+def dial_value(short: str, port: int = 4500):
+    """The ONE accessor for a machine operating value: the shelf's head,
+    parsed by the firmware declaration; genesis when the shelf is dark or
+    the head refuses its bounds (confessed in the log, never silent)."""
+    now = time.time()
+    hit = _DIAL_CACHE.get(short)
+    if hit and now - hit[0] < DIAL_TTL:
+        return hit[1]
+    raw = None
+    try:
+        rows = wire_assets(port, "asset", name=f"dial-{short}")
+        superseded = {d for _, _, dl, _ in rows for d in dl}
+        for rid, body, _, _t in reversed(rows):
+            if rid in superseded:
+                continue
+            raw = ((body.get("asset") or {}).get("profile") or {}).get("value")
+            break
+    except Exception:
+        raw = None                            # a dark wire never mutes an organ
+    if raw is None:
+        v = dials.DIALS_V1[short]["genesis"]
+    else:
+        v, flaw = dials.parse(short, raw)
+        if flaw:
+            print(f"  🎛 dial «{short}» head refused ({flaw}) — genesis serves")
+    _DIAL_CACHE[short] = (now, v)
+    return v
 
 
 def improver_beat(port: int) -> None:
@@ -9077,7 +9155,8 @@ def _stage_assay_card(port: int, card: dict) -> None:
 
 
 # ---- G5: the declared ceiling — a budget the meter shows, then ENFORCES ---------------
-ASSAY_CEILING = int(os.environ.get("ORRETH_ASSAY_DAILY_TOKENS", "25000"))
+# the ceiling is a DIAL now (0063 sp1) — dial_value("assay-ceiling"); genesis
+# rides ORRETH_ASSAY_DAILY_TOKENS in orreth_sim/dials.py
 
 
 def _vera_spent_today() -> int:
@@ -11196,9 +11275,10 @@ def assay_beat(u_port: int) -> None:
         return
     _ASSAY_LAST = time.time()
     spent = _vera_spent_today()
-    if spent >= ASSAY_CEILING:
+    _ceil = dial_value("assay-ceiling")
+    if spent >= _ceil:
         print(f"  🔭 assay: the declared ceiling holds — {spent}/"
-              f"{ASSAY_CEILING} tokens today; the examiner rests (G5)")
+              f"{_ceil} tokens today; the examiner rests (G5)")
         return
     # THE WHOLE RIG (sp5, JB's lock): every tended floor wears the examiner —
     # the universe first, then each floor in order; quiet floors cost one
@@ -11207,7 +11287,7 @@ def assay_beat(u_port: int) -> None:
         (p, s) for p, s in sorted(FLOOR_SCOPES.items())
         if s != UNIVERSE_SCOPE]
     for port, scope in targets:
-        if _vera_spent_today() >= ASSAY_CEILING:
+        if _vera_spent_today() >= _ceil:
             print(f"  🔭 assay: the ceiling closed mid-round at {scope} — "
                   "the rest of the rig waits for tomorrow (G5)")
             break
@@ -11307,7 +11387,11 @@ def _sentences_build() -> dict:
         for n, g in speech.SENTENCES.items()},
         "gloss": {
         n[len("gloss-"):]: (_sentence_active(4500, n) or g)
-        for n, g in speech.GLOSSARY.items()}}
+        for n, g in speech.GLOSSARY.items()},
+        # 0063 sp1 — the dials ride the same pre-warmed door (a separate
+        # key: L1's drawer holds values, never words); the glass reads
+        # kindrank here and its code literal demotes to genesis fallback
+        "dials": {s: dial_value(s) for s in dials.DIALS_V1}}
 
 
 def wire_sentences() -> dict:
@@ -11422,6 +11506,9 @@ def _craft_category(name: str, tags: list) -> str:
     """A heuristic v1 (honest: sp2's editors will let type be DECLARED):
     firmware and known names sort themselves; the rest read as prompts."""
     n, t = name.lower(), set(tags or [])
+    if n.startswith("dial-") or "dial" in t:
+        return "dials"                        # machine operating VALUES — L1's
+                                              # drawer, never mixed with words
     if "firmware" in t or "prompt" in t:
         return "prompts"
     if "skill" in n:
@@ -11797,10 +11884,10 @@ def yardstick_run() -> bool:
     if not questions:
         print("  📏 yardstick: the shelf's set holds no questions — resting")
         return False
-    if _vera_spent_today() >= ASSAY_CEILING:
+    if _vera_spent_today() >= dial_value("assay-ceiling"):
         print(f"  📏 yardstick: vera's declared ceiling holds "
-              f"({_vera_spent_today()}/{ASSAY_CEILING} tokens today) — "
-              "the run waits (G5)")
+              f"({_vera_spent_today()}/{dial_value('assay-ceiling')} tokens "
+              "today) — the run waits (G5)")
         return False
     bench = _judge_bench(UNIVERSE_SCOPE)
     if bench is None:
@@ -11819,7 +11906,7 @@ def yardstick_run() -> bool:
                                   origin="the-memory-yardstick")
         except Exception as ex:
             ans = f"the ask lane stumbled: {ex}"
-        if _vera_spent_today() >= ASSAY_CEILING:
+        if _vera_spent_today() >= dial_value("assay-ceiling"):
             rows.append({"q": q, "focus": item.get("focus"), "score": None,
                          "note": "the ceiling closed mid-run — unjudged, "
                                  "honestly"})
@@ -13608,7 +13695,7 @@ def compose_observatory() -> dict:
         "at": now,
         "dial": {"position": OBS["dial"], "assay_every_s": ASSAY_EVERY,
                  "sample_per_beat": 2,
-                 "ceiling_tokens": ASSAY_CEILING,          # G5: declared…
+                 "ceiling_tokens": dial_value("assay-ceiling"),  # G5: declared…
                  "spent_today": _vera_spent_today(),       # …and shown
                  "price": {"glance": "free", "watch": "free — a deeper read",
                            "assay": "metered under vera's DID"}[OBS["dial"]]
@@ -13652,7 +13739,7 @@ def compose_observatory() -> dict:
         # watching the Observatory's own cost, always one of its instruments
         "rollup": {"floors_watched": len(FLOOR_SCOPES),
                    "observatory_cost_today": {"tokens": _vera_spent_today(),
-                                              "ceiling": ASSAY_CEILING}},
+                                              "ceiling": dial_value("assay-ceiling")}},
         # THE BELL (0044 sp4): the room watches the last mile too — the
         # Observatory would be dishonest if its own alarm could fail unseen
         "bell": _bell_room_view(),
@@ -14080,6 +14167,7 @@ def main() -> None:
                         calibration_beat(port)  # human vs examiner (0048 sp4)
                         bell_beat(port)       # the bell tends its door (0044 sp2)
                         canon_seed(port)      # the firmware stands as records (0045 sp1)
+                        dial_seed(port)       # the operating values stand as craft (0063 sp1)
                         capability_tools_intake()  # late-waking worlds still get their ask (V2)
                         question_reaper(port)  # moot questions withdraw themselves
                         verify_beat(port)     # the deed watchman, standing (0044 sp3 · L-B)

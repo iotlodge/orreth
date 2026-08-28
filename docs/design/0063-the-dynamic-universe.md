@@ -210,11 +210,22 @@ The Commander laws govern: **command-first, ≤2 clicks, edited in place.**
   the operator's own env deny rule (`Read(.env.*)` protects secrets and
   catches the template) — its content stands ready; where it lives is
   JB's word.
-- **sp1 — the registry:** dial declarations + genesis planting + the ONE
-  memoized accessor; three dials walked live end-to-end — **locked (L4):
-  `SEARCH_DAILY`, `ASSAY_CEILING`, `KINDRANK`** (two ceilings whose
-  display half already stands in the glass, one ordering proving a dial
-  is any tunable VALUE, not just a number).
+- **sp1 — the registry** — ✅ **LANDED 2026-08-28, the same day as its
+  locks**: `orreth_sim/dials.py` (declaration = firmware: type, unit,
+  bounds, blast, why, horizon; env demoted to genesis), `dial_seed` at
+  boot (becky signs the genesis values as `dial-*` assets in their own
+  shelf drawer), the ONE memoized accessor `dial_value()` (the
+  `sentence()` idiom, 60 s), the three locked dials wired
+  (`search-daily`, `assay-ceiling` live at every enforcement and
+  confession site; `kindrank` rides the pre-warmed /sentences door and
+  the glass literal demoted to genesis fallback, rule-7 parity
+  suite-held). **The walk, live:** the first governed turn (6→2) took
+  hold in 45 seconds; a 999 head outside [0..100] was refused ALOUD and
+  genesis served while the rig kept breathing; the ordering dial put
+  questions first in the Inbox and reverted, the sibling chain keeping
+  every step. Suite 365. *Honest remainder → sp2: the door is untyped —
+  a flawed head may STAND (the read refuses it); sp2 teaches the gate to
+  refuse before landing.*
 - **sp2 — the gate:** the craft-edit door learns typed validation + bounds +
   blast-radius cards; a turn proven live through the glass; refusal-outside-
   bounds proven live.
