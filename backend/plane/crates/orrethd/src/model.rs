@@ -8,6 +8,8 @@ use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
 pub const LIFECYCLE: [&str; 5] = ["candidate", "canaried", "available", "deprecated", "sunset"];
+// TWINNED in backend/conformance/orreth_sim/stable.py — the sim carries its own
+// copy. RELEASE-ONLY by 0063 sp0's word: change BOTH or change neither.
 pub const CANARY_BEATS: i64 = 3;
 
 /// "%Y-%m-%dT%H:%M:%SZ" from unix seconds (civil-from-days; no chrono).

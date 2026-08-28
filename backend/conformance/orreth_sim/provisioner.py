@@ -77,6 +77,10 @@ def _profile(template: dict, tier_key: str, label: str, scope: str, *, leaf: boo
                                        "qa_sample_rate": 0.01}),
         "retrieval": dials.pop("retrieval", {"time_budget": {"time_ms": 500, "cost": 3},
                                              "horizon": "forever" if not parent else "P90D"}),
+        # the steward/tokens/time_budget rows TWIN backend/plane/profiles/*.json
+        # (0063 sp0 names the duplication; the memory defaults above are the
+        # platform's OWN tone, not a twin — full unification waits for the
+        # dial registry, sp6)
         "steward": {"token_budget": {"tokens": 100000}, "cadence": "P1D",
                     "on_budget_exhaustion": "degrade-to-floors-and-flag"},
         "tokens": {"workforce_ttl": "P1D", "resident_ttl": "P30D"},

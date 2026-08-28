@@ -9,6 +9,8 @@
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
+// TWINNED in backend/conformance/orreth_sim/farm.py — the sim carries its own
+// copy. RELEASE-ONLY by 0063 sp0's word: change BOTH or change neither.
 pub const PROBATION_BEATS: i64 = 3;
 
 /// every legal move, and no other — the state machine IS the governance card (0018 §2)

@@ -198,10 +198,18 @@ The Commander laws govern: **command-first, ≤2 clicks, edited in place.**
 
 ## 6. Spoonfuls (proposed order)
 
-- **sp0 — unify before you dial:** the twenty `days=365` literals become
-  one named constant; the minting path reads the profile it plants; the
-  Python/Rust duplicates get one source of truth or a formal release-only
-  word; `.env.example` is born. No new machinery — honest ground for it.
+- **sp0 — unify before you dial** — ✅ **LANDED 2026-08-28, the locks'
+  own morning**: `RECALL_DAYS = 365` named once beside the beat, twenty
+  sites ride it · the shipyard now MINTS FROM THE PROFILES it plants
+  (demo-eco/demo-field JSON the source, the old literals demoted to
+  fallback — byte-identical today, honest forever) · `EOL_HORIZON_DAYS`
+  is one truth (the worker imports the pasture's own) · the
+  PROBATION/CANARY twins wear the release-only word on BOTH sides of the
+  Python/Rust boundary, each naming the other · the provisioner's twin
+  rows named in place. *Honest remainder:* `.env.example` is blocked by
+  the operator's own env deny rule (`Read(.env.*)` protects secrets and
+  catches the template) — its content stands ready; where it lives is
+  JB's word.
 - **sp1 — the registry:** dial declarations + genesis planting + the ONE
   memoized accessor; three dials walked live end-to-end — **locked (L4):
   `SEARCH_DAILY`, `ASSAY_CEILING`, `KINDRANK`** (two ceilings whose

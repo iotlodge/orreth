@@ -13,11 +13,26 @@ assembled from heartbeats, so a new world is just a new heartbeat.
 """
 from __future__ import annotations
 
+import json
 import re
+from pathlib import Path
 
 from . import continuity
 
 BASE_PORT = 4503                      # 4500-4502 belong to the composed rig
+
+# the composed rig's own profiles are the SOURCE of a grown floor's dials
+# (0063 sp0 — the minting path reads the profile it plants: before this,
+# the same numbers lived here a second time, so editing the JSON changed
+# existing floors but never future ones)
+_PROFILES = Path(__file__).resolve().parents[2] / "plane" / "profiles"
+
+
+def _composed(name: str) -> dict:
+    try:
+        return json.loads((_PROFILES / f"{name}.json").read_text())
+    except Exception:
+        return {}     # a rig without the plane tree mints from the fallbacks below
 _SLUG = re.compile(r"^[a-z][a-z0-9-]{0,23}$")
 TEMPLATES = {continuity.TEMPLATE: continuity.overlay}   # 0009's named templates
 
@@ -37,33 +52,47 @@ def allocate_ports(count: int, used: set[int]) -> list[int]:
 
 
 def eco_profile(universe_scope: str, name: str, trust_root: str) -> dict:
-    """An ecosystem's TierProfile — same dials as the composed demo-eco (0004)."""
+    """An ecosystem's TierProfile — dials READ from the composed demo-eco's own
+    profile (0004; 0063 sp0 made this docstring structurally true)."""
     scope = f"{universe_scope}/e:{name}"
-    return _profile(scope, "ecosystem", is_leaf=False, raw="P395D", horizon="P395D",
-                    qa=0.001, trust_root=trust_root)
+    return _profile(scope, "ecosystem", is_leaf=False, trust_root=trust_root,
+                    src=_composed("demo-eco"),
+                    raw="P395D", horizon="P395D", qa=0.001)
 
 
 def field_profile(eco_scope: str, name: str, trust_root: str) -> dict:
-    """A field's TierProfile — same dials as the composed demo-field (0004)."""
+    """A field's TierProfile — dials READ from the composed demo-field's own
+    profile (0004; 0063 sp0 made this docstring structurally true)."""
     scope = f"{eco_scope}/f:{name}"
-    return _profile(scope, "field", is_leaf=True, raw="P90D", horizon="P90D",
-                    qa=0.01, trust_root=trust_root)
+    return _profile(scope, "field", is_leaf=True, trust_root=trust_root,
+                    src=_composed("demo-field"),
+                    raw="P90D", horizon="P90D", qa=0.01)
 
 
 def _profile(scope: str, label: str, *, is_leaf: bool, raw: str, horizon: str,
-             qa: float, trust_root: str) -> dict:
+             qa: float, trust_root: str, src: dict | None = None) -> dict:
+    # src = the composed rig's profile for this tier; the keyword literals are
+    # the FALLBACK ONLY (a rig without the plane tree). One source of truth.
+    src = src or {}
+    mem, ret = src.get("memory", {}), src.get("retrieval", {})
     return {
         "tier_label": label, "scope": scope, "is_leaf": is_leaf,
         "clock": {"mode": "wall", "high_water_scope": scope},
         "objective": [{"objective": "reliability", "weight": 1.0}],
         "signal_capture": "state-changing",
-        "memory": {"raw_retention": raw, "distilled_retention": "P395D",
-                   "qa_sample_rate": qa},
-        "retrieval": {"time_budget": {"time_ms": 500, "cost": 3}, "horizon": horizon},
-        "steward": {"token_budget": {"tokens": 100000}, "cadence": "P1D",
-                    "on_budget_exhaustion": "degrade-to-floors-and-flag"},
-        "tokens": {"workforce_ttl": "P1D", "resident_ttl": "P30D"},
-        "model_gateway": {"judge_sample_rate": 0.1, "routing": "litellm"},
+        "memory": {"raw_retention": mem.get("raw_retention", raw),
+                   "distilled_retention": mem.get("distilled_retention", "P395D"),
+                   "qa_sample_rate": mem.get("qa_sample_rate", qa)},
+        "retrieval": {"time_budget": ret.get("time_budget",
+                                             {"time_ms": 500, "cost": 3}),
+                      "horizon": ret.get("horizon", horizon)},
+        "steward": src.get("steward",
+                           {"token_budget": {"tokens": 100000}, "cadence": "P1D",
+                            "on_budget_exhaustion": "degrade-to-floors-and-flag"}),
+        "tokens": src.get("tokens", {"workforce_ttl": "P1D", "resident_ttl": "P30D"}),
+        "model_gateway": {"judge_sample_rate":
+                          src.get("model_gateway", {}).get("judge_sample_rate", 0.1),
+                          "routing": "litellm"},
         "join_default": "floors-only",
         "trust_root": {"mode": "did-web", "root": trust_root},
         "version": "0.1.0",

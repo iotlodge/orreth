@@ -28,6 +28,9 @@ LEGAL: dict[str, set[str]] = {
 }
 
 PROBATION_BEATS = 3  # heartbeats a rookie service must earn before it serves
+# TWINNED in backend/plane/crates/orrethd/src/farm.rs — the plane enforces its
+# own copy. RELEASE-ONLY by 0063 sp0's word: change BOTH or change neither;
+# a glass-tuned probation would move this copy while the plane kept enforcing 3.
 
 
 class IllegalTransition(Exception):

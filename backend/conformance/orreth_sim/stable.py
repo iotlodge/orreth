@@ -30,7 +30,10 @@ LEGAL: dict[str, set[str]] = {
 }
 
 CANARY_BEATS = 3      # verified syncs / governed calls a rookie mind earns before it serves
+# TWINNED in backend/plane/crates/orrethd/src/model.rs — the plane enforces its
+# own copy. RELEASE-ONLY by 0063 sp0's word: change BOTH or change neither.
 EOL_HORIZON_DAYS = 30  # inside this window an expiry burns on the pasture calendar
+                       # (the ONE truth — the worker imports this, 0063 sp0)
 
 
 class IllegalTransition(Exception):
