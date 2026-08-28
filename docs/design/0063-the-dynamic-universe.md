@@ -1,7 +1,8 @@
 # 0063 — The Dynamic Universe
 
-*Reserved 2026-08-27 from JB's seed; draft opened 2026-08-28.*
-***Status: DRAFT — JB's locks awaited before any build.***
+*Reserved 2026-08-27 from JB's seed; draft opened 2026-08-28; all four
+locks landed by JB's hand the same morning.*
+***Status: PLANNED — locked, build not yet opened.***
 
 ## 1. JB's seed, verbatim (2026-08-27)
 
@@ -87,7 +88,11 @@ on the shelf.**
    versioned, hash-named, lineage kept — and changes through the same
    one-motion craft-edit door as a sentence: staged at the gate wearing its
    blast radius, landed by the human's word, the old version standing
-   behind it. Cancel/revert is first-class (rule 11).
+   behind it. Cancel/revert is first-class (rule 11). And the shelf keeps
+   **two clearly separate drawers** (L1's condition): dials wear their own
+   `dial-*` name family and category — machine operating VALUES, never
+   interleaved with the NLP craft (sentences, prompts, personas) that
+   steers minds.
 3. **Bounds are law.** The gate refuses a value outside the declaration's
    bounds — a human may not set `BEAT_EVERY` to 0.01s and melt the rig; the
    refusal says the bounds and why. The card states blast radius in plain
@@ -198,11 +203,10 @@ The Commander laws govern: **command-first, ≤2 clicks, edited in place.**
   Python/Rust duplicates get one source of truth or a formal release-only
   word; `.env.example` is born. No new machinery — honest ground for it.
 - **sp1 — the registry:** dial declarations + genesis planting + the ONE
-  memoized accessor; three dials walked live end-to-end. Candidates
-  (lock L4): `SEARCH_DAILY` and `ASSAY_CEILING` — the two the machine
-  *already confesses* in the glass beside `spent_today`, so the display
-  half stands — plus `MIRROR_EVERY` (a pure cadence) or `KINDRANK` (an
-  ordering, proving a dial is any tunable VALUE, not just a number).
+  memoized accessor; three dials walked live end-to-end — **locked (L4):
+  `SEARCH_DAILY`, `ASSAY_CEILING`, `KINDRANK`** (two ceilings whose
+  display half already stands in the glass, one ordering proving a dial
+  is any tunable VALUE, not just a number).
 - **sp2 — the gate:** the craft-edit door learns typed validation + bounds +
   blast-radius cards; a turn proven live through the glass; refusal-outside-
   bounds proven live.
@@ -214,29 +218,34 @@ The Commander laws govern: **command-first, ≤2 clicks, edited in place.**
   demoted to genesis, each landing with its bounds and blast radius; the
   long labor of the dive, paced across sessions.
 
-## 7. Open locks (JB's calls — the draft stands until these land)
+## 7. The locks (JB, 2026-08-28)
 
-- **L1 · The home of values.** Extend the existing craft shelf (dials as a
-  typed craft kind riding all of 0050's machinery — versioning, lineage,
-  hash names, the one-motion door) **[recommended]**, or a new first-class
-  record kind with its own doors.
-- **L2 · The razor's default.** When a value's side is unclear:
-  FIRMWARE-until-named-PURPOSE (conservative; a value stays release-only
-  until a human classifies it) **[recommended]**, or PURPOSE-by-default.
-- **L3 · The machine's own hand.** The improver already tunes four dials
-  autonomously. When a human turns one: the human's value becomes the
-  BOUND the improver optimizes within (§3.9) **[recommended]**, or the
-  improver loses those keys entirely, or the improver's nudge outranks
-  and the card confesses it.
-- **L4 · The first walk.** `SEARCH_DAILY` + `ASSAY_CEILING` +
-  `MIRROR_EVERY` (two ceilings with the display half built, one cadence)
-  **[recommended]**, or swap the third for `KINDRANK` (prove the
-  non-numeric dial early), or JB names his own.
+- **L1 · The home of values: THE CRAFT SHELF — with the separation named.**
+  Dials ride 0050's proven machinery (versioning, lineage, hash names, the
+  one-motion door). JB's condition, part of the lock: *"the
+  attributes/settings separation should be clear in identification and how
+  these are machine/kernel/operating values vs NLP to manage agentic
+  functions."* So: dials wear their own name family (`dial-*`, the
+  `gloss-*` precedent) and their own shelf category with a plain tail
+  ("dials — the machine's operating values; numbers and settings, never
+  words"), every dial card says plainly that it is a MACHINE OPERATING
+  VALUE, and no room ever lists dials interleaved with speech, prompt, or
+  persona craft. Words steer minds; dials steer the machine — one shelf,
+  two clearly separate drawers.
+- **L2 · The razor's default: FIRMWARE UNTIL NAMED.** An unclassified
+  value stays release-only; becoming tunable takes a deliberate word.
+- **L3 · The machine's own hand: THE HUMAN'S WORD IS THE CEILING.** Where
+  the improver nudges a dial, a human-turned value becomes the bound the
+  improver optimizes within (§3.9) — self-tuning survives, inside the
+  human's word, never over it.
+- **L4 · The first walk: `SEARCH_DAILY` + `ASSAY_CEILING` + `KINDRANK`.**
+  Two spend ceilings whose display half already stands in the glass, plus
+  the Inbox's gravest-first ordering — proving from day one that a dial is
+  any tunable VALUE, not just a number.
 
-*Standing recommendation not raised to a lock:* the effect horizon —
+*Standing recommendation, adopted with the locks:* the effect horizon —
 live-read via the memoized accessor, taking hold within ~a minute, the
-horizon confessed on the card (never restart-required). Objection welcome;
-silence adopts it.
+horizon confessed on the card (never restart-required).
 
 ## Appendix A — the dial inventory (recon, 2026-08-28)
 
