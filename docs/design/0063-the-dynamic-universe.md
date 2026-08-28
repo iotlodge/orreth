@@ -226,9 +226,21 @@ The Commander laws govern: **command-first, ≤2 clicks, edited in place.**
   every step. Suite 365. *Honest remainder → sp2: the door is untyped —
   a flawed head may STAND (the read refuses it); sp2 teaches the gate to
   refuse before landing.*
-- **sp2 — the gate:** the craft-edit door learns typed validation + bounds +
-  blast-radius cards; a turn proven live through the glass; refusal-outside-
-  bounds proven live.
+- **sp2 — the gate** — ✅ **LANDED 2026-08-28, hours behind sp1**: the door
+  refuses BEFORE landing — `dials.gate_check()` (pure, suite-held)
+  validates type and bounds at `on_craft_edit`, a clean turn lands
+  CANONICAL ("2" becomes 2), and the refusal TEACHES (bounds, unit,
+  governs, blast — the blast-radius card as words). The prod razor learned
+  dials are PURPOSE (`dial-*` joins the prod-editable set — a value the
+  human cannot change in prod is not a value the human owns). Every
+  landed sibling carries `teachings()` in its body — no dial record is a
+  bare number with amnesia — and the glass's craft room renders the
+  teaching strip (value · unit · bounds · governs · blast · why ·
+  horizon) beside the versions. **Proven through the real glass by hand:**
+  the dials drawer (`dials · 3`, own category chip), a 999 turn refused
+  in the editor with the full teaching and NOTHING landed (v4 stood),
+  the clean turn 6→4 landed as v5 wearing its teachings, the accessor
+  served it within the horizon, canon restored as v6. Suite 368.
 - **sp3 — the ladder:** per-floor / per-resident overrides by the 0059
   resolution; the improver's nudges re-homed inside the human's bound (§3.9).
 - **sp4 — the rooms:** in-place dials on owner cards + the settings room.

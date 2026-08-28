@@ -6409,6 +6409,7 @@ function govOpen(name){
       ${o.lifecycle==="chronicle"?`<span class="gvv" onclick="govEdit('${esc(name)}')">✎ propose an edit — lands on your word</span>`:""}
       ${o.lifecycle==="canon"?`<span class="gvv" onclick="govRelease('${esc(name)}')">⚑ stage a release — asks you first; nothing changes until you agree</span>`:""}
       ${o.argue?`<span class="gvv" onclick="govArgue('${esc(name)}')">⚖ open an argument — two versions race, and you decide</span>`:""}</div>
+    <div class="quiet2" id="gov-dial" style="display:none;border:1px solid var(--hair2);border-radius:6px;padding:.35rem .5rem;margin:.35rem 0"></div>
     ${o.lifecycle==="canon"?`<div class="quiet2">firmware: a change is a release — staged at your gate, adopted only on your word, and the machine's version name moves with it</div>`:""}
     ${o.at?`<div class="quiet2">lives at ${esc(o.at)} — the registry reads across the floors</div>`:""}
     ${(o.wearers||[]).length?`<div class="quiet2">worn by · ${o.wearers.map(esc).join(" · ")}</div>`:""}
@@ -6426,6 +6427,17 @@ async function govVer(name,i){
     GOVRAW=(b&&b.firmware)?b.firmware.text
       :(typeof b==="string"?b:JSON.stringify(b,null,1));
     $("gov-body").textContent=govPretty(b);
+    /* the dial's teaching strip (0063 sp2): value · unit · bounds · what it
+       governs · blast · why · horizon — read before any turn is landed */
+    const gd=$("gov-dial");
+    if(gd){const dl=(b&&b.asset&&b.asset.dial)||null,
+      pv=(b&&b.asset&&b.asset.profile)?b.asset.profile.value:undefined;
+      if(o.category==="dials"&&dl){gd.style.display="";
+        gd.innerHTML=`🎛 a MACHINE OPERATING VALUE — this version: <b>${esc(typeof pv==="object"?JSON.stringify(pv):String(pv))}</b> (${esc(dl.unit||"")})`
+          +(dl.bounds?` · the door refuses outside <b>[${dl.bounds[0]}‥${dl.bounds[1]}]</b>`:"")
+          +` · governs ${esc(dl.governs||"")} · blast — ${esc(dl.blast||"")}`
+          +` · why — ${esc(dl.why||"")} · ${esc(dl.horizon||"")}`}
+      else gd.style.display="none"}
   }catch(e){$("gov-body").textContent="the record would not open: "+e}
 }
 async function govDiff(name){

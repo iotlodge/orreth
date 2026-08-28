@@ -5349,8 +5349,7 @@ def dial_seed(port: int) -> None:
                 continue
             body = {"asset": {
                 "name": name, "profile": {"value": d["genesis"]},
-                "dial": {k: d[k] for k in
-                         ("unit", "governs", "blast", "why", "horizon")},
+                "dial": dials.teachings(short),
                 "extracted_from": "orreth_sim/dials.py — the dial registry "
                                   "(0063 sp1): the declaration is firmware; "
                                   "this VALUE is a machine operating value, "
@@ -11459,7 +11458,11 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
         # a word belongs to a capability iff discovery says so.
         _cap_prefixes = {str(m.get("resident", "")).lower()
                          for m in CAP_GENESIS.values() if m.get("resident")}
+        # dials are PURPOSE by the razor (0063 L1/L2): a machine operating
+        # VALUE is the human's domain in prod — its shape stays firmware,
+        # its value turns at this door
         _is_cap_word = (name.startswith("capability-")
+                        or name.startswith("dial-")
                         or any(name.lower().startswith(p + "-")
                                for p in _cap_prefixes))
         if not _is_cap_word:
@@ -11486,9 +11489,23 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
         flaw = cap_manifest_flaw(parsed)
         if flaw:
             return done(f"the edit refuses loudly — {flaw}. Nothing changed")
+    if name.startswith("dial-"):
+        # 0063 sp2 — bounds are law AT THE DOOR: a flawed value never lands
+        # (sp1's read-side refusal stands behind as the second lock), and a
+        # clean turn lands CANONICAL, so no head ever wears a shape the
+        # declaration would refuse
+        flaw, parsed = dials.gate_check(name, parsed)
+        if flaw:
+            print(f"  🎛 dial turn refused at the door: {name} — {flaw[:80]}")
+            return done(f"the dial refuses at the gate — {flaw}. "
+                        "Nothing changed")
     body = {"asset": {"name": name, "profile": parsed, "adopted_from": head,
                       "authority": f"the human's word at {rid} — edit and "
                                    f"word in one motion (0045 sp2)"}}
+    if name.startswith("dial-"):
+        # every version teaches (0063 sp2): the declaration rides the
+        # sibling, so no dial record is ever a bare number with amnesia
+        body["asset"]["dial"] = dials.teachings(name[len("dial-"):])
     if r.get("note"):
         body["asset"]["note"] = str(r["note"])[:200]
     rec = node.make_memory({"did": IMP_DID, "scope": scope}, IMP, scope,

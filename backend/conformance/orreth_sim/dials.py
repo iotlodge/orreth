@@ -61,6 +61,40 @@ DIALS_V1 = {
 }
 
 
+def teachings(short: str) -> dict:
+    """The declaration's face for a record body and the glass: what the human
+    reads BESIDE the value — every version carries its own teaching, so a
+    dial record can never be a bare number with amnesia."""
+    d = DIALS_V1[short]
+    t = {k: d[k] for k in ("type", "unit", "governs", "blast", "why",
+                           "horizon")}
+    if d["type"] == "int":
+        t["bounds"] = [d["min"], d["max"]]
+    return t
+
+
+def gate_check(asset_name: str, profile):
+    """The DOOR's law (0063 sp2 — bounds are law, refused BEFORE landing):
+    returns (flaw, normalized_profile). A flaw means nothing lands and the
+    refusal teaches — the bounds, the unit, what the dial governs. A clean
+    turn lands CANONICAL (\"2\" becomes 2): the head never carries a shape
+    the declaration would refuse at read time."""
+    short = asset_name[len("dial-"):]
+    d = DIALS_V1.get(short)
+    if d is None:
+        return (f"no declared dial is named “{asset_name}” — a dial's SHAPE "
+                f"is firmware, and the registry declares only: "
+                + ", ".join(f"dial-{s}" for s in sorted(DIALS_V1)), None)
+    if not isinstance(profile, dict) or "value" not in profile:
+        return ("a dial turns by its value alone — the body is "
+                "{\"value\": …}, nothing else", None)
+    v, flaw = parse(short, profile["value"])
+    if flaw:
+        return (f"{flaw} — the declaration holds ({d['unit']}); this dial "
+                f"governs {d['governs']}, and its blast is {d['blast']}", None)
+    return None, {"value": v}
+
+
 def parse(short: str, raw):
     """The read-side law: (value, flaw). A flawed head never breaks an organ
     — genesis serves and the flaw is the caller's to confess out loud."""
