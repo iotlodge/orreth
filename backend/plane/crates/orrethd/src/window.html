@@ -3522,6 +3522,15 @@ function inbSelect(id){INBSEL=id;renderInboxDetail();
   document.querySelectorAll(".inbrow").forEach(x=>x.classList.toggle("on",x.dataset.id===id))}
 function goInbox(id){INBSEL=id;
   const t=document.querySelector('.tab[data-v="inbox"]');if(t)t.click();loadReq()}
+/* the dial door (0063 sp4): any dial mention anywhere in the glass opens
+   its record in the craft room's dials drawer — two clicks from any card
+   to the editor, the Commander law held */
+async function goDial(name){
+  const t=document.querySelector('.tab[data-v="gov"]');if(t)t.click();
+  for(let i=0;i<24&&!(GOVD&&GOVD.objects&&GOVD.objects.length);i++)
+    await new Promise(z=>setTimeout(z,250));
+  if(GOVD&&GOVD.objects&&GOVD.objects.find(x=>x.name===name)){
+    GOVCAT="dials";renderGov();govOpen(name)}}
 async function renderInboxDetail(){
   const el=$("inb-detail");if(!el)return;
   if(!INBSEL){                            /* nothing held — the pane says so */
@@ -3849,7 +3858,7 @@ function renderFarmPane(){
     R.innerHTML=`<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
       <b style="font-size:.95rem">${esc(s.name)}</b><span class="schip ${s.state}">${s.state}</span>
       ${(s.source||"human")!=="human"?`<span class="okband">${esc(s.source)}</span>`:""}
-      ${s.spend_guard?`<span class="roband" title="calls count against the declared daily ${esc(s.spend_guard)} ceiling — one ledger, every road">⛽ ${esc(s.spend_guard)}-guarded</span>`:""}</div>
+      ${s.spend_guard?`<span class="roband" title="calls count against the declared daily ${esc(s.spend_guard)} ceiling — one ledger, every road">⛽ ${esc(s.spend_guard)}-guarded</span>${s.spend_guard==="search"?` <a href="#" onclick="event.stopPropagation();goDial('dial-search-daily');return false" style="color:var(--brass);font-size:.68rem" title="the daily ceiling is a machine operating value — open its record; your turn lands at the gate">✎ the ceiling</a>`:""}`:""}</div>
      <div class="dim" style="font:.66rem var(--mono);margin:.25rem 0">${esc(s.kind)} · ${esc(s.transport)} · on ${esc(s.floor||"")} · DID ${esc((s.did||"").slice(0,34))}… <span style="opacity:.8">(its permanent name here — never reused, never renamed)</span></div>
      <div class="strdeal"><b>THE WIRE — where it lives, and the exact shape you approved</b><br>
       <span class="k">endpoint</span>${envd?`<b>${esc(s.endpoint)}</b> — a stand-in name; the real key never enters any record`:esc(s.endpoint||"—")}<br>
@@ -5988,6 +5997,22 @@ function brnRender(){
       <button class="dk-tab" onclick="brnCadSave()">stage the change</button></div>
     <span class="dim" id="brn-yard-note" style="font-size:.66rem"></span>`;
   h+=(MT.rhythms||[]).map(r=>`<div class="dim" style="font-size:.66rem;margin:.25rem 0">${dkEsc(r.emoji||"")} <b style="color:var(--dim)">${dkEsc(r.name)}</b>${r.every_s?` — every ${r.every_s}s${r.age_s!=null?`, last breath ${r.age_s}s ago`:""}`:""} · ${dkEsc(r.note||"")}</div>`).join("");
+  /* THE MACHINE'S DIALS (0063 sp4 — the settings inventory): every
+     operating value's LIVE word beside its declaration, ✎ two clicks to
+     the editor. Values, never words — the shelf's other drawer. */
+  const DR=B.dial_registry||{};
+  if(Object.keys(DR).length){
+    h+=`<div class="brn-sec">the machine's dials — its operating values: numbers and settings, never words · ✎ opens the record; your turn lands at its gate</div>`;
+    h+=`<div style="overflow-x:auto"><table class="dk-table"><tr><th>dial</th><th>value</th><th>the door refuses outside</th><th>lives at</th><th>governs</th><th style="text-align:right"></th></tr>`
+      +Object.entries(DR).map(([s,d])=>{
+        const v=typeof d.value==="object"?`${Object.keys(d.value).length} ranks`:String(d.value);
+        return `<tr><td style="font-family:var(--mono)">🎛 ${dkEsc(s)}</td>
+        <td style="font-family:var(--mono)"><b>${dkEsc(v)}</b> <span class="dim">${dkEsc(d.unit||"")}</span></td>
+        <td style="font-family:var(--mono)">${d.bounds?`[${d.bounds[0]}‥${d.bounds[1]}]`:"—"}</td>
+        <td>${d.home==="ladder"?`any floor <span class="dim">— most specific wins</span>`:"the universe"}</td>
+        <td class="dim" style="font-size:.64rem">${dkEsc(d.governs||"")}</td>
+        <td style="text-align:right"><button class="dk-tab" onclick="goDial('dial-${dkEsc(s)}')" title="${dkEsc((d.blast||"")+" · why — "+(d.why||"")+" · "+(d.horizon||""))}">✎ turn</button></td></tr>`}).join("")
+      +`</table></div>`}
   if(MT.law)h+=`<div class="dim" style="font-size:.6rem;color:var(--faint);margin:.2rem 0 .5rem">${dkEsc(MT.law)}</div>`;
   h+=`<div class="brn-sec">the yardstick's standings — recall proven by questions, scored on the record</div>`;
   if((Y.runs||[]).length)
@@ -6593,10 +6618,12 @@ function renderObservatory(){
     return}
   const d=obsCache;if(!d)return;
   $("obs-dial").textContent=d.dial.position;
-  $("obs-price").textContent=` · ${d.dial.price} · deep-checks run every ${d.dial.assay_every_s}s, ${d.dial.sample_per_beat} sample(s) each`
-    +(d.dial.ceiling_tokens?` · spent ${fmtTok(d.dial.spent_today||0)}/${fmtTok(d.dial.ceiling_tokens)} tok today of the ceiling you set`:"")
-    +(d.rollup?` · watching all ${d.rollup.floors_watched} floor(s)`:"")
-    +(d.bell?` · the bell (emails you when something needs you): ${d.bell.state}${d.bell.last?` — last ring ${fmtAge((Date.now()-new Date(d.bell.last.at))/1000)} ago${d.bell.last.repeats?` (+${d.bell.last.repeats} aged in)`:""}`:""}`:"");
+  /* innerHTML (0063 sp4): the ceiling is a DIAL — its mention is a door */
+  $("obs-price").innerHTML=esc(` · ${d.dial.price} · deep-checks run every ${d.dial.assay_every_s}s, ${d.dial.sample_per_beat} sample(s) each`)
+    +(d.dial.ceiling_tokens?esc(` · spent ${fmtTok(d.dial.spent_today||0)}/${fmtTok(d.dial.ceiling_tokens)} tok today of the ceiling you set`)
+      +` <a href="#" onclick="goDial('dial-assay-ceiling');return false" style="color:var(--brass)" title="a machine operating value — open its record; your turn lands at the gate">✎ turn it</a>`:"")
+    +esc((d.rollup?` · watching all ${d.rollup.floors_watched} floor(s)`:"")
+    +(d.bell?` · the bell (emails you when something needs you): ${d.bell.state}${d.bell.last?` — last ring ${fmtAge((Date.now()-new Date(d.bell.last.at))/1000)} ago${d.bell.last.repeats?` (+${d.bell.last.repeats} aged in)`:""}`:""}`:""));
   const ra=d.recorder.age_s;
   dot.className="pdot"+(ra==null||ra>150?" dark":ra>45?" amber":"");
   age.textContent=ra==null?"the recorder has not beaten yet":

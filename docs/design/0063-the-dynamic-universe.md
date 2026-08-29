@@ -260,7 +260,24 @@ The Commander laws govern: **command-first, ≤2 clicks, edited in place.**
   improver's ceiling turned 5→3 and back, the machine bounded by the
   human's word both ways. Suite 370. *Per-resident rungs wait for a
   resident-homed enforcement site — named, not faked.*
-- **sp4 — the rooms:** in-place dials on owner cards + the settings room.
+- **sp4 — the rooms** — ✅ **LANDED 2026-08-28, the day's fourth**: THE
+  SETTINGS ROOM lives in the Brain pull beside the machine's tasks —
+  "the machine's dials — its operating values: numbers and settings,
+  never words" — every dial's LIVE value, unit, bounds, home
+  (ladder rows say "any floor — most specific wins"), governs, and a ✎
+  door (blast + why + horizon in its title). The `dial_registry` block
+  rides the /brain door, drawn from the shelf, never from paper. IN
+  PLACE: the Observatory's ceiling line ("…of the ceiling you set")
+  grew ✎ TURN IT, and the Farm's ⛽ search-guarded band grew ✎ the
+  ceiling — a dial's mention is a door wherever its subject lives.
+  `goDial()` is the one door: any mention → the craft room's dials
+  drawer with the record open, the editor one click further — the
+  Commander's ≤2 clicks held. **Proven in the glass:** the table
+  rendered all five live; ✎ from the Brain landed on dial-search-daily
+  v6 with the teaching strip; the Observatory line carries its door.
+  *En route: a local `dials` variable in compose_brain shadowed the
+  module and the /brain door served only an error — caught live, the
+  registry re-enters under its own name.* Suite 370.
 - **sp5 — the infra lane** in the Atlas.
 - **sp6 — the sweep:** the appendix inventory migrated dial by dial, env
   demoted to genesis, each landing with its bounds and blast radius; the

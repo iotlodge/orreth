@@ -13611,6 +13611,10 @@ def _compose_brain_locked() -> dict:
                     "at": dd.get("at", "")}
     except Exception:
         pass
+    # compose_brain holds a LOCAL «dials» (the retention table), so the
+    # registry module re-enters under its own name (caught live 2026-08-28:
+    # the shadow left the whole door serving only an error)
+    from orreth_sim import dials as _dials_mod
     payload = {
         "at": now,
         "mode": ORRETH_MODE,
@@ -13646,6 +13650,13 @@ def _compose_brain_locked() -> dict:
                               "proven by questions — scored runs of the "
                               "shelf's question set land here"},
         "machine_tasks": _machine_tasks(runs),
+        # 0063 sp4 — the settings inventory: every dial's LIVE value beside
+        # its declaration, drawn from the shelf, never from paper. (Ladder
+        # overrides live on each floor's own shelf and are confessed there —
+        # this table speaks the universe's word.)
+        "dial_registry": {s: {"value": dial_value(s),
+                              **_dials_mod.teachings(s)}
+                          for s in sorted(_dials_mod.DIALS_V1)},
     }
     _BRAIN_CACHE.update(at=time.time(), payload=payload)
     return payload
