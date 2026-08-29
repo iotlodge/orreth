@@ -93,7 +93,10 @@ def main() -> None:
                        # 0061: the machine's schematic — the atlas pull
                        # works statically (shape + last hour's measured glow
                        # frozen honestly in the photograph)
-                       ("atlas", "/atlas")):
+                       ("atlas", "/atlas"),
+                       # the one-Inbox door (the 0.62 refresh's named debt
+                       # paid): the universe-root Inbox shows its away rows
+                       ("inbox", "/inbox")):
         try:
             (fx / f"{name}.json").write_text(json.dumps(get2(path)))
             print(f"  captured :4562{path} → fixtures/{name}.json")
