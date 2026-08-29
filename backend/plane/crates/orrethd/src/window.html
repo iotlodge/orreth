@@ -6947,6 +6947,9 @@ function atlToggle(){const w=$("atlasworld");
   w.classList.toggle("capopen");
   document.body.classList.toggle("atlas-open",w.classList.contains("capopen"));
   if(!w.classList.contains("capopen")){
+    /* a closed sheet forgets ⛶ (JB's find 2026-08-29): width 100% against
+       the -82% resting slot left an 18% sliver stuck on screen */
+    w.classList.remove("atlfull");
     if(_ATLTIMER){clearInterval(_ATLTIMER);_ATLTIMER=null}return}
   atlLoad();if(!_ATLTIMER)_ATLTIMER=setInterval(atlLoad,15000);}
 function atlFull(){$("atlasworld").classList.toggle("atlfull");atlRender()}
