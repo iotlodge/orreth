@@ -326,9 +326,23 @@ The Commander laws govern: **command-first, ≤2 clicks, edited in place.**
   left standing) and canon restored. *Honest notes:* `vera.EST_TOKENS`
   turned out to be a sim-only constant, not a live operating value —
   skipped, not swept; the chassis's agent-side `max_tokens` is a named
-  horizon (agent-side dials need the supply-line path). **Waves owed:**
-  leases/fuel/capacity (A.5) · the bell pair (A.9) · the desk's holding
-  period and studio windows (A.10) · judgment bars (A.8) ·
+  horizon (agent-side dials need the supply-line path). **WAVE 3 LANDED 2026-08-29: THE BELL PAIR** — the highest consequence
+  per dial in the inventory. `bell-cooldown` (3600 s, floor **300**: the
+  least quiet between two rings of the human's REAL inbox) and
+  `bell-gate-age` (48 h: how long a card may wait before the bell rings
+  once about it). The cooldown's three scattered env reads became one
+  dial, and the bell SINGLETON hears the word live — `_bell_service`
+  refreshes `cooldown_s` on every service, so a turn never waits for a
+  restart. **Proven:** turned 3600→900 and the Observatory's own bell
+  view read `cooldown_s: 900` within the horizon; a 60 s turn below the
+  floor was REFUSED at the door with the full teaching; canon restored.
+  **The walk's own safety, on the record:** `bell-gate-age` was
+  deliberately never lowered live — cards weeks old stand at the gate,
+  and a lowered age would ring the real inbox once per card; that risk
+  is written into the dial's own blast line. The Rust-side witness
+  floor (`.max(90)`) stays firmware — it is the clamp pattern's home,
+  not a dial. **Waves owed:** leases/fuel/capacity (A.5) · the desk's
+  holding period and studio windows (A.10) · judgment bars (A.8) ·
   retention/tier profiles (A.7, the profile-JSON path).
 
 ## 7. The locks (JB, 2026-08-28)

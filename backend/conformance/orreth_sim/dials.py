@@ -101,6 +101,32 @@ DIALS_V1 = {
         "how often the Brain's memory census refreshes",
         "a stale gauge in the glass",
         "five minutes suits a wall gauge"),
+    # ── the bell (sp6 wave 3 — the highest consequence per dial) ─────────
+    "bell-cooldown": {
+        "type": "int", "unit": "seconds between rings", "min": 300,
+        "max": 604800,
+        "genesis": int(os.environ.get("ORRETH_BELL_COOLDOWN_S", "3600")),
+        "home": "universe",
+        "governs": "the least quiet between two rings of your REAL inbox — "
+                   "a repeat inside the window ages into the standing email "
+                   "(0044 law 6)",
+        "blast": "spam below, a silenced second alarm above — your inbox's "
+                 "peace either way",
+        "why": "one hour matched the witness's own window",
+        "horizon": "takes hold within a minute",
+    },
+    "bell-gate-age": {
+        "type": "int", "unit": "hours a card may wait", "min": 1, "max": 720,
+        "genesis": int(os.environ.get("ORRETH_BELL_GATE_AGE_H", "48")),
+        "home": "universe",
+        "governs": "how long a consequential card may wait at your gate "
+                   "before the bell rings ONCE about it (0044 sp3)",
+        "blast": "nagging below, a forgotten gate above — and turning it "
+                 "DOWN on a rig with old cards standing rings the real "
+                 "inbox at once",
+        "why": "two days is a weekend's grace",
+        "horizon": "takes hold at the next gate-age beat",
+    },
     # ── money (sp6 wave 2 — the numbers that spend) ──────────────────────
     "subscription-cadence-beats": {
         "type": "int", "unit": "beats between issues", "min": 10,

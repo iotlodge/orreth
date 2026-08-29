@@ -9981,12 +9981,15 @@ def _bell_service(port: int) -> "bell_mod.Bell":
             pass                              # the pin re-lands next start
         _BELL = bell_mod.Bell(
             me, BELL, UNIVERSE_SCOPE, manifest, transport=_ses_send,
-            cooldown_s=int(os.environ.get("ORRETH_BELL_COOLDOWN_S", "3600")))
+            cooldown_s=dial_value("bell-cooldown"))
         for k, row in _bell_state_load().items():
             kind, _, subject = k.partition("|")
             _BELL.rung[(kind, subject)] = {"at": row["at"],
                                            "ring": {"id": row["ring"]},
                                            "repeats": row.get("repeats", 0)}
+    # the singleton hears the human's word LIVE (0063 sp6 w3): the cooldown
+    # refreshes on every service, so a turn never waits for a restart
+    _BELL.cooldown_s = dial_value("bell-cooldown")
     return _BELL
 
 
@@ -10082,7 +10085,7 @@ def on_bell_consent(port: int, scope: str, r: dict, *, approved: bool,
                                  "consequence — open or decline (0044 §2)",
                          "terms": f"endpoint {_BELL_ENDPOINT} · kinds "
                                   f"witness/gate-age/tamper · cooldown "
-                                  f"{int(os.environ.get('ORRETH_BELL_COOLDOWN_S', '3600'))//60}min "
+                                  f"{dial_value('bell-cooldown')//60}min "
                                   f"per subject · content-minimal · every "
                                   f"send on the record"}})
 
@@ -10427,7 +10430,8 @@ def bell_beat(port: int) -> None:
 
 _VERIFY_LAST = 0.0
 # the verify cadence is a DIAL (0063 sp6) — dial_value("verify-every")
-_GATE_AGE_H = float(os.environ.get("ORRETH_BELL_GATE_AGE_H", "48"))
+# the gate age is a DIAL (0063 sp6 w3) — dial_value("bell-gate-age");
+# genesis rides ORRETH_BELL_GATE_AGE_H in orreth_sim/dials.py
 
 
 def _age_seconds(at) -> float:
@@ -10549,7 +10553,8 @@ def gate_age_beat(port: int) -> None:
                      or (x.get("kind") == "question"
                          and x.get("status") == "pending"))
                         and x.get("kind") != "witness"
-                        and _age_seconds(x.get("at")) >= _GATE_AGE_H * 3600):
+                        and _age_seconds(x.get("at"))
+                        >= dial_value("bell-gate-age") * 3600):
                     old.append((x, scope))
         except Exception:
             continue
@@ -11973,7 +11978,7 @@ def _bell_room_view() -> dict:
         consent = _bell_consent_head(4500)
     except Exception:
         pass
-    cooldown = int(os.environ.get("ORRETH_BELL_COOLDOWN_S", "3600"))
+    cooldown = dial_value("bell-cooldown")
     state = ("silent — no standing grant"
              if not consent or consent.get("posture") != "granted"
              else "rung" if last and _age_seconds(last["at"]) < cooldown
