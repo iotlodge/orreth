@@ -1119,6 +1119,11 @@
   .atlnode.organs{border-color:var(--brassdim)}
   .atlnode.kernel{border-color:#8fb8d9}
   .atlnode.worlds{border-color:#8fd6b0}
+  .atlnode.infra{border-color:#9aa3ad;width:226px;padding:.35rem .55rem}
+  .atlnode.infra.down{border-color:var(--red);opacity:.7}
+  .atlband{position:absolute;font-size:.6rem;letter-spacing:.14em;color:var(--faint);
+    text-transform:uppercase;white-space:nowrap}
+  .atlband b{color:#9aa3ad}
   body.atlas-open #lens{display:none}
   #capbody,#brnbody,#resbody{flex:1;overflow-y:auto;padding:1.1rem 1.6rem 3rem}
   .roomdoor{margin-left:.35rem;opacity:.55;cursor:pointer;font-size:.8rem}
@@ -1608,6 +1613,7 @@
     <span class="qchip on" id="atl-hum" onclick="atlLens('hum')">🖐 the human</span>
     <span class="qchip on" id="atl-gov" onclick="atlLens('gov')">⚙ governance</span>
     <span class="qchip on" id="atl-cap" onclick="atlLens('cap')">◈ the worlds</span>
+    <span class="qchip on" id="atl-bod" onclick="atlLens('bod')">🔩 the body</span>
     <button class="dk-tab" onclick="atlFull()" title="the full sheet — cover the rail too">⛶</button>
     <button class="dk-tab" style="margin-left:auto" onclick="atlToggle()">✕ close</button></div>
   <div id="atlbody"></div>
@@ -6933,7 +6939,7 @@ function welcomeShow(){$("welcome").style.display="";glossStatic()}
       (last hour) — no line lights that carried nothing. Lanes, not a layout
       engine: the human · the staff · the kernel · the worlds. Every box is
       a door (0052), and dictionary words inside dot as everywhere (0060). ── */
-let ATL=null,_ATLTIMER=null,ATLLENS={hum:true,gov:true,cap:true};
+let ATL=null,_ATLTIMER=null,ATLLENS={hum:true,gov:true,cap:true,bod:true};
 function atlToggle(){const w=$("atlasworld");
   if(!w.classList.contains("capopen")){
     if($("capworld").classList.contains("capopen"))capToggle();
@@ -6954,6 +6960,8 @@ function atlDoor(d){if(!d)return;
   if(d.res)resOpen(d.res);
   else if(d.parlor)openParlor(d.parlor);
   else if(d.world){capToggle();CAPV=d.world;renderCap()}
+  else if(d.floor)floorGo(encodeURIComponent(d.floor));   /* 0063 sp5: a hull opens its floor */
+  else if(d.brain)brnToggle();                            /* pg + the keeper live in the Brain */
   else if(d.view){const t=document.querySelector(`.tab[data-v="${d.view}"]`);if(t)t.click()}}
 function atlRender(){
   const B=$("atlbody");if(!B||!$("atlasworld").classList.contains("capopen"))return;
@@ -6997,13 +7005,32 @@ function atlRender(){
       stroke="${h?"var(--brass)":"var(--hair2)"}" opacity="${h?.85:.4}"
       stroke-width="${h?Math.min(1.4+Math.log2(1+h),4):1}">
       <title>${esc(e.label||"")} — ${h?h+" in the last hour":"quiet this hour"}</title></path>`};
+  /* 🔩 the body (0063 sp5): the basement band — the machine's PHYSICAL
+     anatomy beneath its mind. Family shape declared, members and glow
+     MEASURED (docker + the ledgers, via the worker); every box a door;
+     the rig-down word rendered as the operator's word, never a wound. */
+  let bandHtml="",H2=H;
+  const INF=ATLLENS.bod?(ATL.infra||null):null;
+  if(INF&&(INF.families||[]).length){
+    const top=H+46,colW2=Math.max(246,Math.floor((B.clientWidth-36)/INF.families.length));
+    bandHtml+=`<div class="atlband" style="left:16px;top:${H+14}px"><b>🔩 THE BODY</b> — where the machine physically lives; green breathes, red is down${INF.rig_down?` · <span style="color:var(--red)">■ the rig rests by the human's word since ${esc(INF.rig_down)}</span>`:""}</div>`;
+    let maxRows=0;
+    INF.families.forEach((f,ci)=>{
+      bandHtml+=`<div class="atlband" style="left:${16+ci*colW2}px;top:${top}px">${esc(f.label)} <span style="text-transform:none;letter-spacing:0">— ${esc(f.ledger)}</span></div>`;
+      (f.members||[]).forEach((n,ri)=>{
+        bandHtml+=`<div class="atlnode infra ${n.up?"":"down"}" style="left:${16+ci*colW2}px;top:${top+22+ri*58}px"
+          onclick='atlDoor(${JSON.stringify(n.door||null)})'>
+          <b><span style="color:${n.up?"#7fd1a8":"var(--red)"}">●</span> ${esc(n.label||"")}</b><span>${esc(n.sub||"")}</span></div>`});
+      maxRows=Math.max(maxRows,(f.members||[]).length)});
+    H2=top+22+maxRows*58+40}
   B.innerHTML=`<svg style="position:absolute;inset:12px;width:${Math.max(B.clientWidth-24,liveLanes.length*colW)}px;height:${H}px;z-index:1;overflow:visible">${EDGES.map(path).join("")}</svg>`
     +liveLanes.map(([k,lbl],ci)=>`<div class="atlane" style="left:${16+ci*colW}px">${esc(lbl)}</div>`).join("")
     +liveLanes.flatMap(([k])=>byLane[k]).map(n=>{const p=pos[n.id];
       return `<div class="atlnode ${n.lane}" style="left:${p.x}px;top:${p.y}px"
         onclick='atlDoor(${JSON.stringify(n.door||null)})'>
         <b>${esc(n.label||n.id)}</b><span>${esc(n.sub||"")}</span></div>`}).join("")
-    +`<div style="position:relative;height:${H+30}px"></div>`;
+    +bandHtml
+    +`<div style="position:relative;height:${H2+30}px"></div>`;
   glossifyEl(B);                       /* the map's own words are doors (0060) */
 }
 document.addEventListener("keydown",e=>{if(e.key==="Escape"

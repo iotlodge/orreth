@@ -278,7 +278,25 @@ The Commander laws govern: **command-first, ≤2 clicks, edited in place.**
   *En route: a local `dials` variable in compose_brain shadowed the
   module and the /brain door served only an error — caught live, the
   registry re-enters under its own name.* Suite 370.
-- **sp5 — the infra lane** in the Atlas.
+- **sp5 — the infra lane** — ✅ **LANDED 2026-08-28, the day's fifth**:
+  the Atlas grew its fourth lens, **🔩 the body** — the machine's
+  physical anatomy as the schematic's basement band. Four families each
+  beside the ledger that governs it (the spine — compose.yaml · grown
+  floors — floors.json, the worker replants · tool bodies — bodies.json,
+  stop rests, start wakes · the host pair — dev.sh + the keeper); the
+  FAMILY shape declared in `_atlas_infra`, the members and their glow
+  MEASURED (one memo'd `docker ps` + the ledgers the worker already
+  reads); the rig-down word renders as the operator's word in red when
+  it stands. Every box a door: a hull steps onto its floor (`floorGo`),
+  a body opens the Farm, postgres and the keeper open the Brain — where
+  the keeper now also stands as a named rhythm. **Proven in the glass:**
+  the band rendered 4/4 spine · 17/20 floors · 3/3 bodies · 2/2 host —
+  and the three red floors were exactly the down-ledger's own words
+  (f:probe's grave, charlene, chad), red by measurement, never
+  declaration; e:desk's hull clicked and the console stood on
+  u:demo/e:desk. The morning's question — "where's the view that
+  correlates infra to Orreth objects?" — now has its glass answer.
+  Suite 370.
 - **sp6 — the sweep:** the appendix inventory migrated dial by dial, env
   demoted to genesis, each landing with its bounds and blast radius; the
   long labor of the dive, paced across sessions.

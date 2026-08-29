@@ -7634,7 +7634,93 @@ def wire_atlas(port: int) -> dict:
         pass
     return {"governance": head("atlas-governance-flow"),
             "human": head("atlas-human-flow"),
-            "capabilities": caps, "activity": act}
+            "capabilities": caps, "activity": act,
+            # 0063 sp5 — the 🔩 body lens rides the same door, memo'd so
+            # the schematic never waits on docker
+            "infra": _memo("atlas-infra", 30, _atlas_infra)}
+
+
+def _atlas_infra() -> dict:
+    """0063 sp5 — the body lens: the FAMILY shape is declared here, the
+    members and their glow MEASURED — every container beside the ledger
+    that governs it, the docker state the worker already reads, and the
+    rig-down word rendered as the operator's word, never a wound (the
+    2026-08-28 morning-stop lesson made law)."""
+    state: dict[str, str] = {}
+    try:
+        out = subprocess.run(["docker", "ps", "-a", "--format",
+                              "{{.Names}}\t{{.State}}"],
+                             capture_output=True, text=True, timeout=10).stdout
+        for ln in out.strip().splitlines():
+            nm, _, st = ln.partition("\t")
+            state[nm] = st
+    except Exception:
+        pass
+
+    def mem(cont, label, sub, door=None):
+        return {"id": "i:" + (cont or label), "label": label, "sub": sub,
+                "up": state.get(cont) == "running", "door": door}
+
+    spine = [
+        mem("orreth-demo-universe-universe-1", "universe :4500",
+            "u:demo — the apex", {"floor": "u:demo"}),
+        mem("orreth-demo-universe-eco-cloud-1", "eco :4501",
+            "u:demo/e:cloud", {"floor": "u:demo/e:cloud"}),
+        mem("orreth-demo-universe-field-prod-1", "field :4502",
+            "u:demo/e:cloud/f:prod — becky's join door",
+            {"floor": "u:demo/e:cloud/f:prod"}),
+        mem("orreth-demo-universe-pg-1", "postgres",
+            "the universe's memory — pg + pgvector", {"brain": 1}),
+    ]
+    floors = []
+    try:
+        for port_s, spec in sorted(SHIPYARD.ledger().items(),
+                                   key=lambda x: int(x[0])):
+            sc = spec.get("scope", "")
+            floors.append(mem(spec.get("container", ""),
+                              f"{sc.split('/')[-1]} :{port_s}", sc,
+                              {"floor": sc}))
+    except Exception:
+        pass
+    bodies = []
+    try:
+        for cont, b in sorted(_body_ledger().items()):
+            bodies.append(mem(cont,
+                              cont.replace("orreth-body-", "")
+                              + f" :{b.get('port', '')}",
+                              str(b.get("package", ""))[:44],
+                              {"view": "farm"}))
+    except Exception:
+        pass
+    host = [
+        {"id": "i:worker", "label": "the console worker",
+         "sub": "becky's door and every organ's hands — host-side; "
+                "the keeper replants it", "up": True, "door": {"view": "obs"}},
+        {"id": "i:keeper", "label": "the launchd keeper",
+         "sub": "heals every 5 min · honors the down words",
+         "up": (Path.home() / "Library" / "LaunchAgents"
+                / "com.orreth.replant.plist").exists(),
+         "door": {"brain": 1}},
+    ]
+    down = None
+    try:
+        p = HOME / "shipyard" / "rig-down"
+        if p.exists():
+            down = p.read_text().strip()
+    except Exception:
+        pass
+    return {"families": [
+        {"key": "spine", "label": "the spine",
+         "ledger": "infrastructure/compose.yaml", "members": spine},
+        {"key": "floors", "label": "grown floors",
+         "ledger": "~/.orreth/shipyard/floors.json — the worker replants",
+         "members": floors},
+        {"key": "bodies", "label": "tool bodies",
+         "ledger": "~/.orreth/bodies.json — stop rests them, start wakes them",
+         "members": bodies},
+        {"key": "host", "label": "the host pair",
+         "ledger": "scripts/dev.sh · com.orreth.replant", "members": host},
+    ], "rig_down": down}
 
 
 def wire_stacks_panel(port: int) -> dict:
@@ -12777,6 +12863,13 @@ def _machine_tasks(runs: list) -> dict:
         {"name": "the examiner", "emoji": "🔭",
          "note": ("glance · watch · assay — the dial is a governed word "
                   "that lives in the Observatory")},
+        # 0063 sp5 — the keeper joins the rhythms it already keeps: the
+        # Atlas's body lens doors here, and the row tells the truth of it
+        {"name": "the keeper", "emoji": "🌱", "every_s": 300,
+         "note": ("launchd heals the rig at login and every five minutes — "
+                  "compose rises without a rebuild, the join door reopens, "
+                  "and no floor the human darkened is ever resurrected "
+                  "(rig-down + down.json hold the words)")},
     ]
     return {"tasks": tasks, "rhythms": rhythms,
             "law": ("create and edit stage at your gate; resting is "

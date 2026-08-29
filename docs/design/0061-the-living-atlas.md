@@ -45,6 +45,11 @@ humans.**
   picture says what the architecture always meant: the human is load-bearing
   structure, not an outside observer.
 
+*(A fourth lens arrived with 0063 sp5 — **🔩 the body**: the machine's
+physical anatomy as the schematic's basement band, families beside their
+governing ledgers, glow measured from docker and the down words. Its
+record lives in 0063.)*
+
 ## The two honesty laws
 
 - **The shape is declared; the life is measured.** The governance and human
