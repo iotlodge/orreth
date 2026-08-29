@@ -5365,32 +5365,59 @@ def dial_seed(port: int) -> None:
         print(f"    (dial seed stumbled: {e})")
 
 
-def dial_value(short: str, port: int = 4500):
-    """The ONE accessor for a machine operating value: the shelf's head,
-    parsed by the firmware declaration; genesis when the shelf is dark or
-    the head refuses its bounds (confessed in the log, never silent)."""
-    now = time.time()
-    hit = _DIAL_CACHE.get(short)
-    if hit and now - hit[0] < DIAL_TTL:
-        return hit[1]
-    raw = None
+def _dial_head_raw(port: int, name: str, scope: str = "u:demo"):
+    """The newest non-superseded dial head's raw value on one shelf, or None."""
     try:
-        rows = wire_assets(port, "asset", name=f"dial-{short}")
+        rows = wire_assets(port, "asset", name=name, scope=scope)
         superseded = {d for _, _, dl, _ in rows for d in dl}
         for rid, body, _, _t in reversed(rows):
             if rid in superseded:
                 continue
-            raw = ((body.get("asset") or {}).get("profile") or {}).get("value")
-            break
+            return ((body.get("asset") or {}).get("profile") or {}).get("value")
     except Exception:
-        raw = None                            # a dark wire never mutes an organ
-    if raw is None:
-        v = dials.DIALS_V1[short]["genesis"]
-    else:
-        v, flaw = dials.parse(short, raw)
-        if flaw:
-            print(f"  🎛 dial «{short}» head refused ({flaw}) — genesis serves")
-    _DIAL_CACHE[short] = (now, v)
+        pass                                  # a dark wire never mutes an organ
+    return None
+
+
+def dial_value(short: str, port: int = 4500, scope: str | None = None):
+    """The ONE accessor for a machine operating value — now walking the
+    LADDER (0063 sp3, the 0059 resolution): for a ladder-homed dial asked
+    with a floor's scope, the floor's OWN shelf speaks first; the universe
+    head stands behind it; genesis behind both. A head that refuses its
+    declaration is confessed and the next rung serves — loudly, never
+    silent."""
+    d = dials.DIALS_V1[short]
+    rung = (scope if scope and scope != UNIVERSE_SCOPE
+            and d.get("home") == "ladder" else None)
+    key = f"{short}@{rung or 'u'}"
+    now = time.time()
+    hit = _DIAL_CACHE.get(key)
+    if hit and now - hit[0] < DIAL_TTL:
+        return hit[1]
+    v = None
+    if rung:
+        fport = next((p for p, s in FLOOR_SCOPES.items() if s == rung), None)
+        raw = _dial_head_raw(fport, f"dial-{short}", rung) \
+            if fport is not None else None
+        if raw is not None:
+            v, flaw = dials.parse(short, raw)
+            if flaw:
+                print(f"  🎛 dial «{short}» floor head at {rung} refused "
+                      f"({flaw}) — the next rung serves")
+                v = None
+            else:
+                print(f"  🎛 dial «{short}» at {rung}: the floor's own word "
+                      f"({v}) outranks the universe")
+    if v is None:
+        raw = _dial_head_raw(port, f"dial-{short}")
+        if raw is None:
+            v = d["genesis"]
+        else:
+            v, flaw = dials.parse(short, raw)
+            if flaw:
+                print(f"  🎛 dial «{short}» head refused ({flaw}) — "
+                      "genesis serves")
+    _DIAL_CACHE[key] = (now, v)
     return v
 
 
@@ -5466,7 +5493,10 @@ def improver_beat(port: int) -> None:
     rid, body, _, _ = actives[-1]
     base = dict((body.get("asset") or {}).get("profile") or {})
     prof = dict(base)
-    prof["max_cycles"] = min(int(prof.get("max_cycles", 2)) + 1, 5)
+    # the human's word is the machine's ceiling (0063 sp3, L3): the nudge
+    # climbs toward dial-improver-cycle-cap, never over it
+    prof["max_cycles"] = min(int(prof.get("max_cycles", 2)) + 1,
+                             dial_value("improver-cycle-cap"))
     if prof == base:
         return                               # the dial is at its stop — nothing to propose
     # the human's words ride as evidence (0031 §4): feedback is never an
@@ -7299,7 +7329,9 @@ _METAB_STATE: dict = {}          # the last breath's numbers — the rooms read 
 _METAB_FLOORS: dict = {}         # scope → that floor's last breath (0057 sp1)
 _METAB_RING: list = []           # the round-robin — every floor gets its turn
 METABOLISM_EVERY = int(os.environ.get("ORRETH_METABOLISM_EVERY", "900"))
-METABOLISM_BATCH = int(os.environ.get("ORRETH_METABOLISM_BATCH", "200"))
+# the breath's batch is a LADDER DIAL now (0063 sp3) — dial_value(
+# "metabolism-batch", scope=…): a floor's own shelf may outrank the
+# universe; genesis rides ORRETH_METABOLISM_BATCH in orreth_sim/dials.py
 
 
 def _metab_node(port: int, scope: str):
@@ -7390,7 +7422,7 @@ def _metab_node(port: int, scope: str):
     # the honest horizon: oldest first, one batch per breath — a floor of
     # thousands digests across cycles, never in one gulp
     n.undistilled.sort(key=lambda rid: n.records[rid].get("occurred_at", ""))
-    n.undistilled = n.undistilled[:METABOLISM_BATCH]
+    n.undistilled = n.undistilled[:dial_value("metabolism-batch", scope=scope)]
     # bodies for the full lineage the loss will walk — a parent left tags-only
     # scores as a false stub (u:demo's first breath read 96 phantom bits);
     # links beyond the retrieve window stay the projection's confessed horizon
@@ -11471,9 +11503,11 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
                         "(0045 sp3). Capability craft remains editable: "
                         "purpose is the human's domain. Nothing changed")
     heads = _craft_heads(port)
-    if name not in heads:
+    if name not in heads and not name.startswith("dial-"):
         return done(f"the shelf holds no craft named “{name}” — nothing changed")
-    lifecycle, head = heads[name]
+    # a dial may land FRESH on a floor's shelf (sp3 — the ladder's first
+    # override has no local head to chain; the registry is its existence)
+    lifecycle, head = heads.get(name, ("chronicle", None))
     if lifecycle == "canon":
         return done("CANON refuses the chronicle door — this word is firmware: "
                     "a change is a RELEASE and moves the machine's name "
@@ -11493,15 +11527,19 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
         # 0063 sp2 — bounds are law AT THE DOOR: a flawed value never lands
         # (sp1's read-side refusal stands behind as the second lock), and a
         # clean turn lands CANONICAL, so no head ever wears a shape the
-        # declaration would refuse
-        flaw, parsed = dials.gate_check(name, parsed)
+        # declaration would refuse. sp3: a universe-homed dial refuses a
+        # floor's door — only ladder dials carry a floor's own word
+        flaw, parsed = dials.gate_check(name, parsed,
+                                        at_floor=(scope != UNIVERSE_SCOPE))
         if flaw:
             print(f"  🎛 dial turn refused at the door: {name} — {flaw[:80]}")
             return done(f"the dial refuses at the gate — {flaw}. "
                         "Nothing changed")
-    body = {"asset": {"name": name, "profile": parsed, "adopted_from": head,
+    body = {"asset": {"name": name, "profile": parsed,
                       "authority": f"the human's word at {rid} — edit and "
                                    f"word in one motion (0045 sp2)"}}
+    if head:
+        body["asset"]["adopted_from"] = head
     if name.startswith("dial-"):
         # every version teaches (0063 sp2): the declaration rides the
         # sibling, so no dial record is ever a bare number with amnesia
@@ -11510,7 +11548,8 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
         body["asset"]["note"] = str(r["note"])[:200]
     rec = node.make_memory({"did": IMP_DID, "scope": scope}, IMP, scope,
                            body, kind="semantic", tags=["asset", name])
-    rec["derived_from"] = [head]
+    if head:
+        rec["derived_from"] = [head]
     call(port, "POST", "/records", rec)
     _GOV_CACHE["at"] = 0.0                    # the room re-reads at once
     print(f"  ✎ craft-edit {rid}: “{name}” — the human's sibling stands "

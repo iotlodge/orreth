@@ -214,3 +214,17 @@ def test_approval_package_reads_before_the_gate(world):
     assert any("give it one more cycle" in r["what"] for r in pkg["receipts"])
     assert pkg["rollback"] == aid
     assert pkg["checks"] == {"no_op": False, "cites_active": True}
+
+
+def test_the_humans_word_is_the_nudge_ceiling(world):
+    """0063 sp3 (L3's law): the improver climbs toward the human's cycle cap
+    and never over it — at the cap, the dial is at its stop and nothing
+    proposes; the machine optimizes INSIDE the human's word."""
+    _seed_asset(world)                       # max_cycles 2
+    _park_one(world)                         # evidence that would earn a nudge
+    imp = improver.Improver(world.universe, world.becky)
+    assert imp.beat("fingertip-default", cycle_cap=2) is None
+    pid = imp.beat("fingertip-default", cycle_cap=3)
+    assert pid is not None
+    prof = improver._profile_of(world.universe.records[pid])
+    assert prof["max_cycles"] == 3           # climbed to the word, not past it

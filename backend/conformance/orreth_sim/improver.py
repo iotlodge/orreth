@@ -285,10 +285,14 @@ class Improver:
                                        budget_tokens=budget_tokens)
         self.home = home
 
-    def beat(self, asset_name: str, *, success_floor: int = 90) -> str | None:
+    def beat(self, asset_name: str, *, success_floor: int = 90,
+             cycle_cap: int = 5) -> str | None:
         """One look at the receipts: a healthy asset is left alone; a weak one
         earns a bounded parameter nudge, proposed as a sibling version citing the
-        evidence. One open proposal per asset — the lane holds until it resolves."""
+        evidence. One open proposal per asset — the lane holds until it resolves.
+        cycle_cap (0063 sp3, L3's law): the HUMAN'S word is the ceiling the
+        nudge climbs toward — the machine optimizes inside it, never over it
+        (the worker threads dial-improver-cycle-cap here)."""
         found = active_asset(self.home, asset_name)
         if found is None or open_proposal(self.home, asset_name):
             return None
@@ -301,7 +305,8 @@ class Improver:
         from . import crypto
         profile = json.loads(crypto._b64d(rec["body"]).decode())["asset"]["profile"]
         nudged = dict(profile)
-        nudged["max_cycles"] = min(int(profile.get("max_cycles", 2)) + 1, 5)
+        nudged["max_cycles"] = min(int(profile.get("max_cycles", 2)) + 1,
+                                   cycle_cap)
         if nudged == profile:
             return None                     # the dial is at its stop — nothing to propose
         me = {"did": self.surface.identity["did"], "scope": self.home.scope}

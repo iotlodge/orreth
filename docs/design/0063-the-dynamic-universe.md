@@ -241,8 +241,25 @@ The Commander laws govern: **command-first, ≤2 clicks, edited in place.**
   in the editor with the full teaching and NOTHING landed (v4 stood),
   the clean turn 6→4 landed as v5 wearing its teachings, the accessor
   served it within the horizon, canon restored as v6. Suite 368.
-- **sp3 — the ladder:** per-floor / per-resident overrides by the 0059
-  resolution; the improver's nudges re-homed inside the human's bound (§3.9).
+- **sp3 — the ladder** — ✅ **LANDED 2026-08-28, the same day as sp1 and
+  sp2**: declarations wear a HOME (`universe` = one word for the rig;
+  `ladder` = a floor's own shelf may outrank it, the 0059 resolution),
+  the accessor walks floor-shelf → universe-shelf → genesis with every
+  rung's refusal confessed, the door refuses a universe dial at a floor's
+  gate with the lesson, and a floor's FIRST override lands fresh (no
+  local head to chain — the registry is its existence). Two new dials:
+  `metabolism-batch` (the ladder's first citizen — a floor's breath is a
+  floor's business) and `improver-cycle-cap` (§3.9 PAID: the literal 5
+  that capped the improver's self-tuning since 0028 is now the human's
+  word, threaded to both nudge sites, sim and live; at the cap, nothing
+  proposes — suite-held). **Proven live:** a universe dial refused
+  f:prod's door («this dial lives at the universe alone»); f:prod's
+  `metabolism-batch: 50` landed on its own shelf and its next breath
+  read «the floor's own word (50) outranks the universe» while the
+  universe door still served 200 — two truths, most specific wins; the
+  improver's ceiling turned 5→3 and back, the machine bounded by the
+  human's word both ways. Suite 370. *Per-resident rungs wait for a
+  resident-homed enforcement site — named, not faked.*
 - **sp4 — the rooms:** in-place dials on owner cards + the settings room.
 - **sp5 — the infra lane** in the Atlas.
 - **sp6 — the sweep:** the appendix inventory migrated dial by dial, env

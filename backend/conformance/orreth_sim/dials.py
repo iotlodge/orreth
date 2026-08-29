@@ -30,10 +30,15 @@ KINDRANK_GENESIS = {
     "join": 6, "ecosystem": 6, "dial": 6, "question": 7,
 }
 
+# home (0063 sp3 — the ladder): "universe" = one value for the whole rig,
+# turned only at the universe's own door; "ladder" = a floor may carry its
+# OWN override on its own shelf, and the most specific word wins (the 0059
+# allocation law: subject → floor → universe)
 DIALS_V1 = {
     "search-daily": {
         "type": "int", "unit": "searches per UTC day", "min": 0, "max": 100,
         "genesis": int(os.environ.get("ORRETH_SEARCH_DAILY", "6")),
+        "home": "universe",
         "governs": "live web searches the whole rig may spend in one day",
         "blast": "money — the family the Tavily thousand-credit burn came from",
         "why": "six covers a study day; sized after the Aug-2026 credit burn",
@@ -42,6 +47,7 @@ DIALS_V1 = {
     "assay-ceiling": {
         "type": "int", "unit": "tokens per UTC day", "min": 0, "max": 1000000,
         "genesis": int(os.environ.get("ORRETH_ASSAY_DAILY_TOKENS", "25000")),
+        "home": "universe",
         "governs": "vera's independent-judge budget per day (0043 G5)",
         "blast": "money and judgment — too low mutes the examiner, "
                  "too high spends unwatched",
@@ -51,12 +57,35 @@ DIALS_V1 = {
     "kindrank": {
         "type": "ordering", "unit": "request kind → rank, gravest first",
         "genesis": KINDRANK_GENESIS,
+        "home": "universe",
         "governs": "which grievance reaches the human first in the one Inbox",
         "blast": "attention — a wrong order buries the gravest card",
         "why": "attestations and testaments before questions (0052 sp3's "
                "triage); unlisted kinds rank 8",
         "horizon": "takes hold at the glass's next dictionary fetch "
                    "(about a minute)",
+    },
+    "metabolism-batch": {
+        "type": "int", "unit": "records per breath", "min": 10, "max": 2000,
+        "genesis": int(os.environ.get("ORRETH_METABOLISM_BATCH", "200")),
+        "home": "ladder",
+        "governs": "how many undistilled records one floor chews per "
+                   "metabolism breath (0057)",
+        "blast": "churn or starvation — too small starves distillation, "
+                 "too large spikes a breath",
+        "why": "200 balanced the 0057 round on the demo rig; a busy floor "
+               "may earn its own word",
+        "horizon": "the floor's next breath after the minute",
+    },
+    "improver-cycle-cap": {
+        "type": "int", "unit": "max_cycles ceiling", "min": 1, "max": 10,
+        "genesis": 5, "home": "universe",
+        "governs": "the ceiling the improver may nudge max_cycles toward — "
+                   "the machine tunes INSIDE this word, never over it (L3)",
+        "blast": "runaway self-tuning above, frozen self-improvement below",
+        "why": "5 was the code's own stop since 0028; now it is the "
+               "human's word the machine optimizes within",
+        "horizon": "takes hold at the improver's next look",
     },
 }
 
@@ -67,24 +96,30 @@ def teachings(short: str) -> dict:
     dial record can never be a bare number with amnesia."""
     d = DIALS_V1[short]
     t = {k: d[k] for k in ("type", "unit", "governs", "blast", "why",
-                           "horizon")}
+                           "horizon", "home")}
     if d["type"] == "int":
         t["bounds"] = [d["min"], d["max"]]
     return t
 
 
-def gate_check(asset_name: str, profile):
+def gate_check(asset_name: str, profile, *, at_floor: bool = False):
     """The DOOR's law (0063 sp2 — bounds are law, refused BEFORE landing):
     returns (flaw, normalized_profile). A flaw means nothing lands and the
     refusal teaches — the bounds, the unit, what the dial governs. A clean
     turn lands CANONICAL (\"2\" becomes 2): the head never carries a shape
-    the declaration would refuse at read time."""
+    the declaration would refuse at read time. at_floor (sp3 — the ladder):
+    a universe-homed dial refuses a floor's door; only a ladder-homed dial
+    may carry a floor's own word."""
     short = asset_name[len("dial-"):]
     d = DIALS_V1.get(short)
     if d is None:
         return (f"no declared dial is named “{asset_name}” — a dial's SHAPE "
                 f"is firmware, and the registry declares only: "
                 + ", ".join(f"dial-{s}" for s in sorted(DIALS_V1)), None)
+    if at_floor and d.get("home") != "ladder":
+        return (f"this dial lives at the universe alone — “{asset_name}” is "
+                "one word for the whole rig; turn it at the universe's own "
+                "door. Only ladder-homed dials carry a floor's override", None)
     if not isinstance(profile, dict) or "value" not in profile:
         return ("a dial turns by its value alone — the body is "
                 "{\"value\": …}, nothing else", None)

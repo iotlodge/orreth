@@ -39,11 +39,26 @@ def test_ordering_dial_parses_a_map_and_refuses_junk():
 def test_every_declaration_wears_its_teaching():
     for short, d in dials.DIALS_V1.items():
         for key in ("type", "unit", "genesis", "governs", "blast", "why",
-                    "horizon"):
+                    "horizon", "home"):
             assert d.get(key) not in (None, ""), f"dial {short} lacks {key}"
+        assert d["home"] in ("universe", "ladder")
         if d["type"] == "int":
             assert d["min"] <= d["genesis"] <= d["max"], \
                 f"dial {short}'s genesis falls outside its own bounds"
+
+
+def test_the_ladder_holds_at_the_door():
+    """0063 sp3: a universe-homed dial refuses a floor's door with the lesson;
+    a ladder-homed dial carries a floor's own word."""
+    flaw, norm = dials.gate_check("dial-search-daily", {"value": 3},
+                                  at_floor=True)
+    assert norm is None and "universe alone" in flaw
+    flaw, norm = dials.gate_check("dial-metabolism-batch", {"value": 50},
+                                  at_floor=True)
+    assert flaw is None and norm == {"value": 50}
+    flaw, norm = dials.gate_check("dial-metabolism-batch", {"value": 5},
+                                  at_floor=True)
+    assert norm is None and "bounds" in flaw   # the ladder never skips bounds
 
 
 def test_the_door_refuses_before_landing():
