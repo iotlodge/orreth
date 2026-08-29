@@ -101,6 +101,21 @@ DIALS_V1 = {
         "how often the Brain's memory census refreshes",
         "a stale gauge in the glass",
         "five minutes suits a wall gauge"),
+    # ── retention (sp6 wave 6 — how far back the universe reaches) ───────
+    "recall-days": {
+        "type": "int", "unit": "days of look-back", "min": 30, "max": 3650,
+        "genesis": 365, "home": "universe",
+        "governs": "every governed retrieve's look-back window — how far "
+                   "into its own past the universe reaches when it recalls "
+                   "(sp0 named this constant once; this dial is the promise "
+                   "it carried)",
+        "blast": "too short silently starves recall and reports; too long "
+                 "grows every read — the performance disease's front door",
+        "why": "a year holds every dive this universe has lived",
+        "horizon": "takes hold within a minute; the dial drawer's OWN read "
+                   "keeps its firmware year — reading the dials never "
+                   "depends on a dial",
+    },
     # ── the desk's windows and the judgment bars (sp6 wave 5) ────────────
     "improver-success-floor": {
         "type": "int", "unit": "percent success", "min": 0, "max": 100,

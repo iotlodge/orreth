@@ -1,8 +1,8 @@
 # 0063 — The Dynamic Universe
 
-*Reserved 2026-08-27 from JB's seed; draft opened 2026-08-28; all four
-locks landed by JB's hand the same morning.*
-***Status: PLANNED — locked, build not yet opened.***
+*Reserved 2026-08-27 from JB's seed; drafted, locked, and built
+2026-08-28/29 — sp0–sp5 plus six sweep waves in two days.*
+***Status: CLOSED WHOLE 2026-08-29 — era 0.63.***
 
 ## 1. JB's seed, verbatim (2026-08-27)
 
@@ -371,9 +371,46 @@ The Commander laws govern: **command-first, ≤2 clicks, edited in place.**
   numbers belong on the desk's own craft lane (0055), not the kernel
   drawer; `rivals.CONFESSION_FLOOR` and the infotheory bit-costs
   confessed sim-only; the constitutional trio (`purge.QUORUM`,
-  `ANON_CAPS`, `MAX_BYTES`) keeps its locks. **Wave owed:**
-  retention/tier profiles (A.7, the profile-JSON path) — the sweep's
-  last named wave.
+  `ANON_CAPS`, `MAX_BYTES`) keeps its locks. **WAVE 6 LANDED 2026-08-29: RETENTION** — the sweep's last named wave,
+  paying sp0's own promise: `recall-days` (365, [30‥3650]) — how far
+  into its own past the universe reaches — with the recursion law
+  written into its horizon line: **the dial drawer's own read keeps the
+  firmware year, because reading the dials must never depend on a
+  dial**; the other twenty sites ride `recall_days()`. Proven: turned
+  365→180 within the horizon, a 10 below the floor refused with the
+  teaching, the year restored. **Named by L2, not swept:** the
+  attestation cooling-off stays FIRMWARE — it is the abort margin on an
+  attested DEATH (0035's gravest gate), constitutional in spirit like
+  the purge quorum; the flight recorder's retention regime keeps its
+  firmware book; the canon classes' per-floor windows were ALREADY
+  craft (the metabolism's own dials, planted per floor since 0057); the
+  tier profiles remain the plane's file path (§3.10) — shelf-fed
+  profiles would be their own dive.
+
+## 8. The closing measure (2026-08-29)
+
+**Thirty-six operating values live on the shelf in their own drawer** —
+int, float, and an ordering — every one declared with type, unit,
+bounds, blast, why, home, and horizon; genesis honors the env and the
+shelf outranks it; ONE drawer read serves them all; the ladder holds
+two floor citizens; the improver tunes inside the human's word; and
+six waves proved the same three-step at the gate every time — turn,
+refusal-with-teaching, restore — while the settings room, the craft
+drawer's teaching strips, and the Atlas's 🔩 body lens make the machine
+legible from value to hull. The thesis is paid: a desk's *words* could
+always be retuned at 2 a.m. — now the machine's *numbers* turn through
+the same door, wearing the same lineage, refused by the same teaching
+gate.
+
+**The honest remainder, named at the close:** per-resident ladder rungs
+await a resident-homed enforcement site · agent-side values (the
+chassis's `max_tokens`; the desk's holding period) belong to the
+capability/SDK lanes, not the kernel drawer · shelf-fed tier profiles
+would be their own dive (the plane never opened — rule 9 never woke) ·
+`.env.example`'s placement awaits JB's word · and the unswept PURPOSE
+rows of Appendix A are ordinary follow-ups now — the machinery is
+whole, and any future row is a declaration plus a swap, no new
+machinery ever required.
 
 ## 7. The locks (JB, 2026-08-28)
 

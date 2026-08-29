@@ -147,10 +147,17 @@ SCOPE = "u:demo/e:cloud/f:prod"              # becky's floor — joins bind here
 HOME = Path.home() / ".orreth"
 BEAT_EVERY = 6                               # seconds between heartbeat rounds
 MISSES_TO_DROP = 3                           # silence ages the lease out (SPIFFE's lesson)
-RECALL_DAYS = 365                            # every governed retrieve's look-back window —
-                                             # ONE truth for what was a bare 365 at twenty
-                                             # sites (0063 sp0); a PURPOSE dial when the
-                                             # registry lands (sp1+)
+RECALL_DAYS = 365                            # the FIRMWARE floor: the dial drawer's own
+                                             # read horizon (reading the dials must never
+                                             # depend on a dial). Every OTHER recall site
+                                             # reads recall_days() — the sp0 promise paid
+                                             # in sp6 w6.
+
+
+def recall_days() -> int:
+    """The living look-back window: the human's word via dial-recall-days.
+    The dial machinery itself (_dial_shelf_build) keeps the firmware year."""
+    return dial_value("recall-days")
 
 
 def _seed(name: str) -> crypto.KeyPair:
@@ -342,7 +349,7 @@ def seat_knowledge(port: int, scope: str, topic: str):
     from datetime import datetime, timedelta, timezone
     _, seat_did = lib_seat(scope)
     token = _ROOT.issue_token(seat_did, "u:demo", [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
@@ -401,7 +408,7 @@ def profile_claims(port: int, scope: str):
     _, seat_did = lib_seat(scope)
     from datetime import datetime, timedelta, timezone
     token = _ROOT.issue_token(seat_did, "u:demo", [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
@@ -498,7 +505,7 @@ def recent_markers(port: int, scope: str, keep: int = 8) -> list:
     from datetime import datetime, timedelta, timezone
     _, seat_did = lib_seat(scope)
     token = _ROOT.issue_token(seat_did, "u:demo", [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
@@ -713,7 +720,7 @@ def wire_consents(port: int, scope: str) -> list[dict]:
     _, seat_did = lib_seat(scope)
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
@@ -840,7 +847,7 @@ def wire_testaments(port: int, scope: str) -> list[dict]:
     _, seat_did = lib_seat(scope)
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
@@ -971,7 +978,7 @@ def wire_passage(port: int, scope: str) -> list[dict]:
     _, seat_did = lib_seat(scope)
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
@@ -1776,7 +1783,7 @@ def _cap_shelf_profiles() -> dict:
     token = _ROOT.issue_token(IMP_DID, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
     frm = (datetime.now(timezone.utc)
-           - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+           - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(4500, "POST", "/retrieve", {
             "query": {"requester": IMP_DID,
@@ -2470,7 +2477,7 @@ def wire_audiences(port: int, scope: str) -> list[dict]:
     _, seat_did = lib_seat(scope)
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
@@ -2504,7 +2511,7 @@ def wire_interop(port: int, scope: str) -> list[dict]:
     _, seat_did = lib_seat(scope)
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
@@ -2632,7 +2639,7 @@ def continuity_charter(port: int, scope: str) -> None:
     seat_kp, seat_did = lib_seat(scope)
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
@@ -4072,7 +4079,7 @@ def floor_knowledge(port: int, scope: str):
     from datetime import datetime, timedelta, timezone
     _, seat_did = lib_seat(scope)             # her seat at THIS floor (0023 §1)
     token = _ROOT.issue_token(seat_did, "u:demo", [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     r = call(port, "POST", "/retrieve", {
         "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
                   "space": "self", "time": {"from": frm}, "intent": "recall",
@@ -4145,7 +4152,7 @@ def wire_subscriptions(port: int, scope: str) -> list[dict]:
     _, seat_did = lib_seat(scope)
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
@@ -4178,7 +4185,7 @@ def wire_deliveries(port: int, scope: str, want_slug: str | None = None) -> list
     _, seat_did = lib_seat(scope)
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
@@ -4464,7 +4471,7 @@ def coordinate_citations(port: int, scope: str, goal: str) -> int:
     _, seat_did = lib_seat(scope)
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
@@ -5300,7 +5307,7 @@ def wire_assets(port: int, tag: str, name: str | None = None, *,
     experiment read where the work actually lives."""
     from datetime import datetime, timedelta, timezone
     token = _ROOT.issue_token(IMP_DID, "u:demo", [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": IMP_DID, "subject": {"cohort": {"scope": scope}},
@@ -5805,7 +5812,7 @@ def wire_estate(port: int) -> dict:
     me = {"did": ALLEN_DID, "scope": UNIVERSE_SCOPE}
     token = _ROOT.issue_token(ALLEN_DID, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     answers: dict = {}
     adopted = 0
     charter_rows = 0
@@ -6211,7 +6218,7 @@ def _stacks_node(port: int, scope: str):
     n.recalls = recalls_load(scope)   # the tap survives the process (sp1)
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
-    frm = (datetime.now(timezone.utc) - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frm = (datetime.now(timezone.utc) - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": seat_did, "subject": {"cohort": {"scope": scope}},
@@ -7427,7 +7434,7 @@ def _metab_node(port: int, scope: str):
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
     frm = (datetime.now(timezone.utc)
-           - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+           - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": seat_did,
@@ -11521,7 +11528,7 @@ def _craft_heads(port: int) -> dict:
     token = _ROOT.issue_token(IMP_DID, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
     frm = (datetime.now(timezone.utc)
-           - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+           - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         r = call(port, "POST", "/retrieve", {
             "query": {"requester": IMP_DID,
@@ -12858,7 +12865,7 @@ def _floor_census(port: int, scope: str) -> dict:
     token = _ROOT.issue_token(seat_did, "u:demo",
                               [{"action": "retrieve", "space": "self"}])
     frm = (datetime.now(timezone.utc)
-           - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+           - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
     hits: list = []
     try:
         r = call(port, "POST", "/retrieve", {
