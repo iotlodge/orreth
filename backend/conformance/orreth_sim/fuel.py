@@ -18,7 +18,8 @@ from __future__ import annotations
 EST_FLOOR = 500
 
 
-def posture(row: dict, now: str | None = None) -> str:
+def posture(row: dict, now: str | None = None, *,
+            est_floor: int = EST_FLOOR) -> str:
     """One /model/usage row -> its fuel posture.
 
     fueled   — the lease clears a typical thought, OR its window has already
@@ -32,7 +33,7 @@ def posture(row: dict, now: str | None = None) -> str:
     remaining = row.get("remaining")
     if remaining is None:
         return "unknown"
-    if remaining >= EST_FLOOR:
+    if remaining >= est_floor:      # the human's word may move the line (0063)
         return "fueled"
     fuel = row.get("fuel") or {}
     if (fuel.get("renew_days") or 0) > 0:
@@ -44,14 +45,15 @@ def posture(row: dict, now: str | None = None) -> str:
 
 
 def drain_cards(rows: list[dict], names: dict[str, str] | None = None,
-                now: str | None = None) -> list[dict]:
+                now: str | None = None, *,
+                est_floor: int = EST_FLOOR) -> list[dict]:
     """The cards a drain watch should file — one per dry subject, keyed by its
     window so a NEW window's early drain cards again while the old decline
     stays honored. The card informs; the human's word stays the door (0012)."""
     names = names or {}
     cards = []
     for row in rows:
-        p = posture(row, now=now)
+        p = posture(row, now=now, est_floor=est_floor)
         if p not in ("drained", "lump-dry"):
             continue
         fuel = row.get("fuel") or {}

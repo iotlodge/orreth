@@ -101,6 +101,66 @@ DIALS_V1 = {
         "how often the Brain's memory census refreshes",
         "a stale gauge in the glass",
         "five minutes suits a wall gauge"),
+    # ── leases and fuel (sp6 wave 4 — the roster's breathing terms) ──────
+    "join-lease-days": {
+        "type": "int", "unit": "days a lease breathes", "min": 1, "max": 365,
+        "genesis": int(float(os.environ.get("ORRETH_JOIN_LEASE_DAYS", "30"))),
+        "home": "universe",
+        "governs": "how long a join lease lives before re-join renews it — "
+                   "a lapsed lease is dormancy, never death (2026-08-20)",
+        "blast": "short churns renewals; long discovers dormancy late",
+        "why": "thirty days — a month's honest tenancy",
+        "horizon": "takes hold at the next join or renewal",
+    },
+    "join-lease-tokens": {
+        "type": "int", "unit": "tokens of allowance per window", "min": 1000,
+        "max": 2000000,
+        "genesis": int(os.environ.get("ORRETH_JOIN_LEASE_TOKENS", "50000")),
+        "home": "universe",
+        "governs": "the fuel allowance a joining agent's lease carries "
+                   "per renew window (0058)",
+        "blast": "starves a mind mid-thought below, loosens the spend "
+                 "guard above",
+        "why": "the env seeds this genesis, so the shelf finally shows the "
+               "STANDING truth — the old code default and the rig's real "
+               "value were never the same number",
+        "horizon": "takes hold at the next join or renewal",
+    },
+    "lease-renew-days": {
+        "type": "int", "unit": "days per allowance window", "min": 0,
+        "max": 90,
+        "genesis": int(float(os.environ.get("ORRETH_LEASE_RENEW_DAYS", "1"))),
+        "home": "universe",
+        "governs": "the fuel clause's window — the allowance refills every "
+                   "this-many days; 0 keeps the old lump posture (0058)",
+        "blast": "the vera-419 wound's family — a lump drains silently "
+                 "and nobody is told",
+        "why": "daily, the search ceiling's own grain (0054 L-A)",
+        "horizon": "takes hold at the next join or renewal",
+    },
+    "floor-capacity": {
+        "type": "int", "unit": "seats declared present", "min": 1, "max": 500,
+        "genesis": int(os.environ.get("ORRETH_FLOOR_CAPACITY", "20")),
+        "home": "ladder",
+        "governs": "the floor's declared capacity — INFORMS the join "
+                   "gate's confession, never decides it: the human's word "
+                   "stays the door (0012, rule 3)",
+        "blast": "a false confession either way — the gate still asks",
+        "why": "twenty seats read honestly on the demo rig; a floor may "
+               "earn its own word (the roster's own seed, 2026-08-20)",
+        "horizon": "takes hold at the next join confession",
+    },
+    "fuel-est-floor": {
+        "type": "int", "unit": "tokens one thought needs", "min": 50,
+        "max": 5000, "genesis": 500, "home": "universe",
+        "governs": "the line under every lease: a remaining allowance "
+                   "below this cannot clear one typical governed thought "
+                   "and reads DRAINED, whatever dust remains",
+        "blast": "drains confessed too late below, false alarms above",
+        "why": "the worker's estimates run ~40 to ~500+; the wound's own "
+               "number, 419, must fall on the drained side of this line",
+        "horizon": "takes hold at the next drain watch",
+    },
     # ── the bell (sp6 wave 3 — the highest consequence per dial) ─────────
     "bell-cooldown": {
         "type": "int", "unit": "seconds between rings", "min": 300,

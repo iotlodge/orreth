@@ -341,9 +341,23 @@ The Commander laws govern: **command-first, ≤2 clicks, edited in place.**
   and a lowered age would ring the real inbox once per card; that risk
   is written into the dial's own blast line. The Rust-side witness
   floor (`.max(90)`) stays firmware — it is the clamp pattern's home,
-  not a dial. **Waves owed:** leases/fuel/capacity (A.5) · the desk's
-  holding period and studio windows (A.10) · judgment bars (A.8) ·
-  retention/tier profiles (A.7, the profile-JSON path).
+  not a dial. **WAVE 4 LANDED 2026-08-29: LEASES AND FUEL** — five dials for the
+  roster's breathing terms: `join-lease-days` (30) · `join-lease-tokens`
+  · `lease-renew-days` (1; 0 keeps the old lump posture) ·
+  `floor-capacity` (20, **the ladder's second citizen** — a floor may
+  declare its own room, paying the seed named the day the roster
+  learned to breathe) · `fuel-est-floor` (500, threaded through
+  `fuel.posture`/`drain_cards` the improver's way — "the wound's own
+  number, 419, must fall on the drained side"). **The two-truths trap
+  CURED:** the code said 50000 while the rig ran 400000 by dev.sh's
+  env; env now seeds genesis, and the shelf finally shows the standing
+  truth — the planted dial reads 400000. **Proven:** 28 dials at boot;
+  f:prod's capacity override landed on its own shelf and reverted; a
+  −1 renew-days refused at the door with the teaching; the universe's
+  word untouched throughout. `ORRETH_DORMANT_DAYS` stays a named
+  Rust-side boundary case (release-only in practice). **Waves owed:**
+  the desk's holding period and studio windows (A.10) · judgment bars
+  (A.8) · retention/tier profiles (A.7, the profile-JSON path).
 
 ## 7. The locks (JB, 2026-08-28)
 

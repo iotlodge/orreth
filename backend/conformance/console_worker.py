@@ -208,7 +208,7 @@ def grant_lease(did: str, scope: str = SCOPE) -> dict:
     breathe): the expiry is real, not a hardcoded far-off year. A lapsed
     lease is dormancy, never death — the self, its name, and its diary
     survive, and the same governed door renews it."""
-    days = float(os.environ.get("ORRETH_JOIN_LEASE_DAYS", "30"))
+    days = float(dial_value("join-lease-days"))   # the human's word (0063 sp6 w4)
     expiry = (datetime.now(timezone.utc)
               + timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
     return becky_for(scope).issue_token(
@@ -226,8 +226,8 @@ def fuel_clause() -> dict:
     standing spend. The Budget contract learned renew_days on JB's explicit
     word (2026-08-22, the rule-9 gate held and answered); renew_days=0 keeps
     the old lump posture for anyone who wants it."""
-    clause = {"tokens": int(os.environ.get("ORRETH_JOIN_LEASE_TOKENS", "50000"))}
-    days = float(os.environ.get("ORRETH_LEASE_RENEW_DAYS", "1"))
+    clause = {"tokens": dial_value("join-lease-tokens")}   # one truth at last (0063 sp6 w4)
+    days = float(dial_value("lease-renew-days"))
     if days > 0:
         clause["renew_days"] = days
     return clause
@@ -10603,7 +10603,8 @@ def fuel_beat(port: int, scope: str) -> None:
         return
     cards = fuel_mod.drain_cards(
         rows, names=_did_names(),
-        now=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+        now=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        est_floor=dial_value("fuel-est-floor"))
     if not cards:
         return
     # one card per subject per WINDOW, whatever its fate — a decline is the
@@ -14022,8 +14023,8 @@ def main() -> None:
                                     # 2026-08-20): policy informs the gate,
                                     # never decides it — the human's word
                                     # stays the door (0012, rule 3)
-                                    cap = int(os.environ.get(
-                                        "ORRETH_FLOOR_CAPACITY", "20"))
+                                    cap = dial_value("floor-capacity",
+                                                     scope=scope)  # LADDER: the floor's own word may stand (0063 sp6 w4)
                                     try:
                                         wf = call(port, "GET", "/presence"
                                                   ).get("workforce", [])
