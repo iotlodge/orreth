@@ -1128,6 +1128,8 @@
   .atlnode.worlds{border-color:#8fd6b0}
   .atlnode.infra{border-color:#9aa3ad;width:226px;padding:.35rem .55rem}
   .atlnode.infra.down{border-color:var(--red);opacity:.7}
+  .atlnode.infra.bodylit{border-color:var(--brass);box-shadow:0 0 12px var(--brassdim)}
+  .atlbody{display:block;font-size:.55rem;color:#9aa3ad;margin-top:.18rem}
   .atlband{position:absolute;font-size:.6rem;letter-spacing:.14em;color:var(--faint);
     text-transform:uppercase;white-space:nowrap}
   .atlband b{color:#9aa3ad}
@@ -6701,6 +6703,27 @@ function renderObservatory(){
   <div class="opanel"><div class="pt"><b>the machine's exact versions — one name cut each time it changed</b>${tier("log")}</div>
     ${Object.entries(d.epochs||{}).filter(([,v])=>v).slice(0,9).map(([sc,v])=>`<div class="ogate"><span class="k">${esc(sc)}</span><span class="a">${esc(v)}</span></div>`).join("")||`<div class="onote">no epochs cut yet</div>`}
     <div class="onote">cards open by kind: ${Object.entries(gatesK).map(([k,n])=>`${esc(k)} ×${n}`).join(" · ")||"none"} — detection wears no levers; the gate decides</div></div>`;
+  /* OPERATIONS (JB's ask 2026-08-29): the rig's physical health beside its
+     cognitive health — containers by heat, the doors timed by a real knock,
+     the composers' ages, the host pair. In cloud, allen wires the stack's
+     own logging into this same panel (0037 — why he is firmware). */
+  const op=d.operations;
+  if(op)g.innerHTML+=`
+  <div class="opanel" style="grid-column:1/-1"><div class="pt"><b>operations · where the machine runs, measured</b>${tier("inst")}</div>
+    <div style="display:flex;gap:1.4rem;flex-wrap:wrap;align-items:flex-start">
+    <div style="min-width:280px;flex:1"><div class="onote">containers by heat — one docker look a minute, on the machine's clock</div>
+      <table class="dk-table"><tr><th>container</th><th>cpu</th><th>mem</th></tr>
+      ${(op.containers||[]).slice(0,10).map(c=>`<tr><td style="font-family:var(--mono)">${esc(c.name.replace("orreth-demo-universe-","").replace("orreth-",""))}</td><td style="font-family:var(--mono);${parseFloat(c.cpu)>25?"color:var(--red)":parseFloat(c.cpu)>10?"color:var(--brass)":""}">${esc(c.cpu)}</td><td class="dim" style="font-family:var(--mono)">${esc(c.mem)}</td></tr>`).join("")}
+      ${(op.containers||[]).length>10?`<tr><td colspan="3" class="dim">…and ${(op.containers||[]).length-10} cooler</td></tr>`:""}</table></div>
+    <div style="min-width:220px"><div class="onote">the doors, knocked for real</div>
+      ${(op.doors||[]).map(x=>`<div style="font:.7rem var(--mono)"><span style="color:${x.up?"#7fd1a8":"var(--red)"}">●</span> ${esc(x.door)} · ${x.up?x.ms+" ms":"no answer"}</div>`).join("")}
+      <div class="onote" style="margin-top:.5rem">the heavy composers' ages — how stale each room's truth may be</div>
+      ${Object.entries(op.composer_ages_s||{}).map(([k,s])=>`<div style="font:.66rem var(--mono)" class="dim">${esc(k)} · ${s}s</div>`).join("")}
+      <div class="onote" style="margin-top:.5rem">the host pair</div>
+      <div style="font:.7rem var(--mono)"><span style="color:#7fd1a8">●</span> the console worker — this room IS its pulse</div>
+      <div style="font:.7rem var(--mono)"><span style="color:${op.keeper?"#7fd1a8":"var(--red)"}">●</span> the launchd keeper — ${op.keeper?"loaded, heals every 5 min":"NOT LOADED"}</div>
+      ${op.rig_down?`<div style="font:.7rem var(--mono);color:var(--red)">■ the rig rests by the human's word (${esc(op.rig_down)})</div>`:""}</div></div>
+    <div class="onote" style="margin-top:.4rem">${esc(op.horizon||"")}</div></div>`;
   obsSpark(fl.tokens_hourly||[]);obsScores(as.verdicts||[]);
   glossifyEl(g);                        /* every canon word a door (0060) */
 }
@@ -6976,6 +6999,11 @@ function atlLens(k){ATLLENS[k]=!ATLLENS[k];
 async function atlLoad(){
   try{ATL=await(await fetch(OBSD+"/atlas")).json()}catch{ATL=null}
   atlRender()}
+function atlGlow(sc,on){
+  /* mind ↔ body: hovering a mind box lights its hull in the band */
+  if(!sc)return;
+  document.querySelectorAll(`.atlnode.infra[data-bsc="${CSS.escape(sc)}"]`)
+    .forEach(e=>e.classList.toggle("bodylit",!!on));}
 function atlDoor(d){if(!d)return;
   atlToggle();
   if(d.res)resOpen(d.res);
@@ -6995,9 +7023,28 @@ function atlRender(){
   const seen=new Set(),NODES=nodes.filter(n=>!seen.has(n.id)&&seen.add(n.id));
   const byLane={human:[],organs:[],kernel:[],worlds:[]};
   NODES.forEach(n=>{(byLane[n.lane]||byLane.kernel).push(n)});
+  /* the mind ↔ body correlation (JB 2026-08-29: "where do the atlas's
+     objects RESIDE?") — lane-driven defaults with data overrides, never a
+     hardcoded name: a world resolves its hull through its own manifest
+     floor; an organ whose floor f:<name> stands in the shipyard ledger
+     lives THERE (allen's law, 0037 §8.3); every other organ's hands are
+     the console worker; the kernel is the spine. Hovering a mind box
+     lights its hull in the body band below. */
+  const INF=ATL.infra||null;
+  const FLOORHULL={};((INF&&INF.families)||[]).forEach(f=>(f.members||[]).forEach(m=>{
+    const sc=m.door&&m.door.floor;if(sc)FLOORHULL[sc]=m}));
+  const bodyFor=n=>{
+    if(n.lane==="worlds"){const h=n.floor&&FLOORHULL[n.floor];
+      return h?{t:`lives in ${h.label}`,sc:n.floor}:null}
+    if(n.lane==="organs"){
+      const own=Object.entries(FLOORHULL).find(([sc])=>sc.split("/").pop()==="f:"+n.id);
+      return own?{t:`lives in ${own[1].label} — its own floor`,sc:own[0]}
+                :{t:"the console worker — hands on every floor",sc:null}}
+    if(n.lane==="kernel")return{t:"the spine — every floor's own orrethd",sc:"u:demo"};
+    return null};
   const worlds=ATLLENS.cap?(ATL.capabilities||[]):[];
   worlds.forEach(w=>byLane.worlds.push({id:"w:"+w.key,lane:"worlds",
-    label:`${w.emoji||"◈"} ${w.name||w.key}`,
+    label:`${w.emoji||"◈"} ${w.name||w.key}`,floor:w.floor||"",
     sub:`${w.resident?w.resident+" · ":""}click to open its rooms`,
     door:{world:w.key}}));
   if(ATLLENS.cap&&ATLLENS.gov)worlds.forEach(w=>{
@@ -7031,15 +7078,15 @@ function atlRender(){
      MEASURED (docker + the ledgers, via the worker); every box a door;
      the rig-down word rendered as the operator's word, never a wound. */
   let bandHtml="",H2=H;
-  const INF=ATLLENS.bod?(ATL.infra||null):null;
-  if(INF&&(INF.families||[]).length){
-    const top=H+46,colW2=Math.max(246,Math.floor((B.clientWidth-36)/INF.families.length));
-    bandHtml+=`<div class="atlband" style="left:16px;top:${H+14}px"><b>🔩 THE BODY</b> — where the machine physically lives; green breathes, red is down${INF.rig_down?` · <span style="color:var(--red)">■ the rig rests by the human's word since ${esc(INF.rig_down)}</span>`:""}</div>`;
+  const BINF=ATLLENS.bod?INF:null;
+  if(BINF&&(BINF.families||[]).length){
+    const top=H+46,colW2=Math.max(246,Math.floor((B.clientWidth-36)/BINF.families.length));
+    bandHtml+=`<div class="atlband" style="left:16px;top:${H+14}px"><b>🔩 THE BODY</b> — where the machine physically lives; green breathes, red is down${BINF.rig_down?` · <span style="color:var(--red)">■ the rig rests by the human's word since ${esc(BINF.rig_down)}</span>`:""}</div>`;
     let maxRows=0;
-    INF.families.forEach((f,ci)=>{
+    BINF.families.forEach((f,ci)=>{
       bandHtml+=`<div class="atlband" style="left:${16+ci*colW2}px;top:${top}px">${esc(f.label)} <span style="text-transform:none;letter-spacing:0">— ${esc(f.ledger)}</span></div>`;
       (f.members||[]).forEach((n,ri)=>{
-        bandHtml+=`<div class="atlnode infra ${n.up?"":"down"}" style="left:${16+ci*colW2}px;top:${top+22+ri*58}px"
+        bandHtml+=`<div class="atlnode infra ${n.up?"":"down"}" data-bsc="${esc((n.door&&n.door.floor)||"")}" style="left:${16+ci*colW2}px;top:${top+22+ri*58}px"
           onclick='atlDoor(${JSON.stringify(n.door||null)})'>
           <b><span style="color:${n.up?"#7fd1a8":"var(--red)"}">●</span> ${esc(n.label||"")}</b><span>${esc(n.sub||"")}</span></div>`});
       maxRows=Math.max(maxRows,(f.members||[]).length)});
@@ -7047,9 +7094,12 @@ function atlRender(){
   B.innerHTML=`<svg style="position:absolute;inset:12px;width:${Math.max(B.clientWidth-24,liveLanes.length*colW)}px;height:${H}px;z-index:1;overflow:visible">${EDGES.map(path).join("")}</svg>`
     +liveLanes.map(([k,lbl],ci)=>`<div class="atlane" style="left:${16+ci*colW}px">${esc(lbl)}</div>`).join("")
     +liveLanes.flatMap(([k])=>byLane[k]).map(n=>{const p=pos[n.id];
-      return `<div class="atlnode ${n.lane}" style="left:${p.x}px;top:${p.y}px"
+      const bd=ATLLENS.bod?bodyFor(n):null;
+      return `<div class="atlnode ${n.lane}" data-bsc="${esc((bd&&bd.sc)||"")}"
+        style="left:${p.x}px;top:${p.y}px"
+        onmouseenter="atlGlow(this.dataset.bsc,1)" onmouseleave="atlGlow(this.dataset.bsc,0)"
         onclick='atlDoor(${JSON.stringify(n.door||null)})'>
-        <b>${esc(n.label||n.id)}</b><span>${esc(n.sub||"")}</span></div>`}).join("")
+        <b>${esc(n.label||n.id)}</b><span>${esc(n.sub||"")}</span>${bd?`<span class="atlbody">🔩 ${esc(bd.t)}</span>`:""}</div>`}).join("")
     +bandHtml
     +`<div style="position:relative;height:${H2+30}px"></div>`;
   glossifyEl(B);                       /* the map's own words are doors (0060) */

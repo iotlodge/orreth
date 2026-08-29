@@ -11606,6 +11606,7 @@ def _room_warm_loop() -> None:
                 ("verdicts", 60, lambda: _wire_verdict_standings(4500)),
                 ("sentences-door", 120, _sentences_build),
                 ("dial-shelf", 60, _dial_shelf_build),   # the drawer stays hot (sp6)
+                ("ops-telemetry", 60, _ops_build),       # docker stats off the human's clock
                 ("interop", 60, lambda: wire_interop(4500, UNIVERSE_SCOPE))):
             try:
                 e = _MEMO.get(key)
@@ -13982,9 +13983,63 @@ def compose_observatory() -> dict:
         # THE BELL (0044 sp4): the room watches the last mile too — the
         # Observatory would be dishonest if its own alarm could fail unseen
         "bell": _bell_room_view(),
+        # OPERATIONS (JB's ask 2026-08-29): the rig's PHYSICAL health beside
+        # its cognitive health — docker heat, door latency, the composers'
+        # ages, the host pair. Gathered on the machine's clock (memo'd and
+        # warmed); in cloud, allen wires the stack's own logging into this
+        # same panel — part of why he is firmware (0037).
+        "operations": _memo("ops-telemetry", 60, _ops_build),
     }
     _OBS_CACHE.update(at=time.time(), payload=payload)
     return payload
+
+
+def _ops_build() -> dict:
+    """The operations sweep: containers by heat (one docker stats), the core
+    doors timed by a real knock, the heavy composers' memo ages, and the
+    host pair's standing — dev's honest telemetry, allen's cloud horizon."""
+    conts = []
+    try:
+        out = subprocess.run(["docker", "stats", "--no-stream", "--format",
+                              "{{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"],
+                             capture_output=True, text=True, timeout=25).stdout
+        for ln in out.strip().splitlines():
+            parts = ln.split("\t")
+            if len(parts) == 3 and parts[0].startswith("orreth"):
+                conts.append({"name": parts[0], "cpu": parts[1],
+                              "mem": parts[2].split(" /")[0].strip()})
+        conts.sort(key=lambda c: -float(str(c["cpu"]).rstrip("%") or 0))
+    except Exception:
+        pass
+    doors = []
+    for label, p in (("universe :4500", 4500), ("eco :4501", 4501),
+                     ("field :4502", 4502)):
+        t0 = time.time()
+        try:
+            call(p, "GET", "/health")
+            doors.append({"door": label,
+                          "ms": int((time.time() - t0) * 1000), "up": True})
+        except Exception:
+            doors.append({"door": label, "ms": None, "up": False})
+    ages = {}
+    for k in ("sentences-door", "craft-heads", "dial-shelf", "verdicts",
+              "interop", "atlas-infra", "ops-telemetry"):
+        e = _MEMO.get(k)
+        if e:
+            ages[k] = int(time.time() - e[0])
+    down = None
+    try:
+        pth = HOME / "shipyard" / "rig-down"
+        down = pth.read_text().strip() if pth.exists() else None
+    except Exception:
+        pass
+    return {"containers": conts, "doors": doors, "composer_ages_s": ages,
+            "keeper": (Path.home() / "Library" / "LaunchAgents"
+                       / "com.orreth.replant.plist").exists(),
+            "rig_down": down,
+            "horizon": "dev telemetry — docker and the doors, on the "
+                       "machine's own clock; in cloud, allen wires the "
+                       "stack's logging here (0037 — why he is firmware)"}
 
 
 def main() -> None:
