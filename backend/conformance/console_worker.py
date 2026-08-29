@@ -4234,7 +4234,9 @@ def on_subscription(port: int, scope: str, r: dict, *, approved: bool = False,
     readable, and only the human's word mints the subscription record. The
     cadence is a dial on the record (§8): the ask may carry the human's own."""
     topic = str(r.get("topic") or r.get("text") or "").strip()
-    cadence = int(r.get("cadence") or 100)
+    # the defaults are DIALS (0063 sp6 w2) — the ask's own word always wins
+    cadence = int(r.get("cadence") or dial_value("subscription-cadence-beats"))
+    bcalls = dial_value("subscription-budget-calls")
     seat_kp, seat_did = lib_seat(scope)
     if declined:
         call(port, "POST", "/requests/resolve",
@@ -4248,12 +4250,13 @@ def on_subscription(port: int, scope: str, r: dict, *, approved: bool = False,
         rec = serials.make_subscription({"did": seat_did, "scope": scope},
                                         seat_kp, scope, topic=topic,
                                         cadence_beats=cadence,
+                                        budget_calls=bcalls,
                                         approved_ref=str(r.get("id") or ""))
         call(port, "POST", "/records", rec)
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
               "result": {"subscription": rec["id"], "topic": topic,
-                         "terms": f"every {cadence} beats · 4 call(s) per delivery",
+                         "terms": f"every {cadence} beats · {bcalls} call(s) per delivery",
                          "lane": "opened on the human's word"}})
         print(f"  ↳ subscription OPENED: “{topic}” every {cadence} beats — "
               f"{rec['id'][:18]}…")
@@ -4786,7 +4789,8 @@ def curate_plan(port: int, scope: str, r: dict) -> dict:
     targets = [x for x in (r.get("seats") or []) if x] or \
         [s for p, s in sorted(FLOOR_SCOPES.items())
          if s != scope and is_within(s, scope)]
-    share = max(int(r.get("budget") or 2400) // max(len(targets) + 1, 1), 60)
+    share = max(int(r.get("budget") or dial_value("fanout-budget-tokens"))
+                // max(len(targets) + 1, 1), dial_value("fanout-min-share"))
     intentions, dark = [], []
     for target in targets:
         if next((p for p, s in FLOOR_SCOPES.items() if s == target), None) is None:
@@ -10764,7 +10768,8 @@ def studio_tend(port: int) -> None:
                                    or r.get("text") or "",
                         proposals=draft.get("intentions"),
                         floors=[s for p, s in FLOOR_SCOPES.items()],
-                        budget=int(r.get("budget") or 2400))
+                        budget=int(r.get("budget")
+                                   or dial_value("fanout-budget-tokens")))
                 except fingertip.WorkflowError as e:
                     call(port, "POST", "/requests/resolve",
                          {"id": r["id"], "status": "staged",

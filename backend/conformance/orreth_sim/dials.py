@@ -101,6 +101,43 @@ DIALS_V1 = {
         "how often the Brain's memory census refreshes",
         "a stale gauge in the glass",
         "five minutes suits a wall gauge"),
+    # ── money (sp6 wave 2 — the numbers that spend) ──────────────────────
+    "subscription-cadence-beats": {
+        "type": "int", "unit": "beats between issues", "min": 10,
+        "max": 100800, "genesis": 100, "home": "universe",
+        "governs": "the DEFAULT rhythm of a study line when the human's "
+                   "ask names none — the ask's own word always wins (0032)",
+        "blast": "standing spend frequency — every issue spends its calls",
+        "why": "a hundred beats ≈ ten minutes on the demo rig's pulse",
+        "horizon": "takes hold at the next subscription approval",
+    },
+    "subscription-budget-calls": {
+        "type": "int", "unit": "governed calls per issue", "min": 1,
+        "max": 50, "genesis": 4, "home": "universe",
+        "governs": "how many source calls one issue of a study line "
+                   "may spend (0032 §1)",
+        "blast": "the Tavily family — standing spend per delivery",
+        "why": "four covers a digest without a burn",
+        "horizon": "takes hold at the next subscription approval",
+    },
+    "fanout-budget-tokens": {
+        "type": "int", "unit": "tokens per fan-out", "min": 500,
+        "max": 50000, "genesis": 2400, "home": "universe",
+        "governs": "the DEFAULT thought budget an objective's fan-out "
+                   "divides among its seats when the ask names none (0047)",
+        "blast": "many seats × many tokens — the widest spend lever "
+                 "in one place",
+        "why": "2400 across a handful of seats kept the studio honest",
+        "horizon": "takes hold within a minute",
+    },
+    "fanout-min-share": {
+        "type": "int", "unit": "tokens floor per seat", "min": 10,
+        "max": 2000, "genesis": 60, "home": "universe",
+        "governs": "the least any seat receives from a fan-out split",
+        "blast": "a starved seat mutes mid-thought",
+        "why": "sixty tokens is one honest sentence",
+        "horizon": "takes hold within a minute",
+    },
     "search-daily": {
         "type": "int", "unit": "searches per UTC day", "min": 0, "max": 100,
         "genesis": int(os.environ.get("ORRETH_SEARCH_DAILY", "6")),

@@ -311,11 +311,25 @@ The Commander laws govern: **command-first, ≤2 clicks, edited in place.**
   `metabolism-every` turned 900→300 — the Brain's own rhythm row read
   «every 300s» within the horizon — then canon restored. **Deliberately
   left:** `ATTEST_EVERY` (JB's inline lock — it stays where he put it)
-  and `SILENCE_UNIT` (a dev rig-dial, never prod). **Waves owed:** money
-  slices and fan-out budgets (A.4) · leases/fuel/capacity (A.5) · the
-  bell pair (A.9) · the desk's holding period and studio windows (A.10)
-  · judgment bars (A.8) · retention/tier profiles (A.7, the profile-JSON
-  path). Suite 370.
+  and `SILENCE_UNIT` (a dev rig-dial, never prod). Suite 370.
+  **WAVE 2 LANDED 2026-08-29: THE MONEY FAMILY** — four dials for the
+  numbers that spend: `subscription-cadence-beats` (100) and
+  `subscription-budget-calls` (4) — the study lines' defaults, the ask's
+  own word always winning — plus `fanout-budget-tokens` (2400) and
+  `fanout-min-share` (60), the widest spend lever and the floor beneath
+  every seat. The worker's terms string stopped hardcoding «4 call(s)»
+  and now speaks the dial. **Proven live end to end:** the dial turned
+  4→2, a fresh study line was filed and approved, and its minted terms
+  read «every 100 beats · 2 call(s) per delivery» — inheritance from
+  the turned dial — then the proof-line was CANCELLED through the
+  parlor's own unsubscribe (the Tavily law: no proof-planted spend ever
+  left standing) and canon restored. *Honest notes:* `vera.EST_TOKENS`
+  turned out to be a sim-only constant, not a live operating value —
+  skipped, not swept; the chassis's agent-side `max_tokens` is a named
+  horizon (agent-side dials need the supply-line path). **Waves owed:**
+  leases/fuel/capacity (A.5) · the bell pair (A.9) · the desk's holding
+  period and studio windows (A.10) · judgment bars (A.8) ·
+  retention/tier profiles (A.7, the profile-JSON path).
 
 ## 7. The locks (JB, 2026-08-28)
 
