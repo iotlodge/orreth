@@ -297,9 +297,25 @@ The Commander laws govern: **command-first, ≤2 clicks, edited in place.**
   u:demo/e:desk. The morning's question — "where's the view that
   correlates infra to Orreth objects?" — now has its glass answer.
   Suite 370.
-- **sp6 — the sweep:** the appendix inventory migrated dial by dial, env
-  demoted to genesis, each landing with its bounds and blast radius; the
-  long labor of the dive, paced across sessions.
+- **sp6 — the sweep** (the long labor, paced across sessions) —
+  **WAVE 1 LANDED 2026-08-28, the day's sixth: THE CADENCE FAMILY.**
+  Twelve rhythms left the code in one motion — passage, embed, mirror,
+  monitor, improver, epoch, lag-window, metabolism, assay, verify,
+  calibration, brain-census — every `_EVERY` constant demoted to genesis
+  (env where one existed; `monitor` and `cal` never had one — the gate
+  is their first tunability), each declared with bounds [30‥604800],
+  blast, and why. **The sweep's own economy came first:** ONE drawer
+  read (`_dial_shelf_build` — tags first, bodies only for dial heads,
+  memo'd 60 s and pre-warmed) so seventeen dials never cost seventeen
+  retrieves. Proven live: twelve planted at boot, and
+  `metabolism-every` turned 900→300 — the Brain's own rhythm row read
+  «every 300s» within the horizon — then canon restored. **Deliberately
+  left:** `ATTEST_EVERY` (JB's inline lock — it stays where he put it)
+  and `SILENCE_UNIT` (a dev rig-dial, never prod). **Waves owed:** money
+  slices and fan-out budgets (A.4) · leases/fuel/capacity (A.5) · the
+  bell pair (A.9) · the desk's holding period and studio windows (A.10)
+  · judgment bars (A.8) · retention/tier profiles (A.7, the profile-JSON
+  path). Suite 370.
 
 ## 7. The locks (JB, 2026-08-28)
 

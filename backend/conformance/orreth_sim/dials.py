@@ -30,11 +30,77 @@ KINDRANK_GENESIS = {
     "join": 6, "ecosystem": 6, "dial": 6, "question": 7,
 }
 
+def _cad(env, default, governs, blast, why, *, lo=30, hi=604800):
+    """A cadence declaration (0063 sp6 wave 1 — the _EVERY family): one
+    shape for the machine's rhythms. env=None means the code literal was
+    the only genesis there ever was — the gate is its first tunability."""
+    return {"type": "int", "unit": "seconds between beats", "min": lo,
+            "max": hi,
+            "genesis": (int(os.environ.get(env, str(default)))
+                        if env else default),
+            "home": "universe", "governs": governs, "blast": blast,
+            "why": why, "horizon": "takes hold within a minute"}
+
+
 # home (0063 sp3 — the ladder): "universe" = one value for the whole rig,
 # turned only at the universe's own door; "ladder" = a floor may carry its
 # OWN override on its own shelf, and the most specific word wins (the 0059
 # allocation law: subject → floor → universe)
 DIALS_V1 = {
+    # ── the machine's rhythms (sp6 wave 1 — the cadence family) ──────────
+    "passage-every": _cad("ORRETH_PASSAGE_EVERY", 60,
+        "how often lived time is stamped into the record (0004)",
+        "the machine's sense of time — too slow blurs the calendar",
+        "one minute matched the demo's day"),
+    "embed-every": _cad("ORRETH_EMBED_EVERY", 90,
+        "how often new records earn their meaning vectors (0022)",
+        "meaning lags the record when slow; churn when fast",
+        "ninety seconds keeps pgvector warm without churn"),
+    "mirror-every": _cad("ORRETH_MIRROR_EVERY", 600,
+        "how often the Mirror assesses conversations (0034)",
+        "reflection cost against staleness",
+        "ten minutes was the reveal-era balance"),
+    "monitor-every": _cad(None, 600,
+        "how often the monitor sweeps standing objectives",
+        "silent stalls found late",
+        "the code's own 600 — it never had an env; the gate is its "
+        "first tunability"),
+    "improver-every": _cad("ORRETH_IMPROVER_EVERY", 600,
+        "how often the improver reads the receipts (0028)",
+        "proposal storms when fast, a frozen engine when slow",
+        "ten minutes since 0028"),
+    "epoch-every": _cad("ORRETH_EPOCH_EVERY", 300,
+        "how often the machine checks its own name (0041)",
+        "drift found late when slow, churn when fast",
+        "five minutes names drift within a coffee"),
+    "lag-window": _cad("ORRETH_LAG_WINDOW", 900,
+        "how much heartbeat silence counts as a floor lagging",
+        "false drift floods when tight (the 0052 lesson), blind lag "
+        "when loose",
+        "the drift-flood morning sized it"),
+    "metabolism-every": _cad("ORRETH_METABOLISM_EVERY", 900,
+        "how often ONE floor draws its metabolism breath (0057, "
+        "round-robin)",
+        "churn when fast, a constipated corpus when slow — rig-wide",
+        "fifteen minutes rounds every floor within hours"),
+    "assay-every": _cad("ORRETH_ASSAY_EVERY", 300,
+        "how often vera samples finished work at the assay dial (0043)",
+        "token spend against her declared ceiling",
+        "five minutes at assay tier"),
+    "verify-every": _cad("ORRETH_VERIFY_EVERY_S", 3600,
+        "how often the deed watchman re-checks public deeds (0044)",
+        "tampers found late when slow, wasted checks when fast",
+        "the hour matched the bell's own cooldown"),
+    "cal-every": _cad(None, 120,
+        "how often calibration compares the human's thumbs to the "
+        "examiner (0048)",
+        "a stale calibration gauge",
+        "the code's own 120 — it never had an env; the gate is its "
+        "first tunability"),
+    "brain-census-every": _cad("ORRETH_BRAIN_CENSUS_EVERY", 300,
+        "how often the Brain's memory census refreshes",
+        "a stale gauge in the glass",
+        "five minutes suits a wall gauge"),
     "search-daily": {
         "type": "int", "unit": "searches per UTC day", "min": 0, "max": 100,
         "genesis": int(os.environ.get("ORRETH_SEARCH_DAILY", "6")),

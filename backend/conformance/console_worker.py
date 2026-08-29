@@ -953,7 +953,7 @@ def on_testament(port: int, scope: str, r: dict, *, approved: bool = False,
 # ---------------------------------------------------------------- the passage (0035 §3)
 
 _PASSAGE_LAST = 0.0
-PASSAGE_EVERY = int(os.environ.get("ORRETH_PASSAGE_EVERY", "60"))
+# the passage cadence is a DIAL (0063 sp6) — dial_value("passage-every")
 # a testament-day in seconds — a RIG dial for proving the machine, never law
 SILENCE_UNIT = int(os.environ.get("ORRETH_SILENCE_UNIT", "86400"))
 
@@ -1117,7 +1117,7 @@ def passage_beat() -> None:
     window, seal at twice the window, and never more. A heartbeat reverses
     everything reversible. Detection stages, never decides (0013 §3)."""
     global _PASSAGE_LAST
-    if time.time() - _PASSAGE_LAST < PASSAGE_EVERY:
+    if time.time() - _PASSAGE_LAST < dial_value("passage-every"):
         return
     _PASSAGE_LAST = time.time()              # set early — a failing beat never hot-loops
     for p, s in sorted(FLOOR_SCOPES.items()):
@@ -1346,7 +1346,7 @@ def on_attestation(port: int, scope: str, r: dict, *, approved: bool = False,
 
 EMBED_PORT = int(os.environ.get("ORRETH_EMBED_PORT", "4562"))
 _EMBED_LAST = 0.0
-EMBED_EVERY = int(os.environ.get("ORRETH_EMBED_EVERY", "90"))
+# the embed cadence is a DIAL (0063 sp6) — dial_value("embed-every")
 
 # DEV vs PROD (JB's kernel law, 2026-08-16): Orreth is the kernel, residents
 # are embedded firmware. In DEV the words that drive them are MUTABLE through
@@ -2419,7 +2419,7 @@ def embed_beat(port: int, scope: str) -> None:
     the becky-guarded door. A dark axis sweeps nothing; a bodyless record
     gets the NULL marker and is never revisited."""
     global _EMBED_LAST
-    if time.time() - _EMBED_LAST < EMBED_EVERY:
+    if time.time() - _EMBED_LAST < dial_value("embed-every"):
         return
     _EMBED_LAST = time.time()                 # set early — a failing sweep never hot-loops
     if meaning.embedder() is None:
@@ -2459,7 +2459,7 @@ def embed_beat(port: int, scope: str) -> None:
 MIR = _seed("mirror")                 # the assessor — its own self, no seat, no voice
 MIR_DID = crypto.did_key_for(MIR.public)
 _MIRROR_LAST = 0.0
-MIRROR_EVERY = int(os.environ.get("ORRETH_MIRROR_EVERY", "600"))
+# the mirror cadence is a DIAL (0063 sp6) — dial_value("mirror-every")
 
 
 def wire_audiences(port: int, scope: str) -> list[dict]:
@@ -2538,7 +2538,7 @@ def mirror_beat() -> None:
     (0031 §4) — with the interop ledger as the receipt. Assessor ≠ assessed
     (0005): the Mirror authors everything and is the subject of nothing."""
     global _MIRROR_LAST
-    if time.time() - _MIRROR_LAST < MIRROR_EVERY:
+    if time.time() - _MIRROR_LAST < dial_value("mirror-every"):
         return
     _MIRROR_LAST = time.time()               # set early — a failing beat never hot-loops
     for p, s in sorted(FLOOR_SCOPES.items()):
@@ -4754,7 +4754,8 @@ MON = _seed("monitor")                       # the standing portfolio monitor (J
 MON_DID = crypto.did_key_for(MON.public)
 _OBJECTIVES: dict = {}                       # objective req id → flow state
 _MONITOR_LAST = 0.0
-MONITOR_EVERY = 600                          # the monitor's own cadence, not the beat's
+# the monitor cadence is a DIAL (0063 sp6) — dial_value("monitor-every"); it
+# never had an env — the gate is its first tunability
 
 
 def finger_seat(scope: str):
@@ -5205,7 +5206,7 @@ def monitor_beat(port: int) -> None:
     beating like an organ (R8) — no completion condition exists. Aggregates only,
     the sibling-benchmark law (0005). Its factory-RL duty waits for spoonful 7."""
     global _MONITOR_LAST
-    if time.time() - _MONITOR_LAST < MONITOR_EVERY:
+    if time.time() - _MONITOR_LAST < dial_value("monitor-every"):
         return
     try:
         ru = call(port, "GET", "/rollup")
@@ -5238,7 +5239,7 @@ GOV_DID = crypto.did_key_for(GOV.public)
 ASSET_NAME = "fingertip-default"
 _SENTENCES_PLANTED = False                   # 0050 sp1 — once per process
 _IMPROVER_LAST = 0.0
-IMPROVER_EVERY = int(os.environ.get("ORRETH_IMPROVER_EVERY", "600"))
+# the improver cadence is a DIAL (0063 sp6) — dial_value("improver-every")
 SUCCESS_FLOOR = 90                           # below this, the receipts earn a nudge
 
 
@@ -5365,6 +5366,49 @@ def dial_seed(port: int) -> None:
         print(f"    (dial seed stumbled: {e})")
 
 
+def _dial_shelf_build(port: int = 4500) -> dict:
+    """ONE retrieve for the whole drawer (0063 sp6 — the read law: tags
+    first, bodies only for the dial heads): short → raw head value at the
+    universe. The sweep's own economy — seventeen dials never cost
+    seventeen retrieves; memo'd 60s and pre-warmed, so the horizon holds."""
+    from datetime import datetime, timedelta, timezone
+    token = _ROOT.issue_token(IMP_DID, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc)
+           - timedelta(days=RECALL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": IMP_DID,
+                      "subject": {"cohort": {"scope": "u:demo"}},
+                      "space": "self", "time": {"from": frm},
+                      "intent": "recall", "budget": {"cost": 8},
+                      "auth": "biscuit-sim"},
+            "token": token, "requester_scope": "u:demo"})
+    except Exception:
+        return {}
+    heads: dict[str, str] = {}
+    superseded: set = set()
+    for h in sorted(r.get("hits", []), key=lambda x: x.get("occurred_at", "")):
+        t = h.get("tags") or []
+        name = next((x for x in t if str(x).startswith("dial-")), None)
+        if name is None or "asset" not in t:
+            continue
+        superseded.update(h.get("derived_from") or [])
+        heads[name] = h["ref"]
+    out: dict = {}
+    for name, ref in heads.items():
+        if ref in superseded:
+            continue
+        try:
+            body = call(port, "GET", "/records/"
+                        + urllib.parse.quote(ref, safe="") + "/body")
+            out[name[len("dial-"):]] = ((body.get("asset") or {})
+                                        .get("profile") or {}).get("value")
+        except Exception:
+            continue
+    return out
+
+
 def _dial_head_raw(port: int, name: str, scope: str = "u:demo"):
     """The newest non-superseded dial head's raw value on one shelf, or None."""
     try:
@@ -5409,7 +5453,9 @@ def dial_value(short: str, port: int = 4500, scope: str | None = None):
                 print(f"  🎛 dial «{short}» at {rung}: the floor's own word "
                       f"({v}) outranks the universe")
     if v is None:
-        raw = _dial_head_raw(port, f"dial-{short}")
+        # the universe rung rides the ONE drawer read (sp6) — never a
+        # per-dial retrieve
+        raw = _memo("dial-shelf", 60, _dial_shelf_build).get(short)
         if raw is None:
             v = d["genesis"]
         else:
@@ -5426,7 +5472,7 @@ def improver_beat(port: int) -> None:
     incarnation reading the risen evidence. It PROPOSES; governance grades; the
     lanes route. One open proposal per asset — the lane holds until it resolves."""
     global _IMPROVER_LAST
-    if time.time() - _IMPROVER_LAST < IMPROVER_EVERY:
+    if time.time() - _IMPROVER_LAST < dial_value("improver-every"):
         return
     _IMPROVER_LAST = time.time()             # set early — a failing beat never hot-loops
     scope = UNIVERSE_SCOPE
@@ -6787,7 +6833,7 @@ def _live_graduation(n2, u_port: int, k: int = 3):
 
 
 # ------------------------------------------------------------- 0041 · the epoch
-EPOCH_EVERY = int(os.environ.get("ORRETH_EPOCH_EVERY", "300"))
+# the epoch cadence is a DIAL (0063 sp6) — dial_value("epoch-every")
 _EPOCH_LAST = 0.0
 
 
@@ -6877,7 +6923,7 @@ def _cut_epoch(port: int, scope: str, fp: dict) -> str | None:
 
 
 # ------------------------------------------------ 0041 sp3 · drift is news
-LAG_WINDOW = int(os.environ.get("ORRETH_LAG_WINDOW", "900"))
+# the lag window is a DIAL (0063 sp6) — dial_value("lag-window")
 _LAG: dict = {}          # scope → {"t": first_seen, "staged": bool}
 
 
@@ -6938,7 +6984,7 @@ def _recent_gate_word(port: int) -> bool:
                 ts = int(str(r.get("id", "")).rsplit("-", 1)[1])
             except Exception:
                 continue
-        if now - ts < 2 * EPOCH_EVERY:
+        if now - ts < 2 * dial_value("epoch-every"):
             return True
     return False
 
@@ -7014,7 +7060,7 @@ def _reconcile(scope: str) -> None:
         return
     st = _LAG.setdefault(scope, {"t": time.time(), "staged": False})
     age = time.time() - st["t"]
-    if age < LAG_WINDOW:
+    if age < dial_value("lag-window"):
         print(f"  ↳ the point LAGS at {scope}: sworn [{str(sworn)[7:15]}…] "
               f"vs law [{str(declared)[7:15]}…] — amber, converging")
     elif not st["staged"]:
@@ -7024,7 +7070,7 @@ def _reconcile(scope: str) -> None:
             _stage_drift(port, scope,
                          {"attested.epoch": {"from": sworn, "to": declared}},
                          f"the point's oath would not converge in "
-                         f"{LAG_WINDOW}s")
+                         f"{dial_value('lag-window')}s")
 
 
 def epoch_beat() -> None:
@@ -7032,7 +7078,7 @@ def epoch_beat() -> None:
     per-floor epochs + a universe roll-up citing the floors' heads). Which
     machine is this floor right now? — answered by a hash, on a chain."""
     global _EPOCH_LAST
-    if time.time() - _EPOCH_LAST < EPOCH_EVERY:
+    if time.time() - _EPOCH_LAST < dial_value("epoch-every"):
         return
     if not FLOOR_SCOPES:
         return
@@ -7328,7 +7374,7 @@ _METAB_LAST = 0.0
 _METAB_STATE: dict = {}          # the last breath's numbers — the rooms read them
 _METAB_FLOORS: dict = {}         # scope → that floor's last breath (0057 sp1)
 _METAB_RING: list = []           # the round-robin — every floor gets its turn
-METABOLISM_EVERY = int(os.environ.get("ORRETH_METABOLISM_EVERY", "900"))
+# the metabolism cadence is a DIAL (0063 sp6) — dial_value("metabolism-every")
 # the breath's batch is a LADDER DIAL now (0063 sp3) — dial_value(
 # "metabolism-batch", scope=…): a floor's own shelf may outrank the
 # universe; genesis rides ORRETH_METABOLISM_BATCH in orreth_sim/dials.py
@@ -7448,7 +7494,7 @@ def metabolism_wire_beat() -> None:
     lands a report with its measured loss in bits. The dials stay Canon
     assets, planted per floor on first touch; only the heartbeat lives here."""
     global _METAB_LAST, _METAB_RING, _METAB_STATE
-    if time.time() - _METAB_LAST < METABOLISM_EVERY:
+    if time.time() - _METAB_LAST < dial_value("metabolism-every"):
         return
     if not FLOOR_SCOPES:
         return          # no ground yet — retry next round, free
@@ -9221,7 +9267,7 @@ def _dial_load() -> str | None:
 # nest outlives the process — a governed turn survives a restart; the env is
 # the genesis default only. glance · watch · assay.
 OBS = {"dial": _dial_load() or os.environ.get("ORRETH_OBS_DIAL", "glance")}
-ASSAY_EVERY = int(os.environ.get("ORRETH_ASSAY_EVERY", "300"))
+# the assay cadence is a DIAL (0063 sp6) — dial_value("assay-every")
 _ASSAY_LAST = 0.0
 
 
@@ -10376,7 +10422,7 @@ def bell_beat(port: int) -> None:
 # ------------------------------------------- 0044 sp3 · the subscribers
 
 _VERIFY_LAST = 0.0
-VERIFY_EVERY = int(os.environ.get("ORRETH_VERIFY_EVERY_S", "3600"))
+# the verify cadence is a DIAL (0063 sp6) — dial_value("verify-every")
 _GATE_AGE_H = float(os.environ.get("ORRETH_BELL_GATE_AGE_H", "48"))
 
 
@@ -10416,7 +10462,7 @@ def verify_beat(port: int) -> None:
     would not answer is the observer's own condition — noted without a
     lever after patient looks, never dressed as a tamper."""
     global _VERIFY_LAST
-    if time.time() - _VERIFY_LAST < VERIFY_EVERY:
+    if time.time() - _VERIFY_LAST < dial_value("verify-every"):
         return
     _VERIFY_LAST = time.time()
     seat_kp, seat_did = lib_seat(UNIVERSE_SCOPE)
@@ -11291,7 +11337,7 @@ def _feedback_floor(u_port: int, port: int, scope: str) -> None:
 # sp4 — the calibration's own cadence and memory: whole-rig verdict sweeps
 # are priced work, so they ride a slow beat; the state prints only when it
 # CHANGES, and one open finding bars a second (no storms — 0028's precedent).
-CAL_EVERY = 120
+# the calibration cadence is a DIAL (0063 sp6) — dial_value("cal-every")
 _CAL_LAST = 0.0
 _CAL_STATE: tuple = ()
 
@@ -11302,7 +11348,7 @@ def calibration_beat(port: int) -> None:
     min-n so one thumb never indicts vera. A finding is a staged card citing
     its widest gaps; detection wears no levers (0043 law 3)."""
     global _CAL_LAST, _CAL_STATE
-    if time.time() - _CAL_LAST < CAL_EVERY:
+    if time.time() - _CAL_LAST < dial_value("cal-every"):
         return
     _CAL_LAST = time.time()                  # set early — never hot-loop
     rows: list[dict] = []
@@ -11388,7 +11434,7 @@ def assay_beat(u_port: int) -> None:
     The universe floor always; any floor with a running experiment joins the
     round. Then the experiments' standings turn."""
     global _ASSAY_LAST
-    if OBS["dial"] != "assay" or time.time() - _ASSAY_LAST < ASSAY_EVERY:
+    if OBS["dial"] != "assay" or time.time() - _ASSAY_LAST < dial_value("assay-every"):
         return
     _ASSAY_LAST = time.time()
     spent = _vera_spent_today()
@@ -11529,6 +11575,7 @@ def _room_warm_loop() -> None:
                 ("craft-heads", 120, lambda: _craft_heads(4500)),
                 ("verdicts", 60, lambda: _wire_verdict_standings(4500)),
                 ("sentences-door", 120, _sentences_build),
+                ("dial-shelf", 60, _dial_shelf_build),   # the drawer stays hot (sp6)
                 ("interop", 60, lambda: wire_interop(4500, UNIVERSE_SCOPE))):
             try:
                 e = _MEMO.get(key)
@@ -12778,7 +12825,7 @@ def compose_resident(name: str) -> dict:
 _BRAIN_CACHE: dict = {"at": 0.0, "payload": {}}
 _BRAIN_LOCK = threading.Lock()   # single-flight: stacked clicks share ONE sweep
 _BRAIN_CENSUS: dict = {}      # scope → the last classified sweep, stamped
-BRAIN_CENSUS_EVERY = int(os.environ.get("ORRETH_BRAIN_CENSUS_EVERY", "300"))
+# the census cadence is a DIAL (0063 sp6) — dial_value("brain-census-every")
 
 
 def _floor_census(port: int, scope: str) -> dict:
@@ -12788,7 +12835,7 @@ def _floor_census(port: int, scope: str) -> dict:
     the whole shelf: `classified` stands beside the heartbeat's true total
     and the door confesses the difference."""
     got = _BRAIN_CENSUS.get(scope)
-    if got and time.time() - got["at"] < BRAIN_CENSUS_EVERY:
+    if got and time.time() - got["at"] < dial_value("brain-census-every"):
         return got
     from datetime import datetime, timedelta, timezone
     from orreth_sim import canon as _cn
@@ -12855,7 +12902,7 @@ def _machine_tasks(runs: list) -> dict:
                       "runner": True})
     rhythms = [
         {"name": "the metabolism", "emoji": "🫁",
-         "every_s": METABOLISM_EVERY,
+         "every_s": dial_value("metabolism-every"),
          "age_s": (int(time.time() - _METAB_LAST) if _METAB_LAST else None),
          "note": ("one floor per breath, round-robin across every "
                   "discovered floor; its dials are Canon assets planted "
@@ -13046,8 +13093,8 @@ def compose_pulse() -> dict:
                             if last else ""),
                 "owner": "steward",
                 "world": (tended.get(nxt_scope) or {}).get("world"),
-                "every": f"one floor / {METABOLISM_EVERY}s",
-                "next_at": iso_s(max(_METAB_LAST + METABOLISM_EVERY, now_s))})
+                "every": f"one floor / {dial_value('metabolism-every')}s",
+                "next_at": iso_s(max(_METAB_LAST + dial_value("metabolism-every"), now_s))})
     except Exception:
         pass
     # soonest first; event-driven watchers and resting words close the list
@@ -13725,7 +13772,7 @@ def _compose_brain_locked() -> dict:
                           usd_model.items(), key=lambda x: -x[1])},
                       "by_floor": {k: round(v, 1) for k, v in sorted(
                           by_floor.items(), key=lambda x: -x[1])}},
-        "metabolism": {**_METAB_STATE, "every_s": METABOLISM_EVERY,
+        "metabolism": {**_METAB_STATE, "every_s": dial_value("metabolism-every"),
                        "age_s": (int(time.time() - _METAB_LAST)
                                  if _METAB_LAST else None),
                        "floors": {s: dict(v) for s, v in
@@ -13853,7 +13900,7 @@ def compose_observatory() -> dict:
     spans.sort()
     payload = {
         "at": now,
-        "dial": {"position": OBS["dial"], "assay_every_s": ASSAY_EVERY,
+        "dial": {"position": OBS["dial"], "assay_every_s": dial_value("assay-every"),
                  "sample_per_beat": 2,
                  "ceiling_tokens": dial_value("assay-ceiling"),  # G5: declared…
                  "spent_today": _vera_spent_today(),       # …and shown
