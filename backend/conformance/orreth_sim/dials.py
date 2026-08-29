@@ -101,6 +101,73 @@ DIALS_V1 = {
         "how often the Brain's memory census refreshes",
         "a stale gauge in the glass",
         "five minutes suits a wall gauge"),
+    # ── the desk's windows and the judgment bars (sp6 wave 5) ────────────
+    "improver-success-floor": {
+        "type": "int", "unit": "percent success", "min": 0, "max": 100,
+        "genesis": 90, "home": "universe",
+        "governs": "below this success rate the receipts earn the improver's "
+                   "nudge (0028) — at or above, healthy assets are left alone",
+        "blast": "proposal storms below a high bar, a frozen engine above "
+                 "a low one",
+        "why": "ninety kept the engine quiet on honest work",
+        "horizon": "takes hold at the improver's next look",
+    },
+    "studio-dark": {
+        "type": "int", "unit": "seconds of silence", "min": 10, "max": 3600,
+        "genesis": int(os.environ.get("ORRETH_STUDIO_DARK_S", "90")),
+        "home": "universe",
+        "governs": "how long the studio's reading may stay silent before "
+                   "the card confesses it dark (0047)",
+        "blast": "false darkness below, a hung reading hidden above",
+        "why": "ninety seconds outlasts a slow thought without hiding "
+               "a dead one",
+        "horizon": "takes hold within a minute",
+    },
+    "schedule-every-default": {
+        "type": "int", "unit": "days between runs", "min": 1, "max": 90,
+        "genesis": 7, "home": "universe",
+        "governs": "the DEFAULT rhythm of a standing schedule when the "
+                   "human's word names none — the word always wins",
+        "blast": "a standing word becomes a spend loop when fast",
+        "why": "weekly — the yardstick's own cadence (JB's)",
+        "horizon": "takes hold at the next scheduling word",
+    },
+    "cal-min-n": {
+        "type": "int", "unit": "overlapping pairs", "min": 1, "max": 100,
+        "genesis": 5, "home": "universe",
+        "governs": "the least human-vs-examiner pairs before calibration "
+                   "speaks at all (0048 sp4)",
+        "blast": "one thumb indicts vera below, calibration mute above",
+        "why": "five pairs is the smallest honest sample",
+        "horizon": "takes hold at the next calibration beat",
+    },
+    "cal-bar": {
+        "type": "float", "unit": "mean gap, 0..1", "min": 0.0, "max": 1.0,
+        "genesis": 0.4, "home": "universe",
+        "governs": "the mean human-vs-examiner gap that becomes a card "
+                   "(news, never a lever — 0043 law 3)",
+        "blast": "noise below, a drifted examiner unreported above",
+        "why": "0.4 separates taste from disagreement",
+        "horizon": "takes hold at the next calibration beat",
+    },
+    "assay-floor-mean": {
+        "type": "float", "unit": "mean score, 0..1", "min": 0.0, "max": 1.0,
+        "genesis": 0.55, "home": "universe",
+        "governs": "the mean assay score under which a floor's standing "
+                   "becomes a degradation card (0043)",
+        "blast": "alarm fatigue above, quiet decay below",
+        "why": "0.55 caught the real degradations without crying wolf",
+        "horizon": "takes hold at the next assay round",
+    },
+    "assay-trend-drop": {
+        "type": "float", "unit": "score drop, 0..1", "min": 0.0, "max": 1.0,
+        "genesis": 0.15, "home": "universe",
+        "governs": "the falling-trend size that becomes a degradation card "
+                   "even above the floor (0043)",
+        "blast": "trend noise below, a slow slide unseen above",
+        "why": "0.15 is a real slide, not jitter",
+        "horizon": "takes hold at the next assay round",
+    },
     # ── leases and fuel (sp6 wave 4 — the roster's breathing terms) ──────
     "join-lease-days": {
         "type": "int", "unit": "days a lease breathes", "min": 1, "max": 365,
@@ -286,7 +353,7 @@ def teachings(short: str) -> dict:
     d = DIALS_V1[short]
     t = {k: d[k] for k in ("type", "unit", "governs", "blast", "why",
                            "horizon", "home")}
-    if d["type"] == "int":
+    if d["type"] in ("int", "float"):
         t["bounds"] = [d["min"], d["max"]]
     return t
 
@@ -328,6 +395,15 @@ def parse(short: str, raw):
             v = int(raw)
         except (TypeError, ValueError):
             return d["genesis"], f"not a whole number: {raw!r}"
+        if not (d["min"] <= v <= d["max"]):
+            return d["genesis"], (f"outside the declared bounds "
+                                  f"[{d['min']}..{d['max']}]: {v}")
+        return v, None
+    if d["type"] == "float":                 # the judgment bars (sp6 w5)
+        try:
+            v = float(raw)
+        except (TypeError, ValueError):
+            return d["genesis"], f"not a number: {raw!r}"
         if not (d["min"] <= v <= d["max"]):
             return d["genesis"], (f"outside the declared bounds "
                                   f"[{d['min']}..{d['max']}]: {v}")

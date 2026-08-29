@@ -5244,7 +5244,7 @@ ASSET_NAME = "fingertip-default"
 _SENTENCES_PLANTED = False                   # 0050 sp1 — once per process
 _IMPROVER_LAST = 0.0
 # the improver cadence is a DIAL (0063 sp6) — dial_value("improver-every")
-SUCCESS_FLOOR = 90                           # below this, the receipts earn a nudge
+# the success floor is a DIAL (0063 sp6 w5) — dial_value("improver-success-floor")
 
 
 # 0050 sp1 — the machine's speech served from the shelf: ONE voice for every
@@ -5538,7 +5538,7 @@ def improver_beat(port: int) -> None:
     except Exception:
         return
     rate = int(ru.get("success_rate", 100))
-    if rate >= SUCCESS_FLOOR:
+    if rate >= dial_value("improver-success-floor"):
         return                               # healthy assets are left alone
     rid, body, _, _ = actives[-1]
     base = dict((body.get("asset") or {}).get("profile") or {})
@@ -5560,7 +5560,8 @@ def improver_beat(port: int) -> None:
         call(port, "POST", "/requests",
              {"kind": "improvement", "proposal": proposal["id"],
               "text": sentence(port, "card-smith-nudge", asset=ASSET_NAME,
-                               rate=rate, floor=SUCCESS_FLOOR)})
+                               rate=rate,
+                               floor=dial_value("improver-success-floor"))})
         print(f"  ↳ the smith proposes: {ASSET_NAME} at {rate}% — "
               f"{proposal['id'][:18]}…")
     except Exception as e:
@@ -9851,7 +9852,9 @@ def _assay_floor(port: int, scope: str) -> None:
               + (" · typed on the re-ask" if asks > 1 else "")
               + (" · declared rubric" if declared else ""))
     _, stand = _wire_verdict_standings(port, scope=scope)
-    for card in vera.degradations(stand):
+    for card in vera.degradations(
+            stand, floor_mean=dial_value("assay-floor-mean"),
+            trend_drop=dial_value("assay-trend-drop")):
         _stage_assay_card(port, card)
 
 
@@ -10675,7 +10678,7 @@ def on_fuel_request(port: int, scope: str, r: dict) -> None:
 
 
 # ---- 0047 sp3 · the studio's readings ride onto the plan cards ------------------------
-STUDIO_DARK_S = int(os.environ.get("ORRETH_STUDIO_DARK_S", "90"))
+# the studio's dark window is a DIAL (0063 sp6 w5) — dial_value("studio-dark")
 
 # The 0047 lock-4 label retired 0051 sp1 (req-622, JB's word): it now lives
 # on the shelf as «plan-fallback-label» — quinn called the old words poetry,
@@ -10741,7 +10744,7 @@ def studio_tend(port: int) -> None:
                       f"“{str(read.get('reading', read.get('why', '')))[:64]}”"
                       + (f" · confidence {read.get('confidence')}"
                          if "confidence" in read else ""))
-            elif _age_seconds(u.get("asked_at")) > STUDIO_DARK_S:
+            elif _age_seconds(u.get("asked_at")) > dial_value("studio-dark"):
                 call(port, "POST", "/requests/resolve",
                      {"id": r["id"], "status": "staged",
                       "result": {**res,
@@ -10818,7 +10821,7 @@ def studio_tend(port: int) -> None:
                                                 "label": "planned by the studio"}}})
                 print(f"  🗺 the studio PLANNED {r['id']}: {summary} · "
                       f"spec {newplan['spec'][:22]}… — the fallback retires")
-            elif _age_seconds(pb.get("asked_at")) > STUDIO_DARK_S:
+            elif _age_seconds(pb.get("asked_at")) > dial_value("studio-dark"):
                 call(port, "POST", "/requests/resolve",
                      {"id": r["id"], "status": "staged",
                       "result": {**res, "planned_by": {
@@ -11373,7 +11376,8 @@ def calibration_beat(port: int) -> None:
                                  "human": a.get("judge_floor") == "human"})
         except Exception:
             continue                          # a dark floor never stops the sweep
-    out = thumb_mod.calibration(rows)
+    out = thumb_mod.calibration(rows, min_n=dial_value("cal-min-n"),
+                                bar=dial_value("cal-bar"))
     state = (out["pairs"], out["mean_gap"], out["news"])
     if state != _CAL_STATE:
         _CAL_STATE = state
@@ -12211,7 +12215,7 @@ def on_scheduled_ask(port: int, scope: str, r: dict) -> None:
     what = str(r.get("what") or "yardstick")[:24]
     resident = str(r.get("resident") or "")[:24].lower()
     question = str(r.get("question") or "")[:200]
-    every = max(1, min(90, int(r.get("every_days") or 7)))
+    every = max(1, min(90, int(r.get("every_days") or dial_value("schedule-every-default"))))
     at_hour = None
     try:
         if r.get("at_hour") is not None and str(r.get("at_hour")) != "":
@@ -12304,7 +12308,7 @@ def scheduled_ask_beat() -> None:
     for (what, resident, _q), head in heads.items():
         if head.get("posture") != "standing":
             continue
-        every = int(head.get("every_days") or 7)
+        every = int(head.get("every_days") or dial_value("schedule-every-default"))
         if what == "yardstick" and not resident:
             if _YARD_WALKING:
                 continue
@@ -12730,7 +12734,7 @@ def compose_resident(name: str) -> dict:
         for (_w, rn, _q), h in _memo("sched-heads", 30,
                                      lambda: _sched_heads(4500)).items():
             if rn == low and h.get("posture") == "standing":
-                ev = int(h.get("every_days") or 7)
+                ev = int(h.get("every_days") or dial_value("schedule-every-default"))
                 nxt = ""
                 try:
                     base = (h.get("last_fired") or h.get("at") or "")
@@ -12903,7 +12907,7 @@ def _machine_tasks(runs: list) -> dict:
                 then = datetime.fromisoformat(
                     str(runs[-1].get("at")).replace("Z", "+00:00"))
                 t["next_due"] = (then + timedelta(
-                    days=int(head.get("every_days") or 7))
+                    days=int(head.get("every_days") or dial_value("schedule-every-default")))
                     ).strftime("%Y-%m-%dT%H:%MZ")
             except Exception:
                 pass
@@ -12945,7 +12949,7 @@ def _brain_schedule(runs: list) -> dict:
         head = None
     if not head or head.get("posture") != "standing":
         return {"standing": False}
-    out = {"standing": True, "every_days": int(head.get("every_days") or 7)}
+    out = {"standing": True, "every_days": int(head.get("every_days") or dial_value("schedule-every-default"))}
     if runs:
         try:
             from datetime import datetime, timedelta, timezone
@@ -13027,7 +13031,7 @@ def compose_pulse() -> dict:
         for (what, resident, _q), h in _sched_heads(u_port).items():
             if h.get("posture") != "standing":
                 continue
-            every = int(h.get("every_days") or 7)
+            every = int(h.get("every_days") or dial_value("schedule-every-default"))
             q = str(h.get("question") or "")
             standing.append({
                 "kind": "schedule",

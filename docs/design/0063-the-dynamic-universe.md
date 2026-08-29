@@ -355,9 +355,25 @@ The Commander laws govern: **command-first, ≤2 clicks, edited in place.**
   f:prod's capacity override landed on its own shelf and reverted; a
   −1 renew-days refused at the door with the teaching; the universe's
   word untouched throughout. `ORRETH_DORMANT_DAYS` stays a named
-  Rust-side boundary case (release-only in practice). **Waves owed:**
-  the desk's holding period and studio windows (A.10) · judgment bars
-  (A.8) · retention/tier profiles (A.7, the profile-JSON path).
+  Rust-side boundary case (release-only in practice). **WAVE 5 LANDED 2026-08-29: THE DESK'S WINDOWS AND THE JUDGMENT BARS**
+  — seven dials, and the registry learned **float**, because the bars
+  are fractions: `improver-success-floor` (90) · `studio-dark` (90 s) ·
+  `schedule-every-default` (7 d — six scattered `or 7` fallbacks became
+  one truth) · `cal-min-n` (5) · `cal-bar` (0.4) · `assay-floor-mean`
+  (0.55) · `assay-trend-drop` (0.15). The sim's own signatures had
+  anticipated their dials — `calibration(min_n=, bar=)` and
+  `degradations(floor_mean=, trend_drop=)` were already threaded; the
+  worker now passes the human's words. **Proven:** 35 dials at boot;
+  the first FLOAT turn (`cal-bar` 0.4→0.25) served within the horizon;
+  a 1.5 above the ceiling refused with the teaching; canon restored.
+  **Named, not swept:** `ORRETH_DESK_HOLDING_DAYS` is CAPABILITY
+  territory — the desk is a packaged purpose, and by the razor its
+  numbers belong on the desk's own craft lane (0055), not the kernel
+  drawer; `rivals.CONFESSION_FLOOR` and the infotheory bit-costs
+  confessed sim-only; the constitutional trio (`purge.QUORUM`,
+  `ANON_CAPS`, `MAX_BYTES`) keeps its locks. **Wave owed:**
+  retention/tier profiles (A.7, the profile-JSON path) — the sweep's
+  last named wave.
 
 ## 7. The locks (JB, 2026-08-28)
 

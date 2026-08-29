@@ -42,9 +42,23 @@ def test_every_declaration_wears_its_teaching():
                     "horizon", "home"):
             assert d.get(key) not in (None, ""), f"dial {short} lacks {key}"
         assert d["home"] in ("universe", "ladder")
-        if d["type"] == "int":
+        if d["type"] in ("int", "float"):
             assert d["min"] <= d["genesis"] <= d["max"], \
                 f"dial {short}'s genesis falls outside its own bounds"
+
+
+def test_the_float_bars_parse_and_hold_bounds():
+    """sp6 wave 5 — the judgment bars are fractions, and the registry
+    learned float: parsed, bounded, refused with the flaw named."""
+    v, flaw = dials.parse("cal-bar", "0.25")
+    assert v == 0.25 and flaw is None
+    v, flaw = dials.parse("assay-floor-mean", 1.5)
+    assert v == dials.DIALS_V1["assay-floor-mean"]["genesis"]
+    assert "bounds" in flaw
+    v, flaw = dials.parse("cal-bar", "junk")
+    assert v == dials.DIALS_V1["cal-bar"]["genesis"] and "not a number" in flaw
+    flaw, norm = dials.gate_check("dial-assay-trend-drop", {"value": "0.2"})
+    assert flaw is None and norm == {"value": 0.2}   # canonical at the door
 
 
 def test_the_ladder_holds_at_the_door():
