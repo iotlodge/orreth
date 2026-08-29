@@ -14369,6 +14369,13 @@ def main() -> None:
                     KEEPER.tend(port, scope)
                     WRANGLER.sync(port, scope)
                     fuel_beat(port, scope)    # a drained lease is loud (2026-08-22)
+                    question_reaper(port)     # moot questions withdraw at EVERY
+                                              # floor (JB's find 2026-08-29: the
+                                              # sweep was universe-gated while
+                                              # flow questions file at the
+                                              # objective's own floor — eight
+                                              # orphans haunted f:prod's inbox
+                                              # for weeks)
                     serials_beat(port, scope)  # the desk sweeps on the beat (0032 §2)
                     embed_beat(port, scope)   # the vector projection fills (0022 Ph2)
                     continuity_charter(port, scope)  # a template floor gets its law (0034)
@@ -14398,7 +14405,6 @@ def main() -> None:
                         canon_seed(port)      # the firmware stands as records (0045 sp1)
                         dial_seed(port)       # the operating values stand as craft (0063 sp1)
                         capability_tools_intake()  # late-waking worlds still get their ask (V2)
-                        question_reaper(port)  # moot questions withdraw themselves
                         verify_beat(port)     # the deed watchman, standing (0044 sp3 · L-B)
                         gate_age_beat(port)   # aged consequence rings once (0044 sp3)
 

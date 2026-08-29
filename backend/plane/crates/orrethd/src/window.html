@@ -840,6 +840,13 @@
   #rdr-body .req{flex-direction:column;align-items:stretch;gap:.3rem;cursor:default}
   #rdr-body .req .txt{white-space:normal}
   #rdr-body .req .sub{white-space:normal}
+  /* the pane's chips are pills, never bars (JB 2026-08-29): the stretched
+     column was drawing kind + book chips as full-width bordered walls */
+  #rdr-body .req>span{align-self:flex-start;width:fit-content}
+  /* the pane's title is a TITLE — two lines then ellipsis; the body below
+     carries the whole text */
+  #rdr-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    overflow:hidden;max-height:3.2em}
   .req.clickable,.obj.clickable{cursor:pointer}
   .req.clickable:hover,.obj.clickable:hover{border-color:var(--brassdim)}
   /* the doors (0052 sp2): every mention opens in the pane */
@@ -4714,6 +4721,11 @@ function linkifyEl(root){
       d.textContent=m[0];d.title="open in the reading pane";
       const v=m[0];
       d.onclick=e=>{e.stopPropagation();
+        /* the in-flow Inbox pane already shows this card — opening the same
+           door twice stacked two readers side by side (JB 2026-08-29) */
+        const at=document.querySelector(".tab.on");
+        if(v.startsWith("req-")&&at&&at.dataset.v==="inbox"
+           &&typeof INBSEL!=="undefined"&&INBSEL===v)return;
         v.startsWith("req-")?readerPush("request",v):readerPush("record",v)};
       frag.appendChild(d);last=m.index+m[0].length;
     }
