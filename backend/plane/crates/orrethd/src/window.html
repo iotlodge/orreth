@@ -1908,6 +1908,12 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   if(t.dataset.v==="uni"){const O=$("orrery");if(O)O.dataset.sig="";renderOrrery();scrub()}
   if(t.dataset.v==="obs")loadObservatory();   /* the instrument room wakes on entry (0043 sp3) */
   if(t.dataset.v==="pulse")loadPulseDoor();   /* the pulse's panels wake on entry too */
+  /* with the breathe-what-you-show tick (2026-08-29), EVERY room wakes on
+     entry — the slow lap keeps badges honest, never the view you walked into */
+  if(t.dataset.v==="farm")loadFarm();
+  if(t.dataset.v==="stable")loadStable();
+  if(t.dataset.v==="gov")loadGovernance();
+  if(t.dataset.v==="obj"||t.dataset.v==="inbox")loadObjectives();
   if(typeof syncHash==="function")syncHash(false);   /* the tab rides the URL too */
 });
 
@@ -7236,7 +7242,26 @@ $("obj-in").addEventListener("keydown",e=>{
   if(e.key==="Enter"&&(e.metaKey||e.ctrlKey))submitObjective()});
 $("obj-rubric").addEventListener("keydown",e=>{if(e.key==="Enter")submitObjective()});
 
-function tick(){pulse();roster();loadReq();renderStrip();world();loadFarm();loadStable();loadObjectives();loadObservatory();loadGovernance();loadPulseDoor();stwTick();renderPane()}
+/* the console breathes WHAT IT SHOWS (JB's find 2026-08-29: twelve loaders
+   every four seconds from every tab held six busy connections against the
+   universe and queued the human's own clicks behind the machine's chatter).
+   The active view breathes at full cadence; everything else takes one slow
+   honest lap (~32s) so badges and rails never lie for long. */
+let _TICKN=0;
+function tick(){
+  _TICKN++;
+  const at=document.querySelector(".tab.on"),v=(at&&at.dataset.v)||"uni";
+  const lap=_TICKN%8===1;
+  pulse();loadReq();renderStrip();renderPane();
+  if(v==="uni"||_TICKN%3===1){world();roster()}   /* the rail stays honest everywhere */
+  if(v==="farm"||lap)loadFarm();
+  if(v==="stable"||lap)loadStable();
+  if(v==="obj"||v==="inbox"||lap)loadObjectives();
+  if(v==="obs"||lap)loadObservatory();
+  if(v==="gov"||lap)loadGovernance();
+  if(v==="pulse"||lap)loadPulseDoor();
+  stwTick();                                       /* self-gated on the open drawer */
+}
 tick();setInterval(tick,4000);          /* the console breathes */
 if(window.ORRETH_DEMO){                 /* the spectator's ribbon — honest about the frame */
   const b=document.createElement("div");

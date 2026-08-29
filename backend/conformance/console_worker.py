@@ -5299,7 +5299,8 @@ def sentence(port: int, name: str, **slots) -> str:
 
 
 def wire_assets(port: int, tag: str, name: str | None = None, *,
-                scope: str = "u:demo") -> list[tuple[str, dict, list, list]]:
+                scope: str = "u:demo",
+                bodies: bool = True) -> list[tuple[str, dict, list, list]]:
     """The asset ledger as the improver may read it — its own token, bodies in
     hand, oldest first. Returns (ref, body, derived_from, tags) rows; name=None
     reads the whole shelf (0031 §4), a name narrows to one asset's chain.
@@ -5320,6 +5321,13 @@ def wire_assets(port: int, tag: str, name: str | None = None, *,
     for h in r.get("hits", []):
         tags = h.get("tags") or []
         if tag not in tags or (name is not None and name not in tags):
+            continue
+        if not bodies:
+            # the read law (tags first, bodies only when needed — found live
+            # 2026-08-29: the registry fetched 324 bodies per rebuild and
+            # read none of them, warming universe-1 to a third of a core)
+            rows.append((h["ref"], {}, h.get("derived_from") or [], tags,
+                         h.get("occurred_at", "")))
             continue
         try:
             body = call(port, "GET",
@@ -11872,7 +11880,7 @@ def compose_governance() -> dict:
                         "wearers": _WEARERS.get(name, [])})
     # the Chronicle shelf — grace's assets, grouped by their name tag
     sh: dict[str, dict] = {}
-    for ref, b, _, t in wire_assets(port, "asset"):
+    for ref, b, _, t in wire_assets(port, "asset", bodies=False):
         name = next((x for x in (t or []) if x not in
                      ("asset", "asset-variant", "adopted")), None)
         if not name:
@@ -11900,7 +11908,8 @@ def compose_governance() -> dict:
         if eco_port:
             ec: dict[str, dict] = {}
             for ref, b, _, t in wire_assets(eco_port, "asset",
-                                            scope="u:demo/e:cloud"):
+                                            scope="u:demo/e:cloud",
+                                            bodies=False):
                 nm = next((x for x in (t or []) if x not in
                            ("asset", "asset-variant", "adopted")), None)
                 if nm:
@@ -11922,7 +11931,8 @@ def compose_governance() -> dict:
         rag_port, rag_scope = _rag_floor()
         if rag_port:
             rg: dict[str, dict] = {}
-            for ref, b, _, t in wire_assets(rag_port, "asset", scope=rag_scope):
+            for ref, b, _, t in wire_assets(rag_port, "asset", scope=rag_scope,
+                                            bodies=False):
                 nm = next((x for x in (t or []) if x not in
                            ("asset", "asset-variant", "adopted")), None)
                 if nm:
