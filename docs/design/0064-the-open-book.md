@@ -3,8 +3,18 @@
 *Reserved 2026-08-31 from JB's seed; drafted the same morning by Fable 5,
 grounded in three code-verified survey reports (`tmp/docs-dive/report-kernel.md`,
 `report-docs.md`, `report-monolith.md`).*
-***Status: 🟢 locked 2026-08-31 — four approach locks (§4) + four §10 locks in;
-building begins at sp0. Only the dive's name remains JB's to change.***
+***Status: 🟢 locked 2026-08-31; sp0 + sp1 LANDED the same day — the book is
+LIVE at https://docs.orreth.ai (repo: github.com/iotlodge/orreth-docs, public):
+four Learn pages + the quickstart (sp2 v1, clean-machine walk still the named
+proof), every page verified 200 over the real domain, pretty-URLs and the 404
+face proven, the console's welcome band linking back (cc846e4). En-route
+lessons: the deploy needs the jb_support profile with the shell's static keys
+unset; the first stack mirror dropped the demo's ARecord block — cert and edge
+stood while nothing told DNS where to knock (1819e6f restored it). NAMED
+FINDING for JB: the apex orreth.ai itself is DARK (no record at all) — "linked
+from orreth.ai" needs a decision about what the apex should BE (redirect to
+docs? to demo? a landing?). The demo site inherits the welcome-band link at
+its next refresh. Only the dive's name remains JB's to change.***
 
 A note on this document's own voice: this dive's product is documentation a
 stranger can read, so the charter is written in that voice — plain words first,
