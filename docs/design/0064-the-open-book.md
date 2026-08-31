@@ -37,9 +37,20 @@ tutorial's ending. The Reference track opened with the manifest contract page
 (genesis rules · every field · thirteen panel kinds · the SDK's mirrored
 vocabulary); a formal JSON-Schema file stays named future work. En-route
 residue: a `hello` card rests `declared` on the rig's shelf — retire it from
-its tile at will. Next: sp5 reference tracks (HTTP API · contracts · dials ·
-residents — cuts S5, S4/S6 as needed), the bring-your-own-agent page, and the
-sp2 clean-machine walk.***
+its tile at will.
+**sp5 LANDED (docs 52b1a73) — the Reference spine, four pages**: the HTTP API
+(35 kernel doors by organ + the three laws every door obeys + the worker's
+doors marked as the decoupling layer, dev-only flagged), Configuration
+(GENERATED from the dial registry — 36 dials, bounds/home/governs/blast, the
+glossary one-source pattern extended so the page cannot drift), the Residents
+(guide 03's July debt PAID: nine staff each with the line it will not cross,
+four unembodied keepers, the firmware-vs-purpose razor), the Contracts (16
+schemas digested + the fixtures asymmetry stated plainly). Book = 13 pages.
+SEAM JUDGMENT: S5 (extracting the worker's :4562 door) was NOT needed to
+write honestly — the page documents what is and marks it non-contractual;
+S4/S6 likewise untouched. Remaining: sp6 language sweep-back + quinn walks
+the book · bring-your-own-agent page · clean-machine walk · formal manifest
+JSON-Schema · demo refresh · the dark apex.***
 
 A note on this document's own voice: this dive's product is documentation a
 stranger can read, so the charter is written in that voice — plain words first,
