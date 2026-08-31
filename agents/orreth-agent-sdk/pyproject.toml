@@ -2,8 +2,26 @@
 name = "orreth-agent"
 version = "0.1.0"
 description = "The lifeforce kit: give any agent an identity, a home floor, a memory, a governed mind, and a diary — and it appears in the universe."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Jonathan Barth" }]
 requires-python = ">=3.11"
 dependencies = ["cryptography>=42"]
+keywords = ["agents", "ai", "governance", "identity", "orreth", "runtime"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+]
+
+[project.urls]
+Documentation = "https://docs.orreth.ai"
+Source = "https://github.com/iotlodge/orreth"
+Demo = "https://demo.orreth.ai"
 
 [project.optional-dependencies]
 governed = ["litellm>=1.40"]        # real model calls through the plane's door
