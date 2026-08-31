@@ -3,7 +3,15 @@
 *Reserved 2026-08-31 from JB's seed; drafted the same morning by Fable 5,
 grounded in three code-verified survey reports (`tmp/docs-dive/report-kernel.md`,
 `report-docs.md`, `report-monolith.md`).*
-***Status: 🟢 locked 2026-08-31; sp0 + sp1 LANDED the same day — the book is
+***Status: CLOSED WHOLE 2026-08-31 — era 0.64. Seeded, chartered, locked,
+built, quinn-walked, and closed in ONE DAY: thirteen pages live at
+docs.orreth.ai · the apex 301s to the book · three seams cut with
+stranger-shaped proofs (the image · the SDK · the manifest contract) · the
+demo refreshed carrying the book's door · the honest-boundary row landed
+with the remainders named. The running history below is the day, in order.***
+
+*(the day's log, kept as built:)*
+***sp0 + sp1 LANDED the same day — the book is
 LIVE at https://docs.orreth.ai (repo: github.com/iotlodge/orreth-docs, public):
 four Learn pages + the quickstart (sp2 v1, clean-machine walk still the named
 proof), every page verified 200 over the real domain, pretty-URLs and the 404
@@ -65,10 +73,21 @@ discarded with the reason named; her glossary-page MUTE stands on the
 record — never a clean room. **S7 JUDGMENT: PARKED WITH ITS NAME** — the
 sim/wire fork (farm · deed · epoch · stable living twice) was needed by no
 page this dive wrote; it waits as the named entry fee of whichever future
-page documents those four laws as components. Remaining beyond this dive's
-bites: bring-your-own-agent page · the clean-machine walk · formal manifest
-JSON-Schema · demo refresh · the dark apex (JB's call) · quinn's book walk
-joining a cadence.***
+page documents those four laws as components.
+**THE CLOSING AFTERNOON (JB's two locks: apex → the book; BYO before
+close)**: the apex OPENED — orreth.ai and www 301 to docs.orreth.ai,
+path-preserving, proven on a deep link (the blank front door of the whole
+estate, gone); the public demo REFRESHED to v0.63.472 — the welcome band's
+docs link and the 41-word dictionary now public; and the last Build page
+landed with its proof already lived — **bring-your-own-agent**: an ordinary
+LangGraph agent from OUTSIDE the monorepo, on pip-published packages only,
+REFUSED at the governed gate (the page's first lesson, verbatim), admitted
+on one human approval, and run twice — the same DID both lives, the second
+life recalling the record the first life filed (4 → 5), every id a content
+hash. The one-Inbox queue took the approval and kept the denied duplicate's
+words. Honest remainders at close: the clean-machine quickstart walk ·
+formal manifest JSON-Schema · quinn's book walk joining a cadence ·
+req-1686 awaiting JB's thumb.***
 
 A note on this document's own voice: this dive's product is documentation a
 stranger can read, so the charter is written in that voice — plain words first,
