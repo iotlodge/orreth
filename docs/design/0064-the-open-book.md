@@ -14,7 +14,18 @@ stood while nothing told DNS where to knock (1819e6f restored it). NAMED
 FINDING for JB: the apex orreth.ai itself is DARK (no record at all) — "linked
 from orreth.ai" needs a decision about what the apex should BE (redirect to
 docs? to demo? a landing?). The demo site inherits the welcome-band link at
-its next refresh. Only the dive's name remains JB's to change.***
+its next refresh. Only the dive's name remains JB's to change.
+**sp3 LANDED + SEAM S1 CUT the same day**: `ghcr.io/iotlodge/orrethd`
+(0.63.465 + latest) publicly pullable — JB granted the token scope and made
+the package public with his own click (visibility is UI-only; the API has no
+door). The first-world example (docs repo `examples/first-world`: mint script
+whose private half never leaves the operator + two tier profiles + compose)
+WALKED WHOLE beside the rig on :4600/:4601 — floor joined by one `--parent`
+flag, presence up, rules down, console serving — and the tutorial page ships
+with the register row moved up per the page's own law. Honest residue: the
+full experience (residents, cognition) still runs from the repository until
+the agentic layer is packaged — a later, deeper seam. Next: sp4, the SDK to
+PyPI (S2) + the first-capability tutorial.***
 
 A note on this document's own voice: this dive's product is documentation a
 stranger can read, so the charter is written in that voice — plain words first,
