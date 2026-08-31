@@ -24,8 +24,22 @@ WALKED WHOLE beside the rig on :4600/:4601 — floor joined by one `--parent`
 flag, presence up, rules down, console serving — and the tutorial page ships
 with the register row moved up per the page's own law. Honest residue: the
 full experience (residents, cognition) still runs from the repository until
-the agentic layer is packaged — a later, deeper seam. Next: sp4, the SDK to
-PyPI (S2) + the first-capability tutorial.***
+the agentic layer is packaged — a later, deeper seam.
+**sp4 LANDED the same day — SEAMS S2 + S3 CUT**: `pip install orreth-agent`
+is real (0.1.0 on PyPI, Apache-2.0 by JB's lock, token via .env never in the
+transcript; the `__all__` gap paid — 18 public names; proven by isolated-wheel
+import then a fresh install from the live index; 24/24 tests incl. parity).
+The first-capability walk ran BEFORE its page: the hello world (one folder,
+one file, two names) discovered → tile beside the desks → prompt on the shelf;
+folder removed → **the shelf remembers** (state=declared, genesis absent) —
+0055's boot-honors-the-shelf law observed live and now taught as the
+tutorial's ending. The Reference track opened with the manifest contract page
+(genesis rules · every field · thirteen panel kinds · the SDK's mirrored
+vocabulary); a formal JSON-Schema file stays named future work. En-route
+residue: a `hello` card rests `declared` on the rig's shelf — retire it from
+its tile at will. Next: sp5 reference tracks (HTTP API · contracts · dials ·
+residents — cuts S5, S4/S6 as needed), the bring-your-own-agent page, and the
+sp2 clean-machine walk.***
 
 A note on this document's own voice: this dive's product is documentation a
 stranger can read, so the charter is written in that voice — plain words first,
