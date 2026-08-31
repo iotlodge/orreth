@@ -62,6 +62,21 @@ def capability_views() -> list:
     return views
 
 
+# 0064 — THE OPEN BOOK: the public documentation is a first-contact surface
+# too, so the stranger walks it with the same eyes. Absolute URLs; the live
+# site, exactly as a stranger reaches it.
+BOOK = "https://docs.orreth.ai"
+BOOK_VIEWS = [
+    ("/", "the documentation landing — 'What is Orreth', a stranger's very first page"),
+    ("/learn/anatomy/", "the anatomy page — what exists when Orreth runs"),
+    ("/learn/what-works-today/", "the honest register — proven vs partial vs not-yet"),
+    ("/learn/glossary/", "the glossary — the machine's own dictionary as a docs page"),
+    ("/build/quickstart/", "the quickstart — ten minutes to a running world"),
+    ("/build/first-world/", "the first-world tutorial — a universe from three files"),
+    ("/reference/http-api/", "the HTTP API reference — every door of a running world"),
+]
+
+
 def _post(base: str, path: str, payload: dict) -> dict:
     req = urllib.request.Request(base + path, method="POST",
                                  data=json.dumps(payload).encode(),
@@ -70,18 +85,19 @@ def _post(base: str, path: str, payload: dict) -> dict:
         return json.load(r)
 
 
-def shoot(view: str) -> str | None:
+def shoot(view: str, url: str | None = None) -> str | None:
     """One view, rendered by real Chrome, returned as base64 PNG. The
     universe view animates forever, so virtual time never settles there —
-    the second attempt shoots without it (her first walk's own finding)."""
-    out = Path(tempfile.mkdtemp()) / f"{view}.png"
+    the second attempt shoots without it (her first walk's own finding).
+    An absolute url overrides the console route (the book walk, 0064)."""
+    out = Path(tempfile.mkdtemp()) / f"{view.replace('/', '_') or 'root'}.png"
     for budget in ("--virtual-time-budget=9000", None):
         args = [CHROME, "--headless=new", f"--screenshot={out}",
                 "--window-size=1512,900", "--hide-scrollbars",
                 "--disable-gpu"]
         if budget:
             args.append(budget)
-        args.append(f"{UNIVERSE}/window#f=4500&v={view}")
+        args.append(url or f"{UNIVERSE}/window#f=4500&v={view}")
         try:
             subprocess.run(args, capture_output=True, timeout=45)
             if out.exists() and out.stat().st_size > 10000:
@@ -125,7 +141,10 @@ def judge(think: GovernedThink, persona: str, shot_b64: str,
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--once", action="store_true")
-    ap.parse_args()
+    ap.add_argument("--book", action="store_true",
+                    help="walk the public documentation (docs.orreth.ai) "
+                         "instead of the console")
+    args = ap.parse_args()
     if not Path(CHROME).exists():
         print("no Chrome on this host — quinn-web has no eyes here")
         return 1
@@ -136,8 +155,10 @@ def main() -> int:
     think = GovernedThink(client, max_tokens=700)
     persona = acquire("uat-persona-quinn", did=client.did).text or ""
     findings: list[str] = []
-    for view, ctx in [*VIEWS, *capability_views()]:
-        shot = shoot(view)
+    walk = ([(p, c) for p, c in BOOK_VIEWS] if args.book
+            else [*VIEWS, *capability_views()])
+    for view, ctx in walk:
+        shot = shoot(view, url=(BOOK + view) if args.book else None)
         if not shot:
             findings.append(f"[{view}] the view would not render for the eye "
                             "— itself a finding")
@@ -157,9 +178,11 @@ def main() -> int:
     if len(body) > 3800:                       # the card has edges; the cut confesses
         body = body[:3680] + " · (…the card's edge cut the tail — the FULL list "
         body += "is in the walker's own log, every line printed as found)"
+    surface = ("the public book (docs.orreth.ai)" if args.book
+               else "the console's rooms")
     out = _post(UNIVERSE, "/requests",
                 {"kind": "uat-report", "text": f"👁 quinn-web walked "
-                 f"{len(VIEWS) + len(capability_views())} rooms with real eyes — {len(findings)} "
+                 f"{len(walk)} pages of {surface} with real eyes — {len(findings)} "
                  f"friction(s): {body}"})
     print(f"· the report stands: {out.get('id')} — {len(findings)} finding(s)")
     return 0

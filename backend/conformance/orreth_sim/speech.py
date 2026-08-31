@@ -328,6 +328,25 @@ GLOSSARY = {
         "the ceremony that changes the machine's own parts — the new "
         "version is staged, you approve it, and the machine takes a new "
         "version name; the old version stays behind it forever",
+    # 0064 — the Open Book's sweep-back: the words the public documentation
+    # leaned on hardest and found missing from the dictionary
+    "gloss-capability":
+        "a whole purpose installed on top of the machine — declared in one "
+        "folder, approved by you, rendered by the console; remove it and "
+        "its records remain",
+    "gloss-shelf":
+        "where the machine keeps every versioned word and value it runs on "
+        "— prompts, rules, settings; an edit makes a new version, and "
+        "nothing is overwritten",
+    "gloss-scope":
+        "an address in the world — universe, then wing, then floor; every "
+        "record and permission names exactly where it applies",
+    "gloss-studio":
+        "the mind that reads every ask before work begins — what it "
+        "understood and planned rides on the very card you approve",
+    "gloss-rollup":
+        "the living totals a tier keeps for everything below it — "
+        "memories, work, spend — without ever pulling the raw records up",
 }
 
 # 0050 sp3 — the UAT personas (0049 §3): the tester is craft too, tuned at
