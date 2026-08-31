@@ -48,9 +48,27 @@ four unembodied keepers, the firmware-vs-purpose razor), the Contracts (16
 schemas digested + the fixtures asymmetry stated plainly). Book = 13 pages.
 SEAM JUDGMENT: S5 (extracting the worker's :4562 door) was NOT needed to
 write honestly — the page documents what is and marks it non-contractual;
-S4/S6 likewise untouched. Remaining: sp6 language sweep-back + quinn walks
-the book · bring-your-own-agent page · clean-machine walk · formal manifest
-JSON-Schema · demo refresh · the dark apex.***
+S4/S6 likewise untouched.
+**sp6 LANDED (main 05fe927, docs 58baade) — the language swept back both
+ways**: the dictionary grew the five words the book leaned on hardest
+(capability · shelf · scope · studio · rollup — 36 → 41 under the suite's
+contract; the glass learned their plurals; 371 green), and **quinn took her
+first walk over the LIVE book** (web.py grew `--book`: the same stranger
+eyes and governed metered vision, seven pages of docs.orreth.ai; report
+req-1686). Her 37 findings triaged on the record: the vocabulary strikes
+TRUE and paid within the hour (kernel explained before used ·
+content-address/DID/token/pinned-root translated into plain consequence ·
+the quickstart stops narrating our own seam-cutting at strangers · the API
+laws lead plain with the poetic name as the label · mint_root's expected
+output shown); her console-lens misfires (docs pages have no buttons)
+discarded with the reason named; her glossary-page MUTE stands on the
+record — never a clean room. **S7 JUDGMENT: PARKED WITH ITS NAME** — the
+sim/wire fork (farm · deed · epoch · stable living twice) was needed by no
+page this dive wrote; it waits as the named entry fee of whichever future
+page documents those four laws as components. Remaining beyond this dive's
+bites: bring-your-own-agent page · the clean-machine walk · formal manifest
+JSON-Schema · demo refresh · the dark apex (JB's call) · quinn's book walk
+joining a cadence.***
 
 A note on this document's own voice: this dive's product is documentation a
 stranger can read, so the charter is written in that voice — plain words first,
