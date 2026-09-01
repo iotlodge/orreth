@@ -1055,9 +1055,15 @@
   .pdot.dark{background:var(--red);animation:none}
   @keyframes obreathe{0%,100%{opacity:.35}50%{opacity:1}}
   .obsgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));
-    gap:.8rem;overflow-y:auto;padding-bottom:1rem;align-content:start}
+    gap:.8rem;overflow-y:auto;padding-bottom:1rem;align-content:start;
+    align-items:start}  /* dynamic cards (JB 2026-08-31): each panel takes its
+                           own content height — a tall neighbor never sets a
+                           room's size, and nothing bleeds into the next card */
   .opanel{background:var(--deep);border:1px solid var(--hair);border-radius:10px;
-    padding:.7rem .85rem;display:flex;flex-direction:column;gap:.55rem;min-height:0}
+    padding:.7rem .85rem;display:flex;flex-direction:column;gap:.55rem;min-height:0;
+    overflow:hidden}    /* the guard: whatever the cause, output never escapes
+                           the tile — a panel that outgrows itself clips at its
+                           own border instead of writing over its neighbor */
   .opanel .pt{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem}
   .opanel .pt b{font-family:var(--serif);font-variant-caps:small-caps;
     letter-spacing:.08em;color:var(--star);font-weight:600}
