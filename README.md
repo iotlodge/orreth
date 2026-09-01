@@ -28,10 +28,26 @@ flowchart TD
 
 ---
 
+## The doors — see it, read it, run it, build on it
+
+- 📖 **[docs.orreth.ai](https://docs.orreth.ai)** — the book: what Orreth is, the anatomy of a
+  running world, an honest what-works-today register, and walked tutorials (every one run before
+  it was written). [orreth.ai](https://orreth.ai) lands here.
+- 🔭 **[demo.orreth.ai](https://demo.orreth.ai)** — a captured moment of the live universe, every
+  view real.
+- 🐍 **`pip install orreth-agent`** — the SDK (Apache-2.0): give any agent a permanent identity, a
+  governed admission, signed memory, and a metered mind.
+- 🐳 **`docker pull ghcr.io/iotlodge/orrethd`** — the kernel image; a two-tier world of your own
+  stands from [three small files](https://docs.orreth.ai/build/first-world/).
+- 🚪 **Ten minutes to a running universe**: the
+  [quickstart](https://docs.orreth.ai/build/quickstart/) — clone this repo, one script.
+
+---
+
 ## What is running, today, on one laptop
 
-🟢 **Forty design dives (`0000`–`0039`), every landed decision locked** (`docs/decisions/` + each
-dive's own ledger) · the **Python reference simulator proves the whole model — 230 tests** · the
+🟢 **Sixty-five design dives (`0000`–`0064`), every landed decision locked** (`docs/decisions/` + each
+dive's own ledger) · the **Python reference proves the whole model — 371 conformance tests** · the
 **Rust plane** runs it (six crates, `orrethd` — one binary, tier as a profile, conformance-green
 against fixtures signed in Python and verified in Rust) · **one command** (`scripts/dev.sh start`)
 raises a universe of six ecosystems, twelve fields, and a working population of governed agents,
@@ -62,7 +78,34 @@ versioned assets; proposals with approval packages; the human holds the high lan
 
 ---
 
-## The last three weeks — where it stopped being a database and started being an institution
+## From substrate to estate — the recent eras, compressed
+
+*(the full record is `docs/design/README.md` — sixty-five dives, each closed only when proven
+live by a human in the glass; the standing proof register is
+[`docs/design/the-honest-boundary.md`](docs/design/the-honest-boundary.md))*
+
+- **The machine's own parts became governed assets** (0045–0047): prompts, rules, and sentences
+  live on a versioned shelf, edited through one human-gated door; every objective is READ and
+  PLANNED by a governed mind whose understanding rides the very card the human approves; changing
+  firmware issues a new named release of the whole machine.
+- **Capabilities decoupled from the machine** (0054–0056): whole purposes — three working trading
+  desks — install by dropping a folder of declarations, render blind through typed panels, and
+  lifecycle by a human's word; the console became a cockpit, everything ≤2 clicks, edited in place.
+- **The estate learned to keep itself** (0057–0059, 0062): every floor's memory breathes with
+  measured loss; the model registry watches a five-eyed market of 2,900+ minds as intelligence
+  never authority; MCP tools join through one gate with secrets in zero records and rug-pulls
+  caught by fingerprint; residents maintain their own supply lines and build container bodies for
+  each other as attested deeds.
+- **The stranger was designed for** (0060–0061, 0063): the canon vocabulary became a taught,
+  clickable dictionary; the universe renders its own live schematic down to the physical hulls;
+  thirty-six operating values became governed dials — declared in firmware, valued on the shelf,
+  turned live with bounds that refuse with a teaching.
+- **The machine got its public book** (0064, one day): [docs.orreth.ai](https://docs.orreth.ai) —
+  fourteen pages, every tutorial walked before written, and the docs as the decoupling's forcing
+  function: the kernel image published, the SDK on PyPI, a stranger's world from three files, an
+  outside LangGraph agent admitted at a human gate and remembering across lives.
+
+## Where it started becoming an institution — the earlier keystones
 
 - **The physics of memory (0033).** Information theory made canon: distillation under **distortion
   contracts** (what must survive, refused at save), reconstruction uncertainty **bounded by
@@ -111,9 +154,8 @@ versioned assets; proposals with approval packages; the human holds the high lan
   canaried at the cheap tier, standings confirmed, the mentee serving — with the refusal *and* the
   demotion paths proven beside it. Never silently dumber, in either direction, forever.
 
-**Next:** the lifecycle-synergy pass (how the three keystones interlock) · live-judge graduations
-at real model tiers · the AWS-documentation supply line (farm → librarian → allen) · the Daylight
-Glass light theme · the seven rows' standing projections at scale.
+**Next:** the visibility season — the estate meets the world · bring-your-own-package
+capabilities behind the deed machinery · the clean-machine proof · federation's first handshake.
 
 ---
 
@@ -173,18 +215,18 @@ orreth/
 ├── README.md                 ← you are here
 ├── docs/
 │   ├── vision/                ← the north stars (vision artifacts + hero images)
-│   ├── design/                ← the dives, 0000–0039 — the vision made buildable, one keystone at a time
+│   ├── design/                ← the dives, 0000–0064 — the vision made buildable, one keystone at a time
 │   │   └── README.md          ← the dive sequence + index (start here for the how)
 │   ├── decisions/             ← the ledger — every lock, dated, with its reasoning
-│   ├── guides/                ← the operator's path (01 Librarian flows · 02 Operator's Manual · 05 The Seven Rows)
-│   └── articles/              ← the public series (01–04 published · 05–07 drafted) + assets
-├── contracts/                 ← the wire contracts (v0 JSON Schemas — validated by BOTH implementations; sacred)
+│   ├── guides/                ← the operator's path (superseded for newcomers by docs.orreth.ai)
+│   └── articles/              ← the public series (01–10) + assets
+├── contracts/                 ← the wire contracts (v0 JSON Schemas — Python validates directly; Rust is held to them via generated fixtures; sacred)
 ├── agents/
 │   ├── PROVENANCE.md          ← the authorship ledger — every model's work named, quarantines recorded
 │   ├── orreth-agent-sdk/      ← the FieldClient SDK — persistent identities that re-join as the same self
 │   └── flavors/               ← lifeforce agents (prototype · LangGraph · AgentField sentinel)
 ├── backend/
-│   ├── conformance/           ← the Python reference simulator (230 tests) + console worker + live demos
+│   ├── conformance/           ← the Python reference (371 tests) + console worker + live demos
 │   └── plane/                 ← the Rust plane: 6 crates + orrethd (the daemon, serving its own glass)
 ├── infrastructure/            ← compose + CDK — one laptop, one universe, one command (and the demo site's stack)
 └── scripts/                   ← dev.sh (the rig) · demo.sh (the reel)
@@ -203,6 +245,19 @@ where it becomes buildable · **watch it live** at [demo.orreth.ai](https://demo
 - **Skills are crystallized memory** — learn once at the expensive tier, prove at the cheap one, serve forever. Never silently dumber.
 - **Retrieval spans spacetime — Sourced and Verified, or not at all** — and every answer wears its epistemic status.
 - **Humans conduct; agents perform** — the tournament argues, the evidence is readable, and the human signs.
+
+---
+
+## License & provenance
+
+**The source is public for review and evaluation; a license is deliberately not yet chosen** —
+all rights reserved meanwhile. The SDK is the exception: `agents/orreth-agent-sdk` is
+**Apache-2.0** and published as [`orreth-agent`](https://pypi.org/project/orreth-agent/); the
+documentation ([orreth-docs](https://github.com/iotlodge/orreth-docs)) is CC BY 4.0 with MIT
+examples. Every source file names its authoring model; `agents/PROVENANCE.md` is the ledger.
+
+*This build is my résumé — I'm exploring senior agentic-infrastructure / architecture roles:
+[jsbarth.com](https://jsbarth.com).*
 
 ---
 
