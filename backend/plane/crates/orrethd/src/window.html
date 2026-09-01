@@ -817,7 +817,7 @@
   /* the thumbs (0048 sp2): judgment, not authorship — 👍 fades from view,
      never from the record; 👎 opens the small dialog under the thumb */
   .thumbs{display:flex;gap:.55em;align-items:center;margin:.15rem 0 .3rem}
-  .tchip{cursor:pointer;font:.82rem var(--mono);opacity:.45;transition:opacity .15s,transform .15s}
+  .tchip{cursor:pointer;font:.82rem var(--mono);opacity:.75;transition:opacity .15s,transform .15s}
   .tchip:hover{opacity:1;transform:scale(1.18)}
   .thumbs.fade{opacity:0;transition:opacity .8s}
   .theard{color:var(--dim);font:.66rem var(--mono);margin:.15rem 0 .3rem}
@@ -3412,13 +3412,17 @@ function reqRow(r,inPane,extraHtml){
     &&(r.status==="approved"||r.status==="done");
   /* in the pane, the whole result shows — FULL refs, every one a door */
   const raw=inPane&&r.result?`<div class="rdr-struct">${esc(JSON.stringify(r.result,null,1).slice(0,2500))}</div>`:"";
+  /* the thumb reaches report-shaped request cards (JB's find, 2026-08-31:
+     he read quinn's uat-report, liked it, and had nowhere to say so) — the
+     judged ref is the request's own id; the worker's thumb door accepts it */
+  const thumb=(r.kind==="uat-report"&&r.status==="done")?thumbHtml(r.id):"";
   /* ONE decision layout everywhere (JB's find: inside some cards, outside
      others): the words above, the buttons beneath, all inside the card */
   const decide=w?`<div class="td-in" style="margin:.35rem 0 0"><textarea id="gw-${r.id}" rows="2" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></textarea></div>
     <div style="margin-top:.35rem"><button class="sbtn ok" onclick="gateGo('${r.id}',true,'${r.kind}')">${w[0]}</button>
     <button class="sbtn no" onclick="gateGo('${r.id}',false,'${r.kind}')">${w[1]}</button></div>`:"";
   return `<div class="req${inPane?"":" clickable"}"${inPane?"":` onclick="paneReq('${r.id}',event)" title="open in the reading pane"`}><span class="kind">${r.kind||"request"}</span>${bookChip(r.kind)}
-   <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}${raw}${extraHtml||""}${decide}</span>
+   <span class="txt">${r.text||""}<div class="sub">${r.id} · ${(r.at||"").slice(11,19)}</div>${note}${staleNote(r)}${raw}${thumb}${extraHtml||""}${decide}</span>
    ${rest?`<span class="st">${r.status}</span> <button class="sbtn no" onclick="restIt('${r.kind}','${r.id}')">${r.kind==="reflex"?"rest this watcher":"rest this duty"}</button>`
    :`<span class="st">${r.status}</span>`}</div>`;
 }
