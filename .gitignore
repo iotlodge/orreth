@@ -52,6 +52,11 @@ infrastructure/cdk/.venv/
 # (see archive/README.md; canon cites these where it audited them)
 archive/
 
+# the private papers — article drafts, campaign strategy, outside-facing kits;
+# JB's working desk, local-only (purged from history 2026-09-02 before the public flip)
+docs/articles/
+docs/outside/
+
 # tmp/ — local working bundles (desk report samples, concept images);
 # referenced by dives as local artifacts, never versioned
 tmp/

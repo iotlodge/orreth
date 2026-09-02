@@ -218,8 +218,7 @@ orreth/
 │   ├── design/                ← the dives, 0000–0064 — the vision made buildable, one keystone at a time
 │   │   └── README.md          ← the dive sequence + index (start here for the how)
 │   ├── decisions/             ← the ledger — every lock, dated, with its reasoning
-│   ├── guides/                ← the operator's path (superseded for newcomers by docs.orreth.ai)
-│   └── articles/              ← the public series (01–10) + assets
+│   └── guides/                ← the operator's path (superseded for newcomers by docs.orreth.ai)
 ├── contracts/                 ← the wire contracts (v0 JSON Schemas — Python validates directly; Rust is held to them via generated fixtures; sacred)
 ├── agents/
 │   ├── PROVENANCE.md          ← the authorship ledger — every model's work named, quarantines recorded
