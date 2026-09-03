@@ -3450,7 +3450,9 @@ def governed_ping(port: int, mid: str, klass: str) -> dict | None:
         t0 = time.perf_counter()
         resp = litellm.completion(model=model,
                                   messages=[{"role": "user", "content": "ping"}],
-                                  max_tokens=1)
+                                  max_tokens=16)  # reasoning-class minds spend thought
+                                                  # before speech; a 1-token ceiling
+                                                  # starves them into a false stumble
         ms = int((time.perf_counter() - t0) * 1000)
         tokens = resp.usage.total_tokens
         try:
