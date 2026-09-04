@@ -498,10 +498,11 @@ live by a human in the glass; the standing proof register is
   canaried at the cheap tier, standings confirmed, the mentee serving — with the refusal *and* the
   demotion paths proven beside it. Never silently dumber, in either direction, forever.
 
-**Next: the proofs era.** From here the work is proof builds — purpose worlds that mature the
-kernel by *using* it (embodiment · fleets · attestation · governed updates · energy budgets),
-each installed on the same kernel and governed by the same firmware · bring-your-own-package
-capabilities behind the deed machinery · the clean-machine proof · federation's first handshake.
+**Next: the proofs era** ([PROOFS.md](PROOFS.md)). From here the work is proof builds — purpose
+worlds that mature the kernel by *using* it, each installed on the same kernel and governed by
+the same firmware. Six proof worlds are seeded (embodiment · fleets · attestation · governed
+updates · energy budgets — the roster with descriptions is in [PROOFS.md](PROOFS.md)); the first
+proof to build is selected and announced separately.
 
 ---
 
@@ -559,6 +560,7 @@ tried to break it):
 ```
 orreth/
 ├── README.md                 ← you are here
+├── PROOFS.md                 ← the proofs era: how purpose worlds mature and verify the kernel
 ├── docs/
 │   ├── vision/                ← the north stars (vision artifacts + hero images)
 │   ├── design/                ← the dives, 0000–0064 — the vision made buildable, one keystone at a time
