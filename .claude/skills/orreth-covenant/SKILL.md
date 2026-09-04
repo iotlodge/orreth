@@ -69,6 +69,13 @@ process — mayflies in a universe designed for living things. Review caught it
     at the next safe boundary and says what it left undone. Anything new the machine
     manages ships WITH its stop, from day one — a lever the human lacks is a defect.
 
+12. **The proofs era** (ADR 0001 · JB's lock, 2026-09-04).
+    From here on out, the work is PROOFS: purpose worlds that mature the kernel by
+    USING it. New dives default to proof-shaped work — a purpose world, its walk, and
+    the honest register of what the walk demanded. Kernel and firmware changes land in
+    service of a proof's honest need — a wound a proof actually hit — never as
+    speculative surface. "It would be a nice capability" is not a proof's need.
+
 ## Before you finish — the drift checklist
 
 - Do identities persist and re-join as the same self?

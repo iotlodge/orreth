@@ -78,6 +78,350 @@ versioned assets; proposals with approval packages; the human holds the high lan
 
 ---
 
+## How the kernel works — the anatomy in six pictures
+
+*(Distilled from an outside architect's deep read of this repository. Every diagram below
+describes machinery that exists today; the design canon behind each lives in `docs/design/`.)*
+
+### 1 · The shape of the world
+
+One recursive organism. A human seat above, living identities below, and five load-bearing
+directions — each one a law:
+
+```mermaid
+flowchart TB
+    C["CUSTODIAN<br/>blind custody · freeze without reading"]
+    H["THE HUMAN SEAT<br/>originates Objectives · approves consequence"]
+    U["UNIVERSE<br/>foundation + apex<br/>all-time memory · Canon · Chronicle"]
+    E["ECOSYSTEMS<br/>bounded worlds · mid-horizon memory"]
+    F["FIELDS<br/>where governed work meets living identities"]
+    A["LIVING IDENTITIES<br/>residents · workforce · tools · models"]
+
+    C -. "availability control<br/>not content authority" .-> U
+    H -->|"Objective · consent · gates"| U
+
+    U ==>|"CANON DOWN<br/>floors · charters · standards · skills<br/>tighten only"| E
+    E ==>|"policy down"| F
+    F ==>|"resolved law + apertures"| A
+
+    A -->|"CHRONICLE UP<br/>observations · runs · receipts"| F
+    F -->|"distill under contract"| E
+    E -->|"essential meaning rises"| U
+
+    A -. "retrieve LOCAL first" .-> F
+    F -. "time-horizon remainder UP" .-> E
+    E -. "deeper remainder UP" .-> U
+    U -->|"Sourced · Verified · explicit unknowns"| H
+
+    classDef apex fill:#f2a91d,color:#101625,stroke:#ffd36a,stroke-width:2px;
+    classDef mid fill:#3536a4,color:#eef2ff,stroke:#8f91ff;
+    classDef field fill:#087d86,color:#efffff,stroke:#55d8d7;
+    classDef life fill:#17233a,color:#eef2ff,stroke:#7890b5;
+    classDef human fill:#251a46,color:#f4edff,stroke:#b79ce8,stroke-width:2px;
+    classDef custody fill:#202635,color:#d4d9e6,stroke:#69738b;
+    class U apex;
+    class E mid;
+    class F field;
+    class A life;
+    class H human;
+    class C custody;
+```
+
+| Direction | What moves | The law |
+|---|---|---|
+| **Down** | Canon, policy floors, charters, skills, resolved behavior | A child may tighten; it may never loosen inherited law. |
+| **Up** | Chronicle, memory, evidence, run statistics, usage | Raw detail remains near life; distilled meaning rises. A parent never reaches in. |
+| **Up on demand** | Retrieval remainder | Search local first, then escalate by time horizon and budget. Partial coverage must say what was not served. |
+| **Narrower** | Authority | Root-chained capability delegation only attenuates scope, direction, time, action, and budget. |
+| **Back to the human** | Consequence | Agents may detect, plan, propose, and argue. Consequential changes wait at gates; silence never approves. |
+
+> **Every meaningful act in Orreth is a coordinate:**
+> **Identity × Space × Time × Purpose × Authority × Epistemic standing × Cost × Consent**
+>
+> A chat turn is not enough. An answer without those coordinates is not institutional memory.
+
+### 2 · The atom: a signed memory in spacetime
+
+Every event becomes a content-addressed, DID-signed record on one log. Everything else — every
+index, every search row, the glass itself — is a rebuildable projection. Governed purge erases
+the body everywhere at once and leaves a signed stub proving something was destroyed:
+
+```mermaid
+flowchart LR
+    E["Event / observation / thought"]
+    R["MemoryRecord<br/>content-addressed · DID-signed"]
+    W["Worldline coordinate<br/>identity · scope · two clocks · O·I·O·T"]
+    B["Body store<br/>bytes / object / artifact"]
+    L["Signed log<br/>the sole truth"]
+    P1["Time + tag projection"]
+    P2["Meaning projection<br/>lexical + vector + standing"]
+    P3["Seven RAG rows"]
+    P4["Window · Brain · Orrery"]
+    P5["Rollups + standings"]
+
+    E --> R
+    W --> R
+    R -->|"signed pointer + hash"| B
+    R --> L
+    L --> P1
+    L --> P2
+    L --> P3
+    L --> P4
+    L --> P5
+
+    X["Governed purge"]
+    X -->|"body physically erased"| B
+    X -->|"stub + lineage remain"| L
+    X -->|"evict / rebuild"| P1
+    X -->|"evict / rebuild"| P2
+    X -->|"dead everywhere"| P3
+```
+
+> **The signed log is truth; every index and every glass is a rebuildable projection.** Seven
+> retrieval strategies compete without creating seven realities; a projection can be destroyed
+> and rebuilt; the worldline cannot be silently rewritten.
+
+### 3 · How work happens: Objective · Intention · Observation · Thought
+
+Work is not a call graph. It is a purpose graph that persists after every process is gone — and
+only the sliver rides down to each seat: intent, budget, references, pinned behavior. Never the
+whole plan.
+
+```mermaid
+sequenceDiagram
+    actor Human
+    participant O as Orchestration seat
+    participant G as Human gate
+    participant F as Fingertip at target floor
+    participant M as Governed mind / skill
+    participant S as Independent scribe / reviewer
+    participant C as Chronicle
+
+    Human->>O: OBJECTIVE — the why
+    O->>C: signed Objective + proposed plan
+    O->>G: readable plan, graph, budget, questions
+    G-->>O: approve / decline
+
+    alt approved
+        O->>C: signed Intention + Aperture
+        Note over O,F: Only the sliver rides down:<br/>intent · budget · refs · behavior pins
+        O->>F: INTENTION — delegated what
+        F->>M: OBSERVATION task
+        M-->>F: THOUGHT / deterministic skill result
+        S->>C: RunRecord + grade<br/>author ≠ actor
+        F-->>O: outcome + evidence
+        O->>C: assembled Objective outcome
+        O-->>Human: sourced report + dark/waiting branches
+    else declined or silent
+        O->>C: the refusal / expiry is retained
+    end
+```
+
+| Rung | Originator | Meaning |
+|---|---|---|
+| **Objective** | Human | Why this world should change |
+| **Intention** | Resident / orchestration seat | What bounded unit is delegated |
+| **Observation** | Workforce | What was actually attempted or found |
+| **Thought** | Model / skill | The cognition used inside the attempt |
+
+Each rung reviews the rung below; no one grades their own yardstick. And the **Aperture** makes
+"what could this thought see?" a lookup, not an investigation: every run pins the signed,
+content-addressed opening it ran under.
+
+### 4 · How memory rises without becoming mythology
+
+```mermaid
+flowchart BT
+    R0["Recent raw experience<br/>abundant · high fidelity · local"]
+    D1["Field distillation<br/>dedup · summarize · preserve intolerables"]
+    D2["Ecosystem distillation<br/>longer horizon · lower volume"]
+    U["Universe memory<br/>all-time essential meaning"]
+    SK["Crystallized skill<br/>procedural memory that earned reuse"]
+
+    R0 -->|"distortion contract"| D1
+    D1 -->|"signed derived_from chain"| D2
+    D2 -->|"measured loss"| U
+    U -->|"mentor craft + rubric"| SK
+    SK -. "versioned Canon cascades down" .-> R0
+```
+
+No promise of lossless immortality — a promise of **honest, governed degradation**: a distortion
+contract states what must survive and what may compress; a violating distillation is refused at
+save; every distillation keeps a walkable `derived_from` chain; and reconstruction uncertainty is
+measured and bounded by contract, not by accident. Learning is what makes safe forgetting
+possible.
+
+### 5 · What the machine believes: standing outranks relevance
+
+Cryptographic provenance proves who said a thing, when, and whether it changed — never that it is
+*true*. So knowledge wears its epistemic standing as architecture, and relevance never outranks
+it:
+
+```mermaid
+flowchart LR
+    V["verified / human-trusted"]
+    C["corroborated"]
+    U["untrusted / quarantined"]
+    I["investigating"]
+    R["recalled"]
+
+    U -->|"independent receipts"| C
+    C -->|"challenge / contradiction"| I
+    I -->|"revalidated"| C
+    I -->|"discredited lineage"| R
+    V -->|"freshness or human challenge"| I
+
+    R -. "ranks dead" .-> X["excluded unless explicitly asking for the dead"]
+```
+
+A highly relevant recalled claim still ranks dead. An untrusted finding may speak — dampened and
+labeled. Corroboration counts independent voices, not repeated echoes.
+
+### 6 · The two books, one mind
+
+The **Chronicle** is the universe's epistemic mind — what happened, why, who judged it. The
+**Canon** is its executable system image — every policy, prompt, skill, standard, and dial,
+versioned forever. The loop between them *is* the self-improvement, and a human gates every
+consequential turn:
+
+```mermaid
+flowchart TB
+    HUMAN["HUMAN<br/>telos, legitimacy, judgment"]
+    CANON["CANON<br/>executable system image"]
+    CHRONICLE["CHRONICLE<br/>epistemic mind"]
+    IDENTITIES["LIVING IDENTITIES<br/>residents, workforce, services, minds"]
+    WORLD["WORLD<br/>the environment perceived and changed"]
+    GLASS["GLASS<br/>legibility without hidden authority"]
+
+    HUMAN -->|"objective and consequence authority"| CANON
+    CANON -->|"compiled law, apertures, gates, resources"| IDENTITIES
+    IDENTITIES -->|"governed action"| WORLD
+    WORLD -->|"observations and receipts"| CHRONICLE
+    IDENTITIES -->|"thoughts, decisions, outcomes"| CHRONICLE
+    CHRONICLE -->|"evidence and proposed change"| CANON
+    CHRONICLE --> GLASS
+    CANON --> GLASS
+    GLASS -->|"understanding and judgment"| HUMAN
+```
+
+> **A Universe is a version of the Canon executing over the state of the Chronicle, through
+> governed identities, against a world, under human purpose.**
+
+If you build agent systems, the difference in one table:
+
+| Conventional agent system | Orreth |
+|---|---|
+| Process/session is the apparent self | Identity is the self; processes are incarnations |
+| Context window is memory | Context is a temporary aperture cut from governed memory |
+| Prompt/config lives beside the run | Behavior is versioned Canon and is pinned into the run |
+| Logs are operational exhaust | Chronicle is the institution's biography |
+| Retrieval returns matches | Retrieval returns sources, fidelity, coverage, cost, and explicit remainder |
+| Self-improvement edits the agent | Evidence proposes a sibling Canon version; another seat grades; a human gates consequence |
+| Deletion removes a row | Purge walks lineage and every projection; the signed stub proves that something was destroyed |
+
+And the compact mental model, in one column:
+
+```text
+                         HUMAN PURPOSE
+                              │
+                      Objective + gates
+                              │
+       ┌──────────────────────▼──────────────────────┐
+       │                 THE CANON                   │
+       │ policy · prompts · skills · charters · law │
+       └──────────────────────┬──────────────────────┘
+                              │  descends, tighten-only
+                       signed apertures
+                              │
+       ┌──────────────────────▼──────────────────────┐
+       │                LIVING WORK                  │
+       │ identities · residents · agents · tools    │
+       │ models · observations · thoughts · spend   │
+       └──────────────────────┬──────────────────────┘
+                              │  rises, pruned
+                       signed receipts
+                              │
+       ┌──────────────────────▼──────────────────────┐
+       │               THE CHRONICLE                 │
+       │ what happened · why · who judged · lineage │
+       └──────────────────────┬──────────────────────┘
+                              │  evidence + measures
+                      proposals and canaries
+                              │
+                       HUMAN CONSEQUENCE
+                              │
+                          CANON v+1
+```
+
+> **Orreth is a world in which intelligence may be distributed, but responsibility is never
+> allowed to dissolve.**
+
+---
+
+## One kernel, many worlds — how governance reaches everything you install
+
+The kernel is deliberately **purpose-blind**: identity as cryptography, one signed log, gates,
+and meters — nothing at that layer knows what any agent is *for*. Between the kernel and your
+purposes lives the layer most agent platforms don't have: **resident firmware**, the organs that
+*deliver* the governance everything above them consumes.
+
+```mermaid
+flowchart TB
+    subgraph CAPS["PURPOSE WORLDS — capabilities, installed as folders of declarations"]
+        direction LR
+        D1["equities desk<br/>charles"]
+        D2["crypto desk<br/>charlene"]
+        D3["options desk<br/>chad"]
+        D4["your world here<br/>(the proof builds land as these)"]
+    end
+    subgraph FW["RESIDENT FIRMWARE — the organs that deliver governance"]
+        direction LR
+        B["becky<br/>identity & admission"]
+        A2["ada<br/>minds & metering"]
+        CH["charlotte<br/>tools & manifests"]
+        LB["librarian<br/>knowledge & standing"]
+        VR["vera<br/>independent judgment"]
+        GV["governance<br/>floors & lanes"]
+    end
+    subgraph K["THE KERNEL — purpose-blind substrate"]
+        direction LR
+        I["identity as<br/>cryptography"]
+        LOG["one signed<br/>append-only log"]
+        GT["gates where<br/>consequence waits"]
+        M["meters no one<br/>opts out of"]
+    end
+
+    CAPS ==>|"every join, thought, tool call, and record<br/>passes through the firmware"| FW
+    FW ==>|"enforced with the kernel's physics"| K
+
+    classDef caps fill:#087d86,color:#efffff,stroke:#55d8d7;
+    classDef fw fill:#3536a4,color:#eef2ff,stroke:#8f91ff;
+    classDef kern fill:#f2a91d,color:#101625,stroke:#ffd36a;
+    class D1,D2,D3,D4 caps;
+    class B,A2,CH,LB,VR,GV fw;
+    class I,LOG,GT,M kern;
+```
+
+**How a new world is born.** A capability arrives as a folder of *declarations* — prompts, a
+manifest, a declared pipeline — never a line of platform code. Drop the folder in and the kernel
+discovers the world at boot, raises its floor, welcomes its specialist at becky's gate, and draws
+its entire room in the glass blind, from the manifest alone. From its first breath it is governed:
+its agents join through the same door, its thoughts meter through the same gateway, its records
+sign onto the same log, and its consequences wait at the same gates — because the firmware below
+it is not optional and the kernel beneath *has no other way to run it*.
+
+**And one razor keeps the layers honest:** capabilities stay editable in production — through
+gates, as versioned siblings — because purpose is the human's domain. Resident firmware does not:
+changing how the machine is *governed* is a release. **If you can change it in prod, it's
+purpose. If it takes a release, it's firmware.**
+
+This is the pattern the coming **proof builds** exercise: each proof is a purpose world —
+embodiment, fleets, attestation, governed updates, energy budgets — installed on this same
+kernel, governed by this same firmware, without a line of kernel change. The kernel matures by
+being *used*.
+
+---
+
 ## From substrate to estate — the recent eras, compressed
 
 *(the full record is `docs/design/README.md` — sixty-five dives, each closed only when proven
@@ -154,7 +498,9 @@ live by a human in the glass; the standing proof register is
   canaried at the cheap tier, standings confirmed, the mentee serving — with the refusal *and* the
   demotion paths proven beside it. Never silently dumber, in either direction, forever.
 
-**Next:** the visibility season — the estate meets the world · bring-your-own-package
+**Next: the proofs era.** From here the work is proof builds — purpose worlds that mature the
+kernel by *using* it (embodiment · fleets · attestation · governed updates · energy budgets),
+each installed on the same kernel and governed by the same firmware · bring-your-own-package
 capabilities behind the deed machinery · the clean-machine proof · federation's first handshake.
 
 ---
