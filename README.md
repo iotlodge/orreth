@@ -501,8 +501,9 @@ live by a human in the glass; the standing proof register is
 **Next: the proofs era** ([PROOFS.md](PROOFS.md)). From here the work is proof builds — purpose
 worlds that mature the kernel by *using* it, each installed on the same kernel and governed by
 the same firmware. Six proof worlds are seeded (embodiment · fleets · attestation · governed
-updates · energy budgets — the roster with descriptions is in [PROOFS.md](PROOFS.md)); the first
-proof to build is selected and announced separately.
+updates · energy budgets — the roster with descriptions is in [PROOFS.md](PROOFS.md)); the
+program opens with **orreth-EnterpriseRAG** — enterprise retrieval as a capability on the
+kernel, and Orreth proven as the API of the capability.
 
 ---
 

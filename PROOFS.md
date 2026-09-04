@@ -45,8 +45,19 @@ the same resident firmware, with no kernel change unless a wound demands it.
 | **orreth-fuel** | Energy as a governed budget — leases denominated in watt-hours, starvation as the enforcement mechanism, and the emergency stop as a first-class recorded act. |
 
 These six wear one lens — the kernel as the trust plane around embodied machines — and they are
-**held** deliberately: the value across that space deserves its own season. The proofs program
-opens with a different first proof, selected and announced separately.
+**held** deliberately: the value across that space deserves its own season.
+
+## The first proof: orreth-EnterpriseRAG
+
+The program opens with **orreth-EnterpriseRAG** — enterprise retrieval built as a living
+capability on the kernel: every mainstream document format (and zip archives of them), cloud and
+on-premise data sources onboarded through the Tool Farm as governed identities, full human
+dialog, and the kernel's own Librarian retrieving the capability's answers — *through kernel*,
+demonstrated. Its second proof rides in the same world: **Orreth as the API of the capability**
+— application integration with a governed prompt-in, answer-out surface, guardrails included.
+Unlike the held six, this proof is *expected* to upgrade the kernel's own RAG architecture —
+every change paid as a design dive, citing the requirement that demanded it. In progress,
+private, and it opens when it earns a stranger's read.
 
 ---
 
