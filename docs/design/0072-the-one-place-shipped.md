@@ -1,0 +1,184 @@
+# 0072 — The One Place, Shipped
+
+*Drafted 2026-09-08 from the orreth-EnterpriseRAG proof's charter — the proofs era's eighth
+kernel dive: the APP (JB's One Place) as kernel glass, and the installable capability
+package that pays KCR-0002 and carries the endgame's merge-back. Seeded by the Workspace
+design (the proof repo's `docs/workspace.md`, JB's three locks taken 2026-09-08).*
+
+***Status: 🟡 DRAFTED · LOCKED — all three locks taken by JB's word, 2026-09-08, plainly
+stated per the language law: L1 KERNEL GLASS ROOMS (the rich rooms built once as kernel
+panel kinds; capabilities declare, the kernel renders; the no-foreign-code law survives
+whole) · L2 THE SIGNED BOX APPROVED (content-addressed, human-gated install, crew as
+containerized deeds, retire-never-delete — KCR-0002's payment and the merge-back made
+literal) · L3 THE PHASING APPROVED (five enterprise requirements land with proof one, six
+wait named in the register, none cut).***
+
+## 1. The demand, verbatim (the proof's charter)
+
+> The essence: *"a SMART and Context-Aware chat canvas that can professionally present what
+> it smartly retrieves or is asked about available data or processing of data. One Place."*
+> Tabs/pulls as *"completely different focus events"*: Chat (default) · the variant
+> selector · Management (now the Workspace, designed and locked) · Monitoring · Sources.
+> Download on ask; copy anytime. The Basket. The test-API button.
+>
+> The endgame (addendum 4): the merge-back is **a package installation, never a code
+> transplant** — the E-RAG capability APP is the first installable package (the Hybrid
+> lock). KCR-0002: capabilities must become installable against published artifacts.
+>
+> The Workspace locks (2026-09-08): node-live first · see/edit by entitlement · **the
+> engine is kernel-reusable glass** — declared graphs + typed forms, rendered blind.
+
+## 2. The problem — what the surveys already told us
+
+1. **Install means "copy a folder into our repo checkout."** Capability discovery sweeps
+   `capabilities/*/genesis.py` inside the repository at boot; crew commands execute
+   repo-relative from the host worker; the capability portal rides the worker's own door.
+   A stranger with the published image and SDK cannot install anything — the exact wound
+   KCR-0002 filed on day one.
+2. **The APP wants to be an application; the law says declarations, never code.** 0055's
+   hard-won rule — a capability brings typed declarations and **foreign JavaScript never
+   loads into the Console** — was proven by three trading desks rendered blind from
+   manifests. A "fully loaded interactive intelligent chat session" strains that grammar…
+   unless the grammar grows.
+3. **The pieces of One Place exist as design, scattered across seven dives**: the ask door
+   and envelope (0071), the act graph and its drawer (0067), conversation threads and
+   profiles (0070), the eats estate (0069), guardrail confessions (0068), the router's
+   explanations (0066), the eleven and their registry (0065). This dive is where they
+   become rooms a human lives in.
+
+## 3. The shape
+
+### 3.1 The law that resolves the tension (plain words first — staged as L1)
+
+**In plain words: the rich components — the chat canvas, the workspace engine, the sources
+room, the monitoring room — are built ONCE, into the kernel's own glass, as new panel
+kinds. A capability like E-RAG doesn't bring an app; it brings a declaration that says
+"give me a chat room wired to my ask door, a workspace over my eleven graphs, a sources
+room over my estate." The kernel renders; the capability configures.**
+
+This extends the proven panel grammar (the same one that renders the trading desks blind)
+with the new kinds One Place needs — `chat` · `workspace` · `sources` · `monitor` ·
+`api-console` — each a typed, versioned kernel component. The 0055 law survives whole:
+declarations never code, foreign JS never loads, and every world that ever declares a chat
+or a workspace inherits the same quality. JB's workspace Q3 lock ("kernel-reusable
+engine") generalized to the entire APP.
+
+### 3.2 The rooms of One Place
+
+- **Chat (the default focus).** The conversation thread (0070's worldlines) with the
+  eight experience moves landed: the router's one-sentence explanation before the answer;
+  **the answer wearing its thinking** (the act graph beside each reply, every node a
+  door); citations as doors; the effort dial; inline HITL gate cards (a consequential
+  plan waits *in the conversation* — silence never approves); typed thumbs with the
+  improvement box; the guardrail confession banner when an empty set serves; download on
+  ask, copy anytime. The variant selector rides the composer row — Auto by default, the
+  eleven by choice, the selection always reflected in the reply.
+- **The Workspace.** As designed and locked (`workspace.md`) — the roster, the canvas,
+  the five-tab inspector, Compare, the eats drawer. Rendered by the kernel's workspace
+  engine from E-RAG's declarations.
+- **Sources.** The estate room: the Basket (folders walked, files ticked, origins
+  remembered, one Import — 0069's byte law underneath), the connector estate with the
+  two-keeper flow surfaced (charter answers → the wire), freshness and coverage, the
+  gaps confession, and the import queue's honest progress (interruption is weather;
+  resumed imports say so).
+- **Monitoring.** The operate-side per the standing split: per-variant health, latency
+  classes, cache hit rates, cost meters and showback, drift alarms — every number linking
+  into the Observatory where it becomes a *verdict* (grading never lives here; nothing
+  renders its own report card as authority).
+- **The API console.** The test-API button grown into a small honest room: compose an
+  ask with attributes, see the exact request, fire it through the real door, read the
+  envelope — with copy-as-curl/SDK snippets. Proof two, touchable.
+
+### 3.3 The package — KCR-0002 paid (staged as L2)
+
+**In plain words: a capability becomes a sealed, signed box a stranger can install into
+their own world through their own human gate — instead of a folder someone copies into our
+repository.**
+
+- **The format:** the five declarations (floors · crew · craft · Chronicle seeds · the
+  manifest with its typed panels), packed content-addressed and signed by its publisher —
+  the package's identity is the hash of its bytes; its provenance is a signature the
+  installer's world can attest.
+- **The install road:** a `plant-package` ask at the human gate (the gate card shows the
+  package's contents, publisher, and requested reach — the same legibility the Farm's
+  plant cards have); on approval, the discoverer (generalized from the repo sweep) admits
+  the declarations; **crew run as containers via the proven deed walk** (allen builds
+  known images as five-record deeds; charlotte plants the wires) — never repo-relative
+  shell commands; craft plants to the shelf; the tile carries start/stop/continue (rule
+  11 on the whole world).
+- **Un-install honors dormancy-never-deletion**: the folder-era "remove it and it's gone"
+  becomes a governed retire — records stay, the world is remembered.
+- **The merge-back, made literal:** E-RAG ships as the first package. The endgame's
+  "replace the kernel's RAG and merge home" = the engine (already in main via Waves 1–2)
+  plus this package installed on any world — including ours. The proof repo's lasting
+  artifact is the box and its evidence.
+
+### 3.4 The enterprise requirements, phased (staged as L3)
+
+The eleven proposals (understanding v3.1) — my recommended phasing, none cut:
+
+**Proof-one (land with the APP):** authority-scoped answers (the person registry + scoped
+retrieval make it a property) · compliance export (the act graph as a downloadable audit
+artifact — one button on Result) · quotas & rate limits (0071's traffic law surfaced) ·
+latency classes (the effort dial, formalized) · cost showback (the meters already run;
+Monitoring renders them per person/team).
+
+**Later-wave (named, registered, not built now):** legal hold (rides the purge machinery
+with a gate) · corpus snapshots & as-of answers beyond the scrub's reach · standing
+digests (the machine-tasks pattern, pointed at E-RAG) · data residency (per-store region
+pinning — the store charter carries the field from day one, enforcement later) · HA/DR
+posture (a documented stance; the honest register keeps it honest). Redaction-at-ingest
+already landed in 0069's design.
+
+## 4. The razor applied (plain words in parentheses)
+
+| Layer | Class |
+|---|---|
+| The panel kinds (chat/workspace/sources/monitor/api-console), the package format + install road, the discoverer (what is built once, for everyone) | **Firmware** — release |
+| E-RAG's declarations, room configs, package contents (what a world declares) | **Craft & manifests** — gated, versioned |
+| Room cadences, import concurrency, showback windows (numbers with limits) | **Dials** |
+| Installs, retires, imports, exports (what happened) | **Records & deeds** — signed, purge-reachable |
+
+## 5. The locks (staged for JB, 2026-09-08)
+
+- **L1 — the APP as kernel glass**: the rich rooms built once as kernel panel kinds;
+  capabilities declare, the kernel renders; the no-foreign-code law survives whole.
+- **L2 — the package**: content-addressed, signed, installed through the human gate with
+  crew-as-containers via the deed walk; un-install is a governed retire.
+- **L3 — the enterprise phasing**: five land with proof one, six named for later — none
+  cut (or JB names cuts).
+
+## 6. The spoonfuls (proposed order)
+
+1. **sp1 — The grammar grows.** The new panel kinds declared + the first two rendered
+   (chat, sources) against E-RAG's manifest; the composer row with the selector; the
+   thread lives.
+2. **sp2 — The Workspace engine.** The kernel workspace glass per `workspace.md`; E-RAG's
+   eleven as first tenant; Compare and the eats drawer.
+3. **sp3 — Monitoring + the API console.** The operate room with Observatory doors; the
+   test-API room firing the real door.
+4. **sp4 — The package.** Format + `plant-package` road + the generalized discoverer +
+   crew-as-deeds; proven by a stranger-shaped walk: published artifacts only, E-RAG's
+   box installed at a fresh world's gate.
+5. **sp5 — The enterprise five.** Authority-scoped answers · compliance export · quotas
+   surfaced · latency classes · showback — each proven in its room.
+
+## 7. The honest boundary rows this dive moves
+
+- KCR-0002: from accepted to **paid** when sp4's stranger walk lands.
+- New rows: the panel kinds (each proven by a room rendered blind); the package lifecycle
+  (install/retire walked); the enterprise five.
+- Parked honestly: the later-wave six (named in the register); word-by-word streaming
+  (the standing workspace lock); multi-editor collaboration beyond presence chips.
+
+## Appendix A — evidence trail
+
+The install wound (discovery sweep `console_worker.py:1729-1770`; install = checkout copy
+per the book's own words; crew repo-relative; the portal on the worker's door; manifests
+hardcoding dev coordinates) — from the 2026-09-04 recon and KCR-0002. The 0055 contract
+and its law (declarations never code; foreign JS never loads; typed panels proven by
+three desks; the tile's verbs). The deed walk for bodies (`console_worker.py:10280-10429`,
+0062). The Workspace design + locks (`orreth-EnterpriseRAG/docs/workspace.md`). The
+canvas moves (understanding v3.1 §4). The monitoring split law (decision 13). The
+enterprise eleven (understanding v3.1). Prior dives supplying the rooms' organs:
+0065–0071.
