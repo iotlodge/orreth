@@ -102,6 +102,31 @@ DIALS_V1 = {
         "a stale gauge in the glass",
         "five minutes suits a wall gauge"),
     # ── retention (sp6 wave 6 — how far back the universe reaches) ───────
+    # ── the traffic law (0071 sp4) — knocking, metered ───────────────────
+    "rate-per-min": {
+        "type": "int", "unit": "requests per minute, per identity", "min": 0,
+        "max": 100000, "genesis": 240, "home": "universe",
+        "governs": "how often one identity may knock on the worker's doors "
+                   "inside a one-minute window (0071 sp4) — 0 is the "
+                   "operator's explicit open door, never a default",
+        "blast": "too low turns honest callers away with waits; too high "
+                 "lets one runaway flood the doors for everyone",
+        "why": "two hundred forty a minute serves every honest rhythm the "
+               "rig has ever shown while stopping a tight loop cold",
+        "horizon": "takes hold at the next knock",
+    },
+    "body-limit-kb": {
+        "type": "int", "unit": "kilobytes per request body", "min": 64,
+        "max": 65536, "genesis": 2048, "home": "universe",
+        "governs": "the largest request body the worker's doors accept "
+                   "(0071 sp4) — a deliberate ceiling where an accidental "
+                   "default used to live",
+        "blast": "too small refuses honest uploads and tool calls; too "
+                 "large invites memory pressure from one caller",
+        "why": "two megabytes clears every honest payload the doors serve "
+               "today with room to breathe",
+        "horizon": "takes hold at the next request",
+    },
     "recall-days": {
         "type": "int", "unit": "days of look-back", "min": 30, "max": 3650,
         "genesis": 365, "home": "universe",

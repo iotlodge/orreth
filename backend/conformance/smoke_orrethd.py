@@ -18,7 +18,8 @@ from orreth_sim import crypto
 from orreth_sim.identity import Becky, Nanda
 from orreth_sim.node import make_memory
 
-BASE = f"http://127.0.0.1:{sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] != 'root-pub' else 4400}"
+_ARGS = [a for a in sys.argv[1:] if a not in ("root-pub", "traffic")]
+BASE = f"http://127.0.0.1:{_ARGS[0] if _ARGS else 4400}"
 SCOPE = "u:demo/e:cloud/f:prod"
 SEED_FILE = Path(__file__).parent / ".smoke-root-seed"
 
@@ -48,6 +49,9 @@ def call(method: str, path: str, payload: dict | None = None):
 def main() -> None:
     if len(sys.argv) > 1 and sys.argv[1] == "root-pub":
         print(root_keypair().public)
+        return
+    if "traffic" in sys.argv[1:]:
+        traffic()
         return
 
     kp = crypto.KeyPair()
@@ -172,6 +176,55 @@ def main() -> None:
 
     print("\nsmoke: Python signed, Rust verified — only the pinned root mints authority, "
           "and now only its pen resolves. 🥂")
+
+
+
+
+def traffic() -> None:
+    """0071 sp4 — the traffic-law smoke: run against a plane launched with
+    ORRETH_RATE_PER_MIN=5 and ORRETH_BODY_LIMIT_BYTES=2000. Knocking is
+    metered per identity; one caller's ceiling never slows another; an
+    oversized body refuses loudly."""
+    kp = crypto.KeyPair()
+    agent = {"did": crypto.did_key_for(kp.public), "scope": SCOPE}
+    nanda = Nanda()
+    root = Becky("u:demo", nanda, universe_name="demo", kp=root_keypair())
+    b_field = Becky(SCOPE, nanda, parent=root)
+    token = b_field.issue_token(agent["did"], SCOPE,
+                                [{"action": "retrieve", "space": "self"}])
+    query = {"requester": agent["did"], "subject": "self", "space": "self",
+             "time": {"from": "2026-07-01T00:00:00Z"}, "intent": "recall",
+             "budget": {"cost": 3}, "auth": "biscuit-sim"}
+    codes = []
+    for _ in range(8):
+        status, _res = call("POST", "/retrieve",
+                            {"query": query, "token": token,
+                             "requester_scope": SCOPE})
+        codes.append(status)
+    print(f"eight knocks at ceiling 5 → {codes}")
+    assert codes[:5] == [200] * 5 and codes[5:] == [429] * 3
+    # another identity is never slowed by the first one's flood
+    kp2 = crypto.KeyPair()
+    other = crypto.did_key_for(kp2.public)
+    tok2 = b_field.issue_token(other, SCOPE,
+                               [{"action": "retrieve", "space": "self"}])
+    status, _res = call("POST", "/retrieve",
+                        {"query": {**query, "requester": other},
+                         "token": tok2, "requester_scope": SCOPE})
+    print(f"the other identity        → {status}")
+    assert status == 200
+    # the retry hint is honest, and leaks nothing about anyone else
+    status, res = call("POST", "/retrieve", {"query": query, "token": token,
+                                             "requester_scope": SCOPE})
+    print(f"the busy face             → {status} retry in {res.get('retry_after_s')}s")
+    assert status == 429 and res.get("retry_after_s", 0) >= 1
+    # the deliberate body ceiling refuses loudly
+    big = make_memory(agent, kp, SCOPE, {"bulk": "x" * 4000},
+                      occurred_at="2026-07-02T20:00:00Z")
+    status, _res = call("POST", "/records", big)
+    print(f"an oversized body         → {status}")
+    assert status == 413
+    print("\nsmoke: knocking is metered, per identity, inside the operator's ceilings. 🥂")
 
 
 if __name__ == "__main__":

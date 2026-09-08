@@ -228,9 +228,30 @@ wears the variant (the arm-tag pattern), the envelope carries it typed, and ever
    the record: the safeguard classifier flagged one in-flight chat message during this
    spoonful's build (`[cyber]` — the hardening vocabulary reading as offense); no work
    was lost, no other model ran, and the prose stays matter-of-fact hereafter.*
-4. **sp4 — The traffic law.** Per-DID limits + deliberate body limits at plane and worker
-   doors; dials; the API posture (prod refuses tokenless everywhere the craft door
-   already does).
+4. **sp4 — The traffic law.** ✅ **LANDED 2026-09-08 — knocking is metered, per identity,
+   inside the operator's ceilings.** The law itself is one page of counting
+   (`orreth_sim/traffic.py`): a fixed window per caller — under the ceiling every knock
+   serves; at the ceiling the answer is «the door is busy for you — try again shortly»
+   with an honest `retry_after_s`; identities never share a ledger line (one caller's
+   flood never slows another); limit 0 is the operator's open door; a sweep forgets dead
+   callers only. Both halves of the boundary enforce it: **the plane** (`knock()` +
+   `too_many()` in `main.rs`, wired into egress, model authorize, model meter, resolve,
+   and submit — keyed by the token's subject or the filer's DID) and **the worker**
+   (`do_POST` gates every request BEFORE reading the body: a 413 body ceiling, then the
+   per-DID 429). Body limits stopped being axum accidents: the plane wears
+   `DefaultBodyLimit` from `ORRETH_BODY_LIMIT_BYTES` (default 2 MB), the worker reads
+   its ceiling from the shelf. **Two new dials** by the 0063 pattern — `rate-per-min`
+   (genesis 240) and `body-limit-kb` (genesis 2048), declaration firmware, value craft,
+   bounds and blast on their faces. And the craft door's prod posture reached
+   `tool_invoke`: prod demands a token whose subject is the caller; dev grace confesses
+   aloud. *Proven live against a strict plane (ceiling 5, body 2000): eight knocks →
+   exactly [200×5, 429×3]; a second identity served 200 through the first one's flood;
+   the busy face named its wait; a 4 KB body refused 413. The default-ceiling smoke
+   re-ran whole — 240/min never bites an honest walk. Suite 384→390 (six traffic laws);
+   Rust green.* *Honest remainders: the window is fixed, not sliding — burst-at-the-seam
+   is accepted and named; the worker's book is per-process (a multi-worker floor would
+   need a shared book — no such floor exists); per-scope or per-door ceilings wait for
+   demand.*
 5. **sp5 — The cache.** The semantic ask-cache as a projection: hit/revalidate/purge
    proven, guardrail-version revalidation live.
 

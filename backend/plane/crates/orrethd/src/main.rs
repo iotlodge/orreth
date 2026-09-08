@@ -52,6 +52,12 @@ struct App {
     /// Per-process display counters (beats heard, refusals, upward beats) surfaced as
     /// resident vitals in the Console. Unsigned, reset on restart, never read by governance.
     vitals: Mutex<BTreeMap<String, i64>>,
+    /// 0071 sp4 — THE TRAFFIC LAW: knocking metered per identity in a fixed
+    /// one-minute window (the fuel clause meters thinking; this meters knocking).
+    /// key -> (window_start_s, count). ORRETH_RATE_PER_MIN tunes it; 0 = the
+    /// operator's explicit open door. The Python reference is orreth_sim/traffic.py.
+    rate: Mutex<BTreeMap<String, (i64, u32)>>,
+    rate_per_min: u32,
     /// Organ DIDs pinned at join (the R1 door, closed): becky mints the token, the
     /// plane verifies its chain against the pinned root — authority beats archaeology.
     organs: Mutex<BTreeMap<String, String>>,
@@ -309,6 +315,9 @@ async fn main() {
         witness_open: Mutex::new(false),
         children: Mutex::new(BTreeMap::new()),
         vitals: Mutex::new(BTreeMap::new()),
+        rate: Mutex::new(BTreeMap::new()),
+        rate_per_min: std::env::var("ORRETH_RATE_PER_MIN").ok()
+            .and_then(|v| v.parse().ok()).unwrap_or(240),
         organs: Mutex::new(BTreeMap::new()),
         window_cfg: Mutex::new(Value::Null),
         port,
@@ -371,7 +380,14 @@ async fn main() {
         .route("/organs/pin", post(organs_pin))
         .with_state(app.clone());
 
-    let router = router.layer(axum::middleware::from_fn(cors));
+    // 0071 sp4 — a DELIBERATE body ceiling where an accidental default used to
+    // live: the largest request body any door accepts, tunable by the operator
+    // (ORRETH_BODY_LIMIT_BYTES), refused loudly instead of silently defaulted.
+    let body_limit: usize = std::env::var("ORRETH_BODY_LIMIT_BYTES").ok()
+        .and_then(|v| v.parse().ok()).unwrap_or(2_000_000);
+    let router = router
+        .layer(axum::extract::DefaultBodyLimit::max(body_limit))
+        .layer(axum::middleware::from_fn(cors));
 
     let bind = arg("--bind").unwrap_or_else(|| "127.0.0.1".to_string()); // 0.0.0.0 in containers
     // 0044 sp1 — THE WITNESS: a dead-man's watch that does not live inside the
@@ -674,6 +690,10 @@ async fn standards(State(app): State<Arc<App>>) -> Json<Value> {
 
 async fn egress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
     tokio::task::spawn_blocking(move || {
+        // 0071 sp4 — the traffic law: this caller's knock, metered
+        if let Err(w) = knock(&app, req["token"]["subject"].as_str().unwrap_or("anonymous")) {
+            return too_many(w);
+        }
         let requester_scope = req["requester_scope"].as_str().unwrap_or("").to_string();
         let local = {
             let u = app.universe.lock().unwrap();
@@ -802,6 +822,10 @@ fn merge_results(local: Value, upstream: Value) -> Value {
 
 async fn model_authorize(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
     tokio::task::spawn_blocking(move || {
+        // 0071 sp4 — the traffic law: this caller's knock, metered
+        if let Err(w) = knock(&app, req["token"]["subject"].as_str().unwrap_or("anonymous")) {
+            return too_many(w);
+        }
         let token = &req["token"];
         {
             let u = app.universe.lock().unwrap();
@@ -856,6 +880,10 @@ async fn model_authorize(State(app): State<Arc<App>>, Json(req): Json<Value>) ->
 
 async fn model_meter(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
     tokio::task::spawn_blocking(move || {
+        // 0071 sp4 — the traffic law: this caller's knock, metered
+        if let Err(w) = knock(&app, req["token"]["subject"].as_str().unwrap_or("anonymous")) {
+            return too_many(w);
+        }
         // 0071 sp1 — the meter door demands the same token the authorize door checks:
         // the fuel ledger is money-shaped truth, and an open write door let anyone
         // credit or debit any subject. The token's own subject is the only line a
@@ -1539,6 +1567,36 @@ async fn organs_pin(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl
     .unwrap()
 }
 
+/// 0071 sp4 — one knock by `key` now. Fixed one-minute window, per identity;
+/// a refused knock names how long to wait and leaks nothing about anyone
+/// else's traffic. The Rust twin of orreth_sim/traffic.py's tick().
+fn knock(app: &Arc<App>, key: &str) -> Result<(), i64> {
+    if app.rate_per_min == 0 {
+        return Ok(());
+    }
+    let now = now_s();
+    let mut book = app.rate.lock().unwrap();
+    if book.len() > 4096 {
+        book.retain(|_, v| now - v.0 < 60);
+    }
+    let e = book.entry(key.to_string()).or_insert((now, 0));
+    if now - e.0 >= 60 {
+        *e = (now, 1);
+        return Ok(());
+    }
+    if e.1 < app.rate_per_min {
+        e.1 += 1;
+        return Ok(());
+    }
+    Err((e.0 + 60 - now).max(1))
+}
+
+fn too_many(wait: i64) -> (StatusCode, Json<Value>) {
+    (StatusCode::TOO_MANY_REQUESTS,
+     Json(json!({"error": "the door is busy for you — try again shortly",
+                 "retry_after_s": wait})))
+}
+
 /// 0071 sp1 — may this status follow that one? The queue's transitions become law:
 /// terminal states (done · denied · cancelled) are immutable, `proved` may only answer a
 /// `challenged`, and an unknown status never lands. Same-status re-resolution stays legal
@@ -1572,6 +1630,10 @@ fn transition_legal(from: &str, to: &str) -> bool {
 async fn requests_resolve(State(app): State<Arc<App>>, Json(body): Json<Value>) -> impl IntoResponse {
     // the sync postgres client drives its own runtime — keep it off the async workers
     tokio::task::spawn_blocking(move || {
+        // 0071 sp4 — the traffic law: this caller's knock, metered
+        if let Err(w) = knock(&app, body["token"]["subject"].as_str().or(body["did"].as_str()).unwrap_or("proved-lane")) {
+            return too_many(w);
+        }
         let new_status = body["status"].as_str().unwrap_or("done").to_string();
         let tokenless_proof_lane = body.get("token").is_none()
             && new_status == "proved"
@@ -1647,6 +1709,10 @@ async fn requests_submit(State(app): State<Arc<App>>, Json(mut req): Json<Value>
     }
     // the sync postgres client drives its own runtime — keep it off the async workers
     tokio::task::spawn_blocking(move || {
+        // 0071 sp4 — the traffic law: this caller's knock, metered
+        if let Err(w) = knock(&app, req["did"].as_str().unwrap_or("anonymous")) {
+            return too_many(w);
+        }
         let node_scope = app.universe.lock().unwrap().nodes[0].scope.clone();
         let mut q = app.requests.lock().unwrap();
         // the id carries the submission second: even with the persisted queue, a daemon

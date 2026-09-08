@@ -128,7 +128,7 @@ from orreth_sim import (atlas, bell as bell_mod, continuity, crypto, dials,
                         fingertip, fuel as fuel_mod, improver, market, markers,
                         meaning, mirror, node, observatory, parlor, profile,
                         purge, seeds, serials, shipyard, speech,
-                        thumb as thumb_mod, vera)
+                        thumb as thumb_mod, traffic, vera)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -643,6 +643,8 @@ def lib_charter(port: int, scope: str) -> None:
 
 
 _RESOLVER_TOKEN: dict = {}
+_TRAFFIC_BOOK: dict = {}     # 0071 sp4 — key -> [window_start, count]; the knock ledger
+_TRAFFIC_LOCK = threading.Lock()
 
 
 def resolver_token() -> dict:
@@ -2221,7 +2223,39 @@ def embed_door() -> None:
 
         def do_POST(self):
             ln = int(self.headers.get("content-length") or 0)
+            # 0071 sp4 — THE TRAFFIC LAW at the worker's doors, before a byte
+            # is read: a deliberate body ceiling where an accidental default
+            # used to live, and knocking metered per identity inside a
+            # one-minute window. Both ceilings are governed dials.
+            if ln > dial_value("body-limit-kb") * 1024:
+                self.send_response(413)
+                self.send_header("content-type", "application/json")
+                self.send_header("access-control-allow-origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps(
+                    {"error": "the request body exceeds the door's ceiling "
+                              "(the body-limit-kb dial)"}).encode())
+                return
             raw = self.rfile.read(ln) or b"{}"
+            try:
+                _p0 = json.loads(raw)
+            except Exception:
+                _p0 = {}
+            _tkey = (str(_p0.get("did") or "") if isinstance(_p0, dict) else "") \
+                or f"route:{self.path.split('?')[0]}"
+            with _TRAFFIC_LOCK:
+                _ok, _wait = traffic.tick(_TRAFFIC_BOOK, _tkey, time.time(),
+                                          dial_value("rate-per-min"))
+            if not _ok:
+                self.send_response(429)
+                self.send_header("content-type", "application/json")
+                self.send_header("access-control-allow-origin", "*")
+                self.send_header("retry-after", str(_wait))
+                self.end_headers()
+                self.wfile.write(json.dumps(
+                    {"error": "the door is busy for you — try again shortly",
+                     "retry_after_s": _wait}).encode())
+                return
             if self.path.split("?")[0] == "/craft":
                 # the supply line's LEASED lane (2026-08-23 — 0045 law 8):
                 # a token is a JSON blob, so the leased ask rides POST;
@@ -4689,6 +4723,23 @@ def tool_invoke(payload: dict) -> dict:
     did = str(payload.get("did") or "anonymous-consumer")
     port = int(payload.get("port") or 4520)
     scope = FLOOR_SCOPES.get(port) or ""
+    # 0071 sp4 — the tool door wears the craft door's posture: in prod the
+    # caller presents the SAME becky-chained lease that fuels its thoughts,
+    # and the subject must BE the claimant; dev serves tokenless with a loud
+    # confession. One face on every miss.
+    _tok = payload.get("token")
+    if _tok:
+        try:
+            _ROOT.verify_token(_tok)
+            if _tok.get("subject") != did:
+                return REFUSED
+        except Exception:
+            return REFUSED
+    elif ORRETH_MODE == "prod":
+        return REFUSED
+    else:
+        print(f"  ↳ tool door: tokenless {did[:24]}… served under dev grace — "
+              "in prod this door refuses (0071 sp4)")
     try:
         roster = (call(port, "GET", "/farm") or {}).get("services", [])
     except Exception:
