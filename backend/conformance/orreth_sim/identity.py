@@ -78,6 +78,26 @@ class Becky:
             cert["sig"] = parent.kp.sign(parent.did, cert)
             self.chain = parent.chain + [cert]
 
+    # ---- the delegate credential (0071 sp3 — KCR-0001's key custody) ------
+    @classmethod
+    def adopt(cls, scope: str, nanda: Nanda, kp: crypto.KeyPair,
+              chain: list[dict]) -> "Becky":
+        """Stand a becky up from a PRE-SIGNED delegation credential — the root
+        signed the cert once, offline, and never enters this process. The
+        adopted becky ISSUES (leases, pens) with the chain it was given; it
+        does not verify tokens (verification is the plane's job, against the
+        pinned root). This is the publishable join door's whole custody story:
+        the door holds its own seed; the root stays in the operator's safe."""
+        self = cls.__new__(cls)
+        self.scope, self.nanda, self.parent = scope, nanda, None
+        self.kp = kp
+        self.did = crypto.did_key_for(kp.public)
+        if not chain or chain[-1].get("subject") != self.did:
+            raise AuthzError("the credential's last cert must name this key's own DID")
+        nanda.register(self.did, kp.public)
+        self.chain = list(chain)
+        return self
+
     # ---- identities -------------------------------------------------------
     def issue_identity(self, role: str, scope: str, *, resident: bool = False,
                        lineage: str | None = None) -> tuple[dict, crypto.KeyPair]:
@@ -156,3 +176,21 @@ class Becky:
         last = json.loads(token["chain"][-1])
         if last.get("audience") != token["audience"] or last.get("subject") != token["subject"]:
             raise AuthzError("chain does not bind token")
+
+
+def mint_delegation(root: "Becky", scope: str) -> dict:
+    """0071 sp3 — the ONE offline signing that makes a join door publishable:
+    the root mints a delegate keypair and signs its credential, ONCE. The
+    returned bundle carries the delegate's seed and its cert — never the
+    root's key. `Becky.adopt` stands the door up from exactly this bundle;
+    the plane goes on verifying every chain against the pinned root."""
+    if root.parent is not None:
+        raise AuthzError("only the root mints a door's credential")
+    if not is_within(scope, root.scope):
+        raise AuthzError("delegate scope must be within the root's universe")
+    kp = crypto.KeyPair()
+    cert = {"issuer": root.did, "subject": crypto.did_key_for(kp.public),
+            "scope": scope, "at": NOW()}
+    cert["sig"] = root.kp.sign(root.did, cert)
+    return {"scope": scope, "seed": crypto._b64e(kp.seed),
+            "cert": cert, "root_did": root.did}

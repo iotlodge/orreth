@@ -200,10 +200,34 @@ wears the variant (the arm-tag pattern), the envelope carries it typed, and ever
    person registry; attributes are received and confessed unhonored until the registry
    dive (0065) gives them meaning; the librarian window's visual selector is Dive
    VIII glass — the door it will ride is this one.*
-3. **sp3 — The join door ships.** The adopt-a-credential constructor; the standalone
-   door; welcomes as records; becky's admission record; the compose example grown.
-   Proven by a stranger-shaped walk: published artifacts only, one governed join, twice
-   (the second on the standing welcome).
+3. **sp3 — The join door ships.** ✅ **LANDED 2026-09-08 — KCR-0001's machinery, built
+   and walked.** The pieces: `Becky.adopt` + `mint_delegation` in the reference (the
+   root signs a delegate's credential ONCE, offline; the returned bundle carries the
+   delegate's seed and cert — never the root's key; an adopted becky issues, the plane
+   verifies against the pinned root as always); the SDK's `orreth_agent/joindoor.py` —
+   `mint` (run where the root lives) · `serve` (the desk twin: challenge, verify,
+   stage, mint; a restart re-challenges; an approval without a proven key mints
+   nothing) · `pending`/`approve` (the operator's word from their own terminal); the
+   SDK's crypto grew its verify half (vendored). Two honesty upgrades from birth: **the
+   STANDING WELCOME is a signed record on the floor** (the standalone door has no
+   private file at all; the rig worker now writes the record beside its cache) and
+   **becky's side writes the ADMISSION record** — the joiner's birth memory stops being
+   the only witness. *Proven by the stranger walk: a fresh world from the door + the
+   SDK alone (no worker, no repo imports beyond the package) — credential minted with
+   the root key never leaving its file; one governed join end to end (challenged →
+   proved → staged → the operator's CLI word → a lease that WORKS: remember + recall);
+   a second join honored by the welcome RECORD with no click owed — and the walk's own
+   find fixed in the hour: the final resolution had been clobbering the "approved by
+   your standing welcome" line, so the WHY now survives the minting, door and rig
+   both. Suite 379→384 (five delegation laws: the bundle carries no root key; the
+   adopted door's issues verify at the root; a foreign root's credential refuses; a
+   cert for someone else's key refuses; only the root mints a door).* *Honest
+   remainders → the dive's close, per the release-alignment law: the SDK republishes to
+   PyPI carrying the door; the compose example and the book's first-world page grow the
+   door service; the GHCR image republishes with sp1's locked plane. A session note for
+   the record: the safeguard classifier flagged one in-flight chat message during this
+   spoonful's build (`[cyber]` — the hardening vocabulary reading as offense); no work
+   was lost, no other model ran, and the prose stays matter-of-fact hereafter.*
 4. **sp4 — The traffic law.** Per-DID limits + deliberate body limits at plane and worker
    doors; dials; the API posture (prod refuses tokenless everywhere the craft door
    already does).

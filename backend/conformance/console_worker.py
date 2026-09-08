@@ -1439,12 +1439,14 @@ def _welcome_load() -> dict:
         return {}
 
 
-def _welcome_mark(did: str, scope: str, req_id: str) -> None:
+def _welcome_mark(did: str, scope: str, req_id: str, port: int | None = None) -> None:
     """THE STANDING WELCOME (JB's tenth-recycle frustration, 2026-08-16:
     "thought this was addressed already?"): the human's approval of a SELF
     to a FLOOR is durable — the key is still proven afresh at every join
     (the nonce challenge never sleeps), but the final click is remembered.
-    becky's book, beside the down-ledger; clearing the file rests it."""
+    0071 sp3: the click is now ALSO a signed record on the floor — becky's
+    own testimony, the same truth the standalone join door trusts; the file
+    stays as the rig's fast cache until it retires."""
     d = _welcome_load()
     d[f"{did}|{scope}"] = {"req": req_id, "at": NOW()}
     try:
@@ -1452,6 +1454,17 @@ def _welcome_mark(did: str, scope: str, req_id: str) -> None:
         _WELCOME_LEDGER.write_text(json.dumps(d, indent=1, sort_keys=True))
     except Exception:
         pass
+    if port is not None:
+        try:
+            bk = becky_for(scope)
+            rec = make_memory({"did": bk.did, "scope": scope}, bk.kp, scope,
+                              {"welcome": {"did": did, "scope": scope,
+                                           "req": req_id, "by": bk.did,
+                                           "at": NOW()}},
+                              kind="semantic", tags=["welcome", "join"])
+            call(port, "POST", "/records", rec)
+        except Exception:
+            pass
 
 
 def _welcome_has(did: str, scope: str) -> dict | None:
@@ -14279,8 +14292,16 @@ def main() -> None:
                                                      "set capacity; your word still "
                                                      "decides")}}
                                 if status == "done":
+                                    # the WHY survives the minting (0071 sp3):
+                                    # a standing welcome's line, kept on the
+                                    # final resolution instead of clobbered
+                                    _prior = (r.get("result")
+                                              if isinstance(r.get("result"), dict)
+                                              else {}) or {}
                                     result = {**result, "scope": scope,
-                                              "granted_by": becky_for(scope).did}
+                                              "granted_by": becky_for(scope).did,
+                                              **({"approved_by": _prior["approved_by"]}
+                                                 if _prior.get("approved_by") else {})}
                                     # 0071 sp1 — a CAPABILITY SPECIALIST (the manifest's
                                     # own resident, welcomed at this floor) re-mints with
                                     # the resolve grant beside retrieve: it answers the
@@ -14317,9 +14338,30 @@ def main() -> None:
                                                  "renews it; the self, its name, "
                                                  "and its diary survive")}
                                     # the human's click becomes durable —
-                                    # the same self rejoins across recycles
+                                    # the same self rejoins across recycles;
+                                    # 0071 sp3: welcome AND admission land as
+                                    # becky's own signed records — her side
+                                    # finally writes what her door granted
                                     _welcome_mark(str(r.get("did") or ""),
-                                                  scope, r["id"])
+                                                  scope, r["id"], port)
+                                    try:
+                                        _bk = becky_for(scope)
+                                        _adm = make_memory(
+                                            {"did": _bk.did, "scope": scope},
+                                            _bk.kp, scope,
+                                            {"admission": {
+                                                "did": str(r.get("did") or ""),
+                                                "name": _jname,
+                                                "scope": scope, "req": r["id"],
+                                                "lease_expires":
+                                                    result["lease_terms"]["expires"],
+                                                "granted_by": _bk.did,
+                                                "at": NOW()}},
+                                            kind="semantic",
+                                            tags=["admission", "join"])
+                                        call(port, "POST", "/records", _adm)
+                                    except Exception:
+                                        pass
                                 call(port, "POST", "/requests/resolve",
                                      {"id": r["id"], "status": status, "result": result})
                                 who = r.get("name") or (r.get("did") or "?")[:22] + "…"
