@@ -27,6 +27,15 @@ ASK_SIG_KEYS = ("did", "text", "at")
 REFUSAL = "request cannot be served under this capability"
 
 
+def guardrails_version() -> str:
+    """The guardrail-set version the ask-cache keys on (0071 sp5). One truth,
+    one place: dive 0068's build replaces this body with the real set's
+    version (and grows the envelope's guardrails field to match) — and every
+    cached answer given under the old law revalidates by construction,
+    because the version lives inside the cache key."""
+    return "pre-0068"
+
+
 def make_ask(kp: crypto.KeyPair, did: str, text: str, *,
              at: str, variant: str | None = None,
              attributes: dict | None = None) -> dict:

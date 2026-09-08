@@ -124,10 +124,10 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import (atlas, bell as bell_mod, continuity, crypto, dials,
-                        fingertip, fuel as fuel_mod, improver, market, markers,
-                        meaning, mirror, node, observatory, parlor, profile,
-                        purge, seeds, serials, shipyard, speech,
+from orreth_sim import (askcache, atlas, bell as bell_mod, continuity, crypto,
+                        dials, fingertip, fuel as fuel_mod, improver, market,
+                        markers, meaning, mirror, node, observatory, parlor,
+                        profile, purge, seeds, serials, shipyard, speech,
                         thumb as thumb_mod, traffic, vera)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
@@ -645,6 +645,8 @@ def lib_charter(port: int, scope: str) -> None:
 _RESOLVER_TOKEN: dict = {}
 _TRAFFIC_BOOK: dict = {}     # 0071 sp4 — key -> [window_start, count]; the knock ledger
 _TRAFFIC_LOCK = threading.Lock()
+_ASK_CACHE: dict = {}        # 0071 sp5 — the ask-cache book; entries lean on exchange records
+_ASK_CACHE_LOCK = threading.Lock()
 
 
 def resolver_token() -> dict:
@@ -6846,6 +6848,42 @@ def on_ask(port: int, scope: str, r: dict) -> None:
               "result": {"error": f"unknown variant «{variant}» — the rows "
                                   f"standing today: {rows} (or leave it to Auto)"}})
         return
+    # 0071 sp5 — THE ASK-CACHE: the same words on the same floor under the same
+    # guardrail set may serve again inside the human's TTL dial — every hit
+    # confessed in the envelope, and only while the exchange record the answer
+    # leans on still STANDS: the read-side alive check is how purge and recall
+    # reach this projection (no hooks, by construction). TTL 0 closes the cache.
+    ttl = int(dial_value("ask-cache-ttl-s", port, scope) or 0)
+    ckey = askcache.key(scope, text, variant or "auto",
+                        askdoor.guardrails_version())
+    if ttl > 0:
+        with _ASK_CACHE_LOCK:
+            hit = askcache.get(_ASK_CACHE, ckey, time.time(), ttl)
+        if hit is not None:
+            try:
+                call(port, "GET", f"/records/{hit['ref']}/body")
+                alive = True
+            except Exception:
+                alive = False
+            if alive:
+                env = dict(hit["envelope"])
+                env["cached"] = {
+                    "age_s": int(time.time() - hit["at"]), "hits": hit["hits"],
+                    "note": "served from the ask-cache — same words, same "
+                            "guardrails, same floor; the original exchange "
+                            "stands as the judgeable ref, and retrieval was "
+                            "not run again"}
+                call(port, "POST", "/requests/resolve",
+                     {"id": r["id"], "status": "done",
+                      "result": {"envelope": env}})
+                print(f"  ↳ ask {r['id']}: served from the cache — age "
+                      f"{env['cached']['age_s']}s, hit {hit['hits']}, the "
+                      f"record checked alive first")
+                return
+            with _ASK_CACHE_LOCK:
+                askcache.evict_ref(_ASK_CACHE, hit["ref"])
+            print(f"  ↳ ask {r['id']}: a cached answer died with its record "
+                  f"— answering fresh")
     s = wire_stacks_answer(port, scope, text,
                            origin=f"ask:{did[:22]}", variant=variant)
     if s is None:
@@ -6873,6 +6911,11 @@ def on_ask(port: int, scope: str, r: dict) -> None:
         attributes=r.get("attributes") if isinstance(r.get("attributes"), dict)
         else None,
         confession=confession)
+    if ttl > 0 and confession is None:
+        # grace-served answers never replay — a cached confession would be
+        # someone else's; only clean, signed-lane answers earn a shelf life
+        with _ASK_CACHE_LOCK:
+            askcache.put(_ASK_CACHE, ckey, env, rec["id"], time.time())
     call(port, "POST", "/requests/resolve",
          {"id": r["id"], "status": "done", "result": {"envelope": env}})
     print(f"  ↳ ask {r['id']}: answered by «{s['variant']}» — "

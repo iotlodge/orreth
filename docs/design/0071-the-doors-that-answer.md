@@ -252,8 +252,31 @@ wears the variant (the arm-tag pattern), the envelope carries it typed, and ever
    is accepted and named; the worker's book is per-process (a multi-worker floor would
    need a shared book — no such floor exists); per-scope or per-door ceilings wait for
    demand.*
-5. **sp5 — The cache.** The semantic ask-cache as a projection: hit/revalidate/purge
-   proven, guardrail-version revalidation live.
+5. **sp5 — The cache.** ✅ **LANDED 2026-09-08 — an answer serves again only inside the
+   human's word, always confessed, never a second truth.** The law
+   (`orreth_sim/askcache.py`): an answer already given may serve again ONLY for the same
+   words (canonicalized — case folded, whitespace collapsed), the same variant, the same
+   floor, and the same guardrail-set version — all four live inside the cache key, so a
+   changed guardrail set revalidates BY CONSTRUCTION, no invalidation hooks. The cache
+   is a projection, never a second truth (0065 §3.5): every entry leans on its signed
+   exchange record by whole ref, and the worker checks the record ALIVE read-side before
+   serving any hit — purge and recall reach the cache the way dial bounds are enforced,
+   at the moment of the read. Every hit is confessed in the envelope (`cached: {age_s,
+   hits, note}`); the original exchange stands as the judgeable ref. The TTL is the
+   human's dial (`ask-cache-ttl-s`, genesis 300, ladder-homed — freshness is a floor's
+   own word; 0 is the operator's closed cache), and grace-served answers never cache.
+   `askdoor.guardrails_version()` is the one seam 0068's build replaces. *Proven live on
+   the rig: scout-from-outside's cold ask answered fresh; the SAME words in different
+   clothes (case, whitespace) served from the cache with the confession and the original
+   exchange ref; the dial turned to 0 through the one-motion door and the same words
+   answered FRESH with a new exchange; canon restored (300). Suite 390→398 (eight cache
+   laws, purge-reach among them).* *Honest remainders: matching is same-words today —
+   meaning-similar serving (one question's answer for a merely similar question) is a
+   named horizon awaiting its own lock, a correctness risk a human weighs; the live
+   guardrail turn arrives with 0068 (the law is suite-proven: the version lives in the
+   key); a live purge is a human's gated click, so purge reach is proven by the
+   read-side law in the suite; the book is per-process like the traffic book's;
+   per-asker exchange records on cross-asker hits wait for demand.*
 
 ## 7. The honest boundary rows this dive moves
 

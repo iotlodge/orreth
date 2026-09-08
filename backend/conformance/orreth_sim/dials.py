@@ -127,6 +127,23 @@ DIALS_V1 = {
                "today with room to breathe",
         "horizon": "takes hold at the next request",
     },
+    "ask-cache-ttl-s": {
+        "type": "int", "unit": "seconds an answer may serve again", "min": 0,
+        "max": 86400, "genesis": 300, "home": "ladder",
+        "governs": "how long the ask door may answer the SAME words on the "
+                   "same floor from its cache instead of running retrieval "
+                   "again (0071 sp5) — every hit is confessed in the "
+                   "envelope, dies with its exchange record, and "
+                   "revalidates when the guardrail set changes; 0 closes "
+                   "the cache (every ask answered fresh)",
+        "blast": "too long serves yesterday's answer after today's records "
+                 "landed; 0 spends full retrieval on every repeat of the "
+                 "same question",
+        "why": "five minutes serves the repeat-ask burst (a canvas retry, "
+               "a fleet of agents asking alike) while staying well inside "
+               "any human's sense of «current»",
+        "horizon": "takes hold within a minute (the dial read's own warmth)",
+    },
     "recall-days": {
         "type": "int", "unit": "days of look-back", "min": 30, "max": 3650,
         "genesis": 365, "home": "universe",
