@@ -29,6 +29,15 @@ import urllib.request
 from datetime import date, timedelta
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 4502
+
+def _pen():
+    """0071 sp1 — the resolve door demands the pen: a root-chained token whose
+    grants carry the resolve action. The demo mints it exactly as the worker does."""
+    from orreth_sim.identity import Becky, Nanda
+    from smoke_orrethd import root_keypair
+    _root = Becky("u:demo", Nanda(), universe_name="demo", kp=root_keypair())
+    return _root.issue_token(_root.did, "u:demo", [{"action": "resolve", "space": "queue"}])
+
 BASE = f"http://127.0.0.1:{PORT}"
 
 
@@ -59,7 +68,7 @@ def wait_status(rid: str, statuses: set[str], timeout: int = 40) -> dict:
 
 
 def approve(rid: str) -> None:
-    call("POST", "/requests/resolve", {"id": rid, "status": "approved"})
+    call("POST", "/requests/resolve", {"token": _pen(), "id": rid, "status": "approved"})
 
 
 def stall(mid: str) -> dict | None:

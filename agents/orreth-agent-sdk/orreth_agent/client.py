@@ -174,7 +174,10 @@ class FieldClient:
         return grant if status == 200 else None
 
     def meter(self, grant: dict, *, klass: str, tokens: int, usd: float = 0.0, model: str = "") -> None:
+        # 0071 sp1 — the meter door demands the same lease the authorize door checked:
+        # only your own line may be reconciled, and only with your credential in hand.
         self._call("POST", "/model/meter", {
+            "token": self.token,
             "subject": grant.get("subject", self.did), "est_tokens": grant.get("est_tokens", 0),
             "tokens": tokens, "usd": round(usd, 6), "model": model or grant.get("model", ""),
             "class": klass})

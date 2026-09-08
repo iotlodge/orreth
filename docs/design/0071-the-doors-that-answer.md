@@ -153,9 +153,27 @@ wears the variant (the arm-tag pattern), the envelope carries it typed, and ever
 
 ## 6. The spoonfuls (proposed order)
 
-1. **sp1 — The resolve door locks.** Authenticated resolution + validated statuses +
-   `/model/meter` authenticated; the glass rides the worker's seat. Suite: a forged
-   approval refused with one face; a forged lease result impossible.
+1. **sp1 — The resolve door locks.** ✅ **LANDED 2026-09-08, the build season's first
+   brick.** The two-lane law in the plane (tokenless = the joiner's nonce answer alone,
+   result keys held to {nonce, proof}; everything else demands the root-chained pen);
+   transitions became law (terminal statuses immutable — "a settled word is never
+   rewritten"); `/model/meter` demands the authorize door's own token with subject match,
+   and the credential is stripped before the ledger keeps the entry. **The pen is a NEW
+   narrow action — `resolve` on the `queue` space — added to the sacred token grammar by
+   JB's explicit rule-9 word (2026-09-08)**, so the queue's pen never requires `govern`
+   (the shred-lever class). The worker mints its pen once at the one call() choke point
+   (100+ resolve sites untouched); the glass rides the worker's new `/resolve` door;
+   capability specialists and trusted crew (the studio) re-mint with the pen at becky's
+   welcome while strangers stay retrieve-only; the four demo reels carry the pen; the SDK
+   meters with its own lease. *Proven live on a fresh plane: five forgeries refused with
+   the one face and the card unmoved · the pen resolves · the proved lane serves ·
+   denied→approved refused with its teaching · the meter's three cases. 371 Python + all
+   Rust green; the register row landed in this commit.* *Honest remainders → later
+   spoonfuls: filing still unauthenticated (sp2's ask door + sp4 bind the asker);
+   done→done idempotent races now surface as 409s (rare, loud, acceptable); the bare-
+   kernel Inbox's approve buttons now honestly require the worker's road — the book's
+   first-world page mentions Approve and gets its note at the dive's close per the
+   release-alignment law.*
 2. **sp2 — The ask door.** `kind:"ask"` + the envelope + SDK `ask()`; the librarian
    selector rides it; the variant/choice/guardrail fields served whole. Suite: an agent
    asks and reads the envelope; the choice ref opens.

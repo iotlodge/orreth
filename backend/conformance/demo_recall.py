@@ -33,6 +33,15 @@ from orreth_sim.node import make_memory
 from smoke_orrethd import root_keypair
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 4502
+
+def _pen():
+    """0071 sp1 — the resolve door demands the pen: a root-chained token whose
+    grants carry the resolve action. The demo mints it exactly as the worker does."""
+    from orreth_sim.identity import Becky, Nanda
+    from smoke_orrethd import root_keypair
+    _root = Becky("u:demo", Nanda(), universe_name="demo", kp=root_keypair())
+    return _root.issue_token(_root.did, "u:demo", [{"action": "resolve", "space": "queue"}])
+
 BASE = f"http://127.0.0.1:{PORT}"
 SCOPE = "u:demo/e:cloud/f:prod"
 STUB_PORT = 9923
@@ -112,7 +121,7 @@ def main() -> None:
                 "manifest": [{"name": "almanac-lookup", "description": "field almanac"}],
                 "text": f"plant {ALMANAC}"})
     wait_request(req["id"], "staged")
-    call("POST", "/requests/resolve", {"id": req["id"], "status": "approved"})
+    call("POST", "/requests/resolve", {"token": _pen(), "id": req["id"], "status": "approved"})
     say(f"  {ALMANAC} planted and approved — its DID is {ALMANAC_DID}\n")
 
     say("── II. the almanac speaks; the Window files it — quarantined ──")
@@ -146,7 +155,7 @@ def main() -> None:
                {"kind": "service", "action": "decom", "name": ALMANAC, "discredit": True,
                 "text": f"decommission {ALMANAC} + discredit the source"})
     wait_request(dec["id"], "staged")
-    call("POST", "/requests/resolve", {"id": dec["id"], "status": "approved"})
+    call("POST", "/requests/resolve", {"token": _pen(), "id": dec["id"], "status": "approved"})
     say("  the human approves: decommission + DISCREDIT — consequence had waited (0012)")
     walk = wait_recall(t0)
     say(f"  charlotte handed the queue: “{walk.get('text', '')}”")

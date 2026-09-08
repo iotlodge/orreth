@@ -36,8 +36,14 @@
     "Grant": {
       "type": "object",
       "properties": {
-        "action": { "enum": ["retrieve", "write", "distill", "interview", "govern", "transfer", "issue"] },
-        "space": { "$ref": "common.schema.json#/$defs/Space" },
+        "action": { "enum": ["retrieve", "write", "distill", "interview", "govern", "transfer", "issue", "resolve"] },
+        "space": {
+          "oneOf": [
+            { "$ref": "common.schema.json#/$defs/Space" },
+            { "const": "queue",
+              "description": "0071 sp1 — the resolve action's one space: the request queue. A deliberately narrow pen, so answering the queue never requires govern (the shred-lever class). JB's rule-9 approval, 2026-09-08." }
+          ]
+        },
         "time": { "$ref": "common.schema.json#/$defs/TimeWindow", "description": "How deep in time this grant reaches." },
         "visibility": {
           "type": "array",

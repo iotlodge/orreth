@@ -856,12 +856,29 @@ async fn model_authorize(State(app): State<Arc<App>>, Json(req): Json<Value>) ->
 
 async fn model_meter(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
     tokio::task::spawn_blocking(move || {
+        // 0071 sp1 — the meter door demands the same token the authorize door checks:
+        // the fuel ledger is money-shaped truth, and an open write door let anyone
+        // credit or debit any subject. The token's own subject is the only line a
+        // caller may reconcile — one face on every miss.
+        {
+            let token = &req["token"];
+            let verified = { app.universe.lock().unwrap().verify_token(token).is_ok() };
+            let subject_match = token["subject"].as_str().is_some()
+                && token["subject"] == req["subject"];
+            if !verified || !subject_match {
+                bump(&app, "refusals");
+                return (StatusCode::FORBIDDEN,
+                        Json(json!({"error": "request cannot be served under this capability"})));
+            }
+        }
         let mut m = app.model.lock().unwrap();
         let subject = req["subject"].as_str().unwrap_or("").to_string();
         let remaining = m.reconcile(&subject,
                                     req["est_tokens"].as_i64().unwrap_or(0),
                                     req["tokens"].as_i64().unwrap_or(0));
         let mut entry = req.clone();
+        // the credential proved the door; it never enters the ledger (0059's law, applied)
+        entry.as_object_mut().map(|m| m.remove("token"));
         entry["at"] = json!(now_iso());
         if let Some(mid) = entry["model"].as_str() {
             if let Some(stall) = m.stalls.get_mut(mid) {
@@ -1522,9 +1539,58 @@ async fn organs_pin(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl
     .unwrap()
 }
 
+/// 0071 sp1 — may this status follow that one? The queue's transitions become law:
+/// terminal states (done · denied · cancelled) are immutable, `proved` may only answer a
+/// `challenged`, and an unknown status never lands. Same-status re-resolution stays legal
+/// for non-terminal states (idempotent updates: a re-staged card, a refreshed package).
+fn transition_legal(from: &str, to: &str) -> bool {
+    if matches!(from, "done" | "denied" | "cancelled") {
+        return false; // a settled word is never rewritten — supersede with a new request
+    }
+    if from == to {
+        return true;
+    }
+    match to {
+        "challenged" => matches!(from, "pending" | "proved" | "approved"),
+        "proved" => from == "challenged",
+        "staged" => matches!(from, "pending" | "proved"),
+        "approved" => matches!(from, "pending" | "proved" | "staged"),
+        "riding" => from == "pending",
+        "denied" | "cancelled" => true,
+        "done" => matches!(from, "pending" | "proved" | "staged" | "approved" | "riding"),
+        _ => false,
+    }
+}
+
+/// 0071 sp1 — THE RESOLVE DOOR LOCKS. Two lanes, one law:
+/// - the TOKENLESS lane exists for exactly one step: a joiner answering becky's nonce
+///   (`challenged → proved`, result carrying only {nonce, proof}) — harmless by design,
+///   because the desk re-verifies against its OWN nonce and re-challenges anything odd;
+/// - every other resolution is a PRIVILEGED act: a token chained to the pinned root whose
+///   grants carry the `resolve` action. A forged approval, a forged lease result, and a
+///   status invented from thin air all refuse — the first two with the one face.
 async fn requests_resolve(State(app): State<Arc<App>>, Json(body): Json<Value>) -> impl IntoResponse {
     // the sync postgres client drives its own runtime — keep it off the async workers
     tokio::task::spawn_blocking(move || {
+        let new_status = body["status"].as_str().unwrap_or("done").to_string();
+        let tokenless_proof_lane = body.get("token").is_none()
+            && new_status == "proved"
+            && body.get("result").map_or(true, |res| {
+                res.as_object().map_or(false, |m| m.keys().all(|k| k == "nonce" || k == "proof"))
+            });
+        if !tokenless_proof_lane {
+            // the privileged lane: verify the chain, then demand the resolve grant
+            let token = &body["token"];
+            let verified = { app.universe.lock().unwrap().verify_token(token).is_ok() };
+            let granted = token["grants"].as_array().map_or(false, |gs| {
+                gs.iter().any(|g| g["action"] == "resolve")
+            });
+            if !verified || !granted {
+                bump(&app, "refusals");
+                return (StatusCode::FORBIDDEN,
+                        Json(json!({"error": "request cannot be served under this capability"})));
+            }
+        }
         // scope first, queue second — never hold both locks (universe→requests is the
         // ordering elsewhere; inverting it here would be the deadlock)
         let node_scope = app.universe.lock().unwrap().nodes[0].scope.clone();
@@ -1532,7 +1598,14 @@ async fn requests_resolve(State(app): State<Arc<App>>, Json(body): Json<Value>) 
         let id = body["id"].as_str().unwrap_or("").to_string();
         for (seq, r) in q.iter_mut().enumerate() {
             if r["id"] == id {
-                r["status"] = body.get("status").cloned().unwrap_or(json!("done"));
+                let from = r["status"].as_str().unwrap_or("pending").to_string();
+                if !transition_legal(&from, &new_status) {
+                    // the caller is already past the door here; the teaching is safe
+                    return (StatusCode::CONFLICT,
+                            Json(json!({"error":
+                                format!("the queue refuses {from} → {new_status} — a settled word is never rewritten")})));
+                }
+                r["status"] = json!(new_status);
                 if let Some(n) = body.get("result") { r["result"] = n.clone(); }
                 // write-through: the queue survives the daemon (0022 §8) — a resolution
                 // (a lease, a denial, a human's answer) must not vanish in a crash

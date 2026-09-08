@@ -642,7 +642,32 @@ def lib_charter(port: int, scope: str) -> None:
           f"{len(roster['seats'])} seat(s)")
 
 
+_RESOLVER_TOKEN: dict = {}
+
+
+def resolver_token() -> dict:
+    """0071 sp1 — the worker's resolve credential: a root-chained token whose grants
+    carry the `resolve` action, minted once per process from becky's own seat (the
+    door-keeper resolves). The plane's resolve door now refuses anything less — a
+    forged approval or a forged lease result meets the one face."""
+    if not _RESOLVER_TOKEN:
+        _RESOLVER_TOKEN["token"] = _ROOT.issue_token(
+            _ROOT.did, "u:demo", [{"action": "resolve", "space": "queue"}])
+    return _RESOLVER_TOKEN["token"]
+
+
 def call(port: int, method: str, path: str, payload=None):
+    # 0071 sp1 — the one choke point every worker resolution already rides: the
+    # resolver credential attaches here so 100+ call sites stay untouched. The
+    # joiner's tokenless proved lane never passes through this helper.
+    if path == "/requests/resolve" and isinstance(payload, dict):
+        payload.setdefault("token", resolver_token())
+    # 0071 sp1 — the meter door now demands the subject's own credential; the worker
+    # (becky's host) mints it at the door for the line it is reconciling, exactly as
+    # it already mints the authorize token upstream. External callers bring their own.
+    if path == "/model/meter" and isinstance(payload, dict) and "token" not in payload:
+        payload["token"] = _BECKY.issue_token(
+            payload.get("subject", ""), SCOPE, [{"action": "retrieve", "space": "self"}])
     req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", method=method,
         data=json.dumps(payload).encode() if payload is not None else None,
         headers={"Content-Type": "application/json"})
@@ -2196,6 +2221,34 @@ def embed_door() -> None:
                     str(p.get("name") or ""), str(p.get("did") or ""),
                     pin=p.get("pin"), token=p.get("token"))).encode()
                 self.send_response(200)
+                self.send_header("content-type", "application/json")
+                self.send_header("access-control-allow-origin", "*")
+                self.end_headers()
+                self.wfile.write(out)
+                return
+            if self.path.split("?")[0] == "/resolve":
+                # 0071 sp1 — the glass rides the worker's seat: the plane's resolve
+                # door now demands a root-chained resolve credential, so the human's
+                # click lands here and the worker forwards it wearing its own token.
+                # The worker remains the trusted host process it always was (it holds
+                # becky); the PUBLISHED surface — the plane — no longer trusts anyone.
+                try:
+                    p = json.loads(raw)
+                    _port = int(p.get("port") or 4500)
+                    body = {"id": str(p.get("id") or ""),
+                            "status": str(p.get("status") or "")}
+                    if p.get("result") is not None:
+                        body["result"] = p["result"]
+                    out = json.dumps(call(_port, "POST",
+                                          "/requests/resolve", body)).encode()
+                    code = 200
+                except urllib.error.HTTPError as e:
+                    out = e.read() or b'{"error":"refused"}'
+                    code = e.code
+                except Exception as e:
+                    out = json.dumps({"error": str(e)[:140]}).encode()
+                    code = 502
+                self.send_response(code)
                 self.send_header("content-type", "application/json")
                 self.send_header("access-control-allow-origin", "*")
                 self.end_headers()
@@ -14121,6 +14174,29 @@ def main() -> None:
                                 if status == "done":
                                     result = {**result, "scope": scope,
                                               "granted_by": becky_for(scope).did}
+                                    # 0071 sp1 — a CAPABILITY SPECIALIST (the manifest's
+                                    # own resident, welcomed at this floor) re-mints with
+                                    # the resolve grant beside retrieve: it answers the
+                                    # desk-asks addressed to it, and the plane's locked
+                                    # resolve door now demands that credential. A
+                                    # stranger's lease stays retrieve-only — external
+                                    # joiners never gain the queue's pen.
+                                    # the kernel's own crew flavors carry the pen too —
+                                    # a named set until entitlements ride the person
+                                    # registry (0070); policy is becky's to hold, and
+                                    # this line IS the policy, on the record in code
+                                    _TRUSTED_CREW = {"studio"}
+                                    _jname = str(r.get("name") or "")
+                                    if _jname and (_jname in _TRUSTED_CREW or any(
+                                            (g.get("resident") == _jname
+                                             and g.get("floor") == scope)
+                                            for g in CAP_GENESIS.values())):
+                                        _rt = becky_for(scope).issue_token(
+                                            str(r.get("did") or ""), scope,
+                                            [{"action": "retrieve", "space": "self"},
+                                             {"action": "resolve", "space": "queue"}],
+                                            budget=fuel_clause())
+                                        result["token"] = _rt
                                     # the lease's terms, legible beside the
                                     # token — expiry is dormancy, never death
                                     _c = (result.get("token") or {}).get(

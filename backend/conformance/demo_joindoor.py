@@ -28,6 +28,15 @@ from orreth_agent.client import FieldClient, JoinRefused  # noqa: E402
 from orreth_sim import crypto  # noqa: E402
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 4502
+
+def _pen():
+    """0071 sp1 — the resolve door demands the pen: a root-chained token whose
+    grants carry the resolve action. The demo mints it exactly as the worker does."""
+    from orreth_sim.identity import Becky, Nanda
+    from smoke_orrethd import root_keypair
+    _root = Becky("u:demo", Nanda(), universe_name="demo", kp=root_keypair())
+    return _root.issue_token(_root.did, "u:demo", [{"action": "resolve", "space": "queue"}])
+
 BASE = f"http://127.0.0.1:{PORT}"
 
 
@@ -78,7 +87,7 @@ def main() -> None:
     say("  becky challenged; wren signed the nonce — key control PROVEN")
     say(f"  and now the door WAITS: “{(staged.get('result') or {}).get('note', '')}”")
     say("  … the human looks at the queue, and admits wren:", 1.2)
-    call("POST", "/requests/resolve", {"id": staged["id"], "status": "approved"})
+    call("POST", "/requests/resolve", {"token": _pen(), "id": staged["id"], "status": "approved"})
     t.join(timeout=30)
     if not result.get("token"):
         raise SystemExit("  wren never got its lease — check the worker log")

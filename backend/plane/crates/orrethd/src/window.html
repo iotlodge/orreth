@@ -3645,8 +3645,8 @@ function renderInbox(q){
   renderInboxDetail();
 }
 async function joinDecide(id,ok){
-  await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
-    body:JSON.stringify({id,status:ok?"approved":"denied"})});
+  await fetch(OBSD+"/resolve",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({port:+(location.port||4500),id,status:ok?"approved":"denied"})});
   paneRelease(id);loadReq();
 }
 /* ── the gate bell + the audience strip (Console/UI pass, JB 2026-07-31):
@@ -3715,8 +3715,8 @@ function miniGate(r,pfx){
 }
 async function mgAnswer(id,pfx){
   const el=$(pfx+id);const t=(el?el.value:"").trim();if(!t)return;
-  await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
-    body:JSON.stringify({id,status:"done",result:{answer:t}})});
+  await fetch(OBSD+"/resolve",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({port:+(location.port||4500),id,status:"done",result:{answer:t}})});
   paneRelease(id);loadReq();
 }
 function gatePop(){GPOP=!GPOP;renderGates()}
@@ -3785,7 +3785,7 @@ async function objDecide(id,ok){
       ...(KF.has(id)?{keep_fresh:true}:{}),
       ...(GC.has(id)?{grow_craft:true}:{})};
   }
-  await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
+  await fetch(OBSD+"/resolve",{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify(body)});
   KF.delete(id);GC.delete(id);
   if(INBSEL===id)INBSEL=null;   /* the inbox tile leaves the wait either way */
@@ -3999,8 +3999,8 @@ async function farmReapprove(name){await fetch(api("/requests"),{method:"POST",h
 async function farmUnallocate(sub){await fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
   body:JSON.stringify({kind:"service",action:"unallocate",subject:sub,text:`release the allocation on ${sub}`})});FSIG="";loadFarm()}
 async function farmDecide(id,ok){
-  await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
-    body:JSON.stringify({id,status:ok?"approved":"denied"})});
+  await fetch(OBSD+"/resolve",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({port:+(location.port||4500),id,status:ok?"approved":"denied"})});
   paneRelease(id);FSIG="";loadFarm();loadReq();
 }
 async function plantTool(){
@@ -4462,8 +4462,8 @@ async function stableRetire(id){
   loadStable();
 }
 async function stableDecide(id,ok){
-  await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
-    body:JSON.stringify({id,status:ok?"approved":"denied"})});
+  await fetch(OBSD+"/resolve",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({port:+(location.port||4500),id,status:ok?"approved":"denied"})});
   paneRelease(id);loadStable();loadReq();
 }
 /* ── THE PARLOR (0020): the audience room. Humans never read the world — they ask
@@ -5415,9 +5415,9 @@ async function capDecide(ev,rid,port,statusWord){
   ev.stopPropagation();
   const host=ev.target.closest(".cap-card,.dk-world");
   const el=host?host.querySelector(".dk-note"):null;
-  try{await fetch(`/requests/resolve`,{method:"POST",
+  try{await fetch(OBSD+"/resolve",{method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({id:rid,status:statusWord})})}catch(e){}
+    body:JSON.stringify({port:+(location.port||4500),id:rid,status:statusWord})})}catch(e){}
   paneRelease(rid);
   if(el)el.textContent=statusWord==="approved"?"your word stands — the world answers in a moment":"held back — nothing changes";
   setTimeout(()=>{DESK=null;(CAPV==="home"?loadDesk():renderCap())},2800)}
@@ -6816,8 +6816,8 @@ async function submitObjective(){
 }
 async function objAnswer(qid){
   const el=nearInput("qa-",qid); const t=(el?el.value:"").trim(); if(!t)return;
-  await fetch(api("/requests/resolve"),{method:"POST",headers:{"content-type":"application/json"},
-    body:JSON.stringify({id:qid,status:"done",result:{answer:t}})});
+  await fetch(OBSD+"/resolve",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({port:+(location.port||4500),id:qid,status:"done",result:{answer:t}})});
   paneRelease(qid);loadReq();loadObjectives(); /* an answer given from the
     inbox pane must refresh the inbox too, not just the objectives */
 }

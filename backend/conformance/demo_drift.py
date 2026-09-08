@@ -34,6 +34,15 @@ from pathlib import Path
 from orreth_sim import crypto, improver
 
 FLOOR = int(sys.argv[1]) if len(sys.argv) > 1 else 4512
+
+def _pen():
+    """0071 sp1 — the resolve door demands the pen: a root-chained token whose
+    grants carry the resolve action. The demo mints it exactly as the worker does."""
+    from orreth_sim.identity import Becky, Nanda
+    from smoke_orrethd import root_keypair
+    _root = Becky("u:demo", Nanda(), universe_name="demo", kp=root_keypair())
+    return _root.issue_token(_root.did, "u:demo", [{"action": "resolve", "space": "queue"}])
+
 UNIVERSE = 4500
 HOME = Path.home() / ".orreth"
 
@@ -117,7 +126,7 @@ def main() -> None:
     row = next((r for r in drift_cards(before) if r["id"] == card["id"]), {})
     if row.get("status") == "staged":
         call(UNIVERSE, "POST", "/requests/resolve",
-             {"id": card["id"], "status": "approved"})
+             {"token": _pen(), "id": card["id"], "status": "approved"})
         say("the word is spoken — the revert walks")
 
     # ---- ACT IV · the silence --------------------------------------------

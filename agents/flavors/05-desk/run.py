@@ -180,20 +180,20 @@ def main() -> int:
                     continue
                 if tk in seen_tk:
                     client._call("POST", "/requests/resolve",
-                                 {"id": r["id"], "status": "done",
+                                 {"token": client.token, "id": r["id"], "status": "done",
                                   "result": f"folded — one walk answers {tk} for "
                                             f"every ask standing"})
                     continue
                 seen_tk.add(tk)
                 if True:
                     client._call("POST", "/requests/resolve",
-                                 {"id": r["id"], "status": "riding",
+                                 {"token": client.token, "id": r["id"], "status": "riding",
                                   "result": f"charles is walking {tk} on your word — "
                                             f"the report lands in the Capabilities pull"})
                     print(f"· the human asked — walking {tk} now (no second gate)")
                     out = pipeline.run(client, tm, th, tf, tk, today, agent=args.name)
                     client._call("POST", "/requests/resolve",
-                                 {"id": r["id"], "status": "done",
+                                 {"token": client.token, "id": r["id"], "status": "done",
                                   "result": f"{tk}: {out['rating']} — the report is in "
                                             f"the Capabilities pull; the bundle is one "
                                             f"click down"})

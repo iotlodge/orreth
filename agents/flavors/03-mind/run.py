@@ -174,7 +174,7 @@ def tend_once(mind: StudioMind, client: FieldClient) -> bool:
             out = {"state": "parked", "why": str(e), "by": client.did}
             print(f"· PARKED {leg['id']}: {e}")
         _post(UNIVERSE, "/requests/resolve",
-              {"id": leg["id"], "status": "done", "result": {"route": out}})
+              {"token": client.token, "id": leg["id"], "status": "done", "result": {"route": out}})
         return True
     # 0058 sp2 — effort IS class: the Logic dial the human turned rides the
     # leg and overrides the jacket's declared medium; an absent dial keeps it
@@ -194,7 +194,7 @@ def tend_once(mind: StudioMind, client: FieldClient) -> bool:
             out = {"state": "parked", "why": str(e), "by": client.did}
             print(f"· PARKED {leg['id']}: {e}")
         _post(UNIVERSE, "/requests/resolve",
-              {"id": leg["id"], "status": "done",
+              {"token": client.token, "id": leg["id"], "status": "done",
                "result": {"understanding": out}})
         return True
     # ---- plan-draft (0047 sp4): seats and intents only — never money
@@ -212,7 +212,7 @@ def tend_once(mind: StudioMind, client: FieldClient) -> bool:
         out = {"state": "parked", "why": str(e), "by": client.did}
         print(f"· PARKED {leg['id']}: {e}")
     _post(UNIVERSE, "/requests/resolve",
-          {"id": leg["id"], "status": "done", "result": {"plan": out}})
+          {"token": client.token, "id": leg["id"], "status": "done", "result": {"plan": out}})
     return True
 
 

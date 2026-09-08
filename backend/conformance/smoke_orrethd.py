@@ -110,7 +110,68 @@ def main() -> None:
     print(f"no retrieve grant        → {status} {res['error']}")
     assert status == 403
 
-    print("\nsmoke: Python signed, Rust verified — and only the pinned root mints authority. 🥂")
+    # ---- 0071 sp1: THE RESOLVE DOOR LOCKS — the forgery suite -------------------------
+    # a staged card sits at the gate; a stranger reaches for the pen
+    status, req_row = call("POST", "/requests", {"kind": "join", "did": agent["did"],
+                                                 "name": "smoke-imposter"})
+    assert status == 201
+    rid = req_row["id"]
+    # (1) the forged approval: no token — the one face, and the card unmoved
+    status, res = call("POST", "/requests/resolve", {"id": rid, "status": "approved"})
+    print(f"forged approval          → {status} {res['error']}")
+    assert status == 403
+    # (2) the forged lease: tokenless 'done' smuggling a token into the result
+    status, res = call("POST", "/requests/resolve",
+                       {"id": rid, "status": "done", "result": {"token": forged}})
+    print(f"forged lease result      → {status} {res['error']}")
+    assert status == 403
+    # (3) a retrieve-only lease is not the pen — verified chain, wrong grant
+    status, res = call("POST", "/requests/resolve",
+                       {"id": rid, "status": "approved", "token": token})
+    print(f"lease without the pen    → {status} {res['error']}")
+    assert status == 403
+    _, q = call("GET", "/requests")
+    row = next(r for r in q["requests"] if r["id"] == rid)
+    assert row["status"] == "pending", "the card must not have moved"
+    # (4) the resolver credential opens the door — and transitions are law
+    pen = root.issue_token(root.did, SCOPE, [{"action": "resolve", "space": "queue"}])
+    status, res = call("POST", "/requests/resolve",
+                       {"id": rid, "status": "challenged", "token": pen,
+                        "result": {"nonce": "abc"}})
+    print(f"the pen resolves         → {status} {res}")
+    assert status == 200
+    # (5) the tokenless lane exists for exactly one step: answering the challenge
+    proof = kp.sign(agent["did"], {"join_nonce": "abc", "did": agent["did"]})
+    status, res = call("POST", "/requests/resolve",
+                       {"id": rid, "status": "proved",
+                        "result": {"nonce": "abc", "proof": proof}})
+    print(f"tokenless proved lane    → {status} {res}")
+    assert status == 200
+    # (6) a settled word is never rewritten — terminal states are immutable
+    status, _ = call("POST", "/requests/resolve",
+                     {"id": rid, "status": "denied", "token": pen})
+    assert status == 200
+    status, res = call("POST", "/requests/resolve",
+                       {"id": rid, "status": "approved", "token": pen})
+    print(f"rewriting a settled word → {status} {res['error']}")
+    assert status == 409
+
+    # ---- 0071 sp1: THE METER DOOR LOCKS ------------------------------------------------
+    meter_line = {"subject": agent["did"], "est_tokens": 5, "tokens": 5,
+                  "usd": 0.0, "model": "smoke", "class": "low"}
+    status, res = call("POST", "/model/meter", meter_line)
+    print(f"tokenless meter          → {status} {res['error']}")
+    assert status == 403
+    status, res = call("POST", "/model/meter",
+                       {**meter_line, "subject": "did:key:zSomeoneElse", "token": token})
+    print(f"metering another's line  → {status} {res['error']}")
+    assert status == 403
+    status, res = call("POST", "/model/meter", {**meter_line, "token": token})
+    print(f"your own line, your key  → {status} {res}")
+    assert status == 200
+
+    print("\nsmoke: Python signed, Rust verified — only the pinned root mints authority, "
+          "and now only its pen resolves. 🥂")
 
 
 if __name__ == "__main__":
