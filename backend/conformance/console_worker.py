@@ -6617,18 +6617,22 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
     return q2, pre, settled
 
 
-def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
-    """The ask path, whole (0038 sp1+sp2): the DISPATCHER routes first — its
-    choice a signed record, an unbuilt row falling to the baseline loudly —
-    then the chosen row's projection regrows from the log and answers with
-    citations. Since 0053 sp3: the self-knowledge step resolves machine-state
-    and indirect references BEFORE retrieval, and the reply speaks ANSWER
-    FIRST — the routing note rides at the tail, because a human asked a
-    question, not for the machinery's diary."""
+def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
+                       variant: str | None = None) -> dict | None:
+    """The ask path, whole (0038 sp1+sp2), STRUCTURED (0071 sp2): the
+    DISPATCHER routes first — its choice a signed record, an unbuilt row
+    falling to the baseline loudly — then the chosen row's projection regrows
+    from the log and answers with citations. Since 0053 sp3: the
+    self-knowledge step resolves machine-state and indirect references BEFORE
+    retrieval. Returns the structured answer (reply · citations with WHOLE
+    refs · variant · choice_ref · the routing why) — the envelope's raw
+    material; wire_stacks_ask below remains the prose face for the parlor and
+    the yardstick. `variant` (0071 sp2): the asker's own row choice — Auto
+    stands aside, on the record."""
     from orreth_sim import dispatcher, stacks, tournament
     n, seat_kp, seat_did = _stacks_node(port, scope)
     if n is None:
-        return "the stacks are unreachable — try again on the next beat"
+        return None
     me = {"did": seat_did, "scope": scope}
     dispatcher.plant_standard(n, me, seat_kp)     # genesis once; shelf from then on
     from orreth_sim import canon as _cn
@@ -6660,7 +6664,8 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
     _tap0 = {r: e.get("n", 0)
              for r, e in (getattr(n, "recalls", None) or {}).items()}
     d = dispatcher.dispatch(n, me, seat_kp, q2, origin=origin,
-                            built=list(tournament.ALL_RETRIEVERS))
+                            built=list(tournament.ALL_RETRIEVERS),
+                            force=variant)
     n.records.pop(d["record"], None)   # an ask never cites its OWN routing —
     # the choice persists on the wire; it just doesn't answer itself
     a = tournament.answer_as(n, d["flavor"], q2)
@@ -6685,28 +6690,130 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
             call(port, "POST", "/records", wk)
         except Exception:
             pass
-    cites = " · ".join(f"{c['doc']} [{c['ref'][:18]}…] {c['score']}"
-                       for c in a["citations"][:3])
     ans_txt = a["answer"]
+    citations = [dict(c) for c in a["citations"][:3]]
     if settled and a.get("confessed"):
         # the record itself answered; a weak retrieval must not RETRACT a
         # true answer (vera's run-4 find: assert-then-confess reads as
         # untrustworthy and is) — the shelves simply say they add nothing
         ans_txt = "the shelves add nothing stronger — the record itself answered above"
-        cites = ""
-    # ANSWER FIRST (0053 sp3 — vera dinged replies that led with the
-    # machinery's diary): what the machine knows of itself, then the
-    # retrieved answer with citations, then the routing note at the tail —
-    # and a SETTLED reply carries no routing note at all: "no shape matched"
-    # under a true provenance line read as a retraction (vera, run 5); the
-    # dispatch record still stands on the wire for the walkers
-    return (pre + ans_txt
+        citations = []
+    return {"pre": pre, "answer": ans_txt, "citations": citations,
+            "settled": settled, "variant": d["flavor"], "why": d["why"],
+            "choice_ref": d["record"], "by": seat_did, "arm": arm}
+
+
+def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
+    """The prose face of the ask path — the parlor's and the yardstick's lane,
+    byte-shaped as it always was. ANSWER FIRST (0053 sp3 — vera dinged replies
+    that led with the machinery's diary): what the machine knows of itself,
+    then the retrieved answer with citations, then the routing note at the
+    tail — and a SETTLED reply carries no routing note at all: "no shape
+    matched" under a true provenance line read as a retraction (vera, run 5);
+    the dispatch record still stands on the wire for the walkers."""
+    s = wire_stacks_answer(port, scope, q, origin=origin)
+    if s is None:
+        return "the stacks are unreachable — try again on the next beat"
+    cites = " · ".join(f"{c['doc']} [{c['ref'][:18]}…] {c['score']}"
+                       for c in s["citations"])
+    arm = s["arm"]
+    return (s["pre"] + s["answer"]
             + (f" — citations: {cites}" if cites else "")
-            + ("" if settled else
-               " · " + sentence(port, "note-dispatcher", flavor=d["flavor"],
-                                why=d["why"], choice=d["record"][:18]))
+            + ("" if s["settled"] else
+               " · " + sentence(port, "note-dispatcher", flavor=s["variant"],
+                                why=s["why"], choice=s["choice_ref"][:18]))
             + (f" · 🧪 arm «{arm['label']}» "
                f"[{arm['machine'].split(':', 1)[-1][:12]}] served" if arm else ""))
+
+
+def on_ask(port: int, scope: str, r: dict) -> None:
+    """0071 sp2 — THE ASK DOOR: the machine channel's "request data, get data,"
+    one kind worn by agents, the librarian's selector, and (later) the API.
+    Signature, never bearer: the ask files on the PUBLIC queue, so it carries a
+    signature over {did, text, at} instead of a stealable lease — verified
+    against the DID's own key, then against the standing welcome becky's door
+    already keeps. The answer returns as a STRUCTURED envelope (reply ·
+    citations with whole refs · the variant that served · the full choice
+    record id · the judgeable exchange ref) — the selection is never a secret.
+    Dev grace mirrors the craft door: an unsigned ask serves with a loud
+    confession; in prod this door refuses with the one face."""
+    from orreth_sim import askdoor, tournament
+    did = str(r.get("did") or "")
+    ok, _why = askdoor.verify_ask(r)
+    confession = None
+    if ok:
+        if not _welcome_has(did, scope):
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "denied",
+                  "result": {"error": askdoor.REFUSAL}})
+            print(f"  ↳ ask {r['id']}: refused — no standing welcome for the signer")
+            return
+    elif r.get("sig"):
+        # a PRESENT-but-invalid signature is a forgery attempt, never curiosity —
+        # no grace in any mode, one face (caught by the live walk, 2026-09-08:
+        # an imposter signing the victim's DID rode the dev-grace lane)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "denied",
+              "result": {"error": askdoor.REFUSAL}})
+        print(f"  ↳ ask {r['id']}: refused — the signature did not verify")
+        return
+    else:
+        if ORRETH_MODE == "prod":
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "denied",
+                  "result": {"error": askdoor.REFUSAL}})
+            print(f"  ↳ ask {r['id']}: refused — unsigned, and prod serves no grace")
+            return
+        confession = ("unsigned ask served under dev grace — in prod this "
+                      "door refuses (0071 sp2)")
+        did = did or "anonymous-consumer"
+    text = str(r.get("text") or "").strip()
+    if not text:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "denied",
+              "result": {"error": "an empty ask has no answer"}})
+        return
+    v = str(r.get("variant") or "").strip().lower()
+    variant = None if v in ("", "auto") else v
+    if variant and variant not in tournament.ALL_RETRIEVERS:
+        rows = " · ".join(sorted(tournament.ALL_RETRIEVERS))
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "denied",
+              "result": {"error": f"unknown variant «{variant}» — the rows "
+                                  f"standing today: {rows} (or leave it to Auto)"}})
+        return
+    s = wire_stacks_answer(port, scope, text,
+                           origin=f"ask:{did[:22]}", variant=variant)
+    if s is None:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "denied",
+              "result": {"error": "the stacks are unreachable — ask again on "
+                                  "the next beat"}})
+        return
+    reply = s["pre"] + s["answer"]
+    # the exchange: a signed record of the audience — the thumb's judgeable ref
+    kp, seat_did = lib_seat(scope)
+    rec = make_memory({"did": seat_did, "scope": scope}, kp, scope,
+                      {"ask": {"asked": text[:400], "reply": reply[:600],
+                               "by": did, "variant": s["variant"],
+                               "choice": s["choice_ref"]}},
+                      kind="episodic", tags=["ask"])
+    try:
+        call(port, "POST", "/records", rec)
+    except Exception:
+        pass
+    env = askdoor.envelope(
+        reply=reply, by=s["by"], citations=s["citations"],
+        variant=s["variant"], choice_ref=s["choice_ref"],
+        exchange=rec["id"],
+        attributes=r.get("attributes") if isinstance(r.get("attributes"), dict)
+        else None,
+        confession=confession)
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "done", "result": {"envelope": env}})
+    print(f"  ↳ ask {r['id']}: answered by «{s['variant']}» — "
+          f"choice {s['choice_ref'][:18]}… on the record"
+          + (" (dev-grace, confessed)" if confession else ""))
 
 
 def wire_stacks_tournament(port: int, scope: str, q: str = "") -> str:
@@ -14294,6 +14401,8 @@ def main() -> None:
                                                     "denied"):
                             handled.add(key)
                             on_fuel_request(port, scope, r)
+                        elif r.get("kind") == "ask" and r.get("status") == "pending":
+                            on_ask(port, scope, r)
                         elif r.get("kind") == "parlor" and r.get("status") == "pending":
                             handled.add(key)
                             on_parlor(port, scope, r)

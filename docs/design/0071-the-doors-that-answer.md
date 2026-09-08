@@ -174,9 +174,32 @@ wears the variant (the arm-tag pattern), the envelope carries it typed, and ever
    kernel Inbox's approve buttons now honestly require the worker's road — the book's
    first-world page mentions Approve and gets its note at the dive's close per the
    release-alignment law.*
-2. **sp2 — The ask door.** `kind:"ask"` + the envelope + SDK `ask()`; the librarian
-   selector rides it; the variant/choice/guardrail fields served whole. Suite: an agent
-   asks and reads the envelope; the choice ref opens.
+2. **sp2 — The ask door.** ✅ **LANDED 2026-09-08.** One design amendment made at the
+   drafting table: the ask files on the PUBLIC queue, so it authenticates by
+   **signature, never bearer** — a lease token in a queue row would be a stealable
+   credential; the asker signs {did, text, at} with its own key instead (sp4's
+   filing-authentication, begun early for this kind). The pieces: `orreth_sim/askdoor.py`
+   (the law: verify-by-DID, the envelope with refs held WHOLE — a builder that *refuses*
+   a shortened id); the dispatcher's `force` (the asker's chosen row, Auto standing
+   aside, the choice still a signed record saying who chose — and an unbuilt choice
+   still falls loudly); `wire_stacks_answer` (the ask path made structured; the old
+   prose face kept byte-shaped for the parlor and yardstick); `on_ask` in the worker
+   (signature → standing-welcome check → answer → a signed exchange record → the
+   envelope: reply · by · citations · variant · whole choice_ref · exchange · cost ·
+   guardrails-confessing-honestly-until-0068); SDK `FieldClient.ask()`. Dev grace
+   mirrors the craft door for UNSIGNED asks only — **and the live walk earned its keep:
+   a present-but-invalid signature rode the grace lane on the first run (an imposter
+   signing the victim's DID was served with a confession); the hole was closed the same
+   hour — a failed signature is a forgery attempt and refuses in every mode, one face.**
+   *Proven live on the rig: scout-from-outside rejoined on its standing welcome and read
+   a whole envelope (Auto chose «rerank», the choice ref opened); «graph» chosen by the
+   asker and confessed in the reply; the forged ask denied with the one face; an unknown
+   variant refused with a teaching naming the standing rows. Suite 371→379 (eight
+   askdoor laws).* *Honest remainders: answers ride the public queue result exactly as
+   parlor replies always have — authority-scoped answers arrive with 0072's build + the
+   person registry; attributes are received and confessed unhonored until the registry
+   dive (0065) gives them meaning; the librarian window's visual selector is Dive
+   VIII glass — the door it will ride is this one.*
 3. **sp3 — The join door ships.** The adopt-a-credential constructor; the standalone
    door; welcomes as records; becky's admission record; the compose example grown.
    Proven by a stranger-shaped walk: published artifacts only, one governed join, twice

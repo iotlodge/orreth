@@ -182,6 +182,44 @@ class FieldClient:
             "tokens": tokens, "usd": round(usd, 6), "model": model or grant.get("model", ""),
             "class": klass})
 
+    # ---- the ask door (0071 sp2: request data, get data) ---------------------------------
+    def ask(self, text: str, *, variant: str | None = None,
+            attributes: dict | None = None,
+            timeout: float = 60.0, poll: float = 1.0) -> dict | None:
+        """Ask the world a question through its governed retrieval and read the
+        STRUCTURED answer: {reply, by, citations[], variant, choice_ref,
+        exchange, cost, guardrails}. The ask is SIGNED with this identity's own
+        key (never a bearer token — asks ride the public queue), `variant`
+        names one retrieval row or leaves the choice to Auto, and the reply
+        always says which row served. Returns None on timeout or refusal."""
+        at = now_iso()
+        body = {"kind": "ask", "did": self.did, "text": text, "at_signed": at}
+        if variant:
+            body["variant"] = variant
+        if attributes:
+            body["attributes"] = attributes
+        # ASK_SIG_KEYS = (did, text, at) — the reference twin lives in
+        # orreth_sim.askdoor; the constant is carried verbatim, the
+        # RUN_SIG_KEYS convention
+        body["sig"] = self.kp.sign(self.did,
+                                   {"did": self.did, "text": text, "at": at})
+        status, filed = self._call("POST", "/requests", body)
+        if status != 201:
+            return None
+        rid = filed.get("id")
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            status, q = self._call("GET", "/requests")
+            if status == 200:
+                row = next((x for x in q.get("requests", [])
+                            if x.get("id") == rid), None)
+                if row and row.get("status") == "done":
+                    return (row.get("result") or {}).get("envelope")
+                if row and row.get("status") == "denied":
+                    return None
+            time.sleep(poll)
+        return None
+
     # ---- the diary (0005: signed, scribe-authored, never self-attested) ------------------
     def diary(self, intent: str, *, cycle: int, done: bool, tokens: int = 0,
               model_calls: int = 0, score: float | None = None,
