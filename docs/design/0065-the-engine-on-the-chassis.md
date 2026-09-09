@@ -270,9 +270,40 @@ Three seams, zero new stores:
    hashed-bag's — sp4's harness measures before any floor turns; tree rows STAND but
    nothing walks them until Hierarchical's scaffold; a live purge-reach walk awaits an
    ungated purge (the suite holds the law).*
-3. **sp3 — The graph projection.** Plane DDL + doors + eviction; `extract_beat` with the
-   scaffold extractor; `f:graph`'s flow reads Postgres; witness-ref provenance walks. Suite:
-   the cross-document edge, found in SQL; purge kills the edge.
+3. **sp3 — The graph projection.** ✅ **LANDED 2026-09-09 — 0038's Shape-A debt paid: the
+   graph lives in Postgres, and every edge carries its witness.** The plane grew
+   `graph_nodes` + `graph_edges` in the ALWAYS-ON DDL (walking is pure SQL — the graph
+   stands even where the meaning axis is dark): terms as nodes with per-record mention
+   counts, within-span co-occurrence as edges, each edge naming its record · span ·
+   lane · the piece's hash (the citation IS the edge's provenance, the sim's own law
+   kept), and every row wearing the extraction law's version (extractor name × the chunk
+   policy — either turning re-cuts the world visibly). Three tokened doors (`/graph`
+   write — replaces a record's rows whole; `/graph/missing` — answering ONLY for the
+   caller's own ids, sp2's live lesson born into this door; `/graph/walk` — witnesses
+   binding the ask's terms scored by pairs bound, a one-term ask falling to touching
+   edges dampened, all inside EXACTLY the authorized set or it would be a second read
+   path); eviction rides the tombstone breath beside the chunk and vector evictions —
+   what only the dead record knew is forgotten with it. **One term law**:
+   `graphlaw.terms()` owns the definition and `rivals` delegates by identity, so the
+   rebuild's graph and the standing graph can never disagree about what a term is. The
+   worker's `extract_beat` (new dial `extract-every` 180, per-floor clocks, driving from
+   its own pull) runs the scaffold extractor — deterministic co-occurrence, the law
+   version ready for a saddled extraction mind to bump; and the graph row's PRODUCTION
+   path became the standing walk with the same hash drift-catch as the shelf, the
+   in-process rebuild standing behind. *Proven live on the rig: f:prod extracted 253
+   records in one sweep (floors with nothing confessed honestly — «0 extracted · N
+   marked non-material»); an SDK ask with `variant: graph` answered from Postgres —
+   «the graph walked 4 witness(es) in Postgres — no rebuild», 3.0 s, the envelope
+   confessing `graph`, the reply carrying the binding pair and the witnessing chunk.
+   Suite 416→424 (eight graph laws: one term law by identity · deterministic witnessed
+   extraction · within-span binding only · no echoes · the cross-document edge found by
+   the walk · the walk never leaves the authorized set · purge forgets what only the
+   dead record knew · worklist honesty). Rust green.* *Honest remainders: the extractor
+   is the SCAFFOLD (term co-occurrence — real entities and typed relations arrive when a
+   governed extraction mind saddles, bumping the law version; Full GraphRAG's
+   ingest-side extraction matures with 0069's minded eyes); hop depth stays 1 (the
+   variant's `hops` knob threads at sp4); the graph and chunk sweeps share the pull's
+   cost — a shared per-beat pull is a small optimization when it itches.*
 4. **sp4 — The five new styles + the eleven-arm tournament.** Scaffold-first compositions for
    Hierarchical · Reasoning-First · Memory-Augmented · HyDE · Corrective; registry-driven
    FLAVORS; latency + cost axes in `grade()`; per-variant law suites.

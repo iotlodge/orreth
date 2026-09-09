@@ -85,7 +85,41 @@ impl PgRecords {
                  tokens      BIGINT NOT NULL,
                  usd         DOUBLE PRECISION NOT NULL,
                  PRIMARY KEY (node_scope, subject)
-             );",
+             );
+             -- 0065 sp3 (L2's rule-9 gate): the graph projection — Shape A,
+             -- finally in Postgres. Terms as nodes, within-span co-occurrence
+             -- as edges, EVERY edge carrying its witness (record + span + the
+             -- piece's hash): the citation IS the edge's provenance. Pure SQL
+             -- — the graph stands even where the meaning axis is dark.
+             CREATE TABLE IF NOT EXISTS graph_nodes (
+                 node_scope  TEXT NOT NULL,
+                 record_id   TEXT NOT NULL,
+                 name        TEXT NOT NULL,
+                 cnt         INT NOT NULL DEFAULT 0,
+                 law         TEXT NOT NULL,
+                 PRIMARY KEY (node_scope, record_id, name)
+             );
+             CREATE INDEX IF NOT EXISTS graph_nodes_name
+                 ON graph_nodes (node_scope, name);
+             CREATE TABLE IF NOT EXISTS graph_edges (
+                 node_scope  TEXT NOT NULL,
+                 record_id   TEXT NOT NULL,
+                 a           TEXT NOT NULL,
+                 b           TEXT NOT NULL,
+                 seq         INT NOT NULL,
+                 span_start  INT NOT NULL,
+                 span_end    INT NOT NULL,
+                 lane        TEXT NOT NULL,
+                 doc         TEXT NOT NULL DEFAULT '',
+                 trust       DOUBLE PRECISION NOT NULL DEFAULT 1.0,
+                 hash        TEXT NOT NULL DEFAULT '',
+                 law         TEXT NOT NULL,
+                 PRIMARY KEY (node_scope, record_id, a, b, seq)
+             );
+             CREATE INDEX IF NOT EXISTS graph_edges_a
+                 ON graph_edges (node_scope, a);
+             CREATE INDEX IF NOT EXISTS graph_edges_b
+                 ON graph_edges (node_scope, b);",
         )?;
         // 0022 §4 Phase 2 (JB's rule-9 approval 2026-07-17): the vector
         // projection. NULL embedding = "looked, nothing to embed" — the sweep
@@ -346,6 +380,136 @@ impl PgRecords {
                 lit = Self::vec_literal(qv)
             ),
             &[&node_scope, &ids, &k],
+        )?;
+        Ok(rows.into_iter().map(|r| (r.get(0), r.get(1), r.get(2), r.get(3),
+                                     r.get(4), r.get(5), r.get(6), r.get(7),
+                                     r.get(8), r.get(9))).collect())
+    }
+
+    /// 0065 sp3 — one record, one law, one truth: landing a record's graph
+    /// rows replaces every row it had in both tables. Empty nodes land a
+    /// marker mention (name '') so the worklist stops listing a record this
+    /// floor looked at and found non-material.
+    pub fn save_graph(&self, node_scope: &str, record_id: &str, law: &str,
+                      nodes: &[Value], edges: &[Value])
+                      -> Result<(), postgres::Error> {
+        let mut client = self.client.lock().unwrap();
+        client.execute(
+            "DELETE FROM graph_nodes WHERE node_scope = $1 AND record_id = $2",
+            &[&node_scope, &record_id])?;
+        client.execute(
+            "DELETE FROM graph_edges WHERE node_scope = $1 AND record_id = $2",
+            &[&node_scope, &record_id])?;
+        if nodes.is_empty() {
+            client.execute(
+                "INSERT INTO graph_nodes (node_scope, record_id, name, cnt, law)
+                 VALUES ($1, $2, '', 0, $3)",
+                &[&node_scope, &record_id, &law])?;
+        }
+        for n in nodes {
+            let name = n["name"].as_str().unwrap_or("");
+            let cnt = n["cnt"].as_i64().unwrap_or(0) as i32;
+            if name.is_empty() { continue; }
+            client.execute(
+                "INSERT INTO graph_nodes (node_scope, record_id, name, cnt, law)
+                 VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING",
+                &[&node_scope, &record_id, &name, &cnt, &law])?;
+        }
+        for e in edges {
+            let span = e["span"].as_array().cloned().unwrap_or_default();
+            let (s0, e0) = (span.first().and_then(|v| v.as_i64()).unwrap_or(0) as i32,
+                            span.get(1).and_then(|v| v.as_i64()).unwrap_or(0) as i32);
+            client.execute(
+                "INSERT INTO graph_edges (node_scope, record_id, a, b, seq,
+                     span_start, span_end, lane, doc, trust, hash, law)
+                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+                 ON CONFLICT DO NOTHING",
+                &[&node_scope, &record_id,
+                  &e["a"].as_str().unwrap_or(""), &e["b"].as_str().unwrap_or(""),
+                  &(e["seq"].as_i64().unwrap_or(0) as i32), &s0, &e0,
+                  &e["lane"].as_str().unwrap_or("document"),
+                  &e["doc"].as_str().unwrap_or(""),
+                  &e["trust"].as_f64().unwrap_or(1.0),
+                  &e["hash"].as_str().unwrap_or(""), &law])?;
+        }
+        Ok(())
+    }
+
+    /// The extraction sweep's worklist — answering ONLY for the ids the
+    /// caller sends (sp2's live lesson, baked in from birth here): living
+    /// records among them with no graph rows under the current law.
+    pub fn missing_graph(&self, node_scope: &str, law: &str, ids: &[String],
+                         limit: i64) -> Result<Vec<String>, postgres::Error> {
+        if ids.is_empty() { return Ok(Vec::new()); }
+        let rows = self.client.lock().unwrap().query(
+            "SELECT r.id FROM records r
+             LEFT JOIN purged p ON p.node_scope = r.node_scope AND p.id = r.id
+             WHERE r.node_scope = $1 AND r.id = ANY($3) AND p.id IS NULL
+               AND NOT EXISTS (SELECT 1 FROM graph_nodes gn
+                               WHERE gn.node_scope = r.node_scope
+                                 AND gn.record_id = r.id AND gn.law = $2)
+             ORDER BY (CASE WHEN r.record->'tags' ? 'stacks'
+                              OR r.record->'tags' ? 'knowledge'
+                            THEN 0 ELSE 1 END),
+                      r.occurred_at DESC LIMIT $4",
+            &[&node_scope, &law, &ids, &limit],
+        )?;
+        Ok(rows.into_iter().map(|r| r.get(0)).collect())
+    }
+
+    /// The purge reaches the graph: a shredded record's edges AND its node
+    /// mentions die in the same breath — what only that record knew is
+    /// forgotten with it.
+    pub fn evict_graph(&self, node_scope: &str, id: &str)
+                       -> Result<(), postgres::Error> {
+        let mut client = self.client.lock().unwrap();
+        client.execute(
+            "DELETE FROM graph_nodes WHERE node_scope = $1 AND record_id = $2",
+            &[&node_scope, &id])?;
+        client.execute(
+            "DELETE FROM graph_edges WHERE node_scope = $1 AND record_id = $2",
+            &[&node_scope, &id])?;
+        Ok(())
+    }
+
+    /// The walking read, inside the authorized set ONLY: witnesses binding
+    /// two of the ask's terms, scored by pairs bound; a one-term ask falls
+    /// to the edges touching that term, dampened. Never a second read path.
+    pub fn graph_walk(&self, node_scope: &str, ids: &[String],
+                      terms: &[String], k: i64)
+                      -> Result<Vec<(String, i32, i32, i32, String, String,
+                                     f64, String, f64, String)>, postgres::Error> {
+        if ids.is_empty() || terms.is_empty() { return Ok(Vec::new()); }
+        let mut client = self.client.lock().unwrap();
+        let rows = client.query(
+            "SELECT record_id, seq, span_start, span_end, lane, doc,
+                    MAX(trust) AS trust, MAX(hash) AS hash,
+                    COUNT(*)::float8 AS score,
+                    string_agg(a || '↔' || b, ' · ') AS pairs
+             FROM graph_edges
+             WHERE node_scope = $1 AND record_id = ANY($2)
+               AND a = ANY($3) AND b = ANY($3)
+             GROUP BY record_id, seq, span_start, span_end, lane, doc
+             ORDER BY score DESC LIMIT $4",
+            &[&node_scope, &ids, &terms, &k],
+        )?;
+        if !rows.is_empty() || terms.len() != 1 {
+            return Ok(rows.into_iter().map(|r| (r.get(0), r.get(1), r.get(2),
+                                                r.get(3), r.get(4), r.get(5),
+                                                r.get(6), r.get(7), r.get(8),
+                                                r.get(9))).collect());
+        }
+        let rows = client.query(
+            "SELECT record_id, seq, span_start, span_end, lane, doc,
+                    MAX(trust) AS trust, MAX(hash) AS hash,
+                    0.5::float8 AS score,
+                    MIN(a || '↔' || b) AS pairs
+             FROM graph_edges
+             WHERE node_scope = $1 AND record_id = ANY($2)
+               AND (a = $3 OR b = $3)
+             GROUP BY record_id, seq, span_start, span_end, lane, doc
+             LIMIT $4",
+            &[&node_scope, &ids, &terms[0], &k],
         )?;
         Ok(rows.into_iter().map(|r| (r.get(0), r.get(1), r.get(2), r.get(3),
                                      r.get(4), r.get(5), r.get(6), r.get(7),

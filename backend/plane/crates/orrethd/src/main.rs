@@ -351,6 +351,9 @@ async fn main() {
         .route("/chunks", post(chunks_ingress))
         .route("/chunks/missing", post(chunks_missing))
         .route("/chunks/search", post(chunks_search))
+        .route("/graph", post(graph_ingress))
+        .route("/graph/missing", post(graph_missing))
+        .route("/graph/walk", post(graph_walk_door))
         .route("/standards", get(standards))
         .route("/window", get(window))
         .route("/model/authorize", post(model_authorize))
@@ -552,6 +555,10 @@ async fn tombstone_ingress(State(app): State<Arc<App>>, Json(req): Json<Value>) 
             if let Err(e) = store.evict_chunks(&node_scope, &id) {
                 eprintln!("orrethd · chunk eviction failed for {id}: {e}");
             }
+            // …and the graph forgets what only this record knew (0065 sp3)
+            if let Err(e) = store.evict_graph(&node_scope, &id) {
+                eprintln!("orrethd · graph eviction failed for {id}: {e}");
+            }
         }
         touch(&app);
         (StatusCode::OK, Json(json!({"ok": true, "stub": true})))
@@ -683,6 +690,98 @@ async fn chunks_search(State(app): State<Arc<App>>, Json(req): Json<Value>) -> i
                 "doc": doc, "trust": trust, "occurred": occurred,
                 "hash": hash,
                 "score": (sim * 10000.0).round() / 10000.0})).collect();
+        (StatusCode::OK, Json(json!({"hits": out})))
+    })
+    .await
+    .unwrap()
+}
+
+/// 0065 sp3 — the graph projection's write door: becky-chained token,
+/// uniform refusal; the extraction sweep pushes rows cut where the bytes
+/// live; landing replaces the record's rows whole (one law, one truth).
+async fn graph_ingress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let id = req["record_id"].as_str().unwrap_or("").to_string();
+        let ok = { app.universe.lock().unwrap().verify_token(&req["token"]).is_ok() };
+        if id.is_empty() || !ok {
+            bump(&app, "refusals");
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        let (known, node_scope) = {
+            let u = app.universe.lock().unwrap();
+            (u.nodes[0].records.contains_key(&id), u.nodes[0].scope.clone())
+        };
+        if !known {
+            bump(&app, "refusals"); // absent and unauthorized wear one face
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        let law = req["law"].as_str().unwrap_or("").to_string();
+        let nodes = req["nodes"].as_array().cloned().unwrap_or_default();
+        let edges = req["edges"].as_array().cloned().unwrap_or_default();
+        if let Some(store) = &app.pg {
+            if let Err(e) = store.save_graph(&node_scope, &id, &law, &nodes, &edges) {
+                eprintln!("orrethd · graph write failed for {id}: {e}");
+            }
+        }
+        (StatusCode::OK, Json(json!({"ok": true, "nodes": nodes.len(),
+                                     "edges": edges.len()})))
+    })
+    .await
+    .unwrap()
+}
+
+/// The extraction sweep's worklist — for the caller's own ids only.
+async fn graph_missing(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let ok = { app.universe.lock().unwrap().verify_token(&req["token"]).is_ok() };
+        if !ok {
+            bump(&app, "refusals");
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        let node_scope = { app.universe.lock().unwrap().nodes[0].scope.clone() };
+        let law = req["law"].as_str().unwrap_or("").to_string();
+        let ids: Vec<String> = req["ids"].as_array().map(|a| {
+            a.iter().filter_map(|x| x.as_str().map(String::from)).collect()
+        }).unwrap_or_default();
+        let limit = req["limit"].as_i64().unwrap_or(32).clamp(1, 512);
+        let missing = app.pg.as_ref()
+            .and_then(|s| s.missing_graph(&node_scope, &law, &ids, limit).ok())
+            .unwrap_or_default();
+        (StatusCode::OK, Json(json!({"missing": missing})))
+    })
+    .await
+    .unwrap()
+}
+
+/// The graph's walking read: witnesses binding the ask's terms, inside
+/// EXACTLY the ids the caller's retrieve authorized. Token-guarded, one face.
+async fn graph_walk_door(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let ok = { app.universe.lock().unwrap().verify_token(&req["token"]).is_ok() };
+        if !ok {
+            bump(&app, "refusals");
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        let node_scope = { app.universe.lock().unwrap().nodes[0].scope.clone() };
+        let ids: Vec<String> = req["ids"].as_array().map(|a| {
+            a.iter().filter_map(|x| x.as_str().map(String::from)).collect()
+        }).unwrap_or_default();
+        let terms: Vec<String> = req["terms"].as_array().map(|a| {
+            a.iter().filter_map(|x| x.as_str().map(String::from)).collect()
+        }).unwrap_or_default();
+        let k = req["k"].as_i64().unwrap_or(8).clamp(1, 64);
+        let hits = app.pg.as_ref()
+            .and_then(|s| s.graph_walk(&node_scope, &ids, &terms, k).ok())
+            .unwrap_or_default();
+        let out: Vec<Value> = hits.into_iter().map(
+            |(rid, seq, s, e, lane, doc, trust, hash, score, pairs)| json!({
+                "ref": rid, "seq": seq, "span": [s, e], "lane": lane,
+                "doc": doc, "trust": trust, "hash": hash,
+                "score": score, "pair": pairs})).collect();
         (StatusCode::OK, Json(json!({"hits": out})))
     })
     .await

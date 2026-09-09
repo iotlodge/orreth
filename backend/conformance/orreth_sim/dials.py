@@ -140,6 +140,19 @@ DIALS_V1 = {
                "meaning axis's own ninety-second sweep",
         "horizon": "takes hold within a minute",
     },
+    "extract-every": {
+        "type": "int", "unit": "seconds between beats", "min": 30,
+        "max": 604800, "genesis": 180, "home": "universe",
+        "governs": "how often the graph projection's extraction sweeps what "
+                   "the node accepted but has not yet read for entities and "
+                   "connections (0065 sp3) — the sweep behind the graph "
+                   "style's standing walk",
+        "blast": "slow leaves fresh records unwalkable until the next beat; "
+                 "fast churns extraction",
+        "why": "three minutes trails the chunk sweep's two — the graph reads "
+               "what the shelf has settled",
+        "horizon": "takes hold within a minute",
+    },
     "ask-cache-ttl-s": {
         "type": "int", "unit": "seconds an answer may serve again", "min": 0,
         "max": 86400, "genesis": 300, "home": "ladder",

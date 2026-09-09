@@ -1383,6 +1383,7 @@ def on_attestation(port: int, scope: str, r: dict, *, approved: bool = False,
 EMBED_PORT = int(os.environ.get("ORRETH_EMBED_PORT", "4562"))
 _EMBED_LAST = 0.0
 _CHUNK_LAST: dict = {}   # per floor — every shelf sweeps on its OWN clock
+_EXTRACT_LAST: dict = {}  # per floor — the graph's extraction clock
 # the embed cadence is a DIAL (0063 sp6) — dial_value("embed-every")
 
 # DEV vs PROD (JB's kernel law, 2026-08-16): Orreth is the kernel, residents
@@ -2634,6 +2635,59 @@ def chunk_beat(port: int, scope: str) -> None:
         except Exception:
             pass
     print(f"  ↳ the standing shelf: {scope} — {cut} record(s) cut"
+          + (f" · {marked} marked non-material" if marked else "")
+          + f" ({len(missing)} swept)")
+
+
+def extract_beat(port: int, scope: str) -> None:
+    """0065 sp3 — the graph projection's extraction sweep: read what the node
+    accepted for entities and connections, with the SAME lane law and spans
+    the shelf uses, every edge carrying its witness. Drives from its own
+    pull's ids only (sp2's live lesson, born into this beat), on the floor's
+    own clock. The scaffold extractor is deterministic term co-occurrence; a
+    governed extraction mind bumps the law's version when it saddles."""
+    from orreth_sim import graphlaw, stacks as _stk
+    if time.time() - _EXTRACT_LAST.get(scope, 0.0) < dial_value("extract-every"):
+        return
+    _EXTRACT_LAST[scope] = time.time()    # set early — never a hot loop
+    n, seat_kp, seat_did = _stacks_node(port, scope)
+    if n is None:
+        return
+    pol = _stk._chunking(n)
+    law = graphlaw.law_hash(pol)
+    token = _ROOT.issue_token(_BECKY.did, "u:demo",
+                              [{"action": "govern", "space": "self"}])
+    try:
+        missing = call(port, "POST", "/graph/missing",
+                       {"token": token, "law": law,
+                        "ids": list(n.records.keys()),
+                        "limit": 512}).get("missing", [])
+    except Exception:
+        return
+    if not missing:
+        return
+    sup = _stk.superseded_of(n)
+    read = marked = 0
+    for rid in missing:
+        r = n.records.get(rid)
+        if r is None:
+            continue                  # never judge what this pull cannot see
+        d = _stk.derived_text(n, rid, r, sup)
+        if d is None:
+            nodes, edges = [], []     # non-material → the marker mention
+            marked += 1
+        else:
+            lane, text, doc, trust, state, when = d
+            spans = _stk.lane_spans(lane, text, pol)
+            nodes, edges = graphlaw.extract(text, spans, lane, doc, trust)
+            read += 1
+        try:
+            call(port, "POST", "/graph",
+                 {"record_id": rid, "law": law, "nodes": nodes,
+                  "edges": edges, "token": token})
+        except Exception:
+            pass
+    print(f"  ↳ the graph reads: {scope} — {read} record(s) extracted"
           + (f" · {marked} marked non-material" if marked else "")
           + f" ({len(missing)} swept)")
 
@@ -6816,6 +6870,56 @@ def standing_answer(port: int, scope: str, n, q: str):
     return rivals.answer_from(out, "naive")
 
 
+def standing_graph_answer(port: int, scope: str, n, q: str):
+    """0065 sp3 — the graph's standing walk: the ask's terms against the
+    Postgres edges, inside exactly the ids this pull authorized; every hit's
+    text re-sliced from the derived text and hash-checked (the same drift
+    catch the shelf wears). None when cold or dark — the in-process rebuild
+    serves, loudly."""
+    from orreth_sim import graphlaw, rivals, stacks as _stk
+    qt = graphlaw.terms(q)
+    if not qt:
+        return None
+    try:
+        _, seat_did = lib_seat(scope)
+        token = _ROOT.issue_token(seat_did, "u:demo",
+                                  [{"action": "retrieve", "space": "self"}])
+        hits = call(port, "POST", "/graph/walk",
+                    {"token": token, "ids": list(n.records.keys()),
+                     "terms": qt, "k": 8}).get("hits", [])
+    except Exception:
+        return None
+    if not hits:
+        return None
+    import hashlib as _hl
+    sup = _stk.superseded_of(n)
+    out = []
+    for h in hits:
+        r = n.records.get(h["ref"])
+        d = _stk.derived_text(n, h["ref"], r, sup) if r is not None else None
+        if d is None:
+            continue
+        lane, text, doc, trust, state, when = d
+        s0, e0 = h.get("span") or [0, 0]
+        piece = text[s0:e0]
+        if h.get("hash") and _hl.sha256(
+                piece.encode()).hexdigest()[:16] != h["hash"]:
+            print("  ↳ the graph: an edge no longer matches its witness — "
+                  "falling back to the rebuild, loudly")
+            return None
+        out.append({"ref": h["ref"], "doc": doc, "text": piece,
+                    "score": round(float(h.get("score", 0)), 4),
+                    "pair": str(h.get("pair") or "")})
+    if not out:
+        return None
+    out.sort(key=lambda x: -x["score"])
+    out = out[:4]
+    _stk.record_recalls(n, out)
+    print(f"  ↳ the graph walked {len(out)} witness(es) in Postgres — "
+          f"no rebuild")
+    return rivals.answer_from(out, "graph")
+
+
 def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
                        variant: str | None = None) -> dict | None:
     """The ask path, whole (0038 sp1+sp2), STRUCTURED (0071 sp2): the
@@ -6877,6 +6981,10 @@ def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
         # chunk projection; the in-process rebuild is the dev fallback,
         # served loudly when the shelf is cold or dark
         a = standing_answer(port, scope, n, q2)
+    elif _row == "graph":
+        # 0065 sp3 — the graph row WALKS Postgres: witnesses binding the
+        # ask's terms, inside the authorized set; the rebuild stands behind
+        a = standing_graph_answer(port, scope, n, q2)
     if a is None:
         a = tournament.answer_as(n, _row, q2)
     # the pre-pass's quotes are recalls too (0057 sp2): a human's question
@@ -14932,6 +15040,7 @@ def main() -> None:
                     serials_beat(port, scope)  # the desk sweeps on the beat (0032 §2)
                     embed_beat(port, scope)   # the vector projection fills (0022 Ph2)
                     chunk_beat(port, scope)   # the standing shelf fills (0065 sp2)
+                    extract_beat(port, scope) # the graph reads (0065 sp3)
                     continuity_charter(port, scope)  # a template floor gets its law (0034)
                     pin_organs(port, scope)
                     window_charter(port, scope)

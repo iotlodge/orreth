@@ -17,16 +17,13 @@ from __future__ import annotations
 
 import re
 
-from . import stacks
+from . import graphlaw, stacks
 
-STOP = {"the", "a", "an", "and", "or", "of", "in", "on", "at", "to", "is",
-        "are", "it", "its", "with", "for", "by", "as", "that", "this",
-        "through", "between", "how", "what", "why", "when", "do", "does"}
-
-
-def _terms(text: str) -> list[str]:
-    return [w for w in re.findall(r"[a-z][a-z0-9-]+", (text or "").lower())
-            if w not in STOP and len(w) > 2]
+# 0065 sp3 — ONE term law: graphlaw owns it; the rebuild here and the
+# standing sweep import the same definition, so the two graphs can never
+# disagree about what a term is
+STOP = graphlaw.STOP
+_terms = graphlaw.terms
 
 
 # ---------------------------------------------------------------- f:rerank
