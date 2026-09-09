@@ -172,6 +172,11 @@ class OrrethMind:
         # klass per call (`_klass=`), so an objective's Logic dial rides its
         # legs into the gateway instead of dying unread on the request
         klass = kwargs.pop("_klass", None) or g.klass
+        # 0065 sp5 — the selection rides the same kwarg seam as effort: a
+        # caller may attribute this thought to a retrieval style per call
+        # (`_variant=`); absent = Auto. Governed cognition meters it — the
+        # plane keeps the line verbatim, so per-style cost is a query.
+        variant = kwargs.pop("_variant", None)
         resolved = self._craft(g.craft)
         slots = dict(zip(g.slots, args))
         slots.update(kwargs)
@@ -188,7 +193,8 @@ class OrrethMind:
             ask_prompt = prompt if error is None else (
                 prompt + "\n\n" + _REASK.format(
                     error=error, shape=_shape_of(g.returns)))
-            raw = self.think(klass, ask_prompt)
+            raw = self.think(klass, ask_prompt,
+                             **({"variant": variant} if variant else {}))
             try:
                 value = _validate(g.returns, raw)
             except ValueError as e:

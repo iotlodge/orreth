@@ -163,7 +163,7 @@ class GovernedThink:
         self.last_tokens, self.last_calls = 0, 0
 
     def __call__(self, klass: str, prompt: str, *, content=None,
-                 pin: str | None = None) -> str:
+                 pin: str | None = None, variant: str | None = None) -> str:
         """content (0052 — quinn's eyes): an optional litellm content-parts
         list (text + image parts) replacing the plain prompt in the message;
         `prompt` still sizes the estimate. Same authorize → execute → meter,
@@ -184,7 +184,8 @@ class GovernedThink:
             usd = litellm.completion_cost(completion_response=resp)
         except Exception:
             usd = 0.0
-        self.client.meter(grant, klass=klass, tokens=tokens, usd=usd, model=grant["model"])
+        self.client.meter(grant, klass=klass, tokens=tokens, usd=usd,
+                          model=grant["model"], variant=variant)
         self.last_tokens += tokens
         self.last_calls += 1
         return resp.choices[0].message.content

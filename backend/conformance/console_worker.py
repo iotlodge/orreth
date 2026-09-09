@@ -6400,10 +6400,22 @@ def recalls_load(scope: str) -> dict:
 
 
 def recalls_save(scope: str, node) -> None:
+    """0065 sp5 — the tap earns DECLARED RETENTION: entries whose last warmth
+    is older than the recall-days dial expire at save (a purged record can
+    never re-warm, so its residue dies on the same clock; the metabolism's
+    reader was always alive-gated — canon.py's `r is None: continue`). The
+    file remains a local cache of usage evidence, now bounded by the same
+    dial that bounds every governed look-back."""
     rec = getattr(node, "recalls", None)
     if rec:
         try:
-            _recalls_path(scope).write_text(json.dumps(rec))
+            from datetime import datetime, timedelta, timezone
+            floor_iso = (datetime.now(timezone.utc)
+                         - timedelta(days=recall_days())).strftime(
+                             "%Y-%m-%dT%H:%M:%SZ")
+            live = {k: e for k, e in rec.items()
+                    if str((e or {}).get("last") or "") >= floor_iso}
+            _recalls_path(scope).write_text(json.dumps(live))
         except Exception:
             pass
 
@@ -7159,7 +7171,12 @@ def on_ask(port: int, scope: str, r: dict) -> None:
                       {"ask": {"asked": text[:400], "reply": reply[:600],
                                "by": did, "variant": s["variant"],
                                "choice": s["choice_ref"]}},
-                      kind="episodic", tags=["ask"])
+                      kind="episodic",
+                      # the arm-tag pattern (0043) at the style layer (0065
+                      # sp5): every answer record WEARS its selection — the
+                      # glass and any query read it off the record, never a
+                      # side channel
+                      tags=["ask", f"variant:{s['variant']}"])
     try:
         call(port, "POST", "/records", rec)
     except Exception:

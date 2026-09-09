@@ -339,9 +339,27 @@ Three seams, zero new stores:
    `hops` stays declared-unthreaded until the walk earns multi-hop demand — named, not
    silent; the five new styles ride the in-process projection (their standing-lane
    reads follow the naive/graph pattern as each earns it).*
-5. **sp5 — Identity everywhere.** `variant` through meter/records/diary; `_variant` per-call
-   override; the selection visibly worn by every answer (the proof's reflect-the-selection
-   demand, proven in the glass); warmth tap rehomed.
+5. **sp5 — Identity everywhere.** ✅ **LANDED 2026-09-09 — the selection is never a
+   secret, anywhere.** Three seams, zero new stores, exactly as designed: **the meter
+   wears the variant** — `client.meter()` grew `variant=`, `GovernedThink` threads it,
+   and the plane keeps the line verbatim, so per-style cost became a query the moment
+   the first line landed; **`_variant` rides the `_klass` seam** — a mind's caller
+   attributes any thought to a style per call, absent = Auto; **the answer record wears
+   its selection as a TAG** (`variant:<style>` — the 0043 arm-tag pattern at the style
+   layer): the glass and any query read it off the record, never a side channel. And
+   the **warmth tap earned declared retention**: entries expire at save by the
+   `recall-days` dial (the same word that bounds every governed look-back), so a purged
+   record's residue dies on the dial's clock — the metabolism's reader was always
+   alive-gated, and the tap stops being the one file no law reached. *Proven live: the
+   meter line `hyde · sp5-walk · 5` read back FROM POSTGRES; the exchange record's tags
+   `["ask", "variant:graph"]` read back from the records table; and THE GLASS SPOKE THE
+   SELECTION in its own sentence — the parlor's reply to a human carried «the
+   dispatcher chose "naive" — no shape matched — the default row serves» with the whole
+   choice ref, the reflect-the-selection demand discharged where a human actually
+   reads. Suites 450 + SDK 24 (parity held) + Rust green.* *Honest remainders: the
+   per-variant cost AGGREGATION fold (the Observatory's view) waits for the Observatory
+   to want it — the data is in the ledger now; diary/run records deliberately untouched
+   (their schema is validated — a variant annotation there is its own small motion).*
 
 Each spoonful closes 371+-green with the honest-boundary rows it moves updated in the same
 commit; the dive closes WHOLE only when the eleven serve, the harness grades them all, and
