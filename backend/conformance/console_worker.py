@@ -1384,6 +1384,7 @@ EMBED_PORT = int(os.environ.get("ORRETH_EMBED_PORT", "4562"))
 _EMBED_LAST = 0.0
 _CHUNK_LAST: dict = {}   # per floor — every shelf sweeps on its OWN clock
 _EXTRACT_LAST: dict = {}  # per floor — the graph's extraction clock
+_STANDINGS_LAST: dict = {}  # per floor — the scoreboard's clock
 # the embed cadence is a DIAL (0063 sp6) — dial_value("embed-every")
 
 # DEV vs PROD (JB's kernel law, 2026-08-16): Orreth is the kernel, residents
@@ -2690,6 +2691,150 @@ def extract_beat(port: int, scope: str) -> None:
     print(f"  ↳ the graph reads: {scope} — {read} record(s) extracted"
           + (f" · {marked} marked non-material" if marked else "")
           + f" ({len(missing)} swept)")
+
+
+def _standings_node(port: int, scope: str):
+    """0066 sp4 — the scoreboard's own pull: ask exchanges, their choices,
+    the replay panels, and every verdict — the rows the board is a summary
+    of. Bodies ride so the walk is local; the node is disposable."""
+    from datetime import datetime, timedelta, timezone
+    seat_kp, seat_did = lib_seat(scope)
+
+    class _N:
+        def __init__(self):
+            self.records, self.scope = {}, scope
+
+        def write(self, rec):
+            call(port, "POST", "/records", rec)
+            self.records[rec["id"]] = dict(rec,
+                                           received_at=rec["occurred_at"])
+            return rec["id"]
+    n = _N()
+    token = _ROOT.issue_token(seat_did, "u:demo",
+                              [{"action": "retrieve", "space": "self"}])
+    frm = (datetime.now(timezone.utc)
+           - timedelta(days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = call(port, "POST", "/retrieve", {
+            "query": {"requester": seat_did,
+                      "subject": {"cohort": {"scope": scope}},
+                      "space": "self", "time": {"from": frm},
+                      "intent": "recall", "budget": {"cost": 8},
+                      "auth": "biscuit-sim"},
+            "token": token, "requester_scope": scope})
+    except Exception:
+        return None, seat_kp, seat_did
+    for h in r.get("hits", []):
+        tags = h.get("tags") or []
+        if not ("ask" in tags or "dispatch" in tags or "replay" in tags
+                or "verdict" in tags):
+            continue
+        try:
+            body = call(port, "GET", "/records/"
+                        + urllib.parse.quote(h["ref"], safe="") + "/body")
+        except Exception:
+            continue
+        n.records[h["ref"]] = {"tags": tags,
+                               "received_at": h.get("occurred_at", ""),
+                               "occurred_at": h.get("occurred_at", ""),
+                               "derived_from": h.get("derived_from") or [],
+                               "author": h.get("author", ""),
+                               "body": crypto._b64e(crypto.canonical(body))}
+    return n, seat_kp, seat_did
+
+
+def standings_beat(port: int, scope: str) -> None:
+    """0066 sp4 — THE SCOREBOARD BREATHES: replay what the router chose
+    through the arms it did not choose (the cheap bench, zero serving risk),
+    rebuild the standings from the records, and when a challenger's credible
+    floor clears the incumbent's ceiling with real volume, STAGE the
+    standard revision on the improvement road — the human's gate, never a
+    self-deployment. Cadence is a constant until sp5's dial."""
+    from orreth_sim import dispatcher as _dsp
+    from orreth_sim import standings as _std
+    from orreth_sim import tournament as _t
+    from orreth_sim import variants as _var
+    if time.time() - _STANDINGS_LAST.get(scope, 0.0) < 1800:
+        return
+    _STANDINGS_LAST[scope] = time.time()
+    sn, seat_kp, seat_did = _standings_node(port, scope)
+    if sn is None:
+        return
+    me = {"did": seat_did, "scope": scope}
+    replayed = {(json.loads(crypto._b64d(r["body"]).decode())
+                 .get("replay") or {}).get("of")
+                for r in sn.records.values()
+                if "replay" in (r.get("tags") or [])}
+    pn, _, _ = _stacks_node(port, scope)     # the shelf the arms answer over
+    if pn is None:
+        return
+    rows = sorted({_var.row_for(s2) for s2 in _var.MENU})
+    done = 0
+    for rid, rec in list(sn.records.items()):
+        tags = rec.get("tags") or []
+        if "ask" in tags and "replay" not in tags and rid not in replayed:
+            b = (json.loads(crypto._b64d(rec["body"]).decode())
+                 .get("ask") or {})
+            if not b.get("signals") or not b.get("asked"):
+                continue
+            choice = sn.records.get((rec.get("derived_from") or [None])[0])
+            feats = ((json.loads(crypto._b64d(choice["body"]).decode())
+                      .get("dispatch") or {}).get("features") or {})                 if choice else {}
+            body = _std.counterfactual(pn, b["asked"],
+                                       feats.get("type", "plain"),
+                                       b.get("variant", "naive"),
+                                       _t.answer_as, rows, of=rid)
+            rep = make_memory(me, seat_kp, scope, body, kind="episodic",
+                              tags=["replay", "ask"])
+            rep["derived_from"] = [rid]
+            sn.write(rep)
+            done += 1
+            if done >= 6:
+                break                     # a breath, never a binge
+    std = _dsp.standard(pn)
+    board = _std.build(sn.records, std.get("weights"))
+    if done or board:
+        print(f"  ↳ the scoreboard: {scope} — {done} ask(s) replayed · "
+              f"{len(board)} cell(s) standing")
+    prop = _std.propose(board, std)
+    if not prop:
+        return
+    if open_ask(universe_port(port),
+                {"kind": "improvement", "text": "THE STANDINGS ARGUE"}):
+        return                            # one card at the gate, ever
+    ev = make_memory(me, seat_kp, scope,
+                     {"standings_evidence": {"board": board,
+                                             "changes": prop["changes"]}},
+                     kind="episodic", tags=["standings", "evidence"])
+    sn.write(ev)
+    lines = []
+    for kind, pair in prop["evidence"].items():
+        (iname, icell), = pair["incumbent"].items()
+        (cname, ccell), = pair["challenger"].items()
+        lines.append(
+            f"  {kind}: «{cname}» {ccell['mean']:.2f} "
+            f"[{ccell['low']:.2f}–{ccell['high']:.2f}] over {ccell['n']} "
+            f"beats «{iname}» {icell['mean']:.2f} "
+            f"[{icell['low']:.2f}–{icell['high']:.2f}] over {icell['n']}")
+    try:
+        call(universe_port(port), "POST", "/requests",
+             {"kind": "improvement",
+              "standard_v2": prop["standard"],
+              "proposal_ref": ev["id"],
+              "text": "THE STANDINGS ARGUE — a routing-standard revision "
+                      "from measured play: "
+                      + "; ".join(f"{k} → «{v}»"
+                                  for k, v in prop["changes"].items())
+                      + ". the scoreboard argues, you sign (0012)",
+              "package": "THE CONSERVATIVE TEST (a challenger's credible "
+                         "floor above the incumbent's ceiling, both with "
+                         "volume):\n" + "\n".join(lines)
+                         + "\nROLLBACK: the standing version stays behind "
+                           "it, versioned as ever."})
+        print(f"  ↳ THE STANDINGS ARGUE — a standard revision waits at the "
+              f"gate: {prop['changes']}")
+    except Exception:
+        pass
 
 
 # ---------------------------------------------------------------- the Mirror (0034 sp3)
@@ -15114,6 +15259,7 @@ def main() -> None:
                     embed_beat(port, scope)   # the vector projection fills (0022 Ph2)
                     chunk_beat(port, scope)   # the standing shelf fills (0065 sp2)
                     extract_beat(port, scope) # the graph reads (0065 sp3)
+                    standings_beat(port, scope)  # the scoreboard breathes (0066 sp4)
                     continuity_charter(port, scope)  # a template floor gets its law (0034)
                     pin_organs(port, scope)
                     window_charter(port, scope)

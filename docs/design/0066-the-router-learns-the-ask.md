@@ -277,8 +277,34 @@ recorded like every GET choice. `dispatch_put` stops returning "everything."
    first LIVE record lands with the next chassis cycle on the rig (suite-proven today,
    named rather than forced); per-retrieval tier-two verdicts (vera grading
    observation-outcomes at volume) ride her existing dials.*
-4. **sp4 — Standings and the proposal generator.** The standings projection; the nightly
-   replay harness; the first standings-evidenced standard proposal walked to JB's gate.
+4. **sp4 — Standings and the proposal generator.** ✅ **LANDED 2026-09-09 — the
+   scoreboard reports, argues, and never referees.** `orreth_sim/standings.py`: the
+   Stage-1 scoreboard as a PURE PROJECTION over the records — per question-kind ×
+   style, a Beta posterior over reward with a 95% credible interval (the normal
+   approximation, NAMED as such), rebuildable whole and purge-reached by construction;
+   **a vetoed sample is refused from the arithmetic and counted aside** — the standings
+   never average away a human's 👎 (L3's third appearance in code). **The replay
+   harness**: a completed ask re-runs through every arm the router did not choose,
+   graded by the cheap bench at zero serving risk, one signed panel record per ask
+   naming its exchange (never an orphan, never run twice) — latency and thumbs
+   honestly out of replay's reach. **The proposal generator** is the scoreboard's one
+   voice: only when a challenger's credible FLOOR clears the incumbent's credible
+   CEILING, both with volume (MIN_N), does it stage a routing-standard revision — onto
+   the EXACT road 0038's first promotion walked (`kind: improvement` + the staged
+   standard + the evidence record + the plain package), the human's gate, never a
+   self-deployment; thin evidence and unmeasured incumbents both refuse. The worker's
+   `standings_beat` breathes per floor (constant cadence until sp5's dial), replaying
+   up to six asks a breath and staging at most one card at the gate, ever. *Proven
+   live on the rig: the first breath replayed an ask through the arms and stood eleven
+   cells — and proposed NOTHING, because one sample argues nothing: the refusal law
+   holding on the wire IS the proof. The suite proves the other side: a clear winner
+   (floor above ceiling at volume) stages the revision with its evidence table while
+   the standing rulebook is untouched. Suite 471→478 (seven standings laws). Rust
+   green.* *Honest remainders: the first REAL proposal reaches JB's gate when the
+   rig's accumulated play clears the conservative test — by design a high bar, and
+   the beat will stage it unprompted when it does; the replay/beat cadences and MIN_N
+   become dials in sp5; a default-route change ('plain') is deliberately refused here
+   — the default's argument is rarer and its own.*
 5. **sp5 — The live slice and the dials.** The ε-floor experiment wiring; the router dials;
    the PUT-side registry routing; f:router's flow retires honorably on the record.
 
