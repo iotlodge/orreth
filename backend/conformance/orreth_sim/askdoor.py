@@ -75,6 +75,7 @@ def envelope(*, reply: str, by: str, citations: list[dict],
              variant: str, choice_ref: str, exchange: str,
              cost: dict | None = None,
              attributes: dict | None = None,
+             honored: list | None = None,
              confession: str | None = None) -> dict:
     """The structured answer, with the refs held whole. `guardrails` speaks
     honestly until 0068's build lands: the field exists, the value confesses."""
@@ -92,7 +93,12 @@ def envelope(*, reply: str, by: str, citations: list[dict],
            "guardrails": {"set_version": None,
                           "note": "guardrail enforcement arrives with dive 0068's build"}}
     if attributes:
-        env["attributes"] = {"received": attributes, "honored": []}
+        # 0066 sp2 — the first honored attribute: an asker's latency
+        # preference gates the router's escalation ("fast" never waits on a
+        # thought); everything else stays received-and-confessed until its
+        # dive gives it meaning
+        env["attributes"] = {"received": attributes,
+                             "honored": list(honored or [])}
     if confession:
         env["confession"] = confession
     return env

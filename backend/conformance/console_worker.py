@@ -6936,8 +6936,23 @@ def standing_graph_answer(port: int, scope: str, n, q: str):
     return rivals.answer_from(out, "graph")
 
 
+def _router_consult(port: int, scope: str):
+    """0066 sp2 — the escalation's wire half: one cheap governed thought
+    under the librarian's seat, pinned to the stable's judge mind, metered
+    like every thought. Returns a callable(prompt) -> text|None; a dark
+    ground returns None and the deterministic read serves (the park law)."""
+    _, seat_did = lib_seat(scope)
+
+    def mind(prompt: str):
+        j = governed_thought(port, JUDGE_MIND, "medium", prompt,
+                             max_tokens=120, as_did=seat_did)
+        return j["text"] if j else None
+    return mind
+
+
 def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
-                       variant: str | None = None) -> dict | None:
+                       variant: str | None = None,
+                       attributes: dict | None = None) -> dict | None:
     """The ask path, whole (0038 sp1+sp2), STRUCTURED (0071 sp2): the
     DISPATCHER routes first — its choice a signed record, an unbuilt row
     falling to the baseline loudly — then the chosen row's projection regrows
@@ -6985,7 +7000,8 @@ def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
     from orreth_sim import variants as _var
     d = dispatcher.dispatch(n, me, seat_kp, q2, origin=origin,
                             built=_var.built(tournament.ALL_RETRIEVERS),
-                            force=variant)
+                            force=variant, attributes=attributes,
+                            consult=_router_consult(port, scope))
     n.records.pop(d["record"], None)   # an ask never cites its OWN routing —
     # the choice persists on the wire; it just doesn't answer itself
     # 0065 sp1 — the choice is CANONICAL (the menu's name); the flow that
@@ -7156,8 +7172,11 @@ def on_ask(port: int, scope: str, r: dict) -> None:
                 askcache.evict_ref(_ASK_CACHE, hit["ref"])
             print(f"  ↳ ask {r['id']}: a cached answer died with its record "
                   f"— answering fresh")
+    attrs = r.get("attributes") if isinstance(r.get("attributes"), dict) \
+        else None
     s = wire_stacks_answer(port, scope, text,
-                           origin=f"ask:{did[:22]}", variant=variant)
+                           origin=f"ask:{did[:22]}", variant=variant,
+                           attributes=attrs)
     if s is None:
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "denied",
@@ -7191,8 +7210,8 @@ def on_ask(port: int, scope: str, r: dict) -> None:
         reply=reply, by=s["by"], citations=s["citations"],
         variant=s["variant"], choice_ref=s["choice_ref"],
         exchange=rec["id"],
-        attributes=r.get("attributes") if isinstance(r.get("attributes"), dict)
-        else None,
+        attributes=attrs,
+        honored=(["latency"] if attrs and attrs.get("latency") else []),
         confession=confession)
     if ttl > 0 and confession is None:
         # grace-served answers never replay — a cached confession would be

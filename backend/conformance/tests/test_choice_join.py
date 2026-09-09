@@ -43,8 +43,9 @@ def test_the_choice_wears_its_coordinate_and_featurizer():
     from orreth_sim import crypto
     body = json.loads(crypto._b64d(
         fld.records[d["record"]]["body"]).decode())["dispatch"]
-    assert body["featurizer_version"] == "shapes-v0", \
-        "sp2's mind replaces a NAMED v0, never an anonymous regex"
+    from orreth_sim import featurizer
+    assert body["featurizer_version"] == featurizer.VERSION, \
+        "the analyzer's version pins to its one source of truth"
     assert body.get("standard_ref"), "the whole rulebook ref rides in the body"
 
 

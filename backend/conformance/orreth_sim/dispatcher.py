@@ -101,16 +101,24 @@ def classify(ask: str) -> list[str]:
 
 def dispatch(node, librarian: dict, librarian_kp, ask: str, *,
              kind: str = "get", origin: str = "",
-             built: list | None = None, force: str | None = None) -> dict:
-    """One ask through the reflex: classify → the standard's first matching
-    rule → the flavor — falling to the baseline LOUDLY when the chosen row is
-    not yet built. The choice lands as a signed record, always.
-    force (0071 sp2): the asker chose the row itself — Auto stands aside, the
-    classification is still recorded, and the choice record says who chose."""
+             built: list | None = None, force: str | None = None,
+             attributes: dict | None = None, consult=None) -> dict:
+    """One ask through the reflex: the Analyzer reads → the standard's first
+    matching rule → the flavor — falling to the baseline LOUDLY when the
+    chosen row is not yet built. The choice lands as a signed record, always.
+    force (0071 sp2): the asker chose the row itself — Auto stands aside.
+    consult (0066 sp2): the escalation the docstring always promised — on an
+    AMBIGUOUS read (and only when the asker did not demand speed), a governed
+    mind picks from the menu under a typed contract; it parks honestly and
+    the deterministic read serves. The asker's own word always outranks the
+    mind; the mind's choice still obeys the built law like everyone."""
+    from . import featurizer
     std = standard(node)
-    shapes = classify(ask)
+    features = featurizer.featurize(ask, attributes)
+    shapes = features["shapes"]
     rule = next((r for r in std.get("rules", [])
                  if r.get("when") in shapes), None)
+    consulted = None
     if force:
         chosen = force
         why = f"the asker chose «{force}» — Auto stood aside"
@@ -118,6 +126,15 @@ def dispatch(node, librarian: dict, librarian_kp, ask: str, *,
     else:
         chosen = rule["route"] if rule else std.get("default", "naive")
         why = rule["why"] if rule else "no shape matched — the default row serves"
+        if consult is not None and featurizer.should_consult(features):
+            consulted = featurizer.consult(consult, ask, features)
+            if "style" in consulted:
+                chosen = consulted["style"]
+                why = (f"the ask was ambiguous — a quick governed look chose "
+                       f"«{chosen}»: {consulted['why']}")
+                rule = {"when": "mind-consulted", "why": why}
+            else:
+                why += f" ({consulted['parked']})"
     # the rows standing NOW — the caller's truth; the standard's genesis list
     # is the fallback (v2 of the asset rides the lanes as the rows earn it)
     built = built or std.get("built") or ["naive"]
@@ -155,7 +172,9 @@ def dispatch(node, librarian: dict, librarian_kp, ask: str, *,
                          "rule": (rule or {}).get("when", "default"),
                          "why": why, "standard_version": std.get("version", "?"),
                          **({"standard_ref": srow[0]} if srow else {}),
-                         "featurizer_version": "shapes-v0",
+                         "featurizer_version": featurizer.VERSION,
+                         "features": features,
+                         **({"consulted": consulted} if consulted else {}),
                          "at": NOW()}}
     rec = make_memory(librarian, librarian_kp, node.scope, body,
                       kind="episodic",

@@ -219,9 +219,34 @@ recorded like every GET choice. `dispatch_put` stops returning "everything."
    follow-on); bodies stay in the object store by law, so the one-query join is the
    LINEAGE walk (SQL) with content reads through the governed body door, as
    everywhere.*
-2. **sp2 — The Analyzer.** The versioned featurizer; the governed classify leg on ambiguity;
-   the escalation implemented; choice `why` human-readable. Suite: deterministic determinism
-   + the mind's typed contract + parks honestly.
+2. **sp2 — The Analyzer.** ✅ **LANDED 2026-09-09 — "agentically, hot when applicable"
+   is live.** The six shapes stopped being an anonymous regex pile:
+   `orreth_sim/featurizer.py` is the DECLARED extractor (firmware `feat-v1`, pinned in
+   every choice record) emitting the charter's dimensions in plain words — what kind of
+   question · how many parts · length · domain words · how fresh the answer must be
+   (historical/current/timeless off the standing time law) · modality · the asker's
+   latency preference · and how CONFIDENT the deterministic read is. **The escalation
+   the docstring promised in July finally exists**, on the 0048 pattern exactly: only a
+   LOW-confidence read from an asker who did not demand speed earns one governed
+   thought (the librarian's seat, the stable's judge mind, metered like every thought);
+   the mind picks from the eleven-name menu under a typed contract — one re-ask, then
+   an HONEST PARK with the deterministic read serving, the stumble on the record. The
+   asker's own word (`force`) outranks the mind; the mind's choice obeys the built law
+   like everyone. **The first honored attribute**: `latency: fast` gates the escalation
+   and the envelope's `honored` list finally says so — attributes stop being
+   received-and-ignored. The choice record carries `features` + `consulted` whole.
+   *Proven live on the rig, three lanes: an AMBIGUOUS ask (four conflicting shapes)
+   consulted a real governed mind that chose «multi-agent» with a plain sentence — the
+   why, the features, and the consult all on the choice record; the same ambiguity with
+   `latency: fast` spent NO thought and the envelope confessed `honored=['latency']`; a
+   clear ask stayed HOT, routed by rule with no mind involved. And the park law proved
+   itself unprompted: the first live consult hit a pin/class mismatch and served the
+   deterministic read with the park spoken on the record — exactly the designed
+   failure. Suite 454→463 (nine Analyzer laws). Rust green.* *Honest remainders: the
+   consult rides the judge mind at medium class (a dedicated cheap router mind is an
+   allocation decision for ada's market, not a code edit); confidence is a
+   deterministic rule pair — its thresholds become tunable when the standings (sp4)
+   show where it misjudges.*
 3. **sp3 — Signals and the rungs.** The signal vector; observation-outcome records; vera's
    three-rung sampling; two-tier bench wiring. Suite: a verdict lands at every rung.
 4. **sp4 — Standings and the proposal generator.** The standings projection; the nightly
