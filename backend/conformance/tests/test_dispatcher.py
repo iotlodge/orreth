@@ -21,9 +21,14 @@ def test_standard_plants_once_as_data():
     assert dispatcher.plant_standard(fld, lib, kp)
     assert dispatcher.plant_standard(fld, lib, kp) is None   # genesis once
     std = dispatcher.standard(fld)
-    assert std["version"] == "1" and std["default"] == "naive"
-    assert {r["route"] for r in std["rules"]} == {"multimodal", "graph",
-                                                  "swarm", "rerank"}
+    # pin to the genesis truth itself, not a literal — the rule-7 idiom
+    assert std["version"] == dispatcher.STANDARD_V1["version"]
+    assert std["default"] == "naive"
+    # every route names a DECLARED style, canonically (0065 sp1) — the
+    # registry is the vocabulary, never a hand-kept list here
+    from orreth_sim import variants
+    assert all(variants.resolve(r["route"]) == r["route"]
+               for r in std["rules"])
 
 
 def test_shapes_read_deterministically():

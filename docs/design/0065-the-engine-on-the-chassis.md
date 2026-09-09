@@ -211,9 +211,33 @@ Three seams, zero new stores:
 
 ## 6. The spoonfuls (proposed order)
 
-1. **sp1 — The registry and the drawer.** `variants.py` (eleven declarations + genesis
-   configs), the `variants` craft drawer + gate_check + teachings, the routing standard
-   derived from it, the two-lane standard fix. Suite: registry laws + gate refusals.
+1. **sp1 — The registry and the drawer.** ✅ **LANDED 2026-09-09 — the eleven are
+   declared, the menu speaks, the gate teaches.** `orreth_sim/variants.py`: the charter's
+   eleven as firmware declarations (title · executing row · stages over the six module
+   boundaries · requires · cost class · delta · why · blast · genesis knobs); `resolve()`
+   speaks both vocabularies (legacy flow names map — rerank→advanced, swarm→multi-agent;
+   router resolves to none, Auto being a switch position, never a style); **`built()`
+   DERIVES from registry × standing flows — the three hand-kept arrays retire**. The
+   routing standard's genesis moved to v2: canonical route names, and the recon's two
+   classified-unrouted shapes finally routed (comparative→multi-agent serves TODAY;
+   temporal→memory-augmented names the right row and falls loudly until sp4 — the
+   Dispatcher's own law, never a special case); `dispatch()` normalizes both vocabularies
+   so no honest choice falls over a name. The `variants` craft drawer stands: variant-*
+   is PURPOSE by the razor (prod-editable), may land fresh like a dial, is gate-checked
+   BEFORE landing (undeclared style → the menu; undeclared knob → the declared ones +
+   the blast; wrong type/negative → the declaration; clean turns land CANONICAL), and
+   every sibling carries the style's teachings. The two-lane wound's first stitch: the
+   universe pull keeps routing-standard rows, so a promotion planted above reaches both
+   lanes' node. *Proven live on the rig: «advanced» (a menu name that never existed
+   before) served with the envelope confessing `variant: advanced` while the rerank flow
+   ran underneath; «hyde» (declared, unbuilt) fell LOUDLY to the baseline; «quantum»
+   refused naming the menu; the craft door refused `turbo` with the teaching and landed
+   `{"hops": "2"}` canonical as 2 with teachings on the sibling. Suite 398→407 (nine
+   registry laws); Rust green.* *Honest remainders: a landed config head is real craft
+   but takes EFFECT when sp4 threads `config()` through each flow — named, never silent;
+   the live rig's shelf standard stays v1 until the promotion lane argues v2 (genesis
+   plants once — fresh worlds get v2); the universe-pull stitch is wire-postured, its
+   live proof rides the first real promotion.*
 2. **sp2 — The chunk/tree projection.** Plane DDL + doors + eviction (L2); the sweep beat;
    `stacks.project` learns to read the standing projection (per-ask rebuild becomes the dev
    fallback, never the production path); Hierarchical's tree rows. Suite: rebuild-identical +

@@ -128,7 +128,7 @@ from orreth_sim import (askcache, atlas, bell as bell_mod, continuity, crypto,
                         dials, fingertip, fuel as fuel_mod, improver, market,
                         markers, meaning, mirror, node, observatory, parlor,
                         profile, purge, seeds, serials, shipyard, speech,
-                        thumb as thumb_mod, traffic, vera)
+                        thumb as thumb_mod, traffic, variants, vera)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -6407,7 +6407,8 @@ def _stacks_node(port: int, scope: str):
                 "token": token, "requester_scope": UNIVERSE_SCOPE})
             from orreth_sim import canon as _canon
             cand = [h for h in r2.get("hits", [])
-                    if "knowledge" in (h.get("tags") or [])
+                    if "routing-standard" in (h.get("tags") or [])
+                    or "knowledge" in (h.get("tags") or [])
                     or (_canon.class_of({"tags": h.get("tags") or []})
                         .startswith("chronicle-")
                         and "asset" not in (h.get("tags") or [])
@@ -6729,12 +6730,15 @@ def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
     q2, pre, settled = _ask_self_knowledge(n, q)  # state resolves before retrieval
     _tap0 = {r: e.get("n", 0)
              for r, e in (getattr(n, "recalls", None) or {}).items()}
+    from orreth_sim import variants as _var
     d = dispatcher.dispatch(n, me, seat_kp, q2, origin=origin,
-                            built=list(tournament.ALL_RETRIEVERS),
+                            built=_var.built(tournament.ALL_RETRIEVERS),
                             force=variant)
     n.records.pop(d["record"], None)   # an ask never cites its OWN routing —
     # the choice persists on the wire; it just doesn't answer itself
-    a = tournament.answer_as(n, d["flavor"], q2)
+    # 0065 sp1 — the choice is CANONICAL (the menu's name); the flow that
+    # executes it may still wear its old row name underneath
+    a = tournament.answer_as(n, _var.row_for(d["flavor"]) or d["flavor"], q2)
     # the pre-pass's quotes are recalls too (0057 sp2): a human's question
     # answered FROM a report is that report being used
     from orreth_sim import stacks as _stk
@@ -6839,15 +6843,19 @@ def on_ask(port: int, scope: str, r: dict) -> None:
              {"id": r["id"], "status": "denied",
               "result": {"error": "an empty ask has no answer"}})
         return
+    from orreth_sim import variants as _var
     v = str(r.get("variant") or "").strip().lower()
-    variant = None if v in ("", "auto") else v
-    if variant and variant not in tournament.ALL_RETRIEVERS:
-        rows = " · ".join(sorted(tournament.ALL_RETRIEVERS))
-        call(port, "POST", "/requests/resolve",
-             {"id": r["id"], "status": "denied",
-              "result": {"error": f"unknown variant «{variant}» — the rows "
-                                  f"standing today: {rows} (or leave it to Auto)"}})
-        return
+    variant = None if v in ("", "auto", "router") else v
+    if variant:
+        canonical = _var.resolve(variant)
+        if canonical is None:
+            menu = " · ".join(_var.MENU)
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "denied",
+                  "result": {"error": f"unknown variant «{variant}» — the "
+                                      f"menu: {menu} (or leave it to Auto)"}})
+            return
+        variant = canonical
     # 0071 sp5 — THE ASK-CACHE: the same words on the same floor under the same
     # guardrail set may serve again inside the human's TTL dial — every hit
     # confessed in the envelope, and only while the exchange record the answer
@@ -11928,6 +11936,7 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
         # its value turns at this door
         _is_cap_word = (name.startswith("capability-")
                         or name.startswith("dial-")
+                        or name.startswith("variant-")
                         or any(name.lower().startswith(p + "-")
                                for p in _cap_prefixes))
         if not _is_cap_word:
@@ -11936,7 +11945,7 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
                         "(0045 sp3). Capability craft remains editable: "
                         "purpose is the human's domain. Nothing changed")
     heads = _craft_heads(port)
-    if name not in heads and not name.startswith("dial-"):
+    if name not in heads and not name.startswith(("dial-", "variant-")):
         return done(f"the shelf holds no craft named “{name}” — nothing changed")
     # a dial may land FRESH on a floor's shelf (sp3 — the ladder's first
     # override has no local head to chain; the registry is its existence)
@@ -11956,6 +11965,16 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
         flaw = cap_manifest_flaw(parsed)
         if flaw:
             return done(f"the edit refuses loudly — {flaw}. Nothing changed")
+    if name.startswith("variant-"):
+        # 0065 sp1 — a style's numbers are craft, its shape firmware: the
+        # gate refuses an undeclared style (naming the menu) or an
+        # undeclared knob (naming the declared ones) BEFORE anything lands;
+        # a clean turn lands canonical
+        flaw, parsed = variants.gate_check(name, parsed)
+        if flaw:
+            print(f"  🎛 variant turn refused at the door: {name} — {flaw[:80]}")
+            return done(f"the style refuses at the gate — {flaw}. "
+                        "Nothing changed")
     if name.startswith("dial-"):
         # 0063 sp2 — bounds are law AT THE DOOR: a flawed value never lands
         # (sp1's read-side refusal stands behind as the second lock), and a
@@ -11977,6 +11996,9 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
         # every version teaches (0063 sp2): the declaration rides the
         # sibling, so no dial record is ever a bare number with amnesia
         body["asset"]["dial"] = dials.teachings(name[len("dial-"):])
+    if name.startswith("variant-"):
+        # the style's declaration rides every config sibling (0065 sp1)
+        body["asset"]["variant"] = variants.teachings(name[len("variant-"):])
     if r.get("note"):
         body["asset"]["note"] = str(r["note"])[:200]
     rec = node.make_memory({"did": IMP_DID, "scope": scope}, IMP, scope,
@@ -11998,6 +12020,9 @@ def _craft_category(name: str, tags: list) -> str:
     if n.startswith("dial-") or "dial" in t:
         return "dials"                        # machine operating VALUES — L1's
                                               # drawer, never mixed with words
+    if n.startswith("variant-"):
+        return "variants"                     # retrieval styles' numbers —
+                                              # the Workshop's own drawer (0065)
     if "firmware" in t or "prompt" in t:
         return "prompts"
     if "skill" in n:

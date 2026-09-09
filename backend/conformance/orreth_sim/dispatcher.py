@@ -18,28 +18,42 @@ from __future__ import annotations
 
 import re
 
-from . import improver
+from . import improver, variants
 from .identity import NOW
 from .node import make_memory
 
 STANDARD_NAME = "routing-standard"
 
-# v1 — the genesis standard: rules are DATA on the shelf, never code. The
-# librarian proposes revisions from the standings; JB gates rewrites (0031).
+# v2 (0065 sp1) — the genesis standard speaks the MENU's canonical names and
+# its `built` list DERIVES from the variant registry (the three hand-kept
+# copies retire). Rules stay DATA on the shelf: a fresh world plants this;
+# a standing world's shelf version keeps serving until the promotion lane
+# revises it. Two shapes the recon found classified-but-unrouted now route:
+# comparative asks decompose (a built flow serves today) and temporal asks
+# name Memory-Augmented — falling to the baseline LOUDLY until sp4 builds it,
+# which is the Dispatcher's own honest law, never a special case.
 STANDARD_V1 = {
-    "version": "1",
+    "version": "2",
     "rules": [
         {"when": "media", "route": "multimodal",
          "why": "media asks need the multimodal embedder"},
         {"when": "relational", "route": "graph",
          "why": "relationship-shaped asks walk edges, not distances"},
-        {"when": "multi-source", "route": "swarm",
+        {"when": "multi-source", "route": "multi-agent",
          "why": "cross-source asks decompose and recompose"},
-        {"when": "precision", "route": "rerank",
+        {"when": "comparative", "route": "multi-agent",
+         "why": "each-and-which asks span subjects — they decompose per "
+                "subject or they serve noise (the yardstick's find, 0053)"},
+        {"when": "temporal", "route": "memory-augmented",
+         "why": "as-of-when asks need the conversation's own past — the "
+                "right row by name; the baseline serves loudly until it "
+                "stands (0065 sp4)"},
+        {"when": "precision", "route": "advanced",
          "why": "exactness-shaped asks earn the second pass"},
     ],
     "default": "naive",
-    "built": ["naive"],          # the rows that BREATHE — grown as sp3/sp4 land
+    # derived, never hand-maintained: the genesis truth is the registry's
+    "built": variants.built(["naive"]),
 }
 
 _SHAPES = (
@@ -107,6 +121,12 @@ def dispatch(node, librarian: dict, librarian_kp, ask: str, *,
     # the rows standing NOW — the caller's truth; the standard's genesis list
     # is the fallback (v2 of the asset rides the lanes as the rows earn it)
     built = built or std.get("built") or ["naive"]
+    # 0065 sp1 — one vocabulary: a standing world's shelf standard may still
+    # speak the legacy flow names ('rerank', 'swarm') while the registry
+    # speaks the menu's — both resolve to the canonical style, so no honest
+    # choice ever falls to the baseline over a name
+    chosen = variants.resolve(chosen) or chosen
+    built = [variants.resolve(b) or b for b in built]
     fallback = None
     if chosen not in built:
         fallback = chosen
