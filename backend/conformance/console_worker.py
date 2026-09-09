@@ -7055,7 +7055,7 @@ def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
             + (f" — citations: {cites}" if cites else "")
             + ("" if s["settled"] else
                " · " + sentence(port, "note-dispatcher", flavor=s["variant"],
-                                why=s["why"], choice=s["choice_ref"][:18]))
+                                why=s["why"], choice=s["choice_ref"]))
             + (f" · 🧪 arm «{arm['label']}» "
                f"[{arm['machine'].split(':', 1)[-1][:12]}] served" if arm else ""))
 
@@ -7177,6 +7177,12 @@ def on_ask(port: int, scope: str, r: dict) -> None:
                       # glass and any query read it off the record, never a
                       # side channel
                       tags=["ask", f"variant:{s['variant']}"])
+    if s.get("choice_ref"):
+        # 0066 sp1 — the answer DERIVES from its choice: a thumb or verdict
+        # on this exchange reaches the routing decision in ONE lineage hop
+        # (the GIN index the plane already keeps), the same join the
+        # experiment's arm tags proved
+        rec["derived_from"] = [s["choice_ref"]]
     try:
         call(port, "POST", "/records", rec)
     except Exception:
@@ -12686,9 +12692,21 @@ def yardstick_run() -> bool:
         q = str(item.get("q") or "")
         if not q:
             continue
+        choice_ref = None
         try:
-            ans = wire_stacks_ask(u_port, UNIVERSE_SCOPE, q,
-                                  origin="the-memory-yardstick")
+            # 0066 sp1 — the same road, the structured face: the row keeps
+            # the whole choice ref so a verdict on this answer reaches the
+            # routing decision it judges
+            _s = wire_stacks_answer(u_port, UNIVERSE_SCOPE, q,
+                                    origin="the-memory-yardstick")
+            if _s is None:
+                ans = "the stacks are unreachable — try again on the next beat"
+            else:
+                choice_ref = _s.get("choice_ref")
+                cites = " · ".join(f"{c['doc']} [{c['ref'][:18]}…] {c['score']}"
+                                   for c in _s["citations"])
+                ans = (_s["pre"] + _s["answer"]
+                       + (f" — citations: {cites}" if cites else ""))
         except Exception as ex:
             ans = f"the ask lane stumbled: {ex}"
         if _vera_spent_today() >= dial_value("assay-ceiling"):
@@ -12737,7 +12755,8 @@ def yardstick_run() -> bool:
         rows.append({"q": q, "focus": item.get("focus"),
                      "score": round(float(sc), 2),
                      "note": str(why or "")[:160],
-                     "answer": str(ans or "")[:280]})
+                     "answer": str(ans or "")[:280],
+                     **({"choice": choice_ref} if choice_ref else {})})
         print(f"  📏 {float(sc):.2f} — {q[:70]}")
     body = {"set": set_ref, "asked": len(questions), "scored": scored,
             "mean": round(total / scored, 3) if scored else None,

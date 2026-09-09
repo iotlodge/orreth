@@ -194,9 +194,31 @@ recorded like every GET choice. `dispatch_put` stops returning "everything."
 
 ## 6. The spoonfuls (proposed order)
 
-1. **sp1 — The join.** Choice records gain coordinate/lineage/features; answers carry the
-   choice ref; the yardstick and exchange records carry it too. Suite: thumb → verdict →
-   choice walkable in one query.
+1. **sp1 — The join.** ✅ **LANDED 2026-09-09 — the choice joins the world: every future
+   reward can reach its action.** The dispatch record stops being a leaf: it DERIVES
+   from the exact rulebook version that made it (`derived_from` → the routing-standard
+   asset; a genesis-only world leaves lineage empty, honestly — never a fabricated
+   ref), wears its coordinate as tags (0033 §4's idiom: `variant:<style>` matching
+   0065 sp5's answer law, `origin:<who asked>`), and carries `featurizer_version:
+   "shapes-v0"` + the whole `standard_ref` in the body — sp2's mind will replace a
+   NAMED v0, never an anonymous regex. The answer's side: **the ask door's exchange
+   record derives from the choice** (one GIN-indexed lineage hop — the same join the
+   experiment's arm tags proved), the parlor's routing note stops truncating the
+   choice to eighteen characters (refs are data, 0052's law — the recon's named
+   wound), and **the yardstick rides the structured lane**, each row keeping the whole
+   choice ref so a verdict on an answer reaches the routing decision it judges.
+   *Proven live on the rig: an SDK ask, then ONE SQL join (`e.derived_from[0] = c.id`
+   on the plane's standing GIN index) walked the exchange to its choice — the
+   coordinate tags read back (`variant:naive · origin:ask:did:key:…`), the body
+   through the governed door confessed flavor · featurizer `shapes-v0` · the spoken
+   why · `standard_ref`, and the choice's own lineage resolved to the routing-standard
+   asset version. Suite 450→454 (four join laws: rulebook lineage · coordinate +
+   featurizer · honest-empty lineage · thumb→choice in one hop). Rust green.* *Honest
+   remainders: the parlor's audience record carries the whole ref in TEXT — its
+   structured `derived_from` rides when the parlor lane returns the ref (a small
+   follow-on); bodies stay in the object store by law, so the one-query join is the
+   LINEAGE walk (SQL) with content reads through the governed body door, as
+   everywhere.*
 2. **sp2 — The Analyzer.** The versioned featurizer; the governed classify leg on ambiguity;
    the escalation implemented; choice `why` human-readable. Suite: deterministic determinism
    + the mind's typed contract + parks honestly.

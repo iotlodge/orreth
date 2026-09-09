@@ -141,15 +141,31 @@ def dispatch(node, librarian: dict, librarian_kp, ask: str, *,
         chosen = "naive"
         why += (f"; the default «{fallback}» does not stand here either — "
                 "the baseline row serves, on the record")
+    # 0066 sp1 — THE CHOICE JOINS THE WORLD: it stops being a leaf. Lineage
+    # points at the exact policy version that made it (re-scorable under any
+    # future weights); the coordinate rides as tags (0033 §4's idiom — the
+    # style tag matching 0065 sp5's answer-record law, the origin when one
+    # spoke); the featurizer names its version so sp2's mind replaces a
+    # NAMED v0, never an anonymous regex.
+    srow = improver.active_asset(node, STANDARD_NAME)
     body = {"dispatch": {"kind": kind, "ask": (ask or "")[:200],
                          **({"origin": origin} if origin else {}),
                          "shapes": shapes, "flavor": chosen,
                          **({"wanted": fallback} if fallback else {}),
                          "rule": (rule or {}).get("when", "default"),
                          "why": why, "standard_version": std.get("version", "?"),
+                         **({"standard_ref": srow[0]} if srow else {}),
+                         "featurizer_version": "shapes-v0",
                          "at": NOW()}}
-    rid = node.write(make_memory(librarian, librarian_kp, node.scope, body,
-                                 kind="episodic", tags=["dispatch", chosen, kind]))
+    rec = make_memory(librarian, librarian_kp, node.scope, body,
+                      kind="episodic",
+                      tags=["dispatch", chosen, kind, f"variant:{chosen}",
+                            *([f"origin:{origin[:48]}"] if origin else [])])
+    if srow:
+        rec["derived_from"] = [srow[0]]   # the choice ← the rulebook version;
+        # an unplanted (genesis-only) standard leaves lineage EMPTY, honestly —
+        # never a fabricated ref
+    rid = node.write(rec)
     return {"flavor": chosen, "why": why, "shapes": shapes, "record": rid,
             **({"wanted": fallback} if fallback else {})}
 
