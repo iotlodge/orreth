@@ -90,6 +90,29 @@ def plant_standard(node, librarian: dict, librarian_kp) -> str | None:
     return node.write(rec)
 
 
+def plant_router_retirement(node, librarian: dict, librarian_kp) -> str | None:
+    """0066 sp5 — the router ROW retires honorably, ON THE RECORD (0065 L1's
+    word): one signed record per world, the librarian's authorship, saying
+    what retired, what absorbed it, and where the tactic-picker lives on.
+    Dormancy is never deletion — the record IS the honorable rest."""
+    for r in node.records.values():
+        if "router-retired" in (r.get("tags") or []):
+            return None                    # the rest already stands
+    rec = make_memory(librarian, librarian_kp, node.scope,
+                      {"retirement": {
+                          "row": "router",
+                          "absorbed_by": "Auto — the selector's own switch "
+                                         "position, never a style",
+                          "tactic_lives_on": "inside the swarm's fan-out, "
+                                             "picking each part's row",
+                          "why": "0065 L1 (flows, not floors) + 0066: the "
+                                 "Router became the Dispatcher's own brain; "
+                                 "a contestant that IS the referee cannot "
+                                 "stand in the contest"}},
+                      kind="episodic", tags=["router-retired", "dispatch"])
+    return node.write(rec)
+
+
 def standard(node) -> dict:
     """The ACTIVE standard's word — genesis shape until a version stands."""
     row = improver.active_asset(node, STANDARD_NAME)
@@ -107,7 +130,8 @@ def classify(ask: str) -> list[str]:
 def dispatch(node, librarian: dict, librarian_kp, ask: str, *,
              kind: str = "get", origin: str = "",
              built: list | None = None, force: str | None = None,
-             attributes: dict | None = None, consult=None) -> dict:
+             attributes: dict | None = None, consult=None,
+             slice_pct: int = 0) -> dict:
     """One ask through the reflex: the Analyzer reads → the standard's first
     matching rule → the flavor — falling to the baseline LOUDLY when the
     chosen row is not yet built. The choice lands as a signed record, always.
@@ -149,6 +173,25 @@ def dispatch(node, librarian: dict, librarian_kp, ask: str, *,
     # choice ever falls to the baseline over a name
     chosen = variants.resolve(chosen) or chosen
     built = [variants.resolve(b) or b for b in built]
+    # 0066 sp5 — THE LIVE SLICE: a small, dialed share of Auto-routed asks
+    # deterministically tries a style the rulebook did not pick — the
+    # standings' only live exploration, confessed on the record. Never on a
+    # caller's own choice, never over a spent thought.
+    exploration = None
+    if slice_pct > 0 and not force and not consulted and len(built) > 1:
+        from .crypto import content_hash
+        h = int(content_hash({"explore": (ask or "")})[7:15], 16)
+        if (h % 100) < min(int(slice_pct), 20):     # the hard bound holds
+            others = [b for b in built
+                      if (variants.resolve(b) or b) !=
+                      (variants.resolve(chosen) or chosen)]
+            if others:
+                exploration = {"instead_of": chosen}
+                chosen = others[(h // 100) % len(others)]
+                why = (f"the exploration slice tried «{chosen}» instead of "
+                       f"«{exploration['instead_of']}» — a small measured "
+                       "share, inside the human's dial, on the record")
+                rule = {"when": "exploration-slice", "why": why}
     fallback = None
     if chosen not in built:
         fallback = chosen
@@ -180,6 +223,8 @@ def dispatch(node, librarian: dict, librarian_kp, ask: str, *,
                          "featurizer_version": featurizer.VERSION,
                          "features": features,
                          **({"consulted": consulted} if consulted else {}),
+                         **({"exploration": exploration} if exploration
+                            else {}),
                          "at": NOW()}}
     rec = make_memory(librarian, librarian_kp, node.scope, body,
                       kind="episodic",
@@ -195,12 +240,20 @@ def dispatch(node, librarian: dict, librarian_kp, ask: str, *,
 
 
 def dispatch_put(node, tags: list[str]) -> list[str]:
-    """The PUT side: which projections index a new record — every BUILT row
-    whose appetite matches (v1: the baseline eats everything; the specialists
-    declare appetites as they land in sp3/sp4). Placement itself stays the
-    universe's law (0022) — this only names the indexes."""
+    """The PUT side (0066 sp5 — 0065's parked stub, paid): which styles'
+    projections index a new record, DERIVED from the registry and the
+    record's own modality — deterministic, never "everything". A
+    media-tagged record feeds the media style and the baseline; everything
+    else feeds every text style and skips the media shelf. Placement itself
+    stays the universe's law (0022) — this only names the indexes."""
     std = standard(node)
-    return list(std.get("built") or ["naive"])
+    built = [variants.resolve(b) or b for b in (std.get("built") or ["naive"])]
+    media = any(str(t).startswith("media") for t in (tags or []))
+    if media:
+        rows = [s for s in built if s in ("multimodal", "naive")]
+    else:
+        rows = [s for s in built if s != "multimodal"]
+    return rows or ["naive"]
 
 
 def choices(node, k: int = 8) -> list[dict]:

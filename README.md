@@ -46,8 +46,8 @@ flowchart TD
 
 ## What is running, today, on one laptop
 
-🟢 **Sixty-seven dives closed whole (`0000`–`0064` · `0065` · `0071`), every landed decision locked** (`docs/decisions/` + each
-dive's own ledger) · the **Python reference proves the whole model — 450 conformance tests** · the
+🟢 **Sixty-eight dives closed whole (`0000`–`0064` · `0065` · `0066` · `0071`), every landed decision locked** (`docs/decisions/` + each
+dive's own ledger) · the **Python reference proves the whole model — 484 conformance tests** · the
 **Rust plane** runs it (six crates, `orrethd` — one binary, tier as a profile, conformance-green
 against fixtures signed in Python and verified in Rust) · **one command** (`scripts/dev.sh start`)
 raises a universe of six ecosystems, twelve fields, and a working population of governed agents,
@@ -424,7 +424,7 @@ being *used*.
 
 ## From substrate to estate — the recent eras, compressed
 
-*(the full record is `docs/design/README.md` — sixty-seven dives, each closed only when proven
+*(the full record is `docs/design/README.md` — sixty-eight dives, each closed only when proven
 live by a human in the glass; the standing proof register is
 [`docs/design/the-honest-boundary.md`](docs/design/the-honest-boundary.md))*
 
@@ -460,6 +460,14 @@ live by a human in the glass; the standing proof register is
   graph — no more rebuilding the shelf per question); the tournament grades all eleven with
   latency and cost beside quality; and which style served an answer is a field, a tag, a spoken
   sentence, and a ledger column — never a secret. The first kernel dive a proof demanded.
+- **The router learned to read, think, keep score, and argue** (0066, one day): every ask is
+  read by a declared analyzer before it routes; an ambiguous one earns exactly one governed
+  thought that picks from the menu and parks honestly when it stumbles; every choice is a
+  record joined to its rewards (judge scores, latency, cost — and a human's 👎, which vetoes
+  a sample but never tilts a score); Bayesian standings replay answered questions through the
+  styles not chosen, and only a challenger whose credible floor clears the incumbent's ceiling
+  may stage a rule change — at the human's gate, never by stealth; a small dialed slice
+  explores live inside a bound the dial can never widen.
 
 ## Where it started becoming an institution — the earlier keystones
 
@@ -586,7 +594,7 @@ orreth/
 │   ├── orreth-agent-sdk/      ← the FieldClient SDK — persistent identities that re-join as the same self
 │   └── flavors/               ← lifeforce agents (prototype · LangGraph · AgentField sentinel)
 ├── backend/
-│   ├── conformance/           ← the Python reference (450 tests) + console worker + live demos
+│   ├── conformance/           ← the Python reference (484 tests) + console worker + live demos
 │   └── plane/                 ← the Rust plane: 6 crates + orrethd (the daemon, serving its own glass)
 ├── infrastructure/            ← compose + CDK — one laptop, one universe, one command (and the demo site's stack)
 └── scripts/                   ← dev.sh (the rig) · demo.sh (the reel)

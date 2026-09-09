@@ -140,6 +140,44 @@ DIALS_V1 = {
                "meaning axis's own ninety-second sweep",
         "horizon": "takes hold within a minute",
     },
+    "replay-every": {
+        "type": "int", "unit": "seconds between beats", "min": 300,
+        "max": 604800, "genesis": 1800, "home": "universe",
+        "governs": "how often the router's scoreboard breathes — replaying "
+                   "answered questions through the styles it did not choose "
+                   "and rebuilding the standings (0066 sp4/sp5)",
+        "blast": "fast spends bench work and grows replay records; slow "
+                 "leaves the scoreboard stale and proposals late",
+        "why": "half an hour keeps the board honest without churning the "
+               "same few asks",
+        "horizon": "takes hold within a minute",
+    },
+    "standings-min-n": {
+        "type": "int", "unit": "samples before a cell may argue", "min": 3,
+        "max": 500, "genesis": 8, "home": "universe",
+        "governs": "the least measured samples BOTH sides need before the "
+                   "scoreboard may stage a routing proposal (0066 sp4) — "
+                   "thin evidence refuses below this line",
+        "blast": "low lets noise argue at your gate; high delays real "
+                 "winners from ever being proposed",
+        "why": "eight keeps a deterministic bench honest at rig volumes",
+        "horizon": "takes hold at the scoreboard's next breath",
+    },
+    "live-slice-pct": {
+        "type": "int", "unit": "percent of Auto asks that explore", "min": 0,
+        "max": 20, "genesis": 5, "home": "universe",
+        "governs": "the small live test slice (0066 sp5): this share of "
+                   "Auto-routed asks deterministically tries a style the "
+                   "rulebook did NOT pick, confessed on the choice record — "
+                   "the standings' only live exploration; 0 closes it",
+        "blast": "every explored ask may serve a weaker answer on purpose; "
+                 "the 20 ceiling is the hard bound set in advance — the "
+                 "dial can never widen it",
+        "why": "one ask in twenty buys the scoreboard live truth the "
+               "replay cannot reach (latency, real behavior) at a bounded "
+               "cost",
+        "horizon": "takes hold at the next ask",
+    },
     "extract-every": {
         "type": "int", "unit": "seconds between beats", "min": 30,
         "max": 604800, "genesis": 180, "home": "universe",

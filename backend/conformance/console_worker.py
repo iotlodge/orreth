@@ -2754,7 +2754,8 @@ def standings_beat(port: int, scope: str) -> None:
     from orreth_sim import standings as _std
     from orreth_sim import tournament as _t
     from orreth_sim import variants as _var
-    if time.time() - _STANDINGS_LAST.get(scope, 0.0) < 1800:
+    if time.time() - _STANDINGS_LAST.get(scope, 0.0) < \
+            dial_value("replay-every"):
         return
     _STANDINGS_LAST[scope] = time.time()
     sn, seat_kp, seat_did = _standings_node(port, scope)
@@ -2796,7 +2797,8 @@ def standings_beat(port: int, scope: str) -> None:
     if done or board:
         print(f"  ↳ the scoreboard: {scope} — {done} ask(s) replayed · "
               f"{len(board)} cell(s) standing")
-    prop = _std.propose(board, std)
+    prop = _std.propose(board, std,
+                        min_n=int(dial_value("standings-min-n") or 0))
     if not prop:
         return
     if open_ask(universe_port(port),
@@ -6678,6 +6680,7 @@ def _stacks_node(port: int, scope: str):
           or "routing-standard" in t or "dispatch" in t or "knowledge" in t
           or "distillation" in t or "distillation-dials" in t
           or "metabolism-report" in t    # the metabolism reads its own past (sp2)
+          or "router-retired" in t       # the row's rest, seen once (0066 sp5)
           or any(str(x).startswith("variant-") for x in t))  # the styles'
           # craft reaches the node (0065 sp4) — a turned knob takes effect
     # THE ROWS MEET THE REAL MEMORY (JB-locked 2026-07-22): the librarian's
@@ -7114,6 +7117,7 @@ def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
         return None
     me = {"did": seat_did, "scope": scope}
     dispatcher.plant_standard(n, me, seat_kp)     # genesis once; shelf from then on
+    dispatcher.plant_router_retirement(n, me, seat_kp)  # the row's rest (0066 sp5)
     from orreth_sim import canon as _cn
     _cn.plant_registry(n, me, seat_kp)            # the two books stand (0039 sp1)
     _cn.plant_dials(n, me, seat_kp)               # the metabolism's dials (sp3)
@@ -7146,7 +7150,9 @@ def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
     d = dispatcher.dispatch(n, me, seat_kp, q2, origin=origin,
                             built=_var.built(tournament.ALL_RETRIEVERS),
                             force=variant, attributes=attributes,
-                            consult=_router_consult(port, scope))
+                            consult=_router_consult(port, scope),
+                            slice_pct=int(dial_value("live-slice-pct",
+                                                     port, scope) or 0))
     n.records.pop(d["record"], None)   # an ask never cites its OWN routing —
     # the choice persists on the wire; it just doesn't answer itself
     # 0065 sp1 — the choice is CANONICAL (the menu's name); the flow that

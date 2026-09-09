@@ -118,13 +118,15 @@ def counterfactual(node, asked: str, qkind: str, chosen: str,
                        **({"of": of} if of else {})}}
 
 
-def propose(board: dict, standard: dict) -> dict | None:
+def propose(board: dict, standard: dict,
+            min_n: int | None = None) -> dict | None:
     """The scoreboard's one voice: for each question kind, find the style the
     CURRENT rulebook would route it to, and every challenger whose credible
     LOW clears the incumbent's credible HIGH with enough samples on both
     sides — the conservative test. One winner per kind at most; thin
     evidence refuses (None). The result is a STAGED standard revision plus
     the evidence rows — never an applied change."""
+    floor_n = int(min_n) if min_n else MIN_N
     routes = {r["when"]: variants.resolve(r["route"]) or r["route"]
               for r in standard.get("rules", [])}
     default = standard.get("default", "naive")
@@ -136,13 +138,13 @@ def propose(board: dict, standard: dict) -> dict | None:
         best = None
         for key, cell in board.items():
             k, style = key.split("·", 1)
-            if k != kind or style == incumbent or cell["n"] < MIN_N:
+            if k != kind or style == incumbent or cell["n"] < floor_n:
                 continue
             if best is None or cell["low"] > best[1]["low"]:
                 best = (style, cell)
         if best is None:
             continue
-        inc_high = inc["high"] if inc and inc["n"] >= MIN_N else None
+        inc_high = inc["high"] if inc and inc["n"] >= floor_n else None
         if inc_high is None:
             continue                      # the incumbent unmeasured — refuse
         if best[1]["low"] > inc_high:

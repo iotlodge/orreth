@@ -6,12 +6,18 @@ evidence passes the same day: a full survey of the kernel's feedback-and-improve
 machinery, and the licensed deep-research on learned retrieval routing (the proof repo's
 `docs/research/rl-routing-report.md`).*
 
-***Status: 🟡 DRAFTED · LOCKED — L1 (the learning ladder) and L3 (thumbs veto and calibrate,
-never score) approved by JB 2026-09-07; L2 (the three-level rule) approved WITH A CONDITION
-that is now a standing law: the language of every human-facing decision, section, and
-question must be crystal human clear — plain words first, canon terms as labels only. "One
-of the CORE objectives of E-RAG is human friendly terms and experience vs cryptic guessing"
-(JB, verbatim). §3.8 rewritten under that law the same hour.***
+***Status: ✅ CLOSED WHOLE 2026-09-09 — five spoonfuls in ONE DAY. The charter's hardest
+sentence is machinery: the router READS every ask (feat-v1, plain dimensions, pinned),
+THINKS only when it must (one governed thought on ambiguity, honestly parked when it
+stumbles), KEEPS SCORE (Beta standings over the signal vector, vetoes refused), ARGUES
+for its own improvement only under the conservative test at the human's gate, and
+EXPLORES inside a dialed, firmware-bounded slice — every choice a record joined to its
+rewards, every change a gated proposal, nothing learning by stealth. L3 appears in code
+three times (the thumb never a scalar). Stage 0+1 of the ladder stand; Stages 2/3 wait
+for volume BY DESIGN. Second out-of-order close: VERSION holds 0.71 (the monotone era
+law). Locks as taken 2026-09-07: L1 the learning ladder · L2 the three-level rule
+under the language law (JB's verbatim condition, now standing everywhere) · L3 thumbs
+veto and calibrate, never score.***
 
 ## 1. The demand, verbatim (the proof's charter)
 
@@ -305,8 +311,32 @@ recorded like every GET choice. `dispatch_put` stops returning "everything."
    the beat will stage it unprompted when it does; the replay/beat cadences and MIN_N
    become dials in sp5; a default-route change ('plain') is deliberately refused here
    — the default's argument is rarer and its own.*
-5. **sp5 — The live slice and the dials.** The ε-floor experiment wiring; the router dials;
-   the PUT-side registry routing; f:router's flow retires honorably on the record.
+5. **sp5 — The live slice and the dials.** ✅ **LANDED 2026-09-09 — the router's last
+   pieces: exploration inside the human's word, knobs with pre-set bounds, and an
+   honorable rest.** **The live slice**: a dialed share of Auto-routed asks
+   deterministically tries a style the rulebook did NOT pick (content-hash split — the
+   experiment machinery's own idiom), ALWAYS confessed on the choice record
+   (`exploration: {instead_of}` + the plain why + the explored style's tag); never
+   over the asker's word, never over a spent thought; **the 20% ceiling is firmware —
+   the dial can never widen the bound the human set in advance** (suite-held: a dial
+   of 99 behaves as 20). **Three router dials** on the 0063 machinery: `replay-every`
+   (1800) · `standings-min-n` (8) · `live-slice-pct` (5, max 20) — the beat and the
+   generator read them. **The PUT side paid** (0065's parked stub): `dispatch_put`
+   derives from the registry and the record's modality — media feeds the media style
+   and the baseline, text feeds every text style and skips the media shelf; never
+   "everything" again. **The router row retired honorably ON THE RECORD**: one
+   librarian-signed record per world (planted once, idempotent by the record's own
+   presence) naming what retired, that Auto absorbed it, and that the tactic-picker
+   lives on inside the swarm's fan-out — "a contestant that IS the referee cannot
+   stand in the contest." *Proven live on the rig: the slice dial turned 5→20 through
+   the one-motion door — AT THE UNIVERSE'S OWN DOOR, after the floor's gate correctly
+   refused a universe dial (0063's ladder law holding unprompted) — and within a dozen
+   asks the slice EXPLORED: served «multimodal» instead of «naive», confessed on the
+   choice record; canon restored (5). The retirement record read back from Postgres,
+   librarian-signed. Suite 478→484 (six slice laws). Rust green.* *Honest remainders:
+   explored asks ride the standings as real-lane samples by their variant tag — the
+   slice's dedicated latency-vs-quality readout is 0073's harness territory; the
+   replay's "nightly" is the replay-every dial's word, not a wall clock.*
 
 ## 7. The honest boundary rows this dive moves
 

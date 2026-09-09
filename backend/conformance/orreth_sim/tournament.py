@@ -75,10 +75,12 @@ def swarm_retrieve(node, query: str, k: int = 4) -> list[dict]:
     return sorted(merged.values(), key=lambda h: -h["score"])[:k]
 
 
+# 0066 sp5 — the router ROW retires honorably: Auto absorbed it (a switch
+# position, never a style), its tactic-picker lives on inside the swarm's
+# fan-out, and the retirement stands as a signed record on the floor
 ALL_RETRIEVERS = {**rivals.RETRIEVERS,
                   **styles.RETRIEVERS,          # the five new (0065 sp4)
                   "multimodal": lambda n, q, k=4: multimodal_retrieve(n, q, k),
-                  "router": lambda n, q, k=4: router_retrieve(n, q, k),
                   "swarm": lambda n, q, k=4: swarm_retrieve(n, q, k)}
 
 
