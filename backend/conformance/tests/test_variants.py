@@ -25,9 +25,8 @@ def test_every_declaration_teaches_completely():
 
 def test_built_derives_from_the_standing_rows():
     b = variants.built(ALL_RETRIEVERS)
-    assert set(b) == {"naive", "advanced", "multimodal", "multi-agent",
-                      "graph", "hybrid"}, \
-        "six styles ride flows that breathe today; five await sp4"
+    assert set(b) == set(variants.MENU), \
+        "ALL ELEVEN ride standing flows since sp4 — the menu serves whole"
     assert variants.built([]) == [], "no rows, nothing built — never a lie"
 
 

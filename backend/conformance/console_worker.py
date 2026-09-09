@@ -6520,7 +6520,9 @@ def _stacks_node(port: int, scope: str):
           lambda t: ("stacks" in t and ("document" in t or "tournament" in t))
           or "routing-standard" in t or "dispatch" in t or "knowledge" in t
           or "distillation" in t or "distillation-dials" in t
-          or "metabolism-report" in t)   # the metabolism reads its own past (sp2)
+          or "metabolism-report" in t    # the metabolism reads its own past (sp2)
+          or any(str(x).startswith("variant-") for x in t))  # the styles'
+          # craft reaches the node (0065 sp4) — a turned knob takes effect
     # THE ROWS MEET THE REAL MEMORY (JB-locked 2026-07-22): the librarian's
     # GATHERED knowledge lives on the universe's floors — a second read brings
     # it into the projection, trust and lineage riding with it
@@ -6864,7 +6866,8 @@ def standing_answer(port: int, scope: str, n, q: str):
     if not out:
         return None
     out.sort(key=lambda x: -x["score"])
-    out = out[:4]
+    from orreth_sim import variants as _v
+    out = out[:int(_v.config_for(n, "naive").get("k", 4))]
     _stk.record_recalls(n, out)
     print(f"  ↳ standing shelf served {len(out)} hit(s) — no rebuild")
     return rivals.answer_from(out, "naive")
@@ -6913,7 +6916,8 @@ def standing_graph_answer(port: int, scope: str, n, q: str):
     if not out:
         return None
     out.sort(key=lambda x: -x["score"])
-    out = out[:4]
+    from orreth_sim import variants as _v
+    out = out[:int(_v.config_for(n, "graph").get("k", 4))]
     _stk.record_recalls(n, out)
     print(f"  ↳ the graph walked {len(out)} witness(es) in Postgres — "
           f"no rebuild")

@@ -28,10 +28,12 @@ _terms = graphlaw.terms
 
 # ---------------------------------------------------------------- f:rerank
 
-def rerank_retrieve(projection: dict, query: str, k: int = 4) -> list[dict]:
-    """Wide then narrow: cosine casts a broad net (3k), then a second pass
-    re-scores by exact term overlap — the precision row's delta, nothing else."""
-    wide = stacks.retrieve(projection, query, k=3 * k)
+def rerank_retrieve(projection: dict, query: str, k: int = 4,
+                    wide_factor: int = 3) -> list[dict]:
+    """Wide then narrow: cosine casts a broad net (wide_factor × k), then a
+    second pass re-scores by exact term overlap — the precision row's delta,
+    nothing else. The net's width is the style's craft (0065 sp4)."""
+    wide = stacks.retrieve(projection, query, k=max(2, wide_factor) * k)
     qt = set(_terms(query))
     for h in wide:
         overlap = len(qt & set(_terms(h["text"]))) / (len(qt) or 1)
@@ -87,9 +89,11 @@ def graph_retrieve(gproj: dict, query: str, k: int = 4) -> list[dict]:
 # ---------------------------------------------------------------- f:hybrid
 
 def hybrid_retrieve(node, projection: dict, gproj: dict, query: str,
-                    k: int = 4) -> list[dict]:
+                    k: int = 4, w_vector: float = 0.5,
+                    w_graph: float = 0.5) -> list[dict]:
     """Vector + graph, fused at query time: distance finds the like, walking
-    finds the bound; the fusion ranks what BOTH ways can defend."""
+    finds the bound; the fusion ranks what BOTH ways can defend. The weights
+    ARE the style — its craft since 0065 sp4."""
     vec = {h["ref"] + h["text"][:24]: h
            for h in stacks.retrieve(projection, query, k=2 * k)}
     gr = {h["ref"] + h["text"][:24]: h
@@ -99,20 +103,33 @@ def hybrid_retrieve(node, projection: dict, gproj: dict, query: str,
         v, g2 = vec.get(key), gr.get(key)
         base = v or g2
         fused[key] = {**base, "score": round(
-            0.5 * (v["score"] if v else 0) + 0.5 * min(1.0, (g2["score"] if g2
-                                                             else 0) / 3), 4)}
+            w_vector * (v["score"] if v else 0)
+            + w_graph * min(1.0, (g2["score"] if g2 else 0) / 3), 4)}
     out = sorted(fused.values(), key=lambda h: -h["score"])[:k]
     return [h for h in out if h["score"] > 0.1]
 
 
 # ---------------------------------------------------------------- one door
 
+def _cfg(node, short):
+    from . import variants
+    return variants.config_for(node, short)
+
+
+# each row reads its style's craft at the door (0065 sp4 — the Workshop's
+# knobs finally take effect where the work happens)
 RETRIEVERS = {
-    "naive": lambda node, q, k=4: stacks.retrieve(stacks.project(node), q, k),
-    "rerank": lambda node, q, k=4: rerank_retrieve(stacks.project(node), q, k),
-    "graph": lambda node, q, k=4: graph_retrieve(graph_project(node), q, k),
-    "hybrid": lambda node, q, k=4: hybrid_retrieve(
-        node, stacks.project(node), graph_project(node), q, k),
+    "naive": lambda node, q, k=None: stacks.retrieve(
+        stacks.project(node), q, k or int(_cfg(node, "naive")["k"])),
+    "rerank": lambda node, q, k=None: (lambda c: rerank_retrieve(
+        stacks.project(node), q, k or int(c["k"]),
+        wide_factor=int(c.get("wide_factor", 2))))(_cfg(node, "advanced")),
+    "graph": lambda node, q, k=None: graph_retrieve(
+        graph_project(node), q, k or int(_cfg(node, "graph")["k"])),
+    "hybrid": lambda node, q, k=None: (lambda c: hybrid_retrieve(
+        node, stacks.project(node), graph_project(node), q, k or int(c["k"]),
+        w_vector=float(c.get("w_vector", 0.5)),
+        w_graph=float(c.get("w_graph", 0.5))))(_cfg(node, "hybrid")),
 }
 
 
@@ -129,7 +146,8 @@ def answer_from(hits: list[dict], flavor: str) -> dict:
     same voice: citations, the confession floor, the honest unknown."""
     if not hits:
         return {"answer": "the stacks hold nothing on this — an honest unknown",
-                "citations": [], "flavor": flavor}
+                "citations": [], "flavor": flavor, "context_chars": 0}
+    context_chars = sum(len(h.get("text", "")) for h in hits)
     lines = [f"“{h['text'][:160].strip()}”"
              + (f" ({h['pair']})" if h.get("pair") else "")
              + f" [{h['ref'][:18]}…]" for h in hits[:2]]
@@ -139,9 +157,10 @@ def answer_from(hits: list[dict], flavor: str) -> dict:
         return {"answer": "the shelves hold no strong answer to this — the "
                           "NEAREST records, named as nearest and not as "
                           "answers: " + " · ".join(lines),
-                "flavor": flavor, "citations": cites, "confessed": True}
+                "flavor": flavor, "citations": cites, "confessed": True,
+                "context_chars": context_chars}
     return {"answer": " · ".join(lines), "flavor": flavor,
-            "citations": cites}
+            "citations": cites, "context_chars": context_chars}
 
 
 def answer_as(node, flavor: str, query: str) -> dict:

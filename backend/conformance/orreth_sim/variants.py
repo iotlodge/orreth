@@ -62,7 +62,7 @@ VARIANTS_V1: dict = {
     },
     "hierarchical": {
         "title": "Hierarchical",
-        "row": None,
+        "row": "hierarchical",
         "stages": ["retrieve", "refine", "construct"],
         "requires": ["tree-projection"],
         "cost_class": "medium",
@@ -109,7 +109,7 @@ VARIANTS_V1: dict = {
     },
     "reasoning-first": {
         "title": "Reasoning-First",
-        "row": None,
+        "row": "reasoning-first",
         "stages": ["understand", "retrieve", "refine", "construct",
                    "generate"],
         "requires": ["planning-mind"],
@@ -125,7 +125,7 @@ VARIANTS_V1: dict = {
     },
     "memory-augmented": {
         "title": "Memory-Augmented",
-        "row": None,
+        "row": "memory-augmented",
         "stages": ["understand", "retrieve", "refine", "construct"],
         "requires": ["conversation-worldlines"],
         "cost_class": "medium",
@@ -170,7 +170,7 @@ VARIANTS_V1: dict = {
     },
     "hyde": {
         "title": "HyDE",
-        "row": None,
+        "row": "hyde",
         "stages": ["understand", "generate", "retrieve", "construct"],
         "requires": ["drafting-mind"],
         "cost_class": "medium",
@@ -185,7 +185,7 @@ VARIANTS_V1: dict = {
     },
     "corrective": {
         "title": "Corrective",
-        "row": None,
+        "row": "corrective",
         "stages": ["retrieve", "refine", "generate", "enhance"],
         "requires": ["judging-mind"],
         "cost_class": "high",
@@ -269,6 +269,20 @@ def gate_check(asset_name: str, profile) -> tuple[str | None, dict | None]:
                     f"this style's blast: {d['blast']}", None)
         clean[k] = cv
     return None, clean
+
+
+def config_for(node, short: str) -> dict:
+    """The style's working numbers ON A NODE: the shelf's variant-* head
+    under the genesis (0065 sp4 — the knobs the Workshop turns finally take
+    effect where the work happens). Read-side, loud-fallback: a missing or
+    malformed head serves genesis."""
+    from . import improver
+    try:
+        row = improver.active_asset(node, f"variant-{short}")
+        head = improver._profile_of(row[1]) if row else None
+    except Exception:
+        head = None
+    return config(short, head if isinstance(head, dict) else None)
 
 
 def config(short: str, head: dict | None = None) -> dict:

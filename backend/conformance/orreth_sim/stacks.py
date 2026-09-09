@@ -155,9 +155,12 @@ def derived_text(node, rid: str, r: dict, superseded: set):
         return ("document", doc.get("text", ""), doc.get("name", "?"),
                 1.0, None, r.get("occurred_at", ""))
     if "asset" not in tags and "dispatch" not in tags \
+            and "retrieval-plan" not in tags \
             and canon.class_of(r).startswith("chronicle-"):
         # dispatch stays retrievable (the routing door, the window) but
-        # never chunks into world-answers — machinery-talk is not memory
+        # never chunks into world-answers — machinery-talk is not memory;
+        # a retrieval PLAN is machinery too (0065 sp4's own find: a plan
+        # echoed into its own projection and answered the ask it planned)
         # THE CHRONICLE JOINS THE ROWS (0039 sp2): the universe's own life
         # becomes retrievable, class-gated, stamped with ITS MOMENT
         b = json.loads(crypto._b64d(r["body"]).decode())

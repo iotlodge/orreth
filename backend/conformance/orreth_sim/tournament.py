@@ -19,9 +19,13 @@ from __future__ import annotations
 
 import re
 
-from . import dispatcher, rivals, stacks
+from . import dispatcher, rivals, stacks, styles, variants
 
-FLAVORS = ("naive", "rerank", "graph", "hybrid", "multimodal", "router", "swarm")
+# 0065 sp4 — FLAVORS derives from the registry: the eleven styles' executing
+# rows, in the menu's own order. The hand-kept tuple dies; the router row
+# retires from the standings (Auto is a switch position, never a contestant —
+# its tactic-picker lives on for the dispatcher's own use).
+FLAVORS = tuple(variants.row_for(s) for s in variants.MENU)
 
 
 # ---------------------------------------------------------------- the last three
@@ -55,13 +59,15 @@ def swarm_retrieve(node, query: str, k: int = 4) -> list[dict]:
     """Decompose · fan · recompose: split the ask on its seams, hand each
     sub-ask to the row the Dispatcher's shapes suggest, merge the receipts —
     every claim still cited. (Synchronous fan-out in the sim; the async seat
-    progression is deferred, on the record.)"""
+    progression is deferred, on the record.) Parts and per-part depth are the
+    style's craft (0065 sp4)."""
+    cfg = variants.config_for(node, "multi-agent")
     parts = [p.strip() for p in re.split(r",| and | versus | vs\.? |\?",
                                          (query or "").lower()) if p.strip()]
-    parts = parts[:4] or [query]
+    parts = parts[:int(cfg.get("parts", 4))] or [query]
     merged: dict = {}
     for part in parts:
-        for h in router_retrieve(node, part, k=2):
+        for h in router_retrieve(node, part, k=int(cfg.get("k_per_part", 2))):
             key = h["ref"] + h["text"][:24]
             e = merged.setdefault(key, {**h, "score": 0.0, "parts": []})
             e["score"] = round(e["score"] + h["score"], 4)
@@ -70,6 +76,7 @@ def swarm_retrieve(node, query: str, k: int = 4) -> list[dict]:
 
 
 ALL_RETRIEVERS = {**rivals.RETRIEVERS,
+                  **styles.RETRIEVERS,          # the five new (0065 sp4)
                   "multimodal": lambda n, q, k=4: multimodal_retrieve(n, q, k),
                   "router": lambda n, q, k=4: router_retrieve(n, q, k),
                   "swarm": lambda n, q, k=4: swarm_retrieve(n, q, k)}
@@ -124,18 +131,29 @@ def run(node, questions: list[str]) -> dict:
     """THE TOURNAMENT: every question through every row, every pass graded,
     the standings composed — mean + n, floors flagged (a row that ever
     answered uncited when rivals cited is marked, never averaged away)."""
+    import time as _time
     rounds = []
-    tally: dict = {f: {"n": 0, "total": 0.0, "uncited": 0} for f in FLAVORS}
+    tally: dict = {f: {"n": 0, "total": 0.0, "uncited": 0,
+                       "ms": 0.0, "cost": 0} for f in FLAVORS}
     for q in questions:
         entries = []
         for f in FLAVORS:
+            t0 = _time.perf_counter()
             a = answer_as(node, f, q)
+            ms = round((_time.perf_counter() - t0) * 1000, 2)
             g = grade(node, q, a)
+            # 0065 sp4 — the unpaid 0038 §4 axes: latency MEASURED (never
+            # asserted exactly — determinism law), cost as the context the
+            # style asks a reader to consume (deterministic)
+            cost = int(a.get("context_chars", 0))
             tally[f]["n"] += 1
             tally[f]["total"] += g["score"]
+            tally[f]["ms"] += ms
+            tally[f]["cost"] += cost
             if not a["citations"]:
                 tally[f]["uncited"] += 1
             entries.append({"flavor": f, "graded": g,
+                            "latency_ms": ms, "cost_chars": cost,
                             "cited": len(a["citations"]),
                             "answer": a["answer"][:160]})
         entries.sort(key=lambda e: -e["graded"]["score"])
@@ -144,6 +162,8 @@ def run(node, questions: list[str]) -> dict:
     standings = sorted(
         ({"flavor": f, "n": t["n"],
           "mean": round(t["total"] / max(1, t["n"]), 4),
+          "mean_latency_ms": round(t["ms"] / max(1, t["n"]), 2),
+          "mean_cost_chars": round(t["cost"] / max(1, t["n"])),
           "floors": ([f"{t['uncited']} uncited round(s)"] if t["uncited"]
                      else [])}
          for f, t in tally.items()),

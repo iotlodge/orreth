@@ -61,7 +61,16 @@ def test_standings_rank_and_floors_flag():
     assert means == sorted(means, reverse=True)
     mm = next(s for s in r["standings"] if s["flavor"] == "multimodal")
     assert mm["floors"] and "uncited" in mm["floors"][0]   # flagged, not hidden
-    assert all(len(rd["entries"]) == 7 for rd in r["rounds"])
+    # 0065 sp4 — the hard-coded 7 dies: the field derives from the registry
+    assert all(len(rd["entries"]) == len(tournament.FLAVORS)
+               for rd in r["rounds"])
+    assert len(tournament.FLAVORS) == 11, "the charter's eleven, all standing"
+    # the 0038 §4 axes, finally paid: latency measured (never asserted
+    # exactly — determinism law), cost deterministic
+    for s_ in r["standings"]:
+        assert s_["mean_latency_ms"] >= 0 and s_["mean_cost_chars"] >= 0
+    e0 = r["rounds"][0]["entries"][0]
+    assert "latency_ms" in e0 and "cost_chars" in e0
 
 
 def test_promotion_is_a_proposal_with_evidence():

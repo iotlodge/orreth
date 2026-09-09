@@ -304,9 +304,41 @@ Three seams, zero new stores:
    ingest-side extraction matures with 0069's minded eyes); hop depth stays 1 (the
    variant's `hops` knob threads at sp4); the graph and chunk sweeps share the pull's
    cost — a shared per-beat pull is a small optimization when it itches.*
-4. **sp4 — The five new styles + the eleven-arm tournament.** Scaffold-first compositions for
-   Hierarchical · Reasoning-First · Memory-Augmented · HyDE · Corrective; registry-driven
-   FLAVORS; latency + cost axes in `grade()`; per-variant law suites.
+4. **sp4 — The five new styles + the eleven-arm tournament.** ✅ **LANDED 2026-09-09 —
+   THE MENU ANSWERS WHOLE: eleven declared, eleven serving.** The five new compositions
+   (`orreth_sim/styles.py`), scaffold-first by the house method, each built from
+   machinery that already stands: **Hierarchical** climbs from the best chunk to its
+   SECTION via sp2's tree law — a long document answers from the right floor of the
+   building; **Reasoning-First** decomposes the ask, lands the retrieval PLAN as a
+   signed record where a seat stands (the audit door opens on a whole ref), and runs
+   targeted retrieves per step; **Memory-Augmented** reads the chronicle lane first and
+   confesses what remembering added to the ask (worldlines arrive with 0070);
+   **HyDE** searches by the imagined answer — the strongest seed's text stands in for
+   the drafting mind's hypothesis (pseudo-relevance feedback, named honestly);
+   **Corrective** checks its catch against a faithfulness floor and takes a VISIBLE
+   second look, `corrected` on every hit either way. **The hand-kept tuple dies**:
+   `FLAVORS` derives from the registry (eleven rows, menu order; the router row retires
+   from the standings — Auto is a switch, never a contestant), and the 0038 §4 promise
+   is paid — the tournament grades **latency (measured, never exactly asserted — the
+   determinism law) and cost** (the context a style asks a reader to consume,
+   deterministic) beside the three science axes, per entry and in the standings.
+   **config() finally threads**: every row — the six old and five new, the standing
+   lanes included — reads its style's craft at the door (`variants.config_for`), so the
+   Workshop's knobs take effect where the work happens. *Proven live on the rig: all
+   FIVE new styles served AS THEMSELVES through the SDK (no baseline falls); the knob
+   walk — `variant-naive` k turned 4→2 through the one-motion door, the very next ask
+   served exactly 2 citations, canon restored. Two finds the walks earned: a retrieval
+   PLAN echoed into its own projection and answered the ask it planned (machinery-talk
+   is not memory — the lane law now excludes retrieval plans), and the stacks pull
+   never carried `variant-*` craft so a turned knob was silently inert on the wire —
+   both paid in the hour. Suite 424→450 (five per-variant law files: the four canonical
+   laws + one delta each; the tournament's eleven-arm + axes assertions; built() now
+   expects the whole menu). Rust green.* *Honest remainders: the scaffolds confess
+   their stand-ins (HyDE's drafting mind, Reasoning-First's planner, Memory-Augmented's
+   worldlines — each saddles through the Stable and 0070/0069 in their dives); graph
+   `hops` stays declared-unthreaded until the walk earns multi-hop demand — named, not
+   silent; the five new styles ride the in-process projection (their standing-lane
+   reads follow the naive/graph pattern as each earns it).*
 5. **sp5 — Identity everywhere.** `variant` through meter/records/diary; `_variant` per-call
    override; the selection visibly worn by every answer (the proof's reflect-the-selection
    demand, proven in the glass); warmth tap rehomed.
