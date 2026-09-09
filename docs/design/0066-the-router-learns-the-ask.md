@@ -247,8 +247,36 @@ recorded like every GET choice. `dispatch_put` stops returning "everything."
    allocation decision for ada's market, not a code edit); confidence is a
    deterministic rule pair — its thresholds become tunable when the standings (sp4)
    show where it misjudges.*
-3. **sp3 — Signals and the rungs.** The signal vector; observation-outcome records; vera's
-   three-rung sampling; two-tier bench wiring. Suite: a verdict lands at every rung.
+3. **sp3 — Signals and the rungs.** ✅ **LANDED 2026-09-09 — signals are data, the reward
+   function is law, and the third rung finally exists.** `orreth_sim/signals.py`: **the
+   cheap bench** computes rung scores the moment an answer exists — deterministic
+   proxies, NAMED as such (retrieval = the best citation's own match · faithfulness =
+   how much of the reply stands inside quoted record text · answer = 0033's standing
+   science fold · coverage = cited depth vs asked-for) — written INTO the exchange
+   record beside measured latency and context cost; **`vector_for` assembles the
+   accreted vector by walking the records** (the exchange's own signals + every vera
+   verdict + the human's thumb, joined by the `of` refs they already carry — never a
+   second store); **`reward()` is governed arithmetic** — the combining weights live in
+   the routing standard (genesis in `STANDARD_V1["weights"]`, one truth suite-pinned;
+   re-weighting is a gated standard change) and history re-scores under any future
+   weights because signals never left the records. Vera's judged tier REPLACES the
+   answer proxy when she has spoken — the richer tier outranks the approximation. **L3
+   is code**: a thumb never enters the sum — 👍 and 👎 produce the identical score, a
+   👎 wears `vetoed: true` (the standings will refuse it, never average it), and the
+   sycophancy failure is refused by name. **The Observation rung got built**: the
+   chassis signs every executed observation as a cheap record — SCRIBE-authored (the
+   steward about the agent; nothing grades its own yardstick), coordinate-bearing —
+   and vera's `WORK_TAGS` grew to all three rungs. *Proven live on the rig: an SDK
+   ask's envelope carried `latency 991 ms · context 458 chars`, and the exchange
+   record's body read back its whole bench (retrieval 0.12 · faithfulness 0.6 ·
+   answer 0.57 · coverage 0.75). Suite 463→471 (eight signal laws — the L3 test
+   asserts thumb-up and thumb-down score identically; a verdict lands at every rung;
+   the weights pin to one genesis truth). Rust green.* *Honest remainders: the
+   rung proxies are DECLARED approximations — vera's governed tier refines them as her
+   assays sample ask exchanges (her cadence, not this spoonful's); the third rung's
+   first LIVE record lands with the next chassis cycle on the rig (suite-proven today,
+   named rather than forced); per-retrieval tier-two verdicts (vera grading
+   observation-outcomes at volume) ride her existing dials.*
 4. **sp4 — Standings and the proposal generator.** The standings projection; the nightly
    replay harness; the first standings-evidenced standard proposal walked to JB's gate.
 5. **sp5 — The live slice and the dials.** The ε-floor experiment wiring; the router dials;

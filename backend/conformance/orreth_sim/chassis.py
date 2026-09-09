@@ -74,6 +74,7 @@ class Chassis:
             budget_before = self.surface.budget_left
             observations = self._plan(intent, feedback, klass)
             results = self._nucleus(observations, klass)      # parallel, least-privilege
+            self._observe_outcomes(intent, cycle, results)    # the third rung (0066 sp3)
             critic_prompt = self.critic_template.format(
                 persona=self.persona, intent=intent,
                 results="\n".join(f"- [{k}] {q} → {r}" for k, q, r in results))
@@ -121,6 +122,28 @@ class Chassis:
                     self.think(klass, f"{self.persona}\nAnswer concisely: {question}"))
         with ThreadPoolExecutor(max_workers=len(observations)) as pool:
             return list(pool.map(lambda o: one(*o), observations))
+
+    def _observe_outcomes(self, intent: str, cycle: int,
+                          results: list[tuple[str, str, str]]) -> None:
+        """0066 sp3 — THE OBSERVATION RUNG GETS BUILT: every executed
+        observation lands as a cheap signed record, SCRIBE-authored (the
+        steward signs about the agent — nothing grades its own yardstick),
+        coordinate-bearing, so vera's sampling finally reaches all three
+        rungs and the router can learn retrieval quality per observation,
+        not just answer quality per objective."""
+        node = self.surface.node
+        for skill, question, answer in results:
+            try:
+                node.write(make_memory(
+                    node.steward, node.steward_kp, node.scope,
+                    {"observation": {"intent": intent[:120], "cycle": cycle,
+                                     "skill": skill, "question": question[:200],
+                                     "answer": str(answer)[:280],
+                                     "agent": self.surface.identity["did"]}},
+                    kind="episodic",
+                    tags=["observation-outcome", *self.coordinate]))
+            except Exception:
+                pass                     # a full floor never stalls the loop
 
     def _record(self, intent: str, cycle: int, done: bool, tokens: int) -> None:
         """Every cycle of thought is a signed RunRecord, pinned to the law it ran under —

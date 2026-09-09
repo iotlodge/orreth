@@ -54,6 +54,11 @@ STANDARD_V1 = {
     "default": "naive",
     # derived, never hand-maintained: the genesis truth is the registry's
     "built": variants.built(["naive"]),
+    # 0066 sp3 — THE REWARD FUNCTION IS LAW: the signal vector's combining
+    # weights live HERE, so re-weighting reward is a gated standard change
+    # like any rule — and history is re-scorable under any future weights
+    "weights": {"retrieval": 0.3, "faithfulness": 0.3,
+                "answer": 0.25, "coverage": 0.15},
 }
 
 _SHAPES = (

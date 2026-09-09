@@ -7050,7 +7050,8 @@ def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
         citations = []
     return {"pre": pre, "answer": ans_txt, "citations": citations,
             "settled": settled, "variant": d["flavor"], "why": d["why"],
-            "choice_ref": d["record"], "by": seat_did, "arm": arm}
+            "choice_ref": d["record"], "by": seat_did, "arm": arm,
+            "cost_chars": int(a.get("context_chars", 0))}
 
 
 def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
@@ -7174,9 +7175,11 @@ def on_ask(port: int, scope: str, r: dict) -> None:
                   f"— answering fresh")
     attrs = r.get("attributes") if isinstance(r.get("attributes"), dict) \
         else None
+    _t0 = time.time()
     s = wire_stacks_answer(port, scope, text,
                            origin=f"ask:{did[:22]}", variant=variant,
                            attributes=attrs)
+    _ms = round((time.time() - _t0) * 1000, 1)
     if s is None:
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "denied",
@@ -7184,12 +7187,21 @@ def on_ask(port: int, scope: str, r: dict) -> None:
                                   "the next beat"}})
         return
     reply = s["pre"] + s["answer"]
+    # 0066 sp3 — THE SIGNAL VECTOR begins at answer time: the cheap bench's
+    # rung proxies + latency + context cost, written INTO the exchange —
+    # vera's tier and the human's thumb join later by the refs they carry
+    from orreth_sim import signals as _sig
+    sig = _sig.bench(text, {"answer": s["answer"],
+                            "citations": s["citations"]})
+    sig["latency_ms"] = _ms
+    sig["cost_chars"] = s.get("cost_chars", 0)
     # the exchange: a signed record of the audience — the thumb's judgeable ref
     kp, seat_did = lib_seat(scope)
     rec = make_memory({"did": seat_did, "scope": scope}, kp, scope,
                       {"ask": {"asked": text[:400], "reply": reply[:600],
                                "by": did, "variant": s["variant"],
-                               "choice": s["choice_ref"]}},
+                               "choice": s["choice_ref"],
+                               "signals": sig}},
                       kind="episodic",
                       # the arm-tag pattern (0043) at the style layer (0065
                       # sp5): every answer record WEARS its selection — the
@@ -7210,6 +7222,8 @@ def on_ask(port: int, scope: str, r: dict) -> None:
         reply=reply, by=s["by"], citations=s["citations"],
         variant=s["variant"], choice_ref=s["choice_ref"],
         exchange=rec["id"],
+        cost={"tokens": 0, "latency_ms": _ms,
+              "context_chars": s.get("cost_chars", 0)},
         attributes=attrs,
         honored=(["latency"] if attrs and attrs.get("latency") else []),
         confession=confession)

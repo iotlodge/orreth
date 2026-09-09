@@ -45,7 +45,9 @@ DIAL = ("glance", "watch", "assay")
 DEFAULT_RUBRIC = ("faithful to the record it served · complete against its "
                   "declared intent · honest about what is missing")
 
-WORK_TAGS = ("intention-outcome", "objective-outcome")
+# 0066 sp3 — vera's universe grows to ALL THREE rungs: the Observation
+# rung's records finally exist for a judge to reach
+WORK_TAGS = ("intention-outcome", "objective-outcome", "observation-outcome")
 
 EST_TOKENS = 120          # one commissioned judgment's metered estimate
 
