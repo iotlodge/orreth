@@ -33,6 +33,11 @@ What the kit gives you:
   whose prompts are *acquired from the world's own governed shelf*
   (`acquire`), so the words your agent runs on are versioned, human-editable
   assets, never hardcoded strings.
+- **Per-style attribution** *(new in 0.3.0)* — `ask(variant=...)` chooses
+  any of the world's eleven retrieval styles by name (the reply always says
+  which served); a mind's generation takes `_variant=` per call, and the
+  metered cost of that thought lands on the fuel ledger wearing the style's
+  name — per-style cost is a query, never an estimate.
 - **`FieldClient.ask()`** *(new in 0.2.0)* — ask a world a question through
   its governed retrieval and read the structured answer: the reply, its
   citations, which retrieval variant served it, and the whole decision record

@@ -46,8 +46,8 @@ flowchart TD
 
 ## What is running, today, on one laptop
 
-🟢 **Sixty-five design dives (`0000`–`0064`), every landed decision locked** (`docs/decisions/` + each
-dive's own ledger) · the **Python reference proves the whole model — 398 conformance tests** · the
+🟢 **Sixty-seven dives closed whole (`0000`–`0064` · `0065` · `0071`), every landed decision locked** (`docs/decisions/` + each
+dive's own ledger) · the **Python reference proves the whole model — 450 conformance tests** · the
 **Rust plane** runs it (six crates, `orrethd` — one binary, tier as a profile, conformance-green
 against fixtures signed in Python and verified in Rust) · **one command** (`scripts/dev.sh start`)
 raises a universe of six ecosystems, twelve fields, and a working population of governed agents,
@@ -424,7 +424,7 @@ being *used*.
 
 ## From substrate to estate — the recent eras, compressed
 
-*(the full record is `docs/design/README.md` — sixty-six dives, each closed only when proven
+*(the full record is `docs/design/README.md` — sixty-seven dives, each closed only when proven
 live by a human in the glass; the standing proof register is
 [`docs/design/the-honest-boundary.md`](docs/design/the-honest-boundary.md))*
 
@@ -454,6 +454,12 @@ live by a human in the glass; the standing proof register is
   deployment completes a governed join from published artifacts alone, the root key never leaving
   the operator's safe; knocking is metered per identity inside dialed ceilings; and repeated
   questions serve from a confessed cache that dies with its records.
+- **The Stacks became an eleven-style retrieval engine** (0065, one day): eleven retrieval styles
+  as firmware declarations with their numbers as governed craft — the servable menu derives,
+  never hand-kept; asks read STANDING projections in Postgres (chunks, trees, and a witnessed
+  graph — no more rebuilding the shelf per question); the tournament grades all eleven with
+  latency and cost beside quality; and which style served an answer is a field, a tag, a spoken
+  sentence, and a ledger column — never a secret. The first kernel dive a proof demanded.
 
 ## Where it started becoming an institution — the earlier keystones
 
@@ -580,7 +586,7 @@ orreth/
 │   ├── orreth-agent-sdk/      ← the FieldClient SDK — persistent identities that re-join as the same self
 │   └── flavors/               ← lifeforce agents (prototype · LangGraph · AgentField sentinel)
 ├── backend/
-│   ├── conformance/           ← the Python reference (398 tests) + console worker + live demos
+│   ├── conformance/           ← the Python reference (450 tests) + console worker + live demos
 │   └── plane/                 ← the Rust plane: 6 crates + orrethd (the daemon, serving its own glass)
 ├── infrastructure/            ← compose + CDK — one laptop, one universe, one command (and the demo site's stack)
 └── scripts/                   ← dev.sh (the rig) · demo.sh (the reel)

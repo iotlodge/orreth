@@ -63,7 +63,10 @@ Its first demand is already paid: the proof's first kernel change request — *a
 deployment must be able to complete a governed admission with published artifacts alone* —
 landed as dive 0071 (era 0.71): the request queue closed to forgers, an ask door for machines,
 per-identity traffic ceilings, a confessed ask-cache, and the publishable join door whose root
-key never leaves the operator's safe.
+key never leaves the operator's safe. Its second demand followed in the same week: dive 0065
+turned the kernel's retrieval into the proof's engine — eleven declared styles on one modular
+chassis, standing projections in Postgres, a graded eleven-arm harness, and the style that
+served every answer visible to the human who asked.
 
 ---
 

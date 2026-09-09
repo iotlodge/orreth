@@ -5,9 +5,21 @@ the proofs era (ADR 0001, covenant rule 12): every change below cites the proof 
 that demanded it. Recon: two full code surveys of the Stacks, the projections, the gateway,
 and the test estate, 2026-09-06 (Appendix A).*
 
-***Status: 🟡 DRAFTED · LOCKED — L1 (flows, not floors) and L2 (the rule-9 gate for the two
-plane projections) both taken by JB's word, 2026-09-06, with the options' outcomes spelled
-out; spoonfuls awaiting the build season.***
+***Status: ✅ CLOSED WHOLE 2026-09-09 — five spoonfuls in one day, every close condition
+met: THE ELEVEN SERVE (all as themselves, live), THE HARNESS GRADES THEM ALL (latency +
+cost beside the science axes — 0038 §4 paid), and THE SELECTION SHOWS IN THE GLASS (the
+parlor's own sentence, the record's tag, the meter's column). The registry and drawer
+(sp1) · the standing chunk/tree projection (sp2) · the graph in Postgres, Shape-A paid
+(sp3) · the five new styles + the eleven-arm tournament (sp4) · identity everywhere
+(sp5). Suite 398→450 + SDK 24 + Rust green throughout; four walk-found wounds paid
+in-hour across the build (the global-worklist lie · the plan echo · the pull dropping
+variant craft · the sweep's shared clock). A NOTE ON THE ERA: this is the proofs era's
+first OUT-OF-ORDER close (0071 closed first at JB's sequencing) — the world's VERSION
+stays 0.71, the monotone high-water of entered eras, because a name never regresses;
+the road and register carry this dive's close in full. Named remainder from L1: the six
+empty e:rag hulls still await their honorable dormancy word — a governed click in the
+glass, not a code motion. Locks as taken 2026-09-06: L1 flows-not-floors · L2 the
+rule-9 gate with evidence.***
 
 ## 1. The demand, verbatim (the proof's charter)
 
