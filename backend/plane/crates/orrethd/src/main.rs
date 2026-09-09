@@ -348,6 +348,9 @@ async fn main() {
         .route("/retrieve", post(egress))
         .route("/embeddings", post(embeddings_ingress))
         .route("/embeddings/missing", post(embeddings_missing))
+        .route("/chunks", post(chunks_ingress))
+        .route("/chunks/missing", post(chunks_missing))
+        .route("/chunks/search", post(chunks_search))
         .route("/standards", get(standards))
         .route("/window", get(window))
         .route("/model/authorize", post(model_authorize))
@@ -544,6 +547,11 @@ async fn tombstone_ingress(State(app): State<Arc<App>>, Json(req): Json<Value>) 
             if let Err(e) = store.evict_embedding(&node_scope, &id) {
                 eprintln!("orrethd · embedding eviction failed for {id}: {e}");
             }
+            // …and the standing chunk/tree projection dies in the same breath
+            // (0065 sp2): rows deleted, never marked
+            if let Err(e) = store.evict_chunks(&node_scope, &id) {
+                eprintln!("orrethd · chunk eviction failed for {id}: {e}");
+            }
         }
         touch(&app);
         (StatusCode::OK, Json(json!({"ok": true, "stub": true})))
@@ -582,6 +590,100 @@ async fn embeddings_ingress(State(app): State<Arc<App>>, Json(req): Json<Value>)
             }
         }
         (StatusCode::OK, Json(json!({"ok": true})))
+    })
+    .await
+    .unwrap()
+}
+
+/// 0065 sp2 — the standing chunk/tree projection's write door (L2's rule-9
+/// gate, JB 2026-09-06): becky-chained token, uniform refusal; the sweep
+/// pushes rows CUT where the bytes live — pointers into derived text, never
+/// blobs; landing replaces the record's rows whole (one policy, one truth).
+async fn chunks_ingress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let id = req["record_id"].as_str().unwrap_or("").to_string();
+        let ok = { app.universe.lock().unwrap().verify_token(&req["token"]).is_ok() };
+        if id.is_empty() || !ok {
+            bump(&app, "refusals");
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        let (known, node_scope) = {
+            let u = app.universe.lock().unwrap();
+            (u.nodes[0].records.contains_key(&id), u.nodes[0].scope.clone())
+        };
+        if !known {
+            bump(&app, "refusals"); // absent and unauthorized wear one face
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        let policy = req["policy"].as_str().unwrap_or("").to_string();
+        let rows = req["rows"].as_array().cloned().unwrap_or_default();
+        if let Some(store) = &app.pg {
+            if let Err(e) = store.save_chunks(&node_scope, &id, &policy, &rows) {
+                eprintln!("orrethd · chunk write failed for {id}: {e}");
+            }
+        }
+        (StatusCode::OK, Json(json!({"ok": true, "rows": rows.len()})))
+    })
+    .await
+    .unwrap()
+}
+
+/// The chunk sweep's worklist: living records with no leaf rows under the
+/// current policy. Token-guarded; purged stubs never appear.
+async fn chunks_missing(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let ok = { app.universe.lock().unwrap().verify_token(&req["token"]).is_ok() };
+        if !ok {
+            bump(&app, "refusals");
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        let node_scope = { app.universe.lock().unwrap().nodes[0].scope.clone() };
+        let policy = req["policy"].as_str().unwrap_or("").to_string();
+        let ids: Vec<String> = req["ids"].as_array().map(|a| {
+            a.iter().filter_map(|x| x.as_str().map(String::from)).collect()
+        }).unwrap_or_default();
+        let limit = req["limit"].as_i64().unwrap_or(32).clamp(1, 512);
+        let missing = app.pg.as_ref()
+            .and_then(|s| s.missing_chunks(&node_scope, &policy, &ids, limit).ok())
+            .unwrap_or_default();
+        (StatusCode::OK, Json(json!({"missing": missing})))
+    })
+    .await
+    .unwrap()
+}
+
+/// The standing projection's read: chunk-grain cosine against EXACTLY the
+/// ids the caller's retrieve already authorized — cosine_for's law at chunk
+/// grain, never a second read path. Token-guarded, one face.
+async fn chunks_search(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let ok = { app.universe.lock().unwrap().verify_token(&req["token"]).is_ok() };
+        if !ok {
+            bump(&app, "refusals");
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        let node_scope = { app.universe.lock().unwrap().nodes[0].scope.clone() };
+        let ids: Vec<String> = req["ids"].as_array().map(|a| {
+            a.iter().filter_map(|x| x.as_str().map(String::from)).collect()
+        }).unwrap_or_default();
+        let qv: Vec<f32> = req["vector"].as_array().map(|a| {
+            a.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect()
+        }).unwrap_or_default();
+        let k = req["k"].as_i64().unwrap_or(8).clamp(1, 64);
+        let hits = app.pg.as_ref()
+            .and_then(|s| s.chunk_search(&node_scope, &ids, &qv, k).ok())
+            .unwrap_or_default();
+        let out: Vec<Value> = hits.into_iter().map(
+            |(rid, seq, s, e, lane, doc, trust, occurred, hash, sim)| json!({
+                "ref": rid, "seq": seq, "span": [s, e], "lane": lane,
+                "doc": doc, "trust": trust, "occurred": occurred,
+                "hash": hash,
+                "score": (sim * 10000.0).round() / 10000.0})).collect();
+        (StatusCode::OK, Json(json!({"hits": out})))
     })
     .await
     .unwrap()

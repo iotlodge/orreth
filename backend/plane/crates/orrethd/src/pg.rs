@@ -100,7 +100,31 @@ impl PgRecords {
                      PRIMARY KEY (node_scope, id)
                  );
                  CREATE INDEX IF NOT EXISTS embeddings_hnsw
-                     ON embeddings USING hnsw (embedding vector_cosine_ops);",
+                     ON embeddings USING hnsw (embedding vector_cosine_ops);
+                 -- 0065 sp2 (L2's rule-9 gate, JB 2026-09-06): the standing
+                 -- chunk/tree projection — POINTERS into derived text, never
+                 -- blobs; level 0 = leaf chunks, level >= 1 = tree parents;
+                 -- every row wears the policy that cut it
+                 CREATE TABLE IF NOT EXISTS chunks (
+                     node_scope  TEXT NOT NULL,
+                     record_id   TEXT NOT NULL,
+                     level       INT NOT NULL DEFAULT 0,
+                     seq         INT NOT NULL,
+                     span_start  INT NOT NULL,
+                     span_end    INT NOT NULL,
+                     lane        TEXT NOT NULL,
+                     hash        TEXT NOT NULL DEFAULT '',
+                     policy      TEXT NOT NULL,
+                     doc         TEXT NOT NULL DEFAULT '',
+                     trust       DOUBLE PRECISION NOT NULL DEFAULT 1.0,
+                     occurred    TEXT NOT NULL DEFAULT '',
+                     embedding   vector(384),
+                     PRIMARY KEY (node_scope, record_id, level, seq)
+                 );
+                 CREATE INDEX IF NOT EXISTS chunks_record
+                     ON chunks (node_scope, record_id);
+                 CREATE INDEX IF NOT EXISTS chunks_hnsw
+                     ON chunks USING hnsw (embedding vector_cosine_ops);",
             )
             .map(|_| true)
             .unwrap_or_else(|e| {
@@ -194,6 +218,138 @@ impl PgRecords {
             &[&node_scope, &ids],
         )?;
         Ok(rows.into_iter().map(|r| (r.get(0), r.get(1))).collect())
+    }
+
+    /// 0065 sp2 — one record, one policy, one truth: landing a record's rows
+    /// replaces every row it had, whatever policy the old ones wore. Tree
+    /// parents (level >= 1) ride the same door, vectorless.
+    pub fn save_chunks(&self, node_scope: &str, record_id: &str, policy: &str,
+                       rows: &[Value]) -> Result<(), postgres::Error> {
+        if !self.vectors { return Ok(()); }
+        let mut client = self.client.lock().unwrap();
+        client.execute(
+            "DELETE FROM chunks WHERE node_scope = $1 AND record_id = $2",
+            &[&node_scope, &record_id],
+        )?;
+        for r in rows {
+            let span = r["span"].as_array().cloned().unwrap_or_default();
+            let (s, e) = (span.first().and_then(|v| v.as_i64()).unwrap_or(0) as i32,
+                          span.get(1).and_then(|v| v.as_i64()).unwrap_or(0) as i32);
+            let level = r["level"].as_i64().unwrap_or(0) as i32;
+            let seq = r["seq"].as_i64().unwrap_or(0) as i32;
+            let lane = r["lane"].as_str().unwrap_or("document");
+            let hash = r["hash"].as_str().unwrap_or("");
+            let doc = r["doc"].as_str().unwrap_or("");
+            let trust = r["trust"].as_f64().unwrap_or(1.0);
+            let occurred = r["occurred"].as_str().unwrap_or("");
+            let vec: Vec<f32> = r["vector"].as_array().map(|a| {
+                a.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect()
+            }).unwrap_or_default();
+            if vec.is_empty() {
+                client.execute(
+                    "INSERT INTO chunks (node_scope, record_id, level, seq,
+                         span_start, span_end, lane, hash, policy, doc, trust,
+                         occurred, embedding)
+                     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NULL)",
+                    &[&node_scope, &record_id, &level, &seq, &s, &e, &lane,
+                      &hash, &policy, &doc, &trust, &occurred],
+                )?;
+            } else {
+                client.execute(
+                    &format!(
+                        "INSERT INTO chunks (node_scope, record_id, level, seq,
+                             span_start, span_end, lane, hash, policy, doc,
+                             trust, occurred, embedding)
+                         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,
+                                 '{}'::vector)",
+                        Self::vec_literal(&vec)
+                    ),
+                    &[&node_scope, &record_id, &level, &seq, &s, &e, &lane,
+                      &hash, &policy, &doc, &trust, &occurred],
+                )?;
+            }
+        }
+        Ok(())
+    }
+
+    /// The chunk sweep's worklist: living records with no leaf rows under the
+    /// CURRENT policy — the uncut and the policy-stale alike; purged stubs
+    /// never appear (a purge that misses the projection is not a purge).
+    pub fn missing_chunks(&self, node_scope: &str, policy: &str,
+                          ids: &[String], limit: i64)
+                          -> Result<Vec<String>, postgres::Error> {
+        if !self.vectors { return Ok(Vec::new()); }
+        // ids given → answer only for THAT set (the caller's own authorized
+        // pull — the sweep may never judge records it cannot see); empty →
+        // the whole log, material first
+        let sql = if ids.is_empty() {
+            "SELECT r.id FROM records r
+             LEFT JOIN chunks c ON c.node_scope = r.node_scope
+                               AND c.record_id = r.id AND c.level = 0
+                               AND c.policy = $2
+             LEFT JOIN purged p ON p.node_scope = r.node_scope AND p.id = r.id
+             WHERE r.node_scope = $1 AND c.record_id IS NULL AND p.id IS NULL
+             ORDER BY (CASE WHEN r.record->'tags' ? 'stacks'
+                              OR r.record->'tags' ? 'knowledge'
+                            THEN 0 ELSE 1 END),
+                      r.occurred_at DESC LIMIT $3"
+        } else {
+            "SELECT r.id FROM records r
+             LEFT JOIN chunks c ON c.node_scope = r.node_scope
+                               AND c.record_id = r.id AND c.level = 0
+                               AND c.policy = $2
+             LEFT JOIN purged p ON p.node_scope = r.node_scope AND p.id = r.id
+             WHERE r.node_scope = $1 AND r.id = ANY($4)
+               AND c.record_id IS NULL AND p.id IS NULL
+             ORDER BY (CASE WHEN r.record->'tags' ? 'stacks'
+                              OR r.record->'tags' ? 'knowledge'
+                            THEN 0 ELSE 1 END),
+                      r.occurred_at DESC LIMIT $3"
+        };
+        let rows = if ids.is_empty() {
+            self.client.lock().unwrap().query(sql, &[&node_scope, &policy, &limit])?
+        } else {
+            self.client.lock().unwrap().query(sql, &[&node_scope, &policy, &limit, &ids])?
+        };
+        Ok(rows.into_iter().map(|r| r.get(0)).collect())
+    }
+
+    /// The purge reaches the standing projection: a shredded record's chunk
+    /// rows and tree nodes are DELETED in the same breath as its bytes.
+    pub fn evict_chunks(&self, node_scope: &str, id: &str)
+                        -> Result<(), postgres::Error> {
+        if !self.vectors { return Ok(()); }
+        self.client.lock().unwrap().execute(
+            "DELETE FROM chunks WHERE node_scope = $1 AND record_id = $2",
+            &[&node_scope, &id],
+        )?;
+        Ok(())
+    }
+
+    /// Chunk-grain cosine against exactly the given ids — the standing
+    /// projection's read, over the set THE NODE AUTHORIZED, never a second
+    /// read path (cosine_for's law at chunk grain).
+    pub fn chunk_search(&self, node_scope: &str, ids: &[String], qv: &[f32],
+                        k: i64)
+                        -> Result<Vec<(String, i32, i32, i32, String, String,
+                                       f64, String, String, f64)>, postgres::Error> {
+        if !self.vectors || ids.is_empty() || qv.is_empty() { return Ok(Vec::new()); }
+        let rows = self.client.lock().unwrap().query(
+            &format!(
+                "SELECT record_id, seq, span_start, span_end, lane, doc,
+                        trust, occurred, hash,
+                        1 - (embedding <=> '{lit}'::vector) AS sim
+                 FROM chunks
+                 WHERE node_scope = $1 AND record_id = ANY($2)
+                   AND level = 0 AND embedding IS NOT NULL
+                 ORDER BY embedding <=> '{lit}'::vector LIMIT $3",
+                lit = Self::vec_literal(qv)
+            ),
+            &[&node_scope, &ids, &k],
+        )?;
+        Ok(rows.into_iter().map(|r| (r.get(0), r.get(1), r.get(2), r.get(3),
+                                     r.get(4), r.get(5), r.get(6), r.get(7),
+                                     r.get(8), r.get(9))).collect())
     }
 
     /// Persist the STORED form of an accepted record, keyed by the ACCEPTING node —

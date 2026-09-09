@@ -1382,6 +1382,7 @@ def on_attestation(port: int, scope: str, r: dict, *, approved: bool = False,
 
 EMBED_PORT = int(os.environ.get("ORRETH_EMBED_PORT", "4562"))
 _EMBED_LAST = 0.0
+_CHUNK_LAST: dict = {}   # per floor — every shelf sweeps on its OWN clock
 # the embed cadence is a DIAL (0063 sp6) — dial_value("embed-every")
 
 # DEV vs PROD (JB's kernel law, 2026-08-16): Orreth is the kernel, residents
@@ -2560,6 +2561,80 @@ def embed_beat(port: int, scope: str) -> None:
             pass
     print(f"  ↳ the meaning axis: {scope} — {done} embedded"
           + (f" · {skipped} marked bodyless" if skipped else "")
+          + f" ({len(missing)} swept)")
+
+
+def chunk_beat(port: int, scope: str) -> None:
+    """0065 sp2 — the standing chunk/tree projection's sweep: cut what the
+    node accepted but the projection lacks, with the SAME lane law and knife
+    the rebuild uses (stacks.derived_text + lane_spans), so standing rows and
+    a fresh rebuild can never differ. Cut and embedded HERE where the bytes
+    live, pushed through the guarded door. A record that is not projection
+    material gets a vectorless marker row — looked at, honestly, never
+    revisited. A dark meaning axis sweeps nothing."""
+    if time.time() - _CHUNK_LAST.get(scope, 0.0) < dial_value("chunk-every"):
+        return
+    _CHUNK_LAST[scope] = time.time()      # set early — a failing sweep never hot-loops
+    if meaning.embedder() is None:
+        return
+    from orreth_sim import chunklaw, stacks as _stk
+    n, seat_kp, seat_did = _stacks_node(port, scope)
+    if n is None:
+        return
+    pol = _stk._chunking(n)
+    ph = chunklaw.policy_hash(pol)
+    token = _ROOT.issue_token(_BECKY.did, "u:demo",
+                              [{"action": "govern", "space": "self"}])
+    try:
+        # the sweep judges ONLY what its own pull authorized (the first live
+        # sweep taught this: a global worklist made it mark records the
+        # capped pull simply had not returned — a lie that poisons)
+        missing = call(port, "POST", "/chunks/missing",
+                       {"token": token, "policy": ph,
+                        "ids": list(n.records.keys()),
+                        "limit": 512}).get("missing", [])
+    except Exception:
+        return
+    if not missing:
+        return
+    sup = _stk.superseded_of(n)
+    cut = marked = 0
+    for rid in missing:
+        r = n.records.get(rid)
+        if r is None:
+            continue                  # never judge what this pull cannot see
+        d = _stk.derived_text(n, rid, r, sup)
+        if d is None:
+            # pulled, looked at, and NOT material (machinery-talk, assets) —
+            # the marker row says so (level 0 under the policy, no vector:
+            # the worklist stops listing it, the search can never serve it)
+            rows = [{"seq": -1, "span": [0, 0], "lane": "none", "hash": ""}]
+            marked += 1
+        else:
+            lane, text, doc, trust, state, when = d
+            spans = _stk.lane_spans(lane, text, pol)
+            pieces = [text[s0:e0] for s0, e0 in spans]
+            vecs = meaning.embed(pieces) if pieces else []
+            import hashlib as _hl
+            rows = [{"seq": i, "span": [s0, e0], "lane": lane,
+                     "hash": _hl.sha256(
+                         pieces[i].encode()).hexdigest()[:16],
+                     "doc": doc, "trust": trust, "occurred": when or "",
+                     "vector": vecs[i] if i < len(vecs) else []}
+                    for i, (s0, e0) in enumerate(spans)]
+            if lane == "document" and len(rows) > 1:
+                rows += chunklaw.tree_for(
+                    [{"seq": x["seq"], "span": x["span"], "lane": lane}
+                     for x in rows], levels=2)
+            cut += 1
+        try:
+            call(port, "POST", "/chunks",
+                 {"record_id": rid, "policy": ph, "rows": rows,
+                  "token": token})
+        except Exception:
+            pass
+    print(f"  ↳ the standing shelf: {scope} — {cut} record(s) cut"
+          + (f" · {marked} marked non-material" if marked else "")
           + f" ({len(missing)} swept)")
 
 
@@ -6684,6 +6759,63 @@ def _ask_self_knowledge(n, q: str) -> tuple[str, str, bool]:
     return q2, pre, settled
 
 
+def standing_answer(port: int, scope: str, n, q: str):
+    """0065 sp2 — the standing projection's read: the query embedded ONCE,
+    chunk-grain cosine on the plane over exactly the ids this pull
+    authorized, spans sliced from the derived text already in hand, every
+    hash checked (the drift catch: a row that no longer matches its slice
+    falls the whole ask back to the rebuild, loudly). Returns None when the
+    shelf is cold or dark, or the ask walks time — the rebuild serves."""
+    from orreth_sim import rivals, stacks as _stk
+    if meaning.embedder() is None:
+        return None
+    if _stk.parse_time(q)[0]:
+        return None                    # temporal asks walk the timeline — the
+                                       # rebuild's time law serves (sp4 grows it)
+    try:
+        qv = (meaning.embed([q]) or [[]])[0]
+        if not qv:
+            return None
+        _, seat_did = lib_seat(scope)
+        token = _ROOT.issue_token(seat_did, "u:demo",
+                                  [{"action": "retrieve", "space": "self"}])
+        hits = call(port, "POST", "/chunks/search",
+                    {"token": token, "ids": list(n.records.keys()),
+                     "vector": qv, "k": 8}).get("hits", [])
+    except Exception:
+        return None
+    if not hits:
+        return None
+    import hashlib as _hl
+    pol = _stk._chunking(n)
+    sup = _stk.superseded_of(n)
+    out = []
+    for h in hits:
+        r = n.records.get(h["ref"])
+        d = _stk.derived_text(n, h["ref"], r, sup) if r is not None else None
+        if d is None:
+            continue
+        lane, text, doc, trust, state, when = d
+        s0, e0 = h.get("span") or [0, 0]
+        piece = text[s0:e0]
+        if h.get("hash") and _hl.sha256(
+                piece.encode()).hexdigest()[:16] != h["hash"]:
+            print("  ↳ standing shelf: a row no longer matches its slice — "
+                  "falling back to the rebuild, loudly")
+            return None
+        out.append({"ref": h["ref"], "doc": doc, "at": s0, "text": piece,
+                    "score": round(float(h.get("score", 0))
+                                   * float(trust), 4),
+                    **({"state": state} if state else {})})
+    if not out:
+        return None
+    out.sort(key=lambda x: -x["score"])
+    out = out[:4]
+    _stk.record_recalls(n, out)
+    print(f"  ↳ standing shelf served {len(out)} hit(s) — no rebuild")
+    return rivals.answer_from(out, "naive")
+
+
 def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
                        variant: str | None = None) -> dict | None:
     """The ask path, whole (0038 sp1+sp2), STRUCTURED (0071 sp2): the
@@ -6738,7 +6870,15 @@ def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
     # the choice persists on the wire; it just doesn't answer itself
     # 0065 sp1 — the choice is CANONICAL (the menu's name); the flow that
     # executes it may still wear its old row name underneath
-    a = tournament.answer_as(n, _var.row_for(d["flavor"]) or d["flavor"], q2)
+    _row = _var.row_for(d["flavor"]) or d["flavor"]
+    a = None
+    if _row == "naive":
+        # 0065 sp2 — the PRODUCTION path: the baseline reads the STANDING
+        # chunk projection; the in-process rebuild is the dev fallback,
+        # served loudly when the shelf is cold or dark
+        a = standing_answer(port, scope, n, q2)
+    if a is None:
+        a = tournament.answer_as(n, _row, q2)
     # the pre-pass's quotes are recalls too (0057 sp2): a human's question
     # answered FROM a report is that report being used
     from orreth_sim import stacks as _stk
@@ -14791,6 +14931,7 @@ def main() -> None:
                                               # for weeks)
                     serials_beat(port, scope)  # the desk sweeps on the beat (0032 §2)
                     embed_beat(port, scope)   # the vector projection fills (0022 Ph2)
+                    chunk_beat(port, scope)   # the standing shelf fills (0065 sp2)
                     continuity_charter(port, scope)  # a template floor gets its law (0034)
                     pin_organs(port, scope)
                     window_charter(port, scope)

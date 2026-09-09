@@ -127,6 +127,19 @@ DIALS_V1 = {
                "today with room to breathe",
         "horizon": "takes hold at the next request",
     },
+    "chunk-every": {
+        "type": "int", "unit": "seconds between beats", "min": 30,
+        "max": 604800, "genesis": 120, "home": "universe",
+        "governs": "how often the standing chunk/tree projection sweeps what "
+                   "the node accepted but has not yet cut (0065 sp2) — the "
+                   "sweep that lets an ask READ standing rows instead of "
+                   "rebuilding the whole shelf",
+        "blast": "slow leaves fresh records unfindable by the standing lane "
+                 "until the next beat; fast churns cutting and embedding",
+        "why": "two minutes keeps the shelf warm without racing the "
+               "meaning axis's own ninety-second sweep",
+        "horizon": "takes hold within a minute",
+    },
     "ask-cache-ttl-s": {
         "type": "int", "unit": "seconds an answer may serve again", "min": 0,
         "max": 86400, "genesis": 300, "home": "ladder",

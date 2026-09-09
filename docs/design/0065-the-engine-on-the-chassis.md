@@ -238,10 +238,38 @@ Three seams, zero new stores:
    the live rig's shelf standard stays v1 until the promotion lane argues v2 (genesis
    plants once — fresh worlds get v2); the universe-pull stitch is wire-postured, its
    live proof rides the first real promotion.*
-2. **sp2 — The chunk/tree projection.** Plane DDL + doors + eviction (L2); the sweep beat;
-   `stacks.project` learns to read the standing projection (per-ask rebuild becomes the dev
-   fallback, never the production path); Hierarchical's tree rows. Suite: rebuild-identical +
-   purge-reach on the standing projection.
+2. **sp2 — The chunk/tree projection.** ✅ **LANDED 2026-09-09 — the ask stops rebuilding
+   the shelf.** The plane grew the standing projection under L2's gate, the embeddings
+   lifecycle copied verbatim: the `chunks` table (POINTERS into derived text, never blobs
+   — level 0 leaves with chunk-grain vectors, level ≥ 1 tree parents for Hierarchical,
+   every row wearing the policy hash that cut it), three tokened doors (`/chunks` write —
+   landing replaces a record's rows whole; `/chunks/missing` worklist — material first,
+   and answering ONLY for the ids the caller sends; `/chunks/search` — chunk-grain cosine
+   over exactly the ids the caller's retrieve authorized, cosine_for's law at chunk
+   grain), and eviction in the same tombstone breath as the vector's. **One knife**: the
+   lane law extracted from `project()` into `stacks.derived_text()` + `lane_spans()` so
+   the rebuild and the sweep cut identically BY CONSTRUCTION; the pure law lives in
+   `orreth_sim/chunklaw.py` (deterministic cut · lossless spans · piece hashes · policy
+   naming · tree parents covering exactly their children · a short text earns no tree).
+   The worker's `chunk_beat` sweeps on a new dial (`chunk-every` 120) — per-floor clocks —
+   and the naive row's PRODUCTION path became the standing read: query embedded once,
+   plane-side search, spans sliced from text already in hand, every hash re-checked (a
+   mismatched row falls the whole ask back to the rebuild, loudly); the in-process
+   rebuild stands behind as the dev fallback. *Proven live on the rig: f:prod's sweep cut
+   253 material records in one beat (material-first ordering); the next sweep touched 1;
+   an SDK ask answered FROM the shelf — «standing shelf served 4 hit(s) — no rebuild»,
+   3.1 s end to end, citations riding, the confession floor's honesty intact. And the
+   FIRST live sweep caught a real wound the design had missed: the global worklist let
+   the sweep mark records its capped pull had never seen — a lie that would poison the
+   projection; fixed in the hour (the sweep judges ONLY what its own pull authorized; the
+   poisoned rows truncated — the projection is rebuildable by design). Suite 407→416
+   (nine chunk laws) + Rust green.* *Honest remainders: only the baseline row reads
+   standing today — the other flows thread at sp4 with `config()`; temporal asks
+   deliberately take the rebuild (its time law); the confession floor is
+   embedder-relative and the standing lane's fastembed scores read lower than the
+   hashed-bag's — sp4's harness measures before any floor turns; tree rows STAND but
+   nothing walks them until Hierarchical's scaffold; a live purge-reach walk awaits an
+   ungated purge (the suite holds the law).*
 3. **sp3 — The graph projection.** Plane DDL + doors + eviction; `extract_beat` with the
    scaffold extractor; `f:graph`'s flow reads Postgres; witness-ref provenance walks. Suite:
    the cross-document edge, found in SQL; purge kills the edge.

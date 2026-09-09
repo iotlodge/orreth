@@ -138,70 +138,91 @@ def parse_time(query: str):
     return mode, m.group(2), cleaned or query
 
 
+def derived_text(node, rid: str, r: dict, superseded: set):
+    """THE LANE LAW (0065 sp2, extracted so the rebuild and the standing
+    sweep can never drift): what a record contributes to the projection —
+    (lane, text, doc, trust, state, when), or None. The privacy floor and
+    the machinery-talk exclusions live HERE, once."""
+    from . import canon
+    # THE PRIVACY FLOOR (0039 §7, locked 2026-07-23): floors apply BEFORE
+    # any projection sees a byte — a sovereign record never chunks, no
+    # matter what else it wears
+    if not canon.retrievable(node, r):
+        return None
+    tags = r.get("tags") or []
+    if "document" in tags and "stacks" in tags:
+        doc = json.loads(crypto._b64d(r["body"]).decode()).get("stacks_document") or {}
+        return ("document", doc.get("text", ""), doc.get("name", "?"),
+                1.0, None, r.get("occurred_at", ""))
+    if "asset" not in tags and "dispatch" not in tags \
+            and canon.class_of(r).startswith("chronicle-"):
+        # dispatch stays retrievable (the routing door, the window) but
+        # never chunks into world-answers — machinery-talk is not memory
+        # THE CHRONICLE JOINS THE ROWS (0039 sp2): the universe's own life
+        # becomes retrievable, class-gated, stamped with ITS MOMENT
+        b = json.loads(crypto._b64d(r["body"]).decode())
+        text = _chronicle_text(b)
+        if not text:
+            return None
+        cls = canon.class_of(r)
+        return ("chronicle", text, cls.replace("chronicle-", ""),
+                0.9, None, r.get("occurred_at", ""))
+    if "knowledge" in tags and rid not in superseded:
+        b = json.loads(crypto._b64d(r["body"]).decode())
+        # both dialects: the sim's {claim, category} and the wire's
+        # gathered {knowledge, intent} — one law over both
+        claim = b.get("claim") or b.get("knowledge") or ""
+        state = b.get("state", "untrusted")
+        w = _TRUST.get(state, 0.4)
+        if not claim or w <= 0:
+            return None                     # recalled is DEAD — it never speaks
+        src = str((b.get("source") or {}).get("did") or
+                  (b.get("source") or {}).get("ref") or "?")[-16:]
+        doc = f"{b.get('category') or b.get('intent') or 'knowledge'} · {src}"
+        return ("knowledge", claim, doc, w, state, r.get("occurred_at", ""))
+    return None
+
+
+def lane_spans(lane: str, text: str, pol: dict) -> list[tuple[int, int]]:
+    """How a lane meets the knife — one law for rebuild and sweep alike:
+    documents and knowledge cut by the policy's walk; a chronicle speaks as
+    ONE piece capped at twice the chunk size (project()'s standing shape)."""
+    from . import chunklaw
+    size, ov = int(pol["chunk_chars"]), int(pol["overlap_chars"])
+    if lane == "chronicle":
+        return [(0, min(len(text), size * 2))] if text else []
+    return chunklaw.cut(text, size, ov)
+
+
+def superseded_of(node) -> set:
+    out: set = set()
+    for r in node.records.values():
+        if "knowledge" in (r.get("tags") or []):
+            out.update(r.get("derived_from") or [])
+    return out
+
+
 def project(node) -> dict:
     """The stack's whole body: chunks + vectors DERIVED from the log —
     shelved documents AND the librarian's gathered knowledge (head versions
     only, trust-weighted). Rebuildable, therefore disposable — this function
-    IS the field."""
+    IS the field. Since 0065 sp2 it walks the extracted lane law, so the
+    per-ask rebuild and the standing projection are the same cut by
+    construction."""
     pol = _chunking(node)
-    size, ov = int(pol["chunk_chars"]), int(pol["overlap_chars"])
     chunks = []
-    superseded: set = set()
-    for r in node.records.values():
-        if "knowledge" in (r.get("tags") or []):
-            superseded.update(r.get("derived_from") or [])
-    from . import canon
+    superseded = superseded_of(node)
     for rid, r in sorted(node.records.items()):
-        # THE PRIVACY FLOOR (0039 §7, locked 2026-07-23): floors apply BEFORE
-        # any projection sees a byte — a sovereign record never chunks, no
-        # matter what else it wears
-        if not canon.retrievable(node, r):
+        d = derived_text(node, rid, r, superseded)
+        if d is None:
             continue
-        tags = r.get("tags") or []
-        if "document" in tags and "stacks" in tags:
-            doc = json.loads(crypto._b64d(r["body"]).decode()).get("stacks_document") or {}
-            text, name = doc.get("text", ""), doc.get("name", "?")
-            i = 0
-            while i < len(text):
-                piece = text[i:i + size]
-                chunks.append({"ref": rid, "doc": name, "at": i, "text": piece,
-                               "vec": _embed(piece), "trust": 1.0})
-                i += max(1, size - ov)
-        elif "asset" not in tags and "dispatch" not in tags \
-                and canon.class_of(r).startswith("chronicle-"):
-            # dispatch stays retrievable (the routing door, the window) but
-            # never chunks into world-answers — machinery-talk is not memory
-            # THE CHRONICLE JOINS THE ROWS (0039 sp2): the universe's own life —
-            # objectives, intentions, observations, thoughts, choices — becomes
-            # retrievable, class-gated, each chunk stamped with ITS MOMENT
-            b = json.loads(crypto._b64d(r["body"]).decode())
-            text = _chronicle_text(b)
-            if not text:
-                continue
-            cls = canon.class_of(r)
-            chunks.append({"ref": rid, "doc": cls.replace("chronicle-", ""),
-                           "at": 0, "text": text[:size * 2],
-                           "vec": _embed(text[:size * 2]), "trust": 0.9,
-                           "state": None,
-                           "when": r.get("occurred_at", "")})
-        elif "knowledge" in tags and rid not in superseded:
-            b = json.loads(crypto._b64d(r["body"]).decode())
-            # both dialects: the sim's {claim, category} and the wire's
-            # gathered {knowledge, intent} — one law over both
-            claim = b.get("claim") or b.get("knowledge") or ""
-            state = b.get("state", "untrusted")
-            w = _TRUST.get(state, 0.4)
-            if not claim or w <= 0:
-                continue                     # recalled is DEAD — it never speaks
-            src = str((b.get("source") or {}).get("did") or
-                      (b.get("source") or {}).get("ref") or "?")[-16:]
-            doc = f"{b.get('category') or b.get('intent') or 'knowledge'} · {src}"
-            i = 0
-            while i < len(claim):            # long findings meet the same knife
-                piece = claim[i:i + size]
-                chunks.append({"ref": rid, "doc": doc, "at": i, "text": piece,
-                               "vec": _embed(piece), "trust": w, "state": state})
-                i += max(1, size - ov)
+        lane, text, doc, trust, state, when = d
+        for s0, e0 in lane_spans(lane, text, pol):
+            piece = text[s0:e0]
+            chunks.append({"ref": rid, "doc": doc, "at": s0, "text": piece,
+                           "vec": _embed(piece), "trust": trust,
+                           **({"state": state} if state else {}),
+                           **({"when": when} if lane == "chronicle" else {})})
     return {"flavor": "naive", "chunks": chunks, "policy": pol}
 
 

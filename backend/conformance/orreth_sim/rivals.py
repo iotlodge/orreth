@@ -126,11 +126,10 @@ RETRIEVERS = {
 CONFESSION_FLOOR = 0.3
 
 
-def answer_as(node, flavor: str, query: str) -> dict:
-    """One door for every built row: retrieve by flavor, answer with citations
-    — the shape the Dispatcher routes into and the standings will grade."""
-    hits = RETRIEVERS[flavor](node, query)
-    stacks.record_recalls(node, hits)
+def answer_from(hits: list[dict], flavor: str) -> dict:
+    """The answer's composition from hits — extracted (0065 sp2) so the
+    standing projection's lane and the in-process rebuild speak with the
+    same voice: citations, the confession floor, the honest unknown."""
     if not hits:
         return {"answer": "the stacks hold nothing on this — an honest unknown",
                 "citations": [], "flavor": flavor}
@@ -146,3 +145,11 @@ def answer_as(node, flavor: str, query: str) -> dict:
                 "flavor": flavor, "citations": cites, "confessed": True}
     return {"answer": " · ".join(lines), "flavor": flavor,
             "citations": cites}
+
+
+def answer_as(node, flavor: str, query: str) -> dict:
+    """One door for every built row: retrieve by flavor, answer with citations
+    — the shape the Dispatcher routes into and the standings will grade."""
+    hits = RETRIEVERS[flavor](node, query)
+    stacks.record_recalls(node, hits)
+    return answer_from(hits, flavor)
