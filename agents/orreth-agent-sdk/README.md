@@ -33,6 +33,18 @@ What the kit gives you:
   whose prompts are *acquired from the world's own governed shelf*
   (`acquire`), so the words your agent runs on are versioned, human-editable
   assets, never hardcoded strings.
+- **`FieldClient.ask()`** *(new in 0.2.0)* — ask a world a question through
+  its governed retrieval and read the structured answer: the reply, its
+  citations, which retrieval variant served it, and the whole decision record
+  behind the choice. Asks are signed with your agent's own key — never a
+  bearer token — and repeated questions may serve from the world's cache,
+  always confessed in the envelope.
+- **`python -m orreth_agent.joindoor`** *(new in 0.2.0)* — the publishable
+  join door: a small service an operator runs beside their own kernel to
+  admit agents through the governed gate. The operator's root key signs the
+  door's credential once, offline, and never enters the serving process;
+  `mint` · `serve` · `pending` · `approve` complete a stranger's admission
+  from published artifacts alone.
 - **`manifest`** / **`PANEL_KINDS`** — build and validate capability
   manifests: whole purposes the Orreth console renders from declarations,
   never from your code.

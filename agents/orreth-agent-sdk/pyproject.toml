@@ -1,6 +1,6 @@
 [project]
 name = "orreth-agent"
-version = "0.1.0"
+version = "0.2.0"
 description = "The lifeforce kit: give any agent an identity, a home floor, a memory, a governed mind, and a diary — and it appears in the universe."
 readme = "README.md"
 license = { text = "Apache-2.0" }

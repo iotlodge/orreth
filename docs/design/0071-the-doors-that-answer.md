@@ -5,13 +5,17 @@ kernel dive, opening Wave 3 (the surfaces): the agents channel, the external API
 librarian's selector, and the payment of the proof's KCR-0001 (the publishable join door).
 Grounded in the join-door/queue/limits survey of 2026-09-09 (Appendix A).*
 
-***Status: 🟡 DRAFTED · LOCKED — all three locks taken by JB's word, 2026-09-09, plainly
-stated per the language law: L1 PAY THE QUEUE WOUND NOW (authenticated filing and
-resolving, validated statuses, the meter door demanding its token — the forgery hole
-closes before any channel opens) · L2 the delegate-credential join door APPROVED (root
-signs once at setup and never leaves the operator's safe; KCR-0001's payment design) ·
-L3 the traffic law APPROVED (per-identity rate ceilings with dials + deliberate size
-limits, at kernel and worker doors alike).***
+***Status: ✅ CLOSED WHOLE 2026-09-09 — era 0.71. The build season's first dive:
+five spoonfuls landed in two days, each proven live before its commit — the resolve
+and meter doors locked (sp1) · the ask door with its structured envelope (sp2) · the
+publishable join door, KCR-0001 paid (sp3) · the traffic law (sp4) · the ask-cache
+(sp5). Suite 371→398 + Rust green throughout; the register moved with every spoonful.
+The close turns every public surface together per the release-alignment law: VERSION
+0.71 · GHCR republish with the locked plane · PyPI orreth-agent 0.2.0 carrying ask()
+and the join door · the book's pages re-walked (the Approve note, the door service,
+the three new dials, the token grammar's `resolve`) · the demo refreshed. Locks as
+taken 2026-09-09, plainly stated per the language law: L1 PAY THE QUEUE WOUND NOW ·
+L2 the delegate-credential join door · L3 the traffic law.***
 
 ## 1. The demand, verbatim (the proof's charter)
 

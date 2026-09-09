@@ -47,7 +47,7 @@ flowchart TD
 ## What is running, today, on one laptop
 
 🟢 **Sixty-five design dives (`0000`–`0064`), every landed decision locked** (`docs/decisions/` + each
-dive's own ledger) · the **Python reference proves the whole model — 371 conformance tests** · the
+dive's own ledger) · the **Python reference proves the whole model — 398 conformance tests** · the
 **Rust plane** runs it (six crates, `orrethd` — one binary, tier as a profile, conformance-green
 against fixtures signed in Python and verified in Rust) · **one command** (`scripts/dev.sh start`)
 raises a universe of six ecosystems, twelve fields, and a working population of governed agents,
@@ -424,7 +424,7 @@ being *used*.
 
 ## From substrate to estate — the recent eras, compressed
 
-*(the full record is `docs/design/README.md` — sixty-five dives, each closed only when proven
+*(the full record is `docs/design/README.md` — sixty-six dives, each closed only when proven
 live by a human in the glass; the standing proof register is
 [`docs/design/the-honest-boundary.md`](docs/design/the-honest-boundary.md))*
 
@@ -448,6 +448,12 @@ live by a human in the glass; the standing proof register is
   fourteen pages, every tutorial walked before written, and the docs as the decoupling's forcing
   function: the kernel image published, the SDK on PyPI, a stranger's world from three files, an
   outside LangGraph agent admitted at a human gate and remembering across lives.
+- **The doors learned who is knocking** (0071, two days): the open queue closed — resolving needs a
+  root-chained credential, forgeries meet one face, the fuel ledger answers only to its own key;
+  machines ask and are answered structurally (signed asks, envelopes whose refs open); a stranger's
+  deployment completes a governed join from published artifacts alone, the root key never leaving
+  the operator's safe; knocking is metered per identity inside dialed ceilings; and repeated
+  questions serve from a confessed cache that dies with its records.
 
 ## Where it started becoming an institution — the earlier keystones
 
@@ -574,7 +580,7 @@ orreth/
 │   ├── orreth-agent-sdk/      ← the FieldClient SDK — persistent identities that re-join as the same self
 │   └── flavors/               ← lifeforce agents (prototype · LangGraph · AgentField sentinel)
 ├── backend/
-│   ├── conformance/           ← the Python reference (371 tests) + console worker + live demos
+│   ├── conformance/           ← the Python reference (398 tests) + console worker + live demos
 │   └── plane/                 ← the Rust plane: 6 crates + orrethd (the daemon, serving its own glass)
 ├── infrastructure/            ← compose + CDK — one laptop, one universe, one command (and the demo site's stack)
 └── scripts/                   ← dev.sh (the rig) · demo.sh (the reel)

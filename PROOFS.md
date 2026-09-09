@@ -59,6 +59,12 @@ Unlike the held six, this proof is *expected* to upgrade the kernel's own RAG ar
 every change paid as a design dive, citing the requirement that demanded it. In progress,
 private, and it opens when it earns a stranger's read.
 
+Its first demand is already paid: the proof's first kernel change request — *a stranger's
+deployment must be able to complete a governed admission with published artifacts alone* —
+landed as dive 0071 (era 0.71): the request queue closed to forgers, an ask door for machines,
+per-identity traffic ceilings, a confessed ask-cache, and the publishable join door whose root
+key never leaves the operator's safe.
+
 ---
 
 *The kernel matures by being used. Watch it live at [demo.orreth.ai](https://demo.orreth.ai);
