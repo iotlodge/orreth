@@ -26,10 +26,13 @@ def _ext(filename: str) -> str:
     return filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
 
 
-def check_policy(filename: str, data: bytes) -> None:
-    """The bars (JB lock): size and type. Past them, one face — a prober learns
-    nothing about which bar it hit."""
-    if len(data) > MAX_BYTES or _ext(filename) not in TYPES:
+def check_policy(filename: str, data: bytes,
+                 max_bytes: int | None = None) -> None:
+    """The bars: size and type. Past them, one face — a prober learns
+    nothing about which bar it hit. The size bar became a DIAL at 0069 sp1
+    (upload-inline-kb); MAX_BYTES stands as the firmware fallback."""
+    bar = max_bytes if max_bytes is not None else MAX_BYTES
+    if len(data) > bar or _ext(filename) not in TYPES:
         raise Refusal("upload outside the floor's bars")
 
 
@@ -42,10 +45,10 @@ def extract_text(filename: str, data: bytes) -> str | None:
 
 
 def admit_upload(node, agent: dict, kp, filename: str, mime: str,
-                 data: bytes) -> dict:
+                 data: bytes, max_bytes: int | None = None) -> dict:
     """The whole admission, on the record: artifact always; extraction when the
     floor can read it; a parked eye when it cannot. Returns the receipt."""
-    check_policy(filename, data)
+    check_policy(filename, data, max_bytes=max_bytes)
     artifact = make_memory(agent, kp, node.scope,
                            {"artifact": {"filename": filename, "mime": mime,
                                          "bytes_b64": base64.b64encode(data).decode(),

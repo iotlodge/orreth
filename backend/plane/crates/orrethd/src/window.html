@@ -946,6 +946,9 @@
   .gdetail{margin-top:.4rem;border-top:1px dashed var(--hair2);padding-top:.4rem;
     font:.68rem/1.55 var(--mono);color:var(--dim);white-space:pre-wrap;overflow-wrap:anywhere}
   .wtoggle{cursor:pointer;color:var(--brass)} .wtoggle:hover{color:var(--star)}
+  .bk-row{padding:.18rem .3rem;border-radius:5px;font-size:.82rem;cursor:default}
+  .bk-row:hover{background:rgba(255,255,255,.04)}
+  .bk-row[onclick]{cursor:pointer}
   .pdrop{margin:.5rem 1.1rem;padding:.5rem .8rem;border:1px dashed var(--hair2);border-radius:8px;
     font:.66rem var(--mono);color:var(--faint);text-align:center;cursor:default}
   .pdrop.hot{border-color:var(--brass);color:var(--brass)}
@@ -1588,6 +1591,18 @@
   </div>
 </div>
 <!-- THE PARLOR (0020): the audience room — humans ask; residents fetch -->
+<div id="basket" style="display:none;position:fixed;right:1rem;top:3.2rem;bottom:1rem;width:min(480px,90vw);z-index:60;background:var(--panel,#0d1420);border:1px solid var(--hair2,#2a3444);border-radius:10px;padding:.7rem .9rem;overflow-y:auto">
+  <div style="display:flex;align-items:center;gap:.5rem">
+    <b>🧺 the Basket</b>
+    <span class="quiet2" style="flex:1">tick files across folders; zips open like folders; one Import</span>
+    <span class="x" onclick="basketClose()" style="cursor:pointer">✕</span></div>
+  <div class="quiet2" id="bk-path" style="margin:.35rem 0;word-break:break-all"></div>
+  <div id="bk-list" style="max-height:38vh;overflow-y:auto;border:1px solid var(--hair2,#2a3444);border-radius:8px;padding:.35rem"></div>
+  <div class="section" style="margin:.6rem 0 .2rem">the running list — every entry keeps its origin</div>
+  <div id="bk-basket"></div>
+  <div class="section" style="margin:.6rem 0 .2rem">imports — progress is read from the signed log</div>
+  <div id="bk-jobs"></div>
+</div>
 <div class="parlor" id="parlor">
   <div class="phd"><span class="rd" id="p-dot"></span><span class="nm" id="p-name">—</span><span class="roomdoor" onclick="resOpen($('p-name').textContent)" title="this resident's room — vitals, and the rooms to come">⌂</span>
     <span class="fl" id="p-floor"></span>
@@ -1598,6 +1613,9 @@
   <div class="pws" id="p-ws" style="display:none"></div>
   <div class="pdrop" id="p-drop" style="display:none"
     title="the file lands as a signed record; what it teaches starts untrusted until proven">⇪ drop a document here — it is filed, and the resident reads it</div>
+  <div class="pdrop" id="p-basket-open" style="display:none;cursor:pointer"
+    onclick="basketOpen()"
+    title="0069 — point at folders, tick files (zips open like folders), keep a running list, then one Import; each file's mass rests in the object store with a signed pointer citing its origin">🧺 open the Basket — import folders, many files, zips</div>
   <div class="pth" id="p-thread"></div>
   <div class="pgate" id="p-gate" style="display:none"
        title="what waits on you, right here in the audience — the same gates as the Requests tab"></div>
@@ -4556,6 +4574,7 @@ function openParlor(name){
   $("p-expand").style.display="none"; $("p-ws").style.display="none";
   $("p-ws").innerHTML=""; $("parlor").classList.remove("full");
   $("p-drop").style.display="none";
+  $("p-basket-open").style.display="none";
   $("p-thread").innerHTML=`<div class="msg reply wait">${RESBLURB[name]?`${name} — ${esc(RESBLURB[name])}. `:`${name} is coming… `}ask anything in your own words below — for example, “what do we know about the trading desk?” — and the answer lands here with its sources named, kept for you to find again.</div>`;
   $("parlor").classList.add("on"); $("p-in").focus();
   document.body.classList.add("parlor-open"); parlorRefit();
@@ -4597,6 +4616,7 @@ function parlorCard(card){
   if(!card||!PA)return;
   $("p-expand").style.display=card.workspace?"":"none";   /* the card declares the room (0028) */
   $("p-drop").style.display=(card.accepts||[]).includes("upload")?"":"none"; /* ...and who takes files (0029) */
+  $("p-basket-open").style.display=(card.accepts||[]).includes("upload")?"":"none"; /* the Basket is her big door (0069) */
   $("p-did").textContent=card.did?`its permanent name — ${card.did}`
     :(card.voiced===false?"an unembodied organ — it has no voice of its own yet":"");
   if(card.greeting)parlorLine("reply",card.greeting,card.role||"");
@@ -4997,7 +5017,9 @@ const DROP_TYPES=["txt","md","json","csv","pdf","png","jpg","jpeg"];
   if(ev!=="drop")return;
   const f=e.dataTransfer.files&&e.dataTransfer.files[0]; if(!f||!PA)return;
   const ext=(f.name.split(".").pop()||"").toLowerCase();
-  if(f.size>256*1024||!DROP_TYPES.includes(ext)){
+  /* the size bar is the FLOOR's dial now (0069 sp1) — a client-side number
+     would lie the day the human turns it; only the type spare stays */
+  if(!DROP_TYPES.includes(ext)){
     parlorLine("reply","request cannot be served under this capability");return}
   const rd=new FileReader();
   rd.onload=()=>{
@@ -5007,6 +5029,67 @@ const DROP_TYPES=["txt","md","json","csv","pdf","png","jpg","jpeg"];
   };
   rd.readAsDataURL(f);
 }));
+
+/* ── THE BASKET (0069 sp1): point at folders, tick files, zips open like
+   folders; the running list keeps each entry's ORIGIN; one Import lands a
+   signed job and the worker carries the bytes — mass to the object store,
+   pointer to the log. Progress derives from the log, polled while open. ── */
+let BK={open:false,path:null,zip:null,list:[],ticked:{}};
+function basketOpen(){BK.open=true;$("basket").style.display="";bkLs(null);bkJobs()}
+function basketClose(){BK.open=false;$("basket").style.display="none"}
+const bkKey=e=>e.path+""+(e.zip_member||"");
+async function bkLs(path,zip){
+  BK.zip=zip||null;
+  let u=OBSD+"/basket"+(zip?`?zip=${encodeURIComponent(zip)}`
+    :(path?`?path=${encodeURIComponent(path)}`:""));
+  let d;try{d=await(await fetch(u)).json()}catch{d={error:"the worker's door did not answer"}}
+  if(d.error){$("bk-list").innerHTML=`<div class="quiet">${esc(d.error)} — the Basket sees only inside its declared root</div>`;return}
+  BK.path=d.path;
+  $("bk-path").textContent=(zip?`🗜 ${d.path}`:d.path)+(d.root&&!zip?`   (root: ${d.root})`:"");
+  const rows=(d.entries||[]).map(e=>{
+    if(e.kind==="dir")return `<div class="bk-row" onclick="bkLs('${esc(d.path)}/${esc(e.name)}')">📁 ${esc(e.name)}</div>`;
+    if(e.kind==="zip")return `<div class="bk-row" onclick="bkLs(null,'${esc(d.path)}/${esc(e.name)}')">🗜 ${esc(e.name)} <span class="quiet2">(opens like a folder)</span></div>`;
+    const entry=zip?{path:zip,zip_member:e.name}:{path:(d.path+"/"+e.name)};
+    const k=bkKey(entry),on=!!BK.ticked[k];
+    return `<div class="bk-row"><label><input type="checkbox" ${on?"checked":""}
+      onchange='bkTick(${JSON.stringify(entry).replace(/'/g,"&#39;")})'> 📄 ${esc(e.name)}
+      <span class="quiet2">${e.size!=null?(e.size+" b"):""}</span></label></div>`;
+  }).join("");
+  const upBtn=(zip||d.parent)?`<div class="bk-row" onclick="${zip?`bkLs('${esc(String(zip).split("/").slice(0,-1).join("/"))}')`:`bkLs('${esc(d.parent)}')`}">⬆ up</div>`:"";
+  $("bk-list").innerHTML=upBtn+(rows||`<div class="quiet">an empty room</div>`);
+}
+function bkTick(entry){
+  const k=bkKey(entry);
+  if(BK.ticked[k])delete BK.ticked[k];else BK.ticked[k]=entry;
+  bkRender();
+}
+function bkRender(){
+  const rows=Object.values(BK.ticked);
+  $("bk-basket").innerHTML=rows.length
+    ?rows.map(e=>`<div class="bk-row">🧺 ${esc((e.zip_member||e.path).split("/").pop())}
+       <span class="quiet2">from ${esc(e.zip_member?e.path.split("/").pop()+" › "+e.zip_member:e.path)}</span>
+       <span class="lnk" onclick='bkTick(${JSON.stringify(e).replace(/'/g,"&#39;")})'>✕</span></div>`).join("")
+      +`<div style="margin-top:.4rem"><button class="sbtn ok" onclick="bkImport()">Import ${rows.length} — the mass to the store, the pointers to the log</button></div>`
+    :`<div class="quiet">nothing in the basket yet — tick files above; move folders and keep ticking</div>`;
+}
+async function bkImport(){
+  const entries=Object.values(BK.ticked);if(!entries.length)return;
+  let d;try{d=await(await fetch(OBSD+"/basket/import",{method:"POST",
+    headers:{"content-type":"application/json"},
+    body:JSON.stringify({port:floorPort(),entries})})).json()}catch{d={error:"unreachable"}}
+  if(d.error){$("bk-jobs").innerHTML=`<div class="quiet">${esc(d.error)}</div>`;return}
+  BK.ticked={};bkRender();bkJobs();
+}
+async function bkJobs(){
+  if(!BK.open)return;
+  let d;try{d=await(await fetch(OBSD+"/basket/jobs?port="+floorPort())).json()}catch{d={jobs:[]}}
+  const rows=(d.jobs||[]).slice(-6).reverse().map(j=>
+    `<div class="bk-row">${j.finished?(j.failed?"⚠":"✓"):"⏳"} ${esc(j.job.slice(0,18))}… —
+      ${j.done}/${j.count} landed${j.failed?` · ${j.failed} named honestly`:""}
+      ${j.finished?"":" · the beat is carrying"}</div>`).join("");
+  $("bk-jobs").innerHTML=rows||`<div class="quiet">no imports yet</div>`;
+  if((d.jobs||[]).some(j=>!j.finished))setTimeout(bkJobs,4000);
+}
 
 /* the ask suggestions retired with their tab (0045 sp1) */
 

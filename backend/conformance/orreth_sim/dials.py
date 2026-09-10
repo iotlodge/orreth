@@ -222,6 +222,31 @@ DIALS_V1 = {
                    "keeps its firmware year — reading the dials never "
                    "depends on a dial",
     },
+    "upload-inline-kb": {
+        "type": "int", "unit": "KB a file may weigh on the inline path",
+        "min": 16, "max": 4096, "genesis": 256, "home": "universe",
+        "governs": "the old drop-zone lane where small files ride inside a "
+                   "record body — anything past this bar belongs to the "
+                   "Basket's pointer path (0069 sp1: bulk never enters "
+                   "the mind)",
+        "blast": "too high inflates record bodies with base64 mass; too "
+                 "low refuses honest small files at the parlor door",
+        "why": "256 KB was 0029's hand-set bar — the same number, now the "
+               "human's to turn",
+        "horizon": "the next upload reads it",
+    },
+    "import-max-mb": {
+        "type": "int", "unit": "MB one imported file may weigh",
+        "min": 1, "max": 2048, "genesis": 100, "home": "universe",
+        "governs": "the Basket's per-file bar on the pointer path — the "
+                   "mass rests in the object store, so the bar is about "
+                   "what one import may pull through the worker's hands",
+        "blast": "too high lets one file starve a beat; too low refuses "
+                 "the very documents the Basket exists for",
+        "why": "a hundred megabytes covers every mainstream document "
+               "format's honest weight",
+        "horizon": "the next import reads it",
+    },
     "stamp-window-days": {
         "type": "int", "unit": "days a lapsed-guardrail stamp stands",
         "min": 7, "max": 365, "genesis": 90, "home": "universe",

@@ -160,10 +160,38 @@ single-file upload honestly retired in favor of the Basket + pointer path.
 
 ## 6. The spoonfuls (proposed order)
 
-1. **sp1 — The byte law and the Basket.** Pointer-path imports; the size dial; zip
-   unpacking; the durable import queue; the Basket UI contract (the picker, the running
-   list with origins, Import). Suite: a crashed import resumes; every entry cites its
-   origin.
+1. **sp1 — The byte law and the Basket.** ✅ **LANDED 2026-09-10 — bulk never enters
+   the mind, and interruption is weather.** **The byte law** (`orreth_sim/basket.py`):
+   imported files land as ORIGINS — the mass rests content-addressed in the object
+   store (`~/.orreth/objects/<hh>/<hash>`, torn writes never wear the hash's name)
+   and what enters the signed log is the 0039 §6 artifact-POINTER carrying name,
+   store URI, content hash, and the ORIGIN (path, and the zip it came from) — never
+   base64 in a record body. The free textual floor still extracts (derived from the
+   pointer); dark formats park their intent off the pointer exactly as 0029 taught
+   (sp3's retry list grows). **The bars became dials**: `upload-inline-kb` (the old
+   256 KB drop-zone bar, now the human's) and `import-max-mb` (the pointer path's
+   per-file bar) — and the glass's hardcoded client-side 256 KB precheck died (a
+   number that would lie the day the dial turns). **The queue is the log**: an
+   import job is a SIGNED record before any byte moves; progress derives (an entry
+   is done exactly when its pointer stands); the beat carries a few entries a
+   breath and a kicked floor beats now (storms are a disease); the completion
+   record names interruption instead of pretending completeness. **The Basket
+   stands in the glass**: 🧺 beside the librarian's drop zone — the picker walks
+   folders under a declared root (traversal one-faced; dotfiles unlisted), zips
+   open like folders, the running list keeps every entry's origin, one Import,
+   and progress reads from the log while the panel is open. Doors: GET `/basket`
+   (+ `?zip=`), GET `/basket/jobs`, POST `/basket/import`. *Proven live on the
+   rig: `/etc` REFUSED with the one face; a 4-entry import (two folders + a zip
+   member + a PDF) carried whole — 4 content-addressed objects, 4 signed pointers
+   with origins, the mass in NO record body, three extractions and one honest
+   dark park; then THE CRASH WALK — 8 files imported, the worker KILLED
+   mid-carry, replanted with zero memory, and the log alone finished 8/8 with
+   ZERO duplicate pointers (12 total across both jobs) and two honest completion
+   records.* Suite 519→529 (ten Basket laws). *Honest remainders: the Basket
+   root is the operator's home (`ORRETH_BASKET_ROOT` narrows it); the job sweep
+   rides the governed retrieve (a projection when volume demands); failed
+   entries retry once per worker life by design; the store is local-class — S3
+   arrives with sp2's `store` kind.*
 2. **sp2 — The store kind and the first wire.** The `store` kind end to end on S3 +
    localhost; the two-keeper flow (charter → resource → plant → pinned wire); freshness
    beats. Suite: lifecycle laws (rest/resume/discredit) on a store.

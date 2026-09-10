@@ -2310,6 +2310,21 @@ def embed_door() -> None:
                 self.end_headers()
                 self.wfile.write(out)
                 return
+            if self.path.split("?")[0] == "/basket/import":
+                # 0069 sp1 — one Import: the signed job onto the floor's
+                # log; the beat carries the bytes (never this request)
+                try:
+                    out = json.dumps(basket_import_post(json.loads(raw))).encode()
+                    code = 200
+                except Exception as e:
+                    out = json.dumps({"error": str(e)[:120]}).encode()
+                    code = 400
+                self.send_response(code)
+                self.send_header("content-type", "application/json")
+                self.send_header("access-control-allow-origin", "*")
+                self.end_headers()
+                self.wfile.write(out)
+                return
             if self.path.split("?")[0] == "/tool":
                 # 0054 sp2 — the farm's invoke door rides the worker's own
                 # server like /craft does: the plane never proxies tool bytes
@@ -2360,7 +2375,8 @@ def embed_door() -> None:
                              "/sentences", "/desk", "/brain", "/resident",
                              "/pulse", "/spacetime", "/market", "/assign",
                              "/seeds", "/record", "/atlas", "/inbox",
-                             "/aperture", "/act", "/stamp"):
+                             "/aperture", "/act", "/stamp",
+                             "/basket", "/basket/jobs"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2400,6 +2416,21 @@ def embed_door() -> None:
                     # right now (memo'd with the rails' own breath)
                     out = json.dumps(
                         {"stamp": _rails_state(4500).get("stamp")}).encode()
+                elif route == "/basket":
+                    # 0069 sp1 — the picker's door: read-only listing under
+                    # the root's law; a zip opens like a folder
+                    qs = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query)
+                    try:
+                        out = json.dumps(basket_serve(qs)).encode()
+                    except Exception:
+                        out = json.dumps({"error": "request cannot be "
+                                          "served under this capability"}).encode()
+                elif route == "/basket/jobs":
+                    qs = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query)
+                    out = json.dumps(basket_jobs(
+                        int((qs.get("port") or ["4500"])[0]))).encode()
                 elif route == "/act":
                     # 0067 sp4 — THE ANSWER WEARS ITS THINKING: an ask's
                     # whole picture, projected from its signed records on a
@@ -9395,6 +9426,145 @@ class _WireNode:
         return rec["id"]
 
 
+# ---------------------------------------------------------------- the Basket (0069 sp1)
+# The byte law and the Basket: the human points at folders, ticks files
+# (zips count as folders), and one Import lands each file's MASS in the
+# object store with a SIGNED pointer on the log carrying its origin. The
+# import queue is the log itself — interruption is weather.
+_BASKET_ROOT = Path(os.environ.get("ORRETH_BASKET_ROOT") or str(Path.home()))
+_OBJECT_STORE = Path.home() / ".orreth" / "objects"
+_IMPORT_FAILED: dict = {}          # (job_ref, origin) -> why — this life's answers
+_BASKET_LAST: dict = {}            # per-floor beat clock
+_BASKET_KICK: set = set()          # floors with fresh imports — beat now, not later
+
+
+def basket_serve(qs: dict) -> dict:
+    """The picker's door: one directory's listing under the root's law, or a
+    zip's inner file list. Read-only, dotfiles unlisted, traversal one-faced."""
+    from orreth_sim import basket
+    z = (qs.get("zip") or [None])[0]
+    if z:
+        return basket.ls_zip(_BASKET_ROOT, z)
+    p = (qs.get("path") or [None])[0]
+    return {**basket.ls(_BASKET_ROOT, p), "root": str(_BASKET_ROOT)}
+
+
+def basket_import_post(p: dict) -> dict:
+    """One Import: the job lands SIGNED on the floor's log before any byte
+    moves; the beat does the carrying. Returns the job's ref — progress is
+    derived from the log, never stored."""
+    from orreth_sim import basket
+    port = int(p.get("port") or 4500)
+    scope = FLOOR_SCOPES.get(port) or UNIVERSE_SCOPE
+    seat_kp, seat_did = lib_seat(scope)
+    job = basket.make_job({"did": seat_did, "scope": scope}, seat_kp, scope,
+                          list(p.get("entries") or []))
+    call(port, "POST", "/records", job)
+    _BASKET_KICK.add(port)
+    n = json.loads(crypto._b64d(job["body"]).decode())["import_job"]["count"]
+    print(f"  🧺 import job {job['id'][:18]}… — {n} entr(ies) queued on {scope}")
+    return {"job": job["id"], "count": n}
+
+
+def _origin_key(o: dict) -> tuple:
+    return (str(o.get("path") or ""), str(o.get("zip_member") or ""))
+
+
+def _basket_sweep(port: int) -> dict:
+    """The log read once per beat: open jobs, finished jobs, the origins
+    already pointed at, and the hashes already held."""
+    jobs, dones, origins, hashes = [], set(), set(), set()
+    for ref, b, df, tags in wire_assets(port, "import-job"):
+        j = (b or {}).get("import_job") or {}
+        if j.get("entries"):
+            jobs.append({"ref": ref, "entries": j["entries"]})
+    for _, b, df, _t in wire_assets(port, "import-done"):
+        d = (b or {}).get("import_done") or {}
+        if d.get("job"):
+            dones.add(d["job"])
+    for _, b, _df, _t in wire_assets(port, "artifact-pointer"):
+        ap = (b or {}).get("artifact_pointer") or {}
+        if (ap.get("meta") or {}).get("via") == "the-basket":
+            origins.add(_origin_key(ap["meta"].get("origin") or {}))
+        if ap.get("content_hash"):
+            hashes.add(ap["content_hash"])
+    return {"jobs": jobs, "dones": dones, "origins": origins, "hashes": hashes}
+
+
+def basket_jobs(port: int) -> dict:
+    """The glass's progress read: per job — how many landed, how many this
+    life refused, whether the job is finished (honestly, interruption named)."""
+    s = _memo(f"basket-sweep-{port}", 5, lambda: _basket_sweep(port))
+    rows = []
+    for j in s["jobs"]:
+        done_n = sum(1 for e in j["entries"]
+                     if _origin_key(e) in s["origins"])
+        failed = [w for (jr, o), w in _IMPORT_FAILED.items() if jr == j["ref"]]
+        rows.append({"job": j["ref"], "count": len(j["entries"]),
+                     "done": done_n, "failed": len(failed),
+                     "finished": j["ref"] in s["dones"]})
+    return {"jobs": rows}
+
+
+def basket_beat(port: int, scope: str) -> None:
+    """The carrying, a few entries a beat (storms are a disease): each open
+    job's un-answered entries import through the pointer path; when every
+    entry has its answer the completion record lands — interruption NAMED,
+    never dressed as completeness. A kicked floor beats now; a quiet one
+    every other minute (the sweep is a governed read, not free)."""
+    from orreth_sim import basket
+    now = time.time()
+    if port in _BASKET_KICK:
+        _BASKET_KICK.discard(port)
+    elif now - _BASKET_LAST.get(port, 0) < 120:
+        return
+    _BASKET_LAST[port] = now
+    s = _basket_sweep(port)
+    open_jobs = [j for j in s["jobs"] if j["ref"] not in s["dones"]]
+    if not open_jobs:
+        return
+    seat_kp, seat_did = lib_seat(scope)
+    me = {"did": seat_did, "scope": scope}
+    node = _WireNode(port, scope)
+    bar = dial_value("import-max-mb") * 1024 * 1024
+    for j in open_jobs:
+        pending = [e for e in j["entries"]
+                   if _origin_key(e) not in s["origins"]
+                   and (j["ref"], _origin_key(e)) not in _IMPORT_FAILED]
+        moved = 0
+        for e in pending[:4]:                     # a few a beat, then yield
+            try:
+                r = basket.import_entry(node, me, seat_kp,
+                                        root=_BASKET_ROOT,
+                                        store_root=_OBJECT_STORE, entry=e,
+                                        max_bytes=bar, already=s["hashes"])
+                s["origins"].add(_origin_key(e))
+                moved += 1
+                print(f"  🧺 imported {Path(str(e.get('zip_member') or e['path'])).name}"
+                      f" — {r['status']} ({str(r.get('pointer', ''))[:18]}…)")
+            except Exception as ex:
+                _IMPORT_FAILED[(j["ref"], _origin_key(e))] = str(ex)[:120]
+                print(f"  🧺 entry refused/failed for {e.get('path')} — "
+                      f"{str(ex)[:60]}")
+        left = [e for e in j["entries"]
+                if _origin_key(e) not in s["origins"]
+                and (j["ref"], _origin_key(e)) not in _IMPORT_FAILED]
+        if moved and left:
+            _BASKET_KICK.add(port)                # more to carry — come back
+        if not left:
+            failed = [{"origin": {"path": o[0], "zip_member": o[1]}, "why": w}
+                      for (jr, o), w in _IMPORT_FAILED.items()
+                      if jr == j["ref"]]
+            done_n = sum(1 for e in j["entries"]
+                         if _origin_key(e) in s["origins"])
+            basket.finish_job(node, me, seat_kp, scope, job_ref=j["ref"],
+                              imported=done_n, skipped=0, failed=failed)
+            print(f"  🧺 import job {j['ref'][:18]}… finished — "
+                  f"{done_n} landed"
+                  + (f", {len(failed)} named honestly" if failed else ""))
+        _MEMO.pop(f"basket-sweep-{port}", None)
+
+
 def parlor_facts(port: int, scope: str) -> dict:
     """What the resident may read before it answers — its floor's governed state.
     The human never sees any of this raw; only the composed answer travels."""
@@ -9961,7 +10131,8 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
             try:
                 receipt = artifacts.admit_upload(
                     _WireNode(port, scope), {"did": seat_did, "scope": scope},
-                    seat_kp, filename, str(r.get("mime") or ""), data)
+                    seat_kp, filename, str(r.get("mime") or ""), data,
+                    max_bytes=dial_value("upload-inline-kb") * 1024)
             except _Refusal:
                 call(port, "POST", "/requests/resolve",
                      {"id": r["id"], "status": "denied",
@@ -15998,6 +16169,7 @@ def main() -> None:
                     chunk_beat(port, scope)   # the standing shelf fills (0065 sp2)
                     extract_beat(port, scope) # the graph reads (0065 sp3)
                     standings_beat(port, scope)  # the scoreboard breathes (0066 sp4)
+                    basket_beat(port, scope)  # the Basket carries (0069 sp1)
                     continuity_charter(port, scope)  # a template floor gets its law (0034)
                     pin_organs(port, scope)
                     window_charter(port, scope)
