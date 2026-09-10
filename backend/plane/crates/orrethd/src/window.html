@@ -5583,7 +5583,12 @@ function dkCanvas(id,spec,states,titles){
       pos[n.id]=[PAD+xc*CW,
                  bandY[b]+(bandH[b]-arr.length*RH)/2+i*RH+(RH-NH)/2]})});
   DKCV[id]=Object.assign(DKCV[id]||{},{W,H,z:DKCV[id]?.z||1,
-    px:DKCV[id]?.px||0,py:DKCV[id]?.py||0,lock:DKCV[id]?.lock||false});
+    px:DKCV[id]?.px||0,py:DKCV[id]?.py||0,lock:DKCV[id]?.lock||false,
+    /* 0067 sp2 — the boxes remember what stands behind them: the click
+       handler opens the REAL record, or says honestly why it cannot */
+    info:Object.fromEntries(nodes.map(n=>[n.id,{label:n.label||n.id,
+      desc:n.desc||"",kind:n.kind||"stage",door:n.door||null,
+      digest:(titles||{})[n.id]||n.digest||""}]))});
   const st=n=>(states||{})[n]||"pending";
   let s=`<div id="cvbox-${id}" style="position:relative;background:var(--deep);border:1px solid var(--hair);border-radius:10px;overflow:hidden">`
     +`<svg id="cv-${id}" width="100%" style="display:block;height:${Math.min(H,520)}px;cursor:grab" viewBox="0 0 ${W} ${H}" onmousedown="dkCvDown('${id}',event)">`
@@ -5684,6 +5689,52 @@ function dkFlow(nodes,edges,states,titles){
       +(tip?`<title>${dkEsc(tip)}</title>`:"")
       +`<text x="${P[0]+NW/2}" y="${P[1]+NH/2+3.5}" text-anchor="middle" font-size="${n.length>16?8:9}" fill="${txt}" style="font-family:var(--mono)">${S==="done"?"✓ ":""}${dkEsc(n.replace(/-/g," "))}</text></g>`});
   return s+`</svg></div>`}
+function dkCvNode(cid,nid){
+  /* 0067 sp2 — the one node family that was never a door, doored: a stage
+     that has RUN opens its own record in the reader; one that has not yet
+     run says so in plain words — never a fake ref, never a dead click */
+  const info=(DKCV[cid]&&DKCV[cid].info&&DKCV[cid].info[nid])||{};
+  if(info.door&&info.door.kind==="record"&&info.door.target){
+    readerOpen('record',info.door.target);return}
+  const old=document.getElementById("cvcard");if(old)old.remove();
+  const d=document.createElement("div");d.id="cvcard";
+  d.style.cssText="position:fixed;right:1rem;bottom:1rem;z-index:60;max-width:320px;background:var(--deep);border:1px solid var(--brass);border-radius:10px;padding:.7rem .9rem;font-size:.78rem;box-shadow:0 8px 30px rgba(0,0,0,.5)";
+  d.innerHTML=`<b>${esc(info.label||nid)}</b> <span class="dim">· ${esc(info.kind||"stage")}</span>
+    <div class="dim" style="margin:.3rem 0">${esc(info.desc||"a declared stage of this capability's flow")}</div>
+    ${info.digest?`<div style="margin:.3rem 0">latest digest: “${esc(info.digest)}”</div>`:""}
+    <div class="dim">this stage has not run in the walks on this shelf — its box opens a record the moment one stands.</div>
+    <div style="text-align:right;margin-top:.4rem"><button class="dk-tab" onclick="this.closest('#cvcard').remove()">close</button></div>`;
+  document.body.appendChild(d);
+}
+/* 0067 sp2 — THE ONE DRAWER's dispatcher: act-v1 pipelines ride the
+   serpentine lane (dkCanvas, its earned goods intact); everything else
+   rides renderGraph. Views migrate onto THIS entry, one per spoonful. */
+function renderAct(cid,g,reqId,interactive){
+  if(g&&g.format==="act-v1"&&g.layout==="pipeline"){
+    const states={},titles={};
+    (g.nodes||[]).forEach(n=>{states[n.id]=n.status||"pending";
+      if(n.digest)titles[n.id]=n.digest});
+    return dkCanvas(cid,{label:g.title,nodes:g.nodes,edges:g.edges,
+      groups:g.groups},states,titles);
+  }
+  return renderGraph(g,reqId,interactive);
+}
+function actFromFlow(p,src,capId,live){
+  /* the glass twin of actgraph.from_manifest_flow — same laws: a run stage
+     doors its record; an unrun one confesses */
+  const by={};(src||[]).forEach(x=>{if(x&&x.stage)by[x.stage]=x});
+  const nodes=(p.nodes||[]).map(n=>{n=typeof n==="string"?{id:n}:Object.assign({},n);
+    const st=by[n.id]||{};const ran=!!st.ref;
+    n.label=n.label||n.id.replace(/-/g," ");n.kind=n.kind||"stage";
+    n.status=ran?"done":"pending";if(st.digest)n.digest=st.digest;
+    n.door=ran?{kind:"record",target:st.ref}:{kind:"room",target:capId||"capability"};
+    return n});
+  if(live&&src&&src.length){const cur=src[src.length-1];
+    const c=nodes.find(n=>n.id===(cur.stage||cur));if(c)c.status="live"}
+  const edges=(p.edges||[]).map(e=>Array.isArray(e)?{from:e[0],to:e[1],kinds:[]}:Object.assign({kinds:[]},e));
+  return {format:"act-v1",kind:"act-graph",layout:"pipeline",
+    title:p.label||"",groups:p.groups,nodes,edges,narrative:[]};
+}
 function dkPanel(p,pi,item){
   switch(p.kind){
   case "flow":{
@@ -5695,14 +5746,12 @@ function dkPanel(p,pi,item){
       return `<details style="margin:.7rem 0"><summary class="dk-chtitle" style="cursor:pointer;list-style:none">▸ ${dkEsc(p.label||"how it works")} — open the map</summary>${dkCanvas(cid,p,states,{})}</details>`}
     const walk=(p.live===false?null:((typeof DESK!=="undefined"&&DESK&&DESK.walking)||[])[0]);
     const src=walk?walk.stages:(item[p.src]||[]);
-    const done=new Set(src.map(x=>x.stage||x));
-    const states={},titles={};
-    (p.nodes||[]).forEach(nd=>{const nid=typeof nd==="string"?nd:nd.id;
-      states[nid]=done.has(nid)?"done":"pending"});
-    src.forEach(x=>{if(x&&x.stage&&x.digest)titles[x.stage]=x.digest});
-    if(walk&&src.length){const cur=src[src.length-1];states[cur.stage||cur]="live"}
-    return `<div class="dk-chtitle" style="margin-top:.7rem">${dkEsc(p.label||"the flow")}${walk?` · 🚶 walking ${dkEsc(walk.ticker)} — live`:item&&item.date?` · the ${dkEsc(item.ticker||"")} walk of ${dkEsc(item.date)} — hover a stage for its digest`:""}</div>`
-      +dkCanvas(cid,p,states,titles)}
+    /* 0067 sp2 — the sixteen stages ride the ONE format through the one
+       drawer: act-v1 built here (the sim's from_manifest_flow, twinned),
+       the serpentine lane drawing it, every run stage a record door */
+    const g=actFromFlow(p,src,(typeof DKCAP!=="undefined"&&DKCAP)||"capability",!!walk);
+    return `<div class="dk-chtitle" style="margin-top:.7rem">${dkEsc(p.label||"the flow")}${walk?` · 🚶 walking ${dkEsc(walk.ticker)} — live`:item&&item.date?` · the ${dkEsc(item.ticker||"")} walk of ${dkEsc(item.date)} — click a stage to open its record`:""}</div>`
+      +renderAct(cid,g)}
   case "reports":{
     const reps=(typeof DESK!=="undefined"&&DESK&&DESK.reports)||[];
     if(!reps.length)return `<div class="dim" style="font-size:.75rem;margin:.6rem 0">no report yet — ask above for one now, or approve a daily watch</div>`;

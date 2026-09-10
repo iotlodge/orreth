@@ -75,3 +75,25 @@ def test_conversion_is_deterministic():
     a = actgraph.from_choreography(_walk(), objective="o", request="r")
     b = actgraph.from_choreography(_walk(), objective="o", request="r")
     assert a == b
+
+
+def test_the_capability_flow_converts_and_every_run_stage_is_a_record_door():
+    spec = {"label": "the walk", "nodes": ["gather", {"id": "judge",
+            "kind": "mind", "label": "the judge"}],
+            "edges": [["gather", "judge"]],
+            "groups": [{"label": "intake", "nodes": ["gather"]}]}
+    stages = [{"stage": "gather", "digest": "found 3 filings",
+               "ref": "sha256:stagerec1", "at": "t1"}]
+    g = actgraph.from_manifest_flow(spec, stages, capability="trading-desk")
+    assert g["format"] == actgraph.VERSION and g["layout"] == "pipeline"
+    assert actgraph.validate(g) == [], "a pipeline needs no narrative"
+    gather = next(n for n in g["nodes"] if n["id"] == "gather")
+    assert gather["door"] == {"kind": "record", "target": "sha256:stagerec1"}
+    assert gather["status"] == "done" and gather["digest"] == "found 3 filings"
+    judge = next(n for n in g["nodes"] if n["id"] == "judge")
+    assert judge["door"] == {"kind": "room", "target": "trading-desk"}, \
+        "an unrun stage opens the capability's room — honestly, never a fake ref"
+    assert judge["status"] == "pending" and judge["label"] == "the judge"
+    assert g["groups"][0]["label"] == "intake", "the bands survive"
+    assert actgraph.from_manifest_flow(spec, stages, capability="trading-desk") \
+        == g, "deterministic"

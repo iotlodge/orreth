@@ -150,8 +150,31 @@ flow already proves at 10-second cadence.
    fine for a human's hand, a cache when it itches; pre-0033 apertures wear no
    coordinate and the miss says so honestly; the remaining dialects migrate sp2–sp3
    per L1.*
-2. **sp2 — The capability flow migrates.** `dkCvNode` defined; the desk's sixteen stages on
-   the new drawer, pulse intact; the serpentine survives.
+2. **sp2 — The capability flow migrates.** ✅ **LANDED 2026-09-09 — the last door-less
+   family joins the law.** **`dkCvNode` is finally defined** (referenced since 0055,
+   never written — the 0056v2 inspector's unpaid seam): a stage that has RUN opens its
+   own record in the standing reader; one that has not yet run says so in plain words
+   on a small honest card (its label, kind, latest digest, and the promise: "its box
+   opens a record the moment one stands") — never a fake ref, never a dead click. The
+   plank underneath: **stage rows now carry their record ref** at the desk compose
+   (the ref was always at hand and never threaded). **The second dialect converted**:
+   `actgraph.from_manifest_flow` — the manifest's declared pipeline joined to the
+   walk's stage records, run stages dooring their records, unrun ones dooring the
+   capability's room honestly, groups and edge labels surviving; pipelines carry no
+   narrative and `validate()` says that's lawful. **The one drawer grew its
+   dispatcher**: `renderAct` routes act-v1 pipelines to the SERPENTINE lane (dkCanvas
+   with all its earned goods — bands, pan/zoom, minimap, the live-pulse halo — intact)
+   and everything else to `renderGraph`; the flow panel builds act-v1 through
+   `actFromFlow` (the glass twin of the sim converter, same laws) and rides the
+   dispatcher. *Proven live on the rig: the glass serves all four new functions;
+   **48 of 48 stage rows on the desk carry their record refs**; a stage box's door
+   walked end to end — `retrieve-context` → the cross-floor door → the real record on
+   f:charles, body whole, digest «prior report: yes · 9 lesson(s)». Suite 489→490
+   (the second dialect's law). Rust green (the glass rides the plane).* *Honest
+   remainders: the room-door's jump (an unrun stage navigating to its capability's
+   tab) is a card today, a navigation when the tab router earns a door grammar; the
+   glass twin `actFromFlow` mirrors the sim converter by discipline, not by import —
+   a divergence would surface at the suite's converter law first.*
 3. **sp3 — The atlas and the estate migrate.** The glow law generalized (`kinds` on the
    shared edge); allen's DAG polish paid; the standalone exporter collapses into the one
    drawer's export.

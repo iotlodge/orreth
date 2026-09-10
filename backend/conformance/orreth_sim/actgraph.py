@@ -108,3 +108,42 @@ def from_choreography(g: dict, *, objective: str | None = None,
             **({"coordinate": {"objective": objective}} if objective else {}),
             "nodes": nodes, "edges": edges,
             "narrative": list(g.get("narrative") or [])}
+
+
+def from_manifest_flow(spec: dict, stages: list | None = None,
+                       capability: str | None = None) -> dict:
+    """The capability-flow dialect → act-v1 (0067 sp2): the manifest's
+    declared pipeline joined to the walk's stage records. A stage that has
+    RUN opens its own record (the door the family never had); one that has
+    not yet run opens the capability's room, honestly. Groups and edge
+    labels survive; the serpentine is the drawer's business, not the
+    format's. Pipelines carry no narrative — the bijection law applies only
+    where a story is told."""
+    by_stage = {}
+    for st in stages or []:
+        sid = st.get("stage") or st
+        if isinstance(sid, str):
+            by_stage[sid] = st if isinstance(st, dict) else {}
+    nodes = []
+    for n in spec.get("nodes") or []:
+        n = {"id": n} if isinstance(n, str) else dict(n)
+        st = by_stage.get(n["id"]) or {}
+        ran = bool(st.get("ref"))
+        nodes.append({**n, "label": n.get("label") or n["id"].replace("-", " "),
+                      "kind": n.get("kind", "stage"),
+                      "status": "done" if ran else "pending",
+                      **({"digest": st.get("digest")} if st.get("digest")
+                         else {}),
+                      "door": ({"kind": "record", "target": st["ref"]}
+                               if ran else
+                               {"kind": "room",
+                                "target": capability or "capability"})})
+    edges = []
+    for e in spec.get("edges") or []:
+        e = ({"from": e[0], "to": e[1]} if isinstance(e, (list, tuple))
+             else dict(e))
+        edges.append({**e, "kinds": e.get("kinds") or []})
+    return {"format": VERSION, "kind": "act-graph", "layout": "pipeline",
+            "title": spec.get("label", ""),
+            **({"groups": spec["groups"]} if spec.get("groups") else {}),
+            "nodes": nodes, "edges": edges, "narrative": []}

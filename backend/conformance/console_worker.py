@@ -2062,7 +2062,10 @@ def compose_desk(key: str = "trading-desk") -> dict:
         elif "stage" in tags and body.get("stage"):
             stages.setdefault(key, []).append(
                 {"stage": body["stage"], "at": h.get("occurred_at", ""),
-                 "digest": str(body.get("digest", ""))[:160]})
+                 "digest": str(body.get("digest", ""))[:160],
+                 # 0067 sp2 — the stage's own record rides: the flow box
+                 # becomes a DOOR (the one family that never was one)
+                 "ref": h["ref"]})
         elif "charts" in tags and isinstance(body.get("artifact_pointer"), dict):
             charts_ptr[key] = body["artifact_pointer"]
         elif "desk-watch" in tags and isinstance(body.get("desk_watch"), dict):
