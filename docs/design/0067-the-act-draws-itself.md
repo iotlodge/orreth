@@ -4,8 +4,17 @@
 kernel dive, paying the proof's KCR-0004 (the professional, kernel-reusable act graph).
 Grounded in a full survey of the glass's graph machinery the same day (Appendix A).*
 
-***Status: 🟡 DRAFTED · LOCKED — L1 (one view at a time; nothing breaks while anything
-moves) taken by JB's word, 2026-09-07, plainly stated per the language law.***
+***Status: ✅ CLOSED WHOLE 2026-09-09 — four spoonfuls in ONE DAY; KCR-0004 PAID. One
+graph language (act-v1, v1-earmarked, the sacred v0 untouched) with the four laws in
+validate(); four dialects converted (the walk · the capability flow · the atlas · the
+estate) onto one drawer with lanes (compact walk · serpentine pipeline · the
+schematic sheet · the dag) and ONE export idiom; the three unpaid doors all paid
+(dkCvNode defined at last · the aperture opened after two months unread · allen's DAG
+polish); and the accretion law live — an answer wears its thinking, projected from
+signed records alone, growing as judgments land, degrading honestly when records
+leave. Fourth out-of-order close: VERSION holds 0.71 (the monotone era law). L1 held
+throughout: no view broke while any moved. Lock as taken 2026-09-07: L1 progressive
+unification.***
 
 ## 1. The demand, verbatim (the proof's charter)
 
@@ -199,9 +208,29 @@ flow already proves at 10-second cadence.
    green.* *Honest remainders: the atlas sheet renderer remains its own lane (the
    whole atlas is four lanes + worlds + bodies — one graph is not the sheet); sp4
    accretes live acts and closes the dive.*
-4. **sp4 — The act accretes.** Live acts (asks, objectives) project their graphs from
-   records via `by_coordinate`; 0066's choice nodes and 0065's variant tags appear; the
-   E-RAG "answer wears its thinking" contract proven in the glass.
+4. **sp4 — The act accretes.** ✅ **LANDED 2026-09-09 — the answer wears its thinking,
+   live.** `actgraph.accrete_ask`: a live ask's whole picture PROJECTED from its signed
+   records and nothing else — the asker, **0066's choice node** (dooring its record,
+   wearing its features, its why read aloud in the story), **0065's style** (the
+   variant worn, dooring the rulebook version), the answer with its signals, and
+   **every judgment that has landed since**: run it again after a verdict lands and
+   the picture has GROWN — because a record landed, never because anyone edited a
+   picture. A missing record's node is simply absent and the story says so — the
+   projection rebuilds from nothing and degrades honestly (suite-held: the purged
+   choice case). **The `/act` door** serves it on a human's click (riding the
+   standings pull — asks, choices, verdicts with their lineage already in hand), and
+   **the glass reader wears it**: opening an ask's exchange record draws "the answer
+   wears its thinking — who chose, why, and what judged it" beneath the body, on the
+   one drawer. *Proven live on the rig: an SDK ask, then the /act door — `format:
+   act-v1`, the chain you → choice → style → answer whole, validate() flawless, the
+   choice dooring its real record, the story reading the router's why aloud; the
+   glass serves the hook. Suite 492→495 (three accretion laws: rebuild-from-nothing ·
+   a landed verdict grows the picture · a purged choice degrades honestly). Rust
+   green.* *Honest remainders: objectives' accretion rides the standing choreography
+   emission (their lit walks are already act-v1 projections of branches) — a
+   `by_coordinate` objective accretor generalizes when the Workshop (0072) wants the
+   deeper join; the reader's ask-detection is a text heuristic until record kinds
+   ride the pane's metadata.*
 
 ## 7. The honest boundary rows this dive moves
 

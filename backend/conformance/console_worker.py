@@ -2360,7 +2360,7 @@ def embed_door() -> None:
                              "/sentences", "/desk", "/brain", "/resident",
                              "/pulse", "/spacetime", "/market", "/assign",
                              "/seeds", "/record", "/atlas", "/inbox",
-                             "/aperture"):
+                             "/aperture", "/act"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2394,6 +2394,22 @@ def embed_door() -> None:
                                            lambda: compose_desk(_dk))).encode()
                 elif route == "/brain":
                     out = json.dumps(compose_brain()).encode()
+                elif route == "/act":
+                    # 0067 sp4 — THE ANSWER WEARS ITS THINKING: an ask's
+                    # whole picture, projected from its signed records on a
+                    # human's click — asker → the router's choice → the
+                    # style → the answer → every judgment landed since
+                    qs = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query)
+                    g = lambda k: (qs.get(k) or [""])[0]
+                    _scope = g("scope") or FLOOR_SCOPES.get(4502, SCOPE)
+                    _fport = next((pp for pp, ss in FLOOR_SCOPES.items()
+                                   if ss == _scope), 4502)
+                    sn, _, _ = _standings_node(_fport, _scope)
+                    out = json.dumps(
+                        actgraph.accrete_ask(
+                            sn.records if sn else {},
+                            g("exchange"))).encode()
                 elif route == "/aperture":
                     # 0067 sp1 — THE APERTURE DOOR OPENS: the deepest answer
                     # the walk can give — WHAT RODE DOWN, the whole signed

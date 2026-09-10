@@ -205,3 +205,99 @@ def from_estate_dag(g: dict) -> dict:
             "title": g.get("subject", ""), "subject": g.get("subject", ""),
             "nodes": nodes, "edges": edges,
             "narrative": list(g.get("narrative") or [])}
+
+
+def accrete_ask(records: dict, exchange_id: str) -> dict:
+    """THE ACCRETION (0067 §3.1, sp4): a live ask's whole picture, PROJECTED
+    from its signed records and nothing else — the asker, the router's
+    choice (0066's node, wearing its why and its features), the style that
+    served (0065's tag), the answer, and every judgment that has landed
+    since. Run it again after a verdict lands and the picture has GROWN —
+    because a record landed, never because anyone edited a picture. A
+    missing record's node is simply absent and the story says so: the
+    projection can always be rebuilt from nothing, and degrades honestly.
+    This is the E-RAG contract in one function: the answer wears its
+    thinking."""
+    import json as _json
+
+    from . import crypto
+
+    def _body(rec):
+        try:
+            return _json.loads(crypto._b64d(rec["body"]).decode())
+        except Exception:
+            return {}
+    exch = records.get(exchange_id)
+    if exch is None:
+        return {"format": VERSION, "kind": "act-graph", "title": "",
+                "nodes": [], "edges": [], "narrative": [
+                    {"text": "the exchange record no longer stands — "
+                             "nothing to draw", "nodes": [], "edges": []}]}
+    ask = _body(exch).get("ask") or {}
+    choice_id = (exch.get("derived_from") or [None])[0]
+    choice = records.get(choice_id) if choice_id else None
+    d = (_body(choice).get("dispatch") or {}) if choice else {}
+    style = ask.get("variant") or d.get("flavor") or "naive"
+    nodes = [{"id": "you", "label": "you", "kind": "seat",
+              "door": {"kind": "record", "target": exchange_id}}]
+    edges, narrative = [], [
+        {"text": f"You asked: “{str(ask.get('asked') or '?')[:120]}”",
+         "nodes": ["you"], "edges": []}]
+    if choice is not None:
+        nodes.append({"id": "choice", "label": "the router",
+                      "kind": "choice",
+                      **({"features": d.get("features")} if d.get("features")
+                         else {}),
+                      "door": {"kind": "record", "target": choice_id}})
+        edges.append({"from": "you", "to": "choice", "kinds": ["dispatch"]})
+        narrative.append(
+            {"text": f"The router read the ask and chose «{style}»: "
+                     f"{str(d.get('why') or '?')[:160]}",
+             "nodes": ["choice"], "edges": ["you→choice"]})
+    else:
+        narrative.append(
+            {"text": "The routing record no longer stands — the choice "
+                     "cannot be redrawn, and this picture says so.",
+             "nodes": [], "edges": []})
+    nodes.append({"id": "style", "label": f"the «{style}» style",
+                  "kind": "variant", "variant": style,
+                  "door": ({"kind": "record",
+                            "target": d.get("standard_ref")}
+                           if d.get("standard_ref") else
+                           {"kind": "view", "target": "governance"})})
+    prev = "choice" if choice is not None else "you"
+    edges.append({"from": prev, "to": "style", "kinds": ["ask"]})
+    nodes.append({"id": "answer", "label": "the answer", "kind": "record",
+                  **({"signals": ask.get("signals")} if ask.get("signals")
+                     else {}),
+                  "door": {"kind": "record", "target": exchange_id}})
+    edges.append({"from": "style", "to": "answer", "kinds": ["ask"]})
+    ncites = len((_body(exch).get("ask") or {}).get("citations") or []) or None
+    narrative.append(
+        {"text": f"The «{style}» style answered"
+                 + (f" with {ncites} citation(s)" if ncites else "")
+                 + " — the reply and its signals live on the exchange record.",
+         "nodes": ["style", "answer"],
+         "edges": [f"{prev}→style", "style→answer"]})
+    j = 0
+    for rid, rec in sorted(records.items()):
+        a = (_body(rec).get("assay") or {})
+        if a.get("of") != exchange_id:
+            continue
+        j += 1
+        nid = f"judge{j}"
+        human = a.get("judge_floor") == "human"
+        nodes.append({"id": nid,
+                      "label": ("your thumb" if human else "the judge"),
+                      "kind": "verdict", "score": a.get("score"),
+                      "door": {"kind": "record", "target": rid}})
+        edges.append({"from": "answer", "to": nid, "kinds": ["verdict"]})
+        narrative.append(
+            {"text": (f"You judged it {a.get('score')}: "
+                      if human else
+                      f"A judge graded it {a.get('score')}: ")
+                     + f"“{str(a.get('why') or '')[:100]}”",
+             "nodes": [nid], "edges": [f"answer→{nid}"]})
+    return {"format": VERSION, "kind": "act-graph",
+            "title": str(ask.get("asked") or "")[:80],
+            "nodes": nodes, "edges": edges, "narrative": narrative}

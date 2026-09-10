@@ -136,3 +136,70 @@ def test_the_estate_converts_and_every_card_opens_its_deed():
     orphan = next(n for n in g["nodes"] if n["id"] == "orphan")
     assert orphan["door"]["kind"] == "view", \
         "an unknown template doors the view, honestly — never a fake ref"
+
+
+def _ask_world():
+    from orreth_sim import dispatcher, provisioner, stacks
+    from orreth_sim.node import make_memory
+    prov = provisioner.provision(provisioner.second_brain_template(), "t")
+    fld = prov.fields["desk"]
+    b = prov.beckys["u:t/e:life/f:desk"]
+    lib, kp = b.issue_identity("instance", "u:t/e:life/f:desk", resident=True)
+    stacks.plant_eco_assets(fld, lib, kp)
+    dispatcher.plant_standard(fld, lib, kp)
+    d = dispatcher.dispatch(fld, lib, kp, "how are walls connected to seasons?")
+    exch = make_memory(lib, kp, fld.scope,
+                       {"ask": {"asked": "how are walls connected to seasons?",
+                                "reply": "they breathe", "variant": d["flavor"],
+                                "citations": [{"ref": "sha256:c1", "doc": "d",
+                                               "score": 0.5}],
+                                "signals": {"retrieval": 0.5}}},
+                       kind="episodic", tags=["ask"])
+    exch["derived_from"] = [d["record"]]
+    fld.write(exch)
+    return fld, lib, kp, exch["id"], d
+
+
+def test_the_act_accretes_from_records_alone():
+    fld, lib, kp, xid, d = _ask_world()
+    g = actgraph.accrete_ask(fld.records, xid)
+    assert g == actgraph.accrete_ask(fld.records, xid), "rebuilt from nothing"
+    assert actgraph.validate(g) == [], "whole — every node a door"
+    ids = {n["id"] for n in g["nodes"]}
+    assert {"you", "choice", "style", "answer"} <= ids, \
+        "the chain: asker → the router's choice → the style → the answer"
+    choice = next(n for n in g["nodes"] if n["id"] == "choice")
+    assert choice["door"]["target"] == d["record"] and choice.get("features"), \
+        "the router's node opens its record and wears its features (0066)"
+    style = next(n for n in g["nodes"] if n["id"] == "style")
+    assert style["variant"] == d["flavor"], "the answer wears its style (0065)"
+    assert any(d["why"][:40] in s_["text"] for s_ in g["narrative"]), \
+        "the story reads the router's why aloud"
+
+
+def test_a_landed_verdict_grows_the_picture():
+    from orreth_sim import vera
+    fld, lib, kp, xid, d = _ask_world()
+    before = len(actgraph.accrete_ask(fld.records, xid)["nodes"])
+    v = vera.make_verdict(lib, kp, fld.scope, of=xid, work_floor=fld.scope,
+                          judge_floor="u:t", rubric=vera.DEFAULT_RUBRIC,
+                          rubric_declared=False, score=0.8,
+                          why="faithful", cost={"tokens": 50})
+    fld.write(v)
+    g = actgraph.accrete_ask(fld.records, xid)
+    assert len(g["nodes"]) == before + 1, \
+        "the picture GREW because a record landed — never an edit"
+    judge = next(n for n in g["nodes"] if n["kind"] == "verdict")
+    assert judge["door"]["target"] == v["id"] and judge["score"] == 0.8
+    assert actgraph.validate(g) == []
+
+
+def test_a_purged_choice_degrades_the_picture_honestly():
+    fld, lib, kp, xid, d = _ask_world()
+    fld.records.pop(d["record"])
+    g = actgraph.accrete_ask(fld.records, xid)
+    assert "choice" not in {n["id"] for n in g["nodes"]}, \
+        "a missing record's node is simply absent"
+    assert any("no longer stands" in s_["text"] for s_ in g["narrative"]), \
+        "and the story says so — the projection degrades honestly"
+    assert actgraph.validate(g) == []

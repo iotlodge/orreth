@@ -4787,11 +4787,25 @@ const READERS={
   audience:b=>["reader-audience",{name:b.name||"a resident",
     asked:(b.asked||"").slice(0,90),reply:(b.reply||b.answer||"").slice(0,160)},"an audience"],
 };
+async function actThinking(ref){
+  /* 0067 sp4 — the answer wears its thinking: the reader asks for the
+     ask's accreted picture and draws it beneath the body */
+  try{const g=await(await fetch(`${OBSD}/act?exchange=${encodeURIComponent(ref)}`)).json();
+    if(!g||!g.nodes||!g.nodes.length)return;
+    const el=$("rdr-body");if(!el)return;
+    const d=document.createElement("div");
+    d.innerHTML=`<div class="dk-chtitle" style="margin-top:.8rem">the answer wears its thinking — who chose, why, and what judged it</div>`
+      +renderAct("act-"+ref.slice(8,20),g,ref,false);
+    el.appendChild(d);glossifyEl(d);
+  }catch{}
+}
 async function renderRecordPane(ref){
   let body=null,home="";
   try{const r=await fetch(api("/records/"+encodeURIComponent(ref)+"/body"));
     if(r.ok)body=await r.json()}catch{}
   $("rdr-sub").textContent=`record · ${ref.slice(0,34)}…`;
+  setTimeout(()=>{try{const b=$("rdr-body");
+    if(b&&/"ask"|asked/.test(b.textContent||""))actThinking(ref)}catch{}},400);
   if(!body||!Object.keys(body).length){
     /* the cross-floor door (2026-08-23 — 0052's named gap paid, JB's word:
        "why can't we see the work?"): before confessing a miss, ask the
