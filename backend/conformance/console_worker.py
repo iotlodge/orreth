@@ -12531,7 +12531,11 @@ def _feedback_floor(u_port: int, port: int, scope: str) -> None:
                 print(f"    (classify leg failed to post: {e})")
             continue
         if leg.get("status") != "done":
-            if (_age_seconds(leg.get("at")) > STUDIO_DARK_S
+            # the 0063 dial migration missed THIS site (found by JB in the
+            # log, 2026-09-10): the constant died, its two siblings turned
+            # to the dial, this one kept the dead name — a NameError that
+            # killed the whole feedback pass whenever a classify leg aged
+            if (_age_seconds(leg.get("at")) > dial_value("studio-dark")
                     and fb["id"] not in _FEEDBACK_DARK):
                 _FEEDBACK_DARK.add(fb["id"])  # honest, once: the word WAITS
                 print(f"  🧭 the studio is dark for [{fb['id'][:18]}…] — "
