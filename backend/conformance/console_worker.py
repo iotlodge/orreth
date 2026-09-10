@@ -3848,12 +3848,14 @@ def governed_ping(port: int, mid: str, klass: str) -> dict | None:
                                    budget=fuel_clause())
         est = 40
         grant = call(port, "POST", "/model/authorize",
-                     {"token": token, "class": klass, "est_tokens": est, "model": mid})
+                     {"token": token, "class": klass, "est_tokens": est,
+                      "model": mid, "context": _context_pin(port)})
         model = executable(port, grant["model"])
         if model is None:                 # honest refund: authorized, but no key to execute
             call(port, "POST", "/model/meter",
                  {"subject": grant["subject"], "est_tokens": est, "tokens": 0, "usd": 0,
-                  "model": grant["model"], "class": klass})
+                  "model": grant["model"], "class": klass,
+                  "context": grant.get("context")})
             FLIGHT.refuse(ADA_DID, klass, "no-local-key")
             return None
         import litellm
@@ -3871,7 +3873,8 @@ def governed_ping(port: int, mid: str, klass: str) -> dict | None:
             usd = 0.0
         call(port, "POST", "/model/meter",
              {"subject": grant["subject"], "est_tokens": est, "tokens": tokens,
-              "usd": round(usd, 6), "model": grant["model"], "class": klass})
+              "usd": round(usd, 6), "model": grant["model"], "class": klass,
+                  "context": grant.get("context")})
         FLIGHT.note(caller=ADA_DID, klass=klass, model=grant["model"],
                     tokens=tokens, usd=usd, ms=ms)
         return {"model": grant["model"], "tokens": tokens}
@@ -4061,12 +4064,13 @@ def governed_thought(port: int, mid: str, klass: str, prompt: str, *,
         est = max_tokens + len(prompt) // 3
         grant = call(port, "POST", "/model/authorize",
                      {"token": token, "class": klass, "est_tokens": est,
-                      "model": mid})
+                      "model": mid, "context": _context_pin(port)})
         model = executable(port, grant["model"])
         if model is None:                 # honest refund — authorized, no key here
             call(port, "POST", "/model/meter",
                  {"subject": grant["subject"], "est_tokens": est, "tokens": 0,
-                  "usd": 0, "model": grant["model"], "class": klass})
+                  "usd": 0, "model": grant["model"], "class": klass,
+                  "context": grant.get("context")})
             FLIGHT.refuse(did, klass, "no-local-key")
             return None
         import litellm
@@ -4083,7 +4087,8 @@ def governed_thought(port: int, mid: str, klass: str, prompt: str, *,
             usd = 0.0
         call(port, "POST", "/model/meter",
              {"subject": grant["subject"], "est_tokens": est, "tokens": tokens,
-              "usd": round(usd, 6), "model": grant["model"], "class": klass})
+              "usd": round(usd, 6), "model": grant["model"], "class": klass,
+                  "context": grant.get("context")})
         FLIGHT.note(caller=did, klass=klass, model=grant["model"],
                     tokens=tokens, usd=usd, ms=ms)
         return {"text": text, "tokens": tokens, "usd": usd,
@@ -7182,6 +7187,21 @@ def _push_standards_and_pin(port: int) -> None:
     _push_guardrail_pin(port)
 
 
+def _context_pin(port: int) -> str | None:
+    """0068 sp3 — the law's id every thought must carry: fetched from the
+    plane's own /context, memo'd a short breath. The worker busts this memo
+    itself whenever it re-addresses the law (a guardrail edit), so its own
+    thoughts never go stale by its own hand; an outside re-address costs at
+    most one honestly-refused thought before the next breath repins."""
+    def _read():
+        try:
+            c = call(port, "GET", "/context").get("context") or {}
+            return c.get("id")
+        except Exception:
+            return None
+    return _memo(f"context-pin-{port}", 20, _read)
+
+
 def _push_guardrail_pin(port: int) -> None:
     """The rails' pin reaches the plane's ResolvedContext — a turned rail
     re-addresses the law a thought runs under (sp3 makes the gateway
@@ -7195,6 +7215,7 @@ def _push_guardrail_pin(port: int) -> None:
                   "ref": (row[1] if row and row[1] else "")})
         print(f"  🛤 the law re-addressed on :{port} — context "
               f"{str(r.get('context', '?'))[:28]}…")
+        _MEMO.pop(f"context-pin-{port}", None)
     except Exception as e:
         print(f"  🛤 guardrail pin push failed on :{port}: {e}")
 
@@ -9414,12 +9435,14 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
                                        budget=fuel_clause())
             grant = call(port, "POST", "/model/authorize",
                          {"token": token, "class": klass, "est_tokens": est,
+                          "context": _context_pin(port),
                           **({"model": _pin} if _pin else {})})
             model = executable(port, grant["model"])
             if model is None:             # honest refund: authorized, but no key to execute
                 call(port, "POST", "/model/meter",
                      {"subject": did, "est_tokens": est, "tokens": 0, "usd": 0,
-                      "model": grant["model"], "class": klass})
+                      "model": grant["model"], "class": klass,
+                  "context": grant.get("context")})
                 FLIGHT.refuse(did, klass, "no-local-key")
                 continue
             t0 = time.perf_counter()
@@ -9439,7 +9462,8 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
                 usd = 0.0
             call(port, "POST", "/model/meter",
                  {"subject": did, "est_tokens": est, "tokens": tokens,
-                  "usd": round(usd, 6), "model": grant["model"], "class": klass})
+                  "usd": round(usd, 6), "model": grant["model"], "class": klass,
+                  "context": grant.get("context")})
             FLIGHT.note(caller=did, klass=klass, model=grant["model"],
                         tokens=tokens, usd=usd, ms=ms)
             out = (resp.choices[0].message.content or "").strip()
@@ -12664,6 +12688,7 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
         # forgets, the plane's context recomposes with the fresh pin
         _MEMO.pop(f"guardrails-version-{port}", None)
         _push_guardrail_pin(port)
+        _MEMO.pop(f"context-pin-{port}", None)   # the fresh law, next thought
     print(f"  ✎ craft-edit {rid}: “{name}” — the human's sibling stands "
           f"({rec['id'][:18]}…), the old version behind it")
     done(f"landed on your word — “{name}” wears a new head with its "

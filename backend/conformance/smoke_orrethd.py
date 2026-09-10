@@ -174,8 +174,25 @@ def main() -> None:
     print(f"your own line, your key  → {status} {res}")
     assert status == 200
 
+    # ---- 0068 sp3: THE GATEWAY PIN ----------------------------------------------------
+    ctx = call("GET", "/context")[1]["context"]["id"]
+    auth_body = {"token": token, "class": "low", "est_tokens": 5}
+    status, res = call("POST", "/model/authorize", auth_body)
+    print(f"thought without its law   → {status} {res.get('error', res)}")
+    assert status == 403
+    status, res = call("POST", "/model/authorize",
+                       {**auth_body, "context": "sha256:stale"})
+    print(f"thought under a STALE law → {status} (the same face)")
+    assert status == 403
+    status, res = call("POST", "/model/authorize", {**auth_body, "context": ctx})
+    print(f"thought naming its law    → {status} model={res.get('model')} "
+          f"context pinned={res.get('context') == ctx}")
+    assert status in (200, 403)   # 403 only when the demo registry is keyless
+    if status == 200:
+        assert res.get("context") == ctx, "the grant carries the pin verbatim"
+
     print("\nsmoke: Python signed, Rust verified — only the pinned root mints authority, "
-          "and now only its pen resolves. 🥂")
+          "only its pen resolves, and no thought serves without naming its law. 🥂")
 
 
 

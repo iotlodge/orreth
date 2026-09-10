@@ -346,6 +346,10 @@ signature checks against the pinned root"),
 with the worker's first push"}));
     println!("orrethd · ResolvedContext composed — id {}",
              boot_context["id"].as_str().unwrap_or("?"));
+    if std::env::var("ORRETH_REQUIRE_CONTEXT").map(|v| v == "0").unwrap_or(false) {
+        eprintln!("orrethd · THE GATEWAY PIN IS OFF (ORRETH_REQUIRE_CONTEXT=0) — \
+thoughts will serve without naming their law; a dev posture, confessed");
+    }
     if let Some(store) = &pg_store {
         let _ = tokio::task::block_in_place(|| store.save_context(
             &scope, boot_context["id"].as_str().unwrap_or(""), &boot_context,
@@ -939,6 +943,19 @@ async fn body(State(app): State<Arc<App>>, UrlPath(id): UrlPath<String>) -> impl
     .unwrap()
 }
 
+/// 0068 sp3 — THE GATEWAY PIN's law: a thought is served only when it
+/// carries proof of exactly which law governs it — the CURRENT
+/// ResolvedContext id. Missing and stale wear the same face as every
+/// other refusal. The operator may switch the demand off explicitly
+/// (ORRETH_REQUIRE_CONTEXT=0, confessed at boot) — never by default.
+fn pin_ok(current_id: Option<&str>, req_pin: Option<&str>, require: bool) -> bool {
+    if !require { return true; }
+    match (current_id, req_pin) {
+        (Some(c), Some(p)) => c == p,
+        _ => false,
+    }
+}
+
 /// 0068 sp2 — the ResolvedContext's read door: which law does this node
 /// serve under, whole and content-addressed.
 async fn context_door(State(app): State<Arc<App>>) -> Json<Value> {
@@ -1226,6 +1243,17 @@ async fn model_authorize(State(app): State<Arc<App>>, Json(req): Json<Value>) ->
                         Json(json!({"error": "request cannot be served under this capability"})));
             }
         }
+        // 0068 sp3 — the pin: no thought serves without naming the law it
+        // runs under; stale (a rail turned) and missing wear the one face
+        let require_ctx = std::env::var("ORRETH_REQUIRE_CONTEXT")
+            .map(|v| v != "0").unwrap_or(true);
+        let current_ctx = app.context.lock().unwrap()["id"].as_str()
+            .map(str::to_string);
+        if !pin_ok(current_ctx.as_deref(), req["context"].as_str(), require_ctx) {
+            bump(&app, "refusals");
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
         let subject = token["subject"].as_str().unwrap_or("").to_string();
         // the whole fuel clause rides the verified token — allowance AND window
         let budget = token["constraints"]["budget"].clone();
@@ -1240,7 +1268,9 @@ async fn model_authorize(State(app): State<Arc<App>>, Json(req): Json<Value>) ->
                 match m.debit(&subject, &budget, est, now_s(), &now_iso()) {
                     Ok(remaining) => (StatusCode::OK, Json(json!({
                         "model": model, "deprecated": deprecated,
-                        "subject": subject, "est_tokens": est, "remaining": remaining }))),
+                        "subject": subject, "est_tokens": est,
+                        "remaining": remaining,
+                        "context": current_ctx }))),
                     Err(()) => (StatusCode::FORBIDDEN,
                         Json(json!({"error": "request cannot be served under this capability"}))),
                 }
@@ -2125,6 +2155,23 @@ async fn requests_submit(State(app): State<Arc<App>>, Json(mut req): Json<Value>
     }).await.unwrap()
 }
 
+
+#[cfg(test)]
+mod gateway_pin_tests {
+    use super::*;
+
+    #[test]
+    fn missing_stale_and_matching_pins() {
+        assert!(!pin_ok(Some("sha256:a"), None, true), "missing refuses");
+        assert!(!pin_ok(Some("sha256:a"), Some("sha256:old"), true),
+                "a stale pin — a rail turned — refuses");
+        assert!(pin_ok(Some("sha256:a"), Some("sha256:a"), true));
+        assert!(pin_ok(Some("sha256:a"), None, false),
+                "the operator's explicit off-switch serves — confessed at boot");
+        assert!(!pin_ok(None, Some("sha256:a"), true),
+                "no composed law, nothing serves");
+    }
+}
 
 #[cfg(test)]
 mod guardrail_boot_tests {

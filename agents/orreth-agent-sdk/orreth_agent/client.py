@@ -166,12 +166,32 @@ class FieldClient:
     def authorize(self, klass: str, est_tokens: int,
                   pin: str | None = None) -> dict | None:
         """`pin` (0058 sp2): narrow the class to one named mind — the plane's
-        existing `model` field; an assignment's pin rides through here."""
+        existing `model` field; an assignment's pin rides through here.
+        0068 sp3: every thought carries the LAW'S id (the plane's current
+        ResolvedContext) — a stale pin after a guardrail change is refused
+        one-faced, so this client refetches once and retries: the fresh law,
+        the same ask."""
         body = {"token": self.token, "class": klass, "est_tokens": est_tokens}
         if pin:
             body["model"] = pin
-        status, grant = self._call("POST", "/model/authorize", body)
-        return grant if status == 200 else None
+        for attempt in (1, 2):
+            body["context"] = self._context_pin(force=(attempt == 2))
+            status, grant = self._call("POST", "/model/authorize", body)
+            if status == 200:
+                return grant
+            if status != 403:
+                return None
+        return None
+
+    def _context_pin(self, force: bool = False) -> str | None:
+        if force or not getattr(self, "_ctx_pin", None):
+            try:
+                status, c = self._call("GET", "/context")
+                self._ctx_pin = ((c or {}).get("context") or {}).get("id") \
+                    if status == 200 else None
+            except Exception:
+                self._ctx_pin = None
+        return self._ctx_pin
 
     def meter(self, grant: dict, *, klass: str, tokens: int, usd: float = 0.0,
               model: str = "", variant: str | None = None) -> None:
@@ -183,7 +203,9 @@ class FieldClient:
             "token": self.token,
             "subject": grant.get("subject", self.did), "est_tokens": grant.get("est_tokens", 0),
             "tokens": tokens, "usd": round(usd, 6), "model": model or grant.get("model", ""),
-            "class": klass, **({"variant": variant} if variant else {})})
+            "class": klass,
+            **({"context": grant.get("context")} if grant.get("context") else {}),
+            **({"variant": variant} if variant else {})})
 
     # ---- the ask door (0071 sp2: request data, get data) ---------------------------------
     def ask(self, text: str, *, variant: str | None = None,
