@@ -44,11 +44,14 @@ class LiveGateway:
     """One tier's door to real models. Budgets ride the lease (0010); the ladder and
     registry arrive via resolved config; every call is metered for the roll-up."""
 
-    def __init__(self, registry: dict | None = None, allowed_classes: list[str] | None = None):
+    def __init__(self, registry: dict | None = None, allowed_classes: list[str] | None = None,
+                 rails: dict | None = None):
         self.registry = registry or {k: [dict(e) for e in v] for k, v in DEFAULT_REGISTRY.items()}
         self.allowed = allowed_classes or list(self.registry)   # floors may narrow this
         self.call_log: list[dict] = []                          # vigil's tap + the meter
         self.parent: "LiveGateway | None" = None                # model-miss escalates up
+        self.rails = rails                      # 0068 sp4: the composed guardrail
+                                                # set this lane enforces (None = no rails)
 
     # ---- lifecycle (0016 §3): providers get polled; states flip; routing adapts --------
     def set_state(self, model: str, state: str) -> None:
@@ -82,9 +85,31 @@ class LiveGateway:
         self.call_log.append({"refusal": taxon, "caller": surface.identity["did"],
                               "class": klass, "at": NOW()})
 
-    # ---- the call: budget-gated, class-resolved, fully metered --------------------------
+    # ---- the call: budget-gated, class-resolved, fully metered, rail-checked ------------
     def call(self, surface, klass: str, messages: list[dict], *, pinned: bool = False,
              max_tokens: int = 300) -> dict:
+        # 0068 sp4 — the rails bite in the one lane every thought passes
+        # through: inputs before the call (no budget spent on a refused
+        # exchange), outputs before they return. Events ride the call_log —
+        # categories and counts, never the content.
+        if self.rails is not None:
+            from . import rails as _rails
+            checked, events = [], []
+            for m in messages:
+                r = _rails.enforce(self.rails, "entering",
+                                   m.get("content", "")
+                                   if isinstance(m.get("content"), str) else "")
+                events.extend(r["events"])
+                if r["refused"]:
+                    self.call_log.append({"guardrail": events, "at": NOW()})
+                    return {"text": r["refusal"], "refused": "guardrail",
+                            "tokens": 0, "usd": 0.0, "model": None,
+                            "class": klass}
+                checked.append(dict(m, content=r["text"])
+                               if isinstance(m.get("content"), str) else m)
+            messages = checked
+            if events:
+                self.call_log.append({"guardrail": events, "at": NOW()})
         est = max_tokens + sum(len(m.get("content", "")) // 3 for m in messages)
         if est > surface.budget_left:
             if pinned:
@@ -127,15 +152,25 @@ class LiveGateway:
             "at": NOW(),
         }
         self.call_log.append(meter)                             # rolls up via RunRecords (0005)
-        return {"text": resp.choices[0].message.content, **meter}
+        text = resp.choices[0].message.content
+        if self.rails is not None:
+            from . import rails as _rails
+            r = _rails.enforce(self.rails, "leaving", text or "")
+            if r["events"]:
+                self.call_log.append({"guardrail": r["events"], "at": NOW()})
+            if r["refused"]:                    # spent tokens stay metered — truth first
+                return {"text": r["refusal"], "refused": "guardrail", **meter}
+            text = r["text"]
+        return {"text": text, **meter}
 
 
 class PlaneClient:
     """Cognition's side of the split (0016 §6): the plane authorizes and meters;
     we execute. Budgets live in the daemon's ledger now — not in our honor."""
 
-    def __init__(self, base: str, token: dict):
+    def __init__(self, base: str, token: dict, rails: dict | None = None):
         self.base, self.token = base, token
+        self.rails = rails                      # 0068 sp4 — same lane, same law
 
     def _post(self, path: str, payload: dict) -> tuple[int, dict]:
         import json as _json
@@ -151,6 +186,22 @@ class PlaneClient:
             return e.code, _json.loads(e.read() or b"{}")
 
     def call(self, klass: str, messages: list[dict], *, max_tokens: int = 300) -> dict:
+        # 0068 sp4 — inputs before the call (a refused exchange never even
+        # authorizes), outputs before they return; the meter stays truthful
+        if self.rails is not None:
+            from . import rails as _rails
+            checked = []
+            for m in messages:
+                r = _rails.enforce(self.rails, "entering",
+                                   m.get("content", "")
+                                   if isinstance(m.get("content"), str) else "")
+                if r["refused"]:
+                    return {"text": r["refusal"], "refused": "guardrail",
+                            "model": None, "class": klass, "tokens": 0,
+                            "usd": 0.0, "remaining": None}
+                checked.append(dict(m, content=r["text"])
+                               if isinstance(m.get("content"), str) else m)
+            messages = checked
         est = max_tokens + sum(len(m.get("content", "")) // 3 for m in messages)
         status, grant = self._post("/model/authorize",
                                    {"token": self.token, "class": klass, "est_tokens": est})
@@ -167,6 +218,14 @@ class PlaneClient:
         _, meter = self._post("/model/meter", {
             "subject": grant["subject"], "est_tokens": est, "tokens": tokens,
             "usd": round(usd, 6), "model": grant["model"], "class": klass})
-        return {"text": resp.choices[0].message.content, "model": grant["model"],
+        text = resp.choices[0].message.content
+        if self.rails is not None:
+            from . import rails as _rails
+            r = _rails.enforce(self.rails, "leaving", text or "")
+            if r["refused"]:
+                text = r["refusal"]
+            else:
+                text = r["text"]
+        return {"text": text, "model": grant["model"],
                 "class": klass, "tokens": tokens, "usd": round(usd, 6),
                 "remaining": meter.get("remaining")}

@@ -59,3 +59,40 @@ def test_did_key_roundtrip():
     kp = sdk.KeyPair(seed=b"\x01" * 32)
     assert sdk.did_key_for(kp.public).startswith("did:key:z")
     assert sdk.KeyPair(seed=kp.seed).public == kp.public       # seed persists the identity
+
+
+# ---- 0068 sp4: the rails twin (Fable 5, 2026-09-10) --------------------------------
+# The SDK carries its own copy of the content rails so a field agent enforces
+# the same law the kernel's lanes do. One corpus through both modules —
+# detection, masking, refusal, and events must be IDENTICAL.
+
+RAIL_CORPUS = [
+    "clean text with nothing to see",
+    "pay with 4111 1111 1111 1111 today",
+    "the SSN on file is 078-05-1120.",
+    "mail jo@example.com or call 555-867-5309",
+    "078-05-1120 paid with 4111-1111-1111-1111",
+    "order 4111 1111 1111 1112 shipped",          # Luhn-invalid: not an incident
+]
+
+RAIL_SETS = [
+    {"rules": [
+        {"match": {"category": "pii", "direction": "leaving"}, "action": "mask",
+         "reason": "pii masked leaving"},
+        {"match": {"category": "pci", "direction": "both"}, "action": "refuse",
+         "reason": "pci never rides"}]},
+    {"rules": [
+        {"match": {"category": "pii", "direction": "both"},
+         "action": "quarantine", "reason": "hold for a human"}]},
+]
+
+
+@pytest.mark.skipif(ref is None, reason="orreth_sim reference not on path")
+@pytest.mark.parametrize("text", RAIL_CORPUS)
+@pytest.mark.parametrize("direction", ["entering", "leaving"])
+def test_rails_enforcement_matches_reference(text, direction):
+    from orreth_agent import rails as sdk_rails
+    from orreth_sim import rails as ref_rails
+    for rules in RAIL_SETS:
+        assert (sdk_rails.enforce(rules, direction, text)
+                == ref_rails.enforce(rules, direction, text))

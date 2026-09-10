@@ -233,8 +233,50 @@ because the tier-profile schema is sacred).
    pin — the 0.4.0 republish rides the dive's close per the release-alignment law; a
    non-worker floor's pin lands with its first worker touch (the pre-worker rows
    confess exactly that).*
-4. **sp4 — The rails and the audit.** PII/PCI detectors + mask/refuse in the LiteLLM lane;
-   the scribe-signed audit landing either way; vigil staging the review-worthy.
+4. **sp4 — The rails and the audit.** ✅ **LANDED 2026-09-10 — the rails bite, and the
+   audit is independent of what they held back.** **The detectors are firmware at
+   last** (`orreth_sim/rails.py`, the warden's split promoted): payment cards found
+   13–19 digits through spaces and dashes and LUHN-CHECKED (a random long number is
+   never an incident); the PII roster ships dashed SSNs, emails, and separated US
+   phones (the unseparated 9-digit form collides with too much of the world —
+   named); pattern rules ride their craft list by reference, and an unresolvable
+   list CONFESSES in the events instead of silently watching nothing. The action
+   ladder enforced exactly — annotate passes untouched, mask rewrites each span to
+   «[masked: pii]», quarantine masks AND stages a human look, refuse ends the
+   exchange with the rule's own reason in a loud plain sentence — and refuse
+   outranks mask when both hit, with the audit still showing everything that saw
+   content. **The rails bite in the LiteLLM lane** — cognition-side, exactly as L1
+   promised: `governed_thought` and the resident's voice check inputs BEFORE the
+   call (a refused exchange spends NOTHING — no authorize, no fuel) and outputs
+   before they return (spent tokens stay metered — the meter never lies for the
+   rail's sake); the voice checks the human's words AND the grounded facts, and a
+   refusal returns the loud sentence, never a silent fallback to the ungoverned
+   canned reply. The sim's LiveGateway and PlaneClient carry the same law as the
+   reference; the SDK's GovernedThink takes `rails=` with its own parity-tested
+   twin (`orreth_agent/rails.py`, 12 corpus cases — one law, two packages).
+   **The audit lands either way, scribe-signed**: every checked thought lands ONE
+   guardrail-audit record from the librarian's seat (never the thinker — rule 2),
+   carrying lane · who · the live gr-version · per-direction events (category,
+   action, count, the rule's reason) — and NEVER the matched content; derived_from
+   cites the law's head. **vigil keeps its honor**: a quarantined exchange becomes
+   a staged card citing its audit — staging, never a second enforcement. *Proven
+   live on the rig, end to end: a card number REFUSED at the ear with the rule's
+   reason served as the reply; a real SSN masked LEAVING inside ada's actual
+   answer («[masked: pii]: L3-8B-Stheno…»); the universal tightened mask→
+   quarantine through the one craft door — the law re-addressed within the breath,
+   the same ask came back masked AND vigil staged the pii review card citing the
+   audit; the walk-back re-addressed again to genesis; the log holds all four
+   outcomes (refused · clean · masked · quarantined) and the quarantined audit's
+   body, read through the governed door, holds counts and reasons with the SSN
+   NOWHERE in it. Suites 503→517 (14 rail laws incl. the stubbed-lane bites) ·
+   SDK 24→36 (rails parity) · Rust green.* *Honest remainders: `governed_ping`
+   is unchecked (a constant «ping», output discarded); the live compose enforces
+   the universal — a capability's set joins the lane compose when one is declared
+   (the lattice already guarantees it could only tighten); classifier detectors
+   stay parked per the charter; a cold shelf memo's first-breath audits may land
+   without the head-ref lineage (self-heals within the minute); published SDK
+   0.3.0 carries no rails — 0.4.0 staged (version bumped) for the close's
+   republish.*
 5. **sp5 — The stamp.** The consent-grammar stamp end to end: gate card → minted stamp →
    ledger + Observatory visibility → the confession on served work → the one-click
    walk-back, proven by a human in the glass.

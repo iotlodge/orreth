@@ -158,9 +158,13 @@ class GovernedThink:
     """Real cognition through the plane's door: /model/authorize picks the model and debits
     the lease; litellm executes; /model/meter reconciles. The plane never sees a prompt."""
 
-    def __init__(self, client: FieldClient, *, max_tokens: int = 400):
+    def __init__(self, client: FieldClient, *, max_tokens: int = 400,
+                 rails: dict | None = None):
         self.client, self.max_tokens = client, max_tokens
         self.last_tokens, self.last_calls = 0, 0
+        self.rails = rails      # 0068 sp4: a composed guardrail set ({"rules": [...]})
+                                # this lane enforces — inputs before the call, outputs
+                                # before they return; None = no rails (pre-0068 behavior)
 
     def __call__(self, klass: str, prompt: str, *, content=None,
                  pin: str | None = None, variant: str | None = None) -> str:
@@ -169,8 +173,30 @@ class GovernedThink:
         `prompt` still sizes the estimate. Same authorize → execute → meter,
         image or not — a governed eye is metered like a governed thought.
         pin (0058 sp2): an assignment's named mind narrows the class — the
-        plane refuses a pinned miss rather than serving a substitute."""
+        plane refuses a pinned miss rather than serving a substitute.
+        rails (0068 sp4): a refused exchange returns the loud refusal
+        sentence — no authorize, no call, no fuel; masked content proceeds
+        masked. Text parts inside `content` are checked too; image parts
+        pass (classifier detectors await their own season)."""
         import litellm                                            # optional extra: [governed]
+        if self.rails is not None:
+            from . import rails as _rails
+            r = _rails.enforce(self.rails, "entering", prompt)
+            if r["refused"]:
+                return r["refusal"]
+            prompt = r["text"]
+            if content:
+                checked = []
+                for part in content:
+                    if isinstance(part, dict) and part.get("type") == "text":
+                        pr = _rails.enforce(self.rails, "entering",
+                                            part.get("text", ""))
+                        if pr["refused"]:
+                            return pr["refusal"]
+                        checked.append(dict(part, text=pr["text"]))
+                    else:
+                        checked.append(part)
+                content = checked
         est = self.max_tokens + len(prompt) // 3 + (1500 if content else 0)
         grant = self.client.authorize(klass, est, pin=pin)
         if not grant or "model" not in grant:
@@ -188,4 +214,11 @@ class GovernedThink:
                           model=grant["model"], variant=variant)
         self.last_tokens += tokens
         self.last_calls += 1
-        return resp.choices[0].message.content
+        text = resp.choices[0].message.content
+        if self.rails is not None:
+            from . import rails as _rails
+            r = _rails.enforce(self.rails, "leaving", text or "")
+            if r["refused"]:            # the meter above stays truthful either way
+                return r["refusal"]
+            text = r["text"]
+        return text

@@ -29,6 +29,13 @@ What the kit gives you:
   thinking (`RuleThink` for deterministic logic, `GovernedThink` for model
   calls through the gateway) or keep your existing framework and use the
   client alone — a LangGraph agent joins the same way.
+- **Content guardrails** — pass a composed rule set to
+  `GovernedThink(client, rails={...})` and the lane checks content the same
+  way the kernel's own lanes do: inputs before the model call (a refused
+  exchange returns a plain refusal sentence, spends nothing), outputs before
+  they return (masked where the rules say mask). Detectors for payment cards
+  (Luhn-checked) and personal identifiers ship built in;
+  `orreth_agent.rails` is parity-tested against the kernel reference.
 - **`OrrethMind`** / **`@generation`** — declare model-backed generations
   whose prompts are *acquired from the world's own governed shelf*
   (`acquire`), so the words your agent runs on are versioned, human-editable

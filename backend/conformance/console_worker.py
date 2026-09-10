@@ -4057,6 +4057,23 @@ def governed_thought(port: int, mid: str, klass: str, prompt: str, *,
             or os.environ.get("OPENROUTER_API_KEY")):
         return None
     did = as_did or ADA_DID
+    # 0068 sp4 — the rails bite HERE, in the one lane every thought passes
+    # through: inputs checked before the call, outputs before they return.
+    # The plane sees the proof (the context pin), never the prose.
+    from orreth_sim import rails
+    _rails_set = _guardrails_live(port) or guardrails.compose(
+        guardrails.GENESIS_UNIVERSAL)
+    _r_in = rails.enforce(_rails_set, "entering", prompt)
+    if _r_in["refused"]:
+        aid = _rails_audit(port, "governed-thought", did,
+                           _r_in["events"], [])
+        if _r_in["review"]:
+            _rails_stage_review(port, aid, _r_in["events"])
+        print(f"  🛤 a thought refused at the rail (entering) — "
+              f"audit {str(aid)[:18]}…")
+        return {"text": _r_in["refusal"], "tokens": 0, "usd": 0.0,
+                "model": "guardrail", "refused": "guardrail"}
+    prompt = _r_in["text"]
     try:
         token = _BECKY.issue_token(did, SCOPE,
                                    [{"action": "retrieve", "space": "self"}],
@@ -4091,7 +4108,20 @@ def governed_thought(port: int, mid: str, klass: str, prompt: str, *,
                   "context": grant.get("context")})
         FLIGHT.note(caller=did, klass=klass, model=grant["model"],
                     tokens=tokens, usd=usd, ms=ms)
-        return {"text": text, "tokens": tokens, "usd": usd,
+        # 0068 sp4 — the output checked before it returns; the audit lands
+        # either way, clean or hit (metering above stays truthful — the
+        # tokens WERE spent whatever the rails then held back)
+        _r_out = rails.enforce(_rails_set, "leaving", text)
+        aid = _rails_audit(port, "governed-thought", did,
+                           _r_in["events"], _r_out["events"])
+        if _r_out["review"]:
+            _rails_stage_review(port, aid, _r_out["events"])
+        if _r_out["refused"]:
+            print(f"  🛤 an answer refused at the rail (leaving) — "
+                  f"audit {str(aid)[:18]}…")
+            return {"text": _r_out["refusal"], "tokens": tokens, "usd": usd,
+                    "model": grant["model"], "refused": "guardrail"}
+        return {"text": _r_out["text"], "tokens": tokens, "usd": usd,
                 "model": grant["model"]}
     except Exception as e:
         print(f"    (governed thought stumbled: {e})")
@@ -7233,13 +7263,12 @@ def _plant_guardrails(n, me, seat_kp) -> None:
           "(guardrail-universal, genesis)")
 
 
-def _guardrails_version(port: int) -> str:
-    """0068 sp1 — THE 0071 SEAM PAYS: the ask-cache's guardrail version is
-    the LIVE composed set's content hash, read from the shelf (memo'd a
-    breath — a turn takes hold within the horizon). A turned rail changes
-    the version; every cached answer revalidates by construction — exactly
-    as the caching charter law demanded. The pre-0068 constant serves only
-    a world with no rails at all."""
+def _guardrails_live(port: int) -> dict | None:
+    """0068 sp4 — the composed rules the rails ENFORCE, read from the shelf
+    (memo'd a breath, same horizon as the version). None means a world with
+    no rails on the shelf yet — the lanes then ride genesis, never nothing.
+    Capability-layer sets join this compose when a capability declares one
+    (the lattice already guarantees they only tighten) — named remainder."""
     def _read():
         try:
             row = _craft_heads(port).get(guardrails.UNIVERSAL_NAME)
@@ -7248,12 +7277,78 @@ def _guardrails_version(port: int) -> str:
                          + urllib.parse.quote(row[1], safe="") + "/body")
                 prof = ((b or {}).get("asset") or {}).get("profile") or {}
                 if prof.get("rules") is not None:
-                    return guardrails.set_version(guardrails.compose(prof))
+                    return guardrails.compose(prof)
         except Exception:
             pass
-        from orreth_sim import askdoor as _ad
-        return _ad.guardrails_version()
-    return _memo(f"guardrails-version-{port}", 30, _read)
+        return None
+    return _memo(f"guardrails-live-{port}", 30, _read)
+
+
+def _guardrails_version(port: int) -> str:
+    """0068 sp1 — THE 0071 SEAM PAYS: the ask-cache's guardrail version is
+    the LIVE composed set's content hash, read from the shelf (memo'd a
+    breath — a turn takes hold within the horizon). A turned rail changes
+    the version; every cached answer revalidates by construction — exactly
+    as the caching charter law demanded. The pre-0068 constant serves only
+    a world with no rails at all."""
+    live = _guardrails_live(port)
+    if live is not None:
+        return guardrails.set_version(live)
+    from orreth_sim import askdoor as _ad
+    return _ad.guardrails_version()
+
+
+def _rails_audit(port: int, lane: str, who: str, ein: list, eout: list) -> str | None:
+    """0068 sp4 — the audit is INDEPENDENT of the refusal: a scribe-signed
+    guardrail-audit record lands EITHER WAY, clean or hit (the tamper-verify
+    pattern — the observation lands regardless of what it saw). The scribe
+    is the librarian's seat, never the thinker (rule 2: nothing grades its
+    own yardstick). The body carries categories, counts, actions, reasons —
+    NEVER the content the rails matched. Returns the record id (vigil's
+    card cites it) or None on a dark wire."""
+    from orreth_sim import rails
+    outcome = rails.outcome_of(ein, eout)
+    try:
+        u_p = universe_port(port)
+        skp, sdid = lib_seat(UNIVERSE_SCOPE)
+        rec = make_memory({"did": sdid, "scope": UNIVERSE_SCOPE}, skp,
+                          UNIVERSE_SCOPE,
+                          {"guardrail_audit": {
+                              "lane": lane, "who": who,
+                              "version": _guardrails_version(port),
+                              "entering": ein, "leaving": eout,
+                              "outcome": outcome, "at": NOW()}},
+                          kind="episodic",
+                          tags=["guardrail-audit",
+                                "clean" if outcome == "clean" else "hit",
+                                f"gr:{outcome}"])
+        row = _craft_heads(port).get(guardrails.UNIVERSAL_NAME)
+        if row and row[1]:
+            rec["derived_from"] = [row[1]]        # the law that acted
+        call(u_p, "POST", "/records", rec)
+        return rec["id"]
+    except Exception as ex:
+        print(f"    (guardrail audit stumbled: {ex})")
+        return None
+
+
+def _rails_stage_review(port: int, audit_ref: str | None, events: list) -> None:
+    """0068 sp4 — vigil keeps its honor: the rails enforced, the scribe
+    recorded, and vigil STAGES what needs a human — a quarantined exchange
+    becomes a card in the queue, citing its audit. Staging, never a second
+    enforcement."""
+    cats = sorted({e["category"] for e in events
+                   if e["action"] == "quarantine" and e["count"]})
+    try:
+        call(port, "POST", "/requests", {
+            "kind": "guardrail-review",
+            "text": ("🛤 vigil staged a quarantined exchange for review — "
+                     f"{', '.join(cats) or 'content'} held by a guardrail; "
+                     "the held text is masked in what was served"
+                     + (f" (audit {audit_ref[:18]}…)" if audit_ref else ""))})
+        print(f"  🛤 vigil staged a guardrail review ({', '.join(cats)})")
+    except Exception as ex:
+        print(f"    (guardrail review staging stumbled: {ex})")
 
 
 def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
@@ -9409,6 +9504,24 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
     # other parlor answering in canned cards (JB's find — "the parlor routes
     # keywords, it does not listen"). Authorization stays per-floor and
     # honest; execution was always worker-local.
+    # 0068 sp4 — the rails bite at the ear too: the human's words AND the
+    # grounded facts both travel into the prompt, so both are checked
+    # entering; a refusal returns the loud sentence (never None — None
+    # would fall back to the grounded reply and sidestep the rail).
+    from orreth_sim import rails
+    _rails_set = _guardrails_live(port) or guardrails.compose(
+        guardrails.GENESIS_UNIVERSAL)
+    _rq = rails.enforce(_rails_set, "entering", question)
+    _rg = rails.enforce(_rails_set, "entering", grounded)
+    _ein = _rq["events"] + _rg["events"]
+    if _rq["refused"] or _rg["refused"]:
+        aid = _rails_audit(port, "resident-voice", did, _ein, [])
+        if _rq["review"] or _rg["review"]:
+            _rails_stage_review(port, aid, _ein)
+        print(f"  🛤 a voice ask refused at the rail (entering) — "
+              f"audit {str(aid)[:18]}…")
+        return _rq["refusal"] or _rg["refusal"]
+    question, grounded = _rq["text"], _rg["text"]
     est = 380
     # 0058 sp2 — the assignment outranks the ladder: a human's governed word
     # names this resident's class (the ladder narrows to it) or pins the very
@@ -9468,6 +9581,19 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
                         tokens=tokens, usd=usd, ms=ms)
             out = (resp.choices[0].message.content or "").strip()
             if out:
+                # 0068 sp4 — the reply checked before it reaches the reader;
+                # the audit lands either way (the tokens above were truly
+                # spent — the meter never lies for the rail's sake)
+                _rout = rails.enforce(_rails_set, "leaving", out)
+                aid = _rails_audit(port, "resident-voice", did,
+                                   _ein, _rout["events"])
+                if _rout["review"]:
+                    _rails_stage_review(port, aid, _rout["events"])
+                if _rout["refused"]:
+                    print(f"  🛤 a voice reply refused at the rail (leaving) "
+                          f"— audit {str(aid)[:18]}…")
+                    return _rout["refusal"]
+                out = _rout["text"]
                 if _arm:
                     _voice_armwork(port, name, question, out,
                                    grant["model"], _arm)
