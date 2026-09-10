@@ -212,8 +212,27 @@ because the tier-profile schema is sacred).
    worker life (in-memory on the plane — a pg row when it itches); soft/skills ride
    the profile into the fold but no profile declares them yet; sp3 makes the gateway
    DEMAND the context id.*
-3. **sp3 — The gateway pin.** `/model/authorize` demands the context ref; one-face refusal
-   on miss/stale; the meter carries it; cache revalidation on version change.
+3. **sp3 — The gateway pin.** ✅ **LANDED 2026-09-10 — no thought serves without naming
+   its law.** `/model/authorize` DEMANDS the ResolvedContext id: missing and stale
+   (a rail turned) wear the one face, byte-identical to a budget miss; the demand is
+   on by default and the operator's explicit off-switch confesses at boot
+   (`ORRETH_REQUIRE_CONTEXT=0` — a dev posture, never a silence). The grant returns
+   the pin and **every meter line carries it verbatim** — six worker meter bodies and
+   the SDK's — so «which guardrails governed this answer» is ONE SQL JOIN from the
+   fuel ledger to the resolved context's rails. The callers all pinned: the worker's
+   three thought lanes fetch the pin memo'd (busting their own memo when they
+   re-address the law), and the SDK's `authorize()` refetches ONCE on a stale
+   refusal and retries — the fresh law, the same ask. Cache revalidation was paid at
+   sp1 (the ask-cache keys on the live composed hash). *Proven three ways: the smoke
+   on a fresh plane — no-law 403, stale-law 403 THE SAME FACE, the true pin
+   accepted; live on the rig — a real governed thought (the router's consult,
+   «multi-agent») served under the demand; and the LOOKUP itself — meter →
+   resolved_contexts join read back «sonnet-5 under gr-4a7de4a1…», with a
+   not-yet-pinned floor honestly reading «pre-worker». orrethd 13 (the pin_ok laws) +
+   suites 503 + SDK 24.* *Honest remainders: published SDK 0.3.0 in the wild cannot
+   pin — the 0.4.0 republish rides the dive's close per the release-alignment law; a
+   non-worker floor's pin lands with its first worker touch (the pre-worker rows
+   confess exactly that).*
 4. **sp4 — The rails and the audit.** PII/PCI detectors + mask/refuse in the LiteLLM lane;
    the scribe-signed audit landing either way; vigil staging the review-worthy.
 5. **sp5 — The stamp.** The consent-grammar stamp end to end: gate card → minted stamp →
