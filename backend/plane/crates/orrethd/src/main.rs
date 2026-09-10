@@ -49,6 +49,15 @@ struct App {
     /// Presence flows UP (0000 §1): children heartbeat their subtree summaries here.
     /// A parent learns the world below without ever reaching into it.
     children: Mutex<BTreeMap<String, Value>>,
+    /// 0068 sp2 — THE RESOLVER, AWAKE: the composed, content-addressed policy
+    /// snapshot this node serves under (floors + soft + skills + the guardrail
+    /// pin). Recomposed when the rails turn; persisted so the id has a durable
+    /// referent; sp3's gateway will demand it on every thought.
+    context: Mutex<Value>,
+    /// 0068 sp2 — the SIGNED standards bundle (becky signs, planes verify —
+    /// the plane never signs): served beside the raw floors so a pulling
+    /// child can verify what it inherits against the same pinned root.
+    std_bundle: Mutex<Value>,
     /// Per-process display counters (beats heard, refusals, upward beats) surfaced as
     /// resident vitals in the Console. Unsigned, reset on restart, never read by governance.
     vitals: Mutex<BTreeMap<String, i64>>,
@@ -125,6 +134,7 @@ async fn main() {
             .map(str::to_string)
     });
     let mut floors: Vec<Value> = Vec::new();
+    let mut pulled_bundle: Value = Value::Null;   // 0068 sp2 — verified after build
     if let Some(parent_url) = &parent {
         // in a composed topology the parent may still be waking — be patient at the door
         let mut pulled_ok = false;
@@ -134,6 +144,13 @@ async fn main() {
                     let pulled: Value = resp.into_json().expect("parent standards json");
                     let inherited = pulled["floors"].as_array().cloned().unwrap_or_default();
                     println!("orrethd · pulled {} inherited floor(s) from {parent_url}", inherited.len());
+                    pulled_bundle = pulled.get("bundle").cloned().unwrap_or(Value::Null);
+                    if pulled_bundle.is_null() {
+                        // the honest confession (0068 sp2): unverifiable floors
+                        // are a dev posture, never a silent one
+                        eprintln!("orrethd · inherited floors carry NO signed bundle — \
+unverified in transit; production wants becky's signature on the standards");
+                    }
                     floors.extend(inherited);
                     pulled_ok = true;
                     break;
@@ -147,7 +164,15 @@ async fn main() {
             eprintln!("orrethd · parent unreachable after retries; starting with local floors only");
         }
     }
-    floors.extend(profile.get("floors").and_then(Value::as_array).cloned().unwrap_or_default());
+    // 0068 sp2 — THE MONOTONE CHECK, at last in Rust (the Python twin's
+    // FloorViolation): a local floor that weakens or shortens an inherited
+    // one refuses THE WHOLE BOOT — fail-closed, with the teaching
+    let local_floors: Vec<Value> = profile.get("floors")
+        .and_then(Value::as_array).cloned().unwrap_or_default();
+    if let Some(flaw) = floor_flaw(&floors, &local_floors) {
+        panic!("orrethd · FLOOR VIOLATION — {flaw}");
+    }
+    floors.extend(local_floors);
 
     let node = Node {
         scope: scope.clone(),
@@ -301,6 +326,32 @@ async fn main() {
         }
         model_plane.meter_log = meters;
     }
+    // 0068 sp2 — a pulled SIGNED bundle verifies against THIS node's own
+    // pinned root, or the boot dies: a poisoned standard is rejected, never
+    // swallowed (the Python twin's law, at last in Rust)
+    if !pulled_bundle.is_null() {
+        match bundle_ok(&universe, &pulled_bundle) {
+            Ok(()) => println!("orrethd · inherited standards VERIFIED — becky's \
+signature checks against the pinned root"),
+            Err(e) => panic!("orrethd · {e}"),
+        }
+    }
+    // 0068 sp2 — THE RESOLVER WAKES: the dead crate called at last. The
+    // composed, content-addressed policy snapshot stands from boot; the
+    // guardrail pin arrives from the worker and recomposes it; sp3's
+    // gateway will demand this id on every thought.
+    let boot_context = compose_context(
+        &profile, &universe.nodes[0].floors,
+        &json!({"version": "pre-worker", "note": "the rails' pin arrives \
+with the worker's first push"}));
+    println!("orrethd · ResolvedContext composed — id {}",
+             boot_context["id"].as_str().unwrap_or("?"));
+    if let Some(store) = &pg_store {
+        let _ = tokio::task::block_in_place(|| store.save_context(
+            &scope, boot_context["id"].as_str().unwrap_or(""), &boot_context,
+            &now_iso()));
+    }
+
     let app = Arc::new(App {
         universe: Mutex::new(universe),
         model: Mutex::new(model_plane),
@@ -314,6 +365,8 @@ async fn main() {
         worker_pulse: Mutex::new(std::time::Instant::now()),
         witness_open: Mutex::new(false),
         children: Mutex::new(BTreeMap::new()),
+        context: Mutex::new(boot_context),
+        std_bundle: Mutex::new(Value::Null),
         vitals: Mutex::new(BTreeMap::new()),
         rate: Mutex::new(BTreeMap::new()),
         rate_per_min: std::env::var("ORRETH_RATE_PER_MIN").ok()
@@ -351,6 +404,9 @@ async fn main() {
         .route("/chunks", post(chunks_ingress))
         .route("/chunks/missing", post(chunks_missing))
         .route("/chunks/search", post(chunks_search))
+        .route("/context", get(context_door))
+        .route("/context/guardrails", post(context_guardrails))
+        .route("/standards/bundle", post(standards_bundle))
         .route("/graph", post(graph_ingress))
         .route("/graph/missing", post(graph_missing))
         .route("/graph/walk", post(graph_walk_door))
@@ -883,10 +939,144 @@ async fn body(State(app): State<Arc<App>>, UrlPath(id): UrlPath<String>) -> impl
     .unwrap()
 }
 
+/// 0068 sp2 — the ResolvedContext's read door: which law does this node
+/// serve under, whole and content-addressed.
+async fn context_door(State(app): State<Arc<App>>) -> Json<Value> {
+    Json(json!({"context": app.context.lock().unwrap().clone()}))
+}
+
+/// 0068 sp2 — the guardrail pin arrives (becky's worker pushes it when the
+/// rails turn): the context recomposes and re-addresses; sp3's gateway
+/// will refuse any thought that doesn't carry the fresh id.
+async fn context_guardrails(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let ok = { app.universe.lock().unwrap().verify_token(&req["token"]).is_ok() };
+        if !ok {
+            bump(&app, "refusals");
+            return (StatusCode::FORBIDDEN,
+                    Json(json!({"error": "request cannot be served under this capability"})));
+        }
+        let g = json!({"version": req["version"], "ref": req["ref"]});
+        let (profile_scope, floors) = {
+            let u = app.universe.lock().unwrap();
+            (u.nodes[0].scope.clone(), u.nodes[0].floors.clone())
+        };
+        let ctx = compose_context(&json!({"scope": profile_scope}), &floors, &g);
+        let id = ctx["id"].as_str().unwrap_or("").to_string();
+        if let Some(store) = &app.pg {
+            let _ = store.save_context(&profile_scope, &id, &ctx, &now_iso());
+        }
+        *app.context.lock().unwrap() = ctx;
+        (StatusCode::OK, Json(json!({"context": id})))
+    })
+    .await
+    .unwrap()
+}
+
+/// 0068 sp2 — becky signs, planes verify: the worker pushes the SIGNED
+/// standards bundle; a bad token or a bad signature is refused one-faced;
+/// a good one is served to every pulling child beside the raw floors.
+async fn standards_bundle(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
+    tokio::task::spawn_blocking(move || {
+        let bundle = req["bundle"].clone();
+        {
+            let u = app.universe.lock().unwrap();
+            if bundle_ok(&u, &bundle).is_err() {
+                bump(&app, "refusals");
+                return (StatusCode::FORBIDDEN,
+                        Json(json!({"error": "request cannot be served under this capability"})));
+            }
+        }
+        *app.std_bundle.lock().unwrap() = bundle;
+        (StatusCode::OK, Json(json!({"ok": true})))
+    })
+    .await
+    .unwrap()
+}
+
+/// 0068 sp2 — the monotone law, ported from the Python twin (node.py's
+/// FloorViolation): an inherited floor may be tightened, never loosened —
+/// a weaker action or a shorter keep is refused at boot, fail-closed.
+fn floor_flaw(inherited: &[Value], local: &[Value]) -> Option<String> {
+    fn rank(a: &str) -> i32 {
+        match a { "keep-raw" => 3, "distill" => 2, "drop-after-distill" => 1, _ => 0 }
+    }
+    fn days(p: &str) -> Option<f64> {
+        p.strip_prefix('P')?.strip_suffix('D')?.parse().ok()
+    }
+    let inh: std::collections::BTreeMap<String, &Value> = inherited.iter()
+        .map(|r| (orreth_crypto::content_hash(&r["match"]), r)).collect();
+    for l in local {
+        let Some(i) = inh.get(&orreth_crypto::content_hash(&l["match"])) else { continue };
+        let (la, ia) = (l["action"].as_str().unwrap_or(""), i["action"].as_str().unwrap_or(""));
+        if rank(la) < rank(ia) {
+            return Some(format!(
+                "local floor weakens an inherited one (action «{la}» < «{ia}») — \
+                 inherited floors are non-overridable; a child tightens, never loosens"));
+        }
+        let (lk, ik) = (l["keep_for"].as_str().unwrap_or(""), i["keep_for"].as_str().unwrap_or(""));
+        if lk != "promote" && ik != "promote" {
+            if let (Some(ld), Some(id_)) = (days(lk), days(ik)) {
+                if ld < id_ {
+                    return Some(format!(
+                        "local floor shortens an inherited keep ({lk} < {ik}) — \
+                         a child tightens, never loosens"));
+                }
+            }
+        }
+    }
+    None
+}
+
+/// 0068 sp2 — a signed standards bundle verifies or it is poison: the
+/// pusher's root-chained token names the signer, and the signature covers
+/// {scope, floors, issued_by} with the signer's own did:key.
+fn bundle_ok(u: &Universe, bundle: &Value) -> Result<(), String> {
+    u.verify_token(&bundle["token"]).map_err(|_| "the bundle's token does not \
+        chain to the pinned root".to_string())?;
+    let issued_by = bundle["issued_by"].as_str().unwrap_or("");
+    if bundle["token"]["subject"].as_str().unwrap_or("") != issued_by {
+        return Err("the bundle's signer is not the token's subject".into());
+    }
+    let Some(pubkey) = issued_by.strip_prefix("did:key:") else {
+        return Err("the bundle's signer must be a self-certifying did:key".into());
+    };
+    let payload = json!({"scope": bundle["scope"], "floors": bundle["floors"],
+                         "issued_by": issued_by});
+    if !orreth_crypto::verify_sig(bundle["sig"].as_str().unwrap_or(""), &payload, pubkey) {
+        return Err("bundle signature invalid — poisoned standard rejected".into());
+    }
+    Ok(())
+}
+
+/// 0068 sp2 — the ResolvedContext, composed and content-addressed: the
+/// resolver crate's pure fold (parity-pinned) wrapped with the guardrail
+/// pin, re-hashed so the id names the WHOLE law a thought runs under.
+fn compose_context(profile: &Value, floors: &[Value], guardrails: &Value) -> Value {
+    let tier = json!({"scope": profile["scope"],
+                      "soft": profile.get("soft").cloned().unwrap_or(json!({})),
+                      "skills": profile.get("skills").cloned().unwrap_or(json!({})),
+                      "version": profile.get("version").cloned().unwrap_or(json!("0"))});
+    let base = orreth_resolver::resolve(&[tier], floors);
+    let mut content = base.as_object().unwrap().clone();
+    content.remove("id");
+    content.insert("guardrails".into(), guardrails.clone());
+    let content = Value::Object(content);
+    let id = orreth_crypto::content_hash(&content);
+    let mut out = content.as_object().unwrap().clone();
+    out.insert("id".into(), json!(id));
+    Value::Object(out)
+}
+
 async fn standards(State(app): State<Arc<App>>) -> Json<Value> {
     // the PULL-down surface: children fetch; this node never pushes into anyone
     let u = app.universe.lock().unwrap();
-    Json(json!({"scope": u.nodes[0].scope, "floors": u.nodes[0].floors}))
+    let bundle = app.std_bundle.lock().unwrap().clone();
+    let mut out = json!({"scope": u.nodes[0].scope, "floors": u.nodes[0].floors});
+    if !bundle.is_null() {
+        out["bundle"] = bundle;   // 0068 sp2 — a child verifies what it inherits
+    }
+    Json(out)
 }
 
 async fn egress(State(app): State<Arc<App>>, Json(req): Json<Value>) -> impl IntoResponse {
@@ -1933,4 +2123,51 @@ async fn requests_submit(State(app): State<Arc<App>>, Json(mut req): Json<Value>
         touch(&app);
         (StatusCode::CREATED, Json(req))
     }).await.unwrap()
+}
+
+
+#[cfg(test)]
+mod guardrail_boot_tests {
+    use super::*;
+
+    fn floor(action: &str, keep: &str) -> Value {
+        json!({"match": {"outcome": "failure"}, "action": action,
+               "keep_for": keep, "reason": "t"})
+    }
+
+    #[test]
+    fn a_weaker_local_action_is_refused() {
+        let flaw = floor_flaw(&[floor("keep-raw", "P90D")],
+                              &[floor("distill", "P90D")]);
+        assert!(flaw.unwrap().contains("never loosens"));
+    }
+
+    #[test]
+    fn a_shorter_local_keep_is_refused() {
+        let flaw = floor_flaw(&[floor("keep-raw", "P90D")],
+                              &[floor("keep-raw", "P30D")]);
+        assert!(flaw.unwrap().contains("shortens"));
+    }
+
+    #[test]
+    fn tightening_and_new_floors_are_lawful() {
+        assert!(floor_flaw(&[floor("distill", "P30D")],
+                           &[floor("keep-raw", "P90D")]).is_none());
+        assert!(floor_flaw(&[floor("keep-raw", "P90D")],
+                           &[json!({"match": {"kind": "x"}, "action": "distill",
+                                    "keep_for": "P7D", "reason": "new"})])
+                .is_none());
+    }
+
+    #[test]
+    fn the_context_readdresses_when_the_rails_turn() {
+        let p = json!({"scope": "u:t", "version": "1"});
+        let f = vec![floor("keep-raw", "P90D")];
+        let a = compose_context(&p, &f, &json!({"version": "gr-1"}));
+        let b = compose_context(&p, &f, &json!({"version": "gr-1"}));
+        assert_eq!(a["id"], b["id"], "content-addressed — same law, same id");
+        let c = compose_context(&p, &f, &json!({"version": "gr-2"}));
+        assert_ne!(a["id"], c["id"], "a turned rail is a NEW law with a new id");
+        assert_eq!(c["guardrails"]["version"], json!("gr-2"));
+    }
 }

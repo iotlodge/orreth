@@ -7153,6 +7153,52 @@ def _router_consult(port: int, scope: str):
     return mind
 
 
+_STD_PUSHED: set = set()
+
+
+def _push_standards_and_pin(port: int) -> None:
+    """0068 sp2 — becky signs, planes verify: once per floor per worker
+    life, (1) the SIGNED standards bundle lands on the plane so every
+    pulling child can verify what it inherits against the pinned root, and
+    (2) the guardrail pin recomposes the plane's ResolvedContext — the
+    law's id now names the rails too."""
+    if port in _STD_PUSHED:
+        return
+    _STD_PUSHED.add(port)
+    token = _ROOT.issue_token(_BECKY.did, "u:demo",
+                              [{"action": "govern", "space": "self"}])
+    try:
+        std = call(port, "GET", "/standards")
+        payload = {"scope": std.get("scope", ""),
+                   "floors": std.get("floors") or [],
+                   "issued_by": _BECKY.did}
+        sig = _BECKY.kp.sign(_BECKY.did, payload)["sig"]
+        call(port, "POST", "/standards/bundle",
+             {"bundle": {**payload, "token": token, "sig": sig}})
+        print(f"  🛤 standards bundle SIGNED and served on :{port} — "
+              "children verify what they inherit")
+    except Exception as e:
+        print(f"  🛤 standards bundle push failed on :{port}: {e}")
+    _push_guardrail_pin(port)
+
+
+def _push_guardrail_pin(port: int) -> None:
+    """The rails' pin reaches the plane's ResolvedContext — a turned rail
+    re-addresses the law a thought runs under (sp3 makes the gateway
+    demand it)."""
+    try:
+        row = _craft_heads(port).get(guardrails.UNIVERSAL_NAME)
+        token = _ROOT.issue_token(_BECKY.did, "u:demo",
+                                  [{"action": "govern", "space": "self"}])
+        r = call(port, "POST", "/context/guardrails",
+                 {"token": token, "version": _guardrails_version(port),
+                  "ref": (row[1] if row and row[1] else "")})
+        print(f"  🛤 the law re-addressed on :{port} — context "
+              f"{str(r.get('context', '?'))[:28]}…")
+    except Exception as e:
+        print(f"  🛤 guardrail pin push failed on :{port}: {e}")
+
+
 def _plant_guardrails(n, me, seat_kp) -> None:
     """0068 sp1 — the first rails plant once (the plant_standard idiom):
     PII masked, PCI refused — genesis until a human turns them at the gate."""
@@ -7210,6 +7256,8 @@ def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
     dispatcher.plant_standard(n, me, seat_kp)     # genesis once; shelf from then on
     dispatcher.plant_router_retirement(n, me, seat_kp)  # the row's rest (0066 sp5)
     _plant_guardrails(n, me, seat_kp)             # the first rails (0068 sp1)
+    _push_standards_and_pin(port)                 # becky signs; the law
+                                                  # re-addresses (0068 sp2)
     from orreth_sim import canon as _cn
     _cn.plant_registry(n, me, seat_kp)            # the two books stand (0039 sp1)
     _cn.plant_dials(n, me, seat_kp)               # the metabolism's dials (sp3)
@@ -12611,6 +12659,11 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
         rec["derived_from"] = [head]
     call(port, "POST", "/records", rec)
     _GOV_CACHE["at"] = 0.0                    # the room re-reads at once
+    if name.startswith("guardrail-"):
+        # 0068 sp2 — a turned rail re-addresses the law NOW: the memo
+        # forgets, the plane's context recomposes with the fresh pin
+        _MEMO.pop(f"guardrails-version-{port}", None)
+        _push_guardrail_pin(port)
     print(f"  ✎ craft-edit {rid}: “{name}” — the human's sibling stands "
           f"({rec['id'][:18]}…), the old version behind it")
     done(f"landed on your word — “{name}” wears a new head with its "

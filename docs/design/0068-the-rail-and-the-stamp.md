@@ -184,9 +184,34 @@ because the tier-profile schema is sacred).
    laws). Rust green.* *Honest remainders: detectors arrive sp4 (rules are policy
    today, enforcement lands with the LiteLLM lane); the resolve-side monotone check
    in Rust is sp2's; the stamp is sp5's.*
-2. **sp2 — The resolver wakes.** `orrethd` composes/persists ResolvedContext with the
-   guardrail set; the `/standards` pull verified; the Rust monotone check; (L3's contract
-   line if approved).
+2. **sp2 — The resolver wakes.** ✅ **LANDED 2026-09-09 — the dead crate called at
+   last, and three old lies stopped.** **The resolver wakes**: `orrethd` composes the
+   content-addressed ResolvedContext AT BOOT (the parity-pinned crate's pure fold,
+   wrapped with the guardrail pin and re-hashed so the id names the WHOLE law a
+   thought runs under), persists every version to Postgres (`resolved_contexts` —
+   the id has a durable referent, never just a hash in the air), and serves it at
+   `GET /context`; the worker pushes the rails' pin (`POST /context/guardrails`) at
+   boot and after every guardrail edit — a turned rail RE-ADDRESSES the law within
+   the breath. **The standards pull verified**: becky SIGNS the floors bundle
+   (worker-side — the plane never signs) and the plane verifies before serving
+   (`bundle_ok`: the root-chained token names the signer, the signature covers the
+   floors); a pulling child verifies the same way against its own pinned root and a
+   poisoned standard KILLS THE BOOT — fail-closed, the Python twin's law at last in
+   Rust; an unsigned pull confesses loudly instead of pretending. **The monotone
+   check in Rust**: a local floor that weakens or shortens an inherited one refuses
+   the whole boot with the teaching (`floor_flaw`, unit-held both directions). **L3's
+   contract line landed** (JB's rule-9 word): `floors` declared in the sacred
+   tier-profile schema with its full rule shape — the contract stops lying by
+   omission; parity green. *Proven live on the rig: «ResolvedContext composed» at
+   every plane's boot; becky's bundle signed, pushed, LIVE-VERIFIED by the plane's
+   own bundle_ok at the door, and served to pullers; the context re-addressed with
+   the guardrail pin (gr-…, the head ref riding); THREE floors' contexts already
+   durable in Postgres. Suite 503 + SDK 24 (parity) + orrethd 12 (four new boot
+   laws). The child's own VERIFIED boot line lands at the next rig cycle now that
+   bundles stand on parents — named.* *Honest remainders: the bundle re-pushes each
+   worker life (in-memory on the plane — a pg row when it itches); soft/skills ride
+   the profile into the fold but no profile declares them yet; sp3 makes the gateway
+   DEMAND the context id.*
 3. **sp3 — The gateway pin.** `/model/authorize` demands the context ref; one-face refusal
    on miss/stale; the meter carries it; cache revalidation on version change.
 4. **sp4 — The rails and the audit.** PII/PCI detectors + mask/refuse in the LiteLLM lane;

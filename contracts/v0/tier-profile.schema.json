@@ -5,6 +5,21 @@
  "description": "The dials that make one node (orrethd) a Universe, Ecosystem, or Field (0000 §1). This v0 carries every dial already locked by decisions (retention 0003, TTLs 0006, QA sample, judge sampling 0001, cadence); the 0004 narrative spec will refine, not redefine. tier_label is FRIENDLY DISPLAY ONLY — wire contracts never branch on it.",
  "type": "object",
  "properties": {
+  "floors": {
+   "type": "array",
+   "description": "0068 L3 (JB's rule-9 word, 2026-09-07): the tier's own non-overridable floors — declared at last; every production profile has carried them since 0000, and the contract stops lying by omission. A child may tighten an inherited floor, never loosen it (the monotone law, enforced at boot on both implementations).",
+   "items": {
+    "type": "object",
+    "required": ["match", "action", "keep_for", "reason"],
+    "properties": {
+     "match": { "type": "object" },
+     "action": { "enum": ["keep-raw", "distill", "drop-after-distill"] },
+     "keep_for": { "type": "string", "description": "ISO-8601 duration (PnD) or 'promote'" },
+     "reason": { "type": "string" }
+    },
+    "additionalProperties": false
+   }
+  },
   "tier_label": {
    "type": "string",
    "description": "Display name (e.g. 'universe', 'ecosystem', 'field', or anything a customer likes). Never used for logic."

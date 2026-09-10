@@ -119,7 +119,16 @@ impl PgRecords {
              CREATE INDEX IF NOT EXISTS graph_edges_a
                  ON graph_edges (node_scope, a);
              CREATE INDEX IF NOT EXISTS graph_edges_b
-                 ON graph_edges (node_scope, b);",
+                 ON graph_edges (node_scope, b);
+             -- 0068 sp2: the ResolvedContext's durable referent — every
+             -- composed law this node ever served under, by id
+             CREATE TABLE IF NOT EXISTS resolved_contexts (
+                 node_scope  TEXT NOT NULL,
+                 id          TEXT NOT NULL,
+                 context     JSONB NOT NULL,
+                 at          TEXT NOT NULL DEFAULT '',
+                 PRIMARY KEY (node_scope, id)
+             );",
         )?;
         // 0022 §4 Phase 2 (JB's rule-9 approval 2026-07-17): the vector
         // projection. NULL embedding = "looked, nothing to embed" — the sweep
@@ -514,6 +523,18 @@ impl PgRecords {
         Ok(rows.into_iter().map(|r| (r.get(0), r.get(1), r.get(2), r.get(3),
                                      r.get(4), r.get(5), r.get(6), r.get(7),
                                      r.get(8), r.get(9))).collect())
+    }
+
+    /// 0068 sp2 — the ResolvedContext persists: the id a thought will pin
+    /// has a durable referent, never just a hash in the air.
+    pub fn save_context(&self, node_scope: &str, id: &str, context: &Value,
+                        at: &str) -> Result<(), postgres::Error> {
+        self.client.lock().unwrap().execute(
+            "INSERT INTO resolved_contexts (node_scope, id, context, at)
+             VALUES ($1, $2, $3, $4) ON CONFLICT (node_scope, id) DO NOTHING",
+            &[&node_scope, &id, context, &at],
+        )?;
+        Ok(())
     }
 
     /// Persist the STORED form of an accepted record, keyed by the ACCEPTING node —

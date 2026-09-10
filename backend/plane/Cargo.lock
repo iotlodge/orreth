@@ -987,6 +987,7 @@ dependencies = [
  "axum",
  "orreth-crypto",
  "orreth-node",
+ "orreth-resolver",
  "orreth-store",
  "postgres",
  "serde_json",
