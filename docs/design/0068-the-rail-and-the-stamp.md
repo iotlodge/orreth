@@ -158,9 +158,32 @@ because the tier-profile schema is sacred).
 
 ## 6. The spoonfuls (proposed order)
 
-1. **sp1 — The grammar and the drawer.** The guardrail rule shape; the `guardrail-*` craft
-   drawer + gate checks + teachings; the Universal/Capability lattice with the monotone
-   check (Python first, laws suite).
+1. **sp1 — The grammar and the drawer.** ✅ **LANDED 2026-09-09 — the rails have a
+   grammar, a drawer, a lattice, and a living version.** `orreth_sim/guardrails.py`:
+   the rule shape in plain words (match: a category the firmware can detect — pii ·
+   pci — or a pattern list by reference, with a direction; action on the strength
+   ladder annotate < mask < quarantine < refuse; and **every rule says WHY** — the
+   audit trail starts in the policy). **The first rails ship as genesis**: PII masked
+   leaving, PCI refused both ways — planted once at the ask lane (the plant_standard
+   idiom). **The drawer**: guardrail-* is PURPOSE by the razor, gate-checked rule by
+   rule with teachings on every sibling; an EMPTY set is legal, explicit, and loudly
+   scary (sp5's stamp law will demand the signature). **The lattice, enforced at
+   publication**: a capability set may add, widen, or strengthen — a weakening or
+   narrowing edit REFUSES at the door with the teaching («a child tightens, never
+   loosens; refuse may never become mask»); absence never removes (compose always
+   keeps every universal rule). **And the 0071 seam PAYS EARLY**: the ask-cache's
+   guardrail version is now the LIVE composed set's content hash — a turned rail
+   revalidates every cached answer by construction. *Proven live on the rig: the
+   genesis rails planted on the first ask; a weakening capability set REFUSED with
+   the lattice teaching; a lawful strengthening landed; and the charter's caching law
+   walked whole — cached under the standing rails, the universal tightened through
+   the one door, the SAME words answered FRESH. The walk found its own wound: the
+   stacks pull never carried guardrail-* assets, so the planter re-planted genesis
+   beside the human's word — fixed in the hour (the pull carries the rails; zero
+   re-plants after). Canon restored through the door. Suite 495→503 (eight grammar
+   laws). Rust green.* *Honest remainders: detectors arrive sp4 (rules are policy
+   today, enforcement lands with the LiteLLM lane); the resolve-side monotone check
+   in Rust is sp2's; the stamp is sp5's.*
 2. **sp2 — The resolver wakes.** `orrethd` composes/persists ResolvedContext with the
    guardrail set; the `/standards` pull verified; the Rust monotone check; (L3's contract
    line if approved).

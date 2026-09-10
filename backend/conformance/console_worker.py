@@ -126,10 +126,10 @@ from dotenv import load_dotenv
 
 from orreth_sim import (actgraph, askcache, atlas, bell as bell_mod,
                         continuity, crypto, dials, fingertip,
-                        fuel as fuel_mod, improver, market, markers, meaning,
-                        mirror, node, observatory, parlor, profile, purge,
-                        seeds, serials, shipyard, speech, thumb as thumb_mod,
-                        traffic, variants, vera)
+                        fuel as fuel_mod, guardrails, improver, market,
+                        markers, meaning, mirror, node, observatory, parlor,
+                        profile, purge, seeds, serials, shipyard, speech,
+                        thumb as thumb_mod, traffic, variants, vera)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -6733,8 +6733,11 @@ def _stacks_node(port: int, scope: str):
           or "distillation" in t or "distillation-dials" in t
           or "metabolism-report" in t    # the metabolism reads its own past (sp2)
           or "router-retired" in t       # the row's rest, seen once (0066 sp5)
-          or any(str(x).startswith("variant-") for x in t))  # the styles'
-          # craft reaches the node (0065 sp4) — a turned knob takes effect
+          or any(str(x).startswith(("variant-", "guardrail-"))
+                 for x in t))  # the styles' craft AND the rails reach the
+          # node (0065 sp4 · 0068 sp1) — a turned knob takes effect, and
+          # the planter sees the standing universal (the walk's own find:
+          # an unseen shelf re-planted genesis beside the human's word)
     # THE ROWS MEET THE REAL MEMORY (JB-locked 2026-07-22): the librarian's
     # GATHERED knowledge lives on the universe's floors — a second read brings
     # it into the projection, trust and lineage riding with it
@@ -7150,6 +7153,42 @@ def _router_consult(port: int, scope: str):
     return mind
 
 
+def _plant_guardrails(n, me, seat_kp) -> None:
+    """0068 sp1 — the first rails plant once (the plant_standard idiom):
+    PII masked, PCI refused — genesis until a human turns them at the gate."""
+    if improver.active_asset(n, guardrails.UNIVERSAL_NAME):
+        return
+    rec = improver.make_asset(me, seat_kp, n.scope,
+                              name=guardrails.UNIVERSAL_NAME,
+                              profile=guardrails.GENESIS_UNIVERSAL)
+    n.write(rec)
+    print("  🛤 the first rails planted — PII masked, PCI refused "
+          "(guardrail-universal, genesis)")
+
+
+def _guardrails_version(port: int) -> str:
+    """0068 sp1 — THE 0071 SEAM PAYS: the ask-cache's guardrail version is
+    the LIVE composed set's content hash, read from the shelf (memo'd a
+    breath — a turn takes hold within the horizon). A turned rail changes
+    the version; every cached answer revalidates by construction — exactly
+    as the caching charter law demanded. The pre-0068 constant serves only
+    a world with no rails at all."""
+    def _read():
+        try:
+            row = _craft_heads(port).get(guardrails.UNIVERSAL_NAME)
+            if row and row[1]:
+                b = call(port, "GET", "/records/"
+                         + urllib.parse.quote(row[1], safe="") + "/body")
+                prof = ((b or {}).get("asset") or {}).get("profile") or {}
+                if prof.get("rules") is not None:
+                    return guardrails.set_version(guardrails.compose(prof))
+        except Exception:
+            pass
+        from orreth_sim import askdoor as _ad
+        return _ad.guardrails_version()
+    return _memo(f"guardrails-version-{port}", 30, _read)
+
+
 def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
                        variant: str | None = None,
                        attributes: dict | None = None) -> dict | None:
@@ -7170,6 +7209,7 @@ def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
     me = {"did": seat_did, "scope": scope}
     dispatcher.plant_standard(n, me, seat_kp)     # genesis once; shelf from then on
     dispatcher.plant_router_retirement(n, me, seat_kp)  # the row's rest (0066 sp5)
+    _plant_guardrails(n, me, seat_kp)             # the first rails (0068 sp1)
     from orreth_sim import canon as _cn
     _cn.plant_registry(n, me, seat_kp)            # the two books stand (0039 sp1)
     _cn.plant_dials(n, me, seat_kp)               # the metabolism's dials (sp3)
@@ -7347,7 +7387,7 @@ def on_ask(port: int, scope: str, r: dict) -> None:
     # reach this projection (no hooks, by construction). TTL 0 closes the cache.
     ttl = int(dial_value("ask-cache-ttl-s", port, scope) or 0)
     ckey = askcache.key(scope, text, variant or "auto",
-                        askdoor.guardrails_version())
+                        _guardrails_version(port))
     if ttl > 0:
         with _ASK_CACHE_LOCK:
             hit = askcache.get(_ASK_CACHE, ckey, time.time(), ttl)
@@ -12463,6 +12503,7 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
         _is_cap_word = (name.startswith("capability-")
                         or name.startswith("dial-")
                         or name.startswith("variant-")
+                        or name.startswith("guardrail-")
                         or any(name.lower().startswith(p + "-")
                                for p in _cap_prefixes))
         if not _is_cap_word:
@@ -12471,7 +12512,8 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
                         "(0045 sp3). Capability craft remains editable: "
                         "purpose is the human's domain. Nothing changed")
     heads = _craft_heads(port)
-    if name not in heads and not name.startswith(("dial-", "variant-")):
+    if name not in heads and not name.startswith(("dial-", "variant-",
+                                                  "guardrail-")):
         return done(f"the shelf holds no craft named “{name}” — nothing changed")
     # a dial may land FRESH on a floor's shelf (sp3 — the ladder's first
     # override has no local head to chain; the registry is its existence)
@@ -12501,6 +12543,39 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
             print(f"  🎛 variant turn refused at the door: {name} — {flaw[:80]}")
             return done(f"the style refuses at the gate — {flaw}. "
                         "Nothing changed")
+    if name.startswith("guardrail-"):
+        # 0068 sp1 — the rails' gate: the shape law rule by rule, and the
+        # LATTICE at publication — a capability set that weakens or narrows
+        # the universal refuses with the teaching; nothing lands
+        flaw, parsed = guardrails.gate_check(name, parsed)
+        if flaw:
+            print(f"  🛤 guardrail edit refused at the door: {name} — {flaw[:80]}")
+            return done(f"the rail refuses at the gate — {flaw}. "
+                        "Nothing changed")
+        if name != guardrails.UNIVERSAL_NAME:
+            _uni = {}
+            _urow = heads.get(guardrails.UNIVERSAL_NAME)
+            if _urow and _urow[1]:
+                try:
+                    _ub = call(port, "GET",
+                               "/records/" + urllib.parse.quote(
+                                   _urow[1], safe="") + "/body")
+                    _uni = ((_ub or {}).get("asset") or {}).get(
+                        "profile") or {}
+                except Exception:
+                    _uni = {}
+            _lat = guardrails.monotone_flaws(
+                _uni if _uni.get("rules") is not None
+                else guardrails.GENESIS_UNIVERSAL, parsed)
+            if _lat:
+                print(f"  🛤 lattice refused: {name} — {_lat[0][:80]}")
+                return done("the rail refuses at the gate — "
+                            + " · ".join(_lat)
+                            + ". A child tightens, never loosens. "
+                              "Nothing changed")
+        if not parsed.get("rules"):
+            print(f"  🛤 an EMPTY guardrail set landing at {name} — legal, "
+                  "explicit, and scary (the stamp law arrives with sp5)")
     if name.startswith("dial-"):
         # 0063 sp2 — bounds are law AT THE DOOR: a flawed value never lands
         # (sp1's read-side refusal stands behind as the second lock), and a
@@ -12525,6 +12600,9 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
     if name.startswith("variant-"):
         # the style's declaration rides every config sibling (0065 sp1)
         body["asset"]["variant"] = variants.teachings(name[len("variant-"):])
+    if name.startswith("guardrail-"):
+        # the rails' law rides every sibling (0068 sp1)
+        body["asset"]["guardrail"] = guardrails.teachings(name)
     if r.get("note"):
         body["asset"]["note"] = str(r["note"])[:200]
     rec = node.make_memory({"did": IMP_DID, "scope": scope}, IMP, scope,
@@ -12549,6 +12627,9 @@ def _craft_category(name: str, tags: list) -> str:
     if n.startswith("variant-"):
         return "variants"                     # retrieval styles' numbers —
                                               # the Workshop's own drawer (0065)
+    if n.startswith("guardrail-"):
+        return "guardrails"                   # the content rules — the rails'
+                                              # own drawer (0068)
     if "firmware" in t or "prompt" in t:
         return "prompts"
     if "skill" in n:
