@@ -32,7 +32,11 @@ from __future__ import annotations
 
 VERSION = "act-v1"
 
-DOOR_KINDS = ("record", "room", "floor", "view")
+# 0067 sp3 — the door grammar IS the atlas grammar, absorbed whole (§3.1's
+# own words): a record, a room, a floor, a view — and the atlas's richer
+# doors: a resident's own room, a parlor, an installed world, the Brain
+DOOR_KINDS = ("record", "room", "floor", "view", "resident", "parlor",
+              "world", "brain")
 
 
 def validate(g: dict) -> list[str]:
@@ -147,3 +151,57 @@ def from_manifest_flow(spec: dict, stages: list | None = None,
             "title": spec.get("label", ""),
             **({"groups": spec["groups"]} if spec.get("groups") else {}),
             "nodes": nodes, "edges": edges, "narrative": []}
+
+
+_ATLAS_DOOR = {"res": "resident", "parlor": "parlor", "world": "world",
+               "floor": "floor", "view": "view", "brain": "brain"}
+
+
+def from_atlas(flow: dict) -> dict:
+    """The atlas dialect → act-v1 (0067 sp3): the schematic's nodes were
+    ALWAYS doors and its edges always carried the glow law — this conversion
+    is a renaming, which is the point: the atlas taught the format its door
+    grammar and its kinds law, and now speaks it back. Legacy door keys ride
+    beside the act door so the standing sheet renderer loses nothing (L1)."""
+    nodes = []
+    for n in flow.get("nodes") or []:
+        n = dict(n)
+        legacy = n.get("door") or {}
+        kind, target = "view", "atlas"
+        for k, v in legacy.items():
+            if k in _ATLAS_DOOR:
+                kind, target = _ATLAS_DOOR[k], (v if isinstance(v, str)
+                                                else str(v))
+                break
+        nodes.append({**n, "label": n.get("label", n.get("id", "")),
+                      "kind": n.get("lane", "organs"),
+                      "door": {"kind": kind, "target": target,
+                               **({"opens": legacy} if legacy else {})}})
+    edges = [{**e, "kinds": e.get("kinds") or []}
+             for e in flow.get("edges") or []]
+    return {"format": VERSION, "kind": "act-graph", "layout": "schematic",
+            "title": flow.get("title", ""), "nodes": nodes, "edges": edges,
+            "narrative": []}
+
+
+def from_estate_dag(g: dict) -> dict:
+    """The estate dialect → act-v1 (0067 sp3 — allen's DAG polish paid): a
+    resource's door is the TEMPLATE ASSET RECORD that declared it (the deed
+    the human approved — what you can click is what you signed); a stack
+    node doors the same record; a row whose template ref is unknown doors
+    the estate view, honestly. The category colors, types, and the dag
+    layout survive untouched — the drawer keeps drawing them."""
+    nodes = []
+    for n in g.get("nodes") or []:
+        n = dict(n)
+        ref = n.get("template_ref")
+        nodes.append({**n, "label": n.get("label", n.get("id", "")),
+                      "kind": n.get("category", n.get("kind", "service")),
+                      "door": ({"kind": "record", "target": ref} if ref else
+                               {"kind": "view", "target": "workshop"})})
+    edges = [{**e, "kinds": e.get("kinds") or []}
+             for e in g.get("edges") or []]
+    return {"format": VERSION, "kind": "act-graph", "layout": "dag",
+            "title": g.get("subject", ""), "subject": g.get("subject", ""),
+            "nodes": nodes, "edges": edges,
+            "narrative": list(g.get("narrative") or [])}

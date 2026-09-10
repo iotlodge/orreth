@@ -5689,6 +5689,16 @@ function dkFlow(nodes,edges,states,titles){
       +(tip?`<title>${dkEsc(tip)}</title>`:"")
       +`<text x="${P[0]+NW/2}" y="${P[1]+NH/2+3.5}" text-anchor="middle" font-size="${n.length>16?8:9}" fill="${txt}" style="font-family:var(--mono)">${S==="done"?"✓ ":""}${dkEsc(n.replace(/-/g," "))}</text></g>`});
   return s+`</svg></div>`}
+function dkCvExport(cid){
+  /* 0067 sp3 — the one drawer's export, serpentine lane: the drawn SVG
+     itself is the document (the standalone dag exporter's collapse — one
+     export idiom for every lane) */
+  const el=document.getElementById("cv-"+cid);if(!el)return;
+  const blob=new Blob([new XMLSerializer().serializeToString(el)],
+                      {type:"image/svg+xml"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=cid+".svg";a.click();URL.revokeObjectURL(a.href);
+}
 function dkCvNode(cid,nid){
   /* 0067 sp2 — the one node family that was never a door, doored: a stage
      that has RUN opens its own record in the reader; one that has not yet
@@ -5750,7 +5760,7 @@ function dkPanel(p,pi,item){
        drawer: act-v1 built here (the sim's from_manifest_flow, twinned),
        the serpentine lane drawing it, every run stage a record door */
     const g=actFromFlow(p,src,(typeof DKCAP!=="undefined"&&DKCAP)||"capability",!!walk);
-    return `<div class="dk-chtitle" style="margin-top:.7rem">${dkEsc(p.label||"the flow")}${walk?` · 🚶 walking ${dkEsc(walk.ticker)} — live`:item&&item.date?` · the ${dkEsc(item.ticker||"")} walk of ${dkEsc(item.date)} — click a stage to open its record`:""}</div>`
+    return `<div class="dk-chtitle" style="margin-top:.7rem">${dkEsc(p.label||"the flow")}${walk?` · 🚶 walking ${dkEsc(walk.ticker)} — live`:item&&item.date?` · the ${dkEsc(item.ticker||"")} walk of ${dkEsc(item.date)} — click a stage to open its record`:""}<span class="wtool" style="float:right" onclick="dkCvExport('${cid}')" title="export this picture as SVG">⇩ svg</span></div>`
       +renderAct(cid,g)}
   case "reports":{
     const reps=(typeof DESK!=="undefined"&&DESK&&DESK.reports)||[];
@@ -6908,7 +6918,11 @@ function renderGraph(g,reqId,interactive){
   const chips=g.nodes.map(n=>{const p=pos[n.id];if(!p)return"";
     if(dag){ /* the estate's cards (0037): category band, name, type, meta */
       const cat=n.category||"service";
-      return `<div class="gcard ${cat} ${n.role==="stack"?"stackcard":""}" data-n="${n.id}" style="left:${p[0]}%;top:${p[1]}%" title="${esc(n.type||"")}${n.meta?" — "+esc(n.meta):""}${n.stack?" · "+esc(n.stack):""}">
+      /* 0067 sp3 — allen's DAG polish paid: every card opens the template
+         asset record that DECLARED it (the deed the human approved) */
+      const gdoor=n.door&&n.door.kind==="record"&&n.door.target
+        ?` onclick="readerOpen('record','${esc(n.door.target)}')" `:" ";
+      return `<div class="gcard ${cat} ${n.role==="stack"?"stackcard":""}"${gdoor}data-n="${n.id}" style="left:${p[0]}%;top:${p[1]}%;${gdoor.trim()?"cursor:pointer":""}" title="${esc(n.type||"")}${n.meta?" — "+esc(n.meta):""}${n.stack?" · "+esc(n.stack):""}${gdoor.trim()?" — click to open the deed":""}">
         <span class="gc-cat">${esc(n.role==="stack"?"stack · "+(n.status||""):cat)}</span>
         <span class="gc-id">${esc(n.id)}</span>
         ${n.type&&n.role!=="stack"?`<span class="gc-type">${esc(String(n.type).replace("AWS::",""))}</span>`:""}</div>`;
@@ -7092,7 +7106,16 @@ function atlGlow(sc,on){
   document.querySelectorAll(`.atlnode.infra[data-bsc="${CSS.escape(sc)}"]`)
     .forEach(e=>e.classList.toggle("bodylit",!!on));}
 function atlDoor(d){if(!d)return;
+  /* 0067 sp3 — the atlas speaks act-v1: an act door carries kind/target
+     (its legacy keys riding inside as .opens); either shape opens */
+  if(d.opens)d=d.opens;
+  else if(d.kind&&d.target){
+    const m={resident:{res:d.target},parlor:{parlor:d.target},
+             world:{world:d.target},floor:{floor:d.target},
+             brain:{brain:1},record:{record:d.target}};
+    d=m[d.kind]||d}
   atlToggle();
+  if(d.record){readerOpen('record',d.record);return}
   if(d.res)resOpen(d.res);
   else if(d.parlor)openParlor(d.parlor);
   else if(d.world){capToggle();CAPV=d.world;renderCap()}

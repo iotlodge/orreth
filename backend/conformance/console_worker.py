@@ -6305,6 +6305,8 @@ def wire_estate(port: int) -> dict:
         prof = ((body or {}).get("asset") or {}).get("profile") or {}
         if not prof.get("resources"):
             continue
+        prof["_template_ref"] = h["ref"]   # 0067 sp3 — the deed rides: what
+        # you can click is what you signed
         if prof.get("deployed"):
             deployed_stacks.append(prof)
         else:
@@ -6314,14 +6316,26 @@ def wire_estate(port: int) -> dict:
         for p in deployed_stacks:             # newest template per stack wins
             seen[p.get("stack", p.get("subject", "?"))] = p
         adopted = len(seen)                   # stacks under governance, not receipts
+        _dag = estate.estate_dag(list(seen.values()), "deployed")
+        _by_stack = {p.get("stack", p.get("subject", "?")):
+                     p.get("_template_ref") for p in seen.values()}
+        for _n in _dag["nodes"]:
+            _ref = _by_stack.get(_n.get("stack")) or _by_stack.get(_n["id"])
+            if _ref:
+                _n["template_ref"] = _ref
         plan = {"subject": "the estate", "deployed": True,
                 "yaml": list(seen.values())[-1].get("yaml", ""),
-                "dag": estate.estate_dag(list(seen.values()), "deployed")}
+                "dag": actgraph.from_estate_dag(_dag)}
     elif newest_planned:                      # the newest blueprint stands alone
+        _pd = estate._dag_for(newest_planned.get("subject", "?"),
+                              newest_planned["resources"], "planned")
+        _pref = newest_planned.get("_template_ref")
+        if _pref:
+            for _n in _pd["nodes"]:
+                _n["template_ref"] = _pref
         plan = {"subject": newest_planned.get("subject", "?"),
                 "yaml": newest_planned.get("yaml", ""),
-                "dag": estate._dag_for(newest_planned.get("subject", "?"),
-                                       newest_planned["resources"], "planned")}
+                "dag": actgraph.from_estate_dag(_pd)}
     return {"adopted": adopted, "gate_open": bool(adopted),
             "policy": policy, "workloads": workloads, "answers": answers,
             "plan": plan}
@@ -8422,6 +8436,19 @@ def wire_inbox() -> dict:
     return _memo("one-inbox", 10, sweep)
 
 
+def _atlas_act(doc: dict) -> dict:
+    """0067 sp3 — the atlas speaks the one format back: each flow converted
+    to act-v1 (the legacy door keys riding inside the act door, so the
+    standing sheet renderer loses nothing — L1)."""
+    for key in ("governance", "human"):
+        if isinstance(doc.get(key), dict):
+            act = actgraph.from_atlas(doc[key])
+            doc[key] = {**doc[key], "format": act["format"],
+                        "layout": act["layout"],
+                        "nodes": act["nodes"], "edges": act["edges"]}
+    return doc
+
+
 def wire_atlas(port: int) -> dict:
     """0061 — the machine's schematic, drawn live: the SHAPE is declared
     (live shelf heads first — the schematic is craft; genesis beneath),
@@ -8456,12 +8483,12 @@ def wire_atlas(port: int) -> dict:
                 act[k] = act.get(k, 0) + 1
     except Exception:
         pass
-    return {"governance": head("atlas-governance-flow"),
-            "human": head("atlas-human-flow"),
-            "capabilities": caps, "activity": act,
-            # 0063 sp5 — the 🔩 body lens rides the same door, memo'd so
-            # the schematic never waits on docker
-            "infra": _memo("atlas-infra", 30, _atlas_infra)}
+    return _atlas_act({"governance": head("atlas-governance-flow"),
+                       "human": head("atlas-human-flow"),
+                       "capabilities": caps, "activity": act,
+                       # 0063 sp5 — the 🔩 body lens rides the same door,
+                       # memo'd so the schematic never waits on docker
+                       "infra": _memo("atlas-infra", 30, _atlas_infra)})
 
 
 def _atlas_infra() -> dict:

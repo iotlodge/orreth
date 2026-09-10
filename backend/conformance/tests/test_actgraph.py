@@ -97,3 +97,42 @@ def test_the_capability_flow_converts_and_every_run_stage_is_a_record_door():
     assert g["groups"][0]["label"] == "intake", "the bands survive"
     assert actgraph.from_manifest_flow(spec, stages, capability="trading-desk") \
         == g, "deterministic"
+
+
+def test_the_atlas_converts_and_its_grammar_becomes_the_formats():
+    flow = {"nodes": [{"id": "becky", "label": "becky", "lane": "organs",
+                       "sub": "signs every join", "door": {"res": "becky"}},
+                      {"id": "you", "label": "you", "lane": "human",
+                       "door": {"view": "inbox"}}],
+            "edges": [{"from": "you", "to": "becky", "label": "asks to join",
+                       "kinds": ["join"]}]}
+    g = actgraph.from_atlas(flow)
+    assert g["layout"] == "schematic" and actgraph.validate(g) == []
+    b = next(n for n in g["nodes"] if n["id"] == "becky")
+    assert b["door"]["kind"] == "resident" and b["door"]["target"] == "becky"
+    assert b["door"]["opens"] == {"res": "becky"}, \
+        "the legacy key rides beside — the standing sheet loses nothing (L1)"
+    assert g["edges"][0]["kinds"] == ["join"], "the glow law is the format's"
+    assert actgraph.from_atlas(flow) == g
+
+
+def test_the_estate_converts_and_every_card_opens_its_deed():
+    dag = {"layout": "dag", "subject": "the estate",
+           "nodes": [{"id": "vpc", "category": "network",
+                      "type": "AWS::EC2::VPC", "role": "fingertip",
+                      "template_ref": "sha256:tmpl1"},
+                     {"id": "orphan", "category": "compute",
+                      "type": "AWS::EC2::Instance", "role": "fingertip"}],
+           "edges": [{"from": "vpc", "to": "orphan", "kind": "depends"}],
+           "narrative": [{"text": "two resources", "nodes": ["vpc", "orphan"],
+                          "edges": ["vpc→orphan"]}]}
+    g = actgraph.from_estate_dag(dag)
+    assert g["layout"] == "dag" and actgraph.validate(g) == []
+    vpc = next(n for n in g["nodes"] if n["id"] == "vpc")
+    assert vpc["door"] == {"kind": "record", "target": "sha256:tmpl1"}, \
+        "what you can click is what you signed — the deed"
+    assert vpc["category"] == "network" and vpc["type"] == "AWS::EC2::VPC", \
+        "the colors and types survive — the drawer keeps drawing them"
+    orphan = next(n for n in g["nodes"] if n["id"] == "orphan")
+    assert orphan["door"]["kind"] == "view", \
+        "an unknown template doors the view, honestly — never a fake ref"

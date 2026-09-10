@@ -175,9 +175,30 @@ flow already proves at 10-second cadence.
    tab) is a card today, a navigation when the tab router earns a door grammar; the
    glass twin `actFromFlow` mirrors the sim converter by discipline, not by import —
    a divergence would surface at the suite's converter law first.*
-3. **sp3 — The atlas and the estate migrate.** The glow law generalized (`kinds` on the
-   shared edge); allen's DAG polish paid; the standalone exporter collapses into the one
-   drawer's export.
+3. **sp3 — The atlas and the estate migrate.** ✅ **LANDED 2026-09-09 — four dialects,
+   one language; allen's standing TODO paid.** **The door grammar became the atlas's**,
+   absorbed whole (§3.1's own words): `DOOR_KINDS` grew to record · room · floor ·
+   view · resident · parlor · world · brain. **The atlas converts**
+   (`from_atlas`) — a renaming, which is the point: the schematic taught the format
+   its doors and its glow law and now speaks it back, legacy keys riding inside the
+   act door so the standing sheet renderer loses nothing (L1 both directions);
+   `atlDoor` opens either shape. **The estate converts** (`from_estate_dag`) and
+   **allen's DAG polish is paid**: every card opens the TEMPLATE ASSET RECORD that
+   declared it — what you can click is what you signed — with the template ref
+   threaded through the compose (it was always at hand and always dropped), an
+   unknown ref dooring the view honestly, and the category colors/types surviving for
+   the drawer. **The standalone exporter collapsed**: one export idiom — the dag's
+   `svgOfDag` reads the act payload unchanged, and the serpentine lane gained the
+   same ⇩ svg door (the drawn SVG itself is the document). *Proven live on the rig:
+   the /atlas door serves `format: act-v1 · layout: schematic` with becky's door
+   `{kind: resident, target: becky}` and the first edge's glow list `[join,
+   field-join]` — the sheet rendering unchanged. The estate side is suite-proven
+   (deed doors · honest view-door fallback · categories survive); no estate stands
+   deployed on this rig today, so its live receipt lands with allen's next
+   deployment — named, never faked. Suite 490→492 (the two dialects' laws). Rust
+   green.* *Honest remainders: the atlas sheet renderer remains its own lane (the
+   whole atlas is four lanes + worlds + bodies — one graph is not the sheet); sp4
+   accretes live acts and closes the dive.*
 4. **sp4 — The act accretes.** Live acts (asks, objectives) project their graphs from
    records via `by_coordinate`; 0066's choice nodes and 0065's variant tags appear; the
    E-RAG "answer wears its thinking" contract proven in the glass.
