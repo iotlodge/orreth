@@ -122,10 +122,34 @@ flow already proves at 10-second cadence.
 
 ## 6. The spoonfuls (proposed order)
 
-1. **sp1 — The format and the pen.** The schema (firmware-versioned, beside contracts,
-   v1-earmarked); the unified drawer; the choreography walk migrates first (it is already
-   closest); the aperture door opens. Suite: dialect round-trips + the narrative bijection
-   + every node a door.
+1. **sp1 — The format and the pen.** ✅ **LANDED 2026-09-09 — one language, the first
+   dialect converted, and the deepest answer finally read.** `orreth_sim/actgraph.py`
+   is the format (firmware `act-v1`, v1-earmarked in its own words — the sacred v0
+   untouched, exactly as §2 promised): nodes with `label · kind · status · door ·
+   coordinate · cost · span`, edges keeping the atlas's glow list, and `validate()`
+   holding the four laws — **every node a door or the picture is refused** (0052 made
+   structural), the narrative a bijection (every sentence's nodes exist, every node
+   covered — silent boxes named), edges bind existing nodes. **The choreography
+   converted first**: `from_choreography` maps the walk with NOTHING lost (the
+   narrative verbatim, every detail field surviving), a finished seat's door opening
+   its own outcome record, the human's opening the request, and the objective
+   coordinate riding the graph root. All three worker walk sites emit act-v1. **The
+   pen**: the glass's drawer learned the format — `label` served when present, any
+   doored node opening the REAL record behind it via the standing reader (old payloads
+   untouched, L1 held). **The aperture door opened**: a new `/aperture` worker door
+   fetches the signed envelope BY COORDINATE (objective + seat) across every floor,
+   and the walk's detail grew THE ENVELOPE — what this seat could see, whole: law ·
+   task · behavior · knowledge refs, with the record itself one click deeper. *Proven
+   live on the rig: a filed objective's staged plan came back `format: act-v1`, every
+   node a door, `validate()` flawless ON THE WIRE (then cancelled politely with its
+   why); the aperture door served a REAL July envelope by coordinate — law hash, task
+   with intent and budget, behavior profile, seat; the glass serves the new pen. One
+   walk-find: the :4562 doors ride an allow-list — a new door must join it or 404s
+   (now it has). Suite 484→489 (five format laws). Rust green (the glass rides the
+   plane).* *Honest remainders: the aperture hunt walks floors serially on a click —
+   fine for a human's hand, a cache when it itches; pre-0033 apertures wear no
+   coordinate and the miss says so honestly; the remaining dialects migrate sp2–sp3
+   per L1.*
 2. **sp2 — The capability flow migrates.** `dkCvNode` defined; the desk's sixteen stages on
    the new drawer, pulse intact; the serpentine survives.
 3. **sp3 — The atlas and the estate migrate.** The glow law generalized (`kinds` on the

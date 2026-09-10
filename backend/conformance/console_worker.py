@@ -124,11 +124,12 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from orreth_sim import (askcache, atlas, bell as bell_mod, continuity, crypto,
-                        dials, fingertip, fuel as fuel_mod, improver, market,
-                        markers, meaning, mirror, node, observatory, parlor,
-                        profile, purge, seeds, serials, shipyard, speech,
-                        thumb as thumb_mod, traffic, variants, vera)
+from orreth_sim import (actgraph, askcache, atlas, bell as bell_mod,
+                        continuity, crypto, dials, fingertip,
+                        fuel as fuel_mod, improver, market, markers, meaning,
+                        mirror, node, observatory, parlor, profile, purge,
+                        seeds, serials, shipyard, speech, thumb as thumb_mod,
+                        traffic, variants, vera)
 from orreth_sim.identity import NOW, Becky, Nanda, is_within
 from orreth_sim.joindoor import JoinDesk
 from orreth_sim.node import make_memory
@@ -2355,7 +2356,8 @@ def embed_door() -> None:
             if route not in ("/observatory", "/governance", "/craft",
                              "/sentences", "/desk", "/brain", "/resident",
                              "/pulse", "/spacetime", "/market", "/assign",
-                             "/seeds", "/record", "/atlas", "/inbox"):
+                             "/seeds", "/record", "/atlas", "/inbox",
+                             "/aperture"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2389,6 +2391,17 @@ def embed_door() -> None:
                                            lambda: compose_desk(_dk))).encode()
                 elif route == "/brain":
                     out = json.dumps(compose_brain()).encode()
+                elif route == "/aperture":
+                    # 0067 sp1 — THE APERTURE DOOR OPENS: the deepest answer
+                    # the walk can give — WHAT RODE DOWN, the whole signed
+                    # envelope — fetched by the objective's coordinate and
+                    # the seat that carried it. Walked only on a human's
+                    # click — never a beat.
+                    qs = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query)
+                    g = lambda k: (qs.get(k) or [""])[0]
+                    out = json.dumps(aperture_hunt(
+                        g("objective"), g("seat"))).encode()
                 elif route == "/record":
                     # the cross-floor record door (2026-08-23 — 0052's named
                     # gap paid, JB's word: "why can't we see the work?"):
@@ -5268,8 +5281,11 @@ def on_objective(port: int, scope: str, r: dict) -> None:
     call(port, "POST", "/requests/resolve",
          {"id": r["id"], "status": "staged",
           "result": {"plan_summary": summary, "plan": plan, "plan_record": rec["id"],
-                     # the plan made visible (0031 §6): composed here, rendered blind
-                     "graph": fingertip.choreography(plan),
+                     # the plan made visible (0031 §6): composed here, rendered
+                     # blind — and since 0067 sp1 in the ONE act-graph format
+                     "graph": actgraph.from_choreography(
+                         fingertip.choreography(plan),
+                         objective=rec["id"], request=r["id"]),
                      **({"keep_fresh_offer": offer} if offer else {}),
                      "understanding": ({"state": "asked", "leg": leg,
                                         "asked_at": NOW()} if leg else
@@ -5585,9 +5601,12 @@ def _tend_objective(rid: str, st: dict) -> None:
           "result": {"assembly": assembly, "record": rec["id"],
                      # the same picture, lit by what ran (0031 §6) — one world
                      "plan": st.get("plan"),
-                     "graph": fingertip.choreography(
-                         st.get("plan") or {"objective": st["text"]}, branches,
-                         question_answer=st.get("answer_word"))}})
+                     "graph": actgraph.from_choreography(
+                         fingertip.choreography(
+                             st.get("plan") or {"objective": st["text"]},
+                             branches,
+                             question_answer=st.get("answer_word")),
+                         objective=st["goal"], request=rid)}})
     # a question dies with its parent (JB's find, 2026-08-23: a finished
     # plan left its delivery question begging in the Inbox — answering a
     # moot question is worse than no question): if the human never spoke,
@@ -11564,7 +11583,9 @@ def studio_tend(port: int) -> None:
                      {"id": r["id"], "status": "staged",
                       "result": {**res, "plan": newplan, "plan_record": rec["id"],
                                  "plan_summary": summary,
-                                 "graph": fingertip.choreography(newplan),
+                                 "graph": actgraph.from_choreography(
+                                     fingertip.choreography(newplan),
+                                     objective=rec["id"], request=r["id"]),
                                  "planned_by": {"state": "mind",
                                                 "spec": newplan["spec"],
                                                 "by": draft.get("by", ""),
@@ -14349,6 +14370,59 @@ def on_window_ask(port: int, scope: str, r: dict) -> None:
     _HUMAN_HAND[scope] = time.time()          # a living human framed spacetime
     print(f"  🔭 window-ask · “{asked[:60]}” — {len(citations)} citation(s), "
           f"{'voiced' if voiced else 'grounded'}")
+
+
+def aperture_hunt(objective: str, seat: str) -> dict:
+    """0067 sp1 — the aperture by coordinate: every floor is asked for
+    records tagged with the objective's coordinate AND «aperture»; the
+    seat's own envelope (matched by the scope it rode to) is returned WHOLE
+    — law, task, behavior, knowledge refs — with its record id, so the
+    reader can walk further. An honest miss says which floors were asked."""
+    objective = str(objective or "").strip()
+    seat = str(seat or "").strip()
+    if not objective:
+        return {"miss": "an aperture opens by its objective's coordinate — "
+                        "none was given"}
+    want = set(fingertip.coordinate_tags(objective))
+    asked = []
+    for port, scope in sorted(FLOOR_SCOPES.items()):
+        asked.append(scope)
+        _, seat_did = lib_seat(scope)
+        token = _ROOT.issue_token(seat_did, "u:demo",
+                                  [{"action": "retrieve", "space": "self"}])
+        from datetime import datetime, timedelta, timezone
+        frm = (datetime.now(timezone.utc) - timedelta(
+            days=recall_days())).strftime("%Y-%m-%dT%H:%M:%SZ")
+        try:
+            r = call(port, "POST", "/retrieve", {
+                "query": {"requester": seat_did,
+                          "subject": {"cohort": {"scope": scope}},
+                          "space": "self", "time": {"from": frm},
+                          "intent": "recall", "budget": {"cost": 8},
+                          "auth": "biscuit-sim"},
+                "token": token, "requester_scope": scope})
+        except Exception:
+            continue
+        for h in r.get("hits", []):
+            tags = set(h.get("tags") or [])
+            if "aperture" not in tags or not (want <= tags):
+                continue
+            try:
+                body = call(port, "GET", "/records/"
+                            + urllib.parse.quote(h["ref"], safe="")
+                            + "/body")
+            except Exception:
+                continue
+            ap = (body or {}).get("aperture") or {}
+            if seat and not (str(ap.get("agent", "")).endswith(seat)
+                             or str(ap.get("seat", "")).endswith(seat)
+                             or seat in str(ap.get("agent", ""))):
+                continue
+            return {"ref": h["ref"], "scope": scope, "aperture": ap}
+    return {"miss": f"no aperture wears this objective's coordinate"
+                    + (f" for seat «{seat}»" if seat else "")
+                    + f" on {len(asked)} floor(s) — the envelope may predate "
+                      "the coordinate law (0033) or its floor may be dark"}
 
 
 def record_hunt(ref: str) -> dict:

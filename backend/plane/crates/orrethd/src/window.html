@@ -6864,10 +6864,13 @@ function renderGraph(g,reqId,interactive){
         <span class="gc-id">${esc(n.id)}</span>
         ${n.type&&n.role!=="stack"?`<span class="gc-type">${esc(String(n.type).replace("AWS::",""))}</span>`:""}</div>`;
     }
-    const lbl=n.role==="orchestrator"?"objective":n.role==="review"?"review":n.role==="human"?"you":
-      (n.altitude||n.id).split("/").pop()+(n.status?` · ${n.status}`:"");
+    const lbl=n.label||(n.role==="orchestrator"?"objective":n.role==="review"?"review":n.role==="human"?"you":
+      (n.altitude||n.id).split("/").pop()+(n.status?` · ${n.status}`:""));
     const cls=`gnode ${n.role==="fingertip"?"finger":""} ${n.status||""} ${n.role==="human"?"human":""} ${interactive&&WALKSEL.get(reqId)===n.id?"sel":""}`;
-    const click=interactive&&n.role==="fingertip"?` onclick="walkSel('${reqId}','${n.id}')"`:"";
+    /* 0067 sp1 — every box a door: a fingertip opens its detail as ever; any
+       other act-v1 node opens the REAL record behind it */
+    const click=interactive&&n.role==="fingertip"?` onclick="walkSel('${reqId}','${n.id}')"`
+      :(n.door&&n.door.kind==="record"&&n.door.target?` onclick="readerOpen('record','${esc(n.door.target)}')" style="cursor:pointer"`:"");
     return `<div class="${cls}" data-n="${n.id}" style="left:${p[0]}%;top:${p[1]}%" title="${esc(n.intent||"")}"${click}>${esc(lbl)}${n.severity&&n.severity!=="low"?`<span class="gsev">◆ ${esc(n.severity)}</span>`:""}</div>`}).join("");
   const legend=dag?`<div class="glegend"><span>— depends on</span><span>┄ contains</span>`+
     [["network","#7fb3e8"],["compute","#e8b27f"],["data","#8fd6b0"],["service","#b79ce8"],["operations","#e8c98f"],["identity","#e88f8f"]]
@@ -6885,18 +6888,39 @@ function walkHl(el,on){
   box.querySelectorAll("line").forEach(l=>l.classList.toggle("hl",on&&es.includes(l.dataset.e)));
 }
 function walkSel(reqId,nid){WALKSEL.set(reqId,nid);loadObjectives()}
+const APCACHE=new Map();
+async function fetchAperture(obj,seat){
+  const k=obj+"|"+seat;
+  try{const j=await(await fetch(`${OBSD}/aperture?objective=${encodeURIComponent(obj)}&seat=${encodeURIComponent(seat)}`)).json();
+    APCACHE.set(k,j);loadObjectives();
+  }catch{APCACHE.set(k,{miss:"the aperture door is dark"})}
+}
 function walkDetail(reqId,g){
   const nid=WALKSEL.get(reqId);
   if(!nid)return`<div class="gdetail">click a seat — what rode down, what it cost, who graded it, what came back.</div>`;
   const n=g.nodes.find(x=>x.id===nid);if(!n)return"";
   const mk=n.marker?MARKCACHE.get(n.marker):null;
   if(n.marker&&!MARKCACHE.has(n.marker))fetchMarker(n.marker);
+  /* 0067 sp1 — the deepest answer, finally read: the signed aperture — what
+     this seat COULD see — fetched by the objective's coordinate on a click */
+  let ap="";
+  const obj=g.coordinate&&g.coordinate.objective;
+  if(obj){
+    const seat=(n.altitude||"").split("/").pop(),k=obj+"|"+seat,a=APCACHE.get(k);
+    if(a===undefined){fetchAperture(obj,seat);ap=`
+THE ENVELOPE: opening the signed aperture…`}
+    else if(a.miss){ap=`
+THE ENVELOPE: ${esc(a.miss)}`}
+    else{const e=a.aperture||{};
+      ap=`
+THE ENVELOPE (the signed aperture — ALL this seat could see): law ${esc(String(e.law||"?").slice(0,44))} · task “${esc(JSON.stringify(e.task||{}).slice(0,90))}” · behavior ${esc(JSON.stringify(e.behavior||{}).slice(0,70))} · ${((e.knowledge||[]).length)} knowledge ref(s) — <span class="door" onclick="readerOpen('record','${esc(a.ref)}')">open the record</span>`}
+  }
   return `<div class="gdetail"><b>${esc((n.altitude||"").split("/").pop())}</b> — the walk of the work
 WHAT RODE DOWN: “${esc(n.intent||"?")}”${n.budget?` · a budget slice of ${n.budget} tokens`:""} — and nothing else: never the plan, never the siblings (0027 §3).
 THE CYCLES: ${n.cycles??"?"} cycle(s) on the record — scratch evaporated by law (R7); the RunRecord is the thought that mattered.
 THE GRADE: ${n.severity?esc(n.severity):"ungraded"}${mk?` — “${esc(mk)}”`:""} · authored by the dispatching seat, never the agent (0005).
 THE OUTCOME: ${n.answer?`“${esc(String(n.answer).slice(0,160))}”`:"—"}${n.outcome?`
-records · outcome ${esc(String(n.outcome).slice(0,30))}…${n.marker?` · marker ${esc(String(n.marker).slice(0,30))}…`:""}`:""}</div>`;
+records · <span class="door" onclick="readerOpen('record','${esc(n.outcome)}')">outcome ${esc(String(n.outcome).slice(0,30))}…</span>${n.marker?` · marker ${esc(String(n.marker).slice(0,30))}…`:""}`:""}${ap}</div>`;
 }
 async function fetchMarker(id){
   try{const b=await(await fetch(api("/records/"+encodeURIComponent(id)+"/body"))).json();
