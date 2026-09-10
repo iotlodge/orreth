@@ -46,8 +46,8 @@ flowchart TD
 
 ## What is running, today, on one laptop
 
-🟢 **Sixty-nine dives closed whole (`0000`–`0064` · `0065`–`0067` · `0071`), every landed decision locked** (`docs/decisions/` + each
-dive's own ledger) · the **Python reference proves the whole model — 495 conformance tests** · the
+🟢 **Seventy dives closed whole (`0000`–`0064` · `0065`–`0068` · `0071`), every landed decision locked** (`docs/decisions/` + each
+dive's own ledger) · the **Python reference proves the whole model — 519 conformance tests** · the
 **Rust plane** runs it (six crates, `orrethd` — one binary, tier as a profile, conformance-green
 against fixtures signed in Python and verified in Rust) · **one command** (`scripts/dev.sh start`)
 raises a universe of six ecosystems, twelve fields, and a working population of governed agents,
@@ -424,7 +424,7 @@ being *used*.
 
 ## From substrate to estate — the recent eras, compressed
 
-*(the full record is `docs/design/README.md` — sixty-nine dives, each closed only when proven
+*(the full record is `docs/design/README.md` — seventy dives, each closed only when proven
 live by a human in the glass; the standing proof register is
 [`docs/design/the-honest-boundary.md`](docs/design/the-honest-boundary.md))*
 
@@ -473,6 +473,14 @@ live by a human in the glass; the standing proof register is
   four dialects converted onto one drawer; the aperture (what a seat could see, whole) opened
   after months unread; and an answer now wears its thinking — who chose, why, and what judged
   it, projected from signed records alone and growing as judgments land.
+
+- **The rails and the stamp** (0068, two days): content guardrails as governed law — rules a
+  human edits through one gated door, detectors as firmware that checks every thought's inputs
+  and outputs in the one lane cognition already rides (the kernel still never reads a prompt:
+  it demands proof of WHICH law governed each thought, one SQL join from any answer); every
+  check lands a signed audit carrying categories and counts, never content; and weakening the
+  rails takes a windowed, walk-backable STAMP minted only from a human's click — every answer
+  served under it says so, and one click restores the rails with nothing deleted.
 
 ## Where it started becoming an institution — the earlier keystones
 
@@ -599,7 +607,7 @@ orreth/
 │   ├── orreth-agent-sdk/      ← the FieldClient SDK — persistent identities that re-join as the same self
 │   └── flavors/               ← lifeforce agents (prototype · LangGraph · AgentField sentinel)
 ├── backend/
-│   ├── conformance/           ← the Python reference (495 tests) + console worker + live demos
+│   ├── conformance/           ← the Python reference (519 tests) + console worker + live demos
 │   └── plane/                 ← the Rust plane: 6 crates + orrethd (the daemon, serving its own glass)
 ├── infrastructure/            ← compose + CDK — one laptop, one universe, one command (and the demo site's stack)
 └── scripts/                   ← dev.sh (the rig) · demo.sh (the reel)

@@ -66,7 +66,13 @@ per-identity traffic ceilings, a confessed ask-cache, and the publishable join d
 key never leaves the operator's safe. Its second demand followed in the same week: dive 0065
 turned the kernel's retrieval into the proof's engine — eleven declared styles on one modular
 chassis, standing projections in Postgres, a graded eleven-arm harness, and the style that
-served every answer visible to the human who asked.
+served every answer visible to the human who asked. Two more demands paid in the same wave:
+dive 0067 gave every picture of work one graph language where clicking any box opens the real
+signed record behind it — an answer now wears its thinking; and dive 0068 made content
+guardrails governed law — human-edited rules enforced by firmware detectors in the one lane
+cognition rides (the kernel still never reads a prompt: it demands proof of which law governed
+each thought), signed audits that never leak what they caught, and a windowed, one-click
+walk-backable stamp before any weakening of the rails may govern.
 
 ---
 

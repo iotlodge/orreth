@@ -5,7 +5,11 @@ kernel dive, paying the proof's KCR-0003 (guardrails as layered, governed, hard-
 assets). Grounded in a full survey of the cascade, gateway, safety, and consent machinery
 the same day (Appendix A).*
 
-***Status: 🟡 DRAFTED · LOCKED — all three locks taken by JB's word, 2026-09-07, plainly
+***Status: ✅ CLOSED WHOLE 2026-09-10 — five spoonfuls in TWO DAYS; KCR-0003 PAID. The
+rails have a grammar, a drawer, a lattice, detectors, a lane that bites both directions, an
+audit that never leaks, a stamp minted only from a human's click, and a one-click walk-back
+— the full lifecycle proven live. Fifth out-of-order close: VERSION holds 0.71 (the
+monotone high-water law). All three locks were taken by JB's word, 2026-09-07, plainly
 stated per the language law: L1 proof-required enforcement (the kernel demands the guardrail
 proof on every thought; content checks in the checkpoint lane; independent audits either
 way — hard enforcement without breaking the never-reads-prompts promise) · L2 every reader
