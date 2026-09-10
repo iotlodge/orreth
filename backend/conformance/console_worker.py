@@ -11001,9 +11001,14 @@ def witness_transcribe(port: int, scope: str, r: dict) -> None:
     standing were teaching the human's eye to skip witness cards, which is
     law 6's own definition of noise. The testimony survives in three books
     (the daemon's, the Chronicle's, the bell's) — only the waiting ends."""
-    if r["id"] in _WITNESSED:
+    # keyed by (scope, id) — JB's find 2026-09-10: a whole-rig restart births
+    # IDENTICAL request ids on several floors in the same second (req-N-epoch
+    # is only unique per queue), and an id-only guard let the first floor's
+    # twin swallow the rest — the swarm's witness stood staged forever while
+    # the log swore it was withdrawn
+    if (scope, r["id"]) in _WITNESSED:
         return
-    _WITNESSED.add(r["id"])
+    _WITNESSED.add((scope, r["id"]))
     body = {"witness": {"card": r["id"], "at": r.get("at"),
                         "silent_s": r.get("silent_s"),
                         "threshold_s": r.get("threshold_s"),
@@ -11031,11 +11036,12 @@ def witness_transcribe(port: int, scope: str, r: dict) -> None:
                                   "per rise; the witness withdraws its gate, "
                                   "for a card must wait only while its "
                                   "condition holds"}})
-        print(f"  🔔 witness {r['id']}: silence transcribed to the Chronicle "
-              f"({rec['id'][:22]}…) — pulse returned, gate withdrawn")
+        print(f"  🔔 witness {r['id']} at {scope}: silence transcribed to "
+              f"the Chronicle ({rec['id'][:22]}…) — pulse returned, gate "
+              "withdrawn")
     except Exception as e:
-        _WITNESSED.discard(r["id"])
-        print(f"    (witness transcription failed: {e})")
+        _WITNESSED.discard((scope, r["id"]))
+        print(f"    (witness transcription failed at {scope}: {e})")
 
 
 # ---------------------------------------------------------------- the bell (0044 sp2)

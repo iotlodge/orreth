@@ -1738,6 +1738,14 @@ const $=id=>document.getElementById(id);
    Descents push breadcrumbs; the trail climbs back — no more three URLs. ── */
 let API="";
 const api=p=>API+p;
+/* the VIEWED floor's port — never location.port (JB's find 2026-09-10: in
+   the one-glass era a floor-step re-aims API but location.port stays the
+   serving floor, so every decide that sent location.port resolved against
+   the WRONG queue after a step and the click died in silence) */
+function floorPort(){
+  try{if(API)return +new URL(API).port||4500}catch(e){}
+  return +(location.port||4500);
+}
 let CRUMBS=[];                     /* [{label, base}] — the trail behind this view */
 function floorReset(){
   topoCache=null;presCache=null;farmCache=[];laneSig="";floorScope=null;
@@ -3668,7 +3676,7 @@ function renderInbox(q){
 }
 async function joinDecide(id,ok){
   await fetch(OBSD+"/resolve",{method:"POST",headers:{"content-type":"application/json"},
-    body:JSON.stringify({port:+(location.port||4500),id,status:ok?"approved":"denied"})});
+    body:JSON.stringify({port:floorPort(),id,status:ok?"approved":"denied"})});
   paneRelease(id);loadReq();
 }
 /* ── the gate bell + the audience strip (Console/UI pass, JB 2026-07-31):
@@ -3774,7 +3782,7 @@ function miniGate(r,pfx){
 async function mgAnswer(id,pfx){
   const el=$(pfx+id);const t=(el?el.value:"").trim();if(!t)return;
   await fetch(OBSD+"/resolve",{method:"POST",headers:{"content-type":"application/json"},
-    body:JSON.stringify({port:+(location.port||4500),id,status:"done",result:{answer:t}})});
+    body:JSON.stringify({port:floorPort(),id,status:"done",result:{answer:t}})});
   paneRelease(id);loadReq();
 }
 function gatePop(){GPOP=!GPOP;renderGates()}
@@ -3838,7 +3846,7 @@ async function objDecide(id,ok){
   /* the port rides EVERY resolve (JB's find 2026-09-10: this was the one
      door that dropped it — on any floor but :4500 the click resolved
      against the universe, found nothing, and died in silence) */
-  const body={port:+(location.port||4500),id,status:ok?"approved":"denied"};
+  const body={port:floorPort(),id,status:ok?"approved":"denied"};
   if(ok&&(KF.has(id)||GC.has(id))){
     let q=[];try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{}
     const r=q.find(x=>x.id===id);
@@ -4061,7 +4069,7 @@ async function farmUnallocate(sub){await fetch(api("/requests"),{method:"POST",h
   body:JSON.stringify({kind:"service",action:"unallocate",subject:sub,text:`release the allocation on ${sub}`})});FSIG="";loadFarm()}
 async function farmDecide(id,ok){
   await fetch(OBSD+"/resolve",{method:"POST",headers:{"content-type":"application/json"},
-    body:JSON.stringify({port:+(location.port||4500),id,status:ok?"approved":"denied"})});
+    body:JSON.stringify({port:floorPort(),id,status:ok?"approved":"denied"})});
   paneRelease(id);FSIG="";loadFarm();loadReq();
 }
 async function plantTool(){
@@ -4524,7 +4532,7 @@ async function stableRetire(id){
 }
 async function stableDecide(id,ok){
   await fetch(OBSD+"/resolve",{method:"POST",headers:{"content-type":"application/json"},
-    body:JSON.stringify({port:+(location.port||4500),id,status:ok?"approved":"denied"})});
+    body:JSON.stringify({port:floorPort(),id,status:ok?"approved":"denied"})});
   paneRelease(id);loadStable();loadReq();
 }
 /* ── THE PARLOR (0020): the audience room. Humans never read the world — they ask
@@ -5492,7 +5500,7 @@ async function capDecide(ev,rid,port,statusWord){
   const el=host?host.querySelector(".dk-note"):null;
   try{await fetch(OBSD+"/resolve",{method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({port:+(location.port||4500),id:rid,status:statusWord})})}catch(e){}
+    body:JSON.stringify({port:floorPort(),id:rid,status:statusWord})})}catch(e){}
   paneRelease(rid);
   if(el)el.textContent=statusWord==="approved"?"your word stands — the world answers in a moment":"held back — nothing changes";
   setTimeout(()=>{DESK=null;(CAPV==="home"?loadDesk():renderCap())},2800)}
@@ -6951,7 +6959,7 @@ async function submitObjective(){
 async function objAnswer(qid){
   const el=nearInput("qa-",qid); const t=(el?el.value:"").trim(); if(!t)return;
   await fetch(OBSD+"/resolve",{method:"POST",headers:{"content-type":"application/json"},
-    body:JSON.stringify({port:+(location.port||4500),id:qid,status:"done",result:{answer:t}})});
+    body:JSON.stringify({port:floorPort(),id:qid,status:"done",result:{answer:t}})});
   paneRelease(qid);loadReq();loadObjectives(); /* an answer given from the
     inbox pane must refresh the inbox too, not just the objectives */
 }
