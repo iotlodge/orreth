@@ -76,9 +76,12 @@ def envelope(*, reply: str, by: str, citations: list[dict],
              cost: dict | None = None,
              attributes: dict | None = None,
              honored: list | None = None,
-             confession: str | None = None) -> dict:
-    """The structured answer, with the refs held whole. `guardrails` speaks
-    honestly until 0068's build lands: the field exists, the value confesses."""
+             confession: str | None = None,
+             guardrails: dict | None = None) -> dict:
+    """The structured answer, with the refs held whole. `guardrails` (0068
+    sp4/sp5): the live law this answer served under — the composed set's
+    version, and the stamp when one governs (the L2 confession's API face).
+    A caller that passes nothing gets the honest pre-0068 absence note."""
     for c in citations:
         ref = str(c.get("ref") or "")
         if ref.endswith("…") or (0 < len(ref) < 24):
@@ -90,8 +93,9 @@ def envelope(*, reply: str, by: str, citations: list[dict],
            "variant": variant, "choice_ref": choice_ref,
            "exchange": exchange,
            "cost": cost or {"tokens": 0},
-           "guardrails": {"set_version": None,
-                          "note": "guardrail enforcement arrives with dive 0068's build"}}
+           "guardrails": guardrails or {
+               "set_version": None,
+               "note": "guardrail enforcement arrives with dive 0068's build"}}
     if attributes:
         # 0066 sp2 — the first honored attribute: an asker's latency
         # preference gates the router's escalation ("fast" never waits on a

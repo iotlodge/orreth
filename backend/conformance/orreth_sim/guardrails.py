@@ -168,6 +168,38 @@ def set_version(composed: dict) -> str:
     return "gr-" + crypto.content_hash({"rules": composed.get("rules") or []})[7:23]
 
 
+def scary_flaws(new: dict, previous: dict) -> list[str]:
+    """0068 sp5 — what the STAMP gate reads aloud: an edit to the universal
+    that leaves people less protected than the standing law. Empty is scary
+    by the charter's own words; so is any rule REMOVED, any action WEAKENED,
+    any direction NARROWED against the previous head. Each flaw is the human
+    sentence the stamp card wears — the person clicking must read exactly
+    what protection lapses. An empty list means the edit is not scary and
+    lands like any other."""
+    flaws = []
+    new_rules = {_identity(r): r for r in (new or {}).get("rules") or []}
+    if not new_rules:
+        flaws.append("the set is EMPTY — no content rule of any kind will "
+                     "watch what enters or leaves")
+    for ident, pr in {_identity(r): r
+                      for r in (previous or {}).get("rules") or []}.items():
+        nr = new_rules.get(ident)
+        what = ident[0] if ident[0] != "pattern" else f"pattern {ident[1]}"
+        if nr is None:
+            if new_rules:      # emptiness already said it all
+                flaws.append(f"the {what} rule is REMOVED — its protection "
+                             f"(«{pr['reason']}») lapses entirely")
+            continue
+        if _strength(nr["action"]) < _strength(pr["action"]):
+            flaws.append(f"the {what} rule WEAKENS: «{pr['action']}» becomes "
+                         f"«{nr['action']}»")
+        pd, nd = pr["match"]["direction"], nr["match"]["direction"]
+        if pd != nd and pd == "both":
+            flaws.append(f"the {what} rule NARROWS: it watched both "
+                         f"directions, now only «{nd}»")
+    return flaws
+
+
 def teachings(name: str) -> dict:
     """What rides every guardrail sibling — no set is a bare list with
     amnesia."""

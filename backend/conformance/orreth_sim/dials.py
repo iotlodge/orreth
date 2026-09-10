@@ -222,6 +222,20 @@ DIALS_V1 = {
                    "keeps its firmware year — reading the dials never "
                    "depends on a dial",
     },
+    "stamp-window-days": {
+        "type": "int", "unit": "days a lapsed-guardrail stamp stands",
+        "min": 7, "max": 365, "genesis": 90, "home": "universe",
+        "governs": "how long a human's stamp lets an empty or weakened "
+                   "guardrail set govern before it must be RENEWED by "
+                   "another human word (0068 sp5 — scary is never "
+                   "inherited by silence)",
+        "blast": "too long lets a lapse of protection quietly become the "
+                 "normal; too short nags the human who chose it",
+        "why": "ninety days matches the bell's own consent window — one "
+               "rhythm for every standing permission",
+        "horizon": "read at each stamp's minting; standing stamps keep "
+                   "the window they were born with",
+    },
     # ── the desk's windows and the judgment bars (sp6 wave 5) ────────────
     "improver-success-floor": {
         "type": "int", "unit": "percent success", "min": 0, "max": 100,

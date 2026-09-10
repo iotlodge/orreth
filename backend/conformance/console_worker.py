@@ -2360,7 +2360,7 @@ def embed_door() -> None:
                              "/sentences", "/desk", "/brain", "/resident",
                              "/pulse", "/spacetime", "/market", "/assign",
                              "/seeds", "/record", "/atlas", "/inbox",
-                             "/aperture", "/act"):
+                             "/aperture", "/act", "/stamp"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2394,6 +2394,12 @@ def embed_door() -> None:
                                            lambda: compose_desk(_dk))).encode()
                 elif route == "/brain":
                     out = json.dumps(compose_brain()).encode()
+                elif route == "/stamp":
+                    # 0068 sp5 — the stamp's visibility door: the glass
+                    # banner reads whether a lapsed-guardrail stamp governs
+                    # right now (memo'd with the rails' own breath)
+                    out = json.dumps(
+                        {"stamp": _rails_state(4500).get("stamp")}).encode()
                 elif route == "/act":
                     # 0067 sp4 — THE ANSWER WEARS ITS THINKING: an ask's
                     # whole picture, projected from its signed records on a
@@ -7263,25 +7269,70 @@ def _plant_guardrails(n, me, seat_kp) -> None:
           "(guardrail-universal, genesis)")
 
 
-def _guardrails_live(port: int) -> dict | None:
-    """0068 sp4 — the composed rules the rails ENFORCE, read from the shelf
-    (memo'd a breath, same horizon as the version). None means a world with
-    no rails on the shelf yet — the lanes then ride genesis, never nothing.
-    Capability-layer sets join this compose when a capability declares one
-    (the lattice already guarantees they only tighten) — named remainder."""
+def _rails_state(port: int) -> dict:
+    """0068 sp4+sp5 — the ONE read of what governs right now: the head's
+    composed rules, and — when the head landed under a stamp — the stamp's
+    own standing. A stamp that is revoked or lapsed NEVER quietly keeps
+    governing: enforcement falls back to the first rails (genesis) and says
+    so, because scary is renewed by a human word, never inherited by
+    silence. Returns {composed, stamp} where stamp is None (an ordinary
+    head) or {ref, until, posture, standing, what}."""
     def _read():
         try:
             row = _craft_heads(port).get(guardrails.UNIVERSAL_NAME)
-            if row and row[1]:
-                b = call(port, "GET", "/records/"
-                         + urllib.parse.quote(row[1], safe="") + "/body")
-                prof = ((b or {}).get("asset") or {}).get("profile") or {}
-                if prof.get("rules") is not None:
-                    return guardrails.compose(prof)
+            if not (row and row[1]):
+                return {"composed": None, "stamp": None}
+            b = call(port, "GET", "/records/"
+                     + urllib.parse.quote(row[1], safe="") + "/body")
+            asset = (b or {}).get("asset") or {}
+            prof = asset.get("profile") or {}
+            if prof.get("rules") is None:
+                return {"composed": None, "stamp": None}
+            sref = asset.get("stamped")
+            if not sref:
+                return {"composed": guardrails.compose(prof), "stamp": None}
+            # the stamp's worldline: the minted grant, and any revoked
+            # sibling after it — last posture wins (the bell's idiom)
+            posture, until, what = "granted", "", ""
+            for ref, sb, df, _tags in wire_assets(port, "guardrail-stamp"):
+                c = (sb or {}).get("consent") or {}
+                if ref == sref or sref in (df or []):
+                    posture = c.get("posture") or posture
+                    until = (c.get("window") or {}).get("until") or until
+                    what = c.get("purpose") or what
+            standing = posture == "granted" and until >= NOW()
+            stamp = {"ref": sref, "until": until, "posture": posture,
+                     "standing": standing, "what": what}
+            if standing:
+                return {"composed": guardrails.compose(prof), "stamp": stamp}
+            print(f"  🛤 the stamp is {'revoked' if posture != 'granted' else 'lapsed'}"
+                  f" — the FIRST RAILS govern again until a human word "
+                  f"restores or renews ({sref[:18]}…)")
+            return {"composed": guardrails.compose(
+                        guardrails.GENESIS_UNIVERSAL), "stamp": stamp}
         except Exception:
-            pass
-        return None
-    return _memo(f"guardrails-live-{port}", 30, _read)
+            return {"composed": None, "stamp": None}
+    return _memo(f"rails-state-{port}", 30, _read)
+
+
+def _guardrails_live(port: int) -> dict | None:
+    """0068 sp4 — the composed rules the rails ENFORCE (via _rails_state:
+    the stamp's standing already applied). None means a world with no rails
+    on the shelf yet — the lanes then ride genesis, never nothing.
+    Capability-layer sets join this compose when a capability declares one
+    (the lattice already guarantees they only tighten) — named remainder."""
+    return _rails_state(port).get("composed")
+
+
+def _stamp_confession(port: int) -> str:
+    """0068 sp5 L2 — the sentence a reader must see on work served while a
+    stamp governs; empty when no stamp stands."""
+    s = _rails_state(port).get("stamp")
+    if s and s.get("standing"):
+        return (f"\n\n⚠ served under your lapsed-guardrail stamp (until "
+                f"{str(s.get('until'))[:10]}) — not all the usual content "
+                "rails are standing; walk it back any time in the glass")
+    return ""
 
 
 def _guardrails_version(port: int) -> str:
@@ -7625,6 +7676,14 @@ def on_ask(port: int, scope: str, r: dict) -> None:
         call(port, "POST", "/records", rec)
     except Exception:
         pass
+    # 0068 sp5 L2 — the API face of the confession: the envelope names the
+    # live law, and the stamp when one governs; the human-read reply wears
+    # the sentence too. Scary never silent, wherever the reader is.
+    _stamp = (_rails_state(port).get("stamp") or {})
+    _gr = {"set_version": _guardrails_version(port)}
+    if _stamp.get("standing"):
+        _gr["stamp"] = {"ref": _stamp["ref"], "until": _stamp["until"]}
+        reply = reply + _stamp_confession(port)
     env = askdoor.envelope(
         reply=reply, by=s["by"], citations=s["citations"],
         variant=s["variant"], choice_ref=s["choice_ref"],
@@ -7633,7 +7692,8 @@ def on_ask(port: int, scope: str, r: dict) -> None:
               "context_chars": s.get("cost_chars", 0)},
         attributes=attrs,
         honored=(["latency"] if attrs and attrs.get("latency") else []),
-        confession=confession)
+        confession=confession,
+        guardrails=_gr)
     if ttl > 0 and confession is None:
         # grace-served answers never replay — a cached confession would be
         # someone else's; only clean, signed-lane answers earn a shelf life
@@ -9593,7 +9653,9 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
                     print(f"  🛤 a voice reply refused at the rail (leaving) "
                           f"— audit {str(aid)[:18]}…")
                     return _rout["refusal"]
-                out = _rout["text"]
+                # 0068 sp5 L2 — scary never silent: work served while a
+                # stamp governs says so in the very sentence the reader gets
+                out = _rout["text"] + _stamp_confession(port)
                 if _arm:
                     _voice_armwork(port, name, question, out,
                                    grant["model"], _arm)
@@ -11112,12 +11174,25 @@ def on_bell_consent(port: int, scope: str, r: dict, *, approved: bool,
     purpose): staged with its terms readable; opened only on the human's
     word; declined stays on the record. The first ring answers the grant."""
     if declined:
+        # JB's find (2026-09-10): a decline that leaves nothing on the
+        # worldline is a hole, not a state — the beat saw «no word» and
+        # asked again forever. The decline now mints its own windowed
+        # record (the 0068 §3.4 grammar: declining is itself durable), so
+        # the bell honors the no exactly as long as it would a yes.
+        me = {"did": BELL_DID, "scope": scope}
+        rec = bell_mod.make_ring_consent(
+            me, BELL, scope, endpoint=_BELL_ENDPOINT,
+            kinds=["witness", "gate-age", "tamper"],
+            approved_ref=str(r.get("id") or ""), posture="declined")
+        call(port, "POST", "/records", rec)
         call(port, "POST", "/requests/resolve",
              {"id": r["id"], "status": "done",
-              "result": {"declined": True,
-                         "reply": "declined — the bell stays silent, and the "
-                                  "record keeps that you chose"}})
-        print("  🔕 bell consent declined — the last mile stays closed")
+              "result": {"declined": True, "consent": rec["id"],
+                         "reply": "declined — the bell stays silent for 90 "
+                                  "days on your word, and the record keeps "
+                                  "that you chose; it may ask again only "
+                                  "when this window lapses"}})
+        print(f"  🔕 bell consent DECLINED durably — {rec['id'][:18]}…")
         return
     if approved:
         me = {"did": BELL_DID, "scope": scope}
@@ -11145,6 +11220,113 @@ def on_bell_consent(port: int, scope: str, r: dict, *, approved: bool,
                                   f"{dial_value('bell-cooldown')//60}min "
                                   f"per subject · content-minimal · every "
                                   f"send on the record"}})
+
+
+def on_guardrail_stamp(port: int, scope: str, r: dict) -> None:
+    """0068 sp5 — THE STAMP at the gate: minted ONLY from the human's click
+    (the consent grammar verbatim — the record cites the card), windowed by
+    the stamp-window-days dial, and the held edit then lands through the
+    ONE craft door wearing its stamp. Staged wearing exactly what
+    protection lapses; declining is durable in the settled record."""
+    if r.get("status") == "pending":
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"held": ("scary never lands on an ordinary word — "
+                                  "this stamp is windowed, visible, worn by "
+                                  "every answer served under it, and "
+                                  "walk-backable in one click (0068 sp5)"),
+                         "terms": (f"window {dial_value('stamp-window-days')}"
+                                   " days · the confession rides every "
+                                   "served answer · the walk-back needs no "
+                                   "gate")}})
+        return
+    if r.get("status") == "approved":
+        days = dial_value("stamp-window-days")
+        frm = datetime.now(timezone.utc)
+        me = {"did": _BECKY.did, "scope": UNIVERSE_SCOPE}
+        rec = make_memory(me, _BECKY.kp, UNIVERSE_SCOPE, {"consent": {
+            "purpose": ("an empty or weakened guardrail set may govern "
+                        "(0068 sp5): " + str(r.get("text") or "")[:300]),
+            "window": {"from": frm.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                       "until": (frm + timedelta(days=int(days)))
+                       .strftime("%Y-%m-%dT%H:%M:%SZ")},
+            "posture": "granted", "approved": str(r.get("id") or ""),
+            "restores_to": str(r.get("restores_to") or "")}},
+            kind="semantic", tags=["consent", "guardrail-stamp"])
+        call(port, "POST", "/records", rec)
+        # the held edit lands through the ONE door, wearing its stamp
+        call(port, "POST", "/requests", {
+            "kind": "craft-edit", "name": str(r.get("name") or ""),
+            "text": str(r.get("pending") or ""), "stamped": rec["id"],
+            "note": f"landed under stamp {rec['id'][:18]}… (card {r['id']})",
+            "text_summary": "the stamped landing"})
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"stamp": rec["id"],
+                         "reply": (f"stamped on your word — the edit lands "
+                                   f"now and may govern for {days} days "
+                                   f"(until "
+                                   f"{(frm + timedelta(days=int(days))).strftime('%Y-%m-%d')}). "
+                                   "Every answer served under it will say "
+                                   "so, and one click walks it back")}})
+        print(f"  🪧 STAMP minted {rec['id'][:18]}… — the scary edit lands "
+              f"under it, {days} days, walk-backable")
+        return
+
+
+def on_stamp_walkback(port: int, scope: str, r: dict) -> None:
+    """0068 sp5 — the one-click walk-back, UNGATED: stopping is always
+    safe. A revoked sibling lands on the stamp's worldline, and the rails
+    restore through the one craft door — the pre-stamp head when the card
+    named one, the first rails otherwise. Everything on the record,
+    nothing deleted."""
+    st = _rails_state(port).get("stamp") or {}
+    sref = str(r.get("stamp") or st.get("ref") or "")
+    if not sref:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"reply": "no stamp stands — nothing to walk back"}})
+        return
+    me = {"did": _BECKY.did, "scope": UNIVERSE_SCOPE}
+    rev = make_memory(me, _BECKY.kp, UNIVERSE_SCOPE, {"consent": {
+        "purpose": "the stamp is walked back — the human's stop (rule 11)",
+        "posture": "revoked", "approved": str(r.get("id") or "")}},
+        kind="semantic", tags=["consent", "guardrail-stamp"])
+    rev["derived_from"] = [sref]
+    call(port, "POST", "/records", rev)
+    # restore the rails through the one door: the pre-stamp head's profile
+    # when the stamp knew one, genesis otherwise — a restore only TIGHTENS
+    # against a scary head, so it lands on an ordinary word
+    restore = guardrails.GENESIS_UNIVERSAL
+    restores_to = ""
+    try:
+        b = call(port, "GET", "/records/"
+                 + urllib.parse.quote(sref, safe="") + "/body")
+        restores_to = ((b or {}).get("consent") or {}).get("restores_to") or ""
+        if restores_to:
+            hb = call(port, "GET", "/records/"
+                      + urllib.parse.quote(restores_to, safe="") + "/body")
+            hp = ((hb or {}).get("asset") or {}).get("profile")
+            if hp and hp.get("rules"):
+                restore = hp
+    except Exception:
+        pass
+    call(port, "POST", "/requests", {
+        "kind": "craft-edit", "name": guardrails.UNIVERSAL_NAME,
+        "text": json.dumps(restore),
+        "note": f"the walk-back of stamp {sref[:18]}… — restored "
+                + ("from the pre-stamp head" if restores_to
+                   else "to the first rails"),
+        "text_summary": "the walk-back restore"})
+    _MEMO.pop(f"rails-state-{port}", None)
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "done",
+          "result": {"revoked": rev["id"],
+                     "reply": ("walked back on your word — the stamp is "
+                               "revoked on its own worldline and the rails "
+                               "are restoring now; nothing was deleted, "
+                               "the whole story stays readable")}})
+    print(f"  🪧 stamp WALKED BACK ({sref[:18]}…) — the rails restore")
 
 
 def on_commission(port: int, scope: str, r: dict) -> None:
@@ -11466,20 +11648,61 @@ def on_plant_body(port: int, scope: str, r: dict) -> None:
          container=cont, tools=len(tools))
 
 
+_BELL_BLIND = 0
+BELL_BLIND_LOOKS = 3
+
+
 def bell_beat(port: int) -> None:
-    """The bell tends its own door (0044 sp2): with no standing grant and no
-    open card, it ASKS — a human's word opens the last mile, never code."""
-    if _bell_consent_head(port) is not None:
+    """The bell tends its own door (0044 sp2): with no standing word and no
+    open card, it ASKS — a human's word opens the last mile, never code.
+    Hardened 2026-09-10 (JB approved the same ask THREE TIMES in one day and
+    it kept returning): (1) a failed read of the shelf is BLINDNESS, not an
+    observed absence — the bell asks only after three patient looks (the
+    0042 verify-blind law); (2) ANY standing word within its window —
+    granted, declined, or revoked — is an answer, and the bell holds its
+    tongue for the window's whole length; (3) an open ask whose question
+    the shelf already answers is a GHOST — the beat closes it itself, so a
+    moment of blindness never leaves a stale card at the human's gate; and
+    (4) when a lapsed word makes the ask return, the card SAYS SO."""
+    global _BELL_BLIND
+    head = _bell_consent_head(port)
+    try:
+        q = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
         return
-    q = call(port, "GET", "/requests").get("requests", [])
-    if any(x.get("kind") == "consent" and x.get("bell")
-           and x.get("status") in ("pending", "staged") for x in q):
+    open_cards = [x for x in q if x.get("kind") == "consent" and x.get("bell")
+                  and x.get("status") in ("pending", "staged")]
+    now = NOW()
+    until = str(((head or {}).get("window") or {}).get("until") or "")
+    if head is not None and until >= now:     # a standing word, any posture
+        _BELL_BLIND = 0
+        for x in open_cards:                  # the ghost-closer
+            call(port, "POST", "/requests/resolve",
+                 {"id": x["id"], "status": "done",
+                  "result": {"reply": (
+                      f"already answered — your «{head.get('posture')}» "
+                      f"stands until {until[:10]}; this card was asked into "
+                      "a moment when the shelf could not be read, and the "
+                      "bell has withdrawn it itself")}})
+            print(f"  🔔 ghost ask withdrawn ({x['id']}) — the "
+                  f"«{head.get('posture')}» word already stands")
         return
+    if open_cards:                            # one ask at a time, always
+        _BELL_BLIND = 0
+        return
+    _BELL_BLIND += 1
+    if _BELL_BLIND < BELL_BLIND_LOOKS:        # patience before asking
+        return
+    _BELL_BLIND = 0
+    story = (f" Your earlier «{head.get('posture')}» lapsed {until[:10]} — "
+             "asking fresh, as every standing word must be renewed."
+             if head is not None else "")
     call(port, "POST", "/requests", {
         "kind": "consent", "bell": True,
         "text": f"the bell asks: may it reach {_BELL_ENDPOINT} beyond the "
                 f"glass? witness · gate-age · tamper rings only — revocable, "
-                f"content-minimal, every send on the record (0044 §2)"})
+                f"content-minimal, every send on the record (0044 §2)."
+                + story})
     print("  🔔 the bell asks at the gate — the last mile waits for a word")
 
 
@@ -11645,6 +11868,22 @@ def _did_names() -> dict[str, str]:
     return names
 
 
+def _joined_names(port: int) -> dict[str, str]:
+    """Joined field agents by did (JB's find 2026-09-10: a dry
+    scout-from-outside wore a bare key on its fuel card — a card about a
+    named self must say the name). The join ledger is the truth: every
+    admitted agent asked through the gate wearing both."""
+    names = {}
+    try:
+        for q in call(port, "GET", "/requests").get("requests", []):
+            if (q.get("kind") in ("join", "field-join") and q.get("did")
+                    and q.get("name")):
+                names[str(q["did"])] = str(q["name"])
+    except Exception:
+        pass
+    return names
+
+
 def fuel_beat(port: int, scope: str) -> None:
     """A subject that outran its window's allowance goes uniform-silent at the
     gateway — vera wore that silence for DAYS while 'the ground is missing'
@@ -11659,7 +11898,7 @@ def fuel_beat(port: int, scope: str) -> None:
     if not isinstance(rows, list):
         return
     cards = fuel_mod.drain_cards(
-        rows, names=_did_names(),
+        rows, names={**_joined_names(port), **_did_names()},
         now=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         est_floor=dial_value("fuel-est-floor"))
     if not cards:
@@ -12771,9 +13010,44 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
                             + " · ".join(_lat)
                             + ". A child tightens, never loosens. "
                               "Nothing changed")
-        if not parsed.get("rules"):
-            print(f"  🛤 an EMPTY guardrail set landing at {name} — legal, "
-                  "explicit, and scary (the stamp law arrives with sp5)")
+        if name == guardrails.UNIVERSAL_NAME and not r.get("stamped"):
+            # 0068 sp5 — THE STAMP LAW: an edit that leaves people less
+            # protected (empty · removed · weakened · narrowed) does not
+            # land on an ordinary word. It HOLDS, and a stamp card stages
+            # wearing exactly what protection lapses — only that card's
+            # approval mints the windowed stamp and lands the edit. A
+            # stamped landing rides back through THIS same door wearing
+            # r["stamped"], so there is still only one law of change.
+            _prev = guardrails.GENESIS_UNIVERSAL
+            _hrow = heads.get(guardrails.UNIVERSAL_NAME)
+            if _hrow and _hrow[1]:
+                try:
+                    _hb = call(port, "GET", "/records/" + urllib.parse.quote(
+                        _hrow[1], safe="") + "/body")
+                    _hp = ((_hb or {}).get("asset") or {}).get("profile")
+                    if _hp and _hp.get("rules") is not None:
+                        _prev = _hp
+                except Exception:
+                    pass
+            _scary = guardrails.scary_flaws(parsed, _prev)
+            if _scary:
+                call(port, "POST", "/requests", {
+                    "kind": "guardrail-stamp", "name": name,
+                    "pending": json.dumps(parsed),
+                    "restores_to": (_hrow[1] if _hrow and _hrow[1] else ""),
+                    "carried": rid,
+                    "text": ("a lapsed-guardrail stamp is asked — this edit "
+                             "leaves people less protected: "
+                             + "; ".join(_scary)[:500])})
+                print(f"  🛤 scary guardrail edit HELD for the stamp: "
+                      f"{'; '.join(_scary)[:90]}")
+                return done("held for the stamp — this edit weakens the "
+                            "standing rails ("
+                            + "; ".join(_scary)[:300]
+                            + "). A stamp card now waits in your inbox: "
+                              "approving it mints a windowed, walk-backable "
+                              "stamp and lands this edit; declining keeps "
+                              "the standing rails. Nothing changed yet")
     if name.startswith("dial-"):
         # 0063 sp2 — bounds are law AT THE DOOR: a flawed value never lands
         # (sp1's read-side refusal stands behind as the second lock), and a
@@ -12801,6 +13075,10 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
     if name.startswith("guardrail-"):
         # the rails' law rides every sibling (0068 sp1)
         body["asset"]["guardrail"] = guardrails.teachings(name)
+        if r.get("stamped"):
+            # 0068 sp5 — a scary set wears its stamp: the head itself names
+            # the human's windowed word that let it govern
+            body["asset"]["stamped"] = str(r["stamped"])
     if r.get("note"):
         body["asset"]["note"] = str(r["note"])[:200]
     rec = node.make_memory({"did": IMP_DID, "scope": scope}, IMP, scope,
@@ -12812,7 +13090,7 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
     if name.startswith("guardrail-"):
         # 0068 sp2 — a turned rail re-addresses the law NOW: the memo
         # forgets, the plane's context recomposes with the fresh pin
-        _MEMO.pop(f"guardrails-version-{port}", None)
+        _MEMO.pop(f"rails-state-{port}", None)   # enforcement re-reads NOW
         _push_guardrail_pin(port)
         _MEMO.pop(f"context-pin-{port}", None)   # the fresh law, next thought
     print(f"  ✎ craft-edit {rid}: “{name}” — the human's sibling stands "
@@ -15439,6 +15717,45 @@ def main() -> None:
                                                     "denied"):
                             handled.add(key)
                             on_fuel_request(port, scope, r)
+                        elif r.get("kind") == "guardrail-stamp" and \
+                                r.get("status") in ("pending", "approved"):
+                            handled.add(key)
+                            on_guardrail_stamp(port, scope, r)
+                        elif r.get("kind") == "stamp-walkback" and \
+                                r.get("status") == "pending":
+                            # rule 11's spirit: stopping is ALWAYS safe —
+                            # the walk-back needs no gate, only a record
+                            handled.add(key)
+                            on_stamp_walkback(port, scope, r)
+                        elif r.get("kind") == "guardrail-review" and \
+                                r.get("status") == "pending":
+                            # vigil's card must STAGE to reach the human's
+                            # waiting band — pending is invisible there
+                            # (found 2026-09-10, an hour after sp4 shipped it)
+                            handled.add(key)
+                            call(port, "POST", "/requests/resolve",
+                                 {"id": r["id"], "status": "staged",
+                                  "result": {"held": (
+                                      "a guardrail quarantined content and "
+                                      "the served answer was masked — "
+                                      "nothing is waiting to run; this card "
+                                      "is your look at what was held")}})
+                        elif r.get("kind") == "guardrail-review" and \
+                                r.get("status") == "approved":
+                            # 0068 sp4's card settles on the word (JB's find
+                            # 2026-09-10: a kind with no resolver floats in
+                            # «in flight» forever) — nothing runs either way;
+                            # the served answer was already masked. A denied
+                            # card is already settled by the queue's own law
+                            # («a settled word is never rewritten») and needs
+                            # no hand here.
+                            handled.add(key)
+                            call(port, "POST", "/requests/resolve",
+                                 {"id": r["id"], "status": "done",
+                                  "result": {"reply": (
+                                      "reviewed — you judged the held "
+                                      "content fine; the record keeps the "
+                                      "audit and your word")}})
                         elif r.get("kind") == "ask" and r.get("status") == "pending":
                             on_ask(port, scope, r)
                         elif r.get("kind") == "parlor" and r.get("status") == "pending":

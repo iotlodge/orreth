@@ -3425,7 +3425,7 @@ function reqRow(r,inPane,extraHtml){
   const thumb=(r.kind==="uat-report"&&r.status==="done")?thumbHtml(r.id):"";
   /* ONE decision layout everywhere (JB's find: inside some cards, outside
      others): the words above, the buttons beneath, all inside the card */
-  const decide=w?`<div class="td-in" style="margin:.35rem 0 0"><textarea id="gw-${r.id}" rows="2" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></textarea></div>
+  const decide=w?`${gateWhy(r)}<div class="td-in" style="margin:.35rem 0 0"><textarea id="gw-${r.id}" rows="2" placeholder="${esc(say("gate-word-placeholder",{},"add words to your decision (optional)"))}"></textarea></div>
     <div style="margin-top:.35rem"><button class="sbtn ok" onclick="gateGo('${r.id}',true,'${r.kind}')">${w[0]}</button>
     <button class="sbtn no" onclick="gateGo('${r.id}',false,'${r.kind}')">${w[1]}</button></div>`:"";
   return `<div class="req${inPane?"":" clickable"}"${inPane?"":` onclick="paneReq('${r.id}',event)" title="open in the reading pane"`}><span class="kind">${r.kind||"request"}</span>${bookChip(r.kind)}
@@ -3452,11 +3452,33 @@ async function objCancel(id){
 let REQKIND="all"; const REQOPEN=new Set();
 function reqKind(k){REQKIND=k;loadReq()}
 function reqOpen(k){REQOPEN.has(k)?REQOPEN.delete(k):REQOPEN.add(k);loadReq()}
+let STAMPST=null;
+async function loadStamp(){    /* 0068 sp5 — the stamp's visibility pulse */
+  try{STAMPST=(await(await fetch(OBSD+"/stamp")).json()).stamp||null}
+  catch{STAMPST=null}}
+async function stampWalkback(){
+  /* the one-click walk-back, UNGATED (rule 11: stopping is always safe) —
+     lands at the universe, where the rails live; everything on the record */
+  await fetch(`${location.protocol}//${location.hostname}:4500/requests`,
+    {method:"POST",headers:{"content-type":"application/json"},
+     body:JSON.stringify({kind:"stamp-walkback",
+       text:"walk the lapsed-guardrail stamp back — the human's one click"})});
+  STAMPST=null;loadReq();
+}
+const stampBanner=()=>(STAMPST&&STAMPST.standing)
+  ?`<div class="inbrow" style="border:1px solid var(--red,#c33);background:rgba(200,50,50,.07)">
+     <span class="kind" style="color:var(--red,#c33)">⚠ stamp</span>
+     <span class="t">a lapsed-guardrail stamp governs — not all the usual content
+     rails are standing (until ${esc(String(STAMPST.until||"").slice(0,10))});
+     every answer served under it says so</span>
+     <div style="margin-top:.3rem"><button class="sbtn no" onclick="stampWalkback()">walk it back now — one click, nothing lost</button></div></div>`:"";
 async function loadReq(){
   /* 0051 sp3: a human adding words to a decision outranks the refresh —
      the gw- voice lines join the qa-/td- law */
   const bz=document.activeElement;
   if(bz&&bz.id&&bz.id.startsWith("gw-"))return;
+  loadStamp();                        /* fire-and-forget — the banner rides
+                                         the next breath's render */
   try{
     const q=(await(await fetch(api("/requests"))).json()).requests||[];
     /* the survivors' door (0035 §6): the walk leaves a settled `legacy`
@@ -3631,11 +3653,11 @@ function renderInbox(q){
     ?`<div class="dim" style="margin:.6rem 0 .25rem;font-size:.7rem;letter-spacing:.08em">⚙ THE MACHINE'S OWN HOUSEKEEPING — ${mach.length} waiting · <a href="#" onclick="INBMACH=!INBMACH;renderInbox(REQCACHE||[]);return false" style="color:var(--brass)">${INBMACH?"fold":"open"}</a></div>`
       +(INBMACH?mach.map(row).join(""):"")
     :"";
-  el.innerHTML=(chron.length||mach.length)
+  el.innerHTML=stampBanner()+((chron.length||mach.length)
     ?(chron.map(row).join("")
       +(chron.length?"":`<div class="quiet" style="padding:.4rem 0">nothing waits on your purposes — the drawer below holds the machine's own</div>`)
       +drawer)
-    :`<div class="quiet">nothing waits on you — a calm universe.</div>`;
+    :`<div class="quiet">nothing waits on you — a calm universe.</div>`);
   glossifyEl(el);  /* the dictionary reaches the one inbox's own rows — an
     all-away list held no dotted word at all (quinn v3's dead door); the gw
     click stops its bubble, so a taught word never also steps the floor */
@@ -3675,6 +3697,7 @@ function bookChip(kind){return bookOf(kind)==="machine"
 const GATE_WORDS={join:["admit","turn away"],ecosystem:["launch","scrap"],
   objective:["fan the plan","decline"],improvement:["adopt","decline"],
   subscription:["open the subscription","decline"],
+  "guardrail-stamp":["stamp it — the weaker set may govern","decline — the standing rails hold"],
   consent:["open the access","decline"],testament:["let it stand","decline"],
   attestation:["start the cooling-off","decline"],
   "estate-adopt":["open allen's eyes","not yet"],
@@ -3688,6 +3711,40 @@ const GATE_WORDS={join:["admit","turn away"],ecosystem:["launch","scrap"],
   experiment:r=>[r.phase==="promotion"?"adopt the winner":"open the split","decline"]};
 function gateWords(r){const w=GATE_WORDS[r.kind];
   return w?(typeof w==="function"?w(r):w):null}
+/* ── every card says WHAT IT IS and WHAT EACH BUTTON DOES (JB 2026-09-10:
+   "I don't want to have to call on you each time to understand") — one
+   plain sentence per kind, rendered on the card itself; a kind the map
+   doesn't know gets the honest generic. ── */
+const GATE_WHY={
+  consent:r=>r.bell
+    ?"the bell wants permission to email you when something serious happens (tampering, a death, a gate waiting too long) — approve opens that for 90 days, revocable any time; decline keeps every alert inside this glass"
+    :"a standing permission is being asked of you — approve opens exactly what the card names, for the window it names; decline keeps it shut, and the record keeps that you chose",
+  fuel:"an agent ran out of thinking-fuel and has gone silent — approve refills its allowance right now; decline lets it rest (a windowed lease refills itself when its window turns; a lump lease stays quiet until you refill it)",
+  objective:"work you asked for, understood and planned — «fan the plan» sends the legs to the floors to actually run; decline stops it here and the record keeps the plan unrun",
+  join:"an outside agent asks to live and work here under its own permanent identity — admit mints its lease under this floor's rules; turn away keeps the door shut, on the record",
+  "field-join":"a whole outside world asks to connect beneath yours — letting it join opens a governed lane; not yet keeps things as they are",
+  witness:"the machine caught something it cannot explain away — acknowledge marks it seen (the evidence stays); leave it standing keeps the alarm raised",
+  "guardrail-review":"a guardrail held content back for your eyes — the answer already served was masked, nothing is waiting to run; approve marks it reviewed-and-fine, decline marks it reviewed-and-worth-a-tightening (either way it settles to the record)",
+  drift:"a running machine no longer matches its signed description — revert restores the signed version; leave it accepts the lag for now",
+  service:"a tool or service wants a change at the farm — approve enacts exactly what the card names; decline leaves everything as it stands",
+  mind:"a model decision at the stable (saddle, retire, swap, assign) — approve enacts it; decline leaves the stalls as they are",
+  release:"a firmware change wants to become the new named version — cutting the release adopts it machine-wide; decline keeps the standing version",
+  "craft-edit":"an edit to a living asset (words, rules, dials) — approve lands it as a new version with lineage, the old one kept behind it; decline changes nothing",
+  commission:"the machine built itself a new skill and is showing you — welcome acknowledges it (it already works); leave it standing keeps the card up as a reminder",
+  experiment:"a controlled A/B split wants to open (or its winner wants adopting) — approve runs/adopts it on the record; decline keeps the standing way",
+  dial:"an operating number wants turning (within its pre-set limits) — turn it applies the new value; leave it keeps the current one",
+  assay:"an independent judge scored a piece of finished work — acknowledge files it; nothing runs either way",
+  publish:"something wants to go OUT beyond this machine (or come back) — this is the outward-facing consequence gate; your word is the only thing that moves it",
+  subscription:"a standing paid feed wants to open — approve starts the recurring spend on the record; decline keeps your money where it is",
+  question:"the machine needs a fact only you hold — answer in the box; silence past the deadline counts as a no",
+  improvement:"the machine proposes a better version of one of its own standards, with evidence — adopt makes it the standing way; decline keeps the current one",
+  "guardrail-stamp":"you asked to weaken or empty the content guardrails, and that never lands on an ordinary word — stamping mints a windowed, visible permission (every answer served under it will say so, and one click walks it back); declining keeps the standing rails and changes nothing",
+  "estate-adopt":"allen found real infrastructure he could watch — approve opens read-only eyes on it; not yet keeps him blind to it",
+  ecosystem:"a whole new world wants launching beneath this one — launch builds it; scrap discards the plan"};
+function gateWhy(r){const w=GATE_WHY[r.kind];
+  const s=w?(typeof w==="function"?w(r):w)
+   :"waiting on your word — approve moves it forward exactly as the card describes; decline stops it here, and the record keeps that you chose";
+  return `<div class="sub" style="color:var(--near);border:1px dashed var(--line,#333);border-radius:6px;padding:.3rem .45rem;margin:.3rem 0 0">💡 ${esc(s)}</div>`}
 /* …and ONE door per kind: the objective's word carries the keep-fresh
    coupling (0032 §4) through objDecide — the bell must never route it
    through the plain resolve and silently drop the human's checked line */
@@ -3710,6 +3767,7 @@ function miniGate(r,pfx){
   const held=((r.result||{}).held)||((r.result||{}).package_text)||"";
   return `<div class="mgate"><span class="mk">${esc(r.kind||"gate")}</span><span class="mt">${esc(t)}</span>
     ${held?`<div class="quiet2">${esc(String(held).slice(0,150))}</div>`:""}
+    ${gateWhy(r)}
     <div class="acts"><button class="sbtn ok" onclick="gateGo('${r.id}',true,'${r.kind}')">${lb[0]}</button>
     <button class="sbtn no" onclick="gateGo('${r.id}',false,'${r.kind}')">${lb[1]}</button></div></div>`;
 }
@@ -3777,7 +3835,10 @@ async function objDecide(id,ok){
   if(word)fetch(api("/requests"),{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({kind:"gate-word",of:id,decision:ok?"approved":"denied",
       text:word,text_summary:ok?"words beside an approval":"words beside a decline"})});
-  const body={id,status:ok?"approved":"denied"};
+  /* the port rides EVERY resolve (JB's find 2026-09-10: this was the one
+     door that dropped it — on any floor but :4500 the click resolved
+     against the universe, found nothing, and died in silence) */
+  const body={port:+(location.port||4500),id,status:ok?"approved":"denied"};
   if(ok&&(KF.has(id)||GC.has(id))){
     let q=[];try{q=(await(await fetch(api("/requests"))).json()).requests||[]}catch{}
     const r=q.find(x=>x.id===id);

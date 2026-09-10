@@ -277,9 +277,60 @@ because the tier-profile schema is sacred).
    without the head-ref lineage (self-heals within the minute); published SDK
    0.3.0 carries no rails — 0.4.0 staged (version bumped) for the close's
    republish.*
-5. **sp5 — The stamp.** The consent-grammar stamp end to end: gate card → minted stamp →
-   ledger + Observatory visibility → the confession on served work → the one-click
-   walk-back, proven by a human in the glass.
+5. **sp5 — The stamp.** ✅ **LANDED 2026-09-10 — scary never lands on an ordinary
+   word, never governs in silence, and stops in one click.** **The scary grammar**
+   (`guardrails.scary_flaws`): an edit to the universal that leaves people less
+   protected — EMPTY, a rule REMOVED, an action WEAKENED, a direction NARROWED —
+   read aloud flaw by flaw in human sentences; a strengthening or addition is never
+   scary and lands like any other. **The hold at the gate**: a scary edit does NOT
+   land — it HOLDS, and a stamp card stages wearing exactly what protection lapses;
+   only that card's approval mints the stamp (the consent grammar verbatim — minted
+   from the human's click, the record cites the card, windowed by the new
+   stamp-window-days dial, genesis 90 — one rhythm with the bell's own window) and
+   the held edit then lands through the ONE craft door wearing its stamp ref in the
+   asset body. **The confession, everywhere the reader is (L2)**: while a stamp
+   governs, the voiced reply carries the sentence («⚠ served under your
+   lapsed-guardrail stamp (until …) — not all the usual content rails are
+   standing»), the ask envelope's guardrails field names the live set_version AND
+   the stamp {ref, until} — and the pre-0068 «enforcement arrives with 0068's
+   build» line is retired from the envelope at last — and the glass wears a red
+   banner in the inbox with the walk-back button on it. **The walk-back, ungated**:
+   one click (rule 11 — stopping is always safe) lands a revoked sibling on the
+   stamp's own worldline and restores the rails through the one craft door — the
+   pre-stamp head when the stamp knew one, the first rails otherwise; nothing
+   deleted, the whole story readable. **Never inherited by silence**: a revoked or
+   lapsed stamp stops governing AT THE READ — enforcement falls back to the first
+   rails and says so — so the scary set cannot outlive the human's window even if
+   nothing else moves. *Proven live on the rig, the full lifecycle: an EMPTY
+   universal HELD («held for the stamp — the set is EMPTY…»), the stamp card
+   staged wearing the flaw, approved through the glass's exact door → stamp minted
+   (until 2026-12-09) and the empty set landed under it; the SSN ask that masked
+   in the morning passed UNMASKED with the confession riding the very reply; one
+   click walked it back → the revoked sibling on the worldline (pg shows grant →
+   revoked, derived_from whole), /stamp reads null, and the SAME ask masks again
+   with no stale confession. The envelope's guardrails field live:
+   {"set_version": "gr-4a7de4a1…"}. Suites 517→519 · SDK 36 · the rebuilt glass
+   serves the banner, the button, and the port fix.* **The walk's found wounds,
+   paid in the same motion (JB's inbox walk, 2026-09-10)**: the objective card's
+   buttons were DEAD off the universe floor — the one resolve door in the glass
+   that dropped the port (fixed; every decide now names its floor); the bell asked
+   the SAME consent three times in one day beside JB's standing yes — a moment of
+   shelf-blindness read as «no grant» (fixed three ways: three patient looks
+   before asking — the 0042 verify-blind law; ANY standing word, yes or no, holds
+   for its whole window — the decline now mints a durable record instead of a
+   hole; and a ghost ask whose question the shelf already answers WITHDRAWS
+   ITSELF, proven live on req-1909); a dry agent's fuel card wore a bare key —
+   cards now name the agent from the join ledger; sp4's guardrail-review had no
+   lifecycle — it now stages into the waiting band and settles on the word; and
+   EVERY gate card gained a 💡 line saying in plain words what it is and what
+   each button does (the GATE_WHY map — a card that needs a specialist to read
+   is a defect).* *Honest remainders: my walk drove the glass's exact door
+   bodies — JB's own hand on a fresh stamp in the glass is the standing
+   invitation (the banner and card are live); a mid-life lapse falls back at the
+   read (tighter than the plane's pinned claim until the next re-address —
+   the safe direction, named); the stamp reads the universe head — per-floor
+   stamped heads federate when a floor demands one; a lapse stages no renewal
+   card yet (the loud print and the genesis fallback stand) — a seed.*
 
 ## 7. The honest boundary rows this dive moves
 

@@ -162,3 +162,34 @@ def test_outcome_is_the_strongest_thing_that_happened():
     z = [{"category": "pattern", "action": "annotate", "direction": "entering",
           "count": 0, "reason": "unresolved"}]
     assert rails.outcome_of(z) == "clean"
+
+
+# ---- 0068 sp5: the stamp's reading of "scary" --------------------------------------
+def test_scary_reads_empty_removed_weakened_narrowed():
+    prev = guardrails.GENESIS_UNIVERSAL
+    assert any("EMPTY" in f for f in guardrails.scary_flaws({"rules": []}, prev))
+    # removed: pci gone
+    only_pii = {"rules": [prev["rules"][0]]}
+    fl = guardrails.scary_flaws(only_pii, prev)
+    assert any("REMOVED" in f and "pci" in f for f in fl)
+    # weakened: refuse -> mask
+    weak = {"rules": [prev["rules"][0],
+                      dict(prev["rules"][1], action="mask")]}
+    assert any("WEAKENS" in f for f in guardrails.scary_flaws(weak, prev))
+    # narrowed: both -> leaving
+    narrow = {"rules": [prev["rules"][0],
+                        dict(prev["rules"][1],
+                             match=dict(prev["rules"][1]["match"],
+                                        direction="leaving"))]}
+    assert any("NARROWS" in f for f in guardrails.scary_flaws(narrow, prev))
+
+
+def test_a_strengthening_or_addition_is_never_scary():
+    prev = guardrails.GENESIS_UNIVERSAL
+    stronger = {"rules": [dict(prev["rules"][0], action="quarantine"),
+                          prev["rules"][1],
+                          {"match": {"category": "pattern",
+                                     "pattern_ref": "codewords",
+                                     "direction": "both"},
+                           "action": "mask", "reason": "codewords stay in"}]}
+    assert guardrails.scary_flaws(stronger, prev) == []
