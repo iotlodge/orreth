@@ -10124,6 +10124,10 @@ def wiki_beat(port: int, scope: str) -> None:
 
 
 _EXLINE_LAST: dict = {}
+_EXLINE_FAILED: set = set()        # (scope, park_id) — a park the line could
+                                   # not pay THIS life: named once, not every
+                                   # sweep (a restart retries once — the file
+                                   # may have healed; eternity may not nag)
 
 
 def extraction_line_beat(port: int, scope: str) -> None:
@@ -10161,6 +10165,8 @@ def extraction_line_beat(port: int, scope: str) -> None:
     for park_id, aid in parks:
         if paid >= 2:
             break
+        if (scope, park_id) in _EXLINE_FAILED:
+            continue                          # named once already, this life
         try:
             ab = call(port, "GET", "/records/"
                       + urllib.parse.quote(aid, safe="") + "/body") or {}
@@ -10188,7 +10194,9 @@ def extraction_line_beat(port: int, scope: str) -> None:
         try:
             got = extract.extract(name, data)
         except extract.ExtractionFailed as e:
-            print(f"  📖 the line cannot pay {name} yet — {str(e)[:70]}")
+            _EXLINE_FAILED.add((scope, park_id))
+            print(f"  📖 the line cannot pay {name} — {str(e)[:70]} "
+                  "(the park stands; retried once per worker life)")
             continue
         if got is None:
             continue

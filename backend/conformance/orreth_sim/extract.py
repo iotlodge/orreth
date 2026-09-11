@@ -29,6 +29,12 @@ from html.parser import HTMLParser
 
 VERSION = "extract-v1"
 
+# pypdf narrates broken files through its own logger («EOF marker not
+# found») — raw library noise beside our named ExtractionFailed, which
+# already carries the fact in plain words. One voice, ours.
+import logging as _logging  # noqa: E402
+_logging.getLogger("pypdf").setLevel(_logging.CRITICAL)
+
 # what this line reads deterministically — the eyes-needed formats are
 # everything else the admission bars allow (png/jpg today; audio/video when
 # their bars open)
