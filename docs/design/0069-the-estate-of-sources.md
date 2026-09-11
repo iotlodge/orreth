@@ -228,9 +228,39 @@ single-file upload honestly retired in favor of the Basket + pointer path.
    listing pages at 500 (paging honest, deep paging when demanded); the S3 walk rode
    the rig's ambient env keys — a per-store credential name (env:NAME) joins when two
    stores need two identities.*
-3. **sp3 — The extraction line.** Deterministic extractors paying the parked intents
-   (PDF/Office/HTML/spreadsheets); redaction-at-ingest; lineage on every extraction.
-   Minded extraction (OCR/ASR) staged behind the Stable's eyes, refusing honestly.
+3. **sp3 — The extraction line.** ✅ **LANDED 2026-09-10 — the parked-intent pattern
+   stopped being an apology and became the assembly line.** **The readers**
+   (`orreth_sim/extract.py`, firmware-versioned `extract-v1`): PDF (pypdf, declared),
+   Word/Excel/PowerPoint read with the standard library alone (they are zips of XML —
+   the text is in the XML), HTML stripped clean (script/style dropped). A failed parse
+   raises with its flaw NAMED — the park stays and says why; an eyes-needing format
+   (images, audio, video) refuses honestly naming its missing eye (vision ·
+   speech-to-text · frame description — the Stable's future saddles). **0068's
+   redaction-at-ingest, wired**: the composed content rails run on the extracted text
+   BEFORE it ever becomes a knowledge record — a refusing rule means NO knowledge is
+   minted (a redaction-refusal record lands, carrying events never content; the
+   artifact itself stands), a masking rule means the mind never holds the raw span;
+   the sp4 audit lands either way in the «extraction» lane. **Lineage on everything**:
+   the knowledge cites its pointer; a paid park's knowledge cites artifact AND park.
+   **The retry list, retried at last**: a beat sweeps each floor's lot for parks the
+   line can now read and PAYS them — tagged librarian-handled so the librarian's own
+   lot forgets a paid park by her standing law; two a beat, storms refused. The drop
+   zone joined the line too (admit_upload extracts PDF and kin, rails at the door).
+   *Proven live on the rig: a real Word file imported and EXTRACTED
+   (docx-extract-v1, paragraphs counted); a billing doc with a card number REFUSED
+   AT THE INGEST RAIL in the same job — no knowledge minted, the refusal record
+   holding zero card digits, the audit on the log; and THE MORNING'S DARK PARKS
+   swept — the fake site-plan.pdf honestly unpayable («Stream has ended
+   unexpectedly», the park stands), and the 1.1 MB AWS PDF imported from S3 this
+   morning PAID WHOLE: 100,391 characters extracted, the knowledge deriving from
+   artifact AND park, the chain reading knowledge → pointer → origin
+   {store: jb-documents, key: choosing-the-right-aws-service…pdf} on the signed
+   log.* Suite 537→545 (eight extraction laws); pypdf declared. *Honest
+   remainders: OCR/ASR/frame eyes await their Stable saddles (the parks name
+   them); knowledge bodies cap at 2000 chars by the standing claims law — the
+   full text serves retrieval through the chunk law's projections (0065), whose
+   ingest-side join is sp4-of-this-dive's wiki territory; scanned PDFs without a
+   text layer refuse toward the eye, honestly.*
 4. **sp4 — The wiki.** Taxonomy + claims + the queue, on the signed log; the Hierarchical
    variant's tree index fed; the librarian's through-wiki answers; the purge cascade
    proven (kill an origin, watch its claims retract and its pages flag).

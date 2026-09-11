@@ -137,7 +137,8 @@ def held_hashes(node) -> set[str]:
 def import_entry(node, author: dict, kp, *, root: str | Path,
                  store_root: str | Path, entry: dict,
                  max_bytes: int | None = None,
-                 already: set[str] | None = None) -> dict:
+                 already: set[str] | None = None,
+                 rails: dict | None = None) -> dict:
     """One LOCAL entry's whole admission on the pointer path: bytes read
     under the root's law, then the shared tail (import_bytes). A store
     entry's bytes arrive through the governed connector instead — same
@@ -149,18 +150,25 @@ def import_entry(node, author: dict, kp, *, root: str | Path,
                  if entry.get("zip_member") else {})}
     return import_bytes(node, author, kp, data=data, name=name,
                         origin=origin, store_root=store_root,
-                        max_bytes=max_bytes, already=already)
+                        max_bytes=max_bytes, already=already, rails=rails)
 
 
 def import_bytes(node, author: dict, kp, *, data: bytes, name: str,
                  origin: dict, store_root: str | Path,
                  max_bytes: int | None = None,
-                 already: set[str] | None = None) -> dict:
+                 already: set[str] | None = None,
+                 rails: dict | None = None) -> dict:
     """The pointer path's shared tail: the bar (a dial) → the object store →
-    the SIGNED pointer carrying its origin — and the free textual floor
-    extracts, derived from the pointer (the fuller matrix is sp3's). Every
-    receipt cites its origin; an already-held hash skips honestly."""
-    from . import canon
+    the SIGNED pointer carrying its origin — then THE EXTRACTION LINE
+    (0069 sp3): plain text free as always, PDF/Office/HTML deterministically,
+    an eye-needing format parked honestly naming its eye, a failed parse
+    parked naming its flaw. `rails` is 0068's redaction-at-ingest: the
+    composed content rules run on the extracted text BEFORE it becomes a
+    knowledge record — a refusing rule means no knowledge is minted (the
+    refusal named on the record), a masking rule means the mind never holds
+    the raw span. Every receipt cites its origin and carries the rails'
+    events for the caller's audit."""
+    from . import canon, extract
     bar = max_bytes if max_bytes is not None else MAX_IMPORT_BYTES
     if not data or len(data) > bar:
         raise Refusal("request cannot be served under this capability")
@@ -175,28 +183,131 @@ def import_bytes(node, author: dict, kp, *, data: bytes, name: str,
         already.add(h)
     receipt = {"status": "held", "pointer": pid, "content_hash": h,
                "origin": origin}
+    text, ex_meta = None, {}
     if _ext(name) in _TEXTUAL:
         text = data.decode("utf-8", errors="replace")
-        ext = make_memory(author, kp, node.scope,
+    else:
+        try:
+            got = extract.extract(name, data)
+            if got is not None:
+                text = got["text"]
+                ex_meta = {"extractor": got["extractor"], **got["meta"]}
+        except extract.ExtractionFailed as e:
+            return _park(node, author, kp, pid, name, receipt,
+                         missing=f"a readable shape — {e}")
+    if text is None:
+        return _park(node, author, kp, pid, name, receipt,
+                     missing=extract.eye_needed(name)
+                     or "a saddled eye on the Stable (0019)")
+    events = []
+    if rails is not None:
+        from . import rails as _rails
+        rr = _rails.enforce(rails, "entering", text)
+        events = rr["events"]
+        receipt["redaction"] = events
+        if rr["refused"]:
+            ref = make_memory(author, kp, node.scope,
+                              {"redaction_refusal": {
+                                  "artifact": pid, "name": name,
+                                  "why": rr["refusal"],
+                                  "events": events}},
+                              kind="episodic",
+                              tags=["redaction-refused", name])
+            ref["derived_from"] = [pid]
+            receipt.update(status="refused-at-ingest",
+                           refusal=node.write(ref))
+            return receipt
+        text = rr["text"]
+    ext = make_memory(author, kp, node.scope,
+                      {"knowledge": text[:2000],
+                       "source": {"did": author["did"], "ref": name},
+                       "state": "untrusted",
+                       "intent": f"basket import: {name}",
+                       **({"extraction": ex_meta} if ex_meta else {})},
+                      kind="semantic", tags=["knowledge", "document"],
+                      provenance_class="ingested-archive")
+    ext["derived_from"] = [pid]
+    receipt.update(status="extracted", extraction=node.write(ext))
+    return receipt
+
+
+def _park(node, author, kp, pid: str, name: str, receipt: dict, *,
+          missing: str) -> dict:
+    """The honest park, its missing thing NAMED — the retry list the day
+    the eye saddles or the shape heals."""
+    parked = make_memory(author, kp, node.scope,
+                         {"parked_intent": f"extract the artifact {name}",
+                          "missing": missing,
+                          "handoff": "knowledge-acquisition",
+                          "artifact": pid},
+                         kind="semantic", tags=["parked", "knowledge-intent"])
+    parked["derived_from"] = [pid]
+    receipt.update(status="dark", parked=node.write(parked))
+    return receipt
+
+
+def pay_parked(node, author: dict, kp, *, read_bytes, rails: dict | None = None,
+               limit: int = 2) -> list[dict]:
+    """0069 sp3 — THE PARKED LIST IS THE RETRY LIST, finally paid: sweep the
+    lot for parks whose artifact the line can now read; extract, run the
+    ingest rails, and land the knowledge tagged `librarian-handled` and
+    derived from BOTH the artifact and the park — the lot forgets a paid
+    park by the librarian's own law. `read_bytes(artifact_ref) -> bytes|None`
+    is the caller's hand into its store. A failed parse or a dark eye leaves
+    the park standing, honestly."""
+    from . import extract
+    from .librarian import parked_intents
+    paid = []
+    for park_id, body in parked_intents(node)[:max(1, limit) * 4]:
+        aid = str((body.get("parked_intent") and body.get("artifact")) or "")
+        if not aid:
+            continue
+        art = node.records.get(aid)
+        if art is None:
+            continue
+        name = ""
+        try:
+            ab = _json.loads(crypto._b64d(art["body"]).decode())
+            name = str((ab.get("artifact_pointer") or {}).get("name")
+                       or (ab.get("artifact") or {}).get("filename") or "")
+        except Exception:
+            continue
+        if not extract.can_extract(name):
+            continue
+        data = read_bytes(aid)
+        if not data:
+            continue
+        try:
+            got = extract.extract(name, data)
+        except extract.ExtractionFailed:
+            continue                          # the park stands, its why known
+        if got is None:
+            continue
+        text, events = got["text"], []
+        if rails is not None:
+            from . import rails as _rails
+            rr = _rails.enforce(rails, "entering", text)
+            events = rr["events"]
+            if rr["refused"]:
+                continue                      # refused at ingest — the park
+                                              # stands under the rails' word
+            text = rr["text"]
+        rec = make_memory(author, kp, node.scope,
                           {"knowledge": text[:2000],
                            "source": {"did": author["did"], "ref": name},
                            "state": "untrusted",
-                           "intent": f"basket import: {name}"},
-                          kind="semantic", tags=["knowledge", "document"],
+                           "intent": f"the parked intent paid: {name}",
+                           "extraction": {"extractor": got["extractor"],
+                                          **got["meta"]}},
+                          kind="semantic",
+                          tags=["knowledge", "document", "librarian-handled"],
                           provenance_class="ingested-archive")
-        ext["derived_from"] = [pid]
-        receipt.update(status="extracted", extraction=node.write(ext))
-    else:
-        parked = make_memory(author, kp, node.scope,
-                             {"parked_intent": f"extract the artifact {name}",
-                              "missing": "the extraction line (0069 sp3) or "
-                                         "a saddled eye (0019)",
-                              "handoff": "knowledge-acquisition",
-                              "artifact": pid},
-                             kind="semantic", tags=["parked", "knowledge-intent"])
-        parked["derived_from"] = [pid]
-        receipt.update(status="dark", parked=node.write(parked))
-    return receipt
+        rec["derived_from"] = [aid, park_id]
+        paid.append({"park": park_id, "artifact": aid, "name": name,
+                     "knowledge": node.write(rec), "redaction": events})
+        if len(paid) >= limit:
+            break
+    return paid
 
 
 def make_job(author: dict, kp, scope: str, entries: list[dict]) -> dict:

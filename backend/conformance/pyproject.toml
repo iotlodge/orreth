@@ -9,6 +9,7 @@ dependencies = [
     "cryptography>=42.0",
     "fastembed>=0.8.0",
     "boto3>=1.34",
+    "pypdf>=4.0",
 ]
 
 [project.optional-dependencies]

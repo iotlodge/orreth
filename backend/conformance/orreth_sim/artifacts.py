@@ -45,9 +45,13 @@ def extract_text(filename: str, data: bytes) -> str | None:
 
 
 def admit_upload(node, agent: dict, kp, filename: str, mime: str,
-                 data: bytes, max_bytes: int | None = None) -> dict:
+                 data: bytes, max_bytes: int | None = None,
+                 rails: dict | None = None) -> dict:
     """The whole admission, on the record: artifact always; extraction when the
-    floor can read it; a parked eye when it cannot. Returns the receipt."""
+    floor can read it — since 0069 sp3 that includes the deterministic line
+    (PDF and kin), with 0068's ingest rails run on the text first when the
+    caller passes the composed set; a parked eye when it cannot read.
+    Returns the receipt."""
     check_policy(filename, data, max_bytes=max_bytes)
     artifact = make_memory(agent, kp, node.scope,
                            {"artifact": {"filename": filename, "mime": mime,
@@ -57,6 +61,30 @@ def admit_upload(node, agent: dict, kp, filename: str, mime: str,
                            provenance_class="ingested-archive")
     aid = node.write(artifact)
     text = extract_text(filename, data)
+    if text is None:
+        try:
+            from . import extract as _ex
+            got = _ex.extract(filename, data)
+            if got is not None:
+                text = got["text"]
+        except Exception:
+            text = None                       # the park below says so
+    if text is not None and rails is not None:
+        from . import rails as _rails
+        rr = _rails.enforce(rails, "entering", text)
+        if rr["refused"]:
+            refrec = make_memory(agent, kp, node.scope,
+                                 {"redaction_refusal": {
+                                     "artifact": aid, "name": filename,
+                                     "why": rr["refusal"],
+                                     "events": rr["events"]}},
+                                 kind="episodic",
+                                 tags=["redaction-refused", filename])
+            refrec["derived_from"] = [aid]
+            return {"artifact": aid, "refusal": node.write(refrec),
+                    "status": "refused-at-ingest",
+                    "redaction": rr["events"]}
+        text = rr["text"]
     if text is not None:
         extraction = make_memory(agent, kp, node.scope,
                                  {"knowledge": text[:2000],

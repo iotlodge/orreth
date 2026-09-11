@@ -9670,6 +9670,9 @@ def basket_beat(port: int, scope: str) -> None:
     me = {"did": seat_did, "scope": scope}
     node = _WireNode(port, scope)
     bar = dial_value("import-max-mb") * 1024 * 1024
+    # 0069 sp3 — the ingest rails ride every import (0068's redaction law)
+    _rails_set = _guardrails_live(port) or guardrails.compose(
+        guardrails.GENESIS_UNIVERSAL)
     for j in open_jobs:
         pending = [e for e in j["entries"]
                    if _origin_key(e) not in s["origins"]
@@ -9694,12 +9697,18 @@ def basket_beat(port: int, scope: str) -> None:
                         name=Path(str(e["key"])).name,
                         origin={"store": e["store"], "key": e["key"]},
                         store_root=_OBJECT_STORE, max_bytes=bar,
-                        already=s["hashes"])
+                        already=s["hashes"], rails=_rails_set)
                 else:
                     r = basket.import_entry(node, me, seat_kp,
                                             root=_BASKET_ROOT,
                                             store_root=_OBJECT_STORE, entry=e,
-                                            max_bytes=bar, already=s["hashes"])
+                                            max_bytes=bar, already=s["hashes"],
+                                            rails=_rails_set)
+                if r.get("redaction"):
+                    # the ingest rails spoke — the audit lands either way,
+                    # counts and reasons only (the sp4 law, at the door)
+                    _rails_audit(port, "extraction", seat_did,
+                                 r["redaction"], [])
                 s["origins"].add(_origin_key(e))
                 moved += 1
                 print(f"  🧺 imported "
@@ -9727,6 +9736,101 @@ def basket_beat(port: int, scope: str) -> None:
                   f"{done_n} landed"
                   + (f", {len(failed)} named honestly" if failed else ""))
         _MEMO.pop(f"basket-sweep-{port}", None)
+
+
+_EXLINE_LAST: dict = {}
+
+
+def extraction_line_beat(port: int, scope: str) -> None:
+    """0069 sp3 — THE PARKED LIST IS THE RETRY LIST, retried at last: every
+    few minutes each floor's lot is swept for parks whose artifact the
+    deterministic line can now read (a PDF parked dark before the line
+    existed, an Office file from before its reader). The payment lands as
+    knowledge tagged librarian-handled, derived from BOTH the artifact and
+    the park — the lot forgets it by the librarian's own law. Two a beat;
+    eyes-needing parks stand honestly until the Stable saddles."""
+    from orreth_sim import extract, rails as rails_mod
+    now = time.time()
+    if now - _EXLINE_LAST.get(port, 0) < 300:
+        return
+    _EXLINE_LAST[port] = now
+    handled = set()
+    for row in wire_assets(port, "librarian-handled", bodies=False):
+        handled.update(row[2] or [])          # the bodies=False rows carry
+                                              # occurred_at as a fifth field
+    parks = []
+    for ref, b, df, _t in wire_assets(port, "parked"):
+        if ref in handled:
+            continue
+        pi = (b or {}).get("parked_intent")
+        aid = (b or {}).get("artifact")
+        if pi and aid:
+            parks.append((ref, str(aid)))
+    if not parks:
+        return
+    seat_kp, seat_did = lib_seat(scope)
+    node = _WireNode(port, scope)
+    rails_set = _guardrails_live(port) or guardrails.compose(
+        guardrails.GENESIS_UNIVERSAL)
+    paid = 0
+    for park_id, aid in parks:
+        if paid >= 2:
+            break
+        try:
+            ab = call(port, "GET", "/records/"
+                      + urllib.parse.quote(aid, safe="") + "/body") or {}
+        except Exception:
+            continue
+        ap = ab.get("artifact_pointer") or {}
+        art = ab.get("artifact") or {}
+        name = str(ap.get("name") or art.get("filename") or "")
+        if not extract.can_extract(name):
+            continue                          # an eye's park stands honestly
+        data = b""
+        if ap.get("content_hash"):
+            h = ap["content_hash"]
+            p = _OBJECT_STORE / h[7:9] / h[7:]
+            if p.exists():
+                data = p.read_bytes()
+        elif art.get("bytes_b64"):
+            import base64 as _b64
+            try:
+                data = _b64.b64decode(art["bytes_b64"])
+            except Exception:
+                data = b""
+        if not data:
+            continue
+        try:
+            got = extract.extract(name, data)
+        except extract.ExtractionFailed as e:
+            print(f"  📖 the line cannot pay {name} yet — {str(e)[:70]}")
+            continue
+        if got is None:
+            continue
+        text = got["text"]
+        rr = rails_mod.enforce(rails_set, "entering", text)
+        if rr["events"]:
+            _rails_audit(port, "extraction", seat_did, rr["events"], [])
+        if rr["refused"]:
+            print(f"  📖 {name} refused at the ingest rail — the park "
+                  "stands under the rails' word")
+            continue
+        rec = make_memory({"did": seat_did, "scope": scope}, seat_kp, scope,
+                          {"knowledge": rr["text"][:2000],
+                           "source": {"did": seat_did, "ref": name},
+                           "state": "untrusted",
+                           "intent": f"the parked intent paid: {name}",
+                           "extraction": {"extractor": got["extractor"],
+                                          **got["meta"]}},
+                          kind="semantic",
+                          tags=["knowledge", "document", "librarian-handled"],
+                          provenance_class="ingested-archive")
+        rec["derived_from"] = [aid, park_id]
+        node.write(rec)
+        paid += 1
+        print(f"  📖 THE PARK PAID: {name} extracted "
+              f"({got['extractor']}, {got['meta'].get('chars')} chars) — "
+              f"knowledge {rec['id'][:18]}… cites artifact AND park")
 
 
 def parlor_facts(port: int, scope: str) -> dict:
@@ -10296,7 +10400,12 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                 receipt = artifacts.admit_upload(
                     _WireNode(port, scope), {"did": seat_did, "scope": scope},
                     seat_kp, filename, str(r.get("mime") or ""), data,
-                    max_bytes=dial_value("upload-inline-kb") * 1024)
+                    max_bytes=dial_value("upload-inline-kb") * 1024,
+                    rails=_guardrails_live(port) or guardrails.compose(
+                        guardrails.GENESIS_UNIVERSAL))
+                if receipt.get("redaction"):
+                    _rails_audit(port, "extraction", seat_did,
+                                 receipt["redaction"], [])
             except _Refusal:
                 call(port, "POST", "/requests/resolve",
                      {"id": r["id"], "status": "denied",
@@ -10307,6 +10416,10 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
             reply = (f"“{filename}” admitted — extracted to knowledge, quarantined "
                      f"at 0.0000 [{receipt['extraction'][:18]}…]"
                      if receipt["status"] == "extracted" else
+                     f"“{filename}” admitted, but its text REFUSED at the ingest "
+                     f"rail — a content rule fired (the audit and the refusal are "
+                     f"on the record; the artifact itself stands)"
+                     if receipt["status"] == "refused-at-ingest" else
                      f"“{filename}” admitted dark — no eye saddled yet; the "
                      f"extraction intent is parked (0014) and will be read the day "
                      f"a vision mind joins the Stable")
@@ -16338,6 +16451,7 @@ def main() -> None:
                     extract_beat(port, scope) # the graph reads (0065 sp3)
                     standings_beat(port, scope)  # the scoreboard breathes (0066 sp4)
                     basket_beat(port, scope)  # the Basket carries (0069 sp1)
+                    extraction_line_beat(port, scope)  # parks pay (0069 sp3)
                     continuity_charter(port, scope)  # a template floor gets its law (0034)
                     pin_organs(port, scope)
                     window_charter(port, scope)
