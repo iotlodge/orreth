@@ -247,6 +247,19 @@ DIALS_V1 = {
                "format's honest weight",
         "horizon": "the next import reads it",
     },
+    "store-freshness-min": {
+        "type": "int", "unit": "minutes between freshness looks at a store",
+        "min": 1, "max": 1440, "genesis": 10, "home": "universe",
+        "governs": "how often the keeper's cheap eye re-reads each serving "
+                   "store's listing fingerprint (0069 sp2) — a changed "
+                   "store lands a signed freshness observation; streams "
+                   "will later enter through this same seam",
+        "blast": "too often costs listings against cloud rate limits; too "
+                 "rare lets a moving store look still for hours",
+        "why": "ten minutes notices a working day's changes without "
+               "troubling any provider",
+        "horizon": "the next keeper round reads it",
+    },
     "stamp-window-days": {
         "type": "int", "unit": "days a lapsed-guardrail stamp stands",
         "min": 7, "max": 365, "genesis": 90, "home": "universe",

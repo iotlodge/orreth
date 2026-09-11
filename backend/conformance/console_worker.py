@@ -3280,10 +3280,24 @@ def mcp_call(endpoint: str, tool: str, args: dict) -> dict:
 
 
 def fetch_manifest(svc: dict) -> list | None:
-    """MCP servers are enumerated live; declared manifests stand for plain HTTP tools."""
+    """MCP servers are enumerated live; declared manifests stand for plain
+    HTTP tools; a store's manifest IS its declared operations (0069 sp2) —
+    list · fetch, nothing else invokable, exactly the tool law."""
     if svc.get("kind") == "mcp":
         return mcp_tools(resolve_endpoint(svc["endpoint"]))
+    if svc.get("kind") == "store":
+        from orreth_sim import stores
+        return stores.manifest()
     return svc.get("manifest") or []
+
+
+def svc_probe(svc: dict) -> bool:
+    """One heartbeat's touch, by kind: HTTP-shaped services answer a GET;
+    a store answers a one-key listing (0069 sp2)."""
+    if svc.get("kind") == "store":
+        from orreth_sim import stores
+        return stores.probe(resolve_endpoint(svc.get("endpoint") or ""))
+    return probe(svc.get("endpoint") or "") if svc.get("endpoint") else False
 
 
 def warden_checks(port: int, r: dict, manifest, alive: bool) -> dict:
@@ -3349,6 +3363,67 @@ def worldline(port: int, scope: str, svc: dict, event: str, **extra) -> None:
         print(f"    (worldline write failed: {e})")
 
 
+def on_store_onboard(port: int, scope: str, r: dict) -> None:
+    """0069 sp2 L1 — the two-keeper law, one flow: ALLEN CHARTERS THE
+    RESOURCE (why it exists · what it may hold · where it lives · how long
+    it keeps — his deployment charter's questions, verbatim) and CHARLOTTE
+    HOLDS THE WIRE (the governed store connector). One human word walks
+    both: approve → allen's signed resource record → the plant riding the
+    SAME word (the carried idiom) → the pinned wire earning probation."""
+    from orreth_sim import stores
+    if r.get("status") == "pending":
+        try:
+            stores.parse_uri(str(r.get("uri") or ""))
+            uri_note = "the wire's scope reads clean"
+        except Exception as e:
+            uri_note = str(e)[:120]
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"held": ("a source of records is a RESOURCE with a "
+                                  "charter and a WIRE with a pin — one "
+                                  "approval opens both (0069 sp2)"),
+                         "terms": (f"why: {str(r.get('why') or '—')[:120]} · "
+                                   f"holds: {str(r.get('holds') or '—')[:60]} · "
+                                   f"where: {str(r.get('where') or '—')[:60]} · "
+                                   f"keeps for: {str(r.get('keep_for') or '—')[:60]} · "
+                                   f"wire: {str(r.get('uri') or '—')[:80]} "
+                                   f"({uri_note})")}})
+        return
+    if r.get("status") == "approved":
+        name = str(r.get("name") or "")
+        uri = str(r.get("uri") or "")
+        rec = make_memory({"did": ALLEN_DID, "scope": scope}, ALLEN, scope,
+                          {"resource": {
+                              "name": name, "uri": uri,
+                              "charter": {
+                                  "why": str(r.get("why") or "")[:300],
+                                  "data_classification": str(r.get("holds") or "")[:120],
+                                  "residency": str(r.get("where") or "")[:120],
+                                  "retention": str(r.get("keep_for") or "")[:120]},
+                              "approved": r["id"], "at": NOW()}},
+                          kind="semantic", tags=["resource", name])
+        try:
+            call(port, "POST", "/records", rec)
+        except Exception as e:
+            print(f"    (resource record failed: {e})")
+        call(port, "POST", "/requests", {
+            "kind": "service", "action": "plant", "name": name,
+            "svc_kind": "store", "endpoint": uri, "transport": "store",
+            "source": "store-onboard", "carried": r["id"],
+            "text": f"plant the store wire for «{name}» — allen's charter "
+                    f"at {rec['id'][:18]}… rides this same word"})
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"resource": rec["id"],
+                         "reply": (f"chartered and planting on your one word "
+                                   f"— allen's resource record stands "
+                                   f"({rec['id'][:18]}…) and charlotte's "
+                                   "wire is going in now (probation begins; "
+                                   "beats earn serving)")}})
+        print(f"  🏗 store «{name}» chartered by allen; the wire rides the "
+              "same word")
+
+
 class FarmKeeper:
     """Charlotte's round: verify staged plantings, attest approvals, heartbeat the
     toolshed, age silent leases out, guard the rug-pull door, replant after restarts."""
@@ -3356,6 +3431,9 @@ class FarmKeeper:
     def __init__(self) -> None:
         self.misses: dict[tuple[int, str], int] = {}
         self.last_beat = 0.0
+        self.freshness: dict[tuple[int, str], tuple[float, str]] = {}
+        # (port, store) -> (last look, fingerprint) — the freshness eye's
+        # worker-life memory (0069 sp2); the observations are the durable book
 
     # ---- the queue: plant · decom · reapprove -----------------------------------------
     def on_service_request(self, port: int, scope: str, r: dict) -> bool:
@@ -3384,7 +3462,7 @@ class FarmKeeper:
                    "spend_guard": r.get("spend_guard") or "",
                    "manifest": r.get("manifest") or []}
             manifest = fetch_manifest(svc)
-            alive = probe(svc["endpoint"]) if svc["endpoint"] else False
+            alive = svc_probe(svc)
             svc["manifest"] = manifest or svc["manifest"]
             planted = call(port, "POST", "/farm/plant", svc)
             warden = warden_checks(port, r, manifest, alive)   # vigil beside the buttons
@@ -3531,8 +3609,10 @@ class FarmKeeper:
             if state == "resting":
                 continue     # the human's word — no probes, no drops, no spend
             if state in ("probation", "serving"):
-                if probe(svc["endpoint"]):
+                if svc_probe(svc):
                     self.misses[key] = 0
+                    if svc.get("kind") == "store" and state == "serving":
+                        self._freshness_look(port, scope, svc)
                     beat = call(port, "POST", "/farm/hello", {"name": svc["name"]})
                     if beat.get("transition", {}).get("to") == "serving":
                         worldline(port, scope, beat, "serving",
@@ -3546,7 +3626,7 @@ class FarmKeeper:
                         worldline(port, scope, dropped, "dropped",
                                   reason=f"{self.misses[key]} missed heartbeats")
                         print(f"  ↳ {svc['name']} dropped — the lease aged out")
-            elif state == "dropped" and probe(svc["endpoint"]):
+            elif state == "dropped" and svc_probe(svc):
                 manifest = fetch_manifest(svc)
                 if manifest is None:
                     continue                     # answered but not enumerable yet
@@ -3577,6 +3657,37 @@ class FarmKeeper:
                             print(f"    ↳ {note}")
                         except Exception as e:
                             print(f"    (revalidation walk failed: {e})")
+
+    def _freshness_look(self, port: int, scope: str, svc: dict) -> None:
+        """0069 sp2 — the cheap eye on a serving store, at the dial's
+        cadence: a changed listing fingerprint lands a charlotte-signed
+        freshness observation (the seam streams later enter through);
+        the first look records the baseline quietly."""
+        from orreth_sim import stores
+        key = (port, svc["name"])
+        now = time.time()
+        last_at, last_fp = self.freshness.get(key, (0.0, ""))
+        if now - last_at < dial_value("store-freshness-min") * 60:
+            return
+        try:
+            fp = stores.fingerprint(resolve_endpoint(svc["endpoint"]))
+        except Exception:
+            return                            # a blind look is not a change
+        self.freshness[key] = (now, fp)
+        if last_fp and fp != last_fp:
+            rec = make_memory({"did": CHA_DID, "scope": scope}, CHA, scope,
+                              {"store_freshness": {
+                                  "store": svc["name"],
+                                  "fingerprint": fp,
+                                  "was": last_fp, "at": NOW()}},
+                              kind="episodic",
+                              tags=["store-freshness", svc["name"]])
+            try:
+                call(port, "POST", "/records", rec)
+                print(f"  🛰 {svc['name']} MOVED — freshness observed "
+                      f"({rec['id'][:18]}…)")
+            except Exception as e:
+                print(f"    (freshness write failed: {e})")
 
     def replant(self, port: int, scope: str, present: set) -> None:
         """The daemon may die; the toolshed doesn't. The ledger re-seeds live state,
@@ -5158,7 +5269,23 @@ def tool_invoke(payload: dict) -> dict:
         return REFUSED
     ep = resolve_endpoint(svc["endpoint"])   # a secret resolves only at the wire
     try:
-        if svc.get("kind") == "mcp":
+        if svc.get("kind") == "store":
+            # 0069 sp2 — the store's two operations through the SAME door,
+            # metered above like every invoke. Bulk never rides a response:
+            # fetch lands the bytes content-addressed in the LOCAL object
+            # store and answers with the hash — the caller minting a pointer
+            # reads them back by address (0039 §6 all the way down).
+            from orreth_sim import basket as _bk
+            from orreth_sim import stores as _st
+            if tool == "list":
+                out = {"objects": _st.list_objects(
+                    ep, prefix=str(args.get("prefix") or ""),
+                    limit=int(args.get("limit") or 200))}
+            else:
+                data = _st.fetch(ep, str(args.get("key") or ""))
+                h, uri2 = _bk.store_object(_OBJECT_STORE, data)
+                out = {"content_hash": h, "size": len(data), "stored": uri2}
+        elif svc.get("kind") == "mcp":
             # 0059 §2.8 — ONE door, every transport: tools/call for MCP
             out = mcp_call(ep, tool, args)
         else:
@@ -9439,9 +9566,23 @@ _BASKET_KICK: set = set()          # floors with fresh imports — beat now, not
 
 
 def basket_serve(qs: dict) -> dict:
-    """The picker's door: one directory's listing under the root's law, or a
-    zip's inner file list. Read-only, dotfiles unlisted, traversal one-faced."""
+    """The picker's door: one directory's listing under the root's law, a
+    zip's inner file list — or a GOVERNED STORE's listing through the one
+    invoke door (metered; a resting or discredited store refuses for free).
+    Read-only, dotfiles unlisted, traversal one-faced."""
     from orreth_sim import basket
+    store = (qs.get("store") or [None])[0]
+    if store:
+        port = int((qs.get("port") or ["4500"])[0])
+        out = tool_invoke({"service": store, "tool": "list",
+                           "args": {"prefix": (qs.get("prefix") or [""])[0]},
+                           "port": port, "did": "the-basket"})
+        if out.get("error"):
+            return {"error": out["error"]}
+        return {"path": f"store://{store}", "store": store,
+                "entries": [{"name": o["key"], "kind": "file",
+                             "size": o.get("size")}
+                            for o in out.get("objects") or []]}
     z = (qs.get("zip") or [None])[0]
     if z:
         return basket.ls_zip(_BASKET_ROOT, z)
@@ -9467,6 +9608,8 @@ def basket_import_post(p: dict) -> dict:
 
 
 def _origin_key(o: dict) -> tuple:
+    if o.get("store"):                         # a store object's identity (sp2)
+        return (f"store:{o['store']}", str(o.get("key") or ""))
     return (str(o.get("path") or ""), str(o.get("zip_member") or ""))
 
 
@@ -9534,18 +9677,39 @@ def basket_beat(port: int, scope: str) -> None:
         moved = 0
         for e in pending[:4]:                     # a few a beat, then yield
             try:
-                r = basket.import_entry(node, me, seat_kp,
-                                        root=_BASKET_ROOT,
-                                        store_root=_OBJECT_STORE, entry=e,
-                                        max_bytes=bar, already=s["hashes"])
+                if e.get("store"):
+                    # 0069 sp2 — a store object's bytes arrive through the
+                    # ONE governed door (metered; resting refuses for free),
+                    # landing content-addressed; the pointer cites the
+                    # STORE as its origin
+                    got = tool_invoke({"service": e["store"], "tool": "fetch",
+                                       "args": {"key": e["key"]},
+                                       "port": port, "did": "the-basket"})
+                    if got.get("error"):
+                        raise RuntimeError(got["error"])
+                    h = got["content_hash"]
+                    data = (_OBJECT_STORE / h[7:9] / h[7:]).read_bytes()
+                    r = basket.import_bytes(
+                        node, me, seat_kp, data=data,
+                        name=Path(str(e["key"])).name,
+                        origin={"store": e["store"], "key": e["key"]},
+                        store_root=_OBJECT_STORE, max_bytes=bar,
+                        already=s["hashes"])
+                else:
+                    r = basket.import_entry(node, me, seat_kp,
+                                            root=_BASKET_ROOT,
+                                            store_root=_OBJECT_STORE, entry=e,
+                                            max_bytes=bar, already=s["hashes"])
                 s["origins"].add(_origin_key(e))
                 moved += 1
-                print(f"  🧺 imported {Path(str(e.get('zip_member') or e['path'])).name}"
+                print(f"  🧺 imported "
+                      f"{Path(str(e.get('key') or e.get('zip_member') or e.get('path'))).name}"
                       f" — {r['status']} ({str(r.get('pointer', ''))[:18]}…)")
             except Exception as ex:
                 _IMPORT_FAILED[(j["ref"], _origin_key(e))] = str(ex)[:120]
-                print(f"  🧺 entry refused/failed for {e.get('path')} — "
-                      f"{str(ex)[:60]}")
+                print(f"  🧺 entry refused/failed for "
+                      f"{e.get('path') or (str(e.get('store')) + '/' + str(e.get('key')))}"
+                      f" — {str(ex)[:60]}")
         left = [e for e in j["entries"]
                 if _origin_key(e) not in s["origins"]
                 and (j["ref"], _origin_key(e)) not in _IMPORT_FAILED]
@@ -15898,6 +16062,10 @@ def main() -> None:
                                                     "denied"):
                             handled.add(key)
                             on_fuel_request(port, scope, r)
+                        elif r.get("kind") == "store-onboard" and \
+                                r.get("status") in ("pending", "approved"):
+                            handled.add(key)
+                            on_store_onboard(port, scope, r)
                         elif r.get("kind") == "guardrail-stamp" and \
                                 r.get("status") in ("pending", "approved"):
                             handled.add(key)

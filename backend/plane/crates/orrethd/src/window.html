@@ -3724,6 +3724,7 @@ const GATE_WORDS={join:["admit","turn away"],ecosystem:["launch","scrap"],
   objective:["fan the plan","decline"],improvement:["adopt","decline"],
   subscription:["open the subscription","decline"],
   "guardrail-stamp":["stamp it — the weaker set may govern","decline — the standing rails hold"],
+  "store-onboard":["charter it and plant the wire","decline"],
   consent:["open the access","decline"],testament:["let it stand","decline"],
   attestation:["start the cooling-off","decline"],
   "estate-adopt":["open allen's eyes","not yet"],
@@ -3765,6 +3766,7 @@ const GATE_WHY={
   question:"the machine needs a fact only you hold — answer in the box; silence past the deadline counts as a no",
   improvement:"the machine proposes a better version of one of its own standards, with evidence — adopt makes it the standing way; decline keeps the current one",
   "guardrail-stamp":"you asked to weaken or empty the content guardrails, and that never lands on an ordinary word — stamping mints a windowed, visible permission (every answer served under it will say so, and one click walks it back); declining keeps the standing rails and changes nothing",
+  "store-onboard":"a source of records wants to join — one approval does two things: allen signs the resource's charter (why it exists, what it may hold, where, how long) and charlotte plants the read-only wire, which then earns its place on heartbeats; declining changes nothing",
   "estate-adopt":"allen found real infrastructure he could watch — approve opens read-only eyes on it; not yet keeps him blind to it",
   ecosystem:"a whole new world wants launching beneath this one — launch builds it; scrap discards the plan"};
 function gateWhy(r){const w=GATE_WHY[r.kind];
@@ -5034,29 +5036,43 @@ const DROP_TYPES=["txt","md","json","csv","pdf","png","jpg","jpeg"];
    folders; the running list keeps each entry's ORIGIN; one Import lands a
    signed job and the worker carries the bytes — mass to the object store,
    pointer to the log. Progress derives from the log, polled while open. ── */
-let BK={open:false,path:null,zip:null,list:[],ticked:{}};
-function basketOpen(){BK.open=true;$("basket").style.display="";bkLs(null);bkJobs()}
+let BK={open:false,path:null,zip:null,store:null,stores:[],ticked:{}};
+async function basketOpen(){
+  BK.open=true;$("basket").style.display="";
+  /* the governed sources (0069 sp2): every SERVING store is a place the
+     Basket may browse — the wire charlotte holds, allen's charter behind it */
+  try{const f=await(await fetch(api("/farm"))).json();
+    BK.stores=(f.services||[]).filter(s=>s.kind==="store"&&s.state==="serving").map(s=>s.name)}
+  catch{BK.stores=[]}
+  bkLs(null);bkJobs();
+}
 function basketClose(){BK.open=false;$("basket").style.display="none"}
-const bkKey=e=>e.path+""+(e.zip_member||"");
-async function bkLs(path,zip){
-  BK.zip=zip||null;
-  let u=OBSD+"/basket"+(zip?`?zip=${encodeURIComponent(zip)}`
+const bkKey=e=>e.store?("store:"+e.store+"/"+e.key):(e.path+""+(e.zip_member||""));
+const bkSources=()=>`<div class="bk-row" style="border-bottom:1px solid var(--hair2,#2a3444);margin-bottom:.2rem">
+  <span class="lnk" onclick="bkLs(null)">💽 local disk</span>
+  ${BK.stores.map(n=>` · <span class="lnk" onclick="bkLs(null,null,'${esc(n)}')" title="a governed store — listed through the one metered door">🛰 ${esc(n)}</span>`).join("")}
+  ${BK.stores.length?"":' · <span class="quiet2">no serving stores yet — onboard one and it appears here</span>'}</div>`;
+async function bkLs(path,zip,store){
+  BK.zip=zip||null;BK.store=store||null;
+  let u=OBSD+"/basket"+(store?`?store=${encodeURIComponent(store)}&port=${floorPort()}`
+    :zip?`?zip=${encodeURIComponent(zip)}`
     :(path?`?path=${encodeURIComponent(path)}`:""));
   let d;try{d=await(await fetch(u)).json()}catch{d={error:"the worker's door did not answer"}}
-  if(d.error){$("bk-list").innerHTML=`<div class="quiet">${esc(d.error)} — the Basket sees only inside its declared root</div>`;return}
+  if(d.error){$("bk-list").innerHTML=bkSources()+`<div class="quiet">${esc(d.error)}${store?"":" — the Basket sees only inside its declared root"}</div>`;return}
   BK.path=d.path;
-  $("bk-path").textContent=(zip?`🗜 ${d.path}`:d.path)+(d.root&&!zip?`   (root: ${d.root})`:"");
+  $("bk-path").textContent=(store?`🛰 ${d.path}`:zip?`🗜 ${d.path}`:d.path)+(d.root&&!zip&&!store?`   (root: ${d.root})`:"");
   const rows=(d.entries||[]).map(e=>{
     if(e.kind==="dir")return `<div class="bk-row" onclick="bkLs('${esc(d.path)}/${esc(e.name)}')">📁 ${esc(e.name)}</div>`;
     if(e.kind==="zip")return `<div class="bk-row" onclick="bkLs(null,'${esc(d.path)}/${esc(e.name)}')">🗜 ${esc(e.name)} <span class="quiet2">(opens like a folder)</span></div>`;
-    const entry=zip?{path:zip,zip_member:e.name}:{path:(d.path+"/"+e.name)};
+    const entry=store?{store:store,key:e.name}
+      :zip?{path:zip,zip_member:e.name}:{path:(d.path+"/"+e.name)};
     const k=bkKey(entry),on=!!BK.ticked[k];
     return `<div class="bk-row"><label><input type="checkbox" ${on?"checked":""}
       onchange='bkTick(${JSON.stringify(entry).replace(/'/g,"&#39;")})'> 📄 ${esc(e.name)}
       <span class="quiet2">${e.size!=null?(e.size+" b"):""}</span></label></div>`;
   }).join("");
-  const upBtn=(zip||d.parent)?`<div class="bk-row" onclick="${zip?`bkLs('${esc(String(zip).split("/").slice(0,-1).join("/"))}')`:`bkLs('${esc(d.parent)}')`}">⬆ up</div>`:"";
-  $("bk-list").innerHTML=upBtn+(rows||`<div class="quiet">an empty room</div>`);
+  const upBtn=(!store&&(zip||d.parent))?`<div class="bk-row" onclick="${zip?`bkLs('${esc(String(zip).split("/").slice(0,-1).join("/"))}')`:`bkLs('${esc(d.parent)}')`}">⬆ up</div>`:"";
+  $("bk-list").innerHTML=bkSources()+upBtn+(rows||`<div class="quiet">an empty room</div>`);
 }
 function bkTick(entry){
   const k=bkKey(entry);
@@ -5066,8 +5082,8 @@ function bkTick(entry){
 function bkRender(){
   const rows=Object.values(BK.ticked);
   $("bk-basket").innerHTML=rows.length
-    ?rows.map(e=>`<div class="bk-row">🧺 ${esc((e.zip_member||e.path).split("/").pop())}
-       <span class="quiet2">from ${esc(e.zip_member?e.path.split("/").pop()+" › "+e.zip_member:e.path)}</span>
+    ?rows.map(e=>`<div class="bk-row">🧺 ${esc((e.key||e.zip_member||e.path).split("/").pop())}
+       <span class="quiet2">from ${esc(e.store?("🛰 "+e.store+" › "+e.key):e.zip_member?e.path.split("/").pop()+" › "+e.zip_member:e.path)}</span>
        <span class="lnk" onclick='bkTick(${JSON.stringify(e).replace(/'/g,"&#39;")})'>✕</span></div>`).join("")
       +`<div style="margin-top:.4rem"><button class="sbtn ok" onclick="bkImport()">Import ${rows.length} — the mass to the store, the pointers to the log</button></div>`
     :`<div class="quiet">nothing in the basket yet — tick files above; move folders and keep ticking</div>`;

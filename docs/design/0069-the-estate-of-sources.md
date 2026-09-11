@@ -192,9 +192,42 @@ single-file upload honestly retired in favor of the Basket + pointer path.
    rides the governed retrieve (a projection when volume demands); failed
    entries retry once per worker life by design; the store is local-class — S3
    arrives with sp2's `store` kind.*
-2. **sp2 — The store kind and the first wire.** The `store` kind end to end on S3 +
-   localhost; the two-keeper flow (charter → resource → plant → pinned wire); freshness
-   beats. Suite: lifecycle laws (rest/resume/discredit) on a store.
+2. **sp2 — The store kind and the first wire.** ✅ **LANDED 2026-09-10 — the Farm has
+   its first store-shaped citizen, and the first cloud wire is AWS.** **The connector**
+   (`orreth_sim/stores.py`): a `store` is a thing you LIST and FETCH from; its endpoint
+   is a URI (`s3://bucket/prefix` · `file:///path`); its pinned manifest IS its declared
+   operations (list · fetch — nothing else invokable, exactly the tool law); credentials
+   are AMBIENT (boto3's default chain — a key in ZERO records); the on-premise citizen
+   obeys the Basket's own traversal law; Azure/GCS are RECOGNIZED and refused with
+   their names (GrowthNotWalked — an operator honesty, never a probe surface; the wire's
+   doors keep the one face). **One lifecycle, unchanged**: planted through the human
+   gate, probation earned on heartbeats (svc_probe answers a one-key listing), the
+   rug-pull door quarantines a changed operation set, resting refuses at the meter for
+   free, resumption re-earns serving. **The two-keeper law (L1), one flow**: a
+   `store-onboard` card stages wearing allen's charter questions verbatim (why · what
+   it may hold · where · how long) + the wire's scope read aloud; ONE approval mints
+   allen's signed resource record AND plants charlotte's wire riding the same word
+   (the carried idiom). **The freshness eye**: a cheap listing fingerprint per serving
+   store at the store-freshness-min dial's cadence — a moved store lands a
+   charlotte-signed observation (the seam streams later enter through). **The Basket
+   rides the wire**: 🛰 serving stores appear as sources beside 💽 local disk; a store's
+   listing and every fetched byte travel through the ONE metered invoke door (bulk
+   never rides a response — fetch lands content-addressed and answers with the hash);
+   an imported object's pointer cites {store, key} as its origin. *Proven live on the
+   rig: BOTH stores onboarded through the gate on one word each (site-share on-premise
+   · jb-documents = s3://jbiotlodgebucket/documents) — allen's resource records +
+   charlotte's wires → probation → SERVING on earned beats; both listed through the
+   door; THE FIRST CLOUD IMPORT — a 1.1 MB PDF from S3 (4× the old inline bar) landed
+   content-addressed with its pointer citing the store origin, byte-size matching on
+   disk; the freshness dial turned 10→1 through the craft door, a dropped file landed
+   «site-share MOVED» signed on the log, the dial turned home; and the lifecycle walk —
+   rest staged with its blast radius, approved, the Basket's listing REFUSED one-faced
+   for free, resumed, probation re-earning serving.* Suite 529→537 (eight store laws)
+   + boto3 arrives as a declared dependency (the charter's word: AWS lands first).
+   *Honest remainders: Azure/GCS declared growth; the `database` kind is sp5's; S3
+   listing pages at 500 (paging honest, deep paging when demanded); the S3 walk rode
+   the rig's ambient env keys — a per-store credential name (env:NAME) joins when two
+   stores need two identities.*
 3. **sp3 — The extraction line.** Deterministic extractors paying the parked intents
    (PDF/Office/HTML/spreadsheets); redaction-at-ingest; lineage on every extraction.
    Minded extraction (OCR/ASR) staged behind the Stable's eyes, refusing honestly.

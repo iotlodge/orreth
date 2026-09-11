@@ -138,21 +138,33 @@ def import_entry(node, author: dict, kp, *, root: str | Path,
                  store_root: str | Path, entry: dict,
                  max_bytes: int | None = None,
                  already: set[str] | None = None) -> dict:
-    """One entry's whole admission on the pointer path: bytes read under the
-    root's law → the bar (a dial) → the object store → the SIGNED pointer
-    carrying its origin — and the free textual floor extracts as before,
-    derived from the pointer (the fuller matrix is sp3's). Every receipt
-    cites its origin; an already-held hash skips honestly."""
-    from . import canon
+    """One LOCAL entry's whole admission on the pointer path: bytes read
+    under the root's law, then the shared tail (import_bytes). A store
+    entry's bytes arrive through the governed connector instead — same
+    tail, different origin (0069 sp2)."""
     data = read_entry(root, entry)
-    bar = max_bytes if max_bytes is not None else MAX_IMPORT_BYTES
-    if not data or len(data) > bar:
-        raise Refusal("request cannot be served under this capability")
-    h, uri = store_object(store_root, data)
     name = Path(str(entry.get("zip_member") or entry.get("path"))).name
     origin = {"path": str(entry.get("path") or ""),
               **({"zip_member": str(entry["zip_member"])}
                  if entry.get("zip_member") else {})}
+    return import_bytes(node, author, kp, data=data, name=name,
+                        origin=origin, store_root=store_root,
+                        max_bytes=max_bytes, already=already)
+
+
+def import_bytes(node, author: dict, kp, *, data: bytes, name: str,
+                 origin: dict, store_root: str | Path,
+                 max_bytes: int | None = None,
+                 already: set[str] | None = None) -> dict:
+    """The pointer path's shared tail: the bar (a dial) → the object store →
+    the SIGNED pointer carrying its origin — and the free textual floor
+    extracts, derived from the pointer (the fuller matrix is sp3's). Every
+    receipt cites its origin; an already-held hash skips honestly."""
+    from . import canon
+    bar = max_bytes if max_bytes is not None else MAX_IMPORT_BYTES
+    if not data or len(data) > bar:
+        raise Refusal("request cannot be served under this capability")
+    h, uri = store_object(store_root, data)
     if already is not None and h in already:
         return {"status": "already-held", "content_hash": h, "origin": origin}
     pid = canon.make_pointer(
@@ -190,10 +202,14 @@ def import_entry(node, author: dict, kp, *, root: str | Path,
 def make_job(author: dict, kp, scope: str, entries: list[dict]) -> dict:
     """The import job, signed onto the log BEFORE any byte moves — the queue
     the openwiki discipline demands. Progress is derived, never stored."""
-    clean = [{"path": str(e.get("path") or ""),
-              **({"zip_member": str(e["zip_member"])}
-                 if e.get("zip_member") else {})}
-             for e in entries if e.get("path")]
+    clean = []
+    for e in entries:
+        if e.get("store") and e.get("key"):    # a governed store's object (sp2)
+            clean.append({"store": str(e["store"]), "key": str(e["key"])})
+        elif e.get("path"):
+            clean.append({"path": str(e["path"]),
+                          **({"zip_member": str(e["zip_member"])}
+                             if e.get("zip_member") else {})})
     if not clean:
         raise Refusal("request cannot be served under this capability")
     return make_memory(author, kp, scope,
