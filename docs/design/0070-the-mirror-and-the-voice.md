@@ -226,8 +226,34 @@ honest about being unattributed).
    personas join when their voices do); the capability specialists (charles,
    charlene, chad) keep their own genesis personas — one law when 0072 unifies
    the surfaces.*
-4. **sp4 — The scrub.** Relative dates; events by the dial, beliefs by lineage replay;
-   proven on "what did we believe last Tuesday" in the glass.
+4. **sp4 — The scrub.** ✅ **LANDED 2026-09-11 — the two clocks: events by the dial,
+   beliefs by versions-as-time.** **When-words** (`orreth_sim/whenwords.py`,
+   deterministic firmware): «yesterday», «last Tuesday», «three days ago», «two weeks
+   ago» resolve exactly («last Friday» ON a Friday is a week back, always); an
+   ambiguous when-word («recently», «a while back») is RECOGNIZED AND REFUSED BY
+   NAME — never guessed at (the 0066 escalation consult joins the day it earns the
+   seat; the honest park stands). **The temporal clause speaks human**:
+   `stacks.parse_time` grows «as of last Tuesday» / «since yesterday» beside the
+   ISO forms. **Events on the answer path at last** (the survey's wound: the time
+   dial was never called from any answer): a when-word in the window-ask's own
+   words frames the window to that day — «🕰 the window heard 'yesterday' — framed
+   to 2026-09-10», live. **Beliefs by lineage replay**: `wiki.claims_asof` replays
+   the claim worldlines to a cutoff from RECORDS ALONE — claims minted by then,
+   retractions landed by then applied — answering with what was believed THEN and
+   what has been RETRACTED SINCE; the librarian's «what did we believe…» lane
+   composes it verbatim (a replay is protocol, never a paraphrase). *Proven live
+   in the glass's own door: «what did we believe three days ago about rammed
+   earth?» → «as of 2026-09-08, the record held no standing beliefs about ‹rammed
+   earth› — today it holds 17; belief entered after your when-word» (and the
+   machine out-honested the walker's own clock: the claims entered after UTC
+   midnight, so 'yesterday' truly held none); «what did we believe recently?» →
+   the refusal naming ‹recently›; «about thermal?» → 8 claims listed, each
+   grounded to its full signed evidence ref; the believed-then/retracted-since
+   flag proven at controlled clocks in the suite.* Suite 570→574 (the scrub's
+   four laws). *Honest remainders: the cutoff is day-granular (end of the named
+   day — a sub-day story hides inside it, named); asset-head beliefs (the craft
+   worldlines) ride the same primitive when a walk demands them; the dispatcher's
+   ask lane keeps ISO-first (its human clause joins with the attributes lane).*
 5. **sp5 — The person.** The signer registry (per L1); profiles/preferences/thumbs
    re-homed to persons; the floor seat as honest fallback.
 

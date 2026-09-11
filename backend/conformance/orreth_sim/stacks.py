@@ -152,15 +152,29 @@ _TIME_RX = re.compile(r"\b(as of|since|before|after)\s+(\d{4}-\d{2}-\d{2})\b",
                       re.IGNORECASE)
 
 
-def parse_time(query: str):
-    """The ask's temporal clause, if any → (mode, iso-date, cleaned-query)."""
+def parse_time(query: str, now: str | None = None):
+    """The ask's temporal clause, if any → (mode, iso-date, cleaned-query).
+    0070 sp4: the clause finally speaks HUMAN — «as of last Tuesday»,
+    «since yesterday» resolve through the when-words parser; the ISO form
+    stays first-class."""
     m = _TIME_RX.search(query or "")
-    if not m:
-        return None, None, query
-    mode = {"as of": "asof", "before": "asof",
-            "since": "since", "after": "since"}[m.group(1).lower()]
-    cleaned = (query[:m.start()] + query[m.end():]).strip()
-    return mode, m.group(2), cleaned or query
+    if m:
+        mode = {"as of": "asof", "before": "asof",
+                "since": "since", "after": "since"}[m.group(1).lower()]
+        cleaned = (query[:m.start()] + query[m.end():]).strip()
+        return mode, m.group(2), cleaned or query
+    m2 = re.search(r"\b(as of|since|before|after)\s+", (query or "").lower())
+    if m2:
+        from . import whenwords
+        iso, phrase = whenwords.parse(query[m2.end():], now=now)
+        if iso:
+            mode = {"as of": "asof", "before": "asof",
+                    "since": "since", "after": "since"}[m2.group(1)]
+            tail = re.sub(re.escape(phrase), "", query[m2.end():],
+                          count=1, flags=re.IGNORECASE)
+            cleaned = (query[:m2.start()] + tail).strip(" ,.?")
+            return mode, iso, cleaned or query
+    return None, None, query
 
 
 # 0069 sp4 — the pointer's FULL text joins the projections: a settable hook

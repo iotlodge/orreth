@@ -716,6 +716,14 @@ def answer(name: str, text: str, facts: dict) -> dict:
             return {"reply": "the rows take their marks…",
                     "action": "stacks-tournament",
                     **({"q": q} if q else {}), "verbatim": True}
+        # 0070 sp4 — THE BELIEF SCRUB: «what did we believe last Tuesday»
+        # replays the worldlines to a cutoff — versions ARE time; the
+        # worker composes from records alone, verbatim (a replay is
+        # protocol, never a voice's paraphrase)
+        if re.search(r"\bwhat (did|do) we (believe|know|think)\b", t):
+            return {"reply": "replaying the record to your when-word…",
+                    "action": "belief-scrub", "q": (text or "").strip(),
+                    "verbatim": True}
         for p in ("ask the stacks", "ask stacks"):
             if t.startswith(p):
                 q = (text or "").strip()[len(p):].strip(" :?.!")

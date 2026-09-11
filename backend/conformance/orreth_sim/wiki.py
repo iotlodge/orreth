@@ -204,6 +204,36 @@ def build_catalog(node, author: dict, kp, prior: str | None = None) -> str:
 
 # ---- the cascade (an origin's death runs THROUGH claims) ------------------------------
 
+def claims_asof(node, cutoff_date: str) -> dict:
+    """0070 sp4 — BELIEFS BY VERSIONS-AS-TIME: what the wiki BELIEVED at the
+    end of `cutoff_date` (YYYY-MM-DD), replayed from the worldlines alone —
+    claims minted by then, retractions landed by then applied. Returns
+    {"held": {ref: claim}, "since_retracted": {ref: when}} — the second set
+    is the honest delta: believed THEN, retracted SINCE. «What did we
+    believe last Tuesday» is exactly this question."""
+    cut = str(cutoff_date)[:10] + "T23:59:59Z"
+    retract_at: dict[str, str] = {}
+    for rec in node.records.values():
+        if "claim-retracted" in (rec.get("tags") or []):
+            b = _body(rec).get("claim_retraction") or {}
+            for d in rec.get("derived_from") or []:
+                retract_at[d] = str(b.get("at") or "")
+    held, since = {}, {}
+    for rid, rec in node.records.items():
+        if "wiki-claim" not in (rec.get("tags") or []):
+            continue
+        c = _body(rec).get("claim") or {}
+        if str(c.get("at") or "") > cut:
+            continue                          # not yet believed at the cutoff
+        r_at = retract_at.get(rid)
+        if r_at and r_at <= cut:
+            continue                          # already retracted by then
+        held[rid] = c
+        if r_at:
+            since[rid] = r_at                 # believed then, retracted since
+    return {"held": held, "since_retracted": since}
+
+
 def sealed_refs(node) -> set[str]:
     """The signed death notices: every ref a standing seal darkens (0026 §3
     — the read paths exclude what it names). The cascade READS THE LAW

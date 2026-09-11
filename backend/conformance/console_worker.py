@@ -112,6 +112,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -10907,6 +10908,8 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                      "estate” first and the walk stages for you (0037 §7).")
     if ans.get("action") == "estate-template":  # 0037 §4 — the yaml, recallable
         reply = wire_estate_template(universe_port(port), ans["subject"])
+    if ans.get("action") == "belief-scrub":   # 0070 sp4 — versions ARE time
+        reply = wire_belief_scrub(universe_port(port), ans["q"])
     if ans.get("action") in ("stacks-ingest", "stacks-ask", "stacks-routing"):
         # one mind, many seats (0023 — JB's catch 2026-07-22): from a foreign
         # floor the ask RIDES TO HER RAG SEAT — same DID lineage, the origin
@@ -15754,6 +15757,50 @@ def on_farm_ask(port: int, scope: str, r: dict) -> None:
           + (" · voiced" if voiced else " · grounded"))
 
 
+def wire_belief_scrub(port: int, q: str) -> str:
+    """0070 sp4 — «what did we believe last Tuesday»: the when-word resolves
+    deterministically, the claim worldlines replay to that cutoff from
+    RECORDS ALONE, and the reply names both what was believed THEN and what
+    has been retracted SINCE. An ambiguous when-word is named, never
+    guessed; a missing one is asked for."""
+    from orreth_sim import whenwords, wiki
+    vague = whenwords.ambiguous(q)
+    iso, phrase = whenwords.parse(q)
+    if iso is None:
+        if vague:
+            return (f"«{vague}» is a when-word I refuse to guess at — give "
+                    "me a date, or words like «last Tuesday», «yesterday», "
+                    "«three days ago», and I will replay the record exactly")
+        return ("tell me WHEN — «what did we believe last Tuesday about X» "
+                "— and I will replay the record to that day")
+    topic = ""
+    m = re.search(r"\babout\s+(.+?)[?.!]*$", q, re.IGNORECASE)
+    if m:
+        topic = m.group(1).strip().lower()
+    v = _WikiView(port, FLOOR_SCOPES.get(port, UNIVERSE_SCOPE))
+    v.load(["wiki-claim", "claim-retracted"])
+    out = wiki.claims_asof(v, iso)
+    held = {r2: c for r2, c in out["held"].items()
+            if not topic or topic in str(c.get("text", "")).lower()}
+    if not held:
+        total_now = len(wiki.live_claims(v))
+        return (f"as of {iso} ({phrase}), the record held no standing "
+                f"beliefs" + (f" about «{topic}»" if topic else "")
+                + (f" — today it holds {total_now}; belief entered after "
+                   "your when-word" if total_now else ""))
+    lines = []
+    for r2, c in sorted(held.items(), key=lambda x: x[1].get("at", "")):
+        line = f"• “{str(c.get('text', ''))[:140]}” [{r2}]"
+        if r2 in out["since_retracted"]:
+            line += (f" — BELIEVED THEN, RETRACTED SINCE "
+                     f"({out['since_retracted'][r2][:10]}: its origin died)")
+        lines.append(line)
+    return (f"as of {iso} ({phrase}), the record believed"
+            + (f" about «{topic}»" if topic else "")
+            + f" — {len(held)} claim(s), each grounded to signed evidence:\n"
+            + "\n".join(lines))
+
+
 def on_window_ask(port: int, scope: str, r: dict) -> None:
     """THE WINDOW SPEAKS (mini-dive tab 3): the human frames a piece of
     spacetime — a time range, the lanes in focus — and asks in their own
@@ -15768,6 +15815,14 @@ def on_window_ask(port: int, scope: str, r: dict) -> None:
     asked = str(r.get("text") or "").strip()
     w_from = str(r.get("from") or "")
     w_to = str(r.get("to") or "")
+    if not w_from and not w_to:
+        # 0070 sp4 — EVENTS BY THE DIAL, finally on the answer path: a
+        # when-word in the ask itself frames the window to that day
+        from orreth_sim import whenwords as _ww
+        _iso, _ph = _ww.parse(asked)
+        if _iso:
+            w_from, w_to = _iso + "T00:00:00Z", _iso + "T23:59:59Z"
+            print(f"  🕰 the window heard «{_ph}» — framed to {_iso}")
     want = [s for s in (r.get("scopes") or []) if isinstance(s, str)]
     ports = {s: p for p, s in FLOOR_SCOPES.items()}
     targets = [(ports[s], s) for s in want if s in ports] \
