@@ -44,7 +44,7 @@ def parse_forget(text: str):
 
 def make_claim(agent: dict, kp, scope: str, claim: str, *, asserted_by: str,
                quoted: str | None = None, inferred_from: str | None = None,
-               prefers: dict | None = None) -> dict:
+               prefers: dict | None = None, person: str | None = None) -> dict:
     """A profile claim with its provenance and its rung on the ladder (0025 §2):
     the human enters trusted; the Librarian — and the Mirror (0034 sp3) —
     enter untrusted, always, and every inference names its evidence.
@@ -65,8 +65,11 @@ def make_claim(agent: dict, kp, scope: str, claim: str, *, asserted_by: str,
         body["profile"]["quoted"] = quoted
     if inferred_from is not None:
         body["profile"]["inferred_from"] = inferred_from
-    rec = make_memory(agent, kp, scope, body, kind="semantic",
-                      tags=["profile", "creator"])
+    # 0070 sp5 — whose stroke: a registered person's claim wears their name
+    # (and, at the call sites, their OWN signature); the floor's anonymous
+    # strokes stay exactly as they were — unattributed, honestly
+    tags = ["profile", "creator"] + ([f"person:{person}"] if person else [])
+    rec = make_memory(agent, kp, scope, body, kind="semantic", tags=tags)
     if inferred_from is not None:
         rec["derived_from"] = [inferred_from]
     return rec
@@ -138,6 +141,17 @@ def make_withdrawal(agent: dict, kp, scope: str, claim_ref: str) -> dict:
                       kind="semantic", tags=["profile", "withdrawn"])
     rec["derived_from"] = [claim_ref]
     return rec
+
+
+def stroke_visible(tags: list, person: str = "") -> bool:
+    """0070 sp5 — WHOSE portrait a stroke belongs to: a named person sees
+    exactly their own person-tagged strokes; the anonymous portrait sees
+    only unattributed ones (a person's strokes never leak into it);
+    withdrawals always count wherever they land."""
+    ptag = next((t for t in tags or [] if str(t).startswith("person:")), None)
+    if person:
+        return ptag == f"person:{person}"
+    return ptag is None or "withdrawn" in (tags or [])
 
 
 def withdrawn_refs(bodies: dict) -> set:

@@ -3730,6 +3730,7 @@ const GATE_WORDS={join:["admit","turn away"],ecosystem:["launch","scrap"],
   subscription:["open the subscription","decline"],
   "guardrail-stamp":["stamp it — the weaker set may govern","decline — the standing rails hold"],
   "store-onboard":["charter it and plant the wire","decline"],
+  "person-join":["mint my seat — I become an identity","not me — decline"],
   consent:["open the access","decline"],testament:["let it stand","decline"],
   attestation:["start the cooling-off","decline"],
   "estate-adopt":["open allen's eyes","not yet"],
@@ -3771,6 +3772,7 @@ const GATE_WHY={
   question:"the machine needs a fact only you hold — answer in the box; silence past the deadline counts as a no",
   improvement:"the machine proposes a better version of one of its own standards, with evidence — adopt makes it the standing way; decline keeps the current one",
   "guardrail-stamp":"you asked to weaken or empty the content guardrails, and that never lands on an ordinary word — stamping mints a windowed, visible permission (every answer served under it will say so, and one click walks it back); declining keeps the standing rails and changes nothing",
+  "person-join":"you asked to become a PERSON here — approving mints your own permanent seat key at becky's gate, so your profile strokes, preferences, and thumbs sign under YOUR key instead of the floor's shared one; the anonymous fallback always remains",
   "store-onboard":"a source of records wants to join — one approval does two things: allen signs the resource's charter (why it exists, what it may hold, where, how long) and charlotte plants the read-only wire, which then earns its place on heartbeats; declining changes nothing",
   "estate-adopt":"allen found real infrastructure he could watch — approve opens read-only eyes on it; not yet keeps him blind to it",
   ecosystem:"a whole new world wants launching beneath this one — launch builds it; scrap discards the plan"};
@@ -4602,6 +4604,7 @@ async function parlorPost(extra){
         /* 0070 sp1 — the thread rides both ways: the head the worker
            minted, and the last turn so the reply SEES the conversation */
         ...(PA.thread?{thread:PA.thread}:{}),...(PA.prior?{prior:PA.prior}:{}),
+        ...(PERSON?{person:PERSON}:{}),
         text:extra.text||`${extra.verb||"say"} · ${PA.name}`,...extra})});
     if(!r.ok)parlorLine("reply","the door is sealed — a spectator may watch this world turn, never speak into it.");
   }catch{parlorLine("reply","unreachable — is the daemon up? (scripts/dev.sh status)")}
@@ -4617,9 +4620,19 @@ function parlorWait(){
   const d=document.createElement("div");d.className="msg res wait";
   d.textContent=`${PA.name} is considering…`;th.appendChild(d);th.scrollTop=th.scrollHeight;
 }
+let PERSON=localStorage.getItem("orreth-person")||"";
 function parlorSay(text){
   if(!PA)return; const t=(text??$("p-in").value).trim(); if(!t)return;
-  $("p-in").value=""; parlorLine("mine",t); parlorWait();
+  $("p-in").value="";
+  /* 0070 sp5 — «I am jb»: the glass remembers who speaks; every ask and
+     thumb then carries the person, and their own custody signs */
+  const m=t.match(/^i am ([a-z0-9_-]{2,24})$/i);
+  if(m){PERSON=m[1].toLowerCase();localStorage.setItem("orreth-person",PERSON);
+    parlorLine("mine",t);
+    parlorLine("reply",`you speak as «${PERSON}» now — if registered, your strokes and thumbs sign under YOUR OWN key (register at becky's gate: “register me: ${PERSON}”). Say “i am nobody” to go anonymous.`);
+    if(PERSON==="nobody"){PERSON="";localStorage.removeItem("orreth-person")}
+    return}
+  parlorLine("mine",t); parlorWait();
   parlorPost({text:t});
 }
 function parlorCard(card){
@@ -4969,6 +4982,7 @@ async function thumbPost(url,of,up,text){
   try{const r=await(await fetch(url,{method:"POST",
     headers:{"content-type":"application/json"},
     body:JSON.stringify({kind:"thumb",of,up,text,
+      ...(PERSON?{person:PERSON}:{}),  /* 0070 sp5 — YOUR thumb, YOUR key */
       text_summary:(up?"👍 the quiet word":"👎 "+(text||"").slice(0,80))})})).json();
     return r.id||"";}catch{return ""}
 }

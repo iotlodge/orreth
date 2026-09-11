@@ -6,7 +6,11 @@ made mechanism. Grounded in the profile/session/voice survey of 2026-09-08 (Appe
 two standing promises this dive collects: 0046's "persona waits for Profiles at zero future
 cost" and 0069's language-preference hook.*
 
-***Status: 🟡 DRAFTED · LOCKED — both locks taken by JB's word, 2026-09-08, plainly stated
+***Status: ✅ CLOSED WHOLE 2026-09-11 — five spoonfuls in TWO DAYS: the thread (a
+conversation is a worldline and a reply remembers) · the profile read (the privacy floor
+holding EVERYWHERE) · the personas (residents sounding like themselves, the human's craft)
+· the scrub's two honest clocks · the person (0012's debt paid). Seventh out-of-order
+close: VERSION holds 0.71. Both locks were taken by JB's word, 2026-09-08, plainly stated
 per the language law: L1 BUILD THE PERSON NOW (the signer registry — people become
 identities with their own seat keys, minted at becky's gate; the floor key stays as the
 honest anonymous fallback; 0012's debt paid at last) · L2 THE CARVE-OUT APPROVED (persona
@@ -254,8 +258,36 @@ honest about being unattributed).
    day — a sub-day story hides inside it, named); asset-head beliefs (the craft
    worldlines) ride the same primitive when a walk demands them; the dispatcher's
    ask lane keeps ISO-first (its human clause joins with the attributes lane).*
-5. **sp5 — The person.** The signer registry (per L1); profiles/preferences/thumbs
-   re-homed to persons; the floor seat as honest fallback.
+5. **sp5 — The person.** ✅ **LANDED 2026-09-11 — 0012's oldest debt, PAID: a human
+   is an identity.** **The registry** (`orreth_sim/persons.py`): a person's name is
+   NEVER reissued (first registration owns it forever — the roster's no-rename law
+   applied to people); the becky-signed person record is the registry row. **The
+   mint at becky's gate**: «register me: jb» stages a person-join card; the human's
+   own approval mints their seat — the seed persisted under worker custody exactly
+   as every resident's (the covenant's FIRST RULE, applied to humans at last: the
+   same person re-joins across lives with the same DID), the public key registered
+   with becky's NANDA. Custody v1 is the worker's (the same custody residents
+   live under); client-held keys are 0072's affordance over this same registry.
+   **Re-homed to persons**: a profile stroke, a preference, a withdrawal, and a
+   THUMB sign under the person's OWN key when they speak («I am jb» in any parlor,
+   remembered by the glass); `stroke_visible` is ONE law — a person sees exactly
+   their own strokes, the anonymous portrait never leaks a person's words, and
+   withdrawals always count. **The floor seat remains the honest fallback**: a
+   walk-up human is served, signed, and plainly labeled unattributed — anonymous
+   is a state the machine respects, never a hole. An unproven name never
+   attributes (custody and registry must AGREE or the seat refuses). *Proven
+   live: «jb» minted at becky's gate (did:key:zffCpNk8…) — a real person-join
+   card, a real approval; his stroke «I take my coffee black and my dives whole»
+   landed with AUTHOR = HIS OWN DID on the signed log (the node verifying a
+   human's own signature for the first time); his portrait held only his stroke
+   while the anonymous portrait held the legacy strokes with his NOWHERE in it;
+   his 👍 verdict wears his DID; and the custody survived a worker replant
+   mid-walk — the same self, the same key.* Suite 574→578 (the person's four
+   laws). *Honest remainders: attribution trusts the operator's console v1 (a
+   spoken name selects a custodied seat — enterprise auth binds a session to a
+   person at 0072's workspace); observations/mirror strokes stay floor-level
+   until the observing lanes learn who was present; per-person threads join the
+   workspace.*
 
 ## 7. The honest boundary rows this dive moves
 

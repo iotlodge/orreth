@@ -404,9 +404,66 @@ def seat_knowledge(port: int, scope: str, topic: str):
     return live, len(dead), n_sealed
 
 
-def profile_claims(port: int, scope: str):
+def person_seat(name: str):
+    """0070 sp5 — a PERSON's key survives the process (the covenant's first
+    rule, applied to humans at last): load-or-create under
+    ~/.orreth/persons/<name>/. The same person re-joins across lives with
+    the same DID — worker-custodied v1; client-held keys are 0072's
+    affordance over this same registry."""
+    nest = HOME / "persons" / name
+    nest.mkdir(parents=True, exist_ok=True)
+    path = nest / "seat.seed"
+    if path.exists():
+        return crypto.KeyPair(path.read_bytes())
+    kp = crypto.KeyPair()
+    path.write_bytes(kp.seed)
+    return kp
+
+
+def _person_registry(port: int) -> dict:
+    """name -> {did, ref} from the becky-signed person records (memo'd a
+    breath; registration busts it)."""
+    def _read():
+        out = {}
+        rows = []
+        for ref, b, _df, tg in wire_assets(port, "person"):
+            pr = (b or {}).get("person") or {}
+            if pr.get("name"):
+                rows.append((str(pr.get("registered") or ""), ref, pr))
+        for _at, ref, pr in sorted(rows):
+            if pr["name"] not in out:         # first registration owns the
+                out[pr["name"]] = {"did": pr.get("did", ""), "ref": ref}
+        return out
+    return _memo(f"persons-{port}", 30, _read)
+
+
+def _person_ctx(port: int, name: str):
+    """The speaking person's OWN signing context — (kp, did) when the name
+    is registered AND the custody holds their seed; None otherwise (the
+    floor's shared seat then serves, honestly unattributed)."""
+    if not name:
+        return None
+    row = _person_registry(port).get(name)
+    if not row:
+        return None
+    seed = HOME / "persons" / name / "seat.seed"
+    if not seed.exists():
+        return None
+    kp = crypto.KeyPair(seed.read_bytes())
+    did = crypto.did_key_for(kp.public)
+    if did != row["did"]:
+        print(f"  🧑 person «{name}»: custody and registry DISAGREE — "
+              "refusing the seat (never sign as a self you cannot prove)")
+        return None
+    return kp, did
+
+
+def profile_claims(port: int, scope: str, person: str = ""):
     """The live portrait at this floor (0025): every profile claim, withdrawals
-    applied — a withdrawn claim never answers (lineage-death, reused)."""
+    applied — a withdrawn claim never answers (lineage-death, reused).
+    0070 sp5: `person` scopes the portrait — a registered person's strokes
+    are THEIRS (person:<name> tag); the empty person is the floor's honest
+    anonymous portrait, exactly as before the registry existed."""
     _, seat_did = lib_seat(scope)
     from datetime import datetime, timedelta, timezone
     token = _ROOT.issue_token(seat_did, "u:demo", [{"action": "retrieve", "space": "self"}])
@@ -421,8 +478,12 @@ def profile_claims(port: int, scope: str):
         return []
     bodies = {}
     for h in r.get("hits", []):
-        if "profile" not in (h.get("tags") or []):
+        tags = h.get("tags") or []
+        if "profile" not in tags:
             continue
+        if not profile.stroke_visible(tags, person):
+            continue                          # whose portrait a stroke belongs
+                                              # to is ONE law (0070 sp5)
         try:
             b = call(port, "GET", f"/records/{urllib.parse.quote(h['ref'], safe='')}/body")
         except Exception:
@@ -434,10 +495,10 @@ def profile_claims(port: int, scope: str):
             if "claim" in (b.get("profile") or {}) and ref not in dead]
 
 
-def profile_read(port: int, scope: str) -> str:
+def profile_read(port: int, scope: str, person: str = "") -> str:
     """Compose the portrait, provenance labeled (0025 §4): the strokes you painted,
     then the strokes I painted — every one wearing its receipt."""
-    claims = profile_claims(port, scope)
+    claims = profile_claims(port, scope, person=person)
     if not claims:
         return ("your profile is a blank page — assert with “my profile: …”, or let "
                 "moments you ask me to remember become observations.")
@@ -473,15 +534,19 @@ def shred_claim(port: int, ref: str, reason: str) -> bool:
         return False
 
 
-def profile_forget(port: int, scope: str, topic: str) -> str:
+def profile_forget(port: int, scope: str, topic: str,
+                   person: str = "") -> str:
     """Consent withdrawn (0025 §3), now with its physical step (0026 §2): a
     withdrawal silences each matching claim, then the worker walks it through the
     tombstone door — the subject's own consent IS the quorum for their own data.
     THAT you forgot stays on the record; WHAT you forgot stops existing."""
     seat_kp, seat_did = lib_seat(scope)
+    pctx = _person_ctx(port, person) if person else None
+    if pctx:                                  # your OWN word withdraws your
+        seat_kp, seat_did = pctx              # OWN strokes — signed by YOU
     words = {w for w in topic.lower().split() if len(w) > 2}
     hushed = shredded = 0
-    for ref, c in profile_claims(port, scope):
+    for ref, c in profile_claims(port, scope, person=person):
         text = str(c.get("claim", "")).lower()
         if words and not any(w in text for w in words):
             continue
@@ -490,7 +555,7 @@ def profile_forget(port: int, scope: str, topic: str) -> str:
         try:
             call(port, "POST", "/records", rec)
             hushed += 1
-            _MEMO.pop(f"profile-slice-{port}-{scope}", None)  # the voice
+            _MEMO.pop(f"profile-slice-{port}-{scope}-{person}", None)  # the voice
                                               # forgets MID-THREAD (0070 sp2)
         except Exception as e:
             print(f"    (withdrawal write failed: {e})")
@@ -10230,7 +10295,7 @@ CHARTERS_ROSTER = (
     "observatory (measurement, verdicts, the dial)")
 
 
-def _profile_slice(port: int, scope: str) -> tuple[str, dict]:
+def _profile_slice(port: int, scope: str, person: str = "") -> tuple[str, dict]:
     """0070 sp2 — THE PROFILE FINALLY READ: the slice the voice speaks from,
     composed through the librarian's SOVEREIGN door (profile_claims — the
     privacy floor stands: these records never enter a projection; this text
@@ -10239,15 +10304,15 @@ def _profile_slice(port: int, scope: str) -> tuple[str, dict]:
     claim stops speaking mid-thread."""
     def _read():
         try:
-            claims = profile_claims(port, scope)
+            claims = profile_claims(port, scope, person=person)
         except Exception:
             return ("", {})
         return (profile.slice_text(claims), profile.live_prefs(claims))
-    return _memo(f"profile-slice-{port}-{scope}", 15, _read)
+    return _memo(f"profile-slice-{port}-{scope}-{person}", 15, _read)
 
 
 def _listen_kit(name: str, port: int, scope: str, facts: dict,
-                card: str) -> str:
+                card: str, person: str = "") -> str:
     """0046 sp1 — the grounding kit: what this resident may honestly speak
     from, composed from the CACHED composers. The registry is the
     cross-scope library card (0045); the status card rides as context,
@@ -10339,10 +10404,14 @@ def _listen_kit(name: str, port: int, scope: str, facts: dict,
     # records live behind the privacy floor and never enter any projection;
     # the voice honors them, starting with the human's answer-language
     try:
-        pslice, prefs = _profile_slice(port, scope)
+        pslice, prefs = _profile_slice(port, scope, person=person)
         if pslice:
-            kit += ("\n\nTHE HUMAN'S PROFILE (sovereign — honor it, never "
-                    "recite it unasked): " + pslice)
+            kit += ("\n\nTHE HUMAN'S PROFILE"
+                    + (f" (this is {person}, a registered person — their "
+                       "own signed strokes)" if person else
+                       " (the floor's shared portrait — unattributed)")
+                    + " — sovereign, honor it, never recite it unasked: "
+                    + pslice)
         if prefs.get("language"):
             kit += (f"\n\nANSWER IN {str(prefs['language']).upper()} — the "
                     "human's standing preference, from their own profile.")
@@ -10668,6 +10737,10 @@ def on_thumb(port: int, scope: str, r: dict) -> None:
     up = bool(r.get("up"))
     words = str(r.get("text") or "")
     kp, did = human_seat(scope)
+    _pn = str(r.get("person") or "").strip().lower()
+    _pc = _person_ctx(port, _pn) if _pn else None
+    if _pc:                                   # 0070 sp5 — YOUR thumb, YOUR key
+        kp, did = _pc
     try:
         verdict, fb = thumb_mod.make_thumb({"did": did, "scope": scope}, kp,
                                            scope, of=of, up=up, text=words)
@@ -10730,6 +10803,13 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     """An audience: the caller asks, the resident fetches with its own authority,
     and the exchange lands signed in the Window. Humans never read; they are answered."""
     name = str(r.get("to") or "").strip().lower()
+    # 0070 sp5 — WHO IS SPEAKING: a registered person's name rides the ask;
+    # their own custody signs their own acts. Unregistered or absent, the
+    # floor's shared seat serves — honestly unattributed.
+    person = str(r.get("person") or "").strip().lower()
+    pctx = _person_ctx(port, person) if person else None
+    if person and pctx is None:
+        person = ""                           # an unproven name never attributes
     facts = parlor_facts(port, scope)
     if name == "librarian":                   # the desk answers her card too (0032)
         facts["subscriptions"] = wire_subscriptions(port, scope)
@@ -10842,7 +10922,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     if r.get("verb") == "workspace":          # 0028 §1 — the room is an ask too
         if name == "librarian":               # the richest room reads more state
             facts["stacks"] = wire_stacks_panel(port)   # the seven rows (0038)
-            facts["profile_text"] = profile_read(port, scope)
+            facts["profile_text"] = profile_read(port, scope, person=person)
             facts["markers"] = recent_markers(port, scope)
             facts["domains"] = domain_packages(port, scope)  # 0031 §5
             facts["subscriptions"] = wire_subscriptions(port, scope)  # 0032 §1
@@ -10906,6 +10986,23 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         else:
             reply = ("nothing stands at the gate to decide — say “adopt the "
                      "estate” first and the walk stages for you (0037 §7).")
+    if ans.get("action") == "person-register":  # 0070 sp5 — 0012's debt
+        _nm = str(ans.get("person_name") or "")
+        from orreth_sim import persons as _pp
+        if not _pp.valid_name(_nm):
+            reply = ("a person's name is 2–24 plain characters "
+                     "(a-z, 0-9, - _), starting with a letter")
+        elif _nm in _person_registry(port):
+            reply = (f"«{_nm}» is already a registered person — a name is "
+                     "NEVER reissued; choose another")
+        else:
+            call(port, "POST", "/requests", {
+                "kind": "person-join", "name": _nm,
+                "text": f"«{_nm}» asks to become a PERSON — their own seat "
+                        "key, minted at becky's gate; profile, preferences, "
+                        "and thumbs will sign under it (0070 sp5)"})
+            reply = (f"staged at my gate — approve the person-join card and "
+                     f"«{_nm}» becomes an identity with their own key")
     if ans.get("action") == "estate-template":  # 0037 §4 — the yaml, recallable
         reply = wire_estate_template(universe_port(port), ans["subject"])
     if ans.get("action") == "belief-scrub":   # 0070 sp4 — versions ARE time
@@ -11028,9 +11125,9 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         wire_feedback(universe_port(port), UNIVERSE_SCOPE,
                       ans["asset"], ans.get("note", ""))
     if ans.get("action") == "profile-read":    # 0025 §4 — the portrait, labeled
-        reply = profile_read(port, scope)
+        reply = profile_read(port, scope, person=person)
     if ans.get("action") == "profile-forget":  # 0025 §3 — consent withdrawn
-        reply = profile_forget(port, scope, ans["topic"])
+        reply = profile_forget(port, scope, ans["topic"], person=person)
     if ans.get("action") == "ecosystem":  # the shipyard's front door — staged, never direct
         call(port, "POST", "/requests",
              {"kind": "ecosystem", "eco": ans["eco"], "fields": ans["fields"],
@@ -11113,7 +11210,8 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         # every channel shares it); zero on the dial turns it off honestly
         _tctx = _thread_context(port, str(r.get("prior") or ""))
         voiced = governed_voice(vport, name, did, asked,
-                                _listen_kit(name, port, scope, facts, reply)
+                                _listen_kit(name, port, scope, facts, reply,
+                                            person=person)
                                 + _tctx)
     final = voiced or reply
     # safer mode (0034 §4): consent withdrawn ⇒ the parlor's recorder falls
@@ -11144,6 +11242,7 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         body = parlor.audience_prior(
             parlor.audience_body(name, asked, final,
                                  session=str(r.get("session") or ""),
+                                 person=person,
                                  voiced=bool(voiced), thread=thread,
                                  ask_cap=dial_value("thread-ask-chars"),
                                  reply_cap=dial_value("thread-reply-chars")),
@@ -11190,15 +11289,21 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
                 print(f"    (marker write failed: {e})")
         if ans.get("action") == "profile-assert":  # 0025 §2 — the sovereign stroke
             _prefs = profile.parse_prefs(ans["claim"])   # 0070 sp2 — typed
-            mk = profile.make_claim({"did": did, "scope": scope}, kp, scope,
-                                    ans["claim"], asserted_by="human",
+            # 0070 sp5 — the stroke signs under the PERSON's own key when
+            # one speaks; the floor's seat serves the walk-up, as ever
+            _skp, _sdid = (pctx if pctx else (kp, did))
+            mk = profile.make_claim({"did": _sdid, "scope": scope}, _skp,
+                                    scope, ans["claim"], asserted_by="human",
                                     quoted=ans["claim"],
-                                    prefers=_prefs or None)
+                                    prefers=_prefs or None,
+                                    person=person or None)
             mk["derived_from"] = [rec["id"]]      # the ask is the provenance
             try:
                 call(port, "POST", "/records", mk)
-                _MEMO.pop(f"profile-slice-{port}-{scope}", None)
-                print(f"  ↳ profile · human assertion (trusted) — {mk['id'][:18]}…"
+                _MEMO.pop(f"profile-slice-{port}-{scope}-{person}", None)
+                print(f"  ↳ profile · human assertion (trusted"
+                      + (f", SIGNED BY {person}" if person else "")
+                      + f") — {mk['id'][:18]}…"
                       + (f" · typed prefs {_prefs}" if _prefs else ""))
             except Exception as e:
                 print(f"    (profile write failed: {e})")
@@ -12161,6 +12266,57 @@ def on_guardrail_stamp(port: int, scope: str, r: dict) -> None:
         print(f"  🪧 STAMP minted {rec['id'][:18]}… — the scary edit lands "
               f"under it, {days} days, walk-backable")
         return
+
+
+def on_person_join(port: int, scope: str, r: dict) -> None:
+    """0070 sp5 — THE MINT AT BECKY'S GATE (0012's debt): the human's
+    approval of their own registration mints the person's seat — the seed
+    persisted under the worker's custody (the covenant's first rule: this
+    self survives the process), the public key registered with becky's
+    NANDA, and the becky-signed person record the registry reads forever.
+    A taken name refuses — never reissued."""
+    from orreth_sim import persons as _pp
+    nm = str(r.get("name") or "")
+    if r.get("status") == "pending":
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"held": ("a person is an identity: their own seat "
+                                  "key, their own signed strokes — approve "
+                                  "and the mint happens at becky's gate; "
+                                  "the floor's shared seat remains the "
+                                  "honest anonymous fallback")}})
+        return
+    if r.get("status") == "approved":
+        if not _pp.valid_name(nm) or nm in _person_registry(port):
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "done",
+                  "result": {"refused": f"«{nm}» cannot register — invalid "
+                             "or already a person (a name is never reissued)"}})
+            return
+        kp = person_seat(nm)
+        did = crypto.did_key_for(kp.public)
+        try:
+            _BECKY.nanda.register(did, kp.public)
+        except Exception:
+            pass                              # already registered = the same self
+        rec = _pp.make_person_record({"did": _BECKY.did,
+                                      "scope": UNIVERSE_SCOPE},
+                                     _BECKY.kp, UNIVERSE_SCOPE, nm, did)
+        try:
+            call(port, "POST", "/records", rec)
+        except Exception as e:
+            print(f"    (person record failed: {e})")
+        _MEMO.pop(f"persons-{port}", None)
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "done",
+              "result": {"person": nm, "did": did, "record": rec["id"],
+                         "reply": (f"«{nm}» is a person now — your own seat "
+                                   f"key stands ({did[:30]}…), and it will "
+                                   "survive every restart exactly as every "
+                                   "self here does. Say «I am " + nm + "» "
+                                   "in any parlor and your strokes sign "
+                                   "under YOUR key")}})
+        print(f"  🧑 PERSON MINTED at becky's gate: «{nm}» — {did[:30]}…")
 
 
 def on_stamp_walkback(port: int, scope: str, r: dict) -> None:
@@ -16685,6 +16841,10 @@ def main() -> None:
                                                     "denied"):
                             handled.add(key)
                             on_fuel_request(port, scope, r)
+                        elif r.get("kind") == "person-join" and \
+                                r.get("status") in ("pending", "approved"):
+                            handled.add(key)
+                            on_person_join(port, scope, r)
                         elif r.get("kind") == "store-onboard" and \
                                 r.get("status") in ("pending", "approved"):
                             handled.add(key)

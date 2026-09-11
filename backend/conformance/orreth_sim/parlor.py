@@ -748,6 +748,15 @@ def answer(name: str, text: str, facts: dict) -> dict:
             return {"reply": "dispatching…", "action": "stacks-ask",
                     "q": (text or "").strip(), "verbatim": True}
         return {"reply": _librarian_reply(facts)}
+    if name == "becky":
+        m = re.match(r"^register me[:\s]+([a-z0-9_-]+)\s*$",
+                     (text or "").strip(), re.IGNORECASE)
+        if m:
+            return {"reply": "a person is an identity — the registration "
+                             "stages at my gate; your approval there mints "
+                             "your own seat key (0070 sp5, 0012's debt)",
+                    "action": "person-register",
+                    "person_name": m.group(1).lower(), "verbatim": True}
     if name == "grace":
         fb = parse_feedback(text)
         if fb is not None:                    # 0031 §4 — the feedback door
@@ -1561,7 +1570,7 @@ _ROOMS = {"librarian": _room_librarian, "becky": _room_becky,
 # ---------------------------------------------------------------- the audience record
 
 def audience_body(resident: str, asked: str, reply: str, *, session: str = "",
-                  voiced: bool = False, thread: str = "",
+                  voiced: bool = False, thread: str = "", person: str = "",
                   ask_cap: int = 400, reply_cap: int = 600) -> dict:
     """One exchange, witnessed: the resident authors it — the caller's words ride
     inside until humans carry signatures of their own (0012's signer registry).
@@ -1571,6 +1580,7 @@ def audience_body(resident: str, asked: str, reply: str, *, session: str = "",
     return {"parlor": resident, "asked": (asked or "")[:max(50, int(ask_cap))],
             "reply": (reply or "")[:max(100, int(reply_cap))],
             "session": session, "voiced": voiced,
+            **({"person": person} if person else {}),
             **({"thread": thread} if thread else {}), "at": NOW()}
 
 
