@@ -164,9 +164,36 @@ honest about being unattributed).
    across browser lives is 0072's workspace affordance (the door already serves
    it); older-turn compression (the memory-retriever pattern) arrives when threads
    outgrow the dial.*
-2. **sp2 — The profile read.** The slice in the grounding kit (sovereign door, labeled);
-   typed preferences; language honored by the voice. Suite: privacy floor holds (no
-   profile in any projection); a withdrawn claim stops speaking mid-thread.
+2. **sp2 — The profile read.** ✅ **LANDED 2026-09-11 — the profile is finally read,
+   and the privacy floor finally holds EVERYWHERE.** **The slice**: composed through
+   the librarian's sovereign door (never a projection), provenance-labeled — *you
+   told me / I observed / the mirror noticed* — injected structurally into the
+   grounding kit at the one choke point every voiced answer passes; memo'd a short
+   breath and BUSTED by every profile write, so a withdrawal goes silent mid-thread.
+   **Typed preferences**: a human's own words carry the shape deterministically
+   («I prefer answers in Spanish» → {language: spanish}); ONLY sovereignty sets one
+   (an inference offering prefers refuses by law); latest assertion wins; the
+   answer-language preference (0069's hook) honored by the voice, verbosity beside
+   it. **The floor's walk-back — the spoonful's own found wound**: 134 profile
+   records were wearing VECTORS in the meaning axis (the chunk lane always refused
+   them; the embeddings projection never learned) — the privacy floor's tag list now
+   derives from the Canon registry (`canon.floored_tags` — the law stays in Canon),
+   rides every embeddings worklist ask, and the door EVICTS what the old blindness
+   left: 114 evicted at the universe's first ask, every floor clearing its own,
+   ZERO sovereign vectors standing. And the shared-clock starvation wound's third
+   sibling died in the same hour (the embed sweep's global clock let the universe
+   win every window — per-floor now, like its siblings). *Proven live in one voiced
+   breath: «tell me what you know about me» answered IN SPANISH — «Usted se está
+   reubicando a Colorado, y prefiere respuestas en español. He notado que pregunta
+   frecuentemente a Allen…» — the asserted facts, the typed preference, AND the
+   observed strokes all reaching the voice; then «forget about me: Spanish» erased
+   the claim through the door and the VERY NEXT voiced reply returned in English,
+   Colorado still known.* Suite 562→566 (the four profile-read laws). *Honest
+   remainders: the dispatcher's question lane (stacks-ask) stays deliberately
+   unvoiced by JB's 2026-07-22 law — profile-aware retrieval there rides the 0066
+   attributes lane when demanded; the great re-embedding now runs all floors in
+   parallel (the migration drains faster; round latency during it is the price,
+   named).*
 3. **sp3 — The personas.** The Universe default + the first resident personas; the
    `⟦persona⟧` slot; the razor amendment landed; blurbs from the shelf. Proven by a
    human hearing two residents sound like themselves.

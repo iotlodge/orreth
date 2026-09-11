@@ -109,6 +109,22 @@ def registry(node) -> dict:
     return prof if prof.get("classes") else CLASSES_V1
 
 
+def floored_tags(node) -> list[str]:
+    """0070 sp2 — THE PRIVACY FLOOR'S TAG LIST, derived from the registry
+    (the law stays in Canon, the projections merely obey): every tag whose
+    class the registry marks non-retrievable. The meaning axis and every
+    other projection exclude these — found live 2026-09-11 when 134 profile
+    records were discovered wearing vectors the chunk lane had always
+    refused them."""
+    classes = registry(node).get("classes", {})
+    out = []
+    for tag, cls in _TAG_CLASS:
+        row = classes.get(cls)
+        if row is not None and not row.get("retrievable"):
+            out.append(tag)
+    return out
+
+
 def class_of(record: dict) -> str:
     """A record's class, read from its tags — floors first, always."""
     tags = [str(t) for t in (record.get("tags") or [])]

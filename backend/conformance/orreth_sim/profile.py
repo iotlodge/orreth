@@ -43,17 +43,24 @@ def parse_forget(text: str):
 
 
 def make_claim(agent: dict, kp, scope: str, claim: str, *, asserted_by: str,
-               quoted: str | None = None, inferred_from: str | None = None) -> dict:
+               quoted: str | None = None, inferred_from: str | None = None,
+               prefers: dict | None = None) -> dict:
     """A profile claim with its provenance and its rung on the ladder (0025 §2):
     the human enters trusted; the Librarian — and the Mirror (0034 sp3) —
-    enter untrusted, always, and every inference names its evidence."""
+    enter untrusted, always, and every inference names its evidence.
+    `prefers` (0070 sp2): the typed preference shape a HUMAN's words carry —
+    only sovereignty may set one; an inference offering prefers refuses."""
     if asserted_by not in ("human", "librarian", "mirror"):
         raise ValueError(f"unknown asserter: {asserted_by!r}")
     if asserted_by != "human" and not inferred_from:
         raise ValueError("an inference names its evidence — inferred_from is required")
+    if prefers and asserted_by != "human":
+        raise ValueError("only the human's own word sets a preference (0025 "
+                         "sovereignty — an inference never steers the voice)")
     body: dict = {"profile": {"claim": claim, "asserted_by": asserted_by,
                               "state": "trusted" if asserted_by == "human"
-                                       else "untrusted"}}
+                                       else "untrusted",
+                              **({"prefers": dict(prefers)} if prefers else {})}}
     if quoted is not None:
         body["profile"]["quoted"] = quoted
     if inferred_from is not None:
@@ -63,6 +70,63 @@ def make_claim(agent: dict, kp, scope: str, claim: str, *, asserted_by: str,
     if inferred_from is not None:
         rec["derived_from"] = [inferred_from]
     return rec
+
+
+# ---- typed preferences (0070 sp2 — 0069's language hook lands here) -------------------
+
+_PREF_LANG = (r"(?:prefer(?:s)?\s+(?:answers?\s+)?in|answer\s+(?:me\s+)?in|"
+              r"reply\s+in|respond\s+in|language\s*[:=]?)\s+([a-zA-Z]+)")
+_PREF_VERBOSITY = {"brief": ("brief", "short", "concise", "terse"),
+                   "detailed": ("detailed", "thorough", "verbose", "long")}
+
+
+def parse_prefs(claim: str) -> dict:
+    """The typed shape inside a human's own words — deterministic, never a
+    guess dressed as knowledge: «I prefer answers in Spanish» →
+    {"language": "spanish"}; «keep replies brief» → {"verbosity": "brief"}.
+    Empty when the words carry no preference."""
+    import re
+    out: dict = {}
+    low = (claim or "").lower()
+    m = re.search(_PREF_LANG, low)
+    if m and m.group(1) not in ("a", "an", "the", "my", "your"):
+        out["language"] = m.group(1)
+    for level, words in _PREF_VERBOSITY.items():
+        if any(w in low for w in words) and (
+                "answer" in low or "repl" in low or "response" in low
+                or "verbosity" in low):
+            out["verbosity"] = level
+            break
+    return out
+
+
+def live_prefs(claims: list[tuple[str, dict]]) -> dict:
+    """The standing preferences: HUMAN-asserted only (sovereignty — an
+    inference never sets a preference), latest assertion per key wins
+    (correctable by re-assertion), withdrawn already dead upstream."""
+    out: dict = {}
+    for _ref, c in claims:                    # oldest-first rows; last wins
+        if c.get("asserted_by") != "human":
+            continue
+        for k, v in (c.get("prefers") or {}).items():
+            out[k] = v
+    return out
+
+
+def slice_text(claims: list[tuple[str, dict]], *, cap: int = 700) -> str:
+    """0070 sp2 — THE SLICE the voice finally reads: provenance-labeled
+    (you told me / I observed / the mirror noticed), sovereign-door-only —
+    this text is injected structurally and NEVER enters a projection.
+    Empty portrait, empty slice — a stranger stays a stranger."""
+    label = {"human": "you told me", "librarian": "I observed",
+             "mirror": "the mirror noticed"}
+    rows = [f"{label.get(c.get('asserted_by'), '?')}: "
+            f"{str(c.get('claim') or '')[:120]}"
+            for _r, c in claims if c.get("claim")]
+    if not rows:
+        return ""
+    text = " · ".join(rows)
+    return text[:max(200, int(cap))]
 
 
 def make_withdrawal(agent: dict, kp, scope: str, claim_ref: str) -> dict:

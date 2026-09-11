@@ -489,6 +489,8 @@ def profile_forget(port: int, scope: str, topic: str) -> str:
         try:
             call(port, "POST", "/records", rec)
             hushed += 1
+            _MEMO.pop(f"profile-slice-{port}-{scope}", None)  # the voice
+                                              # forgets MID-THREAD (0070 sp2)
         except Exception as e:
             print(f"    (withdrawal write failed: {e})")
             continue                          # no silence, no shred — consent first
@@ -1382,7 +1384,7 @@ def on_attestation(port: int, scope: str, r: dict, *, approved: bool = False,
 # ---------------------------------------------------------------- the meaning axis (0022 Phase 2)
 
 EMBED_PORT = int(os.environ.get("ORRETH_EMBED_PORT", "4562"))
-_EMBED_LAST = 0.0
+_EMBED_LAST: dict = {}
 _CHUNK_LAST: dict = {}   # per floor — every shelf sweeps on its OWN clock
 _EXTRACT_LAST: dict = {}  # per floor — the graph's extraction clock
 _STANDINGS_LAST: dict = {}  # per floor — the scoreboard's clock
@@ -2627,10 +2629,12 @@ def embed_beat(port: int, scope: str) -> None:
     vector index lacks — computed HERE, where the bytes live, pushed through
     the becky-guarded door. A dark axis sweeps nothing; a bodyless record
     gets the NULL marker and is never revisited."""
-    global _EMBED_LAST
-    if time.time() - _EMBED_LAST < dial_value("embed-every"):
+    # per-floor clock (0070 sp2 — the shared-clock starvation wound's THIRD
+    # sibling cured: one global stamp let the universe win every window while
+    # other floors' sovereign vectors stood unevicted)
+    if time.time() - _EMBED_LAST.get(scope, 0.0) < dial_value("embed-every"):
         return
-    _EMBED_LAST = time.time()                 # set early — a failing sweep never hot-loops
+    _EMBED_LAST[scope] = time.time()          # set early — a failing sweep never hot-loops
     # 0069 sp5 — the axis rides the DECLARED standard: the shelf's head aims
     # the model, and every row wears its name — a turned standard makes the
     # old rows visibly stale and this same sweep re-embeds them, paced
@@ -2639,10 +2643,24 @@ def embed_beat(port: int, scope: str) -> None:
         return
     token = _ROOT.issue_token(_BECKY.did, "u:demo",
                               [{"action": "govern", "space": "self"}])
+    # 0070 sp2 — the privacy floor rides the ask: the Canon registry's
+    # non-retrievable tags travel with every worklist request, so a
+    # sovereign record never enters the meaning axis (and the door evicts
+    # any vector the old blindness left behind)
+    try:
+        from orreth_sim import canon as _cn2
+        n2, _, _ = _stacks_node(port, scope)
+        _floor = _cn2.floored_tags(n2) if n2 is not None else [
+            "profile", "consent", "testament", "passage", "purge",
+            "tombstone", "custody", "birth-certificate"]
+    except Exception:
+        _floor = ["profile", "consent", "testament", "passage", "purge",
+                  "tombstone", "custody", "birth-certificate"]
     try:
         missing = call(port, "POST", "/embeddings/missing",
                        {"token": token, "limit": 64,
-                        "model": meaning.model_name()}).get("missing", [])
+                        "model": meaning.model_name(),
+                        "exclude_tags": _floor}).get("missing", [])
     except Exception:
         return
     if not missing:
@@ -10166,6 +10184,22 @@ CHARTERS_ROSTER = (
     "observatory (measurement, verdicts, the dial)")
 
 
+def _profile_slice(port: int, scope: str) -> tuple[str, dict]:
+    """0070 sp2 — THE PROFILE FINALLY READ: the slice the voice speaks from,
+    composed through the librarian's SOVEREIGN door (profile_claims — the
+    privacy floor stands: these records never enter a projection; this text
+    is injected structurally, provenance-labeled). Returns (slice, prefs).
+    Memo'd a short breath and BUSTED by every profile write, so a withdrawn
+    claim stops speaking mid-thread."""
+    def _read():
+        try:
+            claims = profile_claims(port, scope)
+        except Exception:
+            return ("", {})
+        return (profile.slice_text(claims), profile.live_prefs(claims))
+    return _memo(f"profile-slice-{port}-{scope}", 15, _read)
+
+
 def _listen_kit(name: str, port: int, scope: str, facts: dict,
                 card: str) -> str:
     """0046 sp1 — the grounding kit: what this resident may honestly speak
@@ -10254,6 +10288,22 @@ def _listen_kit(name: str, port: int, scope: str, facts: dict,
     except Exception:
         pass
     kit = "\n".join(bits)[:2800]
+    # 0070 sp2 — THE PROFILE FINALLY READ (0025's deferral collected): the
+    # sovereign slice, provenance-labeled, injected STRUCTURALLY — these
+    # records live behind the privacy floor and never enter any projection;
+    # the voice honors them, starting with the human's answer-language
+    try:
+        pslice, prefs = _profile_slice(port, scope)
+        if pslice:
+            kit += ("\n\nTHE HUMAN'S PROFILE (sovereign — honor it, never "
+                    "recite it unasked): " + pslice)
+        if prefs.get("language"):
+            kit += (f"\n\nANSWER IN {str(prefs['language']).upper()} — the "
+                    "human's standing preference, from their own profile.")
+        if prefs.get("verbosity") == "brief":
+            kit += "\nKeep the answer BRIEF — the human's standing preference."
+    except Exception:
+        pass
     return (kit + "\n\nYOUR STATUS CARD (context, not the whole truth):\n"
             + str(card)[:400])
 
@@ -11089,13 +11139,17 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
             except Exception as e:
                 print(f"    (marker write failed: {e})")
         if ans.get("action") == "profile-assert":  # 0025 §2 — the sovereign stroke
+            _prefs = profile.parse_prefs(ans["claim"])   # 0070 sp2 — typed
             mk = profile.make_claim({"did": did, "scope": scope}, kp, scope,
                                     ans["claim"], asserted_by="human",
-                                    quoted=ans["claim"])
+                                    quoted=ans["claim"],
+                                    prefers=_prefs or None)
             mk["derived_from"] = [rec["id"]]      # the ask is the provenance
             try:
                 call(port, "POST", "/records", mk)
-                print(f"  ↳ profile · human assertion (trusted) — {mk['id'][:18]}…")
+                _MEMO.pop(f"profile-slice-{port}-{scope}", None)
+                print(f"  ↳ profile · human assertion (trusted) — {mk['id'][:18]}…"
+                      + (f" · typed prefs {_prefs}" if _prefs else ""))
             except Exception as e:
                 print(f"    (profile write failed: {e})")
     print(f"  ↳ parlor · {name} received “{asked[:48]}”" + (" · voiced" if voiced else ""))

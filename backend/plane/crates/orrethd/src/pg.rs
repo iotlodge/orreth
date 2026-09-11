@@ -228,11 +228,14 @@ impl PgRecords {
     /// the sweep's worklist. Purged stubs are never on it (0026 §1: a purge
     /// that misses the vector index is not a purge; they never enter it).
     pub fn missing_embeddings(&self, node_scope: &str, limit: i64,
-                              model: &str)
+                              model: &str, exclude_tags: &[String])
                               -> Result<Vec<String>, postgres::Error> {
         // absent rows AND wrong-model rows are BOTH the sweep's work — the
         // survey's exact wound (0069 §2.4): «the sweep only finds absent
-        // rows, not wrong-model rows» — paid here
+        // rows, not wrong-model rows» — paid here. exclude_tags (0070 sp2):
+        // the privacy floor's tag list, derived from the Canon registry by
+        // the worker — a sovereign record never enters THIS projection
+        // either (134 profile vectors found live before this line existed).
         if !self.vectors { return Ok(Vec::new()); }
         let rows = self.client.lock().unwrap().query(
             "SELECT r.id FROM records r
@@ -240,10 +243,27 @@ impl PgRecords {
              LEFT JOIN purged p     ON p.node_scope = r.node_scope AND p.id = r.id
              WHERE r.node_scope = $1 AND p.id IS NULL
                AND (e.id IS NULL OR e.model <> $3)
+               AND NOT (r.record->'tags' ?| $4::text[])
              ORDER BY r.occurred_at DESC LIMIT $2",
-            &[&node_scope, &limit, &model],
+            &[&node_scope, &limit, &model, &exclude_tags],
         )?;
         Ok(rows.into_iter().map(|r| r.get(0)).collect())
+    }
+
+    /// The floor reaches back (0070 sp2): vectors a sovereign record should
+    /// never have worn are evicted in one sweep — the walk-back of the
+    /// meaning axis's old blindness.
+    pub fn evict_floored_embeddings(&self, node_scope: &str,
+                                    tags: &[String])
+                                    -> Result<u64, postgres::Error> {
+        if !self.vectors { return Ok(0); }
+        self.client.lock().unwrap().execute(
+            "DELETE FROM embeddings e USING records r
+             WHERE r.node_scope = e.node_scope AND r.id = e.id
+               AND e.node_scope = $1
+               AND (r.record->'tags' ?| $2::text[])",
+            &[&node_scope, &tags],
+        )
     }
 
     /// The purge reaches the projection (0026 §1, the stated hard rule): a

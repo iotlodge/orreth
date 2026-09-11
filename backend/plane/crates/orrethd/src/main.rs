@@ -862,8 +862,22 @@ async fn embeddings_missing(State(app): State<Arc<App>>, Json(req): Json<Value>)
         let node_scope = { app.universe.lock().unwrap().nodes[0].scope.clone() };
         let limit = req["limit"].as_i64().unwrap_or(32).clamp(1, 256);
         let model = req["model"].as_str().unwrap_or("").to_string();
+        let exclude: Vec<String> = req["exclude_tags"].as_array().map(|a| {
+            a.iter().filter_map(|x| x.as_str().map(String::from)).collect()
+        }).unwrap_or_default();
+        // the floor reaches back once per ask when exclusions ride: old
+        // sovereign vectors evict before the worklist answers
+        if !exclude.is_empty() {
+            if let Some(store) = &app.pg {
+                if let Ok(n) = store.evict_floored_embeddings(&node_scope, &exclude) {
+                    if n > 0 {
+                        eprintln!("orrethd · the privacy floor reached the meaning axis: {n} sovereign vector(s) evicted");
+                    }
+                }
+            }
+        }
         let missing = app.pg.as_ref()
-            .and_then(|s| s.missing_embeddings(&node_scope, limit, &model).ok())
+            .and_then(|s| s.missing_embeddings(&node_scope, limit, &model, &exclude).ok())
             .unwrap_or_default();
         (StatusCode::OK, Json(json!({"missing": missing})))
     })
