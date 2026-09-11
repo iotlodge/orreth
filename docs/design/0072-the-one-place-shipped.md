@@ -150,9 +150,35 @@ already landed in 0069's design.
 
 ## 6. The spoonfuls (proposed order)
 
-1. **sp1 — The grammar grows.** The new panel kinds declared + the first two rendered
-   (chat, sources) against E-RAG's manifest; the composer row with the selector; the
-   thread lives.
+1. **sp1 — The grammar grows.** ✅ **LANDED 2026-09-11.** The new panel kinds declared +
+   the first two rendered (chat, sources) against E-RAG's manifest; the composer row
+   with the selector; the thread lives. The vocabulary release: `CAP_PANEL_KINDS` grew
+   `chat` + `sources` (growing the vocabulary IS a release — 0055's own law), and
+   `capabilities/e-rag/genesis.py` became the first One Place tenant — PURE DATA (a
+   suite law loads it as literals; a `selector` drift-guard holds it to
+   `variants.MENU`). The kernel renders both rooms BLIND from the declaration: the chat
+   canvas (composer + variant selector + transcript where every answer wears its
+   variant, its guardrail law, its exchange ref as the door to «how this was made», and
+   its citations as doors) and the sources room (the Farm's store/database truth + the
+   Basket's signed-log import progress + the 🧺 door). The canvas is a WORLDLINE at the
+   ask door: `thread:"new"` mints the head server-side, every turn derives from
+   [choice, thread, prior] (pg receipt: turn 2 carries all three), threaded asks never
+   ride the ask-cache, and the result envelope returns the thread so the glass carries
+   it forward. Proven live in the glass end to end: a two-turn walk (T1 «naive» +
+   thread minted → T2 riding the same head with the 🧵 chip standing). **Four glass
+   wounds caught by the walk itself and paid in-hour**: (1) `renderWorld`'s no-report
+   arm rendered only `controls` — room-shaped worlds got the desk's «no report yet»
+   line; rooms are item-independent now and the desk line is desk-only. (2) The
+   watcher's give-up was a dead end while the machine kept walking (a fresh replant's
+   first lap ran ~5 min; the canvas quit at 2½) — the give-up line is now a DOOR
+   (⟲ keep watching), proven live twice. (3) The give-up appended beside the standing
+   wait line so «watching again…» outlived its own answer — one wait-class line in
+   flight, always. (4) `capFresh`'s in-flight fetch landed on a half-typed ask and ate
+   it — the focus guard re-checks AFTER the await, and the composer's value/focus/caret
+   survive every rebuild. Suite 578→581 (three One Place laws). Honest remainders: the
+   folder-install road is still the KCR-0002 wound (sp4 pays it); serve latency wobbles
+   30s–5min while boot metabolism laps starve queue serves (the middleware conversation
+   JB has queued is the cure, not a glass patch).
 2. **sp2 — The Workspace engine.** The kernel workspace glass per `workspace.md`; E-RAG's
    eleven as first tenant; Compare and the eats drawer.
 3. **sp3 — Monitoring + the API console.** The operate room with Observatory doors; the

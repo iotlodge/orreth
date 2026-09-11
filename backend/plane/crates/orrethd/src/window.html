@@ -5486,6 +5486,11 @@ async function capFresh(){
   try{
     const url=CAPV==="home"?`${OBSD}/desk`:`${OBSD}/desk?key=${encodeURIComponent(CAPV)}`;
     const d=await (await fetch(url)).json();
+    /* the guard again AFTER the await — a fetch launched before the human
+       clicked into the composer must not land on their half-typed ask
+       (the in-flight race ate a typed question, caught live 2026-09-11) */
+    const a2=document.activeElement;
+    if(a2&&$("capworld").contains(a2)&&(a2.tagName==="INPUT"||a2.tagName==="TEXTAREA"))return;
     if(CAPV!=="home")d._key=CAPV;
     DESK=d;renderCap();
   }catch(e){}}
@@ -6018,9 +6023,115 @@ function dkPanel(p,pi,item){
     let rows=[...(item[p.src]||[])];const cols=p.columns||[];
     if(DKSORT.col)rows.sort((a,b)=>((a[DKSORT.col]>b[DKSORT.col])?1:-1)*DKSORT.dir);
     return `<div style="overflow-x:auto"><table class="dk-table"><tr>${cols.map(c=>`<th onclick="dkTableSort(${pi},'${dkEsc(c.key)}')">${dkEsc(c.label||c.key)}${DKSORT.col===c.key?(DKSORT.dir>0?" ↑":" ↓"):""}</th>`).join("")}</tr>${rows.map(r=>`<tr>${cols.map(c=>`<td>${dkEsc(r[c.key]??"")}</td>`).join("")}</tr>`).join("")}</table></div>`}
+  case "chat":{
+    /* 0072 sp1 — THE CHAT CANVAS, rendered BLIND from the declaration:
+       the composer row (the selector + the ask), the transcript, every
+       answer wearing its variant, its guardrail version, its citations as
+       doors, and its exchange ref (the door to «how this was made»). The
+       conversation is a WORLDLINE at the ask door — the kernel renders,
+       the capability only configured. */
+    const sel=(p.selector||["auto"]).map(v=>`<option value="${dkEsc(v)}"${(typeof CHAT!=="undefined"&&CHAT.variant===v)?" selected":""}>${dkEsc(v)}</option>`).join("");
+    return `<div class="dk-chtitle" style="margin-top:.6rem">${dkEsc(p.label||"the chat")}${(typeof CHAT!=="undefined"&&CHAT.thread)?` · <span class="dim" style="font-size:.68rem">🧵 a worldline — every turn a signed record</span>`:""}</div>
+      <div id="chat-log" style="border:1px solid var(--hair);border-radius:10px;padding:.6rem .8rem;min-height:8rem;max-height:24rem;overflow-y:auto;background:var(--deep)">${(typeof CHAT!=="undefined"?CHAT.html:"")||`<div class="dim" style="font-size:.75rem">ask in your own words — the answer arrives with its citations, its chosen style, and the law it ran under. Auto lets the router read your ask; pick a style to overrule it.</div>`}</div>
+      <div class="dk-law" style="margin-top:.45rem;display:flex;gap:.4rem;align-items:center">
+        <select id="chat-var" onchange="if(typeof CHAT!=='undefined')CHAT.variant=this.value" title="which retrieval style answers — Auto lets the router choose, and the choice is never a secret">${sel}</select>
+        <input id="chat-in" placeholder="${dkEsc(p.placeholder||"ask…")}" style="flex:1" onkeydown="if(event.key==='Enter')chatSend(${pi})">
+        <button class="dk-tab" onclick="chatSend(${pi})">ask →</button></div>`}
+  case "sources":{
+    /* 0072 sp1 — THE SOURCES ROOM: the estate this world may read, live
+       from the governed doors (the Farm's own truth — a resting store
+       rests here instantly, the same fact from the same record), the
+       import queue's honest progress, and the Basket's door. */
+    setTimeout(()=>srcLoad(pi),0);
+    return `<div class="dk-chtitle" style="margin-top:.8rem">${dkEsc(p.label||"the sources")}
+       <span class="wtool" style="float:right" onclick="basketOpen()" title="import folders, many files, zips — mass to the object store, signed pointers to the log">🧺 open the Basket</span></div>
+      <div id="src-body-${pi}" class="dim" style="font-size:.75rem">reading the estate…</div>`}
   default:return `<div class="dim">(panel kind «${dkEsc(p.kind)}» is beyond the canon vocabulary)</div>`}}
+
+/* ── 0072 sp1 · the chat canvas's motion (kernel glass — every capability
+      declaring a chat panel inherits exactly this room) ── */
+let CHAT={html:"",thread:"",prior:"",variant:"auto",busy:false};
+async function chatSend(pi){
+  const p=(_CAPMAN&&_CAPMAN.view||[])[pi]||{};
+  const inp=$("chat-in");const t=(inp?inp.value:"").trim();if(!t||CHAT.busy)return;
+  inp.value="";CHAT.busy=true;
+  CHAT.html+=`<div class="msg mine" style="margin:.3rem 0">${dkEsc(t)}</div>
+    <div class="msg reply wait dim" style="font-size:.72rem">the router is reading your ask…</div>`;
+  const log=$("chat-log");if(log){log.innerHTML=CHAT.html;log.scrollTop=log.scrollHeight}
+  const port=p.ask_port||4500,base=`${location.protocol}//${location.hostname}:${port}`;
+  let rid="";
+  try{const r=await(await fetch(base+"/requests",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({kind:"ask",text:t,
+      ...(CHAT.variant&&CHAT.variant!=="auto"?{variant:CHAT.variant}:{}),
+      thread:CHAT.thread||"new",...(CHAT.prior?{prior:CHAT.prior}:{}),
+      ...(typeof PERSON!=="undefined"&&PERSON?{person:PERSON}:{})})}).catch(()=>null)).json();
+    rid=r&&r.id||""}catch{}
+  if(!rid){CHAT.html+=`<div class="msg reply">the ask door did not answer — is the daemon up?</div>`;CHAT.busy=false;renderCap();return}
+  chatPoll(base,rid,0);
+}
+function chatWait(base,rid){
+  CHAT.html=CHAT.html.replace(/<div class="msg reply dim late">[\s\S]*?<\/div>/,
+    `<div class="msg reply wait dim" style="font-size:.72rem">watching again — the walk never stopped…</div>`);
+  CHAT.busy=true;renderCap();chatPoll(base,rid,0);
+}
+async function chatPoll(base,rid,n){
+  if(n>60){/* the walk OUTLIVES the watcher (found live 2026-09-11: a fresh
+      replant's first boot cycle ran ~5 min and the canvas gave up 30s before
+      the answer landed) — so the give-up line is a DOOR, never a dead end */
+    CHAT.busy=false;
+    /* ONE wait-class line in flight, always — the give-up REPLACES the
+       watcher line (append left two; the landing removes only the first,
+       so «watching again…» outlived its own answer — caught live in-hour) */
+    CHAT.html=CHAT.html.replace(/<div class="msg reply wait[^>]*>[^<]*<\/div>/,"");
+    CHAT.html+=`<div class="msg reply dim late">the machine is still walking your ask — the glass stopped watching after 2½ minutes. <a href="#" style="color:var(--brass)" onclick="chatWait('${base}','${rid}');return false">⟲ keep watching</a> · or the answer lands in Requests either way</div>`;
+    renderCap();return}
+  let row=null;
+  try{const q=(await(await fetch(base+"/requests")).json()).requests||[];
+    row=q.find(x=>x.id===rid)}catch{}
+  if(!row||row.status!=="done"){setTimeout(()=>chatPoll(base,rid,n+1),2500);return}
+  const v=row.result||{},env=v.envelope||{};
+  if(v.thread)CHAT.thread=v.thread;
+  if(env.exchange)CHAT.prior=env.exchange;
+  CHAT.html=CHAT.html.replace(/<div class="msg reply wait[^>]*>[^<]*<\/div>/,"");
+  const gr=env.guardrails||{};
+  const cites=(env.citations||[]).map(c=>`<div class="dim" style="font-size:.68rem">▸ ${dkEsc(c.ref||"")} · ${dkEsc(c.scope||"")} · ${dkEsc(c.fidelity||"")}</div>`).join("");
+  CHAT.html+=`<div class="msg reply" style="margin:.3rem 0">${dkMd(env.reply||v.error||"(no reply)")}</div>
+    <div class="dim" style="font-size:.68rem;margin-bottom:.45rem">
+      served by «${dkEsc(env.variant||"?")}» · law ${dkEsc(String(gr.set_version||"?"))}
+      ${gr.stamp?` · <span style="color:var(--red)">⚠ under a lapsed-guardrail stamp (until ${dkEsc(String(gr.stamp.until||"").slice(0,10))})</span>`:""}
+      ${env.cached?` · ♻ from the cache (${env.cached.age_s}s old, confessed)`:""}
+      ${env.exchange?`<br>the answer wears its thinking: ${dkEsc(env.exchange)}`:""}
+      ${cites?`<details style="margin-top:.2rem"><summary style="cursor:pointer">citations — every one a door (${(env.citations||[]).length})</summary>${cites}</details>`:""}
+    </div>`;
+  CHAT.busy=false;renderCap();
+  const log=$("chat-log");if(log){linkifyEl(log);glossifyEl(log);log.scrollTop=log.scrollHeight}
+}
+async function srcLoad(pi){
+  const p=(_CAPMAN&&_CAPMAN.view||[])[pi]||{};
+  const el=$("src-body-"+pi);if(!el)return;
+  const port=p.farm_port||4500,base=`${location.protocol}//${location.hostname}:${port}`;
+  let svcs=[],jobs=[];
+  try{svcs=((await(await fetch(base+"/farm")).json()).services||[])
+    .filter(s=>s.kind==="store"||s.kind==="database")}catch{}
+  try{jobs=((await(await fetch(OBSD+"/basket/jobs?port="+port)).json()).jobs||[]).slice(-4).reverse()}catch{}
+  const stch=s=>s.state==="serving"?`<span style="color:var(--jade,#7ec9a5)">● serving</span>`
+    :s.state==="resting"?`<span class="dim">◌ resting — the human's word</span>`
+    :`<span class="dim">◌ ${dkEsc(s.state)}</span>`;
+  el.innerHTML=(svcs.length
+    ?svcs.map(s=>`<div class="dk-law">${s.kind==="database"?"🗄":"🛰"} <b>${dkEsc(s.name)}</b> · ${stch(s)} · <span class="dim">${dkEsc(s.endpoint||"")}</span> · <span class="dim">${(s.manifest||[]).map(t=>t.name).join("·")}</span></div>`).join("")
+    :`<div class="dim">no governed sources yet — onboard one at becky's gate («store-onboard») and it appears here, because it is the same fact read from the same record</div>`)
+   +(jobs.length?`<div class="dk-chtitle" style="margin-top:.5rem">imports — progress read from the signed log</div>`
+     +jobs.map(j=>`<div class="dim" style="font-size:.7rem">${j.finished?(j.failed?"⚠":"✓"):"⏳"} ${dkEsc(String(j.job).slice(0,18))}… ${j.done}/${j.count}${j.failed?` · ${j.failed} named honestly`:""}</div>`).join(""):"");
+}
 function renderWorld(man){
   _CAPMAN=man;
+  /* the composer survives every rebuild — value, focus, and caret carried
+     across innerHTML (belt to capFresh's braces: no render path may eat
+     a human's half-typed words) */
+  const _ci=$("chat-in"),_cv=_ci?_ci.value:"",_cf=_ci&&document.activeElement===_ci,
+        _cs=_ci?_ci.selectionStart:0;
+  const _ciRestore=()=>{const n=$("chat-in");
+    if(n&&_cv){n.value=_cv;if(_cf){n.focus();try{n.setSelectionRange(_cs,_cs)}catch(e){}}}};
   const B=$("capbody"),reps=DESK.reports||[];
   const crumb=`<div style="margin-bottom:.5rem"><a href="#" onclick="CAPV='home';renderCap();return false" style="color:var(--brass);font-size:.72rem;text-decoration:none">← worlds</a></div>`;
   const head=`<div class="dk-world">${man.emoji||"📦"} <b>${dkEsc(man.name)}</b> ${dkState(man)}
@@ -6028,8 +6139,17 @@ function renderWorld(man){
      <span style="margin-left:.6rem">${man.pending_verb?"":dkVerbs(man)}</span>
      <span class="dk-note dim" style="font-size:.68rem;margin-left:.5rem"></span>
      <div class="dk-law">${dkEsc(man.law||"")}</div>${dkPendingVerb(man)}</div>`;
-  if(!reps.length){B.innerHTML=crumb+head+((man.view||[]).filter(p=>p.kind==="controls").map((p)=>dkPanel(p,(man.view||[]).indexOf(p),{})).join(""))
-    +`<div class="dim" style="padding:1rem 0">no report yet — ask below for one now, or approve a daily watch</div>`;return}
+  /* 0072 sp1 — ROOMS are item-independent: a chat canvas or a sources
+     room lives whether or not any report ever landed; the no-report line
+     is the DESK pattern's own, shown only to desk-shaped worlds */
+  const ROOMS=new Set(["chat","sources","controls"]);
+  if(!reps.length){
+    const roomHtml=(man.view||[]).map((p,pi)=>ROOMS.has(p.kind)?dkPanel(p,pi,{}):"").join("");
+    const deskish=(man.view||[]).some(p=>!ROOMS.has(p.kind));
+    B.innerHTML=crumb+head+roomHtml
+      +(deskish?`<div class="dim" style="padding:1rem 0">no report yet — ask below for one now, or approve a daily watch</div>`:"");
+    _ciRestore();
+    return}
   DKIDX=Math.min(DKIDX,reps.length-1);
   const item=reps[DKIDX];
   /* the in-flight truth (0053) — a silent card breeds re-asks: every ask's
@@ -6055,7 +6175,7 @@ function renderWorld(man){
   view.forEach((p,pi)=>{if(p.detail)return;
     bodyHtml+=dkPanel(p,pi,item);
     if(p.kind==="reports")bodyHtml+=detailHtml});
-  B.innerHTML=crumb+head+askLines+walkStrips+bodyHtml;}
+  B.innerHTML=crumb+head+askLines+walkStrips+bodyHtml;_ciRestore();}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("capworld").classList.contains("capopen"))capToggle()});
 const _capw=location.hash.match(/capw=([a-z0-9-]+)/);if(_capw)CAPV=_capw[1];
 if(location.hash.includes("cap"))setTimeout(capToggle,600);   // deep-links: #…&cap=1 (the landing) · &capw=trading-desk (a world)

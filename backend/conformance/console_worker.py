@@ -1467,7 +1467,11 @@ ORRETH_MODE = os.environ.get("ORRETH_MODE", "dev").strip().lower()
 CAP_PANEL_KINDS = {"tabs", "markdown", "chart", "strip", "controls", "download",
                    "stat", "bars", "list", "doc", "table",
                    "flow",
-                   "reports"}   # canon (0055 L1/L2 · flow 08-16 · reports 08-17)
+                   "reports",   # canon (0055 L1/L2 · flow 08-16 · reports 08-17)
+                   "chat", "sources"}  # 0072 sp1 — One Place's first rooms:
+                                       # growing this vocabulary IS a release
+                                       # (0055's own words), and this dive is
+                                       # the release
 
 
 def cap_manifest_flaw(parsed) -> str | None:
@@ -7970,7 +7974,16 @@ def on_ask(port: int, scope: str, r: dict) -> None:
     # confessed in the envelope, and only while the exchange record the answer
     # leans on still STANDS: the read-side alive check is how purge and recall
     # reach this projection (no hooks, by construction). TTL 0 closes the cache.
+    # 0072 sp1 — THE CANVAS THREAD: a chat room's asks form a worldline
+    # exactly as the parlor's do (0070 sp1's law, at the ask door): the
+    # first turn mints the head; every exchange cites head + prior. A
+    # threaded ask never serves from cache — a conversation turn is always
+    # its own record.
+    thread_req = str(r.get("thread") or "")
+    prior_req = str(r.get("prior") or "")
     ttl = int(dial_value("ask-cache-ttl-s", port, scope) or 0)
+    if thread_req or prior_req:
+        ttl = 0
     ckey = askcache.key(scope, text, variant or "auto",
                         _guardrails_version(port))
     if ttl > 0:
@@ -8036,12 +8049,33 @@ def on_ask(port: int, scope: str, r: dict) -> None:
                       # glass and any query read it off the record, never a
                       # side channel
                       tags=["ask", f"variant:{s['variant']}"])
+    if thread_req == "new" or (prior_req and not thread_req):
+        head = parlor.make_thread_head({"did": seat_did, "scope": scope},
+                                       kp, scope, "the-canvas")
+        try:
+            call(port, "POST", "/records", head)
+            thread_req = head["id"]
+        except Exception as e:
+            print(f"    (canvas thread head failed: {e})")
+            thread_req = ""
+    if thread_req and thread_req != "new":
+        b = rec["body"]                       # rebuild the body with its thread
+        import json as _j
+        bd = _j.loads(crypto._b64d(b).decode())
+        bd["ask"]["thread"] = thread_req
+        if prior_req:
+            bd["ask"]["prior"] = prior_req
+        rec = make_memory({"did": seat_did, "scope": scope}, kp, scope, bd,
+                          kind="episodic",
+                          tags=["ask", f"variant:{s['variant']}"])
     if s.get("choice_ref"):
         # 0066 sp1 — the answer DERIVES from its choice: a thumb or verdict
         # on this exchange reaches the routing decision in ONE lineage hop
         # (the GIN index the plane already keeps), the same join the
         # experiment's arm tags proved
-        rec["derived_from"] = [s["choice_ref"]]
+        rec["derived_from"] = [s["choice_ref"]] \
+            + [x for x in (thread_req if thread_req != "new" else "",
+                           prior_req) if x]
     try:
         call(port, "POST", "/records", rec)
     except Exception:
@@ -8070,7 +8104,10 @@ def on_ask(port: int, scope: str, r: dict) -> None:
         with _ASK_CACHE_LOCK:
             askcache.put(_ASK_CACHE, ckey, env, rec["id"], time.time())
     call(port, "POST", "/requests/resolve",
-         {"id": r["id"], "status": "done", "result": {"envelope": env}})
+         {"id": r["id"], "status": "done",
+          "result": {"envelope": env,
+                     **({"thread": thread_req}
+                        if thread_req and thread_req != "new" else {})}})
     print(f"  ↳ ask {r['id']}: answered by «{s['variant']}» — "
           f"choice {s['choice_ref'][:18]}… on the record"
           + (" (dev-grace, confessed)" if confession else ""))
