@@ -79,6 +79,13 @@ signed log itself), sources as governed citizens chartered and wired on one huma
 deterministic extraction line with the content rails running before knowledge exists, a
 grounded-claims wiki whose purge cascade runs through every claim, and an embedding standard
 that finally tells one truth — multilingual by default, every vector wearing its model.
+The sixth payment, dive 0070, gave the proof its human face: conversations as worldlines a
+reply actually remembers, the sovereign profile finally read at every voiced answer, every
+resident's personality a human-editable versioned craft over an honesty floor no edit can
+remove, "what did we believe last Tuesday" answered by replaying the record — and the
+person behind the seat at last: a human as an identity with their own minted key, their
+strokes and thumbs signed as themselves, the anonymous walk-up still served with honest
+labels.
 
 ---
 

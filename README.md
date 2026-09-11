@@ -46,8 +46,8 @@ flowchart TD
 
 ## What is running, today, on one laptop
 
-🟢 **Seventy-one dives closed whole (`0000`–`0064` · `0065`–`0069` · `0071`), every landed decision locked** (`docs/decisions/` + each
-dive's own ledger) · the **Python reference proves the whole model — 558 conformance tests** · the
+🟢 **Seventy-two dives closed whole (`0000`–`0064` · `0065`–`0071`), every landed decision locked** (`docs/decisions/` + each
+dive's own ledger) · the **Python reference proves the whole model — 578 conformance tests** · the
 **Rust plane** runs it (six crates, `orrethd` — one binary, tier as a profile, conformance-green
 against fixtures signed in Python and verified in Rust) · **one command** (`scripts/dev.sh start`)
 raises a universe of six ecosystems, twelve fields, and a working population of governed agents,
@@ -424,7 +424,7 @@ being *used*.
 
 ## From substrate to estate — the recent eras, compressed
 
-*(the full record is `docs/design/README.md` — seventy-one dives, each closed only when proven
+*(the full record is `docs/design/README.md` — seventy-two dives, each closed only when proven
 live by a human in the glass; the standing proof register is
 [`docs/design/the-honest-boundary.md`](docs/design/the-honest-boundary.md))*
 
@@ -491,6 +491,15 @@ live by a human in the glass; the standing proof register is
   a grounded-claims wiki where an origin's death cascades through every claim and page; and
   the embedding standard tells one truth — multilingual by default, every vector wearing its
   model so a swap re-embeds the world at the sweeps' own pace, loud and resumable.
+
+- **The mirror and the voice** (0070, two days): the machine finally knows who it is
+  talking to, and talks like itself — conversations are worldlines a reply actually
+  remembers; the sovereign profile reaches every voiced answer (and the privacy floor now
+  holds in every projection, proven by eviction); every resident's personality is the
+  human's versioned craft with an honesty floor no edit can remove; "what did we believe
+  last Tuesday" replays the record to that day; and a human is an identity at last —
+  their own key minted at becky's gate, their strokes and thumbs signed as themselves,
+  the anonymous walk-up still served honestly.
 
 ## Where it started becoming an institution — the earlier keystones
 
@@ -617,7 +626,7 @@ orreth/
 │   ├── orreth-agent-sdk/      ← the FieldClient SDK — persistent identities that re-join as the same self
 │   └── flavors/               ← lifeforce agents (prototype · LangGraph · AgentField sentinel)
 ├── backend/
-│   ├── conformance/           ← the Python reference (558 tests) + console worker + live demos
+│   ├── conformance/           ← the Python reference (578 tests) + console worker + live demos
 │   └── plane/                 ← the Rust plane: 6 crates + orrethd (the daemon, serving its own glass)
 ├── infrastructure/            ← compose + CDK — one laptop, one universe, one command (and the demo site's stack)
 └── scripts/                   ← dev.sh (the rig) · demo.sh (the reel)
