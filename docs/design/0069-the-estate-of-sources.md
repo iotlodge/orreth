@@ -261,9 +261,43 @@ single-file upload honestly retired in favor of the Basket + pointer path.
    full text serves retrieval through the chunk law's projections (0065), whose
    ingest-side join is sp4-of-this-dive's wiki territory; scanned PDFs without a
    text layer refuse toward the eye, honestly.*
-4. **sp4 — The wiki.** Taxonomy + claims + the queue, on the signed log; the Hierarchical
-   variant's tree index fed; the librarian's through-wiki answers; the purge cascade
-   proven (kill an origin, watch its claims retract and its pages flag).
+4. **sp4 — The wiki.** ✅ **LANDED 2026-09-10 — OpenKB's skeleton, openwiki's
+   conscience, Orreth's law.** **Grounded claims** (`orreth_sim/wiki.py`): every
+   material statement a signed record citing its EVIDENCE (a content-addressed id —
+   the id IS the version) and its ORIGIN; deterministic sentence-claims as the honest
+   v1 (a voiced summary is a later garnish, never a replacement for the chain).
+   **The taxonomy**: origin pages (one per artifact, rebuilt as SIBLINGS when the
+   claim set moves — never edited), concept pages (terms recurring across ≥2 distinct
+   origins, the one-term law's own tokenizer), the catalog; **the link whitelist**
+   kills hallucinated cross-references at validation. **THE PURGE CASCADE RUNS
+   THROUGH CLAIMS**: the cascade READS THE LAW — 0026's seal records are the signed
+   death notices (never a door-probe, so a dark wire can never be mistaken for a
+   death — the 0042 blindness law made structural); a sealed origin's claims retract
+   on their own worldlines, every current page wearing one FLAGS (page_status refuses
+   «current» until an explicit recorded rebuild — openwiki's refusal, mechanical),
+   and the rebuild NAMES the retraction, deriving from page AND flag. **The
+   Hierarchical tree fed at last**: `stacks.pointer_text_reader` — a settable hook
+   the worker aims at the object store + the extraction line — makes a pointer
+   record's derived text the WHOLE document, so 0065's chunk/tree projections cut
+   full documents, not 2000-char claims; and the walk found ITS OWN WOUND — the raw
+   full text was entering the projection AROUND the ingest rail that had protected
+   the knowledge record (the card number reachable through re-derivation) — the
+   rails now ride the hook itself (refused text never becomes rows; masked spans
+   never serve), the tainted rows truncated, the 0065 hash-drift law refusing any
+   stale survivor. **The librarian answers through the wiki**: her grounding facts
+   carry the catalog's heads and live claims each wearing its evidence ref — claim
+   chains as citations, never bare prose. *Proven live on the rig: claims minted
+   with evidence+origin cited; origin pages + concept pages + the catalog built and
+   REINDEXED by the beat; a real purge card sealed one origin's knowledge
+   (containment active, quorum honestly held at 1-of-2 for destruction) and THE
+   CASCADE FIRED — 1 claim retracted, 4 pages flagged, the flags answered by
+   rebuilds naming the retraction; 14 whole documents cut into the standing
+   projection under the rail.* Suite 545→553 (eight wiki laws + the seal-read law).
+   *Honest remainders: the pull-filter wound's THIRD strike paid (artifact-pointer
+   joins the keep list) but the capped pull's recency window still gates WHICH
+   pointers chunk — an import-time cut is the seed; page prose is deterministic
+   claims (a governed voiced summary awaits demand); the wiki view's sweeps ride
+   the governed retrieve (a projection when volume demands).*
 5. **sp5 — The database kind + the standard.** The `database` connector (read-only first);
    the embedding standard declared + the migration sweep; L3's model landed; the
    `resting` twin paid.

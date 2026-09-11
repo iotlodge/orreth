@@ -6932,6 +6932,9 @@ def _stacks_node(port: int, scope: str):
           or "distillation" in t or "distillation-dials" in t
           or "metabolism-report" in t    # the metabolism reads its own past (sp2)
           or "router-retired" in t       # the row's rest, seen once (0066 sp5)
+          or "artifact-pointer" in t     # whole documents reach the tree
+                                         # (0069 sp4 — the pull-filter wound's
+                                         # THIRD strike, same cure)
           or any(str(x).startswith(("variant-", "guardrail-"))
                  for x in t))  # the styles' craft AND the rails reach the
           # node (0065 sp4 · 0068 sp1) — a turned knob takes effect, and
@@ -9738,6 +9741,179 @@ def basket_beat(port: int, scope: str) -> None:
         _MEMO.pop(f"basket-sweep-{port}", None)
 
 
+def _pointer_full_text(ap: dict) -> str | None:
+    """0069 sp4 — the pointer's WHOLE document for the projections: bytes
+    from the object store by content hash, read by the extraction line (or
+    plain decode for the textual floor). None keeps the pointer honestly
+    non-material (a dark eye's artifact stays out of the rows)."""
+    from orreth_sim import extract
+    h = str(ap.get("content_hash") or "")
+    name = str(ap.get("name") or "")
+    if not h.startswith("sha256:"):
+        return None
+    p = _OBJECT_STORE / h[7:9] / h[7:]
+    if not p.exists():
+        return None
+    data = p.read_bytes()
+    ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    if ext in ("txt", "md", "json", "csv"):
+        text = data.decode("utf-8", errors="replace")
+    else:
+        try:
+            got = extract.extract(name, data)
+        except Exception:
+            return None
+        if got is None:
+            return None
+        text = got["text"]
+    # the ingest rails ride THIS lane too (found live 2026-09-10: the raw
+    # full text was entering the chunk projection around the rail that had
+    # protected the knowledge record — one law, every door): refused text
+    # never becomes rows; masked spans never reach a searchable piece
+    from orreth_sim import rails as _rl
+    rr = _rl.enforce(_guardrails_live(4500) or guardrails.compose(
+        guardrails.GENESIS_UNIVERSAL), "entering", text)
+    if rr["refused"]:
+        return None
+    return rr["text"]
+
+
+from orreth_sim import stacks as _stacks_hook  # noqa: E402
+_stacks_hook.pointer_text_reader = _pointer_full_text
+# the Hierarchical tree finally retrieves over whole documents (0069 sp4)
+
+
+class _WikiView:
+    """A read view over the wire for the wiki's pure laws: records assembled
+    from governed sweeps (tags · lineage · b64 bodies — the _keep idiom),
+    writes going straight to the plane. The sim node stays the reference;
+    this is its wire twin for one beat's work."""
+
+    def __init__(self, port: int, scope: str):
+        self.port, self.scope = port, scope
+        self.records: dict = {}
+
+    def load(self, tags: list[str]) -> None:
+        for tag in tags:
+            for ref, b, df, tg in wire_assets(self.port, tag):
+                if ref in self.records:
+                    continue
+                self.records[ref] = {
+                    "tags": tg, "derived_from": df or [],
+                    "body": crypto._b64e(crypto.canonical(b or {})),
+                    "occurred_at": ""}
+
+    def write(self, rec: dict) -> str:
+        call(self.port, "POST", "/records", rec)
+        self.records[rec["id"]] = {
+            "tags": rec.get("tags") or [],
+            "derived_from": rec.get("derived_from") or [],
+            "body": rec["body"], "occurred_at": rec.get("occurred_at", "")}
+        return rec["id"]
+
+
+_WIKI_LAST: dict = {}
+
+
+def wiki_beat(port: int, scope: str) -> None:
+    """0069 sp4 — the wiki tends itself: fresh document knowledge yields
+    grounded claims; origin pages build (and REBUILD as siblings) when their
+    claim sets move; concepts recur across origins; the catalog indexes the
+    heads; and the CASCADE CHECK walks a rotating slice of evidence — a
+    dead origin retracts its claims, flags its pages, and the rebuild that
+    answers the flag NAMES the retraction. A few of everything per beat."""
+    from orreth_sim import wiki
+    now = time.time()
+    if now - _WIKI_LAST.get(port, 0) < 240:
+        return
+    _WIKI_LAST[port] = now
+    v = _WikiView(port, scope)
+    v.load(["wiki-claim", "claim-retracted", "wiki-page", "wiki-page-flag"])
+    # fresh document knowledge → claims (a capped pass)
+    claimed = wiki.claimed_evidence(v)
+    fresh = []
+    for ref, b, df, tg in wire_assets(port, "document"):
+        if "knowledge" in tg and ref not in claimed:
+            v.records.setdefault(ref, {
+                "tags": tg, "derived_from": df or [],
+                "body": crypto._b64e(crypto.canonical(b or {})),
+                "occurred_at": ""})
+            fresh.append(ref)
+    seat_kp, seat_did = lib_seat(scope)
+    me = {"did": seat_did, "scope": scope}
+    minted = 0
+    for kref in fresh[:4]:
+        got = wiki.mint_claims(v, me, seat_kp, kref)
+        if got:
+            minted += len(got)
+            print(f"  📚 {len(got)} grounded claim(s) from "
+                  f"{kref[:18]}… — evidence cited, origin cited")
+    # origin pages: build or rebuild-as-sibling when the claim set moved
+    heads = wiki.page_heads(v)
+    by_origin: dict = {}
+    for cref, c in wiki.live_claims(v).items():
+        if c.get("origin"):
+            by_origin.setdefault(c["origin"], []).append(cref)
+    subjects = set(by_origin)
+    for origin, crefs in list(by_origin.items())[:6]:
+        head = heads.get(("origin", origin))
+        if head and set(head[1].get("claims") or []) == set(crefs):
+            continue
+        title = origin[:18] + "…"
+        try:
+            ab = call(port, "GET", "/records/"
+                      + urllib.parse.quote(origin, safe="") + "/body") or {}
+            title = str((ab.get("artifact_pointer") or {}).get("name")
+                        or title)
+        except Exception:
+            pass
+        pid = wiki.build_origin_page(
+            v, me, seat_kp, origin, crefs, title=title,
+            links=[s for s in subjects if s != origin][:8],
+            subjects=subjects, prior=head[0] if head else None,
+            note="rebuilt — the claim set moved" if head else "")
+        print(f"  📚 origin page {'rebuilt' if head else 'built'}: "
+              f"{title} ({len(crefs)} claim(s)) — {pid[:18]}…")
+    # concepts + the catalog, when they moved
+    cm = wiki.concept_map(v)
+    for term, row in list(cm.items())[:4]:
+        head = heads.get(("concept", term))
+        if head and set(head[1].get("claims") or []) == set(row["claims"]):
+            continue
+        wiki.build_concept_page(v, me, seat_kp, term, row,
+                                prior=head[0] if head else None)
+        print(f"  📚 concept page: «{term}» recurs across "
+              f"{row['recurrence']} origins")
+    heads2 = wiki.page_heads(v)
+    cat = heads2.get(("catalog", "catalog"))
+    want = {(k, s) for (k, s) in heads2 if k in ("origin", "concept")}
+    have = {(e.get("kind"), e.get("subject"))
+            for e in (cat[1].get("entries") or [])} if cat else set()
+    if want != have:
+        wiki.build_catalog(v, me, seat_kp, prior=cat[0] if cat else None)
+        print(f"  📚 the catalog reindexed — {len(want)} page(s)")
+    # the cascade check READS THE LAW: a standing seal's refs are the death
+    # notices (0026 §3) — no door-probing, so a dark wire can never be
+    # mistaken for a death (the 0042 blindness law, structural)
+    v.load(["seal"])
+    dead = wiki.sealed_refs(v)
+    if dead:
+        live = wiki.live_claims(v)
+        touched = {c.get("evidence") for c in live.values()} \
+            | {c.get("origin") for c in live.values()}
+        for ref in sorted(dead & touched):
+            out = wiki.cascade(v, me, seat_kp, ref)
+            if out["retracted"]:
+                print(f"  📚 THE CASCADE: {ref[:18]}… is sealed — "
+                      f"{len(out['retracted'])} claim(s) retracted, "
+                      f"{len(out['flagged'])} page(s) flagged")
+    # flagged pages get their explicit, recorded rebuild
+    for page_ref, flag_ref in list(wiki.flagged_pages(v).items())[:3]:
+        new = wiki.rebuild_after_flag(v, me, seat_kp, page_ref, flag_ref)
+        print(f"  📚 flag answered: {page_ref[:18]}… rebuilt as "
+              f"{new[:18]}… — the retraction named, never smoothed over")
+
+
 _EXLINE_LAST: dict = {}
 
 
@@ -9856,6 +10032,24 @@ def parlor_facts(port: int, scope: str) -> dict:
         pass
     try:
         facts["requests"] = call(port, "GET", "/requests").get("requests", [])
+    except Exception:
+        pass
+    try:
+        # 0069 sp4 — the librarian answers THROUGH the wiki: the catalog's
+        # heads and a handful of live grounded claims, each wearing its
+        # evidence ref — a claim chain the voice can cite, never bare prose
+        from orreth_sim import wiki as _wk
+        v = _WikiView(port, scope)
+        v.load(["wiki-page", "wiki-claim", "claim-retracted"])
+        heads = _wk.page_heads(v)
+        cat = heads.get(("catalog", "catalog"))
+        live = list(_wk.live_claims(v).items())
+        if cat or live:
+            facts["wiki"] = {
+                "catalog": (cat[1].get("entries") or [])[:10] if cat else [],
+                "claims": [{"text": c.get("text", "")[:160],
+                            "evidence": ref}
+                           for ref, c in live[:6]]}
     except Exception:
         pass
     return facts
@@ -16452,6 +16646,7 @@ def main() -> None:
                     standings_beat(port, scope)  # the scoreboard breathes (0066 sp4)
                     basket_beat(port, scope)  # the Basket carries (0069 sp1)
                     extraction_line_beat(port, scope)  # parks pay (0069 sp3)
+                    wiki_beat(port, scope)    # the wiki tends itself (0069 sp4)
                     continuity_charter(port, scope)  # a template floor gets its law (0034)
                     pin_organs(port, scope)
                     window_charter(port, scope)

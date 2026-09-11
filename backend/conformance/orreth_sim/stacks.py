@@ -138,6 +138,15 @@ def parse_time(query: str):
     return mode, m.group(2), cleaned or query
 
 
+# 0069 sp4 — the pointer's FULL text joins the projections: a settable hook
+# (the worker aims it at the object store + the extraction line; tests aim
+# it wherever they like). None means pointers stay non-material, exactly as
+# before the hook existed. It receives the artifact_pointer body and returns
+# the whole document's text or None — the Hierarchical variant's tree index
+# finally retrieves over whole documents, not 2000-char claims.
+pointer_text_reader = None
+
+
 def derived_text(node, rid: str, r: dict, superseded: set):
     """THE LANE LAW (0065 sp2, extracted so the rebuild and the standing
     sweep can never drift): what a record contributes to the projection —
@@ -170,6 +179,17 @@ def derived_text(node, rid: str, r: dict, superseded: set):
         cls = canon.class_of(r)
         return ("chronicle", text, cls.replace("chronicle-", ""),
                 0.9, None, r.get("occurred_at", ""))
+    if "artifact-pointer" in tags and pointer_text_reader is not None:
+        b = json.loads(crypto._b64d(r["body"]).decode())
+        ap = b.get("artifact_pointer") or {}
+        try:
+            text = pointer_text_reader(ap)
+        except Exception:
+            text = None
+        if text:
+            return ("document", text, str(ap.get("name") or "?"),
+                    1.0, None, r.get("occurred_at", ""))
+        return None
     if "knowledge" in tags and rid not in superseded:
         b = json.loads(crypto._b64d(r["body"]).decode())
         # both dialects: the sim's {claim, category} and the wire's
