@@ -4152,6 +4152,7 @@ FIRMWARE = {
         "\n\nRECORDS GIVEN TO THE MENTEE:\n⟦corpus⟧\n\nMENTEE'S SUMMARY:\n⟦summary⟧",
     "resident-voice":
         "You are ⟦name⟧, a resident organ of the Orreth floor ⟦scope⟧. "
+        "⟦persona⟧ "
         "Answer the caller in at most three short sentences, grounded ONLY "
         "in the facts below. Never invent numbers or names.\n\nFACTS:\n⟦facts⟧",
     # 0047 sp1 (typed thoughts): NEW firmware enters as genesis at its birth
@@ -7033,7 +7034,7 @@ def _stacks_node(port: int, scope: str):
           or "artifact-pointer" in t     # whole documents reach the tree
                                          # (0069 sp4 — the pull-filter wound's
                                          # THIRD strike, same cure)
-          or any(str(x).startswith(("variant-", "guardrail-"))
+          or any(str(x).startswith(("variant-", "guardrail-", "persona-"))
                  for x in t))  # the styles' craft AND the rails reach the
           # node (0065 sp4 · 0068 sp1) — a turned knob takes effect, and
           # the planter sees the standing universal (the walk's own find:
@@ -7574,6 +7575,49 @@ def _rails_state(port: int) -> dict:
     return _memo(f"rails-state-{port}", 30, _read)
 
 
+def persona_text(port: int, name: str) -> str:
+    """0070 sp3 — the ⟦persona⟧ slot's content: the Universe base under the
+    resident's own asset, composed and worn (memo'd a breath; a persona
+    edit busts it at the door). The shelf's head is the truth; genesis
+    speaks when the shelf is dark."""
+    from orreth_sim import persona as _pa
+
+    def _read():
+        def _prof(asset):
+            try:
+                row = _craft_heads(port).get(asset)
+                if row and row[1]:
+                    b = call(port, "GET", "/records/"
+                             + urllib.parse.quote(row[1], safe="") + "/body")
+                    return ((b or {}).get("asset") or {}).get("profile") or None
+            except Exception:
+                pass
+            return None
+        uni = _prof(_pa.UNIVERSE_NAME) or _pa.GENESIS_UNIVERSE
+        res = _prof(f"persona-{name}") or _pa.GENESIS.get(name)
+        return _pa.worn_text(_pa.compose(uni, res))
+    return _memo(f"persona-{port}-{name}", 30, _read)
+
+
+def _plant_personas(n, me, seat_kp) -> None:
+    """0070 sp3 — the voices plant once (the plant_standard idiom): the
+    Universe base and each speaking resident's expertise-reflective genesis,
+    versioned craft from birth — PURPOSE by the L2 razor amendment."""
+    from orreth_sim import persona as _pa
+    if improver.active_asset(n, _pa.UNIVERSE_NAME):
+        return
+    rec = improver.make_asset(me, seat_kp, n.scope,
+                              name=_pa.UNIVERSE_NAME,
+                              profile=_pa.GENESIS_UNIVERSE)
+    n.write(rec)
+    for who, prof in _pa.GENESIS.items():
+        r2 = improver.make_asset(me, seat_kp, n.scope,
+                                 name=f"persona-{who}", profile=prof)
+        n.write(r2)
+    print(f"  🎭 the personas planted — the Universe base + "
+          f"{len(_pa.GENESIS)} resident voices (persona = purpose, L2)")
+
+
 def _guardrails_live(port: int) -> dict | None:
     """0068 sp4 — the composed rules the rails ENFORCE (via _rails_state:
     the stamp's standing already applied). None means a world with no rails
@@ -7682,6 +7726,7 @@ def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
     dispatcher.plant_standard(n, me, seat_kp)     # genesis once; shelf from then on
     dispatcher.plant_router_retirement(n, me, seat_kp)  # the row's rest (0066 sp5)
     _plant_guardrails(n, me, seat_kp)             # the first rails (0068 sp1)
+    _plant_personas(n, me, seat_kp)               # the voices (0070 sp3)
     _push_standards_and_pin(port)                 # becky signs; the law
                                                   # re-addresses (0068 sp2)
     from orreth_sim import canon as _cn
@@ -10387,6 +10432,8 @@ def governed_voice(port: int, name: str, did: str, question: str, grounded: str)
                            craft_render(craft(universe_port(port),
                                               "resident-voice"),
                                         name=name, scope=SCOPE,
+                                        persona=persona_text(
+                                            universe_port(port), name),
                                         facts=grounded)},
                           {"role": "user", "content": question}])
             ms = int((time.perf_counter() - t0) * 1000)
@@ -13780,10 +13827,16 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
         # dials are PURPOSE by the razor (0063 L1/L2): a machine operating
         # VALUE is the human's domain in prod — its shape stays firmware,
         # its value turns at this door
+        # THE L2 RAZOR AMENDMENT (0070 sp3 — JB's charter word made kernel
+        # law, locked 2026-09-08): a PERSONA is purpose — how a voice
+        # SOUNDS is prod-editable through this one gate for ALL residents,
+        # the kernel's nine included; what a voice may DO stays firmware.
+        # The carve-out is explicit here, never implied.
         _is_cap_word = (name.startswith("capability-")
                         or name.startswith("dial-")
                         or name.startswith("variant-")
                         or name.startswith("guardrail-")
+                        or name.startswith("persona-")
                         or any(name.lower().startswith(p + "-")
                                for p in _cap_prefixes))
         if not _is_cap_word:
@@ -13793,7 +13846,7 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
                         "purpose is the human's domain. Nothing changed")
     heads = _craft_heads(port)
     if name not in heads and not name.startswith(("dial-", "variant-",
-                                                  "guardrail-")):
+                                                  "guardrail-", "persona-")):
         return done(f"the shelf holds no craft named “{name}” — nothing changed")
     # a dial may land FRESH on a floor's shelf (sp3 — the ladder's first
     # override has no local head to chain; the registry is its existence)
@@ -13823,6 +13876,16 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
             print(f"  🎛 variant turn refused at the door: {name} — {flaw[:80]}")
             return done(f"the style refuses at the gate — {flaw}. "
                         "Nothing changed")
+    if name.startswith("persona-"):
+        # 0070 sp3 — the persona gate: known fields, plain sentences; a
+        # clean edit lands canonical, the voice re-reads within the breath
+        from orreth_sim import persona as _pa
+        flaw, parsed = _pa.gate_check(name, parsed)
+        if flaw:
+            print(f"  🎭 persona edit refused at the door: {name} — {flaw[:80]}")
+            return done(f"the persona refuses at the gate — {flaw}. "
+                        "Nothing changed")
+        _MEMO.pop(f"persona-{port}-{name[len('persona-'):]}", None)
     if name.startswith("guardrail-"):
         # 0068 sp1 — the rails' gate: the shape law rule by rule, and the
         # LATTICE at publication — a capability set that weakens or narrows
@@ -13918,6 +13981,10 @@ def on_craft_edit(port: int, scope: str, r: dict) -> None:
     if name.startswith("guardrail-"):
         # the rails' law rides every sibling (0068 sp1)
         body["asset"]["guardrail"] = guardrails.teachings(name)
+    if name.startswith("persona-"):
+        # the voice's law rides every sibling (0070 sp3)
+        from orreth_sim import persona as _pa2
+        body["asset"]["persona"] = _pa2.teachings(name)
         if r.get("stamped"):
             # 0068 sp5 — a scary set wears its stamp: the head itself names
             # the human's windowed word that let it govern
@@ -13955,6 +14022,9 @@ def _craft_category(name: str, tags: list) -> str:
     if n.startswith("guardrail-"):
         return "guardrails"                   # the content rules — the rails'
                                               # own drawer (0068)
+    if n.startswith("persona-"):
+        return "personas"                     # how the voices sound — purpose
+                                              # by the L2 amendment (0070)
     if "firmware" in t or "prompt" in t:
         return "prompts"
     if "skill" in n:

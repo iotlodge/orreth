@@ -194,9 +194,38 @@ honest about being unattributed).
    attributes lane when demanded; the great re-embedding now runs all floors in
    parallel (the migration drains faster; round latency during it is the price,
    named).*
-3. **sp3 — The personas.** The Universe default + the first resident personas; the
-   `⟦persona⟧` slot; the razor amendment landed; blurbs from the shelf. Proven by a
-   human hearing two residents sound like themselves.
+3. **sp3 — The personas.** ✅ **LANDED 2026-09-11 — the residents sound like
+   themselves, and how they sound is finally the human's craft.** **The asset
+   family** (`orreth_sim/persona.py`): the Universe base (helpful, not opinionated,
+   professional — the doctrine verbatim) + seven expertise-reflective resident
+   voices, each a gated, versioned `persona-*` asset with teachings on every
+   sibling; the gate refuses shapeless voices by field name. **THE HONESTY FLOOR IS
+   TIGHTEN-ONLY**: the base's honesty line rides every composed persona verbatim —
+   a resident may add, never remove (the guardrail lattice's little sibling).
+   **The `⟦persona⟧` slot** at the one choke point every resident's voice passes;
+   the firmware text gained it AS A RECORD on the live shelf (a firmware change is
+   a new record, never a code edit — 0045 law 2, honored to the letter). **THE L2
+   RAZOR AMENDMENT LANDED**: `persona-` is PURPOSE in the prod gate's own code —
+   prod-editable for ALL residents, the kernel's nine included, the carve-out
+   explicit with JB's charter word cited; ability prompts stay firmware. **The
+   Rust blurbs retire honorably**: all nine served from the speech shelf
+   (byte-mirrored genesis, the parity law), the plane's literals standing as
+   fallback — the most persona-shaped constants in the system are finally behind
+   a gate. The pull filter's FOURTH strike paid preemptively (persona- joins the
+   keep list with its kin). *Proven live, the hearing the charter demanded: one
+   question, two unmistakable voices — ada the dry stable-keeper («what it won't
+   do — no sugar on it… when one's gone lame») beside vera the exact astronomer
+   («the clean readings, the weak signals, the gaps where we simply don't know»);
+   then the human's hand — persona-ada edited through the one door into a
+   harbormaster and her VERY NEXT answer sailed («matching each caller's cargo to
+   the right vessel… when the maps run out, I say so plain» — the honesty floor
+   riding even in the new idiom); the old version standing behind; a shapeless
+   edit refused by field name; genesis restored as a sibling, the whole story on
+   the shelf.* Suite 566→570 (the four persona laws). *Honest remainders: vigil /
+   steward / governance blurbs are shelved but those organs are unvoiced (their
+   personas join when their voices do); the capability specialists (charles,
+   charlene, chad) keep their own genesis personas — one law when 0072 unifies
+   the surfaces.*
 4. **sp4 — The scrub.** Relative dates; events by the dial, beliefs by lineage replay;
    proven on "what did we believe last Tuesday" in the glass.
 5. **sp5 — The person.** The signer registry (per L1); profiles/preferences/thumbs

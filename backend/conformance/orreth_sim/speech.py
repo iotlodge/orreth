@@ -43,6 +43,29 @@ SENTENCES = {
         "⚡ ⟦event⟧ — [⟦ref⟧…]",
     "card-reflex-escalation-held":
         "a reflex escalated — detection wears no levers; the word is yours",
+    # ---- the residents' one-line blurbs (0070 sp3 — the Rust constants
+    # retire honorably: shelf head wins, the plane's literal is genesis;
+    # each genesis mirrors its Rust twin BYTE-FOR-BYTE, the parity law) ----
+    "blurb-becky":
+        "checks every ask to join — agent or tool — and signs it in; "
+        "nothing enters without her approval",
+    "blurb-vigil":
+        "watches every gate for tampering; can only raise a hand, never act",
+    "blurb-steward":
+        "keeps memory healthy — compresses the old, keeps what matters",
+    "blurb-governance":
+        "holds the rules; nothing changes without an approval it can show",
+    "blurb-charlotte":
+        "keeps the outside tools — tests each one and tracks its whole life",
+    "blurb-librarian":
+        "finds and files knowledge; new facts start untrusted until proven",
+    "blurb-ada":
+        "keeps the AI minds — watches their prices, terms, and retirements",
+    "blurb-grace":
+        "tends the machine's own words; proposes improvements from evidence",
+    "blurb-allen":
+        "manages the cloud infrastructure; always plans before changing anything",
+
     # ---- the warden's confessions at the plant gate (0059 §2.3 → craft,
     # 2026-08-23 — policy-as-craft: the CHECKS are firmware, vigil never
     # stops looking; her WORDS and the credential patterns live here, on

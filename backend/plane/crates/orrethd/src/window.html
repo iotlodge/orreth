@@ -3186,7 +3186,12 @@ async function roster(){
     const p=await(await fetch(api("/presence"))).json();
     const r=$("roster");
     let html=`<div class="grp"><span>residents — the machine's own staff, one per duty · click one to talk</span><span>${p.residents.length}</span></div>`;
-    for(const a of p.residents){if(a.name&&a.blurb)RESBLURB[a.name]=a.blurb;html+=agentRow(a,true)}
+    for(const a of p.residents){
+      /* 0070 sp3 — the blurb from the SHELF: the speech head wins, the
+         plane's literal stands as genesis fallback — the most persona-shaped
+         constant in the system is finally behind a gate */
+      if(a.name)a.blurb=say("blurb-"+a.name,{},a.blurb||"");
+      if(a.name&&a.blurb)RESBLURB[a.name]=a.blurb;html+=agentRow(a,true)}
     /* present vs remembered (JB's find 2026-08-20): the awake stand in the open;
        the dormant fold into a dormitory per floor — each still a self, seeds
        kept, one governed re-join from waking */
