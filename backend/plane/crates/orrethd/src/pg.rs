@@ -140,8 +140,11 @@ impl PgRecords {
                      node_scope  TEXT NOT NULL,
                      id          TEXT NOT NULL,
                      embedding   vector(384),
+                     model       TEXT NOT NULL DEFAULT '',
                      PRIMARY KEY (node_scope, id)
                  );
+                 ALTER TABLE embeddings
+                     ADD COLUMN IF NOT EXISTS model TEXT NOT NULL DEFAULT '';
                  CREATE INDEX IF NOT EXISTS embeddings_hnsw
                      ON embeddings USING hnsw (embedding vector_cosine_ops);
                  -- 0065 sp2 (L2's rule-9 gate, JB 2026-09-06): the standing
@@ -190,26 +193,32 @@ impl PgRecords {
 
     /// Store one record's vector — or a NULL marker when there was nothing to
     /// embed (a purged stub, an empty body): the sweep moves on, honestly.
-    pub fn save_embedding(&self, node_scope: &str, id: &str, vec: &[f32])
+    pub fn save_embedding(&self, node_scope: &str, id: &str, vec: &[f32],
+                          model: &str)
                           -> Result<(), postgres::Error> {
+        // 0069 sp5 — every vector wears the MODEL that made it: a model
+        // swap makes old rows visibly stale, and the sweep re-embeds them
+        // at its own pace — loud, resumable, never silent
         if !self.vectors { return Ok(()); }
         let mut client = self.client.lock().unwrap();
         if vec.is_empty() {
             client.execute(
-                "INSERT INTO embeddings (node_scope, id, embedding)
-                 VALUES ($1, $2, NULL) ON CONFLICT (node_scope, id) DO NOTHING",
-                &[&node_scope, &id],
+                "INSERT INTO embeddings (node_scope, id, embedding, model)
+                 VALUES ($1, $2, NULL, $3)
+                 ON CONFLICT (node_scope, id) DO UPDATE SET model = $3",
+                &[&node_scope, &id, &model],
             )?;
         } else {
             client.execute(
                 &format!(
-                    "INSERT INTO embeddings (node_scope, id, embedding)
-                     VALUES ($1, $2, '{}'::vector)
+                    "INSERT INTO embeddings (node_scope, id, embedding, model)
+                     VALUES ($1, $2, '{}'::vector, $3)
                      ON CONFLICT (node_scope, id) DO UPDATE
-                         SET embedding = EXCLUDED.embedding",
+                         SET embedding = EXCLUDED.embedding,
+                             model = EXCLUDED.model",
                     Self::vec_literal(vec)
                 ),
-                &[&node_scope, &id],
+                &[&node_scope, &id, &model],
             )?;
         }
         Ok(())
@@ -218,16 +227,21 @@ impl PgRecords {
     /// Records this node accepted that the projection has not yet embedded —
     /// the sweep's worklist. Purged stubs are never on it (0026 §1: a purge
     /// that misses the vector index is not a purge; they never enter it).
-    pub fn missing_embeddings(&self, node_scope: &str, limit: i64)
+    pub fn missing_embeddings(&self, node_scope: &str, limit: i64,
+                              model: &str)
                               -> Result<Vec<String>, postgres::Error> {
+        // absent rows AND wrong-model rows are BOTH the sweep's work — the
+        // survey's exact wound (0069 §2.4): «the sweep only finds absent
+        // rows, not wrong-model rows» — paid here
         if !self.vectors { return Ok(Vec::new()); }
         let rows = self.client.lock().unwrap().query(
             "SELECT r.id FROM records r
              LEFT JOIN embeddings e ON e.node_scope = r.node_scope AND e.id = r.id
              LEFT JOIN purged p     ON p.node_scope = r.node_scope AND p.id = r.id
-             WHERE r.node_scope = $1 AND e.id IS NULL AND p.id IS NULL
+             WHERE r.node_scope = $1 AND p.id IS NULL
+               AND (e.id IS NULL OR e.model <> $3)
              ORDER BY r.occurred_at DESC LIMIT $2",
-            &[&node_scope, &limit],
+            &[&node_scope, &limit, &model],
         )?;
         Ok(rows.into_iter().map(|r| r.get(0)).collect())
     }

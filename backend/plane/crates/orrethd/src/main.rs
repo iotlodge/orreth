@@ -651,8 +651,9 @@ async fn embeddings_ingress(State(app): State<Arc<App>>, Json(req): Json<Value>)
         let vec: Vec<f32> = req["vector"].as_array().map(|a| {
             a.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect()
         }).unwrap_or_default();
+        let model = req["model"].as_str().unwrap_or("").to_string();
         if let Some(store) = &app.pg {
-            if let Err(e) = store.save_embedding(&node_scope, &id, &vec) {
+            if let Err(e) = store.save_embedding(&node_scope, &id, &vec, &model) {
                 eprintln!("orrethd · embedding write failed for {id}: {e}");
             }
         }
@@ -860,8 +861,9 @@ async fn embeddings_missing(State(app): State<Arc<App>>, Json(req): Json<Value>)
         }
         let node_scope = { app.universe.lock().unwrap().nodes[0].scope.clone() };
         let limit = req["limit"].as_i64().unwrap_or(32).clamp(1, 256);
+        let model = req["model"].as_str().unwrap_or("").to_string();
         let missing = app.pg.as_ref()
-            .and_then(|s| s.missing_embeddings(&node_scope, limit).ok())
+            .and_then(|s| s.missing_embeddings(&node_scope, limit, &model).ok())
             .unwrap_or_default();
         (StatusCode::OK, Json(json!({"missing": missing})))
     })

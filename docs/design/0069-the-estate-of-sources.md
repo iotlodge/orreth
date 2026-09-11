@@ -4,8 +4,12 @@
 kernel dive, opening Wave 2 (the data estate). Grounded in the Farm/upload/embedder survey
 of 2026-09-08 and the OpenKB/openwiki research banked in the proof repo (Appendix A).*
 
-***Status: 🟡 DRAFTED · LOCKED — all three locks taken by JB's word, 2026-09-08, plainly
-stated per the language law: L1 both keepers (allen charters the resource, charlotte holds
+***Status: ✅ CLOSED WHOLE 2026-09-10 — five spoonfuls in ONE DAY (Wave 2's first dive):
+the Basket and the byte law · the store kind and the first cloud wire · the extraction
+line · the wiki with the seal-read cascade · the database kind and the standard that
+stopped lying. Sixth out-of-order close: VERSION holds 0.71 (the monotone high-water
+law). All three locks were taken by JB's word, 2026-09-08, plainly stated per the
+language law: L1 both keepers (allen charters the resource, charlotte holds
 the wire — one onboarding flow walks both, the container-walk pattern made law) · L2 two
 connector kinds (`store` and `database`, each with an honest precise fingerprint, one
 shared lifecycle) · L3 multilingual default (the standard names a ~100-language model; the
@@ -298,9 +302,39 @@ single-file upload honestly retired in favor of the Basket + pointer path.
    pointers chunk — an import-time cut is the seed; page prose is deterministic
    claims (a governed voiced summary awaits demand); the wiki view's sweeps ride
    the governed retrieve (a projection when volume demands).*
-5. **sp5 — The database kind + the standard.** The `database` connector (read-only first);
-   the embedding standard declared + the migration sweep; L3's model landed; the
-   `resting` twin paid.
+5. **sp5 — The database kind + the standard.** ✅ **LANDED 2026-09-10 — the query
+   citizens arrive, and the three-numbers lie dies measurably.** **The `database`
+   kind**: schema-aware, READ-ONLY FIRST — sqlite as the on-premise citizen (stdlib,
+   zero deps; PostgreSQL/MySQL recognized growth, refused by name); the read law
+   DOUBLE-LOCKED (mode=ro connections AND a one-statement SELECT/WITH gate that
+   refuses before a byte moves, one face); rows capped honestly; the same two-keeper
+   onboarding card routes by URI (a sqlite wire charters and plants as `database`
+   with schema·query as its pinned manifest). **The embedding standard tells ONE
+   truth (L3)**: the stacks-embedding asset declares model + dims — genesis
+   MULTILINGUAL by the lock (`paraphrase-multilingual-MiniLM-L12-v2`, ~50 languages
+   at the plane's own 384 dims; the ~100-language models are 1024-dim and wait on a
+   column migration, named); `meaning` reads the DECLARED model (the shelf's head
+   aims the live axis within the minute); **the migration machinery the survey found
+   missing**: every vector row now WEARS its model (the plane's embeddings table
+   grew the column; both doors carry it), the missing-door lists absent AND
+   wrong-model rows, and the chunk policy wears the model too — a turn re-cuts and
+   re-embeds the world at the sweeps' own pace, loud, resumable, never a spike.
+   **The `resting` twin PAID**: the Python reference's state machine matches the
+   plane's at last (probation/serving→resting, resting→probation·decommissioned;
+   beats never wake the resting). *Proven live on the rig: site-materials.db
+   onboarded through the SAME card (allen's charter + charlotte's `database` wire →
+   serving on earned beats); the schema read and a real SELECT served through the
+   one metered door; INSERT/DELETE/PRAGMA and off-manifest ops REFUSED one-faced
+   (the Refusal un-wrapped from the dead-stall dressing in the same hour); and THE
+   GREAT RE-EMBEDDING BEGAN — 31,525 rows visibly «(pre-standard)» by name, 291
+   re-embedded under the declared multilingual model within minutes, 64 a beat.*
+   Suite 553→558 (five database laws + the resting twin) + Rust 24 (the model-aware
+   doors). *Honest remainders: PostgreSQL/MySQL wires await their walk; the Mirror's
+   similarity threshold retuned to the new model's cosine range (thresholds are
+   model-relative — named); fastembed's POOLING for this model changed across
+   library versions (JB's log find) — a future library flip would shift vectors
+   without a name change; pin deliberately when it matters (noted in the standard
+   itself); the full migration runs for hours at beat pace by design.*
 
 ## 7. The honest boundary rows this dive moves
 

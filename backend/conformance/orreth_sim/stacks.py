@@ -30,8 +30,17 @@ from .node import make_memory
 ECO_ASSETS = {
     "stacks-chunking": {"chunk_chars": 280, "overlap_chars": 40,
                         "note": "the shared knife — every stack cuts alike"},
-    "stacks-embedding": {"dim": 512, "method": "hashed-ngram (sim) / fastembed (wire)",
-                         "note": "one standard, every projection comparable"},
+    "stacks-embedding": {
+        "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        "dim": 384, "languages": "~50 — multilingual by default (0069 L3)",
+        "note": "ONE truth at last (0069 sp5): the model and dimensions every "
+                "projection rides; the plane's vector(384) column is this "
+                "declaration's twin, and a turned model re-embeds the world "
+                "at the sweep's own pace — loud, resumable, never silent. "
+                "KNOWN SENSITIVITY (JB's log find, 2026-09-10): the library's "
+                "POOLING for this model changed across fastembed versions — "
+                "a future library flip would shift vectors without a model-name "
+                "change; pin fastembed deliberately when it matters"},
     "stacks-prompt": {"template": "Answer ONLY from the cited passages. Cite "
                                   "every claim by [ref]. Unknown → say so.",
                       "note": "the shared voice — grounded, cited, honest"},
@@ -52,9 +61,23 @@ def plant_eco_assets(node, librarian: dict, librarian_kp) -> list[str]:
     return out
 
 
+def embedding_standard(node) -> dict:
+    """The ONE truth (0069 sp5): the shelf's head, genesis behind it."""
+    row = improver.active_asset(node, "stacks-embedding")
+    prof = improver._profile_of(row[1]) if row else {}
+    return prof if prof.get("model") else ECO_ASSETS["stacks-embedding"]
+
+
 def _chunking(node) -> dict:
     row = improver.active_asset(node, "stacks-chunking")
-    return improver._profile_of(row[1]) if row else ECO_ASSETS["stacks-chunking"]
+    pol = dict(improver._profile_of(row[1]) if row
+               else ECO_ASSETS["stacks-chunking"])
+    # the chunk policy WEARS the embedding model (0069 sp5): a model turn
+    # changes the policy hash, so every chunk row recuts and re-embeds at
+    # the sweep's own pace — the migration is structural, never a special
+    # case
+    pol["embed_model"] = embedding_standard(node).get("model", "")
+    return pol
 
 
 # ---------------------------------------------------------------- the one truth
@@ -73,7 +96,9 @@ def ingest(node, librarian: dict, librarian_kp, name: str, text: str) -> str:
 
 # ---------------------------------------------------------------- the projection
 
-def _embed(text: str, dim: int = 512) -> list[float]:
+def _embed(text: str, dim: int = 512) -> list[float]:  # the sim bag's OWN dim —
+    # deliberately decoupled from the declared wire standard (0069 sp5): the
+    # standard governs the REAL embedder; this hashed stand-in is a test fixture
     """Deterministic sim embedding: hashed word-and-bigram bag, L2-normalized.
     Honest and reproducible — the wire swaps in fastembed under the same shape."""
     v = [0.0] * dim

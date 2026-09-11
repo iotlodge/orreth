@@ -2603,13 +2603,18 @@ def embed_beat(port: int, scope: str) -> None:
     if time.time() - _EMBED_LAST < dial_value("embed-every"):
         return
     _EMBED_LAST = time.time()                 # set early — a failing sweep never hot-loops
+    # 0069 sp5 — the axis rides the DECLARED standard: the shelf's head aims
+    # the model, and every row wears its name — a turned standard makes the
+    # old rows visibly stale and this same sweep re-embeds them, paced
+    _aim_embedding_standard(port, scope)
     if meaning.embedder() is None:
         return
     token = _ROOT.issue_token(_BECKY.did, "u:demo",
                               [{"action": "govern", "space": "self"}])
     try:
         missing = call(port, "POST", "/embeddings/missing",
-                       {"token": token, "limit": 64}).get("missing", [])
+                       {"token": token, "limit": 64,
+                        "model": meaning.model_name()}).get("missing", [])
     except Exception:
         return
     if not missing:
@@ -2625,7 +2630,8 @@ def embed_beat(port: int, scope: str) -> None:
         vec = (meaning.embed([text]) or [[]])[0] if text else []
         try:
             call(port, "POST", "/embeddings",
-                 {"record_id": rid, "vector": vec, "token": token})
+                 {"record_id": rid, "vector": vec, "token": token,
+                  "model": meaning.model_name()})
             done += 1 if vec else 0
             skipped += 0 if vec else 1
         except Exception:
@@ -2633,6 +2639,24 @@ def embed_beat(port: int, scope: str) -> None:
     print(f"  ↳ the meaning axis: {scope} — {done} embedded"
           + (f" · {skipped} marked bodyless" if skipped else "")
           + f" ({len(missing)} swept)")
+
+
+def _aim_embedding_standard(port: int, scope: str) -> None:
+    """0069 sp5 — the shelf's declared model aims the live axis (memo'd a
+    breath): the standard's head is the ONE truth; a turned head re-aims
+    within the minute and the sweeps do the rest."""
+    def _read():
+        try:
+            n, _, _ = _stacks_node(port, scope)
+            if n is not None:
+                from orreth_sim import stacks as _stk
+                return _stk.embedding_standard(n).get("model", "")
+        except Exception:
+            pass
+        return ""
+    name = _memo(f"embed-model-{scope}", 60, _read)
+    if name:
+        meaning.set_model(name)
 
 
 def chunk_beat(port: int, scope: str) -> None:
@@ -3288,6 +3312,9 @@ def fetch_manifest(svc: dict) -> list | None:
     if svc.get("kind") == "store":
         from orreth_sim import stores
         return stores.manifest()
+    if svc.get("kind") == "database":
+        from orreth_sim import stores
+        return stores.db_manifest()
     return svc.get("manifest") or []
 
 
@@ -3297,6 +3324,9 @@ def svc_probe(svc: dict) -> bool:
     if svc.get("kind") == "store":
         from orreth_sim import stores
         return stores.probe(resolve_endpoint(svc.get("endpoint") or ""))
+    if svc.get("kind") == "database":
+        from orreth_sim import stores
+        return stores.db_probe(resolve_endpoint(svc.get("endpoint") or ""))
     return probe(svc.get("endpoint") or "") if svc.get("endpoint") else False
 
 
@@ -3373,8 +3403,13 @@ def on_store_onboard(port: int, scope: str, r: dict) -> None:
     from orreth_sim import stores
     if r.get("status") == "pending":
         try:
-            stores.parse_uri(str(r.get("uri") or ""))
-            uri_note = "the wire's scope reads clean"
+            if str(r.get("uri") or "").startswith(("sqlite:", "postgres",
+                                                   "mysql")):
+                stores.parse_db_uri(str(r.get("uri") or ""))
+                uri_note = "a DATABASE wire (schema-aware, read-only first)"
+            else:
+                stores.parse_uri(str(r.get("uri") or ""))
+                uri_note = "a STORE wire (list and fetch)"
         except Exception as e:
             uri_note = str(e)[:120]
         call(port, "POST", "/requests/resolve",
@@ -3406,9 +3441,12 @@ def on_store_onboard(port: int, scope: str, r: dict) -> None:
             call(port, "POST", "/records", rec)
         except Exception as e:
             print(f"    (resource record failed: {e})")
+        _dbkind = uri.startswith(("sqlite:", "postgres", "mysql"))
         call(port, "POST", "/requests", {
             "kind": "service", "action": "plant", "name": name,
-            "svc_kind": "store", "endpoint": uri, "transport": "store",
+            "svc_kind": "database" if _dbkind else "store",
+            "endpoint": uri,
+            "transport": "database" if _dbkind else "store",
             "source": "store-onboard", "carried": r["id"],
             "text": f"plant the store wire for «{name}» — allen's charter "
                     f"at {rec['id'][:18]}… rides this same word"})
@@ -5268,8 +5306,19 @@ def tool_invoke(payload: dict) -> dict:
     except Exception:
         return REFUSED
     ep = resolve_endpoint(svc["endpoint"])   # a secret resolves only at the wire
+    from orreth_sim.node import Refusal as _Ref
     try:
-        if svc.get("kind") == "store":
+        if svc.get("kind") == "database":
+            # 0069 sp5 — the query citizens: schema-aware, READ-ONLY first,
+            # through the SAME metered door; a write-shaped statement wears
+            # the one face before a byte moves
+            from orreth_sim import stores as _st2
+            if tool == "schema":
+                out = _st2.db_schema(ep)
+            else:
+                out = _st2.db_query(ep, str(args.get("sql") or ""),
+                                    limit=int(args.get("limit") or 100))
+        elif svc.get("kind") == "store":
             # 0069 sp2 — the store's two operations through the SAME door,
             # metered above like every invoke. Bulk never rides a response:
             # fetch lands the bytes content-addressed in the LOCAL object
@@ -5294,6 +5343,9 @@ def tool_invoke(payload: dict) -> dict:
                 data=json.dumps({"tool": tool, "args": args}).encode(),
                 headers={"Content-Type": "application/json"})
             out = json.loads(urllib.request.urlopen(req, timeout=45).read())
+    except _Ref:
+        return REFUSED                       # the wire's own law — one face,
+                                             # never dressed as a dead stall
     except Exception as e:
         return {"error": f"the stall did not answer: {str(e)[:100]}"}
     if svc.get("spend_guard") == "search" and not out.get("error"):

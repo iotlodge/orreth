@@ -46,8 +46,8 @@ flowchart TD
 
 ## What is running, today, on one laptop
 
-🟢 **Seventy dives closed whole (`0000`–`0064` · `0065`–`0068` · `0071`), every landed decision locked** (`docs/decisions/` + each
-dive's own ledger) · the **Python reference proves the whole model — 519 conformance tests** · the
+🟢 **Seventy-one dives closed whole (`0000`–`0064` · `0065`–`0069` · `0071`), every landed decision locked** (`docs/decisions/` + each
+dive's own ledger) · the **Python reference proves the whole model — 558 conformance tests** · the
 **Rust plane** runs it (six crates, `orrethd` — one binary, tier as a profile, conformance-green
 against fixtures signed in Python and verified in Rust) · **one command** (`scripts/dev.sh start`)
 raises a universe of six ecosystems, twelve fields, and a working population of governed agents,
@@ -424,7 +424,7 @@ being *used*.
 
 ## From substrate to estate — the recent eras, compressed
 
-*(the full record is `docs/design/README.md` — seventy dives, each closed only when proven
+*(the full record is `docs/design/README.md` — seventy-one dives, each closed only when proven
 live by a human in the glass; the standing proof register is
 [`docs/design/the-honest-boundary.md`](docs/design/the-honest-boundary.md))*
 
@@ -481,6 +481,16 @@ live by a human in the glass; the standing proof register is
   check lands a signed audit carrying categories and counts, never content; and weakening the
   rails takes a windowed, walk-backable STAMP minted only from a human's click — every answer
   served under it says so, and one click restores the rails with nothing deleted.
+
+- **The estate of sources** (0069, one day): the data estate stands — point at folders (or
+  your S3 bucket, or a database) and the Basket brings them in as content-addressed origins
+  with signed pointers, the import queue being the signed log itself (a crashed import
+  resumes from the log alone); sources are governed citizens — chartered by allen, wired by
+  charlotte on one word, alive only while they earn their heartbeats; PDF and Office
+  documents finally yield their text with the content rails running before knowledge exists;
+  a grounded-claims wiki where an origin's death cascades through every claim and page; and
+  the embedding standard tells one truth — multilingual by default, every vector wearing its
+  model so a swap re-embeds the world at the sweeps' own pace, loud and resumable.
 
 ## Where it started becoming an institution — the earlier keystones
 
@@ -607,7 +617,7 @@ orreth/
 │   ├── orreth-agent-sdk/      ← the FieldClient SDK — persistent identities that re-join as the same self
 │   └── flavors/               ← lifeforce agents (prototype · LangGraph · AgentField sentinel)
 ├── backend/
-│   ├── conformance/           ← the Python reference (519 tests) + console worker + live demos
+│   ├── conformance/           ← the Python reference (558 tests) + console worker + live demos
 │   └── plane/                 ← the Rust plane: 6 crates + orrethd (the daemon, serving its own glass)
 ├── infrastructure/            ← compose + CDK — one laptop, one universe, one command (and the demo site's stack)
 └── scripts/                   ← dev.sh (the rig) · demo.sh (the reel)

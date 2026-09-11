@@ -30,12 +30,36 @@ import re
 
 _EMBEDDER = None
 
+# 0069 sp5 — THE ONE TRUTH: the model is DECLARED (the stacks-embedding
+# standard on the shelf names it; the worker aims this at the head, and a
+# turned standard re-aims it live). Genesis is multilingual by L3's lock —
+# ~50 languages at the plane's own 384 dimensions (the ~100-language models
+# are 1024-dim and wait on a column migration, named honestly).
+GENESIS_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+MODEL = GENESIS_MODEL
+
+
+def model_name() -> str:
+    """The model every vector wears — the sweeps stamp it on each row, so
+    a swap makes old rows visibly stale instead of silently wrong."""
+    return MODEL
+
+
+def set_model(name: str) -> None:
+    """A turned standard re-aims the axis: the embedder rebuilds on the
+    next call; nothing embedded before is touched — the migration sweep
+    finds the old-model rows at its own pace."""
+    global MODEL, _EMBEDDER
+    if name and name != MODEL:
+        MODEL = name
+        _EMBEDDER = None
+
 
 def embedder():
-    """Lazy, local-only, honest: fastembed's small English model on this
-    node's CPU, or None — and None means identity, never an error. The
-    ORRETH_MEANING=off dial darkens the axis deliberately (a fast dev loop);
-    every consumer states its degradation."""
+    """Lazy, local-only, honest: the DECLARED model on this node's CPU, or
+    None — and None means identity, never an error. The ORRETH_MEANING=off
+    dial darkens the axis deliberately (a fast dev loop); every consumer
+    states its degradation."""
     global _EMBEDDER
     if _EMBEDDER is None:
         if os.environ.get("ORRETH_MEANING", "").lower() in ("off", "0", "no"):
@@ -43,7 +67,7 @@ def embedder():
             return None
         try:
             from fastembed import TextEmbedding
-            _EMBEDDER = TextEmbedding()
+            _EMBEDDER = TextEmbedding(model_name=MODEL)
         except Exception:
             _EMBEDDER = False
     return _EMBEDDER or None

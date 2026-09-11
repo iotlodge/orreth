@@ -80,7 +80,11 @@ def assess(audiences: list[dict], *, mirror_did: str = "",
         if meaning is not None and len(asks) > 1:
             keys = list(asks)
             merged: dict[str, int] = {}
-            for c in meaning.repeats_by_meaning(keys, tau=0.75):
+            # tau is MODEL-RELATIVE (0069 sp5's lesson: the multilingual
+            # standard's cosines run lower than the old English model's —
+            # 0.75 split true paraphrases; 0.62 groups them and unrelated
+            # asks still measure well below it)
+            for c in meaning.repeats_by_meaning(keys, tau=0.62):
                 rep = max((keys[i] for i in c), key=lambda a: asks[a])
                 merged[rep] = sum(asks[keys[i]] for i in c)
             asks = merged

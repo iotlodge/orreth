@@ -15,15 +15,21 @@ from __future__ import annotations
 from . import crypto
 from .identity import NOW
 
-STATES = ("proposed", "probation", "serving", "dropped", "quarantined", "decommissioned")
+STATES = ("proposed", "probation", "serving", "dropped", "quarantined",
+          "resting", "decommissioned")
 
 # every legal move, and no other — the state machine IS the governance card (0018 §2)
 LEGAL: dict[str, set[str]] = {
     "proposed": {"probation", "decommissioned"},            # approved+attested · or denied
-    "probation": {"serving", "dropped", "quarantined", "decommissioned"},
-    "serving": {"dropped", "quarantined", "decommissioned"},
+    "probation": {"serving", "dropped", "quarantined", "resting",
+                  "decommissioned"},
+    "serving": {"dropped", "quarantined", "resting", "decommissioned"},
     "dropped": {"serving", "quarantined", "decommissioned"},  # rejoin: same self · new claim
     "quarantined": {"probation", "decommissioned"},         # only a human re-opens the gate
+    # resting (0059 §2.4 — TWINNED at 0069 sp5, the survey's found divergence
+    # paid): the HUMAN'S word, lease kept — no probes, no drops, no spend;
+    # resume re-earns serving through probation
+    "resting": {"probation", "decommissioned"},
     "decommissioned": set(),                                # terminal — history remains
 }
 
@@ -118,6 +124,17 @@ class Farm:
         svc["proposed_hash"] = seen
         return self._transition(name, "quarantined", "manifest-changed",
                                 pinned=svc["manifest_hash"], seen=seen)
+
+    def rest(self, name: str, *, reason: str = "the human's word") -> dict:
+        """0059 §2.4, twinned (0069 sp5): resting is the HUMAN'S word — the
+        lease kept, the meter refusing for free, nothing dropped."""
+        svc = self.services[name]
+        svc["beats"] = 0
+        return self._transition(name, "resting", "resting", reason=reason)
+
+    def resume(self, name: str) -> dict:
+        """The word withdrawn: probation again — beats earn serving back."""
+        return self._transition(name, "probation", "resumed")
 
     def reapprove(self, name: str) -> dict:
         """A human accepted the NEW manifest — re-pin and re-earn from probation."""

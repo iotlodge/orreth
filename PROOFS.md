@@ -72,7 +72,13 @@ signed record behind it — an answer now wears its thinking; and dive 0068 made
 guardrails governed law — human-edited rules enforced by firmware detectors in the one lane
 cognition rides (the kernel still never reads a prompt: it demands proof of which law governed
 each thought), signed audits that never leak what they caught, and a windowed, one-click
-walk-backable stamp before any weakening of the rails may govern.
+walk-backable stamp before any weakening of the rails may govern. And the wave's fifth
+payment, dive 0069, gave the proof its data estate: the Basket (folders, zips, S3 buckets,
+databases — imported as content-addressed origins with signed pointers, the queue being the
+signed log itself), sources as governed citizens chartered and wired on one human word, a
+deterministic extraction line with the content rails running before knowledge exists, a
+grounded-claims wiki whose purge cascade runs through every claim, and an embedding standard
+that finally tells one truth — multilingual by default, every vector wearing its model.
 
 ---
 

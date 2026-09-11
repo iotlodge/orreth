@@ -26,6 +26,7 @@ will later enter through, built without the streams (the standing lock).
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from . import crypto
@@ -154,6 +155,100 @@ def fetch(uri: str, key: str) -> bytes:
         return _s3().get_object(Bucket=cfg["bucket"], Key=full)["Body"].read()
     except Exception:
         raise Refusal("request cannot be served under this capability")
+
+
+# ---- the database kind (0069 sp5): things you QUERY — schema-aware, ----------
+# ---- READ-ONLY FIRST; sqlite is the on-premise citizen (stdlib, no deps) -----
+
+DB_ROW_CAP = 200
+
+
+def db_manifest() -> list[dict]:
+    """A database's pinned manifest IS its declared operations — schema ·
+    query, read-only; nothing else invokable."""
+    return [{"name": "schema"}, {"name": "query"}]
+
+
+def parse_db_uri(uri: str) -> dict:
+    u = str(uri or "")
+    if u.startswith("sqlite:///"):
+        return {"backend": "sqlite", "path": "/" + u[len("sqlite:///"):]}
+    for scheme, name in (("postgres", "PostgreSQL"), ("postgresql", "PostgreSQL"),
+                         ("mysql", "MySQL")):
+        if u.startswith(scheme + "://"):
+            raise GrowthNotWalked(
+                f"{name} is declared growth — recognized, not yet walked "
+                "(0069 §3.2); sqlite serves on-premise today")
+    raise Refusal("request cannot be served under this capability")
+
+
+def _sqlite_ro(path: str):
+    import sqlite3
+    return sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=4)
+
+
+def db_probe(uri: str) -> bool:
+    try:
+        cfg = parse_db_uri(uri)
+        with _sqlite_ro(cfg["path"]) as c:
+            c.execute("SELECT 1").fetchone()
+        return True
+    except Exception:
+        return False
+
+
+def db_schema(uri: str) -> dict:
+    """The schema-aware read: tables and their columns — what a caller may
+    honestly plan a query against, never a byte of row data."""
+    cfg = parse_db_uri(uri)
+    try:
+        with _sqlite_ro(cfg["path"]) as c:
+            tables = [r[0] for r in c.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' "
+                "AND name NOT LIKE 'sqlite_%' ORDER BY name")]
+            out = {}
+            for t in tables:
+                out[t] = [{"name": r[1], "type": r[2]}
+                          for r in c.execute(f'PRAGMA table_info("{t}")')]
+    except Exception:
+        raise Refusal("request cannot be served under this capability")
+    return {"tables": out}
+
+
+_DB_READ_RX = None
+
+
+def _read_only_sql(sql: str) -> str:
+    """THE READ-ONLY LAW: one statement, SELECT (or WITH…SELECT) alone —
+    anything else wears the one face. The connection is already mode=ro
+    (the second lock); this gate refuses before a byte moves."""
+    s = re.sub(r"/\*.*?\*/", " ", str(sql or ""), flags=re.DOTALL)
+    s = re.sub(r"--[^\n]*", " ", s).strip().rstrip(";").strip()
+    if not s or ";" in s:
+        raise Refusal("request cannot be served under this capability")
+    if not re.match(r"(?is)^(select|with)\b", s):
+        raise Refusal("request cannot be served under this capability")
+    return s
+
+
+def db_query(uri: str, sql: str, *, limit: int = 100) -> dict:
+    """One read-only query, rows capped honestly — {columns, rows, capped}."""
+    cfg = parse_db_uri(uri)
+    clean = _read_only_sql(sql)
+    limit = max(1, min(int(limit or 100), DB_ROW_CAP))
+    try:
+        with _sqlite_ro(cfg["path"]) as c:
+            cur = c.execute(clean)
+            cols = [d[0] for d in cur.description or []]
+            rows = cur.fetchmany(limit + 1)
+    except Refusal:
+        raise
+    except Exception:
+        raise Refusal("request cannot be served under this capability")
+    capped = len(rows) > limit
+    return {"columns": cols,
+            "rows": [list(r) for r in rows[:limit]],
+            "capped": capped}
 
 
 def fingerprint(uri: str, *, limit: int = 50) -> str:

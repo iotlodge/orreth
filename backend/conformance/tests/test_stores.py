@@ -121,3 +121,77 @@ def test_store_bytes_ride_the_pointer_tail_with_store_origin(ground, tmp_path):
         w.universe.records[r["pointer"]]["body"]).decode())["artifact_pointer"]
     assert b["meta"]["origin"] == {"store": "site-archive",
                                    "key": "readme.md"}
+
+
+def test_the_resting_twin_is_paid():
+    """0069 §2.5's found divergence: `resting` lived in the plane's state
+    machine and not the Python reference — twinned now, same moves."""
+    f = farm_mod.Farm("u:demo")
+    f.plant("night-archive", did="did:key:zRest", kind="store",
+            endpoint="file:///data", transport="store",
+            manifest=stores.manifest())
+    f.attest("night-archive", stores.manifest())
+    for _ in range(farm_mod.PROBATION_BEATS):
+        f.beat("night-archive")
+    f.rest("night-archive")
+    assert f.services["night-archive"]["state"] == "resting"
+    for _ in range(farm_mod.PROBATION_BEATS + 1):
+        f.beat("night-archive")                # beats never wake the resting
+    assert f.services["night-archive"]["state"] == "resting"
+    f.resume("night-archive")
+    assert f.services["night-archive"]["state"] == "probation"
+
+
+# ---- 0069 sp5: the database kind ---------------------------------------------------
+@pytest.fixture()
+def dbfile(tmp_path):
+    import sqlite3
+    p = tmp_path / "site.db"
+    c = sqlite3.connect(p)
+    c.execute("CREATE TABLE materials (name TEXT, r_value REAL)")
+    c.executemany("INSERT INTO materials VALUES (?,?)",
+                  [("rammed earth", 0.4), ("hempcrete", 2.1),
+                   ("straw bale", 1.45)])
+    c.commit(); c.close()
+    return p
+
+
+def test_db_uri_reads_honestly_and_growth_is_named():
+    assert stores.parse_db_uri("sqlite:///data/site.db") == \
+        {"backend": "sqlite", "path": "/data/site.db"}
+    with pytest.raises(stores.GrowthNotWalked) as e:
+        stores.parse_db_uri("postgres://host/db")
+    assert "PostgreSQL" in str(e.value)
+
+
+def test_db_schema_and_query_through_the_read_law(dbfile):
+    uri = f"sqlite://{dbfile}"
+    assert stores.db_probe(uri) is True
+    sch = stores.db_schema(uri)
+    assert [c["name"] for c in sch["tables"]["materials"]] == \
+        ["name", "r_value"]
+    out = stores.db_query(uri, "SELECT name FROM materials "
+                               "WHERE r_value > 1 ORDER BY name")
+    assert out["rows"] == [["hempcrete"], ["straw bale"]]
+    assert out["capped"] is False
+
+
+def test_the_read_only_law_wears_one_face(dbfile):
+    uri = f"sqlite://{dbfile}"
+    for evil in ("INSERT INTO materials VALUES ('x', 1)",
+                 "DELETE FROM materials",
+                 "SELECT 1; DROP TABLE materials",
+                 "UPDATE materials SET r_value = 0",
+                 "PRAGMA writable_schema=1"):
+        with pytest.raises(Refusal) as e:
+            stores.db_query(uri, evil)
+        assert str(e.value) == Refusal.PUBLIC
+    # ...and the rows are untouched (the second lock held too)
+    out = stores.db_query(uri, "SELECT count(*) FROM materials")
+    assert out["rows"] == [[3]]
+
+
+def test_db_rows_cap_honestly(dbfile):
+    uri = f"sqlite://{dbfile}"
+    out = stores.db_query(uri, "SELECT name FROM materials", limit=2)
+    assert len(out["rows"]) == 2 and out["capped"] is True
