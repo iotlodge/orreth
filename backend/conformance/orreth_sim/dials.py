@@ -247,6 +247,38 @@ DIALS_V1 = {
                "format's honest weight",
         "horizon": "the next import reads it",
     },
+    "thread-ask-chars": {
+        "type": "int", "unit": "characters of the human's words a turn keeps",
+        "min": 100, "max": 4000, "genesis": 400, "home": "universe",
+        "governs": "how much of each ask the conversation worldline records "
+                   "(0070 sp1 — the old constant cap, now the human's)",
+        "blast": "too low amputates the thread's memory; too high grows "
+                 "every audience record",
+        "why": "four hundred characters holds a real question whole",
+        "horizon": "the next turn recorded",
+    },
+    "thread-reply-chars": {
+        "type": "int", "unit": "characters of the answer a turn keeps",
+        "min": 200, "max": 8000, "genesis": 600, "home": "universe",
+        "governs": "how much of each reply the conversation worldline "
+                   "records (0070 sp1)",
+        "blast": "too low loses the very answers the thread exists to "
+                 "recall; too high grows every audience record",
+        "why": "six hundred characters holds a voiced answer's substance",
+        "horizon": "the next turn recorded",
+    },
+    "thread-turns": {
+        "type": "int", "unit": "recent turns a reply sees",
+        "min": 0, "max": 12, "genesis": 4, "home": "universe",
+        "governs": "how many prior turns ride into the voice's grounding "
+                   "when a conversation continues (0070 sp1 — the "
+                   "Memory-Augmented variant's substrate); zero turns the "
+                   "thread's memory off deliberately",
+        "blast": "too many spends tokens on old words; zero makes every "
+                 "reply a stranger again",
+        "why": "four turns holds the working context of a real exchange",
+        "horizon": "the next voiced reply",
+    },
     "store-freshness-min": {
         "type": "int", "unit": "minutes between freshness looks at a store",
         "min": 1, "max": 1440, "genesis": 10, "home": "universe",

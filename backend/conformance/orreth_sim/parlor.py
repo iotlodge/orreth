@@ -1553,8 +1553,72 @@ _ROOMS = {"librarian": _room_librarian, "becky": _room_becky,
 # ---------------------------------------------------------------- the audience record
 
 def audience_body(resident: str, asked: str, reply: str, *, session: str = "",
-                  voiced: bool = False) -> dict:
+                  voiced: bool = False, thread: str = "",
+                  ask_cap: int = 400, reply_cap: int = 600) -> dict:
     """One exchange, witnessed: the resident authors it — the caller's words ride
-    inside until humans carry signatures of their own (0012's signer registry)."""
-    return {"parlor": resident, "asked": (asked or "")[:400], "reply": (reply or "")[:600],
-            "session": session, "voiced": voiced, "at": NOW()}
+    inside until humans carry signatures of their own (0012's signer registry).
+    0070 sp1: the turn knows its THREAD (the head record's ref rides the body,
+    so a thread rebuilds from records alone), and the truncation caps are the
+    caller's dials, never constants."""
+    return {"parlor": resident, "asked": (asked or "")[:max(50, int(ask_cap))],
+            "reply": (reply or "")[:max(100, int(reply_cap))],
+            "session": session, "voiced": voiced,
+            **({"thread": thread} if thread else {}), "at": NOW()}
+
+
+def audience_prior(body: dict, prior: str) -> dict:
+    """The turn's own pointer to the one before it — riding the BODY (the
+    0067 law: refs always at hand) beside the derived_from lineage, so the
+    walk needs only the body door."""
+    return {**body, **({"prior": prior} if prior else {})}
+
+
+def make_thread_head(agent: dict, kp, scope: str, resident: str) -> dict:
+    """0070 sp1 — a conversation becomes a first-class worldline: the head
+    record every turn will cite. Minted server-side at the first turn; its
+    ref IS the thread's name from then on (the browser's random string
+    retires to a legacy label)."""
+    from .node import make_memory
+    return make_memory(agent, kp, scope,
+                       {"parlor_thread": {"resident": resident,
+                                          "opened_at": NOW()}},
+                       kind="episodic", tags=["parlor-thread", resident])
+
+
+def thread_turns(node, head: str) -> list[dict]:
+    """THE REBUILD LAW: a thread reassembles from records ALONE — every turn
+    whose body names the head, ordered by lineage walk from the head (turn N
+    cites turn N−1; the chain is the order, the clock only a tiebreak for
+    strays). Returns [{ref, asked, reply, voiced, prior}]."""
+    import json as _json
+
+    from . import crypto as _c
+    turns = {}
+    for rid, rec in node.records.items():
+        if "parlor" not in (rec.get("tags") or []):
+            continue
+        try:
+            b = _json.loads(_c._b64d(rec["body"]).decode())
+        except Exception:
+            continue
+        if b.get("thread") != head:
+            continue
+        turns[rid] = {"ref": rid, "asked": b.get("asked", ""),
+                      "reply": b.get("reply", ""),
+                      "voiced": bool(b.get("voiced")),
+                      "at": b.get("at", ""),
+                      "prior": b.get("prior")
+                      or next((d for d in rec.get("derived_from") or []
+                               if d != head), None)}
+    # the chain walk: start at the turn citing the head alone, follow citers
+    by_prior = {t["prior"]: t for t in turns.values()}
+    out, cur = [], by_prior.get(None)
+    seen = set()
+    while cur and cur["ref"] not in seen:
+        seen.add(cur["ref"])
+        out.append(cur)
+        cur = by_prior.get(cur["ref"])
+    for t in sorted(turns.values(), key=lambda x: x["at"]):
+        if t["ref"] not in seen:
+            out.append(t)                     # strays ride the clock, honestly
+    return out

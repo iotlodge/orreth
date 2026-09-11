@@ -2376,7 +2376,7 @@ def embed_door() -> None:
                              "/pulse", "/spacetime", "/market", "/assign",
                              "/seeds", "/record", "/atlas", "/inbox",
                              "/aperture", "/act", "/stamp",
-                             "/basket", "/basket/jobs"):
+                             "/basket", "/basket/jobs", "/thread"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2426,6 +2426,34 @@ def embed_door() -> None:
                     except Exception:
                         out = json.dumps({"error": "request cannot be "
                                           "served under this capability"}).encode()
+                elif route == "/thread":
+                    # 0070 sp1 — THE REBUILD DOOR: a conversation reassembles
+                    # from the signed records alone (the DOM thread retired);
+                    # turn N cites turn N−1 and the chain is the order
+                    qs = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query)
+                    _hd = (qs.get("head") or [""])[0]
+                    _tp = int((qs.get("port") or ["4500"])[0])
+                    _rows = []
+                    for ref, b, df, tg in wire_assets(_tp, "parlor"):
+                        if (b or {}).get("thread") != _hd:
+                            continue
+                        _rows.append({"ref": ref,
+                                      "asked": b.get("asked", ""),
+                                      "reply": b.get("reply", ""),
+                                      "voiced": bool(b.get("voiced")),
+                                      "at": b.get("at", ""),
+                                      "prior": b.get("prior")})
+                    _byp = {t["prior"]: t for t in _rows}
+                    _out, _cur, _seen = [], _byp.get(None), set()
+                    while _cur and _cur["ref"] not in _seen:
+                        _seen.add(_cur["ref"])
+                        _out.append(_cur)
+                        _cur = _byp.get(_cur["ref"])
+                    for t in sorted(_rows, key=lambda x: x["at"]):
+                        if t["ref"] not in _seen:
+                            _out.append(t)
+                    out = json.dumps({"head": _hd, "turns": _out}).encode()
                 elif route == "/basket/jobs":
                     qs = urllib.parse.parse_qs(
                         urllib.parse.urlparse(self.path).query)
@@ -10567,6 +10595,39 @@ def on_thumb(port: int, scope: str, r: dict) -> None:
           + (f" · feedback {fb['id'][:18]}…" if fb is not None else ""))
 
 
+def _thread_context(port: int, prior: str) -> str:
+    """0070 sp1 — the conversation so far, composed from the RECORDS (never
+    the browser's memory): walk the prior-turn chain through the body door,
+    newest-back, as many hops as the thread-turns dial allows. Empty when
+    the dial is zero or the thread is young — a stranger's first ask stays
+    a first ask."""
+    hops = dial_value("thread-turns")
+    if not prior or hops <= 0:
+        return ""
+    turns, cur = [], prior
+    for _ in range(int(hops)):
+        if not cur:
+            break
+        try:
+            b = call(port, "GET", "/records/"
+                     + urllib.parse.quote(cur, safe="") + "/body") or {}
+        except Exception:
+            break                             # a dark hop ends the walk, honestly
+        if not b.get("parlor"):
+            break
+        turns.append((b.get("asked", ""), b.get("reply", "")))
+        cur = b.get("prior") or ""
+    if not turns:
+        return ""
+    lines = []
+    for asked, reply in reversed(turns):      # oldest first, the way talk reads
+        lines.append(f"human: {asked}")
+        lines.append(f"you: {reply}")
+    return ("\n\nTHE CONVERSATION SO FAR (this same human, this thread — "
+            "continue it, never re-introduce yourself):\n"
+            + "\n".join(lines))
+
+
 def on_parlor(port: int, scope: str, r: dict) -> None:
     """An audience: the caller asks, the resident fetches with its own authority,
     and the exchange lands signed in the Window. Humans never read; they are answered."""
@@ -10947,8 +11008,13 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
         # to the grounded reply, honest as ever.
         vport = next((p for p, s in FLOOR_SCOPES.items()
                       if s.endswith(f"/f:{name}")), port)
+        # 0070 sp1 — THE REPLY SEES THE THREAD: recent turns ride the
+        # grounding (the Memory-Augmented variant's substrate, built where
+        # every channel shares it); zero on the dial turns it off honestly
+        _tctx = _thread_context(port, str(r.get("prior") or ""))
         voiced = governed_voice(vport, name, did, asked,
-                                _listen_kit(name, port, scope, facts, reply))
+                                _listen_kit(name, port, scope, facts, reply)
+                                + _tctx)
     final = voiced or reply
     # safer mode (0034 §4): consent withdrawn ⇒ the parlor's recorder falls
     # quiet — the exchange is still ANSWERED, never written. Recall of what was
@@ -10961,15 +11027,34 @@ def on_parlor(port: int, scope: str, r: dict) -> None:
     # ride the result — a thumb judges ONE record by hash, so an exchange that
     # will never land (safer mode, unembodied organ) honestly offers no thumb.
     rec = None
+    thread = str(r.get("thread") or "")
+    prior = str(r.get("prior") or "")
     if kp is not None and recordable:
-        body = parlor.audience_body(name, asked, final,
-                                    session=str(r.get("session") or ""),
-                                    voiced=bool(voiced))
+        # 0070 sp1 — THE WORLDLINE: the first turn mints the thread's head
+        # server-side (the browser's random string retires to a label);
+        # every turn cites the head AND the turn before it
+        if not thread:
+            head = parlor.make_thread_head({"did": did, "scope": scope},
+                                           kp, scope, name)
+            try:
+                call(port, "POST", "/records", head)
+                thread = head["id"]
+            except Exception as e:
+                print(f"    (thread head write failed: {e})")
+        body = parlor.audience_prior(
+            parlor.audience_body(name, asked, final,
+                                 session=str(r.get("session") or ""),
+                                 voiced=bool(voiced), thread=thread,
+                                 ask_cap=dial_value("thread-ask-chars"),
+                                 reply_cap=dial_value("thread-reply-chars")),
+            prior)
         rec = make_memory({"did": did, "scope": scope}, kp, scope, body,
                           kind="episodic", tags=["parlor", name])
+        rec["derived_from"] = [x for x in (thread, prior) if x]
     call(port, "POST", "/requests/resolve",
          {"id": r["id"], "status": "done",
           "result": {"reply": final, "voiced": bool(voiced), "by": did,
+                     **({"thread": thread} if thread else {}),
                      **({"exchange": rec["id"]} if rec is not None else {})}})
     if not asked.strip().lower().startswith(_NOT_A_HEARTBEAT):
         _HUMAN_HAND[scope] = time.time()      # first-hand: a living human spoke

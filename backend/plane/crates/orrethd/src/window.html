@@ -4594,6 +4594,9 @@ async function parlorPost(extra){
   try{
     const r=await fetch((PA.base||"")+"/requests",{method:"POST",headers:{"content-type":"application/json"},
       body:JSON.stringify({kind:"parlor",to:PA.name,session:PA.session,
+        /* 0070 sp1 — the thread rides both ways: the head the worker
+           minted, and the last turn so the reply SEES the conversation */
+        ...(PA.thread?{thread:PA.thread}:{}),...(PA.prior?{prior:PA.prior}:{}),
         text:extra.text||`${extra.verb||"say"} · ${PA.name}`,...extra})});
     if(!r.ok)parlorLine("reply","the door is sealed — a spectator may watch this world turn, never speak into it.");
   }catch{parlorLine("reply","unreachable — is the daemon up? (scripts/dev.sh status)")}
@@ -5002,7 +5005,12 @@ async function parlorPoll(){
       /* the exchange landed signed → it can be judged (0048 sp2); an
          unrecorded answer offers no thumb — nothing stands to mark */
       if(v.exchange){const th=$("p-thread");
-        th.appendChild(thumbRow(v.exchange,PA.base));th.scrollTop=th.scrollHeight}}
+        th.appendChild(thumbRow(v.exchange,PA.base));th.scrollTop=th.scrollHeight}
+      /* 0070 sp1 — the worldline remembered: the head + last turn carry
+         into the next ask; the browser's random session retires to a label */
+      if(v.thread&&!PA.thread){PA.thread=v.thread;
+        parlorLine("reply",`🧵 this conversation is a worldline — every turn a signed record citing the one before it: ${v.thread}`)}
+      if(v.exchange)PA.prior=v.exchange;}
   }
   if(!mine.some(r=>r.status!=="done"))
     $("p-thread").querySelectorAll(".wait").forEach(e=>e.remove());

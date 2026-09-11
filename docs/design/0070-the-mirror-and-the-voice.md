@@ -139,9 +139,31 @@ honest about being unattributed).
 
 ## 6. The spoonfuls (proposed order)
 
-1. **sp1 — The thread.** Lineage on audience records; the session head; replies see
-   recent turns; the DOM-only thread retired. Suite: a thread rebuilds from records
-   alone; turn N cites turn N−1.
+1. **sp1 — The thread.** ✅ **LANDED 2026-09-10 — a conversation is a worldline, and
+   a reply finally remembers.** **The head is a first-class record**: the first turn
+   mints `parlor_thread` server-side (the browser's random session string retires to
+   a legacy label); its ref IS the thread's name. **Every turn cites the head AND the
+   turn before it** — `derived_from` lineage on the record, and the prior ref riding
+   the BODY too (the 0067 refs-at-hand law), so the walk needs only the body door.
+   **Replies see the thread**: the voiced lane composes recent turns from the RECORDS
+   (never the browser's memory) into the grounding — as many hops as the new
+   `thread-turns` dial allows, zero turning the memory off deliberately; the old
+   constant truncation caps became the human's dials (`thread-ask-chars` ·
+   `thread-reply-chars`). **The rebuild door** (`/thread`): a conversation
+   reassembles from signed records alone, the chain the order, strays riding the
+   clock honestly. **The glass carries the worldline both ways** and says so in the
+   thread itself (🧵 with the head ref — a door like every ref). *Proven live on the
+   rig: a two-turn walk — the human told the librarian «my favorite wall material is
+   hempcrete», and the NEXT voiced reply answered «Hempcrete — you just told me that
+   in this thread», honestly naming its own scope; the rebuild door returned both
+   turns in chain order; pg shows turn 1 deriving from [head] and turn 2 from
+   [head, turn 1] — turn N cites turn N−1, the suite's law on the live wire.*
+   Suite 558→562 (the thread's four laws). *Honest remainders: the window-ask and
+   reader audience lanes keep their own sessions (the parlor lane is the thread's
+   first home; they join as the scrub demands them at sp4); a thread's restore
+   across browser lives is 0072's workspace affordance (the door already serves
+   it); older-turn compression (the memory-retriever pattern) arrives when threads
+   outgrow the dial.*
 2. **sp2 — The profile read.** The slice in the grounding kit (sovereign door, labeled);
    typed preferences; language honored by the voice. Suite: privacy floor holds (no
    profile in any projection); a withdrawn claim stops speaking mid-thread.
