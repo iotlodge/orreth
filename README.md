@@ -46,8 +46,8 @@ flowchart TD
 
 ## What is running, today, on one laptop
 
-🟢 **Seventy-two dives closed whole (`0000`–`0064` · `0065`–`0071`), every landed decision locked** (`docs/decisions/` + each
-dive's own ledger) · the **Python reference proves the whole model — 578 conformance tests** · the
+🟢 **Seventy-three dives closed whole (`0000`–`0064` · `0065`–`0072`), every landed decision locked** (`docs/decisions/` + each
+dive's own ledger) · the **Python reference proves the whole model — 597 conformance tests** · the
 **Rust plane** runs it (six crates, `orrethd` — one binary, tier as a profile, conformance-green
 against fixtures signed in Python and verified in Rust) · **one command** (`scripts/dev.sh start`)
 raises a universe of six ecosystems, twelve fields, and a working population of governed agents,
@@ -424,7 +424,7 @@ being *used*.
 
 ## From substrate to estate — the recent eras, compressed
 
-*(the full record is `docs/design/README.md` — seventy-two dives, each closed only when proven
+*(the full record is `docs/design/README.md` — seventy-three dives, each closed only when proven
 live by a human in the glass; the standing proof register is
 [`docs/design/the-honest-boundary.md`](docs/design/the-honest-boundary.md))*
 
@@ -448,6 +448,15 @@ live by a human in the glass; the standing proof register is
   fourteen pages, every tutorial walked before written, and the docs as the decoupling's forcing
   function: the kernel image published, the SDK on PyPI, a stranger's world from three files, an
   outside LangGraph agent admitted at a human gate and remembering across lives.
+- **The One Place shipped, and the capability became a box** (0072, two days): the rich rooms a
+  human lives in — a chat canvas whose conversation is a worldline, a workspace tuning eleven
+  retrieval styles with a draft-and-prove Compare, an operate room reading the one truth, an API
+  console showing the same door raw — built ONCE into the kernel's glass and rendered blind from
+  declarations, no foreign code ever; and a capability became a sealed, signed, content-addressed
+  box installed through the receiving world's own human gate — proven by removing the checkout
+  folder from the machine and watching the world live from its box alone. Answers name the
+  authority they served under, quotas refuse by teaching, the meter shows back per person, and
+  any answer exports as one audit artifact.
 - **The doors learned who is knocking** (0071, two days): the open queue closed — resolving needs a
   root-chained credential, forgeries meet one face, the fuel ledger answers only to its own key;
   machines ask and are answered structurally (signed asks, envelopes whose refs open); a stranger's

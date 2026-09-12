@@ -111,6 +111,7 @@ with confidence.
 
 | Parked | Design home | Gate |
 |---|---|---|
+| The enterprise later-wave six (0072 L3 — named, none cut): legal hold · corpus snapshots & as-of answers beyond the scrub's day grain · standing digests (the machine-tasks pattern at E-RAG) · data residency enforcement (the store charter carries the region field from day one) · HA/DR posture as a documented stance · per-person corpus entitlements (distinct retrieval reach per person) | 0072 §3.4 | a real tenant's demand names which lands first |
 | Hosted Custodian tier; blindness/BYOK/split-key proof on production infrastructure | 0011/0013 | the hosting decision + a partner's real custody need |
 | Federation and transport beyond parent-HTTP dev topology | 0013 | rule-9 re-hash decision first, then the handshake dive |
 | Class-allocated storage provisioned from the Canon's retention/RTO/RPO map | 0039 (the Chronicle & the Canon) + allen's charter | the storage-map spoonful, allen provisions |

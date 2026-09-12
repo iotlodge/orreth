@@ -5,13 +5,16 @@ kernel dive: the APP (JB's One Place) as kernel glass, and the installable capab
 package that pays KCR-0002 and carries the endgame's merge-back. Seeded by the Workspace
 design (the proof repo's `docs/workspace.md`, JB's three locks taken 2026-09-08).*
 
-***Status: 🟡 DRAFTED · LOCKED — all three locks taken by JB's word, 2026-09-08, plainly
-stated per the language law: L1 KERNEL GLASS ROOMS (the rich rooms built once as kernel
-panel kinds; capabilities declare, the kernel renders; the no-foreign-code law survives
-whole) · L2 THE SIGNED BOX APPROVED (content-addressed, human-gated install, crew as
-containerized deeds, retire-never-delete — KCR-0002's payment and the merge-back made
-literal) · L3 THE PHASING APPROVED (five enterprise requirements land with proof one, six
-wait named in the register, none cut).***
+***Status: ✅ CLOSED WHOLE 2026-09-12 (era 0.72 — the high-water finally moves past
+0.71). Five spoonfuls over two days, suite 578→597, every lock honored: L1 the five
+kernel-glass rooms live (chat · workspace · sources · monitor · api-console — declared,
+rendered blind, no foreign code ever); L2 the signed box REAL (orreth-package-v1;
+KCR-0002 PAID — the stranger walk ran with the checkout folder removed from the machine
+and the world lived from its box alone); L3 the enterprise five proven each in its room,
+the later-wave six named in the honest register, none cut. ALL FOUR KCRs the E-RAG proof
+ever filed are now paid. The walks' own wounds paid in-hour throughout (twelve across
+the five spoonfuls — the give-up door, the eaten ask family closed at the root, the
+plant-once manifest freeze, the write-once head story, the act door's named floor).***
 
 ## 1. The demand, verbatim (the proof's charter)
 

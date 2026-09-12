@@ -86,6 +86,14 @@ remove, "what did we believe last Tuesday" answered by replaying the record — 
 person behind the seat at last: a human as an identity with their own minted key, their
 strokes and thumbs signed as themselves, the anonymous walk-up still served with honest
 labels.
+The seventh payment, dive 0072, shipped the One Place itself — and with it the last of the
+proof's four kernel change requests: the rich rooms (chat canvas, workspace, sources,
+monitoring, API console) built once into the kernel's own glass and rendered blind from
+declarations, so every future capability inherits them; and the capability became a sealed,
+signed, content-addressed box a stranger installs through their own human gate — proven the
+hard way, by removing the E-RAG folder from the machine and watching the world live from its
+box alone. The endgame's merge-back is no longer a plan: the box is the vehicle, and it
+exists.
 
 ---
 
