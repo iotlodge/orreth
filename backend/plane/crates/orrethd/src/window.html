@@ -2161,7 +2161,13 @@ function capMapFeed(){
       m[w.floor]={key:w.key,name:w.name||w.key,resident:w.resident,state:w.state}});
     CAPMAP=m;}).catch(()=>{});
 }
-const capOf=s=>{if(!CAPMAP||!s)return null;
+/* LABEL vs LINEAGE (JB's find, 2026-09-11: E-RAG is the first world to
+   declare an ECOSYSTEM as its floor, and the descendant match stamped its
+   chip on every variant floor beneath — eight chips for one world):
+   capOf = the standing chip, worn at the world's OWN floor, once;
+   capUnder = the estate — purpose at work anywhere beneath still burns jade */
+const capOf=s=>(CAPMAP&&s&&CAPMAP[s])||null;
+const capUnder=s=>{if(!CAPMAP||!s)return null;
   for(const f in CAPMAP)if(s===f||s.startsWith(f+"/"))return CAPMAP[f];
   return null};
 /* every ember stays INSIDE the glass: clamp to the shell's interior
@@ -2377,7 +2383,7 @@ function renderBrain(){
   BG.clusters=cl;
   BG.core=core;                              /* the long-term tissue — climbs land here */
   if(!LEGACYF&&gainF()>0)deltas.forEach(d=>{ /* memory formation: the burst */
-    const w=capOf(d.scope);
+    const w=capUnder(d.scope);
     if(w){ /* PURPOSE at work (the taxonomy visible): a world atop the
               machine writes — jade fire descends from above the skull */
       BG.flashes.push({p:d.p,age:0,mag:Math.min(4,1+d.d*.4),hue:"cap"});
@@ -2452,10 +2458,10 @@ function bEvent(h){
   }else if(tags.includes("memory-standing")){
     BG.flashes.push({p:BR3.temporal,age:0,mag:2,hue:"cool"});
     btick(`📏 the yardstick stands — the machine graded its own memory`);
-  }else if(capOf(h.scope)){
+  }else if(capUnder(h.scope)){
     /* purpose on the record: any capability-floor record that isn't the
        physics above — jade, descending from the world atop the machine */
-    const w=capOf(h.scope);
+    const w=capUnder(h.scope);
     BG.parts.push({a:[cl.p[0]*1.35,1.55,cl.p[2]*1.35],b:cl.p,t:0,sp:.55,
       trail:[],hue:"cap"});
     if(tags.includes("report")){
