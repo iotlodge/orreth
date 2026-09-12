@@ -6117,6 +6117,60 @@ function dkPanel(p,pi,item){
         <div id="ws-eats" class="dim" style="font-size:.75rem">reading the estate…</div>
         ${(function(){setTimeout(()=>srcLoad(pi,"ws-eats",p.ask_port||4500),0);return ""})()}
       </details>`}
+  case "monitor":{
+    /* 0072 sp3 — THE OPERATE ROOM: the machine watched PER STYLE, from
+       the same records the scoreboard reads (never a second truth): ask
+       volume, nearest-rank latency percentiles, context spend, draft
+       counts, the recent strip (every row a door), and this world's own
+       raised hands. Folded by default — an operator opens it on purpose. */
+    if(!MON.loaded){MON.loaded=true;setTimeout(()=>monLoad(pi),0)}
+    const m=MON.data||{},sty=m.styles||{},keys=Object.keys(sty).sort();
+    const tbl=keys.length?`<table style="width:100%;border-collapse:collapse;font-size:.7rem">
+      <tr class="dim" style="text-align:left"><th>style</th><th>asks</th><th>p50</th><th>p95</th><th>ctx chars</th><th>drafts ⚗</th><th>last served</th></tr>
+      ${keys.map(k=>{const s=sty[k];return `<tr style="border-top:1px solid var(--hair)">
+        <td style="color:var(--star)">${dkEsc(k)}</td><td>${s.asks}</td>
+        <td>${s.p50_ms}ms</td><td>${s.p95_ms}ms</td><td>${s.chars_mean}</td>
+        <td>${s.drafts||""}</td><td class="dim">${dkEsc((s.last_at||"").slice(5,16).replace("T"," "))}</td></tr>`}).join("")}
+      </table>`
+      :`<div class="dim" style="font-size:.72rem">${MON.data?"no asks on the record yet — the room fills as the door serves":"reading the records…"}</div>`;
+    const rec=(m.recent||[]).map(r=>`<div class="dim" style="font-size:.64rem;margin:.15rem 0">
+      ${dkEsc((r.at||"").slice(5,16).replace("T"," "))} · <b style="color:var(--star)">${dkEsc(r.style)}</b>
+      · ${r.latency_ms}ms${r.draft?" · ⚗ draft":""} · “${dkEsc(r.asked)}” · ${dkEsc(r.ref||"")}</div>`).join("");
+    const gates=(m.gates||[]).map(gt=>`<div class="dk-law" style="font-size:.66rem">✋ <b>${dkEsc(gt.kind)}</b> · ${dkEsc(gt.status)} · ${dkEsc(gt.text)}</div>`).join("");
+    return `<details style="margin-top:.6rem" ${MON.open?"open":""} ontoggle="MON.open=this.open">
+      <summary class="dk-chtitle" style="cursor:pointer;list-style:none">▸ ${dkEsc(p.label||"operate")}${m.asks?` · ${m.asks} asks on the record`:""}</summary>
+      <div id="mon-body-${pi}">${tbl}
+        ${rec?`<div class="dk-chtitle" style="margin-top:.5rem;font-size:.66rem">the recent strip — every ref a door</div>${rec}`:""}
+        ${gates?`<div class="dk-chtitle" style="margin-top:.5rem;font-size:.66rem">this world's raised hands</div>${gates}`:""}
+        <div class="dim" style="font-size:.6rem;margin-top:.4rem">the same records the scoreboard reads — never a second truth · <a href="#" style="color:var(--brass)" onclick="MON.loaded=false;renderCap();return false">⟲ refresh</a></div>
+      </div>
+      ${(function(){setTimeout(()=>{const e=$("mon-body-"+pi);if(e)linkifyEl(e)},50);return ""})()}
+    </details>`}
+  case "api-console":{
+    /* 0072 sp3 — THE API CONSOLE: the SAME ask door, raw — the request
+       shown exactly as any client would send it, the envelope exactly as
+       it returns, and the curl line to take away. Orreth-as-API, proven
+       in the room; never a lab copy (the road is the test). */
+    const port=p.ask_port||4500;
+    const url=`${location.protocol}//${location.hostname}:${port}/requests`;
+    const chatP=(_CAPMAN&&_CAPMAN.view||[]).find(x=>x.kind==="chat")||{};
+    const sel=(chatP.selector||["auto"]).map(v=>`<option${APIC.variant===v?" selected":""}>${dkEsc(v)}</option>`).join("");
+    return `<details style="margin-top:.6rem" ${APIC.open?"open":""} ontoggle="APIC.open=this.open">
+      <summary class="dk-chtitle" style="cursor:pointer;list-style:none">▸ ${dkEsc(p.label||"the API console")}</summary>
+      <div class="dk-law" style="display:flex;gap:.4rem;align-items:center;margin:.35rem 0">
+        <select id="api-var" onchange="APIC.variant=this.value">${sel}</select>
+        <input id="api-text" placeholder="the ask, in your own words" style="flex:1" value="${dkEsc(APIC.text||"")}" onkeydown="if(event.key==='Enter')apiFire(${pi})">
+        <input id="api-draft" placeholder='draft knobs (optional JSON, e.g. {"k":9})' style="width:15rem" value="${dkEsc(APIC.draft||"")}">
+        <button class="dk-tab" onclick="apiFire(${pi})">fire →</button>
+        ${APIC.busy?`<span class="dim" style="font-size:.66rem">on the wire…</span>`:""}</div>
+      ${APIC.req?`<div class="dk-chtitle" style="font-size:.66rem">the request — exactly what any client sends</div>
+        <pre style="font-size:.62rem;background:var(--deep);border:1px solid var(--hair);border-radius:8px;padding:.5rem;overflow-x:auto">POST ${dkEsc(url)}
+${dkEsc(JSON.stringify(APIC.req,null,1))}</pre>
+        <div class="dim" style="font-size:.6rem">curl -s -X POST ${dkEsc(url)} -H 'content-type: application/json' -d '${dkEsc(JSON.stringify(APIC.req))}'   # then poll GET ${dkEsc(url)} for id=${dkEsc(APIC.rid||"…")}</div>`:""}
+      ${APIC.res?`<div class="dk-chtitle" style="font-size:.66rem;margin-top:.4rem">the envelope — exactly what returns (${APIC.ms}ms door-to-done)</div>
+        <pre id="api-res-${pi}" style="font-size:.62rem;background:var(--deep);border:1px solid var(--hair);border-radius:8px;padding:.5rem;max-height:20rem;overflow:auto">${dkEsc(JSON.stringify(APIC.res,null,1))}</pre>
+        ${(function(){setTimeout(()=>{const e=$("api-res-"+pi);if(e)linkifyEl(e)},50);return ""})()}`:""}
+    </details>`}
   case "sources":{
     /* 0072 sp1 — THE SOURCES ROOM: the estate this world may read, live
        from the governed doors (the Farm's own truth — a resting store
@@ -6212,6 +6266,42 @@ async function wsVersion(pi){
     WS.loaded=false;setTimeout(()=>renderCap(),1200);
   }catch(e){const m=$("ws-cmp-msg");if(m)m.textContent="the door would not open: "+e}}
 
+/* ── 0072 sp3 · the operate room's + the API console's motion ── */
+let MON={loaded:false,open:false,data:null};
+async function monLoad(pi){
+  const p=(_CAPMAN&&_CAPMAN.view||[])[pi]||{};
+  try{const d=await(await fetch(`${OBSD}/workspace?port=${p.ws_port||4500}`)).json();
+    MON.data=d.monitor||{}}catch{}
+  renderCap();
+}
+let APIC={busy:false,open:false,text:"",variant:"auto",draft:"",req:null,res:null,rid:"",ms:0};
+async function apiFire(pi){
+  const p=(_CAPMAN&&_CAPMAN.view||[])[pi]||{};
+  const ti=$("api-text");if(ti)APIC.text=ti.value;
+  const di=$("api-draft");if(di)APIC.draft=di.value;
+  const txt=(APIC.text||"").trim();if(!txt||APIC.busy)return;
+  const body={kind:"ask",text:txt};
+  if(APIC.variant&&APIC.variant!=="auto")body.variant=APIC.variant;
+  if((APIC.draft||"").trim()){
+    try{body.draft=JSON.parse(APIC.draft)}
+    catch(e){APIC.res={error:"the draft is not JSON: "+e};renderCap();return}}
+  APIC.req=body;APIC.res=null;APIC.busy=true;APIC.ms=0;renderCap();
+  const base=`${location.protocol}//${location.hostname}:${p.ask_port||4500}`;
+  const t0=Date.now();
+  try{const r=await(await fetch(base+"/requests",{method:"POST",
+    headers:{"content-type":"application/json"},body:JSON.stringify(body)})).json();
+    APIC.rid=r.id||"";
+    for(let n=0;n<80;n++){
+      await new Promise(z=>setTimeout(z,2500));
+      const q=(await(await fetch(base+"/requests")).json()).requests||[];
+      const x=q.find(v=>v.id===APIC.rid);
+      if(x&&(x.status==="done"||x.status==="denied")){
+        APIC.res=x.result||{};APIC.ms=Date.now()-t0;break}}
+    if(!APIC.res)APIC.res={note:"the walk outlived this watcher — poll GET /requests yourself; the answer lands there either way"};
+  }catch(e){APIC.res={error:String(e)}}
+  APIC.busy=false;renderCap();
+}
+
 /* ── 0072 sp1 · the chat canvas's motion (kernel glass — every capability
       declaring a chat panel inherits exactly this room) ── */
 let CHAT={html:"",thread:"",prior:"",variant:"auto",busy:false};
@@ -6292,10 +6382,15 @@ function renderWorld(man){
   /* the composer survives every rebuild — value, focus, and caret carried
      across innerHTML (belt to capFresh's braces: no render path may eat
      a human's half-typed words) */
-  const _cSnap=["chat-in","ws-ask"].map(id=>{const e=$(id);
+  const _cSnap=["chat-in","ws-ask","api-text","api-draft"].map(id=>{const e=$(id);
     return e?{id,v:e.value,f:document.activeElement===e,s:e.selectionStart}:null});
-  const _ciRestore=()=>{_cSnap.forEach(s=>{if(!s||!s.v)return;const n=$(s.id);
-    if(n){n.value=s.v;if(s.f){n.focus();try{n.setSelectionRange(s.s,s.s)}catch(e){}}}})};
+  const _ciRestore=()=>{_cSnap.forEach(s=>{if(!s)return;const n=$(s.id);
+    if(!n)return;
+    if(s.v)n.value=s.v;
+    /* focus restores even over an EMPTY value — a click focused the old
+       node, a loader re-rendered before the first keystroke, and the
+       typing fell on the floor (caught live twice, 2026-09-11) */
+    if(s.f){n.focus();try{n.setSelectionRange(s.s,s.s)}catch(e){}}})};
   const B=$("capbody"),reps=DESK.reports||[];
   const crumb=`<div style="margin-bottom:.5rem"><a href="#" onclick="CAPV='home';renderCap();return false" style="color:var(--brass);font-size:.72rem;text-decoration:none">← worlds</a></div>`;
   const head=`<div class="dk-world">${man.emoji||"📦"} <b>${dkEsc(man.name)}</b> ${dkState(man)}
@@ -6306,7 +6401,7 @@ function renderWorld(man){
   /* 0072 sp1 — ROOMS are item-independent: a chat canvas or a sources
      room lives whether or not any report ever landed; the no-report line
      is the DESK pattern's own, shown only to desk-shaped worlds */
-  const ROOMS=new Set(["chat","sources","controls","workspace"]);
+  const ROOMS=new Set(["chat","sources","controls","workspace","monitor","api-console"]);
   if(!reps.length){
     const roomHtml=(man.view||[]).map((p,pi)=>ROOMS.has(p.kind)?dkPanel(p,pi,{}):"").join("");
     const deskish=(man.view||[]).some(p=>!ROOMS.has(p.kind));

@@ -72,3 +72,44 @@ def test_synthetic_head_swaps_in_memory_and_reads_back():
     assert row and row[0] == "synthetic:draft-head"
     assert improver._profile_of(row[1]) == {"k": 2}
     assert variants.config("naive", improver._profile_of(row[1])) == {"k": 2}
+
+
+# ---- 0072 sp3 · the operate room's laws -------------------------------------------
+
+def _ask_rec(rid, style, lat, at, draft=False, replay=False, asked="q"):
+    from orreth_sim import crypto
+    body = {"ask": {"asked": asked, "variant": style,
+                    "signals": {"latency_ms": lat, "cost_chars": 100}}}
+    if draft:
+        body["ask"]["draft"] = {"hash": "sha256:d", "knobs": {"k": 9}}
+    tags = ["ask", f"variant:{style}"] + (["replay"] if replay else [])
+    return rid, {"tags": tags, "occurred_at": at,
+                 "body": crypto._b64e(crypto.canonical(body))}
+
+
+def test_monitor_folds_per_style_with_honest_percentiles():
+    """Nearest-rank percentiles — at tiny n the room reports a real ask's
+    number, never an interpolated invention; replay rows stay the bench's."""
+    recs = dict([_ask_rec("a", "naive", 100, "2026-09-11T01:00:00Z"),
+                 _ask_rec("b", "naive", 300, "2026-09-11T02:00:00Z"),
+                 _ask_rec("c", "naive", 200, "2026-09-11T03:00:00Z"),
+                 _ask_rec("d", "advanced", 500, "2026-09-11T04:00:00Z",
+                          draft=True),
+                 _ask_rec("e", "naive", 999, "2026-09-11T05:00:00Z",
+                          replay=True)])
+    m = workspace.monitor_fold(recs)
+    assert m["asks"] == 4                       # the replay row never counted
+    nv = m["styles"]["naive"]
+    assert nv["asks"] == 3 and nv["p50_ms"] == 200.0 and nv["p95_ms"] == 300.0
+    assert m["styles"]["advanced"]["drafts"] == 1
+    assert nv["last_at"] == "2026-09-11T03:00:00Z"
+
+
+def test_monitor_recent_is_newest_first_and_every_row_a_door():
+    recs = dict([_ask_rec("a", "naive", 100, "2026-09-11T01:00:00Z"),
+                 _ask_rec("b", "hybrid", 200, "2026-09-11T09:00:00Z"),
+                 _ask_rec("c", "naive", 150, "2026-09-11T05:00:00Z")])
+    m = workspace.monitor_fold(recs)
+    assert [r["ref"] for r in m["recent"]] == ["b", "c", "a"]
+    assert all(r["ref"] and r["at"] for r in m["recent"])
+

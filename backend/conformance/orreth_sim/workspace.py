@@ -100,3 +100,63 @@ def synthetic_head(short: str, draft: dict) -> dict:
     return {"tags": ["asset", f"variant-{short}"],
             "received_at": "9999-12-31T00:00:00Z",
             "body": crypto._b64e(crypto.canonical(body))}
+
+
+# ---- 0072 sp3 · the operate room's fold -------------------------------------------
+
+def _pct(sorted_vals: list, q: float) -> float:
+    """The nearest-rank percentile — deterministic, no interpolation
+    surprises at tiny n (an operate room at n=2 must not invent numbers)."""
+    if not sorted_vals:
+        return 0.0
+    i = min(len(sorted_vals) - 1, max(0, int(q * len(sorted_vals) + 0.5) - 1))
+    return float(sorted_vals[i])
+
+
+def monitor_fold(records: dict) -> dict:
+    """The operate room (0072 sp3), as a function of the SAME records the
+    scoreboard reads: per-style ask volume, latency percentiles (nearest
+    rank), mean context spend, draft-run counts, and the recent strip —
+    every row carrying its exchange ref so the room stays a hall of doors.
+    Replay rows are the bench's, never operations — excluded."""
+    import json as _json
+    styles: dict = {}
+    recent: list = []
+    for rid, rec in (records or {}).items():
+        tags = rec.get("tags") or []
+        if "ask" not in tags or "replay" in tags:
+            continue
+        try:
+            body = _json.loads(crypto._b64d(rec["body"]).decode())
+        except Exception:
+            continue
+        b = body.get("ask") or {}
+        style = variants.resolve(str(b.get("variant") or "")) or "naive"
+        sig = b.get("signals") or {}
+        lat = float(sig.get("latency_ms") or 0)
+        chars = int(sig.get("cost_chars") or 0)
+        at = str(rec.get("occurred_at") or rec.get("received_at") or "")
+        s = styles.setdefault(style, {"asks": 0, "lats": [], "chars": 0,
+                                      "drafts": 0, "last_at": ""})
+        s["asks"] += 1
+        s["lats"].append(lat)
+        s["chars"] += chars
+        if b.get("draft"):
+            s["drafts"] += 1
+        if at > s["last_at"]:
+            s["last_at"] = at
+        recent.append({"at": at, "style": style, "latency_ms": lat,
+                       "chars": chars, "draft": bool(b.get("draft")),
+                       "ref": rid, "asked": str(b.get("asked") or "")[:70]})
+    out = {}
+    for style, s in styles.items():
+        lats = sorted(s["lats"])
+        out[style] = {"asks": s["asks"],
+                      "p50_ms": round(_pct(lats, 0.5), 1),
+                      "p95_ms": round(_pct(lats, 0.95), 1),
+                      "chars_mean": round(s["chars"] / s["asks"]) if s["asks"] else 0,
+                      "drafts": s["drafts"], "last_at": s["last_at"]}
+    recent.sort(key=lambda r: r["at"], reverse=True)
+    return {"styles": out, "recent": recent[:15],
+            "asks": sum(v["asks"] for v in out.values())}
+

@@ -209,8 +209,35 @@ already landed in 0069's design.
    entitlement-scoped edit controls = sp5's authority work; the canvas lights
    whole-run, not per-stage (stage records inside a flow don't exist yet — an
    animation guessing would break the live-watch law).
-3. **sp3 — Monitoring + the API console.** The operate room with Observatory doors; the
-   test-API room firing the real door.
+3. **sp3 — Monitoring + the API console.** ✅ **LANDED 2026-09-11.** Two more kinds in
+   the vocabulary (`monitor`, `api-console` — a release), both folded-by-default rooms
+   an operator opens on purpose. THE OPERATE ROOM: per-style operational truth from the
+   SAME records the scoreboard reads (never a second truth — the room says so):
+   `workspace.monitor_fold` (pure, 2 laws) folds ask volume, nearest-rank latency
+   percentiles (no interpolated inventions at tiny n), context spend, draft counts,
+   last-served; the recent strip with every exchange ref a linkified door; this world's
+   raised hands from its own queue. Live it already earns its keep: naive p50 1.3s /
+   p95 17.5s — the boot-lap starvation VISIBLE in the room (the middleware season's
+   wound, measured where JB can see it). THE API CONSOLE: the same ask door, raw —
+   the request pane shows the EXACT wire shape (POST /requests {kind,text,variant,
+   draft}), the curl + poll line to take away, and the envelope exactly as it returns
+   (by · choice_ref · citations · confession · cost with door-to-done AND walk latency
+   split honestly · sp2's draft {hash, knobs, note} riding visibly · exchange ·
+   guardrails), refs linkified as doors. Orreth-as-API proven in the room; never a lab
+   copy. **THE WALK'S OWN WOUNDS, paid in-hour**: (1) sp3's rooms never reached the
+   glass — the manifest plant was land-if-absent, so a changed genesis NEVER upgraded
+   the shelf head, and the recall window could re-plant by ACCIDENT over a human's
+   word; now the checkout-era UPGRADE lane compares head to install source and lands a
+   SIBLING with lineage, preserving human state (retired) — NAMED PARTIAL: a
+   budget-capped retrieve that misses the head still degrades to blind replant
+   (KCR-0002's signed box replaces this whole road, sp4). (2) `Identifier 'API'
+   already declared` killed the whole glass at parse — renamed APIC. (3) The eaten-ask
+   family's THIRD member: focus now survives re-renders even over an empty value (a
+   click focused the old node, a loader re-rendered before the first keystroke, the
+   typing fell on the floor — caught live twice). Suite 587→589. Remainders: guardrail
+   audit counts stay with vigil's cards + the Observatory (the standings pull doesn't
+   carry universe-scoped audits); Observatory deep-doors (vera's assay per style) wait
+   for the volume that makes them honest.
 4. **sp4 — The package.** Format + `plant-package` road + the generalized discoverer +
    crew-as-deeds; proven by a stranger-shaped walk: published artifacts only, E-RAG's
    box installed at a fresh world's gate.

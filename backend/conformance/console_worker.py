@@ -1470,8 +1470,11 @@ CAP_PANEL_KINDS = {"tabs", "markdown", "chart", "strip", "controls", "download",
                    "reports",   # canon (0055 L1/L2 · flow 08-16 · reports 08-17)
                    "chat", "sources",  # 0072 sp1 — One Place's first rooms:
                                        # growing this vocabulary IS a release
-                   "workspace"}        # 0072 sp2 — the tuning room: declared
+                   "workspace",        # 0072 sp2 — the tuning room: declared
                                        # graphs + typed forms, rendered blind
+                   "monitor", "api-console"}  # 0072 sp3 — the operate room
+                                       # and the raw door: same facts, same
+                                       # doors, two more faces
                                        # (0055's own words), and this dive is
                                        # the release
 
@@ -6343,7 +6346,36 @@ def improver_beat(port: int) -> None:
                              **atlas.FLOWS,              # 0061 — the schematic is craft
                              **_CAP_PLANT,
                              "the-memory-yardstick": YARDSTICK_V1}.items():
-            if wire_assets(port, "asset", name=sname):
+            _rows = wire_assets(port, "asset", name=sname)
+            if _rows:
+                if not sname.startswith("capability-"):
+                    continue
+                # 0072 sp3 — THE CHECKOUT-ERA UPGRADE LANE (found when sp3's
+                # rooms never reached the glass): the manifest plant was
+                # land-if-absent, so a changed genesis NEVER upgraded the
+                # shelf head — and worse, the recall window's horizon could
+                # re-plant by ACCIDENT over a human's word. Now: the head is
+                # compared to the install source; a changed declaration
+                # lands as a SIBLING with lineage (the razor: the manifest's
+                # shape is the declaration, its source wins), while human
+                # state (retirement) is preserved. KCR-0002's signed box
+                # makes this whole road gated; this is the honest folder era.
+                _ref, _b, _x2, _t2 = _rows[-1]
+                _head = ((_b or {}).get("asset") or {}).get("profile") or {}
+                _want = stext if isinstance(stext, dict) else {"template": stext}
+                _merged = {**_want, **{k: _head[k] for k in ("retired",)
+                                       if k in _head}}
+                if _head == _merged:
+                    continue
+                g = improver.make_asset(me, IMP, scope, name=sname,
+                                        profile=_merged, derived_from=[_ref])
+                try:
+                    call(port, "POST", "/records", g)
+                    print(f"  ⟳ the install source changed — «{sname}» "
+                          f"upgraded to a new head with lineage (the "
+                          f"checkout-era lane; KCR-0002 pays the road whole)")
+                except Exception as e:
+                    print(f"    ({sname} upgrade failed: {e})")
                 continue
             g = improver.make_asset(me, IMP, scope, name=sname,
                                     profile=(stext if isinstance(stext, dict)
@@ -7800,9 +7832,24 @@ def wire_workspace(port: int) -> dict:
         cells = _std.build(sn.records if sn else {})
     except Exception:
         cells = {}
+    # 0072 sp3 — the operate room rides the SAME pull: per-style volume,
+    # nearest-rank latency percentiles, draft counts, the recent strip
+    # (every row a door), and this world's raised hands from the one bell
+    monitor = _ws.monitor_fold(sn.records if sn else {})
+    try:
+        monitor["gates"] = [
+            {"id": r.get("id"), "kind": r.get("kind", "?"),
+             "status": r.get("status"),
+             "text": str(r.get("text") or r.get("name") or "")[:90]}
+            for r in call(port, "GET", "/requests").get("requests", [])
+            if r.get("status") in ("pending", "staged")
+            and r.get("kind") not in ("ask", "parlor")][-8:]
+    except Exception:
+        monitor["gates"] = []
     return {"at": NOW(), "scope": scope,
             "roster": _ws.build_roster(
-                heads, cells, _var.built(tournament.ALL_RETRIEVERS))}
+                heads, cells, _var.built(tournament.ALL_RETRIEVERS)),
+            "monitor": monitor}
 
 
 def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
