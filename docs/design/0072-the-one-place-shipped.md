@@ -238,9 +238,39 @@ already landed in 0069's design.
    audit counts stay with vigil's cards + the Observatory (the standings pull doesn't
    carry universe-scoped audits); Observatory deep-doors (vera's assay per style) wait
    for the volume that makes them honest.
-4. **sp4 — The package.** Format + `plant-package` road + the generalized discoverer +
-   crew-as-deeds; proven by a stranger-shaped walk: published artifacts only, E-RAG's
-   box installed at a fresh world's gate.
+4. **sp4 — The package.** ✅ **LANDED 2026-09-12 — KCR-0002 PAID (the last unpaid KCR).**
+   THE FORMAT (`orreth_sim/package.py`, `orreth-package-v1`, six laws): identity = the
+   hash of the canonical declaration bytes (a changed byte is a different box; there is
+   no edit, only a new box); provenance = the publisher's Ed25519 signature,
+   self-certifying via did:key, verifiable offline; crew = container images ONLY — the
+   checkout era's `cmd`/`cwd`/`match` words refuse at pack AND at verify ("a stranger's
+   box never executes into a checkout"); the receiving world's panel vocabulary enforced
+   at verify (a beyond-canon room refuses naming the release law). THE INSTALL ROAD: a
+   `plant-package` ask at the human gate — verified BEFORE the card (a tampered box
+   refused at the door live, naming the byte law); the staged card carries key, rooms,
+   floors, craft, crew images, publisher, and the box's exact hash, with a teaching
+   blurb (the inbox-legibility law honored from birth); on approval the box lands
+   content-addressed deriving from the head it matches or upgrades, craft plants, crew
+   rises through the 0062 deed walk (five records, never a shell), and the world wakes
+   the same worker life. THE DISCOVERER, GENERALIZED: boot reads installed
+   `capability-package` records, RE-VERIFIES each box (trust nothing stale), and feeds
+   CAP_GENESIS beside the folder sweep — a checkout's folder wins a collision in dev.
+   **THE STRANGER WALK, WHOLE**: the box packed by a persistent publisher identity
+   outside the repo (~/orreth-package-demo/e-rag-0.1.json, sha256:18739853…); the
+   tampered twin refused; the true box staged → approved → installed; then
+   `capabilities/e-rag` REMOVED from the machine and the worker rebooted — «⚑ capability
+   installed from a published box: e-rag», all five rooms served, the glass rendered
+   whole, an ask answered in 24s. The world lived from its box alone; the folder then
+   restored. The endgame's merge-back is literal: this box IS the vehicle. One
+   walk-wound paid in-hour: an identical manifest is the SAME record on a write-once
+   log, so the first install's «wears lineage» head was a silent no-op — the box now
+   derives from the head it matches, and a new head lands only when the declaration
+   moved (the story honest both ways). Un-install = the standing governed retire.
+   Suite 589→595. Honest remainders: no shipped box carries crew yet (E-RAG asks for no
+   processes — the lane is law-tested and deed-wired, exercised vacuously); package
+   floors ride the existing shipyard hulls (a box declaring a NEW floor scope awaits a
+   hull-provisioning walk); publisher trust is signature-only (no registry of publishers
+   — becky attests the gate, the human attests the publisher).
 5. **sp5 — The enterprise five.** Authority-scoped answers · compliance export · quotas
    surfaced · latency classes · showback — each proven in its room.
 

@@ -1897,6 +1897,184 @@ for _k, _v in _DISCOVERED.items():
     _CAP_PLANT[f"capability-{_k}"] = _v["manifest"]
 
 
+_PKG_SWEPT = False
+
+
+def discover_installed(port: int) -> None:
+    """0072 sp4 — THE DISCOVERER, GENERALIZED (KCR-0002's other half): the
+    folder sweep serves the checkout era; THIS reads the worlds a human
+    INSTALLED — capability-package records on the shelf, each re-verified
+    at boot (identity + signature + crew law + this world's vocabulary —
+    trust nothing stale), the newest box per key winning. A checkout's own
+    folder still wins a collision in dev (the folder IS newer source);
+    a world with no folder lives from its box alone — the stranger's
+    proof."""
+    global _PKG_SWEPT
+    if _PKG_SWEPT:
+        return
+    from orreth_sim import package as pkg_lib
+    try:
+        call(port, "GET", "/requests")        # the floor must answer first
+    except Exception:
+        return                                # dark — the beat retries
+    _PKG_SWEPT = True
+    latest: dict = {}
+    for ref, b, _x, _t in wire_assets(port, "capability-package"):
+        box = (b or {}).get("capability_package") or {}
+        if box.get("key"):
+            latest[box["key"]] = box          # oldest→newest; last wins
+    for key, box in latest.items():
+        if key in CAP_GENESIS:
+            continue
+        flaw = pkg_lib.verify(box, CAP_PANEL_KINDS)
+        if flaw:
+            print(f"  (installed box {key} refused at boot: {flaw})")
+            continue
+        man = box["declarations"]["manifest"]
+        CAP_GENESIS[key] = man
+        _CAP_PLANT[f"capability-{key}"] = man
+        _CAP_PLANT.update(box["declarations"].get("craft") or {})
+        print(f"  ⚑ capability installed from a published box: {key} "
+              f"({str(box.get('id',''))[:22]}…)")
+
+
+def _package_crew_body(port: int, scope: str, key: str, c: dict,
+                       rid: str) -> str:
+    """A package's crew rises as a CONTAINER through the deed grammar
+    (0062): intent → authorization → docker run → attempt →
+    receipt/observation — five records, never a shell into a checkout."""
+    import subprocess
+    kp, sdid = lib_seat(scope)
+    def deed(role, body, derived=None):
+        rec = _deed_rec(kp, sdid, scope, role, body)
+        if derived:
+            rec["derived_from"] = [derived]
+        call(port, "POST", "/records", rec)
+        return rec["id"]
+    name, image = str(c["name"]), str(c["image"])
+    cont = f"cap-{key}-{name}".replace(" ", "-").lower()[:48]
+    intent = deed("intent", {"effect": "estate-apply",
+                             "change": f"raise crew “{name}” for {key} — "
+                                       f"image {image}", "objective": rid,
+                             "at": NOW()})
+    auth = deed("authorization", {"deed": intent,
+                                  "authority": f"the human's word at {rid}",
+                                  "at": NOW()}, intent)
+    subprocess.run(["docker", "rm", "-f", cont], capture_output=True)
+    args = ["docker", "run", "-d", "--name", cont, "--network", RIG_NET,
+            "--restart", "unless-stopped"]
+    if c.get("port"):
+        args += ["-p", f"{int(c['port'])}:{int(c.get('inner', c['port']))}"]
+    run = subprocess.run(args + [image], capture_output=True, text=True,
+                         timeout=120)
+    attempt = deed("attempt", {"deed": intent,
+                               "manifests": {"image": image,
+                                             "container": cont},
+                               "at": NOW()}, auth)
+    if run.returncode != 0:
+        deed("observation", {"deed": intent,
+                             "found": {"alive": False,
+                                       "error": (run.stderr or
+                                                 run.stdout)[:300]},
+                             "at": NOW()}, attempt)
+        return f"“{name}” failed and the deed says so"
+    deed("receipt", {"deed": intent,
+                     "acknowledged": {"container_id": run.stdout.strip()[:24]},
+                     "at": NOW()}, attempt)
+    return f"“{name}” stands as {cont}"
+
+
+def on_plant_package(port: int, scope: str, r: dict) -> None:
+    """0072 sp4 — THE INSTALL ROAD (KCR-0002 PAID): a sealed signed box at
+    the human gate. Pending → the whole examination (identity · signature ·
+    crew law · vocabulary) then a STAGED card carrying everything the human
+    weighs; approved → the box lands content-addressed on the log, the
+    manifest head upgrades WITH LINEAGE TO THE BOX, craft plants, crew
+    rises as container deeds, and the world wakes this very life. A flawed
+    box refuses naming its first flaw — a stranger learns exactly what to
+    fix."""
+    from orreth_sim import package as pkg_lib
+    box = r.get("box")
+    flaw = pkg_lib.verify(box, CAP_PANEL_KINDS)
+    if flaw:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "denied", "result": {"error": flaw}})
+        print(f"  📦 plant-package {r['id']}: refused — {flaw[:90]}")
+        return
+    s = pkg_lib.summary(box)
+    if r.get("status") == "pending":
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "staged",
+              "result": {"note": "consequence waits for you (0012)",
+                         "terms": (f"install “{s['name']}” ({s['key']}) — "
+                                   f"rooms: {', '.join(map(str, s['rooms']))} · "
+                                   f"floors: {', '.join(map(str, s['floors'])) or 'none'} · "
+                                   f"craft: {len(s['craft'])} · crew images: "
+                                   f"{', '.join(map(str, s['crew_images'])) or 'none'} · "
+                                   f"publisher {str(s['publisher'])[:32]}… · "
+                                   f"box {str(s['id'])[:26]}… — verified: the "
+                                   f"bytes match the name and the signature "
+                                   f"holds")}})
+        print(f"  📦 plant-package {r['id']}: verified and staged — "
+              f"the human weighs {s['key']}")
+        return
+    if r.get("status") != "approved":
+        return
+    key, decl = box["key"], box["declarations"]
+    man = decl["manifest"]
+    kp, sdid = lib_seat(scope)
+    prev = wire_assets(port, "asset", name=f"capability-{key}")
+    pkg_rec = make_memory({"did": sdid, "scope": scope}, kp, scope,
+                          {"capability_package": box}, kind="semantic",
+                          tags=["capability-package", f"cap-pkg-{key}"])
+    if prev:
+        pkg_rec["derived_from"] = [prev[-1][0]]   # the box cites the head
+                                                  # it matches or upgrades
+    call(port, "POST", "/records", pkg_rec)
+    # ids cover the BODY alone — an identical manifest is the SAME record,
+    # and the log never rewrites; land a new head only when the
+    # declaration actually moved (found live: the first install's «wears
+    # lineage» was a no-op against a byte-identical head)
+    prev_prof = (improver._profile_of(prev[-1][1]) if prev else None)
+    head_word = "the standing head already IS this box's manifest"
+    if prev_prof != dict(man):
+        head = improver.make_asset({"did": IMP_DID, "scope": scope}, IMP,
+                                   scope, name=f"capability-{key}",
+                                   profile=dict(man),
+                                   derived_from=[pkg_rec["id"]]
+                                   + ([prev[-1][0]] if prev else []))
+        call(port, "POST", "/records", head)
+        head_word = "the manifest head landed wearing lineage to the box"
+    planted = 0
+    for cname, prof in (decl.get("craft") or {}).items():
+        if wire_assets(port, "asset", name=cname):
+            continue
+        g = improver.make_asset({"did": IMP_DID, "scope": scope}, IMP, scope,
+                                name=cname,
+                                profile=(prof if isinstance(prof, dict)
+                                         else {"template": prof}))
+        call(port, "POST", "/records", g)
+        planted += 1
+    crew_words = [_package_crew_body(port, scope, key, c, r["id"])
+                  for c in (decl.get("crew") or [])]
+    CAP_GENESIS[key] = man
+    _CAP_PLANT[f"capability-{key}"] = man
+    _CAP_PLANT.update(decl.get("craft") or {})
+    call(port, "POST", "/requests/resolve",
+         {"id": r["id"], "status": "done",
+          "result": {"reply": (f"“{s['name']}” is INSTALLED from its box — "
+                               f"the box stands content-addressed on the "
+                               f"log ({pkg_rec['id'][:22]}…), "
+                               f"{head_word}, {planted} craft planted"
+                               + (f"; crew: {'; '.join(crew_words)}"
+                                  if crew_words else "; no crew — the box "
+                                  "asks for no processes")
+                               + ". Un-install is a governed retire — "
+                                 "the shelf remembers.")}})
+    print(f"  📦 plant-package {r['id']}: {key} INSTALLED from box "
+          f"{box['id'][:22]}… — KCR-0002's road, walked")
+
+
 def _cap_shelf_profiles() -> dict:
     """Every capability-* profile off the shelf in ONE retrieve — bodies
     fetched only for the manifest rows themselves (JB's 30-second landing,
@@ -16816,6 +16994,10 @@ def main() -> None:
                 # floor's daemon keeps its own witness, so a universe-only
                 # pulse left 19 honest obituaries for a worker that lived
                 witness_pulse(port)
+                if port == 4500:
+                    # 0072 sp4 — installed boxes wake with the world (once
+                    # per life, the moment the universe answers)
+                    discover_installed(4500)
                 for r in call(port, "GET", "/requests").get("requests", []):
                     key = (port, r.get("id"), r.get("at", ""), r.get("status"))
                     if key in handled:
@@ -17114,6 +17296,10 @@ def main() -> None:
                                 r.get("status") in ("pending", "approved"):
                             handled.add(key)
                             on_scheduled_ask(port, scope, r)
+                        elif r.get("kind") == "plant-package" and \
+                                r.get("status") in ("pending", "approved"):
+                            handled.add(key)
+                            on_plant_package(port, scope, r)
                         elif r.get("kind") == "craft-edit" and r.get("status") == "pending":
                             handled.add(key)
                             on_craft_edit(port, scope, r)

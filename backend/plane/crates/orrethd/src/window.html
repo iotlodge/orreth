@@ -3724,7 +3724,7 @@ let GATEWAIT=[],GPOP=false,GATEN=0;
       world's words are purpose-side from birth. "A card that cannot say
       which book it belongs to is, by definition, the defect" (0053). ── */
 const MACHINE_KINDS=new Set(["join","witness","drift","service","mind","release",
-  "craft-edit","commission","ecosystem","field-join","estate-adopt","assay","dial",
+  "craft-edit","plant-package","commission","ecosystem","field-join","estate-adopt","assay","dial",
   "experiment","uat-report","reflex-escalation","charter-rest","reflex-rest",
   "improvement","gate-word","purge","recall"]);
 function bookOf(kind){return MACHINE_KINDS.has(kind)?"machine":"chronicle"}
@@ -3769,6 +3769,7 @@ const GATE_WHY={
   mind:"a model decision at the stable (saddle, retire, swap, assign) — approve enacts it; decline leaves the stalls as they are",
   release:"a firmware change wants to become the new named version — cutting the release adopts it machine-wide; decline keeps the standing version",
   "craft-edit":"an edit to a living asset (words, rules, dials) — approve lands it as a new version with lineage, the old one kept behind it; decline changes nothing",
+  "plant-package":"a sealed, signed capability box asking to install — its bytes verified against its name, its publisher's signature checked, its crew containers-only; approve and the world rises through the deed walk, decline and nothing enters (un-install is always a governed retire)",
   commission:"the machine built itself a new skill and is showing you — welcome acknowledges it (it already works); leave it standing keeps the card up as a reminder",
   experiment:"a controlled A/B split wants to open (or its winner wants adopting) — approve runs/adopts it on the record; decline keeps the standing way",
   dial:"an operating number wants turning (within its pre-set limits) — turn it applies the new value; leave it keeps the current one",
