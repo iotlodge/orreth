@@ -1468,8 +1468,10 @@ CAP_PANEL_KINDS = {"tabs", "markdown", "chart", "strip", "controls", "download",
                    "stat", "bars", "list", "doc", "table",
                    "flow",
                    "reports",   # canon (0055 L1/L2 · flow 08-16 · reports 08-17)
-                   "chat", "sources"}  # 0072 sp1 — One Place's first rooms:
+                   "chat", "sources",  # 0072 sp1 — One Place's first rooms:
                                        # growing this vocabulary IS a release
+                   "workspace"}        # 0072 sp2 — the tuning room: declared
+                                       # graphs + typed forms, rendered blind
                                        # (0055's own words), and this dive is
                                        # the release
 
@@ -2448,7 +2450,8 @@ def embed_door() -> None:
                              "/pulse", "/spacetime", "/market", "/assign",
                              "/seeds", "/record", "/atlas", "/inbox",
                              "/aperture", "/act", "/stamp",
-                             "/basket", "/basket/jobs", "/thread"):
+                             "/basket", "/basket/jobs", "/thread",
+                             "/workspace"):
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -2531,6 +2534,14 @@ def embed_door() -> None:
                         urllib.parse.urlparse(self.path).query)
                     out = json.dumps(basket_jobs(
                         int((qs.get("port") or ["4500"])[0]))).encode()
+                elif route == "/workspace":
+                    # 0072 sp2 — THE WORKSPACE DOOR: the roster the glass
+                    # renders blind — the registry (firmware) + the shelf's
+                    # heads (craft) + the standings (records), one read
+                    qs = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query)
+                    _wp = int((qs.get("port") or ["4500"])[0])
+                    out = json.dumps(wire_workspace(_wp)).encode()
                 elif route == "/act":
                     # 0067 sp4 — THE ANSWER WEARS ITS THINKING: an ask's
                     # whole picture, projected from its signed records on a
@@ -7775,9 +7786,29 @@ def _rails_stage_review(port: int, audit_ref: str | None, events: list) -> None:
         print(f"    (guardrail review staging stumbled: {ex})")
 
 
+def wire_workspace(port: int) -> dict:
+    """0072 sp2 — the Workspace's one read: the eleven as the registry
+    declares them, wearing the shelf's applied configs and the standings'
+    judged scores. Composition only — the same facts every other surface
+    reads, from the same records (workspace.md's one law)."""
+    from orreth_sim import standings as _std, tournament, variants as _var, \
+        workspace as _ws
+    scope = FLOOR_SCOPES.get(port) or SCOPE
+    heads = _ws.heads_from_assets(wire_assets(port, "asset"))
+    try:
+        sn, _, _ = _standings_node(port, scope)
+        cells = _std.build(sn.records if sn else {})
+    except Exception:
+        cells = {}
+    return {"at": NOW(), "scope": scope,
+            "roster": _ws.build_roster(
+                heads, cells, _var.built(tournament.ALL_RETRIEVERS))}
+
+
 def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
                        variant: str | None = None,
-                       attributes: dict | None = None) -> dict | None:
+                       attributes: dict | None = None,
+                       draft: dict | None = None) -> dict | None:
     """The ask path, whole (0038 sp1+sp2), STRUCTURED (0071 sp2): the
     DISPATCHER routes first — its choice a signed record, an unbuilt row
     falling to the baseline loudly — then the chosen row's projection regrows
@@ -7824,6 +7855,16 @@ def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
             arm = {"label": label, "machine": av["machine"],
                    "tag": f"arm:{av['machine'].split(':', 1)[-1][:12]}",
                    "of": e["record"]}
+    # 0072 sp2 — THE DRAFT RUN (Compare's half): the experiment's proven
+    # in-memory head-swap at the variant layer — the draft knobs become the
+    # newest variant-<style> head for THIS disposable node alone, never
+    # written; the answer wears the draft-config hash so nothing that ran
+    # is ever untraceable (workspace.md §Compare)
+    _draft_worn = None
+    if draft is not None and variant:
+        from orreth_sim import workspace as _ws
+        n.records["synthetic:draft-head"] = _ws.synthetic_head(variant, draft)
+        _draft_worn = {"hash": _ws.draft_hash(draft), "knobs": dict(draft)}
     q2, pre, settled = _ask_self_knowledge(n, q)  # state resolves before retrieval
     _tap0 = {r: e.get("n", 0)
              for r, e in (getattr(n, "recalls", None) or {}).items()}
@@ -7883,7 +7924,8 @@ def wire_stacks_answer(port: int, scope: str, q: str, *, origin: str = "",
     return {"pre": pre, "answer": ans_txt, "citations": citations,
             "settled": settled, "variant": d["flavor"], "why": d["why"],
             "choice_ref": d["record"], "by": seat_did, "arm": arm,
-            "cost_chars": int(a.get("context_chars", 0))}
+            "cost_chars": int(a.get("context_chars", 0)),
+            "draft": _draft_worn}
 
 
 def wire_stacks_ask(port: int, scope: str, q: str, *, origin: str = "") -> str:
@@ -7981,8 +8023,27 @@ def on_ask(port: int, scope: str, r: dict) -> None:
     # its own record.
     thread_req = str(r.get("thread") or "")
     prior_req = str(r.get("prior") or "")
+    # 0072 sp2 — THE DRAFT (Compare): held to EXACTLY the landed law (the
+    # registry's own gate teaches, never a wider door for being temporary);
+    # a draft needs a NAMED style, and draft runs neither serve from nor
+    # seed the cache — an experiment is always its own record
+    draft_req = r.get("draft") if isinstance(r.get("draft"), dict) else None
+    if draft_req is not None and not variant:
+        call(port, "POST", "/requests/resolve",
+             {"id": r["id"], "status": "denied",
+              "result": {"error": "a draft rides a NAMED style — pick a "
+                                  "variant; Auto cannot wear draft knobs"}})
+        return
+    if draft_req is not None:
+        from orreth_sim import workspace as _wsd
+        _derr, draft_req = _wsd.draft_check(variant, draft_req)
+        if _derr:
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "denied",
+                  "result": {"error": _derr}})
+            return
     ttl = int(dial_value("ask-cache-ttl-s", port, scope) or 0)
-    if thread_req or prior_req:
+    if thread_req or prior_req or draft_req is not None:
         ttl = 0
     ckey = askcache.key(scope, text, variant or "auto",
                         _guardrails_version(port))
@@ -8019,7 +8080,7 @@ def on_ask(port: int, scope: str, r: dict) -> None:
     _t0 = time.time()
     s = wire_stacks_answer(port, scope, text,
                            origin=f"ask:{did[:22]}", variant=variant,
-                           attributes=attrs)
+                           attributes=attrs, draft=draft_req)
     _ms = round((time.time() - _t0) * 1000, 1)
     if s is None:
         call(port, "POST", "/requests/resolve",
@@ -8038,17 +8099,25 @@ def on_ask(port: int, scope: str, r: dict) -> None:
     sig["cost_chars"] = s.get("cost_chars", 0)
     # the exchange: a signed record of the audience — the thumb's judgeable ref
     kp, seat_did = lib_seat(scope)
+    _ask_body = {"ask": {"asked": text[:400], "reply": reply[:600],
+                         "by": did, "variant": s["variant"],
+                         "choice": s["choice_ref"],
+                         "signals": sig}}
+    _ask_tags = ["ask", f"variant:{s['variant']}"]
+    if s.get("draft"):
+        # 0072 sp2 — a draft run's record WEARS its draft-config hash
+        # (workspace.md §Compare): traceable forever, standings-joinable,
+        # and the tag keeps drafts distinguishable from landed-config runs
+        _ask_body["ask"]["draft"] = s["draft"]
+        _ask_tags.append("draft-config")
     rec = make_memory({"did": seat_did, "scope": scope}, kp, scope,
-                      {"ask": {"asked": text[:400], "reply": reply[:600],
-                               "by": did, "variant": s["variant"],
-                               "choice": s["choice_ref"],
-                               "signals": sig}},
+                      _ask_body,
                       kind="episodic",
                       # the arm-tag pattern (0043) at the style layer (0065
                       # sp5): every answer record WEARS its selection — the
                       # glass and any query read it off the record, never a
                       # side channel
-                      tags=["ask", f"variant:{s['variant']}"])
+                      tags=_ask_tags)
     if thread_req == "new" or (prior_req and not thread_req):
         head = parlor.make_thread_head({"did": seat_did, "scope": scope},
                                        kp, scope, "the-canvas")
@@ -8067,7 +8136,7 @@ def on_ask(port: int, scope: str, r: dict) -> None:
             bd["ask"]["prior"] = prior_req
         rec = make_memory({"did": seat_did, "scope": scope}, kp, scope, bd,
                           kind="episodic",
-                          tags=["ask", f"variant:{s['variant']}"])
+                          tags=_ask_tags)
     if s.get("choice_ref"):
         # 0066 sp1 — the answer DERIVES from its choice: a thumb or verdict
         # on this exchange reaches the routing decision in ONE lineage hop
@@ -8098,6 +8167,11 @@ def on_ask(port: int, scope: str, r: dict) -> None:
         honored=(["latency"] if attrs and attrs.get("latency") else []),
         confession=confession,
         guardrails=_gr)
+    if s.get("draft"):
+        env["draft"] = {**s["draft"],
+                        "note": "this answer ran under DRAFT knobs — the "
+                                "landed config is untouched; the exchange "
+                                "wears the draft-config hash"}
     if ttl > 0 and confession is None:
         # grace-served answers never replay — a cached confession would be
         # someone else's; only clean, signed-lane answers earn a shelf life

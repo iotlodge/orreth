@@ -51,5 +51,5 @@ def test_the_selector_never_drifts_from_the_one_menu():
 def test_the_rooms_are_the_released_kinds():
     m = _manifest()
     kinds = [p["kind"] for p in m["MANIFEST"]["view"]]
-    assert kinds == ["chat", "sources"]
+    assert kinds == ["chat", "workspace", "sources"]   # sp2 grew the middle
     assert all(p.get("label") for p in m["MANIFEST"]["view"])

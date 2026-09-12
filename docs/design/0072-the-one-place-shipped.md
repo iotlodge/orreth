@@ -179,8 +179,36 @@ already landed in 0069's design.
    folder-install road is still the KCR-0002 wound (sp4 pays it); serve latency wobbles
    30s–5min while boot metabolism laps starve queue serves (the middleware conversation
    JB has queued is the cure, not a glass patch).
-2. **sp2 — The Workspace engine.** The kernel workspace glass per `workspace.md`; E-RAG's
-   eleven as first tenant; Compare and the eats drawer.
+2. **sp2 — The Workspace engine.** ✅ **LANDED 2026-09-11.** The kernel workspace glass
+   per `workspace.md`, rendered BLIND from the declaration (JB's lock 3 — the engine is
+   kernel-reusable; charles/allen inherit it the day their manifests declare one):
+   `workspace` joined the panel vocabulary; `orreth_sim/workspace.py` (pure, 6 suite
+   laws) folds the registry (firmware) + the shelf's variant-* heads (craft) + the
+   standings cells (records) into the roster the `/workspace` door serves — the same
+   facts every surface reads, never a side channel. THE ROOM: the dispatch bar riding
+   the REAL ask door ("the road is the test"), the roster wearing live judged health
+   (score · n · cost class · the tuned ● dot), each style's DECLARED pipeline drawn in
+   the one act format (naive's 2 stages, advanced's 4 — the registry's own `stages`),
+   the inspector (Config: typed knobs with genesis beside, Save through the one-motion
+   craft-edit gate; Result: the envelope whole — variant, law, latency, context chars,
+   exchange ref, citations; Compare: the alter-and-prove loop), and the eats drawer
+   riding sp1's estate composition. THE DRAFT LANE (Compare's engine): a draft is held
+   to EXACTLY the landed law (the registry's own gate teaches — proven live:
+   «"temperature" is not a knob this style declares — advanced turns only: k,
+   wide_factor», blast quoted); draft runs ride the experiment's proven in-memory
+   head-swap (0043 sp4) on the ask's disposable node, never serve from nor seed the
+   ask-cache, and the exchange record WEARS the draft {hash, knobs} + a `draft-config`
+   tag (pg receipt taken) while the envelope confesses. Proven live end to end in the
+   glass: Run (naive, Result whole) → Compare on advanced (wide_factor 3 draft cast a
+   visibly wider net — 497 vs 317 context chars, new records in the catch, both columns
+   wearing their receipts) → «version it» filed the gated edit WITH the comparison note
+   → the sibling landed with lineage → the roster re-served tuned:true with the score
+   already re-folded (7→9 judged). Suite 581→587. Honest remainders: node-level
+   State/Timeline tabs, the replay bench, pins, the standings strip, presence chips —
+   named in workspace.md, later steps (streaming = JB's lock 1's named later door);
+   entitlement-scoped edit controls = sp5's authority work; the canvas lights
+   whole-run, not per-stage (stage records inside a flow don't exist yet — an
+   animation guessing would break the live-watch law).
 3. **sp3 — Monitoring + the API console.** The operate room with Observatory doors; the
    test-API room firing the real door.
 4. **sp4 — The package.** Format + `plant-package` road + the generalized discoverer +

@@ -6043,6 +6043,80 @@ function dkPanel(p,pi,item){
         <select id="chat-var" onchange="if(typeof CHAT!=='undefined')CHAT.variant=this.value" title="which retrieval style answers — Auto lets the router choose, and the choice is never a secret">${sel}</select>
         <input id="chat-in" placeholder="${dkEsc(p.placeholder||"ask…")}" style="flex:1" onkeydown="if(event.key==='Enter')chatSend(${pi})">
         <button class="dk-tab" onclick="chatSend(${pi})">ask →</button></div>`}
+  case "workspace":{
+    /* 0072 sp2 — THE WORKSPACE, rendered BLIND from the declaration
+       (workspace.md; JB's lock 3: the engine is kernel-reusable): the
+       roster from the registry's own door, the declared pipeline in the
+       one act format, the inspector's typed forms, Compare's draft lane —
+       and every edit through the one-motion craft-edit gate. Never a
+       side door. */
+    if(!WS.loaded){WS.loaded=true;setTimeout(()=>wsLoad(pi),0)}
+    const sel=WS.roster.find(r=>r.short===WS.sel)||null;
+    const rosterHtml=WS.roster.length?WS.roster.map(r=>{
+      const sc=r.score?`${(r.score.mean*100).toFixed(0)}% · ${r.score.n} judged`:"unjudged";
+      return `<div onclick="WS.sel='${dkEsc(r.short)}';WS.tab='config';renderCap()" style="padding:.4rem .55rem;border:1px solid ${WS.sel===r.short?"var(--brass)":"var(--hair)"};border-radius:8px;margin-bottom:.35rem;cursor:pointer;${r.built?"":"opacity:.45"}">
+        <b style="font-size:.74rem;color:var(--star)">${dkEsc(r.title)}</b>${r.tuned?` <span title="tuned — the head moved off genesis" style="color:var(--brass)">●</span>`:""}
+        <span class="dim" style="float:right;font-size:.62rem">${dkEsc(r.cost_class)}</span>
+        <div class="dim" style="font-size:.62rem">${r.built?dkEsc(sc):"awaits its scaffold — refuses loudly, falls to the baseline"}</div></div>`}).join("")
+      :`<div class="dim" style="font-size:.72rem">reading the registry…</div>`;
+    let canvasHtml="";
+    if(sel){
+      const nodes=sel.stages.map(s=>({id:s,label:s}));
+      const edges=nodes.slice(1).map((n,i)=>[nodes[i].id,n.id]);
+      const src=WS.run?sel.stages.map(s=>({stage:s,ref:WS.run.exchange})):[];
+      const gph=actFromFlow({label:sel.title+" — the declared pipeline",nodes,edges},src,"e-rag",false);
+      canvasHtml=renderAct(("ws-cv-"+sel.short).replace(/[^a-z0-9-]/gi,""),gph)
+        +`<div class="dim" style="font-size:.64rem;margin:.2rem 0 .5rem">${dkEsc(sel.delta)}</div>`;
+    }
+    const knobForm=(vals,idp)=>sel?Object.keys(sel.genesis).map(k=>{
+      const cur=(vals&&vals[k]!==undefined)?vals[k]:sel.config[k];
+      const isInt=Number.isInteger(sel.genesis[k]);
+      return `<div style="display:flex;gap:.4rem;align-items:center;margin:.25rem 0">
+        <span style="font-size:.7rem;color:var(--star);min-width:8rem">${dkEsc(k)}</span>
+        <input id="${idp}-${dkEsc(k)}" type="number" step="${isInt?"1":"0.05"}" value="${dkEsc(String(cur))}" style="width:6rem">
+        <span class="dim" style="font-size:.6rem">genesis ${dkEsc(String(sel.genesis[k]))}</span></div>`}).join(""):"";
+    let inspHtml="";
+    if(sel){
+      const tabs=["config","result","compare"].map(k=>`<button class="dk-tab${WS.tab===k?" on":""}" onclick="WS.tab='${k}';renderCap()">${k==="config"?"Config":k==="result"?"Result":"Compare"}</button>`).join("");
+      let body="";
+      if(WS.tab==="config"){
+        body=`<div class="dim" style="font-size:.66rem;margin-bottom:.3rem">the applied config — the shelf head under the genesis; Save files a gated craft-edit (a versioned sibling, lineage kept)</div>
+          ${knobForm(null,"ws-cfg")}
+          <div class="dim" style="font-size:.62rem;margin:.35rem 0">⚠ its blast: ${dkEsc(sel.blast)}</div>
+          <button class="dk-tab" onclick="wsSave(${pi})">save — through the gate</button>
+          <span class="dim" id="ws-cfg-msg" style="font-size:.66rem"></span>`;
+      }else if(WS.tab==="result"){
+        body=WS.run?`<div>${dkMd(WS.run.reply||"")}</div>
+          <div class="dim" style="font-size:.66rem;margin-top:.4rem">served by «${dkEsc(WS.run.variant||"?")}» · law ${dkEsc(String((WS.run.guardrails||{}).set_version||"?"))} · ${(WS.run.cost||{}).latency_ms||"?"}ms · ${(WS.run.cost||{}).context_chars||0} context chars
+          ${WS.run.draft?`<br><span style="color:var(--brass)">⚗ ran under DRAFT knobs — ${dkEsc((WS.run.draft.hash||"").slice(0,22))}…</span>`:""}
+          <br>the answer wears its thinking: ${dkEsc(WS.run.exchange||"")}
+          ${(WS.run.citations||[]).length?`<details><summary style="cursor:pointer">citations (${WS.run.citations.length})</summary>${WS.run.citations.map(c=>`<div class="dim" style="font-size:.62rem">▸ ${dkEsc(c.ref||"")}</div>`).join("")}</details>`:""}</div>`
+          :`<div class="dim" style="font-size:.72rem">no run yet — ask above and the result lands here, whole</div>`;
+      }else{
+        body=`<div class="dim" style="font-size:.66rem;margin-bottom:.3rem">draft knobs — held to the landed law, run beside the live config on the SAME ask; the draft never lands unless you version it</div>
+          ${knobForm(WS.draft,"ws-dft")}
+          <button class="dk-tab" onclick="wsCompare(${pi})">run both — same ask, side by side</button>
+          <span class="dim" id="ws-cmp-msg" style="font-size:.66rem"></span>
+          ${WS.cmp&&WS.cmp.a&&WS.cmp.b?`<div style="display:flex;gap:.6rem;margin-top:.5rem">
+            <div style="flex:1;border:1px solid var(--hair);border-radius:8px;padding:.45rem"><b style="font-size:.68rem">the live config</b><div class="dim" style="font-size:.62rem">${(WS.cmp.a.cost||{}).latency_ms||"?"}ms · ${(WS.cmp.a.cost||{}).context_chars||0} chars</div><div style="font-size:.68rem">${dkMd((WS.cmp.a.reply||"").slice(0,400))}</div><div class="dim" style="font-size:.6rem">${dkEsc((WS.cmp.a.exchange||"").slice(0,30))}…</div></div>
+            <div style="flex:1;border:1px solid var(--brassdim);border-radius:8px;padding:.45rem"><b style="font-size:.68rem">the draft ⚗</b><div class="dim" style="font-size:.62rem">${(WS.cmp.b.cost||{}).latency_ms||"?"}ms · ${(WS.cmp.b.cost||{}).context_chars||0} chars</div><div style="font-size:.68rem">${dkMd((WS.cmp.b.reply||"").slice(0,400))}</div><div class="dim" style="font-size:.6rem">${dkEsc(((WS.cmp.b.draft||{}).hash||"").slice(0,26))}…</div></div></div>
+            <button class="dk-tab" style="margin-top:.4rem" onclick="wsVersion(${pi})">version it — file the draft as a gated edit, comparison attached</button>`:""}`;
+      }
+      inspHtml=`<div style="margin-bottom:.3rem">${tabs}</div>${body}`;
+    }
+    return `<div class="dk-chtitle" style="margin-top:.8rem">${dkEsc(p.label||"the workspace")}</div>
+      <div class="dk-law" style="display:flex;gap:.4rem;align-items:center;margin:.35rem 0">
+        <input id="ws-ask" placeholder="ask this variant… (the real ask door — the road is the test)" style="flex:1" onkeydown="if(event.key==='Enter')wsRun(${pi})" value="${dkEsc(WS.ask||"")}">
+        <button class="dk-tab" onclick="wsRun(${pi})">Run ${sel?dkEsc(sel.title):""} →</button>
+        ${WS.busy?`<span class="dim" style="font-size:.66rem">walking…</span>`:""}</div>
+      <div style="display:flex;gap:.7rem;align-items:flex-start">
+        <div style="width:13rem;flex:none;max-height:26rem;overflow-y:auto">${rosterHtml}</div>
+        <div style="flex:1;min-width:0">${canvasHtml}</div>
+        <div style="width:21rem;flex:none">${inspHtml}</div></div>
+      <details style="margin-top:.5rem"><summary class="dk-chtitle" style="cursor:pointer;list-style:none">▸ what E-RAG eats — sources · imports · freshness</summary>
+        <div id="ws-eats" class="dim" style="font-size:.75rem">reading the estate…</div>
+        ${(function(){setTimeout(()=>srcLoad(pi,"ws-eats",p.ask_port||4500),0);return ""})()}
+      </details>`}
   case "sources":{
     /* 0072 sp1 — THE SOURCES ROOM: the estate this world may read, live
        from the governed doors (the Farm's own truth — a resting store
@@ -6053,6 +6127,90 @@ function dkPanel(p,pi,item){
        <span class="wtool" style="float:right" onclick="basketOpen()" title="import folders, many files, zips — mass to the object store, signed pointers to the log">🧺 open the Basket</span></div>
       <div id="src-body-${pi}" class="dim" style="font-size:.75rem">reading the estate…</div>`}
   default:return `<div class="dim">(panel kind «${dkEsc(p.kind)}» is beyond the canon vocabulary)</div>`}}
+
+/* ── 0072 sp2 · the workspace's motion (kernel glass — every capability
+      declaring a workspace panel inherits exactly this room; every edit
+      travels the one-motion craft-edit gate — never a side door) ── */
+let WS={loaded:false,roster:[],sel:"naive",tab:"config",ask:"",busy:false,
+        run:null,cmp:null,draft:{}};
+async function wsLoad(pi){
+  const p=(_CAPMAN&&_CAPMAN.view||[])[pi]||{};
+  try{const d=await(await fetch(`${OBSD}/workspace?port=${p.ws_port||4500}`)).json();
+    WS.roster=d.roster||[];
+    if(!WS.roster.find(r=>r.short===WS.sel&&r.built)){
+      const f=WS.roster.find(r=>r.built);if(f)WS.sel=f.short}
+  }catch{}
+  renderCap();
+}
+function _wsAskText(){const i=$("ws-ask");if(i)WS.ask=i.value;return (WS.ask||"").trim()}
+function _wsKnobs(idp){
+  const sel=WS.roster.find(r=>r.short===WS.sel);if(!sel)return null;
+  const out={};for(const k of Object.keys(sel.genesis)){
+    const el=$(idp+"-"+k);if(!el)continue;
+    out[k]=Number.isInteger(sel.genesis[k])?parseInt(el.value,10):parseFloat(el.value)}
+  return out}
+async function _wsAsk(pi,body){
+  const p=(_CAPMAN&&_CAPMAN.view||[])[pi]||{};
+  const base=`${location.protocol}//${location.hostname}:${p.ask_port||4500}`;
+  const r=await(await fetch(base+"/requests",{method:"POST",
+    headers:{"content-type":"application/json"},body:JSON.stringify(body)})).json();
+  for(let n=0;n<80;n++){
+    await new Promise(z=>setTimeout(z,2500));
+    try{const q=(await(await fetch(base+"/requests")).json()).requests||[];
+      const x=q.find(v=>v.id===r.id);
+      if(x&&x.status==="done")return (x.result||{}).envelope||{};
+      if(x&&x.status==="denied")return {refused:(x.result||{}).error||"refused"};
+    }catch{}}
+  return {refused:"the walk outlived this watcher — the answer lands in Requests"}}
+async function wsRun(pi){
+  const t=_wsAskText();if(!t||WS.busy)return;
+  WS.busy=true;WS.run=null;WS.tab="result";renderCap();
+  const env=await _wsAsk(pi,{kind:"ask",text:t,variant:WS.sel});
+  WS.run=env.refused?{reply:"⛔ "+env.refused}:env;
+  WS.busy=false;renderCap();
+}
+async function wsSave(pi){
+  const knobs=_wsKnobs("ws-cfg");if(!knobs)return;
+  const m=$("ws-cfg-msg");if(m)m.textContent="landing through the gate…";
+  const p=(_CAPMAN&&_CAPMAN.view||[])[pi]||{};
+  const base=`${location.protocol}//${location.hostname}:${p.ask_port||4500}`;
+  try{const r=await(await fetch(base+"/requests",{method:"POST",
+    headers:{"content-type":"application/json"},
+    body:JSON.stringify({kind:"craft-edit",name:"variant-"+WS.sel,
+      text:JSON.stringify(knobs),note:"workspace Config save"})})).json();
+    for(let n=0;n<24;n++){await new Promise(z=>setTimeout(z,900));
+      const q=(await(await fetch(base+"/requests")).json()).requests||[];
+      const x=q.find(v=>v.id===r.id);
+      if(x&&(x.status==="done"||x.status==="denied")){
+        if(m)m.textContent=(x.result||{}).reply||(x.result||{}).error||x.status;
+        WS.loaded=false;renderCap();return}}
+    if(m)m.textContent="still walking — the gate keeps it";
+  }catch(e){if(m)m.textContent="the door would not open: "+e}}
+async function wsCompare(pi){
+  const t=_wsAskText();const m=$("ws-cmp-msg");
+  if(!t){if(m)m.textContent="type the ask above first — both runs ride the same words";return}
+  WS.draft=_wsKnobs("ws-dft")||{};
+  if(m)m.textContent="two walks riding — live + draft…";
+  WS.cmp=null;renderCap();const m2=$("ws-cmp-msg");if(m2)m2.textContent="two walks riding — live + draft…";
+  const [a,b]=await Promise.all([
+    _wsAsk(pi,{kind:"ask",text:t,variant:WS.sel}),
+    _wsAsk(pi,{kind:"ask",text:t,variant:WS.sel,draft:WS.draft})]);
+  if(a.refused||b.refused){const mm=$("ws-cmp-msg");
+    if(mm)mm.textContent="⛔ "+(a.refused||b.refused);return}
+  WS.cmp={a,b};renderCap();
+}
+async function wsVersion(pi){
+  if(!WS.cmp)return;
+  const p=(_CAPMAN&&_CAPMAN.view||[])[pi]||{};
+  const base=`${location.protocol}//${location.hostname}:${p.ask_port||4500}`;
+  const note=`Compare evidence (workspace): baseline ${WS.cmp.a.exchange||"?"} vs draft ${WS.cmp.b.exchange||"?"} (${(WS.cmp.b.draft||{}).hash||""}) — the draft won on the human's eye`;
+  try{await fetch(base+"/requests",{method:"POST",
+    headers:{"content-type":"application/json"},
+    body:JSON.stringify({kind:"craft-edit",name:"variant-"+WS.sel,
+      text:JSON.stringify(WS.draft),note})});
+    const m=$("ws-cmp-msg");if(m)m.textContent="filed through the gate — comparison attached; the shelf answers";
+    WS.loaded=false;setTimeout(()=>renderCap(),1200);
+  }catch(e){const m=$("ws-cmp-msg");if(m)m.textContent="the door would not open: "+e}}
 
 /* ── 0072 sp1 · the chat canvas's motion (kernel glass — every capability
       declaring a chat panel inherits exactly this room) ── */
@@ -6112,10 +6270,10 @@ async function chatPoll(base,rid,n){
   CHAT.busy=false;renderCap();
   const log=$("chat-log");if(log){linkifyEl(log);glossifyEl(log);log.scrollTop=log.scrollHeight}
 }
-async function srcLoad(pi){
+async function srcLoad(pi,elid,fport){
   const p=(_CAPMAN&&_CAPMAN.view||[])[pi]||{};
-  const el=$("src-body-"+pi);if(!el)return;
-  const port=p.farm_port||4500,base=`${location.protocol}//${location.hostname}:${port}`;
+  const el=$(elid||("src-body-"+pi));if(!el)return;
+  const port=fport||p.farm_port||4500,base=`${location.protocol}//${location.hostname}:${port}`;
   let svcs=[],jobs=[];
   try{svcs=((await(await fetch(base+"/farm")).json()).services||[])
     .filter(s=>s.kind==="store"||s.kind==="database")}catch{}
@@ -6134,10 +6292,10 @@ function renderWorld(man){
   /* the composer survives every rebuild — value, focus, and caret carried
      across innerHTML (belt to capFresh's braces: no render path may eat
      a human's half-typed words) */
-  const _ci=$("chat-in"),_cv=_ci?_ci.value:"",_cf=_ci&&document.activeElement===_ci,
-        _cs=_ci?_ci.selectionStart:0;
-  const _ciRestore=()=>{const n=$("chat-in");
-    if(n&&_cv){n.value=_cv;if(_cf){n.focus();try{n.setSelectionRange(_cs,_cs)}catch(e){}}}};
+  const _cSnap=["chat-in","ws-ask"].map(id=>{const e=$(id);
+    return e?{id,v:e.value,f:document.activeElement===e,s:e.selectionStart}:null});
+  const _ciRestore=()=>{_cSnap.forEach(s=>{if(!s||!s.v)return;const n=$(s.id);
+    if(n){n.value=s.v;if(s.f){n.focus();try{n.setSelectionRange(s.s,s.s)}catch(e){}}}})};
   const B=$("capbody"),reps=DESK.reports||[];
   const crumb=`<div style="margin-bottom:.5rem"><a href="#" onclick="CAPV='home';renderCap();return false" style="color:var(--brass);font-size:.72rem;text-decoration:none">← worlds</a></div>`;
   const head=`<div class="dk-world">${man.emoji||"📦"} <b>${dkEsc(man.name)}</b> ${dkState(man)}
@@ -6148,7 +6306,7 @@ function renderWorld(man){
   /* 0072 sp1 — ROOMS are item-independent: a chat canvas or a sources
      room lives whether or not any report ever landed; the no-report line
      is the DESK pattern's own, shown only to desk-shaped worlds */
-  const ROOMS=new Set(["chat","sources","controls"]);
+  const ROOMS=new Set(["chat","sources","controls","workspace"]);
   if(!reps.length){
     const roomHtml=(man.view||[]).map((p,pi)=>ROOMS.has(p.kind)?dkPanel(p,pi,{}):"").join("");
     const deskish=(man.view||[]).some(p=>!ROOMS.has(p.kind));
