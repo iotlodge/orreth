@@ -191,6 +191,25 @@ DIALS_V1 = {
                "what the shelf has settled",
         "horizon": "takes hold within a minute",
     },
+    "ask-quota-hourly": {
+        "type": "int", "unit": "asks per seat per sliding hour", "min": 0,
+        "max": 100000, "genesis": 120, "home": "ladder",
+        "governs": "how many asks one seat (a signer's DID, or the "
+                   "anonymous pool as one seat) may file in a sliding hour "
+                   "at the ask door (0072 sp5) — the refusal TEACHES the "
+                   "number and names this dial, because a quota is a "
+                   "legible business rule, never the one face; 0 turns the "
+                   "quota off",
+        "why": "an open data door with no ceiling lets one seat starve "
+               "the machine for everyone (0071's traffic concern, made a "
+               "governed value at last)",
+        "horizon": "per-seat overrides and burst windows when a real "
+                   "tenant asks for them — one number for all seats until "
+                   "demand names the shape",
+        "blast": "too low and honest askers hit the wall mid-work; too "
+                 "high and one runaway seat can starve every floor's "
+                 "beat — the meter still runs either way",
+    },
     "ask-cache-ttl-s": {
         "type": "int", "unit": "seconds an answer may serve again", "min": 0,
         "max": 86400, "genesis": 300, "home": "ladder",

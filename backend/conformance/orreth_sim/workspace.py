@@ -160,3 +160,61 @@ def monitor_fold(records: dict) -> dict:
     return {"styles": out, "recent": recent[:15],
             "asks": sum(v["asks"] for v in out.values())}
 
+
+# ---- 0072 sp5 · the enterprise folds ----------------------------------------------
+
+def showback_fold(records: dict) -> list:
+    """COST SHOWBACK (0072 sp5): who spent what, folded from the SAME ask
+    records as everything else — per asker (the person's name when their
+    signed ask carried one, the DID otherwise, the anonymous pool as
+    itself): asks · context chars · summed walk latency. Sorted by spend,
+    heaviest first — the operate room renders it, the Observatory judges
+    it, nothing here is a bill (a bill needs a price sheet; this is the
+    honest meter)."""
+    import json as _json
+    spend: dict = {}
+    for rid, rec in (records or {}).items():
+        tags = rec.get("tags") or []
+        if "ask" not in tags or "replay" in tags:
+            continue
+        try:
+            b = _json.loads(crypto._b64d(rec["body"]).decode()).get("ask") or {}
+        except Exception:
+            continue
+        who = str(b.get("person") or "") or str(b.get("by") or "anonymous")
+        sig = b.get("signals") or {}
+        s = spend.setdefault(who, {"who": who, "asks": 0, "chars": 0,
+                                   "latency_ms": 0.0,
+                                   "person": bool(b.get("person"))})
+        s["asks"] += 1
+        s["chars"] += int(sig.get("cost_chars") or 0)
+        s["latency_ms"] = round(s["latency_ms"]
+                                + float(sig.get("latency_ms") or 0), 1)
+    return sorted(spend.values(), key=lambda x: -x["chars"])
+
+
+def quota_check(rows: list, who: str, now_iso: str, limit: int) -> str | None:
+    """THE ASK QUOTA (0072 sp5 — a quota is a legible business rule, so its
+    refusal TEACHES, never the one face): count this asker's asks in the
+    trailing hour from the queue's own ledger (restart-surviving, no side
+    counter) against the dial's word. None = within; a string = the
+    teaching. limit 0 = the quota is off."""
+    if not limit or limit <= 0:
+        return None
+    from datetime import datetime, timedelta
+    try:
+        now = datetime.fromisoformat(now_iso.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    floor_t = (now - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    n = sum(1 for r in rows or []
+            if r.get("kind") == "ask"
+            and str(r.get("did") or "anonymous") == who
+            and str(r.get("at") or "") >= floor_t)
+    if n < limit:
+        return None
+    return (f"the ask quota for this seat is {limit} per hour and the hour "
+            f"holds {n} already — the window slides; ask again shortly, or "
+            f"the human can turn the “ask-quota-hourly” dial (a governed "
+            f"value, not a wall)")
+

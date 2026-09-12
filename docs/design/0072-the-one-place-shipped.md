@@ -271,8 +271,35 @@ already landed in 0069's design.
    floors ride the existing shipyard hulls (a box declaring a NEW floor scope awaits a
    hull-provisioning walk); publisher trust is signature-only (no registry of publishers
    — becky attests the gate, the human attests the publisher).
-5. **sp5 — The enterprise five.** Authority-scoped answers · compliance export · quotas
-   surfaced · latency classes · showback — each proven in its room.
+5. **sp5 — The enterprise five.** ✅ **LANDED 2026-09-12 — each proven in its room.**
+   (1) AUTHORITY-SCOPED ANSWERS: the person lane reaches the DATA door — a registered
+   person's name rides the ask (an unproven name never attributes, the standing law),
+   the exchange record carries the person, and the envelope names the AUTHORITY served
+   under; proven live: jb's ask returned authority {person: jb, did: his own key} while
+   the anonymous twin confessed «the floor's shared authority — honestly unattributed»
+   with the registration teaching; pg receipt: person inside the exchange body. (2) THE
+   QUOTA (a legible business rule — it TEACHES, never the one face): the
+   `ask-quota-hourly` dial (genesis 120; the dial law demanded its full jacket — why ·
+   blast · horizon), counted per seat from the queue's own ledger (restart-surviving,
+   no side counter, the served ask never counted against itself); proven live: the dial
+   turned to 2 through the one craft door, the next ask refused naming the limit, the
+   count, the sliding window, AND the dial; genesis restored. (3) LATENCY CLASSES
+   (fast · normal · patient — 0066's featurizer classes, formalized and surfaced): the
+   api-console grew the class select; proven live: attributes {latency: fast} returned
+   honored: [latency]. (4) COST SHOWBACK: `showback_fold` (pure, law-tested) folds who
+   spent what from the SAME ask records — person-named when the ask carried one, DID
+   otherwise, the anonymous pool as one seat; the operate room renders it titled «the
+   honest meter, not a bill»; live: 👤 jb's attributed row beside the anonymous pool's.
+   (5) COMPLIANCE EXPORT: one click on any answer (chat meta + workspace Result) →
+   `orreth-compliance-export-v1` — the asked words, the whole envelope (authority
+   riding), and the act graph, downloaded as one audit artifact; live: a 4-node act
+   graph rode the second artifact after the walk's own wound (the act door hunts on a
+   NAMED floor and the glass wasn't naming one) — and when the accretion is empty the
+   artifact CONFESSES the 0067-era pull-budget horizon instead of pretending. Suite
+   595→597 (2 enterprise laws + the dial's jacket). Remainders: per-person corpus
+   entitlements (distinct retrieval reach per person) = the later-wave authority work,
+   named; per-seat quota overrides/burst = the dial's declared horizon; showback prices
+   (a bill needs a price sheet) deliberately absent.
 
 ## 7. The honest boundary rows this dive moves
 

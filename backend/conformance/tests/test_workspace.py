@@ -113,3 +113,39 @@ def test_monitor_recent_is_newest_first_and_every_row_a_door():
     assert [r["ref"] for r in m["recent"]] == ["b", "c", "a"]
     assert all(r["ref"] and r["at"] for r in m["recent"])
 
+
+# ---- 0072 sp5 · the enterprise laws -----------------------------------------------
+
+def test_showback_folds_by_person_then_did_then_anonymous():
+    from orreth_sim import crypto
+    def rec(rid, by, person, chars):
+        b = {"ask": {"asked": "q", "by": by, "variant": "naive",
+                     "signals": {"latency_ms": 10, "cost_chars": chars}}}
+        if person:
+            b["ask"]["person"] = person
+        return rid, {"tags": ["ask"], "occurred_at": "2026-09-12T01:00:00Z",
+                     "body": crypto._b64e(crypto.canonical(b))}
+    recs = dict([rec("a", "did:key:zjb", "jb", 500),
+                 rec("b", "did:key:zjb", "jb", 300),
+                 rec("c", "did:key:zother", "", 100),
+                 rec("d", "anonymous-consumer", "", 50)])
+    s = workspace.showback_fold(recs)
+    assert s[0] == {"who": "jb", "asks": 2, "chars": 800,
+                    "latency_ms": 20.0, "person": True}
+    assert [x["who"] for x in s] == ["jb", "did:key:zother",
+                                     "anonymous-consumer"]
+
+
+def test_quota_teaches_within_the_sliding_hour_and_zero_is_off():
+    rows = [{"kind": "ask", "did": "d1", "at": "2026-09-12T10:30:00Z"},
+            {"kind": "ask", "did": "d1", "at": "2026-09-12T10:40:00Z"},
+            {"kind": "ask", "did": "d1", "at": "2026-09-12T09:00:00Z"},  # aged out
+            {"kind": "ask", "did": "d2", "at": "2026-09-12T10:45:00Z"},
+            {"kind": "parlor", "did": "d1", "at": "2026-09-12T10:50:00Z"}]
+    now = "2026-09-12T11:00:00Z"
+    assert workspace.quota_check(rows, "d1", now, 3) is None      # 2 of 3
+    why = workspace.quota_check(rows, "d1", now, 2)               # 2 of 2
+    assert why and "2 per hour" in why and "dial" in why
+    assert workspace.quota_check(rows, "d1", now, 0) is None      # off
+    assert workspace.quota_check(rows, "d2", now, 2) is None      # not d1's
+

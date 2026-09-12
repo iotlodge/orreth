@@ -8014,6 +8014,7 @@ def wire_workspace(port: int) -> dict:
     # nearest-rank latency percentiles, draft counts, the recent strip
     # (every row a door), and this world's raised hands from the one bell
     monitor = _ws.monitor_fold(sn.records if sn else {})
+    monitor["showback"] = _ws.showback_fold(sn.records if sn else {})
     try:
         monitor["gates"] = [
             {"id": r.get("id"), "kind": r.get("kind", "?"),
@@ -8236,6 +8237,34 @@ def on_ask(port: int, scope: str, r: dict) -> None:
                                       f"menu: {menu} (or leave it to Auto)"}})
             return
         variant = canonical
+    # 0072 sp5 — WHO IS SPEAKING at the DATA door (the parlor's law, here):
+    # a registered person's name rides the ask and the answer serves under
+    # a NAMED authority; an unproven name never attributes; absent, the
+    # floor's shared seat serves — honestly unattributed
+    person = str(r.get("person") or "").strip().lower()
+    _pctx = _person_ctx(port, person) if person else None
+    if person and _pctx is None:
+        person = ""
+    # 0072 sp5 — THE QUOTA (a legible business rule — it teaches, never the
+    # one face): this seat's asks in the sliding hour, counted from the
+    # queue's own ledger (restart-surviving, no side counter), against the
+    # governed dial; the ask being served is not counted against itself
+    _qlimit = int(dial_value("ask-quota-hourly", port, scope) or 0)
+    if _qlimit:
+        from orreth_sim import workspace as _wsq
+        try:
+            _qrows = [x for x in call(port, "GET", "/requests")
+                      .get("requests", []) if x.get("id") != r["id"]]
+        except Exception:
+            _qrows = []
+        _qwhy = _wsq.quota_check(_qrows, str(r.get("did") or "anonymous"),
+                                 NOW(), _qlimit)
+        if _qwhy:
+            call(port, "POST", "/requests/resolve",
+                 {"id": r["id"], "status": "denied",
+                  "result": {"error": _qwhy}})
+            print(f"  ↳ ask {r['id']}: the quota teaches — the seat's hour is full")
+            return
     # 0071 sp5 — THE ASK-CACHE: the same words on the same floor under the same
     # guardrail set may serve again inside the human's TTL dial — every hit
     # confessed in the envelope, and only while the exchange record the answer
@@ -8329,6 +8358,10 @@ def on_ask(port: int, scope: str, r: dict) -> None:
                          "choice": s["choice_ref"],
                          "signals": sig}}
     _ask_tags = ["ask", f"variant:{s['variant']}"]
+    if person:
+        # 0072 sp5 — the human behind the ask, on the record (showback and
+        # the thumb chain both read it; the scribe still signs — rule 2)
+        _ask_body["ask"]["person"] = person
     if s.get("draft"):
         # 0072 sp2 — a draft run's record WEARS its draft-config hash
         # (workspace.md §Compare): traceable forever, standings-joinable,
@@ -8392,6 +8425,10 @@ def on_ask(port: int, scope: str, r: dict) -> None:
         honored=(["latency"] if attrs and attrs.get("latency") else []),
         confession=confession,
         guardrails=_gr)
+    env["authority"] = ({"person": person, "did": _pctx[1]} if person else
+                        {"note": "the floor's shared authority — honestly "
+                                 "unattributed; register at becky's gate "
+                                 "(«I am <name>») and your asks sign as you"})
     if s.get("draft"):
         env["draft"] = {**s["draft"],
                         "note": "this answer ran under DRAFT knobs — the "

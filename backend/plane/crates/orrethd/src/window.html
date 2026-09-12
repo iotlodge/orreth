@@ -6091,7 +6091,8 @@ function dkPanel(p,pi,item){
           <div class="dim" style="font-size:.66rem;margin-top:.4rem">served by «${dkEsc(WS.run.variant||"?")}» · law ${dkEsc(String((WS.run.guardrails||{}).set_version||"?"))} · ${(WS.run.cost||{}).latency_ms||"?"}ms · ${(WS.run.cost||{}).context_chars||0} context chars
           ${WS.run.draft?`<br><span style="color:var(--brass)">⚗ ran under DRAFT knobs — ${dkEsc((WS.run.draft.hash||"").slice(0,22))}…</span>`:""}
           <br>the answer wears its thinking: ${dkEsc(WS.run.exchange||"")}
-          ${(WS.run.citations||[]).length?`<details><summary style="cursor:pointer">citations (${WS.run.citations.length})</summary>${WS.run.citations.map(c=>`<div class="dim" style="font-size:.62rem">▸ ${dkEsc(c.ref||"")}</div>`).join("")}</details>`:""}</div>`
+          ${(WS.run.citations||[]).length?`<details><summary style="cursor:pointer">citations (${WS.run.citations.length})</summary>${WS.run.citations.map(c=>`<div class="dim" style="font-size:.62rem">▸ ${dkEsc(c.ref||"")}</div>`).join("")}</details>`:""}
+          <button class="dk-tab" style="margin-top:.35rem" onclick='cxExport(${JSON.stringify(WS.run.exchange||"")},${JSON.stringify(WS.ask||"")},WS.run)' title="the answer + envelope + act graph as one audit artifact">⇩ compliance export</button></div>`
           :`<div class="dim" style="font-size:.72rem">no run yet — ask above and the result lands here, whole</div>`;
       }else{
         body=`<div class="dim" style="font-size:.66rem;margin-bottom:.3rem">draft knobs — held to the landed law, run beside the live config on the SAME ask; the draft never lands unless you version it</div>
@@ -6142,6 +6143,9 @@ function dkPanel(p,pi,item){
       <summary class="dk-chtitle" style="cursor:pointer;list-style:none">▸ ${dkEsc(p.label||"operate")}${m.asks?` · ${m.asks} asks on the record`:""}</summary>
       <div id="mon-body-${pi}">${tbl}
         ${rec?`<div class="dk-chtitle" style="margin-top:.5rem;font-size:.66rem">the recent strip — every ref a door</div>${rec}`:""}
+        ${(m.showback||[]).length?`<div class="dk-chtitle" style="margin-top:.5rem;font-size:.66rem">showback — who spent what (the honest meter, not a bill)</div>
+          <table style="border-collapse:collapse;font-size:.66rem"><tr class="dim" style="text-align:left"><th style="padding-right:1rem">seat</th><th style="padding-right:1rem">asks</th><th style="padding-right:1rem">ctx chars</th><th>walk ms</th></tr>
+          ${m.showback.map(sb=>`<tr style="border-top:1px solid var(--hair)"><td style="color:var(--star);padding-right:1rem">${sb.person?"👤 ":""}${dkEsc(String(sb.who).slice(0,34))}</td><td>${sb.asks}</td><td>${sb.chars}</td><td>${sb.latency_ms}</td></tr>`).join("")}</table>`:""}
         ${gates?`<div class="dk-chtitle" style="margin-top:.5rem;font-size:.66rem">this world's raised hands</div>${gates}`:""}
         <div class="dim" style="font-size:.6rem;margin-top:.4rem">the same records the scoreboard reads — never a second truth · <a href="#" style="color:var(--brass)" onclick="MON.loaded=false;renderCap();return false">⟲ refresh</a></div>
       </div>
@@ -6160,6 +6164,7 @@ function dkPanel(p,pi,item){
       <summary class="dk-chtitle" style="cursor:pointer;list-style:none">▸ ${dkEsc(p.label||"the API console")}</summary>
       <div class="dk-law" style="display:flex;gap:.4rem;align-items:center;margin:.35rem 0">
         <select id="api-var" onchange="APIC.variant=this.value">${sel}</select>
+        <select id="api-lat" onchange="APIC.latency=this.value" title="the latency class — fast never waits on a router thought; normal is the default; patient allows the long road">${["normal","fast","patient"].map(v=>`<option${(APIC.latency||"normal")===v?" selected":""}>${v}</option>`).join("")}</select>
         <input id="api-text" placeholder="the ask, in your own words" style="flex:1" value="${dkEsc(APIC.text||"")}" onkeydown="if(event.key==='Enter')apiFire(${pi})">
         <input id="api-draft" placeholder='draft knobs (optional JSON, e.g. {"k":9})' style="width:15rem" value="${dkEsc(APIC.draft||"")}">
         <button class="dk-tab" onclick="apiFire(${pi})">fire →</button>
@@ -6268,6 +6273,29 @@ async function wsVersion(pi){
   }catch(e){const m=$("ws-cmp-msg");if(m)m.textContent="the door would not open: "+e}}
 
 /* ── 0072 sp3 · the operate room's + the API console's motion ── */
+/* 0072 sp5 — THE COMPLIANCE EXPORT: the answer, its envelope, and the act
+   graph behind it, as ONE downloadable audit artifact — the records' own
+   story, composed at the click, nothing invented */
+async function cxExport(exchange,asked,env){
+  let act=null;
+  /* the act door hunts on a NAMED floor (its default is the field's) —
+     the ask exchanges live on the viewed floor, so say so (found by the
+     first export walk: a whole envelope beside an empty act graph) */
+  try{act=await(await fetch(`${OBSD}/act?exchange=${encodeURIComponent(exchange)}&scope=${encodeURIComponent(floorScope||"u:demo")}`)).json()}catch{}
+  const art={format:"orreth-compliance-export-v1",exported_at:new Date().toISOString(),
+    exported_by:(typeof PERSON!=="undefined"&&PERSON)||"the floor's shared seat (unattributed)",
+    asked:asked||"",envelope:env||null,act:act,
+    note:"every ref herein opens on the machine's own log — this file is a projection, the records are the truth"};
+  if(!act||!(act.nodes||[]).length)
+    art.act_confession="the act door accreted no picture for this exchange on "
+      +(floorScope||"u:demo")+" — the standings pull is budget-capped and an "
+      +"exchange can sit beyond its horizon (a 0067-era boundary, named; the "
+      +"envelope's refs above still open every record by hand)";
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(art,null,1)],{type:"application/json"}));
+  a.download=`orreth-export-${String(exchange).slice(7,19)}.json`;
+  a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
 let MON={loaded:false,open:false,data:null};
 async function monLoad(pi){
   const p=(_CAPMAN&&_CAPMAN.view||[])[pi]||{};
@@ -6283,6 +6311,8 @@ async function apiFire(pi){
   const txt=(APIC.text||"").trim();if(!txt||APIC.busy)return;
   const body={kind:"ask",text:txt};
   if(APIC.variant&&APIC.variant!=="auto")body.variant=APIC.variant;
+  if(APIC.latency&&APIC.latency!=="normal")body.attributes={latency:APIC.latency};
+  if(typeof PERSON!=="undefined"&&PERSON)body.person=PERSON;
   if((APIC.draft||"").trim()){
     try{body.draft=JSON.parse(APIC.draft)}
     catch(e){APIC.res={error:"the draft is not JSON: "+e};renderCap();return}}
@@ -6309,7 +6339,7 @@ let CHAT={html:"",thread:"",prior:"",variant:"auto",busy:false};
 async function chatSend(pi){
   const p=(_CAPMAN&&_CAPMAN.view||[])[pi]||{};
   const inp=$("chat-in");const t=(inp?inp.value:"").trim();if(!t||CHAT.busy)return;
-  inp.value="";CHAT.busy=true;
+  inp.value="";CHAT.busy=true;CHAT.lastAsked=t;
   CHAT.html+=`<div class="msg mine" style="margin:.3rem 0">${dkEsc(t)}</div>
     <div class="msg reply wait dim" style="font-size:.72rem">the router is reading your ask…</div>`;
   const log=$("chat-log");if(log){log.innerHTML=CHAT.html;log.scrollTop=log.scrollHeight}
@@ -6357,6 +6387,7 @@ async function chatPoll(base,rid,n){
       ${env.cached?` · ♻ from the cache (${env.cached.age_s}s old, confessed)`:""}
       ${env.exchange?`<br>the answer wears its thinking: ${dkEsc(env.exchange)}`:""}
       ${cites?`<details style="margin-top:.2rem"><summary style="cursor:pointer">citations — every one a door (${(env.citations||[]).length})</summary>${cites}</details>`:""}
+      ${env.exchange?` · <a href="#" style="color:var(--brass)" onclick='cxExport(${JSON.stringify(env.exchange)},${JSON.stringify(CHAT.lastAsked||"")},${JSON.stringify(env).replace(/'/g,"&#39;")});return false' title="the answer + envelope + act graph as one audit artifact">⇩ export</a>`:""}
     </div>`;
   CHAT.busy=false;renderCap();
   const log=$("chat-log");if(log){linkifyEl(log);glossifyEl(log);log.scrollTop=log.scrollHeight}
