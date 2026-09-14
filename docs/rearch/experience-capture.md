@@ -61,6 +61,38 @@ defect, full stop.
    **notified softly** that "request XX is completed"; if he clicks it, **it
    renders right there** — never someplace else that has to be managed.
 
+### Narration block 2 — scope, governance, and the ask's journey
+
+**The failure (JB: "it's BOTH our faults"):**
+
+- The governance/scope of floors (ecosystem, field) created a drift: things
+  kept getting attached to the universe, or a favored field/ecosystem, while
+  the UI stayed mixed — until eventually asks just went to librarian
+  regardless of scope.
+- This doesn't scale, and it **decouples the ask from its fulfillment** at the
+  cost of process, time, and experience.
+- Most times JB didn't even know where a request went — **no soft text saying
+  what's happening**.
+
+**Decision (proposed by JB, seconded by Fable): DROP THE SPACETIME WINDOW.**
+
+- JB's reasoning: it adds complexity and overhead while serving as eye candy.
+- Replacement — everything the window supports, achieved as **soft scope
+  toggles on the axes of the chat interface** (three placements: inside ·
+  alongside · floating top). Example flow: select a resident → chat opens →
+  pick ecosystem(s) on the right edge, field(s) on the left, a clock icon for
+  time — **or just say "between X and Y" in the ask itself**.
+- Net effect: a neat way to set scope based on what you're getting ready to
+  do, anywhere in Orreth.
+- Fable's read on what must be preserved in the absorption: the window's one
+  unique power was time (replay/scrub) — kept, as a universal time-scope axis
+  on any surface; the structural world-map role is already served better by
+  the Atlas. Nothing of value is lost.
+
+**Held for later:** other screens (inbox, objective, observatory, …) as tabs
+across the top is "yesterday's admin" — JB will describe how to make it more
+immersive in a coming block.
+
 ### Principles Fable derives from session 1 (pending JB confirmation)
 
 - **P1 · One identity shape.** Human or resident, an identity is DID + name +
@@ -76,6 +108,17 @@ defect, full stop.
 - **P5 · Non-blocking by default, softly announced.** Submitting work never
   blocks the conversation; completion arrives as a soft, in-place notice; the
   result opens where the human already is.
+- **P6 · Scope is set where intent forms.** Scope lives on the conversation
+  itself (axes/toggles), defaulting to the current context; words and toggles
+  are two doors to one scope state — saying "between X and Y" visibly updates
+  the toggles, and touching a toggle needs no words.
+- **P7 · Every ask wears its journey.** Soft text always says what's
+  happening: where the ask went, who is fulfilling it, under what scope — and
+  the reply wears where it was fulfilled. The human never wonders where a
+  request went. (Direct cure for the librarian-catch-all failure.)
+- **P8 · No surface exists for eye candy.** Every view must earn its overhead
+  by serving intent. The Spacetime Window is retired; its powers are absorbed
+  by scope axes + universal time scoping + the Atlas.
 
 ### Architectural implications noted for later dives (not designed here)
 
@@ -87,6 +130,12 @@ defect, full stop.
 - Enterprise IdP support ahead of becky's mint ⇒ identity architecture gains a
   federation seam (AWS/Azure identity stores) in front of the existing DID
   machinery.
+- Asks routed BY scope + capability — never a catch-all resident — with each
+  routing step emitted as an event the UI renders as the soft journey text ⇒
+  routing topology + journey events are named transport-dive inputs.
+- "Between X and Y" as a universal time-scope axis ⇒ time scoping is a
+  first-class query dimension on every surface, preserving spacetime replay
+  without a dedicated window.
 
 ---
 
