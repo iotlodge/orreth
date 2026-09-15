@@ -237,6 +237,36 @@ global agentic fleet can pursue cost/placement optimization as an objective
 like any other, under the same laws, with learned improvement. The article
 writes itself from P9 + P10 + the billing feed.
 
+### Narration block 7 — L3 settled, MITL defined, ontology + factories named
+
+**L3 = MFA, in addition to manager authority ("or something").** The top
+escalation tier can demand step-up proof (MFA) and/or a master authority's
+word. The ladder now reads: L1 = the ask itself · L2 = in-chat confirm
+(cancel default, deliberate click) · L3 = MFA and/or master authority.
+
+**MITL, refined (JB: "almost dead on right"):** a **specialist of Orreth that
+serves agents** — governance and real-world risk both demand it. Its makeup:
+
+- the **Orreth ontology** (JB's name, for now, for what was called the
+  'orreth skill') — deep knowledge of Orreth itself;
+- **its own brain (LLM)**;
+- **access to the repos seen by Orreth**, for deep investigations;
+- creation powers: it can **create skills, prompts, and agents through a
+  "factories" feature** — and the results get leveraged.
+
+**The MITL toggle:** possibly a simple **soft toggle** on the interface —
+summoning the Master Mind explicitly rather than weaving it in by context
+inference. Simple, and it negates context-guessing.
+
+**Held dive (JB named it):** *the experience of the agent, and
+agent-on-behalf-of* — required to finish the MITL/toggle thinking; queued
+for when ready (likely the AGENTS dive or its own).
+
+**Fable's note:** MITL is the [self-delivery seed] maturing into a named
+identity — a frontier-class specialist resident inside Orreth: ontology +
+own brain + repo access + factories. The seed's "frontier mind crystallizes
+skills for lesser minds" becomes MITL's factories feature.
+
 ### Open questions ledger
 
 - ~~**Opt Out**~~ ANSWERED (block 5): declines observation/metering only;
@@ -248,11 +278,12 @@ writes itself from P9 + P10 + the billing feed.
 - ~~**Placement profiles**~~ ANSWERED (block 5): YES — per-environment IaC
   artifacts over one logical world; extended to be cost-aware via
   cloud-provider billing.
-- **MITL**: which reading — L3 master authority, supervisory intelligence,
-  or a third? Where does it sit relative to chat-native L1/L2, and what
-  classes of acts summon it?
-- **MFA**: mint-time only, or also step-up in-conversation for
-  high-consequence acts (Fable proposes both, tiered by consequence class)?
+- ~~**MITL**~~ ANSWERED (block 7): a specialist-of-Orreth identity (ontology
+  + own LLM + repo access + factories), summonable — possibly via a soft
+  MITL toggle. Remaining: toggle semantics + what the factories feature
+  governs, held for the agent-experience dive.
+- ~~**MFA**~~ ANSWERED (block 7): L3 = MFA and/or master authority; step-up
+  tiering by consequence class stands as proposed.
 - **Circular dependencies**: adopt async-only messaging with deploy-time
   cycle detection on synchronous call chains? (The deadlock disease we lived
   was synchronous circular waiting on one thread.)
@@ -302,6 +333,12 @@ writes itself from P9 + P10 + the billing feed.
   is unobserved and unmetered but fully governed; what it does and remembers
   stays inside that state forever; opting in is the human's act, met with the
   honest disclosure that nothing from the opt-out window comes along.
+- **P12 (forming) · The proof demand rises to meet the consequence.** The
+  escalation ladder lives inside the conversation: L1 = the ask · L2 =
+  in-chat confirm (cancel default, deliberate click) · L3 = MFA and/or master
+  authority. MITL — the specialist-of-Orreth (ontology + own brain + repo
+  access + factories) — is summonable, possibly by a soft toggle, wherever
+  governance or risk wants a master mind in the loop.
 
 ### Architectural implications noted for later dives (not designed here)
 
