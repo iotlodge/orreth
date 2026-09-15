@@ -203,6 +203,40 @@ automation* — scheduled by the human (what the identity schedules), by role
 (agent schedule), and by kernel (kernel-role required, as embedded firmware).
 Full treatment may land in the AGENTS dive.
 
+### Narration block 6 — MFA, MITL, and the metal-as-state article seed
+
+**Two more experience elements (JB: they drive overall understanding and
+strengthen governance):**
+
+- **MFA — Multi-Factor Authentication.** Fable's proposed reading (pending
+  JB's correction): MFA lives at two moments — (a) identity provisioning /
+  becky's mint, and (b) **step-up verification woven into the conversation**
+  when an act's consequence demands more than the L2 click — the interlock
+  escalates in-flow: soft confirm → deliberate click → MFA challenge, by
+  consequence class. Governance felt, never administered.
+- **MITL — "Master Mind In the Loop."** Named by JB; definition pending. Two
+  candidate readings for JB to pick or correct: (a) **the L3 tier** — a
+  designated master authority (manager-profile / senior human via the
+  enterprise identity layer) in the loop for highest-consequence decisions;
+  (b) **a supervisory intelligence** — the machine's own master mind in the
+  loop for fleet-level acts. Either way it slots above the chat-native L1/L2.
+
+**The article seed — "the metal becomes one target" (JB's words, verbatim
+essence, banked until the outward freeze lifts):**
+
+> "Ability to implement a kernel to not only create rigid control and
+> governance but create a substrate by which the monolithic METAL becomes
+> 1 target (it's one when it's understood as STATE) by which an Agentic
+> global fleet can implement self and learned optimization and cost
+> states… that's almost the holy grail."
+
+Fable's note on why it holds: the kernel's founding trick is reducing the
+world to governed, signed STATE. Pointing that same trick at infrastructure
+makes the metal just another governed domain — one addressable target — so a
+global agentic fleet can pursue cost/placement optimization as an objective
+like any other, under the same laws, with learned improvement. The article
+writes itself from P9 + P10 + the billing feed.
+
 ### Open questions ledger
 
 - ~~**Opt Out**~~ ANSWERED (block 5): declines observation/metering only;
@@ -214,6 +248,11 @@ Full treatment may land in the AGENTS dive.
 - ~~**Placement profiles**~~ ANSWERED (block 5): YES — per-environment IaC
   artifacts over one logical world; extended to be cost-aware via
   cloud-provider billing.
+- **MITL**: which reading — L3 master authority, supervisory intelligence,
+  or a third? Where does it sit relative to chat-native L1/L2, and what
+  classes of acts summon it?
+- **MFA**: mint-time only, or also step-up in-conversation for
+  high-consequence acts (Fable proposes both, tiered by consequence class)?
 - **Circular dependencies**: adopt async-only messaging with deploy-time
   cycle detection on synchronous call chains? (The deadlock disease we lived
   was synchronous circular waiting on one thread.)
