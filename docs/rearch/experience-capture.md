@@ -93,6 +93,29 @@ defect, full stop.
 across the top is "yesterday's admin" — JB will describe how to make it more
 immersive in a coming block.
 
+### Narration block 3 — two clarifications
+
+**The clock icon, precisely:** clicking it *helps the human set* a timeframe
+(an assist for explicit setting). The chat, on its own, simply **extracts the
+"between X and Y" as part of the ask** — time scoping is intrinsic to reading
+the ask, not a synced widget trick. (How an agent implements the extraction is
+out of scope for the experience discussion.)
+
+**Kernel vs scope — the layer law (JB: "important"):**
+
+> "Kernels don't think in scope — humans and agents do. Kernel is about
+> serving needs, but when kernel governs, it governs to the extents of the
+> Orreth deployed architecture. From the lens of the Kernel supporting
+> things, the idea of Experience is distinct."
+
+- **Scope is a lens of identities** — the way humans and agents aim intent,
+  address, and filter.
+- **The kernel serves needs and governs uniformly** — its governance boundary
+  is the deployment itself, not a scope selection. It does not "think in"
+  ecosystem/field; it enforces law everywhere, the same.
+- **Experience is a distinct layer** from kernel mechanics — the kernel
+  supports; the experience is where scope lives and is felt.
+
 ### Principles Fable derives from session 1 (pending JB confirmation)
 
 - **P1 · One identity shape.** Human or resident, an identity is DID + name +
@@ -119,6 +142,10 @@ immersive in a coming block.
 - **P8 · No surface exists for eye candy.** Every view must earn its overhead
   by serving intent. The Spacetime Window is retired; its powers are absorbed
   by scope axes + universal time scoping + the Atlas.
+- **P9 · Scope is a lens of identities, never of the kernel.** Humans and
+  agents think in scope; the kernel serves needs and governs uniformly to the
+  extents of the deployed architecture. Scope rides the ask as intent; law is
+  enforced everywhere the same.
 
 ### Architectural implications noted for later dives (not designed here)
 
@@ -136,6 +163,11 @@ immersive in a coming block.
 - "Between X and Y" as a universal time-scope axis ⇒ time scoping is a
   first-class query dimension on every surface, preserving spacetime replay
   without a dedicated window.
+- P9 (scope = identities' lens, kernel governs uniformly) ⇒ scope becomes
+  LOGICAL addressing carried on intent over ONE governed substrate — it stops
+  being physical partitioning. The floors-as-separate-processes/stores pattern
+  (the very thing the one worker polled 26 of) is on notice; to be validated
+  with JB in the architecture/transport dives.
 
 ---
 
