@@ -116,6 +116,65 @@ out of scope for the experience discussion.)
 - **Experience is a distinct layer** from kernel mechanics — the kernel
   supports; the experience is where scope lives and is felt.
 
+### Narration block 4 — placement, operating risk, blast radius (dug now at JB's call)
+
+**P9 vetting note:** JB 99% positive P9 is correct — **"Opt Out" is an
+operating state that must be vetted against it** (open question below).
+
+**Why dig now — Operating Risk:** circular dependencies, RTO verification,
+and kin must be considered while the physical/logical split is on the table.
+
+**The frame:** *an identity is life*, and every action has a result — wanted
+(good) or not wanted (a bad event / incident). Risk architecture exists to
+bound the unwanted results.
+
+**The placement stance (JB):** if multi-agent deployment to a single
+operating instance (ARN / container / etc.) can be supported **while ensuring
+rigid control, governance, and risk**, then we SHOULD support it.
+
+**The blast-radius law (JB's rule):** a skill applied to allen must know that
+if 4 distinct LangGraph agents run on container.foo, **they all have to be in
+the same field and ecosystem** — co-location bounded by scope. At scale,
+unbounded co-location becomes high risk (JB: "I've been doing this a long
+time").
+
+**E-RAG hindsight:** this model would have let us *visualize decoupled* yet
+*run distinct graphs and logic layers on a single container in dev* — while
+prod may choose not to follow the single-instance shape at all.
+
+**Fable's read-back generalization (seconded in-session):** three concerns the
+old build welded together must separate —
+1. **Logical scope** — the identity's lens (P9);
+2. **Governance** — uniform, the kernel's, everywhere the same;
+3. **Physical placement** — an operational choice, governed by declared
+   placement policy.
+A floor used to be all three at once (a scope AND a governance boundary AND a
+process). The weld is why dev couldn't be dense and prod couldn't be spread.
+The generalized blast-radius law: **physical failure domains must nest inside
+logical scope boundaries** — an instance-level incident may never cross more
+scope than one field/ecosystem. Placement profiles become per-environment
+declared IaC artifacts (dev-dense / prod-spread) over the SAME logical world;
+allen, wearing a loaded placement/risk policy, validates deploys against the
+affinity laws, watches placement drift, and treats a violation as an incident.
+Honest naming of the old failure: it was not dense placement — it was **no
+placement model at all**; one process wore every identity in the world.
+
+### Open questions ledger
+
+- **Opt Out**: what exactly does the identity opt out of, and how does that
+  operating state sit against P9 (scope-as-lens, uniform governance)?
+- **Blast-radius rule precision**: same field (field implies its ecosystem)?
+  Does the rule extend to instance-level shared secrets / LLM keys / mounted
+  stores — i.e., is fate-sharing defined by process, credentials, or both?
+- **Placement profiles**: confirmed as declared per-environment IaC artifacts
+  (dev-dense / prod-spread) enforced by allen's loaded policy?
+- **Circular dependencies**: adopt async-only messaging with deploy-time
+  cycle detection on synchronous call chains? (The deadlock disease we lived
+  was synchronous circular waiting on one thread.)
+- **RTO verification**: declared RTO per agent/placement profile, verified by
+  rehearsed kill-drills (the Testament matured into standing practice) — who
+  runs the drill, and where does the human see the result?
+
 ### Principles Fable derives from session 1 (pending JB confirmation)
 
 - **P1 · One identity shape.** Human or resident, an identity is DID + name +
@@ -145,7 +204,13 @@ out of scope for the experience discussion.)
 - **P9 · Scope is a lens of identities, never of the kernel.** Humans and
   agents think in scope; the kernel serves needs and governs uniformly to the
   extents of the deployed architecture. Scope rides the ask as intent; law is
-  enforced everywhere the same.
+  enforced everywhere the same. (Vet "Opt Out" operating state against this.)
+- **P10 (forming) · Placement is policy, never accident.** Physical placement
+  is an operational choice governed by declared placement policy: co-located
+  agents share one field/ecosystem (failure domains nest inside scope
+  boundaries); dev and prod are placement PROFILES over the same logical
+  world; an infrastructure resident wearing the loaded policy validates
+  deploys, watches drift, and treats violations as incidents.
 
 ### Architectural implications noted for later dives (not designed here)
 
