@@ -159,15 +159,61 @@ affinity laws, watches placement drift, and treats a violation as an incident.
 Honest naming of the old failure: it was not dense placement — it was **no
 placement model at all**; one process wore every identity in the world.
 
+### Narration block 5 — Opt Out defined, secrets as fate-sharing, cost-aware metal
+
+**Opt Out (JB's definition — vets CLEAN against P9):**
+
+- The identity **declines observation/metering — governance still applies.**
+- Humans can still talk to residents in Opt Out, but **what those identities
+  do and remember stays inside the scope of Opt Out.**
+- **Opting back in requires the human to do it**, and the human must be told
+  (a good experience in itself): **no memories from the opt-out timeframe
+  will be touched** — "frankly it could be bad data and we wouldn't want it."
+  Opt-out memories are quarantined to that state forever; opt-in imports
+  nothing.
+- P9 verdict: HOLDS — what is declined is observation/metering (lens-level);
+  the kernel's uniform governance is never declined.
+
+**Fate-sharing includes secrets (JB: it MUST):** "same secret" is a
+co-location, same as "same container" — secrets in prod cause catastrophic
+incidents from a simple secret change. For advanced agent *what-if*
+scenarios, **allen, security, and warden** all need to understand
+**co-location atop location**.
+
+**The compounding move:** this enables an **"Advanced LangGraph Allen Cloud
+Architect"** that can reason and gap-detect, wearing his **'orreth' skill —
+which Fable will be creating**. JB: "one decoupled Experience creates the
+Human Experience."
+
+**Placement profiles CONFIRMED (Q3 = YES)**, extended with cost: the agentic
+kernel and residents should **manage to optimal operating-cost states** by
+bringing in **cloud-provider billing** and allocating across the metal —
+placement is affinity-lawful AND cost-aware.
+
+**Tests mandate:** when built, this gets tests. If Orreth is globally
+scalable/deployable and does advanced analytics/processing, **it must
+understand all possible states between what's experienced and the metal for
+which it runs.**
+
+**Held for coming blocks (JB thinking):** two more Experience perspectives —
+(a) **UI Fluidity/continuity**; (b) **Human↔Agent and the Resident
+Experience** — preview captured: residents are **2-sided**: what they do for
+the human in *direct inference*, and what they do as their *job as
+automation* — scheduled by the human (what the identity schedules), by role
+(agent schedule), and by kernel (kernel-role required, as embedded firmware).
+Full treatment may land in the AGENTS dive.
+
 ### Open questions ledger
 
-- **Opt Out**: what exactly does the identity opt out of, and how does that
-  operating state sit against P9 (scope-as-lens, uniform governance)?
-- **Blast-radius rule precision**: same field (field implies its ecosystem)?
-  Does the rule extend to instance-level shared secrets / LLM keys / mounted
-  stores — i.e., is fate-sharing defined by process, credentials, or both?
-- **Placement profiles**: confirmed as declared per-environment IaC artifacts
-  (dev-dense / prod-spread) enforced by allen's loaded policy?
+- ~~**Opt Out**~~ ANSWERED (block 5): declines observation/metering only;
+  governance always applies; opt-out memories quarantined forever; opt-in is
+  a human act with honest disclosure. P9 holds.
+- ~~**Blast-radius rule precision**~~ ANSWERED (block 5): fate-sharing is
+  process AND credentials — "same secret" is a co-location. allen · security
+  · warden must understand co-location atop location.
+- ~~**Placement profiles**~~ ANSWERED (block 5): YES — per-environment IaC
+  artifacts over one logical world; extended to be cost-aware via
+  cloud-provider billing.
 - **Circular dependencies**: adopt async-only messaging with deploy-time
   cycle detection on synchronous call chains? (The deadlock disease we lived
   was synchronous circular waiting on one thread.)
@@ -205,12 +251,18 @@ placement model at all**; one process wore every identity in the world.
   agents think in scope; the kernel serves needs and governs uniformly to the
   extents of the deployed architecture. Scope rides the ask as intent; law is
   enforced everywhere the same. (Vet "Opt Out" operating state against this.)
-- **P10 (forming) · Placement is policy, never accident.** Physical placement
-  is an operational choice governed by declared placement policy: co-located
-  agents share one field/ecosystem (failure domains nest inside scope
-  boundaries); dev and prod are placement PROFILES over the same logical
-  world; an infrastructure resident wearing the loaded policy validates
-  deploys, watches drift, and treats violations as incidents.
+- **P10 · Placement is policy, never accident.** Physical placement is an
+  operational choice governed by declared placement policy: co-located agents
+  share one field/ecosystem (failure domains — process AND secret — nest
+  inside scope boundaries); dev and prod are placement PROFILES over the same
+  logical world, allocated cost-aware against cloud billing; allen · security
+  · warden wear the loaded policy — validate deploys, watch drift, treat
+  violations as incidents. Tested: Orreth must understand all states between
+  what's experienced and the metal it runs on.
+- **P11 · Opt Out declines the meter, never the law.** An identity in Opt Out
+  is unobserved and unmetered but fully governed; what it does and remembers
+  stays inside that state forever; opting in is the human's act, met with the
+  honest disclosure that nothing from the opt-out window comes along.
 
 ### Architectural implications noted for later dives (not designed here)
 
@@ -236,5 +288,30 @@ placement model at all**; one process wore every identity in the world.
 
 ---
 
-*More narration coming — sections append per exchange; distillation into the
-Experience Charter happens when JB closes the dive.*
+## Fable's mid-dive synthesis (after blocks 1–5, pending JB's read)
+
+**Thesis: the Experience is the felt surface of governance.** Every law has a
+feeling, and the feeling is the proof it exists: scope feels like axes on your
+conversation; routing feels like soft journey text; risk feels like a blast
+radius that can never cross your scope; recovery feels like a resident coming
+back as itself; honesty feels like the opt-in disclosure. The decoupling
+(scope from metal, observation from governance, placement from logic) is what
+lets the felt layer stay simple — "one decoupled Experience creates the Human
+Experience."
+
+**The thread, top to bottom:** a human is an identity (IdP → becky's mint)
+talking to identities of the same digital shape. The conversation is the
+workspace; scope and time ride its axes, defaulting to context, settable by
+words. Every ask wears its journey and never blocks the next one; results
+render where the human already is; Esc always comes home. Beneath the glass,
+asks route by scope + capability on the bus; the kernel governs uniformly no
+matter which container in which region serves; placement policy — affinity
+laws, secret-fate-sharing, cost-awareness — decides the metal; incidents are
+bounded inside one scope; identities survive the metal's death within a
+rehearsed RTO. The human never sees the machinery — they feel its guarantees.
+
+---
+
+*More narration coming — held next: UI fluidity/continuity · Human↔Agent ·
+the two-sided Resident Experience. Distillation into the Experience Charter
+happens when JB closes the dive.*
