@@ -97,11 +97,26 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   breath (0002's law, never retrofitted). Nine envelope laws in
   `spine/tests/`; CI now runs the rearch line (`rearch/**` push + spine
   job).
-- **sp2 — the old world measured (M0)**: baseline the polling rig's
-  latencies/amplification — the numbers the new spine must beat.
-- **sp3 — the playwright agent chartered**: its charter, first experience
-  specs distilled from the charter's principles, first walk against the
-  old glass (the "before" pictures for the article carousel).
+- **sp2 — the old world measured (M0)** ✅ **LANDED 2026-09-16**: the
+  polling rig measured live as it runs (`spine/baseline/measure_m0.py`,
+  stdlib, re-runnable; report `docs/rearch/baselines/m0-old-world.md`).
+  Headlines: 20 floors; the universe's `/requests` poll = **3.7 MB per
+  fetch** (2,684 retained rows, re-downloaded by every poller); the
+  human's ask path = **p50 120 s, 2 of 6 asks never answered in 5 min,
+  373 MB downloaded just to wait**; the idle ladder reaches **289 MB/s of
+  pure polling at 10,100 floors**. The comparison contract vs the locked
+  SLOs is in the report — the spine's 16 ms invoke rail is 125× faster
+  than the old world's best-case dispatch.
+- **sp3 — the playwright agent chartered** ⚠️ **PARTIAL 2026-09-16**:
+  the charter (`docs/rearch/playwright-agent-charter.md` — enforce, never
+  author; the human path only; friction is a finding; honest waits) and
+  the spec book (`docs/rearch/experience-specs.md` — 14 walkable specs
+  from P1–P18 with the old-glass "before" column) both LANDED; the first
+  before-walk ran and is **PARTIAL by name**: the Playwright confirmed
+  SPEC-ESC-01 FAIL (Escape left becky's drawer open) before the session
+  spend limit killed it mid-walk (`baselines/before-walk-2026-09-16.md`).
+  The remaining before-walk re-runs when budget allows; nothing
+  downstream blocks on it.
 
 ## What this document binds
 

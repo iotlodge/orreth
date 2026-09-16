@@ -1,0 +1,264 @@
+{
+ "measured_at": "2026-09-16T20:21:21Z",
+ "floors": [
+  {
+   "port": 4500,
+   "scope": "u:demo",
+   "records": 12542,
+   "health_ms": 66.0,
+   "poll_ms": 142.3,
+   "poll_bytes": 3699740,
+   "queue_rows": 2684
+  },
+  {
+   "port": 4501,
+   "scope": "u:demo/e:cloud",
+   "records": 1186,
+   "health_ms": 2.9,
+   "poll_ms": 15.9,
+   "poll_bytes": 61935,
+   "queue_rows": 116
+  },
+  {
+   "port": 4502,
+   "scope": "u:demo/e:cloud/f:prod",
+   "records": 8903,
+   "health_ms": 3.8,
+   "poll_ms": 57.0,
+   "poll_bytes": 359226,
+   "queue_rows": 363
+  },
+  {
+   "port": 4503,
+   "scope": "u:demo/e:retail",
+   "records": 3688,
+   "health_ms": 2.6,
+   "poll_ms": 15.4,
+   "poll_bytes": 61926,
+   "queue_rows": 114
+  },
+  {
+   "port": 4504,
+   "scope": "u:demo/e:retail/f:web",
+   "records": 1058,
+   "health_ms": 5.4,
+   "poll_ms": 20.1,
+   "poll_bytes": 57815,
+   "queue_rows": 109
+  },
+  {
+   "port": 4505,
+   "scope": "u:demo/e:retail/f:pos",
+   "records": 380,
+   "health_ms": 3.0,
+   "poll_ms": 9.5,
+   "poll_bytes": 58750,
+   "queue_rows": 111
+  },
+  {
+   "port": 4506,
+   "scope": "u:demo/e:care",
+   "records": 366,
+   "health_ms": 2.2,
+   "poll_ms": 11.7,
+   "poll_bytes": 55026,
+   "queue_rows": 102
+  },
+  {
+   "port": 4507,
+   "scope": "u:demo/e:care/f:home",
+   "records": 379,
+   "health_ms": 3.1,
+   "poll_ms": 5.9,
+   "poll_bytes": 64493,
+   "queue_rows": 119
+  },
+  {
+   "port": 4508,
+   "scope": "u:demo/e:estate",
+   "records": 357,
+   "health_ms": 3.8,
+   "poll_ms": 12.3,
+   "poll_bytes": 54313,
+   "queue_rows": 102
+  },
+  {
+   "port": 4510,
+   "scope": "u:demo/f:allen",
+   "records": 638,
+   "health_ms": 6.2,
+   "poll_ms": 14.0,
+   "poll_bytes": 56800,
+   "queue_rows": 107
+  },
+  {
+   "port": 4511,
+   "scope": "u:demo/e:desk",
+   "records": 234,
+   "health_ms": 3.4,
+   "poll_ms": 5.5,
+   "poll_bytes": 40344,
+   "queue_rows": 84
+  },
+  {
+   "port": 4512,
+   "scope": "u:demo/e:rag/f:naive",
+   "records": 565,
+   "health_ms": 3.4,
+   "poll_ms": 22.6,
+   "poll_bytes": 56732,
+   "queue_rows": 106
+  },
+  {
+   "port": 4513,
+   "scope": "u:demo/e:rag",
+   "records": 348,
+   "health_ms": 6.0,
+   "poll_ms": 26.4,
+   "poll_bytes": 55201,
+   "queue_rows": 104
+  },
+  {
+   "port": 4514,
+   "scope": "u:demo/e:rag/f:rerank",
+   "records": 341,
+   "health_ms": 5.6,
+   "poll_ms": 27.5,
+   "poll_bytes": 54981,
+   "queue_rows": 104
+  },
+  {
+   "port": 4515,
+   "scope": "u:demo/e:rag/f:graph",
+   "records": 336,
+   "health_ms": 4.8,
+   "poll_ms": 23.1,
+   "poll_bytes": 54964,
+   "queue_rows": 104
+  },
+  {
+   "port": 4516,
+   "scope": "u:demo/e:rag/f:hybrid",
+   "records": 336,
+   "health_ms": 8.0,
+   "poll_ms": 11.7,
+   "poll_bytes": 56658,
+   "queue_rows": 106
+  },
+  {
+   "port": 4517,
+   "scope": "u:demo/e:rag/f:multimodal",
+   "records": 341,
+   "health_ms": 4.5,
+   "poll_ms": 23.7,
+   "poll_bytes": 56463,
+   "queue_rows": 107
+  },
+  {
+   "port": 4518,
+   "scope": "u:demo/e:rag/f:router",
+   "records": 341,
+   "health_ms": 8.3,
+   "poll_ms": 32.1,
+   "poll_bytes": 58396,
+   "queue_rows": 110
+  },
+  {
+   "port": 4519,
+   "scope": "u:demo/e:rag/f:swarm",
+   "records": 345,
+   "health_ms": 4.0,
+   "poll_ms": 27.3,
+   "poll_bytes": 60114,
+   "queue_rows": 115
+  },
+  {
+   "port": 4520,
+   "scope": "u:demo/e:desk/f:charles",
+   "records": 2200,
+   "health_ms": 13.6,
+   "poll_ms": 45.1,
+   "poll_bytes": 424366,
+   "queue_rows": 400
+  }
+ ],
+ "ask_port": 4502,
+ "asks": [
+  {
+   "ask": 1,
+   "question": "What is Orreth in one sentence?",
+   "status": "done",
+   "seconds": 110.1,
+   "polls": 106,
+   "poll_bytes": 38095598
+  },
+  {
+   "ask": 2,
+   "question": "Which residents live on this floor?",
+   "status": "done",
+   "seconds": 222.3,
+   "polls": 209,
+   "poll_bytes": 75570587
+  },
+  {
+   "ask": 3,
+   "question": "What does the librarian keep?",
+   "status": "timeout",
+   "seconds": 300.1,
+   "polls": 260,
+   "poll_bytes": 94608828
+  },
+  {
+   "ask": 4,
+   "question": "Name one governed dial and what it does.",
+   "status": "done",
+   "seconds": 120.0,
+   "polls": 114,
+   "poll_bytes": 41539561
+  },
+  {
+   "ask": 5,
+   "question": "What happened most recently in this world?",
+   "status": "timeout",
+   "seconds": 300.8,
+   "polls": 284,
+   "poll_bytes": 104534932
+  },
+  {
+   "ask": 6,
+   "question": "What is a capability in this universe?",
+   "status": "done",
+   "seconds": 57.8,
+   "polls": 52,
+   "poll_bytes": 19163266
+  }
+ ],
+ "median_poll_bytes": 57307.5,
+ "median_poll_ms": 21.35,
+ "ladder": [
+  {
+   "floors": 26,
+   "idle_req_s": 26.0,
+   "idle_MB_s": 0.74,
+   "worker_threads_saturated": 0.3
+  },
+  {
+   "floors": 110,
+   "idle_req_s": 110.0,
+   "idle_MB_s": 3.15,
+   "worker_threads_saturated": 1.2
+  },
+  {
+   "floors": 1100,
+   "idle_req_s": 1100.0,
+   "idle_MB_s": 31.52,
+   "worker_threads_saturated": 11.7
+  },
+  {
+   "floors": 10100,
+   "idle_req_s": 10100.0,
+   "idle_MB_s": 289.4,
+   "worker_threads_saturated": 107.8
+  }
+ ]
+}
