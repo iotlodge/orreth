@@ -35,9 +35,32 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
+      events:
+        image: apache/kafka:3.9.1
+        env:
+          KAFKA_NODE_ID: 1
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+          KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+        ports: ["9092:9092"]
+        options: >-
+          --health-cmd "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092"
+          --health-interval 5s
+          --health-timeout 10s
+          --health-retries 30
     env:
       SPINE_PG: postgresql://orreth:orreth-dev@localhost:5433/spine
       SPINE_REQUIRE_PG: "1"
+      SPINE_KAFKA: localhost:9092
+      SPINE_REQUIRE_KAFKA: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5

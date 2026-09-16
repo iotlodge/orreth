@@ -100,9 +100,19 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   spine job now stands up a real Postgres service (SPINE_REQUIRE_PG=1: a
   missing ground FAILS, never silently skips). M1's stop-condition
   honored: no distributed transaction anywhere.
-- Next in phase 1: **sp2 — the events shadow** (the relay grows a
-  KafkaSink; committed facts flow ground → events rail with replay
-  parity, M4-lite) · **sp3 — the Bridge feed v0** (one WS/SSE gateway
+- **sp2 — the events shadow (M4-lite)** ✅ **LANDED 2026-09-16**:
+  `sinks.KafkaSink` (topic = the envelope's TYPE — schema families,
+  never per-identity; key = the aggregate id, so order holds exactly
+  where it matters) + `projector.py` (offset commits ONLY after the
+  database transaction; poison bodies PARK visibly with their evidence
+  and the projector stops at them — never a silent loss). Proven live on
+  the real rail: **project → replay-from-zero → burn-and-rebuild, all
+  three views equal to the domain's own truth**; wire duplicates fold to
+  one effect; a crash between apply and offset-commit redelivers
+  harmlessly; poison parked with reason + raw bytes. Suite 24 green; CI
+  gains the events rail as a real Kafka service (SPINE_REQUIRE_KAFKA=1 —
+  absence FAILS, never skips).
+- Next in phase 1: **sp3 — the Bridge feed v0** (one WS/SSE gateway
   endpoint pushing request lifecycle, M6-lite).
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
