@@ -1,10 +1,10 @@
 # 0001 — The Experience Charter
 
-**Status: DRAFTED** — distilled from the Experience Deep Dive (sessions
-2026-09-14 and 2026-09-16, raw narration in `experience-capture.md`).
-Awaiting JB's review; his lock makes this the first document of the new
-canon. The Experience defines what Orreth must feel like; transport and
-agents are chosen to serve it — never the other way around.
+**Status: LOCKED — JB approved 2026-09-16.** The first document of the new
+canon. Distilled from the Experience Deep Dive (sessions 2026-09-14 and
+2026-09-16, raw narration in `experience-capture.md`). The Experience
+defines what Orreth must feel like; transport and agents are chosen to
+serve it — never the other way around.
 
 ---
 

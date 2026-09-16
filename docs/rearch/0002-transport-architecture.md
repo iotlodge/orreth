@@ -1,10 +1,10 @@
 # 0002 — The Transport Architecture
 
-**Status: DRAFTED** — the Transport Deep Dive's design, derived from the
-Experience Charter (0001) and JB's direction (2026-09-16: "MQ is ideal for
-agent invocation and management while Kafka serves as a great way to build
-and subscribe to topics for fan-outs… maybe Redis has a place also… we
-should partition effectively"). Awaiting JB's review.
+**Status: LOCKED — JB approved 2026-09-16.** The Transport Deep Dive's
+design, derived from the Experience Charter (0001) and JB's direction
+(2026-09-16: "MQ is ideal for agent invocation and management while Kafka
+serves as a great way to build and subscribe to topics for fan-outs… maybe
+Redis has a place also… we should partition effectively").
 
 **Input honored:** the six-document SOL review (`tmp/orreth-messaging-
 architecture/`, 2026-09-09, pre-halt). Verdict: rigorous and largely
