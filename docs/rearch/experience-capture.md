@@ -466,6 +466,22 @@ separate configure/assign pull. The bridge now carries **seven pulls**:
 Chat · Workspace Engineering · Monitoring · Gateways · Tools · Controls ·
 Crew (+ the Objectives/Operations floor hatch, pending JB).
 
+### Narration block 10 — the Atlas remembered
+
+**JB (2026-09-16, post-distillation): the Atlas was forgotten — "maybe that
+is a pull? That is the strongest visualization we have of the architecture
+in the Operating State."**
+
+**Fable's recommendation (pending JB):** not a pull — the **third lens of
+the main view window: ORRERY | BRAIN | ATLAS** on the window sill. Pulls
+are CRUD focus areas; the Atlas is the view of the whole — exactly what the
+main window is for. Two continuities follow: (1) **every box a door becomes
+every box an aim** — clicking an Atlas node sets chat scope (P6 made
+physical; the main window is a scope selector); (2) **universal
+time-scoping on the Atlas lens replays the architecture's evolution**,
+completing the Spacetime Window's absorption. Fallback if JB prefers a
+pull: a full Atlas window, reachable from the sill toggle — nothing lost.
+
 ### Open questions ledger
 
 - ~~**Opt Out**~~ ANSWERED (block 5): declines observation/metering only;

@@ -55,6 +55,10 @@ carrying the pulls, warm light, glass.
 
 - **No navigation, ever.** Login lands on the one landing page; everything
   the human will need can be seen, pulled, or clicked from it.
+- **The main view window has lenses** on its sill: ORRERY | BRAIN — and
+  (Fable's proposal, pending JB) **ATLAS** as the third: the strongest
+  visualization of the Operating State's architecture, where clicking a box
+  sets chat scope and time-scoping replays the architecture's evolution.
 - **Pulls** are the focus areas. Each is themed to the bridge and can open
   into a window of its own with views across its categories.
 - **[Esc] always returns to the top-level view** — recovery without hunting.
@@ -209,8 +213,9 @@ state, many lenses · P18 professional surfaces, plain words.
   · the **agent / agent-on-behalf-of** dive (gates MITL toggle semantics and
   factories governance).
 - Awaiting JB's verdict: the Objectives floor hatch as the lifecycle band ·
-  aggregate schedule view in Monitoring · PULSE as the heartbeat ribbon ·
-  "every click has a sentence."
+  the Atlas as the main window's third lens (vs its own pull) · aggregate
+  schedule view in Monitoring · PULSE as the heartbeat ribbon · "every
+  click has a sentence."
 - To be designed against this charter: the transport (Kafka + RabbitMQ),
   the memory architecture (working / verbatim / semantic tiers), the
   LangGraph resident template, and the V1 build scope — all in their own
