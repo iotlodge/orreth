@@ -125,10 +125,31 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   Suite 30 green. PHASE 1 — THE SPINE — IS WHOLE: ground → rail →
   projection → the human's soft notice, every law tested on real
   services in CI.
-- Next: **Phase 2 — THE RESIDENT SPEAKS** (the soul checkpoint): the
-  LangGraph resident template v0 + covenant policy + OrrethStore v0;
-  AG-1/M3 — a full reply, streamed, with tools, journey text, and the L2
-  interlock; the librarian tells JB the temperature outside.
+## Phase 2 — THE RESIDENT SPEAKS (opened 2026-09-16)
+
+- **sp1 — the body is born** ✅ **LANDED 2026-09-16**: the resident body
+  v0 exactly per canon 0004's boot graph — born from a **versioned
+  template artifact** (declared format or refused); **the same self in
+  every life** (persistent Ed25519 seed; AG-2 proven: respawn wears the
+  same DID, the join ledger counts lives 1, 2); **the covenant policy is
+  a real versioned artifact** (`spine/policy/covenant-policy.v1.json`,
+  12 rules) and **no policy = no join, ever** (AG-3 proven; the join
+  records the policy version + hash it wears, signed). The mind is a
+  real **LangGraph StateGraph** (hear → think), deliberately small: it
+  proves the **FULL-reply law** — every word of the ask returns verbatim.
+  The road: ask lands with its event in ONE tx → the **dispatcher**
+  (events consumer) turns the committed fact into a RabbitMQ command →
+  the resident serves through the durable inbox — **journey + reply rows
+  AND their events in one transaction, ACK only after commit**; a
+  replayed command road leaves the reply untouched; a stale command
+  (unknown ask) is a TERMINAL, visible refusal, never a crashloop; the
+  **authority chain rides every hop** (person → resident on journey and
+  reply — AG-7's seed live). The Bridge feed carries received → journey
+  → reply, completion last. Suite 36 green.
+- Next: **sp2 — the mind arrives** (LLM through a gateway lane, streamed
+  full reply, OrrethStore v0 verbatim recall) · **sp3 — tools + the
+  temperature outside** (the soul checkpoint walked live, with the L2
+  interlock).
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 

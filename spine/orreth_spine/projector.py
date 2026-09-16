@@ -62,6 +62,8 @@ def run_once(conn, *, group: str, topics: list[str], consumer_name: str,
     through the durable inbox (`apply(cur, env)` is the read-model
     effect) → commit the offset ONLY after the database has. Returns the
     honest tally: applied, absorbed (duplicate/stale), parked."""
+    ensure_schema(conn)
+    inbox.ensure_schema(conn)
     cons = Consumer({
         "bootstrap.servers": bootstrap or KAFKA_BOOTSTRAP,
         "group.id": group,

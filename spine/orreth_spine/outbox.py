@@ -62,6 +62,15 @@ def commit_with_outbox(conn, raw: bytes, message_id: str,
                     " VALUES (%s, %s)", (message_id, raw))
 
 
+def add_row(cur, raw: bytes, message_id: str) -> None:
+    """Add an outbox row INSIDE a transaction someone else owns — for
+    effects that must land state + events atomically (the inbox's
+    apply-once effects use this; commit_with_outbox opens its own
+    transaction and cannot nest)."""
+    cur.execute("INSERT INTO spine_outbox (message_id, body) VALUES (%s, %s)",
+                (message_id, raw))
+
+
 def outbox_lag(conn) -> dict:
     """The honest meter: how many rows await publish, and how old the
     oldest one is (now - committed_at) in seconds."""
