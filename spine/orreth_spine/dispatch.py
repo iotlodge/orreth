@@ -44,6 +44,13 @@ def submit_ask(conn, text: str, *,
 
 
 def publish_command(env: dict, rabbit_url: str | None = None) -> None:
+    """Publisher-side topology declaration is the law here: on a fresh
+    broker a topic exchange DROPS messages with no bound queue, silently
+    — so the publisher declares queue + binding too (idempotent), and
+    publishes mandatory so an unroutable command fails LOUDLY instead of
+    vanishing. (Found on CI's fresh broker; the dev rig's leftover
+    bindings had been hiding it.)"""
+    from .resident import SERVE_QUEUE
     raw = ev.encode(env)
     rc = pika.BlockingConnection(pika.URLParameters(rabbit_url or RABBIT_URL))
     try:
@@ -51,10 +58,12 @@ def publish_command(env: dict, rabbit_url: str | None = None) -> None:
         ch.confirm_delivery()
         ch.exchange_declare(COMMAND_EXCHANGE, exchange_type="topic",
                             durable=True)
+        ch.queue_declare(SERVE_QUEUE, durable=True)
+        ch.queue_bind(SERVE_QUEUE, COMMAND_EXCHANGE, SERVE_KEY)
         ch.basic_publish(COMMAND_EXCHANGE, SERVE_KEY, raw,
                          properties=pika.BasicProperties(
                              delivery_mode=2, message_id=env["message_id"]),
-                         mandatory=False)
+                         mandatory=True)
     finally:
         rc.close()
 
