@@ -267,6 +267,169 @@ identity — a frontier-class specialist resident inside Orreth: ontology +
 own brain + repo access + factories. The seed's "frontier mind crystallizes
 skills for lesser minds" becomes MITL's factories feature.
 
+---
+
+## Session 2 — 2026-09-16
+
+### Narration block 8 — UI fluidity & continuity: THE BRIDGE
+
+**The frame:** the human relies on Residents/Agents to facilitate ALL requests
+and work; the kernel governs and provides services to residents and agents;
+the UI is where humans **lifecycle (CRUD) the config/settings** of the
+services the kernel, residents, and agents provide.
+
+**The cockpit — THE BRIDGE CONCEPT (reference: `tmp/ui bridge concept.png`,
+mockup by GPT-6 Astra; JB: "I LOVE IT"; ceiling crop: chat_pull_area.png):**
+
+The image IS the spec: a first-person starship-bridge interior. A large
+framed **main view window** (JB: "really like the frame and window") looks
+out on the living universe — constellation clusters per world wearing live
+counts (`allen · 1a · 544m · 2t`, `charles · 1a · 1992m · 5t`, `retail · 1a ·
+3503m · 1t`, …), orbital rings around a golden sun (`u:demo`), graph nebulae
+on the flanks. The hull frame carries the pulls, themed to the bridge:
+
+- **Top ceiling tab: PULSE** (and the ORRETH nameplate on the window frame);
+  chat descends from the upper-right ceiling (the crop).
+- **Left wall panel: INBOX** — wearing a badge count, a door with a handle.
+- **Right wall panel: WORKSPACE** — matching door, small status light.
+- **Window sill, centered: ORRERY | BRAIN** — the main window's view toggle.
+- **Floor console hatch, center: OBJECTIVES** — the foundation underfoot.
+
+**The no-navigation law:** upon login the human never needs to know where
+something is — **everything they will need can be seen/pulled/clicked from
+the landing page.** Pulls match the theme of the experience.
+
+**Pull 1 · Chat (Inference) — the great simplification. ONE chat interface
+for the entire operating state.** It slides down from the upper-right ceiling
+and **rolls over the landing page like it's coming out of the ceiling**, with
+its own small frame like the main view window and a hint of glass
+transparency. Load behavior is a profile setting (display-on-load vs pulled)
+— and generally **the human's profile carries their Orreth UX settings**.
+The chat's four edges carry soft toggles/links:
+
+- **Right edge:** residents/agents by name — DYNAMIC soft links that adapt as
+  the live operating state changes; scroll/search as the universe scales.
+- **Left edge:** universe / ecosystems / fields, **multi-select** (everything
+  spacetime supported); scroll/search at scale.
+- **Top edge:** the includes — **'critic', 'gap analyzer', 'planner'**, and
+  others to be thought of.
+- Typed words always equal clicks: "ask @allen, @becky to …" works without
+  touching a toggle.
+- Selected scope **displays on/around the chat** so the human clearly sees
+  the scope of applied inference (default: universe level).
+
+Results of ad-hoc live requests **return in the active chat**, clearly
+labeled with which Resident/Agent produced them (one chat window, always);
+produced artifacts are downloadable; documents/images click open **larger in
+the chat's view-results area** — the ChatGPT/Cursor/Claude pattern humans
+already know. Humans never go somewhere else to do these things.
+
+**Clear-display ≠ erase.** Clearing the chat display never purges data — the
+respective resident still recalls everything (residents don't forget). ⇒
+**Every resident is inherently chat-ready** (JB: "sure doesn't feel like it
+today"). (All agents LangGraph/LangChain — out of scope for this block.)
+
+**Pull 2 · Engineering:** Agent, Prompt, Policy, Skill engineering — really
+nice, clean surfaces, worked through **factories or direct edit**. The
+impact button: while tuning a policy/prompt/skill, a professional
+"what's the expected impact of this change?" door — Orreth answers in detail,
+routed through the **MITL flow** (ontology + repo access → full scope of the
+requested change). The place to create new guardrails, or edit and assign
+existing ones.
+
+**Pull 3 · Monitoring:** everything monitoring/testing, with views per area
+of focus — Residents, Agents, Kernel, E-RAG… **"if it's monitoring, it goes
+here."**
+
+**Pull 4 · Workspaces (Studios):** deliberately limited to **graph
+engineering** — watching or replaying work requests; tuning prompts, skills,
+policies, personas **in association to the graph**.
+
+**Pull 5 · Gateways (LLMs):** similar to now, themed better.
+**Pull 6 · Tools (Farm):** similar to now, themed better.
+**Pull 7 · Controls (configs):** governance-like, themed better; two focus
+areas: **kernel settings** AND **artifacts** (policies, skills, prompts).
+**Pull 8 · Crew/Agents:** resident and agent cards; the place to add new
+Agent packages (e.g., a machine-learning agent that brings a studio which
+resides in Workspaces).
+
+**Pull mechanics:** each pull is a category (CRUD) focus area that can become
+a **new window like the landing page** (as in the image), holding its own
+views across its categories; every pull wears the bridge theme.
+
+**Schedules — the continuity of the two-sided resident:** residents serve
+human requests AND autonomously run role-specific automation (scheduled
+jobs) in course of maintaining their role or serving a request. The law:
+**every schedule shows up in the resident that runs it** — kernel automation
+included; if the kernel needs automation, its schedule appears in the
+resident that runs it, and **if it's critical to the kernel's
+objectives/state, it is IMMUTABLE** (visible, never editable). Residents CAN
+schedule their own intentions, thoughts, observations (monitoring, a report,
+research…). CRUD on a schedule = continuity between operating state and what
+the human sees.
+
+**The standing example:** the LLM-lifecycle watcher (the resident formerly of
+the "stable" — **that name is RETIRED going forward**): escalates when a
+provider retires an LLM; can roll all agents to prevent incidents; and will
+eventually **TEST the harness** — A/B test each graph for compliant/passing
+results. Real-world threat on record: a GPT model suddenly produced
+completely incorrect results **without** a noticed/released update — test
+harnesses are essential to catch silent model drift.
+
+**Rendering & language:** editors, graphs, and read views always
+professional and nicely rendered in formatted editors (the ascii/graph mix
+ends). JB is a massive graph believer: as running technology federates
+risks/threats/compute/data, **results must show graphs as part of assertion**
+— flow, relationships, origins. All wording, results, inputs, outputs
+**friendly and understandable by everyone, not just experts** — describe what
+is happening AND the outcome ("what happens when you say yes, in addition to
+how it happens"). A human's requested format is always honored.
+
+**THE LIFECYCLE LAW (the block's heart, JB's words):** when a human executes
+an action in the cockpit, they **see and feel the lifecycle of the request**.
+**Nothing runs in Orreth — scheduled, asked, required, reflexed — without a
+way to see what's in flight, completed (with the full docs/meta of that work
+reviewable), queued.** Soft small wording informs; the human never wonders
+what's going on. The named wound: today there is NO real lifecycle of
+events, no replays, no graph/result views — despite having the features —
+**"NO CONTINUITY IN OPERATIONS to the Felt Experience of the Kernel."**
+And continuity across pulls: **if something is updated in one pull, it
+reflects immediately, appropriately, everywhere in Orreth.**
+
+**Naming:** "stable" retired. The whole of the known config/deployment
+(currently "the rig") needs a plain, unthemed name — JB himself said
+"Orreth operating state"; Fable proposes adopting **the Operating State**.
+No themed phrases; every word for everyone.
+
+### Fable's additions to block 8 (offered in-session, pending JB)
+
+1. **The bottom pull is the missing lifecycle surface.** The mock already
+   says it: OBJECTIVES is the floor hatch — the foundation underfoot. Propose
+   the bottom pull = **Objectives/Operations**: the live band of everything
+   in flight, queued, completed, scheduled — the place the lifecycle law is
+   FELT — with every row a door that renders its result in place. This also
+   gives the V1 razor (fulfill/monitor/analytics/lifecycle an objective) its
+   home surface.
+2. **INBOX (left panel in the mock) = the awaiting-you pull.** L2/L3
+   confirms, MITL escalations, and resident proposals that arrive while the
+   human is away land as chat messages from the resident (one-chat law) AND
+   accumulate under the INBOX badge — nothing awaiting a human is ever only
+   a toast that scrolled away.
+3. **Allocation sharpening (Engineering vs Controls vs Workspaces):** same
+   artifacts, three lenses — **Engineering AUTHORS** (create/edit/impact),
+   **Controls CONFIGURES/ASSIGNS** (what's active where; kernel settings;
+   dials), **Workspaces works IN-GRAPH** (prototype/replay/tune in graph
+   context). P17 keeps the three agreeing instantly. Needs JB's confirm.
+4. **One aggregate schedule view** in Monitoring ("everything automated, one
+   view", filterable) alongside the per-resident law — at hundreds of agents
+   the human needs both lenses of the same records.
+5. **Every click has a sentence.** Generalize the chat-toggle equivalence:
+   anything clickable in the cockpit has a plain-words spoken equivalent,
+   and chat is the command palette of the whole bridge.
+6. **PULSE (top tab) = the universe's heartbeat** — proposal: the soft
+   status ribbon where journey text and soft completions breathe, feeding
+   the INBOX when something needs the human.
+
 ### Open questions ledger
 
 - ~~**Opt Out**~~ ANSWERED (block 5): declines observation/metering only;
@@ -290,6 +453,13 @@ skills for lesser minds" becomes MITL's factories feature.
 - **RTO verification**: declared RTO per agent/placement profile, verified by
   rehearsed kill-drills (the Testament matured into standing practice) — who
   runs the drill, and where does the human see the result?
+- **Block-8 additions awaiting JB**: bottom pull = Objectives/Operations
+  (the lifecycle band)? · INBOX = the awaiting-you pull? · the
+  Engineering/Controls/Workspaces lens split (author/configure/in-graph)? ·
+  aggregate schedule view in Monitoring? · PULSE = heartbeat ribbon? ·
+  "the Operating State" as the plain name for the rig?
+- **Chat includes list**: 'critic', 'gap analyzer', 'planner' named — what
+  else belongs on the top edge? (Fable to propose in charter distillation.)
 
 ### Principles Fable derives from session 1 (pending JB confirmation)
 
@@ -339,6 +509,32 @@ skills for lesser minds" becomes MITL's factories feature.
   authority. MITL — the specialist-of-Orreth (ontology + own brain + repo
   access + factories) — is summonable, possibly by a soft toggle, wherever
   governance or risk wants a master mind in the loop.
+- **P13 · Nothing runs unseen (the lifecycle law).** Nothing runs in Orreth —
+  scheduled, asked, required, reflexed — without a visible lifecycle: in
+  flight, queued, completed with full docs/meta reviewable. Soft small words
+  keep the human informed; the human never wonders. Operations and the felt
+  experience of the kernel are ONE continuity.
+- **P14 · One chat, every identity.** A single chat serves the whole
+  operating state: scope on its edges (residents right, universe/eco/field
+  left, includes top), typed words equal to every click, results returning
+  in-chat labeled by their producer, artifacts enlarging in place,
+  clear-display never erasing (recall stands). Every resident is chat-ready
+  by birthright.
+- **P15 · The bridge, not pages.** Login lands on the one landing page —
+  the framed main view onto the living universe; focus areas are themed
+  pulls that can become windows of their own; navigation does not exist.
+- **P16 · Every schedule lives in its runner.** Automation shows in the
+  resident that runs it — human-scheduled, role-scheduled, and
+  kernel-scheduled alike; residents may schedule their own intentions;
+  kernel-critical schedules are immutable (visible, never editable). CRUD on
+  a schedule is CRUD on the operating state.
+- **P17 · One state, many lenses.** A change made in any pull reflects
+  immediately and appropriately everywhere in Orreth.
+- **P18 · Professional surfaces, plain words.** Editors, graphs, and read
+  views always formatted and professional; results carry graphs as part of
+  assertion (flow, relationships, origins); every word understandable by
+  everyone — say what is happening AND what saying yes does; honor the
+  human's requested format.
 
 ### Architectural implications noted for later dives (not designed here)
 
@@ -388,6 +584,7 @@ rehearsed RTO. The human never sees the machinery — they feel its guarantees.
 
 ---
 
-*More narration coming — held next: UI fluidity/continuity · Human↔Agent ·
-the two-sided Resident Experience. Distillation into the Experience Charter
+*More narration coming — UI fluidity/continuity LANDED (block 8, session 2);
+still held: Human↔Agent · the two-sided Resident Experience (deep form) ·
+the agent/agent-on-behalf-of dive. Distillation into the Experience Charter
 happens when JB closes the dive.*
