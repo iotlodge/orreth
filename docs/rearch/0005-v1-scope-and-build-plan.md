@@ -112,8 +112,23 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   harmlessly; poison parked with reason + raw bytes. Suite 24 green; CI
   gains the events rail as a real Kafka service (SPINE_REQUIRE_KAFKA=1 —
   absence FAILS, never skips).
-- Next in phase 1: **sp3 — the Bridge feed v0** (one WS/SSE gateway
-  endpoint pushing request lifecycle, M6-lite).
+- **sp3 — the Bridge feed v0 (M6-lite)** ✅ **LANDED 2026-09-16**:
+  `bridgefeed.py` — the one place the glass connects. One SSE endpoint;
+  notices are POINTER-ONLY ({rev, kind, ref, message_id, at} — never
+  bodies, never broker credentials; the browser never touches a broker);
+  monotone revisions with a bounded ring; **gap repair rides SSE's own
+  Last-Event-ID** (close the laptop, facts land, reconnect — nothing
+  missed); a gap beyond the ring answers **`resync` honestly** instead of
+  pretending continuity; the gateway DECLARES its topics (a
+  subscribe-before-first-fact race found and cured in-hour). **Measured
+  end to end: commit → notice in the glass client in 124 ms** (bar: 1 s).
+  Suite 30 green. PHASE 1 — THE SPINE — IS WHOLE: ground → rail →
+  projection → the human's soft notice, every law tested on real
+  services in CI.
+- Next: **Phase 2 — THE RESIDENT SPEAKS** (the soul checkpoint): the
+  LangGraph resident template v0 + covenant policy + OrrethStore v0;
+  AG-1/M3 — a full reply, streamed, with tools, journey text, and the L2
+  interlock; the librarian tells JB the temperature outside.
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 
