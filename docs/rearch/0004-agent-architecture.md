@@ -1,10 +1,10 @@
 # 0004 — The Agent Architecture
 
-**Status: DRAFTED** — the AGENTS dive, designed against the locked
-Experience Charter (0001), Transport (0002), and Memory (0003). Awaiting
-JB's review. Two sections are **JB NARRATION SLOTS** — experience he named
-as his to describe (Human↔Agent · agent-on-behalf-of); they carry Fable's
-sketch only as a placeholder for his words.
+**Status: LOCKED — JB resolved both narration slots and approved
+2026-09-16** (Human↔Agent = the One Chat contract, already narrated;
+agent-on-behalf-of = attribution and traceability, chain design ratified,
+verified at testing as AG-7). Designed against the locked Experience
+Charter (0001), Transport (0002), and Memory (0003).
 
 ---
 
@@ -154,26 +154,38 @@ card that runs it.
 | **Why** | JB's direction: reuse of inventoried, versioned templates; the frontier mind crystallizes capability for the fleet; the self-delivery road. |
 | **When** | On demand (a human asks), on gap detection (MITL proposes — the human approves in chat), and eventually as the objective-driven loop matures. |
 
-## JB NARRATION SLOT — Human↔Agent
+## Human↔Agent — RESOLVED (JB, 2026-09-16: already covered)
 
-*Held for JB's words. Fable's placeholder sketch only:* the human speaks
-to every agent the same way (the One Chat contract); agents address the
-human only through the chat and its soft notices; an agent never initiates
-outside its standing duties or an active ask; tone laws — plain words,
-friendly, complete, the full reply always.
+JB confirmed the standing narration covers it: **the One Chat contract IS
+the Human↔Agent law.** The human speaks to every agent through the one
+chat — typed words equal to clicks, fan-out with role lenses, scope on
+the edges. Agents speak to the human only through the chat and its soft
+notices — results labeled by producer, journey text, interlocks
+in-thread. Every word plain, friendly, complete — the full reply, always.
+An agent never initiates toward the human outside its standing duties or
+an active ask.
 
-## JB NARRATION SLOT — agent on behalf of
+## Agent on behalf of — RESOLVED (JB, 2026-09-16): attribution is the point
 
-*Held for JB's words — this gates MITL toggle semantics and factory
-governance depth. Fable's placeholder sketch only:*
+JB's words, captured: when automation or a request is executed or created,
+**an attribute tells humans who created it and who requested it** —
+residents and agents 'request' on behalf of the original request; **graphs
+pass to graphs** as part of bigger planned requests; **traceability and
+handoffs must hold** when looking at metadata, audit, or compliance.
 
-- When agent B works because agent A asked (which asked because human H
-  asked), the envelope carries the **authority chain** `H → A → B`.
-- Metering and showback attribute to the origin; each hop's blast is
+The design (Fable's sketch, ratified by JB as "might already be covered
+naturally" — it now explicitly is):
+
+- Every envelope carries the **authority chain**: origin human → each
+  delegating identity in order (`H → A → B → …`). Created-by and
+  requested-by are always distinct, named attributes.
+- Metering and showback attribute to the **origin**; each hop's blast is
   bounded by the **narrowest scope in the chain**; delegation depth is a
   governed dial.
-- The journey shows the whole chain — the human can always see *why* an
-  agent is working, not just that it is.
+- The chain renders in the journey text, the record metadata, the audit
+  trail, and the compliance export — the human always sees *why* an agent
+  is working, not just that it is.
+- JB's testing marker honored as **proof AG-7** below.
 
 ## Proofs (the AGENTS roadmap)
 
@@ -194,12 +206,15 @@ governance depth. Fable's placeholder sketch only:*
 - **AG-6 The harness catches drift**: a deliberately degraded model
   assignment fails the scheduled A/B run and escalates through the chat
   before any human notices by hand.
+- **AG-7 The chain survives the handoff** (JB's marker): a planned request
+  that passes graph → graph → graph carries its authority chain end to
+  end — visible in the journey, the record metadata, the audit trail, and
+  the compliance export. A broken or truncated chain fails the suite.
 
 ## Explicitly open
 
-- The two narration slots above — JB's words replace the sketches.
-- MITL toggle semantics + factory governance depth (gated on the
-  agent-on-behalf-of narration).
+- MITL toggle semantics fine detail + factory governance depth — design
+  lands with the MITL build phase, inside the resolved on-behalf-of law.
 - Template schema v0 (the exact declaration shape) — lands with the first
   build spoonful, through the factories.
 - Whether the scheduler is a kernel organ or a duty of a standing resident
