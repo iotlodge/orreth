@@ -1,9 +1,11 @@
 # The Experience Deep Dive — capture
 
-**Status:** LIVE CAPTURE — JB narrating, Fable capturing. This working document
-accumulates the narration faithfully and will be distilled into the new canon's
-0001 (the Experience Charter) when the dive completes. Nothing here is final
-until JB confirms the read-back.
+**Status:** NARRATION PAUSED 2026-09-16 (JB: "until we experience after
+build, that's all I can recall now") — **DISTILLED into
+[`0001-experience-charter.md`](0001-experience-charter.md)**, which is the
+document under JB's review. This capture remains the raw record; held
+blocks (Human↔Agent · two-sided Resident deep form · agent-on-behalf-of)
+reopen it when JB is ready.
 
 **Context:** the 2026-09-14 halt and hard refactor. Order of the rearchitecture:
 1. EXPERIENCE → 2. TRANSPORT → 3. AGENTS. The experience defines what the
