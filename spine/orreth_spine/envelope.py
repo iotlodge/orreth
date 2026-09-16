@@ -40,9 +40,13 @@ def now_iso() -> str:
 
 def make_envelope(*, kind: str, type: str, universe_id: str, scope_path: str,
                   payload: dict, correlation_id: str | None = None,
-                  authority_chain: list[str] | None = None) -> dict:
+                  authority_chain: list[str] | None = None,
+                  aggregate: dict | None = None) -> dict:
     """Mint one envelope. The message id is globally unique and immutable
-    (commands wear cmd_, events wear msg_); everything else is plain data."""
+    (commands wear cmd_, events wear msg_); everything else is plain data.
+    `aggregate` ({type, id, sequence}) names the one thing whose order
+    matters — sequences are monotonic PER AGGREGATE, never globally
+    (canon 0002: there is no useful global order)."""
     if kind not in KINDS:
         raise ValueError(f"message_kind must be one of {KINDS}, not {kind!r}")
     env = {
@@ -60,6 +64,8 @@ def make_envelope(*, kind: str, type: str, universe_id: str, scope_path: str,
         env["correlation_id"] = correlation_id
     if authority_chain:
         env["authority_chain"] = list(authority_chain)
+    if aggregate:
+        env["aggregate"] = dict(aggregate)
     return env
 
 

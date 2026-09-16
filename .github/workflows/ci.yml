@@ -20,8 +20,24 @@ jobs:
           uv run pytest -q
 
   spine:
-    name: spine envelope laws (rearch line)
+    name: spine laws — envelope + M1 durability boundary (rearch line)
     runs-on: ubuntu-latest
+    services:
+      ground:
+        image: postgres:16
+        env:
+          POSTGRES_USER: orreth
+          POSTGRES_PASSWORD: orreth-dev
+          POSTGRES_DB: spine
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U orreth -d spine"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      SPINE_PG: postgresql://orreth:orreth-dev@localhost:5433/spine
+      SPINE_REQUIRE_PG: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5

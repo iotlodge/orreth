@@ -84,6 +84,29 @@ bar: *a resident actually chats — tools included, the full reply, streamed
 
 ## Phase 0, sliced (the immediate work)
 
+## Phase 1, sliced (opened 2026-09-16)
+
+- **sp1 — the durability boundary (M1)** ✅ **LANDED 2026-09-16**:
+  `orreth_spine/outbox.py` + `inbox.py` — state and publish-intent commit
+  in ONE transaction (no state without its event, no event without its
+  state); the relay is at-least-once with the crash-between-publish-and-
+  mark window proven harmless; the inbox makes effects ONCE (5 deliveries
+  → 1 counter move, duplicates confessed by the meter); aggregate
+  ordering per aggregate with **gaps refusing to guess** (GapDetected
+  names expected vs got); the outbox budget refuses BY NAME (backpressure
+  honest); success never depends on the sink. The envelope grew its
+  optional `aggregate` {type,id,sequence}. **The whole SOL M1 fault
+  schedule runs as deterministic tests — 20 green in 0.22 s** — and CI's
+  spine job now stands up a real Postgres service (SPINE_REQUIRE_PG=1: a
+  missing ground FAILS, never silently skips). M1's stop-condition
+  honored: no distributed transaction anywhere.
+- Next in phase 1: **sp2 — the events shadow** (the relay grows a
+  KafkaSink; committed facts flow ground → events rail with replay
+  parity, M4-lite) · **sp3 — the Bridge feed v0** (one WS/SSE gateway
+  endpoint pushing request lifecycle, M6-lite).
+
+## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
+
 - **sp1 — the new rig breathes** ✅ **LANDED 2026-09-16**: `spine/` is the
   new line's home — compose rig (postgres:16 on 5433 · rabbitmq:3.13 ·
   apache/kafka:3.9.1 KRaft), the orreth.transport/1 envelope v0 (canonical

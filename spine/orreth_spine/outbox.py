@@ -1,0 +1,138 @@
+# PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P1 sp1, the durability boundary (M1) · 2026-09-16
+"""The transactional outbox and its relay (canon 0002, law 2).
+
+Domain state and the intent to publish commit in ONE Postgres
+transaction: a committed row can never lack its event, a rolled-back row
+can never emit one, and the human-visible success depends only on the
+commit — never on a broker. The relay publishes after the fact,
+at-least-once: a crash between publish and mark simply publishes again,
+and the stable message id makes the duplicate harmless downstream.
+
+Backpressure is explicit: when the unpublished backlog reaches the
+declared budget, new writes refuse BY NAME instead of silently growing
+(canon 0002: bounded outbox budget, honest refusal).
+"""
+from __future__ import annotations
+
+import time
+
+
+class OutboxBudgetExceeded(RuntimeError):
+    """The unpublished backlog reached its declared budget — the write is
+    refused honestly rather than the backlog growing without bound."""
+
+
+def ensure_schema(conn) -> None:
+    with conn.transaction():
+        cur = conn.cursor()
+        cur.execute(
+            "CREATE TABLE IF NOT EXISTS spine_outbox ("
+            " outbox_id bigserial PRIMARY KEY,"
+            " message_id text NOT NULL UNIQUE,"
+            " body bytea NOT NULL,"
+            " committed_at timestamptz NOT NULL DEFAULT now(),"
+            " published_at timestamptz,"
+            " publish_attempts int NOT NULL DEFAULT 0)")
+        # the heartbeat's earlier, poorer table grows the missing columns
+        cur.execute("ALTER TABLE spine_outbox ADD COLUMN IF NOT EXISTS"
+                    " committed_at timestamptz NOT NULL DEFAULT now()")
+        cur.execute("ALTER TABLE spine_outbox ADD COLUMN IF NOT EXISTS"
+                    " publish_attempts int NOT NULL DEFAULT 0")
+
+
+def commit_with_outbox(conn, raw: bytes, message_id: str,
+                       domain=None, *, budget: int | None = None) -> None:
+    """One transaction: the caller's domain writes (`domain(cur)`) plus the
+    outbox row. Any failure inside rolls back BOTH — there is no state
+    without its event and no event without its state."""
+    with conn.transaction():
+        cur = conn.cursor()
+        if budget is not None:
+            cur.execute("SELECT count(*) FROM spine_outbox"
+                        " WHERE published_at IS NULL")
+            pending = cur.fetchone()[0]
+            if pending >= budget:
+                raise OutboxBudgetExceeded(
+                    f"the outbox holds {pending} unpublished rows — the "
+                    f"declared budget is {budget}; publish (or raise the "
+                    f"budget) before writing more")
+        if domain is not None:
+            domain(cur)
+        cur.execute("INSERT INTO spine_outbox (message_id, body)"
+                    " VALUES (%s, %s)", (message_id, raw))
+
+
+def outbox_lag(conn) -> dict:
+    """The honest meter: how many rows await publish, and how old the
+    oldest one is (now - committed_at) in seconds."""
+    cur = conn.cursor()
+    cur.execute("SELECT count(*),"
+                " extract(epoch FROM (now() - min(committed_at)))"
+                " FROM spine_outbox WHERE published_at IS NULL")
+    n, age = cur.fetchone()
+    return {"pending": n, "oldest_age_s": float(age) if age is not None else None}
+
+
+class MemorySink:
+    """The test sink: remembers every publish; can be told to fail before
+    accepting (broker down) or after accepting (crash before mark) —
+    the fault schedule's two relay deaths, deterministic."""
+
+    def __init__(self, fail_before: int = 0, fail_after: int = 0):
+        self.published: list[tuple[str, bytes]] = []
+        self._fail_before = fail_before
+        self._fail_after = fail_after
+
+    def publish(self, message_id: str, body: bytes) -> None:
+        if self._fail_before > 0:
+            self._fail_before -= 1
+            raise ConnectionError("sink refused before accepting (injected)")
+        self.published.append((message_id, body))
+        if self._fail_after > 0:
+            self._fail_after -= 1
+            raise ConnectionError("sink crashed after accepting (injected)")
+
+
+def relay_once(conn, sink, batch: int = 100) -> dict:
+    """Claim unpublished rows oldest-first and publish each. A publish
+    failure records the attempt and stops the batch (the broker is likely
+    down); the row stays unpublished and will be retried — at-least-once,
+    never at-most-once."""
+    cur = conn.cursor()
+    cur.execute("SELECT outbox_id, message_id, body FROM spine_outbox"
+                " WHERE published_at IS NULL ORDER BY outbox_id"
+                " LIMIT %s FOR UPDATE SKIP LOCKED", (batch,))
+    rows = cur.fetchall()
+    conn.commit()
+    published = attempts = 0
+    for outbox_id, message_id, body in rows:
+        attempts += 1
+        try:
+            sink.publish(message_id, bytes(body))
+        except Exception:
+            with conn.transaction():
+                conn.cursor().execute(
+                    "UPDATE spine_outbox SET publish_attempts ="
+                    " publish_attempts + 1 WHERE outbox_id = %s", (outbox_id,))
+            break
+        with conn.transaction():
+            conn.cursor().execute(
+                "UPDATE spine_outbox SET published_at = now(),"
+                " publish_attempts = publish_attempts + 1"
+                " WHERE outbox_id = %s", (outbox_id,))
+        published += 1
+    return {"published": published, "attempts": attempts,
+            "remaining": len(rows) - published}
+
+
+def drain(conn, sink, deadline_s: float = 10.0) -> int:
+    """Relay until nothing is pending or the deadline passes; returns how
+    many were published. A convenience for tests and dev, not a service."""
+    total = 0
+    end = time.monotonic() + deadline_s
+    while time.monotonic() < end:
+        out = relay_once(conn, sink)
+        total += out["published"]
+        if out["remaining"] == 0 and outbox_lag(conn)["pending"] == 0:
+            break
+    return total

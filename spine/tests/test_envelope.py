@@ -68,6 +68,13 @@ def test_authority_chain_keeps_its_order():
     assert ev.decode(ev.encode(env))["authority_chain"] == chain
 
 
+def test_aggregate_rides_the_wire_intact():
+    env = _mint(aggregate={"type": "counter", "id": "c1", "sequence": 7})
+    back = ev.decode(ev.encode(env))
+    assert back["aggregate"] == {"type": "counter", "id": "c1", "sequence": 7}
+    assert "aggregate" not in _mint()  # optional: absent unless declared
+
+
 def test_message_ids_are_unique():
     assert len({_mint()["message_id"] for _ in range(200)}) == 200
 
