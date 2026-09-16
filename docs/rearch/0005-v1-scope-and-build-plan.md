@@ -84,9 +84,19 @@ bar: *a resident actually chats — tools included, the full reply, streamed
 
 ## Phase 0, sliced (the immediate work)
 
-- **sp1 — the new rig breathes**: dev compose with Postgres + RabbitMQ +
-  Kafka + the service skeleton; one heartbeat through each rail; CI on the
-  rearch line.
+- **sp1 — the new rig breathes** ✅ **LANDED 2026-09-16**: `spine/` is the
+  new line's home — compose rig (postgres:16 on 5433 · rabbitmq:3.13 ·
+  apache/kafka:3.9.1 KRaft), the orreth.transport/1 envelope v0 (canonical
+  bytes · content hash · required-fields refusal by name · the authority
+  chain riding in order — AG-7's attribute born in the very first
+  message), and the heartbeat proof: one envelope through each rail, bytes
+  exact. **Measured warm: ground 21 ms · invoke 16 ms · events 215 ms**
+  (Kafka's figure includes a fresh consumer-group join per run; standing
+  consumers sit far lower) — against the old world's ask p50 of 1,300 ms.
+  The ground writes heartbeat + outbox in ONE transaction from the first
+  breath (0002's law, never retrofitted). Nine envelope laws in
+  `spine/tests/`; CI now runs the rearch line (`rearch/**` push + spine
+  job).
 - **sp2 — the old world measured (M0)**: baseline the polling rig's
   latencies/amplification — the numbers the new spine must beat.
 - **sp3 — the playwright agent chartered**: its charter, first experience

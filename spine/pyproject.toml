@@ -1,0 +1,21 @@
+# PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P0 sp1, the rig breathes · 2026-09-16
+[project]
+name = "orreth-spine"
+version = "0.0.1"
+description = "The new line's transport spine: the shared envelope and one breath through each rail."
+requires-python = ">=3.11"
+dependencies = [
+    "psycopg[binary]>=3.2",
+    "pika>=1.3",
+    "confluent-kafka>=2.6",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["orreth_spine"]

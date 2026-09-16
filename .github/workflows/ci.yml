@@ -2,7 +2,7 @@
 name: conformance
 on:
   push:
-    branches: [main]
+    branches: [main, "rearch/**"]
   pull_request:
 
 jobs:
@@ -17,6 +17,18 @@ jobs:
         run: |
           uv venv
           uv pip install -e ".[dev]"
+          uv run pytest -q
+
+  spine:
+    name: spine envelope laws (rearch line)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: install + test
+        working-directory: spine
+        run: |
+          uv sync
           uv run pytest -q
 
   plane:
