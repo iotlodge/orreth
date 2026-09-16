@@ -430,6 +430,40 @@ No themed phrases; every word for everyone.
    status ribbon where journey text and soft completions breathe, feeding
    the INBOX when something needs the human.
 
+### Narration block 9 — corrections and locks on block 8
+
+**Fable's addition #2 CORRECTED (JB caught the conflict):** L2 approval lives
+**in the chat window itself** ("are you sure…", cancel default) — as declared
+in block 7 — never in a separate INBOX surface. Reconciled: approvals happen
+in chat, full stop; anything awaiting the human arrives as a chat message
+with the interlock inline. The mock's INBOX door survives at most as a
+**badge/counter that points INTO chat threads awaiting response** — a
+pointer, never a second place where approvals live.
+
+**Naming LOCKED:** the whole of the known config/deployment = **the
+Operating State** (JB: yes). Framing: **the kernel is reflective of an OS
+kernel** — Orreth kernel :: OS kernel, the Operating State :: the running
+system, the bridge and its pulls :: the shell the human inhabits.
+
+**Multi-select residents = FAN-OUT (new spec, JB's clarification):**
+selecting more than one resident in the chat sends the **same request to
+each**. Example: ask the security architect AND the identity architect to
+check on something — **each applies its own role lens**. The human can
+**download each distinct result**, and can also **ask the chat to summarize
+the results together**. The Operating State must keep this experience
+correct and fluid with **how the human wants to collect results** — distinct
+or synthesized, their choice, in the one chat.
+
+**Pulls merged (JB accepting the overlap):** Engineering + Workspaces become
+one pull — working name **Workspace Engineering** — with allocation INSIDE
+the pull delegated to Fable/us. Proposed internal views (Fable, pending JB):
+**Author** (agents/prompts/policies/skills · factories · the MITL impact
+door) · **Graph Studio** (prototype, watch, replay, tune-in-graph) ·
+artifacts flow freely between the two views, and Controls remains the
+separate configure/assign pull. The bridge now carries **seven pulls**:
+Chat · Workspace Engineering · Monitoring · Gateways · Tools · Controls ·
+Crew (+ the Objectives/Operations floor hatch, pending JB).
+
 ### Open questions ledger
 
 - ~~**Opt Out**~~ ANSWERED (block 5): declines observation/metering only;
@@ -453,11 +487,13 @@ No themed phrases; every word for everyone.
 - **RTO verification**: declared RTO per agent/placement profile, verified by
   rehearsed kill-drills (the Testament matured into standing practice) — who
   runs the drill, and where does the human see the result?
-- **Block-8 additions awaiting JB**: bottom pull = Objectives/Operations
-  (the lifecycle band)? · INBOX = the awaiting-you pull? · the
-  Engineering/Controls/Workspaces lens split (author/configure/in-graph)? ·
-  aggregate schedule view in Monitoring? · PULSE = heartbeat ribbon? ·
-  "the Operating State" as the plain name for the rig?
+- **Block-8 additions — block 9 outcomes**: ~~INBOX as awaiting-you pull~~
+  CORRECTED (L2 lives in chat; INBOX at most a badge into chat) ·
+  ~~lens split~~ RESOLVED (pulls merged: Workspace Engineering; internal
+  allocation delegated to Fable) · ~~Operating State name~~ LOCKED (yes; and
+  kernel :: OS kernel framing). STILL OPEN: bottom pull =
+  Objectives/Operations lifecycle band? · aggregate schedule view in
+  Monitoring? · PULSE = heartbeat ribbon? · "every click has a sentence"?
 - **Chat includes list**: 'critic', 'gap analyzer', 'planner' named — what
   else belongs on the top edge? (Fable to propose in charter distillation.)
 
@@ -515,11 +551,15 @@ No themed phrases; every word for everyone.
   keep the human informed; the human never wonders. Operations and the felt
   experience of the kernel are ONE continuity.
 - **P14 · One chat, every identity.** A single chat serves the whole
-  operating state: scope on its edges (residents right, universe/eco/field
+  Operating State: scope on its edges (residents right, universe/eco/field
   left, includes top), typed words equal to every click, results returning
   in-chat labeled by their producer, artifacts enlarging in place,
   clear-display never erasing (recall stands). Every resident is chat-ready
-  by birthright.
+  by birthright. **Multi-select fans out**: the same request goes to each
+  selected resident, each answers through its own role lens, results stay
+  distinct (each downloadable) unless the human asks the chat to summarize
+  them together — the human chooses how results are collected. Everything
+  awaiting the human — L2/L3 confirms included — arrives IN the chat.
 - **P15 · The bridge, not pages.** Login lands on the one landing page —
   the framed main view onto the living universe; focus areas are themed
   pulls that can become windows of their own; navigation does not exist.
