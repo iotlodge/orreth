@@ -26,6 +26,39 @@ So: **four memories, one truth.** Three of the four are projections over
 the signed log — rebuildable, never a second truth (the standing law:
 projections over one signed log, never N truths).
 
+## The picture
+
+```mermaid
+flowchart TB
+    HUMAN["Human at the Bridge"]
+    AGENT["Resident / Agent<br/>(LangGraph graph)"]
+    WORK["WORKING MEMORY<br/>checkpointer: graph position,<br/>messages, unresolved commitments"]
+
+    subgraph TRUTH["THE TRUTH"]
+        LOG[("THE RECORD — the signed log<br/>every word · signed · scoped ·<br/>content-addressed · forever")]
+    end
+
+    subgraph PROJ["Projections — honest, rebuildable accelerations"]
+        UND["UNDERSTANDING<br/>embeddings + temporal<br/>entity/relationship graph"]
+        DIG["THE DIGEST<br/>episode summaries + profile<br/>distillations, citing sources"]
+    end
+
+    AGENT <-->|"checkpoint / resume<br/>at any hop"| WORK
+    AGENT -->|"outcomes commit<br/>through governed doors"| LOG
+    LOG -->|"events after commit<br/>(the Events rail)"| UND
+    LOG -->|"episode boundaries"| DIG
+    UND -->|"meaning + time<br/>shaped recall"| AGENT
+    DIG -->|"compact context"| AGENT
+    DIG -.->|"every digest cites<br/>its source records"| LOG
+    HUMAN <-->|"verbatim recall:<br/>by ref · by ask · by timeframe"| LOG
+    HUMAN -.->|"sees + adjusts<br/>their profile digest"| DIG
+```
+
+The arrows carry no authority: every read and write crosses a governed
+door with current identity and capability. If a projection burned down
+tonight, tomorrow it is rebuilt from the log and nothing is lost — that
+property is what makes the accelerations honest.
+
 ## The four memories
 
 | Memory | Plain words | Mechanism | Truth? |
@@ -36,6 +69,13 @@ projections over one signed log, never N truths).
 | **The Digest** | "the short version" | Compressed summaries at episode boundaries, always citing sources | Projection |
 
 ### 1. Working memory
+
+| | |
+|---|---|
+| **What** | The agent's live state: graph position, messages in flight, pending work, unresolved commitments — the mind mid-thought. |
+| **How** | The LangGraph checkpointer, Postgres-backed, namespaced per agent identity; thread id = the conversation worldline or objective run. |
+| **Why** | So a 500–1000-hop objective survives any crash, restart, or pause and resumes *exactly* — and so each model call stays inside a useful context budget. |
+| **When** | Written at every hop; read at resume and at every model call; compacted at episode boundaries; retained for the life of the thread — but never the truth of anything. |
 
 - The checkpointer holds graph position, messages, pending work — so a
   500–1000-hop objective **resumes exactly** after crash, restart, or
@@ -48,6 +88,13 @@ projections over one signed log, never N truths).
   model's context stays inside budget while the thread lives for months.
 
 ### 2. The Record — verbatim memory, the charter's hard promise
+
+| | |
+|---|---|
+| **What** | Every word ever acquired, said, produced, or decided — full replies, conversation worldlines, sources, outcomes — with provenance on each. |
+| **How** | Signed, scoped, content-addressed records written through governed doors; immutable; lineage-chained (a correction is a sibling, never an overwrite). |
+| **Why** | The charter's promise: residents never forget, and a human can recall *every single word* that was acquired for them. Provenance is what makes recall trustworthy, not just possible. |
+| **When** | Written at every durable outcome and acquisition, at the moment it happens; read on any recall — by ref, by ask, by timeframe; expires never; leaves only by governed purge. |
 
 - **Verbatim recall is a guaranteed operation.** Every acquired word,
   every full reply, every conversation worldline is recallable
@@ -62,6 +109,13 @@ projections over one signed log, never N truths).
 
 ### 3. Understanding — semantic memory
 
+| | |
+|---|---|
+| **What** | What the record *means*: embeddings for similarity, entities and relationships for structure, validity intervals for time. |
+| **How** | Projections built by Events-rail consumers after commit; vectors wear their embedding model; the temporal graph derives from record timestamps + lineage. Graphiti is a candidate engine, never a truth-holder. |
+| **Why** | Verbatim answers "what exactly was said"; Understanding answers "what do we know about X" and "what was true then vs now" — the recall shapes a conversation actually needs. |
+| **When** | Built asynchronously within seconds of commit (lag honestly reported until indexed); read at every semantic recall and context pack; rebuilt from the log whenever needed. |
+
 - Embeddings and an entity/relationship projection over the log; **vectors
   wear their model** (the standing embedding-truth law).
 - **Temporal honesty comes nearly free**: records are immutable,
@@ -72,6 +126,13 @@ projections over one signed log, never N truths).
   is rebuildable from the log and holds no independent truth.
 
 ### 4. The Digest — compression (JB's addition)
+
+| | |
+|---|---|
+| **What** | The short version: episode summaries, task recaps, profile distillations — each citing the records it compresses. |
+| **How** | Background Events-rail consumers write digests at episode/task boundaries (stable event ids ⇒ retries never duplicate); digests are records too — signed, scoped, rebuildable. |
+| **Why** | JB's compression requirement: context cost must stay bounded as history grows for years. A resident with a decade of memory still packs its mind in milliseconds — without ever losing a word beneath. |
+| **When** | Written when an episode or task closes and when a profile learns; read at every context pack ("the short version first"); the verbatim opens on demand; rebuilt from the log at any time. |
 
 The pattern is the one Fable itself runs on: **compact the working view,
 keep the full transcript.**
@@ -87,6 +148,33 @@ keep the full transcript.**
 - Profile distillation (what the human likes, how they work) is a digest
   family written to the human's profile — visible and adjustable by them.
 
+## How a word becomes memory — the write path
+
+```mermaid
+sequenceDiagram
+    participant A as Agent (LangGraph node)
+    participant D as Governed door
+    participant P as Postgres (log + outbox, ONE tx)
+    participant E as Events rail (Kafka)
+    participant U as Understanding builder
+    participant G as Digest builder
+    participant B as Bridge feed
+
+    A->>D: commit outcome / acquired words
+    D->>D: verify identity · capability · scope · sign
+    D->>P: record + outbox row (one transaction)
+    P-->>A: durable — the word can never be lost now
+    P->>E: relay publishes pointer-only event
+    E->>U: index it (embeddings, entities, time)
+    E->>G: at episode close: digest it (citing sources)
+    E->>B: soft notice — the human sees it landed
+    Note over U,G: asynchronous, seconds behind,<br/>honestly reported until indexed —<br/>and always rebuildable from the log
+```
+
+**Why this order matters:** the human-facing success depends only on the
+signed commit — never on a broker or an index. Everything downstream is
+acceleration that can lag or die and be rebuilt, with zero words at risk.
+
 ## Packing the mind — context assembly
 
 When an agent begins or continues work it packs, in priority order, within
@@ -95,6 +183,28 @@ commitments → the relevant digests → semantic hits → verbatim excerpts on
 demand. Hot digests are cached; the pack must meet the charter's
 sub-second feel. **This is where compression pays**: context cost stays
 bounded as history grows for years.
+
+```mermaid
+flowchart LR
+    ASK["Ask arrives<br/>(scope + timeframe ride it)"] --> PACK
+    subgraph PACK["Pack the mind — priority order, inside the token budget"]
+        direction TB
+        P1["1 · persona + profile<br/>(who am I, who is this human)"]
+        P2["2 · working state<br/>(what I owe, where I was)"]
+        P3["3 · relevant digests<br/>(the short version of history)"]
+        P4["4 · semantic hits<br/>(meaning-shaped recall, scoped)"]
+        P5["5 · verbatim excerpts<br/>(exact words, on demand only)"]
+        P1 --> P2 --> P3 --> P4 --> P5
+    end
+    PACK -->|"&lt; 300 ms hot"| MODEL["Model call —<br/>first token &lt; 1 s"]
+    P3 -.->|"cites"| LOG[("the signed log")]
+    P4 -.->|"projects"| LOG
+    P5 -->|"reads"| LOG
+```
+
+**When the budget runs out, the digest wins and the verbatim waits** — the
+answer says so honestly, and every compressed claim keeps its door to the
+exact words. The budget bounds cost; it never bounds recall.
 
 ## The LangGraph seam
 
@@ -125,6 +235,29 @@ bounded as history grows for years.
 | Letta / MemFS | Reference architecture only (a second runtime) |
 | Deep Agents file memory | The instinct is right, but Orreth already has governed procedural memory: **skills/prompts/playbooks are craft artifacts** on the shelf, versioned — not loose files |
 | Cognee / MemOS / EverOS / A-MEM | Watch list; nothing they hold that the log + projections cannot |
+
+## The lifecycle — quarantine, purge, and what never happens
+
+```mermaid
+flowchart TB
+    subgraph NORMAL["Normal state"]
+        R[("records + projections<br/>observed · metered · governed")]
+    end
+    subgraph OPTOUT["Opt Out state (P11)"]
+        Q[("quarantined records<br/>unobserved · unmetered ·<br/>STILL GOVERNED")]
+    end
+    CLEAR["Human clears the chat display"] -->|"touches NOTHING —<br/>a view reset only"| R
+    R -->|"identity enters Opt Out<br/>(human's act)"| OPTOUT
+    OPTOUT -->|"opt back in (human's act,<br/>honest disclosure shown)"| NORMAL
+    Q -.->|"NEVER imported —<br/>stays inside the state forever"| R
+    PURGE["Governed purge<br/>(escalated approval — policy open)"] ==>|"cascades to record +<br/>embeddings + digests + caches"| GONE["verifiably gone,<br/>everywhere at once"]
+    R --> PURGE
+```
+
+**What never happens:** a display clear that erases · a projection that
+outlives its purged source · an opt-out word that leaks in on opt-in · a
+silent forgetting of any kind. Forgetting in Orreth is either impossible
+or governed — nothing in between.
 
 ## Who remembers what
 
