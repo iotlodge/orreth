@@ -1,9 +1,9 @@
 # 0003 — The Memory Architecture
 
-**Status: DRAFTED** — the memory revamp JB licensed ("you also get to revamp
-the memory architecture as you see fit to aid the experience"), designed
-against the locked Experience Charter (0001) and Transport Architecture
-(0002). Awaiting JB's review.
+**Status: LOCKED — JB approved 2026-09-16** ("Very nice document… I like
+it", Redis stance endorsed: has a place but needs justification which
+warrants the overhead). The memory revamp JB licensed, designed against
+the locked Experience Charter (0001) and Transport Architecture (0002).
 
 **Input honored:** JB's research aid `tmp/agent-memory-architectures-
 langgraph.md` (2026-09-16, eleven candidate systems) — its layering model
