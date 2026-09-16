@@ -20,9 +20,20 @@ jobs:
           uv run pytest -q
 
   spine:
-    name: spine laws — envelope + M1 durability boundary (rearch line)
+    name: spine laws — all rails (rearch line)
     runs-on: ubuntu-latest
     services:
+      invoke:
+        image: rabbitmq:3.13
+        env:
+          RABBITMQ_DEFAULT_USER: orreth
+          RABBITMQ_DEFAULT_PASS: orreth-dev
+        ports: ["5672:5672"]
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
       ground:
         image: postgres:16
         env:
