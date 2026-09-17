@@ -68,6 +68,23 @@ def publish_command(env: dict, rabbit_url: str | None = None) -> None:
         rc.close()
 
 
+def confirm_ask(conn, ask_id: str, *, approve: bool,
+                person: str = "did:orreth:person:jb",
+                rabbit_url: str | None = None) -> None:
+    """The human's click at the interlock (canon 0001 L2): only an
+    explicit approve releases the act — anything else, including
+    silence, is a cancel. The decision is a command wearing the human's
+    own authority."""
+    from .resident import CONFIRM_CMD
+    e = ev.make_envelope(
+        kind="command", type=CONFIRM_CMD, universe_id="u:dev",
+        scope_path="u:dev",
+        payload={"ref": ask_id, "hash": "sha256:-",
+                 "approved": bool(approve)},
+        correlation_id=ask_id, authority_chain=[person])
+    publish_command(e, rabbit_url)
+
+
 def _command_for(event_env: dict) -> dict:
     return ev.make_envelope(
         kind="command", type="orreth.resident.serve.v1",

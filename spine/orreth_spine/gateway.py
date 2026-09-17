@@ -52,6 +52,42 @@ class AnthropicGateway:
                 (did, m, msg.usage.input_tokens, msg.usage.output_tokens))
         return text
 
+    def think_acting(self, conn, *, did: str, system: str, prompt: str,
+                     door, model: str | None = None, max_tokens: int = 1024,
+                     max_rounds: int = 3) -> tuple[str, list[str]]:
+        """The acting mind: the model may use the door's DECLARED tools;
+        every tool call goes through the door (journaled, interlocked),
+        every model round through the meter. Returns (reply, act_notes).
+        A ConsequentialHold propagates — the resident owns the L2 path."""
+        from .tools import ConsequentialHold  # noqa: F401 (re-raise passes)
+        m = model or self.DEFAULT_MODEL
+        messages = [{"role": "user", "content": prompt}]
+        notes: list[str] = []
+        for _round in range(max_rounds):
+            msg = self._client.messages.create(
+                model=m, max_tokens=max_tokens, system=system,
+                tools=door.schemas(), messages=messages)
+            with conn.transaction():
+                conn.cursor().execute(
+                    "INSERT INTO spine_meter (did, model, tokens_in,"
+                    " tokens_out) VALUES (%s, %s, %s, %s)",
+                    (did, m, msg.usage.input_tokens, msg.usage.output_tokens))
+            if msg.stop_reason != "tool_use":
+                return ("".join(b.text for b in msg.content
+                                if b.type == "text"), notes)
+            messages.append({"role": "assistant", "content": msg.content})
+            results = []
+            for b in msg.content:
+                if b.type != "tool_use":
+                    continue
+                result = door.call(b.name, dict(b.input))   # holds propagate
+                notes.append(f"used the {b.name} tool through the door")
+                results.append({"type": "tool_result",
+                                "tool_use_id": b.id, "content": result})
+            messages.append({"role": "user", "content": results})
+        return ("I ran out of thinking rounds before finishing — "
+                "that honesty beats a guess.", notes)
+
 
 class FakeGateway:
     """The test lane: deterministic thoughts, REAL meter lines — the
@@ -72,6 +108,34 @@ class FakeGateway:
                 (did, model or "fake-mind", len(prompt.split()),
                  len(self.reply.split())))
         return self.reply
+
+
+class FakeActingGateway:
+    """The test lane for the acting mind: a scripted sequence of acts —
+    ("tool", name, args) steps go through the REAL door (so capability,
+    journaling, and interlock laws are exercised), then a ("text", ...)
+    step answers, with {result} carrying the last tool result."""
+
+    def __init__(self, script: list[tuple]):
+        self.script = script
+
+    def think_acting(self, conn, *, did: str, system: str, prompt: str,
+                     door, model: str | None = None, max_tokens: int = 1024,
+                     max_rounds: int = 3) -> tuple[str, list[str]]:
+        ensure_schema(conn)
+        with conn.transaction():
+            conn.cursor().execute(
+                "INSERT INTO spine_meter (did, model, tokens_in, tokens_out)"
+                " VALUES (%s, %s, %s, %s)",
+                (did, model or "fake-acting-mind", len(prompt.split()), 12))
+        notes, last = [], ""
+        for step in self.script:
+            if step[0] == "tool":
+                last = door.call(step[1], step[2])       # holds propagate
+                notes.append(f"used the {step[1]} tool through the door")
+            else:
+                return (step[1].replace("{result}", last), notes)
+        return ("the script ended without words", notes)
 
 
 def meter_lines(conn, did: str) -> list[tuple]:

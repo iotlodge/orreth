@@ -166,9 +166,27 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   pointer-only law forbids content in notices, and the lawful design
   (delta rows on ground + pointer notices) waits for a glass to stream
   INTO.
-- Next: **sp3 — tools + the temperature outside** (the soul checkpoint
-  walked live: a real tool through a governed door, journey text, the
-  L2 interlock — and the librarian tells JB the temperature).
+- **sp3 — THE SOUL CHECKPOINT** ✅ **LANDED 2026-09-16, PHASE 2 WHOLE**:
+  `tools.py` — the governed tool door (a template DECLARES its tools or
+  the door refuses WITH a teaching; the mind never even sees an
+  undeclared tool; every call journaled: who, what, when, ok); the
+  acting mind (`gateway.think_acting` — a real Anthropic tool-use loop,
+  every round metered, every act through the door); **the L2 interlock
+  mechanically real**: a consequential act HOLDS (`awaiting-confirm`,
+  the "Are you sure… cancel is the default" reply, a confirm.needed
+  event, the act provably NEVER ran), a deliberate yes releases it
+  through the door ("Done, on your word"), anything else cancels — both
+  paths proven end to end over the rails. Two wounds in-hour: the
+  Exception.args collision (Python's base Exception OVERWRITES `.args`
+  — the held tool-args became a list; renamed `tool_args`) and the
+  clarifying-question dodge (the mind asked "where are you?" instead of
+  using the tool's default — cured in the tool's own words: "call with
+  NO arguments… never ask the human where they are first").
+  **THE LIVE WALK: "What's the temperature outside?" → "Right now it's
+  62.8°F outside where you are, though it feels a touch warmer at about
+  63.5°F. A pleasant enough day, I'd say." — the weather tool journaled
+  ✓, 860 in / 43 out metered, the full road.** The sentence that started
+  the halt is a passing test. Suite 45 green.
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 
