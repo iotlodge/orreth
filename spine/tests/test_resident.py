@@ -60,7 +60,18 @@ def _purge_queue():
     rc.close()
 
 
-def _serve_until_replied(pg, r, ask_id, deadline_s=30.0):
+def _dispatch(pg, **kw):
+    """A FRESH group per call: reusing a group means every call waits on
+    the previous member's departure (slow leaves stall the join); a
+    fresh group joins once, replays the topic with the zero-cost scope
+    skip, applies this world's facts, and closes. Same-session facts
+    re-apply harmlessly — the settled-status guard refuses re-serves."""
+    tok = secrets.token_hex(4)
+    return dispatch.dispatch_once(pg, consumer=f"td-{tok}",
+                                  group=f"td-{tok}", **kw)
+
+
+def _serve_until_replied(pg, r, ask_id, deadline_s=60.0):
     import time as _t
     end = _t.monotonic() + deadline_s
     cur = pg.cursor()
@@ -138,7 +149,7 @@ def test_the_whole_road_ask_to_reply_to_feed(pg):
         text = f"Marker {tok}: please repeat every single word of this ask."
         ask_id = dispatch.submit_ask(pg, text)
         assert outbox.drain(pg, sinks.KafkaSink()) >= 1
-        d = dispatch.dispatch_once(pg, consumer="test-dispatcher", group="test-dispatcher")
+        d = _dispatch(pg)
         assert d["applied"] >= 1
         # the FULL-reply law: every word of the ask, verbatim, in the answer
         status, reply_text, served_by = _serve_until_replied(pg, r, ask_id)
@@ -186,7 +197,7 @@ def test_the_authority_chain_rides_every_hop(pg):
     person = f"did:orreth:person:jb-{tok}"
     ask_id = dispatch.submit_ask(pg, "who asked this?", person=person)
     assert outbox.drain(pg, sinks.KafkaSink()) >= 1
-    dispatch.dispatch_once(pg, consumer="test-dispatcher", group="test-dispatcher")
+    _dispatch(pg)
     _serve_until_replied(pg, r, ask_id)
     from orreth_spine import envelope as ev
     cur = pg.cursor()

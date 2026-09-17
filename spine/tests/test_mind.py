@@ -41,11 +41,12 @@ rails = pytest.mark.skipif(
 
 
 def _walk(pg, r, text, tok):
-    from tests.test_resident import _purge_queue, _serve_until_replied
+    from tests.test_resident import (_dispatch, _purge_queue,
+                                 _serve_until_replied)
     _purge_queue()
     ask_id = dispatch.submit_ask(pg, text)
     assert outbox.drain(pg, sinks.KafkaSink()) >= 1
-    dispatch.dispatch_once(pg, consumer="test-dispatcher", group="test-dispatcher")
+    _dispatch(pg)
     return ask_id, _serve_until_replied(pg, r, ask_id)
 
 

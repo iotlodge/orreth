@@ -43,3 +43,20 @@ def pg():
         yield conn
     finally:
         conn.close()
+
+
+@pytest.fixture(scope="module")
+def rig(pg, _queue_ns):
+    """One standing world PER MODULE — the production shape (one
+    dispatcher membership, one feed membership, living residents), but
+    never outliving the file that walks it. A rig's residents poll the
+    session's benches every 50ms; a rig left standing across files
+    steals the commands of any test serving its OWN resident, refuses
+    them as strangers to its ground, and starves that test (found live:
+    every resident-serving test after the first rig's birth timed out).
+    Tests AIM it by setting rig.resident.gateway and targeting by name."""
+    from orreth_spine import glass
+    r = glass.BridgeRig(gateway=None, port=0).start()
+    assert r.wait_ready(30), "the standing rig never became ready"
+    yield r
+    r.stop()

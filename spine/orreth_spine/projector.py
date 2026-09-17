@@ -25,8 +25,13 @@ KAFKA_BOOTSTRAP = os.environ.get("SPINE_KAFKA", "localhost:9092")
 
 
 def ensure_schema(conn) -> None:
+    from .outbox import once
+    if not once(conn, "projector"):
+        return
     with conn.transaction():
-        conn.cursor().execute(
+        cur = conn.cursor()
+        cur.execute("SELECT pg_advisory_xact_lock(742199)")  # DDL race guard
+        cur.execute(
             "CREATE TABLE IF NOT EXISTS spine_parked ("
             " parked_id bigserial PRIMARY KEY,"
             " consumer text NOT NULL,"
@@ -55,9 +60,48 @@ def parked_count(conn, consumer: str) -> int:
     return int(cur.fetchone()[0])
 
 
+def run_forever(conn, *, group: str, topics: list[str], consumer_name: str,
+                apply, stop, bootstrap: str | None = None,
+                poll_s: float = 0.5, offset: str = "earliest",
+                ready=None, skip=None) -> None:
+    """The standing consumer: ONE membership for its whole life — never
+    the join/leave churn of repeated run_once calls, which litters the
+    group with ghost members until the coordinator wedges (found live:
+    a 297-second ghost join blocked every dispatcher behind it)."""
+    ensure_schema(conn)
+    inbox.ensure_schema(conn)
+    cons = Consumer({
+        "bootstrap.servers": bootstrap or KAFKA_BOOTSTRAP,
+        "group.id": group,
+        "auto.offset.reset": offset,
+        "enable.auto.commit": False,
+    })
+    try:
+        cons.subscribe(topics)
+        while not stop.is_set():
+            msg = cons.poll(poll_s)
+            if ready is not None and not ready.is_set() and                     cons.assignment():
+                ready.set()
+            if msg is None or msg.error():
+                continue
+            try:
+                env = ev.decode(msg.value())
+            except Exception:
+                park(conn, consumer_name, msg, "undecodable body")
+                continue                  # a dispatcher skips bad bytes
+            if skip is not None and skip(env):
+                cons.commit(message=msg)  # not ours: advance, no inbox work
+                continue
+            inbox.apply_event(conn, consumer_name, env,
+                              lambda cur, _e=env: apply(cur, _e))
+            cons.commit(message=msg)
+    finally:
+        cons.close()
+
+
 def run_once(conn, *, group: str, topics: list[str], consumer_name: str,
              apply, bootstrap: str | None = None, max_messages: int = 500,
-             idle_s: float = 8.0) -> dict:
+             idle_s: float = 8.0, skip=None) -> dict:
     """Consume until idle or the cap: for each message decode → apply
     through the durable inbox (`apply(cur, env)` is the read-model
     effect) → commit the offset ONLY after the database has. Returns the
@@ -88,6 +132,9 @@ def run_once(conn, *, group: str, topics: list[str], consumer_name: str,
                      f"undecodable body: {type(e).__name__}: {e}")
                 tally["parked"] += 1
                 break              # never advance past a poison event
+            if skip is not None and skip(env):
+                cons.commit(message=msg)   # not ours: advance, no inbox work
+                continue
             outcome = inbox.apply_event(
                 conn, consumer_name, env,
                 lambda cur, _env=env: apply(cur, _env))

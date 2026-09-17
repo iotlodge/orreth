@@ -131,11 +131,23 @@ def dispatch_once(conn, *, consumer: str, group: str,
     """Consume committed ask.received facts and enqueue one serve command
     each. A redelivered fact enqueues a duplicate command — harmless: the
     resident's inbox absorbs it (proven in the suite)."""
-    def apply(_cur, env):
-        if env.get("scope_path") != ev.scope():
-            return                      # another world's fact — not ours
-        publish_command(_command_for(env), rabbit_url)
-
     return projector.run_once(
         conn, group=group, topics=[ASK_RECEIVED], consumer_name=consumer,
-        apply=apply, **kw)
+        apply=lambda _cur, env: publish_command(_command_for(env),
+                                                rabbit_url),
+        skip=lambda env: env.get("scope_path") != ev.scope(), **kw)
+
+
+def run_dispatcher(conn, *, consumer: str, group: str, stop,
+                   rabbit_url: str | None = None, ready=None,
+                   offset: str = "latest") -> None:
+    """The standing dispatcher (the rig's shape): one consumer for its
+    whole life, dispatching only its own world's NEW facts (latest —
+    a rig dispatches what happens while it lives; another world's facts
+    cost nothing)."""
+    projector.run_forever(
+        conn, group=group, topics=[ASK_RECEIVED], consumer_name=consumer,
+        apply=lambda _cur, env: publish_command(_command_for(env),
+                                                rabbit_url),
+        skip=lambda env: env.get("scope_path") != ev.scope(),
+        stop=stop, ready=ready, offset=offset)

@@ -184,11 +184,14 @@ class BridgeRig:
             echo = Resident(spine / "templates" / "echo-resident.v0.json")
             echo.load_policy(policy_path)
             self.residents.append(echo)
+        for r in self.residents:
+            r.on_delta = self.feed.publish_delta
         from http.server import ThreadingHTTPServer
         self._httpd = ThreadingHTTPServer(
             ("127.0.0.1", port), make_glass_handler(self.feed, self.dsn))
         self.port = self._httpd.server_address[1]
         self.feed_ready = threading.Event()
+        self.dispatcher_ready = threading.Event()
         self._threads = [
             threading.Thread(target=self._httpd.serve_forever, daemon=True),
             threading.Thread(target=bridgefeed.consume_rail,
@@ -212,35 +215,72 @@ class BridgeRig:
                 time.sleep(0.2)
 
     def _dispatch_loop(self):
-        with psycopg.connect(self.dsn) as conn:
-            while not self._stop.is_set():
+        import secrets as _sec
+        gid = f"glass-dispatcher-{_sec.token_hex(3)}"   # a group per life:
+        with psycopg.connect(self.dsn) as conn:          # a wedged ghost
+            while not self._stop.is_set():               # dies with its rig
                 try:
-                    dispatch.dispatch_once(
-                        conn, consumer="glass-dispatcher",
-                        group="glass-dispatcher", idle_s=1.0)
-                except projector.inbox.GapDetected:
-                    pass
+                    dispatch.run_dispatcher(
+                        conn, consumer="glass-dispatcher", group=gid,
+                        stop=self._stop, ready=self.dispatcher_ready,
+                        offset="earliest")  # no produce/assign race:
+                    # replay is cheap (skips) and re-serves refuse
                 except Exception:
-                    pass
+                    time.sleep(0.5)
 
     def _serve_loop(self, resident):
         with psycopg.connect(self.dsn) as conn:
-            resident.join(conn)
+            for _attempt in range(20):      # birth retries: a schema race
+                try:                        # or slow ground never kills a
+                    resident.join(conn)     # resident before it lives
+                    break
+                except Exception:
+                    time.sleep(0.3)
             while not self._stop.is_set():
                 try:
                     resident.serve_once(conn, idle_s=1.0, max_commands=50)
                 except Exception:
                     pass
 
+    def _sweep_benches(self) -> None:
+        """Operator's act at the rig's own start: clear THIS world's
+        queues of any prior life's leftovers."""
+        import pika as _pika
+        from .rails import RABBIT_URL as _RU
+        from .resident import serve_queue as _sq
+        try:
+            rc = _pika.BlockingConnection(_pika.URLParameters(_RU))
+            ch = rc.channel()
+            for q in [_sq()] + [_sq(r.name) for r in self.residents]:
+                ch.queue_declare(q, durable=True)
+                ch.queue_purge(q)
+            rc.close()
+        except Exception:
+            pass
+
     def start(self) -> "BridgeRig":
+        self._sweep_benches()
         for t in self._threads:
             t.start()
         return self
 
+    def wait_ready(self, timeout_s: float = 25.0) -> bool:
+        """Both listeners hold assignments: the feed AND the dispatcher.
+        Submit nothing before this — a fact published pre-assignment is
+        only caught by a later catch-up, which the dev rig doesn't run."""
+        return (self.feed_ready.wait(timeout_s)
+                and self.dispatcher_ready.wait(timeout_s))
+
     def stop(self) -> None:
+        """Stopped WHOLE: the flag, the door, then every thread joined —
+        a resident mid-poll or a consumer mid-close outliving stop() by
+        a second still holds the benches, and whoever walks next on the
+        same benches is raced by a ghost (found live in the suite)."""
         self._stop.set()
         self._httpd.shutdown()
         self._httpd.server_close()
+        for t in self._threads:
+            t.join(timeout=10)
 
 
 def main() -> int:

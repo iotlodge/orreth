@@ -52,6 +52,17 @@ class Feed:
             q.put(notice)
         return notice
 
+    def publish_delta(self, ref: str, text: str) -> None:
+        """Ephemeral streaming: a delta goes to CONNECTED clients only —
+        never the ring, never a revision, never a broker. The words form
+        live in the glass; the durable truth stays the reply behind the
+        door."""
+        with self._lock:
+            clients = list(self._clients)
+        n = {"delta": True, "ref": ref, "text": text}
+        for q in clients:
+            q.put(n)
+
     def attach(self) -> queue.Queue:
         q: queue.Queue = queue.Queue()
         with self._lock:
@@ -183,7 +194,12 @@ def make_handler(feed: Feed):
                 while True:
                     try:
                         n = q.get(timeout=KEEPALIVE_S)
-                        self.wfile.write(_sse_frame(n))
+                        if n.get("delta"):
+                            self.wfile.write(
+                                b"event: delta\ndata: "
+                                + json.dumps(n).encode() + b"\n\n")
+                        else:
+                            self.wfile.write(_sse_frame(n))
                     except queue.Empty:
                         self.wfile.write(b": keepalive\n\n")
                     self.wfile.flush()

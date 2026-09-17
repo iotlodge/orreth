@@ -66,8 +66,12 @@ class _State(TypedDict):
 
 
 def ensure_schema(conn) -> None:
+    from .outbox import once
+    if not once(conn, "resident"):
+        return
     with conn.transaction():
         cur = conn.cursor()
+        cur.execute("SELECT pg_advisory_xact_lock(742199)")  # DDL race guard
         cur.execute(
             "CREATE TABLE IF NOT EXISTS spine_joins ("
             " join_id bigserial PRIMARY KEY,"
@@ -118,6 +122,11 @@ class Resident:
         # back to its deterministic graph — there is no unmetered door
         self.gateway = gateway if self.template.get("mind") else None
         self._serve_conn = None
+        self._current_ask = None
+        # on_delta(ask_id, text): the rig wires this to the glass feed —
+        # words stream to the human as they form; glass-bound only, the
+        # broker never carries a delta, the door still serves the truth
+        self.on_delta = None
         self._graph = self._build_graph()
 
     # ---- birth ----------------------------------------------------------------
@@ -206,20 +215,24 @@ class Resident:
                 door = ToolDoor(self._serve_conn, did=self.identity.did,
                                 capabilities=self.template.get(
                                     "capabilities", []))
+                deltas = None
+                if self.on_delta is not None and self._current_ask:
+                    aid = self._current_ask
+                    deltas = lambda t, a=aid: self.on_delta(a, t)  # noqa: E731
                 try:
                     if hasattr(self.gateway, "think_acting") and \
                             door.schemas():
                         reply, acts = self.gateway.think_acting(
                             self._serve_conn, did=self.identity.did,
                             system=system, prompt=prompt, door=door,
-                            model=mind.get("model"))
+                            model=mind.get("model"), on_delta=deltas)
                         return {"reply": reply,
                                 "steps": s["steps"] + acts
                                 + ["thought it through the metered gateway"]}
                     reply = self.gateway.think(
                         self._serve_conn, did=self.identity.did,
                         system=system, prompt=prompt,
-                        model=mind.get("model"))
+                        model=mind.get("model"), on_delta=deltas)
                 except ConsequentialHold as h:
                     return {"hold": {"tool": h.tool, "args": h.tool_args},
                             "steps": s["steps"]
@@ -249,9 +262,14 @@ class Resident:
     def _serve_ask(self, cur, ask_id: str, chain: list[str]) -> None:
         """The one-transaction heart: read the ask, run the graph, land
         journey + reply rows AND their events together."""
-        cur.execute("SELECT text, person FROM spine_asks"
+        cur.execute("SELECT text, person, status FROM spine_asks"
                     " WHERE ask_id = %s FOR UPDATE", (ask_id,))
         row = cur.fetchone()
+        if row is not None and row[2] != "received":
+            # 0002's conditional-transition law: a re-dispatched fact is a
+            # NEW command the inbox cannot absorb — the BUSINESS state must
+            # refuse. An ask already settled (or held) is never re-served.
+            return
         if row is None:
             # a stale command (the ask is not on THIS ground) is TERMINAL,
             # never a retry loop (0002's failure table): the refusal lands
@@ -265,7 +283,8 @@ class Resident:
                 correlation_id=ask_id, authority_chain=chain or None)
             outbox.add_row(cur, ev.encode(j), j["message_id"])
             return
-        text, person = row
+        text, person, _status = row
+        self._current_ask = ask_id
         out = self._graph.invoke({"text": text, "reply": "", "steps": [],
                                   "notes": [], "hold": None})
         full_chain = list(chain) if chain else [person]
@@ -365,6 +384,11 @@ class Resident:
         ensure_schema(conn)
         inbox.ensure_schema(conn)
         outbox.ensure_schema(conn)
+        from . import gateway as _gw, tools as _tl
+        from . import store as _st
+        _gw.ensure_schema(conn)     # pre-flagged: the serving transaction
+        _tl.ensure_schema(conn)     # never runs DDL, never takes the lock
+        _st.ensure_schema(conn)
         self._serve_conn = conn        # the graph's doors ride this life
         rc = pika.BlockingConnection(
             pika.URLParameters(rabbit_url or RABBIT_URL))

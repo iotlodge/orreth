@@ -318,9 +318,21 @@ async function onNotice(n){
     renderOutcome(n.ref, v, line);
 }
 
+function onDelta(d){
+  const line = PENDING[d.ref];
+  if (!line) return;
+  if (!line._stream){
+    line._stream = el("msg theirs",
+      `<div class="who">…thinking aloud</div><span class="txt"></span>`);
+  }
+  line._stream.querySelector(".txt").textContent += d.text;
+  log.scrollTop = log.scrollHeight;
+}
+
 function renderOutcome(id, v, line){
   const fan = line._fan;
-  line.remove(); delete PENDING[id];
+  if (line._stream) line._stream.remove();   // the door's truth replaces
+  line.remove(); delete PENDING[id];         // the stream's sketch
   const name = NAMES[v.served_by] || v.target || "orreth";
   const who = `<div class="who">${esc(name)}</div>`;
   if (fan && v.status === "replied"){
@@ -387,6 +399,7 @@ function connectFeed(){
     if (band.classList.contains("open") && !bandTimer)   // P17: one state,
       bandTimer = setTimeout(() => { bandTimer = null;   // every lens
                                      loadBand(); }, 400); };
+  src.addEventListener("delta", e => onDelta(JSON.parse(e.data)));
   src.addEventListener("resync", () =>
     pulse.textContent = "PULSE · resync — fetch fresh through the doors");
   src.onopen = () => pulse.textContent = "PULSE · listening" +

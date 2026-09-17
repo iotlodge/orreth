@@ -51,15 +51,13 @@ def _wait_replied(port, ids, deadline_s=60.0):
 
 
 @rails
-def test_fanout_two_lenses_two_selves_and_the_band_sees_all(pg):
+def test_fanout_two_lenses_two_selves_and_the_band_sees_all(pg, rig):
     from tests.test_resident import _purge_queue
     _purge_queue()
     tok = secrets.token_hex(4)
     reply = f"The librarian's own lens on marker {tok}."
-    rig = glass.BridgeRig(gateway=gateway.FakeGateway(reply=reply),
-                          port=0).start()          # second seat: the echo
-    try:
-        assert rig.feed_ready.wait(20)
+    rig.resident.gateway = gateway.FakeGateway(reply=reply)
+    if True:
         crew = _get(rig.port, "/residents")["residents"]
         names = {r["name"] for r in crew}
         assert {"librarian", "echo"} <= names       # the crew door names them
@@ -81,19 +79,16 @@ def test_fanout_two_lenses_two_selves_and_the_band_sees_all(pg):
             assert rows[i]["target"] in ("librarian", "echo")
             assert rows[i]["fanout"]                     # each wears the group
         assert len({rows[i]["fanout"] for i in ids}) == 1   # one shared fanout
-    finally:
-        rig.stop()
 
 
 @rails
-def test_a_targeted_ask_reaches_only_its_target(pg):
+def test_a_targeted_ask_reaches_only_its_target(pg, rig):
     from tests.test_resident import _purge_queue
     _purge_queue()
     tok = secrets.token_hex(4)
-    rig = glass.BridgeRig(gateway=gateway.FakeGateway(
-        reply=f"the librarian would have said {tok}"), port=0).start()
-    try:
-        assert rig.feed_ready.wait(20)
+    rig.resident.gateway = gateway.FakeGateway(
+        reply=f"the librarian would have said {tok}")
+    if True:
         text = f"Echo only, marker {tok}."
         filed = _post(rig.port, "/ask", {"text": text, "to": ["echo"]})
         views = _wait_replied(rig.port, filed["ids"])
@@ -103,5 +98,3 @@ def test_a_targeted_ask_reaches_only_its_target(pg):
                         _get(rig.port, "/residents")["residents"]
                         if r["name"] == "echo")
         assert v["served_by"] == echo_did                # ONLY its target
-    finally:
-        rig.stop()

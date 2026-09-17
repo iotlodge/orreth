@@ -25,8 +25,12 @@ class GapDetected(Exception):
 
 
 def ensure_schema(conn) -> None:
+    from .outbox import once
+    if not once(conn, "inbox"):
+        return
     with conn.transaction():
         cur = conn.cursor()
+        cur.execute("SELECT pg_advisory_xact_lock(742199)")  # DDL race guard
         cur.execute(
             "CREATE TABLE IF NOT EXISTS spine_inbox ("
             " consumer text NOT NULL,"

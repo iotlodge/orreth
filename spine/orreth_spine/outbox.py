@@ -17,14 +17,33 @@ from __future__ import annotations
 import time
 
 
+def once(conn, tag: str) -> bool:
+    """True the first time this connection sees `tag` — ensure_schema
+    runs its DDL (and takes the advisory lock) exactly once per
+    connection, so a long serving transaction never re-enters DDL and
+    never drags the lock with it (found live: one thinking resident
+    held the xact-scoped lock and every door queued behind it)."""
+    done = getattr(conn, "_spine_ensured", None)
+    if done is None:
+        done = set()
+        conn._spine_ensured = done
+    if tag in done:
+        return False
+    done.add(tag)
+    return True
+
+
 class OutboxBudgetExceeded(RuntimeError):
     """The unpublished backlog reached its declared budget — the write is
     refused honestly rather than the backlog growing without bound."""
 
 
 def ensure_schema(conn) -> None:
+    if not once(conn, "outbox"):
+        return
     with conn.transaction():
         cur = conn.cursor()
+        cur.execute("SELECT pg_advisory_xact_lock(742199)")  # DDL race guard
         cur.execute(
             "CREATE TABLE IF NOT EXISTS spine_outbox ("
             " outbox_id bigserial PRIMARY KEY,"

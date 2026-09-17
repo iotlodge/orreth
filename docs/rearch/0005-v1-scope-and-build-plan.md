@@ -236,8 +236,36 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   proven by collision; (2) an old-code process is an OLD WORLD — no new
   law can bind a process that predates it (the deployment lesson,
   named for the cells era). Suite 49 green.
-- Next: **sp3 — streamed deltas + the Playwright walks the specs**
-  (the before/after record).
+- **sp3 — the words form live** ✅ **LANDED 2026-09-17** (streamed
+  deltas; the Playwright walk of the specs is OWED — see Next): the
+  gateway lane streams (`on_delta`; the real mind through
+  `messages.stream`, the fake one word by word), the resident hands each
+  delta to the glass feed, and the feed sends it to CONNECTED clients
+  only as an SSE `delta` frame — **never the ring, never a revision,
+  never the outbox, never a topic** (structural: a delta cannot reach
+  the broker). In the chat the words form under "…thinking aloud" and
+  the door's truth replaces the sketch when the reply lands; the
+  concatenated deltas equal the reply and GET /ask/<id> still serves the
+  whole. `tests/test_stream.py`. THE SUITE WOUNDS OF THE DAY, honestly:
+  CI went red on a fresh ground (four threads racing `CREATE TABLE` —
+  the echo never joined; a reused dispatcher group waiting on its own
+  ghost — the mind "timed out"): cured with a DDL advisory lock taken
+  once per connection, join retries, a STANDING dispatcher consumer
+  (`projector.run_forever`, one membership per life) with the world
+  skip BEFORE the inbox footprint, a settled-status guard on re-serves,
+  and fresh dispatcher groups in the tests. Then the local suite stayed
+  red for hours under a PHANTOM: a Bridge relit at 08:14 on pre-skip
+  code kept marking EVERY world's ask facts applied under the shared
+  `glass-dispatcher` name on the shared ground, so every test dispatcher
+  read `stale` and never published — the sp2 deployment lesson bitten a
+  second time (an old process is an old world), found only by
+  measuring one fresh rig hop by hop instead of patching. Second wound
+  under it: a SESSION-scoped test rig is a competing consumer (its
+  residents steal every later test's command and refuse it as a
+  stranger) — the rig is MODULE-scoped and `stop()` joins its threads.
+  Suite 50 green, twice-run stable (2:41 · 2:42).
+- Next: **sp4 — the Playwright walks the specs** (the before/after
+  record owed from P0 sp3 and P3 sp3).
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 

@@ -49,35 +49,32 @@ def _wait_status(port, ask_id, want, deadline_s=45.0):
 
 
 @rails
-def test_the_human_path_runs_over_http_alone(pg):
+def test_the_human_path_runs_over_http_alone(pg, rig):
     """POST an ask, read the journey, receive the full reply — nothing
     but the glass's own doors, exactly as a browser would."""
     from tests.test_resident import _purge_queue
     _purge_queue()
     tok = secrets.token_hex(4)
     reply = f"The whole answer, every word of it, marker {tok}."
-    rig = glass.BridgeRig(gateway=gateway.FakeGateway(reply=reply),
-                          port=0, second=False).start()
-    try:
-        assert rig.feed_ready.wait(20)
+    rig.resident.gateway = gateway.FakeGateway(reply=reply)
+    if True:
         s, page = _get(rig.port, "/")
         assert s == 200
         html = page.decode()
         assert 'id="chat' in html and "Escape" in html   # the chat + Esc law
         assert "Cancel (default)" in html                # the interlock's face
         s, filed = _post(rig.port, "/ask",
-                         {"text": f"Say the whole answer (marker {tok})."})
-        assert s == 201 and filed["id"].startswith("ask_")
-        view = _wait_status(rig.port, filed["id"], ("replied",))
+                         {"text": f"Say the whole answer (marker {tok}).",
+                          "to": ["librarian"]})
+        assert s == 201 and filed["ids"][0].startswith("ask_")
+        view = _wait_status(rig.port, filed["ids"][0], ("replied",))
         assert view["reply"] == reply                    # the FULL reply
         assert view["journey"]                           # the ask wore its way
         assert any("librarian" in n for n in view["journey"])
-    finally:
-        rig.stop()
 
 
 @rails
-def test_cancel_over_http_means_the_act_never_ran(pg):
+def test_cancel_over_http_means_the_act_never_ran(pg, rig):
     """The interlock through the glass: the held act waits, the human's
     cancel arrives over HTTP, and the journal proves nothing ran."""
     from tests.test_resident import _purge_queue
@@ -86,17 +83,16 @@ def test_cancel_over_http_means_the_act_never_ran(pg):
     gw = gateway.FakeActingGateway(
         script=[("tool", "seal-record", {"key": f"note-{tok}"}),
                 ("text", "sealed: {result}")])
-    rig = glass.BridgeRig(gateway=gw, port=0, second=False).start()
-    try:
-        assert rig.feed_ready.wait(20)
+    rig.resident.gateway = gw
+    if True:
         _s, filed = _post(rig.port, "/ask",
-                          {"text": f"Seal note {tok} forever."})
-        view = _wait_status(rig.port, filed["id"], ("awaiting-confirm",))
+                          {"text": f"Seal note {tok} forever.",
+                           "to": ["librarian"]})
+        ask_id = filed["ids"][0]
+        view = _wait_status(rig.port, ask_id, ("awaiting-confirm",))
         assert "Are you sure" in view["reply"]
         assert tools.journal(pg, rig.resident.identity.did) == []
-        _post(rig.port, "/confirm", {"ask_id": filed["id"]})  # no approve key
-        view = _wait_status(rig.port, filed["id"], ("cancelled",))
+        _post(rig.port, "/confirm", {"ask_id": ask_id})  # no approve key
+        view = _wait_status(rig.port, ask_id, ("cancelled",))
         assert "nothing was done" in view["reply"].lower()
         assert tools.journal(pg, rig.resident.identity.did) == []
-    finally:
-        rig.stop()

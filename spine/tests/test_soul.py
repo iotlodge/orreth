@@ -13,7 +13,8 @@ from pathlib import Path
 import pytest
 
 from orreth_spine import dispatch, gateway, resident, tools
-from tests.test_resident import _purge_queue, _serve_until_replied
+from tests.test_resident import (_dispatch, _purge_queue,
+                                 _serve_until_replied)
 
 SPINE = Path(__file__).resolve().parents[1]
 LIBRARIAN = SPINE / "templates" / "librarian-resident.v0.json"
@@ -64,7 +65,7 @@ def test_the_interlock_holds_then_the_yes_releases(pg):
     ask_id = dispatch.submit_ask(pg, f"Seal my note {tok} forever.")
     from orreth_spine import outbox, sinks
     assert outbox.drain(pg, sinks.KafkaSink()) >= 1
-    dispatch.dispatch_once(pg, consumer="test-dispatcher", group="test-dispatcher")
+    _dispatch(pg)
     r.serve_once(pg, idle_s=2.0, max_commands=100)
     cur = pg.cursor()
     cur.execute("SELECT status, reply, held FROM spine_asks"
@@ -94,7 +95,7 @@ def test_cancel_is_the_default_and_the_act_never_ran(pg):
     ask_id = dispatch.submit_ask(pg, f"Seal my other note {tok} forever.")
     from orreth_spine import outbox, sinks
     assert outbox.drain(pg, sinks.KafkaSink()) >= 1
-    dispatch.dispatch_once(pg, consumer="test-dispatcher", group="test-dispatcher")
+    _dispatch(pg)
     r.serve_once(pg, idle_s=2.0, max_commands=100)
     dispatch.confirm_ask(pg, ask_id, approve=False)    # the default: cancel
     import time as _t

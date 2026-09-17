@@ -14,8 +14,13 @@ import os
 
 
 def ensure_schema(conn) -> None:
+    from .outbox import once
+    if not once(conn, "gateway"):
+        return
     with conn.transaction():
-        conn.cursor().execute(
+        cur = conn.cursor()
+        cur.execute("SELECT pg_advisory_xact_lock(742199)")  # DDL race guard
+        cur.execute(
             "CREATE TABLE IF NOT EXISTS spine_meter ("
             " meter_id bigserial PRIMARY KEY,"
             " did text NOT NULL,"
@@ -38,12 +43,24 @@ class AnthropicGateway:
             api_key=api_key or os.environ.get("ANTHROPIC_API_KEY"))
 
     def think(self, conn, *, did: str, system: str, prompt: str,
-              model: str | None = None, max_tokens: int = 1024) -> str:
+              model: str | None = None, max_tokens: int = 1024,
+              on_delta=None) -> str:
+        """`on_delta(text)` streams the words as they form — display
+        only, glass-bound; the durable truth is always the final reply
+        landed through the door."""
         ensure_schema(conn)
         m = model or self.DEFAULT_MODEL
-        msg = self._client.messages.create(
-            model=m, max_tokens=max_tokens, system=system,
-            messages=[{"role": "user", "content": prompt}])
+        if on_delta is not None:
+            with self._client.messages.stream(
+                    model=m, max_tokens=max_tokens, system=system,
+                    messages=[{"role": "user", "content": prompt}]) as st:
+                for t in st.text_stream:
+                    on_delta(t)
+                msg = st.get_final_message()
+        else:
+            msg = self._client.messages.create(
+                model=m, max_tokens=max_tokens, system=system,
+                messages=[{"role": "user", "content": prompt}])
         text = "".join(b.text for b in msg.content if b.type == "text")
         with conn.transaction():
             conn.cursor().execute(
@@ -54,19 +71,29 @@ class AnthropicGateway:
 
     def think_acting(self, conn, *, did: str, system: str, prompt: str,
                      door, model: str | None = None, max_tokens: int = 1024,
-                     max_rounds: int = 3) -> tuple[str, list[str]]:
+                     max_rounds: int = 3,
+                     on_delta=None) -> tuple[str, list[str]]:
         """The acting mind: the model may use the door's DECLARED tools;
         every tool call goes through the door (journaled, interlocked),
         every model round through the meter. Returns (reply, act_notes).
-        A ConsequentialHold propagates — the resident owns the L2 path."""
+        A ConsequentialHold propagates — the resident owns the L2 path.
+        `on_delta` streams each round's words as they form."""
         from .tools import ConsequentialHold  # noqa: F401 (re-raise passes)
         m = model or self.DEFAULT_MODEL
         messages = [{"role": "user", "content": prompt}]
         notes: list[str] = []
         for _round in range(max_rounds):
-            msg = self._client.messages.create(
-                model=m, max_tokens=max_tokens, system=system,
-                tools=door.schemas(), messages=messages)
+            if on_delta is not None:
+                with self._client.messages.stream(
+                        model=m, max_tokens=max_tokens, system=system,
+                        tools=door.schemas(), messages=messages) as st:
+                    for t in st.text_stream:
+                        on_delta(t)
+                    msg = st.get_final_message()
+            else:
+                msg = self._client.messages.create(
+                    model=m, max_tokens=max_tokens, system=system,
+                    tools=door.schemas(), messages=messages)
             with conn.transaction():
                 conn.cursor().execute(
                     "INSERT INTO spine_meter (did, model, tokens_in,"
@@ -98,9 +125,13 @@ class FakeGateway:
         self.calls: list[dict] = []
 
     def think(self, conn, *, did: str, system: str, prompt: str,
-              model: str | None = None, max_tokens: int = 1024) -> str:
+              model: str | None = None, max_tokens: int = 1024,
+              on_delta=None) -> str:
         ensure_schema(conn)
         self.calls.append({"system": system, "prompt": prompt})
+        if on_delta is not None:
+            for w in self.reply.split(" "):
+                on_delta(w + " ")
         with conn.transaction():
             conn.cursor().execute(
                 "INSERT INTO spine_meter (did, model, tokens_in, tokens_out)"
@@ -121,7 +152,8 @@ class FakeActingGateway:
 
     def think_acting(self, conn, *, did: str, system: str, prompt: str,
                      door, model: str | None = None, max_tokens: int = 1024,
-                     max_rounds: int = 3) -> tuple[str, list[str]]:
+                     max_rounds: int = 3,
+                     on_delta=None) -> tuple[str, list[str]]:
         ensure_schema(conn)
         with conn.transaction():
             conn.cursor().execute(
@@ -134,7 +166,11 @@ class FakeActingGateway:
                 last = door.call(step[1], step[2])       # holds propagate
                 notes.append(f"used the {step[1]} tool through the door")
             else:
-                return (step[1].replace("{result}", last), notes)
+                text = step[1].replace("{result}", last)
+                if on_delta is not None:
+                    for w in text.split(" "):
+                        on_delta(w + " ")
+                return (text, notes)
         return ("the script ended without words", notes)
 
 
