@@ -45,7 +45,7 @@ def _walk(pg, r, text, tok):
     _purge_queue()
     ask_id = dispatch.submit_ask(pg, text)
     assert outbox.drain(pg, sinks.KafkaSink()) >= 1
-    dispatch.dispatch_once(pg, consumer=f"mc-{tok}", group=f"mg-{tok}")
+    dispatch.dispatch_once(pg, consumer="test-dispatcher", group="test-dispatcher")
     return ask_id, _serve_until_replied(pg, r, ask_id)
 
 

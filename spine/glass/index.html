@@ -1,0 +1,244 @@
+<!-- PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orreth — the Bridge</title>
+<style>
+  :root{
+    --hull:#14161c; --hull2:#1b1e27; --seam:#2a2e3a;
+    --amber:#e8a84c; --amber-dim:#8a6428;
+    --space:#070a16; --glass:rgba(22,26,38,.82);
+    --ink:#dfe3ee; --dim:#8b93a8; --jade:#7fd8a8;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0;background:var(--hull);color:var(--ink);
+    font:14px/1.5 "SF Mono","JetBrains Mono",ui-monospace,monospace;
+    overflow:hidden}
+  /* ---- the hull frame ---- */
+  #bridge{position:fixed;inset:0;display:flex;flex-direction:column;
+    background:
+      linear-gradient(180deg,var(--hull2) 0%,var(--hull) 18%,
+                      var(--hull) 82%,var(--hull2) 100%)}
+  .strip{height:4px;background:linear-gradient(90deg,transparent 2%,
+      var(--amber-dim) 12%,var(--amber) 24%,var(--amber-dim) 30%,
+      transparent 40%,transparent 60%,var(--amber-dim) 70%,
+      var(--amber) 82%,var(--amber-dim) 92%,transparent 98%);
+    filter:blur(.4px);opacity:.85}
+  #ceiling{padding:10px 26px 8px;display:flex;align-items:center;
+    justify-content:space-between}
+  #nameplate{letter-spacing:.55em;color:var(--amber);font-size:13px;
+    text-shadow:0 0 12px rgba(232,168,76,.35)}
+  #chat-tab{cursor:pointer;color:var(--dim);border:1px solid var(--seam);
+    border-radius:4px;padding:4px 14px;background:var(--hull2);
+    letter-spacing:.2em;font-size:11px;transition:color .2s}
+  #chat-tab:hover{color:var(--amber)}
+  /* ---- the main view window ---- */
+  #window-frame{flex:1;margin:6px 26px 10px;border:1px solid var(--seam);
+    border-radius:14px;padding:10px;background:var(--hull2);
+    box-shadow:inset 0 0 40px rgba(0,0,0,.6)}
+  #space{position:relative;height:100%;border-radius:9px;overflow:hidden;
+    background:radial-gradient(ellipse at 62% 38%,
+      rgba(232,168,76,.16),transparent 32%),
+      radial-gradient(ellipse at 30% 70%,rgba(90,110,220,.12),
+      transparent 45%),var(--space)}
+  #stars{position:absolute;inset:0}
+  #sun{position:absolute;left:60%;top:36%;width:26px;height:26px;
+    border-radius:50%;background:radial-gradient(circle,#ffe9bf,
+    var(--amber) 55%,transparent 72%);
+    box-shadow:0 0 34px 10px rgba(232,168,76,.35)}
+  .worldtag{position:absolute;color:var(--dim);font-size:11px;
+    letter-spacing:.12em}
+  #sill{display:flex;justify-content:center;gap:26px;color:var(--dim);
+    font-size:10.5px;letter-spacing:.35em;padding:8px 0 2px}
+  #floor{padding:8px 0 14px;text-align:center;color:var(--dim);
+    font-size:10.5px;letter-spacing:.4em}
+  /* ---- the chat pull (out of the ceiling) ---- */
+  #chat{position:fixed;top:0;right:6vw;width:min(560px,88vw);
+    height:72vh;transform:translateY(-104%);transition:transform .45s
+    cubic-bezier(.22,.9,.3,1);z-index:10;display:flex;
+    flex-direction:column;border:1px solid var(--seam);border-top:none;
+    border-radius:0 0 14px 14px;background:var(--glass);
+    backdrop-filter:blur(10px);box-shadow:0 18px 50px rgba(0,0,0,.55)}
+  #chat.open{transform:translateY(0)}
+  #chat header{padding:10px 16px;color:var(--amber);font-size:11px;
+    letter-spacing:.3em;border-bottom:1px solid var(--seam);
+    display:flex;justify-content:space-between}
+  #chat header span.hint{color:var(--dim);letter-spacing:.05em}
+  #log{flex:1;overflow-y:auto;padding:14px 16px;display:flex;
+    flex-direction:column;gap:10px}
+  .msg{max-width:88%;padding:8px 12px;border-radius:10px;
+    white-space:pre-wrap;word-wrap:break-word}
+  .mine{align-self:flex-end;background:#26304a;border:1px solid #334063}
+  .theirs{align-self:flex-start;background:#1d2230;
+    border:1px solid var(--seam)}
+  .who{color:var(--jade);font-size:10.5px;margin-bottom:3px;
+    letter-spacing:.08em}
+  .journey{align-self:flex-start;color:var(--dim);font-size:11.5px;
+    font-style:italic;padding-left:6px}
+  .confirm-row{display:flex;gap:10px;margin-top:8px}
+  .confirm-row button{font:inherit;padding:6px 14px;border-radius:6px;
+    cursor:pointer;border:1px solid var(--seam)}
+  .btn-cancel{background:#2a3040;color:var(--ink);outline:2px solid
+    var(--amber-dim)}      /* cancel is the default — it wears the focus */
+  .btn-yes{background:transparent;color:var(--dim)}
+  .btn-yes:hover{color:var(--ink);border-color:var(--amber-dim)}
+  #composer{display:flex;gap:8px;padding:12px 14px;border-top:1px solid
+    var(--seam)}
+  #composer input{flex:1;font:inherit;color:var(--ink);
+    background:#141824;border:1px solid var(--seam);border-radius:8px;
+    padding:9px 12px;outline:none}
+  #composer input:focus{border-color:var(--amber-dim)}
+  #composer button{font:inherit;background:var(--amber-dim);
+    color:#1a1408;border:none;border-radius:8px;padding:0 18px;
+    cursor:pointer;letter-spacing:.1em}
+  #pulse{position:fixed;left:26px;bottom:12px;color:var(--dim);
+    font-size:10.5px;letter-spacing:.12em}
+</style>
+</head>
+<body>
+<div id="bridge">
+  <div class="strip"></div>
+  <div id="ceiling">
+    <span style="width:120px"></span>
+    <span id="nameplate">O R R E T H</span>
+    <span id="chat-tab" onclick="toggleChat()">C H A T ▾</span>
+  </div>
+  <div id="window-frame"><div id="space">
+    <canvas id="stars"></canvas><div id="sun"></div>
+    <span class="worldtag" style="left:63%;top:33%">u:dev</span>
+    <span class="worldtag" style="left:70%;top:52%">librarian · alive</span>
+  </div></div>
+  <div id="sill">O R R E R Y&nbsp;&nbsp;·&nbsp;&nbsp;B R A I N&nbsp;&nbsp;·&nbsp;&nbsp;A T L A S</div>
+  <div class="strip"></div>
+  <div id="floor">O B J E C T I V E S</div>
+</div>
+
+<div id="chat">
+  <header><span>THE ONE CHAT · u:dev</span>
+    <span class="hint">[Esc] returns to the bridge</span></header>
+  <div id="log"></div>
+  <div id="composer">
+    <input id="chat-in" placeholder="ask anything — every reply arrives whole"
+           autocomplete="off">
+    <button onclick="send()">ASK</button>
+  </div>
+</div>
+<div id="pulse">PULSE · connecting…</div>
+
+<script>
+/* ---- the starfield (drawn once; the window looks out on something) ---- */
+(() => {
+  const c = document.getElementById("stars");
+  const draw = () => {
+    c.width = c.clientWidth; c.height = c.clientHeight;
+    const g = c.getContext("2d");
+    g.clearRect(0,0,c.width,c.height);
+    for (let i = 0; i < 240; i++) {
+      const r = Math.random()*1.3 + .2;
+      g.fillStyle = `rgba(${200+Math.random()*55|0},
+        ${200+Math.random()*55|0},255,${.25+Math.random()*.6})`;
+      g.beginPath();
+      g.arc(Math.random()*c.width, Math.random()*c.height, r, 0, 7);
+      g.fill();
+    }
+  };
+  draw(); addEventListener("resize", draw);
+})();
+
+/* ---- the chat pull + THE ESC LAW: one keystroke returns the bridge ---- */
+const chat = document.getElementById("chat");
+function toggleChat(open){
+  chat.classList.toggle("open", open ?? !chat.classList.contains("open"));
+  if (chat.classList.contains("open"))
+    document.getElementById("chat-in").focus();
+}
+addEventListener("keydown", e => {
+  if (e.key === "Escape") { toggleChat(false); }        // SPEC-ESC-01
+});
+
+/* ---- the conversation ---- */
+const log = document.getElementById("log");
+const PENDING = {};          // ask_id -> its journey line element
+function el(cls, html){ const d = document.createElement("div");
+  d.className = cls; d.innerHTML = html; log.appendChild(d);
+  log.scrollTop = log.scrollHeight; return d; }
+const esc = s => s.replace(/[&<>"]/g,
+  ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+
+async function send(){
+  const inp = document.getElementById("chat-in");
+  const text = inp.value.trim(); if (!text) return;
+  inp.value = "";
+  el("msg mine", esc(text));
+  const r = await fetch("/ask", {method:"POST",
+    headers:{"content-type":"application/json"},
+    body: JSON.stringify({text})}).then(x=>x.json()).catch(()=>null);
+  if (!r || !r.id) { el("journey","the ask door did not answer"); return; }
+  PENDING[r.id] = el("journey", "the ask is on its way…");
+}
+
+/* every notice is a pointer — the glass fetches truth through the door */
+async function onNotice(n){
+  const line = PENDING[n.ref];
+  if (!line) return;
+  const v = await fetch("/ask/" + n.ref).then(x=>x.json()).catch(()=>null);
+  if (!v) return;
+  if (n.kind.includes("journey") && v.journey.length)
+    line.textContent = v.journey[v.journey.length-1];
+  if (n.kind.includes("reply") || n.kind.includes("confirm.needed"))
+    renderOutcome(n.ref, v, line);
+}
+
+function renderOutcome(id, v, line){
+  line.remove(); delete PENDING[id];
+  const who = `<div class="who">${esc(v.served_by ? "the librarian" : "orreth")}</div>`;
+  if (v.status === "awaiting-confirm"){
+    const m = el("msg theirs", who + esc(v.reply));
+    const row = document.createElement("div");
+    row.className = "confirm-row";
+    row.innerHTML =
+      `<button class="btn-cancel">Cancel (default)</button>` +
+      `<button class="btn-yes">Yes — do it</button>`;
+    /* cancel is the default: it holds focus; Enter can never confirm */
+    row.children[0].onclick = () => decide(id, false, row);
+    row.children[1].onclick = () => decide(id, true, row);
+    m.appendChild(row); row.children[0].focus();
+    PENDING[id] = el("journey", "held at the interlock — your word decides");
+    return;
+  }
+  el("msg theirs", who + esc(v.reply || "(no words came back)"));
+}
+
+async function decide(id, approve, row){
+  row.querySelectorAll("button").forEach(b => b.disabled = true);
+  await fetch("/confirm", {method:"POST",
+    headers:{"content-type":"application/json"},
+    body: JSON.stringify({ask_id: id, approve})});
+  if (PENDING[id]) PENDING[id].textContent = approve
+    ? "your yes is on its way…" : "cancelling — nothing will run…";
+}
+
+document.getElementById("chat-in").addEventListener("keydown",
+  e => { if (e.key === "Enter") send(); });
+
+/* ---- the feed: one SSE stream, pointer-only, gap-repairing ---- */
+const pulse = document.getElementById("pulse");
+let lastRev = null;
+function connectFeed(){
+  const src = new EventSource("/feed");
+  src.onmessage = e => { const n = JSON.parse(e.data);
+    lastRev = n.rev; pulse.textContent = "PULSE · rev " + n.rev;
+    onNotice(n); };
+  src.addEventListener("resync", () =>
+    pulse.textContent = "PULSE · resync — fetch fresh through the doors");
+  src.onopen = () => pulse.textContent = "PULSE · listening" +
+    (lastRev ? " · rev " + lastRev : "");
+  src.onerror = () => pulse.textContent = "PULSE · reconnecting…";
+}
+connectFeed();
+toggleChat(true);            /* the chat greets you (profile setting later) */
+</script>
+</body>
+</html>

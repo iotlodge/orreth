@@ -129,15 +129,15 @@ def test_the_whole_road_ask_to_reply_to_feed(pg):
         from_start=True).start()
     try:
         assert bf.wait_ready()
-        _purge_queue()
+        q = bf.feed.attach()        # listen like a client, live — the ring
+        _purge_queue()              # holds only the last 1024 and says so
         r = resident.Resident(TEMPLATE)
         r.load_policy(POLICY)
         r.join(pg)
         text = f"Marker {tok}: please repeat every single word of this ask."
         ask_id = dispatch.submit_ask(pg, text)
         assert outbox.drain(pg, sinks.KafkaSink()) >= 1
-        d = dispatch.dispatch_once(pg, consumer=f"dispatcher-{tok}",
-                                   group=f"dg-{tok}")
+        d = dispatch.dispatch_once(pg, consumer="test-dispatcher", group="test-dispatcher")
         assert d["applied"] >= 1
         # the FULL-reply law: every word of the ask, verbatim, in the answer
         status, reply_text, served_by = _serve_until_replied(pg, r, ask_id)
@@ -146,21 +146,24 @@ def test_the_whole_road_ask_to_reply_to_feed(pg):
         cur = pg.cursor()
         # the events reach the rail: journey then reply, one aggregate
         assert outbox.drain(pg, sinks.KafkaSink()) >= 3
-        seen, deadline = [], 30
+        import queue as _q
         import time as _t
-        end = _t.monotonic() + deadline
-        while _t.monotonic() < end and len(
-                [n for n in seen if n["ref"] == ask_id]) < 4:
-            n = bf.feed.since(0)
-            seen = n or []
-            _t.sleep(0.2)
-        mine = [n for n in seen if n["ref"] == ask_id]
+        mine, end = [], _t.monotonic() + 30
+        while _t.monotonic() < end and \
+                resident.REPLY not in [n["kind"] for n in mine]:
+            try:
+                n = q.get(timeout=0.5)
+            except _q.Empty:
+                continue
+            if n["ref"] == ask_id:
+                mine.append(n)
         kinds = [n["kind"] for n in mine]
         assert resident.JOURNEY in kinds and resident.REPLY in kinds
         assert kinds[-1] == resident.REPLY     # completion arrives last
         # duplicate invocation absorbed: replay the whole command road
-        d2 = dispatch.dispatch_once(pg, consumer=f"dispatcher2-{tok}",
-                                    group=f"dg2-{tok}")
+        # (deliberately a FRESH group — replaying history IS this test)
+        d2 = dispatch.dispatch_once(pg, consumer=f"dupcheck-{tok}",
+                                    group=f"dupcheck-{tok}")
         assert d2["applied"] >= 1              # the same fact re-dispatched
         r.serve_once(pg, idle_s=2.0, max_commands=200)
         cur.execute("SELECT reply, replied_at FROM spine_asks"
@@ -182,7 +185,7 @@ def test_the_authority_chain_rides_every_hop(pg):
     person = f"did:orreth:person:jb-{tok}"
     ask_id = dispatch.submit_ask(pg, "who asked this?", person=person)
     assert outbox.drain(pg, sinks.KafkaSink()) >= 1
-    dispatch.dispatch_once(pg, consumer=f"dc-{tok}", group=f"dcg-{tok}")
+    dispatch.dispatch_once(pg, consumer="test-dispatcher", group="test-dispatcher")
     _serve_until_replied(pg, r, ask_id)
     from orreth_spine import envelope as ev
     cur = pg.cursor()

@@ -188,6 +188,35 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   ✓, 860 in / 43 out metered, the full road.** The sentence that started
   the halt is a passing test. Suite 45 green.
 
+## Phase 3 — THE BRIDGE (opened 2026-09-16)
+
+- **sp1 — the glass exists** ✅ **LANDED 2026-09-16**: `glass.py` — the
+  glass server (the page, the SSE feed, and the human-path doors: POST
+  /ask · GET /ask/<id> with the journey notes · POST /confirm where
+  **an absent approve key means cancel**) + **BridgeRig**, the whole dev
+  Operating State in one object (relay + dispatcher + librarian + glass,
+  started together, stopped whole — `python -m orreth_spine.glass` →
+  http://127.0.0.1:4600). `glass/index.html` — the Bridge v0 in the
+  cockpit theme: hull frame + amber strips + the starfield window +
+  ORRERY·BRAIN·ATLAS sill + OBJECTIVES floor + **the One Chat sliding
+  out of the ceiling** (glassy, framed), journey soft-lines live under
+  each ask, the full reply rendering in place, the interlock in-chat
+  with **Cancel (default) holding focus — Enter can never confirm**, and
+  **[Esc] returning the bridge from anywhere** (SPEC-ESC-01's cure).
+  Every notice is a pointer; the glass fetches truth through the doors.
+  Proven over HTTP alone: the human path end to end, and a cancel whose
+  journal shows the act NEVER ran. THREE test-suite wounds paid
+  in-hour, each a small production lesson: fresh dispatcher groups
+  replayed ALL topic history (the tests had the growing-corpus disease;
+  cured with the production pattern — ONE persistent group) · the feed
+  ring honestly overflowed at 1024 replayed events (tests now listen
+  like clients, attached before asking) · a grown graph moved the reply
+  to notice five (collect until the reply, never count). Suite 47
+  green, twice-run stable.
+- Next: **sp2 — the Objectives band + scope edges + fan-out UI** ·
+  **sp3 — streamed deltas + the Playwright walks the specs** (the
+  before/after record).
+
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 
 - **sp1 — the new rig breathes** ✅ **LANDED 2026-09-16**: `spine/` is the

@@ -64,7 +64,7 @@ def test_the_interlock_holds_then_the_yes_releases(pg):
     ask_id = dispatch.submit_ask(pg, f"Seal my note {tok} forever.")
     from orreth_spine import outbox, sinks
     assert outbox.drain(pg, sinks.KafkaSink()) >= 1
-    dispatch.dispatch_once(pg, consumer=f"ic-{tok}", group=f"ig-{tok}")
+    dispatch.dispatch_once(pg, consumer="test-dispatcher", group="test-dispatcher")
     r.serve_once(pg, idle_s=2.0, max_commands=100)
     cur = pg.cursor()
     cur.execute("SELECT status, reply, held FROM spine_asks"
@@ -94,7 +94,7 @@ def test_cancel_is_the_default_and_the_act_never_ran(pg):
     ask_id = dispatch.submit_ask(pg, f"Seal my other note {tok} forever.")
     from orreth_spine import outbox, sinks
     assert outbox.drain(pg, sinks.KafkaSink()) >= 1
-    dispatch.dispatch_once(pg, consumer=f"cc-{tok}", group=f"cg-{tok}")
+    dispatch.dispatch_once(pg, consumer="test-dispatcher", group="test-dispatcher")
     r.serve_once(pg, idle_s=2.0, max_commands=100)
     dispatch.confirm_ask(pg, ask_id, approve=False)    # the default: cancel
     import time as _t
