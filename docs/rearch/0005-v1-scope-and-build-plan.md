@@ -213,9 +213,31 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   like clients, attached before asking) · a grown graph moved the reply
   to notice five (collect until the reply, never count). Suite 47
   green, twice-run stable.
-- Next: **sp2 — the Objectives band + scope edges + fan-out UI** ·
-  **sp3 — streamed deltas + the Playwright walks the specs** (the
-  before/after record).
+- **sp2 — the band, the edges, the fan-out** ✅ **LANDED 2026-09-17**:
+  **the OBJECTIVES floor hatch opens** — the lifecycle band slides up
+  from the floor (P13 felt): every ask queued/held/replied/cancelled,
+  status dots breathing, every row a door that renders its reply AND
+  journey in place, live-refreshing on feed notices (P17). **The chat
+  grew its resident edge** (the crew rail: live roster chips from the
+  new /residents door; selection IS the scope of applied inference —
+  the chat targets its selected residents, so two residents never make
+  the shared queue a lottery). **Fan-out is real** (P14): one ask →
+  one per named resident via per-resident routing keys/queues; two
+  lenses, two selves, distinct labeled results, a shared fanout id —
+  and "summarize these together?" appears only when all replies land,
+  because synthesis is the human's choice. The BridgeRig seats a second
+  resident (the echo) by default. New doors: GET /asks · GET /residents
+  · POST /ask {to:[…]}. TWO structural wounds found live and cured at
+  the right layer: (1) the running Bridge's librarian ANSWERED A TEST'S
+  ASK — with yesterday's weather in her recall — two rigs shared one
+  broker world; now **queues wear a namespace (SPINE_QUEUE_NS) and
+  every fact wears its WORLD (SPINE_SCOPE; a dispatcher only dispatches
+  its own world's facts)** — the universe-isolation law arriving early,
+  proven by collision; (2) an old-code process is an OLD WORLD — no new
+  law can bind a process that predates it (the deployment lesson,
+  named for the cells era). Suite 49 green.
+- Next: **sp3 — streamed deltas + the Playwright walks the specs**
+  (the before/after record).
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 

@@ -57,7 +57,7 @@ def test_the_human_path_runs_over_http_alone(pg):
     tok = secrets.token_hex(4)
     reply = f"The whole answer, every word of it, marker {tok}."
     rig = glass.BridgeRig(gateway=gateway.FakeGateway(reply=reply),
-                          port=0).start()
+                          port=0, second=False).start()
     try:
         assert rig.feed_ready.wait(20)
         s, page = _get(rig.port, "/")
@@ -86,7 +86,7 @@ def test_cancel_over_http_means_the_act_never_ran(pg):
     gw = gateway.FakeActingGateway(
         script=[("tool", "seal-record", {"key": f"note-{tok}"}),
                 ("text", "sealed: {result}")])
-    rig = glass.BridgeRig(gateway=gw, port=0).start()
+    rig = glass.BridgeRig(gateway=gw, port=0, second=False).start()
     try:
         assert rig.feed_ready.wait(20)
         _s, filed = _post(rig.port, "/ask",

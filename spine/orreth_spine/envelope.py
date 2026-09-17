@@ -13,8 +13,18 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import secrets
 from datetime import datetime, timezone
+
+
+def scope() -> str:
+    """The world this process belongs to (SPINE_SCOPE, default u:dev).
+    Facts wear it, and a dispatcher only dispatches its OWN world's
+    facts — two rigs on one broker stay two worlds (found live: the
+    running Bridge's dispatcher bridged a test's facts onto its own
+    benches and its librarian answered them)."""
+    return os.environ.get("SPINE_SCOPE", "u:dev")
 
 SPECVERSION = "orreth.transport/1"
 KINDS = ("command", "event")

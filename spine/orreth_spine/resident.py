@@ -30,6 +30,22 @@ from .rails import COMMAND_EXCHANGE, RABBIT_URL
 
 SERVE_QUEUE = "resident.serve.00"
 SERVE_KEY = "cmd.dev.00.resident.serve"
+
+
+def serve_queue(name: str | None = None) -> str:
+    """Queue names wear the SPINE_QUEUE_NS namespace when one is set —
+    a test session lives on its own benches and can never race a live
+    rig on the same broker (found live: the running Bridge's librarian
+    answered a test's ask, with yesterday's weather in her recall)."""
+    ns = os.environ.get("SPINE_QUEUE_NS", "")
+    base = SERVE_QUEUE + (f".{ns}" if ns else "")
+    return f"{base}.{name}" if name else base
+
+
+def serve_key(name: str | None = None) -> str:
+    ns = os.environ.get("SPINE_QUEUE_NS", "")
+    base = SERVE_KEY + (f".{ns}" if ns else "")
+    return f"{base}.{name}" if name else base
 ASK_RECEIVED = "orreth.ask.received.v1"
 JOURNEY = "orreth.journey.v1"
 REPLY = "orreth.reply.v1"
@@ -70,6 +86,10 @@ def ensure_schema(conn) -> None:
                     " held text")
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
                     " seq int NOT NULL DEFAULT 1")
+        cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
+                    " target text")
+        cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
+                    " fanout text")
 
 
 def _next_seq(cur, ask_id: str) -> int:
@@ -237,8 +257,8 @@ class Resident:
             # never a retry loop (0002's failure table): the refusal lands
             # as a visible journey event and the footprint stands
             j = ev.make_envelope(
-                kind="event", type=JOURNEY, universe_id="u:dev",
-                scope_path="u:dev",
+                kind="event", type=JOURNEY, universe_id=ev.scope(),
+                scope_path=ev.scope(),
                 payload={"ref": ask_id, "hash": "sha256:-",
                          "note": f"{self.name}: refused a stale command — "
                                  f"this ask is not on my ground"},
@@ -263,8 +283,8 @@ class Resident:
                 " reply = %s, served_by = %s, held = %s WHERE ask_id = %s",
                 (question, self.identity.did, json.dumps(held), ask_id))
             n = ev.make_envelope(
-                kind="event", type=CONFIRM_NEEDED, universe_id="u:dev",
-                scope_path="u:dev",
+                kind="event", type=CONFIRM_NEEDED, universe_id=ev.scope(),
+                scope_path=ev.scope(),
                 payload={"ref": ask_id, "hash": "sha256:-",
                          "tool": held["tool"]},
                 correlation_id=ask_id, authority_chain=full_chain,
@@ -277,8 +297,8 @@ class Resident:
     def _journey(self, cur, ask_id: str, steps: list, chain: list) -> None:
         for step in steps:
             j = ev.make_envelope(
-                kind="event", type=JOURNEY, universe_id="u:dev",
-                scope_path="u:dev",
+                kind="event", type=JOURNEY, universe_id=ev.scope(),
+                scope_path=ev.scope(),
                 payload={"ref": ask_id, "hash": "sha256:-",
                          "note": f"{self.name}: {step}"},
                 correlation_id=ask_id, authority_chain=chain,
@@ -293,7 +313,7 @@ class Resident:
             " served_by = %s, replied_at = now() WHERE ask_id = %s",
             (status, reply, self.identity.did, ask_id))
         r = ev.make_envelope(
-            kind="event", type=REPLY, universe_id="u:dev", scope_path="u:dev",
+            kind="event", type=REPLY, universe_id=ev.scope(), scope_path=ev.scope(),
             payload={"ref": ask_id, "hash": ev.content_hash(reply)},
             correlation_id=ask_id, authority_chain=chain,
             aggregate={"type": "ask", "id": ask_id,
@@ -353,12 +373,23 @@ class Resident:
             ch = rc.channel()
             ch.exchange_declare(COMMAND_EXCHANGE, exchange_type="topic",
                                 durable=True)
-            ch.queue_declare(SERVE_QUEUE, durable=True)
-            ch.queue_bind(SERVE_QUEUE, COMMAND_EXCHANGE, SERVE_KEY)
+            # two doors: the shared any-resident queue (an untargeted ask)
+            # and MY OWN queue (a fan-out names its residents — the same
+            # request reaches each selected one, never a lottery)
+            shared, mine = serve_queue(), serve_queue(self.name)
+            ch.queue_declare(shared, durable=True)
+            ch.queue_bind(shared, COMMAND_EXCHANGE, serve_key())
+            ch.queue_declare(mine, durable=True)
+            ch.queue_bind(mine, COMMAND_EXCHANGE, serve_key(self.name))
+            queues = [shared, mine]
             deadline = time.monotonic() + idle_s
             while time.monotonic() < deadline and \
                     tally["served"] + tally["absorbed"] < max_commands:
-                method, _props, body = ch.basic_get(SERVE_QUEUE)
+                method = body = None
+                for q in queues:
+                    method, _props, body = ch.basic_get(q)
+                    if method is not None:
+                        break
                 if method is None:
                     time.sleep(0.05)
                     continue

@@ -84,6 +84,52 @@
     var(--amber-dim)}      /* cancel is the default — it wears the focus */
   .btn-yes{background:transparent;color:var(--dim)}
   .btn-yes:hover{color:var(--ink);border-color:var(--amber-dim)}
+  #chat-body{flex:1;display:flex;min-height:0}
+  #rail{width:132px;border-left:1px solid var(--seam);padding:10px 8px;
+    overflow-y:auto}
+  #rail h4{margin:0 0 8px;color:var(--dim);font-size:9.5px;
+    letter-spacing:.25em;font-weight:normal}
+  .chip{display:block;width:100%;text-align:left;font:inherit;
+    font-size:11px;margin-bottom:6px;padding:5px 8px;border-radius:6px;
+    cursor:pointer;background:#1a1f2c;border:1px solid var(--seam);
+    color:var(--dim)}
+  .chip.on{color:var(--jade);border-color:var(--jade);
+    background:rgba(127,216,168,.08)}
+  .summarize{align-self:flex-start;font:inherit;font-size:11px;
+    margin:2px 0 4px;padding:5px 10px;border-radius:6px;cursor:pointer;
+    background:transparent;border:1px dashed var(--amber-dim);
+    color:var(--amber)}
+  /* ---- the Objectives band (the floor hatch opens) ---- */
+  #floor{cursor:pointer;transition:color .2s}
+  #floor:hover{color:var(--amber)}
+  #band{position:fixed;left:5vw;right:5vw;bottom:0;height:46vh;
+    transform:translateY(104%);transition:transform .45s
+    cubic-bezier(.22,.9,.3,1);z-index:9;display:flex;flex-direction:column;
+    border:1px solid var(--seam);border-bottom:none;
+    border-radius:14px 14px 0 0;background:var(--glass);
+    backdrop-filter:blur(10px);box-shadow:0 -14px 44px rgba(0,0,0,.5)}
+  #band.open{transform:translateY(0)}
+  #band header{padding:9px 16px;color:var(--amber);font-size:11px;
+    letter-spacing:.3em;border-bottom:1px solid var(--seam)}
+  #band-rows{flex:1;overflow-y:auto;padding:6px 10px}
+  .brow{border-bottom:1px solid rgba(42,46,58,.6);padding:7px 8px;
+    cursor:pointer;display:flex;gap:10px;align-items:baseline}
+  .brow:hover{background:rgba(255,255,255,.03)}
+  .dot{width:8px;height:8px;border-radius:50%;flex:none;
+    align-self:center}
+  .dot.received{background:var(--amber);animation:pulse 1.2s infinite}
+  .dot.awaiting-confirm{background:var(--amber)}
+  .dot.replied{background:var(--jade)}
+  .dot.cancelled{background:#555}
+  @keyframes pulse{50%{opacity:.35}}
+  .brow .snip{flex:1;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap}
+  .brow .meta{color:var(--dim);font-size:10.5px;flex:none}
+  .bexpand{padding:8px 26px 12px;color:var(--ink);font-size:12.5px;
+    background:rgba(0,0,0,.25);border-bottom:1px solid var(--seam);
+    white-space:pre-wrap}
+  .bexpand .journey-notes{color:var(--dim);font-style:italic;
+    font-size:11px;margin-top:6px}
   #composer{display:flex;gap:8px;padding:12px 14px;border-top:1px solid
     var(--seam)}
   #composer input{flex:1;font:inherit;color:var(--ink);
@@ -112,13 +158,21 @@
   </div></div>
   <div id="sill">O R R E R Y&nbsp;&nbsp;·&nbsp;&nbsp;B R A I N&nbsp;&nbsp;·&nbsp;&nbsp;A T L A S</div>
   <div class="strip"></div>
-  <div id="floor">O B J E C T I V E S</div>
+  <div id="floor" onclick="toggleBand()" title="everything running, everything run">O B J E C T I V E S ▴</div>
+</div>
+
+<div id="band">
+  <header>OBJECTIVES · everything running, everything run — every row a door</header>
+  <div id="band-rows"></div>
 </div>
 
 <div id="chat">
   <header><span>THE ONE CHAT · u:dev</span>
     <span class="hint">[Esc] returns to the bridge</span></header>
-  <div id="log"></div>
+  <div id="chat-body">
+    <div id="log"></div>
+    <div id="rail"><h4>RESIDENTS</h4><div id="chips"></div></div>
+  </div>
   <div id="composer">
     <input id="chat-in" placeholder="ask anything — every reply arrives whole"
            autocomplete="off">
@@ -155,8 +209,69 @@ function toggleChat(open){
     document.getElementById("chat-in").focus();
 }
 addEventListener("keydown", e => {
-  if (e.key === "Escape") { toggleChat(false); }        // SPEC-ESC-01
+  if (e.key === "Escape") {                             // SPEC-ESC-01:
+    toggleChat(false); toggleBand(false);               // one keystroke,
+  }                                                     // the bridge
 });
+
+/* ---- the crew rail: residents on the right edge, targets by chip ---- */
+const NAMES = {};                 // did -> name
+let SELECTED = new Set();
+async function loadRoster(){
+  const r = await fetch("/residents").then(x=>x.json()).catch(()=>null);
+  if (!r) return;
+  const box = document.getElementById("chips"); box.innerHTML = "";
+  for (const res of r.residents){
+    NAMES[res.did] = res.name;
+    if (!SELECTED.size && res.name === "librarian") SELECTED.add(res.name);
+    const b = document.createElement("button");
+    b.className = "chip" + (SELECTED.has(res.name) ? " on" : "");
+    b.textContent = res.name + " · life " + res.lives;
+    b.onclick = () => { SELECTED.has(res.name) ? SELECTED.delete(res.name)
+                                               : SELECTED.add(res.name);
+                        b.classList.toggle("on"); };
+    box.appendChild(b);
+  }
+  if (!SELECTED.size && r.residents.length)
+    SELECTED.add(r.residents[0].name);
+}
+loadRoster(); setInterval(loadRoster, 20000);
+
+/* ---- the Objectives band: the floor hatch opens ---- */
+const band = document.getElementById("band");
+function toggleBand(open){
+  band.classList.toggle("open", open ?? !band.classList.contains("open"));
+  if (band.classList.contains("open")) loadBand();
+}
+let bandOpenRow = null;
+async function loadBand(){
+  const r = await fetch("/asks").then(x=>x.json()).catch(()=>null);
+  if (!r) return;
+  const box = document.getElementById("band-rows"); box.innerHTML = "";
+  for (const a of r.asks){
+    const row = document.createElement("div");
+    row.className = "brow";
+    row.innerHTML =
+      `<span class="dot ${a.status}"></span>` +
+      `<span class="snip">${esc(a.text)}</span>` +
+      `<span class="meta">${esc(a.target || "any")} · ${a.status}</span>`;
+    row.onclick = () => expandRow(row, a.ask_id);
+    box.appendChild(row);
+  }
+}
+async function expandRow(row, id){
+  if (bandOpenRow){ bandOpenRow.remove(); bandOpenRow = null; }
+  const v = await fetch("/ask/" + id).then(x=>x.json()).catch(()=>null);
+  if (!v) return;
+  const d = document.createElement("div");
+  d.className = "bexpand";
+  d.textContent = v.reply || "(still on its way)";
+  const j = document.createElement("div");
+  j.className = "journey-notes";
+  j.textContent = v.journey.join("  ·  ");
+  d.appendChild(j);
+  row.after(d); bandOpenRow = d;      // the result renders RIGHT HERE
+}
 
 /* ---- the conversation ---- */
 const log = document.getElementById("log");
@@ -167,16 +282,28 @@ function el(cls, html){ const d = document.createElement("div");
 const esc = s => s.replace(/[&<>"]/g,
   ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 
+const FANS = {};      // fanout ids -> {ids:[], replies:{}, offered:false}
 async function send(){
   const inp = document.getElementById("chat-in");
   const text = inp.value.trim(); if (!text) return;
   inp.value = "";
-  el("msg mine", esc(text));
+  const to = [...SELECTED];
+  el("msg mine", esc(text) + (to.length > 1
+    ? `<div class="who" style="text-align:right">→ ${esc(to.join(" + "))}</div>` : ""));
   const r = await fetch("/ask", {method:"POST",
     headers:{"content-type":"application/json"},
-    body: JSON.stringify({text})}).then(x=>x.json()).catch(()=>null);
-  if (!r || !r.id) { el("journey","the ask door did not answer"); return; }
-  PENDING[r.id] = el("journey", "the ask is on its way…");
+    body: JSON.stringify({text, to: to.length ? to : undefined})})
+    .then(x=>x.json()).catch(()=>null);
+  const ids = r && (r.ids || (r.id && [r.id]));
+  if (!ids) { el("journey","the ask door did not answer"); return; }
+  if (ids.length > 1){
+    const fan = "fan:" + ids.join(",");
+    FANS[fan] = {ids, replies:{}, offered:false};
+    ids.forEach((id, i) => { PENDING[id] = el("journey",
+      `→ ${esc(to[i] || "…")} — on its way…`); PENDING[id]._fan = fan; });
+  } else {
+    PENDING[ids[0]] = el("journey", "the ask is on its way…");
+  }
 }
 
 /* every notice is a pointer — the glass fetches truth through the door */
@@ -192,8 +319,14 @@ async function onNotice(n){
 }
 
 function renderOutcome(id, v, line){
+  const fan = line._fan;
   line.remove(); delete PENDING[id];
-  const who = `<div class="who">${esc(v.served_by ? "the librarian" : "orreth")}</div>`;
+  const name = NAMES[v.served_by] || v.target || "orreth";
+  const who = `<div class="who">${esc(name)}</div>`;
+  if (fan && v.status === "replied"){
+    FANS[fan].replies[id] = {name, reply: v.reply};
+    offerSummarize(fan);
+  }
   if (v.status === "awaiting-confirm"){
     const m = el("msg theirs", who + esc(v.reply));
     const row = document.createElement("div");
@@ -220,6 +353,25 @@ async function decide(id, approve, row){
     ? "your yes is on its way…" : "cancelling — nothing will run…";
 }
 
+function offerSummarize(fan){
+  const f = FANS[fan];
+  if (f.offered || Object.keys(f.replies).length < f.ids.length) return;
+  f.offered = true;                 // the human CHOOSES synthesis (P14)
+  const b = document.createElement("button");
+  b.className = "summarize";
+  b.textContent = "summarize these together?";
+  b.onclick = () => {
+    b.remove();
+    const parts = Object.values(f.replies).map(
+      r => `${r.name} said: "${r.reply}"`).join("\n\n");
+    const inp = document.getElementById("chat-in");
+    inp.value = "Summarize these answers together, briefly:\n\n" + parts;
+    SELECTED = new Set(["librarian"]); loadRoster();
+    send();
+  };
+  log.appendChild(b); log.scrollTop = log.scrollHeight;
+}
+
 document.getElementById("chat-in").addEventListener("keydown",
   e => { if (e.key === "Enter") send(); });
 
@@ -228,9 +380,13 @@ const pulse = document.getElementById("pulse");
 let lastRev = null;
 function connectFeed(){
   const src = new EventSource("/feed");
+  let bandTimer = null;
   src.onmessage = e => { const n = JSON.parse(e.data);
     lastRev = n.rev; pulse.textContent = "PULSE · rev " + n.rev;
-    onNotice(n); };
+    onNotice(n);
+    if (band.classList.contains("open") && !bandTimer)   // P17: one state,
+      bandTimer = setTimeout(() => { bandTimer = null;   // every lens
+                                     loadBand(); }, 400); };
   src.addEventListener("resync", () =>
     pulse.textContent = "PULSE · resync — fetch fresh through the doors");
   src.onopen = () => pulse.textContent = "PULSE · listening" +

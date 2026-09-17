@@ -54,8 +54,9 @@ def _purge_queue():
         os.environ.get("SPINE_RABBIT",
                        "amqp://orreth:orreth-dev@localhost:5672/%2F")))
     ch = rc.channel()
-    ch.queue_declare(resident.SERVE_QUEUE, durable=True)
-    ch.queue_purge(resident.SERVE_QUEUE)
+    q = resident.serve_queue()
+    ch.queue_declare(q, durable=True)
+    ch.queue_purge(q)
     rc.close()
 
 

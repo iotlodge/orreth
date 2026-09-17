@@ -45,8 +45,8 @@ class OrrethStore:
     def put(self, namespace: str, key: str, body: str) -> str:
         h = ev.content_hash(body)
         e = ev.make_envelope(
-            kind="event", type=MEMORY_EVENT, universe_id="u:dev",
-            scope_path="u:dev",
+            kind="event", type=MEMORY_EVENT, universe_id=ev.scope(),
+            scope_path=ev.scope(),
             payload={"ref": f"{namespace}/{key}", "hash": h},
             authority_chain=[self.by_did])
         with self._conn.transaction():

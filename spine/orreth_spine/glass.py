@@ -59,6 +59,31 @@ def ask_view(conn, ask_id: str) -> dict | None:
             "journey": [n for n in notes if n]}
 
 
+def asks_view(conn, limit: int = 30) -> list[dict]:
+    """The Objectives band's door (canon 0001 P13): everything running,
+    everything run — newest first, every row a door."""
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT ask_id, text, person, status, served_by, target, fanout,"
+        " asked_at, replied_at FROM spine_asks"
+        " ORDER BY asked_at DESC LIMIT %s", (limit,))
+    return [{"ask_id": r[0], "text": r[1][:140], "person": r[2],
+             "status": r[3], "served_by": r[4], "target": r[5],
+             "fanout": r[6], "asked_at": r[7].isoformat(),
+             "replied_at": r[8].isoformat() if r[8] else None}
+            for r in cur.fetchall()]
+
+
+def residents_view(conn) -> list[dict]:
+    """The chat's right edge: who lives here — name, self, lives."""
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT DISTINCT ON (name) name, did, life, joined_at"
+        " FROM spine_joins ORDER BY name, join_id DESC")
+    return [{"name": r[0], "did": r[1], "lives": r[2],
+             "joined_at": r[3].isoformat()} for r in cur.fetchall()]
+
+
 def make_glass_handler(feed: bridgefeed.Feed, dsn: str):
     Base = bridgefeed.make_handler(feed)
 
@@ -88,6 +113,13 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str):
                 if view is None:
                     return self._json(404, {"error": "no such ask"})
                 return self._json(200, view)
+            if path == "/asks":
+                with psycopg.connect(dsn) as conn:
+                    return self._json(200, {"asks": asks_view(conn)})
+            if path == "/residents":
+                with psycopg.connect(dsn) as conn:
+                    return self._json(200,
+                                      {"residents": residents_view(conn)})
             self.send_response(404)
             self.end_headers()
 
@@ -104,9 +136,18 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str):
                     return self._json(400, {"error": "an empty ask asks "
                                                      "nothing"})
                 person = str(p.get("person") or "did:orreth:person:jb")
+                to = p.get("to") or None
+                if to is not None and not (isinstance(to, list) and
+                                           all(isinstance(t, str)
+                                               for t in to) and to):
+                    return self._json(400, {"error": "'to' names residents "
+                                                     "as a list of names"})
                 with psycopg.connect(dsn) as conn:
-                    ask_id = dispatch.submit_ask(conn, text, person=person)
-                return self._json(201, {"id": ask_id})
+                    out = dispatch.submit_ask(conn, text, person=person,
+                                              to=to)
+                if isinstance(out, list):
+                    return self._json(201, {"ids": out})
+                return self._json(201, {"id": out})
             if path == "/confirm":
                 ask_id = str(p.get("ask_id") or "")
                 approve = bool(p.get("approve", False))   # absent = cancel
@@ -126,16 +167,23 @@ class BridgeRig:
     the glass, breathing together; stopped together."""
 
     def __init__(self, *, gateway=None, template=None, port: int = 4600,
-                 dsn: str | None = None, policy=None):
+                 dsn: str | None = None, policy=None, second: bool = True):
         spine = Path(__file__).resolve().parents[1]
         self.dsn = dsn or PG_DSN
         self._stop = threading.Event()
         self.feed = bridgefeed.Feed()
+        policy_path = policy or spine / "policy" / "covenant-policy.v1.json"
         self.resident = Resident(
             template or spine / "templates" / "librarian-resident.v0.json",
             gateway=gateway)
-        self.resident.load_policy(
-            policy or spine / "policy" / "covenant-policy.v1.json")
+        self.resident.load_policy(policy_path)
+        self.residents = [self.resident]
+        if second:
+            # the crew's second seat: the echo — mindless, honest, and
+            # exactly what a fan-out needs to show two distinct lenses
+            echo = Resident(spine / "templates" / "echo-resident.v0.json")
+            echo.load_policy(policy_path)
+            self.residents.append(echo)
         from http.server import ThreadingHTTPServer
         self._httpd = ThreadingHTTPServer(
             ("127.0.0.1", port), make_glass_handler(self.feed, self.dsn))
@@ -149,8 +197,8 @@ class BridgeRig:
                              kwargs={"ready": self.feed_ready}, daemon=True),
             threading.Thread(target=self._relay_loop, daemon=True),
             threading.Thread(target=self._dispatch_loop, daemon=True),
-            threading.Thread(target=self._serve_loop, daemon=True),
-        ]
+        ] + [threading.Thread(target=self._serve_loop, args=(r,),
+                              daemon=True) for r in self.residents]
 
     def _relay_loop(self):
         sink = sinks.KafkaSink()
@@ -175,13 +223,12 @@ class BridgeRig:
                 except Exception:
                     pass
 
-    def _serve_loop(self):
+    def _serve_loop(self, resident):
         with psycopg.connect(self.dsn) as conn:
-            self.resident.join(conn)
+            resident.join(conn)
             while not self._stop.is_set():
                 try:
-                    self.resident.serve_once(conn, idle_s=1.0,
-                                             max_commands=50)
+                    resident.serve_once(conn, idle_s=1.0, max_commands=50)
                 except Exception:
                     pass
 
