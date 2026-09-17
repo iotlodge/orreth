@@ -60,6 +60,33 @@ to machine learn a self-tuning and adaptive kernel."
 5. **Never-sleeping observation is metered work**: cadence is a dial,
    cost rides showback.
 
+## JB's SCOPE LOCK (2026-09-16, on reading the keep-it-real list)
+
+**"4 alone is a reason to only consider this for a specific use case —
+those threats are REAL."** So the seed narrows, by JB's word: L4 is
+NEVER a platform-wide default. Each application is a NAMED use case,
+individually gated, with its own threat model — or it doesn't run.
+
+**Fable's selection criterion (the sharpening): rank use cases by WHO
+SIGNS THE ROWS.** Poisoning risk is inherited from the observation
+stream's authors:
+
+- **Tier 1 — kernel-signed streams** (refusals, gate denials, fencing
+  rejections, meter lines): the kernel itself authors every row; an
+  adversary cannot sign them without owning the kernel — in which case
+  models are the least of the problems. *Poisoning-resistant by
+  construction.* → The first and maybe only V1-era candidate: threat
+  detection over the kernel's own enforcement events.
+- **Tier 2 — resident-signed operational streams** (scheduled duty
+  observations): trustworthy identities, but their INPUTS may be
+  attacker-influenced — models here need input-provenance weighting.
+- **Tier 3 — anything touched by external/human content** (asks,
+  feedback, imported sources): the article-12 surface at full strength.
+  Highest bar, latest consideration, possibly never.
+
+The rule in one line: **learn first from the streams only the kernel
+can write, and earn each step outward.**
+
 ## The ladder, complete
 
 L1 in-graph self-critique · L2 the offline A/B harness · L3 near-live
