@@ -146,10 +146,29 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   **authority chain rides every hop** (person → resident on journey and
   reply — AG-7's seed live). The Bridge feed carries received → journey
   → reply, completion last. Suite 36 green.
-- Next: **sp2 — the mind arrives** (LLM through a gateway lane, streamed
-  full reply, OrrethStore v0 verbatim recall) · **sp3 — tools + the
-  temperature outside** (the soul checkpoint walked live, with the L2
-  interlock).
+- **sp2 — the mind arrives** ✅ **LANDED 2026-09-16**: `gateway.py` —
+  the metered lane ("no mind thinks off-meter": every thought lands a
+  meter line — did · model · tokens in/out; the kernel never sees the
+  prompt); `store.py` — the **OrrethStore v0** (memories land
+  content-hashed WITH their event in one tx; verbatim get; word-match
+  search — honestly v0, Phase 5's projection replaces its innards behind
+  the same call); the resident graph grew **recall** (its own worldline
+  + matching memories packed as notes) and **think** now rides the
+  gateway when the template declares a mind — a mindless template NEVER
+  touches the gateway (proven). The **librarian** is born
+  (`librarian-resident.v0.json`, Haiku 4.5) and **thought for real,
+  live**: recalled a seeded fact, cited it by marker, answered
+  completely, metered 792 in / 106 out. One walk-wound paid in-hour:
+  v0 search matched whole sentences (found nothing) → word-based; the
+  honesty law had already held (she refused to invent the memory she
+  couldn't find). Suite 40 green. NAMED DEFERRAL: token-by-token
+  streaming to the glass lands with the Bridge (P3) — the feed's
+  pointer-only law forbids content in notices, and the lawful design
+  (delta rows on ground + pointer notices) waits for a glass to stream
+  INTO.
+- Next: **sp3 — tools + the temperature outside** (the soul checkpoint
+  walked live: a real tool through a governed door, journey text, the
+  L2 interlock — and the librarian tells JB the temperature).
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 

@@ -43,6 +43,7 @@ class _State(TypedDict):
     text: str
     reply: str
     steps: list
+    notes: list
 
 
 def ensure_schema(conn) -> None:
@@ -66,7 +67,7 @@ def ensure_schema(conn) -> None:
 
 class Resident:
     def __init__(self, template_path: str | os.PathLike,
-                 *, home: str | os.PathLike | None = None):
+                 *, home: str | os.PathLike | None = None, gateway=None):
         raw = Path(template_path).read_bytes()
         self.template = json.loads(raw)
         if self.template.get("format") != "orreth-resident-template/1":
@@ -76,6 +77,11 @@ class Resident:
         self.name = self.template["name"]
         self.identity = Identity.load(self.name, home)
         self.policy: dict | None = None
+        # the mind: a template that declares one thinks through the
+        # gateway (metered, always); without a gateway the body falls
+        # back to its deterministic graph — there is no unmetered door
+        self.gateway = gateway if self.template.get("mind") else None
+        self._serve_conn = None
         self._graph = self._build_graph()
 
     # ---- birth ----------------------------------------------------------------
@@ -120,7 +126,51 @@ class Resident:
         def hear(s: _State) -> dict:
             return {"steps": s["steps"] + ["heard the ask, every word"]}
 
+        def recall(s: _State) -> dict:
+            """Pack the mind (canon 0003): my own worldline (recent
+            replies) and my memories that match the ask — packed as
+            notes the think node reads. Without a serving connection
+            (pure-graph tests) the recall is honestly empty."""
+            notes: list[str] = []
+            conn = self._serve_conn
+            if conn is not None:
+                from .store import OrrethStore
+                cur = conn.cursor()
+                cur.execute(
+                    "SELECT text, reply FROM spine_asks"
+                    " WHERE served_by = %s AND status = 'replied'"
+                    " ORDER BY replied_at DESC LIMIT 3",
+                    (self.identity.did,))
+                for t, rp in cur.fetchall():
+                    notes.append(f"earlier, asked: {t!r} — I replied: {rp!r}")
+                st = OrrethStore(conn, by_did=self.identity.did)
+                for m in st.search(self.name, s["text"][:60], limit=3):
+                    notes.append(f"I remember [{m['key']}]: {m['body']}")
+            step = (f"recalled {len(notes)} notes" if notes
+                    else "recalled nothing yet — a young memory")
+            return {"notes": notes, "steps": s["steps"] + [step]}
+
         def think(s: _State) -> dict:
+            if self.gateway is not None and self._serve_conn is not None:
+                mind = self.template.get("mind") or {}
+                system = (
+                    f"You are {self.name}, a resident of Orreth — "
+                    f"{self.template['persona']}. Laws you live by: answer "
+                    "in plain, friendly words anyone can understand; answer "
+                    "COMPLETELY — the full reply, never a teaser; when your "
+                    "recalled notes bear on the ask, use them and say so "
+                    "plainly; never invent a memory you were not handed.")
+                prompt = ""
+                if s["notes"]:
+                    prompt += ("Your recalled notes:\n- "
+                               + "\n- ".join(s["notes"]) + "\n\n")
+                prompt += f"The ask: {s['text']}"
+                reply = self.gateway.think(
+                    self._serve_conn, did=self.identity.did, system=system,
+                    prompt=prompt, model=mind.get("model"))
+                return {"reply": reply,
+                        "steps": s["steps"] + ["thought it through the "
+                                               "metered gateway"]}
             reply = (f"I am {self.name} — {self.template['persona']}. "
                      f"You asked: \"{s['text']}\" — and that is every word "
                      f"of it, back to you, none summarized away.")
@@ -129,9 +179,11 @@ class Resident:
 
         g = StateGraph(_State)
         g.add_node("hear", hear)
+        g.add_node("recall", recall)
         g.add_node("think", think)
         g.add_edge(START, "hear")
-        g.add_edge("hear", "think")
+        g.add_edge("hear", "recall")
+        g.add_edge("recall", "think")
         g.add_edge("think", END)
         return g.compile()
 
@@ -157,7 +209,8 @@ class Resident:
             outbox.add_row(cur, ev.encode(j), j["message_id"])
             return
         text, person = row
-        out = self._graph.invoke({"text": text, "reply": "", "steps": []})
+        out = self._graph.invoke({"text": text, "reply": "", "steps": [],
+                                  "notes": []})
         seq = 1                                   # ask.received wore seq 1
         full_chain = list(chain) if chain else [person]
         if self.identity.did not in full_chain:
@@ -191,6 +244,7 @@ class Resident:
         ensure_schema(conn)
         inbox.ensure_schema(conn)
         outbox.ensure_schema(conn)
+        self._serve_conn = conn        # the graph's doors ride this life
         rc = pika.BlockingConnection(
             pika.URLParameters(rabbit_url or RABBIT_URL))
         tally = {"served": 0, "absorbed": 0}

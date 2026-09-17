@@ -10,6 +10,7 @@ dependencies = [
     "confluent-kafka>=2.6",
     "langgraph>=1.2.11",
     "pynacl>=1.6.2",
+    "anthropic>=1.6.0",
 ]
 
 [dependency-groups]
