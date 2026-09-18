@@ -13,7 +13,7 @@ is the reason the rearchitecture exists.
 | **SPEC-JOURNEY-01** | P7 | Submit any ask; watch beneath it | Soft text names who took it, on which scope, and when it completed | expected FAIL | **PASS** (after sp5) — "librarian took it on u:dev · completed 01:52:34 (0.2 s)"; first walk: who only |
 | **SPEC-SOFT-01** | P5 | Submit an ask, immediately start a second in the same window; wait | Neither blocks the other; completion arrives softly; clicking renders the result right there | expected FAIL | **PASS** — second ask while the first streamed; both whole in 11 s |
 | **SPEC-ESC-01** | P4 | Open any pull/panel; press [Esc] | One keystroke returns the top-level view, from anywhere | expected FAIL | **PASS** — one Escape from chat + band + row → bare bridge |
-| **SPEC-SCOPE-01** | P6 | Type an ask containing "between last Monday and today" | The time scope visibly reflects on the chat's clock/axes without any click | expected FAIL | NOT BUILT (expected) |
+| **SPEC-SCOPE-01** | P6 | Type an ask containing "between last Monday and today" | The time scope visibly reflects on the chat's clock/axes without any click | expected FAIL | **PASS** (sp6) — typing "between last Monday and today" drew "Mon, Sep 14 ——|——|—— today · 4 days" on the clock, no click; the window rode the ask into its journey line |
 | **SPEC-FANOUT-01** | P14 fan-out | Select two residents; send one ask | Two distinct, labeled results; each downloadable; "summarize together" offered on demand | expected FAIL | **PASS** two labelled results + summarize-by-name (after wounds 2 & 3 cured) · FAIL download (no control) |
 | **SPEC-LIFE-01** | P13 | Open the lifecycle surface while work runs | Queued, in-flight, and completed all visible; every row opens its result in place | expected FAIL | **PASS** (after wound 1 cured; sp5) — every row a door from the landing state; rows carry a time; no stranger world's rows even with the suite running |
 | **SPEC-SCHED-01** | P16 | Open a resident's card | Every schedule it runs is listed — human, role, and kernel; the kernel-critical one refuses edit with plain words | expected FAIL | NOT BUILT (expected) |
@@ -41,4 +41,6 @@ misattributing the echo's words · every reply labelled "orreth" once the
 roster turned over (the Bridge's residents had been ephemeral selves).
 Re-walk #3 (sp5, the ground wears its world): JOURNEY-01 and LIFE-01
 green, isolation held while the full suite ran on the same ground.
+Re-walk #4 (sp6, the scope edges): SCOPE-01 green — the clock assist
+followed the typed words with no click; the window rode the ask.
 The before-walk remainder (old glass) stays owed.

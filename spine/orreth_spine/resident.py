@@ -101,6 +101,8 @@ def ensure_schema(conn) -> None:
         cur.execute("ALTER TABLE spine_joins ADD COLUMN IF NOT EXISTS"
                     " scope text")
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
+                    " time_window text")   # the time scope the ask was set
+        cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
                     " fanout text")
 
 

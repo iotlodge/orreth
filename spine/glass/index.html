@@ -67,6 +67,18 @@
      band row stays a door and the ask box stays reachable (after-walk
      wound #1: the chat swallowed the band's clicks in the landing state) */
   body:has(#band.open) #chat{height:calc(54vh - 10px)}
+  /* the clock assist (P6): the chat's time axis — typed words set it,
+     no click; the window rides the ask (never eye candy, P8) */
+  #clock{display:flex;align-items:center;gap:10px;padding:5px 16px;
+    color:var(--dim);font-size:10.5px;letter-spacing:.12em;
+    border-bottom:1px solid var(--seam)}
+  #clock .axis{flex:1;display:flex;align-items:center;gap:6px;min-width:0}
+  #clock .edge{color:var(--amber);white-space:nowrap}
+  #clock .bar{flex:1;height:8px;position:relative;border-bottom:1px solid
+    var(--amber);opacity:.85}
+  #clock .bar i{position:absolute;bottom:0;width:1px;height:5px;
+    background:var(--amber)}
+  #clock.now .axis{opacity:.45}
   #chat header{padding:10px 16px;color:var(--amber);font-size:11px;
     letter-spacing:.3em;border-bottom:1px solid var(--seam);
     display:flex;justify-content:space-between}
@@ -174,6 +186,9 @@
 <div id="chat">
   <header><span>THE ONE CHAT · u:dev</span>
     <span class="hint">[Esc] returns to the bridge</span></header>
+  <div id="clock" class="now"><span>TIME</span>
+    <span class="axis"><span class="edge">now</span></span>
+    <span class="hint" id="clock-hint">type "between X and Y" or "since …" to set it</span></div>
   <div id="chat-body">
     <div id="log"></div>
     <div id="rail"><h4>RESIDENTS</h4><div id="chips"></div></div>
@@ -300,10 +315,15 @@ async function send(given, label){
     ? `<div class="who" style="text-align:right">→ ${esc(to.join(" + "))}</div>` : ""));
   const r = await fetch("/ask", {method:"POST",
     headers:{"content-type":"application/json"},
-    body: JSON.stringify({text, to: to.length ? to : undefined})})
+    body: JSON.stringify({text, to: to.length ? to : undefined,
+                          window: WINDOW ? {from: WINDOW.from.toISOString(),
+                                            to: WINDOW.to.toISOString()} : undefined})})
     .then(x=>x.json()).catch(()=>null);
   const ids = r && (r.ids || (r.id && [r.id]));
   if (!ids) { el("journey","the ask door did not answer"); return; }
+  WINDOW = null; drawClock();       // the window rode THAT ask (its journey
+                                    // line keeps it); the next ask's scope
+                                    // forms with its own words (P6)
   if (ids.length > 1){
     const fan = "fan:" + ids.join(",");
     FANS[fan] = {ids, replies:{}, offered:false};
@@ -363,9 +383,82 @@ function renderOutcome(id, v, line){
   }
   el("msg theirs", who + esc(v.reply || "(no words came back)"));
   if (v.replied_at)                          // P7: who took it, on which
-    el("journey", `${esc(name)} took it on ${esc(v.scope || "?")} · ` +   // scope,
-       `completed ${hhmm(v.replied_at)} (${secs(v.asked_at, v.replied_at)})`);  // when
+    el("journey", `${esc(name)} took it on ${esc(v.scope || "?")}` +      // scope,
+       (v.window ? ` · ${dayLabel(new Date(v.window.from))} → ${dayLabel(new Date(v.window.to))}` : "") +
+       ` · completed ${hhmm(v.replied_at)} (${secs(v.asked_at, v.replied_at)})`);  // when
 }
+
+/* ---- the clock assist: typed words set the time scope (P6), no click ---- */
+let WINDOW = null;
+const DAY = 864e5, WEEKDAYS = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+function startOfDay(d){ const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function dayLabel(d){ return d.toLocaleDateString([], {weekday:"short", month:"short", day:"numeric"}); }
+function readMoment(s, now){                 // one edge, in human words
+  s = s.trim().replace(/^the\s+/, "").replace(/[.?!,]+$/, "");
+  if (!s || s === "now") return {at: now, day: false};
+  if (s === "today") return {at: startOfDay(now), day: true};
+  if (s === "yesterday") return {at: startOfDay(new Date(now - DAY)), day: true};
+  let m = s.match(/^(last|past|previous)\s+(\d+|a|an|one|two|three|seven)\s+(minute|hour|day|week|month)s?$/);
+  if (m){
+    const n = {a:1, an:1, one:1, two:2, three:3, seven:7}[m[2]] ?? parseInt(m[2], 10);
+    const unit = {minute:6e4, hour:36e5, day:DAY, week:7*DAY, month:30*DAY}[m[3]];
+    return {at: new Date(now - n * unit), day: m[3] !== "minute" && m[3] !== "hour"};
+  }
+  m = s.match(/^(last|this)\s+(week|month)$/);
+  if (m){
+    const d = startOfDay(now);
+    if (m[2] === "week"){ d.setDate(d.getDate() - ((d.getDay() + 6) % 7) - (m[1] === "last" ? 7 : 0)); }
+    else { d.setDate(1); if (m[1] === "last") d.setMonth(d.getMonth() - 1); }
+    return {at: d, day: true};
+  }
+  m = s.match(/^(?:last\s+|this\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/);
+  if (m){
+    const d = startOfDay(now), want = WEEKDAYS.indexOf(m[1]);
+    let back = (d.getDay() - want + 7) % 7; if (back === 0) back = 7;   // the most recent one before today
+    d.setDate(d.getDate() - back);
+    return {at: d, day: true};
+  }
+  const t = Date.parse(s);                    // "Sep 14", "2026-09-14", …
+  return isNaN(t) ? null : {at: new Date(t), day: !/\d:\d/.test(s)};
+}
+function readWindow(text){                   // the whole ask → {from, to} or null
+  const now = new Date(), s = text.toLowerCase();
+  let m = s.match(/between\s+(.+?)\s+and\s+(.+?)(?=[.?!,]|$)/);
+  if (m){
+    const a = readMoment(m[1], now), b = readMoment(m[2], now);
+    if (a && b){
+      const to = b.day && +b.at === +startOfDay(now) ? now
+               : (b.day ? new Date(+b.at + DAY - 1) : b.at);   // a day-edge ends at its end
+      return a.at <= to ? {from: a.at, to} : {from: to, to: a.at};
+    }
+  }
+  m = s.match(/\b(since|from)\s+(.+?)(?=[.?!,]|\s+(?:to|until|till)\b|$)/);
+  if (m){ const a = readMoment(m[2], now); if (a) return {from: a.at, to: now}; }
+  m = s.match(/\b(last|past)\s+(\d+|a|an|one|two|three|seven)\s+(minute|hour|day|week|month)s?\b/);
+  if (m){ const a = readMoment(`${m[1]} ${m[2]} ${m[3]}`, now); if (a) return {from: a.at, to: now}; }
+  m = s.match(/\b(yesterday|today|last week|this week|last month|this month)\b/);
+  if (m){ const a = readMoment(m[1], now);
+          if (a) return {from: a.at, to: m[1] === "yesterday" ? new Date(+a.at + DAY - 1) : now}; }
+  return null;
+}
+function drawClock(){
+  const c = document.getElementById("clock"), ax = c.querySelector(".axis");
+  if (!WINDOW){ c.classList.add("now"); ax.innerHTML = `<span class="edge">now</span>`;
+                document.getElementById("clock-hint").hidden = false; return; }
+  c.classList.remove("now"); document.getElementById("clock-hint").hidden = true;
+  const days = Math.max(1, Math.round((WINDOW.to - WINDOW.from) / DAY));
+  const ticks = Math.min(days, 30), bar = [];
+  for (let i = 1; i < ticks; i++) bar.push(`<i style="left:${(100 * i / ticks).toFixed(1)}%"></i>`);
+  const span = days >= 2 ? `${days} days` : `${Math.max(1, Math.round((WINDOW.to - WINDOW.from) / 36e5))} h`;
+  ax.innerHTML = `<span class="edge">${esc(dayLabel(WINDOW.from))}</span>` +
+                 `<span class="bar">${bar.join("")}</span>` +
+                 `<span class="edge">${+startOfDay(WINDOW.to) === +startOfDay(new Date()) ? "today" : esc(dayLabel(WINDOW.to))}</span>` +
+                 `<span>· ${span}</span>`;
+}
+document.getElementById("chat-in").addEventListener("input", e => {
+  const w = readWindow(e.target.value);       // as intent forms — no click
+  if (w || !e.target.value.trim()) { WINDOW = w; drawClock(); }
+});
 function hhmm(iso){ return new Date(iso).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"}); }
 function secs(a, b){ return `${Math.max(0, (new Date(b) - new Date(a)) / 1000).toFixed(1)} s`; }
 

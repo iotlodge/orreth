@@ -188,7 +188,7 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   ✓, 860 in / 43 out metered, the full road.** The sentence that started
   the halt is a passing test. Suite 45 green.
 
-## Phase 3 — THE BRIDGE (opened 2026-09-16)
+## Phase 3 — THE BRIDGE (opened 2026-09-16 · **CLOSED WHOLE 2026-09-17**, JB's lock: every named claim walked green on the human path; the left scope edge — universe · ecosystems · fields multi-select — owed to P4, where a second world first exists)
 
 - **sp1 — the glass exists** ✅ **LANDED 2026-09-16**: `glass.py` — the
   glass server (the page, the SSE feed, and the human-path doors: POST
@@ -331,9 +331,32 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   of its own. And a process wound, recorded so it never recurs: a
   background suite's "exit 0" was the pipe's, not pytest's — the close
   was nearly called on 8 red. Suite 53 green.
-- Next: **sp6 — the scope edges** (SPEC-SCOPE-01: a typed time scope
-  reflects on the chat's clock/axes without a click — the last One-Chat
-  bar P3 claims; then P3 closes whole and P4 fleet+job opens).
+- **sp6 — the scope edges** ✅ **LANDED 2026-09-17**: the chat's **clock
+  assist** (the charter's "clock assist for time" on the chat's edges;
+  P6 scope set where intent forms; P8 never eye candy): a TIME strip
+  under the chat header reads "now" until typed words set it — "between
+  last Monday and today", "since yesterday", "last 3 days", "last week",
+  a weekday, a date — and it follows the words AS THEY ARE TYPED, no
+  click, no send: both edges named, a day-ticked axis between, the span
+  in days or hours. The window is scope, not decoration: it **rides the
+  ask** (payload `window`, `time_window` on the ask row — `window` is a
+  reserved word in SQL, found the loud way), the door validates it, and
+  the journey line under the reply names it ("librarian took it on u:dev
+  · Mon Sep 14 → today · completed …"). After a send the clock returns to
+  "now": the next ask's scope forms with its own words (re-checked on
+  the human path). **SPEC-SCOPE-01
+  PASSES** (re-walk #4: the strip changed character by character, "Mon,
+  Sep 14 ——|——|—— today · 4 days"; "since yesterday" → "27 h"; cleared →
+  "now"). A law: an ask wears its window on the ground and in its
+  committed event; a plain ask wears none. Friction filed: the browser's
+  own clock/day (a UTC container reads tomorrow); the librarian has
+  nothing to say about the window yet — recall does not read it (P5
+  memory whole is where the window becomes a lens). The left edge
+  (universe · ecosystems · fields multi-select) has nothing to select
+  until a second world exists — owed to P4. Suite 54 green. **PHASE 3
+  IS WHOLE.**
+- Next: **Phase 4 — fleet + job** (a second world; the left scope edge;
+  the roster that breathes).
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 

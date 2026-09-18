@@ -136,3 +136,21 @@ def test_a_world_sees_only_its_own_ground(pg, monkeypatch):
     assert ask_id not in {a["ask_id"] for a in glass.asks_view(pg)}
     assert glass.ask_view(pg, ask_id) is None            # one face: no such ask
     assert "echo" not in {x["name"] for x in glass.residents_view(pg)}
+
+
+def test_an_ask_wears_its_time_window(pg, monkeypatch):
+    """P6 — scope set where intent forms: the window the human typed
+    ("between last Monday and today") rides the ask onto the ground and
+    into its committed event, so the scope is real, never eye candy."""
+    monkeypatch.setenv("SPINE_SCOPE", "u:law-" + secrets.token_hex(3))
+    win = {"from": "2026-09-14T00:00:00+00:00", "to": "2026-09-17T18:00:00+00:00"}
+    ask_id = dispatch.submit_ask(pg, "what happened between last Monday and today?",
+                                 window=win)
+    assert glass.ask_view(pg, ask_id)["window"] == win
+    cur = pg.cursor()
+    cur.execute("SELECT body FROM spine_outbox WHERE convert_from(body, 'UTF8')"
+                " LIKE %s", (f"%{ask_id}%",))
+    events = [ev.decode(bytes(b)) for (b,) in cur.fetchall()]
+    assert any(e["payload"].get("window") == win for e in events)
+    plain = dispatch.submit_ask(pg, "and with no time words at all")
+    assert glass.ask_view(pg, plain)["window"] is None

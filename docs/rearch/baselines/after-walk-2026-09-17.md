@@ -166,3 +166,32 @@ clock). "Recalled 2 notes" and "the metered gateway" remain glossary words
 (the band open under the shrunk chat with my single timed row; the journey
 line under the reply above); `after-walk-rw3-02-life-row-door-isolated.png`
 (the row opened in place with its journey line; band still one row).
+
+## Re-walk #4 — 2026-09-17, sp6 (the scope edges)
+
+**Status: WHOLE (P3 sp6 pass, one spec).** Same Bridge, same browser, page
+reloaded fresh after the relight (crew chips read `echo · life 4` /
+`librarian · life 4`). The chat now carries a TIME strip under its header.
+Note on the clock: this browser lives in a UTC container where it was
+already past midnight, so its "today" is Fri, Sep 18 while the host sits on
+Thu, Sep 17 — every date below is the browser's own; a human at their own
+machine sees their own day.
+
+| Spec | Verdict | What the Playwright saw |
+|---|---|---|
+| **SPEC-SCOPE-01** | **PASS** | **Resting:** the strip read `TIME · now · type "between X and Y" or "since …" to set it`. **Typing** "What happened between last Monday and today?" character by character, no click, no send: the strip became **`Mon, Sep 14 ——|——|——|—— today · 4 days`** — both edges named, a ticked axis between them — as the words landed. **Sent:** the reply was whole within the 5-s script (the glass's own count 0.2 s); the journey line under it names the window: **"librarian took it on u:dev · Mon, Sep 14 → Fri, Sep 18 · completed 02:33:37 AM (0.2 s)"**. The strip kept the window after the send with the box empty. **Typed** "since yesterday": the strip followed at once — **`Thu, Sep 17 … today · 27 h`**. **Cleared the box** (select-all, backspace): the strip returned to **`now`** with its hint. |
+| **SPEC-SCOPE-01** (re-check, after the cure) | **PASS** | Reloaded fresh (no relight). Typed "What has changed since yesterday?" character by character: the strip followed — `Thu, Sep 17 … today · 27 h`. Sent: the reply was whole within the 5-s script (the glass's own count 0.2 s); the strip read **`now`** with its hint, the box empty, while the reply's journey line still names the window: **"librarian took it on u:dev · Thu, Sep 17 → Fri, Sep 18 · completed 02:36:29 AM (0.2 s)"**. The after-send friction below is cured. Evidence: `after-walk-rw4-03-recheck-strip-now-after-send.png`. |
+
+Friction, small: after a send the strip keeps the sent window over an empty
+box until the next keystroke — a human may wonder whether the next ask is
+still scoped (not walked; out of this pass). "4 days" and "27 h" are the
+browser-clock spans and read as the strip's arithmetic, fine. The
+librarian's reply itself had nothing to say about the window ("I don't have
+any record of what happened between last Monday and today") — content, not
+the clock's bar. Nothing in this pass is wound-grade; the chat reacted to
+typing and replied.
+
+**Re-walk #4 evidence** (same folder): `after-walk-rw4-01-scope-typed-no-click.png`
+(the strip showing Mon, Sep 14 → today · 4 days with the ask still unsent
+in the box); `after-walk-rw4-02-scope-journey-window.png` (the journey line
+naming the window under the reply; the strip still holding it).

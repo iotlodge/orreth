@@ -41,7 +41,7 @@ def ask_view(conn, ask_id: str) -> dict | None:
     # a glass serves ONLY its own world's ground: another world's ask is
     # "no such ask" here — the refusal wears one face (covenant rule 4)
     cur.execute("SELECT text, person, status, reply, served_by, target,"
-                " scope, asked_at, replied_at"
+                " scope, asked_at, replied_at, time_window"
                 " FROM spine_asks WHERE ask_id = %s AND scope = %s",
                 (ask_id, ev.scope()))
     row = cur.fetchone()
@@ -64,6 +64,7 @@ def ask_view(conn, ask_id: str) -> dict | None:
             "scope": row[6],        # command reaches only its target
             "asked_at": row[7].isoformat(),
             "replied_at": row[8].isoformat() if row[8] else None,
+            "window": json.loads(row[9]) if row[9] else None,  # P6
             "journey": [n for n in notes if n]}
 
 
@@ -151,9 +152,15 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str):
                                                for t in to) and to):
                     return self._json(400, {"error": "'to' names residents "
                                                      "as a list of names"})
+                window = p.get("window") or None
+                if window is not None and not (
+                        isinstance(window, dict) and window.get("from")
+                        and window.get("to")):
+                    return self._json(400, {"error": "'window' is "
+                                                     "{from, to} in ISO time"})
                 with psycopg.connect(dsn) as conn:
                     out = dispatch.submit_ask(conn, text, person=person,
-                                              to=to)
+                                              to=to, window=window)
                 if isinstance(out, list):
                     return self._json(201, {"ids": out})
                 return self._json(201, {"id": out})
