@@ -54,7 +54,7 @@ flowchart LR
     P1["Phase 1<br/>THE SPINE<br/>outbox/inbox + envelope (M1) ·<br/>events shadow (M4-lite) ·<br/>Bridge feed v0 (M6-lite)"]
     P2["Phase 2<br/>THE RESIDENT SPEAKS<br/>template v0 + covenant policy ·<br/>OrrethStore v0 · AG-1/M3:<br/>full reply, streamed, with tools"]
     P3["Phase 3<br/>THE BRIDGE v0<br/>landing page · One Chat whole<br/>(fan-out, scope edges, inline results) ·<br/>Objectives band · Esc law"]
-    P4["Phase 4<br/>THE FLEET & THE JOB<br/>two-sided residents + cards ·<br/>presence leases (M2) ·<br/>Monitoring pull · A/B harness v0"]
+    P4["Phase 4<br/>THE FEEL & THE FLEET<br/>focus + sessions · the includes<br/>(first firmware bodies) · Crew workspace<br/>+ cards · Monitoring + its agent ·<br/>harness v0 · leases (M2)"]
     P5["Phase 5<br/>MEMORY WHOLE<br/>understanding + digest full ·<br/>MEM-1..6 · recall in chat<br/>('between X and Y')"]
     P6["Phase 6<br/>GOVERNANCE FELT<br/>MFA/L3 · MITL v0 + impact door ·<br/>compliance export w/ AG-7 chains ·<br/>placement policy v0"]
     P7["Phase 7<br/>SCALE & SEAL<br/>cells + partition (M7) ·<br/>isolation (M8) · hardening ·<br/>the release wave, replacing main"]
@@ -355,8 +355,32 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   (universe · ecosystems · fields multi-select) has nothing to select
   until a second world exists — owed to P4. Suite 54 green. **PHASE 3
   IS WHOLE.**
-- Next: **Phase 4 — fleet + job** (a second world; the left scope edge;
-  the roster that breathes).
+
+## Phase 4 — THE FEEL & THE FLEET (opened 2026-09-18, re-sliced on block 9 — JB's lock)
+
+JB's narration before P4 (`experience-capture.md` block 9; distilled into
+0001 P19–P21, 0003 sessions, 0004 the third kind) re-sliced the phase:
+experience first, bodies second, workspaces third — each spoonful walked
+by the Playwright before it closes.
+
+- **sp1 — the chat follows the focus + sessions v0**: the focus stack
+  (push by click or words, Esc pops and restores the bridge's scope);
+  sessions as the human's worldlines — roll · list · load by words or
+  link; the resizable chat. Specs: SPEC-FOCUS-01 · SPEC-SESSION-01
+  (MEM-7 seed). Also the left scope edge once a second world exists.
+- **sp2 — the includes edge**: planner · critic · grader as the first
+  firmware bodies (0004's third kind) — a soft link and the typed word
+  apply one over the residents' results in the chat; the chain end to end
+  (AG-8); the grader scribe-class.
+- **sp3 — the Crew pull, the first workspace**: the workspace-firmware
+  template with its first binding; resident and agent cards showing both
+  sides (AG-4); manual vs assist felt.
+- **sp4 — Monitoring + its workspace agent**: the pull, its agent
+  building monitoring for the human's approval, the A/B harness v0
+  (AG-6), presence leases (M2).
+- The **draft shelf** (PROD/DEV decoupling, AG-9) lands with Workspace
+  Engineering; the **markers dive** (`0006-markers-dive.md`) is designed
+  before Phase 5 projects them.
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 

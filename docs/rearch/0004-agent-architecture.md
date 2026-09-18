@@ -4,7 +4,9 @@
 2026-09-16** (Human↔Agent = the One Chat contract, already narrated;
 agent-on-behalf-of = attribution and traceability, chain design ratified,
 verified at testing as AG-7). Designed against the locked Experience
-Charter (0001), Transport (0002), and Memory (0003).
+Charter (0001), Transport (0002), and Memory (0003). **Amended 2026-09-18
+(block 9, JB's lock): the third kind — firmware agents; the draft shelf;
+skill allocation by need.**
 
 ---
 
@@ -145,6 +147,46 @@ card that runs it.
   leveraged. Summoned by the soft MITL toggle; answers the "expected
   impact of this change?" door in Workspace Engineering.
 
+## The third kind — firmware agents (block 9 — JB's lock, 2026-09-18)
+
+Residents are named and wear a persona; installed agents differ only in
+mutability. **Firmware agents are the third kind: the same body of laws,
+no persona, named by their function** — planner · gap analyzer · critic ·
+grader · debater · analysis — and the workspace agents bound to the pulls.
+
+- **A keypair is still a self.** "No name" means no human name and no
+  persona — never no identity. Every firmware agent is a DID born from a
+  versioned template, wearing the covenant, joining through becky's door,
+  thinking on the meter, emitting its journey. Nothing about the body
+  changes; only the wearer's face.
+- **Two callers.** The human calls one directly — as an **include** on the
+  chat's top edge (a soft link or the typed word), applied as a single step
+  over whatever the residents brought into the chat. The kernel calls one
+  as a duty when a flow needs it. Either way the call rides the Invocation
+  rail and **wears the authority chain**: H → the residents whose results
+  are read → the firmware agent. "Who planned this" is always answerable
+  (AG-7's chain, unchanged).
+- **One body, per-pull bindings.** The workspace agents are ONE
+  workspace-firmware template with a **binding** per pull — policy ·
+  prompt · skill allocation — that makes it the Crew's agent, Monitoring's
+  agent, Workspace Engineering's agent. Bindings are versioned artifacts
+  like everything on the shelf; the harness A/B-tests each. Seven pulls
+  are seven bindings, not seven selves to govern.
+- **The grader is scribe-class.** A grader, critic, or gap analyzer never
+  grades its own yardstick (covenant rule 2): its verdicts are records
+  whose author is the firmware agent and whose subject is another
+  identity's work; a firmware agent asked to judge its own output refuses.
+- **Skills are allocated by need.** The **Orreth Skill** — the ontology of
+  Orreth in massive detail — is one versioned artifact; the factories
+  allocate **subsets** of it per resident and per firmware agent, each
+  allocation versioned, asserted, and assured by MITL. Not every DID knows
+  everything (compartmentalization is a security posture, not an
+  inconvenience).
+- **Where they show.** In the chat as includes and as workspace
+  conversants (0001 P19); in the main view as the lines between residents
+  and floors — the firmware in flight (the orrery direction, designed with
+  the WOW work); in their own cards like any body.
+
 ## The factories
 
 | | |
@@ -153,6 +195,16 @@ card that runs it.
 | **How** | MITL (or a human in Workspace Engineering) drafts → the artifact lands as a versioned craft through the gate → the A/B harness proves it → assignment through Controls. Factory outputs are ordinary artifacts — nothing born in a factory skips a gate. |
 | **Why** | JB's direction: reuse of inventoried, versioned templates; the frontier mind crystallizes capability for the fleet; the self-delivery road. |
 | **When** | On demand (a human asks), on gap detection (MITL proposes — the human approves in chat), and eventually as the objective-driven loop matures. |
+
+**The draft shelf (block 9).** While a human creates or updates an agent,
+prompt, skill, policy, or binding, the draft lives in **their profile**
+(S3/local) — never in Orreth's brain or template inventory. **Cutting a
+version is the gate**: only then does the artifact join the shelf, linked
+by version to every operating instance that wears it. Unversioned means
+higher risk; the kernel never holds it. In Workspace Engineering every
+kind of metadata an agent wears — skills · tools · prompts · persona ·
+policies — carries an **"Agent Assistance"** soft link into that agent's
+versioning, where MITL helps author the next cut.
 
 ## Human↔Agent — RESOLVED (JB, 2026-09-16: already covered)
 
@@ -210,6 +262,13 @@ naturally" — it now explicitly is):
   that passes graph → graph → graph carries its authority chain end to
   end — visible in the journey, the record metadata, the audit trail, and
   the compliance export. A broken or truncated chain fails the suite.
+- **AG-8 The include wears the chain:** a planner/critic/grader applied
+  from the chat over two residents' results carries H → resident →
+  resident → firmware end to end; the grader refuses to grade its own
+  output (scribe-class), provably.
+- **AG-9 The draft shelf holds:** an unversioned draft never appears in
+  the template inventory nor in any recall; the cut version does, linked
+  to its instances; a running instance keeps its version until re-cut.
 
 ## Explicitly open
 
@@ -220,6 +279,9 @@ naturally" — it now explicitly is):
 - Whether the scheduler is a kernel organ or a duty of a standing resident
   (0002 left it open; Fable leans kernel organ with occurrences visible in
   each runner's card, per P16).
+- The **binding schema** (policy · prompt · skill allocation per pull) and
+  the include invocation shape — land with P4 sp2/sp3, through the
+  factories.
 
 ## What this document binds
 

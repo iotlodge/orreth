@@ -77,6 +77,9 @@ carrying the pulls, warm light, glass.
 | Controls | Configure and assign: kernel settings, artifact activation, dials |
 | Crew/Agents | Resident and agent cards; install agent packages |
 
+Every pull is a **workspace**, and every workspace has a **firmware agent**
+bound to it (0004): open the pull and the One Chat follows the focus (P19).
+
 ## The One Chat
 
 One chat interface serves the entire Operating State. It slides down from
@@ -117,6 +120,50 @@ glass.
   access to the repos Orreth sees, and **factories** that create skills,
   prompts, and agents whose results get leveraged. The "expected impact of
   this change?" door in Workspace Engineering routes through MITL.
+
+## Focus, includes, and sessions (block 9 — JB's lock, 2026-09-18)
+
+The One Chat is one window with a **focus**. Its edges re-dress to the
+focus; the human never leaves it.
+
+- **The chat follows the focus (P19).** The bridge is a focus (scope =
+  the selected residents, worlds, and time). Every pull is a workspace,
+  and opening one — by click, or by words ("open the crew", "load
+  template #x in the workspace") — **pushes** a focus: the workspace's
+  firmware agent joins the session and the edges show that workspace's
+  scope. **[Esc] pops it and restores the bridge's scope exactly** — a
+  focus is never a silent drop of scope (JB's veto on the drop, ratified
+  in the vet). Inside a workspace, **chat closed = the human works
+  manually; chat open = the human converses with that workspace's
+  firmware agent only.** The chat window is resizable: the upper-right
+  corner is the origin, locked; the other corners move.
+- **Includes are firmware agents.** The top edge's includes — planner ·
+  gap analyzer · critic · grader · debater · analysis — are
+  function-named firmware agents (0004): a soft link or the typed word
+  ("plan this", "critique these", "grade that") applies one, as a single
+  step, over whatever the residents brought into the chat. The human who
+  prefers to hold planning and judgment in their own hands holds them
+  here.
+- **Sessions roll, never spill (P20).** The kernel keeps the chat as a
+  **session** — the human's own worldline — holding every artifact and
+  result the session produced. "New session" / "new topic" rolls a fresh
+  chat and archives the current one as working-not-active, recallable and
+  continuable: a "previous sessions" link, and the words "list my
+  sessions", "load session x". A newly selected agent reads **that
+  session's** results — and only those, plus its own worldline — and
+  offers "how can I help here?" Work on several things at once without
+  intelligence spilling between them.
+- **Eager for the next helpful step (P21).** Every resident and firmware
+  agent pursues the next helpful step — **as an offer inside the ask,
+  never as an act**: "would you like me to open template #x in the
+  workspace?" The opening is the human's word or click.
+- **The draft shelf.** While a human authors an agent, prompt, skill, or
+  policy, the draft lives in their profile — never in Orreth's brain —
+  until they cut a version; the cut is the gate (0004).
+- **Workspace agents build for humans.** In Monitoring, the workspace
+  agent can acquire, build, test, route for the human's approval, and
+  implement new monitoring: Orreth works on behalf of humans to create
+  for humans.
 
 ## Scope and governance
 
@@ -196,7 +243,7 @@ Every principle below maps to a walkable spec; screenshots and walk outputs
 are captured once and serve three masters — experience proof, the new main's
 docs, and the article carousel.
 
-**The principles (P1–P18)** — the testable index, detailed in
+**The principles (P1–P21)** — the testable index, detailed in
 `experience-capture.md`:
 P1 one identity shape · P2 conversation is the workspace · P3 zero unneeded
 steps · P4 Esc-rollback · P5 non-blocking, softly announced · P6 scope set
@@ -205,7 +252,9 @@ candy · P9 scope is a lens of identities · P10 placement is policy · P11
 Opt Out declines the meter, never the law · P12 proof demand rises to meet
 consequence · P13 nothing runs unseen · P14 one chat, every identity · P15
 the bridge, not pages · P16 every schedule lives in its runner · P17 one
-state, many lenses · P18 professional surfaces, plain words.
+state, many lenses · P18 professional surfaces, plain words · P19 the chat
+follows the focus (pushed, Esc-popped) · P20 sessions roll, never spill ·
+P21 eager for the next helpful step, always as an offer.
 
 ## Explicitly open
 

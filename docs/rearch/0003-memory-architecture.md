@@ -271,6 +271,24 @@ or governed — nothing in between.
 - **The kernel** remembers uniformly for everyone — it is the memory, and
   it thinks in none of it (P9).
 
+## Sessions — the human's worldlines (block 9 — JB's lock, 2026-09-18)
+
+A **session** is a conversation worldline owned by the human identity —
+nothing new in the four memories, only a name and its doors:
+
+| Door | Words or click | What happens |
+|---|---|---|
+| **roll** | "new session" / "new topic" | a fresh thread id; the current session becomes working-not-active — every word stays in the Record |
+| **list** | "list my sessions" / the previous-sessions link | the human's worldlines, newest first, each with its span and its last words |
+| **load** | "load session x" / click | the thread resumes exactly (working memory) and the chat shows it |
+| **read** | selecting an agent into a session | the agent reads **that session's** shown results, plus its own worldline — never another session, never another human's (the privacy floor) |
+
+A session's artifacts (results, includes' outputs, acquired sources) are
+Record entries referenced by the session; "clear display never erases"
+applies to sessions as to everything. Time-scoping ("between X and Y")
+crosses sessions: recall by time is a lens over all of the human's
+worldlines.
+
 ## Performance obligations (from the charter)
 
 | Operation | Target |
@@ -298,6 +316,9 @@ structurally: memory work rides the Events rail; nothing polls the corpus.
 - **MEM-5 Quarantine & purge:** opt-out memories never leak on opt-in;
   a governed purge reaches embeddings, digests, and caches — proven.
 - **MEM-6 Growth:** corpus ×10, recall latency flat.
+- **MEM-7 Roll & recall (P20):** roll a session, work a second, load the
+  first — every artifact recalled by the session; an agent selected into
+  a session sees only that session's results; nothing spills.
 - Plus the aid's remaining dimensions: distant dependencies, concurrent
   writers, learning-from-failure — folded into the harness.
 

@@ -642,7 +642,127 @@ rehearsed RTO. The human never sees the machinery — they feel its guarantees.
 
 ---
 
-*More narration coming — UI fluidity/continuity LANDED (block 8, session 2);
-still held: Human↔Agent · the two-sided Resident Experience (deep form) ·
-the agent/agent-on-behalf-of dive. Distillation into the Experience Charter
-happens when JB closes the dive.*
+## Session 3 — 2026-09-18 (before P4 opens; P3 the Bridge v0 whole)
+
+### Narration block 9 — THE FEEL: workspaces, focus, firmware agents, sessions
+
+**The frame (JB's words, essence preserved):** "Orreth architects experience
+and governance for reproducible outcomes and human experience." Experiences
+create feelings, and feelings drive effectiveness, ENGAGEMENT, and perceived
+value — not the active sentiment an agent can read off inference, but the
+**strategic** feeling: an overall perceived personal value. The old glass
+lost it: click a resident on the left, cross the screen to chat, click a
+governance floor to apply scope — "painful and non-intuitive," an admin
+interface where humans had to know Orreth before they could use it, unclear
+how the kernel remediates threats, unclear what interoperability and changes
+do to the running state of the agents. "We're heading the right direction
+now" — and we must NEVER lose focus on how humans feel using Orreth: easy to
+understand and use, fluid handoffs between chat and pulls, agent involvement
+and human manual involvement both natural.
+
+**The Orreth Skill → factories → compartmentalized skills:** the Orreth
+Skill (the ontology of Orreth, built in massive detail) is what a Factory
+allocates from: Resident/Firmware-specific skills built for that agent, each
+a versioned artifact that MITL, through the factories, can generate, assert,
+and assure against (the ontology of Orreth in focus allocation to the
+Operating State). Some firmware needs the whole thing; some needs parts —
+and for security not every DID should know everything (compartmentalization).
+
+**Resident Firmware Agents:** as already narrated — inference (chat) with the
+human PLUS their own book of work — now also wearing a nice human feeling
+("thank you, and continue to improve where applicable").
+
+**Firmware Agents (NEW — JB asks for the Good and the BAD):** the same class
+as residents EXCEPT they have NO name (no "becky") and are function-based:
+planner, gap analysis, critic, grader, analysis, debater. What makes them
+resident-class is the human's ability to call on them directly; otherwise
+the kernel uses them when needed, AND they live inside the chat window. Use
+case: some humans prefer to control planning, gap analysis, critique,
+grading, analysis themselves — as a single step over one or many datasets
+retrieved by the residents/agents they are chatting with. An agent is a
+reproducible graph; its role in Orreth decides when it is mutable (Prod/Dev
+hard separation; Resident vs Installed-Agent differences).
+
+**Workspace firmware agents — the chat follows the focus:** a dedicated
+firmware agent INSIDE each workspace (the pulls: floor, ceiling, sides).
+When a workspace loads — the human asks for it in natural language in the
+bridge chat, asks to "load agent x in workspace", or activates the pull —
+THE SAME chat window takes on the properties of that workspace: the
+workspace's firmware agent is loaded into the session and the bridge's
+active scopes are dropped. To the human this is a change of focus: to
+engineer/work/view whatever was sent to the workspace, or the inventory of
+agents/templates to begin focused work. Manual vs assist: close the chat
+inside the workspace → the human has chosen to work manually; leave it open
+→ talk ONLY with that pull's firmware resident. It could well be the SAME
+workspace firmware agent with DISTINCT policy, prompt, and skills per
+workspace, facilitating CRUD there — "totally up to you, but it needs to be
+mature." Inside the engineering workspace: handy soft links for MITL actions
+— an "Agent Assistance" link on each kind of metadata an agent wears
+(skills, tools, prompts, persona, policies), all linked to the agent's
+versioning.
+
+**PROD/DEV decoupling of authoring:** nothing unversioned (templates,
+skills, prompts) inside Orreth's brain/knowledge — before a thing is
+versioned INTO the kernel it is higher risk. While a human is creating or
+updating an agent, that data stays inside the User Profile (S3/local) until
+final submission cuts a new version; only then does it join the template
+inventory for reuse, linked by version to any active operating instance.
+
+**Memory as the enabler:** Orreth's memory looks up the context of a given
+point of inference (chats and flows) — the source of interoperability that
+other foundations lack.
+
+**A law — eager for the next helpful step:** all residents pursue the next
+helpful step. Ask to see a resident's graph in the chat, and the agent might
+ask: "would you like me to open template #x in the workspace?"
+
+**Immersive experiences (JB's examples):**
+- A. The chat window is resizable — the upper-right corner is the origin
+  (0,0), locked; the other corners resize.
+- 1. Fluid chat ↔ pulls ("workspaces" = whatever pull is the focus of the
+  objective/intention). On load, the chat is driven by the human selecting
+  scope and any number of agents (typed "ask e:name1, e:name2" too — already
+  there). The chat DYNAMICALLY ADJUSTS to the focus the human selects.
+- 2. Human decouple, on our memory: select several residents/agents with
+  scopes → each brings results to the same chat → click a firmware soft link
+  ("plan", "gap analysis", critic, grade) → a new result → unselect those
+  agents, select a new one → it sees the previous results in its read of the
+  session and asks "how can I help here?" The kernel manages a CHAT SESSION
+  that stores the session's artifacts/intelligence to carry work along. The
+  chat fills with lots of things; JB works several things at once and wants
+  no overlap of intelligence — WHAT IF a "new session" / "new topic" rolled
+  a fresh chat, pushing the current one to an archived/working (not active)
+  session the HUMAN can recall and continue? A "previous sessions" link; and
+  by words: "list/show me previous sessions", "load session x". The human
+  experience never leaves the chat window.
+
+**The main bridge view — WOW me:** keep the brain view; upgrade the orrery
+toward the mock (`tmp/ui bridge concept.png`) or take a new direction. The
+residents circle the floors (keep — residents are critical elements of
+global architecture governance) but there is no way yet to show the firmware
+agents (planner, critic, gap finder, debater…). A reference mood image
+arrived with this narration: a violet lattice of nodes and lines over a
+starfield with a few amber stars. **MARKERS — a deep dive is owed:** every
+Objective, Intention, Observation, Thought/Action sets a 'marker' attribute
+on the event being actioned; Orreth's inherent ontology then captures
+everything by dependency, starting from thoughts or from
+objectives/intentions depending on the request's origin. Markers give the
+main view many things to toggle on and off in the Monitoring view — the
+main window goes full screen and serves as the LIVE OBSERVABILITY of the
+Operating State.
+
+**The workspace agent in Monitoring:** build the monitoring Orreth needs,
+and let a workspace agent in that pull allow MITL to build NEW monitoring —
+the agent acquires, builds, tests, routes for the human's approval, and
+implements. "Orreth is different now: it works on behalf of humans to create
+for humans."
+
+**JB's close:** "Almost all the heavy lifting is done, I think. Keep it real,
+friend, and help me architect the future."
+
+---
+
+*Block 9 LANDED (session 3). Vetted against 0001/0003/0004 by Fable the same
+day; the distillation (a focus law, sessions as worldlines, firmware agents as
+an agent kind, the draft shelf, the markers dive) lands in canon on JB's
+lock.*
