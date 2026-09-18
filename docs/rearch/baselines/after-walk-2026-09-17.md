@@ -195,3 +195,69 @@ typing and replied.
 (the strip showing Mon, Sep 14 → today · 4 days with the ask still unsent
 in the box); `after-walk-rw4-02-scope-journey-window.png` (the journey line
 naming the window under the reply; the strip still holding it).
+
+## Walk #2 — 2026-09-18, P4 sp1 (focus + sessions)
+
+**Status: WHOLE (P4 sp1, two new specs).** Same Bridge, same browser, page
+reloaded fresh after the relight (crew chips read `echo · life 5` /
+`librarian · life 5`). The chat header now reads "sessions · new session ·
+[Esc] returns to the bridge", and a resize grip sits at the chat's
+lower-left corner. Waits are the deliberate waits I took; every reply was
+whole inside its 5-s wait (the glass's own counts: 0.1–0.2 s). Clock stamps
+are the browser's own.
+
+| Spec | Verdict | What the Playwright saw |
+|---|---|---|
+| **SPEC-FOCUS-01** | **PASS** (with friction) | *Setup:* with echo selected, sent "Between last Monday and today, both of you: say hello in one sentence." (both replied under the window "Mon, Sep 14 → Fri, Sep 18"), then deselected echo. Resting state recorded: crew rail **librarian alone**, clock **now**. *Walk:* Escape to the bare bridge; opened OBJECTIVES; clicked that ask's row (echo's). The chat opened by itself and re-dressed with a FOCUS strip — **"FOCUS · ask 5b583f3c · echo · Mon, Sep 14 → Fri, Sep 18 · [Esc] returns the bridge, scope restored"** — the clock read **"Mon, Sep 14 … today · 5 days"** and echo's chip lit; no click beyond the row. Typed the follow-up "And now say goodbye in one sentence.": it went there — **"echo took it on u:dev · Mon, Sep 14 → Fri, Sep 18 · completed 07:14:00 PM (0.2 s)"**. One Escape: the bare bridge (orrery, sun, "librarian · alive"). Reopened the chat: FOCUS strip gone, clock **now**, rail **librarian alone** — the previous selection and clock restored exactly (rail screenshots before and after match). |
+| **SPEC-SESSION-01** | **FAIL — wound-grade** (isolation half PASS) | *Session A* (the chat as found): "Remember the word PELICAN." → "I've got it. I'm writing down right now: PELICAN … If you ask me later in this session … it was the word PELICAN." (0.1 s). Typed **"new session"**: a fresh chat rolled with the line **"a fresh session · 086d98 — the previous one is archived, not gone: say “list my sessions” to return to it"**. *Session B:* "What word did I ask you to remember?" → **"I haven't been given any word to remember from you yet. This is the start of our conversation…"** (0.2 s) — no PELICAN: the isolation bar holds. Typed **"list my sessions"**: **"sessions · newest first · click one to load it — none yet"**. Retry by the header's "sessions" link: **"none yet"** again. Typed "load session 1": **"no session called “1” — say “list my sessions”"**. *Second pass from a session "new session" itself created:* "Remember the word HERON." → new session **aaeff3** (same promise) → the word question → no HERON ("I don't find any note or word you've asked me to remember") → "list my sessions" → **"none yet"**. **Every earlier conversation is unreachable from the glass**: the fresh-session line promises "archived, not gone" and the list never shows anything, so "loading returns the earlier conversation whole" and "has that session's earlier results in view" could not be walked. A human who says "new session" loses what they were saying. |
+| **SPEC-SESSION-01** (re-walk, after the sessions-door cure) | **PASS** (with friction) — wound CLOSED | Fresh load after the relight (chips `life 6`). *A:* "Remember the word PELICAN." → "I hear you clear and plain: PELICAN. I'm holding that word now…" (0.2 s). **"new session"** → "a fresh session · 02eb31 — the previous one is archived, not gone…". *B:* "What word did I ask you to remember?" → **"I haven't been given any word to remember from you yet…"** (0.2 s) — no PELICAN. **"list my sessions"** → **"sessions · newest first · click one to load it — 1. 07:27:03 PM · 1 ask · “What word did I ask you to remember?” · (this one) — 2. 07:26:57 PM · 2 asks · “Remember the word PELICAN.” — 3. 07:17:33 PM · 2 asks · “Remember the word HERON.” — 4. 07:15:06 PM · 4 asks · “Remember the word PELICAN.”"** — newest first, counts, last words, the first pass's sessions present. **"load session 2"** → the conversation returned whole, in order (the 07:17:40 word question and its reply, then the 07:26:57 PELICAN ask and its reply), closing with **"session aaeff3 loaded · 2 asks · continue here"** — which also revealed that the relit chat had silently continued session aaeff3 from the first pass (its log looked empty on load), so "2 asks" was right. Asked the word question there → **"The word PELICAN appears in my notes from earlier in this session"** (0.2 s) — she has PELICAN in view and nothing of any other session; she also reads her own earlier in-session "no memory" reply as a contradiction and says so at length. |
+| **SPEC-FOCUS-01** (re-walk, cheap check of the cures) | **PASS** | Escape → OBJECTIVES → the windowed ask's row: "FOCUS · ask 5b583f3c · echo · Mon, Sep 14 → Fri, Sep 18" with the clock **"Mon, Sep 14 … today · 4 days"** (calendar days now). Sent "Say goodbye once more, in one sentence.": after the send the TIME strip **still read "Mon, Sep 14 … today · 4 days"** with the FOCUS strip held — cured; the reply went to echo with the window ("echo took it on u:dev · Mon, Sep 14 → Fri, Sep 18 · completed 07:28:35 PM (0.2 s)") and **rendered once**. The grip is now announced as a separator, "resize the chat". |
+| **SPEC-SESSION-01** (re-check, reload continues the session visibly) | **PASS** | Reloaded fresh after the relight (chips `life 7`). The chat rendered the last session's four asks whole and in order on load — the word question, "Remember the word PELICAN.", the word question again, "Say goodbye once more…" — each with its reply, closing with **"session aaeff3 loaded · 4 asks · continue here"**. The replayed journey lines carry the world like live ones: **"librarian took it on u:dev · completed 07:17:40 PM (0.1 s)"** (and echo's with its window, "echo took it on u:dev · Mon, Sep 14 → Fri, Sep 18 · completed 07:28:35 PM (0.2 s)"). Both frictions cured. Evidence: `after-walk-p4s1-rw-04-recheck-reload-continues-session.png`. |
+
+**Friction (FOCUS-01 and around it):**
+- Under focus, after the follow-up was sent, the TIME strip dropped back to
+  "now" while the FOCUS strip still named the window — the two disagree
+  while focus is held (whether a second follow-up still rides the window
+  was not walked).
+- The focus strip's span read "5 days" for Mon, Sep 14 → Fri, Sep 18 where
+  the typed clock had read "4 days" for the same window — two arithmetics.
+- In the setup fan-out, **echo's reply rendered twice** in the chat: two
+  identical "echo" bubbles, each with its own identical journey line
+  (`echo took it on u:dev · … · completed 07:12:49 PM (0.1 s)`), while the
+  band listed echo's reply once. A human sees a stutter.
+- The librarian, asked "both of you", still answers "I'm just one person
+  here" (already filed).
+- The band now lists every ask of this world back to yesterday evening
+  (all mine — no strangers; isolation still holds).
+
+**The resize grip (not a spec):** one drag from the lower-left grip,
+120 px left and 100 px down: the chat grew from 560×355 to 671×446 and
+tracked the pointer within ~10 px; the upper-right corner stayed put
+(right edge 733, top 0). It feels right. The grip is a 16×16 px target —
+small, but findable by its hover title.
+
+**Wound call:** SPEC-SESSION-01 — the earlier session is gone from the
+human's seat despite the glass's own promise "archived, not gone" (list
+always "none yet"; load by ordinal refused). Wound-grade, for the lead's
+ruling. FOCUS-01's items are friction only.
+
+**Walk #2 evidence** (same folder): `after-walk-p4s1-00-rail-before-focus.png`
+(librarian alone, before focus); `after-walk-p4s1-01-focus-strip.png`
+(FOCUS strip, re-dressed clock, echo lit, band open); `after-walk-p4s1-02-esc-bare-bridge.png`
+(one Escape → bare bridge); `after-walk-p4s1-03-rail-after-esc.png`
+(librarian alone again); `after-walk-p4s1-04-session-list.png` (session B:
+no PELICAN; list "none yet"); `after-walk-p4s1-05-session-list-retry-none-yet.png`
+(second pass: list "none yet" again).
+
+
+**Walk #2 re-walk evidence** (same folder): `after-walk-p4s1-rw-01-session-list.png`
+(the list: four sessions newest first with counts and last words; B's reply below
+it); `after-walk-p4s1-rw-02-loaded-session-pelican.png` (the loaded session's answer:
+PELICAN in view); `after-walk-p4s1-rw-03-focus-time-held-after-send.png` (FOCUS and
+TIME both holding the window after a follow-up send; the reply once).
+
+Re-walk friction, small: the session list bubble landed *above* the reply it
+followed (the ask, then the list, then the librarian's answer); a reloaded page
+shows an empty chat while silently continuing the last session; re-rendered
+journey lines read "librarian · completed …" without the scope the live lines
+carry; the chat remembered its dragged size across the reload.

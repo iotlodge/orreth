@@ -363,11 +363,43 @@ JB's narration before P4 (`experience-capture.md` block 9; distilled into
 experience first, bodies second, workspaces third — each spoonful walked
 by the Playwright before it closes.
 
-- **sp1 — the chat follows the focus + sessions v0**: the focus stack
-  (push by click or words, Esc pops and restores the bridge's scope);
-  sessions as the human's worldlines — roll · list · load by words or
-  link; the resizable chat. Specs: SPEC-FOCUS-01 · SPEC-SESSION-01
-  (MEM-7 seed). Also the left scope edge once a second world exists.
+- **sp1 — the chat follows the focus + sessions v0** ✅ **LANDED
+  2026-09-18**: **the focus stack (P19)** — opening an ask from
+  OBJECTIVES pushes a focus: the chat opens itself, re-dresses to that
+  ask's resident and window (the crew chip lit, the clock set, a FOCUS
+  strip naming it), a follow-up goes there; **one [Esc] pops every focus,
+  restores the bridge's selection and clock EXACTLY, and returns the bare
+  bridge** — SPEC-ESC-01 and P19 agree by construction (the first focus
+  is an ask; a workspace's focus arrives with the Crew pull in sp3).
+  **Sessions (P20)** — the kernel half: a `session` on every ask, a
+  `spine_sessions` table, three doors (roll · list · load), the ask door
+  carrying the session, and **MEM-7's seed: a resident's recall reads
+  THIS session's results — by any resident, labeled — never another's**
+  (an ask with no session reads only its own session-less past). The
+  glass half: "sessions · new session" in the header, and the words
+  "new session", "list my sessions", "load session 2" (an ordinal or an
+  id prefix) equal the clicks; a loaded session renders whole, in order,
+  and a reloaded page continues the last one VISIBLY. **The chat is
+  resizable** — the upper-right corner is the origin, locked; the grip
+  at the lower-left moves the rest; the size survives a reload. THE
+  WALK (Playwright, walk #2 + re-walks): **SPEC-FOCUS-01 PASS**; **SPEC-
+  SESSION-01 FAIL then PASS** — a wound found and cured the same hour:
+  the sessions door never decoded the URL-encoded person, so "list my
+  sessions" read "none yet" for everyone and "archived, not gone" was a
+  false promise (cured at the door; pinned by an HTTP-level law — the
+  Python views were tested, the handler's parsing was the gap). PELICAN
+  in session A · "new session" · no PELICAN in B · the list newest first
+  with counts and last words · "load session 2" returned A whole ·
+  PELICAN back in view — nothing spilled. Frictions cured on the way:
+  the clock keeps a held focus's window after a send; the span counts
+  calendar days everywhere; two racing notices can no longer render a
+  reply twice; the reload continues the session visibly; replayed
+  journey lines carry the world. On the road: the librarian argues with
+  her own earlier "no record" reply once the session returns (content;
+  P5's digest will settle it); the left scope edge waits for a second
+  world (P4 sp3/sp4). Three laws: sessions roll/list/load and never
+  spill · a resident reads only this session's results · the session
+  doors answer over HTTP as the glass asks. Suite 57 green.
 - **sp2 — the includes edge**: planner · critic · grader as the first
   firmware bodies (0004's third kind) — a soft link and the typed word
   apply one over the residents' results in the chat; the chain end to end

@@ -21,7 +21,8 @@ from .resident import ASK_RECEIVED, SERVE_KEY
 
 
 def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
-               to: list[str] | None = None, window: dict | None = None):
+               to: list[str] | None = None, window: dict | None = None,
+               session: str | None = None):
     """The glass's write: the ask row and its committed event, one
     transaction. The event is pointer-only; the words live on the ground.
     `to` names residents for a FAN-OUT (canon 0001 P14): the same request
@@ -39,6 +40,8 @@ def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
         payload = {"ref": ask_id, "hash": ev.content_hash(text)}
         if target:
             payload["target"] = target
+        if session:
+            payload["session"] = session   # P20: the ask names its session
         if window:                      # P6: the time scope rides the ask —
             payload["window"] = {       # set by typed words, no click
                 "from": str(window.get("from") or ""),
@@ -52,10 +55,10 @@ def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
         def domain(cur, a=ask_id, t=target, w=payload.get("window")):
             cur.execute(
                 "INSERT INTO spine_asks (ask_id, text, person, target,"
-                " fanout, scope, time_window)"
-                " VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                " fanout, scope, time_window, session)"
+                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 (a, text, person, t, fanout, ev.scope(),     # asked in
-                 json.dumps(w) if w else None))              # THIS world
+                 json.dumps(w) if w else None, session))     # THIS world
 
         outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"],
                                   domain)

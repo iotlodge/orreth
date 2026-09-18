@@ -66,7 +66,7 @@
   /* the band open → the chat YIELDS: the two never overlap, so every
      band row stays a door and the ask box stays reachable (after-walk
      wound #1: the chat swallowed the band's clicks in the landing state) */
-  body:has(#band.open) #chat{height:calc(54vh - 10px)}
+  body:has(#band.open) #chat{max-height:calc(54vh - 10px)}
   /* the clock assist (P6): the chat's time axis — typed words set it,
      no click; the window rides the ask (never eye candy, P8) */
   #clock{display:flex;align-items:center;gap:10px;padding:5px 16px;
@@ -79,6 +79,24 @@
   #clock .bar i{position:absolute;bottom:0;width:1px;height:5px;
     background:var(--amber)}
   #clock.now .axis{opacity:.45}
+  /* the focus strip (P19): the chat follows the focus — pushed by an
+     open ask (a workspace, from sp3), popped by [Esc] with the bridge's
+     scope restored exactly */
+  #focus{display:none;align-items:center;gap:10px;padding:5px 16px;
+    color:var(--amber);font-size:10.5px;letter-spacing:.12em;
+    border-bottom:1px solid var(--seam);background:rgba(255,180,60,.06)}
+  #focus.on{display:flex}
+  #focus .hint{margin-left:auto;color:var(--dim)}
+  #chat header a{cursor:pointer;color:var(--dim);text-decoration:none}
+  #chat header a:hover{color:var(--amber)}
+  /* resizable (block 9 A): the upper-right corner is the origin, locked;
+     the grip at the lower-left moves the other corners */
+  #grip{position:absolute;left:0;bottom:0;width:16px;height:16px;
+    cursor:sw-resize;border-left:2px solid var(--amber);
+    border-bottom:2px solid var(--amber);opacity:.5;border-radius:0 0 0 14px}
+  #grip:hover{opacity:1}
+  .sesrow{cursor:pointer;color:var(--dim);font-size:11.5px;padding:2px 0}
+  .sesrow:hover,.sesrow.on{color:var(--amber)}
   #chat header{padding:10px 16px;color:var(--amber);font-size:11px;
     letter-spacing:.3em;border-bottom:1px solid var(--seam);
     display:flex;justify-content:space-between}
@@ -184,8 +202,13 @@
 </div>
 
 <div id="chat">
+  <div id="grip" title="drag to resize — the upper-right corner stays"
+       aria-label="resize the chat" role="separator"></div>
   <header><span>THE ONE CHAT · u:dev</span>
-    <span class="hint">[Esc] returns to the bridge</span></header>
+    <span class="hint"><a id="ses-list">sessions</a> · <a id="ses-new">new session</a>
+      · [Esc] returns to the bridge</span></header>
+  <div id="focus"><span>FOCUS</span><span id="focus-what"></span>
+    <span class="hint">[Esc] returns the bridge, scope restored</span></div>
   <div id="clock" class="now"><span>TIME</span>
     <span class="axis"><span class="edge">now</span></span>
     <span class="hint" id="clock-hint">type "between X and Y" or "since …" to set it</span></div>
@@ -229,21 +252,19 @@ function toggleChat(open){
     document.getElementById("chat-in").focus();
 }
 addEventListener("keydown", e => {
-  if (e.key === "Escape") {                             // SPEC-ESC-01:
-    toggleChat(false); toggleBand(false);               // one keystroke,
-  }                                                     // the bridge
+  if (e.key === "Escape") {                             // SPEC-ESC-01 + P19:
+    popAllFocus();                                      // one keystroke: the
+    toggleChat(false); toggleBand(false);               // bridge, its scope
+  }                                                     // restored exactly
 });
 
 /* ---- the crew rail: residents on the right edge, targets by chip ---- */
 const NAMES = {};                 // did -> name
 let SELECTED = new Set();
-async function loadRoster(){
-  const r = await fetch("/residents").then(x=>x.json()).catch(()=>null);
-  if (!r) return;
+let ROSTER = [];
+function drawChips(){
   const box = document.getElementById("chips"); box.innerHTML = "";
-  for (const res of r.residents){
-    NAMES[res.did] = res.name;
-    if (!SELECTED.size && res.name === "librarian") SELECTED.add(res.name);
+  for (const res of ROSTER){
     const b = document.createElement("button");
     b.className = "chip" + (SELECTED.has(res.name) ? " on" : "");
     b.textContent = res.name + " · life " + res.lives;
@@ -252,8 +273,17 @@ async function loadRoster(){
                         b.classList.toggle("on"); };
     box.appendChild(b);
   }
-  if (!SELECTED.size && r.residents.length)
-    SELECTED.add(r.residents[0].name);
+}
+async function loadRoster(){
+  const r = await fetch("/residents").then(x=>x.json()).catch(()=>null);
+  if (!r) return;
+  ROSTER = r.residents;
+  for (const res of ROSTER){
+    NAMES[res.did] = res.name;
+    if (!SELECTED.size && res.name === "librarian") SELECTED.add(res.name);
+  }
+  if (!SELECTED.size && ROSTER.length) SELECTED.add(ROSTER[0].name);
+  drawChips();
 }
 loadRoster(); setInterval(loadRoster, 20000);
 
@@ -284,6 +314,9 @@ async function expandRow(row, id){
   if (bandOpenRow){ bandOpenRow.remove(); bandOpenRow = null; }
   const v = await fetch("/ask/" + id).then(x=>x.json()).catch(()=>null);
   if (!v) return;
+  pushFocus({kind: "ask", id, name: NAMES[v.served_by] || v.target || null,
+             window: v.window ? {from: new Date(v.window.from),
+                                 to: new Date(v.window.to)} : null});
   const d = document.createElement("div");
   d.className = "bexpand";
   d.textContent = v.reply || "(still on its way)";
@@ -308,6 +341,7 @@ async function send(given, label){
   const inp = document.getElementById("chat-in");
   const text = (given ?? inp.value).trim(); if (!text) return;
   if (given == null) inp.value = "";
+  if (given == null && await sessionWords(text)) return;   // P20 by words
   const to = [...SELECTED];
   // a synthesis is the human's CHOICE, never the human's words: it wears
   // its own label; the machine's prompt never appears as if typed
@@ -317,13 +351,16 @@ async function send(given, label){
     headers:{"content-type":"application/json"},
     body: JSON.stringify({text, to: to.length ? to : undefined,
                           window: WINDOW ? {from: WINDOW.from.toISOString(),
-                                            to: WINDOW.to.toISOString()} : undefined})})
+                                            to: WINDOW.to.toISOString()} : undefined,
+                          session: SESSION || undefined})})
     .then(x=>x.json()).catch(()=>null);
   const ids = r && (r.ids || (r.id && [r.id]));
   if (!ids) { el("journey","the ask door did not answer"); return; }
-  WINDOW = null; drawClock();       // the window rode THAT ask (its journey
+  WINDOW = FOCUS.length ? FOCUS[FOCUS.length - 1].f.window : null;
+  drawClock();                      // the window rode THAT ask (its journey
                                     // line keeps it); the next ask's scope
-                                    // forms with its own words (P6)
+                                    // forms with its own words (P6) — unless
+                                    // a focus holds the scope (P19)
   if (ids.length > 1){
     const fan = "fan:" + ids.join(",");
     FANS[fan] = {ids, replies:{}, offered:false};
@@ -358,6 +395,7 @@ function onDelta(d){
 }
 
 function renderOutcome(id, v, line){
+  if (PENDING[id] !== line) return;          // two notices raced: render once
   const fan = line._fan;
   if (line._stream) line._stream.remove();   // the door's truth replaces
   line.remove(); delete PENDING[id];         // the stream's sketch
@@ -446,7 +484,7 @@ function drawClock(){
   if (!WINDOW){ c.classList.add("now"); ax.innerHTML = `<span class="edge">now</span>`;
                 document.getElementById("clock-hint").hidden = false; return; }
   c.classList.remove("now"); document.getElementById("clock-hint").hidden = true;
-  const days = Math.max(1, Math.round((WINDOW.to - WINDOW.from) / DAY));
+  const days = Math.max(1, Math.round((startOfDay(WINDOW.to) - startOfDay(WINDOW.from)) / DAY));
   const ticks = Math.min(days, 30), bar = [];
   for (let i = 1; i < ticks; i++) bar.push(`<i style="left:${(100 * i / ticks).toFixed(1)}%"></i>`);
   const span = days >= 2 ? `${days} days` : `${Math.max(1, Math.round((WINDOW.to - WINDOW.from) / 36e5))} h`;
@@ -498,6 +536,141 @@ function offerSummarize(fan){
 
 document.getElementById("chat-in").addEventListener("keydown",
   e => { if (e.key === "Enter") send(); });
+
+/* ---- the focus stack (P19): the chat follows the focus ---- */
+const FOCUS = [];                 // pushed by an open ask (workspaces from sp3)
+function pushFocus(f){
+  FOCUS.push({saved: {selected: new Set(SELECTED), window: WINDOW}, f});
+  if (f.name) SELECTED = new Set([f.name]);
+  WINDOW = f.window;
+  drawChips(); drawClock();
+  const what = `ask ${esc(f.id.slice(4, 12))}` + (f.name ? ` · ${esc(f.name)}` : "") +
+    (f.window ? ` · ${esc(dayLabel(f.window.from))} → ${esc(dayLabel(f.window.to))}` : " · now");
+  document.getElementById("focus-what").innerHTML = what;
+  document.getElementById("focus").classList.add("on");
+  toggleChat(true);               // the chat follows: it is the focus's
+}
+function popAllFocus(){           // one [Esc]: every focus popped, the
+  if (!FOCUS.length) return;      // bridge's scope restored EXACTLY
+  const bottom = FOCUS[0].saved; FOCUS.length = 0;
+  SELECTED = new Set(bottom.selected); WINDOW = bottom.window;
+  drawChips(); drawClock();
+  document.getElementById("focus").classList.remove("on");
+  if (bandOpenRow){ bandOpenRow.remove(); bandOpenRow = null; }
+}
+
+/* ---- sessions (P20): the human's worldlines — roll · list · load ---- */
+let SESSION = null;
+const PERSON = "did:orreth:person:jb";
+let LAST_LIST = [];
+function sysline(html){ return el("journey", html); }
+function clearDisplay(){          // clear ≠ erase: the words stay in the Record
+  log.innerHTML = ""; for (const k in PENDING) delete PENDING[k];
+}
+async function rollSession(announce){
+  const r = await fetch("/sessions", {method:"POST",
+    headers:{"content-type":"application/json"},
+    body: JSON.stringify({person: PERSON})}).then(x=>x.json()).catch(()=>null);
+  if (!r) { sysline("the sessions door did not answer"); return; }
+  SESSION = r.session_id;
+  try { localStorage.setItem("orreth.session", SESSION); } catch (e) {}
+  clearDisplay();
+  if (announce) sysline(`a fresh session · ${esc(SESSION.slice(4, 10))} — the previous one is ` +
+                        `archived, not gone: say “list my sessions” to return to it`);
+}
+async function listSessions(){
+  const r = await fetch("/sessions?person=" + encodeURIComponent(PERSON))
+    .then(x=>x.json()).catch(()=>null);
+  if (!r) { sysline("the sessions door did not answer"); return; }
+  LAST_LIST = r.sessions;
+  const box = el("msg theirs", `<div class="who">sessions · newest first · click one to load it</div>`);
+  if (!LAST_LIST.length) box.innerHTML += `<div class="sesrow">none yet</div>`;
+  LAST_LIST.forEach((s, i) => {
+    const row = document.createElement("div");
+    row.className = "sesrow" + (s.session_id === SESSION ? " on" : "");
+    row.textContent = `${i + 1}. ${hhmm(s.last_at || s.opened_at)} · ${s.asks} ask${s.asks === 1 ? "" : "s"}` +
+      (s.title ? ` · ${s.title}` : "") + (s.last_words ? ` · “${s.last_words}”` : "") +
+      (s.session_id === SESSION ? " · (this one)" : "");
+    row.onclick = () => loadSession(s.session_id);
+    box.appendChild(row);
+  });
+  log.scrollTop = log.scrollHeight;
+}
+async function loadSession(x){
+  let id = x;
+  if (!/^ses_[0-9a-f]{12}$/.test(x)){          // an ordinal, or a prefix
+    if (!LAST_LIST.length){
+      const r = await fetch("/sessions?person=" + encodeURIComponent(PERSON))
+        .then(y=>y.json()).catch(()=>null);
+      LAST_LIST = r ? r.sessions : [];
+    }
+    const n = parseInt(x, 10);
+    const hit = (!isNaN(n) && LAST_LIST[n - 1]) ||
+                LAST_LIST.find(s => s.session_id.startsWith(x) || s.session_id.slice(4).startsWith(x));
+    if (!hit) { sysline(`no session called “${esc(x)}” — say “list my sessions”`); return; }
+    id = hit.session_id;
+  }
+  const v = await fetch("/session/" + id).then(y=>y.json()).catch(()=>null);
+  if (!v || v.error) { sysline("no such session here"); return; }
+  SESSION = id;
+  try { localStorage.setItem("orreth.session", SESSION); } catch (e) {}
+  clearDisplay();
+  for (const a of v.asks){                       // the session, whole, in order
+    el("msg mine", esc(a.text) + (a.target ? `<div class="who" style="text-align:right">→ ${esc(a.target)}</div>` : ""));
+    const name = NAMES[a.served_by] || a.target || "orreth";
+    if (a.status === "replied" || a.status === "cancelled" || a.status === "awaiting-confirm"){
+      el("msg theirs", `<div class="who">${esc(name)}</div>` + esc(a.reply || "(no words came back)"));
+      if (a.replied_at) el("journey", `${esc(name)} took it on ${esc(v.scope || "?")}` +
+        (a.window ? ` · ${dayLabel(new Date(a.window.from))} → ${dayLabel(new Date(a.window.to))}` : "") +
+        ` · completed ${hhmm(a.replied_at)} (${secs(a.asked_at, a.replied_at)})`);
+    } else {
+      PENDING[a.ask_id] = el("journey", "still on its way…");
+    }
+  }
+  sysline(`session ${esc(id.slice(4, 10))} loaded · ${v.asks.length} ask${v.asks.length === 1 ? "" : "s"} · continue here`);
+}
+async function sessionWords(text){               // typed words equal every click
+  const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
+  if (/^(start a |a )?new (session|topic)$/.test(t)) { await rollSession(true); return true; }
+  if (/^((list|show)( me)?( my| the)?( previous| earlier)? sessions|previous sessions|my sessions)$/.test(t)) { await listSessions(); return true; }
+  const m = t.match(/^(load|open|resume|continue) (session )?(\S+)$/);
+  if (m && (m[2] || /^(ses_|\d+$)/.test(m[3]))) { await loadSession(m[3]); return true; }
+  return false;
+}
+document.getElementById("ses-list").onclick = listSessions;
+document.getElementById("ses-new").onclick = () => rollSession(true);
+(async () => {                                   // the session on load
+  let saved = null; try { saved = localStorage.getItem("orreth.session"); } catch (e) {}
+  if (saved && /^ses_[0-9a-f]{12}$/.test(saved)){
+    const ok = await fetch("/session/" + saved).then(x => x.ok).catch(() => false);
+    if (ok) { await loadSession(saved); return; }   // continue it, VISIBLY:
+  }                                                 // the session renders whole
+  await rollSession(false);
+})();
+
+/* ---- resizable: the upper-right corner is the origin, locked ---- */
+(() => {
+  const chat = document.getElementById("chat"), grip = document.getElementById("grip");
+  try {
+    const s = JSON.parse(localStorage.getItem("orreth.chat.size") || "null");
+    if (s && s.w && s.h){ chat.style.width = s.w + "px"; chat.style.height = s.h + "px"; }
+  } catch (e) {}
+  let drag = null;
+  grip.addEventListener("pointerdown", e => {
+    const r = chat.getBoundingClientRect();
+    drag = {right: r.right, top: r.top}; grip.setPointerCapture(e.pointerId); e.preventDefault();
+  });
+  grip.addEventListener("pointermove", e => {
+    if (!drag) return;
+    const w = Math.max(320, Math.min(window.innerWidth - 24, drag.right - e.clientX));
+    const h = Math.max(240, Math.min(window.innerHeight - 24, e.clientY - drag.top));
+    chat.style.width = w + "px"; chat.style.height = h + "px";
+  });
+  const done = () => { if (!drag) return; drag = null;
+    try { localStorage.setItem("orreth.chat.size", JSON.stringify(
+      {w: chat.getBoundingClientRect().width, h: chat.getBoundingClientRect().height})); } catch (e) {} };
+  grip.addEventListener("pointerup", done); grip.addEventListener("pointercancel", done);
+})();
 
 /* ---- the feed: one SSE stream, pointer-only, gap-repairing ---- */
 const pulse = document.getElementById("pulse");

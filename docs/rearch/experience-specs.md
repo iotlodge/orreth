@@ -21,6 +21,8 @@ is the reason the rearchitecture exists.
 | **SPEC-CLEAR-01** | P14 clear≠erase | Clear the chat display; ask "what did I ask you earlier?" | The display is clean AND the resident recalls — nothing was erased | expected FAIL | NOT BUILT (expected); recall half partial |
 | **SPEC-L2-01** | P12 | Ask for a consequential change | "Are you sure…" arrives in the chat; cancel is default; yes needs a deliberate click, never the return key | expected FAIL | **PASS** — "Are you sure?" in-chat, Cancel focused, Enter cancelled; Yes withheld by the Playwright |
 | **SPEC-WORDS-01** | P18 | Read every word on the landing surface as a newcomer | No jargon a newcomer can't parse; actions say what saying yes will do | expected FAIL | FRICTION — u:dev · life 1 · rev N · ORRERY·BRAIN·ATLAS unparseable to a newcomer; actions plain |
+| **SPEC-FOCUS-01** | P19 | Open an ask from OBJECTIVES; look at the chat; type a follow-up; press [Esc] | The chat re-dresses to that ask's crew and window with a FOCUS line, no click beyond the row; the follow-up goes there; one Esc returns the bare bridge with the previous selection and clock restored exactly | expected FAIL | **PASS** (P4 sp1) — "FOCUS · ask 5b583f3c · echo · Mon, Sep 14 → Fri, Sep 18", chip lit, clock set, the follow-up went there; one Escape restored rail and clock exactly |
+| **SPEC-SESSION-01** | P20 · MEM-7 | Say "new session"; ask something; say "list my sessions"; say "load session 2" (or click the earlier one) | A fresh chat rolls (the earlier one archived, not gone); the list shows sessions newest first with counts and last words; loading returns the earlier conversation whole, in order; a resident asked in a session has that session's earlier results in view, and never another's | expected FAIL | **PASS** (P4 sp1, after the sessions-door wound was cured) — PELICAN held in A, absent in B, the list newest first, "load session 2" returned A whole, PELICAN back in view |
 | **SPEC-FEEL-01** | the cockpit itself | Sit down cold; find chat, results, and what's running | No navigation needed; everything reachable from the landing page; it feels like a place, not an admin panel | expected FAIL | **PASS** w/ friction — a place, no navigation; the open chat hides the header at small widths |
 
 ## Walk records
@@ -43,4 +45,12 @@ Re-walk #3 (sp5, the ground wears its world): JOURNEY-01 and LIFE-01
 green, isolation held while the full suite ran on the same ground.
 Re-walk #4 (sp6, the scope edges): SCOPE-01 green — the clock assist
 followed the typed words with no click; the window rode the ask.
+
+### Walk #2 — P4 sp1, 2026-09-18 (focus + sessions)
+
+FOCUS-01 green on the first pass. SESSION-01 found a wound — the
+sessions door decoded nothing, every list read "none yet" — cured at
+the door within the hour, re-walked green with the frictions it named
+cured alongside (the clock under focus, calendar-day spans, a reply
+rendering twice, the silent reload). Evidence in the same record.
 The before-walk remainder (old glass) stays owed.

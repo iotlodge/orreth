@@ -154,3 +154,80 @@ def test_an_ask_wears_its_time_window(pg, monkeypatch):
     assert any(e["payload"].get("window") == win for e in events)
     plain = dispatch.submit_ask(pg, "and with no time words at all")
     assert glass.ask_view(pg, plain)["window"] is None
+
+
+def test_sessions_roll_list_and_load_and_never_spill(pg, monkeypatch):
+    """P20 / MEM-7's ground half: a session is the human's worldline —
+    roll a fresh one, ask in it, roll again, ask again; the list is newest
+    first with counts and last words; loading one returns exactly its
+    asks in order; an ask wears its session; a stranger world sees none."""
+    monkeypatch.setenv("SPINE_SCOPE", "u:law-" + secrets.token_hex(3))
+    me = "did:orreth:person:test"
+    first = glass.open_session(pg, me, title="the first topic")
+    a1 = dispatch.submit_ask(pg, "first words", session=first)
+    a2 = dispatch.submit_ask(pg, "second words", session=first)
+    second = glass.open_session(pg, me)
+    b1 = dispatch.submit_ask(pg, "a new topic entirely", session=second)
+    listed = glass.sessions_view(pg, me)
+    assert [x["session_id"] for x in listed] == [second, first]   # newest first
+    assert listed[1]["asks"] == 2 and listed[1]["last_words"] == "second words"
+    assert listed[0]["asks"] == 1 and listed[1]["title"] == "the first topic"
+    loaded = glass.session_view(pg, first)
+    assert [x["ask_id"] for x in loaded["asks"]] == [a1, a2]     # in order
+    assert [x["ask_id"] for x in glass.session_view(pg, second)["asks"]] == [b1]
+    assert glass.ask_view(pg, a1)["session"] == first
+    monkeypatch.setenv("SPINE_SCOPE", "u:stranger-" + secrets.token_hex(3))
+    assert glass.sessions_view(pg, me) == [] and glass.session_view(pg, first) is None
+
+
+def test_a_resident_reads_only_this_sessions_results(pg, monkeypatch):
+    """MEM-7's mind half: a resident selected into a session recalls THAT
+    session's results — by any resident, labeled — and never another
+    session's; nothing spills between topics."""
+    monkeypatch.setenv("SPINE_SCOPE", "u:law-" + secrets.token_hex(3))
+    SPINE = glass.Path(__file__).resolve().parents[1]
+    tok_a, tok_b = secrets.token_hex(3), secrets.token_hex(3)
+    me = "did:orreth:person:test"
+    echo = resident.Resident(SPINE / "templates" / "echo-resident.v0.json")
+    echo.load_policy(SPINE / "policy" / "covenant-policy.v1.json"); echo.join(pg)
+    sa, sb = glass.open_session(pg, me), glass.open_session(pg, me)
+    cur = pg.cursor()
+    for ses, tok in ((sa, tok_a), (sb, tok_b)):            # a reply landed by
+        aid = dispatch.submit_ask(pg, f"about {tok}", session=ses)  # the echo
+        cur.execute("UPDATE spine_asks SET status = 'replied', served_by = %s,"
+                    " reply = %s, replied_at = now() WHERE ask_id = %s",
+                    (echo.identity.did, f"the echo said marker {tok}", aid))
+    gw = gateway.FakeGateway(reply="noted")
+    lib = resident.Resident(SPINE / "templates" / "librarian-resident.v0.json",
+                            gateway=gw)
+    lib.load_policy(SPINE / "policy" / "covenant-policy.v1.json")
+    lib._serve_conn = pg
+    lib._current_ask = dispatch.submit_ask(pg, "what was said here?", session=sb)
+    out = lib._graph.invoke({"text": "what was said here?", "reply": "",
+                             "steps": [], "notes": [], "hold": None})
+    prompt = gw.calls[0]["prompt"]
+    assert f"marker {tok_b}" in prompt and "echo replied" in prompt   # this session,
+    assert f"marker {tok_a}" not in prompt                            # labeled — never
+    assert any("recalled" in st for st in out["steps"])               # the other
+
+
+@rails
+def test_the_session_doors_answer_over_http_as_the_glass_asks(pg, rig):
+    """The doors as a browser calls them — the person URL-encoded in the
+    query (found by the Playwright: the door matched no one and every
+    session read 'none yet'): roll, list, load, and an ask filed in the
+    session, all over HTTP alone."""
+    from urllib.parse import quote
+    me = "did:orreth:person:" + secrets.token_hex(3)
+    s, rolled = _post(rig.port, "/sessions", {"person": me, "title": "over http"})
+    assert s == 201 and rolled["session_id"].startswith("ses_")
+    _s, filed = _post(rig.port, "/ask", {"text": "a word in my session",
+                                         "to": ["echo"], "session": rolled["session_id"]})
+    s, body = _get(rig.port, "/sessions?person=" + quote(me, safe=""))
+    listed = json.loads(body)["sessions"]
+    assert s == 200 and [x["session_id"] for x in listed] == [rolled["session_id"]]
+    assert listed[0]["asks"] == 1 and listed[0]["last_words"] == "a word in my session"
+    s, body = _get(rig.port, "/session/" + rolled["session_id"])
+    assert s == 200 and [a["ask_id"] for a in json.loads(body)["asks"]] == filed["ids"]
+    s, body = _get(rig.port, "/sessions?person=" + quote("did:orreth:person:nobody", safe=""))
+    assert s == 200 and json.loads(body)["sessions"] == []

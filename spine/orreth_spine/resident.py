@@ -102,6 +102,15 @@ def ensure_schema(conn) -> None:
                     " scope text")
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
                     " time_window text")   # the time scope the ask was set
+        # sessions (0003 · P20): the human's worldlines — an ask belongs to
+        # the session it was asked in; a session rolls, never spills
+        cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
+                    " session text")
+        cur.execute(
+            "CREATE TABLE IF NOT EXISTS spine_sessions ("
+            " session_id text PRIMARY KEY, person text NOT NULL,"
+            " scope text NOT NULL, title text,"
+            " opened_at timestamptz NOT NULL DEFAULT now())")
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
                     " fanout text")
 
@@ -192,13 +201,38 @@ class Resident:
             if conn is not None:
                 from .store import OrrethStore
                 cur = conn.cursor()
-                cur.execute(
-                    "SELECT text, reply FROM spine_asks"
-                    " WHERE served_by = %s AND status = 'replied'"
-                    " ORDER BY replied_at DESC LIMIT 3",
-                    (self.identity.did,))
-                for t, rp in cur.fetchall():
-                    notes.append(f"earlier, asked: {t!r} — I replied: {rp!r}")
+                # the session law (P20 · MEM-7): the worldline I read is
+                # THIS ask's session — every reply landed in it, by any
+                # resident, labeled — never another session's; an ask
+                # with no session reads only my own session-less replies
+                session = None
+                if self._current_ask:
+                    cur.execute("SELECT session FROM spine_asks"
+                                " WHERE ask_id = %s", (self._current_ask,))
+                    row = cur.fetchone()
+                    session = row[0] if row else None
+                if session:
+                    cur.execute(
+                        "SELECT a.text, a.reply, coalesce(j.name, 'a resident')"
+                        " FROM spine_asks a LEFT JOIN LATERAL ("
+                        "  SELECT name FROM spine_joins WHERE did = a.served_by"
+                        "  ORDER BY join_id DESC LIMIT 1) j ON true"
+                        " WHERE a.session = %s AND a.status = 'replied'"
+                        " AND a.ask_id <> %s"
+                        " ORDER BY a.replied_at DESC LIMIT 6",
+                        (session, self._current_ask))
+                    for t, rp, who in cur.fetchall():
+                        mine = who == self.name
+                        notes.append(f"earlier in this session, asked: {t!r} — "
+                                     f"{'I' if mine else who} replied: {rp!r}")
+                else:
+                    cur.execute(
+                        "SELECT text, reply FROM spine_asks"
+                        " WHERE served_by = %s AND status = 'replied'"
+                        " AND session IS NULL ORDER BY replied_at DESC LIMIT 3",
+                        (self.identity.did,))
+                    for t, rp in cur.fetchall():
+                        notes.append(f"earlier, asked: {t!r} — I replied: {rp!r}")
                 st = OrrethStore(conn, by_did=self.identity.did)
                 for m in st.search(self.name, s["text"][:60], limit=3):
                     notes.append(f"I remember [{m['key']}]: {m['body']}")

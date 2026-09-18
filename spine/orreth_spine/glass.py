@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import os
+import secrets
 import threading
 import time
 from pathlib import Path
@@ -41,7 +42,7 @@ def ask_view(conn, ask_id: str) -> dict | None:
     # a glass serves ONLY its own world's ground: another world's ask is
     # "no such ask" here — the refusal wears one face (covenant rule 4)
     cur.execute("SELECT text, person, status, reply, served_by, target,"
-                " scope, asked_at, replied_at, time_window"
+                " scope, asked_at, replied_at, time_window, session"
                 " FROM spine_asks WHERE ask_id = %s AND scope = %s",
                 (ask_id, ev.scope()))
     row = cur.fetchone()
@@ -65,6 +66,7 @@ def ask_view(conn, ask_id: str) -> dict | None:
             "asked_at": row[7].isoformat(),
             "replied_at": row[8].isoformat() if row[8] else None,
             "window": json.loads(row[9]) if row[9] else None,  # P6
+            "session": row[10],                                 # P20
             "journey": [n for n in notes if n]}
 
 
@@ -81,6 +83,62 @@ def asks_view(conn, limit: int = 30) -> list[dict]:
              "fanout": r[6], "asked_at": r[7].isoformat(),
              "replied_at": r[8].isoformat() if r[8] else None}
             for r in cur.fetchall()]
+
+
+def open_session(conn, person: str, title: str | None = None) -> str:
+    """Roll (P20): a fresh worldline for this human in this world. The
+    previous session is not touched — archived means 'not active', never
+    'gone' (every word stays in the Record)."""
+    from .resident import ensure_schema
+    ensure_schema(conn)
+    sid = "ses_" + secrets.token_hex(6)
+    with conn.transaction():
+        conn.cursor().execute(
+            "INSERT INTO spine_sessions (session_id, person, scope, title)"
+            " VALUES (%s, %s, %s, %s)", (sid, person, ev.scope(), title))
+    return sid
+
+
+def sessions_view(conn, person: str, limit: int = 30) -> list[dict]:
+    """List (P20): this human's worldlines in this world, newest first —
+    each with its span, how many asks it holds, and its last words."""
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT s.session_id, s.title, s.opened_at,"
+        " count(a.ask_id), max(a.asked_at),"
+        " (SELECT text FROM spine_asks WHERE session = s.session_id"
+        "  ORDER BY asked_at DESC LIMIT 1)"
+        " FROM spine_sessions s LEFT JOIN spine_asks a"
+        " ON a.session = s.session_id"
+        " WHERE s.person = %s AND s.scope = %s"
+        " GROUP BY s.session_id ORDER BY s.opened_at DESC LIMIT %s",
+        (person, ev.scope(), limit))
+    return [{"session_id": r[0], "title": r[1], "opened_at": r[2].isoformat(),
+             "asks": int(r[3]), "last_at": r[4].isoformat() if r[4] else None,
+             "last_words": (r[5] or "")[:140]} for r in cur.fetchall()]
+
+
+def session_view(conn, session_id: str) -> dict | None:
+    """Load (P20): the session and its asks in the order they were asked
+    — the chat re-renders them whole; another world's session is 'no
+    such session' (one face)."""
+    cur = conn.cursor()
+    cur.execute("SELECT session_id, person, title, opened_at FROM spine_sessions"
+                " WHERE session_id = %s AND scope = %s", (session_id, ev.scope()))
+    row = cur.fetchone()
+    if row is None:
+        return None
+    cur.execute(
+        "SELECT ask_id, text, status, reply, served_by, target, asked_at,"
+        " replied_at, time_window FROM spine_asks WHERE session = %s"
+        " ORDER BY asked_at", (session_id,))
+    asks = [{"ask_id": r[0], "text": r[1], "status": r[2], "reply": r[3],
+             "served_by": r[4], "target": r[5], "asked_at": r[6].isoformat(),
+             "replied_at": r[7].isoformat() if r[7] else None,
+             "window": json.loads(r[8]) if r[8] else None}
+            for r in cur.fetchall()]
+    return {"session_id": row[0], "person": row[1], "title": row[2],
+            "opened_at": row[3].isoformat(), "scope": ev.scope(), "asks": asks}
 
 
 def residents_view(conn) -> list[dict]:
@@ -130,6 +188,18 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str):
                 with psycopg.connect(dsn) as conn:
                     return self._json(200,
                                       {"residents": residents_view(conn)})
+            if path == "/sessions":
+                from urllib.parse import parse_qs
+                qs = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
+                person = (qs.get("person") or ["did:orreth:person:jb"])[0]
+                with psycopg.connect(dsn) as conn:
+                    return self._json(200, {"sessions": sessions_view(conn, person)})
+            if path.startswith("/session/"):
+                with psycopg.connect(dsn) as conn:
+                    view = session_view(conn, path.split("/session/", 1)[1])
+                if view is None:
+                    return self._json(404, {"error": "no such session"})
+                return self._json(200, view)
             self.send_response(404)
             self.end_headers()
 
@@ -158,12 +228,20 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str):
                         and window.get("to")):
                     return self._json(400, {"error": "'window' is "
                                                      "{from, to} in ISO time"})
+                session = str(p.get("session") or "") or None
                 with psycopg.connect(dsn) as conn:
                     out = dispatch.submit_ask(conn, text, person=person,
-                                              to=to, window=window)
+                                              to=to, window=window,
+                                              session=session)
                 if isinstance(out, list):
                     return self._json(201, {"ids": out})
                 return self._json(201, {"id": out})
+            if path == "/sessions":                   # roll a fresh one
+                person = str(p.get("person") or "did:orreth:person:jb")
+                with psycopg.connect(dsn) as conn:
+                    sid = open_session(conn, person,
+                                       title=str(p.get("title") or "") or None)
+                return self._json(201, {"session_id": sid})
             if path == "/confirm":
                 ask_id = str(p.get("ask_id") or "")
                 approve = bool(p.get("approve", False))   # absent = cancel
