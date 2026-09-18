@@ -57,11 +57,16 @@
   /* ---- the chat pull (out of the ceiling) ---- */
   #chat{position:fixed;top:0;right:6vw;width:min(560px,88vw);
     height:72vh;transform:translateY(-104%);transition:transform .45s
-    cubic-bezier(.22,.9,.3,1);z-index:10;display:flex;
+    cubic-bezier(.22,.9,.3,1),height .45s cubic-bezier(.22,.9,.3,1);
+    z-index:10;display:flex;
     flex-direction:column;border:1px solid var(--seam);border-top:none;
     border-radius:0 0 14px 14px;background:var(--glass);
     backdrop-filter:blur(10px);box-shadow:0 18px 50px rgba(0,0,0,.55)}
   #chat.open{transform:translateY(0)}
+  /* the band open → the chat YIELDS: the two never overlap, so every
+     band row stays a door and the ask box stays reachable (after-walk
+     wound #1: the chat swallowed the band's clicks in the landing state) */
+  body:has(#band.open) #chat{height:calc(54vh - 10px)}
   #chat header{padding:10px 16px;color:var(--amber);font-size:11px;
     letter-spacing:.3em;border-bottom:1px solid var(--seam);
     display:flex;justify-content:space-between}
@@ -283,12 +288,14 @@ const esc = s => s.replace(/[&<>"]/g,
   ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 
 const FANS = {};      // fanout ids -> {ids:[], replies:{}, offered:false}
-async function send(){
+async function send(given, label){
   const inp = document.getElementById("chat-in");
-  const text = inp.value.trim(); if (!text) return;
-  inp.value = "";
+  const text = (given ?? inp.value).trim(); if (!text) return;
+  if (given == null) inp.value = "";
   const to = [...SELECTED];
-  el("msg mine", esc(text) + (to.length > 1
+  // a synthesis is the human's CHOICE, never the human's words: it wears
+  // its own label; the machine's prompt never appears as if typed
+  el("msg mine", (label ? `<em>${esc(label)}</em>` : esc(text)) + (to.length > 1
     ? `<div class="who" style="text-align:right">→ ${esc(to.join(" + "))}</div>` : ""));
   const r = await fetch("/ask", {method:"POST",
     headers:{"content-type":"application/json"},
@@ -374,12 +381,18 @@ function offerSummarize(fan){
   b.textContent = "summarize these together?";
   b.onclick = () => {
     b.remove();
+    const names = Object.values(f.replies).map(r => r.name);
     const parts = Object.values(f.replies).map(
-      r => `${r.name} said: "${r.reply}"`).join("\n\n");
-    const inp = document.getElementById("chat-in");
-    inp.value = "Summarize these answers together, briefly:\n\n" + parts;
+      r => `${r.name} answered: "${r.reply}"`).join("\n\n");
     SELECTED = new Set(["librarian"]); loadRoster();
-    send();
+    // the crew is named to the mind that synthesizes (after-walk wound
+    // #2: the librarian claimed the echo's words as her own)
+    send("Two residents (" + names.join(" and ") + ") each answered the "
+         + "same ask. Summarize their answers together, briefly, and "
+         + "attribute every point to the resident who said it, by name. "
+         + "You are the librarian, one of them: never present another "
+         + "resident's words as your own.\n\n" + parts,
+         "summarize these together — on your word → librarian");
   };
   log.appendChild(b); log.scrollTop = log.scrollHeight;
 }

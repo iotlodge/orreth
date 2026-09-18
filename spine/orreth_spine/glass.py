@@ -38,7 +38,7 @@ def ask_view(conn, ask_id: str) -> dict | None:
     """The Questions door: the ask row plus its journey notes, read from
     the ground (the outbox is the dev log; notes ride the events)."""
     cur = conn.cursor()
-    cur.execute("SELECT text, person, status, reply, served_by"
+    cur.execute("SELECT text, person, status, reply, served_by, target"
                 " FROM spine_asks WHERE ask_id = %s", (ask_id,))
     row = cur.fetchone()
     if row is None:
@@ -56,7 +56,8 @@ def ask_view(conn, ask_id: str) -> dict | None:
             notes.append(e.get("payload", {}).get("note", ""))
     return {"ask_id": ask_id, "text": row[0], "person": row[1],
             "status": row[2], "reply": row[3], "served_by": row[4],
-            "journey": [n for n in notes if n]}
+            "target": row[5],       # who the ask was routed to: a targeted
+            "journey": [n for n in notes if n]}   # command reaches only its target
 
 
 def asks_view(conn, limit: int = 30) -> list[dict]:
@@ -167,7 +168,13 @@ class BridgeRig:
     the glass, breathing together; stopped together."""
 
     def __init__(self, *, gateway=None, template=None, port: int = 4600,
-                 dsn: str | None = None, policy=None, second: bool = True):
+                 dsn: str | None = None, policy=None, second: bool = True,
+                 home: str | os.PathLike | None = None):
+        """`home` is where the residents' seeds live (covenant rule 1: a
+        keypair is a self, and a self survives the process — the SAME
+        librarian in every life of the Bridge). None mints ephemeral
+        selves: tests only, never a resident (found by the Playwright:
+        every relight had been a stranger wearing the librarian's name)."""
         spine = Path(__file__).resolve().parents[1]
         self.dsn = dsn or PG_DSN
         self._stop = threading.Event()
@@ -175,13 +182,14 @@ class BridgeRig:
         policy_path = policy or spine / "policy" / "covenant-policy.v1.json"
         self.resident = Resident(
             template or spine / "templates" / "librarian-resident.v0.json",
-            gateway=gateway)
+            gateway=gateway, home=home)
         self.resident.load_policy(policy_path)
         self.residents = [self.resident]
         if second:
             # the crew's second seat: the echo — mindless, honest, and
             # exactly what a fan-out needs to show two distinct lenses
-            echo = Resident(spine / "templates" / "echo-resident.v0.json")
+            echo = Resident(spine / "templates" / "echo-resident.v0.json",
+                            home=home)
             echo.load_policy(policy_path)
             self.residents.append(echo)
         for r in self.residents:
@@ -294,8 +302,11 @@ def main() -> int:
         gw = FakeGateway(reply="I am the fake mind — set ANTHROPIC_API_KEY "
                                "and restart me to think for real.")
         mind = "a fake mind (no key found)"
-    rig = BridgeRig(gateway=gw).start()
+    home = Path(os.environ.get("ORRETH_HOME", Path.home() / ".orreth")) / "agents"
+    rig = BridgeRig(gateway=gw, home=home).start()   # the same selves, every life
     print(f"the Bridge is lit: http://127.0.0.1:{rig.port}/  ({mind})")
+    print("crew: " + " · ".join(f"{r.name} {r.identity.did}"
+                                for r in rig.residents) + f"  (home {home})")
     print("Ctrl+C brings it down whole.")
     try:
         while True:

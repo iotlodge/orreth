@@ -264,8 +264,45 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   residents steal every later test's command and refuse it as a
   stranger) — the rig is MODULE-scoped and `stop()` joins its threads.
   Suite 50 green, twice-run stable (2:41 · 2:42).
-- Next: **sp4 — the Playwright walks the specs** (the before/after
-  record owed from P0 sp3 and P3 sp3).
+- **sp4 — the Playwright walks the specs** ✅ **LANDED 2026-09-17**:
+  the AFTER-WALK — a Fable Playwright agent walked all 14 specs against
+  the live Bridge on the human path only (a real Chromium in the
+  Playwright MCP container; click, type, read, wait — no door, no
+  ground, no source), 18 bar-moment screenshots, honest waits (every
+  reply 4–12 s): `baselines/after-walk-2026-09-17.md` + its evidence
+  folder; verdicts in the spec book's new **Bridge v0** column beside
+  the old glass. THREE WOUNDS FOUND, RULED, CURED, RE-WALKED GREEN —
+  the wound rule working as written: (1) **the band's doors were shut
+  in the landing state** — the open chat overlapped the band's top rows
+  and swallowed their clicks → the chat YIELDS when the band opens (no
+  overlap, the ask box stays reachable); (2) **"summarize these
+  together" misattributed** — the machine prompt rode the human's own
+  bubble and the librarian claimed the echo's words → a labelled
+  synthesis line ("on your word → librarian") and a prompt that names
+  the crew and forbids claiming another's words; (3) **every reply
+  bubble read "orreth"** — the roster had turned over because the
+  Bridge minted EPHEMERAL selves every life (covenant rule 1 drift: the
+  librarian was a stranger wearing her name on every relight) → the
+  Bridge seats the SAME selves (seeds under `~/.orreth/agents`, proven
+  live: `lives=2`, same DIDs; a rig-layer law in the suite) and a reply
+  falls back to the resident the ask was routed to. Suite wound on the
+  way: a bare execute on the session's `pg` connection pinned the DDL
+  advisory lock for the whole session (psycopg3's implicit transaction)
+  → the fixture is autocommit. Honest findings on the road, not
+  footnoted: JOURNEY-01 names WHO only (no scope, no time — sp5);
+  SCOPE-01 · SCHED-01 · LENS-01 · CLEAR-01 · FULL-01's acquire half
+  NOT BUILT (expected; later phases); the band and the roster show
+  EVERY world's rows because the ground carries no world scope — the
+  universe-isolation leak, **sp5's first cut**; residents don't know
+  they share a fan-out ("I'm only one person here" — P4); the
+  consequential act demands a machine key a stranger lacks (tool UX);
+  raw markdown in bubbles; crew selection resets after a synthesis;
+  no download control (FANOUT-01's third bar). The before-walk
+  remainder (old glass) stays OWED — it needs the old rig relit and is
+  JB's spend call; nothing downstream blocks on it. Suite 51 green.
+- Next: **sp5 — the ground wears its world** (asks + joins carry
+  SPINE_SCOPE; every door filters by the glass's world; JOURNEY-01's
+  scope + completion time under each ask).
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 

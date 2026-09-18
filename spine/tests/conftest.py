@@ -28,7 +28,11 @@ def _queue_ns():
 def pg():
     psycopg = pytest.importorskip("psycopg")
     try:
-        conn = psycopg.connect(DSN)
+        # autocommit: a session-long connection handed to library code must
+        # never sit inside an implicit transaction — a bare execute here
+        # once pinned ensure_schema's xact-scoped advisory lock for the rest
+        # of the session, and every later rig's dispatcher queued behind it
+        conn = psycopg.connect(DSN, autocommit=True)
     except Exception as e:
         if os.environ.get("SPINE_REQUIRE_PG"):
             raise
@@ -56,7 +60,10 @@ def rig(pg, _queue_ns):
     every resident-serving test after the first rig's birth timed out).
     Tests AIM it by setting rig.resident.gateway and targeting by name."""
     from orreth_spine import glass
-    r = glass.BridgeRig(gateway=None, port=0).start()
-    assert r.wait_ready(30), "the standing rig never became ready"
+    r = glass.BridgeRig(gateway=None, port=0, home=None).start()  # ephemeral
+    assert r.wait_ready(30), (
+        "the standing rig never became ready — feed_ready="
+        f"{r.feed_ready.is_set()} dispatcher_ready={r.dispatcher_ready.is_set()} "
+        f"threads alive={sum(t.is_alive() for t in r._threads)}/{len(r._threads)}")
     yield r
     r.stop()

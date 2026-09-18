@@ -96,3 +96,20 @@ def test_cancel_over_http_means_the_act_never_ran(pg, rig):
         view = _wait_status(rig.port, ask_id, ("cancelled",))
         assert "nothing was done" in view["reply"].lower()
         assert tools.journal(pg, rig.resident.identity.did) == []
+
+
+def test_the_bridge_seats_the_same_selves_in_every_life(tmp_path):
+    """Covenant rule 1 at the rig layer: a relit Bridge seats the SAME
+    librarian and echo (seeds under `home`), never strangers wearing
+    their names — found by the Playwright when a roster turned over
+    and every reply bubble lost its speaker."""
+    first = glass.BridgeRig(gateway=None, port=0, home=tmp_path)
+    again = glass.BridgeRig(gateway=None, port=0, home=tmp_path)
+    try:
+        assert [r.identity.did for r in first.residents] == \
+               [r.identity.did for r in again.residents]
+        stranger = glass.BridgeRig(gateway=None, port=0, home=None)
+        assert stranger.resident.identity.did != first.resident.identity.did
+    finally:
+        for rig in (first, again, stranger):
+            rig._httpd.server_close()          # never started: just the socket
