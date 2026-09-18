@@ -38,8 +38,12 @@ def ask_view(conn, ask_id: str) -> dict | None:
     """The Questions door: the ask row plus its journey notes, read from
     the ground (the outbox is the dev log; notes ride the events)."""
     cur = conn.cursor()
-    cur.execute("SELECT text, person, status, reply, served_by, target"
-                " FROM spine_asks WHERE ask_id = %s", (ask_id,))
+    # a glass serves ONLY its own world's ground: another world's ask is
+    # "no such ask" here — the refusal wears one face (covenant rule 4)
+    cur.execute("SELECT text, person, status, reply, served_by, target,"
+                " scope, asked_at, replied_at"
+                " FROM spine_asks WHERE ask_id = %s AND scope = %s",
+                (ask_id, ev.scope()))
     row = cur.fetchone()
     if row is None:
         return None
@@ -57,7 +61,10 @@ def ask_view(conn, ask_id: str) -> dict | None:
     return {"ask_id": ask_id, "text": row[0], "person": row[1],
             "status": row[2], "reply": row[3], "served_by": row[4],
             "target": row[5],       # who the ask was routed to: a targeted
-            "journey": [n for n in notes if n]}   # command reaches only its target
+            "scope": row[6],        # command reaches only its target
+            "asked_at": row[7].isoformat(),
+            "replied_at": row[8].isoformat() if row[8] else None,
+            "journey": [n for n in notes if n]}
 
 
 def asks_view(conn, limit: int = 30) -> list[dict]:
@@ -66,8 +73,8 @@ def asks_view(conn, limit: int = 30) -> list[dict]:
     cur = conn.cursor()
     cur.execute(
         "SELECT ask_id, text, person, status, served_by, target, fanout,"
-        " asked_at, replied_at FROM spine_asks"
-        " ORDER BY asked_at DESC LIMIT %s", (limit,))
+        " asked_at, replied_at FROM spine_asks WHERE scope = %s"
+        " ORDER BY asked_at DESC LIMIT %s", (ev.scope(), limit))
     return [{"ask_id": r[0], "text": r[1][:140], "person": r[2],
              "status": r[3], "served_by": r[4], "target": r[5],
              "fanout": r[6], "asked_at": r[7].isoformat(),
@@ -80,7 +87,8 @@ def residents_view(conn) -> list[dict]:
     cur = conn.cursor()
     cur.execute(
         "SELECT DISTINCT ON (name) name, did, life, joined_at"
-        " FROM spine_joins ORDER BY name, join_id DESC")
+        " FROM spine_joins WHERE scope = %s ORDER BY name, join_id DESC",
+        (ev.scope(),))
     return [{"name": r[0], "did": r[1], "lives": r[2],
              "joined_at": r[3].isoformat()} for r in cur.fetchall()]
 

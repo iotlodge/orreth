@@ -92,6 +92,14 @@ def ensure_schema(conn) -> None:
                     " seq int NOT NULL DEFAULT 1")
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
                     " target text")
+        # the ground wears its world (canon 0002's isolation law, felt by
+        # the Playwright: the band and the roster showed EVERY world's
+        # rows) — every ask and every join carries the scope it was
+        # made in, and a glass's doors serve only their own world's
+        cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
+                    " scope text")
+        cur.execute("ALTER TABLE spine_joins ADD COLUMN IF NOT EXISTS"
+                    " scope text")
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
                     " fanout text")
 
@@ -158,10 +166,11 @@ class Resident:
                 "policy": self.policy["hash"]})
             cur.execute(
                 "INSERT INTO spine_joins (did, name, life, template_hash,"
-                " policy_version, policy_hash, sig)"
-                " VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                " policy_version, policy_hash, sig, scope)"
+                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 (self.identity.did, self.name, life, self.template_hash,
-                 self.policy["version"], self.policy["hash"], sig))
+                 self.policy["version"], self.policy["hash"], sig,
+                 ev.scope()))                  # joined THIS world
         return {"did": self.identity.did, "life": life,
                 "policy_version": self.policy["version"]}
 

@@ -159,3 +159,25 @@ def test_poison_parks_visibly_and_never_advances(pg):
                 (consumer,))
     reason, body = cur.fetchone()
     assert "undecodable" in reason and bytes(body) == b"this is not an envelope"
+
+
+def test_another_worlds_facts_cost_nothing_against_the_cap(pg):
+    """The growing-corpus disease, pinned (found twice: P3 sp1 and P3
+    sp5 — a fresh group replaying a 539-fact topic hit the 500 cap on
+    skips alone and never reached its own world's fact): the cap bounds
+    THIS world's work; another world's facts are skipped for free."""
+    typ = f"orreth.test.cap.{secrets.token_hex(3)}.v1"
+    sink = sinks.KafkaSink()
+    for seq in range(1, 4):                     # three strangers ahead of us
+        e = _env(typ, "agg-elsewhere", seq)
+        e["scope_path"] = "u:elsewhere"
+        sink.publish(e["message_id"], ev.encode(e))
+    aid = "agg-" + secrets.token_hex(3)
+    _commit_and_relay(pg, typ, aid, 1)          # then ONE of ours
+    consumer = "cap-" + secrets.token_hex(3)
+    out = projector.run_once(
+        pg, group=f"g-{consumer}", topics=[typ], consumer_name=consumer,
+        apply=_view_apply(consumer), max_messages=1,
+        skip=lambda env: env.get("scope_path") != "u:dev")  # _env's world
+    assert out["applied"] == 1                  # ours, past three free skips
+    assert _view(pg, consumer, aid) == 1

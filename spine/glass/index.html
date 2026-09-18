@@ -259,7 +259,8 @@ async function loadBand(){
     row.innerHTML =
       `<span class="dot ${a.status}"></span>` +
       `<span class="snip">${esc(a.text)}</span>` +
-      `<span class="meta">${esc(a.target || "any")} · ${a.status}</span>`;
+      `<span class="meta">${esc(a.target || "any")} · ${a.status} · ` +
+      `${hhmm(a.replied_at || a.asked_at)}</span>`;
     row.onclick = () => expandRow(row, a.ask_id);
     box.appendChild(row);
   }
@@ -361,7 +362,12 @@ function renderOutcome(id, v, line){
     return;
   }
   el("msg theirs", who + esc(v.reply || "(no words came back)"));
+  if (v.replied_at)                          // P7: who took it, on which
+    el("journey", `${esc(name)} took it on ${esc(v.scope || "?")} · ` +   // scope,
+       `completed ${hhmm(v.replied_at)} (${secs(v.asked_at, v.replied_at)})`);  // when
 }
+function hhmm(iso){ return new Date(iso).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"}); }
+function secs(a, b){ return `${Math.max(0, (new Date(b) - new Date(a)) / 1000).toFixed(1)} s`; }
 
 async function decide(id, approve, row){
   row.querySelectorAll("button").forEach(b => b.disabled = true);

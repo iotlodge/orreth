@@ -47,8 +47,8 @@ def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
         def domain(cur, a=ask_id, t=target):
             cur.execute(
                 "INSERT INTO spine_asks (ask_id, text, person, target,"
-                " fanout) VALUES (%s, %s, %s, %s, %s)",
-                (a, text, person, t, fanout))
+                " fanout, scope) VALUES (%s, %s, %s, %s, %s, %s)",
+                (a, text, person, t, fanout, ev.scope()))   # asked in
 
         outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"],
                                   domain)

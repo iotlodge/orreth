@@ -300,9 +300,40 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   no download control (FANOUT-01's third bar). The before-walk
   remainder (old glass) stays OWED — it needs the old rig relit and is
   JB's spend call; nothing downstream blocks on it. Suite 51 green.
-- Next: **sp5 — the ground wears its world** (asks + joins carry
-  SPINE_SCOPE; every door filters by the glass's world; JOURNEY-01's
-  scope + completion time under each ask).
+- **sp5 — the ground wears its world** ✅ **LANDED 2026-09-17**: every
+  ask and every join carries the world it was made in (`scope` on
+  `spine_asks` and `spine_joins`, stamped from SPINE_SCOPE at the write),
+  and a glass's doors serve ONLY their own world — /asks, /residents, and
+  /ask/<id> (another world's ask is "no such ask": the refusal wears one
+  face). The universe-isolation law now holds at the ground, not only on
+  the rails and benches. **JOURNEY-01 PASSES**: under each reply a soft
+  line names who took it, on which scope, and when it completed, with
+  the elapsed seconds ("librarian took it on u:dev · completed 01:52:34
+  (0.2 s)"); band rows carry a time. Proven the hard way: the Playwright
+  re-walked LIFE-01 + JOURNEY-01 WHILE the full suite ran on the same
+  ground — 15 s of watching, rev 23 → 37, and not one stranger's row in
+  the band (re-walk #3, evidence saved). Two laws in the suite: the
+  human path's view wears its world and its completion time; a stranger
+  world sees none of this world's ground. Operator's act on the dev
+  ground, once: the 239 rows from before the column got their world
+  from their OWN ask.received events (51 real dev asks returned to the
+  band; every test row left it). Friction filed: the completion clock is
+  the browser's local 12-hour time with no date. TWO SUITE WOUNDS on the
+  way, both honest: (1) **the growing-corpus disease, second time** —
+  the test dispatchers' fresh groups replay the topic from its start
+  and `run_once` counted every SKIPPED (other-world) fact against its
+  500 cap; the day's walks pushed the topic to 539 facts and eight
+  resident tests went red deterministically, their own fact never
+  reached → skipped facts now cost nothing against the cap (the cap
+  bounds THIS world's work), pinned by a law in test_events_shadow;
+  (2) the new isolation law itself polluted a later test (its ask was
+  drained and served by the next resident) → the law files in a world
+  of its own. And a process wound, recorded so it never recurs: a
+  background suite's "exit 0" was the pipe's, not pytest's — the close
+  was nearly called on 8 red. Suite 53 green.
+- Next: **sp6 — the scope edges** (SPEC-SCOPE-01: a typed time scope
+  reflects on the chat's clock/axes without a click — the last One-Chat
+  bar P3 claims; then P3 closes whole and P4 fleet+job opens).
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 

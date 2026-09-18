@@ -123,7 +123,6 @@ def run_once(conn, *, group: str, topics: list[str], consumer_name: str,
             msg = cons.poll(0.5)
             if msg is None or msg.error():
                 continue
-            seen += 1
             deadline = time.monotonic() + idle_s
             try:
                 env = ev.decode(msg.value())
@@ -134,8 +133,13 @@ def run_once(conn, *, group: str, topics: list[str], consumer_name: str,
                 break              # never advance past a poison event
             if skip is not None and skip(env):
                 cons.commit(message=msg)   # not ours: advance, no inbox work
-                continue
-            outcome = inbox.apply_event(
+                continue                   # — and it costs NOTHING against
+            seen += 1                      # the cap: the cap bounds THIS
+            outcome = inbox.apply_event(   # world's work (a fresh group
+                                           # replaying a 539-fact topic hit
+                                           # 500 skips and never reached
+                                           # its own fact: the growing-
+                                           # corpus disease, second time)
                 conn, consumer_name, env,
                 lambda cur, _env=env: apply(cur, _env))
             if outcome == "applied":

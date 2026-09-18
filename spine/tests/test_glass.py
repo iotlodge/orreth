@@ -12,7 +12,7 @@ import urllib.request
 
 import pytest
 
-from orreth_spine import gateway, glass, tools
+from orreth_spine import dispatch, envelope as ev, gateway, glass, resident, tools
 
 from tests.test_mind import _rails_up  # noqa: E402
 
@@ -71,6 +71,8 @@ def test_the_human_path_runs_over_http_alone(pg, rig):
         assert view["reply"] == reply                    # the FULL reply
         assert view["journey"]                           # the ask wore its way
         assert any("librarian" in n for n in view["journey"])
+        assert view["scope"] == ev.scope()               # P7: on which scope,
+        assert view["replied_at"] and view["asked_at"]   # and when it completed
 
 
 @rails
@@ -113,3 +115,24 @@ def test_the_bridge_seats_the_same_selves_in_every_life(tmp_path):
     finally:
         for rig in (first, again, stranger):
             rig._httpd.server_close()          # never started: just the socket
+
+
+def test_a_world_sees_only_its_own_ground(pg, monkeypatch):
+    """The isolation law at the doors (canon 0002; felt by the Playwright
+    when the band and the roster showed every world's rows): an ask and
+    a join made in THIS world are served by this world's doors, and to
+    a stranger world they do not exist — the same face as never asked."""
+    SPINE = glass.Path(__file__).resolve().parents[1]
+    mine = "u:law-" + secrets.token_hex(3)       # a world of this law's own:
+    monkeypatch.setenv("SPINE_SCOPE", mine)      # nothing here is ever
+    r = resident.Resident(SPINE / "templates" / "echo-resident.v0.json")
+    r.load_policy(SPINE / "policy" / "covenant-policy.v1.json")  # dispatched
+    r.join(pg)                                   # by the session's world
+    ask_id = dispatch.submit_ask(pg, "a word for my own world")
+    assert ask_id in {a["ask_id"] for a in glass.asks_view(pg)}
+    assert glass.ask_view(pg, ask_id)["scope"] == mine
+    assert "echo" in {x["name"] for x in glass.residents_view(pg)}
+    monkeypatch.setenv("SPINE_SCOPE", "u:stranger-" + mine[-6:])
+    assert ask_id not in {a["ask_id"] for a in glass.asks_view(pg)}
+    assert glass.ask_view(pg, ask_id) is None            # one face: no such ask
+    assert "echo" not in {x["name"] for x in glass.residents_view(pg)}

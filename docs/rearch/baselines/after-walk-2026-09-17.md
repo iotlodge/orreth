@@ -141,3 +141,28 @@ this pass's scope).
 "librarian"-labelled reply sits just above the frame);
 `after-walk-rw2-02-summarize-labels.png` (the summary attributing
 **Librarian** and **Echo** by name).
+
+## Re-walk #3 — 2026-09-17, after sp5 (the ground wears its world)
+
+**Status: WHOLE (P3 sp5 regression pass, two specs).** Same Bridge, same
+browser, page reloaded fresh after the relight (crew chips read `echo ·
+life 3` / `librarian · life 3`). The test suite was running on the same
+ground throughout the pass (the pulse counter climbed from rev 23 to rev 37
+and on while I watched). The band opened nearly empty, as expected — the
+ground's older, world-less rows are invisible now.
+
+| Spec | Verdict | What the Playwright saw |
+|---|---|---|
+| **SPEC-JOURNEY-01** | **PASS** | Asked "What is the capital of Spain, in one sentence?". Beneath the reply, a soft line: **"librarian took it on u:dev · completed 01:52:34 AM (0.2 s)"** — who took it, on which scope, and when it completed, with the elapsed seconds. It stays after completion. The reply itself was whole within the one-second script that submitted it and opened the band (the glass's own count: 0.2 s). |
+| **SPEC-LIFE-01** | **PASS** (in-flight not catchable; isolation held) | Opened OBJECTIVES a beat after submitting: the band held exactly one row — mine — reading **"librarian · replied · 01:52:34 AM"**: rows carry a time. Clicked it: the result opened in place beneath the row with its journey line ("librarian: heard the ask, every word · recalled 2 notes · thought it through the metered gateway"). Watched the band for a further ~15 s with the suite running on the same ground: **no stranger rows appeared** — no "Marker …", no "Seal note …", nothing I did not cause in this world. The isolation check passes. Queued / in-flight states could not be caught: the reply landed in 0.2 s, before the band was even open. |
+
+Friction, small: the completion clock is the browser's own, in 12-hour form
+with no date ("01:52:34 AM" — this browser lives in a UTC container while
+the host sits in the afternoon; a human at their own machine sees their own
+clock). "Recalled 2 notes" and "the metered gateway" remain glossary words
+(already filed under SPEC-WORDS-01). Nothing in this pass is wound-grade.
+
+**Re-walk #3 evidence** (same folder): `after-walk-rw3-01-life-band-while-running.png`
+(the band open under the shrunk chat with my single timed row; the journey
+line under the reply above); `after-walk-rw3-02-life-row-door-isolated.png`
+(the row opened in place with its journey line; band still one row).
