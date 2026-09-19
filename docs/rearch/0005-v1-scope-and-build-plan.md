@@ -553,6 +553,24 @@ first walk carries MONITOR-01's deferred re-walk.
   event and recalls byte-exact by ref and by timeframe · recall reads
   the ask's window over all the human's worldlines · the door answers
   verbatim over HTTP, encoded as a browser sends it). Suite 74 green.
+- **sp2 — Understanding v0, MEM-4 changing facts** ✅ **BUILT 2026-09-19**:
+  **a memory never overwrites** — a new memory under the same key is a
+  SIBLING that supersedes the current one (lineage on the row and in
+  its event; the same words again land nothing), each with a **validity
+  interval**, so `get` and `search` answer **what is true now** and,
+  with `at`, **what was true then**; `history` is the lineage, oldest
+  first; the door serves both (`/recall?ref=…&at=…`, `&history=1`). In
+  the chat, an ask wearing a window reads the memories **as they stood
+  at the window's end** — what we knew then, not now. **The projection
+  v0** behind `search`: Postgres full-text — stemmed ("cure" finds
+  "cures"), OR-shaped over the ask's words, RANKED (the memory holding
+  more of them first), a GIN index; every row wears the projection's
+  kind (`tsvector:english` — vectors will wear their model the same way
+  when an embedding lane exists); pure stopwords honestly find nothing,
+  and a token the stemmer can't hold still finds its memory by the old
+  word-match. An older ground migrates in place (the v0 primary key on
+  namespace/key gives way to lineage; the rows stay). Four laws in
+  `tests/test_understanding.py`. Suite 78 green.
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 

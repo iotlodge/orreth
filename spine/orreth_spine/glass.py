@@ -127,7 +127,8 @@ def crew_view(conn) -> list[dict]:
 
 def recall_view(conn, *, ref: str | None = None, ask: str | None = None,
                 session: str | None = None, window: tuple[str, str] | None = None,
-                person: str = "did:orreth:person:jb") -> dict | None:
+                person: str = "did:orreth:person:jb", at: str | None = None,
+                history: bool = False) -> dict | None:
     """Verbatim recall (MEM-1, canon 0003): every word, byte-exact — by
     ref (a memory), by ask, by session (the worldline), or by timeframe
     (the human's lens over all their worldlines in this world)."""
@@ -137,12 +138,22 @@ def recall_view(conn, *, ref: str | None = None, ask: str | None = None,
     cur = conn.cursor()
     if ref:
         ns, _, key = ref.partition("/")
-        cur.execute("SELECT namespace, key, body, hash, by_did, landed_at"
-                    " FROM spine_memories WHERE namespace = %s AND key = %s"
-                    " AND scope = %s", (ns, key, ev.scope()))
+        from .store import OrrethStore
+        st = OrrethStore(conn, by_did=person)
+        if history:                        # the lineage, never an overwrite
+            versions = st.history(ns, key)
+            return {"ref": ref, "history": versions} if versions else None
+        body = st.get(ns, key, at=at)      # true now — or true then (MEM-4)
+        if body is None:
+            return None
+        cur.execute("SELECT hash, by_did, landed_at, valid_from, valid_to FROM spine_memories"
+                    " WHERE namespace = %s AND key = %s AND scope = %s AND body = %s"
+                    " ORDER BY valid_from DESC LIMIT 1", (ns, key, ev.scope(), body))
         r = cur.fetchone()
-        return {"memory": {"ref": ref, "body": r[2], "hash": r[3], "by": r[4],
-                           "landed_at": r[5].isoformat()}} if r else None
+        return {"memory": {"ref": ref, "body": body, "hash": r[0], "by": r[1],
+                           "landed_at": r[2].isoformat(), "valid_from": r[3].isoformat(),
+                           "valid_to": r[4].isoformat() if r[4] else None,
+                           "as_of": at}}
     if ask:
         v = ask_view(conn, ask)
         return {"ask": v} if v else None
@@ -293,7 +304,8 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                             conn, ref=qs.get("ref"), ask=qs.get("ask"),
                             session=qs.get("session"),
                             window=(qs["from"], qs["to"]) if qs.get("from") and qs.get("to") else None,
-                            person=qs.get("person") or "did:orreth:person:jb")
+                            person=qs.get("person") or "did:orreth:person:jb",
+                            at=qs.get("at"), history=qs.get("history") == "1")
                 except psycopg.DataError:
                     return self._json(400, {"error": "the window is two ISO times, from and to"})
                 if view is None:

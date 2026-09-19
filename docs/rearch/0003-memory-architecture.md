@@ -117,7 +117,11 @@ property is what makes the accelerations honest.
 | **When** | Built asynchronously within seconds of commit (lag honestly reported until indexed); read at every semantic recall and context pack; rebuilt from the log whenever needed. |
 
 - Embeddings and an entity/relationship projection over the log; **vectors
-  wear their model** (the standing embedding-truth law).
+  wear their model** (the standing embedding-truth law). *(P5 sp2: the
+  projection's v0 is lexical — Postgres full-text, stemmed and ranked,
+  wearing `tsvector:english` on every row — until an embedding lane
+  exists; lineage + validity intervals landed with it, so MEM-4's two
+  truths answer today.)*
 - **Temporal honesty comes nearly free**: records are immutable,
   timestamped, and lineage-chained, so "what is true now" vs "what was
   true then" are both answerable — the capability Graphiti/Zep exists to

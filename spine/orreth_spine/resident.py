@@ -319,8 +319,16 @@ class Resident:
                     for m in st.within(self.name, window["from"], window["to"]):
                         notes.append(f"in the window I acquired [{m['key']}] at "
                                      f"{m['landed_at'][:16]}: {m['body']}")
-                for m in st.search(self.name, s["text"][:60], limit=3):
-                    notes.append(f"I remember [{m['key']}]: {m['body']}")
+                if window and window.get("to"):
+                    # MEM-4 in the chat: inside a window the memories read
+                    # as they stood at the window's END — what we knew then
+                    for m in st.search(self.name, s["text"][:60], limit=3,
+                                       at=window["to"]):
+                        notes.append(f"as of {window['to'][:16]} I remembered "
+                                     f"[{m['key']}]: {m['body']}")
+                else:
+                    for m in st.search(self.name, s["text"][:60], limit=3):
+                        notes.append(f"I remember [{m['key']}]: {m['body']}")
             step = (f"recalled {len(notes)} notes" if notes
                     else "recalled nothing yet — a young memory")
             steps = s["steps"] + [step]
