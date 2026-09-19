@@ -34,6 +34,13 @@ def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
     ensure_schema(conn)
     outbox.ensure_schema(conn)
     fanout = ("fan_" + secrets.token_hex(6)) if to and len(to) > 1 else None
+    state = "in"
+    if session:                        # an ask is born in its session's state
+        cur0 = conn.cursor()
+        cur0.execute("SELECT coalesce(state, 'in') FROM spine_sessions"
+                     " WHERE session_id = %s", (session,))
+        row0 = cur0.fetchone()
+        state = row0[0] if row0 else "in"
     ids = []
     for target in (to or [None]):
         ask_id = "ask_" + secrets.token_hex(8)
@@ -55,10 +62,10 @@ def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
         def domain(cur, a=ask_id, t=target, w=payload.get("window")):
             cur.execute(
                 "INSERT INTO spine_asks (ask_id, text, person, target,"
-                " fanout, scope, time_window, session)"
-                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                " fanout, scope, time_window, session, state)"
+                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (a, text, person, t, fanout, ev.scope(),     # asked in
-                 json.dumps(w) if w else None, session))     # THIS world
+                 json.dumps(w) if w else None, session, state))   # THIS world
 
         outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"],
                                   domain)

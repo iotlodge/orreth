@@ -116,6 +116,10 @@ def ensure_schema(conn) -> None:
             " session_id text PRIMARY KEY, person text NOT NULL,"
             " scope text NOT NULL, title text,"
             " opened_at timestamptz NOT NULL DEFAULT now())")
+        cur.execute("ALTER TABLE spine_sessions ADD COLUMN IF NOT EXISTS"
+                    " state text NOT NULL DEFAULT 'in'")    # P11: Opt Out is a
+        cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"       # state
+                    " state text NOT NULL DEFAULT 'in'")
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
                     " fanout text")
 
@@ -164,6 +168,8 @@ class Resident:
         self.gateway = gateway if self.template.get("mind") else None
         self._serve_conn = None
         self._current_ask = None
+        self._state = "in"
+        self._ckpt_graph = None      # the checkpointed graph, one per life
         # on_delta(ask_id, text): the rig wires this to the glass feed —
         # words stream to the human as they form; glass-bound only, the
         # broker never carries a delta, the door still serves the truth
@@ -214,7 +220,7 @@ class Resident:
 
     # ---- the mind (small, real) ----------------------------------------------
 
-    def _build_graph(self):
+    def _build_graph(self, checkpointer=None):
         def hear(s: _State) -> dict:
             return {"steps": s["steps"] + ["heard the ask, every word"]}
 
@@ -233,14 +239,15 @@ class Resident:
                 # THIS ask's session — every reply landed in it, by any
                 # resident, labeled — never another session's; an ask
                 # with no session reads only my own session-less replies
-                session, window, person = None, None, None
+                session, window, person, state = None, None, None, "in"
                 if self._current_ask:
-                    cur.execute("SELECT session, time_window, person FROM spine_asks"
-                                " WHERE ask_id = %s", (self._current_ask,))
+                    cur.execute("SELECT session, time_window, person, coalesce(state, 'in')"
+                                " FROM spine_asks WHERE ask_id = %s", (self._current_ask,))
                     row = cur.fetchone()
                     if row:
-                        session, person = row[0], row[2]
+                        session, person, state = row[0], row[2], row[3]
                         window = json.loads(row[1]) if row[1] else None
+                self._state = state          # P11: this serve stays in its state
                 if person:
                     # the pack's third rung (canon 0003): the SHORT VERSION
                     # first — the digests of this human's earlier sessions,
@@ -248,7 +255,7 @@ class Resident:
                     # and opens on demand through the recall door
                     from .digest import for_person
                     for d in for_person(conn, person, exclude=session,
-                                        window=window):
+                                        window=window, state=state):
                         notes.append("the short version of session "
                                      f"{d['session'][4:10]} (digest {d['digest_id'][4:10]},"
                                      f" {len(d['sources'])} sources): "
@@ -261,9 +268,9 @@ class Resident:
                         "  SELECT name FROM spine_joins WHERE did = a.served_by"
                         "  ORDER BY join_id DESC LIMIT 1) j ON true"
                         " WHERE a.session = %s AND a.status = 'replied'"
-                        " AND a.ask_id <> %s"
+                        " AND a.ask_id <> %s AND coalesce(a.state, 'in') = %s"
                         " ORDER BY a.replied_at DESC LIMIT 6",
-                        (session, self._current_ask))
+                        (session, self._current_ask, state))
                     for t, rp, who, by in cur.fetchall():
                         mine = by == self.identity.did
                         if mine and self.function == "grade":
@@ -310,7 +317,7 @@ class Resident:
                                      f"covenant policy v{pv}, capabilities "
                                      f"{', '.join(json.loads(caps or '[]')) or 'none declared'}, "
                                      f"self {did[-8:]}")
-                st = OrrethStore(conn, by_did=self.identity.did)
+                st = OrrethStore(conn, by_did=self.identity.did, state=state)
                 if window and window.get("from") and window.get("to"):
                     # MEM-1 by timeframe (P6): the window the human typed is
                     # a lens over ALL their worldlines in this world — every
@@ -322,9 +329,10 @@ class Resident:
                         "  ORDER BY join_id DESC LIMIT 1) j ON true"
                         " WHERE a.person = %s AND a.scope = %s AND a.status = 'replied'"
                         " AND a.asked_at BETWEEN %s AND %s AND a.ask_id <> %s"
+                        " AND coalesce(a.state, 'in') = %s"
                         " ORDER BY a.asked_at LIMIT 12",
                         (person, ev.scope(), window["from"], window["to"],
-                         self._current_ask))
+                         self._current_ask, state))
                     for t, rp, at, who in cur.fetchall():
                         notes.append(f"in the window, at {at.strftime('%a %b %d %H:%M')}, "
                                      f"asked: {t!r} — {who} replied: {rp!r}")
@@ -435,7 +443,27 @@ class Resident:
         g.add_edge("hear", "recall")
         g.add_edge("recall", "think")
         g.add_edge("think", END)
-        return g.compile()
+        return g.compile(checkpointer=checkpointer)
+
+    def prepare(self, conn) -> None:
+        """Working memory (canon 0003 · MEM-2): the graph checkpointed on
+        the ground after every hop — on a connection of its OWN, so a
+        serve that rolls back keeps the hops it already made and a life
+        that dies mid-graph resumes at its hop, never re-hearing, never
+        re-recalling. Called once per life, at the first serve."""
+        if self._ckpt_graph is not None:
+            return
+        import psycopg
+        from langgraph.checkpoint.postgres import PostgresSaver
+        own = psycopg.connect(conn.info.dsn, password=conn.info.password,
+                              autocommit=True)
+        saver = PostgresSaver(own)
+        own.execute("SELECT pg_advisory_lock(742199)")      # the DDL guard, session-
+        try:                                                # scoped: the saver's
+            saver.setup()                                   # migrations commit on
+        finally:                                            # their own
+            own.execute("SELECT pg_advisory_unlock(742199)")
+        self._ckpt_graph = self._build_graph(saver)
 
     # ---- service --------------------------------------------------------------
 
@@ -465,8 +493,22 @@ class Resident:
             return
         text, person, _status = row
         self._current_ask = ask_id
-        out = self._graph.invoke({"text": text, "reply": "", "steps": [],
-                                  "notes": [], "hold": None, "read": []})
+        initial = {"text": text, "reply": "", "steps": [], "notes": [],
+                   "hold": None, "read": []}
+        resumed = None
+        if self._ckpt_graph is not None:            # MEM-2: resume at the hop
+            config = {"configurable": {"thread_id": ask_id}}
+            snap = self._ckpt_graph.get_state(config)
+            if snap.next:                            # a life died mid-graph
+                resumed = (f"resumed at {snap.next[0]} — the hops before it "
+                           "were already mine")
+                out = self._ckpt_graph.invoke(None, config)
+            else:
+                out = self._ckpt_graph.invoke(initial, config)
+        else:
+            out = self._graph.invoke(initial)
+        if resumed:
+            out = dict(out, steps=list(out["steps"]) + [resumed])
         full_chain = list(chain) if chain else [person]
         for by in out.get("read") or []:    # AG-8: H → the residents whose
             if by not in full_chain:        # results I read → me
@@ -573,6 +615,10 @@ class Resident:
         _tl.ensure_schema(conn)     # never runs DDL, never takes the lock
         _st.ensure_schema(conn)
         self._serve_conn = conn        # the graph's doors ride this life
+        try:
+            self.prepare(conn)         # MEM-2: working memory on the ground
+        except Exception:
+            self._ckpt_graph = None    # a ground without it still serves
         rc = pika.BlockingConnection(
             pika.URLParameters(rabbit_url or RABBIT_URL))
         tally = {"served": 0, "absorbed": 0}

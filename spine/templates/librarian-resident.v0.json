@@ -11,7 +11,8 @@
     "ask",
     "tools:weather",
     "tools:seal-record",
-    "tools:acquire"
+    "tools:acquire",
+    "tools:purge-memory"
   ],
   "schedules": [
     {

@@ -180,7 +180,7 @@ def recall_view(conn, *, ref: str | None = None, ask: str | None = None,
 
 
 def open_session(conn, person: str, title: str | None = None,
-                 archive: str | None = None) -> str:
+                 archive: str | None = None, opt_out: bool = False) -> str:
     """Roll (P20): a fresh worldline for this human in this world. The
     previous session is not touched — archived means 'not active', never
     'gone' (every word stays in the Record) — and its roll is an EPISODE
@@ -192,9 +192,10 @@ def open_session(conn, person: str, title: str | None = None,
     sid = "ses_" + secrets.token_hex(6)
     with conn.transaction():
         conn.cursor().execute(
-            "INSERT INTO spine_sessions (session_id, person, scope, title)"
-            " VALUES (%s, %s, %s, %s)", (sid, person, ev.scope(), title))
-    return sid
+            "INSERT INTO spine_sessions (session_id, person, scope, title, state)"
+            " VALUES (%s, %s, %s, %s, %s)",
+            (sid, person, ev.scope(), title, "opt-out" if opt_out else "in"))
+    return sid                 # P11: what happens in an opt-out state stays there
 
 
 def sessions_view(conn, person: str, limit: int = 30) -> list[dict]:
@@ -204,7 +205,7 @@ def sessions_view(conn, person: str, limit: int = 30) -> list[dict]:
     digest.ensure_schema(conn)
     cur.execute(
         "SELECT s.session_id, s.title, s.opened_at,"
-        " count(a.ask_id), max(a.asked_at),"
+        " count(a.ask_id), max(a.asked_at), coalesce(s.state, 'in'),"
         " (SELECT text FROM spine_asks WHERE session = s.session_id"
         "  ORDER BY asked_at DESC LIMIT 1),"
         " (SELECT body FROM spine_digests d WHERE d.kind = 'session'"
@@ -216,8 +217,8 @@ def sessions_view(conn, person: str, limit: int = 30) -> list[dict]:
         (person, ev.scope(), limit))
     return [{"session_id": r[0], "title": r[1], "opened_at": r[2].isoformat(),
              "asks": int(r[3]), "last_at": r[4].isoformat() if r[4] else None,
-             "last_words": (r[5] or "")[:140],
-             "short_version": (r[6] or "")[:280] or None}   # MEM-3, at a glance
+             "state": r[5], "last_words": (r[6] or "")[:140],
+             "short_version": (r[7] or "")[:280] or None}   # MEM-3, at a glance
             for r in cur.fetchall()]
 
 
@@ -407,7 +408,8 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 with psycopg.connect(dsn) as conn:                        # digest
                     sid = open_session(conn, person,                      # the one
                                        title=str(p.get("title") or "") or None,
-                                       archive=str(p.get("archive") or "") or None)
+                                       archive=str(p.get("archive") or "") or None,
+                                       opt_out=bool(p.get("opt_out", False)))
                 return self._json(201, {"session_id": sid})               # archived
             if path == "/digest":                     # on demand, or rebuild
                 sid = str(p.get("session") or "")

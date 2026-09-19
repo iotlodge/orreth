@@ -85,6 +85,23 @@ TOOLS: dict[str, dict] = {
               __import__("orreth_spine.store", fromlist=["OrrethStore"])
               .OrrethStore(conn, by_did=args["_by"]).put(args["_name"], args["key"], args["text"])),
     },
+    "purge-memory": {
+        "description": "Permanently erase a memory you acquired, every "
+                       "version of it, under a key — the words leave the "
+                       "Record, the projection, and every digest that cited "
+                       "them; only a tombstone with the hashes remains. This "
+                       "cannot be undone; it holds for the human's yes.",
+        "input_schema": {"type": "object", "properties": {
+            "key": {"type": "string"}}, "required": ["key"]},
+        "consequential": True,
+        "ground": True,
+        "fn": lambda args, conn: (lambda st, dg: (lambda out: (lambda n:
+              f"purged {out['versions']} version(s) of {out['ref']!r}; {n} digest(s) rebuilt; "
+              f"tombstone keeps the hashes")(dg.rebuild_citing(conn, out["ref"])))(
+              st.OrrethStore(conn, by_did=args["_by"]).purge(args["_name"], args["key"])))(
+              __import__("orreth_spine.store", fromlist=["OrrethStore"]),
+              __import__("orreth_spine.digest", fromlist=["rebuild_citing"])),
+    },
     "add-watch": {
         "description": "Propose a new monitoring watch: a named check of one "
                        "metric (outbox_pending · oldest_outbox_age_s · "

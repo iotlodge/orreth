@@ -528,7 +528,7 @@ by the Playwright before it closes.
   (0006) stays parked; sp2's projection is where a marker lineage would
   later live.
 
-## Phase 5 — MEMORY WHOLE (opened 2026-09-19 — JB's lock on the slicing)
+## Phase 5 — MEMORY WHOLE (opened 2026-09-19 — JB's lock on the slicing · **BUILT 2026-09-19, four spoonfuls; closes WHOLE on its first walk**, which also re-walks MONITOR-01 → P4 WHOLE)
 
 Four spoonfuls, one MEM proof each with its law (canon 0003): **sp1**
 MEM-1 total recall + the window reads · **sp2** Understanding v0 (a
@@ -588,6 +588,31 @@ first walk carries MONITOR-01's deferred re-walk.
   in it. The sessions list shows each session's short version at a
   glance. A mind's prose digest can later land as a sibling of the same
   record. Three laws in `tests/test_digest.py`. Suite 81 green.
+- **sp4 — resume · quarantine and purge · growth (MEM-2 · MEM-5 · MEM-6)**
+  ✅ **BUILT 2026-09-19**: **MEM-2 resume** — working memory on the
+  ground: a body's graph is checkpointed after every hop (the LangGraph
+  Postgres saver, on a connection of its OWN so a serve that rolls back
+  keeps the hops it made); a life that dies mid-think resumes AT THINK
+  on the next serve — never re-hearing, never re-recalling, one thought
+  spent, and the journey says "resumed at think" (the 500-hop objective
+  is a later phase's; the mechanism is this one). **MEM-5 quarantine
+  and purge** — Opt Out is a state (P11): a session opened opt-out
+  makes its asks, the memories acquired in it, and its digest opt-out;
+  every read — recall, the store, the digests — stays inside its state,
+  so an "in" ask never sees them and opting in imports nothing; inside
+  its state the resident still remembers. A **governed purge** (the
+  librarian's `purge-memory` tool, consequential — it holds at the
+  interlock for the human's yes) removes every version of a memory,
+  the projection leaves with the rows, every digest that cited it is
+  rebuilt as a sibling without the citation, and a **tombstone** event
+  keeps the hashes — never the words. **MEM-6 growth**, measured: 1k →
+  10k memories, `search` and `within` medians under 100 ms and flat
+  within a bound (a GIN index for the projection; an index on the
+  landing time). Laws: `tests/test_resume.py` (a body that dies
+  mid-think resumes at think) · `tests/test_purge.py` (opt-out never
+  leaks; a purge reaches everything and leaves a tombstone) ·
+  `tests/test_growth.py` (latency flat ×10). Dependency:
+  `langgraph-checkpoint-postgres`. Suite 85 green.
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 

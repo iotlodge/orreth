@@ -20,10 +20,12 @@ from . import envelope as ev
 from . import outbox
 
 MEMORY_EVENT = "orreth.memory.landed.v1"
+PURGE_EVENT = "orreth.memory.purged.v1"     # the tombstone: hashes, never words
 UNDERSTANDING = "tsvector:english"      # the projection's kind, worn by every row
 
 _VALID_NOW = "valid_to IS NULL"
 _VALID_AT = "valid_from <= %s AND (valid_to IS NULL OR valid_to > %s)"
+_IN_STATE = "state = %s"      # quarantine (P11): a read never crosses states
 
 
 def ensure_schema(conn) -> None:
@@ -65,15 +67,20 @@ def ensure_schema(conn) -> None:
                     " ON spine_memories (namespace, key, scope) WHERE valid_to IS NULL")
         cur.execute("CREATE INDEX IF NOT EXISTS spine_memories_tsv"
                     " ON spine_memories USING GIN (tsv)")
+        cur.execute("ALTER TABLE spine_memories ADD COLUMN IF NOT EXISTS"
+                    " state text NOT NULL DEFAULT 'in'")   # P11: opt-out is a state
+        cur.execute("CREATE INDEX IF NOT EXISTS spine_memories_landed"
+                    " ON spine_memories (namespace, scope, landed_at)")  # MEM-6
 
 
 class OrrethStore:
     """LangGraph's Store shape (put / get / search) over the kernel's laws."""
 
-    def __init__(self, conn, *, by_did: str):
+    def __init__(self, conn, *, by_did: str, state: str = "in"):
         self._conn = conn
         self.by_did = by_did
-        ensure_schema(conn)
+        self.state = state          # P11: 'in' or 'opt-out' — what is done and
+        ensure_schema(conn)         # remembered in a state stays in that state
         outbox.ensure_schema(conn)
 
     def put(self, namespace: str, key: str, body: str) -> str:
@@ -102,9 +109,9 @@ class OrrethStore:
                 authority_chain=[self.by_did])
             cur.execute(
                 "INSERT INTO spine_memories (namespace, key, body, hash, by_did,"
-                " scope, supersedes) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                " scope, supersedes, state) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 (namespace, key, body, h, self.by_did, ev.scope(),
-                 prev[1] if prev else None))
+                 prev[1] if prev else None, self.state))
             outbox.add_row(cur, ev.encode(e), e["message_id"])
         return h
 
@@ -113,13 +120,13 @@ class OrrethStore:
         cur = self._conn.cursor()
         if at is None:
             cur.execute(f"SELECT body FROM spine_memories WHERE namespace = %s"
-                        f" AND key = %s AND scope = %s AND {_VALID_NOW}",
-                        (namespace, key, ev.scope()))
+                        f" AND key = %s AND scope = %s AND {_VALID_NOW} AND {_IN_STATE}",
+                        (namespace, key, ev.scope(), self.state))
         else:
             cur.execute(f"SELECT body FROM spine_memories WHERE namespace = %s"
-                        f" AND key = %s AND scope = %s AND {_VALID_AT}"
+                        f" AND key = %s AND scope = %s AND {_VALID_AT} AND {_IN_STATE}"
                         " ORDER BY valid_from DESC LIMIT 1",
-                        (namespace, key, ev.scope(), at, at))
+                        (namespace, key, ev.scope(), at, at, self.state))
         row = cur.fetchone()
         return row[0] if row else None
 
@@ -150,9 +157,9 @@ class OrrethStore:
         cur.execute(
             f"SELECT key, body, ts_rank(tsv, q) AS rank FROM spine_memories,"
             f" websearch_to_tsquery('english', %s) q"
-            f" WHERE namespace = %s AND scope = %s AND {valid} AND tsv @@ q"
+            f" WHERE namespace = %s AND scope = %s AND {valid} AND {_IN_STATE} AND tsv @@ q"
             f" ORDER BY rank DESC, landed_at DESC LIMIT %s",
-            (terms, namespace, ev.scope(), *vargs, limit))
+            (terms, namespace, ev.scope(), *vargs, self.state, limit))
         rows = [{"key": k, "body": b, "rank": float(r)} for k, b, r in cur.fetchall()]
         if rows:
             return rows
@@ -161,9 +168,9 @@ class OrrethStore:
         conds = " OR ".join(["body ILIKE %s"] * len(words))
         cur.execute(
             f"SELECT key, body FROM spine_memories"
-            f" WHERE namespace = %s AND scope = %s AND {valid} AND ({conds})"
+            f" WHERE namespace = %s AND scope = %s AND {valid} AND {_IN_STATE} AND ({conds})"
             f" ORDER BY landed_at DESC LIMIT %s",
-            (namespace, ev.scope(), *vargs, *[f"%{w}%" for w in words], limit))
+            (namespace, ev.scope(), *vargs, self.state, *[f"%{w}%" for w in words], limit))
         return [{"key": k, "body": b, "rank": 0.0} for k, b in cur.fetchall()]
 
     def within(self, namespace: str, from_iso: str, to_iso: str,
@@ -172,10 +179,10 @@ class OrrethStore:
         oldest first — any version; the window the human typed, honored."""
         cur = self._conn.cursor()
         cur.execute(
-            "SELECT key, body, landed_at FROM spine_memories WHERE namespace = %s"
-            " AND scope = %s AND landed_at BETWEEN %s AND %s"
-            " ORDER BY landed_at LIMIT %s",
-            (namespace, ev.scope(), from_iso, to_iso, limit))
+            f"SELECT key, body, landed_at FROM spine_memories WHERE namespace = %s"
+            f" AND scope = %s AND {_IN_STATE} AND landed_at BETWEEN %s AND %s"
+            f" ORDER BY landed_at LIMIT %s",
+            (namespace, ev.scope(), self.state, from_iso, to_iso, limit))
         return [{"key": k, "body": b, "landed_at": t.isoformat()}
                 for k, b, t in cur.fetchall()]
 
@@ -183,6 +190,27 @@ class OrrethStore:
         cur = self._conn.cursor()
         cur.execute(
             f"SELECT key, body FROM spine_memories WHERE namespace = %s"
-            f" AND scope = %s AND {_VALID_NOW} ORDER BY landed_at DESC LIMIT %s",
-            (namespace, ev.scope(), limit))
+            f" AND scope = %s AND {_VALID_NOW} AND {_IN_STATE}"
+            f" ORDER BY landed_at DESC LIMIT %s",
+            (namespace, ev.scope(), self.state, limit))
         return [{"key": k, "body": b} for k, b in cur.fetchall()]
+
+    def purge(self, namespace: str, key: str) -> dict:
+        """Governed erasure (canon 0003 · MEM-5): every version of a memory
+        leaves the Record; the projection leaves with the rows; a TOMBSTONE
+        event keeps the hashes — never the words — so the erasure itself is
+        remembered. Digests that cited it are rebuilt by the caller."""
+        with self._conn.transaction():
+            cur = self._conn.cursor()
+            cur.execute("DELETE FROM spine_memories WHERE namespace = %s AND key = %s"
+                        " AND scope = %s RETURNING hash", (namespace, key, ev.scope()))
+            hashes = [r[0] for r in cur.fetchall()]
+            if hashes:
+                e = ev.make_envelope(
+                    kind="event", type=PURGE_EVENT, universe_id=ev.scope(),
+                    scope_path=ev.scope(),
+                    payload={"ref": f"{namespace}/{key}", "hashes": hashes,
+                             "hash": ev.content_hash(",".join(hashes))},
+                    authority_chain=[self.by_did])
+                outbox.add_row(cur, ev.encode(e), e["message_id"])
+        return {"ref": f"{namespace}/{key}", "versions": len(hashes), "hashes": hashes}

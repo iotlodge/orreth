@@ -34,6 +34,8 @@ def ensure_schema(conn) -> None:
             " valid_from timestamptz NOT NULL DEFAULT now(), valid_to timestamptz)")
         cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS spine_digests_current"
                     " ON spine_digests (kind, ref, scope) WHERE valid_to IS NULL")
+        cur.execute("ALTER TABLE spine_digests ADD COLUMN IF NOT EXISTS"
+                    " state text NOT NULL DEFAULT 'in'")    # a digest keeps its
 
 
 def _head(text: str, n: int = HEAD) -> str:
@@ -48,12 +50,13 @@ def compose_session(conn, session_id: str) -> tuple[str, list[str]] | None:
     from .resident import ensure_schema as _ground
     _ground(conn)
     cur = conn.cursor()
-    cur.execute("SELECT session_id, title, opened_at, person FROM spine_sessions"
-                " WHERE session_id = %s AND scope = %s", (session_id, ev.scope()))
+    cur.execute("SELECT session_id, title, opened_at, person, coalesce(state, 'in')"
+                " FROM spine_sessions WHERE session_id = %s AND scope = %s",
+                (session_id, ev.scope()))
     row = cur.fetchone()
     if row is None:
         return None
-    _sid, title, opened, person = row
+    _sid, title, opened, person, state = row
     # the episode's span: from this session's opening to the next session's
     # opening (the same human, this world) — or now, for the latest one
     cur.execute("SELECT coalesce(min(opened_at), now()) FROM spine_sessions"
@@ -83,12 +86,12 @@ def compose_session(conn, session_id: str) -> tuple[str, list[str]] | None:
         if cur.fetchone()[0]:
             cur.execute(
                 "SELECT namespace, key, body FROM spine_memories WHERE scope = %s"
-                " AND landed_at BETWEEN %s AND %s ORDER BY landed_at",
-                (ev.scope(), opened, span_end))
+                " AND state = %s AND landed_at BETWEEN %s AND %s ORDER BY landed_at",
+                (ev.scope(), state, opened, span_end))
             for ns, key, body in cur.fetchall():
                 sources.append(f"{ns}/{key}")
                 lines.append(f"· acquired [{ns}/{key}]: {_head(body)}")
-    return "\n".join(lines), sources
+    return "\n".join(lines), sources, state
 
 
 def build(conn, session_id: str, by: str = "the digest builder") -> dict | None:
@@ -99,7 +102,7 @@ def build(conn, session_id: str, by: str = "the digest builder") -> dict | None:
     made = compose_session(conn, session_id)
     if made is None:
         return None
-    body, sources = made
+    body, sources, state = made
     h = ev.content_hash(body)
     with conn.transaction():
         cur = conn.cursor()
@@ -116,9 +119,10 @@ def build(conn, session_id: str, by: str = "the digest builder") -> dict | None:
                         (prev[0],))
         cur.execute(
             "INSERT INTO spine_digests (digest_id, kind, ref, body, sources, hash,"
-            " by_did, scope, supersedes) VALUES (%s, 'session', %s, %s, %s, %s, %s, %s, %s)",
+            " by_did, scope, supersedes, state)"
+            " VALUES (%s, 'session', %s, %s, %s, %s, %s, %s, %s, %s)",
             (did, session_id, body, json.dumps(sources), h, by, ev.scope(),
-             prev[1] if prev else None))
+             prev[1] if prev else None, state))
         e = ev.make_envelope(
             kind="event", type=DIGEST_EVENT, universe_id=ev.scope(), scope_path=ev.scope(),
             payload={"ref": did, "hash": h, "session": session_id,
@@ -141,8 +145,23 @@ def of_session(conn, session_id: str) -> dict | None:
             "built_at": r[5].isoformat(), "supersedes": r[6]} if r else None
 
 
+def rebuild_citing(conn, ref: str, by: str = "the digest builder") -> int:
+    """After a purge: every current digest that cited the ref is rebuilt
+    from what remains — a sibling, the citation gone with the words."""
+    ensure_schema(conn)
+    cur = conn.cursor()
+    cur.execute("SELECT ref FROM spine_digests WHERE kind = 'session' AND scope = %s"
+                " AND valid_to IS NULL AND sources LIKE %s", (ev.scope(), f'%"{ref}"%'))
+    n = 0
+    for (session_id,) in cur.fetchall():
+        made = build(conn, session_id, by=by)
+        n += bool(made and made["new"])
+    return n
+
+
 def for_person(conn, person: str, *, exclude: str | None = None,
-               window: dict | None = None, limit: int = 3) -> list[dict]:
+               window: dict | None = None, limit: int = 3,
+               state: str = "in") -> list[dict]:
     """The short version first (the pack's third rung): the current digests
     of this human's sessions in this world — newest first; inside a
     window, only sessions with asks in it."""
@@ -153,16 +172,18 @@ def for_person(conn, person: str, *, exclude: str | None = None,
             "SELECT d.digest_id, d.ref, d.body, d.sources FROM spine_digests d"
             " JOIN spine_sessions s ON s.session_id = d.ref"
             " WHERE d.kind = 'session' AND d.scope = %s AND d.valid_to IS NULL"
-            " AND s.person = %s AND d.ref <> %s AND EXISTS (SELECT 1 FROM spine_asks a"
+            " AND d.state = %s AND s.person = %s AND d.ref <> %s"
+            " AND EXISTS (SELECT 1 FROM spine_asks a"
             "  WHERE a.session = d.ref AND a.asked_at BETWEEN %s AND %s)"
             " ORDER BY s.opened_at DESC LIMIT %s",
-            (ev.scope(), person, exclude or "", window["from"], window["to"], limit))
+            (ev.scope(), state, person, exclude or "", window["from"], window["to"], limit))
     else:
         cur.execute(
             "SELECT d.digest_id, d.ref, d.body, d.sources FROM spine_digests d"
             " JOIN spine_sessions s ON s.session_id = d.ref"
             " WHERE d.kind = 'session' AND d.scope = %s AND d.valid_to IS NULL"
-            " AND s.person = %s AND d.ref <> %s ORDER BY s.opened_at DESC LIMIT %s",
-            (ev.scope(), person, exclude or "", limit))
+            " AND d.state = %s AND s.person = %s AND d.ref <> %s"
+            " ORDER BY s.opened_at DESC LIMIT %s",
+            (ev.scope(), state, person, exclude or "", limit))
     return [{"digest_id": r[0], "session": r[1], "body": r[2],
              "sources": json.loads(r[3])} for r in cur.fetchall()]

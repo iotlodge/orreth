@@ -320,6 +320,9 @@ structurally: memory work rides the Events rail; nothing polls the corpus.
 - **MEM-5 Quarantine & purge:** opt-out memories never leak on opt-in;
   a governed purge reaches embeddings, digests, and caches — proven.
 - **MEM-6 Growth:** corpus ×10, recall latency flat.
+- *(Status 2026-09-19, P5 built: MEM-1 · MEM-3 · MEM-4 · MEM-5 · MEM-6 · MEM-7
+  proven by law; MEM-2 proven at the per-ask hop — the long objective's resume
+  waits for long objectives.)*
 - **MEM-7 Roll & recall (P20):** roll a session, work a second, load the
   first — every artifact recalled by the session; an agent selected into
   a session sees only that session's results; nothing spills.
