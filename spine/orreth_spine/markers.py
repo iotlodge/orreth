@@ -182,6 +182,10 @@ def dispatch_interests(conn, marker: dict, ref: str, note: str | None) -> list[d
     """The interest law: every interested body is asked to act — the
     marker as PARENT, so the lineage records who acted, on what, and why."""
     from . import dispatch
+    cur = conn.cursor()                     # the act lands in the marked ask's
+    cur.execute("SELECT session FROM spine_asks WHERE ask_id = %s", (ref,))   # session,
+    row = cur.fetchone()                    # so the chat that promised it shows it
+    session = row[0] if row else None
     asked = []
     for name in interested(conn, marker["kind"]):
         if name == marker["by"]:
@@ -189,7 +193,7 @@ def dispatch_interests(conn, marker: dict, ref: str, note: str | None) -> list[d
         text = (f"A marker of kind {marker['kind']!r} was set on {ref} by {marker['by']}"
                 + (f": {note}" if note else "") + ". Act on it as your role requires.")
         [aid] = dispatch.submit_ask(conn, text, person=marker["by"], to=[name],
-                                    parent_marker=marker["id"])
+                                    parent_marker=marker["id"], session=session)
         asked.append({"body": name, "ask_id": aid})
     return asked
 
@@ -244,3 +248,18 @@ def stream(conn, kind: str | None = None, grp: str | None = None, limit: int = 6
 def _row(r) -> dict:
     return {"id": r[0], "kind": r[1], "parent": r[2], "ref": r[3], "by": r[4],
             "note": r[5], "at": r[6].isoformat(), "depth": r[7]}
+
+
+def with_words(conn, rows: list[dict]) -> list[dict]:
+    """The why in words: an ask ref carries the ask's text (walk #5: the
+    why printed ids)."""
+    ids = [m["ref"] for m in rows if m["ref"].startswith("ask_")]
+    if not ids:
+        return rows
+    cur = conn.cursor()
+    cur.execute("SELECT ask_id, left(text, 100) FROM spine_asks WHERE ask_id = ANY(%s)", (ids,))
+    words = dict(cur.fetchall())
+    for m in rows:
+        if m["ref"] in words:
+            m["words"] = words[m["ref"]]
+    return rows

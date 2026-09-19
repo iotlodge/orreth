@@ -356,7 +356,7 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   until a second world exists — owed to P4. Suite 54 green. **PHASE 3
   IS WHOLE.**
 
-## Phase 4 — THE FEEL & THE FLEET (opened 2026-09-18, re-sliced on block 9 — JB's lock · **BUILT 2026-09-18, five spoonfuls, suite 71; closes WHOLE on the single walk session** — the charter closes a phase on its walks green, and the walks for sp2's cured third, sp3, sp4, sp5 are owed to the Playwright's spend wall)
+## Phase 4 — THE FEEL & THE FLEET (opened 2026-09-18, re-sliced on block 9 — JB's lock · BUILT 2026-09-18, five spoonfuls · **CLOSED WHOLE 2026-09-20**: every spec walked green on the human path, MONITOR-01's cure re-walked in walk #5)
 
 JB's narration before P4 (`experience-capture.md` block 9; distilled into
 0001 P19–P21, 0003 sessions, 0004 the third kind) re-sliced the phase:
@@ -528,7 +528,7 @@ by the Playwright before it closes.
   (0006) stays parked; sp2's projection is where a marker lineage would
   later live.
 
-## Phase 5 — MEMORY WHOLE (opened 2026-09-19 — JB's lock on the slicing · **BUILT 2026-09-19, four spoonfuls; closes WHOLE on its first walk**, which also re-walks MONITOR-01 → P4 WHOLE)
+## Phase 5 — MEMORY WHOLE (opened 2026-09-19 — JB's lock on the slicing · **BUILT 2026-09-19**, four spoonfuls · walk #5 (2026-09-20): FULL-01's acquire half green; SCOPE-01 and MARK-01's fourth bar found wounds, cured the same hour; SESSION-01's short version not exercised — **closes WHOLE on the next walk of those three**)
 
 Four spoonfuls, one MEM proof each with its law (canon 0003): **sp1**
 MEM-1 total recall + the window reads · **sp2** Understanding v0 (a

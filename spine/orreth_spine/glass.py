@@ -204,6 +204,16 @@ def sessions_view(conn, person: str, limit: int = 30) -> list[dict]:
     each with its span, how many asks it holds, and its last words."""
     cur = conn.cursor()
     digest.ensure_schema(conn)
+    # a listed session without its short version gets it from the log — the
+    # Digest is a projection, rebuildable at any time (walk #5: sessions
+    # archived before the Digest existed showed none)
+    cur.execute("SELECT s.session_id FROM spine_sessions s WHERE s.person = %s AND s.scope = %s"
+                " AND EXISTS (SELECT 1 FROM spine_asks a WHERE a.session = s.session_id)"
+                " AND NOT EXISTS (SELECT 1 FROM spine_digests d WHERE d.kind = 'session'"
+                "  AND d.ref = s.session_id AND d.scope = s.scope AND d.valid_to IS NULL)"
+                " ORDER BY s.opened_at DESC LIMIT %s", (person, ev.scope(), limit))
+    for (sid,) in cur.fetchall():
+        digest.build(conn, sid, by="the digest builder")
     cur.execute(
         "SELECT s.session_id, s.title, s.opened_at,"
         " count(a.ask_id), max(a.asked_at), coalesce(s.state, 'in'),"
@@ -337,9 +347,9 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     if "?" in self.path else {}
                 with psycopg.connect(dsn) as conn:
                     if qs.get("root"):
-                        return self._json(200, {"root": qs["root"], "tree": markers.tree(conn, qs["root"])})
+                        return self._json(200, {"root": qs["root"], "tree": markers.with_words(conn, markers.tree(conn, qs["root"]))})
                     if qs.get("from"):
-                        return self._json(200, {"from": qs["from"], "ancestry": markers.ancestry(conn, qs["from"])})
+                        return self._json(200, {"from": qs["from"], "ancestry": markers.with_words(conn, markers.ancestry(conn, qs["from"]))})
                     return self._json(200, {"markers": markers.stream(
                         conn, kind=qs.get("kind"), grp=qs.get("group"))})
             if path.startswith("/digest/"):            # the short version, and

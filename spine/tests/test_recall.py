@@ -81,6 +81,9 @@ def test_recall_reads_the_asks_window_over_all_the_humans_worldlines(pg, monkeyp
     lib._graph.invoke({"text": "what happened between then and then?", "reply": "",
                        "steps": [], "notes": [], "hold": None, "read": []})
     prompt = gw.calls[0]["prompt"]
+    notes = [l for l in prompt.splitlines() if l.startswith("- ")]
+    assert notes[0].startswith("- THE WINDOW the human asked about")        # first, always
+    assert "ARE the record of that window" in gw.calls[0]["system"]
     window_lines = [l for l in prompt.splitlines() if l.startswith("- in the window")]
     assert any(f"the old ask {old_tok}" in l for l in window_lines)             # across sessions
     assert not any(f"the new ask {new_tok}" in l for l in window_lines)         # outside: not in

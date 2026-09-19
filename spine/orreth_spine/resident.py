@@ -327,7 +327,12 @@ class Resident:
                 if window and window.get("from") and window.get("to"):
                     # MEM-1 by timeframe (P6): the window the human typed is
                     # a lens over ALL their worldlines in this world — every
-                    # ask they made and every word I acquired between X and Y
+                    # ask they made and every word I acquired between X and Y.
+                    # It goes FIRST, under a header: it IS the answer to a
+                    # windowed ask (walk #5: packed deep and unlabeled, the
+                    # mind denied having any record of the window)
+                    head = [f"THE WINDOW the human asked about: {window['from'][:16]} → "
+                            f"{window['to'][:16]}. What was asked and answered inside it:"]
                     cur.execute(
                         "SELECT a.text, a.reply, a.asked_at, coalesce(j.name, 'a resident')"
                         " FROM spine_asks a LEFT JOIN LATERAL ("
@@ -339,12 +344,16 @@ class Resident:
                         " ORDER BY a.asked_at LIMIT 12",
                         (person, ev.scope(), window["from"], window["to"],
                          self._current_ask, state))
+                    inside = []
                     for t, rp, at, who in cur.fetchall():
-                        notes.append(f"in the window, at {at.strftime('%a %b %d %H:%M')}, "
-                                     f"asked: {t!r} — {who} replied: {rp!r}")
+                        inside.append(f"in the window, at {at.strftime('%a %b %d %H:%M')}, "
+                                      f"asked: {t!r} — {who} replied: {rp!r}")
                     for m in st.within(self.name, window["from"], window["to"]):
-                        notes.append(f"in the window I acquired [{m['key']}] at "
-                                     f"{m['landed_at'][:16]}: {m['body']}")
+                        inside.append(f"in the window I acquired [{m['key']}] at "
+                                      f"{m['landed_at'][:16]}: {m['body']}")
+                    if not inside:
+                        inside = ["nothing was asked or acquired inside this window"]
+                    notes[:0] = head + inside              # first, always
                 if window and window.get("to"):
                     # MEM-4 in the chat: inside a window the memories read
                     # as they stood at the window's END — what we knew then
@@ -400,7 +409,11 @@ class Resident:
                         "COMPLETELY — the full reply, never a teaser; when your "
                         "recalled notes bear on the ask, use them and say so "
                         "plainly; never invent a memory you were not handed; "
-                        "use your tools when the ask needs the real world.")
+                        "use your tools when the ask needs the real world. When "
+                        "the ask names a time window, the notes under 'THE "
+                        "WINDOW' ARE the record of that window — answer from "
+                        "them, and never say you have no record while they "
+                        "are there.")
                 if "tools:mark" in self.template.get("capabilities", []):
                     system += (" If you observe an IMPROVEMENT to what you "
                                "are executing, mark it: call the mark tool "

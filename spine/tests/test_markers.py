@@ -94,6 +94,7 @@ def test_mk1_an_improvement_marked_by_the_librarian_makes_the_critic_act(pg, mon
     cur.execute("SELECT ask_id, text, marker FROM spine_asks WHERE target = 'critic' AND person = %s",
                 (lib.identity.did,))
     [(cask, ctext, cmarker)] = cur.fetchall()                                       # the critic was asked
+    assert glass.ask_view(pg, cask)["session"] == ses                               # in the SAME session
     assert "improvement" in ctext and "lime beats cement" in ctext
     assert [m["kind"] for m in markers.ancestry(pg, cmarker)] == ["thought", "improvement", "objective"]
     journeys = [e for e in _events_for(pg, ask) if e["type"] == resident.JOURNEY]

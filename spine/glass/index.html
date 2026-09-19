@@ -477,8 +477,16 @@ async function onNotice(n){
     if (monitorPull.classList.contains("open")) loadMonitor();
     return;
   }
-  const line = PENDING[n.ref];
-  if (!line) return;
+  let line = PENDING[n.ref];
+  if (!line){                                     // an ask this chat did not file —
+    if (!n.kind.includes("ask.received")) return; // the kernel's, on the interest law:
+    const v0 = await fetch("/ask/" + n.ref).then(x=>x.json()).catch(()=>null);
+    if (!v0 || !SESSION || v0.session !== SESSION) return;   // shown if it is THIS
+    el("msg mine", `<em>on the kernel's word → ${esc(v0.target || "…")}</em>` +   // session's
+       `<div class="meta">${esc(v0.text)}</div>`);
+    PENDING[n.ref] = el("journey", `→ ${esc(v0.target || "…")} — on its way…`);
+    return;
+  }
   const v = await fetch("/ask/" + n.ref).then(x=>x.json()).catch(()=>null);
   if (!v) return;
   if (n.kind.includes("journey") && v.journey.length)
@@ -652,6 +660,14 @@ function offerSummarize(fan){
 document.getElementById("chat-in").addEventListener("keydown",
   e => { if (e.key === "Enter") send(); });
 
+function whoIs(did){                              // a name for a self, never 8 chars
+  if (!did) return "?";
+  if (NAMES[did]) return NAMES[did];
+  if (did.startsWith("did:orreth:person:")) return did.split(":").pop();
+  if (did === "the kernel") return "the kernel";
+  return "…" + did.slice(-6);
+}
+
 /* ---- the includes: firmware applied as one step over the session ---- */
 const INCLUDES = {
   planner: ["Plan the next steps from what was said in this session.", "plan — on your word → planner"],
@@ -806,7 +822,7 @@ async function loadMonitor(){
     `<span>${ks.map(k => `<label style="margin-left:8px"><input type="checkbox" data-k="${esc(k)}" ${off[k] ? "" : "checked"}> ${esc(k)}</label>`).join("")}</span></div>`).join("");
   const rows = marks.markers.filter(m => !off[m.kind]).map(m =>
     `<div class="row duty" data-mk="${esc(m.id)}"><span>${hhmm(m.at)} · <b style="color:var(--amber)">${esc(m.kind)}</b>` +
-    ` · ${esc((m.by || "").slice(-8))} · ${esc(m.ref)}${m.note ? " — " + esc(m.note) : ""}</span><span class="meta">why?</span></div>`).join("");
+    ` · ${esc(whoIs(m.by))} · ${esc(m.ref)}${m.note ? " — " + esc(m.note) : ""}</span><span class="meta">why?</span></div>`).join("");
   const mv = view("MARKERS · the open vocabulary of why", toggles + (rows || `<div class="meta">none yet — say “mark this as improvement: …” in the chat</div>`));
   mv.querySelectorAll("input[data-k]").forEach(i => i.onchange = () => {            // toggle a kind
     off[i.dataset.k] = !i.checked; try { localStorage.setItem("orreth.markers.off", JSON.stringify(off)); } catch (e) {}
@@ -819,7 +835,7 @@ async function loadMonitor(){
     const a = await fetch("/markers?from=" + encodeURIComponent(r.dataset.mk)).then(x=>x.json()).catch(()=>null);   // its WHY
     if (!a) return;
     toggleChat(true);
-    sysline("why · " + a.ancestry.map(m => `${esc(m.kind)} (${esc(m.ref)})`).join(" ← "));
+    sysline("why · " + a.ancestry.map(m => `${esc(m.kind)}` + (m.words ? ` “${esc(m.words)}”` : ` (${esc(m.ref)})`)).join(" ← "));
   });
   const hv = view("HARNESS", (s.harness ? row(`${s.harness.template} v${s.harness.version} · ${hhmm(s.harness.ran_at)}`,
        `${s.harness.passed} passed · ${s.harness.failed} failed`, s.harness.failed ? "red" : "ok") : `<div class="meta">no run yet</div>`) +

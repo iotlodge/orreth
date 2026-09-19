@@ -368,3 +368,41 @@ pull rev 197); `after-walk-p4ws-15-monitor-after-yes-watches-none-yet.png`
 FOCUS); `after-walk-p4ws-18-regress-summarize-selection-held.png` (the summary
 with both chips lit). Screenshot 09 (the row as first listed) was dropped — the
 pull had snapped to its top card and the frame showed nothing of the bar.
+
+## Walk #5 — 2026-09-20, the owed specs (lean)
+
+**Status: WHOLE (five specs, each once, one retry on each failure, one
+screenshot per spec — the account at 80% of its session).** Same Bridge,
+relit (the page loaded first time on session 35ae48; crew chips `echo ·
+life 18` / `librarian · life 18`); same browser (780×493). The chat header
+now carries its own **"▾ close"** — walk #4's hidden-tab friction cured.
+Waits are the browser's own clock around each submit (the glass's counts
+in brackets); stamps are the browser's (~05:30 PM). Echo was deselected
+before the librarian's asks so only she answered.
+
+| Spec | Verdict | What the Playwright saw |
+|---|---|---|
+| **SPEC-MONITOR-01** (re-walk of the cured wound) | **PASS** — wound CLOSED | "open the monitor" → the pull in **0.09 s** (feed revision "—" then counting; seven bodies "alive · until 05:31:32 PM"; walk #4's watch still listed). Asked "propose a watch that catches asks left waiting": the interlock in **2.7 s**, Cancel (default) holding focus. Clicked Yes at 05:31:22: without touching the pull, **"asks-awaiting-confirm — asks_received > 4 · 0 · RED"** stood in WATCHES beneath the older watch by the 05:31:42 read (the MARKERS list logged "05:31:22 PM · action · b3df0b5a · add-watch" at once). The leases kept breathing: "until 05:31:32" → **05:31:37** (05:31:22) → **05:31:47** (05:31:32) → **05:31:57** (05:31:42), all "alive", the pull's revision 11 → 13 in step with the footer. |
+| **SPEC-FULL-01** (acquire half) | **PASS** — both halves now green | "Remember this text under the key hemp: The hemp rope held the ferry to the pier all winter. By spring its fibers had gone grey but not one strand had parted." → **2.7 s** (0.1 s): "Done. I've kept that text under the key "hemp" — every word exactly as you gave it…". "Repeat every word you acquired under hemp" → **1.0 s** (0.1 s): **"Here are the exact words I acquired under the key hemp: The hemp rope held the ferry to the pier all winter. By spring its fibers had gone grey but not one strand had parted."** — byte-for-byte the two sentences, none summarized away. |
+| **SPEC-SCOPE-01** (the mind reads the window) | **FAIL** — the assist half still green | Typing "What did I ask you between yesterday and today?" drew the clock **"Fri, Sep 18 … today"** with no click, and the window rode the ask ("librarian took it on u:dev · **Fri, Sep 18 → Sat, Sep 19** · … (0.2 s)"). Her reply (**2.9 s**): **"I need to be plain with you: I don't have any record of what you asked me between yesterday and today. Looking at my notes, I can see the conversation we've had in this session — starting from when you first asked me about Spain's capital, then about colors, then about words to remember like PELICAN and HERON. But I have no notes about what happened between yesterday and today specifically. I won't invent a memory I wasn't given…"** — an apology, and "Spain's capital" was never asked (France was, two days ago). *Retry* (same words, **4.7 s**): the same denial, the same Spain, plus the hemp text. She does not answer from the window the glass drew for her. |
+| **SPEC-SESSION-01** (short version only) | **FAIL** | "list my sessions" (**0.02 s**): ten sessions newest first — "1. 05:32:33 PM · 7 asks · "What did I ask you between yesterday and today?" · (this one) — 2. 03:12:00 AM · 0 asks — 3. 03:08:52 AM · 4 asks · "propose a watch…" — …" — time, count, last words; **no short-version line beneath any earlier session**. *Retry* after the mark step: the same list, still none. |
+| **SPEC-MARK-01** | **PASS · PASS · PASS · FAIL** (the critique never reached the chat) | Typed "mark this as improvement: the binder should be lime": the chat printed the soft line **"marked ask_f63f1cccdccbd9f4 as improvement — critic asked to act"** (in place at the next read; my words are not echoed as a bubble). "open the monitor": the **MARKERS · the open vocabulary of why** view (groups quality · improvement · structural; kinds action intention objective observation thought) listed **"05:33:28 PM · improvement · erson:jb · ask_f63f1cccdccbd9f4 — the binder should be lime · why?"**. Clicked **quality**: the row vanished (the others stayed); clicked it again: the row returned. Clicked the row: the chat printed **"why · improvement (ask_f63f1cccdccbd9f4) ← objective (ask_f63f1cccdccbd9f4)"** in **0.06 s**. The critique: **nothing arrived in the chat** in 3 min 40 s (05:33:28 → 05:37:07). The OBJECTIVES band shows the critic did act — a row "A marker of kind 'improvement' was set on ask_f63f1ccc… by did:orreth:person:jb: the binder should be lime. Act on it as your role re… · critic · replied · 05:33:28 PM" — so the critique exists one door away, but the chat that promised "critic asked to act" never showed it. |
+
+**Friction, one line each:**
+- Marker authors are cut to eight characters: "erson:jb" (person:jb), "e kernel" (the kernel).
+- The marker's why prints as ids — "improvement (ask_f63f…) ← objective (ask_f63f…)" — not the objective's words.
+- The scope journey line carries the window the reply then denies.
+- The sessions list carries an empty session ("2. 03:12:00 AM · 0 asks") with nothing to load.
+- The MARKERS view sits between WATCHES and HARNESS with no gap of its own.
+- The librarian's journey lines read "read the session's results by monitor, echo" even for a plain acquire.
+
+**Wound calls, for the lead's ruling:** SCOPE-01 — a human asks what they asked between yesterday and today; the glass draws the window, and the mind answers "I don't have any record" and names an ask never made, twice. MARK-01's fourth bar — "critic asked to act" and then silence in the chat while the critique sits in the band. MONITOR-01's walk-#4 wound is closed.
+
+**Not walkable on the human path:** an opt-out session (no typed words for it in the glass); kill a body (as before).
+
+**Walk #5 evidence** (same folder): `after-walk-p5w-01-monitor-watch-live-leases.png`
+(both watches in view, leases fresh, the pull untouched); `after-walk-p5w-02-full-acquire-repeat-verbatim.png`
+(the two sentences back exactly); `after-walk-p5w-03-scope-recall-reads-window.png`
+(the clock window drawn; the denial beneath); `after-walk-p5w-04-sessions-short-versions.png`
+(the list without short versions); `after-walk-p5w-05-mark-markers-view-and-why.png`
+(the marker under quality; the why line in the chat).
