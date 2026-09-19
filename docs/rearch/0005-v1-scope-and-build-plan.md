@@ -511,9 +511,19 @@ by the Playwright before it closes.
 - The **draft shelf** (PROD/DEV decoupling, AG-9) lands with Workspace
   Engineering; the **markers dive** (`0006-markers-dive.md`) is designed
   before Phase 5 projects them.
-- Next: **the walk session** (one Playwright debug session when the limit
-  resets: INCLUDE-01's cured third · WORKSPACE-01 · MONITOR-01 · SCHED-01 ·
-  the frictions cured since) → **P4 WHOLE** → the markers dive (0006) →
+- **The walk session** ✅ **WALKED 2026-09-18** (walk #4): INCLUDE-01 ·
+  WORKSPACE-01 · SCHED-01 green on the human path; MONITOR-01 green on
+  every bar but one WOUND — **the open pull went stale** (loaded once on
+  open; the watch confirmed at the interlock read "none yet"; leases
+  aged past "until" still reading "alive") — P17 failing where a human
+  feels it. Cured the same hour, at the layer: every open pull follows
+  the feed (a debounced refresh on each notice, as the band always did),
+  the monitor breathes on a 5 s beat while open (leases move without a
+  notice), a confirm refreshes every lens; the Crew pull keeps its
+  reader's place on refresh; the chat has its own close; italics fall
+  away in plain words. **MONITOR-01's re-walk is the one thing between
+  P4 and WHOLE.**
+- Next: re-walk MONITOR-01 → **P4 WHOLE** → the markers dive (0006) →
   **Phase 5 — MEMORY WHOLE**.
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)

@@ -293,6 +293,7 @@
        aria-label="resize the chat" role="separator"></div>
   <header><span>THE ONE CHAT · u:dev</span>
     <span class="hint"><a id="ses-list">sessions</a> · <a id="ses-new">new session</a>
+      · <a onclick="toggleChat(false)" title="close the chat, keep the pulls">▾ close</a>
       · [Esc] returns to the bridge</span></header>
   <div id="focus"><span>FOCUS</span><span id="focus-what"></span>
     <span class="hint">[Esc] returns the bridge, scope restored</span></div>
@@ -531,8 +532,9 @@ function renderOutcome(id, v, line){
 function plain(text){                      // plain words on the glass: markdown
   return esc(text).replace(/^#{1,6}\s+/gm, "")            // headings and bold
                   .replace(/\*\*(.+?)\*\*/g, "$1")      // marks fall away
-                  .replace(/^\s*[-*]\s+/gm, "· ");        // (the Record keeps
-}                                                           // the exact words)
+                  .replace(/^\s*[-*]\s+/gm, "· ")         // (the Record keeps
+                  .replace(/(^|\s)\*([^*\n]+)\*(?=[\s.,;:!?]|$)/g, "$1$2");  // the exact words)
+}
 
 /* ---- the clock assist: typed words set the time scope (P6), no click ---- */
 let WINDOW = null;
@@ -610,6 +612,7 @@ function secs(a, b){ return `${Math.max(0, (new Date(b) - new Date(a)) / 1000).t
 
 async function decide(id, approve, row){
   row.querySelectorAll("button").forEach(b => b.disabled = true);
+  setTimeout(refreshPulls, 1500);             // the act's effect, in every lens
   await fetch("/confirm", {method:"POST",
     headers:{"content-type":"application/json"},
     body: JSON.stringify({ask_id: id, approve})});
@@ -663,6 +666,7 @@ document.querySelectorAll("#includes a").forEach(a => a.onclick = () => include(
 
 /* ---- the Crew pull: the first workspace, and its agent (P19) ---- */
 const crewPull = document.getElementById("crew");
+let crewTimer = null;
 function toggleCrew(open){
   const was = crewPull.classList.contains("open");
   const now = open ?? !was;
@@ -682,7 +686,8 @@ function workspaceWords(text){
 async function loadCrew(){
   const r = await fetch("/crew").then(x=>x.json()).catch(()=>null);
   if (!r) return;
-  const box = document.getElementById("cards"); box.innerHTML = "";
+  const box = document.getElementById("cards"); const keep = box.scrollTop;
+  box.innerHTML = "";
   for (const c of r.crew){
     const d = document.createElement("div"); d.className = "card";
     const caps = c.capabilities.length ? c.capabilities.map(x => `<span class="cap">${esc(x)}</span>`).join("") : `<span class="meta">none declared</span>`;
@@ -729,6 +734,7 @@ async function loadCrew(){
     });
     box.appendChild(d);
   }
+  box.scrollTop = keep;                       // the reader keeps their place
 }
 
 /* ---- the Monitoring pull: the second workspace, and its agent ---- */
@@ -739,14 +745,24 @@ function toggleMonitor(open){
   monitorPull.classList.toggle("open", now);
   if (now && !was){
     loadMonitor();
+    monitorBeat = setInterval(loadMonitor, 5000);   // leases move without a notice
     pushFocus({kind: "workspace", id: "ws_monitor", name: "monitor", window: null,
                label: "the Monitoring workspace · its agent, monitor"});
   }
+  if (!now && monitorBeat){ clearInterval(monitorBeat); monitorBeat = null; }
+}
+let monitorTimer = null, monitorBeat = null;
+function refreshPulls(){                 // P17: a change anywhere reflects in
+  if (crewPull.classList.contains("open") && !crewTimer)          // every open
+    crewTimer = setTimeout(() => { crewTimer = null; loadCrew(); }, 400);   // lens
+  if (monitorPull.classList.contains("open") && !monitorTimer)
+    monitorTimer = setTimeout(() => { monitorTimer = null; loadMonitor(); }, 400);
 }
 async function loadMonitor(){
   const s = await fetch("/monitor").then(x=>x.json()).catch(()=>null);
   if (!s) return;
-  const box = document.getElementById("views"); box.innerHTML = "";
+  const box = document.getElementById("views"); const keep = box.scrollTop;
+  box.innerHTML = "";
   const view = (title, rows) => {
     const d = document.createElement("div"); d.className = "view";
     d.innerHTML = `<h5>${title}</h5>` + rows; box.appendChild(d); return d; };
@@ -772,6 +788,7 @@ async function loadMonitor(){
                                  body: JSON.stringify({template: "librarian"})}).catch(()=>null);
     loadMonitor();
   };
+  box.scrollTop = keep;                       // the reader keeps their place
 }
 
 /* ---- the focus stack (P19): the chat follows the focus ---- */
@@ -923,7 +940,8 @@ function connectFeed(){
     onNotice(n);
     if (band.classList.contains("open") && !bandTimer)   // P17: one state,
       bandTimer = setTimeout(() => { bandTimer = null;   // every lens
-                                     loadBand(); }, 400); };
+                                     loadBand(); }, 400);
+    refreshPulls(); };
   src.addEventListener("delta", e => onDelta(JSON.parse(e.data)));
   src.addEventListener("resync", () =>
     pulse.textContent = "PULSE · resync — fetch fresh through the doors");
