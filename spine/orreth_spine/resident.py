@@ -121,6 +121,10 @@ def ensure_schema(conn) -> None:
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"       # state
                     " state text NOT NULL DEFAULT 'in'")
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
+                    " marker text")                 # the ask's marker (0006)
+        cur.execute("ALTER TABLE spine_joins ADD COLUMN IF NOT EXISTS"
+                    " interests text")              # the kinds a body cares about
+        cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
                     " fanout text")
 
 
@@ -168,6 +172,7 @@ class Resident:
         self.gateway = gateway if self.template.get("mind") else None
         self._serve_conn = None
         self._current_ask = None
+        self._current_marker = None  # the ask's marker: WHY this serve (0006)
         self._state = "in"
         self._ckpt_graph = None      # the checkpointed graph, one per life
         # on_delta(ask_id, text): the rig wires this to the glass feed —
@@ -205,12 +210,13 @@ class Resident:
                 "policy": self.policy["hash"]})
             cur.execute(
                 "INSERT INTO spine_joins (did, name, life, template_hash,"
-                " policy_version, policy_hash, sig, scope, kind, capabilities)"
-                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                " policy_version, policy_hash, sig, scope, kind, capabilities,"
+                " interests) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (self.identity.did, self.name, life, self.template_hash,
                  self.policy["version"], self.policy["hash"], sig,
                  ev.scope(), self.kind,        # joined THIS world, as my kind,
-                 json.dumps(self.template.get("capabilities", []))))  # declared
+                 json.dumps(self.template.get("capabilities", [])),   # declared
+                 json.dumps(self.template.get("interests", []))))     # + interests
         from . import scheduler                  # the role schedules the
         for sch in self.template.get("schedules", []):   # template declares are
             scheduler.declared(conn, self.name, "role", sch["text"],   # registered
@@ -395,6 +401,11 @@ class Resident:
                         "recalled notes bear on the ask, use them and say so "
                         "plainly; never invent a memory you were not handed; "
                         "use your tools when the ask needs the real world.")
+                if "tools:mark" in self.template.get("capabilities", []):
+                    system += (" If you observe an IMPROVEMENT to what you "
+                               "are executing, mark it: call the mark tool "
+                               "with kind 'improvement' and a short note — "
+                               "other bodies act on marks.")   # 0006's policy line
                 prompt = ""
                 if s["notes"]:
                     prompt += ("Your recalled notes:\n- "
@@ -402,7 +413,8 @@ class Resident:
                 prompt += f"The ask: {s['text']}"
                 door = ToolDoor(self._serve_conn, did=self.identity.did,
                                 capabilities=self.template.get(
-                                    "capabilities", []), name=self.name)
+                                    "capabilities", []), name=self.name,
+                                marker=(self._current_marker or {}).get("id"))
                 deltas = None
                 if self.on_delta is not None and self._current_ask:
                     aid = self._current_ask
@@ -493,6 +505,10 @@ class Resident:
             return
         text, person, _status = row
         self._current_ask = ask_id
+        from . import markers as _mk
+        cur.execute("SELECT marker FROM spine_asks WHERE ask_id = %s", (ask_id,))
+        _mrow = cur.fetchone()
+        self._current_marker = _mk.as_env(self._serve_conn, _mrow[0]) if _mrow and _mrow[0] else None
         initial = {"text": text, "reply": "", "steps": [], "notes": [],
                    "hold": None, "read": []}
         resumed = None
@@ -547,7 +563,8 @@ class Resident:
                          "note": f"{self.name}: {step}"},
                 correlation_id=ask_id, authority_chain=chain,
                 aggregate={"type": "ask", "id": ask_id,
-                           "sequence": _next_seq(cur, ask_id)})
+                           "sequence": _next_seq(cur, ask_id)},
+                marker=self._current_marker)       # every hop says WHY
             outbox.add_row(cur, ev.encode(j), j["message_id"])
 
     def _land_reply(self, cur, ask_id: str, reply: str, chain: list,
@@ -559,7 +576,7 @@ class Resident:
         r = ev.make_envelope(
             kind="event", type=REPLY, universe_id=ev.scope(), scope_path=ev.scope(),
             payload={"ref": ask_id, "hash": ev.content_hash(reply)},
-            correlation_id=ask_id, authority_chain=chain,
+            correlation_id=ask_id, authority_chain=chain, marker=self._current_marker,
             aggregate={"type": "ask", "id": ask_id,
                        "sequence": _next_seq(cur, ask_id)})
         outbox.add_row(cur, ev.encode(r), r["message_id"])
@@ -585,7 +602,8 @@ class Resident:
         if approved:
             door = ToolDoor(self._serve_conn, did=self.identity.did,
                             capabilities=self.template.get(
-                                "capabilities", []), name=self.name)
+                                "capabilities", []), name=self.name,
+                            marker=(self._current_marker or {}).get("id"))
             result = door.call(held["tool"], held["args"], confirmed=True)
             self._journey(cur, ask_id,
                           [f"the human said yes — the {held['tool']} act "

@@ -85,6 +85,24 @@ TOOLS: dict[str, dict] = {
               __import__("orreth_spine.store", fromlist=["OrrethStore"])
               .OrrethStore(conn, by_did=args["_by"]).put(args["_name"], args["key"], args["text"])),
     },
+    "mark": {
+        "description": "Set a marker on what you are executing: a declared "
+                       "kind (e.g. 'improvement') and a short note. Other "
+                       "bodies that declared interest in that kind will be "
+                       "asked to act on it. A kind must be declared first.",
+        "input_schema": {"type": "object", "properties": {
+            "kind": {"type": "string"}, "note": {"type": "string"}},
+            "required": ["kind", "note"]},
+        "consequential": False,
+        "ground": True,
+        "fn": lambda args, conn: (lambda mk: (lambda m: (lambda asked:
+              f"marked {m['ref']} as {m['kind']!r} ({m['id']}); "
+              f"{len(asked)} interested bod{'y' if len(asked) == 1 else 'ies'} asked to act")(
+              mk.dispatch_interests(conn, m, m["ref"], m["note"])))(
+              mk.set_marker(conn, args["kind"], ref=(mk.get(conn, args["_parent"]) or {}).get("ref", args["_by"]) if args.get("_parent") else args["_by"],
+                            by=args["_by"], parent=args.get("_parent"), note=args["note"])))(
+              __import__("orreth_spine.markers", fromlist=["set_marker"])),
+    },
     "purge-memory": {
         "description": "Permanently erase a memory you acquired, every "
                        "version of it, under a key — the words leave the "
@@ -149,10 +167,11 @@ class ToolDoor:
     interlocked."""
 
     def __init__(self, conn, *, did: str, capabilities: list[str],
-                 name: str | None = None):
+                 name: str | None = None, marker: str | None = None):
         self._conn = conn
         self.did = did
         self.name = name                  # the memory namespace (acquire)
+        self.marker = marker              # the serving ask's marker (0006)
         self.capabilities = capabilities
         ensure_schema(conn)
 
@@ -178,7 +197,8 @@ class ToolDoor:
             raise ConsequentialHold(name, args)
         try:
             if tool.get("ground"):        # an act on the ground rides the
-                args = dict(args, _by=self.did, _name=self.name or self.did)
+                args = dict(args, _by=self.did, _name=self.name or self.did,
+                            _parent=self.marker)
                 result = tool["fn"](args, self._conn)
             else:
                 result = tool["fn"](args)
@@ -186,10 +206,17 @@ class ToolDoor:
         except Exception as e:
             result, ok = f"{type(e).__name__}: {e}"[:300], False
         with self._conn.transaction():
-            self._conn.cursor().execute(
+            cur = self._conn.cursor()
+            cur.execute(
                 "INSERT INTO spine_tool_calls (did, tool, args, ok, result)"
                 " VALUES (%s, %s, %s, %s, %s)",
-                (self.did, name, json.dumps(args), ok, result[:500]))
+                (self.did, name, json.dumps({k: v for k, v in args.items()
+                                             if not k.startswith("_")}), ok, result[:500]))
+            if ok and name != "mark":            # an ACTION under the ask's
+                from . import markers            # marker (0006); `mark` sets
+                markers.ensure_schema(self._conn)  # its own
+                markers.insert(cur, markers.new_id(), "action", self.marker,
+                               f"{name}:{self.marker or self.did}", self.did, name)
         if not ok:
             raise ToolRefused(f"the {name} tool failed honestly: {result}")
         return result

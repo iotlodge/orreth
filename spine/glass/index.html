@@ -436,6 +436,7 @@ async function send(given, label, toOverride){
   if (given == null && await sessionWords(text)) return;   // P20 by words
   if (given == null && includeWords(text)) return;         // the includes, by words
   if (given == null && workspaceWords(text)) return;       // the pulls, by words
+  if (given == null && await markWords(text)) return;      // a human marks (0006)
   const to = toOverride ? [...toOverride] : [...SELECTED];
   // a synthesis is the human's CHOICE, never the human's words: it wears
   // its own label; the machine's prompt never appears as if typed
@@ -467,6 +468,9 @@ async function send(given, label, toOverride){
 
 /* every notice is a pointer — the glass fetches truth through the door */
 async function onNotice(n){
+  if (n.kind === "orreth.marker.set.v1"){          // 0006: a marker landed
+    refreshPulls(); return;                          // (the lenses follow)
+  }
   if (n.kind === "orreth.harness.failed.v1"){      // AG-6: a failing run
     sysline(`⚠ the harness failed a run (${esc(n.ref)}) — open the monitor ` +
             `for the details; the watcher escalates here, in the chat`);
@@ -677,6 +681,19 @@ function toggleCrew(open){
                label: "the Crew workspace · its agent, crew"});
   }
 }
+async function markWords(text){                  // "mark this as improvement: the note"
+  const m = text.match(/^mark (?:this|that|it)(?: as)?\s+([a-z0-9-]+)\s*(?::\s*(.+))?$/i);
+  if (!m) return false;
+  const r = await fetch("/mark", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({kind: m[1].toLowerCase(), note: m[2] || "", session: SESSION})})
+    .then(async x => ({s: x.status, b: await x.json()})).catch(()=>null);
+  if (!r) { sysline("the mark door did not answer"); return true; }
+  if (r.s !== 201) { sysline(esc(r.b.error || "not marked")); return true; }
+  sysline(`marked ${esc(r.b.marker.ref)} as ${esc(r.b.marker.kind)}` +
+          (r.b.asked.length ? ` — ${r.b.asked.map(a => esc(a.body)).join(", ")} asked to act` : ""));
+  refreshPulls();
+  return true;
+}
 function workspaceWords(text){
   const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
   if (/^((open|show)( me)?( the)? crew|crew|the crew)$/.test(t)) { toggleCrew(true); return true; }
@@ -779,6 +796,31 @@ async function loadMonitor(){
   view("ASKS", Object.entries(s.asks).map(([k, v]) => row(k, v)).join("") || `<div class="meta">none in this world</div>`);
   view("WATCHES", (s.watches.map(w => row(`${w.name} — ${w.metric} ${w.op} ${w.threshold}`, `${w.value} · ${w.ok ? "green" : "RED"}`, w.ok ? "ok" : "red")).join("") ||
        `<div class="meta">none yet — ask the monitor agent to propose one ("watch for asks left waiting")</div>`));
+  const kinds = await fetch("/markers/kinds").then(x=>x.json()).catch(()=>({kinds: []}));
+  const marks = await fetch("/markers").then(x=>x.json()).catch(()=>({markers: []}));
+  let off = {}; try { off = JSON.parse(localStorage.getItem("orreth.markers.off") || "{}"); } catch (e) {}
+  const groups = {};
+  for (const k of kinds.kinds) (groups[k.group] = groups[k.group] || []).push(k.kind);
+  const toggles = Object.entries(groups).map(([g, ks]) =>
+    `<div class="row"><span><label><input type="checkbox" data-g="${esc(g)}" ${ks.every(k => off[k]) ? "" : "checked"}> ${esc(g)}</label></span>` +
+    `<span>${ks.map(k => `<label style="margin-left:8px"><input type="checkbox" data-k="${esc(k)}" ${off[k] ? "" : "checked"}> ${esc(k)}</label>`).join("")}</span></div>`).join("");
+  const rows = marks.markers.filter(m => !off[m.kind]).map(m =>
+    `<div class="row duty" data-mk="${esc(m.id)}"><span>${hhmm(m.at)} · <b style="color:var(--amber)">${esc(m.kind)}</b>` +
+    ` · ${esc((m.by || "").slice(-8))} · ${esc(m.ref)}${m.note ? " — " + esc(m.note) : ""}</span><span class="meta">why?</span></div>`).join("");
+  const mv = view("MARKERS · the open vocabulary of why", toggles + (rows || `<div class="meta">none yet — say “mark this as improvement: …” in the chat</div>`));
+  mv.querySelectorAll("input[data-k]").forEach(i => i.onchange = () => {            // toggle a kind
+    off[i.dataset.k] = !i.checked; try { localStorage.setItem("orreth.markers.off", JSON.stringify(off)); } catch (e) {}
+    loadMonitor(); });
+  mv.querySelectorAll("input[data-g]").forEach(i => i.onchange = () => {            // toggle a group
+    for (const k of groups[i.dataset.g]) off[k] = !i.checked;
+    try { localStorage.setItem("orreth.markers.off", JSON.stringify(off)); } catch (e) {}
+    loadMonitor(); });
+  mv.querySelectorAll("[data-mk]").forEach(r => r.onclick = async () => {           // every row a door:
+    const a = await fetch("/markers?from=" + encodeURIComponent(r.dataset.mk)).then(x=>x.json()).catch(()=>null);   // its WHY
+    if (!a) return;
+    toggleChat(true);
+    sysline("why · " + a.ancestry.map(m => `${esc(m.kind)} (${esc(m.ref)})`).join(" ← "));
+  });
   const hv = view("HARNESS", (s.harness ? row(`${s.harness.template} v${s.harness.version} · ${hhmm(s.harness.ran_at)}`,
        `${s.harness.passed} passed · ${s.harness.failed} failed`, s.harness.failed ? "red" : "ok") : `<div class="meta">no run yet</div>`) +
        `<span class="assist">run the harness against the librarian now</span>`);

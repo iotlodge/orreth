@@ -11,5 +11,8 @@
   },
   "capabilities": [
     "ask"
+  ],
+  "interests": [
+    "improvement"
   ]
 }

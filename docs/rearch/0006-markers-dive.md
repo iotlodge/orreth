@@ -81,7 +81,7 @@ automation.** The vocabulary must be expandable.
 
 ## Build
 
-- **markers sp1** (opened 2026-09-19 on the lock): the registry with the
-  structural seed · the write path minting structural markers · the
+- **markers sp1** ✅ **BUILT 2026-09-19** (walk owed): the registry with
+  the structural seed · the write path minting structural markers · the
   `mark` door and the policy line · the interest consumer · the doors ·
-  the MARKERS view · MK-1 as its law.
+  the MARKERS view · MK-1 proven by law (`tests/test_markers.py`).

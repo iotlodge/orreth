@@ -51,7 +51,8 @@ def now_iso() -> str:
 def make_envelope(*, kind: str, type: str, universe_id: str, scope_path: str,
                   payload: dict, correlation_id: str | None = None,
                   authority_chain: list[str] | None = None,
-                  aggregate: dict | None = None) -> dict:
+                  aggregate: dict | None = None,
+                  marker: dict | None = None) -> dict:
     """Mint one envelope. The message id is globally unique and immutable
     (commands wear cmd_, events wear msg_); everything else is plain data.
     `aggregate` ({type, id, sequence}) names the one thing whose order
@@ -76,6 +77,8 @@ def make_envelope(*, kind: str, type: str, universe_id: str, scope_path: str,
         env["authority_chain"] = list(authority_chain)
     if aggregate:
         env["aggregate"] = dict(aggregate)
+    if marker:                      # the typed origin this fact serves (0006):
+        env["marker"] = dict(marker)   # {kind, id, parent, by} — WHY, never who
     return env
 
 

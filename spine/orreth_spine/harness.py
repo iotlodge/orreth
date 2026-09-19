@@ -36,7 +36,8 @@ def golden(template: str) -> list[dict]:
     return json.loads(p.read_text()) if p.exists() else []
 
 
-def run(conn, body, cases: list[dict] | None = None) -> dict:
+def run(conn, body, cases: list[dict] | None = None,
+        parent_marker: str | None = None) -> dict:
     """Run the golden cases through the body's own graph (its mind on the
     meter, its recall honestly empty of any ask) and record the run."""
     from .resident import ensure_schema as _ground   # lazily: no import cycle
@@ -58,8 +59,16 @@ def run(conn, body, cases: list[dict] | None = None) -> dict:
     failed = len(cases) - passed
     rid = "run_" + secrets.token_hex(5)
     version = body.template.get("version", "?")
+    from . import markers
+    markers.ensure_schema(conn)
+    mid = markers.new_id()
+    marker = {"kind": "observation", "id": mid, "parent": parent_marker,
+              "by": body.identity.did}
     with conn.transaction():
-        conn.cursor().execute(
+        cur = conn.cursor()
+        markers.insert(cur, mid, "observation", parent_marker, rid,
+                       body.identity.did, f"harness: {passed} passed, {failed} failed")
+        cur.execute(
             "INSERT INTO spine_harness_runs (run_id, template, version, passed,"
             " failed, details, scope) VALUES (%s, %s, %s, %s, %s, %s, %s)",
             (rid, body.template["name"], version, passed, failed,
@@ -70,7 +79,7 @@ def run(conn, body, cases: list[dict] | None = None) -> dict:
             scope_path=ev.scope(),
             payload={"ref": rid, "hash": "sha256:-", "template": body.template["name"],
                      "version": version, "passed": passed, "failed": failed},
-            correlation_id=rid, authority_chain=[body.identity.did])
+            correlation_id=rid, authority_chain=[body.identity.did], marker=marker)
         outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"])
     return {"run_id": rid, "template": body.template["name"], "version": version,
             "passed": passed, "failed": failed, "details": details}

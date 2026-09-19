@@ -36,6 +36,8 @@ def ensure_schema(conn) -> None:
             " active boolean NOT NULL DEFAULT true, added_by text NOT NULL,"
             " rested_by text, rested_at timestamptz, scope text NOT NULL,"
             " added_at timestamptz NOT NULL DEFAULT now())")
+        cur.execute("ALTER TABLE spine_schedules ADD COLUMN IF NOT EXISTS"
+                    " marker text")                 # the intention's marker
         cur.execute(
             "CREATE TABLE IF NOT EXISTS spine_occurrences ("
             " occurrence_id text PRIMARY KEY, schedule_id text NOT NULL,"
@@ -47,15 +49,20 @@ def add(conn, runner: str, kind: str, text: str, every_s: int, by: str,
     """A standing intention lands. `first_in_s` None = due now."""
     if kind not in KINDS:
         raise ValueError(f"kind is one of {', '.join(KINDS)}")
+    from . import markers
     ensure_schema(conn)
+    markers.ensure_schema(conn)
     sid = "sch_" + secrets.token_hex(5)
+    mid = markers.new_id()
     with conn.transaction():
-        conn.cursor().execute(
+        cur = conn.cursor()
+        markers.insert(cur, mid, "intention", None, sid, by)   # a root: WHY it beats
+        cur.execute(
             "INSERT INTO spine_schedules (schedule_id, runner, kind, text, every_s,"
-            " next_at, added_by, scope) VALUES (%s, %s, %s, %s, %s,"
-            " now() + make_interval(secs => %s), %s, %s)",
+            " next_at, added_by, scope, marker) VALUES (%s, %s, %s, %s, %s,"
+            " now() + make_interval(secs => %s), %s, %s, %s)",
             (sid, runner, kind, text, int(every_s),
-             int(first_in_s if first_in_s is not None else 0), by, ev.scope()))
+             int(first_in_s if first_in_s is not None else 0), by, ev.scope(), mid))
     return sid
 
 
@@ -64,10 +71,18 @@ def declared(conn, runner: str, kind: str, text: str, every_s: int, by: str) -> 
     kernel's duties at every boot): the same intention is never doubled."""
     ensure_schema(conn)
     cur = conn.cursor()
-    cur.execute("SELECT schedule_id FROM spine_schedules WHERE runner = %s AND kind = %s"
+    cur.execute("SELECT schedule_id, marker FROM spine_schedules WHERE runner = %s AND kind = %s"
                 " AND text = %s AND scope = %s", (runner, kind, text, ev.scope()))
     row = cur.fetchone()
-    return row[0] if row else add(conn, runner, kind, text, every_s, by, first_in_s=every_s)
+    if row is None:
+        return add(conn, runner, kind, text, every_s, by, first_in_s=every_s)
+    if row[1] is None:                 # declared before markers existed: it
+        from . import markers          # gets its intention now, once
+        mid = markers.mint(conn, "intention", row[0], by)["id"]
+        with conn.transaction():
+            conn.cursor().execute("UPDATE spine_schedules SET marker = %s"
+                                  " WHERE schedule_id = %s", (mid, row[0]))
+    return row[0]
 
 
 def rest(conn, schedule_id: str, by: str) -> None:
@@ -114,18 +129,19 @@ def tick(conn, bodies: dict | None = None) -> list[dict]:
     from . import dispatch, harness
     ensure_schema(conn)
     cur = conn.cursor()
-    cur.execute("SELECT schedule_id, runner, kind, text, every_s, added_by FROM spine_schedules"
-                " WHERE active AND next_at <= now() AND scope = %s ORDER BY next_at",
-                (ev.scope(),))
+    cur.execute("SELECT schedule_id, runner, kind, text, every_s, added_by, marker"
+                " FROM spine_schedules WHERE active AND next_at <= now() AND scope = %s"
+                " ORDER BY next_at", (ev.scope(),))
     occurred = []
-    for sid, runner, kind, text, every_s, by in cur.fetchall():
+    for sid, runner, kind, text, every_s, by, marker in cur.fetchall():
         ref = None
         if kind == "kernel" and text.startswith("run the harness"):
             body = (bodies or {}).get(runner)
-            if body is not None:
-                ref = harness.run(conn, body)["run_id"]
-        else:
-            ref = dispatch.submit_ask(conn, text, person=by, to=[runner])[0]
+            if body is not None:              # an OBSERVATION under the intention
+                ref = harness.run(conn, body, parent_marker=marker)["run_id"]
+        else:                                 # an occurrence: an objective under it
+            ref = dispatch.submit_ask(conn, text, person=by, to=[runner],
+                                      parent_marker=marker)[0]
         oid = "occ_" + secrets.token_hex(5)
         with conn.transaction():
             c = conn.cursor()

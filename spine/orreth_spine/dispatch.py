@@ -22,7 +22,7 @@ from .resident import ASK_RECEIVED, SERVE_KEY
 
 def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
                to: list[str] | None = None, window: dict | None = None,
-               session: str | None = None):
+               session: str | None = None, parent_marker: str | None = None):
     """The glass's write: the ask row and its committed event, one
     transaction. The event is pointer-only; the words live on the ground.
     `to` names residents for a FAN-OUT (canon 0001 P14): the same request
@@ -30,9 +30,11 @@ def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
     role lens, results stay distinct, and they share a fanout id so the
     glass can offer 'summarize together' on demand. Untargeted asks keep
     returning one id (any resident serves); a fan-out returns the list."""
+    from . import markers
     from .resident import ensure_schema
     ensure_schema(conn)
     outbox.ensure_schema(conn)
+    markers.ensure_schema(conn)
     fanout = ("fan_" + secrets.token_hex(6)) if to and len(to) > 1 else None
     state = "in"
     if session:                        # an ask is born in its session's state
@@ -44,6 +46,22 @@ def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
     ids = []
     for target in (to or [None]):
         ask_id = "ask_" + secrets.token_hex(8)
+        # the ask's marker (0006): an include's ask is a THOUGHT under the
+        # session's latest objective; anything else is an OBJECTIVE — a root,
+        # or a child of the marker it was dispatched under (an occurrence
+        # of an intention, an act of interest)
+        kind, parent = "objective", parent_marker
+        if target in markers.INCLUDES:
+            kind = "thought"
+            if parent is None and session:
+                cur0 = conn.cursor()
+                cur0.execute(
+                    "SELECT a.marker FROM spine_asks a JOIN spine_markers m ON m.marker_id = a.marker"
+                    " WHERE a.session = %s AND m.kind = 'objective' ORDER BY a.asked_at DESC LIMIT 1",
+                    (session,))
+                r0 = cur0.fetchone(); parent = r0[0] if r0 else None
+        marker_id = markers.new_id()
+        marker = {"kind": kind, "id": marker_id, "parent": parent, "by": person}
         payload = {"ref": ask_id, "hash": ev.content_hash(text)}
         if target:
             payload["target"] = target
@@ -57,15 +75,18 @@ def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
             kind="event", type=ASK_RECEIVED, universe_id=ev.scope(),
             scope_path=ev.scope(), payload=payload,
             correlation_id=fanout or ask_id, authority_chain=[person],
-            aggregate={"type": "ask", "id": ask_id, "sequence": 1})
+            aggregate={"type": "ask", "id": ask_id, "sequence": 1},
+            marker=marker)
 
-        def domain(cur, a=ask_id, t=target, w=payload.get("window")):
-            cur.execute(
+        def domain(cur, a=ask_id, t=target, w=payload.get("window"),
+                   mk=marker_id, kd=kind, pa=parent):
+            markers.insert(cur, mk, kd, pa, a, person)     # the fact and its
+            cur.execute(                                   # marker, together
                 "INSERT INTO spine_asks (ask_id, text, person, target,"
-                " fanout, scope, time_window, session, state)"
-                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                " fanout, scope, time_window, session, state, marker)"
+                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (a, text, person, t, fanout, ev.scope(),     # asked in
-                 json.dumps(w) if w else None, session, state))   # THIS world
+                 json.dumps(w) if w else None, session, state, mk))   # THIS world
 
         outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"],
                                   domain)

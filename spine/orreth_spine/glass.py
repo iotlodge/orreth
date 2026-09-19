@@ -27,14 +27,15 @@ from pathlib import Path
 
 import psycopg
 
-from . import bridgefeed, digest, dispatch, envelope as ev, harness, monitor, outbox
+from . import bridgefeed, digest, dispatch, envelope as ev, harness, markers, monitor, outbox
 from . import presence, projector, scheduler, sinks
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, Resident
 
 GLASS_DIR = Path(__file__).resolve().parents[1] / "glass"
 FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED,
-               harness.HARNESS_FAILED]   # a failing run escalates to the chat
+               harness.HARNESS_FAILED,   # a failing run escalates to the chat
+               markers.MARKER_SET]       # a marker set is seen where it lands
 
 
 def ask_view(conn, ask_id: str) -> dict | None:
@@ -327,6 +328,20 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 person = (qs.get("person") or ["did:orreth:person:jb"])[0]
                 with psycopg.connect(dsn) as conn:
                     return self._json(200, {"sessions": sessions_view(conn, person)})
+            if path == "/markers/kinds":                 # the registry
+                with psycopg.connect(dsn) as conn:
+                    return self._json(200, {"kinds": markers.kinds(conn)})
+            if path == "/markers":                       # the tree · the ancestry · the stream
+                from urllib.parse import parse_qs
+                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
+                    if "?" in self.path else {}
+                with psycopg.connect(dsn) as conn:
+                    if qs.get("root"):
+                        return self._json(200, {"root": qs["root"], "tree": markers.tree(conn, qs["root"])})
+                    if qs.get("from"):
+                        return self._json(200, {"from": qs["from"], "ancestry": markers.ancestry(conn, qs["from"])})
+                    return self._json(200, {"markers": markers.stream(
+                        conn, kind=qs.get("kind"), grp=qs.get("group"))})
             if path.startswith("/digest/"):            # the short version, and
                 with psycopg.connect(dsn) as conn:        # every source it cites
                     view = digest.of_session(conn, path.split("/digest/", 1)[1])
@@ -411,6 +426,38 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                                        archive=str(p.get("archive") or "") or None,
                                        opt_out=bool(p.get("opt_out", False)))
                 return self._json(201, {"session_id": sid})               # archived
+            if path == "/markers/kinds":              # declare a kind
+                try:
+                    with psycopg.connect(dsn) as conn:
+                        made = markers.declare(conn, str(p.get("kind") or ""),
+                                               str(p.get("group") or ""),
+                                               str(p.get("description") or ""),
+                                               str(p.get("person") or "did:orreth:person:jb"))
+                except ValueError as e:
+                    return self._json(400, {"error": str(e)})
+                return self._json(201, made)
+            if path == "/mark":                       # a human marks from the chat
+                person = str(p.get("person") or "did:orreth:person:jb")
+                ref = str(p.get("ref") or "")
+                with psycopg.connect(dsn) as conn:
+                    if not ref and p.get("session"):
+                        cur = conn.cursor()
+                        cur.execute("SELECT ask_id FROM spine_asks WHERE session = %s"
+                                    " ORDER BY asked_at DESC LIMIT 1", (str(p["session"]),))
+                        row = cur.fetchone(); ref = row[0] if row else ""
+                    if not ref:
+                        return self._json(400, {"error": "mark what? name an ask or a session"})
+                    cur = conn.cursor()
+                    cur.execute("SELECT marker FROM spine_asks WHERE ask_id = %s", (ref,))
+                    row = cur.fetchone(); parent = row[0] if row else None
+                    try:
+                        m = markers.set_marker(conn, str(p.get("kind") or ""), ref=ref,
+                                               by=person, parent=parent,
+                                               note=str(p.get("note") or "") or None)
+                    except markers.UnknownKind as e:
+                        return self._json(400, {"error": str(e)})
+                    asked = markers.dispatch_interests(conn, m, ref, m.get("note"))
+                return self._json(201, {"marker": m, "asked": asked})
             if path == "/digest":                     # on demand, or rebuild
                 sid = str(p.get("session") or "")
                 with psycopg.connect(dsn) as conn:

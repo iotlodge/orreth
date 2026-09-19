@@ -12,7 +12,8 @@
     "tools:weather",
     "tools:seal-record",
     "tools:acquire",
-    "tools:purge-memory"
+    "tools:purge-memory",
+    "tools:mark"
   ],
   "schedules": [
     {

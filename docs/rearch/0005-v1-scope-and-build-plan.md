@@ -614,6 +614,43 @@ first walk carries MONITOR-01's deferred re-walk.
   `tests/test_growth.py` (latency flat ×10). Dependency:
   `langgraph-checkpoint-postgres`. Suite 85 green.
 
+## The markers (0006) — opened 2026-09-19 on the dive's locks
+
+- **markers sp1 — the open vocabulary of WHY** ✅ **BUILT 2026-09-19 —
+  walk OWED**: **the registry** (`spine_marker_kinds`: kind · group ·
+  description · declared by — per world; the kernel seeds objective ·
+  intention · thought · action · observation and `improvement`; a kind
+  is declared before use, an unknown kind refused with a teaching that
+  names the vocabulary). **The write path mints structural markers with
+  the fact, in one transaction**: an ask is an objective (a root — or a
+  child of the marker it was dispatched under); a schedule is an
+  intention and its occurrences are objectives under it; the kernel's
+  harness run is an observation under its intention; an include's ask
+  is a thought under the session's latest objective; every tool call
+  is an action under the serving ask. **Every envelope carries its
+  marker** (`{kind, id, parent, by}` — the ask received, every journey
+  hop, the reply, a failing harness run, a marker set). **The `mark`
+  door**: any body sets a marker on what it is executing (a declared
+  kind + a note) — the librarian declares it and carries the policy
+  line *"if you observe an improvement to what you are executing, mark
+  it"*; a human marks from the chat ("mark this as improvement: …").
+  **The interest law**: the critic's template declares
+  `interests: ["improvement"]`; a marker set is a fact on the rail
+  (`orreth.marker.set.v1`) and the kernel asks every interested body to
+  act — the marker as PARENT — so the lineage records who acted, on
+  what, because of which marker. **Doors**: the registry (read ·
+  declare) · the tree under a marker · the ancestry above one · the
+  stream by kind or group · `/mark`. **The glass**: a MARKERS view in
+  the Monitoring pull — toggles per group and per kind (remembered),
+  the live stream, every row a door to its *why* (the ancestry, in the
+  chat). **MK-1 proven by law**: the librarian, serving a human's ask,
+  marks an improvement; the critic is asked with the marker as parent;
+  the lineage reads thought ← improvement ← objective from the critic's
+  end and objective → improvement → thought from the human's; every hop
+  says why; an undeclared kind is refused with the teaching. Three laws
+  in `tests/test_markers.py`. Suite 88 green. (Schedules that predate
+  markers get their intention at the next boot — found live.)
+
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 
 - **sp1 — the new rig breathes** ✅ **LANDED 2026-09-16**: `spine/` is the
