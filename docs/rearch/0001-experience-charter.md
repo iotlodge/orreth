@@ -64,8 +64,9 @@ carrying the pulls, warm light, glass.
 - **[Esc] always returns to the top-level view** — recovery without hunting.
 - The pulls: **Chat (Inference)** · **Workspace Engineering** ·
   **Monitoring** · **Gateways (LLMs)** · **Tools** · **Controls** ·
-  **Crew/Agents** — plus the **Objectives** floor hatch (pending JB's
-  verdict as the lifecycle band).
+  **Crew/Agents** — plus the **ANALYZER** floor hatch (block 11 — JB's
+  verdict, 2026-09-19: Objectives is NOT a pull; the hatch is the
+  Analyzer — everything born in the chat, grouped by origin).
 
 | Pull | What lives there |
 |---|---|
@@ -165,6 +166,50 @@ focus; the human never leaves it.
   implement new monitoring: Orreth works on behalf of humans to create
   for humans.
 
+## Intent, the kind of an ask, and the Analyzer (block 11 — JB's lock, 2026-09-19)
+
+Everything a human asks for is born in the chat. What they ask invokes the
+level, flow, or graph inside the kernel; nothing a human does begins
+anywhere else. **Objectives are not a pull.**
+
+- **Least energy (P22).** The fluid experience is the immersion between
+  the kernel's flow and the human's focus, in the chat. Every design
+  choice is measured by the energy it asks of the human — a click, a mode
+  to remember, a place to go — and the lowest wins. The chat closed
+  withdraws assist and the open pull takes the width (P19's other half).
+- **The ask wears its kind (P23).** There are no chat modes. The typed
+  words propose the ask's kind — **thought · objective · intention** — as
+  a chip before send ("this reads as an OBJECTIVE · change?"); one click
+  or one word flips it; the kind is minted as the ask's marker (0006),
+  with the ask, in one transaction. The interest law then re-dresses the
+  chat: an objective wakes the planner, an intention wakes the intention
+  architect (Workspace Engineering's binding), and INCLUDES shows who is
+  interested for the human to include or exclude. No mode to keep in
+  sync; auditable ("the kernel read this as an objective; JB confirmed");
+  voice speaks the same chip.
+- **State is a projection of applied intent (P24).** JB's law — *"State is
+  an outcome of applied Intent."* Every act on the rail wears the marker
+  of the intent it served; every view reads a projection of the ground;
+  the kernel knows, reports, and replays the state of anything from its
+  own memory and reaches a running body only when it must. Lookups, never
+  fan-outs.
+- **The Analyzer (P25).** The floor hatch is the **ANALYZER**: everything
+  born in the chat, **grouped by origin** — intention → objectives →
+  thoughts · actions · observations — in flight and completed, from the
+  ground. Nothing sent to it → all active | completed intentions and
+  objectives, human- and agent-owned. Something sent from the chat → that
+  origin's tree. The one invoke: "follow up on this by …" in the chat.
+  The MARKERS view lives here (lineage is history; Monitoring stays
+  *now*). Its assistant reviews (planner · critic · gap analyzer);
+  Workspace Engineering's assistant makes (CUD) — the CUD line is what
+  separates the two pulls.
+- **On behalf of, in one line.** A human submits; the kernel's agents own
+  it through the firmware-rails (0004); the chain says *who*, the marker
+  says *why*; the journey reads "on JB's word · owned by the kernel".
+- **Infinite Horizon Intentions** are standing kernel intentions with no
+  end — Business · Security · Resiliency · Compliance · Cost — each with
+  its stop; the Analyzer shows their line of sight. The model is 0007's.
+
 ## Scope and governance
 
 - **Scope is a lens of identities, never of the kernel.** Humans and agents
@@ -261,7 +306,8 @@ P21 eager for the next helpful step, always as an offer.
 - Held narration: **Human↔Agent** · the **two-sided Resident** in deep form
   · the **agent / agent-on-behalf-of** dive (gates MITL toggle semantics and
   factories governance).
-- Awaiting JB's verdict: the Objectives floor hatch as the lifecycle band ·
+- Awaiting JB's verdict: ~~the Objectives floor hatch as the lifecycle
+  band~~ (**RESOLVED block 11, 2026-09-19: the hatch is the ANALYZER**) ·
   the Atlas as the main window's third lens (vs its own pull) · aggregate
   schedule view in Monitoring · PULSE as the heartbeat ribbon · "every
   click has a sentence."

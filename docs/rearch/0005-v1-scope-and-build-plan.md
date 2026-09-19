@@ -21,8 +21,8 @@ replaces main only when JB and Fable both believe it ready.
 | V1 razor | This document applies it |
 
 **Charter verdicts still open default to Fable's proposals for the build —
-each cheap to reverse, JB may veto any at sight:** the Objectives floor
-hatch as the lifecycle band · the Atlas as the main window's third lens ·
+each cheap to reverse, JB may veto any at sight:** ~~the Objectives floor
+hatch as the lifecycle band~~ (block 11: **the ANALYZER**, 0007) · the Atlas as the main window's third lens ·
 the aggregate schedule view in Monitoring · PULSE as the heartbeat ribbon
 · "every click has a sentence."
 
@@ -37,8 +37,9 @@ times, monitor it, provide analytics on it, and manage its lifecycle*:
   a conversationalist with real tools (the "temp outside" bar), the
   LLM-lifecycle watcher with the A/B harness, an allen-class
   infrastructure resident. MITL v0 with the impact door.
-- The Bridge: landing page, the One Chat (full contract), the Objectives
-  band, and the seven pulls arriving in phases.
+- The Bridge: landing page, the One Chat (full contract), the Analyzer
+  hatch (block 11 — Objectives is not a pull), and the seven pulls
+  arriving in phases.
 - The playwright agent: chartered in phase 0, walking every phase close.
 - Docs and article screenshots produced inside every close loop.
 
@@ -613,6 +614,32 @@ first walk carries MONITOR-01's deferred re-walk.
   leaks; a purge reaches everything and leaves a tombstone) ·
   `tests/test_growth.py` (latency flat ×10). Dependency:
   `langgraph-checkpoint-postgres`. Suite 85 green.
+
+## The intent (0007) — opened 2026-09-19 on block 11's locks, BEFORE P6
+
+- **intent sp1 — the Analyzer, the kind of an ask, the fifth rail** —
+  PLANNED (JB's lock: canon now, then sp1 before P6): the floor hatch
+  becomes the **ANALYZER** (grouped by origin from the ground: intention
+  → objectives → thoughts · actions · observations; nothing sent → all
+  active | completed; the MARKERS view moves in; "follow up on this by …"
+  the one invoke) · **the ask wears its kind** (the chip before send —
+  thought · objective · intention — one click or one word flips it; the
+  marker minted with the ask; the interest law re-dresses INCLUDES) ·
+  **the intention record** (`spine_intentions`: words · serves · kind ·
+  interests · planner · cadence · gates · stop; a schedule is the
+  smallest one; the registry's `intention` widened) · **the intent rail**
+  (tick or an interesting marker → the planner asked under the intention
+  → its reply an objective to the crew, parent = the intention; every
+  objective a kernel-filed ask in the intention's session) · **Resiliency
+  wired** (the first Infinite Horizon Intention, declared at boot with its
+  stop: a red watch → an objective under it) · laws in
+  `tests/test_intent.py` (IH-1 · IH-2 · IH-3 of 0007) · SPEC-INTENT-01 ·
+  SPEC-ANALYZE-01 walked.
+- **intent sp2** — the intention architect in the chat ("create an
+  intention to …" fills a declaration; cut from the draft shelf) · Cost
+  (the meter; `cost-anomaly`) · the Analyzer's review assistant.
+- **intent sp3** — Business · Security · Compliance declared at boot; the
+  line-of-sight face in the Analyzer.
 
 ## The markers (0006) — opened 2026-09-19 on the dive's locks
 

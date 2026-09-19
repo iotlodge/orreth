@@ -31,7 +31,8 @@ automation.** The vocabulary must be expandable.
   (structural · quality · security · cost · …) so a dashboard toggles a
   kind or a whole group. The kernel seeds the structural kinds:
   objective (a human's ask, root) · intention (a schedule — human, role,
-  kernel — root; its occurrences are objectives under it) · thought (an
+  kernel — root; its occurrences are objectives under it; **widened by
+  0007 to any standing purpose — the schedule is its smallest form**) · thought (an
   include's ask, under the session's latest objective) · action (a tool
   call, a purge, a watch added — on the serving ask's marker) ·
   observation (a harness run, a red watch, a lease lapse — under the
@@ -65,7 +66,9 @@ automation.** The vocabulary must be expandable.
   itself an event — Understanding (0003) can rebuild the tree from the log.
 - **Doors:** the tree under a marker · the ancestry above a marker · the
   stream by kind or group · the registry (read, declare).
-- **The glass:** a MARKERS view in the Monitoring pull first — live,
+- **The glass:** a MARKERS view — in the Monitoring pull first (sp1);
+  **block 11 moves it to the ANALYZER** (lineage is history; Monitoring
+  stays *now*) — live,
   toggles per kind and per group, every row a door; the bridge's main
   viewport inherits the toggles with the orrery work.
 

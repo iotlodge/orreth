@@ -101,7 +101,7 @@ Laws of the body, restated from the locks:
 |---|---|---|
 | **What** | Serving a human's ask from the chat, live | Role-specific automation: scheduled work, standing duties, reflex responses |
 | **Triggered by** | The One Chat (fan-out included) | Three schedulers: **the human** (what the identity schedules) · **the role** (what the agent schedules for itself — its intentions, observations, research) · **the kernel** (kernel-required duties, embedded-firmware class) |
-| **Visible where** | The chat thread + journey text | **In the resident's own card** (every schedule lives in its runner — P16) + the Objectives band + Monitoring |
+| **Visible where** | The chat thread + journey text | **In the resident's own card** (every schedule lives in its runner — P16) + the Analyzer (grouped by origin, block 11) + Monitoring |
 | **Changeable?** | Per ask | Human- and role-scheduled: CRUD through gates. **Kernel-critical: IMMUTABLE** — visible, never editable |
 
 ```mermaid
@@ -117,7 +117,7 @@ flowchart LR
     SCHED -->|"occurrences ride<br/>the Invocation rail"| BODY
     CHAT -->|"asks ride the<br/>Invocation rail"| BODY
     BODY --> CARD
-    BODY -->|journey + lifecycle| BAND["Objectives band · Monitoring"]
+    BODY -->|journey + lifecycle| BAND["Analyzer · Monitoring"]
 ```
 
 Both sides are the same body under the same laws — the difference is only
@@ -194,6 +194,58 @@ grader · debater · analysis — and the workspace agents bound to the pulls.
   conversants (0001 P19); in the main view as the lines between residents
   and floors — the firmware in flight (the orrery direction, designed with
   the WOW work); in their own cards like any body.
+
+## The firmware-rails and the intent loop (block 11 — JB's lock, 2026-09-19)
+
+JB's name for the embedded loops the Operating Kernel provides as
+features: **the firmware-rails**. Each is an organ of the rig, breathing
+on the ground (autocommit connections — the P4 sp5 law), visible in
+Monitoring:
+
+| Rail | What it does | Built |
+|---|---|---|
+| **relay** | outbox → RabbitMQ + Kafka | P1 |
+| **dispatcher** | a fact → the benches of the bodies it addresses | P1 / P3 |
+| **scheduler** | standing intentions tick; occurrences are asks | P4 sp5 |
+| **serve / presence** | bodies on leases, alive while serving | P4 sp4 |
+| **intent** (the fifth) | an intention observes → plans → births objectives → reads their observations → re-plans | 0007 · intent sp1 |
+
+- **An intention is a record** on the ground with a body: `words · serves
+  (business · security · resiliency · compliance · cost) · kind (human ·
+  role · kernel) · interests (marker kinds) · planner (a firmware
+  binding) · cadence · gates (HITL / on-the-loop) · stop`. A schedule is
+  the smallest intention (cadence only). The registry's `intention` kind
+  (0006) widens to cover it; the tree law is unchanged — an intention is
+  a root, its objectives children, their acts and observations under them.
+- **The intent loop is the interest law at intention level.** Two
+  triggers: a tick (cadence) or a marker set of a kind the intention is
+  interested in (a red watch's observation, a cost anomaly, an
+  improvement). The kernel asks the intention's planner **under the
+  intention's marker** — "here is what was observed; the next objective?"
+  — and the planner's reply is an objective: an ask to the crew, parent =
+  the intention. The crew acts; observations land; the critic marks
+  improvements; the loop turns. HITL gates ride the interlock (L2 in the
+  chat); every objective born of an intention is a kernel-filed ask in
+  the intention's session, so the human sees it in the chat (walk #5's
+  law) and can stop it (rule 11).
+- **Infinite Horizon Intentions** are intentions with no end, owned by the
+  kernel, one per strategic line — Business · Security · Resiliency ·
+  Compliance · Cost — declared at boot like kernel duties, each with its
+  stop. First wired: **Resiliency** (a red watch births an objective under
+  it). Cost next (the meter on the gateway; a `cost-anomaly` kind).
+- **Intention templates are declarations, not graphs**:
+  `intentions/<name>.v0.json`, cut from the draft shelf; the **intention
+  architect** (Workspace Engineering's binding) helps a human fill one in
+  the chat ("create an intention to …"). The graph that runs an intention
+  is the intent loop itself — one engine (0040's law): the planner emits
+  objectives, objectives are asks, the crew's graphs run them. A
+  human-authored LangGraph per intention waits for a proof that needs it.
+- **Self-improving under human cut.** Improvement marker → critic → a
+  proposed change on the draft shelf → the human cuts the version. Never
+  raw feedback into a body (the graded-learning seed's guardrail).
+- **On behalf of, rendered.** The chain says who, the marker says why; a
+  kernel-owned act reads "on JB's word · owned by the kernel" in the
+  journey and the Analyzer.
 
 ## The factories
 
@@ -292,6 +344,8 @@ naturally" — it now explicitly is):
   the Invocation rail as asks to the runner, every schedule in its
   runner's card, rest recorded never deleted, the kernel kind immutable
   with one plain face.
+- The **intention record schema v0** and the intent rail — land with
+  intent sp1 (0007); the intention architect's binding with intent sp2.
 - ~~The **binding schema** and the include invocation shape~~ — **v0
   LANDED (P4 sp2/sp3):** an include is an ask targeted at a firmware
   body in the same session (its input = the session's results, labeled;

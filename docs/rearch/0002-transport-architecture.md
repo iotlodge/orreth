@@ -24,7 +24,7 @@ The charter is the requirements document. Read as transport obligations:
 |---|---|
 | Soft completions, fire-and-continue (P5) | Push channel to the Bridge; results announced by event, never by polling |
 | Every ask wears its journey (P7) | Journey events emitted at each routing/fulfillment step, streamed to the glass |
-| Nothing runs unseen (P13) | Every lifecycle transition (queued → in flight → completed) is a published event feeding the Objectives band and Monitoring |
+| Nothing runs unseen (P13) | Every lifecycle transition (queued → in flight → completed) is a published event feeding the Analyzer (block 11) and Monitoring |
 | One chat fan-out (P14) | One ask becomes N addressed invocations; N labeled results return independently; optional summary is a new ask |
 | One state, many lenses (P17) | Change events invalidate every open view instantly |
 | Time scoping / replay ("between X and Y") | A replayable event stream with real retention; graph/work replay reads it |
@@ -64,7 +64,7 @@ package's discipline underneath.
 | Hops INSIDE one agent's graph | Thinking (in-process LangGraph; checkpointed) — hop events published to Events for replay/monitoring |
 | "Request XX completed" soft notice | Events → Bridge feed |
 | Journey text ("routed to allen on …") | Events (journey family) → Bridge feed |
-| Lifecycle band / Objectives hatch | Events (request.transitioned) → Bridge feed + Monitoring |
+| Lifecycle band / the Analyzer hatch (block 11: Objectives is not a pull) | Events (request.transitioned) → Bridge feed + Monitoring |
 | Schedules firing (human/role/kernel) | Scheduler commits occurrence → Invocation claim |
 | Cancellation / contain / rest | Durable state transition → high-priority Invocation control message; fencing epoch blocks stale workers |
 | Presence / topology | Self-only lease events (compacted Kafka topic) → one projector builds the tree — nested heartbeat snapshots END |

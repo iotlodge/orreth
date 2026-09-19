@@ -766,3 +766,176 @@ friend, and help me architect the future."
 day; the distillation (a focus law, sessions as worldlines, firmware agents as
 an agent kind, the draft shelf, the markers dive) lands in canon on JB's
 lock.*
+
+
+---
+
+## Session 4 — 2026-09-19 (before P6 opens; P4 whole · P5 built · markers sp1 built)
+
+### Narration block 11 — INTENT: the origin of work, the firmware-rails, and the chat that follows
+
+**The frame (JB's words, essence preserved):** "Kernel Interoperability and
+Fluid Experience Through Infinite Horizon Intentions" — one more, final,
+round of deep thinking on Experience and Continuity of Experience, so that
+we fully understand Orreth, interoperability with humans, how the outputs
+and the work done in Orreth are managed, and — given where we are — the
+rails embedded in the kernel. Intentions drive resident/agent automation
+in the focused scaling and fulfillment of their Objectives. Make the chat
+smoother and keep it THE primary interface for inference across "the
+Intents of Orreth" (a marketing idea and an article), seamless and
+immersive, driving the sought-after feeling.
+
+**Two principles.** UI: **the Principle of Least Energy** = fluid
+experience = immersion between the kernel's flow and the human's focus,
+in chat mode. Kernel: **Naturally Occurring State — "State is an outcome
+of applied Intent."** JB's line for Orreth: a Rust-based, global,
+self-learning, polymorphic architecture-governance kernel for running
+agentic DIDs through a governed-by-humans control interface — 1, 5, 50, or
+50,000 — a single binary.
+
+**The ontology — work and act.** Maturing the ontology around humans'
+origin of *work* AND agents' origin of *act* creates an "intelligence
+transformation": the ontology's intelligence state, from data to act,
+across the whole scope of the kernel. This closes how the kernel works,
+thinks, and manages governance and policy — robust, reusable kernel rails
+for every capability. Humans act through **Intention**, which creates
+Observations. Orreth today treats Objective as the top level; introduce
+**human Intention as the topmost human end-to-end process** — Orreth
+creates Objectives for each "project" under it. Think a major enterprise
+program with many flows and interdependencies that need effective
+governing of the program, its sub-projects, and their tasks.
+
+**The ANALYZER pull (new).** How humans see the progress of an Intention,
+its projects, its completed and in-flight graphs. Mostly a view; the one
+invoke is "follow up on this by …". With nothing sent to it, the Analyzer
+opens all active | completed Objectives and Intentions AND the agents'
+own Intentions — **simple lookups, never calls or fan-outs**: the idea of
+the kernel is to use its brain and memories to know, report, and replay
+the state of anything, and reach out to a running agent only when it HAS
+to. What separates Workspace Engineering from Analyze is **CUD**: in the
+workspace the assistant acts on the template or graph; in Analyze the
+assistant is a planner, critic, or gap analyzer helping review whatever
+is being analyzed. Both are about CRUD over templates and active agent
+graphs (the live view).
+
+**Intention templates.** In Workshop Engineering, "create intention" is a
+toggle that changes the pull's mode; the firmware agents engineer
+workflows; the human creates LangGraphs for objectives OR selects an
+active agent they made "consumable" (imported or created from the
+workspace). Intention templates are LangGraphs with distinct capabilities
+that run many other LangGraphs and flows; the **Intention architect**
+(human, or human + agent) designs the right HITL / on-the-loop / LLM-in-
+the-loop gates into the template.
+
+**The chat IS the interface.** A human with a real thought to check on
+uses Chat (the default mode). Other modes: **Objective** — saying "create
+/ start objective" in the chat flips a soft toggle close to or inside the
+chat; in Objective mode a second vertical menu shows the kernel-firmware
+toggles, ready to assist in planning; the same for MITL. The experience
+the human sees and feels adapts to their changing focus. **Close the chat
+= remove "assist"**; whatever pull is open auto-expands. **CORRECTION
+(JB):** the rearch images keep showing "Objectives" as if it were a pull —
+"this tells me you might not fully understand the importance of the chat
+window." EVERYTHING a human asks for is done in the chat; *what* they ask
+invokes the respective level, flow, or graph inside the kernel; simple
+soft toggles in and around the chat, or NLP entered into it, change what
+and how. A clean chat also makes orreth-voice easier and really powerful.
+
+**Three words.** **On Behalf Of:** an Intention or an Observation/Request
+submitted by a human and *owned* by the agents of Orreth through the
+networks, loops, flows, and rails embedded in the kernel — **"firmware-
+rails"** as the name for each embedded loop provided as a feature of the
+Operating Kernel (worth capturing). **Chat:** the human working with the
+minds, firmware agents, and agents of the kernel to *assist* in whatever
+they do — a guided, capable helper. **Work:** automation scheduled, or
+resident/agent intentions aligned to a role in service of the kernel's
+goals — outputs and results organized so that all viewable work comes
+from requests, objectives, and intentions, **grouped by origin**.
+
+**Infinite Horizon Intention.** Human Intention feeds a new, HIGHER
+embedded loop — think a policy of "Run Rate", "Resiliency", "Security",
+"Monitoring": an uplift to long-horizon agents, leveraging the firmware
+agents and intentions, in a kernel whose agents are always improving in a
+kernel that is always improving — "I mean, might have something here."
+
+**JB's close:** "Keep me honest and real. If you can make it even better,
+put it in. If it is crap, tell me why and how you can make it better." In
+JB's brain it creates an adaptive state machine that can learn itself,
+create itself, and do anything you ask or architect it to do while keeping
+**Strategic Eternal Line-of-Sight on Business, Security, Resiliency,
+Compliance, and COST objectives.** "Oh, and it's a single binary. 'mic
+drop'."
+
+### Fable's vet of block 11 (same day) and JB's locks
+
+**What holds, and is mostly poured.** Intention above Objective is right,
+and the rail exists: the marker registry (0006) already roots `intention`
+with objectives under it — today it means a schedule row; block 11 widens
+it to *any standing purpose* (a schedule is the smallest intention). "State
+is an outcome of applied Intent" is how the spine already works: every
+fact wears the marker of the intent it served, every view is a projection
+of the ground, the pulls read snapshots and never fan out. "On behalf of"
+and "firmware-rails" need no new build — the authority chain and the
+marker's `by` say who asked and who owns; the rails are relay · dispatcher
+· scheduler · serve, and block 11 names them. The correction is accepted:
+block 8 placed an OBJECTIVES floor hatch pending JB's verdict and P3 built
+it as the band; the verdict is in — **the hatch is the ANALYZER**.
+
+**Where Fable pushed back (ratified).** Chat *modes* are the one shape that
+fights least energy: a hidden mode, soft-toggled or inferred from "create
+objective", means a mis-read silently changes what the kernel does with
+the words, and the human must know the mode to predict the outcome. Better
+and cheaper: **there are no modes — the ask wears its kind** (the kernel
+already mints a marker on every ask): the typed words propose the kind as
+a chip before send, one click or one word flips it, the marker is minted
+with the ask, and the interest law wakes the planner or the intention
+architect — JB's "second vertical menu of firmware toggles" *is* the
+INCLUDES strip showing who is interested. Same feel, zero new UI state,
+auditable, voice-ready. Intention templates are real but sequenced under
+the razor: no graph editor — the first templates are **declarations** like
+the bindings, cut from the draft shelf; "LangGraphs that run LangGraphs"
+is the intent loop itself (one engine, 0040's law). One ontology
+correction: observations are born from *acts*, not from intentions — the
+loop reads Intent → Objective → Act → Observation → Improvement, and the
+intention reads observations to plan its next objective (what the registry
+already encodes).
+
+**Where Fable kept it honest.** *Single binary* and *Rust-based* are not
+what we have: the spine is Python on Postgres · RabbitMQ · Kafka; the Rust
+plane is the old world, sacred and untouched. The laws being poured are
+language-independent and a Rust kernel could carry them later — but the
+honest boundary cannot say "single binary" today, and the marketing line
+must not until it is true; the honest end shape is one kernel that governs
+and residents as processes it spawns. *Self-learning* is real only under a
+human cut: improvement marker → critic → a proposed change on the draft
+shelf → the human cuts the version (rule 11; the graded-learning
+guardrail) — "self-improving under human cut" is the stronger enterprise
+claim anyway. The Infinite Horizon Intention, made concrete: five standing
+kernel intentions on the ground — Business · Security · Resiliency ·
+Compliance · Cost — each with interests, a planner, and a stop; the first
+wired is the one the kernel already breathes.
+
+**JB's four locks (AskUserQuestion, 2026-09-19):**
+1. **The floor hatch is the ANALYZER, grouped by origin** — intentions,
+   objectives, thoughts, and acts, in flight and completed, read from the
+   ground; the MARKERS view moves in from Monitoring; the one invoke is
+   "follow up on this by …" in the chat.
+2. **The ask wears its kind** — no mode state; the chip before send; the
+   marker minted with the ask; the interest law re-dresses the chat.
+3. **Widen `intention`; the first Infinite Horizon Intention is
+   Resiliency** — an intention is a record (words · serves · interests ·
+   planner · cadence · gates · stop); the intent loop is the fifth
+   firmware-rail; a red watch births an objective under Resiliency.
+4. **Canon now, then intent sp1 before P6** — 0001 (P22–P25), 0004 (the
+   rails and the loop), 0007 (the dive); then build.
+
+**Seeds recorded:** "Intents of Orreth" (article + marketing line — the
+one chat across every intent) · orreth-voice (V2; P23 makes it a voice
+over the same chip, no toggles to speak).
+
+---
+
+*Block 11 LANDED (session 4). Vetted against 0001/0004/0006 and the code
+(markers.py · scheduler.py · dispatch.py · the glass) by Fable the same
+day; the distillation (P22–P25, the firmware-rails and the intent loop,
+the Analyzer, the 0007 dive) lands in canon on JB's lock.*
