@@ -1,7 +1,7 @@
 # 0007 — The Intent Dive: Infinite Horizon Intentions
 
 **Status: DESIGNED — JB's lock, 2026-09-19 (seeded 2026-09-17 as the
-"Infinite Horizon Initiative"; narrated as block 11).** Human Intention
+"Infinite Horizon Initiative"; narrated as block 11) · intent sp1 BUILT the same day, walk owed.** Human Intention
 becomes the topmost origin of work; the intent loop becomes the fifth
 firmware-rail; the chat stays the one place a human begins anything; the
 floor hatch becomes the Analyzer. Build: intent sp1 before P6.
@@ -104,10 +104,14 @@ Business, Security, Resiliency, Compliance, and Cost.
   `orreth.intention.stopped.v1` · the planner's ask and the objective it
   births carry the intention's marker as parent.
 - **Doors:** `/intentions` (list by serves · kind · state) · `POST
-  /intentions` (declare — a human's, through the interlock) · `POST
-  /intentions/stop` (rule 11; the kernel's refuse with one plain face) ·
-  `/analyzer` (origins with progress counts, from the ground; `?origin=`
-  for one tree) · the ask door accepts `kind`.
+  /intentions` (declare — a human's) · `POST /intentions/stop` (rule 11:
+  EVERY intention rests on the human's word, the kernel's included — an
+  Infinite Horizon Intention is a managed program, not a body's duty;
+  kernel DUTIES stay immutable as P4 sp5 locked; recorded on the row and
+  on the rail, never deleted, and `declared` at the next boot leaves it
+  at rest — JB may veto at sight) · `/analyzer` (origins with counts by
+  kind, from the ground; `?origin=` for one tree) · the ask door accepts
+  `kind` and `parent`.
 - **The glass:** the floor hatch reads ANALYZER — origins grouped, each
   row a door to its tree; the MARKERS view moves in; the chat's chip
   before send; kernel-filed objectives render in the intention's session;
@@ -132,14 +136,40 @@ Business, Security, Resiliency, Compliance, and Cost.
 
 ## Build
 
-- **intent sp1 — the Analyzer, the kind of an ask, the fifth rail** (before
-  P6; JB's lock): the Analyzer hatch (grouped by origin; MARKERS moves in;
-  "follow up on this by …") · the chip before send + `kind` on the ask
-  door · the intention record + `/intentions` + stop · the intent rail in
-  the rig (tick or interesting marker → the planner under the intention →
-  an objective to the crew in the intention's session) · Resiliency
-  declared at boot and wired to red watches · laws in `tests/test_intent.py`
-  (IH-1 · IH-2 · IH-3) · SPEC-INTENT-01 · SPEC-ANALYZE-01 walked.
+- **intent sp1 — the Analyzer, the kind of an ask, the fifth rail** ✅
+  **BUILT 2026-09-19 — walk owed** (before P6; JB's lock): `intent.py`
+  (the record · `read_words` · declare/declared/stop · the loop: watch
+  transitions → `watch-red` under every interested intention → the
+  interest law asks the planner under the observation → the replied plan
+  filed as the objective to the runner, parent = the intention, in its
+  session · cadence) · markers grow a ROOT column (the Analyzer is a
+  GROUP BY, never a walk) and `origins`/`origin` · `dispatch_interests`
+  asks intentions after bodies · the ask door takes `kind` (prefix >
+  chip > the words' read) and `parent` · doors `/intentions` · `POST
+  /intentions` · `/intentions/stop` · `/analyzer` · the rig's
+  `_intent_loop` declares Resiliency at boot (runner: librarian — every
+  body serves the shared bench, so an untargeted objective could land on
+  a firmware body) and turns every 3 s · the glass: the ANALYZER hatch
+  (INTENTIONS with stop · OBJECTIVES · an intention's tree in words · the
+  MARKERS view moved in) · the KIND chip under the composer (the words
+  propose; click flips; "objective: …" pins) · "follow up on this by …"
+  files a child of the origin in focus · the chat says "on the kernel's
+  word · <intention> → …" when an intention births work. Laws in
+  `tests/test_intent.py`: IH-1 · IH-2 · IH-3 (origins at 10k: ~1 ms) ·
+  the doors and the rail in the rig. **A wound found at the relight, cured
+  the same hour:** the first `markers.ensure_schema` on a serving
+  connection ran INSIDE a serve's transaction (the resident reading its
+  ask's marker), so the new column's AccessExclusiveLock lived as long as
+  the serve — one backend idle in transaction, every loop and door of the
+  Bridge queued behind it for five minutes. Cure, and a law:
+  `ground.ensure_all(conn)` flags EVERY ground the moment a rig connection
+  is born (every loop, `serve_once`), door connections are autocommit too,
+  and `tests/test_intent.py` pins it. **Not folded yet:** the scheduler's
+  rows stay their own table (both mint `intention` markers; folding is
+  sp3). Live on the dev ground within a minute of the relight: two red
+  watches observed under Resiliency, the planner asked, its reply filed
+  as an objective to the librarian, answered. SPEC-INTENT-01 ·
+  SPEC-ANALYZE-01 walk owed.
 - **intent sp2** — the intention architect in the chat ("create an
   intention to …" fills a declaration; cut from the draft shelf) · Cost
   (the meter; `cost-anomaly`) · the Analyzer's review assistant.

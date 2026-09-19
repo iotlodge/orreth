@@ -22,7 +22,8 @@ from .resident import ASK_RECEIVED, SERVE_KEY
 
 def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
                to: list[str] | None = None, window: dict | None = None,
-               session: str | None = None, parent_marker: str | None = None):
+               session: str | None = None, parent_marker: str | None = None,
+               kind: str | None = None):
     """The glass's write: the ask row and its committed event, one
     transaction. The event is pointer-only; the words live on the ground.
     `to` names residents for a FAN-OUT (canon 0001 P14): the same request
@@ -50,9 +51,14 @@ def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
         # session's latest objective; anything else is an OBJECTIVE — a root,
         # or a child of the marker it was dispatched under (an occurrence
         # of an intention, an act of interest)
-        kind, parent = "objective", parent_marker
-        if target in markers.INCLUDES:
-            kind = "thought"
+        # P23 (block 11): the ask wears its kind — the chip's word, when
+        # given, says thought or objective; an intention is declared at the
+        # door, never asked
+        if kind not in (None, "thought", "objective"):
+            raise ValueError("an ask is a thought or an objective — an intention is declared")
+        ask_kind, parent = (kind or "objective"), parent_marker
+        if target in markers.INCLUDES or ask_kind == "thought":
+            ask_kind = "thought"
             if parent is None and session:
                 cur0 = conn.cursor()
                 cur0.execute(
@@ -61,7 +67,7 @@ def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
                     (session,))
                 r0 = cur0.fetchone(); parent = r0[0] if r0 else None
         marker_id = markers.new_id()
-        marker = {"kind": kind, "id": marker_id, "parent": parent, "by": person}
+        marker = {"kind": ask_kind, "id": marker_id, "parent": parent, "by": person}
         payload = {"ref": ask_id, "hash": ev.content_hash(text)}
         if target:
             payload["target"] = target
@@ -79,7 +85,7 @@ def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
             marker=marker)
 
         def domain(cur, a=ask_id, t=target, w=payload.get("window"),
-                   mk=marker_id, kd=kind, pa=parent):
+                   mk=marker_id, kd=ask_kind, pa=parent):
             markers.insert(cur, mk, kd, pa, a, person)     # the fact and its
             cur.execute(                                   # marker, together
                 "INSERT INTO spine_asks (ask_id, text, person, target,"

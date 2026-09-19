@@ -645,7 +645,9 @@ class Resident:
         _gw.ensure_schema(conn)     # pre-flagged: the serving transaction
         _tl.ensure_schema(conn)     # never runs DDL, never takes the lock
         _st.ensure_schema(conn)
-        self._serve_conn = conn        # the graph's doors ride this life
+        from . import ground as _ground
+        _ground.ensure_all(conn)    # EVERY ground, at birth (found live: the
+        self._serve_conn = conn        # markers DDL inside one serve wedged the Bridge)
         try:
             self.prepare(conn)         # MEM-2: working memory on the ground
         except Exception:

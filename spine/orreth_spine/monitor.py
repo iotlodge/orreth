@@ -31,6 +31,8 @@ def ensure_schema(conn) -> None:
             " op text NOT NULL, threshold double precision NOT NULL,"
             " added_by text NOT NULL, scope text NOT NULL,"
             " added_at timestamptz NOT NULL DEFAULT now())")
+        cur.execute("ALTER TABLE spine_watches ADD COLUMN IF NOT EXISTS"
+                    " last_ok boolean")     # 0007: the intent rail sees a watch TURN red
 
 
 def add_watch(conn, name: str, metric: str, op: str, threshold: float,

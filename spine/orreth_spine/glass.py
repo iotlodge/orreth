@@ -21,13 +21,14 @@ from __future__ import annotations
 import json
 import os
 import secrets
+import sys
 import threading
 import time
 from pathlib import Path
 
 import psycopg
 
-from . import bridgefeed, digest, dispatch, envelope as ev, harness, markers, monitor, outbox
+from . import bridgefeed, digest, dispatch, envelope as ev, ground, harness, intent, markers, monitor, outbox
 from . import presence, projector, scheduler, sinks
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, Resident
@@ -45,12 +46,22 @@ def ask_view(conn, ask_id: str) -> dict | None:
     # a glass serves ONLY its own world's ground: another world's ask is
     # "no such ask" here — the refusal wears one face (covenant rule 4)
     cur.execute("SELECT text, person, status, reply, served_by, target,"
-                " scope, asked_at, replied_at, time_window, session"
+                " scope, asked_at, replied_at, time_window, session, marker"
                 " FROM spine_asks WHERE ask_id = %s AND scope = %s",
                 (ask_id, ev.scope()))
     row = cur.fetchone()
     if row is None:
         return None
+    origin = None                    # block 11: what this ask serves — its root
+    if row[11]:
+        cur.execute("SELECT r.marker_id, r.kind, r.parent, r.ref, r.by_did, r.note, r.at, 0"
+                    " FROM spine_markers m JOIN spine_markers r ON r.marker_id = m.root"
+                    " WHERE m.marker_id = %s", (row[11],))
+        r0 = cur.fetchone()
+        if r0 and r0[0] != row[11]:
+            [o] = markers.with_words(conn, [markers._row(r0)])
+            origin = {"marker": o["id"], "kind": o["kind"], "ref": o["ref"],
+                      "words": o.get("words") or o.get("note")}
     cur.execute("SELECT body FROM spine_outbox"
                 " WHERE convert_from(body, 'UTF8') LIKE %s"
                 " ORDER BY outbox_id", (f"%{ask_id}%",))
@@ -70,6 +81,7 @@ def ask_view(conn, ask_id: str) -> dict | None:
             "replied_at": row[8].isoformat() if row[8] else None,
             "window": json.loads(row[9]) if row[9] else None,  # P6
             "session": row[10],                                 # P20
+            "marker": row[11], "origin": origin,                # 0006 · 0007
             "journey": [n for n in notes if n]}
 
 
@@ -272,6 +284,9 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
     Base = bridgefeed.make_handler(feed)
     bodies = bodies or {}            # the rig's bodies by name (the harness door)
 
+    # every door connection is AUTOCOMMIT (the rig-loop law, now for doors
+    # too): a door's bare read must never open an implicit transaction that
+    # a later DDL guard or lock rides until the door returns
     class Handler(Base):
         def _json(self, code: int, obj) -> None:
             body = json.dumps(obj).encode()
@@ -293,26 +308,26 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 self.wfile.write(html)
                 return
             if path.startswith("/ask/"):
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     view = ask_view(conn, path.split("/ask/", 1)[1])
                 if view is None:
                     return self._json(404, {"error": "no such ask"})
                 return self._json(200, view)
             if path == "/asks":
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"asks": asks_view(conn)})
             if path == "/residents":
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200,
                                       {"residents": residents_view(conn)})
             if path == "/crew":
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"crew": crew_view(conn)})
             if path == "/monitor":
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, monitor.snapshot(conn))
             if path.startswith("/schedules/"):           # the card's side B
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, scheduler.for_runner(
                         conn, path.split("/schedules/", 1)[1]))
             if path == "/recall":
@@ -320,7 +335,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
                     if "?" in self.path else {}
                 try:
-                    with psycopg.connect(dsn) as conn:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
                         view = recall_view(
                             conn, ref=qs.get("ref"), ask=qs.get("ask"),
                             session=qs.get("session"),
@@ -336,16 +351,31 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 from urllib.parse import parse_qs
                 qs = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
                 person = (qs.get("person") or ["did:orreth:person:jb"])[0]
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"sessions": sessions_view(conn, person)})
+            if path == "/analyzer":                      # P25: origins, from the ground
+                from urllib.parse import parse_qs
+                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
+                    if "?" in self.path else {}
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    if qs.get("origin"):
+                        return self._json(200, markers.origin(conn, qs["origin"]))
+                    return self._json(200, {"origins": markers.origins(conn)})
+            if path == "/intentions":                    # 0007: the standing purposes
+                from urllib.parse import parse_qs
+                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
+                    if "?" in self.path else {}
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    return self._json(200, {"intentions": intent.listing(
+                        conn, serves=qs.get("serves"), kind=qs.get("kind"))})
             if path == "/markers/kinds":                 # the registry
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"kinds": markers.kinds(conn)})
             if path == "/markers":                       # the tree · the ancestry · the stream
                 from urllib.parse import parse_qs
                 qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
                     if "?" in self.path else {}
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     if qs.get("root"):
                         return self._json(200, {"root": qs["root"], "tree": markers.with_words(conn, markers.tree(conn, qs["root"]))})
                     if qs.get("from"):
@@ -353,13 +383,13 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(200, {"markers": markers.stream(
                         conn, kind=qs.get("kind"), grp=qs.get("group"))})
             if path.startswith("/digest/"):            # the short version, and
-                with psycopg.connect(dsn) as conn:        # every source it cites
+                with psycopg.connect(dsn, autocommit=True) as conn:        # every source it cites
                     view = digest.of_session(conn, path.split("/digest/", 1)[1])
                 if view is None:
                     return self._json(404, {"error": "no digest yet — one face"})
                 return self._json(200, view)
             if path.startswith("/session/"):
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     view = session_view(conn, path.split("/session/", 1)[1])
                 if view is None:
                     return self._json(404, {"error": "no such session"})
@@ -393,13 +423,57 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(400, {"error": "'window' is "
                                                      "{from, to} in ISO time"})
                 session = str(p.get("session") or "") or None
-                with psycopg.connect(dsn) as conn:
+                # P23: the ask wears its kind — a typed prefix is the human's
+                # flip and wins; else the chip's word; else the words' own read
+                rw = intent.read_words(text)
+                kind = rw["kind"] if rw["pinned"] else (str(p.get("kind") or "") or rw["kind"])
+                if kind not in intent.ASK_KINDS:
+                    return self._json(400, {"error": "'kind' is thought, objective, or intention"})
+                text = rw["words"] if rw["pinned"] else text
+                parent = str(p.get("parent") or "") or None   # "follow up on this by …"
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    if kind == "intention":               # declared, never asked (0007)
+                        r2 = intent.read_words("intention: " + text)
+                        try:
+                            made = intent.declare(
+                                conn, text, serves=str(p.get("serves") or r2["serves"]),
+                                kind="human", by=person,
+                                interests=p.get("interests") or r2["interests"],
+                                every_s=p.get("every_s") or r2["every_s"],
+                                runner=(to or [None])[0])
+                        except (ValueError, markers.UnknownKind) as e:
+                            return self._json(400, {"error": str(e)})
+                        return self._json(201, {"intention": made})
                     out = dispatch.submit_ask(conn, text, person=person,
                                               to=to, window=window,
-                                              session=session)
+                                              session=session, kind=kind,
+                                              parent_marker=parent)
                 if isinstance(out, list):
                     return self._json(201, {"ids": out})
                 return self._json(201, {"id": out})
+            if path == "/intentions":                 # declared by a human
+                words = str(p.get("words") or p.get("text") or "").strip()
+                person = str(p.get("person") or "did:orreth:person:jb")
+                rw = intent.read_words("intention: " + words) if words else {}
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        made = intent.declare(
+                            conn, words, serves=str(p.get("serves") or rw.get("serves") or "business"),
+                            kind="human", by=person,
+                            interests=p.get("interests") or rw.get("interests") or [],
+                            every_s=p.get("every_s") or rw.get("every_s"),
+                            runner=str(p.get("runner") or "") or None)
+                except (ValueError, markers.UnknownKind) as e:
+                    return self._json(400, {"error": str(e)})
+                return self._json(201, {"intention": made})
+            if path == "/intentions/stop":            # rule 11: the human's stop
+                person = str(p.get("person") or "did:orreth:person:jb")
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        made = intent.stop(conn, str(p.get("intention_id") or ""), person)
+                except KeyError:
+                    return self._json(404, {"error": "no such intention"})
+                return self._json(202, {"intention": made})
             if path == "/schedules":                  # a human schedule lands
                 runner = str(p.get("runner") or "")
                 text = str(p.get("text") or "").strip()
@@ -408,13 +482,13 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(400, {"error": "a schedule is {runner, text,"
                                                      " every_s >= 5}"})
                 person = str(p.get("person") or "did:orreth:person:jb")
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     sid = scheduler.add(conn, runner, "human", text, every, person)
                 return self._json(201, {"schedule_id": sid})
             if path == "/schedules/rest":             # the human's stop
                 person = str(p.get("person") or "did:orreth:person:jb")
                 try:
-                    with psycopg.connect(dsn) as conn:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
                         scheduler.rest(conn, str(p.get("schedule_id") or ""), person)
                 except scheduler.KernelRequired as e:
                     return self._json(403, {"error": str(e)})
@@ -426,11 +500,11 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 body = bodies.get(name)                        # run waits
                 if body is None:                               # for the
                     return self._json(404, {"error": "no such body"})  # scheduler)
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, harness.run(conn, body))
             if path == "/sessions":                   # roll a fresh one —
                 person = str(p.get("person") or "did:orreth:person:jb")   # and
-                with psycopg.connect(dsn) as conn:                        # digest
+                with psycopg.connect(dsn, autocommit=True) as conn:                        # digest
                     sid = open_session(conn, person,                      # the one
                                        title=str(p.get("title") or "") or None,
                                        archive=str(p.get("archive") or "") or None,
@@ -438,7 +512,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 return self._json(201, {"session_id": sid})               # archived
             if path == "/markers/kinds":              # declare a kind
                 try:
-                    with psycopg.connect(dsn) as conn:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
                         made = markers.declare(conn, str(p.get("kind") or ""),
                                                str(p.get("group") or ""),
                                                str(p.get("description") or ""),
@@ -449,7 +523,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
             if path == "/mark":                       # a human marks from the chat
                 person = str(p.get("person") or "did:orreth:person:jb")
                 ref = str(p.get("ref") or "")
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     if not ref and p.get("session"):
                         cur = conn.cursor()
                         cur.execute("SELECT ask_id FROM spine_asks WHERE session = %s"
@@ -470,7 +544,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 return self._json(201, {"marker": m, "asked": asked})
             if path == "/digest":                     # on demand, or rebuild
                 sid = str(p.get("session") or "")
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     made = digest.build(conn, sid, by=str(p.get("person") or "did:orreth:person:jb"))
                 if made is None:
                     return self._json(404, {"error": "no such session"})
@@ -478,7 +552,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
             if path == "/confirm":
                 ask_id = str(p.get("ask_id") or "")
                 approve = bool(p.get("approve", False))   # absent = cancel
-                with psycopg.connect(dsn) as conn:
+                with psycopg.connect(dsn, autocommit=True) as conn:
                     dispatch.confirm_ask(conn, ask_id, approve=approve,
                                          person=str(p.get("person")
                                                     or "did:orreth:person:jb"))
@@ -557,6 +631,7 @@ class BridgeRig:
             threading.Thread(target=self._relay_loop, daemon=True),
             threading.Thread(target=self._dispatch_loop, daemon=True),
             threading.Thread(target=self._schedule_loop, daemon=True),
+            threading.Thread(target=self._intent_loop, daemon=True),
         ] + [threading.Thread(target=self._serve_loop, args=(r,),
                               daemon=True) for r in self.residents]
 
@@ -568,7 +643,7 @@ class BridgeRig:
     def _relay_loop(self):
         sink = sinks.KafkaSink()
         with psycopg.connect(self.dsn, autocommit=True) as conn:
-            outbox.ensure_schema(conn)
+            ground.ensure_all(conn)         # every ground at birth
             while not self._stop.is_set():
                 try:
                     outbox.relay_once(conn, sink)
@@ -580,6 +655,7 @@ class BridgeRig:
         import secrets as _sec
         gid = f"glass-dispatcher-{_sec.token_hex(3)}"   # a group per life:
         with psycopg.connect(self.dsn, autocommit=True) as conn:          # a wedged ghost
+            ground.ensure_all(conn)                      # every ground at birth
             while not self._stop.is_set():               # dies with its rig
                 try:
                     dispatch.run_dispatcher(
@@ -597,6 +673,7 @@ class BridgeRig:
         with psycopg.connect(self.dsn, autocommit=True) as conn:
             for _attempt in range(20):
                 try:
+                    ground.ensure_all(conn)       # every ground at birth
                     for r in self.residents:      # AG-6's scheduled run:
                         if harness.golden(r.name): # every mind with a golden set
                             scheduler.declared(conn, r.name, "kernel",
@@ -612,11 +689,40 @@ class BridgeRig:
                     pass
                 time.sleep(5)
 
+    def _intent_loop(self):
+        """The intent rail (0007, the fifth): the kernel's Infinite Horizon
+        Intentions declared at boot — Resiliency first, once per world, a
+        stopped one left at rest — then a turn every few seconds: watches
+        judged, the newly red observed under every intention that cares,
+        the planner asked under the observation, its reply filed as the
+        objective to the crew in the intention's session."""
+        with psycopg.connect(self.dsn, autocommit=True) as conn:
+            for _attempt in range(20):
+                try:
+                    ground.ensure_all(conn)       # every ground at birth
+                    intent.declared(conn, intent.RESILIENCY["words"],
+                                    serves=intent.RESILIENCY["serves"], kind="kernel",
+                                    by="the kernel", interests=intent.RESILIENCY["interests"],
+                                    planner=intent.RESILIENCY["planner"], runner="librarian")
+                    break
+                except Exception as e:
+                    if _attempt == 19:            # the last try says why, never silent
+                        print(f"the intent rail could not declare at boot: {type(e).__name__}: {e}",
+                              file=sys.stderr, flush=True)
+                    time.sleep(0.3)
+            while not self._stop.is_set():
+                try:
+                    intent.turn(conn)
+                except Exception:
+                    pass
+                time.sleep(3)
+
     def _serve_loop(self, resident):
         with psycopg.connect(self.dsn, autocommit=True) as conn:
             for _attempt in range(20):      # birth retries: a schema race
                 try:                        # or slow ground never kills a
-                    resident.join(conn)     # resident before it lives
+                    ground.ensure_all(conn) # resident before it lives —
+                    resident.join(conn)     # every ground at birth, then join
                     break
                 except Exception:
                     time.sleep(0.3)

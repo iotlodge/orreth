@@ -24,6 +24,7 @@ SEED = [  # kind, group, description — the kernel's, in every world
     ("action", "structural", "a tool call, a purge, a watch — under the serving ask"),
     ("observation", "structural", "a harness run, a red watch, a lease lapse — under its kernel intention"),
     ("improvement", "quality", "an improvement observed to what was being executed — every body's policy marks it"),
+    ("watch-red", "resiliency", "a watch judged red — under the intention that keeps it green (0007)"),
 ]
 
 
@@ -51,17 +52,36 @@ def ensure_schema(conn) -> None:
             " scope text NOT NULL, at timestamptz NOT NULL DEFAULT now())")
         cur.execute("CREATE INDEX IF NOT EXISTS spine_markers_parent ON spine_markers (parent)")
         cur.execute("CREATE INDEX IF NOT EXISTS spine_markers_kind ON spine_markers (scope, kind, at)")
-
-
-_SEEDED: set[str] = set()      # worlds this process has seeded (the ground keeps them)
+        # block 11 / P25: every marker knows its ROOT, so the Analyzer is a
+        # GROUP BY over the ground — lookups, never a walk per request
+        cur.execute("ALTER TABLE spine_markers ADD COLUMN IF NOT EXISTS root text")
+        cur.execute("CREATE INDEX IF NOT EXISTS spine_markers_root ON spine_markers (scope, root)")
+        cur.execute("CREATE INDEX IF NOT EXISTS spine_markers_roots ON spine_markers (scope, at)"
+                    " WHERE parent IS NULL")
+        cur.execute("SELECT 1 FROM spine_markers WHERE root IS NULL LIMIT 1")
+        if cur.fetchone():                 # rows from before the column: once
+            cur.execute(
+                "WITH RECURSIVE r AS ("
+                "  SELECT marker_id, marker_id AS root FROM spine_markers WHERE parent IS NULL"
+                "  UNION ALL"
+                "  SELECT m.marker_id, r.root FROM spine_markers m JOIN r ON m.parent = r.marker_id)"
+                " UPDATE spine_markers s SET root = r.root FROM r"
+                " WHERE s.marker_id = r.marker_id AND s.root IS NULL")
 
 
 def seed(conn) -> None:
     """The kernel's kinds, in THIS world — idempotent, once per world per
-    process (the DDL guard is per connection; a world is not)."""
+    CONNECTION (a process-wide memo lied: two connections on different
+    grounds — the test schema and the public one — share a process, and
+    the second ground never got its seed; the rig's `watch-red` was then
+    unknown and Resiliency never declared)."""
     ensure_schema(conn)
     scope = ev.scope()
-    if scope in _SEEDED:
+    done = getattr(conn, "_spine_seeded", None)
+    if done is None:
+        done = set()
+        conn._spine_seeded = done
+    if scope in done:
         return
     with conn.transaction():
         cur = conn.cursor()
@@ -70,7 +90,7 @@ def seed(conn) -> None:
                 "INSERT INTO spine_marker_kinds (kind, grp, description, declared_by, scope)"
                 " VALUES (%s, %s, %s, 'the kernel', %s) ON CONFLICT DO NOTHING",
                 (kind, grp, desc, scope))
-    _SEEDED.add(scope)
+    done.add(scope)
 
 
 def kinds(conn) -> list[dict]:
@@ -116,9 +136,10 @@ def insert(cur, marker_id: str, kind: str, parent: str | None, ref: str,
     """The marker row, inside a transaction someone else owns (the write
     path: the fact and its marker land together)."""
     cur.execute(
-        "INSERT INTO spine_markers (marker_id, kind, parent, ref, by_did, note, scope)"
-        " VALUES (%s, %s, %s, %s, %s, %s, %s)",
-        (marker_id, kind, parent, ref, by, note, ev.scope()))
+        "INSERT INTO spine_markers (marker_id, kind, parent, ref, by_did, note, scope, root)"
+        " VALUES (%s, %s, %s, %s, %s, %s, %s,"
+        " coalesce((SELECT root FROM spine_markers WHERE marker_id = %s), %s))",
+        (marker_id, kind, parent, ref, by, note, ev.scope(), parent, marker_id))
 
 
 def mint(conn, kind: str, ref: str, by: str, parent: str | None = None,
@@ -195,6 +216,10 @@ def dispatch_interests(conn, marker: dict, ref: str, note: str | None) -> list[d
         [aid] = dispatch.submit_ask(conn, text, person=marker["by"], to=[name],
                                     parent_marker=marker["id"], session=session)
         asked.append({"body": name, "ask_id": aid})
+    from . import intent                    # 0007: the same law at intention level —
+    for t in intent.on_marker(conn, marker, ref, note):   # an interested intention plans
+        asked.append({"body": t["planner"], "ask_id": t["plan_ask"],
+                      "intention": t["intention_id"], "words": t["words"]})
     return asked
 
 
@@ -250,16 +275,67 @@ def _row(r) -> dict:
             "note": r[5], "at": r[6].isoformat(), "depth": r[7]}
 
 
-def with_words(conn, rows: list[dict]) -> list[dict]:
-    """The why in words: an ask ref carries the ask's text (walk #5: the
-    why printed ids)."""
-    ids = [m["ref"] for m in rows if m["ref"].startswith("ask_")]
-    if not ids:
-        return rows
+def _has(conn, table: str) -> bool:
     cur = conn.cursor()
-    cur.execute("SELECT ask_id, left(text, 100) FROM spine_asks WHERE ask_id = ANY(%s)", (ids,))
-    words = dict(cur.fetchall())
-    for m in rows:
-        if m["ref"] in words:
-            m["words"] = words[m["ref"]]
+    cur.execute("SELECT to_regclass(%s) IS NOT NULL", (table,))
+    return bool(cur.fetchone()[0])
+
+
+def with_words(conn, rows: list[dict]) -> list[dict]:
+    """The why in words: an ask ref carries the ask's text and status
+    (walk #5: the why printed ids); an intention ref its words and
+    whether it stands; a schedule ref its text."""
+    cur = conn.cursor()
+    ids = [m["ref"] for m in rows if m["ref"].startswith("ask_")]
+    if ids:
+        cur.execute("SELECT ask_id, left(text, 100), status, target FROM spine_asks"
+                    " WHERE ask_id = ANY(%s)", (ids,))
+        found = {r[0]: r[1:] for r in cur.fetchall()}
+        for m in rows:
+            if m["ref"] in found:
+                m["words"], m["status"], m["target"] = found[m["ref"]]
+    iids = [m["ref"] for m in rows if m["ref"].startswith("int_")]
+    if iids and _has(conn, "spine_intentions"):
+        cur.execute("SELECT intention_id, left(words, 100), active, serves, kind FROM spine_intentions"
+                    " WHERE intention_id = ANY(%s)", (iids,))
+        found = {r[0]: r[1:] for r in cur.fetchall()}
+        for m in rows:
+            if m["ref"] in found:
+                m["words"], m["active"], m["serves"], m["origin_kind"] = found[m["ref"]]
+    sids = [m["ref"] for m in rows if m["ref"].startswith("sch_")]
+    if sids and _has(conn, "spine_schedules"):
+        cur.execute("SELECT schedule_id, left(text, 100), active, kind FROM spine_schedules"
+                    " WHERE schedule_id = ANY(%s)", (sids,))
+        found = {r[0]: r[1:] for r in cur.fetchall()}
+        for m in rows:
+            if m["ref"] in found:
+                m["words"], m["active"], m["origin_kind"] = found[m["ref"]]
+                m["serves"] = "schedule"
     return rows
+
+
+def origins(conn, limit: int = 60) -> list[dict]:
+    """The Analyzer's door (P25): every ROOT in this world — intentions and
+    objectives — newest first, with what grew under each, counted by kind,
+    from the ground alone (the root column: no walk per request)."""
+    ensure_schema(conn)
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT r.marker_id, r.kind, r.parent, r.ref, r.by_did, r.note, r.at, 0,"
+        " (SELECT coalesce(json_object_agg(x.kind, x.n), '{}'::json) FROM"
+        "   (SELECT c.kind, count(*) AS n FROM spine_markers c"
+        "     WHERE c.scope = r.scope AND c.root = r.marker_id AND c.marker_id <> r.marker_id"
+        "     GROUP BY c.kind) x)"
+        " FROM spine_markers r WHERE r.scope = %s AND r.parent IS NULL"
+        " ORDER BY r.at DESC LIMIT %s", (ev.scope(), limit))
+    out = []
+    for row in cur.fetchall():
+        d = _row(row[:8]); d["root"] = d["id"]
+        d["counts"] = row[8] if isinstance(row[8], dict) else json.loads(row[8] or "{}")
+        out.append(d)
+    return with_words(conn, out)
+
+
+def origin(conn, root: str) -> dict:
+    """One origin's tree, in words."""
+    return {"root": root, "tree": with_words(conn, tree(conn, root))}

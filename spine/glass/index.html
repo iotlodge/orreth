@@ -143,8 +143,24 @@
     margin:2px 0 4px;padding:5px 10px;border-radius:6px;cursor:pointer;
     background:transparent;border:1px dashed var(--amber-dim);
     color:var(--amber)}
-  /* ---- the Objectives band (the floor hatch opens) ---- */
+  /* ---- the ANALYZER (the floor hatch opens — block 11: Objectives is not a pull) ---- */
   #floor{cursor:pointer;transition:color .2s}
+  .origin-h{margin:10px 8px 2px;color:var(--amber);font-size:10.5px;
+    letter-spacing:.3em;font-weight:normal}
+  .brow .stop{color:var(--dim);font-size:10.5px;cursor:pointer;flex:none;
+    border:1px dashed var(--seam);border-radius:5px;padding:1px 7px}
+  .brow .stop:hover{color:var(--amber);border-color:var(--amber-dim)}
+  .twig{padding:4px 8px 4px 26px;font-size:12px;border-bottom:1px solid rgba(42,46,58,.4);
+    display:flex;gap:10px;align-items:baseline;cursor:pointer}
+  .twig .k{color:var(--amber);letter-spacing:.15em;font-size:10.5px;flex:none;width:92px}
+  .twig .w{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .twig .meta{color:var(--dim);font-size:10.5px;flex:none}
+  /* the kind of an ask (P23): the words propose it; the human flips it */
+  #kind{display:flex;gap:10px;align-items:baseline;padding:2px 14px 8px;
+    font-size:10.5px;color:var(--dim);letter-spacing:.2em}
+  #kind b{color:var(--amber);cursor:pointer;letter-spacing:.3em;font-weight:normal;
+    border-bottom:1px dashed var(--amber-dim)}
+  #kind .hint{letter-spacing:0;font-size:10.5px}
   /* the Crew pull (P19, the first workspace): a hull panel on the left
      wall; its tab is the wall's edge; the cards inside; the chat follows */
   #crew-tab{position:fixed;left:0;top:38vh;writing-mode:vertical-rl;
@@ -268,7 +284,7 @@
   </div></div>
   <div id="sill">O R R E R Y&nbsp;&nbsp;·&nbsp;&nbsp;B R A I N&nbsp;&nbsp;·&nbsp;&nbsp;A T L A S</div>
   <div class="strip"></div>
-  <div id="floor" onclick="toggleBand()" title="everything running, everything run">O B J E C T I V E S ▴</div>
+  <div id="floor" onclick="toggleBand()" title="the Analyzer — everything born in the chat, by origin">A N A L Y Z E R ▴</div>
 </div>
 
 <div id="crew-tab" onclick="toggleCrew()" title="the crew — every body in this world, both sides">C R E W</div>
@@ -284,7 +300,7 @@
 </div>
 
 <div id="band">
-  <header onclick="toggleBand(false)" style="cursor:pointer" title="close the band">OBJECTIVES · everything running, everything run — every row a door · ▾ close</header>
+  <header onclick="toggleBand(false)" style="cursor:pointer" title="close the Analyzer">ANALYZER · everything born in the chat, by origin — intentions · objectives · in flight and done · every row a door · ▾ close</header>
   <div id="band-rows"></div>
 </div>
 
@@ -312,6 +328,8 @@
            autocomplete="off">
     <button onclick="send()">ASK</button>
   </div>
+  <div id="kind"><span>KIND</span><b id="kind-word" title="click to flip — or type “objective: …” / “intention: …”">THOUGHT</b>
+    <span class="hint" id="kind-hint">the words propose it · click to flip · the marker is minted with the ask</span></div>
 </div>
 <div id="pulse">PULSE · connecting…</div>
 
@@ -386,27 +404,73 @@ function toggleBand(open){
   if (band.classList.contains("open")) loadBand();
 }
 let bandOpenRow = null;
-async function loadBand(){
-  const r = await fetch("/asks").then(x=>x.json()).catch(()=>null);
+let LAST_ORIGIN = null;           // the origin last opened here: "follow up on this by …"
+const counts = o => Object.entries(o.counts || {}).map(([k, n]) => `${n} ${k}${n > 1 ? "s" : ""}`).join(" · ");
+async function loadBand(){                     // P25: origins, from the ground — no body asked
+  const r = await fetch("/analyzer").then(x=>x.json()).catch(()=>null);
   if (!r) return;
-  const box = document.getElementById("band-rows"); box.innerHTML = "";
-  for (const a of r.asks){
-    const row = document.createElement("div");
-    row.className = "brow";
-    row.innerHTML =
-      `<span class="dot ${a.status}"></span>` +
-      `<span class="snip">${esc(a.text)}</span>` +
-      `<span class="meta">${esc(a.target || "any")} · ${a.status} · ` +
-      `${hhmm(a.replied_at || a.asked_at)}</span>`;
-    row.onclick = () => expandRow(row, a.ask_id);
-    box.appendChild(row);
-  }
+  const box = document.getElementById("band-rows"); const keep = box.scrollTop;
+  box.innerHTML = ""; bandOpenRow = null;
+  const ints = r.origins.filter(o => o.kind === "intention"), objs = r.origins.filter(o => o.kind !== "intention");
+  const head = t => { const d = document.createElement("h5"); d.className = "origin-h"; d.textContent = t; box.appendChild(d); };
+  head("INTENTIONS · standing purposes — the kernel's and yours");
+  if (!ints.length) box.insertAdjacentHTML("beforeend",
+    `<div class="meta" style="padding:4px 8px">none yet — say “keep this world resilient: when a watch goes red, get it green”</div>`);
+  for (const o of ints) box.appendChild(originRow(o));
+  head("OBJECTIVES · everything asked — in flight and done");
+  if (!objs.length) box.insertAdjacentHTML("beforeend", `<div class="meta" style="padding:4px 8px">nothing asked yet</div>`);
+  for (const o of objs) box.appendChild(originRow(o));
+  await markersView(box, loadBand);            // 0006 → block 11: lineage lives here
+  box.scrollTop = keep;
+}
+function originRow(o){
+  const row = document.createElement("div"); row.className = "brow";
+  const isInt = o.kind === "intention";
+  const state = isInt ? (o.active === false ? "cancelled" : "received") : (o.status || "replied");
+  row.innerHTML =
+    `<span class="dot ${state}"></span>` +
+    `<span class="snip">${esc(o.words || o.note || o.ref)}</span>` +
+    `<span class="meta">${isInt ? `${esc(o.serves || "")} · ${esc(o.origin_kind || "")} · ${o.active === false ? "at rest" : "standing"}`
+                                : `${esc(o.target || "any")} · ${esc(o.status || "")}`}` +
+    `${counts(o) ? " · " + esc(counts(o)) : ""} · ${hhmm(o.at)}</span>` +
+    (isInt && o.active !== false && o.serves !== "schedule" ? `<span class="stop" data-stop="${esc(o.ref)}" title="rule 11: recorded, never deleted">stop</span>` : "");
+  row.onclick = e => { if (e.target.dataset.stop) return stopIntention(e.target, o);
+                       LAST_ORIGIN = {marker: o.root, words: o.words || o.ref};
+                       isInt ? expandOrigin(row, o) : expandRow(row, o.ref); };
+  return row;
+}
+async function stopIntention(el, o){          // two clicks, never the return key
+  if (el.dataset.sure !== "1"){ el.dataset.sure = "1"; el.textContent = "sure? click again to rest it"; return; }
+  const r = await fetch("/intentions/stop", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({intention_id: o.ref})}).then(x=>x.json()).catch(()=>null);
+  sysline(r && r.intention ? `intention at rest — “${esc(o.words || o.ref)}” · recorded, never deleted` : "the stop door did not answer");
+  loadBand();
+}
+async function expandOrigin(row, o){          // an intention's tree, in words
+  if (bandOpenRow){ bandOpenRow.remove(); bandOpenRow = null; }
+  const t = await fetch("/analyzer?origin=" + encodeURIComponent(o.root)).then(x=>x.json()).catch(()=>null);
+  if (!t) return;
+  pushFocus({kind: "intention", id: o.ref, name: null, window: null, marker: o.root,
+             label: `the intention · ${esc(o.words || o.ref)}`});
+  const d = document.createElement("div"); d.className = "bexpand"; d.style.padding = "4px 0 8px";
+  const twigs = t.tree.filter(m => m.id !== o.root);
+  d.innerHTML = twigs.length ? twigs.map(m =>
+    `<div class="twig" data-ask="${m.ref.startsWith("ask_") ? esc(m.ref) : ""}" style="padding-left:${14 + m.depth * 14}px">` +
+    `<span class="k">${esc(m.kind)}</span><span class="w">${esc(m.words || m.note || m.ref)}</span>` +
+    `<span class="meta">${esc(m.target || whoIs(m.by))}${m.status ? " · " + esc(m.status) : ""} · ${hhmm(m.at)}</span></div>`).join("")
+    : `<div class="meta" style="padding:4px 26px">nothing under it yet — it plans when it observes</div>`;
+  d.querySelectorAll("[data-ask]").forEach(tw => { if (tw.dataset.ask) tw.onclick = async e => {
+    e.stopPropagation();
+    const v = await fetch("/ask/" + tw.dataset.ask).then(x=>x.json()).catch(()=>null);
+    if (!v) return; toggleChat(true);
+    sysline(`${esc(v.target || "any")} · ${esc(v.status)} — ${esc((v.reply || v.text).slice(0, 300))}`); }; });
+  row.after(d); bandOpenRow = d;
 }
 async function expandRow(row, id){
   if (bandOpenRow){ bandOpenRow.remove(); bandOpenRow = null; }
   const v = await fetch("/ask/" + id).then(x=>x.json()).catch(()=>null);
   if (!v) return;
-  pushFocus({kind: "ask", id, name: NAMES[v.served_by] || v.target || null,
+  pushFocus({kind: "ask", id, name: NAMES[v.served_by] || v.target || null, marker: v.marker,
              window: v.window ? {from: new Date(v.window.from),
                                  to: new Date(v.window.to)} : null});
   const d = document.createElement("div");
@@ -429,7 +493,40 @@ const esc = s => s.replace(/[&<>"]/g,
   ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 
 const FANS = {};      // fanout ids -> {ids:[], replies:{}, offered:false}
-async function send(given, label, toOverride){
+/* ---- the kind of an ask (P23): no modes — the words propose it, one click flips it ---- */
+const ASK_KINDS = ["thought", "objective", "intention"];
+let KIND_PIN = null;
+function proposeKind(text){                      // the door reads the same rules
+  const t = text.trim(); const m = t.match(/^(thought|objective|intention)\s*:/i);
+  if (m) return m[1].toLowerCase();
+  const low = t.toLowerCase();
+  if (/(\bkeep\b.{0,60}\b(resilient|green|alive|safe|secure|compliant|healthy|under|below|within)\b|\bwhen(ever)?\b.{0,60}\b(goes|turns|is|are|go)\s+(red|down|dormant|late|over)\b|\bevery\s+(\d+\s+)?(minute|hour|day|week)s?\b|\bfrom now on\b|\bwatch for\b|\bstanding\b|\bas long as\b|\bany ?time\b)/.test(low)) return "intention";
+  if (/(\?\s*$|^(who|what|what's|whats|when|where|why|how|is|are|does|do|can|could|would|should|which|did|tell me|explain|describe|repeat)\b)/.test(low)) return "thought";
+  return "objective";
+}
+function drawKind(){
+  const text = document.getElementById("chat-in").value;
+  const k = KIND_PIN || proposeKind(text);
+  document.getElementById("kind-word").textContent = k.toUpperCase();
+  document.getElementById("kind-hint").textContent = KIND_PIN ? "pinned · click to flip · sent with the next ask"
+    : (text.trim() ? `reads as ${k === "intention" ? "an" : k === "objective" ? "an" : "a"} ${k} · click to flip · or type “${k === "thought" ? "objective" : "thought"}: …”`
+                   : "the words propose it · click to flip · the marker is minted with the ask");
+}
+document.getElementById("chat-in").addEventListener("input", drawKind);
+document.getElementById("kind-word").onclick = () => {
+  const k = KIND_PIN || proposeKind(document.getElementById("chat-in").value);
+  KIND_PIN = ASK_KINDS[(ASK_KINDS.indexOf(k) + 1) % ASK_KINDS.length]; drawKind();
+  document.getElementById("chat-in").focus(); };
+function followWords(text){                       // "follow up on this by …": a child of the origin in focus
+  const m = text.match(/^follow up on (?:this|that|it)(?: by)?[:\s]+(.+)$/i);
+  if (!m) return false;
+  const f = FOCUS.length ? FOCUS[FOCUS.length - 1].f : null;
+  const parent = (f && f.marker) || (LAST_ORIGIN && LAST_ORIGIN.marker);
+  if (!parent){ sysline("follow up on what? open an origin in the ANALYZER first"); return true; }
+  send(m[1], `follow-up → under ${esc((f && f.label) || (LAST_ORIGIN && LAST_ORIGIN.words) || "the origin")}`, undefined, parent);
+  return true;
+}
+async function send(given, label, toOverride, parent){
   const inp = document.getElementById("chat-in");
   const text = (given ?? inp.value).trim(); if (!text) return;
   if (given == null) inp.value = "";
@@ -437,6 +534,9 @@ async function send(given, label, toOverride){
   if (given == null && includeWords(text)) return;         // the includes, by words
   if (given == null && workspaceWords(text)) return;       // the pulls, by words
   if (given == null && await markWords(text)) return;      // a human marks (0006)
+  if (given == null && followWords(text)) return;          // a child of an origin (P25)
+  const kind = given == null ? (KIND_PIN || proposeKind(text)) : undefined;   // P23
+  if (given == null){ KIND_PIN = null; drawKind(); }
   const to = toOverride ? [...toOverride] : [...SELECTED];
   // a synthesis is the human's CHOICE, never the human's words: it wears
   // its own label; the machine's prompt never appears as if typed
@@ -447,8 +547,14 @@ async function send(given, label, toOverride){
     body: JSON.stringify({text, to: to.length ? to : undefined,
                           window: WINDOW ? {from: WINDOW.from.toISOString(),
                                             to: WINDOW.to.toISOString()} : undefined,
-                          session: SESSION || undefined})})
+                          session: SESSION || undefined, kind, parent: parent || undefined})})
     .then(x=>x.json()).catch(()=>null);
+  if (r && r.intention){                         // declared, never asked (0007)
+    const i = r.intention;
+    sysline(`intention declared · serves ${esc(i.serves)} · wakes on ${esc(i.interests.join(", ") || "its cadence")}` +
+            ` — its objectives will show here and in the ANALYZER · stop it there, any time`);
+    refreshPulls(); return; }
+  if (r && r.error){ el("journey", esc(r.error)); return; }
   const ids = r && (r.ids || (r.id && [r.id]));
   if (!ids) { el("journey","the ask door did not answer"); return; }
   WINDOW = FOCUS.length ? FOCUS[FOCUS.length - 1].f.window : null;
@@ -481,6 +587,11 @@ async function onNotice(n){
   if (!line){                                     // an ask this chat did not file —
     if (!n.kind.includes("ask.received")) return; // the kernel's, on the interest law:
     const v0 = await fetch("/ask/" + n.ref).then(x=>x.json()).catch(()=>null);
+    if (v0 && v0.origin && v0.origin.kind === "intention" && v0.session !== SESSION){   // 0007: born of an intention
+      const inc = ["planner", "critic", "grader"].includes(v0.target);
+      sysline(`on the kernel's word · “${esc((v0.origin.words || "").slice(0, 80))}” → ${esc(v0.target || "the crew")}: ` +
+              (inc ? "the next objective?" : esc(v0.text.slice(0, 160))) + " · the ANALYZER shows the rest");
+      return; }
     if (!v0 || !SESSION || v0.session !== SESSION) return;   // shown if it is THIS
     el("msg mine", `<em>on the kernel's word → ${esc(v0.target || "…")}</em>` +   // session's
        `<div class="meta">${esc(v0.text)}</div>`);
@@ -812,6 +923,24 @@ async function loadMonitor(){
   view("ASKS", Object.entries(s.asks).map(([k, v]) => row(k, v)).join("") || `<div class="meta">none in this world</div>`);
   view("WATCHES", (s.watches.map(w => row(`${w.name} — ${w.metric} ${w.op} ${w.threshold}`, `${w.value} · ${w.ok ? "green" : "RED"}`, w.ok ? "ok" : "red")).join("") ||
        `<div class="meta">none yet — ask the monitor agent to propose one ("watch for asks left waiting")</div>`));
+  const hv = view("HARNESS", (s.harness ? row(`${s.harness.template} v${s.harness.version} · ${hhmm(s.harness.ran_at)}`,
+       `${s.harness.passed} passed · ${s.harness.failed} failed`, s.harness.failed ? "red" : "ok") : `<div class="meta">no run yet</div>`) +
+       `<span class="assist">run the harness against the librarian now</span>`);
+  hv.querySelector(".assist").onclick = async () => {
+    hv.querySelector(".assist").textContent = "running…";
+    await fetch("/harness/run", {method:"POST", headers:{"content-type":"application/json"},
+                                 body: JSON.stringify({template: "librarian"})}).catch(()=>null);
+    loadMonitor();
+  };
+  box.scrollTop = keep;                       // the reader keeps their place
+}
+
+
+/* ---- the MARKERS view (0006): the open vocabulary of why — in the Analyzer (block 11) ---- */
+async function markersView(box, reload){
+  const view = (title, rows) => {
+    const d = document.createElement("div"); d.className = "view";
+    d.innerHTML = `<h5>${title}</h5>` + rows; box.appendChild(d); return d; };
   const kinds = await fetch("/markers/kinds").then(x=>x.json()).catch(()=>({kinds: []}));
   const marks = await fetch("/markers").then(x=>x.json()).catch(()=>({markers: []}));
   let off = {}; try { off = JSON.parse(localStorage.getItem("orreth.markers.off") || "{}"); } catch (e) {}
@@ -826,29 +955,18 @@ async function loadMonitor(){
   const mv = view("MARKERS · the open vocabulary of why", toggles + (rows || `<div class="meta">none yet — say “mark this as improvement: …” in the chat</div>`));
   mv.querySelectorAll("input[data-k]").forEach(i => i.onchange = () => {            // toggle a kind
     off[i.dataset.k] = !i.checked; try { localStorage.setItem("orreth.markers.off", JSON.stringify(off)); } catch (e) {}
-    loadMonitor(); });
+    reload(); });
   mv.querySelectorAll("input[data-g]").forEach(i => i.onchange = () => {            // toggle a group
     for (const k of groups[i.dataset.g]) off[k] = !i.checked;
     try { localStorage.setItem("orreth.markers.off", JSON.stringify(off)); } catch (e) {}
-    loadMonitor(); });
+    reload(); });
   mv.querySelectorAll("[data-mk]").forEach(r => r.onclick = async () => {           // every row a door:
     const a = await fetch("/markers?from=" + encodeURIComponent(r.dataset.mk)).then(x=>x.json()).catch(()=>null);   // its WHY
     if (!a) return;
     toggleChat(true);
     sysline("why · " + a.ancestry.map(m => `${esc(m.kind)}` + (m.words ? ` “${esc(m.words)}”` : ` (${esc(m.ref)})`)).join(" ← "));
   });
-  const hv = view("HARNESS", (s.harness ? row(`${s.harness.template} v${s.harness.version} · ${hhmm(s.harness.ran_at)}`,
-       `${s.harness.passed} passed · ${s.harness.failed} failed`, s.harness.failed ? "red" : "ok") : `<div class="meta">no run yet</div>`) +
-       `<span class="assist">run the harness against the librarian now</span>`);
-  hv.querySelector(".assist").onclick = async () => {
-    hv.querySelector(".assist").textContent = "running…";
-    await fetch("/harness/run", {method:"POST", headers:{"content-type":"application/json"},
-                                 body: JSON.stringify({template: "librarian"})}).catch(()=>null);
-    loadMonitor();
-  };
-  box.scrollTop = keep;                       // the reader keeps their place
 }
-
 /* ---- the focus stack (P19): the chat follows the focus ---- */
 const FOCUS = [];                 // pushed by an open ask (workspaces from sp3)
 function pushFocus(f){

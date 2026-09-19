@@ -617,8 +617,16 @@ first walk carries MONITOR-01's deferred re-walk.
 
 ## The intent (0007) — opened 2026-09-19 on block 11's locks, BEFORE P6
 
-- **intent sp1 — the Analyzer, the kind of an ask, the fifth rail** —
-  PLANNED (JB's lock: canon now, then sp1 before P6): the floor hatch
+- **intent sp1 — the Analyzer, the kind of an ask, the fifth rail** ✅
+  **BUILT 2026-09-19 — walk OWED** (JB's lock: canon now, then sp1 before
+  P6; suite 93 green; IH-3 measured: origins at 10k markers ~1 ms
+  from a ROOT column, never a walk; the stop reaches the kernel's
+  intentions too — rule 11 over P4 sp5's duty-immutability, JB may veto
+  at sight; schedules not yet folded in — sp3; a PRODUCTION WOUND at the
+  relight, cured the same hour: the markers DDL ran inside one serve's
+  transaction and its exclusive lock wedged the whole Bridge — now
+  `ground.ensure_all` flags every ground at a connection's birth and no
+  serve ever runs DDL): the floor hatch
   becomes the **ANALYZER** (grouped by origin from the ground: intention
   → objectives → thoughts · actions · observations; nothing sent → all
   active | completed; the MARKERS view moves in; "follow up on this by …"
