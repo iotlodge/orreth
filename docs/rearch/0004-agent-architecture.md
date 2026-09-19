@@ -86,6 +86,14 @@ Laws of the body, restated from the locks:
 - **The journey is emitted, always** — no invisible second runtime (P7,
   P13).
 - **Refusal wears one face** outward, while dial/quota/craft gates teach.
+- **Every body marks, and acts on marks** (0006, JB's lock 2026-09-19): a
+  body sets markers on whatever it is executing through the `mark` door,
+  its policy saying when — every body carries the line *"if you observe
+  an improvement to what you are executing, mark it `improvement`"*, and a
+  template may add its own; a template declares the kinds it has an
+  **interest** in, and the kernel dispatches it an ask — the marker as
+  parent — whenever such a marker lands. Kinds are declared into the
+  registry before use; the chain says who, the marker says why.
 
 ## The two sides — inference and the job
 

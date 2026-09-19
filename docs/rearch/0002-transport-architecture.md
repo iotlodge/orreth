@@ -112,6 +112,16 @@ proof shows Postgres + the two brokers genuinely need it.
    queue deletion. Workers check at safe boundaries; stale epochs cannot
    commit. "The human can always stop" gets a measured propagation SLO.
 
+- **The marker rides every envelope** (0006, JB's lock 2026-09-19):
+  `marker {kind, id, parent, by}` — the typed origin the fact serves; a
+  root fact mints it, a new beginning under it mints a child. Kinds come
+  from a governed, expandable registry (the kernel seeds objective ·
+  intention · thought · action · observation). A marker set is itself a
+  fact on the rail (`orreth.marker.set.v1`), so interested bodies act on
+  it and Understanding rebuilds the lineage from the log. The chain says
+  who; the marker says why; never conflated. Four short fields — the
+  words stay on the ground.
+
 ## The LangGraph re-base (what changed since the SOL review)
 
 - The SOL package's warning stands, transposed: **no invisible second

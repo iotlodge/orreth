@@ -128,6 +128,12 @@ property is what makes the accelerations honest.
   provide, here as a projection. Graphiti remains a candidate *engine* for
   this projection if building it ourselves proves expensive; either way it
   is rebuildable from the log and holds no independent truth.
+- **The marker lineage is a projection too** (0006, JB's lock 2026-09-19):
+  every event carries its `marker {kind, id, parent, by}`; the ground's
+  `spine_markers` tree is written with the fact and rebuildable from the
+  rail; Understanding answers "everything this objective caused" and
+  "what this thought serves" from it — ids, kinds, and pointers only; the
+  words stay in the Record and follow its fate.
 
 ### 4. The Digest — compression (JB's addition)
 
