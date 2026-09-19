@@ -33,6 +33,8 @@ def ensure_schema(conn) -> None:
             " by_did text NOT NULL,"
             " landed_at timestamptz NOT NULL DEFAULT now(),"
             " PRIMARY KEY (namespace, key))")
+        cur.execute("ALTER TABLE spine_memories ADD COLUMN IF NOT EXISTS"
+                    " scope text")          # a memory wears its world (0002)
 
 
 class OrrethStore:
@@ -58,18 +60,20 @@ class OrrethStore:
             cur = self._conn.cursor()
             cur.execute(
                 "INSERT INTO spine_memories (namespace, key, body, hash,"
-                " by_did) VALUES (%s, %s, %s, %s, %s)"
+                " by_did, scope) VALUES (%s, %s, %s, %s, %s, %s)"
                 " ON CONFLICT (namespace, key) DO UPDATE SET"
                 " body = EXCLUDED.body, hash = EXCLUDED.hash,"
-                " by_did = EXCLUDED.by_did, landed_at = now()",
-                (namespace, key, body, h, self.by_did))
+                " by_did = EXCLUDED.by_did, landed_at = now(),"
+                " scope = EXCLUDED.scope",
+                (namespace, key, body, h, self.by_did, ev.scope()))
             outbox.add_row(cur, ev.encode(e), e["message_id"])
         return h
 
     def get(self, namespace: str, key: str) -> str | None:
         cur = self._conn.cursor()
         cur.execute("SELECT body FROM spine_memories"
-                    " WHERE namespace = %s AND key = %s", (namespace, key))
+                    " WHERE namespace = %s AND key = %s AND scope = %s",
+                    (namespace, key, ev.scope()))    # a memory is its world's
         row = cur.fetchone()
         return row[0] if row else None
 
@@ -85,14 +89,28 @@ class OrrethStore:
         cur = self._conn.cursor()
         cur.execute(
             f"SELECT key, body FROM spine_memories"
-            f" WHERE namespace = %s AND ({conds})"
+            f" WHERE namespace = %s AND scope = %s AND ({conds})"
             f" ORDER BY landed_at DESC LIMIT %s",
-            (namespace, *[f"%{w}%" for w in words], limit))
+            (namespace, ev.scope(), *[f"%{w}%" for w in words], limit))
         return [{"key": k, "body": b} for k, b in cur.fetchall()]
+
+    def within(self, namespace: str, from_iso: str, to_iso: str,
+               limit: int = 6) -> list[dict]:
+        """Recall by timeframe (MEM-1): every word landed between X and Y,
+        oldest first — the window the human typed, honored by the store."""
+        cur = self._conn.cursor()
+        cur.execute(
+            "SELECT key, body, landed_at FROM spine_memories WHERE namespace = %s"
+            " AND scope = %s AND landed_at BETWEEN %s AND %s"
+            " ORDER BY landed_at LIMIT %s",
+            (namespace, ev.scope(), from_iso, to_iso, limit))
+        return [{"key": k, "body": b, "landed_at": t.isoformat()}
+                for k, b, t in cur.fetchall()]
 
     def recent(self, namespace: str, limit: int = 5) -> list[dict]:
         cur = self._conn.cursor()
         cur.execute(
             "SELECT key, body FROM spine_memories WHERE namespace = %s"
-            " ORDER BY landed_at DESC LIMIT %s", (namespace, limit))
+            " AND scope = %s ORDER BY landed_at DESC LIMIT %s",
+            (namespace, ev.scope(), limit))
         return [{"key": k, "body": b} for k, b in cur.fetchall()]

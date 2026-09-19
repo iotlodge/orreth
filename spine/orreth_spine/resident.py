@@ -233,12 +233,14 @@ class Resident:
                 # THIS ask's session — every reply landed in it, by any
                 # resident, labeled — never another session's; an ask
                 # with no session reads only my own session-less replies
-                session = None
+                session, window, person = None, None, None
                 if self._current_ask:
-                    cur.execute("SELECT session FROM spine_asks"
+                    cur.execute("SELECT session, time_window, person FROM spine_asks"
                                 " WHERE ask_id = %s", (self._current_ask,))
                     row = cur.fetchone()
-                    session = row[0] if row else None
+                    if row:
+                        session, person = row[0], row[2]
+                        window = json.loads(row[1]) if row[1] else None
                 if session:
                     cur.execute(
                         "SELECT a.text, a.reply, coalesce(j.name, 'a resident'),"
@@ -297,6 +299,26 @@ class Resident:
                                      f"{', '.join(json.loads(caps or '[]')) or 'none declared'}, "
                                      f"self {did[-8:]}")
                 st = OrrethStore(conn, by_did=self.identity.did)
+                if window and window.get("from") and window.get("to"):
+                    # MEM-1 by timeframe (P6): the window the human typed is
+                    # a lens over ALL their worldlines in this world — every
+                    # ask they made and every word I acquired between X and Y
+                    cur.execute(
+                        "SELECT a.text, a.reply, a.asked_at, coalesce(j.name, 'a resident')"
+                        " FROM spine_asks a LEFT JOIN LATERAL ("
+                        "  SELECT name FROM spine_joins WHERE did = a.served_by"
+                        "  ORDER BY join_id DESC LIMIT 1) j ON true"
+                        " WHERE a.person = %s AND a.scope = %s AND a.status = 'replied'"
+                        " AND a.asked_at BETWEEN %s AND %s AND a.ask_id <> %s"
+                        " ORDER BY a.asked_at LIMIT 12",
+                        (person, ev.scope(), window["from"], window["to"],
+                         self._current_ask))
+                    for t, rp, at, who in cur.fetchall():
+                        notes.append(f"in the window, at {at.strftime('%a %b %d %H:%M')}, "
+                                     f"asked: {t!r} — {who} replied: {rp!r}")
+                    for m in st.within(self.name, window["from"], window["to"]):
+                        notes.append(f"in the window I acquired [{m['key']}] at "
+                                     f"{m['landed_at'][:16]}: {m['body']}")
                 for m in st.search(self.name, s["text"][:60], limit=3):
                     notes.append(f"I remember [{m['key']}]: {m['body']}")
             step = (f"recalled {len(notes)} notes" if notes
@@ -352,7 +374,7 @@ class Resident:
                 prompt += f"The ask: {s['text']}"
                 door = ToolDoor(self._serve_conn, did=self.identity.did,
                                 capabilities=self.template.get(
-                                    "capabilities", []))
+                                    "capabilities", []), name=self.name)
                 deltas = None
                 if self.on_delta is not None and self._current_ask:
                     aid = self._current_ask
@@ -501,7 +523,7 @@ class Resident:
         if approved:
             door = ToolDoor(self._serve_conn, did=self.identity.did,
                             capabilities=self.template.get(
-                                "capabilities", []))
+                                "capabilities", []), name=self.name)
             result = door.call(held["tool"], held["args"], confirmed=True)
             self._journey(cur, ask_id,
                           [f"the human said yes — the {held['tool']} act "

@@ -10,7 +10,8 @@
   "capabilities": [
     "ask",
     "tools:weather",
-    "tools:seal-record"
+    "tools:seal-record",
+    "tools:acquire"
   ],
   "schedules": [
     {

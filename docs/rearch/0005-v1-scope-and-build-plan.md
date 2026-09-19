@@ -523,8 +523,36 @@ by the Playwright before it closes.
   reader's place on refresh; the chat has its own close; italics fall
   away in plain words. **MONITOR-01's re-walk is the one thing between
   P4 and WHOLE.**
-- Next: re-walk MONITOR-01 → **P4 WHOLE** → the markers dive (0006) →
-  **Phase 5 — MEMORY WHOLE**.
+- Next: **P4 WHOLE** on MONITOR-01's re-walk at Phase 5's first walk
+  (JB's lock, 2026-09-19: deferred rather than spent). The markers dive
+  (0006) stays parked; sp2's projection is where a marker lineage would
+  later live.
+
+## Phase 5 — MEMORY WHOLE (opened 2026-09-19 — JB's lock on the slicing)
+
+Four spoonfuls, one MEM proof each with its law (canon 0003): **sp1**
+MEM-1 total recall + the window reads · **sp2** Understanding v0 (a
+ranked projection; validity intervals; MEM-4) · **sp3** the Digest
+(session roll = episode boundary; digests cite sources; MEM-3) · **sp4**
+resume · quarantine and purge · growth (MEM-2 · MEM-5 · MEM-6). P5's
+first walk carries MONITOR-01's deferred re-walk.
+
+- **sp1 — MEM-1 total recall, and the window reads** ✅ **BUILT
+  2026-09-19 — walk OWED**: **the `acquire` tool** — a resident acquires
+  a text through the door (every word kept exactly, content-hashed, WITH
+  its event, under the resident's own namespace; memories now wear their
+  world) — declared by the librarian; FULL-01's acquire half is real.
+  **Recall by ref · by ask · by session · by timeframe**, byte-exact,
+  through one door (`/recall`; a malformed window answers 400, nothing
+  recalled answers one face). **The window reads (P6, at last):** an ask
+  wearing "between X and Y" packs, into the mind, the human's asks in
+  that window across ALL their sessions in this world (labeled, timed)
+  and every word the resident acquired in it — the session's own results
+  stay in view (P20) and nothing outside the window comes along. Three
+  laws in `tests/test_recall.py` (acquire lands every word with its
+  event and recalls byte-exact by ref and by timeframe · recall reads
+  the ask's window over all the human's worldlines · the door answers
+  verbatim over HTTP, encoded as a browser sends it). Suite 74 green.
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 

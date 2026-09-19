@@ -125,6 +125,49 @@ def crew_view(conn) -> list[dict]:
     return cards
 
 
+def recall_view(conn, *, ref: str | None = None, ask: str | None = None,
+                session: str | None = None, window: tuple[str, str] | None = None,
+                person: str = "did:orreth:person:jb") -> dict | None:
+    """Verbatim recall (MEM-1, canon 0003): every word, byte-exact — by
+    ref (a memory), by ask, by session (the worldline), or by timeframe
+    (the human's lens over all their worldlines in this world)."""
+    from .resident import ensure_schema as _ground
+    from .store import ensure_schema as _mem
+    _ground(conn); _mem(conn)
+    cur = conn.cursor()
+    if ref:
+        ns, _, key = ref.partition("/")
+        cur.execute("SELECT namespace, key, body, hash, by_did, landed_at"
+                    " FROM spine_memories WHERE namespace = %s AND key = %s"
+                    " AND scope = %s", (ns, key, ev.scope()))
+        r = cur.fetchone()
+        return {"memory": {"ref": ref, "body": r[2], "hash": r[3], "by": r[4],
+                           "landed_at": r[5].isoformat()}} if r else None
+    if ask:
+        v = ask_view(conn, ask)
+        return {"ask": v} if v else None
+    if session:
+        v = session_view(conn, session)
+        return {"session": v} if v else None
+    if window:
+        cur.execute(
+            "SELECT ask_id, text, reply, asked_at, replied_at, served_by FROM spine_asks"
+            " WHERE person = %s AND scope = %s AND asked_at BETWEEN %s AND %s"
+            " ORDER BY asked_at", (person, ev.scope(), window[0], window[1]))
+        asks = [{"ask_id": r[0], "text": r[1], "reply": r[2], "asked_at": r[3].isoformat(),
+                 "replied_at": r[4].isoformat() if r[4] else None, "served_by": r[5]}
+                for r in cur.fetchall()]
+        cur.execute(
+            "SELECT namespace, key, body, hash, landed_at FROM spine_memories"
+            " WHERE scope = %s AND landed_at BETWEEN %s AND %s ORDER BY landed_at",
+            (ev.scope(), window[0], window[1]))
+        memories = [{"ref": f"{r[0]}/{r[1]}", "body": r[2], "hash": r[3],
+                     "landed_at": r[4].isoformat()} for r in cur.fetchall()]
+        return {"window": {"from": window[0], "to": window[1]}, "asks": asks,
+                "memories": memories}
+    return None
+
+
 def open_session(conn, person: str, title: str | None = None) -> str:
     """Roll (P20): a fresh worldline for this human in this world. The
     previous session is not touched — archived means 'not active', never
@@ -240,6 +283,22 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 with psycopg.connect(dsn) as conn:
                     return self._json(200, scheduler.for_runner(
                         conn, path.split("/schedules/", 1)[1]))
+            if path == "/recall":
+                from urllib.parse import parse_qs
+                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
+                    if "?" in self.path else {}
+                try:
+                    with psycopg.connect(dsn) as conn:
+                        view = recall_view(
+                            conn, ref=qs.get("ref"), ask=qs.get("ask"),
+                            session=qs.get("session"),
+                            window=(qs["from"], qs["to"]) if qs.get("from") and qs.get("to") else None,
+                            person=qs.get("person") or "did:orreth:person:jb")
+                except psycopg.DataError:
+                    return self._json(400, {"error": "the window is two ISO times, from and to"})
+                if view is None:
+                    return self._json(404, {"error": "nothing recalled — one face"})
+                return self._json(200, view)
             if path == "/sessions":
                 from urllib.parse import parse_qs
                 qs = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}

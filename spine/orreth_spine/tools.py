@@ -69,6 +69,22 @@ TOOLS: dict[str, dict] = {
         "consequential": False,
         "fn": _weather,
     },
+    "acquire": {
+        "description": "Acquire a text into your memory under a short key: "
+                       "every word is kept exactly, with its provenance, and "
+                       "the human can recall every word later — by key, by "
+                       "ask, or by timeframe. Use it when the human asks you "
+                       "to remember, keep, acquire, or take in a text.",
+        "input_schema": {"type": "object", "properties": {
+            "key": {"type": "string"}, "text": {"type": "string"}},
+            "required": ["key", "text"]},
+        "consequential": False,
+        "ground": True,
+        "fn": lambda args, conn: (lambda h: f"acquired {len(args['text'])} characters "
+                                            f"under {args['key']!r} — hash {h[:16]}")(
+              __import__("orreth_spine.store", fromlist=["OrrethStore"])
+              .OrrethStore(conn, by_did=args["_by"]).put(args["_name"], args["key"], args["text"])),
+    },
     "add-watch": {
         "description": "Propose a new monitoring watch: a named check of one "
                        "metric (outbox_pending · oldest_outbox_age_s · "
@@ -115,9 +131,11 @@ class ToolDoor:
     """One door per serving resident: capability-checked, journaled,
     interlocked."""
 
-    def __init__(self, conn, *, did: str, capabilities: list[str]):
+    def __init__(self, conn, *, did: str, capabilities: list[str],
+                 name: str | None = None):
         self._conn = conn
         self.did = did
+        self.name = name                  # the memory namespace (acquire)
         self.capabilities = capabilities
         ensure_schema(conn)
 
@@ -143,7 +161,7 @@ class ToolDoor:
             raise ConsequentialHold(name, args)
         try:
             if tool.get("ground"):        # an act on the ground rides the
-                args = dict(args, _by=self.did)   # door's own connection
+                args = dict(args, _by=self.did, _name=self.name or self.did)
                 result = tool["fn"](args, self._conn)
             else:
                 result = tool["fn"](args)
