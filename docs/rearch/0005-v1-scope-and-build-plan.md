@@ -453,9 +453,34 @@ by the Playwright before it closes.
   laws in `tests/test_crew.py` (the door's both sides · the binding
   births the agent with the crew in its recall · the door over HTTP with
   the whole rig of six). Suite 63 green (sp2 + sp3 together).
-- **sp4 — Monitoring + its workspace agent**: the pull, its agent
-  building monitoring for the human's approval, the A/B harness v0
-  (AG-6), presence leases (M2).
+- **sp4 — Monitoring + its workspace agent, the harness v0, presence
+  leases** ✅ **BUILT 2026-09-18 — walk OWED**: **presence leases (M2)**
+  — every body renews a lease as it serves (`presence.py`, 15 s); alive
+  = a fresh lease; a body that stops renewing reads DORMANT within
+  seconds and stays listed — the roster breathes, nothing is deleted;
+  the crew cards and the monitor show it. **The Monitoring pull** (the
+  second tab on the left wall; "open the monitor" by words): the
+  Operating State live through one door (`/monitor`) — the pulse, the
+  rails (outbox pending and oldest, the benches' depths, the topic's
+  depth), every body alive or dormant on its lease, asks by status, the
+  WATCHES, the last harness run. **Its workspace agent** (the one
+  workspace body wearing `bindings/monitor.v0.json`; its recall packs
+  the snapshot) can PROPOSE a watch — the MITL loop in miniature: the
+  `add-watch` tool is consequential, so it holds at the L2 interlock for
+  the human's yes, then lands on the ground and is judged live, green or
+  red (the tool door now passes the ground to tools that act on it).
+  **The A/B harness v0** (`harness.py`, `golden/librarian.v0.json`):
+  golden cases through a body's own graph; every run a record; a failing
+  run is a FACT on the rail (`orreth.harness.failed.v1`) that the feed
+  carries and the chat shows as a soft notice — the escalation the
+  watcher owes; on demand through `/harness/run` (a soft link in the
+  view). **The scheduler is now the named gap**: AG-4's CRUD half and
+  AG-6's scheduled run both wait for it. Four laws in
+  `tests/test_monitor.py` (a lease's life and lapse · a watch holds,
+  lands, is judged · the harness passes a sound mind and fails a
+  degraded one on the rail · the doors over HTTP with seven bodies
+  alive). SPEC-MONITOR-01 written; walk owed with the others. Suite 67
+  green.
 - The **draft shelf** (PROD/DEV decoupling, AG-9) lands with Workspace
   Engineering; the **markers dive** (`0006-markers-dive.md`) is designed
   before Phase 5 projects them.

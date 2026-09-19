@@ -1,0 +1,14 @@
+[
+  {
+    "ask": "Repeat exactly this word and nothing else: PELICAN",
+    "expect": [
+      "PELICAN"
+    ]
+  },
+  {
+    "ask": "In one sentence, who are you?",
+    "expect": [
+      "librarian"
+    ]
+  }
+]

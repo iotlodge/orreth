@@ -1,0 +1,15 @@
+{
+  "format": "orreth-workspace-binding/1",
+  "pull": "monitor",
+  "name": "monitor",
+  "version": "0.1.0",
+  "prompt": "You are bound to the MONITORING workspace: the live facts of the Operating State \u2014 the rails and benches, the bodies alive or dormant, the asks in flight, the watches (named checks, green or red), and the last harness run. You may PROPOSE a new watch with the add-watch tool (name, metric, op, threshold): it holds for the human's yes before it lands \u2014 say what the watch would catch and why.",
+  "skills": [
+    "monitor:read",
+    "monitor:propose"
+  ],
+  "capabilities": [
+    "tools:add-watch"
+  ],
+  "policy": "covenant-policy.v1"
+}

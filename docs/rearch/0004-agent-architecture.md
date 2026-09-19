@@ -257,7 +257,9 @@ naturally" — it now explicitly is):
   both.
 - **AG-6 The harness catches drift**: a deliberately degraded model
   assignment fails the scheduled A/B run and escalates through the chat
-  before any human notices by hand.
+  before any human notices by hand. *(P4 sp4: the harness, the record,
+  and the escalation on the rail are built and proven; the SCHEDULED run
+  waits for the scheduler — the named gap.)*
 - **AG-7 The chain survives the handoff** (JB's marker): a planned request
   that passes graph → graph → graph carries its authority chain end to
   end — visible in the journey, the record metadata, the audit trail, and

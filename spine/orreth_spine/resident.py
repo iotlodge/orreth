@@ -153,6 +153,9 @@ class Resident:
             self.name = self.binding["name"]
             self.function = f"workspace:{self.binding['pull']}"
             self.charge = f"{self.charge} {self.binding.get('prompt', '')}".strip()
+            self.template["capabilities"] = list(dict.fromkeys(
+                self.template.get("capabilities", [])
+                + self.binding.get("capabilities", [])))   # the seat's tools
         self.identity = Identity.load(self.name, home)
         self.policy: dict | None = None
         # the mind: a template that declares one thinks through the
@@ -260,7 +263,24 @@ class Resident:
                         (self.identity.did,))
                     for t, rp in cur.fetchall():
                         notes.append(f"earlier, asked: {t!r} — I replied: {rp!r}")
-                if (self.function or "").startswith("workspace:"):
+                if self.function == "workspace:monitor":
+                    from .monitor import snapshot
+                    snap = snapshot(conn, rails=False)
+                    notes.append("monitor — outbox pending "
+                                 f"{snap['values']['outbox_pending']}, oldest "
+                                 f"{snap['values']['oldest_outbox_age_s']:.0f} s; "
+                                 f"asks {snap['asks']}; bodies alive "
+                                 f"{snap['values']['bodies_alive']}, dormant "
+                                 f"{snap['values']['bodies_dormant']}")
+                    for w in snap["watches"]:
+                        notes.append(f"watch — {w['name']}: {w['metric']} "
+                                     f"{w['value']} {w['op']} {w['threshold']} → "
+                                     f"{'green' if w['ok'] else 'RED'}")
+                    if snap["harness"]:
+                        h = snap["harness"]
+                        notes.append(f"harness — {h['template']} v{h['version']}: "
+                                     f"{h['passed']} passed, {h['failed']} failed")
+                elif (self.function or "").startswith("workspace:"):
                     # a workspace agent reads ITS workspace's facts (the
                     # binding names which); the crew: every body here
                     cur.execute(

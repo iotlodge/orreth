@@ -69,6 +69,22 @@ TOOLS: dict[str, dict] = {
         "consequential": False,
         "fn": _weather,
     },
+    "add-watch": {
+        "description": "Propose a new monitoring watch: a named check of one "
+                       "metric (outbox_pending · oldest_outbox_age_s · "
+                       "asks_received · bodies_alive · bodies_dormant) against "
+                       "a threshold with an op (<= >= < > ==). It holds for "
+                       "the human's yes before it lands.",
+        "input_schema": {"type": "object", "properties": {
+            "name": {"type": "string"}, "metric": {"type": "string"},
+            "op": {"type": "string"}, "threshold": {"type": "number"}},
+            "required": ["name", "metric", "op", "threshold"]},
+        "consequential": True,
+        "ground": True,
+        "fn": lambda args, conn: __import__("orreth_spine.monitor", fromlist=["add_watch"])
+              .add_watch(conn, args["name"], args["metric"], args["op"],
+                         args["threshold"], by=args.get("_by", "the monitor")),
+    },
     "seal-record": {
         "description": "Permanently seal a note so it can never be edited "
                        "again. This cannot be undone.",
@@ -126,7 +142,11 @@ class ToolDoor:
         if tool["consequential"] and not confirmed:
             raise ConsequentialHold(name, args)
         try:
-            result = tool["fn"](args)
+            if tool.get("ground"):        # an act on the ground rides the
+                args = dict(args, _by=self.did)   # door's own connection
+                result = tool["fn"](args, self._conn)
+            else:
+                result = tool["fn"](args)
             ok = True
         except Exception as e:
             result, ok = f"{type(e).__name__}: {e}"[:300], False

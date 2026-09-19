@@ -27,12 +27,14 @@ from pathlib import Path
 
 import psycopg
 
-from . import bridgefeed, dispatch, envelope as ev, outbox, projector, sinks
+from . import bridgefeed, dispatch, envelope as ev, harness, monitor, outbox
+from . import presence, projector, sinks
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, Resident
 
 GLASS_DIR = Path(__file__).resolve().parents[1] / "glass"
-FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED]
+FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED,
+               harness.HARNESS_FAILED]   # a failing run escalates to the chat
 
 
 def ask_view(conn, ask_id: str) -> dict | None:
@@ -104,6 +106,7 @@ def crew_view(conn) -> list[dict]:
         "SELECT DISTINCT ON (name) name, kind, did, life, joined_at,"
         " policy_version, template_hash, capabilities FROM spine_joins"
         " WHERE scope = %s ORDER BY name, join_id DESC", (ev.scope(),))
+    alive = {b["did"]: b["alive"] for b in presence.roster(conn)}
     cards = []
     for name, kind, did, life, joined, pv, th, caps in cur.fetchall():
         cur.execute("SELECT count(*), max(replied_at) FROM spine_asks"
@@ -113,6 +116,7 @@ def crew_view(conn) -> list[dict]:
         cards.append({
             "name": name, "kind": kind, "did": did, "lives": life,
             "joined_at": joined.isoformat(), "policy_version": pv,
+            "alive": alive.get(did),        # M2: a fresh lease, or dormant
             "template": th[:12], "capabilities": json.loads(caps or "[]"),
             "side_a": {"asks_served": int(n),
                        "last_served": last.isoformat() if last else None},
@@ -189,8 +193,9 @@ def residents_view(conn) -> list[dict]:
             for r in cur.fetchall()]
 
 
-def make_glass_handler(feed: bridgefeed.Feed, dsn: str):
+def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = None):
     Base = bridgefeed.make_handler(feed)
+    bodies = bodies or {}            # the rig's bodies by name (the harness door)
 
     class Handler(Base):
         def _json(self, code: int, obj) -> None:
@@ -228,6 +233,9 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str):
             if path == "/crew":
                 with psycopg.connect(dsn) as conn:
                     return self._json(200, {"crew": crew_view(conn)})
+            if path == "/monitor":
+                with psycopg.connect(dsn) as conn:
+                    return self._json(200, monitor.snapshot(conn))
             if path == "/sessions":
                 from urllib.parse import parse_qs
                 qs = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
@@ -276,6 +284,13 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str):
                 if isinstance(out, list):
                     return self._json(201, {"ids": out})
                 return self._json(201, {"id": out})
+            if path == "/harness/run":                # on demand (the
+                name = str(p.get("template") or "librarian")   # scheduled
+                body = bodies.get(name)                        # run waits
+                if body is None:                               # for the
+                    return self._json(404, {"error": "no such body"})  # scheduler)
+                with psycopg.connect(dsn) as conn:
+                    return self._json(200, harness.run(conn, body))
             if path == "/sessions":                   # roll a fresh one
                 person = str(p.get("person") or "did:orreth:person:jb")
                 with psycopg.connect(dsn) as conn:
@@ -340,12 +355,18 @@ class BridgeRig:
                         gateway=gateway, home=home,
                         binding=spine / "bindings" / "crew.v0.json")
         crew.load_policy(policy_path)
-        self.residents.append(crew); self.workspaces = {"crew": crew}
+        monitor_agent = Resident(spine / "templates" / "workspace-firmware.v0.json",
+                                 gateway=gateway, home=home,
+                                 binding=spine / "bindings" / "monitor.v0.json")
+        monitor_agent.load_policy(policy_path)
+        self.residents += [crew, monitor_agent]
+        self.workspaces = {"crew": crew, "monitor": monitor_agent}
         for r in self.residents:
             r.on_delta = self.feed.publish_delta
         from http.server import ThreadingHTTPServer
         self._httpd = ThreadingHTTPServer(
-            ("127.0.0.1", port), make_glass_handler(self.feed, self.dsn))
+            ("127.0.0.1", port), make_glass_handler(
+                self.feed, self.dsn, {r.name: r for r in self.residents}))
         self.port = self._httpd.server_address[1]
         self.feed_ready = threading.Event()
         self.dispatcher_ready = threading.Event()
@@ -395,6 +416,8 @@ class BridgeRig:
                     time.sleep(0.3)
             while not self._stop.is_set():
                 try:
+                    presence.renew(conn, resident.identity.did, resident.name,
+                                   resident.kind)         # M2: alive while I serve
                     resident.serve_once(conn, idle_s=1.0, max_commands=50)
                 except Exception:
                     pass
