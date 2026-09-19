@@ -199,6 +199,15 @@
   .duty.kernel::before{content:"🔒 ";font-size:10px}
   .duty .why{display:none;color:var(--amber);margin-left:8px;font-size:11px}
   .duty.asked .why{display:inline}
+  .sched{display:flex;gap:6px;margin-top:5px;align-items:center}
+  .sched input{flex:1;min-width:0;background:transparent;border:1px solid var(--seam);
+    border-radius:6px;color:var(--ink);font:inherit;font-size:11px;padding:2px 6px}
+  .sched input.n{flex:0 0 52px}
+  .sched button{background:transparent;border:1px solid var(--amber);color:var(--amber);
+    border-radius:6px;font:inherit;font-size:10.5px;padding:2px 8px;cursor:pointer}
+  .duty .rest{margin-left:8px;color:var(--dim);cursor:pointer;font-size:10.5px}
+  .duty .rest:hover{color:var(--amber)}
+  .duty.rested{opacity:.55;text-decoration:line-through}
   .assist{display:inline-block;margin-top:6px;cursor:pointer;color:var(--amber);
     font-size:11px;opacity:.85}
   .assist:hover{opacity:1;text-decoration:underline}
@@ -680,20 +689,44 @@ async function loadCrew(){
     const kernel = c.side_b.kernel.map(k =>
       `<div class="duty kernel" onclick="this.classList.toggle('asked')">${esc(k.duty)}` +
       `<span class="why">kernel-required — visible, never editable</span></div>`).join("");
+    const sched = await fetch("/schedules/" + encodeURIComponent(c.name)).then(x=>x.json()).catch(()=>null) || {human: [], role: [], kernel: []};
+    const when = s => `every ${s.every_s >= 3600 ? (s.every_s / 3600) + " h" : s.every_s >= 60 ? (s.every_s / 60) + " min" : s.every_s + " s"}` +
+                      (s.last_at ? ` · last ${hhmm(s.last_at)}` : "") + ` · ${s.occurrences}×`;
+    const line = (s, kind) => `<div class="duty ${kind === "kernel" ? "kernel" : ""} ${s.active ? "" : "rested"}" data-id="${esc(s.schedule_id)}"` +
+      (kind === "kernel" ? ` onclick="this.classList.toggle('asked')"` : "") + `>${esc(s.text)} <span class="meta">(${when(s)})</span>` +
+      (kind === "kernel" ? `<span class="why">kernel-required — visible, never editable</span>`
+        : s.active ? `<span class="rest" data-rest="${esc(s.schedule_id)}">rest it</span>`
+        : `<span class="meta"> · at rest since ${hhmm(s.rested_at)}</span>`) + `</div>`;
+    const schedules = sched.kernel.map(s => line(s, "kernel")).join("") + sched.role.map(s => line(s, "role")).join("") +
+      sched.human.map(s => line(s, "human")).join("");
     d.innerHTML =
       `<h5>${esc(c.name)} <span class="meta">· ${esc(c.kind)} · life ${c.lives}</span></h5>` +
       `<div class="meta">self …${esc(c.did.slice(-8))} · wearing covenant v${esc(c.policy_version)} · template ${esc(c.template)}</div>` +
       `<div>${caps}</div>` +
       `<div class="side"><b>SIDE A · INFERENCE</b><div>asks served: ${c.side_a.asks_served}` +
       (c.side_a.last_served ? ` · last ${hhmm(c.side_a.last_served)}` : "") + `</div></div>` +
-      `<div class="side"><b>SIDE B · THE JOB</b>${kernel}` +
-      `<div class="meta">human-scheduled: none yet · role-scheduled: none yet — the scheduler is on the road</div></div>` +
+      `<div class="side"><b>SIDE B · THE JOB</b>${kernel}${schedules}` +
+      `<div class="sched"><input placeholder="schedule an ask for ${esc(c.name)}…" data-text>` +
+      `<input class="n" type="number" min="5" value="3600" data-every title="every N seconds"><button data-add>schedule</button></div></div>` +
       `<span class="assist">ask the crew agent about ${esc(c.name)}</span>`;
     d.querySelector(".assist").onclick = () => {
       toggleChat(true);
       send(`Tell me about ${c.name}: what it does, what it wears, and its two sides.`,
            `about ${c.name} — on your word → crew`, ["crew"]);
     };
+    d.querySelector("[data-add]").onclick = async () => {        // CRUD on the human's
+      const text = d.querySelector("[data-text]").value.trim();  // schedule changes the
+      const every = parseInt(d.querySelector("[data-every]").value, 10);   // Operating State
+      if (!text) return;
+      await fetch("/schedules", {method:"POST", headers:{"content-type":"application/json"},
+                                 body: JSON.stringify({runner: c.name, text, every_s: every})}).catch(()=>null);
+      loadCrew();
+    };
+    d.querySelectorAll("[data-rest]").forEach(r => r.onclick = async () => {   // the stop:
+      await fetch("/schedules/rest", {method:"POST", headers:{"content-type":"application/json"},
+                                      body: JSON.stringify({schedule_id: r.dataset.rest})}).catch(()=>null);
+      loadCrew();                                                            // recorded, never deleted
+    });
     box.appendChild(d);
   }
 }

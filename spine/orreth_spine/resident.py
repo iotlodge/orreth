@@ -205,6 +205,10 @@ class Resident:
                  self.policy["version"], self.policy["hash"], sig,
                  ev.scope(), self.kind,        # joined THIS world, as my kind,
                  json.dumps(self.template.get("capabilities", []))))  # declared
+        from . import scheduler                  # the role schedules the
+        for sch in self.template.get("schedules", []):   # template declares are
+            scheduler.declared(conn, self.name, "role", sch["text"],   # registered
+                               int(sch["every_s"]), self.identity.did)   # at every join
         return {"did": self.identity.did, "life": life,
                 "policy_version": self.policy["version"]}
 

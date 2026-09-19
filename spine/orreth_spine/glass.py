@@ -28,7 +28,7 @@ from pathlib import Path
 import psycopg
 
 from . import bridgefeed, dispatch, envelope as ev, harness, monitor, outbox
-from . import presence, projector, sinks
+from . import presence, projector, scheduler, sinks
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, Resident
 
@@ -236,6 +236,10 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
             if path == "/monitor":
                 with psycopg.connect(dsn) as conn:
                     return self._json(200, monitor.snapshot(conn))
+            if path.startswith("/schedules/"):           # the card's side B
+                with psycopg.connect(dsn) as conn:
+                    return self._json(200, scheduler.for_runner(
+                        conn, path.split("/schedules/", 1)[1]))
             if path == "/sessions":
                 from urllib.parse import parse_qs
                 qs = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
@@ -284,6 +288,27 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 if isinstance(out, list):
                     return self._json(201, {"ids": out})
                 return self._json(201, {"id": out})
+            if path == "/schedules":                  # a human schedule lands
+                runner = str(p.get("runner") or "")
+                text = str(p.get("text") or "").strip()
+                every = int(p.get("every_s") or 0)
+                if not (runner and text and every >= 5):
+                    return self._json(400, {"error": "a schedule is {runner, text,"
+                                                     " every_s >= 5}"})
+                person = str(p.get("person") or "did:orreth:person:jb")
+                with psycopg.connect(dsn) as conn:
+                    sid = scheduler.add(conn, runner, "human", text, every, person)
+                return self._json(201, {"schedule_id": sid})
+            if path == "/schedules/rest":             # the human's stop
+                person = str(p.get("person") or "did:orreth:person:jb")
+                try:
+                    with psycopg.connect(dsn) as conn:
+                        scheduler.rest(conn, str(p.get("schedule_id") or ""), person)
+                except scheduler.KernelRequired as e:
+                    return self._json(403, {"error": str(e)})
+                except KeyError:
+                    return self._json(404, {"error": "no such schedule"})
+                return self._json(202, {"rested": str(p.get("schedule_id"))})
             if path == "/harness/run":                # on demand (the
                 name = str(p.get("template") or "librarian")   # scheduled
                 body = bodies.get(name)                        # run waits
@@ -378,12 +403,18 @@ class BridgeRig:
                              kwargs={"ready": self.feed_ready}, daemon=True),
             threading.Thread(target=self._relay_loop, daemon=True),
             threading.Thread(target=self._dispatch_loop, daemon=True),
+            threading.Thread(target=self._schedule_loop, daemon=True),
         ] + [threading.Thread(target=self._serve_loop, args=(r,),
                               daemon=True) for r in self.residents]
 
+    # Every long-lived rig connection is AUTOCOMMIT: a bare execute on a
+    # non-autocommit connection opens an implicit transaction that never
+    # commits, and the next ensure_schema inside it holds the xact-scoped
+    # DDL lock forever — every door then queues behind it (found live in
+    # the test fixture yesterday, then in the schedule loop today).
     def _relay_loop(self):
         sink = sinks.KafkaSink()
-        with psycopg.connect(self.dsn) as conn:
+        with psycopg.connect(self.dsn, autocommit=True) as conn:
             outbox.ensure_schema(conn)
             while not self._stop.is_set():
                 try:
@@ -395,7 +426,7 @@ class BridgeRig:
     def _dispatch_loop(self):
         import secrets as _sec
         gid = f"glass-dispatcher-{_sec.token_hex(3)}"   # a group per life:
-        with psycopg.connect(self.dsn) as conn:          # a wedged ghost
+        with psycopg.connect(self.dsn, autocommit=True) as conn:          # a wedged ghost
             while not self._stop.is_set():               # dies with its rig
                 try:
                     dispatch.run_dispatcher(
@@ -406,8 +437,30 @@ class BridgeRig:
                 except Exception:
                     time.sleep(0.5)
 
+    def _schedule_loop(self):
+        """The scheduler as a kernel organ: the kernel's duties registered
+        at boot (immutable), then a beat every few seconds."""
+        bodies = {r.name: r for r in self.residents}
+        with psycopg.connect(self.dsn, autocommit=True) as conn:
+            for _attempt in range(20):
+                try:
+                    for r in self.residents:      # AG-6's scheduled run:
+                        if harness.golden(r.name): # every mind with a golden set
+                            scheduler.declared(conn, r.name, "kernel",
+                                               "run the harness against my golden set",
+                                               1800, "the kernel")
+                    break
+                except Exception:
+                    time.sleep(0.3)
+            while not self._stop.is_set():
+                try:
+                    scheduler.tick(conn, bodies)
+                except Exception:
+                    pass
+                time.sleep(5)
+
     def _serve_loop(self, resident):
-        with psycopg.connect(self.dsn) as conn:
+        with psycopg.connect(self.dsn, autocommit=True) as conn:
             for _attempt in range(20):      # birth retries: a schema race
                 try:                        # or slow ground never kills a
                     resident.join(conn)     # resident before it lives

@@ -11,5 +11,11 @@
     "ask",
     "tools:weather",
     "tools:seal-record"
+  ],
+  "schedules": [
+    {
+      "text": "Review what was asked of you today and note one thing worth remembering.",
+      "every_s": 3600
+    }
   ]
 }

@@ -278,9 +278,12 @@ naturally" — it now explicitly is):
   lands with the MITL build phase, inside the resolved on-behalf-of law.
 - Template schema v0 (the exact declaration shape) — lands with the first
   build spoonful, through the factories.
-- Whether the scheduler is a kernel organ or a duty of a standing resident
-  (0002 left it open; Fable leans kernel organ with occurrences visible in
-  each runner's card, per P16).
+- ~~Whether the scheduler is a kernel organ or a duty of a standing
+  resident~~ — **DECIDED and BUILT (P4 sp5): a kernel organ** —
+  `scheduler.py`, three kinds (human · role · kernel), occurrences on
+  the Invocation rail as asks to the runner, every schedule in its
+  runner's card, rest recorded never deleted, the kernel kind immutable
+  with one plain face.
 - ~~The **binding schema** and the include invocation shape~~ — **v0
   LANDED (P4 sp2/sp3):** an include is an ask targeted at a firmware
   body in the same session (its input = the session's results, labeled;

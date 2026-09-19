@@ -356,7 +356,7 @@ bar: *a resident actually chats — tools included, the full reply, streamed
   until a second world exists — owed to P4. Suite 54 green. **PHASE 3
   IS WHOLE.**
 
-## Phase 4 — THE FEEL & THE FLEET (opened 2026-09-18, re-sliced on block 9 — JB's lock)
+## Phase 4 — THE FEEL & THE FLEET (opened 2026-09-18, re-sliced on block 9 — JB's lock · **BUILT 2026-09-18, five spoonfuls, suite 71; closes WHOLE on the single walk session** — the charter closes a phase on its walks green, and the walks for sp2's cured third, sp3, sp4, sp5 are owed to the Playwright's spend wall)
 
 JB's narration before P4 (`experience-capture.md` block 9; distilled into
 0001 P19–P21, 0003 sessions, 0004 the third kind) re-sliced the phase:
@@ -481,9 +481,40 @@ by the Playwright before it closes.
   degraded one on the rail · the doors over HTTP with seven bodies
   alive). SPEC-MONITOR-01 written; walk owed with the others. Suite 67
   green.
+- **sp5 — the scheduler** ✅ **BUILT 2026-09-18 — walk OWED**: the
+  named gap closed as **a kernel organ** (0004's lean, now decided): a
+  SCHEDULE is a standing intention on the ground in one of three kinds —
+  **human** (CRUD through the door; from the card), **role** (declared
+  by a body's template — the librarian's "review what was asked of you
+  today…" — registered once at every join), **kernel** (registered by
+  the rig at boot — the harness run for every mind with a golden set —
+  visible, NEVER editable: one plain face, 403 at the door). An
+  OCCURRENCE of a human or role schedule is an ask to its runner on the
+  Invocation rail — it shows in the band wearing its journey; a kernel
+  occurrence acts directly (the harness runs) and is recorded. **Rest is
+  a first-class recorded act, never a deletion** (covenant rule 11): the
+  card's "rest it" lands `rested_by` and `rested_at`, and the schedule
+  never beats again — still there. **Every schedule lives in its
+  runner's card** (P16): side B now lists kernel 🔒 · role · human with
+  their beats, last occurrence, and count, plus a "schedule an ask…"
+  form. **AG-4 is built** (a kernel duty and a role intention in the
+  card; the kernel one refuses; CRUD on the human one changes the
+  Operating State) and **AG-6's scheduled half is built** (the kernel
+  beats the harness every 30 min). A PRODUCTION WOUND, found by a hang:
+  the schedule loop's long-lived connection ran a bare SELECT, psycopg3
+  opened its implicit transaction, and the next `ensure_schema` inside
+  it held the xact-scoped DDL lock forever — every door queued (the
+  fixture lesson of the day before, in production exactly where the
+  memory said to watch). Cured at the layer: every long-lived rig
+  connection is autocommit. Four laws in `tests/test_scheduler.py`;
+  SCHED-01 now BUILT (walk owed). Suite 71 green.
 - The **draft shelf** (PROD/DEV decoupling, AG-9) lands with Workspace
   Engineering; the **markers dive** (`0006-markers-dive.md`) is designed
   before Phase 5 projects them.
+- Next: **the walk session** (one Playwright debug session when the limit
+  resets: INCLUDE-01's cured third · WORKSPACE-01 · MONITOR-01 · SCHED-01 ·
+  the frictions cured since) → **P4 WHOLE** → the markers dive (0006) →
+  **Phase 5 — MEMORY WHOLE**.
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 
