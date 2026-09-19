@@ -825,7 +825,8 @@ function clearDisplay(){          // clear ≠ erase: the words stay in the Reco
 async function rollSession(announce){
   const r = await fetch("/sessions", {method:"POST",
     headers:{"content-type":"application/json"},
-    body: JSON.stringify({person: PERSON})}).then(x=>x.json()).catch(()=>null);
+    body: JSON.stringify({person: PERSON, archive: SESSION || undefined})})   // the roll
+    .then(x=>x.json()).catch(()=>null);                        // digests the archived one
   if (!r) { sysline("the sessions door did not answer"); return; }
   SESSION = r.session_id;
   try { localStorage.setItem("orreth.session", SESSION); } catch (e) {}
@@ -847,6 +848,11 @@ async function listSessions(){
     row.textContent = `${i + 1}. ${hhmm(s.last_at || s.opened_at)} · ${s.asks} ask${s.asks === 1 ? "" : "s"}` +
       (s.title ? ` · ${s.title}` : "") + (s.last_words ? ` · “${s.last_words}”` : "") +
       (s.session_id === SESSION ? " · (this one)" : "");
+    if (s.short_version){                          // MEM-3: the short version, at a glance
+      const sv = document.createElement("div"); sv.className = "meta";
+      sv.style.cssText = "padding-left:14px;white-space:pre-wrap;font-size:11px";
+      sv.textContent = s.short_version.split("\n").slice(1, 4).join("\n"); row.appendChild(sv);
+    }
     row.onclick = () => loadSession(s.session_id);
     box.appendChild(row);
   });

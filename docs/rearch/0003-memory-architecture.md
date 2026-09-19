@@ -136,7 +136,7 @@ property is what makes the accelerations honest.
 | **What** | The short version: episode summaries, task recaps, profile distillations — each citing the records it compresses. |
 | **How** | Background Events-rail consumers write digests at episode/task boundaries (stable event ids ⇒ retries never duplicate); digests are records too — signed, scoped, rebuildable. |
 | **Why** | JB's compression requirement: context cost must stay bounded as history grows for years. A resident with a decade of memory still packs its mind in milliseconds — without ever losing a word beneath. |
-| **When** | Written when an episode or task closes and when a profile learns; read at every context pack ("the short version first"); the verbatim opens on demand; rebuilt from the log at any time. |
+| **When** | Written when an episode or task closes and when a profile learns; read at every context pack ("the short version first"); the verbatim opens on demand; rebuilt from the log at any time. *(P5 sp3: a session's roll is the first episode boundary; the v0 digest is extractive and deterministic — byte-identical on rebuild, a superseding sibling when the episode grew — and cites every source; the pack reads it first.)* |
 
 The pattern is the one Fable itself runs on: **compact the working view,
 keep the full transcript.**

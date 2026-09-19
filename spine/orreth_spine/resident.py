@@ -241,6 +241,18 @@ class Resident:
                     if row:
                         session, person = row[0], row[2]
                         window = json.loads(row[1]) if row[1] else None
+                if person:
+                    # the pack's third rung (canon 0003): the SHORT VERSION
+                    # first — the digests of this human's earlier sessions,
+                    # each naming its session; the verbatim comes after,
+                    # and opens on demand through the recall door
+                    from .digest import for_person
+                    for d in for_person(conn, person, exclude=session,
+                                        window=window):
+                        notes.append("the short version of session "
+                                     f"{d['session'][4:10]} (digest {d['digest_id'][4:10]},"
+                                     f" {len(d['sources'])} sources): "
+                                     + d["body"].replace("\n", " / "))
                 if session:
                     cur.execute(
                         "SELECT a.text, a.reply, coalesce(j.name, 'a resident'),"

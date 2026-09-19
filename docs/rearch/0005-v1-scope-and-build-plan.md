@@ -571,6 +571,23 @@ first walk carries MONITOR-01's deferred re-walk.
   word-match. An older ground migrates in place (the v0 primary key on
   namespace/key gives way to lineage; the rows stay). Four laws in
   `tests/test_understanding.py`. Suite 78 green.
+- **sp3 — the Digest, MEM-3** ✅ **BUILT 2026-09-19**: **a session's roll
+  is an episode boundary** — the archived session gets its digest
+  (`digest.py`; the roll door carries the archived session; `/digest`
+  on demand or to rebuild; `/digest/<session>` to read it with every
+  source it cites). The digest v0 is **extractive and deterministic** —
+  the head of every exchange, who replied and when, the words acquired
+  in the episode's span (this opening to the next) — so a rebuilt digest
+  is **byte-identical when nothing changed**, and a grown episode gets a
+  **sibling that supersedes** (the lineage pattern), each landing with
+  its event. **Every digest cites its sources** (ask ids, memory refs),
+  and each source opens verbatim through the recall door. **The pack
+  reads the short version first**: a resident's recall packs the digests
+  of this human's earlier sessions — each naming its session and its
+  digest — before any verbatim; inside a window, only sessions with asks
+  in it. The sessions list shows each session's short version at a
+  glance. A mind's prose digest can later land as a sibling of the same
+  record. Three laws in `tests/test_digest.py`. Suite 81 green.
 
 ## Phase 0, sliced (CLOSED 2026-09-16 — sp3's before-walk remainder owed)
 

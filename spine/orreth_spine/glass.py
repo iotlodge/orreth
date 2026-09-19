@@ -27,7 +27,7 @@ from pathlib import Path
 
 import psycopg
 
-from . import bridgefeed, dispatch, envelope as ev, harness, monitor, outbox
+from . import bridgefeed, digest, dispatch, envelope as ev, harness, monitor, outbox
 from . import presence, projector, scheduler, sinks
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, Resident
@@ -179,12 +179,16 @@ def recall_view(conn, *, ref: str | None = None, ask: str | None = None,
     return None
 
 
-def open_session(conn, person: str, title: str | None = None) -> str:
+def open_session(conn, person: str, title: str | None = None,
+                 archive: str | None = None) -> str:
     """Roll (P20): a fresh worldline for this human in this world. The
     previous session is not touched — archived means 'not active', never
-    'gone' (every word stays in the Record)."""
+    'gone' (every word stays in the Record) — and its roll is an EPISODE
+    BOUNDARY: the archived session gets its digest (MEM-3)."""
     from .resident import ensure_schema
     ensure_schema(conn)
+    if archive:
+        digest.build(conn, archive, by=person)
     sid = "ses_" + secrets.token_hex(6)
     with conn.transaction():
         conn.cursor().execute(
@@ -197,11 +201,14 @@ def sessions_view(conn, person: str, limit: int = 30) -> list[dict]:
     """List (P20): this human's worldlines in this world, newest first —
     each with its span, how many asks it holds, and its last words."""
     cur = conn.cursor()
+    digest.ensure_schema(conn)
     cur.execute(
         "SELECT s.session_id, s.title, s.opened_at,"
         " count(a.ask_id), max(a.asked_at),"
         " (SELECT text FROM spine_asks WHERE session = s.session_id"
-        "  ORDER BY asked_at DESC LIMIT 1)"
+        "  ORDER BY asked_at DESC LIMIT 1),"
+        " (SELECT body FROM spine_digests d WHERE d.kind = 'session'"
+        "  AND d.ref = s.session_id AND d.scope = s.scope AND d.valid_to IS NULL)"
         " FROM spine_sessions s LEFT JOIN spine_asks a"
         " ON a.session = s.session_id"
         " WHERE s.person = %s AND s.scope = %s"
@@ -209,7 +216,9 @@ def sessions_view(conn, person: str, limit: int = 30) -> list[dict]:
         (person, ev.scope(), limit))
     return [{"session_id": r[0], "title": r[1], "opened_at": r[2].isoformat(),
              "asks": int(r[3]), "last_at": r[4].isoformat() if r[4] else None,
-             "last_words": (r[5] or "")[:140]} for r in cur.fetchall()]
+             "last_words": (r[5] or "")[:140],
+             "short_version": (r[6] or "")[:280] or None}   # MEM-3, at a glance
+            for r in cur.fetchall()]
 
 
 def session_view(conn, session_id: str) -> dict | None:
@@ -317,6 +326,12 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 person = (qs.get("person") or ["did:orreth:person:jb"])[0]
                 with psycopg.connect(dsn) as conn:
                     return self._json(200, {"sessions": sessions_view(conn, person)})
+            if path.startswith("/digest/"):            # the short version, and
+                with psycopg.connect(dsn) as conn:        # every source it cites
+                    view = digest.of_session(conn, path.split("/digest/", 1)[1])
+                if view is None:
+                    return self._json(404, {"error": "no digest yet — one face"})
+                return self._json(200, view)
             if path.startswith("/session/"):
                 with psycopg.connect(dsn) as conn:
                     view = session_view(conn, path.split("/session/", 1)[1])
@@ -387,12 +402,20 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(404, {"error": "no such body"})  # scheduler)
                 with psycopg.connect(dsn) as conn:
                     return self._json(200, harness.run(conn, body))
-            if path == "/sessions":                   # roll a fresh one
-                person = str(p.get("person") or "did:orreth:person:jb")
+            if path == "/sessions":                   # roll a fresh one —
+                person = str(p.get("person") or "did:orreth:person:jb")   # and
+                with psycopg.connect(dsn) as conn:                        # digest
+                    sid = open_session(conn, person,                      # the one
+                                       title=str(p.get("title") or "") or None,
+                                       archive=str(p.get("archive") or "") or None)
+                return self._json(201, {"session_id": sid})               # archived
+            if path == "/digest":                     # on demand, or rebuild
+                sid = str(p.get("session") or "")
                 with psycopg.connect(dsn) as conn:
-                    sid = open_session(conn, person,
-                                       title=str(p.get("title") or "") or None)
-                return self._json(201, {"session_id": sid})
+                    made = digest.build(conn, sid, by=str(p.get("person") or "did:orreth:person:jb"))
+                if made is None:
+                    return self._json(404, {"error": "no such session"})
+                return self._json(200 if not made["new"] else 201, made)
             if path == "/confirm":
                 ask_id = str(p.get("ask_id") or "")
                 approve = bool(p.get("approve", False))   # absent = cancel
