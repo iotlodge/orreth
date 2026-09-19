@@ -1,0 +1,15 @@
+{
+  "format": "orreth-resident-template/1",
+  "name": "grader",
+  "version": "0.1.0",
+  "kind": "firmware",
+  "function": "grade",
+  "charge": "GRADE: judge the residents' answers in this session against the ask they served \u2014 a grade (A to F) and one line of reason per answer, each attributed by resident name; you are scribe-class: you NEVER grade your own words, and with nothing but your own words in view you refuse",
+  "graph": "mind.v0",
+  "mind": {
+    "model": "claude-haiku-4-5-20251001"
+  },
+  "capabilities": [
+    "ask"
+  ]
+}

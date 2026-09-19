@@ -16,13 +16,15 @@ is the reason the rearchitecture exists.
 | **SPEC-SCOPE-01** | P6 | Type an ask containing "between last Monday and today" | The time scope visibly reflects on the chat's clock/axes without any click | expected FAIL | **PASS** (sp6) — typing "between last Monday and today" drew "Mon, Sep 14 ——|——|—— today · 4 days" on the clock, no click; the window rode the ask into its journey line |
 | **SPEC-FANOUT-01** | P14 fan-out | Select two residents; send one ask | Two distinct, labeled results; each downloadable; "summarize together" offered on demand | expected FAIL | **PASS** two labelled results + summarize-by-name (after wounds 2 & 3 cured) · FAIL download (no control) |
 | **SPEC-LIFE-01** | P13 | Open the lifecycle surface while work runs | Queued, in-flight, and completed all visible; every row opens its result in place | expected FAIL | **PASS** (after wound 1 cured; sp5) — every row a door from the landing state; rows carry a time; no stranger world's rows even with the suite running |
-| **SPEC-SCHED-01** | P16 | Open a resident's card | Every schedule it runs is listed — human, role, and kernel; the kernel-critical one refuses edit with plain words | expected FAIL | NOT BUILT (expected) |
+| **SPEC-SCHED-01** | P16 | Open a resident's card | Every schedule it runs is listed — human, role, and kernel; the kernel-critical one refuses edit with plain words | expected FAIL | **PARTIAL** (P4 sp3) — the card lists the kernel-required duties and each refuses edit in plain words; human- and role-scheduled ones arrive with the scheduler |
 | **SPEC-LENS-01** | P17 | Change a setting in one pull; look at another surface showing it | The change is already there — no refresh, no navigation | expected FAIL | NOT BUILT (expected) |
 | **SPEC-CLEAR-01** | P14 clear≠erase | Clear the chat display; ask "what did I ask you earlier?" | The display is clean AND the resident recalls — nothing was erased | expected FAIL | NOT BUILT (expected); recall half partial |
 | **SPEC-L2-01** | P12 | Ask for a consequential change | "Are you sure…" arrives in the chat; cancel is default; yes needs a deliberate click, never the return key | expected FAIL | **PASS** — "Are you sure?" in-chat, Cancel focused, Enter cancelled; Yes withheld by the Playwright |
 | **SPEC-WORDS-01** | P18 | Read every word on the landing surface as a newcomer | No jargon a newcomer can't parse; actions say what saying yes will do | expected FAIL | FRICTION — u:dev · life 1 · rev N · ORRERY·BRAIN·ATLAS unparseable to a newcomer; actions plain |
 | **SPEC-FOCUS-01** | P19 | Open an ask from OBJECTIVES; look at the chat; type a follow-up; press [Esc] | The chat re-dresses to that ask's crew and window with a FOCUS line, no click beyond the row; the follow-up goes there; one Esc returns the bare bridge with the previous selection and clock restored exactly | expected FAIL | **PASS** (P4 sp1) — "FOCUS · ask 5b583f3c · echo · Mon, Sep 14 → Fri, Sep 18", chip lit, clock set, the follow-up went there; one Escape restored rail and clock exactly |
 | **SPEC-SESSION-01** | P20 · MEM-7 | Say "new session"; ask something; say "list my sessions"; say "load session 2" (or click the earlier one) | A fresh chat rolls (the earlier one archived, not gone); the list shows sessions newest first with counts and last words; loading returns the earlier conversation whole, in order; a resident asked in a session has that session's earlier results in view, and never another's | expected FAIL | **PASS** (P4 sp1, after the sessions-door wound was cured) — PELICAN held in A, absent in B, the list newest first, "load session 2" returned A whole, PELICAN back in view |
+| **SPEC-INCLUDE-01** | includes · AG-8 | With two residents' answers in the chat, click "plan" (or type "plan this"); then, in a fresh session with no one else's words, type "grade" | A new result labeled by its function (planner) that draws on BOTH answers and names the residents by name; its journey says whose results it read; the grader, with nothing but its own words in view, refuses in plain words | expected FAIL | **PASS · PASS · FAIL→cured** (P4 sp2, walk #3) — the planner drew on both answers by name; the grader refused plainly; the journey line lacked whose results were read (the note existed; the line now carries it) — re-walk OWED |
+| **SPEC-WORKSPACE-01** | P19 · the first workspace | Say "open the crew" (or pull the CREW tab); read a card; ask "who is here?"; click a kernel duty; close the chat and click another card's soft link; press [Esc] | The pull opens with one card per body, both sides; the chat follows — its scope is the crew agent, which answers from the cards; a kernel duty says in plain words it is never editable; with the chat closed the cards still work by hand (manual), and a soft link reopens the chat to its agent (assist); one Esc returns the bridge with the previous scope | expected FAIL | BUILT (P4 sp3) — walk OWED (the Playwright's spend wall) |
 | **SPEC-FEEL-01** | the cockpit itself | Sit down cold; find chat, results, and what's running | No navigation needed; everything reachable from the landing page; it feels like a place, not an admin panel | expected FAIL | **PASS** w/ friction — a place, no navigation; the open chat hides the header at small widths |
 
 ## Walk records
@@ -53,4 +55,14 @@ sessions door decoded nothing, every list read "none yet" — cured at
 the door within the hour, re-walked green with the frictions it named
 cured alongside (the clock under focus, calendar-day spans, a reply
 rendering twice, the silent reload). Evidence in the same record.
+
+### Walk #3 — P4 sp2, 2026-09-18 (the includes) — the last before the wall
+
+INCLUDE-01: the planner's result and the grader's refusal green; the
+chat's journey line did not name whose results the include read (cured
+the same hour). The Playwright hit the account's spend limit at the end
+of this walk. **OWED, in one debug session when the limit resets:**
+INCLUDE-01's cured third · WORKSPACE-01 (P4 sp3) · SCHED-01's partial ·
+the frictions cured since (focus vs "new session", the band's header
+close, plain-words bubbles).
 The before-walk remainder (old glass) stays owed.

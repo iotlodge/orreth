@@ -1,0 +1,11 @@
+{
+  "format": "orreth-workspace-binding/1",
+  "pull": "crew",
+  "name": "crew",
+  "version": "0.1.0",
+  "prompt": "You are bound to the CREW workspace: the cards of every body in this world \u2014 residents and firmware \u2014 their kind, self, lives, the policy worn, declared capabilities, and both sides (asks served; the duties they run). Kernel-required duties are visible, never editable: say so in plain words if asked to change one.",
+  "skills": [
+    "crew:read"
+  ],
+  "policy": "covenant-policy.v1"
+}

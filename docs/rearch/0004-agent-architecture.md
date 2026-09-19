@@ -279,9 +279,13 @@ naturally" — it now explicitly is):
 - Whether the scheduler is a kernel organ or a duty of a standing resident
   (0002 left it open; Fable leans kernel organ with occurrences visible in
   each runner's card, per P16).
-- The **binding schema** (policy · prompt · skill allocation per pull) and
-  the include invocation shape — land with P4 sp2/sp3, through the
-  factories.
+- ~~The **binding schema** and the include invocation shape~~ — **v0
+  LANDED (P4 sp2/sp3):** an include is an ask targeted at a firmware
+  body in the same session (its input = the session's results, labeled;
+  the chain names what it read); a binding is `bindings/<pull>.v0.json`
+  {pull · name · prompt · skills · policy} applied to the one workspace
+  template at birth. The factories' governed cut of both (versioned,
+  A/B-assured) is still to come.
 
 ## What this document binds
 

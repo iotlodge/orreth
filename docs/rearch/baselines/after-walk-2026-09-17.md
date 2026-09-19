@@ -261,3 +261,41 @@ followed (the ask, then the list, then the librarian's answer); a reloaded page
 shows an empty chat while silently continuing the last session; re-rendered
 journey lines read "librarian · completed …" without the scope the live lines
 carry; the chat remembered its dragged size across the reload.
+## Walk #3 — 2026-09-18, P4 sp2 (the includes)
+
+**Status: WHOLE (P4 sp2, one new spec; one walk, no re-checks — JB's
+cadence).** Same Bridge, same browser, page reloaded fresh after the relight
+(crew chips read `echo · life 8` / `librarian · life 8`). Under the chat's
+header an INCLUDES strip reads **"INCLUDES · plan · critique · grade · one
+step over what the residents brought into this session"**; the crew rail
+still lists residents only. Waits are the deliberate waits I took; the
+glass's own counts in brackets.
+
+| Spec | Verdict | What the Playwright saw |
+|---|---|---|
+| **SPEC-INCLUDE-01** | **PASS** on the planner's result and the grader's refusal · **FAIL** on "its journey says whose results it read" | *Setup:* "new session" → fresh session 401933; echo selected beside the librarian; asked "Both of you: in one sentence, what is the best way to keep a record safe?" — echo (verbatim) and the librarian ("store it somewhere dry and cool … seal it so no one can alter what's written") both whole inside 6 s (0.2 s). *Plan:* clicked **plan** in the strip; my side shows **"plan — on your word → planner"**; inside 10 s a bubble labelled **"planner"** (0.1 s) — "# PLAN: Next Steps … 1. Clarify what "safe" means — Ask both echo and the librarian … 2. Test the librarian's method — The librarian named dry, cool, dark storage and sealing … 3. Ask echo what "safe" means to echo — Echo mirrored back the question itself … Gap left open: …" — it draws on BOTH answers and names both residents by name. Its journey line: **"planner took it on u:dev · completed 07:41:43 PM (0.1 s)"** — it does not say whose results it read; the band's row for the step reads "Plan the next steps from what was said in this session. · planner · replied · 07:41:43 PM", no fuller line seen. *Critique:* typed "critique"; inside 10 s a result whose journey reads **"critic took it on u:dev · completed 07:43:03 PM (0.2 s)"** — "What is thin: Echo's answer gives us nothing to work with … What contradicts: The librarian and echo are not contradicting each other … The one thing most worth fixing: Ask echo again, directly…" — both residents by name, the planner's words weighed too (the bubble's own label line was not separately captured; the journey names the critic). *Grade:* "new session" (936d86) then typed "grade" with no one else's words in it: my side **"grade — on your word → grader"**, bubble labelled **"grader"**: **"Nothing here to grade but my own words — I never grade my own yardstick. Bring a resident's answer into this session and ask me again."** — journey **"grader took it on u:dev · completed 07:43:42 PM (0.3 s)"**. A plain refusal, no grade, no thinking. |
+
+**Friction:**
+- **A held focus survives "new session".** A click on the planner's row in
+  the band (to read its journey) set "FOCUS · ask 2e835044 · planner" —
+  and the fresh session 936d86 opened still wearing it ("FOCUS · ask
+  2e835044 · planner · now"). A new session should not carry the old
+  session's focus; the grade step ran under it.
+- **With a band row expanded, the floor's OBJECTIVES toggle is covered** by
+  the expanded row, so the band cannot be closed by its own toggle (the
+  click lands on the expansion); Escape still clears everything.
+- The planner's bubble shows raw markdown ("# PLAN: Next Steps", `**…**`)
+  — the standing raw-markdown friction, now on headings too.
+- The crew selection stayed as I left it (both chips lit) after the plan
+  and critique steps; the "summarize these together?" case was not
+  re-tested (it would have cost a round).
+- The includes' journey lines name the include and the world only; a human
+  cannot see from the chat which residents' results the include read.
+
+Nothing wound-grade: every include answered as labelled, both residents
+were named in the plan and the critique, and the grader refused cleanly.
+
+**Walk #3 evidence** (same folder): `after-walk-p4s2-01-planner-result.png`
+(the planner's bubble and its journey line under the INCLUDES strip; both
+chips lit); `after-walk-p4s2-02-grader-refuses.png` (the fresh session with
+the grader's refusal — and the carried-over FOCUS strip above it).

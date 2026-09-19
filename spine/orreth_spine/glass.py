@@ -85,6 +85,42 @@ def asks_view(conn, limit: int = 30) -> list[dict]:
             for r in cur.fetchall()]
 
 
+KERNEL_DUTIES = [                # every body runs these — kernel-required,
+    "serve the invocation rail",   # visible in its card, never editable (P16)
+    "emit the journey at every hop",
+    "think only on the meter",
+    "wear the covenant policy it joined with",
+]
+
+
+def crew_view(conn) -> list[dict]:
+    """The Crew workspace's door: one card per body in this world —
+    who it is, what it wears, what it declared, and BOTH SIDES (canon
+    0004): side A, the asks it served; side B, the duties it runs. The
+    kernel-required duties are listed and immutable; human- and role-
+    scheduled ones arrive with the scheduler (AG-4's CRUD half)."""
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT DISTINCT ON (name) name, kind, did, life, joined_at,"
+        " policy_version, template_hash, capabilities FROM spine_joins"
+        " WHERE scope = %s ORDER BY name, join_id DESC", (ev.scope(),))
+    cards = []
+    for name, kind, did, life, joined, pv, th, caps in cur.fetchall():
+        cur.execute("SELECT count(*), max(replied_at) FROM spine_asks"
+                    " WHERE served_by = %s AND scope = %s AND status <> 'received'",
+                    (did, ev.scope()))
+        n, last = cur.fetchone()
+        cards.append({
+            "name": name, "kind": kind, "did": did, "lives": life,
+            "joined_at": joined.isoformat(), "policy_version": pv,
+            "template": th[:12], "capabilities": json.loads(caps or "[]"),
+            "side_a": {"asks_served": int(n),
+                       "last_served": last.isoformat() if last else None},
+            "side_b": {"kernel": [{"duty": d, "editable": False} for d in KERNEL_DUTIES],
+                       "human": [], "role": []}})
+    return cards
+
+
 def open_session(conn, person: str, title: str | None = None) -> str:
     """Roll (P20): a fresh worldline for this human in this world. The
     previous session is not touched — archived means 'not active', never
@@ -145,11 +181,12 @@ def residents_view(conn) -> list[dict]:
     """The chat's right edge: who lives here — name, self, lives."""
     cur = conn.cursor()
     cur.execute(
-        "SELECT DISTINCT ON (name) name, did, life, joined_at"
+        "SELECT DISTINCT ON (name) name, did, life, joined_at, kind"
         " FROM spine_joins WHERE scope = %s ORDER BY name, join_id DESC",
         (ev.scope(),))
     return [{"name": r[0], "did": r[1], "lives": r[2],
-             "joined_at": r[3].isoformat()} for r in cur.fetchall()]
+             "joined_at": r[3].isoformat(), "kind": r[4]}
+            for r in cur.fetchall()]
 
 
 def make_glass_handler(feed: bridgefeed.Feed, dsn: str):
@@ -188,6 +225,9 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str):
                 with psycopg.connect(dsn) as conn:
                     return self._json(200,
                                       {"residents": residents_view(conn)})
+            if path == "/crew":
+                with psycopg.connect(dsn) as conn:
+                    return self._json(200, {"crew": crew_view(conn)})
             if path == "/sessions":
                 from urllib.parse import parse_qs
                 qs = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
@@ -285,6 +325,22 @@ class BridgeRig:
                             home=home)
             echo.load_policy(policy_path)
             self.residents.append(echo)
+        # the includes (0004's third kind): planner · critic · grader —
+        # firmware bodies, same laws, no persona, called by the human as
+        # includes over the session's results
+        self.firmware: dict[str, Resident] = {}
+        for fn in ("planner", "critic", "grader"):
+            fw = Resident(spine / "templates" / f"firmware-{fn}.v0.json",
+                          gateway=gateway, home=home)
+            fw.load_policy(policy_path)
+            self.residents.append(fw); self.firmware[fn] = fw
+        # the first workspace: the Crew pull's agent — the ONE workspace
+        # body wearing the crew binding (0004: one body, per-pull bindings)
+        crew = Resident(spine / "templates" / "workspace-firmware.v0.json",
+                        gateway=gateway, home=home,
+                        binding=spine / "bindings" / "crew.v0.json")
+        crew.load_policy(policy_path)
+        self.residents.append(crew); self.workspaces = {"crew": crew}
         for r in self.residents:
             r.on_delta = self.feed.publish_delta
         from http.server import ThreadingHTTPServer

@@ -400,13 +400,59 @@ by the Playwright before it closes.
   world (P4 sp3/sp4). Three laws: sessions roll/list/load and never
   spill · a resident reads only this session's results · the session
   doors answer over HTTP as the glass asks. Suite 57 green.
-- **sp2 — the includes edge**: planner · critic · grader as the first
-  firmware bodies (0004's third kind) — a soft link and the typed word
-  apply one over the residents' results in the chat; the chain end to end
-  (AG-8); the grader scribe-class.
-- **sp3 — the Crew pull, the first workspace**: the workspace-firmware
-  template with its first binding; resident and agent cards showing both
-  sides (AG-4); manual vs assist felt.
+- **sp2 — the includes edge** ✅ **LANDED 2026-09-18**: **the third
+  kind is real** — planner · critic · grader are bodies born from
+  firmware templates (`kind: firmware`, named by function, a `charge`
+  instead of a persona; the same laws: a persistent self, the covenant
+  worn, the meter, the journey), seated by the BridgeRig beside the
+  residents. An **include is an ask targeted at a firmware body in the
+  same session**, so its input is exactly sp1's session-bound recall —
+  the residents' results in this session, labeled by who said them. The
+  INCLUDES strip on the chat's top edge ("plan · critique · grade") and
+  the typed words ("plan this", "critique", "grade") send one step; the
+  crew rail shows residents only (the crew door tells the kinds). **AG-8
+  holds by construction**: recall collects the DIDs whose results it
+  read and the journey lands H → the residents read → the firmware; a
+  step names them ("read the session's results by echo, librarian").
+  **The grader is scribe-class**: its own replies are never material,
+  and with nothing else in view it refuses before any thinking ("I never
+  grade my own yardstick"). The synthesis no longer resets the human's
+  crew selection (a filed friction). THE WALK (#3, the Playwright's last
+  before the spend wall): planner's result draws on BOTH answers by name
+  (PASS); the grader refuses in plain words (PASS); "its journey says
+  whose results it read" FAILED in the chat — the note was emitted (the
+  law proves it) but the journey line under the reply never showed it;
+  cured the same hour (the line now carries it), re-walk OWED. Frictions
+  cured: a held focus survived "new session" (roll and load now start at
+  the bridge's focus); the band's toggle hid under an expansion (its
+  header closes it); markdown headings and bold now fall away on the
+  glass (the Record keeps the exact words). Three laws in
+  `tests/test_includes.py`.
+- **sp3 — the Crew pull, the first workspace** ✅ **BUILT 2026-09-18 —
+  walk OWED** (the Playwright hit the account's spend wall during sp2's
+  walk; per JB's cadence call the owed walks — INCLUDE-01's cured third,
+  WORKSPACE-01, SCHED-01's partial — run in ONE debug session when the
+  limit resets): **the binding schema's v0** —
+  `templates/workspace-firmware.v0.json` is the ONE workspace body;
+  `bindings/crew.v0.json` names its seat ("crew"), its pull, its prompt,
+  its skills; `Resident(binding=…)` applies it at birth (name, function
+  `workspace:crew`, the charge extended), and the rig seats it. **The
+  Crew pull** slides from the left hull wall (its tab is the wall's edge;
+  "open the crew" by words): **one card per body, both sides** (0004) —
+  kind · self · lives · the covenant version worn · what it DECLARED at
+  its join (capabilities now recorded on the join) · side A, asks served
+  and last · side B, the kernel-required duties, each 🔒 and answering a
+  click in plain words ("kernel-required — visible, never editable");
+  human- and role-scheduled: "none yet — the scheduler is on the road"
+  (AG-4's CRUD half waits for it; SCHED-01 PARTIAL). **The chat follows
+  the workspace** (P19): opening the pull pushes "FOCUS · the Crew
+  workspace · its agent, crew" — the crew agent answers from the cards
+  (its recall packs them); close the chat and the cards work by hand
+  (manual); each card's soft link reopens the chat to its agent about
+  that body (assist); one Esc returns the bridge, scope restored. Three
+  laws in `tests/test_crew.py` (the door's both sides · the binding
+  births the agent with the crew in its recall · the door over HTTP with
+  the whole rig of six). Suite 63 green (sp2 + sp3 together).
 - **sp4 — Monitoring + its workspace agent**: the pull, its agent
   building monitoring for the human's approval, the A/B harness v0
   (AG-6), presence leases (M2).

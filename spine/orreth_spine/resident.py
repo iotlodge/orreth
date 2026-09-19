@@ -63,6 +63,7 @@ class _State(TypedDict):
     steps: list
     notes: list
     hold: dict | None
+    read: list          # the DIDs whose results this mind read (the chain)
 
 
 def ensure_schema(conn) -> None:
@@ -106,6 +107,10 @@ def ensure_schema(conn) -> None:
         # the session it was asked in; a session rolls, never spills
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
                     " session text")
+        cur.execute("ALTER TABLE spine_joins ADD COLUMN IF NOT EXISTS"
+                    " kind text NOT NULL DEFAULT 'resident'")  # the third kind
+        cur.execute("ALTER TABLE spine_joins ADD COLUMN IF NOT EXISTS"
+                    " capabilities text")   # what the body DECLARED at its join
         cur.execute(
             "CREATE TABLE IF NOT EXISTS spine_sessions ("
             " session_id text PRIMARY KEY, person text NOT NULL,"
@@ -126,7 +131,8 @@ def _next_seq(cur, ask_id: str) -> int:
 
 class Resident:
     def __init__(self, template_path: str | os.PathLike,
-                 *, home: str | os.PathLike | None = None, gateway=None):
+                 *, home: str | os.PathLike | None = None, gateway=None,
+                 binding: str | os.PathLike | None = None):
         raw = Path(template_path).read_bytes()
         self.template = json.loads(raw)
         if self.template.get("format") != "orreth-resident-template/1":
@@ -134,6 +140,19 @@ class Resident:
                              f"{self.template.get('format')!r}")
         self.template_hash = ev.content_hash(self.template)
         self.name = self.template["name"]
+        # the third kind (0004): a firmware agent wears no persona and is
+        # named by its function; the body of laws is the same
+        self.kind = self.template.get("kind", "resident")
+        self.function = self.template.get("function")
+        self.charge = self.template.get("charge", "")
+        # a workspace binding (0004): ONE workspace-firmware body, a binding
+        # per pull — the binding names the seat and adds its prompt/skills
+        self.binding = None
+        if binding is not None:
+            self.binding = json.loads(Path(binding).read_text())
+            self.name = self.binding["name"]
+            self.function = f"workspace:{self.binding['pull']}"
+            self.charge = f"{self.charge} {self.binding.get('prompt', '')}".strip()
         self.identity = Identity.load(self.name, home)
         self.policy: dict | None = None
         # the mind: a template that declares one thinks through the
@@ -177,11 +196,12 @@ class Resident:
                 "policy": self.policy["hash"]})
             cur.execute(
                 "INSERT INTO spine_joins (did, name, life, template_hash,"
-                " policy_version, policy_hash, sig, scope)"
-                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                " policy_version, policy_hash, sig, scope, kind, capabilities)"
+                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (self.identity.did, self.name, life, self.template_hash,
                  self.policy["version"], self.policy["hash"], sig,
-                 ev.scope()))                  # joined THIS world
+                 ev.scope(), self.kind,        # joined THIS world, as my kind,
+                 json.dumps(self.template.get("capabilities", []))))  # declared
         return {"did": self.identity.did, "life": life,
                 "policy_version": self.policy["version"]}
 
@@ -197,6 +217,7 @@ class Resident:
             notes the think node reads. Without a serving connection
             (pure-graph tests) the recall is honestly empty."""
             notes: list[str] = []
+            read: list[str] = []            # whose results I read
             conn = self._serve_conn
             if conn is not None:
                 from .store import OrrethStore
@@ -213,7 +234,8 @@ class Resident:
                     session = row[0] if row else None
                 if session:
                     cur.execute(
-                        "SELECT a.text, a.reply, coalesce(j.name, 'a resident')"
+                        "SELECT a.text, a.reply, coalesce(j.name, 'a resident'),"
+                        " a.served_by"
                         " FROM spine_asks a LEFT JOIN LATERAL ("
                         "  SELECT name FROM spine_joins WHERE did = a.served_by"
                         "  ORDER BY join_id DESC LIMIT 1) j ON true"
@@ -221,10 +243,15 @@ class Resident:
                         " AND a.ask_id <> %s"
                         " ORDER BY a.replied_at DESC LIMIT 6",
                         (session, self._current_ask))
-                    for t, rp, who in cur.fetchall():
-                        mine = who == self.name
-                        notes.append(f"earlier in this session, asked: {t!r} — "
-                                     f"{'I' if mine else who} replied: {rp!r}")
+                    for t, rp, who, by in cur.fetchall():
+                        mine = by == self.identity.did
+                        if mine and self.function == "grade":
+                            continue        # scribe-class: my own words are
+                        notes.append(         # never material for my grade
+                            f"earlier in this session, asked: {t!r} — "
+                            f"{'I' if mine else who} replied: {rp!r}")
+                        if not mine and by and by not in read:
+                            read.append(by)   # the chain will name them
                 else:
                     cur.execute(
                         "SELECT text, reply FROM spine_asks"
@@ -233,25 +260,67 @@ class Resident:
                         (self.identity.did,))
                     for t, rp in cur.fetchall():
                         notes.append(f"earlier, asked: {t!r} — I replied: {rp!r}")
+                if (self.function or "").startswith("workspace:"):
+                    # a workspace agent reads ITS workspace's facts (the
+                    # binding names which); the crew: every body here
+                    cur.execute(
+                        "SELECT DISTINCT ON (name) name, kind, life, policy_version,"
+                        " capabilities, did FROM spine_joins WHERE scope = %s"
+                        " ORDER BY name, join_id DESC", (ev.scope(),))
+                    for n, k, life, pv, caps, did in cur.fetchall():
+                        notes.append(f"crew card — {n}: {k}, life {life}, wearing "
+                                     f"covenant policy v{pv}, capabilities "
+                                     f"{', '.join(json.loads(caps or '[]')) or 'none declared'}, "
+                                     f"self {did[-8:]}")
                 st = OrrethStore(conn, by_did=self.identity.did)
                 for m in st.search(self.name, s["text"][:60], limit=3):
                     notes.append(f"I remember [{m['key']}]: {m['body']}")
             step = (f"recalled {len(notes)} notes" if notes
                     else "recalled nothing yet — a young memory")
-            return {"notes": notes, "steps": s["steps"] + [step]}
+            steps = s["steps"] + [step]
+            if read and conn is not None:
+                cur.execute("SELECT DISTINCT ON (did) did, name FROM spine_joins"
+                            " WHERE did = ANY(%s) ORDER BY did, join_id DESC",
+                            (read,))
+                names = {d: n for d, n in cur.fetchall()}
+                steps.append("read the session's results by "
+                             + ", ".join(names.get(d, d[-8:]) for d in read))
+            return {"notes": notes, "steps": steps, "read": read}
 
         def think(s: _State) -> dict:
+            if self.function == "grade" and not s.get("read"):
+                # scribe-class (covenant rule 2): with nothing but my own
+                # words in view there is nothing I may grade — refused
+                # before any thinking, honestly
+                return {"reply": ("Nothing here to grade but my own words — "
+                                  "I never grade my own yardstick. Bring a "
+                                  "resident's answer into this session and "
+                                  "ask me again."),
+                        "steps": s["steps"] + ["refused to grade my own work "
+                                               "— scribe-class"]}
             if self.gateway is not None and self._serve_conn is not None:
                 from .tools import ConsequentialHold, ToolDoor
                 mind = self.template.get("mind") or {}
-                system = (
-                    f"You are {self.name}, a resident of Orreth — "
-                    f"{self.template['persona']}. Laws you live by: answer "
-                    "in plain, friendly words anyone can understand; answer "
-                    "COMPLETELY — the full reply, never a teaser; when your "
-                    "recalled notes bear on the ask, use them and say so "
-                    "plainly; never invent a memory you were not handed; "
-                    "use your tools when the ask needs the real world.")
+                if self.kind == "firmware":
+                    system = (
+                        f"You are the {self.name} — a firmware agent of "
+                        "Orreth, named by your function, wearing no persona. "
+                        f"Your charge: {self.charge}. You "
+                        "work over what the residents brought into this "
+                        "session — your recalled notes — and nothing else. "
+                        "Laws: attribute every point to the resident who said "
+                        "it, by name; never present another's words as your "
+                        "own; plain words anyone can understand; complete, "
+                        "never a teaser.")
+                else:
+                    system = (
+                        f"You are {self.name}, a resident of Orreth — "
+                        f"{self.template['persona']}. Laws you live by: answer "
+                        "in plain, friendly words anyone can understand; answer "
+                        "COMPLETELY — the full reply, never a teaser; when your "
+                        "recalled notes bear on the ask, use them and say so "
+                        "plainly; never invent a memory you were not handed; "
+                        "use your tools when the ask needs the real world.")
                 prompt = ""
                 if s["notes"]:
                     prompt += ("Your recalled notes:\n- "
@@ -331,8 +400,11 @@ class Resident:
         text, person, _status = row
         self._current_ask = ask_id
         out = self._graph.invoke({"text": text, "reply": "", "steps": [],
-                                  "notes": [], "hold": None})
+                                  "notes": [], "hold": None, "read": []})
         full_chain = list(chain) if chain else [person]
+        for by in out.get("read") or []:    # AG-8: H → the residents whose
+            if by not in full_chain:        # results I read → me
+                full_chain.append(by)
         if self.identity.did not in full_chain:
             full_chain.append(self.identity.did)
         self._journey(cur, ask_id, out["steps"], full_chain)

@@ -86,6 +86,15 @@
     color:var(--amber);font-size:10.5px;letter-spacing:.12em;
     border-bottom:1px solid var(--seam);background:rgba(255,180,60,.06)}
   #focus.on{display:flex}
+  /* the includes (0004's third kind): the top edge's firmware — plan ·
+     critique · grade — applied as one step over what the residents
+     brought into this session */
+  #includes{display:flex;align-items:center;gap:10px;padding:5px 16px;
+    color:var(--dim);font-size:10.5px;letter-spacing:.12em;
+    border-bottom:1px solid var(--seam)}
+  #includes a{cursor:pointer;color:var(--amber);text-decoration:none;opacity:.85}
+  #includes a:hover{opacity:1;text-decoration:underline}
+  #includes .hint{margin-left:auto}
   #focus .hint{margin-left:auto;color:var(--dim)}
   #chat header a{cursor:pointer;color:var(--dim);text-decoration:none}
   #chat header a:hover{color:var(--amber)}
@@ -136,6 +145,39 @@
     color:var(--amber)}
   /* ---- the Objectives band (the floor hatch opens) ---- */
   #floor{cursor:pointer;transition:color .2s}
+  /* the Crew pull (P19, the first workspace): a hull panel on the left
+     wall; its tab is the wall's edge; the cards inside; the chat follows */
+  #crew-tab{position:fixed;left:0;top:38vh;writing-mode:vertical-rl;
+    transform:rotate(180deg);cursor:pointer;color:var(--dim);font-size:10.5px;
+    letter-spacing:.4em;padding:14px 6px;border:1px solid var(--seam);
+    border-left:none;border-radius:0 8px 8px 0;background:var(--glass);
+    z-index:8;transition:color .2s}
+  #crew-tab:hover{color:var(--amber)}
+  #crew{position:fixed;left:0;top:6vh;height:88vh;width:min(520px,92vw);
+    transform:translateX(-104%);transition:transform .45s
+    cubic-bezier(.22,.9,.3,1);z-index:9;display:flex;flex-direction:column;
+    border:1px solid var(--seam);border-left:none;border-radius:0 14px 14px 0;
+    background:var(--glass);backdrop-filter:blur(10px);
+    box-shadow:14px 0 44px rgba(0,0,0,.5)}
+  #crew.open{transform:translateX(0)}
+  #crew header{padding:9px 16px;color:var(--amber);font-size:11px;
+    letter-spacing:.12em;border-bottom:1px solid var(--seam)}
+  #cards{flex:1;overflow-y:auto;padding:8px 12px}
+  .card{border:1px solid var(--seam);border-radius:10px;padding:9px 12px;
+    margin:0 0 9px;font-size:12px;color:var(--ink)}
+  .card h5{margin:0 0 4px;font-size:12.5px;color:var(--amber);letter-spacing:.06em}
+  .card .meta{color:var(--dim);font-size:11px}
+  .card .side{margin-top:6px;border-top:1px dashed rgba(42,46,58,.7);padding-top:5px}
+  .card .side b{color:var(--dim);font-weight:normal;letter-spacing:.1em;font-size:10.5px}
+  .cap{display:inline-block;border:1px solid var(--seam);border-radius:8px;
+    padding:0 6px;margin:2px 3px 0 0;font-size:10.5px;color:var(--dim)}
+  .duty{cursor:pointer;padding:1px 0}
+  .duty.kernel::before{content:"🔒 ";font-size:10px}
+  .duty .why{display:none;color:var(--amber);margin-left:8px;font-size:11px}
+  .duty.asked .why{display:inline}
+  .assist{display:inline-block;margin-top:6px;cursor:pointer;color:var(--amber);
+    font-size:11px;opacity:.85}
+  .assist:hover{opacity:1;text-decoration:underline}
   #floor:hover{color:var(--amber)}
   #band{position:fixed;left:5vw;right:5vw;bottom:0;height:46vh;
     transform:translateY(104%);transition:transform .45s
@@ -196,8 +238,14 @@
   <div id="floor" onclick="toggleBand()" title="everything running, everything run">O B J E C T I V E S ▴</div>
 </div>
 
+<div id="crew-tab" onclick="toggleCrew()" title="the crew — every body in this world, both sides">C R E W</div>
+<div id="crew">
+  <header>CREW · every body in this world — residents and firmware, both sides · [Esc] returns the bridge</header>
+  <div id="cards"></div>
+</div>
+
 <div id="band">
-  <header>OBJECTIVES · everything running, everything run — every row a door</header>
+  <header onclick="toggleBand(false)" style="cursor:pointer" title="close the band">OBJECTIVES · everything running, everything run — every row a door · ▾ close</header>
   <div id="band-rows"></div>
 </div>
 
@@ -209,6 +257,9 @@
       · [Esc] returns to the bridge</span></header>
   <div id="focus"><span>FOCUS</span><span id="focus-what"></span>
     <span class="hint">[Esc] returns the bridge, scope restored</span></div>
+  <div id="includes"><span>INCLUDES</span>
+    <a data-fn="planner">plan</a> · <a data-fn="critic">critique</a> · <a data-fn="grader">grade</a>
+    <span class="hint">one step over what the residents brought into this session</span></div>
   <div id="clock" class="now"><span>TIME</span>
     <span class="axis"><span class="edge">now</span></span>
     <span class="hint" id="clock-hint">type "between X and Y" or "since …" to set it</span></div>
@@ -254,8 +305,8 @@ function toggleChat(open){
 addEventListener("keydown", e => {
   if (e.key === "Escape") {                             // SPEC-ESC-01 + P19:
     popAllFocus();                                      // one keystroke: the
-    toggleChat(false); toggleBand(false);               // bridge, its scope
-  }                                                     // restored exactly
+    toggleChat(false); toggleBand(false); toggleCrew(false);  // bridge, its
+  }                                                     // scope restored exactly
 });
 
 /* ---- the crew rail: residents on the right edge, targets by chip ---- */
@@ -265,6 +316,7 @@ let ROSTER = [];
 function drawChips(){
   const box = document.getElementById("chips"); box.innerHTML = "";
   for (const res of ROSTER){
+    if (res.kind === "firmware") continue;   // the includes live on the top edge
     const b = document.createElement("button");
     b.className = "chip" + (SELECTED.has(res.name) ? " on" : "");
     b.textContent = res.name + " · life " + res.lives;
@@ -337,12 +389,14 @@ const esc = s => s.replace(/[&<>"]/g,
   ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 
 const FANS = {};      // fanout ids -> {ids:[], replies:{}, offered:false}
-async function send(given, label){
+async function send(given, label, toOverride){
   const inp = document.getElementById("chat-in");
   const text = (given ?? inp.value).trim(); if (!text) return;
   if (given == null) inp.value = "";
   if (given == null && await sessionWords(text)) return;   // P20 by words
-  const to = [...SELECTED];
+  if (given == null && includeWords(text)) return;         // the includes, by words
+  if (given == null && workspaceWords(text)) return;       // the pulls, by words
+  const to = toOverride ? [...toOverride] : [...SELECTED];
   // a synthesis is the human's CHOICE, never the human's words: it wears
   // its own label; the machine's prompt never appears as if typed
   el("msg mine", (label ? `<em>${esc(label)}</em>` : esc(text)) + (to.length > 1
@@ -419,12 +473,21 @@ function renderOutcome(id, v, line){
     PENDING[id] = el("journey", "held at the interlock — your word decides");
     return;
   }
-  el("msg theirs", who + esc(v.reply || "(no words came back)"));
-  if (v.replied_at)                          // P7: who took it, on which
-    el("journey", `${esc(name)} took it on ${esc(v.scope || "?")}` +      // scope,
+  el("msg theirs", who + plain(v.reply || "(no words came back)"));
+  if (v.replied_at){                         // P7: who took it, on which
+    const read = (v.journey || []).map(n => n.replace(/^[^:]+: /, ""))       // scope,
+      .find(n => n.startsWith("read the session's results by"));           // whose
+    el("journey", `${esc(name)} took it on ${esc(v.scope || "?")}` +      // results
        (v.window ? ` · ${dayLabel(new Date(v.window.from))} → ${dayLabel(new Date(v.window.to))}` : "") +
+       (read ? ` · ${esc(read)}` : "") +                                     // it read,
        ` · completed ${hhmm(v.replied_at)} (${secs(v.asked_at, v.replied_at)})`);  // when
+  }
 }
+function plain(text){                      // plain words on the glass: markdown
+  return esc(text).replace(/^#{1,6}\s+/gm, "")            // headings and bold
+                  .replace(/\*\*(.+?)\*\*/g, "$1")      // marks fall away
+                  .replace(/^\s*[-*]\s+/gm, "· ");        // (the Record keeps
+}                                                           // the exact words)
 
 /* ---- the clock assist: typed words set the time scope (P6), no click ---- */
 let WINDOW = null;
@@ -521,21 +584,82 @@ function offerSummarize(fan){
     const names = Object.values(f.replies).map(r => r.name);
     const parts = Object.values(f.replies).map(
       r => `${r.name} answered: "${r.reply}"`).join("\n\n");
-    SELECTED = new Set(["librarian"]); loadRoster();
     // the crew is named to the mind that synthesizes (after-walk wound
-    // #2: the librarian claimed the echo's words as her own)
+    // #2: the librarian claimed the echo's words as her own); the human's
+    // own selection is left as it was (walk #1 friction)
     send("Two residents (" + names.join(" and ") + ") each answered the "
          + "same ask. Summarize their answers together, briefly, and "
          + "attribute every point to the resident who said it, by name. "
          + "You are the librarian, one of them: never present another "
          + "resident's words as your own.\n\n" + parts,
-         "summarize these together — on your word → librarian");
+         "summarize these together — on your word → librarian", ["librarian"]);
   };
   log.appendChild(b); log.scrollTop = log.scrollHeight;
 }
 
 document.getElementById("chat-in").addEventListener("keydown",
   e => { if (e.key === "Enter") send(); });
+
+/* ---- the includes: firmware applied as one step over the session ---- */
+const INCLUDES = {
+  planner: ["Plan the next steps from what was said in this session.", "plan — on your word → planner"],
+  critic:  ["Critique what was said in this session.",                 "critique — on your word → critic"],
+  grader:  ["Grade the answers in this session.",                     "grade — on your word → grader"],
+};
+function include(fn){ const [text, label] = INCLUDES[fn]; send(text, label, [fn]); }
+function includeWords(text){                     // typed words equal the links
+  const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
+  if (/^(plan|make a plan|plan (this|these|that|it|the next steps?))$/.test(t)) { include("planner"); return true; }
+  if (/^(critique|critic|critique (this|these|that|it))$/.test(t))         { include("critic");  return true; }
+  if (/^(grade|grade (this|these|that|it|the answers?))$/.test(t))         { include("grader");  return true; }
+  return false;
+}
+document.querySelectorAll("#includes a").forEach(a => a.onclick = () => include(a.dataset.fn));
+
+/* ---- the Crew pull: the first workspace, and its agent (P19) ---- */
+const crewPull = document.getElementById("crew");
+function toggleCrew(open){
+  const was = crewPull.classList.contains("open");
+  const now = open ?? !was;
+  crewPull.classList.toggle("open", now);
+  if (now && !was){
+    loadCrew();
+    pushFocus({kind: "workspace", id: "ws_crew", name: "crew", window: null,
+               label: "the Crew workspace · its agent, crew"});
+  }
+}
+function workspaceWords(text){
+  const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
+  if (/^((open|show)( me)?( the)? crew|crew|the crew)$/.test(t)) { toggleCrew(true); return true; }
+  return false;
+}
+async function loadCrew(){
+  const r = await fetch("/crew").then(x=>x.json()).catch(()=>null);
+  if (!r) return;
+  const box = document.getElementById("cards"); box.innerHTML = "";
+  for (const c of r.crew){
+    const d = document.createElement("div"); d.className = "card";
+    const caps = c.capabilities.length ? c.capabilities.map(x => `<span class="cap">${esc(x)}</span>`).join("") : `<span class="meta">none declared</span>`;
+    const kernel = c.side_b.kernel.map(k =>
+      `<div class="duty kernel" onclick="this.classList.toggle('asked')">${esc(k.duty)}` +
+      `<span class="why">kernel-required — visible, never editable</span></div>`).join("");
+    d.innerHTML =
+      `<h5>${esc(c.name)} <span class="meta">· ${esc(c.kind)} · life ${c.lives}</span></h5>` +
+      `<div class="meta">self …${esc(c.did.slice(-8))} · wearing covenant v${esc(c.policy_version)} · template ${esc(c.template)}</div>` +
+      `<div>${caps}</div>` +
+      `<div class="side"><b>SIDE A · INFERENCE</b><div>asks served: ${c.side_a.asks_served}` +
+      (c.side_a.last_served ? ` · last ${hhmm(c.side_a.last_served)}` : "") + `</div></div>` +
+      `<div class="side"><b>SIDE B · THE JOB</b>${kernel}` +
+      `<div class="meta">human-scheduled: none yet · role-scheduled: none yet — the scheduler is on the road</div></div>` +
+      `<span class="assist">ask the crew agent about ${esc(c.name)}</span>`;
+    d.querySelector(".assist").onclick = () => {
+      toggleChat(true);
+      send(`Tell me about ${c.name}: what it does, what it wears, and its two sides.`,
+           `about ${c.name} — on your word → crew`, ["crew"]);
+    };
+    box.appendChild(d);
+  }
+}
 
 /* ---- the focus stack (P19): the chat follows the focus ---- */
 const FOCUS = [];                 // pushed by an open ask (workspaces from sp3)
@@ -544,7 +668,8 @@ function pushFocus(f){
   if (f.name) SELECTED = new Set([f.name]);
   WINDOW = f.window;
   drawChips(); drawClock();
-  const what = `ask ${esc(f.id.slice(4, 12))}` + (f.name ? ` · ${esc(f.name)}` : "") +
+  const what = f.label ? esc(f.label) :
+    `ask ${esc(f.id.slice(4, 12))}` + (f.name ? ` · ${esc(f.name)}` : "") +
     (f.window ? ` · ${esc(dayLabel(f.window.from))} → ${esc(dayLabel(f.window.to))}` : " · now");
   document.getElementById("focus-what").innerHTML = what;
   document.getElementById("focus").classList.add("on");
@@ -574,6 +699,7 @@ async function rollSession(announce){
   if (!r) { sysline("the sessions door did not answer"); return; }
   SESSION = r.session_id;
   try { localStorage.setItem("orreth.session", SESSION); } catch (e) {}
+  popAllFocus();                    // a new topic starts at the bridge's focus
   clearDisplay();
   if (announce) sysline(`a fresh session · ${esc(SESSION.slice(4, 10))} — the previous one is ` +
                         `archived, not gone: say “list my sessions” to return to it`);
@@ -614,12 +740,13 @@ async function loadSession(x){
   if (!v || v.error) { sysline("no such session here"); return; }
   SESSION = id;
   try { localStorage.setItem("orreth.session", SESSION); } catch (e) {}
+  popAllFocus();
   clearDisplay();
   for (const a of v.asks){                       // the session, whole, in order
     el("msg mine", esc(a.text) + (a.target ? `<div class="who" style="text-align:right">→ ${esc(a.target)}</div>` : ""));
     const name = NAMES[a.served_by] || a.target || "orreth";
     if (a.status === "replied" || a.status === "cancelled" || a.status === "awaiting-confirm"){
-      el("msg theirs", `<div class="who">${esc(name)}</div>` + esc(a.reply || "(no words came back)"));
+      el("msg theirs", `<div class="who">${esc(name)}</div>` + plain(a.reply || "(no words came back)"));
       if (a.replied_at) el("journey", `${esc(name)} took it on ${esc(v.scope || "?")}` +
         (a.window ? ` · ${dayLabel(new Date(a.window.from))} → ${dayLabel(new Date(a.window.to))}` : "") +
         ` · completed ${hhmm(a.replied_at)} (${secs(a.asked_at, a.replied_at)})`);
