@@ -132,6 +132,17 @@
   .confirm-row input{font:inherit;padding:6px 10px;border-radius:6px;background:#141820;
     color:var(--ink);border:1px solid var(--seam);letter-spacing:.2em;width:9.5em}
   .confirm-row input.who-in{letter-spacing:0;width:16em}   /* the master's name */
+  /* the compliance export, in place (P6 sp2): a compact table, then the download offer */
+  .xtable{border-collapse:collapse;font-size:10.5px;margin-top:6px;max-width:100%;white-space:normal}
+  .xtable th{color:var(--dim);font-weight:normal;letter-spacing:.12em;text-align:left;
+    padding:2px 8px 3px 0;border-bottom:1px solid var(--seam);font-size:9.5px}
+  .xtable td{padding:2px 8px 2px 0;vertical-align:top;color:var(--ink);border-bottom:1px dashed rgba(42,46,58,.55)}
+  .xtable td.chain{color:var(--jade)}.xtable td.why{color:var(--dim)}.xtable td.words{color:var(--dim);font-style:italic}
+  .xtable td.broken{color:#ff7a6e}
+  .xdl{display:flex;gap:10px;margin-top:8px}
+  .xdl button{font:inherit;font-size:11px;padding:4px 12px;border-radius:6px;cursor:pointer;
+    background:transparent;color:var(--amber);border:1px solid var(--amber-dim)}
+  .xdl button:hover{color:var(--ink);border-color:var(--amber)}
   .qr{display:block;margin:8px 0 6px;width:180px;height:180px;image-rendering:pixelated;
     border-radius:6px;background:#fff}
   .copy{font:inherit;font-size:11px;user-select:all;word-break:break-all;color:var(--dim);
@@ -557,6 +568,7 @@ async function send(given, label, toOverride, parent){
   const text = (given ?? inp.value).trim(); if (!text) return;
   if (given == null) inp.value = "";
   if (given == null && await sessionWords(text)) return;   // P20 by words
+  if (given == null && await exportWords(text)) return;    // "export compliance …" (P6 sp2)
   if (given == null && includeWords(text)) return;         // the includes, by words
   if (given == null && workspaceWords(text)) return;       // the pulls, by words
   if (given == null && await markWords(text)) return;      // a human marks (0006)
@@ -1185,6 +1197,75 @@ async function sessionWords(text){               // typed words equal every clic
   const m = t.match(/^(load|open|resume|continue) (session )?(\S+)$/);
   if (m && (m[2] || /^(ses_|\d+$)/.test(m[3]))) { await loadSession(m[3]); return true; }
   return false;
+}
+/* ---- the compliance export (P6 sp2): words → a table in place, then the download ---- */
+function download(name, blob){                   // a normal browser: the Blob saves as a file
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+async function exportWords(text){                // "export compliance" · "… for this session" ·
+  const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();   // "… for between Friday and today" ·
+  const m = t.match(/^export (?:the )?compliance(?: (?:report|bundle|export|record))?(?: for (.+))?$/);
+  if (!m) return false;                          // "… for the hemp objective"
+  const rest = (m[1] || "").trim();
+  const q = new URLSearchParams({person: PERSON});
+  let scopeWords;
+  if (!rest || /^(this|the current|the) session$/.test(rest)){
+    if (!SESSION){ sysline("no session is open yet — say something first, or “new session”"); return true; }
+    q.set("session", SESSION); scopeWords = `this session · ${SESSION.slice(4, 10)}`;
+  } else {
+    const w = readWindow(rest);                  // the SAME parser the recall uses: words equal links
+    if (w){ q.set("from", w.from.toISOString()); q.set("to", w.to.toISOString());
+            scopeWords = `${dayLabel(w.from)} → ${+startOfDay(w.to) === +startOfDay(new Date()) ? "today" : dayLabel(w.to)}`; }
+    else {
+      const name = rest.replace(/^the\s+/, "").replace(/\s+(objective|intention|origin)$/, "").trim();
+      const r = await fetch("/analyzer").then(x=>x.json()).catch(()=>null);
+      const hit = ((r && r.origins) || []).find(o => ((o.words || o.note || "") + "").toLowerCase().includes(name));
+      if (!hit){ sysline(`no objective or intention here reads like “${esc(name)}” — the ANALYZER lists them`); return true; }
+      q.set("marker", hit.root); scopeWords = `the ${hit.kind} “${(hit.words || hit.note || hit.root)}” and everything under it`;
+    }
+  }
+  el("msg mine", esc(text));
+  const url = "/export?" + q.toString();
+  const b = await fetch(url).then(x => x.ok ? x.json() : null).catch(()=>null);
+  if (!b){ sysline("the export door did not answer"); return true; }
+  const n = b.summary.rows, broken = b.summary.chain_broken;
+  const levels = Object.entries(b.summary.by_proof || {}).map(([k, c]) => `${k} ×${c}`).join(", ");
+  const box = el("msg theirs", `<div class="who">compliance export · ${esc(scopeWords)}</div>` +
+    `${n} record${n === 1 ? "" : "s"} · the chain of who acted for whom: ` +
+    (broken ? `<span class="red">${broken} broken</span>` : "unbroken on every record") +
+    (n ? ` · proof ${esc(levels)}` : "") +
+    (b.summary.words_withheld ? ` · ${b.summary.words_withheld} without words (opt-out)` : "") +
+    (b.signed_by ? ` · signed by ${esc(whoIs(b.signed_by))}` : " · unsigned (hash-chained)"));
+  if (n){
+    const tbl = document.createElement("table"); tbl.className = "xtable";
+    tbl.innerHTML = `<tr><th>at</th><th>kind</th><th>who → for whom</th><th>proof</th><th>why</th><th>words</th></tr>`;
+    for (const r of b.rows){
+      const chain = (r.authority_chain || []).map(whoIs).join(" → ") || "(no chain)";
+      const why = r.marker ? `${r.marker.kind}${r.marker.parent ? " · under " + r.marker.parent.slice(3, 9) : ""}` : "—";
+      const words = r.words_withheld ? "(withheld — opt-out)"
+                  : Object.values(r.words || {}).filter(Boolean).join(" · ").slice(0, 90);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${hhmm(r.at)}</td><td>${esc(r.kind)}${r.tool ? " · " + esc(r.tool) : ""}</td>` +
+        `<td class="chain${r.chain_status === "broken" ? " broken" : ""}">${esc(chain)}` +
+        `${r.chain_status === "broken" ? " ⚠ broken" : ""}</td>` +
+        `<td>${esc(r.proof || "—")}</td><td class="why">${esc(why)}</td><td class="words">${esc(words)}</td>`;
+      tbl.appendChild(tr);
+    }
+    box.appendChild(tbl);
+  }
+  const dl = document.createElement("div"); dl.className = "xdl";
+  dl.innerHTML = `<button class="dl-json">download JSON</button><button class="dl-csv">download CSV</button>`;
+  const stamp = (b.generated_at || "").replace(/[:.]/g, "-").slice(0, 19);
+  dl.querySelector(".dl-json").onclick = () =>
+    download(`orreth-compliance-${stamp}.json`, new Blob([JSON.stringify(b, null, 1)], {type: "application/json"}));
+  dl.querySelector(".dl-csv").onclick = async () => {
+    const blob = await fetch(url + "&format=csv").then(x => x.blob()).catch(()=>null);
+    if (blob) download(`orreth-compliance-${stamp}.csv`, blob); else sysline("the export door did not answer");
+  };
+  box.appendChild(dl);
+  log.scrollTop = log.scrollHeight;
+  return true;
 }
 document.getElementById("ses-list").onclick = listSessions;
 document.getElementById("ses-new").onclick = () => rollSession(true);

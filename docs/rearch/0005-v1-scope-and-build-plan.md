@@ -683,7 +683,46 @@ session (the token law).
   The word "sure" never passes L3: a code is typed, a master clicks.
   **SPEC-L3-01.** Fixture: the consequence classes and the proof-level
   record on the wire.
-- **sp2 — the compliance export with AG-7 chains** (JB's testing marker).
+- **sp2 — the compliance export with AG-7 chains** (JB's testing marker)
+  ✅ **BUILT 2026-09-21 — walk OWED (JB in the glass, SPEC-EXPORT-01).**
+  What landed: `orreth_spine/export.py` — the bundle `orreth.compliance/1`
+  for ONE scope (a session · a window · a marker root; none given → the
+  current session): every ask, hold, proof offered, reply, include act,
+  intention stop and marker set, chronological, each row wearing the
+  chain its envelope carried (never rebuilt; a hop that does not run from
+  the origin human to the body that acted is `chain_status: broken` and
+  COUNTED), its proof level, its marker lineage (kind · id · parent ·
+  root), its words (an opt-out session's rows carry none) and who served
+  it; a sha256 hash chain over the rows (`h0 = sha256(canonical(row0))`,
+  `h_i = sha256(ascii_hex(h_{i-1}) || canonical(row_i))`) with
+  `verify()` recomputing hashes, statuses and counts; a CSV (the chain
+  joined " → ", words cut at 500 with an ellipsis and a `words_truncated`
+  column) · `GET /export?session=|from=&to=|marker=` (+ `format=json|csv`,
+  `person=`) — a READ, the outbox gains no row · the chat words "export
+  compliance" · "… for this session" · "… for between Friday and today"
+  (the recall's own window parser) · "… for the hemp objective" (the
+  Analyzer's origins, first match) → a table in place (at · kind · who →
+  for whom · proof · why · words) under a one-line summary, then
+  "download JSON" · "download CSV" · fixture `conformance/export-v0.json`
+  (6 cases: `hash_chain` · `chain_status` · `verify` · the bundle's
+  canonical bytes) · `tests/test_export.py` (10 laws). **AG-7 PROVEN:** a
+  planned request (echo + librarian answered; planner and grader applied
+  over both) exports with H → the residents read → the firmware on every
+  include row, `chain_broken: 0`, and `verify()` true; one hop cut →
+  `verify()` false, resealed → counted; the kernel's held stop exports
+  hold (H → the kernel · L3-master) · two proofs · reply (H → master →
+  the kernel) · the intention's stop. **Suite 141 green** (the full local run; 10 of them sp2's).
+  **Honest boundary:** the glass has no kernel self, so its door exports
+  UNSIGNED (`signed_by: null`; the Ed25519 path is built and proven with
+  an ephemeral signer in the suite — a kernel identity is the seam);
+  exporting ANOTHER person's words is grave and NOT built — a bundle only
+  ever holds the requester's own asks (`scope.person`), the L3 door for
+  another's words is a named seam; the tool hop is not on the wire
+  (`spine_tool_calls` records did · tool · args, no chain, no event — the
+  hold row names the tool, the chain ends at the body; a real AG-7 finding
+  for a later spoonful); a body's own `marker.set` fact carries only its
+  setter, not the origin human; the outbox is read by id with a sequential
+  scan (the audit projection is P7's). The original sp2 text follows.
   Words in the chat — "export compliance for this session" · "for between
   Friday and today" · "for the hemp objective" — produce a **signed bundle**
   (canonical JSON + a human CSV) of every ask, act, hold, confirm, reply and

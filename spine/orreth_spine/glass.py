@@ -28,7 +28,7 @@ from pathlib import Path
 
 import psycopg
 
-from . import bridgefeed, digest, dispatch, envelope as ev, ground, harness, intent, markers, monitor, outbox
+from . import bridgefeed, digest, dispatch, envelope as ev, export, ground, harness, intent, markers, monitor, outbox
 from . import presence, projector, proof, scheduler, sinks
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, Resident
@@ -394,6 +394,34 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                         return self._json(200, {"from": qs["from"], "ancestry": markers.with_words(conn, markers.ancestry(conn, qs["from"]))})
                     return self._json(200, {"markers": markers.stream(
                         conn, kind=qs.get("kind"), grp=qs.get("group"))})
+            if path == "/export":                        # P6 sp2: the compliance export — a READ
+                from urllib.parse import parse_qs
+                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
+                    if "?" in self.path else {}
+                person = qs.get("person") or "did:orreth:person:jb"
+                fmt = qs.get("format") or "json"
+                if fmt not in ("json", "csv"):
+                    return self._json(400, {"error": "format is json or csv"})
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        bundle = export.build(          # the requester's OWN asks only;
+                            conn, person=person,        # another's words are a named seam
+                            session=qs.get("session"),
+                            window=(qs["from"], qs["to"]) if qs.get("from") and qs.get("to") else None,
+                            marker=qs.get("marker"))
+                except psycopg.DataError:
+                    return self._json(400, {"error": "the window is two ISO times, from and to"})
+                if fmt == "csv":
+                    body = export.to_csv(bundle).encode("utf-8")
+                    self.send_response(200)
+                    self.send_header("content-type", "text/csv; charset=utf-8")
+                    self.send_header("content-disposition",
+                                     'attachment; filename="orreth-compliance.csv"')
+                    self.send_header("access-control-allow-origin", "*")
+                    self.end_headers()
+                    self.wfile.write(body)
+                    return
+                return self._json(200, bundle)
             if path.startswith("/digest/"):            # the short version, and
                 with psycopg.connect(dsn, autocommit=True) as conn:        # every source it cites
                     view = digest.of_session(conn, path.split("/digest/", 1)[1])

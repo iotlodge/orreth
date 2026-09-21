@@ -39,6 +39,12 @@ class Identity:
             path.chmod(0o600)
         return cls(name, seed)
 
+    @property
+    def verify_key_hex(self) -> str:
+        """The public half, hex — what a stranger checks a signature with
+        (the export names it beside the DID it derives)."""
+        return bytes(self._key.verify_key).hex()
+
     def sign(self, payload: dict) -> str:
         """Sign the canonical bytes of a payload; hex signature."""
         return self._key.sign(ev.canonical(payload)).signature.hex()

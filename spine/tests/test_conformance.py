@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import envelope as ev, proof
+from orreth_spine import envelope as ev, export, proof
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
 FIXTURES = sorted(ROOT.glob("*-v*.json"))
@@ -52,5 +52,17 @@ def test_fixture(contract, case):
         assert [proof.LEVEL_OF_CLASS[c] for c in got] == exp["levels"]
     elif kind == "class_level":
         assert proof.level_for(inp["class"], master=bool(inp.get("master"))) == exp["level"]
+    # ---- orreth.compliance/1 (P6 sp2): the hash chain, the chain's status, the verifier ----
+    elif kind == "hash_chain":
+        got = export.hash_chain(inp["rows"])
+        assert got == exp["hashes"]
+        assert (got[-1] if got else None) == exp["root_hash"]
+    elif kind == "chain_status":
+        assert [export.chain_status(r) for r in inp["rows"]] == exp["status"]
+    elif kind == "verify":
+        assert export.verify(inp["bundle"]) is exp["bundle"]
+        assert export.verify(inp["truncated"]) is exp["truncated"]
+        assert export.verify(inp["resealed"]) is exp["resealed"]
+        assert inp["resealed"]["summary"]["chain_broken"] == exp["resealed_chain_broken"]
     else:
         pytest.fail(f"unknown case kind {kind!r} in {contract}")
