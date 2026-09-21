@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp1, the body is born · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL recalls the canon it wears · 2026-09-21
 """The resident body v0 (canon 0004): one governed body for every mind.
 
 Born from a versioned TEMPLATE artifact; the SAME identity in every life
@@ -368,6 +369,14 @@ class Resident:
                                        at=window["to"]):
                         notes.append(f"as of {window['to'][:16]} I remembered "
                                      f"[{m['key']}]: {m['body']}")
+                elif self.function == "impact":
+                    # P6 sp3: MITL recalls the CANON it wears — the passages
+                    # that match the change (the ask's first line names it),
+                    # each named by its source path; the same store, the
+                    # same projection, only a wider pack
+                    head = s["text"].split("\n", 1)[0]
+                    for m in st.search(self.name, head[:240], limit=6):
+                        notes.append(f"the canon says [{m['key']}]: {m['body']}")
                 else:
                     for m in st.search(self.name, s["text"][:60], limit=3):
                         notes.append(f"I remember [{m['key']}]: {m['body']}")
@@ -397,7 +406,10 @@ class Resident:
             if self.gateway is not None and self._serve_conn is not None:
                 from .tools import ConsequentialHold, ToolDoor
                 mind = self.template.get("mind") or {}
-                if self.kind == "firmware":
+                if self.function == "impact":
+                    from .mitl import SYSTEM as _mitl_system   # P6 sp3: MITL's own
+                    system = _mitl_system                      # words, the same body
+                elif self.kind == "firmware":
                     system = (
                         f"You are the {self.name} — a firmware agent of "
                         "Orreth, named by your function, wearing no persona. "

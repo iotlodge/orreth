@@ -180,6 +180,16 @@
   #kind b{color:var(--amber);cursor:pointer;letter-spacing:.3em;font-weight:normal;
     border-bottom:1px dashed var(--amber-dim)}
   #kind .hint{letter-spacing:0;font-size:10.5px}
+  #kind .sep{color:var(--dim);letter-spacing:0}
+  /* MITL (P6 sp3): the soft toggle beside KIND; the impact door's box under a hold */
+  #mitl-word{opacity:.55} #mitl-word.on{opacity:1}
+  .btn-impact{font:inherit;font-size:10.5px;letter-spacing:.05em;padding:3px 10px;border-radius:6px;
+    background:transparent;color:var(--amber);border:1px solid var(--amber-dim);cursor:pointer}
+  .btn-impact:hover{color:var(--ink);border-color:var(--amber)}
+  .btn-impact:disabled{opacity:.6;cursor:default}
+  .impact{margin-top:8px;padding:6px 10px;border-left:2px solid var(--amber-dim);font-size:12px}
+  .impact .journey{padding-left:0}
+  .impact .msg{margin:6px 0 0;padding:6px 8px;max-width:none}
   /* the Crew pull (P19, the first workspace): a hull panel on the left
      wall; its tab is the wall's edge; the cards inside; the chat follows */
   #crew-tab{position:fixed;left:0;top:38vh;writing-mode:vertical-rl;
@@ -348,7 +358,10 @@
     <button onclick="send()">ASK</button>
   </div>
   <div id="kind"><span>KIND</span><b id="kind-word" title="click to flip — or type “objective: …” / “intention: …”">THOUGHT</b>
-    <span class="hint" id="kind-hint">the words propose it · click to flip · the marker is minted with the ask</span></div>
+    <span class="hint" id="kind-hint">the words propose it · click to flip · the marker is minted with the ask</span>
+    <button id="impact-btn" class="btn-impact" hidden title="ask MITL — the Master Mind In the Loop — what this intention would touch, before you declare it">expected impact?</button>
+    <span class="sep">·</span><b id="mitl-word" title="MITL — the Master Mind In the Loop, Orreth's own specialist · click to summon or dismiss (recorded, never deleted)">MITL OFF</b>
+    <span class="hint" id="mitl-hint">the Master Mind In the Loop · off · click to summon</span></div>
 </div>
 <div id="pulse">PULSE · connecting…</div>
 
@@ -393,10 +406,10 @@ let ROSTER = [];
 function drawChips(){
   const box = document.getElementById("chips"); box.innerHTML = "";
   for (const res of ROSTER){
-    if (res.kind === "firmware") continue;   // the includes live on the top edge
-    const b = document.createElement("button");
-    b.className = "chip" + (SELECTED.has(res.name) ? " on" : "");
-    b.textContent = res.name + " · life " + res.lives;
+    if (res.kind === "firmware" && !(res.name === "mitl" && MITL_ON)) continue;   // the includes live on
+    const b = document.createElement("button");                                  // the top edge; MITL joins
+    b.className = "chip" + (SELECTED.has(res.name) ? " on" : "");               // the rail when summoned
+    b.textContent = res.name === "mitl" ? "mitl · the Master Mind In the Loop" : res.name + " · life " + res.lives;
     b.onclick = () => { SELECTED.has(res.name) ? SELECTED.delete(res.name)
                                                : SELECTED.add(res.name);
                         b.classList.toggle("on"); };
@@ -548,6 +561,79 @@ function drawKind(){
   document.getElementById("kind-hint").textContent = KIND_PIN ? "pinned · click to flip · sent with the next ask"
     : (text.trim() ? `reads as ${k === "intention" ? "an" : k === "objective" ? "an" : "a"} ${k} · click to flip · or type “${k === "thought" ? "objective" : "thought"}: …”`
                    : "the words propose it · click to flip · the marker is minted with the ask");
+  // P6 sp3: an intention about to be declared can be sent to MITL first
+  document.getElementById("impact-btn").hidden = !(k === "intention" && text.trim());
+}
+document.getElementById("impact-btn").onclick = () => {
+  const text = document.getElementById("chat-in").value.trim(); if (!text) return;
+  const change = {kind: "intention", draft: {words: text}, words: text};
+  const m = el("msg theirs", `<div class="who">expected impact? · before declaring “${esc(text.slice(0, 80))}”</div>`);
+  const bar = impactBar(change); m.appendChild(bar);
+  askImpact(bar, bar.querySelector("button"), change);
+};
+/* ---- MITL (P6 sp3): the Master Mind In the Loop — the soft toggle, and the impact door ---- */
+let MITL_ON = false, MITL_SAID = false;      // said in full once per session (P18)
+function mitlName(){ const n = MITL_SAID ? "MITL" : "MITL — the Master Mind In the Loop"; MITL_SAID = true; return n; }
+function drawMitl(){
+  const w = document.getElementById("mitl-word"), h = document.getElementById("mitl-hint");
+  w.textContent = MITL_ON ? "MITL ON" : "MITL OFF"; w.classList.toggle("on", MITL_ON);
+  h.textContent = MITL_ON ? "summoned — ask “what does the canon say about …?” · “mitl, …” · or click “expected impact?” on any change"
+                          : "the Master Mind In the Loop · off · click to summon";
+  drawChips();
+}
+async function loadMitl(){
+  const r = await fetch("/mitl?" + new URLSearchParams({person: PERSON, session: SESSION || ""}))
+    .then(x=>x.json()).catch(()=>null);
+  if (!r) return;
+  MITL_ON = !!r.summoned; drawMitl();
+}
+async function toggleMitl(on){
+  const want = on ?? !MITL_ON;
+  const r = await fetch("/mitl", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({summon: want, person: PERSON, session: SESSION || undefined})})
+    .then(x=>x.json()).catch(()=>null);
+  if (!r){ sysline("the MITL door did not answer"); return; }
+  MITL_ON = !!r.summoned;
+  if (!MITL_ON) SELECTED.delete("mitl");
+  drawMitl();
+  sysline(MITL_ON
+    ? `${mitlName()} summoned — Orreth's own specialist joins this session's crew: ask “what does the canon say about …?”, address it as “mitl, …”, or click “expected impact?” on any change · recorded, never a deletion`
+    : `${mitlName()} dismissed — it leaves the crew · recorded, never deleted; say “summon MITL” to call it back`);
+}
+document.getElementById("mitl-word").onclick = () => toggleMitl();
+async function mitlWords(text){                  // "summon MITL" · "dismiss MITL" · "mitl, …" · "what does the canon say …"
+  const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
+  if (/^(summon|call|invite)\s+mitl$/.test(t)){ el("msg mine", esc(text)); await toggleMitl(true); return true; }
+  if (/^(dismiss|release|excuse)\s+mitl$/.test(t)){ el("msg mine", esc(text)); await toggleMitl(false); return true; }
+  const m = text.match(/^mitl[,:]\s*(.+)$/i);
+  if (!m && !/^what does the canon say/i.test(text)) return false;
+  if (!MITL_ON){ sysline(`${mitlName()} is not summoned — say “summon MITL” first`); return true; }
+  send(m ? m[1] : text, undefined, ["mitl"]);
+  return true;
+}
+function impactKind(tool){ return tool === "add-watch" ? "watch" : tool === "intent.stop" ? "intention" : "act"; }
+function elIn(parent, cls, html){ const d = document.createElement("div"); d.className = cls; d.innerHTML = html;
+  parent.appendChild(d); log.scrollTop = log.scrollHeight; return d; }
+function impactBar(change){                      // "expected impact?" — MITL weighs before the human cuts
+  const box = document.createElement("div"); box.className = "impact";
+  const b = document.createElement("button"); b.className = "btn-impact"; b.textContent = "expected impact?";
+  b.title = "ask MITL — the Master Mind In the Loop — who and what this change touches, the risk, what to watch after";
+  b.onclick = () => askImpact(box, b, change);
+  box.appendChild(b); return box;
+}
+async function askImpact(box, b, change){
+  b.disabled = true; b.textContent = "the kernel reads the ground; MITL weighs it…";
+  const r = await fetch("/impact", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({change, person: PERSON, session: SESSION || undefined})})
+    .then(async x => ({s: x.status, b: await x.json()})).catch(()=>null);
+  if (!r || r.s !== 201){ b.disabled = false; b.textContent = "expected impact?";
+    elIn(box, "journey", esc((r && r.b && r.b.error) || "the impact door did not answer")); return; }
+  b.remove();
+  const a = r.b, grave = a.verdict.startsWith("grave");
+  elIn(box, "journey", `the kernel read the ground for ${esc(mitlName())}: ` + esc(a.ground.join(" · ")) +
+    ` — <b>verdict by the ladder: <span class="${grave ? "red" : "ok"}">${esc(a.verdict)}</span></b>`);
+  PENDING[a.ask_id] = elIn(box, "journey", "MITL is weighing it in words — on its way…");
+  PENDING[a.ask_id]._into = box;                 // its reply lands HERE, above Cancel / Yes
 }
 document.getElementById("chat-in").addEventListener("input", drawKind);
 document.getElementById("kind-word").onclick = () => {
@@ -569,6 +655,7 @@ async function send(given, label, toOverride, parent){
   if (given == null) inp.value = "";
   if (given == null && await sessionWords(text)) return;   // P20 by words
   if (given == null && await exportWords(text)) return;    // "export compliance …" (P6 sp2)
+  if (given == null && await mitlWords(text)) return;      // "summon MITL" · "what does the canon say …" (P6 sp3)
   if (given == null && includeWords(text)) return;         // the includes, by words
   if (given == null && workspaceWords(text)) return;       // the pulls, by words
   if (given == null && await markWords(text)) return;      // a human marks (0006)
@@ -628,7 +715,7 @@ async function onNotice(n){
     if (!n.kind.includes("ask.received")) return; // the kernel's, on the interest law:
     const v0 = await fetch("/ask/" + n.ref).then(x=>x.json()).catch(()=>null);
     if (v0 && v0.origin && v0.origin.kind === "intention" && v0.session !== SESSION){   // 0007: born of an intention
-      const inc = ["planner", "critic", "grader"].includes(v0.target);
+      const inc = ["planner", "critic", "grader", "mitl"].includes(v0.target);
       const whose = v0.origin.by === "the kernel" ? "on the kernel's word" : `on ${esc(whoIs(v0.origin.by))}'s word · owned by the kernel`;
       const words = `“${esc((v0.origin.words || "").slice(0, 80))}”`;
       if (inc){ sysline(`${whose} · ${words} → ${esc(v0.target)}: the next objective?`); return; }
@@ -667,6 +754,7 @@ function renderOutcome(id, v, line){
   const fan = line._fan;
   if (line._stream) line._stream.remove();   // the door's truth replaces
   line.remove(); delete PENDING[id];         // the stream's sketch
+  const put = line._into ? (c, h) => elIn(line._into, c, h) : el;   // P6 sp3: MITL's answer lands under the hold
   const name = NAMES[v.served_by] || (v.served_by === "the kernel" ? "the kernel" : null) || v.target || "orreth";
   const who = `<div class="who">${esc(name)}</div>`;
   if (fan && v.status === "replied"){
@@ -702,6 +790,9 @@ function renderOutcome(id, v, line){
       yes.onclick = () => decide(id, true, row, level === "L3-code" ? inp.value : undefined,
                                                   level === "L3-master" ? inp.value.trim() : undefined);
     } else yes.onclick = () => decide(id, true, row);
+    // P6 sp3: every hold offers "expected impact?" — MITL's answer renders here, before Cancel / Yes
+    m.appendChild(impactBar({kind: impactKind(v.hold && v.hold.tool), ref: id,
+                             draft: {tool: v.hold && v.hold.tool}, words: v.text}));
     m.appendChild(row); cancel.focus();
     PENDING[id] = el("journey", level === "L3-code" ? "held — this needs your code · cancel is the default"
                               : level === "L3-master" ? "held — this needs a second named person · cancel is the default"
@@ -710,11 +801,11 @@ function renderOutcome(id, v, line){
     return;
   }
   if (line._row) line._row.querySelectorAll("button,input").forEach(b => b.disabled = true);   // the hold settled
-  el("msg theirs", who + plain(v.reply || "(no words came back)"));
+  put("msg theirs", who + plain(v.reply || "(no words came back)"));
   if (v.replied_at){                         // P7: who took it, on which
     const read = (v.journey || []).map(n => n.replace(/^[^:]+: /, ""))       // scope,
       .find(n => n.startsWith("read the session's results by"));           // whose
-    el("journey", `${esc(name)} took it on ${esc(v.scope || "?")}` +      // results
+    put("journey", `${esc(name)} took it on ${esc(v.scope || "?")}` +      // results
        (v.window ? ` · ${dayLabel(new Date(v.window.from))} → ${dayLabel(new Date(v.window.to))}` : "") +
        (read ? ` · ${esc(read)}` : "") +                                     // it read,
        (v.proof && v.proof !== "L1" ? ` · proof ${esc(v.proof)}` : "") +      // the proof it wore (P6 sp1)
@@ -1130,6 +1221,7 @@ async function rollSession(announce){
   try { localStorage.setItem("orreth.session", SESSION); } catch (e) {}
   popAllFocus();                    // a new topic starts at the bridge's focus
   clearDisplay();
+  MITL_SAID = false; loadMitl();    // the toggle is per session; the name in full again (P18)
   if (announce) sysline(`a fresh session · ${esc(SESSION.slice(4, 10))} — the previous one is ` +
                         `archived, not gone: say “list my sessions” to return to it`);
 }
@@ -1176,6 +1268,7 @@ async function loadSession(x){
   try { localStorage.setItem("orreth.session", SESSION); } catch (e) {}
   popAllFocus();
   clearDisplay();
+  MITL_SAID = false; loadMitl();    // the toggle is per session (P6 sp3)
   for (const a of v.asks){                       // the session, whole, in order
     el("msg mine", esc(a.text) + (a.target ? `<div class="who" style="text-align:right">→ ${esc(a.target)}</div>` : ""));
     const name = NAMES[a.served_by] || a.target || "orreth";

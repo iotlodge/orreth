@@ -21,16 +21,16 @@ from __future__ import annotations
 
 TAGS = ("outbox", "inbox", "projector", "resident", "gateway", "tools", "store",
         "markers", "monitor", "scheduler", "harness", "presence", "digest", "intent",
-        "proof")
+        "proof", "mitl")
 
 
 def ensure_all(conn) -> None:
     """Flag every ground on this connection (each module's `once` tag), so
     the serving transaction never runs DDL and never takes the lock."""
-    from . import (digest, gateway, harness, inbox, intent, markers, monitor, outbox,
+    from . import (digest, gateway, harness, inbox, intent, markers, mitl, monitor, outbox,
                    presence, projector, proof, resident, scheduler, store, tools)
     for mod in (outbox, inbox, projector, resident, gateway, tools, store, markers,
-                monitor, scheduler, harness, presence, digest, intent, proof):
+                monitor, scheduler, harness, presence, digest, intent, proof, mitl):
         mod.ensure_schema(conn)
     markers.seed(conn)                      # the kernel's kinds, in this world
     outbox.mark_ground_done(conn, TAGS)     # the birth FINISHED: later connections are born flagged

@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL born · the toggle and the impact doors · 2026-09-21
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -28,7 +29,7 @@ from pathlib import Path
 
 import psycopg
 
-from . import bridgefeed, digest, dispatch, envelope as ev, export, ground, harness, intent, markers, monitor, outbox
+from . import bridgefeed, digest, dispatch, envelope as ev, export, ground, harness, intent, markers, mitl, monitor, outbox
 from . import presence, projector, proof, scheduler, sinks
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, Resident
@@ -358,6 +359,18 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 person = (qs.get("person") or ["did:orreth:person:jb"])[0]
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"sessions": sessions_view(conn, person)})
+            if path == "/mitl":                           # P6 sp3: is MITL in the lit crew? what does it wear?
+                from urllib.parse import parse_qs
+                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
+                    if "?" in self.path else {}
+                person = qs.get("person") or "did:orreth:person:jb"
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    ont = mitl.ontology(conn)
+                    return self._json(200, {
+                        "name": mitl.NAME, "expansion": mitl.EXPANSION,
+                        "summoned": mitl.summoned(conn, qs.get("session") or None, person),
+                        "ontology": {"passages": len(ont),
+                                     "files": sorted({o["path"] for o in ont})}})
             if path == "/proof":                          # P6 sp1: enrolled? who are the masters?
                 from urllib.parse import parse_qs
                 qs = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
@@ -608,6 +621,24 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 except proof.NotConfirmed:                # rule 4: ONE face, every refusal
                     return self._json(403, dict(proof.ONE_FACE))
                 return self._json(202, out)
+            if path == "/mitl":                           # P6 sp3: the soft toggle — a recorded fact
+                person = str(p.get("person") or "did:orreth:person:jb")
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    made = mitl.summon(conn, person, str(p.get("session") or "") or None,
+                                       on=bool(p.get("summon", True)))
+                return self._json(201, made)
+            if path == "/impact":                         # P6 sp3: "expected impact of this change?"
+                change = p.get("change")
+                if not isinstance(change, dict):
+                    return self._json(400, {"error": "a change is {kind, ref or draft, words}"})
+                person = str(p.get("person") or "did:orreth:person:jb")
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        made = mitl.impact(conn, change, person=person,
+                                           session=str(p.get("session") or "") or None)
+                except ValueError as e:
+                    return self._json(400, {"error": str(e)})
+                return self._json(201, made)
             if path == "/enroll":                         # P6 sp1: "enroll my authenticator"
                 person = str(p.get("person") or "did:orreth:person:jb")
                 try:
@@ -659,11 +690,12 @@ class BridgeRig:
                             home=home)
             echo.load_policy(policy_path)
             self.residents.append(echo)
-        # the includes (0004's third kind): planner · critic · grader —
-        # firmware bodies, same laws, no persona, called by the human as
-        # includes over the session's results
+        # the includes (0004's third kind): planner · critic · grader — and
+        # MITL (P6 sp3), the specialist of Orreth wearing the canon —
+        # firmware bodies, same laws, called by the human as includes over
+        # the session's results (MITL by the soft toggle and the impact door)
         self.firmware: dict[str, Resident] = {}
-        for fn in ("planner", "critic", "grader"):
+        for fn in ("planner", "critic", "grader", "mitl"):
             fw = Resident(spine / "templates" / f"firmware-{fn}.v0.json",
                           gateway=gateway, home=home)
             fw.load_policy(policy_path)
@@ -793,6 +825,17 @@ class BridgeRig:
                     break
                 except Exception:
                     time.sleep(0.3)
+            if resident.name == mitl.NAME:  # P6 sp3: MITL wears the canon from
+                try:                        # birth — acquired through the door,
+                    made = mitl.acquire_ontology(conn, resident)   # idempotent
+                    if made["acquired"] or made["missing"]:
+                        print(f"mitl wears the Orreth ontology v0: {made['acquired']} passages "
+                              f"acquired from {made['files']} files"
+                              + (f"; missing {made['missing']}" if made["missing"] else ""),
+                              file=sys.stderr, flush=True)
+                except Exception as e:      # a body that cannot read the canon
+                    print(f"mitl could not acquire the ontology: {type(e).__name__}: {e}",
+                          file=sys.stderr, flush=True)      # still serves — and says so
             while not self._stop.is_set():
                 try:
                     presence.renew(conn, resident.identity.did, resident.name,

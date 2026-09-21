@@ -744,7 +744,59 @@ session (the token law).
   truncated chain FAILS the suite. **SPEC-EXPORT-01.** Fixture: the
   export's row shape and its hash chain (the Rust plane must produce the
   same bytes).
-- **sp3 — MITL v0 + the impact door.** The **Master Mind In the Loop** as a
+- **sp3 — MITL v0 + the impact door** ✅ **BUILT 2026-09-21 — walk OWED
+  (JB in the glass, SPEC-MITL-01).** What landed: `orreth_spine/mitl.py`
+  + `templates/firmware-mitl.v0.json` — MITL born with the rig as the
+  fourth include of the third kind (kind firmware · function `impact` ·
+  a persona in plain words · `tools:acquire`), thinking ONLY through the
+  gateway with its own system words (rule 5: a meter line for every
+  thought; no gateway → the deterministic graph, never an unmetered door)
+  · the **Orreth ontology v0** acquired at birth through the librarian's
+  own `acquire` door — 0001…0008 + the covenant card, 139 passages (a new
+  passage at every heading, packed to ~2.4k chars) under the `mitl`
+  namespace, each row wearing its source path (the key), its sha256 (the
+  hash) and acquired_at (the landing), every hop journaled and on the
+  wire under one action marker; re-acquire lands nothing; MITL's recall
+  packs the six canon passages that match the ask's first line · the
+  **soft toggle**: "summon MITL" · "dismiss MITL" · the MITL chip beside
+  KIND — each a recorded fact (`orreth.mitl.summoned.v1` / `.dismissed.v1`)
+  with the human's chain and an action marker, rows that stay (rule 11);
+  summoned, `mitl` joins the RESIDENTS rail and "what does the canon say
+  about …?" / "mitl, …" go to it · the **impact door** `POST /impact` —
+  the kernel reads the GROUND by rule (bodies · chains · intentions that
+  wake · watches on the metric · markers · the meter's cost so far ·
+  class and level) and judges the VERDICT by sp1's ladder (a kernel
+  intention or any L3 act ⇒ "grave — needs L3" whatever a brain says; a
+  standing intention, an L2 act, or what bodies wear ⇒ "consider"; else
+  "low"), then asks MITL for the words as an ordinary thought filed under
+  the change's marker (the intention's, the held ask's, else the session's
+  latest objective) · in the glass every hold row and every intention
+  about to be declared wears **"expected impact?"**: the ground and the
+  verdict render at once, MITL's words land beneath, before Cancel / Yes
+  (the confirm untouched: Cancel default, Enter never submits) · a BODY
+  never confirms: any joined self at the confirm door — yes or cancel,
+  any level, even declared a master — is the ONE face · `mitl` joined
+  `markers.INCLUDES` · fixture `conformance/mitl-v0.json` (9 cases: the
+  answer's canonical bytes, the summoned/dismissed envelopes, the verdict
+  ladder) · `tests/test_mitl.py` (6 laws). **Suite 160 green** (the full
+  local run; 6 of them sp3's; `test_crew`'s roster gained `mitl` by name
+  — it enumerated the rig's bodies). **Relight:** 139 passages from 9
+  files at birth; `/impact` on "no body is dormant" named monitor ·
+  planner · librarian, both intentions that wake on watch-red, the cost
+  so far, class consequential → L2, verdict "consider"; MITL's real reply
+  landed through the meter (recalled 9 notes).
+  **Honest boundary:** factories are OUT (a proof's need decides); the
+  ontology is the nine canon files only (no repo access, no honest
+  register yet); the ground and the verdict are the KERNEL's by rule —
+  the brain only writes the words and is told to end with the verdict
+  unchanged; the metric from plain words is a v0 word map; placement
+  (sp4) is not built, so a template/binding/placement change only names
+  the bodies that wear it; a passage removed from the canon leaves its
+  old row current (the store has no retire verb short of the governed
+  purge); the toggle is per session (or per person outside one); MITL
+  reads the canon lexically (the store's tsvector projection — no
+  embedding lane). The original sp3 text follows.
+  The **Master Mind In the Loop** as a
   firmware body of the third kind (with planner · critic · grader) wearing
   the **Orreth ontology v0** — digest + understanding over the canon
   (0001–0008, the covenant, the honest register) as its own corpus — and its

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import envelope as ev, export, proof
+from orreth_spine import envelope as ev, export, mitl, proof
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
 FIXTURES = sorted(ROOT.glob("*-v*.json"))
@@ -64,5 +64,8 @@ def test_fixture(contract, case):
         assert export.verify(inp["truncated"]) is exp["truncated"]
         assert export.verify(inp["resealed"]) is exp["resealed"]
         assert inp["resealed"]["summary"]["chain_broken"] == exp["resealed_chain_broken"]
+    # ---- orreth.impact/1 (P6 sp3): the verdict ladder — rules, never a brain ----
+    elif kind == "verdict":
+        assert mitl.verdict(inp["touches"]) == exp["verdict"]
     else:
         pytest.fail(f"unknown case kind {kind!r} in {contract}")

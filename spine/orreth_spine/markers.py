@@ -15,7 +15,7 @@ import secrets
 from . import envelope as ev, outbox
 
 MARKER_SET = "orreth.marker.set.v1"
-INCLUDES = ("planner", "critic", "grader")
+INCLUDES = ("planner", "critic", "grader", "mitl")   # P6 sp3: MITL is an include of the third kind
 
 SEED = [  # kind, group, description — the kernel's, in every world
     ("objective", "structural", "a human's ask — a root"),

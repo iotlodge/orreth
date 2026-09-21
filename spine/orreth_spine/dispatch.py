@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp1, the body is born · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, a body never confirms (one face) · 2026-09-21
 """The ask road (canon 0002's chain, in miniature): ONE write path.
 
 A human's ask lands on the ground with its event in one transaction; the
@@ -141,13 +142,21 @@ def confirm_ask(conn, ask_id: str, *, approve: bool,
     alone; L3-code the asker's authenticator code; L3-master `person` a
     declared master and never the asker. Every refusal — wrong code,
     a stranger, the asker as master, an ask nobody holds — is the ONE
-    face (rule 4): `proof.NotConfirmed`. The third refusal RESTS the act
-    (a recorded cancel) before the face is shown. The decision rides a
+    face (rule 4): `proof.NotConfirmed` — and so is any BODY of this
+    ground offering the word (P6 sp3: MITL weighs, the human cuts). The
+    third refusal RESTS the act (a recorded cancel) before the face is
+    shown. The decision rides a
     command wearing the human's own authority; an act the kernel holds
     itself is settled on the ground, no rail."""
     from . import proof
     proof.ensure_schema(conn)
     cur = conn.cursor()
+    # P6 sp3 (covenant rule 2, MITL's law): a BODY never confirms — MITL
+    # weighs, the human cuts. A self that ever joined this ground offering
+    # a yes or a no at the door is refused with the one face, at every level
+    cur.execute("SELECT 1 FROM spine_joins WHERE did = %s LIMIT 1", (person,))
+    if cur.fetchone():
+        raise proof.NotConfirmed()
     cur.execute("SELECT target, served_by, held, person, status FROM spine_asks"
                 " WHERE ask_id=%s AND scope=%s", (ask_id, ev.scope()))
     row = cur.fetchone()

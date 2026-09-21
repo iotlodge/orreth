@@ -33,6 +33,13 @@ the same files, unchanged — before any module earns the word "ported".
   - `verify` — `input.bundle` verifies, `input.truncated` (one hop cut, hashes
     unchanged) does not, `input.resealed` (the cut rows re-sealed) verifies with
     `summary.chain_broken` counting the cut.
+  - `verdict` (mitl-v0) — `input.touches` (what the kernel read from the ground:
+    `kind` · `kernel` · `class` · `level` · `intentions` …) → `expect.verdict`: a
+    kernel intention or any act held at L3 is `grave — needs L3`; a change touching
+    a standing intention, a consequential act, or what bodies wear is `consider`;
+    the rest is `low` — by rule, never by a brain. The impact answer's shape
+    (`orreth.impact/1`) and the summoned/dismissed envelopes ride the `canonical`
+    and `encode` kinds.
 - The law: every spoonful that changes a wire contract adds or extends a
   fixture in the same change. A fixture the reference fails is a wound,
   never a regeneration. `spine/tests/test_conformance.py` runs them all.

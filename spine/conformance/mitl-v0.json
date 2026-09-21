@@ -1,0 +1,289 @@
+{
+ "contract": "orreth.impact/1",
+ "version": 0,
+ "generated_by": "orreth_spine.mitl + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 sp3",
+ "generated_at": "2026-09-21",
+ "cases": [
+  {
+   "name": "impact answer: orreth.impact/1 \u2014 the shape's canonical bytes (a watch, L2, consider)",
+   "kind": "canonical",
+   "input": {
+    "obj": {
+     "contract": "orreth.impact/1",
+     "change": {
+      "kind": "watch",
+      "ref": null,
+      "words": "no body is dormant"
+     },
+     "touches": {
+      "bodies": [
+       "monitor",
+       "planner"
+      ],
+      "chains": [
+       "H \u2192 monitor \u2192 tool:add-watch",
+       "the kernel \u2192 planner \u2192 librarian (when \u201ckeep this world resilient\u201d wakes on watch-red)"
+      ],
+      "intentions": [
+       {
+        "intention_id": "int_0a1b2c3d4e5f",
+        "kind": "kernel",
+        "words": "keep this world resilient: when a watch goes red, get it green"
+       }
+      ],
+      "watches": [
+       "watch_0011223344"
+      ],
+      "markers": [],
+      "cost": {
+       "planner": {
+        "thoughts": 3,
+        "tokens": 412
+       }
+      },
+      "metric": "bodies_dormant",
+      "class": "consequential",
+      "level": "L2",
+      "kernel": false,
+      "notes": []
+     },
+     "verdict": "consider",
+     "served_by": "mitl",
+     "ask_id": "ask_00112233445566778899aabbccddeeff",
+     "marker": null
+    }
+   },
+   "expect": {
+    "bytes": "{\"ask_id\":\"ask_00112233445566778899aabbccddeeff\",\"change\":{\"kind\":\"watch\",\"ref\":null,\"words\":\"no body is dormant\"},\"contract\":\"orreth.impact/1\",\"marker\":null,\"served_by\":\"mitl\",\"touches\":{\"bodies\":[\"monitor\",\"planner\"],\"chains\":[\"H \\u2192 monitor \\u2192 tool:add-watch\",\"the kernel \\u2192 planner \\u2192 librarian (when \\u201ckeep this world resilient\\u201d wakes on watch-red)\"],\"class\":\"consequential\",\"cost\":{\"planner\":{\"thoughts\":3,\"tokens\":412}},\"intentions\":[{\"intention_id\":\"int_0a1b2c3d4e5f\",\"kind\":\"kernel\",\"words\":\"keep this world resilient: when a watch goes red, get it green\"}],\"kernel\":false,\"level\":\"L2\",\"markers\":[],\"metric\":\"bodies_dormant\",\"notes\":[],\"watches\":[\"watch_0011223344\"]},\"verdict\":\"consider\"}",
+    "hash": "sha256:3ab5c7d8f62f3b164e1826f4b60649ef1e6438c36ea30c67806390372c79ba9d"
+   }
+  },
+  {
+   "name": "envelope: summoned \u2014 the toggle's fact wears the human's chain and an action marker",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_id": "msg_000000000000000000000000",
+     "message_kind": "event",
+     "type": "orreth.mitl.summoned.v1",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-21T12:00:00.000Z",
+     "payload": {
+      "ref": "ses_0a0b0c0d0e0f",
+      "hash": "sha256:-",
+      "by": "did:orreth:person:jb",
+      "session": "ses_0a0b0c0d0e0f",
+      "body": "mitl"
+     },
+     "correlation_id": "ses_0a0b0c0d0e0f",
+     "authority_chain": [
+      "did:orreth:person:jb"
+     ],
+     "marker": {
+      "kind": "action",
+      "id": "mk_0102030405",
+      "parent": "mk_a1b2c3d4e5f6",
+      "by": "did:orreth:person:jb"
+     }
+    }
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"did:orreth:person:jb\"],\"correlation_id\":\"ses_0a0b0c0d0e0f\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_0102030405\",\"kind\":\"action\",\"parent\":\"mk_a1b2c3d4e5f6\"},\"message_id\":\"msg_000000000000000000000000\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T12:00:00.000Z\",\"payload\":{\"body\":\"mitl\",\"by\":\"did:orreth:person:jb\",\"hash\":\"sha256:-\",\"ref\":\"ses_0a0b0c0d0e0f\",\"session\":\"ses_0a0b0c0d0e0f\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.mitl.summoned.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "envelope: dismissed \u2014 the toggle's fact wears the human's chain and an action marker",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_id": "msg_010101010101010101010101",
+     "message_kind": "event",
+     "type": "orreth.mitl.dismissed.v1",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-21T12:00:00.000Z",
+     "payload": {
+      "ref": "ses_0a0b0c0d0e0f",
+      "hash": "sha256:-",
+      "by": "did:orreth:person:jb",
+      "session": "ses_0a0b0c0d0e0f",
+      "body": "mitl"
+     },
+     "correlation_id": "ses_0a0b0c0d0e0f",
+     "authority_chain": [
+      "did:orreth:person:jb"
+     ],
+     "marker": {
+      "kind": "action",
+      "id": "mk_0102030405",
+      "parent": "mk_a1b2c3d4e5f6",
+      "by": "did:orreth:person:jb"
+     }
+    }
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"did:orreth:person:jb\"],\"correlation_id\":\"ses_0a0b0c0d0e0f\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_0102030405\",\"kind\":\"action\",\"parent\":\"mk_a1b2c3d4e5f6\"},\"message_id\":\"msg_010101010101010101010101\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T12:00:00.000Z\",\"payload\":{\"body\":\"mitl\",\"by\":\"did:orreth:person:jb\",\"hash\":\"sha256:-\",\"ref\":\"ses_0a0b0c0d0e0f\",\"session\":\"ses_0a0b0c0d0e0f\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.mitl.dismissed.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "verdict: a kernel intention is grave \u2014 needs L3, whatever the brain says",
+   "kind": "verdict",
+   "input": {
+    "touches": {
+     "kind": "intention",
+     "ref": null,
+     "words": "",
+     "bodies": [],
+     "chains": [],
+     "intentions": [],
+     "watches": [],
+     "markers": [],
+     "cost": {},
+     "notes": [],
+     "kernel": true,
+     "class": "grave",
+     "level": "L3-master",
+     "marker": null
+    }
+   },
+   "expect": {
+    "verdict": "grave \u2014 needs L3"
+   }
+  },
+  {
+   "name": "verdict: any act held at L3 is grave",
+   "kind": "verdict",
+   "input": {
+    "touches": {
+     "kind": "act",
+     "ref": null,
+     "words": "",
+     "bodies": [],
+     "chains": [],
+     "intentions": [],
+     "watches": [],
+     "markers": [],
+     "cost": {},
+     "notes": [],
+     "kernel": false,
+     "class": "grave",
+     "level": "L3-code",
+     "marker": null
+    }
+   },
+   "expect": {
+    "verdict": "grave \u2014 needs L3"
+   }
+  },
+  {
+   "name": "verdict: a watch is a consequential act (L2) \u2014 consider",
+   "kind": "verdict",
+   "input": {
+    "touches": {
+     "kind": "watch",
+     "ref": null,
+     "words": "",
+     "bodies": [],
+     "chains": [],
+     "intentions": [],
+     "watches": [],
+     "markers": [],
+     "cost": {},
+     "notes": [],
+     "kernel": false,
+     "class": "consequential",
+     "level": "L2",
+     "marker": null
+    }
+   },
+   "expect": {
+    "verdict": "consider"
+   }
+  },
+  {
+   "name": "verdict: a change touching a standing human intention \u2014 consider",
+   "kind": "verdict",
+   "input": {
+    "touches": {
+     "kind": "intention",
+     "ref": null,
+     "words": "",
+     "bodies": [],
+     "chains": [],
+     "intentions": [
+      {
+       "intention_id": "int_1",
+       "words": "x",
+       "kind": "human",
+       "serves": "business"
+      }
+     ],
+     "watches": [],
+     "markers": [],
+     "cost": {},
+     "notes": [],
+     "kernel": false,
+     "class": "routine",
+     "level": "L1",
+     "marker": null
+    }
+   },
+   "expect": {
+    "verdict": "consider"
+   }
+  },
+  {
+   "name": "verdict: what bodies wear (template \u00b7 binding \u00b7 placement) \u2014 consider",
+   "kind": "verdict",
+   "input": {
+    "touches": {
+     "kind": "placement",
+     "ref": null,
+     "words": "",
+     "bodies": [],
+     "chains": [],
+     "intentions": [],
+     "watches": [],
+     "markers": [],
+     "cost": {},
+     "notes": [],
+     "kernel": false,
+     "class": "routine",
+     "level": "L1",
+     "marker": null
+    }
+   },
+   "expect": {
+    "verdict": "consider"
+   }
+  },
+  {
+   "name": "verdict: a routine act touching nothing standing \u2014 low",
+   "kind": "verdict",
+   "input": {
+    "touches": {
+     "kind": "act",
+     "ref": null,
+     "words": "",
+     "bodies": [],
+     "chains": [],
+     "intentions": [],
+     "watches": [],
+     "markers": [],
+     "cost": {},
+     "notes": [],
+     "kernel": false,
+     "class": "routine",
+     "level": "L1",
+     "marker": null
+    }
+   },
+   "expect": {
+    "verdict": "low"
+   }
+  }
+ ]
+}
