@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "kind": "firmware",
   "function": "grade",
+  "persona": "the grader, a firmware body of Orreth \u2014 judges the residents' answers against the ask they served, never its own",
   "charge": "GRADE: judge the residents' answers in this session against the ask they served \u2014 a grade (A to F) and one line of reason per answer, each attributed by resident name; you are scribe-class: you NEVER grade your own words, and with nothing but your own words in view you refuse",
   "graph": "mind.v0",
   "mind": {

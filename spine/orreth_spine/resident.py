@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp1, the body is born · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL recalls the canon it wears · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement enforced at birth · 2026-09-21
 """The resident body v0 (canon 0004): one governed body for every mind.
 
 Born from a versioned TEMPLATE artifact; the SAME identity in every life
@@ -25,7 +26,7 @@ import pika
 from langgraph.graph import END, START, StateGraph
 
 from . import envelope as ev
-from . import inbox, outbox
+from . import inbox, outbox, placement as _placement
 from .identity import Identity
 from .rails import COMMAND_EXCHANGE, RABBIT_URL
 
@@ -56,6 +57,9 @@ CONFIRM_CMD = "orreth.resident.confirm.v1"
 
 class PolicyRefused(RuntimeError):
     """No policy loaded, no join — ever."""
+
+
+PlacementRefused = _placement.PlacementRefused   # P6 sp4: the ground cannot seat this body
 
 
 class _State(TypedDict):
@@ -130,6 +134,8 @@ def ensure_schema(conn) -> None:
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
                     " proof text NOT NULL DEFAULT 'L1'")   # P6 sp1: the proof the
         # act's record wears — L1 · L2 · L3-code · L3-master; the export reads it
+        cur.execute("ALTER TABLE spine_joins ADD COLUMN IF NOT EXISTS"
+                    " placement text")     # P6 sp4: the placement the body was born under
 
 
 def _next_seq(cur, ask_id: str) -> int:
@@ -169,6 +175,10 @@ class Resident:
                 self.template.get("capabilities", [])
                 + self.binding.get("capabilities", [])))   # the seat's tools
         self.identity = Identity.load(self.name, home)
+        # P6 sp4: the placement profile the template declares (defaults
+        # applied) — enforced at the join, never here; a self is loaded
+        # BEFORE the check, so a refusal never mints or loses one (rule 1)
+        self.placement = _placement.profile(self.template)
         self.policy: dict | None = None
         # the mind: a template that declares one thinks through the
         # gateway (metered, always); without a gateway the body falls
@@ -204,6 +214,14 @@ class Resident:
                 "this body wears no covenant policy — load it, or it never "
                 "joins (canon 0004: governance is worn, not remembered)")
         ensure_schema(conn)
+        # P6 sp4: placement is policy — the ground declares what it is and
+        # a body it cannot seat is REFUSED with the reason, a recorded fact,
+        # never started; the same self stands refused (rule 1)
+        ground = _placement.ground_declares()
+        ok, reasons = _placement.honor(self.placement, ground)
+        if not ok:
+            _placement.refuse(conn, self, self.placement, ground, reasons)
+            raise PlacementRefused(self.name, reasons)
         with conn.transaction():
             cur = conn.cursor()
             cur.execute("SELECT count(*) FROM spine_joins WHERE did = %s",
@@ -216,18 +234,20 @@ class Resident:
             cur.execute(
                 "INSERT INTO spine_joins (did, name, life, template_hash,"
                 " policy_version, policy_hash, sig, scope, kind, capabilities,"
-                " interests) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                " interests, placement) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (self.identity.did, self.name, life, self.template_hash,
                  self.policy["version"], self.policy["hash"], sig,
                  ev.scope(), self.kind,        # joined THIS world, as my kind,
                  json.dumps(self.template.get("capabilities", [])),   # declared
-                 json.dumps(self.template.get("interests", []))))     # + interests
+                 json.dumps(self.template.get("interests", [])),      # + interests
+                 ev.canonical(self.placement).decode("ascii")))       # + where I stand
         from . import scheduler                  # the role schedules the
         for sch in self.template.get("schedules", []):   # template declares are
             scheduler.declared(conn, self.name, "role", sch["text"],   # registered
                                int(sch["every_s"]), self.identity.did)   # at every join
         return {"did": self.identity.did, "life": life,
-                "policy_version": self.policy["version"]}
+                "policy_version": self.policy["version"],
+                "placement": dict(self.placement)}
 
     # ---- the mind (small, real) ----------------------------------------------
 
@@ -477,7 +497,10 @@ class Resident:
                 return {"reply": reply,
                         "steps": s["steps"] + ["thought it through the "
                                                "metered gateway"]}
-            reply = (f"I am {self.name} — {self.template['persona']}. "
+            # P6 sp4's side cure (found by sp3): a firmware body without a
+            # gateway wears no persona — the echo names it plainly instead
+            persona = self.template.get("persona") or f"the {self.name}, a firmware body"
+            reply = (f"I am {self.name} — {persona}. "
                      f"You asked: \"{s['text']}\" — and that is every word "
                      f"of it, back to you, none summarized away.")
             return {"reply": reply,

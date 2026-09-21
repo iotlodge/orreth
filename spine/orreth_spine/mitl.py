@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL v0 + the impact door · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 """MITL v0 — the Master Mind In the Loop (canon 0001 · 0004 · 0005 P6 sp3).
 
 The specialist of Orreth as a firmware body of the third kind: the same
@@ -398,7 +399,41 @@ def read_ground(conn, change: dict) -> dict:
             if not (rw.get("interests") or rw.get("every_s")):
                 t["notes"].append("nothing wakes it yet — say WHEN (a red watch, a cadence)")
 
-    elif kind in ("template", "binding", "placement"):
+    elif kind == "placement":
+        # P6 sp4: a placement change is consequential (L2) in v0 — MITL reads
+        # the profile the change proposes (the draft's `placement`, else the
+        # named body's own from its join) and judges it against THIS ground
+        from . import placement as _placement
+        who = str(draft.get("name") or ref or "")
+        if who in bodies:
+            name_body(who)
+        cur = conn.cursor()
+        worn = None
+        if who in bodies:
+            cur.execute("SELECT placement FROM spine_joins WHERE did = %s ORDER BY join_id DESC LIMIT 1",
+                        (bodies[who]["did"],))
+            r = cur.fetchone()
+            worn = json.loads(r[0]) if r and r[0] else dict(_placement.DEFAULT)
+        try:
+            prof = _placement.profile({"placement": draft.get("placement") or worn or {}})
+        except ValueError as e:
+            prof, t["notes"] = None, t["notes"] + [str(e)]
+        t["class"], t["level"] = "consequential", "L2"
+        t["placement"] = prof
+        if prof is not None:
+            here = _placement.ground_declares()
+            ok, reasons = _placement.honor(prof, here)
+            t["notes"].append(("this ground honors it: " if ok else "this ground would REFUSE it at birth: ")
+                              + _placement.why_here(prof, here))
+            if worn is not None and worn != prof:
+                t["notes"].append(f"{who} stands today on cell '{worn['cell']}' · metal {worn['metal']}"
+                                  + (" · beside " + ", ".join(worn["affinity"]) if worn.get("affinity") else ""))
+            if prof["affinity"]:
+                t["notes"].append("affinity is advisory in v0 — recorded and shown, not enforced (P7's cells)")
+        if not who:
+            t["notes"].append("no body named — the profile is judged on its own against this ground")
+
+    elif kind in ("template", "binding"):
         who = str(draft.get("name") or ref or "")
         if who in bodies:
             name_body(who)
@@ -406,10 +441,8 @@ def read_ground(conn, change: dict) -> dict:
             for b in bodies.values():
                 if kind == "template" and b["kind"] == "resident":
                     name_body(b["name"])
-                elif kind in ("binding", "placement") and b["kind"] == "firmware":
+                elif kind == "binding" and b["kind"] == "firmware":
                     name_body(b["name"])
-        t["notes"].append("placement policy v0 is not built yet (P6 sp4) — MITL names the bodies "
-                          "that wear it; where a body may run is not yet a rule of this world")
 
     elif kind == "act":
         tool = str(draft.get("tool") or ref or "")
@@ -471,6 +504,11 @@ def describe(t: dict) -> list[str]:
         lines.append(f"cost so far: {n} — {c['thoughts']} thoughts, {c['tokens']} tokens on the meter")
     if t.get("metric"):
         lines.append(f"metric: {t['metric']}")
+    if t.get("placement"):
+        p = t["placement"]
+        lines.append(f"placement asked: cell '{p['cell']}' · metal {p['metal']}"
+                     + (" · beside " + ", ".join(p["affinity"]) if p["affinity"] else "")
+                     + (" · secrets " + ", ".join(p["secrets_with"]) if p["secrets_with"] else ""))
     lines.append(f"consequence: {t['class']} → {t['level']}")
     lines.extend(t["notes"])
     return lines
@@ -494,6 +532,7 @@ def shape(change: dict, touches: dict, verdict_: str, ask_id: str | None,
             "metric": touches.get("metric"),
             "class": touches["class"], "level": touches["level"], "kernel": bool(touches["kernel"]),
             "notes": list(touches["notes"]),
+            **({"placement": touches["placement"]} if touches.get("placement") else {}),
         },
         "verdict": verdict_,
         "served_by": NAME,

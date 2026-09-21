@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch canon 0008, the conformance suite's first fixture · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -7,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import envelope as ev, export, mitl, proof
+from orreth_spine import envelope as ev, export, mitl, placement, proof
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
 FIXTURES = sorted(ROOT.glob("*-v*.json"))
@@ -67,5 +68,14 @@ def test_fixture(contract, case):
     # ---- orreth.impact/1 (P6 sp3): the verdict ladder — rules, never a brain ----
     elif kind == "verdict":
         assert mitl.verdict(inp["touches"]) == exp["verdict"]
+    # ---- orreth.placement/1 (P6 sp4): the profile's defaults, the honor rule and its reasons ----
+    elif kind == "profile":
+        got = placement.profile(inp["template"])
+        assert got == exp["profile"]
+        assert ev.canonical(got).decode("ascii") == exp["bytes"]
+    elif kind == "honor":
+        ok, reasons = placement.honor(inp["profile"], inp["ground"])
+        assert (ok, reasons) == (exp["honored"], exp["reasons"])
+        assert placement.why_here(inp["profile"], inp["ground"]) == exp["why"]
     else:
         pytest.fail(f"unknown case kind {kind!r} in {contract}")

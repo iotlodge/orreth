@@ -239,7 +239,9 @@ def test_impact_on_a_new_watch_names_the_monitor_body_and_the_metric(pg, monkeyp
     grave = mitl.read_ground(pg, {"kind": "act", "draft": {"tool": "erase-record"}})
     assert mitl.verdict(grave) == "grave — needs L3" and grave["level"] == "L3-code"
     place = mitl.read_ground(pg, {"kind": "placement", "ref": "monitor"})
-    assert [b["name"] for b in place["bodies"]] == ["monitor"] and "not built yet" in place["notes"][0]
+    assert [b["name"] for b in place["bodies"]] == ["monitor"]       # P6 sp4 replaced the "not
+    assert place["notes"][0].startswith("this ground honors it: stands on ")   # built yet" note
+    assert (place["class"], place["level"]) == ("consequential", "L2")   # by the rule itself
 
 
 def test_mitl_never_confirms_its_identity_wears_the_one_face_at_the_door(pg, monkeypatch):

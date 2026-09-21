@@ -237,6 +237,14 @@
   .card h5{margin:0 0 4px;font-size:12.5px;color:var(--amber);letter-spacing:.06em}
   .card .meta{color:var(--dim);font-size:11px}
   .card .side{margin-top:6px;border-top:1px dashed rgba(42,46,58,.7);padding-top:5px}
+  /* P6 sp4: where a body stands (placement is policy) — and a refused body, greyed, the reason in words */
+  .card .stands{margin-top:4px;font-size:11px;color:var(--ink)}
+  .card .stands .meta{display:block}
+  .card .secret{display:inline-block;border:1px dashed var(--seam);border-radius:8px;padding:0 6px;margin:2px 4px 0 0;font-size:10.5px}
+  .card .secret.unreached{color:#ff7a6e}
+  .card.refused{opacity:.55;border-style:dashed}
+  .card.refused h5{color:var(--dim)}
+  .card.refused .stands{color:#ff7a6e}
   .card .side b{color:var(--dim);font-weight:normal;letter-spacing:.1em;font-size:10.5px}
   .cap{display:inline-block;border:1px solid var(--seam);border-radius:8px;
     padding:0 6px;margin:2px 3px 0 0;font-size:10.5px;color:var(--dim)}
@@ -657,6 +665,7 @@ async function send(given, label, toOverride, parent){
   if (given == null && await exportWords(text)) return;    // "export compliance …" (P6 sp2)
   if (given == null && await mitlWords(text)) return;      // "summon MITL" · "what does the canon say …" (P6 sp3)
   if (given == null && includeWords(text)) return;         // the includes, by words
+  if (given == null && await placementWords(text)) return; // "where does the librarian stand?" (P6 sp4)
   if (given == null && workspaceWords(text)) return;       // the pulls, by words
   if (given == null && await markWords(text)) return;      // a human marks (0006)
   if (given == null && await enrollWords(text)) return;    // "enroll my authenticator" (P6 sp1)
@@ -1034,6 +1043,24 @@ async function stopWords(text){                  // "stop the kernel's Resilienc
   await stopIntention(null, {ref: hits[0].intention_id, words: hits[0].words, sure: true});
   return true;
 }
+function whyLine(c){                             // P6 sp4: the card's line, as words
+  const p = c.placement || {};
+  return c.refused ? `${c.name} is refused here — ${p.why.replace(/^refused: /, "")} · recorded; fix its template to seat it`
+                   : `${c.name} ${p.why || "stands here"}`;
+}
+async function placementWords(text){             // "where does the librarian stand?" → the why-line, no click
+  const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
+  const one = t.match(/^where (?:does|is) (?:the )?([a-z0-9_-]+) (?:stand|standing|run|running|placed|seated)$/);
+  const all = /^where (?:does|do|is|are) (?:the )?(?:crew|bodies|everyone|everybody) (?:stand|standing|run|running)$/.test(t);
+  if (!one && !all) return false;
+  el("msg mine", esc(text));
+  const r = await fetch("/crew").then(x=>x.json()).catch(()=>null);
+  if (!r){ sysline("the crew door did not answer"); return true; }
+  const cards = all ? r.crew : r.crew.filter(c => c.name === one[1]);
+  if (!cards.length){ sysline(`no body here is named “${esc(one[1])}” — say “crew” to see who stands here`); return true; }
+  for (const c of cards) sysline(`<b>where</b> · ${esc(whyLine(c))}`);
+  return true;
+}
 function workspaceWords(text){
   const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
   if (/^((open|show)( me)?( the)? crew|crew|the crew)$/.test(t)) { toggleCrew(true); return true; }
@@ -1046,7 +1073,18 @@ async function loadCrew(){
   const box = document.getElementById("cards"); const keep = box.scrollTop;
   box.innerHTML = "";
   for (const c of r.crew){
-    const d = document.createElement("div"); d.className = "card";
+    const d = document.createElement("div"); d.className = "card" + (c.refused ? " refused" : "");
+    const p = c.placement || {};
+    const secrets = (p.secrets || []).map(s => `<span class="secret ${s.reached ? "" : "unreached"}" title="by name only — the value is never shown">${esc(s.name)} ${s.reached ? "✓ reached" : "✗ unreached"}</span>`).join("");
+    const stands = c.refused
+      ? `<div class="stands">refused at birth — ${esc((p.reasons || []).join("; "))}<span class="meta">recorded ${hhmm(c.refused_at)} · never started · the rig runs without it · fix its template to seat it (nothing to stop)</span></div>`
+      : `<div class="stands">${esc(p.why || "")}<span class="meta">cell ${esc(p.cell)} · metal ${esc(p.metal)}` +
+        ((p.affinity || []).length ? ` · beside ${esc(p.affinity.join(", "))} (advisory in v0)` : "") + `</span>${secrets}</div>`;
+    if (c.refused){
+      d.innerHTML = `<h5>${esc(c.name)} <span class="meta">· ${esc(c.kind)} · refused</span></h5>` +
+        `<div class="meta">self …${esc(c.did.slice(-8))} · template ${esc(c.template)}</div>` + stands;
+      box.appendChild(d); continue;
+    }
     const caps = c.capabilities.length ? c.capabilities.map(x => `<span class="cap">${esc(x)}</span>`).join("") : `<span class="meta">none declared</span>`;
     const kernel = c.side_b.kernel.map(k =>
       `<div class="duty kernel" onclick="this.classList.toggle('asked')">${esc(k.duty)}` +
@@ -1064,7 +1102,7 @@ async function loadCrew(){
     d.innerHTML =
       `<h5>${esc(c.name)} <span class="meta">· ${esc(c.kind)} · life ${c.lives}</span></h5>` +
       `<div class="meta">self …${esc(c.did.slice(-8))} · wearing covenant v${esc(c.policy_version)} · template ${esc(c.template)}</div>` +
-      `<div>${caps}</div>` +
+      stands + `<div>${caps}</div>` +
       `<div class="side"><b>SIDE A · INFERENCE</b><div>asks served: ${c.side_a.asks_served}` +
       (c.side_a.last_served ? ` · last ${hhmm(c.side_a.last_served)}` : "") + `</div></div>` +
       `<div class="side"><b>SIDE B · THE JOB</b>${kernel}${schedules}` +

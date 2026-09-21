@@ -1,0 +1,314 @@
+{
+ "contract": "orreth.placement/1",
+ "version": 0,
+ "generated_by": "orreth_spine.placement + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 sp4",
+ "generated_at": "2026-09-21",
+ "cases": [
+  {
+   "name": "profile: a template without a placement wears the default \u2014 born exactly as before",
+   "kind": "profile",
+   "input": {
+    "template": {
+     "format": "orreth-resident-template/1",
+     "name": "echo",
+     "version": "0.1.0"
+    }
+   },
+   "expect": {
+    "profile": {
+     "cell": "local",
+     "affinity": [],
+     "secrets_with": [],
+     "metal": "any"
+    },
+    "bytes": "{\"affinity\":[],\"cell\":\"local\",\"metal\":\"any\",\"secrets_with\":[]}"
+   }
+  },
+  {
+   "name": "profile: a partial placement fills its missing clauses from the default",
+   "kind": "profile",
+   "input": {
+    "template": {
+     "format": "orreth-resident-template/1",
+     "name": "librarian",
+     "placement": {
+      "secrets_with": [
+       "ANTHROPIC_API_KEY"
+      ]
+     }
+    }
+   },
+   "expect": {
+    "profile": {
+     "cell": "local",
+     "affinity": [],
+     "secrets_with": [
+      "ANTHROPIC_API_KEY"
+     ],
+     "metal": "any"
+    },
+    "bytes": "{\"affinity\":[],\"cell\":\"local\",\"metal\":\"any\",\"secrets_with\":[\"ANTHROPIC_API_KEY\"]}"
+   }
+  },
+  {
+   "name": "profile: the full profile's canonical bytes (cell \u00b7 affinity \u00b7 secrets_with \u00b7 metal)",
+   "kind": "canonical",
+   "input": {
+    "obj": {
+     "cell": "gpu-east",
+     "affinity": [
+      "librarian"
+     ],
+     "secrets_with": [
+      "OPENAI_KEY"
+     ],
+     "metal": "gpu"
+    }
+   },
+   "expect": {
+    "bytes": "{\"affinity\":[\"librarian\"],\"cell\":\"gpu-east\",\"metal\":\"gpu\",\"secrets_with\":[\"OPENAI_KEY\"]}",
+    "hash": "sha256:80daceadb4df345f18b601a8c1694ce711cb19c58e868a0c48563bd79ab41ab9"
+   }
+  },
+  {
+   "name": "honor: the default profile on a local \u00b7 cpu ground",
+   "kind": "honor",
+   "input": {
+    "profile": {
+     "cell": "local",
+     "affinity": [],
+     "secrets_with": [],
+     "metal": "any"
+    },
+    "ground": {
+     "cell": "local",
+     "metal": "cpu",
+     "secrets": [
+      "ANTHROPIC_API_KEY",
+      "PATH"
+     ]
+    }
+   },
+   "expect": {
+    "honored": true,
+    "reasons": [],
+    "why": "stands on local \u00b7 cpu"
+   }
+  },
+  {
+   "name": "honor: metal any is honored on a gpu ground too",
+   "kind": "honor",
+   "input": {
+    "profile": {
+     "cell": "local",
+     "affinity": [],
+     "secrets_with": [],
+     "metal": "any"
+    },
+    "ground": {
+     "cell": "local",
+     "metal": "gpu",
+     "secrets": []
+    }
+   },
+   "expect": {
+    "honored": true,
+    "reasons": [],
+    "why": "stands on local \u00b7 gpu"
+   }
+  },
+  {
+   "name": "honor: a secret named and reachable, an affinity as words (advisory)",
+   "kind": "honor",
+   "input": {
+    "profile": {
+     "cell": "local",
+     "affinity": [
+      "echo"
+     ],
+     "secrets_with": [
+      "ANTHROPIC_API_KEY"
+     ],
+     "metal": "any"
+    },
+    "ground": {
+     "cell": "local",
+     "metal": "cpu",
+     "secrets": [
+      "ANTHROPIC_API_KEY",
+      "PATH"
+     ]
+    }
+   },
+   "expect": {
+    "honored": true,
+    "reasons": [],
+    "why": "stands on local \u00b7 cpu \u00b7 reaches 1 of 1 secrets \u00b7 beside echo (advisory)"
+   }
+  },
+  {
+   "name": "refuse: cell 'gpu-east' is not this ground ('local')",
+   "kind": "honor",
+   "input": {
+    "profile": {
+     "cell": "gpu-east",
+     "affinity": [],
+     "secrets_with": [],
+     "metal": "any"
+    },
+    "ground": {
+     "cell": "local",
+     "metal": "cpu",
+     "secrets": [
+      "ANTHROPIC_API_KEY",
+      "PATH"
+     ]
+    }
+   },
+   "expect": {
+    "honored": false,
+    "reasons": [
+     "cell 'gpu-east' is not this ground ('local')"
+    ],
+    "why": "refused: cell 'gpu-east' is not this ground ('local')"
+   }
+  },
+  {
+   "name": "refuse: metal gpu is not here (cpu)",
+   "kind": "honor",
+   "input": {
+    "profile": {
+     "cell": "local",
+     "affinity": [],
+     "secrets_with": [],
+     "metal": "gpu"
+    },
+    "ground": {
+     "cell": "local",
+     "metal": "cpu",
+     "secrets": [
+      "ANTHROPIC_API_KEY",
+      "PATH"
+     ]
+    }
+   },
+   "expect": {
+    "honored": false,
+    "reasons": [
+     "metal gpu is not here (cpu)"
+    ],
+    "why": "refused: metal gpu is not here (cpu)"
+   }
+  },
+  {
+   "name": "refuse: secret OPENAI_KEY is not reachable here",
+   "kind": "honor",
+   "input": {
+    "profile": {
+     "cell": "local",
+     "affinity": [],
+     "secrets_with": [
+      "OPENAI_KEY"
+     ],
+     "metal": "any"
+    },
+    "ground": {
+     "cell": "local",
+     "metal": "cpu",
+     "secrets": [
+      "ANTHROPIC_API_KEY",
+      "PATH"
+     ]
+    }
+   },
+   "expect": {
+    "honored": false,
+    "reasons": [
+     "secret OPENAI_KEY is not reachable here"
+    ],
+    "why": "refused: secret OPENAI_KEY is not reachable here"
+   }
+  },
+  {
+   "name": "refuse: every unmet clause is named, cell then metal then each secret",
+   "kind": "honor",
+   "input": {
+    "profile": {
+     "cell": "gpu-east",
+     "affinity": [
+      "librarian"
+     ],
+     "secrets_with": [
+      "OPENAI_KEY"
+     ],
+     "metal": "gpu"
+    },
+    "ground": {
+     "cell": "local",
+     "metal": "cpu",
+     "secrets": [
+      "ANTHROPIC_API_KEY",
+      "PATH"
+     ]
+    }
+   },
+   "expect": {
+    "honored": false,
+    "reasons": [
+     "cell 'gpu-east' is not this ground ('local')",
+     "metal gpu is not here (cpu)",
+     "secret OPENAI_KEY is not reachable here"
+    ],
+    "why": "refused: cell 'gpu-east' is not this ground ('local'); metal gpu is not here (cpu); secret OPENAI_KEY is not reachable here"
+   }
+  },
+  {
+   "name": "envelope: refused \u2014 orreth.body.refused.v1 wears the kernel's chain, the profile and the reason",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_id": "msg_000000000000000000000000",
+     "message_kind": "event",
+     "type": "orreth.body.refused.v1",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-21T12:00:00.000Z",
+     "payload": {
+      "ref": "did:orreth:agent:0a0b0c0d0e0f0a0b0c0d0e0f",
+      "hash": "sha256:fac368c0bed66023f59730b061143f2b7cba6f9b64fd17d12944063b10610675",
+      "name": "echo",
+      "kind": "resident",
+      "template": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "placement": {
+       "cell": "local",
+       "affinity": [],
+       "secrets_with": [],
+       "metal": "gpu"
+      },
+      "ground": {
+       "cell": "local",
+       "metal": "cpu"
+      },
+      "reasons": [
+       "metal gpu is not here (cpu)"
+      ]
+     },
+     "correlation_id": "did:orreth:agent:0a0b0c0d0e0f0a0b0c0d0e0f",
+     "authority_chain": [
+      "the kernel"
+     ],
+     "marker": {
+      "kind": "observation",
+      "id": "mk_0102030405",
+      "parent": null,
+      "by": "the kernel"
+     }
+    }
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"did:orreth:agent:0a0b0c0d0e0f0a0b0c0d0e0f\",\"marker\":{\"by\":\"the kernel\",\"id\":\"mk_0102030405\",\"kind\":\"observation\",\"parent\":null},\"message_id\":\"msg_000000000000000000000000\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T12:00:00.000Z\",\"payload\":{\"ground\":{\"cell\":\"local\",\"metal\":\"cpu\"},\"hash\":\"sha256:fac368c0bed66023f59730b061143f2b7cba6f9b64fd17d12944063b10610675\",\"kind\":\"resident\",\"name\":\"echo\",\"placement\":{\"affinity\":[],\"cell\":\"local\",\"metal\":\"gpu\",\"secrets_with\":[]},\"reasons\":[\"metal gpu is not here (cpu)\"],\"ref\":\"did:orreth:agent:0a0b0c0d0e0f0a0b0c0d0e0f\",\"template\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.body.refused.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  }
+ ]
+}

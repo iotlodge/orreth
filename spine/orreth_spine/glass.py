@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL born · the toggle and the impact doors · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -30,9 +31,9 @@ from pathlib import Path
 import psycopg
 
 from . import bridgefeed, digest, dispatch, envelope as ev, export, ground, harness, intent, markers, mitl, monitor, outbox
-from . import presence, projector, proof, scheduler, sinks
+from . import placement, presence, projector, proof, scheduler, sinks
 from .rails import PG_DSN
-from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, Resident
+from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRefused, Resident
 
 GLASS_DIR = Path(__file__).resolve().parents[1] / "glass"
 FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED,
@@ -123,25 +124,50 @@ def crew_view(conn) -> list[dict]:
     cur = conn.cursor()
     cur.execute(
         "SELECT DISTINCT ON (name) name, kind, did, life, joined_at,"
-        " policy_version, template_hash, capabilities FROM spine_joins"
+        " policy_version, template_hash, capabilities, placement FROM spine_joins"
         " WHERE scope = %s ORDER BY name, join_id DESC", (ev.scope(),))
     alive = {b["did"]: b["alive"] for b in presence.roster(conn)}
+    here = placement.ground_declares()      # P6 sp4: where this ground is
+    refused = placement.refusals(conn)      # the bodies it could not seat
     cards = []
-    for name, kind, did, life, joined, pv, th, caps in cur.fetchall():
+    for name, kind, did, life, joined, pv, th, caps, plc in cur.fetchall():
         cur.execute("SELECT count(*), max(replied_at) FROM spine_asks"
                     " WHERE served_by = %s AND scope = %s AND status <> 'received'",
                     (did, ev.scope()))
         n, last = cur.fetchone()
+        prof = json.loads(plc) if plc else dict(placement.DEFAULT)
+        r = refused.pop(name, None)
+        if r is not None and r["refused_at"] > joined:   # refused SINCE its last join:
+            cards.append(_refused_card(r)); continue      # the picture says so (rule 7)
         cards.append({
             "name": name, "kind": kind, "did": did, "lives": life,
             "joined_at": joined.isoformat(), "policy_version": pv,
             "alive": alive.get(did),        # M2: a fresh lease, or dormant
             "template": th[:12], "capabilities": json.loads(caps or "[]"),
+            "placement": placement.card(prof, here),    # where it stands, and why
             "side_a": {"asks_served": int(n),
                        "last_served": last.isoformat() if last else None},
             "side_b": {"kernel": [{"duty": d, "editable": False} for d in KERNEL_DUTIES],
                        "human": [], "role": []}})
+    for r in refused.values():              # never joined here at all: refused at birth
+        cards.append(_refused_card(r))
     return cards
+
+
+def _refused_card(r: dict) -> dict:
+    """A body the ground could not seat: greyed, the reason in words —
+    never silently absent (rule 7). Nothing to stop (rule 11): the human
+    retires the refusal by fixing the template."""
+    prof = r["placement"]
+    ground = {"cell": r["ground"]["cell"], "metal": r["ground"]["metal"], "secrets": []}
+    c = placement.card(prof, ground)
+    c["honored"], c["reasons"], c["why"] = False, list(r["reasons"]), "refused: " + "; ".join(r["reasons"])
+    return {"name": r["name"], "kind": r["kind"], "did": r["did"], "lives": 0,
+            "joined_at": None, "policy_version": None, "alive": False, "refused": True,
+            "refused_at": r["refused_at"].isoformat(), "marker": r["marker"],
+            "template": r["template"][:12], "capabilities": [], "placement": c,
+            "side_a": {"asks_served": 0, "last_served": None},
+            "side_b": {"kernel": [], "human": [], "role": []}}
 
 
 def recall_view(conn, *, ref: str | None = None, ask: str | None = None,
@@ -823,6 +849,10 @@ class BridgeRig:
                     ground.ensure_all(conn) # resident before it lives —
                     resident.join(conn)     # every ground at birth, then join
                     break
+                except PlacementRefused as e:   # P6 sp4: the ground cannot seat
+                    print(f"{resident.name} refused at birth — " + "; ".join(e.reasons)
+                          + " (recorded; the rig runs without it)", file=sys.stderr, flush=True)
+                    return                  # never started; the others serve
                 except Exception:
                     time.sleep(0.3)
             if resident.name == mitl.NAME:  # P6 sp3: MITL wears the canon from

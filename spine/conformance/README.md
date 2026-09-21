@@ -40,6 +40,16 @@ the same files, unchanged — before any module earns the word "ported".
     the rest is `low` — by rule, never by a brain. The impact answer's shape
     (`orreth.impact/1`) and the summoned/dismissed envelopes ride the `canonical`
     and `encode` kinds.
+  - `profile` (placement-v0) — `input.template` → `expect.profile` (the placement with
+    the defaults applied: `{cell: "local", affinity: [], secrets_with: [], metal: "any"}`
+    fills every missing clause) and its canonical `expect.bytes`.
+  - `honor` — `input.profile` + `input.ground` (`cell` · `metal` · the secret NAMES the
+    ground can reach) → `expect.honored` and `expect.reasons` (every unmet clause in
+    words, cell then metal then each secret: `cell 'X' is not this ground ('Y')` ·
+    `metal gpu is not here (cpu)` · `secret S is not reachable here`) and `expect.why`
+    (the card's line: `stands on local · cpu · reaches 1 of 1 secrets · beside echo
+    (advisory)`, or `refused: …`). `metal any` is always honored; affinity never
+    refuses (advisory in v0). The refused fact (`orreth.body.refused.v1`) rides `encode`.
 - The law: every spoonful that changes a wire contract adds or extends a
   fixture in the same change. A fixture the reference fails is a wound,
   never a regeneration. `spine/tests/test_conformance.py` runs them all.

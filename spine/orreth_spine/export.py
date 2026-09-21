@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp2, the compliance export · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 """The compliance export (canon 0005 P6 sp2 · AG-7): the chain, proven to
 a stranger.
 
@@ -54,7 +55,7 @@ KIND_OF = {ASK_RECEIVED: "ask", CONFIRM_NEEDED: "hold", PROOF_ATTEMPT: "proof",
            TOOL_CALLED: "tool"}
 CSV_COLUMNS = ("at", "kind", "ref", "person", "authority_chain", "chain_status", "proof",
                "marker_kind", "marker_id", "marker_parent", "marker_root", "served_by",
-               "tool", "words", "words_truncated")
+               "tool", "words", "words_truncated", "placement")
 
 
 # ---- the hash chain (the wire contract; the fixture's law) ---------------------------
@@ -223,6 +224,14 @@ def build(conn, *, person: str, session: str | None = None,
         marker_ids = {r[0] for r in cur.fetchall()}
     cur.execute("SELECT did FROM spine_joins WHERE scope = %s AND kind = 'firmware'", (world,))
     firmware = {r[0] for r in cur.fetchall()}
+    # P6 sp4: the placement each body was born under (its latest join) —
+    # a row for a body's act carries cell · metal from the record
+    cur.execute("SELECT DISTINCT ON (did) did, placement FROM spine_joins WHERE scope = %s"
+                " ORDER BY did, join_id DESC", (world,))
+    stands = {}
+    for did, plc in cur.fetchall():
+        prof = json.loads(plc) if plc else {"cell": "local", "metal": "any"}
+        stands[did] = {"cell": prof["cell"], "metal": prof["metal"]}
     words_by_intention: dict[str, str] = {}
     if intentions:
         cur.execute("SELECT intention_id, words FROM spine_intentions WHERE intention_id = ANY(%s)",
@@ -247,6 +256,7 @@ def build(conn, *, person: str, session: str | None = None,
                 continue
             row = _row(e, kind, oid, asks, intentions, marker_ids, firmware, words_by_intention)
             if row is not None:
+                row["placement"] = stands.get(row.get("served_by"))   # a body's act: where it stood
                 rows.append(row)
     rows.sort(key=lambda r: (r["at"], r["_order"]))
     for r in rows:
@@ -335,5 +345,7 @@ def to_csv(bundle: dict) -> str:
                     " → ".join(r.get("authority_chain") or []), r["chain_status"],
                     r.get("proof") or "", m.get("kind") or "", m.get("id") or "",
                     m.get("parent") or "", m.get("root") or "", r.get("served_by") or "",
-                    r.get("tool") or "", words, "yes" if cut else ""])
+                    r.get("tool") or "", words, "yes" if cut else "",
+                    (f"{r['placement']['cell']} · {r['placement']['metal']}"
+                     if r.get("placement") else "")])
     return out.getvalue()

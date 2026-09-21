@@ -809,7 +809,46 @@ session (the token law).
   and its answer is filed under the change's marker so the L2/L3 confirm
   that follows shows it. Factories wait (a proof's need decides).
   **SPEC-MITL-01.**
-- **sp4 — placement policy v0 (P10: placement is policy).** A template
+- **sp4 — placement policy v0 (P10: placement is policy)** ✅ **BUILT
+  2026-09-21 — walk OWED (JB in the glass, SPEC-PLACE-01).** What landed:
+  `orreth_spine/placement.py` — the profile `{cell, affinity, secrets_with,
+  metal}` with defaults applied (a template without one is born exactly as
+  before), the ground declaring itself from the dials `SPINE_CELL`
+  (default `local`) and `SPINE_METAL` (default `cpu`) and its secrets by
+  NAME (set in the environment — a value is printed nowhere), the honor
+  rule (cell · metal (`any` always) · every named secret reachable) and
+  every unmet clause in words · **enforced at the join**: a body the
+  ground cannot seat is REFUSED with the reason, never started — the fact
+  `orreth.body.refused.v1` through the outbox with the kernel's chain, the
+  profile and an observation marker, a `spine_refusals` row, the rig's
+  serve loop ends that seat and the rest breathe · `spine_joins.placement`
+  on every join · `GET /crew` and the glass card: "stands on local · cpu ·
+  reaches 2 of 2 secrets · beside echo (advisory)", secrets by name with
+  a reached/unreached mark, a REFUSED body as a greyed card with the
+  reason (never silently absent — rule 7; retired by the join that follows a
+  fixed template, the record kept) · the chat words "where does the
+  librarian stand?" → the why-line in place · the export's rows carry
+  `placement` (cell · metal) from the acting body's join (+ a CSV column)
+  · MITL's `/impact` on kind `placement` reads the profile (the draft's,
+  else the body's own), judges it against THIS ground and answers
+  consequential → L2 (`placement` in `orreth.impact/1`'s touches) ·
+  fixture `conformance/placement-v0.json` (11 cases: `profile` · `honor`
+  · the refused envelope) · `tests/test_placement.py` (7 laws) · the
+  side cure of sp3's wound: planner · critic · grader wear a one-line
+  persona and the echo fallback names a persona-less firmware body
+  plainly. **Suite 178 green** (the full local run; 7 of them sp4's plus
+  11 fixture cases). **Relight:** all eight bodies seated, each card
+  "stands on local · cpu". `test_mitl`'s "not built yet" note was
+  replaced by name (it encoded sp3's placeholder).
+  **Honest boundary:** ONE cell until P7's cells — the ground IS the cell
+  it declares; affinity is advisory (recorded and shown, never enforced);
+  a secret is judged by its NAME in the environment only (the one honest
+  check one host can make); allen · security · warden are NOT bodies yet
+  — MITL and the crew door read placement; the residents rail (the
+  target chips) never lists a refused body (it cannot be asked); nothing
+  new to stop (rule 11): a refusal is a record, and the human retires it
+  by fixing the template — the next join wears the fix. The original sp4
+  text follows. A template
   declares its **placement profile** (`placement: {cell, affinity,
   secrets_with, metal}`); the kernel enforces it at birth — a body whose
   placement its ground cannot honor is refused with the reason, never
