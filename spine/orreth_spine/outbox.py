@@ -14,15 +14,58 @@ declared budget, new writes refuse BY NAME instead of silently growing
 """
 from __future__ import annotations
 
+import threading
 import time
+
+# The ground memo (canon 0008's ground law, sharpened 2026-09-21): DDL runs
+# once per GROUND per process — never per connection. A door opens a fresh
+# connection for every request; with a per-connection guard alone, every
+# request re-ran the schema DDL (ALTER TABLE … ADD COLUMN IF NOT EXISTS takes
+# an AccessExclusiveLock even when the column exists) inside a transaction
+# holding the advisory lock, and two concurrent asks deadlocked against a
+# serving resident (CI, three runs in a row: DeadlockDetected at the lock).
+# A ground is the DSN plus the connection's search_path (PG ≥ 14 reports it):
+# the test schema and the public one stay two grounds (markers.seed's lesson).
+_GROUNDS: dict[str, set[str]] = {}
+_GROUNDS_LOCK = threading.Lock()
+
+
+def ground_key(conn) -> str:
+    """The ground a connection stands on: its DSN and its search_path. The
+    server does not report search_path (probed: parameter_status is None
+    after SET), so it is asked ONCE per connection — safely in every
+    transaction state: autocommit or already inside a transaction, a bare
+    SHOW; idle without autocommit, SHOW then rollback so no implicit
+    transaction lingers (the conftest lesson); in error or mid-statement,
+    no query — the key falls back to this connection alone, so DDL is
+    never wrongly skipped."""
+    key = getattr(conn, "_spine_ground", None)
+    if key is None:
+        path = None
+        try:
+            status = int(conn.info.transaction_status)     # 0 idle · 2 in a transaction
+            if conn.autocommit or status == 2:
+                path = conn.execute("SHOW search_path").fetchone()[0]
+            elif status == 0:
+                path = conn.execute("SHOW search_path").fetchone()[0]
+                conn.rollback()
+        except Exception:
+            path = None
+        dsn = getattr(getattr(conn, "info", None), "dsn", "?")
+        key = f"{dsn}|{path}" if path is not None else f"{dsn}|conn:{id(conn)}"
+        conn._spine_ground = key
+    return key
 
 
 def once(conn, tag: str) -> bool:
-    """True the first time this connection sees `tag` — ensure_schema
-    runs its DDL (and takes the advisory lock) exactly once per
-    connection, so a long serving transaction never re-enters DDL and
-    never drags the lock with it (found live: one thinking resident
-    held the xact-scoped lock and every door queued behind it)."""
+    """True the first time this PROCESS sees `tag` on this connection's
+    ground — ensure_schema runs its DDL (and takes the advisory lock)
+    exactly once per ground, so a long serving transaction never re-enters
+    DDL and never drags the lock with it (found live: one thinking resident
+    held the xact-scoped lock and every door queued behind it), and a
+    connection born after the ground was ensured is born flagged: a door's
+    fresh connection never runs DDL inside a request (found in CI: two
+    fan-out asks deadlocked a serving resident at the advisory lock)."""
     done = getattr(conn, "_spine_ensured", None)
     if done is None:
         done = set()
@@ -30,6 +73,11 @@ def once(conn, tag: str) -> bool:
     if tag in done:
         return False
     done.add(tag)
+    with _GROUNDS_LOCK:
+        tags = _GROUNDS.setdefault(ground_key(conn), set())
+        if tag in tags:
+            return False                       # born flagged: this ground is ensured
+        tags.add(tag)
     return True
 
 

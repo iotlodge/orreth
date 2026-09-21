@@ -175,6 +175,21 @@ def test_every_ground_is_ensured_at_birth_never_inside_a_serve(pg, monkeypatch):
     from orreth_spine import ground
     ground.ensure_all(pg)
     assert ground.ensured(pg) >= set(ground.TAGS)
+    # the memo (2026-09-21): a connection BORN to this ground after it was
+    # ensured is born flagged — a door's fresh connection never runs DDL
+    # inside a request (CI: two fan-out asks deadlocked a serving resident)
+    import psycopg
+    from orreth_spine import outbox
+    from tests.conftest import DSN
+    with psycopg.connect(DSN, autocommit=True) as born:
+        born.execute("SET search_path TO spine_test")
+        assert outbox.ground_key(born) == outbox.ground_key(pg)
+        assert not outbox.once(born, "resident"), "born flagged, no DDL"
+        assert not outbox.once(born, "markers")
+    with psycopg.connect(DSN, autocommit=True) as other:   # another ground
+        other.execute("SET search_path TO public")
+        assert outbox.ground_key(other) != outbox.ground_key(pg)
+        assert outbox.once(other, "test-only-tag"), "a new ground ensures once"
     missing = set(ground.TAGS) - ground.ensured(pg)
     assert not missing, missing
     cur = pg.cursor()

@@ -10,6 +10,10 @@ one serve's savepoint; that serve then waited on the graph, and every
 loop and door of the Bridge queued behind a backend "idle in transaction"
 for five minutes. So: a rig connection ensures EVERY ground the moment it
 is opened, on its own autocommit statements, and no serve ever runs DDL.
+Sharpened 2026-09-21 (CI, three runs: two fan-out asks deadlocked a serving
+resident at the advisory lock): `outbox.once` keeps a PROCESS memo per
+ground (DSN + search_path), so a door's fresh connection to an ensured
+ground is born flagged and runs no DDL at all.
 """
 from __future__ import annotations
 
