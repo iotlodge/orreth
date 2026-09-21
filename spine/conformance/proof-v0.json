@@ -1,0 +1,274 @@
+{
+ "contract": "orreth.proof/1",
+ "version": 0,
+ "generated_by": "orreth_spine.proof + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 sp1",
+ "generated_at": "2026-09-21",
+ "cases": [
+  {
+   "name": "totp: RFC 6238 vector at t=59 (SHA-1, 30 s, 6 digits)",
+   "kind": "totp",
+   "input": {
+    "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ",
+    "time": 59
+   },
+   "expect": {
+    "code": "287082"
+   }
+  },
+  {
+   "name": "totp: RFC 6238 vector at t=1111111109 (SHA-1, 30 s, 6 digits)",
+   "kind": "totp",
+   "input": {
+    "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ",
+    "time": 1111111109
+   },
+   "expect": {
+    "code": "081804"
+   }
+  },
+  {
+   "name": "totp: RFC 6238 vector at t=1111111111 (SHA-1, 30 s, 6 digits)",
+   "kind": "totp",
+   "input": {
+    "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ",
+    "time": 1111111111
+   },
+   "expect": {
+    "code": "050471"
+   }
+  },
+  {
+   "name": "totp: RFC 6238 vector at t=1234567890 (SHA-1, 30 s, 6 digits)",
+   "kind": "totp",
+   "input": {
+    "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ",
+    "time": 1234567890
+   },
+   "expect": {
+    "code": "005924"
+   }
+  },
+  {
+   "name": "totp: RFC 6238 vector at t=2000000000 (SHA-1, 30 s, 6 digits)",
+   "kind": "totp",
+   "input": {
+    "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ",
+    "time": 2000000000
+   },
+   "expect": {
+    "code": "279037"
+   }
+  },
+  {
+   "name": "totp: drift \u2014 the step before and after verify, two steps away refuses",
+   "kind": "totp_verify",
+   "input": {
+    "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ",
+    "time": 1111111111,
+    "code": "050471",
+    "at": [
+     1111111081,
+     1111111141,
+     1111111051,
+     1111111171
+    ]
+   },
+   "expect": {
+    "ok": [
+     true,
+     true,
+     false,
+     false
+    ]
+   }
+  },
+  {
+   "name": "ladder: routine < consequential < grave \u2192 L1 < L2 < L3",
+   "kind": "ladder",
+   "input": {
+    "order": [
+     "grave",
+     "routine",
+     "consequential"
+    ]
+   },
+   "expect": {
+    "sorted": [
+     "routine",
+     "consequential",
+     "grave"
+    ],
+    "levels": [
+     "L1",
+     "L2",
+     "L3"
+    ]
+   }
+  },
+  {
+   "name": "class_level: routine \u2192 L1",
+   "kind": "class_level",
+   "input": {
+    "class": "routine",
+    "master": false
+   },
+   "expect": {
+    "level": "L1"
+   }
+  },
+  {
+   "name": "class_level: consequential \u2192 L2",
+   "kind": "class_level",
+   "input": {
+    "class": "consequential",
+    "master": false
+   },
+   "expect": {
+    "level": "L2"
+   }
+  },
+  {
+   "name": "class_level: grave \u2192 L3-code",
+   "kind": "class_level",
+   "input": {
+    "class": "grave",
+    "master": false
+   },
+   "expect": {
+    "level": "L3-code"
+   }
+  },
+  {
+   "name": "class_level: grave + master \u2192 L3-master",
+   "kind": "class_level",
+   "input": {
+    "class": "grave",
+    "master": true
+   },
+   "expect": {
+    "level": "L3-master"
+   }
+  },
+  {
+   "name": "encode: confirm.needed wears its class and level (L3-code)",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_kind": "event",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-21T15:00:00.000Z",
+     "message_id": "msg_0000000000000000000000b1",
+     "type": "orreth.confirm.needed.v1",
+     "payload": {
+      "ref": "ask_1",
+      "hash": "sha256:-",
+      "tool": "erase-record",
+      "class": "grave",
+      "level": "L3-code"
+     },
+     "correlation_id": "ask_1",
+     "authority_chain": [
+      "did:orreth:person:jb",
+      "did:orreth:resident:librarian"
+     ],
+     "aggregate": {
+      "type": "ask",
+      "id": "ask_1",
+      "sequence": 4
+     },
+     "marker": {
+      "kind": "objective",
+      "id": "mk_1",
+      "parent": null,
+      "by": "did:orreth:person:jb"
+     }
+    }
+   },
+   "expect": {
+    "bytes": "{\"aggregate\":{\"id\":\"ask_1\",\"sequence\":4,\"type\":\"ask\"},\"authority_chain\":[\"did:orreth:person:jb\",\"did:orreth:resident:librarian\"],\"correlation_id\":\"ask_1\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_1\",\"kind\":\"objective\",\"parent\":null},\"message_id\":\"msg_0000000000000000000000b1\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T15:00:00.000Z\",\"payload\":{\"class\":\"grave\",\"hash\":\"sha256:-\",\"level\":\"L3-code\",\"ref\":\"ask_1\",\"tool\":\"erase-record\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.confirm.needed.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "encode: the kernel's own hold (L3-master, the kernel in the chain)",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_kind": "event",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-21T15:00:00.000Z",
+     "message_id": "msg_0000000000000000000000b2",
+     "type": "orreth.confirm.needed.v1",
+     "payload": {
+      "ref": "ask_2",
+      "hash": "sha256:a18ac9ef0dd3eb461e5b9910c0dff612b8fabeec3654f89fbf9a02f7413f9c8b",
+      "tool": "intent.stop",
+      "class": "grave",
+      "level": "L3-master"
+     },
+     "correlation_id": "ask_2",
+     "authority_chain": [
+      "did:orreth:person:jb",
+      "the kernel"
+     ],
+     "aggregate": {
+      "type": "ask",
+      "id": "ask_2",
+      "sequence": 1
+     },
+     "marker": {
+      "kind": "objective",
+      "id": "mk_2",
+      "parent": null,
+      "by": "did:orreth:person:jb"
+     }
+    }
+   },
+   "expect": {
+    "bytes": "{\"aggregate\":{\"id\":\"ask_2\",\"sequence\":1,\"type\":\"ask\"},\"authority_chain\":[\"did:orreth:person:jb\",\"the kernel\"],\"correlation_id\":\"ask_2\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_2\",\"kind\":\"objective\",\"parent\":null},\"message_id\":\"msg_0000000000000000000000b2\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T15:00:00.000Z\",\"payload\":{\"class\":\"grave\",\"hash\":\"sha256:a18ac9ef0dd3eb461e5b9910c0dff612b8fabeec3654f89fbf9a02f7413f9c8b\",\"level\":\"L3-master\",\"ref\":\"ask_2\",\"tool\":\"intent.stop\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.confirm.needed.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "encode: the reply wears the proof the act was given",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_kind": "event",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-21T15:00:00.000Z",
+     "message_id": "msg_0000000000000000000000b3",
+     "type": "orreth.reply.v1",
+     "payload": {
+      "ref": "ask_1",
+      "hash": "sha256:fed412eb2392e2fdc7aa6e20bbaa981265bb25697260b80dcbe2b389add20e98",
+      "proof": "L3-code"
+     },
+     "correlation_id": "ask_1",
+     "authority_chain": [
+      "did:orreth:person:jb",
+      "did:orreth:resident:librarian"
+     ],
+     "aggregate": {
+      "type": "ask",
+      "id": "ask_1",
+      "sequence": 6
+     },
+     "marker": {
+      "kind": "objective",
+      "id": "mk_1",
+      "parent": null,
+      "by": "did:orreth:person:jb"
+     }
+    }
+   },
+   "expect": {
+    "bytes": "{\"aggregate\":{\"id\":\"ask_1\",\"sequence\":6,\"type\":\"ask\"},\"authority_chain\":[\"did:orreth:person:jb\",\"did:orreth:resident:librarian\"],\"correlation_id\":\"ask_1\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_1\",\"kind\":\"objective\",\"parent\":null},\"message_id\":\"msg_0000000000000000000000b3\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T15:00:00.000Z\",\"payload\":{\"hash\":\"sha256:fed412eb2392e2fdc7aa6e20bbaa981265bb25697260b80dcbe2b389add20e98\",\"proof\":\"L3-code\",\"ref\":\"ask_1\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.reply.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  }
+ ]
+}

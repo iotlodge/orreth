@@ -126,6 +126,9 @@ def ensure_schema(conn) -> None:
                     " interests text")              # the kinds a body cares about
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
                     " fanout text")
+        cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
+                    " proof text NOT NULL DEFAULT 'L1'")   # P6 sp1: the proof the
+        # act's record wears — L1 · L2 · L3-code · L3-master; the export reads it
 
 
 def _next_seq(cur, ask_id: str) -> int:
@@ -450,10 +453,12 @@ class Resident:
                         system=system, prompt=prompt,
                         model=mind.get("model"), on_delta=deltas)
                 except ConsequentialHold as h:
-                    return {"hold": {"tool": h.tool, "args": h.tool_args},
+                    return {"hold": {"tool": h.tool, "args": h.tool_args,
+                                     "class": h.consequence, "level": h.level},
                             "steps": s["steps"]
-                            + [f"the {h.tool} act is consequential — "
-                               "held at the interlock for the human"]}
+                            + [f"the {h.tool} act is {h.consequence} — "
+                               "held at the interlock for the human"
+                               + ("" if h.level == "L2" else f" · needs {h.level}")]}
                 return {"reply": reply,
                         "steps": s["steps"] + ["thought it through the "
                                                "metered gateway"]}
@@ -549,11 +554,16 @@ class Resident:
             full_chain.append(self.identity.did)
         self._journey(cur, ask_id, out["steps"], full_chain)
         if out.get("hold"):
-            held = out["hold"]
-            question = (
-                f"Are you sure? The {held['tool']} act is consequential "
-                "and cannot be undone. Confirming takes a deliberate yes — "
-                "cancel is the default, and doing nothing cancels.")
+            held = dict(out["hold"])
+            held.setdefault("class", "consequential"); held.setdefault("level", "L2")
+            if held["level"] == "L2":
+                question = (
+                    f"Are you sure? The {held['tool']} act is consequential "
+                    "and cannot be undone. Confirming takes a deliberate yes — "
+                    "cancel is the default, and doing nothing cancels.")
+            else:                                # P6 sp1: the demand rises
+                from .proof import question_for
+                question = question_for(held["level"], f"The {held['tool']} act")
             cur.execute(
                 "UPDATE spine_asks SET status = 'awaiting-confirm',"
                 " reply = %s, served_by = %s, held = %s WHERE ask_id = %s",
@@ -562,7 +572,8 @@ class Resident:
                 kind="event", type=CONFIRM_NEEDED, universe_id=ev.scope(),
                 scope_path=ev.scope(),
                 payload={"ref": ask_id, "hash": "sha256:-",
-                         "tool": held["tool"]},
+                         "tool": held["tool"], "class": held["class"],
+                         "level": held["level"]},     # the hold wears its level
                 correlation_id=ask_id, authority_chain=full_chain,
                 aggregate={"type": "ask", "id": ask_id,
                            "sequence": _next_seq(cur, ask_id)})
@@ -584,24 +595,29 @@ class Resident:
             outbox.add_row(cur, ev.encode(j), j["message_id"])
 
     def _land_reply(self, cur, ask_id: str, reply: str, chain: list,
-                    status: str = "replied") -> None:
+                    status: str = "replied", proof: str = "L1") -> None:
+        # P6 sp1: every act's record wears its proof level (L1 · L2 ·
+        # L3-code · L3-master) on the row AND on the reply's envelope
         cur.execute(
-            "UPDATE spine_asks SET status = %s, reply = %s,"
+            "UPDATE spine_asks SET status = %s, reply = %s, proof = %s,"
             " served_by = %s, replied_at = now() WHERE ask_id = %s",
-            (status, reply, self.identity.did, ask_id))
+            (status, reply, proof, self.identity.did, ask_id))
         r = ev.make_envelope(
             kind="event", type=REPLY, universe_id=ev.scope(), scope_path=ev.scope(),
-            payload={"ref": ask_id, "hash": ev.content_hash(reply)},
+            payload={"ref": ask_id, "hash": ev.content_hash(reply), "proof": proof},
             correlation_id=ask_id, authority_chain=chain, marker=self._current_marker,
             aggregate={"type": "ask", "id": ask_id,
                        "sequence": _next_seq(cur, ask_id)})
         outbox.add_row(cur, ev.encode(r), r["message_id"])
 
     def _confirm_ask(self, cur, ask_id: str, approved: bool,
-                     chain: list[str]) -> None:
-        """The human's word arrives (canon 0001 L2): a deliberate yes
-        releases the held act through the door; anything else cancels —
-        cancel is the default, and a cancelled act NEVER ran."""
+                     chain: list[str], *, proof: str | None = None,
+                     by: str | None = None, reason: str | None = None) -> None:
+        """The human's word arrives (canon 0001 L2 · P6 sp1 L3): a
+        deliberate yes — judged at the door for its proof — releases the
+        held act through the door; anything else cancels — cancel is the
+        default, and a cancelled act NEVER ran. `reason` names a cancel
+        the kernel made (three wrong proofs rest the act)."""
         from .tools import ToolDoor
         cur.execute("SELECT status, held, person FROM spine_asks"
                     " WHERE ask_id = %s FOR UPDATE", (ask_id,))
@@ -615,26 +631,33 @@ class Resident:
                            "as stale"], full_chain or None)
             return
         held = json.loads(row[1])
+        level = proof or held.get("level") or "L2"
         if approved:
             door = ToolDoor(self._serve_conn, did=self.identity.did,
                             capabilities=self.template.get(
                                 "capabilities", []), name=self.name,
                             marker=(self._current_marker or {}).get("id"))
             result = door.call(held["tool"], held["args"], confirmed=True)
+            word = {"L3-code": "the code was right",
+                    "L3-master": f"{(by or '?').split(':')[-1]} confirmed as master"
+                    }.get(level, "the human said yes")
             self._journey(cur, ask_id,
-                          [f"the human said yes — the {held['tool']} act "
-                           "ran through the door"], full_chain)
+                          [f"{word} — the {held['tool']} act ran through "
+                           f"the door · proof {level}"], full_chain)
             self._land_reply(cur, ask_id, f"Done, on your word: {result}",
-                             full_chain)
+                             full_chain, proof=level)
         else:
             self._journey(cur, ask_id,
-                          [f"the human cancelled — the {held['tool']} act "
-                           "never ran (cancel is always the default)"],
-                          full_chain)
+                          [f"{reason or 'the human cancelled'} — the "
+                           f"{held['tool']} act never ran (cancel is always "
+                           "the default)"], full_chain)
             self._land_reply(
                 cur, ask_id,
-                "Cancelled — nothing was done. Cancel is always the "
-                "default here.", full_chain, status="cancelled")
+                ("Rested — three wrong proofs were given, so nothing was "
+                 "done. The act is at rest, recorded; ask again when you "
+                 "are ready." if reason else
+                 "Cancelled — nothing was done. Cancel is always the "
+                 "default here."), full_chain, status="cancelled")
 
     def serve_once(self, conn, *, rabbit_url: str | None = None,
                    idle_s: float = 5.0, max_commands: int = 50) -> dict:
@@ -687,10 +710,11 @@ class Resident:
                 ask_id = str((env.get("payload") or {}).get("ref") or "")
                 chain = env.get("authority_chain") or []
                 if env.get("type") == CONFIRM_CMD:
-                    approved = bool((env.get("payload") or {}).get(
-                        "approved", False))       # absence = cancel, always
-                    effect = (lambda cur, a=ask_id, ap=approved, c=chain:
-                              self._confirm_ask(cur, a, ap, c))
+                    pl = env.get("payload") or {}
+                    approved = bool(pl.get("approved", False))   # absence = cancel, always
+                    effect = (lambda cur, a=ask_id, ap=approved, c=chain, p=pl:
+                              self._confirm_ask(cur, a, ap, c, proof=p.get("proof"),
+                                                by=p.get("by"), reason=p.get("reason")))
                 else:
                     effect = (lambda cur, a=ask_id, c=chain:
                               self._serve_ask(cur, a, c))

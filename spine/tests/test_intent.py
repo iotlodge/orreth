@@ -86,7 +86,11 @@ def test_ih1_a_red_watch_turns_the_resiliency_loop_and_the_stop_ends_it(pg, monk
     assert under >= {"intention", "watch-red", "thought", "objective"}
     [row] = [i for i in intent.listing(pg) if i["intention_id"] == r["intention_id"]]
     assert row["objectives"] == 1 and row["observations"] == 1 and row["turns"] == 1
-    stopped = intent.stop(pg, r["intention_id"], by=ME)                             # rule 11
+    from orreth_spine import proof
+    with pytest.raises(proof.ProofRequired):                                         # P6 sp1: the kernel's own
+        intent.stop(pg, r["intention_id"], by=ME)                                    # intention — grave, never bare
+    stopped = intent.stop(pg, r["intention_id"], by=ME, proof="L3-master",           # rule 11, proven
+                          confirmed_by="did:orreth:person:master")
     assert stopped["active"] is False and stopped["stopped_by"] == ME
     assert any(e["type"] == intent.INTENTION_STOPPED for e in _events_for(pg, r["intention_id"]))
     pg.cursor().execute("UPDATE spine_watches SET last_ok = true")                  # red again —

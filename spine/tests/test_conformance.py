@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import envelope as ev
+from orreth_spine import envelope as ev, proof
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
 FIXTURES = sorted(ROOT.glob("*-v*.json"))
@@ -41,5 +41,16 @@ def test_fixture(contract, case):
             assert name in str(e.value), f"refusal must name {name!r}: {e.value}"
     elif kind == "decode_preserves":
         assert ev.decode(inp["bytes"].encode("ascii")) == exp["obj"]
+    # ---- orreth.proof/1 (P6 sp1): the code, the ladder, the level a class demands ----
+    elif kind == "totp":
+        assert proof.totp(inp["secret"], inp["time"]) == exp["code"]
+    elif kind == "totp_verify":
+        assert [proof.verify(inp["secret"], inp["code"], t) for t in inp["at"]] == exp["ok"]
+    elif kind == "ladder":
+        got = sorted(inp["order"], key=proof.rank)
+        assert got == exp["sorted"]
+        assert [proof.LEVEL_OF_CLASS[c] for c in got] == exp["levels"]
+    elif kind == "class_level":
+        assert proof.level_for(inp["class"], master=bool(inp.get("master"))) == exp["level"]
     else:
         pytest.fail(f"unknown case kind {kind!r} in {contract}")

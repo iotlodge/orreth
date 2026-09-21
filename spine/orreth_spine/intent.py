@@ -229,23 +229,35 @@ def listing(conn, *, serves: str | None = None, kind: str | None = None,
     return out
 
 
-def stop(conn, intention_id: str, by: str) -> dict:
+def stop(conn, intention_id: str, by: str, *, proof: str | None = None,
+         confirmed_by: str | None = None) -> dict:
     """The human's stop (rule 11): recorded on the row and on the rail,
-    never a deletion; the loop does not turn again for it."""
+    never a deletion; the loop does not turn again for it. Stopping one
+    of the KERNEL's own intentions is grave (P6 sp1): it demands
+    L3-master — a second named person confirms, never the asker — so a
+    bare stop on a kernel intention raises `proof.ProofRequired` and the
+    door holds the act instead; the proven stop carries its level."""
+    from .proof import ProofRequired
     ensure_schema(conn); outbox.ensure_schema(conn)
     cur = conn.cursor()
-    cur.execute("SELECT marker, active FROM spine_intentions WHERE intention_id = %s AND scope = %s",
-                (intention_id, ev.scope()))
+    cur.execute("SELECT marker, active, kind, words FROM spine_intentions"
+                " WHERE intention_id = %s AND scope = %s", (intention_id, ev.scope()))
     row = cur.fetchone()
     if row is None:
         raise KeyError(intention_id)
     if not row[1]:
         return get(conn, intention_id)      # already at rest: one face
+    if row[2] == "kernel" and proof != "L3-master":
+        raise ProofRequired("L3-master", f"stopping the kernel's intention “{row[3]}”")
     marker = {"kind": "intention", "id": row[0], "parent": None, "by": by}
+    payload = {"ref": intention_id, "hash": "sha256:-", "by": by, "proof": proof or "L1"}
+    if confirmed_by:
+        payload["confirmed_by"] = confirmed_by
     e = ev.make_envelope(
         kind="event", type=INTENTION_STOPPED, universe_id=ev.scope(), scope_path=ev.scope(),
-        payload={"ref": intention_id, "hash": "sha256:-", "by": by},
-        correlation_id=intention_id, authority_chain=[by], marker=marker)
+        payload=payload, correlation_id=intention_id,
+        authority_chain=[by] + ([confirmed_by] if confirmed_by and confirmed_by != by else []),
+        marker=marker)
 
     def domain(cur):
         cur.execute("UPDATE spine_intentions SET active = false, stopped_by = %s, stopped_at = now()"

@@ -132,21 +132,61 @@ def publish_command(env: dict, rabbit_url: str | None = None) -> None:
 
 def confirm_ask(conn, ask_id: str, *, approve: bool,
                 person: str = "did:orreth:person:jb",
-                rabbit_url: str | None = None) -> None:
-    """The human's click at the interlock (canon 0001 L2): only an
-    explicit approve releases the act — anything else, including
-    silence, is a cancel. The decision is a command wearing the human's
-    own authority."""
-    from .resident import CONFIRM_CMD
-    payload = {"ref": ask_id, "hash": "sha256:-", "approved": bool(approve)}
+                code: str | None = None,
+                rabbit_url: str | None = None) -> dict:
+    """The human's word at the interlock (canon 0001 L2 · P6 sp1 L3):
+    only an explicit approve releases the act — anything else, including
+    silence, is a cancel, and a cancel is ALWAYS taken (rule 11). An
+    approve is judged here for the proof the hold demands: L2 the click
+    alone; L3-code the asker's authenticator code; L3-master `person` a
+    declared master and never the asker. Every refusal — wrong code,
+    a stranger, the asker as master, an ask nobody holds — is the ONE
+    face (rule 4): `proof.NotConfirmed`. The third refusal RESTS the act
+    (a recorded cancel) before the face is shown. The decision rides a
+    command wearing the human's own authority; an act the kernel holds
+    itself is settled on the ground, no rail."""
+    from . import proof
+    proof.ensure_schema(conn)
     cur = conn.cursor()
-    cur.execute("SELECT target, served_by FROM spine_asks WHERE ask_id=%s",
-                (ask_id,))
+    cur.execute("SELECT target, served_by, held, person, status FROM spine_asks"
+                " WHERE ask_id=%s AND scope=%s", (ask_id, ev.scope()))
     row = cur.fetchone()
+    held = json.loads(row[2]) if row and row[2] else {}
+    level = held.get("level") or "L2"
+    reason = None
+    if approve:
+        if row is None or row[4] != "awaiting-confirm":
+            raise proof.NotConfirmed()          # nothing held: the one face
+        try:
+            proof.judge(conn, ask_id, level=level, asker=row[3], by=person, code=code)
+        except proof.NotConfirmed as nc:
+            if nc.rest:                         # three wrong proofs: the act rests
+                _settle(conn, row, ask_id, approve=False, person=person, level=level,
+                        reason="three wrong proofs — the kernel rested this act",
+                        rabbit_url=rabbit_url)
+            raise
+    _settle(conn, row, ask_id, approve=approve, person=person, level=level,
+            reason=reason, rabbit_url=rabbit_url)
+    return {"id": ask_id, "approve": bool(approve), "level": level}
+
+
+def _settle(conn, row, ask_id: str, *, approve: bool, person: str, level: str,
+            reason: str | None, rabbit_url: str | None) -> None:
+    from . import proof
+    from .resident import CONFIRM_CMD
+    if row and row[1] == proof.KERNEL:          # the kernel holds its own acts
+        proof.settle_kernel_act(conn, ask_id, approve=approve, by=person,
+                                level=level, reason=reason)
+        return
+    payload = {"ref": ask_id, "hash": "sha256:-", "approved": bool(approve),
+               "proof": level, "by": person}
+    if reason:
+        payload["reason"] = reason
     if row:
         target = row[0]
         if not target and row[1]:
             # the holder set served_by at the hold — route to that name
+            cur = conn.cursor()
             cur.execute("SELECT name FROM spine_joins WHERE did = %s"
                         " ORDER BY join_id DESC LIMIT 1", (row[1],))
             j = cur.fetchone()

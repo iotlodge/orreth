@@ -29,7 +29,7 @@ from pathlib import Path
 import psycopg
 
 from . import bridgefeed, digest, dispatch, envelope as ev, ground, harness, intent, markers, monitor, outbox
-from . import presence, projector, scheduler, sinks
+from . import presence, projector, proof, scheduler, sinks
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, Resident
 
@@ -46,7 +46,8 @@ def ask_view(conn, ask_id: str) -> dict | None:
     # a glass serves ONLY its own world's ground: another world's ask is
     # "no such ask" here — the refusal wears one face (covenant rule 4)
     cur.execute("SELECT text, person, status, reply, served_by, target,"
-                " scope, asked_at, replied_at, time_window, session, marker"
+                " scope, asked_at, replied_at, time_window, session, marker,"
+                " proof, held"
                 " FROM spine_asks WHERE ask_id = %s AND scope = %s",
                 (ask_id, ev.scope()))
     row = cur.fetchone()
@@ -82,6 +83,10 @@ def ask_view(conn, ask_id: str) -> dict | None:
             "window": json.loads(row[9]) if row[9] else None,  # P6
             "session": row[10],                                 # P20
             "marker": row[11], "origin": origin,                # 0006 · 0007
+            "proof": row[12] or "L1",                           # P6 sp1: the level the act wore
+            "hold": ({"tool": h.get("tool"), "class": h.get("class", "consequential"),
+                      "level": h.get("level", "L2")}                 # what the hold demands
+                     if row[2] == "awaiting-confirm" and (h := json.loads(row[13] or "{}")) else None),
             "journey": [n for n in notes if n]}
 
 
@@ -353,6 +358,13 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 person = (qs.get("person") or ["did:orreth:person:jb"])[0]
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"sessions": sessions_view(conn, person)})
+            if path == "/proof":                          # P6 sp1: enrolled? who are the masters?
+                from urllib.parse import parse_qs
+                qs = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
+                person = (qs.get("person") or ["did:orreth:person:jb"])[0]
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    return self._json(200, {"person": person, "enrolled": proof.enrolled(conn, person),
+                                            "masters": proof.masters(conn)})
             if path == "/analyzer":                      # P25: origins, from the ground
                 from urllib.parse import parse_qs
                 qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
@@ -468,9 +480,17 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 return self._json(201, {"intention": made})
             if path == "/intentions/stop":            # rule 11: the human's stop
                 person = str(p.get("person") or "did:orreth:person:jb")
+                iid = str(p.get("intention_id") or "")
                 try:
                     with psycopg.connect(dsn, autocommit=True) as conn:
-                        made = intent.stop(conn, str(p.get("intention_id") or ""), person)
+                        try:
+                            made = intent.stop(conn, iid, person)
+                        except proof.ProofRequired as pr:      # P6 sp1: the kernel's own
+                            held = proof.hold_kernel_act(          # intention — grave, held
+                                conn, text=pr.what, person=person, tool="intent.stop",
+                                args={"intention_id": iid}, level=pr.level,
+                                session=str(p.get("session") or "") or None)
+                            return self._json(202, {"held": held, "level": pr.level})
                 except KeyError:
                     return self._json(404, {"error": "no such intention"})
                 return self._json(202, {"intention": made})
@@ -552,11 +572,30 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
             if path == "/confirm":
                 ask_id = str(p.get("ask_id") or "")
                 approve = bool(p.get("approve", False))   # absent = cancel
-                with psycopg.connect(dsn, autocommit=True) as conn:
-                    dispatch.confirm_ask(conn, ask_id, approve=approve,
-                                         person=str(p.get("person")
-                                                    or "did:orreth:person:jb"))
-                return self._json(202, {"id": ask_id, "approve": approve})
+                by = str(p.get("by") or p.get("person") or "did:orreth:person:jb")
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        out = dispatch.confirm_ask(conn, ask_id, approve=approve, person=by,
+                                                   code=str(p.get("code") or "") or None)
+                except proof.NotConfirmed:                # rule 4: ONE face, every refusal
+                    return self._json(403, dict(proof.ONE_FACE))
+                return self._json(202, out)
+            if path == "/enroll":                         # P6 sp1: "enroll my authenticator"
+                person = str(p.get("person") or "did:orreth:person:jb")
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        made = proof.enroll(conn, person, code=str(p.get("code") or "") or None)
+                except proof.NotConfirmed:                # re-enrolling is grave: the old code
+                    return self._json(403, dict(proof.ONE_FACE))
+                return self._json(201, made)
+            if path == "/enroll/confirm":                 # the first code confirms it
+                person = str(p.get("person") or "did:orreth:person:jb")
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        made = proof.confirm_enrollment(conn, person, str(p.get("code") or ""))
+                except proof.NotConfirmed:
+                    return self._json(403, dict(proof.ONE_FACE))
+                return self._json(200, made)
             self.send_response(404)
             self.end_headers()
 

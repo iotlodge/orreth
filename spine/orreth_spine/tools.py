@@ -26,11 +26,20 @@ class ConsequentialHold(Exception):
     Exception.__init__ OVERWRITES `.args` with the message tuple; found
     the hard way, in-hour.)"""
 
-    def __init__(self, tool: str, tool_args: dict):
-        super().__init__(f"the {tool} act is consequential — held for the "
-                         "human's confirmation (cancel is the default)")
+    def __init__(self, tool: str, tool_args: dict, *,
+                 consequence: str = "consequential", level: str = "L2"):
+        super().__init__(f"the {tool} act is {consequence} — held for the "
+                         f"human's confirmation at {level} (cancel is the default)")
         self.tool = tool
         self.tool_args = dict(tool_args)
+        self.consequence = consequence    # P6 sp1: the class the act wears
+        self.level = level                # and the proof it demands
+
+
+def consequence_of(tool: dict) -> str:
+    """The class a tool declared: `consequence` by name, or the older
+    `consequential` flag read as consequential/routine."""
+    return tool.get("consequence") or ("consequential" if tool.get("consequential") else "routine")
 
 
 # ---- the tools themselves ---------------------------------------------------------
@@ -144,6 +153,18 @@ TOOLS: dict[str, dict] = {
         "consequential": True,
         "fn": _seal_record,
     },
+    "erase-record": {
+        # P6 sp1's proving ground for GRAVE: a test-only act that demands
+        # the person's code (L3-code) — no template of the house declares
+        # it; a test template does, so the path is walkable and testable
+        "description": "Permanently erase a sealed note — every trace of "
+                       "it. This is grave and cannot be undone.",
+        "input_schema": {"type": "object", "properties": {
+            "key": {"type": "string"}}, "required": ["key"]},
+        "consequential": True,
+        "consequence": "grave",
+        "fn": lambda args: f"Erased the sealed note {args.get('key', '?')!r} — no trace remains.",
+    },
 }
 
 
@@ -193,8 +214,14 @@ class ToolDoor:
         tool = TOOLS.get(name)
         if tool is None:
             raise ToolRefused(f"no tool named {name!r} lives on this shelf")
-        if tool["consequential"] and not confirmed:
-            raise ConsequentialHold(name, args)
+        cls = consequence_of(tool)
+        if cls != "routine" and not confirmed:
+            # the proof demand rises to meet the consequence (P12):
+            # consequential → L2 · grave → L3 (a code; or a master when
+            # the tool says so — the seam for the gravest acts)
+            from .proof import level_for
+            raise ConsequentialHold(name, args, consequence=cls,
+                                    level=level_for(cls, master=bool(tool.get("master"))))
         try:
             if tool.get("ground"):        # an act on the ground rides the
                 args = dict(args, _by=self.did, _name=self.name or self.did,

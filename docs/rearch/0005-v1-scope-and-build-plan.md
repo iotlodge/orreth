@@ -641,7 +641,35 @@ simulator (0008); **every wire change adds a conformance fixture**; JB walks
 each spoonful in the glass and Fable keeps the register. One spoonful per
 session (the token law).
 
-- **sp1 — L3: the proof demand rises.** Acts wear a *consequence class* —
+- **sp1 — L3: the proof demand rises** ✅ **BUILT 2026-09-21 — walk OWED
+  (JB in the glass, SPEC-L3-01).** What landed: `orreth_spine/proof.py`
+  (TOTP per RFC 6238 in pure Python, ±1 step; the ladder routine <
+  consequential < grave → L1 < L2 < L3; the authenticator enrolled through
+  the chat — "enroll my authenticator" draws the QR once, the first code
+  confirms, re-enrolling needs the OLD code; masters on the ground, seeded
+  from `SPINE_MASTERS`; every proof offered a recorded fact) · every hold
+  wears its `class` and `level` on the row and on `confirm.needed` · the
+  `/confirm` door judges the proof (L3-code: the asker's code · L3-master:
+  a declared master, never the asker) and every refusal is ONE face,
+  `403 {"error": "not confirmed"}` · three wrong proofs REST the act (a
+  recorded cancel; the chat says so) · cancel taken at every level ·
+  `spine_asks.proof` on every record (L1 · L2 · L3-code · L3-master), on
+  the reply's envelope and the journey line · stopping one of the
+  KERNEL's intentions is grave: a bare stop refuses, the kernel holds it
+  for L3-master and settles it on the ground · one test-only grave tool
+  (`erase-record`, declared by no template of the house) · the glass
+  draws "this needs your code" (a typed code, then a click; Enter never
+  submits) and "this needs a second named person" · fixture
+  `conformance/proof-v0.json` (RFC vectors, drift, the ladder, the wire
+  shapes) · `tests/test_proof.py` (9 laws). **Suite 126 green** (the full local run; 9 of them sp1's).
+  **Honest boundary:** no template of the house declares a grave tool yet
+  (the librarian's shelf is unchanged — a proof's need decides); masters
+  come from the dial alone (a directory is not in P6); a body killed and
+  a policy cut into service are not yet classed grave (the seam is
+  `consequence: "grave"` + `master: true` on the declaration); the
+  export that reads `proof` is sp2's. The old bare stop on a kernel
+  intention in `tests/test_intent.py` was replaced by name (it encoded
+  the law sp1 raises). Acts wear a *consequence class* —
   routine · consequential (L2 today) · **grave**. Grave acts (the kernel's
   own intentions stopped, a body killed, a policy or template cut into
   service, an export of another person's words) demand **L3 in the chat**:

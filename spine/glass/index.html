@@ -128,6 +128,14 @@
     var(--amber-dim)}      /* cancel is the default — it wears the focus */
   .btn-yes{background:transparent;color:var(--dim)}
   .btn-yes:hover{color:var(--ink);border-color:var(--amber-dim)}
+  .btn-yes:disabled{opacity:.45;cursor:default}
+  .confirm-row input{font:inherit;padding:6px 10px;border-radius:6px;background:#141820;
+    color:var(--ink);border:1px solid var(--seam);letter-spacing:.2em;width:9.5em}
+  .confirm-row input.who-in{letter-spacing:0;width:16em}   /* the master's name */
+  .qr{display:block;margin:8px 0 6px;width:180px;height:180px;image-rendering:pixelated;
+    border-radius:6px;background:#fff}
+  .copy{font:inherit;font-size:11px;user-select:all;word-break:break-all;color:var(--dim);
+    background:#141820;padding:6px 8px;border-radius:6px;margin-top:6px}
   #chat-body{flex:1;display:flex;min-height:0}
   #rail{width:132px;border-left:1px solid var(--seam);padding:10px 8px;
     overflow-y:auto}
@@ -448,10 +456,16 @@ function originRow(o){
                        isInt ? expandOrigin(row, o) : expandRow(row, o.ref); };
   return row;
 }
-async function stopIntention(el, o){          // two clicks, never the return key
-  if (el.dataset.sure !== "1"){ el.dataset.sure = "1"; el.textContent = "sure? click again to rest it"; return; }
+async function stopIntention(elm, o){         // two clicks, never the return key
+  if (elm && elm.dataset.sure !== "1"){ elm.dataset.sure = "1"; elm.textContent = "sure? click again to rest it"; return; }
   const r = await fetch("/intentions/stop", {method:"POST", headers:{"content-type":"application/json"},
-    body: JSON.stringify({intention_id: o.ref})}).then(x=>x.json()).catch(()=>null);
+    body: JSON.stringify({intention_id: o.ref, person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
+  if (r && r.held){                            // P6 sp1: the kernel's own intention — grave, held for a second named person
+    PENDING[r.held] = el("journey", `stopping “${esc(o.words || o.ref)}” is grave — the kernel holds it for ${esc(r.level)}…`);
+    const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);   // the hold may have landed before its notice
+    if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
+    return;
+  }
   sysline(r && r.intention ? `intention at rest — “${esc(o.words || o.ref)}” · recorded, never deleted` : "the stop door did not answer");
   loadBand();
 }
@@ -546,6 +560,8 @@ async function send(given, label, toOverride, parent){
   if (given == null && includeWords(text)) return;         // the includes, by words
   if (given == null && workspaceWords(text)) return;       // the pulls, by words
   if (given == null && await markWords(text)) return;      // a human marks (0006)
+  if (given == null && await enrollWords(text)) return;    // "enroll my authenticator" (P6 sp1)
+  if (given == null && await stopWords(text)) return;      // "stop the kernel's … intention"
   if (given == null && followWords(text)) return;          // a child of an origin (P25)
   const kind = given == null ? (KIND_PIN || proposeKind(text)) : undefined;   // P23
   if (given == null){ KIND_PIN = null; drawKind(); }
@@ -635,29 +651,53 @@ function onDelta(d){
 
 function renderOutcome(id, v, line){
   if (PENDING[id] !== line) return;          // two notices raced: render once
+  if (line._row && v.status === "awaiting-confirm") return;   // the hold is already drawn
   const fan = line._fan;
   if (line._stream) line._stream.remove();   // the door's truth replaces
   line.remove(); delete PENDING[id];         // the stream's sketch
-  const name = NAMES[v.served_by] || v.target || "orreth";
+  const name = NAMES[v.served_by] || (v.served_by === "the kernel" ? "the kernel" : null) || v.target || "orreth";
   const who = `<div class="who">${esc(name)}</div>`;
   if (fan && v.status === "replied"){
     FANS[fan].replies[id] = {name, reply: v.reply};
     offerSummarize(fan);
   }
   if (v.status === "awaiting-confirm"){
+    const level = (v.hold && v.hold.level) || "L2";          // P6 sp1: the demand rises
     const m = el("msg theirs", who + esc(v.reply));
     const row = document.createElement("div");
     row.className = "confirm-row";
-    row.innerHTML =
-      `<button class="btn-cancel">Cancel (default)</button>` +
-      `<button class="btn-yes">Yes — do it</button>`;
+    if (level === "L3-code"){                                 // a code is TYPED, then a click
+      row.innerHTML =
+        `<button class="btn-cancel">Cancel (default)</button>` +
+        `<input inputmode="numeric" maxlength="6" pattern="[0-9]*" placeholder="6-digit code" aria-label="the code from your authenticator">` +
+        `<button class="btn-yes" disabled>Confirm with this code</button>`;
+    } else if (level === "L3-master"){                        // a second NAMED person clicks
+      row.innerHTML =
+        `<button class="btn-cancel">Cancel (default)</button>` +
+        `<input class="who-in" placeholder="the master's name, e.g. did:orreth:person:…" aria-label="the second named person">` +
+        `<button class="btn-yes" disabled>Confirm as master</button>`;
+    } else {
+      row.innerHTML =
+        `<button class="btn-cancel">Cancel (default)</button>` +
+        `<button class="btn-yes">Yes — do it</button>`;
+    }
     /* cancel is the default: it holds focus; Enter can never confirm */
-    row.children[0].onclick = () => decide(id, false, row);
-    row.children[1].onclick = () => decide(id, true, row);
-    m.appendChild(row); row.children[0].focus();
-    PENDING[id] = el("journey", "held at the interlock — your word decides");
+    const cancel = row.querySelector(".btn-cancel"), yes = row.querySelector(".btn-yes"), inp = row.querySelector("input");
+    cancel.onclick = () => decide(id, false, row);
+    if (inp){
+      inp.addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); });   /* Enter never submits */
+      inp.addEventListener("input", () => { yes.disabled = level === "L3-code" ? !/^\d{6}$/.test(inp.value) : !inp.value.trim(); });
+      yes.onclick = () => decide(id, true, row, level === "L3-code" ? inp.value : undefined,
+                                                  level === "L3-master" ? inp.value.trim() : undefined);
+    } else yes.onclick = () => decide(id, true, row);
+    m.appendChild(row); cancel.focus();
+    PENDING[id] = el("journey", level === "L3-code" ? "held — this needs your code · cancel is the default"
+                              : level === "L3-master" ? "held — this needs a second named person · cancel is the default"
+                              : "held at the interlock — your word decides");
+    PENDING[id]._row = row;
     return;
   }
+  if (line._row) line._row.querySelectorAll("button,input").forEach(b => b.disabled = true);   // the hold settled
   el("msg theirs", who + plain(v.reply || "(no words came back)"));
   if (v.replied_at){                         // P7: who took it, on which
     const read = (v.journey || []).map(n => n.replace(/^[^:]+: /, ""))       // scope,
@@ -665,6 +705,7 @@ function renderOutcome(id, v, line){
     el("journey", `${esc(name)} took it on ${esc(v.scope || "?")}` +      // results
        (v.window ? ` · ${dayLabel(new Date(v.window.from))} → ${dayLabel(new Date(v.window.to))}` : "") +
        (read ? ` · ${esc(read)}` : "") +                                     // it read,
+       (v.proof && v.proof !== "L1" ? ` · proof ${esc(v.proof)}` : "") +      // the proof it wore (P6 sp1)
        ` · completed ${hhmm(v.replied_at)} (${secs(v.asked_at, v.replied_at)})`);  // when
   }
 }
@@ -749,14 +790,21 @@ document.getElementById("chat-in").addEventListener("input", e => {
 function hhmm(iso){ return new Date(iso).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"}); }
 function secs(a, b){ return `${Math.max(0, (new Date(b) - new Date(a)) / 1000).toFixed(1)} s`; }
 
-async function decide(id, approve, row){
-  row.querySelectorAll("button").forEach(b => b.disabled = true);
+async function decide(id, approve, row, code, by){
+  row.querySelectorAll("button,input").forEach(b => b.disabled = true);
   setTimeout(refreshPulls, 1500);             // the act's effect, in every lens
-  await fetch("/confirm", {method:"POST",
+  const r = await fetch("/confirm", {method:"POST",
     headers:{"content-type":"application/json"},
-    body: JSON.stringify({ask_id: id, approve})});
+    body: JSON.stringify({ask_id: id, approve, code: code || undefined, by: by || undefined})}).catch(()=>null);
+  if (r && r.status === 403){                 // ONE face (rule 4): try again, or cancel — nothing ran
+    if (PENDING[id]) PENDING[id].textContent = "not confirmed — nothing ran · try again, or cancel";
+    row.querySelectorAll("button,input").forEach(b => b.disabled = false);
+    const inp = row.querySelector("input"); if (inp){ inp.value = ""; row.querySelector(".btn-yes").disabled = true; inp.focus(); }
+    return;
+  }
   if (PENDING[id]) PENDING[id].textContent = approve
-    ? "your yes is on its way…" : "cancelling — nothing will run…";
+    ? (code ? "your code is on its way…" : by ? "the master's word is on its way…" : "your yes is on its way…")
+    : "cancelling — nothing will run…";
 }
 
 function offerSummarize(fan){
@@ -835,6 +883,52 @@ async function markWords(text){                  // "mark this as improvement: t
   sysline(`marked ${esc(r.b.marker.ref)} as ${esc(r.b.marker.kind)}` +
           (r.b.asked.length ? ` — ${r.b.asked.map(a => esc(a.body)).join(", ")} asked to act` : ""));
   refreshPulls();
+  return true;
+}
+/* ---- L3 (P6 sp1): the authenticator, enrolled through the chat; the kernel's intentions stopped by words ---- */
+async function enrollWords(text){                // "enroll my authenticator" · "… with code 123456" to re-enroll
+  const m = text.match(/^(?:re-?)?enroll my authenticator(?:\s+with(?: the)?(?: old)? code\s+(\d{6}))?\s*[.!]?$/i);
+  if (!m) return false;
+  el("msg mine", esc(text));
+  const r = await fetch("/enroll", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({person: PERSON, code: m[1] || undefined})})
+    .then(async x => ({s: x.status, b: await x.json()})).catch(()=>null);
+  if (!r){ sysline("the enroll door did not answer"); return true; }
+  if (r.s !== 201){ sysline("not confirmed — you already hold an authenticator; re-enrolling is grave: say “enroll my authenticator with code 123456” using your current code"); return true; }
+  const b = r.b;
+  const msg = el("msg theirs", `<div class="who">the kernel</div>` +
+    `Scan this once with your authenticator app, then type the first code it shows to finish enrolling.` +
+    (b.qr ? `<img class="qr" alt="the QR for your authenticator" src="${b.qr}">` : "") +
+    `<div class="copy" title="if you cannot scan: enter this in your app">${esc(b.uri)}</div>`);
+  const row = document.createElement("div"); row.className = "confirm-row";
+  row.innerHTML = `<button class="btn-cancel">Not now</button>` +
+    `<input inputmode="numeric" maxlength="6" pattern="[0-9]*" placeholder="first 6-digit code" aria-label="the first code from your authenticator">` +
+    `<button class="btn-yes" disabled>Finish enrolling</button>`;
+  const [cancel, inp, yes] = row.children;
+  inp.addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); });   /* Enter never submits */
+  inp.addEventListener("input", () => { yes.disabled = !/^\d{6}$/.test(inp.value); });
+  cancel.onclick = () => { row.querySelectorAll("button,input").forEach(x => x.disabled = true); sysline("not enrolled — the QR is gone from view; say “enroll my authenticator” to start over"); };
+  yes.onclick = async () => {
+    row.querySelectorAll("button,input").forEach(x => x.disabled = true);
+    const c = await fetch("/enroll/confirm", {method:"POST", headers:{"content-type":"application/json"},
+      body: JSON.stringify({person: PERSON, code: inp.value})}).catch(()=>null);
+    if (c && c.status === 200){ msg.querySelector(".qr")?.remove(); msg.querySelector(".copy")?.remove(); sysline("authenticator enrolled — grave acts will ask for its code"); return; }
+    sysline("not confirmed — nothing changed · type the code your app shows now");
+    row.querySelectorAll("button,input").forEach(x => x.disabled = false); inp.value = ""; yes.disabled = true; inp.focus();
+  };
+  msg.appendChild(row); inp.focus();
+  return true;
+}
+async function stopWords(text){                  // "stop the kernel's Resiliency intention" — grave for the kernel's
+  const m = text.match(/^(?:stop|rest)\s+(?:the\s+)?(?:kernel'?s\s+)?(.+?)\s+intention\s*[.!]?$/i);
+  if (!m) return false;
+  const want = m[1].toLowerCase();
+  const ints = await fetch("/intentions").then(x=>x.json()).then(x => x.intentions || []).catch(()=>[]);
+  const hits = ints.filter(i => i.active !== false && (i.serves.toLowerCase() === want || (i.words || "").toLowerCase().includes(want)));
+  if (hits.length !== 1){ sysline(hits.length ? `which one? ${hits.length} intentions match “${esc(m[1])}” — stop it from the ANALYZER`
+                                              : `no standing intention matches “${esc(m[1])}” — the ANALYZER lists them`); return true; }
+  el("msg mine", esc(text));
+  await stopIntention(null, {ref: hits[0].intention_id, words: hits[0].words, sure: true});
   return true;
 }
 function workspaceWords(text){

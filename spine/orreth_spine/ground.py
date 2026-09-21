@@ -18,18 +18,20 @@ ground is born flagged and runs no DDL at all.
 from __future__ import annotations
 
 TAGS = ("outbox", "inbox", "projector", "resident", "gateway", "tools", "store",
-        "markers", "monitor", "scheduler", "harness", "presence", "digest", "intent")
+        "markers", "monitor", "scheduler", "harness", "presence", "digest", "intent",
+        "proof")
 
 
 def ensure_all(conn) -> None:
     """Flag every ground on this connection (each module's `once` tag), so
     the serving transaction never runs DDL and never takes the lock."""
     from . import (digest, gateway, harness, inbox, intent, markers, monitor, outbox,
-                   presence, projector, resident, scheduler, store, tools)
+                   presence, projector, proof, resident, scheduler, store, tools)
     for mod in (outbox, inbox, projector, resident, gateway, tools, store, markers,
-                monitor, scheduler, harness, presence, digest, intent):
+                monitor, scheduler, harness, presence, digest, intent, proof):
         mod.ensure_schema(conn)
     markers.seed(conn)                      # the kernel's kinds, in this world
+    proof.seed_masters(conn)                # the SPINE_MASTERS dial, in this world (P6 sp1)
 
 
 def ensured(conn) -> set[str]:
