@@ -627,6 +627,76 @@ first walk carries MONITOR-01's deferred re-walk.
   `tests/test_growth.py` (latency flat ×10). Dependency:
   `langgraph-checkpoint-postgres`. Suite 85 green.
 
+## Phase 6 — GOVERNANCE FELT (opened 2026-09-21 — Fable's slicing, JB may veto any spoonful at sight)
+
+The charter's line: **the proof demand rises to meet the consequence** (P12),
+and governance is a *felt* experience in the chat — never a form someplace
+else. What stands at the open: L1 (the ask) and L2 (the in-chat interlock:
+"are you sure", cancel default, yes by a deliberate click — SPEC-L2-01
+green) · the authority chain on every envelope (AG-7's seed) · markers as
+the WHY on every fact · the stop on every intention (rule 11). What P6 adds
+is the top of the ladder, the specialist who weighs a change, the export that
+proves the chain to a stranger, and where a body may run. Built in the Python
+simulator (0008); **every wire change adds a conformance fixture**; JB walks
+each spoonful in the glass and Fable keeps the register. One spoonful per
+session (the token law).
+
+- **sp1 — L3: the proof demand rises.** Acts wear a *consequence class* —
+  routine · consequential (L2 today) · **grave**. Grave acts (the kernel's
+  own intentions stopped, a body killed, a policy or template cut into
+  service, an export of another person's words) demand **L3 in the chat**:
+  the kernel asks for a **one-time code from the person's authenticator**
+  (TOTP, enrolled once through the chat — "enroll my authenticator" draws
+  the QR in the transcript), and for the gravest — the kernel's standing
+  intentions, killing a body — **master authority**: a second, *named*
+  person confirms, never the asker. A wrong code refuses with ONE face (rule
+  4); three wrong codes rest the act and say so. Every act's record carries
+  its **proof level** (L1 · L2 · L3-code · L3-master) — the export reads it.
+  The word "sure" never passes L3: a code is typed, a master clicks.
+  **SPEC-L3-01.** Fixture: the consequence classes and the proof-level
+  record on the wire.
+- **sp2 — the compliance export with AG-7 chains** (JB's testing marker).
+  Words in the chat — "export compliance for this session" · "for between
+  Friday and today" · "for the hemp objective" — produce a **signed bundle**
+  (canonical JSON + a human CSV) of every ask, act, hold, confirm, reply and
+  marker in the window, each row with its **authority chain end to end**
+  (H → resident → firmware → tool), its proof level, its marker lineage
+  (the WHY), and a hash chain over the rows; downloadable from the chat,
+  rendered as a table in place first. **AG-7 proven:** a planned request
+  (planner → resident → grader) shows an unbroken chain in the export; a
+  truncated chain FAILS the suite. **SPEC-EXPORT-01.** Fixture: the
+  export's row shape and its hash chain (the Rust plane must produce the
+  same bytes).
+- **sp3 — MITL v0 + the impact door.** The **Master Mind In the Loop** as a
+  firmware body of the third kind (with planner · critic · grader) wearing
+  the **Orreth ontology v0** — digest + understanding over the canon
+  (0001–0008, the covenant, the honest register) as its own corpus — and its
+  own brain through the gateway (rule 5: the meter is universal). Summoned
+  by a soft toggle ("summon MITL" · the MITL chip in the composer); the
+  **"expected impact of this change?" door**: any craft about to be cut
+  (a template, a binding, a watch, an intention, a placement) can be sent
+  to MITL first — it answers with who and what the change touches (bodies,
+  chains, intentions, cost), the risk in words, and what to watch after —
+  and its answer is filed under the change's marker so the L2/L3 confirm
+  that follows shows it. Factories wait (a proof's need decides).
+  **SPEC-MITL-01.**
+- **sp4 — placement policy v0 (P10: placement is policy).** A template
+  declares its **placement profile** (`placement: {cell, affinity,
+  secrets_with, metal}`); the kernel enforces it at birth — a body whose
+  placement its ground cannot honor is refused with the reason, never
+  started; the crew card shows where a body stands and why; the export
+  carries it; **allen · security · warden** read it (what-if reasoning is
+  P7's, with real cells). Honest boundary: one host until P7's cells — v0
+  is the declaration, the refusal, the card and the record. **SPEC-PLACE-01.**
+  Fixture: the placement profile's shape.
+
+**Close conditions** (canon): four proofs green · JB walks the four specs
+green in the glass · the register updated (L3, export, MITL, placement move
+from park to claim with evidence named) · docs written in the close loop ·
+`VERSION` bumped in the closing commit. **Not in P6:** enterprise IdP
+federation (the seam is L3-master's second person; a directory arrives with
+a proof's need) · MITL's factories · multi-host placement (P7).
+
 ## The intent (0007) — opened 2026-09-19 on block 11's locks, BEFORE P6
 
 - **intent sp1 — the Analyzer, the kind of an ask, the fifth rail** ✅
