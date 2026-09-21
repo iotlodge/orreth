@@ -60,7 +60,7 @@ def ask_view(conn, ask_id: str) -> dict | None:
         r0 = cur.fetchone()
         if r0 and r0[0] != row[11]:
             [o] = markers.with_words(conn, [markers._row(r0)])
-            origin = {"marker": o["id"], "kind": o["kind"], "ref": o["ref"],
+            origin = {"marker": o["id"], "kind": o["kind"], "ref": o["ref"], "by": o["by"],
                       "words": o.get("words") or o.get("note")}
     cur.execute("SELECT body FROM spine_outbox"
                 " WHERE convert_from(body, 'UTF8') LIKE %s"

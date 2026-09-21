@@ -94,7 +94,12 @@ Business, Security, Resiliency, Compliance, and Cost.
   version. Never raw feedback into a body.
 - **Lookups, never fan-outs** is a promise the Analyzer must keep under
   measurement (P17's budget): the page paints from projections in under a
-  second at 10k markers; a walk proves it or the line stops.
+  second at 10k markers; a walk proves it or the line stops (IH-3: ~1 ms
+  by law; walk #6: 0.02 s on the glass).
+- **The loop's objectives need a crew that can act.** In sp1 the runner
+  is the librarian — a conversationalist. Resiliency's objectives are
+  real and lineaged but un-actionable until an acting resident exists
+  (V1's infrastructure resident); sp2 binds the runner per `serves`.
 
 ## Where it lives and how it shows
 
@@ -168,8 +173,25 @@ Business, Security, Resiliency, Compliance, and Cost.
   rows stay their own table (both mint `intention` markers; folding is
   sp3). Live on the dev ground within a minute of the relight: two red
   watches observed under Resiliency, the planner asked, its reply filed
-  as an objective to the librarian, answered. SPEC-INTENT-01 ·
-  SPEC-ANALYZE-01 walk owed.
+  as an objective to the librarian, answered. **Walk #6 (2026-09-19,
+  lean): SPEC-INTENT-01 PASS ×4 w/ friction · SPEC-ANALYZE-01 PASS ×2 w/
+  friction** — the chip read INTENTION from the words; the declaration in
+  0.05 s; a confirmed red watch woke the loop in 3–4 s (planner, then the
+  objective to the librarian); the Analyzer painted origins in 0.02 s
+  with no body asked, an intention's tree in words in 0.03 s. Ruled and
+  cured the same hour: the crew's reply to a kernel-born objective now
+  lands in the chat as a bubble (it was only in the tree, cut); the chat
+  says WHOSE word ("on jb's word · owned by the kernel" for a human's
+  intention, "on the kernel's word" for the kernel's); an open Analyzer
+  row survives the feed's repaint; a twig is a door across its whole row
+  and shows the reply whole. **Sp1's honest limit, recorded:** every
+  objective Resiliency birthed today landed on the librarian, who has no
+  tools for it — the loop turns, the crew that can act arrives with V1's
+  infrastructure resident (intent sp2 names the runner per `serves`).
+  Owed frictions: the two planner lines read alike when two intentions
+  share words; the KIND chip is a three-click cycle; the kernel's
+  intention session sits in "my sessions" for a human's intention; the
+  stop was not walked (lean).
 - **intent sp2** — the intention architect in the chat ("create an
   intention to …" fills a declaration; cut from the draft shelf) · Cost
   (the meter; `cost-anomaly`) · the Analyzer's review assistant.

@@ -529,7 +529,7 @@ by the Playwright before it closes.
   (0006) stays parked; sp2's projection is where a marker lineage would
   later live.
 
-## Phase 5 — MEMORY WHOLE (opened 2026-09-19 — JB's lock on the slicing · **BUILT 2026-09-19**, four spoonfuls · walk #5 (2026-09-20): FULL-01's acquire half green; SCOPE-01 and MARK-01's fourth bar found wounds, cured the same hour; SESSION-01's short version not exercised — **closes WHOLE on the next walk of those three**)
+## Phase 5 — MEMORY WHOLE (opened 2026-09-19 — JB's lock on the slicing · **BUILT 2026-09-19**, four spoonfuls · walk #5: FULL-01's acquire half green; SCOPE-01 and MARK-01's fourth bar found wounds, cured the same hour · **CLOSED WHOLE 2026-09-19, walk #6**: SCOPE-01 reads the window (seven asks named to the minute), SESSION-01's short version under every archived session, MARK-01's critique in the chat in 16 s — every named claim walked green on the human path)
 
 Four spoonfuls, one MEM proof each with its law (canon 0003): **sp1**
 MEM-1 total recall + the window reads · **sp2** Understanding v0 (a
@@ -618,8 +618,15 @@ first walk carries MONITOR-01's deferred re-walk.
 ## The intent (0007) — opened 2026-09-19 on block 11's locks, BEFORE P6
 
 - **intent sp1 — the Analyzer, the kind of an ask, the fifth rail** ✅
-  **BUILT 2026-09-19 — walk OWED** (JB's lock: canon now, then sp1 before
-  P6; suite 93 green; IH-3 measured: origins at 10k markers ~1 ms
+  **BUILT 2026-09-19 · WALKED #6 the same day — INTENT-01 PASS ×4 (one
+  friction) · ANALYZE-01 PASS ×2 (one friction); two wound calls cured at
+  once (a kernel-born objective's reply now lands in the chat as a bubble;
+  the chat says WHOSE word — "on jb's word · owned by the kernel" for a
+  human's intention); one recorded as sp1's honest limit (the objectives
+  land on a librarian with no tools for them — the acting crew is V1's
+  infrastructure resident); the Analyzer's open row now survives the
+  feed's repaint; the KIND chip reads THOUGHT when the composer is empty**
+  (JB's lock: canon now, then sp1 before P6; suite 93 green; IH-3 measured: origins at 10k markers ~1 ms
   from a ROOT column, never a walk; the stop reaches the kernel's
   intentions too — rule 11 over P4 sp5's duty-immutability, JB may veto
   at sight; schedules not yet folded in — sp3; a PRODUCTION WOUND at the

@@ -332,7 +332,10 @@ class Resident:
                     # windowed ask (walk #5: packed deep and unlabeled, the
                     # mind denied having any record of the window)
                     head = [f"THE WINDOW the human asked about: {window['from'][:16]} → "
-                            f"{window['to'][:16]}. What was asked and answered inside it:"]
+                            f"{window['to'][:16]}. What was asked and answered inside it "
+                            "(this IS the record: open your answer by naming the window "
+                            "and what is listed here; an ask not listed here was NOT "
+                            "asked in it — name no other; never open with a denial):"]
                     cur.execute(
                         "SELECT a.text, a.reply, a.asked_at, coalesce(j.name, 'a resident')"
                         " FROM spine_asks a LEFT JOIN LATERAL ("

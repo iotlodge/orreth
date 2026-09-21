@@ -405,6 +405,7 @@ function toggleBand(open){
 }
 let bandOpenRow = null;
 let LAST_ORIGIN = null;           // the origin last opened here: "follow up on this by …"
+let BAND_OPEN = null;             // the row open in the Analyzer: it survives a repaint (walk #6)
 const counts = o => Object.entries(o.counts || {}).map(([k, n]) => `${n} ${k}${n > 1 ? "s" : ""}`).join(" · ");
 async function loadBand(){                     // P25: origins, from the ground — no body asked
   const r = await fetch("/analyzer").then(x=>x.json()).catch(()=>null);
@@ -421,10 +422,15 @@ async function loadBand(){                     // P25: origins, from the ground 
   if (!objs.length) box.insertAdjacentHTML("beforeend", `<div class="meta" style="padding:4px 8px">nothing asked yet</div>`);
   for (const o of objs) box.appendChild(originRow(o));
   await markersView(box, loadBand);            // 0006 → block 11: lineage lives here
+  if (BAND_OPEN){                              // the row the human had open stays open
+    const row = box.querySelector(`[data-root="${BAND_OPEN.root}"]`);
+    const o = r.origins.find(x => x.root === BAND_OPEN.root);
+    if (row && o) await (o.kind === "intention" ? expandOrigin(row, o, true) : expandRow(row, o.ref, true));
+  }
   box.scrollTop = keep;
 }
 function originRow(o){
-  const row = document.createElement("div"); row.className = "brow";
+  const row = document.createElement("div"); row.className = "brow"; row.dataset.root = o.root;
   const isInt = o.kind === "intention";
   const state = isInt ? (o.active === false ? "cancelled" : "received") : (o.status || "replied");
   row.innerHTML =
@@ -436,6 +442,9 @@ function originRow(o){
     (isInt && o.active !== false && o.serves !== "schedule" ? `<span class="stop" data-stop="${esc(o.ref)}" title="rule 11: recorded, never deleted">stop</span>` : "");
   row.onclick = e => { if (e.target.dataset.stop) return stopIntention(e.target, o);
                        LAST_ORIGIN = {marker: o.root, words: o.words || o.ref};
+                       if (BAND_OPEN && BAND_OPEN.root === o.root){ BAND_OPEN = null;   // a second click closes
+                         if (bandOpenRow){ bandOpenRow.remove(); bandOpenRow = null; } return; }
+                       BAND_OPEN = {root: o.root};
                        isInt ? expandOrigin(row, o) : expandRow(row, o.ref); };
   return row;
 }
@@ -446,12 +455,12 @@ async function stopIntention(el, o){          // two clicks, never the return ke
   sysline(r && r.intention ? `intention at rest — “${esc(o.words || o.ref)}” · recorded, never deleted` : "the stop door did not answer");
   loadBand();
 }
-async function expandOrigin(row, o){          // an intention's tree, in words
+async function expandOrigin(row, o, quiet){   // an intention's tree, in words
   if (bandOpenRow){ bandOpenRow.remove(); bandOpenRow = null; }
   const t = await fetch("/analyzer?origin=" + encodeURIComponent(o.root)).then(x=>x.json()).catch(()=>null);
   if (!t) return;
-  pushFocus({kind: "intention", id: o.ref, name: null, window: null, marker: o.root,
-             label: `the intention · ${esc(o.words || o.ref)}`});
+  if (!quiet) pushFocus({kind: "intention", id: o.ref, name: null, window: null, marker: o.root,
+                         label: `the intention · ${esc(o.words || o.ref)}`});
   const d = document.createElement("div"); d.className = "bexpand"; d.style.padding = "4px 0 8px";
   const twigs = t.tree.filter(m => m.id !== o.root);
   d.innerHTML = twigs.length ? twigs.map(m =>
@@ -463,16 +472,18 @@ async function expandOrigin(row, o){          // an intention's tree, in words
     e.stopPropagation();
     const v = await fetch("/ask/" + tw.dataset.ask).then(x=>x.json()).catch(()=>null);
     if (!v) return; toggleChat(true);
-    sysline(`${esc(v.target || "any")} · ${esc(v.status)} — ${esc((v.reply || v.text).slice(0, 300))}`); }; });
+    el("msg mine", `<em>from the Analyzer → ${esc(v.target || "any")}</em><div class="meta">${esc(v.text)}</div>`);
+    el("msg", `<div class="who">${esc(NAMES[v.served_by] || v.target || "orreth")}</div>` +   // the reply, WHOLE
+       (v.reply ? plain(v.reply) : `<i>${esc(v.status)} — still on its way</i>`)); }; });
   row.after(d); bandOpenRow = d;
 }
-async function expandRow(row, id){
+async function expandRow(row, id, quiet){
   if (bandOpenRow){ bandOpenRow.remove(); bandOpenRow = null; }
   const v = await fetch("/ask/" + id).then(x=>x.json()).catch(()=>null);
   if (!v) return;
-  pushFocus({kind: "ask", id, name: NAMES[v.served_by] || v.target || null, marker: v.marker,
-             window: v.window ? {from: new Date(v.window.from),
-                                 to: new Date(v.window.to)} : null});
+  if (!quiet) pushFocus({kind: "ask", id, name: NAMES[v.served_by] || v.target || null, marker: v.marker,
+                         window: v.window ? {from: new Date(v.window.from),
+                                             to: new Date(v.window.to)} : null});
   const d = document.createElement("div");
   d.className = "bexpand";
   d.textContent = v.reply || "(still on its way)";
@@ -499,6 +510,7 @@ let KIND_PIN = null;
 function proposeKind(text){                      // the door reads the same rules
   const t = text.trim(); const m = t.match(/^(thought|objective|intention)\s*:/i);
   if (m) return m[1].toLowerCase();
+  if (!t) return "thought";                       // the chat's own face, until words say otherwise
   const low = t.toLowerCase();
   if (/(\bkeep\b.{0,60}\b(resilient|green|alive|safe|secure|compliant|healthy|under|below|within)\b|\bwhen(ever)?\b.{0,60}\b(goes|turns|is|are|go)\s+(red|down|dormant|late|over)\b|\bevery\s+(\d+\s+)?(minute|hour|day|week)s?\b|\bfrom now on\b|\bwatch for\b|\bstanding\b|\bas long as\b|\bany ?time\b)/.test(low)) return "intention";
   if (/(\?\s*$|^(who|what|what's|whats|when|where|why|how|is|are|does|do|can|could|would|should|which|did|tell me|explain|describe|repeat)\b)/.test(low)) return "thought";
@@ -589,8 +601,12 @@ async function onNotice(n){
     const v0 = await fetch("/ask/" + n.ref).then(x=>x.json()).catch(()=>null);
     if (v0 && v0.origin && v0.origin.kind === "intention" && v0.session !== SESSION){   // 0007: born of an intention
       const inc = ["planner", "critic", "grader"].includes(v0.target);
-      sysline(`on the kernel's word · “${esc((v0.origin.words || "").slice(0, 80))}” → ${esc(v0.target || "the crew")}: ` +
-              (inc ? "the next objective?" : esc(v0.text.slice(0, 160))) + " · the ANALYZER shows the rest");
+      const whose = v0.origin.by === "the kernel" ? "on the kernel's word" : `on ${esc(whoIs(v0.origin.by))}'s word · owned by the kernel`;
+      const words = `“${esc((v0.origin.words || "").slice(0, 80))}”`;
+      if (inc){ sysline(`${whose} · ${words} → ${esc(v0.target)}: the next objective?`); return; }
+      el("msg mine", `<em>${whose} · ${words} → ${esc(v0.target || "the crew")}</em>` +   // the objective renders
+         `<div class="meta">${esc(v0.text)}</div>`);                                   // like any ask: its reply
+      PENDING[n.ref] = el("journey", `→ ${esc(v0.target || "the crew")} — on its way…`);   // lands HERE (walk #6)
       return; }
     if (!v0 || !SESSION || v0.session !== SESSION) return;   // shown if it is THIS
     el("msg mine", `<em>on the kernel's word → ${esc(v0.target || "…")}</em>` +   // session's
