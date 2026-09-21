@@ -705,24 +705,34 @@ session (the token law).
   for whom · proof · why · words) under a one-line summary, then
   "download JSON" · "download CSV" · fixture `conformance/export-v0.json`
   (6 cases: `hash_chain` · `chain_status` · `verify` · the bundle's
-  canonical bytes) · `tests/test_export.py` (10 laws). **AG-7 PROVEN:** a
+  canonical bytes) · `tests/test_export.py` (11 laws). **AG-7 PROVEN:** a
   planned request (echo + librarian answered; planner and grader applied
   over both) exports with H → the residents read → the firmware on every
   include row, `chain_broken: 0`, and `verify()` true; one hop cut →
   `verify()` false, resealed → counted; the kernel's held stop exports
   hold (H → the kernel · L3-master) · two proofs · reply (H → master →
-  the kernel) · the intention's stop. **Suite 141 green** (the full local run; 10 of them sp2's).
+  the kernel) · the intention's stop. **The tool-hop wound, found by sp2 and CURED the same day (after
+  57cf0b1):** `tools.py`'s door now records the calling body's chain plus
+  the tool's own name (`tool:<name>`) on `spine_tool_calls` and files
+  `orreth.tool.called.v1` through the outbox — the envelope carries the
+  chain end to end and the action marker — so a `tool` row of the export
+  reads H → resident → tool:acquire from the record; a body's own
+  `marker.set` fact carries the origin human first, then the body;
+  `resident._full_chain` is the ONE chain the journey, the reply, the
+  hold, every tool call and every mark wear; a held act released by the
+  human's yes wears the confirm command's chain (H → body → tool — the
+  read hops stay on the hold's row). Fixture `export-v0.json` grew the
+  tool row (9 cases). **Suite 145 green** (the full local
+  run; 11 of them sp2's).
   **Honest boundary:** the glass has no kernel self, so its door exports
   UNSIGNED (`signed_by: null`; the Ed25519 path is built and proven with
   an ephemeral signer in the suite — a kernel identity is the seam);
   exporting ANOTHER person's words is grave and NOT built — a bundle only
   ever holds the requester's own asks (`scope.person`), the L3 door for
-  another's words is a named seam; the tool hop is not on the wire
-  (`spine_tool_calls` records did · tool · args, no chain, no event — the
-  hold row names the tool, the chain ends at the body; a real AG-7 finding
-  for a later spoonful); a body's own `marker.set` fact carries only its
-  setter, not the origin human; the outbox is read by id with a sequential
-  scan (the audit projection is P7's). The original sp2 text follows.
+  another's words is a named seam; a tool has no self of its own yet —
+  the hop is named `tool:<name>` on the chain (a tool identity is a
+  seam); the outbox is read by id with a sequential scan (the audit
+  projection is P7's). The original sp2 text follows.
   Words in the chat — "export compliance for this session" · "for between
   Friday and today" · "for the hemp objective" — produce a **signed bundle**
   (canonical JSON + a human CSV) of every ask, act, hold, confirm, reply and

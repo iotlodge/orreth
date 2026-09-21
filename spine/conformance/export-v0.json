@@ -1,7 +1,7 @@
 {
  "contract": "orreth.compliance/1",
  "version": 0,
- "generated_by": "orreth_spine.export + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 sp2",
+ "generated_by": "orreth_spine.export + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 sp2 (+ the tool hop, same day)",
  "generated_at": "2026-09-21",
  "cases": [
   {
@@ -704,6 +704,238 @@
     "truncated": false,
     "resealed": true,
     "resealed_chain_broken": 1
+   }
+  },
+  {
+   "name": "hash_chain: four rows with the tool hop (H -> resident -> tool:<name>) between the ask and its reply",
+   "kind": "hash_chain",
+   "input": {
+    "rows": [
+     {
+      "at": "2026-09-21T12:00:00.000Z",
+      "kind": "ask",
+      "ref": "ask_0000000000000001",
+      "person": "did:orreth:person:jb",
+      "authority_chain": [
+       "did:orreth:person:jb"
+      ],
+      "chain_status": "intact",
+      "proof": "L1",
+      "marker": {
+       "kind": "objective",
+       "id": "mk_000000000001",
+       "parent": null,
+       "root": "mk_000000000001"
+      },
+      "words": {
+       "ask": "what is on the shelf?"
+      },
+      "served_by": null,
+      "message_id": "msg_000000000000000000000001"
+     },
+     {
+      "at": "2026-09-21T12:00:00.500Z",
+      "kind": "tool",
+      "ref": "ask_0000000000000001",
+      "person": "did:orreth:person:jb",
+      "authority_chain": [
+       "did:orreth:person:jb",
+       "did:orreth:agent:0123456789abcdef0123456789abcdef",
+       "tool:acquire"
+      ],
+      "chain_status": "intact",
+      "proof": "L1",
+      "marker": {
+       "kind": "action",
+       "id": "mk_000000000003",
+       "parent": "mk_000000000001",
+       "root": "mk_000000000001"
+      },
+      "words": null,
+      "served_by": "tool:acquire",
+      "message_id": "msg_000000000000000000000004",
+      "tool": "acquire",
+      "ok": true
+     },
+     {
+      "at": "2026-09-21T12:00:01.000Z",
+      "kind": "reply",
+      "ref": "ask_0000000000000001",
+      "person": "did:orreth:person:jb",
+      "authority_chain": [
+       "did:orreth:person:jb",
+       "did:orreth:agent:0123456789abcdef0123456789abcdef"
+      ],
+      "chain_status": "intact",
+      "proof": "L1",
+      "marker": {
+       "kind": "objective",
+       "id": "mk_000000000001",
+       "parent": null,
+       "root": "mk_000000000001"
+      },
+      "words": {
+       "reply": "Three books and a lamp."
+      },
+      "served_by": "did:orreth:agent:0123456789abcdef0123456789abcdef",
+      "message_id": "msg_000000000000000000000002"
+     },
+     {
+      "at": "2026-09-21T12:00:02.000Z",
+      "kind": "include",
+      "ref": "ask_0000000000000002",
+      "person": "did:orreth:person:jb",
+      "authority_chain": [
+       "did:orreth:person:jb",
+       "did:orreth:agent:0123456789abcdef0123456789abcdef",
+       "did:orreth:agent:fedcba9876543210fedcba9876543210"
+      ],
+      "chain_status": "intact",
+      "proof": "L1",
+      "marker": {
+       "kind": "thought",
+       "id": "mk_000000000002",
+       "parent": "mk_000000000001",
+       "root": "mk_000000000001"
+      },
+      "words": {
+       "reply": "1. read the books 2. light the lamp"
+      },
+      "served_by": "did:orreth:agent:fedcba9876543210fedcba9876543210",
+      "message_id": "msg_000000000000000000000003"
+     }
+    ]
+   },
+   "expect": {
+    "hashes": [
+     "ec085473250516f03ac52f567bae59da486f2a691c6e34dbe0f08a68281f2251",
+     "a28657456290f41aedfd285ba9f8fca4d6b371d4ea0ff7e8cc76619d1bae1b92",
+     "75dc3ec36bcfe8dd61dec4a003278f74bd89ee9a207d5f77db0647df3744d3c5",
+     "7ad82161e7f0c5ea8ee0f08a1b9eb551b0ac118dabf2d9734ca7cc626fcf7ebf"
+    ],
+    "root_hash": "7ad82161e7f0c5ea8ee0f08a1b9eb551b0ac118dabf2d9734ca7cc626fcf7ebf"
+   }
+  },
+  {
+   "name": "chain_status: a tool row is intact when its chain ends with tool:<name>; without the tool hop it is broken",
+   "kind": "chain_status",
+   "input": {
+    "rows": [
+     {
+      "at": "2026-09-21T12:00:00.500Z",
+      "kind": "tool",
+      "ref": "ask_0000000000000001",
+      "person": "did:orreth:person:jb",
+      "authority_chain": [
+       "did:orreth:person:jb",
+       "did:orreth:agent:0123456789abcdef0123456789abcdef",
+       "tool:acquire"
+      ],
+      "chain_status": "intact",
+      "proof": "L1",
+      "marker": {
+       "kind": "action",
+       "id": "mk_000000000003",
+       "parent": "mk_000000000001",
+       "root": "mk_000000000001"
+      },
+      "words": null,
+      "served_by": "tool:acquire",
+      "message_id": "msg_000000000000000000000004",
+      "tool": "acquire",
+      "ok": true
+     },
+     {
+      "at": "2026-09-21T12:00:00.500Z",
+      "kind": "tool",
+      "ref": "ask_0000000000000001",
+      "person": "did:orreth:person:jb",
+      "authority_chain": [
+       "did:orreth:person:jb",
+       "did:orreth:agent:0123456789abcdef0123456789abcdef"
+      ],
+      "chain_status": "intact",
+      "proof": "L1",
+      "marker": {
+       "kind": "action",
+       "id": "mk_000000000003",
+       "parent": "mk_000000000001",
+       "root": "mk_000000000001"
+      },
+      "words": null,
+      "served_by": "tool:acquire",
+      "message_id": "msg_000000000000000000000004",
+      "tool": "acquire",
+      "ok": true
+     },
+     {
+      "at": "2026-09-21T12:00:00.500Z",
+      "kind": "tool",
+      "ref": "ask_0000000000000001",
+      "person": "did:orreth:person:jb",
+      "authority_chain": [
+       "did:orreth:agent:0123456789abcdef0123456789abcdef",
+       "tool:acquire"
+      ],
+      "chain_status": "intact",
+      "proof": "L1",
+      "marker": {
+       "kind": "action",
+       "id": "mk_000000000003",
+       "parent": "mk_000000000001",
+       "root": "mk_000000000001"
+      },
+      "words": null,
+      "served_by": "tool:acquire",
+      "message_id": "msg_000000000000000000000004",
+      "tool": "acquire",
+      "ok": true
+     }
+    ]
+   },
+   "expect": {
+    "status": [
+     "intact",
+     "broken",
+     "broken"
+    ]
+   }
+  },
+  {
+   "name": "encode: the tool-called fact (orreth.tool.called.v1) wears the chain end to end and the action marker",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_id": "msg_000000000000000000000004",
+     "message_kind": "event",
+     "type": "orreth.tool.called.v1",
+     "universe_id": "u:fixture",
+     "scope_path": "u:fixture",
+     "occurred_at": "2026-09-21T12:00:00.500Z",
+     "correlation_id": "ask_0000000000000001",
+     "payload": {
+      "ref": "ask_0000000000000001",
+      "hash": "sha256:b1de09de68cf57841856f2f30538a4af876b1356ee0b3fec1a1e4d31ed93fc3c",
+      "tool": "acquire",
+      "ok": true,
+      "by": "did:orreth:agent:0123456789abcdef0123456789abcdef"
+     },
+     "authority_chain": [
+      "did:orreth:person:jb",
+      "did:orreth:agent:0123456789abcdef0123456789abcdef",
+      "tool:acquire"
+     ],
+     "marker": {
+      "kind": "action",
+      "id": "mk_000000000003",
+      "parent": "mk_000000000001",
+      "by": "did:orreth:agent:0123456789abcdef0123456789abcdef"
+     }
+    }
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"did:orreth:person:jb\",\"did:orreth:agent:0123456789abcdef0123456789abcdef\",\"tool:acquire\"],\"correlation_id\":\"ask_0000000000000001\",\"marker\":{\"by\":\"did:orreth:agent:0123456789abcdef0123456789abcdef\",\"id\":\"mk_000000000003\",\"kind\":\"action\",\"parent\":\"mk_000000000001\"},\"message_id\":\"msg_000000000000000000000004\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T12:00:00.500Z\",\"payload\":{\"by\":\"did:orreth:agent:0123456789abcdef0123456789abcdef\",\"hash\":\"sha256:b1de09de68cf57841856f2f30538a4af876b1356ee0b3fec1a1e4d31ed93fc3c\",\"ok\":true,\"ref\":\"ask_0000000000000001\",\"tool\":\"acquire\"},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.tool.called.v1\",\"universe_id\":\"u:fixture\"}"
    }
   }
  ]

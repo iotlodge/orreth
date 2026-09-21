@@ -176,6 +176,7 @@ class Resident:
         self._serve_conn = None
         self._current_ask = None
         self._current_marker = None  # the ask's marker: WHY this serve (0006)
+        self._current_chain = None   # the chain the serve command arrived with (AG-7)
         self._state = "in"
         self._ckpt_graph = None      # the checkpointed graph, one per life
         # on_delta(ask_id, text): the rig wires this to the glass feed —
@@ -433,7 +434,9 @@ class Resident:
                 door = ToolDoor(self._serve_conn, did=self.identity.did,
                                 capabilities=self.template.get(
                                     "capabilities", []), name=self.name,
-                                marker=(self._current_marker or {}).get("id"))
+                                marker=(self._current_marker or {}).get("id"),
+                                ask=self._current_ask,          # AG-7: the door wears
+                                chain=self._full_chain(s.get("read")))   # the chain
                 deltas = None
                 if self.on_delta is not None and self._current_ask:
                     aid = self._current_ask
@@ -526,6 +529,7 @@ class Resident:
             return
         text, person, _status = row
         self._current_ask = ask_id
+        self._current_chain = list(chain) if chain else [person]
         from . import markers as _mk
         cur.execute("SELECT marker FROM spine_asks WHERE ask_id = %s", (ask_id,))
         _mrow = cur.fetchone()
@@ -546,12 +550,7 @@ class Resident:
             out = self._graph.invoke(initial)
         if resumed:
             out = dict(out, steps=list(out["steps"]) + [resumed])
-        full_chain = list(chain) if chain else [person]
-        for by in out.get("read") or []:    # AG-8: H → the residents whose
-            if by not in full_chain:        # results I read → me
-                full_chain.append(by)
-        if self.identity.did not in full_chain:
-            full_chain.append(self.identity.did)
+        full_chain = self._full_chain(out.get("read"))
         self._journey(cur, ask_id, out["steps"], full_chain)
         if out.get("hold"):
             held = dict(out["hold"])
@@ -580,6 +579,19 @@ class Resident:
             outbox.add_row(cur, ev.encode(n), n["message_id"])
             return
         self._land_reply(cur, ask_id, out["reply"], full_chain)
+
+    def _full_chain(self, read: list | None) -> list[str]:
+        """The chain this body wears for the serve in hand (AG-8 · AG-7):
+        the command's chain (the origin human first) → the selves whose
+        results I read → me. The journey, the reply, the hold and every
+        tool call wear the SAME chain."""
+        full_chain = list(self._current_chain or [])
+        for by in read or []:
+            if by not in full_chain:
+                full_chain.append(by)
+        if self.identity.did not in full_chain:
+            full_chain.append(self.identity.did)
+        return full_chain
 
     def _journey(self, cur, ask_id: str, steps: list, chain: list) -> None:
         for step in steps:
@@ -633,10 +645,13 @@ class Resident:
         held = json.loads(row[1])
         level = proof or held.get("level") or "L2"
         if approved:
+            cur.execute("SELECT marker FROM spine_asks WHERE ask_id = %s", (ask_id,))
+            mrow = cur.fetchone()               # the released act hangs under ITS ask
             door = ToolDoor(self._serve_conn, did=self.identity.did,
                             capabilities=self.template.get(
                                 "capabilities", []), name=self.name,
-                            marker=(self._current_marker or {}).get("id"))
+                            marker=(mrow[0] if mrow and mrow[0] else None),
+                            ask=ask_id, chain=full_chain)   # AG-7: the same chain
             result = door.call(held["tool"], held["args"], confirmed=True)
             word = {"L3-code": "the code was right",
                     "L3-master": f"{(by or '?').split(':')[-1]} confirmed as master"

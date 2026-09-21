@@ -3,7 +3,7 @@
 a stranger.
 
 A bundle (orreth.compliance/1) is every ask, hold, proof offered, reply,
-include act, intention stop and marker set inside ONE scope — a session,
+include act, tool call, intention stop and marker set inside ONE scope — a session,
 a window, or a marker root (an objective or intention and everything
 under it) — in the order it happened, each row wearing what the wire
 carried: the authority chain END TO END (the origin human → the residents
@@ -46,10 +46,12 @@ HASHING = ("sha256; h0 = sha256(canonical(row0)); "
 WORDS_MAX = 500                                    # the CSV's cut, marked when it cuts
 INTENTION_STOPPED = "orreth.intention.stopped.v1"   # intent.py's fact (no import cycle)
 PROOF_ATTEMPT = "orreth.proof.attempt.v1"           # proof.py's fact
+TOOL_CALLED = "orreth.tool.called.v1"               # tools.py's fact: the tool hop
 KERNEL = "the kernel"
 
 KIND_OF = {ASK_RECEIVED: "ask", CONFIRM_NEEDED: "hold", PROOF_ATTEMPT: "proof",
-           REPLY: "reply", INTENTION_STOPPED: "intention.stop", MARKER_SET: "marker.set"}
+           REPLY: "reply", INTENTION_STOPPED: "intention.stop", MARKER_SET: "marker.set",
+           TOOL_CALLED: "tool"}
 CSV_COLUMNS = ("at", "kind", "ref", "person", "authority_chain", "chain_status", "proof",
                "marker_kind", "marker_id", "marker_parent", "marker_root", "served_by",
                "tool", "words", "words_truncated")
@@ -266,8 +268,11 @@ def _row(e: dict, kind: str, oid: int, asks: dict, intentions: set, marker_ids: 
     elif kind == "marker.set":
         if not (a or (mk and mk.get("id") in marker_ids)):
             return None
-        person, served, proof = (mk or {}).get("by") or (e.get("authority_chain") or [None])[0], None, None
-        words = None
+        # the origin human is the marked ask's person; the setter (a body,
+        # or the human by hand) is who the fact's chain must end with
+        served = (mk or {}).get("by")
+        person = a["person"] if a else (e.get("authority_chain") or [served])[0]
+        proof, words = None, None
     else:
         if a is None:
             return None
@@ -278,6 +283,8 @@ def _row(e: dict, kind: str, oid: int, asks: dict, intentions: set, marker_ids: 
             served, proof, words = a["served_by"], p.get("level") or "L2", None
         elif kind == "proof":
             proof, words = p.get("level"), None
+        elif kind == "tool":                        # the hop: H → body → tool:<name>
+            served, proof, words = f"tool:{p.get('tool')}", a["proof"], None
         else:                                       # reply — an include's when firmware acted
             served, proof = a["served_by"], p.get("proof") or a["proof"]
             words = {"reply": a["reply"]}
@@ -295,6 +302,8 @@ def _row(e: dict, kind: str, oid: int, asks: dict, intentions: set, marker_ids: 
         row["tool"] = p.get("tool"); row["class"] = p.get("class")
     if kind == "proof":
         row["ok"] = bool(p.get("ok"))
+    if kind == "tool":
+        row["tool"] = p.get("tool"); row["ok"] = bool(p.get("ok"))
     if a and a["state"] != "in":                    # P11: an opt-out session's words stay there
         row["words"] = None; row["words_withheld"] = a["state"]
     return row

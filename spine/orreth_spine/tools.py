@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp3, the soul checkpoint · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp2, the tool hop wears the chain (AG-7) · 2026-09-21
 """The tool door v0 (canon 0004): a resident acts only through a
 governed door.
 
@@ -9,11 +10,19 @@ who called, which tool, when, and whether it worked. A tool marked
 CONSEQUENTIAL never runs on the first ask — the door raises the L2
 interlock instead, and only the human's deliberate yes releases it
 (cancel is the default, always).
+
+P6 sp2 (AG-7): the tool hop is ON THE WIRE. Every call lands with the
+calling body's authority chain plus the tool's own name (`tool:<name>`)
+on its row, and files `orreth.tool.called.v1` through the outbox — an
+envelope carrying that chain end to end and the action marker — so a
+compliance row reads H → resident → firmware → tool from the record.
 """
 from __future__ import annotations
 
 import json
 import urllib.request
+
+TOOL_CALLED = "orreth.tool.called.v1"
 
 
 class ToolRefused(RuntimeError):
@@ -109,7 +118,8 @@ TOOLS: dict[str, dict] = {
               f"{len(asked)} interested bod{'y' if len(asked) == 1 else 'ies'} asked to act")(
               mk.dispatch_interests(conn, m, m["ref"], m["note"])))(
               mk.set_marker(conn, args["kind"], ref=(mk.get(conn, args["_parent"]) or {}).get("ref", args["_by"]) if args.get("_parent") else args["_by"],
-                            by=args["_by"], parent=args.get("_parent"), note=args["note"])))(
+                            by=args["_by"], parent=args.get("_parent"), note=args["note"],
+                            chain=args.get("_chain"))))(
               __import__("orreth_spine.markers", fromlist=["set_marker"])),
     },
     "purge-memory": {
@@ -181,6 +191,9 @@ def ensure_schema(conn) -> None:
             " did text NOT NULL, tool text NOT NULL,"
             " args text NOT NULL, ok boolean NOT NULL,"
             " result text, at timestamptz NOT NULL DEFAULT now())")
+        # P6 sp2: the hop wears its chain and names its ask (AG-7)
+        cur.execute("ALTER TABLE spine_tool_calls ADD COLUMN IF NOT EXISTS authority_chain text")
+        cur.execute("ALTER TABLE spine_tool_calls ADD COLUMN IF NOT EXISTS ask text")
 
 
 class ToolDoor:
@@ -188,11 +201,18 @@ class ToolDoor:
     interlocked."""
 
     def __init__(self, conn, *, did: str, capabilities: list[str],
-                 name: str | None = None, marker: str | None = None):
+                 name: str | None = None, marker: str | None = None,
+                 ask: str | None = None, chain: list[str] | None = None):
         self._conn = conn
         self.did = did
         self.name = name                  # the memory namespace (acquire)
         self.marker = marker              # the serving ask's marker (0006)
+        self.ask = ask                    # the serving ask (the fact's ref)
+        # the chain the body wears while it serves (AG-7): the origin human
+        # first, then every self whose results it read, then itself
+        self.chain = list(chain) if chain else []
+        if did not in self.chain:
+            self.chain.append(did)
         self.capabilities = capabilities
         ensure_schema(conn)
 
@@ -225,25 +245,35 @@ class ToolDoor:
         try:
             if tool.get("ground"):        # an act on the ground rides the
                 args = dict(args, _by=self.did, _name=self.name or self.did,
-                            _parent=self.marker)
+                            _parent=self.marker, _chain=self.chain)
                 result = tool["fn"](args, self._conn)
             else:
                 result = tool["fn"](args)
             ok = True
         except Exception as e:
             result, ok = f"{type(e).__name__}: {e}"[:300], False
+        from . import envelope as ev, markers, outbox
+        public = {k: v for k, v in args.items() if not k.startswith("_")}
+        chain = self.chain + [f"tool:{name}"]        # the hop, end to end
+        markers.ensure_schema(self._conn); outbox.ensure_schema(self._conn)
         with self._conn.transaction():
             cur = self._conn.cursor()
             cur.execute(
-                "INSERT INTO spine_tool_calls (did, tool, args, ok, result)"
-                " VALUES (%s, %s, %s, %s, %s)",
-                (self.did, name, json.dumps({k: v for k, v in args.items()
-                                             if not k.startswith("_")}), ok, result[:500]))
+                "INSERT INTO spine_tool_calls (did, tool, args, ok, result, authority_chain, ask)"
+                " VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (self.did, name, json.dumps(public), ok, result[:500], json.dumps(chain), self.ask))
+            marker = markers.as_env(self._conn, self.marker)
             if ok and name != "mark":            # an ACTION under the ask's
-                from . import markers            # marker (0006); `mark` sets
-                markers.ensure_schema(self._conn)  # its own
-                markers.insert(cur, markers.new_id(), "action", self.marker,
+                mid = markers.new_id()           # marker (0006); `mark` sets
+                markers.insert(cur, mid, "action", self.marker,   # its own
                                f"{name}:{self.marker or self.did}", self.did, name)
+                marker = {"kind": "action", "id": mid, "parent": self.marker, "by": self.did}
+            e = ev.make_envelope(                # the fact: the hop on the wire (AG-7)
+                kind="event", type=TOOL_CALLED, universe_id=ev.scope(), scope_path=ev.scope(),
+                payload={"ref": self.ask or self.did, "hash": ev.content_hash(public),
+                         "tool": name, "ok": ok, "by": self.did},
+                correlation_id=self.ask, authority_chain=chain, marker=marker)
+            outbox.add_row(cur, ev.encode(e), e["message_id"])
         if not ok:
             raise ToolRefused(f"the {name} tool failed honestly: {result}")
         return result

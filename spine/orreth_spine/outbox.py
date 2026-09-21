@@ -24,10 +24,22 @@ import time
 # an AccessExclusiveLock even when the column exists) inside a transaction
 # holding the advisory lock, and two concurrent asks deadlocked against a
 # serving resident (CI, three runs in a row: DeadlockDetected at the lock).
-# A ground is the DSN plus the connection's search_path (PG ≥ 14 reports it):
-# the test schema and the public one stay two grounds (markers.seed's lesson).
-_GROUNDS: dict[str, set[str]] = {}
+# A ground is the DSN plus the connection's search_path: the test schema and
+# the public one stay two grounds (markers.seed's lesson).
+# A ground counts as ensured only when a BIRTH (`ground.ensure_all`) has
+# FINISHED on it — never when a first caller merely claimed the tag (CI, the
+# same day: a second rig thread skipped the DDL while the first was still
+# creating spine_marker_kinds; its seed hit an undefined table and the relay
+# thread died at birth, so no fact ever reached a resident).
+_GROUNDS_DONE: dict[str, set[str]] = {}
 _GROUNDS_LOCK = threading.Lock()
+
+
+def mark_ground_done(conn, tags) -> None:
+    """A birth finished on this connection's ground: connections born later
+    are born flagged for these tags and run no DDL."""
+    with _GROUNDS_LOCK:
+        _GROUNDS_DONE.setdefault(ground_key(conn), set()).update(tags)
 
 
 def ground_key(conn) -> str:
@@ -74,10 +86,8 @@ def once(conn, tag: str) -> bool:
         return False
     done.add(tag)
     with _GROUNDS_LOCK:
-        tags = _GROUNDS.setdefault(ground_key(conn), set())
-        if tag in tags:
-            return False                       # born flagged: this ground is ensured
-        tags.add(tag)
+        if tag in _GROUNDS_DONE.get(ground_key(conn), ()):
+            return False                       # born flagged: a birth finished here
     return True
 
 

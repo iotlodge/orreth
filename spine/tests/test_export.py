@@ -231,6 +231,61 @@ def test_the_kernels_held_stop_exports_hold_proof_reply_and_the_stop(pg, monkeyp
     assert b["summary"]["by_proof"] == {"L3-master": 5}           # every row of a grave act wears it
 
 
+def test_the_tool_hop_wears_the_chain_end_to_end(pg, monkeypatch):
+    """AG-7 cured: a served ask that calls a tool exports a `tool` row whose
+    chain reads human → resident → tool:<name>, unbroken, hanging under the
+    ask as an action; a body's own mark carries the human first; a held
+    act released by the human's yes wears the same chain through the door."""
+    monkeypatch.setenv("SPINE_SCOPE", "u:law-" + secrets.token_hex(3))
+    gw = gateway.FakeActingGateway(script=[
+        ("tool", "acquire", {"key": "hemp", "text": "lime binds hempcrete"}),
+        ("tool", "mark", {"kind": "improvement", "note": "lime beats cement"}),
+        ("text", "kept and marked: {result}")])
+    lib = _body("librarian-resident.v0.json", gw); lib.join(pg)
+    ses = glass.open_session(pg, ME)
+    [a1] = dispatch.submit_ask(pg, "keep this: lime binds hempcrete", person=ME, to=["librarian"], session=ses)
+    _serve(pg, lib, a1)
+    held = _body("librarian-resident.v0.json", gateway.FakeActingGateway(script=[
+        ("tool", "seal-record", {"key": "hemp"}), ("text", "sealed: {result}")]))
+    held.join(pg)
+    [a2] = dispatch.submit_ask(pg, "seal the hemp note forever", person=ME, to=["librarian"], session=ses)
+    _serve(pg, held, a2)                                                       # holds at L2
+    with pg.transaction():
+        held._confirm_ask(pg.cursor(), a2, True, [ME], proof="L2")             # the human's yes
+    b = export.build(pg, person=ME, session=ses)
+    assert export.verify(b) and b["summary"]["chain_broken"] == 0
+    assert b["summary"]["by_kind"] == {"ask": 2, "tool": 3, "marker.set": 1, "reply": 2, "hold": 1}
+    tools_of = {(r["ref"], r["tool"]): r["authority_chain"] for r in b["rows"] if r["kind"] == "tool"}
+    assert tools_of[(a1, "mark")] == [ME, lib.identity.did, "tool:mark"]         # the mark IS a tool call
+    cur = pg.cursor(); cur.execute("SELECT marker FROM spine_asks WHERE ask_id = %s", (a1,))
+    objective = cur.fetchone()[0]
+    acq = next(r for r in b["rows"] if r["kind"] == "tool" and r["ref"] == a1)
+    assert acq["authority_chain"] == [ME, lib.identity.did, "tool:acquire"]    # H → resident → tool
+    assert acq["served_by"] == "tool:acquire" and acq["tool"] == "acquire" and acq["ok"] is True
+    assert acq["marker"] == {"kind": "action", "id": acq["marker"]["id"], "parent": objective, "root": objective}
+    mark = next(r for r in b["rows"] if r["kind"] == "marker.set")
+    assert mark["authority_chain"] == [ME, lib.identity.did] and mark["served_by"] == lib.identity.did
+    assert mark["person"] == ME and mark["marker"]["kind"] == "improvement" and mark["marker"]["parent"] == objective
+    seal = next(r for r in b["rows"] if r["kind"] == "tool" and r["ref"] == a2)
+    assert seal["authority_chain"] == [ME, held.identity.did, "tool:seal-record"]
+    assert seal["proof"] == "L2" and seal["marker"]["kind"] == "action"
+    hold = next(r for r in b["rows"] if r["kind"] == "hold")
+    hc = hold["authority_chain"]                   # the hold names the librarian it READ (AG-8);
+    assert hc[0] == ME and hc[-1] == held.identity.did and lib.identity.did in hc and hold["tool"] == "seal-record"
+    # the released act wears the confirm command's chain — the human's word → the
+    # body → the tool (the read hops live on the hold's row, the record keeps both)
+    reply2 = next(r for r in b["rows"] if r["kind"] == "reply" and r["ref"] == a2)
+    assert reply2["authority_chain"] == [ME, held.identity.did] and reply2["proof"] == "L2"
+    cur.execute("SELECT authority_chain, ask FROM spine_tool_calls WHERE did = %s ORDER BY call_id",
+                (lib.identity.did,))                                           # the row wears it too
+    assert [(json.loads(c), k) for c, k in cur.fetchall()] == [
+        ([ME, lib.identity.did, "tool:acquire"], a1), ([ME, lib.identity.did, "tool:mark"], a1)]
+    cut = copy.deepcopy(b)
+    next(r for r in cut["rows"] if r["kind"] == "tool")["authority_chain"] = [ME, lib.identity.did]
+    assert not export.verify(cut)                                              # the tool hop cut → fails
+    assert export.seal(cut["rows"], scope=cut["scope"], world=cut["world"])["summary"]["chain_broken"] == 1
+
+
 def test_a_signed_bundle_verifies_and_a_forged_one_does_not(pg, monkeypatch):
     monkeypatch.setenv("SPINE_SCOPE", "u:law-" + secrets.token_hex(3))
     echo = _body("echo-resident.v0.json"); echo.join(pg)

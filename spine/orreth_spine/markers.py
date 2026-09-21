@@ -170,19 +170,24 @@ def as_env(conn, marker_id: str | None) -> dict | None:
 
 
 def set_marker(conn, kind: str, ref: str, by: str, parent: str | None = None,
-               note: str | None = None) -> dict:
+               note: str | None = None, chain: list[str] | None = None) -> dict:
     """The `mark` door's effect: a marker set by a body or a human on what
     was being executed — with its fact on the rail (orreth.marker.set.v1)
-    so interested bodies can act."""
+    so interested bodies can act. The fact wears the setter's FULL chain
+    (P6 sp2 · AG-7): the origin human first, then the body — `[by]` alone
+    only when a human marks by hand."""
     check_kind(conn, kind)
     outbox.ensure_schema(conn)
     mid = new_id()
     marker = {"kind": kind, "id": mid, "parent": parent, "by": by}
+    authority = list(chain) if chain else [by]
+    if by not in authority:
+        authority.append(by)
     e = ev.make_envelope(
         kind="event", type=MARKER_SET, universe_id=ev.scope(), scope_path=ev.scope(),
         payload={"ref": ref, "hash": ev.content_hash(note or ""), "marker_id": mid,
                  "kind": kind, "parent": parent},
-        correlation_id=ref, authority_chain=[by], marker=marker)
+        correlation_id=ref, authority_chain=authority, marker=marker)
     with conn.transaction():
         cur = conn.cursor()
         insert(cur, mid, kind, parent, ref, by, note)

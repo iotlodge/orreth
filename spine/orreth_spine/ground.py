@@ -13,7 +13,9 @@ is opened, on its own autocommit statements, and no serve ever runs DDL.
 Sharpened 2026-09-21 (CI, three runs: two fan-out asks deadlocked a serving
 resident at the advisory lock): `outbox.once` keeps a PROCESS memo per
 ground (DSN + search_path), so a door's fresh connection to an ensured
-ground is born flagged and runs no DDL at all.
+ground is born flagged and runs no DDL at all — flagged only once a birth has
+FINISHED (the same day, CI: a thread born mid-birth skipped DDL, its seed hit an
+undefined table, and the relay died; no resident ever replied).
 """
 from __future__ import annotations
 
@@ -31,6 +33,7 @@ def ensure_all(conn) -> None:
                 monitor, scheduler, harness, presence, digest, intent, proof):
         mod.ensure_schema(conn)
     markers.seed(conn)                      # the kernel's kinds, in this world
+    outbox.mark_ground_done(conn, TAGS)     # the birth FINISHED: later connections are born flagged
     proof.seed_masters(conn)                # the SPINE_MASTERS dial, in this world (P6 sp1)
 
 
