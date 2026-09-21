@@ -7,7 +7,10 @@ locked canon (0001–0004). The old main stays frozen as the record;
 demo.orreth.ai and docs.orreth.ai stay untouched until JB says otherwise;
 the sacred crates (`orreth-node`, `orreth-store`, crypto, `contracts/v0`)
 still change only with JB's explicit per-change approval. The new line
-replaces main only when JB and Fable both believe it ready.
+replaces main only when JB and Fable both believe it ready. **The kernel's
+language is decided in 0008 (2026-09-21): Rust by Phase 7, the port measured
+by the conformance suite this line grows from now; the bodies stay
+LangGraph processes the kernel spawns.**
 
 ## The coverage checklist (why lifting is safe)
 
@@ -17,6 +20,7 @@ replaces main only when JB and Fable both believe it ready.
 | Transport — four rails, Bridge feed, laws, SLOs | **0002 LOCKED** |
 | Memory — four memories, one truth, proofs | **0003 LOCKED** |
 | Agents — the governed body, two sides, covenant-as-policy, attribution chain | **0004 LOCKED** |
+| Language & the port — kernel Rust (`orrethd`) by P7 · bodies LangGraph · glass one page · the conformance-suite law | **0008 LOCKED 2026-09-21** |
 | Process — design→phases→spoons, two-agent testing, docs in close loops | Locked in the direction record |
 | V1 razor | This document applies it |
 
@@ -40,7 +44,11 @@ times, monitor it, provide analytics on it, and manage its lifecycle*:
 - The Bridge: landing page, the One Chat (full contract), the Analyzer
   hatch (block 11 — Objectives is not a pull), and the seven pulls
   arriving in phases.
-- The playwright agent: chartered in phase 0, walking every phase close.
+- The human walk: JB in the glass at every phase close; the friction
+  register turns his narration into polish · bug · feature lists (the
+  Playwright walker RETIRED 2026-09-21 — see its charter).
+- The Rust kernel by Phase 7 (0008), the conformance suite growing one
+  fixture per wire change from intent sp1 on.
 - Docs and article screenshots produced inside every close loop.
 
 **Out of V1** (parked, named): voice (V2) · multiverse portal · full
@@ -58,23 +66,27 @@ flowchart LR
     P4["Phase 4<br/>THE FEEL & THE FLEET<br/>focus + sessions · the includes<br/>(first firmware bodies) · Crew workspace<br/>+ cards · Monitoring + its agent ·<br/>harness v0 · leases (M2)"]
     P5["Phase 5<br/>MEMORY WHOLE<br/>understanding + digest full ·<br/>MEM-1..6 · recall in chat<br/>('between X and Y')"]
     P6["Phase 6<br/>GOVERNANCE FELT<br/>MFA/L3 · MITL v0 + impact door ·<br/>compliance export w/ AG-7 chains ·<br/>placement policy v0"]
-    P7["Phase 7<br/>SCALE & SEAL<br/>cells + partition (M7) ·<br/>isolation (M8) · hardening ·<br/>the release wave, replacing main"]
+    P7["Phase 7<br/>SCALE & SEAL<br/>cells + partition (M7) ·<br/>isolation (M8) · hardening ·<br/>THE PORT (0008): orrethd carries the spine<br/>against the conformance suite ·<br/>the release wave, replacing main"]
     P0 --> P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7
 ```
 
 Each phase is a sprint (or two), sliced into spoonfuls at its open, and
-CLOSES only when: its proofs pass · the playwright agent walks its
-experience specs green · its docs section is written · its screenshots are
-banked. **Phase 2 is the soul checkpoint** — the charter's first-class
+CLOSES only when: its proofs pass · JB walks its
+experience specs green in the glass (the register carries what felt wrong) ·
+its wire changes have their conformance fixtures (0008) · its docs section is
+written · its screenshots are banked. **Phase 2 is the soul checkpoint** — the charter's first-class
 bar: *a resident actually chats — tools included, the full reply, streamed
 — and the librarian can tell JB the temperature outside.*
 
 ## The process (standing, per the direction record)
 
-- **Two agents**: Fable builds; the **playwright agent** drives the UI and
-  tests the experience from written specs (authored from JB's narration),
-  filing friction reports — its screenshots serve proof, docs, and the
-  article carousel at once.
+- **Two hands, one human**: Fable builds; **JB tests in the glass** — he
+  builds real things end to end in the UI and narrates; Fable turns the
+  narration into the friction register and the polish · bug · feature
+  lists, then the cures. The Fable Playwright walker is RETIRED
+  (2026-09-21: one lean walk cost a third of a five-hour window — the
+  charter carries the numbers); regressions are the suite's; screenshots
+  come from JB's walks.
 - **Docs in every close loop** — the new main's book grows with the build,
   never after it.
 - **Slicing**: spoonfuls stay one-sitting sized; every spoonful lands
@@ -732,6 +744,6 @@ first walk carries MONITOR-01's deferred re-walk.
 ## What this document binds
 
 The halt is lifted for THIS line, THIS plan, THESE laws. Slicing stays
-honest, closes stay whole, the experience is tested by an agent that
-behaves like a human, and the first thing V1 must prove is not a feature —
+honest, closes stay whole, the experience is tested by the human it is
+for, in the glass, and the first thing V1 must prove is not a feature —
 it is a conversation.

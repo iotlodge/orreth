@@ -1,6 +1,16 @@
 # The Playwright — the experience agent's charter
 
-**Status: ACTIVE (P0 sp3, 2026-09-16).** Born from JB's direction: *"we
+**Status: RETIRED 2026-09-21 (JB's lock).** The agent is retired; its laws,
+the spec book and the six walk records stay as the method's record. **Why:**
+walk #6 (lean, five specs) ran 127 turns in 15 minutes at a ~196k-token
+context — 16.3M cached tokens — and kept walking after the lead had said
+"done"; with the lead's own 390k context and the memory observer's calls the
+afternoon burned ~36M tokens in 30 minutes, a third of a five-hour window.
+**What replaces it:** JB walks the glass — he builds real things end to end
+in the UI and narrates; Fable turns the narration into the friction register
+and the polish · bug · feature lists, then the cures. Laws 1–5 below now bind
+that walk. Regressions belong to the suite (and the conformance fixtures,
+0008). Originally: **ACTIVE (P0 sp3, 2026-09-16).** Born from JB's direction: *"we
 spawn a Fable playwright agent… you then work with your Fable playwright
 to achieve that experience by sending you requirements. This agent should
 drive input and testing of experience"* — and its screenshots replay the

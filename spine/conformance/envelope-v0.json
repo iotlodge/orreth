@@ -1,0 +1,203 @@
+{
+ "contract": "orreth.transport/1",
+ "version": 0,
+ "generated_by": "orreth_spine.envelope (Python reference), canon 0008",
+ "generated_at": "2026-09-21",
+ "cases": [
+  {
+   "name": "canonical: empty object",
+   "kind": "canonical",
+   "input": {
+    "obj": {}
+   },
+   "expect": {
+    "bytes": "{}",
+    "hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+   }
+  },
+  {
+   "name": "canonical: nested, keys unsorted, non-ascii escaped",
+   "kind": "canonical",
+   "input": {
+    "obj": {
+     "b": 1,
+     "a": [
+      2,
+      {
+       "z": "\u00fc",
+       "y": 3
+      }
+     ]
+    }
+   },
+   "expect": {
+    "bytes": "{\"a\":[2,{\"y\":3,\"z\":\"\\u00fc\"}],\"b\":1}",
+    "hash": "sha256:d2e35a97143f98b60f9ff71692b4e175a29aba35a08995cd53b1f1da2d7d0e58"
+   }
+  },
+  {
+   "name": "canonical: numbers, booleans, null",
+   "kind": "canonical",
+   "input": {
+    "obj": {
+     "n": 1.5,
+     "i": 10,
+     "t": true,
+     "f": false,
+     "z": null,
+     "s": "a b"
+    }
+   },
+   "expect": {
+    "bytes": "{\"f\":false,\"i\":10,\"n\":1.5,\"s\":\"a b\",\"t\":true,\"z\":null}",
+    "hash": "sha256:2ac99b549facd5152c75246d9f5776a41ae87dddd02b4afb85313cd5ccc1ef84"
+   }
+  },
+  {
+   "name": "canonical: unicode beyond the BMP",
+   "kind": "canonical",
+   "input": {
+    "obj": {
+     "emoji": "\ud83e\udd42",
+     "text": "na\u00efve caf\u00e9"
+    }
+   },
+   "expect": {
+    "bytes": "{\"emoji\":\"\\ud83e\\udd42\",\"text\":\"na\\u00efve caf\\u00e9\"}",
+    "hash": "sha256:76817a2c0525476492f750ce3e4e87fc7593fa5db4dec05d024148d0e9671eaf"
+   }
+  },
+  {
+   "name": "encode: a full envelope, every optional field",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_id": "msg_000000000000000000000001",
+     "message_kind": "event",
+     "type": "orreth.heartbeat.v1",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev/e:eco/f:field",
+     "occurred_at": "2026-09-21T15:00:00.000Z",
+     "payload": {
+      "ref": "rec_1",
+      "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+     },
+     "correlation_id": "cmd_0000000000000000000000aa",
+     "authority_chain": [
+      "did:orreth:person:jb",
+      "did:orreth:resident:librarian"
+     ],
+     "aggregate": {
+      "type": "ask",
+      "id": "ask_1",
+      "sequence": 3
+     },
+     "marker": {
+      "kind": "objective",
+      "id": "mk_1",
+      "parent": null,
+      "by": "did:orreth:person:jb"
+     }
+    }
+   },
+   "expect": {
+    "bytes": "{\"aggregate\":{\"id\":\"ask_1\",\"sequence\":3,\"type\":\"ask\"},\"authority_chain\":[\"did:orreth:person:jb\",\"did:orreth:resident:librarian\"],\"correlation_id\":\"cmd_0000000000000000000000aa\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_1\",\"kind\":\"objective\",\"parent\":null},\"message_id\":\"msg_000000000000000000000001\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T15:00:00.000Z\",\"payload\":{\"hash\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"ref\":\"rec_1\"},\"scope_path\":\"u:dev/e:eco/f:field\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.heartbeat.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "encode: the minimal envelope",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_id": "msg_000000000000000000000001",
+     "message_kind": "event",
+     "type": "orreth.heartbeat.v1",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev/e:eco/f:field",
+     "occurred_at": "2026-09-21T15:00:00.000Z",
+     "payload": {
+      "ref": "rec_1",
+      "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+     }
+    }
+   },
+   "expect": {
+    "bytes": "{\"message_id\":\"msg_000000000000000000000001\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T15:00:00.000Z\",\"payload\":{\"hash\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"ref\":\"rec_1\"},\"scope_path\":\"u:dev/e:eco/f:field\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.heartbeat.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "encode refuses: missing fields named",
+   "kind": "encode_refuses",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_id": "msg_000000000000000000000001",
+     "message_kind": "event",
+     "type": "orreth.heartbeat.v1",
+     "universe_id": "u:dev",
+     "payload": {
+      "ref": "rec_1",
+      "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+     }
+    }
+   },
+   "expect": {
+    "names": [
+     "scope_path",
+     "occurred_at"
+    ]
+   }
+  },
+  {
+   "name": "encode refuses: unknown specversion",
+   "kind": "encode_refuses",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/9",
+     "message_id": "msg_000000000000000000000001",
+     "message_kind": "event",
+     "type": "orreth.heartbeat.v1",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev/e:eco/f:field",
+     "occurred_at": "2026-09-21T15:00:00.000Z",
+     "payload": {
+      "ref": "rec_1",
+      "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+     }
+    }
+   },
+   "expect": {
+    "names": [
+     "specversion"
+    ]
+   }
+  },
+  {
+   "name": "decode preserves: an unknown additive field survives",
+   "kind": "decode_preserves",
+   "input": {
+    "bytes": "{\"future_field\":{\"a\":1},\"message_id\":\"msg_000000000000000000000001\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T15:00:00.000Z\",\"payload\":{\"hash\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"ref\":\"rec_1\"},\"scope_path\":\"u:dev/e:eco/f:field\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.heartbeat.v1\",\"universe_id\":\"u:dev\"}"
+   },
+   "expect": {
+    "obj": {
+     "specversion": "orreth.transport/1",
+     "message_id": "msg_000000000000000000000001",
+     "message_kind": "event",
+     "type": "orreth.heartbeat.v1",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev/e:eco/f:field",
+     "occurred_at": "2026-09-21T15:00:00.000Z",
+     "payload": {
+      "ref": "rec_1",
+      "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+     },
+     "future_field": {
+      "a": 1
+     }
+    }
+   }
+  }
+ ]
+}

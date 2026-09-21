@@ -906,7 +906,14 @@ plane is the old world, sacred and untouched. The laws being poured are
 language-independent and a Rust kernel could carry them later — but the
 honest boundary cannot say "single binary" today, and the marketing line
 must not until it is true; the honest end shape is one kernel that governs
-and residents as processes it spawns. *Self-learning* is real only under a
+and residents as processes it spawns. **JB's correction (2026-09-21):** that
+boundary read as an architecture flip he never agreed to — Rust was first on
+his list of what survives, and the locked canon never chose the spine's
+language; Fable chose Python at Phase 1 by default and footnoted it. Put
+right in **0008**: the Python spine is the simulator stage of JB's own
+sequence (0000 §3); Phase 7 is the port of the kernel into `orrethd` against
+a conformance suite the line grows from now; bodies stay LangGraph processes
+the kernel spawns. The register now says "not yet" and names the phase. *Self-learning* is real only under a
 human cut: improvement marker → critic → a proposed change on the draft
 shelf → the human cuts the version (rule 11; the graded-learning
 guardrail) — "self-improving under human cut" is the stronger enterprise

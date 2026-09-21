@@ -83,12 +83,14 @@ Business, Security, Resiliency, Compliance, and Cost.
 
 ## What we do NOT claim (the honest boundary)
 
-- **Not a single binary; not Rust.** The spine is Python on Postgres ·
-  RabbitMQ · Kafka; the Rust plane (`orreth-node`) is the old world,
-  sacred and untouched. The laws here are language-independent and a Rust
-  kernel could carry them later. Until then the register does not say
-  "single binary", and neither does the marketing line. The honest end
-  shape: one kernel that governs; residents as processes it spawns.
+- **Not YET a single binary; not YET Rust — by sequence, never by
+  decision (0008).** The spine is Python on Postgres · RabbitMQ · Kafka:
+  the simulator stage of JB's own sequence (0000 §3), whose laws are
+  language-independent. Phase 7 ports the kernel into `orrethd` against
+  the conformance suite (growing from now); until that lands the register
+  does not say "single binary", and neither does the marketing line. The
+  honest end shape: one Rust kernel that governs; residents as LangGraph
+  processes it spawns.
 - **Self-improving under human cut, not self-learning.** Improvement →
   critic → a proposed change on the draft shelf → the human cuts the
   version. Never raw feedback into a body.
