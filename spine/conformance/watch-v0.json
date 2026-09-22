@@ -1,0 +1,159 @@
+{
+ "contract": "orreth.watch/1",
+ "version": 0,
+ "generated_by": "orreth_spine.monitor + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 cure sp1 (kernel), walk #7 W14",
+ "generated_at": "2026-09-21",
+ "cases": [
+  {
+   "name": "watch_judge: bodies_dormant > 0 is red WHEN a body is dormant (value 1)",
+   "kind": "watch_judge",
+   "input": {
+    "op": ">",
+    "threshold": 0.0,
+    "value": 1
+   },
+   "expect": {
+    "red": true,
+    "state": "red"
+   }
+  },
+  {
+   "name": "watch_judge: bodies_dormant > 0 is green at value 0 (walk #7: the board stood red here)",
+   "kind": "watch_judge",
+   "input": {
+    "op": ">",
+    "threshold": 0.0,
+    "value": 0
+   },
+   "expect": {
+    "red": false,
+    "state": "green"
+   }
+  },
+  {
+   "name": "watch_judge: asks_received > 72 is green at value 5 (walk #7: the board stood red here)",
+   "kind": "watch_judge",
+   "input": {
+    "op": ">",
+    "threshold": 72.0,
+    "value": 5
+   },
+   "expect": {
+    "red": false,
+    "state": "green"
+   }
+  },
+  {
+   "name": "watch_judge: asks_received > 4 is red at value 5",
+   "kind": "watch_judge",
+   "input": {
+    "op": ">",
+    "threshold": 4.0,
+    "value": 5
+   },
+   "expect": {
+    "red": true,
+    "state": "red"
+   }
+  },
+  {
+   "name": "watch_judge: outbox_pending >= 1 is red at 1",
+   "kind": "watch_judge",
+   "input": {
+    "op": ">=",
+    "threshold": 1.0,
+    "value": 1
+   },
+   "expect": {
+    "red": true,
+    "state": "red"
+   }
+  },
+  {
+   "name": "watch_judge: oldest_outbox_age_s <= 0 is red at 0 (the condition holds)",
+   "kind": "watch_judge",
+   "input": {
+    "op": "<=",
+    "threshold": 0.0,
+    "value": 0.0
+   },
+   "expect": {
+    "red": true,
+    "state": "red"
+   }
+  },
+  {
+   "name": "watch_judge: bodies_alive < 2 is green at 2",
+   "kind": "watch_judge",
+   "input": {
+    "op": "<",
+    "threshold": 2.0,
+    "value": 2
+   },
+   "expect": {
+    "red": false,
+    "state": "green"
+   }
+  },
+  {
+   "name": "watch_judge: bodies_alive == 0 is red at 0",
+   "kind": "watch_judge",
+   "input": {
+    "op": "==",
+    "threshold": 0.0,
+    "value": 0
+   },
+   "expect": {
+    "red": true,
+    "state": "red"
+   }
+  },
+  {
+   "name": "watch_reads: the human's sentence spells the sense",
+   "kind": "watch_reads",
+   "input": {
+    "metric": "bodies_dormant",
+    "op": ">",
+    "threshold": 0.0,
+    "value": 0,
+    "red": false
+   },
+   "expect": {
+    "reads": "red when bodies_dormant > 0.0 \u00b7 now 0 \u2192 green"
+   }
+  },
+  {
+   "name": "encode: orreth.watch.turned.v1 \u2014 a watch turned red \u2192 green, the kernel's fact",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_id": "msg_0000000000000000000000w1",
+     "message_kind": "event",
+     "type": "orreth.watch.turned.v1",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-21T15:00:00.000Z",
+     "payload": {
+      "ref": "watch_a44ed3b2a5",
+      "hash": "sha256:43c76b214fe0866849d4106c8f2aacc184bf3fc6b46ee572eacad9dce7ea670b",
+      "name": "bodies-dormant-alert",
+      "metric": "bodies_dormant",
+      "op": ">",
+      "threshold": 0.0,
+      "value": 0,
+      "from": "red",
+      "to": "green"
+     },
+     "correlation_id": "watch_a44ed3b2a5",
+     "authority_chain": [
+      "the kernel"
+     ]
+    }
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"watch_a44ed3b2a5\",\"message_id\":\"msg_0000000000000000000000w1\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T15:00:00.000Z\",\"payload\":{\"from\":\"red\",\"hash\":\"sha256:43c76b214fe0866849d4106c8f2aacc184bf3fc6b46ee572eacad9dce7ea670b\",\"metric\":\"bodies_dormant\",\"name\":\"bodies-dormant-alert\",\"op\":\">\",\"ref\":\"watch_a44ed3b2a5\",\"threshold\":0.0,\"to\":\"green\",\"value\":0},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.watch.turned.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  }
+ ]
+}

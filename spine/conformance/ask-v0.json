@@ -1,0 +1,71 @@
+{
+ "contract": "orreth.ask/1",
+ "version": 0,
+ "generated_by": "orreth_spine.dispatch + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 cure sp1 (kernel), walk #7 W19",
+ "generated_at": "2026-09-21",
+ "cases": [
+  {
+   "name": "absent_words: echo",
+   "kind": "absent_words",
+   "input": {
+    "name": "echo",
+    "reason": "refused at birth: metal gpu is not here (cpu); fix its template to seat it"
+   },
+   "expect": {
+    "reply": "echo is not here \u2014 refused at birth: metal gpu is not here (cpu); fix its template to seat it"
+   }
+  },
+  {
+   "name": "absent_words: nobody",
+   "kind": "absent_words",
+   "input": {
+    "name": "nobody",
+    "reason": "no body of that name has joined this world"
+   },
+   "expect": {
+    "reply": "nobody is not here \u2014 no body of that name has joined this world"
+   }
+  },
+  {
+   "name": "encode: orreth.ask.refused.v1 \u2014 an ask to a body not here, answered at the door",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_id": "msg_0000000000000000000000r1",
+     "message_kind": "event",
+     "type": "orreth.ask.refused.v1",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-21T15:00:00.000Z",
+     "payload": {
+      "ref": "ask_0000000000000001",
+      "hash": "sha256:d3e291a03ae4782963d56c152558c3497b03d3883cb260905c9f0060445b581e",
+      "target": "echo",
+      "reason": "refused at birth: metal gpu is not here (cpu); fix its template to seat it",
+      "session": "ses_000000000001"
+     },
+     "correlation_id": "ask_0000000000000001",
+     "authority_chain": [
+      "did:orreth:person:jb",
+      "the kernel"
+     ],
+     "aggregate": {
+      "type": "ask",
+      "id": "ask_0000000000000001",
+      "sequence": 1
+     },
+     "marker": {
+      "kind": "objective",
+      "id": "mk_1",
+      "parent": null,
+      "by": "did:orreth:person:jb"
+     }
+    }
+   },
+   "expect": {
+    "bytes": "{\"aggregate\":{\"id\":\"ask_0000000000000001\",\"sequence\":1,\"type\":\"ask\"},\"authority_chain\":[\"did:orreth:person:jb\",\"the kernel\"],\"correlation_id\":\"ask_0000000000000001\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_1\",\"kind\":\"objective\",\"parent\":null},\"message_id\":\"msg_0000000000000000000000r1\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T15:00:00.000Z\",\"payload\":{\"hash\":\"sha256:d3e291a03ae4782963d56c152558c3497b03d3883cb260905c9f0060445b581e\",\"reason\":\"refused at birth: metal gpu is not here (cpu); fix its template to seat it\",\"ref\":\"ask_0000000000000001\",\"session\":\"ses_000000000001\",\"target\":\"echo\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.ask.refused.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  }
+ ]
+}

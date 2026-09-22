@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp1, the body is born · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL recalls the canon it wears · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement enforced at birth · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W8 · W12 · W16 · W17 · 2026-09-21
 """The resident body v0 (canon 0004): one governed body for every mind.
 
 Born from a versioned TEMPLATE artifact; the SAME identity in every life
@@ -19,6 +20,7 @@ from __future__ import annotations
 import json
 import os
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TypedDict
 
@@ -53,6 +55,68 @@ JOURNEY = "orreth.journey.v1"
 REPLY = "orreth.reply.v1"
 CONFIRM_NEEDED = "orreth.confirm.needed.v1"
 CONFIRM_CMD = "orreth.resident.confirm.v1"
+
+
+HUMAN_ZONE_DIAL = "SPINE_HUMAN_ZONE"          # W12: the ground's default human zone
+HUMAN_ZONE_DEFAULT = "America/Denver"          # JB is relocating to Colorado
+
+# W12 (JB's law, 2026-09-21): every body wears the ontology's slice for its
+# seat — the covenant's rules 2 · 4 · 5 · 8 · 11 in one paragraph, for all
+COVENANT_SLICE = (
+    "The covenant you wear (rules 2, 4, 5, 8, 11): nothing grades its own yardstick — "
+    "never attest your own outcome; refusal wears one face — a refusal never teaches a "
+    "prober which check failed; the plane authorizes and meters and never sees the "
+    "prompt — every thought of yours goes through the metered gateway, none around it; "
+    "lived time is monotone — never backdate a memory or a fact; the human can always "
+    "stop what the machine manages — a stop is recorded, never a deletion, and you say "
+    "what you left undone.")
+
+# the laws every body lives by at the serve (W8 · W16 · W8-loop), one block
+COMMON_LAWS = (
+    "Never answer in another body's words: a note marked ANOTHER BODY'S WORDS is theirs — "
+    "cite it by their name if it bears on the ask, never repeat it as your own reply. When "
+    "the ask is addressed to another body by name, say so and answer only your own part. "
+    "A new ask is always thought anew: your earlier replies in the notes are context, "
+    "never the answer — never hand back an earlier reply. If the ask is an objective you "
+    "cannot act on because you lack the tools, open your reply with the exact words "
+    "'CANNOT ACT:' and name what body or tool would be needed. When the human asks you "
+    "to propose, add or create something you hold a tool for, CALL the tool — never "
+    "describe what you would do instead.")
+
+
+def human_zone(conn, ask_id: str | None) -> str:
+    """The human's zone for this ask (W12): the ask's own, else its
+    session's, else the ground's dial, else America/Denver."""
+    if conn is not None and ask_id:
+        cur = conn.cursor()
+        cur.execute("SELECT a.zone, s.zone FROM spine_asks a"
+                    " LEFT JOIN spine_sessions s ON s.session_id = a.session"
+                    " WHERE a.ask_id = %s", (ask_id,))
+        row = cur.fetchone()
+        if row:
+            for z in row:
+                if z:
+                    return z
+    return os.environ.get(HUMAN_ZONE_DIAL) or HUMAN_ZONE_DEFAULT
+
+
+def time_words(zone: str, now: datetime | None = None) -> str:
+    """The clock every body carries (W12, JB's law: a body that cannot say
+    the date cannot reason about origin): now in UTC to the second, the
+    same instant in the human's zone, today's date there, and the plain
+    sentence. An unknown zone is said, never guessed."""
+    from zoneinfo import ZoneInfo
+    now = now or datetime.now(timezone.utc)
+    utc = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        local = now.astimezone(ZoneInfo(zone))
+        where = (f"The human's zone is {zone}, where it is "
+                 f"{local.strftime('%A %Y-%m-%d %H:%M:%S %Z')}; today's date there is "
+                 f"{local.strftime('%Y-%m-%d')}.")
+    except Exception:
+        where = (f"The human's zone was given as {zone!r}, which this ground does not know — "
+                 f"today's date in UTC is {now.strftime('%Y-%m-%d')}; ask the human their zone.")
+    return f"NOW is {utc} (UTC). {where} Convert times for humans into their zone, and say the zone."
 
 
 class PolicyRefused(RuntimeError):
@@ -136,6 +200,10 @@ def ensure_schema(conn) -> None:
         # act's record wears — L1 · L2 · L3-code · L3-master; the export reads it
         cur.execute("ALTER TABLE spine_joins ADD COLUMN IF NOT EXISTS"
                     " placement text")     # P6 sp4: the placement the body was born under
+        cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
+                    " zone text")          # W12: the human's zone, when the ask names it
+        cur.execute("ALTER TABLE spine_sessions ADD COLUMN IF NOT EXISTS"
+                    " zone text")
 
 
 def _next_seq(cur, ask_id: str) -> int:
@@ -306,9 +374,13 @@ class Resident:
                         mine = by == self.identity.did
                         if mine and self.function == "grade":
                             continue        # scribe-class: my own words are
-                        notes.append(         # never material for my grade
-                            f"earlier in this session, asked: {t!r} — "
-                            f"{'I' if mine else who} replied: {rp!r}")
+                        if mine:              # never material for my grade
+                            notes.append(f"earlier in this session, asked: {t!r} — "
+                                         f"I replied: {rp!r} (context, never the answer)")
+                        else:                 # W8: labeled THEIRS, never mine to wear
+                            notes.append(f"ANOTHER BODY'S WORDS — {who} replied to {t!r}: "
+                                         f"{rp!r} (theirs; cite {who} by name, never repeat "
+                                         "it as your own)")
                         if not mine and by and by not in read:
                             read.append(by)   # the chain will name them
                 else:
@@ -458,6 +530,7 @@ class Resident:
                                "are executing, mark it: call the mark tool "
                                "with kind 'improvement' and a short note — "
                                "other bodies act on marks.")   # 0006's policy line
+                system += "\n\n" + self.seat_words(self._serve_conn, self._current_ask)
                 prompt = ""
                 if s["notes"]:
                     prompt += ("Your recalled notes:\n- "
@@ -515,6 +588,35 @@ class Resident:
         g.add_edge("recall", "think")
         g.add_edge("think", END)
         return g.compile(checkpointer=checkpointer)
+
+    def seat_words(self, conn, ask_id: str | None) -> str:
+        """W12 (JB's law): what the kernel hands EVERY body — resident or
+        firmware — with its system words: the clock (now in UTC, the
+        human's zone, the sentence), the world, the covenant's slice, the
+        slice of the ontology its template names (`ontology: [...]`,
+        searched in MITL's acquired corpus — v0: the best passage per
+        entry), and the common laws of the serve."""
+        parts = [time_words(human_zone(conn, ask_id)),
+                 f"THE WORLD you serve in is {ev.scope()}; you are {self.name}, "
+                 f"a {self.kind} body" + (f" whose function is {self.function}" if self.function else "") + ".",
+                 COVENANT_SLICE]
+        for entry in self.template.get("ontology", []) or []:
+            try:
+                from .mitl import NAME as _mitl
+                from .store import OrrethStore
+                hits = OrrethStore(conn, by_did=self.identity.did).search(_mitl, str(entry), limit=6) \
+                    if conn is not None else []
+            except Exception:
+                hits = []
+            if hits:                       # v0: the passage holding MOST of the entry's words wins
+                words = [w.lower() for w in str(entry).split() if len(w) > 2]
+                best = max(hits, key=lambda h: sum(w in h["body"].lower() for w in words))
+                parts.append(f"The canon on '{entry}' [{best['key']}]: {best['body'][:700]}")
+            else:
+                parts.append(f"The canon on '{entry}': not acquired on this ground yet — "
+                             "say so if asked, never invent it.")
+        parts.append(COMMON_LAWS)
+        return "\n".join(parts)
 
     def prepare(self, conn) -> None:
         """Working memory (canon 0003 · MEM-2): the graph checkpointed on
@@ -645,9 +747,12 @@ class Resident:
                     status: str = "replied", proof: str = "L1") -> None:
         # P6 sp1: every act's record wears its proof level (L1 · L2 ·
         # L3-code · L3-master) on the row AND on the reply's envelope
+        # W17: replied_at is the LANDING on the ground's clock — clock_timestamp(),
+        # never now(): inside the serve's one transaction now() is the transaction's
+        # START, and a long thought read "completed (0.2 s)" on the glass
         cur.execute(
             "UPDATE spine_asks SET status = %s, reply = %s, proof = %s,"
-            " served_by = %s, replied_at = now() WHERE ask_id = %s",
+            " served_by = %s, replied_at = clock_timestamp() WHERE ask_id = %s",
             (status, reply, proof, self.identity.did, ask_id))
         r = ev.make_envelope(
             kind="event", type=REPLY, universe_id=ev.scope(), scope_path=ev.scope(),

@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P4 sp4, Monitoring · leases · harness · 2026-09-18
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): the watch's sense (W14) · 2026-09-21
 """P4 sp4: presence leases (M2) — alive while serving, dormant never
 deleted; the Monitoring ground — the snapshot and the WATCHES, added
 through the interlock; the A/B harness v0 (AG-6's non-scheduled half) —
@@ -45,21 +46,23 @@ def test_a_lease_makes_a_body_alive_and_its_lapse_makes_it_dormant(pg, monkeypat
 def test_a_watch_holds_at_the_interlock_then_lands_and_is_judged(pg, monkeypatch):
     """The monitor agent PROPOSES a watch through the add-watch tool: the
     door holds it (consequential) until confirmed; landed, the snapshot
-    judges it against the live value, green or red."""
+    judges it against the live value — RED when the condition holds (W14:
+    the watch names what it catches), green otherwise."""
     monkeypatch.setenv("SPINE_SCOPE", "u:law-" + secrets.token_hex(3))
     mon = _body("workspace-firmware.v0.json", binding=SPINE / "bindings" / "monitor.v0.json")
     assert "tools:add-watch" in mon.template["capabilities"]   # the seat's tool
     door = tools.ToolDoor(pg, did=mon.identity.did, capabilities=mon.template["capabilities"])
-    args = {"name": "no asks left waiting", "metric": "asks_received", "op": "<=", "threshold": 0}
+    args = {"name": "asks left waiting", "metric": "asks_received", "op": ">", "threshold": 0}
     with pytest.raises(tools.ConsequentialHold):
         door.call("add-watch", args)                 # holds for the human's yes
     door.call("add-watch", args, confirmed=True)     # the yes: it lands
     snap = monitor.snapshot(pg, rails=False)
     [w] = snap["watches"]
-    assert w["name"] == "no asks left waiting" and w["ok"] is True and w["added_by"] == mon.identity.did
-    dispatch.submit_ask(pg, "one ask, unserved")     # now a red watch
+    assert w["name"] == "asks left waiting" and w["ok"] is True and w["added_by"] == mon.identity.did
+    assert w["state"] == "green" and w["reads"] == "red when asks_received > 0.0 · now 0 → green"
+    dispatch.submit_ask(pg, "one ask, unserved")     # now a red watch: the condition holds
     [w] = monitor.snapshot(pg, rails=False)["watches"]
-    assert w["value"] == 1 and w["ok"] is False
+    assert w["value"] == 1 and w["ok"] is False and w["red"] is True and w["state"] == "red"
     with pytest.raises(ValueError):
         monitor.add_watch(pg, "bad", "no_such_metric", "<=", 1, by="x")
 

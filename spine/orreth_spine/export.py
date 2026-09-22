@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp2, the compliance export · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W19 (the refused ask in the record) · 2026-09-21
 """The compliance export (canon 0005 P6 sp2 · AG-7): the chain, proven to
 a stranger.
 
@@ -48,11 +49,12 @@ WORDS_MAX = 500                                    # the CSV's cut, marked when 
 INTENTION_STOPPED = "orreth.intention.stopped.v1"   # intent.py's fact (no import cycle)
 PROOF_ATTEMPT = "orreth.proof.attempt.v1"           # proof.py's fact
 TOOL_CALLED = "orreth.tool.called.v1"               # tools.py's fact: the tool hop
+ASK_REFUSED = "orreth.ask.refused.v1"               # dispatch.py's fact: an ask to a body not here (W19)
 KERNEL = "the kernel"
 
 KIND_OF = {ASK_RECEIVED: "ask", CONFIRM_NEEDED: "hold", PROOF_ATTEMPT: "proof",
            REPLY: "reply", INTENTION_STOPPED: "intention.stop", MARKER_SET: "marker.set",
-           TOOL_CALLED: "tool"}
+           TOOL_CALLED: "tool", ASK_REFUSED: "refused"}
 CSV_COLUMNS = ("at", "kind", "ref", "person", "authority_chain", "chain_status", "proof",
                "marker_kind", "marker_id", "marker_parent", "marker_root", "served_by",
                "tool", "words", "words_truncated", "placement")
@@ -289,6 +291,8 @@ def _row(e: dict, kind: str, oid: int, asks: dict, intentions: set, marker_ids: 
         person, served = a["person"], None
         if kind == "ask":
             proof, words = a["proof"], {"ask": a["text"]}
+        elif kind == "refused":                     # W19: the door's refusal, the reply is its words
+            served, proof, words = KERNEL, a["proof"], {"ask": a["text"], "reply": a["reply"]}
         elif kind == "hold":
             served, proof, words = a["served_by"], p.get("level") or "L2", None
         elif kind == "proof":

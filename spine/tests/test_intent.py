@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch intent sp1, the fifth firmware-rail · 2026-09-19
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): IH-1 under the watch's sense (W14), the runner joined (W19), the human's stop held (W5) · 2026-09-21
 """The intent loop (canon 0007, block 11): an intention is a record with
 a root marker; the loop observes (a red watch), asks the planner under
 the observation, and files the planner's reply as an objective under the
@@ -50,6 +51,7 @@ def test_ih1_a_red_watch_turns_the_resiliency_loop_and_the_stop_ends_it(pg, monk
     planner = _body("firmware-planner.v0.json",
                     gateway.FakeGateway(reply="Serve the waiting ask and confirm the bench is drained."))
     planner.join(pg); planner._serve_conn = pg
+    _body("librarian-resident.v0.json").join(pg)      # W19: the runner must be HERE, or the door refuses
     r = intent.declared(pg, intent.RESILIENCY["words"], serves="resiliency", kind="kernel",
                         by="the kernel", interests=intent.RESILIENCY["interests"],
                         planner="planner", runner="librarian")
@@ -57,7 +59,7 @@ def test_ih1_a_red_watch_turns_the_resiliency_loop_and_the_stop_ends_it(pg, monk
     assert intent.declared(pg, intent.RESILIENCY["words"], kind="kernel")["intention_id"] == r["intention_id"]
     assert any(e["type"] == intent.INTENTION_DECLARED and e["marker"]["id"] == r["marker"]
                for e in _events_for(pg, r["intention_id"]))                        # a fact on the rail
-    monitor.add_watch(pg, "no asks left waiting", "asks_received", "<=", 0, by=ME)
+    monitor.add_watch(pg, "asks left waiting", "asks_received", ">", 0, by=ME)      # W14: red WHEN it holds
     assert intent.turn(pg)["observed"] == []                                        # green: nothing
     dispatch.submit_ask(pg, "one ask, unserved")                                    # now red
     t = intent.turn(pg)
@@ -93,7 +95,7 @@ def test_ih1_a_red_watch_turns_the_resiliency_loop_and_the_stop_ends_it(pg, monk
                           confirmed_by="did:orreth:person:master")
     assert stopped["active"] is False and stopped["stopped_by"] == ME
     assert any(e["type"] == intent.INTENTION_STOPPED for e in _events_for(pg, r["intention_id"]))
-    pg.cursor().execute("UPDATE spine_watches SET last_ok = true")                  # red again —
+    pg.cursor().execute("UPDATE spine_watches SET last_ok = true")                  # turns red again —
     assert intent.turn(pg)["observed"] == []                                        # nobody cares now
     assert intent.stop(pg, r["intention_id"], by=ME)["active"] is False             # one face, twice
     with pytest.raises(KeyError):
@@ -128,6 +130,7 @@ def test_ih2_the_ask_wears_its_kind(pg, monkeypatch):
                           kind="human", by=ME, interests=["improvement"])
     assert made["kind"] == "human" and made["interests"] == ["improvement"]
     critic = _body("firmware-critic.v0.json"); critic.join(pg)
+    _body("firmware-planner.v0.json").join(pg)                          # W19: the planner must be here
     ask = dispatch.submit_ask(pg, "what binds hempcrete?", person=ME, session=ses)
     m = markers.set_marker(pg, "improvement", ref=ask, by=ME, parent=_marker_of(pg, ask), note="lime")
     asked = markers.dispatch_interests(pg, m, ask, "lime")                          # bodies AND intentions
@@ -239,12 +242,25 @@ def test_the_intent_doors_and_the_rail_in_the_rig(pg, rig):
     assert kind_of(body["ids"][0]) == "objective"
     s, body = post("/ask", {"text": "be excellent", "kind": "intention"})
     assert s == 400 and "wake it" in body["error"]
-    s, body = post("/ask", {"text": "when an improvement is marked, plan its landing", "kind": "intention"})
+    walker = "did:orreth:person:intent-walker"                         # enrolled here, never jb (test_proof's)
+    s, body = post("/ask", {"text": "when an improvement is marked, plan its landing", "kind": "intention",
+                            "person": walker})
     assert s == 201 and body["intention"]["kind"] == "human" and body["intention"]["interests"] == ["improvement"]
     iid = body["intention"]["intention_id"]
     assert any(i["intention_id"] == iid for i in get("/intentions?kind=human")["intentions"])
-    s, body = post("/intentions/stop", {"intention_id": iid})
-    assert s == 202 and body["intention"]["active"] is False
+    s, body = post("/intentions/stop", {"intention_id": iid, "person": walker})   # W5: a human's stop is
+    assert s == 202 and body["level"] == "L3-code" and body["held"].startswith("ask_")   # HELD for the code
+    held = body["held"]
+    assert get(f"/ask/{held}")["hold"]["level"] == "L3-code" and "This needs your code" in get(f"/ask/{held}")["reply"]
+    assert [i for i in get("/intentions?kind=human")["intentions"] if i["intention_id"] == iid][0]["active"] is True
+    from orreth_spine import proof
+    s, made = post("/enroll", {"person": walker})
+    assert s == 201 and post("/enroll/confirm", {"person": walker, "code": proof.totp(made["secret"])})[0] == 200
+    assert post("/confirm", {"ask_id": held, "approve": True, "by": walker, "code": "000000"})[0] == 403   # one face
+    s, out = post("/confirm", {"ask_id": held, "approve": True, "by": walker, "code": proof.totp(made["secret"])})
+    assert s == 202 and out["level"] == "L3-code"                                    # the right code rests it
+    assert [i for i in get("/intentions?kind=human")["intentions"] if i["intention_id"] == iid][0]["active"] is False
+    assert get(f"/ask/{held}")["proof"] == "L3-code" and get(f"/ask/{held}")["reply"].startswith("Done, on your code")
     s, _ = post("/intentions/stop", {"intention_id": "int_nobody"})
     assert s == 404
     tree = get(f"/analyzer?origin={o['root']}")["tree"]

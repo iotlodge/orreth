@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch markers sp1 · 2026-09-19
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): the runner joins before the door asks it (W19) · 2026-09-21
 """Markers (canon 0006): an open, governed vocabulary of WHY. The write
 path mints the structural kinds with the fact; any body marks what it
 executes through the door; the interest law asks interested bodies to
@@ -48,6 +49,7 @@ def test_the_registry_and_the_write_paths_lineage(pg, monkeypatch):
     assert obj["kind"] == "objective" and obj["parent"] is None and obj["ref"] == ask and obj["by"] == ME
     assert any(e.get("marker", {}).get("id") == obj["id"] for e in _events_for(pg, ask))  # on the rail
     lib = _body("librarian-resident.v0.json", gateway.FakeGateway(reply="PELICAN, the librarian"))
+    lib.join(pg)                                                           # W19: the runner must be here
     sid = scheduler.add(pg, "librarian", "human", "say the time", 3600, ME)   # an INTENTION
     cur.execute("SELECT marker FROM spine_schedules WHERE schedule_id = %s", (sid,))
     intention = markers.get(pg, cur.fetchone()[0])

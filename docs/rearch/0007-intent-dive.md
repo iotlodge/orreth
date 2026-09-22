@@ -102,6 +102,12 @@ Business, Security, Resiliency, Compliance, and Cost.
   is the librarian — a conversationalist. Resiliency's objectives are
   real and lineaged but un-actionable until an acting resident exists
   (V1's infrastructure resident); sp2 binds the runner per `serves`.
+  **Cured as a felt wound (walk #7, W8 · 2026-09-21):** a runner that
+  lacks the tools opens its reply with `CANNOT ACT:` (the seat words
+  teach it); the loop hears it ONCE — an `improvement` marker under the
+  intention ("runner cannot act: … needs a body with the tools for it")
+  — and does not plan or re-file for that intention until the crew
+  changes (a body joins or declares a tool); then it plans again.
 
 ## Where it lives and how it shows
 
@@ -127,7 +133,10 @@ Business, Security, Resiliency, Compliance, and Cost.
 ## Proof
 
 - **IH-1 — the loop turns.** Resiliency is declared at boot with its stop;
-  a watch goes red; an observation lands under Resiliency; the planner is
+  a watch TURNS red — the loop wakes on the red transition only (walk #7,
+  W14: `monitor.judge` records red ↔ green with `since` and the fact
+  `orreth.watch.turned.v1`; a standing red re-files nothing; a watch is
+  red WHEN its condition holds); an observation lands under Resiliency; the planner is
   asked under it and answers an objective; the objective is an ask to the
   crew with Resiliency as parent, filed in its session; the crew's reply
   lands under the objective. The tree reads intention → observation ·
@@ -190,6 +199,9 @@ Business, Security, Resiliency, Compliance, and Cost.
   objective Resiliency birthed today landed on the librarian, who has no
   tools for it — the loop turns, the crew that can act arrives with V1's
   infrastructure resident (intent sp2 names the runner per `serves`).
+  Since walk #7's cure the loop records an improvement once and does
+  not re-file: a runner's `CANNOT ACT:` blocks the intention until the
+  crew changes.
   Owed frictions: the two planner lines read alike when two intentions
   share words; the KIND chip is a three-click cycle; the kernel's
   intention session sits in "my sessions" for a human's intention; the

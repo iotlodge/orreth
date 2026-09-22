@@ -140,11 +140,15 @@ TOOLS: dict[str, dict] = {
               __import__("orreth_spine.digest", fromlist=["rebuild_citing"])),
     },
     "add-watch": {
-        "description": "Propose a new monitoring watch: a named check of one "
+        "description": "Propose a new monitoring watch: a named ALERT on one "
                        "metric (outbox_pending · oldest_outbox_age_s · "
-                       "asks_received · bodies_alive · bodies_dormant) against "
-                       "a threshold with an op (<= >= < > ==). It holds for "
-                       "the human's yes before it lands.",
+                       "asks_received · bodies_alive · bodies_dormant) — the "
+                       "watch turns RED when `metric op threshold` holds and is "
+                       "green otherwise (ops: <= >= < > ==). To catch dormant "
+                       "bodies: bodies_dormant > 0. To catch asks left waiting: "
+                       "asks_received > 0. It holds for the human's yes before "
+                       "it lands. When the human asks you to propose a watch, "
+                       "call this tool — never describe the watch in words instead.",
         "input_schema": {"type": "object", "properties": {
             "name": {"type": "string"}, "metric": {"type": "string"},
             "op": {"type": "string"}, "threshold": {"type": "number"}},

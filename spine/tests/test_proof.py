@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp1, L3: the proof demand rises · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): the kernel's stop wants the asker's code before the master (W5) · 2026-09-21
 """P6 sp1's laws (canon 0001 P12 · 0005): the code is RFC 6238 and
 tolerates one step of drift; the ladder is routine < consequential <
 grave → L1 < L2 < L3; an authenticator is enrolled once through the
@@ -137,15 +138,22 @@ def _kernel_intention(pg) -> dict:
 def _hold_stop(pg, iid: str, person: str) -> str:
     with pytest.raises(proof.ProofRequired) as pr:                        # a bare stop refuses
         intent.stop(pg, iid, by=person)
-    assert pr.value.level == "L3-master"
+    assert pr.value.level == "L3-master" and pr.value.needs_code is True  # W5: the code, then the master
     return proof.hold_kernel_act(pg, text=pr.value.what, person=person, tool="intent.stop",
-                                 args={"intention_id": iid}, level="L3-master")
+                                 args={"intention_id": iid}, level="L3-master", needs_code=True)
+
+
+def _code_first(pg, ask_id: str, asker: str, secret: str) -> None:
+    """W5's first step: the asker's right code readies the hold for the master."""
+    out = dispatch.confirm_ask(pg, ask_id, approve=True, person=asker, code=proof.totp(secret))
+    assert out["step"] == "code" and out["next"] == "master"
 
 
 def test_the_kernels_intention_holds_for_a_master_and_the_asker_is_never_their_own(pg):
     me, master, stranger = _person("asker"), _person("master"), _person("stranger")
     proof.declare_master(pg, master, by="did:orreth:person:jb")
     proof.declare_master(pg, me, by="did:orreth:person:jb")                # even a master cannot self-confirm
+    secret = _enrolled(pg, me)
     r = _kernel_intention(pg)
     ask_id = _hold_stop(pg, r["intention_id"], me)
     cur = pg.cursor()
@@ -153,6 +161,10 @@ def test_the_kernels_intention_holds_for_a_master_and_the_asker_is_never_their_o
     status, served_by, held, reply = cur.fetchone()
     assert status == "awaiting-confirm" and served_by == proof.KERNEL
     assert json.loads(held)["level"] == "L3-master" and "second named person" in reply
+    assert "This needs your code, then" in reply                           # W5: the code comes first
+    with pytest.raises(proof.NotConfirmed):                                # the master before the code: one face
+        dispatch.confirm_ask(pg, ask_id, approve=True, person=master)
+    _code_first(pg, ask_id, me, secret)
     hold_ev = [e for e in _events_for(pg, ask_id) if e["type"] == resident.CONFIRM_NEEDED]
     assert hold_ev and hold_ev[0]["payload"]["level"] == "L3-master" and hold_ev[0]["payload"]["class"] == "grave"
     assert not any(e["type"] == resident.ASK_RECEIVED for e in _events_for(pg, ask_id))   # never dispatched
@@ -174,7 +186,8 @@ def test_the_kernels_intention_holds_for_a_master_and_the_asker_is_never_their_o
     assert any(e["type"] == resident.JOURNEY and "confirmed as master" in e["payload"]["note"] for e in evs)
     st = [e for e in _events_for(pg, r["intention_id"]) if e["type"] == intent.INTENTION_STOPPED]
     assert st and st[0]["payload"]["proof"] == "L3-master" and st[0]["payload"]["confirmed_by"] == master
-    assert [a[2] for a in proof.attempts(pg, ask_id)] == [False, False, True]
+    assert [a[2] for a in proof.attempts(pg, ask_id)] == [True, False, False, True]   # code · asker · stranger · master
+    assert "after the asker's code" in reply
     with pytest.raises(proof.NotConfirmed):                                # settled: nothing held any more
         dispatch.confirm_ask(pg, ask_id, approve=True, person=master)
 
@@ -189,9 +202,11 @@ def test_cancel_is_taken_at_l3_master_and_three_wrong_proofs_rest_the_act(pg):
     assert cur.fetchone() == ("cancelled", "L1", "Cancelled — nothing was done. Cancel is always the default here.")
     assert intent.get(pg, r["intention_id"])["active"] is True
     ask2 = _hold_stop(pg, r["intention_id"], me)                           # three wrong proofs
-    for _ in range(3):
+    with pytest.raises(proof.NotConfirmed):                                # a stranger before the code: one
+        dispatch.confirm_ask(pg, ask2, approve=True, person=stranger)      # face, no attempt of the asker's
+    for _ in range(3):                                                     # W5: the asker's three wrong codes
         with pytest.raises(proof.NotConfirmed):
-            dispatch.confirm_ask(pg, ask2, approve=True, person=stranger)
+            dispatch.confirm_ask(pg, ask2, approve=True, person=me, code="000000")
     cur.execute("SELECT status, reply FROM spine_asks WHERE ask_id = %s", (ask2,))
     status, reply = cur.fetchone()
     assert status == "cancelled" and reply.startswith("Rested — three wrong proofs")
@@ -347,7 +362,8 @@ def test_the_doors_enroll_hold_the_kernels_intention_and_wear_one_face(pg, rig):
     assert s == 202 and b["level"] == "L3-master" and b["held"].startswith("ask_")
     view = _get(port, "/ask/" + b["held"])
     assert view["status"] == "awaiting-confirm" and view["served_by"] == "the kernel"
-    assert view["hold"] == {"tool": "intent.stop", "class": "grave", "level": "L3-master"}
+    assert view["hold"] == {"tool": "intent.stop", "class": "grave", "level": "L3-master",
+                            "needs_code": True, "code_ok": False}                 # W5: the code, then the master
     assert "second named person" in view["reply"] and view["proof"] == "L1"
     assert _post(port, "/confirm", {"ask_id": b["held"], "approve": True, "by": me}) == (403, ONE_FACE)
     assert _post(port, "/confirm", {"ask_id": b["held"], "approve": True, "by": "did:orreth:person:nobody"}) == (403, ONE_FACE)

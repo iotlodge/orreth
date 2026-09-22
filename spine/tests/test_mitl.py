@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL v0 + the impact door · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): MITL's words carry the seat block too (W12) · 2026-09-21
 """MITL v0 (canon 0001 · 0004 · 0005 P6 sp3): the Master Mind In the Loop
 is a firmware body of the third kind that thinks only through the gateway
 (rule 5), wears the Orreth ontology v0 acquired through the librarian's
@@ -74,7 +75,8 @@ def test_mitl_is_born_of_the_third_kind_and_thinks_only_through_the_gateway(pg, 
     assert v["status"] == "replied" and v["reply"] == gw.reply and v["served_by"] == m.identity.did
     [(model, t_in, t_out)] = gateway.meter_lines(pg, m.identity.did)          # ONE line, its model
     assert model == "claude-haiku-4-5-20251001" and t_in > 0 and t_out > 0
-    assert gw.calls[0]["system"] == mitl.SYSTEM and "the human cuts" in gw.calls[0]["system"]
+    assert gw.calls[0]["system"].startswith(mitl.SYSTEM) and "the human cuts" in gw.calls[0]["system"]
+    assert "NOW is " in gw.calls[0]["system"]          # W12: MITL wears the clock and the seat like every body
     assert any("metered gateway" in n for n in v["journey"])
     reply_ev = [e for e in _events_for(pg, aid) if e["type"] == resident.REPLY]
     assert reply_ev[0]["authority_chain"] == [ME, m.identity.did]                   # AG-7: H → mitl
@@ -156,6 +158,7 @@ def test_impact_on_a_kernel_intention_stop_is_grave_and_files_under_its_marker(p
     a human's standing intention is 'consider'."""
     _scope(monkeypatch)
     _body("firmware-planner.v0.json").join(pg)
+    _body("firmware-mitl.v0.json").join(pg)                       # W19: MITL must be here to be asked
     r = _kernel_intention(pg)
     ses = glass.open_session(pg, ME)
     out = mitl.impact(pg, {"kind": "intention", "ref": r["intention_id"]}, person=ME, session=ses)

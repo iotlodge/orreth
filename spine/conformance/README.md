@@ -22,6 +22,20 @@ the same files, unchanged — before any module earns the word "ported".
     `L1 < L2 < L3`).
   - `class_level` — `input.class` (+ `master`) → `expect.level`
     (`L1` · `L2` · `L3-code` · `L3-master`).
+  - `stop_demand` (proof-v0, W5) — `input.intention_kind` (`human` · `role` ·
+    `kernel`) → `expect.level` + `expect.needs_code`: a human's or a role's
+    intention rests on the asker's code (`L3-code`); the kernel's on the asker's
+    code and THEN a declared master's click (`L3-master`, `needs_code`).
+  - `watch_judge` (watch-v0, W14) — `input.op` · `input.value` · `input.threshold`
+    → `expect.red` + `expect.state`: a watch is RED when `value op threshold`
+    holds and green otherwise (`bodies_dormant > 0` is red the moment a body is
+    dormant, green at 0). `watch_reads` — the watch's human sentence
+    ("red when … · now … → …"). The `encode` case carries the wire shape of
+    `orreth.watch.turned.v1` (`from` · `to` · the metric and value at the turn).
+  - `absent_words` (ask-v0, W19) — `input.name` + `input.reason` → `expect.reply`:
+    the door's plain refusal for an ask to a body that is not here ("<name> is
+    not here — <reason>"); the `encode` case carries `orreth.ask.refused.v1`
+    (`target` · `reason` · `session`, the chain `[person, "the kernel"]`).
   - `hash_chain` (export-v0) — `input.rows` → `expect.hashes` and `expect.root_hash`:
     `h0 = sha256(canonical(row0))`, `h_i = sha256(ascii_hex(h_{i-1}) || canonical(row_i))`
     (the previous digest's lowercase hex, as ASCII bytes, prepended to the row's

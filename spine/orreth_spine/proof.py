@@ -58,12 +58,15 @@ class NotConfirmed(PermissionError):
 
 class ProofRequired(RuntimeError):
     """The teaching inward: a grave act was asked bare — it must be HELD
-    at the level named, never run on the first word."""
+    at the level named, never run on the first word. `needs_code` (W5):
+    an L3-master hold that also wants the asker's code before the
+    master's click counts."""
 
-    def __init__(self, level: str, what: str):
+    def __init__(self, level: str, what: str, needs_code: bool = False):
         super().__init__(f"{what} is grave — it needs {level}, never a bare word")
         self.level = level
         self.what = what
+        self.needs_code = bool(needs_code)
 
 
 # ---- the ladder --------------------------------------------------------------------
@@ -346,9 +349,14 @@ def attempts(conn, ask_id: str) -> list[tuple]:
 
 # ---- the kernel's own held acts ------------------------------------------------------
 
-def question_for(level: str, what: str) -> str:
+def question_for(level: str, what: str, needs_code: bool = False) -> str:
     """The words the chat says when an act is held — plain, for a newcomer
     (charter P18). L2 keeps its own words in the resident."""
+    if level == "L3-master" and needs_code:
+        return (f"This needs your code, then a second named person. {what} is grave: "
+                "type the six digits from your authenticator and confirm; then a "
+                "declared master — never you — confirms it with a click. Cancel is the "
+                "default, and doing nothing cancels. Three wrong codes put this act to rest.")
     if level == "L3-master":
         return (f"This needs a second named person. {what} is grave: a declared "
                 "master — never you — confirms it with a click. Cancel is the "
@@ -360,7 +368,7 @@ def question_for(level: str, what: str) -> str:
 
 def hold_kernel_act(conn, *, text: str, person: str, tool: str, args: dict,
                     level: str, session: str | None = None,
-                    cls: str = "grave") -> str:
+                    cls: str = "grave", needs_code: bool = False) -> str:
     """An act the KERNEL itself holds (no resident serves it — stopping one
     of the kernel's intentions): the ask row is born held, with its
     CONFIRM_NEEDED and its marker in one transaction. No ask.received is
@@ -372,11 +380,14 @@ def hold_kernel_act(conn, *, text: str, person: str, tool: str, args: dict,
     mid = markers.new_id()
     marker = {"kind": "objective", "id": mid, "parent": None, "by": person}
     held = {"tool": tool, "args": dict(args), "class": cls, "level": level}
-    question = question_for(level, text[:1].upper() + text[1:])
+    needs_code = bool(needs_code) and level == "L3-master"   # L3-code IS the code; the flag
+    if needs_code:                       # W5: the asker's code, then the master's click
+        held["needs_code"], held["code_ok"] = True, False
+    question = question_for(level, text[:1].upper() + text[1:], needs_code=needs_code)
     n = ev.make_envelope(
         kind="event", type=CONFIRM_NEEDED, universe_id=ev.scope(), scope_path=ev.scope(),
         payload={"ref": ask_id, "hash": ev.content_hash(text), "tool": tool,
-                 "class": cls, "level": level},
+                 "class": cls, "level": level, **({"needs_code": True} if needs_code else {})},
         correlation_id=ask_id, authority_chain=[person, KERNEL],
         aggregate={"type": "ask", "id": ask_id, "sequence": 1}, marker=marker)
 
@@ -426,8 +437,14 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
                 result = f"the intention “{made['words']}” is at rest — recorded, never deleted"
             else:
                 raise NotConfirmed()                     # no other kernel act yet
-            note(f"{by} confirmed as master — the {held['tool']} act ran · proof {level}")
-            reply, status, proof = f"Done, on {by.split(':')[-1]}'s word as master: {result}.", "replied", level
+            if level == "L3-code":
+                note(f"the code was right — the {held['tool']} act ran · proof {level}")
+                reply = f"Done, on your code: {result}."
+            else:
+                word = " after the asker's code" if held.get("needs_code") else ""
+                note(f"{by} confirmed as master{word} — the {held['tool']} act ran · proof {level}")
+                reply = f"Done, on {by.split(':')[-1]}'s word as master{word}: {result}."
+            status, proof = "replied", level
         else:
             why = reason or "the human cancelled"
             note(f"{why} — the {held['tool']} act never ran (cancel is always the default)")
@@ -435,8 +452,9 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
                      "is at rest, recorded; ask again when you are ready." if reason
                      else "Cancelled — nothing was done. Cancel is always the default here.")
             status, proof = "cancelled", "L1"
-        cur.execute("UPDATE spine_asks SET status = %s, reply = %s, proof = %s, replied_at = now()"
-                    " WHERE ask_id = %s", (status, reply, proof, ask_id))
+        cur.execute("UPDATE spine_asks SET status = %s, reply = %s, proof = %s,"
+                    " replied_at = clock_timestamp() WHERE ask_id = %s",   # W17: the landing, not the start
+                    (status, reply, proof, ask_id))
         r = ev.make_envelope(
             kind="event", type=REPLY, universe_id=ev.scope(), scope_path=ev.scope(),
             payload={"ref": ask_id, "hash": ev.content_hash(reply), "proof": proof},

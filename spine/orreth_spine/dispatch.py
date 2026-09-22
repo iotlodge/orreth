@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp1, the body is born · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, a body never confirms (one face) · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W12 · W19 · 2026-09-21
 """The ask road (canon 0002's chain, in miniature): ONE write path.
 
 A human's ask lands on the ground with its event in one transaction; the
@@ -20,18 +21,51 @@ from . import outbox, projector
 from .rails import COMMAND_EXCHANGE, RABBIT_URL
 from .resident import ASK_RECEIVED, SERVE_KEY
 
+ASK_REFUSED = "orreth.ask.refused.v1"     # W19: an ask to a body that is not here
+
+
+def absent(conn, name: str) -> str | None:
+    """Is the body named here to serve? None when it is (a join row in
+    this world, not refused since); else the reason in words (W19): a
+    body refused at birth says its reasons and the cure; a name that
+    never joined says so. Presence (alive/dormant) is not absence — a
+    dormant body may still wake to its bench."""
+    from . import placement
+    cur = conn.cursor()
+    cur.execute("SELECT max(joined_at) FROM spine_joins WHERE name = %s AND scope = %s",
+                (name, ev.scope()))
+    joined = cur.fetchone()[0]
+    r = placement.refusals(conn).get(name)
+    if r is not None and (joined is None or r["refused_at"] > joined):
+        return "refused at birth: " + "; ".join(r["reasons"]) + "; fix its template to seat it"
+    if joined is None:
+        return "no body of that name has joined this world"
+    return None
+
+
+def refusal_words(name: str, reason: str) -> str:
+    """The door's plain reply for an ask to a body that is not here
+    (conformance `absent_words`)."""
+    return f"{name} is not here — {reason}"
+
 
 def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
                to: list[str] | None = None, window: dict | None = None,
                session: str | None = None, parent_marker: str | None = None,
-               kind: str | None = None):
+               kind: str | None = None, zone: str | None = None):
     """The glass's write: the ask row and its committed event, one
     transaction. The event is pointer-only; the words live on the ground.
     `to` names residents for a FAN-OUT (canon 0001 P14): the same request
     becomes one ask PER named resident — each answers through its own
     role lens, results stay distinct, and they share a fanout id so the
     glass can offer 'summarize together' on demand. Untargeted asks keep
-    returning one id (any resident serves); a fan-out returns the list."""
+    returning one id (any resident serves); a fan-out returns the list.
+    An ask to a body that is NOT HERE (W19: refused at birth, or never
+    joined this world) is answered at the door: its row lands with status
+    `refused` and the reply in plain words, its fact `orreth.ask.refused.v1`
+    — never an ask.received, never left in flight; a fan-out drops the
+    absent body and the refused row says so in the chat. `zone` (W12) is
+    the human's time zone for this ask, an IANA name."""
     from . import markers
     from .resident import ensure_schema
     ensure_schema(conn)
@@ -69,6 +103,11 @@ def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
                 r0 = cur0.fetchone(); parent = r0[0] if r0 else None
         marker_id = markers.new_id()
         marker = {"kind": ask_kind, "id": marker_id, "parent": parent, "by": person}
+        why = absent(conn, target) if target else None
+        if why is not None:                       # W19: refused at the door, recorded — the
+            ids.append(_refuse_at_door(conn, ask_id, text, person, target, why,   # same marker
+                                       marker=marker, fanout=fanout, session=session, state=state))
+            continue
         payload = {"ref": ask_id, "hash": ev.content_hash(text)}
         if target:
             payload["target"] = target
@@ -90,15 +129,46 @@ def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
             markers.insert(cur, mk, kd, pa, a, person)     # the fact and its
             cur.execute(                                   # marker, together
                 "INSERT INTO spine_asks (ask_id, text, person, target,"
-                " fanout, scope, time_window, session, state, marker)"
-                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                " fanout, scope, time_window, session, state, marker, zone)"
+                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (a, text, person, t, fanout, ev.scope(),     # asked in
-                 json.dumps(w) if w else None, session, state, mk))   # THIS world
+                 json.dumps(w) if w else None, session, state, mk,   # THIS world
+                 zone or None))
 
         outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"],
                                   domain)
         ids.append(ask_id)
     return ids if to else ids[0]
+
+
+def _refuse_at_door(conn, ask_id: str, text: str, person: str, target: str, why: str,
+                    *, marker: dict, fanout: str | None, session: str | None, state: str) -> str:
+    """The refused ask: its row (status `refused`, the reply, the kernel
+    as server, replied at the landing) and its fact in one transaction —
+    wearing the marker the ask would have worn (its kind, its parent), so
+    the lineage records the refusal where the act was meant to hang."""
+    from . import markers
+    from .proof import KERNEL
+    reply = refusal_words(target, why)
+    marker_id = marker["id"]
+    e = ev.make_envelope(
+        kind="event", type=ASK_REFUSED, universe_id=ev.scope(), scope_path=ev.scope(),
+        payload={"ref": ask_id, "hash": ev.content_hash(text), "target": target,
+                 "reason": why, **({"session": session} if session else {})},
+        correlation_id=fanout or ask_id, authority_chain=[person, KERNEL],
+        aggregate={"type": "ask", "id": ask_id, "sequence": 1}, marker=marker)
+
+    def domain(cur):
+        markers.insert(cur, marker_id, marker["kind"], marker["parent"], ask_id, person)
+        cur.execute(
+            "INSERT INTO spine_asks (ask_id, text, person, target, fanout, scope, session,"
+            " state, marker, status, reply, served_by, replied_at)"
+            " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'refused', %s, %s, clock_timestamp())",
+            (ask_id, text, person, target, fanout, ev.scope(), session, state, marker_id,
+             reply, KERNEL))
+
+    outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)
+    return ask_id
 
 
 def publish_command(env: dict, rabbit_url: str | None = None) -> None:
@@ -166,6 +236,26 @@ def confirm_ask(conn, ask_id: str, *, approve: bool,
     if approve:
         if row is None or row[4] != "awaiting-confirm":
             raise proof.NotConfirmed()          # nothing held: the one face
+        if level == "L3-master" and held.get("needs_code") and not held.get("code_ok"):
+            # W5: the kernel's intention — the ASKER's code comes first; the
+            # master's click counts only after it. A master clicking before
+            # the code, a stranger, or a wrong code: the one face
+            if person != row[3]:
+                raise proof.NotConfirmed()
+            try:
+                proof.judge(conn, ask_id, level="L3-code", asker=row[3], by=person, code=code)
+            except proof.NotConfirmed as nc:
+                if nc.rest:
+                    _settle(conn, row, ask_id, approve=False, person=person, level=level,
+                            reason="three wrong proofs — the kernel rested this act",
+                            rabbit_url=rabbit_url)
+                raise
+            held["code_ok"] = True
+            with conn.transaction():
+                conn.cursor().execute("UPDATE spine_asks SET held = %s WHERE ask_id = %s",
+                                      (json.dumps(held), ask_id))
+            return {"id": ask_id, "approve": True, "level": level, "step": "code",
+                    "next": "master"}          # held still: the master's click is owed
         try:
             proof.judge(conn, ask_id, level=level, asker=row[3], by=person, code=code)
         except proof.NotConfirmed as nc:

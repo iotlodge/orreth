@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch canon 0008, the conformance suite's first fixture · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): watch · stop_demand · absent_words · 2026-09-21
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -8,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import envelope as ev, export, mitl, placement, proof
+from orreth_spine import dispatch, envelope as ev, export, intent, mitl, monitor, placement, proof
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
 FIXTURES = sorted(ROOT.glob("*-v*.json"))
@@ -53,6 +54,17 @@ def test_fixture(contract, case):
         assert [proof.LEVEL_OF_CLASS[c] for c in got] == exp["levels"]
     elif kind == "class_level":
         assert proof.level_for(inp["class"], master=bool(inp.get("master"))) == exp["level"]
+    elif kind == "stop_demand":                  # W5: what the stop of an intention demands
+        assert intent.stop_demand(inp["intention_kind"]) == exp
+    # ---- orreth.watch/1 (W14): the sense of a watch — red WHEN the condition holds ----
+    elif kind == "watch_judge":
+        red = monitor.judge_one(inp["op"], inp["value"], inp["threshold"])
+        assert (red, "red" if red else "green") == (exp["red"], exp["state"])
+    elif kind == "watch_reads":
+        assert monitor.reads(inp) == exp["reads"]
+    # ---- orreth.ask/1 (W19): the door's refusal for a body that is not here ----
+    elif kind == "absent_words":
+        assert dispatch.refusal_words(inp["name"], inp["reason"]) == exp["reply"]
     # ---- orreth.compliance/1 (P6 sp2): the hash chain, the chain's status, the verifier ----
     elif kind == "hash_chain":
         got = export.hash_chain(inp["rows"])

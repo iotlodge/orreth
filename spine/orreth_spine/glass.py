@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL born · the toggle and the impact doors · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W12 · W14 · W19 doors · 2026-09-21
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -38,7 +39,9 @@ from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRef
 GLASS_DIR = Path(__file__).resolve().parents[1] / "glass"
 FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED,
                harness.HARNESS_FAILED,   # a failing run escalates to the chat
-               markers.MARKER_SET]       # a marker set is seen where it lands
+               markers.MARKER_SET,       # a marker set is seen where it lands
+               dispatch.ASK_REFUSED,     # W19: an ask to a body not here, answered at the door
+               monitor.WATCH_TURNED]     # W14: a watch turned red or green
 
 
 def ask_view(conn, ask_id: str) -> dict | None:
@@ -87,7 +90,9 @@ def ask_view(conn, ask_id: str) -> dict | None:
             "marker": row[11], "origin": origin,                # 0006 · 0007
             "proof": row[12] or "L1",                           # P6 sp1: the level the act wore
             "hold": ({"tool": h.get("tool"), "class": h.get("class", "consequential"),
-                      "level": h.get("level", "L2")}                 # what the hold demands
+                      "level": h.get("level", "L2"),                 # what the hold demands
+                      **({"needs_code": True, "code_ok": bool(h.get("code_ok"))}   # W5: the asker's
+                         if h.get("needs_code") else {})}            # code, then the master
                      if row[2] == "awaiting-confirm" and (h := json.loads(row[13] or "{}")) else None),
             "journey": [n for n in notes if n]}
 
@@ -502,6 +507,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(400, {"error": "'window' is "
                                                      "{from, to} in ISO time"})
                 session = str(p.get("session") or "") or None
+                zone = str(p.get("zone") or "") or None      # W12: the human's zone, IANA
                 # P23: the ask wears its kind — a typed prefix is the human's
                 # flip and wins; else the chip's word; else the words' own read
                 rw = intent.read_words(text)
@@ -526,7 +532,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     out = dispatch.submit_ask(conn, text, person=person,
                                               to=to, window=window,
                                               session=session, kind=kind,
-                                              parent_marker=parent)
+                                              parent_marker=parent, zone=zone)
                 if isinstance(out, list):
                     return self._json(201, {"ids": out})
                 return self._json(201, {"id": out})
@@ -552,12 +558,14 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     with psycopg.connect(dsn, autocommit=True) as conn:
                         try:
                             made = intent.stop(conn, iid, person)
-                        except proof.ProofRequired as pr:      # P6 sp1: the kernel's own
-                            held = proof.hold_kernel_act(          # intention — grave, held
+                        except proof.ProofRequired as pr:      # W5: ANY intention's stop is
+                            held = proof.hold_kernel_act(          # grave — held for the code
                                 conn, text=pr.what, person=person, tool="intent.stop",
                                 args={"intention_id": iid}, level=pr.level,
-                                session=str(p.get("session") or "") or None)
-                            return self._json(202, {"held": held, "level": pr.level})
+                                session=str(p.get("session") or "") or None,
+                                needs_code=pr.needs_code)          # the kernel's: code, then master
+                            return self._json(202, {"held": held, "level": pr.level,
+                                                    "needs_code": pr.needs_code})
                 except KeyError:
                     return self._json(404, {"error": "no such intention"})
                 return self._json(202, {"intention": made})

@@ -269,6 +269,39 @@
    "expect": {
     "bytes": "{\"aggregate\":{\"id\":\"ask_1\",\"sequence\":6,\"type\":\"ask\"},\"authority_chain\":[\"did:orreth:person:jb\",\"did:orreth:resident:librarian\"],\"correlation_id\":\"ask_1\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_1\",\"kind\":\"objective\",\"parent\":null},\"message_id\":\"msg_0000000000000000000000b3\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T15:00:00.000Z\",\"payload\":{\"hash\":\"sha256:fed412eb2392e2fdc7aa6e20bbaa981265bb25697260b80dcbe2b389add20e98\",\"proof\":\"L3-code\",\"ref\":\"ask_1\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.reply.v1\",\"universe_id\":\"u:dev\"}"
    }
+  },
+  {
+   "name": "stop_demand: stopping a human intention (W5, JB's lock 2026-09-21)",
+   "kind": "stop_demand",
+   "input": {
+    "intention_kind": "human"
+   },
+   "expect": {
+    "level": "L3-code",
+    "needs_code": true
+   }
+  },
+  {
+   "name": "stop_demand: stopping a role intention (W5, JB's lock 2026-09-21)",
+   "kind": "stop_demand",
+   "input": {
+    "intention_kind": "role"
+   },
+   "expect": {
+    "level": "L3-code",
+    "needs_code": true
+   }
+  },
+  {
+   "name": "stop_demand: stopping a kernel intention (W5, JB's lock 2026-09-21)",
+   "kind": "stop_demand",
+   "input": {
+    "intention_kind": "kernel"
+   },
+   "expect": {
+    "level": "L3-master",
+    "needs_code": true
+   }
   }
  ]
 }

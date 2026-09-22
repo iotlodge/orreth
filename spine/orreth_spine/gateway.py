@@ -1,9 +1,11 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp2, the mind arrives · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W17 (the meter's clock) · 2026-09-21
 """The gateway lane v0 (canon 0004): no mind thinks off-meter.
 
 Every model call in the new world goes through here: the thought runs,
 and the meter line lands on the ground — who thought, with which model,
-how many tokens, when. The kernel never sees the prompt (the covenant's
+how many tokens, when (W17: `at` is the landing on the ground's clock,
+clock_timestamp(), never the serving transaction's start). The kernel never sees the prompt (the covenant's
 plane law); the meter sees only the count. A resident without a gateway
 falls back to its deterministic graph — it never calls a model around
 the meter, because there is no other door.
@@ -64,8 +66,8 @@ class AnthropicGateway:
         text = "".join(b.text for b in msg.content if b.type == "text")
         with conn.transaction():
             conn.cursor().execute(
-                "INSERT INTO spine_meter (did, model, tokens_in, tokens_out)"
-                " VALUES (%s, %s, %s, %s)",
+                "INSERT INTO spine_meter (did, model, tokens_in, tokens_out, at)"
+                " VALUES (%s, %s, %s, %s, clock_timestamp())",
                 (did, m, msg.usage.input_tokens, msg.usage.output_tokens))
         return text
 
@@ -97,7 +99,7 @@ class AnthropicGateway:
             with conn.transaction():
                 conn.cursor().execute(
                     "INSERT INTO spine_meter (did, model, tokens_in,"
-                    " tokens_out) VALUES (%s, %s, %s, %s)",
+                    " tokens_out, at) VALUES (%s, %s, %s, %s, clock_timestamp())",
                     (did, m, msg.usage.input_tokens, msg.usage.output_tokens))
             if msg.stop_reason != "tool_use":
                 return ("".join(b.text for b in msg.content
@@ -134,8 +136,8 @@ class FakeGateway:
                 on_delta(w + " ")
         with conn.transaction():
             conn.cursor().execute(
-                "INSERT INTO spine_meter (did, model, tokens_in, tokens_out)"
-                " VALUES (%s, %s, %s, %s)",
+                "INSERT INTO spine_meter (did, model, tokens_in, tokens_out, at)"
+                " VALUES (%s, %s, %s, %s, clock_timestamp())",
                 (did, model or "fake-mind", len(prompt.split()),
                  len(self.reply.split())))
         return self.reply
@@ -157,8 +159,8 @@ class FakeActingGateway:
         ensure_schema(conn)
         with conn.transaction():
             conn.cursor().execute(
-                "INSERT INTO spine_meter (did, model, tokens_in, tokens_out)"
-                " VALUES (%s, %s, %s, %s)",
+                "INSERT INTO spine_meter (did, model, tokens_in, tokens_out, at)"
+                " VALUES (%s, %s, %s, %s, clock_timestamp())",
                 (did, model or "fake-acting-mind", len(prompt.split()), 12))
         notes, last = [], ""
         for step in self.script:

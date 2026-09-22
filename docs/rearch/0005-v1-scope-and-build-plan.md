@@ -865,6 +865,29 @@ from park to claim with evidence named) · docs written in the close loop ·
 federation (the seam is L3-master's second person; a directory arrives with
 a proof's need) · MITL's factories · multi-host placement (P7).
 
+- **P6 cure sp1 (kernel)** ✅ **BUILT 2026-09-21 — walk #7's kernel wounds
+  (W5k · W8 · W12 · W14 · W16 · W17 · W19), the glass half owed to the next
+  builder.** Suite **202** green (178 → 202; `tests/test_cure_walk7.py`, 8 laws;
+  fixtures `watch-v0.json` + `ask-v0.json` new, `proof-v0.json` +3). The root
+  wound W14 was a SENSE inversion, not a stuck state: the kernel judged a watch
+  green while its condition held; every watch the monitor mind authored (and JB
+  read) was an alert — now a watch is RED when `metric op threshold` holds,
+  judged on every beat, red ↔ green recorded (`orreth.watch.turned.v1`, `since`),
+  the loop waking on the red transition alone. W16's premise was a misread (the
+  second ask HAS its meter row); its cure is the seat words. What stays honest:
+  the ontology slice is **v0** — the covenant paragraph for every body plus the
+  best-matching passage from MITL's corpus per `ontology` entry a template names
+  (full-text rank, not understanding); the human's zone defaults to
+  `SPINE_HUMAN_ZONE` = America/Denver until the person's profile carries it; a
+  runner's "cannot act" is read from its reply's opening words (the seat words
+  teach it), not from a marker it sets; whether the REAL monitor mind calls
+  add-watch on "propose a watch …" is the walk's to prove. The glass builder
+  wires: the code row for `/intentions/stop`'s hold (`level` · `needs_code` ·
+  `code_ok`; `/confirm` → `step: "code"`), `/monitor`'s `state` · `since` ·
+  `reads`, the `refused` ask status and `orreth.ask.refused.v1` in the chat,
+  `orreth.watch.turned.v1` on the feed, `zone` on `/ask`, `blocked` ·
+  `blocked_note` on `/intentions`.
+
 ## The intent (0007) — opened 2026-09-19 on block 11's locks, BEFORE P6
 
 - **intent sp1 — the Analyzer, the kind of an ask, the fifth rail** ✅

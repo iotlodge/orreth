@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch intent sp1, the fifth firmware-rail · 2026-09-19
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W8 · W14 · 2026-09-21
 """The intent loop — the fifth firmware-rail (canon 0007, block 11).
 
 Human INTENTION is the topmost origin of work. An intention is a record
@@ -16,6 +17,15 @@ always stop what the machine manages — the kernel's intentions included
 (kernel DUTIES stay immutable; a standing PROGRAM rests on the human's
 word). "State is an outcome of applied Intent" (P24): every act here
 wears the marker of the intention it serves.
+
+Walk #7's cures (2026-09-21): the loop wakes on a watch's red TRANSITION
+alone (`monitor.judge`), never on a standing red (W14); a runner that
+says it CANNOT ACT (its reply opens with the words) is heard once — an
+`improvement` marker under the intention — and the loop plans nothing
+more for that intention until the crew changes (W8); and the stop of ANY
+intention asks for the code first — a human's is L3-code, the kernel's
+is L3-master with the asker's code before the master's click (W5, JB's
+lock).
 """
 from __future__ import annotations
 
@@ -31,6 +41,7 @@ SERVES = ("business", "security", "resiliency", "compliance", "cost")
 KINDS = ("human", "role", "kernel")
 ASK_KINDS = ("thought", "objective", "intention")      # P23: the ask wears its kind
 WATCH_RED = "watch-red"                                # seeded by the kernel (markers.SEED)
+CANNOT_ACT = "cannot act"                              # the runner's honest opening (W8)
 
 RESILIENCY = {                    # the first Infinite Horizon Intention (0007)
     "words": "keep this world resilient: when a watch goes red, get it green",
@@ -60,6 +71,12 @@ def ensure_schema(conn) -> None:
             " at timestamptz NOT NULL DEFAULT now())")
         cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS spine_intent_turns_cause"
                     " ON spine_intent_turns (cause) WHERE cause IS NOT NULL")
+        # W8: the runner said it cannot act — the crew's shape when it said so;
+        # the loop plans nothing more for this intention until the crew changes
+        cur.execute("ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS blocked_crew text")
+        cur.execute("ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS blocked_note text")
+        cur.execute("ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS"
+                    " heard boolean NOT NULL DEFAULT false")   # the runner's reply, judged once
 
 
 # ---- the kind of an ask (P23): the words propose it, the human flips it ----
@@ -121,7 +138,9 @@ def read_words(text: str) -> dict:
 
 # ---- the record ----
 _COLS = ("intention_id, words, serves, kind, interests, planner, runner, every_s, gates,"
-         " active, stopped_by, stopped_at, added_by, marker, session, next_at, last_at, added_at")
+         " active, stopped_by, stopped_at, added_by, marker, session, next_at, last_at, added_at,"
+         " blocked_crew, blocked_note")
+_NCOLS = 20
 
 
 def _dict(r) -> dict:
@@ -132,7 +151,8 @@ def _dict(r) -> dict:
             "stopped_at": r[11].isoformat() if r[11] else None, "added_by": r[12],
             "marker": r[13], "session": r[14],
             "next_at": r[15].isoformat() if r[15] else None,
-            "last_at": r[16].isoformat() if r[16] else None, "added_at": r[17].isoformat()}
+            "last_at": r[16].isoformat() if r[16] else None, "added_at": r[17].isoformat(),
+            "blocked": r[18] is not None, "blocked_note": r[19]}
 
 
 def declare(conn, words: str, *, serves: str, kind: str, by: str,
@@ -223,20 +243,33 @@ def listing(conn, *, serves: str | None = None, kind: str | None = None,
         (ev.scope(), serves, serves, kind, kind, active, active, limit))
     out = []
     for r in cur.fetchall():
-        d = _dict(r[:18])
-        d.update(objectives=int(r[18]), observations=int(r[19]), turns=int(r[20]))
+        d = _dict(r[:_NCOLS])
+        d.update(objectives=int(r[_NCOLS]), observations=int(r[_NCOLS + 1]), turns=int(r[_NCOLS + 2]))
         out.append(d)
     return out
+
+
+def stop_demand(kind: str) -> dict:
+    """What the stop of an intention demands (W5, JB's lock 2026-09-21;
+    conformance `stop_demand`): a human's or a role's intention rests on
+    the asker's CODE (L3-code); the kernel's needs the asker's code AND a
+    declared master's click (L3-master, `needs_code`). The order built:
+    the asker's code first, then the master confirms — the intention
+    rests only when both stand."""
+    if kind == "kernel":
+        return {"level": "L3-master", "needs_code": True}
+    return {"level": "L3-code", "needs_code": True}
 
 
 def stop(conn, intention_id: str, by: str, *, proof: str | None = None,
          confirmed_by: str | None = None) -> dict:
     """The human's stop (rule 11): recorded on the row and on the rail,
-    never a deletion; the loop does not turn again for it. Stopping one
-    of the KERNEL's own intentions is grave (P6 sp1): it demands
-    L3-master — a second named person confirms, never the asker — so a
-    bare stop on a kernel intention raises `proof.ProofRequired` and the
-    door holds the act instead; the proven stop carries its level."""
+    never a deletion; the loop does not turn again for it. Stopping ANY
+    intention is grave (W5): a bare stop raises `proof.ProofRequired` at
+    the level `stop_demand` names and the door holds the act instead —
+    a human's intention rests on the right code (L3-code); the kernel's
+    on the asker's code and then a master's click (L3-master). The
+    proven stop carries its level and who confirmed."""
     from .proof import ProofRequired
     ensure_schema(conn); outbox.ensure_schema(conn)
     cur = conn.cursor()
@@ -247,10 +280,13 @@ def stop(conn, intention_id: str, by: str, *, proof: str | None = None,
         raise KeyError(intention_id)
     if not row[1]:
         return get(conn, intention_id)      # already at rest: one face
-    if row[2] == "kernel" and proof != "L3-master":
-        raise ProofRequired("L3-master", f"stopping the kernel's intention “{row[3]}”")
+    demand = stop_demand(row[2])
+    if proof != demand["level"]:
+        whose = {"kernel": "the kernel's", "role": "the role's"}.get(row[2], "the human's")
+        raise ProofRequired(demand["level"], f"stopping {whose} intention “{row[3]}”",
+                            needs_code=demand["needs_code"])
     marker = {"kind": "intention", "id": row[0], "parent": None, "by": by}
-    payload = {"ref": intention_id, "hash": "sha256:-", "by": by, "proof": proof or "L1"}
+    payload = {"ref": intention_id, "hash": "sha256:-", "by": by, "proof": proof}
     if confirmed_by:
         payload["confirmed_by"] = confirmed_by
     e = ev.make_envelope(
@@ -287,6 +323,9 @@ def plan(conn, intention: dict, *, cause: dict | None, observed: str) -> dict:
         cur.execute("SELECT turn_id FROM spine_intent_turns WHERE cause = %s", (cause["id"],))
         if cur.fetchone():
             return {"planned": False, "intention_id": intention["intention_id"]}
+    if _blocked(conn, intention):        # W8: the runner cannot act — nothing more until the crew changes
+        return {"planned": False, "blocked": True, "intention_id": intention["intention_id"],
+                "note": intention.get("blocked_note")}
     text = (f"INTENTION (serves {intention['serves']}): {intention['words']}\n"
             f"OBSERVED: {observed}\n"
             "Reply with the ONE next objective for the crew that serves this intention — "
@@ -327,19 +366,87 @@ def on_marker(conn, marker: dict, ref: str, note: str | None) -> list[dict]:
 
 
 def _watch_transitions(conn) -> list[dict]:
-    """Watches judged; the ones newly red (first seen red, or green before)."""
+    """Watches judged by the monitor (W14): the ones that TURNED red on
+    this beat — a red transition, recorded there as a fact; a standing
+    red returns nothing here, ever."""
     from . import monitor
-    snap = monitor.snapshot(conn, rails=False)
+    return [w for w in monitor.judge(conn) if w["to"] == "red"]
+
+
+def crew_hash(conn) -> str:
+    """The crew's shape — every body's name and declared capabilities —
+    hashed: when it changes, a runner that could not act may now."""
     cur = conn.cursor()
-    cur.execute("SELECT watch_id, last_ok FROM spine_watches WHERE scope = %s", (ev.scope(),))
-    last = dict(cur.fetchall())
-    red = [w for w in snap["watches"] if not w["ok"] and last.get(w["watch_id"]) is not False]
+    cur.execute("SELECT DISTINCT ON (name) name, capabilities FROM spine_joins"
+                " WHERE scope = %s ORDER BY name, join_id DESC", (ev.scope(),))
+    shape = sorted((n, json.loads(c or "[]")) for n, c in cur.fetchall())
+    return ev.content_hash(shape)
+
+
+def cannot_act(reply: str | None) -> bool:
+    """The runner's honest word (the system words teach it): a reply
+    that OPENS with 'cannot act' says the body lacks the tools for this
+    objective. Only the opening counts — a reply that merely mentions
+    the words is a reply."""
+    head = " ".join((reply or "").split()).lower().lstrip("*#-> ")
+    return head.startswith(CANNOT_ACT)
+
+
+def _blocked(conn, intention: dict) -> bool:
+    """Is this intention blocked — its runner said it cannot act and the
+    crew has not changed since? A changed crew lifts the block (recorded
+    on the row) and the loop plans again."""
+    if not intention.get("blocked"):
+        return False
+    cur = conn.cursor()
+    cur.execute("SELECT blocked_crew FROM spine_intentions WHERE intention_id = %s",
+                (intention["intention_id"],))
+    row = cur.fetchone()
+    if row is None or row[0] is None:
+        return False
+    if row[0] == crew_hash(conn):
+        return True
     with conn.transaction():
-        c = conn.cursor()
-        for w in snap["watches"]:
-            c.execute("UPDATE spine_watches SET last_ok = %s WHERE watch_id = %s",
-                      (bool(w["ok"]), w["watch_id"]))
-    return red
+        conn.cursor().execute("UPDATE spine_intentions SET blocked_crew = NULL, blocked_note = NULL"
+                              " WHERE intention_id = %s", (intention["intention_id"],))
+    intention["blocked"], intention["blocked_note"] = False, None
+    return False
+
+
+def _hear_runners(conn) -> list[dict]:
+    """Every objective the crew replied to is heard ONCE: a runner that
+    opened with 'cannot act' marks an `improvement` under the intention
+    ("runner cannot act: …") and blocks the intention until the crew
+    changes — the loop never files the same objective at a body that
+    said it cannot do it (0007's honest limit, W8)."""
+    from . import markers
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT t.turn_id, i.intention_id, i.marker, i.runner, i.blocked_crew, a.ask_id, a.reply,"
+        " coalesce(j.name, i.runner, 'the crew')"
+        " FROM spine_intent_turns t"
+        " JOIN spine_intentions i ON i.intention_id = t.intention_id"
+        " JOIN spine_asks a ON a.ask_id = t.objective_ask"
+        " LEFT JOIN LATERAL (SELECT name FROM spine_joins WHERE did = a.served_by"
+        "   ORDER BY join_id DESC LIMIT 1) j ON true"
+        " WHERE NOT t.heard AND a.status IN ('replied', 'refused') AND i.scope = %s", (ev.scope(),))
+    heard = []
+    for tid, iid, marker, runner, blocked, aid, reply, who in cur.fetchall():
+        with conn.transaction():
+            conn.cursor().execute("UPDATE spine_intent_turns SET heard = true WHERE turn_id = %s", (tid,))
+        if not cannot_act(reply):
+            continue
+        first = " ".join((reply or "").split())[:200]
+        note = f"runner cannot act: {who} said “{first}” — needs a body with the tools for it"
+        if blocked is None:                                  # ONCE per block
+            m = markers.set_marker(conn, "improvement", ref=aid, by="the kernel",
+                                   parent=marker, note=note)
+            with conn.transaction():
+                conn.cursor().execute(
+                    "UPDATE spine_intentions SET blocked_crew = %s, blocked_note = %s"
+                    " WHERE intention_id = %s", (crew_hash(conn), note, iid))
+            heard.append({"intention_id": iid, "objective_ask": aid, "improvement": m["id"]})
+    return heard
 
 
 def _due(conn) -> list[dict]:
@@ -405,4 +512,5 @@ def turn(conn) -> dict:
             markers.dispatch_interests(conn, m, w["watch_id"], note)   # → on_marker → the plan
     due = _due(conn)
     filed = _file_objectives(conn)
-    return {"observed": observed, "due": due, "filed": filed}
+    heard = _hear_runners(conn)          # W8: a runner that cannot act is heard once
+    return {"observed": observed, "due": due, "filed": filed, "heard": heard}
