@@ -1,6 +1,6 @@
 # 0009 — The Old World, Carried
 
-*Status: **DRAFT for JB's lock (2026-09-22).** Author: Claude Fable 5.1
+*Status: **LOCKED 2026-09-22 — JB's three locks: (1) the organs are built on a PARALLEL PYTHON TRACK beside the port ("Phase 6.5 — THE ORGANS", sliced in 0005); (2) ONE services registry (tool · mcp · store · source · mind) on one lifecycle ladder with TWO keeper bodies — the Tools keeper and the Stable keeper; (3) the old world kept as tag `main-v0.72-old-world` (main's head 3f88cb4) and branch `old-world/main`, both pushed, never deleted. Locks 3 and 5 below (parked rows to unpark; the proof that pays RAG) stay open for JB's second reading.** Author: Claude Fable 5.1
 (claude-fable-5-1). Docs only — nothing in the spine moved for this page.*
 
 ## Why this page exists

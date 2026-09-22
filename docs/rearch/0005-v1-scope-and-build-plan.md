@@ -1039,6 +1039,54 @@ than one session each. Close conditions: every fixture kind ported; JB
 walks the same four P6 specs plus the P3–P5 specs against the Rust kernel
 green; docs; VERSION 1.0 in the release commit.
 
+## Phase 6.5 — THE ORGANS (a parallel Python track beside the port — opened 2026-09-22 on JB's locks in 0009)
+
+JB, 2026-09-22: the first architecture's organs — the Stable, the Tool Farm
+and Toolshed, the Farms, RAG — must not be lost, and the kernel still lacks a
+Tools firmware for the lifecycle of tools and a Stable firmware for the
+lifecycle of LLMs "regardless of where they reside" (the LiteLLM and
+OpenRouter objective). Bodies are Python/LangGraph by canon (0004 · 0008),
+and the fixtures' reference is the Python spine, so the organs are built
+HERE, now, beside the port; the kernel-side seams they need (registries,
+routing tables, the meter) are then ported in P7 against their fixtures.
+Sacred-crate rule untouched; every wire shape adds a fixture; JB walks.
+Two tracks never share a builder's files at once — the fixtures and
+`test_conformance.py` are shared, so landings are sequenced.
+
+- **sp1 — the services registry, one ladder.** One registry for every
+  service the kernel governs — `tool · mcp · store · source · mind` — as
+  identities (0018: services as identities; each with a DID, a manifest
+  pin, a placement, secrets by NAME per 0059) on one lifecycle ladder:
+  register → version → health → retire (dormancy never deletion — the
+  roster law). The meter reads the ladder (rule 5: one door). Doors and
+  words; the crew pull shows the shelf; fixture `services-v0`.
+- **sp2 — the Tools keeper** (firmware, third kind): MCP through ONE door
+  (0059) — an MCP client that lists a server's tools into the registry,
+  versions them by manifest hash, health-checks them, retires them; the
+  env-secrets law (a key in ZERO records); tools placed like bodies; the
+  harness checks tools; the human asks the keeper "what tools are here?"
+  "retire X" (L2/L3 by the ladder).
+- **sp3 — the Stable keeper** (firmware, third kind — 0004's LLM-lifecycle
+  watcher, ada's seat): a registry of minds wherever they reside —
+  Anthropic direct · LiteLLM · OpenRouter · local — each a service on the
+  ladder with its route, cost per token, health, pins; routing policy per
+  body and per ask (the five-eyed market, 0058); the meter in DOLLARS; the
+  A/B harness on a model change ("model changed without an announcement");
+  gateway.py becomes the one door that consults the registry. Fixture
+  `minds-v0` (routing decisions, cost arithmetic).
+- **sp4 — the embedding lane and the Farms.** pgvector on the ground; one
+  embedding truth (0069: vectors wear their model); understanding gains
+  the meaning axis beside tsvector; sources as identities (the Basket, the
+  byte law); the Farm = services of kind `source` and `store` on the same
+  ladder.
+- **sp5 — RAG as a capability**, paid by a proof: E-RAG's re-walk on the
+  new kernel (0009 lock 5, open) — the seven RAG projections over one
+  signed log (the seven-RAGs law) as the first capability atop the
+  organs.
+
+Each spoonful lands whole (built + fixture + JB's walk) or confesses
+PARTIAL; the ledger 0009 rows it carries move to CARRIED in its close.
+
 ## The intent (0007) — opened 2026-09-19 on block 11's locks, BEFORE P6
 
 - **intent sp1 — the Analyzer, the kind of an ask, the fifth rail** ✅
