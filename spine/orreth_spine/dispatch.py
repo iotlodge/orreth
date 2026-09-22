@@ -12,6 +12,7 @@ point)."""
 from __future__ import annotations
 
 import json
+import re
 import secrets
 
 import pika
@@ -40,6 +41,22 @@ def absent(conn, name: str) -> str | None:
         return "refused at birth: " + "; ".join(r["reasons"]) + "; fix its template to seat it"
     if joined is None:
         return "no body of that name has joined this world"
+    return None
+
+
+def address(text: str, names) -> str | None:
+    """W7 (walk #7): a name at the HEAD of an ask selects that body —
+    "echo, what is today's date?" · "@echo …" · "librarian: …" — when the
+    name is a body of this world (`names`). Anything else is unaddressed
+    and the fan-out stays. Case does not matter; the name comes back as
+    the body spells it."""
+    m = re.match(r"^\s*@?([A-Za-z0-9_-]+)\s*[,:]\s*\S", text or "")
+    if not m:
+        return None
+    want = m.group(1).lower()
+    for n in names or ():
+        if str(n).lower() == want:
+            return str(n)
     return None
 
 

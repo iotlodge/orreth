@@ -1,7 +1,7 @@
 {
  "contract": "orreth.watch/1",
  "version": 0,
- "generated_by": "orreth_spine.monitor + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 cure sp1 (kernel), walk #7 W14",
+ "generated_by": "orreth_spine.monitor + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 cure sp1 (kernel), walk #7 W14 \u00b7 P6 cure sp2 (glass), walk #7 (the monitor's offer)",
  "generated_at": "2026-09-21",
  "cases": [
   {
@@ -153,6 +153,39 @@
    },
    "expect": {
     "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"watch_a44ed3b2a5\",\"message_id\":\"msg_0000000000000000000000w1\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T15:00:00.000Z\",\"payload\":{\"from\":\"red\",\"hash\":\"sha256:43c76b214fe0866849d4106c8f2aacc184bf3fc6b46ee572eacad9dce7ea670b\",\"metric\":\"bodies_dormant\",\"name\":\"bodies-dormant-alert\",\"op\":\">\",\"ref\":\"watch_a44ed3b2a5\",\"threshold\":0.0,\"to\":\"green\",\"value\":0},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.watch.turned.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "offer: the monitor offers a watch and names the condition",
+   "kind": "offer",
+   "input": {
+    "reply": "All bodies are alive. I can propose a watch: `bodies_dormant > 0` - red when one goes dormant."
+   },
+   "expect": {
+    "offer": {
+     "words": "bodies_dormant > 0",
+     "ask": "propose a watch that bodies_dormant > 0"
+    }
+   }
+  },
+  {
+   "name": "offer: an offer without a condition draws no button",
+   "kind": "offer",
+   "input": {
+    "reply": "I could propose a watch for that if you like."
+   },
+   "expect": {
+    "offer": null
+   }
+  },
+  {
+   "name": "offer: a condition without an offer draws no button",
+   "kind": "offer",
+   "input": {
+    "reply": "The board reads `asks_received > 72` at value 5."
+   },
+   "expect": {
+    "offer": null
    }
   }
  ]

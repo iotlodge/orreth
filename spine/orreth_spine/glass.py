@@ -79,8 +79,12 @@ def ask_view(conn, ask_id: str) -> dict | None:
             continue
         if e.get("type") == JOURNEY:
             notes.append(e.get("payload", {}).get("note", ""))
+    offer = None                     # walk #7: the monitor's OFFER, one click
+    if row[2] == "replied" and row[3] and (row[5] == "monitor" or _name_of(conn, row[4]) == "monitor"):
+        offer = monitor.offer_in(row[3])
     return {"ask_id": ask_id, "text": row[0], "person": row[1],
             "status": row[2], "reply": row[3], "served_by": row[4],
+            "offer": offer,         # {words, ask} when the monitor offered a watch
             "target": row[5],       # who the ask was routed to: a targeted
             "scope": row[6],        # command reaches only its target
             "asked_at": row[7].isoformat(),
@@ -95,6 +99,16 @@ def ask_view(conn, ask_id: str) -> dict | None:
                          if h.get("needs_code") else {})}            # code, then the master
                      if row[2] == "awaiting-confirm" and (h := json.loads(row[13] or "{}")) else None),
             "journey": [n for n in notes if n]}
+
+
+def _name_of(conn, did: str | None) -> str | None:
+    if not did or not did.startswith("did:"):
+        return None
+    cur = conn.cursor()
+    cur.execute("SELECT name FROM spine_joins WHERE did = %s AND scope = %s ORDER BY join_id DESC LIMIT 1",
+                (did, ev.scope()))
+    r = cur.fetchone()
+    return r[0] if r else None
 
 
 def asks_view(conn, limit: int = 30) -> list[dict]:
@@ -129,13 +143,13 @@ def crew_view(conn) -> list[dict]:
     cur = conn.cursor()
     cur.execute(
         "SELECT DISTINCT ON (name) name, kind, did, life, joined_at,"
-        " policy_version, template_hash, capabilities, placement FROM spine_joins"
+        " policy_version, template_hash, capabilities, placement, nature FROM spine_joins"
         " WHERE scope = %s ORDER BY name, join_id DESC", (ev.scope(),))
     alive = {b["did"]: b["alive"] for b in presence.roster(conn)}
     here = placement.ground_declares()      # P6 sp4: where this ground is
     refused = placement.refusals(conn)      # the bodies it could not seat
     cards = []
-    for name, kind, did, life, joined, pv, th, caps, plc in cur.fetchall():
+    for name, kind, did, life, joined, pv, th, caps, plc, nature in cur.fetchall():
         cur.execute("SELECT count(*), max(replied_at) FROM spine_asks"
                     " WHERE served_by = %s AND scope = %s AND status <> 'received'",
                     (did, ev.scope()))
@@ -143,9 +157,10 @@ def crew_view(conn) -> list[dict]:
         prof = json.loads(plc) if plc else dict(placement.DEFAULT)
         r = refused.pop(name, None)
         if r is not None and r["refused_at"] > joined:   # refused SINCE its last join:
-            cards.append(_refused_card(r)); continue      # the picture says so (rule 7)
+            cards.append(_refused_card(r, nature)); continue   # the picture says so (rule 7)
         cards.append({
             "name": name, "kind": kind, "did": did, "lives": life,
+            "nature": nature or "",         # W7: what it IS, one line
             "joined_at": joined.isoformat(), "policy_version": pv,
             "alive": alive.get(did),        # M2: a fresh lease, or dormant
             "template": th[:12], "capabilities": json.loads(caps or "[]"),
@@ -159,7 +174,7 @@ def crew_view(conn) -> list[dict]:
     return cards
 
 
-def _refused_card(r: dict) -> dict:
+def _refused_card(r: dict, nature: str | None = None) -> dict:
     """A body the ground could not seat: greyed, the reason in words —
     never silently absent (rule 7). Nothing to stop (rule 11): the human
     retires the refusal by fixing the template."""
@@ -167,7 +182,7 @@ def _refused_card(r: dict) -> dict:
     ground = {"cell": r["ground"]["cell"], "metal": r["ground"]["metal"], "secrets": []}
     c = placement.card(prof, ground)
     c["honored"], c["reasons"], c["why"] = False, list(r["reasons"]), "refused: " + "; ".join(r["reasons"])
-    return {"name": r["name"], "kind": r["kind"], "did": r["did"], "lives": 0,
+    return {"name": r["name"], "kind": r["kind"], "did": r["did"], "lives": 0, "nature": nature or "",
             "joined_at": None, "policy_version": None, "alive": False, "refused": True,
             "refused_at": r["refused_at"].isoformat(), "marker": r["marker"],
             "template": r["template"][:12], "capabilities": [], "placement": c,
@@ -309,12 +324,22 @@ def residents_view(conn) -> list[dict]:
     """The chat's right edge: who lives here — name, self, lives."""
     cur = conn.cursor()
     cur.execute(
-        "SELECT DISTINCT ON (name) name, did, life, joined_at, kind"
+        "SELECT DISTINCT ON (name) name, did, life, joined_at, kind, nature"
         " FROM spine_joins WHERE scope = %s ORDER BY name, join_id DESC",
         (ev.scope(),))
     return [{"name": r[0], "did": r[1], "lives": r[2],
-             "joined_at": r[3].isoformat(), "kind": r[4]}
+             "joined_at": r[3].isoformat(), "kind": r[4], "nature": r[5] or ""}
             for r in cur.fetchall()]
+
+
+def address_to(conn, text: str, to: list[str] | None) -> list[str] | None:
+    """W7: a name at the head of the ask selects THAT body alone — when
+    it is a body of this world (joined here, by name); the fan-out stays
+    for an unaddressed ask. The door's rule, the glass's too."""
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT name FROM spine_joins WHERE scope = %s", (ev.scope(),))
+    who = dispatch.address(text, [r[0] for r in cur.fetchall()])
+    return [who] if who else to
 
 
 def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = None):
@@ -401,7 +426,8 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                         "name": mitl.NAME, "expansion": mitl.EXPANSION,
                         "summoned": mitl.summoned(conn, qs.get("session") or None, person),
                         "ontology": {"passages": len(ont),
-                                     "files": sorted({o["path"] for o in ont})}})
+                                     "files": sorted({o["path"] for o in ont})},
+                        "citations": mitl.citations()})      # W15: path#n → a human name
             if path == "/proof":                          # P6 sp1: enrolled? who are the masters?
                 from urllib.parse import parse_qs
                 qs = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
@@ -529,6 +555,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                         except (ValueError, markers.UnknownKind) as e:
                             return self._json(400, {"error": str(e)})
                         return self._json(201, {"intention": made})
+                    to = address_to(conn, text, to)       # W7: "echo, …" reaches echo alone
                     out = dispatch.submit_ask(conn, text, person=person,
                                               to=to, window=window,
                                               session=session, kind=kind,

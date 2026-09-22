@@ -1,7 +1,7 @@
 {
  "contract": "orreth.ask/1",
  "version": 0,
- "generated_by": "orreth_spine.dispatch + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 cure sp1 (kernel), walk #7 W19",
+ "generated_by": "orreth_spine.dispatch + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 cure sp1 (kernel), walk #7 W19 \u00b7 P6 cure sp2 (glass), walk #7 W7 (address)",
  "generated_at": "2026-09-21",
  "cases": [
   {
@@ -65,6 +65,62 @@
    },
    "expect": {
     "bytes": "{\"aggregate\":{\"id\":\"ask_0000000000000001\",\"sequence\":1,\"type\":\"ask\"},\"authority_chain\":[\"did:orreth:person:jb\",\"the kernel\"],\"correlation_id\":\"ask_0000000000000001\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_1\",\"kind\":\"objective\",\"parent\":null},\"message_id\":\"msg_0000000000000000000000r1\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T15:00:00.000Z\",\"payload\":{\"hash\":\"sha256:d3e291a03ae4782963d56c152558c3497b03d3883cb260905c9f0060445b581e\",\"reason\":\"refused at birth: metal gpu is not here (cpu); fix its template to seat it\",\"ref\":\"ask_0000000000000001\",\"session\":\"ses_000000000001\",\"target\":\"echo\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.ask.refused.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "address: a name at the head selects that body",
+   "kind": "address",
+   "input": {
+    "text": "echo, what is today's date?",
+    "names": [
+     "echo",
+     "librarian"
+    ]
+   },
+   "expect": {
+    "name": "echo"
+   }
+  },
+  {
+   "name": "address: @Name: \u2014 case does not matter, the body's spelling comes back",
+   "kind": "address",
+   "input": {
+    "text": "@Librarian: what do you recall?",
+    "names": [
+     "echo",
+     "librarian"
+    ]
+   },
+   "expect": {
+    "name": "librarian"
+   }
+  },
+  {
+   "name": "address: an unaddressed ask keeps the fan-out",
+   "kind": "address",
+   "input": {
+    "text": "what is echo, really?",
+    "names": [
+     "echo",
+     "librarian"
+    ]
+   },
+   "expect": {
+    "name": null
+   }
+  },
+  {
+   "name": "address: a name that is not a body of this world",
+   "kind": "address",
+   "input": {
+    "text": "planner, plan this",
+    "names": [
+     "echo",
+     "librarian"
+    ]
+   },
+   "expect": {
+    "name": null
    }
   }
  ]

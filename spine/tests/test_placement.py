@@ -173,7 +173,7 @@ def test_the_export_rows_carry_the_placement_the_body_was_born_under(pg, monkeyp
     assert by_kind["reply"]["served_by"] == echo.identity.did
     assert export.verify(b)
     lines = export.to_csv(b).splitlines()
-    assert lines[0].endswith(",placement") and lines[-1].endswith(",local · cpu")
+    assert ",placement," in lines[0] and ",local · cpu," in lines[-1]   # W11 grew target · marker_words after it
 
 
 def test_impact_on_a_placement_change_reads_the_profile_and_answers_consequential(pg, monkeypatch):

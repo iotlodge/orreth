@@ -301,12 +301,16 @@ def with_words(conn, rows: list[dict]) -> list[dict]:
                 m["words"], m["status"], m["target"] = found[m["ref"]]
     iids = [m["ref"] for m in rows if m["ref"].startswith("int_")]
     if iids and _has(conn, "spine_intentions"):
-        cur.execute("SELECT intention_id, left(words, 100), active, serves, kind FROM spine_intentions"
-                    " WHERE intention_id = ANY(%s)", (iids,))
+        cur.execute("SELECT count(*) FROM pg_attribute WHERE attrelid = to_regclass('spine_intentions')"
+                    " AND attname = 'blocked_note' AND NOT attisdropped")
+        blk = ", blocked_note" if cur.fetchone()[0] else ", NULL"
+        cur.execute("SELECT intention_id, left(words, 100), active, serves, kind" + blk +
+                    " FROM spine_intentions WHERE intention_id = ANY(%s)", (iids,))
         found = {r[0]: r[1:] for r in cur.fetchall()}
         for m in rows:
             if m["ref"] in found:
-                m["words"], m["active"], m["serves"], m["origin_kind"] = found[m["ref"]]
+                m["words"], m["active"], m["serves"], m["origin_kind"], note = found[m["ref"]]
+                m["blocked"], m["blocked_note"] = note is not None, note   # W6: waiting for a crew
     sids = [m["ref"] for m in rows if m["ref"].startswith("sch_")]
     if sids and _has(conn, "spine_schedules"):
         cur.execute("SELECT schedule_id, left(text, 100), active, kind FROM spine_schedules"

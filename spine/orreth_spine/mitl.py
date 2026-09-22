@@ -51,6 +51,17 @@ ONTOLOGY = (                                        # the Orreth ontology v0: th
     ".claude/skills/orreth-covenant/SKILL.md",
 )
 PASSAGE = 2400                                      # a passage the pack can carry whole
+TITLES = {                                          # W15: the canon in human names (the path stays in the record)
+    "docs/rearch/0001-experience-charter.md": "the experience charter",
+    "docs/rearch/0002-transport-architecture.md": "the transport architecture",
+    "docs/rearch/0003-memory-architecture.md": "the memory architecture",
+    "docs/rearch/0004-agent-architecture.md": "the agent canon",
+    "docs/rearch/0005-v1-scope-and-build-plan.md": "the build plan",
+    "docs/rearch/0006-markers-dive.md": "the markers dive",
+    "docs/rearch/0007-intent-dive.md": "the intent dive",
+    "docs/rearch/0008-the-rust-plane-and-the-port.md": "the Rust plane and the port",
+    ".claude/skills/orreth-covenant/SKILL.md": "the covenant",
+}
 KINDS = ("watch", "intention", "template", "binding", "placement", "act")
 VERDICTS = ("low", "consider", "grave — needs L3")  # sp1's ladder, in MITL's words
 
@@ -91,6 +102,57 @@ def passages(text: str, limit: int = PASSAGE) -> list[str]:
         cur = f"{cur}\n\n{para}" if cur else para
     if cur:
         out.append(cur)
+    return out
+
+
+def citation_name(path: str, heading: str | None = None, rule=None) -> str:
+    """One citation in a human's words (W15; conformance `citation_name`):
+    the file's title from TITLES (an unknown path keeps its bare name),
+    then the passage's place — `rule N` for a covenant rule, else the
+    heading with its marks and its parenthetical tail dropped, cut short.
+    "the covenant, rule 5" · "the build plan, Phase 6 — GOVERNANCE FELT"."""
+    title = TITLES.get(path) or Path(path).stem
+    if isinstance(rule, (list, tuple)) and rule:
+        a, b = int(rule[0]), int(rule[-1])
+        return f"{title}, rule {a}" if a == b else f"{title}, rules {a}–{b}"
+    if rule is not None:
+        return f"{title}, rule {int(rule)}"
+    h = (heading or "").strip().lstrip("#").strip()
+    h = re.sub(r"\*\*|__|`", "", h)
+    h = re.split(r"\s+\((?:opened|CLOSED|why|JB|block|re-sliced)", h)[0].strip()
+    h = re.sub(r"^\d{4}\s+—\s+", "", h)                # "0005 — V1 Scope…" → the title says it
+    if len(h) > 48:
+        h = h[:48].rstrip() + "…"
+    return f"{title}, {h}" if h else title
+
+
+_CITES: dict[str, dict[str, str]] = {}
+
+
+def citations(root: str | Path | None = None) -> dict[str, str]:
+    """Every passage key MITL can cite → its human name, from the same
+    files split the same way `acquire_ontology` splits them: `path#n`
+    and the bare `file.md#n` both resolve. Cached per root."""
+    base = Path(root or REPO)
+    key = str(base)
+    if key in _CITES:
+        return _CITES[key]
+    out: dict[str, str] = {}
+    for rel in ONTOLOGY:
+        p = base / rel
+        if not p.exists():
+            continue
+        heading = None
+        for i, part in enumerate(passages(p.read_text("utf-8")), 1):
+            hm = re.search(r"^#{1,6}\s+(.+)$", part, re.M)
+            first = part.lstrip()
+            if first.startswith("#"):
+                heading = hm.group(1) if hm else heading
+            rules = [int(n) for n in re.findall(r"^(\d+)\.\s+\*\*", part, re.M)] if rel.endswith("SKILL.md") else []
+            name = citation_name(rel, heading, rules or None)
+            out[f"{rel}#{i}"] = name
+            out.setdefault(f"{Path(rel).name}#{i}", name)
+    _CITES[key] = out
     return out
 
 
@@ -550,8 +612,12 @@ def impact(conn, change: dict, *, person: str, session: str | None = None) -> di
     t = read_ground(conn, change)
     v = verdict(t)
     ground = describe(t)
-    head = t["words"] or f"a {t['kind']}" + (f" {t['ref']}" if t["ref"] else "")
-    text = (f"EXPECTED IMPACT? {head}\n"
+    head = (t["words"] or next((i["words"] for i in t["intentions"] if i.get("words")), None)
+            or next((w["name"] for w in t["watches"] if w.get("name")), None)
+            or f"the {t['kind']}" + (f" {t['ref']}" if t["ref"] else ""))
+    # W6: the ask's words START with the change — the Analyzer's twig reads
+    # "the change: keep this world resilient…", never the prompt's shape
+    text = (f"the change: {head} — expected impact?\n"
             f"THE CHANGE: a {t['kind']}" + (f" ({t['ref']})" if t["ref"] else "") + "\n"
             "THE GROUND (read by the kernel — this is the record):\n- " + "\n- ".join(ground) + "\n"
             f"VERDICT BY THE LADDER: {v}\n"

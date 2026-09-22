@@ -204,6 +204,8 @@ def ensure_schema(conn) -> None:
                     " zone text")          # W12: the human's zone, when the ask names it
         cur.execute("ALTER TABLE spine_sessions ADD COLUMN IF NOT EXISTS"
                     " zone text")
+        cur.execute("ALTER TABLE spine_joins ADD COLUMN IF NOT EXISTS"
+                    " nature text")        # W7: what the body IS, in one line
 
 
 def _next_seq(cur, ask_id: str) -> int:
@@ -231,6 +233,9 @@ class Resident:
         self.kind = self.template.get("kind", "resident")
         self.function = self.template.get("function")
         self.charge = self.template.get("charge", "")
+        # W7 (walk #7): what a body IS, in one line a newcomer reads on its
+        # chip and its card — the template's word, a binding's when it seats
+        self.nature = str(self.template.get("nature") or "")
         # a workspace binding (0004): ONE workspace-firmware body, a binding
         # per pull — the binding names the seat and adds its prompt/skills
         self.binding = None
@@ -239,6 +244,7 @@ class Resident:
             self.name = self.binding["name"]
             self.function = f"workspace:{self.binding['pull']}"
             self.charge = f"{self.charge} {self.binding.get('prompt', '')}".strip()
+            self.nature = str(self.binding.get("nature") or self.nature)
             self.template["capabilities"] = list(dict.fromkeys(
                 self.template.get("capabilities", [])
                 + self.binding.get("capabilities", [])))   # the seat's tools
@@ -302,13 +308,15 @@ class Resident:
             cur.execute(
                 "INSERT INTO spine_joins (did, name, life, template_hash,"
                 " policy_version, policy_hash, sig, scope, kind, capabilities,"
-                " interests, placement) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                " interests, placement, nature)"
+                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (self.identity.did, self.name, life, self.template_hash,
                  self.policy["version"], self.policy["hash"], sig,
                  ev.scope(), self.kind,        # joined THIS world, as my kind,
                  json.dumps(self.template.get("capabilities", [])),   # declared
                  json.dumps(self.template.get("interests", [])),      # + interests
-                 ev.canonical(self.placement).decode("ascii")))       # + where I stand
+                 ev.canonical(self.placement).decode("ascii"),        # + where I stand
+                 self.nature or None))                                # + what I am (W7)
         from . import scheduler                  # the role schedules the
         for sch in self.template.get("schedules", []):   # template declares are
             scheduler.declared(conn, self.name, "role", sch["text"],   # registered

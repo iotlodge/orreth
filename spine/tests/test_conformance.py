@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch canon 0008, the conformance suite's first fixture · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): watch · stop_demand · absent_words · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass): address · offer · citation_name · 2026-09-21
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -63,6 +64,12 @@ def test_fixture(contract, case):
     elif kind == "watch_reads":
         assert monitor.reads(inp) == exp["reads"]
     # ---- orreth.ask/1 (W19): the door's refusal for a body that is not here ----
+    elif kind == "address":                      # W7: a name at the head selects that body
+        assert dispatch.address(inp["text"], inp["names"]) == exp["name"]
+    elif kind == "offer":                        # walk #7: the monitor's offer, read from its words
+        assert monitor.offer_in(inp["reply"]) == exp["offer"]
+    elif kind == "citation_name":                # W15: a citation in a human's name
+        assert mitl.citation_name(inp["path"], inp["heading"], inp["rule"]) == exp["name"]
     elif kind == "absent_words":
         assert dispatch.refusal_words(inp["name"], inp["reason"]) == exp["reply"]
     # ---- orreth.compliance/1 (P6 sp2): the hash chain, the chain's status, the verifier ----

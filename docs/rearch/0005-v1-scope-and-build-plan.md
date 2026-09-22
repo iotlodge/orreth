@@ -887,6 +887,26 @@ a proof's need) · MITL's factories · multi-host placement (P7).
   `reads`, the `refused` ask status and `orreth.ask.refused.v1` in the chat,
   `orreth.watch.turned.v1` on the feed, `zone` on `/ask`, `blocked` ·
   `blocked_note` on `/intentions`.
+- **P6 cure sp2 (glass)** ✅ **BUILT 2026-09-21 — walk #7's glass wounds (W1–W4 ·
+  W5g · W6 · W7 · W10 · W11 · W13 · W15 · W18 · the monitor's "propose it" · the
+  feed wiring), the kernel cures wired into the page.** Suite **220** green
+  (202 → 220; `tests/test_cure_walk7_glass.py`, 8 laws; fixtures `ask-v0` +4
+  `address`, `watch-v0` +3 `offer`, `mitl-v0` +3 `citation_name`). In the glass:
+  ONE code row (`codeRow` / `holdRow`) serves the re-enroll, the L3-code stop and
+  the kernel's code-then-master stop; steps collapse on success and every refusal
+  names its step; the QR alone, the secret behind a click; the Analyzer folds
+  (repeats counted, thoughts under their objective, objectives only in the band,
+  observations folded, blocked intentions named); "echo, …" reaches echo alone;
+  every chip and card says what the body IS (`nature` on templates, bindings, the
+  join row, `/crew`, `/residents`); copy on every reply and the export table; the
+  export's why in words and the fan-out's target; the chat yields to an open pull
+  and a click raises the pull; citations in human names; the rail reads `/crew`
+  and greys a refused body. What stays honest: the glass is JB's to walk (L3-01
+  and MITL 3.3 re-walk owed); the monitor's offer button appears only when the
+  mind names its condition in backticks; `nature` is a template's one line, not
+  a body's self-description; `citations` name a passage by its heading (or the
+  covenant's rules it holds), not by the sentence cited; a refused body's nature
+  is read from its LAST join row (a body never seated here has none).
 
 ## The intent (0007) — opened 2026-09-19 on block 11's locks, BEFORE P6
 

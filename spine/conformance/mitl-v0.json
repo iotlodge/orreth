@@ -1,7 +1,7 @@
 {
  "contract": "orreth.impact/1",
  "version": 0,
- "generated_by": "orreth_spine.mitl + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 sp3",
+ "generated_by": "orreth_spine.mitl + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 sp3 \u00b7 P6 cure sp2 (glass), walk #7 W15 (citation_name)",
  "generated_at": "2026-09-21",
  "cases": [
   {
@@ -283,6 +283,42 @@
    },
    "expect": {
     "verdict": "low"
+   }
+  },
+  {
+   "name": "citation_name: a covenant rule",
+   "kind": "citation_name",
+   "input": {
+    "path": ".claude/skills/orreth-covenant/SKILL.md",
+    "heading": "## The rules - non-negotiable",
+    "rule": 5
+   },
+   "expect": {
+    "name": "the covenant, rule 5"
+   }
+  },
+  {
+   "name": "citation_name: the build plan's phase, the parenthetical dropped",
+   "kind": "citation_name",
+   "input": {
+    "path": "docs/rearch/0005-v1-scope-and-build-plan.md",
+    "heading": "## Phase 6 - GOVERNANCE FELT (opened 2026-09-21)",
+    "rule": null
+   },
+   "expect": {
+    "name": "the build plan, Phase 6 - GOVERNANCE FELT"
+   }
+  },
+  {
+   "name": "citation_name: a path outside the canon keeps its bare name",
+   "kind": "citation_name",
+   "input": {
+    "path": "notes/elsewhere.md",
+    "heading": "# Elsewhere",
+    "rule": null
+   },
+   "expect": {
+    "name": "elsewhere, Elsewhere"
    }
   }
  ]

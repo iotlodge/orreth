@@ -37,6 +37,7 @@ import csv
 import hashlib
 import io
 import json
+import re
 
 from . import envelope as ev
 from .markers import INCLUDES, MARKER_SET
@@ -57,7 +58,7 @@ KIND_OF = {ASK_RECEIVED: "ask", CONFIRM_NEEDED: "hold", PROOF_ATTEMPT: "proof",
            TOOL_CALLED: "tool", ASK_REFUSED: "refused"}
 CSV_COLUMNS = ("at", "kind", "ref", "person", "authority_chain", "chain_status", "proof",
                "marker_kind", "marker_id", "marker_parent", "marker_root", "served_by",
-               "tool", "words", "words_truncated", "placement")
+               "tool", "words", "words_truncated", "placement", "target", "marker_words")
 
 
 # ---- the hash chain (the wire contract; the fixture's law) ---------------------------
@@ -261,9 +262,43 @@ def build(conn, *, person: str, session: str | None = None,
                 row["placement"] = stands.get(row.get("served_by"))   # a body's act: where it stood
                 rows.append(row)
     rows.sort(key=lambda r: (r["at"], r["_order"]))
+    served = _marker_words(conn, {(r.get("marker") or {}).get("id") for r in rows})   # W11
     for r in rows:
-        r.pop("_order", None)
+        r.pop("_order", None)                       # P11: a withheld row borrows no words either
+        r["marker_words"] = None if r.get("words_withheld") else served.get((r.get("marker") or {}).get("id"))
     return seal(rows, scope=scope, world=world, signer=signer)
+
+
+def _marker_words(conn, ids: set) -> dict[str, str | None]:
+    """W11: the WHY in words — for each marker, the words of the objective
+    it serves: its parent's when it has one (a thought under an
+    objective, an objective under an intention's turn), its own when it
+    is a root. Read through `markers.with_words`: an ask's text, an
+    intention's words, a schedule's text, else the marker's note."""
+    from . import markers
+    ids = {i for i in ids if i}
+    if not ids:
+        return {}
+    cur = conn.cursor()
+    cur.execute("SELECT marker_id, parent FROM spine_markers WHERE marker_id = ANY(%s)", (list(ids),))
+    parent = dict(cur.fetchall())
+    want = {parent.get(i) or i for i in ids}
+    cur.execute("SELECT marker_id, kind, parent, ref, by_did, note, at, 0 FROM spine_markers"
+                " WHERE marker_id = ANY(%s)", (list(want),))
+    found = {m["id"]: m for m in markers.with_words(conn, [markers._row(r) for r in cur.fetchall()])}
+    # P11: words borrowed from an ask in an opt-out session stay there — withheld here too
+    refs = [m["ref"] for m in found.values() if m["ref"].startswith("ask_")]
+    if refs:
+        cur.execute("SELECT ask_id FROM spine_asks WHERE ask_id = ANY(%s) AND coalesce(state, 'in') <> 'in'", (refs,))
+        for (withheld,) in cur.fetchall():
+            for m in found.values():
+                if m["ref"] == withheld:
+                    m["words"] = m["note"] = None
+    out = {}
+    for i in ids:
+        m = found.get(parent.get(i) or i)
+        out[i] = (m.get("words") or m.get("note") or None) if m else None
+    return out
 
 
 def _row(e: dict, kind: str, oid: int, asks: dict, intentions: set, marker_ids: set,
@@ -306,7 +341,7 @@ def _row(e: dict, kind: str, oid: int, asks: dict, intentions: set, marker_ids: 
                 kind = "include"
     row = {"at": e["occurred_at"], "kind": kind, "ref": ref, "person": person,
            "authority_chain": list(e.get("authority_chain") or []), "chain_status": None,
-           "proof": proof,
+           "proof": proof, "target": (a or {}).get("target"),     # W11: "jb → echo (ask)" in a fan-out
            "marker": ({"kind": mk.get("kind"), "id": mk.get("id"), "parent": mk.get("parent"),
                        "root": (a or {}).get("root") or (mk.get("id") if mk.get("parent") is None else None)}
                       if mk else None),
@@ -331,15 +366,28 @@ def _has(conn, table: str) -> bool:
 
 # ---- the human's CSV ----------------------------------------------------------------
 
+def _plain(text: str) -> str:
+    """W10: plain words for a human's table — the markdown marks fall
+    away (headings, bold, bullets, code ticks), the first line stays
+    whole; the JSON bundle keeps the exact words."""
+    t = re.sub(r"^\s{0,3}#{1,6}\s+", "", text or "", flags=re.M)
+    t = re.sub(r"\*\*(.+?)\*\*", r"\1", t)
+    t = re.sub(r"(?<![\w*])\*([^*\n]+)\*(?![\w*])", r"\1", t)
+    t = re.sub(r"^\s*[-*•]\s+", "· ", t, flags=re.M)
+    t = t.replace("`", "")
+    return t.strip()
+
+
 def to_csv(bundle: dict) -> str:
     """One line per row; the chain joined by ' → '; words cut at 500 with
-    an ellipsis and the cut marked in its own column."""
+    an ellipsis and the cut marked in its own column; the words column
+    in plain words (W10), the why in words (W11)."""
     out = io.StringIO()
     w = csv.writer(out, lineterminator="\n")
     w.writerow(CSV_COLUMNS)
     for r in bundle["rows"]:
         m = r.get("marker") or {}
-        words = " | ".join(f"{k}: {v}" for k, v in (r.get("words") or {}).items() if v)
+        words = " | ".join(f"{k}: {_plain(v)}" for k, v in (r.get("words") or {}).items() if v)
         if r.get("words_withheld"):
             words = f"(withheld — {r['words_withheld']})"
         cut = len(words) > WORDS_MAX
@@ -351,5 +399,6 @@ def to_csv(bundle: dict) -> str:
                     m.get("parent") or "", m.get("root") or "", r.get("served_by") or "",
                     r.get("tool") or "", words, "yes" if cut else "",
                     (f"{r['placement']['cell']} · {r['placement']['metal']}"
-                     if r.get("placement") else "")])
+                     if r.get("placement") else ""),
+                    r.get("target") or "", _plain(r.get("marker_words") or "")])
     return out.getvalue()

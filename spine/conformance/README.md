@@ -36,6 +36,18 @@ the same files, unchanged — before any module earns the word "ported".
     the door's plain refusal for an ask to a body that is not here ("<name> is
     not here — <reason>"); the `encode` case carries `orreth.ask.refused.v1`
     (`target` · `reason` · `session`, the chain `[person, "the kernel"]`).
+  - `address` (ask-v0, W7) — `input.text` + `input.names` (the bodies of this world) →
+    `expect.name`: a name at the HEAD of an ask ("echo, …" · "@echo …" · "librarian: …")
+    selects that body alone, spelled as the body spells it; anything else is `null`
+    and the fan-out stays.
+  - `offer` (watch-v0, walk #7) — `input.reply` (the monitor's words) → `expect.offer`:
+    `{words, ask}` when the reply offers to propose a watch AND names the condition in
+    backticks (`bodies_dormant > 0` → "propose a watch that bodies_dormant > 0"), else
+    `null` — the glass draws one click, "propose it", only from an honest offer.
+  - `citation_name` (mitl-v0, W15) — `input.path` + `input.heading` (+ `input.rule`) →
+    `expect.name`: the canon file's human title ("the covenant" · "the build plan" ·
+    "the agent canon" …) and the passage's place — `rule N`, or the heading with its
+    marks and its parenthetical tail dropped; the path stays in the record.
   - `hash_chain` (export-v0) — `input.rows` → `expect.hashes` and `expect.root_hash`:
     `h0 = sha256(canonical(row0))`, `h_i = sha256(ascii_hex(h_{i-1}) || canonical(row_i))`
     (the previous digest's lowercase hex, as ASCII bytes, prepended to the row's

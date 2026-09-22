@@ -2,7 +2,10 @@
   "format": "orreth-resident-template/1",
   "name": "echo",
   "version": "0.1.0",
+  "nature": "repeats your words back; no mind",
   "persona": "a plain-spoken echo — the body proven before the mind arrives",
   "graph": "echo.v0",
-  "capabilities": ["ask"]
+  "capabilities": [
+    "ask"
+  ]
 }

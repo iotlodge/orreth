@@ -1,4 +1,5 @@
 <!-- PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16 -->
+<!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass), walk #7's wounds · 2026-09-21 -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -147,8 +148,21 @@
     border-radius:6px;background:#fff}
   .copy{font:inherit;font-size:11px;user-select:all;word-break:break-all;color:var(--dim);
     background:#141820;padding:6px 8px;border-radius:6px;margin-top:6px}
+  /* W2: the secret sits behind a click, masked again on the next repaint */
+  .reveal{display:inline-block;margin-top:6px;cursor:pointer;color:var(--amber);font-size:11px;opacity:.85}
+  .reveal:hover{opacity:1;text-decoration:underline}
+  /* W10: a copy for humans — every reply, every include, the export table */
+  .copybtn{float:right;margin:-2px -6px 0 10px;font:inherit;font-size:10px;letter-spacing:.1em;
+    color:var(--dim);background:transparent;border:1px solid var(--seam);border-radius:5px;
+    padding:1px 6px;cursor:pointer;opacity:.55}
+  .copybtn:hover{opacity:1;color:var(--amber);border-color:var(--amber-dim)}
+  /* W15: a citation in a human's name; the path stays on hover */
+  .cite{color:var(--jade);border-bottom:1px dotted var(--jade);cursor:help}
+  /* W3: a step that succeeded folds to one line */
+  .stepline{color:var(--jade);font-size:11.5px;margin-top:6px}
+  .steprefused{color:#ff7a6e;font-size:11.5px;margin-top:6px;font-style:italic}
   #chat-body{flex:1;display:flex;min-height:0}
-  #rail{width:132px;border-left:1px solid var(--seam);padding:10px 8px;
+  #rail{width:178px;border-left:1px solid var(--seam);padding:10px 8px;
     overflow-y:auto}
   #rail h4{margin:0 0 8px;color:var(--dim);font-size:9.5px;
     letter-spacing:.25em;font-weight:normal}
@@ -158,6 +172,11 @@
     color:var(--dim)}
   .chip.on{color:var(--jade);border-color:var(--jade);
     background:rgba(127,216,168,.08)}
+  /* W7: every resident says what it is; W18: a refused body is greyed, never lit */
+  .chip .nat{display:block;color:var(--dim);font-size:10px;line-height:1.3;margin-top:2px;
+    white-space:normal;opacity:.85}
+  .chip.refused{opacity:.5;cursor:not-allowed;border-style:dashed}
+  .chip.refused .nat{color:#ff7a6e;opacity:1}
   .summarize{align-self:flex-start;font:inherit;font-size:11px;
     margin:2px 0 4px;padding:5px 10px;border-radius:6px;cursor:pointer;
     background:transparent;border:1px dashed var(--amber-dim);
@@ -174,6 +193,16 @@
   .twig .k{color:var(--amber);letter-spacing:.15em;font-size:10.5px;flex:none;width:92px}
   .twig .w{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .twig .meta{color:var(--dim);font-size:10.5px;flex:none}
+  /* W6: the tree folds — repeats count, thoughts fold under their objective */
+  .twig.fold .k{color:#ff7a6e}
+  .twig .n{color:var(--amber);flex:none;font-size:10.5px}
+  .folded{padding:3px 8px 3px 26px;font-size:11px;color:var(--dim);cursor:pointer;
+    border-bottom:1px solid rgba(42,46,58,.4)}
+  .folded:hover{color:var(--amber)}
+  .brow .blocked{color:#ff7a6e;font-size:10.5px;flex:none;max-width:38%;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  /* W13: a click on any pull raises it above the chat */
+  #crew.raised,#monitor.raised,#band.raised{z-index:11}
   /* the kind of an ask (P23): the words propose it; the human flips it */
   #kind{display:flex;gap:10px;align-items:baseline;padding:2px 14px 8px;
     font-size:10.5px;color:var(--dim);letter-spacing:.2em}
@@ -416,25 +445,41 @@ function drawChips(){
   for (const res of ROSTER){
     if (res.kind === "firmware" && !(res.name === "mitl" && MITL_ON)) continue;   // the includes live on
     const b = document.createElement("button");                                  // the top edge; MITL joins
-    b.className = "chip" + (SELECTED.has(res.name) ? " on" : "");               // the rail when summoned
-    b.textContent = res.name === "mitl" ? "mitl · the Master Mind In the Loop" : res.name + " · life " + res.lives;
-    b.onclick = () => { SELECTED.has(res.name) ? SELECTED.delete(res.name)
-                                               : SELECTED.add(res.name);
-                        b.classList.toggle("on"); };
+    b.className = "chip" + (SELECTED.has(res.name) ? " on" : "") + (res.refused ? " refused" : "");   // the rail when summoned
+    const head = res.name === "mitl" ? "mitl · the Master Mind In the Loop" : res.name + (res.refused ? "" : " · life " + res.lives);
+    // W7: what it IS, from its template; W18: a refused body says so and is never selectable (rule 7)
+    b.innerHTML = esc(head) + `<span class="nat">${res.refused ? "refused — not here" + (res.why ? " · " + esc(res.why) : "")
+                                                              : esc(res.nature || "")}</span>`;
+    if (res.refused){ b.disabled = true; b.title = `${res.name} is refused here — ${res.why} · fix its template to seat it`; }
+    else { b.title = `${res.name} — ${res.nature || "a resident"} · click to light or unlight`;
+           b.onclick = () => { SELECTED.has(res.name) ? SELECTED.delete(res.name)
+                                                      : SELECTED.add(res.name);
+                               b.classList.toggle("on"); }; }
     box.appendChild(b);
   }
 }
-async function loadRoster(){
-  const r = await fetch("/residents").then(x=>x.json()).catch(()=>null);
+async function loadRoster(){                      // W18: the rail reads the SAME door as the cards (rule 7)
+  const r = await fetch("/crew").then(x=>x.json()).catch(()=>null);
   if (!r) return;
-  ROSTER = r.residents;
+  ROSTER = r.crew.map(c => ({name: c.name, did: c.did, lives: c.lives, kind: c.kind, nature: c.nature || "",
+                             refused: !!c.refused, why: c.refused ? ((c.placement || {}).reasons || []).join("; ") : ""}));
   for (const res of ROSTER){
     NAMES[res.did] = res.name;
-    if (!SELECTED.size && res.name === "librarian") SELECTED.add(res.name);
+    if (res.refused) SELECTED.delete(res.name);   // a refused body cannot be lit
   }
-  if (!SELECTED.size && ROSTER.length) SELECTED.add(ROSTER[0].name);
+  if (!SELECTED.size){
+    const first = ROSTER.find(x => x.name === "librarian" && !x.refused) || ROSTER.find(x => !x.refused && x.kind !== "firmware");
+    if (first) SELECTED.add(first.name);
+  }
   drawChips();
 }
+function addressed(text){                         // W7: "echo, …" · "@echo …" · "librarian: …" → that body alone
+  const m = (text || "").match(/^\s*@?([a-z0-9_-]+)\s*[,:]\s*\S/i);
+  if (!m) return null;
+  const hit = ROSTER.find(x => x.name.toLowerCase() === m[1].toLowerCase());
+  return hit ? hit.name : null;
+}
+const ZONE = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { return undefined; } })();
 loadRoster(); setInterval(loadRoster, 20000);
 
 /* ---- the Objectives band: the floor hatch opens ---- */
@@ -446,21 +491,31 @@ function toggleBand(open){
 let bandOpenRow = null;
 let LAST_ORIGIN = null;           // the origin last opened here: "follow up on this by …"
 let BAND_OPEN = null;             // the row open in the Analyzer: it survives a repaint (walk #6)
+let BAND_OBS_OPEN = false;        // W6: the observations fold, remembered across repaints
 const counts = o => Object.entries(o.counts || {}).map(([k, n]) => `${n} ${k}${n > 1 ? "s" : ""}`).join(" · ");
 async function loadBand(){                     // P25: origins, from the ground — no body asked
   const r = await fetch("/analyzer").then(x=>x.json()).catch(()=>null);
   if (!r) return;
   const box = document.getElementById("band-rows"); const keep = box.scrollTop;
   box.innerHTML = ""; bandOpenRow = null;
-  const ints = r.origins.filter(o => o.kind === "intention"), objs = r.origins.filter(o => o.kind !== "intention");
-  const head = t => { const d = document.createElement("h5"); d.className = "origin-h"; d.textContent = t; box.appendChild(d); };
+  const ints = r.origins.filter(o => o.kind === "intention"), objs = r.origins.filter(o => o.kind === "objective");
+  const obs = r.origins.filter(o => o.kind !== "intention" && o.kind !== "objective");   // W6: never an objective
+  const head = (t, cls) => { const d = document.createElement("h5"); d.className = "origin-h" + (cls ? " " + cls : ""); d.textContent = t; box.appendChild(d); return d; };
   head("INTENTIONS · standing purposes — the kernel's and yours");
   if (!ints.length) box.insertAdjacentHTML("beforeend",
     `<div class="meta" style="padding:4px 8px">none yet — say “keep this world resilient: when a watch goes red, get it green”</div>`);
   for (const o of ints) box.appendChild(originRow(o));
-  head("OBJECTIVES · everything asked — in flight and done");
+  head("OBJECTIVES · what was asked to be done — in flight and done");
   if (!objs.length) box.insertAdjacentHTML("beforeend", `<div class="meta" style="padding:4px 8px">nothing asked yet</div>`);
   for (const o of objs) box.appendChild(originRow(o));
+  if (obs.length){                                  // observations · actions · loose thoughts: folded, never lost
+    const h = head(`OBSERVATIONS · ${obs.length} recorded — actions, observations and loose thoughts · ▸ click to open`);
+    h.style.cursor = "pointer";
+    const wrap = document.createElement("div"); wrap.hidden = !BAND_OBS_OPEN;
+    for (const o of obs) wrap.appendChild(originRow(o));
+    h.onclick = () => { wrap.hidden = !wrap.hidden; BAND_OBS_OPEN = !wrap.hidden; };
+    box.appendChild(wrap);
+  }
   await markersView(box, loadBand);            // 0006 → block 11: lineage lives here
   if (BAND_OPEN){                              // the row the human had open stays open
     const row = box.querySelector(`[data-root="${BAND_OPEN.root}"]`);
@@ -476,10 +531,11 @@ function originRow(o){
   row.innerHTML =
     `<span class="dot ${state}"></span>` +
     `<span class="snip">${esc(o.words || o.note || o.ref)}</span>` +
-    `<span class="meta">${isInt ? `${esc(o.serves || "")} · ${esc(o.origin_kind || "")} · ${o.active === false ? "at rest" : "standing"}`
+    `<span class="meta">${isInt ? `${esc(o.serves || "")} · ${esc(o.origin_kind || "")} · ${o.active === false ? "at rest" : o.blocked ? "standing · blocked" : "standing"}`
                                 : `${esc(o.target || "any")} · ${esc(o.status || "")}`}` +
     `${counts(o) ? " · " + esc(counts(o)) : ""} · ${hhmm(o.at)}</span>` +
-    (isInt && o.active !== false && o.serves !== "schedule" ? `<span class="stop" data-stop="${esc(o.ref)}" title="rule 11: recorded, never deleted">stop</span>` : "");
+    (isInt && o.blocked ? `<span class="blocked" title="${esc(o.blocked_note || "")}">waiting for a crew that can act: ${esc(o.blocked_note || "")}</span>` : "") +   // W6
+    (isInt && o.active !== false && o.serves !== "schedule" ? `<span class="stop" data-stop="${esc(o.ref)}" title="rule 11: recorded, never deleted — the stop asks for your code in the chat">stop</span>` : "");
   row.onclick = e => { if (e.target.dataset.stop) return stopIntention(e.target, o);
                        LAST_ORIGIN = {marker: o.root, words: o.words || o.ref};
                        if (BAND_OPEN && BAND_OPEN.root === o.root){ BAND_OPEN = null;   // a second click closes
@@ -488,17 +544,21 @@ function originRow(o){
                        isInt ? expandOrigin(row, o) : expandRow(row, o.ref); };
   return row;
 }
-async function stopIntention(elm, o){         // two clicks, never the return key
-  if (elm && elm.dataset.sure !== "1"){ elm.dataset.sure = "1"; elm.textContent = "sure? click again to rest it"; return; }
+async function stopIntention(elm, o){         // W5 (JB's lock): the stop asks for the CODE, in the chat, before it rests —
+  toggleChat(true);                            // never a second click, never the return key
+  const words = o.words || o.ref;
   const r = await fetch("/intentions/stop", {method:"POST", headers:{"content-type":"application/json"},
     body: JSON.stringify({intention_id: o.ref, person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
-  if (r && r.held){                            // P6 sp1: the kernel's own intention — grave, held for a second named person
-    PENDING[r.held] = el("journey", `stopping “${esc(o.words || o.ref)}” is grave — the kernel holds it for ${esc(r.level)}…`);
+  if (r && r.held){                            // held: a human's for the code (L3-code); the kernel's for the code, THEN a master (L3-master)
+    PENDING[r.held] = el("journey", `stopping “${esc(words)}” is grave — the kernel holds it: ` +
+      (r.level === "L3-master" ? "your code first, then a declared master's click" : "your code rests it") + `…`);
+    PENDING[r.held]._stopping = words;
     const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);   // the hold may have landed before its notice
     if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
     return;
   }
-  sysline(r && r.intention ? `intention at rest — “${esc(o.words || o.ref)}” · recorded, never deleted` : "the stop door did not answer");
+  sysline(r && r.intention ? `intention at rest — “${esc(words)}” · recorded, never deleted`
+        : r && r.error ? esc(r.error) : "the stop door did not answer");
   loadBand();
 }
 async function expandOrigin(row, o, quiet){   // an intention's tree, in words
@@ -509,19 +569,57 @@ async function expandOrigin(row, o, quiet){   // an intention's tree, in words
                          label: `the intention · ${esc(o.words || o.ref)}`});
   const d = document.createElement("div"); d.className = "bexpand"; d.style.padding = "4px 0 8px";
   const twigs = t.tree.filter(m => m.id !== o.root);
-  d.innerHTML = twigs.length ? twigs.map(m =>
-    `<div class="twig" data-ask="${m.ref.startsWith("ask_") ? esc(m.ref) : ""}" style="padding-left:${14 + m.depth * 14}px">` +
-    `<span class="k">${esc(m.kind)}</span><span class="w">${esc(m.words || m.note || m.ref)}</span>` +
-    `<span class="meta">${esc(m.target || whoIs(m.by))}${m.status ? " · " + esc(m.status) : ""} · ${hhmm(m.at)}</span></div>`).join("")
+  d.innerHTML = twigs.length ? foldTree(t.tree, o.root)
     : `<div class="meta" style="padding:4px 26px">nothing under it yet — it plans when it observes</div>`;
+  if (o.blocked) d.insertAdjacentHTML("afterbegin",
+    `<div class="meta" style="padding:4px 26px;color:#ff7a6e">waiting for a crew that can act: ${esc(o.blocked_note || "")} — it plans again when a body joins or declares a tool</div>`);
+  d.querySelectorAll("[data-fold]").forEach(f => f.onclick = e => {           // W6: thoughts open on a click
+    e.stopPropagation(); const box = f.nextElementSibling; box.hidden = !box.hidden;
+    f.textContent = (box.hidden ? "▸ " : "▾ ") + f.dataset.fold; });
   d.querySelectorAll("[data-ask]").forEach(tw => { if (tw.dataset.ask) tw.onclick = async e => {
     e.stopPropagation();
     const v = await fetch("/ask/" + tw.dataset.ask).then(x=>x.json()).catch(()=>null);
     if (!v) return; toggleChat(true);
     el("msg mine", `<em>from the Analyzer → ${esc(v.target || "any")}</em><div class="meta">${esc(v.text)}</div>`);
-    el("msg", `<div class="who">${esc(NAMES[v.served_by] || v.target || "orreth")}</div>` +   // the reply, WHOLE
-       (v.reply ? plain(v.reply) : `<i>${esc(v.status)} — still on its way</i>`)); }; });
+    const m2 = el("msg theirs", `<div class="who">${esc(NAMES[v.served_by] || v.target || "orreth")}</div>` +   // the reply, WHOLE
+       (v.reply ? cite(plain(v.reply)) : `<i>${esc(v.status)} — still on its way</i>`));
+    if (v.reply) m2.prepend(copyBtn(() => stripMarks(v.reply))); }; });   // W10
   row.after(d); bandOpenRow = d;
+}
+function foldTree(tree, root){                // W6: the wall becomes a tree — repeats fold with a count,
+  const kids = {};                            // an objective sits under its watch-red, thoughts fold under it
+  for (const m of tree) if (m.id !== root) (kids[m.parent] = kids[m.parent] || []).push(m);
+  const watchName = m => { const w = (m.note || "").match(/watch '([^']+)'/); return w ? w[1] : m.ref; };
+  const twig = (m, depth, words, meta, cls) =>
+    `<div class="twig ${cls || ""}" data-ask="${(m.ref || "").startsWith("ask_") ? esc(m.ref) : ""}" style="padding-left:${14 + depth * 14}px">` +
+    `<span class="k">${esc(m.kind)}</span><span class="w">${words}</span><span class="meta">${meta}</span></div>`;
+  const render = (list, depth) => {
+    let html = "", i = 0;
+    while (i < list.length){
+      const m = list[i];
+      if (m.kind === "watch-red"){                                   // a run of the same watch → one twig, a count
+        let j = i; while (j + 1 < list.length && list[j + 1].kind === "watch-red" && list[j + 1].ref === m.ref) j++;
+        const n = j - i + 1, last = list[j];
+        html += twig(last, depth, `watch “${esc(watchName(last))}” went red` + (n > 1 ? ` <span class="n">×${n}</span>` : ""),
+                     `${n > 1 ? "latest " : ""}${hhmm(last.at)}`, "fold");
+        for (let k = i; k <= j; k++) html += render(kids[list[k].id] || [], depth + 1);   // its objectives, under it
+        i = j + 1; continue;
+      }
+      html += twig(m, depth, esc(m.words || m.note || m.ref),
+                   `${esc(m.target || whoIs(m.by))}${m.status ? " · " + esc(m.status) : ""} · ${hhmm(m.at)}`);
+      const ch = kids[m.id] || [];
+      if (m.kind === "objective"){                                    // thoughts fold under their objective
+        const th = ch.filter(c => c.kind === "thought"), rest = ch.filter(c => c.kind !== "thought");
+        if (th.length){ const label = `${th.length} thought${th.length > 1 ? "s" : ""} under it · click to open`;
+          html += `<div class="folded" data-fold="${esc(label)}" style="padding-left:${26 + (depth + 1) * 14}px">▸ ${esc(label)}</div>` +
+                  `<div hidden>${render(th, depth + 1)}</div>`; }
+        html += render(rest, depth + 1);
+      } else html += render(ch, depth + 1);
+      i++;
+    }
+    return html;
+  };
+  return render(kids[root] || [], 0);
 }
 async function expandRow(row, id, quiet){
   if (bandOpenRow){ bandOpenRow.remove(); bandOpenRow = null; }
@@ -544,8 +642,32 @@ async function expandRow(row, id, quiet){
 const log = document.getElementById("log");
 const PENDING = {};          // ask_id -> its journey line element
 function el(cls, html){ const d = document.createElement("div");
+  log.querySelectorAll(".copy:not([hidden])").forEach(c => c.hidden = true);   // W2: the next repaint masks the secret
   d.className = cls; d.innerHTML = html; log.appendChild(d);
   log.scrollTop = log.scrollHeight; return d; }
+/* W10: a copy for humans — the reply's plain text, markdown marks stripped */
+function stripMarks(text){
+  return String(text || "").replace(/^\s{0,3}#{1,6}\s+/gm, "").replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/(^|\s)\*([^*\n]+)\*(?=[\s.,;:!?]|$)/g, "$1$2").replace(/^\s*[-*•]\s+/gm, "· ").replace(/`/g, "").trim();
+}
+async function copyText(t){
+  try { await navigator.clipboard.writeText(t); return true; } catch (e) {}
+  try { const ta = document.createElement("textarea"); ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; } catch (e) { return false; }
+}
+function copyBtn(getText){
+  const b = document.createElement("button"); b.className = "copybtn"; b.textContent = "copy"; b.title = "copy the plain words";
+  b.onclick = async e => { e.stopPropagation(); const ok = await copyText(getText());
+    b.textContent = ok ? "copied" : "copy failed"; setTimeout(() => b.textContent = "copy", 1400); };
+  return b;
+}
+/* W15: MITL's citations in human names — “SKILL.md#3” reads “the covenant, rules 1–9”; the path stays on hover */
+let CITES = {};
+function cite(html){
+  return html.replace(/\[?((?:[\w.\/-]+\/)?[\w-]+\.md)#(\d+)\]?/g, (all, path, n) => {
+    const name = CITES[path + "#" + n] || CITES[path.split("/").pop() + "#" + n];
+    return name ? `<span class="cite" title="${path}#${n}">${esc(name)}</span>` : all; });
+}
 const esc = s => s.replace(/[&<>"]/g,
   ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 
@@ -593,7 +715,7 @@ async function loadMitl(){
   const r = await fetch("/mitl?" + new URLSearchParams({person: PERSON, session: SESSION || ""}))
     .then(x=>x.json()).catch(()=>null);
   if (!r) return;
-  MITL_ON = !!r.summoned; drawMitl();
+  MITL_ON = !!r.summoned; CITES = r.citations || CITES; drawMitl();
 }
 async function toggleMitl(on){
   const want = on ?? !MITL_ON;
@@ -673,17 +795,19 @@ async function send(given, label, toOverride, parent){
   if (given == null && followWords(text)) return;          // a child of an origin (P25)
   const kind = given == null ? (KIND_PIN || proposeKind(text)) : undefined;   // P23
   if (given == null){ KIND_PIN = null; drawKind(); }
-  const to = toOverride ? [...toOverride] : [...SELECTED];
+  const named = given == null && !toOverride ? addressed(text) : null;   // W7: a name at the head selects that body alone
+  const to = named ? [named] : toOverride ? [...toOverride] : [...SELECTED];
   // a synthesis is the human's CHOICE, never the human's words: it wears
   // its own label; the machine's prompt never appears as if typed
-  el("msg mine", (label ? `<em>${esc(label)}</em>` : esc(text)) + (to.length > 1
-    ? `<div class="who" style="text-align:right">→ ${esc(to.join(" + "))}</div>` : ""));
+  el("msg mine", (label ? `<em>${esc(label)}</em>` : esc(text)) + (to.length > 1 || named
+    ? `<div class="who" style="text-align:right">→ ${esc(to.join(" + "))}${named ? " · by name" : ""}</div>` : ""));
   const r = await fetch("/ask", {method:"POST",
     headers:{"content-type":"application/json"},
     body: JSON.stringify({text, to: to.length ? to : undefined,
                           window: WINDOW ? {from: WINDOW.from.toISOString(),
                                             to: WINDOW.to.toISOString()} : undefined,
-                          session: SESSION || undefined, kind, parent: parent || undefined})})
+                          session: SESSION || undefined, kind, parent: parent || undefined,
+                          zone: ZONE})})                       // W12: the human's zone rides every ask
     .then(x=>x.json()).catch(()=>null);
   if (r && r.intention){                         // declared, never asked (0007)
     const i = r.intention;
@@ -712,6 +836,14 @@ async function send(given, label, toOverride, parent){
 async function onNotice(n){
   if (n.kind === "orreth.marker.set.v1"){          // 0006: a marker landed
     refreshPulls(); return;                          // (the lenses follow)
+  }
+  if (n.kind === "orreth.watch.turned.v1"){        // W14 → the glass: a watch turned red or green
+    const s = await fetch("/monitor").then(x=>x.json()).catch(()=>null);
+    const w = s && (s.watches || []).find(x => x.watch_id === n.ref);
+    if (w) sysline(`watch “${esc(w.name)}” turned <span class="${w.red ? "red" : "ok"}">${esc(w.state)}</span>` +
+                   ` · value ${esc(String(w.value))}${w.since ? " · since " + hhmm(w.since) : ""} · ${esc(w.reads || "")}`);
+    if (monitorPull.classList.contains("open")) loadMonitor();
+    return;
   }
   if (n.kind === "orreth.harness.failed.v1"){      // AG-6: a failing run
     sysline(`⚠ the harness failed a run (${esc(n.ref)}) — open the monitor ` +
@@ -742,8 +874,8 @@ async function onNotice(n){
   if (!v) return;
   if (n.kind.includes("journey") && v.journey.length)
     line.textContent = v.journey[v.journey.length-1];
-  if (n.kind.includes("reply") || n.kind.includes("confirm.needed"))
-    renderOutcome(n.ref, v, line);
+  if (n.kind.includes("reply") || n.kind.includes("confirm.needed") || n.kind.includes("ask.refused"))
+    renderOutcome(n.ref, v, line);                 // W19 → the glass: the kernel's words, status refused, never "on its way…"
 }
 
 function onDelta(d){
@@ -766,51 +898,40 @@ function renderOutcome(id, v, line){
   const put = line._into ? (c, h) => elIn(line._into, c, h) : el;   // P6 sp3: MITL's answer lands under the hold
   const name = NAMES[v.served_by] || (v.served_by === "the kernel" ? "the kernel" : null) || v.target || "orreth";
   const who = `<div class="who">${esc(name)}</div>`;
-  if (fan && v.status === "replied"){
+  if (fan && (v.status === "replied" || v.status === "refused")){
     FANS[fan].replies[id] = {name, reply: v.reply};
     offerSummarize(fan);
   }
   if (v.status === "awaiting-confirm"){
-    const level = (v.hold && v.hold.level) || "L2";          // P6 sp1: the demand rises
+    const hold = v.hold || {}, level = hold.level || "L2";   // P6 sp1: the demand rises
+    // W5: the kernel's intention asks for the asker's CODE first (needs_code, code_ok false), the master's click after
+    const step = level === "L3-code" || (level === "L3-master" && hold.needs_code && !hold.code_ok) ? "code"
+               : level === "L3-master" ? "master" : "yes";
     const m = el("msg theirs", who + esc(v.reply));
-    const row = document.createElement("div");
-    row.className = "confirm-row";
-    if (level === "L3-code"){                                 // a code is TYPED, then a click
-      row.innerHTML =
-        `<button class="btn-cancel">Cancel (default)</button>` +
-        `<input inputmode="numeric" maxlength="6" pattern="[0-9]*" placeholder="6-digit code" aria-label="the code from your authenticator">` +
-        `<button class="btn-yes" disabled>Confirm with this code</button>`;
-    } else if (level === "L3-master"){                        // a second NAMED person clicks
-      row.innerHTML =
-        `<button class="btn-cancel">Cancel (default)</button>` +
-        `<input class="who-in" placeholder="the master's name, e.g. did:orreth:person:…" aria-label="the second named person">` +
-        `<button class="btn-yes" disabled>Confirm as master</button>`;
-    } else {
-      row.innerHTML =
-        `<button class="btn-cancel">Cancel (default)</button>` +
-        `<button class="btn-yes">Yes — do it</button>`;
-    }
-    /* cancel is the default: it holds focus; Enter can never confirm */
-    const cancel = row.querySelector(".btn-cancel"), yes = row.querySelector(".btn-yes"), inp = row.querySelector("input");
-    cancel.onclick = () => decide(id, false, row);
-    if (inp){
-      inp.addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); });   /* Enter never submits */
-      inp.addEventListener("input", () => { yes.disabled = level === "L3-code" ? !/^\d{6}$/.test(inp.value) : !inp.value.trim(); });
-      yes.onclick = () => decide(id, true, row, level === "L3-code" ? inp.value : undefined,
-                                                  level === "L3-master" ? inp.value.trim() : undefined);
-    } else yes.onclick = () => decide(id, true, row);
+    const row = holdRow(id, step, level);
     // P6 sp3: every hold offers "expected impact?" — MITL's answer renders here, before Cancel / Yes
-    m.appendChild(impactBar({kind: impactKind(v.hold && v.hold.tool), ref: id,
-                             draft: {tool: v.hold && v.hold.tool}, words: v.text}));
-    m.appendChild(row); cancel.focus();
-    PENDING[id] = el("journey", level === "L3-code" ? "held — this needs your code · cancel is the default"
-                              : level === "L3-master" ? "held — this needs a second named person · cancel is the default"
+    m.appendChild(impactBar({kind: impactKind(hold.tool), ref: id, draft: {tool: hold.tool}, words: v.text}));
+    m.appendChild(row); row.querySelector(".btn-cancel").focus();
+    PENDING[id] = el("journey", step === "code" ? (level === "L3-master" ? "held — your code first, then a declared master's click · cancel is the default"
+                                                                            : "held — this needs your code · cancel is the default")
+                              : step === "master" ? "held — this needs a second named person · cancel is the default"
                               : "held at the interlock — your word decides");
-    PENDING[id]._row = row;
+    PENDING[id]._row = row; PENDING[id]._stopping = line._stopping;
     return;
   }
   if (line._row) line._row.querySelectorAll("button,input").forEach(b => b.disabled = true);   // the hold settled
-  put("msg theirs", who + plain(v.reply || "(no words came back)"));
+  const bubble = put("msg theirs", who + cite(plain(v.reply || "(no words came back)")));
+  if (v.reply) bubble.prepend(copyBtn(() => stripMarks(v.reply)));                            // W10
+  if (line._stopping && v.status === "replied")                                             // W5: the stop's outcome
+    put("journey", `intention at rest · “${esc(line._stopping)}” · proof ${esc(v.proof || "L1")} · recorded, never deleted`);
+  if (v.status === "refused"){                                                              // W19: refused at the door
+    put("journey", `refused at the door · ${hhmm(v.replied_at || v.asked_at)} · recorded, never in flight`); return; }
+  if (v.offer && v.offer.ask){                                                              // the monitor's offer, one click
+    const b = document.createElement("button"); b.className = "summarize"; b.textContent = "propose it";
+    b.title = `sends “${v.offer.ask}” to the monitor — the interlock (“expected impact?”, Cancel default) then arrives`;
+    b.onclick = () => { b.remove(); send(v.offer.ask, `propose it — on your word → monitor · “${esc(v.offer.words)}”`, ["monitor"]); };
+    (line._into || log).appendChild(b); log.scrollTop = log.scrollHeight;
+  }
   if (v.replied_at){                         // P7: who took it, on which
     const read = (v.journey || []).map(n => n.replace(/^[^:]+: /, ""))       // scope,
       .find(n => n.startsWith("read the session's results by"));           // whose
@@ -902,16 +1023,47 @@ document.getElementById("chat-in").addEventListener("input", e => {
 function hhmm(iso){ return new Date(iso).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"}); }
 function secs(a, b){ return `${Math.max(0, (new Date(b) - new Date(a)) / 1000).toFixed(1)} s`; }
 
-async function decide(id, approve, row, code, by){
+function holdRow(id, step, level){          // one hold row: Cancel default · a typed code or the master's name · Enter never confirms
+  const row = document.createElement("div"); row.className = "confirm-row";
+  if (step === "code")                                       // a code is TYPED, then a click
+    row.innerHTML = `<button class="btn-cancel">Cancel (default)</button>` +
+      `<input inputmode="numeric" maxlength="6" pattern="[0-9]*" placeholder="6-digit code" aria-label="the code from your authenticator">` +
+      `<button class="btn-yes" disabled>Confirm with this code</button>`;
+  else if (step === "master")                                // a second NAMED person clicks
+    row.innerHTML = `<button class="btn-cancel">Cancel (default)</button>` +
+      `<input class="who-in" placeholder="the master's name, e.g. did:orreth:person:…" aria-label="the second named person">` +
+      `<button class="btn-yes" disabled>Confirm as master</button>`;
+  else
+    row.innerHTML = `<button class="btn-cancel">Cancel (default)</button><button class="btn-yes">Yes — do it</button>`;
+  const cancel = row.querySelector(".btn-cancel"), yes = row.querySelector(".btn-yes"), inp = row.querySelector("input");
+  cancel.onclick = () => decide(id, false, row);
+  if (inp){
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); });   /* Enter never submits */
+    inp.addEventListener("input", () => { yes.disabled = step === "code" ? !/^\d{6}$/.test(inp.value) : !inp.value.trim(); });
+    yes.onclick = () => decide(id, true, row, step === "code" ? inp.value : undefined, step === "master" ? inp.value.trim() : undefined, level);
+  } else yes.onclick = () => decide(id, true, row);
+  return row;
+}
+async function decide(id, approve, row, code, by, level){
   row.querySelectorAll("button,input").forEach(b => b.disabled = true);
   setTimeout(refreshPulls, 1500);             // the act's effect, in every lens
   const r = await fetch("/confirm", {method:"POST",
     headers:{"content-type":"application/json"},
     body: JSON.stringify({ask_id: id, approve, code: code || undefined, by: by || undefined})}).catch(()=>null);
   if (r && r.status === 403){                 // ONE face (rule 4): try again, or cancel — nothing ran
-    if (PENDING[id]) PENDING[id].textContent = "not confirmed — nothing ran · try again, or cancel";
+    if (PENDING[id]) PENDING[id].textContent = code ? "not confirmed — that code was not right; nothing ran · type the code your authenticator shows now, or cancel"
+                                                    : "not confirmed — nothing ran · try again, or cancel";
     row.querySelectorAll("button,input").forEach(b => b.disabled = false);
     const inp = row.querySelector("input"); if (inp){ inp.value = ""; row.querySelector(".btn-yes").disabled = true; inp.focus(); }
+    return;
+  }
+  const out = r ? await r.json().catch(()=>null) : null;
+  if (out && out.step === "code" && out.next === "master"){   // W5: the kernel's — your code is right; now the master
+    const msg = row.parentNode; row.remove();
+    const next = holdRow(id, "master", level);
+    if (msg){ msg.insertAdjacentHTML("beforeend", `<div class="stepline">✓ your code is right · ${hhmm(new Date().toISOString())}</div>`); msg.appendChild(next); }
+    if (PENDING[id]){ PENDING[id].textContent = "your code is right — now a declared master confirms with a click · cancel is the default"; PENDING[id]._row = next; }
+    next.querySelector(".btn-cancel").focus();
     return;
   }
   if (PENDING[id]) PENDING[id].textContent = approve
@@ -974,10 +1126,26 @@ document.querySelectorAll("#includes a").forEach(a => a.onclick = () => include(
 /* ---- the Crew pull: the first workspace, and its agent (P19) ---- */
 const crewPull = document.getElementById("crew");
 let crewTimer = null;
+let CHAT_YIELD = null;              // W13: the width the human chose, kept while the chat yields to a pull
+function layoutChat(){              // the chat never covers an open left pull: it yields on the x-axis, and takes its width back
+  const open = [crewPull, monitorPull].filter(p => p.classList.contains("open"));
+  if (!open.length){
+    if (CHAT_YIELD !== null){ chat.style.width = CHAT_YIELD ? CHAT_YIELD + "px" : ""; CHAT_YIELD = null; }
+    return;
+  }
+  const pullW = Math.max(...open.map(p => p.offsetWidth));
+  const avail = Math.floor(window.innerWidth - pullW - window.innerWidth * 0.06 - 16);   // the pull · a seam · the chat's right margin
+  if (chat.getBoundingClientRect().width > avail){
+    if (CHAT_YIELD === null) CHAT_YIELD = chat.style.width ? parseFloat(chat.style.width) : 0;
+    chat.style.width = Math.max(320, avail) + "px";
+  }
+}
+addEventListener("resize", layoutChat);
 function toggleCrew(open){
   const was = crewPull.classList.contains("open");
   const now = open ?? !was;
   crewPull.classList.toggle("open", now);
+  layoutChat();
   if (now && !was){
     loadCrew();
     pushFocus({kind: "workspace", id: "ws_crew", name: "crew", window: null,
@@ -997,38 +1165,81 @@ async function markWords(text){                  // "mark this as improvement: t
   refreshPulls();
   return true;
 }
-/* ---- L3 (P6 sp1): the authenticator, enrolled through the chat; the kernel's intentions stopped by words ---- */
-async function enrollWords(text){                // "enroll my authenticator" · "… with code 123456" to re-enroll
-  const m = text.match(/^(?:re-?)?enroll my authenticator(?:\s+with(?: the)?(?: old)? code\s+(\d{6}))?\s*[.!]?$/i);
-  if (!m) return false;
-  el("msg mine", esc(text));
-  const r = await fetch("/enroll", {method:"POST", headers:{"content-type":"application/json"},
-    body: JSON.stringify({person: PERSON, code: m[1] || undefined})})
-    .then(async x => ({s: x.status, b: await x.json()})).catch(()=>null);
-  if (!r){ sysline("the enroll door did not answer"); return true; }
-  if (r.s !== 201){ sysline("not confirmed — you already hold an authenticator; re-enrolling is grave: say “enroll my authenticator with code 123456” using your current code"); return true; }
-  const b = r.b;
-  const msg = el("msg theirs", `<div class="who">the kernel</div>` +
-    `Scan this once with your authenticator app, then type the first code it shows to finish enrolling.` +
-    (b.qr ? `<img class="qr" alt="the QR for your authenticator" src="${b.qr}">` : "") +
-    `<div class="copy" title="if you cannot scan: enter this in your app">${esc(b.uri)}</div>`);
+/* ---- L3 (P6 sp1 → walk #7's cure): the authenticator, enrolled through the chat ---- */
+function codeRow(msg, yesLabel, onYes, cancelLabel, onCancel){   // the ONE code row: typed code · click · Cancel default · Enter never submits
   const row = document.createElement("div"); row.className = "confirm-row";
-  row.innerHTML = `<button class="btn-cancel">Not now</button>` +
-    `<input inputmode="numeric" maxlength="6" pattern="[0-9]*" placeholder="first 6-digit code" aria-label="the first code from your authenticator">` +
-    `<button class="btn-yes" disabled>Finish enrolling</button>`;
+  row.innerHTML = `<button class="btn-cancel">${esc(cancelLabel || "Cancel (default)")}</button>` +
+    `<input inputmode="numeric" maxlength="6" pattern="[0-9]*" placeholder="6-digit code" aria-label="the code from your authenticator">` +
+    `<button class="btn-yes" disabled>${esc(yesLabel)}</button>`;
   const [cancel, inp, yes] = row.children;
   inp.addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); });   /* Enter never submits */
   inp.addEventListener("input", () => { yes.disabled = !/^\d{6}$/.test(inp.value); });
-  cancel.onclick = () => { row.querySelectorAll("button,input").forEach(x => x.disabled = true); sysline("not enrolled — the QR is gone from view; say “enroll my authenticator” to start over"); };
-  yes.onclick = async () => {
-    row.querySelectorAll("button,input").forEach(x => x.disabled = true);
+  cancel.onclick = () => { row.querySelectorAll("button,input").forEach(x => x.disabled = true); if (onCancel) onCancel(); };
+  yes.onclick = async () => { row.querySelectorAll("button,input").forEach(x => x.disabled = true); await onYes(inp.value, row); };
+  msg.appendChild(row); cancel.focus();
+  return row;
+}
+function stepDone(msg, row, words){           // W3: a step that succeeded COLLAPSES to one line
+  row.remove();
+  msg.querySelectorAll(".qr,.reveal,.copy,.steprefused,.stepwords").forEach(x => x.remove());
+  msg.insertAdjacentHTML("beforeend", `<div class="stepline">✓ ${words} · ${hhmm(new Date().toISOString())}</div>`);
+}
+function stepRefused(msg, row, words){        // W3: every refusal NAMES its step; the row stays open for another code
+  let r = msg.querySelector(".steprefused"); if (!r){ r = document.createElement("div"); r.className = "steprefused"; msg.insertBefore(r, row); }
+  r.textContent = words;
+  row.querySelectorAll("button,input").forEach(x => x.disabled = false);
+  const inp = row.querySelector("input"); inp.value = ""; row.querySelector(".btn-yes").disabled = true; inp.focus();
+}
+async function postEnroll(code){
+  return fetch("/enroll", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({person: PERSON, code: code || undefined})})
+    .then(async x => ({s: x.status, b: await x.json()})).catch(()=>null);
+}
+function drawEnroll(b, re){                   // W2: the QR only — the secret behind a click, masked again on the next repaint
+  const entry = re ? "the new Orreth entry" : "your app";
+  const msg = el("msg theirs", `<div class="who">the kernel</div><span class="stepwords">` +
+    (re ? "Your current authenticator is proven. Now the NEW one: scan this once with your authenticator app, then type the first code the new Orreth entry shows to finish."
+        : "Scan this once with your authenticator app, then type the first code it shows to finish enrolling.") + `</span>` +
+    (b.qr ? `<img class="qr" alt="the QR for your authenticator" src="${b.qr}">` : "") +
+    `<span class="reveal">can't scan? reveal the secret</span>` +
+    `<div class="copy" hidden title="enter this in your app by hand — it is never kept in the transcript">${esc(b.uri)}</div>`);
+  const rv = msg.querySelector(".reveal"), cp = msg.querySelector(".copy");
+  rv.onclick = () => { cp.hidden = !cp.hidden; rv.textContent = cp.hidden ? "can't scan? reveal the secret" : "hide the secret"; };
+  codeRow(msg, re ? "Finish the new authenticator" : "Finish enrolling", async (code, row) => {
     const c = await fetch("/enroll/confirm", {method:"POST", headers:{"content-type":"application/json"},
-      body: JSON.stringify({person: PERSON, code: inp.value})}).catch(()=>null);
-    if (c && c.status === 200){ msg.querySelector(".qr")?.remove(); msg.querySelector(".copy")?.remove(); sysline("authenticator enrolled — grave acts will ask for its code"); return; }
-    sysline("not confirmed — nothing changed · type the code your app shows now");
-    row.querySelectorAll("button,input").forEach(x => x.disabled = false); inp.value = ""; yes.disabled = true; inp.focus();
-  };
-  msg.appendChild(row); inp.focus();
+      body: JSON.stringify({person: PERSON, code})}).catch(()=>null);
+    if (c && c.status === 200){
+      stepDone(msg, row, re ? "new authenticator enrolled — the old entry is retired" : "authenticator enrolled");
+      sysline(`authenticator ${re ? "re-" : ""}enrolled — grave acts will ask for its code`); return; }
+    stepRefused(msg, row, re ? "finishing the NEW authenticator: that code is not the new entry's — type the code the new Orreth entry shows now"
+                             : "finishing the authenticator: that code is not this entry's — type the code your app shows now");
+  }, "Not now", () => { msg.querySelectorAll(".qr,.reveal,.copy").forEach(x => x.remove());
+                        sysline(re ? "the new authenticator was not finished — your current one still stands; say “enroll my authenticator” to start over"
+                                   : "not enrolled — the QR is gone from view; say “enroll my authenticator” to start over"); });
+}
+async function enrollWords(text){             // "enroll my authenticator" · the old words "… with code 123456" still work as an alias
+  const m = text.match(/^(?:re-?)?enroll my authenticator(?:\s+with(?: the)?(?: old| current)? code\s+(\d{6}))?\s*[.!]?$/i);
+  if (!m) return false;
+  el("msg mine", esc(text));
+  const st = await fetch("/proof?person=" + encodeURIComponent(PERSON)).then(x=>x.json()).catch(()=>null);
+  if (!st){ sysline("the proof door did not answer"); return true; }
+  if (st.enrolled && !m[1]){                  // W1: re-enrolling is grave — the CURRENT code, in the code row (no sentence to retype)
+    const msg = el("msg theirs", `<div class="who">the kernel</div><span class="stepwords">You already hold an authenticator, so this is grave: ` +
+      `type the code your CURRENT authenticator shows, then confirm — cancel is the default. A new QR follows.</span>`);
+    codeRow(msg, "Confirm with this code", async (code, row) => {
+      const c = await postEnroll(code);
+      if (!c){ stepRefused(msg, row, "the enroll door did not answer — try again, or cancel"); return; }
+      if (c.s !== 201){ stepRefused(msg, row, "proving the CURRENT authenticator: that code is not your current authenticator's — type the code it shows now"); return; }
+      stepDone(msg, row, "current authenticator proven");
+      drawEnroll(c.b, true);
+    }, "Cancel (default)", () => sysline("not re-enrolled — your current authenticator stands; nothing changed"));
+    return true;
+  }
+  const c = await postEnroll(m[1]);
+  if (!c){ sysline("the enroll door did not answer"); return true; }
+  if (c.s !== 201){ sysline(st.enrolled ? "proving the CURRENT authenticator: that code is not your current authenticator's — say “enroll my authenticator” and type the code it shows now"
+                                        : "not enrolled — the enroll door refused; try again"); return true; }
+  drawEnroll(c.b, !!st.enrolled);
   return true;
 }
 async function stopWords(text){                  // "stop the kernel's Resiliency intention" — grave for the kernel's
@@ -1040,7 +1251,7 @@ async function stopWords(text){                  // "stop the kernel's Resilienc
   if (hits.length !== 1){ sysline(hits.length ? `which one? ${hits.length} intentions match “${esc(m[1])}” — stop it from the ANALYZER`
                                               : `no standing intention matches “${esc(m[1])}” — the ANALYZER lists them`); return true; }
   el("msg mine", esc(text));
-  await stopIntention(null, {ref: hits[0].intention_id, words: hits[0].words, sure: true});
+  await stopIntention(null, {ref: hits[0].intention_id, words: hits[0].words});
   return true;
 }
 function whyLine(c){                             // P6 sp4: the card's line, as words
@@ -1138,6 +1349,7 @@ function toggleMonitor(open){
   const was = monitorPull.classList.contains("open");
   const now = open ?? !was;
   monitorPull.classList.toggle("open", now);
+  layoutChat();
   if (now && !was){
     loadMonitor();
     monitorBeat = setInterval(loadMonitor, 5000);   // leases move without a notice
@@ -1147,6 +1359,9 @@ function toggleMonitor(open){
   if (!now && monitorBeat){ clearInterval(monitorBeat); monitorBeat = null; }
 }
 let monitorTimer = null, monitorBeat = null;
+[crewPull, monitorPull, band].forEach(pull => pull.addEventListener("pointerdown", () => {   // W13: a click anywhere on a pull
+  [crewPull, monitorPull, band].forEach(q => q.classList.toggle("raised", q === pull)); }));   // raises it above the chat
+chat.addEventListener("pointerdown", () => [crewPull, monitorPull, band].forEach(q => q.classList.remove("raised")));
 function refreshPulls(){                 // P17: a change anywhere reflects in
   if (crewPull.classList.contains("open") && !crewTimer)          // every open
     crewTimer = setTimeout(() => { crewTimer = null; loadCrew(); }, 400);   // lens
@@ -1172,7 +1387,8 @@ async function loadMonitor(){
        `${esc(b.name)} · ${esc(b.kind)}</span><span class="${b.alive ? "ok" : "red"}">${b.alive ? "alive" : "dormant"} · until ${hhmm(b.until)}</span></div>`).join("") ||
        `<div class="meta">no leases yet</div>`);
   view("ASKS", Object.entries(s.asks).map(([k, v]) => row(k, v)).join("") || `<div class="meta">none in this world</div>`);
-  view("WATCHES", (s.watches.map(w => row(`${w.name} — ${w.metric} ${w.op} ${w.threshold}`, `${w.value} · ${w.ok ? "green" : "RED"}`, w.ok ? "ok" : "red")).join("") ||
+  view("WATCHES", (s.watches.map(w => row(`${w.name} — ${w.reads || `${w.metric} ${w.op} ${w.threshold} · now ${w.value}`}`,
+       `${(w.state || (w.red ? "red" : "green")).toUpperCase()}${w.since ? " · since " + hhmm(w.since) : ""}`, w.red ? "red" : "ok")).join("") ||
        `<div class="meta">none yet — ask the monitor agent to propose one ("watch for asks left waiting")</div>`));
   const hv = view("HARNESS", (s.harness ? row(`${s.harness.template} v${s.harness.version} · ${hhmm(s.harness.ran_at)}`,
        `${s.harness.passed} passed · ${s.harness.failed} failed`, s.harness.failed ? "red" : "ok") : `<div class="meta">no run yet</div>`) +
@@ -1310,9 +1526,11 @@ async function loadSession(x){
   for (const a of v.asks){                       // the session, whole, in order
     el("msg mine", esc(a.text) + (a.target ? `<div class="who" style="text-align:right">→ ${esc(a.target)}</div>` : ""));
     const name = NAMES[a.served_by] || a.target || "orreth";
-    if (a.status === "replied" || a.status === "cancelled" || a.status === "awaiting-confirm"){
-      el("msg theirs", `<div class="who">${esc(name)}</div>` + plain(a.reply || "(no words came back)"));
-      if (a.replied_at) el("journey", `${esc(name)} took it on ${esc(v.scope || "?")}` +
+    if (a.status === "replied" || a.status === "cancelled" || a.status === "awaiting-confirm" || a.status === "refused"){
+      const bub = el("msg theirs", `<div class="who">${esc(name)}</div>` + cite(plain(a.reply || "(no words came back)")));
+      if (a.reply) bub.prepend(copyBtn(() => stripMarks(a.reply)));                   // W10
+      if (a.status === "refused") el("journey", `refused at the door · ${hhmm(a.replied_at || a.asked_at)}`);   // W19
+      else if (a.replied_at) el("journey", `${esc(name)} took it on ${esc(v.scope || "?")}` +
         (a.window ? ` · ${dayLabel(new Date(a.window.from))} → ${dayLabel(new Date(a.window.to))}` : "") +
         ` · completed ${hhmm(a.replied_at)} (${secs(a.asked_at, a.replied_at)})`);
     } else {
@@ -1371,19 +1589,26 @@ async function exportWords(text){                // "export compliance" · "… 
   if (n){
     const tbl = document.createElement("table"); tbl.className = "xtable";
     tbl.innerHTML = `<tr><th>at</th><th>kind</th><th>who → for whom</th><th>proof</th><th>why</th><th>words</th></tr>`;
+    const lines = [["at", "kind", "who → for whom", "proof", "why", "words"]];
     for (const r of b.rows){
-      const chain = (r.authority_chain || []).map(whoIs).join(" → ") || "(no chain)";
-      const why = r.marker ? `${r.marker.kind}${r.marker.parent ? " · under " + r.marker.parent.slice(3, 9) : ""}` : "—";
-      const words = r.words_withheld ? "(withheld — opt-out)"
-                  : Object.values(r.words || {}).filter(Boolean).join(" · ").slice(0, 90);
+      const chain = ((r.authority_chain || []).map(whoIs).join(" → ") || "(no chain)") +
+                    ((r.kind === "ask" || r.kind === "refused") && r.target ? ` → ${r.target} (ask)` : "");   // W11: the fan-out's target
+      const kind = (r.kind === "refused" ? "refused at the door" : r.kind) + (r.tool ? " · " + r.tool : "");
+      const why = r.marker_words ? stripMarks(r.marker_words) : r.marker ? r.marker.kind : "—";          // W11: the marker's WORDS
+      const all = r.words_withheld ? "(withheld — opt-out)"
+                : stripMarks(Object.values(r.words || {}).filter(Boolean).join(" · "));                   // W10: plain words,
+      const first = all.split("\n")[0];                                                                  // the first line whole
+      const words = first.length >= 90 || all === first ? first : first + " · " + all.slice(first.length).replace(/\s+/g, " ").trim().slice(0, 90 - Math.min(first.length, 60));
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${hhmm(r.at)}</td><td>${esc(r.kind)}${r.tool ? " · " + esc(r.tool) : ""}</td>` +
+      tr.innerHTML = `<td>${hhmm(r.at)}</td><td>${esc(kind)}</td>` +
         `<td class="chain${r.chain_status === "broken" ? " broken" : ""}">${esc(chain)}` +
         `${r.chain_status === "broken" ? " ⚠ broken" : ""}</td>` +
-        `<td>${esc(r.proof || "—")}</td><td class="why">${esc(why)}</td><td class="words">${esc(words)}</td>`;
+        `<td>${esc(r.proof || "—")}</td><td class="why" title="${esc(r.marker ? r.marker.kind + (r.marker.parent ? " · under " + r.marker.parent : "") : "")}">${esc(why)}</td><td class="words">${esc(words)}</td>`;
       tbl.appendChild(tr);
+      lines.push([hhmm(r.at), kind, chain + (r.chain_status === "broken" ? " ⚠ broken" : ""), r.proof || "—", why, all]);
     }
     box.appendChild(tbl);
+    box.prepend(copyBtn(() => lines.map(l => l.map(c => String(c).replace(/\t|\n/g, " ")).join("\t")).join("\n")));   // W10: the table, for humans
   }
   const dl = document.createElement("div"); dl.className = "xdl";
   dl.innerHTML = `<button class="dl-json">download JSON</button><button class="dl-csv">download CSV</button>`;

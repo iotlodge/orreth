@@ -19,6 +19,7 @@ red."""
 from __future__ import annotations
 
 import json
+import re
 import secrets
 
 from . import envelope as ev, outbox, presence
@@ -62,6 +63,26 @@ def reads(w: dict) -> str:
     left to a bare `> 0`: 'red when bodies_dormant > 0.0 · now 0 → green'."""
     return (f"red when {w['metric']} {w['op']} {w['threshold']} · now {w['value']} → "
             f"{'RED' if w['red'] else 'green'}")
+
+
+OFFER_RE = re.compile(r"\bpropos(?:e|ing)\b[^.\n]{0,80}?\bwatch\b", re.I)
+COND_RE = re.compile(r"`\s*([a-z_]+\s*(?:>=|<=|==|!=|>|<)\s*-?\d+(?:\.\d+)?)\s*`", re.I)
+
+
+def offer_in(reply: str | None) -> dict | None:
+    """Walk #7's friction — the monitor's OFFER, read honestly from its
+    words: a reply that offers to propose a watch and names the condition
+    in backticks (`bodies_dormant > 0`) yields {words, ask} — the glass
+    draws one click, "propose it", that sends `ask`; the interlock then
+    arrives. No offer, no condition: None — the human is never guessed
+    at."""
+    if not reply or not OFFER_RE.search(reply):
+        return None
+    m = COND_RE.search(reply)
+    if not m:
+        return None
+    words = " ".join(m.group(1).split())
+    return {"words": words, "ask": f"propose a watch that {words}"}
 
 
 def add_watch(conn, name: str, metric: str, op: str, threshold: float,
