@@ -588,3 +588,9 @@ path only: click, type, read, wait; no door, no database.
 - **The two harness checks** — `harness.checks`: "a duty answered, not refused" (the latest duty reply per runner does not open as a refusal — `refused_words`) and "the monitor's offers arrive as holds" (the latest 5 monitor replies that speak of proposing a watch each have an add-watch hold behind them); listed on the new door `GET /harness` with the last golden run. Laws: W21 harness · W22 harness. Relit on the dev ground 2026-09-21: `POST /intentions/restart` on JB's rested Resiliency intention → `{held, level: "L3-code", needs_code: true}` (the hold stands on the ground for JB's code or cancel); `/harness` → both checks ok (1 runner answered, none refused · 4 offers, every offer held).
 
 **The close:** suite **254** green (220 → 254). The four P6 rows move to PASS in `experience-specs.md`; Phase 6 CLOSED WHOLE in 0005 (VERSION bump in the closing commit).
+
+## Walk #9 — 2026-09-22, JB walks the shelf (P6.5 sp1, SPEC-SERVICES-01)
+
+| Bar | What JB saw | Verdict |
+|---|---|---|
+| The shelf · retire · cancel · yes · restore · check (1–5) | "what services are here?" opened the shelf; "retire the weather tool" held at the interlock with "expected impact?"; Cancel did nothing; Yes greyed the card; "restore the weather tool" brought it back; "check the services" gave the health lines. JB: "1, 2, 3, 4, 5 all worked well." | **PASS** — no friction filed |
