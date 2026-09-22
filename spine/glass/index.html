@@ -274,6 +274,14 @@
   .card.refused{opacity:.55;border-style:dashed}
   .card.refused h5{color:var(--dim)}
   .card.refused .stands{color:#ff7a6e}
+  /* P6.5 sp1: THE SHELF — every service the kernel governs, on one ladder, beside the bodies */
+  .shelf-head{margin:14px 0 8px;padding-top:8px;border-top:1px solid var(--seam);color:var(--amber);
+    font-size:10.5px;letter-spacing:.12em}
+  .card.service h5 .kind{display:inline-block;border:1px solid var(--amber);border-radius:8px;padding:0 6px;
+    font-size:10px;letter-spacing:.1em;margin-right:4px}
+  .card.service .health{margin-top:4px;font-size:11px;color:var(--dim)}
+  .card.service .health.bad{color:#ff7a6e}
+  .card.retired{opacity:.55;border-style:dashed}
   .card .side b{color:var(--dim);font-weight:normal;letter-spacing:.1em;font-size:10.5px}
   .cap{display:inline-block;border:1px solid var(--seam);border-radius:8px;
     padding:0 6px;margin:2px 3px 0 0;font-size:10.5px;color:var(--dim)}
@@ -754,7 +762,7 @@ async function mitlWords(text){                  // "summon MITL" · "dismiss MI
   send(m ? m[1] : text, undefined, ["mitl"]);
   return true;
 }
-function impactKind(tool){ return tool === "add-watch" ? "watch" : (tool === "intent.stop" || tool === "intent.restart") ? "intention" : "act"; }
+function impactKind(tool){ return tool === "add-watch" ? "watch" : (tool === "intent.stop" || tool === "intent.restart") ? "intention" : tool === "service.retire" ? "service" : "act"; }
 function elIn(parent, cls, html){ const d = document.createElement("div"); d.className = cls; d.innerHTML = html;
   parent.appendChild(d); log.scrollTop = log.scrollHeight; return d; }
 function impactBar(change){                      // "expected impact?" — MITL weighs before the human cuts
@@ -805,6 +813,7 @@ async function send(given, label, toOverride, parent){
   if (given == null && await markWords(text)) return;      // a human marks (0006)
   if (given == null && await enrollWords(text)) return;    // "enroll my authenticator" (P6 sp1)
   if (given == null && await stopWords(text)) return;      // "stop the kernel's … intention"
+  if (given == null && await serviceWords(text)) return;   // the shelf: "what services are here?" · "retire the weather tool" · "check the services" (P6.5 sp1)
   if (given == null && followWords(text)) return;          // a child of an origin (P25)
   const kind = given == null ? (KIND_PIN || proposeKind(text)) : undefined;   // P23
   if (given == null){ KIND_PIN = null; drawKind(); }
@@ -1372,7 +1381,94 @@ async function loadCrew(){
     });
     box.appendChild(d);
   }
+  await loadShelf(box);                       // P6.5 sp1: the shelf beside the bodies
   box.scrollTop = keep;                       // the reader keeps their place
+}
+
+/* ---- P6.5 sp1: THE SHELF — every service the kernel governs (tool · mcp · store · source · mind), one ladder ---- */
+function stateWords(s){ return `${s.state}${s.state === "versioned" ? " (" + s.version + ")" : ""} · since ${hhmm(s.since)}`; }
+function healthWords(s){ const h = s.last_health; if (!h) return "never probed";
+  return (h.ok === true ? "healthy" : h.ok === false ? "UNHEALTHY" : "not probed") + ` · ${hhmm(h.at)} · ${h.detail}`; }
+function serviceCard(s){
+  const d = document.createElement("div"); d.className = "card service" + (s.state === "retired" ? " retired" : "");
+  const p = s.placement || {};
+  const secrets = (s.secrets || []).map(x => `<span class="secret ${x.reached ? "" : "unreached"}" title="by name only — the value is never shown">${esc(x.name)} ${x.reached ? "✓ reached" : "✗ unreached"}</span>`).join("");
+  d.innerHTML = `<h5><span class="kind">${esc(s.kind)}</span>${esc(s.name)} <span class="meta">· ${esc(stateWords(s))}</span></h5>` +
+    `<div class="meta">self …${esc(s.did.slice(-8))} · pin ${esc(s.manifest_hash.slice(7, 19))} · v${s.version} · by ${esc(whoIs(s.by))}</div>` +
+    `<div class="stands">${esc(p.why || "")}${secrets}</div>` +
+    `<div class="health ${(s.last_health || {}).ok === false ? "bad" : ""}">health: ${esc(healthWords(s))}</div>` +
+    (s.retirable ? `<span class="assist" data-retire title="consequential — held at the interlock in the chat; cancel is the default">retire ${esc(s.name)} → the interlock</span>`
+     : s.restorable ? `<span class="assist" data-restore title="a new fact — its stop stays in the record">restore ${esc(s.name)}</span>` : "");
+  const r = d.querySelector("[data-retire]"); if (r) r.onclick = () => retireService(s.name, s.kind);
+  const b = d.querySelector("[data-restore]"); if (b) b.onclick = () => restoreService(s.name, s.kind);
+  return d;
+}
+async function loadShelf(box){
+  const r = await fetch("/services").then(x=>x.json()).catch(()=>null);
+  const head = document.createElement("div"); head.className = "shelf-head";
+  head.textContent = "THE SHELF · every service the kernel governs — tool · mcp · store · source · mind · one ladder: registered → versioned → healthy | unhealthy → retired";
+  box.appendChild(head);
+  if (!r){ box.insertAdjacentHTML("beforeend", `<div class="meta">the shelf door did not answer</div>`); return; }
+  if (!r.services.length){ box.insertAdjacentHTML("beforeend", `<div class="meta">nothing on the shelf yet — the kernel registers its built-ins at boot</div>`); return; }
+  for (const s of r.services) box.appendChild(serviceCard(s));
+}
+async function retireService(name, kind){          // consequential (L2): the kernel holds it — the interlock arrives in the chat
+  toggleChat(true);
+  const r = await fetch("/services/retire", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({name, person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
+  if (r && r.held){
+    PENDING[r.held] = el("journey", `retiring the ${esc(name)} ${esc(kind || "service")} is consequential — the kernel holds it at the interlock…`);
+    const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);   // the hold may have landed before its notice
+    if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
+    return;
+  }
+  sysline(r && r.error ? esc(r.error) : "the retire door did not answer");
+}
+async function restoreService(name, kind){         // a new fact; its stop stays in the record
+  toggleChat(true);
+  const r = await fetch("/services/restore", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({name, person: PERSON})}).then(x=>x.json()).catch(()=>null);
+  sysline(r && r.service ? `${esc(name)} ${esc(kind || "service")} restored — standing ${esc(r.service.state)} again · a new fact; its stop stays in the record`
+        : r && r.error ? esc(r.error) : "the restore door did not answer");
+  refreshPulls();
+}
+const SERVICE_KINDS = {service: null, services: null, tool: "tool", tools: "tool", mind: "mind", minds: "mind",
+                       store: "store", stores: "store", source: "source", sources: "source", mcp: "mcp", mcps: "mcp", shelf: null};
+async function serviceWords(text){                 // "what services are here?" · "what tools are here?" · "retire the weather tool" · "check the services"
+  const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
+  let m = t.match(/^(?:what|which)\s+(services?|tools?|minds?|stores?|sources?|mcps?)\s+(?:are|is)\s+(?:here|on the shelf|registered)$/);
+  if (m){
+    el("msg mine", esc(text));
+    const kind = SERVICE_KINDS[m[1]];
+    const r = await fetch("/services" + (kind ? "?kind=" + kind : "")).then(x=>x.json()).catch(()=>null);
+    if (!r){ sysline("the shelf door did not answer"); return true; }
+    if (!r.services.length){ sysline(`nothing on the shelf${kind ? " of kind " + esc(kind) : ""} — the kernel registers its built-ins at boot`); return true; }
+    for (const s of r.services)
+      sysline(`<b>${esc(s.kind)}</b> · ${esc(s.name)} · ${esc(stateWords(s))} · ${esc((s.placement || {}).why || "")} · health: ${esc(healthWords(s).split(" · ")[0])}`);
+    toggleCrew(true);                              // the shelf, in the CREW pull
+    return true;
+  }
+  m = t.match(/^(retire|restore)\s+(?:the\s+)?([a-z0-9_.-]+)(?:\s+(tool|mind|store|source|mcp|service))?$/);
+  if (m){
+    el("msg mine", esc(text));
+    if (m[1] === "retire") await retireService(m[2], m[3]); else await restoreService(m[2], m[3]);
+    return true;
+  }
+  m = t.match(/^(?:check|probe)\s+(?:the\s+)?(services|tools|minds|stores|sources|mcps|shelf)$/);
+  if (m){
+    el("msg mine", esc(text));
+    const kind = SERVICE_KINDS[m[1]] || null;
+    const line = sysline("checking the shelf — every standing service probed by its kind…");
+    const r = await fetch("/services/check", {method:"POST", headers:{"content-type":"application/json"},
+      body: JSON.stringify({kind: kind || undefined, person: PERSON})}).then(x=>x.json()).catch(()=>null);
+    if (!r){ line.textContent = "the check door did not answer"; return true; }
+    line.textContent = `checked ${r.checked.length} services — ${r.ok ? "every one answered" : "some did not answer"}`;
+    for (const c of r.checked)
+      sysline(`<b>${esc(c.kind)}</b> · ${esc(c.name)} → <span class="${c.ok === false ? "red" : "ok"}">${c.ok === true ? "healthy" : c.ok === false ? "UNHEALTHY" : "not probed"}</span> · ${esc(c.detail)}`);
+    refreshPulls();
+    return true;
+  }
+  return false;
 }
 
 /* ---- the Monitoring pull: the second workspace, and its agent ---- */

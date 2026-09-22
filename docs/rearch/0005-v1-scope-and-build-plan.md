@@ -1113,13 +1113,58 @@ Sacred-crate rule untouched; every wire shape adds a fixture; JB walks.
 Two tracks never share a builder's files at once — the fixtures and
 `test_conformance.py` are shared, so landings are sequenced.
 
-- **sp1 — the services registry, one ladder.** One registry for every
-  service the kernel governs — `tool · mcp · store · source · mind` — as
-  identities (0018: services as identities; each with a DID, a manifest
-  pin, a placement, secrets by NAME per 0059) on one lifecycle ladder:
-  register → version → health → retire (dormancy never deletion — the
-  roster law). The meter reads the ladder (rule 5: one door). Doors and
-  words; the crew pull shows the shelf; fixture `services-v0`.
+- **sp1 — the services registry, one ladder** ✅ **BUILT 2026-09-22 — walk
+  OWED (JB in the glass, SPEC-SERVICES-01)**: `orreth_spine/services.py`
+  — ONE registry for every service the kernel governs (`tool · mcp · store
+  · source · mind`), each an IDENTITY (`did:orreth:service:…` minted by
+  `identity.py`'s machinery, the seed under `~/.orreth/services/<name>/` —
+  the same self every boot, rule 1; ephemeral only in tests), a MANIFEST
+  PIN (sha256 over canonical bytes: a tool's schema + class, a mind's
+  route + model, an mcp server's listed tools, a store's/source's locator
+  by NAME), a PLACEMENT honored at register exactly as a body's at birth
+  (P6 sp4), secrets by NAME only (0059: a key in ZERO records — a named
+  secret the ground cannot reach refuses BY NAME and records nothing);
+  ONE ladder `registered → versioned(n) → healthy | unhealthy → retired`,
+  `ladder_step` the pure law (a skipped step refused with the reason
+  words), retired = dormancy never deletion, restore a NEW fact; every
+  state change a fact through the outbox with the chain and a marker
+  (`orreth.service.registered.v1 · .versioned.v1 · .health.v1 ·
+  .retired.v1 · .restored.v1`); RETIRE is consequential (L2) — held as one
+  of the kernel's own acts at the interlock (`proof.hold_kernel_act`,
+  tool `service.retire`; cancel the default; the kernel settles it on the
+  yes) · **the meter reads the ladder**: `spine_meter.service` and
+  `spine_tool_calls.service` carry the SERVICE DID; the tool hop on the
+  wire and in the export reads `H → resident → did:orreth:service:…`
+  (`tool:<name>` stays the honest fallback for an unregistered tool); a
+  RETIRED tool refuses at the door with a teaching · **health** by kind:
+  tool — the door describes it and the schema matches the pin; mind — a
+  one-token ping through the meter under the service's own DID; store /
+  source — the locator reachable by NAME; mcp — "not yet probed" (sp2's)
+  · `harness.checks` gains "every service healthy or retired" (the
+  unhealthy and the never-probed named) · **the built-ins register at
+  boot** (seven tools, the ground and the Record as `store`, the mind the
+  gateway IS — the Anthropic route with its key by name, or the fake
+  lane) and are probed once · **doors** `GET /services[?kind]` · `POST
+  /services` · `/services/version` · `/services/check` · `/services/retire`
+  (202, held) · `/services/restore` · **words** "what services / tools /
+  minds are here?" · "retire the weather tool" (→ the interlock) ·
+  "restore the weather tool" · "check the services" · **the SHELF** in the
+  CREW pull beside the bodies (kind · name · ladder state with since ·
+  placement why-line · secrets ✓/✗ by name · last health · retire /
+  restore) · MITL's `read_ground` gains kind `service` and names the
+  services a change touches · fixture `services-v0.json` (22 cases:
+  `ladder_step` · `manifest_pin` · the registered/retired envelopes) ·
+  `tests/test_services.py` (7 laws). **Suite 283** (254 → 283; 140
+  conformance cases within). One test replaced by name: walk #8's
+  harness-list assertion names the third check. **Honest limits:** mcp
+  health is reserved for sp2 (recorded as "not yet probed", ok null); the
+  only mind on the shelf is the route the rig was lit with (LiteLLM ·
+  OpenRouter · local arrive with sp3); a service signs nothing yet (the
+  DID is its self; signed service acts come with the keepers); the
+  Anthropic mind is seeded only when its key is reachable by name — a
+  keyless rig registers the fake lane, honestly; the harness reads the
+  LAST health, it runs no probe (the rig probes at boot and on "check
+  the services" — the keeper's beat is sp2's).
 - **sp2 — the Tools keeper** (firmware, third kind): MCP through ONE door
   (0059) — an MCP client that lists a server's tools into the registry,
   versions them by manifest hash, health-checks them, retires them; the

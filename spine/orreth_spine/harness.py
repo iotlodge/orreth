@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P4 sp4, the A/B harness v0 · 2026-09-18
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): the world checks — a duty answered · offers arrive as holds · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the world check: every service healthy or retired · 2026-09-22
 """The A/B harness v0 (canon 0004, AG-6): golden cases run against a body's
 mind; every run is a record; a failing run is a FACT on the rail
 (orreth.harness.failed.v1) that the feed carries to the chat as a soft
@@ -163,6 +164,29 @@ def offers_are_holds(conn, n: int = 5) -> dict:
             "detail": detail, "unheld": unheld}
 
 
+def services_healthy(conn) -> dict:
+    """P6.5 sp1: every registered service is healthy or retired — read
+    off the shelf's LAST recorded health (the check runs no probe; the
+    rig probes at boot and on "check the services"). The unhealthy are
+    named; a service never probed is named too (an mcp is "not yet
+    probed" honestly until sp2) — a shelf with nothing on it passes."""
+    from . import services
+    rows = services.listing(conn)
+    standing = [r for r in rows if r["state"] != "retired"]
+    unhealthy = [r["name"] for r in standing if r["state"] == "unhealthy"]
+    unprobed = [r["name"] for r in standing if r["state"] not in ("healthy", "unhealthy")]
+    retired = [r["name"] for r in rows if r["state"] == "retired"]
+    ok = not unhealthy and not unprobed
+    if not rows:
+        detail = "no services on the shelf"
+    else:
+        detail = (f"{len(standing) - len(unhealthy) - len(unprobed)} healthy · {len(retired)} retired"
+                  + (f" · unhealthy: {', '.join(unhealthy)}" if unhealthy else "")
+                  + (f" · not yet probed: {', '.join(unprobed)}" if unprobed else ""))
+    return {"name": "every service healthy or retired", "ok": ok, "detail": detail,
+            "unhealthy": unhealthy, "unprobed": unprobed}
+
+
 def checks(conn) -> list[dict]:
     """Every world check, read off the ground — the harness door lists
     them; a failed check is a wound named in words."""
@@ -170,4 +194,4 @@ def checks(conn) -> list[dict]:
     _ground(conn)
     from . import monitor, scheduler
     scheduler.ensure_schema(conn); monitor.ensure_schema(conn)
-    return [duty_answered(conn), offers_are_holds(conn)]
+    return [duty_answered(conn), offers_are_holds(conn), services_healthy(conn)]

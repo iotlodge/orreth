@@ -3,6 +3,9 @@
 # (RabbitMQ), the events rail (Kafka, KRaft single node). Host ports are
 # chosen to never collide with the old world's rig (4500-4502) or a local
 # Postgres (5432): the ground answers on 5433.
+# P6.5 sp1 (JB's lock, 2026-09-22): the ground's data lives on a NAMED volume,
+# `orreth-spine-ground`, so a recreated container keeps the world — it ran on
+# an anonymous volume before (migrated once by hand: stop · create · cp -a · up).
 name: orreth-spine
 
 services:
@@ -14,6 +17,8 @@ services:
       POSTGRES_USER: orreth
       POSTGRES_PASSWORD: orreth-dev
       POSTGRES_DB: spine
+    volumes:
+      - orreth-spine-ground:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U orreth -d spine"]
       interval: 3s
@@ -58,3 +63,7 @@ services:
       timeout: 10s
       retries: 30
     restart: unless-stopped
+
+volumes:
+  orreth-spine-ground:
+    name: orreth-spine-ground

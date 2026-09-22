@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp2, the compliance export · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W19 (the refused ask in the record) · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the tool hop reads the service DID · 2026-09-22
 """The compliance export (canon 0005 P6 sp2 · AG-7): the chain, proven to
 a stranger.
 
@@ -332,8 +333,9 @@ def _row(e: dict, kind: str, oid: int, asks: dict, intentions: set, marker_ids: 
             served, proof, words = a["served_by"], p.get("level") or "L2", None
         elif kind == "proof":
             proof, words = p.get("level"), None
-        elif kind == "tool":                        # the hop: H → body → tool:<name>
-            served, proof, words = f"tool:{p.get('tool')}", a["proof"], None
+        elif kind == "tool":                        # the hop: H → body → the tool's service DID
+            served = p.get("service") or f"tool:{p.get('tool')}"   # (P6.5 sp1; tool:<name> when unregistered)
+            proof, words = a["proof"], None
         else:                                       # reply — an include's when firmware acted
             served, proof = a["served_by"], p.get("proof") or a["proof"]
             words = {"reply": a["reply"]}

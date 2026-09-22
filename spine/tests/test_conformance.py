@@ -4,6 +4,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass): address · offer · citation_name · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): restart_demand · duty_text · refused_words · echo_reply · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails: rail_names · outbox_row · inbox_key · 2026-09-22
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the services ladder: ladder_step · manifest_pin · 2026-09-22
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -15,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from orreth_spine import (dispatch, envelope as ev, export, harness, intent, mitl, monitor, placement, proof,
-                          rails, resident, scheduler)
+                          rails, resident, scheduler, services)
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
 FIXTURES = sorted(ROOT.glob("*-v*.json"))
@@ -154,5 +155,11 @@ def test_fixture(contract, case):
         assert {"road": road, "message_id": env["message_id"],
                 "aggregate_id": aid if road == "sequenced" else None,
                 "sequence": seq if road == "sequenced" else None} == exp
+    # ---- orreth.services/1 (P6.5 sp1): the one ladder's legality; the manifest pin ----
+    elif kind == "ladder_step":                  # from a state (null = unregistered), may a verb step, and to where?
+        assert services.ladder_step(inp["state"], inp["verb"]) == exp
+    elif kind == "manifest_pin":                 # canonical bytes → sha256, the pin every kind wears
+        assert ev.canonical(inp["manifest"]).decode("ascii") == exp["bytes"]
+        assert services.pin(inp["manifest"]) == exp["hash"]
     else:
         pytest.fail(f"unknown case kind {kind!r} in {contract}")

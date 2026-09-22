@@ -256,7 +256,8 @@ def test_w21_the_harness_catches_a_duty_refused_and_passes_a_note(pg, monkeypatc
     _land(pg, occ["ref"], "**I am not answering this again.** It was asked six times.", lib.identity.did)
     c = harness.duty_answered(pg)
     assert c["ok"] is False and c["refused"][0]["runner"] == "librarian" and "1 refused: librarian" in c["detail"]
-    assert [x["name"] for x in harness.checks(pg)] == ["a duty answered, not refused", "the monitor's offers arrive as holds"]
+    assert [x["name"] for x in harness.checks(pg)] == ["a duty answered, not refused", "the monitor's offers arrive as holds",
+                                                      "every service healthy or retired"]   # P6.5 sp1 added the third
     assert harness.checks(pg)[0]["ok"] is False
     _land(pg, occ["ref"], "nothing new since 7:12 PM", lib.identity.did)
     assert harness.duty_answered(pg)["ok"] is True

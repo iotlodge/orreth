@@ -1,0 +1,384 @@
+{
+ "contract": "orreth.services/1",
+ "version": 0,
+ "generated_by": "orreth_spine.services + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6.5 sp1",
+ "generated_at": "2026-09-22",
+ "cases": [
+  {
+   "name": "ladder_step: the first rung: an unregistered service registers",
+   "kind": "ladder_step",
+   "input": {
+    "state": null,
+    "verb": "register"
+   },
+   "expect": {
+    "ok": true,
+    "to": "registered",
+    "reason": null
+   }
+  },
+  {
+   "name": "ladder_step: a changed manifest re-pins: registered \u2192 versioned(n)",
+   "kind": "ladder_step",
+   "input": {
+    "state": "registered",
+    "verb": "version"
+   },
+   "expect": {
+    "ok": true,
+    "to": "versioned",
+    "reason": null
+   }
+  },
+  {
+   "name": "ladder_step: a probe that answers: versioned \u2192 healthy",
+   "kind": "ladder_step",
+   "input": {
+    "state": "versioned",
+    "verb": "healthy"
+   },
+   "expect": {
+    "ok": true,
+    "to": "healthy",
+    "reason": null
+   }
+  },
+  {
+   "name": "ladder_step: a probe that fails: healthy \u2192 unhealthy",
+   "kind": "ladder_step",
+   "input": {
+    "state": "healthy",
+    "verb": "unhealthy"
+   },
+   "expect": {
+    "ok": true,
+    "to": "unhealthy",
+    "reason": null
+   }
+  },
+  {
+   "name": "ladder_step: the next probe answers: unhealthy \u2192 healthy",
+   "kind": "ladder_step",
+   "input": {
+    "state": "unhealthy",
+    "verb": "healthy"
+   },
+   "expect": {
+    "ok": true,
+    "to": "healthy",
+    "reason": null
+   }
+  },
+  {
+   "name": "ladder_step: the human's stop: healthy \u2192 retired (dormancy, never deletion)",
+   "kind": "ladder_step",
+   "input": {
+    "state": "healthy",
+    "verb": "retire"
+   },
+   "expect": {
+    "ok": true,
+    "to": "retired",
+    "reason": null
+   }
+  },
+  {
+   "name": "ladder_step: retire from the first rung is a step too",
+   "kind": "ladder_step",
+   "input": {
+    "state": "registered",
+    "verb": "retire"
+   },
+   "expect": {
+    "ok": true,
+    "to": "retired",
+    "reason": null
+   }
+  },
+  {
+   "name": "ladder_step: the human's restore: retired \u2192 registered (a new fact)",
+   "kind": "ladder_step",
+   "input": {
+    "state": "retired",
+    "verb": "restore"
+   },
+   "expect": {
+    "ok": true,
+    "to": "registered",
+    "reason": null
+   }
+  },
+  {
+   "name": "ladder_step: refused: register twice \u2014 version it",
+   "kind": "ladder_step",
+   "input": {
+    "state": "registered",
+    "verb": "register"
+   },
+   "expect": {
+    "ok": false,
+    "to": null,
+    "reason": "already registered \u2014 version it when its manifest changes, never register it twice"
+   }
+  },
+  {
+   "name": "ladder_step: refused: a retired service is restored, never registered twice",
+   "kind": "ladder_step",
+   "input": {
+    "state": "retired",
+    "verb": "register"
+   },
+   "expect": {
+    "ok": false,
+    "to": null,
+    "reason": "retired \u2014 a retired service is restored, never registered twice"
+   }
+  },
+  {
+   "name": "ladder_step: refused: no version on a retired service",
+   "kind": "ladder_step",
+   "input": {
+    "state": "retired",
+    "verb": "version"
+   },
+   "expect": {
+    "ok": false,
+    "to": null,
+    "reason": "retired \u2014 the ladder runs no version on a retired service; restore it first"
+   }
+  },
+  {
+   "name": "ladder_step: refused: no health on a retired service",
+   "kind": "ladder_step",
+   "input": {
+    "state": "retired",
+    "verb": "healthy"
+   },
+   "expect": {
+    "ok": false,
+    "to": null,
+    "reason": "retired \u2014 the ladder runs no healthy on a retired service; restore it first"
+   }
+  },
+  {
+   "name": "ladder_step: refused: already retired",
+   "kind": "ladder_step",
+   "input": {
+    "state": "retired",
+    "verb": "retire"
+   },
+   "expect": {
+    "ok": false,
+    "to": null,
+    "reason": "already retired \u2014 nothing to retire"
+   }
+  },
+  {
+   "name": "ladder_step: refused: restore only from retired",
+   "kind": "ladder_step",
+   "input": {
+    "state": "healthy",
+    "verb": "restore"
+   },
+   "expect": {
+    "ok": false,
+    "to": null,
+    "reason": "healthy, not retired \u2014 nothing to restore"
+   }
+  },
+  {
+   "name": "ladder_step: refused: not registered",
+   "kind": "ladder_step",
+   "input": {
+    "state": null,
+    "verb": "retire"
+   },
+   "expect": {
+    "ok": false,
+    "to": null,
+    "reason": "not registered \u2014 retire is not a step from there; register it first"
+   }
+  },
+  {
+   "name": "ladder_step: refused: no such step on the ladder",
+   "kind": "ladder_step",
+   "input": {
+    "state": "registered",
+    "verb": "fly"
+   },
+   "expect": {
+    "ok": false,
+    "to": null,
+    "reason": "no step named 'fly' on the ladder \u2014 the steps: register, version, healthy, unhealthy, retire, restore"
+   }
+  },
+  {
+   "name": "manifest_pin: a tool's manifest \u2014 the weather tool's schema and class",
+   "kind": "manifest_pin",
+   "input": {
+    "manifest": {
+     "name": "weather",
+     "description": "Read the real temperature outside right now. Call it with NO arguments to use the operator's own town (the default) \u2014 never ask the human where they are first.",
+     "input_schema": {
+      "type": "object",
+      "properties": {
+       "latitude": {
+        "type": "number"
+       },
+       "longitude": {
+        "type": "number"
+       }
+      },
+      "required": []
+     },
+     "consequence": "routine"
+    }
+   },
+   "expect": {
+    "bytes": "{\"consequence\":\"routine\",\"description\":\"Read the real temperature outside right now. Call it with NO arguments to use the operator's own town (the default) \\u2014 never ask the human where they are first.\",\"input_schema\":{\"properties\":{\"latitude\":{\"type\":\"number\"},\"longitude\":{\"type\":\"number\"}},\"required\":[],\"type\":\"object\"},\"name\":\"weather\"}",
+    "hash": "sha256:845484c281d4eaa8fa9a303fb2c2861529938fb6e814f05bc825cf13d40d7503"
+   }
+  },
+  {
+   "name": "manifest_pin: a mind's manifest \u2014 the Anthropic route and its model",
+   "kind": "manifest_pin",
+   "input": {
+    "manifest": {
+     "route": "anthropic",
+     "model": "claude-haiku-4-5-20251001"
+    }
+   },
+   "expect": {
+    "bytes": "{\"model\":\"claude-haiku-4-5-20251001\",\"route\":\"anthropic\"}",
+    "hash": "sha256:b889a97db3896b71bfd556bcb3cdf11519603adf2fd84b3cca0377f0154c54f3"
+   }
+  },
+  {
+   "name": "manifest_pin: an mcp server's manifest \u2014 its listed tools, its url by secret NAME",
+   "kind": "manifest_pin",
+   "input": {
+    "manifest": {
+     "server": "weather-mcp",
+     "url_secret": "WEATHER_MCP_URL",
+     "tools": [
+      {
+       "name": "forecast",
+       "input_schema": {
+        "type": "object",
+        "properties": {
+         "city": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "city"
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "expect": {
+    "bytes": "{\"server\":\"weather-mcp\",\"tools\":[{\"input_schema\":{\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"},\"name\":\"forecast\"}],\"url_secret\":\"WEATHER_MCP_URL\"}",
+    "hash": "sha256:a2c070e5a8c4beeadfec7edeccfe768d5b8fd3b06b1c13a5d6161222ae8a7503"
+   }
+  },
+  {
+   "name": "manifest_pin: a store's manifest \u2014 its locator by NAME, never a value",
+   "kind": "manifest_pin",
+   "input": {
+    "manifest": {
+     "locator": "SPINE_PG",
+     "table": "spine_memories"
+    }
+   },
+   "expect": {
+    "bytes": "{\"locator\":\"SPINE_PG\",\"table\":\"spine_memories\"}",
+    "hash": "sha256:b4b7db6a35793eaf1a57c1824238bddc855456557c0be65d44f81e7a08b5173e"
+   }
+  },
+  {
+   "name": "encode: orreth.service.registered.v1 \u2014 the kernel's chain, an observation marker, the pin and the placement",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_id": "msg_000000000000000000000001",
+     "message_kind": "event",
+     "type": "orreth.service.registered.v1",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-22T12:00:00.000Z",
+     "payload": {
+      "ref": "did:orreth:service:5d41402abc4b2a76b9719d911017c592",
+      "hash": "sha256:845484c281d4eaa8fa9a303fb2c2861529938fb6e814f05bc825cf13d40d7503",
+      "name": "weather",
+      "kind": "tool",
+      "version": 1,
+      "state": "registered",
+      "by": "the kernel",
+      "placement": {
+       "cell": "local",
+       "affinity": [],
+       "secrets_with": [],
+       "metal": "any"
+      },
+      "secrets_with": []
+     },
+     "correlation_id": "did:orreth:service:5d41402abc4b2a76b9719d911017c592",
+     "authority_chain": [
+      "the kernel"
+     ],
+     "marker": {
+      "kind": "observation",
+      "id": "mk_000000000001",
+      "parent": null,
+      "by": "the kernel"
+     }
+    }
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"did:orreth:service:5d41402abc4b2a76b9719d911017c592\",\"marker\":{\"by\":\"the kernel\",\"id\":\"mk_000000000001\",\"kind\":\"observation\",\"parent\":null},\"message_id\":\"msg_000000000000000000000001\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-22T12:00:00.000Z\",\"payload\":{\"by\":\"the kernel\",\"hash\":\"sha256:845484c281d4eaa8fa9a303fb2c2861529938fb6e814f05bc825cf13d40d7503\",\"kind\":\"tool\",\"name\":\"weather\",\"placement\":{\"affinity\":[],\"cell\":\"local\",\"metal\":\"any\",\"secrets_with\":[]},\"ref\":\"did:orreth:service:5d41402abc4b2a76b9719d911017c592\",\"secrets_with\":[],\"state\":\"registered\",\"version\":1},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.service.registered.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "encode: orreth.service.retired.v1 \u2014 released at the interlock: [person, the kernel], an action under the held ask",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_id": "msg_000000000000000000000002",
+     "message_kind": "event",
+     "type": "orreth.service.retired.v1",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-22T12:05:00.000Z",
+     "payload": {
+      "ref": "did:orreth:service:5d41402abc4b2a76b9719d911017c592",
+      "hash": "sha256:845484c281d4eaa8fa9a303fb2c2861529938fb6e814f05bc825cf13d40d7503",
+      "name": "weather",
+      "kind": "tool",
+      "version": 1,
+      "state": "retired",
+      "by": "did:orreth:person:jb",
+      "from": "healthy"
+     },
+     "correlation_id": "ask_00000000000000aa",
+     "authority_chain": [
+      "did:orreth:person:jb",
+      "the kernel"
+     ],
+     "marker": {
+      "kind": "action",
+      "id": "mk_000000000002",
+      "parent": "mk_0000000000ob",
+      "by": "did:orreth:person:jb"
+     }
+    }
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"did:orreth:person:jb\",\"the kernel\"],\"correlation_id\":\"ask_00000000000000aa\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_000000000002\",\"kind\":\"action\",\"parent\":\"mk_0000000000ob\"},\"message_id\":\"msg_000000000000000000000002\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-22T12:05:00.000Z\",\"payload\":{\"by\":\"did:orreth:person:jb\",\"from\":\"healthy\",\"hash\":\"sha256:845484c281d4eaa8fa9a303fb2c2861529938fb6e814f05bc825cf13d40d7503\",\"kind\":\"tool\",\"name\":\"weather\",\"ref\":\"did:orreth:service:5d41402abc4b2a76b9719d911017c592\",\"state\":\"retired\",\"version\":1},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.service.retired.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  }
+ ]
+}

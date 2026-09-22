@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch intent sp1, the ground at birth · 2026-09-19
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the services ground · 2026-09-22
 """Every ground, ensured when a connection is BORN — never inside a serve.
 
 The law (found live at the intent sp1 relight): `outbox.once` keeps a
@@ -22,16 +23,17 @@ from __future__ import annotations
 
 TAGS = ("outbox", "inbox", "projector", "resident", "gateway", "tools", "store",
         "markers", "monitor", "scheduler", "harness", "presence", "digest", "intent",
-        "proof", "mitl", "placement")
+        "proof", "mitl", "placement", "services")
 
 
 def ensure_all(conn) -> None:
     """Flag every ground on this connection (each module's `once` tag), so
     the serving transaction never runs DDL and never takes the lock."""
     from . import (digest, gateway, harness, inbox, intent, markers, mitl, monitor, outbox,
-                   placement, presence, projector, proof, resident, scheduler, store, tools)
+                   placement, presence, projector, proof, resident, scheduler, services, store, tools)
     for mod in (outbox, inbox, projector, resident, gateway, tools, store, markers,
-                monitor, scheduler, harness, presence, digest, intent, proof, mitl, placement):
+                monitor, scheduler, harness, presence, digest, intent, proof, mitl, placement,
+                services):
         mod.ensure_schema(conn)
     markers.seed(conn)                      # the kernel's kinds, in this world
     outbox.mark_ground_done(conn, TAGS)     # the birth FINISHED: later connections are born flagged

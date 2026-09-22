@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp3, the soul checkpoint · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp2, the tool hop wears the chain (AG-7) · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the hop wears the SERVICE DID; a retired tool refuses · 2026-09-22
 """The tool door v0 (canon 0004): a resident acts only through a
 governed door.
 
@@ -16,6 +17,12 @@ calling body's authority chain plus the tool's own name (`tool:<name>`)
 on its row, and files `orreth.tool.called.v1` through the outbox — an
 envelope carrying that chain end to end and the action marker — so a
 compliance row reads H → resident → firmware → tool from the record.
+
+P6.5 sp1: a tool is a SERVICE on the registry's ladder (services.py) — the
+hop wears the service's DID (`did:orreth:service:…`) when the tool is
+registered, `tool:<name>` only for an unregistered one (the honest
+fallback), and a RETIRED tool refuses at the door with a teaching:
+retirement is the human's stop (rule 11), restore brings it back.
 """
 from __future__ import annotations
 
@@ -49,6 +56,13 @@ def consequence_of(tool: dict) -> str:
     """The class a tool declared: `consequence` by name, or the older
     `consequential` flag read as consequential/routine."""
     return tool.get("consequence") or ("consequential" if tool.get("consequential") else "routine")
+
+
+def tool_manifest(name: str, tool: dict) -> dict:
+    """What a tool DECLARES — the manifest the registry pins (P6.5 sp1):
+    its name, its words, its input schema, its consequence class."""
+    return {"name": name, "description": tool["description"],
+            "input_schema": tool["input_schema"], "consequence": consequence_of(tool)}
 
 
 # ---- the tools themselves ---------------------------------------------------------
@@ -198,6 +212,8 @@ def ensure_schema(conn) -> None:
         # P6 sp2: the hop wears its chain and names its ask (AG-7)
         cur.execute("ALTER TABLE spine_tool_calls ADD COLUMN IF NOT EXISTS authority_chain text")
         cur.execute("ALTER TABLE spine_tool_calls ADD COLUMN IF NOT EXISTS ask text")
+        # P6.5 sp1: the hop names the SERVICE it called (the registry's DID)
+        cur.execute("ALTER TABLE spine_tool_calls ADD COLUMN IF NOT EXISTS service text")
 
 
 class ToolDoor:
@@ -238,6 +254,12 @@ class ToolDoor:
         tool = TOOLS.get(name)
         if tool is None:
             raise ToolRefused(f"no tool named {name!r} lives on this shelf")
+        from . import services                   # P6.5 sp1: the door reads the ladder
+        conn = getattr(self, "_conn", None)      # (a door without a ground — the pure hold test — reads none)
+        service = services.did_of(conn, "tool", name) if conn is not None else None
+        if service and services.state_of(conn, "tool", name) == "retired":
+            raise ToolRefused(f"the {name} tool is retired on this shelf — at rest, never deleted; "
+                              f"the human restores it (\"restore the {name} tool\") before it serves again")
         cls = consequence_of(tool)
         if cls != "routine" and not confirmed:
             # the proof demand rises to meet the consequence (P12):
@@ -258,14 +280,14 @@ class ToolDoor:
             result, ok = f"{type(e).__name__}: {e}"[:300], False
         from . import envelope as ev, markers, outbox
         public = {k: v for k, v in args.items() if not k.startswith("_")}
-        chain = self.chain + [f"tool:{name}"]        # the hop, end to end
-        markers.ensure_schema(self._conn); outbox.ensure_schema(self._conn)
+        chain = self.chain + [service or f"tool:{name}"]   # the hop, end to end: the service's
+        markers.ensure_schema(self._conn); outbox.ensure_schema(self._conn)   # DID when registered
         with self._conn.transaction():
             cur = self._conn.cursor()
             cur.execute(
-                "INSERT INTO spine_tool_calls (did, tool, args, ok, result, authority_chain, ask)"
-                " VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                (self.did, name, json.dumps(public), ok, result[:500], json.dumps(chain), self.ask))
+                "INSERT INTO spine_tool_calls (did, tool, args, ok, result, authority_chain, ask, service)"
+                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                (self.did, name, json.dumps(public), ok, result[:500], json.dumps(chain), self.ask, service))
             marker = markers.as_env(self._conn, self.marker)
             if ok and name != "mark":            # an ACTION under the ask's
                 mid = markers.new_id()           # marker (0006); `mark` sets
@@ -275,7 +297,8 @@ class ToolDoor:
             e = ev.make_envelope(                # the fact: the hop on the wire (AG-7)
                 kind="event", type=TOOL_CALLED, universe_id=ev.scope(), scope_path=ev.scope(),
                 payload={"ref": self.ask or self.did, "hash": ev.content_hash(public),
-                         "tool": name, "ok": ok, "by": self.did},
+                         "tool": name, "ok": ok, "by": self.did,
+                         **({"service": service} if service else {})},
                 correlation_id=self.ask, authority_chain=chain, marker=marker)
             outbox.add_row(cur, ev.encode(e), e["message_id"])
         if not ok:

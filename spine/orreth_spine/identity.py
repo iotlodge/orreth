@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp1, the body is born · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, a service is a self too (`kind`) · 2026-09-22
 """Identity (covenant rule 1): a keypair is a self, and a self survives
 the process. The seed persists under the agent's home; every life loads
 the SAME keys and wears the SAME DID. An ephemeral identity (home=None)
@@ -16,19 +17,22 @@ from . import envelope as ev
 
 
 class Identity:
-    def __init__(self, name: str, seed: bytes):
+    def __init__(self, name: str, seed: bytes, kind: str = "agent"):
+        """`kind` names what the self IS in its DID — an agent (a body) or,
+        since P6.5 sp1, a service (0018: services as identities)."""
         self.name = name
+        self.kind = kind
         self._key = SigningKey(seed)
         pub = bytes(self._key.verify_key)
-        self.did = "did:orreth:agent:" + hashlib.sha256(pub).hexdigest()[:32]
+        self.did = f"did:orreth:{kind}:" + hashlib.sha256(pub).hexdigest()[:32]
 
     @classmethod
-    def load(cls, name: str, home: str | os.PathLike | None) -> "Identity":
+    def load(cls, name: str, home: str | os.PathLike | None, kind: str = "agent") -> "Identity":
         """The same self in every life: the seed is read from
         <home>/<name>/seed, minted once if absent. home=None mints an
         ephemeral self — tests only, never a resident."""
         if home is None:
-            return cls(name, os.urandom(32))
+            return cls(name, os.urandom(32), kind)
         path = Path(home) / name / "seed"
         if path.exists():
             seed = path.read_bytes()
@@ -37,7 +41,7 @@ class Identity:
             seed = os.urandom(32)
             path.write_bytes(seed)
             path.chmod(0o600)
-        return cls(name, seed)
+        return cls(name, seed, kind)
 
     @property
     def verify_key_hex(self) -> str:

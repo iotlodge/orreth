@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the shelf's doors (`/services…`); the built-ins registered and probed at boot · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W20 `/intentions/restart` · the harness door `GET /harness` · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL born · the toggle and the impact doors · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
@@ -33,7 +34,7 @@ from pathlib import Path
 import psycopg
 
 from . import bridgefeed, digest, dispatch, envelope as ev, export, ground, harness, intent, markers, mitl, monitor, outbox
-from . import placement, presence, projector, proof, scheduler, sinks
+from . import placement, presence, projector, proof, scheduler, services, sinks
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRefused, Resident
 
@@ -343,9 +344,12 @@ def address_to(conn, text: str, to: list[str] | None) -> list[str] | None:
     return [who] if who else to
 
 
-def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = None):
+def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = None,
+                       gateway=None, services_home=None):
     Base = bridgefeed.make_handler(feed)
     bodies = bodies or {}            # the rig's bodies by name (the harness door)
+    # P6.5 sp1: the shelf's doors probe a mind through the rig's gateway and
+    # seat a new service's seed beside the agents' (None: ephemeral, tests)
 
     # every door connection is AUTOCOMMIT (the rig-loop law, now for doors
     # too): a door's bare read must never open an implicit transaction that
@@ -459,6 +463,18 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
             if path == "/markers/kinds":                 # the registry
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"kinds": markers.kinds(conn)})
+            if path == "/services":                      # P6.5 sp1: the shelf — every service, its ladder state
+                from urllib.parse import parse_qs
+                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
+                    if "?" in self.path else {}
+                kind = qs.get("kind") or None
+                if kind and kind not in services.KINDS:
+                    return self._json(400, {"error": f"a kind is one of {', '.join(services.KINDS)}"})
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    here = placement.ground_declares()
+                    return self._json(200, {"services": services.listing(conn, kind=kind),
+                                            "kinds": list(services.KINDS),
+                                            "ground": {"cell": here["cell"], "metal": here["metal"]}})
             if path == "/markers":                       # the tree · the ancestry · the stream
                 from urllib.parse import parse_qs
                 qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
@@ -708,6 +724,37 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 except ValueError as e:
                     return self._json(400, {"error": str(e)})
                 return self._json(201, made)
+            if path in ("/services", "/services/version", "/services/check",
+                        "/services/retire", "/services/restore"):   # P6.5 sp1: the shelf's doors — the owner's, plain words
+                person = str(p.get("person") or "did:orreth:person:jb")
+                name = str(p.get("name") or "").strip()
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        if path == "/services":                       # register
+                            made = services.register(
+                                conn, name, str(p.get("kind") or ""), p.get("manifest"), by=person,
+                                placement=p.get("placement") or None,
+                                secrets_with=p.get("secrets_with") or None, home=services_home)
+                            return self._json(201, {"service": made})
+                        if path == "/services/version":
+                            made = services.version(conn, name, p.get("manifest"), by=person)
+                            return self._json(200, {"service": made})
+                        if path == "/services/check":                 # one by name, or every standing one
+                            if name:
+                                out = [services.check(conn, name, gateway=gateway, by=person)]
+                            else:
+                                out = services.check_all(conn, gateway=gateway,
+                                                         kind=str(p.get("kind") or "") or None, by=person)
+                            return self._json(200, {"checked": out, "ok": all(c["ok"] for c in out)})
+                        if path == "/services/retire":                # held at the interlock (L2)
+                            held = services.hold_retire(conn, name, person=person,
+                                                        session=str(p.get("session") or "") or None)
+                            return self._json(202, {"held": held, "level": services.RETIRE_LEVEL,
+                                                    "class": services.RETIRE_CLASS})
+                        made = services.restore(conn, name, by=person)   # a new fact
+                        return self._json(201, {"service": made})
+                except services.ServiceRefused as e:
+                    return self._json(400, {"error": str(e)})
             if path == "/enroll":                         # P6 sp1: "enroll my authenticator"
                 person = str(p.get("person") or "did:orreth:person:jb")
                 try:
@@ -746,6 +793,9 @@ class BridgeRig:
         self.dsn = dsn or PG_DSN
         self._stop = threading.Event()
         self.feed = bridgefeed.Feed()
+        self.gateway = gateway                       # P6.5 sp1: the mind the shelf probes
+        self.services_home = services.services_home(home)   # the services' seeds, beside the agents'
+
         policy_path = policy or spine / "policy" / "covenant-policy.v1.json"
         self.resident = Resident(
             template or spine / "templates" / "librarian-resident.v0.json",
@@ -786,7 +836,8 @@ class BridgeRig:
         from http.server import ThreadingHTTPServer
         self._httpd = ThreadingHTTPServer(
             ("127.0.0.1", port), make_glass_handler(
-                self.feed, self.dsn, {r.name: r for r in self.residents}))
+                self.feed, self.dsn, {r.name: r for r in self.residents},
+                gateway=gateway, services_home=self.services_home))
         self.port = self._httpd.server_address[1]
         self.feed_ready = threading.Event()
         self.dispatcher_ready = threading.Event()
@@ -847,6 +898,7 @@ class BridgeRig:
                             scheduler.declared(conn, r.name, "kernel",
                                                "run the harness against my golden set",
                                                1800, "the kernel")
+                    self._seed_shelf(conn)        # P6.5 sp1: the built-ins on the shelf, probed
                     break
                 except Exception:
                     time.sleep(0.3)
@@ -856,6 +908,25 @@ class BridgeRig:
                 except Exception:
                     pass
                 time.sleep(5)
+
+    def _seed_shelf(self, conn) -> None:
+        """P6.5 sp1: the kernel registers what it was born with — every
+        built-in tool, the ground and the Record, the mind the gateway is
+        — the same selves every boot (seeds beside the agents'), then
+        probes each once so the shelf and the harness read true. A
+        refusal is said, never a crash."""
+        try:
+            made = services.seed(conn, gateway=self.gateway, home=self.services_home)
+            for line in made["refused"]:
+                print(f"the shelf refused a built-in: {line}", file=sys.stderr, flush=True)
+            checked = services.check_all(conn, gateway=self.gateway)
+            bad = [c["name"] for c in checked if c["ok"] is False]
+            if made["registered"] or bad:
+                print(f"the shelf: {len(checked)} services probed"
+                      + (f", registered now: {', '.join(made['registered'])}" if made["registered"] else "")
+                      + (f", UNHEALTHY: {', '.join(bad)}" if bad else ""), file=sys.stderr, flush=True)
+        except Exception as e:                       # noqa: BLE001 — the rig runs on; the harness will say
+            print(f"the shelf could not be seeded: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
 
     def _intent_loop(self):
         """The intent rail (0007, the fifth): the kernel's Infinite Horizon

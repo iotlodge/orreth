@@ -57,7 +57,7 @@ is the exact thing this page exists to prevent.
 | The doors that answer (0071) | publishable join door, signed machine asks, per-DID knock ceilings, ask-cache | RE-SEATED — P7 sp3 · sp8 | none of it in the spine; the glass's doors are unauthenticated dev doors. KCR-0001 must be re-paid on the new kernel. |
 | The Person (0070) | humans as identities: own key, signed acts, name never reissued | CARRIED partial — `proof.py` | persons enroll TOTP and can be masters; no person keypair, no signed human act. |
 | Factories + BirthCertificate (0011) | archetype → incarnation, upgrade in place, rookie probation | RE-SEATED — 0004 "the factories" + the draft shelf | `spine/templates/*.v0.json` are versioned templates; no birth record, no probation, no factory body. |
-| Roster breathes (dormancy, leases) | present vs remembered, 30-day leases, never deletion | CARRIED — `presence.py` | leases renew while serving; dormant in seconds; stays listed. |
+| Roster breathes (dormancy, leases) | present vs remembered, 30-day leases, never deletion | CARRIED — `presence.py` · `services.py` (P6.5 sp1: the shelf) | leases renew while serving; dormant in seconds; stays listed. A retired SERVICE is dormancy too: held at L2, the row and every fact stay, restore is a new fact. |
 
 ### Governance & policy
 
@@ -89,10 +89,10 @@ is the exact thing this page exists to prevent.
 
 | Old organ (dive) | What it did | Seat | Evidence / gap |
 |---|---|---|---|
-| Services are identities (0018) | DID'd tools/MCPs, manifest hash pin, lifecycle ladder, drop = lease expiry, charlotte | RE-SEATED — P6.5 sp6a | `tools.py` = a Python dict of seven built-ins (weather · acquire · mark · purge-memory · add-watch · seal-record · erase-record). No registry, no DID, no manifest, no ladder. |
+| Services are identities (0018) | DID'd tools/MCPs, manifest hash pin, lifecycle ladder, drop = lease expiry, charlotte | CARRIED partial — `services.py` (P6.5 sp1) | ONE registry for tool · mcp · store · source · mind: a `did:orreth:service:…` self per service (seed persisted, rule 1), the manifest pin, the ladder registered → versioned(n) → healthy \| unhealthy → retired (restore a new fact), every step a fact with chain + marker; the built-ins registered at boot; the meter and the tool hop carry the service DID. **Missing:** drop = lease expiry (a service holds no lease yet), quarantine on a changed manifest (a change VERSIONS today), the keeper (charlotte's seat — sp2). |
 | The governed tool door (0059's ONE door) | every call metered, journaled, authorized | CARRIED — `tools.py` `ToolDoor` | declared per template or refused (teaching); journaled; AG-7 chain on the wire (`orreth.tool.called.v1`); L2 interlock. |
 | MCP as a whole transport (0059) | `tools/call` through the one door, session, SSE | RE-SEATED — sp6a | **no MCP client in the spine.** |
-| The env-secrets law (0059) | `env:NAME` indirection; a key in ZERO records | RE-SEATED — sp6a | no endpoints, so no secrets yet; the law must land with the first remote tool. |
+| The env-secrets law (0059) | `env:NAME` indirection; a key in ZERO records | CARRIED — `services.py` `register(secrets_with=…)` · `placement.py` (P6.5 sp1) | a service names its secrets by NAME; register refuses BY NAME when the ground cannot reach one and records nothing; the shelf shows ✓/✗ by name; a value is printed nowhere. The first remote endpoint (an mcp `url_secret`) rides it in sp2. |
 | Seed catalog, RESTING, allocations, warden checks, playground (0059) | registry searched live; rest/resume; per-floor allocation; credential sniffer | RE-SEATED — sp6a (catalog last) | none present. |
 | The Estate / allen (0037) | the infrastructure resident; charters stores and cloud | RE-SEATED — 0004 allen-class resident · `placement.py` | placement policy stands (P6 sp4); no allen body. |
 | Residents keep themselves + the Serials Desk (0062 · 0032) | standing supply lines, subscriptions as standing word | PARKED — rule 12 | `scheduler.py` gives the standing-duty half; the supply line waits for a proof that needs it. |
@@ -165,7 +165,7 @@ is the exact thing this page exists to prevent.
 | The six embodied proof repos | body · fleet · blackbox · genuine · ota · fuel | PARKED — 0005's out-of-V1 list | held deliberately; their own season. |
 | The multiverse portal · voice · enterprise IdP federation | | PARKED — 0005 (voice V2; federation seam declared, minimal) | |
 
-**Tally (63 rows):** CARRIED 8 · CARRIED partial 12 · RE-SEATED 29 ·
+**Tally (63 rows, re-counted 2026-09-22 after P6.5 sp1):** CARRIED 9 · CARRIED partial 13 · RE-SEATED 27 ·
 CAPABILITY 6 · PARKED 7 · DROPPED 1. The honest reading: the LAWS crossed; the
 ORGANS that made the old world a product mostly wait on the four bodies
 below and the port's sp7–sp8.

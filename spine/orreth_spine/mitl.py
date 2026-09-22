@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL v0 + the impact door · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, MITL names the services a change touches (kind `service`) · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 """MITL v0 — the Master Mind In the Loop (canon 0001 · 0004 · 0005 P6 sp3).
 
@@ -62,7 +63,7 @@ TITLES = {                                          # W15: the canon in human na
     "docs/rearch/0008-the-rust-plane-and-the-port.md": "the Rust plane and the port",
     ".claude/skills/orreth-covenant/SKILL.md": "the covenant",
 }
-KINDS = ("watch", "intention", "template", "binding", "placement", "act")
+KINDS = ("watch", "intention", "template", "binding", "placement", "act", "service")
 VERDICTS = ("low", "consider", "grave — needs L3")  # sp1's ladder, in MITL's words
 
 SYSTEM = (
@@ -352,7 +353,7 @@ def read_ground(conn, change: dict) -> dict:
     draft = dict(change.get("draft") or {})
     words = " ".join(str(change.get("words") or "").split())
     t: dict = {"kind": kind, "ref": ref, "words": words, "bodies": [], "chains": [],
-               "intentions": [], "watches": [], "markers": [], "cost": {}, "notes": [],
+               "intentions": [], "watches": [], "markers": [], "services": [], "cost": {}, "notes": [],
                "kernel": False, "class": "routine", "level": "L1", "marker": None}
     bodies = _bodies(conn)
     named: list[str] = []
@@ -515,8 +516,34 @@ def read_ground(conn, change: dict) -> dict:
         elif not hold:
             t["class"] = consequence_of(spec)
             t["level"] = level_for(t["class"], master=bool(spec.get("master")))
+        svc, declared = _service_touched(conn, t, "tool", tool)   # P6.5 sp1: the service the act calls
+        for n in declared:
+            name_body(n)
         if named:
-            t["chains"].append(f"H → {named[0]} → tool:{tool}")
+            t["chains"].append(f"H → {named[0]} → {svc['did'] if svc else 'tool:' + tool}")
+
+    elif kind == "service":
+        # P6.5 sp1: a change on the shelf — retiring (consequential, L2), versioning,
+        # restoring a service: the kernel reads its row, names the bodies that
+        # declared it, and says where it stands on the ladder
+        from . import services as _services
+        who = str(draft.get("name") or ref or "")
+        svc = _services.get(conn, who) if who else None
+        if not hold:
+            t["class"], t["level"] = _services.RETIRE_CLASS, _services.RETIRE_LEVEL
+        if svc is None:
+            t["notes"].append(f"no service named {who!r} is on the shelf — \"what services are here?\" lists them")
+        else:
+            _svc, declared = _service_touched(conn, t, svc["kind"], svc["name"])
+            for n in declared:
+                name_body(n)
+            t["chains"].append(f"H → the kernel → {svc['did']}")
+            if svc["state"] == "retired":
+                t["notes"].append(f"{who} is already retired (since {svc['since'][:16]}) — restore is the step from there")
+            else:
+                t["notes"].append(f"{who} stands {svc['state']} on the ladder, version {svc['version']}"
+                                  + (f" · last health: {'ok' if svc['last_health']['ok'] else 'not ok' if svc['last_health']['ok'] is False else 'not probed'}"
+                                     if svc["last_health"] else " · never probed"))
 
     for n in named:
         b = bodies.get(n)
@@ -527,6 +554,27 @@ def read_ground(conn, change: dict) -> dict:
         if b["did"] in cost:
             t["cost"][b["name"]] = cost[b["did"]]
     return t
+
+
+def _service_touched(conn, t: dict, kind: str, name: str) -> tuple[dict | None, list[str]]:
+    """The service a change touches, from the shelf (P6.5 sp1), and the
+    names of the bodies that DECLARED it (a tool: `tools:<name>` at their
+    join) — the caller names them."""
+    from . import services as _services
+    svc = _services.get(conn, name)
+    if svc is None or svc["kind"] != kind:
+        return None, []
+    t["services"].append({"name": svc["name"], "kind": svc["kind"], "did": svc["did"],
+                          "state": svc["state"], "version": svc["version"]})
+    declared: list[str] = []
+    if kind == "tool":
+        cur = conn.cursor()
+        cur.execute("SELECT DISTINCT ON (name) name, capabilities FROM spine_joins WHERE scope = %s"
+                    " ORDER BY name, join_id DESC", (ev.scope(),))
+        for n, caps in cur.fetchall():
+            if f"tools:{name}" in json.loads(caps or "[]"):
+                declared.append(n)
+    return svc, declared
 
 
 def verdict(touches: dict) -> str:

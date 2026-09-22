@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp2, the mind arrives · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W17 (the meter's clock) · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the meter reads the ladder (the mind's service DID) · 2026-09-22
 """The gateway lane v0 (canon 0004): no mind thinks off-meter.
 
 Every model call in the new world goes through here: the thought runs,
@@ -9,6 +10,10 @@ clock_timestamp(), never the serving transaction's start). The kernel never sees
 plane law); the meter sees only the count. A resident without a gateway
 falls back to its deterministic graph — it never calls a model around
 the meter, because there is no other door.
+
+P6.5 sp1: the meter reads the ladder — every meter row carries the DID of
+the MIND SERVICE the model belongs to (services.py, kind mind) when one is
+registered; null honestly when none is.
 """
 from __future__ import annotations
 
@@ -30,6 +35,21 @@ def ensure_schema(conn) -> None:
             " tokens_in int NOT NULL,"
             " tokens_out int NOT NULL,"
             " at timestamptz NOT NULL DEFAULT now())")
+        # P6.5 sp1: the mind's service DID on every line (null when unregistered)
+        cur.execute("ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS service text")
+
+
+def meter(conn, did: str, model: str, tokens_in: int, tokens_out: int) -> None:
+    """ONE meter line, the same for every lane: who thought, which model,
+    how many tokens, when (W17: the landing on the ground's clock) — and
+    which mind service the model is, read from the ladder."""
+    from . import services
+    service = services.mind_did(conn, model)
+    with conn.transaction():
+        conn.cursor().execute(
+            "INSERT INTO spine_meter (did, model, tokens_in, tokens_out, at, service)"
+            " VALUES (%s, %s, %s, %s, clock_timestamp(), %s)",
+            (did, model, tokens_in, tokens_out, service))
 
 
 class AnthropicGateway:
@@ -64,11 +84,7 @@ class AnthropicGateway:
                 model=m, max_tokens=max_tokens, system=system,
                 messages=[{"role": "user", "content": prompt}])
         text = "".join(b.text for b in msg.content if b.type == "text")
-        with conn.transaction():
-            conn.cursor().execute(
-                "INSERT INTO spine_meter (did, model, tokens_in, tokens_out, at)"
-                " VALUES (%s, %s, %s, %s, clock_timestamp())",
-                (did, m, msg.usage.input_tokens, msg.usage.output_tokens))
+        meter(conn, did, m, msg.usage.input_tokens, msg.usage.output_tokens)
         return text
 
     def think_acting(self, conn, *, did: str, system: str, prompt: str,
@@ -96,11 +112,7 @@ class AnthropicGateway:
                 msg = self._client.messages.create(
                     model=m, max_tokens=max_tokens, system=system,
                     tools=door.schemas(), messages=messages)
-            with conn.transaction():
-                conn.cursor().execute(
-                    "INSERT INTO spine_meter (did, model, tokens_in,"
-                    " tokens_out, at) VALUES (%s, %s, %s, %s, clock_timestamp())",
-                    (did, m, msg.usage.input_tokens, msg.usage.output_tokens))
+            meter(conn, did, m, msg.usage.input_tokens, msg.usage.output_tokens)
             if msg.stop_reason != "tool_use":
                 return ("".join(b.text for b in msg.content
                                 if b.type == "text"), notes)
@@ -122,6 +134,8 @@ class FakeGateway:
     """The test lane: deterministic thoughts, REAL meter lines — the
     metering law is tested without a network."""
 
+    DEFAULT_MODEL = "fake-mind"
+
     def __init__(self, reply: str = "a thought from the fake mind"):
         self.reply = reply
         self.calls: list[dict] = []
@@ -134,12 +148,7 @@ class FakeGateway:
         if on_delta is not None:
             for w in self.reply.split(" "):
                 on_delta(w + " ")
-        with conn.transaction():
-            conn.cursor().execute(
-                "INSERT INTO spine_meter (did, model, tokens_in, tokens_out, at)"
-                " VALUES (%s, %s, %s, %s, clock_timestamp())",
-                (did, model or "fake-mind", len(prompt.split()),
-                 len(self.reply.split())))
+        meter(conn, did, model or self.DEFAULT_MODEL, len(prompt.split()), len(self.reply.split()))
         return self.reply
 
 
@@ -149,6 +158,8 @@ class FakeActingGateway:
     journaling, and interlock laws are exercised), then a ("text", ...)
     step answers, with {result} carrying the last tool result."""
 
+    DEFAULT_MODEL = "fake-acting-mind"
+
     def __init__(self, script: list[tuple]):
         self.script = script
 
@@ -157,11 +168,7 @@ class FakeActingGateway:
                      max_rounds: int = 3,
                      on_delta=None) -> tuple[str, list[str]]:
         ensure_schema(conn)
-        with conn.transaction():
-            conn.cursor().execute(
-                "INSERT INTO spine_meter (did, model, tokens_in, tokens_out, at)"
-                " VALUES (%s, %s, %s, %s, clock_timestamp())",
-                (did, model or "fake-acting-mind", len(prompt.split()), 12))
+        meter(conn, did, model or self.DEFAULT_MODEL, len(prompt.split()), 12)
         notes, last = [], ""
         for step in self.script:
             if step[0] == "tool":

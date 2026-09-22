@@ -109,3 +109,18 @@ the same files, unchanged — before any module earns the word "ported".
   - `inbox_key` — `input.env` → `expect.road` (`once` by message id, or
     `sequenced` per aggregate when it wears an id AND a positive sequence — the
     head of `inbox.apply_event`) with the aggregate id and sequence it rides.
+  - `ladder_step` (services-v0, P6.5 sp1) — `input.state` (`registered` · `versioned` ·
+    `healthy` · `unhealthy` · `retired`, or null = not registered) + `input.verb`
+    (`register` · `version` · `healthy` · `unhealthy` · `retire` · `restore`) →
+    `expect.ok` · `expect.to` (the state stepped to) · `expect.reason` (the refusal in
+    words, naming the state and the step: "already registered — version it …", "retired —
+    the ladder runs no version on a retired service; restore it first", "healthy, not
+    retired — nothing to restore"). ONE ladder for tool · mcp · store · source · mind;
+    retired is dormancy (restore returns it), never deletion.
+  - `manifest_pin` — `input.manifest` (what a service declares: a tool's schema and class,
+    a mind's route + model, an mcp server's listed tools, a store's locator by NAME) →
+    `expect.bytes` (canonical) and `expect.hash` (`sha256:` over them) — the pin the
+    registry keeps; a changed manifest is a new version, never a silent drift. The
+    `encode` cases carry `orreth.service.registered.v1` (the kernel's chain, an
+    observation marker, the pin and the placement) and `orreth.service.retired.v1`
+    (released at the interlock: `[person, the kernel]`, an action under the held ask).
