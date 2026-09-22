@@ -1,0 +1,14 @@
+# PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
+[package]
+name = "orreth-spine"
+version = "0.1.0"
+edition = "2021"
+description = "The Orreth kernel's pure laws, ported from the Python spine against the conformance suite (canon 0008)"
+
+[dependencies]
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+sha1 = { workspace = true }
+hmac = { workspace = true }
+regex = { workspace = true }
+ed25519-dalek = { workspace = true }

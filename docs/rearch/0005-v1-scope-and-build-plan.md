@@ -974,7 +974,8 @@ approves each spoonful's scope at its open; every commit under
 no builder touches the five old crates without a need named in a brief JB
 approved (covenant rule 9).
 
-- **sp1 — THE BYTES** (hermetic: no ground, no broker, no door). The crate
+- **sp1 — THE BYTES** ✅ **BUILT 2026-09-22 — JB's review of the plane diff
+  OWED before the push** (hermetic: no ground, no broker, no door). The crate
   is born: `backend/plane/crates/orreth-spine` (library; workspace member).
   The canonical form byte-identical to Python (sorted keys · compact ·
   ASCII with `\uXXXX` escapes and surrogate pairs beyond the BMP — the
@@ -987,6 +988,33 @@ approved (covenant rule 9).
   coverage (ported kinds / all) and failing on any ported kind's mismatch;
   kinds that need a ground or a clock are named "not yet ported", never
   skipped silently.
+  **What stands (2026-09-22):** `orreth-spine` — 12 files, 2,227 lines
+  (nine modules · `py` · the runner · 25 unit tests); workspace member; three
+  workspace deps added (`hmac` · `sha1` · `regex`), nothing else in
+  `backend/plane` touched. The runner (`tests/conformance.rs`) reads all eight
+  fixture files and reports **ported 105/105 cases — all 25 kinds**
+  (canonical · encode · encode_refuses · decode_preserves · totp ·
+  totp_verify · ladder · class_level · stop_demand · restart_demand ·
+  duty_text · refused_words · echo_reply · watch_judge · watch_reads ·
+  address · offer · citation_name · absent_words · hash_chain · chain_status ·
+  verify · verdict · profile · honor) · **not yet ported: none** — every
+  fixture kind proved pure (the duty's clock is `since`, given; the code's
+  is the unix time, given). **The crux proven:** the canonical form is
+  byte-identical to Python on every `canonical` · `encode` · `profile` case —
+  the `ensure_ascii` escaper written by hand (`\uXXXX` lowercase; the
+  surrogate pair for the beyond-BMP emoji; DEL 0x7f escaped, where
+  `char::is_ascii` would pass it raw — a divergence noticed in
+  `orreth-crypto`'s escaper and left untouched by rule 9) and floats as
+  CPython's `repr` (`1.5` · `0.0` · `1e+16` · `1e-05` ·
+  `1000000000000000.0` — 16 forms proven against CPython in unit tests);
+  the hardest cases: the 🥂 pair, the compliance bundle's three-row chain
+  bytes, the impact answer's arrows and curly quotes. `cargo test` green
+  across the whole workspace; clippy clean; fmt'd. **Honest boundary:** the
+  export's Ed25519 branch is proven by a Python-signed bundle embedded as a
+  unit test (the fixture carries `signature: null`); float forms beyond
+  those proven rest on Rust's shortest-digits agreeing with CPython's;
+  integers beyond u64 are not held; nothing here touches a ground, a
+  broker, a clock or a door — those are sp2's and after.
 - **sp2 — THE GROUND AND THE RAILS.** Postgres (the ground, the once-guard,
   the advisory law), RabbitMQ (invoke), Kafka (events) from Rust: outbox ·
   inbox · relay · the heartbeat through each rail — Phase 0's proof, in

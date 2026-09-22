@@ -80,6 +80,13 @@ contract every rail already rides. The existing 4,966 lines of Rust in
 `orrethd`) are the seed the port grows from; its canonicalization already
 matches the Python reference by the serde_json BTreeMap rule.
 
+**The Rust runner — P7 sp1, 2026-09-22:** `orreth-spine` is born
+(`backend/plane/crates/orreth-spine`) with `tests/conformance.rs`, which
+reads every fixture file and dispatches by kind — at sp1 it reports
+**ported 105/105 cases, all 25 kinds, not yet ported: none**; the crate's
+canonical form is byte-identical to Python on every case, the `\uXXXX`
+escaper and the float `repr` written by hand rather than trusted to serde.
+
 ## What this document binds
 
 The kernel is Rust by Phase 7; the bodies are LangGraph processes it
