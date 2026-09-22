@@ -954,6 +954,63 @@ a proof's need) · MITL's factories · multi-host placement (P7).
   counts as held when any add-watch hold by the monitor stands at or after it);
   a duty's fold and the restart's row are JB's to walk.
 
+## Phase 7 — SCALE & SEAL = THE PORT (opened 2026-09-22 — JB's three locks: a NEW crate `orreth-spine` with `orrethd` re-based on it at the release wave · approval = scope at open, review at close · sp1 starts now)
+
+Canon 0008 made the kernel Rust by this phase and the conformance suite the
+measure. What stands at the open: the Python spine — 7,670 lines across 25
+modules, suite 254, the glass one page of 1,717 lines — and eight fixture
+files, 105 cases, that the Python reference passes on every CI run. The old
+plane — `orrethd` (3,689 lines, axum + sync Postgres, the old world's doors)
+and the five sacred crates (1,277 lines: node · store · crypto · resolver ·
+rollup) — already carries the habit the port needs: conformance tests
+twinned to a Python reference, run by CI's "rust plane" job.
+
+**The law of a ported module:** it is "ported" only when `orreth-spine`
+passes that module's fixture file UNCHANGED, then runs in SHADOW on the
+same ground beside the Python spine, then takes the door. The Python spine
+retires to reference and stays alive for the fixtures. **Approval:** JB
+approves each spoonful's scope at its open; every commit under
+`backend/plane` is his to review at the spoonful's close before the push;
+no builder touches the five old crates without a need named in a brief JB
+approved (covenant rule 9).
+
+- **sp1 — THE BYTES** (hermetic: no ground, no broker, no door). The crate
+  is born: `backend/plane/crates/orreth-spine` (library; workspace member).
+  The canonical form byte-identical to Python (sorted keys · compact ·
+  ASCII with `\uXXXX` escapes and surrogate pairs beyond the BMP — the
+  crux; rule 6), the content hash, the envelope (encode · decode · refusals
+  by name), TOTP (RFC 6238 vectors), the export hash chain + verify, the
+  proof ladder, the watch judge, placement profile + honor, address,
+  refused words, echo reply, citation names — every PURE fixture kind — and
+  **the Rust fixture runner**: one integration test that reads every file
+  under `spine/conformance/` and dispatches by case kind, reporting
+  coverage (ported kinds / all) and failing on any ported kind's mismatch;
+  kinds that need a ground or a clock are named "not yet ported", never
+  skipped silently.
+- **sp2 — THE GROUND AND THE RAILS.** Postgres (the ground, the once-guard,
+  the advisory law), RabbitMQ (invoke), Kafka (events) from Rust: outbox ·
+  inbox · relay · the heartbeat through each rail — Phase 0's proof, in
+  Rust, on the same dev rig.
+- **sp3 — THE ASK ROAD.** Dispatch · asks · markers · the proof ladder live
+  (enroll · confirm · masters) · the doors the glass uses · `orrethd`
+  serving the glass page. Shadow first, then the door.
+- **sp4 — THE LOOPS.** Watches and the monitor · the scheduler · the intent
+  loop · presence and leases · the harness.
+- **sp5 — MEMORY AND THE EXPORT.** Store · digest · recall · the export,
+  SIGNED with `orreth-crypto`'s Ed25519 — the kernel's own self at last.
+- **sp6 — THE BODIES' SEAM.** Residents stay LangGraph processes the kernel
+  spawns and governs over the invoke rail; the Python `Resident` becomes
+  the SDK-side body (0008's end shape).
+- **sp7 — CELLS, PARTITION, ISOLATION, HARDENING** (M7 · M8), built once in
+  the Rust kernel.
+- **sp8 — THE RELEASE WAVE.** `orrethd` re-based on `orreth-spine` replaces
+  the Python glass; the new line replaces main; VERSION 1.0.
+
+Honest scale: ten to fifteen thousand lines of Rust, eight spoonfuls, more
+than one session each. Close conditions: every fixture kind ported; JB
+walks the same four P6 specs plus the P3–P5 specs against the Rust kernel
+green; docs; VERSION 1.0 in the release commit.
+
 ## The intent (0007) — opened 2026-09-19 on block 11's locks, BEFORE P6
 
 - **intent sp1 — the Analyzer, the kind of an ask, the fifth rail** ✅
