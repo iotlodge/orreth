@@ -40,10 +40,28 @@ the same files, unchanged — before any module earns the word "ported".
     `expect.name`: a name at the HEAD of an ask ("echo, …" · "@echo …" · "librarian: …")
     selects that body alone, spelled as the body spells it; anything else is `null`
     and the fan-out stays.
-  - `offer` (watch-v0, walk #7) — `input.reply` (the monitor's words) → `expect.offer`:
-    `{words, ask}` when the reply offers to propose a watch AND names the condition in
-    backticks (`bodies_dormant > 0` → "propose a watch that bodies_dormant > 0"), else
-    `null` — the glass draws one click, "propose it", only from an honest offer.
+  - `offer` (watch-v0, walk #7 → W22) — `input.reply` (the monitor's words) → `expect.offer`:
+    `{words, ask}` when the reply offers to propose a watch; the condition is read with
+    or without backticks (`bodies_dormant > 0` → "propose a watch that bodies_dormant > 0");
+    an offer that names no condition (or a metric this world does not measure) still
+    offers — `words` null, `ask` tells the monitor to propose through add-watch; a bare
+    condition with no offer is `null`. The glass draws "propose it" from any offer.
+  - `restart_demand` (intent-v0, W20) — `input.intention_kind` → `expect.level` +
+    `expect.needs_code`: the reverse of the stop climbs the stop's ladder. The `encode`
+    cases carry `orreth.intention.restarted.v1` (`by` · `proof` · `confirmed_by` for the
+    kernel's, the chain `[asker, master]`).
+  - `duty_text` (intent-v0, W21) — `input.text` · `every_s` · `since` (the last run's
+    clock or null) · `notes` (the runner's own earlier notes, newest first) →
+    `expect.cadence` (hourly · daily · weekly · every N minutes/seconds) and `expect.text`:
+    the occurrence FRAMED as a duty — `"<words>" — your <cadence> duty (every N s) ·
+    since <time> | your first run · your earlier notes today: a · b · c | no earlier
+    notes today` (at most three notes, each cut at 160).
+  - `refused_words` (intent-v0, W21) — `input.reply` → `expect.refused`: a reply that
+    OPENS as a refusal ("I will not …", "I am not answering …", "not answering this …",
+    "I refuse/decline …"), markdown stripped; a mention inside a reply is not one.
+  - `echo_reply` (intent-v0, W24) — `input.name` + `input.text` → `expect.reply`: the
+    echoed words alone (whitespace folded); a QUESTION adds one plain line — "<name>
+    repeats; ask the librarian for the date" (a date/time ask) or "… for an answer".
   - `citation_name` (mitl-v0, W15) — `input.path` + `input.heading` (+ `input.rule`) →
     `expect.name`: the canon file's human title ("the covenant" · "the build plan" ·
     "the agent canon" …) and the passage's place — `rule N`, or the heading with its

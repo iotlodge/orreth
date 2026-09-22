@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W20 `/intentions/restart` · the harness door `GET /harness` · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL born · the toggle and the impact doors · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W12 · W14 · W19 doors · 2026-09-21
@@ -450,6 +451,11 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"intentions": intent.listing(
                         conn, serves=qs.get("serves"), kind=qs.get("kind"))})
+            if path == "/harness":                       # walk #8: the world checks, off the ground
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    ch = harness.checks(conn)
+                    return self._json(200, {"checks": ch, "ok": all(c["ok"] for c in ch),
+                                            "last": monitor.snapshot(conn, rails=False)["harness"]})
             if path == "/markers/kinds":                 # the registry
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"kinds": markers.kinds(conn)})
@@ -578,16 +584,18 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 except (ValueError, markers.UnknownKind) as e:
                     return self._json(400, {"error": str(e)})
                 return self._json(201, {"intention": made})
-            if path == "/intentions/stop":            # rule 11: the human's stop
+            if path in ("/intentions/stop", "/intentions/restart"):   # rule 11: the stop — and its reverse (W20)
                 person = str(p.get("person") or "did:orreth:person:jb")
-                iid = str(p.get("intention_id") or "")
+                iid = str(p.get("intention_id") or p.get("ref") or "")
+                verb, act = (("stop", intent.stop) if path.endswith("/stop")
+                             else ("restart", intent.restart))
                 try:
                     with psycopg.connect(dsn, autocommit=True) as conn:
                         try:
-                            made = intent.stop(conn, iid, person)
-                        except proof.ProofRequired as pr:      # W5: ANY intention's stop is
-                            held = proof.hold_kernel_act(          # grave — held for the code
-                                conn, text=pr.what, person=person, tool="intent.stop",
+                            made = act(conn, iid, person)
+                        except proof.ProofRequired as pr:      # W5 · W20: ANY intention's stop — and
+                            held = proof.hold_kernel_act(          # its restart — is grave, held for the code
+                                conn, text=pr.what, person=person, tool=f"intent.{verb}",
                                 args={"intention_id": iid}, level=pr.level,
                                 session=str(p.get("session") or "") or None,
                                 needs_code=pr.needs_code)          # the kernel's: code, then master

@@ -169,13 +169,16 @@
    }
   },
   {
-   "name": "offer: an offer without a condition draws no button",
+   "name": "offer: an offer without a condition still draws the button \u2014 the ask tells the monitor to propose through add-watch (W22)",
    "kind": "offer",
    "input": {
     "reply": "I could propose a watch for that if you like."
    },
    "expect": {
-    "offer": null
+    "offer": {
+     "words": null,
+     "ask": "propose the watch you described \u2014 call add-watch with its name, metric, op and threshold"
+    }
    }
   },
   {
@@ -186,6 +189,32 @@
    },
    "expect": {
     "offer": null
+   }
+  },
+  {
+   "name": "offer: the condition without backticks is read all the same (W22)",
+   "kind": "offer",
+   "input": {
+    "reply": "All bodies are alive now. I propose a watch: bodies_dormant > 0, red the moment one goes dormant."
+   },
+   "expect": {
+    "offer": {
+     "words": "bodies_dormant > 0",
+     "ask": "propose a watch that bodies_dormant > 0"
+    }
+   }
+  },
+  {
+   "name": "offer: a condition on a metric this world does not measure is read as no condition (W22)",
+   "kind": "offer",
+   "input": {
+    "reply": "I could propose a watch on cpu_load > 90 if you like."
+   },
+   "expect": {
+    "offer": {
+     "words": null,
+     "ask": "propose the watch you described \u2014 call add-watch with its name, metric, op and threshold"
+    }
    }
   }
  ]

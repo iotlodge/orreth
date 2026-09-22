@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P4 sp5, the scheduler · 2026-09-18
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3: the bare occurrence text replaced by W21's duty framing (walk #8) · 2026-09-21
 """The scheduler (0004: three schedulers, one body; P16 every schedule
 lives in its runner; covenant rule 11: the human can always stop what
 the machine manages). AG-4: a kernel duty and a role intention both in
@@ -33,7 +34,9 @@ def test_a_human_schedule_occurs_as_an_ask_on_the_rail_and_rests_on_record(pg, m
     occurred = scheduler.tick(pg)
     assert [o["schedule_id"] for o in occurred] == [sid]
     ask = glass.ask_view(pg, occurred[0]["ref"])         # the occurrence IS an ask
-    assert ask["text"] == "say the time, please" and ask["target"] == "echo" and ask["person"] == ME
+    # W21 (walk #8): the occurrence is FRAMED as a duty — the words, the cadence, the window, the notes
+    assert ask["text"].startswith("“say the time, please” — your duty every 1 minute (every 60 s) · your first run")
+    assert ask["target"] == "echo" and ask["person"] == ME
     assert scheduler.tick(pg) == []                      # not due again yet
     card = scheduler.for_runner(pg, "echo")
     [h] = card["human"]

@@ -277,6 +277,12 @@
   .card .side b{color:var(--dim);font-weight:normal;letter-spacing:.1em;font-size:10.5px}
   .cap{display:inline-block;border:1px solid var(--seam);border-radius:8px;
     padding:0 6px;margin:2px 3px 0 0;font-size:10.5px;color:var(--dim)}
+  /* W21: a duty's reply folds to one line — the body · the note · the stamp; a click opens it */
+  .msg.duty-fold{padding:4px 10px;opacity:.85}
+  .msg.duty-fold .note{cursor:pointer;font-size:12px;color:var(--dim)}
+  .msg.duty-fold .note:hover{color:var(--amber)}
+  .msg.duty-fold.open{opacity:1}
+  .msg.duty-fold .full{margin-top:6px}
   .duty{cursor:pointer;padding:1px 0}
   .duty.kernel::before{content:"🔒 ";font-size:10px}
   .duty .why{display:none;color:var(--amber);margin-left:8px;font-size:11px}
@@ -531,12 +537,16 @@ function originRow(o){
   row.innerHTML =
     `<span class="dot ${state}"></span>` +
     `<span class="snip">${esc(o.words || o.note || o.ref)}</span>` +
-    `<span class="meta">${isInt ? `${esc(o.serves || "")} · ${esc(o.origin_kind || "")} · ${o.active === false ? "at rest" : o.blocked ? "standing · blocked" : "standing"}`
+    `<span class="meta">${isInt ? `${esc(o.serves || "")} · ${esc(o.origin_kind || "")} · ${o.active === false ? "at rest" : o.blocked ? "standing · blocked" : "standing"}` +
+                                  (o.serves === "schedule" && o.cadence ? ` · ${esc(o.cadence)} · ${o.runs || 0} run${o.runs === 1 ? "" : "s"}${o.last_at ? " · last " + hhmm(o.last_at) : ""}` : "")   // W21: the duty's cadence
                                 : `${esc(o.target || "any")} · ${esc(o.status || "")}`}` +
     `${counts(o) ? " · " + esc(counts(o)) : ""} · ${hhmm(o.at)}</span>` +
     (isInt && o.blocked ? `<span class="blocked" title="${esc(o.blocked_note || "")}">waiting for a crew that can act: ${esc(o.blocked_note || "")}</span>` : "") +   // W6
-    (isInt && o.active !== false && o.serves !== "schedule" ? `<span class="stop" data-stop="${esc(o.ref)}" title="rule 11: recorded, never deleted — the stop asks for your code in the chat">stop</span>` : "");
+    (isInt && o.serves !== "schedule" ? (o.active !== false
+        ? `<span class="stop" data-stop="${esc(o.ref)}" title="rule 11: recorded, never deleted — the stop asks for your code in the chat">stop</span>`
+        : `<span class="stop" data-restart="${esc(o.ref)}" title="W20: the reverse of the stop — a new recorded fact, the history whole; it asks for your code in the chat">restart</span>`) : "");
   row.onclick = e => { if (e.target.dataset.stop) return stopIntention(e.target, o);
+                       if (e.target.dataset.restart) return restartIntention(e.target, o);
                        LAST_ORIGIN = {marker: o.root, words: o.words || o.ref};
                        if (BAND_OPEN && BAND_OPEN.root === o.root){ BAND_OPEN = null;   // a second click closes
                          if (bandOpenRow){ bandOpenRow.remove(); bandOpenRow = null; } return; }
@@ -544,21 +554,24 @@ function originRow(o){
                        isInt ? expandOrigin(row, o) : expandRow(row, o.ref); };
   return row;
 }
-async function stopIntention(elm, o){         // W5 (JB's lock): the stop asks for the CODE, in the chat, before it rests —
-  toggleChat(true);                            // never a second click, never the return key
+async function stopIntention(elm, o){ return actOnIntention(o, "stop"); }          // W5 (JB's lock): the stop asks for the CODE, in the chat, before it rests
+async function restartIntention(elm, o){ return actOnIntention(o, "restart"); }    // W20: the reverse act — the same ladder, its own fact
+const VERB_DONE = {stop: "intention at rest", restart: "intention standing again"};
+async function actOnIntention(o, verb){        // never a second click, never the return key
+  toggleChat(true);
   const words = o.words || o.ref;
-  const r = await fetch("/intentions/stop", {method:"POST", headers:{"content-type":"application/json"},
+  const r = await fetch("/intentions/" + verb, {method:"POST", headers:{"content-type":"application/json"},
     body: JSON.stringify({intention_id: o.ref, person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
   if (r && r.held){                            // held: a human's for the code (L3-code); the kernel's for the code, THEN a master (L3-master)
-    PENDING[r.held] = el("journey", `stopping “${esc(words)}” is grave — the kernel holds it: ` +
-      (r.level === "L3-master" ? "your code first, then a declared master's click" : "your code rests it") + `…`);
-    PENDING[r.held]._stopping = words;
+    PENDING[r.held] = el("journey", `${verb === "stop" ? "stopping" : "restarting"} “${esc(words)}” is grave — the kernel holds it: ` +
+      (r.level === "L3-master" ? "your code first, then a declared master's click" : verb === "stop" ? "your code rests it" : "your code stands it again") + `…`);
+    PENDING[r.held]._stopping = words; PENDING[r.held]._verb = verb;
     const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);   // the hold may have landed before its notice
     if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
     return;
   }
-  sysline(r && r.intention ? `intention at rest — “${esc(words)}” · recorded, never deleted`
-        : r && r.error ? esc(r.error) : "the stop door did not answer");
+  sysline(r && r.intention ? `${VERB_DONE[verb]} — “${esc(words)}” · recorded, never deleted`
+        : r && r.error ? esc(r.error) : `the ${verb} door did not answer`);
   loadBand();
 }
 async function expandOrigin(row, o, quiet){   // an intention's tree, in words
@@ -741,7 +754,7 @@ async function mitlWords(text){                  // "summon MITL" · "dismiss MI
   send(m ? m[1] : text, undefined, ["mitl"]);
   return true;
 }
-function impactKind(tool){ return tool === "add-watch" ? "watch" : tool === "intent.stop" ? "intention" : "act"; }
+function impactKind(tool){ return tool === "add-watch" ? "watch" : (tool === "intent.stop" || tool === "intent.restart") ? "intention" : "act"; }
 function elIn(parent, cls, html){ const d = document.createElement("div"); d.className = cls; d.innerHTML = html;
   parent.appendChild(d); log.scrollTop = log.scrollHeight; return d; }
 function impactBar(change){                      // "expected impact?" — MITL weighs before the human cuts
@@ -863,6 +876,7 @@ async function onNotice(n){
       el("msg mine", `<em>${whose} · ${words} → ${esc(v0.target || "the crew")}</em>` +   // the objective renders
          `<div class="meta">${esc(v0.text)}</div>`);                                   // like any ask: its reply
       PENDING[n.ref] = el("journey", `→ ${esc(v0.target || "the crew")} — on its way…`);   // lands HERE (walk #6)
+      PENDING[n.ref]._duty = true;                   // W21: not this session's human — its reply folds to one line
       return; }
     if (!v0 || !SESSION || v0.session !== SESSION) return;   // shown if it is THIS
     el("msg mine", `<em>on the kernel's word → ${esc(v0.target || "…")}</em>` +   // session's
@@ -920,16 +934,18 @@ function renderOutcome(id, v, line){
     return;
   }
   if (line._row) line._row.querySelectorAll("button,input").forEach(b => b.disabled = true);   // the hold settled
-  const bubble = put("msg theirs", who + cite(plain(v.reply || "(no words came back)")));
-  if (v.reply) bubble.prepend(copyBtn(() => stripMarks(v.reply)));                            // W10
-  if (line._stopping && v.status === "replied")                                             // W5: the stop's outcome
-    put("journey", `intention at rest · “${esc(line._stopping)}” · proof ${esc(v.proof || "L1")} · recorded, never deleted`);
+  const bubble = line._duty && v.status === "replied"
+    ? dutyBubble(name, v)                                                                   // W21: a duty's reply folds to one line
+    : put("msg theirs", who + cite(plain(v.reply || "(no words came back)")));
+  if (v.reply && !line._duty) bubble.prepend(copyBtn(() => stripMarks(v.reply)));            // W10
+  if (line._stopping && v.status === "replied")                                             // W5 · W20: the act's outcome
+    put("journey", `${VERB_DONE[line._verb || "stop"]} · “${esc(line._stopping)}” · proof ${esc(v.proof || "L1")} · recorded, never deleted`);
   if (v.status === "refused"){                                                              // W19: refused at the door
     put("journey", `refused at the door · ${hhmm(v.replied_at || v.asked_at)} · recorded, never in flight`); return; }
   if (v.offer && v.offer.ask){                                                              // the monitor's offer, one click
-    const b = document.createElement("button"); b.className = "summarize"; b.textContent = "propose it";
+    const b = document.createElement("button"); b.className = "summarize"; b.textContent = "propose it";   // W22: no backticks required
     b.title = `sends “${v.offer.ask}” to the monitor — the interlock (“expected impact?”, Cancel default) then arrives`;
-    b.onclick = () => { b.remove(); send(v.offer.ask, `propose it — on your word → monitor · “${esc(v.offer.words)}”`, ["monitor"]); };
+    b.onclick = () => { b.remove(); send(v.offer.ask, `propose it — on your word → monitor${v.offer.words ? ` · “${esc(v.offer.words)}”` : ""}`, ["monitor"]); };
     (line._into || log).appendChild(b); log.scrollTop = log.scrollHeight;
   }
   if (v.replied_at){                         // P7: who took it, on which
@@ -941,6 +957,15 @@ function renderOutcome(id, v, line){
        (v.proof && v.proof !== "L1" ? ` · proof ${esc(v.proof)}` : "") +      // the proof it wore (P6 sp1)
        ` · completed ${hhmm(v.replied_at)} (${secs(v.asked_at, v.replied_at)})`);  // when
   }
+}
+function dutyBubble(name, v){              // W21: a duty's reply — the body · the note's first line · the stamp; a click opens the whole bubble
+  const first = stripMarks(v.reply || "(no words came back)").split("\n").map(x => x.trim()).find(x => x) || "(no words came back)";
+  const d = el("msg theirs duty-fold",
+    `<div class="note" title="a duty's reply — click to open it whole">${esc(name)} · ${esc(first.slice(0, 160))}${first.length > 160 ? "…" : ""}` +
+    `<span class="meta"> · ${hhmm(v.replied_at || v.asked_at)}</span></div>` +
+    `<div class="full" hidden><div class="who">${esc(name)}</div>${cite(plain(v.reply || "(no words came back)"))}</div>`);
+  d.querySelector(".note").onclick = () => { const f = d.querySelector(".full"); f.hidden = !f.hidden; d.classList.toggle("open", !f.hidden); };
+  return d;
 }
 function plain(text){                      // plain words on the glass: markdown
   return esc(text).replace(/^#{1,6}\s+/gm, "")            // headings and bold
@@ -984,6 +1009,8 @@ function readMoment(s, now){                 // one edge, in human words
 }
 function readWindow(text){                   // the whole ask → {from, to} or null
   const now = new Date(), s = text.toLowerCase();
+  // W24: "what is today's date?" names no window — a possessive day, or an ask for the date/time itself, is a question, not a scope
+  if (!/\b(between|since|from|last|past)\b/.test(s) && /\b(today|yesterday)'s\b|\b(what|which)\b.{0,30}\b(date|time|day is it|day it is)\b/.test(s)) return null;
   let m = s.match(/between\s+(.+?)\s+and\s+(.+?)(?=[.?!,]|$)/);
   if (m){
     const a = readMoment(m[1], now), b = readMoment(m[2], now);
@@ -1061,8 +1088,10 @@ async function decide(id, approve, row, code, by, level){
   if (out && out.step === "code" && out.next === "master"){   // W5: the kernel's — your code is right; now the master
     const msg = row.parentNode; row.remove();
     const next = holdRow(id, "master", level);
-    if (msg){ msg.insertAdjacentHTML("beforeend", `<div class="stepline">✓ your code is right · ${hhmm(new Date().toISOString())}</div>`); msg.appendChild(next); }
-    if (PENDING[id]){ PENDING[id].textContent = "your code is right — now a declared master confirms with a click · cancel is the default"; PENDING[id]._row = next; }
+    const state = (PENDING[id] && PENDING[id]._verb === "restart") ? "stays AT REST" : "STANDS";   // the hold's words (walk #8): what stands meanwhile
+    const words = `your code is right — the intention ${state} until a declared master confirms with a click · cancel is the default`;
+    if (msg){ msg.insertAdjacentHTML("beforeend", `<div class="stepline">✓ ${esc(words)} · ${hhmm(new Date().toISOString())}</div>`); msg.appendChild(next); }
+    if (PENDING[id]){ PENDING[id].textContent = words; PENDING[id]._row = next; }
     next.querySelector(".btn-cancel").focus();
     return;
   }
@@ -1242,16 +1271,19 @@ async function enrollWords(text){             // "enroll my authenticator" · th
   drawEnroll(c.b, !!st.enrolled);
   return true;
 }
-async function stopWords(text){                  // "stop the kernel's Resiliency intention" — grave for the kernel's
-  const m = text.match(/^(?:stop|rest)\s+(?:the\s+)?(?:kernel'?s\s+)?(.+?)\s+intention\s*[.!]?$/i);
+async function stopWords(text){                  // "stop the kernel's Resiliency intention" — grave for the kernel's; "restart my resiliency intention" (W20)
+  const m = text.match(/^(stop|rest|restart|resume)\s+(?:the\s+|my\s+)?(kernel'?s\s+)?(.+?)\s+intention\s*[.!]?$/i);
   if (!m) return false;
-  const want = m[1].toLowerCase();
+  const verb = /^(restart|resume)$/i.test(m[1]) ? "restart" : "stop", kernels = !!m[2];
+  const want = m[3].toLowerCase();
   const ints = await fetch("/intentions").then(x=>x.json()).then(x => x.intentions || []).catch(()=>[]);
-  const hits = ints.filter(i => i.active !== false && (i.serves.toLowerCase() === want || (i.words || "").toLowerCase().includes(want)));
-  if (hits.length !== 1){ sysline(hits.length ? `which one? ${hits.length} intentions match “${esc(m[1])}” — stop it from the ANALYZER`
-                                              : `no standing intention matches “${esc(m[1])}” — the ANALYZER lists them`); return true; }
+  const hits = ints.filter(i => (verb === "stop" ? i.active !== false : i.active === false)      // stop a standing one · restart a rested one
+                              && (!kernels || i.kind === "kernel") && (kernels || !m[0].match(/\bmy\b/i) || i.kind !== "kernel")
+                              && (i.serves.toLowerCase() === want || (i.words || "").toLowerCase().includes(want)));
+  if (hits.length !== 1){ sysline(hits.length ? `which one? ${hits.length} intentions match “${esc(m[3])}” — ${verb} it from the ANALYZER`
+                                              : `no ${verb === "stop" ? "standing" : "rested"} intention matches “${esc(m[3])}” — the ANALYZER lists them`); return true; }
   el("msg mine", esc(text));
-  await stopIntention(null, {ref: hits[0].intention_id, words: hits[0].words});
+  await actOnIntention({ref: hits[0].intention_id, words: hits[0].words}, verb);
   return true;
 }
 function whyLine(c){                             // P6 sp4: the card's line, as words

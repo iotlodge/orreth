@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp1, L3: the proof demand rises · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W20 the kernel settles a restart · W23 the words (rule 11) · 2026-09-21
 """The proof demand rises to meet the consequence (canon 0001 P12 · 0005 P6 sp1).
 
 Every act wears a CONSEQUENCE CLASS — routine · consequential · grave —
@@ -361,9 +362,11 @@ def question_for(level: str, what: str, needs_code: bool = False) -> str:
         return (f"This needs a second named person. {what} is grave: a declared "
                 "master — never you — confirms it with a click. Cancel is the "
                 "default, and doing nothing cancels.")
-    return (f"This needs your code. {what} is grave and cannot be undone. Type "
-            "the six digits from your authenticator, then confirm — cancel is the "
-            "default, and doing nothing cancels. Three wrong codes put this act to rest.")
+    # W23 (rule 11): the question never claims the act is beyond undoing — a
+    # grave act is recorded, and the human can rest what it started later
+    return (f"This needs your code. {what} is grave — it is recorded, and you can rest "
+            "it later. Type the six digits from your authenticator, then confirm — cancel "
+            "is the default, and doing nothing cancels. Three wrong codes put this act to rest.")
 
 
 def hold_kernel_act(conn, *, text: str, person: str, tool: str, args: dict,
@@ -435,6 +438,11 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
                 made = intent.stop(conn, held["args"]["intention_id"], by=asker,
                                    proof=level, confirmed_by=by)
                 result = f"the intention “{made['words']}” is at rest — recorded, never deleted"
+            elif held["tool"] == "intent.restart":       # W20: the reverse act, its own fact
+                made = intent.restart(conn, held["args"]["intention_id"], by=asker,
+                                      proof=level, confirmed_by=by)
+                result = (f"the intention “{made['words']}” stands again — its stop stays in "
+                          "the record, its history whole")
             else:
                 raise NotConfirmed()                     # no other kernel act yet
             if level == "L3-code":

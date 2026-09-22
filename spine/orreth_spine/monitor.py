@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P4 sp4, the Monitoring workspace · 2026-09-18
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W14 · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W22 an offer is a proposal · 2026-09-21
 """The Monitoring workspace's ground (canon 0001: "if it's monitoring, it
 goes here"): the live snapshot of the Operating State — rails, benches,
 bodies, asks, the last harness run — and the WATCHES: named checks the
@@ -66,22 +67,26 @@ def reads(w: dict) -> str:
 
 
 OFFER_RE = re.compile(r"\bpropos(?:e|ing)\b[^.\n]{0,80}?\bwatch\b", re.I)
-COND_RE = re.compile(r"`\s*([a-z_]+\s*(?:>=|<=|==|!=|>|<)\s*-?\d+(?:\.\d+)?)\s*`", re.I)
+COND_RE = re.compile(r"`?\s*\b([a-z_]+)\s*(>=|<=|==|!=|>|<)\s*(-?\d+(?:\.\d+)?)\b\s*`?", re.I)
+PROPOSE_BARE = "propose the watch you described — call add-watch with its name, metric, op and threshold"
 
 
 def offer_in(reply: str | None) -> dict | None:
-    """Walk #7's friction — the monitor's OFFER, read honestly from its
-    words: a reply that offers to propose a watch and names the condition
-    in backticks (`bodies_dormant > 0`) yields {words, ask} — the glass
-    draws one click, "propose it", that sends `ask`; the interlock then
-    arrives. No offer, no condition: None — the human is never guessed
-    at."""
+    """Walk #7's friction, walk #8's cure (W22): the monitor's OFFER, read
+    honestly from its words. A reply that offers to propose a watch yields
+    {words, ask} — the glass draws one click, "propose it", that sends
+    `ask`; the interlock then arrives. The condition (`bodies_dormant > 0`)
+    is read with or without backticks — W22: the button never depended on
+    the mind's typography. An offer that names no condition still draws
+    the button: `words` is None and the ask tells the monitor to propose
+    the watch it described through the add-watch tool. No offer: None —
+    a bare condition in a sentence is a reading, not an offer."""
     if not reply or not OFFER_RE.search(reply):
         return None
     m = COND_RE.search(reply)
-    if not m:
-        return None
-    words = " ".join(m.group(1).split())
+    if not m or m.group(1).lower() not in METRICS:
+        return {"words": None, "ask": PROPOSE_BARE}
+    words = f"{m.group(1).lower()} {m.group(2)} {m.group(3)}"
     return {"words": words, "ask": f"propose a watch that {words}"}
 
 

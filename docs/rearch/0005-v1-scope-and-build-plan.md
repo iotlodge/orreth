@@ -627,7 +627,7 @@ first walk carries MONITOR-01's deferred re-walk.
   `tests/test_growth.py` (latency flat ×10). Dependency:
   `langgraph-checkpoint-postgres`. Suite 85 green.
 
-## Phase 6 — GOVERNANCE FELT (opened 2026-09-21 — Fable's slicing, JB may veto any spoonful at sight)
+## Phase 6 — GOVERNANCE FELT (opened 2026-09-21 — Fable's slicing, JB may veto any spoonful at sight) — **CLOSED WHOLE 2026-09-21 (walks #7 · #8 — JB in the glass; 24 wounds cured across three cure spoonfuls; VERSION bump in the closing commit)**
 
 The charter's line: **the proof demand rises to meet the consequence** (P12),
 and governance is a *felt* experience in the chat — never a form someplace
@@ -907,6 +907,52 @@ a proof's need) · MITL's factories · multi-host placement (P7).
   a body's self-description; `citations` name a passage by its heading (or the
   covenant's rules it holds), not by the sentence cited; a refused body's nature
   is read from its LAST join row (a body never seated here has none).
+- **P6 cure sp3 (the re-walk's wounds)** ✅ **BUILT 2026-09-21 — walk #8's five
+  wounds (W20 · W21 · W22 · W23 · W24) + the hold's words + the two harness
+  checks; the close staged.** Suite **254** green (220 → 254;
+  `tests/test_cure_walk8.py`, 7 laws; fixture `intent-v0` new — `restart_demand`
+  ×3, the `orreth.intention.restarted.v1` wire ×2, `duty_text` ×5,
+  `refused_words` ×9, `echo_reply` ×6; `watch-v0` `offer` +2 and one case
+  replaced by name). What landed: **W20** `intent.restart` — the reverse of the
+  stop, a NEW fact under the intention's marker with its proof, the stop's fact
+  and `stopped_by` kept (the history whole), grave through the stop's ladder
+  (`restart_demand`), settled by the kernel (`settle_kernel_act` · tool
+  `intent.restart`), the door `POST /intentions/restart` (`{held, level,
+  needs_code}`, `ref` or `intention_id`), the Analyzer row's "restart" on a
+  rested intention, the words "restart my … intention" / "restart the kernel's
+  … intention", the sysline "intention standing again · proof …"; the cadence
+  counts from the restart and the loop wakes on the NEXT red transition. **W21**
+  the scheduler files an occurrence FRAMED (`duty_text`: the words · the
+  cadence · since the last run · the runner's earlier notes, newest first, three
+  at most); the pack labels earlier runs of the SAME duty `YOUR OWN NOTES …` and
+  a declined run "an earlier run you declined; do not decline again"; `DUTY_LAW`
+  in every body's seat ("a duty is served, never refused … one line: nothing
+  new since <time>"); the glass folds a duty's reply to one line (body · note ·
+  stamp, click to open); the schedule row reads "hourly · N runs · last HH:MM";
+  the harness check **"a duty answered, not refused"**. **W22** the monitor's
+  seat says PROPOSE it (call add-watch; never "would you like me to"; cancel is
+  the default); `offer_in` reads the condition with or without backticks and an
+  offer with no condition still draws "propose it"; the harness check **"the
+  monitor's offers arrive as holds"**; the world checks ride `GET /harness`.
+  **W23** `interlock_words`: "… it is recorded, and you can rest it later. Cancel
+  is the default; a deliberate click confirms" — "cannot be undone" gone from the
+  L2 and L3 questions and the page. **W24** echo's reply is the echoed words
+  alone (`echo_reply`; a question earns one plain line "echo repeats; ask the
+  librarian for the date"), the assertion in the journey — the record — never
+  the bubble; "today's date" names no window on the glass. The hold's words for
+  the kernel's stop: "your code is right — the intention STANDS until a declared
+  master confirms with a click · cancel is the default" (a restart: "stays AT
+  REST until …"). Two old tests replaced by name for laws the walk record
+  replaces: `test_scheduler` (the bare occurrence text → the framing) and
+  `test_cure_walk7_glass` ("no condition, no button" → W22).
+  **Honest boundary (what P6 is and is not):** L3 is TOTP + a named master from
+  the `SPINE_MASTERS` dial — no directory, no hardware key; the export proves
+  the chain to a reader of the bundle, not to a third-party notary; MITL weighs
+  by rule and by a mind, the human cuts — MITL never confirms; placement is ONE
+  cell until P7's cells; the harness's world checks read the ground's latest
+  replies (a refusal earlier in the day is history once a note lands; an offer
+  counts as held when any add-watch hold by the monitor stands at or after it);
+  a duty's fold and the restart's row are JB's to walk.
 
 ## The intent (0007) — opened 2026-09-19 on block 11's locks, BEFORE P6
 

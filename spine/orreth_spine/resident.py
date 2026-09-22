@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL recalls the canon it wears · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement enforced at birth · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W8 · W12 · W16 · W17 · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W21 the duty law + the pack · W23 the interlock's words · W24 echo's bubble · 2026-09-21
 """The resident body v0 (canon 0004): one governed body for every mind.
 
 Born from a versioned TEMPLATE artifact; the SAME identity in every life
@@ -19,6 +20,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -71,6 +73,13 @@ COVENANT_SLICE = (
     "stop what the machine manages — a stop is recorded, never a deletion, and you say "
     "what you left undone.")
 
+# W21 (walk #8, the reasoning wound): a standing duty is served, never refused
+DUTY_LAW = (
+    "A duty is served, never refused. An ask framed as your duty — with its cadence and its "
+    "window — is the kernel keeping your own standing intention, never a human repeating a "
+    "question; your earlier notes are yours to build on. When nothing is new since your last "
+    "run, answer in ONE line: \"nothing new since <time>\".")
+
 # the laws every body lives by at the serve (W8 · W16 · W8-loop), one block
 COMMON_LAWS = (
     "Never answer in another body's words: a note marked ANOTHER BODY'S WORDS is theirs — "
@@ -81,7 +90,32 @@ COMMON_LAWS = (
     "cannot act on because you lack the tools, open your reply with the exact words "
     "'CANNOT ACT:' and name what body or tool would be needed. When the human asks you "
     "to propose, add or create something you hold a tool for, CALL the tool — never "
-    "describe what you would do instead.")
+    "describe what you would do instead. " + DUTY_LAW)
+
+
+def interlock_words(tool: str) -> str:
+    """The L2 interlock's words (W23, covenant rule 11): a consequential
+    act is RECORDED and the human can rest it later — never "cannot be
+    undone". Cancel is the default; a deliberate click confirms."""
+    return (f"Are you sure? The {tool} act is consequential — it is recorded, and you "
+            "can rest it later. Cancel is the default; a deliberate click confirms.")
+
+
+_QUESTION = re.compile(r"(\?\s*$|^(who|what|what's|whats|when|where|why|how|is|are|does|do|can"
+                       r"|could|would|should|which|did|tell me)\b)", re.I)
+_DATE_ASK = re.compile(r"\b(date|time|clock|year|month|what day|which day|day is it|day it is|day of the week)\b", re.I)
+
+
+def echo_reply(name: str, text: str) -> str:
+    """W24 (conformance `echo_reply`): the echoed words alone — "hello" is
+    "hello". A QUESTION the body cannot answer by nature adds one plain
+    line: "echo repeats; ask the librarian for the date" (a date or time
+    ask) — or "… for an answer" (anything else)."""
+    words = " ".join((text or "").split())
+    if not _QUESTION.search(words):
+        return words
+    want = "the date" if _DATE_ASK.search(words) else "an answer"
+    return f"{words}\n{name} repeats; ask the librarian for {want}"
 
 
 def human_zone(conn, ask_id: str | None) -> str:
@@ -391,6 +425,27 @@ class Resident:
                                          "it as your own)")
                         if not mine and by and by not in read:
                             read.append(by)   # the chain will name them
+                elif (self._current_marker or {}).get("parent"):
+                    # W21: an ask filed under an intention's marker (a duty's
+                    # occurrence, an objective) — the earlier runs of the SAME
+                    # duty are MY OWN NOTES, never a human's repeated question;
+                    # a run I declined is named a refusal, never an answer
+                    from .harness import refused_words
+                    cur.execute(
+                        "SELECT a.reply, a.replied_at FROM spine_asks a"
+                        " JOIN spine_markers m ON m.marker_id = a.marker"
+                        " WHERE m.parent = %s AND a.served_by = %s AND a.status = 'replied'"
+                        " AND a.ask_id <> %s ORDER BY a.replied_at DESC LIMIT 3",
+                        (self._current_marker["parent"], self.identity.did, self._current_ask))
+                    for rp, at in cur.fetchall():
+                        when = at.strftime("%H:%M UTC") if at else "earlier"
+                        first = " ".join((rp or "").split())[:300]
+                        if refused_words(rp):
+                            notes.append(f"an earlier run you declined ({when}); do not decline "
+                                         f"again — a duty is served: {first!r}")
+                        else:
+                            notes.append(f"YOUR OWN NOTES from earlier runs of this duty — "
+                                         f"{when}: {first!r}")
                 else:
                     cur.execute(
                         "SELECT text, reply FROM spine_asks"
@@ -578,14 +633,23 @@ class Resident:
                 return {"reply": reply,
                         "steps": s["steps"] + ["thought it through the "
                                                "metered gateway"]}
-            # P6 sp4's side cure (found by sp3): a firmware body without a
-            # gateway wears no persona — the echo names it plainly instead
-            persona = self.template.get("persona") or f"the {self.name}, a firmware body"
-            reply = (f"I am {self.name} — {persona}. "
-                     f"You asked: \"{s['text']}\" — and that is every word "
-                     f"of it, back to you, none summarized away.")
-            return {"reply": reply,
-                    "steps": s["steps"] + ["thought it through"]}
+            if self.kind == "firmware":
+                # P6 sp4's side cure (found by sp3): a firmware body without a
+                # gateway wears no persona — the echo names it plainly instead
+                persona = self.template.get("persona") or f"the {self.name}, a firmware body"
+                reply = (f"I am {self.name} — {persona}. "
+                         f"You asked: \"{s['text']}\" — and that is every word "
+                         f"of it, back to you, none summarized away.")
+                return {"reply": reply,
+                        "steps": s["steps"] + ["thought it through"]}
+            # W24 (walk #8): a body says its nature ONCE, on its chip — the
+            # reply is the echoed words alone; the assertion (the body proven
+            # before the mind arrives, none summarized away) lives in the
+            # journey — the record — never in the bubble. A question it
+            # cannot answer by nature earns one plain line more.
+            return {"reply": echo_reply(self.name, s["text"]),
+                    "steps": s["steps"] + [f"echoed every word — none summarized away "
+                                           f"({self.template.get('persona') or 'a plain-spoken echo'})"]}
 
         g = StateGraph(_State)
         g.add_node("hear", hear)
@@ -701,10 +765,7 @@ class Resident:
             held = dict(out["hold"])
             held.setdefault("class", "consequential"); held.setdefault("level", "L2")
             if held["level"] == "L2":
-                question = (
-                    f"Are you sure? The {held['tool']} act is consequential "
-                    "and cannot be undone. Confirming takes a deliberate yes — "
-                    "cancel is the default, and doing nothing cancels.")
+                question = interlock_words(held["tool"])     # W23: rule 11's words
             else:                                # P6 sp1: the demand rises
                 from .proof import question_for
                 question = question_for(held["level"], f"The {held['tool']} act")

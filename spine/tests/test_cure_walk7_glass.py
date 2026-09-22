@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass), walk #7's wounds · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3: the "no condition, no button" line replaced by W22 (walk #8) · 2026-09-21
 """The door and shape laws behind walk #7's GLASS cures (docs/rearch/
 baselines/after-walk-2026-09-17.md, "Walk #7"): W1–W4 the re-enroll takes
 the current code as a field and the NEW secret finishes it; W7 a name at
@@ -177,7 +178,8 @@ def test_the_monitors_offer_is_read_from_its_words_and_rides_the_ask_view(pg, mo
     assert monitor.offer_in("I can propose a watch: `bodies_dormant > 0` would catch a dormant body.") == \
         {"words": "bodies_dormant > 0", "ask": "propose a watch that bodies_dormant > 0"}
     assert monitor.offer_in("Shall I propose a watch on `asks_received >= 5`?")["words"] == "asks_received >= 5"
-    assert monitor.offer_in("I could propose a watch for that.") is None          # no condition: no button
+    assert monitor.offer_in("I could propose a watch for that.") == \
+        {"words": None, "ask": monitor.PROPOSE_BARE}                                # W22 (walk #8): an offer without a condition STILL draws the button
     assert monitor.offer_in("The value is `bodies_dormant > 0` right now.") is None   # no offer: no button
     assert monitor.offer_in(None) is None
     mon = _body("workspace-firmware.v0.json", binding=SPINE / "bindings" / "monitor.v0.json"); mon.join(pg)

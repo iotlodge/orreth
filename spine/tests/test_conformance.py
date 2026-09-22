@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): watch · stop_demand · absent_words · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass): address · offer · citation_name · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): restart_demand · duty_text · refused_words · echo_reply · 2026-09-21
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -10,7 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import dispatch, envelope as ev, export, intent, mitl, monitor, placement, proof
+from orreth_spine import (dispatch, envelope as ev, export, harness, intent, mitl, monitor, placement, proof,
+                          resident, scheduler)
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
 FIXTURES = sorted(ROOT.glob("*-v*.json"))
@@ -57,6 +59,16 @@ def test_fixture(contract, case):
         assert proof.level_for(inp["class"], master=bool(inp.get("master"))) == exp["level"]
     elif kind == "stop_demand":                  # W5: what the stop of an intention demands
         assert intent.stop_demand(inp["intention_kind"]) == exp
+    # ---- orreth.intent/1 (walk #8): the restart's demand, the duty's framing, the refusal, echo's reply ----
+    elif kind == "restart_demand":               # W20: the reverse of the stop climbs the same ladder
+        assert intent.restart_demand(inp["intention_kind"]) == exp
+    elif kind == "duty_text":                    # W21: a duty is framed as a duty
+        assert scheduler.cadence_words(inp["every_s"]) == exp["cadence"]
+        assert scheduler.duty_text(inp["text"], inp["every_s"], inp["since"], inp["notes"]) == exp["text"]
+    elif kind == "refused_words":                # W21: a reply that OPENS as a refusal
+        assert harness.refused_words(inp["reply"]) is exp["refused"]
+    elif kind == "echo_reply":                   # W24: the echoed words alone; one plain line for a question
+        assert resident.echo_reply(inp["name"], inp["text"]) == exp["reply"]
     # ---- orreth.watch/1 (W14): the sense of a watch — red WHEN the condition holds ----
     elif kind == "watch_judge":
         red = monitor.judge_one(inp["op"], inp["value"], inp["threshold"])

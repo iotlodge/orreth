@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch intent sp1, the fifth firmware-rail · 2026-09-19
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W8 · W14 · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds), walk #8's W20 the restart · 2026-09-21
 """The intent loop — the fifth firmware-rail (canon 0007, block 11).
 
 Human INTENTION is the topmost origin of work. An intention is a record
@@ -26,6 +27,13 @@ more for that intention until the crew changes (W8); and the stop of ANY
 intention asks for the code first — a human's is L3-code, the kernel's
 is L3-master with the asker's code before the master's click (W5, JB's
 lock).
+
+Walk #8's cure (W20): the REVERSE of a stop — `restart` — a rested
+intention stands again with its history whole: a NEW recorded fact
+(`orreth.intention.restarted.v1`), never an edit of the stop, grave
+through the SAME ladder the stop climbs; a restarted intention wakes on
+the NEXT red transition (never a standing red) and its cadence counts
+from the restart.
 """
 from __future__ import annotations
 
@@ -37,6 +45,7 @@ from . import envelope as ev, outbox
 
 INTENTION_DECLARED = "orreth.intention.declared.v1"
 INTENTION_STOPPED = "orreth.intention.stopped.v1"
+INTENTION_RESTARTED = "orreth.intention.restarted.v1"   # W20: the reverse act, its own fact
 SERVES = ("business", "security", "resiliency", "compliance", "cost")
 KINDS = ("human", "role", "kernel")
 ASK_KINDS = ("thought", "objective", "intention")      # P23: the ask wears its kind
@@ -77,6 +86,9 @@ def ensure_schema(conn) -> None:
         cur.execute("ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS blocked_note text")
         cur.execute("ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS"
                     " heard boolean NOT NULL DEFAULT false")   # the runner's reply, judged once
+        # W20: the restart is recorded beside the stop — the history stays whole
+        cur.execute("ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS restarted_by text")
+        cur.execute("ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS restarted_at timestamptz")
 
 
 # ---- the kind of an ask (P23): the words propose it, the human flips it ----
@@ -139,8 +151,8 @@ def read_words(text: str) -> dict:
 # ---- the record ----
 _COLS = ("intention_id, words, serves, kind, interests, planner, runner, every_s, gates,"
          " active, stopped_by, stopped_at, added_by, marker, session, next_at, last_at, added_at,"
-         " blocked_crew, blocked_note")
-_NCOLS = 20
+         " blocked_crew, blocked_note, restarted_by, restarted_at")
+_NCOLS = 22
 
 
 def _dict(r) -> dict:
@@ -152,7 +164,9 @@ def _dict(r) -> dict:
             "marker": r[13], "session": r[14],
             "next_at": r[15].isoformat() if r[15] else None,
             "last_at": r[16].isoformat() if r[16] else None, "added_at": r[17].isoformat(),
-            "blocked": r[18] is not None, "blocked_note": r[19]}
+            "blocked": r[18] is not None, "blocked_note": r[19],
+            "restarted_by": r[20],                                    # W20: the reverse act
+            "restarted_at": r[21].isoformat() if r[21] else None}
 
 
 def declare(conn, words: str, *, serves: str, kind: str, by: str,
@@ -297,6 +311,62 @@ def stop(conn, intention_id: str, by: str, *, proof: str | None = None,
 
     def domain(cur):
         cur.execute("UPDATE spine_intentions SET active = false, stopped_by = %s, stopped_at = now()"
+                    " WHERE intention_id = %s", (by, intention_id))
+
+    outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)
+    return get(conn, intention_id)
+
+
+def restart_demand(kind: str) -> dict:
+    """What the RESTART of a rested intention demands (W20; conformance
+    `restart_demand`): the same ladder the stop climbed — the reverse of a
+    grave act is grave. A human's or a role's stands again on the asker's
+    code (L3-code); the kernel's on the asker's code and then a declared
+    master's click (L3-master, `needs_code`)."""
+    return stop_demand(kind)
+
+
+def restart(conn, intention_id: str, by: str, *, proof: str | None = None,
+            confirmed_by: str | None = None) -> dict:
+    """The reverse of the stop (W20): a rested intention stands again, its
+    history whole — the stop's fact and its `stopped_by` stay; a NEW fact
+    `orreth.intention.restarted.v1` lands under the intention's marker
+    with its proof level. Grave through the same ladder as the stop: a
+    bare restart raises `proof.ProofRequired` and the door holds the act.
+    A standing intention keeps one face (nothing to restart). The loop
+    treats it as live from here: its cadence counts from the restart and
+    it wakes on the NEXT red transition — never on a standing red (W14)."""
+    from .proof import ProofRequired
+    ensure_schema(conn); outbox.ensure_schema(conn)
+    cur = conn.cursor()
+    cur.execute("SELECT marker, active, kind, words, every_s FROM spine_intentions"
+                " WHERE intention_id = %s AND scope = %s", (intention_id, ev.scope()))
+    row = cur.fetchone()
+    if row is None:
+        raise KeyError(intention_id)
+    if row[1]:
+        return get(conn, intention_id)      # already standing: one face
+    demand = restart_demand(row[2])
+    if proof != demand["level"]:
+        whose = {"kernel": "the kernel's", "role": "the role's"}.get(row[2], "the human's")
+        raise ProofRequired(demand["level"], f"restarting {whose} intention “{row[3]}”",
+                            needs_code=demand["needs_code"])
+    marker = {"kind": "intention", "id": row[0], "parent": None, "by": by}
+    payload = {"ref": intention_id, "hash": "sha256:-", "by": by, "proof": proof}
+    if confirmed_by:
+        payload["confirmed_by"] = confirmed_by
+    e = ev.make_envelope(
+        kind="event", type=INTENTION_RESTARTED, universe_id=ev.scope(), scope_path=ev.scope(),
+        payload=payload, correlation_id=intention_id,
+        authority_chain=[by] + ([confirmed_by] if confirmed_by and confirmed_by != by else []),
+        marker=marker)
+
+    def domain(cur):
+        # active again; the stop's columns stay (the history is whole); the
+        # cadence counts from now — never a beat owed from the rest
+        cur.execute("UPDATE spine_intentions SET active = true, restarted_by = %s,"
+                    " restarted_at = now(), next_at = CASE WHEN every_s IS NULL THEN NULL"
+                    " ELSE now() + make_interval(secs => every_s) END"
                     " WHERE intention_id = %s", (by, intention_id))
 
     outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)

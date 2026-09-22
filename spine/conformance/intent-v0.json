@@ -1,0 +1,350 @@
+{
+ "contract": "orreth.intent/1",
+ "version": 0,
+ "generated_by": "orreth_spine.intent + scheduler + harness + resident (Python reference), canon 0008 \u00b7 P6 cure sp3 (walk #8)",
+ "generated_at": "2026-09-21",
+ "cases": [
+  {
+   "name": "restart_demand: restarting a rested human intention climbs the stop's ladder (W20)",
+   "kind": "restart_demand",
+   "input": {
+    "intention_kind": "human"
+   },
+   "expect": {
+    "level": "L3-code",
+    "needs_code": true
+   }
+  },
+  {
+   "name": "restart_demand: restarting a rested role intention climbs the stop's ladder (W20)",
+   "kind": "restart_demand",
+   "input": {
+    "intention_kind": "role"
+   },
+   "expect": {
+    "level": "L3-code",
+    "needs_code": true
+   }
+  },
+  {
+   "name": "restart_demand: restarting a rested kernel intention climbs the stop's ladder (W20)",
+   "kind": "restart_demand",
+   "input": {
+    "intention_kind": "kernel"
+   },
+   "expect": {
+    "level": "L3-master",
+    "needs_code": true
+   }
+  },
+  {
+   "name": "encode: orreth.intention.restarted.v1 \u2014 a human's, on the code (W20)",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_id": "msg_000000000000000000000020",
+     "message_kind": "event",
+     "type": "orreth.intention.restarted.v1",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-21T20:30:00.000Z",
+     "payload": {
+      "ref": "int_0a1b2c3d4e5f",
+      "hash": "sha256:-",
+      "by": "did:orreth:person:jb",
+      "proof": "L3-code"
+     },
+     "correlation_id": "int_0a1b2c3d4e5f",
+     "authority_chain": [
+      "did:orreth:person:jb"
+     ],
+     "marker": {
+      "kind": "intention",
+      "id": "mk_0000000000000001",
+      "parent": null,
+      "by": "did:orreth:person:jb"
+     }
+    }
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"did:orreth:person:jb\"],\"correlation_id\":\"int_0a1b2c3d4e5f\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_0000000000000001\",\"kind\":\"intention\",\"parent\":null},\"message_id\":\"msg_000000000000000000000020\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T20:30:00.000Z\",\"payload\":{\"by\":\"did:orreth:person:jb\",\"hash\":\"sha256:-\",\"proof\":\"L3-code\",\"ref\":\"int_0a1b2c3d4e5f\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.intention.restarted.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "encode: orreth.intention.restarted.v1 \u2014 the kernel's, code then master (W20)",
+   "kind": "encode",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_id": "msg_000000000000000000000021",
+     "message_kind": "event",
+     "type": "orreth.intention.restarted.v1",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-21T20:30:00.000Z",
+     "payload": {
+      "ref": "int_0a1b2c3d4e5f",
+      "hash": "sha256:-",
+      "by": "did:orreth:person:jb",
+      "proof": "L3-master",
+      "confirmed_by": "did:orreth:person:master"
+     },
+     "correlation_id": "int_0a1b2c3d4e5f",
+     "authority_chain": [
+      "did:orreth:person:jb",
+      "did:orreth:person:master"
+     ],
+     "marker": {
+      "kind": "intention",
+      "id": "mk_0000000000000001",
+      "parent": null,
+      "by": "did:orreth:person:jb"
+     }
+    }
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"did:orreth:person:jb\",\"did:orreth:person:master\"],\"correlation_id\":\"int_0a1b2c3d4e5f\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_0000000000000001\",\"kind\":\"intention\",\"parent\":null},\"message_id\":\"msg_000000000000000000000021\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T20:30:00.000Z\",\"payload\":{\"by\":\"did:orreth:person:jb\",\"confirmed_by\":\"did:orreth:person:master\",\"hash\":\"sha256:-\",\"proof\":\"L3-master\",\"ref\":\"int_0a1b2c3d4e5f\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.intention.restarted.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "duty_text: hourly \u00b7 since 7:12 PM \u00b7 3 note(s) (W21)",
+   "kind": "duty_text",
+   "input": {
+    "text": "Review what was asked of you today and note one thing worth remembering.",
+    "every_s": 3600,
+    "since": "7:12 PM",
+    "notes": [
+     "Nothing new since 6:12 PM.",
+     "JB asked for the weather twice; the second time from my notes.",
+     "quiet hour"
+    ]
+   },
+   "expect": {
+    "cadence": "hourly",
+    "text": "\u201cReview what was asked of you today and note one thing worth remembering.\u201d \u2014 your hourly duty (every 3600 s) \u00b7 since 7:12 PM \u00b7 your earlier notes today: Nothing new since 6:12 PM. \u00b7 JB asked for the weather twice; the second time from my notes. \u00b7 quiet hour"
+   }
+  },
+  {
+   "name": "duty_text: hourly \u00b7 first run \u00b7 0 note(s) (W21)",
+   "kind": "duty_text",
+   "input": {
+    "text": "Review what was asked of you today and note one thing worth remembering.",
+    "every_s": 3600,
+    "since": null,
+    "notes": []
+   },
+   "expect": {
+    "cadence": "hourly",
+    "text": "\u201cReview what was asked of you today and note one thing worth remembering.\u201d \u2014 your hourly duty (every 3600 s) \u00b7 your first run \u00b7 no earlier notes today"
+   }
+  },
+  {
+   "name": "duty_text: every 30 minutes \u00b7 since 08:00 UTC \u00b7 4 note(s) (W21)",
+   "kind": "duty_text",
+   "input": {
+    "text": "count the asks",
+    "every_s": 1800,
+    "since": "08:00 UTC",
+    "notes": [
+     "four asks",
+     "two asks",
+     "one ask",
+     "none"
+    ]
+   },
+   "expect": {
+    "cadence": "every 30 minutes",
+    "text": "\u201ccount the asks\u201d \u2014 your duty every 30 minutes (every 1800 s) \u00b7 since 08:00 UTC \u00b7 your earlier notes today: four asks \u00b7 two asks \u00b7 one ask"
+   }
+  },
+  {
+   "name": "duty_text: daily \u00b7 since 9:00 AM \u00b7 1 note(s) (W21)",
+   "kind": "duty_text",
+   "input": {
+    "text": "check the benches",
+    "every_s": 86400,
+    "since": "9:00 AM",
+    "notes": [
+     "benches quiet"
+    ]
+   },
+   "expect": {
+    "cadence": "daily",
+    "text": "\u201ccheck the benches\u201d \u2014 your daily duty (every 86400 s) \u00b7 since 9:00 AM \u00b7 your earlier notes today: benches quiet"
+   }
+  },
+  {
+   "name": "duty_text: every 90 seconds \u00b7 first run \u00b7 1 note(s) (W21)",
+   "kind": "duty_text",
+   "input": {
+    "text": "sweep the outbox",
+    "every_s": 90,
+    "since": null,
+    "notes": [
+     "outbox 0"
+    ]
+   },
+   "expect": {
+    "cadence": "every 90 seconds",
+    "text": "\u201csweep the outbox\u201d \u2014 your duty every 90 seconds (every 90 s) \u00b7 your first run \u00b7 your earlier notes today: outbox 0"
+   }
+  },
+  {
+   "name": "refused_words: 'I will not answer it a seventh time. This is a l' (W21)",
+   "kind": "refused_words",
+   "input": {
+    "reply": "I will not answer it a seventh time. This is a librarian keeping her word."
+   },
+   "expect": {
+    "refused": true
+   }
+  },
+  {
+   "name": "refused_words: '**I am not answering this again.**' (W21)",
+   "kind": "refused_words",
+   "input": {
+    "reply": "**I am not answering this again.**"
+   },
+   "expect": {
+    "refused": true
+   }
+  },
+  {
+   "name": "refused_words: 'Not answering this \u2014 it was asked six times alre' (W21)",
+   "kind": "refused_words",
+   "input": {
+    "reply": "Not answering this \u2014 it was asked six times already."
+   },
+   "expect": {
+    "refused": true
+   }
+  },
+  {
+   "name": "refused_words: 'I decline.' (W21)",
+   "kind": "refused_words",
+   "input": {
+    "reply": "I decline."
+   },
+   "expect": {
+    "refused": true
+   }
+  },
+  {
+   "name": "refused_words: 'Nothing new since 7:12 PM.' (W21)",
+   "kind": "refused_words",
+   "input": {
+    "reply": "Nothing new since 7:12 PM."
+   },
+   "expect": {
+    "refused": false
+   }
+  },
+  {
+   "name": "refused_words: 'I will note one thing: JB asked for the weather.' (W21)",
+   "kind": "refused_words",
+   "input": {
+    "reply": "I will note one thing: JB asked for the weather."
+   },
+   "expect": {
+    "refused": false
+   }
+  },
+  {
+   "name": "refused_words: \"The word 'I will not' appears in my notes, but h\" (W21)",
+   "kind": "refused_words",
+   "input": {
+    "reply": "The word 'I will not' appears in my notes, but here is my note: quiet hour."
+   },
+   "expect": {
+    "refused": false
+   }
+  },
+  {
+   "name": "refused_words: '(empty)' (W21)",
+   "kind": "refused_words",
+   "input": {
+    "reply": ""
+   },
+   "expect": {
+    "refused": false
+   }
+  },
+  {
+   "name": "refused_words: '(empty)' (W21)",
+   "kind": "refused_words",
+   "input": {
+    "reply": null
+   },
+   "expect": {
+    "refused": false
+   }
+  },
+  {
+   "name": "echo_reply: 'hello' (W24)",
+   "kind": "echo_reply",
+   "input": {
+    "name": "echo",
+    "text": "hello"
+   },
+   "expect": {
+    "reply": "hello"
+   }
+  },
+  {
+   "name": "echo_reply: '  hello   there  ' (W24)",
+   "kind": "echo_reply",
+   "input": {
+    "name": "echo",
+    "text": "  hello   there  "
+   },
+   "expect": {
+    "reply": "hello there"
+   }
+  },
+  {
+   "name": "echo_reply: \"echo, what is today's date?\" (W24)",
+   "kind": "echo_reply",
+   "input": {
+    "name": "echo",
+    "text": "echo, what is today's date?"
+   },
+   "expect": {
+    "reply": "echo, what is today's date?\necho repeats; ask the librarian for the date"
+   }
+  },
+  {
+   "name": "echo_reply: 'What time is it' (W24)",
+   "kind": "echo_reply",
+   "input": {
+    "name": "echo",
+    "text": "What time is it"
+   },
+   "expect": {
+    "reply": "What time is it\necho repeats; ask the librarian for the date"
+   }
+  },
+  {
+   "name": "echo_reply: 'can you plan the day?' (W24)",
+   "kind": "echo_reply",
+   "input": {
+    "name": "echo",
+    "text": "can you plan the day?"
+   },
+   "expect": {
+    "reply": "can you plan the day?\necho repeats; ask the librarian for an answer"
+   }
+  },
+  {
+   "name": "echo_reply: 'repeat this.' (W24)",
+   "kind": "echo_reply",
+   "input": {
+    "name": "echo",
+    "text": "repeat this."
+   },
+   "expect": {
+    "reply": "repeat this."
+   }
+  }
+ ]
+}

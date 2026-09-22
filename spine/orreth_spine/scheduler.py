@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P4 sp5, the scheduler · 2026-09-18
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W21 a duty is framed as a duty · 2026-09-21
 """The scheduler — a kernel organ (canon 0004: three schedulers, one
 body). A SCHEDULE is a standing intention on the ground: HUMAN (the
 identity's, CRUD through the door), ROLE (declared by a body's template,
@@ -7,10 +8,16 @@ visible, NEVER editable). An OCCURRENCE of a human or role schedule is
 an ask to its runner on the Invocation rail — seen in the band, wearing
 its journey; a kernel occurrence acts directly and is recorded. Rest is
 a first-class recorded act, never a deletion (covenant rule 11): the
-human can always stop what the machine manages."""
+human can always stop what the machine manages.
+
+Walk #8's cure (W21, the reasoning wound): an occurrence is FRAMED as a
+duty — the ask the runner receives carries the duty's words, its cadence,
+the window since its last run, and the runner's own earlier notes — never
+the bare sentence a twelfth time, as if a human re-asked it."""
 from __future__ import annotations
 
 import secrets
+from datetime import datetime, timezone
 
 from . import envelope as ev
 
@@ -42,6 +49,65 @@ def ensure_schema(conn) -> None:
             "CREATE TABLE IF NOT EXISTS spine_occurrences ("
             " occurrence_id text PRIMARY KEY, schedule_id text NOT NULL,"
             " ref text, at timestamptz NOT NULL DEFAULT now())")
+
+
+def cadence_words(every_s: int) -> str:
+    """The cadence in a human's word (conformance `duty_text`): hourly ·
+    daily · weekly · every N minutes · every N seconds."""
+    n = int(every_s)
+    if n == 3600:
+        return "hourly"
+    if n == 86400:
+        return "daily"
+    if n == 604800:
+        return "weekly"
+    if n % 3600 == 0:
+        return f"every {n // 3600} hours"
+    if n % 60 == 0 and n >= 60:
+        return f"every {n // 60} minute{'s' if n // 60 != 1 else ''}"
+    return f"every {n} seconds"
+
+
+def duty_text(text: str, every_s: int, since: str | None, notes: list[str]) -> str:
+    """The framing of a duty's occurrence (W21; conformance `duty_text`):
+    `"<the duty's words>" — your <cadence> duty (every N s) · since <the
+    last run's time | your first run> · your earlier notes today: <one
+    line each, newest first, at most 3>` — or `· no earlier notes today`."""
+    words = " ".join((text or "").split())
+    cadence = cadence_words(every_s)
+    head = (f"“{words}” — your duty {cadence} (every {int(every_s)} s)" if cadence.startswith("every")
+            else f"“{words}” — your {cadence} duty (every {int(every_s)} s)")
+    window = f"since {since}" if since else "your first run"
+    lines = [" ".join((n or "").split())[:160] for n in (notes or [])][:3]
+    tail = ("your earlier notes today: " + " · ".join(lines)) if lines else "no earlier notes today"
+    return f"{head} · {window} · {tail}"
+
+
+def _clock(at: datetime | None, zone: str) -> str | None:
+    if at is None:
+        return None
+    try:
+        from zoneinfo import ZoneInfo
+        return at.astimezone(ZoneInfo(zone)).strftime("%I:%M %p").lstrip("0")
+    except Exception:
+        return at.astimezone(timezone.utc).strftime("%H:%M UTC")
+
+
+def notes_for(conn, schedule_id: str, *, limit: int = 3) -> list[str]:
+    """The runner's own earlier notes on this duty — the first line of
+    each replied occurrence, newest first, today (the last 24 h)."""
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT a.reply FROM spine_occurrences o JOIN spine_asks a ON a.ask_id = o.ref"
+        " WHERE o.schedule_id = %s AND a.status = 'replied' AND a.reply IS NOT NULL"
+        " AND a.replied_at > now() - interval '24 hours'"
+        " ORDER BY a.replied_at DESC LIMIT %s", (schedule_id, limit))
+    out = []
+    for (rp,) in cur.fetchall():
+        first = (rp or "").strip().split("\n", 1)[0].strip()
+        if first:
+            out.append(first)
+    return out
 
 
 def add(conn, runner: str, kind: str, text: str, every_s: int, by: str,
@@ -127,20 +193,26 @@ def tick(conn, bodies: dict | None = None) -> list[dict]:
     role ones as an ask to the runner on the rail; kernel ones act here
     (the harness run) — and the next beat is set. Returns what occurred."""
     from . import dispatch, harness
-    ensure_schema(conn)
+    from .resident import ensure_schema as _ground   # the notes read the asks' ground (W21)
+    ensure_schema(conn); _ground(conn)
     cur = conn.cursor()
-    cur.execute("SELECT schedule_id, runner, kind, text, every_s, added_by, marker"
+    cur.execute("SELECT schedule_id, runner, kind, text, every_s, added_by, marker, last_at"
                 " FROM spine_schedules WHERE active AND next_at <= now() AND scope = %s"
                 " ORDER BY next_at", (ev.scope(),))
     occurred = []
-    for sid, runner, kind, text, every_s, by, marker in cur.fetchall():
+    from .resident import HUMAN_ZONE_DEFAULT, HUMAN_ZONE_DIAL
+    import os
+    zone = os.environ.get(HUMAN_ZONE_DIAL, HUMAN_ZONE_DEFAULT)
+    for sid, runner, kind, text, every_s, by, marker, last_at in cur.fetchall():
         ref = None
         if kind == "kernel" and text.startswith("run the harness"):
             body = (bodies or {}).get(runner)
             if body is not None:              # an OBSERVATION under the intention
                 ref = harness.run(conn, body, parent_marker=marker)["run_id"]
-        else:                                 # an occurrence: an objective under it
-            ref = dispatch.submit_ask(conn, text, person=by, to=[runner],
+        else:                                 # an occurrence: an objective under it —
+            framed = duty_text(text, every_s, _clock(last_at, zone),   # framed as a DUTY (W21)
+                               notes_for(conn, sid))
+            ref = dispatch.submit_ask(conn, framed, person=by, to=[runner],
                                       parent_marker=marker)[0]
         oid = "occ_" + secrets.token_hex(5)
         with conn.transaction():

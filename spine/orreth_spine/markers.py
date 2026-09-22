@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch markers sp1, the open vocabulary of WHY · 2026-09-19
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W21 the schedule row wears its cadence · 2026-09-21
 """Markers (canon 0006): the kernel's open, governed vocabulary of WHY.
 A marker is a typed origin on a fact — {kind, id, parent, by}: a root
 fact mints it, a serving fact carries it, a new beginning under it mints
@@ -313,13 +314,17 @@ def with_words(conn, rows: list[dict]) -> list[dict]:
                 m["blocked"], m["blocked_note"] = note is not None, note   # W6: waiting for a crew
     sids = [m["ref"] for m in rows if m["ref"].startswith("sch_")]
     if sids and _has(conn, "spine_schedules"):
-        cur.execute("SELECT schedule_id, left(text, 100), active, kind FROM spine_schedules"
-                    " WHERE schedule_id = ANY(%s)", (sids,))
+        cur.execute("SELECT s.schedule_id, left(s.text, 100), s.active, s.kind, s.every_s, s.last_at,"
+                    " (SELECT count(*) FROM spine_occurrences o WHERE o.schedule_id = s.schedule_id)"
+                    " FROM spine_schedules s WHERE s.schedule_id = ANY(%s)", (sids,))
         found = {r[0]: r[1:] for r in cur.fetchall()}
+        from .scheduler import cadence_words
         for m in rows:
             if m["ref"] in found:
-                m["words"], m["active"], m["origin_kind"] = found[m["ref"]]
+                m["words"], m["active"], m["origin_kind"], every, last, runs = found[m["ref"]]
                 m["serves"] = "schedule"
+                m["cadence"], m["runs"] = cadence_words(every), int(runs)     # W21: "hourly · 12 runs · last 08:12 PM"
+                m["last_at"] = last.isoformat() if last else None
     return rows
 
 
