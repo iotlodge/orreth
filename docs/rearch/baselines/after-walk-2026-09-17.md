@@ -451,3 +451,81 @@ path only: click, type, read, wait; no door, no database.
 (her reply's close and the journey line carrying Fri, Sep 18 → Sat, Sep 19); `after-walk-i1w-04-sessions-short-versions.png`
 (the list newest first, the short-version lines beneath sessions 2 and 3); `after-walk-i1w-05-mark-critique-arrives-in-chat.png`
 (the critic's critique whole in the chat, its journey beneath).
+
+## Walk #7 — 2026-09-21, JB walks Phase 6 (the human walk; the Playwright is retired)
+
+**Who walked:** JB, in the glass, narrating; Fable keeps the register. Bridge relit at
+1f63e31 with `SPINE_MASTERS=did:orreth:person:master`. SPEC-L3-01 first.
+
+| Bar | What JB saw | Verdict |
+|---|---|---|
+| Enroll (1.1) | "enroll my authenticator": the QR drew, the first code took — "authenticator enrolled". "Pretty smooth up to that point." | **PASS** |
+| Re-enroll is grave (1.2) | "enroll my authenticator" answered *not confirmed — you already hold an authenticator; re-enrolling is grave: say "enroll my authenticator with code 123456"* — JB typed that sentence with 123456 literally, then with a real code; the kernel then drew a NEW QR **with the otpauth URI and the secret in plain text in the transcript**, kept the "First 6-digit / Finish enrolling" inputs open, and two later codes answered *not confirmed — nothing changed · type the code your app shows now*. JB: "part of 1.2 seemed to not take"; "if it was successful it is confusing to show another input field on the success". | **FRICTION ×4 (wounds)** — see W1–W4 |
+| Stop an intention (1.3) | In the ANALYZER JB clicked **stop** on the FIRST row — his own human intention — and got *sure? click again to rest it*; the second click rested it (*intention at rest — recorded, never deleted*). JB: "you have effectively got 2nd level human confirm down. However, would have been better to receive the input field to provide my 3rd Level MFA, BEFORE it disabled the Intention." The kernel's row (second) still stands with its stop; the L3-master half was not reached. | **JB's CALL → W5** |
+| The Analyzer under the intention | A wall of repeated `watch-red → objective` pairs (the loop's 30-minute churn, the librarian's un-actionable objectives), "EXPECTED IMPACT? … THE CHANGE: … THE GROUND …" raw prompt text as an OBJECTIVES row, "MITL acquired the Orreth ontology v0" as an objective per relight. JB: "rest of these I can't tell what's going on." | **FRICTION → W6** |
+
+**Wounds and calls (the line stops here until cured — 0005's wound rule):**
+- **W1 — the re-enroll asks in the wrong voice.** A guidance message wears the refusal's words ("not confirmed") and asks the human to retype a sentence with a placeholder code. Cure: the grave re-enroll asks for the CURRENT code in the chat's code row (sp1's L3-code row: typed code, click, Cancel default) — words equal links, no sentence to retype.
+- **W2 — the secret on the glass.** The otpauth URI with the secret printed in the transcript and stays there. Cure: the QR only; the URI/secret behind a "can't scan? reveal the secret" click that masks again on the next repaint, never in the transcript's record.
+- **W3 — success keeps its inputs open.** After the new QR, the "First 6-digit / Finish enrolling" row stays after the step succeeds and the two "not confirmed — nothing changed" lines do not say WHICH step refused. Cure: each step collapses on success; every refusal names its step ("finishing the NEW authenticator: that code is not the new entry's — type the code the new Orreth entry shows").
+- **W4 — did the re-enroll finish?** Two "nothing changed" replies after the new QR: either JB typed the OLD entry's code or the finish step verifies against the wrong secret. Cure: a law in the suite — re-enroll → new QR → finish with the NEW secret's code → confirmed; the old secret refuses by name.
+- **W5 — JB's lock: stopping ANY intention asks for the code BEFORE it rests.** The two-click "sure? click again" in the Analyzer is not governance felt in the chat (P12: approvals live in the chat). Cure: the stop of a human's intention is L3-code (the code row in the chat, the intention rests only when the code is right); the kernel's intention is L3-master AND the code; the Analyzer's stop opens that row instead of a second click.
+- **W6 — the intention tree is a wall.** Cure: fold repeats ("watch 'bodies-dormant-alert' went red ×8 · latest 03:44 PM" as one twig with a count), objectives under their watch-red, thoughts folded; the OBJECTIVES band shows objectives only — the impact ask is a thought under its change (its words start with the change, not the prompt), the ontology acquisition is an observation, never an objective.
+
+**Walks 2–4 continue on the same Bridge; cures land after "down", then SPEC-L3-01 is re-walked.**
+
+### Walk #7, continued — SPEC-EXPORT-01 (walk 2)
+
+| Bar | What JB saw | Verdict |
+|---|---|---|
+| Two answers, plan, grade (2.1–2.2) | With both residents lit, "echo, what is today's date?" fanned out to BOTH: echo echoed the question (it is an echo — the body proven before the mind), and **the librarian answered in echo's voice** — her reply was echo's words verbatim plus a parenthetical about the window. Alone, echo echoed again. "plan" produced a real plan naming the three gaps (the librarian lacks tools for the loop's objectives; echo's role is ambiguous); "grade" gave the planner an A and every date answer an F — "the grader seemed to be SPOT ON." | plan/grade **PASS**; the date **FAIL** (W7 · W8 · W12) |
+| The export (2.3) | "export compliance for this session": 10 records · the chain of who acted for whom unbroken on every record · proof L1 ×10 · unsigned (hash-chained); the plan row's chain read jb → echo → librarian → planner, the grade row's jb → planner → echo → librarian → grader; both downloads saved; "for between Friday and today" gave 121 records. | **PASS** w/ friction (W10 · W11) |
+
+**Wounds and frictions from walk 2:**
+- **W7 — "echo, …" should reach echo alone.** A name at the head of the ask (or @name) selects that resident; the fan-out stays for an unaddressed ask with several lit. And a resident's nature shows on its chip/card ("echo — repeats your words back; no mind" — P18): JB: "I may not know how you have echo setup."
+- **W8 — the librarian wore echo's voice.** In a fan-out her recall packed echo's fresh result and she returned it as her own. The pack must label another body's result as THEIRS and the system words must say "never answer in another body's words"; the earlier "I'm done." reply (a fifth identical objective from the loop) shows the un-actionable-objective loop wearing her down — the loop must not re-file an objective its runner said it cannot act on (0007's honest limit, now a felt wound).
+- **W10 — a copy for humans.** Every reply (plan, grade, any answer) gets a copy button; the export's words column strips markdown marks (it showed "# PLAN … **What:**" raw) and keeps the first line whole.
+- **W11 — the export table's words.** The "why" column read "thought" ten times — it should carry the marker's WORDS (the objective it serves), and an ask row in a fan-out names its target ("jb → echo (ask)").
+- **W12 — every body knows the clock.** "what's today's date?" earned an F from the grader and it should be unanswerable only by an echo: the kernel gives every body the time and the world in its system words (the charter's first bar is "the temperature outside"; the date is the floor of it).
+
+**JB's law, spoken before walk 3 (2026-09-21) — binds every body, not one cure:**
+- **Every resident and firmware agent wears the Orreth ontology** — the part that serves its
+  prescribed role, so the body knows the risks of its own seat (what it may not do, what it
+  must ask for). MITL's corpus is the seed; each body gets its role's slice, not the whole.
+- **Every body MUST know TIME.** Time is the backbone of Orreth's origin assertion (lived time
+  is monotone — covenant rule 8; every fact wears occurred_at); a body that cannot say the
+  date cannot reason about origin. The kernel gives every body now-in-UTC, the world, and the
+  human's zone; bodies convert zones for humans in plain words. Part of the fluid, immersive
+  experience — never a tool a body has to remember to call.
+
+### Walk #7, continued — SPEC-MITL-01 (walk 3, first half)
+
+| Bar | What JB saw | Verdict |
+|---|---|---|
+| Summon (3.1) | "summon MITL": the chip turned on, the sysline expanded the name and said what to do next. JB: "oh that's cute and I like; correct behavior and feeling." | **PASS** |
+| The canon answers (3.2) | "what does the canon say about the meter?": a whole, correct answer citing the covenant and the canon, with its meter line — JB: "my vision of an 'energy-packet'." Citations read as file paths ("SKILL.md#3", "0005-…md#10"). | **PASS** w/ friction (W15) |
+| The monitor and the impact door (3.3) | With the chat resized above default and the MONITOR pull open, the chat covered the pull; clicking the pull behind did not raise it. Typing "no body is dormant" to the monitor: a full, honest reply — it found **the watch `bodies-dormant-alert` RED while its metric reads 0 (0 > 0.0 is false)** and offered to propose a watch, but proposed none — so no hold row, no "expected impact?" to click. The same board shows `asks-left-waiting — asks_received > 72` at value 5 · RED. | **BLOCKED by W13 · W14** |
+
+**Wounds and frictions from walk 3 (first half):**
+- **W13 — pulls and the chat share the width.** When the human has resized the chat wider than its default and a pull opens, the two must stand side by side — the chat yields on the x-axis (never covers the pull), and a click on any pull raises it above the chat. "You're the pro friend."
+- **W14 — WATCH STATES ARE STUCK RED (kernel wound).** `bodies-dormant-alert` is RED with value 0 against `> 0.0`; `asks-left-waiting` is RED at 5 against `> 72`. The watch's state does not follow its metric: it went red once and never returned to green. This is the root of the Analyzer's wall (walk 1, W6) and of the librarian's exhaustion (walk 2, W8): the resiliency loop fires on a red that is not real, every thirty minutes. Cure: a watch's state is a pure function of its metric NOW (re-evaluated on every beat); red → green is a recorded transition; the intent loop wakes on the red TRANSITION only, never on a standing red; a red that has not changed re-files nothing.
+- **W15 — citations in human names.** MITL cites "SKILL.md#3" and "0005-v1-scope-and-build-plan.md#10"; the glass should say "the covenant, rule 5" and "the build plan, Phase 6 sp2" — the path stays in the record.
+- **Friction — a bare phrase to the monitor.** "no body is dormant" reads as a statement; the monitor answered well and offered the watch, but the offer needs a "yes" the walk did not give. The monitor's offer should end with a one-click "propose it" (the interlock then arrives) so the human is never asked to type "yes" to a question.
+- **W16 — a new ask got an old reply, unthought.** "propose a watch that no body is dormant" (ask_2a70fe659a36b88a) replied in 0.2 s with the previous ask's reply verbatim under a new first line; the ground shows NO meter row for that serve (the earlier ask, ask_1af97728d8292ba7, has one: Haiku, 1591 in / 202 out). Something on the serve path answered from the record instead of thinking — and the monitor's "propose" verb (the interlock, 11 s in walk #6) never ran. The builder finds the shortcut by reading the serve path for a repeated ask in one session and removes it: a new ask is ALWAYS a thought (the meter is the proof), the record is context never the answer. Blocks 3.3 until cured.
+
+### Walk #7, continued — SPEC-MITL-01 (walk 3, second half) and SPEC-PLACE-01 (walk 4)
+
+| Bar | What JB saw | Verdict |
+|---|---|---|
+| Stop the kernel's intention + impact (3.4) | "stop the kernel's resiliency intention": the kernel held it — "This needs a second named person … a declared master — never you — confirms it with a click. Cancel is the default" — with "expected impact?" on the row. Clicking it drew the ground at once (bodies planner · librarian; chains; the intention's 25 markers; cost so far 24,825 + 334,548 tokens; consequence grave → L3-master) and MITL's words beneath: who and what it touches, chains, intentions, cost, no recovery path but a human re-cut, four things to watch after, VERDICT BY THE LADDER: grave — needs L3. Cancel stayed default. "dismiss MITL" left the crew, recorded. | **PASS** w/ friction (W5 · W15 · W17) |
+| Where a body stands (4.1) | "crew": every card reads "stands on local · cpu · cell local · metal any" with its self, covenant, template hash, tools; "where does the librarian stand?" → "where · librarian stands on local · cpu" in place, no click. The pull and the chat stood side by side. | **PASS** |
+| A refusal at birth (4.2) | Fable set `"placement": {"metal": "gpu"}` on the echo template and relit: stderr "echo refused at birth — metal gpu is not here (cpu) (recorded; the rig runs without it)"; the crew door shows echo `alive false · refused true · lives 0 · why: refused: metal gpu is not here (cpu)`; the other seven bodies seated. | **PASS** on the door — JB reads the glass next |
+
+- **W17 — the journey's clock lies.** MITL's long impact reply and the crew agent's reply both read "completed (0.2 s)" — a real thought of that length is not 0.2 s. The journey's completed span measures the wrong interval (walk #6 saw "(0.0 s)" for a 2 s follow-up). Cure: the span runs from the ask's receipt to the reply's landing, on the ground's clock, and the meter row is its witness.
+| The refused card and the words (4.2–4.3) | "crew": echo greyed — "refused at birth — metal gpu is not here (cpu) · recorded 06:02:46 PM · never started · the rig runs without it · fix its template to seat it (nothing to stop)". "where does echo stand?" → "echo is refused here — metal gpu is not here (cpu) · recorded; fix its template to seat it". The librarian answered as usual. BUT the residents rail still listed echo, green and selectable, and "echo, are you out there?" sat at "the ask is on its way…" forever. | card + words **PASS**; the rail and the door **W18 · W19** |
+
+- **W18 — the rail must tell the truth (rule 7).** A refused body still stands green and selectable in the residents rail while the crew card says refused. One picture: the rail shows it greyed with "refused — not here", never selectable; a refused body cannot be lit.
+- **W19 — an ask to a body that is not here refuses at the door.** The ask to echo went "on its way…" and nothing will ever serve it. The door answers in plain words at once ("echo is not here — refused at birth: metal gpu is not here (cpu); fix its template to seat it"), the ask is recorded as refused, never left in flight.
+| Echo comes home (4.4) | Template reverted, Bridge relit: echo seated again — same self `did:orreth:agent:4af83d08…`, life 27 → 28, "stands on local · cpu"; the refusal row stays. JB: "echo is back, life 28." | **PASS** |
+
+**Walk #7 — the close.** Four specs walked by the human they are for. **EXPORT-01 PASS** (w/ friction) · **PLACE-01 PASS** (W18 · W19 owed) · **MITL-01 PASS on 3.1 · 3.2 · 3.4, BLOCKED on 3.3** (W14 · W16) · **L3-01 FRICTION** (W1–W5; re-walk owed after the cures). Nineteen wounds and frictions, one law spoken (ontology + time for every body). JB's verdict: *"the interoperability and flow is vastly better. Clearly heading into the right direction."* The line stops here until the wounds are cured (0005's wound rule); the cure spoonful reads this section as its spec.
