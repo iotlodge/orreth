@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails: rail_names · outbox_row · inbox_key · 2026-09-22
 //! The Rust conformance runner (canon 0008 · P7 sp1): every fixture under
 //! `spine/conformance/*-v*.json` — the same files the Python reference
 //! generated and passes, unchanged — dispatched by case kind exactly as
@@ -8,7 +9,9 @@
 //! The one test fails on any ported kind's mismatch, and on a ported kind the
 //! runner has no arm for (the list and the dispatch must agree).
 
-use orreth_spine::{ask, canonical, content_hash, envelope, export, mitl, placement, proof, watch};
+use orreth_spine::{
+    ask, canonical, content_hash, envelope, export, mitl, placement, proof, rails, watch,
+};
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -40,6 +43,9 @@ const PORTED_KINDS: &[&str] = &[
     "verdict",
     "profile",
     "honor",
+    "rail_names",
+    "outbox_row",
+    "inbox_key",
 ];
 
 fn fixture_dir() -> PathBuf {
@@ -328,6 +334,50 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
                 "honored · reasons"
             );
             same!(placement::why_here(&prof, &ground), s(&exp["why"]), "why");
+        }
+        // ---- orreth.rails/1 (P7 sp2): the rails' names and shapes — what the ground and rails stand on ----
+        "rail_names" => {
+            let (ns, name) = (s(&inp["ns"]), opt_str(&inp["name"]));
+            let got = serde_json::json!({
+                "serve_queue": rails::serve_queue(ns, name),
+                "serve_key": rails::serve_key(ns, name),
+                "scope": rails::scope_from(opt_str(&inp["scope"])),
+                "command_exchange": rails::COMMAND_EXCHANGE,
+                "heartbeat_queue": rails::HEARTBEAT_QUEUE,
+                "heartbeat_key": rails::HEARTBEAT_KEY,
+                "heartbeat_topic": rails::HEARTBEAT_TOPIC,
+            });
+            same!(got, *exp, "rail names");
+        }
+        "outbox_row" => {
+            let row = rails::outbox_row(&inp["env"]).map_err(|e| e.to_string())?;
+            same!(row.message_id, s(&exp["message_id"]), "message id");
+            same!(
+                String::from_utf8(row.body).unwrap(),
+                s(&exp["body"]),
+                "row body"
+            );
+            same!(
+                rails::topic_for(&inp["env"]),
+                opt_str(&exp["topic"]),
+                "topic"
+            );
+            let key = rails::key_for(&inp["env"]);
+            same!(key.as_deref(), opt_str(&exp["key"]), "key");
+        }
+        "inbox_key" => {
+            let route = rails::inbox_route(&inp["env"]);
+            let got = match &route {
+                rails::InboxRoute::Once { message_id } => serde_json::json!({
+                    "road": "once", "message_id": message_id, "aggregate_id": null, "sequence": null}),
+                rails::InboxRoute::Sequenced {
+                    message_id,
+                    aggregate_id,
+                    sequence,
+                } => serde_json::json!({
+                    "road": "sequenced", "message_id": message_id, "aggregate_id": aggregate_id, "sequence": sequence}),
+            };
+            same!(got, *exp, "inbox road");
         }
         other => {
             return Err(format!(

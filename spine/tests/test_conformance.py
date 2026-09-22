@@ -3,16 +3,19 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): watch · stop_demand · absent_words · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass): address · offer · citation_name · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): restart_demand · duty_text · refused_words · echo_reply · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails: rail_names · outbox_row · inbox_key · 2026-09-22
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
 import json
+import os
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 
 from orreth_spine import (dispatch, envelope as ev, export, harness, intent, mitl, monitor, placement, proof,
-                          resident, scheduler)
+                          rails, resident, scheduler)
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
 FIXTURES = sorted(ROOT.glob("*-v*.json"))
@@ -23,6 +26,26 @@ def _cases():
         doc = json.loads(f.read_text("ascii"))
         for c in doc["cases"]:
             yield pytest.param(doc["contract"], c, id=f"{f.stem}::{c['name']}")
+
+
+@contextmanager
+def _dials(**env):
+    """Set the rails' dials for one case (None unsets), restoring them after —
+    the session's own SPINE_QUEUE_NS / SPINE_SCOPE (conftest) stay untouched."""
+    old = {k: os.environ.get(k) for k in env}
+    for k, v in env.items():
+        if v is None:
+            os.environ.pop(k, None)
+        else:
+            os.environ[k] = v
+    try:
+        yield
+    finally:
+        for k, v in old.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
 
 
 def test_the_suite_has_fixtures():
@@ -108,5 +131,28 @@ def test_fixture(contract, case):
         ok, reasons = placement.honor(inp["profile"], inp["ground"])
         assert (ok, reasons) == (exp["honored"], exp["reasons"])
         assert placement.why_here(inp["profile"], inp["ground"]) == exp["why"]
+    # ---- orreth.rails/1 (P7 sp2): the rails' NAMES and SHAPES the Rust ground and rails stand on ----
+    elif kind == "rail_names":                   # queues wear the namespace, facts wear the world
+        with _dials(SPINE_QUEUE_NS=inp["ns"], SPINE_SCOPE=inp["scope"]):
+            got = {"serve_queue": resident.serve_queue(inp["name"]), "serve_key": resident.serve_key(inp["name"]),
+                   "scope": ev.scope(), "command_exchange": rails.COMMAND_EXCHANGE,
+                   "heartbeat_queue": rails.HEARTBEAT_QUEUE, "heartbeat_key": rails.HEARTBEAT_KEY,
+                   "heartbeat_topic": rails.HEARTBEAT_TOPIC}
+        assert got == exp
+    elif kind == "outbox_row":                   # the row a fact becomes; sinks.KafkaSink's topic + key laws
+        env = inp["env"]
+        assert ev.encode(env).decode("ascii") == exp["body"]
+        assert env["message_id"] == exp["message_id"]
+        assert env["type"] == exp["topic"]      # topic = the TYPE (schema families, never per-identity)
+        assert str((env.get("aggregate") or {}).get("id") or env["message_id"]) == exp["key"]
+    elif kind == "inbox_key":                    # the head of inbox.apply_event: once, or sequenced per aggregate
+        env = inp["env"]
+        agg = env.get("aggregate") or {}
+        aid = str(agg.get("id") or "")
+        seq = int(agg.get("sequence") or 0)
+        road = "once" if (not aid or seq <= 0) else "sequenced"
+        assert {"road": road, "message_id": env["message_id"],
+                "aggregate_id": aid if road == "sequenced" else None,
+                "sequence": seq if road == "sequenced" else None} == exp
     else:
         pytest.fail(f"unknown case kind {kind!r} in {contract}")

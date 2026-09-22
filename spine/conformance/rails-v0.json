@@ -1,0 +1,332 @@
+{
+ "contract": "orreth.rails/1",
+ "version": 0,
+ "generated_by": "orreth_spine.rails \u00b7 resident.serve_queue/serve_key \u00b7 envelope.scope \u00b7 sinks.KafkaSink \u00b7 inbox.apply_event (Python reference), canon 0008 \u00b7 P7 sp2",
+ "generated_at": "2026-09-22",
+ "cases": [
+  {
+   "name": "rail names: the rig's own benches, untargeted",
+   "kind": "rail_names",
+   "input": {
+    "ns": "",
+    "scope": null,
+    "name": null
+   },
+   "expect": {
+    "serve_queue": "resident.serve.00",
+    "serve_key": "cmd.dev.00.resident.serve",
+    "scope": "u:dev",
+    "command_exchange": "orreth.command.v1",
+    "heartbeat_queue": "spine.heartbeat",
+    "heartbeat_key": "cmd.dev.00.heartbeat",
+    "heartbeat_topic": "orreth.heartbeat.v1"
+   }
+  },
+  {
+   "name": "rail names: a session's namespace, untargeted",
+   "kind": "rail_names",
+   "input": {
+    "ns": "t1a2b3",
+    "scope": "u:test-t1a2b3",
+    "name": null
+   },
+   "expect": {
+    "serve_queue": "resident.serve.00.t1a2b3",
+    "serve_key": "cmd.dev.00.resident.serve.t1a2b3",
+    "scope": "u:test-t1a2b3",
+    "command_exchange": "orreth.command.v1",
+    "heartbeat_queue": "spine.heartbeat",
+    "heartbeat_key": "cmd.dev.00.heartbeat",
+    "heartbeat_topic": "orreth.heartbeat.v1"
+   }
+  },
+  {
+   "name": "rail names: a session's namespace, targeted at a body",
+   "kind": "rail_names",
+   "input": {
+    "ns": "t1a2b3",
+    "scope": "u:test-t1a2b3",
+    "name": "librarian"
+   },
+   "expect": {
+    "serve_queue": "resident.serve.00.t1a2b3.librarian",
+    "serve_key": "cmd.dev.00.resident.serve.t1a2b3.librarian",
+    "scope": "u:test-t1a2b3",
+    "command_exchange": "orreth.command.v1",
+    "heartbeat_queue": "spine.heartbeat",
+    "heartbeat_key": "cmd.dev.00.heartbeat",
+    "heartbeat_topic": "orreth.heartbeat.v1"
+   }
+  },
+  {
+   "name": "rail names: the rig's benches, targeted",
+   "kind": "rail_names",
+   "input": {
+    "ns": "",
+    "scope": null,
+    "name": "echo"
+   },
+   "expect": {
+    "serve_queue": "resident.serve.00.echo",
+    "serve_key": "cmd.dev.00.resident.serve.echo",
+    "scope": "u:dev",
+    "command_exchange": "orreth.command.v1",
+    "heartbeat_queue": "spine.heartbeat",
+    "heartbeat_key": "cmd.dev.00.heartbeat",
+    "heartbeat_topic": "orreth.heartbeat.v1"
+   }
+  },
+  {
+   "name": "outbox row: a fact wearing an aggregate keys by the aggregate",
+   "kind": "outbox_row",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_kind": "event",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-22T00:00:00.000Z",
+     "message_id": "msg_0123456789abcdef01234567",
+     "type": "orreth.ask.received.v1",
+     "payload": {
+      "ref": "ask_a1",
+      "hash": "sha256:x",
+      "target": "echo"
+     },
+     "correlation_id": "ask_a1",
+     "authority_chain": [
+      "did:orreth:person:jb"
+     ],
+     "aggregate": {
+      "type": "ask",
+      "id": "ask_a1",
+      "sequence": 1
+     },
+     "marker": {
+      "kind": "objective",
+      "id": "mk_1",
+      "parent": null,
+      "by": "did:orreth:person:jb"
+     }
+    }
+   },
+   "expect": {
+    "message_id": "msg_0123456789abcdef01234567",
+    "body": "{\"aggregate\":{\"id\":\"ask_a1\",\"sequence\":1,\"type\":\"ask\"},\"authority_chain\":[\"did:orreth:person:jb\"],\"correlation_id\":\"ask_a1\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_1\",\"kind\":\"objective\",\"parent\":null},\"message_id\":\"msg_0123456789abcdef01234567\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-22T00:00:00.000Z\",\"payload\":{\"hash\":\"sha256:x\",\"ref\":\"ask_a1\",\"target\":\"echo\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.ask.received.v1\",\"universe_id\":\"u:dev\"}",
+    "topic": "orreth.ask.received.v1",
+    "key": "ask_a1"
+   }
+  },
+  {
+   "name": "outbox row: a bare fact keys by its message id",
+   "kind": "outbox_row",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_kind": "event",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-22T00:00:00.000Z",
+     "message_id": "msg_fedcba9876543210fedcba98",
+     "type": "orreth.heartbeat.v1",
+     "payload": {
+      "ref": "heartbeat:ground",
+      "hash": "sha256:y"
+     }
+    }
+   },
+   "expect": {
+    "message_id": "msg_fedcba9876543210fedcba98",
+    "body": "{\"message_id\":\"msg_fedcba9876543210fedcba98\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-22T00:00:00.000Z\",\"payload\":{\"hash\":\"sha256:y\",\"ref\":\"heartbeat:ground\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.heartbeat.v1\",\"universe_id\":\"u:dev\"}",
+    "topic": "orreth.heartbeat.v1",
+    "key": "msg_fedcba9876543210fedcba98"
+   }
+  },
+  {
+   "name": "outbox row: an empty aggregate id falls back to the message id",
+   "kind": "outbox_row",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_kind": "event",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-22T00:00:00.000Z",
+     "message_id": "msg_00000000000000000000aaaa",
+     "type": "orreth.counter.incremented.v1",
+     "payload": {
+      "ref": "r",
+      "hash": "sha256:z"
+     },
+     "aggregate": {
+      "type": "counter",
+      "id": "",
+      "sequence": 2
+     }
+    }
+   },
+   "expect": {
+    "message_id": "msg_00000000000000000000aaaa",
+    "body": "{\"aggregate\":{\"id\":\"\",\"sequence\":2,\"type\":\"counter\"},\"message_id\":\"msg_00000000000000000000aaaa\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-22T00:00:00.000Z\",\"payload\":{\"hash\":\"sha256:z\",\"ref\":\"r\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.counter.incremented.v1\",\"universe_id\":\"u:dev\"}",
+    "topic": "orreth.counter.incremented.v1",
+    "key": "msg_00000000000000000000aaaa"
+   }
+  },
+  {
+   "name": "outbox row: a numeric aggregate id is spelled as text",
+   "kind": "outbox_row",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_kind": "event",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-22T00:00:00.000Z",
+     "message_id": "msg_00000000000000000000bbbb",
+     "type": "orreth.counter.incremented.v1",
+     "payload": {
+      "ref": "r",
+      "hash": "sha256:z"
+     },
+     "aggregate": {
+      "type": "counter",
+      "id": 7,
+      "sequence": 3
+     }
+    }
+   },
+   "expect": {
+    "message_id": "msg_00000000000000000000bbbb",
+    "body": "{\"aggregate\":{\"id\":7,\"sequence\":3,\"type\":\"counter\"},\"message_id\":\"msg_00000000000000000000bbbb\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-22T00:00:00.000Z\",\"payload\":{\"hash\":\"sha256:z\",\"ref\":\"r\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.counter.incremented.v1\",\"universe_id\":\"u:dev\"}",
+    "topic": "orreth.counter.incremented.v1",
+    "key": "7"
+   }
+  },
+  {
+   "name": "inbox key: a sequenced fact rides its aggregate's cursor",
+   "kind": "inbox_key",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_kind": "event",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-22T00:00:00.000Z",
+     "message_id": "msg_0123456789abcdef01234567",
+     "type": "orreth.ask.received.v1",
+     "payload": {
+      "ref": "ask_a1",
+      "hash": "sha256:x",
+      "target": "echo"
+     },
+     "correlation_id": "ask_a1",
+     "authority_chain": [
+      "did:orreth:person:jb"
+     ],
+     "aggregate": {
+      "type": "ask",
+      "id": "ask_a1",
+      "sequence": 1
+     },
+     "marker": {
+      "kind": "objective",
+      "id": "mk_1",
+      "parent": null,
+      "by": "did:orreth:person:jb"
+     }
+    }
+   },
+   "expect": {
+    "road": "sequenced",
+    "message_id": "msg_0123456789abcdef01234567",
+    "aggregate_id": "ask_a1",
+    "sequence": 1
+   }
+  },
+  {
+   "name": "inbox key: a bare fact effects once by message id",
+   "kind": "inbox_key",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_kind": "event",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-22T00:00:00.000Z",
+     "message_id": "msg_fedcba9876543210fedcba98",
+     "type": "orreth.heartbeat.v1",
+     "payload": {
+      "ref": "heartbeat:ground",
+      "hash": "sha256:y"
+     }
+    }
+   },
+   "expect": {
+    "road": "once",
+    "message_id": "msg_fedcba9876543210fedcba98",
+    "aggregate_id": null,
+    "sequence": null
+   }
+  },
+  {
+   "name": "inbox key: sequence zero is no sequence",
+   "kind": "inbox_key",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_kind": "event",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-22T00:00:00.000Z",
+     "message_id": "msg_00000000000000000000cccc",
+     "type": "orreth.counter.incremented.v1",
+     "payload": {
+      "ref": "r",
+      "hash": "sha256:z"
+     },
+     "aggregate": {
+      "type": "counter",
+      "id": "c1",
+      "sequence": 0
+     }
+    }
+   },
+   "expect": {
+    "road": "once",
+    "message_id": "msg_00000000000000000000cccc",
+    "aggregate_id": null,
+    "sequence": null
+   }
+  },
+  {
+   "name": "inbox key: an empty aggregate id is no aggregate",
+   "kind": "inbox_key",
+   "input": {
+    "env": {
+     "specversion": "orreth.transport/1",
+     "message_kind": "event",
+     "universe_id": "u:dev",
+     "scope_path": "u:dev",
+     "occurred_at": "2026-09-22T00:00:00.000Z",
+     "message_id": "msg_00000000000000000000aaaa",
+     "type": "orreth.counter.incremented.v1",
+     "payload": {
+      "ref": "r",
+      "hash": "sha256:z"
+     },
+     "aggregate": {
+      "type": "counter",
+      "id": "",
+      "sequence": 2
+     }
+    }
+   },
+   "expect": {
+    "road": "once",
+    "message_id": "msg_00000000000000000000aaaa",
+    "aggregate_id": null,
+    "sequence": null
+   }
+  }
+ ]
+}

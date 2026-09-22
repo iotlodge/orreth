@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
 [package]
 name = "orreth-spine"
 version = "0.1.0"
@@ -12,3 +13,20 @@ sha1 = { workspace = true }
 hmac = { workspace = true }
 regex = { workspace = true }
 ed25519-dalek = { workspace = true }
+
+# The rails (P7 sp2) ride behind ONE feature so `cargo test` stays hermetic by
+# default — no ground, no broker, no librdkafka build — and the rail tests run
+# only when asked for by name with the rig up:
+#   cargo test -p orreth-spine --features rails --test rails -- --nocapture
+tokio = { workspace = true, optional = true, features = ["rt-multi-thread", "macros", "time", "net", "process", "sync"] }
+tokio-postgres = { workspace = true, optional = true }
+lapin = { workspace = true, optional = true }
+rdkafka = { workspace = true, optional = true }
+rand = { workspace = true, optional = true }
+
+[features]
+rails = ["dep:tokio", "dep:tokio-postgres", "dep:lapin", "dep:rdkafka", "dep:rand"]
+
+[[test]]
+name = "rails"
+required-features = ["rails"]

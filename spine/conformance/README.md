@@ -97,3 +97,15 @@ the same files, unchanged — before any module earns the word "ported".
 - The law: every spoonful that changes a wire contract adds or extends a
   fixture in the same change. A fixture the reference fails is a wound,
   never a regeneration. `spine/tests/test_conformance.py` runs them all.
+  - `rail_names` (rails-v0, P7 sp2) — `input.ns` (`SPINE_QUEUE_NS`) · `input.scope`
+    (`SPINE_SCOPE`, null = unset) · `input.name` (a target, or null) → the serve
+    queue and key wearing the namespace and the name in that order, the world
+    (`u:dev` when unset), and the rails' fixed names (the command exchange, the
+    heartbeat's queue · key · topic).
+  - `outbox_row` — `input.env` → `expect.message_id` · `expect.body` (the
+    canonical bytes) · `expect.topic` (the envelope's TYPE) · `expect.key` (the
+    aggregate id when the envelope wears a truthy one, else the message id —
+    `sinks.KafkaSink`'s two laws).
+  - `inbox_key` — `input.env` → `expect.road` (`once` by message id, or
+    `sequenced` per aggregate when it wears an id AND a positive sequence — the
+    head of `inbox.apply_event`) with the aggregate id and sequence it rides.

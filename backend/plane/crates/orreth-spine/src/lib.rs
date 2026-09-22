@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
 //! `orreth-spine` — the kernel's pure laws in Rust, ported from the Python spine
 //! (`spine/orreth_spine/`) against the conformance suite (canon 0008).
 //!
@@ -21,6 +22,20 @@
 //!   refusal in a reply, echo's reply, the duty's framing.
 //! - [`mitl`] — a citation in a human's name, the verdict ladder.
 //! - [`py`] — Python's truth and `str()`, where a law was written in that idiom.
+//! - [`rails`] — the rails' NAMES and SHAPES (queues · keys · topics · the
+//!   outbox row · the inbox road), pure; measured by `rails-v0.json`.
+//!
+//! Phase 7 sp2 adds the GROUND AND THE RAILS behind the `rails` feature —
+//! off by default so `cargo test` stays hermetic; on, the crate stands on
+//! the dev rig (`spine/compose.yaml`) and `tests/rails.rs` proves it:
+//! - [`ground`] — connect; the once-guard, the ground memo, the advisory law.
+//! - [`outbox`] — `commit_with_outbox` · `relay_once` · the bounded budget.
+//! - [`inbox`] — `apply_once` · `apply_event` — effects once, gaps refuse.
+//! - [`sinks`] — `KafkaSink`: topic = type, key = aggregate id.
+//! - [`invoke`] — RabbitMQ: declare · publish with confirms · receive and ack.
+//! - [`events`] — Kafka: declare topics · a reader that commits after the work.
+//! - [`heartbeat`] — one breath through each rail, and all three composed.
+//! - [`rail_error`] — the rails' refusals, in the reference's words.
 
 pub mod ask;
 pub mod canonical;
@@ -31,7 +46,25 @@ pub mod mitl;
 pub mod placement;
 pub mod proof;
 pub mod py;
+pub mod rails;
 pub mod watch;
+
+#[cfg(feature = "rails")]
+pub mod events;
+#[cfg(feature = "rails")]
+pub mod ground;
+#[cfg(feature = "rails")]
+pub mod heartbeat;
+#[cfg(feature = "rails")]
+pub mod inbox;
+#[cfg(feature = "rails")]
+pub mod invoke;
+#[cfg(feature = "rails")]
+pub mod outbox;
+#[cfg(feature = "rails")]
+pub mod rail_error;
+#[cfg(feature = "rails")]
+pub mod sinks;
 
 pub use canonical::canonical;
 pub use hash::content_hash;

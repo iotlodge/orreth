@@ -22,3 +22,14 @@ base64 = "0.22"
 hmac = "0.12"
 sha1 = "0.10"
 regex = "1"
+# P7 sp2 (orreth-spine, feature `rails`): the ground and the rails from Rust —
+# tokio-postgres for the ground (async; the sync `postgres` orrethd wears is the
+# same protocol crate underneath), lapin for the invoke rail (AMQP), rdkafka for
+# the events rail (librdkafka built by cmake from the vendored source, so no
+# system library is needed — CI's rust job compiles it hermetically IF the
+# feature is ever turned on there; by default it is off and nothing here builds).
+tokio = "1"
+tokio-postgres = "0.7"
+lapin = "4"
+rdkafka = { version = "0.39", features = ["cmake-build"] }
+rand = "0.8"

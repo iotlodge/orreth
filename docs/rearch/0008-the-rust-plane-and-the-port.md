@@ -51,6 +51,14 @@ meters; it never sees the prompt).
 - **Between now and P7, the conformance suite grows with every spoonful.**
   This is the law that makes the port a measured walk instead of a big
   bang.
+- **P7 sp2 (2026-09-22) — the first SHADOW:** the Rust ground and rails
+  (`orreth-spine`, feature `rails`) stood on the PUBLIC dev ground beside the
+  Python spine — same tables, same advisory lock — and a fact each spine
+  committed was relayed, read and absorbed by the OTHER (Rust → Python relay
+  + projector; Python → Rust relay + reader + inbox, in sequence): two
+  spines, one ground, one truth. The rail tests run by name with the rig up
+  and skip BY NAME without it (`tests/rails.rs`); `rails-v0.json` measures
+  the names and shapes both spines share.
 
 ## The conformance-suite law
 
