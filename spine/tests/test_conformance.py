@@ -7,6 +7,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the services ladder: ladder_step · manifest_pin · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: ask_fact · refused_fact · ask_kind · otpauth · hold_words · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, MCP through one door: mcp_request · mcp_tool_manifest · mcp_server_manifest · mcp_transport · mcp_words · 2026-09-23
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: beat_lock · loop_words · plan_words · observed_words · watch_note · cannot_act · improvement_note · crew_hash · turned_fact · 2026-09-23
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -17,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import (dispatch, envelope as ev, export, harness, intent, mcp, mitl, monitor, placement, proof,
-                          rails, resident, scheduler, services)
+from orreth_spine import (dispatch, envelope as ev, export, ground, harness, intent, mcp, mitl, monitor, placement,
+                          presence, proof, rails, resident, scheduler, services)
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
 FIXTURES = sorted(ROOT.glob("*-v*.json"))
@@ -213,5 +214,39 @@ def test_fixture(contract, case):
         assert (mcp.GONE, mcp.STRIKES_DIAL, mcp.STRIKES_DEFAULT, mcp.PROTOCOL) == \
             (exp["gone"], exp["strikes_dial"], exp["strikes_default"], exp["protocol"])
         assert {"initialize": mcp.INITIALIZE_ID, "tools/list": mcp.LIST_ID, "tools/call": mcp.CALL_ID} == exp["ids"]
+    # ---- orreth.loops/1 (P7 sp4): the beat lock, the loop's words, the watch's turned fact ----
+    elif kind == "beat_lock":                    # two kernels on one ground: one beat at a time, per world
+        assert (ground.BEAT_LOCK, ground.BEATS, ground.HELD) == (exp["base"], exp["beats"], exp["held"])
+        assert {k: ground.beat_key(k) for k in ground.BEATS} == exp["keys"]
+    elif kind == "loop_words":
+        assert (intent.CADENCE_DUE, intent.CANNOT_ACT, monitor.WATCH_TURNED, harness.HARNESS_FAILED) == \
+            (exp["cadence_due"], exp["cannot_act"], exp["watch_turned"], exp["harness_failed"])
+        assert (intent.INTENTION_DECLARED, intent.INTENTION_STOPPED, intent.INTENTION_RESTARTED, intent.WATCH_RED) == \
+            (exp["intention_declared"], exp["intention_stopped"], exp["intention_restarted"], exp["watch_red"])
+        assert (presence.TTL_S, intent.RESILIENCY, resident.W26_WORDS, resident.W26_STEP) == \
+            (exp["lease_ttl_s"], exp["resiliency"], exp["w26_words"], exp["w26_step"])
+    elif kind == "plan_words":                   # what the kernel asks the planner
+        assert intent.plan_words(inp["serves"], inp["words"], inp["observed"]) == exp["text"]
+    elif kind == "observed_words":
+        assert intent.observed_words(inp["kind"], inp["ref"], inp["note"]) == exp["text"]
+    elif kind == "watch_note":                   # the name in Python's quotes, the float threshold
+        assert intent.watch_note(inp["name"], inp["metric"], inp["op"], inp["threshold"], inp["value"]) == exp["text"]
+    elif kind == "cannot_act":                   # W8: only the opening counts
+        assert intent.cannot_act(inp["reply"]) is exp["cannot"]
+    elif kind == "improvement_note":
+        assert intent.improvement_note(inp["who"], inp["reply"]) == exp["note"]
+    elif kind == "crew_hash":                    # the crew's shape, sorted, as canonical bytes
+        assert intent.crew_shape_hash([(n, c) for n, c in inp["shape"]]) == exp["hash"]
+    elif kind == "turned_fact":                  # orreth.watch.turned.v1 — the kernel's chain, the watch as correlation
+        with _dials(SPINE_SCOPE=inp["scope"]):
+            e = ev.make_envelope(
+                kind="event", type=monitor.WATCH_TURNED, universe_id=ev.scope(), scope_path=ev.scope(),
+                payload={"ref": inp["watch_id"], "hash": ev.content_hash(inp["name"]), "name": inp["name"],
+                         "metric": inp["metric"], "op": inp["op"], "threshold": inp["threshold"],
+                         "value": inp["value"], "from": inp["from"], "to": inp["to"]},
+                correlation_id=inp["watch_id"], authority_chain=["the kernel"])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert ev.encode(e).decode("ascii") == exp["bytes"] and e["payload"] == exp["payload"]
+        assert (e["type"], e["correlation_id"]) == (exp["topic"], exp["correlation_id"])
     else:
         pytest.fail(f"unknown case kind {kind!r} in {contract}")

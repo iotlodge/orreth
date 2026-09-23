@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P4 sp5, the scheduler · 2026-09-18
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3: the bare occurrence text replaced by W21's duty framing (walk #8) · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4: the beat lock — two kernels on one ground, one beat at a time · 2026-09-23
 """The scheduler (0004: three schedulers, one body; P16 every schedule
 lives in its runner; covenant rule 11: the human can always stop what
 the machine manages). AG-4: a kernel duty and a role intention both in
@@ -14,6 +15,7 @@ import pytest
 
 from orreth_spine import dispatch, gateway, glass, harness, resident, scheduler
 
+from tests.test_conformance import _dials  # noqa: E402
 from tests.test_mind import _rails_up  # noqa: E402
 
 SPINE = Path(__file__).resolve().parents[1]
@@ -46,6 +48,48 @@ def test_a_human_schedule_occurs_as_an_ask_on_the_rail_and_rests_on_record(pg, m
     assert h["active"] is False and h["rested_by"] == ME and h["rested_at"]
     pg.cursor().execute("UPDATE spine_schedules SET next_at = now() WHERE schedule_id = %s", (sid,))
     assert scheduler.tick(pg) == []                      # at rest, it never occurs
+
+
+def test_the_beat_belongs_to_one_kernel_at_a_time(pg, monkeypatch):
+    """P7 sp4, the loops' shadow law: two kernels stand on one ground (the
+    Python Bridge and the Rust bridge, in shadow) and both run the
+    scheduler's tick and the intent rail's turn. A beat is CLAIMED on the
+    ground first — `pg_try_advisory_lock(class, hashtext(scope))` — so
+    while one kernel's beat holds, the other's tick returns nothing and
+    the other's turn says so; the lock is per world (another scope beats
+    freely) and per class (the intent beat is not the scheduler's); a
+    dropped connection drops the lock."""
+    import psycopg
+    from orreth_spine import ground, intent
+    from tests.conftest import DSN
+    monkeypatch.setenv("SPINE_SCOPE", "u:law-" + secrets.token_hex(3))
+    sid = scheduler.add(pg, "echo", "human", "say the time, please", every_s=60, by=ME)
+    other = psycopg.connect(DSN, autocommit=True)                     # the other kernel's connection
+    other.execute("SET search_path TO spine_test")
+    try:
+        assert ground.try_beat(other, "scheduler")                    # the other kernel holds the beat
+        assert scheduler.tick(pg) == []                               # ours steps back: nothing occurred
+        [h] = scheduler.for_runner(pg, "echo")["human"]
+        assert h["occurrences"] == 0 and h["last_at"] is None         # the row untouched, still due
+        assert intent.turn(pg)["observed"] == []                      # the intent beat is its own class:
+        assert "beat" not in intent.turn(pg)                          # ours to run while they hold the scheduler's
+        assert ground.try_beat(other, "intent")
+        assert intent.turn(pg) == {"observed": [], "due": [], "filed": [], "heard": [], "beat": ground.HELD}
+        ground.end_beat(other, "intent")
+        with _dials(SPINE_SCOPE="u:law-elsewhere"):                  # another world beats freely
+            assert ground.try_beat(pg, "scheduler") and ground.end_beat(pg, "scheduler") is None
+        ground.end_beat(other, "scheduler")                           # released: the beat is ours again
+        occurred = scheduler.tick(pg)
+        assert [o["schedule_id"] for o in occurred] == [sid]
+        assert scheduler.for_runner(pg, "echo")["human"][0]["occurrences"] == 1
+        assert ground.try_beat(other, "scheduler")                    # a dying kernel drops its lock
+        other.close()
+        assert scheduler.tick(pg) == []                               # (not due again — nothing to do)
+        assert ground.try_beat(pg, "scheduler")                       # but the beat is claimable at once
+        ground.end_beat(pg, "scheduler")
+    finally:
+        if not other.closed:
+            other.close()
 
 
 def test_a_kernel_schedule_refuses_edit_with_one_plain_face(pg, monkeypatch):

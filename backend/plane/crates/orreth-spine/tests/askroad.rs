@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4: the Analyzer's two reads converge instead of racing a body still acquiring · 2026-09-23
 //! THE SHADOW PROOF of the ask road (canon 0008: fixture unchanged → SHADOW →
 //! the door), on the dev rig, by name:
 //!
@@ -258,8 +259,19 @@ async fn shadow_an_ask_through_the_rust_door_is_served_by_the_python_librarian_a
         vec![("glass-dispatcher".to_string(), "done".to_string())],
         "exactly one dispatch of {mid}"
     );
-    let (_, an_rs) = get(rs_port, "/analyzer").await;
-    let (_, an_py) = get(py_port, "/analyzer").await;
+    // the two doors read one ground — read until they agree (a body still
+    // acquiring at boot grows a root's counts between two reads: P7 sp4 saw
+    // MITL's `action` count move 46 → 48 across the pair)
+    let end = Instant::now() + Duration::from_secs(30);
+    let (mut an_rs, mut an_py) = (Value::Null, Value::Null);
+    while Instant::now() < end {
+        an_rs = get(rs_port, "/analyzer").await.1;
+        an_py = get(py_port, "/analyzer").await.1;
+        if an_rs == an_py {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(500)).await;
+    }
     assert_eq!(an_rs, an_py, "the Analyzer's origins, equal on both doors");
     assert!(
         an_rs["origins"]

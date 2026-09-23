@@ -1,12 +1,14 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the watches · the schedules · the harness runs · 2026-09-23
 //! The ask road's tables — the Python spine's DDL, word for word, under the
 //! same tags its `once` guard uses (`resident` · `markers` · `proof` · `intent`
 //! · `presence` · `digest`), so two spines on one ground never disagree about a
 //! column. Every statement is `IF NOT EXISTS`; every birth runs inside the
 //! advisory-locked transaction the ground law demands (`Ground::ensure`).
-//! The tables this spine only READS (`spine_refusals` · `spine_services` ·
-//! `spine_schedules`) are the Python's to create — the readers ask
-//! `to_regclass` first, as the reference does.
+//! P7 sp4 adds the loops' three (`monitor` · `scheduler` · `harness`). The
+//! tables this spine only READS (`spine_refusals` · `spine_services` · its
+//! health) are the Python's to create — the readers ask `to_regclass` first,
+//! as the reference does.
 
 use crate::ground::Ground;
 use crate::rail_error::RailError;
@@ -115,14 +117,45 @@ pub const DIGEST_DDL: &[&str] = &[
     "ALTER TABLE spine_digests ADD COLUMN IF NOT EXISTS state text NOT NULL DEFAULT 'in'",
 ];
 
+/// `monitor.ensure_schema`: the watches, their recorded state (W14).
+pub const MONITOR_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_watches ( watch_id text PRIMARY KEY, name text NOT NULL, \
+     metric text NOT NULL, op text NOT NULL, threshold double precision NOT NULL, added_by text \
+     NOT NULL, scope text NOT NULL, added_at timestamptz NOT NULL DEFAULT now())",
+    "ALTER TABLE spine_watches ADD COLUMN IF NOT EXISTS last_ok boolean",
+    "ALTER TABLE spine_watches ADD COLUMN IF NOT EXISTS since timestamptz",
+];
+
+/// `scheduler.ensure_schema`: the schedules (with their intention's marker), the occurrences.
+pub const SCHEDULER_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_schedules ( schedule_id text PRIMARY KEY, runner text NOT \
+     NULL, kind text NOT NULL, text text NOT NULL, every_s int NOT NULL, next_at timestamptz NOT \
+     NULL DEFAULT now(), last_at timestamptz, active boolean NOT NULL DEFAULT true, added_by text \
+     NOT NULL, rested_by text, rested_at timestamptz, scope text NOT NULL, added_at timestamptz \
+     NOT NULL DEFAULT now())",
+    "ALTER TABLE spine_schedules ADD COLUMN IF NOT EXISTS marker text",
+    "CREATE TABLE IF NOT EXISTS spine_occurrences ( occurrence_id text PRIMARY KEY, schedule_id \
+     text NOT NULL, ref text, at timestamptz NOT NULL DEFAULT now())",
+];
+
+/// `harness.ensure_schema`: the runs.
+pub const HARNESS_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_harness_runs ( run_id text PRIMARY KEY, template text NOT \
+     NULL, version text NOT NULL, passed int NOT NULL, failed int NOT NULL, details text NOT \
+     NULL, scope text NOT NULL, ran_at timestamptz NOT NULL DEFAULT now())",
+];
+
 /// The tags and their DDL, in the order the road ensures them.
-pub const ROAD: [(&str, &[&str]); 6] = [
+pub const ROAD: [(&str, &[&str]); 9] = [
     ("resident", RESIDENT_DDL),
     ("markers", MARKERS_DDL),
     ("proof", PROOF_DDL),
     ("intent", INTENT_DDL),
     ("presence", PRESENCE_DDL),
     ("digest", DIGEST_DDL),
+    ("monitor", MONITOR_DDL),
+    ("scheduler", SCHEDULER_DDL),
+    ("harness", HARNESS_DDL),
 ];
 
 /// Every table the ask road stands on, once per ground per process.

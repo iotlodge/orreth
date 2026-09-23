@@ -1,17 +1,89 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the loop's words in one place · 2026-09-23
 //! The pure half of `orreth_spine.intent` that the ask door needs — P23
 //! (block 11): THE KIND OF AN ASK. The words propose it (thought · objective
 //! · intention), a typed prefix is the human's flip and wins, and an
 //! intention's words also say what it serves, what wakes it (its interests)
 //! and its cadence. Every regex is the reference's, character for character;
 //! measured by the conformance kind `ask_kind` (`askroad-v0.json`). The stop's
-//! and restart's demands live in [`crate::proof`]; the loop itself is sp4's.
+//! and restart's demands live in [`crate::proof`]. P7 sp4 adds THE LOOP'S
+//! WORDS, pure — what the kernel asks the planner, the observation under a
+//! marker, a red watch's note, the runner's honest opening (W8), the
+//! improvement's note, the crew's shape hashed — measured by `loops-v0.json`;
+//! the loop itself turns in [`crate::intent_live`].
 
+use crate::hash::content_hash;
+use crate::py::{fold_ws, python_str, repr_str};
 use regex::Regex;
 use serde_json::{json, Value};
 use std::sync::LazyLock;
 
 pub const INTENTION_DECLARED: &str = "orreth.intention.declared.v1";
+pub const INTENTION_STOPPED: &str = "orreth.intention.stopped.v1";
+/// W20: the reverse act, its own fact.
+pub const INTENTION_RESTARTED: &str = "orreth.intention.restarted.v1";
+/// The runner's honest opening (W8).
+pub const CANNOT_ACT: &str = "cannot act";
+/// The cadence's observation, when nothing new was seen.
+pub const CADENCE_DUE: &str = "the cadence came due; nothing new was observed";
+
+/// The first Infinite Horizon Intention (0007), as the Python dict spells it.
+pub fn resiliency() -> Value {
+    json!({"words": "keep this world resilient: when a watch goes red, get it green",
+           "serves": "resiliency", "interests": [WATCH_RED], "planner": "planner"})
+}
+
+/// The observation's words when a watch turns red: the name in Python's
+/// quotes, the condition, the value (numbers as Python prints them).
+pub fn watch_note(name: &str, metric: &str, op: &str, threshold: &Value, value: &Value) -> String {
+    format!(
+        "watch {} went red: {metric} {op} {}, value {}",
+        repr_str(name),
+        python_str(threshold),
+        python_str(value)
+    )
+}
+
+/// What the kernel asks the planner under an observation.
+pub fn plan_words(serves: &str, words: &str, observed: &str) -> String {
+    format!(
+        "INTENTION (serves {serves}): {words}\nOBSERVED: {observed}\nReply with the ONE next \
+         objective for the crew that serves this intention — one imperative sentence, nothing else."
+    )
+}
+
+/// The observation under a marker.
+pub fn observed_words(kind: &str, r#ref: &str, note: Option<&str>) -> String {
+    match note {
+        Some(n) => format!("a marker of kind {} on {ref}: {n}", repr_str(kind)),
+        None => format!("a marker of kind {} on {ref}", repr_str(kind)),
+    }
+}
+
+/// W8: the runner's honest word — a reply that OPENS with `cannot act` says
+/// the body lacks the tools for this objective; a reply that merely mentions
+/// the words is a reply.
+pub fn cannot_act(reply: Option<&str>) -> bool {
+    let low = fold_ws(reply.unwrap_or("")).to_lowercase();
+    low.trim_start_matches(|c| "*#-> ".contains(c))
+        .starts_with(CANNOT_ACT)
+}
+
+/// W8's marker note when a runner says it cannot act: the first 200 characters of what it said.
+pub fn improvement_note(who: &str, reply: Option<&str>) -> String {
+    let first: String = fold_ws(reply.unwrap_or("")).chars().take(200).collect();
+    format!("runner cannot act: {who} said “{first}” — needs a body with the tools for it")
+}
+
+/// The crew's shape hashed: the (name, capabilities) pairs sorted by name, as
+/// canonical bytes of a list of lists — when it changes, a runner that could
+/// not act may now.
+pub fn crew_shape_hash(shape: &[(String, Value)]) -> String {
+    let mut pairs: Vec<&(String, Value)> = shape.iter().collect();
+    pairs.sort_by(|a, b| a.0.cmp(&b.0));
+    let list: Vec<Value> = pairs.into_iter().map(|(n, c)| json!([n, c])).collect();
+    content_hash(&Value::Array(list))
+}
 pub const SERVES: [&str; 5] = ["business", "security", "resiliency", "compliance", "cost"];
 pub const KINDS: [&str; 3] = ["human", "role", "kernel"];
 /// P23: the ask wears its kind.
@@ -158,6 +230,30 @@ pub fn read_words(text: &str) -> Read {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_loops_words() {
+        assert!(cannot_act(Some("  **Cannot act** — no tools here")));
+        assert!(!cannot_act(Some("I could act, but I cannot act on this")));
+        assert!(!cannot_act(None));
+        assert_eq!(
+            watch_note(
+                "a body's lease lapsed",
+                "bodies_dormant",
+                ">=",
+                &json!(1.0),
+                &json!(2)
+            ),
+            "watch \"a body's lease lapsed\" went red: bodies_dormant >= 1.0, value 2"
+        );
+        assert_eq!(
+            observed_words("improvement", "ask_1", None),
+            "a marker of kind 'improvement' on ask_1"
+        );
+        let h1 = crew_shape_hash(&[("b".into(), json!([])), ("a".into(), json!(["x"]))]);
+        let h2 = crew_shape_hash(&[("a".into(), json!(["x"])), ("b".into(), json!([]))]);
+        assert_eq!(h1, h2);
+    }
 
     #[test]
     fn the_words_propose_the_kind_and_the_prefix_flips_it() {

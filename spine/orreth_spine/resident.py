@@ -3,6 +3,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement enforced at birth · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W8 · W12 · W16 · W17 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W21 the duty law + the pack · W23 the interlock's words · W24 echo's bubble · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, W26: an empty reply never lands as replied — asked again once, then said in words · 2026-09-23
 """The resident body v0 (canon 0004): one governed body for every mind.
 
 Born from a versioned TEMPLATE artifact; the SAME identity in every life
@@ -59,6 +60,10 @@ CONFIRM_NEEDED = "orreth.confirm.needed.v1"
 CONFIRM_CMD = "orreth.resident.confirm.v1"
 
 
+# W26 (P7 sp4): a mind that returns no words is asked again ONCE; a second
+# silence lands as these words with status `replied` — never an empty bubble
+W26_WORDS = "the mind returned nothing; asked again, nothing"
+W26_STEP = "the mind returned no words — asked again, once (W26)"
 HUMAN_ZONE_DIAL = "SPINE_HUMAN_ZONE"          # W12: the ground's default human zone
 HUMAN_ZONE_DEFAULT = "America/Denver"          # JB is relocating to Colorado
 
@@ -609,6 +614,7 @@ class Resident:
                 if self.on_delta is not None and self._current_ask:
                     aid = self._current_ask
                     deltas = lambda t, a=aid: self.on_delta(a, t)  # noqa: E731
+                retried = []                       # W26: the mind's silence, said in words
                 try:
                     if hasattr(self.gateway, "think_acting") and \
                             door.schemas():
@@ -616,13 +622,29 @@ class Resident:
                             self._serve_conn, did=self.identity.did,
                             system=system, prompt=prompt, door=door,
                             model=mind.get("model"), on_delta=deltas)
+                        if not (reply or "").strip():          # W26: asked again, once
+                            reply, more = self.gateway.think_acting(
+                                self._serve_conn, did=self.identity.did,
+                                system=system, prompt=prompt, door=door,
+                                model=mind.get("model"), on_delta=deltas)
+                            acts, retried = acts + more, [W26_STEP]
+                            if not (reply or "").strip():
+                                reply = W26_WORDS
                         return {"reply": reply,
-                                "steps": s["steps"] + acts
+                                "steps": s["steps"] + acts + retried
                                 + ["thought it through the metered gateway"]}
                     reply = self.gateway.think(
                         self._serve_conn, did=self.identity.did,
                         system=system, prompt=prompt,
                         model=mind.get("model"), on_delta=deltas)
+                    if not (reply or "").strip():              # W26: asked again, once
+                        reply = self.gateway.think(
+                            self._serve_conn, did=self.identity.did,
+                            system=system, prompt=prompt,
+                            model=mind.get("model"), on_delta=deltas)
+                        retried = [W26_STEP]
+                        if not (reply or "").strip():
+                            reply = W26_WORDS
                 except ConsequentialHold as h:
                     return {"hold": {"tool": h.tool, "args": h.tool_args,
                                      "class": h.consequence, "level": h.level},
@@ -631,8 +653,8 @@ class Resident:
                                "held at the interlock for the human"
                                + ("" if h.level == "L2" else f" · needs {h.level}")]}
                 return {"reply": reply,
-                        "steps": s["steps"] + ["thought it through the "
-                                               "metered gateway"]}
+                        "steps": s["steps"] + retried + ["thought it through the "
+                                                         "metered gateway"]}
             if self.kind == "firmware":
                 # P6 sp4's side cure (found by sp3): a firmware body without a
                 # gateway wears no persona — the echo names it plainly instead

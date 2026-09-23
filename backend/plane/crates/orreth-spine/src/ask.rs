@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: W26's words · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: the ask's fact and the door's refusal, as bytes · 2026-09-22
 //! `orreth.ask/1` and the word-shaped laws of `orreth.intent/1` — the pure
 //! half of `orreth_spine.dispatch` (the address at the head of an ask, W7;
@@ -18,6 +19,15 @@ pub const ASK_RECEIVED: &str = "orreth.ask.received.v1";
 pub const ASK_REFUSED: &str = "orreth.ask.refused.v1";
 /// The holder of its own acts (`proof.KERNEL`).
 pub const KERNEL: &str = "the kernel";
+/// W26 (P7 sp4): a mind that returns no words is asked again ONCE; a second
+/// silence lands as these words with status `replied` — never an empty bubble.
+/// The serve is the Python body's until the bodies' seam; the words are the law.
+pub const W26_WORDS: &str = "the mind returned nothing; asked again, nothing";
+pub const W26_STEP: &str = "the mind returned no words — asked again, once (W26)";
+/// A failing harness run is a fact on the rail (AG-6).
+pub const HARNESS_FAILED: &str = "orreth.harness.failed.v1";
+/// M2: a body is alive while its lease is fresh — the lease's length in seconds.
+pub const LEASE_TTL_S: i64 = 15;
 
 // ---- dispatch.py ------------------------------------------------------------------
 

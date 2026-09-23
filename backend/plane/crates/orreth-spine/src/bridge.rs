@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the schedule and intent loops as tasks · /monitor · /schedules · /harness · /intentions/stop|restart · 2026-09-23
 //! The Rust bridge — the doors and the feed of `orreth_spine.glass` +
 //! `bridgefeed` on axum, lit in SHADOW on :4601 beside the Python Bridge on
 //! :4600, both on one ground. It serves the SAME page (`spine/glass/index.html`
@@ -7,27 +8,37 @@
 //! ported, and the same SSE feed (`/feed`: `id: <rev>` + `data: <notice>`,
 //! `event: resync` when the gap outlived the ring, `: keepalive` every 15 s),
 //! so the one page works unchanged against either port. It holds NO residents
-//! (they stay Python, serving from their benches) and runs no schedule or
-//! intent loop (sp4): it relays, it dispatches, it feeds, it answers.
+//! (they stay Python, serving from their benches); it relays, it dispatches,
+//! it feeds, it answers — and since P7 sp4 it BEATS: the scheduler's tick and
+//! the intent rail's turn run as standing tasks, each beat CLAIMED on the
+//! ground first (`beat` — the loops' shadow law), so two kernels on one world
+//! never tick or turn it at once. The kernel's Resiliency intention is
+//! declared at boot (once per world; one at rest stays at rest).
 //!
 //! Doors ported: `GET /` · `/feed` · `/health` · `/ask/<id>` · `/asks` ·
 //! `/residents` · `/crew` · `/sessions` · `/session/<id>` · `/proof` ·
 //! `/analyzer[?origin=]` · `/services[?kind=]` · `/intentions` · `/markers`
-//! · `/markers/kinds` · `/shadow` (Rust-only: the dispatcher's meter);
-//! `POST /ask` · `/confirm` · `/enroll` · `/enroll/confirm` · `/sessions`.
-//! Every other door answers 404 with no body, as the Python handler does —
-//! the page treats a missing door as "nothing here".
+//! · `/markers/kinds` · `/monitor` · `/schedules/<runner>` · `/harness` ·
+//! `/shadow` (Rust-only: the dispatcher's meter); `POST /ask` · `/confirm` ·
+//! `/enroll` · `/enroll/confirm` · `/sessions` · `/schedules` ·
+//! `/schedules/rest` · `/intentions/stop` · `/intentions/restart`;
+//! `/harness/run` answers 501 by name (a mind's run — the Python door until
+//! the bodies' seam). Every other door answers 404 with no body, as the
+//! Python handler does — the page treats a missing door as "nothing here".
 
 use crate::asks::{self, Submit, FEED_TOPICS};
 use crate::dispatcher::{self, Meter};
 use crate::feed::{self, Feed};
 use crate::ground::Ground;
+use crate::harness;
 use crate::intent::{read_words, ASK_KINDS};
 use crate::intent_live::{self, Declare};
 use crate::markers_live;
+use crate::monitor;
 use crate::proof::one_face;
 use crate::proof_live;
 use crate::py::python_str;
+use crate::scheduler;
 use crate::services::KINDS as SERVICE_KINDS;
 use crate::sessions;
 use crate::world::{RoadError, World};
@@ -248,6 +259,89 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
             }
         }));
     }
+    // the scheduler's beat — every 5 s, claimed on the ground first
+    {
+        let (w, stop, zone) = (w.clone(), stop.clone(), cfg.human_zone.clone());
+        tasks.push(tokio::spawn(async move {
+            while !stop.load(Ordering::Relaxed) {
+                match Ground::connect(&w.pg_dsn).await {
+                    Ok(mut g) => {
+                        while !stop.load(Ordering::Relaxed) {
+                            if let Err(e) = scheduler::tick(&mut g, &w, &zone).await {
+                                eprintln!("the scheduler's beat stumbled: {e}");
+                                if matches!(e, RoadError::Rail(_)) {
+                                    break; // stand again on a fresh connection
+                                }
+                            }
+                            sleep_unless_stopped(&stop, Duration::from_secs(5)).await;
+                        }
+                    }
+                    Err(e) => eprintln!("the scheduler could not reach the ground: {e}"),
+                }
+                if !stop.load(Ordering::Relaxed) {
+                    tokio::time::sleep(Duration::from_millis(500)).await;
+                }
+            }
+        }));
+    }
+    // the intent rail's beat — Resiliency declared at boot, then a turn every 3 s
+    {
+        let (w, stop) = (w.clone(), stop.clone());
+        tasks.push(tokio::spawn(async move {
+            while !stop.load(Ordering::Relaxed) {
+                match Ground::connect(&w.pg_dsn).await {
+                    Ok(mut g) => {
+                        let r = crate::intent::resiliency();
+                        let mut declared = false;
+                        for attempt in 0..20 {
+                            match intent_live::declared(
+                                &mut g,
+                                &w,
+                                Declare {
+                                    words: r["words"].as_str().unwrap_or_default().into(),
+                                    serves: r["serves"].as_str().unwrap_or_default().into(),
+                                    kind: "kernel".into(),
+                                    by: "the kernel".into(),
+                                    interests: vec![crate::intent::WATCH_RED.into()],
+                                    planner: "planner".into(),
+                                    runner: Some("librarian".into()),
+                                    every_s: None,
+                                    gates: None,
+                                },
+                            )
+                            .await
+                            {
+                                Ok(_) => {
+                                    declared = true;
+                                    break;
+                                }
+                                Err(e) => {
+                                    if attempt == 19 {
+                                        eprintln!("the intent rail could not declare at boot: {e}");
+                                    }
+                                    tokio::time::sleep(Duration::from_millis(300)).await;
+                                }
+                            }
+                        }
+                        let _ = declared;
+                        while !stop.load(Ordering::Relaxed) {
+                            if let Err(e) = intent_live::turn(&mut g, &w).await {
+                                eprintln!("the intent rail's turn stumbled: {e}");
+                                if matches!(e, RoadError::Rail(_)) {
+                                    break;
+                                }
+                            }
+                            sleep_unless_stopped(&stop, Duration::from_secs(3)).await;
+                        }
+                    }
+                    Err(e) => eprintln!("the intent rail could not reach the ground: {e}"),
+                }
+                if !stop.load(Ordering::Relaxed) {
+                    tokio::time::sleep(Duration::from_millis(500)).await;
+                }
+            }
+        }));
+    }
     // the door
     {
         let stop = stop.clone();
@@ -278,6 +372,14 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
     })
 }
 
+/// A beat's rest, cut short by the stop (so a stop is felt within 100 ms).
+async fn sleep_unless_stopped(stop: &AtomicBool, d: Duration) {
+    let end = tokio::time::Instant::now() + d;
+    while tokio::time::Instant::now() < end && !stop.load(Ordering::Relaxed) {
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    }
+}
+
 fn router(app: Arc<App>) -> Router {
     Router::new()
         .route("/", get(page))
@@ -298,6 +400,14 @@ fn router(app: Arc<App>) -> Router {
         .route("/intentions", get(intentions_door))
         .route("/markers", get(markers_door))
         .route("/markers/kinds", get(markers_kinds))
+        .route("/monitor", get(monitor_door))
+        .route("/schedules", post(schedules_post))
+        .route("/schedules/rest", post(schedules_rest))
+        .route("/schedules/:runner", get(schedules_door))
+        .route("/harness", get(harness_door))
+        .route("/harness/run", post(harness_run))
+        .route("/intentions/stop", post(intentions_stop))
+        .route("/intentions/restart", post(intentions_restart))
         .route("/confirm", post(confirm_post))
         .route("/enroll", post(enroll_post))
         .route("/enroll/confirm", post(enroll_confirm_post))
@@ -320,14 +430,19 @@ fn answer(code: u16, v: Value) -> Response {
         .into_response()
 }
 
-/// Every refusal at a door, by its face: the one face (403), a refusal in
-/// words (400), a door not yet served (501), a rail's fall (500).
+/// Every refusal at a door, by its face: the one face (403), kernel-required
+/// (403, in words), a refusal in words (400), a door not yet served (501), a
+/// rail's fall (500). A proof's demand never reaches here — the door holds.
 fn refuse(e: RoadError) -> Response {
     match e {
         RoadError::NotConfirmed { .. } => answer(403, one_face()),
+        RoadError::Forbidden(w) => answer(403, json!({"error": w})),
         RoadError::Refused(w) => answer(400, json!({"error": w})),
         RoadError::NotYet(w) => answer(501, json!({"error": w})),
         RoadError::Rail(r) => answer(500, json!({"error": r.to_string()})),
+        RoadError::ProofRequired { level, what, .. } => {
+            answer(400, json!({"error": format!("{what} needs {level}")}))
+        }
     }
 }
 
@@ -834,4 +949,177 @@ async fn enroll_confirm_post(State(app): State<Arc<App>>, body: Bytes) -> Respon
         Ok(v) => answer(200, v),
         Err(e) => refuse(e),
     }
+}
+
+// ---- the loops' doors (P7 sp4) --------------------------------------------------------
+
+async fn monitor_door(State(app): State<Arc<App>>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        monitor::snapshot(&g, &app.cfg.world, true).await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// The card's side B: every schedule this runner runs, by kind.
+async fn schedules_door(State(app): State<Arc<App>>, Path(runner): Path<String>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        scheduler::for_runner(&g, scope(&app), &runner).await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// A human schedule lands: `{runner, text, every_s >= 5}`.
+async fn schedules_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let runner = s_or(&p, "runner", "");
+    let text = s_or(&p, "text", "").trim().to_string();
+    let every = p["every_s"]
+        .as_i64()
+        .or_else(|| p["every_s"].as_f64().map(|f| f as i64))
+        .or_else(|| p["every_s"].as_str().and_then(|s| s.parse().ok()))
+        .unwrap_or(0);
+    if runner.is_empty() || text.is_empty() || every < 5 {
+        return answer(
+            400,
+            json!({"error": "a schedule is {runner, text, every_s >= 5}"}),
+        );
+    }
+    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let out = async {
+        let mut g = ground(&app).await?;
+        scheduler::add(
+            &mut g,
+            scope(&app),
+            &runner,
+            "human",
+            &text,
+            every,
+            &person,
+            None,
+        )
+        .await
+    }
+    .await;
+    match out {
+        Ok(sid) => answer(201, json!({"schedule_id": sid})),
+        Err(e) => refuse(e),
+    }
+}
+
+/// The human's stop of a schedule: recorded, never a delete; a kernel one refuses.
+async fn schedules_rest(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let sid = s_or(&p, "schedule_id", "");
+    let out = async {
+        let g = ground(&app).await?;
+        scheduler::rest(&g, scope(&app), &sid, &person).await
+    }
+    .await;
+    match out {
+        Ok(true) => answer(202, json!({"rested": python_str(&p["schedule_id"])})),
+        Ok(false) => answer(404, json!({"error": "no such schedule"})),
+        Err(e) => refuse(e),
+    }
+}
+
+/// The world checks, read off the ground; the last harness run beside them.
+async fn harness_door(State(app): State<Arc<App>>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        let sc = scope(&app);
+        let ch = harness::checks(&g, sc).await?;
+        let ok = ch.iter().all(|c| c["ok"] == json!(true));
+        Ok::<_, RoadError>(
+            json!({"checks": ch, "ok": ok, "last": monitor::last_harness(&g, sc).await?}),
+        )
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// A mind's run — the Python door until the bodies' seam (P7 sp6): named, never silent.
+async fn harness_run() -> Response {
+    answer(
+        501,
+        json!({"error": "the harness runs a body's mind — the Python door until the bodies' seam (P7 sp6); the world checks are at GET /harness"}),
+    )
+}
+
+/// Rule 11: the stop — and its reverse (W20). ANY intention's stop is grave
+/// (W5): a bare one is HELD for the code (the kernel's: code, then master).
+async fn intentions_act(app: Arc<App>, p: Value, restart: bool) -> Response {
+    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let iid = {
+        let v = s_or(&p, "intention_id", "");
+        if v.is_empty() {
+            s_or(&p, "ref", "")
+        } else {
+            v
+        }
+    };
+    let verb = if restart { "restart" } else { "stop" };
+    let out = async {
+        let mut g = ground(&app).await?;
+        let w = &app.cfg.world;
+        let made = if restart {
+            intent_live::restart(&mut g, w, &iid, &person, None, None).await
+        } else {
+            intent_live::stop(&mut g, w, &iid, &person, None, None).await
+        };
+        match made {
+            Ok(Some(v)) => Ok((202, json!({"intention": v}))),
+            Ok(None) => Ok((404, json!({"error": "no such intention"}))),
+            Err(RoadError::ProofRequired {
+                level,
+                what,
+                needs_code,
+            }) => {
+                let held = proof_live::hold_kernel_act(
+                    &mut g,
+                    w,
+                    &what,
+                    &person,
+                    &format!("intent.{verb}"),
+                    json!({"intention_id": iid}),
+                    level,
+                    s_opt(&p, "session").as_deref(),
+                    "grave",
+                    needs_code,
+                )
+                .await?;
+                Ok((
+                    202,
+                    json!({"held": held, "level": level, "needs_code": needs_code}),
+                ))
+            }
+            Err(e) => Err(e),
+        }
+    }
+    .await;
+    match out {
+        Ok((code, v)) => answer(code, v),
+        Err(e) => refuse(e),
+    }
+}
+
+async fn intentions_stop(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    intentions_act(app, body_json(&body), false).await
+}
+
+async fn intentions_restart(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    intentions_act(app, body_json(&body), true).await
 }

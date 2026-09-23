@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the kernel HOLDS its own act (`hold_kernel_act`) · 2026-09-23
 //! The proof ladder on the ground — mirrors the live half of
 //! `orreth_spine.proof` (canon 0001 P12 · 0005 P6 sp1): the authenticator
 //! enrolled once through the door and confirmed by its first code (re-enrolling
@@ -11,8 +12,10 @@
 
 use crate::envelope::{self, Mint};
 use crate::ground::Ground;
+use crate::hash::content_hash;
 use crate::outbox;
 use crate::proof::{self, DRIFT};
+use crate::rail_error::RailError;
 use crate::world::{token_hex, RoadError, World};
 use base64::Engine;
 use serde_json::{json, Value};
@@ -391,4 +394,93 @@ pub async fn attempts(g: &Ground, ask_id: &str) -> Result<Vec<(String, String, b
         .iter()
         .map(|r| (r.get(0), r.get(1), r.get(2)))
         .collect())
+}
+
+/// An act the KERNEL itself holds (no resident serves it — stopping one of
+/// the kernel's intentions, retiring a service): the ask row is born held,
+/// with its CONFIRM_NEEDED and its marker in one transaction. No
+/// `ask.received` is filed — the dispatcher must never hand this to a
+/// resident. Returns the held ask's id. `proof.hold_kernel_act`, law for law.
+#[allow(clippy::too_many_arguments)]
+pub async fn hold_kernel_act(
+    g: &mut Ground,
+    w: &World,
+    text: &str,
+    person: &str,
+    tool: &str,
+    args: Value,
+    level: &str,
+    session: Option<&str>,
+    cls: &str,
+    needs_code: bool,
+) -> Result<String, RoadError> {
+    use crate::asks::CONFIRM_NEEDED;
+    use crate::markers_live;
+    let ask_id = format!("ask_{}", token_hex(8));
+    let mid = markers_live::new_id();
+    let marker = json!({"kind": "objective", "id": mid, "parent": Value::Null, "by": person});
+    let needs_code = needs_code && level == "L3-master"; // L3-code IS the code; the flag
+    let mut held = json!({"tool": tool, "args": args, "class": cls, "level": level});
+    if needs_code {
+        held["needs_code"] = json!(true); // W5: the asker's code, then the master's click
+        held["code_ok"] = json!(false);
+    }
+    let mut chars = text.chars();
+    let capital = match chars.next() {
+        Some(c) => c.to_uppercase().collect::<String>() + chars.as_str(),
+        None => String::new(),
+    };
+    let question = crate::proof::question_for(level, &capital, needs_code);
+    let mut payload = json!({"ref": ask_id, "hash": content_hash(&Value::String(text.into())),
+                             "tool": tool, "class": cls, "level": level});
+    if needs_code {
+        payload["needs_code"] = json!(true);
+    }
+    let n = Mint {
+        kind: "event".into(),
+        r#type: CONFIRM_NEEDED.into(),
+        universe_id: w.scope.clone(),
+        scope_path: w.scope.clone(),
+        payload,
+        correlation_id: Some(ask_id.clone()),
+        authority_chain: Some(vec![person.to_string(), crate::proof::KERNEL.to_string()]),
+        aggregate: Some(json!({"type": "ask", "id": ask_id, "sequence": 1})),
+        marker: Some(marker),
+    }
+    .mint()?;
+    let raw = envelope::encode(&n)?;
+    let message_id = n["message_id"].as_str().unwrap_or_default().to_string();
+    let (scope, person2, ask2, mid2, text2, held_text) = (
+        w.scope.clone(),
+        person.to_string(),
+        ask_id.clone(),
+        mid.clone(),
+        text.to_string(),
+        held.to_string(),
+    );
+    let session = session.map(str::to_string);
+    outbox::commit_with_outbox(g, &raw, &message_id, None, async move |tx| {
+        markers_live::insert(tx, &mid2, "objective", None, &ask2, &person2, None, &scope)
+            .await
+            .map_err(|e| RailError::Refused(e.to_string()))?;
+        tx.execute(
+            "INSERT INTO spine_asks (ask_id, text, person, status, reply, served_by, held, scope, \
+             session, marker) VALUES ($1, $2, $3, 'awaiting-confirm', $4, $5, $6, $7, $8, $9)",
+            &[
+                &ask2,
+                &text2,
+                &person2,
+                &question,
+                &crate::proof::KERNEL,
+                &held_text,
+                &scope,
+                &session,
+                &mid2,
+            ],
+        )
+        .await?;
+        Ok(())
+    })
+    .await?;
+    Ok(ask_id)
 }

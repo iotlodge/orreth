@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: `repr_str` · 2026-09-23
 //! Python's idiom, where a law was written in it: truthiness (`or` · `if x`)
 //! and `str(x)` over a JSON value. Kept in one place so every ported module
 //! reads a record the way the reference does.
@@ -40,6 +41,37 @@ pub fn python_str(v: &Value) -> String {
     }
 }
 
+/// Python's `repr()` of a str (`f"{name!r}"`): single quotes unless the text
+/// holds a single quote and no double quote; backslash, the quote, `\n` `\r`
+/// `\t` escaped; other control characters as `\xNN`; printable unicode kept.
+pub fn repr_str(s: &str) -> String {
+    let q = if s.contains('\'') && !s.contains('"') {
+        '"'
+    } else {
+        '\''
+    };
+    let mut out = String::with_capacity(s.len() + 2);
+    out.push(q);
+    for c in s.chars() {
+        match c {
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            c if c == q => {
+                out.push('\\');
+                out.push(c);
+            }
+            c if (c as u32) < 0x20 || c as u32 == 0x7f => {
+                out.push_str(&format!("\\x{:02x}", c as u32))
+            }
+            c => out.push(c),
+        }
+    }
+    out.push(q);
+    out
+}
+
 /// `" ".join(text.split())` — whitespace folded to single spaces, ends trimmed.
 pub fn fold_ws(text: &str) -> String {
     text.split_whitespace().collect::<Vec<_>>().join(" ")
@@ -49,6 +81,14 @@ pub fn fold_ws(text: &str) -> String {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn repr_is_pythons() {
+        assert_eq!(repr_str("asks left waiting"), "'asks left waiting'");
+        assert_eq!(repr_str("a body's lease"), "\"a body's lease\"");
+        assert_eq!(repr_str("it's \"both\""), "'it\\'s \"both\"'");
+        assert_eq!(repr_str("tab\there"), "'tab\\there'");
+    }
 
     #[test]
     fn truth_and_str() {

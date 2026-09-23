@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the APPROVE of a kernel-held act runs intent.stop · intent.restart · 2026-09-23
 //! The ask road on the ground — mirrors `orreth_spine.dispatch` (the write
 //! half) and the ask views of `orreth_spine.glass`: ONE write path. A human's
 //! ask lands on `spine_asks` WITH its marker and its `ask.received` fact in
@@ -33,8 +34,8 @@ pub const REPLY: &str = "orreth.reply.v1";
 pub const CONFIRM_NEEDED: &str = "orreth.confirm.needed.v1";
 pub const CONFIRM_CMD: &str = "orreth.resident.confirm.v1";
 pub const SERVE_CMD: &str = "orreth.resident.serve.v1";
-pub const HARNESS_FAILED: &str = "orreth.harness.failed.v1";
-pub const WATCH_TURNED: &str = "orreth.watch.turned.v1";
+pub use crate::ask::HARNESS_FAILED;
+pub use crate::watch::WATCH_TURNED;
 
 /// The topics the Bridge feed reads — `glass.FEED_TOPICS`, in order.
 pub const FEED_TOPICS: [&str; 8] = [
@@ -676,11 +677,11 @@ async fn settle_command(
     Ok(())
 }
 
-/// The kernel settles its own held act after the door judged the proof.
-/// A cancel is the full law (a recorded cancel, the act never ran, the
-/// journey and the reply landed in one transaction — rule 11). An APPROVE
-/// runs a kernel tool (`intent.stop` · `intent.restart` · `service.retire`)
-/// that stands at the Python door until sp4 — named, never silent.
+/// The kernel settles its own held act after the door judged the proof: yes
+/// → the held act runs (`intent.stop` · `intent.restart`, in the SAME
+/// transaction as the record) and the record wears its level; anything else →
+/// a recorded cancel, the act never ran (rule 11). `service.retire` is the
+/// Python organ's until the bodies' seam — named (501), never silent.
 pub async fn settle_kernel_act(
     g: &mut Ground,
     w: &World,
@@ -690,13 +691,6 @@ pub async fn settle_kernel_act(
     level: Option<&str>,
     reason: Option<&str>,
 ) -> Result<Value, RoadError> {
-    if approve {
-        return Err(RoadError::NotYet(
-            "the kernel's own acts (intent.stop · intent.restart · service.retire) settle at the \
-             Python door until sp4 — cancel is taken here, always"
-                .into(),
-        ));
-    }
     let tx = g.client_mut().transaction().await?;
     let row = tx
         .query_opt(
@@ -735,8 +729,78 @@ pub async fn settle_kernel_act(
         vec![asker.clone(), KERNEL.to_string()]
     };
     let tool = held["tool"].as_str().unwrap_or_default().to_string();
-    let why = reason.unwrap_or("the human cancelled");
-    let note = format!("{KERNEL}: {why} — the {tool} act never ran (cancel is always the default)");
+    let (note, reply, status, proof): (String, String, &str, String) = if approve {
+        let iid = held["args"]["intention_id"]
+            .as_str()
+            .unwrap_or_default()
+            .to_string();
+        let result = match tool.as_str() {
+            "intent.stop" | "intent.restart" => {
+                let made = crate::intent_live::stop_or_restart_in(
+                    &tx,
+                    w,
+                    &iid,
+                    &asker,
+                    Some(&level),
+                    Some(by),
+                    tool == "intent.restart",
+                )
+                .await?
+                .ok_or(RoadError::NotConfirmed { rest: false })?;
+                let words = made["words"].as_str().unwrap_or_default();
+                if tool == "intent.stop" {
+                    format!("the intention “{words}” is at rest — recorded, never deleted")
+                } else {
+                    format!("the intention “{words}” stands again — its stop stays in the record, its history whole")
+                }
+            }
+            "service.retire" => return Err(RoadError::NotYet(
+                "the kernel's service.retire settles at the Python door until the bodies' seam \
+                     (P7 sp6) — cancel is taken here, always"
+                    .into(),
+            )),
+            _ => return Err(RoadError::NotConfirmed { rest: false }),
+        };
+        let (n, r) = match level.as_str() {
+            "L2" => (
+                format!("the human said yes — the {tool} act ran · proof {level}"),
+                format!("Done, on your word: {result}."),
+            ),
+            "L3-code" => (
+                format!("the code was right — the {tool} act ran · proof {level}"),
+                format!("Done, on your code: {result}."),
+            ),
+            _ => {
+                let word = if crate::py::truthy(&held["needs_code"]) {
+                    " after the asker's code"
+                } else {
+                    ""
+                };
+                (
+                    format!("{by} confirmed as master{word} — the {tool} act ran · proof {level}"),
+                    format!(
+                        "Done, on {}'s word as master{word}: {result}.",
+                        by.rsplit(':').next().unwrap_or(by)
+                    ),
+                )
+            }
+        };
+        (format!("{KERNEL}: {n}"), r, "replied", level.clone())
+    } else {
+        let why = reason.unwrap_or("the human cancelled");
+        let r = if reason.is_some() {
+            "Rested — three wrong proofs were given, so nothing was done. The act is at rest, \
+             recorded; ask again when you are ready."
+        } else {
+            "Cancelled — nothing was done. Cancel is always the default here."
+        };
+        (
+            format!("{KERNEL}: {why} — the {tool} act never ran (cancel is always the default)"),
+            r.to_string(),
+            "cancelled",
+            "L1".to_string(),
+        )
+    };
     let seq = next_seq(&tx, ask_id).await?;
     let j = Mint {
         kind: "event".into(),
@@ -756,13 +820,6 @@ pub async fn settle_kernel_act(
         j["message_id"].as_str().unwrap_or_default(),
     )
     .await?;
-    let reply = if reason.is_some() {
-        "Rested — three wrong proofs were given, so nothing was done. The act is at rest, \
-         recorded; ask again when you are ready."
-    } else {
-        "Cancelled — nothing was done. Cancel is always the default here."
-    };
-    let (status, proof) = ("cancelled", "L1");
     tx.execute(
         "UPDATE spine_asks SET status = $1, reply = $2, proof = $3, replied_at = clock_timestamp() \
          WHERE ask_id = $4",
@@ -775,7 +832,7 @@ pub async fn settle_kernel_act(
         r#type: REPLY.into(),
         universe_id: w.scope.clone(),
         scope_path: w.scope.clone(),
-        payload: json!({"ref": ask_id, "hash": content_hash(&Value::String(reply.into())), "proof": proof}),
+        payload: json!({"ref": ask_id, "hash": content_hash(&Value::String(reply.clone())), "proof": proof}),
         correlation_id: Some(ask_id.to_string()),
         authority_chain: Some(chain),
         aggregate: Some(json!({"type": "ask", "id": ask_id, "sequence": seq})),
@@ -789,7 +846,6 @@ pub async fn settle_kernel_act(
     )
     .await?;
     tx.commit().await?;
-    let _ = level;
     Ok(json!({"ask_id": ask_id, "status": status, "proof": proof, "reply": reply}))
 }
 

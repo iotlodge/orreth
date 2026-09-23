@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch intent sp1, the fifth firmware-rail · 2026-09-19
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W8 · W14 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds), walk #8's W20 the restart · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the turn under the beat lock; the loop's words in one place · 2026-09-23
 """The intent loop — the fifth firmware-rail (canon 0007, block 11).
 
 Human INTENTION is the topmost origin of work. An intention is a record
@@ -396,10 +397,7 @@ def plan(conn, intention: dict, *, cause: dict | None, observed: str) -> dict:
     if _blocked(conn, intention):        # W8: the runner cannot act — nothing more until the crew changes
         return {"planned": False, "blocked": True, "intention_id": intention["intention_id"],
                 "note": intention.get("blocked_note")}
-    text = (f"INTENTION (serves {intention['serves']}): {intention['words']}\n"
-            f"OBSERVED: {observed}\n"
-            "Reply with the ONE next objective for the crew that serves this intention — "
-            "one imperative sentence, nothing else.")
+    text = plan_words(intention['serves'], intention['words'], observed)
     [aid] = dispatch.submit_ask(conn, text, person=intention["added_by"],
                                 to=[intention["planner"]],
                                 parent_marker=(cause["id"] if cause else intention["marker"]),
@@ -430,7 +428,7 @@ def on_marker(conn, marker: dict, ref: str, note: str | None) -> list[dict]:
         mine = [i for i in cands if i["marker"] == root]
         if mine:
             cands = mine
-    observed = f"a marker of kind {marker['kind']!r} on {ref}" + (f": {note}" if note else "")
+    observed = observed_words(marker['kind'], ref, note)
     return [t for t in (plan(conn, i, cause=marker, observed=observed) for i in cands)
             if t["planned"]]
 
@@ -449,8 +447,7 @@ def crew_hash(conn) -> str:
     cur = conn.cursor()
     cur.execute("SELECT DISTINCT ON (name) name, capabilities FROM spine_joins"
                 " WHERE scope = %s ORDER BY name, join_id DESC", (ev.scope(),))
-    shape = sorted((n, json.loads(c or "[]")) for n, c in cur.fetchall())
-    return ev.content_hash(shape)
+    return crew_shape_hash([(n, json.loads(c or "[]")) for n, c in cur.fetchall()])
 
 
 def cannot_act(reply: str | None) -> bool:
@@ -506,8 +503,7 @@ def _hear_runners(conn) -> list[dict]:
             conn.cursor().execute("UPDATE spine_intent_turns SET heard = true WHERE turn_id = %s", (tid,))
         if not cannot_act(reply):
             continue
-        first = " ".join((reply or "").split())[:200]
-        note = f"runner cannot act: {who} said “{first}” — needs a body with the tools for it"
+        note = improvement_note(who, reply)
         if blocked is None:                                  # ONCE per block
             m = markers.set_marker(conn, "improvement", ref=aid, by="the kernel",
                                    parent=marker, note=note)
@@ -526,7 +522,7 @@ def _due(conn) -> list[dict]:
                 " AND every_s IS NOT NULL AND next_at <= now() ORDER BY next_at", (ev.scope(),))
     out = []
     for i in (_dict(r) for r in cur.fetchall()):
-        out.append(plan(conn, i, cause=None, observed="the cadence came due; nothing new was observed"))
+        out.append(plan(conn, i, cause=None, observed=CADENCE_DUE))
         with conn.transaction():
             conn.cursor().execute(
                 "UPDATE spine_intentions SET next_at = now() + make_interval(secs => %s)"
@@ -568,13 +564,58 @@ def turn(conn) -> dict:
     """The rail's beat: watches judged and the newly red ones observed
     under every intention that cares (the marker set is a fact; the
     interest law asks the planner under it); cadences that came due
-    plan; replied plans are filed as objectives."""
-    from . import markers
+    plan; replied plans are filed as objectives. The beat is CLAIMED
+    first (P7 sp4, `ground.beat`): two kernels on one ground in shadow
+    never turn the same world at once — the one that finds the beat
+    held returns an empty turn that says so."""
+    from . import ground
     ensure_schema(conn)
+    with ground.beat(conn, "intent") as ours:
+        if not ours:
+            return {"observed": [], "due": [], "filed": [], "heard": [], "beat": ground.HELD}
+        return _turn(conn)
+
+
+def watch_note(name: str, metric: str, op: str, threshold, value) -> str:
+    """The observation's words when a watch turns red (conformance
+    `watch_note`): the name in Python's quotes, the condition, the value."""
+    return f"watch {name!r} went red: {metric} {op} {threshold}, value {value}"
+
+
+def plan_words(serves: str, words: str, observed: str) -> str:
+    """What the kernel asks the planner (conformance `plan_words`)."""
+    return (f"INTENTION (serves {serves}): {words}\n"
+            f"OBSERVED: {observed}\n"
+            "Reply with the ONE next objective for the crew that serves this intention — "
+            "one imperative sentence, nothing else.")
+
+
+def observed_words(kind: str, ref: str, note: str | None) -> str:
+    """The observation under a marker (conformance `observed_words`)."""
+    return f"a marker of kind {kind!r} on {ref}" + (f": {note}" if note else "")
+
+
+CADENCE_DUE = "the cadence came due; nothing new was observed"
+
+
+def improvement_note(who: str, reply: str | None) -> str:
+    """W8's marker note when a runner says it cannot act (conformance
+    `improvement_note`): the first 200 characters of what it said."""
+    first = " ".join((reply or "").split())[:200]
+    return f"runner cannot act: {who} said “{first}” — needs a body with the tools for it"
+
+
+def crew_shape_hash(shape: list) -> str:
+    """The crew's shape hashed (conformance `crew_hash`): the sorted
+    (name, capabilities) pairs as canonical bytes."""
+    return ev.content_hash(sorted((n, list(c)) for n, c in shape))
+
+
+def _turn(conn) -> dict:
+    from . import markers
     observed = []
     for w in _watch_transitions(conn):
-        note = (f"watch {w['name']!r} went red: {w['metric']} {w['op']} {w['threshold']},"
-                f" value {w['value']}")
+        note = watch_note(w["name"], w["metric"], w["op"], w["threshold"], w["value"])
         for i in interested(conn, WATCH_RED):
             m = markers.set_marker(conn, WATCH_RED, ref=w["watch_id"], by="the kernel",
                                    parent=i["marker"], note=note)

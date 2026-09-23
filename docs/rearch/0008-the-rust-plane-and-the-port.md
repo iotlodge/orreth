@@ -66,6 +66,20 @@ meters; it never sees the prompt).
   (the inbox footprint hands each fact to exactly one), served by the Python
   librarian, read equal at both doors; `askroad-v0.json` + `ladder_step` ·
   `manifest_pin` bring the Rust runner to 157/157, not yet ported: none.
+- **P7 sp4 (2026-09-23) — the loops in SHADOW, and THE BEAT LOCK:** the
+  Rust bridge beats beside the Python Bridge — the scheduler's tick, the
+  intent rail's turn (watches judged, the red observed, the planner asked,
+  the objective filed, runners heard), the stop and its reverse settled by
+  the Rust kernel on the proof. Two kernels on one ground taught the port
+  its second shadow law (the first was the inbox footprint for dispatch): a
+  BEAT is claimed on the ground before it runs — `pg_try_advisory_lock(742200
+  + class, hashtext(scope))`, per world, per class — so one world is never
+  ticked or turned twice at once; the kernel that finds the beat held steps
+  back and says so. The law is written in BOTH spines (the Python reference
+  gained `ground.beat`) and measured by `loops-v0.json` (`beat_lock`); the
+  five mcp kinds are ported; the runner reads 195/195 across 49 kinds, not
+  yet ported: none. What a kernel without bodies cannot run it LEAVES DUE
+  (the harness's mind-run), never claims and drops.
 
 ## The conformance-suite law
 

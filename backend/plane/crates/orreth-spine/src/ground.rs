@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops' three tags · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: the road's six tags at birth · 2026-09-22
 //! The ground — mirrors `orreth_spine.ground` and the memo half of
 //! `orreth_spine.outbox` (`once` · `ground_key` · `mark_ground_done`).
@@ -30,8 +31,8 @@ pub const DDL_LOCK: i64 = 742199;
 
 /// The tags this spine ensures at birth (the Python spine ensures more —
 /// its `ground.TAGS`; the Rust spine grows its list spoonful by spoonful —
-/// sp3 added the ask road's six).
-pub const TAGS: [&str; 9] = [
+/// sp3 added the ask road's six, sp4 the loops' three).
+pub const TAGS: [&str; 12] = [
     "outbox",
     "inbox",
     "heartbeat",
@@ -41,6 +42,9 @@ pub const TAGS: [&str; 9] = [
     "intent",
     "presence",
     "digest",
+    "monitor",
+    "scheduler",
+    "harness",
 ];
 
 static GROUNDS_DONE: OnceLock<Mutex<HashMap<String, HashSet<String>>>> = OnceLock::new();

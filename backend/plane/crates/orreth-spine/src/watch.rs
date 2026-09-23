@@ -1,9 +1,13 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the turned fact as bytes · 2026-09-23
 //! `orreth.watch/1` — the pure half of `orreth_spine.monitor`: the SENSE of a
 //! watch (W14 — RED when `value op threshold` holds now, green otherwise),
 //! its human sentence, and the monitor's offer read from its words (W22).
-//! Measuring the metrics and recording the turn read a ground — sp4's.
+//! Measuring the metrics and recording the turn read a ground — [`crate::monitor`]
+//! (P7 sp4); the turned fact's bytes are pure here (`turned_fact`, measured by
+//! `loops-v0.json`).
 
+use crate::hash::content_hash;
 use crate::py::python_str;
 use regex::Regex;
 use serde_json::{json, Value};
@@ -17,6 +21,8 @@ pub const METRICS: [&str; 5] = [
     "bodies_alive",
     "bodies_dormant",
 ];
+/// A watch changed state: red ↔ green.
+pub const WATCH_TURNED: &str = "orreth.watch.turned.v1";
 /// The ops a watch may wear.
 pub const OPS: [&str; 5] = ["<=", ">=", "<", ">", "=="];
 
@@ -52,6 +58,54 @@ pub fn reads(metric: &str, op: &str, threshold: &Value, value: &Value, red: bool
         python_str(value),
         if red { "RED" } else { "green" }
     )
+}
+
+/// The payload of `orreth.watch.turned.v1`: the watch, its name's hash, the
+/// condition and the value at the turn, `from` (None when first judged) and `to`.
+#[allow(clippy::too_many_arguments)]
+pub fn turned_payload(
+    watch_id: &str,
+    name: &str,
+    metric: &str,
+    op: &str,
+    threshold: &Value,
+    value: &Value,
+    from: Option<&str>,
+    to: &str,
+) -> Value {
+    json!({
+        "ref": watch_id, "hash": content_hash(&Value::String(name.into())), "name": name,
+        "metric": metric, "op": op, "threshold": threshold, "value": value, "from": from, "to": to,
+    })
+}
+
+/// The turned fact whole: the kernel's chain, the watch as correlation, no
+/// aggregate, no marker. The id and the clock are the caller's (the live
+/// path mints them; the fixture fixes them).
+pub fn turned_fact(
+    scope: &str,
+    watch_id: &str,
+    payload: Value,
+    message_id: &str,
+    occurred_at: &str,
+) -> Value {
+    json!({
+        "specversion": crate::envelope::SPECVERSION,
+        "message_id": message_id,
+        "message_kind": "event",
+        "type": WATCH_TURNED,
+        "universe_id": scope,
+        "scope_path": scope,
+        "occurred_at": occurred_at,
+        "payload": payload,
+        "correlation_id": watch_id,
+        "authority_chain": ["the kernel"],
+    })
+}
+
+/// Does a reply speak of proposing a watch (W22 — the harness's `offers_are_holds`)?
+pub fn is_offer(reply: &str) -> bool {
+    OFFER_RE.is_match(reply)
 }
 
 static OFFER_RE: LazyLock<Regex> =

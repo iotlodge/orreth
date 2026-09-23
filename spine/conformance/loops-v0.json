@@ -1,0 +1,364 @@
+{
+ "contract": "orreth.loops/1",
+ "version": 0,
+ "generated_by": "orreth_spine.ground (the beat lock) + intent (the loop's words) + monitor + envelope (Python reference), canon 0008 \u00b7 P7 sp4",
+ "generated_at": "2026-09-23",
+ "cases": [
+  {
+   "name": "beat_lock: the classes count up from 742200 and the keys they make; the held words",
+   "kind": "beat_lock",
+   "input": {},
+   "expect": {
+    "base": 742200,
+    "beats": {
+     "scheduler": 1,
+     "intent": 2,
+     "keeper": 3
+    },
+    "keys": {
+     "scheduler": 742201,
+     "intent": 742202,
+     "keeper": 742203
+    },
+    "held": "the beat is held by another kernel on this ground"
+   }
+  },
+  {
+   "name": "loop_words: the loop's constants \u2014 the cadence's observation, the runner's honest opening, the facts' names, the lease, W26",
+   "kind": "loop_words",
+   "input": {},
+   "expect": {
+    "cadence_due": "the cadence came due; nothing new was observed",
+    "cannot_act": "cannot act",
+    "watch_turned": "orreth.watch.turned.v1",
+    "harness_failed": "orreth.harness.failed.v1",
+    "intention_declared": "orreth.intention.declared.v1",
+    "intention_stopped": "orreth.intention.stopped.v1",
+    "intention_restarted": "orreth.intention.restarted.v1",
+    "watch_red": "watch-red",
+    "lease_ttl_s": 15,
+    "resiliency": {
+     "words": "keep this world resilient: when a watch goes red, get it green",
+     "serves": "resiliency",
+     "interests": [
+      "watch-red"
+     ],
+     "planner": "planner"
+    },
+    "w26_words": "the mind returned nothing; asked again, nothing",
+    "w26_step": "the mind returned no words \u2014 asked again, once (W26)",
+    "kernel_harness_duty": "run the harness against my golden set",
+    "kernel_harness_every_s": 1800
+   }
+  },
+  {
+   "name": "plan_words: the planner's ask under an observation (resiliency)",
+   "kind": "plan_words",
+   "input": {
+    "serves": "resiliency",
+    "words": "keep this world resilient: when a watch goes red, get it green",
+    "observed": "a marker of kind 'watch-red' on watch_0a1b2c3d4e: watch 'asks left waiting' went red: asks_received > 0.0, value 1"
+   },
+   "expect": {
+    "text": "INTENTION (serves resiliency): keep this world resilient: when a watch goes red, get it green\nOBSERVED: a marker of kind 'watch-red' on watch_0a1b2c3d4e: watch 'asks left waiting' went red: asks_received > 0.0, value 1\nReply with the ONE next objective for the crew that serves this intention \u2014 one imperative sentence, nothing else."
+   }
+  },
+  {
+   "name": "plan_words: the planner's ask under an observation (cost)",
+   "kind": "plan_words",
+   "input": {
+    "serves": "cost",
+    "words": "keep the spend under budget every 2 hours",
+    "observed": "the cadence came due; nothing new was observed"
+   },
+   "expect": {
+    "text": "INTENTION (serves cost): keep the spend under budget every 2 hours\nOBSERVED: the cadence came due; nothing new was observed\nReply with the ONE next objective for the crew that serves this intention \u2014 one imperative sentence, nothing else."
+   }
+  },
+  {
+   "name": "observed_words: a marker of kind watch-red with its note",
+   "kind": "observed_words",
+   "input": {
+    "kind": "watch-red",
+    "ref": "watch_0a1b2c3d4e",
+    "note": "watch 'asks left waiting' went red: asks_received > 0.0, value 1"
+   },
+   "expect": {
+    "text": "a marker of kind 'watch-red' on watch_0a1b2c3d4e: watch 'asks left waiting' went red: asks_received > 0.0, value 1"
+   }
+  },
+  {
+   "name": "observed_words: a marker of kind improvement without its note",
+   "kind": "observed_words",
+   "input": {
+    "kind": "improvement",
+    "ref": "ask_00000000000000a1",
+    "note": null
+   },
+   "expect": {
+    "text": "a marker of kind 'improvement' on ask_00000000000000a1"
+   }
+  },
+  {
+   "name": "watch_note: 'asks left waiting' \u2014 the name in Python's quotes, the float threshold, the value",
+   "kind": "watch_note",
+   "input": {
+    "name": "asks left waiting",
+    "metric": "asks_received",
+    "op": ">",
+    "threshold": 0.0,
+    "value": 1
+   },
+   "expect": {
+    "text": "watch 'asks left waiting' went red: asks_received > 0.0, value 1"
+   }
+  },
+  {
+   "name": "watch_note: \"a body's lease lapsed\" \u2014 the name in Python's quotes, the float threshold, the value",
+   "kind": "watch_note",
+   "input": {
+    "name": "a body's lease lapsed",
+    "metric": "bodies_dormant",
+    "op": ">=",
+    "threshold": 1.0,
+    "value": 2
+   },
+   "expect": {
+    "text": "watch \"a body's lease lapsed\" went red: bodies_dormant >= 1.0, value 2"
+   }
+  },
+  {
+   "name": "watch_note: 'outbox slow' \u2014 the name in Python's quotes, the float threshold, the value",
+   "kind": "watch_note",
+   "input": {
+    "name": "outbox slow",
+    "metric": "oldest_outbox_age_s",
+    "op": ">",
+    "threshold": 2.5,
+    "value": 3.75
+   },
+   "expect": {
+    "text": "watch 'outbox slow' went red: oldest_outbox_age_s > 2.5, value 3.75"
+   }
+  },
+  {
+   "name": "cannot_act: 'cannot act: I have no tool that reaches the bench.'",
+   "kind": "cannot_act",
+   "input": {
+    "reply": "cannot act: I have no tool that reaches the bench."
+   },
+   "expect": {
+    "cannot": true
+   }
+  },
+  {
+   "name": "cannot_act: '  **Cannot act** \u2014 no tools here'",
+   "kind": "cannot_act",
+   "input": {
+    "reply": "  **Cannot act** \u2014 no tools here"
+   },
+   "expect": {
+    "cannot": true
+   }
+  },
+  {
+   "name": "cannot_act: 'I could act, but I cannot act on this without a tool'",
+   "kind": "cannot_act",
+   "input": {
+    "reply": "I could act, but I cannot act on this without a tool"
+   },
+   "expect": {
+    "cannot": false
+   }
+  },
+  {
+   "name": "cannot_act: 'I served it; nothing to add.'",
+   "kind": "cannot_act",
+   "input": {
+    "reply": "I served it; nothing to add."
+   },
+   "expect": {
+    "cannot": false
+   }
+  },
+  {
+   "name": "cannot_act: None",
+   "kind": "cannot_act",
+   "input": {
+    "reply": null
+   },
+   "expect": {
+    "cannot": false
+   }
+  },
+  {
+   "name": "cannot_act: ''",
+   "kind": "cannot_act",
+   "input": {
+    "reply": ""
+   },
+   "expect": {
+    "cannot": false
+   }
+  },
+  {
+   "name": "improvement_note: librarian said it cannot act (short)",
+   "kind": "improvement_note",
+   "input": {
+    "who": "librarian",
+    "reply": "cannot act: I have no tool for the bench."
+   },
+   "expect": {
+    "note": "runner cannot act: librarian said \u201ccannot act: I have no tool for the bench.\u201d \u2014 needs a body with the tools for it"
+   }
+  },
+  {
+   "name": "improvement_note: the crew said it cannot act (long, cut at 200)",
+   "kind": "improvement_note",
+   "input": {
+    "who": "the crew",
+    "reply": "cannot act: the bench is out of reach and the tool is missing the bench is out of reach and the tool is missing the bench is out of reach and the tool is missing the bench is out of reach and the tool is missing the bench is out of reach and the tool is missing the bench is out of reach and the tool is missing the bench is out of reach and the tool is missing the bench is out of reach and the tool is missing "
+   },
+   "expect": {
+    "note": "runner cannot act: the crew said \u201ccannot act: the bench is out of reach and the tool is missing the bench is out of reach and the tool is missing the bench is out of reach and the tool is missing the bench is out of reach and the tool\u201d \u2014 needs a body with the tools for it"
+   }
+  },
+  {
+   "name": "improvement_note: echo said it cannot act (short)",
+   "kind": "improvement_note",
+   "input": {
+    "who": "echo",
+    "reply": null
+   },
+   "expect": {
+    "note": "runner cannot act: echo said \u201c\u201d \u2014 needs a body with the tools for it"
+   }
+  },
+  {
+   "name": "crew_hash: 2 bodies \u2014 sorted by name, capabilities as given",
+   "kind": "crew_hash",
+   "input": {
+    "shape": [
+     [
+      "librarian",
+      [
+       "tools:recall",
+       "tools:now"
+      ]
+     ],
+     [
+      "echo",
+      []
+     ]
+    ]
+   },
+   "expect": {
+    "hash": "sha256:fec6b5210c7af16caefff1e682b600152e75b38d2801aaba5ac9b43f6ebc170b"
+   }
+  },
+  {
+   "name": "crew_hash: 3 bodies \u2014 sorted by name, capabilities as given",
+   "kind": "crew_hash",
+   "input": {
+    "shape": [
+     [
+      "echo",
+      []
+     ],
+     [
+      "librarian",
+      [
+       "tools:recall",
+       "tools:now"
+      ]
+     ],
+     [
+      "planner",
+      [
+       "tools:mark"
+      ]
+     ]
+    ]
+   },
+   "expect": {
+    "hash": "sha256:26bb87622ffb781d122f607c082c6c9ad847fed07f3ae4bf7c259ffebdef8a18"
+   }
+  },
+  {
+   "name": "crew_hash: 0 bodies \u2014 sorted by name, capabilities as given",
+   "kind": "crew_hash",
+   "input": {
+    "shape": []
+   },
+   "expect": {
+    "hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+   }
+  },
+  {
+   "name": "turned_fact: first judged \u2192 red \u2014 the watch.turned bytes, the kernel's chain, the watch as correlation",
+   "kind": "turned_fact",
+   "input": {
+    "scope": "u:dev",
+    "watch_id": "watch_0a1b2c3d4e",
+    "name": "asks left waiting",
+    "metric": "asks_received",
+    "op": ">",
+    "threshold": 0.0,
+    "value": 1,
+    "from": null,
+    "to": "red",
+    "message_id": "msg_0000000000000000000000b1",
+    "occurred_at": "2026-09-23T15:00:00.000Z"
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"watch_0a1b2c3d4e\",\"message_id\":\"msg_0000000000000000000000b1\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-23T15:00:00.000Z\",\"payload\":{\"from\":null,\"hash\":\"sha256:865d39ff6409ed33bc1bc721a1e44ddd805f46199318ec584c14082a008e9e43\",\"metric\":\"asks_received\",\"name\":\"asks left waiting\",\"op\":\">\",\"ref\":\"watch_0a1b2c3d4e\",\"threshold\":0.0,\"to\":\"red\",\"value\":1},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.watch.turned.v1\",\"universe_id\":\"u:dev\"}",
+    "payload": {
+     "ref": "watch_0a1b2c3d4e",
+     "hash": "sha256:865d39ff6409ed33bc1bc721a1e44ddd805f46199318ec584c14082a008e9e43",
+     "name": "asks left waiting",
+     "metric": "asks_received",
+     "op": ">",
+     "threshold": 0.0,
+     "value": 1,
+     "from": null,
+     "to": "red"
+    },
+    "topic": "orreth.watch.turned.v1",
+    "correlation_id": "watch_0a1b2c3d4e"
+   }
+  },
+  {
+   "name": "turned_fact: red \u2192 green \u2014 the watch.turned bytes, the kernel's chain, the watch as correlation",
+   "kind": "turned_fact",
+   "input": {
+    "scope": "u:dev",
+    "watch_id": "watch_0a1b2c3d4e",
+    "name": "asks left waiting",
+    "metric": "asks_received",
+    "op": ">",
+    "threshold": 0.0,
+    "value": 0,
+    "from": "red",
+    "to": "green",
+    "message_id": "msg_0000000000000000000000b2",
+    "occurred_at": "2026-09-23T15:00:05.000Z"
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"watch_0a1b2c3d4e\",\"message_id\":\"msg_0000000000000000000000b2\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-23T15:00:05.000Z\",\"payload\":{\"from\":\"red\",\"hash\":\"sha256:865d39ff6409ed33bc1bc721a1e44ddd805f46199318ec584c14082a008e9e43\",\"metric\":\"asks_received\",\"name\":\"asks left waiting\",\"op\":\">\",\"ref\":\"watch_0a1b2c3d4e\",\"threshold\":0.0,\"to\":\"green\",\"value\":0},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.watch.turned.v1\",\"universe_id\":\"u:dev\"}",
+    "payload": {
+     "ref": "watch_0a1b2c3d4e",
+     "hash": "sha256:865d39ff6409ed33bc1bc721a1e44ddd805f46199318ec584c14082a008e9e43",
+     "name": "asks left waiting",
+     "metric": "asks_received",
+     "op": ">",
+     "threshold": 0.0,
+     "value": 0,
+     "from": "red",
+     "to": "green"
+    },
+    "topic": "orreth.watch.turned.v1",
+    "correlation_id": "watch_0a1b2c3d4e"
+   }
+  }
+ ]
+}

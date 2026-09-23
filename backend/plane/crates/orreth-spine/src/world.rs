@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the kernel-required face · the proof's demand · 2026-09-23
 //! The world a bridge process stands in — its scope (`SPINE_SCOPE`), its
 //! benches (`SPINE_QUEUE_NS`), its rails — carried explicitly so a test can
 //! stand two worlds in one process; and the small idioms every live module
@@ -48,6 +49,16 @@ pub enum RoadError {
     Refused(String),
     /// A door this spine does not yet serve — named, never silent (501).
     NotYet(String),
+    /// Kernel-required — visible, never editable (403, in words).
+    Forbidden(String),
+    /// A grave act asked bare: the door HOLDS it at this level instead
+    /// (`proof.ProofRequired`) — `what` is the act in words, `needs_code` the
+    /// kernel's demand for the asker's code before the master's click.
+    ProofRequired {
+        level: &'static str,
+        what: String,
+        needs_code: bool,
+    },
 }
 
 impl fmt::Display for RoadError {
@@ -55,7 +66,10 @@ impl fmt::Display for RoadError {
         match self {
             RoadError::Rail(e) => write!(f, "{e}"),
             RoadError::NotConfirmed { .. } => f.write_str("not confirmed"),
-            RoadError::Refused(w) | RoadError::NotYet(w) => f.write_str(w),
+            RoadError::Refused(w) | RoadError::NotYet(w) | RoadError::Forbidden(w) => {
+                f.write_str(w)
+            }
+            RoadError::ProofRequired { level, what, .. } => write!(f, "{what} needs {level}"),
         }
     }
 }

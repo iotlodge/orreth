@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P4 sp5, the scheduler · 2026-09-18
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W21 a duty is framed as a duty · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the tick under the beat lock (the loops' shadow law) · 2026-09-23
 """The scheduler — a kernel organ (canon 0004: three schedulers, one
 body). A SCHEDULE is a standing intention on the ground: HUMAN (the
 identity's, CRUD through the door), ROLE (declared by a body's template,
@@ -191,10 +192,22 @@ def for_runner(conn, runner: str) -> dict:
 def tick(conn, bodies: dict | None = None) -> list[dict]:
     """The organ's beat: every due, active schedule occurs — human and
     role ones as an ask to the runner on the rail; kernel ones act here
-    (the harness run) — and the next beat is set. Returns what occurred."""
-    from . import dispatch, harness
+    (the harness run) — and the next beat is set. Returns what occurred.
+    The beat is CLAIMED first (P7 sp4, `ground.beat`): two kernels on one
+    ground in shadow never tick the same world at once — the one that
+    finds the beat held returns nothing and says nothing (the holder's
+    beat is the world's beat)."""
+    from . import dispatch, ground, harness
     from .resident import ensure_schema as _ground   # the notes read the asks' ground (W21)
     ensure_schema(conn); _ground(conn)
+    with ground.beat(conn, "scheduler") as ours:
+        if not ours:
+            return []
+        return _tick(conn, bodies)
+
+
+def _tick(conn, bodies: dict | None) -> list[dict]:
+    from . import dispatch, harness
     cur = conn.cursor()
     cur.execute("SELECT schedule_id, runner, kind, text, every_s, added_by, marker, last_at"
                 " FROM spine_schedules WHERE active AND next_at <= now() AND scope = %s"

@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp2, the mind arrives · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, W26: a silent mind is asked again once, then the silence is said in words · 2026-09-23
 """The mind's laws (canon 0003 · 0004): no mind thinks off-meter (every
 thought lands a meter line); recall packs the worldline and the
 memories into the prompt (verbatim, provenance-carrying); a mindless
@@ -104,6 +105,50 @@ def test_a_mindless_template_never_touches_the_gateway(pg):
     _ask, (status, reply, _by) = _walk(pg, r, text, tok)
     assert status == "replied" and text in reply
     assert gw.calls == []                        # the gateway never rang
+
+
+class _Silences(gateway.FakeGateway):
+    """A mind that answers from a script — "" is a silence."""
+
+    def __init__(self, *replies):
+        super().__init__(reply="")
+        self.script = list(replies)
+
+    def think(self, conn, **kw):
+        self.reply = self.script.pop(0) if self.script else ""
+        return super().think(conn, **kw)
+
+
+@rails
+def test_w26_an_empty_reply_never_lands_as_replied_asked_again_once_then_said_in_words(pg):
+    """W26 (seen 2026-09-23 in the live-mind law, once in three runs): the
+    mind returned NO words and the row landed `replied` with an empty
+    bubble. The cure, on the serve path: a silence is asked again ONCE —
+    words on the second try land as the reply, with a journey step naming
+    the retry; a second silence lands as words that say so, status
+    `replied`, never an empty bubble. Every thought is metered."""
+    tok = secrets.token_hex(4)
+    gw = _Silences("", f"On the second asking: hempcrete cures for 28 days (marker {tok}).")
+    r = resident.Resident(LIBRARIAN, gateway=gw)
+    r.load_policy(POLICY)
+    r.join(pg)
+    ask_id, (status, reply, _by) = _walk(pg, r, f"How long does hempcrete cure? (marker {tok})", tok)
+    assert status == "replied" and reply.startswith("On the second asking")
+    assert len(gw.calls) == 2                                    # asked twice, no more
+    cur = pg.cursor()
+    cur.execute("SELECT count(*) FROM spine_meter WHERE did = %s", (r.identity.did,))
+    assert cur.fetchone()[0] >= 2                                # both thoughts metered
+    from orreth_spine import glass
+    view = glass.ask_view(pg, ask_id)
+    assert any(resident.W26_STEP in j for j in view["journey"])  # the retry is in the record
+    gw2 = _Silences("", "", "never reached")
+    r2 = resident.Resident(LIBRARIAN, gateway=gw2)
+    r2.load_policy(POLICY)
+    r2.join(pg)
+    tok2 = secrets.token_hex(4)
+    _a2, (status2, reply2, _b2) = _walk(pg, r2, f"Say nothing twice (marker {tok2})", tok2)
+    assert (status2, reply2) == ("replied", resident.W26_WORDS)   # words, never an empty bubble
+    assert len(gw2.calls) == 2 and gw2.script == ["never reached"]
 
 
 # ---- the live mind (needs the real key; skipped where absent) --------------------

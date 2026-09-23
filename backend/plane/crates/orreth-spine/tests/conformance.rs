@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails: rail_names · outbox_row · inbox_key · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: ladder_step · manifest_pin · ask_fact · refused_fact · ask_kind · otpauth · hold_words · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the five mcp kinds · beat_lock · loop_words · plan_words · observed_words · watch_note · cannot_act · improvement_note · crew_hash · turned_fact · 2026-09-23
 //! The Rust conformance runner (canon 0008 · P7 sp1): every fixture under
 //! `spine/conformance/*-v*.json` — the same files the Python reference
 //! generated and passes, unchanged — dispatched by case kind exactly as
@@ -11,8 +12,8 @@
 //! runner has no arm for (the list and the dispatch must agree).
 
 use orreth_spine::{
-    ask, canonical, content_hash, envelope, export, intent, mitl, placement, proof, rails,
-    services, watch,
+    ask, beat, canonical, content_hash, envelope, export, intent, mcp, mitl, placement, proof,
+    rails, services, watch,
 };
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -55,6 +56,20 @@ const PORTED_KINDS: &[&str] = &[
     "ask_kind",
     "otpauth",
     "hold_words",
+    "mcp_request",
+    "mcp_tool_manifest",
+    "mcp_server_manifest",
+    "mcp_transport",
+    "mcp_words",
+    "beat_lock",
+    "loop_words",
+    "plan_words",
+    "observed_words",
+    "watch_note",
+    "cannot_act",
+    "improvement_note",
+    "crew_hash",
+    "turned_fact",
 ];
 
 fn fixture_dir() -> PathBuf {
@@ -502,6 +517,218 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             s(&exp["text"]).to_string(),
             "the hold's words"
         ),
+        // ---- orreth.mcp/1 (P6.5 sp2, ported P7 sp4): the three requests' bytes, the pins, the words ----
+        "mcp_request" => {
+            let req = match s(&inp["method"]) {
+                "initialize" => mcp::initialize_request(),
+                "tools/list" => mcp::list_request(),
+                _ => mcp::call_request(s(&inp["tool"]), &inp["arguments"]),
+            };
+            same!(req["id"], exp["id"], "the fixed id");
+            same!(
+                String::from_utf8(mcp::request_bytes(&req)).unwrap(),
+                s(&exp["bytes"]).to_string(),
+                "the request's bytes"
+            );
+        }
+        "mcp_tool_manifest" => {
+            let m = mcp::tool_manifest(s(&inp["server"]), &inp["tool"]);
+            same!(m, exp["manifest"], "the tool's manifest");
+            same!(m["name"], exp["shelf_name"], "the shelf name");
+            same!(m["consequence"], exp["consequence"], "the class");
+            same!(
+                canonical::canonical_string(&m),
+                s(&exp["bytes"]).to_string(),
+                "the manifest's bytes"
+            );
+            same!(services::pin(&m), s(&exp["hash"]).to_string(), "the pin");
+        }
+        "mcp_server_manifest" => {
+            let tools = inp["tools"].as_array().cloned().unwrap_or_default();
+            let m = mcp::server_manifest(s(&inp["locator"]), &tools)?;
+            same!(m, exp["manifest"], "the server's manifest");
+            same!(m["transport"], exp["transport"], "the transport");
+            same!(services::pin(&m), s(&exp["hash"]).to_string(), "the pin");
+        }
+        "mcp_transport" => same!(
+            Value::String(mcp::transport_of(s(&inp["locator"])).into()),
+            exp["transport"],
+            "the transport"
+        ),
+        "mcp_words" => {
+            same!(
+                Value::String(mcp::GONE.into()),
+                exp["gone"],
+                "the gone words"
+            );
+            same!(
+                Value::String(mcp::STRIKES_DIAL.into()),
+                exp["strikes_dial"],
+                "the dial"
+            );
+            same!(
+                Value::from(mcp::STRIKES_DEFAULT),
+                exp["strikes_default"],
+                "the default"
+            );
+            same!(
+                Value::String(mcp::PROTOCOL.into()),
+                exp["protocol"],
+                "the protocol"
+            );
+            same!(
+                serde_json::json!({"initialize": mcp::INITIALIZE_ID, "tools/list": mcp::LIST_ID, "tools/call": mcp::CALL_ID}),
+                exp["ids"],
+                "the fixed ids"
+            );
+        }
+        // ---- orreth.loops/1 (P7 sp4): the beat lock, the loop's words, the watch's turned fact ----
+        "beat_lock" => {
+            same!(Value::from(beat::BEAT_LOCK), exp["base"], "the base");
+            let beats: BTreeMap<String, i64> = beat::BEATS
+                .iter()
+                .map(|(n, c)| (n.to_string(), *c))
+                .collect();
+            same!(
+                serde_json::to_value(&beats).unwrap(),
+                exp["beats"],
+                "the classes"
+            );
+            let keys: BTreeMap<String, i32> = beat::BEATS
+                .iter()
+                .map(|(n, _)| (n.to_string(), beat::beat_key(n).unwrap()))
+                .collect();
+            same!(
+                serde_json::to_value(&keys).unwrap(),
+                exp["keys"],
+                "the keys"
+            );
+            same!(
+                Value::String(beat::HELD.into()),
+                exp["held"],
+                "the held words"
+            );
+        }
+        "loop_words" => {
+            for (got, want, what) in [
+                (
+                    intent::CADENCE_DUE,
+                    "cadence_due",
+                    "the cadence's observation",
+                ),
+                (intent::CANNOT_ACT, "cannot_act", "the runner's opening"),
+                (
+                    watch::WATCH_TURNED,
+                    "watch_turned",
+                    "the turned fact's name",
+                ),
+                (
+                    ask::HARNESS_FAILED,
+                    "harness_failed",
+                    "the harness fact's name",
+                ),
+                (intent::INTENTION_DECLARED, "intention_declared", "declared"),
+                (intent::INTENTION_STOPPED, "intention_stopped", "stopped"),
+                (
+                    intent::INTENTION_RESTARTED,
+                    "intention_restarted",
+                    "restarted",
+                ),
+                (intent::WATCH_RED, "watch_red", "the kind"),
+                (ask::W26_WORDS, "w26_words", "W26's words"),
+                (ask::W26_STEP, "w26_step", "W26's step"),
+            ] {
+                if exp[want] != Value::String(got.into()) {
+                    return Err(format!("{what}: got {got:?}, fixture says {:?}", exp[want]));
+                }
+            }
+            same!(
+                Value::from(ask::LEASE_TTL_S),
+                exp["lease_ttl_s"],
+                "the lease"
+            );
+            same!(
+                intent::resiliency(),
+                exp["resiliency"],
+                "the first intention"
+            );
+        }
+        "plan_words" => same!(
+            intent::plan_words(s(&inp["serves"]), s(&inp["words"]), s(&inp["observed"])),
+            s(&exp["text"]).to_string(),
+            "the planner's ask"
+        ),
+        "observed_words" => same!(
+            intent::observed_words(s(&inp["kind"]), s(&inp["ref"]), opt_str(&inp["note"])),
+            s(&exp["text"]).to_string(),
+            "the observation"
+        ),
+        "watch_note" => same!(
+            intent::watch_note(
+                s(&inp["name"]),
+                s(&inp["metric"]),
+                s(&inp["op"]),
+                &inp["threshold"],
+                &inp["value"]
+            ),
+            s(&exp["text"]).to_string(),
+            "the watch's note"
+        ),
+        "cannot_act" => same!(
+            Value::Bool(intent::cannot_act(opt_str(&inp["reply"]))),
+            exp["cannot"],
+            "the opening"
+        ),
+        "improvement_note" => same!(
+            intent::improvement_note(s(&inp["who"]), opt_str(&inp["reply"])),
+            s(&exp["note"]).to_string(),
+            "the note"
+        ),
+        "crew_hash" => {
+            let shape: Vec<(String, Value)> = inp["shape"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|p| (s(&p[0]).to_string(), p[1].clone()))
+                .collect();
+            same!(
+                intent::crew_shape_hash(&shape),
+                s(&exp["hash"]).to_string(),
+                "the crew's hash"
+            );
+        }
+        "turned_fact" => {
+            let payload = watch::turned_payload(
+                s(&inp["watch_id"]),
+                s(&inp["name"]),
+                s(&inp["metric"]),
+                s(&inp["op"]),
+                &inp["threshold"],
+                &inp["value"],
+                opt_str(&inp["from"]),
+                s(&inp["to"]),
+            );
+            same!(payload, exp["payload"], "the payload");
+            let env = watch::turned_fact(
+                s(&inp["scope"]),
+                s(&inp["watch_id"]),
+                payload,
+                s(&inp["message_id"]),
+                s(&inp["occurred_at"]),
+            );
+            let bytes = envelope::encode(&env).map_err(|e| e.to_string())?;
+            same!(
+                String::from_utf8(bytes).unwrap(),
+                s(&exp["bytes"]).to_string(),
+                "the fact's bytes"
+            );
+            same!(env["type"], exp["topic"], "the topic");
+            same!(
+                env["correlation_id"],
+                exp["correlation_id"],
+                "the correlation"
+            );
+        }
         other => {
             return Err(format!(
                 "kind {other:?} is listed in PORTED_KINDS but the runner has no arm for it"

@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: `set_marker` with its fact · the interest law (`dispatch_interests`) · 2026-09-23
 //! Markers on the ground — mirrors `orreth_spine.markers` (canon 0006): the
 //! registry (the kernel's seven seeded in every world), the marker row minted
 //! WITH the fact inside the write path's own transaction, the ROOT column
@@ -10,9 +11,12 @@
 //! same JSON VALUES the Python doors return (key order is serde's — sorted —
 //! and the wire's JSON is the same JSON).
 
+use crate::envelope::{self, Mint};
 use crate::ground::Ground;
+use crate::hash::content_hash;
+use crate::outbox;
 use crate::schema::has_table;
-use crate::world::{head, iso_opt, isoformat, refused, token_hex, RoadError};
+use crate::world::{head, iso_opt, isoformat, json_text, refused, token_hex, RoadError, World};
 use serde_json::{json, Map, Value};
 use std::time::SystemTime;
 use tokio_postgres::Transaction;
@@ -84,6 +88,134 @@ pub async fn insert(
     )
     .await?;
     Ok(())
+}
+
+/// The `mark` door's effect (and the loop's): a marker set by a body, a human
+/// or the kernel on what was being executed — with its fact on the rail
+/// (`orreth.marker.set.v1`) so interested bodies can act, in ONE transaction.
+/// The fact wears the setter's FULL chain (AG-7): the chain given, the setter
+/// appended when absent; `[by]` alone when a human marks by hand. Returns the
+/// marker's four fields plus `ref` and `note`.
+#[allow(clippy::too_many_arguments)]
+pub async fn set_marker(
+    g: &mut Ground,
+    w: &World,
+    kind: &str,
+    r#ref: &str,
+    by: &str,
+    parent: Option<&str>,
+    note: Option<&str>,
+    chain: Option<&[String]>,
+) -> Result<Value, RoadError> {
+    check_kind(g, &w.scope, kind).await?;
+    let mid = new_id();
+    let marker = json!({"kind": kind, "id": mid, "parent": parent, "by": by});
+    let mut authority: Vec<String> = chain.map(|c| c.to_vec()).unwrap_or_default();
+    if !authority.iter().any(|a| a == by) {
+        authority.push(by.to_string());
+    }
+    let e = Mint {
+        kind: "event".into(),
+        r#type: MARKER_SET.into(),
+        universe_id: w.scope.clone(),
+        scope_path: w.scope.clone(),
+        payload: json!({"ref": r#ref, "hash": content_hash(&Value::String(note.unwrap_or("").into())),
+                        "marker_id": mid, "kind": kind, "parent": parent}),
+        correlation_id: Some(r#ref.to_string()),
+        authority_chain: Some(authority),
+        aggregate: None,
+        marker: Some(marker.clone()),
+    }
+    .mint()?;
+    let raw = envelope::encode(&e)?;
+    let tx = g.client_mut().transaction().await?;
+    insert(&tx, &mid, kind, parent, r#ref, by, note, &w.scope).await?;
+    outbox::add_row(&tx, &raw, e["message_id"].as_str().unwrap_or_default()).await?;
+    tx.commit().await?;
+    let mut out = marker;
+    out["ref"] = json!(r#ref);
+    out["note"] = json!(note);
+    Ok(out)
+}
+
+/// The bodies of this world whose templates declared interest in a kind.
+pub async fn interested_bodies(
+    g: &Ground,
+    scope: &str,
+    kind: &str,
+) -> Result<Vec<String>, RoadError> {
+    let rows = g
+        .client()
+        .query(
+            "SELECT DISTINCT ON (name) name, interests FROM spine_joins WHERE scope = $1 ORDER BY \
+             name, join_id DESC",
+            &[&scope],
+        )
+        .await?;
+    Ok(rows
+        .iter()
+        .filter(|r| {
+            let ints: Option<String> = r.get(1);
+            json_text(ints.as_deref())
+                .and_then(|v| v.as_array().cloned())
+                .is_some_and(|a| a.iter().any(|k| k == kind))
+        })
+        .map(|r| r.get(0))
+        .collect())
+}
+
+/// The interest law: every interested body is asked to act — the marker as
+/// PARENT, so the lineage records who acted, on what, and why; the act lands
+/// in the marked ask's session. Then the same law at intention level (0007):
+/// an interested intention plans (`intent_live::on_marker`).
+pub async fn dispatch_interests(
+    g: &mut Ground,
+    w: &World,
+    marker: &Value,
+    r#ref: &str,
+    note: Option<&str>,
+) -> Result<Vec<Value>, RoadError> {
+    let session: Option<String> = g
+        .client()
+        .query_opt(
+            "SELECT session FROM spine_asks WHERE ask_id = $1",
+            &[&r#ref],
+        )
+        .await?
+        .and_then(|r| r.get(0));
+    let kind = marker["kind"].as_str().unwrap_or_default().to_string();
+    let by = marker["by"].as_str().unwrap_or_default().to_string();
+    let mid = marker["id"].as_str().unwrap_or_default().to_string();
+    let mut asked = Vec::new();
+    for name in interested_bodies(g, &w.scope, &kind).await? {
+        if name == by {
+            continue;
+        }
+        let text = format!(
+            "A marker of kind {} was set on {ref} by {by}{}. Act on it as your role requires.",
+            crate::py::repr_str(&kind),
+            note.map(|n| format!(": {n}")).unwrap_or_default()
+        );
+        let filed = crate::asks::submit_ask(
+            g,
+            w,
+            crate::asks::Submit {
+                text,
+                person: by.clone(),
+                to: Some(vec![name.clone()]),
+                parent_marker: Some(mid.clone()),
+                session: session.clone(),
+                ..Default::default()
+            },
+        )
+        .await?;
+        asked.push(json!({"body": name, "ask_id": filed.ids().first().cloned()}));
+    }
+    for t in crate::intent_live::on_marker(g, w, marker, r#ref, note).await? {
+        asked.push(json!({"body": t["planner"], "ask_id": t["plan_ask"],
+                          "intention": t["intention_id"], "words": t["words"]}));
+    }
+    Ok(asked)
 }
 
 /// The kernel's kinds, in THIS world — idempotent.

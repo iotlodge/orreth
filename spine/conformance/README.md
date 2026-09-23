@@ -144,3 +144,25 @@ the same files, unchanged — before any module earns the word "ported".
   - `mcp_words` — the words a vanished tool's health wears ("gone from the server's
     list" — unhealthy, never retired by the machine), the strikes dial
     (`SPINE_TOOL_UNHEALTHY_STRIKES`, default 3), the protocol version, the fixed ids.
+  - `beat_lock` (loops-v0, P7 sp4) — the loops' shadow law: the beat classes
+    (`scheduler` 1 · `intent` 2 · `keeper` 3) counting up from 742200, the
+    advisory-lock keys they make (`pg_try_advisory_lock(key, hashtext(scope))`),
+    and the words a kernel says when another holds the beat.
+  - `loop_words` — the loop's constants: the cadence's observation, the runner's
+    honest opening (`cannot act`), the facts' names (`watch.turned` ·
+    `harness.failed` · `intention.declared/stopped/restarted`), the `watch-red`
+    kind, the lease's TTL, the Resiliency intention, W26's words and step.
+  - `plan_words` — `input.serves` + `input.words` + `input.observed` → `expect.text`:
+    what the kernel asks the planner under an observation.
+  - `observed_words` — `input.kind` + `input.ref` + `input.note` → `expect.text`: the
+    observation under a marker (the kind in Python's quotes).
+  - `watch_note` — a red watch's note: the name in Python's `repr` quotes (double
+    quotes when the name holds an apostrophe), the float threshold, the value.
+  - `cannot_act` — `input.reply` → `expect.cannot`: only the OPENING counts (W8),
+    markdown stripped; a reply that merely mentions the words is a reply.
+  - `improvement_note` — `input.who` + `input.reply` → `expect.note`: the first 200
+    characters of what the runner said.
+  - `crew_hash` — `input.shape` (name · capabilities pairs, any order) → `expect.hash`:
+    sorted by name, as canonical bytes of a list of lists.
+  - `turned_fact` — the `orreth.watch.turned.v1` bytes for a fixed id and clock: the
+    kernel's chain, the watch as correlation, `from` null when first judged.
