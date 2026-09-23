@@ -594,3 +594,6 @@ path only: click, type, read, wait; no door, no database.
 | Bar | What JB saw | Verdict |
 |---|---|---|
 | The shelf · retire · cancel · yes · restore · check (1–5) | "what services are here?" opened the shelf; "retire the weather tool" held at the interlock with "expected impact?"; Cancel did nothing; Yes greyed the card; "restore the weather tool" brought it back; "check the services" gave the health lines. JB: "1, 2, 3, 4, 5 all worked well." | **PASS** — no friction filed |
+| The chat on a smaller screen (JB, after sp3's review) | Moving from the big monitor to the laptop: the browser restored the chat's remembered size, and the composer and the resize grip stood beyond the laptop's edge; Esc closed it, reopening restored the same. "If human goes to smaller screen, chat interface should adjust." | **W25 — cured the same hour** |
+
+- **W25 — the remembered size is the wish, the screen is the law.** The chat is fitted to the viewport it wakes on and on every resize (`fitChat`): width and height clamped to the screen less a margin, the composer and the grip always on screen; the stored wish is kept untouched for the big screen's return.

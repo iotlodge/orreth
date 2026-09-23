@@ -1765,10 +1765,18 @@ document.getElementById("ses-new").onclick = () => rollSession(true);
 /* ---- resizable: the upper-right corner is the origin, locked ---- */
 (() => {
   const chat = document.getElementById("chat"), grip = document.getElementById("grip");
-  try {
-    const s = JSON.parse(localStorage.getItem("orreth.chat.size") || "null");
-    if (s && s.w && s.h){ chat.style.width = s.w + "px"; chat.style.height = s.h + "px"; }
-  } catch (e) {}
+  // W25 (walk #9, JB on the laptop screen): the remembered size is the human's WISH, the
+  // screen is the LAW — the chat is fitted to the viewport it wakes on and again on every
+  // resize, so the composer and the grip never stand beyond the edge; the wish is kept
+  // for the day the big screen returns (the stored value is never overwritten by a fit).
+  const fitChat = () => {
+    let s = null; try { s = JSON.parse(localStorage.getItem("orreth.chat.size") || "null"); } catch (e) {}
+    const maxW = Math.max(320, window.innerWidth - 24), maxH = Math.max(240, window.innerHeight - 24);
+    const w = s && s.w ? Math.min(s.w, maxW) : null, h = s && s.h ? Math.min(s.h, maxH) : null;
+    if (w) chat.style.width = w + "px"; else if (chat.getBoundingClientRect().width > maxW) chat.style.width = maxW + "px";
+    if (h) chat.style.height = h + "px"; else if (chat.getBoundingClientRect().height > maxH) chat.style.height = maxH + "px";
+  };
+  fitChat(); addEventListener("resize", fitChat);
   let drag = null;
   grip.addEventListener("pointerdown", e => {
     const r = chat.getBoundingClientRect();
