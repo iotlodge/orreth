@@ -76,6 +76,13 @@ process — mayflies in a universe designed for living things. Review caught it
     service of a proof's honest need — a wound a proof actually hit — never as
     speculative surface. "It would be a nice capability" is not a proof's need.
 
+13. **Every word aimed at a human is plain** (JB's lock, walk #11, 2026-09-23).
+    In the glass, in a walk script, in a register row, in a reply to JB: plain enough
+    for a newcomer, complete, in the human's own terms. A machinery name ("interlock",
+    "feed", "port", "beat lock") appears only beside its plain words, never instead of
+    them. The walk script is held to this as hard as the glass — the first breach was
+    Fable's own script, not the page.
+
 ## Before you finish — the drift checklist
 
 - Do identities persist and re-join as the same self?
@@ -89,6 +96,7 @@ process — mayflies in a universe designed for living things. Review caught it
   closing commit** (0.39 for 0039). `dev.sh` derives the console's version whisper from
   it; a stale era means the glass lies about what world it is. Caught out-of-band three
   times before this line existed (last: 2026-07-24, v0.35 worn by a forty-dive world).
+- Every word a human will read plain (rule 13)? Walk scripts and register rows included.
 - Did this work move a row of `docs/design/the-honest-boundary.md` — prove a claim,
   narrow a partial, unpark a park? → the register updates **in the same closing
   commit** (JB's lock, 2026-07-26). A register that lags lies with confidence; a
