@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp3, the soul checkpoint · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp2, the tool hop wears the chain (AG-7) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the hop wears the SERVICE DID; a retired tool refuses · 2026-09-22
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the Tools keeper: MCP-born tools through the one door; the `services` tool; a class by the arguments · 2026-09-23
 """The tool door v0 (canon 0004): a resident acts only through a
 governed door.
 
@@ -52,9 +53,14 @@ class ConsequentialHold(Exception):
         self.level = level                # and the proof it demands
 
 
-def consequence_of(tool: dict) -> str:
+def consequence_of(tool: dict, args: dict | None = None) -> str:
     """The class a tool declared: `consequence` by name, or the older
-    `consequential` flag read as consequential/routine."""
+    `consequential` flag read as consequential/routine. P6.5 sp2: a tool
+    of several acts may class them BY THE ARGUMENTS (`consequence_by`) —
+    the keeper's `services` tool holds a register and runs a check; with
+    no arguments in hand the declared class stands (the pin, the shelf)."""
+    if args is not None and callable(tool.get("consequence_by")):
+        return str(tool["consequence_by"](args))
     return tool.get("consequence") or ("consequential" if tool.get("consequential") else "routine")
 
 
@@ -81,6 +87,64 @@ def _weather(args: dict) -> str:
     return (f"Right now at {lat:.2f},{lon:.2f} it is "
             f"{cur['temperature_2m']}°F outside "
             f"(feels like {cur['apparent_temperature']}°F).")
+
+
+SERVICES_ACTS = ("register", "check", "version", "retire", "restore", "changes", "list")
+SERVICES_HELD = ("register", "version", "retire", "restore")     # hold at the interlock; the rest run at once
+
+
+def _services_tool(args: dict, conn) -> str:
+    """The keeper's one tool (P6.5 sp2): the shelf tended on the human's
+    word — every act through services.py / mcp.py, every step a fact under
+    the keeper's DID, the answer in words."""
+    from . import mcp, services
+    act = str(args.get("action") or "").strip().lower()
+    name = str(args.get("name") or "").strip().lower()
+    by = args.get("_by") or "the toolkeeper"
+    if act not in SERVICES_ACTS:
+        raise ValueError(f"the services tool's acts: {', '.join(SERVICES_ACTS)} — not {act!r}")
+    if act == "register":
+        locator = str(args.get("locator") or "").strip()
+        if not name or not locator:
+            raise ValueError("register needs a short name and the server's locator (its command or URL)")
+        made = mcp.register_server(conn, name, locator, by=by,
+                                   secrets_with=[str(s) for s in (args.get("secrets_with") or [])])
+        t = made["tools"]
+        listed = t["new"] + t["versioned"] + t["present"]
+        return (f"registered the {name} MCP server ({made['info'].get('name') or 'unnamed'} "
+                f"{made['info'].get('version') or '?'}) at {mcp.locator_words(locator)} — "
+                f"{len(listed)} tool{'s' if len(listed) != 1 else ''} on the shelf under it"
+                + (": " + ", ".join(listed) if listed else "")
+                + (f"; gone: {', '.join(t['gone'])}" if t["gone"] else "")
+                + (f"; refused: {'; '.join(t['refused'])}" if t["refused"] else ""))
+    if act in ("check", "version"):
+        if name:
+            out = [services.check(conn, name, by=by)]
+        else:
+            out = services.check_all(conn, kind="mcp", by=by)       # each server's listing verdicts its tools
+        if not out:
+            return "nothing to check — no MCP server is on the shelf; \"toolkeeper, add the MCP server at <command or url>\""
+        lines = [f"{c['name']} ({c['kind']}) → {'healthy' if c['ok'] else 'UNHEALTHY' if c['ok'] is False else 'not probed'}: {c['detail']}"
+                 for c in out]
+        return f"checked {len(out)}: " + " · ".join(lines)
+    if act == "retire":
+        made = services.retire(conn, name, by=by, ask=args.get("_ask"), parent_marker=args.get("_parent"))
+        return f"the {made['name']} {made['kind']} is retired — at rest on the shelf, recorded, never deleted; restore brings it back"
+    if act == "restore":
+        made = services.restore(conn, name, by=by)
+        return f"the {made['name']} {made['kind']} stands registered again — a new fact; its stop stays in the record"
+    if act == "changes":
+        since = str(args.get("since") or "").strip() or mcp.last_ask_at(conn, by)
+        rows = mcp.changes(conn, since)
+        if not rows:
+            return "nothing changed on the shelf" + (f" since {since[:16]}" if since else "")
+        return (f"{len(rows)} change{'s' if len(rows) != 1 else ''} on the shelf"
+                + (f" since {since[:16]}" if since else "") + ": "
+                + " · ".join(f"{r['at'][11:16]} {r['note']}" for r in rows))
+    rows = [s for s in services.listing(conn) if s["kind"] in ("mcp", "tool")]
+    return "on the shelf: " + " · ".join(
+        f"{s['name']} ({s['kind']}{', under ' + s['manifest']['server'] if s['manifest'].get('server') else ''}) {s['state']}"
+        for s in rows) if rows else "nothing on the shelf"
 
 
 def _seal_record(args: dict) -> str:
@@ -173,6 +237,29 @@ TOOLS: dict[str, dict] = {
               .add_watch(conn, args["name"], args["metric"], args["op"],
                          args["threshold"], by=args.get("_by", "the monitor")),
     },
+    "services": {
+        # P6.5 sp2: the Tools keeper's one tool — the shelf tended on the human's word
+        "description": "Keep the shelf of services. action=register adds an MCP server "
+                       "(name: a short lowercase name; locator: its command line or URL, or "
+                       "env:NAME; secrets_with: the env NAMES it needs) and lists its tools onto "
+                       "the shelf. action=check probes one service by name, or every MCP server "
+                       "when no name is given. action=retire / restore move a service by name. "
+                       "action=changes reads what changed on the shelf since the last ask. "
+                       "action=list names what stands. Register, retire and restore hold for the "
+                       "human's yes at the interlock; check, changes and list run at once. When the "
+                       "human asks you to add, check, retire or restore, CALL this tool — never "
+                       "describe the act instead.",
+        "input_schema": {"type": "object", "properties": {
+            "action": {"type": "string", "enum": list(SERVICES_ACTS)},
+            "name": {"type": "string"}, "locator": {"type": "string"},
+            "secrets_with": {"type": "array", "items": {"type": "string"}},
+            "since": {"type": "string"}},
+            "required": ["action"]},
+        "consequential": True,
+        "consequence_by": lambda args: "consequential" if str(args.get("action") or "") in SERVICES_HELD else "routine",
+        "ground": True,
+        "fn": _services_tool,
+    },
     "seal-record": {
         "description": "Permanently seal a note so it can never be edited "
                        "again. This cannot be undone.",
@@ -244,14 +331,37 @@ class ToolDoor:
             if f"tools:{name}" in self.capabilities:
                 out.append({"name": name, "description": t["description"],
                             "input_schema": t["input_schema"]})
+        for cap in self.capabilities:            # P6.5 sp2: a declared MCP-born tool, when its server listed it
+            name = cap[6:] if cap.startswith("tools:") else None
+            if name and name not in TOOLS:
+                t = self._shelf_tool(name)
+                if t is not None:
+                    out.append({"name": name, "description": t["description"], "input_schema": t["input_schema"]})
         return out
+
+    def _shelf_tool(self, name: str) -> dict | None:
+        """An MCP-born tool on the shelf (kind tool, its manifest naming
+        its server), as a door spec: words · schema · class · the row —
+        None when the shelf has no such standing tool (a retired one is
+        returned so the door can teach)."""
+        conn = getattr(self, "_conn", None)
+        if conn is None:
+            return None
+        from . import services
+        row = services.get(conn, name)
+        if row is None or row["kind"] != "tool" or not (row["manifest"] or {}).get("server"):
+            return None
+        m = row["manifest"]
+        return {"description": m.get("description") or f"the {name} tool of the {m['server']} server",
+                "input_schema": m.get("input_schema") or {"type": "object", "properties": {}},
+                "consequence": m.get("consequence") or "routine", "mcp": row}
 
     def call(self, name: str, args: dict, *, confirmed: bool = False) -> str:
         if f"tools:{name}" not in self.capabilities:
             raise ToolRefused(
                 f"this body never declared the {name!r} tool — a template "
                 "declares its tools, or the door stays shut")
-        tool = TOOLS.get(name)
+        tool = TOOLS.get(name) or self._shelf_tool(name)   # P6.5 sp2: or an MCP-born tool on the shelf
         if tool is None:
             raise ToolRefused(f"no tool named {name!r} lives on this shelf")
         from . import services                   # P6.5 sp1: the door reads the ladder
@@ -260,7 +370,7 @@ class ToolDoor:
         if service and services.state_of(conn, "tool", name) == "retired":
             raise ToolRefused(f"the {name} tool is retired on this shelf — at rest, never deleted; "
                               f"the human restores it (\"restore the {name} tool\") before it serves again")
-        cls = consequence_of(tool)
+        cls = consequence_of(tool, args)
         if cls != "routine" and not confirmed:
             # the proof demand rises to meet the consequence (P12):
             # consequential → L2 · grave → L3 (a code; or a master when
@@ -269,9 +379,12 @@ class ToolDoor:
             raise ConsequentialHold(name, args, consequence=cls,
                                     level=level_for(cls, master=bool(tool.get("master"))))
         try:
-            if tool.get("ground"):        # an act on the ground rides the
+            if tool.get("mcp"):           # P6.5 sp2: tools/call through the one MCP door
+                from . import mcp
+                result = mcp.call(self._conn, tool["mcp"], args)
+            elif tool.get("ground"):      # an act on the ground rides the
                 args = dict(args, _by=self.did, _name=self.name or self.did,
-                            _parent=self.marker, _chain=self.chain)
+                            _parent=self.marker, _chain=self.chain, _ask=self.ask)
                 result = tool["fn"](args, self._conn)
             else:
                 result = tool["fn"](args)

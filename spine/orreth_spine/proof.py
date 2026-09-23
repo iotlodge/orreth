@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp1, L3: the proof demand rises · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the kernel holds and settles `service.retire` at L2 · 2026-09-22
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the confirmer rides the retire fact's chain (a body proposed, the human cut) · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W20 the kernel settles a restart · W23 the words (rule 11) · 2026-09-21
 """The proof demand rises to meet the consequence (canon 0001 P12 · 0005 P6 sp1).
 
@@ -450,7 +451,8 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
             elif held["tool"] == "service.retire":       # P6.5 sp1: the shelf's stop, at L2
                 from . import services
                 made = services.retire(conn, held["args"]["name"], by=asker, ask=ask_id,
-                                       parent_marker=row[3])
+                                       parent_marker=row[3], confirmed_by=by)   # P6.5 sp2: the keeper's
+                                                                                 # proposal, the human's cut
                 result = (f"the {made['name']} {made['kind']} is retired — at rest on the shelf, "
                           f"recorded, never deleted; say “restore the {made['name']} {made['kind']}” "
                           "to bring it back")

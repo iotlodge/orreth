@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the services registry · 2026-09-22
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the Tools keeper: the mcp probe is real; record_health; the rig's HOME · 2026-09-23
 """The services registry v0 (canon 0005 P6.5 sp1 · 0009 §3 "one ladder, two
 keepers" · 0018 services as identities · 0059 the env-secrets law).
 
@@ -36,7 +37,9 @@ registered, and the export's tool hop reads that DID instead of
 Health is the kind's honest probe: a tool — the door answers `describe`
 and its schema matches the pin; a mind — the gateway answers a one-token
 ping under the service's own DID, through the meter; a store or source —
-its locator is reachable by NAME; an mcp — "not yet probed" (sp2's).
+its locator is reachable by NAME; an mcp — initialize + tools/list through
+the one MCP door (mcp.py, P6.5 sp2), its listed tools synced onto the
+shelf as services of kind tool placed under it.
 """
 from __future__ import annotations
 
@@ -62,6 +65,8 @@ FACT_OF = {"register": REGISTERED, "version": VERSIONED, "healthy": HEALTH,
            "unhealthy": HEALTH, "retire": RETIRED, "restore": RESTORED}
 
 KERNEL = "the kernel"
+_UNSET = object()                                # "use the rig's HOME" (P6.5 sp2: the keeper's door has no home of its own)
+HOME: str | os.PathLike | None = None            # where the rig keeps the services' seeds; None = ephemeral (tests)
 RETIRE_TOOL = "service.retire"                   # the kernel's own held act
 RETIRE_CLASS, RETIRE_LEVEL = "consequential", "L2"
 GROUND_LOCATOR = "SPINE_PG"                      # the ground's dial (rails.py); a default stands
@@ -232,7 +237,8 @@ def shelf_root(conn) -> str:
 
 
 def _fact(conn, verb: str, svc: dict, by: str, *, extra: dict | None = None,
-          parent_marker: str | None = None, ask: str | None = None, domain=None) -> dict:
+          parent_marker: str | None = None, ask: str | None = None, domain=None,
+          confirmed_by: str | None = None) -> dict:
     """Every state change is a fact: the envelope (the chain: the actor,
     then the kernel; a marker — an ACTION under the ask that released it,
     else an OBSERVATION under the service's own register, itself under
@@ -245,6 +251,8 @@ def _fact(conn, verb: str, svc: dict, by: str, *, extra: dict | None = None,
     parent_marker = parent_marker or svc.get("root_marker") or shelf_root(conn)
     marker = {"kind": kind, "id": mid, "parent": parent_marker, "by": by}
     chain = [by] if by == KERNEL else [by, KERNEL]
+    if confirmed_by and confirmed_by != by:          # P6.5 sp2: a body proposed, the human cut — both on the chain
+        chain = [by, confirmed_by, KERNEL]
     payload = {"ref": svc["did"], "hash": svc["manifest_hash"], "name": svc["name"],
                "kind": svc["kind"], "version": svc["version"], "state": svc["state"], "by": by}
     payload.update(extra or {})
@@ -277,7 +285,7 @@ def _validate(name: str, kind: str, manifest) -> None:
 
 def register(conn, name: str, kind: str, manifest: dict, *, by: str = KERNEL,
              placement: dict | None = None, secrets_with: list[str] | None = None,
-             home: str | os.PathLike | None = None) -> dict:
+             home: str | os.PathLike | None = _UNSET) -> dict:
     """The first rung: the service becomes an identity on this ground.
     Placement (with its secrets by NAME) is honored FIRST — a refusal
     records nothing (the env-secrets law: a key in ZERO records, and no
@@ -305,7 +313,7 @@ def register(conn, name: str, kind: str, manifest: dict, *, by: str = KERNEL,
             raise ServiceRefused(f"the {name} service is already registered as a {row['kind']} — "
                                  f"a name wears one kind; {kind} needs its own name")
         _refuse_step(name, row["state"], "register")
-    ident = Identity.load(name, home, kind="service")
+    ident = Identity.load(name, HOME if home is _UNSET else home, kind="service")
     svc = {"name": name, "kind": kind, "did": ident.did, "manifest": manifest, "manifest_hash": h,
            "version": 1, "placement": prof, "secrets_with": prof["secrets_with"], "state": "registered"}
 
@@ -358,8 +366,11 @@ def version(conn, name: str, manifest: dict, *, by: str = KERNEL) -> dict:
 
 # ---- health: the kind's honest probe ---------------------------------------------------
 
-def _probe(conn, row: dict, gateway) -> tuple[bool | None, str]:
+def _probe(conn, row: dict, gateway, by: str = KERNEL) -> tuple[bool | None, str]:
     kind, m = row["kind"], row["manifest"]
+    if kind == "tool" and m.get("server"):          # P6.5 sp2: an MCP-born tool — its server lists it, or it is gone
+        from . import mcp
+        return mcp.probe_tool(conn, row)
     if kind == "tool":
         from .tools import TOOLS, tool_manifest
         spec = TOOLS.get(row["name"])
@@ -379,8 +390,9 @@ def _probe(conn, row: dict, gateway) -> tuple[bool | None, str]:
         except Exception as e:                       # noqa: BLE001 — the honest verdict
             return False, f"the gateway did not answer: {type(e).__name__}: {str(e)[:140]}"
         return True, f"the gateway answered a one-token ping through the meter (model {m.get('model')})"
-    if kind == "mcp":
-        return None, "not yet probed — MCP health arrives with sp2 (the Tools keeper)"
+    if kind == "mcp":                                # P6.5 sp2: initialize + tools/list, the list synced onto the shelf
+        from . import mcp
+        return mcp.probe(conn, row, by=by)
     loc = str(m.get("locator") or "")                # store · source: the locator by NAME
     if not loc:
         return False, "the manifest names no locator"
@@ -407,7 +419,20 @@ def check(conn, name: str, *, gateway=None, by: str = KERNEL) -> dict:
     if row is None:
         raise ServiceRefused(f"no service named {name!r} is registered here — the shelf lists them")
     _refuse_step(name, row["state"], "healthy")
-    ok, detail = _probe(conn, row, gateway)
+    ok, detail = _probe(conn, row, gateway, by)
+    return record_health(conn, name, ok, detail, by=by)
+
+
+def record_health(conn, name: str, ok: bool | None, detail: str, *, by: str = KERNEL) -> dict:
+    """A health verdict recorded without a probe (P6.5 sp2: an MCP
+    server's listing says which of its tools stand and which are gone —
+    one session, every tool's verdict): the health row and the fact; the
+    ladder steps to healthy or unhealthy. The row is re-read first — a
+    probe may have versioned the service under its own feet."""
+    row = get(conn, name)
+    if row is None:
+        raise ServiceRefused(f"no service named {name!r} is registered here — the shelf lists them")
+    _refuse_step(name, row["state"], "healthy")
     verb = "healthy" if ok else "unhealthy" if ok is False else None
     state = ladder_step(row["state"], verb)["to"] if verb else row["state"]
     svc = dict(row, state=state)
@@ -450,7 +475,7 @@ def hold_retire(conn, name: str, *, person: str, session: str | None = None) -> 
 
 
 def retire(conn, name: str, *, by: str, ask: str | None = None,
-           parent_marker: str | None = None) -> dict:
+           parent_marker: str | None = None, confirmed_by: str | None = None) -> dict:
     """The rung down: state retired, since now — the row, its versions,
     its health and every fact STAY (the roster law: dormancy, never
     deletion). The fact hangs under the held ask's marker when the
@@ -464,7 +489,7 @@ def retire(conn, name: str, *, by: str, ask: str | None = None,
                     " WHERE name = %s AND scope = %s", (mid, name, ev.scope()))
 
     _fact(conn, "retire", svc, by, extra={"from": row["state"]}, parent_marker=parent_marker,
-          ask=ask, domain=domain)
+          ask=ask, domain=domain, confirmed_by=confirmed_by)
     return get(conn, name)
 
 
@@ -535,7 +560,7 @@ def mind_of(gateway) -> tuple[str, dict, list[str]] | None:
     return (model, {"route": "fake", "model": model}, [])
 
 
-def seed(conn, *, gateway=None, home: str | os.PathLike | None = None) -> dict:
+def seed(conn, *, gateway=None, home: str | os.PathLike | None = _UNSET) -> dict:
     """The kernel registers what it was born with: every built-in tool
     (kind tool, its schema the pin), the ground and the Record (kind
     store, the locator by NAME), and the mind the gateway is (kind

@@ -152,10 +152,11 @@ def test_a_secret_not_reachable_refuses_by_name_and_records_nothing_and_placemen
     assert card["secrets"] == [{"name": "A_SECRET_OF_THIS_TEST", "reached": True}]
     assert card["placement"]["why"] == "stands on local · cpu · reaches 1 of 1 secrets"
     assert "hunter2" not in json.dumps(card) and "hunter2" not in json.dumps(_facts(pg, made["did"]))
-    # the mcp's health is honestly "not yet probed" — the ladder does not move
+    # P6.5 sp2 replaced sp1's "not yet probed": the mcp probe is real — a manifest that
+    # names no locator is UNHEALTHY in words (the keeper's register always names one)
     out = services.check(pg, "weather-mcp")
-    assert out["ok"] is None and out["detail"].startswith("not yet probed") and out["state"] == "registered"
-    assert services.get(pg, "weather-mcp")["last_health"]["ok"] is None
+    assert out["ok"] is False and out["detail"] == "the manifest names no locator" and out["state"] == "unhealthy"
+    assert services.get(pg, "weather-mcp")["last_health"]["ok"] is False
 
 
 def test_retire_is_held_then_rested_never_deleted_and_restore_is_a_new_fact(pg, monkeypatch):
@@ -293,7 +294,7 @@ def test_the_harness_check_names_an_unhealthy_service_and_a_retired_one_passes(p
     c = harness.services_healthy(pg)
     assert c["ok"] is False and c["unhealthy"] == ["lake", "ghost", "weather"] and c["unprobed"] == []
     assert c["detail"] == "2 healthy · 0 retired · unhealthy: lake, ghost, weather"
-    assert [x["name"] for x in harness.checks(pg)][-1] == "every service healthy or retired"
+    assert [x["name"] for x in harness.checks(pg)][2] == "every service healthy or retired"   # sp2 added two after it
     services.version(pg, "weather", WEATHER, by=ME)                          # the pin follows the door
     assert services.check(pg, "weather")["ok"] is True
     for name in ("ghost", "lake"):
@@ -320,12 +321,13 @@ def test_the_built_ins_register_at_birth_and_the_shelf_door_lists_every_kind(pg,
     while time.monotonic() < end:
         _s, body = _get(rig.port, "/services")
         shelf = json.loads(body)["services"]
-        if len(shelf) >= 9 and all(s["last_health"] for s in shelf):
+        if len(shelf) >= 10 and all(s["last_health"] for s in shelf):
             break
         time.sleep(0.3)
     by_name = {s["name"]: s for s in shelf}
     assert set(by_name) == {"weather", "acquire", "mark", "purge-memory", "add-watch", "seal-record",
-                            "erase-record", "ground", "record"}       # no gateway: no mind seeded (honest)
+                            "erase-record", "services", "ground", "record"}   # no gateway: no mind seeded (honest);
+    # (P6.5 sp2: the keeper's `services` tool is a built-in on the shelf too — eight tools now)
     assert {s["kind"] for s in shelf} == {"tool", "store"}
     assert all(s["did"].startswith("did:orreth:service:") and s["state"] == "healthy" for s in shelf)
     assert by_name["weather"]["placement"]["why"] == "stands on local · cpu" and by_name["weather"]["secrets"] == []

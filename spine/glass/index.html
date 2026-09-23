@@ -282,6 +282,7 @@
   .card.service .health{margin-top:4px;font-size:11px;color:var(--dim)}
   .card.service .health.bad{color:#ff7a6e}
   .card.retired{opacity:.55;border-style:dashed}
+  .card.service.under{margin-left:18px;border-left:2px solid var(--amber)}   /* P6.5 sp2: a tool beneath its MCP server */
   .card .side b{color:var(--dim);font-weight:normal;letter-spacing:.1em;font-size:10.5px}
   .cap{display:inline-block;border:1px solid var(--seam);border-radius:8px;
     padding:0 6px;margin:2px 3px 0 0;font-size:10.5px;color:var(--dim)}
@@ -874,6 +875,15 @@ async function onNotice(n){
     return;
   }
   let line = PENDING[n.ref];
+  if (!line && n.kind.includes("confirm.needed")){   // P6.5 sp2: a hold this chat did not file — the keeper's
+    const vh = await fetch("/ask/" + n.ref).then(x=>x.json()).catch(()=>null);   // proposal (rule 11: it never
+    if (!vh || vh.served_by !== "the kernel" || !(vh.hold || {}).tool || vh.status !== "awaiting-confirm") return;   // retires alone)
+    if (!(vh.person || "").startsWith("did:orreth:agent:")) return;                // a body proposed it: the human cuts
+    el("msg mine", `<em>${esc(whoIs(vh.person))} proposes · the shelf</em><div class="meta">${esc(vh.text)}</div>`);
+    PENDING[n.ref] = el("journey", "held at the interlock — cancel is the default…");
+    renderOutcome(n.ref, vh, PENDING[n.ref]);
+    return;
+  }
   if (!line){                                     // an ask this chat did not file —
     if (!n.kind.includes("ask.received")) return; // the kernel's, on the interest law:
     const v0 = await fetch("/ask/" + n.ref).then(x=>x.json()).catch(()=>null);
@@ -1393,8 +1403,13 @@ function serviceCard(s){
   const d = document.createElement("div"); d.className = "card service" + (s.state === "retired" ? " retired" : "");
   const p = s.placement || {};
   const secrets = (s.secrets || []).map(x => `<span class="secret ${x.reached ? "" : "unreached"}" title="by name only — the value is never shown">${esc(x.name)} ${x.reached ? "✓ reached" : "✗ unreached"}</span>`).join("");
+  const m = s.manifest || {};                    // P6.5 sp2: an MCP server wears its locator BY NAME, its tool count, its last list time
+  const mcpLine = s.kind === "mcp" ? `<div class="meta">${esc(m.transport || "?")} · at ${esc(m.locator || "?")} · ${(m.tools || []).length} tool${(m.tools || []).length === 1 ? "" : "s"} listed` +
+                    (s.last_health ? ` · last listed ${hhmm(s.last_health.at)}` : " · never listed") + `</div>` : "";
+  const under = s.kind === "tool" && m.server ? `<div class="meta">through the ${esc(m.server)} MCP server · ${esc(m.consequence || "routine")}</div>` : "";
   d.innerHTML = `<h5><span class="kind">${esc(s.kind)}</span>${esc(s.name)} <span class="meta">· ${esc(stateWords(s))}</span></h5>` +
     `<div class="meta">self …${esc(s.did.slice(-8))} · pin ${esc(s.manifest_hash.slice(7, 19))} · v${s.version} · by ${esc(whoIs(s.by))}</div>` +
+    mcpLine + under +
     `<div class="stands">${esc(p.why || "")}${secrets}</div>` +
     `<div class="health ${(s.last_health || {}).ok === false ? "bad" : ""}">health: ${esc(healthWords(s))}</div>` +
     (s.retirable ? `<span class="assist" data-retire title="consequential — held at the interlock in the chat; cancel is the default">retire ${esc(s.name)} → the interlock</span>`
@@ -1410,7 +1425,16 @@ async function loadShelf(box){
   box.appendChild(head);
   if (!r){ box.insertAdjacentHTML("beforeend", `<div class="meta">the shelf door did not answer</div>`); return; }
   if (!r.services.length){ box.insertAdjacentHTML("beforeend", `<div class="meta">nothing on the shelf yet — the kernel registers its built-ins at boot</div>`); return; }
-  for (const s of r.services) box.appendChild(serviceCard(s));
+  // P6.5 sp2: an MCP server's tools nest beneath it; a tool whose server is gone from the shelf stands alone, said so
+  const servers = new Set(r.services.filter(s => s.kind === "mcp").map(s => s.name));
+  const nested = new Map();
+  for (const s of r.services) if (s.kind === "tool" && (s.manifest || {}).server && servers.has(s.manifest.server))
+    nested.set(s.manifest.server, (nested.get(s.manifest.server) || []).concat([s]));
+  for (const s of r.services){
+    if (s.kind === "tool" && (s.manifest || {}).server && servers.has(s.manifest.server)) continue;
+    const card = serviceCard(s); box.appendChild(card);
+    for (const t of (nested.get(s.name) || [])){ const tc = serviceCard(t); tc.classList.add("under"); box.appendChild(tc); }
+  }
 }
 async function retireService(name, kind){          // consequential (L2): the kernel holds it — the interlock arrives in the chat
   toggleChat(true);

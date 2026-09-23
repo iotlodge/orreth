@@ -124,3 +124,23 @@ the same files, unchanged — before any module earns the word "ported".
     `encode` cases carry `orreth.service.registered.v1` (the kernel's chain, an
     observation marker, the pin and the placement) and `orreth.service.retired.v1`
     (released at the interlock: `[person, the kernel]`, an action under the held ask).
+  - `mcp_request` (mcp-v0, P6.5 sp2) — `input.method` (`initialize` · `tools/list` ·
+    `tools/call` with `input.tool` + `input.arguments`) → `expect.id` (FIXED: 1 · 2 · 3 —
+    a session per act, so the ids never climb) and `expect.bytes`: the JSON-RPC 2.0
+    request as canonical bytes (the protocol version, the client by name, the tool by
+    its WIRE name, arguments an empty object never null).
+  - `mcp_tool_manifest` — `input.server` + `input.tool` (an entry of a server's
+    `tools/list`: `name` · `description` · `inputSchema` · `annotations`) →
+    `expect.manifest` (the service a tool becomes: `name` = the shelf name — the wire
+    name lowercased, made lawful; `tool` = the wire name; `input_schema`;
+    `consequence` — `destructiveHint` → consequential, else routine; `server`),
+    `expect.shelf_name`, `expect.consequence`, `expect.bytes`, `expect.hash` (the pin).
+  - `mcp_server_manifest` — `input.locator` (a command line, or a URL) + `input.tools`
+    → `expect.manifest` (`transport` stdio | http by the locator; `locator` BY NAME;
+    `tools` = name · schema · class, SORTED by name so the pin reads the list alone)
+    and `expect.hash`: a changed list is a changed pin — the server VERSIONS.
+  - `mcp_transport` — `input.locator` → `expect.transport` (`http` for http(s)://,
+    `stdio` for anything else).
+  - `mcp_words` — the words a vanished tool's health wears ("gone from the server's
+    list" — unhealthy, never retired by the machine), the strikes dial
+    (`SPINE_TOOL_UNHEALTHY_STRIKES`, default 3), the protocol version, the fixed ids.

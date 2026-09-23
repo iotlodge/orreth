@@ -1,0 +1,356 @@
+{
+ "contract": "orreth.mcp/1",
+ "version": 0,
+ "generated_by": "orreth_spine.mcp + orreth_spine.services + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6.5 sp2",
+ "generated_at": "2026-09-23",
+ "cases": [
+  {
+   "name": "mcp_request: initialize \u2014 fixed id 1, the protocol and the client by name",
+   "kind": "mcp_request",
+   "input": {
+    "method": "initialize"
+   },
+   "expect": {
+    "id": 1,
+    "bytes": "{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"params\":{\"capabilities\":{},\"clientInfo\":{\"name\":\"orreth-spine\",\"version\":\"0.1.0\"},\"protocolVersion\":\"2025-06-18\"}}"
+   }
+  },
+  {
+   "name": "mcp_request: tools/list \u2014 fixed id 2, empty params",
+   "kind": "mcp_request",
+   "input": {
+    "method": "tools/list"
+   },
+   "expect": {
+    "id": 2,
+    "bytes": "{\"id\":2,\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"params\":{}}"
+   }
+  },
+  {
+   "name": "mcp_request: tools/call \u2014 fixed id 3, the tool by its WIRE name and its arguments",
+   "kind": "mcp_request",
+   "input": {
+    "method": "tools/call",
+    "tool": "now",
+    "arguments": {
+     "zone": "America/Denver"
+    }
+   },
+   "expect": {
+    "id": 3,
+    "bytes": "{\"id\":3,\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"arguments\":{\"zone\":\"America/Denver\"},\"name\":\"now\"}}"
+   }
+  },
+  {
+   "name": "mcp_request: tools/call with no arguments \u2014 an empty object, never null",
+   "kind": "mcp_request",
+   "input": {
+    "method": "tools/call",
+    "tool": "echo",
+    "arguments": {}
+   },
+   "expect": {
+    "id": 3,
+    "bytes": "{\"id\":3,\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"arguments\":{},\"name\":\"echo\"}}"
+   }
+  },
+  {
+   "name": "mcp_tool_manifest: a read-only tool (annotations readOnlyHint) is ROUTINE",
+   "kind": "mcp_tool_manifest",
+   "input": {
+    "server": "clock",
+    "tool": {
+     "name": "now",
+     "description": "The current time in an IANA zone (default UTC).",
+     "inputSchema": {
+      "type": "object",
+      "properties": {
+       "zone": {
+        "type": "string"
+       }
+      },
+      "required": []
+     },
+     "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false
+     }
+    }
+   },
+   "expect": {
+    "manifest": {
+     "name": "now",
+     "tool": "now",
+     "description": "The current time in an IANA zone (default UTC).",
+     "input_schema": {
+      "type": "object",
+      "properties": {
+       "zone": {
+        "type": "string"
+       }
+      },
+      "required": []
+     },
+     "consequence": "routine",
+     "server": "clock"
+    },
+    "shelf_name": "now",
+    "consequence": "routine",
+    "bytes": "{\"consequence\":\"routine\",\"description\":\"The current time in an IANA zone (default UTC).\",\"input_schema\":{\"properties\":{\"zone\":{\"type\":\"string\"}},\"required\":[],\"type\":\"object\"},\"name\":\"now\",\"server\":\"clock\",\"tool\":\"now\"}",
+    "hash": "sha256:cac0f1a615e364cfe5a9dbb2cd17e1387c5eced61d746c9157d6b88cfac7a03a"
+   }
+  },
+  {
+   "name": "mcp_tool_manifest: a destructive tool (destructiveHint) is CONSEQUENTIAL; the shelf name is the wire name made lawful",
+   "kind": "mcp_tool_manifest",
+   "input": {
+    "server": "clock",
+    "tool": {
+     "name": "Wipe_All",
+     "description": "Forget everything.",
+     "inputSchema": {
+      "type": "object",
+      "properties": {}
+     },
+     "annotations": {
+      "destructiveHint": true
+     }
+    }
+   },
+   "expect": {
+    "manifest": {
+     "name": "wipe-all",
+     "tool": "Wipe_All",
+     "description": "Forget everything.",
+     "input_schema": {
+      "type": "object",
+      "properties": {}
+     },
+     "consequence": "consequential",
+     "server": "clock"
+    },
+    "shelf_name": "wipe-all",
+    "consequence": "consequential",
+    "bytes": "{\"consequence\":\"consequential\",\"description\":\"Forget everything.\",\"input_schema\":{\"properties\":{},\"type\":\"object\"},\"name\":\"wipe-all\",\"server\":\"clock\",\"tool\":\"Wipe_All\"}",
+    "hash": "sha256:ab91858ef37fa737974443571628f4d64706e8fcbbb688d98aacf551a8baa492"
+   }
+  },
+  {
+   "name": "mcp_tool_manifest: a bare listing (no description, no schema) still pins",
+   "kind": "mcp_tool_manifest",
+   "input": {
+    "server": "clock",
+    "tool": {
+     "name": "echo"
+    }
+   },
+   "expect": {
+    "manifest": {
+     "name": "echo",
+     "tool": "echo",
+     "description": "",
+     "input_schema": {
+      "type": "object",
+      "properties": {}
+     },
+     "consequence": "routine",
+     "server": "clock"
+    },
+    "shelf_name": "echo",
+    "consequence": "routine",
+    "bytes": "{\"consequence\":\"routine\",\"description\":\"\",\"input_schema\":{\"properties\":{},\"type\":\"object\"},\"name\":\"echo\",\"server\":\"clock\",\"tool\":\"echo\"}",
+    "hash": "sha256:690979539f79351a1ef476b84177dcb283842fe69487f84973ba315c86e23b45"
+   }
+  },
+  {
+   "name": "mcp_server_manifest: stdio by a command line; the list SORTED so the pin reads the list alone",
+   "kind": "mcp_server_manifest",
+   "input": {
+    "locator": "python clock_server.py",
+    "tools": [
+     {
+      "name": "Wipe_All",
+      "description": "Forget everything.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {}
+      },
+      "annotations": {
+       "destructiveHint": true
+      }
+     },
+     {
+      "name": "now",
+      "description": "The current time in an IANA zone (default UTC).",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "zone": {
+         "type": "string"
+        }
+       },
+       "required": []
+      },
+      "annotations": {
+       "readOnlyHint": true,
+       "destructiveHint": false
+      }
+     }
+    ]
+   },
+   "expect": {
+    "manifest": {
+     "transport": "stdio",
+     "locator": "python clock_server.py",
+     "tools": [
+      {
+       "name": "Wipe_All",
+       "input_schema": {
+        "type": "object",
+        "properties": {}
+       },
+       "consequence": "consequential"
+      },
+      {
+       "name": "now",
+       "input_schema": {
+        "type": "object",
+        "properties": {
+         "zone": {
+          "type": "string"
+         }
+        },
+        "required": []
+       },
+       "consequence": "routine"
+      }
+     ]
+    },
+    "transport": "stdio",
+    "hash": "sha256:f5280baf59d54083e9d060075dbd00cc5ec83317c96565c591d3f4300bbcdcb0"
+   }
+  },
+  {
+   "name": "mcp_server_manifest: streamable HTTP by URL",
+   "kind": "mcp_server_manifest",
+   "input": {
+    "locator": "https://mcp.example.test/mcp",
+    "tools": [
+     {
+      "name": "now",
+      "description": "The current time in an IANA zone (default UTC).",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "zone": {
+         "type": "string"
+        }
+       },
+       "required": []
+      },
+      "annotations": {
+       "readOnlyHint": true,
+       "destructiveHint": false
+      }
+     }
+    ]
+   },
+   "expect": {
+    "manifest": {
+     "transport": "http",
+     "locator": "https://mcp.example.test/mcp",
+     "tools": [
+      {
+       "name": "now",
+       "input_schema": {
+        "type": "object",
+        "properties": {
+         "zone": {
+          "type": "string"
+         }
+        },
+        "required": []
+       },
+       "consequence": "routine"
+      }
+     ]
+    },
+    "transport": "http",
+    "hash": "sha256:cdd2fd98594c8214c05023fcd07bad1e97c63fba9789e50020c17167200e75a3"
+   }
+  },
+  {
+   "name": "mcp_server_manifest: an empty listing pins too",
+   "kind": "mcp_server_manifest",
+   "input": {
+    "locator": "python nothing.py",
+    "tools": []
+   },
+   "expect": {
+    "manifest": {
+     "transport": "stdio",
+     "locator": "python nothing.py",
+     "tools": []
+    },
+    "transport": "stdio",
+    "hash": "sha256:1652eee5627cd8af86763f13529a0ebdcbdfd146f28468cb9fdd5d09c1657b80"
+   }
+  },
+  {
+   "name": "mcp_words: the transition words and the dials \u2014 a vanished tool goes UNHEALTHY with these words, never retired by the machine; the strikes dial and its default",
+   "kind": "mcp_words",
+   "input": {},
+   "expect": {
+    "gone": "gone from the server's list",
+    "strikes_dial": "SPINE_TOOL_UNHEALTHY_STRIKES",
+    "strikes_default": 3,
+    "protocol": "2025-06-18",
+    "ids": {
+     "initialize": 1,
+     "tools/list": 2,
+     "tools/call": 3
+    }
+   }
+  },
+  {
+   "name": "mcp_transport: 'python x.py' is stdio",
+   "kind": "mcp_transport",
+   "input": {
+    "locator": "python x.py"
+   },
+   "expect": {
+    "transport": "stdio"
+   }
+  },
+  {
+   "name": "mcp_transport: 'http://127.0.0.1:8080/mcp' is http",
+   "kind": "mcp_transport",
+   "input": {
+    "locator": "http://127.0.0.1:8080/mcp"
+   },
+   "expect": {
+    "transport": "http"
+   }
+  },
+  {
+   "name": "mcp_transport: 'HTTPS://h/mcp' is http",
+   "kind": "mcp_transport",
+   "input": {
+    "locator": "HTTPS://h/mcp"
+   },
+   "expect": {
+    "transport": "http"
+   }
+  },
+  {
+   "name": "mcp_transport: '/usr/bin/server --flag' is stdio",
+   "kind": "mcp_transport",
+   "input": {
+    "locator": "/usr/bin/server --flag"
+   },
+   "expect": {
+    "transport": "stdio"
+   }
+  }
+ ]
+}

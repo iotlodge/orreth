@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL v0 + the impact door · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, MITL names the services a change touches (kind `service`) · 2026-09-22
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, an MCP server's change names the tools under it; a tool names its server · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 """MITL v0 — the Master Mind In the Loop (canon 0001 · 0004 · 0005 P6 sp3).
 
@@ -538,6 +539,21 @@ def read_ground(conn, change: dict) -> dict:
             for n in declared:
                 name_body(n)
             t["chains"].append(f"H → the kernel → {svc['did']}")
+            # P6.5 sp2: a change on an MCP server touches every tool listed under it;
+            # a change on an MCP-born tool names the server it came through
+            if svc["kind"] == "mcp":
+                from . import mcp as _mcp
+                under = _mcp.tools_of(conn, svc["name"])
+                for u in under:
+                    _u, dec = _service_touched(conn, t, "tool", u["name"])
+                    for n in dec:
+                        name_body(n)
+                t["notes"].append(f"{who} is an MCP server ({svc['manifest'].get('transport', '?')}, at "
+                                  f"{_mcp.locator_words(str(svc['manifest'].get('locator') or ''))}) — "
+                                  + (f"{len(under)} tool{'s' if len(under) != 1 else ''} under it: "
+                                     + ", ".join(f"{u['name']} ({u['state']})" for u in under) if under else "no tools under it"))
+            elif svc["kind"] == "tool" and (svc["manifest"] or {}).get("server"):
+                t["notes"].append(f"{who} came through the {svc['manifest']['server']} MCP server (tools/call at the one door)")
             if svc["state"] == "retired":
                 t["notes"].append(f"{who} is already retired (since {svc['since'][:16]}) — restore is the step from there")
             else:

@@ -6,6 +6,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails: rail_names · outbox_row · inbox_key · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the services ladder: ladder_step · manifest_pin · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: ask_fact · refused_fact · ask_kind · otpauth · hold_words · 2026-09-22
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, MCP through one door: mcp_request · mcp_tool_manifest · mcp_server_manifest · mcp_transport · mcp_words · 2026-09-23
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -16,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import (dispatch, envelope as ev, export, harness, intent, mitl, monitor, placement, proof,
+from orreth_spine import (dispatch, envelope as ev, export, harness, intent, mcp, mitl, monitor, placement, proof,
                           rails, resident, scheduler, services)
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
@@ -194,5 +195,23 @@ def test_fixture(contract, case):
         assert proof.otpauth_uri(inp["person"], inp["secret"]) == exp["uri"]
     elif kind == "hold_words":                  # the words the chat says when an act is held (P18 · W23)
         assert proof.question_for(inp["level"], inp["what"], needs_code=inp["needs_code"]) == exp["text"]
+    # ---- orreth.mcp/1 (P6.5 sp2): the three requests' bytes, the pins an MCP server and its tools wear, the words ----
+    elif kind == "mcp_request":                  # JSON-RPC 2.0 with FIXED ids: the bytes on the wire are canonical
+        req = (mcp.initialize_request() if inp["method"] == "initialize" else mcp.list_request()
+               if inp["method"] == "tools/list" else mcp.call_request(inp["tool"], inp["arguments"]))
+        assert (req["id"], mcp.request_bytes(req).decode("ascii")) == (exp["id"], exp["bytes"])
+    elif kind == "mcp_tool_manifest":            # an MCP listing entry → the service manifest a tool wears, pinned
+        m = mcp.tool_manifest(inp["server"], inp["tool"])
+        assert m == exp["manifest"] and (m["name"], m["consequence"]) == (exp["shelf_name"], exp["consequence"])
+        assert ev.canonical(m).decode("ascii") == exp["bytes"] and services.pin(m) == exp["hash"]
+    elif kind == "mcp_server_manifest":          # the server's manifest: transport · locator BY NAME · the list, sorted
+        m = mcp.server_manifest(inp["locator"], inp["tools"])
+        assert m == exp["manifest"] and m["transport"] == exp["transport"] and services.pin(m) == exp["hash"]
+    elif kind == "mcp_transport":
+        assert mcp.transport_of(inp["locator"]) == exp["transport"]
+    elif kind == "mcp_words":                    # the transition words; the dials; the fixed ids
+        assert (mcp.GONE, mcp.STRIKES_DIAL, mcp.STRIKES_DEFAULT, mcp.PROTOCOL) == \
+            (exp["gone"], exp["strikes_dial"], exp["strikes_default"], exp["protocol"])
+        assert {"initialize": mcp.INITIALIZE_ID, "tools/list": mcp.LIST_ID, "tools/call": mcp.CALL_ID} == exp["ids"]
     else:
         pytest.fail(f"unknown case kind {kind!r} in {contract}")

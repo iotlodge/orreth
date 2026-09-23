@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P4 sp4, the A/B harness v0 · 2026-09-18
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): the world checks — a duty answered · offers arrive as holds · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the world check: every service healthy or retired · 2026-09-22
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, two checks: every MCP server answers initialize · the keeper proposes after strikes, never retires alone · 2026-09-23
 """The A/B harness v0 (canon 0004, AG-6): golden cases run against a body's
 mind; every run is a record; a failing run is a FACT on the rail
 (orreth.harness.failed.v1) that the feed carries to the chat as a soft
@@ -187,11 +188,52 @@ def services_healthy(conn) -> dict:
             "unhealthy": unhealthy, "unprobed": unprobed}
 
 
+def mcp_servers_answer(conn) -> dict:
+    """P6.5 sp2: every standing MCP server answered initialize at its LAST
+    probe (the keeper's beat and "check the tools" probe; this reads) —
+    the silent named, the never-probed named; no server on the shelf
+    passes honestly."""
+    from . import services
+    rows = [r for r in services.listing(conn, kind="mcp") if r["state"] != "retired"]
+    silent = [r["name"] for r in rows if r["last_health"] and r["last_health"]["ok"] is False]
+    unprobed = [r["name"] for r in rows if not r["last_health"]]
+    detail = ("no MCP server on the shelf" if not rows else
+              f"{len(rows) - len(silent) - len(unprobed)} of {len(rows)} answered initialize"
+              + (f" · silent: {', '.join(silent)}" if silent else "")
+              + (f" · never probed: {', '.join(unprobed)}" if unprobed else ""))
+    return {"name": "every MCP server answers initialize", "ok": not silent and not unprobed,
+            "detail": detail, "silent": silent, "unprobed": unprobed}
+
+
+def keeper_proposes(conn) -> dict:
+    """P6.5 sp2, the strikes rule (rule 11): a service unhealthy across N
+    checks in a row has a PROPOSAL at the interlock (or the human has
+    heard one since) — and no service was ever retired by a body's own
+    hand: every retire fact names a human's ask or a hold."""
+    from . import mcp, services
+    n = mcp.strikes_n()
+    unproposed = []
+    for s in services.listing(conn):
+        if s["state"] == "retired":
+            continue
+        if mcp.strikes(conn, s["name"]) >= n:
+            unproposed.append(s["name"])            # strikes count since the last proposal: ≥ n = none heard
+    cur = conn.cursor()
+    cur.execute("SELECT count(*) FROM spine_markers WHERE scope = %s AND kind = 'observation'"
+                " AND note LIKE '%% retire: retired%%' AND by_did LIKE 'did:orreth:agent:%%'", (ev.scope(),))
+    alone = int(cur.fetchone()[0])                  # a body retiring by its own hand = an observation, not an act under an ask
+    detail = (f"strikes rule: {n} in a row" + (f" · unproposed: {', '.join(unproposed)}" if unproposed else " · every strike proposed")
+              + (f" · {alone} retired by a body alone" if alone else ""))
+    return {"name": "the keeper proposes after strikes, never retires alone", "ok": not unproposed and not alone,
+            "detail": detail, "unproposed": unproposed, "alone": alone}
+
+
 def checks(conn) -> list[dict]:
     """Every world check, read off the ground — the harness door lists
     them; a failed check is a wound named in words."""
     from .resident import ensure_schema as _ground
     _ground(conn)
-    from . import monitor, scheduler
-    scheduler.ensure_schema(conn); monitor.ensure_schema(conn)
-    return [duty_answered(conn), offers_are_holds(conn), services_healthy(conn)]
+    from . import monitor, scheduler, services
+    scheduler.ensure_schema(conn); monitor.ensure_schema(conn); services.ensure_schema(conn)
+    return [duty_answered(conn), offers_are_holds(conn), services_healthy(conn),
+            mcp_servers_answer(conn), keeper_proposes(conn)]

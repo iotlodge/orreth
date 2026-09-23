@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the shelf's doors (`/services…`); the built-ins registered and probed at boot · 2026-09-22
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the Tools keeper born with the rig; its beat; the reference clock by the dial · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W20 `/intentions/restart` · the harness door `GET /harness` · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL born · the toggle and the impact doors · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
@@ -725,11 +726,19 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(400, {"error": str(e)})
                 return self._json(201, made)
             if path in ("/services", "/services/version", "/services/check",
-                        "/services/retire", "/services/restore"):   # P6.5 sp1: the shelf's doors — the owner's, plain words
+                        "/services/retire", "/services/restore", "/services/mcp"):   # P6.5 sp1: the shelf's doors — the owner's, plain words
                 person = str(p.get("person") or "did:orreth:person:jb")
                 name = str(p.get("name") or "").strip()
                 try:
                     with psycopg.connect(dsn, autocommit=True) as conn:
+                        if path == "/services/mcp":                   # P6.5 sp2: an MCP server through the one door —
+                            from . import mcp                         # listed, its tools onto the shelf under it
+                            made = mcp.register_server(
+                                conn, name, str(p.get("locator") or ""), by=person,
+                                secrets_with=p.get("secrets_with") or None,
+                                placement=p.get("placement") or None, home=services_home)
+                            return self._json(201, {"service": made["server"], "tools": made["tools"],
+                                                    "info": made["info"]})
                         if path == "/services":                       # register
                             made = services.register(
                                 conn, name, str(p.get("kind") or ""), p.get("manifest"), by=person,
@@ -795,6 +804,7 @@ class BridgeRig:
         self.feed = bridgefeed.Feed()
         self.gateway = gateway                       # P6.5 sp1: the mind the shelf probes
         self.services_home = services.services_home(home)   # the services' seeds, beside the agents'
+        services.HOME = self.services_home           # P6.5 sp2: the keeper's door registers into the same home
 
         policy_path = policy or spine / "policy" / "covenant-policy.v1.json"
         self.resident = Resident(
@@ -814,7 +824,9 @@ class BridgeRig:
         # firmware bodies, same laws, called by the human as includes over
         # the session's results (MITL by the soft toggle and the impact door)
         self.firmware: dict[str, Resident] = {}
-        for fn in ("planner", "critic", "grader", "mitl"):
+        # — and the TOOLS KEEPER (P6.5 sp2), the third-kind body that tends the
+        # shelf on the human's word (its beat runs on the scheduler's clock)
+        for fn in ("planner", "critic", "grader", "mitl", "toolkeeper"):
             fw = Resident(spine / "templates" / f"firmware-{fn}.v0.json",
                           gateway=gateway, home=home)
             fw.load_policy(policy_path)
@@ -899,15 +911,63 @@ class BridgeRig:
                                                "run the harness against my golden set",
                                                1800, "the kernel")
                     self._seed_shelf(conn)        # P6.5 sp1: the built-ins on the shelf, probed
+                    self._seed_ref(conn)          # P6.5 sp2: the reference clock, by the dial
                     break
                 except Exception:
                     time.sleep(0.3)
+            next_beat = time.monotonic() + self._tool_check_s()
             while not self._stop.is_set():
                 try:
                     scheduler.tick(conn, bodies)
                 except Exception:
                     pass
+                if time.monotonic() >= next_beat:     # P6.5 sp2: the keeper's beat — every MCP server
+                    next_beat = time.monotonic() + self._tool_check_s()   # probed, its tools synced,
+                    self._keeper_beat(conn)           # the strikes rule → a proposal the human cuts
                 time.sleep(5)
+
+    @staticmethod
+    def _tool_check_s() -> float:
+        """The keeper's cadence (`SPINE_TOOL_CHECK_S`, default 300 s): a
+        beat spawns every stdio server once — five minutes is the honest
+        default for a dev rig."""
+        try:
+            return max(5.0, float(os.environ.get("SPINE_TOOL_CHECK_S") or 300))
+        except ValueError:
+            return 300.0
+
+    def _seed_ref(self, conn) -> None:
+        """P6.5 sp2: with `SPINE_MCP_REF=1` the rig registers the reference
+        clock server (`clock`: its `now` and `echo` land under it) — the
+        librarian's `tools:now` then answers "what time is it in Denver?"
+        through a real MCP tool. Off by default on the rig: a server is
+        the human's to add. A refusal is said, never a crash."""
+        from . import mcp
+        if not mcp.ref_on():
+            return
+        try:
+            made = mcp.seed_ref(conn, home=self.services_home)
+            t = made["tools"]
+            print(f"the shelf: the reference clock server registered at {mcp.locator_words(mcp.ref_locator())}"
+                  f" — tools {', '.join(t['new'] + t['present'] + t['versioned']) or 'none'}", file=sys.stderr, flush=True)
+        except Exception as e:                       # noqa: BLE001 — the rig runs on
+            print(f"the reference clock could not be registered: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
+
+    def _keeper_beat(self, conn) -> None:
+        from . import mcp
+        keeper = self.firmware.get("toolkeeper")
+        if keeper is None:
+            return
+        try:
+            out = mcp.keeper_beat(conn, keeper=keeper.identity.did)
+            bad = [c["name"] for c in out["checked"] if c["ok"] is False]
+            if bad or out["proposed"]:
+                print(f"the keeper's beat: {len(out['checked'])} servers probed"
+                      + (f", UNHEALTHY: {', '.join(bad)}" if bad else "")
+                      + (f", proposed retiring: {', '.join(p['name'] for p in out['proposed'])}" if out["proposed"] else ""),
+                      file=sys.stderr, flush=True)
+        except Exception as e:                       # noqa: BLE001
+            print(f"the keeper's beat stumbled: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
 
     def _seed_shelf(self, conn) -> None:
         """P6.5 sp1: the kernel registers what it was born with — every

@@ -1247,12 +1247,90 @@ Two tracks never share a builder's files at once — the fixtures and
   keyless rig registers the fake lane, honestly; the harness reads the
   LAST health, it runs no probe (the rig probes at boot and on "check
   the services" — the keeper's beat is sp2's).
-- **sp2 — the Tools keeper** (firmware, third kind): MCP through ONE door
-  (0059) — an MCP client that lists a server's tools into the registry,
-  versions them by manifest hash, health-checks them, retires them; the
-  env-secrets law (a key in ZERO records); tools placed like bodies; the
-  harness checks tools; the human asks the keeper "what tools are here?"
-  "retire X" (L2/L3 by the ladder).
+- **sp2 — the Tools keeper** (firmware, third kind) ✅ **BUILT 2026-09-23
+  — walk OWED (JB in the glass, SPEC-TOOLS-01)**: **MCP through ONE door**
+  (0059) — `orreth_spine/mcp.py`, the kernel's Model Context Protocol
+  client written by hand (the official `mcp` package drags a second web
+  stack in; three calls are small): JSON-RPC 2.0 over **stdio** (a server
+  command the kernel spawns) and **streamable HTTP** (a URL; an SSE answer
+  unwrapped) — `initialize` · `tools/list` · `tools/call`, a session per
+  act, the request bytes canonical with FIXED ids (fixture `mcp-v0.json`)
+  · **a server is a service of kind `mcp`** on the one ladder, registered
+  with its locator BY NAME (the command line, the URL, or `env:NAME`) and
+  its `secrets_with` names; **the env-secrets law** at spawn: the child's
+  environment is PATH + the named secrets, nothing else (`spawn_env`), an
+  HTTP bearer rides a named secret as a header, a value touches no record
+  — an unreachable name refuses BY NAME before anything is spawned and
+  records nothing · **its listed tools are services of kind `tool`**, one
+  self each (the same DID across two registers, rule 1), manifest = the
+  tool's schema + its class (`destructiveHint` → consequential: the
+  interlock, never the first ask) + the server's name, placed under the
+  server (`placement.affinity`); the server's pin READS ITS LIST, so **a
+  changed list VERSIONS the server**, a new tool REGISTERS, a vanished
+  tool goes UNHEALTHY with the words "gone from the server's list" — never
+  retired by the machine; listed again, it is healthy again, the same
+  self · `services.check` for kind `mcp` probes for real (initialize +
+  list, the tools synced); an MCP-born tool's own probe reads its server
+  · **the ToolDoor dispatches** an MCP-born tool through `tools/call`
+  (declared as `tools:<name>` like a built-in; the schema read off the
+  shelf) — journaled with the service DID and the chain (AG-7), the
+  `orreth.tool.called.v1` fact, metered like any tool, the result whole;
+  an `isError` answer is an honest failure at the door · **the Tools
+  keeper** `templates/firmware-toolkeeper.v0.json` (name `toolkeeper`,
+  function `tools`, kind firmware — born with the rig beside `mitl`,
+  thinking through the gateway, rule 5) with ONE tool, `services`
+  (register · check · version · retire · restore · changes · list) whose
+  class is read BY THE ARGUMENTS (`consequence_by`): register · version ·
+  retire · restore HOLD at the interlock (L2, cancel the default); check
+  · changes · list run at once · **words** "toolkeeper, add the MCP
+  server at <command or url>" (→ the hold → the human's yes → the server
+  and its tools on the shelf, the facts under the keeper's DID) ·
+  "toolkeeper, check the tools" · "toolkeeper, what changed on the shelf?"
+  (the ladder's facts since the keeper's previous such ask) · "retire
+  <tool>" (sp1's road, unchanged) · **the strikes rule** (rule 11): the
+  keeper NEVER retires alone — on its beat (`SPINE_TOOL_CHECK_S`, default
+  300 s: every server probed, its tools synced) a service unhealthy across
+  N checks in a row (`SPINE_TOOL_UNHEALTHY_STRIKES`, default 3) earns ONE
+  proposal: a hold at the interlock under the keeper's own DID, cancel the
+  default, none while one waits; the human's yes retires it with the chain
+  `[toolkeeper, human, the kernel]` (the confirmer now rides the retire
+  fact's chain); a retired tool is left at rest by the sync even when the
+  server lists it again (the human's stop stands) · **the reference
+  server** `spine/mcp_ref/clock_server.py` (stdlib only; tools `now` — the
+  time in an IANA zone, JB's law: every body knows time — and `echo`; its
+  listing shaped by the env NAME `SPINE_MCP_REF_TOOLS` so the suite makes
+  a tool vanish or appear without changing the command), registered on the
+  rig as `clock` when `SPINE_MCP_REF=1` (OFF by default on the rig — a
+  server is the human's to add; the suite runs it for real) — the
+  librarian's template declares `tools:now`, so "what time is it in
+  Denver?" gets a real answer through an MCP tool when the clock stands ·
+  **harness** two checks: "every MCP server answers initialize" · "the
+  keeper proposes after strikes, never retires alone" (a body's retire
+  with no ask = an observation = named) · **MITL** `read_ground` on an
+  MCP server names every tool under it and their declaring bodies; on an
+  MCP-born tool names its server · **doors** `POST /services/mcp` {name,
+  locator, secrets_with} (201: the server, the sync, the server's info) ·
+  **the shelf** (glass): an MCP server's card wears its transport, its
+  locator BY NAME, its tool count and its last list time, its tools
+  nested beneath (each naming its server and class); a vanished tool's
+  health line carries the reason; the keeper's proposals arrive in the
+  chat as holds (a `confirm.needed` this chat did not file, the person a
+  body) · fixture `mcp-v0.json` (15 cases: `mcp_request` · `mcp_tool_manifest`
+  · `mcp_server_manifest` · `mcp_transport` · `mcp_words`) ·
+  `tests/test_toolkeeper.py` (8 laws). **Suite 336** (295 → 336; 173
+  conformance within). Three tests replaced by name: sp1's "not yet
+  probed" mcp assertion (the probe is real now — a manifest with no
+  locator is unhealthy in words), sp1's built-ins set (the keeper's
+  `services` tool is a built-in — eight tools), the rig's crew roster and
+  the harness list (the keeper and two checks joined them). **Honest
+  limits:** stdio + streamable HTTP only, tools only (no resources,
+  prompts, sampling), no OAuth, no standing session (every act
+  re-initializes — a stdio server is spawned per call), the strikes rule
+  is v0 (a count of consecutive unhealthy checks since the last proposal;
+  no per-kind thresholds), the keeper's beat is kernel code run under the
+  keeper's DID (it thinks only when the human speaks to it), a tool's name
+  is ONE name on the shelf (two servers offering the same tool name: the
+  second is refused by name in the sync), no seed catalog, no allocations.
 - **sp3 — the Stable keeper** (firmware, third kind — 0004's LLM-lifecycle
   watcher, ada's seat): a registry of minds wherever they reside —
   Anthropic direct · LiteLLM · OpenRouter · local — each a service on the
