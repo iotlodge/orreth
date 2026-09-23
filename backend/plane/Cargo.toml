@@ -33,3 +33,10 @@ tokio-postgres = "0.7"
 lapin = "4"
 rdkafka = { version = "0.39", features = ["cmake-build"] }
 rand = "0.8"
+# P7 sp3 (orreth-spine, feature `bridge`): the Rust bridge on :4601 — axum (the
+# version orrethd wears), tokio-stream for the SSE feed, qrcode + flate2 for the
+# enrollment QR (the matrix drawn, the PNG written by hand as the Python does).
+axum = "0.7"
+tokio-stream = { version = "0.1", features = ["sync"] }
+qrcode = { version = "0.14", default-features = false }
+flate2 = "1"

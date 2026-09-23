@@ -11,6 +11,9 @@
 #   scripts/dev.sh bridge        relight the Python Bridge on the host (SPINE_MASTERS · ANTHROPIC_API_KEY
 #                                from the environment / .env), log ~/.orreth/tmp/bridge.log, print the pid
 #   scripts/dev.sh bridge stop   bring the Bridge down cleanly (SIGINT — it stops whole); confirms :4600 empty
+#   scripts/dev.sh shadow        light the RUST bridge (spine-bridge, P7 sp3) on :4601 in SHADOW beside the Python
+#                                Bridge — same ground, same page; log ~/.orreth/tmp/shadow.log, pid printed
+#   scripts/dev.sh shadow stop   bring the Rust bridge down (SIGINT — it stops whole); confirms :4601 empty
 #   scripts/dev.sh suite [args]  the spine suite to ~/.orreth/tmp/suite.log, tail printed (default: tests;
 #                                pass a file or -k to narrow) — REFUSES while a Bridge is lit (the stale-rig law)
 #   scripts/dev.sh rust [rails]  cargo test in backend/plane (the whole workspace, hermetic) + the
@@ -42,8 +45,10 @@ SPINE="$ROOT/spine"; PLANE="$ROOT/backend/plane"
 RIG="docker compose -f $SPINE/compose.yaml"
 RIG_BOXES="orreth-spine-ground orreth-spine-invoke orreth-spine-events"   # compose.yaml's container names
 BRIDGE_PORT=4600; BRIDGE_LOG="$TMPDIR/bridge.log"; SUITE_LOG="$TMPDIR/suite.log"; RUST_LOG="$TMPDIR/rust.log"
+SHADOW_PORT=4601; SHADOW_LOG="$TMPDIR/shadow.log"   # P7 sp3: the Rust bridge in SHADOW beside the Python Bridge
 
 bridge_pid() { lsof -nP -iTCP:$BRIDGE_PORT -sTCP:LISTEN -t 2>/dev/null | head -1 || true; }
+shadow_pid() { lsof -nP -iTCP:$SHADOW_PORT -sTCP:LISTEN -t 2>/dev/null | head -1 || true; }
 ground_up()  { nc -z 127.0.0.1 5433 >/dev/null 2>&1; }
 
 rig_health() {  # one word per box: healthy · starting · unhealthy · stopped · dark (no such box)
@@ -103,6 +108,30 @@ bridge_light() {
   echo "· the Bridge is lit: http://127.0.0.1:$BRIDGE_PORT/  (pid $pid · $mind · masters: $n named) — log: $BRIDGE_LOG"
 }
 
+shadow_light() {  # P7 sp3: the Rust bridge (spine-bridge) on :4601, the same ground, the same page
+  pid=$(shadow_pid)
+  [ -n "$pid" ] && { echo "· the Rust bridge is already lit on :$SHADOW_PORT (pid $pid) — \`shadow stop\` first to relight"; return 0; }
+  ground_up || { echo "· the ground is dark on :5433 — run scripts/dev.sh up first"; return 1; }
+  load_env
+  echo "· building spine-bridge (cargo, feature bridge) …"
+  (cd "$PLANE" && cargo build --quiet -p orreth-spine --features bridge --bin spine-bridge) || { echo "· the build refused — read the errors above"; return 1; }
+  (cd "$PLANE" && SPINE_BRIDGE_PORT=$SHADOW_PORT nohup "$PLANE/target/debug/spine-bridge" >"$SHADOW_LOG" 2>&1 &)
+  for i in $(seq 60); do [ -n "$(shadow_pid)" ] && break; sleep 0.5; done
+  pid=$(shadow_pid)
+  [ -z "$pid" ] && { echo "· the Rust bridge never took :$SHADOW_PORT in 30 s — read $SHADOW_LOG"; tail -5 "$SHADOW_LOG"; return 1; }
+  echo "· the Rust bridge is lit: http://127.0.0.1:$SHADOW_PORT/  (pid $pid · in SHADOW beside :$BRIDGE_PORT — the Python Bridge's residents serve) — log: $SHADOW_LOG"
+}
+
+shadow_stop() {
+  pid=$(shadow_pid)
+  [ -z "$pid" ] && { echo "· no Rust bridge on :$SHADOW_PORT — nothing to stop"; return 0; }
+  kill -INT "$pid" 2>/dev/null || true       # Ctrl+C's law: it stops whole
+  for i in $(seq 60); do [ -z "$(shadow_pid)" ] && break; sleep 0.5; done
+  [ -n "$(shadow_pid)" ] && { kill "$pid" 2>/dev/null || true; for i in $(seq 20); do [ -z "$(shadow_pid)" ] && break; sleep 0.5; done; }
+  [ -n "$(shadow_pid)" ] && { echo "· :$SHADOW_PORT is STILL held by $(shadow_pid) — kill it by hand"; return 1; }
+  echo "· the Rust bridge is dark — :$SHADOW_PORT empty"
+}
+
 new_status() {
   echo "the spine rig (spine/compose.yaml):"
   $RIG ps --format 'table {{.Name}}\t{{.Status}}\t{{.Ports}}' 2>/dev/null || echo "  (compose is not answering — is Docker up?)"
@@ -119,6 +148,9 @@ new_status() {
   else
     echo "  bridge: dark — scripts/dev.sh bridge (or walk) lights it"
   fi
+  spid=$(shadow_pid)
+  [ -n "$spid" ] && echo "  shadow: the Rust bridge LIT on :$SHADOW_PORT (pid $spid) — log $SHADOW_LOG" \
+                 || echo "  shadow: dark — scripts/dev.sh shadow lights the Rust bridge on :$SHADOW_PORT"
   [ -f "$TMPDIR/replant.log" ] && echo "  keeper's diary: $TMPDIR/replant.log exists (the old rig's; not parsed)" \
                                 || echo "  keeper's diary: none yet"
 }
@@ -306,6 +338,8 @@ case "${1:-}" in
   logs)    $RIG logs -f --tail 40 ;;
   bridge)  case "${2:-}" in stop) bridge_stop ;; ""|start) bridge_light ;;
              *) echo "usage: scripts/dev.sh bridge [stop]"; exit 2 ;; esac ;;
+  shadow)  case "${2:-}" in stop) shadow_stop ;; ""|start) shadow_light ;;   # P7 sp3: the Rust bridge on :4601
+             *) echo "usage: scripts/dev.sh shadow [stop]"; exit 2 ;; esac ;;
   suite)   pid=$(bridge_pid)
            [ -n "$pid" ] && { echo "· a Bridge is lit on :$BRIDGE_PORT (pid $pid) — the stale-rig law: a live rig poisons every test dispatcher. \`scripts/dev.sh bridge stop\` first."; exit 1; }
            ground_up || { echo "· the ground is dark on :5433 — run scripts/dev.sh up first (the suite needs the rails)"; exit 1; }
@@ -333,5 +367,5 @@ case "${1:-}" in
            echo "· open the glass: http://127.0.0.1:$BRIDGE_PORT/" ;;
   old)     shift; old_rig "$@" ;;
   replant) old_rig replant ;;     # the launchd keeper's word — unchanged, at the top level
-  *) echo "usage: scripts/dev.sh up|down|status|logs|bridge [stop]|suite [pytest args]|rust [rails]|walk|old <verb>|replant" ;;
+  *) echo "usage: scripts/dev.sh up|down|status|logs|bridge [stop]|shadow [stop]|suite [pytest args]|rust [rails]|walk|old <verb>|replant" ;;
 esac

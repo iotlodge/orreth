@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: the road's six tags at birth · 2026-09-22
 //! The ground — mirrors `orreth_spine.ground` and the memo half of
 //! `orreth_spine.outbox` (`once` · `ground_key` · `mark_ground_done`).
 //!
@@ -28,8 +29,19 @@ use tokio_postgres::{Client, NoTls};
 pub const DDL_LOCK: i64 = 742199;
 
 /// The tags this spine ensures at birth (the Python spine ensures more —
-/// its `ground.TAGS`; the Rust spine grows its list spoonful by spoonful).
-pub const TAGS: [&str; 3] = ["outbox", "inbox", "heartbeat"];
+/// its `ground.TAGS`; the Rust spine grows its list spoonful by spoonful —
+/// sp3 added the ask road's six).
+pub const TAGS: [&str; 9] = [
+    "outbox",
+    "inbox",
+    "heartbeat",
+    "resident",
+    "markers",
+    "proof",
+    "intent",
+    "presence",
+    "digest",
+];
 
 static GROUNDS_DONE: OnceLock<Mutex<HashMap<String, HashSet<String>>>> = OnceLock::new();
 
@@ -140,6 +152,7 @@ impl Ground {
         crate::outbox::ensure_schema(self).await?;
         crate::inbox::ensure_schema(self).await?;
         crate::heartbeat::ensure_schema(self).await?;
+        crate::schema::ensure_road(self).await?;
         mark_ground_done(&self.key, TAGS);
         Ok(())
     }

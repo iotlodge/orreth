@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 //! `orreth-spine` — the kernel's pure laws in Rust, ported from the Python spine
 //! (`spine/orreth_spine/`) against the conformance suite (canon 0008).
 //!
@@ -36,21 +37,47 @@
 //! - [`events`] — Kafka: declare topics · a reader that commits after the work.
 //! - [`heartbeat`] — one breath through each rail, and all three composed.
 //! - [`rail_error`] — the rails' refusals, in the reference's words.
+//!
+//! Phase 7 sp3 adds THE ASK ROAD — pure: [`services`] (the ladder's step,
+//! the manifest pin) · [`intent`] (the kind of an ask, P23) · the hold's
+//! words and the otpauth URI in [`proof`]; behind `rails`: [`schema`] (the
+//! road's tables, word for word) · [`world`] (the dials, the road's refusals,
+//! Python's `isoformat`) · [`markers_live`] (minting with the fact; the
+//! Analyzer's origins) · [`proof_live`] (enroll · confirm · masters · the
+//! judgement at the door) · [`asks`] (`submit_ask` = the row and its fact in
+//! one transaction; `absent`; `confirm_ask`; the views) · [`sessions`] (roll
+//! · list · load; the residents; the crew; the shelf's read) ·
+//! [`intent_live`] (an intention declared at the door; the listing) ·
+//! [`dispatcher`] (the standing events consumer: `ask.received` → a serve
+//! command on the target's bench; the relay loop) · [`feed`] (the Bridge
+//! feed's heart: revisions, the ring, the fan-out); and behind `bridge`:
+//! [`bridge`] — the doors and the SSE feed on axum, the `spine-bridge`
+//! binary's whole, in SHADOW on :4601 beside the Python Bridge on :4600.
 
 pub mod ask;
 pub mod canonical;
 pub mod envelope;
 pub mod export;
 pub mod hash;
+pub mod intent;
 pub mod mitl;
 pub mod placement;
 pub mod proof;
 pub mod py;
 pub mod rails;
+pub mod services;
 pub mod watch;
 
 #[cfg(feature = "rails")]
+pub mod asks;
+#[cfg(feature = "bridge")]
+pub mod bridge;
+#[cfg(feature = "rails")]
+pub mod dispatcher;
+#[cfg(feature = "rails")]
 pub mod events;
+#[cfg(feature = "rails")]
+pub mod feed;
 #[cfg(feature = "rails")]
 pub mod ground;
 #[cfg(feature = "rails")]
@@ -58,13 +85,25 @@ pub mod heartbeat;
 #[cfg(feature = "rails")]
 pub mod inbox;
 #[cfg(feature = "rails")]
+pub mod intent_live;
+#[cfg(feature = "rails")]
 pub mod invoke;
+#[cfg(feature = "rails")]
+pub mod markers_live;
 #[cfg(feature = "rails")]
 pub mod outbox;
 #[cfg(feature = "rails")]
+pub mod proof_live;
+#[cfg(feature = "rails")]
 pub mod rail_error;
 #[cfg(feature = "rails")]
+pub mod schema;
+#[cfg(feature = "rails")]
+pub mod sessions;
+#[cfg(feature = "rails")]
 pub mod sinks;
+#[cfg(feature = "rails")]
+pub mod world;
 
 pub use canonical::canonical;
 pub use hash::content_hash;

@@ -1817,9 +1817,13 @@ dependencies = [
 name = "orreth-spine"
 version = "0.1.0"
 dependencies = [
+ "axum",
+ "base64",
  "ed25519-dalek",
+ "flate2",
  "hmac 0.12.1",
  "lapin",
+ "qrcode",
  "rand 0.8.8",
  "rdkafka",
  "regex",
@@ -1828,6 +1832,7 @@ dependencies = [
  "sha2 0.10.9",
  "tokio",
  "tokio-postgres",
+ "tokio-stream",
 ]
 
 [[package]]
@@ -2117,6 +2122,12 @@ checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
 dependencies = [
  "unicode-ident",
 ]
+
+[[package]]
+name = "qrcode"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d68782463e408eb1e668cf6152704bd856c78c5b6417adaee3203d8f4c1fc9ec"
 
 [[package]]
 name = "quote"
@@ -2926,6 +2937,7 @@ dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]

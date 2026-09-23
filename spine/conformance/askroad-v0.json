@@ -1,0 +1,340 @@
+{
+ "contract": "orreth.askroad/1",
+ "version": 0,
+ "generated_by": "orreth_spine.dispatch (submit_ask's fact law \u00b7 refusal_words) \u00b7 intent.read_words \u00b7 proof.otpauth_uri / question_for (Python reference), canon 0008 \u00b7 P7 sp3",
+ "generated_at": "2026-09-22",
+ "cases": [
+  {
+   "name": "ask_fact: an untargeted objective \u2014 the words' hash, the human's chain, the ask at sequence 1",
+   "kind": "ask_fact",
+   "input": {
+    "scope": "u:dev",
+    "ask_id": "ask_00000000000000a1",
+    "text": "stock the pantry for the week",
+    "person": "did:orreth:person:jb",
+    "target": null,
+    "session": null,
+    "window": null,
+    "fanout": null,
+    "marker": {
+     "kind": "objective",
+     "id": "mk_0000000000a1",
+     "parent": null,
+     "by": "did:orreth:person:jb"
+    },
+    "message_id": "msg_0000000000000000000000a3",
+    "occurred_at": "2026-09-22T15:00:00.000Z"
+   },
+   "expect": {
+    "bytes": "{\"aggregate\":{\"id\":\"ask_00000000000000a1\",\"sequence\":1,\"type\":\"ask\"},\"authority_chain\":[\"did:orreth:person:jb\"],\"correlation_id\":\"ask_00000000000000a1\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_0000000000a1\",\"kind\":\"objective\",\"parent\":null},\"message_id\":\"msg_0000000000000000000000a3\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-22T15:00:00.000Z\",\"payload\":{\"hash\":\"sha256:5d6135472c79e427f3930e47ab8fdf3623aaa9f54ae026237a53ade47a48ca4f\",\"ref\":\"ask_00000000000000a1\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.ask.received.v1\",\"universe_id\":\"u:dev\"}",
+    "payload": {
+     "ref": "ask_00000000000000a1",
+     "hash": "sha256:5d6135472c79e427f3930e47ab8fdf3623aaa9f54ae026237a53ade47a48ca4f"
+    },
+    "topic": "orreth.ask.received.v1",
+    "key": "ask_00000000000000a1",
+    "correlation_id": "ask_00000000000000a1"
+   }
+  },
+  {
+   "name": "ask_fact: a targeted ask in its session with a window \u2014 target, session, window ride the payload",
+   "kind": "ask_fact",
+   "input": {
+    "scope": "u:dev",
+    "ask_id": "ask_00000000000000a2",
+    "text": "librarian, what did we say about the pantry?",
+    "person": "did:orreth:person:jb",
+    "target": "librarian",
+    "session": "ses_000000000001",
+    "window": {
+     "from": "2026-09-01T00:00:00Z",
+     "to": "2026-09-22T00:00:00Z"
+    },
+    "fanout": null,
+    "marker": {
+     "kind": "objective",
+     "id": "mk_0000000000a2",
+     "parent": null,
+     "by": "did:orreth:person:jb"
+    },
+    "message_id": "msg_0000000000000000000000a3",
+    "occurred_at": "2026-09-22T15:00:00.000Z"
+   },
+   "expect": {
+    "bytes": "{\"aggregate\":{\"id\":\"ask_00000000000000a2\",\"sequence\":1,\"type\":\"ask\"},\"authority_chain\":[\"did:orreth:person:jb\"],\"correlation_id\":\"ask_00000000000000a2\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_0000000000a2\",\"kind\":\"objective\",\"parent\":null},\"message_id\":\"msg_0000000000000000000000a3\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-22T15:00:00.000Z\",\"payload\":{\"hash\":\"sha256:2cb2bf493d9a0c6697242e537ccd5d788d726e64c2c30ec0dbe5e4eaad39f375\",\"ref\":\"ask_00000000000000a2\",\"session\":\"ses_000000000001\",\"target\":\"librarian\",\"window\":{\"from\":\"2026-09-01T00:00:00Z\",\"to\":\"2026-09-22T00:00:00Z\"}},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.ask.received.v1\",\"universe_id\":\"u:dev\"}",
+    "payload": {
+     "ref": "ask_00000000000000a2",
+     "hash": "sha256:2cb2bf493d9a0c6697242e537ccd5d788d726e64c2c30ec0dbe5e4eaad39f375",
+     "target": "librarian",
+     "session": "ses_000000000001",
+     "window": {
+      "from": "2026-09-01T00:00:00Z",
+      "to": "2026-09-22T00:00:00Z"
+     }
+    },
+    "topic": "orreth.ask.received.v1",
+    "key": "ask_00000000000000a2",
+    "correlation_id": "ask_00000000000000a2"
+   }
+  },
+  {
+   "name": "ask_fact: a fan-out member \u2014 the fanout id is the correlation; an include's ask is a THOUGHT under the objective",
+   "kind": "ask_fact",
+   "input": {
+    "scope": "u:shadow",
+    "ask_id": "ask_00000000000000a3",
+    "text": "critique the plan \u2014 caf\u00e9 \ud83e\udd42",
+    "person": "did:orreth:person:jb",
+    "target": "critic",
+    "session": "ses_000000000001",
+    "window": null,
+    "fanout": "fan_000000000003",
+    "marker": {
+     "kind": "thought",
+     "id": "mk_0000000000a3",
+     "parent": "mk_0000000000a1",
+     "by": "did:orreth:person:jb"
+    },
+    "message_id": "msg_0000000000000000000000a3",
+    "occurred_at": "2026-09-22T15:00:00.000Z"
+   },
+   "expect": {
+    "bytes": "{\"aggregate\":{\"id\":\"ask_00000000000000a3\",\"sequence\":1,\"type\":\"ask\"},\"authority_chain\":[\"did:orreth:person:jb\"],\"correlation_id\":\"fan_000000000003\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_0000000000a3\",\"kind\":\"thought\",\"parent\":\"mk_0000000000a1\"},\"message_id\":\"msg_0000000000000000000000a3\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-22T15:00:00.000Z\",\"payload\":{\"hash\":\"sha256:e6dc80744798575a5ba594b69a14fa56bddf4042cd4dc39a674e7042a36ea72c\",\"ref\":\"ask_00000000000000a3\",\"session\":\"ses_000000000001\",\"target\":\"critic\"},\"scope_path\":\"u:shadow\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.ask.received.v1\",\"universe_id\":\"u:shadow\"}",
+    "payload": {
+     "ref": "ask_00000000000000a3",
+     "hash": "sha256:e6dc80744798575a5ba594b69a14fa56bddf4042cd4dc39a674e7042a36ea72c",
+     "target": "critic",
+     "session": "ses_000000000001"
+    },
+    "topic": "orreth.ask.received.v1",
+    "key": "ask_00000000000000a3",
+    "correlation_id": "fan_000000000003"
+   }
+  },
+  {
+   "name": "refused_fact: W19 \u2014 an ask to a name that never joined is answered at the door",
+   "kind": "refused_fact",
+   "input": {
+    "scope": "u:dev",
+    "ask_id": "ask_00000000000000b1",
+    "text": "ghost, are you there?",
+    "person": "did:orreth:person:jb",
+    "target": "ghost",
+    "reason": "no body of that name has joined this world",
+    "session": null,
+    "fanout": null,
+    "marker": {
+     "kind": "objective",
+     "id": "mk_0000000000b1",
+     "parent": null,
+     "by": "did:orreth:person:jb"
+    },
+    "message_id": "msg_0000000000000000000000a3",
+    "occurred_at": "2026-09-22T15:00:00.000Z"
+   },
+   "expect": {
+    "bytes": "{\"aggregate\":{\"id\":\"ask_00000000000000b1\",\"sequence\":1,\"type\":\"ask\"},\"authority_chain\":[\"did:orreth:person:jb\",\"the kernel\"],\"correlation_id\":\"ask_00000000000000b1\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_0000000000b1\",\"kind\":\"objective\",\"parent\":null},\"message_id\":\"msg_0000000000000000000000a3\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-22T15:00:00.000Z\",\"payload\":{\"hash\":\"sha256:9eb4307484156ffe79ebafef7806b4c57ed6e1c19dc496cffe307e76fb3e971b\",\"reason\":\"no body of that name has joined this world\",\"ref\":\"ask_00000000000000b1\",\"target\":\"ghost\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.ask.refused.v1\",\"universe_id\":\"u:dev\"}",
+    "reply": "ghost is not here \u2014 no body of that name has joined this world",
+    "status": "refused",
+    "served_by": "the kernel",
+    "topic": "orreth.ask.refused.v1"
+   }
+  },
+  {
+   "name": "refused_fact: W19 \u2014 a body refused at birth says its reasons and the cure; the session rides",
+   "kind": "refused_fact",
+   "input": {
+    "scope": "u:dev",
+    "ask_id": "ask_00000000000000b2",
+    "text": "echo, hello",
+    "person": "did:orreth:person:jb",
+    "target": "echo",
+    "reason": "refused at birth: metal gpu is not here (cpu); fix its template to seat it",
+    "session": "ses_000000000001",
+    "fanout": "fan_000000000002",
+    "marker": {
+     "kind": "objective",
+     "id": "mk_0000000000b2",
+     "parent": null,
+     "by": "did:orreth:person:jb"
+    },
+    "message_id": "msg_0000000000000000000000a3",
+    "occurred_at": "2026-09-22T15:00:00.000Z"
+   },
+   "expect": {
+    "bytes": "{\"aggregate\":{\"id\":\"ask_00000000000000b2\",\"sequence\":1,\"type\":\"ask\"},\"authority_chain\":[\"did:orreth:person:jb\",\"the kernel\"],\"correlation_id\":\"fan_000000000002\",\"marker\":{\"by\":\"did:orreth:person:jb\",\"id\":\"mk_0000000000b2\",\"kind\":\"objective\",\"parent\":null},\"message_id\":\"msg_0000000000000000000000a3\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-22T15:00:00.000Z\",\"payload\":{\"hash\":\"sha256:cdb14ae98369148b3eb8e6dad2e35c80a10c8e13d2877ef464d017ce6a1784b0\",\"reason\":\"refused at birth: metal gpu is not here (cpu); fix its template to seat it\",\"ref\":\"ask_00000000000000b2\",\"session\":\"ses_000000000001\",\"target\":\"echo\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.ask.refused.v1\",\"universe_id\":\"u:dev\"}",
+    "reply": "echo is not here \u2014 refused at birth: metal gpu is not here (cpu); fix its template to seat it",
+    "status": "refused",
+    "served_by": "the kernel",
+    "topic": "orreth.ask.refused.v1"
+   }
+  },
+  {
+   "name": "ask_kind: a question is a thought",
+   "kind": "ask_kind",
+   "input": {
+    "text": "what is today's date?"
+   },
+   "expect": {
+    "kind": "thought",
+    "words": "what is today's date?",
+    "pinned": false
+   }
+  },
+  {
+   "name": "ask_kind: a plain instruction is an objective",
+   "kind": "ask_kind",
+   "input": {
+    "text": "stock the pantry for the week"
+   },
+   "expect": {
+    "kind": "objective",
+    "words": "stock the pantry for the week",
+    "pinned": false
+   }
+  },
+  {
+   "name": "ask_kind: 'keep \u2026 green' with a cadence is an intention serving resiliency, woken by watch-red, every 2 hours",
+   "kind": "ask_kind",
+   "input": {
+    "text": "keep the crew green; whenever a watch goes red, act \u2014 every 2 hours"
+   },
+   "expect": {
+    "kind": "intention",
+    "words": "keep the crew green; whenever a watch goes red, act \u2014 every 2 hours",
+    "pinned": false,
+    "serves": "resiliency",
+    "interests": [
+     "watch-red"
+    ],
+    "every_s": 7200
+   }
+  },
+  {
+   "name": "ask_kind: a typed prefix is the human's flip and wins \u2014 the words after it are the ask",
+   "kind": "ask_kind",
+   "input": {
+    "text": "  Objective:  what is this?  "
+   },
+   "expect": {
+    "kind": "objective",
+    "words": "what is this?",
+    "pinned": true
+   }
+  },
+  {
+   "name": "ask_kind: 'intention:' pins an intention; cost words serve cost and wake on cost-anomaly",
+   "kind": "ask_kind",
+   "input": {
+    "text": "intention: keep the monthly spend under budget, every day"
+   },
+   "expect": {
+    "kind": "intention",
+    "words": "keep the monthly spend under budget, every day",
+    "pinned": true,
+    "serves": "cost",
+    "interests": [
+     "cost-anomaly"
+    ],
+    "every_s": 86400
+   }
+  },
+  {
+   "name": "ask_kind: 'from now on' reads as an intention serving business with nothing to wake it (the door refuses later)",
+   "kind": "ask_kind",
+   "input": {
+    "text": "from now on greet me by name"
+   },
+   "expect": {
+    "kind": "intention",
+    "words": "from now on greet me by name",
+    "pinned": false,
+    "serves": "business",
+    "interests": [],
+    "every_s": null
+   }
+  },
+  {
+   "name": "ask_kind: whitespace folds; an improvement marked wakes an intention",
+   "kind": "ask_kind",
+   "input": {
+    "text": "when   an improvement is marked,\nreview it"
+   },
+   "expect": {
+    "kind": "thought",
+    "words": "when an improvement is marked, review it",
+    "pinned": false
+   }
+  },
+  {
+   "name": "otpauth: a person DID's last segment is the label; SHA1 \u00b7 6 digits \u00b7 30 s",
+   "kind": "otpauth",
+   "input": {
+    "person": "did:orreth:person:jb",
+    "secret": "JBSWY3DPEHPK3PXP"
+   },
+   "expect": {
+    "uri": "otpauth://totp/Orreth:jb?secret=JBSWY3DPEHPK3PXP&issuer=Orreth&algorithm=SHA1&digits=6&period=30"
+   }
+  },
+  {
+   "name": "otpauth: a bare name is the label as given; reserved characters are quoted",
+   "kind": "otpauth",
+   "input": {
+    "person": "jane doe@x",
+    "secret": "GEZDGNBVGY3TQOJQ"
+   },
+   "expect": {
+    "uri": "otpauth://totp/Orreth:jane%20doe%40x?secret=GEZDGNBVGY3TQOJQ&issuer=Orreth&algorithm=SHA1&digits=6&period=30"
+   }
+  },
+  {
+   "name": "hold_words: the kernel's intention \u2014 the code, then a master (W5)",
+   "kind": "hold_words",
+   "input": {
+    "level": "L3-master",
+    "what": "Stopping the intention \u201ckeep the crew green\u201d",
+    "needs_code": true
+   },
+   "expect": {
+    "text": "This needs your code, then a second named person. Stopping the intention \u201ckeep the crew green\u201d is grave: type the six digits from your authenticator and confirm; then a declared master \u2014 never you \u2014 confirms it with a click. Cancel is the default, and doing nothing cancels. Three wrong codes put this act to rest."
+   }
+  },
+  {
+   "name": "hold_words: a grave act for a master's click",
+   "kind": "hold_words",
+   "input": {
+    "level": "L3-master",
+    "what": "Retiring the ground",
+    "needs_code": false
+   },
+   "expect": {
+    "text": "This needs a second named person. Retiring the ground is grave: a declared master \u2014 never you \u2014 confirms it with a click. Cancel is the default, and doing nothing cancels."
+   }
+  },
+  {
+   "name": "hold_words: the kernel's consequential act at L2 (P6.5 sp1, rule 11's words)",
+   "kind": "hold_words",
+   "input": {
+    "level": "L2",
+    "what": "Retiring the weather tool",
+    "needs_code": false
+   },
+   "expect": {
+    "text": "Are you sure? Retiring the weather tool is consequential \u2014 it is recorded, and you can restore it later. Cancel is the default; a deliberate click confirms."
+   }
+  },
+  {
+   "name": "hold_words: a grave act for the asker's code (W23: never beyond undoing)",
+   "kind": "hold_words",
+   "input": {
+    "level": "L3-code",
+    "what": "Stopping the intention \u201cgreet me by name\u201d",
+    "needs_code": false
+   },
+   "expect": {
+    "text": "This needs your code. Stopping the intention \u201cgreet me by name\u201d is grave \u2014 it is recorded, and you can rest it later. Type the six digits from your authenticator, then confirm \u2014 cancel is the default, and doing nothing cancels. Three wrong codes put this act to rest."
+   }
+  }
+ ]
+}

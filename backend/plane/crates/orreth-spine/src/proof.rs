@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: otpauth · the hold's words · 2026-09-22
 //! `orreth.proof/1` — the pure half of `orreth_spine.proof` and the stop's
 //! demand from `orreth_spine.intent`: the code (TOTP per RFC 6238 — HMAC-SHA1,
 //! 30 s steps, 6 digits, ±1 step of drift), the consequence ladder
@@ -220,6 +221,80 @@ fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
         diff |= x ^ y;
     }
     diff == 0
+}
+
+// ---- the live ladder's pure words (P7 sp3) ------------------------------------------
+
+/// The levels, in order.
+pub const LEVELS: [&str; 4] = ["L1", "L2", "L3-code", "L3-master"];
+/// The holder of its own acts.
+pub const KERNEL: &str = "the kernel";
+/// Three wrong proofs rest the act.
+pub const REST_AFTER: i64 = 3;
+/// Rule 4: the outer face, always — `{"error": "not confirmed"}`.
+pub fn one_face() -> Value {
+    json!({"error": "not confirmed"})
+}
+
+/// `urllib.parse.quote` with its default safe set (`/` and the unreserved).
+fn quote(s: &str) -> String {
+    let mut out = String::new();
+    for b in s.bytes() {
+        if b.is_ascii_alphanumeric() || b"_.-~/".contains(&b) {
+            out.push(b as char);
+        } else {
+            out.push_str(&format!("%{b:02X}"));
+        }
+    }
+    out
+}
+
+/// The otpauth URI an authenticator app reads — the label is the person's
+/// last DID segment, the issuer Orreth, SHA1 · 6 digits · 30 s.
+pub fn otpauth_uri(person: &str, secret_b32: &str, issuer: &str) -> String {
+    let label = if person.starts_with("did:") {
+        person.rsplit(':').next().unwrap_or(person)
+    } else {
+        person
+    };
+    format!(
+        "otpauth://totp/{}:{}?secret={secret_b32}&issuer={}&algorithm=SHA1&digits={DIGITS}&period={STEP_S}",
+        quote(issuer),
+        quote(label),
+        quote(issuer)
+    )
+}
+
+/// The words the chat says when an act is held — plain, for a newcomer
+/// (charter P18). L2 keeps its own words in the resident; the kernel's L2 is
+/// the consequential one (P6.5 sp1); W23 (rule 11): the question never
+/// claims the act is beyond undoing.
+pub fn question_for(level: &str, what: &str, needs_code: bool) -> String {
+    if level == "L3-master" && needs_code {
+        return format!(
+            "This needs your code, then a second named person. {what} is grave: type the six \
+             digits from your authenticator and confirm; then a declared master — never you — \
+             confirms it with a click. Cancel is the default, and doing nothing cancels. Three \
+             wrong codes put this act to rest."
+        );
+    }
+    if level == "L3-master" {
+        return format!(
+            "This needs a second named person. {what} is grave: a declared master — never you \
+             — confirms it with a click. Cancel is the default, and doing nothing cancels."
+        );
+    }
+    if level == "L2" {
+        return format!(
+            "Are you sure? {what} is consequential — it is recorded, and you can restore it \
+             later. Cancel is the default; a deliberate click confirms."
+        );
+    }
+    format!(
+        "This needs your code. {what} is grave — it is recorded, and you can rest it later. Type \
+         the six digits from your authenticator, then confirm — cancel is the default, and doing \
+         nothing cancels. Three wrong codes put this act to rest."
+    )
 }
 
 #[cfg(test)]

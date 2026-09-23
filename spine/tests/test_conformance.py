@@ -5,6 +5,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): restart_demand · duty_text · refused_words · echo_reply · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails: rail_names · outbox_row · inbox_key · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the services ladder: ladder_step · manifest_pin · 2026-09-22
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: ask_fact · refused_fact · ask_kind · otpauth · hold_words · 2026-09-22
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -161,5 +162,37 @@ def test_fixture(contract, case):
     elif kind == "manifest_pin":                 # canonical bytes → sha256, the pin every kind wears
         assert ev.canonical(inp["manifest"]).decode("ascii") == exp["bytes"]
         assert services.pin(inp["manifest"]) == exp["hash"]
+    # ---- orreth.askroad/1 (P7 sp3): the ask's fact, the door's refusal, the kind of an ask, the proof's words ----
+    elif kind == "ask_fact":                    # submit_ask's law: the pointer-only payload, the human's chain, the ask at seq 1
+        payload = {"ref": inp["ask_id"], "hash": ev.content_hash(inp["text"])}
+        if inp["target"]:
+            payload["target"] = inp["target"]
+        if inp["session"]:
+            payload["session"] = inp["session"]
+        if inp["window"]:
+            payload["window"] = {"from": str(inp["window"].get("from") or ""), "to": str(inp["window"].get("to") or "")}
+        e = ev.make_envelope(kind="event", type=resident.ASK_RECEIVED, universe_id=inp["scope"], scope_path=inp["scope"],
+                             payload=payload, correlation_id=inp["fanout"] or inp["ask_id"], authority_chain=[inp["person"]],
+                             aggregate={"type": "ask", "id": inp["ask_id"], "sequence": 1}, marker=inp["marker"])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert ev.encode(e).decode("ascii") == exp["bytes"]
+        assert (payload, e["type"], e["aggregate"]["id"], e["correlation_id"]) == (exp["payload"], exp["topic"], exp["key"], exp["correlation_id"])
+    elif kind == "refused_fact":                # W19: the row lands refused, the kernel as server, its own fact
+        payload = {"ref": inp["ask_id"], "hash": ev.content_hash(inp["text"]), "target": inp["target"], "reason": inp["reason"],
+                   **({"session": inp["session"]} if inp["session"] else {})}
+        e = ev.make_envelope(kind="event", type=dispatch.ASK_REFUSED, universe_id=inp["scope"], scope_path=inp["scope"],
+                             payload=payload, correlation_id=inp["fanout"] or inp["ask_id"],
+                             authority_chain=[inp["person"], proof.KERNEL],
+                             aggregate={"type": "ask", "id": inp["ask_id"], "sequence": 1}, marker=inp["marker"])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert ev.encode(e).decode("ascii") == exp["bytes"]
+        assert dispatch.refusal_words(inp["target"], inp["reason"]) == exp["reply"]
+        assert (exp["status"], exp["served_by"], e["type"]) == ("refused", proof.KERNEL, exp["topic"])
+    elif kind == "ask_kind":                    # P23: the words propose the kind; a typed prefix flips it
+        assert intent.read_words(inp["text"]) == exp
+    elif kind == "otpauth":                     # the URI an authenticator reads
+        assert proof.otpauth_uri(inp["person"], inp["secret"]) == exp["uri"]
+    elif kind == "hold_words":                  # the words the chat says when an act is held (P18 · W23)
+        assert proof.question_for(inp["level"], inp["what"], needs_code=inp["needs_code"]) == exp["text"]
     else:
         pytest.fail(f"unknown case kind {kind!r} in {contract}")

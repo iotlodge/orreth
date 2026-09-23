@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: the ask's fact and the door's refusal, as bytes · 2026-09-22
 //! `orreth.ask/1` and the word-shaped laws of `orreth.intent/1` — the pure
 //! half of `orreth_spine.dispatch` (the address at the head of an ask, W7;
 //! the door's refusal for a body that is not here, W19), `harness` (a reply
@@ -6,9 +7,17 @@
 //! `scheduler` (a duty framed as a duty, W21). Every regex here is the
 //! reference's, character for character; the words are the fixtures'.
 
+use crate::hash::content_hash;
 use crate::py::fold_ws;
 use regex::Regex;
+use serde_json::{json, Value};
 use std::sync::LazyLock;
+
+pub const ASK_RECEIVED: &str = "orreth.ask.received.v1";
+/// W19: an ask to a body that is not here.
+pub const ASK_REFUSED: &str = "orreth.ask.refused.v1";
+/// The holder of its own acts (`proof.KERNEL`).
+pub const KERNEL: &str = "the kernel";
 
 // ---- dispatch.py ------------------------------------------------------------------
 
@@ -32,6 +41,82 @@ pub fn address<S: AsRef<str>>(text: &str, names: &[S]) -> Option<String> {
 /// W19: the door's plain reply for an ask to a body that is not here.
 pub fn refusal_words(name: &str, reason: &str) -> String {
     format!("{name} is not here — {reason}")
+}
+
+// ---- the ask's fact, as bytes (the fixture's law: `askroad-v0.json`) ---------------
+
+/// The `ask.received` payload: pointer-only — the ref and the words' hash;
+/// the target only when named, the session only when given, the window as
+/// two strings (`submit_ask`'s law).
+pub fn received_payload(
+    ask_id: &str,
+    text: &str,
+    target: Option<&str>,
+    session: Option<&str>,
+    window: Option<(&str, &str)>,
+) -> Value {
+    let mut p = json!({"ref": ask_id, "hash": content_hash(&Value::String(text.into()))});
+    if let Some(t) = target {
+        p["target"] = json!(t);
+    }
+    if let Some(s) = session {
+        p["session"] = json!(s);
+    }
+    if let Some((from, to)) = window {
+        p["window"] = json!({"from": from, "to": to});
+    }
+    p
+}
+
+/// The `ask.refused` payload (W19): the target and the reason ride it.
+pub fn refused_payload(
+    ask_id: &str,
+    text: &str,
+    target: &str,
+    reason: &str,
+    session: Option<&str>,
+) -> Value {
+    let mut p = json!({
+        "ref": ask_id, "hash": content_hash(&Value::String(text.into())),
+        "target": target, "reason": reason,
+    });
+    if let Some(s) = session {
+        p["session"] = json!(s);
+    }
+    p
+}
+
+/// An ask's fact, whole: the correlation is the fanout or the ask, the
+/// aggregate is the ask at sequence 1, the chain and the marker as given —
+/// `ask.received` wears the human alone, `ask.refused` the human then the
+/// kernel. The id and the clock are the caller's (the live path mints them;
+/// the fixture fixes them).
+#[allow(clippy::too_many_arguments)]
+pub fn ask_fact(
+    typ: &str,
+    scope: &str,
+    ask_id: &str,
+    payload: Value,
+    fanout: Option<&str>,
+    chain: &[&str],
+    marker: &Value,
+    message_id: &str,
+    occurred_at: &str,
+) -> Value {
+    json!({
+        "specversion": crate::envelope::SPECVERSION,
+        "message_id": message_id,
+        "message_kind": "event",
+        "type": typ,
+        "universe_id": scope,
+        "scope_path": scope,
+        "occurred_at": occurred_at,
+        "payload": payload,
+        "correlation_id": fanout.unwrap_or(ask_id),
+        "authority_chain": chain,
+        "aggregate": {"type": "ask", "id": ask_id, "sequence": 1},
+        "marker": marker,
+    })
 }
 
 // ---- harness.py -------------------------------------------------------------------

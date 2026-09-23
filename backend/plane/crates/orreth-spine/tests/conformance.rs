@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails: rail_names · outbox_row · inbox_key · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: ladder_step · manifest_pin · ask_fact · refused_fact · ask_kind · otpauth · hold_words · 2026-09-22
 //! The Rust conformance runner (canon 0008 · P7 sp1): every fixture under
 //! `spine/conformance/*-v*.json` — the same files the Python reference
 //! generated and passes, unchanged — dispatched by case kind exactly as
@@ -10,7 +11,8 @@
 //! runner has no arm for (the list and the dispatch must agree).
 
 use orreth_spine::{
-    ask, canonical, content_hash, envelope, export, mitl, placement, proof, rails, watch,
+    ask, canonical, content_hash, envelope, export, intent, mitl, placement, proof, rails,
+    services, watch,
 };
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -46,6 +48,13 @@ const PORTED_KINDS: &[&str] = &[
     "rail_names",
     "outbox_row",
     "inbox_key",
+    "ladder_step",
+    "manifest_pin",
+    "ask_fact",
+    "refused_fact",
+    "ask_kind",
+    "otpauth",
+    "hold_words",
 ];
 
 fn fixture_dir() -> PathBuf {
@@ -379,6 +388,120 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             };
             same!(got, *exp, "inbox road");
         }
+        // ---- orreth.services/1 (P6.5 sp1): the one ladder's legality; the manifest pin ----
+        "ladder_step" => same!(
+            services::ladder_step(opt_str(&inp["state"]), s(&inp["verb"])).to_value(),
+            *exp,
+            "ladder step"
+        ),
+        "manifest_pin" => {
+            same!(
+                canonical::canonical_string(&inp["manifest"]),
+                s(&exp["bytes"]).to_string(),
+                "manifest bytes"
+            );
+            same!(
+                services::pin(&inp["manifest"]),
+                s(&exp["hash"]).to_string(),
+                "manifest pin"
+            );
+        }
+        // ---- orreth.askroad/1 (P7 sp3): the ask's fact, the door's refusal, the kind, the proof's words ----
+        "ask_fact" | "refused_fact" => {
+            let window = inp["window"].as_object().map(|w| {
+                (
+                    orreth_spine::py::python_str(&w["from"]),
+                    orreth_spine::py::python_str(&w["to"]),
+                )
+            });
+            let (ask_id, text, scope, person) = (
+                s(&inp["ask_id"]),
+                s(&inp["text"]),
+                s(&inp["scope"]),
+                s(&inp["person"]),
+            );
+            let fanout = opt_str(&inp["fanout"]);
+            let (typ, payload, chain): (&str, Value, Vec<&str>) = if kind == "ask_fact" {
+                let payload = ask::received_payload(
+                    ask_id,
+                    text,
+                    opt_str(&inp["target"]),
+                    opt_str(&inp["session"]),
+                    window.as_ref().map(|(f, t)| (f.as_str(), t.as_str())),
+                );
+                same!(payload, exp["payload"], "the ask's payload");
+                (ask::ASK_RECEIVED, payload, vec![person])
+            } else {
+                same!(
+                    ask::refusal_words(s(&inp["target"]), s(&inp["reason"])),
+                    s(&exp["reply"]).to_string(),
+                    "the door's reply"
+                );
+                same!(
+                    exp["served_by"],
+                    Value::String(ask::KERNEL.into()),
+                    "the kernel serves the refusal"
+                );
+                same!(
+                    exp["status"],
+                    Value::String("refused".into()),
+                    "the row's status"
+                );
+                let payload = ask::refused_payload(
+                    ask_id,
+                    text,
+                    s(&inp["target"]),
+                    s(&inp["reason"]),
+                    opt_str(&inp["session"]),
+                );
+                (ask::ASK_REFUSED, payload, vec![person, ask::KERNEL])
+            };
+            let env = ask::ask_fact(
+                typ,
+                scope,
+                ask_id,
+                payload,
+                fanout,
+                &chain,
+                &inp["marker"],
+                s(&inp["message_id"]),
+                s(&inp["occurred_at"]),
+            );
+            let bytes = envelope::encode(&env).map_err(|e| e.to_string())?;
+            same!(
+                String::from_utf8(bytes).unwrap(),
+                s(&exp["bytes"]).to_string(),
+                "the fact's bytes"
+            );
+            same!(env["type"], exp["topic"], "the topic");
+            if kind == "ask_fact" {
+                same!(env["aggregate"]["id"], exp["key"], "the key");
+                same!(
+                    env["correlation_id"],
+                    exp["correlation_id"],
+                    "the correlation"
+                );
+            }
+        }
+        "ask_kind" => same!(
+            intent::read_words(s(&inp["text"])).to_value(),
+            *exp,
+            "the kind of an ask"
+        ),
+        "otpauth" => same!(
+            proof::otpauth_uri(s(&inp["person"]), s(&inp["secret"]), "Orreth"),
+            s(&exp["uri"]).to_string(),
+            "otpauth uri"
+        ),
+        "hold_words" => same!(
+            proof::question_for(
+                s(&inp["level"]),
+                s(&inp["what"]),
+                inp["needs_code"].as_bool().unwrap_or(false)
+            ),
+            s(&exp["text"]).to_string(),
+            "the hold's words"
+        ),
         other => {
             return Err(format!(
                 "kind {other:?} is listed in PORTED_KINDS but the runner has no arm for it"

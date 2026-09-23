@@ -59,6 +59,13 @@ meters; it never sees the prompt).
   spines, one ground, one truth. The rail tests run by name with the rig up
   and skip BY NAME without it (`tests/rails.rs`); `rails-v0.json` measures
   the names and shapes both spines share.
+- **P7 sp3 (2026-09-22) — the ask road in SHADOW:** the Rust bridge
+  (`spine-bridge`, feature `bridge`, :4601) serves the SAME glass page and
+  the ask road's doors beside the Python Bridge on :4600; one ground, one
+  truth — an ask through the Rust door, dispatched by the Rust dispatcher
+  (the inbox footprint hands each fact to exactly one), served by the Python
+  librarian, read equal at both doors; `askroad-v0.json` + `ladder_step` ·
+  `manifest_pin` bring the Rust runner to 157/157, not yet ported: none.
 
 ## The conformance-suite law
 
