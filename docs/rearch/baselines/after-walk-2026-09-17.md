@@ -599,3 +599,17 @@ path only: click, type, read, wait; no door, no database.
 - **W25 — the remembered size is the wish, the screen is the law.** The chat is fitted to the viewport it wakes on and on every resize (`fitChat`): width and height clamped to the screen less a margin, the composer and the grip always on screen; the stored wish is kept untouched for the big screen's return.
 
 - **W26 — an empty reply must never land as "replied" (seen 2026-09-23 in the suite's live-mind law, once in three runs).** The librarian, thinking for real, landed status `replied` with an EMPTY reply; the same ask answered whole on two reruns. Cure (owed to P7 sp4 / the serve path): when the mind returns no words, the serve retries ONCE, then lands the reply in words — "the mind returned nothing; asked again, nothing" — with status `replied` and a journey step naming it, never an empty bubble.
+
+## Walk #10 — 2026-09-23, JB walks the Rust bridge, the toolkeeper and the laptop screen (sp3 · P6.5 sp2 · W25)
+
+| Bar | What JB saw | Verdict |
+|---|---|---|
+| The Rust bridge (1) | "hello from the Rust bridge" on :4601: the ground shows it served by the librarian in 4 s (asked 15:56:48, replied 15:56:52) — but NOTHING showed on :4600's chat. Cause: the page keeps its session in browser storage, which is per ORIGIN, and a port is an origin — two pages, two sessions; the doors agreed, the chats did not. | road **PASS** · **W27** |
+| The toolkeeper (2) | "toolkeeper, add the MCP server at <command>" → the keeper asked for a NAME; "clock" alone and "toolkeeper" alone went to the librarian ("that's a name, not a question"); with `named "clock"` in a fresh session: the interlock ("The services act is consequential…"), Yes, "registered the clock MCP server (orreth-clock 0.1.0) … 2 tools on the shelf under it: now, echo"; THE SHELF card: clock (mcp · stdio · healthy · initialize answered · 2 tools listed) with now and echo nested; "show the tools please" went to the LIBRARIAN, who answered from recalled notes and listed `now` twice; the time through the clock works. JB: "mixed behavior … otherwise it did add and I can use the tool." | **PASS** w/ friction — W28 · W29 · W30 · W31 |
+| The laptop screen (3) | The chat fitted the smaller screen. | **PASS** — W25 CLOSED |
+
+- **W27 — a session belongs to the person, not the browser's origin.** The page restores the person's latest session from the ground (`/sessions?person=` newest) and writes browser storage only as a hint; two bridges, two browsers, one chat.
+- **W28 — a server names itself.** `initialize` returns the server's name ("orreth-clock"); the keeper derives the shelf name from it (the last word, lowercased) when the human gives none; a name is optional.
+- **W29 — a follow-up stays with the body that asked.** When the keeper asks for something (a name), the next bare words in that session are the ANSWER to it, routed to the keeper, never to the lit crew; a bare "toolkeeper" opens the keeper ("toolkeeper here — say what to add, check or retire"), never a librarian's aside.
+- **W30 — the interlock names the act in words.** "Are you sure? Registering the clock MCP server is consequential — recorded, you can rest it later" — never "The services act".
+- **W31 — shelf questions are the keeper's, answered from the registry.** "show the tools" · "what tools are here?" route to the toolkeeper (or the registry door) — the source of truth — and every tool appears ONCE with its home ("now — through the clock MCP server"); a body's recalled notes never stand in for the shelf.
