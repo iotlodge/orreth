@@ -68,6 +68,7 @@ const PORTED_KINDS: &[&str] = &[
     "watch_note",
     "cannot_act",
     "improvement_note",
+    "duplicate_words",
     "crew_hash",
     "turned_fact",
 ];
@@ -683,6 +684,11 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             intent::improvement_note(s(&inp["who"]), opt_str(&inp["reply"])),
             s(&exp["note"]).to_string(),
             "the note"
+        ),
+        "duplicate_words" => same!(
+            intent::duplicate_words(s(&inp["kind"]), s(&inp["words"])),
+            s(&exp["text"]).to_string(),
+            "the duplicate's words"
         ),
         "crew_hash" => {
             let shape: Vec<(String, Value)> = inp["shape"]

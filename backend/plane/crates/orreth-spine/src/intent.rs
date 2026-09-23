@@ -1,5 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
-// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the loop's words in one place · walk #11 W.1: a cadence in seconds · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the loop's words in one place · walk #11 W.1: a cadence in seconds · W37 · W38 · 2026-09-23
 //! The pure half of `orreth_spine.intent` that the ask door needs — P23
 //! (block 11): THE KIND OF AN ASK. The words propose it (thought · objective
 //! · intention), a typed prefix is the human's flip and wins, and an
@@ -60,13 +60,46 @@ pub fn observed_words(kind: &str, r#ref: &str, note: Option<&str>) -> String {
     }
 }
 
-/// W8: the runner's honest word — a reply that OPENS with `cannot act` says
-/// the body lacks the tools for this objective; a reply that merely mentions
-/// the words is a reply.
+static CANNOT_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(
+        r"^(cannot act\b|i (?:cannot|can't|can not|am unable to|am not able to|lack the tool|lack a tool|don't have (?:a|the|any) tool|do not have (?:a|the|any) tool|have no tool)\b)",
+    )
+    .unwrap()
+});
+static PREFACE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[^:.]{0,60}:\s*").unwrap());
+
+fn strip_marks(s: &str) -> &str {
+    s.trim_start_matches(|c| "*#-> \"“'".contains(c))
+}
+
+/// W8, walk #11 W38: the runner's honest word, heard in more than one shape —
+/// a reply that OPENS by saying the body cannot ("cannot act: …", "I cannot
+/// …", "I can't …", "I lack the tool …", "I don't have a tool …"), after at
+/// most one short preface ending in a colon. Only the opening counts — a
+/// reply that merely mentions the words is a reply.
 pub fn cannot_act(reply: Option<&str>) -> bool {
     let low = fold_ws(reply.unwrap_or("")).to_lowercase();
-    low.trim_start_matches(|c| "*#-> ".contains(c))
-        .starts_with(CANNOT_ACT)
+    let head = strip_marks(&low);
+    if CANNOT_RE.is_match(head) {
+        return true;
+    }
+    match PREFACE_RE.find(head) {
+        Some(m) => CANNOT_RE.is_match(strip_marks(&head[m.end()..])),
+        None => false,
+    }
+}
+
+/// W37: the door's refusal when an intention with these words already stands.
+pub fn duplicate_words(kind: &str, words: &str) -> String {
+    let whose = match kind {
+        "kernel" => "the kernel's",
+        "role" => "the role's",
+        _ => "your own",
+    };
+    format!(
+        "an intention with these words already stands — {whose} “{words}” is at work; stop it \
+         first, or say what is different"
+    )
 }
 
 /// W8's marker note when a runner says it cannot act: the first 200 characters of what it said.

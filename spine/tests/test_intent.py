@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch intent sp1, the fifth firmware-rail · 2026-09-19
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): IH-1 under the watch's sense (W14), the runner joined (W19), the human's stop held (W5) · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures: W35 a stop asked is a stop held · W37 a duplicate purpose named at the door · W38 the honest word in more shapes · W40 standing intentions never off the board · 2026-09-23
 """The intent loop (canon 0007, block 11): an intention is a record with
 a root marker; the loop observes (a red watch), asks the planner under
 the observation, and files the planner's reply as an objective under the
@@ -265,3 +266,63 @@ def test_the_intent_doors_and_the_rail_in_the_rig(pg, rig):
     assert s == 404
     tree = get(f"/analyzer?origin={o['root']}")["tree"]
     assert tree and tree[0]["kind"] == "intention" and tree[0]["words"].startswith("keep this world")
+
+
+def test_walk11_a_stop_asked_is_a_stop_held_a_duplicate_is_named_and_a_standing_intention_stays_on_the_board(pg, monkeypatch):
+    """Walk #11's kernel cures. W35: while an intention's stop waits at the
+    interlock (held for the code), the loop files nothing new for it — its
+    cadence sleeps, its red is not observed, its replied plan is not filed;
+    a cancel resumes it. W37: a human intention with words that already
+    stand (the kernel's, or the human's own) is refused at the door in
+    words. W38: "I cannot …" / "I don't have a tool" are heard as the
+    honest word. W40: the Analyzer's origins keep every standing
+    intention's root, however many newer roots there are."""
+    from orreth_spine import proof
+    monkeypatch.setenv("SPINE_SCOPE", "u:law-" + secrets.token_hex(3))
+    planner = _body("firmware-planner.v0.json", gateway.FakeGateway(reply="Drain the bench."))
+    planner.join(pg); planner._serve_conn = pg
+    _body("librarian-resident.v0.json").join(pg)
+    kern = intent.declared(pg, intent.RESILIENCY["words"], serves="resiliency", kind="kernel",
+                           by="the kernel", interests=intent.RESILIENCY["interests"], planner="planner", runner="librarian")
+    # W37: the same words, declared by a human — named at the door
+    with pytest.raises(ValueError, match="already stands — the kernel's"):
+        intent.declare(pg, intent.RESILIENCY["words"], serves="resiliency", kind="human", by=ME,
+                       interests=intent.RESILIENCY["interests"])
+    mine = intent.declare(pg, "say the time every 5 seconds", serves="business", kind="human", by=ME,
+                          every_s=5, runner="librarian")
+    with pytest.raises(ValueError, match="already stands — your own"):
+        intent.declare(pg, "say the time  every 5 seconds", serves="business", kind="human", by=ME, every_s=5)
+    # W35: the cadence beats …
+    pg.cursor().execute("UPDATE spine_intentions SET next_at = now() WHERE intention_id = %s", (mine["intention_id"],))
+    t = intent.turn(pg)
+    assert [d["intention_id"] for d in t["due"]] == [mine["intention_id"]]
+    # … until its stop is HELD for the code: then nothing new, though it is due and its plan was answered
+    held = proof.hold_kernel_act(pg, text="stopping your intention", person=ME, tool="intent.stop",
+                                 args={"intention_id": mine["intention_id"]}, level="L3-code")
+    assert intent.held_stops(pg) == {mine["intention_id"]}
+    [(plan_ask,)] = pg.execute("SELECT plan_ask FROM spine_intent_turns WHERE intention_id = %s", (mine["intention_id"],)).fetchall()
+    with pg.transaction():
+        planner._serve_ask(pg.cursor(), plan_ask, ["the kernel"])      # the planner answered
+    pg.cursor().execute("UPDATE spine_intentions SET next_at = now() WHERE intention_id = %s", (mine["intention_id"],))
+    t = intent.turn(pg)
+    assert t["due"] == [] and t["filed"] == []                          # held: the loop stands still for it
+    assert kern["intention_id"] not in [d["intention_id"] for d in t["due"]]
+    # a cancel resumes it: the answered plan is filed, the cadence beats again
+    proof.settle_kernel_act(pg, held, approve=False, by=ME)
+    assert intent.held_stops(pg) == set()
+    t = intent.turn(pg)
+    assert [f["intention_id"] for f in t["filed"]] == [mine["intention_id"]]
+    assert [d["intention_id"] for d in t["due"]] == [mine["intention_id"]]
+    # W38: the honest word in more than one shape
+    assert intent.cannot_act("I need to be plain with you: I cannot query the watch directly. I don't have a tool.")
+    assert intent.cannot_act("I lack the tool to run the harness. CANNOT ACT: the kernel's runner would be needed.")
+    assert not intent.cannot_act("The bench is drained; I cannot say more than that.")
+    # W40: sixty newer roots do not push a standing intention off the board; a rested one may fall off
+    for _ in range(3):
+        dispatch.submit_ask(pg, "a newer root")
+    roots = [o["ref"] for o in markers.origins(pg, limit=2)]
+    assert kern["intention_id"] in roots and mine["intention_id"] in roots
+    assert len([r for r in roots if r.startswith("ask_")]) == 2
+    intent.stop(pg, mine["intention_id"], by=ME, proof="L3-code")
+    roots = [o["ref"] for o in markers.origins(pg, limit=2)]
+    assert kern["intention_id"] in roots and mine["intention_id"] not in roots

@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the stop and the restart · `declared` · the loop (interested · plan · on_marker · due · file · hear · turn) · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures: W35 a stop asked is a stop held · W37 a duplicate purpose named at the door · 2026-09-23
 //! Intentions on the ground — the row half of `orreth_spine.intent` (0007):
 //! an intention declared at the door lands as its row, its ROOT marker, its
 //! own session (where its objectives show) and its fact, in one transaction;
@@ -14,9 +15,9 @@ use crate::envelope::{self, Mint};
 use crate::ground::Ground;
 use crate::hash::content_hash;
 use crate::intent::{
-    cannot_act, crew_shape_hash, improvement_note, observed_words, plan_words, watch_note,
-    CADENCE_DUE, INTENTION_DECLARED, INTENTION_RESTARTED, INTENTION_STOPPED, KINDS, SERVES,
-    WATCH_RED,
+    cannot_act, crew_shape_hash, duplicate_words, improvement_note, observed_words, plan_words,
+    watch_note, CADENCE_DUE, INTENTION_DECLARED, INTENTION_RESTARTED, INTENTION_STOPPED, KINDS,
+    SERVES, WATCH_RED,
 };
 use crate::markers_live;
 use crate::outbox;
@@ -103,6 +104,20 @@ pub async fn declare(g: &mut Ground, w: &World, d: Declare) -> Result<Value, Roa
     }
     for k in &interests {
         markers_live::check_kind(g, &w.scope, k).await?;
+    }
+    if d.kind == "human" {
+        // W37: a duplicate purpose is named at the door
+        if let Some(r) = g
+            .client()
+            .query_opt(
+                "SELECT kind FROM spine_intentions WHERE words = $1 AND scope = $2 AND active ORDER \
+                 BY added_at LIMIT 1",
+                &[&words, &w.scope],
+            )
+            .await?
+        {
+            return Err(refused(duplicate_words(r.get::<_, &str>(0), &words)));
+        }
     }
     let iid = format!("int_{}", token_hex(6));
     let mid = markers_live::new_id();
@@ -379,8 +394,30 @@ pub async fn declared(g: &mut Ground, w: &World, d: Declare) -> Result<Value, Ro
 
 // ---- the loop (0007) --------------------------------------------------------------------
 
-/// The active intentions of this world that declared interest in a kind.
+/// W35 (walk #11): a stop ASKED is a stop HELD — every intention whose stop
+/// waits at the interlock (the kernel's held `intent.stop`, the code not yet
+/// given). The loop files nothing new for these: a cancel resumes them, the
+/// code rests them.
+pub async fn held_stops(g: &Ground, scope: &str) -> Result<Vec<String>, RoadError> {
+    let rows = g
+        .client()
+        .query(
+            "SELECT held::json->'args'->>'intention_id' FROM spine_asks WHERE scope = $1 AND \
+             served_by = 'the kernel' AND status = 'awaiting-confirm' AND held::json->>'tool' = \
+             'intent.stop'",
+            &[&scope],
+        )
+        .await?;
+    Ok(rows
+        .iter()
+        .filter_map(|r| r.get::<_, Option<String>>(0))
+        .collect())
+}
+
+/// The active intentions of this world that declared interest in a kind — a
+/// stop held at the interlock pauses one (W35).
 pub async fn interested(g: &Ground, scope: &str, kind: &str) -> Result<Vec<Value>, RoadError> {
+    let held = held_stops(g, scope).await?;
     let rows = g
         .client()
         .query(
@@ -397,6 +434,9 @@ pub async fn interested(g: &Ground, scope: &str, kind: &str) -> Result<Vec<Value
             d["interests"]
                 .as_array()
                 .is_some_and(|a| a.iter().any(|k| k == kind))
+                && !held
+                    .iter()
+                    .any(|h| h == d["intention_id"].as_str().unwrap_or_default())
         })
         .collect())
 }
@@ -682,8 +722,15 @@ async fn due(g: &mut Ground, w: &World) -> Result<Vec<Value>, RoadError> {
         )
         .await?;
     let intentions: Vec<Value> = rows.iter().map(dict).collect();
+    let held = held_stops(g, &w.scope).await?; // W35: a held stop pauses the cadence
     let mut out = Vec::new();
     for i in intentions {
+        if held
+            .iter()
+            .any(|h| h == i["intention_id"].as_str().unwrap_or_default())
+        {
+            continue;
+        }
         out.push(plan(g, w, &i, None, CADENCE_DUE).await?);
         let every = i["every_s"].as_i64().unwrap_or(0) as f64;
         g.client()
@@ -724,8 +771,12 @@ async fn file_objectives(g: &mut Ground, w: &World) -> Result<Vec<Value>, RoadEr
             )
         })
         .collect();
+    let held = held_stops(g, &w.scope).await?; // W35: nothing new filed while the code is awaited
     let mut filed = Vec::new();
     for (tid, iid, by, runner, marker, session, reply) in pending {
+        if held.contains(&iid) {
+            continue;
+        }
         let words: String = crate::py::fold_ws(reply.as_deref().unwrap_or(""))
             .chars()
             .take(500)

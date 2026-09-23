@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W8 · W14 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds), walk #8's W20 the restart · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the turn under the beat lock; the loop's words in one place · 2026-09-23
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures: W35 a stop asked is a stop held · W37 a duplicate purpose named at the door · W38 the honest word in more shapes · 2026-09-23
 """The intent loop — the fifth firmware-rail (canon 0007, block 11).
 
 Human INTENTION is the topmost origin of work. An intention is a record
@@ -192,6 +193,13 @@ def declare(conn, words: str, *, serves: str, kind: str, by: str,
     _ground(conn); ensure_schema(conn); markers.ensure_schema(conn); outbox.ensure_schema(conn)
     for k in interests:
         markers.check_kind(conn, k)        # interests name declared kinds — the teaching otherwise
+    if kind == "human":                    # W37: a duplicate purpose is named at the door
+        cur = conn.cursor()
+        cur.execute("SELECT kind FROM spine_intentions WHERE words = %s AND scope = %s AND active"
+                    " ORDER BY added_at LIMIT 1", (words, ev.scope()))
+        row = cur.fetchone()
+        if row:
+            raise ValueError(duplicate_words(row[0], words))
     iid = "int_" + secrets.token_hex(6)
     mid = markers.new_id()
     sid = "ses_" + secrets.token_hex(6)
@@ -375,13 +383,28 @@ def restart(conn, intention_id: str, by: str, *, proof: str | None = None,
 
 
 # ---- the loop ----
+def held_stops(conn) -> set[str]:
+    """W35 (walk #11): a stop ASKED is a stop HELD — every intention whose
+    stop waits at the interlock (the kernel's held `intent.stop`, the code
+    not yet given). The loop files nothing new for these: a cancel resumes
+    them, the code rests them."""
+    cur = conn.cursor()
+    cur.execute("SELECT held::json->'args'->>'intention_id' FROM spine_asks WHERE scope = %s"
+                " AND served_by = 'the kernel' AND status = 'awaiting-confirm'"
+                " AND held::json->>'tool' = 'intent.stop'", (ev.scope(),))
+    return {r[0] for r in cur.fetchall() if r[0]}
+
+
 def interested(conn, kind: str) -> list[dict]:
-    """The active intentions of this world that declared interest in a kind."""
+    """The active intentions of this world that declared interest in a
+    kind — a stop held at the interlock pauses one (W35)."""
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute(f"SELECT {_COLS} FROM spine_intentions WHERE scope = %s AND active"
                 " ORDER BY added_at", (ev.scope(),))
-    return [d for d in (_dict(r) for r in cur.fetchall()) if kind in d["interests"]]
+    held = held_stops(conn)
+    return [d for d in (_dict(r) for r in cur.fetchall())
+            if kind in d["interests"] and d["intention_id"] not in held]
 
 
 def plan(conn, intention: dict, *, cause: dict | None, observed: str) -> dict:
@@ -450,13 +473,23 @@ def crew_hash(conn) -> str:
     return crew_shape_hash([(n, json.loads(c or "[]")) for n, c in cur.fetchall()])
 
 
+_CANNOT_RE = re.compile(
+    r"^(cannot act\b|i (?:cannot|can't|can not|am unable to|am not able to|lack the tool|lack a tool"
+    r"|don't have (?:a|the|any) tool|do not have (?:a|the|any) tool|have no tool)\b)")
+
+
 def cannot_act(reply: str | None) -> bool:
-    """The runner's honest word (the system words teach it): a reply
-    that OPENS with 'cannot act' says the body lacks the tools for this
-    objective. Only the opening counts — a reply that merely mentions
-    the words is a reply."""
-    head = " ".join((reply or "").split()).lower().lstrip("*#-> ")
-    return head.startswith(CANNOT_ACT)
+    """The runner's honest word, heard in more than one shape (W8; walk
+    #11 W38): a reply that OPENS by saying the body cannot — "cannot act:
+    …", "I cannot …", "I can't …", "I lack the tool …", "I don't have a
+    tool …" — after at most one short preface ending in a colon ("I need
+    to be plain with you: I cannot …"). Only the opening counts — a
+    reply that merely mentions the words is a reply."""
+    head = " ".join((reply or "").split()).lower().lstrip("*#-> \"“'")
+    if _CANNOT_RE.match(head):
+        return True
+    m = re.match(r"^[^:.]{0,60}:\s*", head)          # one short preface, then the word
+    return bool(m and _CANNOT_RE.match(head[m.end():].lstrip("*#-> \"“'")))
 
 
 def _blocked(conn, intention: dict) -> bool:
@@ -520,8 +553,11 @@ def _due(conn) -> list[dict]:
     cur = conn.cursor()
     cur.execute(f"SELECT {_COLS} FROM spine_intentions WHERE scope = %s AND active"
                 " AND every_s IS NOT NULL AND next_at <= now() ORDER BY next_at", (ev.scope(),))
+    held = held_stops(conn)                    # W35: a held stop pauses the cadence
     out = []
     for i in (_dict(r) for r in cur.fetchall()):
+        if i["intention_id"] in held:
+            continue
         out.append(plan(conn, i, cause=None, observed=CADENCE_DUE))
         with conn.transaction():
             conn.cursor().execute(
@@ -543,7 +579,10 @@ def _file_objectives(conn) -> list[dict]:
         " WHERE t.objective_ask IS NULL AND a.status = 'replied' AND i.active AND i.scope = %s",
         (ev.scope(),))
     filed = []
+    held = held_stops(conn)                    # W35: nothing new filed while the code is awaited
     for tid, iid, by, runner, marker, session, reply in cur.fetchall():
+        if iid in held:
+            continue
         words = " ".join((reply or "").split())[:500]
         if not words:
             with conn.transaction():
@@ -603,6 +642,14 @@ def improvement_note(who: str, reply: str | None) -> str:
     `improvement_note`): the first 200 characters of what it said."""
     first = " ".join((reply or "").split())[:200]
     return f"runner cannot act: {who} said “{first}” — needs a body with the tools for it"
+
+
+def duplicate_words(kind: str, words: str) -> str:
+    """W37: the door's refusal when an intention with these words already
+    stands in this world (conformance `duplicate_words`)."""
+    whose = {"kernel": "the kernel's", "role": "the role's"}.get(kind, "your own")
+    return (f"an intention with these words already stands — {whose} “{words}” is at work; "
+            "stop it first, or say what is different")
 
 
 def crew_shape_hash(shape: list) -> str:

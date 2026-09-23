@@ -1,5 +1,6 @@
 <!-- PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass), walk #7's wounds · 2026-09-21 -->
+<!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures (glass): W27 the person's latest session · W32 one Esc, one thing · W33 a pull retracts when focus moves · W34/W39 a stop never needs the exact words · W35 the code row pinned · 2026-09-23 -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -106,6 +107,8 @@
     border-bottom:2px solid var(--amber);opacity:.5;border-radius:0 0 0 14px}
   #grip:hover{opacity:1}
   .sesrow{cursor:pointer;color:var(--dim);font-size:11.5px;padding:2px 0}
+  #pin{padding:0 14px;max-height:38vh;overflow:auto;border-top:1px solid var(--line, #2a2f3a)}   /* W35: the hold stays in view */
+  #pin:empty{display:none;border:0}
   .sesrow:hover,.sesrow.on{color:var(--amber)}
   #chat header{padding:10px 16px;color:var(--amber);font-size:11px;
     letter-spacing:.3em;border-bottom:1px solid var(--seam);
@@ -370,13 +373,13 @@
 
 <div id="crew-tab" onclick="toggleCrew()" title="the crew — every body in this world, both sides">C R E W</div>
 <div id="crew">
-  <header>CREW · every body in this world — residents and firmware, both sides · [Esc] returns the bridge</header>
+  <header onclick="toggleCrew(false)" style="cursor:pointer" title="close the Crew">CREW · every body in this world — residents and firmware, both sides · [Esc] closes this · ▾ close</header>
   <div id="cards"></div>
 </div>
 
 <div id="monitor-tab" onclick="toggleMonitor()" title="monitoring — the Operating State, live">M O N I T O R</div>
 <div id="monitor">
-  <header>MONITORING · the Operating State, live — rails · bodies · asks · watches · the harness · [Esc] returns the bridge</header>
+  <header onclick="toggleMonitor(false)" style="cursor:pointer" title="close the Monitoring">MONITORING · the Operating State, live — rails · bodies · asks · watches · the harness · [Esc] closes this · ▾ close</header>
   <div id="views"></div>
 </div>
 
@@ -404,6 +407,7 @@
     <div id="log"></div>
     <div id="rail"><h4>RESIDENTS</h4><div id="chips"></div></div>
   </div>
+  <div id="pin" title="a held act waits for your word here — it never scrolls away"></div>
   <div id="composer">
     <input id="chat-in" placeholder="ask anything — every reply arrives whole"
            autocomplete="off">
@@ -445,10 +449,12 @@ function toggleChat(open){
     document.getElementById("chat-in").focus();
 }
 addEventListener("keydown", e => {
-  if (e.key === "Escape") {                             // SPEC-ESC-01 + P19:
-    popAllFocus();                                      // one keystroke: the
-    toggleChat(false); toggleBand(false); toggleCrew(false); toggleMonitor(false);
-  }                                                     // scope restored exactly
+  if (e.key === "Escape") {                             // SPEC-ESC-01 + P19 — W32 (walk #11): ONE Esc, ONE thing —
+    if (band.classList.contains("open")) toggleBand(false);          // the pull on top closes first;
+    else if (monitorPull.classList.contains("open")) toggleMonitor(false);   // the chat and the focus only
+    else if (crewPull.classList.contains("open")) toggleCrew(false);         // when no pull is open —
+    else { popAllFocus(); toggleChat(false); }                      // then the bridge, scope restored exactly
+  }
 });
 
 /* ---- the crew rail: residents on the right edge, targets by chip ---- */
@@ -500,7 +506,9 @@ loadRoster(); setInterval(loadRoster, 20000);
 /* ---- the Objectives band: the floor hatch opens ---- */
 const band = document.getElementById("band");
 function toggleBand(open){
-  band.classList.toggle("open", open ?? !band.classList.contains("open"));
+  const now = open ?? !band.classList.contains("open");
+  if (now){ toggleCrew(false); toggleMonitor(false); }      // W33: what focus leaves, retracts — one pull at a time
+  band.classList.toggle("open", now);
   if (band.classList.contains("open")) loadBand();
 }
 let bandOpenRow = null;
@@ -941,7 +949,8 @@ function renderOutcome(id, v, line){
     const step = level === "L3-code" || (level === "L3-master" && hold.needs_code && !hold.code_ok) ? "code"
                : level === "L3-master" ? "master" : "yes";
     const m = el("msg theirs", who + esc(v.reply));
-    const row = holdRow(id, step, level);
+    document.getElementById("pin").appendChild(m);   // W35 (walk #11): the hold is PINNED above the composer until it settles —
+    const row = holdRow(id, step, level);            // the crew's bubbles never scroll the code row away
     // P6 sp3: every hold offers "expected impact?" — MITL's answer renders here, before Cancel / Yes
     m.appendChild(impactBar({kind: impactKind(hold.tool), ref: id, draft: {tool: hold.tool}, words: v.text}));
     m.appendChild(row); row.querySelector(".btn-cancel").focus();
@@ -952,7 +961,11 @@ function renderOutcome(id, v, line){
     PENDING[id]._row = row; PENDING[id]._stopping = line._stopping;
     return;
   }
-  if (line._row) line._row.querySelectorAll("button,input").forEach(b => b.disabled = true);   // the hold settled
+  if (line._row){                                                                            // the hold settled:
+    line._row.querySelectorAll("button,input").forEach(b => b.disabled = true);
+    const held = line._row.closest(".msg");                                                  // W35: back into the log, in order
+    if (held && held.parentElement && held.parentElement.id === "pin") log.appendChild(held);
+  }
   const bubble = line._duty && v.status === "replied"
     ? dutyBubble(name, v)                                                                   // W21: a duty's reply folds to one line
     : put("msg theirs", who + cite(plain(v.reply || "(no words came back)")));
@@ -1192,6 +1205,7 @@ addEventListener("resize", layoutChat);
 function toggleCrew(open){
   const was = crewPull.classList.contains("open");
   const now = open ?? !was;
+  if (now && !was){ toggleBand(false); toggleMonitor(false); }   // W33: one pull at a time
   crewPull.classList.toggle("open", now);
   layoutChat();
   if (now && !was){
@@ -1290,19 +1304,44 @@ async function enrollWords(text){             // "enroll my authenticator" · th
   drawEnroll(c.b, !!st.enrolled);
   return true;
 }
-async function stopWords(text){                  // "stop the kernel's Resiliency intention" — grave for the kernel's; "restart my resiliency intention" (W20)
-  const m = text.match(/^(stop|rest|restart|resume)\s+(?:the\s+|my\s+)?(kernel'?s\s+)?(.+?)\s+intention\s*[.!]?$/i);
-  if (!m) return false;
-  const verb = /^(restart|resume)$/i.test(m[1]) ? "restart" : "stop", kernels = !!m[2];
-  const want = m[3].toLowerCase();
+const STOP_NOISE = new Set(["the", "and", "that", "this", "with", "for", "every", "when", "please", "intention", "my", "our"]);
+function looseMatch(i, want){                    // W39: a word in common, the runner, or what it serves
+  const w = (i.words || "").toLowerCase(), serves = (i.serves || "").toLowerCase(), runner = (i.runner || "").toLowerCase();
+  if (w.includes(want) || serves === want || runner === want) return true;
+  const toks = want.split(/[^a-z0-9]+/).filter(t => t.length >= 3 && !STOP_NOISE.has(t));
+  const have = new Set(w.split(/[^a-z0-9]+/));
+  return toks.length > 0 && toks.some(t => have.has(t));
+}
+function offerIntentions(rows, verb, head){       // the choice, one click each — never the exact words again
+  const box = el("msg theirs", `<div class="who">${head}</div>`);
+  rows.forEach(i => {
+    const row = document.createElement("div"); row.className = "sesrow";
+    row.textContent = `${verb} · “${i.words}” · ${i.kind} · ${i.runner ? "runs on " + i.runner + " · " : ""}serves ${i.serves}`;
+    row.onclick = () => actOnIntention({ref: i.intention_id, words: i.words}, verb);
+    box.appendChild(row);
+  });
+  log.scrollTop = log.scrollHeight;
+}
+async function stopWords(text){                  // W34 · W39 (walk #11): "stop" · "echo, stop" · "stop my time intention" — never the exact words
+  const bare = text.match(/^(?:([a-z][a-z0-9_-]*),\s*)?(stop|rest|restart|resume)\s*[.!]?$/i);
+  const m = bare ? null : text.match(/^(stop|rest|restart|resume)\s+(?:the\s+|my\s+)?(kernel'?s\s+)?(.+?)(?:\s+intention)?\s*[.!]?$/i);
+  if (!bare && !m) return false;
+  const verb = /^(restart|resume)$/i.test(bare ? bare[2] : m[1]) ? "restart" : "stop";
+  const runner = bare && bare[1] ? bare[1].toLowerCase() : "";
+  const kernels = !!(m && m[2]), want = m ? m[3].toLowerCase().trim() : "";
   const ints = await fetch("/intentions").then(x=>x.json()).then(x => x.intentions || []).catch(()=>[]);
-  const hits = ints.filter(i => (verb === "stop" ? i.active !== false : i.active === false)      // stop a standing one · restart a rested one
-                              && (!kernels || i.kind === "kernel") && (kernels || !m[0].match(/\bmy\b/i) || i.kind !== "kernel")
-                              && (i.serves.toLowerCase() === want || (i.words || "").toLowerCase().includes(want)));
-  if (hits.length !== 1){ sysline(hits.length ? `which one? ${hits.length} intentions match “${esc(m[3])}” — ${verb} it from the ANALYZER`
-                                              : `no ${verb === "stop" ? "standing" : "rested"} intention matches “${esc(m[3])}” — the ANALYZER lists them`); return true; }
+  const standing = ints.filter(i => (verb === "stop" ? i.active !== false : i.active === false));   // stop a standing one · restart a rested one
+  let hits = standing.filter(i => (!kernels || i.kind === "kernel") && (kernels || !/\bmy\b/i.test(text) || i.kind !== "kernel"));
+  if (runner) hits = hits.filter(i => (i.runner || "").toLowerCase() === runner);
+  if (want) hits = hits.filter(i => looseMatch(i, want));
   el("msg mine", esc(text));
-  await actOnIntention({ref: hits[0].intention_id, words: hits[0].words}, verb);
+  const state = verb === "stop" ? "standing" : "rested";
+  if (hits.length === 1){ await actOnIntention({ref: hits[0].intention_id, words: hits[0].words}, verb); return true; }
+  if (hits.length > 1){ offerIntentions(hits, verb, `which one? ${hits.length} ${state} intentions match — click one`); return true; }
+  if (!standing.length){ sysline(`no ${state} intention here — the ANALYZER lists what there is`); return true; }
+  offerIntentions(standing, verb, runner ? `nothing ${state} runs on ${esc(runner)} — these ${state} intentions are here, click one`
+                                         : want ? `nothing ${state} matches “${esc(want)}” — these ${state} intentions are here, click one`
+                                                : `these ${state} intentions are here — click one to ${verb} it`);
   return true;
 }
 function whyLine(c){                             // P6 sp4: the card's line, as words
@@ -1500,6 +1539,7 @@ const monitorPull = document.getElementById("monitor");
 function toggleMonitor(open){
   const was = monitorPull.classList.contains("open");
   const now = open ?? !was;
+  if (now && !was){ toggleBand(false); toggleCrew(false); }      // W33: one pull at a time
   monitorPull.classList.toggle("open", now);
   layoutChat();
   if (now && !was){
@@ -1777,8 +1817,12 @@ async function exportWords(text){                // "export compliance" · "… 
 }
 document.getElementById("ses-list").onclick = listSessions;
 document.getElementById("ses-new").onclick = () => rollSession(true);
-(async () => {                                   // the session on load
-  let saved = null; try { saved = localStorage.getItem("orreth.session"); } catch (e) {}
+(async () => {                                   // the session on load — W27 (walk #10): a session belongs to the PERSON,
+  const r = await fetch("/sessions?person=" + encodeURIComponent(PERSON))   // not the browser's origin: the person's
+    .then(x=>x.json()).catch(()=>null);                                     // latest, from the ground — two bridges,
+  const newest = r && r.sessions && r.sessions[0];                          // two browsers, one chat
+  if (newest && newest.session_id){ await loadSession(newest.session_id); return; }
+  let saved = null; try { saved = localStorage.getItem("orreth.session"); } catch (e) {}   // the browser's memory: a hint
   if (saved && /^ses_[0-9a-f]{12}$/.test(saved)){
     const ok = await fetch("/session/" + saved).then(x => x.ok).catch(() => false);
     if (ok) { await loadSession(saved); return; }   // continue it, VISIBLY:

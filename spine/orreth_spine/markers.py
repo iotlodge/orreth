@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch markers sp1, the open vocabulary of WHY · 2026-09-19
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W21 the schedule row wears its cadence · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cure W40: the origins keep every standing intention · 2026-09-23
 """Markers (canon 0006): the kernel's open, governed vocabulary of WHY.
 A marker is a typed origin on a fact — {kind, id, parent, by}: a root
 fact mints it, a serving fact carries it, a new beginning under it mints
@@ -331,7 +332,9 @@ def with_words(conn, rows: list[dict]) -> list[dict]:
 def origins(conn, limit: int = 60) -> list[dict]:
     """The Analyzer's door (P25): every ROOT in this world — intentions and
     objectives — newest first, with what grew under each, counted by kind,
-    from the ground alone (the root column: no walk per request)."""
+    from the ground alone (the root column: no walk per request). W40
+    (walk #11): the newest `limit` roots AND every standing intention's
+    root, whatever its age — a standing purpose is never off the board."""
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute(
@@ -341,7 +344,10 @@ def origins(conn, limit: int = 60) -> list[dict]:
         "     WHERE c.scope = r.scope AND c.root = r.marker_id AND c.marker_id <> r.marker_id"
         "     GROUP BY c.kind) x)"
         " FROM spine_markers r WHERE r.scope = %s AND r.parent IS NULL"
-        " ORDER BY r.at DESC LIMIT %s", (ev.scope(), limit))
+        " AND (r.marker_id IN (SELECT n.marker_id FROM spine_markers n WHERE n.scope = %s"
+        "        AND n.parent IS NULL ORDER BY n.at DESC LIMIT %s)"
+        "   OR r.marker_id IN (SELECT i.marker FROM spine_intentions i WHERE i.scope = %s AND i.active))"
+        " ORDER BY r.at DESC", (ev.scope(), ev.scope(), limit, ev.scope()))   # W40: a standing intention is never off the board
     out = []
     for row in cur.fetchall():
         d = _row(row[:8]); d["root"] = d["id"]

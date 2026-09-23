@@ -359,6 +359,68 @@
     "topic": "orreth.watch.turned.v1",
     "correlation_id": "watch_0a1b2c3d4e"
    }
+  },
+  {
+   "name": "cannot_act (W38): 'I need to be plain with you: I cannot query watch_25d4adbe1d directly.'",
+   "kind": "cannot_act",
+   "input": {
+    "reply": "I need to be plain with you: I cannot query watch_25d4adbe1d directly. I don't have a tool that lets me read live system state."
+   },
+   "expect": {
+    "cannot": true
+   }
+  },
+  {
+   "name": "cannot_act (W38): \"I don't have a tool for that bench.\"",
+   "kind": "cannot_act",
+   "input": {
+    "reply": "I don't have a tool for that bench."
+   },
+   "expect": {
+    "cannot": true
+   }
+  },
+  {
+   "name": "cannot_act (W38): \"I lack the tool to run the harness. CANNOT ACT: the kernel's harness r\"",
+   "kind": "cannot_act",
+   "input": {
+    "reply": "I lack the tool to run the harness. CANNOT ACT: the kernel's harness runner would be needed."
+   },
+   "expect": {
+    "cannot": true
+   }
+  },
+  {
+   "name": "cannot_act (W38): 'The bench is drained; I cannot say more than that.'",
+   "kind": "cannot_act",
+   "input": {
+    "reply": "The bench is drained; I cannot say more than that."
+   },
+   "expect": {
+    "cannot": false
+   }
+  },
+  {
+   "name": "duplicate_words (W37): kernel's words already stand",
+   "kind": "duplicate_words",
+   "input": {
+    "kind": "kernel",
+    "words": "keep this world resilient: when a watch goes red, get it green"
+   },
+   "expect": {
+    "text": "an intention with these words already stands \u2014 the kernel's \u201ckeep this world resilient: when a watch goes red, get it green\u201d is at work; stop it first, or say what is different"
+   }
+  },
+  {
+   "name": "duplicate_words (W37): human's words already stand",
+   "kind": "duplicate_words",
+   "input": {
+    "kind": "human",
+    "words": "say the time every 5 seconds"
+   },
+   "expect": {
+    "text": "an intention with these words already stands \u2014 your own \u201csay the time every 5 seconds\u201d is at work; stop it first, or say what is different"
+   }
   }
  ]
 }

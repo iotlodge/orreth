@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: `set_marker` with its fact · the interest law (`dispatch_interests`) · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cure W40: the origins keep every standing intention · 2026-09-23
 //! Markers on the ground — mirrors `orreth_spine.markers` (canon 0006): the
 //! registry (the kernel's seven seeded in every world), the marker row minted
 //! WITH the fact inside the write path's own transaction, the ROOT column
@@ -491,7 +492,10 @@ pub async fn origins(g: &Ground, scope: &str, limit: i64) -> Result<Vec<Value>, 
              coalesce(json_object_agg(x.kind, x.n), '{}'::json) FROM   (SELECT c.kind, count(*) \
              AS n FROM spine_markers c     WHERE c.scope = r.scope AND c.root = r.marker_id AND \
              c.marker_id <> r.marker_id     GROUP BY c.kind) x)::text FROM spine_markers r WHERE \
-             r.scope = $1 AND r.parent IS NULL ORDER BY r.at DESC LIMIT $2",
+             r.scope = $1 AND r.parent IS NULL AND (r.marker_id IN (SELECT n.marker_id FROM \
+             spine_markers n WHERE n.scope = $1        AND n.parent IS NULL ORDER BY n.at DESC LIMIT \
+             $2)   OR r.marker_id IN (SELECT i.marker FROM spine_intentions i WHERE i.scope = $1 AND \
+             i.active)) ORDER BY r.at DESC",
             &[&scope, &limit],
         )
         .await?;

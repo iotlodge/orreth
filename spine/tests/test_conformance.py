@@ -233,6 +233,8 @@ def test_fixture(contract, case):
         assert intent.watch_note(inp["name"], inp["metric"], inp["op"], inp["threshold"], inp["value"]) == exp["text"]
     elif kind == "cannot_act":                   # W8: only the opening counts
         assert intent.cannot_act(inp["reply"]) is exp["cannot"]
+    elif kind == "duplicate_words":              # W37: a duplicate purpose is named at the door
+        assert intent.duplicate_words(inp["kind"], inp["words"]) == exp["text"]
     elif kind == "improvement_note":
         assert intent.improvement_note(inp["who"], inp["reply"]) == exp["note"]
     elif kind == "crew_hash":                    # the crew's shape, sorted, as canonical bytes

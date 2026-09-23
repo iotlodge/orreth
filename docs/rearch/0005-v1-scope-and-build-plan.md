@@ -1166,8 +1166,9 @@ approved (covenant rule 9).
   fact is walked past and committed (a projector would PARK it).
 - **sp4 — THE LOOPS** ✅ **BUILT + PUSHED 2026-09-23 (74e9edd); WALKED —
   SPEC-LOOPS-01 PASS w/ friction (walk #11: the beat lock held on every
-  count; the seconds grammar cured in the walk; W32–W40 registered, the
-  cures owed).** Watches and the monitor · the scheduler · the
+  count; the seconds grammar cured in the walk; W32–W40 registered and
+  CURED the same day — W27 · W32–W35 · W39 on the glass, W35 · W37 · W38 ·
+  W40 in both spines, W36 in the monitor's words; re-walk owed).** Watches and the monitor · the scheduler · the
   intent loop · presence and leases · the harness's world checks — the Rust
   bridge BEATS beside the Python Bridge, in SHADOW on one ground.
   **THE BEAT LOCK — the loops' shadow law (new, both spines):** a beat reads
