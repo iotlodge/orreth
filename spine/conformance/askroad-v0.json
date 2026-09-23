@@ -335,6 +335,21 @@
    "expect": {
     "text": "This needs your code. Stopping the intention \u201cgreet me by name\u201d is grave \u2014 it is recorded, and you can rest it later. Type the six digits from your authenticator, then confirm \u2014 cancel is the default, and doing nothing cancels. Three wrong codes put this act to rest."
    }
+  },
+  {
+   "name": "ask_kind: a cadence in SECONDS reads as an intention (walk #11 W.1: the words could not be extracted)",
+   "kind": "ask_kind",
+   "input": {
+    "text": "echo, every 5 seconds, say the time, please."
+   },
+   "expect": {
+    "kind": "intention",
+    "words": "echo, every 5 seconds, say the time, please.",
+    "pinned": false,
+    "serves": "resiliency",
+    "interests": [],
+    "every_s": 5
+   }
   }
  ]
 }

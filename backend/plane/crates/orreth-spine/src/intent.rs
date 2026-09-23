@@ -1,5 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
-// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the loop's words in one place · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the loop's words in one place · walk #11 W.1: a cadence in seconds · 2026-09-23
 //! The pure half of `orreth_spine.intent` that the ask door needs — P23
 //! (block 11): THE KIND OF AN ASK. The words propose it (thought · objective
 //! · intention), a typed prefix is the human's flip and wins, and an
@@ -95,15 +95,16 @@ static PREFIX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?is)^(thought|objective|intention)\s*:\s*(.+)$").unwrap());
 static INTENT: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
-        r"(?i)(\bkeep\b.{0,60}\b(resilient|green|alive|safe|secure|compliant|healthy|under|below|within)\b|\bwhen(ever)?\b.{0,60}\b(goes|turns|is|are|go)\s+(red|down|dormant|late|over)\b|\bevery\s+(\d+\s+)?(minute|hour|day|week)s?\b|\bfrom now on\b|\bwatch for\b|\bstanding\b|\bas long as\b|\bany ?time\b)",
+        r"(?i)(\bkeep\b.{0,60}\b(resilient|green|alive|safe|secure|compliant|healthy|under|below|within)\b|\bwhen(ever)?\b.{0,60}\b(goes|turns|is|are|go)\s+(red|down|dormant|late|over)\b|\bevery\s+(\d+\s+)?(second|minute|hour|day|week)s?\b|\bfrom now on\b|\bwatch for\b|\bstanding\b|\bas long as\b|\bany ?time\b)",
     )
     .unwrap()
 });
 static THOUGHT: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(?i)(\?\s*$|^(who|what|what's|whats|when|where|why|how|is|are|does|do|can|could|would|should|which|did|tell me|explain|describe|repeat)\b)").unwrap()
 });
-static EVERY: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?i)\bevery\s+(\d+\s+)?(minute|hour|day|week)s?\b").unwrap());
+static EVERY: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)\bevery\s+(\d+\s+)?(second|minute|hour|day|week)s?\b").unwrap()
+});
 static SERVES_RE: LazyLock<Vec<(&'static str, Regex)>> = LazyLock::new(|| {
     vec![
         (
@@ -132,6 +133,7 @@ static WAKES_COST: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"cost|spend|bu
 
 fn unit_seconds(unit: &str) -> i64 {
     match unit {
+        "second" => 1,
         "minute" => 60,
         "hour" => 3600,
         "day" => 86400,

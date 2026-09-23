@@ -97,13 +97,13 @@ _PREFIX = re.compile(r"^(thought|objective|intention)\s*:\s*(.+)$", re.I | re.S)
 _INTENT = re.compile(
     r"(\bkeep\b.{0,60}\b(resilient|green|alive|safe|secure|compliant|healthy|under|below|within)\b"
     r"|\bwhen(ever)?\b.{0,60}\b(goes|turns|is|are|go)\s+(red|down|dormant|late|over)\b"
-    r"|\bevery\s+(\d+\s+)?(minute|hour|day|week)s?\b|\bfrom now on\b|\bwatch for\b"
+    r"|\bevery\s+(\d+\s+)?(second|minute|hour|day|week)s?\b|\bfrom now on\b|\bwatch for\b"
     r"|\bstanding\b|\bas long as\b|\bany ?time\b)", re.I)
 _THOUGHT = re.compile(
     r"(\?\s*$|^(who|what|what's|whats|when|where|why|how|is|are|does|do|can|could|would"
     r"|should|which|did|tell me|explain|describe|repeat)\b)", re.I)
-_EVERY = re.compile(r"\bevery\s+(\d+\s+)?(minute|hour|day|week)s?\b", re.I)
-_UNIT = {"minute": 60, "hour": 3600, "day": 86400, "week": 604800}
+_EVERY = re.compile(r"\bevery\s+(\d+\s+)?(second|minute|hour|day|week)s?\b", re.I)
+_UNIT = {"second": 1, "minute": 60, "hour": 3600, "day": 86400, "week": 604800}   # walk #11 W.1: seconds read too
 _SERVES = (("cost", r"cost|spend|run rate|budget|meter|token"),
            ("security", r"secur|threat|vulnerab|attack|intrus"),
            ("compliance", r"complian|audit|regulat|policy"),

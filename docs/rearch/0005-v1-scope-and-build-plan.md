@@ -1164,8 +1164,10 @@ approved (covenant rule 9).
   differs from Python's dumps (serde sorts) — the values are equal, and the
   fixtures measure canonical bytes; the page is unchanged. The undecodable
   fact is walked past and committed (a projector would PARK it).
-- **sp4 — THE LOOPS** ✅ **BUILT 2026-09-23 — JB's review of the plane
-  diff OWED before the push.** Watches and the monitor · the scheduler · the
+- **sp4 — THE LOOPS** ✅ **BUILT + PUSHED 2026-09-23 (74e9edd); WALKED —
+  SPEC-LOOPS-01 PASS w/ friction (walk #11: the beat lock held on every
+  count; the seconds grammar cured in the walk; W32–W40 registered, the
+  cures owed).** Watches and the monitor · the scheduler · the
   intent loop · presence and leases · the harness's world checks — the Rust
   bridge BEATS beside the Python Bridge, in SHADOW on one ground.
   **THE BEAT LOCK — the loops' shadow law (new, both spines):** a beat reads
