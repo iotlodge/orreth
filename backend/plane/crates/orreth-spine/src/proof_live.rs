@@ -484,3 +484,44 @@ pub async fn hold_kernel_act(
     .await?;
     Ok(ask_id)
 }
+
+/// W35's boundary (walk #11): every act the KERNEL holds with no word for
+/// `minutes` is settled as a cancel — recorded, the act never ran — so a hold
+/// nobody answered never pauses the world forever. Returns the asks settled.
+pub async fn expire_holds(
+    g: &mut Ground,
+    w: &World,
+    minutes: i64,
+) -> Result<Vec<String>, RoadError> {
+    let mins = minutes as f64;
+    let ids: Vec<String> = g
+        .client()
+        .query(
+            "SELECT ask_id FROM spine_asks WHERE scope = $1 AND served_by = $2 AND status = \
+             'awaiting-confirm' AND asked_at < now() - make_interval(mins => $3::float8)",
+            &[&w.scope, &crate::proof::KERNEL, &mins],
+        )
+        .await?
+        .iter()
+        .map(|r| r.get(0))
+        .collect();
+    let mut out = Vec::new();
+    for aid in ids {
+        match crate::asks::settle_kernel_act(
+            g,
+            w,
+            &aid,
+            false,
+            crate::proof::KERNEL,
+            None,
+            Some(&crate::proof::expired_words(minutes)),
+        )
+        .await
+        {
+            Ok(_) => out.push(aid),
+            Err(RoadError::NotConfirmed { .. }) => {} // settled by a hand in between: one face
+            Err(e) => return Err(e),
+        }
+    }
+    Ok(out)
+}

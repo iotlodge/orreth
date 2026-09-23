@@ -832,6 +832,8 @@ pub async fn turn(g: &mut Ground, w: &World) -> Result<Value, RoadError> {
 }
 
 async fn turn_inner(g: &mut Ground, w: &World) -> Result<Value, RoadError> {
+    // W35's boundary: a hold with no word ages out — cancel is the default
+    let expired = crate::proof_live::expire_holds(g, w, crate::proof::HOLD_TTL_MIN).await?;
     let mut observed = Vec::new();
     let turned: Vec<Value> = crate::monitor::judge(g, w)
         .await?
@@ -867,5 +869,7 @@ async fn turn_inner(g: &mut Ground, w: &World) -> Result<Value, RoadError> {
     let due = due(g, w).await?;
     let filed = file_objectives(g, w).await?;
     let heard = hear_runners(g, w).await?; // W8: a runner that cannot act is heard once
-    Ok(json!({"observed": observed, "due": due, "filed": filed, "heard": heard}))
+    Ok(
+        json!({"observed": observed, "due": due, "filed": filed, "heard": heard, "expired": expired}),
+    )
 }

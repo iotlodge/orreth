@@ -788,11 +788,13 @@ pub async fn settle_kernel_act(
         (format!("{KERNEL}: {n}"), r, "replied", level.clone())
     } else {
         let why = reason.unwrap_or("the human cancelled");
-        let r = if reason.is_some() {
-            "Rested — three wrong proofs were given, so nothing was done. The act is at rest, \
-             recorded; ask again when you are ready."
-        } else {
-            "Cancelled — nothing was done. Cancel is always the default here."
+        let r = match reason {
+            Some(r) if r.starts_with("no word came") => crate::proof::EXPIRED_REPLY,
+            Some(_) => {
+                "Rested — three wrong proofs were given, so nothing was done. The act is at rest, \
+                 recorded; ask again when you are ready."
+            }
+            None => "Cancelled — nothing was done. Cancel is always the default here.",
         };
         (
             format!("{KERNEL}: {why} — the {tool} act never ran (cancel is always the default)"),

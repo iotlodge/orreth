@@ -233,6 +233,8 @@ def test_fixture(contract, case):
         assert intent.watch_note(inp["name"], inp["metric"], inp["op"], inp["threshold"], inp["value"]) == exp["text"]
     elif kind == "cannot_act":                   # W8: only the opening counts
         assert intent.cannot_act(inp["reply"]) is exp["cannot"]
+    elif kind == "hold_expiry":                  # W35's boundary: doing nothing cancels, after the window
+        assert (proof.HOLD_TTL_MIN, proof.expired_words(), proof.EXPIRED_REPLY) == (exp["minutes"], exp["reason"], exp["reply"])
     elif kind == "duplicate_words":              # W37: a duplicate purpose is named at the door
         assert intent.duplicate_words(inp["kind"], inp["words"]) == exp["text"]
     elif kind == "improvement_note":

@@ -307,12 +307,24 @@ def test_walk11_a_stop_asked_is_a_stop_held_a_duplicate_is_named_and_a_standing_
     t = intent.turn(pg)
     assert t["due"] == [] and t["filed"] == []                          # held: the loop stands still for it
     assert kern["intention_id"] not in [d["intention_id"] for d in t["due"]]
-    # a cancel resumes it: the answered plan is filed, the cadence beats again
-    proof.settle_kernel_act(pg, held, approve=False, by=ME)
-    assert intent.held_stops(pg) == set()
+    # W35's boundary: a hold with no word for 15 minutes ages out on the beat — cancel is the default, recorded
+    pg.cursor().execute("UPDATE spine_asks SET asked_at = now() - interval '16 minutes' WHERE ask_id = %s", (held,))
     t = intent.turn(pg)
-    assert [f["intention_id"] for f in t["filed"]] == [mine["intention_id"]]
+    assert t["expired"] == [held] and intent.held_stops(pg) == set()
+    hv = glass.ask_view(pg, held)
+    assert hv["status"] == "cancelled" and hv["reply"] == proof.EXPIRED_REPLY
+    assert any("no word came in 15 minutes" in j for j in hv["journey"])
+    assert [f["intention_id"] for f in t["filed"]] == [mine["intention_id"]]   # and the loop resumed in the same beat
     assert [d["intention_id"] for d in t["due"]] == [mine["intention_id"]]
+    # a cancel by hand resumes it too
+    held2 = proof.hold_kernel_act(pg, text="stopping your intention", person=ME, tool="intent.stop",
+                                  args={"intention_id": mine["intention_id"]}, level="L3-code")
+    assert intent.turn(pg)["due"] == []
+    proof.settle_kernel_act(pg, held2, approve=False, by=ME)
+    assert intent.held_stops(pg) == set()
+    pg.cursor().execute("UPDATE spine_intentions SET next_at = now() WHERE intention_id = %s", (mine["intention_id"],))
+    t = intent.turn(pg)
+    assert t["filed"] == [] and [d["intention_id"] for d in t["due"]] == [mine["intention_id"]]
     # W38: the honest word in more than one shape
     assert intent.cannot_act("I need to be plain with you: I cannot query the watch directly. I don't have a tool.")
     assert intent.cannot_act("I lack the tool to run the harness. CANNOT ACT: the kernel's runner would be needed.")

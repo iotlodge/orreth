@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the kernel holds and settles `service.retire` at L2 · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the confirmer rides the retire fact's chain (a body proposed, the human cut) · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W20 the kernel settles a restart · W23 the words (rule 11) · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures, W35's boundary: a kernel-held act with no word for 15 minutes is cancelled by the default (`expire_holds`) · 2026-09-23
 """The proof demand rises to meet the consequence (canon 0001 P12 · 0005 P6 sp1).
 
 Every act wears a CONSEQUENCE CLASS — routine · consequential · grave —
@@ -374,6 +375,37 @@ def question_for(level: str, what: str, needs_code: bool = False) -> str:
             "is the default, and doing nothing cancels. Three wrong codes put this act to rest.")
 
 
+HOLD_TTL_MIN = 15                      # the interlock's window: "doing nothing cancels"
+
+
+def expired_words(minutes: int = HOLD_TTL_MIN) -> str:
+    """The reason recorded when a kernel-held act ages out (conformance `hold_expiry`)."""
+    return f"no word came in {minutes} minutes — doing nothing cancels"
+
+
+EXPIRED_REPLY = ("Cancelled — no word came, and doing nothing cancels. Nothing was done; "
+                 "ask again when you are ready.")
+
+
+def expire_holds(conn, minutes: int = HOLD_TTL_MIN) -> list[str]:
+    """W35's boundary (walk #11): every act the KERNEL holds with no word for
+    `minutes` is settled as a cancel — recorded, the act never ran — so a
+    hold nobody answered never pauses the world forever (three stale stops
+    were found holding the kernel's Resiliency). Returns the asks settled."""
+    cur = conn.cursor()
+    cur.execute("SELECT ask_id FROM spine_asks WHERE scope = %s AND served_by = %s"
+                " AND status = 'awaiting-confirm' AND asked_at < now() - make_interval(mins => %s)",
+                (ev.scope(), KERNEL, int(minutes)))
+    out = []
+    for (aid,) in cur.fetchall():
+        try:
+            settle_kernel_act(conn, aid, approve=False, by=KERNEL, reason=expired_words(minutes))
+            out.append(aid)
+        except NotConfirmed:
+            pass                                    # settled by a hand in between: one face
+    return out
+
+
 def hold_kernel_act(conn, *, text: str, person: str, tool: str, args: dict,
                     level: str, session: str | None = None,
                     cls: str = "grave", needs_code: bool = False) -> str:
@@ -472,8 +504,9 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
         else:
             why = reason or "the human cancelled"
             note(f"{why} — the {held['tool']} act never ran (cancel is always the default)")
-            reply = ("Rested — three wrong proofs were given, so nothing was done. The act "
-                     "is at rest, recorded; ask again when you are ready." if reason
+            reply = (EXPIRED_REPLY if reason and reason.startswith("no word came")
+                     else "Rested — three wrong proofs were given, so nothing was done. The act "
+                          "is at rest, recorded; ask again when you are ready." if reason
                      else "Cancelled — nothing was done. Cancel is always the default here.")
             status, proof = "cancelled", "L1"
         cur.execute("UPDATE spine_asks SET status = %s, reply = %s, proof = %s,"

@@ -659,7 +659,8 @@ def crew_shape_hash(shape: list) -> str:
 
 
 def _turn(conn) -> dict:
-    from . import markers
+    from . import markers, proof
+    expired = proof.expire_holds(conn)       # W35's boundary: a hold with no word ages out — cancel is the default
     observed = []
     for w in _watch_transitions(conn):
         note = watch_note(w["name"], w["metric"], w["op"], w["threshold"], w["value"])
@@ -671,4 +672,4 @@ def _turn(conn) -> dict:
     due = _due(conn)
     filed = _file_objectives(conn)
     heard = _hear_runners(conn)          # W8: a runner that cannot act is heard once
-    return {"observed": observed, "due": due, "filed": filed, "heard": heard}
+    return {"observed": observed, "due": due, "filed": filed, "heard": heard, "expired": expired}

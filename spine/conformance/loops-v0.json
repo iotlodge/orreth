@@ -421,6 +421,16 @@
    "expect": {
     "text": "an intention with these words already stands \u2014 your own \u201csay the time every 5 seconds\u201d is at work; stop it first, or say what is different"
    }
+  },
+  {
+   "name": "hold_expiry (W35's boundary): a kernel-held act with no word ages out \u2014 the window, the reason, the reply",
+   "kind": "hold_expiry",
+   "input": {},
+   "expect": {
+    "minutes": 15,
+    "reason": "no word came in 15 minutes \u2014 doing nothing cancels",
+    "reply": "Cancelled \u2014 no word came, and doing nothing cancels. Nothing was done; ask again when you are ready."
+   }
   }
  ]
 }

@@ -69,6 +69,7 @@ const PORTED_KINDS: &[&str] = &[
     "cannot_act",
     "improvement_note",
     "duplicate_words",
+    "hold_expiry",
     "crew_hash",
     "turned_fact",
 ];
@@ -685,6 +686,23 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             s(&exp["note"]).to_string(),
             "the note"
         ),
+        "hold_expiry" => {
+            same!(
+                Value::from(proof::HOLD_TTL_MIN),
+                exp["minutes"],
+                "the window"
+            );
+            same!(
+                proof::expired_words(proof::HOLD_TTL_MIN),
+                s(&exp["reason"]).to_string(),
+                "the reason"
+            );
+            same!(
+                Value::String(proof::EXPIRED_REPLY.into()),
+                exp["reply"],
+                "the reply"
+            );
+        }
         "duplicate_words" => same!(
             intent::duplicate_words(s(&inp["kind"]), s(&inp["words"])),
             s(&exp["text"]).to_string(),

@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures, W35's boundary: the hold's window and words · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: otpauth · the hold's words · 2026-09-22
 //! `orreth.proof/1` — the pure half of `orreth_spine.proof` and the stop's
 //! demand from `orreth_spine.intent`: the code (TOTP per RFC 6238 — HMAC-SHA1,
@@ -231,6 +232,17 @@ pub const LEVELS: [&str; 4] = ["L1", "L2", "L3-code", "L3-master"];
 pub const KERNEL: &str = "the kernel";
 /// Three wrong proofs rest the act.
 pub const REST_AFTER: i64 = 3;
+/// The interlock's window: "doing nothing cancels" — a kernel-held act with no
+/// word for this many minutes is cancelled by the default (W35's boundary).
+pub const HOLD_TTL_MIN: i64 = 15;
+pub const EXPIRED_REPLY: &str =
+    "Cancelled — no word came, and doing nothing cancels. Nothing was done; \
+                                 ask again when you are ready.";
+
+/// The reason recorded when a kernel-held act ages out.
+pub fn expired_words(minutes: i64) -> String {
+    format!("no word came in {minutes} minutes — doing nothing cancels")
+}
 /// Rule 4: the outer face, always — `{"error": "not confirmed"}`.
 pub fn one_face() -> Value {
     json!({"error": "not confirmed"})

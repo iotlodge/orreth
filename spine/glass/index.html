@@ -958,7 +958,7 @@ function renderOutcome(id, v, line){
                                                                             : "held — this needs your code · cancel is the default")
                               : step === "master" ? "held — this needs a second named person · cancel is the default"
                               : "held at the interlock — your word decides");
-    PENDING[id]._row = row; PENDING[id]._stopping = line._stopping;
+    PENDING[id]._row = row; PENDING[id]._stopping = line._stopping; PENDING[id]._verb = line._verb;   // the verb rides along: "standing again", not "at rest", after a restart
     return;
   }
   if (line._row){                                                                            // the hold settled:
@@ -1324,11 +1324,13 @@ function offerIntentions(rows, verb, head){       // the choice, one click each 
 }
 async function stopWords(text){                  // W34 · W39 (walk #11): "stop" · "echo, stop" · "stop my time intention" — never the exact words
   const bare = text.match(/^(?:([a-z][a-z0-9_-]*),\s*)?(stop|rest|restart|resume)\s*[.!]?$/i);
-  const m = bare ? null : text.match(/^(stop|rest|restart|resume)\s+(?:the\s+|my\s+)?(kernel'?s\s+)?(.+?)(?:\s+intention)?\s*[.!]?$/i);
+  // "echo, restart intention 'every 5 seconds'" · "stop my time intention" · "restart the kernel's resiliency intention"
+  const m = bare ? null : text.match(/^(?:([a-z][a-z0-9_-]*),\s*)?(stop|rest|restart|resume)\s+(?:the\s+|my\s+)?(?:intention\s+)?(kernel'?s\s+)?(.+?)(?:\s+intention)?\s*[.!]?$/i);
   if (!bare && !m) return false;
-  const verb = /^(restart|resume)$/i.test(bare ? bare[2] : m[1]) ? "restart" : "stop";
-  const runner = bare && bare[1] ? bare[1].toLowerCase() : "";
-  const kernels = !!(m && m[2]), want = m ? m[3].toLowerCase().trim() : "";
+  const verb = /^(restart|resume)$/i.test(bare ? bare[2] : m[2]) ? "restart" : "stop";
+  const runner = ((bare ? bare[1] : m[1]) || "").toLowerCase();
+  const kernels = !!(m && m[3]);
+  const want = m ? m[4].toLowerCase().trim().replace(/^["'“‘]+|["'”’]+$/g, "").trim() : "";
   const ints = await fetch("/intentions").then(x=>x.json()).then(x => x.intentions || []).catch(()=>[]);
   const standing = ints.filter(i => (verb === "stop" ? i.active !== false : i.active === false));   // stop a standing one · restart a rested one
   let hits = standing.filter(i => (!kernels || i.kind === "kernel") && (kernels || !/\bmy\b/i.test(text) || i.kind !== "kernel"));
