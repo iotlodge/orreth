@@ -38,7 +38,7 @@ def test_the_crew_door_shows_every_body_and_both_sides(pg, monkeypatch):
     cards = {c["name"]: c for c in glass.crew_view(pg)}
     assert set(cards) == {"echo", "librarian"}
     lib = cards["librarian"]
-    assert lib["kind"] == "resident" and lib["policy_version"] == "1.0.0"
+    assert lib["kind"] == "resident" and lib["policy_version"] == "1.1.0"
     assert "tools:weather" in lib["capabilities"]            # declared at the join
     assert cards["echo"]["side_a"]["asks_served"] == 1 and lib["side_a"]["asks_served"] == 0
     duties = lib["side_b"]
@@ -75,7 +75,7 @@ def test_the_crew_door_answers_over_http_with_the_whole_rig(pg, rig):
     with urllib.request.urlopen(f"http://127.0.0.1:{rig.port}/crew", timeout=10) as r:
         cards = {c["name"]: c["kind"] for c in json.loads(r.read())["crew"]}
     assert cards == {"librarian": "resident", "echo": "resident", "planner": "firmware",
-                     "critic": "firmware", "grader": "firmware", "crew": "firmware",
+                     "critic": "firmware", "grader": "firmware", "crew": "firmware", "stablekeeper": "firmware",
                      "monitor": "firmware",
                      "mitl": "firmware",      # P6 sp3: MITL, the fourth include, is born with the rig
                      "toolkeeper": "firmware"}   # P6.5 sp2: the Tools keeper, born with the rig

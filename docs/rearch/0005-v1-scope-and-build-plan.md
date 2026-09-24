@@ -1426,13 +1426,74 @@ Two tracks never share a builder's files at once — the fixtures and
   is ONE name on the shelf (two servers offering the same tool name: the
   second is refused by name in the sync), no seed catalog, no allocations.
 - **sp3 — the Stable keeper** (firmware, third kind — 0004's LLM-lifecycle
-  watcher, ada's seat): a registry of minds wherever they reside —
-  Anthropic direct · LiteLLM · OpenRouter · local — each a service on the
-  ladder with its route, cost per token, health, pins; routing policy per
-  body and per ask (the five-eyed market, 0058); the meter in DOLLARS; the
-  A/B harness on a model change ("model changed without an announcement");
-  gateway.py becomes the one door that consults the registry. Fixture
-  `minds-v0` (routing decisions, cost arithmetic).
+  watcher, ada's seat) ✅ **BUILT 2026-09-24 — walk OWED (JB in the glass,
+  SPEC-MINDS-01)**. **JB's lock at the open (2026-09-24): "I want 100%
+  token/cost tracking through LiteLLM" → THE GATEWAY IS LITELLM, run and
+  managed by Orreth** — `spine/compose.yaml` gains the `gateway` box
+  (`ghcr.io/berriai/litellm`, host :4604, its own `litellm` database on the
+  ground, `dev.sh up` makes it once; provider keys ride in from the shell's
+  environment only). "LiteLLM executes; the registry knows and decides"
+  (0058): `orreth_spine/stable.py` — a mind wherever it resides (Anthropic ·
+  OpenRouter · Ollama on the host · any OpenAI-compatible base) is a STALL: a
+  service of kind `mind` on the one ladder whose manifest is the DEAL (model
+  · provider · route · price per million in/out · context · modalities ·
+  class · the key by env NAME — a value is refused) AND a model entry the
+  Stable writes into the gateway (`/model/new`, `os.environ/NAME`);
+  registering writes it, retiring drops it, restoring rewrites it. **Every
+  body thinks through the gateway with ITS OWN virtual key** (`gateway.py`
+  `LiteLLMGateway`, the one lane; the Anthropic SDK left the think path)
+  minted once with the default lease — **the fuel clause is the gateway's
+  native budget** (`max_budget` + `budget_duration` = `budget.renew_days`;
+  `SPINE_LEASE_USD` · `SPINE_LEASE_RENEW_DAYS`), a `orreth.mind.fueled.v1`
+  fact; a drained lease (the gateway's 429) is said in words ("I am out of
+  fuel — …'s allowance of $1 for this window is spent … A refill is one
+  word away") and metered as a failed line; the keeper proposes the refill.
+  **The meter in DOLLARS**: every line carries the cost the answer wore
+  (`x-litellm-response-cost`; the pin's price when streamed — never a
+  guess), the stall, the gateway's request id, `ok` + the reason on
+  failure, the confessed degrade. **Routing** (`resolve`, the fixture's):
+  an ask's PIN (a pinned mind that does not stand refuses, never climbs) →
+  the body's ASSIGNMENT for the class (`spine_mind_assignments`, facts
+  assigned/unassigned) → the template's model → the cheapest standing stall
+  of the class → a neighbouring class, confessed. **The market's eyes**:
+  the gateway's own price map (`/model/info`) and OpenRouter's keyless
+  catalog — drift (the price or the context moved under the pin) marks the
+  stall UNHEALTHY with what moved and the keeper proposes a RE-PIN; an
+  expiry inside the horizon (`SPINE_EOL_HORIZON_DAYS`, 30) proposes RETIRE
+  with the swap named (same class → fit → nearest price → newest). **The
+  keeper** (`templates/firmware-stablekeeper.v0.json`, `tools:minds`): its
+  beat every `SPINE_MIND_CHECK_S` (600) pings every mind through the
+  gateway under ITS OWN DID (metered), then drift · EOL · drained · strikes
+  → proposals, each ONE hold at the interlock (the kernel's acts
+  `mind.register · mind.assign · mind.unassign · mind.refill · mind.repin`
+  + `service.retire`, L2, cancel the default, settled on proof's path);
+  the keeper never acts alone. **The `minds` tool**: register · check ·
+  search · list · assign · unassign · fuel · refill · spend · retire ·
+  restore · repin · changes; the consequential ones hold. **Monitoring
+  grows with the farm**: `minds_standing · minds_unhealthy · usd_today ·
+  route_failures_1h · meter_rate_10m · bodies_drained` (watchable), THE
+  STABLE view in the Monitoring pull, the mind cards on the shelf wear the
+  deal and the spend. **The harness**: model ARMS (`harness.ab`, the same
+  golden cases against two stalls, each run pinned to its arm; the verdict
+  a proposal in words) and four world checks — every mind answers · the
+  gateway answers and holds every mind · the meter and the gateway agree
+  (the 100%) · a model change is announced. **Doors**: `GET /minds ·
+  /minds/search · /minds/spend · /minds/fuel`, `POST /minds · /minds/assign
+  · /minds/unassign · /minds/refill` (202 held) · `/minds/check ·
+  /minds/retire · /minds/restore` · `/harness/ab`. **Rule 13 landed in the
+  policy** (`covenant-policy.v1.json` 1.1.0, 13 rules). Walk #10's
+  frictions cured: W28 a server names itself · W29 a keeper's follow-up
+  stays with the keeper · W30 the interlock names the act · W31 "show the
+  tools". Fixture **`minds-v0.json`** (62 cases: route_for · usd ·
+  budget_duration · resolve · drift · eol_due · recommend · deal ·
+  deal_refuses · drained_words · act_words · server_name) — the Rust
+  runner reads them "not yet ported" until P7 sp6. Suite: `test_stable.py`
+  (7 laws over a fake gateway that speaks LiteLLM's wire — no spend) ·
+  proven LIVE against the real box before the tests were written.
+  **Honest limits**: the meter is world-wide (no scope column — the
+  rollup counts every world on the ground); a streamed answer's cost is
+  the pin's arithmetic, reconciled by the harness; no Ollama/OpenRouter
+  walked yet (JB's keys are on the host; the walk says).
 - **sp4 — the embedding lane and the Farms.** pgvector on the ground; one
   embedding truth (0069: vectors wear their model); understanding gains
   the meaning axis beside tsvector; sources as identities (the Basket, the

@@ -326,7 +326,7 @@ def test_the_built_ins_register_at_birth_and_the_shelf_door_lists_every_kind(pg,
         time.sleep(0.3)
     by_name = {s["name"]: s for s in shelf}
     assert set(by_name) == {"weather", "acquire", "mark", "purge-memory", "add-watch", "seal-record",
-                            "erase-record", "services", "ground", "record"}   # no gateway: no mind seeded (honest);
+                            "erase-record", "services", "minds", "ground", "record"}   # no gateway: no mind seeded (honest);
     # (P6.5 sp2: the keeper's `services` tool is a built-in on the shelf too — eight tools now)
     assert {s["kind"] for s in shelf} == {"tool", "store"}
     assert all(s["did"].startswith("did:orreth:service:") and s["state"] == "healthy" for s in shelf)

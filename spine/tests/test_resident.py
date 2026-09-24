@@ -96,9 +96,9 @@ def test_no_policy_no_join_ever(pg):
 def test_join_wears_the_policy_version(pg):
     r = resident.Resident(TEMPLATE)
     pol = r.load_policy(POLICY)
-    assert pol["version"] == "1.0.0" and pol["rules"] == 12
+    assert pol["version"] == "1.1.0" and pol["rules"] == 13
     joined = r.join(pg)
-    assert joined["policy_version"] == "1.0.0"
+    assert joined["policy_version"] == "1.1.0"
     cur = pg.cursor()
     cur.execute("SELECT policy_hash, template_hash, sig FROM spine_joins"
                 " WHERE did = %s ORDER BY join_id DESC LIMIT 1",

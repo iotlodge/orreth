@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P4 sp4, the Monitoring workspace · 2026-09-18
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W14 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W22 an offer is a proposal · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the farm's metrics: the Monitoring grows with the Stable · 2026-09-24
 """The Monitoring workspace's ground (canon 0001: "if it's monitoring, it
 goes here"): the live snapshot of the Operating State — rails, benches,
 bodies, asks, the last harness run — and the WATCHES: named checks the
@@ -29,7 +30,10 @@ from .rails import RABBIT_URL
 WATCH_TURNED = "orreth.watch.turned.v1"     # a watch changed state: red ↔ green
 
 METRICS = ("outbox_pending", "oldest_outbox_age_s", "asks_received",
-           "bodies_alive", "bodies_dormant")
+           "bodies_alive", "bodies_dormant",
+           # P6.5 sp3: the farm's metrics — the Monitoring grows with the Stable
+           "minds_standing", "minds_unhealthy", "usd_today", "route_failures_1h", "meter_rate_10m",
+           "bodies_drained")
 OPS = {"<=": lambda v, t: v <= t, ">=": lambda v, t: v >= t,
        "<": lambda v, t: v < t, ">": lambda v, t: v > t, "==": lambda v, t: v == t}
 
@@ -142,6 +146,45 @@ def _topic_depth() -> int | None:
         return None
 
 
+def _farm(conn) -> dict:
+    """P6.5 sp3: the Stable's numbers off the ground — minds standing and
+    unhealthy, dollars today, route failures in the last hour, the
+    meter's rate over ten minutes, bodies out of fuel."""
+    out = {"minds_standing": 0, "minds_unhealthy": 0, "usd_today": 0.0, "route_failures_1h": 0,
+           "meter_rate_10m": 0.0, "bodies_drained": 0}
+    cur = conn.cursor()
+    if _has_table(conn, "spine_services"):
+        cur.execute("SELECT count(*) FILTER (WHERE state IN ('registered','versioned','healthy')),"
+                    " count(*) FILTER (WHERE state = 'unhealthy') FROM spine_services WHERE scope = %s AND kind = 'mind'",
+                    (ev.scope(),))
+        r = cur.fetchone(); out["minds_standing"], out["minds_unhealthy"] = int(r[0]), int(r[1])
+    if _has_table(conn, "spine_meter"):
+        cur.execute("SELECT coalesce(sum(usd) FILTER (WHERE at >= date_trunc('day', now())), 0),"
+                    " count(*) FILTER (WHERE ok = false AND at >= now() - interval '1 hour'),"
+                    " count(*) FILTER (WHERE at >= now() - interval '10 minutes') FROM spine_meter")
+        r = cur.fetchone()
+        out["usd_today"] = round(float(r[0]), 6); out["route_failures_1h"] = int(r[1])
+        out["meter_rate_10m"] = round(int(r[2]) / 10.0, 2)
+    if _has_table(conn, "spine_mind_keys"):
+        cur.execute("SELECT count(*) FROM spine_mind_keys WHERE scope = %s AND drained_at IS NOT NULL", (ev.scope(),))
+        out["bodies_drained"] = int(cur.fetchone()[0])
+    return out
+
+
+def _stable(conn) -> dict:
+    """The Stable's face: each mind's words and spend, the assignments."""
+    if not _has_table(conn, "spine_services"):
+        return {"minds": [], "assignments": []}
+    from . import stable
+    try:
+        minds = [{"name": s["name"], "state": s["state"], "words": stable.stall_words(s),
+                  "spend": s.get("spend"), "last": (s.get("last_health") or {}).get("detail")}
+                 for s in stable.stalls(conn)]
+        return {"minds": minds, "assignments": stable.assignments(conn)}
+    except Exception as e:                            # noqa: BLE001 — the face never breaks the snapshot
+        return {"minds": [], "assignments": [], "error": f"{type(e).__name__}: {e}"}
+
+
 def snapshot(conn, *, rails: bool = True) -> dict:
     """The Operating State, live, for this world."""
     from .resident import ensure_schema as _ground   # lazily: no import cycle
@@ -166,6 +209,8 @@ def snapshot(conn, *, rails: bool = True) -> dict:
         "bodies_alive": len(alive),
         "bodies_dormant": len(bodies) - len(alive),
     }
+    values.update(_farm(conn))
+    stable_view = _stable(conn)
     cur.execute("SELECT watch_id, name, metric, op, threshold, added_by, last_ok, since"
                 " FROM spine_watches WHERE scope = %s ORDER BY added_at", (ev.scope(),))
     watches = []
@@ -192,6 +237,7 @@ def snapshot(conn, *, rails: bool = True) -> dict:
         "topic_depth": _topic_depth() if rails else None,
         "harness": ({"template": last[0], "version": last[1], "passed": last[2],
                      "failed": last[3], "ran_at": last[4].isoformat()} if last else None),
+        "stable": stable_view,                        # P6.5 sp3: the farm's face in the Monitoring
     }
 
 

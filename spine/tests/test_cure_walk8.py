@@ -69,7 +69,7 @@ class PackGateway:
     def __init__(self):
         self.calls = []
 
-    def think(self, conn, *, did, system, prompt, model=None, max_tokens=1024, on_delta=None):
+    def think(self, conn, *, did, system, prompt, model=None, max_tokens=1024, on_delta=None, **_):
         from orreth_spine import gateway
         gateway.ensure_schema(conn)
         self.calls.append({"system": system, "prompt": prompt})
@@ -259,7 +259,9 @@ def test_w21_the_harness_catches_a_duty_refused_and_passes_a_note(pg, monkeypatc
     assert [x["name"] for x in harness.checks(pg)] == ["a duty answered, not refused", "the monitor's offers arrive as holds",
                                                       "every service healthy or retired",      # P6.5 sp1 added the third
                                                       "every MCP server answers initialize",   # P6.5 sp2 the fourth and fifth
-                                                      "the keeper proposes after strikes, never retires alone"]
+                                                      "the keeper proposes after strikes, never retires alone",
+                                                      "every mind answers", "the gateway answers and holds every mind",   # P6.5 sp3: four more
+                                                      "the meter and the gateway agree", "a model change is announced"]
     assert harness.checks(pg)[0]["ok"] is False
     _land(pg, occ["ref"], "nothing new since 7:12 PM", lib.identity.did)
     assert harness.duty_answered(pg)["ok"] is True
@@ -309,7 +311,7 @@ def test_w23_the_interlock_says_recorded_and_restable_never_cannot_be_undone(pg,
     src = (SPINE / "orreth_spine" / "resident.py").read_text()
     assert "cannot be undone" not in src and "cannot be undone" not in (SPINE / "orreth_spine" / "proof.py").read_text()
     # (the purge-memory and the test-only erase-record TOOL descriptions keep the phrase: those acts truly cannot be undone)
-    assert 'interlock_words(held["tool"])' in src                                   # the source, not a copy
+    assert 'interlock_words_for(held["tool"]' in src                                # the source, not a copy (sp3: the act named, W30)
 
 
 # ---- W24: a body's nature once, on its chip ------------------------------------------------

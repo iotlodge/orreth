@@ -1,7 +1,7 @@
 {
   "format": "orreth-covenant-policy/1",
   "name": "the-orreth-covenant",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "rules": [
     "A keypair is a self, and a self survives the process — a new identity per run is a defect, never a feature.",
     "Nothing grades its own yardstick — outcomes are recorded by another, never self-attested.",
@@ -14,6 +14,7 @@
     "The core is sacred — it changes only with the human's explicit word.",
     "Provenance or nothing — every artifact names its author.",
     "The human can always stop what the machine manages — cancellation is a first-class recorded act.",
-    "Every ask wears its journey, and every schedule lives in its runner — nothing runs unseen."
+    "Every ask wears its journey, and every schedule lives in its runner — nothing runs unseen.",
+    "Every word aimed at a human is plain — complete, in the human's own terms; a machinery name only beside its plain words, never instead of them."
   ]
 }

@@ -1448,9 +1448,15 @@ function serviceCard(s){
   const mcpLine = s.kind === "mcp" ? `<div class="meta">${esc(m.transport || "?")} · at ${esc(m.locator || "?")} · ${(m.tools || []).length} tool${(m.tools || []).length === 1 ? "" : "s"} listed` +
                     (s.last_health ? ` · last listed ${hhmm(s.last_health.at)}` : " · never listed") + `</div>` : "";
   const under = s.kind === "tool" && m.server ? `<div class="meta">through the ${esc(m.server)} MCP server · ${esc(m.consequence || "routine")}</div>` : "";
+  // P6.5 sp3: a mind wears its DEAL — where it resides, its class, its price per million in and out, its context — and what it has cost
+  const sp = s.spend || {};
+  const mindLine = s.kind === "mind" ? `<div class="meta">${esc(m.provider || "?")} ${esc(m.model || "?")} · ${esc(m.class || "standard")} · $${(m.price || {}).in_per_m ?? 0} in / $${(m.price || {}).out_per_m ?? 0} out per million` +
+                    (m.context ? ` · context ${Number(m.context).toLocaleString()}` : "") + (m.key ? ` · key ${esc(m.key)} (by name)` : " · no key needed") +
+                    `</div><div class="meta">${sp.calls ? `spent $${(sp.usd || 0).toFixed(4)} over ${sp.calls} call${sp.calls === 1 ? "" : "s"} ($${(sp.usd_today || 0).toFixed(4)} today)` : "never called"}` +
+                    (sp.failed ? ` · ${sp.failed} could not think` : "") + `</div>` : "";
   d.innerHTML = `<h5><span class="kind">${esc(s.kind)}</span>${esc(s.name)} <span class="meta">· ${esc(stateWords(s))}</span></h5>` +
     `<div class="meta">self …${esc(s.did.slice(-8))} · pin ${esc(s.manifest_hash.slice(7, 19))} · v${s.version} · by ${esc(whoIs(s.by))}</div>` +
-    mcpLine + under +
+    mcpLine + under + mindLine +
     `<div class="stands">${esc(p.why || "")}${secrets}</div>` +
     `<div class="health ${(s.last_health || {}).ok === false ? "bad" : ""}">health: ${esc(healthWords(s))}</div>` +
     (s.retirable ? `<span class="assist" data-retire title="consequential — held at the interlock in the chat; cancel is the default">retire ${esc(s.name)} → the interlock</span>`
@@ -1461,8 +1467,10 @@ function serviceCard(s){
 }
 async function loadShelf(box){
   const r = await fetch("/services").then(x=>x.json()).catch(()=>null);
+  const st = await fetch("/minds").then(x=>x.json()).catch(()=>null);      // P6.5 sp3: the Stable's spend rides the mind cards
+  if (r && st) for (const s of r.services) if (s.kind === "mind"){ const m = (st.minds || []).find(x => x.name === s.name); if (m) s.spend = m.spend; }
   const head = document.createElement("div"); head.className = "shelf-head";
-  head.textContent = "THE SHELF · every service the kernel governs — tool · mcp · store · source · mind · one ladder: registered → versioned → healthy | unhealthy → retired";
+  head.textContent = "THE SHELF · every service the kernel governs — tool · mcp · store · source · mind · one ladder: registered → versioned → healthy | unhealthy → retired · a mind is a stall in the Stable and a model entry in the gateway";
   box.appendChild(head);
   if (!r){ box.insertAdjacentHTML("beforeend", `<div class="meta">the shelf door did not answer</div>`); return; }
   if (!r.services.length){ box.insertAdjacentHTML("beforeend", `<div class="meta">nothing on the shelf yet — the kernel registers its built-ins at boot</div>`); return; }
@@ -1476,6 +1484,18 @@ async function loadShelf(box){
     const card = serviceCard(s); box.appendChild(card);
     for (const t of (nested.get(s.name) || [])){ const tc = serviceCard(t); tc.classList.add("under"); box.appendChild(tc); }
   }
+}
+async function mindDoor(path, body, words){        // P6.5 sp3: a Stable act — held by the kernel at L2; the interlock arrives in the chat
+  toggleChat(true);
+  const r = await fetch(path, {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify(Object.assign({person: PERSON, session: SESSION || undefined}, body))}).then(x=>x.json()).catch(()=>null);
+  if (r && r.held){
+    PENDING[r.held] = el("journey", words);
+    const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);
+    if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
+    return;
+  }
+  sysline(r && r.error ? esc(r.error) : "the Stable's door did not answer");
 }
 async function retireService(name, kind){          // consequential (L2): the kernel holds it — the interlock arrives in the chat
   toggleChat(true);
@@ -1501,10 +1521,49 @@ const SERVICE_KINDS = {service: null, services: null, tool: "tool", tools: "tool
                        store: "store", stores: "store", source: "source", sources: "source", mcp: "mcp", mcps: "mcp", shelf: null};
 async function serviceWords(text){                 // "what services are here?" · "what tools are here?" · "retire the weather tool" · "check the services"
   const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
-  let m = t.match(/^(?:what|which)\s+(services?|tools?|minds?|stores?|sources?|mcps?)\s+(?:are|is)\s+(?:here|on the shelf|registered)$/);
+  // P6.5 sp3: the Stable's own words — the mind cards in words, a body's fuel, a refill, an assignment (held at the interlock)
+  let m = t.match(/^(?:what|which)\s+minds?\s+(?:are|is)\s+(?:here|in the stable|registered|standing)$|^show\s+(?:me\s+)?(?:the\s+)?(?:minds|stable)$|^(?:what'?s|what is)\s+in the stable$/);
   if (m){
     el("msg mine", esc(text));
-    const kind = SERVICE_KINDS[m[1]];
+    const r = await fetch("/minds").then(x=>x.json()).catch(()=>null);
+    if (!r){ sysline("the Stable's door did not answer"); return true; }
+    if (!r.minds.length){ sysline("no mind in the Stable yet — say “stablekeeper, add the mind ollama llama3.2 as llama”"); return true; }
+    for (const s of r.minds) sysline(`<b>mind</b> · ${esc(s.words)} · health: ${esc(healthWords(s).split(" · ")[0])}`);
+    for (const a of (r.assignments || [])) sysline(`<b>assignment</b> · ${esc(a.subject === "*" ? "every body" : a.subject)} thinks with ${esc(a.stall)} for ${esc(a.klass)} work`);
+    sysline(r.gateway && r.gateway.ready ? "the gateway answers — every mind thinks through it" : "the gateway is DARK — no mind can think until scripts/dev.sh up");
+    toggleMonitor(true);
+    return true;
+  }
+  m = t.match(/^(?:what(?:'s| is)\s+)?([a-z0-9_-]+)'?s?\s+fuel(?:\s+(?:gauge|level|left))?$|^how much fuel (?:does|has)\s+([a-z0-9_-]+)(?:\s+have|\s+got)?(?:\s+left)?$/);
+  if (m){
+    el("msg mine", esc(text));
+    const who = m[1] || m[2];
+    const r = await fetch("/minds/fuel?name=" + encodeURIComponent(who)).then(x=>x.json()).catch(()=>null);
+    if (!r || r.error){ sysline(r && r.error ? esc(r.error) : "the fuel door did not answer"); return true; }
+    const g = r.fuel;
+    sysline(!g ? `${esc(who)} has no lease yet — it is fueled on its first thought`
+               : `${esc(who)}: $${Number(g.spend ?? 0).toFixed(4)} spent of $${g.max_usd} this window` + (g.renews_at ? ` · renews ${esc(g.renews_at.slice(0, 16).replace("T", " "))} UTC` : "") +
+                 (g.drained_at ? " · <b>OUT OF FUEL</b> — say “refill " + esc(who) + " by $1”" : "") + (g.refills ? ` · refilled ${g.refills}×` : ""));
+    return true;
+  }
+  m = t.match(/^refill\s+([a-z0-9_-]+)(?:\s+by)?\s+\$?([0-9.]+)$/);
+  if (m){
+    el("msg mine", esc(text));
+    await mindDoor("/minds/refill", {subject: m[1], usd: Number(m[2])}, `refilling ${esc(m[1])} by $${m[2]} is consequential — real spending; the kernel holds it at the interlock…`);
+    return true;
+  }
+  m = t.match(/^(?:assign|point)\s+([a-z0-9_*-]+|every body|everyone)\s+(?:to|at)\s+(?:the\s+)?([a-z0-9_.-]+)(?:\s+mind)?(?:\s+for\s+(fast|standard|deep)(?:\s+work)?)?$/);
+  if (m){
+    el("msg mine", esc(text));
+    const subject = (m[1] === "every body" || m[1] === "everyone") ? "*" : m[1];
+    await mindDoor("/minds/assign", {subject, stall: m[2], klass: m[3] || "standard"},
+                   `pointing ${esc(subject === "*" ? "every body" : subject)} at the ${esc(m[2])} mind for ${esc(m[3] || "standard")} work is consequential — the kernel holds it at the interlock…`);
+    return true;
+  }
+  m = t.match(/^(?:what|which)\s+(services?|tools?|minds?|stores?|sources?|mcps?)\s+(?:are|is)\s+(?:here|on the shelf|registered)$|^show\s+(?:me\s+)?(?:the\s+)?(services|tools|stores|sources|mcps|shelf)$|^(?:what|which)\s+(services|tools|stores|sources|mcps)\s+(?:do we have|have we got|are there)$/);   // W31: "show the tools" too
+  if (m){
+    el("msg mine", esc(text));
+    const kind = SERVICE_KINDS[m[1] || m[2] || m[3]];
     const r = await fetch("/services" + (kind ? "?kind=" + kind : "")).then(x=>x.json()).catch(()=>null);
     if (!r){ sysline("the shelf door did not answer"); return true; }
     if (!r.services.length){ sysline(`nothing on the shelf${kind ? " of kind " + esc(kind) : ""} — the kernel registers its built-ins at boot`); return true; }
@@ -1571,7 +1630,18 @@ async function loadMonitor(){
     const d = document.createElement("div"); d.className = "view";
     d.innerHTML = `<h5>${title}</h5>` + rows; box.appendChild(d); return d; };
   const row = (k, v, cls) => `<div class="row"><span>${esc(k)}</span><span class="${cls || ""}">${esc(String(v))}</span></div>`;
-  view("PULSE", row("feed revision", lastRev ?? "—") + row("world", s.world));
+  const v = s.values || {};
+  view("PULSE", row("feed revision", lastRev ?? "—") + row("world", s.world) +
+       row("spent today (every mind)", "$" + Number(v.usd_today || 0).toFixed(4)) +
+       row("thoughts in the last 10 min", (v.meter_rate_10m || 0) + " / min") +
+       row("could not think (last hour)", v.route_failures_1h || 0, v.route_failures_1h ? "red" : "ok") +
+       row("bodies out of fuel", v.bodies_drained || 0, v.bodies_drained ? "red" : "ok"));
+  const stb = s.stable || {minds: [], assignments: []};                            // P6.5 sp3: THE STABLE — every mind, its deal, its spend
+  view("THE STABLE · minds " + (v.minds_standing || 0) + " standing" + (v.minds_unhealthy ? " · " + v.minds_unhealthy + " unhealthy" : ""),
+       (stb.minds || []).map(m => `<div class="row"><span>${esc(m.words)}</span><span class="${m.state === "unhealthy" ? "red" : m.state === "retired" ? "" : "ok"}">${esc(m.state)}</span></div>`).join("") +
+       ((stb.assignments || []).length ? (stb.assignments.map(a => row(`${a.subject === "*" ? "every body" : a.subject} thinks with`, `${a.stall} (${a.klass})`)).join(""))
+                                        : `<div class="meta">no assignments — every body rides its template's mind; say “assign librarian to haiku for fast work”</div>`) ||
+       `<div class="meta">no mind in the Stable — say “stablekeeper, add the mind ollama llama3.2 as llama”</div>`);
   const benches = Object.entries(s.benches || {}).filter(([k]) => k !== "error")
     .map(([q, n]) => row("bench " + q.split(".").slice(3).join(".") || "shared", n ?? "?")).join("");
   view("RAILS", row("outbox pending", s.outbox.pending, s.outbox.pending ? "red" : "ok") +

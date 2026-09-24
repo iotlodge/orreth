@@ -166,3 +166,14 @@ the same files, unchanged — before any module earns the word "ported".
     sorted by name, as canonical bytes of a list of lists.
   - `turned_fact` — the `orreth.watch.turned.v1` bytes for a fixed id and clock: the
     kernel's chain, the watch as correlation, `from` null when first judged.
+  - `route_for` · `usd` · `budget_duration` · `resolve` · `drift` · `eol_due` ·
+    `recommend` · `deal` · `deal_refuses` · `drained_words` · `act_words` (minds-v0,
+    P6.5 sp3) — the Stable's laws: the gateway's model string for a mind wherever it
+    resides; dollars from the pin's price; the fuel window in the gateway's grammar;
+    the routing decision (pin → assignment → the template's model → the cheapest of
+    the class → a neighbour confessed); what moved under a pin; an expiry inside the
+    horizon; the swap (same class → fit → nearest price → newest); the DEAL and its
+    refusals (a key VALUE never enters a record); the honest words of a drained
+    body; the interlock's words for each Stable act.
+  - `server_name` (minds-v0, W28) — `input.info` (a server's initialize) + `input.locator`
+    → `expect.name`: the last word of the server's own name, lowercased.

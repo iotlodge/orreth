@@ -6,6 +6,7 @@
 # P6.5 sp1 (JB's lock, 2026-09-22): the ground's data lives on a NAMED volume,
 # `orreth-spine-ground`, so a recreated container keeps the world — it ran on
 # an anonymous volume before (migrated once by hand: stop · create · cp -a · up).
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper: the gateway joins the rig · 2026-09-24
 name: orreth-spine
 
 services:
@@ -62,6 +63,40 @@ services:
       interval: 5s
       timeout: 10s
       retries: 30
+    restart: unless-stopped
+
+  # P6.5 sp3 (JB's lock, 2026-09-24): THE GATEWAY — LiteLLM, run and managed by
+  # Orreth. Every mind, wherever it resides (Anthropic · OpenRouter · Ollama on the
+  # host · any OpenAI-compatible base), is a model entry the Stable writes here;
+  # every body thinks through it with its OWN virtual key wearing its budget and
+  # renewal window (the fuel clause); every answer wears its cost. Provider keys
+  # reach the container from the shell's environment only — a key VALUE lives in
+  # no record, no file of Orreth's (0059's env-secrets law); a stall names the
+  # env NAME. The gateway keeps its own ledger in a `litellm` database on the
+  # ground (dev.sh `up` creates it once). Host port 4604 (the bridges hold
+  # 4600/4601; the old world 4500-4502).
+  gateway:
+    image: ghcr.io/berriai/litellm:main-stable
+    container_name: orreth-spine-gateway
+    ports: ["4604:4000"]
+    environment:
+      DATABASE_URL: postgresql://orreth:orreth-dev@ground:5432/litellm
+      LITELLM_MASTER_KEY: ${SPINE_GATEWAY_KEY:-sk-orreth-dev}
+      LITELLM_SALT_KEY: ${SPINE_GATEWAY_SALT:-sk-orreth-dev-salt}
+      STORE_MODEL_IN_DB: "True"
+      LITELLM_LOG: ${SPINE_GATEWAY_LOG:-ERROR}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    extra_hosts: ["host.docker.internal:host-gateway"]   # Ollama on the host, by name
+    depends_on:
+      ground:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4000/health/liveliness', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
     restart: unless-stopped
 
 volumes:

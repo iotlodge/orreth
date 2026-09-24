@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp2, the tool hop wears the chain (AG-7) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the hop wears the SERVICE DID; a retired tool refuses · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the Tools keeper: MCP-born tools through the one door; the `services` tool; a class by the arguments · 2026-09-23
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper's `minds` tool · the interlock names the act (W30) · 2026-09-24
 """The tool door v0 (canon 0004): a resident acts only through a
 governed door.
 
@@ -91,6 +92,180 @@ def _weather(args: dict) -> str:
 
 SERVICES_ACTS = ("register", "check", "version", "retire", "restore", "changes", "list")
 SERVICES_HELD = ("register", "version", "retire", "restore")     # hold at the interlock; the rest run at once
+GATEWAY = None          # P6.5 sp3: the rig's gateway lane, set at boot — the keepers' checks ping through it
+
+
+def _services_words(args: dict) -> str:
+    """W30: the interlock names the act in words — never "The services act"."""
+    act, name = str(args.get("action") or ""), str(args.get("name") or "the")
+    if act == "register":
+        return (f"Are you sure? Registering the {name or 'new'} MCP server at {args.get('locator') or '?'} is consequential — "
+                "it is recorded, and you can rest it later")
+    if act == "retire":
+        return f"Are you sure? Retiring the {name} service is consequential — it rests, recorded, never deleted; you can restore it later"
+    if act == "restore":
+        return f"Are you sure? Restoring the {name} service is consequential — it stands again, recorded"
+    if act == "version":
+        return f"Are you sure? Re-pinning the {name} service to its changed manifest is consequential — recorded; the old pin stays in its history"
+    return f"Are you sure? The {act or 'services'} act is consequential — it is recorded, and you can rest it later"
+
+
+def interlock_words_for(tool: str, args: dict | None = None) -> str:
+    """The L2 interlock's words for a tool act (W23 · W30 · rule 13): the
+    act NAMED — what happens, that it is recorded, that it can be rested —
+    when the tool declares `words_by`; the plain default otherwise."""
+    spec = TOOLS.get(tool) or {}
+    if callable(spec.get("words_by")):
+        return spec["words_by"](args or {}) + ". Cancel is the default; a deliberate click confirms."
+    from .resident import interlock_words
+    return interlock_words(tool)
+
+
+MINDS_ACTS = ("register", "check", "search", "list", "assign", "unassign", "refill", "fuel",
+              "spend", "retire", "restore", "repin", "changes")
+MINDS_HELD = ("register", "assign", "unassign", "refill", "retire", "restore", "repin")
+
+
+def _gw():
+    """The gateway's management door when the gateway is lit; None when dark."""
+    from . import stable
+    gw = stable.Gateway()
+    return gw if gw.ready() else None
+
+
+def _minds_words(args: dict) -> str:
+    from . import stable
+    act = str(args.get("action") or "")
+    a = dict(args)
+    if act == "register":
+        a["deal"] = {"provider": args.get("provider"), "model": args.get("model")}
+        return stable.act_words(stable.REGISTER_TOOL, a)
+    if act == "assign":
+        return stable.act_words(stable.ASSIGN_TOOL, {"subject": args.get("subject") or "*", "klass": args.get("klass") or "standard",
+                                                     "stall": args.get("stall") or args.get("name")})
+    if act == "unassign":
+        return stable.act_words(stable.UNASSIGN_TOOL, {"subject": args.get("subject") or "*", "klass": args.get("klass") or "standard"})
+    if act == "refill":
+        return stable.act_words(stable.REFILL_TOOL, {"name": args.get("subject") or args.get("name"), "usd": args.get("usd") or 1})
+    if act == "retire":
+        return stable.act_words(__import__("orreth_spine.services", fromlist=["RETIRE_TOOL"]).RETIRE_TOOL, {"name": args.get("name")})
+    if act == "restore":
+        return f"Are you sure? Restoring the {args.get('name')} mind is consequential — it stands again in the Stable and the gateway, recorded"
+    if act == "repin":
+        return stable.act_words(stable.REPIN_TOOL, {"name": args.get("name")})
+    return f"Are you sure? The {act or 'minds'} act is consequential — it is recorded"
+
+
+def _minds_tool(args: dict, conn) -> str:
+    """The Stable keeper's one tool (P6.5 sp3): the Stable tended on the
+    human's word — every act through stable.py / services.py, every step a
+    fact under the keeper's DID, the answer in words."""
+    from . import services, stable
+    act = str(args.get("action") or "").strip().lower()
+    name = str(args.get("name") or "").strip().lower()
+    by = args.get("_by") or "the stablekeeper"
+    if act not in MINDS_ACTS:
+        raise ValueError(f"the minds tool's acts: {', '.join(MINDS_ACTS)} — not {act!r}")
+    gw = _gw()
+    if act == "register":
+        provider, model = str(args.get("provider") or "").strip().lower(), str(args.get("model") or "").strip()
+        if not name or not provider or not model:
+            raise ValueError("register needs a short name, the provider (anthropic · openrouter · ollama · openai · compatible) and the model id")
+        price = None
+        if args.get("price_in_per_m") is not None or args.get("price_out_per_m") is not None:
+            price = {"in_per_m": args.get("price_in_per_m") or 0, "out_per_m": args.get("price_out_per_m") or 0}
+        d = stable.deal(model, provider, base=args.get("base") or None, price=price, context=args.get("context"),
+                        modalities=args.get("modalities"), klass=str(args.get("klass") or "standard"),
+                        key=args["key"] if args.get("key") else "auto")
+        if gw is not None and price is None:                # the price from the gateway's own map, never guessed
+            gw.add_stall(name, d)
+            seen = gw.seen_deal(name) or {}
+            if (seen.get("price") or {}).get("in_per_m") is not None:
+                d = stable.deal(model, provider, base=d.get("base"), price=seen["price"], context=d.get("context") or seen.get("context"),
+                                modalities=seen.get("modalities") if not args.get("modalities") else d["modalities"],
+                                klass=d["class"], key=d.get("key"))
+        made = stable.register_mind(conn, name, d, by=by, gw=gw)
+        return (f"the {made['name']} mind stands in the Stable — {stable.stall_words(dict(made, spend=None))}"
+                + ("" if gw is not None else " (the gateway is dark: written to the ladder, not yet into the gateway — the keeper's beat syncs it)"))
+    if act == "check":
+        out = [services.check(conn, name, gateway=GATEWAY, by=by)] if name else \
+              services.check_all(conn, kind="mind", gateway=GATEWAY, by=by)
+        if not out:
+            return "nothing to check — no mind is in the Stable; \"stablekeeper, add the mind <provider> <model id> as <name>\""
+        return "checked " + str(len(out)) + ": " + " · ".join(
+            f"{c['name']} → {'healthy' if c['ok'] else 'UNHEALTHY' if c['ok'] is False else 'not probed'}: {c['detail']}" for c in out)
+    if act in ("search", "list"):
+        rows = stable.search(conn, args.get("q") if act == "search" else None, klass=args.get("klass") or None,
+                             max_in_per_m=args.get("max_in_per_m"), modality=args.get("modality") or None)
+        if not rows:
+            return "no mind matches" if act == "search" else "the Stable is empty — no mind stands yet"
+        asg = stable.assignments(conn)
+        return (f"{len(rows)} mind{'s' if len(rows) != 1 else ''}: " + " · ".join(stable.stall_words(s) for s in rows)
+                + ("; assignments: " + ", ".join(f"{a['subject']} → {a['stall']} ({a['klass']})" for a in asg) if asg else "; no assignments — every body rides its template's mind"))
+    if act == "assign":
+        subject = str(args.get("subject") or "*").strip()
+        made = stable.assign(conn, subject, str(args.get("klass") or "standard"), str(args.get("stall") or name), by=by)
+        return f"{'every body' if made['subject'] == '*' else made['subject']} now thinks with the {made['stall']} mind for {made['klass']} work — recorded"
+    if act == "unassign":
+        made = stable.unassign(conn, str(args.get("subject") or "*").strip(), str(args.get("klass") or "standard"), by=by)
+        return f"{made['subject']}'s {made['klass']} assignment to {made['stall']} is lifted — recorded"
+    if act in ("refill", "fuel"):
+        subject = str(args.get("subject") or name or "").strip()
+        did = _did_of_body(conn, subject)
+        if did is None:
+            raise ValueError(f"no body named {subject!r} is joined here")
+        if act == "fuel":
+            g = stable.fuel(conn, did, gw)
+            if g is None:
+                return f"{subject} has no lease yet — it is fueled on its first thought (${stable.lease_defaults()[0]:g} every {stable.lease_defaults()[1]} day(s))"
+            return (f"{subject}: ${g['spend'] if g['spend'] is not None else '?'} spent of ${g['max_usd']:g} this window"
+                    + (f", renews at {g['renews_at']}" if g.get('renews_at') else "") + (" — DRAINED" if g.get("drained_at") else ""))
+        if gw is None:
+            raise ValueError("the gateway is dark — a refill needs it lit (scripts/dev.sh up)")
+        made = stable.refill(conn, did, float(args.get("usd") or 1.0), by=by, gw=gw, name=subject)
+        return f"{subject} refilled by ${made['added_usd']:g} — its allowance is now ${made['max_usd']:g}"
+    if act == "spend":
+        sp = stable.spend(conn)
+        if not sp["rows"]:
+            return "the meter is empty — no thought has been billed yet"
+        return (f"${sp['usd_today']:.4f} today, ${sp['usd']:.4f} all time: "
+                + " · ".join(f"{r['did'].rsplit(':', 1)[-1]} on {r['stall']}: ${r['usd']:.4f} over {r['calls']} calls"
+                             + (f" ({r['failed']} failed)" if r['failed'] else "") for r in sp["rows"][:12]))
+    if act == "retire":
+        made = stable.retire_mind(conn, name, by=by, gw=gw)
+        return f"the {made['name']} mind is retired — at rest in the Stable, dropped from the gateway, recorded, never deleted"
+    if act == "restore":
+        made = stable.restore_mind(conn, name, by=by, gw=gw)
+        return f"the {made['name']} mind stands again ({made['state']}) — a new fact; its rest stays in the record"
+    if act == "repin":
+        s_ = services.get(conn, name)
+        if s_ is None:
+            raise ValueError(f"no mind named {name!r}")
+        seen = stable.seen_deal(gw, s_) or {}
+        if not seen:
+            raise ValueError(f"the market has no word on {name} to re-pin from")
+        d = dict(s_["manifest"], price=seen.get("price") or s_["manifest"]["price"], context=seen.get("context") or s_["manifest"].get("context"))
+        made = stable.repin_mind(conn, name, d, by=by, gw=gw)
+        return f"the {made['name']} mind is re-pinned (version {made['version']}) — the old pin stays in its history"
+    since = args.get("since")
+    cur = conn.cursor()
+    cur.execute("SELECT name, ok, detail, at FROM spine_service_health WHERE scope = %s AND name IN"
+                " (SELECT name FROM spine_services WHERE scope = %s AND kind = 'mind')"
+                " AND (%s::timestamptz IS NULL OR at > %s::timestamptz) ORDER BY health_id DESC LIMIT 20",
+                (__import__("orreth_spine.envelope", fromlist=["scope"]).scope(),
+                 __import__("orreth_spine.envelope", fromlist=["scope"]).scope(), since, since))
+    rows = cur.fetchall()
+    return ("nothing changed in the Stable" if not rows else
+            "; ".join(f"{r[3].strftime('%H:%M')} {r[0]} {'healthy' if r[1] else 'UNHEALTHY' if r[1] is False else 'noted'} — {r[2]}" for r in rows))
+
+
+def _did_of_body(conn, name: str) -> str | None:
+    from . import envelope as _ev
+    cur = conn.cursor()
+    cur.execute("SELECT did FROM spine_joins WHERE scope = %s AND lower(name) = lower(%s) ORDER BY join_id DESC LIMIT 1",
+                (_ev.scope(), name))
+    r = cur.fetchone()
+    return r[0] if r else None
 
 
 def _services_tool(args: dict, conn) -> str:
@@ -257,8 +432,42 @@ TOOLS: dict[str, dict] = {
             "required": ["action"]},
         "consequential": True,
         "consequence_by": lambda args: "consequential" if str(args.get("action") or "") in SERVICES_HELD else "routine",
+        "words_by": _services_words,                     # W30: the interlock names the act
         "ground": True,
         "fn": _services_tool,
+    },
+    "minds": {
+        # P6.5 sp3: the Stable keeper's one tool — the minds tended on the human's word
+        "description": "Keep the Stable of minds. action=register adds a mind (name: a short lowercase "
+                       "name; provider: anthropic | openrouter | ollama | openai | compatible; model: the "
+                       "model id; base: a URL for ollama or compatible; klass: fast | standard | deep; "
+                       "key: the env NAME of its key — never a value; price_in_per_m / price_out_per_m "
+                       "in dollars per million, else read from the gateway). action=check probes one mind "
+                       "by name or every mind. action=search finds minds (q, klass, max_in_per_m, "
+                       "modality); action=list names what stands. action=assign points a body "
+                       "(subject: its name, or * for every body) at a mind (stall) for a class of work "
+                       "(klass); action=unassign lifts it. action=fuel reads a body's allowance and "
+                       "spend (subject); action=refill adds dollars (subject, usd). action=spend rolls "
+                       "the meter up. action=retire / restore move a mind by name; action=repin re-pins "
+                       "a mind whose deal moved. action=changes reads what changed. Register, assign, "
+                       "unassign, refill, retire, restore and repin hold for the human's yes at the "
+                       "interlock; the rest run at once. When the human asks you to add, check, assign, "
+                       "refill, retire or restore, CALL this tool — never describe the act instead.",
+        "input_schema": {"type": "object", "properties": {
+            "action": {"type": "string", "enum": list(MINDS_ACTS)},
+            "name": {"type": "string"}, "provider": {"type": "string"}, "model": {"type": "string"},
+            "base": {"type": "string"}, "klass": {"type": "string"}, "key": {"type": "string"},
+            "price_in_per_m": {"type": "number"}, "price_out_per_m": {"type": "number"},
+            "context": {"type": "integer"}, "modalities": {"type": "array", "items": {"type": "string"}},
+            "q": {"type": "string"}, "max_in_per_m": {"type": "number"}, "modality": {"type": "string"},
+            "subject": {"type": "string"}, "stall": {"type": "string"}, "usd": {"type": "number"},
+            "since": {"type": "string"}},
+            "required": ["action"]},
+        "consequential": True,
+        "consequence_by": lambda args: "consequential" if str(args.get("action") or "") in MINDS_HELD else "routine",
+        "words_by": _minds_words,
+        "ground": True,
+        "fn": _minds_tool,
     },
     "seal-record": {
         "description": "Permanently seal a note so it can never be edited "

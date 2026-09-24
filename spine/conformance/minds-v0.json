@@ -1,0 +1,2600 @@
+{
+ "contract": "orreth.minds/1",
+ "version": 0,
+ "generated_by": "orreth_spine.stable + orreth_spine.mcp (Python reference), canon 0008 \u00b7 P6.5 sp3",
+ "generated_at": "2026-09-24",
+ "cases": [
+  {
+   "name": "route_for: anthropic claude-haiku-4-5-20251001",
+   "kind": "route_for",
+   "input": {
+    "provider": "anthropic",
+    "model": "claude-haiku-4-5-20251001",
+    "base": null
+   },
+   "expect": {
+    "ok": true,
+    "route": "anthropic/claude-haiku-4-5-20251001",
+    "base": null,
+    "reason": null
+   }
+  },
+  {
+   "name": "route_for: openrouter meta-llama/llama-3.3-70b-instruct",
+   "kind": "route_for",
+   "input": {
+    "provider": "openrouter",
+    "model": "meta-llama/llama-3.3-70b-instruct",
+    "base": null
+   },
+   "expect": {
+    "ok": true,
+    "route": "openrouter/meta-llama/llama-3.3-70b-instruct",
+    "base": null,
+    "reason": null
+   }
+  },
+  {
+   "name": "route_for: ollama llama3.2",
+   "kind": "route_for",
+   "input": {
+    "provider": "ollama",
+    "model": "llama3.2",
+    "base": null
+   },
+   "expect": {
+    "ok": true,
+    "route": "ollama/llama3.2",
+    "base": "http://host.docker.internal:11434",
+    "reason": null
+   }
+  },
+  {
+   "name": "route_for: ollama llama3.2 at http://10.0.0.5:11434",
+   "kind": "route_for",
+   "input": {
+    "provider": "ollama",
+    "model": "llama3.2",
+    "base": "http://10.0.0.5:11434"
+   },
+   "expect": {
+    "ok": true,
+    "route": "ollama/llama3.2",
+    "base": "http://10.0.0.5:11434",
+    "reason": null
+   }
+  },
+  {
+   "name": "route_for: openai gpt-4o-mini",
+   "kind": "route_for",
+   "input": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "base": null
+   },
+   "expect": {
+    "ok": true,
+    "route": "openai/gpt-4o-mini",
+    "base": null,
+    "reason": null
+   }
+  },
+  {
+   "name": "route_for: compatible qwen2.5 at http://127.0.0.1:8000/v1",
+   "kind": "route_for",
+   "input": {
+    "provider": "compatible",
+    "model": "qwen2.5",
+    "base": "http://127.0.0.1:8000/v1"
+   },
+   "expect": {
+    "ok": true,
+    "route": "openai/qwen2.5",
+    "base": "http://127.0.0.1:8000/v1",
+    "reason": null
+   }
+  },
+  {
+   "name": "route_for: compatible qwen2.5",
+   "kind": "route_for",
+   "input": {
+    "provider": "compatible",
+    "model": "qwen2.5",
+    "base": null
+   },
+   "expect": {
+    "ok": false,
+    "route": null,
+    "base": null,
+    "reason": "an OpenAI-compatible mind needs its base URL"
+   }
+  },
+  {
+   "name": "route_for: bedrock x",
+   "kind": "route_for",
+   "input": {
+    "provider": "bedrock",
+    "model": "x",
+    "base": null
+   },
+   "expect": {
+    "ok": false,
+    "route": null,
+    "base": null,
+    "reason": "no provider named 'bedrock' \u2014 the providers: anthropic, openrouter, ollama, openai, compatible"
+   }
+  },
+  {
+   "name": "route_for: anthropic (no model)",
+   "kind": "route_for",
+   "input": {
+    "provider": "anthropic",
+    "model": "",
+    "base": null
+   },
+   "expect": {
+    "ok": false,
+    "route": null,
+    "base": null,
+    "reason": "a mind needs a model id"
+   }
+  },
+  {
+   "name": "usd: 13 in, 5 out at $1.0/$5.0 per million",
+   "kind": "usd",
+   "input": {
+    "price": {
+     "in_per_m": 1.0,
+     "out_per_m": 5.0
+    },
+    "tokens_in": 13,
+    "tokens_out": 5
+   },
+   "expect": {
+    "usd": 3.8e-05
+   }
+  },
+  {
+   "name": "usd: 1000000 in, 0 out at $3.0/$15.0 per million",
+   "kind": "usd",
+   "input": {
+    "price": {
+     "in_per_m": 3.0,
+     "out_per_m": 15.0
+    },
+    "tokens_in": 1000000,
+    "tokens_out": 0
+   },
+   "expect": {
+    "usd": 3.0
+   }
+  },
+  {
+   "name": "usd: 500 in, 500 out at $0.0/$0.0 per million",
+   "kind": "usd",
+   "input": {
+    "price": {
+     "in_per_m": 0.0,
+     "out_per_m": 0.0
+    },
+    "tokens_in": 500,
+    "tokens_out": 500
+   },
+   "expect": {
+    "usd": 0.0
+   }
+  },
+  {
+   "name": "usd: 1234 in, 567 out at $0.15/$0.6 per million",
+   "kind": "usd",
+   "input": {
+    "price": {
+     "in_per_m": 0.15,
+     "out_per_m": 0.6
+    },
+    "tokens_in": 1234,
+    "tokens_out": 567
+   },
+   "expect": {
+    "usd": 0.0005253
+   }
+  },
+  {
+   "name": "budget_duration: 1 days",
+   "kind": "budget_duration",
+   "input": {
+    "days": 1
+   },
+   "expect": {
+    "duration": "1d"
+   }
+  },
+  {
+   "name": "budget_duration: 7 days",
+   "kind": "budget_duration",
+   "input": {
+    "days": 7
+   },
+   "expect": {
+    "duration": "7d"
+   }
+  },
+  {
+   "name": "budget_duration: 30 days",
+   "kind": "budget_duration",
+   "input": {
+    "days": 30
+   },
+   "expect": {
+    "duration": "30d"
+   }
+  },
+  {
+   "name": "budget_duration: 0 days",
+   "kind": "budget_duration",
+   "input": {
+    "days": 0
+   },
+   "expect": {
+    "duration": "1d"
+   }
+  },
+  {
+   "name": "resolve: a pin wins",
+   "kind": "resolve",
+   "input": {
+    "stalls": [
+     {
+      "name": "haiku",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-haiku-4-5-20251001",
+       "route": "anthropic/claude-haiku-4-5-20251001",
+       "class": "fast",
+       "price": {
+        "in_per_m": 1.0,
+        "out_per_m": 5.0
+       }
+      }
+     },
+     {
+      "name": "sonnet",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sonnet-5",
+       "route": "anthropic/claude-sonnet-5",
+       "class": "standard",
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 15.0
+       }
+      }
+     },
+     {
+      "name": "opus",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-opus-5",
+       "route": "anthropic/claude-opus-5",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "old",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "claude-3-opus",
+       "route": "anthropic/claude-3-opus",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "sick",
+      "state": "unhealthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sick",
+       "route": "anthropic/claude-sick",
+       "class": "fast",
+       "price": {
+        "in_per_m": 0.5,
+        "out_per_m": 2.5
+       }
+      }
+     },
+     {
+      "name": "cheap",
+      "state": "registered",
+      "version": 1,
+      "manifest": {
+       "model": "cheap-1",
+       "route": "anthropic/cheap-1",
+       "class": "standard",
+       "price": {
+        "in_per_m": 0.2,
+        "out_per_m": 1.0
+       }
+      }
+     }
+    ],
+    "assignments": [
+     {
+      "subject": "librarian",
+      "klass": "standard",
+      "stall": "sonnet"
+     },
+     {
+      "subject": "*",
+      "klass": "deep",
+      "stall": "opus"
+     },
+     {
+      "subject": "echo",
+      "klass": "fast",
+      "stall": "sick"
+     }
+    ],
+    "subject": "librarian",
+    "pin": "opus"
+   },
+   "expect": {
+    "ok": true,
+    "stall": "opus",
+    "route": "anthropic/claude-opus-5",
+    "why": "pinned to opus for this ask",
+    "degraded": false,
+    "reason": null
+   }
+  },
+  {
+   "name": "resolve: a pin to a mind that is not standing refuses, never climbs",
+   "kind": "resolve",
+   "input": {
+    "stalls": [
+     {
+      "name": "haiku",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-haiku-4-5-20251001",
+       "route": "anthropic/claude-haiku-4-5-20251001",
+       "class": "fast",
+       "price": {
+        "in_per_m": 1.0,
+        "out_per_m": 5.0
+       }
+      }
+     },
+     {
+      "name": "sonnet",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sonnet-5",
+       "route": "anthropic/claude-sonnet-5",
+       "class": "standard",
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 15.0
+       }
+      }
+     },
+     {
+      "name": "opus",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-opus-5",
+       "route": "anthropic/claude-opus-5",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "old",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "claude-3-opus",
+       "route": "anthropic/claude-3-opus",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "sick",
+      "state": "unhealthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sick",
+       "route": "anthropic/claude-sick",
+       "class": "fast",
+       "price": {
+        "in_per_m": 0.5,
+        "out_per_m": 2.5
+       }
+      }
+     },
+     {
+      "name": "cheap",
+      "state": "registered",
+      "version": 1,
+      "manifest": {
+       "model": "cheap-1",
+       "route": "anthropic/cheap-1",
+       "class": "standard",
+       "price": {
+        "in_per_m": 0.2,
+        "out_per_m": 1.0
+       }
+      }
+     }
+    ],
+    "assignments": [
+     {
+      "subject": "librarian",
+      "klass": "standard",
+      "stall": "sonnet"
+     },
+     {
+      "subject": "*",
+      "klass": "deep",
+      "stall": "opus"
+     },
+     {
+      "subject": "echo",
+      "klass": "fast",
+      "stall": "sick"
+     }
+    ],
+    "subject": "librarian",
+    "pin": "sick"
+   },
+   "expect": {
+    "ok": false,
+    "stall": null,
+    "route": null,
+    "why": null,
+    "degraded": false,
+    "reason": "the sick mind is unhealthy \u2014 a pinned mind that does not stand refuses, never climbs"
+   }
+  },
+  {
+   "name": "resolve: a pin to no such mind refuses",
+   "kind": "resolve",
+   "input": {
+    "stalls": [
+     {
+      "name": "haiku",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-haiku-4-5-20251001",
+       "route": "anthropic/claude-haiku-4-5-20251001",
+       "class": "fast",
+       "price": {
+        "in_per_m": 1.0,
+        "out_per_m": 5.0
+       }
+      }
+     },
+     {
+      "name": "sonnet",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sonnet-5",
+       "route": "anthropic/claude-sonnet-5",
+       "class": "standard",
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 15.0
+       }
+      }
+     },
+     {
+      "name": "opus",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-opus-5",
+       "route": "anthropic/claude-opus-5",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "old",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "claude-3-opus",
+       "route": "anthropic/claude-3-opus",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "sick",
+      "state": "unhealthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sick",
+       "route": "anthropic/claude-sick",
+       "class": "fast",
+       "price": {
+        "in_per_m": 0.5,
+        "out_per_m": 2.5
+       }
+      }
+     },
+     {
+      "name": "cheap",
+      "state": "registered",
+      "version": 1,
+      "manifest": {
+       "model": "cheap-1",
+       "route": "anthropic/cheap-1",
+       "class": "standard",
+       "price": {
+        "in_per_m": 0.2,
+        "out_per_m": 1.0
+       }
+      }
+     }
+    ],
+    "assignments": [
+     {
+      "subject": "librarian",
+      "klass": "standard",
+      "stall": "sonnet"
+     },
+     {
+      "subject": "*",
+      "klass": "deep",
+      "stall": "opus"
+     },
+     {
+      "subject": "echo",
+      "klass": "fast",
+      "stall": "sick"
+     }
+    ],
+    "subject": "librarian",
+    "pin": "ghost"
+   },
+   "expect": {
+    "ok": false,
+    "stall": null,
+    "route": null,
+    "why": null,
+    "degraded": false,
+    "reason": "no mind named 'ghost' stands in the Stable"
+   }
+  },
+  {
+   "name": "resolve: the subject's assignment for the class",
+   "kind": "resolve",
+   "input": {
+    "stalls": [
+     {
+      "name": "haiku",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-haiku-4-5-20251001",
+       "route": "anthropic/claude-haiku-4-5-20251001",
+       "class": "fast",
+       "price": {
+        "in_per_m": 1.0,
+        "out_per_m": 5.0
+       }
+      }
+     },
+     {
+      "name": "sonnet",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sonnet-5",
+       "route": "anthropic/claude-sonnet-5",
+       "class": "standard",
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 15.0
+       }
+      }
+     },
+     {
+      "name": "opus",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-opus-5",
+       "route": "anthropic/claude-opus-5",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "old",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "claude-3-opus",
+       "route": "anthropic/claude-3-opus",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "sick",
+      "state": "unhealthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sick",
+       "route": "anthropic/claude-sick",
+       "class": "fast",
+       "price": {
+        "in_per_m": 0.5,
+        "out_per_m": 2.5
+       }
+      }
+     },
+     {
+      "name": "cheap",
+      "state": "registered",
+      "version": 1,
+      "manifest": {
+       "model": "cheap-1",
+       "route": "anthropic/cheap-1",
+       "class": "standard",
+       "price": {
+        "in_per_m": 0.2,
+        "out_per_m": 1.0
+       }
+      }
+     }
+    ],
+    "assignments": [
+     {
+      "subject": "librarian",
+      "klass": "standard",
+      "stall": "sonnet"
+     },
+     {
+      "subject": "*",
+      "klass": "deep",
+      "stall": "opus"
+     },
+     {
+      "subject": "echo",
+      "klass": "fast",
+      "stall": "sick"
+     }
+    ],
+    "subject": "librarian",
+    "klass": "standard"
+   },
+   "expect": {
+    "ok": true,
+    "stall": "sonnet",
+    "route": "anthropic/claude-sonnet-5",
+    "why": "assigned to sonnet for librarian (standard)",
+    "degraded": false,
+    "reason": null
+   }
+  },
+  {
+   "name": "resolve: every body's assignment for the class",
+   "kind": "resolve",
+   "input": {
+    "stalls": [
+     {
+      "name": "haiku",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-haiku-4-5-20251001",
+       "route": "anthropic/claude-haiku-4-5-20251001",
+       "class": "fast",
+       "price": {
+        "in_per_m": 1.0,
+        "out_per_m": 5.0
+       }
+      }
+     },
+     {
+      "name": "sonnet",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sonnet-5",
+       "route": "anthropic/claude-sonnet-5",
+       "class": "standard",
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 15.0
+       }
+      }
+     },
+     {
+      "name": "opus",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-opus-5",
+       "route": "anthropic/claude-opus-5",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "old",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "claude-3-opus",
+       "route": "anthropic/claude-3-opus",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "sick",
+      "state": "unhealthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sick",
+       "route": "anthropic/claude-sick",
+       "class": "fast",
+       "price": {
+        "in_per_m": 0.5,
+        "out_per_m": 2.5
+       }
+      }
+     },
+     {
+      "name": "cheap",
+      "state": "registered",
+      "version": 1,
+      "manifest": {
+       "model": "cheap-1",
+       "route": "anthropic/cheap-1",
+       "class": "standard",
+       "price": {
+        "in_per_m": 0.2,
+        "out_per_m": 1.0
+       }
+      }
+     }
+    ],
+    "assignments": [
+     {
+      "subject": "librarian",
+      "klass": "standard",
+      "stall": "sonnet"
+     },
+     {
+      "subject": "*",
+      "klass": "deep",
+      "stall": "opus"
+     },
+     {
+      "subject": "echo",
+      "klass": "fast",
+      "stall": "sick"
+     }
+    ],
+    "subject": "planner",
+    "klass": "deep"
+   },
+   "expect": {
+    "ok": true,
+    "stall": "opus",
+    "route": "anthropic/claude-opus-5",
+    "why": "assigned to opus for every body (deep)",
+    "degraded": false,
+    "reason": null
+   }
+  },
+  {
+   "name": "resolve: an assignment to a mind that is not standing is skipped",
+   "kind": "resolve",
+   "input": {
+    "stalls": [
+     {
+      "name": "haiku",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-haiku-4-5-20251001",
+       "route": "anthropic/claude-haiku-4-5-20251001",
+       "class": "fast",
+       "price": {
+        "in_per_m": 1.0,
+        "out_per_m": 5.0
+       }
+      }
+     },
+     {
+      "name": "sonnet",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sonnet-5",
+       "route": "anthropic/claude-sonnet-5",
+       "class": "standard",
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 15.0
+       }
+      }
+     },
+     {
+      "name": "opus",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-opus-5",
+       "route": "anthropic/claude-opus-5",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "old",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "claude-3-opus",
+       "route": "anthropic/claude-3-opus",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "sick",
+      "state": "unhealthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sick",
+       "route": "anthropic/claude-sick",
+       "class": "fast",
+       "price": {
+        "in_per_m": 0.5,
+        "out_per_m": 2.5
+       }
+      }
+     },
+     {
+      "name": "cheap",
+      "state": "registered",
+      "version": 1,
+      "manifest": {
+       "model": "cheap-1",
+       "route": "anthropic/cheap-1",
+       "class": "standard",
+       "price": {
+        "in_per_m": 0.2,
+        "out_per_m": 1.0
+       }
+      }
+     }
+    ],
+    "assignments": [
+     {
+      "subject": "librarian",
+      "klass": "standard",
+      "stall": "sonnet"
+     },
+     {
+      "subject": "*",
+      "klass": "deep",
+      "stall": "opus"
+     },
+     {
+      "subject": "echo",
+      "klass": "fast",
+      "stall": "sick"
+     }
+    ],
+    "subject": "echo",
+    "klass": "fast",
+    "model": "claude-haiku-4-5-20251001"
+   },
+   "expect": {
+    "ok": true,
+    "stall": "haiku",
+    "route": "anthropic/claude-haiku-4-5-20251001",
+    "why": "the template names claude-haiku-4-5-20251001 \u2014 the haiku mind",
+    "degraded": false,
+    "reason": null
+   }
+  },
+  {
+   "name": "resolve: the template's model when a standing stall pins it",
+   "kind": "resolve",
+   "input": {
+    "stalls": [
+     {
+      "name": "haiku",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-haiku-4-5-20251001",
+       "route": "anthropic/claude-haiku-4-5-20251001",
+       "class": "fast",
+       "price": {
+        "in_per_m": 1.0,
+        "out_per_m": 5.0
+       }
+      }
+     },
+     {
+      "name": "sonnet",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sonnet-5",
+       "route": "anthropic/claude-sonnet-5",
+       "class": "standard",
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 15.0
+       }
+      }
+     },
+     {
+      "name": "opus",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-opus-5",
+       "route": "anthropic/claude-opus-5",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "old",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "claude-3-opus",
+       "route": "anthropic/claude-3-opus",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "sick",
+      "state": "unhealthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sick",
+       "route": "anthropic/claude-sick",
+       "class": "fast",
+       "price": {
+        "in_per_m": 0.5,
+        "out_per_m": 2.5
+       }
+      }
+     },
+     {
+      "name": "cheap",
+      "state": "registered",
+      "version": 1,
+      "manifest": {
+       "model": "cheap-1",
+       "route": "anthropic/cheap-1",
+       "class": "standard",
+       "price": {
+        "in_per_m": 0.2,
+        "out_per_m": 1.0
+       }
+      }
+     }
+    ],
+    "assignments": [
+     {
+      "subject": "librarian",
+      "klass": "standard",
+      "stall": "sonnet"
+     },
+     {
+      "subject": "*",
+      "klass": "deep",
+      "stall": "opus"
+     },
+     {
+      "subject": "echo",
+      "klass": "fast",
+      "stall": "sick"
+     }
+    ],
+    "subject": "echo",
+    "model": "claude-haiku-4-5-20251001"
+   },
+   "expect": {
+    "ok": true,
+    "stall": "opus",
+    "route": "anthropic/claude-opus-5",
+    "why": "assigned to opus for every body (deep)",
+    "degraded": false,
+    "reason": null
+   }
+  },
+  {
+   "name": "resolve: the cheapest standing mind of the class",
+   "kind": "resolve",
+   "input": {
+    "stalls": [
+     {
+      "name": "haiku",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-haiku-4-5-20251001",
+       "route": "anthropic/claude-haiku-4-5-20251001",
+       "class": "fast",
+       "price": {
+        "in_per_m": 1.0,
+        "out_per_m": 5.0
+       }
+      }
+     },
+     {
+      "name": "sonnet",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sonnet-5",
+       "route": "anthropic/claude-sonnet-5",
+       "class": "standard",
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 15.0
+       }
+      }
+     },
+     {
+      "name": "opus",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-opus-5",
+       "route": "anthropic/claude-opus-5",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "old",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "claude-3-opus",
+       "route": "anthropic/claude-3-opus",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "sick",
+      "state": "unhealthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sick",
+       "route": "anthropic/claude-sick",
+       "class": "fast",
+       "price": {
+        "in_per_m": 0.5,
+        "out_per_m": 2.5
+       }
+      }
+     },
+     {
+      "name": "cheap",
+      "state": "registered",
+      "version": 1,
+      "manifest": {
+       "model": "cheap-1",
+       "route": "anthropic/cheap-1",
+       "class": "standard",
+       "price": {
+        "in_per_m": 0.2,
+        "out_per_m": 1.0
+       }
+      }
+     }
+    ],
+    "assignments": [
+     {
+      "subject": "librarian",
+      "klass": "standard",
+      "stall": "sonnet"
+     },
+     {
+      "subject": "*",
+      "klass": "deep",
+      "stall": "opus"
+     },
+     {
+      "subject": "echo",
+      "klass": "fast",
+      "stall": "sick"
+     }
+    ],
+    "subject": "critic",
+    "klass": "standard"
+   },
+   "expect": {
+    "ok": true,
+    "stall": "cheap",
+    "route": "anthropic/cheap-1",
+    "why": "the cheapest standing standard mind",
+    "degraded": false,
+    "reason": null
+   }
+  },
+  {
+   "name": "resolve: a neighbouring class serves, confessed",
+   "kind": "resolve",
+   "input": {
+    "stalls": [
+     {
+      "name": "sonnet",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sonnet-5",
+       "route": "anthropic/claude-sonnet-5",
+       "class": "standard",
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 15.0
+       }
+      }
+     },
+     {
+      "name": "opus",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-opus-5",
+       "route": "anthropic/claude-opus-5",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "old",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "claude-3-opus",
+       "route": "anthropic/claude-3-opus",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "sick",
+      "state": "unhealthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sick",
+       "route": "anthropic/claude-sick",
+       "class": "fast",
+       "price": {
+        "in_per_m": 0.5,
+        "out_per_m": 2.5
+       }
+      }
+     },
+     {
+      "name": "cheap",
+      "state": "registered",
+      "version": 1,
+      "manifest": {
+       "model": "cheap-1",
+       "route": "anthropic/cheap-1",
+       "class": "standard",
+       "price": {
+        "in_per_m": 0.2,
+        "out_per_m": 1.0
+       }
+      }
+     }
+    ],
+    "assignments": [
+     {
+      "subject": "librarian",
+      "klass": "standard",
+      "stall": "sonnet"
+     },
+     {
+      "subject": "*",
+      "klass": "deep",
+      "stall": "opus"
+     },
+     {
+      "subject": "echo",
+      "klass": "fast",
+      "stall": "sick"
+     }
+    ],
+    "subject": "critic",
+    "klass": "fast",
+    "model": null
+   },
+   "expect": {
+    "ok": true,
+    "stall": "cheap",
+    "route": "anthropic/cheap-1",
+    "why": "no fast mind stands \u2014 the standard mind cheap serves instead, confessed",
+    "degraded": true,
+    "reason": null
+   }
+  },
+  {
+   "name": "resolve: no class, no model: the cheapest standing mind",
+   "kind": "resolve",
+   "input": {
+    "stalls": [
+     {
+      "name": "haiku",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-haiku-4-5-20251001",
+       "route": "anthropic/claude-haiku-4-5-20251001",
+       "class": "fast",
+       "price": {
+        "in_per_m": 1.0,
+        "out_per_m": 5.0
+       }
+      }
+     },
+     {
+      "name": "sonnet",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sonnet-5",
+       "route": "anthropic/claude-sonnet-5",
+       "class": "standard",
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 15.0
+       }
+      }
+     },
+     {
+      "name": "opus",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-opus-5",
+       "route": "anthropic/claude-opus-5",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "old",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "claude-3-opus",
+       "route": "anthropic/claude-3-opus",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "sick",
+      "state": "unhealthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sick",
+       "route": "anthropic/claude-sick",
+       "class": "fast",
+       "price": {
+        "in_per_m": 0.5,
+        "out_per_m": 2.5
+       }
+      }
+     },
+     {
+      "name": "cheap",
+      "state": "registered",
+      "version": 1,
+      "manifest": {
+       "model": "cheap-1",
+       "route": "anthropic/cheap-1",
+       "class": "standard",
+       "price": {
+        "in_per_m": 0.2,
+        "out_per_m": 1.0
+       }
+      }
+     }
+    ],
+    "assignments": [
+     {
+      "subject": "librarian",
+      "klass": "standard",
+      "stall": "sonnet"
+     },
+     {
+      "subject": "*",
+      "klass": "deep",
+      "stall": "opus"
+     },
+     {
+      "subject": "echo",
+      "klass": "fast",
+      "stall": "sick"
+     }
+    ],
+    "subject": "critic"
+   },
+   "expect": {
+    "ok": true,
+    "stall": "opus",
+    "route": "anthropic/claude-opus-5",
+    "why": "assigned to opus for every body (deep)",
+    "degraded": false,
+    "reason": null
+   }
+  },
+  {
+   "name": "resolve: the template names a model no stall pins: the cheapest, confessed",
+   "kind": "resolve",
+   "input": {
+    "stalls": [
+     {
+      "name": "haiku",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-haiku-4-5-20251001",
+       "route": "anthropic/claude-haiku-4-5-20251001",
+       "class": "fast",
+       "price": {
+        "in_per_m": 1.0,
+        "out_per_m": 5.0
+       }
+      }
+     },
+     {
+      "name": "sonnet",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sonnet-5",
+       "route": "anthropic/claude-sonnet-5",
+       "class": "standard",
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 15.0
+       }
+      }
+     },
+     {
+      "name": "opus",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-opus-5",
+       "route": "anthropic/claude-opus-5",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "old",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "claude-3-opus",
+       "route": "anthropic/claude-3-opus",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "sick",
+      "state": "unhealthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sick",
+       "route": "anthropic/claude-sick",
+       "class": "fast",
+       "price": {
+        "in_per_m": 0.5,
+        "out_per_m": 2.5
+       }
+      }
+     },
+     {
+      "name": "cheap",
+      "state": "registered",
+      "version": 1,
+      "manifest": {
+       "model": "cheap-1",
+       "route": "anthropic/cheap-1",
+       "class": "standard",
+       "price": {
+        "in_per_m": 0.2,
+        "out_per_m": 1.0
+       }
+      }
+     }
+    ],
+    "assignments": [
+     {
+      "subject": "librarian",
+      "klass": "standard",
+      "stall": "sonnet"
+     },
+     {
+      "subject": "*",
+      "klass": "deep",
+      "stall": "opus"
+     },
+     {
+      "subject": "echo",
+      "klass": "fast",
+      "stall": "sick"
+     }
+    ],
+    "subject": "critic",
+    "model": "claude-3-haiku"
+   },
+   "expect": {
+    "ok": true,
+    "stall": "opus",
+    "route": "anthropic/claude-opus-5",
+    "why": "assigned to opus for every body (deep)",
+    "degraded": false,
+    "reason": null
+   }
+  },
+  {
+   "name": "resolve: an empty Stable refuses in words",
+   "kind": "resolve",
+   "input": {
+    "stalls": [],
+    "assignments": [],
+    "subject": "x"
+   },
+   "expect": {
+    "ok": false,
+    "stall": null,
+    "route": null,
+    "why": null,
+    "degraded": false,
+    "reason": "no mind stands in the Stable \u2014 register one (\"stablekeeper, add the mind \u2026\")"
+   }
+  },
+  {
+   "name": "drift: the deal holds",
+   "kind": "drift",
+   "input": {
+    "pinned": {
+     "price": {
+      "in_per_m": 3.0,
+      "out_per_m": 15.0
+     },
+     "context": 200000
+    },
+    "seen": {
+     "price": {
+      "in_per_m": 3.0,
+      "out_per_m": 15.0
+     },
+     "context": 200000
+    }
+   },
+   "expect": {
+    "moved": []
+   }
+  },
+  {
+   "name": "drift: the price in moved",
+   "kind": "drift",
+   "input": {
+    "pinned": {
+     "price": {
+      "in_per_m": 3.0,
+      "out_per_m": 15.0
+     },
+     "context": 200000
+    },
+    "seen": {
+     "price": {
+      "in_per_m": 3.5,
+      "out_per_m": 15.0
+     },
+     "context": 200000
+    }
+   },
+   "expect": {
+    "moved": [
+     "the price in moved: $3 \u2192 $3.5 per million"
+    ]
+   }
+  },
+  {
+   "name": "drift: both prices and the context moved",
+   "kind": "drift",
+   "input": {
+    "pinned": {
+     "price": {
+      "in_per_m": 3.0,
+      "out_per_m": 15.0
+     },
+     "context": 200000
+    },
+    "seen": {
+     "price": {
+      "in_per_m": 4.0,
+      "out_per_m": 20.0
+     },
+     "context": 128000
+    }
+   },
+   "expect": {
+    "moved": [
+     "the price in moved: $3 \u2192 $4 per million",
+     "the price out moved: $15 \u2192 $20 per million",
+     "the context moved: 200,000 \u2192 128,000 tokens"
+    ]
+   }
+  },
+  {
+   "name": "drift: a catalog with no context says nothing of it",
+   "kind": "drift",
+   "input": {
+    "pinned": {
+     "price": {
+      "in_per_m": 3.0,
+      "out_per_m": 15.0
+     },
+     "context": 200000
+    },
+    "seen": {
+     "price": {
+      "in_per_m": 3.0,
+      "out_per_m": 15.0
+     }
+    }
+   },
+   "expect": {
+    "moved": []
+   }
+  },
+  {
+   "name": "eol_due: expiry None on 2026-09-24, horizon 30",
+   "kind": "eol_due",
+   "input": {
+    "expires": null,
+    "now": "2026-09-24T12:00:00+00:00",
+    "horizon_days": 30
+   },
+   "expect": {
+    "due": false,
+    "days": null,
+    "words": "no expiry named"
+   }
+  },
+  {
+   "name": "eol_due: expiry '2026-10-01' on 2026-09-24, horizon 30",
+   "kind": "eol_due",
+   "input": {
+    "expires": "2026-10-01",
+    "now": "2026-09-24T12:00:00+00:00",
+    "horizon_days": 30
+   },
+   "expect": {
+    "due": true,
+    "days": 6,
+    "words": "expires in 6 days (2026-10-01)"
+   }
+  },
+  {
+   "name": "eol_due: expiry '2026-10-30T00:00:00Z' on 2026-09-24, horizon 30",
+   "kind": "eol_due",
+   "input": {
+    "expires": "2026-10-30T00:00:00Z",
+    "now": "2026-09-24T12:00:00+00:00",
+    "horizon_days": 30
+   },
+   "expect": {
+    "due": false,
+    "days": 35,
+    "words": "expires in 35 days \u2014 outside the 30-day horizon"
+   }
+  },
+  {
+   "name": "eol_due: expiry '2026-12-25' on 2026-09-24, horizon 30",
+   "kind": "eol_due",
+   "input": {
+    "expires": "2026-12-25",
+    "now": "2026-09-24T12:00:00+00:00",
+    "horizon_days": 30
+   },
+   "expect": {
+    "due": false,
+    "days": 91,
+    "words": "expires in 91 days \u2014 outside the 30-day horizon"
+   }
+  },
+  {
+   "name": "eol_due: expiry '2026-09-20' on 2026-09-24, horizon 30",
+   "kind": "eol_due",
+   "input": {
+    "expires": "2026-09-20",
+    "now": "2026-09-24T12:00:00+00:00",
+    "horizon_days": 30
+   },
+   "expect": {
+    "due": true,
+    "days": -5,
+    "words": "expired 5 days ago (2026-09-20)"
+   }
+  },
+  {
+   "name": "eol_due: expiry 'yesterday-ish' on 2026-09-24, horizon 30",
+   "kind": "eol_due",
+   "input": {
+    "expires": "yesterday-ish",
+    "now": "2026-09-24T12:00:00+00:00",
+    "horizon_days": 30
+   },
+   "expect": {
+    "due": false,
+    "days": null,
+    "words": "an expiry the calendar cannot read: 'yesterday-ish'"
+   }
+  },
+  {
+   "name": "recommend: same class, fits, nearest price, newest",
+   "kind": "recommend",
+   "input": {
+    "stalls": [
+     {
+      "name": "a",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "a",
+       "route": "x/a",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 12.0
+       }
+      }
+     },
+     {
+      "name": "b",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "b",
+       "route": "x/b",
+       "class": "standard",
+       "context": 128000,
+       "modalities": [
+        "text"
+       ],
+       "price": {
+        "in_per_m": 2.5,
+        "out_per_m": 10.0
+       }
+      }
+     },
+     {
+      "name": "c",
+      "state": "healthy",
+      "version": 2,
+      "manifest": {
+       "model": "c",
+       "route": "x/c",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.2,
+        "out_per_m": 12.8
+       }
+      }
+     },
+     {
+      "name": "d",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "d",
+       "route": "x/d",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.1,
+        "out_per_m": 12.4
+       }
+      }
+     },
+     {
+      "name": "e",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "e",
+       "route": "x/e",
+       "class": "deep",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 60.0
+       }
+      }
+     },
+     {
+      "name": "f",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "f",
+       "route": "x/f",
+       "class": "standard",
+       "context": 64000,
+       "modalities": [
+        "text"
+       ],
+       "price": {
+        "in_per_m": 0.9,
+        "out_per_m": 3.6
+       }
+      }
+     }
+    ],
+    "retiring": "a"
+   },
+   "expect": {
+    "stall": "c",
+    "why": "same class, fits the deal, nearest price ($3.2 vs $3 per million in)"
+   }
+  },
+  {
+   "name": "recommend: nothing fits the deal",
+   "kind": "recommend",
+   "input": {
+    "stalls": [
+     {
+      "name": "a",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "a",
+       "route": "x/a",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 12.0
+       }
+      }
+     },
+     {
+      "name": "b",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "b",
+       "route": "x/b",
+       "class": "standard",
+       "context": 128000,
+       "modalities": [
+        "text"
+       ],
+       "price": {
+        "in_per_m": 2.5,
+        "out_per_m": 10.0
+       }
+      }
+     },
+     {
+      "name": "c",
+      "state": "healthy",
+      "version": 2,
+      "manifest": {
+       "model": "c",
+       "route": "x/c",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.2,
+        "out_per_m": 12.8
+       }
+      }
+     },
+     {
+      "name": "d",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "d",
+       "route": "x/d",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.1,
+        "out_per_m": 12.4
+       }
+      }
+     }
+    ],
+    "retiring": "e"
+   },
+   "expect": {
+    "stall": null,
+    "why": "no mind named 'e' to swap from"
+   }
+  },
+  {
+   "name": "recommend: no other standing mind of the class",
+   "kind": "recommend",
+   "input": {
+    "stalls": [
+     {
+      "name": "a",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "a",
+       "route": "x/a",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 12.0
+       }
+      }
+     },
+     {
+      "name": "b",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "b",
+       "route": "x/b",
+       "class": "standard",
+       "context": 128000,
+       "modalities": [
+        "text"
+       ],
+       "price": {
+        "in_per_m": 2.5,
+        "out_per_m": 10.0
+       }
+      }
+     },
+     {
+      "name": "c",
+      "state": "healthy",
+      "version": 2,
+      "manifest": {
+       "model": "c",
+       "route": "x/c",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.2,
+        "out_per_m": 12.8
+       }
+      }
+     },
+     {
+      "name": "d",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "d",
+       "route": "x/d",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.1,
+        "out_per_m": 12.4
+       }
+      }
+     },
+     {
+      "name": "e",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "e",
+       "route": "x/e",
+       "class": "deep",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 60.0
+       }
+      }
+     },
+     {
+      "name": "f",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "f",
+       "route": "x/f",
+       "class": "standard",
+       "context": 64000,
+       "modalities": [
+        "text"
+       ],
+       "price": {
+        "in_per_m": 0.9,
+        "out_per_m": 3.6
+       }
+      }
+     }
+    ],
+    "retiring": "e"
+   },
+   "expect": {
+    "stall": null,
+    "why": "no other standing deep mind \u2014 nothing to swap to"
+   }
+  },
+  {
+   "name": "recommend: no such mind",
+   "kind": "recommend",
+   "input": {
+    "stalls": [
+     {
+      "name": "a",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "a",
+       "route": "x/a",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 12.0
+       }
+      }
+     },
+     {
+      "name": "b",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "b",
+       "route": "x/b",
+       "class": "standard",
+       "context": 128000,
+       "modalities": [
+        "text"
+       ],
+       "price": {
+        "in_per_m": 2.5,
+        "out_per_m": 10.0
+       }
+      }
+     },
+     {
+      "name": "c",
+      "state": "healthy",
+      "version": 2,
+      "manifest": {
+       "model": "c",
+       "route": "x/c",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.2,
+        "out_per_m": 12.8
+       }
+      }
+     },
+     {
+      "name": "d",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "d",
+       "route": "x/d",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.1,
+        "out_per_m": 12.4
+       }
+      }
+     },
+     {
+      "name": "e",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "e",
+       "route": "x/e",
+       "class": "deep",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 60.0
+       }
+      }
+     },
+     {
+      "name": "f",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "f",
+       "route": "x/f",
+       "class": "standard",
+       "context": 64000,
+       "modalities": [
+        "text"
+       ],
+       "price": {
+        "in_per_m": 0.9,
+        "out_per_m": 3.6
+       }
+      }
+     }
+    ],
+    "retiring": "zz"
+   },
+   "expect": {
+    "stall": null,
+    "why": "no mind named 'zz' to swap from"
+   }
+  },
+  {
+   "name": "recommend: a small deal fits everywhere: nearest price",
+   "kind": "recommend",
+   "input": {
+    "stalls": [
+     {
+      "name": "a",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "a",
+       "route": "x/a",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 12.0
+       }
+      }
+     },
+     {
+      "name": "b",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "b",
+       "route": "x/b",
+       "class": "standard",
+       "context": 128000,
+       "modalities": [
+        "text"
+       ],
+       "price": {
+        "in_per_m": 2.5,
+        "out_per_m": 10.0
+       }
+      }
+     },
+     {
+      "name": "c",
+      "state": "healthy",
+      "version": 2,
+      "manifest": {
+       "model": "c",
+       "route": "x/c",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.2,
+        "out_per_m": 12.8
+       }
+      }
+     },
+     {
+      "name": "d",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "d",
+       "route": "x/d",
+       "class": "standard",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 3.1,
+        "out_per_m": 12.4
+       }
+      }
+     },
+     {
+      "name": "e",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "e",
+       "route": "x/e",
+       "class": "deep",
+       "context": 200000,
+       "modalities": [
+        "text",
+        "vision"
+       ],
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 60.0
+       }
+      }
+     },
+     {
+      "name": "f",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "f",
+       "route": "x/f",
+       "class": "standard",
+       "context": 64000,
+       "modalities": [
+        "text"
+       ],
+       "price": {
+        "in_per_m": 0.9,
+        "out_per_m": 3.6
+       }
+      }
+     }
+    ],
+    "retiring": "f"
+   },
+   "expect": {
+    "stall": "b",
+    "why": "same class, fits the deal, nearest price ($2.5 vs $0.9 per million in)"
+   }
+  },
+  {
+   "name": "deal: the key is an env NAME",
+   "kind": "deal",
+   "input": {
+    "model": "claude-haiku-4-5-20251001",
+    "provider": "anthropic"
+   },
+   "expect": {
+    "model": "claude-haiku-4-5-20251001",
+    "provider": "anthropic",
+    "route": "anthropic/claude-haiku-4-5-20251001",
+    "base": null,
+    "key": "ANTHROPIC_API_KEY",
+    "price": {
+     "in_per_m": 0.0,
+     "out_per_m": 0.0
+    },
+    "context": null,
+    "modalities": [
+     "text"
+    ],
+    "class": "standard"
+   }
+  },
+  {
+   "name": "deal: a local mind needs no key",
+   "kind": "deal",
+   "input": {
+    "model": "llama3.2",
+    "provider": "ollama"
+   },
+   "expect": {
+    "model": "llama3.2",
+    "provider": "ollama",
+    "route": "ollama/llama3.2",
+    "base": "http://host.docker.internal:11434",
+    "key": null,
+    "price": {
+     "in_per_m": 0.0,
+     "out_per_m": 0.0
+    },
+    "context": null,
+    "modalities": [
+     "text"
+    ],
+    "class": "standard"
+   }
+  },
+  {
+   "name": "deal: a compatible base with a named key",
+   "kind": "deal",
+   "input": {
+    "model": "qwen",
+    "provider": "compatible",
+    "base": "http://h:8000/v1",
+    "key": "MY_KEY"
+   },
+   "expect": {
+    "model": "qwen",
+    "provider": "compatible",
+    "route": "openai/qwen",
+    "base": "http://h:8000/v1",
+    "key": "MY_KEY",
+    "price": {
+     "in_per_m": 0.0,
+     "out_per_m": 0.0
+    },
+    "context": null,
+    "modalities": [
+     "text"
+    ],
+    "class": "standard"
+   }
+  },
+  {
+   "name": "deal_refuses: a key VALUE is refused",
+   "kind": "deal_refuses",
+   "input": {
+    "model": "x",
+    "provider": "anthropic",
+    "key": "sk-ant-abc123"
+   },
+   "expect": {
+    "words": "a key VALUE never enters a record \u2014 name the environment variable that holds it (like ANTHROPIC_API_KEY)"
+   }
+  },
+  {
+   "name": "deal_refuses: an unknown class is refused",
+   "kind": "deal_refuses",
+   "input": {
+    "model": "x",
+    "provider": "anthropic",
+    "klass": "huge"
+   },
+   "expect": {
+    "words": "no class named 'huge' \u2014 the classes: fast, standard, deep"
+   }
+  },
+  {
+   "name": "drained_words: with a gauge",
+   "kind": "drained_words",
+   "input": {
+    "name": "librarian",
+    "gauge": {
+     "max_usd": 1.0,
+     "renews_at": "2026-09-25T00:00:00+00:00"
+    }
+   },
+   "expect": {
+    "words": "I am out of fuel \u2014 librarian's allowance of $1 for this window is spent, so I cannot think until it renews or is refilled. It renews on its own at 2026-09-25 00:00 UTC. A refill is one word away: \"refill librarian by $1\"."
+   }
+  },
+  {
+   "name": "drained_words: no gauge",
+   "kind": "drained_words",
+   "input": {
+    "name": "echo",
+    "gauge": null
+   },
+   "expect": {
+    "words": "I am out of fuel \u2014 echo's allowance of its allowance for this window is spent, so I cannot think until it renews or is refilled. A refill is one word away: \"refill echo by $1\"."
+   }
+  },
+  {
+   "name": "act_words: mind.register {\"name\": \"llama\", \"deal\": {\"provider\": \"",
+   "kind": "act_words",
+   "input": {
+    "tool": "mind.register",
+    "args": {
+     "name": "llama",
+     "deal": {
+      "provider": "ollama",
+      "model": "llama3.2"
+     }
+    }
+   },
+   "expect": {
+    "words": "Are you sure? Adding the llama mind (ollama llama3.2) is consequential \u2014 it is written into the gateway and recorded; you can retire it later"
+   }
+  },
+  {
+   "name": "act_words: mind.assign {\"subject\": \"*\", \"klass\": \"deep\", \"stall",
+   "kind": "act_words",
+   "input": {
+    "tool": "mind.assign",
+    "args": {
+     "subject": "*",
+     "klass": "deep",
+     "stall": "opus"
+    }
+   },
+   "expect": {
+    "words": "Are you sure? Pointing every body at the opus mind for deep work is consequential \u2014 recorded, and you can lift it later"
+   }
+  },
+  {
+   "name": "act_words: mind.assign {\"subject\": \"librarian\", \"klass\": \"fast\"",
+   "kind": "act_words",
+   "input": {
+    "tool": "mind.assign",
+    "args": {
+     "subject": "librarian",
+     "klass": "fast",
+     "stall": "haiku"
+    }
+   },
+   "expect": {
+    "words": "Are you sure? Pointing librarian at the haiku mind for fast work is consequential \u2014 recorded, and you can lift it later"
+   }
+  },
+  {
+   "name": "act_words: mind.unassign {\"subject\": \"librarian\", \"klass\": \"fast\"",
+   "kind": "act_words",
+   "input": {
+    "tool": "mind.unassign",
+    "args": {
+     "subject": "librarian",
+     "klass": "fast"
+    }
+   },
+   "expect": {
+    "words": "Are you sure? Lifting librarian's fast assignment is consequential \u2014 recorded; assign again any time"
+   }
+  },
+  {
+   "name": "act_words: mind.refill {\"name\": \"librarian\", \"usd\": 2.5}",
+   "kind": "act_words",
+   "input": {
+    "tool": "mind.refill",
+    "args": {
+     "name": "librarian",
+     "usd": 2.5
+    }
+   },
+   "expect": {
+    "words": "Are you sure? Refilling librarian by $2.5 is consequential \u2014 real spending, recorded"
+   }
+  },
+  {
+   "name": "act_words: mind.repin {\"name\": \"sonnet\"}",
+   "kind": "act_words",
+   "input": {
+    "tool": "mind.repin",
+    "args": {
+     "name": "sonnet"
+    }
+   },
+   "expect": {
+    "words": "Are you sure? Re-pinning the sonnet mind to its new deal is consequential \u2014 recorded; the old pin stays in its history"
+   }
+  },
+  {
+   "name": "act_words: service.retire {\"name\": \"sonnet\"}",
+   "kind": "act_words",
+   "input": {
+    "tool": "service.retire",
+    "args": {
+     "name": "sonnet"
+    }
+   },
+   "expect": {
+    "words": "Are you sure? Retiring the sonnet mind is consequential \u2014 it rests, recorded, never deleted; you can restore it later"
+   }
+  },
+  {
+   "name": "server_name: 'orreth-clock' at 'python x.py'",
+   "kind": "server_name",
+   "input": {
+    "info": {
+     "name": "orreth-clock",
+     "version": "0.1"
+    },
+    "locator": "python x.py"
+   },
+   "expect": {
+    "name": "clock"
+   }
+  },
+  {
+   "name": "server_name: 'Weather Server' at ''",
+   "kind": "server_name",
+   "input": {
+    "info": {
+     "name": "Weather Server"
+    },
+    "locator": ""
+   },
+   "expect": {
+    "name": "server"
+   }
+  },
+  {
+   "name": "server_name: None at '/usr/bin/some-tool-server'",
+   "kind": "server_name",
+   "input": {
+    "info": {},
+    "locator": "/usr/bin/some-tool-server"
+   },
+   "expect": {
+    "name": "server"
+   }
+  },
+  {
+   "name": "server_name: '' at 'https://mcp.deepwiki.com/mcp'",
+   "kind": "server_name",
+   "input": {
+    "info": {
+     "name": ""
+    },
+    "locator": "https://mcp.deepwiki.com/mcp"
+   },
+   "expect": {
+    "name": "mcp"
+   }
+  }
+ ]
+}

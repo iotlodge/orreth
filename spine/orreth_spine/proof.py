@@ -3,6 +3,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the confirmer rides the retire fact's chain (a body proposed, the human cut) · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W20 the kernel settles a restart · W23 the words (rule 11) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures, W35's boundary: a kernel-held act with no word for 15 minutes is cancelled by the default (`expire_holds`) · 2026-09-23
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
 """The proof demand rises to meet the consequence (canon 0001 P12 · 0005 P6 sp1).
 
 Every act wears a CONSEQUENCE CLASS — routine · consequential · grave —
@@ -481,13 +482,17 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
                 result = (f"the intention “{made['words']}” stands again — its stop stays in "
                           "the record, its history whole")
             elif held["tool"] == "service.retire":       # P6.5 sp1: the shelf's stop, at L2
-                from . import services
-                made = services.retire(conn, held["args"]["name"], by=asker, ask=ask_id,
-                                       parent_marker=row[3], confirmed_by=by)   # P6.5 sp2: the keeper's
-                                                                                 # proposal, the human's cut
+                from . import services, stable
+                made = stable.retire_mind(conn, held["args"]["name"], by=asker, ask=ask_id,
+                                          parent_marker=row[3], confirmed_by=by,   # P6.5 sp2: the keeper's
+                                          gw=stable.Gateway() if (services.get(conn, held["args"]["name"]) or {}).get("kind") == "mind" else None)  # proposal, the human's cut; sp3: a mind leaves the gateway too
                 result = (f"the {made['name']} {made['kind']} is retired — at rest on the shelf, "
                           f"recorded, never deleted; say “restore the {made['name']} {made['kind']}” "
                           "to bring it back")
+            elif held["tool"].startswith("mind."):        # P6.5 sp3: the Stable's acts — register · assign ·
+                from . import stable                     # unassign · refill · re-pin; the keeper proposed, the human cut
+                result = stable.settle(conn, held, asker=asker, ask_id=ask_id, parent_marker=row[3],
+                                       confirmed_by=by)
             else:
                 raise NotConfirmed()                     # no other kernel act yet
             if level == "L2":

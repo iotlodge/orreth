@@ -8,6 +8,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: ask_fact · refused_fact · ask_kind · otpauth · hold_words · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, MCP through one door: mcp_request · mcp_tool_manifest · mcp_server_manifest · mcp_transport · mcp_words · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: beat_lock · loop_words · plan_words · observed_words · watch_note · cannot_act · improvement_note · crew_hash · turned_fact · 2026-09-23
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable: route_for · usd · budget_duration · resolve · drift · eol_due · recommend · deal · deal_refuses · drained_words · act_words · server_name · 2026-09-24
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -19,7 +20,7 @@ from pathlib import Path
 import pytest
 
 from orreth_spine import (dispatch, envelope as ev, export, ground, harness, intent, mcp, mitl, monitor, placement,
-                          presence, proof, rails, resident, scheduler, services)
+                          presence, proof, rails, resident, scheduler, services, stable)
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
 FIXTURES = sorted(ROOT.glob("*-v*.json"))
@@ -111,6 +112,36 @@ def test_fixture(contract, case):
         assert mitl.citation_name(inp["path"], inp["heading"], inp["rule"]) == exp["name"]
     elif kind == "absent_words":
         assert dispatch.refusal_words(inp["name"], inp["reason"]) == exp["reply"]
+    # ---- orreth.minds/1 (P6.5 sp3): the Stable's laws — routes, dollars, the routing decision, drift, EOL, the swap ----
+    elif kind == "route_for":
+        assert stable.route_for(inp["provider"], inp["model"], inp.get("base")) == exp
+    elif kind == "usd":
+        assert stable.usd(inp["price"], inp["tokens_in"], inp["tokens_out"]) == exp["usd"]
+    elif kind == "budget_duration":
+        assert stable.budget_duration(inp["days"]) == exp["duration"]
+    elif kind == "resolve":
+        assert stable.resolve(inp["stalls"], inp["assignments"], subject=inp.get("subject"), klass=inp.get("klass"),
+                              pin=inp.get("pin"), model=inp.get("model")) == exp
+    elif kind == "drift":
+        assert stable.drift(inp["pinned"], inp["seen"]) == exp["moved"]
+    elif kind == "eol_due":
+        from datetime import datetime
+        assert stable.eol_due(inp["expires"], datetime.fromisoformat(inp["now"]), inp["horizon_days"]) == exp
+    elif kind == "recommend":
+        assert stable.recommend(inp["stalls"], inp["retiring"]) == exp
+    elif kind == "deal":
+        assert stable.deal(inp["model"], inp["provider"], base=inp.get("base"), klass=inp.get("klass", "standard"),
+                           key=inp["key"] if "key" in inp else "auto") == exp
+    elif kind == "deal_refuses":
+        with pytest.raises(stable.StableRefused) as e:
+            stable.deal(inp["model"], inp["provider"], klass=inp.get("klass", "standard"), key=inp["key"] if "key" in inp else "auto")
+        assert str(e.value) == exp["words"]
+    elif kind == "drained_words":
+        assert stable.drained_words(inp["name"], inp["gauge"]) == exp["words"]
+    elif kind == "act_words":
+        assert stable.act_words(inp["tool"], inp["args"]) == exp["words"]
+    elif kind == "server_name":                  # W28: a server names itself
+        assert mcp.server_name(inp["info"], inp["locator"]) == exp["name"]
     # ---- orreth.compliance/1 (P6 sp2): the hash chain, the chain's status, the verifier ----
     elif kind == "hash_chain":
         got = export.hash_chain(inp["rows"])

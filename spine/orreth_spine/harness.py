@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): the world checks — a duty answered · offers arrive as holds · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the world check: every service healthy or retired · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, two checks: every MCP server answers initialize · the keeper proposes after strikes, never retires alone · 2026-09-23
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, model ARMS on a run (the same golden cases against two minds) · three checks: every mind answers · the gateway answers and holds every stall · the meter and the gateway agree · a model change is announced · 2026-09-24
 """The A/B harness v0 (canon 0004, AG-6): golden cases run against a body's
 mind; every run is a record; a failing run is a FACT on the rail
 (orreth.harness.failed.v1) that the feed carries to the chat as a soft
@@ -39,6 +40,7 @@ def ensure_schema(conn) -> None:
             " version text NOT NULL, passed int NOT NULL, failed int NOT NULL,"
             " details text NOT NULL, scope text NOT NULL,"
             " ran_at timestamptz NOT NULL DEFAULT now())")
+        cur.execute("ALTER TABLE spine_harness_runs ADD COLUMN IF NOT EXISTS arm text")   # P6.5 sp3: the mind this run rode
 
 
 def golden(template: str) -> list[dict]:
@@ -47,9 +49,11 @@ def golden(template: str) -> list[dict]:
 
 
 def run(conn, body, cases: list[dict] | None = None,
-        parent_marker: str | None = None) -> dict:
+        parent_marker: str | None = None, arm: str | None = None) -> dict:
     """Run the golden cases through the body's own graph (its mind on the
-    meter, its recall honestly empty of any ask) and record the run."""
+    meter, its recall honestly empty of any ask) and record the run.
+    P6.5 sp3: `arm` names a stall — the body thinks through THAT mind for
+    the run (its template's model set aside for the run, restored after)."""
     from .resident import ensure_schema as _ground   # lazily: no import cycle
     _ground(conn)
     ensure_schema(conn)
@@ -58,6 +62,20 @@ def run(conn, body, cases: list[dict] | None = None,
     body._serve_conn = conn
     body._current_ask = None
     details, passed = [], 0
+    mind_was = dict(body.template.get("mind") or {})
+    if arm:
+        from . import services
+        s = services.get(conn, arm)
+        if s is None or s["kind"] != "mind":
+            raise ValueError(f"no mind named {arm!r} stands in the Stable — an arm is a mind by name")
+        body.template["mind"] = dict(mind_was, pin=arm)     # the run PINS the arm — nothing outranks a pin
+    try:
+        return _run(conn, body, cases, parent_marker, arm, details, passed)
+    finally:
+        body.template["mind"] = mind_was
+
+
+def _run(conn, body, cases, parent_marker, arm, details, passed):
     for c in cases:
         out = body._graph.invoke({"text": c["ask"], "reply": "", "steps": [],
                                   "notes": [], "hold": None, "read": []})
@@ -80,9 +98,9 @@ def run(conn, body, cases: list[dict] | None = None,
                        body.identity.did, f"harness: {passed} passed, {failed} failed")
         cur.execute(
             "INSERT INTO spine_harness_runs (run_id, template, version, passed,"
-            " failed, details, scope) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            " failed, details, scope, arm) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
             (rid, body.template["name"], version, passed, failed,
-             json.dumps(details), ev.scope()))
+             json.dumps(details), ev.scope(), arm))
     if failed:
         e = ev.make_envelope(
             kind="event", type=HARNESS_FAILED, universe_id=ev.scope(),
@@ -228,6 +246,88 @@ def keeper_proposes(conn) -> dict:
             "detail": detail, "unproposed": unproposed, "alone": alone}
 
 
+def ab(conn, body, arms: list[str], cases: list[dict] | None = None, parent_marker: str | None = None) -> dict:
+    """P6.5 sp3, the A/B harness with model ARMS (0058): the same golden
+    cases against each named mind, one run each; the verdict names the
+    arm that passed most — a PROPOSAL for the human's cut, never an
+    assignment made by the machine."""
+    runs = {}
+    for a in arms:
+        runs[a] = run(conn, body, cases, parent_marker=parent_marker, arm=a)
+    best = sorted(runs.items(), key=lambda kv: (-kv[1]["passed"], kv[0]))[0][0] if runs else None
+    words = " · ".join(f"{a}: {r['passed']} passed, {r['failed']} failed" for a, r in runs.items())
+    return {"template": body.template["name"], "arms": {a: {"run_id": r["run_id"], "passed": r["passed"], "failed": r["failed"]}
+                                                       for a, r in runs.items()},
+            "best": best, "words": f"{body.template['name']} over {len(arms)} arms — {words}"
+                                   + (f"; {best} did best — say \"assign {body.template['name']} to {best}\" to make it so" if best else "")}
+
+
+def minds_answer(conn) -> dict:
+    """P6.5 sp3: every standing mind answered its canary at its LAST check
+    (the keeper's beat); the silent named; the never-checked named."""
+    from . import services
+    rows = [r for r in services.listing(conn, kind="mind") if r["state"] != "retired"]
+    silent = [r["name"] for r in rows if r["last_health"] and r["last_health"]["ok"] is False]
+    unprobed = [r["name"] for r in rows if not r["last_health"]]
+    detail = ("no mind in the Stable" if not rows else
+              f"{len(rows) - len(silent) - len(unprobed)} of {len(rows)} answered"
+              + (f" · silent: {', '.join(silent)}" if silent else "")
+              + (f" · never checked: {', '.join(unprobed)}" if unprobed else ""))
+    return {"name": "every mind answers", "ok": not silent and not unprobed, "detail": detail,
+            "silent": silent, "unprobed": unprobed}
+
+
+def gateway_holds(conn, gw=None) -> dict:
+    """P6.5 sp3: the gateway answers, and holds a model entry for every
+    standing mind (a stall the ladder has that the gateway lacks is named)."""
+    from . import services, stable
+    gw = gw or stable.Gateway()
+    rows = [r for r in services.listing(conn, kind="mind") if r["state"] != "retired"]
+    if not gw.ready():
+        return {"name": "the gateway answers and holds every mind", "ok": not rows,
+                "detail": f"the gateway at {gw.base} is dark" + (f" — {len(rows)} minds cannot think" if rows else ""),
+                "missing": [r["name"] for r in rows]}
+    try:
+        held = set(gw.models().keys())
+    except stable.GatewayDark as e:
+        return {"name": "the gateway answers and holds every mind", "ok": False, "detail": str(e), "missing": []}
+    missing = [r["name"] for r in rows if r["name"] not in held]
+    return {"name": "the gateway answers and holds every mind", "ok": not missing,
+            "detail": f"the gateway answers · {len(rows) - len(missing)} of {len(rows)} minds held"
+                      + (f" · missing: {', '.join(missing)}" if missing else ""),
+            "missing": missing}
+
+
+def meter_agrees(conn, gw=None) -> dict:
+    """P6.5 sp3, the 100%: the meter's dollars for this world's bodies
+    against the gateway's ledger for their keys — within a tenth of a cent."""
+    from . import stable
+    r = stable.reconcile(conn, gw if gw is not None else stable.Gateway())
+    return {"name": "the meter and the gateway agree", "ok": not r.get("mismatched"), "detail": r["words"],
+            "meter_usd": r["meter_usd"], "gateway_usd": r["gateway_usd"], "mismatched": r.get("mismatched", [])}
+
+
+def changes_announced(conn) -> dict:
+    """P6.5 sp3 ("model changed without an announcement"): every meter line
+    that rode a mind other than the one asked for carries the why (a
+    confessed degrade) — a silent swap is a wound."""
+    from .gateway import ensure_schema as _meter
+    _meter(conn)
+    cur = conn.cursor()
+    cur.execute("SELECT to_regclass('spine_meter') IS NOT NULL")
+    if not cur.fetchone()[0]:                     # no meter on this ground yet: nothing swapped, nothing silent
+        return {"name": "a model change is announced", "ok": True, "detail": "no thought metered yet", "silent": 0}
+    cur.execute("SELECT count(*) FROM spine_meter WHERE ok AND stall IS NOT NULL AND note IS NULL"
+                " AND model <> stall AND at >= now() - interval '1 day'")
+    silent = int(cur.fetchone()[0])
+    cur.execute("SELECT count(*) FROM spine_meter WHERE ok AND note IS NOT NULL AND at >= now() - interval '1 day'")
+    confessed = int(cur.fetchone()[0])
+    return {"name": "a model change is announced", "ok": silent == 0,
+            "detail": f"{confessed} confessed swap{'s' if confessed != 1 else ''} today"
+                      + (f" · {silent} SILENT" if silent else " · none silent"),
+            "silent": silent}
+
+
 def checks(conn) -> list[dict]:
     """Every world check, read off the ground — the harness door lists
     them; a failed check is a wound named in words."""
@@ -236,4 +336,5 @@ def checks(conn) -> list[dict]:
     from . import monitor, scheduler, services
     scheduler.ensure_schema(conn); monitor.ensure_schema(conn); services.ensure_schema(conn)
     return [duty_answered(conn), offers_are_holds(conn), services_healthy(conn),
-            mcp_servers_answer(conn), keeper_proposes(conn)]
+            mcp_servers_answer(conn), keeper_proposes(conn),
+            minds_answer(conn), gateway_holds(conn), meter_agrees(conn), changes_announced(conn)]

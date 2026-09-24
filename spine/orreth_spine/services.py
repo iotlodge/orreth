@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the services registry · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the Tools keeper: the mcp probe is real; record_health; the rig's HOME · 2026-09-23
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
 """The services registry v0 (canon 0005 P6.5 sp1 · 0009 §3 "one ladder, two
 keepers" · 0018 services as identities · 0059 the env-secrets law).
 
@@ -211,6 +212,15 @@ def mind_did(conn, model: str) -> str | None:
     return r[0] if r else None
 
 
+def stall_did(conn, stall: str) -> str | None:
+    """P6.5 sp3: the mind service by its stall NAME — what a dollar meter row carries."""
+    ensure_schema(conn)
+    cur = conn.cursor()
+    cur.execute("SELECT did FROM spine_services WHERE scope = %s AND kind = 'mind' AND name = %s", (ev.scope(), stall))
+    r = cur.fetchone()
+    return r[0] if r else None
+
+
 SHELF_REF = "the shelf"
 
 
@@ -384,12 +394,18 @@ def _probe(conn, row: dict, gateway, by: str = KERNEL) -> tuple[bool | None, str
     if kind == "mind":
         if gateway is None:
             return None, "not probed — no gateway was handed to the check"
+        # P6.5 sp3: the canary ping under the KEEPER's DID (0009 §2), pinned to THIS stall —
+        # a pinned mind that does not answer refuses, never climbs (0019); the honest word
+        # the lane returns ("I cannot think …") is the verdict, never a stack
+        who = by if str(by).startswith("did:") else row["did"]
         try:
-            gateway.think(conn, did=row["did"], system="Answer with one word.", prompt="ping",
-                          model=m.get("model"), max_tokens=1)
+            said = gateway.think(conn, did=who, system="Answer with one word.", prompt="ping",
+                                 model=m.get("model"), max_tokens=1, pin=row["name"])
         except Exception as e:                       # noqa: BLE001 — the honest verdict
             return False, f"the gateway did not answer: {type(e).__name__}: {str(e)[:140]}"
-        return True, f"the gateway answered a one-token ping through the meter (model {m.get('model')})"
+        if str(said or "").lstrip().lower().startswith("i cannot think") or str(said or "").lstrip().lower().startswith("i am out of fuel"):
+            return False, f"the mind did not answer: {str(said)[:160]}"
+        return True, f"the gateway answered a one-token ping through the meter ({m.get('route') or m.get('model')})"
     if kind == "mcp":                                # P6.5 sp2: initialize + tools/list, the list synced onto the shelf
         from . import mcp
         return mcp.probe(conn, row, by=by)
@@ -549,15 +565,23 @@ def health(conn, name: str, limit: int = 10) -> list[dict]:
 
 # ---- the built-ins, at birth ---------------------------------------------------------------
 
+def name_of(row: dict) -> str:
+    return str(row.get("name") or "")
+
+
 def mind_of(gateway) -> tuple[str, dict, list[str]] | None:
     """The mind service a gateway IS: the Anthropic route (its default
-    model, the key by NAME), or the fake lane; None without a gateway."""
+    model, the key by NAME), or the fake lane; None without a gateway.
+    P6.5 sp3: the LiteLLM lane's minds are STALLS — stable.seed registers
+    the rig's own (`haiku`) with the deal the gateway's price map reads."""
     if gateway is None:
         return None
     model = getattr(gateway, "DEFAULT_MODEL", None) or "fake-mind"
+    if type(gateway).__name__ == "LiteLLMGateway":
+        return None
     if type(gateway).__name__ == "AnthropicGateway":
         return ("anthropic", {"route": "anthropic", "model": model}, ["ANTHROPIC_API_KEY"])
-    return (model, {"route": "fake", "model": model}, [])
+    return (model, {"route": "fake", "model": model, "class": "fast", "price": {"in_per_m": 0.0, "out_per_m": 0.0}}, [])
 
 
 def seed(conn, *, gateway=None, home: str | os.PathLike | None = _UNSET) -> dict:
@@ -586,6 +610,12 @@ def seed(conn, *, gateway=None, home: str | os.PathLike | None = _UNSET) -> dict
     mind = mind_of(gateway)
     if mind is not None:
         one(mind[0], "mind", mind[1], mind[2])
+    if type(gateway).__name__ == "LiteLLMGateway":     # P6.5 sp3: the rig's own stall, through the Stable
+        from . import stable
+        st = stable.seed(conn, gateway.stable, home=home)
+        made += st["registered"]; refused += st["refused"]
+        for n in st.get("retired", []):
+            refused.append(f"{n}: the old world's built-in mind, retired — the Stable's {stable.DEFAULT_STALL[0]} stall serves the same model through the gateway")
     return {"registered": made, "refused": refused}
 
 

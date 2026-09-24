@@ -1,4 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the Tools keeper · 2026-09-23
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
 """MCP through ONE door (canon 0005 P6.5 sp2 · 0009 §1 the Tools firmware ·
 0059 the Toolshed's laws · 0018 services as identities).
 
@@ -373,7 +375,9 @@ def register_server(conn, name: str, locator: str, *, by: str, secrets_with: lis
     must answer initialize and list (else refused with the reason), then
     the server registers as kind mcp with its list as the pin and every
     listed tool lands under it."""
-    services._validate(name, "mcp", {"locator": locator})
+    name = str(name or "").strip().lower()
+    if name:
+        services._validate(name, "mcp", {"locator": locator})
     raw = dict(placement or {})
     raw["secrets_with"] = sorted(set(list(raw.get("secrets_with") or []) + list(secrets_with or [])))
     if locator.strip().startswith("env:"):
@@ -389,6 +393,9 @@ def register_server(conn, name: str, locator: str, *, by: str, secrets_with: lis
         info, listed = listing_of(locator, prof["secrets_with"])
     except MCPUnreachable as e:
         raise services.ServiceRefused(f"the server at {locator_words(locator)} did not answer: {e}")
+    if not name:                                          # W28 (walk #10): a server names itself —
+        name = server_name(info, locator)                 # the last word of its own name, lowercased
+        services._validate(name, "mcp", {"locator": locator})
     manifest = server_manifest(locator, listed)
     row = services.get(conn, name)
     if row is not None and row["kind"] == "mcp" and row["state"] != "retired" and row["manifest_hash"] != services.pin(manifest):
@@ -406,6 +413,18 @@ def locator_words(locator: str) -> str:
     if loc.startswith("env:"):
         return f"the locator named by {loc[4:].strip()}"
     return loc
+
+
+def server_name(info: dict, locator: str = "") -> str:
+    """W28: the shelf name a server gives itself — the last word of its
+    initialize name ("orreth-clock" → "clock"), lowercased; else the last
+    word of its locator."""
+    import re as _re
+    raw = str((info or {}).get("name") or "").strip()
+    words = [w for w in _re.split(r"[^a-z0-9]+", raw.lower()) if w]
+    if not words:
+        words = [w for w in _re.split(r"[^a-z0-9]+", str(locator).lower()) if w and not w.endswith("py")]
+    return (words[-1] if words else "server")[:40]
 
 
 def listing_words(info: dict, listed: list[dict], synced: dict) -> str:
@@ -543,7 +562,8 @@ def strikes(conn, name: str) -> int:
     return n
 
 
-def propose_retire(conn, name: str, *, keeper: str, n: int, session: str | None = None) -> str:
+def propose_retire(conn, name: str, *, keeper: str, n: int, session: str | None = None,
+                   who: str = "the toolkeeper") -> str:
     """The keeper's proposal: a hold at the interlock under ITS OWN DID
     (the kernel's `service.retire` act, L2, cancel the default). The
     keeper never retires alone."""
@@ -552,19 +572,26 @@ def propose_retire(conn, name: str, *, keeper: str, n: int, session: str | None 
     services._refuse_step(name, row["state"] if row else None, "retire")
     why = (row.get("last_health") or {}).get("detail") or "no answer"
     return hold_kernel_act(
-        conn, text=f"the toolkeeper proposes retiring the {name} {row['kind']} — unhealthy across "
+        conn, text=f"{who} proposes retiring the {name} {row['kind']} — unhealthy across "
                    f"{n} check{'s' if n != 1 else ''} in a row ({why})",
         person=keeper, tool=services.RETIRE_TOOL, args={"name": name},
         level=services.RETIRE_LEVEL, session=session, cls=services.RETIRE_CLASS)
 
 
-def proposals(conn, *, keeper: str, n: int | None = None) -> list[dict]:
+def proposals(conn, *, keeper: str, n: int | None = None, kinds: tuple | None = None,
+              who: str = "the toolkeeper") -> list[dict]:
     """Every standing service unhealthy across N checks in a row earns ONE
-    proposal (none while one waits at the interlock)."""
+    proposal (none while one waits at the interlock). P6.5 sp3: each
+    keeper proposes for ITS kinds — the toolkeeper for everything but
+    minds, the stablekeeper (`who`) for minds."""
     n = n or strikes_n()
     out = []
     for s in services.listing(conn):
         if s["state"] == "retired":
+            continue
+        if kinds is not None and s["kind"] not in kinds:
+            continue
+        if kinds is None and s["kind"] == "mind":
             continue
         k = strikes(conn, s["name"])
         if k < n:
@@ -573,7 +600,7 @@ def proposals(conn, *, keeper: str, n: int | None = None) -> list[dict]:
         if prop and prop["status"] == "awaiting-confirm":
             continue
         out.append({"name": s["name"], "kind": s["kind"], "strikes": k,
-                    "held": propose_retire(conn, s["name"], keeper=keeper, n=k)})
+                    "held": propose_retire(conn, s["name"], keeper=keeper, n=k, who=who)})
     return out
 
 

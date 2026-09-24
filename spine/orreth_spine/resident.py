@@ -4,6 +4,8 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W8 · W12 · W16 · W17 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W21 the duty law + the pack · W23 the interlock's words · W24 echo's bubble · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, W26: an empty reply never lands as replied — asked again once, then said in words · 2026-09-23
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
 """The resident body v0 (canon 0004): one governed body for every mind.
 
 Born from a versioned TEMPLATE artifact; the SAME identity in every life
@@ -621,12 +623,15 @@ class Resident:
                         reply, acts = self.gateway.think_acting(
                             self._serve_conn, did=self.identity.did,
                             system=system, prompt=prompt, door=door,
-                            model=mind.get("model"), on_delta=deltas)
+                            model=mind.get("model"), on_delta=deltas,
+                            subject=self.name, klass=mind.get("class"),
+                            pin=mind.get("pin"))                          # P6.5 sp3: the Stable decides the mind
                         if not (reply or "").strip():          # W26: asked again, once
                             reply, more = self.gateway.think_acting(
                                 self._serve_conn, did=self.identity.did,
                                 system=system, prompt=prompt, door=door,
-                                model=mind.get("model"), on_delta=deltas)
+                                model=mind.get("model"), on_delta=deltas,
+                                subject=self.name, klass=mind.get("class"), pin=mind.get("pin"))
                             acts, retried = acts + more, [W26_STEP]
                             if not (reply or "").strip():
                                 reply = W26_WORDS
@@ -636,12 +641,14 @@ class Resident:
                     reply = self.gateway.think(
                         self._serve_conn, did=self.identity.did,
                         system=system, prompt=prompt,
-                        model=mind.get("model"), on_delta=deltas)
+                        model=mind.get("model"), on_delta=deltas,
+                        subject=self.name, klass=mind.get("class"), pin=mind.get("pin"))   # P6.5 sp3
                     if not (reply or "").strip():              # W26: asked again, once
                         reply = self.gateway.think(
                             self._serve_conn, did=self.identity.did,
                             system=system, prompt=prompt,
-                            model=mind.get("model"), on_delta=deltas)
+                            model=mind.get("model"), on_delta=deltas,
+                            subject=self.name, klass=mind.get("class"), pin=mind.get("pin"))
                         retried = [W26_STEP]
                         if not (reply or "").strip():
                             reply = W26_WORDS
@@ -787,7 +794,8 @@ class Resident:
             held = dict(out["hold"])
             held.setdefault("class", "consequential"); held.setdefault("level", "L2")
             if held["level"] == "L2":
-                question = interlock_words(held["tool"])     # W23: rule 11's words
+                from .tools import interlock_words_for
+                question = interlock_words_for(held["tool"], held.get("args") or {})   # W23: rule 11's words · W30: the act NAMED
             else:                                # P6 sp1: the demand rises
                 from .proof import question_for
                 question = question_for(held["level"], f"The {held['tool']} act")

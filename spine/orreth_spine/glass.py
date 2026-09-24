@@ -5,6 +5,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, MITL born · the toggle and the impact doors · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W12 · W14 · W19 doors · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper: the gateway is the bridge's lane; the Stable's doors (/minds …); the keeper's beat; W29 · 2026-09-24
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -335,14 +336,47 @@ def residents_view(conn) -> list[dict]:
             for r in cur.fetchall()]
 
 
-def address_to(conn, text: str, to: list[str] | None) -> list[str] | None:
+KEEPERS = ("toolkeeper", "stablekeeper")     # the bodies whose question the next bare words answer (W29)
+
+
+def follow_up_to(conn, text: str, session: str | None, names: list[str]) -> str | None:
+    """W29 (walk #10): when a keeper ASKED for something ("what name shall
+    it wear?"), the next bare words in that session are the ANSWER —
+    routed to the keeper, never fanned out; and a bare keeper name opens
+    the keeper. Otherwise None."""
+    bare = (text or "").strip().lower().rstrip("?.! ")
+    for n in names:
+        if n.lower() in KEEPERS and bare == n.lower():
+            return n
+    if not session:
+        return None
+    cur = conn.cursor()
+    cur.execute("SELECT a.served_by, a.reply, j.name FROM spine_asks a JOIN spine_joins j ON j.did = a.served_by"
+                " AND j.scope = a.scope WHERE a.scope = %s AND a.session = %s AND a.status = 'replied'"
+                " ORDER BY a.replied_at DESC LIMIT 1", (ev.scope(), session))
+    r = cur.fetchone()
+    if r is None or str(r[2]).lower() not in KEEPERS:
+        return None
+    reply = " ".join(str(r[1] or "").split())
+    return r[2] if reply.rstrip().endswith("?") else None
+
+
+def address_to(conn, text: str, to: list[str] | None, session: str | None = None) -> list[str] | None:
     """W7: a name at the head of the ask selects THAT body alone — when
     it is a body of this world (joined here, by name); the fan-out stays
-    for an unaddressed ask. The door's rule, the glass's too."""
+    for an unaddressed ask. The door's rule, the glass's too. W29: a
+    keeper's question keeps the next bare words."""
     cur = conn.cursor()
     cur.execute("SELECT DISTINCT name FROM spine_joins WHERE scope = %s", (ev.scope(),))
-    who = dispatch.address(text, [r[0] for r in cur.fetchall()])
-    return [who] if who else to
+    names = [r[0] for r in cur.fetchall()]
+    who = dispatch.address(text, names)
+    if who:
+        return [who]
+    if to is None:
+        who = follow_up_to(conn, text, session, names)
+        if who:
+            return [who]
+    return to
 
 
 def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = None,
@@ -456,6 +490,30 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"intentions": intent.listing(
                         conn, serves=qs.get("serves"), kind=qs.get("kind"))})
+            if path in ("/minds", "/minds/spend", "/minds/fuel", "/minds/search"):   # P6.5 sp3: the Stable's doors
+                from urllib.parse import parse_qs
+                from . import stable
+                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
+                    if "?" in self.path else {}
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    if path == "/minds/spend":
+                        return self._json(200, stable.spend(conn))
+                    if path == "/minds/fuel":                 # a body's gauge, by name
+                        from .tools import _did_of_body
+                        did = _did_of_body(conn, str(qs.get("name") or ""))
+                        if did is None:
+                            return self._json(404, {"error": f"no body named {qs.get('name')!r} is joined here"})
+                        gw = stable.Gateway()
+                        return self._json(200, {"name": qs.get("name"), "fuel": stable.fuel(conn, did, gw if gw.ready() else None)})
+                    if path == "/minds/search":
+                        rows = stable.search(conn, qs.get("q"), klass=qs.get("klass"),
+                                             max_in_per_m=float(qs["max_in_per_m"]) if qs.get("max_in_per_m") else None,
+                                             modality=qs.get("modality"))
+                        return self._json(200, {"minds": [dict(r, words=stable.stall_words(r)) for r in rows]})
+                    gw = stable.Gateway()
+                    return self._json(200, {"minds": [dict(r, words=stable.stall_words(r)) for r in stable.stalls(conn)],
+                                            "assignments": stable.assignments(conn),
+                                            "gateway": {"base": gw.base, "ready": gw.ready()}})
             if path == "/harness":                       # walk #8: the world checks, off the ground
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     ch = harness.checks(conn)
@@ -578,7 +636,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                         except (ValueError, markers.UnknownKind) as e:
                             return self._json(400, {"error": str(e)})
                         return self._json(201, {"intention": made})
-                    to = address_to(conn, text, to)       # W7: "echo, …" reaches echo alone
+                    to = address_to(conn, text, to, session)   # W7: "echo, …" reaches echo alone · W29: a keeper's follow-up
                     out = dispatch.submit_ask(conn, text, person=person,
                                               to=to, window=window,
                                               session=session, kind=kind,
@@ -642,6 +700,64 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 except KeyError:
                     return self._json(404, {"error": "no such schedule"})
                 return self._json(202, {"rested": str(p.get("schedule_id"))})
+            if path == "/harness/ab":                 # P6.5 sp3: the same golden cases against two minds
+                name = str(p.get("template") or "librarian")
+                body = bodies.get(name)
+                if body is None:
+                    return self._json(404, {"error": "no such body"})
+                arms = [str(a) for a in (p.get("arms") or []) if str(a).strip()]
+                if len(arms) < 2:
+                    return self._json(400, {"error": "an A/B run names two or more minds as arms"})
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        return self._json(200, harness.ab(conn, body, arms))
+                except ValueError as e:
+                    return self._json(400, {"error": str(e)})
+            if path in ("/minds", "/minds/assign", "/minds/unassign", "/minds/refill", "/minds/check",
+                        "/minds/retire", "/minds/restore"):      # P6.5 sp3: the Stable's doors — held acts hold
+                from . import stable
+                person = str(p.get("person") or "did:orreth:person:jb")
+                session = str(p.get("session") or "") or None
+                name = str(p.get("name") or "").strip().lower()
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        if path == "/minds/check":
+                            out = [services.check(conn, name, gateway=gateway, by=person)] if name else \
+                                  services.check_all(conn, gateway=gateway, kind="mind", by=person)
+                            return self._json(200, {"checked": out, "ok": all(c["ok"] for c in out)})
+                        if path == "/minds/restore":
+                            gw = stable.Gateway()
+                            made = stable.restore_mind(conn, name, by=person, gw=gw if gw.ready() else None)
+                            return self._json(201, {"service": made})
+                        if path == "/minds/retire":
+                            held = services.hold_retire(conn, name, person=person, session=session)
+                            return self._json(202, {"held": held, "level": services.RETIRE_LEVEL, "class": services.RETIRE_CLASS})
+                        if path == "/minds":                  # register — held
+                            d = stable.deal(str(p.get("model") or ""), str(p.get("provider") or ""),
+                                            base=p.get("base") or None, price=p.get("price"), context=p.get("context"),
+                                            modalities=p.get("modalities"), klass=str(p.get("klass") or "standard"),
+                                            key=p["key"] if p.get("key") else "auto")
+                            args = {"name": name, "deal": d}
+                            tool = stable.REGISTER_TOOL
+                        elif path == "/minds/assign":
+                            args = {"subject": str(p.get("subject") or "*"), "klass": str(p.get("klass") or "standard"),
+                                    "stall": str(p.get("stall") or name)}
+                            tool = stable.ASSIGN_TOOL
+                        elif path == "/minds/unassign":
+                            args = {"subject": str(p.get("subject") or "*"), "klass": str(p.get("klass") or "standard")}
+                            tool = stable.UNASSIGN_TOOL
+                        else:                                 # refill
+                            from .tools import _did_of_body
+                            who = str(p.get("subject") or name)
+                            did = _did_of_body(conn, who)
+                            if did is None:
+                                return self._json(404, {"error": f"no body named {who!r} is joined here"})
+                            args = {"did": did, "name": who, "usd": float(p.get("usd") or 1.0)}
+                            tool = stable.REFILL_TOOL
+                        held = stable.hold(conn, tool, args, text=stable.act_words(tool, args), person=person, session=session)
+                        return self._json(202, {"held": held, "level": stable.ACT_LEVEL, "class": stable.ACT_CLASS})
+                except (services.ServiceRefused, stable.StableRefused, stable.GatewayDark, ValueError) as e:
+                    return self._json(400, {"error": str(e)})
             if path == "/harness/run":                # on demand (the
                 name = str(p.get("template") or "librarian")   # scheduled
                 body = bodies.get(name)                        # run waits
@@ -826,7 +942,10 @@ class BridgeRig:
         self.firmware: dict[str, Resident] = {}
         # — and the TOOLS KEEPER (P6.5 sp2), the third-kind body that tends the
         # shelf on the human's word (its beat runs on the scheduler's clock)
-        for fn in ("planner", "critic", "grader", "mitl", "toolkeeper"):
+        # — and the STABLE KEEPER (P6.5 sp3), the third-kind body that tends the minds
+        from . import tools as _tools
+        _tools.GATEWAY = gateway                     # the keepers' checks ping through the rig's lane
+        for fn in ("planner", "critic", "grader", "mitl", "toolkeeper", "stablekeeper"):
             fw = Resident(spine / "templates" / f"firmware-{fn}.v0.json",
                           gateway=gateway, home=home)
             fw.load_policy(policy_path)
@@ -916,6 +1035,7 @@ class BridgeRig:
                 except Exception:
                     time.sleep(0.3)
             next_beat = time.monotonic() + self._tool_check_s()
+            next_stable = time.monotonic() + self._mind_check_s()
             while not self._stop.is_set():
                 try:
                     scheduler.tick(conn, bodies)
@@ -924,6 +1044,9 @@ class BridgeRig:
                 if time.monotonic() >= next_beat:     # P6.5 sp2: the keeper's beat — every MCP server
                     next_beat = time.monotonic() + self._tool_check_s()   # probed, its tools synced,
                     self._keeper_beat(conn)           # the strikes rule → a proposal the human cuts
+                if time.monotonic() >= next_stable:   # P6.5 sp3: the Stable keeper's beat — every mind
+                    next_stable = time.monotonic() + self._mind_check_s()   # pinged, the market's eyes,
+                    self._stable_beat(conn)           # drift · EOL · drained · strikes → proposals
                 time.sleep(5)
 
     @staticmethod
@@ -935,6 +1058,34 @@ class BridgeRig:
             return max(5.0, float(os.environ.get("SPINE_TOOL_CHECK_S") or 300))
         except ValueError:
             return 300.0
+
+    @staticmethod
+    def _mind_check_s() -> float:
+        """The Stable keeper's cadence (`SPINE_MIND_CHECK_S`, default 600 s):
+        a beat pings every mind once — real spending, so ten minutes."""
+        from . import stable
+        try:
+            return max(5.0, float(os.environ.get(stable.MIND_CHECK_DIAL) or stable.MIND_CHECK_DEFAULT))
+        except ValueError:
+            return float(stable.MIND_CHECK_DEFAULT)
+
+    def _stable_beat(self, conn) -> None:
+        from . import stable
+        keeper = self.firmware.get("stablekeeper")
+        if keeper is None:
+            return
+        try:
+            gw = stable.Gateway()
+            out = stable.keeper_beat(conn, keeper=keeper.identity.did, gateway=self.gateway,
+                                     gw=gw if gw.ready() else None)
+            bad = [c["name"] for c in out["checked"] if c["ok"] is False]
+            if bad or out["proposed"]:
+                print(f"the Stable keeper's beat: {len(out['checked'])} minds pinged"
+                      + (f", UNHEALTHY: {', '.join(bad)}" if bad else "")
+                      + (f", proposed: {', '.join(p['kind'] + ' ' + p['name'] for p in out['proposed'])}" if out["proposed"] else ""),
+                      file=sys.stderr, flush=True)
+        except Exception as e:                       # noqa: BLE001
+            print(f"the Stable keeper's beat stumbled: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
 
     def _seed_ref(self, conn) -> None:
         """P6.5 sp2: with `SPINE_MCP_REF=1` the rig registers the reference
@@ -1091,15 +1242,16 @@ class BridgeRig:
 
 def main() -> int:
     gw = None
-    if os.environ.get("ANTHROPIC_API_KEY"):
-        from .gateway import AnthropicGateway
-        gw = AnthropicGateway()
-        mind = "the librarian, thinking for real"
+    from . import stable as _stable                      # P6.5 sp3: THE GATEWAY — every mind through LiteLLM
+    if _stable.Gateway().ready():
+        from .gateway import LiteLLMGateway
+        gw = LiteLLMGateway()
+        mind = f"every mind through the gateway at {gw.base}"
     else:
         from .gateway import FakeGateway
-        gw = FakeGateway(reply="I am the fake mind — set ANTHROPIC_API_KEY "
+        gw = FakeGateway(reply="I am the fake mind — the gateway is dark; run scripts/dev.sh up "
                                "and restart me to think for real.")
-        mind = "a fake mind (no key found)"
+        mind = f"a fake mind (the gateway at {_stable.Gateway().base} is dark)"
     home = Path(os.environ.get("ORRETH_HOME", Path.home() / ".orreth")) / "agents"
     rig = BridgeRig(gateway=gw, home=home).start()   # the same selves, every life
     print(f"the Bridge is lit: http://127.0.0.1:{rig.port}/  ({mind})")

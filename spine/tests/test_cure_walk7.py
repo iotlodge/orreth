@@ -63,7 +63,7 @@ class SystemWordsGateway:
     def __init__(self):
         self.calls = []
 
-    def think(self, conn, *, did, system, prompt, model=None, max_tokens=1024, on_delta=None):
+    def think(self, conn, *, did, system, prompt, model=None, max_tokens=1024, on_delta=None, **_):
         gateway.ensure_schema(conn)
         self.calls.append({"system": system, "prompt": prompt})
         with conn.transaction():

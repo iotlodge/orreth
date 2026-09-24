@@ -4,11 +4,11 @@
 #
 # Orreth dev rig — JB's one-command feedback rig, DOCKER-first (the NEW line: canon 0002).
 #   scripts/dev.sh up            the spine rig rises: ground (Postgres :5433) · invoke (RabbitMQ
-#                                :5672 / :15672) · events (Kafka :9092); waits until all three are healthy
+#                                :5672 / :15672) · events (Kafka :9092) · gateway (LiteLLM :4604); waits until all four are healthy
 #   scripts/dev.sh down          the rig rests: compose STOP — never `down -v`; the ground's data survives
 #   scripts/dev.sh status        compose ps · the Bridge on :4600 · the harness door when the Bridge is lit
 #   scripts/dev.sh logs          follow the rig's logs
-#   scripts/dev.sh bridge        relight the Python Bridge on the host (SPINE_MASTERS · ANTHROPIC_API_KEY
+#   scripts/dev.sh bridge        relight the Python Bridge on the host (SPINE_MASTERS · the gateway on :4604
 #                                from the environment / .env), log ~/.orreth/tmp/bridge.log, print the pid
 #   scripts/dev.sh bridge stop   bring the Bridge down cleanly (SIGINT — it stops whole); confirms :4600 empty
 #   scripts/dev.sh shadow        light the RUST bridge (spine-bridge, P7 sp3) on :4601 in SHADOW beside the Python
@@ -43,7 +43,8 @@ export TMPDIR="$HOME/.orreth/tmp"; mkdir -p "$TMPDIR"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SPINE="$ROOT/spine"; PLANE="$ROOT/backend/plane"
 RIG="docker compose -f $SPINE/compose.yaml"
-RIG_BOXES="orreth-spine-ground orreth-spine-invoke orreth-spine-events"   # compose.yaml's container names
+RIG_BOXES="orreth-spine-ground orreth-spine-invoke orreth-spine-events orreth-spine-gateway"   # compose.yaml's container names
+GATEWAY_PORT=4604   # P6.5 sp3: THE GATEWAY (LiteLLM), run and managed by Orreth — every mind thinks through it
 BRIDGE_PORT=4600; BRIDGE_LOG="$TMPDIR/bridge.log"; SUITE_LOG="$TMPDIR/suite.log"; RUST_LOG="$TMPDIR/rust.log"
 SHADOW_PORT=4601; SHADOW_LOG="$TMPDIR/shadow.log"   # P7 sp3: the Rust bridge in SHADOW beside the Python Bridge
 
@@ -62,7 +63,7 @@ wait_healthy() {  # up to ~3 minutes; the events rail (Kafka) is the slow riser
   for i in $(seq 90); do
     n=0; for b in $RIG_BOXES; do
       [ "$(docker inspect -f '{{.State.Health.Status}}' "$b" 2>/dev/null || true)" = healthy ] && n=$((n+1)); done
-    [ "$n" = 3 ] && return 0
+    [ "$n" = 4 ] && return 0
     sleep 2
   done
   return 1
@@ -71,6 +72,14 @@ wait_healthy() {  # up to ~3 minutes; the events rail (Kafka) is the slow riser
 load_env() {  # keys live in .env and the process env only, never in any record (the env-secrets law, 0059)
   [ -f "$ROOT/.env" ] && { set -a; . "$ROOT/.env"; set +a; }; true
 }
+
+gateway_db() {  # P6.5 sp3: the gateway keeps its ledger in its own database on the ground — made once, kept forever
+  have=$(docker exec orreth-spine-ground psql -U orreth -d spine -tAc "SELECT 1 FROM pg_database WHERE datname='litellm'" 2>/dev/null || true)
+  [ "$have" = 1 ] && return 0
+  docker exec orreth-spine-ground createdb -U orreth litellm >/dev/null 2>&1 && echo "· the gateway's ledger database made on the ground (litellm)"
+}
+
+gateway_up() { curl -sf -m 3 "http://127.0.0.1:$GATEWAY_PORT/health/liveliness" >/dev/null 2>&1; }
 
 bridge_stop() {
   pid=$(bridge_pid)
@@ -92,7 +101,7 @@ bridge_light() {
   ground_up || { echo "· the ground is dark on :5433 — run scripts/dev.sh up first"; return 1; }
   load_env
   masters="${SPINE_MASTERS:-}"; n=0; [ -n "$masters" ] && n=$(echo "$masters" | tr ',' '\n' | grep -c . || true)
-  mind="a fake mind (no ANTHROPIC_API_KEY)"; [ -n "${ANTHROPIC_API_KEY:-}" ] && mind="the librarian, thinking for real"
+  mind="a fake mind (the gateway on :$GATEWAY_PORT is dark — run scripts/dev.sh up)"; gateway_up && mind="every mind through the gateway on :$GATEWAY_PORT"
   # nohup + & + a subshell: the worker outlives this verb; its stdout is the log, never our pipe.
   # A background child of a non-interactive shell inherits SIGINT IGNORED (POSIX), and Python
   # then never installs KeyboardInterrupt — so `bridge stop`'s SIGINT would fall on deaf ears
@@ -326,9 +335,15 @@ case "${1:-}" in
            # recreated, events kept); a RECREATE carries the anonymous volumes over — verified:
            # 16k outbox rows from 2026-09-17 still there — only `down -v`/`rm` would drop them.
            # A NAMED volume for the ground would make this a law instead of a behaviour (JB's call).
-           echo "· the spine rig rises (ground · invoke · events)"
-           $RIG up -d 2>&1 | tail -3
-           if wait_healthy; then echo "· all three rails healthy"; else echo "· NOT all healthy after 3 min — see below and \`logs\`"; fi
+           # P6.5 sp3: the gateway rises LAST — its ledger database must stand on the ground first,
+           # and its provider keys ride in from THIS shell's environment (load_env; never a file of ours)
+           load_env
+           echo "· the spine rig rises (ground · invoke · events · gateway)"
+           $RIG up -d ground invoke events 2>&1 | tail -3
+           for i in $(seq 60); do [ "$(docker inspect -f '{{.State.Health.Status}}' orreth-spine-ground 2>/dev/null)" = healthy ] && break; sleep 2; done
+           gateway_db
+           $RIG up -d gateway 2>&1 | tail -2
+           if wait_healthy; then echo "· all four boxes healthy"; else echo "· NOT all healthy after 3 min — see below and \`logs\`"; fi
            new_status ;;
   down)    [ -n "$(bridge_pid)" ] && bridge_stop
            echo "· the rig rests (compose stop — the ground's data survives; never down -v)"

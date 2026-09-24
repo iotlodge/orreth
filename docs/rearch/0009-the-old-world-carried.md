@@ -78,12 +78,12 @@ is the exact thing this page exists to prevent.
 
 | Old organ (dive) | What it did | Seat | Evidence / gap |
 |---|---|---|---|
-| The Model Plane (0016) | LiteLLM through the floors; degrade-where-pins-allow; plane meters, never sees the prompt | RE-SEATED — P6.5 sp6b | `gateway.py` = `AnthropicGateway` + two fakes. **No LiteLLM, no OpenRouter, no local route, no pins, no degrade rule.** The prompt law holds. |
-| The universal meter (0019, rule 5) | every resident's cognition metered under its own DID; honest zeros | CARRIED — `gateway.py` `spine_meter` | per DID · model · tokens in/out · landed-at. **No dollars** (no price known), no per-floor rollup. |
-| The Stable registry (0019) | minds as identities: stalls pin the DEAL, price drift = rug-pull, EOL calendar, ada | RE-SEATED — sp6b | no registry of minds anywhere; a template names a model string and the gateway honors it. |
-| The market + effort=class + assignments + allocation A/B (0058) | five-eyed catalog, class routing, subject→pin ledger, arms as signed records | RE-SEATED — sp6b | `harness.py` runs golden cases per TEMPLATE; there are no model arms, no assignment ledger, no class. |
-| The fuel clause (0058 wound, `budget.renew_days`) | allowance-per-window, lazy renewal, refill door | RE-SEATED — sp6b | the spine has **no budgets at all**; a body can think without a ceiling. |
-| The LLM-lifecycle watcher (0004) | watches retirements and drift; rolls assignments; owns the A/B harness | RE-SEATED — sp6b | designed in canon, no template exists. The harness it should own exists without an owner. |
+| The Model Plane (0016) | LiteLLM through the floors; degrade-where-pins-allow; plane meters, never sees the prompt | **CARRIED — P6.5 sp3 (2026-09-24)** | THE GATEWAY IS LITELLM (compose `gateway` box, managed by Orreth); `LiteLLMGateway` the one lane; pins · assignments · degrade CONFESSED (`stable.resolve`, fixture `minds-v0`). The prompt law holds (the kernel sees the meter, never the words). |
+| The universal meter (0019, rule 5) | every resident's cognition metered under its own DID; honest zeros | **CARRIED — sp3: DOLLARS** | per DID · model · tokens · landed-at · **usd** (the gateway's cost header; the pin's price when streamed) · stall · request id · ok + reason · confessed degrade; `stable.spend` rolls up per body per mind; the harness's "the meter and the gateway agree" is the 100%. Still no per-WORLD rollup (the meter has no scope column). |
+| The Stable registry (0019) | minds as identities: stalls pin the DEAL, price drift = rug-pull, EOL calendar, ada | **CARRIED — sp3** | stalls = services of kind `mind` (the DEAL the manifest, the key by NAME) + model entries in the gateway; drift → UNHEALTHY + a RE-PIN proposal; EOL (OpenRouter's keyless catalog, the 30-day horizon) → a RETIRE proposal with the swap; the stablekeeper is ada's seat. |
+| The market + effort=class + assignments + allocation A/B (0058) | five-eyed catalog, class routing, subject→pin ledger, arms as signed records | **CARRIED — sp3 (partial)** | classes fast · standard · deep on the stall and the template (`mind.class`); assignments subject→{class: stall} as facts; `harness.ab` runs model ARMS (each run pinned); `stable.search` by words · class · ceiling price · modality. **Not yet**: an ask's EFFORT read from its words (class is the template's or the pin's); arms as signed records judged by the grader; the five eyes beyond price/context/expiry (latency · quality · availability · fit are the harness's and the health's, not a catalog's). |
+| The fuel clause (0058 wound, `budget.renew_days`) | allowance-per-window, lazy renewal, refill door | **CARRIED — sp3** | every body's virtual key at the gateway wears `max_budget` + `budget_duration` (= renew_days); the gateway renews it; a drained key is the honest word + the keeper's refill proposal; `/minds/refill` the door; `orreth.mind.fueled.v1` the fact. |
+| The LLM-lifecycle watcher (0004) | watches retirements and drift; rolls assignments; owns the A/B harness | **CARRIED — sp3** | `firmware-stablekeeper.v0.json` + `stable.keeper_beat`: pings · drift · EOL · drained · strikes → proposals; never acts alone (rule 11); the A/B harness's arms are its to propose from. |
 
 ### The Tool Farm & the Toolshed — tools, MCP, services as identities
 
@@ -230,6 +230,10 @@ covenant, acting on the markers it cares about (the interest law).
   fixtures (`stable-v0.json`); the port carries registry · assignment ·
   meter-in-dollars · route resolution. The SDK call stays body-side; the
   kernel never sees the prompt (rule 5, unchanged).
+- **BUILT 2026-09-24 (P6.5 sp3)** on JB's lock that the gateway IS LiteLLM,
+  run and managed by Orreth — see 0005 sp3 for the whole. The fixture is
+  `minds-v0.json` (not `stable-v0`); P7 sp6 ports `stable.py`'s pure laws
+  and the registry/assignment/meter seams against it.
 
 ### 3. The FARMS — one ladder, two keepers (a simplification to lock)
 
