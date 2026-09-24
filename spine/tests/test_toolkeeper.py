@@ -390,3 +390,28 @@ def test_the_shelf_door_shows_the_nesting_and_the_keeper_stands_in_the_crew(pg, 
     checks = {c["name"]: c for c in json.loads(h)["checks"]}
     assert checks["every MCP server answers initialize"]["ok"] is True
     assert checks["the keeper proposes after strikes, never retires alone"]["ok"] is True
+
+
+def test_a_proposal_whose_reason_passed_withdraws_itself(pg, monkeypatch, tmp_path):
+    """W49 (walk #12): the keeper proposed retiring a tool for being
+    unhealthy; the tool answers its next check — the kernel withdraws the
+    waiting proposal in words (a recorded cancel), so no stale hold waits
+    on the human; a human's own retire hold is never touched."""
+    _scope(monkeypatch)
+    monkeypatch.delenv(mcp.STRIKES_DIAL, raising=False)
+    keeper = _body("firmware-toolkeeper.v0.json"); keeper.join(pg)
+    _clock(pg, monkeypatch, tmp_path)
+    monkeypatch.setenv("SPINE_MCP_REF_TOOLS", "now")
+    for _ in range(3):
+        beat = mcp.keeper_beat(pg, keeper=keeper.identity.did)
+    [p] = beat["proposed"]
+    assert glass.ask_view(pg, p["held"])["status"] == "awaiting-confirm"
+    mine = services.hold_retire(pg, "now", person=ME)                # the human's own hold stands apart
+    monkeypatch.setenv("SPINE_MCP_REF_TOOLS", "now,echo")             # echo is listed again
+    services.check(pg, "clock", by=ME)
+    assert services.get(pg, "echo")["state"] == "healthy"
+    v = glass.ask_view(pg, p["held"])
+    assert v["status"] != "awaiting-confirm"
+    assert "Withdrawn — the echo service answered its check and is healthy again; nothing to retire" in (v["reply"] or "")
+    assert glass.ask_view(pg, mine)["status"] == "awaiting-confirm"
+    assert mcp.keeper_beat(pg, keeper=keeper.identity.did)["proposed"] == []

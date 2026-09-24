@@ -510,6 +510,8 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
             why = reason or "the human cancelled"
             note(f"{why} — the {held['tool']} act never ran (cancel is always the default)")
             reply = (EXPIRED_REPLY if reason and reason.startswith("no word came")
+                     else f"{reason[0].upper() + reason[1:]}. Nothing was done; the proposal is at rest, recorded."
+                     if reason and reason.startswith("withdrawn")          # W49: a proposal whose reason passed
                      else "Rested — three wrong proofs were given, so nothing was done. The act "
                           "is at rest, recorded; ask again when you are ready." if reason
                      else "Cancelled — nothing was done. Cancel is always the default here.")

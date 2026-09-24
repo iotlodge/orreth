@@ -463,7 +463,33 @@ def record_health(conn, name: str, ok: bool | None, detail: str, *, by: str = KE
             " WHERE name = %s AND scope = %s", (state, state, ok, detail, name, ev.scope()))
 
     _fact(conn, verb or "healthy", svc, by, extra={"ok": ok, "detail": detail}, domain=domain)
+    if ok:
+        withdraw_stale_proposals(conn, name)          # W49 (walk #12): a proposal whose reason passed withdraws itself
     return {"name": name, "kind": row["kind"], "did": row["did"], "ok": ok, "detail": detail, "state": state}
+
+
+def withdraw_stale_proposals(conn, name: str) -> list[str]:
+    """W49: a keeper proposed retiring this service for being unhealthy;
+    it is healthy again — the kernel withdraws the waiting proposal with
+    the reason in words (a recorded cancel, never a deletion), so no
+    stale hold waits on the human."""
+    from .proof import settle_kernel_act, NotConfirmed
+    cur = conn.cursor()
+    cur.execute("SELECT to_regclass('spine_asks') IS NOT NULL")
+    if not cur.fetchone()[0]:
+        return []
+    cur.execute("SELECT ask_id FROM spine_asks WHERE scope = %s AND served_by = %s AND status = 'awaiting-confirm'"
+                " AND held IS NOT NULL AND held::json->>'tool' = %s AND held::json->'args'->>'name' = %s"
+                " AND person LIKE 'did:orreth:agent:%%'", (ev.scope(), KERNEL, RETIRE_TOOL, name))
+    out = []
+    for (aid,) in cur.fetchall():
+        try:
+            settle_kernel_act(conn, aid, approve=False, by=KERNEL,
+                              reason=f"withdrawn — the {name} service answered its check and is healthy again; nothing to retire")
+            out.append(aid)
+        except NotConfirmed:
+            pass
+    return out
 
 
 def check_all(conn, *, gateway=None, kind: str | None = None, by: str = KERNEL) -> list[dict]:
