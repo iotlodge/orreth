@@ -1405,6 +1405,8 @@ async function loadCrew(){
     d.innerHTML =
       `<h5>${esc(c.name)} <span class="meta">· ${esc(c.kind)} · life ${c.lives}</span></h5>` +
       `<div class="meta">self …${esc(c.did.slice(-8))} · wearing covenant v${esc(c.policy_version)} · template ${esc(c.template)}</div>` +
+      (c.mind ? `<div class="meta">LLM: ${c.mind.stall ? `<b>${esc(c.mind.stall)}</b> · ${esc(c.mind.route || "")}${c.mind.klass ? " · " + esc(c.mind.klass) : ""}` : "<b>none can serve</b>"}` +
+                ` — ${esc(c.mind.why || "")}` + (c.mind.last ? ` · last thought rode ${esc(c.mind.last.stall)}${c.mind.last.usd != null ? " ($" + Number(c.mind.last.usd).toFixed(4) + ")" : ""}${c.mind.last.ok === false ? " · could not think" : ""}` : "") + `</div>` : "") +   // P6.5 sp3 (walk #12): which mind, and why
       stands + `<div>${caps}</div>` +
       `<div class="side"><b>SIDE A · INFERENCE</b><div>asks served: ${c.side_a.asks_served}` +
       (c.side_a.last_served ? ` · last ${hhmm(c.side_a.last_served)}` : "") + `</div></div>` +
@@ -1470,7 +1472,7 @@ async function loadShelf(box){
   const st = await fetch("/minds").then(x=>x.json()).catch(()=>null);      // P6.5 sp3: the Stable's spend rides the mind cards
   if (r && st) for (const s of r.services) if (s.kind === "mind"){ const m = (st.minds || []).find(x => x.name === s.name); if (m) s.spend = m.spend; }
   const head = document.createElement("div"); head.className = "shelf-head";
-  head.textContent = "THE SHELF · every service the kernel governs — tool · mcp · store · source · mind · one ladder: registered → versioned → healthy | unhealthy → retired · a mind is a stall in the Stable and a model entry in the gateway";
+  head.textContent = "THE SHELF · every service the kernel governs — tool · mcp · store · source · mind (an LLM) · one ladder: registered → versioned → healthy | unhealthy → retired · an LLM is a stall in the Stable and a model entry in the gateway";
   box.appendChild(head);
   if (!r){ box.insertAdjacentHTML("beforeend", `<div class="meta">the shelf door did not answer</div>`); return; }
   if (!r.services.length){ box.insertAdjacentHTML("beforeend", `<div class="meta">nothing on the shelf yet — the kernel registers its built-ins at boot</div>`); return; }
@@ -1522,15 +1524,15 @@ const SERVICE_KINDS = {service: null, services: null, tool: "tool", tools: "tool
 async function serviceWords(text){                 // "what services are here?" · "what tools are here?" · "retire the weather tool" · "check the services"
   const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
   // P6.5 sp3: the Stable's own words — the mind cards in words, a body's fuel, a refill, an assignment (held at the interlock)
-  let m = t.match(/^(?:what|which)\s+minds?\s+(?:are|is)\s+(?:here|in the stable|registered|standing)$|^show\s+(?:me\s+)?(?:the\s+)?(?:minds|stable)$|^(?:what'?s|what is)\s+in the stable$/);
+  let m = t.match(/^(?:what|which)\s+(?:minds?|llms?|models?)\s+(?:are|is)\s+(?:here|in the stable|registered|standing|available)$|^show\s+(?:me\s+)?(?:the\s+)?(?:minds|llms|models|stable)$|^(?:what'?s|what is)\s+in the stable$/);
   if (m){
     el("msg mine", esc(text));
     const r = await fetch("/minds").then(x=>x.json()).catch(()=>null);
     if (!r){ sysline("the Stable's door did not answer"); return true; }
-    if (!r.minds.length){ sysline("no mind in the Stable yet — say “stablekeeper, add the mind ollama llama3.2 as llama”"); return true; }
-    for (const s of r.minds) sysline(`<b>mind</b> · ${esc(s.words)} · health: ${esc(healthWords(s).split(" · ")[0])}`);
-    for (const a of (r.assignments || [])) sysline(`<b>assignment</b> · ${esc(a.subject === "*" ? "every body" : a.subject)} thinks with ${esc(a.stall)} for ${esc(a.klass)} work`);
-    sysline(r.gateway && r.gateway.ready ? "the gateway answers — every mind thinks through it" : "the gateway is DARK — no mind can think until scripts/dev.sh up");
+    if (!r.minds.length){ sysline("no LLM in the Stable yet — say “stablekeeper, add the LLM ollama llama3.2 as llama”"); return true; }
+    for (const s of r.minds) sysline(`<b>LLM</b> · ${esc(s.words)} · health: ${esc(healthWords(s).split(" · ")[0])}`);
+    for (const a of (r.assignments || [])) sysline(`<b>assignment</b> · ${esc(a.subject === "*" ? "every body" : a.subject)} uses ${esc(a.stall)} for ${esc(a.klass === "any" ? "all" : a.klass)} work`);
+    sysline(r.gateway && r.gateway.ready ? "the gateway answers — every LLM call goes through it" : "the gateway is DARK — no LLM can answer until scripts/dev.sh up");
     toggleMonitor(true);
     return true;
   }
@@ -1546,18 +1548,35 @@ async function serviceWords(text){                 // "what services are here?" 
                  (g.drained_at ? " · <b>OUT OF FUEL</b> — say “refill " + esc(who) + " by $1”" : "") + (g.refills ? ` · refilled ${g.refills}×` : ""));
     return true;
   }
+  m = t.match(/^(?:stablekeeper,?\s+)?(?:add|register)\s+(?:the\s+)?(?:mind|llm|model)\s+(anthropic|openrouter|ollama|openai|compatible)\s+(\S+)\s+as\s+([a-z0-9_.-]+)(?:\s+for\s+(fast|standard|deep)(?:\s+work)?)?(?:\s+at\s+(\S+))?$/);
+  if (m){                                          // W41: a well-formed "add the mind …" goes straight to the Stable's door — held, never described
+    el("msg mine", esc(text));
+    await mindDoor("/minds", {name: m[3], provider: m[1], model: m[2], klass: m[4] || "standard", base: m[5] || undefined},
+                   `adding the ${esc(m[3])} LLM (${esc(m[1])} ${esc(m[2])}) is consequential — the kernel holds it at the interlock…`);
+    return true;
+  }
   m = t.match(/^refill\s+([a-z0-9_-]+)(?:\s+by)?\s+\$?([0-9.]+)$/);
   if (m){
     el("msg mine", esc(text));
     await mindDoor("/minds/refill", {subject: m[1], usd: Number(m[2])}, `refilling ${esc(m[1])} by $${m[2]} is consequential — real spending; the kernel holds it at the interlock…`);
     return true;
   }
-  m = t.match(/^(?:assign|point)\s+([a-z0-9_*-]+|every body|everyone)\s+(?:to|at)\s+(?:the\s+)?([a-z0-9_.-]+)(?:\s+mind)?(?:\s+for\s+(fast|standard|deep)(?:\s+work)?)?$/);
+  m = t.match(/^(?:assign|point)\s+([a-z0-9_*-]+|every body|everyone)\s+(?:to|at)\s+(?:the\s+)?([a-z0-9_.-]+)(?:\s+(?:mind|llm|model))?(?:\s+for\s+(fast|standard|deep|all)(?:\s+work)?)?$/);
   if (m){
     el("msg mine", esc(text));
     const subject = (m[1] === "every body" || m[1] === "everyone") ? "*" : m[1];
-    await mindDoor("/minds/assign", {subject, stall: m[2], klass: m[3] || "standard"},
-                   `pointing ${esc(subject === "*" ? "every body" : subject)} at the ${esc(m[2])} mind for ${esc(m[3] || "standard")} work is consequential — the kernel holds it at the interlock…`);
+    const klass = (!m[3] || m[3] === "all") ? "any" : m[3];
+    await mindDoor("/minds/assign", {subject, stall: m[2], klass},
+                   `pointing ${esc(subject === "*" ? "every body" : subject)} at the ${esc(m[2])} LLM for ${klass === "any" ? "all its" : esc(klass)} work is consequential — the kernel holds it at the interlock…`);
+    return true;
+  }
+  m = t.match(/^(?:unassign|release)\s+([a-z0-9_*-]+|every body|everyone)(?:\s+(?:for|from)\s+(fast|standard|deep|all)(?:\s+work)?)?$/);
+  if (m){                                          // "unassign librarian" lifts its all-work assignment; "… for fast work" lifts that one
+    el("msg mine", esc(text));
+    const subject = (m[1] === "every body" || m[1] === "everyone") ? "*" : m[1];
+    const klass = (!m[2] || m[2] === "all") ? "any" : m[2];
+    await mindDoor("/minds/unassign", {subject, klass},
+                   `lifting ${esc(subject === "*" ? "every body" : subject)}'s ${klass === "any" ? "all-work" : esc(klass)} assignment is consequential — the kernel holds it at the interlock…`);
     return true;
   }
   m = t.match(/^(?:what|which)\s+(services?|tools?|minds?|stores?|sources?|mcps?)\s+(?:are|is)\s+(?:here|on the shelf|registered)$|^show\s+(?:me\s+)?(?:the\s+)?(services|tools|stores|sources|mcps|shelf)$|^(?:what|which)\s+(services|tools|stores|sources|mcps)\s+(?:do we have|have we got|are there)$/);   // W31: "show the tools" too
@@ -1621,11 +1640,12 @@ function refreshPulls(){                 // P17: a change anywhere reflects in
   if (monitorPull.classList.contains("open") && !monitorTimer)
     monitorTimer = setTimeout(() => { monitorTimer = null; loadMonitor(); }, 400);
 }
+let HC = null, HC_AT = 0;                        // the health checks, read every 30 s (nine laws, some through the gateway)
 async function loadMonitor(){
   const s = await fetch("/monitor").then(x=>x.json()).catch(()=>null);
   if (!s) return;
-  const box = document.getElementById("views"); const keep = box.scrollTop;
-  box.innerHTML = "";
+  const real = document.getElementById("views"); const keep = real.scrollTop;
+  const box = document.createElement("div");      // W48 (walk #12): painted off-screen, swapped in ONLY when something changed — no flash
   const view = (title, rows) => {
     const d = document.createElement("div"); d.className = "view";
     d.innerHTML = `<h5>${title}</h5>` + rows; box.appendChild(d); return d; };
@@ -1637,11 +1657,17 @@ async function loadMonitor(){
        row("could not think (last hour)", v.route_failures_1h || 0, v.route_failures_1h ? "red" : "ok") +
        row("bodies out of fuel", v.bodies_drained || 0, v.bodies_drained ? "red" : "ok"));
   const stb = s.stable || {minds: [], assignments: []};                            // P6.5 sp3: THE STABLE — every mind, its deal, its spend
-  view("THE STABLE · minds " + (v.minds_standing || 0) + " standing" + (v.minds_unhealthy ? " · " + v.minds_unhealthy + " unhealthy" : ""),
+  view("THE STABLE · LLMs · " + (v.minds_standing || 0) + " standing" + (v.minds_unhealthy ? " · " + v.minds_unhealthy + " unhealthy" : ""),
        (stb.minds || []).map(m => `<div class="row"><span>${esc(m.words)}</span><span class="${m.state === "unhealthy" ? "red" : m.state === "retired" ? "" : "ok"}">${esc(m.state)}</span></div>`).join("") +
-       ((stb.assignments || []).length ? (stb.assignments.map(a => row(`${a.subject === "*" ? "every body" : a.subject} thinks with`, `${a.stall} (${a.klass})`)).join(""))
-                                        : `<div class="meta">no assignments — every body rides its template's mind; say “assign librarian to haiku for fast work”</div>`) ||
-       `<div class="meta">no mind in the Stable — say “stablekeeper, add the mind ollama llama3.2 as llama”</div>`);
+       ((stb.assignments || []).length ? (stb.assignments.map(a => row(`${a.subject === "*" ? "every body" : a.subject} uses`, `${a.stall} for ${a.klass === "any" ? "all" : a.klass} work`)).join(""))
+                                        : `<div class="meta">no assignments — every body uses its template's LLM; say “assign librarian to haiku”</div>`) ||
+       `<div class="meta">no LLM in the Stable — say “stablekeeper, add the LLM ollama llama3.2 as llama”</div>`);
+  // P6.5 sp3 (walk #12, W45): the HEALTH CHECKS — nine things that must be true of this world, read from the ground right now
+  if (!HC || Date.now() - HC_AT > 30000){ HC = await fetch("/harness").then(x=>x.json()).catch(()=>null); HC_AT = Date.now(); }
+  const hc = HC;
+  view("HEALTH CHECKS · what must be true of this world, read from the ground now" + (HC_AT ? " · as of " + hhmm(new Date(HC_AT).toISOString()) : ""),
+       hc && hc.checks ? hc.checks.map(c => `<div class="row"><span>${c.ok ? "✓" : "✗"} ${esc(c.name)} — <span class="meta">${esc(c.detail || "")}</span></span><span class="${c.ok ? "ok" : "red"}">${c.ok ? "holds" : "BROKEN"}</span></div>`).join("")
+                      : `<div class="meta">the health door did not answer</div>`);
   const benches = Object.entries(s.benches || {}).filter(([k]) => k !== "error")
     .map(([q, n]) => row("bench " + q.split(".").slice(3).join(".") || "shared", n ?? "?")).join("");
   view("RAILS", row("outbox pending", s.outbox.pending, s.outbox.pending ? "red" : "ok") +
@@ -1661,9 +1687,10 @@ async function loadMonitor(){
     hv.querySelector(".assist").textContent = "running…";
     await fetch("/harness/run", {method:"POST", headers:{"content-type":"application/json"},
                                  body: JSON.stringify({template: "librarian"})}).catch(()=>null);
-    loadMonitor();
+    HC_AT = 0; loadMonitor();
   };
-  box.scrollTop = keep;                       // the reader keeps their place
+  if (box.innerHTML !== real.innerHTML) real.replaceChildren(...box.childNodes);   // the same picture stays put
+  real.scrollTop = keep;                      // the reader keeps their place
 }
 
 

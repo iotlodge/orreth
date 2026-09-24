@@ -125,7 +125,7 @@ def test_a_body_thinks_through_the_gateway_with_its_own_key_and_the_meter_lands_
     fake.reply = "pong"
     # a pin to a mind that does not stand
     said = gw.think(pg, did=did, system="s", prompt="p", subject="librarian", pin="ghost")
-    assert said == "I cannot think right now — no mind named 'ghost' stands in the Stable."
+    assert said == "I cannot think right now — no LLM named 'ghost' stands in the Stable."
     bad = [r for r in gateway.meter_rows(pg, did) if not r["ok"]]
     assert len(bad) == 1 and bad[0]["note"].startswith("I cannot think right now") and bad[0]["usd"] == 0.0
     # the gateway dark: words, never a stack
@@ -152,7 +152,7 @@ def test_a_drained_lease_speaks_in_words_and_the_keeper_proposes_a_refill_the_hu
     did = lib.identity.did
     assert gw.think(pg, did=did, system="s", prompt="p", model=HAIKU, subject="librarian") == "pong"   # $0.000038 spent of $0.00003: the next refuses
     said = gw.think(pg, did=did, system="s", prompt="p", model=HAIKU, subject="librarian")
-    assert said.startswith("I am out of fuel — librarian's allowance of $3e-05 for this window is spent, so I cannot think until it renews or is refilled.")
+    assert said.startswith("I am out of fuel — librarian's LLM allowance of $3e-05 for this window is spent, so I cannot think until it renews or is refilled.")
     assert "It renews on its own at 2099-01-01 00:00 UTC." in said and 'A refill is one word away: "refill librarian by $1".' in said
     g = stable.fuel(pg, did, gw.stable)
     assert g["drained_at"] is not None and g["max_usd"] == 3e-05
@@ -208,20 +208,20 @@ def test_the_market_eyes_drift_and_eol_and_the_keeper_proposes_never_acts(pg, fa
     assert services.get(pg, "llama")["last_health"]["detail"] == "the deal moved under the pin: the price in moved: $0.1 → $0.2 per million"
     [p] = [p for p in beat["proposed"] if p["kind"] == "repin"]
     v = glass.ask_view(pg, p["held"])
-    assert v["text"] == "the stablekeeper proposes re-pinning the llama mind — the price in moved: $0.1 → $0.2 per million"
+    assert v["text"] == "the stablekeeper proposes re-pinning the llama LLM — the price in moved: $0.1 → $0.2 per million"
     assert v["hold"]["tool"] == stable.REPIN_TOOL and services.get(pg, "llama")["version"] == 1
     dispatch.confirm_ask(pg, p["held"], approve=True, person=ME)
     ll = services.get(pg, "llama")
     assert ll["version"] == 2 and ll["manifest"]["price"]["in_per_m"] == 0.2 and fake.models["llama"]["litellm_params"]["model"] == llama_route
-    assert glass.ask_view(pg, p["held"])["reply"].startswith("Done, on your word: the llama mind is re-pinned to its new deal (version 2)")
+    assert glass.ask_view(pg, p["held"])["reply"].startswith("Done, on your word: the llama LLM is re-pinned to its new deal (version 2)")
     # EOL inside the horizon → retire proposed with the swap named
     now = datetime(2026, 9, 24, tzinfo=timezone.utc)
     catalog2 = {"meta-llama/llama-3.3-70b-instruct": {"price": {"in_per_m": 0.2, "out_per_m": 0.3}, "context": 128000, "expires": "2026-10-10"}}
     beat = stable.keeper_beat(pg, keeper=keeper.identity.did, gateway=gw, gw=gw.stable, catalog=catalog2, now=now)
     [p] = [p for p in beat["proposed"] if p["kind"] == "retire"]
     v = glass.ask_view(pg, p["held"])
-    assert v["text"] == ("the stablekeeper proposes retiring the llama mind — it expires in 16 days (2026-10-10); "
-                         "the swap: the haiku mind (same class, fits the deal, nearest price ($1 vs $0.2 per million in))")
+    assert v["text"] == ("the stablekeeper proposes retiring the llama LLM — it expires in 16 days (2026-10-10); "
+                         "the swap: the haiku LLM (same class, fits the deal, nearest price ($1 vs $0.2 per million in))")
     assert services.get(pg, "llama")["state"] != "retired"                      # proposed, never acted
     dispatch.confirm_ask(pg, p["held"], approve=True, person=ME)
     assert services.get(pg, "llama")["state"] == "retired" and "llama" not in fake.models
@@ -272,7 +272,7 @@ def test_the_harness_runs_model_arms_and_reads_the_stables_world_checks(pg, fake
     stable.retire_mind(pg, "haiku", by=ME, gw=gw.stable)                          # the template's model gone: the cheapest stands in, confessed
     gw.think(pg, did=lib.identity.did, system="s", prompt="p", model=HAIKU, subject="librarian")
     last = gateway.meter_rows(pg, lib.identity.did)[-1]
-    assert last["stall"] == "sonnet" and last["note"] == "the cheapest standing mind — none named claude-haiku-4-5-20251001"
+    assert last["stall"] == "sonnet" and last["note"] == "the cheapest standing LLM — none named claude-haiku-4-5-20251001"
     assert harness.changes_announced(pg)["ok"] is True and harness.changes_announced(pg)["detail"].startswith("1 confessed swap")
 
 
@@ -296,18 +296,26 @@ def test_the_keepers_tool_holds_what_is_consequential_and_names_the_act(pg, fake
     _serve(pg, keeper, a1)
     v = glass.ask_view(pg, a1)
     assert v["status"] == "awaiting-confirm" and v["hold"] == {"tool": "minds", "class": "consequential", "level": "L2"}
-    assert v["reply"] == ("Are you sure? Adding the llama mind (ollama llama3.2) is consequential — it is written into the gateway "
-                          "and recorded; you can retire it later. Cancel is the default; a deliberate click confirms.")
+    assert v["reply"] == ("Are you sure? Adding the llama LLM (ollama llama3.2) to the Stable and the gateway is consequential — "
+                          "it is recorded, and you can rest it later. Cancel is the default; a deliberate click confirms.")
     assert services.get(pg, "llama") is None
     keeper._serve_conn = pg
     with pg.transaction():
         keeper._confirm_ask(pg.cursor(), a1, True, [ME], proof="L2", by=ME)
     ll = services.get(pg, "llama")
     assert ll is not None and ll["kind"] == "mind" and fake.models["llama"]["litellm_params"]["model"] == "ollama/llama3.2"
-    assert glass.ask_view(pg, a1)["reply"].startswith("Done, on your word: the llama mind stands in the Stable — llama — ollama llama3.2 · fast · $0 in / $0 out per million")
+    assert glass.ask_view(pg, a1)["reply"].startswith("Done, on your word: the llama LLM stands in the Stable — llama — ollama llama3.2 · fast · $0 in / $0 out per million")
     # the routine acts run at once: list (W31 — from the registry), fuel, spend
     words = tools._minds_tool({"action": "list", "_by": keeper.identity.did}, pg)
     assert words.startswith("2 minds: haiku — anthropic") and "llama — ollama llama3.2" in words and "no assignments" in words
+    # W44: an assignment without a class is for ALL the body's work and replaces the older one; the class asked still wins
+    stable.assign(pg, "librarian", "fast", "llama", by=ME)
+    stable.assign(pg, "librarian", stable.ANY, "haiku", by=ME)
+    assert stable.resolve_for(pg, subject="librarian", model="claude-sonnet-5")["why"] == "assigned: librarian uses haiku for all work"
+    assert stable.resolve_for(pg, subject="librarian", klass="fast")["stall"] == "llama"
+    stable.assign(pg, "librarian", stable.ANY, "llama", by=ME)                      # the newest all-work assignment wins
+    assert stable.resolve_for(pg, subject="librarian", model="claude-sonnet-5")["stall"] == "llama"
+    assert len([a for a in stable.assignments(pg) if a["subject"] == "librarian"]) == 2
     assert tools._minds_tool({"action": "fuel", "subject": "librarian"}, pg).startswith("librarian has no lease yet")
     assert tools._minds_tool({"action": "spend"}, pg).startswith("the meter is empty") or "$" in tools._minds_tool({"action": "spend"}, pg)
     # W30 for the toolkeeper's tool too
@@ -342,7 +350,9 @@ def test_the_stables_doors_hold_and_the_shelf_shows_the_deal(rig, fake):
                                           "price": {"in_per_m": 3, "out_per_m": 15}, "person": ME})
     assert st == 202 and out["level"] == "L2" and out["class"] == "consequential"
     v = json.loads(_get(rig.port, "/ask/" + out["held"])[1])
-    assert v["status"] == "awaiting-confirm" and v["text"].startswith("Are you sure? Adding the sonnet mind (anthropic claude-sonnet-5) is consequential")
+    assert v["status"] == "awaiting-confirm" and v["text"] == "Adding the sonnet LLM (anthropic claude-sonnet-5) to the Stable and the gateway"
+    assert v["reply"].startswith("Are you sure? Adding the sonnet LLM (anthropic claude-sonnet-5) to the Stable and the gateway is consequential — it is recorded")
+    assert v["reply"].count("Are you sure?") == 1                                    # W42: framed once
     st, out = _post(rig.port, "/minds/assign", {"subject": "librarian", "klass": "standard", "stall": "haiku", "person": ME})
     assert st == 202
     st, body = _get(rig.port, "/minds")

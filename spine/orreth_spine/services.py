@@ -591,11 +591,16 @@ def seed(conn, *, gateway=None, home: str | os.PathLike | None = _UNSET) -> dict
     mind). Idempotent: the same self every boot; a service the ground
     cannot seat is named, never a crash."""
     from .tools import TOOLS, tool_manifest
-    made, refused = [], []
+    made, refused, versioned = [], [], []
 
     def one(name, kind, manifest, secrets=()):
         try:
             before = get(conn, name)
+            if before is not None and before["kind"] == kind and before["state"] != "retired" \
+                    and before["manifest_hash"] != pin(manifest):
+                version(conn, name, manifest, by=KERNEL)      # W47 (walk #12): a built-in whose declaration
+                versioned.append(name)                        # changed re-pins at boot — a fact, never unhealthy
+                return
             register(conn, name, kind, manifest, by=KERNEL, secrets_with=list(secrets), home=home)
             if before is None:
                 made.append(name)
@@ -616,7 +621,7 @@ def seed(conn, *, gateway=None, home: str | os.PathLike | None = _UNSET) -> dict
         made += st["registered"]; refused += st["refused"]
         for n in st.get("retired", []):
             refused.append(f"{n}: the old world's built-in mind, retired — the Stable's {stable.DEFAULT_STALL[0]} stall serves the same model through the gateway")
-    return {"registered": made, "refused": refused}
+    return {"registered": made, "refused": refused, "versioned": versioned}
 
 
 def services_home(agents_home: str | os.PathLike | None) -> Path | None:

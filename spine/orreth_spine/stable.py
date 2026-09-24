@@ -53,6 +53,7 @@ TIMEOUT_S = 60.0
 OPENROUTER_CATALOG = "https://openrouter.ai/api/v1/models"           # keyless intel (0019)
 
 CLASSES = ("fast", "standard", "deep")
+ANY = "any"                                                          # an assignment for ALL of a body's work (W44)
 PROVIDERS = ("anthropic", "openrouter", "ollama", "openai", "compatible")
 KEY_OF = {"anthropic": "ANTHROPIC_API_KEY", "openrouter": "OPENROUTER_API_KEY",
           "openai": "OPENAI_API_KEY", "ollama": None, "compatible": None}
@@ -174,47 +175,54 @@ def resolve(stalls: list[dict], assignments: list[dict], *, subject: str | None,
         s = by_name.get(pin)
         if s is None:
             return {"ok": False, "stall": None, "route": None, "why": None, "degraded": False,
-                    "reason": f"no mind named {pin!r} stands in the Stable"}
+                    "reason": f"no LLM named {pin!r} stands in the Stable"}
         if not _standing(s):
             return {"ok": False, "stall": None, "route": None, "why": None, "degraded": False,
-                    "reason": f"the {pin} mind is {s['state']} — a pinned mind that does not stand refuses, never climbs"}
+                    "reason": f"the {pin} LLM is {s['state']} — a pinned LLM that does not stand refuses, never climbs"}
         return {"ok": True, "stall": pin, "route": s["manifest"]["route"], "why": f"pinned to {pin} for this ask",
                 "degraded": False, "reason": None}
     k = klass if klass in CLASSES else None
     for who in ((subject, "*") if subject else ("*",)):
-        for a in assignments:
-            if a["subject"] == who and (k is None or a["klass"] == k):
-                s = by_name.get(a["stall"])
-                if s is not None and _standing(s):
-                    return {"ok": True, "stall": s["name"], "route": s["manifest"]["route"],
-                            "why": f"assigned to {s['name']} for {who if who != '*' else 'every body'}"
-                                   + (f" ({a['klass']})" if a.get("klass") else ""),
-                            "degraded": False, "reason": None}
+        rows = [a for a in assignments if a["subject"] == who]
+        # W44 (walk #12): "assign librarian to haiku" means the librarian uses haiku for ALL its work —
+        # an assignment for the class asked wins, then the body-wide one, then the newest; never the alphabet
+        exact = [a for a in rows if k is not None and a.get("klass") == k]
+        wide = [a for a in rows if a.get("klass") in (ANY, None)]
+        rest = [a for a in rows if a not in exact and a not in wide]
+        newest = lambda xs: sorted(xs, key=lambda a: str(a.get("at") or ""), reverse=True)  # noqa: E731
+        for a in newest(exact) + newest(wide) + (newest(rest) if k is None else []):
+            s = by_name.get(a["stall"])
+            if s is not None and _standing(s):
+                whom = "every body" if who == "*" else who
+                return {"ok": True, "stall": s["name"], "route": s["manifest"]["route"],
+                        "why": (f"assigned: {whom} uses {s['name']} for all work" if a.get("klass") in (ANY, None)
+                                else f"assigned: {whom} uses {s['name']} for {a['klass']} work"),
+                        "degraded": False, "reason": None}
     if model:
         for s in stalls:
             if _standing(s) and (s.get("manifest") or {}).get("model") == model and (k is None or s["manifest"].get("class") == k):
                 return {"ok": True, "stall": s["name"], "route": s["manifest"]["route"],
-                        "why": f"the template names {model} — the {s['name']} mind", "degraded": False, "reason": None}
+                        "why": f"the template names {model} — the {s['name']} LLM", "degraded": False, "reason": None}
     standing = [s for s in stalls if _standing(s)]
     if k is not None:
         s = _cheapest([s for s in standing if (s.get("manifest") or {}).get("class") == k])
         if s is not None:
             return {"ok": True, "stall": s["name"], "route": s["manifest"]["route"],
-                    "why": f"the cheapest standing {k} mind", "degraded": False, "reason": None}
+                    "why": f"the cheapest standing {k} LLM", "degraded": False, "reason": None}
         near = {"fast": ("standard", "deep"), "standard": ("fast", "deep"), "deep": ("standard", "fast")}[k]
         for nk in near:
             s = _cheapest([s for s in standing if (s.get("manifest") or {}).get("class") == nk])
             if s is not None:
                 return {"ok": True, "stall": s["name"], "route": s["manifest"]["route"],
-                        "why": f"no {k} mind stands — the {nk} mind {s['name']} serves instead, confessed",
+                        "why": f"no {k} LLM stands — the {nk} LLM {s['name']} serves instead, confessed",
                         "degraded": True, "reason": None}
     s = _cheapest(standing)
     if s is not None:
         return {"ok": True, "stall": s["name"], "route": s["manifest"]["route"],
-                "why": f"the cheapest standing mind" + (f" — none named {model}" if model else ""),
+                "why": f"the cheapest standing LLM" + (f" — none named {model}" if model else ""),
                 "degraded": bool(model), "reason": None}
     return {"ok": False, "stall": None, "route": None, "why": None, "degraded": False,
-            "reason": "no mind stands in the Stable — register one (\"stablekeeper, add the mind …\")"}
+            "reason": "no LLM stands in the Stable — add one (\"stablekeeper, add the LLM ollama gemma3:270m as gemma\")"}
 
 
 def drift(pinned: dict, seen: dict) -> list[str]:
@@ -258,16 +266,16 @@ def recommend(stalls: list[dict], retiring: str) -> dict:
     by_name = {s["name"]: s for s in stalls}
     old = by_name.get(retiring)
     if old is None:
-        return {"stall": None, "why": f"no mind named {retiring!r} to swap from"}
+        return {"stall": None, "why": f"no LLM named {retiring!r} to swap from"}
     om = old.get("manifest") or {}
     cands = [s for s in stalls if s["name"] != retiring and _standing(s)
              and (s.get("manifest") or {}).get("class") == om.get("class")]
     if not cands:
-        return {"stall": None, "why": f"no other standing {om.get('class', '?')} mind — nothing to swap to"}
+        return {"stall": None, "why": f"no other standing {om.get('class', '?')} LLM — nothing to swap to"}
     fit = [s for s in cands if (not om.get("context") or (s["manifest"].get("context") or 0) >= om["context"])
            and set(om.get("modalities") or []) <= set(s["manifest"].get("modalities") or [])]
     if not fit:
-        return {"stall": None, "why": f"{len(cands)} {om.get('class')} mind{'s' if len(cands) != 1 else ''} stand but none "
+        return {"stall": None, "why": f"{len(cands)} {om.get('class')} LLM{'s' if len(cands) != 1 else ''} stand but none "
                                       f"fits the deal (context {om.get('context')}, {', '.join(om.get('modalities') or [])})"}
     op = float((om.get("price") or {}).get("in_per_m", 0.0))
     best = sorted(fit, key=lambda s: (abs(float(s["manifest"]["price"].get("in_per_m", 0.0)) - op),
@@ -353,7 +361,7 @@ class Gateway:
         st, body, _ = self._call("POST", "/model/new", {"model_name": name, "litellm_params": params,
                                                         "model_info": {"id": name, "base_model": d["route"]}})
         if st != 200:
-            raise GatewayDark(f"the gateway refused the {name} mind: {self._words(body)}")
+            raise GatewayDark(f"the gateway refused the {name} LLM: {self._words(body)}")
         return {"present": have is not None}
 
     def drop_stall(self, name: str) -> bool:
@@ -361,7 +369,7 @@ class Gateway:
             return False
         st, body, _ = self._call("POST", "/model/delete", {"id": name})
         if st != 200:
-            raise GatewayDark(f"the gateway would not drop the {name} mind: {self._words(body)}")
+            raise GatewayDark(f"the gateway would not drop the {name} LLM: {self._words(body)}")
         return True
 
     def seen_deal(self, name: str) -> dict | None:
@@ -495,7 +503,7 @@ def register_mind(conn, name: str, d: dict, *, by: str, gw: Gateway | None = Non
     ensure_schema(conn)
     name = str(name or "").strip().lower()
     if not re.match(r"^[a-z][a-z0-9_.-]{0,63}$", name):
-        raise StableRefused("a mind needs a short lowercase name (letters, digits, . _ -)")
+        raise StableRefused("an LLM needs a short lowercase name (letters, digits, . _ -)")
     if gw is not None:
         gw.add_stall(name, d)                        # words on refusal; the ladder untouched
     return services.register(conn, name, "mind", d, by=by, placement=placement,
@@ -535,13 +543,13 @@ def assign(conn, subject: str, klass: str, stall: str, *, by: str, ask: str | No
     """subject → {class: stall}: a body's (or "*", every body's) mind for a
     class, a fact. The stall must stand."""
     ensure_schema(conn)
-    if klass not in CLASSES:
-        raise StableRefused(f"no class named {klass!r} — the classes: " + ", ".join(CLASSES))
+    if klass not in CLASSES and klass != ANY:
+        raise StableRefused(f"no class of work named {klass!r} — fast, standard, deep, or any")
     s = services.get(conn, stall)
     if s is None or s["kind"] != "mind":
-        raise StableRefused(f"no mind named {stall!r} stands in the Stable")
+        raise StableRefused(f"no LLM named {stall!r} stands in the Stable")
     if not _standing(s):
-        raise StableRefused(f"the {stall} mind is {s['state']} — assign a mind that stands")
+        raise StableRefused(f"the {stall} LLM is {s['state']} — assign an LLM that stands")
 
     def domain(cur, mid):
         cur.execute("INSERT INTO spine_mind_assignments (subject, scope, klass, stall, by_did, at)"
@@ -550,7 +558,7 @@ def assign(conn, subject: str, klass: str, stall: str, *, by: str, ask: str | No
                     " by_did = EXCLUDED.by_did, at = clock_timestamp()", (subject, ev.scope(), klass, stall, by))
 
     _mind_fact(conn, ASSIGNED, s["did"], {"subject": subject, "klass": klass, "stall": stall, "hash": s["manifest_hash"]},
-               by, f"{subject} thinks with {stall} ({klass})", ask=ask, parent_marker=parent_marker,
+               by, f"{subject} uses the {stall} LLM for {'all' if klass == ANY else klass} work", ask=ask, parent_marker=parent_marker,
                confirmed_by=confirmed_by, domain=domain)
     return {"subject": subject, "klass": klass, "stall": stall}
 
@@ -679,7 +687,7 @@ def drained_words(name: str, gauge: dict | None) -> str:
         except ValueError:
             pass
     ceiling = f"${gauge['max_usd']:g}" if gauge and gauge.get("max_usd") is not None else "its allowance"
-    return (f"I am out of fuel — {name}'s allowance of {ceiling} for this window is spent, so I cannot think "
+    return (f"I am out of fuel — {name}'s LLM allowance of {ceiling} for this window is spent, so I cannot think "
             f"until it renews or is refilled.{when} A refill is one word away: \"refill {name} by $1\".")
 
 
@@ -694,29 +702,29 @@ def hold(conn, tool: str, args: dict, *, text: str, person: str, session: str | 
 
 
 def act_words(tool: str, args: dict) -> str:
-    """The interlock's words for a Stable act — the act NAMED in words
-    (W30 · rule 13): what will happen, that it is recorded, that it can be
-    undone or rested later."""
+    """The act NAMED in words (W30 · rule 13) — the bare phrase the
+    interlock frames ONCE ("Are you sure? <phrase> is consequential — it is
+    recorded, and you can restore it later"; W42: the frame is the kernel's
+    or the door's, never doubled here)."""
     n = args.get("name") or args.get("stall") or "?"
     if tool == REGISTER_TOOL:
         d = args.get("deal") or {}
-        return (f"Are you sure? Adding the {n} mind ({d.get('provider', '?')} {d.get('model', '?')}) is consequential — "
-                f"it is written into the gateway and recorded; you can retire it later")
+        return f"Adding the {n} LLM ({d.get('provider', '?')} {d.get('model', '?')}) to the Stable and the gateway"
     if tool == ASSIGN_TOOL:
         who = "every body" if args.get("subject") == "*" else args.get("subject")
-        return (f"Are you sure? Pointing {who} at the {args.get('stall')} mind for {args.get('klass')} work is consequential — "
-                f"recorded, and you can lift it later")
+        work = "all its work" if args.get("klass") in (ANY, None) else f"{args.get('klass')} work"
+        return f"Pointing {who} at the {args.get('stall')} LLM for {work}"
     if tool == UNASSIGN_TOOL:
         who = "every body" if args.get("subject") == "*" else args.get("subject")
-        return f"Are you sure? Lifting {who}'s {args.get('klass')} assignment is consequential — recorded; assign again any time"
+        work = "all-work" if args.get("klass") in (ANY, None) else args.get("klass")
+        return f"Lifting {who}'s {work} assignment"
     if tool == REFILL_TOOL:
-        return (f"Are you sure? Refilling {args.get('name') or args.get('did')} by ${float(args.get('usd', 0)):g} is consequential — "
-                f"real spending, recorded")
+        return f"Refilling {args.get('name') or args.get('did')} by ${float(args.get('usd', 0)):g} of real spending"
     if tool == REPIN_TOOL:
-        return f"Are you sure? Re-pinning the {n} mind to its new deal is consequential — recorded; the old pin stays in its history"
+        return f"Re-pinning the {n} LLM to its new deal (the old pin stays in its history)"
     if tool == services.RETIRE_TOOL:
-        return f"Are you sure? Retiring the {n} mind is consequential — it rests, recorded, never deleted; you can restore it later"
-    return f"Are you sure? The {tool} act is consequential — it is recorded"
+        return f"Retiring the {n} LLM (it rests, never deleted)"
+    return f"The {tool} act"
 
 
 def settle(conn, held: dict, *, asker: str, ask_id: str, parent_marker: str | None,
@@ -728,14 +736,14 @@ def settle(conn, held: dict, *, asker: str, ask_id: str, parent_marker: str | No
     if tool == REGISTER_TOOL:
         made = register_mind(conn, a["name"], a["deal"], by=asker, gw=gw)
         d = made["manifest"]
-        return (f"the {made['name']} mind stands in the Stable — {d['provider']} {d['model']}, "
+        return (f"the {made['name']} LLM stands in the Stable — {d['provider']} {d['model']}, "
                 f"${d['price']['in_per_m']:g} in / ${d['price']['out_per_m']:g} out per million, class {d['class']}; "
                 "say “check the minds” to hear it answer")
     if tool == ASSIGN_TOOL:
         made = assign(conn, a["subject"], a["klass"], a["stall"], by=asker, ask=ask_id,
                       parent_marker=parent_marker, confirmed_by=confirmed_by)
         who = "every body" if made["subject"] == "*" else made["subject"]
-        return f"{who} now thinks with the {made['stall']} mind for {made['klass']} work — recorded"
+        return f"{who} now uses the {made['stall']} LLM for {'all its' if made['klass'] == ANY else made['klass']} work — recorded"
     if tool == UNASSIGN_TOOL:
         made = unassign(conn, a["subject"], a["klass"], by=asker, ask=ask_id, parent_marker=parent_marker,
                         confirmed_by=confirmed_by)
@@ -746,7 +754,7 @@ def settle(conn, held: dict, *, asker: str, ask_id: str, parent_marker: str | No
         return f"{a.get('name') or a['did']} refilled by ${made['added_usd']:g} — its allowance is now ${made['max_usd']:g}"
     if tool == REPIN_TOOL:
         made = repin_mind(conn, a["name"], a["deal"], by=asker, gw=gw)
-        return f"the {made['name']} mind is re-pinned to its new deal (version {made['version']}) — the old pin stays in its history"
+        return f"the {made['name']} LLM is re-pinned to its new deal (version {made['version']}) — the old pin stays in its history"
     raise StableRefused(f"no Stable act named {tool!r}")
 
 
@@ -866,7 +874,7 @@ def proposals(conn, *, keeper: str, gw: Gateway | None, catalog: dict | None = N
             continue
         out.append({"kind": "repin", "name": d["name"], "held": hold(
             conn, REPIN_TOOL, {"name": d["name"], "deal": d["deal"]}, person=keeper,
-            text=f"the stablekeeper proposes re-pinning the {d['name']} mind — " + "; ".join(d["moved"]))})
+            text=f"the stablekeeper proposes re-pinning the {d['name']} LLM — " + "; ".join(d["moved"]))})
     for e in eol_scan(conn, gw, now=now, catalog=catalog):
         prev = _last_hold(conn, services.RETIRE_TOOL, e["name"])
         if prev and prev["status"] == "awaiting-confirm":
@@ -874,8 +882,8 @@ def proposals(conn, *, keeper: str, gw: Gateway | None, catalog: dict | None = N
         swap = e["swap"]
         out.append({"kind": "retire", "name": e["name"], "held": hold(
             conn, services.RETIRE_TOOL, {"name": e["name"]}, person=keeper,
-            text=f"the stablekeeper proposes retiring the {e['name']} mind — it {e['words']}"
-                 + (f"; the swap: the {swap['stall']} mind ({swap['why']})" if swap.get("stall") else f"; {swap['why']}"))})
+            text=f"the stablekeeper proposes retiring the {e['name']} LLM — it {e['words']}"
+                 + (f"; the swap: the {swap['stall']} LLM ({swap['why']})" if swap.get("stall") else f"; {swap['why']}"))})
     cur = conn.cursor()
     cur.execute("SELECT k.did, k.alias, k.max_usd FROM spine_mind_keys k WHERE k.scope = %s AND k.drained_at IS NOT NULL",
                 (ev.scope(),))

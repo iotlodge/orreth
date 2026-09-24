@@ -474,7 +474,7 @@
     "route": null,
     "why": null,
     "degraded": false,
-    "reason": "the sick mind is unhealthy \u2014 a pinned mind that does not stand refuses, never climbs"
+    "reason": "the sick LLM is unhealthy \u2014 a pinned LLM that does not stand refuses, never climbs"
    }
   },
   {
@@ -593,7 +593,7 @@
     "route": null,
     "why": null,
     "degraded": false,
-    "reason": "no mind named 'ghost' stands in the Stable"
+    "reason": "no LLM named 'ghost' stands in the Stable"
    }
   },
   {
@@ -710,7 +710,7 @@
     "ok": true,
     "stall": "sonnet",
     "route": "anthropic/claude-sonnet-5",
-    "why": "assigned to sonnet for librarian (standard)",
+    "why": "assigned: librarian uses sonnet for standard work",
     "degraded": false,
     "reason": null
    }
@@ -829,7 +829,7 @@
     "ok": true,
     "stall": "opus",
     "route": "anthropic/claude-opus-5",
-    "why": "assigned to opus for every body (deep)",
+    "why": "assigned: every body uses opus for deep work",
     "degraded": false,
     "reason": null
    }
@@ -949,7 +949,7 @@
     "ok": true,
     "stall": "haiku",
     "route": "anthropic/claude-haiku-4-5-20251001",
-    "why": "the template names claude-haiku-4-5-20251001 \u2014 the haiku mind",
+    "why": "the template names claude-haiku-4-5-20251001 \u2014 the haiku LLM",
     "degraded": false,
     "reason": null
    }
@@ -1068,7 +1068,7 @@
     "ok": true,
     "stall": "opus",
     "route": "anthropic/claude-opus-5",
-    "why": "assigned to opus for every body (deep)",
+    "why": "assigned: every body uses opus for deep work",
     "degraded": false,
     "reason": null
    }
@@ -1187,7 +1187,7 @@
     "ok": true,
     "stall": "cheap",
     "route": "anthropic/cheap-1",
-    "why": "the cheapest standing standard mind",
+    "why": "the cheapest standing standard LLM",
     "degraded": false,
     "reason": null
    }
@@ -1293,7 +1293,7 @@
     "ok": true,
     "stall": "cheap",
     "route": "anthropic/cheap-1",
-    "why": "no fast mind stands \u2014 the standard mind cheap serves instead, confessed",
+    "why": "no fast LLM stands \u2014 the standard LLM cheap serves instead, confessed",
     "degraded": true,
     "reason": null
    }
@@ -1411,7 +1411,7 @@
     "ok": true,
     "stall": "opus",
     "route": "anthropic/claude-opus-5",
-    "why": "assigned to opus for every body (deep)",
+    "why": "assigned: every body uses opus for deep work",
     "degraded": false,
     "reason": null
    }
@@ -1530,7 +1530,7 @@
     "ok": true,
     "stall": "opus",
     "route": "anthropic/claude-opus-5",
-    "why": "assigned to opus for every body (deep)",
+    "why": "assigned: every body uses opus for deep work",
     "degraded": false,
     "reason": null
    }
@@ -1549,7 +1549,7 @@
     "route": null,
     "why": null,
     "degraded": false,
-    "reason": "no mind stands in the Stable \u2014 register one (\"stablekeeper, add the mind \u2026\")"
+    "reason": "no LLM stands in the Stable \u2014 add one (\"stablekeeper, add the LLM ollama gemma3:270m as gemma\")"
    }
   },
   {
@@ -1943,7 +1943,7 @@
    },
    "expect": {
     "stall": null,
-    "why": "no mind named 'e' to swap from"
+    "why": "no LLM named 'e' to swap from"
    }
   },
   {
@@ -2068,7 +2068,7 @@
    },
    "expect": {
     "stall": null,
-    "why": "no other standing deep mind \u2014 nothing to swap to"
+    "why": "no other standing deep LLM \u2014 nothing to swap to"
    }
   },
   {
@@ -2193,7 +2193,7 @@
    },
    "expect": {
     "stall": null,
-    "why": "no mind named 'zz' to swap from"
+    "why": "no LLM named 'zz' to swap from"
    }
   },
   {
@@ -2430,7 +2430,7 @@
     }
    },
    "expect": {
-    "words": "I am out of fuel \u2014 librarian's allowance of $1 for this window is spent, so I cannot think until it renews or is refilled. It renews on its own at 2026-09-25 00:00 UTC. A refill is one word away: \"refill librarian by $1\"."
+    "words": "I am out of fuel \u2014 librarian's LLM allowance of $1 for this window is spent, so I cannot think until it renews or is refilled. It renews on its own at 2026-09-25 00:00 UTC. A refill is one word away: \"refill librarian by $1\"."
    }
   },
   {
@@ -2441,7 +2441,7 @@
     "gauge": null
    },
    "expect": {
-    "words": "I am out of fuel \u2014 echo's allowance of its allowance for this window is spent, so I cannot think until it renews or is refilled. A refill is one word away: \"refill echo by $1\"."
+    "words": "I am out of fuel \u2014 echo's LLM allowance of its allowance for this window is spent, so I cannot think until it renews or is refilled. A refill is one word away: \"refill echo by $1\"."
    }
   },
   {
@@ -2458,7 +2458,7 @@
     }
    },
    "expect": {
-    "words": "Are you sure? Adding the llama mind (ollama llama3.2) is consequential \u2014 it is written into the gateway and recorded; you can retire it later"
+    "words": "Adding the llama LLM (ollama llama3.2) to the Stable and the gateway"
    }
   },
   {
@@ -2473,7 +2473,7 @@
     }
    },
    "expect": {
-    "words": "Are you sure? Pointing every body at the opus mind for deep work is consequential \u2014 recorded, and you can lift it later"
+    "words": "Pointing every body at the opus LLM for deep work"
    }
   },
   {
@@ -2488,7 +2488,7 @@
     }
    },
    "expect": {
-    "words": "Are you sure? Pointing librarian at the haiku mind for fast work is consequential \u2014 recorded, and you can lift it later"
+    "words": "Pointing librarian at the haiku LLM for fast work"
    }
   },
   {
@@ -2502,7 +2502,7 @@
     }
    },
    "expect": {
-    "words": "Are you sure? Lifting librarian's fast assignment is consequential \u2014 recorded; assign again any time"
+    "words": "Lifting librarian's fast assignment"
    }
   },
   {
@@ -2516,7 +2516,7 @@
     }
    },
    "expect": {
-    "words": "Are you sure? Refilling librarian by $2.5 is consequential \u2014 real spending, recorded"
+    "words": "Refilling librarian by $2.5 of real spending"
    }
   },
   {
@@ -2529,7 +2529,7 @@
     }
    },
    "expect": {
-    "words": "Are you sure? Re-pinning the sonnet mind to its new deal is consequential \u2014 recorded; the old pin stays in its history"
+    "words": "Re-pinning the sonnet LLM to its new deal (the old pin stays in its history)"
    }
   },
   {
@@ -2542,7 +2542,7 @@
     }
    },
    "expect": {
-    "words": "Are you sure? Retiring the sonnet mind is consequential \u2014 it rests, recorded, never deleted; you can restore it later"
+    "words": "Retiring the sonnet LLM (it rests, never deleted)"
    }
   },
   {
@@ -2594,6 +2594,353 @@
    },
    "expect": {
     "name": "mcp"
+   }
+  },
+  {
+   "name": "resolve: W44: an all-work assignment wins for a body with no class asked",
+   "kind": "resolve",
+   "input": {
+    "stalls": [
+     {
+      "name": "haiku",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-haiku-4-5-20251001",
+       "route": "anthropic/claude-haiku-4-5-20251001",
+       "class": "fast",
+       "price": {
+        "in_per_m": 1.0,
+        "out_per_m": 5.0
+       }
+      }
+     },
+     {
+      "name": "sonnet",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sonnet-5",
+       "route": "anthropic/claude-sonnet-5",
+       "class": "standard",
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 15.0
+       }
+      }
+     },
+     {
+      "name": "opus",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-opus-5",
+       "route": "anthropic/claude-opus-5",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "old",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "claude-3-opus",
+       "route": "anthropic/claude-3-opus",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "sick",
+      "state": "unhealthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sick",
+       "route": "anthropic/claude-sick",
+       "class": "fast",
+       "price": {
+        "in_per_m": 0.5,
+        "out_per_m": 2.5
+       }
+      }
+     },
+     {
+      "name": "cheap",
+      "state": "registered",
+      "version": 1,
+      "manifest": {
+       "model": "cheap-1",
+       "route": "anthropic/cheap-1",
+       "class": "standard",
+       "price": {
+        "in_per_m": 0.2,
+        "out_per_m": 1.0
+       }
+      }
+     }
+    ],
+    "assignments": [
+     {
+      "subject": "librarian",
+      "klass": "fast",
+      "stall": "cheap",
+      "at": "2026-09-24T12:27:29+00:00"
+     },
+     {
+      "subject": "librarian",
+      "klass": "any",
+      "stall": "haiku",
+      "at": "2026-09-24T12:30:04+00:00"
+     }
+    ],
+    "subject": "librarian",
+    "model": "claude-sonnet-5"
+   },
+   "expect": {
+    "ok": true,
+    "stall": "haiku",
+    "route": "anthropic/claude-haiku-4-5-20251001",
+    "why": "assigned: librarian uses haiku for all work",
+    "degraded": false,
+    "reason": null
+   }
+  },
+  {
+   "name": "resolve: W44: the class asked wins over the all-work assignment",
+   "kind": "resolve",
+   "input": {
+    "stalls": [
+     {
+      "name": "haiku",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-haiku-4-5-20251001",
+       "route": "anthropic/claude-haiku-4-5-20251001",
+       "class": "fast",
+       "price": {
+        "in_per_m": 1.0,
+        "out_per_m": 5.0
+       }
+      }
+     },
+     {
+      "name": "sonnet",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sonnet-5",
+       "route": "anthropic/claude-sonnet-5",
+       "class": "standard",
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 15.0
+       }
+      }
+     },
+     {
+      "name": "opus",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-opus-5",
+       "route": "anthropic/claude-opus-5",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "old",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "claude-3-opus",
+       "route": "anthropic/claude-3-opus",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "sick",
+      "state": "unhealthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sick",
+       "route": "anthropic/claude-sick",
+       "class": "fast",
+       "price": {
+        "in_per_m": 0.5,
+        "out_per_m": 2.5
+       }
+      }
+     },
+     {
+      "name": "cheap",
+      "state": "registered",
+      "version": 1,
+      "manifest": {
+       "model": "cheap-1",
+       "route": "anthropic/cheap-1",
+       "class": "standard",
+       "price": {
+        "in_per_m": 0.2,
+        "out_per_m": 1.0
+       }
+      }
+     }
+    ],
+    "assignments": [
+     {
+      "subject": "librarian",
+      "klass": "fast",
+      "stall": "cheap",
+      "at": "2026-09-24T12:27:29+00:00"
+     },
+     {
+      "subject": "librarian",
+      "klass": "any",
+      "stall": "haiku",
+      "at": "2026-09-24T12:30:04+00:00"
+     }
+    ],
+    "subject": "librarian",
+    "klass": "fast"
+   },
+   "expect": {
+    "ok": true,
+    "stall": "cheap",
+    "route": "anthropic/cheap-1",
+    "why": "assigned: librarian uses cheap for fast work",
+    "degraded": false,
+    "reason": null
+   }
+  },
+  {
+   "name": "resolve: W44: two class rows and no class asked \u2014 the newest wins",
+   "kind": "resolve",
+   "input": {
+    "stalls": [
+     {
+      "name": "haiku",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-haiku-4-5-20251001",
+       "route": "anthropic/claude-haiku-4-5-20251001",
+       "class": "fast",
+       "price": {
+        "in_per_m": 1.0,
+        "out_per_m": 5.0
+       }
+      }
+     },
+     {
+      "name": "sonnet",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sonnet-5",
+       "route": "anthropic/claude-sonnet-5",
+       "class": "standard",
+       "price": {
+        "in_per_m": 3.0,
+        "out_per_m": 15.0
+       }
+      }
+     },
+     {
+      "name": "opus",
+      "state": "healthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-opus-5",
+       "route": "anthropic/claude-opus-5",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "old",
+      "state": "retired",
+      "version": 1,
+      "manifest": {
+       "model": "claude-3-opus",
+       "route": "anthropic/claude-3-opus",
+       "class": "deep",
+       "price": {
+        "in_per_m": 15.0,
+        "out_per_m": 75.0
+       }
+      }
+     },
+     {
+      "name": "sick",
+      "state": "unhealthy",
+      "version": 1,
+      "manifest": {
+       "model": "claude-sick",
+       "route": "anthropic/claude-sick",
+       "class": "fast",
+       "price": {
+        "in_per_m": 0.5,
+        "out_per_m": 2.5
+       }
+      }
+     },
+     {
+      "name": "cheap",
+      "state": "registered",
+      "version": 1,
+      "manifest": {
+       "model": "cheap-1",
+       "route": "anthropic/cheap-1",
+       "class": "standard",
+       "price": {
+        "in_per_m": 0.2,
+        "out_per_m": 1.0
+       }
+      }
+     }
+    ],
+    "assignments": [
+     {
+      "subject": "planner",
+      "klass": "fast",
+      "stall": "cheap",
+      "at": "2026-09-24T12:00:00+00:00"
+     },
+     {
+      "subject": "planner",
+      "klass": "standard",
+      "stall": "sonnet",
+      "at": "2026-09-24T12:05:00+00:00"
+     }
+    ],
+    "subject": "planner"
+   },
+   "expect": {
+    "ok": true,
+    "stall": "sonnet",
+    "route": "anthropic/claude-sonnet-5",
+    "why": "assigned: planner uses sonnet for standard work",
+    "degraded": false,
+    "reason": null
    }
   }
  ]

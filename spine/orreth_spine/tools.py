@@ -134,6 +134,10 @@ def _gw():
 
 
 def _minds_words(args: dict) -> str:
+    return "Are you sure? " + _minds_phrase(args) + " is consequential — it is recorded, and you can rest it later"
+
+
+def _minds_phrase(args: dict) -> str:
     from . import stable
     act = str(args.get("action") or "")
     a = dict(args)
@@ -141,19 +145,19 @@ def _minds_words(args: dict) -> str:
         a["deal"] = {"provider": args.get("provider"), "model": args.get("model")}
         return stable.act_words(stable.REGISTER_TOOL, a)
     if act == "assign":
-        return stable.act_words(stable.ASSIGN_TOOL, {"subject": args.get("subject") or "*", "klass": args.get("klass") or "standard",
+        return stable.act_words(stable.ASSIGN_TOOL, {"subject": args.get("subject") or "*", "klass": args.get("klass") or stable.ANY,
                                                      "stall": args.get("stall") or args.get("name")})
     if act == "unassign":
-        return stable.act_words(stable.UNASSIGN_TOOL, {"subject": args.get("subject") or "*", "klass": args.get("klass") or "standard"})
+        return stable.act_words(stable.UNASSIGN_TOOL, {"subject": args.get("subject") or "*", "klass": args.get("klass") or stable.ANY})
     if act == "refill":
         return stable.act_words(stable.REFILL_TOOL, {"name": args.get("subject") or args.get("name"), "usd": args.get("usd") or 1})
     if act == "retire":
         return stable.act_words(__import__("orreth_spine.services", fromlist=["RETIRE_TOOL"]).RETIRE_TOOL, {"name": args.get("name")})
     if act == "restore":
-        return f"Are you sure? Restoring the {args.get('name')} mind is consequential — it stands again in the Stable and the gateway, recorded"
+        return f"Restoring the {args.get('name')} LLM (it stands again in the Stable and the gateway)"
     if act == "repin":
         return stable.act_words(stable.REPIN_TOOL, {"name": args.get("name")})
-    return f"Are you sure? The {act or 'minds'} act is consequential — it is recorded"
+    return f"The {act or 'minds'} act"
 
 
 def _minds_tool(args: dict, conn) -> str:
@@ -185,29 +189,29 @@ def _minds_tool(args: dict, conn) -> str:
                                 modalities=seen.get("modalities") if not args.get("modalities") else d["modalities"],
                                 klass=d["class"], key=d.get("key"))
         made = stable.register_mind(conn, name, d, by=by, gw=gw)
-        return (f"the {made['name']} mind stands in the Stable — {stable.stall_words(dict(made, spend=None))}"
+        return (f"the {made['name']} LLM stands in the Stable — {stable.stall_words(dict(made, spend=None))}"
                 + ("" if gw is not None else " (the gateway is dark: written to the ladder, not yet into the gateway — the keeper's beat syncs it)"))
     if act == "check":
         out = [services.check(conn, name, gateway=GATEWAY, by=by)] if name else \
               services.check_all(conn, kind="mind", gateway=GATEWAY, by=by)
         if not out:
-            return "nothing to check — no mind is in the Stable; \"stablekeeper, add the mind <provider> <model id> as <name>\""
+            return "nothing to check — no LLM is in the Stable; \"stablekeeper, add the LLM <provider> <model id> as <name>\""
         return "checked " + str(len(out)) + ": " + " · ".join(
             f"{c['name']} → {'healthy' if c['ok'] else 'UNHEALTHY' if c['ok'] is False else 'not probed'}: {c['detail']}" for c in out)
     if act in ("search", "list"):
         rows = stable.search(conn, args.get("q") if act == "search" else None, klass=args.get("klass") or None,
                              max_in_per_m=args.get("max_in_per_m"), modality=args.get("modality") or None)
         if not rows:
-            return "no mind matches" if act == "search" else "the Stable is empty — no mind stands yet"
+            return "no LLM matches" if act == "search" else "the Stable is empty — no LLM stands yet"
         asg = stable.assignments(conn)
         return (f"{len(rows)} mind{'s' if len(rows) != 1 else ''}: " + " · ".join(stable.stall_words(s) for s in rows)
-                + ("; assignments: " + ", ".join(f"{a['subject']} → {a['stall']} ({a['klass']})" for a in asg) if asg else "; no assignments — every body rides its template's mind"))
+                + ("; assignments: " + ", ".join(f"{a['subject']} uses {a['stall']} for {'all' if a['klass'] == stable.ANY else a['klass']} work" for a in asg) if asg else "; no assignments — every body uses its template's LLM"))
     if act == "assign":
         subject = str(args.get("subject") or "*").strip()
-        made = stable.assign(conn, subject, str(args.get("klass") or "standard"), str(args.get("stall") or name), by=by)
-        return f"{'every body' if made['subject'] == '*' else made['subject']} now thinks with the {made['stall']} mind for {made['klass']} work — recorded"
+        made = stable.assign(conn, subject, str(args.get("klass") or stable.ANY), str(args.get("stall") or name), by=by)
+        return f"{'every body' if made['subject'] == '*' else made['subject']} now uses the {made['stall']} LLM for {'all its' if made['klass'] == stable.ANY else made['klass']} work — recorded"
     if act == "unassign":
-        made = stable.unassign(conn, str(args.get("subject") or "*").strip(), str(args.get("klass") or "standard"), by=by)
+        made = stable.unassign(conn, str(args.get("subject") or "*").strip(), str(args.get("klass") or stable.ANY), by=by)
         return f"{made['subject']}'s {made['klass']} assignment to {made['stall']} is lifted — recorded"
     if act in ("refill", "fuel"):
         subject = str(args.get("subject") or name or "").strip()
@@ -233,10 +237,10 @@ def _minds_tool(args: dict, conn) -> str:
                              + (f" ({r['failed']} failed)" if r['failed'] else "") for r in sp["rows"][:12]))
     if act == "retire":
         made = stable.retire_mind(conn, name, by=by, gw=gw)
-        return f"the {made['name']} mind is retired — at rest in the Stable, dropped from the gateway, recorded, never deleted"
+        return f"the {made['name']} LLM is retired — at rest in the Stable, dropped from the gateway, recorded, never deleted"
     if act == "restore":
         made = stable.restore_mind(conn, name, by=by, gw=gw)
-        return f"the {made['name']} mind stands again ({made['state']}) — a new fact; its rest stays in the record"
+        return f"the {made['name']} LLM stands again ({made['state']}) — a new fact; its rest stays in the record"
     if act == "repin":
         s_ = services.get(conn, name)
         if s_ is None:
@@ -246,7 +250,7 @@ def _minds_tool(args: dict, conn) -> str:
             raise ValueError(f"the market has no word on {name} to re-pin from")
         d = dict(s_["manifest"], price=seen.get("price") or s_["manifest"]["price"], context=seen.get("context") or s_["manifest"].get("context"))
         made = stable.repin_mind(conn, name, d, by=by, gw=gw)
-        return f"the {made['name']} mind is re-pinned (version {made['version']}) — the old pin stays in its history"
+        return f"the {made['name']} LLM is re-pinned (version {made['version']}) — the old pin stays in its history"
     since = args.get("since")
     cur = conn.cursor()
     cur.execute("SELECT name, ok, detail, at FROM spine_service_health WHERE scope = %s AND name IN"
@@ -440,13 +444,16 @@ TOOLS: dict[str, dict] = {
         # P6.5 sp3: the Stable keeper's one tool — the minds tended on the human's word
         "description": "Keep the Stable of minds. action=register adds a mind (name: a short lowercase "
                        "name; provider: anthropic | openrouter | ollama | openai | compatible; model: the "
-                       "model id; base: a URL for ollama or compatible; klass: fast | standard | deep; "
-                       "key: the env NAME of its key — never a value; price_in_per_m / price_out_per_m "
-                       "in dollars per million, else read from the gateway). action=check probes one mind "
+                       "model id). Everything else has a default — NEVER ask the human for it: base is "
+                       "only for compatible (ollama reaches the laptop's own Ollama by default); klass "
+                       "defaults to standard (fast | standard | deep); the key is the provider's env NAME "
+                       "by default — never a value; prices are read from the gateway. With a name, a "
+                       "provider and a model in hand, CALL register at once — the hold at the interlock "
+                       "is the human's yes. action=check probes one mind "
                        "by name or every mind. action=search finds minds (q, klass, max_in_per_m, "
                        "modality); action=list names what stands. action=assign points a body "
                        "(subject: its name, or * for every body) at a mind (stall) for a class of work "
-                       "(klass); action=unassign lifts it. action=fuel reads a body's allowance and "
+                       "(klass: fast | standard | deep, or any for all its work — the default); action=unassign lifts it. action=fuel reads a body's allowance and "
                        "spend (subject); action=refill adds dollars (subject, usd). action=spend rolls "
                        "the meter up. action=retire / restore move a mind by name; action=repin re-pins "
                        "a mind whose deal moved. action=changes reads what changed. Register, assign, "

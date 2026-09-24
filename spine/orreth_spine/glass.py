@@ -138,7 +138,31 @@ KERNEL_DUTIES = [                # every body runs these — kernel-required,
 ]
 
 
-def crew_view(conn) -> list[dict]:
+def mind_line(conn, name: str, did: str, template: dict | None) -> dict | None:
+    """P6.5 sp3 (walk #12, JB's callout): which mind this body thinks with
+    NOW and why — the Stable's decision for it (a pin · an assignment ·
+    the template's model · the class), and the last thought it rode."""
+    mind = (template or {}).get("mind") or {}
+    if not mind:
+        return None
+    from . import stable
+    d = stable.resolve_for(conn, subject=name, model=mind.get("model"), klass=mind.get("class"), pin=mind.get("pin"))
+    out = {"stall": d.get("stall"), "why": d.get("why") or d.get("reason"), "degraded": bool(d.get("degraded"))}
+    if d.get("stall"):
+        s = services.get(conn, d["stall"]) or {}
+        m = s.get("manifest") or {}
+        out["route"] = f"{m.get('provider', '?')} {m.get('model', '?')}"; out["klass"] = m.get("class")
+    cur = conn.cursor()
+    cur.execute("SELECT to_regclass('spine_meter') IS NOT NULL")
+    if cur.fetchone()[0]:
+        cur.execute("SELECT stall, usd, at, ok FROM spine_meter WHERE did = %s AND stall IS NOT NULL ORDER BY meter_id DESC LIMIT 1", (did,))
+        r = cur.fetchone()
+        if r:
+            out["last"] = {"stall": r[0], "usd": r[1], "at": r[2].isoformat(), "ok": r[3]}
+    return out
+
+
+def crew_view(conn, bodies: dict | None = None) -> list[dict]:
     """The Crew workspace's door: one card per body in this world —
     who it is, what it wears, what it declared, and BOTH SIDES (canon
     0004): side A, the asks it served; side B, the duties it runs. The
@@ -162,7 +186,9 @@ def crew_view(conn) -> list[dict]:
         r = refused.pop(name, None)
         if r is not None and r["refused_at"] > joined:   # refused SINCE its last join:
             cards.append(_refused_card(r, nature)); continue   # the picture says so (rule 7)
+        body = (bodies or {}).get(name)
         cards.append({
+            "mind": mind_line(conn, name, did, getattr(body, "template", None)) if body is not None else None,
             "name": name, "kind": kind, "did": did, "lives": life,
             "nature": nature or "",         # W7: what it IS, one line
             "joined_at": joined.isoformat(), "policy_version": pv,
@@ -424,7 +450,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                                       {"residents": residents_view(conn)})
             if path == "/crew":
                 with psycopg.connect(dsn, autocommit=True) as conn:
-                    return self._json(200, {"crew": crew_view(conn)})
+                    return self._json(200, {"crew": crew_view(conn, bodies)})
             if path == "/monitor":
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, monitor.snapshot(conn))
@@ -740,11 +766,11 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                             args = {"name": name, "deal": d}
                             tool = stable.REGISTER_TOOL
                         elif path == "/minds/assign":
-                            args = {"subject": str(p.get("subject") or "*"), "klass": str(p.get("klass") or "standard"),
+                            args = {"subject": str(p.get("subject") or "*"), "klass": str(p.get("klass") or stable.ANY),
                                     "stall": str(p.get("stall") or name)}
                             tool = stable.ASSIGN_TOOL
                         elif path == "/minds/unassign":
-                            args = {"subject": str(p.get("subject") or "*"), "klass": str(p.get("klass") or "standard")}
+                            args = {"subject": str(p.get("subject") or "*"), "klass": str(p.get("klass") or stable.ANY)}
                             tool = stable.UNASSIGN_TOOL
                         else:                                 # refill
                             from .tools import _did_of_body
@@ -1132,9 +1158,10 @@ class BridgeRig:
                 print(f"the shelf refused a built-in: {line}", file=sys.stderr, flush=True)
             checked = services.check_all(conn, gateway=self.gateway)
             bad = [c["name"] for c in checked if c["ok"] is False]
-            if made["registered"] or bad:
+            if made["registered"] or made.get("versioned") or bad:
                 print(f"the shelf: {len(checked)} services probed"
                       + (f", registered now: {', '.join(made['registered'])}" if made["registered"] else "")
+                      + (f", re-pinned (their words changed): {', '.join(made['versioned'])}" if made.get("versioned") else "")
                       + (f", UNHEALTHY: {', '.join(bad)}" if bad else ""), file=sys.stderr, flush=True)
         except Exception as e:                       # noqa: BLE001 — the rig runs on; the harness will say
             print(f"the shelf could not be seeded: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
