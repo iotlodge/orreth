@@ -36,7 +36,16 @@ pub enum RailError {
 impl fmt::Display for RailError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RailError::Ground(e) => write!(f, "the ground refused: {e}"),
+            RailError::Ground(e) => match e.as_db_error() {
+                // P7 sp5: the ground's own words, never a bare "db error" (rule 13)
+                Some(db) => write!(
+                    f,
+                    "the ground refused: {} ({})",
+                    db.message(),
+                    db.code().code()
+                ),
+                None => write!(f, "the ground refused: {e}"),
+            },
             RailError::Budget { pending, budget } => write!(
                 f,
                 "the outbox holds {pending} unpublished rows — the declared budget is {budget}; \

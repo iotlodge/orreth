@@ -12,8 +12,8 @@
 //! runner has no arm for (the list and the dispatch must agree).
 
 use orreth_spine::{
-    ask, beat, canonical, content_hash, envelope, export, intent, mcp, mitl, placement, proof,
-    rails, services, watch,
+    ask, beat, canonical, content_hash, envelope, export, intent, kernel_self, mcp, memory, mitl,
+    placement, proof, rails, services, watch,
 };
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -72,6 +72,15 @@ const PORTED_KINDS: &[&str] = &[
     "hold_expiry",
     "crew_hash",
     "turned_fact",
+    // P7 sp5 — orreth.memory/1 and the signed export
+    "search_terms",
+    "memory_fact",
+    "purge_fact",
+    "digest_text",
+    "digest_fact",
+    "signed_bundle",
+    "verify_signed",
+    "did_of",
 ];
 
 fn fixture_dir() -> PathBuf {
@@ -122,6 +131,14 @@ fn strings(v: &Value) -> Vec<String> {
         .iter()
         .map(|x| s(x).to_string())
         .collect()
+}
+
+fn hex_bytes(h: &str) -> [u8; 32] {
+    let v: Vec<u8> = (0..h.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&h[i..i + 2], 16).unwrap())
+        .collect();
+    v.as_slice().try_into().unwrap()
 }
 
 fn opt_str(v: &Value) -> Option<&str> {
@@ -719,6 +736,154 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
                 intent::crew_shape_hash(&shape),
                 s(&exp["hash"]).to_string(),
                 "the crew's hash"
+            );
+        }
+        "search_terms" => {
+            same!(
+                memory::search_terms(s(&inp["query"])),
+                s(&exp["terms"]).to_string(),
+                "the terms"
+            );
+            let fb: Vec<String> = exp["fallback"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|v| s(v).to_string())
+                .collect();
+            same!(
+                memory::fallback_words(s(&inp["query"])),
+                fb,
+                "the fallback words"
+            );
+        }
+        "memory_fact" | "purge_fact" => {
+            let payload = if kind == "memory_fact" {
+                memory::landed_payload(
+                    s(&inp["namespace"]),
+                    s(&inp["key"]),
+                    &content_hash(&inp["body"]),
+                    opt_str(&inp["supersedes"]),
+                )
+            } else {
+                let hashes: Vec<String> = inp["hashes"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|v| s(v).to_string())
+                    .collect();
+                memory::purge_payload(s(&inp["namespace"]), s(&inp["key"]), &hashes)
+            };
+            same!(payload, exp["payload"], "the payload");
+            let env = memory::fact(
+                if kind == "memory_fact" {
+                    memory::MEMORY_EVENT
+                } else {
+                    memory::PURGE_EVENT
+                },
+                s(&inp["scope"]),
+                payload,
+                s(&inp["by"]),
+                None,
+                s(&inp["message_id"]),
+                s(&inp["occurred_at"]),
+            );
+            let bytes = envelope::encode(&env).map_err(|e| e.to_string())?;
+            same!(
+                String::from_utf8(bytes).unwrap(),
+                s(&exp["bytes"]).to_string(),
+                "the fact's bytes"
+            );
+        }
+        "digest_text" => {
+            let asks: Vec<memory::DigestAsk> = inp["asks"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|a| memory::DigestAsk {
+                    ask_id: s(&a[0]).into(),
+                    text: s(&a[1]).into(),
+                    reply: opt_str(&a[2]).map(str::to_string),
+                    status: s(&a[3]).into(),
+                    asked_at: memory::Civil::parse(s(&a[4])).unwrap(),
+                    replied_at: opt_str(&a[5]).and_then(memory::Civil::parse),
+                    who: s(&a[6]).into(),
+                })
+                .collect();
+            let mems: Vec<(String, String, String)> = inp["memories"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|m| (s(&m[0]).into(), s(&m[1]).into(), s(&m[2]).into()))
+                .collect();
+            let (body, sources) = memory::digest_lines(
+                s(&inp["session_id"]),
+                opt_str(&inp["title"]),
+                memory::Civil::parse(s(&inp["opened"])).unwrap(),
+                &asks,
+                &mems,
+            );
+            same!(body, s(&exp["body"]).to_string(), "the digest's text");
+            let want: Vec<String> = exp["sources"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|v| s(v).to_string())
+                .collect();
+            same!(sources, want, "the sources");
+        }
+        "digest_fact" => {
+            let payload = memory::digest_payload(
+                s(&inp["digest_id"]),
+                s(&inp["body"]),
+                s(&inp["session"]),
+                inp["sources"].as_u64().unwrap_or(0) as usize,
+            );
+            same!(payload, exp["payload"], "the payload");
+            let env = memory::fact(
+                memory::DIGEST_EVENT,
+                s(&inp["scope"]),
+                payload,
+                s(&inp["by"]),
+                Some(s(&inp["session"])),
+                s(&inp["message_id"]),
+                s(&inp["occurred_at"]),
+            );
+            let bytes = envelope::encode(&env).map_err(|e| e.to_string())?;
+            same!(
+                String::from_utf8(bytes).unwrap(),
+                s(&exp["bytes"]).to_string(),
+                "the fact's bytes"
+            );
+        }
+        "signed_bundle" => {
+            let seed = hex_bytes(s(&inp["seed_hex"]));
+            let signer = kernel_self::KernelSelf::from_seed(&seed, "kernel");
+            let rows = inp["rows"].as_array().unwrap();
+            let b = export::seal(
+                rows,
+                &inp["scope"],
+                s(&inp["world"]),
+                s(&inp["generated_at"]),
+                Some(&signer),
+            );
+            same!(b, exp["bundle"], "the sealed bundle");
+            same!(export::verify(&b), true, "the bundle verifies");
+        }
+        "verify_signed" => {
+            same!(
+                export::verify(&inp["bundle"]),
+                exp["ok"].as_bool().unwrap(),
+                "verify"
+            );
+        }
+        "did_of" => {
+            let seed = hex_bytes(s(&inp["seed_hex"]));
+            let me = kernel_self::KernelSelf::from_seed(&seed, s(&inp["kind"]));
+            same!(me.did(), s(&exp["did"]).to_string(), "the DID");
+            same!(
+                me.verify_key_hex(),
+                s(&exp["public_key_hex"]).to_string(),
+                "the public key"
             );
         }
         "turned_fact" => {

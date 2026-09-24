@@ -2,6 +2,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: memory · kernel_self · store · digest · export_live · 2026-09-24
 //! `orreth-spine` — the kernel's pure laws in Rust, ported from the Python spine
 //! (`spine/orreth_spine/`) against the conformance suite (canon 0008).
 //!
@@ -77,7 +78,9 @@ pub mod envelope;
 pub mod export;
 pub mod hash;
 pub mod intent;
+pub mod kernel_self;
 pub mod mcp;
+pub mod memory;
 pub mod mitl;
 pub mod placement;
 pub mod proof;
@@ -91,9 +94,13 @@ pub mod asks;
 #[cfg(feature = "bridge")]
 pub mod bridge;
 #[cfg(feature = "rails")]
+pub mod digest;
+#[cfg(feature = "rails")]
 pub mod dispatcher;
 #[cfg(feature = "rails")]
 pub mod events;
+#[cfg(feature = "rails")]
+pub mod export_live;
 #[cfg(feature = "rails")]
 pub mod feed;
 #[cfg(feature = "rails")]
@@ -128,6 +135,8 @@ pub mod schema;
 pub mod sessions;
 #[cfg(feature = "rails")]
 pub mod sinks;
+#[cfg(feature = "rails")]
+pub mod store;
 #[cfg(feature = "rails")]
 pub mod world;
 

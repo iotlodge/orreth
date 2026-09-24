@@ -1,0 +1,361 @@
+{
+ "contract": "orreth.memory/1",
+ "version": 0,
+ "generated_by": "orreth_spine.store + digest + envelope (Python reference), canon 0008 \u00b7 P7 sp5",
+ "generated_at": "2026-09-24",
+ "cases": [
+  {
+   "name": "search_terms: 'what cures the cough'",
+   "kind": "search_terms",
+   "input": {
+    "query": "what cures the cough"
+   },
+   "expect": {
+    "terms": "what or cures or the or cough",
+    "fallback": [
+     "what",
+     "cures",
+     "cough"
+    ]
+   }
+  },
+  {
+   "name": "search_terms: 'cure'",
+   "kind": "search_terms",
+   "input": {
+    "query": "cure"
+   },
+   "expect": {
+    "terms": "cure",
+    "fallback": [
+     "cure"
+    ]
+   }
+  },
+  {
+   "name": "search_terms: 'the of a'",
+   "kind": "search_terms",
+   "input": {
+    "query": "the of a"
+   },
+   "expect": {
+    "terms": "the or of or a",
+    "fallback": [
+     "the of a"
+    ]
+   }
+  },
+  {
+   "name": "search_terms: \"walk #11's W35 boundary\"",
+   "kind": "search_terms",
+   "input": {
+    "query": "walk #11's W35 boundary"
+   },
+   "expect": {
+    "terms": "walk or 11 or s or W35 or boundary",
+    "fallback": [
+     "walk",
+     "boundary"
+    ]
+   }
+  },
+  {
+   "name": "search_terms: ''",
+   "kind": "search_terms",
+   "input": {
+    "query": ""
+   },
+   "expect": {
+    "terms": "",
+    "fallback": [
+     ""
+    ]
+   }
+  },
+  {
+   "name": "search_terms: 'Denver time please!'",
+   "kind": "search_terms",
+   "input": {
+    "query": "Denver time please!"
+   },
+   "expect": {
+    "terms": "Denver or time or please",
+    "fallback": [
+     "Denver",
+     "time",
+     "please"
+    ]
+   }
+  },
+  {
+   "name": "search_terms: 'internationalization efforts abroad'",
+   "kind": "search_terms",
+   "input": {
+    "query": "internationalization efforts abroad"
+   },
+   "expect": {
+    "terms": "internationalization or efforts or abroad",
+    "fallback": [
+     "internationalization",
+     "efforts",
+     "abroad"
+    ]
+   }
+  },
+  {
+   "name": "memory_fact: librarian/jb.likes",
+   "kind": "memory_fact",
+   "input": {
+    "scope": "u:fixture",
+    "by": "did:orreth:agent:0123456789abcdef0123456789abcdef",
+    "occurred_at": "2026-09-24T20:00:00.000Z",
+    "namespace": "librarian",
+    "key": "jb.likes",
+    "body": "JB likes plain words.",
+    "message_id": "msg_fixture00"
+   },
+   "expect": {
+    "payload": {
+     "ref": "librarian/jb.likes",
+     "hash": "sha256:a43d5089446670937a4a6217deeb10efde72c0ff160bdd33309a6c754e167954"
+    },
+    "bytes": "{\"authority_chain\":[\"did:orreth:agent:0123456789abcdef0123456789abcdef\"],\"message_id\":\"msg_fixture00\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-24T20:00:00.000Z\",\"payload\":{\"hash\":\"sha256:a43d5089446670937a4a6217deeb10efde72c0ff160bdd33309a6c754e167954\",\"ref\":\"librarian/jb.likes\"},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.memory.landed.v1\",\"universe_id\":\"u:fixture\"}",
+    "topic": "orreth.memory.landed.v1"
+   }
+  },
+  {
+   "name": "memory_fact: librarian/jb.likes supersedes",
+   "kind": "memory_fact",
+   "input": {
+    "scope": "u:fixture",
+    "by": "did:orreth:agent:0123456789abcdef0123456789abcdef",
+    "occurred_at": "2026-09-24T20:00:00.000Z",
+    "namespace": "librarian",
+    "key": "jb.likes",
+    "body": "JB likes plain words and a quiet monitor.",
+    "message_id": "msg_fixture01",
+    "supersedes": "sha256:a43d5089446670937a4a6217deeb10efde72c0ff160bdd33309a6c754e167954"
+   },
+   "expect": {
+    "payload": {
+     "ref": "librarian/jb.likes",
+     "hash": "sha256:c14856eced0a71f0e30239e03b9623004f0d0991e7a6b9af4a98760f76fa3950",
+     "supersedes": "sha256:a43d5089446670937a4a6217deeb10efde72c0ff160bdd33309a6c754e167954"
+    },
+    "bytes": "{\"authority_chain\":[\"did:orreth:agent:0123456789abcdef0123456789abcdef\"],\"message_id\":\"msg_fixture01\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-24T20:00:00.000Z\",\"payload\":{\"hash\":\"sha256:c14856eced0a71f0e30239e03b9623004f0d0991e7a6b9af4a98760f76fa3950\",\"ref\":\"librarian/jb.likes\",\"supersedes\":\"sha256:a43d5089446670937a4a6217deeb10efde72c0ff160bdd33309a6c754e167954\"},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.memory.landed.v1\",\"universe_id\":\"u:fixture\"}",
+    "topic": "orreth.memory.landed.v1"
+   }
+  },
+  {
+   "name": "memory_fact: mitl/ontology/rule-13",
+   "kind": "memory_fact",
+   "input": {
+    "scope": "u:fixture",
+    "by": "did:orreth:agent:0123456789abcdef0123456789abcdef",
+    "occurred_at": "2026-09-24T20:00:00.000Z",
+    "namespace": "mitl",
+    "key": "ontology/rule-13",
+    "body": "Every word aimed at a human is plain \u2014 with an apostrophe's edge and \u00fcn\u00efcode.",
+    "message_id": "msg_fixture02"
+   },
+   "expect": {
+    "payload": {
+     "ref": "mitl/ontology/rule-13",
+     "hash": "sha256:60f518e5eb95b4a0db0ab7829ab92fd82ec7ec64484574f710b24e9b0534f7e7"
+    },
+    "bytes": "{\"authority_chain\":[\"did:orreth:agent:0123456789abcdef0123456789abcdef\"],\"message_id\":\"msg_fixture02\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-24T20:00:00.000Z\",\"payload\":{\"hash\":\"sha256:60f518e5eb95b4a0db0ab7829ab92fd82ec7ec64484574f710b24e9b0534f7e7\",\"ref\":\"mitl/ontology/rule-13\"},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.memory.landed.v1\",\"universe_id\":\"u:fixture\"}",
+    "topic": "orreth.memory.landed.v1"
+   }
+  },
+  {
+   "name": "purge_fact: two versions leave, their hashes stay",
+   "kind": "purge_fact",
+   "input": {
+    "scope": "u:fixture",
+    "by": "did:orreth:agent:0123456789abcdef0123456789abcdef",
+    "occurred_at": "2026-09-24T20:00:00.000Z",
+    "namespace": "librarian",
+    "key": "jb.likes",
+    "hashes": [
+     "sha256:a43d5089446670937a4a6217deeb10efde72c0ff160bdd33309a6c754e167954",
+     "sha256:c14856eced0a71f0e30239e03b9623004f0d0991e7a6b9af4a98760f76fa3950"
+    ],
+    "message_id": "msg_fixture10"
+   },
+   "expect": {
+    "payload": {
+     "ref": "librarian/jb.likes",
+     "hashes": [
+      "sha256:a43d5089446670937a4a6217deeb10efde72c0ff160bdd33309a6c754e167954",
+      "sha256:c14856eced0a71f0e30239e03b9623004f0d0991e7a6b9af4a98760f76fa3950"
+     ],
+     "hash": "sha256:66957fd8635efacf2a35ce5729840bb66b102ae8e91d0812b07b04bd0eee266f"
+    },
+    "bytes": "{\"authority_chain\":[\"did:orreth:agent:0123456789abcdef0123456789abcdef\"],\"message_id\":\"msg_fixture10\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-24T20:00:00.000Z\",\"payload\":{\"hash\":\"sha256:66957fd8635efacf2a35ce5729840bb66b102ae8e91d0812b07b04bd0eee266f\",\"hashes\":[\"sha256:a43d5089446670937a4a6217deeb10efde72c0ff160bdd33309a6c754e167954\",\"sha256:c14856eced0a71f0e30239e03b9623004f0d0991e7a6b9af4a98760f76fa3950\"],\"ref\":\"librarian/jb.likes\"},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.memory.purged.v1\",\"universe_id\":\"u:fixture\"}",
+    "topic": "orreth.memory.purged.v1"
+   }
+  },
+  {
+   "name": "purge_fact: one version",
+   "kind": "purge_fact",
+   "input": {
+    "scope": "u:fixture",
+    "by": "did:orreth:agent:0123456789abcdef0123456789abcdef",
+    "occurred_at": "2026-09-24T20:00:00.000Z",
+    "namespace": "librarian",
+    "key": "one",
+    "hashes": [
+     "sha256:ba2df4903a2c14e86dc3bcca58911b44ac1d2514b7227bf6eb08cfb978f55a1b"
+    ],
+    "message_id": "msg_fixture11"
+   },
+   "expect": {
+    "payload": {
+     "ref": "librarian/one",
+     "hashes": [
+      "sha256:ba2df4903a2c14e86dc3bcca58911b44ac1d2514b7227bf6eb08cfb978f55a1b"
+     ],
+     "hash": "sha256:5d13cc1cb6b912b0bdfddc0b66f4feb296cf5736f153b86a9e1f5a6473bb93cf"
+    },
+    "bytes": "{\"authority_chain\":[\"did:orreth:agent:0123456789abcdef0123456789abcdef\"],\"message_id\":\"msg_fixture11\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-24T20:00:00.000Z\",\"payload\":{\"hash\":\"sha256:5d13cc1cb6b912b0bdfddc0b66f4feb296cf5736f153b86a9e1f5a6473bb93cf\",\"hashes\":[\"sha256:ba2df4903a2c14e86dc3bcca58911b44ac1d2514b7227bf6eb08cfb978f55a1b\"],\"ref\":\"librarian/one\"},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.memory.purged.v1\",\"universe_id\":\"u:fixture\"}",
+    "topic": "orreth.memory.purged.v1"
+   }
+  },
+  {
+   "name": "digest_text: four asks, two memories",
+   "kind": "digest_text",
+   "input": {
+    "session_id": "ses_0f1e2d3c4b5a",
+    "title": "the Stable walk",
+    "opened": "2026-09-24T10:00:00",
+    "asks": [
+     [
+      "ask_aaaa111122223333",
+      "what is the temperature outside?",
+      "Right now it is 71\u00b0F outside (feels like 70\u00b0F).",
+      "replied",
+      "2026-09-24T10:01:05",
+      "2026-09-24T10:01:09",
+      "librarian"
+     ],
+     [
+      "ask_bbbb111122223333",
+      "echo, say the word HERON once, in one sentence, please \u2014 and then keep going for a very long while so the head is cut at one hundred and twenty characters exactly",
+      null,
+      "received",
+      "2026-09-24T10:02:00",
+      null,
+      "a resident"
+     ],
+     [
+      "ask_cccc111122223333",
+      "stop the kernel's Resiliency intention",
+      "Cancelled \u2014 nothing was done. Cancel is always the default here.",
+      "cancelled",
+      "2026-09-24T10:03:30",
+      "2026-09-24T10:03:31",
+      "the kernel"
+     ],
+     [
+      "ask_dddd111122223333",
+      "retire echo",
+      null,
+      "refused",
+      "2026-09-24T10:04:00",
+      null,
+      "a resident"
+     ]
+    ],
+    "memories": [
+     [
+      "librarian",
+      "jb.likes",
+      "JB likes plain words."
+     ],
+     [
+      "mitl",
+      "ontology/rule-13",
+      "Every word aimed at a human is plain \u2014 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+     ]
+    ]
+   },
+   "expect": {
+    "body": "session 0f1e2d \u2014 the Stable walk \u00b7 opened Thu Sep 24 10:00 \u00b7 4 asks\n\u00b7 10:01 asked: what is the temperature outside?\n  librarian replied (10:01): Right now it is 71\u00b0F outside (feels like 70\u00b0F).\n\u00b7 10:02 asked: echo, say the word HERON once, in one sentence, please \u2014 and then keep going for a very long while so the head is cut a\u2026\n\u00b7 10:03 asked: stop the kernel's Resiliency intention\n  cancelled\n\u00b7 10:04 asked: retire echo\n  refused\n\u00b7 acquired [librarian/jb.likes]: JB likes plain words.\n\u00b7 acquired [mitl/ontology/rule-13]: Every word aimed at a human is plain \u2014 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u2026",
+    "sources": [
+     "ask_aaaa111122223333",
+     "ask_bbbb111122223333",
+     "ask_cccc111122223333",
+     "ask_dddd111122223333",
+     "librarian/jb.likes",
+     "mitl/ontology/rule-13"
+    ]
+   }
+  },
+  {
+   "name": "digest_text: one ask, no title, no memories",
+   "kind": "digest_text",
+   "input": {
+    "session_id": "ses_aabbccddeeff",
+    "title": null,
+    "opened": "2026-09-24T10:00:00",
+    "asks": [
+     [
+      "ask_aaaa111122223333",
+      "what is the temperature outside?",
+      "Right now it is 71\u00b0F outside (feels like 70\u00b0F).",
+      "replied",
+      "2026-09-24T10:01:05",
+      "2026-09-24T10:01:09",
+      "librarian"
+     ]
+    ],
+    "memories": []
+   },
+   "expect": {
+    "body": "session aabbcc \u00b7 opened Thu Sep 24 10:00 \u00b7 1 ask\n\u00b7 10:01 asked: what is the temperature outside?\n  librarian replied (10:01): Right now it is 71\u00b0F outside (feels like 70\u00b0F).",
+    "sources": [
+     "ask_aaaa111122223333"
+    ]
+   }
+  },
+  {
+   "name": "digest_text: no asks",
+   "kind": "digest_text",
+   "input": {
+    "session_id": "ses_000000000000",
+    "title": "empty",
+    "opened": "2026-09-24T10:00:00",
+    "asks": [],
+    "memories": []
+   },
+   "expect": {
+    "body": "session 000000 \u2014 empty \u00b7 opened Thu Sep 24 10:00 \u00b7 0 asks",
+    "sources": []
+   }
+  },
+  {
+   "name": "digest_fact: the session as correlation, the builder's chain",
+   "kind": "digest_fact",
+   "input": {
+    "scope": "u:fixture",
+    "by": "the digest builder",
+    "occurred_at": "2026-09-24T20:00:00.000Z",
+    "digest_id": "dig_0011223344",
+    "body": "session 0f1e2d \u2014 the Stable walk \u00b7 opened Thu Sep 24 10:00 \u00b7 4 asks\n\u00b7 10:01 asked: what is the temperature outside?\n  librarian replied (10:01): Right now it is 71\u00b0F outside (feels like 70\u00b0F).\n\u00b7 10:02 asked: echo, say the word HERON once, in one sentence, please \u2014 and then keep going for a very long while so the head is cut a\u2026\n\u00b7 10:03 asked: stop the kernel's Resiliency intention\n  cancelled\n\u00b7 10:04 asked: retire echo\n  refused\n\u00b7 acquired [librarian/jb.likes]: JB likes plain words.\n\u00b7 acquired [mitl/ontology/rule-13]: Every word aimed at a human is plain \u2014 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u2026",
+    "session": "ses_0f1e2d3c4b5a",
+    "sources": 6,
+    "message_id": "msg_fixture20"
+   },
+   "expect": {
+    "payload": {
+     "ref": "dig_0011223344",
+     "hash": "sha256:9ae91b9aafaae44b12e7679b355116977cef021e1e539ddac09d42e78afa96c7",
+     "session": "ses_0f1e2d3c4b5a",
+     "sources": 6
+    },
+    "bytes": "{\"authority_chain\":[\"the digest builder\"],\"correlation_id\":\"ses_0f1e2d3c4b5a\",\"message_id\":\"msg_fixture20\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-24T20:00:00.000Z\",\"payload\":{\"hash\":\"sha256:9ae91b9aafaae44b12e7679b355116977cef021e1e539ddac09d42e78afa96c7\",\"ref\":\"dig_0011223344\",\"session\":\"ses_0f1e2d3c4b5a\",\"sources\":6},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.digest.landed.v1\",\"universe_id\":\"u:fixture\"}",
+    "topic": "orreth.digest.landed.v1"
+   }
+  }
+ ]
+}

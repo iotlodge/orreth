@@ -429,8 +429,22 @@ async fn shadow_two_kernels_beat_on_one_ground_one_beat_at_a_time() {
     let (s, hz) = get(rs_port, "/harness").await;
     assert_eq!(s, 200);
     let (_, hz_py) = get(py_port, "/harness").await;
-    assert_eq!(hz, hz_py, "the world checks, equal on both doors");
+    // P6.5 sp3 grew the Python harness by the Stable's four checks (every mind answers · the
+    // gateway holds every mind · the meter and the gateway agree · a model change is announced);
+    // the Rust kernel reads the first five until P7 sp6 ports the Stable's seam — so the five
+    // are compared, and the Python door's four more are named, not hidden
+    let py_checks = hz_py["checks"].as_array().unwrap();
     assert_eq!(hz["checks"].as_array().unwrap().len(), 5);
+    assert_eq!(
+        hz["checks"].as_array().unwrap()[..],
+        py_checks[..5],
+        "the five world checks, equal on both doors"
+    );
+    assert_eq!(
+        py_checks.len(),
+        9,
+        "the Python door reads the Stable's four more (sp6 ports them)"
+    );
     assert_eq!(
         hz["checks"][0]["name"],
         json!("a duty answered, not refused")

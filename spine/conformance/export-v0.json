@@ -1,7 +1,7 @@
 {
  "contract": "orreth.compliance/1",
  "version": 0,
- "generated_by": "orreth_spine.export + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 sp2 (+ the tool hop, same day)",
+ "generated_by": "orreth_spine.export + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 sp2 (+ the tool hop, same day) \u00b7 P7 sp5: signed_bundle \u00b7 did_of",
  "generated_at": "2026-09-21",
  "cases": [
   {
@@ -936,6 +936,567 @@
    },
    "expect": {
     "bytes": "{\"authority_chain\":[\"did:orreth:person:jb\",\"did:orreth:agent:0123456789abcdef0123456789abcdef\",\"tool:acquire\"],\"correlation_id\":\"ask_0000000000000001\",\"marker\":{\"by\":\"did:orreth:agent:0123456789abcdef0123456789abcdef\",\"id\":\"mk_000000000003\",\"kind\":\"action\",\"parent\":\"mk_000000000001\"},\"message_id\":\"msg_000000000000000000000004\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T12:00:00.500Z\",\"payload\":{\"by\":\"did:orreth:agent:0123456789abcdef0123456789abcdef\",\"hash\":\"sha256:b1de09de68cf57841856f2f30538a4af876b1356ee0b3fec1a1e4d31ed93fc3c\",\"ok\":true,\"ref\":\"ask_0000000000000001\",\"tool\":\"acquire\"},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.tool.called.v1\",\"universe_id\":\"u:fixture\"}"
+   }
+  },
+  {
+   "name": "signed_bundle: three rows sealed and SIGNED by the kernel's own self (Ed25519 over the signed part's canonical bytes; hex)",
+   "kind": "signed_bundle",
+   "input": {
+    "rows": [
+     {
+      "at": "2026-09-21T12:00:00.000Z",
+      "kind": "ask",
+      "ref": "ask_0000000000000001",
+      "person": "did:orreth:person:jb",
+      "authority_chain": [
+       "did:orreth:person:jb"
+      ],
+      "chain_status": "intact",
+      "proof": "L1",
+      "marker": {
+       "kind": "objective",
+       "id": "mk_000000000001",
+       "parent": null,
+       "root": "mk_000000000001"
+      },
+      "words": {
+       "ask": "what is on the shelf?"
+      },
+      "served_by": null,
+      "message_id": "msg_000000000000000000000001"
+     },
+     {
+      "at": "2026-09-21T12:00:01.000Z",
+      "kind": "reply",
+      "ref": "ask_0000000000000001",
+      "person": "did:orreth:person:jb",
+      "authority_chain": [
+       "did:orreth:person:jb",
+       "did:orreth:agent:0123456789abcdef0123456789abcdef"
+      ],
+      "chain_status": "intact",
+      "proof": "L1",
+      "marker": {
+       "kind": "objective",
+       "id": "mk_000000000001",
+       "parent": null,
+       "root": "mk_000000000001"
+      },
+      "words": {
+       "reply": "Three books and a lamp."
+      },
+      "served_by": "did:orreth:agent:0123456789abcdef0123456789abcdef",
+      "message_id": "msg_000000000000000000000002"
+     },
+     {
+      "at": "2026-09-21T12:00:02.000Z",
+      "kind": "include",
+      "ref": "ask_0000000000000002",
+      "person": "did:orreth:person:jb",
+      "authority_chain": [
+       "did:orreth:person:jb",
+       "did:orreth:agent:0123456789abcdef0123456789abcdef",
+       "did:orreth:agent:fedcba9876543210fedcba9876543210"
+      ],
+      "chain_status": "intact",
+      "proof": "L1",
+      "marker": {
+       "kind": "thought",
+       "id": "mk_000000000002",
+       "parent": "mk_000000000001",
+       "root": "mk_000000000001"
+      },
+      "words": {
+       "reply": "1. read the books 2. light the lamp"
+      },
+      "served_by": "did:orreth:agent:fedcba9876543210fedcba9876543210",
+      "message_id": "msg_000000000000000000000003"
+     }
+    ],
+    "scope": {
+     "person": "did:orreth:person:jb",
+     "session": "ses_0f1e2d3c4b5a"
+    },
+    "world": "u:fixture",
+    "generated_at": "2026-09-24T20:00:03.000Z",
+    "seed_hex": "000000000000000000000000000000000123456789abcdef0123456789abcdef"
+   },
+   "expect": {
+    "bundle": {
+     "contract": "orreth.compliance/1",
+     "scope": {
+      "person": "did:orreth:person:jb",
+      "session": "ses_0f1e2d3c4b5a"
+     },
+     "generated_at": "2026-09-24T20:00:03.000Z",
+     "world": "u:fixture",
+     "rows": [
+      {
+       "at": "2026-09-21T12:00:00.000Z",
+       "kind": "ask",
+       "ref": "ask_0000000000000001",
+       "person": "did:orreth:person:jb",
+       "authority_chain": [
+        "did:orreth:person:jb"
+       ],
+       "chain_status": "intact",
+       "proof": "L1",
+       "marker": {
+        "kind": "objective",
+        "id": "mk_000000000001",
+        "parent": null,
+        "root": "mk_000000000001"
+       },
+       "words": {
+        "ask": "what is on the shelf?"
+       },
+       "served_by": null,
+       "message_id": "msg_000000000000000000000001"
+      },
+      {
+       "at": "2026-09-21T12:00:01.000Z",
+       "kind": "reply",
+       "ref": "ask_0000000000000001",
+       "person": "did:orreth:person:jb",
+       "authority_chain": [
+        "did:orreth:person:jb",
+        "did:orreth:agent:0123456789abcdef0123456789abcdef"
+       ],
+       "chain_status": "intact",
+       "proof": "L1",
+       "marker": {
+        "kind": "objective",
+        "id": "mk_000000000001",
+        "parent": null,
+        "root": "mk_000000000001"
+       },
+       "words": {
+        "reply": "Three books and a lamp."
+       },
+       "served_by": "did:orreth:agent:0123456789abcdef0123456789abcdef",
+       "message_id": "msg_000000000000000000000002"
+      },
+      {
+       "at": "2026-09-21T12:00:02.000Z",
+       "kind": "include",
+       "ref": "ask_0000000000000002",
+       "person": "did:orreth:person:jb",
+       "authority_chain": [
+        "did:orreth:person:jb",
+        "did:orreth:agent:0123456789abcdef0123456789abcdef",
+        "did:orreth:agent:fedcba9876543210fedcba9876543210"
+       ],
+       "chain_status": "intact",
+       "proof": "L1",
+       "marker": {
+        "kind": "thought",
+        "id": "mk_000000000002",
+        "parent": "mk_000000000001",
+        "root": "mk_000000000001"
+       },
+       "words": {
+        "reply": "1. read the books 2. light the lamp"
+       },
+       "served_by": "did:orreth:agent:fedcba9876543210fedcba9876543210",
+       "message_id": "msg_000000000000000000000003"
+      }
+     ],
+     "summary": {
+      "rows": 3,
+      "by_kind": {
+       "ask": 1,
+       "reply": 1,
+       "include": 1
+      },
+      "by_proof": {
+       "L1": 3
+      },
+      "chain_broken": 0,
+      "words_withheld": 0
+     },
+     "hashing": "sha256; h0 = sha256(canonical(row0)); h_i = sha256(ascii_hex(h_{i-1}) || canonical(row_i)); root_hash = h_last",
+     "hash_chain": [
+      "ec085473250516f03ac52f567bae59da486f2a691c6e34dbe0f08a68281f2251",
+      "bb7ed1aa9ed6424442cbc457c567483e81dfdda6b80ffda354fc505a9f4615bf",
+      "d2600f4159ac3ef2706db49331a68f9ce377ae8e7cbad08c046e0379d302acf0"
+     ],
+     "root_hash": "d2600f4159ac3ef2706db49331a68f9ce377ae8e7cbad08c046e0379d302acf0",
+     "signed_by": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "signer_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "7a4bd6e4c02d2f30a63e1f71e5fe0a7a69b27531cff3ac4037d4c732a626245ac8d8937f0e0ec3ecc451fdb56bc34eb9a927b2d54603c580f5576f37ecaa6f02"
+    }
+   }
+  },
+  {
+   "name": "verify_signed: the kernel-signed bundle verifies",
+   "kind": "verify_signed",
+   "input": {
+    "bundle": {
+     "contract": "orreth.compliance/1",
+     "scope": {
+      "person": "did:orreth:person:jb",
+      "session": "ses_0f1e2d3c4b5a"
+     },
+     "generated_at": "2026-09-24T20:00:03.000Z",
+     "world": "u:fixture",
+     "rows": [
+      {
+       "at": "2026-09-21T12:00:00.000Z",
+       "kind": "ask",
+       "ref": "ask_0000000000000001",
+       "person": "did:orreth:person:jb",
+       "authority_chain": [
+        "did:orreth:person:jb"
+       ],
+       "chain_status": "intact",
+       "proof": "L1",
+       "marker": {
+        "kind": "objective",
+        "id": "mk_000000000001",
+        "parent": null,
+        "root": "mk_000000000001"
+       },
+       "words": {
+        "ask": "what is on the shelf?"
+       },
+       "served_by": null,
+       "message_id": "msg_000000000000000000000001"
+      },
+      {
+       "at": "2026-09-21T12:00:01.000Z",
+       "kind": "reply",
+       "ref": "ask_0000000000000001",
+       "person": "did:orreth:person:jb",
+       "authority_chain": [
+        "did:orreth:person:jb",
+        "did:orreth:agent:0123456789abcdef0123456789abcdef"
+       ],
+       "chain_status": "intact",
+       "proof": "L1",
+       "marker": {
+        "kind": "objective",
+        "id": "mk_000000000001",
+        "parent": null,
+        "root": "mk_000000000001"
+       },
+       "words": {
+        "reply": "Three books and a lamp."
+       },
+       "served_by": "did:orreth:agent:0123456789abcdef0123456789abcdef",
+       "message_id": "msg_000000000000000000000002"
+      },
+      {
+       "at": "2026-09-21T12:00:02.000Z",
+       "kind": "include",
+       "ref": "ask_0000000000000002",
+       "person": "did:orreth:person:jb",
+       "authority_chain": [
+        "did:orreth:person:jb",
+        "did:orreth:agent:0123456789abcdef0123456789abcdef",
+        "did:orreth:agent:fedcba9876543210fedcba9876543210"
+       ],
+       "chain_status": "intact",
+       "proof": "L1",
+       "marker": {
+        "kind": "thought",
+        "id": "mk_000000000002",
+        "parent": "mk_000000000001",
+        "root": "mk_000000000001"
+       },
+       "words": {
+        "reply": "1. read the books 2. light the lamp"
+       },
+       "served_by": "did:orreth:agent:fedcba9876543210fedcba9876543210",
+       "message_id": "msg_000000000000000000000003"
+      }
+     ],
+     "summary": {
+      "rows": 3,
+      "by_kind": {
+       "ask": 1,
+       "reply": 1,
+       "include": 1
+      },
+      "by_proof": {
+       "L1": 3
+      },
+      "chain_broken": 0,
+      "words_withheld": 0
+     },
+     "hashing": "sha256; h0 = sha256(canonical(row0)); h_i = sha256(ascii_hex(h_{i-1}) || canonical(row_i)); root_hash = h_last",
+     "hash_chain": [
+      "ec085473250516f03ac52f567bae59da486f2a691c6e34dbe0f08a68281f2251",
+      "bb7ed1aa9ed6424442cbc457c567483e81dfdda6b80ffda354fc505a9f4615bf",
+      "d2600f4159ac3ef2706db49331a68f9ce377ae8e7cbad08c046e0379d302acf0"
+     ],
+     "root_hash": "d2600f4159ac3ef2706db49331a68f9ce377ae8e7cbad08c046e0379d302acf0",
+     "signed_by": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "signer_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "7a4bd6e4c02d2f30a63e1f71e5fe0a7a69b27531cff3ac4037d4c732a626245ac8d8937f0e0ec3ecc451fdb56bc34eb9a927b2d54603c580f5576f37ecaa6f02"
+    }
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "verify_signed: a forged signature refuses",
+   "kind": "verify_signed",
+   "input": {
+    "bundle": {
+     "contract": "orreth.compliance/1",
+     "scope": {
+      "person": "did:orreth:person:jb",
+      "session": "ses_0f1e2d3c4b5a"
+     },
+     "generated_at": "2026-09-24T20:00:03.000Z",
+     "world": "u:fixture",
+     "rows": [
+      {
+       "at": "2026-09-21T12:00:00.000Z",
+       "kind": "ask",
+       "ref": "ask_0000000000000001",
+       "person": "did:orreth:person:jb",
+       "authority_chain": [
+        "did:orreth:person:jb"
+       ],
+       "chain_status": "intact",
+       "proof": "L1",
+       "marker": {
+        "kind": "objective",
+        "id": "mk_000000000001",
+        "parent": null,
+        "root": "mk_000000000001"
+       },
+       "words": {
+        "ask": "what is on the shelf?"
+       },
+       "served_by": null,
+       "message_id": "msg_000000000000000000000001"
+      },
+      {
+       "at": "2026-09-21T12:00:01.000Z",
+       "kind": "reply",
+       "ref": "ask_0000000000000001",
+       "person": "did:orreth:person:jb",
+       "authority_chain": [
+        "did:orreth:person:jb",
+        "did:orreth:agent:0123456789abcdef0123456789abcdef"
+       ],
+       "chain_status": "intact",
+       "proof": "L1",
+       "marker": {
+        "kind": "objective",
+        "id": "mk_000000000001",
+        "parent": null,
+        "root": "mk_000000000001"
+       },
+       "words": {
+        "reply": "Three books and a lamp."
+       },
+       "served_by": "did:orreth:agent:0123456789abcdef0123456789abcdef",
+       "message_id": "msg_000000000000000000000002"
+      },
+      {
+       "at": "2026-09-21T12:00:02.000Z",
+       "kind": "include",
+       "ref": "ask_0000000000000002",
+       "person": "did:orreth:person:jb",
+       "authority_chain": [
+        "did:orreth:person:jb",
+        "did:orreth:agent:0123456789abcdef0123456789abcdef",
+        "did:orreth:agent:fedcba9876543210fedcba9876543210"
+       ],
+       "chain_status": "intact",
+       "proof": "L1",
+       "marker": {
+        "kind": "thought",
+        "id": "mk_000000000002",
+        "parent": "mk_000000000001",
+        "root": "mk_000000000001"
+       },
+       "words": {
+        "reply": "1. read the books 2. light the lamp"
+       },
+       "served_by": "did:orreth:agent:fedcba9876543210fedcba9876543210",
+       "message_id": "msg_000000000000000000000003"
+      }
+     ],
+     "summary": {
+      "rows": 3,
+      "by_kind": {
+       "ask": 1,
+       "reply": 1,
+       "include": 1
+      },
+      "by_proof": {
+       "L1": 3
+      },
+      "chain_broken": 0,
+      "words_withheld": 0
+     },
+     "hashing": "sha256; h0 = sha256(canonical(row0)); h_i = sha256(ascii_hex(h_{i-1}) || canonical(row_i)); root_hash = h_last",
+     "hash_chain": [
+      "ec085473250516f03ac52f567bae59da486f2a691c6e34dbe0f08a68281f2251",
+      "bb7ed1aa9ed6424442cbc457c567483e81dfdda6b80ffda354fc505a9f4615bf",
+      "d2600f4159ac3ef2706db49331a68f9ce377ae8e7cbad08c046e0379d302acf0"
+     ],
+     "root_hash": "d2600f4159ac3ef2706db49331a68f9ce377ae8e7cbad08c046e0379d302acf0",
+     "signed_by": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "signer_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "0a4bd6e4c02d2f30a63e1f71e5fe0a7a69b27531cff3ac4037d4c732a626245ac8d8937f0e0ec3ecc451fdb56bc34eb9a927b2d54603c580f5576f37ecaa6f02"
+    }
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "verify_signed: a signer whose DID is not its key's refuses",
+   "kind": "verify_signed",
+   "input": {
+    "bundle": {
+     "contract": "orreth.compliance/1",
+     "scope": {
+      "person": "did:orreth:person:jb",
+      "session": "ses_0f1e2d3c4b5a"
+     },
+     "generated_at": "2026-09-24T20:00:03.000Z",
+     "world": "u:fixture",
+     "rows": [
+      {
+       "at": "2026-09-21T12:00:00.000Z",
+       "kind": "ask",
+       "ref": "ask_0000000000000001",
+       "person": "did:orreth:person:jb",
+       "authority_chain": [
+        "did:orreth:person:jb"
+       ],
+       "chain_status": "intact",
+       "proof": "L1",
+       "marker": {
+        "kind": "objective",
+        "id": "mk_000000000001",
+        "parent": null,
+        "root": "mk_000000000001"
+       },
+       "words": {
+        "ask": "what is on the shelf?"
+       },
+       "served_by": null,
+       "message_id": "msg_000000000000000000000001"
+      },
+      {
+       "at": "2026-09-21T12:00:01.000Z",
+       "kind": "reply",
+       "ref": "ask_0000000000000001",
+       "person": "did:orreth:person:jb",
+       "authority_chain": [
+        "did:orreth:person:jb",
+        "did:orreth:agent:0123456789abcdef0123456789abcdef"
+       ],
+       "chain_status": "intact",
+       "proof": "L1",
+       "marker": {
+        "kind": "objective",
+        "id": "mk_000000000001",
+        "parent": null,
+        "root": "mk_000000000001"
+       },
+       "words": {
+        "reply": "Three books and a lamp."
+       },
+       "served_by": "did:orreth:agent:0123456789abcdef0123456789abcdef",
+       "message_id": "msg_000000000000000000000002"
+      },
+      {
+       "at": "2026-09-21T12:00:02.000Z",
+       "kind": "include",
+       "ref": "ask_0000000000000002",
+       "person": "did:orreth:person:jb",
+       "authority_chain": [
+        "did:orreth:person:jb",
+        "did:orreth:agent:0123456789abcdef0123456789abcdef",
+        "did:orreth:agent:fedcba9876543210fedcba9876543210"
+       ],
+       "chain_status": "intact",
+       "proof": "L1",
+       "marker": {
+        "kind": "thought",
+        "id": "mk_000000000002",
+        "parent": "mk_000000000001",
+        "root": "mk_000000000001"
+       },
+       "words": {
+        "reply": "1. read the books 2. light the lamp"
+       },
+       "served_by": "did:orreth:agent:fedcba9876543210fedcba9876543210",
+       "message_id": "msg_000000000000000000000003"
+      }
+     ],
+     "summary": {
+      "rows": 3,
+      "by_kind": {
+       "ask": 1,
+       "reply": 1,
+       "include": 1
+      },
+      "by_proof": {
+       "L1": 3
+      },
+      "chain_broken": 0,
+      "words_withheld": 0
+     },
+     "hashing": "sha256; h0 = sha256(canonical(row0)); h_i = sha256(ascii_hex(h_{i-1}) || canonical(row_i)); root_hash = h_last",
+     "hash_chain": [
+      "ec085473250516f03ac52f567bae59da486f2a691c6e34dbe0f08a68281f2251",
+      "bb7ed1aa9ed6424442cbc457c567483e81dfdda6b80ffda354fc505a9f4615bf",
+      "d2600f4159ac3ef2706db49331a68f9ce377ae8e7cbad08c046e0379d302acf0"
+     ],
+     "root_hash": "d2600f4159ac3ef2706db49331a68f9ce377ae8e7cbad08c046e0379d302acf0",
+     "signed_by": "did:orreth:kernel:ffffffffffffffffffffffffffffffff",
+     "signer_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "7a4bd6e4c02d2f30a63e1f71e5fe0a7a69b27531cff3ac4037d4c732a626245ac8d8937f0e0ec3ecc451fdb56bc34eb9a927b2d54603c580f5576f37ecaa6f02"
+    }
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "did_of: a kernel's DID from its public key",
+   "kind": "did_of",
+   "input": {
+    "seed_hex": "000000000000000000000000000000000123456789abcdef0123456789abcdef",
+    "kind": "kernel"
+   },
+   "expect": {
+    "did": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "public_key_hex": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2"
+   }
+  },
+  {
+   "name": "did_of: a agent's DID from its public key",
+   "kind": "did_of",
+   "input": {
+    "seed_hex": "000000000000000000000000000000000123456789abcdef0123456789abcdef",
+    "kind": "agent"
+   },
+   "expect": {
+    "did": "did:orreth:agent:bdc46e11b084929d19ed73bf735768dd",
+    "public_key_hex": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2"
+   }
+  },
+  {
+   "name": "did_of: a service's DID from its public key",
+   "kind": "did_of",
+   "input": {
+    "seed_hex": "000000000000000000000000000000000123456789abcdef0123456789abcdef",
+    "kind": "service"
+   },
+   "expect": {
+    "did": "did:orreth:service:bdc46e11b084929d19ed73bf735768dd",
+    "public_key_hex": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2"
    }
   }
  ]

@@ -9,6 +9,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, MCP through one door: mcp_request · mcp_tool_manifest · mcp_server_manifest · mcp_transport · mcp_words · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: beat_lock · loop_words · plan_words · observed_words · watch_note · cannot_act · improvement_note · crew_hash · turned_fact · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable: route_for · usd · budget_duration · resolve · drift · eol_due · recommend · deal · deal_refuses · drained_words · act_words · server_name · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: search_terms · memory_fact · purge_fact · digest_text · digest_fact · signed_bundle · did_of · 2026-09-24
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -20,7 +21,8 @@ from pathlib import Path
 import pytest
 
 from orreth_spine import (dispatch, envelope as ev, export, ground, harness, intent, mcp, mitl, monitor, placement,
-                          presence, proof, rails, resident, scheduler, services, stable)
+                          presence, proof, rails, resident, scheduler, services, stable, store, digest)
+from orreth_spine.identity import Identity
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
 FIXTURES = sorted(ROOT.glob("*-v*.json"))
@@ -272,6 +274,49 @@ def test_fixture(contract, case):
         assert intent.improvement_note(inp["who"], inp["reply"]) == exp["note"]
     elif kind == "crew_hash":                    # the crew's shape, sorted, as canonical bytes
         assert intent.crew_shape_hash([(n, c) for n, c in inp["shape"]]) == exp["hash"]
+    # ---- orreth.memory/1 (P7 sp5): the Record's laws — recall's grammar, the landed and purged facts, the digest ----
+    elif kind == "search_terms":
+        assert store.search_terms(inp["query"]) == exp["terms"]
+        assert store.fallback_words(inp["query"]) == exp["fallback"]
+    elif kind == "memory_fact":                  # orreth.memory.landed.v1 for a fixed id and clock
+        with _dials(SPINE_SCOPE=inp["scope"]):
+            payload = store.landed_payload(inp["namespace"], inp["key"], ev.content_hash(inp["body"]), inp.get("supersedes"))
+            e = ev.make_envelope(kind="event", type=store.MEMORY_EVENT, universe_id=ev.scope(), scope_path=ev.scope(),
+                                 payload=payload, authority_chain=[inp["by"]])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert payload == exp["payload"] and ev.encode(e).decode("ascii") == exp["bytes"]
+    elif kind == "purge_fact":                   # the tombstone: hashes, never words
+        with _dials(SPINE_SCOPE=inp["scope"]):
+            payload = store.purge_payload(inp["namespace"], inp["key"], inp["hashes"])
+            e = ev.make_envelope(kind="event", type=store.PURGE_EVENT, universe_id=ev.scope(), scope_path=ev.scope(),
+                                 payload=payload, authority_chain=[inp["by"]])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert payload == exp["payload"] and ev.encode(e).decode("ascii") == exp["bytes"]
+    elif kind == "digest_text":                  # the short version's text from its parts
+        from datetime import datetime
+        asks = [(a[0], a[1], a[2], a[3], datetime.fromisoformat(a[4]), datetime.fromisoformat(a[5]) if a[5] else None, a[6])
+                for a in inp["asks"]]
+        body, sources = digest.compose_lines(inp["session_id"], inp.get("title"), datetime.fromisoformat(inp["opened"]),
+                                             asks, [tuple(m) for m in inp["memories"]])
+        assert body == exp["body"] and sources == exp["sources"]
+    elif kind == "digest_fact":                  # orreth.digest.landed.v1: the session as correlation
+        with _dials(SPINE_SCOPE=inp["scope"]):
+            payload = {"ref": inp["digest_id"], "hash": ev.content_hash(inp["body"]), "session": inp["session"],
+                       "sources": inp["sources"]}
+            e = ev.make_envelope(kind="event", type=digest.DIGEST_EVENT, universe_id=ev.scope(), scope_path=ev.scope(),
+                                 payload=payload, correlation_id=inp["session"], authority_chain=[inp["by"]])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert payload == exp["payload"] and ev.encode(e).decode("ascii") == exp["bytes"]
+    # ---- orreth.compliance/1 (P7 sp5): the bundle SIGNED by the kernel's own self ----
+    elif kind == "signed_bundle":
+        signer = Identity("kernel", bytes.fromhex(inp["seed_hex"]), kind="kernel")
+        b = export.seal(inp["rows"], scope=inp["scope"], world=inp["world"], generated_at=inp["generated_at"], signer=signer)
+        assert b == exp["bundle"] and export.verify(b) is True
+    elif kind == "verify_signed":
+        assert export.verify(inp["bundle"]) is exp["ok"]
+    elif kind == "did_of":
+        assert Identity("x", bytes.fromhex(inp["seed_hex"]), kind=inp["kind"]).did == exp["did"]
+        assert Identity("x", bytes.fromhex(inp["seed_hex"]), kind=inp["kind"]).verify_key_hex == exp["public_key_hex"]
     elif kind == "turned_fact":                  # orreth.watch.turned.v1 — the kernel's chain, the watch as correlation
         with _dials(SPINE_SCOPE=inp["scope"]):
             e = ev.make_envelope(

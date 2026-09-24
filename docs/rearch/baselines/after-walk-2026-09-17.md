@@ -686,3 +686,16 @@ path only: click, type, read, wait; no door, no database.
 **After the walk (JB): a stale proposal waited in the chat** — "The toolkeeper proposes retiring the minds tool — unhealthy across 3 checks in a row" — the beat had counted its strikes before W47's re-pin, and the tool had been healthy since. JB asked whether to action it; the answer was Cancel (Yes would have retired the stablekeeper's own tool). **W49 CURED:** a keeper's proposal whose reason has passed withdraws itself — when the service answers its next check, the kernel cancels the waiting hold in words ("Withdrawn — the minds service answered its check and is healthy again; nothing to retire. Nothing was done; the proposal is at rest, recorded."); a human's own retire hold is never touched.
 
 9. (Optional) Stop Ollama, wait a beat of the stablekeeper (ten minutes, or set SPINE_MIND_CHECK_S=30 before the bridge) — expect llama to turn UNHEALTHY with the reason; after three beats, a proposal to retire it arrives in the chat as a hold; Cancel it.
+
+## Walk #13 — memory and the export (P7 sp5, built 2026-09-24; JB's walk OWED)
+
+**What was built (plain words):** the Rust kernel now keeps the same memory the Python kernel keeps — one Record on one ground — writes the same session summaries (the digests) byte for byte, answers recall, and signs the compliance export as the kernel's own self: one keypair per rig, the same on both bridges, its seed kept beside the bodies' seeds. The Python bridge signs its export with the same self.
+
+**The script (JB in the glass; `scripts/dev.sh bridge` and `scripts/dev.sh shadow` both lit):**
+1. On :4600 tell the librarian something to keep: "remember that the walk's word is HERON". Expect it to say it kept it.
+2. On :4601 (the Rust door) ask "what do you remember about the walk's word?" — expect HERON, word for word.
+3. On :4601 open a fresh session (the roll). Expect the old session's short version to appear in the sessions list on BOTH doors, reading the same.
+4. On :4600 say "export compliance for this session" and take the download; do the same on :4601. Expect both files to carry the same root hash and the same signer, `did:orreth:kernel:…`, and "verify" to hold. Open the CSV: the same lines.
+**Found by sp5's shadow proof — W50 (kernel, Rust): the Rust intent loop's turn had stumbled on EVERY beat since walk #11's hold-expiry cure** — `make_interval(mins => $3::float8)` (Postgres takes whole minutes there); the words "the ground refused: db error" hid it. **CURED:** seconds × 60; and a ground's refusal is now said in the ground's own words with its code (rule 13), never a bare "db error".
+
+5. (Optional) Ask the librarian to forget the walk's word — expect the recall to come back empty on both doors and the session's short version to lose the line.

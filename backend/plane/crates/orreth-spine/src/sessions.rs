@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
 //! The human's worldlines and the roster's reads — mirrors the session,
 //! resident, crew and shelf views of `orreth_spine.glass` (P20 · canon 0004)
 //! and the reads of `presence` · `placement` · `services` they stand on:
@@ -6,9 +7,9 @@
 //! newest first with their span and short version, load one whole; who
 //! lives here; the Crew's cards — both sides (the asks served, the duties
 //! run), the placement why-line, a body the ground refused shown greyed
-//! (rule 7); the shelf, every service on its ladder. Reads only: the Rust
-//! bridge never builds a digest (MEM-3 is sp5's) — a listed session shows
-//! the short version the Python spine already wrote, or none.
+//! (rule 7); the shelf, every service on its ladder. P7 sp5: a roll is an
+//! EPISODE BOUNDARY — the archived session gets its digest (MEM-3) — and a
+//! listed session without its short version gets it from the log.
 
 use crate::ground::Ground;
 use crate::placement::{honor, why_here, Ground as Here, Profile};
@@ -28,12 +29,16 @@ pub const KERNEL_DUTIES: [&str; 4] = [
 
 /// Roll (P20): a fresh worldline for this human in this world.
 pub async fn open_session(
-    g: &Ground,
+    g: &mut Ground,
     scope: &str,
     person: &str,
     title: Option<&str>,
     opt_out: bool,
+    archive: Option<&str>,
 ) -> Result<String, RoadError> {
+    if let Some(a) = archive.filter(|a| !a.is_empty()) {
+        crate::digest::build(g, scope, a, person).await?; // MEM-3: the archived session's digest
+    }
     let sid = format!("ses_{}", token_hex(6));
     let state = if opt_out { "opt-out" } else { "in" };
     g.client()
@@ -49,11 +54,12 @@ pub async fn open_session(
 /// List (P20): this human's worldlines in this world, newest first — each
 /// with its span, how many asks it holds, its last words, its short version.
 pub async fn sessions_view(
-    g: &Ground,
+    g: &mut Ground,
     scope: &str,
     person: &str,
     limit: i64,
 ) -> Result<Vec<Value>, RoadError> {
+    crate::digest::build_missing(g, scope, person, limit).await?; // P7 sp5 (MEM-3): the Digest is a projection
     let rows = g
         .client()
         .query(

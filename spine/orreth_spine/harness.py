@@ -282,7 +282,8 @@ def gateway_holds(conn, gw=None) -> dict:
     standing mind (a stall the ladder has that the gateway lacks is named)."""
     from . import services, stable
     gw = gw or stable.Gateway()
-    rows = [r for r in services.listing(conn, kind="mind") if r["state"] != "retired"]
+    rows = [r for r in services.listing(conn, kind="mind") if r["state"] != "retired"
+            and (r.get("manifest") or {}).get("provider")]        # a DEAL: the test lane's fake mind is never in the gateway
     if not gw.ready():
         return {"name": "the gateway answers and holds every mind", "ok": not rows,
                 "detail": f"the gateway at {gw.base} is dark" + (f" — {len(rows)} minds cannot think" if rows else ""),

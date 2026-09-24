@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P5 sp3, the Digest (MEM-3) · 2026-09-19
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: the pure laws factored for the fixture; the kernel's own self signs the export · 2026-09-24
 """The Digest (canon 0003, JB's compression law): the short version of an
 episode, written at its boundary, CITING every record it compresses. v0
 is extractive and deterministic — the head of every exchange, who
@@ -43,6 +44,28 @@ def _head(text: str, n: int = HEAD) -> str:
     return text if len(text) <= n else text[:n - 1].rstrip() + "…"
 
 
+def compose_lines(session_id: str, title: str | None, opened, asks: list[tuple],
+                  memories: list[tuple]) -> tuple[str, list[str]]:
+    """The short version's TEXT from its parts (fixture `digest_text`): the
+    session's head line, every ask's head with who replied and when, the
+    words acquired in the span. `asks` = (ask_id, text, reply, status,
+    asked_at, replied_at, who); `memories` = (namespace, key, body)."""
+    sources = [a[0] for a in asks]
+    lines = [f"session {session_id[4:10]}" + (f" — {title}" if title else "")
+             + f" · opened {opened.strftime('%a %b %d %H:%M')} · {len(asks)} ask"
+             + ("" if len(asks) == 1 else "s")]
+    for aid, text, reply, status, at, rat, who in asks:
+        lines.append(f"· {at.strftime('%H:%M')} asked: {_head(text)}")
+        if status == "replied" and reply:
+            lines.append(f"  {who} replied ({rat.strftime('%H:%M') if rat else '—'}): {_head(reply)}")
+        elif status != "received":
+            lines.append(f"  {status}")
+    for ns, key, body in memories:
+        sources.append(f"{ns}/{key}")
+        lines.append(f"· acquired [{ns}/{key}]: {_head(body)}")
+    return "\n".join(lines), sources
+
+
 def compose_session(conn, session_id: str) -> tuple[str, list[str]] | None:
     """The short version of a session, from the Record alone: every ask's
     head, who replied and when, the reply's head; the words acquired in
@@ -71,16 +94,7 @@ def compose_session(conn, session_id: str) -> tuple[str, list[str]] | None:
         "  ORDER BY join_id DESC LIMIT 1) j ON true"
         " WHERE a.session = %s ORDER BY a.asked_at", (session_id,))
     asks = cur.fetchall()
-    sources = [a[0] for a in asks]
-    lines = [f"session {session_id[4:10]}" + (f" — {title}" if title else "")
-             + f" · opened {opened.strftime('%a %b %d %H:%M')} · {len(asks)} ask"
-             + ("" if len(asks) == 1 else "s")]
-    for aid, text, reply, status, at, rat, who in asks:
-        lines.append(f"· {at.strftime('%H:%M')} asked: {_head(text)}")
-        if status == "replied" and reply:
-            lines.append(f"  {who} replied ({rat.strftime('%H:%M') if rat else '—'}): {_head(reply)}")
-        elif status != "received":
-            lines.append(f"  {status}")
+    memories = []
     if asks:
         cur.execute("SELECT to_regclass('spine_memories') IS NOT NULL")
         if cur.fetchone()[0]:
@@ -88,10 +102,9 @@ def compose_session(conn, session_id: str) -> tuple[str, list[str]] | None:
                 "SELECT namespace, key, body FROM spine_memories WHERE scope = %s"
                 " AND state = %s AND landed_at BETWEEN %s AND %s ORDER BY landed_at",
                 (ev.scope(), state, opened, span_end))
-            for ns, key, body in cur.fetchall():
-                sources.append(f"{ns}/{key}")
-                lines.append(f"· acquired [{ns}/{key}]: {_head(body)}")
-    return "\n".join(lines), sources, state
+            memories = cur.fetchall()
+    body, sources = compose_lines(session_id, title, opened, asks, memories)
+    return body, sources, state
 
 
 def build(conn, session_id: str, by: str = "the digest builder") -> dict | None:

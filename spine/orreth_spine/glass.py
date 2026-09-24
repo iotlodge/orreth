@@ -6,6 +6,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W12 · W14 · W19 doors · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper: the gateway is the bridge's lane; the Stable's doors (/minds …); the keeper's beat; W29 · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: the pure laws factored for the fixture; the kernel's own self signs the export · 2026-09-24
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -406,7 +407,7 @@ def address_to(conn, text: str, to: list[str] | None, session: str | None = None
 
 
 def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = None,
-                       gateway=None, services_home=None):
+                       gateway=None, services_home=None, kernel=None):
     Base = bridgefeed.make_handler(feed)
     bodies = bodies or {}            # the rig's bodies by name (the harness door)
     # P6.5 sp1: the shelf's doors probe a mind through the rig's gateway and
@@ -585,7 +586,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                             conn, person=person,        # another's words are a named seam
                             session=qs.get("session"),
                             window=(qs["from"], qs["to"]) if qs.get("from") and qs.get("to") else None,
-                            marker=qs.get("marker"))
+                            marker=qs.get("marker"), signer=kernel)   # P7 sp5: SIGNED by the kernel's own self
                 except psycopg.DataError:
                     return self._json(400, {"error": "the window is two ISO times, from and to"})
                 if fmt == "csv":
@@ -945,6 +946,8 @@ class BridgeRig:
         self._stop = threading.Event()
         self.feed = bridgefeed.Feed()
         self.gateway = gateway                       # P6.5 sp1: the mind the shelf probes
+        from .identity import Identity
+        self.kernel = Identity.kernel(home)          # P7 sp5: the kernel's own self — the export's signer
         self.services_home = services.services_home(home)   # the services' seeds, beside the agents'
         services.HOME = self.services_home           # P6.5 sp2: the keeper's door registers into the same home
 
@@ -994,7 +997,7 @@ class BridgeRig:
         self._httpd = ThreadingHTTPServer(
             ("127.0.0.1", port), make_glass_handler(
                 self.feed, self.dsn, {r.name: r for r in self.residents},
-                gateway=gateway, services_home=self.services_home))
+                gateway=gateway, services_home=self.services_home, kernel=self.kernel))
         self.port = self._httpd.server_address[1]
         self.feed_ready = threading.Event()
         self.dispatcher_ready = threading.Event()

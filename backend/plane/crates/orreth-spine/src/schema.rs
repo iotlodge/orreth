@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the watches · the schedules · the harness runs · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
 //! The ask road's tables — the Python spine's DDL, word for word, under the
 //! same tags its `once` guard uses (`resident` · `markers` · `proof` · `intent`
 //! · `presence` · `digest`), so two spines on one ground never disagree about a
@@ -146,7 +147,7 @@ pub const HARNESS_DDL: &[&str] = &[
 ];
 
 /// The tags and their DDL, in the order the road ensures them.
-pub const ROAD: [(&str, &[&str]); 9] = [
+pub const ROAD: [(&str, &[&str]); 10] = [
     ("resident", RESIDENT_DDL),
     ("markers", MARKERS_DDL),
     ("proof", PROOF_DDL),
@@ -156,6 +157,7 @@ pub const ROAD: [(&str, &[&str]); 9] = [
     ("monitor", MONITOR_DDL),
     ("scheduler", SCHEDULER_DDL),
     ("harness", HARNESS_DDL),
+    ("store", crate::store::STORE_DDL), // P7 sp5: the Record (spine_memories)
 ];
 
 /// Every table the ask road stands on, once per ground per process.

@@ -53,6 +53,10 @@ required-features = ["bridge"]
 name = "loops"
 required-features = ["bridge"]
 
+[[test]]
+name = "memory"
+required-features = ["bridge"]
+
 [[bin]]
 name = "spine-bridge"
 path = "src/bin/spine-bridge.rs"

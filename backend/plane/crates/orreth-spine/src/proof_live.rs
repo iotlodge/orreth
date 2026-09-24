@@ -498,7 +498,7 @@ pub async fn expire_holds(
         .client()
         .query(
             "SELECT ask_id FROM spine_asks WHERE scope = $1 AND served_by = $2 AND status = \
-             'awaiting-confirm' AND asked_at < now() - make_interval(mins => $3::float8)",
+             'awaiting-confirm' AND asked_at < now() - make_interval(secs => $3::float8 * 60)",
             &[&w.scope, &crate::proof::KERNEL, &mins],
         )
         .await?

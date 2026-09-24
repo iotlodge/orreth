@@ -177,3 +177,13 @@ the same files, unchanged — before any module earns the word "ported".
     body; the interlock's words for each Stable act.
   - `server_name` (minds-v0, W28) — `input.info` (a server's initialize) + `input.locator`
     → `expect.name`: the last word of the server's own name, lowercased.
+  - `search_terms` · `memory_fact` · `purge_fact` · `digest_text` · `digest_fact`
+    (memory-v0, P7 sp5) — recall's grammar (OR-shaped terms; the word-match
+    fallback's needles); the landed and purged facts' payloads and bytes for a
+    fixed id and clock; the short version's text from its parts (`%a %b %d %H:%M`
+    in UTC); the digest's fact with the session as correlation.
+  - `signed_bundle` · `verify_signed` · `did_of` (export-v0, P7 sp5) — a bundle
+    sealed and SIGNED by the kernel's own self from a fixed seed (Ed25519 is
+    deterministic: the same bytes, the same signature); the verifier's yes and its
+    two refusals (a forged signature; a signer whose DID is not its key's); the DID
+    of a kernel, an agent, a service from one public key.

@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp2, the mind arrives · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P5 sp2, Understanding v0 (lineage · validity · a ranked projection) · 2026-09-19
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: the pure laws factored for the fixture; the kernel's own self signs the export · 2026-09-24
 """The OrrethStore (canon 0003): LangGraph memory ergonomics, kernel truth
 beneath.
 
@@ -17,6 +18,8 @@ enforcement stays at the door that owns the connection.
 from __future__ import annotations
 
 from . import envelope as ev
+import re
+
 from . import outbox
 
 MEMORY_EVENT = "orreth.memory.landed.v1"
@@ -24,6 +27,35 @@ PURGE_EVENT = "orreth.memory.purged.v1"     # the tombstone: hashes, never words
 UNDERSTANDING = "tsvector:english"      # the projection's kind, worn by every row
 
 _VALID_NOW = "valid_to IS NULL"
+_WORD = re.compile(r"[A-Za-z0-9]+")
+
+
+def search_terms(query: str) -> str:
+    """The recall query in the projection's grammar (fixture `search_terms`):
+    OR-shaped — any word of the ask may find a memory, and the memory
+    holding MORE of them ranks first (websearch ANDs by default); a query
+    with no word passes through whole."""
+    return " or ".join(_WORD.findall(query)) or query
+
+
+def fallback_words(query: str) -> list[str]:
+    """The word-match fallback's needles: the query's words of four letters
+    or more, the first six; the whole query when none."""
+    return [w for w in _WORD.findall(query) if len(w) >= 4][:6] or [query]
+
+
+def landed_payload(namespace: str, key: str, hash_: str, supersedes: str | None = None) -> dict:
+    """`orreth.memory.landed.v1`'s payload: the ref, the hash, the hash it supersedes."""
+    p = {"ref": f"{namespace}/{key}", "hash": hash_}
+    if supersedes:
+        p["supersedes"] = supersedes
+    return p
+
+
+def purge_payload(namespace: str, key: str, hashes: list[str]) -> dict:
+    """The tombstone's payload (MEM-5): every version's hash, never the words,
+    and one hash over them all."""
+    return {"ref": f"{namespace}/{key}", "hashes": list(hashes), "hash": ev.content_hash(",".join(hashes))}
 _VALID_AT = "valid_from <= %s AND (valid_to IS NULL OR valid_to > %s)"
 _IN_STATE = "state = %s"      # quarantine (P11): a read never crosses states
 
@@ -98,9 +130,8 @@ class OrrethStore:
             prev = cur.fetchone()
             if prev and prev[1] == h:
                 return h                       # the same words: nothing new
-            payload = {"ref": f"{namespace}/{key}", "hash": h}
+            payload = landed_payload(namespace, key, h, prev[1] if prev else None)
             if prev:
-                payload["supersedes"] = prev[1]
                 cur.execute("UPDATE spine_memories SET valid_to = now()"
                             " WHERE memory_id = %s", (prev[0],))
             e = ev.make_envelope(
@@ -148,12 +179,9 @@ class OrrethStore:
         `at` (what we knew then). Falls back to the old word-match when
         the query carries nothing the projection can hold (stopwords
         only), so a young memory is never unreachable."""
-        import re
         cur = self._conn.cursor()
         valid, vargs = (_VALID_NOW, ()) if at is None else (_VALID_AT, (at, at))
-        # recall is OR-shaped: any word of the ask may find a memory, and the
-        # memory holding MORE of them ranks first (websearch ANDs by default)
-        terms = " or ".join(re.findall(r"[A-Za-z0-9]+", query)) or query
+        terms = search_terms(query)                   # OR-shaped recall (the fixture's law)
         cur.execute(
             f"SELECT key, body, ts_rank(tsv, q) AS rank FROM spine_memories,"
             f" websearch_to_tsquery('english', %s) q"
@@ -163,8 +191,7 @@ class OrrethStore:
         rows = [{"key": k, "body": b, "rank": float(r)} for k, b, r in cur.fetchall()]
         if rows:
             return rows
-        words = [w for w in re.findall(r"[A-Za-z0-9]+", query)
-                 if len(w) >= 4][:6] or [query]
+        words = fallback_words(query)
         conds = " OR ".join(["body ILIKE %s"] * len(words))
         cur.execute(
             f"SELECT key, body FROM spine_memories"
@@ -208,9 +235,7 @@ class OrrethStore:
             if hashes:
                 e = ev.make_envelope(
                     kind="event", type=PURGE_EVENT, universe_id=ev.scope(),
-                    scope_path=ev.scope(),
-                    payload={"ref": f"{namespace}/{key}", "hashes": hashes,
-                             "hash": ev.content_hash(",".join(hashes))},
+                    scope_path=ev.scope(), payload=purge_payload(namespace, key, hashes),
                     authority_chain=[self.by_did])
                 outbox.add_row(cur, ev.encode(e), e["message_id"])
         return {"ref": f"{namespace}/{key}", "versions": len(hashes), "hashes": hashes}

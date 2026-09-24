@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp1, the body is born · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, a service is a self too (`kind`) · 2026-09-22
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: the pure laws factored for the fixture; the kernel's own self signs the export · 2026-09-24
 """Identity (covenant rule 1): a keypair is a self, and a self survives
 the process. The seed persists under the agent's home; every life loads
 the SAME keys and wears the SAME DID. An ephemeral identity (home=None)
@@ -43,6 +44,19 @@ class Identity:
             path.chmod(0o600)
         return cls(name, seed, kind)
 
+    @classmethod
+    def kernel(cls, home: str | os.PathLike | None) -> "Identity":
+        """P7 sp5: THE KERNEL'S OWN SELF — one keypair per rig, the seed at
+        `<SPINE_KERNEL_HOME or <home's parent>/kernel>/seed`, the same self
+        every boot on EVERY bridge over this ground (both spines read the
+        same seed); ephemeral when the rig itself is (tests)."""
+        kh = os.environ.get("SPINE_KERNEL_HOME")           # the directory that holds `seed`
+        if kh:
+            return cls("kernel", _seed_at(Path(kh) / "seed"), "kernel")
+        if home is None:
+            return cls("kernel", os.urandom(32), "kernel")
+        return cls.load("kernel", Path(home).parent, kind="kernel")
+
     @property
     def verify_key_hex(self) -> str:
         """The public half, hex — what a stranger checks a signature with
@@ -52,3 +66,13 @@ class Identity:
     def sign(self, payload: dict) -> str:
         """Sign the canonical bytes of a payload; hex signature."""
         return self._key.sign(ev.canonical(payload)).signature.hex()
+
+
+def _seed_at(path: Path) -> bytes:
+    if path.exists():
+        return path.read_bytes()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    seed = os.urandom(32)
+    path.write_bytes(seed)
+    path.chmod(0o600)
+    return seed

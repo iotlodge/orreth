@@ -1260,8 +1260,45 @@ approved (covenant rule 9).
   (no resident renews from Rust); the beat lock serialises beats per world
   — it does not yet shard them (P7 sp7's cells); `dev.sh shadow` lights the
   loops too — with both bridges lit, both beat, the lock decides.
-- **sp5 — MEMORY AND THE EXPORT.** Store · digest · recall · the export,
-  SIGNED with `orreth-crypto`'s Ed25519 — the kernel's own self at last.
+- **sp5 — MEMORY AND THE EXPORT** ✅ **BUILT 2026-09-24 — walk OWED (JB in the
+  glass, SPEC-MEMORY-01)**. Store · digest · recall · the export, SIGNED —
+  the kernel's own self at last. **JB's locks at the open:** signing lives
+  INSIDE `orreth-spine` on the same Ed25519 library the verifier already used
+  (the sacred `orreth-crypto` crate untouched; the canon line's Ed25519 kept,
+  its crate not); one whole spoonful. **Fixtures first, from the reference:**
+  `memory-v0.json` (16 cases — `search_terms` · `memory_fact` · `purge_fact`
+  · `digest_text` · `digest_fact`; the pure laws factored out of `store.py`
+  and `digest.py` so a fixture can hold them) and `export-v0.json` +7
+  (`signed_bundle` · `verify_signed` · `did_of`, a fixed seed: Ed25519 is
+  deterministic). **The kernel's own self:** `identity.Identity.kernel` /
+  `kernel_self.rs` — one seed at `SPINE_KERNEL_HOME` (else
+  `ORRETH_HOME/kernel/seed`), the same self every boot on BOTH bridges; DID
+  `did:orreth:kernel:…`; the verifier reads a signer's DID by its hash,
+  whatever its kind. **The port:** `memory.rs` (pure: recall's grammar, the
+  facts for a fixed clock, the digest's text with Python's `%a %b %d %H:%M`
+  in UTC) · `store.rs` (the Record: the same DDL and SQL — the sibling law,
+  as-of reads, lineage, ranked search + the word-match fallback, the window,
+  the purge with its tombstone; every fact through the outbox in one
+  transaction) · `digest.rs` (compose · build · of_session · rebuild_citing
+  · build_missing — MEM-3) · `export_live.rs` (`build` off the outbox, the
+  rows shaped as the reference shapes them, W11's why, P11's withheld words)
+  · `export.rs` (`seal` · `to_csv` · `plain`) · the doors `/recall` ·
+  `/export` (json + csv) · `/digest/:id` · `POST /digest`; `POST /sessions`
+  honours `archive` and `/sessions` builds missing digests. The Python
+  export door now SIGNS too (`glass.py` passes the rig's kernel). **The
+  shadow proof** (`tests/memory.rs`): two kernels on one ground — a memory
+  landed by the Rust kernel recalled verbatim on both doors with its lineage;
+  a session digested by the Rust kernel read byte-identical on the Python
+  door and rebuilt by the Python kernel to the SAME hash (nothing new); the
+  export from either door signed by the same kernel self, equal roots, both
+  verify, CSV equal line for line; a purge empties both doors and the citing
+  digest is rebuilt without the words. Runner: 226/291 across 59 kinds, the
+  eight new kinds ported; not yet ported only minds-v0's twelve (P7 sp6).
+  **Honest limits:** the digest's clock is UTC on both spines (the reference
+  formats the ground's timestamptz in the connection's zone — UTC on the rig;
+  a ground in another zone would differ); `/recall` and `/export` read a
+  window as text the ground casts; the SDK-side `acquire` tool still lands
+  memories through the Python body (P7 sp6's seam); the Rust `/harness` reads the five shared world checks — the Stable's four (sp3) are the Python door's until sp6 ports them (the loops proof compares the five and names the four); found by this spoonful's proof and cured: the Rust intent loop's turn had stumbled on every beat since walk #11 (`make_interval(mins => float)`, W50) and a ground's refusal is now said in the ground's own words.
 - **sp6 — THE BODIES' SEAM.** Residents stay LangGraph processes the kernel
   spawns and governs over the invoke rail; the Python `Resident` becomes
   the SDK-side body (0008's end shape).

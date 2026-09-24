@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: seal · to_csv · the kernel's own kind · 2026-09-24
 //! `orreth.compliance/1` — the pure half of `orreth_spine.export`: the hash
 //! chain over a bundle's rows, a row's chain status judged from its own
 //! fields, and `verify` — everything a stranger can recompute (the chain and
@@ -7,10 +8,35 @@
 
 use crate::canonical::canonical;
 use crate::hash::sha256_hex;
+use crate::kernel_self::KernelSelf;
 use crate::py::{get, truthy};
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
-use serde_json::{json, Value};
+use regex::Regex;
+use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
+use std::sync::OnceLock;
+
+pub const WORDS_MAX: usize = 500;
+pub const CSV_COLUMNS: [&str; 18] = [
+    "at",
+    "kind",
+    "ref",
+    "person",
+    "authority_chain",
+    "chain_status",
+    "proof",
+    "marker_kind",
+    "marker_id",
+    "marker_parent",
+    "marker_root",
+    "served_by",
+    "tool",
+    "words",
+    "words_truncated",
+    "placement",
+    "target",
+    "marker_words",
+];
 
 pub const CONTRACT: &str = "orreth.compliance/1";
 pub const HASHING: &str = "sha256; h0 = sha256(canonical(row0)); \
@@ -84,7 +110,197 @@ fn hex_decode(s: &str) -> Option<Vec<u8>> {
 
 /// `"did:orreth:agent:" + sha256(pub).hexdigest()[:32]` — the self a key names.
 pub fn did_of(public_key: &[u8]) -> String {
-    format!("did:orreth:agent:{}", &sha256_hex(public_key)[..32])
+    did_of_kind(public_key, "agent")
+}
+
+/// `did:orreth:<kind>:` + sha256(public)[..32] — a body's, a service's, the kernel's.
+pub fn did_of_kind(public_key: &[u8], kind: &str) -> String {
+    format!("did:orreth:{kind}:{}", &sha256_hex(public_key)[..32])
+}
+
+/// `export.seal`: rows → a bundle — statuses re-derived, the summary counted,
+/// the hash chain drawn, the root SIGNED when a signer is given (the
+/// kernel's own self, P7 sp5). `generated_at` is given by the caller (the
+/// live door passes now).
+pub fn seal(
+    rows: &[Value],
+    scope: &Value,
+    world: &str,
+    generated_at: &str,
+    signer: Option<&KernelSelf>,
+) -> Value {
+    let mut rows: Vec<Value> = rows.to_vec();
+    for r in rows.iter_mut() {
+        let status = chain_status(r);
+        r["chain_status"] = json!(status);
+    }
+    let mut by_kind: Map<String, Value> = Map::new();
+    let mut by_proof: Map<String, Value> = Map::new();
+    for r in &rows {
+        let k = get(r, "kind").as_str().unwrap_or_default().to_string();
+        let n = by_kind.get(&k).and_then(Value::as_i64).unwrap_or(0);
+        by_kind.insert(k, json!(n + 1));
+        let p = match get(r, "proof") {
+            Value::String(s) if !s.is_empty() => s.clone(),
+            _ => "-".to_string(),
+        };
+        let n = by_proof.get(&p).and_then(Value::as_i64).unwrap_or(0);
+        by_proof.insert(p, json!(n + 1));
+    }
+    let chain = hash_chain(&rows);
+    let broken = rows
+        .iter()
+        .filter(|r| get(r, "chain_status").as_str() == Some("broken"))
+        .count();
+    let withheld = rows
+        .iter()
+        .filter(|r| truthy(get(r, "words_withheld")))
+        .count();
+    let mut bundle = json!({
+        "contract": CONTRACT, "scope": scope, "generated_at": generated_at, "world": world,
+        "rows": rows,
+        "summary": {"rows": chain.len(), "by_kind": by_kind, "by_proof": by_proof,
+                    "chain_broken": broken, "words_withheld": withheld},
+        "hashing": HASHING, "hash_chain": chain, "root_hash": root_hash(&chain),
+        "signed_by": Value::Null, "signer_key": Value::Null, "signature": Value::Null,
+    });
+    if let Some(k) = signer {
+        bundle["signed_by"] = json!(k.did());
+        bundle["signer_key"] = json!(k.verify_key_hex());
+        let part = signed_part(&bundle).unwrap_or(Value::Null);
+        bundle["signature"] = json!(k.sign(&part));
+    }
+    bundle
+}
+
+fn re(pat: &'static str, cell: &'static OnceLock<Regex>) -> &'static Regex {
+    cell.get_or_init(|| Regex::new(pat).unwrap())
+}
+
+/// `export._plain` (W10): plain words for a human's table — headings, bold,
+/// italics, bullets and code ticks fall away; the JSON bundle keeps the exact words.
+pub fn plain(text: &str) -> String {
+    static H: OnceLock<Regex> = OnceLock::new();
+    static B: OnceLock<Regex> = OnceLock::new();
+    static I: OnceLock<Regex> = OnceLock::new();
+    static L: OnceLock<Regex> = OnceLock::new();
+    let t = re(r"(?m)^\s{0,3}#{1,6}\s+", &H).replace_all(text, "");
+    let t = re(r"\*\*(.+?)\*\*", &B).replace_all(&t, "$1");
+    let t = italics(&t, re(r"\*([^*\n]+)\*", &I));
+    let t = re(r"(?m)^\s*[-*•]\s+", &L).replace_all(&t, "· ");
+    t.replace('`', "").trim().to_string()
+}
+
+/// `(?<![\w*])\*([^*\n]+)\*(?![\w*])` without look-around: a starred run whose
+/// neighbours are neither word characters nor stars.
+fn italics(t: &str, star: &Regex) -> String {
+    let bytes: Vec<char> = t.chars().collect();
+    let mut out = String::new();
+    let mut last = 0;
+    for m in star.find_iter(t) {
+        let (s, e) = (m.start(), m.end());
+        let before = t[..s].chars().next_back();
+        let after = t[e..].chars().next();
+        let wordish =
+            |c: Option<char>| c.is_some_and(|c| c.is_alphanumeric() || c == '_' || c == '*');
+        if wordish(before) || wordish(after) {
+            continue;
+        }
+        out.push_str(&t[last..s]);
+        out.push_str(&m.as_str()[1..m.as_str().len() - 1]);
+        last = e;
+    }
+    out.push_str(&t[last..]);
+    let _ = bytes;
+    out
+}
+
+fn csv_cell(s: &str) -> String {
+    if s.contains(['"', ',', '\n', '\r']) {
+        format!("\"{}\"", s.replace('"', "\"\""))
+    } else {
+        s.to_string()
+    }
+}
+
+fn s_of(v: &Value) -> String {
+    match v {
+        Value::Null => String::new(),
+        Value::String(s) => s.clone(),
+        other => other.to_string(),
+    }
+}
+
+/// `export.to_csv`: one line per row; the chain joined by ' → '; words cut at
+/// 500 with an ellipsis and the cut marked in its own column; the words
+/// column in plain words (W10), the why in words (W11). Python's csv writer
+/// with `lineterminator="\n"`: a cell is quoted when it holds a quote, a
+/// comma, or a line break.
+pub fn to_csv(bundle: &Value) -> String {
+    let mut out = String::new();
+    out.push_str(&CSV_COLUMNS.join(","));
+    out.push('\n');
+    for r in bundle
+        .get("rows")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default()
+    {
+        let m = get(&r, "marker");
+        let mut words = match get(&r, "words") {
+            Value::Object(o) => o
+                .iter()
+                .filter(|(_, v)| truthy(v))
+                .map(|(k, v)| format!("{k}: {}", plain(v.as_str().unwrap_or_default())))
+                .collect::<Vec<_>>()
+                .join(" | "),
+            _ => String::new(),
+        };
+        if truthy(get(&r, "words_withheld")) {
+            words = format!("(withheld — {})", s_of(get(&r, "words_withheld")));
+        }
+        let cut = words.chars().count() > WORDS_MAX;
+        if cut {
+            words = format!("{}…", words.chars().take(WORDS_MAX).collect::<String>());
+        }
+        let chain = get(&r, "authority_chain")
+            .as_array()
+            .map(|a| a.iter().map(s_of).collect::<Vec<_>>().join(" → "))
+            .unwrap_or_default();
+        let placement = match get(&r, "placement") {
+            Value::Object(p) => format!("{} · {}", s_of(&p["cell"]), s_of(&p["metal"])),
+            _ => String::new(),
+        };
+        let cells = [
+            s_of(get(&r, "at")),
+            s_of(get(&r, "kind")),
+            s_of(get(&r, "ref")),
+            s_of(get(&r, "person")),
+            chain,
+            s_of(get(&r, "chain_status")),
+            s_of(get(&r, "proof")),
+            s_of(get(m, "kind")),
+            s_of(get(m, "id")),
+            s_of(get(m, "parent")),
+            s_of(get(m, "root")),
+            s_of(get(&r, "served_by")),
+            s_of(get(&r, "tool")),
+            words,
+            if cut { "yes".into() } else { String::new() },
+            placement,
+            s_of(get(&r, "target")),
+            plain(get(&r, "marker_words").as_str().unwrap_or_default()),
+        ];
+        out.push_str(
+            &cells
+                .iter()
+                .map(|c| csv_cell(c))
+                .collect::<Vec<_>>()
+                .join(","),
+        );
+        out.push('\n');
+    }
+    out
 }
 
 /// Recompute everything a stranger can: the hash chain and root, every row's
@@ -140,7 +356,11 @@ fn verify_inner(bundle: &Value) -> Option<bool> {
     let signature = get(bundle, "signature");
     if truthy(signature) {
         let public = hex_decode(bundle.get("signer_key")?.as_str()?)?;
-        if get(bundle, "signed_by").as_str() != Some(&did_of(&public)) {
+        let signed_by = get(bundle, "signed_by").as_str().unwrap_or_default();
+        // P7 sp5: the signer's DID by its hash, whatever its kind (the kernel's own)
+        if !signed_by.starts_with("did:orreth:")
+            || signed_by.rsplit(':').next() != Some(&sha256_hex(&public)[..32])
+        {
             return Some(false);
         }
         let key = VerifyingKey::from_bytes(&<[u8; 32]>::try_from(public.as_slice()).ok()?).ok()?;

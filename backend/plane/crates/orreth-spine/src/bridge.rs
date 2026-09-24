@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the schedule and intent loops as tasks · /monitor · /schedules · /harness · /intentions/stop|restart · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
 //! The Rust bridge — the doors and the feed of `orreth_spine.glass` +
 //! `bridgefeed` on axum, lit in SHADOW on :4601 beside the Python Bridge on
 //! :4600, both on one ground. It serves the SAME page (`spine/glass/index.html`
@@ -107,6 +108,7 @@ impl Config {
 
 struct App {
     cfg: Config,
+    kernel: crate::kernel_self::KernelSelf, // P7 sp5: the kernel's own self — the export's signer
     feed: Arc<Feed>,
     meter: Arc<Meter>,
     group: String,
@@ -174,8 +176,17 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
     let feed = Arc::new(Feed::new(1024));
     let meter = Arc::new(Meter::default());
     let group = dispatcher::group_per_life();
+    let kernel = match crate::kernel_self::KernelSelf::load(&crate::kernel_self::KernelSelf::home())
+    {
+        Ok(k) => k,
+        Err(e) => {
+            eprintln!("the kernel's self could not be read ({e}) — an ephemeral self this life");
+            crate::kernel_self::KernelSelf::ephemeral()
+        }
+    };
     let app = Arc::new(App {
         cfg: cfg.clone(),
+        kernel,
         feed: feed.clone(),
         meter: meter.clone(),
         group: group.clone(),
@@ -394,6 +405,10 @@ fn router(app: Arc<App>) -> Router {
         .route("/crew", get(crew_door))
         .route("/sessions", get(sessions_get).post(sessions_post))
         .route("/session/:id", get(session_door))
+        .route("/recall", get(recall_door))
+        .route("/export", get(export_door))
+        .route("/digest/:id", get(digest_door))
+        .route("/digest", post(digest_post))
         .route("/proof", get(proof_door))
         .route("/analyzer", get(analyzer_door))
         .route("/services", get(services_door))
@@ -609,8 +624,8 @@ async fn sessions_get(State(app): State<Arc<App>>, Query(q): Q) -> Response {
         .filter(|p| !p.is_empty())
         .unwrap_or_else(|| PERSON_DEFAULT.into());
     let out = async {
-        let g = ground(&app).await?;
-        sessions::sessions_view(&g, scope(&app), &person, 30).await
+        let mut g = ground(&app).await?;
+        sessions::sessions_view(&mut g, scope(&app), &person, 30).await
     }
     .await;
     match out {
@@ -624,13 +639,166 @@ async fn sessions_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
     let person = s_or(&p, "person", PERSON_DEFAULT);
     let title = s_opt(&p, "title");
     let opt_out = crate::py::truthy(&p["opt_out"]);
+    let archive = s_opt(&p, "archive");
     let out = async {
-        let g = ground(&app).await?;
-        sessions::open_session(&g, scope(&app), &person, title.as_deref(), opt_out).await
+        let mut g = ground(&app).await?;
+        sessions::open_session(
+            &mut g,
+            scope(&app),
+            &person,
+            title.as_deref(),
+            opt_out,
+            archive.as_deref(),
+        )
+        .await
     }
     .await;
     match out {
         Ok(sid) => answer(201, json!({"session_id": sid})),
+        Err(e) => refuse(e),
+    }
+}
+
+/// P7 sp5: verbatim recall (MEM-1) — by ref (as of a time, or its lineage), by ask, by session, by window.
+async fn recall_door(State(app): State<Arc<App>>, Query(q): Q) -> Response {
+    let person = q
+        .get("person")
+        .cloned()
+        .filter(|p| !p.is_empty())
+        .unwrap_or_else(|| PERSON_DEFAULT.into());
+    let window = match (q.get("from"), q.get("to")) {
+        (Some(f), Some(t)) if !f.is_empty() && !t.is_empty() => Some((f.as_str(), t.as_str())),
+        _ => None,
+    };
+    let opt = |k: &str| q.get(k).map(String::as_str).filter(|v| !v.is_empty());
+    let out = async {
+        let g = ground(&app).await?;
+        crate::store::recall_view(
+            &g,
+            scope(&app),
+            opt("ref"),
+            opt("ask"),
+            opt("session"),
+            window,
+            &person,
+            opt("at"),
+            q.get("history").map(String::as_str) == Some("1"),
+        )
+        .await
+    }
+    .await;
+    match out {
+        Ok(Some(v)) => answer(200, v),
+        Ok(None) => answer(404, json!({"error": "nothing recalled — one face"})),
+        Err(RoadError::Rail(r))
+            if r.to_string().contains("timestamp")
+                || r.to_string().contains("invalid input syntax") =>
+        {
+            answer(
+                400,
+                json!({"error": "the window is two ISO times, from and to"}),
+            )
+        }
+        Err(e) => refuse(e),
+    }
+}
+
+/// P7 sp5: the compliance export — a READ, the requester's own asks only, SIGNED by the kernel's self.
+async fn export_door(State(app): State<Arc<App>>, Query(q): Q) -> Response {
+    let person = q
+        .get("person")
+        .cloned()
+        .filter(|p| !p.is_empty())
+        .unwrap_or_else(|| PERSON_DEFAULT.into());
+    let fmt = q
+        .get("format")
+        .cloned()
+        .filter(|f| !f.is_empty())
+        .unwrap_or_else(|| "json".into());
+    if fmt != "json" && fmt != "csv" {
+        return answer(400, json!({"error": "format is json or csv"}));
+    }
+    let window = match (q.get("from"), q.get("to")) {
+        (Some(f), Some(t)) if !f.is_empty() && !t.is_empty() => Some((f.as_str(), t.as_str())),
+        _ => None,
+    };
+    let opt = |k: &str| q.get(k).map(String::as_str).filter(|v| !v.is_empty());
+    let out = async {
+        let g = ground(&app).await?;
+        crate::export_live::build(
+            &g,
+            scope(&app),
+            &person,
+            opt("session"),
+            window,
+            opt("marker"),
+            Some(&app.kernel),
+        )
+        .await
+    }
+    .await;
+    match out {
+        Ok(bundle) if fmt == "csv" => (
+            StatusCode::OK,
+            [
+                (header::CONTENT_TYPE, "text/csv; charset=utf-8"),
+                (
+                    header::CONTENT_DISPOSITION,
+                    "attachment; filename=\"orreth-compliance.csv\"",
+                ),
+                (header::ACCESS_CONTROL_ALLOW_ORIGIN, "*"),
+            ],
+            crate::export::to_csv(&bundle),
+        )
+            .into_response(),
+        Ok(bundle) => answer(200, bundle),
+        Err(RoadError::Rail(r))
+            if r.to_string().contains("timestamp")
+                || r.to_string().contains("invalid input syntax") =>
+        {
+            answer(
+                400,
+                json!({"error": "the window is two ISO times, from and to"}),
+            )
+        }
+        Err(e) => refuse(e),
+    }
+}
+
+/// P7 sp5: the short version, and every source it cites.
+async fn digest_door(State(app): State<Arc<App>>, Path(id): Path<String>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        crate::digest::of_session(&g, scope(&app), &id).await
+    }
+    .await;
+    match out {
+        Ok(Some(v)) => answer(200, v),
+        Ok(None) => answer(404, json!({"error": "no digest yet — one face"})),
+        Err(e) => refuse(e),
+    }
+}
+
+/// P7 sp5: on demand, or rebuild.
+async fn digest_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let sid = s_or(&p, "session", "");
+    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let out = async {
+        let mut g = ground(&app).await?;
+        crate::digest::build(&mut g, scope(&app), &sid, &person).await
+    }
+    .await;
+    match out {
+        Ok(Some(v)) => {
+            let code = if v["new"].as_bool().unwrap_or(false) {
+                201
+            } else {
+                200
+            };
+            answer(code, v)
+        }
+        Ok(None) => answer(404, json!({"error": "no such session"})),
         Err(e) => refuse(e),
     }
 }

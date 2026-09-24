@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W19 (the refused ask in the record) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the tool hop reads the service DID · 2026-09-22
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: the pure laws factored for the fixture; the kernel's own self signs the export · 2026-09-24
 """The compliance export (canon 0005 P6 sp2 · AG-7): the chain, proven to
 a stranger.
 
@@ -149,7 +150,9 @@ def verify(bundle: dict) -> bool:
             from nacl.exceptions import BadSignatureError
             from nacl.signing import VerifyKey
             pub = bytes.fromhex(bundle["signer_key"])
-            if "did:orreth:agent:" + hashlib.sha256(pub).hexdigest()[:32] != bundle.get("signed_by"):
+            signed_by = str(bundle.get("signed_by") or "")
+            if not signed_by.startswith("did:orreth:") or \
+                    signed_by.rsplit(":", 1)[-1] != hashlib.sha256(pub).hexdigest()[:32]:   # P7 sp5: the kernel's own kind
                 return False
             try:
                 VerifyKey(pub).verify(ev.canonical(_signed_part(bundle)),
