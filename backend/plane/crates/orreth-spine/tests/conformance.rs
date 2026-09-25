@@ -2,6 +2,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails: rail_names · outbox_row · inbox_key · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: ladder_step · manifest_pin · ask_fact · refused_fact · ask_kind · otpauth · hold_words · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the five mcp kinds · beat_lock · loop_words · plan_words · observed_words · watch_note · cannot_act · improvement_note · crew_hash · turned_fact · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the twelve minds kinds · backoff · park_rule · parked_words · parked_fact · harness_verdict · harness_command · 2026-09-24
 //! The Rust conformance runner (canon 0008 · P7 sp1): every fixture under
 //! `spine/conformance/*-v*.json` — the same files the Python reference
 //! generated and passes, unchanged — dispatched by case kind exactly as
@@ -12,10 +13,10 @@
 //! runner has no arm for (the list and the dispatch must agree).
 
 use orreth_spine::{
-    ask, beat, canonical, content_hash, envelope, export, intent, kernel_self, mcp, memory, mitl,
-    placement, proof, rails, services, watch,
+    ask, beat, body, canonical, content_hash, envelope, export, intent, kernel_self, mcp, memory,
+    mitl, placement, proof, rails, services, stable, watch,
 };
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
@@ -82,6 +83,25 @@ const PORTED_KINDS: &[&str] = &[
     "signed_bundle",
     "verify_signed",
     "did_of",
+    // P7 sp6 — orreth.minds/1 (the Stable's laws) and orreth.bodies/1 (the bodies' seam)
+    "route_for",
+    "usd",
+    "budget_duration",
+    "resolve",
+    "drift",
+    "eol_due",
+    "recommend",
+    "deal",
+    "deal_refuses",
+    "drained_words",
+    "act_words",
+    "server_name",
+    "backoff",
+    "park_rule",
+    "parked_words",
+    "parked_fact",
+    "harness_verdict",
+    "harness_command",
 ];
 
 fn fixture_dir() -> PathBuf {
@@ -942,6 +962,201 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
                 env["correlation_id"],
                 exp["correlation_id"],
                 "the correlation"
+            );
+        }
+        // ---- orreth.minds/1 (P6.5 sp3, ported P7 sp6): the Stable's laws ----
+        "route_for" => same!(
+            stable::route_for(s(&inp["provider"]), s(&inp["model"]), opt_str(&inp["base"])),
+            *exp,
+            "the route"
+        ),
+        "usd" => same!(
+            json!(stable::usd(
+                &inp["price"],
+                inp["tokens_in"].as_i64().unwrap_or(0),
+                inp["tokens_out"].as_i64().unwrap_or(0)
+            )),
+            exp["usd"],
+            "the dollars"
+        ),
+        "budget_duration" => same!(
+            stable::budget_duration(inp["days"].as_i64().unwrap_or(0)),
+            s(&exp["duration"]).to_string(),
+            "the window"
+        ),
+        "resolve" => {
+            let stalls = inp["stalls"].as_array().cloned().unwrap_or_default();
+            let assignments = inp["assignments"].as_array().cloned().unwrap_or_default();
+            let got = stable::resolve(
+                &stalls,
+                &assignments,
+                stable::ResolveAsk {
+                    subject: opt_str(&inp["subject"]),
+                    klass: opt_str(&inp["klass"]),
+                    pin: opt_str(&inp["pin"]),
+                    model: opt_str(&inp["model"]),
+                },
+            );
+            same!(got, *exp, "the routing decision");
+        }
+        "drift" => same!(
+            json!(stable::drift(&inp["pinned"], &inp["seen"])),
+            exp["moved"],
+            "what moved"
+        ),
+        "eol_due" => same!(
+            stable::eol_due(
+                opt_str(&inp["expires"]),
+                s(&inp["now"]),
+                inp["horizon_days"].as_i64().unwrap_or(30)
+            ),
+            *exp,
+            "the appointment"
+        ),
+        "recommend" => {
+            let stalls = inp["stalls"].as_array().cloned().unwrap_or_default();
+            same!(
+                stable::recommend(&stalls, s(&inp["retiring"])),
+                *exp,
+                "the swap"
+            );
+        }
+        "deal" => {
+            let got = stable::deal(
+                s(&inp["model"]),
+                s(&inp["provider"]),
+                stable::DealAsk {
+                    base: opt_str(&inp["base"]),
+                    price: inp.get("price"),
+                    context: inp.get("context"),
+                    modalities: inp.get("modalities"),
+                    klass: inp.get("klass").and_then(Value::as_str),
+                    key: inp.get("key").map(|k| k.as_str()),
+                    expires: opt_str(&inp["expires"]),
+                },
+            )
+            .map_err(|e| format!("the deal refused: {e}"))?;
+            same!(got, *exp, "the deal");
+        }
+        "deal_refuses" => {
+            let got = stable::deal(
+                s(&inp["model"]),
+                s(&inp["provider"]),
+                stable::DealAsk {
+                    klass: inp.get("klass").and_then(Value::as_str),
+                    key: inp.get("key").map(|k| k.as_str()),
+                    ..Default::default()
+                },
+            );
+            match got {
+                Ok(d) => return Err(format!("the deal did not refuse: {d}")),
+                Err(words) => same!(words, s(&exp["words"]).to_string(), "the refusal"),
+            }
+        }
+        "drained_words" => same!(
+            stable::drained_words(s(&inp["name"]), inp.get("gauge").filter(|g| !g.is_null())),
+            s(&exp["words"]).to_string(),
+            "out of fuel"
+        ),
+        "act_words" => same!(
+            stable::act_words(s(&inp["tool"]), &inp["args"]),
+            s(&exp["words"]).to_string(),
+            "the act named"
+        ),
+        "server_name" => same!(
+            mcp::server_name(&inp["info"], s(&inp["locator"])),
+            s(&exp["name"]).to_string(),
+            "the server's name"
+        ),
+        // ---- orreth.bodies/1 (P7 sp6): the kernel governs the bodies it spawns; the harness rides the rail ----
+        "backoff" => same!(
+            json!(body::backoff_s(inp["deaths"].as_i64().unwrap_or(0))),
+            exp["wait_s"],
+            "the wait"
+        ),
+        "park_rule" => {
+            let exits: Vec<String> = strings(&inp["exits"]);
+            same!(
+                body::park_rule(
+                    &exits,
+                    s(&inp["now"]),
+                    inp["window_s"].as_i64().unwrap_or(300),
+                    inp["strikes"].as_i64().unwrap_or(3)
+                ),
+                *exp,
+                "the park law"
+            );
+        }
+        "parked_words" => same!(
+            body::parked_words(
+                s(&inp["name"]),
+                inp["deaths"].as_i64().unwrap_or(0),
+                inp["window_s"].as_i64().unwrap_or(300),
+                opt_str(&inp["last_words"])
+            ),
+            s(&exp["words"]).to_string(),
+            "the parked words"
+        ),
+        "parked_fact" => {
+            let payload = body::parked_payload(
+                s(&inp["name"]),
+                opt_str(&inp["did"]),
+                inp["deaths"].as_i64().unwrap_or(0),
+                inp["window_s"].as_i64().unwrap_or(300),
+                opt_str(&inp["last_words"]),
+            );
+            same!(payload, exp["payload"], "the payload");
+            let env = body::parked_fact(
+                s(&inp["scope"]),
+                s(&inp["name"]),
+                payload,
+                s(&inp["message_id"]),
+                s(&inp["occurred_at"]),
+            );
+            same!(env["type"], exp["type"], "the type");
+            same!(env["authority_chain"], exp["chain"], "the chain");
+            let bytes = envelope::encode(&env).map_err(|e| e.to_string())?;
+            same!(
+                String::from_utf8(bytes).unwrap(),
+                s(&exp["bytes"]).to_string(),
+                "the fact's bytes"
+            );
+        }
+        "harness_verdict" => {
+            let cases = inp["cases"].as_array().cloned().unwrap_or_default();
+            let replies = inp["replies"].as_array().cloned().unwrap_or_default();
+            same!(body::verdict(&cases, &replies), *exp, "the verdict");
+        }
+        "harness_command" => {
+            let cases = inp["cases"].as_array().cloned().unwrap_or_default();
+            let payload = body::harness_payload(
+                s(&inp["run_id"]),
+                s(&inp["target"]),
+                &cases,
+                opt_str(&inp["arm"]),
+                opt_str(&inp["parent_marker"]),
+            );
+            same!(payload, exp["payload"], "the payload");
+            same!(payload["target"], exp["queue_target"], "the bench");
+            let env = body::harness_command(
+                s(&inp["scope"]),
+                s(&inp["run_id"]),
+                payload,
+                s(&inp["message_id"]),
+                s(&inp["occurred_at"]),
+            );
+            same!(env["type"], exp["type"], "the type");
+            same!(
+                env["correlation_id"],
+                exp["correlation_id"],
+                "the correlation"
+            );
+            same!(env["authority_chain"], exp["chain"], "the chain");
+            let bytes = envelope::encode(&env).map_err(|e| e.to_string())?;
+            same!(
+                String::from_utf8(bytes).unwrap(),
+                s(&exp["bytes"]).to_string(),
+                "the command's bytes"
             );
         }
         other => {

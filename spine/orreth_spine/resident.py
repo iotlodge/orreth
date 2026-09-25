@@ -5,7 +5,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W21 the duty law + the pack · W23 the interlock's words · W24 echo's bubble · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, W26: an empty reply never lands as replied — asked again once, then said in words · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
-# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the harness command served on the bench · 2026-09-24
 """The resident body v0 (canon 0004): one governed body for every mind.
 
 Born from a versioned TEMPLATE artifact; the SAME identity in every life
@@ -60,6 +60,7 @@ JOURNEY = "orreth.journey.v1"
 REPLY = "orreth.reply.v1"
 CONFIRM_NEEDED = "orreth.confirm.needed.v1"
 CONFIRM_CMD = "orreth.resident.confirm.v1"
+HARNESS_CMD = "orreth.resident.harness.v1"   # P7 sp6: the kernel asks a body to run its golden cases
 
 
 # W26 (P7 sp4): a mind that returns no words is asked again ONCE; a second
@@ -920,11 +921,12 @@ class Resident:
         ensure_schema(conn)
         inbox.ensure_schema(conn)
         outbox.ensure_schema(conn)
-        from . import gateway as _gw, tools as _tl
+        from . import gateway as _gw, harness as _hz, tools as _tl
         from . import store as _st
         _gw.ensure_schema(conn)     # pre-flagged: the serving transaction
         _tl.ensure_schema(conn)     # never runs DDL, never takes the lock
         _st.ensure_schema(conn)
+        _hz.ensure_schema(conn)     # P7 sp6: a harness run may ride the bench
         from . import ground as _ground
         _ground.ensure_all(conn)    # EVERY ground, at birth (found live: the
         self._serve_conn = conn        # markers DDL inside one serve wedged the Bridge)
@@ -969,6 +971,9 @@ class Resident:
                     effect = (lambda cur, a=ask_id, ap=approved, c=chain, p=pl:
                               self._confirm_ask(cur, a, ap, c, proof=p.get("proof"),
                                                 by=p.get("by"), reason=p.get("reason")))
+                elif env.get("type") == HARNESS_CMD:          # P7 sp6: the kernel's run, through MY graph
+                    from . import harness as _hz
+                    effect = (lambda cur, e=env: _hz.run_command(conn, self, e))
                 else:
                     effect = (lambda cur, a=ask_id, c=chain:
                               self._serve_ask(cur, a, c))

@@ -2,6 +2,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the schedule and intent loops as tasks · /monitor · /schedules · /harness · /intentions/stop|restart · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE door · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the crew spawned and governed · /delta · /bodies · the Stable's doors · the shelf's doors · the harness over the rail · the keepers' beats · 2026-09-24
 //! The Rust bridge — the doors and the feed of `orreth_spine.glass` +
 //! `bridgefeed` on axum, lit in SHADOW on :4601 beside the Python Bridge on
 //! :4600, both on one ground. It serves the SAME page (`spine/glass/index.html`
@@ -9,9 +10,12 @@
 //! index.html`), the same JSON shapes and status codes at every door it has
 //! ported, and the same SSE feed (`/feed`: `id: <rev>` + `data: <notice>`,
 //! `event: resync` when the gap outlived the ring, `: keepalive` every 15 s),
-//! so the one page works unchanged against either port. It holds NO residents
-//! (they stay Python, serving from their benches); it relays, it dispatches,
-//! it feeds, it answers — and since P7 sp4 it BEATS: the scheduler's tick and
+//! so the one page works unchanged against either port. Since P7 sp6 it SEATS
+//! THE CREW: every seat of `spine/crew.v0.json` spawned as its own Python
+//! process (`orreth_spine.body`), governed — restarted, parked, stopped whole
+//! — by [`crate::bodies`]; `SPINE_BODIES=none` leaves the seats to the Python
+//! Bridge beside it. It relays, it dispatches, it feeds, it answers — and
+//! since P7 sp4 it BEATS: the scheduler's tick and
 //! the intent rail's turn run as standing tasks, each beat CLAIMED on the
 //! ground first (`beat` — the loops' shadow law), so two kernels on one world
 //! never tick or turn it at once. The kernel's Resiliency intention is
@@ -23,14 +27,17 @@
 //! · `/markers/kinds` · `/monitor` · `/schedules/<runner>` · `/harness` ·
 //! `/shadow` (Rust-only: the dispatcher's meter); `POST /ask` · `/confirm` ·
 //! `/enroll` · `/enroll/confirm` · `/sessions` · `/schedules` ·
-//! `/schedules/rest` · `/intentions/stop` · `/intentions/restart`;
-//! `/harness/run` answers 501 by name (a mind's run — the Python door until
-//! the bodies' seam). Every other door answers 404 with no body, as the
-//! Python handler does — the page treats a missing door as "nothing here".
+//! `/schedules/rest` · `/intentions/stop` · `/intentions/restart`; P7 sp6:
+//! `POST /harness/run` · `/harness/ab` (the run over the rail) · `/delta` (a
+//! body's words as they form) · `GET /bodies` · `POST /bodies/restart` · the
+//! Stable's `/minds…` · the shelf's `POST /services…`. Every other door
+//! answers 404 with no body, as the Python handler does.
 
 use crate::asks::{self, Submit, FEED_TOPICS};
+use crate::bodies::{self, Bodies};
 use crate::dispatcher::{self, Meter};
 use crate::feed::{self, Feed};
+use crate::gateway::Gateway;
 use crate::ground::Ground;
 use crate::harness;
 use crate::intent::{read_words, ASK_KINDS};
@@ -42,7 +49,9 @@ use crate::proof_live;
 use crate::py::python_str;
 use crate::scheduler;
 use crate::services::KINDS as SERVICE_KINDS;
+use crate::services_live;
 use crate::sessions;
+use crate::stable_live;
 use crate::world::{RoadError, World};
 use axum::body::Bytes;
 use axum::extract::{Path, Query, State};
@@ -86,6 +95,12 @@ pub struct Config {
     /// `SPINE_HUMAN_ZONE` — the ground's default human zone (the residents
     /// read it; the bridge only says it).
     pub human_zone: String,
+    /// P7 sp6: does this kernel seat the crew (`SPINE_BODIES`, default crew; `none` beside the Python Bridge)?
+    pub bodies: bool,
+    /// Tests only: the bodies mint ephemeral selves (`SPINE_BODY_EPHEMERAL`).
+    pub ephemeral: bool,
+    /// The spine home (`ORRETH_SPINE`, else beside the crate) — the crew manifest, the templates, the golden sets.
+    pub spine: PathBuf,
 }
 
 impl Config {
@@ -103,6 +118,11 @@ impl Config {
                 .ok()
                 .filter(|z| !z.is_empty())
                 .unwrap_or_else(|| "America/Denver".into()),
+            bodies: bodies::wanted(),
+            ephemeral: std::env::var("SPINE_BODY_EPHEMERAL")
+                .ok()
+                .is_some_and(|v| !v.is_empty()),
+            spine: bodies::spine_dir(),
         }
     }
 }
@@ -114,6 +134,9 @@ struct App {
     meter: Arc<Meter>,
     group: String,
     port: u16,
+    bodies: Option<Arc<Bodies>>, // P7 sp6: the crew this kernel seats and governs
+    gateway: Gateway,            // THE GATEWAY's doors from the kernel's side
+    templates: HashMap<String, Value>, // the seats' templates by body name (the crew card's LLM line)
 }
 
 /// A lit bridge: its port, its readiness, its meter, and its stop.
@@ -125,6 +148,8 @@ pub struct Lit {
     pub feed_ready: Arc<AtomicBool>,
     pub meter: Arc<Meter>,
     pub feed: Arc<Feed>,
+    /// P7 sp6: the crew this kernel seats — `None` when it seats none.
+    pub bodies: Option<Arc<Bodies>>,
     tasks: Vec<tokio::task::JoinHandle<()>>,
 }
 
@@ -143,8 +168,12 @@ impl Lit {
         false
     }
 
-    /// Stopped whole: the flag, then every task joined (bounded).
+    /// Stopped whole: the bodies first (SIGINT, a bounded wait), then the
+    /// flag, then every task joined (bounded).
     pub async fn stop(self) {
+        if let Some(b) = &self.bodies {
+            b.stop().await;
+        }
         self.stop.store(true, Ordering::Relaxed);
         for t in self.tasks {
             let _ = tokio::time::timeout(Duration::from_secs(15), t).await;
@@ -185,6 +214,33 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
             crate::kernel_self::KernelSelf::ephemeral()
         }
     };
+    let gateway = Gateway::from_env();
+    // P7 sp6: THE CREW — every seat a process this kernel spawns and governs
+    let bodies_arc: Option<Arc<Bodies>> = if cfg.bodies {
+        let seats = bodies::crew(&cfg.spine)?;
+        Some(Bodies::new(
+            seats,
+            cfg.spine.clone(),
+            w.clone(),
+            format!("http://127.0.0.1:{port}"),
+            cfg.ephemeral,
+        ))
+    } else {
+        None
+    };
+    // the seats' templates by name — read from the one manifest whether or not this kernel
+    // spawns the crew, so the crew card's LLM line reads the same on both doors (rule 7)
+    let templates = match &bodies_arc {
+        Some(b) => b.templates(),
+        None => bodies::crew(&cfg.spine)
+            .map(|seats| {
+                seats
+                    .into_iter()
+                    .map(|s| (s.name, s.template_json))
+                    .collect()
+            })
+            .unwrap_or_default(),
+    };
     let app = Arc::new(App {
         cfg: cfg.clone(),
         kernel,
@@ -192,8 +248,67 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
         meter: meter.clone(),
         group: group.clone(),
         port,
+        bodies: bodies_arc.clone(),
+        gateway: gateway.clone(),
+        templates,
     });
     let mut tasks = Vec::new();
+    // the crew: the benches swept, the boot rite once, the kernel's duties declared, then every seat spawned
+    if let Some(b) = bodies_arc.clone() {
+        let (w2, stop2) = (w.clone(), stop.clone());
+        tasks.push(tokio::spawn(async move {
+            if let Err(e) = b.sweep_benches().await {
+                eprintln!("the benches could not be swept: {e}");
+            }
+            if stop2.load(Ordering::Relaxed) {
+                return;
+            }
+            if let Err(e) = b.seed_shelf().await {
+                eprintln!("the boot rite could not run: {e}");
+            }
+            match Ground::connect(&w2.pg_dsn).await {
+                Ok(mut g) => match b.declare_duties(&mut g).await {
+                    Ok(names) if !names.is_empty() => eprintln!(
+                        "the kernel's harness duty declared for: {}",
+                        names.join(", ")
+                    ),
+                    Ok(_) => {}
+                    Err(e) => eprintln!("the kernel's duties could not be declared: {e}"),
+                },
+                Err(e) => eprintln!("the kernel's duties could not reach the ground: {e}"),
+            }
+            if !stop2.load(Ordering::Relaxed) {
+                b.spawn_all();
+                eprintln!(
+                    "the crew is seated: {} bodies spawned as processes",
+                    b.seats.len()
+                );
+            }
+        }));
+        // the keepers' beats (P6.5 sp2 · sp3), on the kernel that holds the keepers' bodies
+        let (w3, stop3, gw3) = (w.clone(), stop.clone(), gateway.clone());
+        tasks.push(tokio::spawn(async move {
+            let mut next_tool = tokio::time::Instant::now()
+                + Duration::from_secs_f64(crate::mcp_live::tool_check_s());
+            let mut next_mind =
+                tokio::time::Instant::now() + Duration::from_secs_f64(stable_live::mind_check_s());
+            while !stop3.load(Ordering::Relaxed) {
+                sleep_unless_stopped(&stop3, Duration::from_secs(5)).await;
+                if stop3.load(Ordering::Relaxed) {
+                    break;
+                }
+                let now = tokio::time::Instant::now();
+                if now >= next_tool {
+                    next_tool = now + Duration::from_secs_f64(crate::mcp_live::tool_check_s());
+                    keeper_beat(&w3, "toolkeeper", None).await;
+                }
+                if now >= next_mind {
+                    next_mind = now + Duration::from_secs_f64(stable_live::mind_check_s());
+                    keeper_beat(&w3, "stablekeeper", Some(&gw3)).await;
+                }
+            }
+        }));
+    }
     // the relay
     {
         let (w, stop) = (w.clone(), stop.clone());
@@ -380,8 +495,76 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
         feed_ready,
         meter,
         feed,
+        bodies: bodies_arc,
         tasks,
     })
+}
+
+/// One keeper's beat (`BridgeRig._keeper_beat` · `_stable_beat`): under the
+/// keeper's DID when the keeper is joined here; its words on the kernel's stderr.
+async fn keeper_beat(w: &World, keeper: &str, gw: Option<&Gateway>) {
+    let mut g = match Ground::connect(&w.pg_dsn).await {
+        Ok(g) => g,
+        Err(e) => {
+            eprintln!("the {keeper}'s beat could not reach the ground: {e}");
+            return;
+        }
+    };
+    let did = match services_live::did_of_body(g.client(), &w.scope, keeper).await {
+        Ok(Some(d)) => d,
+        Ok(None) => return, // the keeper is not seated here (yet)
+        Err(e) => {
+            eprintln!("the {keeper}'s beat stumbled: {e}");
+            return;
+        }
+    };
+    let out = if keeper == "stablekeeper" {
+        let ready = match gw {
+            Some(g) => g.ready().await,
+            None => false,
+        };
+        stable_live::keeper_beat(&mut g, w, &did, if ready { gw } else { None }).await
+    } else {
+        crate::mcp_live::keeper_beat(&mut g, w, &did).await
+    };
+    match out {
+        Ok(v) => {
+            let bad: Vec<String> = v["checked"]
+                .as_array()
+                .map(|a| {
+                    a.iter()
+                        .filter(|c| c["ok"] == json!(false))
+                        .map(|c| python_str(&c["name"]))
+                        .collect()
+                })
+                .unwrap_or_default();
+            let proposed: Vec<String> = v["proposed"]
+                .as_array()
+                .map(|a| {
+                    a.iter()
+                        .map(|p| format!("{} {}", python_str(&p["kind"]), python_str(&p["name"])))
+                        .collect()
+                })
+                .unwrap_or_default();
+            if !bad.is_empty() || !proposed.is_empty() {
+                eprintln!(
+                    "the {keeper}'s beat: {} checked{}{}",
+                    v["checked"].as_array().map(|a| a.len()).unwrap_or(0),
+                    if bad.is_empty() {
+                        String::new()
+                    } else {
+                        format!(", UNHEALTHY: {}", bad.join(", "))
+                    },
+                    if proposed.is_empty() {
+                        String::new()
+                    } else {
+                        format!(", proposed: {}", proposed.join(", "))
+                    }
+                );
+            }
+        }
+        Err(e) => eprintln!("the {keeper}'s beat stumbled: {e}"),
+    }
 }
 
 /// A beat's rest, cut short by the stop (so a stop is felt within 100 ms).
@@ -413,7 +596,7 @@ fn router(app: Arc<App>) -> Router {
         .route("/guide", get(guide_door))
         .route("/proof", get(proof_door))
         .route("/analyzer", get(analyzer_door))
-        .route("/services", get(services_door))
+        .route("/services", get(services_door).post(services_post))
         .route("/intentions", get(intentions_door))
         .route("/markers", get(markers_door))
         .route("/markers/kinds", get(markers_kinds))
@@ -423,6 +606,25 @@ fn router(app: Arc<App>) -> Router {
         .route("/schedules/:runner", get(schedules_door))
         .route("/harness", get(harness_door))
         .route("/harness/run", post(harness_run))
+        .route("/harness/ab", post(harness_ab))
+        .route("/delta", post(delta_post))
+        .route("/bodies", get(bodies_door))
+        .route("/bodies/restart", post(bodies_restart))
+        .route("/minds", get(minds_door).post(minds_post))
+        .route("/minds/spend", get(minds_spend))
+        .route("/minds/fuel", get(minds_fuel))
+        .route("/minds/search", get(minds_search))
+        .route("/minds/assign", post(minds_post))
+        .route("/minds/unassign", post(minds_post))
+        .route("/minds/refill", post(minds_post))
+        .route("/minds/check", post(minds_post))
+        .route("/minds/retire", post(minds_post))
+        .route("/minds/restore", post(minds_post))
+        .route("/services/version", post(services_post))
+        .route("/services/check", post(services_post))
+        .route("/services/retire", post(services_post))
+        .route("/services/restore", post(services_post))
+        .route("/services/mcp", post(services_post))
         .route("/intentions/stop", post(intentions_stop))
         .route("/intentions/restart", post(intentions_restart))
         .route("/confirm", post(confirm_post))
@@ -514,6 +716,10 @@ async fn page(State(app): State<Arc<App>>) -> Response {
 }
 
 fn frame(n: &Value) -> Event {
+    if n["delta"] == json!(true) {
+        // P7 sp6: a body's words as they form — `event: delta`, no revision (as the Python feed frames it)
+        return Event::default().event("delta").data(n.to_string());
+    }
     Event::default()
         .id(n["rev"].as_u64().unwrap_or(0).to_string())
         .data(n.to_string())
@@ -610,7 +816,7 @@ async fn residents_door(State(app): State<Arc<App>>) -> Response {
 async fn crew_door(State(app): State<Arc<App>>) -> Response {
     let out = async {
         let g = ground(&app).await?;
-        sessions::crew_view(&g, scope(&app)).await
+        sessions::crew_view(&g, scope(&app), Some(&app.templates)).await
     }
     .await;
     match out {
@@ -1230,7 +1436,7 @@ async fn harness_door(State(app): State<Arc<App>>) -> Response {
     let out = async {
         let g = ground(&app).await?;
         let sc = scope(&app);
-        let ch = harness::checks(&g, sc).await?;
+        let ch = harness::checks(&g, sc, &app.gateway).await?;
         let ok = ch.iter().all(|c| c["ok"] == json!(true));
         Ok::<_, RoadError>(
             json!({"checks": ch, "ok": ok, "last": monitor::last_harness(&g, sc).await?}),
@@ -1243,12 +1449,317 @@ async fn harness_door(State(app): State<Arc<App>>) -> Response {
     }
 }
 
-/// A mind's run — the Python door until the bodies' seam (P7 sp6): named, never silent.
-async fn harness_run() -> Response {
-    answer(
-        501,
-        json!({"error": "the harness runs a body's mind — the Python door until the bodies' seam (P7 sp6); the world checks are at GET /harness"}),
-    )
+/// P7 sp6: a mind's run OVER THE RAIL — the kernel asks the body to run its
+/// golden cases as this run id; the run's row answers (200), or 202 while the
+/// body still works. A body not here: 404, as the Python door says.
+async fn harness_run(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let template = s_or(&p, "template", "librarian");
+    let out = async {
+        let g = ground(&app).await?;
+        let w = &app.cfg.world;
+        let cases = harness::golden(&template);
+        let rid = harness::run_over_rail(&g, w, &template, &cases, s_opt(&p, "arm").as_deref(), None).await?;
+        match harness::wait_run(&g, &rid, Duration::from_secs(90)).await? {
+            Some(row) => Ok::<_, RoadError>((200, row)),
+            None => Ok((202, json!({"run_id": rid, "template": template, "running": true,
+                                    "words": format!("{template} is still running its {} golden cases — the run lands as {rid}; the Monitoring shows it when it does", cases.len())}))),
+        }
+    }
+    .await;
+    match out {
+        Ok((code, v)) => answer(code, v),
+        Err(RoadError::Refused(w)) if w == "no such body" => answer(404, json!({"error": w})),
+        Err(e) => refuse(e),
+    }
+}
+
+/// P6.5 sp3's A/B with model ARMS, over the rail: the same golden cases against two or more minds.
+async fn harness_ab(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let template = s_or(&p, "template", "librarian");
+    let arms: Vec<String> = p["arms"]
+        .as_array()
+        .map(|a| {
+            a.iter()
+                .map(python_str)
+                .filter(|s| !s.trim().is_empty())
+                .collect()
+        })
+        .unwrap_or_default();
+    if arms.len() < 2 {
+        return answer(
+            400,
+            json!({"error": "an A/B run names two or more minds as arms"}),
+        );
+    }
+    let out = async {
+        let g = ground(&app).await?;
+        harness::ab(
+            &g,
+            &app.cfg.world,
+            &template,
+            &arms,
+            Duration::from_secs(120),
+        )
+        .await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(RoadError::Refused(w)) if w == "no such body" => answer(404, json!({"error": w})),
+        Err(e) => refuse(e),
+    }
+}
+
+// ---- the bodies' seam (P7 sp6) ------------------------------------------------------------
+
+/// A spawned body's words as they form: `{ref, text}` → the feed's delta frame (display only).
+async fn delta_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let r#ref = s_or(&p, "ref", "");
+    let text = s_or(&p, "text", "");
+    if r#ref.is_empty() || text.is_empty() {
+        return answer(400, json!({"error": "a delta is {ref, text}"}));
+    }
+    app.feed.publish_delta(&r#ref, &text);
+    StatusCode::NO_CONTENT.into_response()
+}
+
+/// Every body this kernel seats, as the kernel sees it (the ground's leases say alive).
+async fn bodies_door(State(app): State<Arc<App>>) -> Response {
+    match &app.bodies {
+        Some(b) => answer(
+            200,
+            json!({"mode": "crew", "spine": app.cfg.spine.display().to_string(), "bodies": b.view()}),
+        ),
+        None => answer(
+            200,
+            json!({"mode": "none", "spine": app.cfg.spine.display().to_string(), "bodies": [],
+                                   "words": "this kernel seats no bodies — the Python Bridge's serve from their benches (SPINE_BODIES=none)"}),
+        ),
+    }
+}
+
+/// The human's lever: a parked or refused body is tried again.
+async fn bodies_restart(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let name = s_or(&p, "name", "").trim().to_lowercase();
+    let Some(b) = &app.bodies else {
+        return answer(
+            400,
+            json!({"error": "this kernel seats no bodies (SPINE_BODIES=none)"}),
+        );
+    };
+    match b.restart(&name) {
+        Ok(v) => answer(202, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// The Stable's read: every LLM with its deal, health and spend; the assignments; the gateway.
+async fn minds_door(State(app): State<Arc<App>>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        let sc = scope(&app);
+        let minds: Vec<Value> = stable_live::stalls(&g, sc)
+            .await?
+            .into_iter()
+            .map(|mut r| {
+                r["words"] = json!(crate::stable::stall_words(&r));
+                r
+            })
+            .collect();
+        Ok::<_, RoadError>(json!({"minds": minds, "assignments": stable_live::assignments(g.client(), sc).await?,
+                                  "gateway": {"base": app.gateway.base, "ready": app.gateway.ready().await}}))
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+async fn minds_spend(State(app): State<Arc<App>>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        stable_live::spend(&g).await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// A body's gauge, by name.
+async fn minds_fuel(State(app): State<Arc<App>>, Query(q): Q) -> Response {
+    let name = q.get("name").cloned().unwrap_or_default();
+    let out = async {
+        let g = ground(&app).await?;
+        let Some(did) = services_live::did_of_body(g.client(), scope(&app), &name).await? else {
+            return Ok::<_, RoadError>((404, json!({"error": format!("no body named {} is joined here", crate::py::repr_str(&name))})));
+        };
+        let gw = if app.gateway.ready().await { Some(&app.gateway) } else { None };
+        Ok((200, json!({"name": name, "fuel": stable_live::fuel(&g, scope(&app), gw, &did).await?})))
+    }
+    .await;
+    match out {
+        Ok((code, v)) => answer(code, v),
+        Err(e) => refuse(e),
+    }
+}
+
+async fn minds_search(State(app): State<Arc<App>>, Query(q): Q) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        let rows = stable_live::search(
+            &g,
+            scope(&app),
+            q.get("q").map(String::as_str),
+            q.get("klass").map(String::as_str).filter(|k| !k.is_empty()),
+            q.get("max_in_per_m").and_then(|v| v.parse().ok()),
+            q.get("modality")
+                .map(String::as_str)
+                .filter(|m| !m.is_empty()),
+        )
+        .await?;
+        let minds: Vec<Value> = rows
+            .into_iter()
+            .map(|mut r| {
+                r["words"] = json!(crate::stable::stall_words(&r));
+                r
+            })
+            .collect();
+        Ok::<_, RoadError>(json!({"minds": minds}))
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// The Stable's acts — the held ones hold at the interlock (L2); check and restore run at once.
+async fn minds_post(State(app): State<Arc<App>>, uri: axum::http::Uri, body: Bytes) -> Response {
+    let path = uri.path().to_string();
+    let p = body_json(&body);
+    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let session = s_opt(&p, "session");
+    let name = s_or(&p, "name", "").trim().to_lowercase();
+    let out = async {
+        let mut g = ground(&app).await?;
+        let w = &app.cfg.world;
+        let ready = app.gateway.ready().await;
+        let gw = if ready { Some(&app.gateway) } else { None };
+        match path.as_str() {
+            "/minds/check" => {
+                let checked = if name.is_empty() {
+                    services_live::check_all(&mut g, w, gw, Some("mind"), &person).await?
+                } else {
+                    vec![services_live::check(&mut g, w, gw, &name, &person).await?]
+                };
+                let ok = checked.iter().all(|c| c["ok"] == json!(true));
+                Ok::<_, RoadError>((200, json!({"checked": checked, "ok": ok})))
+            }
+            "/minds/restore" => {
+                let made = stable_live::restore_mind(&mut g, w, gw, &name, &person).await?;
+                Ok((201, json!({"service": made})))
+            }
+            "/minds/retire" => {
+                let held = services_live::hold_retire(&mut g, w, &name, &person, session.as_deref()).await?;
+                Ok((202, json!({"held": held, "level": services_live::RETIRE_LEVEL, "class": services_live::RETIRE_CLASS})))
+            }
+            _ => {
+                let (tool, args) = match path.as_str() {
+                    "/minds" => {
+                        let d = stable_live::deal_from(&p)?;
+                        (crate::stable::REGISTER_TOOL, json!({"name": name, "deal": d}))
+                    }
+                    "/minds/assign" => (
+                        crate::stable::ASSIGN_TOOL,
+                        json!({"subject": s_or(&p, "subject", "*"), "klass": s_or(&p, "klass", crate::stable::ANY),
+                               "stall": if crate::py::truthy(&p["stall"]) { python_str(&p["stall"]) } else { name.clone() }}),
+                    ),
+                    "/minds/unassign" => (
+                        crate::stable::UNASSIGN_TOOL,
+                        json!({"subject": s_or(&p, "subject", "*"), "klass": s_or(&p, "klass", crate::stable::ANY)}),
+                    ),
+                    _ => {
+                        let who = if crate::py::truthy(&p["subject"]) { python_str(&p["subject"]) } else { name.clone() };
+                        let Some(did) = services_live::did_of_body(g.client(), &w.scope, &who).await? else {
+                            return Ok((404, json!({"error": format!("no body named {} is joined here", crate::py::repr_str(&who))})));
+                        };
+                        let usd = p["usd"].as_f64().or_else(|| p["usd"].as_str().and_then(|s| s.parse().ok())).unwrap_or(1.0);
+                        (crate::stable::REFILL_TOOL, json!({"did": did, "name": who, "usd": usd}))
+                    }
+                };
+                let text = stable_live::words_for(tool, &args);
+                let held = stable_live::hold(&mut g, w, tool, args, &text, &person, session.as_deref()).await?;
+                Ok((202, json!({"held": held, "level": crate::stable::ACT_LEVEL, "class": crate::stable::ACT_CLASS})))
+            }
+        }
+    }
+    .await;
+    match out {
+        Ok((code, v)) => answer(code, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// The shelf's doors — the owner's, plain words (P6.5 sp1 · sp2).
+async fn services_post(State(app): State<Arc<App>>, uri: axum::http::Uri, body: Bytes) -> Response {
+    let path = uri.path().to_string();
+    let p = body_json(&body);
+    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let name = s_or(&p, "name", "").trim().to_string();
+    let secrets: Vec<String> = p["secrets_with"]
+        .as_array()
+        .map(|a| a.iter().map(python_str).collect())
+        .unwrap_or_default();
+    let placement = p.get("placement").filter(|v| crate::py::truthy(v));
+    let out = async {
+        let mut g = ground(&app).await?;
+        let w = &app.cfg.world;
+        match path.as_str() {
+            "/services/mcp" => {
+                let made = crate::mcp_live::register_server(&mut g, w, &name, &s_or(&p, "locator", ""), &person, &secrets, placement).await?;
+                Ok::<_, RoadError>((201, json!({"service": made["server"], "tools": made["tools"], "info": made["info"]})))
+            }
+            "/services" => {
+                let made = services_live::register(&mut g, w, &name, &s_or(&p, "kind", ""), &p["manifest"], &person, placement, &secrets).await?;
+                Ok((201, json!({"service": made})))
+            }
+            "/services/version" => {
+                let made = services_live::version(&mut g, w, &name, &p["manifest"], &person).await?;
+                Ok((200, json!({"service": made})))
+            }
+            "/services/check" => {
+                let ready = app.gateway.ready().await;
+                let gw = if ready { Some(&app.gateway) } else { None };
+                let checked = if name.is_empty() {
+                    services_live::check_all(&mut g, w, gw, s_opt(&p, "kind").as_deref(), &person).await?
+                } else {
+                    vec![services_live::check(&mut g, w, gw, &name, &person).await?]
+                };
+                let ok = checked.iter().all(|c| c["ok"] == json!(true));
+                Ok((200, json!({"checked": checked, "ok": ok})))
+            }
+            "/services/retire" => {
+                let held = services_live::hold_retire(&mut g, w, &name, &person, s_opt(&p, "session").as_deref()).await?;
+                Ok((202, json!({"held": held, "level": services_live::RETIRE_LEVEL, "class": services_live::RETIRE_CLASS})))
+            }
+            _ => {
+                let made = services_live::restore(&mut g, w, &name, &person).await?;
+                Ok((201, json!({"service": made})))
+            }
+        }
+    }
+    .await;
+    match out {
+        Ok((code, v)) => answer(code, v),
+        Err(e) => refuse(e),
+    }
 }
 
 /// Rule 11: the stop — and its reverse (W20). ANY intention's stop is grave

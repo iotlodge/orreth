@@ -1,0 +1,17 @@
+{
+  "format": "orreth-crew/1",
+  "version": "0.1.0",
+  "words": "the crew a kernel seats at light — one body per seat, one process per body when the kernel spawns them (P7 sp6); the Python Bridge seats the same crew in-process as the reference",
+  "seats": [
+    {"template": "templates/librarian-resident.v0.json"},
+    {"template": "templates/echo-resident.v0.json"},
+    {"template": "templates/firmware-planner.v0.json"},
+    {"template": "templates/firmware-critic.v0.json"},
+    {"template": "templates/firmware-grader.v0.json"},
+    {"template": "templates/firmware-mitl.v0.json"},
+    {"template": "templates/firmware-toolkeeper.v0.json"},
+    {"template": "templates/firmware-stablekeeper.v0.json"},
+    {"template": "templates/workspace-firmware.v0.json", "binding": "bindings/crew.v0.json"},
+    {"template": "templates/workspace-firmware.v0.json", "binding": "bindings/monitor.v0.json"}
+  ]
+}

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: `shadow` seats the crew when it stands alone · 2026-09-24
 # (the OLD world's rig, unchanged, lives on below under `old` — its own provenance in its lines)
 #
 # Orreth dev rig — JB's one-command feedback rig, DOCKER-first (the NEW line: canon 0002).
@@ -11,8 +12,9 @@
 #   scripts/dev.sh bridge        relight the Python Bridge on the host (SPINE_MASTERS · the gateway on :4604
 #                                from the environment / .env), log ~/.orreth/tmp/bridge.log, print the pid
 #   scripts/dev.sh bridge stop   bring the Bridge down cleanly (SIGINT — it stops whole); confirms :4600 empty
-#   scripts/dev.sh shadow        light the RUST bridge (spine-bridge, P7 sp3) on :4601 in SHADOW beside the Python
-#                                Bridge — same ground, same page; log ~/.orreth/tmp/shadow.log, pid printed
+#   scripts/dev.sh shadow        light the RUST bridge (spine-bridge, P7 sp3) on :4601 — beside a lit Python Bridge in
+#                                SHADOW (same ground, same page, the Python bodies serve); ALONE (P7 sp6) it seats the
+#                                crew itself, every body a process it governs; log ~/.orreth/tmp/shadow.log, pid printed
 #   scripts/dev.sh shadow stop   bring the Rust bridge down (SIGINT — it stops whole); confirms :4601 empty
 #   scripts/dev.sh suite [args]  the spine suite to ~/.orreth/tmp/suite.log, tail printed (default: tests;
 #                                pass a file or -k to narrow) — REFUSES while a Bridge is lit (the stale-rig law)
@@ -124,11 +126,16 @@ shadow_light() {  # P7 sp3: the Rust bridge (spine-bridge) on :4601, the same gr
   load_env
   echo "· building spine-bridge (cargo, feature bridge) …"
   (cd "$PLANE" && cargo build --quiet -p orreth-spine --features bridge --bin spine-bridge) || { echo "· the build refused — read the errors above"; return 1; }
-  (cd "$PLANE" && SPINE_BRIDGE_PORT=$SHADOW_PORT nohup "$PLANE/target/debug/spine-bridge" >"$SHADOW_LOG" 2>&1 &)
+  # P7 sp6: whose bodies serve? Beside a lit Python Bridge the Rust kernel seats NONE (one crew, never
+  # doubled); alone it seats the crew as processes it governs (SPINE_BODIES honours an explicit setting).
+  bodies="${SPINE_BODIES:-}"
+  if [ -z "$bodies" ]; then [ -n "$(bridge_pid)" ] && bodies=none || bodies=crew; fi
+  (cd "$PLANE" && SPINE_BRIDGE_PORT=$SHADOW_PORT SPINE_BODIES="$bodies" nohup "$PLANE/target/debug/spine-bridge" >"$SHADOW_LOG" 2>&1 &)
   for i in $(seq 60); do [ -n "$(shadow_pid)" ] && break; sleep 0.5; done
   pid=$(shadow_pid)
   [ -z "$pid" ] && { echo "· the Rust bridge never took :$SHADOW_PORT in 30 s — read $SHADOW_LOG"; tail -5 "$SHADOW_LOG"; return 1; }
-  echo "· the Rust bridge is lit: http://127.0.0.1:$SHADOW_PORT/  (pid $pid · in SHADOW beside :$BRIDGE_PORT — the Python Bridge's residents serve) — log: $SHADOW_LOG"
+  echo "· the Rust bridge is lit: http://127.0.0.1:$SHADOW_PORT/  (pid $pid · bodies: $bodies) — log: $SHADOW_LOG"
+  [ "$bodies" = crew ] && echo "· the crew is the Rust kernel's: every seat a process it spawns and governs (kill one: it comes back as the same self; kill it three times in five minutes: it parks and says so)" || echo "· the Rust kernel seats no bodies — the Python Bridge's serve (SPINE_BODIES=none)"
 }
 
 shadow_stop() {

@@ -33,3 +33,25 @@ uv run pytest -q              # envelope laws — no brokers needed (CI runs the
 
 The RabbitMQ management console is at http://localhost:15672
 (orreth / orreth-dev) if you want to watch the queue by eye.
+
+## The bodies as processes (P7 sp6, the bodies' seam)
+
+The kernel spawns and governs every body as its own process. The crew is ONE
+manifest, `crew.v0.json`, read by both spines: the Python Bridge (`glass.py`)
+seats it in-process as the reference; the Rust kernel (`spine-bridge`,
+`scripts/dev.sh shadow`) spawns one process per seat:
+
+```bash
+.venv/bin/python3 -m orreth_spine.body --template templates/echo-resident.v0.json         # one body, standing alone
+.venv/bin/python3 -m orreth_spine.body --template templates/workspace-firmware.v0.json --binding bindings/crew.v0.json
+.venv/bin/python3 -m orreth_spine.body --seed-shelf                                        # the kernel's boot rite, once
+```
+
+A body joins as the same self every life (its seed under `~/.orreth/agents/<name>/`),
+keeps its lease while it serves, streams its words to the kernel that spawned it
+(`SPINE_KERNEL_DOOR`), serves the kernel's harness command on its bench, and stops
+whole on SIGINT. The kernel restarts a body that died (1 s, doubling, capped at 30),
+PARKS one that dies three times in five minutes (a fact, `orreth.body.parked.v1`;
+"restart the <name> body" is the human's lever), never restarts a refusal, and stops
+every body at dark. Dials: `SPINE_BODIES` (crew · none) · `SPINE_CREW` (another
+manifest) · `SPINE_PYTHON` (another interpreter) · `SPINE_BODY_EPHEMERAL` (tests).

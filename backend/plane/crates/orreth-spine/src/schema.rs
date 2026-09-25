@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the watches · the schedules · the harness runs · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the shelf · the Stable · the meter · 2026-09-24
 //! The ask road's tables — the Python spine's DDL, word for word, under the
 //! same tags its `once` guard uses (`resident` · `markers` · `proof` · `intent`
 //! · `presence` · `digest`), so two spines on one ground never disagree about a
@@ -146,8 +147,64 @@ pub const HARNESS_DDL: &[&str] = &[
      NULL, scope text NOT NULL, ran_at timestamptz NOT NULL DEFAULT now())",
 ];
 
+/// `services.ensure_schema` (P6.5 sp1): the shelf — one registry for tool · mcp · store · source · mind.
+pub const SERVICES_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_services ( name text NOT NULL, scope text NOT NULL, kind text \
+     NOT NULL, did text NOT NULL, manifest text NOT NULL, manifest_hash text NOT NULL, version int \
+     NOT NULL DEFAULT 1, placement text NOT NULL, secrets_with text NOT NULL DEFAULT '[]', state \
+     text NOT NULL, by_did text NOT NULL, since timestamptz NOT NULL DEFAULT now(), registered_at \
+     timestamptz NOT NULL DEFAULT now(), last_ok boolean, last_detail text, last_checked_at \
+     timestamptz, marker text, root_marker text, PRIMARY KEY (name, scope))",
+    "CREATE TABLE IF NOT EXISTS spine_service_versions ( version_id bigserial PRIMARY KEY, name \
+     text NOT NULL, scope text NOT NULL, version int NOT NULL, manifest text NOT NULL, \
+     manifest_hash text NOT NULL, by_did text NOT NULL, at timestamptz NOT NULL DEFAULT now())",
+    "CREATE TABLE IF NOT EXISTS spine_service_health ( health_id bigserial PRIMARY KEY, name text \
+     NOT NULL, scope text NOT NULL, did text NOT NULL, ok boolean, detail text NOT NULL, at \
+     timestamptz NOT NULL DEFAULT now())",
+    "CREATE INDEX IF NOT EXISTS spine_services_kind ON spine_services (scope, kind)",
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+     'spine_services' AND column_name = 'root_marker') THEN ALTER TABLE spine_services ADD COLUMN root_marker text; END IF; \
+     END $$",
+];
+
+/// `stable.ensure_schema` (P6.5 sp3): the assignments and the bodies' keys (the fuel clause).
+pub const STABLE_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_mind_assignments ( subject text NOT NULL, scope text NOT \
+     NULL, klass text NOT NULL, stall text NOT NULL, by_did text NOT NULL, at timestamptz NOT NULL \
+     DEFAULT now(), PRIMARY KEY (subject, scope, klass))",
+    "CREATE TABLE IF NOT EXISTS spine_mind_keys ( did text NOT NULL, scope text NOT NULL, alias \
+     text NOT NULL, key text NOT NULL, max_usd double precision NOT NULL, renew_days int NOT NULL, \
+     made_at timestamptz NOT NULL DEFAULT now(), drained_at timestamptz, refills int NOT NULL \
+     DEFAULT 0, PRIMARY KEY (did, scope))",
+];
+
+/// `gateway.ensure_schema`: the meter — every thought's line.
+pub const GATEWAY_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_meter ( meter_id bigserial PRIMARY KEY, did text NOT NULL, \
+     model text NOT NULL, tokens_in int NOT NULL, tokens_out int NOT NULL, at timestamptz NOT NULL \
+     DEFAULT now())",
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+     'spine_meter' AND column_name = 'service') THEN ALTER TABLE spine_meter ADD COLUMN service text; END IF; \
+     END $$",
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+     'spine_meter' AND column_name = 'usd') THEN ALTER TABLE spine_meter ADD COLUMN usd double precision; END IF; \
+     END $$",
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+     'spine_meter' AND column_name = 'stall') THEN ALTER TABLE spine_meter ADD COLUMN stall text; END IF; \
+     END $$",
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+     'spine_meter' AND column_name = 'request_id') THEN ALTER TABLE spine_meter ADD COLUMN request_id text; END IF; \
+     END $$",
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+     'spine_meter' AND column_name = 'ok') THEN ALTER TABLE spine_meter ADD COLUMN ok boolean NOT NULL DEFAULT true; END IF; \
+     END $$",
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+     'spine_meter' AND column_name = 'note') THEN ALTER TABLE spine_meter ADD COLUMN note text; END IF; \
+     END $$",
+];
+
 /// The tags and their DDL, in the order the road ensures them.
-pub const ROAD: [(&str, &[&str]); 10] = [
+pub const ROAD: [(&str, &[&str]); 13] = [
     ("resident", RESIDENT_DDL),
     ("markers", MARKERS_DDL),
     ("proof", PROOF_DDL),
@@ -158,6 +215,9 @@ pub const ROAD: [(&str, &[&str]); 10] = [
     ("scheduler", SCHEDULER_DDL),
     ("harness", HARNESS_DDL),
     ("store", crate::store::STORE_DDL), // P7 sp5: the Record (spine_memories)
+    ("services", SERVICES_DDL), // P7 sp6: the shelf, the Stable, the meter — the registry seam
+    ("stable", STABLE_DDL),
+    ("gateway", GATEWAY_DDL),
 ];
 
 /// Every table the ask road stands on, once per ground per process.

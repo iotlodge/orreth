@@ -80,6 +80,22 @@ meters; it never sees the prompt).
   five mcp kinds are ported; the runner reads 195/195 across 49 kinds, not
   yet ported: none. What a kernel without bodies cannot run it LEAVES DUE
   (the harness's mind-run), never claims and drops.
+- **P7 sp6 (2026-09-24) — THE BODIES' SEAM, the end shape reached:** the
+  Rust kernel SPAWNS the crew — every seat of `spine/crew.v0.json` its own
+  Python process, `python -m orreth_spine.body` (the SDK-side body) — and
+  GOVERNS it: a body that dies is restarted after a backoff, one that dies
+  three times in five minutes is PARKED as a fact with its last words and
+  restarted only on the human's word, a refusal at birth is never restarted,
+  and at dark every body is stopped whole. The kernel never runs a prompt in
+  its own address space (0016): the one thought it asks is the canary's
+  one-token ping, metered; the harness's run rides the invoke rail to the
+  body and lands under the kernel's run id. The Stable's and the shelf's
+  registries, the held acts, both keepers' beats and the nine health checks
+  are the Rust kernel's too. `bodies-v0.json` measures the park law and the
+  harness's command; minds-v0's twelve are ported; the runner reads 328/328
+  across 78 kinds, not yet ported: none. Standing alone, the Rust kernel is
+  whole but for the built-in tools' door (their schemas live in `tools.py` —
+  the boot rite runs as a Python one-shot until sp8 moves the door).
 
 ## The conformance-suite law
 

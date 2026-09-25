@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: `publish_delta` — the spawned bodies' words as they form · 2026-09-24
 //! The Bridge feed's heart — mirrors `orreth_spine.bridgefeed.Feed` and
 //! `consume_rail` (canon 0002): the one place the glass connects. The browser
 //! never touches a broker; it receives small, pointer-only notices —
@@ -6,9 +7,9 @@
 //! notice wears a monotone revision; a bounded ring replays what a
 //! reconnecting client missed, or `since` says `None` — resync — when the gap
 //! outlived the ring. The SSE framing lives in [`crate::bridge`].
-//! (The Python feed also carries a resident's streaming DELTAS to connected
-//! clients; the Rust bridge holds no residents, so its feed carries none —
-//! the words land with the reply's notice.)
+//! P7 sp6: the feed also carries the spawned bodies' streaming DELTAS to
+//! connected clients (`publish_delta`) — a body POSTs its words to the
+//! kernel's `/delta` door as they form; never the ring, never a revision.
 
 use crate::envelope::now_iso;
 use crate::events::Reader;
@@ -61,6 +62,15 @@ impl Feed {
         };
         let _ = self.tx.send(notice.clone());
         notice
+    }
+
+    /// P7 sp6: a body's words as they form — to CONNECTED clients only, never
+    /// the ring, never a revision (`Feed.publish_delta`): the glass draws them
+    /// live; the durable truth stays the reply behind the door.
+    pub fn publish_delta(&self, r#ref: &str, text: &str) {
+        let _ = self
+            .tx
+            .send(json!({"delta": true, "ref": r#ref, "text": text}));
     }
 
     /// A client's ear — subscribe BEFORE asking `since`, so nothing falls between.

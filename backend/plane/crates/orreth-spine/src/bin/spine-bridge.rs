@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the crew this kernel seats, said at light · 2026-09-24
 //! `spine-bridge` — the Rust bridge, lit in SHADOW on :4601 beside the Python
 //! Bridge on :4600 (canon 0008: fixture unchanged → SHADOW → the door). One
 //! ground, one truth: an ask through either door is dispatched once (the
@@ -10,7 +11,9 @@
 //!
 //! Dials: `SPINE_BRIDGE_PORT` (4601) · `SPINE_PG` · `SPINE_RABBIT` · `SPINE_KAFKA`
 //! · `SPINE_SCOPE` · `SPINE_QUEUE_NS` · `SPINE_MASTERS` · `SPINE_HUMAN_ZONE` ·
-//! `ORRETH_GLASS` (the page; default the crate's `../../../../spine/glass/index.html`).
+//! `ORRETH_GLASS` (the page; default the crate's `../../../../spine/glass/index.html`)
+//! · `SPINE_BODIES` (P7 sp6: `crew` — this kernel seats and governs the crew as
+//! processes; `none` — the Python Bridge's bodies serve) · `ORRETH_SPINE` (the spine home).
 //! Ctrl+C brings it down whole.
 
 use orreth_spine::bridge::{light, Config};
@@ -33,7 +36,14 @@ async fn main() {
         lit.group,
         cfg.glass.display()
     );
-    println!("no residents live here — the Python Bridge's serve from their benches; Ctrl+C brings it down whole.");
+    match &lit.bodies {
+        Some(b) => println!(
+            "the crew is this kernel's: {} seats spawned as processes ({}); a body that dies is restarted, one that dies three times in five minutes is parked and said; Ctrl+C brings everything down whole.",
+            b.seats.len(),
+            b.seats.iter().map(|s| s.name.as_str()).collect::<Vec<_>>().join(" · ")
+        ),
+        None => println!("no bodies live here (SPINE_BODIES=none) — the Python Bridge's serve from their benches; Ctrl+C brings it down whole."),
+    }
     if lit.wait_ready(std::time::Duration::from_secs(30)).await {
         println!("the feed and the dispatcher hold their assignments.");
     } else {

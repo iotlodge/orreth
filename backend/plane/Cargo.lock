@@ -1823,6 +1823,7 @@ dependencies = [
  "flate2",
  "hmac 0.12.1",
  "lapin",
+ "libc",
  "qrcode",
  "rand 0.8.8",
  "rdkafka",
@@ -1833,6 +1834,7 @@ dependencies = [
  "tokio",
  "tokio-postgres",
  "tokio-stream",
+ "ureq",
 ]
 
 [[package]]

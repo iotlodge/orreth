@@ -1304,9 +1304,74 @@ approved (covenant rule 9).
   a ground in another zone would differ); `/recall` and `/export` read a
   window as text the ground casts; the SDK-side `acquire` tool still lands
   memories through the Python body (P7 sp6's seam); the Rust `/harness` reads the five shared world checks — the Stable's four (sp3) are the Python door's until sp6 ports them (the loops proof compares the five and names the four); found by this spoonful's proof and cured: the Rust intent loop's turn had stumbled on every beat since walk #11 (`make_interval(mins => float)`, W50) and a ground's refusal is now said in the ground's own words.
-- **sp6 — THE BODIES' SEAM.** Residents stay LangGraph processes the kernel
-  spawns and governs over the invoke rail; the Python `Resident` becomes
-  the SDK-side body (0008's end shape).
+- **sp6 — THE BODIES' SEAM** ✅ **BUILT 2026-09-24 (JB's lock at the open:
+  the whole seam, A–F, one spoonful; the plane diff his to review at the
+  close before the push).** Residents stay LangGraph processes; from here
+  THE KERNEL SPAWNS AND GOVERNS THEM. In plain words: the Rust kernel used
+  to have no bodies of its own — every body lived as a thread inside the
+  Python Bridge's one process. Now each seat of ONE crew manifest
+  (`spine/crew.v0.json`, read by both spines — one crew, one truth) becomes
+  its own process, `python -m orreth_spine.body --template … [--binding …]`
+  (`orreth_spine/body.py`, the SDK-side body: the same `Resident`, standing
+  alone — it loads its template, binding and covenant policy, joins as the
+  SAME self every life, keeps its lease while it serves its benches, streams
+  its words to the kernel that spawned it through the kernel's `/delta`
+  door, stops WHOLE on SIGINT). The Rust kernel (`bodies.rs`) spawns every
+  seat through the spine's own interpreter (never a wrapper — a wrapper's pid
+  is not the body's, found by the proof), watches it, restarts one that died
+  after a backoff (1 s, doubling, capped at 30), PARKS one that dies three
+  times in five minutes — a fact, `orreth.body.parked.v1`, with its last
+  words; the crew card says PARKED and the human's lever is "restart the
+  <name> body" — never restarts a refusal (placement, no policy: terminal,
+  already a recorded fact), and at dark stops every body whole (SIGINT, a
+  bounded wait, SIGKILL only for one that would not stop; a fallen kernel
+  takes its children with it). Before the crew the kernel's BOOT RITE runs
+  once in the reference's own words (`--seed-shelf`: the built-ins on the
+  shelf, probed; the reference clock by the dial) and the benches are swept.
+  Beside a lit Python Bridge `dev.sh shadow` seats NONE (`SPINE_BODIES=none`;
+  the Python bodies serve); alone it seats the crew. **The harness rides the
+  rail** (`orreth.resident.harness.v1`): the kernel asks the body to run its
+  golden cases through its own graph and record the run under the kernel's
+  run id (the body serves it on its bench like any command; `harness.verdict`
+  is the shared law); `POST /harness/run` and `/harness/ab` answer from the
+  Rust door (200 with the run, 202 while it runs) and the kernel's scheduled
+  harness duty runs from the Rust kernel too. **minds-v0 ported** (`stable.rs`:
+  the twelve laws + `mcp::server_name`) — the runner reads **328/328 across
+  78 kinds, not yet ported: none** (`bodies-v0.json`, 34 cases: `backoff` ·
+  `park_rule` · `parked_words` · `parked_fact` · `harness_verdict` ·
+  `harness_command`). **The registry seams in Rust:** `services_live.rs`
+  (register · version · health · retire · restore as facts under the shelf
+  root, a service's self from its seed, the kind's honest probe, W49's
+  withdrawal), `stable_live.rs` (stalls · assignments · the routing decision
+  on the ground · the fuel clause · the meter · the held acts settled inside
+  the record's own transaction · drift · EOL · the proposals · search · spend
+  · the 100%), `gateway.rs` (LiteLLM's management doors and the canary — the
+  only words the kernel ever sends are "Answer with one word." / "ping"),
+  `mcp_live.rs` (initialize + tools/list over stdio and HTTP, the listing
+  synced onto the shelf, the strikes rule); the doors `/minds…` (GET · POST,
+  every held act at the interlock) and `POST /services…`; `service.retire`
+  and every `mind.*` act settle at the Rust door; the Stable's four health
+  checks read on the Rust door — NINE, equal on both doors (the loops proof
+  compares them); the crew card's LLM line for the bodies this kernel seats.
+  **Both keepers' beats** run on the kernel that holds the keepers' bodies
+  (the tools keeper's every 300 s, the Stable keeper's every 600 s — the
+  dials `SPINE_TOOL_CHECK_S` · `SPINE_MIND_CHECK_S`). **The proof**
+  (`tests/bodies.rs`, 32 s): the Rust kernel ALONE seats a two-seat crew as
+  processes; the roster reads them alive; an ask through the Rust door is
+  served by a body it spawned and the words stream to its feed; the harness
+  runs over the rail and lands under the kernel's id (a failing run a fact);
+  the echo killed by hand comes back as THE SAME SELF, life 2 (AG-2); killed
+  three times it is PARKED — said, a fact — and restarted on the word, its
+  deaths forgotten; the Stable's doors answer; at dark both bodies are gone.
+  **Honest limits:** the built-in TOOLS' schemas live in `tools.py`, so a
+  built-in tool's probe and the shelf's seeding stay the reference's (the
+  Rust kernel runs the boot rite as a Python one-shot; a built-in tool's
+  check on the Rust door says "not probed by this kernel" and records
+  nothing) until the tool door moves (sp8); a body's `acquire` and every tool
+  call are the body's own (Python, by canon); the Python Bridge still seats
+  its crew in-process (the reference, the simulator); the harness's A/B arms
+  ride the rail one run at a time (120 s each); `dev.sh suite` still refuses
+  beside a lit Bridge. Python suite 508 (469 before); five Rust proofs green; clippy + fmt clean. Walk #14 OWED (the script in the register).
 - **sp7 — CELLS, PARTITION, ISOLATION, HARDENING** (M7 · M8), built once in
   the Rust kernel.
 - **sp8 — THE RELEASE WAVE.** `orrethd` re-based on `orreth-spine` replaces

@@ -53,7 +53,7 @@ is the exact thing this page exists to prevent.
 | Old organ (dive) | What it did | Seat | Evidence / gap |
 |---|---|---|---|
 | A keypair is a self (0002 · 0006) | persistent DID per agent, seeds under `~/.orreth`, same self re-joins | CARRIED — `identity.py` | seed persists under the body's home; ephemeral only for tests. Rule 1 holds. |
-| becky's join door + leases (0006 · 0012) | governed join queue, root-chained attenuation-only tokens, revocation | RE-SEATED — P7 sp3 (doors) · sp6 (the bodies' seam) | `resident.py` carries a **dev gate v0** only ("the governed becky gate arrives with kernel"). No token chain, no revocation, no queue a human sees. |
+| becky's join door + leases (0006 · 0012) | governed join queue, root-chained attenuation-only tokens, revocation | RE-SEATED — P7 sp3 (doors) · sp6 (the bodies' seam) · the governed gate itself sp8 | P7 sp6: the kernel SPAWNS and GOVERNS every body as a process (restart · park · stop whole; leases the truth of liveness). The join is still `resident.py`'s **dev gate v0** — no token chain, no revocation, no queue a human sees; that gate is sp8's. |
 | The doors that answer (0071) | publishable join door, signed machine asks, per-DID knock ceilings, ask-cache | RE-SEATED — P7 sp3 · sp8 | none of it in the spine; the glass's doors are unauthenticated dev doors. KCR-0001 must be re-paid on the new kernel. |
 | The Person (0070) | humans as identities: own key, signed acts, name never reissued | CARRIED partial — `proof.py` | persons enroll TOTP and can be masters; no person keypair, no signed human act. |
 | Factories + BirthCertificate (0011) | archetype → incarnation, upgrade in place, rookie probation | RE-SEATED — 0004 "the factories" + the draft shelf | `spine/templates/*.v0.json` are versioned templates; no birth record, no probation, no factory body. |
@@ -151,7 +151,7 @@ is the exact thing this page exists to prevent.
 
 | Old organ (dive) | What it did | Seat | Evidence / gap |
 |---|---|---|---|
-| orreth-agent SDK 0.4.0 (PyPI) + the join door (0017 · 0071) | a stranger's world joins with published artifacts alone | RE-SEATED — P7 sp6 (Python `Resident` = the SDK-side body) · sp8 | "continue SDK for sure" (0008). Not cut on the new line. |
+| orreth-agent SDK 0.4.0 (PyPI) + the join door (0017 · 0071) | a stranger's world joins with published artifacts alone | RE-SEATED — P7 sp6 (Python `Resident` = the SDK-side body) · sp8 | P7 sp6: `python -m orreth_spine.body` IS the SDK-side body — one process per body, spawned and governed by the kernel, the same self every life. Not yet cut as a published package; the join door for a stranger's world is sp8's. |
 | Machines ask and are answered (0071); Orreth as the API (E-RAG) | signed `ask` kind for agents | RE-SEATED — P7 sp3 doors; CAPABILITY for the API face | the glass's ask door is a dev door. |
 | The Desk / charles (0054) | a purpose world through Orreth end to end | CAPABILITY — re-proof after release | untouched. |
 

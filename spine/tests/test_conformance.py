@@ -10,6 +10,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: beat_lock · loop_words · plan_words · observed_words · watch_note · cannot_act · improvement_note · crew_hash · turned_fact · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable: route_for · usd · budget_duration · resolve · drift · eol_due · recommend · deal · deal_refuses · drained_words · act_words · server_name · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: search_terms · memory_fact · purge_fact · digest_text · digest_fact · signed_bundle · did_of · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: backoff · park_rule · parked_words · parked_fact · harness_verdict · harness_command · 2026-09-24
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -20,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import (dispatch, envelope as ev, export, ground, harness, intent, mcp, mitl, monitor, placement,
+from orreth_spine import (body as _body, dispatch, envelope as ev, export, ground, harness, intent, mcp, mitl, monitor, placement,
                           presence, proof, rails, resident, scheduler, services, stable, store, digest)
 from orreth_spine.identity import Identity
 
@@ -144,6 +145,28 @@ def test_fixture(contract, case):
         assert stable.act_words(inp["tool"], inp["args"]) == exp["words"]
     elif kind == "server_name":                  # W28: a server names itself
         assert mcp.server_name(inp["info"], inp["locator"]) == exp["name"]
+    # ---- orreth.bodies/1 (P7 sp6): the kernel governs the bodies it spawns; the harness rides the rail ----
+    elif kind == "backoff":                     # the wait before the n-th restart
+        assert _body.backoff_s(inp["deaths"]) == exp["wait_s"]
+    elif kind == "park_rule":                   # deaths inside the window; at the strikes, PARKED
+        assert _body.park_rule(inp["exits"], inp["now"], inp["window_s"], inp["strikes"]) == exp
+    elif kind == "parked_words":                # the plain words of a parked body, with the human's lever
+        assert _body.parked_words(inp["name"], inp["deaths"], inp["window_s"], inp["last_words"]) == exp["words"]
+    elif kind == "parked_fact":                 # orreth.body.parked.v1 — the kernel's fact, its evidence cut
+        e = _body.parked_fact(inp["name"], inp["did"], inp["deaths"], inp["window_s"], inp["last_words"], scope=inp["scope"])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert (e["payload"], e["type"], e["authority_chain"]) == (exp["payload"], exp["type"], exp["chain"])
+        assert ev.encode(e).decode("ascii") == exp["bytes"]
+    elif kind == "harness_verdict":             # a case passes when every expected word is in the reply, case folded
+        assert harness.verdict(inp["cases"], inp["replies"]) == exp
+    elif kind == "harness_command":             # the kernel's ask of a body: run these cases as this run id
+        e = harness.command_for(inp["run_id"], inp["target"], inp["cases"], arm=inp["arm"],
+                               parent_marker=inp["parent_marker"], scope=inp["scope"])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert (e["payload"], e["type"], e["correlation_id"], e["authority_chain"]) == \
+            (exp["payload"], exp["type"], exp["correlation_id"], exp["chain"])
+        assert e["payload"]["target"] == exp["queue_target"]        # routed to that body's own bench
+        assert ev.encode(e).decode("ascii") == exp["bytes"]
     # ---- orreth.compliance/1 (P6 sp2): the hash chain, the chain's status, the verifier ----
     elif kind == "hash_chain":
         got = export.hash_chain(inp["rows"])

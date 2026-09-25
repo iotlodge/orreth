@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: `load_as` — a service's self from its seed · 2026-09-24
 //! THE KERNEL'S OWN SELF (canon 0005 P7 sp5 · covenant rule 1): one Ed25519
 //! keypair per rig, its seed at `<SPINE_KERNEL_HOME or ORRETH_HOME/kernel>/seed`,
 //! minted once and read every boot after — the same self on EVERY bridge
@@ -50,6 +51,12 @@ impl KernelSelf {
 
     /// The same self every life: the seed read from `<dir>/seed`, minted once if absent.
     pub fn load(dir: &Path) -> std::io::Result<KernelSelf> {
+        Self::load_as(dir, "kernel", "kernel")
+    }
+
+    /// P7 sp6: a self of any kind from its seed file — a service's (`identity.Identity.load(name, home, kind="service")`,
+    /// the seed at `<dir>/seed`), minted once if absent, the same DID every life (rule 1).
+    pub fn load_as(dir: &Path, name: &str, kind: &str) -> std::io::Result<KernelSelf> {
         let path = dir.join("seed");
         let seed: Vec<u8> = if path.exists() {
             std::fs::read(&path)?
@@ -74,7 +81,9 @@ impl KernelSelf {
                 "the kernel's seed is not 32 bytes",
             )
         })?;
-        Ok(KernelSelf::from_seed(&seed, "kernel"))
+        let mut me = KernelSelf::from_seed(&seed, kind);
+        me.name = name.to_string();
+        Ok(me)
     }
 
     /// An ephemeral self — tests only, never a rig.

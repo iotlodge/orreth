@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the Config's bodies dial · 2026-09-24
 //! THE SHADOW PROOF OF MEMORY AND THE EXPORT (canon 0008, P7 sp5): two
 //! kernels on one ground — the Python reference and the Rust bridge — read
 //! ONE Record. A memory landed by the Rust kernel is recalled verbatim on
@@ -172,6 +173,9 @@ async fn shadow_two_kernels_read_one_record_and_sign_as_one_self() {
         glass: glass_path(),
         masters: String::new(),
         human_zone: "America/Denver".into(),
+        bodies: false, // beside the Python rig: its bodies serve
+        ephemeral: true,
+        spine: spine_dir(),
     })
     .await
     .expect("the Rust bridge lights");

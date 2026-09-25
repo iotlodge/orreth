@@ -40,3 +40,9 @@ axum = "0.7"
 tokio-stream = { version = "0.1", features = ["sync"] }
 qrcode = { version = "0.14", default-features = false }
 flate2 = "1"
+# P7 sp6 (orreth-spine, feature `bridge`): the bodies' seam — ureq (the blocking HTTP
+# client orrethd already wears) for the gateway's management doors, the canary and the
+# MCP servers over HTTP, run on tokio's blocking pool; libc for the SIGINT a governed
+# body is stopped with (stopped WHOLE, never killed first).
+ureq = { version = "2", features = ["json"] }
+libc = "0.2"

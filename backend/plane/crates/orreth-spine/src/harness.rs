@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the run OVER THE RAIL · the A/B arms · the Stable's four checks · 2026-09-24
 //! The harness's WORLD CHECKS — `orreth_spine.harness.checks` (walk #8; P6.5):
 //! laws the harness reads off the ground itself, no mind invoked — "a duty
 //! answered, not refused" (W21) · "the monitor's offers arrive as holds" (W22)
@@ -6,12 +7,19 @@
 //! initialize" · "the keeper proposes after strikes, never retires alone"
 //! (rule 11). A failed check is a wound named in words.
 //!
-//! The A/B RUN itself (`harness.run` — golden cases through a body's own
-//! graph, a failing run a fact on the rail) needs a body's mind; the bodies
-//! are Python's until the seam (P7 sp6) — `/harness/run` here answers 501 by
-//! name, and the kernel's scheduled run is left due for the Python kernel.
+//! The A/B RUN (`harness.run` — golden cases through a body's own graph, a
+//! failing run a fact on the rail) needs a body's mind: since P7 sp6 the
+//! kernel ASKS the body over the invoke rail (`orreth.resident.harness.v1`,
+//! the cases riding the command, the run recorded under the kernel's run id
+//! — `body::harness_payload`) and reads the run off the ground (`wait_run`);
+//! the door answers with the run, or 202 while it runs. P6.5 sp3's four Stable
+//! checks read here too: every mind answers · the gateway answers and holds
+//! every mind · the meter and the gateway agree · a model change is announced.
 
 use crate::ask::refused_words;
+use crate::body::{harness_payload, verdict, HARNESS_CMD, KERNEL};
+use crate::envelope::Mint;
+use crate::gateway::Gateway;
 use crate::ground::Ground;
 use crate::mcp::strikes_n;
 use crate::py::fold_ws;
@@ -19,8 +27,10 @@ use crate::schema::has_table;
 use crate::sessions::services_listing;
 use crate::watch::is_offer;
 use crate::world::{head, RoadError};
+use crate::world::{isoformat, json_text, refused, token_hex, World};
 use serde_json::{json, Value};
-use std::time::SystemTime;
+use std::path::PathBuf;
+use std::time::{Duration, SystemTime};
 
 fn plural(n: usize, word: &str) -> String {
     format!("{n} {word}{}", if n != 1 { "s" } else { "" })
@@ -286,13 +296,283 @@ pub async fn keeper_proposes(g: &Ground, scope: &str) -> Result<Value, RoadError
     )
 }
 
-/// Every world check, read off the ground — the harness door lists them.
-pub async fn checks(g: &Ground, scope: &str) -> Result<Vec<Value>, RoadError> {
+// ---- P6.5 sp3's four, ported P7 sp6: the Stable's health -------------------------------
+
+/// Every standing mind answered its canary at its LAST check (the keeper's beat).
+pub async fn minds_answer(g: &Ground, scope: &str) -> Result<Value, RoadError> {
+    let rows: Vec<Value> = services_listing(g, scope, Some("mind"))
+        .await?
+        .into_iter()
+        .filter(|r| r["state"] != json!("retired"))
+        .collect();
+    let silent = names_of(&rows, |r| r["last_health"]["ok"] == json!(false));
+    let unprobed = names_of(&rows, |r| r["last_health"].is_null());
+    let detail = if rows.is_empty() {
+        "no mind in the Stable".to_string()
+    } else {
+        let mut d = format!(
+            "{} of {} answered",
+            rows.len() - silent.len() - unprobed.len(),
+            rows.len()
+        );
+        if !silent.is_empty() {
+            d.push_str(&format!(" · silent: {}", silent.join(", ")));
+        }
+        if !unprobed.is_empty() {
+            d.push_str(&format!(" · never checked: {}", unprobed.join(", ")));
+        }
+        d
+    };
+    Ok(
+        json!({"name": "every mind answers", "ok": silent.is_empty() && unprobed.is_empty(), "detail": detail,
+              "silent": silent, "unprobed": unprobed}),
+    )
+}
+
+/// The gateway answers, and holds a model entry for every standing mind (a
+/// stall with a DEAL; the test lane's fake mind is never in the gateway).
+pub async fn gateway_holds(g: &Ground, scope: &str, gw: &Gateway) -> Result<Value, RoadError> {
+    let name = "the gateway answers and holds every mind";
+    let rows: Vec<Value> = services_listing(g, scope, Some("mind"))
+        .await?
+        .into_iter()
+        .filter(|r| r["state"] != json!("retired") && crate::py::truthy(&r["manifest"]["provider"]))
+        .collect();
+    if !gw.ready().await {
+        let missing: Vec<&str> = rows
+            .iter()
+            .map(|r| r["name"].as_str().unwrap_or_default())
+            .collect();
+        return Ok(json!({"name": name, "ok": rows.is_empty(),
+                         "detail": format!("the gateway at {} is dark{}", gw.base,
+                                           if rows.is_empty() { String::new() } else { format!(" — {} minds cannot think", rows.len()) }),
+                         "missing": missing}));
+    }
+    let held = match gw.models().await {
+        Ok(m) => m,
+        Err(e) => {
+            return Ok(json!({"name": name, "ok": false, "detail": e.to_string(), "missing": []}))
+        }
+    };
+    let missing = names_of(&rows, |r| {
+        !held.contains_key(r["name"].as_str().unwrap_or_default())
+    });
+    let mut detail = format!(
+        "the gateway answers · {} of {} minds held",
+        rows.len() - missing.len(),
+        rows.len()
+    );
+    if !missing.is_empty() {
+        detail.push_str(&format!(" · missing: {}", missing.join(", ")));
+    }
+    Ok(json!({"name": name, "ok": missing.is_empty(), "detail": detail, "missing": missing}))
+}
+
+/// The 100%: the meter's dollars against the gateway's ledger — within a tenth of a cent.
+pub async fn meter_agrees(g: &Ground, scope: &str, gw: &Gateway) -> Result<Value, RoadError> {
+    let r = crate::stable_live::reconcile(g, scope, Some(gw), 20, 30.0).await?;
+    let mismatched = r["mismatched"].as_array().cloned().unwrap_or_default();
+    Ok(
+        json!({"name": "the meter and the gateway agree", "ok": mismatched.is_empty(), "detail": r["words"],
+              "meter_usd": r["meter_usd"], "gateway_usd": r["gateway_usd"], "mismatched": mismatched}),
+    )
+}
+
+/// "Model changed without an announcement": every meter line that rode a
+/// mind other than the one asked for carries the why — a silent swap is a wound.
+pub async fn changes_announced(g: &Ground) -> Result<Value, RoadError> {
+    let name = "a model change is announced";
+    if !has_table(g, "spine_meter").await? {
+        return Ok(
+            json!({"name": name, "ok": true, "detail": "no thought metered yet", "silent": 0}),
+        );
+    }
+    let silent: i64 = g
+        .client()
+        .query_one(
+            "SELECT count(*) FROM spine_meter WHERE ok AND stall IS NOT NULL AND note IS NULL AND model <> stall \
+             AND at >= now() - interval '1 day'",
+            &[],
+        )
+        .await?
+        .get(0);
+    let confessed: i64 = g
+        .client()
+        .query_one(
+            "SELECT count(*) FROM spine_meter WHERE ok AND note IS NOT NULL AND at >= now() - interval '1 day'",
+            &[],
+        )
+        .await?
+        .get(0);
+    Ok(json!({"name": name, "ok": silent == 0,
+              "detail": format!("{confessed} confessed swap{} today{}", if confessed != 1 { "s" } else { "" },
+                                if silent > 0 { format!(" · {silent} SILENT") } else { " · none silent".to_string() }),
+              "silent": silent}))
+}
+
+/// Every world check, read off the ground — the harness door lists them (nine, as the reference's).
+pub async fn checks(g: &Ground, scope: &str, gw: &Gateway) -> Result<Vec<Value>, RoadError> {
     Ok(vec![
         duty_answered(g, scope).await?,
         offers_are_holds(g, scope, 5).await?,
         services_healthy(g, scope).await?,
         mcp_servers_answer(g, scope).await?,
         keeper_proposes(g, scope).await?,
+        minds_answer(g, scope).await?,
+        gateway_holds(g, scope, gw).await?,
+        meter_agrees(g, scope, gw).await?,
+        changes_announced(g).await?,
     ])
+}
+
+// ---- the run, over the rail (P7 sp6) ----------------------------------------------------------
+
+/// The spine home: `ORRETH_SPINE`, else the crate's `../../../../spine`.
+pub fn spine_dir() -> PathBuf {
+    std::env::var("ORRETH_SPINE")
+        .ok()
+        .filter(|p| !p.is_empty())
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../spine"))
+}
+
+/// `harness.golden`: a template's golden cases (`spine/golden/<template>.v0.json`), or none.
+pub fn golden(template: &str) -> Vec<Value> {
+    let p = spine_dir()
+        .join("golden")
+        .join(format!("{template}.v0.json"));
+    std::fs::read_to_string(p)
+        .ok()
+        .and_then(|t| serde_json::from_str::<Value>(&t).ok())
+        .and_then(|v| v.as_array().cloned())
+        .unwrap_or_default()
+}
+
+/// The kernel asks a body to run cases through its own graph — the command
+/// on the body's own bench; the run lands under `run_id`. A body not joined
+/// here is refused in words (the reference's 404).
+pub async fn run_over_rail(
+    g: &Ground,
+    w: &World,
+    template: &str,
+    cases: &[Value],
+    arm: Option<&str>,
+    parent_marker: Option<&str>,
+) -> Result<String, RoadError> {
+    if crate::services_live::did_of_body(g.client(), &w.scope, template)
+        .await?
+        .is_none()
+    {
+        return Err(refused("no such body"));
+    }
+    if let Some(a) = arm {
+        let s = crate::services_live::get(g.client(), &w.scope, a).await?;
+        if !s.is_some_and(|s| s["kind"] == json!("mind")) {
+            return Err(refused(format!(
+                "no mind named {} stands in the Stable — an arm is a mind by name",
+                crate::py::repr_str(a)
+            )));
+        }
+    }
+    let run_id = format!("run_{}", token_hex(5));
+    let e = Mint {
+        kind: "command".into(),
+        r#type: HARNESS_CMD.into(),
+        universe_id: w.scope.clone(),
+        scope_path: w.scope.clone(),
+        payload: harness_payload(&run_id, template, cases, arm, parent_marker),
+        correlation_id: Some(run_id.clone()),
+        authority_chain: Some(vec![KERNEL.to_string()]),
+        ..Default::default()
+    }
+    .mint()?;
+    crate::invoke::publish_command(&w.rabbit_url, &e, &w.ns).await?;
+    Ok(run_id)
+}
+
+/// The run's row as the reference's `harness.run` returns it, once it lands.
+pub async fn run_row(g: &Ground, run_id: &str) -> Result<Option<Value>, RoadError> {
+    Ok(g
+        .client()
+        .query_opt(
+            "SELECT run_id, template, version, passed, failed, details, ran_at, arm FROM spine_harness_runs WHERE \
+             run_id = $1",
+            &[&run_id],
+        )
+        .await?
+        .map(|r| {
+            json!({"run_id": r.get::<_, String>(0), "template": r.get::<_, String>(1), "version": r.get::<_, String>(2),
+                   "passed": r.get::<_, i32>(3), "failed": r.get::<_, i32>(4),
+                   "details": json_text(r.get::<_, Option<String>>(5).as_deref()).unwrap_or(json!([])),
+                   "ran_at": isoformat(r.get::<_, SystemTime>(6)), "arm": r.get::<_, Option<String>>(7)})
+        }))
+}
+
+/// Wait for a run to land, within a bound.
+pub async fn wait_run(
+    g: &Ground,
+    run_id: &str,
+    within: Duration,
+) -> Result<Option<Value>, RoadError> {
+    let end = tokio::time::Instant::now() + within;
+    loop {
+        if let Some(r) = run_row(g, run_id).await? {
+            return Ok(Some(r));
+        }
+        if tokio::time::Instant::now() >= end {
+            return Ok(None);
+        }
+        tokio::time::sleep(Duration::from_millis(300)).await;
+    }
+}
+
+/// `harness.ab`: the same golden cases against each named mind, one run each,
+/// over the rail; the verdict names the arm that passed most — a PROPOSAL for
+/// the human's cut, never an assignment made by the machine.
+pub async fn ab(
+    g: &Ground,
+    w: &World,
+    template: &str,
+    arms: &[String],
+    within: Duration,
+) -> Result<Value, RoadError> {
+    let cases = golden(template);
+    let mut runs = serde_json::Map::new();
+    for a in arms {
+        let rid = run_over_rail(g, w, template, &cases, Some(a), None).await?;
+        let row = wait_run(g, &rid, within).await?.ok_or_else(|| {
+            refused(format!("the {a} arm's run did not land within {} s — the body may be busy; the run id is {rid}", within.as_secs()))
+        })?;
+        runs.insert(
+            a.clone(),
+            json!({"run_id": rid, "passed": row["passed"], "failed": row["failed"]}),
+        );
+    }
+    let mut ranked: Vec<(&String, &Value)> = runs.iter().collect();
+    ranked.sort_by(|(an, av), (bn, bv)| {
+        bv["passed"]
+            .as_i64()
+            .cmp(&av["passed"].as_i64())
+            .then(an.cmp(bn))
+    });
+    let best = ranked.first().map(|(n, _)| (*n).clone());
+    let words: Vec<String> = arms
+        .iter()
+        .filter_map(|a| {
+            runs.get(a)
+                .map(|r| format!("{a}: {} passed, {} failed", r["passed"], r["failed"]))
+        })
+        .collect();
+    let mut sentence = format!(
+        "{template} over {} arms — {}",
+        arms.len(),
+        words.join(" · ")
+    );
+    if let Some(b) = &best {
+        sentence.push_str(&format!(
+            "; {b} did best — say \"assign {template} to {b}\" to make it so"
+        ));
+    }
+    let _ = verdict; // the shared law lives in `body::verdict`; the body applies it
+    Ok(json!({"template": template, "arms": runs, "best": best, "words": sentence}))
 }

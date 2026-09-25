@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the Config's bodies dial · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4: the Analyzer's two reads converge instead of racing a body still acquiring · 2026-09-23
 //! THE SHADOW PROOF of the ask road (canon 0008: fixture unchanged → SHADOW →
 //! the door), on the dev rig, by name:
@@ -185,6 +186,9 @@ async fn shadow_an_ask_through_the_rust_door_is_served_by_the_python_librarian_a
         glass: glass_path(),
         masters: String::new(),
         human_zone: "America/Denver".into(),
+        bodies: false, // beside the Python rig: its bodies serve
+        ephemeral: true,
+        spine: spine_dir(),
     })
     .await
     .expect("the Rust bridge lights");

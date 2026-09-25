@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: nine world checks compared; the harness run rides the rail · 2026-09-24
 //! THE SHADOW PROOF OF THE LOOPS (canon 0008: fixture unchanged → SHADOW → the
 //! door), on the dev rig, by name:
 //!
@@ -187,6 +188,9 @@ async fn shadow_two_kernels_beat_on_one_ground_one_beat_at_a_time() {
         glass: glass_path(),
         masters: String::new(),
         human_zone: "America/Denver".into(),
+        bodies: false, // beside the Python rig: its bodies serve (SPINE_BODIES=none)
+        ephemeral: true,
+        spine: spine_dir(),
     })
     .await
     .expect("the Rust bridge lights");
@@ -429,32 +433,45 @@ async fn shadow_two_kernels_beat_on_one_ground_one_beat_at_a_time() {
     let (s, hz) = get(rs_port, "/harness").await;
     assert_eq!(s, 200);
     let (_, hz_py) = get(py_port, "/harness").await;
-    // P6.5 sp3 grew the Python harness by the Stable's four checks (every mind answers · the
-    // gateway holds every mind · the meter and the gateway agree · a model change is announced);
-    // the Rust kernel reads the first five until P7 sp6 ports the Stable's seam — so the five
-    // are compared, and the Python door's four more are named, not hidden
+    // P7 sp6 ported the Stable's four checks (every mind answers · the gateway holds every mind ·
+    // the meter and the gateway agree · a model change is announced): NINE world checks, read
+    // off one ground and one gateway by both kernels — equal on both doors, name for name and
+    // verdict for verdict (the meter's words may differ by a "not yet flushed" count, so the
+    // eighth is compared by name and verdict alone)
     let py_checks = hz_py["checks"].as_array().unwrap();
-    assert_eq!(hz["checks"].as_array().unwrap().len(), 5);
-    assert_eq!(
-        hz["checks"].as_array().unwrap()[..],
-        py_checks[..5],
-        "the five world checks, equal on both doors"
-    );
-    assert_eq!(
-        py_checks.len(),
-        9,
-        "the Python door reads the Stable's four more (sp6 ports them)"
-    );
+    let rs_checks = hz["checks"].as_array().unwrap();
+    assert_eq!(rs_checks.len(), 9, "{hz}");
+    assert_eq!(py_checks.len(), 9, "{hz_py}");
+    for (i, (a, b)) in rs_checks.iter().zip(py_checks.iter()).enumerate() {
+        assert_eq!(a["name"], b["name"], "check {i}");
+        assert_eq!(
+            a["ok"], b["ok"],
+            "check {i} ({}) — Rust: {a} · Python: {b}",
+            a["name"]
+        );
+        if i != 7 {
+            assert_eq!(a["detail"], b["detail"], "check {i} ({})", a["name"]);
+        }
+    }
     assert_eq!(
         hz["checks"][0]["name"],
         json!("a duty answered, not refused")
     );
     assert_eq!(
-        post(rs_port, "/harness/run", json!({"template": "librarian"}))
-            .await
-            .0,
-        501
+        hz["checks"][8]["name"],
+        json!("a model change is announced")
     );
+    // the harness's run is the seam's (P7 sp6): this kernel seats no bodies here (SPINE_BODIES=none
+    // — the Python rig's serve), so the run rides the rail to a Python body and lands on the ground
+    let (s, run) = post(rs_port, "/harness/run", json!({"template": "librarian"})).await;
+    assert!(s == 200 || s == 202, "the run over the rail: {s} {run}");
+    if s == 200 {
+        assert_eq!(run["template"], json!("librarian"));
+        assert!(
+            run["passed"].as_i64().unwrap_or(-1) + run["failed"].as_i64().unwrap_or(-1) >= 0,
+            "{run}"
+        );
+    }
     assert_eq!(
         get(rs_port, "/intentions").await.1,
         get(py_port, "/intentions").await.1,

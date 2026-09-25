@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the kernel's harness duty runs over the rail · 2026-09-24
 //! The scheduler — a kernel organ (`orreth_spine.scheduler`; canon 0004:
 //! three schedulers, one body). A SCHEDULE is a standing intention on the
 //! ground: HUMAN (the identity's, CRUD through the door), ROLE (declared by a
@@ -10,10 +11,10 @@
 //! deletion (rule 11).
 //!
 //! The tick runs under the scheduler BEAT (the beat lock): two kernels on one
-//! ground never tick one world at once. What this bridge cannot run it leaves
-//! due: the kernel's "run the harness" duty needs a body's mind, and the
-//! bodies are Python's until the seam (P7 sp6) — the Python kernel's next
-//! beat runs it.
+//! ground never tick one world at once. The kernel's "run the harness" duty
+//! (P7 sp6) ASKS the runner over the invoke rail (`harness::run_over_rail`)
+//! — the run lands as the occurrence's ref; a runner not joined here leaves
+//! the duty due for the kernel that holds it.
 
 use crate::ask::duty_text;
 use crate::asks::{self, Submit};
@@ -276,25 +277,34 @@ async fn tick_inner(g: &mut Ground, w: &World, zone: &str) -> Result<Vec<Value>,
         .collect();
     let mut occurred = Vec::new();
     for (sid, runner, kind, text, every_s, by, marker, last_at) in due {
-        if kind == "kernel" && text.starts_with("run the harness") {
-            continue; // a mind's run: left due for the kernel that holds the bodies
-        }
-        let since = clock(g, last_at, zone).await?;
-        let notes = notes_for(g, &sid, 3).await?;
-        let framed = duty_text(&text, every_s as i64, since.as_deref(), &notes);
-        let filed = asks::submit_ask(
-            g,
-            w,
-            Submit {
-                text: framed,
-                person: by.clone(),
-                to: Some(vec![runner.clone()]),
-                parent_marker: marker.clone(),
-                ..Default::default()
-            },
-        )
-        .await?;
-        let r#ref = filed.ids().into_iter().next();
+        let r#ref: Option<String> = if kind == "kernel" && text.starts_with("run the harness") {
+            // P7 sp6: the run asked of the body over the rail — an OBSERVATION under the intention
+            let cases = crate::harness::golden(&runner);
+            match crate::harness::run_over_rail(g, w, &runner, &cases, None, marker.as_deref())
+                .await
+            {
+                Ok(rid) => Some(rid),
+                Err(RoadError::Refused(_)) => continue, // the runner is not here: left due for the kernel that holds it
+                Err(e) => return Err(e),
+            }
+        } else {
+            let since = clock(g, last_at, zone).await?;
+            let notes = notes_for(g, &sid, 3).await?;
+            let framed = duty_text(&text, every_s as i64, since.as_deref(), &notes);
+            let filed = asks::submit_ask(
+                g,
+                w,
+                Submit {
+                    text: framed,
+                    person: by.clone(),
+                    to: Some(vec![runner.clone()]),
+                    parent_marker: marker.clone(),
+                    ..Default::default()
+                },
+            )
+            .await?;
+            filed.ids().into_iter().next()
+        };
         let oid = format!("occ_{}", token_hex(5));
         let every = every_s as f64;
         let tx = g.client_mut().transaction().await?;

@@ -32,7 +32,7 @@ pub const DDL_LOCK: i64 = 742199;
 /// The tags this spine ensures at birth (the Python spine ensures more —
 /// its `ground.TAGS`; the Rust spine grows its list spoonful by spoonful —
 /// sp3 added the ask road's six, sp4 the loops' three).
-pub const TAGS: [&str; 13] = [
+pub const TAGS: [&str; 16] = [
     "outbox",
     "inbox",
     "heartbeat",
@@ -46,6 +46,9 @@ pub const TAGS: [&str; 13] = [
     "monitor",
     "scheduler",
     "harness",
+    "services",
+    "stable",
+    "gateway",
 ];
 
 static GROUNDS_DONE: OnceLock<Mutex<HashMap<String, HashSet<String>>>> = OnceLock::new();

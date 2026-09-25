@@ -1439,6 +1439,9 @@ function workspaceWords(text){
 async function loadCrew(){
   const r = await fetch("/crew").then(x=>x.json()).catch(()=>null);
   if (!r) return;
+  // P7 sp6: the bodies this kernel seats as processes — where each stands (alive · restarting · PARKED · refused)
+  const bd = await fetch("/bodies").then(x=>x.json()).catch(()=>null);
+  const PROC = {}; if (bd && bd.mode === "crew") for (const b of bd.bodies) PROC[b.name] = b;
   const box = document.getElementById("cards"); const keep = box.scrollTop;
   box.innerHTML = "";
   for (const c of r.crew){
@@ -1471,6 +1474,9 @@ async function loadCrew(){
     d.innerHTML =
       `<h5>${esc(c.name)} <span class="meta">· ${esc(c.kind)} · life ${c.lives}</span></h5>` +
       `<div class="meta">self …${esc(c.did.slice(-8))} · wearing covenant v${esc(c.policy_version)} · template ${esc(c.template)}</div>` +
+      (PROC[c.name] ? `<div class="meta ${/parked|refused/.test(PROC[c.name].state) ? "bad" : ""}">process: ${PROC[c.name].state === "alive" ? `alive · life ${PROC[c.name].lives} · pid ${PROC[c.name].pid}` :
+                        PROC[c.name].state === "restarting" ? esc(PROC[c.name].words) :
+                        /parked|refused/.test(PROC[c.name].state) ? `<b>${PROC[c.name].state.toUpperCase()}</b> — ${esc(PROC[c.name].words)}` : esc(PROC[c.name].state)}</div>` : "") +   // P7 sp6: the kernel's own eyes on the body it spawned
       (c.mind ? `<div class="meta">LLM: ${c.mind.stall ? `<b>${esc(c.mind.stall)}</b> · ${esc(c.mind.route || "")}${c.mind.klass ? " · " + esc(c.mind.klass) : ""}` : "<b>none can serve</b>"}` +
                 ` — ${esc(c.mind.why || "")}` + (c.mind.last ? ` · last thought rode ${esc(c.mind.last.stall)}${c.mind.last.usd != null ? " ($" + Number(c.mind.last.usd).toFixed(4) + ")" : ""}${c.mind.last.ok === false ? " · could not think" : ""}` : "") + `</div>` : "") +   // P6.5 sp3 (walk #12): which mind, and why
       stands + `<div>${caps}</div>` +
@@ -1661,6 +1667,15 @@ async function serviceWords(text){                 // "what services are here?" 
   if (m){
     el("msg mine", esc(text));
     if (m[1] === "retire") await retireService(m[2], m[3]); else await restoreService(m[2], m[3]);
+    return true;
+  }
+  m = t.match(/^(?:restart|revive|start)\s+(?:the\s+)?([a-z0-9_-]+)\s+body(?:\s+again)?$/);   // P7 sp6: the human's lever on a parked body
+  if (m){
+    el("msg mine", esc(text));
+    const r = await fetch("/bodies/restart", {method:"POST", headers:{"content-type":"application/json"},
+      body: JSON.stringify({name: m[1]})}).then(x=>x.json()).catch(()=>null);
+    sysline(!r ? "the bodies' door did not answer" : r.error ? esc(r.error) : esc(r.words || "restarting"));
+    if (r && r.restarting) setTimeout(loadCrew, 4000);
     return true;
   }
   m = t.match(/^(?:check|probe)\s+(?:the\s+)?(services|tools|minds|stores|sources|mcps|shelf)$/);

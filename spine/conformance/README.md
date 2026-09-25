@@ -187,3 +187,16 @@ the same files, unchanged — before any module earns the word "ported".
     deterministic: the same bytes, the same signature); the verifier's yes and its
     two refusals (a forged signature; a signer whose DID is not its key's); the DID
     of a kernel, an agent, a service from one public key.
+  - `backoff` · `park_rule` · `parked_words` · `parked_fact` (bodies-v0, P7 sp6) — the
+    kernel governs the bodies it spawns: the wait before the n-th restart (1 s, doubling,
+    capped at 30); the PARK law (`input.exits` ISO times · `input.now` · `input.window_s`
+    · `input.strikes` → `expect.parked` · `deaths` inside the window · `wait_s`); the plain
+    words of a parked body with the human's lever ("Say “restart the <name> body” to try
+    again"); the `orreth.body.parked.v1` payload and bytes for a fixed id and clock (the
+    last words cut at 600, the kernel's chain, the body's name as correlation).
+  - `harness_verdict` · `harness_command` (bodies-v0, P7 sp6) — the run over the rail: a
+    case passes when every expected word is in the reply, case folded (the details keep
+    the reply's first 300 characters; the marker's note "harness: N passed, M failed");
+    the kernel's ask of a body, `orreth.resident.harness.v1` — the run id as ref, the
+    cases' hash, the target (the body's own bench), the cases whole, the arm and the
+    parent marker only when given, the kernel's chain — for a fixed id and clock.

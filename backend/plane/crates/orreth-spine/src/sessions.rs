@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE door · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the crew card's LLM line for the bodies this kernel seats · 2026-09-24
 //! The human's worldlines and the roster's reads — mirrors the session,
 //! resident, crew and shelf views of `orreth_spine.glass` (P20 · canon 0004)
 //! and the reads of `presence` · `placement` · `services` they stand on:
@@ -261,7 +262,11 @@ fn refused_card(r: &crate::asks::Refusal, nature: Option<&str>) -> Value {
 
 /// The Crew workspace's door: one card per body in this world — who it is,
 /// what it wears, what it declared, and BOTH SIDES (canon 0004).
-pub async fn crew_view(g: &Ground, scope: &str) -> Result<Vec<Value>, RoadError> {
+pub async fn crew_view(
+    g: &Ground,
+    scope: &str,
+    templates: Option<&std::collections::HashMap<String, Value>>,
+) -> Result<Vec<Value>, RoadError> {
     let rows = g
         .client()
         .query(
@@ -295,7 +300,14 @@ pub async fn crew_view(g: &Ground, scope: &str) -> Result<Vec<Value>, RoadError>
                 continue;
             }
         }
+        // P6.5 sp3 (walk #12, W43): which LLM this body thinks with, and why — when this
+        // kernel seats the body (its template is known); else null, as the reference's
+        let mind = match templates.and_then(|t| t.get(&name)) {
+            Some(t) => crate::stable_live::mind_line(g, scope, &name, &did, Some(t)).await?,
+            None => None,
+        };
         cards.push(json!({
+            "mind": mind,
             "name": name, "kind": r.get::<_, String>(1), "did": did, "lives": r.get::<_, i32>(3),
             "nature": nature.unwrap_or_default(), "joined_at": isoformat(joined),
             "policy_version": r.get::<_, String>(5), "alive": alive.get(&did).copied(),

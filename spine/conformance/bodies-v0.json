@@ -1,0 +1,795 @@
+{
+ "contract": "orreth.bodies/1",
+ "version": 0,
+ "generated_by": "orreth_spine.body + orreth_spine.harness (Python reference), canon 0008 \u00b7 P7 sp6",
+ "generated_at": "2026-09-24",
+ "cases": [
+  {
+   "name": "backoff: death 0",
+   "kind": "backoff",
+   "input": {
+    "deaths": 0
+   },
+   "expect": {
+    "wait_s": 0.0
+   }
+  },
+  {
+   "name": "backoff: death 1",
+   "kind": "backoff",
+   "input": {
+    "deaths": 1
+   },
+   "expect": {
+    "wait_s": 1.0
+   }
+  },
+  {
+   "name": "backoff: death 2",
+   "kind": "backoff",
+   "input": {
+    "deaths": 2
+   },
+   "expect": {
+    "wait_s": 2.0
+   }
+  },
+  {
+   "name": "backoff: death 3",
+   "kind": "backoff",
+   "input": {
+    "deaths": 3
+   },
+   "expect": {
+    "wait_s": 4.0
+   }
+  },
+  {
+   "name": "backoff: death 4",
+   "kind": "backoff",
+   "input": {
+    "deaths": 4
+   },
+   "expect": {
+    "wait_s": 8.0
+   }
+  },
+  {
+   "name": "backoff: death 5",
+   "kind": "backoff",
+   "input": {
+    "deaths": 5
+   },
+   "expect": {
+    "wait_s": 16.0
+   }
+  },
+  {
+   "name": "backoff: death 6",
+   "kind": "backoff",
+   "input": {
+    "deaths": 6
+   },
+   "expect": {
+    "wait_s": 30.0
+   }
+  },
+  {
+   "name": "backoff: death 9",
+   "kind": "backoff",
+   "input": {
+    "deaths": 9
+   },
+   "expect": {
+    "wait_s": 30.0
+   }
+  },
+  {
+   "name": "park_rule: no deaths",
+   "kind": "park_rule",
+   "input": {
+    "exits": [],
+    "now": "2026-09-24T18:00:00+00:00",
+    "window_s": 300,
+    "strikes": 3
+   },
+   "expect": {
+    "parked": false,
+    "deaths": 0,
+    "wait_s": 0.0
+   }
+  },
+  {
+   "name": "park_rule: one death just now",
+   "kind": "park_rule",
+   "input": {
+    "exits": [
+     "2026-09-24T18:00:00+00:00"
+    ],
+    "now": "2026-09-24T18:00:00+00:00",
+    "window_s": 300,
+    "strikes": 3
+   },
+   "expect": {
+    "parked": false,
+    "deaths": 1,
+    "wait_s": 1.0
+   }
+  },
+  {
+   "name": "park_rule: two deaths inside the window",
+   "kind": "park_rule",
+   "input": {
+    "exits": [
+     "2026-09-24T17:56:00+00:00",
+     "2026-09-24T17:59:00+00:00"
+    ],
+    "now": "2026-09-24T18:00:00+00:00",
+    "window_s": 300,
+    "strikes": 3
+   },
+   "expect": {
+    "parked": false,
+    "deaths": 2,
+    "wait_s": 2.0
+   }
+  },
+  {
+   "name": "park_rule: three deaths inside the window: parked",
+   "kind": "park_rule",
+   "input": {
+    "exits": [
+     "2026-09-24T17:56:00+00:00",
+     "2026-09-24T17:58:00+00:00",
+     "2026-09-24T18:00:00+00:00"
+    ],
+    "now": "2026-09-24T18:00:00+00:00",
+    "window_s": 300,
+    "strikes": 3
+   },
+   "expect": {
+    "parked": true,
+    "deaths": 3,
+    "wait_s": null
+   }
+  },
+  {
+   "name": "park_rule: three deaths, one outside the window",
+   "kind": "park_rule",
+   "input": {
+    "exits": [
+     "2026-09-24T17:54:00+00:00",
+     "2026-09-24T17:58:00+00:00",
+     "2026-09-24T18:00:00+00:00"
+    ],
+    "now": "2026-09-24T18:00:00+00:00",
+    "window_s": 300,
+    "strikes": 3
+   },
+   "expect": {
+    "parked": false,
+    "deaths": 2,
+    "wait_s": 2.0
+   }
+  },
+  {
+   "name": "park_rule: an old death is forgotten",
+   "kind": "park_rule",
+   "input": {
+    "exits": [
+     "2026-09-24T16:00:00+00:00",
+     "2026-09-24T16:30:00+00:00"
+    ],
+    "now": "2026-09-24T18:00:00+00:00",
+    "window_s": 300,
+    "strikes": 3
+   },
+   "expect": {
+    "parked": false,
+    "deaths": 0,
+    "wait_s": 0.0
+   }
+  },
+  {
+   "name": "park_rule: a Z-suffixed clock reads the same",
+   "kind": "park_rule",
+   "input": {
+    "exits": [
+     "2026-09-24T17:59:00Z",
+     "2026-09-24T17:58:00Z"
+    ],
+    "now": "2026-09-24T18:00:00+00:00",
+    "window_s": 300,
+    "strikes": 3
+   },
+   "expect": {
+    "parked": false,
+    "deaths": 2,
+    "wait_s": 2.0
+   }
+  },
+  {
+   "name": "park_rule: one strike parks at once",
+   "kind": "park_rule",
+   "input": {
+    "exits": [
+     "2026-09-24T18:00:00+00:00"
+    ],
+    "now": "2026-09-24T18:00:00+00:00",
+    "window_s": 300,
+    "strikes": 1
+   },
+   "expect": {
+    "parked": true,
+    "deaths": 1,
+    "wait_s": null
+   }
+  },
+  {
+   "name": "park_rule: deaths on the window's edge count",
+   "kind": "park_rule",
+   "input": {
+    "exits": [
+     "2026-09-24T17:55:00+00:00"
+    ],
+    "now": "2026-09-24T18:00:00+00:00",
+    "window_s": 300,
+    "strikes": 3
+   },
+   "expect": {
+    "parked": false,
+    "deaths": 1,
+    "wait_s": 1.0
+   }
+  },
+  {
+   "name": "parked_words: librarian x3",
+   "kind": "parked_words",
+   "input": {
+    "name": "librarian",
+    "deaths": 3,
+    "window_s": 300,
+    "last_words": "Traceback (most recent call last):\n  File x.py, line 1\nKeyError: 'mind'"
+   },
+   "expect": {
+    "words": "librarian is PARKED \u2014 it died 3 times in 5 minutes, so the kernel stopped restarting it. Its last words: \u201cTraceback (most recent call last): File x.py, line 1 KeyError: 'mind'\u201d. Nothing is deleted: its seat, its self and its record stand. Say \u201crestart the librarian body\u201d to try again."
+   }
+  },
+  {
+   "name": "parked_words: echo x3",
+   "kind": "parked_words",
+   "input": {
+    "name": "echo",
+    "deaths": 3,
+    "window_s": 60,
+    "last_words": null
+   },
+   "expect": {
+    "words": "echo is PARKED \u2014 it died 3 times in 1 minute, so the kernel stopped restarting it. It left no words. Nothing is deleted: its seat, its self and its record stand. Say \u201crestart the echo body\u201d to try again."
+   }
+  },
+  {
+   "name": "parked_words: monitor x5",
+   "kind": "parked_words",
+   "input": {
+    "name": "monitor",
+    "deaths": 5,
+    "window_s": 3600,
+    "last_words": "  killed   by a signal  "
+   },
+   "expect": {
+    "words": "monitor is PARKED \u2014 it died 5 times in 1 hour, so the kernel stopped restarting it. Its last words: \u201ckilled by a signal\u201d. Nothing is deleted: its seat, its self and its record stand. Say \u201crestart the monitor body\u201d to try again."
+   }
+  },
+  {
+   "name": "parked_words: planner x1",
+   "kind": "parked_words",
+   "input": {
+    "name": "planner",
+    "deaths": 1,
+    "window_s": 90,
+    "last_words": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   },
+   "expect": {
+    "words": "planner is PARKED \u2014 it died 1 time in 90 seconds, so the kernel stopped restarting it. Its last words: \u201cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u201d. Nothing is deleted: its seat, its self and its record stand. Say \u201crestart the planner body\u201d to try again."
+   }
+  },
+  {
+   "name": "harness_verdict: both pass",
+   "kind": "harness_verdict",
+   "input": {
+    "cases": [
+     {
+      "ask": "Repeat exactly this word and nothing else: PELICAN",
+      "expect": [
+       "PELICAN"
+      ]
+     },
+     {
+      "ask": "In one sentence, who are you?",
+      "expect": [
+       "librarian"
+      ]
+     }
+    ],
+    "replies": [
+     "PELICAN",
+     "I am the librarian, a keeper of what this world knows."
+    ]
+   },
+   "expect": {
+    "passed": 2,
+    "failed": 0,
+    "details": [
+     {
+      "ask": "Repeat exactly this word and nothing else: PELICAN",
+      "expect": [
+       "PELICAN"
+      ],
+      "reply": "PELICAN",
+      "ok": true
+     },
+     {
+      "ask": "In one sentence, who are you?",
+      "expect": [
+       "librarian"
+      ],
+      "reply": "I am the librarian, a keeper of what this world knows.",
+      "ok": true
+     }
+    ],
+    "note": "harness: 2 passed, 0 failed"
+   }
+  },
+  {
+   "name": "harness_verdict: case folded",
+   "kind": "harness_verdict",
+   "input": {
+    "cases": [
+     {
+      "ask": "Repeat exactly this word and nothing else: PELICAN",
+      "expect": [
+       "PELICAN"
+      ]
+     },
+     {
+      "ask": "In one sentence, who are you?",
+      "expect": [
+       "librarian"
+      ]
+     }
+    ],
+    "replies": [
+     "pelican.",
+     "the LIBRARIAN here"
+    ]
+   },
+   "expect": {
+    "passed": 2,
+    "failed": 0,
+    "details": [
+     {
+      "ask": "Repeat exactly this word and nothing else: PELICAN",
+      "expect": [
+       "PELICAN"
+      ],
+      "reply": "pelican.",
+      "ok": true
+     },
+     {
+      "ask": "In one sentence, who are you?",
+      "expect": [
+       "librarian"
+      ],
+      "reply": "the LIBRARIAN here",
+      "ok": true
+     }
+    ],
+    "note": "harness: 2 passed, 0 failed"
+   }
+  },
+  {
+   "name": "harness_verdict: one fails",
+   "kind": "harness_verdict",
+   "input": {
+    "cases": [
+     {
+      "ask": "Repeat exactly this word and nothing else: PELICAN",
+      "expect": [
+       "PELICAN"
+      ]
+     },
+     {
+      "ask": "In one sentence, who are you?",
+      "expect": [
+       "librarian"
+      ]
+     }
+    ],
+    "replies": [
+     "PELICAN",
+     "I am echo."
+    ]
+   },
+   "expect": {
+    "passed": 1,
+    "failed": 1,
+    "details": [
+     {
+      "ask": "Repeat exactly this word and nothing else: PELICAN",
+      "expect": [
+       "PELICAN"
+      ],
+      "reply": "PELICAN",
+      "ok": true
+     },
+     {
+      "ask": "In one sentence, who are you?",
+      "expect": [
+       "librarian"
+      ],
+      "reply": "I am echo.",
+      "ok": false
+     }
+    ],
+    "note": "harness: 1 passed, 1 failed"
+   }
+  },
+  {
+   "name": "harness_verdict: an empty reply fails",
+   "kind": "harness_verdict",
+   "input": {
+    "cases": [
+     {
+      "ask": "Repeat exactly this word and nothing else: PELICAN",
+      "expect": [
+       "PELICAN"
+      ]
+     },
+     {
+      "ask": "In one sentence, who are you?",
+      "expect": [
+       "librarian"
+      ]
+     }
+    ],
+    "replies": [
+     "",
+     null
+    ]
+   },
+   "expect": {
+    "passed": 0,
+    "failed": 2,
+    "details": [
+     {
+      "ask": "Repeat exactly this word and nothing else: PELICAN",
+      "expect": [
+       "PELICAN"
+      ],
+      "reply": "",
+      "ok": false
+     },
+     {
+      "ask": "In one sentence, who are you?",
+      "expect": [
+       "librarian"
+      ],
+      "reply": "",
+      "ok": false
+     }
+    ],
+    "note": "harness: 0 passed, 2 failed"
+   }
+  },
+  {
+   "name": "harness_verdict: a long reply is cut at 300",
+   "kind": "harness_verdict",
+   "input": {
+    "cases": [
+     {
+      "ask": "say a lot",
+      "expect": [
+       "ok"
+      ]
+     }
+    ],
+    "replies": [
+     "ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok "
+    ]
+   },
+   "expect": {
+    "passed": 1,
+    "failed": 0,
+    "details": [
+     {
+      "ask": "say a lot",
+      "expect": [
+       "ok"
+      ],
+      "reply": "ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ok ",
+      "ok": true
+     }
+    ],
+    "note": "harness: 1 passed, 0 failed"
+   }
+  },
+  {
+   "name": "harness_verdict: no expectation passes",
+   "kind": "harness_verdict",
+   "input": {
+    "cases": [
+     {
+      "ask": "anything"
+     }
+    ],
+    "replies": [
+     "whatever"
+    ]
+   },
+   "expect": {
+    "passed": 1,
+    "failed": 0,
+    "details": [
+     {
+      "ask": "anything",
+      "expect": [],
+      "reply": "whatever",
+      "ok": true
+     }
+    ],
+    "note": "harness: 1 passed, 0 failed"
+   }
+  },
+  {
+   "name": "harness_verdict: no cases",
+   "kind": "harness_verdict",
+   "input": {
+    "cases": [],
+    "replies": []
+   },
+   "expect": {
+    "passed": 0,
+    "failed": 0,
+    "details": [],
+    "note": "harness: 0 passed, 0 failed"
+   }
+  },
+  {
+   "name": "harness_command: the librarian's golden set",
+   "kind": "harness_command",
+   "input": {
+    "run_id": "run_a1b2c3d4e5",
+    "target": "librarian",
+    "cases": [
+     {
+      "ask": "Repeat exactly this word and nothing else: PELICAN",
+      "expect": [
+       "PELICAN"
+      ]
+     },
+     {
+      "ask": "In one sentence, who are you?",
+      "expect": [
+       "librarian"
+      ]
+     }
+    ],
+    "arm": null,
+    "parent_marker": null,
+    "scope": "u:fixture",
+    "message_id": "cmd_abababababababababababab",
+    "occurred_at": "2026-09-24T18:00:00.000Z"
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"run_a1b2c3d4e5\",\"message_id\":\"cmd_abababababababababababab\",\"message_kind\":\"command\",\"occurred_at\":\"2026-09-24T18:00:00.000Z\",\"payload\":{\"cases\":[{\"ask\":\"Repeat exactly this word and nothing else: PELICAN\",\"expect\":[\"PELICAN\"]},{\"ask\":\"In one sentence, who are you?\",\"expect\":[\"librarian\"]}],\"hash\":\"sha256:fae646389cbf0c0ef1bb2f1bdf158bcd10db4e2356b6e86810e31ff4dff5d453\",\"ref\":\"run_a1b2c3d4e5\",\"target\":\"librarian\"},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.resident.harness.v1\",\"universe_id\":\"u:fixture\"}",
+    "payload": {
+     "ref": "run_a1b2c3d4e5",
+     "hash": "sha256:fae646389cbf0c0ef1bb2f1bdf158bcd10db4e2356b6e86810e31ff4dff5d453",
+     "target": "librarian",
+     "cases": [
+      {
+       "ask": "Repeat exactly this word and nothing else: PELICAN",
+       "expect": [
+        "PELICAN"
+       ]
+      },
+      {
+       "ask": "In one sentence, who are you?",
+       "expect": [
+        "librarian"
+       ]
+      }
+     ]
+    },
+    "type": "orreth.resident.harness.v1",
+    "queue_target": "librarian",
+    "correlation_id": "run_a1b2c3d4e5",
+    "chain": [
+     "the kernel"
+    ]
+   }
+  },
+  {
+   "name": "harness_command: an arm pinned, under a marker",
+   "kind": "harness_command",
+   "input": {
+    "run_id": "run_0102030405",
+    "target": "librarian",
+    "cases": [
+     {
+      "ask": "Repeat exactly this word and nothing else: PELICAN",
+      "expect": [
+       "PELICAN"
+      ]
+     },
+     {
+      "ask": "In one sentence, who are you?",
+      "expect": [
+       "librarian"
+      ]
+     }
+    ],
+    "arm": "haiku",
+    "parent_marker": "mk_0f0f0f0f0f0f",
+    "scope": "u:fixture",
+    "message_id": "cmd_abababababababababababab",
+    "occurred_at": "2026-09-24T18:00:00.000Z"
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"run_0102030405\",\"message_id\":\"cmd_abababababababababababab\",\"message_kind\":\"command\",\"occurred_at\":\"2026-09-24T18:00:00.000Z\",\"payload\":{\"arm\":\"haiku\",\"cases\":[{\"ask\":\"Repeat exactly this word and nothing else: PELICAN\",\"expect\":[\"PELICAN\"]},{\"ask\":\"In one sentence, who are you?\",\"expect\":[\"librarian\"]}],\"hash\":\"sha256:fae646389cbf0c0ef1bb2f1bdf158bcd10db4e2356b6e86810e31ff4dff5d453\",\"parent_marker\":\"mk_0f0f0f0f0f0f\",\"ref\":\"run_0102030405\",\"target\":\"librarian\"},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.resident.harness.v1\",\"universe_id\":\"u:fixture\"}",
+    "payload": {
+     "ref": "run_0102030405",
+     "hash": "sha256:fae646389cbf0c0ef1bb2f1bdf158bcd10db4e2356b6e86810e31ff4dff5d453",
+     "target": "librarian",
+     "cases": [
+      {
+       "ask": "Repeat exactly this word and nothing else: PELICAN",
+       "expect": [
+        "PELICAN"
+       ]
+      },
+      {
+       "ask": "In one sentence, who are you?",
+       "expect": [
+        "librarian"
+       ]
+      }
+     ],
+     "arm": "haiku",
+     "parent_marker": "mk_0f0f0f0f0f0f"
+    },
+    "type": "orreth.resident.harness.v1",
+    "queue_target": "librarian",
+    "correlation_id": "run_0102030405",
+    "chain": [
+     "the kernel"
+    ]
+   }
+  },
+  {
+   "name": "harness_command: one case, no expectation",
+   "kind": "harness_command",
+   "input": {
+    "run_id": "run_ffffffffff",
+    "target": "echo",
+    "cases": [
+     {
+      "ask": "say HERON"
+     }
+    ],
+    "arm": null,
+    "parent_marker": null,
+    "scope": "u:fixture",
+    "message_id": "cmd_abababababababababababab",
+    "occurred_at": "2026-09-24T18:00:00.000Z"
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"run_ffffffffff\",\"message_id\":\"cmd_abababababababababababab\",\"message_kind\":\"command\",\"occurred_at\":\"2026-09-24T18:00:00.000Z\",\"payload\":{\"cases\":[{\"ask\":\"say HERON\"}],\"hash\":\"sha256:5ad1bec00470ca6956de1476a65013c14ab46505c2c7f87c024ef3ad1d07b975\",\"ref\":\"run_ffffffffff\",\"target\":\"echo\"},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.resident.harness.v1\",\"universe_id\":\"u:fixture\"}",
+    "payload": {
+     "ref": "run_ffffffffff",
+     "hash": "sha256:5ad1bec00470ca6956de1476a65013c14ab46505c2c7f87c024ef3ad1d07b975",
+     "target": "echo",
+     "cases": [
+      {
+       "ask": "say HERON"
+      }
+     ]
+    },
+    "type": "orreth.resident.harness.v1",
+    "queue_target": "echo",
+    "correlation_id": "run_ffffffffff",
+    "chain": [
+     "the kernel"
+    ]
+   }
+  },
+  {
+   "name": "parked_fact: the librarian, three deaths",
+   "kind": "parked_fact",
+   "input": {
+    "name": "librarian",
+    "did": "did:orreth:agent:0123456789abcdef0123456789abcdef",
+    "deaths": 3,
+    "window_s": 300,
+    "last_words": "KeyError: 'mind'",
+    "scope": "u:fixture",
+    "message_id": "msg_cdcdcdcdcdcdcdcdcdcdcdcd",
+    "occurred_at": "2026-09-24T18:00:00.000Z"
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"librarian\",\"message_id\":\"msg_cdcdcdcdcdcdcdcdcdcdcdcd\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-24T18:00:00.000Z\",\"payload\":{\"deaths\":3,\"did\":\"did:orreth:agent:0123456789abcdef0123456789abcdef\",\"hash\":\"sha256:8ca5ab9f7a75998275739ad9feea7d7380d3c596c3eb32dd279de814f08f134f\",\"last_words\":\"KeyError: 'mind'\",\"ref\":\"librarian\",\"window_s\":300},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.body.parked.v1\",\"universe_id\":\"u:fixture\"}",
+    "payload": {
+     "ref": "librarian",
+     "hash": "sha256:8ca5ab9f7a75998275739ad9feea7d7380d3c596c3eb32dd279de814f08f134f",
+     "did": "did:orreth:agent:0123456789abcdef0123456789abcdef",
+     "deaths": 3,
+     "window_s": 300,
+     "last_words": "KeyError: 'mind'"
+    },
+    "type": "orreth.body.parked.v1",
+    "chain": [
+     "the kernel"
+    ]
+   }
+  },
+  {
+   "name": "parked_fact: a body with no self yet",
+   "kind": "parked_fact",
+   "input": {
+    "name": "echo",
+    "did": null,
+    "deaths": 3,
+    "window_s": 300,
+    "last_words": null,
+    "scope": "u:fixture",
+    "message_id": "msg_cdcdcdcdcdcdcdcdcdcdcdcd",
+    "occurred_at": "2026-09-24T18:00:00.000Z"
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"echo\",\"message_id\":\"msg_cdcdcdcdcdcdcdcdcdcdcdcd\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-24T18:00:00.000Z\",\"payload\":{\"deaths\":3,\"did\":null,\"hash\":\"sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126\",\"last_words\":\"\",\"ref\":\"echo\",\"window_s\":300},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.body.parked.v1\",\"universe_id\":\"u:fixture\"}",
+    "payload": {
+     "ref": "echo",
+     "hash": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+     "did": null,
+     "deaths": 3,
+     "window_s": 300,
+     "last_words": ""
+    },
+    "type": "orreth.body.parked.v1",
+    "chain": [
+     "the kernel"
+    ]
+   }
+  },
+  {
+   "name": "parked_fact: long last words are cut at 600",
+   "kind": "parked_fact",
+   "input": {
+    "name": "monitor",
+    "did": "did:orreth:agent:ffffffffffffffffffffffffffffffff",
+    "deaths": 4,
+    "window_s": 600,
+    "last_words": "e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e ",
+    "scope": "u:fixture",
+    "message_id": "msg_cdcdcdcdcdcdcdcdcdcdcdcd",
+    "occurred_at": "2026-09-24T18:00:00.000Z"
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"monitor\",\"message_id\":\"msg_cdcdcdcdcdcdcdcdcdcdcdcd\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-24T18:00:00.000Z\",\"payload\":{\"deaths\":4,\"did\":\"did:orreth:agent:ffffffffffffffffffffffffffffffff\",\"hash\":\"sha256:03dc02562ace136124bcb3e40854eb34ef50d63c3339b2cee1c01a69a7a75c69\",\"last_words\":\"e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e \",\"ref\":\"monitor\",\"window_s\":600},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.body.parked.v1\",\"universe_id\":\"u:fixture\"}",
+    "payload": {
+     "ref": "monitor",
+     "hash": "sha256:03dc02562ace136124bcb3e40854eb34ef50d63c3339b2cee1c01a69a7a75c69",
+     "did": "did:orreth:agent:ffffffffffffffffffffffffffffffff",
+     "deaths": 4,
+     "window_s": 600,
+     "last_words": "e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e "
+    },
+    "type": "orreth.body.parked.v1",
+    "chain": [
+     "the kernel"
+    ]
+   }
+  }
+ ]
+}

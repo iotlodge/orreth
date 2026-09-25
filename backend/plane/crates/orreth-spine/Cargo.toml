@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: ureq · libc · the bodies proof · 2026-09-24
 [package]
 name = "orreth-spine"
 version = "0.1.0"
@@ -35,10 +36,12 @@ tokio-stream = { workspace = true, optional = true }
 qrcode = { workspace = true, optional = true }
 flate2 = { workspace = true, optional = true }
 base64 = { workspace = true, optional = true }
+ureq = { workspace = true, optional = true }
+libc = { workspace = true, optional = true }
 
 [features]
-rails = ["dep:tokio", "dep:tokio-postgres", "dep:lapin", "dep:rdkafka", "dep:rand"]
-bridge = ["rails", "dep:axum", "dep:tokio-stream", "dep:qrcode", "dep:flate2", "dep:base64", "tokio/signal"]
+rails = ["dep:tokio", "dep:tokio-postgres", "dep:lapin", "dep:rdkafka", "dep:rand", "dep:ureq"]
+bridge = ["rails", "dep:axum", "dep:tokio-stream", "dep:qrcode", "dep:flate2", "dep:base64", "dep:libc", "tokio/signal"]
 
 [[test]]
 name = "rails"
@@ -55,6 +58,11 @@ required-features = ["bridge"]
 
 [[test]]
 name = "memory"
+required-features = ["bridge"]
+
+# The bodies' shadow proof (P7 sp6): the Rust kernel alone, its crew spawned as processes.
+[[test]]
+name = "bodies"
 required-features = ["bridge"]
 
 [[bin]]

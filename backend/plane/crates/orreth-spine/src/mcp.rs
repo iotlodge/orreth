@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: `server_name` (W28) · 2026-09-24
 //! `orreth.mcp/1` — the pure half of `orreth_spine.mcp` (P6.5 sp2, MCP through
 //! ONE door): the three JSON-RPC 2.0 requests with FIXED ids (so the bytes on
 //! the wire are canonical), the transport a locator names, the pin a tool and
@@ -163,6 +164,34 @@ pub fn server_manifest(locator: &str, tools: &[Value]) -> Result<Value, String> 
         "transport": transport_of(&resolve_locator(locator)?), "locator": locator,
         "tools": listed.into_iter().map(|(_, v)| v).collect::<Vec<_>>(),
     }))
+}
+
+/// W28 (P6.5 sp3, ported P7 sp6): the shelf name a server gives itself — the
+/// last word of its initialize name (`orreth-clock` → `clock`), lowercased;
+/// else the last word of its locator that is not a `.py`; else `server`.
+pub fn server_name(info: &Value, locator: &str) -> String {
+    let split = |text: &str| -> Vec<String> {
+        text.to_lowercase()
+            .split(|c: char| !c.is_ascii_lowercase() && !c.is_ascii_digit())
+            .filter(|w| !w.is_empty())
+            .map(str::to_string)
+            .collect()
+    };
+    let raw = info
+        .get("name")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .trim()
+        .to_string();
+    let mut words = split(&raw);
+    if words.is_empty() {
+        words = split(locator)
+            .into_iter()
+            .filter(|w| !w.ends_with("py"))
+            .collect();
+    }
+    let name = words.last().cloned().unwrap_or_else(|| "server".into());
+    name.chars().take(40).collect()
 }
 
 /// The strikes dial: `SPINE_TOOL_UNHEALTHY_STRIKES`, at least 1, default 3.

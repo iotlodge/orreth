@@ -6,6 +6,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W12 · W14 · W19 doors · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper: the gateway is the bridge's lane; the Stable's doors (/minds …); the keeper's beat; W29 · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the crew is one manifest (spine/crew.v0.json) · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: the pure laws factored for the fixture; the kernel's own self signs the export · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE (JB's seed) · 2026-09-24
 """The glass server v0 (canon 0001): the one place a human connects.
@@ -973,45 +974,37 @@ class BridgeRig:
         services.HOME = self.services_home           # P6.5 sp2: the keeper's door registers into the same home
 
         policy_path = policy or spine / "policy" / "covenant-policy.v1.json"
-        self.resident = Resident(
-            template or spine / "templates" / "librarian-resident.v0.json",
-            gateway=gateway, home=home)
-        self.resident.load_policy(policy_path)
-        self.residents = [self.resident]
-        if second:
-            # the crew's second seat: the echo — mindless, honest, and
-            # exactly what a fan-out needs to show two distinct lenses
-            echo = Resident(spine / "templates" / "echo-resident.v0.json",
-                            home=home)
-            echo.load_policy(policy_path)
-            self.residents.append(echo)
-        # the includes (0004's third kind): planner · critic · grader — and
-        # MITL (P6 sp3), the specialist of Orreth wearing the canon —
-        # firmware bodies, same laws, called by the human as includes over
-        # the session's results (MITL by the soft toggle and the impact door)
-        self.firmware: dict[str, Resident] = {}
-        # — and the TOOLS KEEPER (P6.5 sp2), the third-kind body that tends the
-        # shelf on the human's word (its beat runs on the scheduler's clock)
-        # — and the STABLE KEEPER (P6.5 sp3), the third-kind body that tends the minds
-        from . import tools as _tools
+        # P7 sp6: THE CREW IS ONE MANIFEST (spine/crew.v0.json), read by both
+        # spines — the Rust kernel spawns one process per seat; this rig, the
+        # reference, seats the same crew in-process. The first seat is the
+        # librarian (a test may hand another template for it); the echo seat —
+        # mindless, honest, exactly what a fan-out needs to show two distinct
+        # lenses — is dropped when `second` is off (tests). The includes (0004's
+        # third kind: planner · critic · grader · MITL), the TOOLS keeper (P6.5
+        # sp2) and the STABLE keeper (P6.5 sp3) are firmware bodies named by
+        # their function; the workspace agents are ONE workspace-firmware body
+        # wearing a binding per pull (crew · monitor).
+        from . import body as _body, tools as _tools
         _tools.GATEWAY = gateway                     # the keepers' checks ping through the rig's lane
-        for fn in ("planner", "critic", "grader", "mitl", "toolkeeper", "stablekeeper"):
-            fw = Resident(spine / "templates" / f"firmware-{fn}.v0.json",
-                          gateway=gateway, home=home)
-            fw.load_policy(policy_path)
-            self.residents.append(fw); self.firmware[fn] = fw
-        # the first workspace: the Crew pull's agent — the ONE workspace
-        # body wearing the crew binding (0004: one body, per-pull bindings)
-        crew = Resident(spine / "templates" / "workspace-firmware.v0.json",
-                        gateway=gateway, home=home,
-                        binding=spine / "bindings" / "crew.v0.json")
-        crew.load_policy(policy_path)
-        monitor_agent = Resident(spine / "templates" / "workspace-firmware.v0.json",
-                                 gateway=gateway, home=home,
-                                 binding=spine / "bindings" / "monitor.v0.json")
-        monitor_agent.load_policy(policy_path)
-        self.residents += [crew, monitor_agent]
-        self.workspaces = {"crew": crew, "monitor": monitor_agent}
+        self.residents = []
+        self.firmware: dict[str, Resident] = {}
+        self.workspaces: dict[str, Resident] = {}
+        self.resident = None
+        for seat in _body.crew(spine):
+            tpath, bpath = seat["template"], seat["binding"]
+            if self.resident is None and tpath.name.startswith("librarian"):
+                tpath = Path(template) if template else tpath
+            elif tpath.name.startswith("echo") and not second:
+                continue
+            r = Resident(tpath, gateway=gateway, home=home, binding=bpath)
+            r.load_policy(policy_path)
+            self.residents.append(r)
+            if self.resident is None:
+                self.resident = r                    # the first seat: the librarian (or the test's body)
+            elif bpath is not None:
+                self.workspaces[r.binding["pull"]] = r
+            elif r.kind == "firmware":
+                self.firmware[r.name] = r
         for r in self.residents:
             r.on_delta = self.feed.publish_delta
         from http.server import ThreadingHTTPServer

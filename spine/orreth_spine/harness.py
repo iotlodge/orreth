@@ -3,6 +3,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the world check: every service healthy or retired · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, two checks: every MCP server answers initialize · the keeper proposes after strikes, never retires alone · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, model ARMS on a run (the same golden cases against two minds) · three checks: every mind answers · the gateway answers and holds every stall · the meter and the gateway agree · a model change is announced · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the run over the invoke rail (`orreth.resident.harness.v1`) · the verdict factored (fixture bodies-v0) · 2026-09-24
 """The A/B harness v0 (canon 0004, AG-6): golden cases run against a body's
 mind; every run is a record; a failing run is a FACT on the rail
 (orreth.harness.failed.v1) that the feed carries to the chat as a soft
@@ -24,6 +25,11 @@ from pathlib import Path
 from . import envelope as ev, outbox
 
 HARNESS_FAILED = "orreth.harness.failed.v1"
+# P7 sp6: the run asked of a body over the invoke rail — a kernel with no body of its
+# own in its process (the Rust kernel) publishes this on the body's bench; the body runs
+# its golden cases through its own graph and records the run under the kernel's run id
+HARNESS_CMD = "orreth.resident.harness.v1"
+KERNEL = "the kernel"
 GOLDEN = Path(__file__).resolve().parents[1] / "golden"
 
 
@@ -48,8 +54,40 @@ def golden(template: str) -> list[dict]:
     return json.loads(p.read_text()) if p.exists() else []
 
 
+def verdict(cases: list[dict], replies: list[str]) -> dict:
+    """The shared law of a run (fixture `harness_verdict`, P7 sp6): a case
+    passes when every expected word appears in the reply, case folded; the
+    details keep the reply's first 300 characters; the note is the marker's."""
+    details, passed = [], 0
+    for c, reply in zip(cases, replies):
+        reply = reply or ""
+        ok = all(str(x).lower() in reply.lower() for x in c.get("expect", []))
+        passed += ok
+        details.append({"ask": c["ask"], "expect": list(c.get("expect", [])), "reply": reply[:300], "ok": bool(ok)})
+    failed = len(cases) - passed
+    return {"passed": passed, "failed": failed, "details": details,
+            "note": f"harness: {passed} passed, {failed} failed"}
+
+
+def command_for(run_id: str, target: str, cases: list[dict], *, arm: str | None = None,
+                parent_marker: str | None = None, scope: str | None = None) -> dict:
+    """The kernel's ask of a body: run these cases through your own graph and
+    record the run as `run_id` (the Rust door polls for it). The cases ride
+    the command whole — a golden set is the kernel's, not the body's — and
+    the payload wears their hash; the chain is the kernel's."""
+    sc = scope or ev.scope()
+    payload = {"ref": run_id, "hash": ev.content_hash(cases), "target": target, "cases": list(cases)}
+    if arm:
+        payload["arm"] = arm
+    if parent_marker:
+        payload["parent_marker"] = parent_marker
+    return ev.make_envelope(kind="command", type=HARNESS_CMD, universe_id=sc, scope_path=sc,
+                            payload=payload, correlation_id=run_id, authority_chain=[KERNEL])
+
+
 def run(conn, body, cases: list[dict] | None = None,
-        parent_marker: str | None = None, arm: str | None = None) -> dict:
+        parent_marker: str | None = None, arm: str | None = None,
+        run_id: str | None = None) -> dict:
     """Run the golden cases through the body's own graph (its mind on the
     meter, its recall honestly empty of any ask) and record the run.
     P6.5 sp3: `arm` names a stall — the body thinks through THAT mind for
@@ -70,47 +108,63 @@ def run(conn, body, cases: list[dict] | None = None,
             raise ValueError(f"no mind named {arm!r} stands in the Stable — an arm is a mind by name")
         body.template["mind"] = dict(mind_was, pin=arm)     # the run PINS the arm — nothing outranks a pin
     try:
-        return _run(conn, body, cases, parent_marker, arm, details, passed)
+        return _run(conn, body, cases, parent_marker, arm, run_id)
     finally:
         body.template["mind"] = mind_was
 
 
-def _run(conn, body, cases, parent_marker, arm, details, passed):
+def _run(conn, body, cases, parent_marker, arm, run_id=None):
+    replies = []
     for c in cases:
         out = body._graph.invoke({"text": c["ask"], "reply": "", "steps": [],
                                   "notes": [], "hold": None, "read": []})
-        reply = out.get("reply") or ""
-        ok = all(x.lower() in reply.lower() for x in c.get("expect", []))
-        passed += ok
-        details.append({"ask": c["ask"], "expect": c.get("expect", []),
-                        "reply": reply[:300], "ok": ok})
-    failed = len(cases) - passed
-    rid = "run_" + secrets.token_hex(5)
+        replies.append(out.get("reply") or "")
+    v = verdict(cases, replies)
+    passed, failed, details = v["passed"], v["failed"], v["details"]
+    rid = run_id or ("run_" + secrets.token_hex(5))
     version = body.template.get("version", "?")
     from . import markers
     markers.ensure_schema(conn)
     mid = markers.new_id()
     marker = {"kind": "observation", "id": mid, "parent": parent_marker,
               "by": body.identity.did}
+    # one transaction: the marker, the run's row and (a failing run) its fact — nested
+    # inside a serve's own transaction when the run rides the rail (a savepoint)
     with conn.transaction():
         cur = conn.cursor()
         markers.insert(cur, mid, "observation", parent_marker, rid,
-                       body.identity.did, f"harness: {passed} passed, {failed} failed")
+                       body.identity.did, v["note"])
         cur.execute(
             "INSERT INTO spine_harness_runs (run_id, template, version, passed,"
             " failed, details, scope, arm) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
             (rid, body.template["name"], version, passed, failed,
              json.dumps(details), ev.scope(), arm))
-    if failed:
-        e = ev.make_envelope(
-            kind="event", type=HARNESS_FAILED, universe_id=ev.scope(),
-            scope_path=ev.scope(),
-            payload={"ref": rid, "hash": "sha256:-", "template": body.template["name"],
-                     "version": version, "passed": passed, "failed": failed},
-            correlation_id=rid, authority_chain=[body.identity.did], marker=marker)
-        outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"])
+        if failed:
+            e = ev.make_envelope(
+                kind="event", type=HARNESS_FAILED, universe_id=ev.scope(),
+                scope_path=ev.scope(),
+                payload={"ref": rid, "hash": "sha256:-", "template": body.template["name"],
+                         "version": version, "passed": passed, "failed": failed},
+                correlation_id=rid, authority_chain=[body.identity.did], marker=marker)
+            outbox.add_row(cur, ev.encode(e), e["message_id"])
     return {"run_id": rid, "template": body.template["name"], "version": version,
             "passed": passed, "failed": failed, "details": details}
+
+
+def run_command(conn, body, env: dict) -> dict:
+    """A body serves the kernel's harness command (P7 sp6): the cases from
+    the payload, the arm and the parent marker as given, the run recorded
+    under the kernel's run id. A run id already on the ground is the same
+    run asked twice — nothing is run again (the inbox's footprint is the
+    first guard; this is the second)."""
+    pl = env.get("payload") or {}
+    rid = str(pl.get("ref") or "")
+    cur = conn.cursor()
+    cur.execute("SELECT 1 FROM spine_harness_runs WHERE run_id = %s", (rid,))
+    if cur.fetchone() is not None:
+        return {"run_id": rid, "repeated": True}
+    return run(conn, body, list(pl.get("cases") or []), parent_marker=pl.get("parent_marker"),
+               arm=pl.get("arm"), run_id=rid)
 
 
 # ---- the world checks (walk #8) -------------------------------------------------------

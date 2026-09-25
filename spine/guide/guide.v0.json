@@ -1,100 +1,212 @@
 {
-  "format": "orreth-guide/1",
-  "version": "0.1.0",
-  "title": "THE GUIDE · what you can say here, and what happens",
-  "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful",
-  "sections": [
+ "format": "orreth-guide/1",
+ "version": "0.1.0",
+ "title": "THE GUIDE \u00b7 what you can say here, and what happens",
+ "kept_by": "the kernel \u2014 the same words on every door; Fable keeps it current with each spoonful",
+ "sections": [
+  {
+   "id": "chat",
+   "when": "chat",
+   "title": "The chat",
+   "lead": "Type to the crew. A reply always arrives whole. Esc closes one thing at a time.",
+   "entries": [
     {
-      "id": "chat",
-      "when": "chat",
-      "title": "The chat",
-      "lead": "Type to the crew. A reply always arrives whole. Esc closes one thing at a time.",
-      "entries": [
-        {"say": "what is the temperature outside?", "does": "A thought: the librarian answers with its tools; every body it needs is asked."},
-        {"say": "echo, say the word HERON once", "does": "A name at the head sends the ask to that body alone."},
-        {"say": "librarian, remember that I went to the trailer today", "does": "The librarian keeps the words in the Record. Ask later: \"what do you remember about the trailer?\""},
-        {"say": "between 9am and noon, what did I ask?", "does": "Sets the time window the crew reads from; \"since yesterday\" works too."},
-        {"say": "follow up on this by counting the asks", "does": "A child of the origin last opened in the Analyzer."},
-        {"say": "summon MITL", "does": "The Master Mind In The Loop reads the canon and says what a change touches; every hold offers \"expected impact?\"."},
-        {"say": "export compliance for this session", "does": "A table of every ask, act and reply with its chain of who acted for whom, signed by the kernel; two downloads beneath it, JSON and CSV."},
-        {"say": "list my sessions · new session", "does": "Your worldlines, newest first, each with its short version; a new session archives the old one — nothing is deleted."},
-        {"say": "guide · help · ?", "does": "This guide, opened to where you are."}
-      ]
+     "say": "what is the temperature outside?",
+     "does": "A thought: the librarian answers with its tools; every body it needs is asked."
     },
     {
-      "id": "kinds",
-      "when": "chat",
-      "title": "The kind of an ask",
-      "lead": "The chip under the composer reads the kind from your words; one click flips it.",
-      "entries": [
-        {"say": "thought: …", "does": "One answer, now."},
-        {"say": "objective: …", "does": "Work the crew owns until it is done; the Analyzer shows it under its origin."},
-        {"say": "keep this world resilient: when a watch goes red, get it green", "does": "An intention — a standing purpose that wakes on what it watches; it appears in the Analyzer with its stop."},
-        {"say": "echo, every 5 seconds, say the time, please", "does": "A cadence: the intention runs on the clock; \"echo, stop\" rests it, \"echo, restart intention 'every 5 seconds'\" stands it again."}
-      ]
+     "say": "echo, say the word HERON once",
+     "does": "A name at the head sends the ask to that body alone."
     },
     {
-      "id": "interlock",
-      "when": "chat",
-      "title": "When the kernel asks \"Are you sure?\"",
-      "lead": "A consequential act holds until you decide. Cancel is the default and has the focus; Yes needs a deliberate click.",
-      "entries": [
-        {"say": "Cancel", "does": "Nothing runs; the hold is recorded as cancelled."},
-        {"say": "Yes — do it", "does": "The act runs on your word and wears proof L2; a grave act asks for your authenticator's code instead (\"enroll my authenticator\" once)."},
-        {"say": "expected impact?", "does": "MITL says who and what the act touches before you decide."},
-        {"say": "(a proposal from a keeper)", "does": "A keeper never retires, assigns, refills or re-pins alone — it proposes here and you cut; a proposal whose reason has passed withdraws itself."}
-      ]
+     "say": "librarian, remember that I went to the trailer today",
+     "does": "The librarian keeps the words in the Record. Ask later: \"what do you remember about the trailer?\""
     },
     {
-      "id": "crew",
-      "when": "crew",
-      "title": "The Crew",
-      "lead": "Every body in this world, both sides: what it served and the job it runs. Beneath the bodies stands the shelf.",
-      "entries": [
-        {"say": "what services are here? · show the tools · show the LLMs", "does": "The shelf, from the registry: every tool, MCP server, store, source and LLM on one ladder — registered → versioned → healthy | unhealthy → retired."},
-        {"say": "check the services · check the minds", "does": "Every standing service probed by its kind; an LLM answers a one-token ping through the gateway."},
-        {"say": "retire the weather tool · restore the weather tool", "does": "Retire holds at the interlock; restore is a new fact. Retired is dormancy, never deletion."},
-        {"say": "toolkeeper, add the MCP server at <command or URL>", "does": "The server and its tools land on the shelf as identities; its secrets by env NAME only."},
-        {"say": "stablekeeper, add the LLM ollama gemma3:270m as gemma", "does": "An LLM wherever it lives — anthropic · openrouter · ollama · openai · compatible — becomes a stall in the Stable and an entry in the gateway; held for your yes."},
-        {"say": "assign librarian to gemma · assign librarian to gemma for fast work · unassign librarian", "does": "Which LLM a body uses, for all its work or one class of work (fast · standard · deep); the card says \"LLM: …\" and why."},
-        {"say": "librarian's fuel · refill librarian by $2", "does": "A body's allowance for this window and what it has spent; a refill holds at the interlock — real spending."},
-        {"say": "schedule an ask for librarian… (on its card)", "does": "A standing duty on the clock, shown on the card's job side; \"rest it\" stops it."}
-      ]
+     "say": "between 9am and noon, what did I ask?",
+     "does": "Sets the time window the crew reads from; \"since yesterday\" works too."
     },
     {
-      "id": "monitor",
-      "when": "monitor",
-      "title": "The Monitoring",
-      "lead": "The operating state of this world, live: the rails, the bodies, the asks, the watches, THE STABLE, the HEALTH CHECKS.",
-      "entries": [
-        {"say": "watch for asks left waiting", "does": "The monitor agent proposes a watch — a hold you cut; a watch is RED while its condition holds and turns in the chat."},
-        {"say": "propose a watch that usd_today > 5", "does": "A watch over the farm: spend today, thoughts per minute, LLMs standing, bodies out of fuel."},
-        {"say": "HEALTH CHECKS", "does": "What must be true of this world, read from the ground now: nine rows, each holds or BROKEN with its words; read every 30 seconds."},
-        {"say": "run the harness against the librarian now", "does": "The golden cases against a body's LLM; a failing run escalates to the chat."}
-      ]
+     "say": "follow up on this by counting the asks",
+     "does": "A child of the origin last opened in the Analyzer."
     },
     {
-      "id": "analyzer",
-      "when": "band",
-      "title": "The Analyzer",
-      "lead": "Everything born in the chat, by origin: intentions, objectives, in flight and done. Every row is a door.",
-      "entries": [
-        {"say": "(click a row)", "does": "Its tree in words; an objective's row puts the chat in focus on it."},
-        {"say": "stop the kernel's Resiliency intention", "does": "A grave act: your code, then a declared master's click; the intention rests, recorded, never deleted."},
-        {"say": "restart intention '<its words>'", "does": "The reverse, through the same ladder; it \"stands again\"."}
-      ]
+     "say": "summon MITL",
+     "does": "The Master Mind In The Loop reads the canon and says what a change touches; every hold offers \"expected impact?\"."
     },
     {
-      "id": "memory",
-      "when": "chat",
-      "title": "Memory, sessions and the export",
-      "lead": "The kernel never forgets: every word acquired is kept verbatim with its lineage; a correction is a sibling, never an overwrite.",
-      "entries": [
-        {"say": "what do you remember about the trailer?", "does": "Recall, stemmed and ranked; the librarian answers from the Record, word for word."},
-        {"say": "list my sessions", "does": "Each session's short version — the digest — written from the Record alone; the same on every door."},
-        {"say": "export compliance for this session · export compliance for today", "does": "Signed by the kernel's own self (did:orreth:kernel:…); a stranger can verify the chain and the signature."},
-        {"say": "forget the trailer note", "does": "Governed erasure: every version leaves; a tombstone keeps the hashes; the digests that cited it are rebuilt."}
-      ]
+     "say": "export compliance for this session",
+     "does": "A table of every ask, act and reply with its chain of who acted for whom, signed by the kernel; two downloads beneath it, JSON and CSV."
+    },
+    {
+     "say": "list my sessions \u00b7 new session",
+     "does": "Your worldlines, newest first, each with its short version; a new session archives the old one \u2014 nothing is deleted."
+    },
+    {
+     "say": "guide \u00b7 help \u00b7 ?",
+     "does": "This guide, opened to where you are."
     }
-  ]
+   ]
+  },
+  {
+   "id": "kinds",
+   "when": "chat",
+   "title": "The kind of an ask",
+   "lead": "The chip under the composer reads the kind from your words; one click flips it.",
+   "entries": [
+    {
+     "say": "thought: \u2026",
+     "does": "One answer, now."
+    },
+    {
+     "say": "objective: \u2026",
+     "does": "Work the crew owns until it is done; the Analyzer shows it under its origin."
+    },
+    {
+     "say": "keep this world resilient: when a watch goes red, get it green",
+     "does": "An intention \u2014 a standing purpose that wakes on what it watches; it appears in the Analyzer with its stop."
+    },
+    {
+     "say": "echo, every 5 seconds, say the time, please",
+     "does": "A cadence: the intention runs on the clock; \"echo, stop\" rests it, \"echo, restart intention 'every 5 seconds'\" stands it again."
+    }
+   ]
+  },
+  {
+   "id": "interlock",
+   "when": "chat",
+   "title": "When the kernel asks \"Are you sure?\"",
+   "lead": "A consequential act holds until you decide. Cancel is the default and has the focus; Yes needs a deliberate click.",
+   "entries": [
+    {
+     "say": "Cancel",
+     "does": "Nothing runs; the hold is recorded as cancelled."
+    },
+    {
+     "say": "Yes \u2014 do it",
+     "does": "The act runs on your word and wears proof L2; a grave act asks for your authenticator's code instead (\"enroll my authenticator\" once)."
+    },
+    {
+     "say": "expected impact?",
+     "does": "MITL says who and what the act touches before you decide."
+    },
+    {
+     "say": "(a proposal from a keeper)",
+     "does": "A keeper never retires, assigns, refills or re-pins alone \u2014 it proposes here and you cut; a proposal whose reason has passed withdraws itself."
+    }
+   ]
+  },
+  {
+   "id": "crew",
+   "when": "crew",
+   "title": "The Crew",
+   "lead": "Every body in this world, both sides: what it served and the job it runs. When this kernel seats the bodies itself (the Rust kernel alone), each card says where its process stands \u2014 alive, restarting, PARKED or refused. Beneath the bodies stands the shelf.",
+   "entries": [
+    {
+     "say": "what services are here? \u00b7 show the tools \u00b7 show the LLMs",
+     "does": "The shelf, from the registry: every tool, MCP server, store, source and LLM on one ladder \u2014 registered \u2192 versioned \u2192 healthy | unhealthy \u2192 retired."
+    },
+    {
+     "say": "check the services \u00b7 check the minds",
+     "does": "Every standing service probed by its kind; an LLM answers a one-token ping through the gateway."
+    },
+    {
+     "say": "retire the weather tool \u00b7 restore the weather tool",
+     "does": "Retire holds at the interlock; restore is a new fact. Retired is dormancy, never deletion."
+    },
+    {
+     "say": "toolkeeper, add the MCP server at <command or URL>",
+     "does": "The server and its tools land on the shelf as identities; its secrets by env NAME only."
+    },
+    {
+     "say": "stablekeeper, add the LLM ollama gemma3:270m as gemma",
+     "does": "An LLM wherever it lives \u2014 anthropic \u00b7 openrouter \u00b7 ollama \u00b7 openai \u00b7 compatible \u2014 becomes a stall in the Stable and an entry in the gateway; held for your yes."
+    },
+    {
+     "say": "assign librarian to gemma \u00b7 assign librarian to gemma for fast work \u00b7 unassign librarian",
+     "does": "Which LLM a body uses, for all its work or one class of work (fast \u00b7 standard \u00b7 deep); the card says \"LLM: \u2026\" and why."
+    },
+    {
+     "say": "librarian's fuel \u00b7 refill librarian by $2",
+     "does": "A body's allowance for this window and what it has spent; a refill holds at the interlock \u2014 real spending."
+    },
+    {
+     "say": "schedule an ask for librarian\u2026 (on its card)",
+     "does": "A standing duty on the clock, shown on the card's job side; \"rest it\" stops it."
+    },
+    {
+     "say": "restart the echo body",
+     "does": "A body the kernel PARKED (it died three times in five minutes) or refused at birth is tried again on your word \u2014 its deaths forgotten, the same self. A body that simply died comes back by itself; nothing is ever deleted."
+    }
+   ]
+  },
+  {
+   "id": "monitor",
+   "when": "monitor",
+   "title": "The Monitoring",
+   "lead": "The operating state of this world, live: the rails, the bodies, the asks, the watches, THE STABLE, the HEALTH CHECKS.",
+   "entries": [
+    {
+     "say": "watch for asks left waiting",
+     "does": "The monitor agent proposes a watch \u2014 a hold you cut; a watch is RED while its condition holds and turns in the chat."
+    },
+    {
+     "say": "propose a watch that usd_today > 5",
+     "does": "A watch over the farm: spend today, thoughts per minute, LLMs standing, bodies out of fuel."
+    },
+    {
+     "say": "HEALTH CHECKS",
+     "does": "What must be true of this world, read from the ground now: nine rows, each holds or BROKEN with its words; read every 30 seconds."
+    },
+    {
+     "say": "run the harness against the librarian now",
+     "does": "The golden cases against a body's LLM; a failing run escalates to the chat. From the Rust kernel the run rides the rail to the body and lands when it is done."
+    }
+   ]
+  },
+  {
+   "id": "analyzer",
+   "when": "band",
+   "title": "The Analyzer",
+   "lead": "Everything born in the chat, by origin: intentions, objectives, in flight and done. Every row is a door.",
+   "entries": [
+    {
+     "say": "(click a row)",
+     "does": "Its tree in words; an objective's row puts the chat in focus on it."
+    },
+    {
+     "say": "stop the kernel's Resiliency intention",
+     "does": "A grave act: your code, then a declared master's click; the intention rests, recorded, never deleted."
+    },
+    {
+     "say": "restart intention '<its words>'",
+     "does": "The reverse, through the same ladder; it \"stands again\"."
+    }
+   ]
+  },
+  {
+   "id": "memory",
+   "when": "chat",
+   "title": "Memory, sessions and the export",
+   "lead": "The kernel never forgets: every word acquired is kept verbatim with its lineage; a correction is a sibling, never an overwrite.",
+   "entries": [
+    {
+     "say": "what do you remember about the trailer?",
+     "does": "Recall, stemmed and ranked; the librarian answers from the Record, word for word."
+    },
+    {
+     "say": "list my sessions",
+     "does": "Each session's short version \u2014 the digest \u2014 written from the Record alone; the same on every door."
+    },
+    {
+     "say": "export compliance for this session \u00b7 export compliance for today",
+     "does": "Signed by the kernel's own self (did:orreth:kernel:\u2026); a stranger can verify the chain and the signature."
+    },
+    {
+     "say": "forget the trailer note",
+     "does": "Governed erasure: every version leaves; a tombstone keeps the hashes; the digests that cited it are rebuilt."
+    }
+   ]
+  }
+ ]
 }

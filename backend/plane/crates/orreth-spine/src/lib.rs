@@ -3,6 +3,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: memory · kernel_self · store · digest · export_live · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: body · stable (pure) · bodies · stable_live · services_live · gateway · mcp_live · keepers (live) · 2026-09-24
 //! `orreth-spine` — the kernel's pure laws in Rust, ported from the Python spine
 //! (`spine/orreth_spine/`) against the conformance suite (canon 0008).
 //!
@@ -73,6 +74,7 @@
 
 pub mod ask;
 pub mod beat;
+pub mod body;
 pub mod canonical;
 pub mod envelope;
 pub mod export;
@@ -87,10 +89,13 @@ pub mod proof;
 pub mod py;
 pub mod rails;
 pub mod services;
+pub mod stable;
 pub mod watch;
 
 #[cfg(feature = "rails")]
 pub mod asks;
+#[cfg(feature = "bridge")]
+pub mod bodies;
 #[cfg(feature = "bridge")]
 pub mod bridge;
 #[cfg(feature = "rails")]
@@ -103,6 +108,8 @@ pub mod events;
 pub mod export_live;
 #[cfg(feature = "rails")]
 pub mod feed;
+#[cfg(feature = "rails")]
+pub mod gateway;
 #[cfg(feature = "rails")]
 pub mod ground;
 #[cfg(feature = "rails")]
@@ -118,6 +125,8 @@ pub mod invoke;
 #[cfg(feature = "rails")]
 pub mod markers_live;
 #[cfg(feature = "rails")]
+pub mod mcp_live;
+#[cfg(feature = "rails")]
 pub mod monitor;
 #[cfg(feature = "rails")]
 pub mod outbox;
@@ -132,9 +141,13 @@ pub mod scheduler;
 #[cfg(feature = "rails")]
 pub mod schema;
 #[cfg(feature = "rails")]
+pub mod services_live;
+#[cfg(feature = "rails")]
 pub mod sessions;
 #[cfg(feature = "rails")]
 pub mod sinks;
+#[cfg(feature = "rails")]
+pub mod stable_live;
 #[cfg(feature = "rails")]
 pub mod store;
 #[cfg(feature = "rails")]

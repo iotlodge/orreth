@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the APPROVE of a kernel-held act runs intent.stop · intent.restart · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the APPROVE of service.retire and the Stable's acts (mind.*) settles here · 2026-09-24
 //! The ask road on the ground — mirrors `orreth_spine.dispatch` (the write
 //! half) and the ask views of `orreth_spine.glass`: ONE write path. A human's
 //! ask lands on `spine_asks` WITH its marker and its `ask.received` fact in
@@ -681,8 +682,9 @@ async fn settle_command(
 /// The kernel settles its own held act after the door judged the proof: yes
 /// → the held act runs (`intent.stop` · `intent.restart`, in the SAME
 /// transaction as the record) and the record wears its level; anything else →
-/// a recorded cancel, the act never ran (rule 11). `service.retire` is the
-/// Python organ's until the bodies' seam — named (501), never silent.
+/// a recorded cancel, the act never ran (rule 11). P7 sp6: `service.retire`
+/// and the Stable's acts (`mind.register` · `.assign` · `.unassign` · `.refill`
+/// · `.repin`) settle here too, the act inside the record's own transaction.
 pub async fn settle_kernel_act(
     g: &mut Ground,
     w: &World,
@@ -755,11 +757,21 @@ pub async fn settle_kernel_act(
                     format!("the intention “{words}” stands again — its stop stays in the record, its history whole")
                 }
             }
-            "service.retire" => return Err(RoadError::NotYet(
-                "the kernel's service.retire settles at the Python door until the bodies' seam \
-                     (P7 sp6) — cancel is taken here, always"
-                    .into(),
-            )),
+            t if t == "service.retire" || t.starts_with("mind.") => {
+                // P7 sp6: the shelf's stop and the Stable's acts — the keeper proposed, the human cut
+                let gw = crate::gateway::Gateway::from_env();
+                crate::stable_live::settle_in(
+                    &tx,
+                    w,
+                    Some(&gw),
+                    &held,
+                    &asker,
+                    ask_id,
+                    marker_id.as_deref(),
+                    Some(by),
+                )
+                .await?
+            }
             _ => return Err(RoadError::NotConfirmed { rest: false }),
         };
         let (n, r) = match level.as_str() {
