@@ -1,0 +1,1070 @@
+{
+ "contract": "orreth.cells/1",
+ "version": 0,
+ "generated_by": "orreth_spine.cells (the Python reference) \u00b7 P7 sp7",
+ "generated_at": "2026-09-25T15:00:00.000Z",
+ "cases": [
+  {
+   "name": "topic_name: orreth.ask.received.v1 in namespace ''",
+   "kind": "topic_name",
+   "input": {
+    "base": "orreth.ask.received.v1",
+    "ns": ""
+   },
+   "expect": {
+    "topic": "orreth.ask.received.v1"
+   }
+  },
+  {
+   "name": "topic_name: orreth.ask.received.v1 in namespace 'two'",
+   "kind": "topic_name",
+   "input": {
+    "base": "orreth.ask.received.v1",
+    "ns": "two"
+   },
+   "expect": {
+    "topic": "orreth.ask.received.v1.two"
+   }
+  },
+  {
+   "name": "topic_name: orreth.heartbeat.v1 in namespace 't1a2b3'",
+   "kind": "topic_name",
+   "input": {
+    "base": "orreth.heartbeat.v1",
+    "ns": "t1a2b3"
+   },
+   "expect": {
+    "topic": "orreth.heartbeat.v1.t1a2b3"
+   }
+  },
+  {
+   "name": "topic_name: orreth.reply.v1 in namespace None",
+   "kind": "topic_name",
+   "input": {
+    "base": "orreth.reply.v1",
+    "ns": null
+   },
+   "expect": {
+    "topic": "orreth.reply.v1"
+   }
+  },
+  {
+   "name": "peers_from: 'two=http://127.0.0.1:4602'",
+   "kind": "peers_from",
+   "input": {
+    "dial": "two=http://127.0.0.1:4602"
+   },
+   "expect": {
+    "peers": [
+     {
+      "cell": "two",
+      "door": "http://127.0.0.1:4602"
+     }
+    ]
+   }
+  },
+  {
+   "name": "peers_from: 'two=http://127.0.0.1:4602,three=https://cells.example/three/'",
+   "kind": "peers_from",
+   "input": {
+    "dial": "two=http://127.0.0.1:4602,three=https://cells.example/three/"
+   },
+   "expect": {
+    "peers": [
+     {
+      "cell": "two",
+      "door": "http://127.0.0.1:4602"
+     },
+     {
+      "cell": "three",
+      "door": "https://cells.example/three"
+     }
+    ]
+   }
+  },
+  {
+   "name": "peers_from: ' two = http://127.0.0.1:4602 ,, bad, four=ftp://x, Five=http://h:1'",
+   "kind": "peers_from",
+   "input": {
+    "dial": " two = http://127.0.0.1:4602 ,, bad, four=ftp://x, Five=http://h:1"
+   },
+   "expect": {
+    "peers": [
+     {
+      "cell": "two",
+      "door": "http://127.0.0.1:4602"
+     },
+     {
+      "cell": "five",
+      "door": "http://h:1"
+     }
+    ]
+   }
+  },
+  {
+   "name": "peers_from: ''",
+   "kind": "peers_from",
+   "input": {
+    "dial": ""
+   },
+   "expect": {
+    "peers": []
+   }
+  },
+  {
+   "name": "peers_from: None",
+   "kind": "peers_from",
+   "input": {
+    "dial": null
+   },
+   "expect": {
+    "peers": []
+   }
+  },
+  {
+   "name": "address_home: 'librarian@two, what is the weather?'",
+   "kind": "address_home",
+   "input": {
+    "text": "librarian@two, what is the weather?"
+   },
+   "expect": {
+    "home": {
+     "cell": "two",
+     "name": "librarian"
+    },
+    "served": "librarian, what is the weather?"
+   }
+  },
+  {
+   "name": "address_home: '@Librarian@Two: hello'",
+   "kind": "address_home",
+   "input": {
+    "text": "@Librarian@Two: hello"
+   },
+   "expect": {
+    "home": {
+     "cell": "two",
+     "name": "librarian"
+    },
+    "served": "Librarian: hello"
+   }
+  },
+  {
+   "name": "address_home: 'two/librarian, hello'",
+   "kind": "address_home",
+   "input": {
+    "text": "two/librarian, hello"
+   },
+   "expect": {
+    "home": {
+     "cell": "two",
+     "name": "librarian"
+    },
+    "served": "librarian, hello"
+   }
+  },
+  {
+   "name": "address_home: 'echo, say HERON'",
+   "kind": "address_home",
+   "input": {
+    "text": "echo, say HERON"
+   },
+   "expect": {
+    "home": null,
+    "served": "echo, say HERON"
+   }
+  },
+  {
+   "name": "address_home: 'librarian@two'",
+   "kind": "address_home",
+   "input": {
+    "text": "librarian@two"
+   },
+   "expect": {
+    "home": null,
+    "served": "librarian@two"
+   }
+  },
+  {
+   "name": "address_home: 'what is librarian@two?'",
+   "kind": "address_home",
+   "input": {
+    "text": "what is librarian@two?"
+   },
+   "expect": {
+    "home": null,
+    "served": "what is librarian@two?"
+   }
+  },
+  {
+   "name": "address_home: '  acme/Echo :  say GULL'",
+   "kind": "address_home",
+   "input": {
+    "text": "  acme/Echo :  say GULL"
+   },
+   "expect": {
+    "home": {
+     "cell": "acme",
+     "name": "echo"
+    },
+    "served": "Echo :  say GULL"
+   }
+  },
+  {
+   "name": "address_home: ''",
+   "kind": "address_home",
+   "input": {
+    "text": ""
+   },
+   "expect": {
+    "home": null,
+    "served": ""
+   }
+  },
+  {
+   "name": "address_home: '@echo, hi'",
+   "kind": "address_home",
+   "input": {
+    "text": "@echo, hi"
+   },
+   "expect": {
+    "home": null,
+    "served": "@echo, hi"
+   }
+  },
+  {
+   "name": "epoch_check: mine 1 theirs 1",
+   "kind": "epoch_check",
+   "input": {
+    "mine": 1,
+    "theirs": 1
+   },
+   "expect": {
+    "verdict": "current"
+   }
+  },
+  {
+   "name": "epoch_check: mine 2 theirs 1",
+   "kind": "epoch_check",
+   "input": {
+    "mine": 2,
+    "theirs": 1
+   },
+   "expect": {
+    "verdict": "stale"
+   }
+  },
+  {
+   "name": "epoch_check: mine 1 theirs 2",
+   "kind": "epoch_check",
+   "input": {
+    "mine": 1,
+    "theirs": 2
+   },
+   "expect": {
+    "verdict": "future"
+   }
+  },
+  {
+   "name": "epoch_check: mine 7 theirs 7",
+   "kind": "epoch_check",
+   "input": {
+    "mine": 7,
+    "theirs": 7
+   },
+   "expect": {
+    "verdict": "current"
+   }
+  },
+  {
+   "name": "epoch_check: mine 7 theirs 3",
+   "kind": "epoch_check",
+   "input": {
+    "mine": 7,
+    "theirs": 3
+   },
+   "expect": {
+    "verdict": "stale"
+   }
+  },
+  {
+   "name": "world_fact: u:fixture opened in local at epoch 1",
+   "kind": "world_fact",
+   "input": {
+    "scope": "u:fixture",
+    "cell": "local",
+    "epoch": 1,
+    "kernel": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "door": "http://127.0.0.1:4601",
+    "reason": "opened",
+    "message_id": "msg_aaaaaaaaaaaaaaaaaaaaaaaa",
+    "occurred_at": "2026-09-25T15:00:00.000Z"
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"u:fixture\",\"message_id\":\"msg_aaaaaaaaaaaaaaaaaaaaaaaa\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-25T15:00:00.000Z\",\"payload\":{\"cell\":\"local\",\"door\":\"http://127.0.0.1:4601\",\"epoch\":1,\"hash\":\"sha256:a1b8c80c296b6ac331bdfaa0d1d904cef65948dc99299a856be0f92c55a0c74e\",\"kernel\":\"did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd\",\"reason\":\"opened\",\"ref\":\"u:fixture\"},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.world.homed.v1\",\"universe_id\":\"u:fixture\"}",
+    "payload": {
+     "ref": "u:fixture",
+     "hash": "sha256:a1b8c80c296b6ac331bdfaa0d1d904cef65948dc99299a856be0f92c55a0c74e",
+     "cell": "local",
+     "epoch": 1,
+     "kernel": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "door": "http://127.0.0.1:4601",
+     "reason": "opened"
+    },
+    "type": "orreth.world.homed.v1",
+    "chain": [
+     "the kernel"
+    ],
+    "correlation_id": "u:fixture"
+   }
+  },
+  {
+   "name": "world_fact: u:acme re-homed in two at epoch 2",
+   "kind": "world_fact",
+   "input": {
+    "scope": "u:acme",
+    "cell": "two",
+    "epoch": 2,
+    "kernel": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "door": "http://127.0.0.1:4601",
+    "reason": "re-homed",
+    "message_id": "msg_bbbbbbbbbbbbbbbbbbbbbbbb",
+    "occurred_at": "2026-09-25T15:00:00.000Z"
+   },
+   "expect": {
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"u:acme\",\"message_id\":\"msg_bbbbbbbbbbbbbbbbbbbbbbbb\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-25T15:00:00.000Z\",\"payload\":{\"cell\":\"two\",\"door\":\"http://127.0.0.1:4601\",\"epoch\":2,\"hash\":\"sha256:8e87eef7d49f801d6c0ddfca3f21189466cb1dc12a03e94a593a5b00cfea1824\",\"kernel\":\"did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd\",\"reason\":\"re-homed\",\"ref\":\"u:acme\"},\"scope_path\":\"u:acme\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.world.homed.v1\",\"universe_id\":\"u:acme\"}",
+    "payload": {
+     "ref": "u:acme",
+     "hash": "sha256:8e87eef7d49f801d6c0ddfca3f21189466cb1dc12a03e94a593a5b00cfea1824",
+     "cell": "two",
+     "epoch": 2,
+     "kernel": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "door": "http://127.0.0.1:4601",
+     "reason": "re-homed"
+    },
+    "type": "orreth.world.homed.v1",
+    "chain": [
+     "the kernel"
+    ],
+    "correlation_id": "u:acme"
+   }
+  },
+  {
+   "name": "seam_sign: an ask across the seam, signed by cell local's kernel",
+   "kind": "seam_sign",
+   "input": {
+    "message": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, hello",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z"
+    },
+    "seed_hex": "000000000000000000000000000000000123456789abcdef0123456789abcdef"
+   },
+   "expect": {
+    "signed": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, hello",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "9dfd160a262a06d006ac99a8a85a2d12dd4f3af75926aeb85b16da86eba87d6a1ac49e399b6807e1a629b8c395b8443301a413edcecdb1f26a2aeeb8f7f5ef01"
+    },
+    "bytes": "{\"at\":\"2026-09-25T15:00:00.000Z\",\"body\":{\"ask_id\":\"ask_0000000000000001\",\"person\":\"did:orreth:person:jb\",\"text\":\"librarian, hello\"},\"epoch\":1,\"from\":\"local\",\"kind\":\"ask\",\"nonce\":\"n_0123456789abcdef\",\"specversion\":\"orreth.seam/1\",\"to\":\"two\",\"world\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "seam_verify: the pinned signer's message verifies",
+   "kind": "seam_verify",
+   "input": {
+    "signed": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, hello",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "9dfd160a262a06d006ac99a8a85a2d12dd4f3af75926aeb85b16da86eba87d6a1ac49e399b6807e1a629b8c395b8443301a413edcecdb1f26a2aeeb8f7f5ef01"
+    },
+    "pinned_did": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "now": "2026-09-25T15:00:00.000Z",
+    "seen_nonces": [],
+    "epoch": null
+   },
+   "expect": {
+    "verdict": "ok"
+   }
+  },
+  {
+   "name": "seam_verify: the pinned signer's message verifies against my epoch for it",
+   "kind": "seam_verify",
+   "input": {
+    "signed": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, hello",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "9dfd160a262a06d006ac99a8a85a2d12dd4f3af75926aeb85b16da86eba87d6a1ac49e399b6807e1a629b8c395b8443301a413edcecdb1f26a2aeeb8f7f5ef01"
+    },
+    "pinned_did": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "now": "2026-09-25T15:00:00.000Z",
+    "seen_nonces": [],
+    "epoch": 1
+   },
+   "expect": {
+    "verdict": "ok"
+   }
+  },
+  {
+   "name": "seam_verify: no pin \u2014 unknown signer",
+   "kind": "seam_verify",
+   "input": {
+    "signed": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, hello",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "9dfd160a262a06d006ac99a8a85a2d12dd4f3af75926aeb85b16da86eba87d6a1ac49e399b6807e1a629b8c395b8443301a413edcecdb1f26a2aeeb8f7f5ef01"
+    },
+    "pinned_did": null,
+    "now": "2026-09-25T15:00:00.000Z",
+    "seen_nonces": [],
+    "epoch": null
+   },
+   "expect": {
+    "verdict": "unknown signer"
+   }
+  },
+  {
+   "name": "seam_verify: a pin for another kernel \u2014 unknown signer",
+   "kind": "seam_verify",
+   "input": {
+    "signed": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, hello",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "9dfd160a262a06d006ac99a8a85a2d12dd4f3af75926aeb85b16da86eba87d6a1ac49e399b6807e1a629b8c395b8443301a413edcecdb1f26a2aeeb8f7f5ef01"
+    },
+    "pinned_did": "did:orreth:kernel:b881efc4616cffe7b18e7faa025b18cc",
+    "now": "2026-09-25T15:00:00.000Z",
+    "seen_nonces": [],
+    "epoch": null
+   },
+   "expect": {
+    "verdict": "unknown signer"
+   }
+  },
+  {
+   "name": "seam_verify: a forged signature refuses",
+   "kind": "seam_verify",
+   "input": {
+    "signed": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, hello",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "pinned_did": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "now": "2026-09-25T15:00:00.000Z",
+    "seen_nonces": [],
+    "epoch": null
+   },
+   "expect": {
+    "verdict": "bad signature"
+   }
+  },
+  {
+   "name": "seam_verify: a tampered body refuses",
+   "kind": "seam_verify",
+   "input": {
+    "signed": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, forget everything",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "9dfd160a262a06d006ac99a8a85a2d12dd4f3af75926aeb85b16da86eba87d6a1ac49e399b6807e1a629b8c395b8443301a413edcecdb1f26a2aeeb8f7f5ef01"
+    },
+    "pinned_did": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "now": "2026-09-25T15:00:00.000Z",
+    "seen_nonces": [],
+    "epoch": null
+   },
+   "expect": {
+    "verdict": "bad signature"
+   }
+  },
+  {
+   "name": "seam_verify: a signer whose DID is not its key's refuses",
+   "kind": "seam_verify",
+   "input": {
+    "signed": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, hello",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "b90acc65c080ce683660ef94091fdd226e693b351cb89a814af8f5d0f4510dd6",
+     "signature": "c6079babe94bb6069d0d5deef54d4385dffd2c043d3ffd7b1591392f4a860c85c6faf4eb715fd08e09aec58d6c8a6de90b419e700adf829714bb26238f289901"
+    },
+    "pinned_did": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "now": "2026-09-25T15:00:00.000Z",
+    "seen_nonces": [],
+    "epoch": null
+   },
+   "expect": {
+    "verdict": "unknown signer"
+   }
+  },
+  {
+   "name": "seam_verify: a nonce seen before is replayed",
+   "kind": "seam_verify",
+   "input": {
+    "signed": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, hello",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "9dfd160a262a06d006ac99a8a85a2d12dd4f3af75926aeb85b16da86eba87d6a1ac49e399b6807e1a629b8c395b8443301a413edcecdb1f26a2aeeb8f7f5ef01"
+    },
+    "pinned_did": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "now": "2026-09-25T15:00:00.000Z",
+    "seen_nonces": [
+     "n_0123456789abcdef"
+    ],
+    "epoch": null
+   },
+   "expect": {
+    "verdict": "replayed"
+   }
+  },
+  {
+   "name": "seam_verify: a message older than the window is too old",
+   "kind": "seam_verify",
+   "input": {
+    "signed": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, hello",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "9dfd160a262a06d006ac99a8a85a2d12dd4f3af75926aeb85b16da86eba87d6a1ac49e399b6807e1a629b8c395b8443301a413edcecdb1f26a2aeeb8f7f5ef01"
+    },
+    "pinned_did": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "now": "2026-09-25T15:02:01.000Z",
+    "seen_nonces": [],
+    "epoch": null
+   },
+   "expect": {
+    "verdict": "too old"
+   }
+  },
+  {
+   "name": "seam_verify: a message from the future is too new",
+   "kind": "seam_verify",
+   "input": {
+    "signed": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, hello",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "9dfd160a262a06d006ac99a8a85a2d12dd4f3af75926aeb85b16da86eba87d6a1ac49e399b6807e1a629b8c395b8443301a413edcecdb1f26a2aeeb8f7f5ef01"
+    },
+    "pinned_did": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "now": "2026-09-25T14:57:59.000Z",
+    "seen_nonces": [],
+    "epoch": null
+   },
+   "expect": {
+    "verdict": "too new"
+   }
+  },
+  {
+   "name": "seam_verify: at the window's edge it still passes",
+   "kind": "seam_verify",
+   "input": {
+    "signed": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, hello",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "9dfd160a262a06d006ac99a8a85a2d12dd4f3af75926aeb85b16da86eba87d6a1ac49e399b6807e1a629b8c395b8443301a413edcecdb1f26a2aeeb8f7f5ef01"
+    },
+    "pinned_did": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "now": "2026-09-25T15:02:00.000Z",
+    "seen_nonces": [],
+    "epoch": null
+   },
+   "expect": {
+    "verdict": "ok"
+   }
+  },
+  {
+   "name": "seam_verify: a stale epoch refuses",
+   "kind": "seam_verify",
+   "input": {
+    "signed": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, hello",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "9dfd160a262a06d006ac99a8a85a2d12dd4f3af75926aeb85b16da86eba87d6a1ac49e399b6807e1a629b8c395b8443301a413edcecdb1f26a2aeeb8f7f5ef01"
+    },
+    "pinned_did": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "now": "2026-09-25T15:00:00.000Z",
+    "seen_nonces": [],
+    "epoch": 2
+   },
+   "expect": {
+    "verdict": "stale epoch"
+   }
+  },
+  {
+   "name": "seam_verify: a future epoch says refresh",
+   "kind": "seam_verify",
+   "input": {
+    "signed": {
+     "specversion": "orreth.seam/1",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 3,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000002"
+     },
+     "nonce": "n_fedcba9876543210",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "cb3d73a81fd3b8f470b3ab7a99371d5816298d3e55f03d6d7c26b1d7f6614f840e612b19b2922a3528bb85e3af256efc8e2081d06937324a24a6bcf65186b506"
+    },
+    "pinned_did": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "now": "2026-09-25T15:00:00.000Z",
+    "seen_nonces": [],
+    "epoch": 2
+   },
+   "expect": {
+    "verdict": "future epoch"
+   }
+  },
+  {
+   "name": "seam_verify: another specversion refuses",
+   "kind": "seam_verify",
+   "input": {
+    "signed": {
+     "specversion": "orreth.seam/0",
+     "from": "local",
+     "world": "u:dev",
+     "to": "two",
+     "epoch": 1,
+     "kind": "ask",
+     "body": {
+      "ask_id": "ask_0000000000000001",
+      "text": "librarian, hello",
+      "person": "did:orreth:person:jb"
+     },
+     "nonce": "n_0123456789abcdef",
+     "at": "2026-09-25T15:00:00.000Z",
+     "signer": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+     "public_key": "cd91a994e26660e708bf3b536e8428a7a1ef3c87df4b097132e6f92c5028d4d2",
+     "signature": "9dfd160a262a06d006ac99a8a85a2d12dd4f3af75926aeb85b16da86eba87d6a1ac49e399b6807e1a629b8c395b8443301a413edcecdb1f26a2aeeb8f7f5ef01"
+    },
+    "pinned_did": "did:orreth:kernel:bdc46e11b084929d19ed73bf735768dd",
+    "now": "2026-09-25T15:00:00.000Z",
+    "seen_nonces": [],
+    "epoch": null
+   },
+   "expect": {
+    "verdict": "bad signature"
+   }
+  },
+  {
+   "name": "park_words",
+   "kind": "park_words",
+   "input": {
+    "name": "librarian",
+    "cell": "two",
+    "since": "10:42"
+   },
+   "expect": {
+    "words": "librarian@two is out of reach \u2014 cell two has not answered since 10:42; your ask is parked and will go the moment it answers"
+   }
+  },
+  {
+   "name": "resumed_words",
+   "kind": "resumed_words",
+   "input": {
+    "name": "librarian",
+    "cell": "two"
+   },
+   "expect": {
+    "words": "cell two answers again \u2014 your ask to librarian@two is on its way"
+   }
+  },
+  {
+   "name": "lag_words: two u:acme 0.4 None",
+   "kind": "lag_words",
+   "input": {
+    "cell": "two",
+    "world": "u:acme",
+    "behind_s": 0.4,
+    "unreachable_since": null
+   },
+   "expect": {
+    "words": "cell two \u00b7 u:acme \u00b7 live"
+   }
+  },
+  {
+   "name": "lag_words: two u:acme 3.2 None",
+   "kind": "lag_words",
+   "input": {
+    "cell": "two",
+    "world": "u:acme",
+    "behind_s": 3.2,
+    "unreachable_since": null
+   },
+   "expect": {
+    "words": "cell two \u00b7 u:acme \u00b7 3 s behind"
+   }
+  },
+  {
+   "name": "lag_words: two None None None",
+   "kind": "lag_words",
+   "input": {
+    "cell": "two",
+    "world": null,
+    "behind_s": null,
+    "unreachable_since": null
+   },
+   "expect": {
+    "words": "cell two \u00b7 not yet heard"
+   }
+  },
+  {
+   "name": "lag_words: two u:acme 900.0 10:42",
+   "kind": "lag_words",
+   "input": {
+    "cell": "two",
+    "world": "u:acme",
+    "behind_s": 900.0,
+    "unreachable_since": "10:42"
+   },
+   "expect": {
+    "words": "cell two \u00b7 u:acme \u00b7 unreachable since 10:42"
+   }
+  },
+  {
+   "name": "lag_words: three u:corp 12.5 None",
+   "kind": "lag_words",
+   "input": {
+    "cell": "three",
+    "world": "u:corp",
+    "behind_s": 12.5,
+    "unreachable_since": null
+   },
+   "expect": {
+    "words": "cell three \u00b7 u:corp \u00b7 12 s behind"
+   }
+  },
+  {
+   "name": "sealed_words: cell_two on spine_two reaching ['spine_two']",
+   "kind": "sealed_words",
+   "input": {
+    "role": "cell_two",
+    "own_db": "spine_two",
+    "reachable": [
+     "spine_two"
+    ]
+   },
+   "expect": {
+    "ok": true,
+    "words": "the role cell_two reaches only spine_two"
+   }
+  },
+  {
+   "name": "sealed_words: orreth on spine reaching ['litellm', 'postgres', 'spine', 'spine_two']",
+   "kind": "sealed_words",
+   "input": {
+    "role": "orreth",
+    "own_db": "spine",
+    "reachable": [
+     "litellm",
+     "postgres",
+     "spine",
+     "spine_two"
+    ]
+   },
+   "expect": {
+    "ok": false,
+    "words": "the role orreth reaches 4 databases: spine, litellm, postgres, spine_two \u2014 unsealed (the dev profile); seal it with scripts/dev.sh cell"
+   }
+  },
+  {
+   "name": "sealed_words: cell_two on spine_two reaching ['spine_two', 'postgres']",
+   "kind": "sealed_words",
+   "input": {
+    "role": "cell_two",
+    "own_db": "spine_two",
+    "reachable": [
+     "spine_two",
+     "postgres"
+    ]
+   },
+   "expect": {
+    "ok": false,
+    "words": "the role cell_two reaches 2 databases: spine_two, postgres \u2014 unsealed (the dev profile); seal it with scripts/dev.sh cell"
+   }
+  },
+  {
+   "name": "rehome_words",
+   "kind": "rehome_words",
+   "input": {
+    "scope": "u:acme",
+    "from_cell": "two",
+    "to_cell": "three",
+    "epoch": 2
+   },
+   "expect": {
+    "words": "u:acme is re-homed from cell two to cell three at epoch 2 \u2014 a kernel still wearing epoch 1 may not commit for it"
+   }
+  },
+  {
+   "name": "ceiling: 20.0 tokens, 0.0s since, rate 5.0 burst 20.0",
+   "kind": "ceiling",
+   "input": {
+    "tokens": 20.0,
+    "last_at": 0.0,
+    "now": 0.0,
+    "rate": 5.0,
+    "burst": 20.0
+   },
+   "expect": {
+    "allowed": true,
+    "tokens_after": 19.0
+   }
+  },
+  {
+   "name": "ceiling: 0.0 tokens, 0.0s since, rate 5.0 burst 20.0",
+   "kind": "ceiling",
+   "input": {
+    "tokens": 0.0,
+    "last_at": 100.0,
+    "now": 100.0,
+    "rate": 5.0,
+    "burst": 20.0
+   },
+   "expect": {
+    "allowed": false,
+    "tokens_after": 0.0
+   }
+  },
+  {
+   "name": "ceiling: 0.5 tokens, 0.2s since, rate 5.0 burst 20.0",
+   "kind": "ceiling",
+   "input": {
+    "tokens": 0.5,
+    "last_at": 100.0,
+    "now": 100.2,
+    "rate": 5.0,
+    "burst": 20.0
+   },
+   "expect": {
+    "allowed": true,
+    "tokens_after": 0.5000000000000142
+   }
+  },
+  {
+   "name": "ceiling: 0.0 tokens, 0.1s since, rate 5.0 burst 20.0",
+   "kind": "ceiling",
+   "input": {
+    "tokens": 0.0,
+    "last_at": 100.0,
+    "now": 100.1,
+    "rate": 5.0,
+    "burst": 20.0
+   },
+   "expect": {
+    "allowed": false,
+    "tokens_after": 0.4999999999999716
+   }
+  },
+  {
+   "name": "ceiling: 3.0 tokens, 100.0s since, rate 5.0 burst 20.0",
+   "kind": "ceiling",
+   "input": {
+    "tokens": 3.0,
+    "last_at": 100.0,
+    "now": 200.0,
+    "rate": 5.0,
+    "burst": 20.0
+   },
+   "expect": {
+    "allowed": true,
+    "tokens_after": 19.0
+   }
+  },
+  {
+   "name": "ceiling: 1.0 tokens, -10.0s since, rate 5.0 burst 20.0",
+   "kind": "ceiling",
+   "input": {
+    "tokens": 1.0,
+    "last_at": 50.0,
+    "now": 40.0,
+    "rate": 5.0,
+    "burst": 20.0
+   },
+   "expect": {
+    "allowed": true,
+    "tokens_after": 0.0
+   }
+  }
+ ]
+}

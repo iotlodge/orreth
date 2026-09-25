@@ -3,6 +3,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: ladder_step · manifest_pin · ask_fact · refused_fact · ask_kind · otpauth · hold_words · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the five mcp kinds · beat_lock · loop_words · plan_words · observed_words · watch_note · cannot_act · improvement_note · crew_hash · turned_fact · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the twelve minds kinds · backoff · park_rule · parked_words · parked_fact · harness_verdict · harness_command · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: topic_name · peers_from · address_home · epoch_check · world_fact · seam_sign · seam_verify · the words · sealed_words · ceiling · 2026-09-25
 //! The Rust conformance runner (canon 0008 · P7 sp1): every fixture under
 //! `spine/conformance/*-v*.json` — the same files the Python reference
 //! generated and passes, unchanged — dispatched by case kind exactly as
@@ -13,8 +14,8 @@
 //! runner has no arm for (the list and the dispatch must agree).
 
 use orreth_spine::{
-    ask, beat, body, canonical, content_hash, envelope, export, intent, kernel_self, mcp, memory,
-    mitl, placement, proof, rails, services, stable, watch,
+    ask, beat, body, canonical, cells, content_hash, envelope, export, intent, kernel_self, mcp,
+    memory, mitl, placement, proof, rails, services, stable, watch,
 };
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
@@ -102,6 +103,20 @@ const PORTED_KINDS: &[&str] = &[
     "parked_fact",
     "harness_verdict",
     "harness_command",
+    // P7 sp7 — orreth.cells/1 (cells = worlds: the namespace, the home, the seam, the words, the ceiling)
+    "topic_name",
+    "peers_from",
+    "address_home",
+    "epoch_check",
+    "world_fact",
+    "seam_sign",
+    "seam_verify",
+    "park_words",
+    "resumed_words",
+    "lag_words",
+    "sealed_words",
+    "rehome_words",
+    "ceiling",
 ];
 
 fn fixture_dir() -> PathBuf {
@@ -1068,6 +1083,143 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             s(&exp["name"]).to_string(),
             "the server's name"
         ),
+        // ---- orreth.cells/1 (P7 sp7): cells = worlds — the namespace, the home, the seam, the words, the ceiling ----
+        "topic_name" => same!(
+            cells::topic_name(s(&inp["base"]), opt_str(&inp["ns"])),
+            s(&exp["topic"]),
+            "the topic"
+        ),
+        "peers_from" => same!(
+            json!(cells::peers_from(opt_str(&inp["dial"]))
+                .iter()
+                .map(|p| p.to_value())
+                .collect::<Vec<_>>()),
+            exp["peers"],
+            "the peers"
+        ),
+        "address_home" => {
+            let got = cells::address_home(s(&inp["text"]))
+                .map(|(cell, name)| json!({"cell": cell, "name": name}))
+                .unwrap_or(Value::Null);
+            same!(got, exp["home"], "the home");
+            same!(
+                cells::strip_home(s(&inp["text"])),
+                s(&exp["served"]),
+                "the words served"
+            );
+        }
+        "epoch_check" => same!(
+            cells::epoch_check(
+                inp["mine"].as_i64().unwrap(),
+                inp["theirs"].as_i64().unwrap()
+            ),
+            s(&exp["verdict"]),
+            "the verdict"
+        ),
+        "world_fact" => {
+            let payload = cells::world_payload(
+                s(&inp["scope"]),
+                s(&inp["cell"]),
+                inp["epoch"].as_i64().unwrap(),
+                s(&inp["kernel"]),
+                s(&inp["door"]),
+                s(&inp["reason"]),
+            );
+            same!(payload, exp["payload"], "the payload");
+            let env = json!({
+                "specversion": envelope::SPECVERSION, "message_id": inp["message_id"], "message_kind": "event",
+                "type": cells::WORLD_HOMED, "universe_id": inp["scope"], "scope_path": inp["scope"],
+                "occurred_at": inp["occurred_at"], "payload": payload, "correlation_id": inp["scope"],
+                "authority_chain": [cells::KERNEL],
+            });
+            same!(cells::WORLD_HOMED, s(&exp["type"]), "the type");
+            same!(json!([cells::KERNEL]), exp["chain"], "the chain");
+            same!(
+                String::from_utf8(envelope::encode(&env).map_err(|e| e.to_string())?).unwrap(),
+                s(&exp["bytes"]),
+                "the bytes"
+            );
+        }
+        "seam_sign" => {
+            let signer =
+                kernel_self::KernelSelf::from_seed(&hex_bytes(s(&inp["seed_hex"])), "kernel");
+            same!(
+                cells::seam_sign(&inp["message"], &signer),
+                exp["signed"],
+                "the signed message"
+            );
+            same!(
+                String::from_utf8(canonical(&inp["message"])).unwrap(),
+                s(&exp["bytes"]),
+                "the bytes"
+            );
+        }
+        "seam_verify" => same!(
+            cells::seam_verify(
+                &inp["signed"],
+                opt_str(&inp["pinned_did"]),
+                s(&inp["now"]),
+                &strings(&inp["seen_nonces"]),
+                inp["epoch"].as_i64(),
+            ),
+            s(&exp["verdict"]),
+            "the verdict"
+        ),
+        "park_words" => same!(
+            cells::park_words(s(&inp["name"]), s(&inp["cell"]), s(&inp["since"])),
+            s(&exp["words"]),
+            "the words"
+        ),
+        "resumed_words" => same!(
+            cells::resumed_words(s(&inp["name"]), s(&inp["cell"])),
+            s(&exp["words"]),
+            "the words"
+        ),
+        "lag_words" => same!(
+            cells::lag_words(
+                s(&inp["cell"]),
+                opt_str(&inp["world"]),
+                inp["behind_s"].as_f64(),
+                opt_str(&inp["unreachable_since"]),
+            ),
+            s(&exp["words"]),
+            "the words"
+        ),
+        "sealed_words" => {
+            let (ok, words) = cells::sealed_words(
+                s(&inp["role"]),
+                s(&inp["own_db"]),
+                &strings(&inp["reachable"]),
+            );
+            same!(ok, exp["ok"].as_bool().unwrap(), "sealed");
+            same!(words, s(&exp["words"]), "the words");
+        }
+        "rehome_words" => same!(
+            cells::rehome_words(
+                s(&inp["scope"]),
+                s(&inp["from_cell"]),
+                s(&inp["to_cell"]),
+                inp["epoch"].as_i64().unwrap(),
+            ),
+            s(&exp["words"]),
+            "the words"
+        ),
+        "ceiling" => {
+            let (allowed, after) = cells::ceiling(
+                inp["tokens"].as_f64().unwrap(),
+                inp["last_at"].as_f64().unwrap(),
+                inp["now"].as_f64().unwrap(),
+                inp["rate"].as_f64().unwrap(),
+                inp["burst"].as_f64().unwrap(),
+            );
+            same!(allowed, exp["allowed"].as_bool().unwrap(), "allowed");
+            if (after - exp["tokens_after"].as_f64().unwrap()).abs() > 1e-9 {
+                return Err(format!(
+                    "the tokens after: got {after}, want {}",
+                    exp["tokens_after"]
+                ));
+            }
+        }
         // ---- orreth.bodies/1 (P7 sp6): the kernel governs the bodies it spawns; the harness rides the rail ----
         "backoff" => same!(
             json!(body::backoff_s(inp["deaths"].as_i64().unwrap_or(0))),

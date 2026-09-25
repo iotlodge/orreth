@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the shadow rides the cell's topic · 2026-09-25
 //! The rails, proven on the dev rig (`spine/compose.yaml`) — Phase 0's and
 //! Phase 1 sp1/sp2's laws, in Rust, on the same ground the Python spine
 //! stands on. Runs only by name with the feature on:
@@ -527,10 +528,10 @@ async fn shadow_the_two_spines_share_one_ground_and_one_truth() {
     .await
     .unwrap();
     let py = python(&tok, &format!(
-        "from orreth_spine import outbox, sinks, projector, envelope as ev; import psycopg, os\n\
+        "from orreth_spine import outbox, sinks, projector, rails, envelope as ev; import psycopg, os\n\
          c = psycopg.connect(os.environ['SPINE_PG'], autocommit=True)\n\
          n = outbox.drain(c, sinks.KafkaSink())\n\
-         t = projector.run_once(c, group='shadow-py-{tok}', topics=['{typ}'], consumer_name='shadow-py-{tok}',\n\
+         t = projector.run_once(c, group='shadow-py-{tok}', topics=[rails.topic('{typ}')], consumer_name='shadow-py-{tok}',\n\
              apply=lambda cur, env: cur.execute(\"INSERT INTO spine_shadow_marks (tok, side, message_id) VALUES (%s, 'python-saw', %s)\", ('{tok}', env['message_id'])))\n\
          print('python: relayed', n, 'projected', t)")).await;
     print!("{py}");
@@ -581,7 +582,7 @@ async fn shadow_the_two_spines_share_one_ground_and_one_truth() {
         mid_py.starts_with("msg_"),
         "python printed the message id: {py}"
     );
-    let mut sink = KafkaSink::new(&kafka).unwrap();
+    let mut sink = KafkaSink::new(&kafka, &format!("t{tok}")).unwrap(); // P7 sp7: the cell's namespace
     outbox::drain(&g, &mut sink, Duration::from_secs(30))
         .await
         .unwrap();
@@ -594,7 +595,8 @@ async fn shadow_the_two_spines_share_one_ground_and_one_truth() {
     // seq 2 — the Rust reader sees them in that order and feeds the inbox's cursor
     // honestly (1 then 2), never a guess
     let consumer = format!("shadow-rs-{tok}");
-    let reader = events::Reader::open(&kafka, &format!("shadow-rs-{tok}"), &[&typ], true)
+    let worn = orreth_spine::rails::topic(&typ, &format!("t{tok}"));
+    let reader = events::Reader::open(&kafka, &format!("shadow-rs-{tok}"), &[&worn], true)
         .await
         .unwrap();
     let e1 = reader

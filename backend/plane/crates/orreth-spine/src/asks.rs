@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the APPROVE of a kernel-held act runs intent.stop · intent.restart · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the APPROVE of service.retire and the Stable's acts (mind.*) settles here · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: name_of shared with the seam · the world.rehome act settles here · 2026-09-25
 //! The ask road on the ground — mirrors `orreth_spine.dispatch` (the write
 //! half) and the ask views of `orreth_spine.glass`: ONE write path. A human's
 //! ask lands on `spine_asks` WITH its marker and its `ask.received` fact in
@@ -772,6 +773,14 @@ pub async fn settle_kernel_act(
                 )
                 .await?
             }
+            "world.rehome" => {
+                // P7 sp7: the universe re-homed — its epoch advances, the old home may not commit
+                let to_cell = held["args"]["to_cell"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .to_string();
+                crate::cells_live::rehome_in(&tx, w, &to_cell, by).await?
+            }
             _ => return Err(RoadError::NotConfirmed { rest: false }),
         };
         let (n, r) = match level.as_str() {
@@ -866,7 +875,11 @@ pub async fn settle_kernel_act(
 
 // ---- the views --------------------------------------------------------------------------
 
-async fn name_of(g: &Ground, scope: &str, did: Option<&str>) -> Result<Option<String>, RoadError> {
+pub async fn name_of(
+    g: &Ground,
+    scope: &str,
+    did: Option<&str>,
+) -> Result<Option<String>, RoadError> {
     let Some(did) = did.filter(|d| d.starts_with("did:")) else {
         return Ok(None);
     };

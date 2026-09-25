@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: `shadow` seats the crew when it stands alone · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: `cell <name>` — a second universe on its own database and role · 2026-09-25
 # (the OLD world's rig, unchanged, lives on below under `old` — its own provenance in its lines)
 #
 # Orreth dev rig — JB's one-command feedback rig, DOCKER-first (the NEW line: canon 0002).
@@ -16,6 +17,12 @@
 #                                SHADOW (same ground, same page, the Python bodies serve); ALONE (P7 sp6) it seats the
 #                                crew itself, every body a process it governs; log ~/.orreth/tmp/shadow.log, pid printed
 #   scripts/dev.sh shadow stop   bring the Rust bridge down (SIGINT — it stops whole); confirms :4601 empty
+#   scripts/dev.sh cell <name> [port]   P7 sp7: light a CELL — a second universe (u:<name>) with its OWN database
+#                                (spine_<name>) and role (cell_<name>, reaching no other database), its own benches and
+#                                topics (namespace <name>), its own kernel self and bodies' seeds (~/.orreth/cells/<name>),
+#                                on :<port> (default 4602 + the count of cells lit); names its peers from SPINE_PEERS
+#                                ("local=http://127.0.0.1:4601"); log ~/.orreth/tmp/cell-<name>.log
+#   scripts/dev.sh cell <name> stop   bring that cell's kernel down whole; `cell <name> seal` only makes its role and database
 #   scripts/dev.sh suite [args]  the spine suite to ~/.orreth/tmp/suite.log, tail printed (default: tests;
 #                                pass a file or -k to narrow) — REFUSES while a Bridge is lit (the stale-rig law)
 #   scripts/dev.sh rust [rails]  cargo test in backend/plane (the whole workspace, hermetic) + the
@@ -146,6 +153,64 @@ shadow_stop() {
   [ -n "$(shadow_pid)" ] && { kill "$pid" 2>/dev/null || true; for i in $(seq 20); do [ -z "$(shadow_pid)" ] && break; sleep 0.5; done; }
   [ -n "$(shadow_pid)" ] && { echo "· :$SHADOW_PORT is STILL held by $(shadow_pid) — kill it by hand"; return 1; }
   echo "· the Rust bridge is dark — :$SHADOW_PORT empty"
+}
+
+cell_seal() {  # P7 sp7: a cell's ground — its own database and a role that reaches no other (M8's isolation, the dev profile)
+  name="$1"; db="spine_$name"; role="cell_$name"; pw="cell-$name-dev"
+  PSQL="docker exec orreth-spine-ground psql -U orreth -d spine -tAqc"
+  have=$($PSQL "SELECT 1 FROM pg_roles WHERE rolname='$role'" 2>/dev/null || true)
+  [ "$have" = 1 ] || { $PSQL "CREATE ROLE $role LOGIN PASSWORD '$pw'" >/dev/null && echo "· the role $role made"; }
+  have=$($PSQL "SELECT 1 FROM pg_database WHERE datname='$db'" 2>/dev/null || true)
+  [ "$have" = 1 ] || { docker exec orreth-spine-ground createdb -U orreth -O "$role" "$db" >/dev/null && echo "· the database $db made, owned by $role"; }
+  # the seal: PUBLIC may enter no database of ours; each cell's role enters only its own (the owner role, orreth, enters all — the dev profile, said by the tenth check)
+  for d in spine litellm postgres "$db"; do $PSQL "REVOKE CONNECT ON DATABASE $d FROM PUBLIC" >/dev/null 2>&1 || true; done
+  $PSQL "GRANT CONNECT ON DATABASE $db TO $role" >/dev/null
+  $PSQL "REVOKE CONNECT ON DATABASE $db FROM $role; GRANT CONNECT ON DATABASE $db TO $role" >/dev/null   # idempotent
+  echo "· cell $name is sealed: the role $role reaches only $db"
+}
+
+cell_home() { echo "$HOME/.orreth/cells/$1"; }
+cell_pid()  { lsof -nP -iTCP:"$1" -sTCP:LISTEN -t 2>/dev/null | head -1 || true; }
+cell_port() { # the port a lit cell holds, remembered beside its seeds
+  [ -f "$(cell_home "$1")/port" ] && cat "$(cell_home "$1")/port" || true; }
+
+cell_light() {  # P7 sp7: a second universe beside u:dev — its own kernel on its own database, sealed
+  name="$1"; port="${2:-}"
+  case "$name" in local|"") echo "· 'local' is the first cell (u:dev on :$SHADOW_PORT) — light it with scripts/dev.sh shadow"; return 2 ;; esac
+  echo "$name" | grep -Eq '^[a-z0-9_-]+$' || { echo "· a cell's name is lower-case letters, digits, - and _"; return 2; }
+  ground_up || { echo "· the ground is dark on :5433 — run scripts/dev.sh up first"; return 1; }
+  home=$(cell_home "$name"); mkdir -p "$home"
+  if [ -z "$port" ]; then port=$(cell_port "$name"); fi
+  if [ -z "$port" ]; then n=$(ls -d "$HOME"/.orreth/cells/*/ 2>/dev/null | wc -l | tr -d ' '); port=$((4601 + n)); fi
+  pid=$(cell_pid "$port")
+  [ -n "$pid" ] && { echo "· :$port is already held (pid $pid) — \`cell $name stop\` first, or name another port"; return 0; }
+  cell_seal "$name"
+  load_env
+  echo "· building spine-bridge (cargo, feature bridge) …"
+  (cd "$PLANE" && cargo build --quiet -p orreth-spine --features bridge --bin spine-bridge) || { echo "· the build refused — read the errors above"; return 1; }
+  echo "$port" >"$home/port"
+  log="$TMPDIR/cell-$name.log"
+  peers="${SPINE_PEERS:-local=http://127.0.0.1:$SHADOW_PORT}"
+  (cd "$PLANE" && ORRETH_HOME="$home" SPINE_PG="postgresql://cell_$name:cell-$name-dev@localhost:5433/spine_$name" \
+     SPINE_SCOPE="u:$name" SPINE_CELL="$name" SPINE_QUEUE_NS="$name" SPINE_BRIDGE_PORT="$port" SPINE_BODIES=crew \
+     SPINE_PEERS="$peers" nohup "$PLANE/target/debug/spine-bridge" >"$log" 2>&1 &)
+  for i in $(seq 60); do [ -n "$(cell_pid "$port")" ] && break; sleep 0.5; done
+  pid=$(cell_pid "$port")
+  [ -z "$pid" ] && { echo "· cell $name never took :$port in 30 s — read $log"; tail -5 "$log"; return 1; }
+  echo "· cell $name is lit: http://127.0.0.1:$port/  (u:$name on spine_$name as cell_$name · benches and topics '$name' · seeds in $home · peers: $peers · pid $pid) — log: $log"
+  echo "· say \"librarian@$name, hello\" on :$SHADOW_PORT to route an ask home to this cell; stop it with scripts/dev.sh cell $name stop"
+}
+
+cell_stop() {
+  name="$1"; port=$(cell_port "$name")
+  [ -z "$port" ] && { echo "· no cell named $name was ever lit here (no $(cell_home "$name")/port)"; return 0; }
+  pid=$(cell_pid "$port")
+  [ -z "$pid" ] && { echo "· cell $name is dark — :$port empty"; return 0; }
+  kill -INT "$pid" 2>/dev/null || true       # Ctrl+C's law: it stops whole, its bodies with it
+  for i in $(seq 60); do [ -z "$(cell_pid "$port")" ] && break; sleep 0.5; done
+  [ -n "$(cell_pid "$port")" ] && { kill "$pid" 2>/dev/null || true; for i in $(seq 20); do [ -z "$(cell_pid "$port")" ] && break; sleep 0.5; done; }
+  [ -n "$(cell_pid "$port")" ] && { echo "· :$port is STILL held by $(cell_pid "$port") — kill it by hand"; return 1; }
+  echo "· cell $name is dark — :$port empty"
 }
 
 new_status() {
@@ -362,8 +427,12 @@ case "${1:-}" in
              *) echo "usage: scripts/dev.sh bridge [stop]"; exit 2 ;; esac ;;
   shadow)  case "${2:-}" in stop) shadow_stop ;; ""|start) shadow_light ;;   # P7 sp3: the Rust bridge on :4601
              *) echo "usage: scripts/dev.sh shadow [stop]"; exit 2 ;; esac ;;
+  cell)    case "${3:-}" in stop) cell_stop "${2:-}" ;; seal) cell_seal "${2:-}" ;;   # P7 sp7: a second universe, sealed
+             *) cell_light "${2:-}" "${3:-}" ;; esac ;;
   suite)   pid=$(bridge_pid)
            [ -n "$pid" ] && { echo "· a Bridge is lit on :$BRIDGE_PORT (pid $pid) — the stale-rig law: a live rig poisons every test dispatcher. \`scripts/dev.sh bridge stop\` first."; exit 1; }
+           spid=$(shadow_pid)   # P7 sp7: a lit Rust kernel on the SAME ground relays the suite's rows to ITS topics (found 2026-09-25: an old :4601 ate every test's ask fact)
+           [ -n "$spid" ] && { echo "· the Rust kernel is lit on :$SHADOW_PORT (pid $spid) — the stale-rig law: its relay publishes the suite's outbox rows to its own topics. \`scripts/dev.sh shadow stop\` first."; exit 1; }
            ground_up || { echo "· the ground is dark on :5433 — run scripts/dev.sh up first (the suite needs the rails)"; exit 1; }
            shift; args=("$@"); [ ${#args[@]} -eq 0 ] && args=(tests)
            echo "· the spine suite → $SUITE_LOG  (pytest -q ${args[*]})"
@@ -389,5 +458,5 @@ case "${1:-}" in
            echo "· open the glass: http://127.0.0.1:$BRIDGE_PORT/" ;;
   old)     shift; old_rig "$@" ;;
   replant) old_rig replant ;;     # the launchd keeper's word — unchanged, at the top level
-  *) echo "usage: scripts/dev.sh up|down|status|logs|bridge [stop]|shadow [stop]|suite [pytest args]|rust [rails]|walk|old <verb>|replant" ;;
+  *) echo "usage: scripts/dev.sh up|down|status|logs|bridge [stop]|shadow [stop]|cell <name> [port|stop|seal]|suite [pytest args]|rust [rails]|walk|old <verb>|replant" ;;
 esac

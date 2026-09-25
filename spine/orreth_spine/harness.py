@@ -4,6 +4,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, two checks: every MCP server answers initialize · the keeper proposes after strikes, never retires alone · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, model ARMS on a run (the same golden cases against two minds) · three checks: every mind answers · the gateway answers and holds every stall · the meter and the gateway agree · a model change is announced · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the run over the invoke rail (`orreth.resident.harness.v1`) · the verdict factored (fixture bodies-v0) · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the tenth check — this cell is sealed · 2026-09-25
 """The A/B harness v0 (canon 0004, AG-6): golden cases run against a body's
 mind; every run is a record; a failing run is a FACT on the rail
 (orreth.harness.failed.v1) that the feed carries to the chat as a soft
@@ -388,8 +389,9 @@ def checks(conn) -> list[dict]:
     them; a failed check is a wound named in words."""
     from .resident import ensure_schema as _ground
     _ground(conn)
-    from . import monitor, scheduler, services
+    from . import cells, monitor, scheduler, services
     scheduler.ensure_schema(conn); monitor.ensure_schema(conn); services.ensure_schema(conn)
     return [duty_answered(conn), offers_are_holds(conn), services_healthy(conn),
             mcp_servers_answer(conn), keeper_proposes(conn),
-            minds_answer(conn), gateway_holds(conn), meter_agrees(conn), changes_announced(conn)]
+            minds_answer(conn), gateway_holds(conn), meter_agrees(conn), changes_announced(conn),
+            cells.sealed(conn)]                      # P7 sp7: the TENTH — this cell's role reaches no other database

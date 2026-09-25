@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W14 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W22 an offer is a proposal · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the farm's metrics: the Monitoring grows with the Stable · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the Operating State names the cell and epoch · 2026-09-25
 """The Monitoring workspace's ground (canon 0001: "if it's monitoring, it
 goes here"): the live snapshot of the Operating State — rails, benches,
 bodies, asks, the last harness run — and the WATCHES: named checks the
@@ -226,8 +227,11 @@ def snapshot(conn, *, rails: bool = True) -> dict:
              "since": w[7].isoformat() if w[7] is not None and recorded_red == red else None}
         d["reads"] = reads(d)
         watches.append(d)
+    from . import cells
+    home = cells.card(conn)
     return {
         "world": ev.scope(),
+        "home": {"cell": home["cell"], "epoch": home["epoch"], "namespace": home["namespace"]},   # P7 sp7
         "outbox": lag,
         "asks": asks,
         "bodies": bodies,

@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W17 (the meter's clock) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the meter reads the ladder (the mind's service DID) · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, THE GATEWAY: every mind through LiteLLM with the body's own key; the meter in dollars · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the meter wears its world (scope) · 2026-09-25
 """The gateway lane v0 (canon 0004): no mind thinks off-meter.
 
 Every model call in the new world goes through here: the thought runs,
@@ -59,6 +60,13 @@ def ensure_schema(conn) -> None:
         cur.execute("ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS request_id text")
         cur.execute("ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS ok boolean NOT NULL DEFAULT true")
         cur.execute("ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS note text")
+        # P7 sp7: the meter wears its world — the per-world roll-up (0009's open row)
+        cur.execute("ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS scope text")
+
+
+def _scope() -> str:
+    from . import envelope as ev
+    return ev.scope()
 
 
 def meter(conn, did: str, model: str, tokens_in: int, tokens_out: int, *,
@@ -72,9 +80,9 @@ def meter(conn, did: str, model: str, tokens_in: int, tokens_out: int, *,
     service = services.mind_did(conn, model) if stall is None else services.stall_did(conn, stall)
     with conn.transaction():
         conn.cursor().execute(
-            "INSERT INTO spine_meter (did, model, tokens_in, tokens_out, at, service, usd, stall, request_id, ok, note)"
-            " VALUES (%s, %s, %s, %s, clock_timestamp(), %s, %s, %s, %s, %s, %s)",
-            (did, model, tokens_in, tokens_out, service, usd, stall, request_id, ok, note))
+            "INSERT INTO spine_meter (did, model, tokens_in, tokens_out, at, service, usd, stall, request_id, ok, note,"
+            " scope) VALUES (%s, %s, %s, %s, clock_timestamp(), %s, %s, %s, %s, %s, %s, %s)",
+            (did, model, tokens_in, tokens_out, service, usd, stall, request_id, ok, note, _scope()))
 
 
 class MindUnavailable(RuntimeError):

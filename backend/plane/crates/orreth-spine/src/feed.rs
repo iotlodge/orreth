@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: `publish_delta` — the spawned bodies' words as they form · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the feed on the cell's topics · 2026-09-25
 //! The Bridge feed's heart — mirrors `orreth_spine.bridgefeed.Feed` and
 //! `consume_rail` (canon 0002): the one place the glass connects. The browser
 //! never touches a broker; it receives small, pointer-only notices —
@@ -121,7 +122,12 @@ pub async fn consume_rail(
     stop: Arc<AtomicBool>,
     ready: Arc<AtomicBool>,
 ) -> Result<(), RailError> {
-    let reader = Reader::open(&w.kafka, group, topics, false).await?;
+    let worn: Vec<String> = topics
+        .iter()
+        .map(|t| crate::rails::topic(t, &w.ns))
+        .collect(); // P7 sp7: the cell's topics
+    let worn: Vec<&str> = worn.iter().map(String::as_str).collect();
+    let reader = Reader::open(&w.kafka, group, &worn, false).await?;
     while !stop.load(Ordering::Relaxed) {
         if !ready.load(Ordering::Relaxed) && reader.assigned() {
             ready.store(true, Ordering::Relaxed);

@@ -65,6 +65,10 @@ required-features = ["bridge"]
 name = "bodies"
 required-features = ["bridge"]
 
+[[test]]
+name = "cells"
+required-features = ["bridge"]
+
 [[bin]]
 name = "spine-bridge"
 path = "src/bin/spine-bridge.rs"

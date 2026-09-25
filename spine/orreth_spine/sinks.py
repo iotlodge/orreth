@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P1 sp2, the events shadow (M4-lite) · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the topic wears the cell's namespace · 2026-09-25
 """The relay's real sinks (canon 0002).
 
 KafkaSink publishes an outbox row to the events rail: the TOPIC is the
@@ -14,7 +15,7 @@ import os
 
 from confluent_kafka import Producer
 
-from . import envelope as ev
+from . import envelope as ev, rails
 
 KAFKA_BOOTSTRAP = os.environ.get("SPINE_KAFKA", "localhost:9092")
 
@@ -25,7 +26,7 @@ class KafkaSink:
 
     def publish(self, message_id: str, body: bytes) -> None:
         env = ev.decode(body)
-        topic = env["type"]
+        topic = rails.topic(env["type"])       # P7 sp7: the type, wearing the cell's namespace
         key = str((env.get("aggregate") or {}).get("id") or message_id)
         errors: list = []
         self._p.produce(topic, value=body, key=key,

@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P0 sp1, the rig breathes · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: topics wear the cell's namespace · 2026-09-25
 """One breath through each rail (canon 0002).
 
 Every breath is the same proof: an envelope goes in, comes back, and the
@@ -30,6 +31,14 @@ COMMAND_EXCHANGE = "orreth.command.v1"
 HEARTBEAT_QUEUE = "spine.heartbeat"
 HEARTBEAT_KEY = "cmd.dev.00.heartbeat"
 HEARTBEAT_TOPIC = "orreth.heartbeat.v1"
+
+
+def topic(base: str) -> str:
+    """P7 sp7: the topic a fact rides on wears the cell's namespace the way
+    a bench does (`SPINE_QUEUE_NS`; `cells.topic_name` is the pure law) —
+    one broker may carry many cells in dev, none reads another's log."""
+    from .cells import topic_name
+    return topic_name(base, os.environ.get("SPINE_QUEUE_NS", ""))
 
 
 def ground_breath(env: dict) -> float:
@@ -106,7 +115,7 @@ def events_breath(env: dict, timeout_s: float = 30.0) -> float:
     raw = ev.encode(env)
     t0 = time.perf_counter()
     prod = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP})
-    prod.produce(HEARTBEAT_TOPIC, value=raw, key=env["message_id"])
+    prod.produce(topic(HEARTBEAT_TOPIC), value=raw, key=env["message_id"])
     remaining = prod.flush(timeout_s)
     if remaining:
         raise TimeoutError("the events rail never confirmed the produce")
@@ -117,7 +126,7 @@ def events_breath(env: dict, timeout_s: float = 30.0) -> float:
         "enable.auto.commit": False,
     })
     try:
-        cons.subscribe([HEARTBEAT_TOPIC])
+        cons.subscribe([topic(HEARTBEAT_TOPIC)])
         deadline = time.monotonic() + timeout_s
         while time.monotonic() < deadline:
             msg = cons.poll(0.5)

@@ -189,6 +189,9 @@ async fn shadow_an_ask_through_the_rust_door_is_served_by_the_python_librarian_a
         bodies: false, // beside the Python rig: its bodies serve
         ephemeral: true,
         spine: spine_dir(),
+        cell: "local".into(),
+        peers: vec![],
+        kernel_home: None,
     })
     .await
     .expect("the Rust bridge lights");

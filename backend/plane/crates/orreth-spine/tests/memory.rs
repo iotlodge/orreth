@@ -176,6 +176,9 @@ async fn shadow_two_kernels_read_one_record_and_sign_as_one_self() {
         bodies: false, // beside the Python rig: its bodies serve
         ephemeral: true,
         spine: spine_dir(),
+        cell: "local".into(),
+        peers: vec![],
+        kernel_home: None,
     })
     .await
     .expect("the Rust bridge lights");

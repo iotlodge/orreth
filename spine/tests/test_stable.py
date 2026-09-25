@@ -259,7 +259,8 @@ def test_the_harness_runs_model_arms_and_reads_the_stables_world_checks(pg, fake
     with pytest.raises(ValueError):
         harness.run(pg, lib, cases=cases, arm="ghost")
     names = [c["name"] for c in harness.checks(pg)]
-    assert names[-4:] == ["every mind answers", "the gateway answers and holds every mind", "the meter and the gateway agree", "a model change is announced"]
+    assert names[-5:] == ["every mind answers", "the gateway answers and holds every mind", "the meter and the gateway agree", "a model change is announced",
+                          "this cell is sealed"]                                             # P7 sp7: the tenth
     assert harness.minds_answer(pg)["unprobed"] == ["haiku", "sonnet"] and harness.minds_answer(pg)["ok"] is False
     services.check_all(pg, kind="mind", gateway=gw, by=ME)
     assert harness.minds_answer(pg) == {"name": "every mind answers", "ok": True, "detail": "2 of 2 answered", "silent": [], "unprobed": []}

@@ -191,6 +191,9 @@ async fn shadow_two_kernels_beat_on_one_ground_one_beat_at_a_time() {
         bodies: false, // beside the Python rig: its bodies serve (SPINE_BODIES=none)
         ephemeral: true,
         spine: spine_dir(),
+        cell: "local".into(),
+        peers: vec![],
+        kernel_home: None,
     })
     .await
     .expect("the Rust bridge lights");
@@ -440,8 +443,8 @@ async fn shadow_two_kernels_beat_on_one_ground_one_beat_at_a_time() {
     // eighth is compared by name and verdict alone)
     let py_checks = hz_py["checks"].as_array().unwrap();
     let rs_checks = hz["checks"].as_array().unwrap();
-    assert_eq!(rs_checks.len(), 9, "{hz}");
-    assert_eq!(py_checks.len(), 9, "{hz_py}");
+    assert_eq!(rs_checks.len(), 10, "{hz}"); // P7 sp7: the tenth — this cell is sealed
+    assert_eq!(py_checks.len(), 10, "{hz_py}");
     for (i, (a, b)) in rs_checks.iter().zip(py_checks.iter()).enumerate() {
         assert_eq!(a["name"], b["name"], "check {i}");
         assert_eq!(

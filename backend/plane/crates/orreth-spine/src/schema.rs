@@ -2,6 +2,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the watches · the schedules · the harness runs · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the shelf · the Stable · the meter · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the meter's world · the cells' tables · 2026-09-25
 //! The ask road's tables — the Python spine's DDL, word for word, under the
 //! same tags its `once` guard uses (`resident` · `markers` · `proof` · `intent`
 //! · `presence` · `digest`), so two spines on one ground never disagree about a
@@ -183,6 +184,8 @@ pub const GATEWAY_DDL: &[&str] = &[
     "CREATE TABLE IF NOT EXISTS spine_meter ( meter_id bigserial PRIMARY KEY, did text NOT NULL, \
      model text NOT NULL, tokens_in int NOT NULL, tokens_out int NOT NULL, at timestamptz NOT NULL \
      DEFAULT now())",
+    // P7 sp7: the meter wears its world — the per-world roll-up
+    "ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS scope text",
     "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
      'spine_meter' AND column_name = 'service') THEN ALTER TABLE spine_meter ADD COLUMN service text; END IF; \
      END $$",
@@ -204,7 +207,7 @@ pub const GATEWAY_DDL: &[&str] = &[
 ];
 
 /// The tags and their DDL, in the order the road ensures them.
-pub const ROAD: [(&str, &[&str]); 13] = [
+pub const ROAD: [(&str, &[&str]); 15] = [
     ("resident", RESIDENT_DDL),
     ("markers", MARKERS_DDL),
     ("proof", PROOF_DDL),
@@ -218,6 +221,8 @@ pub const ROAD: [(&str, &[&str]); 13] = [
     ("services", SERVICES_DDL), // P7 sp6: the shelf, the Stable, the meter — the registry seam
     ("stable", STABLE_DDL),
     ("gateway", GATEWAY_DDL),
+    ("cells", crate::cells_live::CELLS_DDL), // P7 sp7: the world, its peers, the seam's nonces
+    ("seam", crate::seam::SEAM_DDL), // P7 sp7: the seam's outbound queue, the routed ask's columns
 ];
 
 /// Every table the ask road stands on, once per ground per process.

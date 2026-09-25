@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp1, the body is born · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, a body never confirms (one face) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W12 · W19 · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the dispatcher listens on the cell's topic · 2026-09-25
 """The ask road (canon 0002's chain, in miniature): ONE write path.
 
 A human's ask lands on the ground with its event in one transaction; the
@@ -19,7 +20,7 @@ import pika
 
 from . import envelope as ev
 from . import outbox, projector
-from .rails import COMMAND_EXCHANGE, RABBIT_URL
+from .rails import COMMAND_EXCHANGE, RABBIT_URL, topic as _topic
 from .resident import ASK_RECEIVED, SERVE_KEY
 
 ASK_REFUSED = "orreth.ask.refused.v1"     # W19: an ask to a body that is not here
@@ -332,7 +333,7 @@ def dispatch_once(conn, *, consumer: str, group: str,
     each. A redelivered fact enqueues a duplicate command — harmless: the
     resident's inbox absorbs it (proven in the suite)."""
     return projector.run_once(
-        conn, group=group, topics=[ASK_RECEIVED], consumer_name=consumer,
+        conn, group=group, topics=[_topic(ASK_RECEIVED)], consumer_name=consumer,
         apply=lambda _cur, env: publish_command(_command_for(env),
                                                 rabbit_url),
         skip=lambda env: env.get("scope_path") != ev.scope(), **kw)
@@ -346,7 +347,7 @@ def run_dispatcher(conn, *, consumer: str, group: str, stop,
     a rig dispatches what happens while it lives; another world's facts
     cost nothing)."""
     projector.run_forever(
-        conn, group=group, topics=[ASK_RECEIVED], consumer_name=consumer,
+        conn, group=group, topics=[_topic(ASK_RECEIVED)], consumer_name=consumer,
         apply=lambda _cur, env: publish_command(_command_for(env),
                                                 rabbit_url),
         skip=lambda env: env.get("scope_path") != ev.scope(),

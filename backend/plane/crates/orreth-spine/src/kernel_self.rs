@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: `load_as` — a service's self from its seed · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: Clone — the seam signs with the same self · 2026-09-25
 //! THE KERNEL'S OWN SELF (canon 0005 P7 sp5 · covenant rule 1): one Ed25519
 //! keypair per rig, its seed at `<SPINE_KERNEL_HOME or ORRETH_HOME/kernel>/seed`,
 //! minted once and read every boot after — the same self on EVERY bridge
@@ -16,6 +17,7 @@ use ed25519_dalek::{Signer, SigningKey};
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 
+#[derive(Clone)]
 pub struct KernelSelf {
     pub name: String,
     pub kind: String,

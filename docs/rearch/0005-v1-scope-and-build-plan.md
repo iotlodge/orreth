@@ -1258,7 +1258,7 @@ approved (covenant rule 9).
   (probe · sync · strikes) is the Python organ's (beat class 3 reserved);
   `service.retire`'s approve stays 501; `renew` is ported but unused here
   (no resident renews from Rust); the beat lock serialises beats per world
-  — it does not yet shard them (P7 sp7's cells); `dev.sh shadow` lights the
+  — it does not yet shard them (sp7 gave each cell its own ground, so a beat is per cell by construction); `dev.sh shadow` lights the
   loops too — with both bridges lit, both beat, the lock decides.
 - **sp5 — MEMORY AND THE EXPORT** ✅ **BUILT 2026-09-24 — walk OWED (JB in the
   glass, SPEC-MEMORY-01)**. Store · digest · recall · the export, SIGNED —
@@ -1372,8 +1372,88 @@ approved (covenant rule 9).
   its crew in-process (the reference, the simulator); the harness's A/B arms
   ride the rail one run at a time (120 s each); `dev.sh suite` still refuses
   beside a lit Bridge. Python suite 508 (469 before); five Rust proofs green; clippy + fmt clean. **Walk #14 (JB, 2026-09-25): PASS, no friction.** Pushed after JB's review of the plane diff.
-- **sp7 — CELLS, PARTITION, ISOLATION, HARDENING** (M7 · M8), built once in
-  the Rust kernel.
+- **sp7 — CELLS, PARTITION, ISOLATION, HARDENING** (M7 · M8) ✅ **BUILT
+  2026-09-25 — walk OWED (JB in the glass, SPEC-CELLS-01)**, built once in the
+  Rust kernel. **JB's locks at the open:** the WHOLE seam in one spoonful; the
+  dev metal is ONE Postgres box with a database and a role per cell; bodies
+  stay host processes (a container metal is sp8's). **"Cells = worlds":** a
+  CELL is one universe's physical home — its own kernel self, its own ground
+  (a database and a role that reaches no other), its own benches and topics
+  (the namespace `SPINE_QUEUE_NS` now names topics too: `orreth.ask.received.v1.two`),
+  its own bodies with their own seed homes (`~/.orreth/cells/<name>`), its
+  own policy and meter (the meter wears its world — `spine_meter.scope`).
+  **Fixtures first, from the reference:** `cells-v0.json` (57 cases —
+  `topic_name` · `peers_from` · `address_home` · `epoch_check` · `world_fact` ·
+  `seam_sign` · `seam_verify` (every fence: the pin, a forged or tampered
+  message, a signer whose DID is not its key's, a replayed nonce, the clock
+  window's two edges, a stale and a future epoch) · `park_words` ·
+  `resumed_words` · `lag_words` · `sealed_words` · `rehome_words` · `ceiling`)
+  — the pure laws in `orreth_spine/cells.py`, ported in `cells.rs`; the Rust
+  runner reads 385/385 across 91 kinds, not yet ported: none. **The world's
+  home** (`spine_world`: scope · cell · epoch · the kernel that keeps it) is
+  settled at light — absent: this cell, epoch 1, the fact `orreth.world.homed.v1`
+  in the row's own transaction; present in another cell: the kernel REFUSES
+  TO LIGHT over it in words (the fencing law at the door) — and read on both
+  doors as the world card `/world` (rule 7). **The tenth health check**, "this
+  cell is sealed", names the connection's role and every database it can
+  enter (the dev ground's owner reaches everything and says so). **The rig:**
+  `scripts/dev.sh cell <name> [port]` stands a second universe `u:<name>` on
+  `spine_<name>` as `cell_<name>` (PUBLIC may enter no database of ours; each
+  cell's role only its own), its own kernel self and seeds, its peers from
+  `SPINE_PEERS`. **THE SEAM** (`seam.rs`): two cells that NAME each other
+  speak over ONE door, `POST /seam`, in messages SIGNED by their kernels' own
+  selves, the peer's DID pinned on first sight, every message through every
+  fence and a knock ceiling per signer (5 a second, a burst of 20); a hello
+  every 10 s carries the world card and the roster (the replicated picture,
+  its lag on the peer's row — "cell two · u:two · live" / "3 s behind" /
+  "unreachable since 16:13"). **Commands route home:** "librarian@two, …" (or
+  "two/librarian, …") files the ask here as ROUTED with its journey ("routed
+  home to cell two — librarian answers there"), carries it over the seam, cell
+  two files it as the person's own ask and serves it by its own address rule
+  (a name not there is refused at the door and the words come back), and the
+  answer is carried back as a fact on the ask the human asked — served by
+  "librarian@two", "answered in cell two by librarian". **Partition:** every
+  outbound message waits in `spine_seam_out` with a backoff (1 s doubling,
+  cap 30); an ask whose home does not answer reads PARKED in plain words; the
+  moment the peer answers again the message goes and the ask resumes, once
+  (a nonce is spent once; an origin ask lands once at its home). **The stop
+  (rule 11):** `POST /asks/stop` (the "stop it" link on a routed ask's line)
+  rests the ask here at once and carries the stop first of anything waiting;
+  the home cell rests it at its next safe boundary — the proof measures the
+  propagation at 0.6 s (SLO 2 s). **Re-homing** is consequential: "re-home
+  this universe to cell three" is held at L2 (`world.rehome`, settled in the
+  held ask's own transaction); the epoch advances with the fact, the old home
+  REFUSES to serve ("re-homed to cell three at epoch 2"), a message wearing an
+  old epoch is refused as stale (409, past the signature) and the sender
+  re-hears the world; a stranger, a replay and a flood wear the one face
+  (403). **The glass:** the world tag reads the universe, its cell and epoch;
+  PULSE says where the world stands; PEERS lists every peer with its lag and
+  who is alive there; "what world is this?"; the GUIDE gained its cells
+  section. **THE PROOF** (`tests/cells.rs`, 31 s): two Rust kernels as two
+  cells on two databases and roles; the seal felt (cell A's role may not enter
+  cell B's database; the tenth check holds); the seam pinned both ways; an ask
+  routed home is served by B's own echo and answered on A's ask; the stop
+  reaches B in 0.6 s; B dark → the ask parks in plain words and the peer reads
+  "unreachable since"; B relit as the same self → the ask resumes and lands
+  once; a stranger and a replay wear the one face, 5 of a 30-knock flood are
+  refused at the ceiling; re-homed at L2 → epoch 2, the old home refuses, a
+  stale epoch is fenced; at dark both cells stopped whole and the proof's
+  grounds dropped. **Honest limits:** re-homing advances the epoch and the
+  record — moving the universe's DATA is the operator's act (a database copy)
+  outside the kernel; a body's home is its universe's (the placement profile's
+  `cell` must be this ground's — no body stands in two cells); the raw fact
+  log does not cross the seam (the world card, the roster and the answers to
+  routed asks do); the Python Bridge serves `/world` and the tenth check as
+  the reference but homes no peers (the seam is the Rust kernel's, by 0008);
+  the human's own door stays a dev door until sp8's gate; the dev cell u:dev
+  stands on the ground's owner role and its tenth check says "unsealed" until
+  it too is sealed. FOUND BY THE PROOFS AND CURED: an old Rust kernel left lit
+  on :4601 shared the dev ground's one outbox and its relay published every
+  test world's facts to ITS topics (`dev.sh suite` now refuses beside :4601
+  too); the Python feed and projector wear the namespace for every caller.
+  Python suite 571 (508 before); six Rust proofs green (rails · askroad ·
+  loops · memory · bodies · cells); clippy + fmt clean on both feature sets. The plane diff awaits JB's review
+  before the push (P7's law).
 - **sp8 — THE RELEASE WAVE.** `orrethd` re-based on `orreth-spine` replaces
   the Python glass; the new line replaces main; VERSION 1.0.
 

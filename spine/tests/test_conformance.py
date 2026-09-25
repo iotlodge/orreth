@@ -11,6 +11,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable: route_for · usd · budget_duration · resolve · drift · eol_due · recommend · deal · deal_refuses · drained_words · act_words · server_name · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: search_terms · memory_fact · purge_fact · digest_text · digest_fact · signed_bundle · did_of · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: backoff · park_rule · parked_words · parked_fact · harness_verdict · harness_command · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: topic_name · peers_from · address_home · epoch_check · world_fact · seam_sign · seam_verify · the words · sealed_words · ceiling · 2026-09-25
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -21,8 +22,8 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import (body as _body, dispatch, envelope as ev, export, ground, harness, intent, mcp, mitl, monitor, placement,
-                          presence, proof, rails, resident, scheduler, services, stable, store, digest)
+from orreth_spine import (body as _body, cells, dispatch, envelope as ev, export, ground, harness, intent, mcp, mitl, monitor,
+                          placement, presence, proof, rails, resident, scheduler, services, stable, store, digest)
 from orreth_spine.identity import Identity
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
@@ -348,6 +349,42 @@ def test_fixture(contract, case):
     elif kind == "did_of":
         assert Identity("x", bytes.fromhex(inp["seed_hex"]), kind=inp["kind"]).did == exp["did"]
         assert Identity("x", bytes.fromhex(inp["seed_hex"]), kind=inp["kind"]).verify_key_hex == exp["public_key_hex"]
+    # ---- orreth.cells/1 (P7 sp7): cells = worlds — the namespace, the home, the seam, the words, the ceiling ----
+    elif kind == "topic_name":                   # the topic wears the cell's namespace as a bench does
+        assert cells.topic_name(inp["base"], inp["ns"]) == exp["topic"]
+    elif kind == "peers_from":                   # SPINE_PEERS → the peers this cell names; a malformed pair dropped by name
+        assert cells.peers_from(inp["dial"]) == exp["peers"]
+    elif kind == "address_home":                 # "librarian@two, …" · "two/librarian, …" → the home cell and the name
+        assert cells.address_home(inp["text"]) == exp["home"]
+        assert cells.strip_home(inp["text"]) == exp["served"]
+    elif kind == "epoch_check":                  # current · stale · future
+        assert cells.epoch_check(inp["mine"], inp["theirs"]) == exp["verdict"]
+    elif kind == "world_fact":                   # orreth.world.homed.v1 — the kernel's chain, the world as correlation
+        e = cells.world_fact(inp["scope"], inp["cell"], inp["epoch"], inp["kernel"], inp["door"], inp["reason"])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert (e["payload"], e["type"], e["authority_chain"], e["correlation_id"]) == \
+            (exp["payload"], exp["type"], exp["chain"], exp["correlation_id"])
+        assert ev.encode(e).decode("ascii") == exp["bytes"]
+    elif kind == "seam_sign":                    # Ed25519 over the message's canonical bytes; the signer's DID and key beside it
+        signer = Identity("kernel", bytes.fromhex(inp["seed_hex"]), kind="kernel")
+        assert cells.seam_sign(inp["message"], signer) == exp["signed"]
+        assert ev.canonical(inp["message"]).decode("ascii") == exp["bytes"]
+    elif kind == "seam_verify":                  # the seam's gate: one verdict in words
+        assert cells.seam_verify(inp["signed"], pinned_did=inp["pinned_did"], now=inp["now"],
+                                 seen_nonces=inp["seen_nonces"], epoch=inp["epoch"]) == exp["verdict"]
+    elif kind == "park_words":
+        assert cells.park_words(inp["name"], inp["cell"], inp["since"]) == exp["words"]
+    elif kind == "resumed_words":
+        assert cells.resumed_words(inp["name"], inp["cell"]) == exp["words"]
+    elif kind == "lag_words":
+        assert cells.lag_words(inp["cell"], inp["world"], inp["behind_s"], inp["unreachable_since"]) == exp["words"]
+    elif kind == "sealed_words":
+        assert cells.sealed_words(inp["role"], inp["own_db"], inp["reachable"]) == (exp["ok"], exp["words"])
+    elif kind == "rehome_words":
+        assert cells.rehome_words(inp["scope"], inp["from_cell"], inp["to_cell"], inp["epoch"]) == exp["words"]
+    elif kind == "ceiling":                      # the token bucket: refills at rate up to burst; a knock spends one
+        allowed, after = cells.ceiling(inp["tokens"], inp["last_at"], inp["now"], inp["rate"], inp["burst"])
+        assert allowed == exp["allowed"] and abs(after - exp["tokens_after"]) < 1e-9
     elif kind == "turned_fact":                  # orreth.watch.turned.v1 — the kernel's chain, the watch as correlation
         with _dials(SPINE_SCOPE=inp["scope"]):
             e = ev.make_envelope(

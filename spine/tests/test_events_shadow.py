@@ -10,7 +10,7 @@ import secrets
 import pytest
 
 from orreth_spine import envelope as ev
-from orreth_spine import inbox, outbox, projector, sinks
+from orreth_spine import inbox, outbox, projector, rails, sinks
 
 BOOT = os.environ.get("SPINE_KAFKA", "localhost:9092")
 
@@ -90,7 +90,7 @@ def _commit_and_relay(pg, typ, aid, n):
 def _project(pg, typ, consumer, token=None):
     return projector.run_once(
         pg, group=f"g-{consumer}-{token or secrets.token_hex(3)}",
-        topics=[typ], consumer_name=consumer, apply=_view_apply(consumer))
+        topics=[rails.topic(typ)], consumer_name=consumer, apply=_view_apply(consumer))
 
 
 def test_committed_facts_flow_and_the_projection_rebuilds(pg):
@@ -148,7 +148,7 @@ def test_poison_parks_visibly_and_never_advances(pg):
     typ = f"orreth.test-{tok}.counter.v1"
     from confluent_kafka import Producer
     p = Producer({"bootstrap.servers": BOOT})
-    p.produce(typ, value=b"this is not an envelope")
+    p.produce(rails.topic(typ), value=b"this is not an envelope")    # P7 sp7: the cell's topic
     p.flush(10)
     consumer = f"poison-{tok}"
     t = _project(pg, typ, consumer)
@@ -176,7 +176,7 @@ def test_another_worlds_facts_cost_nothing_against_the_cap(pg):
     _commit_and_relay(pg, typ, aid, 1)          # then ONE of ours
     consumer = "cap-" + secrets.token_hex(3)
     out = projector.run_once(
-        pg, group=f"g-{consumer}", topics=[typ], consumer_name=consumer,
+        pg, group=f"g-{consumer}", topics=[rails.topic(typ)], consumer_name=consumer,
         apply=_view_apply(consumer), max_messages=1,
         skip=lambda env: env.get("scope_path") != "u:dev")  # _env's world
     assert out["applied"] == 1                  # ours, past three free skips

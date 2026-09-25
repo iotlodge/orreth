@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the dispatcher and the relay on the cell's topics · 2026-09-25
 //! The standing loops of a bridge — mirrors `dispatch.run_dispatcher` (the
 //! events-rail consumer turning a committed `ask.received` into a serve
 //! command on the target's bench) and the rig's relay loop.
@@ -69,11 +70,17 @@ pub async fn run_dispatcher(
     ready: Arc<AtomicBool>,
     meter: Arc<Meter>,
 ) -> Result<(), RailError> {
-    let reader = Reader::open(&w.kafka, group, &[ASK_RECEIVED], true).await?;
-    // a replay from `earliest` walks every world's facts on the broker: the
-    // ones not ours are committed in batches (the offset is monotone on the
-    // one partition; the latest commit covers the rest), so the catch-up is
-    // seconds, not a sync commit per skipped fact
+    let reader = Reader::open(
+        &w.kafka,
+        group,
+        &[&crate::rails::topic(ASK_RECEIVED, &w.ns)],
+        true,
+    )
+    .await?; // P7 sp7: the cell's topic
+             // a replay from `earliest` walks every world's facts on the broker: the
+             // ones not ours are committed in batches (the offset is monotone on the
+             // one partition; the latest commit covers the rest), so the catch-up is
+             // seconds, not a sync commit per skipped fact
     let mut behind: Option<Pending> = None;
     let mut skipped_since = 0u32;
     while !stop.load(Ordering::Relaxed) {
@@ -128,7 +135,7 @@ pub async fn run_dispatcher(
 /// The relay loop: every 200 ms, the unpublished rows to the events rail —
 /// a refusal is recorded on the row and retried (at-least-once).
 pub async fn run_relay(g: &Ground, w: &World, stop: Arc<AtomicBool>) -> Result<(), RailError> {
-    let mut sink = KafkaSink::new(&w.kafka)?;
+    let mut sink = KafkaSink::new(&w.kafka, &w.ns)?;
     while !stop.load(Ordering::Relaxed) {
         let _ = outbox::relay_once(g, &mut sink, 100).await;
         tokio::time::sleep(Duration::from_millis(200)).await;

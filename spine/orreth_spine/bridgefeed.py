@@ -1,3 +1,4 @@
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the feed's topics wear the cell's namespace · 2026-09-25
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P1 sp3, the Bridge feed v0 (M6-lite) · 2026-09-16
 """The Bridge feed (canon 0002): the one place the glass connects.
 
@@ -109,6 +110,9 @@ def consume_rail(feed: Feed, topics: list[str], group: str,
     production default. The gateway DECLARES its topics before
     subscribing — a topic that exists only after its first fact would
     leave the consumer assignment-less forever."""
+    from .rails import topic as _topic
+    topics = [_topic(t) for t in topics]     # P7 sp7: every topic wears the cell's namespace, whoever names it
+
     try:
         from confluent_kafka.admin import AdminClient, NewTopic
         admin = AdminClient({"bootstrap.servers": bootstrap or KAFKA_BOOTSTRAP})

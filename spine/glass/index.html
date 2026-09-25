@@ -378,7 +378,7 @@
   </div>
   <div id="window-frame"><div id="space">
     <canvas id="stars"></canvas><div id="sun"></div>
-    <span class="worldtag" style="left:63%;top:33%">u:dev</span>
+    <span class="worldtag" id="worldtag" style="left:63%;top:33%" title="the world this door serves, its cell and its epoch — from /world">u:dev</span>
     <span class="worldtag" style="left:70%;top:52%">librarian · alive</span>
   </div></div>
   <div id="sill">O R R E R Y&nbsp;&nbsp;·&nbsp;&nbsp;B R A I N&nbsp;&nbsp;·&nbsp;&nbsp;A T L A S</div>
@@ -725,6 +725,13 @@ async function expandRow(row, id, quiet){
   const j = document.createElement("div");
   j.className = "journey-notes";
   j.textContent = v.journey.join("  ·  ");
+  if (v.status === "routed" || v.status === "parked"){                                   // P7 sp7: a routed ask can always be stopped
+    const a = document.createElement("a"); a.href = "#"; a.textContent = "  ·  stop it"; a.title = "rests the ask here and tells its home cell to rest it too";
+    a.onclick = async e => { e.preventDefault(); const r = await fetch("/asks/stop", {method:"POST", headers:{"content-type":"application/json"},
+      body: JSON.stringify({id: v.ask_id || v.id, person: PERSON})}).then(x=>x.json()).catch(()=>null);
+      sysline(!r ? "the stop door did not answer" : r.error ? esc(r.error) : esc(r.words || "stopped")); };
+    j.appendChild(a);
+  }
   d.appendChild(j);
   row.after(d); bandOpenRow = d;      // the result renders RIGHT HERE
 }
@@ -1268,6 +1275,14 @@ function layoutChat(){              // the chat never covers an open left pull: 
   }
 }
 addEventListener("resize", layoutChat);
+let WORLD = null;                                // P7 sp7: the world card — the universe, its cell, its epoch, its peers
+async function loadWorld(){
+  WORLD = await fetch("/world").then(x=>x.json()).catch(()=>null);
+  const tag = document.getElementById("worldtag");
+  if (WORLD && tag) tag.textContent = `${WORLD.scope} · cell ${WORLD.cell}` + (WORLD.epoch ? ` · epoch ${WORLD.epoch}` : "");
+  return WORLD;
+}
+loadWorld();
 function toggleCrew(open){
   const was = crewPull.classList.contains("open");
   const now = open ?? !was;
@@ -1669,6 +1684,29 @@ async function serviceWords(text){                 // "what services are here?" 
     if (m[1] === "retire") await retireService(m[2], m[3]); else await restoreService(m[2], m[3]);
     return true;
   }
+  m = t.match(/^re-?home\s+(?:this\s+)?(?:universe|world)\s+(?:to\s+)?(?:cell\s+)?([a-z0-9_-]+)$/);   // P7 sp7: re-home the universe — consequential, held at L2
+  if (m){
+    el("msg mine", esc(text)); toggleChat(true);
+    const r = await fetch("/world/rehome", {method:"POST", headers:{"content-type":"application/json"},
+      body: JSON.stringify({to_cell: m[1], person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
+    if (r && r.held){
+      PENDING[r.held] = el("journey", `re-homing this universe to cell ${esc(m[1])} is consequential — the kernel holds it at the interlock…`);
+      const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);
+      if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
+      setTimeout(loadWorld, 3000);
+      return true;
+    }
+    sysline(r && r.error ? esc(r.error) : "the re-home door did not answer (the Python door does not serve it — the Rust kernel's)");
+    return true;
+  }
+  m = t.match(/^(?:what|which)\s+(?:world|cell|universe)\s+(?:is\s+this|am\s+i\s+in)\??$/);   // P7 sp7: "what world is this?"
+  if (m){
+    el("msg mine", esc(text));
+    const w = await loadWorld();
+    sysline(!w ? "the world door did not answer" : `${esc(w.scope)} stands in cell ${esc(w.cell)}${w.epoch ? " at epoch " + w.epoch : ""}, kept by ${esc((w.kernel || "?").slice(0, 40))}…` +
+            (w.peers && w.peers.length ? ` · peers: ${w.peers.map(pr => esc(pr.words)).join(" · ")}` : " · no peers named"));
+    return true;
+  }
   m = t.match(/^(?:restart|revive|start)\s+(?:the\s+)?([a-z0-9_-]+)\s+body(?:\s+again)?$/);   // P7 sp6: the human's lever on a parked body
   if (m){
     el("msg mine", esc(text));
@@ -1732,11 +1770,23 @@ async function loadMonitor(){
     d.innerHTML = `<h5>${title}</h5>` + rows; box.appendChild(d); return d; };
   const row = (k, v, cls) => `<div class="row"><span>${esc(k)}</span><span class="${cls || ""}">${esc(String(v))}</span></div>`;
   const v = s.values || {};
+  const home = s.home || {};                                                         // P7 sp7: the cell this universe stands in
   view("PULSE", row("feed revision", lastRev ?? "—") + row("world", s.world) +
+       row("stands in", `cell ${home.cell || "?"}` + (home.epoch ? ` · epoch ${home.epoch}` : "") + (home.namespace ? ` · benches and topics '${home.namespace}'` : "")) +
        row("spent today (every mind)", "$" + Number(v.usd_today || 0).toFixed(4)) +
        row("thoughts in the last 10 min", (v.meter_rate_10m || 0) + " / min") +
        row("could not think (last hour)", v.route_failures_1h || 0, v.route_failures_1h ? "red" : "ok") +
        row("bodies out of fuel", v.bodies_drained || 0, v.bodies_drained ? "red" : "ok"));
+  // P7 sp7: THE PEERS — every cell this one names, its self pinned, how far behind my picture of it is
+  const wc = await loadWorld();
+  const peers = (wc && wc.peers) || [];
+  view("PEERS · the cells this one speaks to over the signed seam",
+       peers.map(pr => { let roster = []; try { roster = JSON.parse(pr.picture || "[]"); } catch(e) {}
+         const alive = roster.filter(b => b.alive).map(b => b.name);
+         return `<div class="row"><span>${esc(pr.words)}${pr.did ? ` · <span class="meta">${esc(pr.did.slice(0, 32))}…</span>` : ""}` +
+                `${alive.length ? `<div class="meta">alive there: ${esc(alive.join(", "))} — say “${esc(alive[0])}@${esc(pr.cell)}, …” to ask it</div>` : ""}</span>` +
+                `<span class="${pr.unreachable_since ? "red" : pr.did ? "ok" : ""}">${pr.unreachable_since ? "unreachable" : pr.did ? "pinned" : "not yet heard"}</span></div>`; }).join("") ||
+       `<div class="meta">no peers named — light a second cell with <code>scripts/dev.sh cell two</code> and relight this kernel so it names it (SPINE_PEERS)</div>`);
   const stb = s.stable || {minds: [], assignments: []};                            // P6.5 sp3: THE STABLE — every mind, its deal, its spend
   view("THE STABLE · LLMs · " + (v.minds_standing || 0) + " standing" + (v.minds_unhealthy ? " · " + v.minds_unhealthy + " unhealthy" : ""),
        (stb.minds || []).map(m => `<div class="row"><span>${esc(m.words)}</span><span class="${m.state === "unhealthy" ? "red" : m.state === "retired" ? "" : "ok"}">${esc(m.state)}</span></div>`).join("") +

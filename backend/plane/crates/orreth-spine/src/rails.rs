@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: topics wear the cell's namespace · 2026-09-25
 //! The rails' NAMES and SHAPES — pure, no I/O. Mirrors `orreth_spine.rails`
 //! (the command exchange, the heartbeat's queue · key · topic, the dials
 //! `SPINE_PG` · `SPINE_RABBIT` · `SPINE_KAFKA`), `orreth_spine.resident.serve_queue`
@@ -112,9 +113,16 @@ pub fn heartbeat_key(ns: &str) -> String {
     namespaced(HEARTBEAT_KEY, ns, None)
 }
 
-/// The topic a fact is published to: the envelope's TYPE.
+/// The topic a fact is published to: the envelope's TYPE (the base name; the
+/// cell's namespace rides on it through [`topic`]).
 pub fn topic_for(env: &Value) -> Option<&str> {
     env.get("type").and_then(Value::as_str)
+}
+
+/// P7 sp7: the topic wearing the cell's namespace, as a bench wears it
+/// (`cells.topic_name`): `orreth.ask.received.v1` alone, `….v1.two` in cell two.
+pub fn topic(base: &str, ns: &str) -> String {
+    crate::cells::topic_name(base, Some(ns))
 }
 
 /// The partition key: the aggregate's id when the envelope wears a truthy

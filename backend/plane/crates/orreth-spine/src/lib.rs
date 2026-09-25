@@ -76,6 +76,7 @@ pub mod ask;
 pub mod beat;
 pub mod body;
 pub mod canonical;
+pub mod cells;
 pub mod envelope;
 pub mod export;
 pub mod hash;
@@ -98,6 +99,8 @@ pub mod asks;
 pub mod bodies;
 #[cfg(feature = "bridge")]
 pub mod bridge;
+#[cfg(feature = "rails")]
+pub mod cells_live;
 #[cfg(feature = "rails")]
 pub mod digest;
 #[cfg(feature = "rails")]
@@ -140,6 +143,8 @@ pub mod rail_error;
 pub mod scheduler;
 #[cfg(feature = "rails")]
 pub mod schema;
+#[cfg(feature = "rails")]
+pub mod seam;
 #[cfg(feature = "rails")]
 pub mod services_live;
 #[cfg(feature = "rails")]

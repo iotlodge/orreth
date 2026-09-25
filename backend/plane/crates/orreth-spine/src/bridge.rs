@@ -3,6 +3,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE door · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the crew spawned and governed · /delta · /bodies · the Stable's doors · the shelf's doors · the harness over the rail · the keepers' beats · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the cell — the home at light · the /world door · 2026-09-25
 //! The Rust bridge — the doors and the feed of `orreth_spine.glass` +
 //! `bridgefeed` on axum, lit in SHADOW on :4601 beside the Python Bridge on
 //! :4600, both on one ground. It serves the SAME page (`spine/glass/index.html`
@@ -101,6 +102,12 @@ pub struct Config {
     pub ephemeral: bool,
     /// The spine home (`ORRETH_SPINE`, else beside the crate) — the crew manifest, the templates, the golden sets.
     pub spine: PathBuf,
+    /// P7 sp7: the cell this kernel IS (`SPINE_CELL`, else `local`) — the universe's home.
+    pub cell: String,
+    /// P7 sp7: the peers this cell names (`SPINE_PEERS`: `name=door,…`).
+    pub peers: Vec<crate::cells::Peer>,
+    /// The kernel self's seed directory (`None`: `SPINE_KERNEL_HOME`, else `ORRETH_HOME/kernel`) — a proof stands two kernels in one process.
+    pub kernel_home: Option<PathBuf>,
 }
 
 impl Config {
@@ -123,6 +130,9 @@ impl Config {
                 .ok()
                 .is_some_and(|v| !v.is_empty()),
             spine: bodies::spine_dir(),
+            cell: crate::cells_live::cell_here(),
+            peers: crate::cells::peers_from(std::env::var("SPINE_PEERS").ok().as_deref()),
+            kernel_home: None,
         }
     }
 }
@@ -130,6 +140,8 @@ impl Config {
 struct App {
     cfg: Config,
     kernel: crate::kernel_self::KernelSelf, // P7 sp5: the kernel's own self — the export's signer
+    cell: String,                           // P7 sp7: the cell this kernel IS — the universe's home
+    seam: Arc<crate::seam::Seam>,           // P7 sp7: the seam to the peers this cell names
     feed: Arc<Feed>,
     meter: Arc<Meter>,
     group: String,
@@ -206,8 +218,11 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
     let feed = Arc::new(Feed::new(1024));
     let meter = Arc::new(Meter::default());
     let group = dispatcher::group_per_life();
-    let kernel = match crate::kernel_self::KernelSelf::load(&crate::kernel_self::KernelSelf::home())
-    {
+    let kernel_home = cfg
+        .kernel_home
+        .clone()
+        .unwrap_or_else(crate::kernel_self::KernelSelf::home);
+    let kernel = match crate::kernel_self::KernelSelf::load(&kernel_home) {
         Ok(k) => k,
         Err(e) => {
             eprintln!("the kernel's self could not be read ({e}) — an ephemeral self this life");
@@ -215,6 +230,42 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
         }
     };
     let gateway = Gateway::from_env();
+    // P7 sp7: THE CELL — the universe's home settled at light, said once as a fact; a kernel of
+    // another cell may not light over a universe homed here (the fencing law at the door)
+    let cell = cfg.cell.clone();
+    let home = crate::cells_live::home(
+        &mut g,
+        &w.scope,
+        &cell,
+        &kernel.did(),
+        &format!("http://127.0.0.1:{port}"),
+    )
+    .await?;
+    eprintln!(
+        "{} stands in cell {cell} at epoch {} — kept by {}",
+        w.scope,
+        home["epoch"],
+        kernel.did()
+    );
+    // P7 sp7: THE SEAM — signed by this kernel's self; the peers this cell names
+    let seam = Arc::new(crate::seam::Seam::new(
+        &cell,
+        cfg.peers.clone(),
+        kernel.clone(),
+        &format!("http://127.0.0.1:{port}"),
+        w.clone(),
+        &cfg.human_zone,
+    ));
+    if !cfg.peers.is_empty() {
+        eprintln!(
+            "cell {cell} names its peers: {}",
+            cfg.peers
+                .iter()
+                .map(|p| format!("{} at {}", p.cell, p.door))
+                .collect::<Vec<_>>()
+                .join(" · ")
+        );
+    }
     // P7 sp6: THE CREW — every seat a process this kernel spawns and governs
     let bodies_arc: Option<Arc<Bodies>> = if cfg.bodies {
         let seats = bodies::crew(&cfg.spine)?;
@@ -244,6 +295,8 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
     let app = Arc::new(App {
         cfg: cfg.clone(),
         kernel,
+        cell,
+        seam: seam.clone(),
         feed: feed.clone(),
         meter: meter.clone(),
         group: group.clone(),
@@ -384,6 +437,13 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
                     tokio::time::sleep(Duration::from_millis(500)).await;
                 }
             }
+        }));
+    }
+    // P7 sp7: the seam's beat — the peers greeted, what waits carried, the answers carried home
+    {
+        let (seam, stop) = (seam.clone(), stop.clone());
+        tasks.push(tokio::spawn(async move {
+            seam.run(&stop).await;
         }));
     }
     // the scheduler's beat — every 5 s, claimed on the ground first
@@ -601,6 +661,10 @@ fn router(app: Arc<App>) -> Router {
         .route("/markers", get(markers_door))
         .route("/markers/kinds", get(markers_kinds))
         .route("/monitor", get(monitor_door))
+        .route("/world", get(world_door)) // P7 sp7: the world card — the universe, its cell, its epoch, its peers
+        .route("/world/rehome", post(world_rehome)) // P7 sp7: re-home the universe — held at L2, the epoch advances on the yes
+        .route("/seam", post(seam_post)) // P7 sp7: the seam — signed messages between peer cells
+        .route("/asks/stop", post(asks_stop)) // P7 sp7: the human stops a routed ask (rule 11)
         .route("/schedules", post(schedules_post))
         .route("/schedules/rest", post(schedules_rest))
         .route("/schedules/:runner", get(schedules_door))
@@ -1265,6 +1329,33 @@ async fn ask_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
             .await?;
             return Ok((201, json!({"intention": made})));
         }
+        // P7 sp7: the fence at the action boundary — a re-homed universe is not this kernel's to serve
+        if let Some(words) = crate::cells_live::fence(&g, &w.scope, &app.cell).await? {
+            return Err(RoadError::Forbidden(words));
+        }
+        // P7 sp7: an ask that names a CELL routes home over the seam
+        if let Some((cell, name)) = crate::cells::address_home(&text) {
+            let id = app
+                .seam
+                .route_ask(
+                    &mut g,
+                    w,
+                    &cell,
+                    &name,
+                    &Submit {
+                        text: text.clone(),
+                        person: person.clone(),
+                        to: None,
+                        window: window.clone(),
+                        session: session.clone(),
+                        parent_marker: parent.clone(),
+                        kind: Some(kind.clone()),
+                        zone: zone.clone(),
+                    },
+                )
+                .await?;
+            return Ok((201, json!({"id": id})));
+        }
         let to = asks::address_to(&g, &w.scope, &text, to).await?;
         let out = asks::submit_ask(
             &mut g,
@@ -1350,6 +1441,81 @@ async fn enroll_confirm_post(State(app): State<Arc<App>>, body: Bytes) -> Respon
 }
 
 // ---- the loops' doors (P7 sp4) --------------------------------------------------------
+
+/// P7 sp7: the world card (rule 7 — the same on both doors).
+async fn world_door(State(app): State<Arc<App>>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        crate::cells_live::card(
+            &g,
+            scope(&app),
+            &app.cell,
+            Some(&app.kernel.did()),
+            &app.cfg.world.ns,
+            &app.cfg.human_zone,
+        )
+        .await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// P7 sp7: `POST /seam` — a peer's signed message through every fence, answered in kind.
+async fn seam_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let signed = body_json(&body);
+    let out = async {
+        let mut g = ground(&app).await?;
+        app.seam.receive(&mut g, &signed).await
+    }
+    .await;
+    match out {
+        Ok((code, v)) => answer(code, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// P7 sp7: `POST /asks/stop {id}` — a routed ask set to rest here and at its home.
+async fn asks_stop(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let id = s_or(&p, "id", "");
+    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let out = async {
+        let mut g = ground(&app).await?;
+        app.seam.stop_ask(&mut g, &id, &person).await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// P7 sp7: `POST /world/rehome {to_cell}` — held at the interlock (L2); on the yes the epoch advances.
+async fn world_rehome(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let to_cell = s_or(&p, "to_cell", "");
+    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let out = async {
+        let mut g = ground(&app).await?;
+        let held = crate::cells_live::hold_rehome(
+            &mut g,
+            &app.cfg.world,
+            &to_cell,
+            &person,
+            s_opt(&p, "session").as_deref(),
+        )
+        .await?;
+        Ok::<_, RoadError>(json!({"held": held, "level": crate::cells_live::REHOME_LEVEL}))
+    }
+    .await;
+    match out {
+        Ok(v) => answer(202, v),
+        Err(e) => refuse(e),
+    }
+}
 
 async fn monitor_door(State(app): State<Arc<App>>) -> Response {
     let out = async {

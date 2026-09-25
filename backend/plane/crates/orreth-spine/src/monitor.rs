@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the Operating State names the cell and epoch · 2026-09-25
 //! The Monitoring workspace's ground — `orreth_spine.monitor` (canon 0001:
 //! "if it's monitoring, it goes here"): the live snapshot of the Operating
 //! State — rails, benches, bodies, asks, the last harness run — and the
@@ -213,8 +214,25 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
         .iter()
         .map(|b| b["name"].as_str().unwrap_or_default().to_string())
         .collect();
+    // P7 sp7: the cell and epoch this universe stands in (the world card's words)
+    let home = if crate::schema::has_table(g, "spine_world").await? {
+        g.client()
+            .query_opt(
+                "SELECT cell, epoch FROM spine_world WHERE scope = $1",
+                &[&scope],
+            )
+            .await?
+    } else {
+        None
+    };
+    let home = json!({
+        "cell": home.as_ref().map(|r| r.get::<_, String>(0)).unwrap_or_else(crate::cells_live::cell_here),
+        "epoch": home.as_ref().map(|r| r.get::<_, i32>(1)),
+        "namespace": w.ns,
+    });
     Ok(json!({
         "world": scope,
+        "home": home,
         "outbox": {"pending": lag.pending, "oldest_age_s": lag.oldest_age_s},
         "asks": Value::Object(asks),
         "bodies": bodies,

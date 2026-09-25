@@ -159,6 +159,9 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
         bodies: true,
         ephemeral: false,
         spine: spine_dir(),
+        cell: "local".into(),
+        peers: vec![],
+        kernel_home: None,
     })
     .await
     .expect("the Rust kernel lights alone");
@@ -288,8 +291,8 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
     assert_eq!(hz["last"]["template"], json!("librarian"));
     assert_eq!(
         hz["checks"].as_array().unwrap().len(),
-        9,
-        "nine world checks on the Rust door: {hz}"
+        10,
+        "ten world checks on the Rust door (P7 sp7 added the tenth): {hz}"
     );
     assert_eq!(
         post(port, "/harness/run", json!({"template": "nobody"}))

@@ -96,6 +96,25 @@ meters; it never sees the prompt).
   across 78 kinds, not yet ported: none. Standing alone, the Rust kernel is
   whole but for the built-in tools' door (their schemas live in `tools.py` —
   the boot rite runs as a Python one-shot until sp8 moves the door).
+- **P7 sp7 (2026-09-25) — CELLS, PARTITION, ISOLATION, HARDENING (M7 · M8),
+  built once in the Rust kernel:** a CELL is one universe's physical home —
+  its own kernel self, its own database and role (a role that reaches no
+  other database; the tenth health check says so), its own benches and
+  topics (the namespace names topics too), its own bodies and seeds. The
+  universe's home stands on the ground (`spine_world`: cell · epoch · the
+  kernel that keeps it), settled at light and said as a fact; a kernel of
+  another cell may not light over it. Two cells that name each other speak
+  over ONE door, `/seam`, in messages signed by their kernels' own selves,
+  the peer pinned on first sight, every message through every fence (the pin
+  · the signature · the nonce · the clock window · the epoch) and a ceiling
+  per signer. Commands route home ("librarian@two, …" is served by cell two's
+  own body and answered on the ask here); the world card and the roster
+  replicate with their lag; under partition the ask parks in plain words and
+  resumes once when the peer returns; the human's stop rides the seam first
+  and lands within the SLO; a re-homed universe advances its epoch (held at
+  L2) and the old home refuses to serve. `cells-v0.json` (57 cases) measures
+  the laws; the runner reads 385/385 across 91 kinds, not yet ported: none.
+  `tests/cells.rs` proves it with two kernels on two databases in 31 s.
 
 ## The conformance-suite law
 

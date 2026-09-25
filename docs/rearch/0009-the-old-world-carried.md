@@ -63,7 +63,7 @@ is the exact thing this page exists to prevent.
 
 | Old organ (dive) | What it did | Seat | Evidence / gap |
 |---|---|---|---|
-| The cascade resolver (0007) | floors tighten-only, ResolvedContext content-addressed, every thought names its law | RE-SEATED — P7 sp7 (cells) | `spine/policy/covenant-policy.v1.json` is ONE flat policy worn by every body. No floors, no cascade, no context hash on a thought. |
+| The cascade resolver (0007) | floors tighten-only, ResolvedContext content-addressed, every thought names its law | RE-SEATED partial — P7 sp7 gave every universe its OWN policy sheet (a cell wears its own `spine/policy`); the tighten-only cascade BETWEEN worlds and the context hash on a thought await a proof's need | `spine/policy/covenant-policy.v1.json` is ONE flat policy worn by every body. No floors, no cascade, no context hash on a thought. |
 | HITL gates, quorum, cooling-off (0012) | consequence waits for humans; silence never approves | CARRIED partial — `proof.py` · `tools.py` · `mitl.py` | L1/L2/L3 ladder, ConsequentialHold, MFA. No distinct-signer quorum, no cooling-off, no expiry law. |
 | The Reins — rule 11 (0051) | cancel/rest as recorded acts on everything managed | CARRIED — `intent.py` stop · `scheduler.py` rest · `proof.py` stop_demand | walked green in P6. |
 | Markers & severity lanes (0024) | signed annotations deriving from what they mark | CARRIED — `markers.py` (0006) | the open vocabulary of WHY; severity lanes not modeled. |
@@ -134,7 +134,7 @@ is the exact thing this page exists to prevent.
 |---|---|---|---|
 | The Observatory + vera (0043) | observability as a projection; the examiner grades under its own DID | CARRIED partial — `monitor.py` · `harness.py` · `templates/firmware-grader.v0.json` | watches, snapshot, judge; the grader is scribe-class. No per-floor tour, no daily ceiling. |
 | The Bell + the witness (0044) | dead-man notices silence; the one organ that reaches a human off-glass | CARRIED half — `presence.py` (the witness) | dormancy is noticed and listed. **No bell: nothing reaches a human beyond the glass.** |
-| Run record + monoidal roll-up (0005) | aggregatable envelope composed up the tree | RE-SEATED — P7 sp7 (cells, partition) | one ground, one world today. |
+| Run record + monoidal roll-up (0005) | aggregatable envelope composed up the tree | CARRIED partial — P7 sp7 | the meter wears its world (`spine_meter.scope`, both spines) and every cell is its own ground, so a roll-up per world is a query on its cell; a roll-up ACROSS cells (the tree) rides nothing yet — the seam carries the world card, the roster and the answers to routed asks, not the meter. |
 | A/B with signed arms (0043 · 0058) | arms as records, deterministic split, promotion as a stamped act | CARRIED partial — `harness.py` | template goldens only; arms and promotion go with sp6b. |
 | The Epoch drill / drift stages never enacts (0041) | | PARKED — see governance | |
 
@@ -142,7 +142,7 @@ is the exact thing this page exists to prevent.
 
 | Old organ (dive) | What it did | Seat | Evidence / gap |
 |---|---|---|---|
-| A template is a universe as data; the Shipyard (0009 · 0021) | League · Second Brain · Company; floors launched by conversation | RE-SEATED — P7 sp7 (cells = worlds) | the spine is ONE world ("a memory wears its world" is a column, not a floor). |
+| A template is a universe as data; the Shipyard (0009 · 0021) | League · Second Brain · Company; floors launched by conversation | CARRIED partial — P7 sp7 (cells = worlds) | a universe is a CELL: `scripts/dev.sh cell <name>` stands a second one on its own database, role, benches, topics, kernel self and seeds, sealed from the first; two cells speak over the signed seam. A universe launched BY CONVERSATION (the Shipyard's door) and a universe as a template's DATA await sp8's package. |
 | One binary, tier = profile, two clocks (0000 · 0004-old) | universe-time monotone, wall-clock for money | CARRIED partial — validity intervals, the meter's clock (W17) | no declared universe-time; rule 8's rejection of backdating not modeled. |
 | The Continuity Universe + the Testament (0034 · 0035) | the personal universe; survivorship | PARKED — template-shaped, waits for worlds | the standing grave law (never revive f:probe:4509) belongs to the old rig. |
 | Dials (0063) | | RE-SEATED — see governance | |
@@ -290,8 +290,9 @@ dollars, one remote MCP tool serving by env name.
   old world behind the same gates; nothing moved them.
 - **The Epoch, the Deed's observer walk, the supply lines** — rule 12:
   each waits for a proof that hits the wound.
-- **The Continuity Universe and the Testament** — templates need worlds
-  (P7 sp7) before a personal universe can exist.
+- **The Continuity Universe and the Testament** — worlds exist now (P7 sp7:
+  a cell is a universe of its own); the personal universe as a TEMPLATE
+  awaits sp8's package.
 
 ## What the old world had that the new deliberately dropped
 

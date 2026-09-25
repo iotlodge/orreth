@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the topic wears the cell's namespace · 2026-09-25
 //! The relay's real sink — mirrors `orreth_spine.sinks.KafkaSink` (canon
 //! 0002). The TOPIC is the envelope's type (schema families, never
 //! per-identity); the KEY is the aggregate id when the envelope wears one —
@@ -17,10 +18,12 @@ use std::time::Duration;
 pub struct KafkaSink {
     producer: FutureProducer,
     timeout: Duration,
+    /// P7 sp7: the cell's namespace every topic wears.
+    ns: String,
 }
 
 impl KafkaSink {
-    pub fn new(bootstrap: &str) -> Result<KafkaSink, RailError> {
+    pub fn new(bootstrap: &str, ns: &str) -> Result<KafkaSink, RailError> {
         let producer: FutureProducer = ClientConfig::new()
             .set("bootstrap.servers", bootstrap)
             .set("message.timeout.ms", "10000")
@@ -28,6 +31,7 @@ impl KafkaSink {
         Ok(KafkaSink {
             producer,
             timeout: Duration::from_secs(10),
+            ns: ns.to_string(),
         })
     }
 }
@@ -35,9 +39,11 @@ impl KafkaSink {
 impl Sink for KafkaSink {
     async fn publish(&mut self, message_id: &str, body: &[u8]) -> Result<(), RailError> {
         let env = envelope::decode(body)?;
-        let topic = topic_for(&env)
-            .ok_or_else(|| RailError::Refused("the envelope names no type".into()))?
-            .to_string();
+        let topic = crate::rails::topic(
+            topic_for(&env)
+                .ok_or_else(|| RailError::Refused("the envelope names no type".into()))?,
+            &self.ns,
+        );
         let key = key_for(&env).unwrap_or_else(|| message_id.to_string());
         self.producer
             .send(

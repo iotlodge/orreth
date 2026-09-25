@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the run OVER THE RAIL · the A/B arms · the Stable's four checks · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the tenth check — this cell is sealed · 2026-09-25
 //! The harness's WORLD CHECKS — `orreth_spine.harness.checks` (walk #8; P6.5):
 //! laws the harness reads off the ground itself, no mind invoked — "a duty
 //! answered, not refused" (W21) · "the monitor's offers arrive as holds" (W22)
@@ -410,7 +411,7 @@ pub async fn changes_announced(g: &Ground) -> Result<Value, RoadError> {
               "silent": silent}))
 }
 
-/// Every world check, read off the ground — the harness door lists them (nine, as the reference's).
+/// Every world check, read off the ground — the harness door lists them (ten, as the reference's).
 pub async fn checks(g: &Ground, scope: &str, gw: &Gateway) -> Result<Vec<Value>, RoadError> {
     Ok(vec![
         duty_answered(g, scope).await?,
@@ -422,6 +423,7 @@ pub async fn checks(g: &Ground, scope: &str, gw: &Gateway) -> Result<Vec<Value>,
         gateway_holds(g, scope, gw).await?,
         meter_agrees(g, scope, gw).await?,
         changes_announced(g).await?,
+        crate::cells_live::sealed(g).await?, // P7 sp7: the TENTH — this cell's role reaches no other database
     ])
 }
 

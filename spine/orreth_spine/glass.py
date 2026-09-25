@@ -9,6 +9,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the crew is one manifest (spine/crew.v0.json) · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: the pure laws factored for the fixture; the kernel's own self signs the export · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE (JB's seed) · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the cell's topics · the /world door · the home settled at light · 2026-09-25
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -39,7 +40,7 @@ from pathlib import Path
 import psycopg
 
 from . import bridgefeed, digest, dispatch, envelope as ev, export, ground, harness, intent, markers, mitl, monitor, outbox
-from . import placement, presence, projector, proof, scheduler, services, sinks
+from . import cells, placement, presence, projector, proof, scheduler, services, sinks
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRefused, Resident
 
@@ -472,6 +473,9 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
             if path == "/monitor":
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, monitor.snapshot(conn))
+            if path == "/world":                         # P7 sp7: the world card — the universe, its cell, its epoch, its peers
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    return self._json(200, cells.card(conn, kernel.did if kernel else None))
             if path.startswith("/schedules/"):           # the card's side B
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, scheduler.for_runner(
@@ -1018,7 +1022,7 @@ class BridgeRig:
         self._threads = [
             threading.Thread(target=self._httpd.serve_forever, daemon=True),
             threading.Thread(target=bridgefeed.consume_rail,
-                             args=(self.feed, FEED_TOPICS,
+                             args=(self.feed, FEED_TOPICS,   # P7 sp7: consume_rail wears the cell's namespace on every topic
                                    f"glass-feed-{self.port}", self._stop),
                              kwargs={"ready": self.feed_ready}, daemon=True),
             threading.Thread(target=self._relay_loop, daemon=True),
@@ -1261,6 +1265,9 @@ class BridgeRig:
 
     def start(self) -> "BridgeRig":
         self._sweep_benches()
+        with psycopg.connect(self.dsn, autocommit=True) as conn:     # P7 sp7: the universe's home settled at light
+            ground.ensure_all(conn)
+            self.home = cells.home(conn, self.kernel.did, f"http://127.0.0.1:{self.port}")
         for t in self._threads:
             t.start()
         return self

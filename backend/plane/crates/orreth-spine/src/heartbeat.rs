@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the breaths ride the cell's topics · 2026-09-25
 //! The rig's breath from Rust — mirrors `orreth_spine.heartbeat` and the
 //! three breaths of `orreth_spine.rails`. Every breath is the same proof: an
 //! envelope goes in, comes back, and the bytes match exactly. The ground
@@ -120,13 +121,20 @@ pub async fn events_breath(
     let raw = envelope::encode(env)?;
     let message_id = env["message_id"].as_str().unwrap_or_default().to_string();
     let t0 = Instant::now();
-    let mut sink = KafkaSink::new(bootstrap)?;
+    let ns = crate::rails::queue_ns(); // P7 sp7: the breath rides the cell's topic
+    let mut sink = KafkaSink::new(bootstrap, &ns)?;
     outbox::Sink::publish(&mut sink, &message_id, &raw).await?;
     let group = format!(
         "spine-breath-{}",
         &message_id[message_id.len().saturating_sub(8)..]
     );
-    let reader = events::Reader::open(bootstrap, &group, &[HEARTBEAT_TOPIC], true).await?;
+    let reader = events::Reader::open(
+        bootstrap,
+        &group,
+        &[&crate::rails::topic(HEARTBEAT_TOPIC, &ns)],
+        true,
+    )
+    .await?;
     let back = reader
         .read_until(timeout, |e| e["message_id"].as_str() == Some(&message_id))
         .await?;
@@ -149,10 +157,11 @@ pub async fn all_rails(
     timeout: Duration,
 ) -> Result<(Outcome, Outcome), RailError> {
     ground_breath(g, env).await?;
-    let mut sink = KafkaSink::new(bootstrap)?;
+    let ns = crate::rails::queue_ns();
+    let mut sink = KafkaSink::new(bootstrap, &ns)?;
     outbox::drain(g, &mut sink, timeout).await?;
     let message_id = env["message_id"].as_str().unwrap_or_default().to_string();
-    let topic = env["type"].as_str().unwrap_or(HEARTBEAT_TOPIC).to_string();
+    let topic = crate::rails::topic(env["type"].as_str().unwrap_or(HEARTBEAT_TOPIC), &ns);
     let reader = events::Reader::open(bootstrap, &format!("{consumer}-g"), &[&topic], true).await?;
     let seen = reader
         .read_until(timeout, |e| e["message_id"].as_str() == Some(&message_id))

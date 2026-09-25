@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the meter wears its world · 2026-09-25
 //! THE STABLE on the ground — the live half of `orreth_spine.stable` (P6.5 sp3
 //! · 0009 §2 · 0019 · 0058; JB's lock 2026-09-24: LiteLLM executes, the
 //! registry knows and decides): stalls (services of kind mind, each a model
@@ -592,8 +593,8 @@ pub async fn meter(
     g.client()
         .execute(
             "INSERT INTO spine_meter (did, model, tokens_in, tokens_out, at, service, usd, stall, request_id, ok, \
-             note) VALUES ($1, $2, $3, $4, clock_timestamp(), $5, $6, $7, $8, $9, $10)",
-            &[&did, &model, &tin, &tout, &service, &usd, &stall, &request_id, &ok, &note],
+             note, scope) VALUES ($1, $2, $3, $4, clock_timestamp(), $5, $6, $7, $8, $9, $10, $11)",
+            &[&did, &model, &tin, &tout, &service, &usd, &stall, &request_id, &ok, &note, &scope],
         )
         .await?;
     Ok(())

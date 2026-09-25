@@ -1,6 +1,6 @@
 {
  "format": "orreth-guide/1",
- "version": "0.1.0",
+ "version": "0.2.0",
  "title": "THE GUIDE \u00b7 what you can say here, and what happens",
  "kept_by": "the kernel \u2014 the same words on every door; Fable keeps it current with each spoonful",
  "sections": [
@@ -205,6 +205,38 @@
     {
      "say": "forget the trailer note",
      "does": "Governed erasure: every version leaves; a tombstone keeps the hashes; the digests that cited it are rebuilt."
+    }
+   ]
+  },
+  {
+   "id": "cells",
+   "when": "monitor",
+   "title": "Cells \u2014 a second universe, and the seam between them",
+   "lead": "A cell is one universe's home: its own kernel, its own database and role, its own benches, its own bodies and keys. Two cells that name each other can speak over a signed seam. What this world is and where it stands reads in the Monitoring's PULSE and PEERS.",
+   "entries": [
+    {
+     "say": "what world is this?",
+     "does": "The universe, the cell it stands in, its epoch, and the peers it names."
+    },
+    {
+     "say": "librarian@two, what is the weather?",
+     "does": "An ask that names a cell ROUTES HOME: cell two's own librarian answers, and the answer lands on your ask here, its journey saying so. \"two/librarian, \u2026\" works too."
+    },
+    {
+     "say": "stop it (on a routed ask's line)",
+     "does": "Rests the ask here and tells its home cell to rest it too \u2014 the human can always stop what the machine manages."
+    },
+    {
+     "say": "scripts/dev.sh cell two (in a terminal)",
+     "does": "Lights a second universe, u:two, on its own database and role, sealed from this one; relight this kernel so it names cell two as a peer (SPINE_PEERS)."
+    },
+    {
+     "say": "re-home this universe to cell three",
+     "does": "Consequential: held at the interlock (your yes). The universe's epoch advances; this kernel then refuses to serve it, and a peer still wearing the old epoch is told to re-hear the world."
+    },
+    {
+     "say": "(when a peer is dark)",
+     "does": "An ask routed to it reads PARKED in plain words \u2014 nothing is lost; the moment the peer answers again the ask goes and is answered once. The PEERS view says \"unreachable since\"."
     }
    ]
   }

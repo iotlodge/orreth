@@ -200,3 +200,24 @@ the same files, unchanged — before any module earns the word "ported".
     the kernel's ask of a body, `orreth.resident.harness.v1` — the run id as ref, the
     cases' hash, the target (the body's own bench), the cases whole, the arm and the
     parent marker only when given, the kernel's chain — for a fixed id and clock.
+  - `topic_name` · `peers_from` · `address_home` · `epoch_check` · `world_fact` (cells-v0,
+    P7 sp7) — cells = worlds: the topic a fact rides on wears the cell's namespace as a
+    bench does; `SPINE_PEERS` read into the peers a cell names (a malformed pair dropped by
+    name); an ask that names a CELL at its head ("librarian@two, …" · "two/librarian, …")
+    → the home cell and the name, both lower-cased, and the words the home serves (the
+    cell address rewritten plain); the fencing law (`current` · `stale` · `future`); the
+    `orreth.world.homed.v1` payload and bytes for a fixed id and clock (the world as the
+    pointer, the (cell, epoch) hashed, the kernel's chain).
+  - `seam_sign` · `seam_verify` (cells-v0, P7 sp7) — the seam's message signed by a kernel
+    self from a fixed seed (Ed25519 over the canonical bytes of the message without its
+    signature fields; the signer's DID and key beside it) and the seam's gate, one verdict
+    in words: `ok`, or the first fence that refused — `unknown signer` (no pin, another
+    pin, a DID that is not its key's) · `bad signature` (forged, tampered, another
+    specversion) · `replayed` · `too old` / `too new` (the 120 s window, both edges) ·
+    `stale epoch` / `future epoch`.
+  - `park_words` · `resumed_words` · `lag_words` · `sealed_words` · `rehome_words` · `ceiling`
+    (cells-v0, P7 sp7) — the plain words on an ask whose home does not answer, on its
+    resuming, on a peer's line ("live" · "N s behind" · "unreachable since HH:MM" · "not
+    yet heard"), on the tenth check (sealed, or unsealed with every database named), on a
+    re-homing; and the knock ceiling — a token bucket that refills `rate` a second up to
+    `burst`, a knock spending one.
