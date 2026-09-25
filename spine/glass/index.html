@@ -1,6 +1,7 @@
 <!-- PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass), walk #7's wounds · 2026-09-21 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures (glass): W27 the person's latest session · W32 one Esc, one thing · W33 a pull retracts when focus moves · W34/W39 a stop never needs the exact words · W35 the code row pinned · 2026-09-23 -->
+<!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7 walk #15 cures: W53 a closed pull gives its focus back · 2026-09-25 -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -1294,6 +1295,7 @@ function toggleCrew(open){
     pushFocus({kind: "workspace", id: "ws_crew", name: "crew", window: null,
                label: "the Crew workspace · its agent, crew"});
   }
+  if (!now && was) popFocusOf("ws_crew");                        // W53: the pull closed, its focus goes with it
 }
 async function markWords(text){                  // "mark this as improvement: the note"
   const m = text.match(/^mark (?:this|that|it)(?: as)?\s+([a-z0-9-]+)\s*(?::\s*(.+))?$/i);
@@ -1748,6 +1750,7 @@ function toggleMonitor(open){
                label: "the Monitoring workspace · its agent, monitor"});
   }
   if (!now && monitorBeat){ clearInterval(monitorBeat); monitorBeat = null; }
+  if (!now && was) popFocusOf("ws_monitor");                    // W53
 }
 let monitorTimer = null, monitorBeat = null;
 [crewPull, monitorPull, band].forEach(pull => pull.addEventListener("pointerdown", () => {   // W13: a click anywhere on a pull
@@ -1869,6 +1872,15 @@ function pushFocus(f){
   document.getElementById("focus-what").innerHTML = what;
   document.getElementById("focus").classList.add("on");
   toggleChat(true);               // the chat follows: it is the focus's
+}
+function popFocusOf(id){          // W53 (walk #15): a pull that closes gives its focus back — the chat is the chat again
+  const top = FOCUS[FOCUS.length - 1];
+  if (!top || top.f.id !== id) return;
+  FOCUS.pop();
+  SELECTED = new Set(top.saved.selected); WINDOW = top.saved.window;
+  drawChips(); drawClock();
+  if (!FOCUS.length) document.getElementById("focus").classList.remove("on");
+  else { const f = FOCUS[FOCUS.length - 1].f; document.getElementById("focus-what").innerHTML = f.label ? esc(f.label) : `ask ${esc(f.id.slice(4, 12))}`; }
 }
 function popAllFocus(){           // one [Esc]: every focus popped, the
   if (!FOCUS.length) return;      // bridge's scope restored EXACTLY

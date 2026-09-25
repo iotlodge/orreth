@@ -309,6 +309,56 @@
    "expect": {
     "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"did:orreth:agent:0a0b0c0d0e0f0a0b0c0d0e0f\",\"marker\":{\"by\":\"the kernel\",\"id\":\"mk_0102030405\",\"kind\":\"observation\",\"parent\":null},\"message_id\":\"msg_000000000000000000000000\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-21T12:00:00.000Z\",\"payload\":{\"ground\":{\"cell\":\"local\",\"metal\":\"cpu\"},\"hash\":\"sha256:fac368c0bed66023f59730b061143f2b7cba6f9b64fd17d12944063b10610675\",\"kind\":\"resident\",\"name\":\"echo\",\"placement\":{\"affinity\":[],\"cell\":\"local\",\"metal\":\"gpu\",\"secrets_with\":[]},\"reasons\":[\"metal gpu is not here (cpu)\"],\"ref\":\"did:orreth:agent:0a0b0c0d0e0f0a0b0c0d0e0f\",\"template\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.body.refused.v1\",\"universe_id\":\"u:dev\"}"
    }
+  },
+  {
+   "name": "honor: the default cell 'local' means wherever this ground stands \u2014 honored in cell two (W54, walk #15)",
+   "kind": "honor",
+   "input": {
+    "profile": {
+     "cell": "local",
+     "affinity": [],
+     "secrets_with": [],
+     "metal": "any"
+    },
+    "ground": {
+     "cell": "two",
+     "metal": "cpu",
+     "secrets": [
+      "PATH"
+     ]
+    }
+   },
+   "expect": {
+    "honored": true,
+    "reasons": [],
+    "why": "stands on two \u00b7 cpu"
+   }
+  },
+  {
+   "name": "refuse: a NAMED cell 'gpu-east' is not this ground ('two') (W54)",
+   "kind": "honor",
+   "input": {
+    "profile": {
+     "cell": "gpu-east",
+     "affinity": [],
+     "secrets_with": [],
+     "metal": "any"
+    },
+    "ground": {
+     "cell": "two",
+     "metal": "cpu",
+     "secrets": [
+      "PATH"
+     ]
+    }
+   },
+   "expect": {
+    "honored": false,
+    "reasons": [
+     "cell 'gpu-east' is not this ground ('two')"
+    ],
+    "why": "refused: cell 'gpu-east' is not this ground ('two')"
+   }
   }
  ]
 }

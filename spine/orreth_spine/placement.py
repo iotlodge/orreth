@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7 walk #15, W54: the default cell means wherever this ground stands · 2026-09-25
 """Placement policy v0 (canon 0001 P10 · 0004 · 0005 P6 sp4): where a body
 may run is a rule of the world, never an accident.
 
@@ -75,7 +76,9 @@ def honor(prof: dict, ground: dict) -> tuple[bool, list[str]]:
     (or "any"), and every named secret is reachable. Every unmet clause is
     named in plain words — the owner learns why."""
     reasons: list[str] = []
-    if prof["cell"] != ground["cell"]:
+    # W54 (walk #15): the default cell, "local", means "wherever this ground stands" — a template
+    # that names no cell seats in any cell; only a NAMED cell must be this ground's
+    if prof["cell"] not in (ground["cell"], DEFAULT["cell"]):
         reasons.append(f"cell '{prof['cell']}' is not this ground ('{ground['cell']}')")
     if prof["metal"] not in ("any", ground["metal"]):
         reasons.append(f"metal {prof['metal']} is not here ({ground['metal']})")

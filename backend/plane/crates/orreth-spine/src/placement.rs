@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7 walk #15, W54: the default cell means wherever this ground stands · 2026-09-25
 //! `orreth.placement/1` — the pure half of `orreth_spine.placement`: a
 //! template's placement with the defaults applied, the honor rule (honored
 //! iff the cell is this ground's, the metal is here or `any`, and every named
@@ -143,7 +144,8 @@ pub fn profile(template: &Value) -> Result<Profile, PlacementError> {
 /// cell then metal then each secret — the owner learns why.
 pub fn honor(prof: &Profile, ground: &Ground) -> (bool, Vec<String>) {
     let mut reasons = Vec::new();
-    if prof.cell != ground.cell {
+    // W54 (walk #15): the default cell, `local`, means "wherever this ground stands"
+    if prof.cell != ground.cell && prof.cell != DEFAULT_CELL {
         reasons.push(format!(
             "cell '{}' is not this ground ('{}')",
             prof.cell, ground.cell
