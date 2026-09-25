@@ -458,5 +458,12 @@ case "${1:-}" in
            echo "· open the glass: http://127.0.0.1:$BRIDGE_PORT/" ;;
   old)     shift; old_rig "$@" ;;
   replant) old_rig replant ;;     # the launchd keeper's word — unchanged, at the top level
-  *) echo "usage: scripts/dev.sh up|down|status|logs|bridge [stop]|shadow [stop]|cell <name> [port|stop|seal]|suite [pytest args]|rust [rails]|walk|old <verb>|replant" ;;
+  stop)    # W55 (walk #15): "stop two" / "two stop" — a hand reaches for these; they mean `cell two stop`
+           [ -n "${2:-}" ] && [ -f "$(cell_home "$2")/port" ] && { cell_stop "$2"; exit $?; }
+           echo "usage: scripts/dev.sh cell <name> stop   (cells lit here: $(ls "$HOME"/.orreth/cells 2>/dev/null | tr '\n' ' '))"; exit 2 ;;
+  *) if [ -f "$(cell_home "$1")/port" ]; then      # a cell's bare name: `two` lights it, `two stop` darkens it
+       case "${2:-}" in stop) cell_stop "$1" ;; ""|start) cell_light "$1" ;; *) echo "usage: scripts/dev.sh cell $1 [port|stop|seal]"; exit 2 ;; esac
+     else
+       echo "usage: scripts/dev.sh up|down|status|logs|bridge [stop]|shadow [stop]|cell <name> [port|stop|seal]|suite [pytest args]|rust [rails]|walk|old <verb>|replant"
+     fi ;;
 esac
