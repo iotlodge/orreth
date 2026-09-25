@@ -177,11 +177,12 @@ cell_seal() {  # P7 sp7: a cell's ground — its own database and a role that re
 
 cell_home() { echo "$HOME/.orreth/cells/$1"; }
 cell_pid()  { lsof -nP -iTCP:"$1" -sTCP:LISTEN -t 2>/dev/null | head -1 || true; }
-cell_port() { # the port a lit cell holds, remembered beside its seeds
-  [ -f "$(cell_home "$1")/port" ] && cat "$(cell_home "$1")/port" || true; }
+cell_port() { # the port a lit cell holds, remembered beside its seeds (a number, or nothing)
+  [ -f "$(cell_home "$1")/port" ] && grep -E '^[0-9]+$' "$(cell_home "$1")/port" || true; }
 
 cell_light() {  # P7 sp7: a second universe beside u:dev — its own kernel on its own database, sealed
   name="$1"; port="${2:-}"
+  case "$port" in ""|*[!0-9]*) [ -n "$port" ] && { echo "· a port is a number (got '$port') — scripts/dev.sh cell $name [port|stop|seal]"; return 2; } ;; esac   # W59: never write a word into the port file
   case "$name" in local|"") echo "· 'local' is the first cell (u:dev on :$SHADOW_PORT) — light it with scripts/dev.sh shadow"; return 2 ;; esac
   echo "$name" | grep -Eq '^[a-z0-9_-]+$' || { echo "· a cell's name is lower-case letters, digits, - and _"; return 2; }
   ground_up || { echo "· the ground is dark on :5433 — run scripts/dev.sh up first"; return 1; }
@@ -434,7 +435,7 @@ case "${1:-}" in
   shadow)  case "${2:-}" in stop) shadow_stop ;; ""|start) shadow_light ;;   # P7 sp3: the Rust bridge on :4601
              *) echo "usage: scripts/dev.sh shadow [stop]"; exit 2 ;; esac ;;
   cell)    case "${3:-}" in stop) cell_stop "${2:-}" ;; seal) cell_seal "${2:-}" ;;   # P7 sp7: a second universe, sealed
-             *) cell_light "${2:-}" "${3:-}" ;; esac ;;
+             ""|start) cell_light "${2:-}" ;; *) cell_light "${2:-}" "${3:-}" ;; esac ;;
   suite)   pid=$(bridge_pid)
            [ -n "$pid" ] && { echo "· a Bridge is lit on :$BRIDGE_PORT (pid $pid) — the stale-rig law: a live rig poisons every test dispatcher. \`scripts/dev.sh bridge stop\` first."; exit 1; }
            spid=$(shadow_pid)   # P7 sp7: a lit Rust kernel on the SAME ground relays the suite's rows to ITS topics (found 2026-09-25: an old :4601 ate every test's ask fact)
