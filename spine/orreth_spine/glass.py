@@ -7,6 +7,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W12 · W14 · W19 doors · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper: the gateway is the bridge's lane; the Stable's doors (/minds …); the keeper's beat; W29 · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: the pure laws factored for the fixture; the kernel's own self signs the export · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE (JB's seed) · 2026-09-24
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -42,7 +43,9 @@ from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRefused, Resident
 
 GLASS_DIR = Path(__file__).resolve().parents[1] / "glass"
-FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED,
+SESSION_OPENED = "orreth.session.opened.v1"     # W51: a roll is a fact — every door's sessions list follows
+GUIDE = Path(__file__).resolve().parents[1] / "guide" / "guide.v0.json"   # THE GUIDE, kept by the kernel
+FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED, SESSION_OPENED,
                harness.HARNESS_FAILED,   # a failing run escalates to the chat
                markers.MARKER_SET,       # a marker set is seen where it lands
                dispatch.ASK_REFUSED,     # W19: an ask to a body not here, answered at the door
@@ -283,15 +286,28 @@ def open_session(conn, person: str, title: str | None = None,
     BOUNDARY: the archived session gets its digest (MEM-3)."""
     from .resident import ensure_schema
     ensure_schema(conn)
-    if archive:
-        digest.build(conn, archive, by=person)
     sid = "ses_" + secrets.token_hex(6)
+    outbox.ensure_schema(conn)
+    e = ev.make_envelope(kind="event", type=SESSION_OPENED, universe_id=ev.scope(), scope_path=ev.scope(),
+                         payload=session_payload(sid, person, title, archive, "opt-out" if opt_out else "in"),
+                         correlation_id=sid, authority_chain=[person])
     with conn.transaction():
-        conn.cursor().execute(
+        cur = conn.cursor()
+        cur.execute(
             "INSERT INTO spine_sessions (session_id, person, scope, title, state)"
             " VALUES (%s, %s, %s, %s, %s)",
             (sid, person, ev.scope(), title, "opt-out" if opt_out else "in"))
+        outbox.add_row(cur, ev.encode(e), e["message_id"])     # W51: the roll is a fact the feed carries
+    if archive:                # AFTER the new row stands: the archived span ends at this opening, so the
+        digest.build(conn, archive, by=person)                 # digest built here is the one a rebuild finds
     return sid                 # P11: what happens in an opt-out state stays there
+
+
+def session_payload(session_id: str, person: str, title: str | None, archived: str | None, state: str) -> dict:
+    """`orreth.session.opened.v1`'s payload (fixture `session_fact`): the
+    session as ref, its person, its title, the session it archived, its state."""
+    return {"ref": session_id, "hash": ev.content_hash(session_id), "person": person,
+            "title": title or None, "archived": archived or None, "state": state}
 
 
 def sessions_view(conn, person: str, limit: int = 30) -> list[dict]:
@@ -541,6 +557,11 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(200, {"minds": [dict(r, words=stable.stall_words(r)) for r in stable.stalls(conn)],
                                             "assignments": stable.assignments(conn),
                                             "gateway": {"base": gw.base, "ready": gw.ready()}})
+            if path == "/guide":                         # THE GUIDE (JB's seed, walk #13): kept by the kernel, the same on every door
+                try:
+                    return self._json(200, json.loads(GUIDE.read_text("utf-8")))
+                except (OSError, ValueError) as e:
+                    return self._json(500, {"error": f"the guide is not at {GUIDE} — {e}"})
             if path == "/harness":                       # walk #8: the world checks, off the ground
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     ch = harness.checks(conn)

@@ -299,6 +299,14 @@ def test_fixture(contract, case):
         body, sources = digest.compose_lines(inp["session_id"], inp.get("title"), datetime.fromisoformat(inp["opened"]),
                                              asks, [tuple(m) for m in inp["memories"]])
         assert body == exp["body"] and sources == exp["sources"]
+    elif kind == "session_fact":                 # orreth.session.opened.v1 (W51): the roll is a fact, the person's chain
+        with _dials(SPINE_SCOPE=inp["scope"]):
+            from orreth_spine import glass as _glass
+            payload = _glass.session_payload(inp["session_id"], inp["person"], inp.get("title"), inp.get("archived"), inp["state"])
+            e = ev.make_envelope(kind="event", type=_glass.SESSION_OPENED, universe_id=ev.scope(), scope_path=ev.scope(),
+                                 payload=payload, correlation_id=inp["session_id"], authority_chain=[inp["person"]])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert payload == exp["payload"] and ev.encode(e).decode("ascii") == exp["bytes"]
     elif kind == "digest_fact":                  # orreth.digest.landed.v1: the session as correlation
         with _dials(SPINE_SCOPE=inp["scope"]):
             payload = {"ref": inp["digest_id"], "hash": ev.content_hash(inp["body"]), "session": inp["session"],

@@ -38,8 +38,9 @@ pub use crate::ask::HARNESS_FAILED;
 pub use crate::watch::WATCH_TURNED;
 
 /// The topics the Bridge feed reads — `glass.FEED_TOPICS`, in order.
-pub const FEED_TOPICS: [&str; 8] = [
+pub const FEED_TOPICS: [&str; 9] = [
     ASK_RECEIVED,
+    crate::memory::SESSION_OPENED, // W51: a roll is a fact every door's sessions list follows
     JOURNEY,
     REPLY,
     CONFIRM_NEEDED,

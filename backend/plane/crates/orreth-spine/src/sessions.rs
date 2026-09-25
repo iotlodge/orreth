@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE door · 2026-09-24
 //! The human's worldlines and the roster's reads — mirrors the session,
 //! resident, crew and shelf views of `orreth_spine.glass` (P20 · canon 0004)
 //! and the reads of `presence` · `placement` · `services` they stand on:
@@ -35,19 +36,37 @@ pub async fn open_session(
     title: Option<&str>,
     opt_out: bool,
     archive: Option<&str>,
+    zone: &str,
 ) -> Result<String, RoadError> {
-    if let Some(a) = archive.filter(|a| !a.is_empty()) {
-        crate::digest::build(g, scope, a, person).await?; // MEM-3: the archived session's digest
-    }
     let sid = format!("ses_{}", token_hex(6));
     let state = if opt_out { "opt-out" } else { "in" };
-    g.client()
-        .execute(
-            "INSERT INTO spine_sessions (session_id, person, scope, title, state) VALUES ($1, $2, \
-             $3, $4, $5)",
-            &[&sid, &person, &scope, &title, &state],
-        )
-        .await?;
+    let e = crate::envelope::Mint {
+        kind: "event".into(),
+        r#type: crate::memory::SESSION_OPENED.into(),
+        universe_id: scope.into(),
+        scope_path: scope.into(),
+        payload: crate::memory::session_payload(&sid, person, title, archive, state),
+        correlation_id: Some(sid.clone()),
+        authority_chain: Some(vec![person.to_string()]),
+        aggregate: None,
+        marker: None,
+    }
+    .mint()?;
+    let raw = crate::envelope::encode(&e)?;
+    let tx = g.client_mut().transaction().await?;
+    tx.execute(
+        "INSERT INTO spine_sessions (session_id, person, scope, title, state) VALUES ($1, $2, \
+         $3, $4, $5)",
+        &[&sid, &person, &scope, &title, &state],
+    )
+    .await?;
+    crate::outbox::add_row(&tx, &raw, e["message_id"].as_str().unwrap_or_default()).await?; // W51
+    tx.commit().await?;
+    if let Some(a) = archive.filter(|a| !a.is_empty()) {
+        // MEM-3, AFTER the new row stands: the archived span ends at this opening, so the digest
+        // built here is the one a rebuild finds (the roll's race, found by test_digest)
+        crate::digest::build(g, scope, a, person, zone).await?;
+    }
     Ok(sid)
 }
 
@@ -58,8 +77,9 @@ pub async fn sessions_view(
     scope: &str,
     person: &str,
     limit: i64,
+    zone: &str,
 ) -> Result<Vec<Value>, RoadError> {
-    crate::digest::build_missing(g, scope, person, limit).await?; // P7 sp5 (MEM-3): the Digest is a projection
+    crate::digest::build_missing(g, scope, person, limit, zone).await?; // P7 sp5 (MEM-3): the Digest is a projection
     let rows = g
         .client()
         .query(

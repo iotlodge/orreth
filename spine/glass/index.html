@@ -319,6 +319,21 @@
     border-radius:14px 14px 0 0;background:var(--glass);
     backdrop-filter:blur(10px);box-shadow:0 -14px 44px rgba(0,0,0,.5)}
   #band.open{transform:translateY(0)}
+  /* THE GUIDE (JB's seed, walk #13): a sheet over everything, opened to where you are */
+  #guide{position:fixed;left:12vw;right:12vw;top:6vh;bottom:6vh;transform:translateY(-120%);transition:transform .4s cubic-bezier(.22,.9,.3,1);
+    z-index:12;display:flex;flex-direction:column;border:1px solid var(--seam);border-radius:14px;background:var(--glass);
+    backdrop-filter:blur(12px);box-shadow:0 14px 44px rgba(0,0,0,.55)}
+  #guide.open{transform:translateY(0)}
+  #guide header{font-size:10.5px;letter-spacing:.2em;color:var(--dim);padding:10px 14px;border-bottom:1px solid var(--seam)}
+  #guide-rows{overflow:auto;padding:8px 14px 16px}
+  #guide-rows .sec{margin:10px 0 14px}
+  #guide-rows .sec.here{border-left:2px solid var(--amber);padding-left:10px}
+  #guide-rows h5{margin:0 0 3px;font-size:11px;letter-spacing:.18em;color:var(--amber)}
+  #guide-rows .lead{color:var(--dim);margin:0 0 6px}
+  #guide-rows .row{display:grid;grid-template-columns:minmax(220px,38%) 1fr;gap:12px;padding:3px 0;border-top:1px dotted var(--seam)}
+  #guide-rows .say{color:var(--ink);cursor:pointer}
+  #guide-rows .say:hover{text-decoration:underline}
+  #guide-rows .does{color:var(--dim)}
   #band header{padding:9px 16px;color:var(--amber);font-size:11px;
     letter-spacing:.3em;border-bottom:1px solid var(--seam)}
   #band-rows{flex:1;overflow-y:auto;padding:6px 10px}
@@ -381,6 +396,11 @@
 <div id="monitor">
   <header onclick="toggleMonitor(false)" style="cursor:pointer" title="close the Monitoring">MONITORING · the Operating State, live — rails · bodies · asks · watches · the harness · [Esc] closes this · ▾ close</header>
   <div id="views"></div>
+</div>
+
+<div id="guide" role="dialog" aria-label="the guide">
+  <header onclick="toggleGuide(false)" style="cursor:pointer" title="close the guide">THE GUIDE · what you can say here, and what happens · [Esc] closes this · ▾ close</header>
+  <div id="guide-rows"></div>
 </div>
 
 <div id="band">
@@ -450,12 +470,53 @@ function toggleChat(open){
 }
 addEventListener("keydown", e => {
   if (e.key === "Escape") {                             // SPEC-ESC-01 + P19 — W32 (walk #11): ONE Esc, ONE thing —
-    if (band.classList.contains("open")) toggleBand(false);          // the pull on top closes first;
+    if (guideBox.classList.contains("open")) toggleGuide(false);      // the guide is on top of everything
+    else if (band.classList.contains("open")) toggleBand(false);     // the pull on top closes first;
     else if (monitorPull.classList.contains("open")) toggleMonitor(false);   // the chat and the focus only
     else if (crewPull.classList.contains("open")) toggleCrew(false);         // when no pull is open —
     else { popAllFocus(); toggleChat(false); }                      // then the bridge, scope restored exactly
   }
 });
+
+/* ---- THE GUIDE (walk #13, JB's seed): kept by the kernel, served by every door, opened to where you are ---- */
+const guideBox = document.getElementById("guide");
+function whereAmI(){
+  if (crewPull.classList.contains("open")) return "crew";
+  if (monitorPull.classList.contains("open")) return "monitor";
+  if (band.classList.contains("open")) return "band";
+  return "chat";
+}
+function guideWords(text){
+  const t = text.trim().toLowerCase().replace(/[.!]+$/, "");
+  if (!/^(guide|help|\?|the guide|show (me )?the guide|what can i say( here)?)$/.test(t)) return false;
+  el("msg mine", esc(text));
+  toggleGuide(true);
+  return true;
+}
+async function toggleGuide(open){
+  const now = open ?? !guideBox.classList.contains("open");
+  guideBox.classList.toggle("open", now);
+  if (!now) return;
+  const g = await fetch("/guide").then(x=>x.json()).catch(()=>null);
+  const box = document.getElementById("guide-rows"); box.innerHTML = "";
+  if (!g){ box.innerHTML = `<div class="meta">the guide door did not answer</div>`; return; }
+  const here = whereAmI();
+  const secs = [...(g.sections || [])].sort((a, b) => (b.when === here) - (a.when === here));   // where you are, first
+  box.insertAdjacentHTML("beforeend", `<div class="meta">${esc(g.kept_by || "")} · v${esc(g.version || "")}</div>`);
+  for (const s of secs){
+    const d = document.createElement("div"); d.className = "sec" + (s.when === here ? " here" : "");
+    d.innerHTML = `<h5>${esc(s.title)}${s.when === here ? " · you are here" : ""}</h5>` + (s.lead ? `<div class="lead">${esc(s.lead)}</div>` : "") +
+      (s.entries || []).map(e => `<div class="row"><span class="say" data-say="${esc(e.say)}" title="click to put these words in the composer">${esc(e.say)}</span><span class="does">${esc(e.does)}</span></div>`).join("");
+    box.appendChild(d);
+  }
+  box.querySelectorAll("[data-say]").forEach(x => x.onclick = () => {          // a click puts the words in the composer, never sends them
+    const say = x.dataset.say.split(" · ")[0];
+    if (/^\(/.test(say)) return;
+    toggleGuide(false); toggleChat(true);
+    const ta = document.getElementById("chat-in");
+    if (ta){ ta.value = say; ta.focus(); }
+  });
+}
 
 /* ---- the crew rail: residents on the right edge, targets by chip ---- */
 const NAMES = {};                 // did -> name
@@ -822,6 +883,7 @@ async function send(given, label, toOverride, parent){
   if (given == null && await markWords(text)) return;      // a human marks (0006)
   if (given == null && await enrollWords(text)) return;    // "enroll my authenticator" (P6 sp1)
   if (given == null && await stopWords(text)) return;      // "stop the kernel's … intention"
+  if (given == null && guideWords(text)) return;           // "guide" · "help" · "?" — THE GUIDE, opened to where you are (walk #13, JB's seed)
   if (given == null && await serviceWords(text)) return;   // the shelf: "what services are here?" · "retire the weather tool" · "check the services" (P6.5 sp1)
   if (given == null && followWords(text)) return;          // a child of an origin (P25)
   const kind = given == null ? (KIND_PIN || proposeKind(text)) : undefined;   // P23
@@ -865,6 +927,10 @@ async function send(given, label, toOverride, parent){
 
 /* every notice is a pointer — the glass fetches truth through the door */
 async function onNotice(n){
+  if (n.kind === "orreth.session.opened.v1"){      // W51 (walk #13): a roll on ANY door — this door's sessions list follows
+    if (SESSIONS_SHOWN) listSessions();            // the list was shown here: it follows
+    return;
+  }
   if (n.kind === "orreth.marker.set.v1"){          // 0006: a marker landed
     refreshPulls(); return;                          // (the lenses follow)
   }
@@ -1752,6 +1818,7 @@ function popAllFocus(){           // one [Esc]: every focus popped, the
 let SESSION = null;
 const PERSON = "did:orreth:person:jb";
 let LAST_LIST = [];
+let SESSIONS_SHOWN = false;       // W51: once the list has been shown here, a roll on any door re-reads it
 function sysline(html){ return el("journey", html); }
 function clearDisplay(){          // clear ≠ erase: the words stay in the Record
   log.innerHTML = ""; for (const k in PENDING) delete PENDING[k];
@@ -1774,7 +1841,7 @@ async function listSessions(){
   const r = await fetch("/sessions?person=" + encodeURIComponent(PERSON))
     .then(x=>x.json()).catch(()=>null);
   if (!r) { sysline("the sessions door did not answer"); return; }
-  LAST_LIST = r.sessions;
+  LAST_LIST = r.sessions; SESSIONS_SHOWN = true;
   const box = el("msg theirs", `<div class="who">sessions · newest first · click one to load it</div>`);
   if (!LAST_LIST.length) box.innerHTML += `<div class="sesrow">none yet</div>`;
   LAST_LIST.forEach((s, i) => {

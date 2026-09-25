@@ -356,6 +356,84 @@
     "bytes": "{\"authority_chain\":[\"the digest builder\"],\"correlation_id\":\"ses_0f1e2d3c4b5a\",\"message_id\":\"msg_fixture20\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-24T20:00:00.000Z\",\"payload\":{\"hash\":\"sha256:9ae91b9aafaae44b12e7679b355116977cef021e1e539ddac09d42e78afa96c7\",\"ref\":\"dig_0011223344\",\"session\":\"ses_0f1e2d3c4b5a\",\"sources\":6},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.digest.landed.v1\",\"universe_id\":\"u:fixture\"}",
     "topic": "orreth.digest.landed.v1"
    }
+  },
+  {
+   "name": "session_fact: ses_0f1e2d3c4b5a first",
+   "kind": "session_fact",
+   "input": {
+    "scope": "u:fixture",
+    "session_id": "ses_0f1e2d3c4b5a",
+    "person": "did:orreth:person:jb",
+    "title": "the Stable walk",
+    "archived": null,
+    "state": "in",
+    "message_id": "msg_fixture30",
+    "occurred_at": "2026-09-24T20:00:00.000Z"
+   },
+   "expect": {
+    "payload": {
+     "ref": "ses_0f1e2d3c4b5a",
+     "hash": "sha256:ce157973970b3ffdd3efd5a58070687f049609070b97345e05bb517a83260757",
+     "person": "did:orreth:person:jb",
+     "title": "the Stable walk",
+     "archived": null,
+     "state": "in"
+    },
+    "bytes": "{\"authority_chain\":[\"did:orreth:person:jb\"],\"correlation_id\":\"ses_0f1e2d3c4b5a\",\"message_id\":\"msg_fixture30\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-24T20:00:00.000Z\",\"payload\":{\"archived\":null,\"hash\":\"sha256:ce157973970b3ffdd3efd5a58070687f049609070b97345e05bb517a83260757\",\"person\":\"did:orreth:person:jb\",\"ref\":\"ses_0f1e2d3c4b5a\",\"state\":\"in\",\"title\":\"the Stable walk\"},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.session.opened.v1\",\"universe_id\":\"u:fixture\"}",
+    "topic": "orreth.session.opened.v1"
+   }
+  },
+  {
+   "name": "session_fact: ses_aabbccddeeff archives ses_0f1e2d3c4b5a",
+   "kind": "session_fact",
+   "input": {
+    "scope": "u:fixture",
+    "session_id": "ses_aabbccddeeff",
+    "person": "did:orreth:person:jb",
+    "title": null,
+    "archived": "ses_0f1e2d3c4b5a",
+    "state": "in",
+    "message_id": "msg_fixture31",
+    "occurred_at": "2026-09-24T20:00:00.000Z"
+   },
+   "expect": {
+    "payload": {
+     "ref": "ses_aabbccddeeff",
+     "hash": "sha256:25220c6dc7acc6b2a5c3db488fad8957640e3d27a63310cc861607d8812636bc",
+     "person": "did:orreth:person:jb",
+     "title": null,
+     "archived": "ses_0f1e2d3c4b5a",
+     "state": "in"
+    },
+    "bytes": "{\"authority_chain\":[\"did:orreth:person:jb\"],\"correlation_id\":\"ses_aabbccddeeff\",\"message_id\":\"msg_fixture31\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-24T20:00:00.000Z\",\"payload\":{\"archived\":\"ses_0f1e2d3c4b5a\",\"hash\":\"sha256:25220c6dc7acc6b2a5c3db488fad8957640e3d27a63310cc861607d8812636bc\",\"person\":\"did:orreth:person:jb\",\"ref\":\"ses_aabbccddeeff\",\"state\":\"in\",\"title\":null},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.session.opened.v1\",\"universe_id\":\"u:fixture\"}",
+    "topic": "orreth.session.opened.v1"
+   }
+  },
+  {
+   "name": "session_fact: ses_112233445566 archives ses_aabbccddeeff (opt-out)",
+   "kind": "session_fact",
+   "input": {
+    "scope": "u:fixture",
+    "session_id": "ses_112233445566",
+    "person": "did:orreth:person:test",
+    "title": "quiet",
+    "archived": "ses_aabbccddeeff",
+    "state": "opt-out",
+    "message_id": "msg_fixture32",
+    "occurred_at": "2026-09-24T20:00:00.000Z"
+   },
+   "expect": {
+    "payload": {
+     "ref": "ses_112233445566",
+     "hash": "sha256:57cd91c98ec12c9f33b29f7838995af1b6bf221e277b932561816f8a44bf4437",
+     "person": "did:orreth:person:test",
+     "title": "quiet",
+     "archived": "ses_aabbccddeeff",
+     "state": "opt-out"
+    },
+    "bytes": "{\"authority_chain\":[\"did:orreth:person:test\"],\"correlation_id\":\"ses_112233445566\",\"message_id\":\"msg_fixture32\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-24T20:00:00.000Z\",\"payload\":{\"archived\":\"ses_aabbccddeeff\",\"hash\":\"sha256:57cd91c98ec12c9f33b29f7838995af1b6bf221e277b932561816f8a44bf4437\",\"person\":\"did:orreth:person:test\",\"ref\":\"ses_112233445566\",\"state\":\"opt-out\",\"title\":\"quiet\"},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.session.opened.v1\",\"universe_id\":\"u:fixture\"}",
+    "topic": "orreth.session.opened.v1"
+   }
   }
  ]
 }

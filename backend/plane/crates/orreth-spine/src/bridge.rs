@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the schedule and intent loops as tasks · /monitor · /schedules · /harness · /intentions/stop|restart · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE door · 2026-09-24
 //! The Rust bridge — the doors and the feed of `orreth_spine.glass` +
 //! `bridgefeed` on axum, lit in SHADOW on :4601 beside the Python Bridge on
 //! :4600, both on one ground. It serves the SAME page (`spine/glass/index.html`
@@ -409,6 +410,7 @@ fn router(app: Arc<App>) -> Router {
         .route("/export", get(export_door))
         .route("/digest/:id", get(digest_door))
         .route("/digest", post(digest_post))
+        .route("/guide", get(guide_door))
         .route("/proof", get(proof_door))
         .route("/analyzer", get(analyzer_door))
         .route("/services", get(services_door))
@@ -625,7 +627,7 @@ async fn sessions_get(State(app): State<Arc<App>>, Query(q): Q) -> Response {
         .unwrap_or_else(|| PERSON_DEFAULT.into());
     let out = async {
         let mut g = ground(&app).await?;
-        sessions::sessions_view(&mut g, scope(&app), &person, 30).await
+        sessions::sessions_view(&mut g, scope(&app), &person, 30, &app.cfg.human_zone).await
     }
     .await;
     match out {
@@ -649,6 +651,7 @@ async fn sessions_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
             title.as_deref(),
             opt_out,
             archive.as_deref(),
+            &app.cfg.human_zone,
         )
         .await
     }
@@ -765,6 +768,27 @@ async fn export_door(State(app): State<Arc<App>>, Query(q): Q) -> Response {
     }
 }
 
+/// THE GUIDE (JB's seed, walk #13): kept by the kernel beside the glass — the same words on every door.
+async fn guide_door(State(app): State<Arc<App>>) -> Response {
+    let path = app
+        .cfg
+        .glass
+        .parent()
+        .and_then(|p| p.parent())
+        .map(|p| p.join("guide").join("guide.v0.json"));
+    let read = path
+        .as_ref()
+        .and_then(|p| std::fs::read_to_string(p).ok())
+        .and_then(|t| serde_json::from_str::<Value>(&t).ok());
+    match read {
+        Some(v) => answer(200, v),
+        None => answer(
+            500,
+            json!({"error": format!("the guide is not at {}", path.map(|p| p.display().to_string()).unwrap_or_default())}),
+        ),
+    }
+}
+
 /// P7 sp5: the short version, and every source it cites.
 async fn digest_door(State(app): State<Arc<App>>, Path(id): Path<String>) -> Response {
     let out = async {
@@ -786,7 +810,7 @@ async fn digest_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
     let person = s_or(&p, "person", PERSON_DEFAULT);
     let out = async {
         let mut g = ground(&app).await?;
-        crate::digest::build(&mut g, scope(&app), &sid, &person).await
+        crate::digest::build(&mut g, scope(&app), &sid, &person, &app.cfg.human_zone).await
     }
     .await;
     match out {

@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE door · 2026-09-24
 //! `orreth.memory/1` — the pure half of `orreth_spine.store` and `digest`
 //! (canon 0003 · MEM-1..MEM-6): recall's grammar (OR-shaped terms, the
 //! word-match fallback), the landed and purged facts' payloads and bytes
@@ -273,6 +274,23 @@ pub fn digest_lines(
         lines.push(format!("· acquired [{ns}/{key}]: {}", head(body, HEAD)));
     }
     (lines.join("\n"), sources)
+}
+
+pub const SESSION_OPENED: &str = "orreth.session.opened.v1";
+
+/// `orreth.session.opened.v1`'s payload (W51, fixture `session_fact`): the
+/// session as ref, its person, its title, the session it archived, its state.
+pub fn session_payload(
+    session_id: &str,
+    person: &str,
+    title: Option<&str>,
+    archived: Option<&str>,
+    state: &str,
+) -> Value {
+    json!({
+        "ref": session_id, "hash": content_hash(&Value::String(session_id.into())), "person": person,
+        "title": title.filter(|t| !t.is_empty()), "archived": archived.filter(|a| !a.is_empty()), "state": state,
+    })
 }
 
 /// `orreth.digest.landed.v1`'s payload.

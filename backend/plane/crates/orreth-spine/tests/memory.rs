@@ -257,14 +257,15 @@ async fn shadow_two_kernels_read_one_record_and_sign_as_one_self() {
         |v| v["status"] == json!("replied"),
     )
     .await;
-    let (st, d) = post(
+    // the roll closes the span (the episode boundary, MEM-3): the Rust kernel builds the archived
+    // session's digest at the roll — an OPEN session's summary moves as memories land in its span
+    let (st, rolled) = post(
         rs_port,
-        "/digest",
-        json!({"session": sid, "person": person}),
+        "/sessions",
+        json!({"person": person, "archive": sid}),
     )
     .await;
-    assert_eq!(st, 201, "the Rust kernel built the digest: {d}");
-    assert_eq!(d["new"], json!(true));
+    assert_eq!(st, 201, "the roll on the Rust door: {rolled}");
     let (_, d1) = get(rs_port, &format!("/digest/{sid}")).await;
     let (_, d2) = get(py_port, &format!("/digest/{sid}")).await;
     assert_eq!(d1, d2, "the digest reads equal on both doors");
@@ -292,7 +293,7 @@ async fn shadow_two_kernels_read_one_record_and_sign_as_one_self() {
     assert_eq!(
         (st, again["new"].clone(), again["hash"].clone()),
         (200, json!(false), d1["hash"].clone()),
-        "byte-identical across kernels: {again}"
+        "byte-identical across kernels — the Rust digest: {d1} · the Python rebuild: {again}"
     );
     let short = |v: &Value| {
         v["sessions"]
@@ -382,6 +383,7 @@ async fn shadow_two_kernels_read_one_record_and_sign_as_one_self() {
         &world.scope,
         "librarian/walk.note",
         "the digest builder",
+        "America/Denver",
     )
     .await
     .unwrap();

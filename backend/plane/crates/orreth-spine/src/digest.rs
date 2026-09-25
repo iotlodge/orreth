@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE door · 2026-09-24
 //! The Digest — `orreth_spine.digest` ported (MEM-3, canon 0003): the short
 //! version of a session composed from the Record alone (deterministic,
 //! extractive — a rebuild lands byte-identical), the sibling law over
@@ -15,26 +16,26 @@ use crate::outbox;
 use crate::schema::has_table;
 use crate::world::{isoformat, token_hex, RoadError};
 use serde_json::{json, Value};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::SystemTime;
 
 pub const BUILDER: &str = "the digest builder";
-
-fn civil(t: SystemTime) -> Civil {
-    Civil::from_unix(t.duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() as i64)
-}
 
 /// `digest.compose_session`: (body, sources, state) — None when no such session.
 pub async fn compose_session(
     g: &Ground,
     scope: &str,
     session_id: &str,
+    zone: &str,
 ) -> Result<Option<(String, Vec<String>, String)>, RoadError> {
+    // W52: the digest's clock is the human's — the ground shifts every time into the zone
+    // (`AT TIME ZONE`, the same tzdata the Python spine's ZoneInfo reads) before it is worded
     let row = g
         .client()
         .query_opt(
-            "SELECT session_id, title, opened_at, person, coalesce(state, 'in') FROM spine_sessions \
+            "SELECT session_id, title, opened_at, person, coalesce(state, 'in'), \
+             to_char(opened_at AT TIME ZONE $3, 'YYYY-MM-DD\"T\"HH24:MI:SS') FROM spine_sessions \
              WHERE session_id = $1 AND scope = $2",
-            &[&session_id, &scope],
+            &[&session_id, &scope, &zone],
         )
         .await?;
     let Some(row) = row else {
@@ -44,6 +45,7 @@ pub async fn compose_session(
     let opened: SystemTime = row.get(2);
     let person: String = row.get(3);
     let state: String = row.get(4);
+    let opened_civil = Civil::parse(&row.get::<_, String>(5)).expect("the ground's own text");
     let span_end: SystemTime = g
         .client()
         .query_one(
@@ -56,10 +58,12 @@ pub async fn compose_session(
     let asks = g
         .client()
         .query(
-            "SELECT a.ask_id, a.text, a.reply, a.status, a.asked_at, a.replied_at, coalesce(j.name, 'a \
+            "SELECT a.ask_id, a.text, a.reply, a.status, \
+             to_char(a.asked_at AT TIME ZONE $2, 'YYYY-MM-DD\"T\"HH24:MI:SS'), \
+             to_char(a.replied_at AT TIME ZONE $2, 'YYYY-MM-DD\"T\"HH24:MI:SS'), coalesce(j.name, 'a \
              resident') FROM spine_asks a LEFT JOIN LATERAL (  SELECT name FROM spine_joins WHERE did = \
              a.served_by  ORDER BY join_id DESC LIMIT 1) j ON true WHERE a.session = $1 ORDER BY a.asked_at",
-            &[&session_id],
+            &[&session_id, &zone],
         )
         .await?;
     let asks: Vec<DigestAsk> = asks
@@ -69,8 +73,8 @@ pub async fn compose_session(
             text: r.get(1),
             reply: r.get(2),
             status: r.get(3),
-            asked_at: civil(r.get(4)),
-            replied_at: r.get::<_, Option<SystemTime>>(5).map(civil),
+            asked_at: Civil::parse(&r.get::<_, String>(4)).expect("the ground's own text"),
+            replied_at: r.get::<_, Option<String>>(5).and_then(|t| Civil::parse(&t)),
             who: r.get(6),
         })
         .collect();
@@ -89,13 +93,8 @@ pub async fn compose_session(
             .map(|r| (r.get(0), r.get(1), r.get(2)))
             .collect();
     }
-    let (body, sources) = digest_lines(
-        session_id,
-        title.as_deref(),
-        civil(opened),
-        &asks,
-        &memories,
-    );
+    let (body, sources) =
+        digest_lines(session_id, title.as_deref(), opened_civil, &asks, &memories);
     Ok(Some((body, sources, state)))
 }
 
@@ -106,8 +105,9 @@ pub async fn build(
     scope: &str,
     session_id: &str,
     by: &str,
+    zone: &str,
 ) -> Result<Option<Value>, RoadError> {
-    let Some((body, sources, state)) = compose_session(g, scope, session_id).await? else {
+    let Some((body, sources, state)) = compose_session(g, scope, session_id, zone).await? else {
         return Ok(None);
     };
     let h = content_hash(&Value::String(body.clone()));
@@ -193,6 +193,7 @@ pub async fn rebuild_citing(
     scope: &str,
     r#ref: &str,
     by: &str,
+    zone: &str,
 ) -> Result<usize, RoadError> {
     let needle = format!("%\"{}\"%", r#ref);
     let rows = g
@@ -206,7 +207,7 @@ pub async fn rebuild_citing(
     let sessions: Vec<String> = rows.iter().map(|r| r.get(0)).collect();
     let mut n = 0;
     for sid in sessions {
-        if let Some(made) = build(g, scope, &sid, by).await? {
+        if let Some(made) = build(g, scope, &sid, by, zone).await? {
             if made["new"].as_bool().unwrap_or(false) {
                 n += 1;
             }
@@ -222,6 +223,7 @@ pub async fn build_missing(
     scope: &str,
     person: &str,
     limit: i64,
+    zone: &str,
 ) -> Result<usize, RoadError> {
     let rows = g
         .client()
@@ -236,7 +238,7 @@ pub async fn build_missing(
     let sids: Vec<String> = rows.iter().map(|r| r.get(0)).collect();
     let mut n = 0;
     for sid in sids {
-        build(g, scope, &sid, BUILDER).await?;
+        build(g, scope, &sid, BUILDER, zone).await?;
         n += 1;
     }
     Ok(n)

@@ -1292,8 +1292,13 @@ approved (covenant rule 9).
   door and rebuilt by the Python kernel to the SAME hash (nothing new); the
   export from either door signed by the same kernel self, equal roots, both
   verify, CSV equal line for line; a purge empties both doors and the citing
-  digest is rebuilt without the words. Runner: 226/291 across 59 kinds, the
-  eight new kinds ported; not yet ported only minds-v0's twelve (P7 sp6).
+  digest is rebuilt without the words. Runner: 229/294 across 60 kinds
+  (walk #13's cures added `session_fact`), the nine new kinds ported; not
+  yet ported only minds-v0's twelve (P7 sp6). **Walk #13 (JB, the same
+  evening): steps 1–3 PASS, step 4 compared from both doors; W51 (a roll is
+  a fact the feed carries) · W52 (the digest in the human's zone) cured;
+  THE GUIDE built on JB's seed — "guide" · "help" · "?" opens the kernel's
+  own guide to what you can say, the same on every door.**
   **Honest limits:** the digest's clock is UTC on both spines (the reference
   formats the ground's timestamptz in the connection's zone — UTC on the rig;
   a ground in another zone would differ); `/recall` and `/export` read a

@@ -78,6 +78,7 @@ const PORTED_KINDS: &[&str] = &[
     "purge_fact",
     "digest_text",
     "digest_fact",
+    "session_fact",
     "signed_bundle",
     "verify_signed",
     "did_of",
@@ -830,6 +831,31 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
                 .map(|v| s(v).to_string())
                 .collect();
             same!(sources, want, "the sources");
+        }
+        "session_fact" => {
+            let payload = memory::session_payload(
+                s(&inp["session_id"]),
+                s(&inp["person"]),
+                opt_str(&inp["title"]),
+                opt_str(&inp["archived"]),
+                s(&inp["state"]),
+            );
+            same!(payload, exp["payload"], "the payload");
+            let env = memory::fact(
+                memory::SESSION_OPENED,
+                s(&inp["scope"]),
+                payload,
+                s(&inp["person"]),
+                Some(s(&inp["session_id"])),
+                s(&inp["message_id"]),
+                s(&inp["occurred_at"]),
+            );
+            let bytes = envelope::encode(&env).map_err(|e| e.to_string())?;
+            same!(
+                String::from_utf8(bytes).unwrap(),
+                s(&exp["bytes"]).to_string(),
+                "the fact's bytes"
+            );
         }
         "digest_fact" => {
             let payload = memory::digest_payload(

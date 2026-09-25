@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P5 sp3, the Digest (MEM-3) · 2026-09-19
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: the pure laws factored for the fixture; the kernel's own self signs the export · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE (JB's seed) · 2026-09-24
 """The Digest (canon 0003, JB's compression law): the short version of an
 episode, written at its boundary, CITING every record it compresses. v0
 is extractive and deterministic — the head of every exchange, who
@@ -66,6 +67,13 @@ def compose_lines(session_id: str, title: str | None, opened, asks: list[tuple],
     return "\n".join(lines), sources
 
 
+def human_zone_name() -> str:
+    """W52: the digest's clock is the human's — `SPINE_HUMAN_ZONE` (the ground's
+    default human zone, America/Denver), the same dial the Rust bridge reads."""
+    import os
+    return os.environ.get("SPINE_HUMAN_ZONE") or "America/Denver"
+
+
 def compose_session(conn, session_id: str) -> tuple[str, list[str]] | None:
     """The short version of a session, from the Record alone: every ask's
     head, who replied and when, the reply's head; the words acquired in
@@ -93,7 +101,10 @@ def compose_session(conn, session_id: str) -> tuple[str, list[str]] | None:
         "  SELECT name FROM spine_joins WHERE did = a.served_by"
         "  ORDER BY join_id DESC LIMIT 1) j ON true"
         " WHERE a.session = %s ORDER BY a.asked_at", (session_id,))
-    asks = cur.fetchall()
+    from zoneinfo import ZoneInfo
+    z = ZoneInfo(human_zone_name())
+    asks = [(a[0], a[1], a[2], a[3], a[4].astimezone(z), a[5].astimezone(z) if a[5] else None, a[6])
+            for a in cur.fetchall()]                      # W52: the human's clock, not UTC's
     memories = []
     if asks:
         cur.execute("SELECT to_regclass('spine_memories') IS NOT NULL")
@@ -103,7 +114,7 @@ def compose_session(conn, session_id: str) -> tuple[str, list[str]] | None:
                 " AND state = %s AND landed_at BETWEEN %s AND %s ORDER BY landed_at",
                 (ev.scope(), state, opened, span_end))
             memories = cur.fetchall()
-    body, sources = compose_lines(session_id, title, opened, asks, memories)
+    body, sources = compose_lines(session_id, title, opened.astimezone(z), asks, memories)
     return body, sources, state
 
 
