@@ -1371,7 +1371,7 @@ approved (covenant rule 9).
   call are the body's own (Python, by canon); the Python Bridge still seats
   its crew in-process (the reference, the simulator); the harness's A/B arms
   ride the rail one run at a time (120 s each); `dev.sh suite` still refuses
-  beside a lit Bridge. Python suite 508 (469 before); five Rust proofs green; clippy + fmt clean. Walk #14 OWED (the script in the register).
+  beside a lit Bridge. Python suite 508 (469 before); five Rust proofs green; clippy + fmt clean. **Walk #14 (JB, 2026-09-25): PASS, no friction.** Pushed after JB's review of the plane diff.
 - **sp7 — CELLS, PARTITION, ISOLATION, HARDENING** (M7 · M8), built once in
   the Rust kernel.
 - **sp8 — THE RELEASE WAVE.** `orrethd` re-based on `orreth-spine` replaces

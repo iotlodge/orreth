@@ -725,3 +725,5 @@ path only: click, type, read, wait; no door, no database.
 7. Open the Monitoring. Expect HEALTH CHECKS to read nine rows (the Stable's four included) and the HARNESS to show the librarian's last run. Click "run the harness against the librarian now" — expect the run to land within a minute (the Rust kernel asks the librarian over the rail).
 8. Say "what minds are here?" and "librarian's fuel" — expect the Stable's answer from the Rust door, the gateway's word included.
 9. Stop the kernel: `scripts/dev.sh shadow stop`. Expect "the Rust bridge is dark" and `pgrep -f orreth_spine.body` to print nothing — no body outlived the kernel.
+
+**Walk #14, JB, 2026-09-25: PASS — walked whole on the Rust kernel alone (the Python Bridge dark); no friction reported.** JB's question at the close: why no change in Docker — because the rig's boxes (ground · invoke · events · gateway) are the infrastructure; the kernel and the bodies run on the host as processes by design (0008: the kernel spawns and governs them), so sp6 touched no box. Bodies in containers is a placement question for P7 sp7 (cells).
