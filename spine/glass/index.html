@@ -354,6 +354,7 @@
   .bexpand{padding:8px 26px 12px;color:var(--ink);font-size:12.5px;
     background:rgba(0,0,0,.25);border-bottom:1px solid var(--seam);
     white-space:pre-wrap}
+  .journey a.stopit{color:var(--accent,#d4a24c);text-decoration:none;cursor:pointer}
   .bexpand .journey-notes{color:var(--dim);font-style:italic;
     font-size:11px;margin-top:6px}
   #composer{display:flex;gap:8px;padding:12px 14px;border-top:1px solid
@@ -890,7 +891,7 @@ async function send(given, label, toOverride, parent){
   if (given == null && workspaceWords(text)) return;       // the pulls, by words
   if (given == null && await markWords(text)) return;      // a human marks (0006)
   if (given == null && await enrollWords(text)) return;    // "enroll my authenticator" (P6 sp1)
-  if (given == null && await stopWords(text)) return;      // "stop the kernel's … intention"
+  if (given == null && (await stopRoutedWords(text) || await stopWords(text))) return;      // "stop the kernel's … intention"
   if (given == null && guideWords(text)) return;           // "guide" · "help" · "?" — THE GUIDE, opened to where you are (walk #13, JB's seed)
   if (given == null && await serviceWords(text)) return;   // the shelf: "what services are here?" · "retire the weather tool" · "check the services" (P6.5 sp1)
   if (given == null && followWords(text)) return;          // a child of an origin (P25)
@@ -987,8 +988,10 @@ async function onNotice(n){
   }
   const v = await fetch("/ask/" + n.ref).then(x=>x.json()).catch(()=>null);
   if (!v) return;
-  if (n.kind.includes("journey") && v.journey.length)
+  if (n.kind.includes("journey") && v.journey.length){
     line.textContent = v.journey[v.journey.length-1];
+    if (v.status === "routed" || v.status === "parked") line.appendChild(stopItLink(n.ref));   // W56 (walk #15): the lever sits on the line itself
+  }
   if (n.kind.includes("reply") || n.kind.includes("confirm.needed") || n.kind.includes("ask.refused"))
     renderOutcome(n.ref, v, line);                 // W19 → the glass: the kernel's words, status refused, never "on its way…"
 }
@@ -1404,6 +1407,26 @@ function offerIntentions(rows, verb, head){       // the choice, one click each 
     box.appendChild(row);
   });
   log.scrollTop = log.scrollHeight;
+}
+function stopItLink(id){                          // W56: "stop it" on a routed or parked ask's line — rule 11, one click
+  const a = document.createElement("a"); a.href = "#"; a.textContent = "  ·  stop it"; a.className = "stopit";
+  a.title = "rests the ask here and tells its home cell to rest it too";
+  a.onclick = async e => { e.preventDefault(); e.stopPropagation(); await stopRouted(id); };
+  return a;
+}
+async function stopRouted(id){
+  const r = await fetch("/asks/stop", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({id, person: PERSON})}).then(x=>x.json()).catch(()=>null);
+  sysline(!r ? "the stop door did not answer" : r.error ? esc(r.error) : esc(r.words || "stopped"));
+}
+async function stopRoutedWords(text){             // W56: "stop it" · "stop that" · "stop the ask" — the newest routed or parked ask
+  if (!/^stop\s+(it|that|the ask|that ask|the last ask)\s*[.!]?$/i.test(text.trim())) return false;
+  const asks = await fetch("/asks").then(x=>x.json()).then(x => x.asks || []).catch(()=>[]);
+  const open = asks.filter(a => a.status === "routed" || a.status === "parked");
+  el("msg mine", esc(text));
+  if (!open.length){ sysline("nothing routed to another cell is waiting — an ask served here comes to rest on its own"); return true; }
+  await stopRouted(open[0].ask_id || open[0].id);
+  return true;
 }
 async function stopWords(text){                  // W34 · W39 (walk #11): "stop" · "echo, stop" · "stop my time intention" — never the exact words
   const bare = text.match(/^(?:([a-z][a-z0-9_-]*),\s*)?(stop|rest|restart|resume)\s*[.!]?$/i);

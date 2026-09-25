@@ -79,7 +79,13 @@ wait_healthy() {  # up to ~3 minutes; the events rail (Kafka) is the slow riser
 }
 
 load_env() {  # keys live in .env and the process env only, never in any record (the env-secrets law, 0059)
-  [ -f "$ROOT/.env" ] && { set -a; . "$ROOT/.env"; set +a; }; true
+  [ -f "$ROOT/.env" ] && { set -a; . "$ROOT/.env"; set +a; }
+  # W57 (walk #15): every clock a human reads is the HUMAN'S — the machine's own zone unless a dial says otherwise
+  # (the kernel's default, America/Denver, read 12:28 beside a Mac on America/Phoenix that read 11:28)
+  if [ -z "${SPINE_HUMAN_ZONE:-}" ]; then
+    z=$(readlink /etc/localtime 2>/dev/null | sed 's|.*/zoneinfo/||'); [ -n "$z" ] && export SPINE_HUMAN_ZONE="$z"
+  fi
+  true
 }
 
 gateway_db() {  # P6.5 sp3: the gateway keeps its ledger in its own database on the ground — made once, kept forever
