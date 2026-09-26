@@ -1502,6 +1502,60 @@ approved (covenant rule 9).
     the dev door's `did:orreth:person:jb` until sp8's gate; the geocoder is
     one outbound call at the telling — offline, the words stand and the
     weather tool says it has no coordinates.
+  - **The rows after it (JB's locks, 2026-09-26, after walk #16).** Each in
+    a fresh session (the token-bleed law), each walked by JB, in this order:
+    - **Row 2 — THE TOOL DOOR MOVES.** The built-in tools' DECLARATIONS
+      (name · description · input schema · consequence class · the
+      ground/mcp/master flags) become DATA both kernels read (one file
+      beside the crew manifest); the Rust kernel seeds the shelf and probes
+      a built-in itself (`services_live::probe`'s "not probed by this
+      kernel" retires; the Python one-shot boot rite retires); a tool's
+      EXECUTION stays body-side by canon (0009 §"the Tools firmware": the
+      kernel authorizes and journals, it never runs the call; an MCP-born
+      tool's `tools/call` rides the body's door as today). The manifest pin
+      in services-v0 stays byte-identical or the fixture is regenerated
+      honestly. One session.
+    - **Row 3 — THE GATE (JB's lock: the human seat AND the machine join
+      desk both ride 0.1.0).** Today every door reads the person from the
+      request body and defaults to `did:orreth:person:jb`; the only
+      protection is the loopback bind and the browser origin is open; the
+      proof ladder (TOTP · masters · L1–L3 · the one face) is real but
+      judges an unauthenticated claim. (a) THE HUMAN SEAT: a person holds a
+      SEAT TOKEN — the 0006 shape (subject · audience · grants ·
+      constraints{expiry, direction} · chain · sig, attenuation-only,
+      `contracts/v0/capability-token.schema.json`), minted at the door after
+      their proof (the enrolled authenticator; on a fresh ground the first
+      person to enroll is the owner — the ceremony), chained to the kernel's
+      own self as this universe's root; EVERY door reads the person from the
+      token, never the body; the browser origin closed; the knock ceiling
+      (`cells.ceiling`, today only at `/seam`) generalized per DID to every
+      door (0071's traffic law, re-paid). (b) THE MACHINE JOIN DESK: a
+      stranger's body joins through the five-status desk carried from
+      `orreth_sim/joindoor.py` (pending → challenged → proved → staged →
+      done | denied: a nonce signed with the key behind the DID, then the
+      HUMAN's yes at the gate, then a chained LEASE with the fuel clause);
+      bodies the kernel spawns keep their governed join; KCR-0001 re-paid on
+      the new kernel. Persons: the name never reissued (`persons.py`'s law).
+      Two to three sessions.
+    - **Row 4 — THE RE-BASE AND MAIN REPLACED AT 0.1.0 (JB's plane
+      approval, 2026-09-26: the OLD `orrethd` crate is RETIRED from the
+      workspace — it lives on at the `main-v0.72-old-world` tag forever —
+      and the name `orrethd` moves to the new kernel's binary inside
+      `orreth-spine`; the five sacred crates untouched).** The four
+      Python-only doors cross (`GET/POST /mitl` · `POST /impact` · `POST
+      /mark` · `POST /markers/kinds`); the projector's POISON-PARKING crosses
+      (the Rust inbox parks a poison visibly and stops, as 0002 orders — the
+      one loop without a Rust twin); `backend/plane/Dockerfile` and the
+      compose build the new binary; `scripts/dev.sh` lights the Rust kernel
+      on :4600 as THE door (the Python Bridge becomes the `reference` verb,
+      alive for the fixtures and the shadow proofs; the stale-rig refusals
+      re-aimed); the root README rewritten for the new world (it still
+      describes the old one and a `dev.sh start` that no longer exists); the
+      new line replaces main (the old main stays at its tag); **VERSION
+      0.1.0 in the release commit** and a tag that does not collide with
+      July's `v0.1.0-universe-runs`; demo.orreth.ai and docs.orreth.ai stay
+      FROZEN until JB says otherwise. Then JB walks the P3–P6 specs against
+      the Rust kernel alone. One to two sessions.
 
 Honest scale: ten to fifteen thousand lines of Rust, eight spoonfuls, more
 than one session each. Close conditions: every fixture kind ported; JB
