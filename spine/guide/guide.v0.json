@@ -1,6 +1,6 @@
 {
  "format": "orreth-guide/1",
- "version": "0.4.0",
+ "version": "0.5.0",
  "title": "THE GUIDE \u00b7 what you can say here, and what happens",
  "kept_by": "the kernel \u2014 the same words on every door; Fable keeps it current with each spoonful",
  "sections": [
@@ -69,6 +69,38 @@
     {
      "say": "echo, every 5 seconds, say the time, please",
      "does": "A cadence: the intention runs on the clock; \"echo, stop\" rests it, \"echo, restart intention 'every 5 seconds'\" stands it again."
+    }
+   ]
+  },
+  {
+   "id": "involvement",
+   "when": "chat",
+   "title": "How much of you a task needs \u2014 manual \u00b7 manual assist \u00b7 full auto",
+   "lead": "The kind of your ask decides how far the kernel goes without you, and it never goes one step further without a word from you. A THOUGHT moves nothing: you ask, one body answers, you are the whole loop (manual). An OBJECTIVE moves what you asked and stops at every consequence: the planner breaks it into steps, the crew acts, and any step that changes something holds for your Cancel or Yes (manual assist). An INTENTION keeps moving until you rest it: the kernel watches for what you named \u2014 a red watch, a clock \u2014 plans the next objective itself, files it, and the loop turns; you are told, not asked \u2014 except at a consequence, which still holds for you (full auto). Three things tell you which mode a thing is in: the chip under the composer (the kind), the hold row (the kernel is waiting on you), and the Analyzer (every intention and objective by origin, with its stop).",
+   "entries": [
+    {
+     "say": "what is the temperature outside?",
+     "does": "MANUAL. A thought: the librarian answers once, with its tools. Nothing in the world changes. Your part: the question."
+    },
+    {
+     "say": "objective: get the weather tool healthy again",
+     "does": "MANUAL ASSIST. The planner writes the steps, the crew runs them, the Analyzer shows the tree. When a step would change something (retire, re-pin, refill), the chat shows a hold with Cancel as the default \u2014 nothing runs until you click Yes (a grave step asks for your authenticator's code). Your part: one word to start, one word at each hold. Say \u201cstop it\u201d at any time; what was left undone is said."
+    },
+    {
+     "say": "keep this world resilient: when a watch goes red, get it green",
+     "does": "FULL AUTO. A standing purpose. The kernel observes (the red), asks the planner for the next objective, files it, the crew acts, the observation lands, the loop turns \u2014 you read it in the Analyzer and the Intentions band; you are not asked. Consequential steps STILL hold for you: the kernel never lowers the ladder because it is running on its own. Your part: declare once; decide holds when they come; rest it when you want (\u201cstop the \u2026 intention\u201d \u2014 your code, then a master's click; \u201crestart intention '\u2026'\u201d stands it again)."
+    },
+    {
+     "say": "echo, every 5 seconds, say the time, please",
+     "does": "FULL AUTO on a clock: the same loop, woken by a cadence instead of a red. \u201cecho, stop\u201d rests it."
+    },
+    {
+     "say": "summon MITL \u00b7 expected impact?",
+     "does": "In any mode, before you decide a hold: the Master Mind In The Loop says who and what the act touches, from the canon."
+    },
+    {
+     "say": "(the light bulb)",
+     "does": "Manual: you act, the kernel answers. Manual assist: the kernel acts, you decide every consequence. Full auto: the kernel acts and plans, you still decide every consequence and can always stop. The kernel's reach grows with the kind you chose; your hand on the consequences never shrinks."
     }
    ]
   },

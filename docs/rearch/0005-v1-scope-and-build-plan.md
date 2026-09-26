@@ -1628,6 +1628,47 @@ approved (covenant rule 9).
         embedded, active proof on a cadence (a nonce the body signs with the
         key behind its DID, as the desk challenges once at the door), not for
         now. It rides with row 3 (b)'s desk, whose challenge it repeats.
+      - **JB's LOCKS (2026-09-26 night) — THE KERNEL THAT LASTS.** His
+        words: "if we rearchitected due to storms and performance, we don't
+        want to do it again. We want a seamless experience that allows a
+        kernel to extend through what it, and/or a human, creates while being
+        able to serve as a kernel." Seven standing laws, found by the seat's
+        build, each with its row:
+        1. **A connection pool at every door — with ROW 4.** Today each Rust
+           door (46 sites in `bridge.rs`) and the Python reference open a
+           fresh ground connection per knock; the gate proof exhausted
+           Postgres with ninety knocks from one seat before the ceiling moved
+           in front of the ground. The App holds a pool; handlers borrow. The
+           performance law's first fixed cost, gone.
+        2. **A schema migrator, single writer — with ROW 4.** Two kernels
+           lighting on one ground run the whole DDL road under one advisory
+           lock and deadlocked once on an ALTER TABLE (the memory proof). A
+           versioned `spine_schema` table: the first kernel migrates, later
+           kernels wait and verify; a relight never races a light.
+        3. **Per-door latency in the Monitoring — with ROW 4.** The meter
+           covers minds; no door records how long it took. A p50 and p95 per
+           door, judged by the same beat that judges watches, so the
+           performance law is watched before a walk finds it.
+        4. **The glass driven by the feed, not by polls — with ROW 4's glass
+           work.** The roster every 20 s and the monitor every 5 s knock on
+           doors the feed already announces; feed-driven refresh makes a
+           quiet window cost nothing and the per-person ceiling generous by
+           construction.
+        5. **One rig per test session — the next test-infrastructure
+           spoonful (with row 3b, whose desk adds proofs).** Each module
+           lights ten bodies and probes eleven services before its first
+           test; the Python suite is six to seven minutes mostly for that.
+           Shared rig, the shelf probe skipped under test: the suite runs
+           before every commit.
+        6. **Root rotation as a rite — with the identity row (the seed
+           `seeds/identity-layer-and-the-seat.md`).** The kernel's self is
+           one seed file; every seat and every seam pin chains to it. 0006's
+           ceremony, built: the outgoing self signs its successor, the peers'
+           pins follow, no flag day.
+        7. **The Python reference grows no new doors from here.** Each law
+           lands twice today and the doubled tests are most of a day. Row 3b
+           lands once on the Rust kernel and once in the fixture; row 4
+           narrows the reference to fixtures and shadow proofs, as written.
       - **(b) THE MACHINE JOIN DESK — NEXT SESSION ("sp8 row 3b"):** the
         five-status desk, the nonce signed with the key behind the DID, the
         human's yes as a kernel-held act, the chained LEASE minted by
@@ -1637,7 +1678,10 @@ approved (covenant rule 9).
       approval, 2026-09-26: the OLD `orrethd` crate is RETIRED from the
       workspace — it lives on at the `main-v0.72-old-world` tag forever —
       and the name `orrethd` moves to the new kernel's binary inside
-      `orreth-spine`; the five sacred crates untouched).** The four
+      `orreth-spine`; the five sacred crates untouched).** **JB's locks 2026-09-26 ride this
+      row: the connection pool at every door, the single-writer schema
+      migrator, per-door latency in the Monitoring, and the glass driven by
+      the feed (row 3's "the kernel that lasts" list).** The four
       Python-only doors cross (`GET/POST /mitl` · `POST /impact` · `POST
       /mark` · `POST /markers/kinds`); the projector's POISON-PARKING crosses
       (the Rust inbox parks a poison visibly and stops, as 0002 orders — the
