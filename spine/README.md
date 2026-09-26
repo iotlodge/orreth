@@ -39,12 +39,15 @@ The RabbitMQ management console is at http://localhost:15672
 The kernel spawns and governs every body as its own process. The crew is ONE
 manifest, `crew.v0.json`, read by both spines: the Python Bridge (`glass.py`)
 seats it in-process as the reference; the Rust kernel (`spine-bridge`,
-`scripts/dev.sh shadow`) spawns one process per seat:
+`scripts/dev.sh shadow`) spawns one process per seat. Beside it, `tools.v0.json`
+declares the built-in tools (name · words · schema · class · flags) — data both
+kernels read; each kernel seeds the shelf from it and probes a built-in itself,
+while a tool's execution stays in the body (`tools.py` binds each name to its
+executor and refuses to start when a declaration has none):
 
 ```bash
 .venv/bin/python3 -m orreth_spine.body --template templates/echo-resident.v0.json         # one body, standing alone
 .venv/bin/python3 -m orreth_spine.body --template templates/workspace-firmware.v0.json --binding bindings/crew.v0.json
-.venv/bin/python3 -m orreth_spine.body --seed-shelf                                        # the kernel's boot rite, once
 ```
 
 A body joins as the same self every life (its seed under `~/.orreth/agents/<name>/`),

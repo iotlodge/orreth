@@ -725,11 +725,36 @@ pub async fn probe(
         return Ok(crate::mcp_live::probe_tool(g, w, row).await);
     }
     if kind == "tool" {
+        // P7 sp8 row 2: a built-in's describe — the declaration this kernel reads (the same
+        // file the body binds its executor to) against the pin the shelf keeps
+        let decls = match crate::tools::declarations(&crate::tools::spine_dir()) {
+            Ok(d) => d,
+            Err(e) => return Ok((None, format!("not probed — {e}"))),
+        };
+        let Some(decl) = crate::tools::declared(&decls, &name) else {
+            return Ok((
+                Some(false),
+                format!(
+                    "the door names no tool called {} on this shelf",
+                    repr_str(&name)
+                ),
+            ));
+        };
+        let h = crate::services::pin(&crate::tools::manifest(decl));
+        let pinned = python_str(&row["manifest_hash"]);
+        if h != pinned {
+            return Ok((
+                Some(false),
+                format!(
+                    "the door describes a different schema than the pin ({}… vs {}…) — version it",
+                    h.get(7..19).unwrap_or(""),
+                    pinned.get(7..19).unwrap_or("")
+                ),
+            ));
+        }
         return Ok((
-            None,
-            "not probed by this kernel — a built-in tool's door is the body's; the Python kernel probes \
-             it at boot (the tool door moves in sp8)"
-                .into(),
+            Some(true),
+            "the door answers describe; the schema matches the pin".into(),
         ));
     }
     if kind == "mind" {
@@ -837,13 +862,62 @@ pub async fn check(
     };
     refuse_step(name, row["state"].as_str(), "healthy")?;
     let (ok, detail) = probe(g, w, gw, &row, by).await?;
-    if ok.is_none() && row["kind"] == json!("tool") {
-        // a built-in tool: nothing recorded — the last verdict (the Python kernel's) stands
-        return Ok(
-            json!({"name": name, "kind": row["kind"], "did": row["did"], "ok": Value::Null, "detail": detail, "state": row["state"]}),
-        );
-    }
     record_health(g, w, name, ok, &detail, by).await
+}
+
+/// `services.seed` (P7 sp8 row 2, native — the Python one-shot rite retired): the
+/// kernel registers what it was born with — every built-in tool from the
+/// declarations file (kind tool, its manifest the pin), the ground and the
+/// Record (kind store, the locator by NAME). Idempotent: the same self every
+/// boot; a built-in whose declaration changed re-pins (W47: a fact, never
+/// unhealthy); a service the ground cannot seat is named, never a crash.
+/// `{registered, refused, versioned}`. The mind the gateway IS is a STALL —
+/// `stable_live::seed` registers it.
+pub async fn seed(g: &mut Ground, w: &World, spine: &std::path::Path) -> Result<Value, RoadError> {
+    let mut made: Vec<String> = Vec::new();
+    let mut refused_: Vec<String> = Vec::new();
+    let mut versioned: Vec<String> = Vec::new();
+    let decls = crate::tools::declarations(spine).map_err(refused)?;
+    let mut wanted: Vec<(String, &'static str, Value)> = decls
+        .iter()
+        .map(|d| (python_str(&d["name"]), "tool", crate::tools::manifest(d)))
+        .collect();
+    wanted.push((
+        "ground".into(),
+        "store",
+        json!({"locator": GROUND_LOCATOR, "what": "postgres — the ground every organ stands on"}),
+    ));
+    wanted.push((
+        "record".into(),
+        "store",
+        json!({"locator": GROUND_LOCATOR, "table": "spine_memories",
+               "what": "the Record — every memory, content-hashed, with lineage"}),
+    ));
+    for (name, kind, manifest) in wanted {
+        let before = get(g.client(), &w.scope, &name).await?;
+        let out = match &before {
+            Some(b)
+                if b["kind"] == json!(kind)
+                    && b["state"] != json!("retired")
+                    && b["manifest_hash"] != json!(crate::services::pin(&manifest)) =>
+            {
+                version(g, w, &name, &manifest, KERNEL).await.map(|_| {
+                    versioned.push(name.clone());
+                })
+            }
+            _ => register(g, w, &name, kind, &manifest, KERNEL, None, &[])
+                .await
+                .map(|_| {
+                    if before.is_none() {
+                        made.push(name.clone());
+                    }
+                }),
+        };
+        if let Err(e) = out {
+            refused_.push(format!("{name}: {e}"));
+        }
+    }
+    Ok(json!({"registered": made, "refused": refused_, "versioned": versioned}))
 }
 
 /// `services.check_all`: every standing service (of a kind) probed.

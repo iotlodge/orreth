@@ -4,6 +4,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the Tools keeper: MCP-born tools through the one door; the `services` tool; a class by the arguments · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper's `minds` tool · the interlock names the act (W30) · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the weather tool reads the asker's own place (W58) · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 2, the tool door moves: the declarations are DATA (`spine/tools.v0.json`) both kernels read; the executors bind to them here · 2026-09-26
 """The tool door v0 (canon 0004): a resident acts only through a
 governed door.
 
@@ -26,13 +27,110 @@ hop wears the service's DID (`did:orreth:service:…`) when the tool is
 registered, `tool:<name>` only for an unregistered one (the honest
 fallback), and a RETIRED tool refuses at the door with a teaching:
 retirement is the human's stop (rule 11), restore brings it back.
+
+P7 sp8 row 2 — THE TOOL DOOR MOVES: what a built-in tool DECLARES (name ·
+words · input schema · consequence class · the ground and master flags ·
+which arguments hold at the interlock) is DATA in `spine/tools.v0.json`,
+beside the crew manifest, read by BOTH kernels — the Rust kernel seeds the
+shelf from it and probes a built-in by describe itself. What a tool DOES
+stays here, body-side (0009: the kernel authorizes, journals and meters;
+it never runs the call): `_BODIES` binds each declared name to its
+executor, and the door's table `TOOLS` is the join — a declaration with no
+executor, or an executor with no declaration, refuses at import.
 """
 from __future__ import annotations
 
 import json
 import urllib.request
+from pathlib import Path
 
 TOOL_CALLED = "orreth.tool.called.v1"
+
+# ---- the declarations: data both kernels read (P7 sp8 row 2) -------------------------
+
+TOOLS_FORMAT = "orreth-tools/1"
+DECLARATIONS = Path(__file__).resolve().parents[1] / "tools.v0.json"      # beside crew.v0.json
+DECLARED_KEYS = ("name", "description", "input_schema", "consequence")
+CLASSES = ("routine", "consequential", "grave")
+
+
+def declarations(path: str | Path | None = None) -> list[dict]:
+    """The built-in tools' declarations, read from the one file beside the
+    crew manifest (`spine/tools.v0.json`) — the SAME file the Rust kernel
+    reads to seed the shelf and probe a built-in. Refuses in words: a wrong
+    format, a tool missing its name · words · schema · class, an unknown
+    class, a name declared twice."""
+    p = Path(path) if path is not None else DECLARATIONS
+    doc = json.loads(p.read_text("utf-8"))
+    if doc.get("format") != TOOLS_FORMAT:
+        raise ValueError(f"not a tools manifest ({p}): format {doc.get('format')!r}, expected {TOOLS_FORMAT!r}")
+    out, seen = [], set()
+    for d in doc.get("tools") or []:
+        missing = [k for k in DECLARED_KEYS if k not in d]
+        if missing:
+            raise ValueError(f"the tool declaration {d.get('name', '?')!r} lacks {', '.join(missing)}")
+        if d["consequence"] not in CLASSES:
+            raise ValueError(f"the {d['name']!r} tool declares an unknown class {d['consequence']!r} — "
+                             f"the classes: {', '.join(CLASSES)}")
+        if d["name"] in seen:
+            raise ValueError(f"the tool {d['name']!r} is declared twice")
+        seen.add(d["name"])
+        out.append(d)
+    return out
+
+
+def held_by_of(decl: dict):
+    """The class-by-the-arguments rule a declaration carries (`held_by`: the
+    argument field and the values that HOLD at the interlock), as the
+    callable `consequence_of` reads: a held value wears the declared class,
+    any other runs at once (routine). None when the class stands for every
+    call."""
+    hb = decl.get("held_by")
+    if not hb:
+        return None
+    field, held, cls = str(hb["field"]), tuple(str(v) for v in hb["held"]), decl["consequence"]
+    return lambda args: cls if str(args.get(field) or "") in held else "routine"
+
+
+def bind(decls: list[dict], bodies: dict[str, dict]) -> dict[str, dict]:
+    """The door's table: every declaration joined to its body-side executor
+    (`fn`; `words_by` for the interlock's words). A declaration without an
+    executor, or an executor without a declaration, refuses at import — the
+    shelf never declares a tool this body cannot run, and a body never runs
+    an undeclared one."""
+    declared = {d["name"] for d in decls}
+    undeclared = sorted(set(bodies) - declared)
+    if undeclared:
+        raise RuntimeError(f"this body carries executors the shelf never declared: {', '.join(undeclared)} — "
+                           f"declare them in {DECLARATIONS.name} or drop them")
+    out = {}
+    for d in decls:
+        b = bodies.get(d["name"])
+        if b is None:
+            raise RuntimeError(f"the shelf declares the {d['name']!r} tool but this body has no executor for it — "
+                               "a declaration without its body is a defect")
+        t = dict(d, **b)
+        cb = held_by_of(d)
+        if cb is not None:
+            t["consequence_by"] = cb
+        out[d["name"]] = t
+    return out
+
+
+_DECLARED: dict[str, dict] = {d["name"]: d for d in declarations()}
+
+
+def _acts_of(name: str) -> tuple[str, ...]:
+    return tuple(_DECLARED[name]["input_schema"]["properties"]["action"]["enum"])
+
+
+def _held_of(name: str) -> tuple[str, ...]:
+    return tuple(_DECLARED[name]["held_by"]["held"])
+
+
+# the keepers' acts and which of them hold at the interlock — ONE truth, the declaration's
+SERVICES_ACTS, SERVICES_HELD = _acts_of("services"), _held_of("services")
+MINDS_ACTS, MINDS_HELD = _acts_of("minds"), _held_of("minds")
 
 
 class ToolRefused(RuntimeError):
@@ -68,7 +166,9 @@ def consequence_of(tool: dict, args: dict | None = None) -> str:
 
 def tool_manifest(name: str, tool: dict) -> dict:
     """What a tool DECLARES — the manifest the registry pins (P6.5 sp1):
-    its name, its words, its input schema, its consequence class."""
+    its name, its words, its input schema, its consequence class. The flags
+    (ground · master · held_by) are the door's, never the pin's — the Rust
+    kernel's `tools::manifest` builds the same bytes from the same file."""
     return {"name": name, "description": tool["description"],
             "input_schema": tool["input_schema"], "consequence": consequence_of(tool)}
 
@@ -110,8 +210,6 @@ def _weather(args: dict, conn=None) -> str:
             f"(feels like {cur['apparent_temperature']}°F).")
 
 
-SERVICES_ACTS = ("register", "check", "version", "retire", "restore", "changes", "list")
-SERVICES_HELD = ("register", "version", "retire", "restore")     # hold at the interlock; the rest run at once
 GATEWAY = None          # P6.5 sp3: the rig's gateway lane, set at boot — the keepers' checks ping through it
 
 
@@ -139,11 +237,6 @@ def interlock_words_for(tool: str, args: dict | None = None) -> str:
         return spec["words_by"](args or {}) + ". Cancel is the default; a deliberate click confirms."
     from .resident import interlock_words
     return interlock_words(tool)
-
-
-MINDS_ACTS = ("register", "check", "search", "list", "assign", "unassign", "refill", "fuel",
-              "spend", "retire", "restore", "repin", "changes")
-MINDS_HELD = ("register", "assign", "unassign", "refill", "retire", "restore", "repin")
 
 
 def _gw():
@@ -352,45 +445,17 @@ def _seal_record(args: dict) -> str:
     return f"Sealed the note {args.get('key', '?')!r} — it is now permanent."
 
 
-TOOLS: dict[str, dict] = {
-    "weather": {
-        "description": "Read the real temperature outside right now. Call "
-                       "it with NO arguments to use the operator's own "
-                       "town (the default) — never ask the human where "
-                       "they are first.",
-        "input_schema": {"type": "object", "properties": {
-            "latitude": {"type": "number"}, "longitude": {"type": "number"}},
-            "required": []},
-        "consequential": False,
-        "fn": _weather,
-        "ground": True,            # P7 sp8: the default place is the asker's own, read from their profile
-    },
+# ---- the executors: what a declared tool DOES, body-side (never the kernel) -----------------
+
+_BODIES: dict[str, dict] = {
+    "weather": {"fn": _weather},
     "acquire": {
-        "description": "Acquire a text into your memory under a short key: "
-                       "every word is kept exactly, with its provenance, and "
-                       "the human can recall every word later — by key, by "
-                       "ask, or by timeframe. Use it when the human asks you "
-                       "to remember, keep, acquire, or take in a text.",
-        "input_schema": {"type": "object", "properties": {
-            "key": {"type": "string"}, "text": {"type": "string"}},
-            "required": ["key", "text"]},
-        "consequential": False,
-        "ground": True,
         "fn": lambda args, conn: (lambda h: f"acquired {len(args['text'])} characters "
                                             f"under {args['key']!r} — hash {h[:16]}")(
               __import__("orreth_spine.store", fromlist=["OrrethStore"])
               .OrrethStore(conn, by_did=args["_by"]).put(args["_name"], args["key"], args["text"])),
     },
     "mark": {
-        "description": "Set a marker on what you are executing: a declared "
-                       "kind (e.g. 'improvement') and a short note. Other "
-                       "bodies that declared interest in that kind will be "
-                       "asked to act on it. A kind must be declared first.",
-        "input_schema": {"type": "object", "properties": {
-            "kind": {"type": "string"}, "note": {"type": "string"}},
-            "required": ["kind", "note"]},
-        "consequential": False,
-        "ground": True,
         "fn": lambda args, conn: (lambda mk: (lambda m: (lambda asked:
               f"marked {m['ref']} as {m['kind']!r} ({m['id']}); "
               f"{len(asked)} interested bod{'y' if len(asked) == 1 else 'ies'} asked to act")(
@@ -401,15 +466,6 @@ TOOLS: dict[str, dict] = {
               __import__("orreth_spine.markers", fromlist=["set_marker"])),
     },
     "purge-memory": {
-        "description": "Permanently erase a memory you acquired, every "
-                       "version of it, under a key — the words leave the "
-                       "Record, the projection, and every digest that cited "
-                       "them; only a tombstone with the hashes remains. This "
-                       "cannot be undone; it holds for the human's yes.",
-        "input_schema": {"type": "object", "properties": {
-            "key": {"type": "string"}}, "required": ["key"]},
-        "consequential": True,
-        "ground": True,
         "fn": lambda args, conn: (lambda st, dg: (lambda out: (lambda n:
               f"purged {out['versions']} version(s) of {out['ref']!r}; {n} digest(s) rebuilt; "
               f"tombstone keeps the hashes")(dg.rebuild_citing(conn, out["ref"])))(
@@ -418,107 +474,22 @@ TOOLS: dict[str, dict] = {
               __import__("orreth_spine.digest", fromlist=["rebuild_citing"])),
     },
     "add-watch": {
-        "description": "Propose a new monitoring watch: a named ALERT on one "
-                       "metric (outbox_pending · oldest_outbox_age_s · "
-                       "asks_received · bodies_alive · bodies_dormant) — the "
-                       "watch turns RED when `metric op threshold` holds and is "
-                       "green otherwise (ops: <= >= < > ==). To catch dormant "
-                       "bodies: bodies_dormant > 0. To catch asks left waiting: "
-                       "asks_received > 0. It holds for the human's yes before "
-                       "it lands. When the human asks you to propose a watch, "
-                       "call this tool — never describe the watch in words instead.",
-        "input_schema": {"type": "object", "properties": {
-            "name": {"type": "string"}, "metric": {"type": "string"},
-            "op": {"type": "string"}, "threshold": {"type": "number"}},
-            "required": ["name", "metric", "op", "threshold"]},
-        "consequential": True,
-        "ground": True,
         "fn": lambda args, conn: __import__("orreth_spine.monitor", fromlist=["add_watch"])
               .add_watch(conn, args["name"], args["metric"], args["op"],
                          args["threshold"], by=args.get("_by", "the monitor")),
     },
-    "services": {
-        # P6.5 sp2: the Tools keeper's one tool — the shelf tended on the human's word
-        "description": "Keep the shelf of services. action=register adds an MCP server "
-                       "(name: a short lowercase name; locator: its command line or URL, or "
-                       "env:NAME; secrets_with: the env NAMES it needs) and lists its tools onto "
-                       "the shelf. action=check probes one service by name, or every MCP server "
-                       "when no name is given. action=retire / restore move a service by name. "
-                       "action=changes reads what changed on the shelf since the last ask. "
-                       "action=list names what stands. Register, retire and restore hold for the "
-                       "human's yes at the interlock; check, changes and list run at once. When the "
-                       "human asks you to add, check, retire or restore, CALL this tool — never "
-                       "describe the act instead.",
-        "input_schema": {"type": "object", "properties": {
-            "action": {"type": "string", "enum": list(SERVICES_ACTS)},
-            "name": {"type": "string"}, "locator": {"type": "string"},
-            "secrets_with": {"type": "array", "items": {"type": "string"}},
-            "since": {"type": "string"}},
-            "required": ["action"]},
-        "consequential": True,
-        "consequence_by": lambda args: "consequential" if str(args.get("action") or "") in SERVICES_HELD else "routine",
-        "words_by": _services_words,                     # W30: the interlock names the act
-        "ground": True,
-        "fn": _services_tool,
-    },
-    "minds": {
-        # P6.5 sp3: the Stable keeper's one tool — the minds tended on the human's word
-        "description": "Keep the Stable of minds. action=register adds a mind (name: a short lowercase "
-                       "name; provider: anthropic | openrouter | ollama | openai | compatible; model: the "
-                       "model id). Everything else has a default — NEVER ask the human for it: base is "
-                       "only for compatible (ollama reaches the laptop's own Ollama by default); klass "
-                       "defaults to standard (fast | standard | deep); the key is the provider's env NAME "
-                       "by default — never a value; prices are read from the gateway. With a name, a "
-                       "provider and a model in hand, CALL register at once — the hold at the interlock "
-                       "is the human's yes. action=check probes one mind "
-                       "by name or every mind. action=search finds minds (q, klass, max_in_per_m, "
-                       "modality); action=list names what stands. action=assign points a body "
-                       "(subject: its name, or * for every body) at a mind (stall) for a class of work "
-                       "(klass: fast | standard | deep, or any for all its work — the default); action=unassign lifts it. action=fuel reads a body's allowance and "
-                       "spend (subject); action=refill adds dollars (subject, usd). action=spend rolls "
-                       "the meter up. action=retire / restore move a mind by name; action=repin re-pins "
-                       "a mind whose deal moved. action=changes reads what changed. Register, assign, "
-                       "unassign, refill, retire, restore and repin hold for the human's yes at the "
-                       "interlock; the rest run at once. When the human asks you to add, check, assign, "
-                       "refill, retire or restore, CALL this tool — never describe the act instead.",
-        "input_schema": {"type": "object", "properties": {
-            "action": {"type": "string", "enum": list(MINDS_ACTS)},
-            "name": {"type": "string"}, "provider": {"type": "string"}, "model": {"type": "string"},
-            "base": {"type": "string"}, "klass": {"type": "string"}, "key": {"type": "string"},
-            "price_in_per_m": {"type": "number"}, "price_out_per_m": {"type": "number"},
-            "context": {"type": "integer"}, "modalities": {"type": "array", "items": {"type": "string"}},
-            "q": {"type": "string"}, "max_in_per_m": {"type": "number"}, "modality": {"type": "string"},
-            "subject": {"type": "string"}, "stall": {"type": "string"}, "usd": {"type": "number"},
-            "since": {"type": "string"}},
-            "required": ["action"]},
-        "consequential": True,
-        "consequence_by": lambda args: "consequential" if str(args.get("action") or "") in MINDS_HELD else "routine",
-        "words_by": _minds_words,
-        "ground": True,
-        "fn": _minds_tool,
-    },
-    "seal-record": {
-        "description": "Permanently seal a note so it can never be edited "
-                       "again. This cannot be undone.",
-        "input_schema": {"type": "object", "properties": {
-            "key": {"type": "string"}}, "required": ["key"]},
-        "consequential": True,
-        "fn": _seal_record,
-    },
-    "erase-record": {
-        # P6 sp1's proving ground for GRAVE: a test-only act that demands
-        # the person's code (L3-code) — no template of the house declares
-        # it; a test template does, so the path is walkable and testable
-        "description": "Permanently erase a sealed note — every trace of "
-                       "it. This is grave and cannot be undone.",
-        "input_schema": {"type": "object", "properties": {
-            "key": {"type": "string"}}, "required": ["key"]},
-        "consequential": True,
-        "consequence": "grave",
-        "fn": lambda args: f"Erased the sealed note {args.get('key', '?')!r} — no trace remains.",
-    },
+    # P6.5 sp2: the Tools keeper's one tool — the shelf tended on the human's word
+    "services": {"fn": _services_tool, "words_by": _services_words},        # W30: the interlock names the act
+    # P6.5 sp3: the Stable keeper's one tool — the minds tended on the human's word
+    "minds": {"fn": _minds_tool, "words_by": _minds_words},
+    "seal-record": {"fn": _seal_record},
+    # P6 sp1's proving ground for GRAVE: a test-only act that demands the person's code
+    # (L3-code) — no template of the house declares it; a test template does
+    "erase-record": {"fn": lambda args: f"Erased the sealed note {args.get('key', '?')!r} — no trace remains."},
 }
 
+# the door's table: the declarations (data) joined to their executors (code)
+TOOLS: dict[str, dict] = bind(list(_DECLARED.values()), _BODIES)
 
 def ensure_schema(conn) -> None:
     from .outbox import once

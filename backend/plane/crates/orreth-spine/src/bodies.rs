@@ -15,10 +15,11 @@
 //! nothing is left running. Liveness stays a fact on the ground (the leases,
 //! M2): what this module knows is the process; what the world knows is the lease.
 //!
-//! Before the crew: the kernel's BOOT RITE runs once in the reference's own
-//! words (`--seed-shelf`: the built-ins on the shelf, probed; the reference
-//! clock by the dial) — the tool door's schemas live in tools.py until sp8 —
-//! and the world's benches are swept of a prior life's leftovers.
+//! Before the crew: the kernel's BOOT RITE runs once, NATIVE since P7 sp8 row
+//! 2 (the built-ins on the shelf from `spine/tools.v0.json` — the declarations
+//! both kernels read — the ground, the Record and the rig's own stall, each
+//! probed by this kernel; the reference clock by the dial; no Python spawned to
+//! seed) and the world's benches are swept of a prior life's leftovers.
 
 use crate::body::{
     park_rule, parked_payload, parked_words, EXIT_NO_POLICY, EXIT_REFUSED, KERNEL, PARKED,
@@ -38,7 +39,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::Notify;
 
 pub const BODIES_DIAL: &str = "SPINE_BODIES"; // crew (default) · none
-pub const SPINE_DIAL: &str = "ORRETH_SPINE"; // the spine home; default beside the crate
+pub const SPINE_DIAL: &str = crate::tools::SPINE_DIAL; // the spine home; default beside the crate
 pub const CREW_FORMAT: &str = "orreth-crew/1";
 /// The Python that runs a body: `SPINE_PYTHON`, else the spine's own venv
 /// (`<spine>/.venv/bin/python3`), else `python3` on PATH. NEVER through `uv run`:
@@ -49,13 +50,10 @@ pub const PYTHON_DIAL: &str = "SPINE_PYTHON";
 pub const CREW_DIAL: &str = "SPINE_CREW";
 const LAST_WORDS: usize = 20;
 
-/// The spine home: `ORRETH_SPINE`, else the crate's `../../../../spine`.
+/// The spine home: `ORRETH_SPINE`, else the crate's `../../../../spine` (the
+/// one reading, shared with the tools' declarations — `tools::spine_dir`).
 pub fn spine_dir() -> PathBuf {
-    std::env::var(SPINE_DIAL)
-        .ok()
-        .filter(|p| !p.is_empty())
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../spine"))
+    crate::tools::spine_dir()
 }
 
 /// Does this kernel seat a crew? `SPINE_BODIES=none` says no (side by side
@@ -292,29 +290,95 @@ impl Bodies {
         c
     }
 
-    /// The kernel's boot rite, once, in the reference's words: the built-ins
-    /// on the shelf, probed; the reference clock by the dial. Its words are
-    /// said on the kernel's own stderr; a refusal is said, never a crash.
-    pub async fn seed_shelf(&self) -> Result<Vec<String>, RoadError> {
-        let mut child = self
-            .command(&["--seed-shelf".to_string()])
-            .spawn()
-            .map_err(|e| {
-                RoadError::Refused(format!(
-                    "the boot rite could not start (SPINE_PYTHON names another interpreter): {e}"
-                ))
-            })?;
-        let stderr = child.stderr.take();
+    /// The kernel's boot rite, once, NATIVE (P7 sp8 row 2 — the spawned Python
+    /// `--seed-shelf` one-shot retired): the built-ins on the shelf from the
+    /// declarations file both kernels read, the ground and the Record, the rig's
+    /// own stall, each probed once by this kernel; the reference clock by the
+    /// dial. Its words are said on the kernel's own stderr and returned; a
+    /// refusal is said, never a crash.
+    pub async fn seed_shelf(
+        &self,
+        gw: Option<&crate::gateway::Gateway>,
+    ) -> Result<Vec<String>, RoadError> {
+        use crate::{mcp_live, services_live, stable_live};
         let mut said = Vec::new();
-        if let Some(err) = stderr {
-            let mut lines = BufReader::new(err).lines();
-            let deadline = tokio::time::Instant::now() + Duration::from_secs(240);
-            while let Ok(Ok(Some(l))) = tokio::time::timeout_at(deadline, lines.next_line()).await {
-                eprintln!("  [boot rite] {l}");
-                said.push(l);
+        let mut say = |line: String| {
+            eprintln!("{line}");
+            said.push(line);
+        };
+        let mut g = crate::ground::Ground::connect(&self.world.pg_dsn).await?;
+        let made = services_live::seed(&mut g, &self.world, &self.spine).await?;
+        let st = stable_live::seed(&mut g, &self.world, gw).await?;
+        let names = |v: &Value| -> Vec<String> {
+            v.as_array()
+                .map(|a| a.iter().map(crate::py::python_str).collect())
+                .unwrap_or_default()
+        };
+        for line in names(&made["refused"])
+            .into_iter()
+            .chain(names(&st["refused"]))
+        {
+            say(format!("the shelf refused a built-in: {line}"));
+        }
+        for n in names(&st["retired"]) {
+            say(format!(
+                "the shelf: {n}, the old world's built-in mind, retired — the Stable's {} stall serves the same model through the gateway",
+                stable_live::DEFAULT_STALL.0
+            ));
+        }
+        let checked =
+            services_live::check_all(&mut g, &self.world, gw, None, services_live::KERNEL).await?;
+        let bad: Vec<String> = checked
+            .iter()
+            .filter(|c| c["ok"] == json!(false))
+            .map(|c| crate::py::python_str(&c["name"]))
+            .collect();
+        let registered: Vec<String> = names(&made["registered"])
+            .into_iter()
+            .chain(names(&st["registered"]))
+            .collect();
+        let versioned: Vec<String> = names(&made["versioned"])
+            .into_iter()
+            .chain(names(&st["versioned"]))
+            .collect();
+        let mut words = format!("the shelf: {} services probed", checked.len());
+        if !registered.is_empty() {
+            words.push_str(&format!(", registered now: {}", registered.join(", ")));
+        }
+        if !versioned.is_empty() {
+            words.push_str(&format!(
+                ", re-pinned (their words changed): {}",
+                versioned.join(", ")
+            ));
+        }
+        if !bad.is_empty() {
+            words.push_str(&format!(", UNHEALTHY: {}", bad.join(", ")));
+        }
+        say(words);
+        if mcp_live::ref_on() {
+            match mcp_live::seed_ref(&mut g, &self.world, &self.python(), &self.spine).await {
+                Ok(r) => {
+                    let t = &r["tools"];
+                    let listed: Vec<String> = ["new", "present", "versioned"]
+                        .iter()
+                        .flat_map(|k| names(&t[*k]))
+                        .collect();
+                    say(format!(
+                        "the shelf: the reference clock server registered at {} — tools {}",
+                        mcp_live::locator_words(&mcp_live::ref_locator(
+                            &self.python(),
+                            &self.spine
+                        )),
+                        if listed.is_empty() {
+                            "none".to_string()
+                        } else {
+                            listed.join(", ")
+                        }
+                    ));
+                }
+                Err(e) => say(format!("the reference clock could not be registered: {e}")), // the rig runs on
             }
         }
-        let _ = tokio::time::timeout(Duration::from_secs(30), child.wait()).await;
         Ok(said)
     }
 

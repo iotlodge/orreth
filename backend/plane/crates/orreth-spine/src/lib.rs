@@ -96,6 +96,7 @@ pub mod py;
 pub mod rails;
 pub mod services;
 pub mod stable;
+pub mod tools;
 pub mod watch;
 
 #[cfg(feature = "rails")]

@@ -771,3 +771,16 @@ path only: click, type, read, wait; no door, no database.
 
 **Walk #16, JB, 2026-09-26: PASS on :4601 — JB's words: "I've opened 4601 and can confirm the profile setting and recall in request is working." Walked: the tellings (steps 3–4), the librarian answering from the profile (step 5), the read-back (step 7). Not reported this walk: the routed ask to cell two (step 6), the clock (step 9), the forgetting (step 10) — proven by `tests/cells.rs` and `tests/test_profile.py`; JB walks them when cell two is next lit. Shadow stopped after the check. No wounds.**
 
+
+## Walk #17 — the tool door moves (P7 sp8 row 2, built 2026-09-26; JB's walk OWED)
+
+**What was built (plain words):** the Rust kernel no longer needs Python to know what tools the house has. What each built-in tool IS — its name, its words, what it takes, whether it holds for your yes — now lives in one small file beside the crew manifest (`spine/tools.v0.json`), and both kernels read that same file. When the Rust kernel lights alone it puts every built-in on the shelf itself, checks each one against that file ("the door answers describe; the schema matches the pin"), registers the ground, the Record and its own mind, and says so in its own voice — the old trick of starting a Python one-shot to do that is gone. What a tool DOES is unchanged and still runs inside the body that calls it (the kernel authorizes, journals and meters; it never runs the call). Nothing about how you use the glass changed; what changed is that the kernel standing alone is one step more whole (row 4 retires the Python glass from the door).
+
+**The script (JB in the shell and the glass; the Python Bridge DARK — `scripts/dev.sh bridge stop` if it is lit):**
+1. Light the Rust kernel alone: `scripts/dev.sh shadow`. Read `~/.orreth/tmp/shadow.log`. Expect one line "the shelf: 12 services probed" (or more with the reference clock on), in the kernel's own voice, and NO line beginning "[boot rite]" — no Python was started to seed the shelf. A first light on a fresh ground adds ", registered now: weather, acquire, … haiku".
+2. Open http://127.0.0.1:4601/ and say "what services are here?". Expect the shelf beneath the bodies to list every built-in tool (weather · acquire · mark · purge-memory · add-watch · services · minds · seal-record · erase-record), the ground and the Record (stores) and the haiku stall (a mind) — each healthy.
+3. Say "check the services". Expect every built-in's line to say "the door answers describe; the schema matches the pin" — never "not probed by this kernel".
+4. Say "librarian, what is the temperature outside?". Expect the weather for your place as in walk #16 — the tool still runs in the librarian's own body.
+5. Say "retire the weather tool". Expect the interlock with Cancel as the default; Cancel. Nothing changes.
+6. In the shell: `cd spine && .venv/bin/python3 -m orreth_spine.body --seed-shelf`. Expect the body to refuse — "unrecognized arguments: --seed-shelf" — the one-shot rite no longer exists.
+7. Stop the kernel: `scripts/dev.sh shadow stop`.

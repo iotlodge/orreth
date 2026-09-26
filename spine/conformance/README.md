@@ -230,3 +230,13 @@ the same files, unchanged — before any module earns the word "ported".
     the claims, the kernel's observation only beside the told place it explains, the whole
     capped at 700); and the weather tool's default — the newest observed coordinates beside
     a live told place, or null.
+  - `tool_manifest` · `tool_consequence` (tools-v0, P7 sp8 row 2 — THE TOOL DOOR MOVES) —
+    the built-in tools' declarations as DATA: both runners read `spine/tools.v0.json`
+    (beside the crew manifest) by `input.name` and must build the same manifest (name ·
+    description · input_schema · consequence — `expect.bytes` canonical, `expect.hash` the
+    registry's pin, byte-identical to services-v0's `manifest_pin` for the weather tool),
+    read the same flags (`expect.ground` · `expect.master`) and the same declared class; and
+    class the same CALL the same way (`input.args` → `expect.consequence`: a declaration's
+    `held_by` names the argument field and the values that hold at the interlock — a held
+    value wears the declared class, any other runs at once, routine). Execution is not
+    measured: it is the body's, never the kernel's.

@@ -24,7 +24,8 @@ from pathlib import Path
 import pytest
 
 from orreth_spine import (body as _body, cells, dispatch, envelope as ev, export, ground, harness, intent, mcp, mitl, monitor,
-                          placement, presence, profile, proof, rails, resident, scheduler, services, stable, store, digest)
+                          placement, presence, profile, proof, rails, resident, scheduler, services, stable, store, digest,
+                          tools)
 from orreth_spine.identity import Identity
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
@@ -231,6 +232,16 @@ def test_fixture(contract, case):
     elif kind == "manifest_pin":                 # canonical bytes → sha256, the pin every kind wears
         assert ev.canonical(inp["manifest"]).decode("ascii") == exp["bytes"]
         assert services.pin(inp["manifest"]) == exp["hash"]
+    # ---- orreth.tools/1 (P7 sp8 row 2): the declarations as data — both kernels read tools.v0.json by name ----
+    elif kind == "tool_manifest":               # the declaration → the registry's pin, byte-identical on both kernels
+        t = tools.TOOLS[inp["name"]]
+        m = tools.tool_manifest(inp["name"], t)
+        assert ev.canonical(m).decode("ascii") == exp["bytes"]
+        assert services.pin(m) == exp["hash"]
+        assert {"consequence": tools.consequence_of(t), "ground": bool(t.get("ground")),
+                "master": bool(t.get("master"))} == {k: exp[k] for k in ("consequence", "ground", "master")}
+    elif kind == "tool_consequence":            # the class a CALL wears: held_by's rule by the arguments
+        assert tools.consequence_of(tools.TOOLS[inp["name"]], inp["args"]) == exp["consequence"]
     # ---- orreth.askroad/1 (P7 sp3): the ask's fact, the door's refusal, the kind of an ask, the proof's words ----
     elif kind == "ask_fact":                    # submit_ask's law: the pointer-only payload, the human's chain, the ask at seq 1
         payload = {"ref": inp["ask_id"], "hash": ev.content_hash(inp["text"])}

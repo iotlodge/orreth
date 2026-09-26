@@ -309,7 +309,7 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
     let mut tasks = Vec::new();
     // the crew: the benches swept, the boot rite once, the kernel's duties declared, then every seat spawned
     if let Some(b) = bodies_arc.clone() {
-        let (w2, stop2) = (w.clone(), stop.clone());
+        let (w2, stop2, gw2) = (w.clone(), stop.clone(), gateway.clone());
         tasks.push(tokio::spawn(async move {
             if let Err(e) = b.sweep_benches().await {
                 eprintln!("the benches could not be swept: {e}");
@@ -317,7 +317,9 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
             if stop2.load(Ordering::Relaxed) {
                 return;
             }
-            if let Err(e) = b.seed_shelf().await {
+            // P7 sp8 row 2: the rite is this kernel's own — no Python is spawned to seed the shelf
+            let ready = gw2.ready().await;
+            if let Err(e) = b.seed_shelf(if ready { Some(&gw2) } else { None }).await {
                 eprintln!("the boot rite could not run: {e}");
             }
             match Ground::connect(&w2.pg_dsn).await {

@@ -1,0 +1,493 @@
+{
+ "contract": "orreth.tools/1",
+ "version": 0,
+ "generated_by": "orreth_spine.tools + orreth_spine.services + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P7 sp8 row 2",
+ "generated_at": "2026-09-26",
+ "words": "the tool door's declarations as DATA (spine/tools.v0.json, beside the crew manifest): both runners read the SAME file by name and must pin the same bytes (tool_manifest \u2014 the registry's pin, byte-identical to services-v0's manifest_pin for the weather tool) and class the same call the same way (tool_consequence \u2014 the held_by rule: a held argument wears the declared class, any other runs at once). Execution is not measured here: it is the body's, never the kernel's.",
+ "cases": [
+  {
+   "name": "tool_manifest: the weather tool \u2014 its declaration, read from tools.v0.json, pinned",
+   "kind": "tool_manifest",
+   "input": {
+    "name": "weather"
+   },
+   "expect": {
+    "bytes": "{\"consequence\":\"routine\",\"description\":\"Read the real temperature outside right now. Call it with NO arguments to use the operator's own town (the default) \\u2014 never ask the human where they are first.\",\"input_schema\":{\"properties\":{\"latitude\":{\"type\":\"number\"},\"longitude\":{\"type\":\"number\"}},\"required\":[],\"type\":\"object\"},\"name\":\"weather\"}",
+    "hash": "sha256:845484c281d4eaa8fa9a303fb2c2861529938fb6e814f05bc825cf13d40d7503",
+    "consequence": "routine",
+    "ground": true,
+    "master": false
+   }
+  },
+  {
+   "name": "tool_manifest: the acquire tool \u2014 its declaration, read from tools.v0.json, pinned",
+   "kind": "tool_manifest",
+   "input": {
+    "name": "acquire"
+   },
+   "expect": {
+    "bytes": "{\"consequence\":\"routine\",\"description\":\"Acquire a text into your memory under a short key: every word is kept exactly, with its provenance, and the human can recall every word later \\u2014 by key, by ask, or by timeframe. Use it when the human asks you to remember, keep, acquire, or take in a text.\",\"input_schema\":{\"properties\":{\"key\":{\"type\":\"string\"},\"text\":{\"type\":\"string\"}},\"required\":[\"key\",\"text\"],\"type\":\"object\"},\"name\":\"acquire\"}",
+    "hash": "sha256:22ed9890b61f212333c1db120893fa261f2c1bc1d3f06f971866927a0d773cfc",
+    "consequence": "routine",
+    "ground": true,
+    "master": false
+   }
+  },
+  {
+   "name": "tool_manifest: the mark tool \u2014 its declaration, read from tools.v0.json, pinned",
+   "kind": "tool_manifest",
+   "input": {
+    "name": "mark"
+   },
+   "expect": {
+    "bytes": "{\"consequence\":\"routine\",\"description\":\"Set a marker on what you are executing: a declared kind (e.g. 'improvement') and a short note. Other bodies that declared interest in that kind will be asked to act on it. A kind must be declared first.\",\"input_schema\":{\"properties\":{\"kind\":{\"type\":\"string\"},\"note\":{\"type\":\"string\"}},\"required\":[\"kind\",\"note\"],\"type\":\"object\"},\"name\":\"mark\"}",
+    "hash": "sha256:314b3fc774a3ea06c5767f718f8a369a53c1dd9438e9d3172090ba0778b6866f",
+    "consequence": "routine",
+    "ground": true,
+    "master": false
+   }
+  },
+  {
+   "name": "tool_manifest: the purge-memory tool \u2014 its declaration, read from tools.v0.json, pinned",
+   "kind": "tool_manifest",
+   "input": {
+    "name": "purge-memory"
+   },
+   "expect": {
+    "bytes": "{\"consequence\":\"consequential\",\"description\":\"Permanently erase a memory you acquired, every version of it, under a key \\u2014 the words leave the Record, the projection, and every digest that cited them; only a tombstone with the hashes remains. This cannot be undone; it holds for the human's yes.\",\"input_schema\":{\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"],\"type\":\"object\"},\"name\":\"purge-memory\"}",
+    "hash": "sha256:af1510775d8cfff989776d34491fe87688b9b58882200316dd2add5e5b148185",
+    "consequence": "consequential",
+    "ground": true,
+    "master": false
+   }
+  },
+  {
+   "name": "tool_manifest: the add-watch tool \u2014 its declaration, read from tools.v0.json, pinned",
+   "kind": "tool_manifest",
+   "input": {
+    "name": "add-watch"
+   },
+   "expect": {
+    "bytes": "{\"consequence\":\"consequential\",\"description\":\"Propose a new monitoring watch: a named ALERT on one metric (outbox_pending \\u00b7 oldest_outbox_age_s \\u00b7 asks_received \\u00b7 bodies_alive \\u00b7 bodies_dormant) \\u2014 the watch turns RED when `metric op threshold` holds and is green otherwise (ops: <= >= < > ==). To catch dormant bodies: bodies_dormant > 0. To catch asks left waiting: asks_received > 0. It holds for the human's yes before it lands. When the human asks you to propose a watch, call this tool \\u2014 never describe the watch in words instead.\",\"input_schema\":{\"properties\":{\"metric\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"op\":{\"type\":\"string\"},\"threshold\":{\"type\":\"number\"}},\"required\":[\"name\",\"metric\",\"op\",\"threshold\"],\"type\":\"object\"},\"name\":\"add-watch\"}",
+    "hash": "sha256:988c3957391006e3ca87332a99567899cf8dc825936925edcb7abafaa68144ff",
+    "consequence": "consequential",
+    "ground": true,
+    "master": false
+   }
+  },
+  {
+   "name": "tool_manifest: the services tool \u2014 its declaration, read from tools.v0.json, pinned",
+   "kind": "tool_manifest",
+   "input": {
+    "name": "services"
+   },
+   "expect": {
+    "bytes": "{\"consequence\":\"consequential\",\"description\":\"Keep the shelf of services. action=register adds an MCP server (name: a short lowercase name; locator: its command line or URL, or env:NAME; secrets_with: the env NAMES it needs) and lists its tools onto the shelf. action=check probes one service by name, or every MCP server when no name is given. action=retire / restore move a service by name. action=changes reads what changed on the shelf since the last ask. action=list names what stands. Register, retire and restore hold for the human's yes at the interlock; check, changes and list run at once. When the human asks you to add, check, retire or restore, CALL this tool \\u2014 never describe the act instead.\",\"input_schema\":{\"properties\":{\"action\":{\"enum\":[\"register\",\"check\",\"version\",\"retire\",\"restore\",\"changes\",\"list\"],\"type\":\"string\"},\"locator\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"secrets_with\":{\"items\":{\"type\":\"string\"},\"type\":\"array\"},\"since\":{\"type\":\"string\"}},\"required\":[\"action\"],\"type\":\"object\"},\"name\":\"services\"}",
+    "hash": "sha256:c9a2a3ba8245e718872fce111a0841a110cb44fb8df8976bab1d90a2a7c40417",
+    "consequence": "consequential",
+    "ground": true,
+    "master": false
+   }
+  },
+  {
+   "name": "tool_manifest: the minds tool \u2014 its declaration, read from tools.v0.json, pinned",
+   "kind": "tool_manifest",
+   "input": {
+    "name": "minds"
+   },
+   "expect": {
+    "bytes": "{\"consequence\":\"consequential\",\"description\":\"Keep the Stable of minds. action=register adds a mind (name: a short lowercase name; provider: anthropic | openrouter | ollama | openai | compatible; model: the model id). Everything else has a default \\u2014 NEVER ask the human for it: base is only for compatible (ollama reaches the laptop's own Ollama by default); klass defaults to standard (fast | standard | deep); the key is the provider's env NAME by default \\u2014 never a value; prices are read from the gateway. With a name, a provider and a model in hand, CALL register at once \\u2014 the hold at the interlock is the human's yes. action=check probes one mind by name or every mind. action=search finds minds (q, klass, max_in_per_m, modality); action=list names what stands. action=assign points a body (subject: its name, or * for every body) at a mind (stall) for a class of work (klass: fast | standard | deep, or any for all its work \\u2014 the default); action=unassign lifts it. action=fuel reads a body's allowance and spend (subject); action=refill adds dollars (subject, usd). action=spend rolls the meter up. action=retire / restore move a mind by name; action=repin re-pins a mind whose deal moved. action=changes reads what changed. Register, assign, unassign, refill, retire, restore and repin hold for the human's yes at the interlock; the rest run at once. When the human asks you to add, check, assign, refill, retire or restore, CALL this tool \\u2014 never describe the act instead.\",\"input_schema\":{\"properties\":{\"action\":{\"enum\":[\"register\",\"check\",\"search\",\"list\",\"assign\",\"unassign\",\"refill\",\"fuel\",\"spend\",\"retire\",\"restore\",\"repin\",\"changes\"],\"type\":\"string\"},\"base\":{\"type\":\"string\"},\"context\":{\"type\":\"integer\"},\"key\":{\"type\":\"string\"},\"klass\":{\"type\":\"string\"},\"max_in_per_m\":{\"type\":\"number\"},\"modalities\":{\"items\":{\"type\":\"string\"},\"type\":\"array\"},\"modality\":{\"type\":\"string\"},\"model\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"price_in_per_m\":{\"type\":\"number\"},\"price_out_per_m\":{\"type\":\"number\"},\"provider\":{\"type\":\"string\"},\"q\":{\"type\":\"string\"},\"since\":{\"type\":\"string\"},\"stall\":{\"type\":\"string\"},\"subject\":{\"type\":\"string\"},\"usd\":{\"type\":\"number\"}},\"required\":[\"action\"],\"type\":\"object\"},\"name\":\"minds\"}",
+    "hash": "sha256:a3355673bb28a4b56c56cac01ece360e48a931cfcf6aaf57032337c636e517ef",
+    "consequence": "consequential",
+    "ground": true,
+    "master": false
+   }
+  },
+  {
+   "name": "tool_manifest: the seal-record tool \u2014 its declaration, read from tools.v0.json, pinned",
+   "kind": "tool_manifest",
+   "input": {
+    "name": "seal-record"
+   },
+   "expect": {
+    "bytes": "{\"consequence\":\"consequential\",\"description\":\"Permanently seal a note so it can never be edited again. This cannot be undone.\",\"input_schema\":{\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"],\"type\":\"object\"},\"name\":\"seal-record\"}",
+    "hash": "sha256:7af0a85150e29efb3c4cebd6a15fc7b3ddc63872bdf8af086ee6e8ab72167497",
+    "consequence": "consequential",
+    "ground": false,
+    "master": false
+   }
+  },
+  {
+   "name": "tool_manifest: the erase-record tool \u2014 its declaration, read from tools.v0.json, pinned",
+   "kind": "tool_manifest",
+   "input": {
+    "name": "erase-record"
+   },
+   "expect": {
+    "bytes": "{\"consequence\":\"grave\",\"description\":\"Permanently erase a sealed note \\u2014 every trace of it. This is grave and cannot be undone.\",\"input_schema\":{\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"],\"type\":\"object\"},\"name\":\"erase-record\"}",
+    "hash": "sha256:1df3ce7cb475bb40a0d7825d3bdb4bbe832cb32584043b2c89526f744c9128a7",
+    "consequence": "grave",
+    "ground": false,
+    "master": false
+   }
+  },
+  {
+   "name": "tool_consequence: services {\"action\": \"list\"} \u2014 a look runs at once",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "services",
+    "args": {
+     "action": "list"
+    }
+   },
+   "expect": {
+    "consequence": "routine"
+   }
+  },
+  {
+   "name": "tool_consequence: services {\"action\": \"check\", \"name\": \"clock\"} \u2014 a probe runs at once",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "services",
+    "args": {
+     "action": "check",
+     "name": "clock"
+    }
+   },
+   "expect": {
+    "consequence": "routine"
+   }
+  },
+  {
+   "name": "tool_consequence: services {\"action\": \"changes\"} \u2014 reading the changes runs at once",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "services",
+    "args": {
+     "action": "changes"
+    }
+   },
+   "expect": {
+    "consequence": "routine"
+   }
+  },
+  {
+   "name": "tool_consequence: services {\"action\": \"register\", \"locator\": \"env:CLOCK\", \"name\": \"clock\"} \u2014 registering holds at the interlock",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "services",
+    "args": {
+     "action": "register",
+     "name": "clock",
+     "locator": "env:CLOCK"
+    }
+   },
+   "expect": {
+    "consequence": "consequential"
+   }
+  },
+  {
+   "name": "tool_consequence: services {\"action\": \"version\", \"name\": \"clock\"} \u2014 re-pinning holds",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "services",
+    "args": {
+     "action": "version",
+     "name": "clock"
+    }
+   },
+   "expect": {
+    "consequence": "consequential"
+   }
+  },
+  {
+   "name": "tool_consequence: services {\"action\": \"retire\", \"name\": \"clock\"} \u2014 retiring holds",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "services",
+    "args": {
+     "action": "retire",
+     "name": "clock"
+    }
+   },
+   "expect": {
+    "consequence": "consequential"
+   }
+  },
+  {
+   "name": "tool_consequence: services {\"action\": \"restore\", \"name\": \"clock\"} \u2014 restoring holds",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "services",
+    "args": {
+     "action": "restore",
+     "name": "clock"
+    }
+   },
+   "expect": {
+    "consequence": "consequential"
+   }
+  },
+  {
+   "name": "tool_consequence: services {} \u2014 no act named \u2014 nothing to hold, routine",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "services",
+    "args": {}
+   },
+   "expect": {
+    "consequence": "routine"
+   }
+  },
+  {
+   "name": "tool_consequence: services {\"action\": \"fly\"} \u2014 an unknown act is routine at the door (the executor refuses it in words)",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "services",
+    "args": {
+     "action": "fly"
+    }
+   },
+   "expect": {
+    "consequence": "routine"
+   }
+  },
+  {
+   "name": "tool_consequence: minds {\"action\": \"fuel\", \"subject\": \"librarian\"} \u2014 reading fuel runs at once",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "minds",
+    "args": {
+     "action": "fuel",
+     "subject": "librarian"
+    }
+   },
+   "expect": {
+    "consequence": "routine"
+   }
+  },
+  {
+   "name": "tool_consequence: minds {\"action\": \"search\", \"q\": \"haiku\"} \u2014 a search runs at once",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "minds",
+    "args": {
+     "action": "search",
+     "q": "haiku"
+    }
+   },
+   "expect": {
+    "consequence": "routine"
+   }
+  },
+  {
+   "name": "tool_consequence: minds {\"action\": \"spend\"} \u2014 rolling the meter runs at once",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "minds",
+    "args": {
+     "action": "spend"
+    }
+   },
+   "expect": {
+    "consequence": "routine"
+   }
+  },
+  {
+   "name": "tool_consequence: minds {\"action\": \"register\", \"model\": \"claude-sonnet-5\", \"name\": \"sonnet\", \"provider\": \"anthropic\"} \u2014 registering holds",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "minds",
+    "args": {
+     "action": "register",
+     "name": "sonnet",
+     "provider": "anthropic",
+     "model": "claude-sonnet-5"
+    }
+   },
+   "expect": {
+    "consequence": "consequential"
+   }
+  },
+  {
+   "name": "tool_consequence: minds {\"action\": \"assign\", \"stall\": \"haiku\", \"subject\": \"*\"} \u2014 assigning holds",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "minds",
+    "args": {
+     "action": "assign",
+     "subject": "*",
+     "stall": "haiku"
+    }
+   },
+   "expect": {
+    "consequence": "consequential"
+   }
+  },
+  {
+   "name": "tool_consequence: minds {\"action\": \"unassign\", \"subject\": \"librarian\"} \u2014 unassigning holds",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "minds",
+    "args": {
+     "action": "unassign",
+     "subject": "librarian"
+    }
+   },
+   "expect": {
+    "consequence": "consequential"
+   }
+  },
+  {
+   "name": "tool_consequence: minds {\"action\": \"refill\", \"subject\": \"librarian\", \"usd\": 5} \u2014 a refill holds",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "minds",
+    "args": {
+     "action": "refill",
+     "subject": "librarian",
+     "usd": 5
+    }
+   },
+   "expect": {
+    "consequence": "consequential"
+   }
+  },
+  {
+   "name": "tool_consequence: minds {\"action\": \"repin\", \"name\": \"haiku\"} \u2014 a repin holds",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "minds",
+    "args": {
+     "action": "repin",
+     "name": "haiku"
+    }
+   },
+   "expect": {
+    "consequence": "consequential"
+   }
+  },
+  {
+   "name": "tool_consequence: minds {\"action\": \"retire\", \"name\": \"haiku\"} \u2014 retiring holds",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "minds",
+    "args": {
+     "action": "retire",
+     "name": "haiku"
+    }
+   },
+   "expect": {
+    "consequence": "consequential"
+   }
+  },
+  {
+   "name": "tool_consequence: minds {\"action\": \"restore\", \"name\": \"haiku\"} \u2014 restoring holds",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "minds",
+    "args": {
+     "action": "restore",
+     "name": "haiku"
+    }
+   },
+   "expect": {
+    "consequence": "consequential"
+   }
+  },
+  {
+   "name": "tool_consequence: weather {\"latitude\": 39.7, \"longitude\": -104.9} \u2014 a routine tool with arguments stays routine",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "weather",
+    "args": {
+     "latitude": 39.7,
+     "longitude": -104.9
+    }
+   },
+   "expect": {
+    "consequence": "routine"
+   }
+  },
+  {
+   "name": "tool_consequence: weather {} \u2014 routine with none",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "weather",
+    "args": {}
+   },
+   "expect": {
+    "consequence": "routine"
+   }
+  },
+  {
+   "name": "tool_consequence: acquire {\"key\": \"k\", \"text\": \"t\"} \u2014 routine",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "acquire",
+    "args": {
+     "key": "k",
+     "text": "t"
+    }
+   },
+   "expect": {
+    "consequence": "routine"
+   }
+  },
+  {
+   "name": "tool_consequence: add-watch {\"metric\": \"bodies_dormant\", \"name\": \"w\", \"op\": \">\", \"threshold\": 0} \u2014 consequential for every call",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "add-watch",
+    "args": {
+     "name": "w",
+     "metric": "bodies_dormant",
+     "op": ">",
+     "threshold": 0
+    }
+   },
+   "expect": {
+    "consequence": "consequential"
+   }
+  },
+  {
+   "name": "tool_consequence: purge-memory {\"key\": \"k\"} \u2014 consequential for every call",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "purge-memory",
+    "args": {
+     "key": "k"
+    }
+   },
+   "expect": {
+    "consequence": "consequential"
+   }
+  },
+  {
+   "name": "tool_consequence: seal-record {\"key\": \"k\"} \u2014 consequential for every call",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "seal-record",
+    "args": {
+     "key": "k"
+    }
+   },
+   "expect": {
+    "consequence": "consequential"
+   }
+  },
+  {
+   "name": "tool_consequence: erase-record {\"key\": \"k\"} \u2014 grave for every call \u2014 L3",
+   "kind": "tool_consequence",
+   "input": {
+    "name": "erase-record",
+    "args": {
+     "key": "k"
+    }
+   },
+   "expect": {
+    "consequence": "grave"
+   }
+  }
+ ]
+}

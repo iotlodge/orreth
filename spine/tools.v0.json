@@ -1,0 +1,293 @@
+{
+  "format": "orreth-tools/1",
+  "version": "0.1.0",
+  "words": "the built-in tools a kernel seeds on the shelf at light and probes by describe — their DECLARATIONS only (name · words · input schema · consequence class · the ground and master flags · which arguments hold at the interlock), read by both kernels (P7 sp8 row 2). A tool's EXECUTION stays body-side: the Python body binds each name to its executor and refuses to start when a declaration has none; the kernel authorizes, journals and meters, it never runs the call. MCP-born tools never live here — their server lists them onto the shelf.",
+  "tools": [
+    {
+      "name": "weather",
+      "description": "Read the real temperature outside right now. Call it with NO arguments to use the operator's own town (the default) — never ask the human where they are first.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          }
+        },
+        "required": []
+      },
+      "consequence": "routine",
+      "ground": true
+    },
+    {
+      "name": "acquire",
+      "description": "Acquire a text into your memory under a short key: every word is kept exactly, with its provenance, and the human can recall every word later — by key, by ask, or by timeframe. Use it when the human asks you to remember, keep, acquire, or take in a text.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "text"
+        ]
+      },
+      "consequence": "routine",
+      "ground": true
+    },
+    {
+      "name": "mark",
+      "description": "Set a marker on what you are executing: a declared kind (e.g. 'improvement') and a short note. Other bodies that declared interest in that kind will be asked to act on it. A kind must be declared first.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "note"
+        ]
+      },
+      "consequence": "routine",
+      "ground": true
+    },
+    {
+      "name": "purge-memory",
+      "description": "Permanently erase a memory you acquired, every version of it, under a key — the words leave the Record, the projection, and every digest that cited them; only a tombstone with the hashes remains. This cannot be undone; it holds for the human's yes.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key"
+        ]
+      },
+      "consequence": "consequential",
+      "ground": true
+    },
+    {
+      "name": "add-watch",
+      "description": "Propose a new monitoring watch: a named ALERT on one metric (outbox_pending · oldest_outbox_age_s · asks_received · bodies_alive · bodies_dormant) — the watch turns RED when `metric op threshold` holds and is green otherwise (ops: <= >= < > ==). To catch dormant bodies: bodies_dormant > 0. To catch asks left waiting: asks_received > 0. It holds for the human's yes before it lands. When the human asks you to propose a watch, call this tool — never describe the watch in words instead.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "metric": {
+            "type": "string"
+          },
+          "op": {
+            "type": "string"
+          },
+          "threshold": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "metric",
+          "op",
+          "threshold"
+        ]
+      },
+      "consequence": "consequential",
+      "ground": true
+    },
+    {
+      "name": "services",
+      "description": "Keep the shelf of services. action=register adds an MCP server (name: a short lowercase name; locator: its command line or URL, or env:NAME; secrets_with: the env NAMES it needs) and lists its tools onto the shelf. action=check probes one service by name, or every MCP server when no name is given. action=retire / restore move a service by name. action=changes reads what changed on the shelf since the last ask. action=list names what stands. Register, retire and restore hold for the human's yes at the interlock; check, changes and list run at once. When the human asks you to add, check, retire or restore, CALL this tool — never describe the act instead.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "register",
+              "check",
+              "version",
+              "retire",
+              "restore",
+              "changes",
+              "list"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "locator": {
+            "type": "string"
+          },
+          "secrets_with": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "since": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "consequence": "consequential",
+      "ground": true,
+      "held_by": {
+        "field": "action",
+        "held": [
+          "register",
+          "version",
+          "retire",
+          "restore"
+        ]
+      }
+    },
+    {
+      "name": "minds",
+      "description": "Keep the Stable of minds. action=register adds a mind (name: a short lowercase name; provider: anthropic | openrouter | ollama | openai | compatible; model: the model id). Everything else has a default — NEVER ask the human for it: base is only for compatible (ollama reaches the laptop's own Ollama by default); klass defaults to standard (fast | standard | deep); the key is the provider's env NAME by default — never a value; prices are read from the gateway. With a name, a provider and a model in hand, CALL register at once — the hold at the interlock is the human's yes. action=check probes one mind by name or every mind. action=search finds minds (q, klass, max_in_per_m, modality); action=list names what stands. action=assign points a body (subject: its name, or * for every body) at a mind (stall) for a class of work (klass: fast | standard | deep, or any for all its work — the default); action=unassign lifts it. action=fuel reads a body's allowance and spend (subject); action=refill adds dollars (subject, usd). action=spend rolls the meter up. action=retire / restore move a mind by name; action=repin re-pins a mind whose deal moved. action=changes reads what changed. Register, assign, unassign, refill, retire, restore and repin hold for the human's yes at the interlock; the rest run at once. When the human asks you to add, check, assign, refill, retire or restore, CALL this tool — never describe the act instead.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "register",
+              "check",
+              "search",
+              "list",
+              "assign",
+              "unassign",
+              "refill",
+              "fuel",
+              "spend",
+              "retire",
+              "restore",
+              "repin",
+              "changes"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "base": {
+            "type": "string"
+          },
+          "klass": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "price_in_per_m": {
+            "type": "number"
+          },
+          "price_out_per_m": {
+            "type": "number"
+          },
+          "context": {
+            "type": "integer"
+          },
+          "modalities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "q": {
+            "type": "string"
+          },
+          "max_in_per_m": {
+            "type": "number"
+          },
+          "modality": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "stall": {
+            "type": "string"
+          },
+          "usd": {
+            "type": "number"
+          },
+          "since": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "consequence": "consequential",
+      "ground": true,
+      "held_by": {
+        "field": "action",
+        "held": [
+          "register",
+          "assign",
+          "unassign",
+          "refill",
+          "retire",
+          "restore",
+          "repin"
+        ]
+      }
+    },
+    {
+      "name": "seal-record",
+      "description": "Permanently seal a note so it can never be edited again. This cannot be undone.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key"
+        ]
+      },
+      "consequence": "consequential"
+    },
+    {
+      "name": "erase-record",
+      "description": "Permanently erase a sealed note — every trace of it. This is grave and cannot be undone.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key"
+        ]
+      },
+      "consequence": "grave"
+    }
+  ]
+}

@@ -331,8 +331,46 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
     .await;
     // the kernel settles: a ghost stall REFUSES in words — the record says so, nothing assigned
     assert!(st == 202 || st == 400, "{st} {c}");
+    // P7 sp8 row 2: the shelf was seeded by THIS kernel from the declarations file (no Python
+    // rite spawned) and every built-in probed by describe — healthy, the pin matching the file
     let (_, sv) = get(port, "/services").await;
     assert!(sv["services"].is_array());
+    let shelf = sv["services"].as_array().unwrap();
+    for name in [
+        "weather",
+        "acquire",
+        "mark",
+        "purge-memory",
+        "add-watch",
+        "services",
+        "minds",
+        "seal-record",
+        "erase-record",
+        "ground",
+        "record",
+    ] {
+        let row = shelf
+            .iter()
+            .find(|r| r["name"] == json!(name))
+            .unwrap_or_else(|| panic!("the shelf carries no {name}: {sv}"));
+        assert_eq!(
+            row["state"],
+            json!("healthy"),
+            "{name} probed by this kernel: {row}"
+        );
+    }
+    let (st, checked) = post(
+        port,
+        "/services/check",
+        json!({"name": "weather", "person": person}),
+    )
+    .await;
+    assert_eq!(st, 200, "{checked}");
+    assert_eq!(
+        checked["checked"][0]["detail"],
+        json!("the door answers describe; the schema matches the pin"),
+        "{checked}"
+    );
     let (st, checked) = post(
         port,
         "/services/check",

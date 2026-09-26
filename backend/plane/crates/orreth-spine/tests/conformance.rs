@@ -15,7 +15,7 @@
 
 use orreth_spine::{
     ask, beat, body, canonical, cells, content_hash, envelope, export, intent, kernel_self, mcp,
-    memory, mitl, placement, profile, proof, rails, services, stable, watch,
+    memory, mitl, placement, profile, proof, rails, services, stable, tools, watch,
 };
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
@@ -53,6 +53,8 @@ const PORTED_KINDS: &[&str] = &[
     "inbox_key",
     "ladder_step",
     "manifest_pin",
+    "tool_manifest",
+    "tool_consequence",
     "ask_fact",
     "refused_fact",
     "ask_kind",
@@ -479,6 +481,35 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
                 s(&exp["hash"]).to_string(),
                 "manifest pin"
             );
+        }
+        // ---- orreth.tools/1 (P7 sp8 row 2): the declarations as data — both kernels read tools.v0.json by name ----
+        "tool_manifest" | "tool_consequence" => {
+            let decls = tools::declarations(&tools::spine_dir())
+                .map_err(|e| format!("the declarations: {e}"))?;
+            let d = tools::declared(&decls, s(&inp["name"]))
+                .ok_or_else(|| format!("no built-in named {} is declared", inp["name"]))?;
+            if kind == "tool_manifest" {
+                let m = tools::manifest(d);
+                same!(
+                    canonical::canonical_string(&m),
+                    s(&exp["bytes"]).to_string(),
+                    "the declaration's manifest bytes"
+                );
+                same!(services::pin(&m), s(&exp["hash"]).to_string(), "the pin");
+                same!(
+                    json!(tools::consequence_of(d, None)),
+                    exp["consequence"],
+                    "the declared class"
+                );
+                same!(json!(tools::on_ground(d)), exp["ground"], "the ground flag");
+                same!(json!(tools::master(d)), exp["master"], "the master flag");
+            } else {
+                same!(
+                    json!(tools::consequence_of(d, Some(&inp["args"]))),
+                    exp["consequence"],
+                    "the class the call wears"
+                );
+            }
         }
         // ---- orreth.askroad/1 (P7 sp3): the ask's fact, the door's refusal, the kind, the proof's words ----
         "ask_fact" | "refused_fact" => {

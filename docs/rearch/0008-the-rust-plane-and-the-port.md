@@ -93,9 +93,12 @@ meters; it never sees the prompt).
   registries, the held acts, both keepers' beats and the nine health checks
   are the Rust kernel's too. `bodies-v0.json` measures the park law and the
   harness's command; minds-v0's twelve are ported; the runner reads 328/328
-  across 78 kinds, not yet ported: none. Standing alone, the Rust kernel is
-  whole but for the built-in tools' door (their schemas live in `tools.py` —
-  the boot rite runs as a Python one-shot until sp8 moves the door).
+  across 78 kinds, not yet ported: none. Standing alone, the Rust kernel was
+  whole but for the built-in tools' door (their schemas lived in `tools.py` —
+  the boot rite ran as a Python one-shot) until sp8 row 2 (2026-09-26) moved
+  the door: the declarations are data (`spine/tools.v0.json`) both kernels
+  read, the Rust kernel seeds and probes the shelf itself, execution stays
+  body-side (`tools-v0.json`, 35 cases; runner 465/465 across 97 kinds).
 - **P7 sp7 (2026-09-25) — CELLS, PARTITION, ISOLATION, HARDENING (M7 · M8),
   built once in the Rust kernel:** a CELL is one universe's physical home —
   its own kernel self, its own database and role (a role that reaches no

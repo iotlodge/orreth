@@ -749,3 +749,61 @@ pub fn at_words(t: SystemTime) -> String {
 pub fn nowhere<'a>() -> FactWhere<'a> {
     FactWhere::default()
 }
+
+// ---- the reference server, on the rig by the dial (P7 sp8 row 2: `mcp.seed_ref`, native) ---------
+
+/// The rig registers the reference clock when set.
+pub const REF_DIAL: &str = "SPINE_MCP_REF";
+pub const REF_NAME: &str = "clock";
+/// The env NAME the reference server reads its tool list from (a secret by name, never a value).
+pub const REF_TOOLS_DIAL: &str = "SPINE_MCP_REF_TOOLS";
+
+/// `mcp.ref_on`: the dial, read as the Python reference reads it.
+pub fn ref_on() -> bool {
+    matches!(
+        std::env::var(REF_DIAL)
+            .unwrap_or_default()
+            .trim()
+            .to_lowercase()
+            .as_str(),
+        "1" | "true" | "yes" | "on"
+    )
+}
+
+/// `mcp.ref_locator`: the bodies' interpreter running `spine/mcp_ref/clock_server.py`.
+pub fn ref_locator(python: &std::path::Path, spine: &std::path::Path) -> String {
+    format!(
+        "{} {}",
+        python.display(),
+        spine.join("mcp_ref").join("clock_server.py").display()
+    )
+}
+
+/// `mcp.seed_ref`: the reference clock registered as the `clock` server (its
+/// `now` and `echo` on the shelf) — idempotent: the same selves every boot.
+pub async fn seed_ref(
+    g: &mut Ground,
+    w: &World,
+    python: &std::path::Path,
+    spine: &std::path::Path,
+) -> Result<Value, RoadError> {
+    let secrets: Vec<String> = if std::env::var(REF_TOOLS_DIAL)
+        .ok()
+        .filter(|v| !v.is_empty())
+        .is_some()
+    {
+        vec![REF_TOOLS_DIAL.to_string()]
+    } else {
+        Vec::new()
+    };
+    register_server(
+        g,
+        w,
+        REF_NAME,
+        &ref_locator(python, spine),
+        services_live::KERNEL,
+        &secrets,
+        None,
+    )
+    .await
+}

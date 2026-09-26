@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 2, the one-shot `--seed-shelf` rite retires: the Rust kernel seeds and probes the shelf itself · 2026-09-26
 """THE SDK-SIDE BODY (canon 0004 · 0008's end shape · 0005 P7 sp6, THE BODIES'
 SEAM).
 
@@ -243,31 +244,6 @@ def _say(words: str) -> None:
     print(words, file=sys.stderr, flush=True)
 
 
-def seed_shelf(conn, gateway, home) -> None:
-    """The kernel's boot rite, in the reference's own words (P6.5 sp1 · sp2):
-    the built-ins on the shelf (their schemas live in tools.py — the Rust
-    kernel asks this rite to run once at light, until sp8 moves the tool
-    door), each probed once; the reference clock by the dial."""
-    from . import mcp, services
-    made = services.seed(conn, gateway=gateway, home=home)
-    for line in made["refused"]:
-        _say(f"the shelf refused a built-in: {line}")
-    checked = services.check_all(conn, gateway=gateway)
-    bad = [c["name"] for c in checked if c["ok"] is False]
-    _say(f"the shelf: {len(checked)} services probed"
-         + (f", registered now: {', '.join(made['registered'])}" if made["registered"] else "")
-         + (f", re-pinned (their words changed): {', '.join(made['versioned'])}" if made.get("versioned") else "")
-         + (f", UNHEALTHY: {', '.join(bad)}" if bad else ""))
-    if mcp.ref_on():
-        try:
-            ref = mcp.seed_ref(conn, home=home)
-            t = ref["tools"]
-            _say(f"the shelf: the reference clock server registered at {mcp.locator_words(mcp.ref_locator())}"
-                 f" — tools {', '.join(t['new'] + t['present'] + t['versioned']) or 'none'}")
-        except Exception as e:                                  # noqa: BLE001 — the rig runs on
-            _say(f"the reference clock could not be registered: {type(e).__name__}: {e}")
-
-
 def serve(template, binding, policy, *, stop: threading.Event, ready: threading.Event | None = None) -> int:
     """One body's whole life: born, joined, serving on its lease until the
     stop; the exit code says how it ended."""
@@ -344,8 +320,6 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--binding", help="a workspace binding (bindings/<pull>.v0.json)")
     ap.add_argument("--policy", default=str(SPINE / "policy" / "covenant-policy.v1.json"),
                     help="the covenant policy the body wears (no policy, no join)")
-    ap.add_argument("--seed-shelf", action="store_true",
-                    help="the kernel's boot rite, once: the built-ins on the shelf, probed; then exit")
     a = ap.parse_args(argv)
     stop = threading.Event()
 
@@ -354,24 +328,9 @@ def main(argv: list[str] | None = None) -> int:
     signal.signal(signal.SIGINT, _on_signal)
     signal.signal(signal.SIGTERM, _on_signal)
 
-    if a.seed_shelf:
-        import psycopg
-        from . import ground
-        from .rails import PG_DSN
-        home = _home()
-        gateway, _mind = _gateway()
-        with psycopg.connect(PG_DSN, autocommit=True) as conn:
-            ground.ensure_all(conn)
-            seed_shelf(conn, gateway, services_home(home))
-        return EXIT_STOPPED
     if not a.template:
-        ap.error("--template is required (or --seed-shelf)")
+        ap.error("--template is required")
     return serve(a.template, a.binding, a.policy, stop=stop)
-
-
-def services_home(home):
-    from . import services
-    return services.services_home(home)
 
 
 if __name__ == "__main__":

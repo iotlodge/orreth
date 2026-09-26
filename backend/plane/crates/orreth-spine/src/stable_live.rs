@@ -1377,3 +1377,110 @@ pub fn deal_from(p: &Value) -> Result<Value, RoadError> {
 pub fn words_for(tool: &str, args: &Value) -> String {
     act_words(tool, args)
 }
+
+// ---- the built-in stall, at birth (P7 sp8 row 2: `stable.seed`, native) ---------------------------------
+
+/// The rig's own mind: the default model every template names.
+pub const DEFAULT_STALL: (&str, &str, &str) = ("haiku", "claude-haiku-4-5-20251001", "anthropic");
+
+/// `stable.seed`: the default model every template names, registered as the
+/// `haiku` stall with the deal the gateway's price map reads — the same self
+/// every boot; a gateway that refuses is named, never a crash. The old world's
+/// built-in mind (a `{route, model}` manifest, no provider) is retired —
+/// superseded by the Stable: at rest, recorded, never deleted.
+/// `{registered, versioned, refused, retired}`.
+pub async fn seed(g: &mut Ground, w: &World, gw: Option<&Gateway>) -> Result<Value, RoadError> {
+    let (name, model, provider) = DEFAULT_STALL;
+    let mut retired: Vec<String> = Vec::new();
+    for s in services_live::rows(g.client(), &w.scope, Some("mind")).await? {
+        let old_world = s["manifest"].get("provider").is_none();
+        if s["state"] != json!("retired") && old_world && s["name"] != json!(name) {
+            let sname = python_str(&s["name"]);
+            let tx = g.client_mut().transaction().await?;
+            let done = services_live::retire_in(
+                &tx,
+                w,
+                &sname,
+                services_live::KERNEL,
+                crate::mcp_live::nowhere(),
+            )
+            .await;
+            if done.is_ok() {
+                tx.commit().await?;
+                retired.push(sname);
+            }
+        }
+    }
+    let refused_words = |e: String| json!({"registered": [], "versioned": [], "refused": [format!("{name}: {e}")], "retired": retired.clone()});
+    let fast = |price: Option<&Value>, context: Option<&Value>, modalities: Option<&Value>| {
+        stable::deal(
+            model,
+            provider,
+            DealAsk {
+                klass: Some("fast"),
+                price,
+                context,
+                modalities,
+                ..Default::default()
+            },
+        )
+    };
+    let mut d = match fast(None, None, None) {
+        Ok(d) => d,
+        Err(e) => return Ok(refused_words(e)),
+    };
+    if let Some(gw) = gw {
+        if let Err(GatewayDark(e)) = gw.add_stall(name, &d).await {
+            return Ok(refused_words(e));
+        }
+        let seen = gw.seen_deal(name).await.ok().flatten().unwrap_or(json!({}));
+        if !seen["price"]["in_per_m"].is_null() {
+            let not_null = |k: &str| seen.get(k).filter(|v| !v.is_null());
+            d = match fast(
+                seen.get("price"),
+                not_null("context"),
+                not_null("modalities"),
+            ) {
+                Ok(d) => d,
+                Err(e) => return Ok(refused_words(e)),
+            };
+        }
+    }
+    let row = services_live::get(g.client(), &w.scope, name).await?;
+    if let Some(r) = &row {
+        if r["state"] != json!("retired") && r["manifest_hash"] != json!(crate::services::pin(&d)) {
+            return Ok(
+                match services_live::version(g, w, name, &d, services_live::KERNEL).await {
+                    Ok(_) => {
+                        json!({"registered": [], "versioned": [name], "refused": [], "retired": retired})
+                    }
+                    Err(e) => refused_words(e.to_string()),
+                },
+            );
+        }
+    }
+    let secrets: Vec<String> = d["key"]
+        .as_str()
+        .filter(|k| !k.is_empty())
+        .map(|k| vec![k.to_string()])
+        .unwrap_or_default();
+    Ok(
+        match services_live::register(
+            g,
+            w,
+            name,
+            "mind",
+            &d,
+            services_live::KERNEL,
+            None,
+            &secrets,
+        )
+        .await
+        {
+            Ok(_) => {
+                json!({"registered": if row.is_none() { vec![name] } else { vec![] }, "versioned": [], "refused": [], "retired": retired})
+            }
+            Err(e) => refused_words(e.to_string()),
+        },
+    )
+}

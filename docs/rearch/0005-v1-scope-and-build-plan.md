@@ -1327,7 +1327,8 @@ approved (covenant rule 9).
   bounded wait, SIGKILL only for one that would not stop; a fallen kernel
   takes its children with it). Before the crew the kernel's BOOT RITE runs
   once in the reference's own words (`--seed-shelf`: the built-ins on the
-  shelf, probed; the reference clock by the dial) and the benches are swept.
+  shelf, probed; the reference clock by the dial — native since sp8 row 2, the
+  one-shot retired) and the benches are swept.
   Beside a lit Python Bridge `dev.sh shadow` seats NONE (`SPINE_BODIES=none`;
   the Python bodies serve); alone it seats the crew. **The harness rides the
   rail** (`orreth.resident.harness.v1`): the kernel asks the body to run its
@@ -1363,11 +1364,13 @@ approved (covenant rule 9).
   the echo killed by hand comes back as THE SAME SELF, life 2 (AG-2); killed
   three times it is PARKED — said, a fact — and restarted on the word, its
   deaths forgotten; the Stable's doors answer; at dark both bodies are gone.
-  **Honest limits:** the built-in TOOLS' schemas live in `tools.py`, so a
+  **Honest limits:** ~~the built-in TOOLS' schemas live in `tools.py`, so a
   built-in tool's probe and the shelf's seeding stay the reference's (the
   Rust kernel runs the boot rite as a Python one-shot; a built-in tool's
   check on the Rust door says "not probed by this kernel" and records
-  nothing) until the tool door moves (sp8); a body's `acquire` and every tool
+  nothing) until the tool door moves (sp8)~~ PAID sp8 row 2 (2026-09-26): the
+  declarations are data both kernels read, the Rust kernel seeds and probes
+  the shelf itself; a body's `acquire` and every tool
   call are the body's own (Python, by canon); the Python Bridge still seats
   its crew in-process (the reference, the simulator); the harness's A/B arms
   ride the rail one run at a time (120 s each); `dev.sh suite` still refuses
@@ -1504,17 +1507,41 @@ approved (covenant rule 9).
     weather tool says it has no coordinates.
   - **The rows after it (JB's locks, 2026-09-26, after walk #16).** Each in
     a fresh session (the token-bleed law), each walked by JB, in this order:
-    - **Row 2 — THE TOOL DOOR MOVES.** The built-in tools' DECLARATIONS
-      (name · description · input schema · consequence class · the
-      ground/mcp/master flags) become DATA both kernels read (one file
-      beside the crew manifest); the Rust kernel seeds the shelf and probes
-      a built-in itself (`services_live::probe`'s "not probed by this
-      kernel" retires; the Python one-shot boot rite retires); a tool's
-      EXECUTION stays body-side by canon (0009 §"the Tools firmware": the
-      kernel authorizes and journals, it never runs the call; an MCP-born
-      tool's `tools/call` rides the body's door as today). The manifest pin
-      in services-v0 stays byte-identical or the fixture is regenerated
-      honestly. One session.
+    - **Row 2 — THE TOOL DOOR MOVES** ✅ **BUILT 2026-09-26 (walk #17
+      OWED — the script in the walk register).** The built-in tools'
+      DECLARATIONS (name · description · input schema · consequence class ·
+      the ground and master flags · `held_by`: which arguments hold at the
+      interlock) are DATA in `spine/tools.v0.json`, beside the crew
+      manifest, read by BOTH kernels — generated from the old table so
+      every pin is byte-identical (services-v0's `manifest_pin` untouched;
+      the weather pin `sha256:845484c2…` unmoved). Python `tools.py` binds
+      each declared name to its body-side executor (`_BODIES`; `TOOLS` is
+      the join — a declaration without an executor, or an executor without
+      a declaration, refuses at import; the keepers' acts and held lists
+      derive from the declaration, one truth); Rust `tools.rs` (pure:
+      `declarations` · `manifest` · `consequence_of` · the flags) reads the
+      same file. The Rust kernel's boot rite is NATIVE: `services_live::seed`
+      (the built-ins, the ground, the Record) · `stable_live::seed` (the
+      rig's own `haiku` stall; the old world's built-in mind retired) ·
+      `check_all` (a built-in probed by describe — "the door answers
+      describe; the schema matches the pin", or "describes a different
+      schema than the pin … version it") · `mcp_live::seed_ref` (the
+      reference clock by the dial); `bodies::seed_shelf` no longer spawns
+      Python and `body.py --seed-shelf` is gone. EXECUTION stays body-side
+      by canon (0009: the kernel authorizes, journals and meters; it never
+      runs the call; an MCP-born tool's `tools/call` rides the body's door
+      as before). Fixture `tools-v0.json` (35 cases: `tool_manifest` — both
+      runners read the file by NAME and pin the same bytes; `tool_consequence`
+      — the held_by rule; runner 465/465 across 97 kinds, not yet ported:
+      none); `tests/bodies.rs` asserts the shelf this kernel seeded (twelve
+      services healthy, the weather probe's words); Python
+      `test_services` gained the bind laws; Python suite 658 (622 before);
+      clippy + fmt clean. **Honest limits:** the rite
+      runs when the kernel seats a crew (beside a lit Python Bridge,
+      `SPINE_BODIES=none`, the Bridge's own rite seeds — as before); the
+      Python Bridge keeps its in-process rite as the reference; the
+      interlock's WORDS for a held act (`words_by`) stay body-side code, not
+      data; the Rust kernel has no `tools/call` of its own by design.
     - **Row 3 — THE GATE (JB's lock: the human seat AND the machine join
       desk both ride 0.1.0).** Today every door reads the person from the
       request body and defaults to `did:orreth:person:jb`; the only

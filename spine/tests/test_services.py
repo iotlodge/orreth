@@ -357,3 +357,36 @@ def test_the_built_ins_register_at_birth_and_the_shelf_door_lists_every_kind(pg,
         _post(rig.port, "/services", {"name": "weather-mcp", "kind": "mcp", "manifest": dict(MCP, tools=[]),
                                       "person": ME})
     assert e.value.code == 400 and b"version it" in e.value.read()
+
+
+def test_the_tool_door_moves_the_declarations_are_data_and_the_body_binds_them(tmp_path):
+    """P7 sp8 row 2: what a built-in DECLARES lives in spine/tools.v0.json, read by both
+    kernels; what it DOES stays here, bound by name. One truth for the pin; a
+    declaration without its body, or a body without its declaration, refuses."""
+    from orreth_spine import body as _body
+    decls = tools.declarations()
+    assert [d["name"] for d in decls] == list(tools.TOOLS)
+    for d in decls:                                    # the file's pin IS the door's pin, every built-in
+        assert services.pin(tools.tool_manifest(d["name"], d)) == \
+            services.pin(tools.tool_manifest(d["name"], tools.TOOLS[d["name"]]))
+        assert set(d) <= {"name", "description", "input_schema", "consequence", "ground", "master", "held_by"}
+    assert services.pin(tools.tool_manifest("weather", tools.TOOLS["weather"])) == \
+        "sha256:845484c281d4eaa8fa9a303fb2c2861529938fb6e814f05bc825cf13d40d7503"   # services-v0's pin, unmoved
+    with pytest.raises(RuntimeError, match="no executor"):
+        tools.bind(decls + [dict(decls[0], name="ghost")], tools._BODIES)
+    with pytest.raises(RuntimeError, match="never declared"):
+        tools.bind(decls, dict(tools._BODIES, ghost={"fn": lambda a: ""}))
+    bad = tmp_path / "tools.v0.json"
+    bad.write_text(json.dumps({"format": "orreth-crew/1", "tools": []}))
+    with pytest.raises(ValueError, match="not a tools manifest"):
+        tools.declarations(bad)
+    bad.write_text(json.dumps({"format": tools.TOOLS_FORMAT, "tools": [dict(decls[0], consequence="dire")]}))
+    with pytest.raises(ValueError, match="unknown class 'dire'"):
+        tools.declarations(bad)
+    # the class by the arguments comes from the declaration's held_by, not from code
+    assert tools.SERVICES_HELD == ("register", "version", "retire", "restore")
+    assert tools.consequence_of(tools.TOOLS["services"], {"action": "list"}) == "routine"
+    assert tools.consequence_of(tools.TOOLS["minds"], {"action": "assign"}) == "consequential"
+    # the one-shot rite is gone from the body: the kernel seeds and probes the shelf itself
+    with pytest.raises(SystemExit):
+        _body.main(["--seed-shelf"])
