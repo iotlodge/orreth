@@ -769,3 +769,5 @@ path only: click, type, read, wait; no door, no database.
 9. Say "my time zone is Europe/Paris" then "echo, what time is it?". Expect the time in Paris. Say "forget my time zone" — expect "Forgotten on your word — 1 thing(s) about zone no longer read; the record keeps that you said them once." and the clock back to your place's.
 10. Say "forget about me: my place" then "librarian, what is the temperature outside?". Expect the librarian to say it does not know your place yet (the observed coordinates left with the told place). Open the Analyzer — expect the tellings, the observation and the withdrawals as markers under "jb keeps their own profile".
 
+**Walk #16, JB, 2026-09-26: PASS on :4601 — JB's words: "I've opened 4601 and can confirm the profile setting and recall in request is working." Walked: the tellings (steps 3–4), the librarian answering from the profile (step 5), the read-back (step 7). Not reported this walk: the routed ask to cell two (step 6), the clock (step 9), the forgetting (step 10) — proven by `tests/cells.rs` and `tests/test_profile.py`; JB walks them when cell two is next lit. Shadow stopped after the check. No wounds.**
+

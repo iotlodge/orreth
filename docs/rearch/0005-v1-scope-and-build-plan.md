@@ -1469,8 +1469,9 @@ approved (covenant rule 9).
   — Orreth files a feature through Orreth and delivers it for itself (Phase
   9 below). Calling anything 1.0 before that would be a claim the register
   cannot back.
-  - **Row 1 — THE HUMAN PROFILE** ✅ **BUILT 2026-09-26 — walk OWED (JB in
-    the glass, SPEC-PROFILE-01, walk #16)**. JB's locks at the open: the
+  - **Row 1 — THE HUMAN PROFILE** ✅ **BUILT + WALKED 2026-09-26 (walk #16
+    PASS on :4601 — JB: "the profile setting and recall in request is
+    working"; SPEC-PROFILE-01)**. JB's locks at the open: the
     kernel GEOCODES a told place (Open-Meteo, no key) and lands the
     coordinates and clock beside the words as "I observed"; the profile
     RIDES a routed ask over the seam; the row carries name · place · zone
