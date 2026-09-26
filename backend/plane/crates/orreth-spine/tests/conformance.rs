@@ -15,7 +15,7 @@
 
 use orreth_spine::{
     ask, beat, body, canonical, cells, content_hash, envelope, export, intent, kernel_self, mcp,
-    memory, mitl, placement, proof, rails, services, stable, watch,
+    memory, mitl, placement, profile, proof, rails, services, stable, watch,
 };
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
@@ -58,6 +58,10 @@ const PORTED_KINDS: &[&str] = &[
     "ask_kind",
     "otpauth",
     "hold_words",
+    "profile_words",
+    "profile_label",
+    "profile_slice",
+    "place_default",
     "mcp_request",
     "mcp_tool_manifest",
     "mcp_server_manifest",
@@ -1309,6 +1313,37 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
                 String::from_utf8(bytes).unwrap(),
                 s(&exp["bytes"]).to_string(),
                 "the command's bytes"
+            );
+        }
+        // ---- orreth.profile/1 (P7 sp8, W58): the human's own words about themselves ----
+        "profile_words" => {
+            same!(
+                profile::read_words(s(&inp["text"])),
+                *exp,
+                "what the words say"
+            );
+        }
+        "profile_label" => {
+            same!(
+                json!(profile::label_of(s(&inp["asserted_by"])).map_err(|e| e.to_string())?),
+                exp["label"],
+                "the label"
+            );
+        }
+        "profile_slice" => {
+            let claims = inp["claims"].as_array().cloned().unwrap_or_default();
+            same!(
+                profile::slice_words(&claims),
+                s(&exp["words"]).to_string(),
+                "the slice"
+            );
+        }
+        "place_default" => {
+            let claims = inp["claims"].as_array().cloned().unwrap_or_default();
+            same!(
+                profile::place_default(&claims),
+                exp["place"],
+                "the default place"
             );
         }
         other => {

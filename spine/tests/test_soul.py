@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp3, the soul checkpoint · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the temperature is the human's own place's (W58) · 2026-09-26
 """The soul checkpoint's laws (canon 0001 · 0004): a resident acts only
 through the governed tool door (undeclared tools refuse WITH a
 teaching); every act is journaled; a consequential act HOLDS at the L2
@@ -127,6 +128,12 @@ def test_the_librarian_tells_the_temperature_outside(pg):
     r = resident.Resident(LIBRARIAN, gateway=gw)
     r.load_policy(POLICY)
     r.join(pg)
+    # P7 sp8 (W58): the weather is read for THE HUMAN'S OWN PLACE — told first, in their words;
+    # the geocoder is stood in for so the proof reaches the one real road (the weather itself)
+    from orreth_spine import profile
+    profile.say(pg, "did:orreth:person:jb", "I live in Payson, Arizona",
+                geocoder=lambda place: {"lat": 34.2308, "lon": -111.3251, "zone": "America/Phoenix",
+                                        "label": "Payson, Arizona, United States"})
     _ask, (status, reply, _by) = _walk(
         pg, r, "What's the temperature outside?", tok)
     assert status == "replied"

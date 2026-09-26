@@ -12,6 +12,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: search_terms · memory_fact · purge_fact · digest_text · digest_fact · signed_bundle · did_of · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: backoff · park_rule · parked_words · parked_fact · harness_verdict · harness_command · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: topic_name · peers_from · address_home · epoch_check · world_fact · seam_sign · seam_verify · the words · sealed_words · ceiling · 2026-09-25
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the profile's arms (W58) · 2026-09-26
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -23,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from orreth_spine import (body as _body, cells, dispatch, envelope as ev, export, ground, harness, intent, mcp, mitl, monitor,
-                          placement, presence, proof, rails, resident, scheduler, services, stable, store, digest)
+                          placement, presence, profile, proof, rails, resident, scheduler, services, stable, store, digest)
 from orreth_spine.identity import Identity
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
@@ -78,6 +79,15 @@ def test_fixture(contract, case):
             assert name in str(e.value), f"refusal must name {name!r}: {e.value}"
     elif kind == "decode_preserves":
         assert ev.decode(inp["bytes"].encode("ascii")) == exp["obj"]
+    # ---- orreth.profile/1 (P7 sp8, W58): the human's own words about themselves ----
+    elif kind == "profile_words":                # what a sentence says about the person, or nothing
+        assert profile.read_words(inp["text"]) == exp
+    elif kind == "profile_label":                # the provenance label a read wears
+        assert profile.label_of(inp["asserted_by"]) == exp["label"]
+    elif kind == "profile_slice":                # slot 1 of the pack, in one paragraph
+        assert profile.slice_words(inp["claims"]) == exp["words"]
+    elif kind == "place_default":                # the weather tool's default, or null
+        assert profile.place_default(inp["claims"]) == exp["place"]
     # ---- orreth.proof/1 (P6 sp1): the code, the ladder, the level a class demands ----
     elif kind == "totp":
         assert proof.totp(inp["secret"], inp["time"]) == exp["code"]

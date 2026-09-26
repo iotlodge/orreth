@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells · partition · isolation · hardening · 2026-09-25
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the profile rides the routed ask (W58) · 2026-09-26
 //! THE CELLS' PROOF (canon 0002 rule 8 · 0005 P7 sp7 · M7 + M8): two Rust
 //! kernels stand as two CELLS on one Postgres box — each its own database
 //! and role, its own benches and topics, its own kernel self — and name
@@ -12,7 +13,9 @@
 //! refused); the seam pins the peer's self on first sight and every hello
 //! after reads live; an ask "echo@pb, say HERON" from cell A ROUTES HOME to
 //! cell B, is served there by B's own body and answered on A's ask, its
-//! journey said; the human STOPS a routed ask and the home cell rests it
+//! journey said; the human's PROFILE told on A rides with a routed ask and B
+//! reads it for that answer alone, keeping no row of it (P7 sp8, W58); the
+//! human STOPS a routed ask and the home cell rests it
 //! within the SLO (< 2 s); under PARTITION (cell B dark) the ask PARKS in
 //! plain words and nothing is lost — when B returns the ask resumes and is
 //! answered, never doubled; a universe RE-HOMED advances its epoch (held at
@@ -494,6 +497,89 @@ async fn two_cells_on_one_box_route_home_park_resume_and_fence() {
     println!(
         "cells · routed home: echo@pb, say HERON → {:?} by {}",
         v["reply"], v["served_by"]
+    );
+
+    // ---- 6b. P7 sp8 (W58): the human's profile on A RIDES with a routed ask — B reads it for that
+    // answer only (the ask's own column), and keeps no profile row of the person
+    let (st, r) = post(
+        port_a,
+        "/profile",
+        json!({"person": "did:orreth:person:jb", "text": "my name is JB", "geocode": false}),
+    )
+    .await;
+    assert_eq!(st, 201, "{r}");
+    assert_eq!(r["act"], json!("tell"));
+    assert_eq!(r["portrait"]["name"], json!("JB"));
+    let (st, r) = post(
+        port_a,
+        "/profile",
+        json!({"person": "did:orreth:person:jb", "text": "my clock is Europe/Rome", "geocode": false}),
+    )
+    .await;
+    assert_eq!(st, 201, "{r}");
+    assert_eq!(r["portrait"]["clock"], json!("Europe/Rome"));
+    let (st, r) = post(
+        port_a,
+        "/profile",
+        json!({"person": "did:orreth:person:jb", "text": "what is the temperature outside?"}),
+    )
+    .await;
+    assert_eq!(st, 400, "{r}");
+    assert!(
+        r["error"]
+            .as_str()
+            .unwrap()
+            .contains("tell me nothing about you"),
+        "{r}"
+    );
+    let (st, pa) = get(port_a, "/profile?person=did:orreth:person:jb").await;
+    assert_eq!(st, 200);
+    assert_eq!(
+        pa["words"],
+        json!("you told me: your name is JB · your clock is Europe/Rome")
+    );
+    assert_eq!(pa["claims"][0]["label"], json!("you told me"));
+    let (_, r) = post(
+        port_a,
+        "/ask",
+        json!({"text": "echo@pb, say KITE", "person": "did:orreth:person:jb"}),
+    )
+    .await;
+    let id_k = r["id"].as_str().unwrap().to_string();
+    wait_for(
+        port_a,
+        &format!("/ask/{id_k}"),
+        Duration::from_secs(60),
+        |v| v["status"] == json!("replied"),
+    )
+    .await;
+    let carried: String = gb
+        .client()
+        .query_one(
+            "SELECT carried_profile FROM spine_asks WHERE remote_id = $1",
+            &[&id_k],
+        )
+        .await
+        .unwrap()
+        .get(0);
+    let carried: Value = serde_json::from_str(&carried).unwrap();
+    assert_eq!(carried["words"], pa["words"], "the slice rode whole");
+    assert_eq!(carried["zone"], json!("Europe/Rome"));
+    let kept: i64 = gb
+        .client()
+        .query_one(
+            "SELECT count(*) FROM spine_profile WHERE person = 'did:orreth:person:jb'",
+            &[],
+        )
+        .await
+        .unwrap()
+        .get(0);
+    assert_eq!(kept, 0, "the far cell keeps no profile row of the person");
+    let (_, pb) = get(port_b, "/profile?person=did:orreth:person:jb").await;
+    assert_eq!(pb["name"], Value::Null);
+    println!(
+        "cells · the profile rode with the ask: {} → B kept nothing",
+        carried["words"]
     );
 
     // ---- 7. PARTITION: cell B dark — the ask parks in plain words; B back — it resumes, once

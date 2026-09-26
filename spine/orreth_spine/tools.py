@@ -3,6 +3,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the hop wears the SERVICE DID; a retired tool refuses · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the Tools keeper: MCP-born tools through the one door; the `services` tool; a class by the arguments · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper's `minds` tool · the interlock names the act (W30) · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the weather tool reads the asker's own place (W58) · 2026-09-26
 """The tool door v0 (canon 0004): a resident acts only through a
 governed door.
 
@@ -74,18 +75,37 @@ def tool_manifest(name: str, tool: dict) -> dict:
 
 # ---- the tools themselves ---------------------------------------------------------
 
-def _weather(args: dict) -> str:
-    """The temperature outside — Open-Meteo, no key, plain words.
-    Defaults to Payson, Arizona; any lat/lon welcome."""
-    lat = float(args.get("latitude", 34.2308))
-    lon = float(args.get("longitude", -111.3251))
+NO_PLACE_WORDS = ("I do not know your place yet — nothing in your profile says where you are, so I "
+                  "read no weather rather than someone else's. Say \"I live in <town, region>\" and ask again.")
+NO_COORDS_WORDS = ("your profile says you live in {place}, but I could not find its coordinates when you "
+                   "told me and cannot read its weather yet — tell me the place again when the road is up.")
+
+
+def _weather(args: dict, conn=None) -> str:
+    """The temperature outside — Open-Meteo, no key, plain words. With no
+    lat/lon given it reads THE ASKER'S OWN PLACE from their profile (P7
+    sp8, W58: the fixed Arizona point answered the weather for the wrong
+    place); a person who has told the ground no place is told so, never
+    someone else's weather."""
+    where = None
+    if args.get("latitude") is not None and args.get("longitude") is not None:
+        lat, lon = float(args["latitude"]), float(args["longitude"])
+    else:
+        from . import profile
+        where = profile.place_for_ask(conn, args.get("_ask")) if conn is not None else None
+        if where is None:
+            return NO_PLACE_WORDS
+        if where.get("lat") is None:
+            return NO_COORDS_WORDS.format(place=where["place"])
+        lat, lon = float(where["lat"]), float(where["lon"])
     url = ("https://api.open-meteo.com/v1/forecast"
            f"?latitude={lat}&longitude={lon}"
            "&current=temperature_2m,apparent_temperature"
            "&temperature_unit=fahrenheit")
     with urllib.request.urlopen(url, timeout=10) as r:
         cur = json.loads(r.read())["current"]
-    return (f"Right now at {lat:.2f},{lon:.2f} it is "
+    at = f"in {where['place']} (your place, from your profile)" if where else f"at {lat:.2f},{lon:.2f}"
+    return (f"Right now {at} it is "
             f"{cur['temperature_2m']}°F outside "
             f"(feels like {cur['apparent_temperature']}°F).")
 
@@ -343,6 +363,7 @@ TOOLS: dict[str, dict] = {
             "required": []},
         "consequential": False,
         "fn": _weather,
+        "ground": True,            # P7 sp8: the default place is the asker's own, read from their profile
     },
     "acquire": {
         "description": "Acquire a text into your memory under a short key: "

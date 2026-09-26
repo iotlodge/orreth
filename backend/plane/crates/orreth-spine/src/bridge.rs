@@ -4,6 +4,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE door · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the crew spawned and governed · /delta · /bodies · the Stable's doors · the shelf's doors · the harness over the rail · the keepers' beats · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the cell — the home at light · the /world door · 2026-09-25
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the profile doors (W58) · 2026-09-26
 //! The Rust bridge — the doors and the feed of `orreth_spine.glass` +
 //! `bridgefeed` on axum, lit in SHADOW on :4601 beside the Python Bridge on
 //! :4600, both on one ground. It serves the SAME page (`spine/glass/index.html`
@@ -661,6 +662,7 @@ fn router(app: Arc<App>) -> Router {
         .route("/markers", get(markers_door))
         .route("/markers/kinds", get(markers_kinds))
         .route("/monitor", get(monitor_door))
+        .route("/profile", get(profile_door).post(profile_post)) // P7 sp8: the human's own profile — theirs to see and adjust (W58)
         .route("/world", get(world_door)) // P7 sp7: the world card — the universe, its cell, its epoch, its peers
         .route("/world/rehome", post(world_rehome)) // P7 sp7: re-home the universe — held at L2, the epoch advances on the yes
         .route("/seam", post(seam_post)) // P7 sp7: the seam — signed messages between peer cells
@@ -1441,6 +1443,49 @@ async fn enroll_confirm_post(State(app): State<Arc<App>>, body: Bytes) -> Respon
 }
 
 // ---- the loops' doors (P7 sp4) --------------------------------------------------------
+
+/// P7 sp8: `GET /profile?person=` — the portrait: every live word with its label, the named
+/// fields resolved, the slice the bodies read, the clock this ground would use.
+async fn profile_door(State(app): State<Arc<App>>, Query(q): Q) -> Response {
+    let person = q
+        .get("person")
+        .filter(|p| !p.is_empty())
+        .cloned()
+        .unwrap_or_else(|| PERSON_DEFAULT.into());
+    let out = async {
+        let g = ground(&app).await?;
+        crate::profile_live::portrait(&g, &app.cfg.world, &person).await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// P7 sp8: `POST /profile {person, text}` — "my name is …" · "I live in …" · "forget about me: …" ·
+/// "what do you know about me?" — read by the law; words that say nothing refuse in words (400).
+async fn profile_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let text = s_or(&p, "text", "").trim().to_string();
+    if text.is_empty() {
+        return answer(
+            400,
+            json!({"error": "say something about yourself, or ask what I know"}),
+        );
+    }
+    let geocode_it = !matches!(p["geocode"], Value::Bool(false)); // a proof may say no road
+    let out = async {
+        let mut g = ground(&app).await?;
+        crate::profile_live::say(&mut g, &app.cfg.world, &person, &text, None, geocode_it).await
+    }
+    .await;
+    match out {
+        Ok((code, v)) => answer(code, v),
+        Err(e) => refuse(e),
+    }
+}
 
 /// P7 sp7: the world card (rule 7 — the same on both doors).
 async fn world_door(State(app): State<Arc<App>>) -> Response {

@@ -383,6 +383,7 @@
     <canvas id="stars"></canvas><div id="sun"></div>
     <span class="worldtag" id="worldtag" style="left:63%;top:33%" title="the world this door serves, its cell and its epoch — from /world">u:dev</span>
     <span class="worldtag" style="left:70%;top:52%">librarian · alive</span>
+    <span class="worldtag" id="youtag" style="left:14%;top:60%;cursor:pointer" onclick="profileWords('what do you know about me?')" title="what this ground knows about you — click to read it">you</span>
   </div></div>
   <div id="sill">O R R E R Y&nbsp;&nbsp;·&nbsp;&nbsp;B R A I N&nbsp;&nbsp;·&nbsp;&nbsp;A T L A S</div>
   <div class="strip"></div>
@@ -894,6 +895,7 @@ async function send(given, label, toOverride, parent){
   if (given == null && await enrollWords(text)) return;    // "enroll my authenticator" (P6 sp1)
   if (given == null && (await stopRoutedWords(text) || await stopWords(text))) return;      // "stop the kernel's … intention"
   if (given == null && guideWords(text)) return;           // "guide" · "help" · "?" — THE GUIDE, opened to where you are (walk #13, JB's seed)
+  if (given == null && await profileWords(text)) return;   // "my name is …" · "I live in …" · "what do you know about me?" · "forget about me: …" (P7 sp8, W58)
   if (given == null && await serviceWords(text)) return;   // the shelf: "what services are here?" · "retire the weather tool" · "check the services" (P6.5 sp1)
   if (given == null && followWords(text)) return;          // a child of an origin (P25)
   const kind = given == null ? (KIND_PIN || proposeKind(text)) : undefined;   // P23
@@ -1292,6 +1294,7 @@ async function loadWorld(){
   return WORLD;
 }
 loadWorld();
+setTimeout(loadYou, 0);                          // P7 sp8: the YOU tag (PERSON is declared below)
 function toggleCrew(open){
   const was = crewPull.classList.contains("open");
   const now = open ?? !was;
@@ -1638,6 +1641,47 @@ async function restoreService(name, kind){         // a new fact; its stop stays
 }
 const SERVICE_KINDS = {service: null, services: null, tool: "tool", tools: "tool", mind: "mind", minds: "mind",
                        store: "store", stores: "store", source: "source", sources: "source", mcp: "mcp", mcps: "mcp", shelf: null};
+/* ---- the human's own profile (P7 sp8, W58): what you tell this ground about yourself, in your words, provenance-labeled ---- */
+const PROFILE_RX = /^(?:my name is|call me|i am |i'm |i live in|i live at|i am in|i'm in|i am living in|i'm living in|my (?:place|home|town) is|my (?:time ?zone|zone|clock) is|i am on|i'm on|remember about me|about me:|my profile|what do you know about me|show (?:me )?my profile|read my profile|who am i|forget (?:about me|my|that|about))/i;
+async function profileWords(text){
+  const t = text.trim();
+  if (!PROFILE_RX.test(t)) return false;
+  const r = await fetch("/profile", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({person: PERSON, text: t})}).then(x=>x.json()).catch(()=>null);
+  if (!r) return false;                                            // the door did not answer — let the ask go on
+  if (r.error){
+    if (/tell me nothing about you/.test(r.error)) return false;   // the law read nothing about you — it is an ordinary ask
+    el("msg mine", esc(text)); sysline(esc(r.error)); return true;
+  }
+  el("msg mine", esc(text));
+  if (r.act === "read") drawPortrait(r.portrait);
+  else { sysline(esc(r.words)); drawYou(r.portrait); }
+  return true;
+}
+function drawPortrait(p){                       // the portrait, every word with its label — theirs to see and adjust
+  if (!p || !p.claims || !p.claims.length){
+    sysline("nothing yet — you have told this ground nothing about yourself. Say “my name is …”, “I live in …”, “my time zone is …” or “remember about me: …”.");
+    drawYou(p); return;
+  }
+  const groups = {};
+  for (const c of p.claims) (groups[c.label] = groups[c.label] || []).push(c);
+  for (const label of ["you told me", "I observed", "the mirror noticed"]){
+    if (!groups[label]) continue;
+    sysline(`<b>${esc(label)}</b> · ` + groups[label].map(c => esc(c.words)).join(" · "));
+  }
+  sysline(`your clock here reads ${esc(p.clock || "the ground's own")} · say “forget about me: my place” (or “forget that …”) to withdraw a word — the record keeps that you said it once`);
+  drawYou(p);
+}
+function drawYou(p){                            // the YOU tag under the sun: who this door knows you are
+  const tag = document.getElementById("youtag"); if (!tag) return;
+  const bits = [];
+  if (p && p.name) bits.push(p.name); else bits.push("you");
+  if (p && p.place) bits.push(p.place);
+  if (p && p.clock) bits.push(p.clock);
+  tag.textContent = bits.join(" · ");
+  tag.title = (p && p.claims && p.claims.length) ? "what this ground knows about you, in your own words — click to read it" : "this ground knows nothing about you yet — say “my name is …” or “I live in …”";
+}
+async function loadYou(){ const p = await fetch("/profile?person=" + encodeURIComponent(PERSON)).then(x=>x.json()).catch(()=>null); drawYou(p); }
 async function serviceWords(text){                 // "what services are here?" · "what tools are here?" · "retire the weather tool" · "check the services"
   const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
   // P6.5 sp3: the Stable's own words — the mind cards in words, a body's fuel, a refill, an assignment (held at the interlock)

@@ -1,6 +1,6 @@
 {
  "format": "orreth-guide/1",
- "version": "0.2.0",
+ "version": "0.3.0",
  "title": "THE GUIDE \u00b7 what you can say here, and what happens",
  "kept_by": "the kernel \u2014 the same words on every door; Fable keeps it current with each spoonful",
  "sections": [
@@ -181,6 +181,38 @@
     {
      "say": "restart intention '<its words>'",
      "does": "The reverse, through the same ladder; it \"stands again\"."
+    }
+   ]
+  },
+  {
+   "id": "you",
+   "when": "chat",
+   "title": "You \u2014 what this ground knows about you",
+   "lead": "Your profile is yours: what you tell this ground about yourself, in your own words, labeled by who said it \u2014 \u201cyou told me\u201d \u00b7 \u201cI observed\u201d \u00b7 \u201cthe mirror noticed\u201d (reserved). Every body reads it first when it answers you; a routed ask carries it to the far cell for that answer alone. The YOU tag under the sun shows who this door knows you are.",
+   "entries": [
+    {
+     "say": "my name is JB \u00b7 call me JB",
+     "does": "Your name, trusted on your word. The newest word wins; the old one stays in the record."
+    },
+    {
+     "say": "I live in Boulder, Colorado \u00b7 my place is Payson, Arizona",
+     "does": "Your place, in your words. The kernel looks its coordinates and clock up once (Open-Meteo, no key) and keeps them beside your words as \u201cI observed\u201d \u2014 the weather tool then answers for YOUR place, never a fixed point. With no place told, it says so rather than reading someone else's weather."
+    },
+    {
+     "say": "my time zone is America/Denver \u00b7 my clock is Europe/Paris",
+     "does": "Your clock, told; every time a body reads you is in it. Untold, the clock of your told place; untold both, the browser's zone, then the ground's dial."
+    },
+    {
+     "say": "remember about me: I take my coffee black",
+     "does": "A free word about you. Every resident reads it in its context, never recites it unasked."
+    },
+    {
+     "say": "what do you know about me? \u00b7 show my profile \u00b7 who am I",
+     "does": "The portrait: every live word with its label and the clock this ground would use for you."
+    },
+    {
+     "say": "forget about me: my place \u00b7 forget my name \u00b7 forget that I take my coffee black",
+     "does": "A recorded withdrawal on your word \u2014 the words no longer read; the record keeps that you said them once. Never a deletion."
     }
    ]
   },

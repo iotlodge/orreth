@@ -221,3 +221,12 @@ the same files, unchanged — before any module earns the word "ported".
     yet heard"), on the tenth check (sealed, or unsealed with every database named), on a
     re-homing; and the knock ceiling — a token bucket that refills `rate` a second up to
     `burst`, a knock spending one.
+  - `profile_words` · `profile_label` · `profile_slice` · `place_default` (profile-v0, P7
+    sp8 row 1 — W58) — the human's own words about themselves: what a sentence says (a
+    tell of name · place · zone · claim in the person's own spelling; a read; a forgetting
+    by field or topic; or nothing — the ask goes on untouched); the provenance label a read
+    wears (`you told me` · `I observed` · `the mirror noticed`); the profile as one paragraph
+    for the pack's first slot (the newest word per named field, name · place · zone · then
+    the claims, the kernel's observation only beside the told place it explains, the whole
+    capped at 700); and the weather tool's default — the newest observed coordinates beside
+    a live told place, or null.

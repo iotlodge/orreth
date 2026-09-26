@@ -1,0 +1,948 @@
+{
+ "contract": "orreth.profile/1",
+ "version": 0,
+ "generated_by": "orreth_spine.profile (the Python reference) \u00b7 P7 sp8",
+ "generated_at": "2026-09-26T15:00:00.000Z",
+ "cases": [
+  {
+   "name": "profile_words: 'my name is JB'",
+   "kind": "profile_words",
+   "input": {
+    "text": "my name is JB"
+   },
+   "expect": {
+    "act": "tell",
+    "field": "name",
+    "value": "JB"
+   }
+  },
+  {
+   "name": "profile_words: 'Call me jb.'",
+   "kind": "profile_words",
+   "input": {
+    "text": "Call me jb."
+   },
+   "expect": {
+    "act": "tell",
+    "field": "name",
+    "value": "jb"
+   }
+  },
+  {
+   "name": "profile_words: 'I am Jonathan'",
+   "kind": "profile_words",
+   "input": {
+    "text": "I am Jonathan"
+   },
+   "expect": {
+    "act": "tell",
+    "field": "name",
+    "value": "Jonathan"
+   }
+  },
+  {
+   "name": "profile_words: \"I'm Jon\"",
+   "kind": "profile_words",
+   "input": {
+    "text": "I'm Jon"
+   },
+   "expect": {
+    "act": "tell",
+    "field": "name",
+    "value": "Jon"
+   }
+  },
+  {
+   "name": "profile_words: 'I live in Boulder, Colorado'",
+   "kind": "profile_words",
+   "input": {
+    "text": "I live in Boulder, Colorado"
+   },
+   "expect": {
+    "act": "tell",
+    "field": "place",
+    "value": "Boulder, Colorado"
+   }
+  },
+  {
+   "name": "profile_words: \"I'm in Phoenix, Arizona\"",
+   "kind": "profile_words",
+   "input": {
+    "text": "I'm in Phoenix, Arizona"
+   },
+   "expect": {
+    "act": "tell",
+    "field": "place",
+    "value": "Phoenix, Arizona"
+   }
+  },
+  {
+   "name": "profile_words: 'My place is Payson, AZ.'",
+   "kind": "profile_words",
+   "input": {
+    "text": "My place is Payson, AZ."
+   },
+   "expect": {
+    "act": "tell",
+    "field": "place",
+    "value": "Payson, AZ"
+   }
+  },
+  {
+   "name": "profile_words: 'I am in Denver'",
+   "kind": "profile_words",
+   "input": {
+    "text": "I am in Denver"
+   },
+   "expect": {
+    "act": "tell",
+    "field": "place",
+    "value": "Denver"
+   }
+  },
+  {
+   "name": "profile_words: 'my time zone is America/Denver'",
+   "kind": "profile_words",
+   "input": {
+    "text": "my time zone is America/Denver"
+   },
+   "expect": {
+    "act": "tell",
+    "field": "zone",
+    "value": "America/Denver"
+   }
+  },
+  {
+   "name": "profile_words: 'my zone is America/Phoenix'",
+   "kind": "profile_words",
+   "input": {
+    "text": "my zone is America/Phoenix"
+   },
+   "expect": {
+    "act": "tell",
+    "field": "zone",
+    "value": "America/Phoenix"
+   }
+  },
+  {
+   "name": "profile_words: 'My clock is Europe/Paris'",
+   "kind": "profile_words",
+   "input": {
+    "text": "My clock is Europe/Paris"
+   },
+   "expect": {
+    "act": "tell",
+    "field": "zone",
+    "value": "Europe/Paris"
+   }
+  },
+  {
+   "name": "profile_words: 'I am on UTC'",
+   "kind": "profile_words",
+   "input": {
+    "text": "I am on UTC"
+   },
+   "expect": {
+    "act": "tell",
+    "field": "zone",
+    "value": "UTC"
+   }
+  },
+  {
+   "name": "profile_words: 'remember about me: I take my coffee black and my'",
+   "kind": "profile_words",
+   "input": {
+    "text": "remember about me: I take my coffee black and my dives whole"
+   },
+   "expect": {
+    "act": "tell",
+    "field": "claim",
+    "value": "I take my coffee black and my dives whole"
+   }
+  },
+  {
+   "name": "profile_words: 'about me: I am relocating to Colorado'",
+   "kind": "profile_words",
+   "input": {
+    "text": "about me: I am relocating to Colorado"
+   },
+   "expect": {
+    "act": "tell",
+    "field": "claim",
+    "value": "I am relocating to Colorado"
+   }
+  },
+  {
+   "name": "profile_words: 'my profile: I prefer brief answers'",
+   "kind": "profile_words",
+   "input": {
+    "text": "my profile: I prefer brief answers"
+   },
+   "expect": {
+    "act": "tell",
+    "field": "claim",
+    "value": "I prefer brief answers"
+   }
+  },
+  {
+   "name": "profile_words: 'what do you know about me?'",
+   "kind": "profile_words",
+   "input": {
+    "text": "what do you know about me?"
+   },
+   "expect": {
+    "act": "read",
+    "field": null,
+    "value": null
+   }
+  },
+  {
+   "name": "profile_words: 'show my profile'",
+   "kind": "profile_words",
+   "input": {
+    "text": "show my profile"
+   },
+   "expect": {
+    "act": "read",
+    "field": null,
+    "value": null
+   }
+  },
+  {
+   "name": "profile_words: 'read my profile'",
+   "kind": "profile_words",
+   "input": {
+    "text": "read my profile"
+   },
+   "expect": {
+    "act": "read",
+    "field": null,
+    "value": null
+   }
+  },
+  {
+   "name": "profile_words: 'who am I'",
+   "kind": "profile_words",
+   "input": {
+    "text": "who am I"
+   },
+   "expect": {
+    "act": "read",
+    "field": null,
+    "value": null
+   }
+  },
+  {
+   "name": "profile_words: 'my profile?'",
+   "kind": "profile_words",
+   "input": {
+    "text": "my profile?"
+   },
+   "expect": {
+    "act": "read",
+    "field": null,
+    "value": null
+   }
+  },
+  {
+   "name": "profile_words: 'forget about me: my place'",
+   "kind": "profile_words",
+   "input": {
+    "text": "forget about me: my place"
+   },
+   "expect": {
+    "act": "forget",
+    "field": "place",
+    "value": null
+   }
+  },
+  {
+   "name": "profile_words: 'forget my name'",
+   "kind": "profile_words",
+   "input": {
+    "text": "forget my name"
+   },
+   "expect": {
+    "act": "forget",
+    "field": "name",
+    "value": null
+   }
+  },
+  {
+   "name": "profile_words: 'forget my time zone'",
+   "kind": "profile_words",
+   "input": {
+    "text": "forget my time zone"
+   },
+   "expect": {
+    "act": "forget",
+    "field": "zone",
+    "value": null
+   }
+  },
+  {
+   "name": "profile_words: 'forget that I take my coffee black'",
+   "kind": "profile_words",
+   "input": {
+    "text": "forget that I take my coffee black"
+   },
+   "expect": {
+    "act": "forget",
+    "field": null,
+    "value": "I take my coffee black"
+   }
+  },
+  {
+   "name": "profile_words: 'forget about me: coffee'",
+   "kind": "profile_words",
+   "input": {
+    "text": "forget about me: coffee"
+   },
+   "expect": {
+    "act": "forget",
+    "field": null,
+    "value": "coffee"
+   }
+  },
+  {
+   "name": "profile_words: 'what is the temperature outside?'",
+   "kind": "profile_words",
+   "input": {
+    "text": "what is the temperature outside?"
+   },
+   "expect": {
+    "act": null,
+    "field": null,
+    "value": null
+   }
+  },
+  {
+   "name": "profile_words: 'I am tired'",
+   "kind": "profile_words",
+   "input": {
+    "text": "I am tired"
+   },
+   "expect": {
+    "act": null,
+    "field": null,
+    "value": null
+   }
+  },
+  {
+   "name": "profile_words: 'I am not here'",
+   "kind": "profile_words",
+   "input": {
+    "text": "I am not here"
+   },
+   "expect": {
+    "act": null,
+    "field": null,
+    "value": null
+   }
+  },
+  {
+   "name": "profile_words: 'librarian, what do you know about me?'",
+   "kind": "profile_words",
+   "input": {
+    "text": "librarian, what do you know about me?"
+   },
+   "expect": {
+    "act": null,
+    "field": null,
+    "value": null
+   }
+  },
+  {
+   "name": "profile_words: 'my name is'",
+   "kind": "profile_words",
+   "input": {
+    "text": "my name is"
+   },
+   "expect": {
+    "act": null,
+    "field": null,
+    "value": null
+   }
+  },
+  {
+   "name": "profile_words: ''",
+   "kind": "profile_words",
+   "input": {
+    "text": ""
+   },
+   "expect": {
+    "act": null,
+    "field": null,
+    "value": null
+   }
+  },
+  {
+   "name": "profile_label: human",
+   "kind": "profile_label",
+   "input": {
+    "asserted_by": "human"
+   },
+   "expect": {
+    "label": "you told me"
+   }
+  },
+  {
+   "name": "profile_label: kernel",
+   "kind": "profile_label",
+   "input": {
+    "asserted_by": "kernel"
+   },
+   "expect": {
+    "label": "I observed"
+   }
+  },
+  {
+   "name": "profile_label: mirror",
+   "kind": "profile_label",
+   "input": {
+    "asserted_by": "mirror"
+   },
+   "expect": {
+    "label": "the mirror noticed"
+   }
+  },
+  {
+   "name": "profile_slice: nothing told",
+   "kind": "profile_slice",
+   "input": {
+    "claims": []
+   },
+   "expect": {
+    "words": "nothing yet \u2014 you have told this ground nothing about yourself"
+   }
+  },
+  {
+   "name": "profile_slice: jb whole \u2014 newest name and place win, observed beside told",
+   "kind": "profile_slice",
+   "input": {
+    "claims": [
+     {
+      "field": "claim",
+      "value": "I take my coffee black and my dives whole",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "place",
+      "value": "Boulder, Colorado, United States",
+      "asserted_by": "kernel",
+      "withdrawn_at": null,
+      "lat": 40.01499,
+      "lon": -105.27055,
+      "zone": "America/Denver",
+      "evidence": "Boulder, Colorado"
+     },
+     {
+      "field": "place",
+      "value": "Boulder, Colorado",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "place",
+      "value": "Payson, Arizona, United States",
+      "asserted_by": "kernel",
+      "withdrawn_at": null,
+      "lat": 34.23087,
+      "lon": -111.32514,
+      "zone": "America/Phoenix",
+      "evidence": "Payson, Arizona"
+     },
+     {
+      "field": "place",
+      "value": "Payson, Arizona",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "name",
+      "value": "JB",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "name",
+      "value": "Jonathan",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     }
+    ]
+   },
+   "expect": {
+    "words": "you told me: your name is JB \u00b7 you live in Boulder, Colorado \u00b7 I take my coffee black and my dives whole \u2014 I observed: Boulder, Colorado, United States is at 40.01,-105.27, its clock America/Denver"
+   }
+  },
+  {
+   "name": "profile_slice: a withdrawn place never reads",
+   "kind": "profile_slice",
+   "input": {
+    "claims": [
+     {
+      "field": "place",
+      "value": "Boulder, Colorado",
+      "asserted_by": "human",
+      "withdrawn_at": "2026-09-26T15:00:00Z",
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "name",
+      "value": "JB",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     }
+    ]
+   },
+   "expect": {
+    "words": "you told me: your name is JB"
+   }
+  },
+  {
+   "name": "profile_slice: the mirror's group wears its label",
+   "kind": "profile_slice",
+   "input": {
+    "claims": [
+     {
+      "field": "claim",
+      "value": "returns often to the weather with librarian (4 mentions)",
+      "asserted_by": "mirror",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "name",
+      "value": "JB",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     }
+    ]
+   },
+   "expect": {
+    "words": "you told me: your name is JB \u2014 the mirror noticed: returns often to the weather with librarian (4 mentions)"
+   }
+  },
+  {
+   "name": "profile_slice: capped at 700",
+   "kind": "profile_slice",
+   "input": {
+    "claims": [
+     {
+      "field": "claim",
+      "value": "claim number 0 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 1 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 2 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 3 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 4 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 5 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 6 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 7 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 8 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 9 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 10 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 11 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 12 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 13 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 14 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 15 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 16 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 17 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 18 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "claim",
+      "value": "claim number 19 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     }
+    ]
+   },
+   "expect": {
+    "words": "you told me: claim number 0 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \u00b7 claim number 1 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \u00b7 claim number 2 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \u00b7 claim number 3 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \u00b7 claim number 4 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \u00b7 claim number 5 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \u00b7 claim number 6 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \u00b7 claim number 7 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \u00b7 claim number 8 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u2026"
+   }
+  },
+  {
+   "name": "place_default: nothing told \u2192 null",
+   "kind": "place_default",
+   "input": {
+    "claims": [
+     {
+      "field": "name",
+      "value": "JB",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     }
+    ]
+   },
+   "expect": {
+    "place": null
+   }
+  },
+  {
+   "name": "place_default: the newest told place with its observed coordinates",
+   "kind": "place_default",
+   "input": {
+    "claims": [
+     {
+      "field": "claim",
+      "value": "I take my coffee black and my dives whole",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "place",
+      "value": "Boulder, Colorado, United States",
+      "asserted_by": "kernel",
+      "withdrawn_at": null,
+      "lat": 40.01499,
+      "lon": -105.27055,
+      "zone": "America/Denver",
+      "evidence": "Boulder, Colorado"
+     },
+     {
+      "field": "place",
+      "value": "Boulder, Colorado",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "place",
+      "value": "Payson, Arizona, United States",
+      "asserted_by": "kernel",
+      "withdrawn_at": null,
+      "lat": 34.23087,
+      "lon": -111.32514,
+      "zone": "America/Phoenix",
+      "evidence": "Payson, Arizona"
+     },
+     {
+      "field": "place",
+      "value": "Payson, Arizona",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "name",
+      "value": "JB",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "name",
+      "value": "Jonathan",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     }
+    ]
+   },
+   "expect": {
+    "place": {
+     "place": "Boulder, Colorado",
+     "lat": 40.01499,
+     "lon": -105.27055,
+     "zone": "America/Denver"
+    }
+   }
+  },
+  {
+   "name": "place_default: told but never geocoded \u2192 lat null",
+   "kind": "place_default",
+   "input": {
+    "claims": [
+     {
+      "field": "place",
+      "value": "Nowhere Special",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     }
+    ]
+   },
+   "expect": {
+    "place": {
+     "place": "Nowhere Special",
+     "lat": null,
+     "lon": null,
+     "zone": null
+    }
+   }
+  },
+  {
+   "name": "place_default: a withdrawn place is no default",
+   "kind": "place_default",
+   "input": {
+    "claims": [
+     {
+      "field": "place",
+      "value": "Boulder, Colorado, United States",
+      "asserted_by": "kernel",
+      "withdrawn_at": "2026-09-26T15:00:00Z",
+      "lat": 40.01,
+      "lon": -105.27,
+      "zone": "America/Denver",
+      "evidence": "Boulder, Colorado"
+     },
+     {
+      "field": "place",
+      "value": "Boulder, Colorado",
+      "asserted_by": "human",
+      "withdrawn_at": "2026-09-26T15:00:00Z",
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     },
+     {
+      "field": "name",
+      "value": "JB",
+      "asserted_by": "human",
+      "withdrawn_at": null,
+      "lat": null,
+      "lon": null,
+      "zone": null,
+      "evidence": null
+     }
+    ]
+   },
+   "expect": {
+    "place": null
+   }
+  }
+ ]
+}

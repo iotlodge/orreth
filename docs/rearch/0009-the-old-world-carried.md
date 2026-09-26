@@ -112,7 +112,7 @@ is the exact thing this page exists to prevent.
 | The router learns the ask (0066) | choices = actions, gradings = reward, scoreboard | CAPABILITY — E-RAG | markers + the grader firmware are the seed of reward reaching action. |
 | Multimodal upload (0029) | upload as an ask, artifact content-addressed | CAPABILITY — with the Basket (sp6c) | no upload door. |
 | The Aperture (0031) | context projection as a signed record | RE-SEATED — 0003 "packing the mind" | context assembly exists in the body; not a signed record. |
-| The Human Profile + the Mirror + personas (0025 · 0070) | sovereign profile, provenance-labeled; persona craft | RE-SEATED — 0003 "who remembers what"; sessions carried (`glass.py`) | sessions per person stand; no profile, no persona slot. |
+| The Human Profile + the Mirror + personas (0025 · 0070) | sovereign profile, provenance-labeled; persona craft | CARRIED partial — `profile.py` · `profile.rs` (P7 sp8 row 1, W58); the Mirror's inferences and personas RE-SEATED | the profile stands on both kernels: name · place · zone · free claims, `you told me` / `I observed` / `the mirror noticed` (reserved), read first by every body, the weather's default, carried over the seam; no Mirror sweep, no persona slot. |
 | orreth-EnterpriseRAG (the first proof, 8/9 closed, 4 KCRs paid) | enterprise retrieval as a capability; Orreth as the API | CAPABILITY — re-walked after sp6c on the new kernel | held at the halt in its own repo; its register is the acceptance list for sp6c. |
 
 ### The Console, the orrery, the brain views

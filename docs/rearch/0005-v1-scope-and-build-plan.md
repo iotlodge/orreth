@@ -1469,6 +1469,38 @@ approved (covenant rule 9).
   — Orreth files a feature through Orreth and delivers it for itself (Phase
   9 below). Calling anything 1.0 before that would be a claim the register
   cannot back.
+  - **Row 1 — THE HUMAN PROFILE** ✅ **BUILT 2026-09-26 — walk OWED (JB in
+    the glass, SPEC-PROFILE-01, walk #16)**. JB's locks at the open: the
+    kernel GEOCODES a told place (Open-Meteo, no key) and lands the
+    coordinates and clock beside the words as "I observed"; the profile
+    RIDES a routed ask over the seam; the row carries name · place · zone
+    AND free claims. `orreth_spine/profile.py` (the reference) + Rust
+    `profile.rs` (pure) · `profile_live.rs`: one table of provenance-
+    labeled claims per person (`you told me` human/trusted · `I observed`
+    kernel · `the mirror noticed` reserved, unbuilt); the newest word wins
+    per named field, claims accumulate; every change a FACT with the chain
+    (`orreth.profile.told.v1 · .observed.v1 · .withdrawn.v1`) under an
+    ACTION of the ask or an OBSERVATION under the person's one root;
+    FORGETTING a recorded withdrawal, never a deletion. READ: slot 1 of
+    every body's pack (`resident.seat_words` — "THE HUMAN you serve is jb —
+    their own profile, in their own provenance: …"); the weather tool's
+    default is the asker's own place (no place told → "I do not know your
+    place yet", never someone else's weather); the human's clock reads the
+    profile ahead of the ground's dial (ask's own zone → session → told
+    zone → the told place's clock → dial); a routed ask carries `{words,
+    place, zone}` in `spine_asks.carried_profile` and the far cell reads
+    it for that answer alone, keeping no row. WORDS: "my name is …" · "I
+    live in …" · "my time zone is …" · "remember about me: …" · "what do
+    you know about me?" · "forget about me: …"; the YOU tag under the sun;
+    doors `GET/POST /profile` on both kernels; the guide's "You" section.
+    Fixture `profile-v0.json` (43 cases; runner 430/430 across 95 kinds);
+    `tests/test_profile.py` (6 laws); the cells proof gained the carry.
+    **Honest limits:** the Mirror's own inferences are not built (the label
+    is reserved so the ladder is whole); a withdrawn word is hidden, not
+    crypto-shredded (the new kernel has no Purge yet); the person is still
+    the dev door's `did:orreth:person:jb` until sp8's gate; the geocoder is
+    one outbound call at the telling — offline, the words stand and the
+    weather tool says it has no coordinates.
 
 Honest scale: ten to fifteen thousand lines of Rust, eight spoonfuls, more
 than one session each. Close conditions: every fixture kind ported; JB

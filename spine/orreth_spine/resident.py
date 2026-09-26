@@ -6,6 +6,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, W26: an empty reply never lands as replied — asked again once, then said in words · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the harness command served on the bench · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the human profile in the seat words and the clock (W58) · 2026-09-26
 """The resident body v0 (canon 0004): one governed body for every mind.
 
 Born from a versioned TEMPLATE artifact; the SAME identity in every life
@@ -128,17 +129,26 @@ def echo_reply(name: str, text: str) -> str:
 
 def human_zone(conn, ask_id: str | None) -> str:
     """The human's zone for this ask (W12): the ask's own, else its
-    session's, else the ground's dial, else America/Denver."""
+    session's, else the one their PROFILE knows (P7 sp8 — told, or the
+    clock of the place they told; a routed ask carries it), else the
+    ground's dial, else America/Denver."""
     if conn is not None and ask_id:
         cur = conn.cursor()
-        cur.execute("SELECT a.zone, s.zone FROM spine_asks a"
+        cur.execute("SELECT a.zone, s.zone, a.person FROM spine_asks a"
                     " LEFT JOIN spine_sessions s ON s.session_id = a.session"
                     " WHERE a.ask_id = %s", (ask_id,))
         row = cur.fetchone()
         if row:
-            for z in row:
+            for z in row[:2]:
                 if z:
                     return z
+            from . import profile
+            rode = profile.carried(conn, ask_id)
+            if rode and rode.get("zone"):
+                return rode["zone"]
+            z = profile.zone_of(conn, row[2]) if row[2] else None
+            if z:
+                return z
     return os.environ.get(HUMAN_ZONE_DIAL) or HUMAN_ZONE_DEFAULT
 
 
@@ -694,13 +704,16 @@ class Resident:
     def seat_words(self, conn, ask_id: str | None) -> str:
         """W12 (JB's law): what the kernel hands EVERY body — resident or
         firmware — with its system words: the clock (now in UTC, the
-        human's zone, the sentence), the world, the covenant's slice, the
+        human's zone, the sentence), the world, THE HUMAN's own profile
+        (P7 sp8, W58 — the pack's first slot by 0003), the covenant's slice, the
         slice of the ontology its template names (`ontology: [...]`,
         searched in MITL's acquired corpus — v0: the best passage per
         entry), and the common laws of the serve."""
+        from . import profile
         parts = [time_words(human_zone(conn, ask_id)),
                  f"THE WORLD you serve in is {ev.scope()}; you are {self.name}, "
                  f"a {self.kind} body" + (f" whose function is {self.function}" if self.function else "") + ".",
+                 profile.seat_words(conn, ask_id),     # P7 sp8: slot 1 of the pack — who this human is (W58)
                  COVENANT_SLICE]
         for entry in self.template.get("ontology", []) or []:
             try:

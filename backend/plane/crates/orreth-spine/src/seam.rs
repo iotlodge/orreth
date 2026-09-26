@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells · partition · isolation · hardening · 2026-09-25
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the routed ask carries the asker's profile slice (W58) · 2026-09-26
 //! THE SEAM between cells (canon 0002 rule 8 · JB's locks 2026-09-25): two
 //! cells that NAME each other as peers (`SPINE_PEERS`) speak over one door,
 //! `POST /seam`, in messages SIGNED by their kernels' own selves — the peer's
@@ -560,8 +561,11 @@ impl Seam {
             Ok(())
         })
         .await?;
+        // P7 sp8 (W58): the asker's profile slice RIDES with the ask — the far cell answers for their
+        // place and clock and stores nothing about them (it lands on the ask's row there, never in its profile)
+        let carried = crate::profile_live::carry(g, w, &s.person).await?;
         let body = json!({"ask_id": ask_id, "text": cells::strip_home(&s.text), "person": s.person,
-                          "session": s.session, "at": envelope::now_iso()});
+                          "session": s.session, "at": envelope::now_iso(), "profile": carried});
         self.enqueue(g, cell, "ask", &body, Some(&ask_id)).await?;
         Ok(ask_id)
     }
@@ -922,10 +926,14 @@ impl Seam {
             asks::Submitted::One(id) => id,
             asks::Submitted::Many(mut ids) => ids.remove(0),
         };
+        let carried: Option<String> = body
+            .get("profile")
+            .filter(|p| p.is_object())
+            .map(|p| p.to_string()); // P7 sp8: what rode with the ask — read for this answer only
         g.client()
             .execute(
-                "UPDATE spine_asks SET home_cell = $2, remote_id = $3, seam_side = 'home' WHERE ask_id = $1",
-                &[&ask_id, &from, &origin_id],
+                "UPDATE spine_asks SET home_cell = $2, remote_id = $3, seam_side = 'home', carried_profile = $4 WHERE ask_id = $1",
+                &[&ask_id, &from, &origin_id, &carried],
             )
             .await?;
         self.journey(g, &ask_id, &format!("{KERNEL}: came over the seam from cell {from} (its ask {origin_id}), asked by {person}"))

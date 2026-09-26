@@ -10,6 +10,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: the pure laws factored for the fixture; the kernel's own self signs the export · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE (JB's seed) · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the cell's topics · the /world door · the home settled at light · 2026-09-25
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the profile doors (W58) · 2026-09-26
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -40,7 +41,7 @@ from pathlib import Path
 import psycopg
 
 from . import bridgefeed, digest, dispatch, envelope as ev, export, ground, harness, intent, markers, mitl, monitor, outbox
-from . import cells, placement, presence, projector, proof, scheduler, services, sinks
+from . import cells, placement, presence, profile, projector, proof, scheduler, services, sinks
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRefused, Resident
 
@@ -575,6 +576,13 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
             if path == "/markers/kinds":                 # the registry
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"kinds": markers.kinds(conn)})
+            if path == "/profile":                       # P7 sp8: the human's own profile — theirs to see (W58)
+                from urllib.parse import parse_qs
+                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
+                    if "?" in self.path else {}
+                person = str(qs.get("person") or "did:orreth:person:jb")
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    return self._json(200, profile.portrait(conn, person))
             if path == "/services":                      # P6.5 sp1: the shelf — every service, its ladder state
                 from urllib.parse import parse_qs
                 qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
@@ -933,6 +941,17 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                         return self._json(201, {"service": made})
                 except services.ServiceRefused as e:
                     return self._json(400, {"error": str(e)})
+            if path == "/profile":                        # P7 sp8: "my name is …" · "I live in …" · "forget about me: …" — theirs to adjust (W58)
+                person = str(p.get("person") or "did:orreth:person:jb")
+                text = str(p.get("text") or "").strip()
+                if not text:
+                    return self._json(400, {"error": "say something about yourself, or ask what I know"})
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        made = profile.say(conn, person, text)
+                except profile.ProfileRefused as e:
+                    return self._json(400, {"error": str(e)})
+                return self._json(201 if made["act"] != "read" else 200, made)
             if path == "/enroll":                         # P6 sp1: "enroll my authenticator"
                 person = str(p.get("person") or "did:orreth:person:jb")
                 try:
