@@ -4,6 +4,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the shelf · the Stable · the meter · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the meter's world · the cells' tables · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the human profile's table (W58) · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the seat's tables (the gate) · 2026-09-26
 //! The ask road's tables — the Python spine's DDL, word for word, under the
 //! same tags its `once` guard uses (`resident` · `markers` · `proof` · `intent`
 //! · `presence` · `digest`), so two spines on one ground never disagree about a
@@ -208,7 +209,7 @@ pub const GATEWAY_DDL: &[&str] = &[
 ];
 
 /// The tags and their DDL, in the order the road ensures them.
-pub const ROAD: [(&str, &[&str]); 16] = [
+pub const ROAD: [(&str, &[&str]); 17] = [
     ("resident", RESIDENT_DDL),
     ("markers", MARKERS_DDL),
     ("proof", PROOF_DDL),
@@ -225,6 +226,7 @@ pub const ROAD: [(&str, &[&str]); 16] = [
     ("cells", crate::cells_live::CELLS_DDL), // P7 sp7: the world, its peers, the seam's nonces
     ("seam", crate::seam::SEAM_DDL), // P7 sp7: the seam's outbound queue, the routed ask's columns
     ("profile", crate::profile_live::PROFILE_DDL), // P7 sp8: the human's own profile, the carried slice on the ask
+    ("seat", crate::seat_live::SEAT_DDL), // P7 sp8 row 3: the owner and the seats (the gate)
 ];
 
 /// Every table the ask road stands on, once per ground per process.

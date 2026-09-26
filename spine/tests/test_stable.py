@@ -346,7 +346,9 @@ def test_the_stables_doors_hold_and_the_shelf_shows_the_deal(rig, fake):
     hold at the interlock (202, the kernel's act); GET /minds/search;
     /harness/ab refuses one arm; /monitor carries the farm's values."""
     from tests.test_glass import _get, _post
+    from tests import seats
     import urllib.error
+    seats.govern(rig.port, ME)                    # P7 sp8 row 3a: the Stable's changes are a governing seat's word
     st, out = _post(rig.port, "/minds", {"name": "sonnet", "provider": "anthropic", "model": SONNET, "klass": "standard",
                                           "price": {"in_per_m": 3, "out_per_m": 15}, "person": ME})
     assert st == 202 and out["level"] == "L2" and out["class"] == "consequential"

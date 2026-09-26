@@ -7,6 +7,8 @@ act, the marker as parent; the lineage answers from either end."""
 import json
 import secrets
 import urllib.request
+
+from tests import seats  # P7 sp8 row 3: every door reads the person from the SEAT — the test sits first
 from pathlib import Path
 
 import pytest
@@ -111,13 +113,13 @@ def test_mk1_an_improvement_marked_by_the_librarian_makes_the_critic_act(pg, mon
 def test_the_marker_doors_over_http(pg, rig):
     port = rig.port
     def get(path):
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=10) as r:
+        with seats.urlopen(f"http://127.0.0.1:{port}{path}", timeout=10) as r:
             return json.loads(r.read())
     def post(path, obj):
         req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", data=json.dumps(obj).encode(),
                                      headers={"content-type": "application/json"}, method="POST")
         try:
-            with urllib.request.urlopen(req, timeout=10) as r:
+            with seats.urlopen(req, timeout=10) as r:
                 return r.status, json.loads(r.read())
         except urllib.error.HTTPError as e:
             return e.code, json.loads(e.read())

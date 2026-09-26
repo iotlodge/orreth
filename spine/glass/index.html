@@ -446,6 +446,92 @@
 <div id="pulse">PULSE · connecting…</div>
 
 <script>
+/* ---- P7 sp8 row 3: THE SEAT — every door reads the person from the seat token, never from this page's word.
+   The seat is kept in this browser (localStorage "orreth.seat") and rides every knock as a bearer header;
+   the live feed, which cannot send headers, carries it as its query. A door that answers 401 "not seated"
+   (no seat, an expired one, a left one, a forged one — the same words) brings the seat form into the chat:
+   your name and the code your authenticator shows. On a ground no one holds, the first to prove an
+   authenticator becomes its OWNER — the ceremony — and enrolling anyone else is the owner's word. ---- */
+let PERSON = null, SEAT = null;
+function seatToken(wire){ try { return JSON.parse(atob(wire.replace(/-/g, "+").replace(/_/g, "/"))); } catch (e) { return null; } }
+(function seatLoad(){
+  try { SEAT = localStorage.getItem("orreth.seat") || null; } catch (e) {}
+  const t = SEAT && seatToken(SEAT);
+  if (t && t.constraints && new Date(t.constraints.expiry) > new Date()) PERSON = t.subject;
+  else SEAT = null;
+})();
+const _fetch = window.fetch.bind(window);
+window.fetch = function(url, opts){
+  opts = opts || {};
+  if (SEAT){ const h = new Headers(opts.headers || {}); if (!h.has("authorization")) h.set("authorization", "Bearer " + SEAT); opts.headers = h; }
+  return _fetch(url, opts).then(r => { if (r.status === 401) unseated(); return r; });
+};
+let SEAT_ASKED = false;
+async function unseated(){                        // the seat form, once: the ceremony on a fresh ground, else name + code
+  if (SEAT_ASKED) return; SEAT_ASKED = true;
+  SEAT = null; PERSON = null;
+  try { localStorage.removeItem("orreth.seat"); } catch (e) {}
+  const st = await _fetch("/seat").then(x=>x.json()).catch(()=>null);
+  const ceremony = !!(st && st.ceremony), hours = st && st.hours ? st.hours : 24;
+  const msg = el("msg theirs", `<div class="who">the kernel</div><span class="stepwords">` + (ceremony
+    ? `No one holds this ground yet: the first person to prove an authenticator here becomes its owner. Type your name (lower-case letters, digits, - or _). Already enrolled on this ground? Type the code your authenticator shows and take your seat. Not yet? Enroll: scan the QR with your authenticator app and type the code it shows.`
+    : `This door needs your seat. Type your name and the code your authenticator shows now — a seat lasts ${esc(String(hours))} hours; say “leave my seat” to end it sooner. No authenticator yet? Ask the owner of this ground to enroll you.`) + `</span>`);
+  const row = document.createElement("div"); row.className = "confirm-row";
+  row.innerHTML = `<input class="who-in" placeholder="your name, e.g. jb" aria-label="your name" autocomplete="username">` +
+    `<input inputmode="numeric" maxlength="6" pattern="[0-9]*" placeholder="6-digit code" aria-label="the code from your authenticator">` +
+    `<button class="btn-yes" disabled>Take my seat</button>` +
+    (ceremony ? `<button class="btn-enroll" disabled>Enroll</button>` : ``);
+  const name = row.querySelector(".who-in"), code = row.querySelector("input[inputmode]"), yes = row.querySelector(".btn-yes"), enroll = row.querySelector(".btn-enroll");
+  const nameOk = () => /^[a-z][a-z0-9_-]{1,23}$/.test(name.value.trim());
+  const refresh = () => { yes.disabled = !(nameOk() && /^\d{6}$/.test(code.value)); if (enroll) enroll.disabled = !nameOk(); };
+  row.querySelectorAll("input").forEach(i => { i.addEventListener("input", refresh);
+                                              i.addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); }); });   /* Enter never submits */
+  yes.onclick = async () => {
+    row.querySelectorAll("button,input").forEach(x => x.disabled = true);
+    await takeSeat(name.value.trim(), code.value, msg, row);
+  };
+  if (enroll) enroll.onclick = async () => {
+    row.querySelectorAll("button,input").forEach(x => x.disabled = true);
+    const c = await _fetch("/enroll", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({person: name.value.trim()})})
+      .then(async x => ({s: x.status, b: await x.json()})).catch(()=>null);
+    if (!c || c.s !== 201){ stepRefused(msg, row, c && c.s === 403 ? "that name already holds an authenticator here — type its code and take your seat instead"
+                                                   : "that name did not enroll — " + (c && c.b && c.b.error ? c.b.error : "the door did not answer")); return; }
+    stepDone(msg, row, `enrolling ${esc(name.value.trim())}`);
+    drawEnroll(c.b, false, name.value.trim());
+  };
+  msg.appendChild(row); name.focus();
+}
+async function takeSeat(name, code, msg, row){   // the code proves the person; the token comes back; the page wakes seated
+  const r = await _fetch("/seat", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({person: name, code})})
+    .then(async x => ({s: x.status, b: await x.json()})).catch(()=>null);
+  if (!r || r.s !== 201){
+    stepRefused(msg, row, r && r.s === 403 ? "not seated — that code was not right, or that name holds no authenticator here; type the code your app shows now"
+                        : r && r.b && r.b.error ? r.b.error : "the seat door did not answer");
+    return;
+  }
+  SEAT = r.b.wire; PERSON = r.b.person;
+  try { localStorage.setItem("orreth.seat", SEAT); } catch (e) {}
+  stepDone(msg, row, esc(r.b.words));
+  setTimeout(() => location.reload(), 700);
+}
+async function seatWords(text){                  // "leave my seat" · "who am I seated as?" · "my seat"
+  const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
+  if (/^leave (my )?seat$/.test(t) || /^(sign|log) ?out$/.test(t)){
+    el("msg mine", esc(text));
+    const r = await fetch("/seat/leave", {method:"POST", headers:{"content-type":"application/json"}, body: "{}"}).then(x=>x.json()).catch(()=>null);
+    sysline(esc(r && r.words ? r.words : "your seat is ended"));
+    SEAT = null; PERSON = null; try { localStorage.removeItem("orreth.seat"); } catch (e) {}
+    setTimeout(() => location.reload(), 700);
+    return true;
+  }
+  if (/^(my seat|who am i seated as|whose seat is this|am i seated)$/.test(t)){
+    el("msg mine", esc(text));
+    const tk = SEAT && seatToken(SEAT);
+    sysline(tk ? `seated as ${esc(whoIs(tk.subject))} until ${esc(new Date(tk.constraints.expiry).toLocaleString())} · ${esc(tk.grants.map(g => g.action).join(" · "))} within ${esc(tk.audience)}` : "not seated");
+    return true;
+  }
+  return false;
+}
 /* ---- the starfield (drawn once; the window looks out on something) ---- */
 (() => {
   const c = document.getElementById("stars");
@@ -885,6 +971,7 @@ async function send(given, label, toOverride, parent){
   const inp = document.getElementById("chat-in");
   const text = (given ?? inp.value).trim(); if (!text) return;
   if (given == null) inp.value = "";
+  if (given == null && await seatWords(text)) return;      // P7 sp8 row 3: "leave my seat" · "my seat"
   if (given == null && await sessionWords(text)) return;   // P20 by words
   if (given == null && await exportWords(text)) return;    // "export compliance …" (P6 sp2)
   if (given == null && await mitlWords(text)) return;      // "summon MITL" · "what does the canon say …" (P6 sp3)
@@ -1030,7 +1117,7 @@ function renderOutcome(id, v, line){
                : level === "L3-master" ? "master" : "yes";
     const m = el("msg theirs", who + esc(v.reply));
     document.getElementById("pin").appendChild(m);   // W35 (walk #11): the hold is PINNED above the composer until it settles —
-    const row = holdRow(id, step, level);            // the crew's bubbles never scroll the code row away
+    const row = holdRow(id, step, level, v.person);  // the crew's bubbles never scroll the code row away
     // P6 sp3: every hold offers "expected impact?" — MITL's answer renders here, before Cancel / Yes
     m.appendChild(impactBar({kind: impactKind(hold.tool), ref: id, draft: {tool: hold.tool}, words: v.text}));
     m.appendChild(row); row.querySelector(".btn-cancel").focus();
@@ -1166,33 +1253,34 @@ document.getElementById("chat-in").addEventListener("input", e => {
 function hhmm(iso){ return new Date(iso).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"}); }
 function secs(a, b){ return `${Math.max(0, (new Date(b) - new Date(a)) / 1000).toFixed(1)} s`; }
 
-function holdRow(id, step, level){          // one hold row: Cancel default · a typed code or the master's name · Enter never confirms
+function holdRow(id, step, level, asker){   // one hold row: Cancel default · a typed code, or a MASTER's click from their own seat · Enter never confirms
   const row = document.createElement("div"); row.className = "confirm-row";
   if (step === "code")                                       // a code is TYPED, then a click
     row.innerHTML = `<button class="btn-cancel">Cancel (default)</button>` +
       `<input inputmode="numeric" maxlength="6" pattern="[0-9]*" placeholder="6-digit code" aria-label="the code from your authenticator">` +
       `<button class="btn-yes" disabled>Confirm with this code</button>`;
-  else if (step === "master")                                // a second NAMED person clicks
+  else if (step === "master" && asker && asker === PERSON)   // P7 sp8 row 3: the asker waits — a declared master confirms from THEIR OWN seat
     row.innerHTML = `<button class="btn-cancel">Cancel (default)</button>` +
-      `<input class="who-in" placeholder="the master's name, e.g. did:orreth:person:…" aria-label="the second named person">` +
-      `<button class="btn-yes" disabled>Confirm as master</button>`;
+      `<span class="stepwords">a declared master confirms this from their own seat — open this ask in their glass; cancel is the default</span>`;
+  else if (step === "master")                                // a second person — seated as themselves — clicks
+    row.innerHTML = `<button class="btn-cancel">Cancel (default)</button><button class="btn-yes">Confirm as master</button>`;
   else
     row.innerHTML = `<button class="btn-cancel">Cancel (default)</button><button class="btn-yes">Yes — do it</button>`;
   const cancel = row.querySelector(".btn-cancel"), yes = row.querySelector(".btn-yes"), inp = row.querySelector("input");
   cancel.onclick = () => decide(id, false, row);
   if (inp){
     inp.addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); });   /* Enter never submits */
-    inp.addEventListener("input", () => { yes.disabled = step === "code" ? !/^\d{6}$/.test(inp.value) : !inp.value.trim(); });
-    yes.onclick = () => decide(id, true, row, step === "code" ? inp.value : undefined, step === "master" ? inp.value.trim() : undefined, level);
-  } else yes.onclick = () => decide(id, true, row);
+    inp.addEventListener("input", () => { yes.disabled = !/^\d{6}$/.test(inp.value); });
+    yes.onclick = () => decide(id, true, row, inp.value, undefined, level);
+  } else if (yes) yes.onclick = () => decide(id, true, row, undefined, undefined, level);
   return row;
 }
-async function decide(id, approve, row, code, by, level){
+async function decide(id, approve, row, code, by, level){    // `by` is the SEAT's word now — never sent from the page
   row.querySelectorAll("button,input").forEach(b => b.disabled = true);
   setTimeout(refreshPulls, 1500);             // the act's effect, in every lens
   const r = await fetch("/confirm", {method:"POST",
     headers:{"content-type":"application/json"},
-    body: JSON.stringify({ask_id: id, approve, code: code || undefined, by: by || undefined})}).catch(()=>null);
+    body: JSON.stringify({ask_id: id, approve, code: code || undefined})}).catch(()=>null);
   if (r && r.status === 403){                 // ONE face (rule 4): try again, or cancel — nothing ran
     if (PENDING[id]) PENDING[id].textContent = code ? "not confirmed — that code was not right; nothing ran · type the code your authenticator shows now, or cancel"
                                                     : "not confirmed — nothing ran · try again, or cancel";
@@ -1203,7 +1291,7 @@ async function decide(id, approve, row, code, by, level){
   const out = r ? await r.json().catch(()=>null) : null;
   if (out && out.step === "code" && out.next === "master"){   // W5: the kernel's — your code is right; now the master
     const msg = row.parentNode; row.remove();
-    const next = holdRow(id, "master", level);
+    const next = holdRow(id, "master", level, PERSON);
     const state = (PENDING[id] && PENDING[id]._verb === "restart") ? "stays AT REST" : "STANDS";   // the hold's words (walk #8): what stands meanwhile
     const words = `your code is right — the intention ${state} until a declared master confirms with a click · cancel is the default`;
     if (msg){ msg.insertAdjacentHTML("beforeend", `<div class="stepline">✓ ${esc(words)} · ${hhmm(new Date().toISOString())}</div>`); msg.appendChild(next); }
@@ -1212,7 +1300,7 @@ async function decide(id, approve, row, code, by, level){
     return;
   }
   if (PENDING[id]) PENDING[id].textContent = approve
-    ? (code ? "your code is on its way…" : by ? "the master's word is on its way…" : "your yes is on its way…")
+    ? (code ? "your code is on its way…" : level === "L3-master" ? "the master's word is on its way…" : "your yes is on its way…")
     : "cancelling — nothing will run…";
 }
 
@@ -1351,7 +1439,7 @@ async function postEnroll(code){
     body: JSON.stringify({person: PERSON, code: code || undefined})})
     .then(async x => ({s: x.status, b: await x.json()})).catch(()=>null);
 }
-function drawEnroll(b, re){                   // W2: the QR only — the secret behind a click, masked again on the next repaint
+function drawEnroll(b, re, seatAs){           // W2: the QR only — the secret behind a click, masked again on the next repaint · `seatAs`: the ceremony's name, seated on the next code
   const entry = re ? "the new Orreth entry" : "your app";
   const msg = el("msg theirs", `<div class="who">the kernel</div><span class="stepwords">` +
     (re ? "Your current authenticator is proven. Now the NEW one: scan this once with your authenticator app, then type the first code the new Orreth entry shows to finish."
@@ -1363,9 +1451,15 @@ function drawEnroll(b, re){                   // W2: the QR only — the secret 
   rv.onclick = () => { cp.hidden = !cp.hidden; rv.textContent = cp.hidden ? "can't scan? reveal the secret" : "hide the secret"; };
   codeRow(msg, re ? "Finish the new authenticator" : "Finish enrolling", async (code, row) => {
     const c = await fetch("/enroll/confirm", {method:"POST", headers:{"content-type":"application/json"},
-      body: JSON.stringify({person: PERSON, code})}).catch(()=>null);
+      body: JSON.stringify({person: b.person || PERSON, code})}).catch(()=>null);
     if (c && c.status === 200){
       stepDone(msg, row, re ? "new authenticator enrolled — the old entry is retired" : "authenticator enrolled");
+      if (seatAs){                                            // P7 sp8 row 3: the ceremony — the next code takes the owner's seat
+        const m2 = el("msg theirs", `<div class="who">the kernel</div><span class="stepwords">Enrolled. Now type the NEXT code your app shows to take your seat — the first to prove an authenticator here holds this ground.</span>`);
+        codeRow(m2, "Take my seat", async (code2, row2) => takeSeat(seatAs, code2, m2, row2), "Not now",
+                () => sysline("not seated — say anything to bring the seat form back"));
+        return;
+      }
       sysline(`authenticator ${re ? "re-" : ""}enrolled — grave acts will ask for its code`); return; }
     stepRefused(msg, row, re ? "finishing the NEW authenticator: that code is not the new entry's — type the code the new Orreth entry shows now"
                              : "finishing the authenticator: that code is not this entry's — type the code your app shows now");
@@ -1373,7 +1467,28 @@ function drawEnroll(b, re){                   // W2: the QR only — the secret 
                         sysline(re ? "the new authenticator was not finished — your current one still stands; say “enroll my authenticator” to start over"
                                    : "not enrolled — the QR is gone from view; say “enroll my authenticator” to start over"); });
 }
-async function enrollWords(text){             // "enroll my authenticator" · the old words "… with code 123456" still work as an alias
+async function enrollWords(text){             // "enroll my authenticator" · the old words "… with code 123456" still work as an alias · "enroll quinn" (the owner's word, P7 sp8 row 3)
+  const other = text.match(/^enroll (?:an? )?(?:authenticator for )?([a-z][a-z0-9_-]{1,23})\s*[.!]?$/i);
+  if (other && !/^(my|an?|the)$/i.test(other[1])){
+    el("msg mine", esc(text));
+    const who = other[1].toLowerCase();
+    const c = await fetch("/enroll", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({person: who})})
+      .then(async x => ({s: x.status, b: await x.json()})).catch(()=>null);
+    if (!c){ sysline("the enroll door did not answer"); return true; }
+    if (c.s === 403){ sysline(`not confirmed — enrolling ${esc(who)} is the owner's or a master's word, and a person already enrolled re-enrolls with their own old code`); return true; }
+    if (c.s !== 201){ sysline(esc(c.b && c.b.error ? c.b.error : "the enroll door refused")); return true; }
+    const msg = el("msg theirs", `<div class="who">the kernel</div><span class="stepwords">Enrolling ${esc(who)}: hand them this QR to scan with their authenticator app, then type here the first code it shows to finish. They take their seat in their own browser with the next code.</span>` +
+      (c.b.qr ? `<img class="qr" alt="the QR for ${esc(who)}'s authenticator" src="${c.b.qr}">` : "") +
+      `<span class="reveal">can't scan? reveal the secret</span><div class="copy" hidden>${esc(c.b.uri)}</div>`);
+    const rv = msg.querySelector(".reveal"), cp = msg.querySelector(".copy");
+    rv.onclick = () => { cp.hidden = !cp.hidden; rv.textContent = cp.hidden ? "can't scan? reveal the secret" : "hide the secret"; };
+    codeRow(msg, `Finish enrolling ${who}`, async (code, row) => {
+      const r = await fetch("/enroll/confirm", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({person: who, code})}).catch(()=>null);
+      if (r && r.status === 200){ stepDone(msg, row, `${who}'s authenticator enrolled — they sit with the next code it shows`); return; }
+      stepRefused(msg, row, `finishing ${who}'s authenticator: that code is not this entry's — type the code the app shows now`);
+    }, "Not now", () => { msg.querySelectorAll(".qr,.reveal,.copy").forEach(x => x.remove()); sysline(`${esc(who)} was not enrolled — say “enroll ${esc(who)}” to start over`); });
+    return true;
+  }
   const m = text.match(/^(?:re-?)?enroll my authenticator(?:\s+with(?: the)?(?: old| current)? code\s+(\d{6}))?\s*[.!]?$/i);
   if (!m) return false;
   el("msg mine", esc(text));
@@ -1965,7 +2080,6 @@ function popAllFocus(){           // one [Esc]: every focus popped, the
 
 /* ---- sessions (P20): the human's worldlines — roll · list · load ---- */
 let SESSION = null;
-const PERSON = "did:orreth:person:jb";
 let LAST_LIST = [];
 let SESSIONS_SHOWN = false;       // W51: once the list has been shown here, a roll on any door re-reads it
 function sysline(html){ return el("journey", html); }
@@ -2181,7 +2295,8 @@ document.getElementById("ses-new").onclick = () => rollSession(true);
 const pulse = document.getElementById("pulse");
 let lastRev = null;
 function connectFeed(){
-  const src = new EventSource("/feed");
+  if (!SEAT){ unseated(); return; }           // P7 sp8 row 3: no seat, no feed — the form first
+  const src = new EventSource("/feed?seat=" + encodeURIComponent(SEAT));
   let bandTimer = null;
   src.onmessage = e => { const n = JSON.parse(e.data);
     lastRev = n.rev; pulse.textContent = "PULSE · rev " + n.rev;

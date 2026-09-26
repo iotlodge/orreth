@@ -67,7 +67,7 @@ def test_a_governed_purge_reaches_every_version_and_every_digest_and_leaves_a_to
     assert "purged 2 version(s)" in out and "1 digest(s) rebuilt" in out
     assert st.get("librarian", "doomed") is None and st.history("librarian", "doomed") == []
     assert st.search("librarian", "secret words") == []                     # the projection went with the rows
-    assert glass.recall_view(pg, ref="librarian/doomed") is None
+    assert glass.recall_view(pg, person="did:orreth:person:test", ref="librarian/doomed") is None
     after = digest.of_session(pg, ses)
     assert "librarian/doomed" not in after["sources"] and "secret" not in after["body"]
     assert after["supersedes"] == made["hash"]                               # a sibling, the citation gone

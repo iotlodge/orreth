@@ -7,6 +7,8 @@ a failing run is a fact on the rail."""
 import json
 import secrets
 import urllib.request
+
+from tests import seats  # P7 sp8 row 3: every door reads the person from the SEAT — the test sits first
 from pathlib import Path
 
 import pytest
@@ -60,7 +62,7 @@ def test_a_watch_holds_at_the_interlock_then_lands_and_is_judged(pg, monkeypatch
     [w] = snap["watches"]
     assert w["name"] == "asks left waiting" and w["ok"] is True and w["added_by"] == mon.identity.did
     assert w["state"] == "green" and w["reads"] == "red when asks_received > 0.0 · now 0 → green"
-    dispatch.submit_ask(pg, "one ask, unserved")     # now a red watch: the condition holds
+    dispatch.submit_ask(pg, "one ask, unserved", person="did:orreth:person:test")     # now a red watch: the condition holds
     [w] = monitor.snapshot(pg, rails=False)["watches"]
     assert w["value"] == 1 and w["ok"] is False and w["red"] is True and w["state"] == "red"
     with pytest.raises(ValueError):
@@ -93,7 +95,7 @@ def test_the_monitor_door_and_the_harness_door_over_http(pg, rig):
     """The whole rig: seven bodies alive on fresh leases, the snapshot's
     every part, and a harness run on demand against the rig's librarian."""
     rig.resident.gateway = gateway.FakeGateway(reply="PELICAN, says the librarian")
-    with urllib.request.urlopen(f"http://127.0.0.1:{rig.port}/monitor", timeout=15) as r:
+    with seats.urlopen(f"http://127.0.0.1:{rig.port}/monitor", timeout=15) as r:
         snap = json.loads(r.read())
     assert {"outbox", "asks", "bodies", "values", "watches", "benches", "topic_depth", "harness"} <= set(snap)
     assert snap["values"]["bodies_alive"] >= 7                    # leases renewed as they serve
@@ -101,6 +103,6 @@ def test_the_monitor_door_and_the_harness_door_over_http(pg, rig):
     req = urllib.request.Request(f"http://127.0.0.1:{rig.port}/harness/run",
                                  data=json.dumps({"template": "librarian"}).encode(),
                                  headers={"content-type": "application/json"}, method="POST")
-    with urllib.request.urlopen(req, timeout=30) as r:
+    with seats.urlopen(req, timeout=30) as r:
         run = json.loads(r.read())
     assert run["template"] == "librarian" and run["passed"] == 2 and run["failed"] == 0

@@ -74,17 +74,17 @@ def beat(conn, name: str):
 
 TAGS = ("outbox", "inbox", "projector", "resident", "gateway", "tools", "store",
         "markers", "monitor", "scheduler", "harness", "presence", "digest", "intent",
-        "proof", "mitl", "placement", "services", "cells", "profile")
+        "proof", "mitl", "placement", "services", "cells", "profile", "seat")
 
 
 def ensure_all(conn) -> None:
     """Flag every ground on this connection (each module's `once` tag), so
     the serving transaction never runs DDL and never takes the lock."""
     from . import (cells, digest, gateway, harness, inbox, intent, markers, mitl, monitor, outbox,
-                   placement, presence, profile, projector, proof, resident, scheduler, services, store, tools)
+                   placement, presence, profile, projector, proof, resident, scheduler, seat, services, store, tools)
     for mod in (outbox, inbox, projector, resident, gateway, tools, store, markers,
                 monitor, scheduler, harness, presence, digest, intent, proof, mitl, placement, cells,
-                services, profile):
+                services, profile, seat):
         mod.ensure_schema(conn)
     markers.seed(conn)                      # the kernel's kinds, in this world
     outbox.mark_ground_done(conn, TAGS)     # the birth FINISHED: later connections are born flagged

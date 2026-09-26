@@ -19,6 +19,7 @@
 //! feed's notice — all through the Rust door alone, as a browser would.
 //! With no rig it prints "rails not up — skipped by name" and passes green
 //! without proving anything; beside a live Bridge on :4600 it refuses to run.
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the gate: the proof SITS before it knocks (the ceremony through the doors) · 2026-09-26
 
 #![cfg(feature = "bridge")]
 
@@ -76,8 +77,9 @@ async fn http(port: u16, method: &str, path: &str, body: Option<&Value>) -> (u16
         .await
         .expect("the door answers");
     let body = body.map(|b| b.to_string()).unwrap_or_default();
+    let seat = seat_header(port);
     let req = format!(
-        "{method} {path} HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\ncontent-type: \
+        "{method} {path} HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n{seat}content-type: \
          application/json\r\ncontent-length: {}\r\n\r\n{body}",
         body.len()
     );
@@ -105,6 +107,102 @@ async fn get(port: u16, path: &str) -> (u16, Value) {
 async fn post(port: u16, path: &str, body: Value) -> (u16, Value) {
     let (s, b) = http(port, "POST", path, Some(&body)).await;
     (s, serde_json::from_str(&b).unwrap_or(Value::Null))
+}
+
+// ---- P7 sp8 row 3: THE GATE — every door reads the person from the SEAT; a proof sits first
+static SEATS: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<u16, String>>> =
+    std::sync::OnceLock::new();
+static SECRETS: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<String, String>>> =
+    std::sync::OnceLock::new();
+
+/// The seat this proof holds at a port, as the request header line — or nothing.
+fn seat_header(port: u16) -> String {
+    SEATS
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap()
+        .get(&port)
+        .map(|w| format!("authorization: Bearer {w}\r\n"))
+        .unwrap_or_default()
+}
+
+#[allow(dead_code)]
+fn secret_of(person: &str) -> String {
+    SECRETS
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap()
+        .get(person)
+        .cloned()
+        .expect("the person's secret is known: sit first")
+}
+
+/// The ceremony a human runs in the glass, through the doors alone: enroll (the door
+/// stands open while no one holds this ground; afterwards on the seated owner's word),
+/// confirm with the first code, sit with the next — the seat rides every later knock at
+/// this port. Returns the seat's answer.
+async fn sit(port: u16, person: &str) -> Value {
+    let known = SECRETS
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap()
+        .get(person)
+        .cloned();
+    let secret = match known {
+        Some(s) => s,
+        None => {
+            let (s, b) = post(port, "/enroll", json!({"person": person})).await;
+            assert_eq!(s, 201, "the enroll at :{port} for {person}: {b}");
+            let secret = b["secret"].as_str().unwrap().to_string();
+            let code =
+                orreth_spine::proof::totp(&secret, orreth_spine::proof_live::now_unix()).unwrap();
+            let (s, b) = post(
+                port,
+                "/enroll/confirm",
+                json!({"person": person, "code": code}),
+            )
+            .await;
+            assert_eq!(s, 200, "the confirm at :{port} for {person}: {b}");
+            SECRETS
+                .get_or_init(Default::default)
+                .lock()
+                .unwrap()
+                .insert(person.to_string(), secret.clone());
+            secret
+        }
+    };
+    let code = orreth_spine::proof::totp(&secret, orreth_spine::proof_live::now_unix()).unwrap();
+    let (mut s, mut b) = post(port, "/seat", json!({"person": person, "code": code})).await;
+    if s == 403 {
+        // another GROUND at this port (a second cell): the known secret is not enrolled here — its own ceremony
+        let (es, eb) = post(port, "/enroll", json!({"person": person})).await;
+        assert_eq!(
+            es, 201,
+            "the enroll at :{port} for {person} (a second ground): {eb}"
+        );
+        let secret2 = eb["secret"].as_str().unwrap().to_string();
+        let code2 =
+            orreth_spine::proof::totp(&secret2, orreth_spine::proof_live::now_unix()).unwrap();
+        let (cs, cb) = post(
+            port,
+            "/enroll/confirm",
+            json!({"person": person, "code": code2}),
+        )
+        .await;
+        assert_eq!(cs, 200, "the confirm at :{port}: {cb}");
+        let code3 =
+            orreth_spine::proof::totp(&secret2, orreth_spine::proof_live::now_unix()).unwrap();
+        let r = post(port, "/seat", json!({"person": person, "code": code3})).await;
+        s = r.0;
+        b = r.1;
+    }
+    assert_eq!(s, 201, "the seat at :{port} for {person}: {b}");
+    SEATS
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap()
+        .insert(port, b["wire"].as_str().unwrap().to_string());
+    b
 }
 
 /// Poll the ask's door until its status is one of `want`.
@@ -200,6 +298,14 @@ async fn shadow_an_ask_through_the_rust_door_is_served_by_the_python_librarian_a
         lit.wait_ready(Duration::from_secs(60)).await,
         "the Rust feed and dispatcher hold their assignments"
     );
+    // P7 sp8 row 3: the ceremony at the Rust door — jb holds this ground; the same seat law at the Python door
+    let seated = sit(rs_port, "did:orreth:person:jb").await;
+    assert_eq!(
+        (seated["owner"].clone(), seated["role"].clone()),
+        (json!(true), json!("owner")),
+        "{seated}"
+    );
+    sit(py_port, "did:orreth:person:jb").await;
     let (s, page) = http(rs_port, "GET", "/", None).await;
     assert_eq!(s, 200);
     assert!(
@@ -306,18 +412,36 @@ async fn shadow_an_ask_through_the_rust_door_is_served_by_the_python_librarian_a
     assert_eq!(get(py_port, &format!("/ask/{ghost}")).await.1, v);
 
     // ---- the proof doors, the one face (P6 sp1's door test, through the Rust door)
+    // P7 sp8 row 3: the proof door answers for the SEAT's person — jb, the owner, enrolled at the ceremony
     let me = "did:orreth:person:jb";
+    let (s, st) = get(rs_port, "/proof").await;
+    assert_eq!(s, 200, "{st}");
     assert_eq!(
-        get(rs_port, &format!("/proof?person={me}")).await,
-        (200, json!({"person": me, "enrolled": false, "masters": []}))
+        (
+            st["person"].clone(),
+            st["enrolled"].clone(),
+            st["owner"].clone(),
+            st["masters"].clone()
+        ),
+        (json!(me), json!(true), json!(me), json!([me])),
+        "{st}"
     );
-    let (s, b) = post(rs_port, "/enroll", json!({"person": me})).await;
-    assert_eq!(s, 201);
+    assert_eq!(st["seat"]["role"], json!("owner"));
+    let one_face = json!({"error": "not confirmed"});
+    assert_eq!(
+        get(py_port, "/proof").await.1["enrolled"],
+        json!(true),
+        "the Python door sees the enrollment"
+    );
+    // a second person, enrolled on the owner's word, confirmed by the first code
+    let quinn = "did:orreth:person:quinn";
+    let (s, b) = post(rs_port, "/enroll", json!({"person": quinn})).await;
+    assert_eq!(s, 201, "{b}");
     assert!(
         b["uri"]
             .as_str()
             .unwrap()
-            .starts_with("otpauth://totp/Orreth:jb"),
+            .starts_with("otpauth://totp/Orreth:quinn"),
         "{b}"
     );
     assert!(b["qr"]
@@ -325,12 +449,11 @@ async fn shadow_an_ask_through_the_rust_door_is_served_by_the_python_librarian_a
         .unwrap()
         .starts_with("data:image/png;base64,"));
     assert_eq!(b["re_enrolled"], json!(false));
-    let one_face = json!({"error": "not confirmed"});
     assert_eq!(
         post(
             rs_port,
             "/enroll/confirm",
-            json!({"person": me, "code": "000000"})
+            json!({"person": quinn, "code": "000000"})
         )
         .await,
         (403, one_face.clone())
@@ -340,23 +463,15 @@ async fn shadow_an_ask_through_the_rust_door_is_served_by_the_python_librarian_a
         post(
             rs_port,
             "/enroll/confirm",
-            json!({"person": me, "code": code})
+            json!({"person": quinn, "code": code})
         )
         .await,
-        (200, json!({"person": me, "enrolled": true}))
-    );
-    assert_eq!(
-        get(rs_port, &format!("/proof?person={me}")).await.1["enrolled"],
-        json!(true)
-    );
-    assert_eq!(
-        get(py_port, &format!("/proof?person={me}")).await.1["enrolled"],
-        json!(true),
-        "the Python door sees the enrollment"
+        (200, json!({"person": quinn, "enrolled": true}))
     );
     assert_eq!(
         post(rs_port, "/enroll", json!({"person": me})).await,
-        (403, one_face.clone())
+        (403, one_face.clone()),
+        "re-enrolling is grave: the old code"
     );
     assert_eq!(
         post(
@@ -370,9 +485,19 @@ async fn shadow_an_ask_through_the_rust_door_is_served_by_the_python_librarian_a
 
     // ---- a session rolled, an ask in it (with the feed listening), the fan-out to two benches
     let mut feed = TcpStream::connect(("127.0.0.1", rs_port)).await.unwrap();
-    feed.write_all(b"GET /feed HTTP/1.1\r\nHost: 127.0.0.1\r\naccept: text/event-stream\r\n\r\n")
-        .await
-        .unwrap();
+    let wire = SEATS
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap()
+        .get(&rs_port)
+        .cloned()
+        .expect("jb sits at the Rust door");
+    feed.write_all(
+        format!("GET /feed?seat={wire} HTTP/1.1\r\nHost: 127.0.0.1\r\naccept: text/event-stream\r\n\r\n")
+            .as_bytes(),
+    )
+    .await
+    .unwrap();
     let (s, rolled) = post(
         rs_port,
         "/sessions",

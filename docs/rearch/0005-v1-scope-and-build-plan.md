@@ -1564,6 +1564,75 @@ approved (covenant rule 9).
       bodies the kernel spawns keep their governed join; KCR-0001 re-paid on
       the new kernel. Persons: the name never reissued (`persons.py`'s law).
       Two to three sessions.
+      - **(a) THE HUMAN SEAT** ✅ **BUILT 2026-09-26 (walk #18 OWED — the
+        script in the walk register; SPEC-GATE-01).** JB's locks at the open
+        (AskUserQuestion): the contract's DID pattern widened to `did:orreth`
+        (rule 9, his word — `contracts/v0/common.schema.json`, one line) ·
+        the seat rides `authorization: Bearer <base64url of the canonical
+        token>` (the live feed, which a browser cannot send headers to,
+        carries it as its `seat` query) · a seat lasts 24 hours
+        (`SPINE_SEAT_HOURS`; "leave my seat" ends it sooner, recorded) ·
+        L3-master is a SECOND seated person — the typed master's name is
+        gone. `orreth_spine/seat.py` (the reference; pure: `mint` ·
+        `verify` — the verdicts in fence order: malformed · expired ·
+        foreign authority · broken chain · bad signature · amplified ·
+        `attenuate` · `wire`/`unwire` · `seat_id` · `bearer` · `grants_for`
+        (a person reads and writes within this world; the owner and a
+        master also GOVERN) · `door_needs` (open · enroll · retrieve ·
+        write · govern) · `origin_ok` · `person_did` (persons.py's grammar
+        carried: the name IS the DID, never reissued) · the words; the
+        ground: `spine_owner` · `spine_seats`, `take` · `offline` ·
+        `on_ground` · `leave` · `may_enroll`, the `Ceilings` with the gate's
+        memory) and Rust `seat.rs` (pure) · `seat_live.rs`. THE GATE ITSELF
+        is `glass.py`'s `_admit` and a tower layer in `bridge.rs`, law for
+        law: the origin closed (a foreign `Origin` refused before the body
+        is read; no open origin on any answer) → the door's need → the
+        seat's OFFLINE half (no ground for a forged seat) → the knock
+        ceiling spent per person BEFORE the ground is asked (a flood never
+        reaches it; open doors per address) → the gate's memory → the
+        ground once per 5 s. THE CEREMONY: the first person to prove an
+        authenticator on a ground no one holds is its OWNER
+        (`orreth.owner.declared.v1`; a master from that moment); enrolling
+        another is a governing seat's word; oneself re-enrolls with the old
+        code. Facts `orreth.seat.taken.v1` · `orreth.seat.left.v1` under the
+        person's chain. Doors: `GET /seat` (is the ground held? how long a
+        seat?) · `POST /seat {person, code}` · `POST /seat/leave`; `GET
+        /proof` says the owner and the seat; `POST /confirm` reads the
+        confirmer from the seat alone. The glass: the seat form on any 401
+        (name + code, and Enroll during the ceremony), the bearer on every
+        knock, "my seat" · "leave my seat" · "enroll quinn" (the owner's
+        word: the QR for another), the master's row without a typed name —
+        a declared master clicks from THEIR OWN seat. Fixture `seat-v0.json`
+        (80 cases; runner 545/545 across 106 kinds, not yet ported: none;
+        the minted tokens validate against `capability-token.schema.json`);
+        proof `tests/gate.rs` (one Rust kernel: the unseated's one face; the
+        ceremony; a person's seat cannot govern nor enroll another; a forged
+        seat, a touched seat, no seat; the origin closed; the seated feed; a
+        left seat; the ceiling per seat and per address); every Python door
+        test and all five Rust door proofs SIT first (the ceremony through
+        the doors — `tests/seats.py` · the Rust `sit`); Python suite 738
+        (658 before), the six Rust proofs green, clippy + fmt clean. **Honest limits:** a
+        person's name IS their DID — no person keypair yet, so a person
+        cannot delegate a seat (attenuation serves key-bearing selves: the
+        desk's leases, row 3b); the seat lives in one browser; a leave is
+        seen by another kernel over the same ground within 5 s; the
+        ceiling's buckets are per process; `/delta` (the bodies' display
+        door) and `/seam` stay open by their own laws — a body's own signed
+        knock lands with the join desk; `/harness` and `/guide` are open
+        reads (health-class words, no person's); masters are still the
+        ceremony's owner or `SPINE_MASTERS` at birth — no door declares one.
+      - **JB's pin (2026-09-26, at the open): a STANDING KEY-CHECK between
+        the kernel and its agents.** His words: "our DID is amazing and
+        should be secure, but have a way for the kernel to check every so
+        often that agents are WHAT they say and WHO they say they are" — an
+        embedded, active proof on a cadence (a nonce the body signs with the
+        key behind its DID, as the desk challenges once at the door), not for
+        now. It rides with row 3 (b)'s desk, whose challenge it repeats.
+      - **(b) THE MACHINE JOIN DESK — NEXT SESSION ("sp8 row 3b"):** the
+        five-status desk, the nonce signed with the key behind the DID, the
+        human's yes as a kernel-held act, the chained LEASE minted by
+        `seat.mint` with the fuel clause (the token's shape already carries
+        `budget`), the body's signed knock at `/delta`, KCR-0001 re-paid.
     - **Row 4 — THE RE-BASE AND MAIN REPLACED AT 0.1.0 (JB's plane
       approval, 2026-09-26: the OLD `orrethd` crate is RETIRED from the
       workspace — it lives on at the `main-v0.72-old-world` tag forever —

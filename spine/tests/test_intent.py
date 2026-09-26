@@ -11,6 +11,8 @@ import secrets
 import statistics
 import time
 import urllib.request
+
+from tests import seats  # P7 sp8 row 3: every door reads the person from the SEAT — the test sits first
 from pathlib import Path
 
 import pytest
@@ -62,7 +64,7 @@ def test_ih1_a_red_watch_turns_the_resiliency_loop_and_the_stop_ends_it(pg, monk
                for e in _events_for(pg, r["intention_id"]))                        # a fact on the rail
     monitor.add_watch(pg, "asks left waiting", "asks_received", ">", 0, by=ME)      # W14: red WHEN it holds
     assert intent.turn(pg)["observed"] == []                                        # green: nothing
-    dispatch.submit_ask(pg, "one ask, unserved")                                    # now red
+    dispatch.submit_ask(pg, "one ask, unserved", person="did:orreth:person:test")                                    # now red
     t = intent.turn(pg)
     [obs] = t["observed"]
     o = markers.get(pg, obs)
@@ -212,13 +214,13 @@ def test_the_intent_doors_and_the_rail_in_the_rig(pg, rig):
     intention typed in the chat is declared; a human's stops with 202."""
     port = rig.port
     def get(path):
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=10) as r:
+        with seats.urlopen(f"http://127.0.0.1:{port}{path}", timeout=10) as r:
             return json.loads(r.read())
     def post(path, obj):
         req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", data=json.dumps(obj).encode(),
                                      headers={"content-type": "application/json"}, method="POST")
         try:
-            with urllib.request.urlopen(req, timeout=10) as r:
+            with seats.urlopen(req, timeout=10) as r:
                 return r.status, json.loads(r.read())
         except urllib.error.HTTPError as e:
             return e.code, json.loads(e.read())
@@ -255,8 +257,8 @@ def test_the_intent_doors_and_the_rail_in_the_rig(pg, rig):
     assert get(f"/ask/{held}")["hold"]["level"] == "L3-code" and "This needs your code" in get(f"/ask/{held}")["reply"]
     assert [i for i in get("/intentions?kind=human")["intentions"] if i["intention_id"] == iid][0]["active"] is True
     from orreth_spine import proof
-    s, made = post("/enroll", {"person": walker})
-    assert s == 201 and post("/enroll/confirm", {"person": walker, "code": proof.totp(made["secret"])})[0] == 200
+    made = {"secret": seats.secret_of(walker)}          # P7 sp8 row 3a: the walker was enrolled at their first knock (the seat)
+    assert made["secret"]
     assert post("/confirm", {"ask_id": held, "approve": True, "by": walker, "code": "000000"})[0] == 403   # one face
     s, out = post("/confirm", {"ask_id": held, "approve": True, "by": walker, "code": proof.totp(made["secret"])})
     assert s == 202 and out["level"] == "L3-code"                                    # the right code rests it
@@ -331,7 +333,7 @@ def test_walk11_a_stop_asked_is_a_stop_held_a_duplicate_is_named_and_a_standing_
     assert not intent.cannot_act("The bench is drained; I cannot say more than that.")
     # W40: sixty newer roots do not push a standing intention off the board; a rested one may fall off
     for _ in range(3):
-        dispatch.submit_ask(pg, "a newer root")
+        dispatch.submit_ask(pg, "a newer root", person="did:orreth:person:test")
     roots = [o["ref"] for o in markers.origins(pg, limit=2)]
     assert kern["intention_id"] in roots and mine["intention_id"] in roots
     assert len([r for r in roots if r.startswith("ask_")]) == 2

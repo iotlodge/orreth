@@ -13,6 +13,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: backoff · park_rule · parked_words · parked_fact · harness_verdict · harness_command · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: topic_name · peers_from · address_home · epoch_check · world_fact · seam_sign · seam_verify · the words · sealed_words · ceiling · 2026-09-25
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the profile's arms (W58) · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the seat's arms: seat_mint · seat_verify · seat_grants · door_needs · origin_ok · bearer · seat_words · seat_did_of_key · 2026-09-26
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -24,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from orreth_spine import (body as _body, cells, dispatch, envelope as ev, export, ground, harness, intent, mcp, mitl, monitor,
-                          placement, presence, profile, proof, rails, resident, scheduler, services, stable, store, digest,
+                          placement, presence, profile, proof, rails, resident, scheduler, seat, services, stable, store, digest,
                           tools)
 from orreth_spine.identity import Identity
 
@@ -417,5 +418,33 @@ def test_fixture(contract, case):
         e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
         assert ev.encode(e).decode("ascii") == exp["bytes"] and e["payload"] == exp["payload"]
         assert (e["type"], e["correlation_id"]) == (exp["topic"], exp["correlation_id"])
+    # ---- orreth.seat/1 (P7 sp8 row 3a): THE HUMAN SEAT — the 0006 token from a seed, its verdicts, the doors' needs ----
+    elif kind == "seat_mint":                    # the token's exact bytes from the root's seed; its id and its wire form
+        signer = Identity("kernel", bytes.fromhex(inp["seed_hex"]), kind="kernel")
+        t = seat.mint(signer, subject=inp["subject"], audience=inp["audience"], grants=inp["grants"],
+                      expiry=inp["expiry"], direction=inp["direction"], budget=inp["budget"])
+        assert t == exp["token"] and ev.canonical(t).decode("ascii") == exp["bytes"]
+        assert seat.seat_id(t) == exp["seat_id"] and seat.wire(t) == exp["wire"] and seat.unwire(exp["wire"]) == t
+    elif kind == "seat_verify":                  # ok · malformed · expired · foreign authority · broken chain · bad signature · amplified
+        assert seat.verify(inp["token"], root_did=inp["root_did"], root_key_hex=inp["root_key_hex"], now=inp["now"]) == exp["verdict"]
+    elif kind == "seat_grants":                  # a person reads and writes; the owner and a master also govern
+        assert seat.grants_for(inp["role"], inp["scope"]) == exp["grants"]
+    elif kind == "door_needs":                   # open · enroll · retrieve · write · govern
+        assert seat.door_needs(inp["method"], inp["path"]) == exp["needs"]
+    elif kind == "origin_ok":                    # the browser origin is closed
+        assert seat.origin_ok(inp["origin"], inp["host"]) == exp["ok"]
+    elif kind == "bearer":                       # authorization: Bearer <wire>
+        assert seat.bearer(inp["header"]) == exp["wire"]
+    elif kind == "seat_words":
+        if inp["what"] == "busy":
+            assert seat.BUSY_WORDS == exp["words"] and seat.busy() == exp["face"]
+        elif inp["what"] == "not_seated":
+            assert seat.NOT_SEATED == exp["face"]
+        else:
+            assert seat.taken_words(inp["person"], inp["role"], inp["hours"], inp["ceremony"]) == exp["words"]
+    elif kind == "person_did":                   # the person grammar: a bare name or the DID, else None
+        assert seat.person_did(inp["text"]) == exp["did"]
+    elif kind == "seat_did_of_key":
+        assert seat.did_of_key(inp["kind"], inp["public_key_hex"]) == exp["did"]
     else:
         pytest.fail(f"unknown case kind {kind!r} in {contract}")

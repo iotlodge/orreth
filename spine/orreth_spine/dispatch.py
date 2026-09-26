@@ -67,7 +67,7 @@ def refusal_words(name: str, reason: str) -> str:
     return f"{name} is not here — {reason}"
 
 
-def submit_ask(conn, text: str, *, person: str = "did:orreth:person:jb",
+def submit_ask(conn, text: str, *, person: str,
                to: list[str] | None = None, window: dict | None = None,
                session: str | None = None, parent_marker: str | None = None,
                kind: str | None = None, zone: str | None = None):
@@ -220,7 +220,7 @@ def publish_command(env: dict, rabbit_url: str | None = None) -> None:
 
 
 def confirm_ask(conn, ask_id: str, *, approve: bool,
-                person: str = "did:orreth:person:jb",
+                person: str,
                 code: str | None = None,
                 rabbit_url: str | None = None) -> dict:
     """The human's word at the interlock (canon 0001 L2 · P6 sp1 L3):

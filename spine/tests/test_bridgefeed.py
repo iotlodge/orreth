@@ -61,12 +61,13 @@ rails = pytest.mark.skipif(
 class SSEClient:
     """A minimal human-shaped client: one GET, a stream of events."""
 
-    def __init__(self, port: int, last_event_id: int | None = None):
+    def __init__(self, port: int, last_event_id: int | None = None, seat: str | None = None):
         self._c = http.client.HTTPConnection("127.0.0.1", port, timeout=15)
         headers = {"accept": "text/event-stream"}
         if last_event_id is not None:
             headers["last-event-id"] = str(last_event_id)
-        self._c.request("GET", "/feed", headers=headers)
+        # P7 sp8 row 3a: a gated door's feed carries the seat as its query (a browser's EventSource sends no header)
+        self._c.request("GET", "/feed" + (f"?seat={seat}" if seat else ""), headers=headers)
         self._r = self._c.getresponse()
 
     def next_event(self, deadline_s: float = 20.0):

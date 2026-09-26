@@ -178,8 +178,7 @@ def make_handler(feed: Feed):
             self.send_response(200)
             self.send_header("content-type", "text/event-stream")
             self.send_header("cache-control", "no-cache")
-            self.send_header("access-control-allow-origin", "*")
-            self.end_headers()
+            self.end_headers()                   # P7 sp8 row 3: no open origin — the seat rides the feed's query
             q = feed.attach()
             try:
                 last = self.headers.get("last-event-id")

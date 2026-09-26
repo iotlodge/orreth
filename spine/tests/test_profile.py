@@ -12,6 +12,8 @@ import json
 import secrets
 import urllib.request
 
+from tests import seats  # P7 sp8 row 3: every door reads the person from the SEAT — the test sits first
+
 import pytest
 
 from orreth_spine import dispatch, envelope as ev, markers, profile, resident, tools
@@ -190,7 +192,7 @@ def test_the_doors_serve_the_profile(rig):
     req = urllib.request.Request(f"http://127.0.0.1:{rig.port}/profile", data=json.dumps({"person": person, "text": "hello there"}).encode(),
                                  headers={"content-type": "application/json"}, method="POST")
     with pytest.raises(urllib.error.HTTPError) as e:
-        urllib.request.urlopen(req, timeout=10)
+        seats.urlopen(req, timeout=10)
     assert e.value.code == 400 and "tell me nothing about you" in json.loads(e.value.read())["error"]
     code, p = _post(rig.port, "/profile", {"person": person, "text": "forget my name"})
     assert code == 201 and p["act"] == "forget" and p["portrait"]["name"] is None

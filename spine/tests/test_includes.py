@@ -49,14 +49,14 @@ def test_the_include_wears_the_chain_and_reads_the_session(pg, monkeypatch):
     echo.join(pg); lib.join(pg)
     ses = glass.open_session(pg, ME)
     tok_e, tok_l = secrets.token_hex(3), secrets.token_hex(3)
-    _landed(pg, dispatch.submit_ask(pg, "what is the plan?", session=ses),
+    _landed(pg, dispatch.submit_ask(pg, "what is the plan?", person="did:orreth:person:test", session=ses),
             echo.identity.did, "", f"the echo's view: marker {tok_e}", ses)
-    _landed(pg, dispatch.submit_ask(pg, "and the risk?", session=ses),
+    _landed(pg, dispatch.submit_ask(pg, "and the risk?", person="did:orreth:person:test", session=ses),
             lib.identity.did, "", f"the librarian's view: marker {tok_l}", ses)
     gw = gateway.FakeGateway(reply="1. do the first thing (librarian) 2. then the second (echo)")
     planner = _body("firmware-planner.v0.json", gw)
     planner.join(pg); planner._serve_conn = pg
-    [ask_id] = dispatch.submit_ask(pg, "Plan the next steps from what was said here.",
+    [ask_id] = dispatch.submit_ask(pg, "Plan the next steps from what was said here.", person="did:orreth:person:test",
                                    to=["planner"], session=ses)   # targeted: a list
     with pg.transaction():
         planner._serve_ask(pg.cursor(), ask_id, [ME])
@@ -83,9 +83,9 @@ def test_the_grader_never_grades_its_own_yardstick(pg, monkeypatch):
     grader = _body("firmware-grader.v0.json", gw)
     grader.join(pg); grader._serve_conn = pg
     ses = glass.open_session(pg, ME)
-    _landed(pg, dispatch.submit_ask(pg, "grade this", to=["grader"], session=ses)[0],
+    _landed(pg, dispatch.submit_ask(pg, "grade this", person="did:orreth:person:test", to=["grader"], session=ses)[0],
             grader.identity.did, "", "B — my own earlier grade", ses)
-    [ask_id] = dispatch.submit_ask(pg, "Grade the answers in this session.",
+    [ask_id] = dispatch.submit_ask(pg, "Grade the answers in this session.", person="did:orreth:person:test",
                                    to=["grader"], session=ses)
     with pg.transaction():
         grader._serve_ask(pg.cursor(), ask_id, [ME])

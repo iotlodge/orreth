@@ -1,6 +1,6 @@
 {
  "format": "orreth-guide/1",
- "version": "0.3.0",
+ "version": "0.4.0",
  "title": "THE GUIDE \u00b7 what you can say here, and what happens",
  "kept_by": "the kernel \u2014 the same words on every door; Fable keeps it current with each spoonful",
  "sections": [
@@ -181,6 +181,42 @@
     {
      "say": "restart intention '<its words>'",
      "does": "The reverse, through the same ladder; it \"stands again\"."
+    }
+   ]
+  },
+  {
+   "id": "seat",
+   "when": "chat",
+   "title": "Your seat \u2014 who this door knows you are",
+   "lead": "Every door reads who you are from your SEAT, never from the page. You take a seat with the code your authenticator shows; it lasts a day. On a ground no one holds yet, the first person to prove an authenticator becomes its owner; from then on only the owner or a master can enroll someone new. Nobody types a master's name any more \u2014 a master confirms a grave act from their own seat, in their own window.",
+   "entries": [
+    {
+     "say": "(the seat form) your name + the 6-digit code \u00b7 Take my seat",
+     "does": "The kernel signs a token naming you, what you may do here and until when; the page carries it on every knock. The first proof on an unheld ground: \u201cyou hold this ground now\u201d."
+    },
+    {
+     "say": "(the seat form, no one holds the ground yet) your name \u00b7 Enroll",
+     "does": "The QR for your authenticator; the first code finishes enrolling; the next one takes your seat as the owner."
+    },
+    {
+     "say": "my seat \u00b7 who am I seated as?",
+     "does": "Seated as whom, until when, and what the seat may do: retrieve \u00b7 write (\u00b7 govern for the owner and a master)."
+    },
+    {
+     "say": "leave my seat",
+     "does": "Ends this seat now \u2014 recorded, never deleted; the seat form returns. Another window's seat is its own."
+    },
+    {
+     "say": "enroll quinn",
+     "does": "The owner's (or a master's) word: a QR for another person's authenticator; their first code finishes it here; they sit in their own browser with the next."
+    },
+    {
+     "say": "enroll my authenticator",
+     "does": "Re-enrolling yourself is grave: your current code first, then the new QR."
+    },
+    {
+     "say": "(a grave act, as the asker) type your code \u2192 a declared master clicks Confirm as master in THEIR window",
+     "does": "The two-person law, honestly: the master is a second seated person; the typed name is gone."
     }
    ]
   },

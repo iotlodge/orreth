@@ -34,6 +34,7 @@
 //! body's words as they form) · `GET /bodies` · `POST /bodies/restart` · the
 //! Stable's `/minds…` · the shelf's `POST /services…`. Every other door
 //! answers 404 with no body, as the Python handler does.
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (a): the seat read at every door by a tower layer — the person from the token, never the body; the origin closed; the knock ceiling per person; the seat doors · 2026-09-26
 
 use crate::asks::{self, Submit, FEED_TOPICS};
 use crate::bodies::{self, Bodies};
@@ -50,21 +51,26 @@ use crate::proof::one_face;
 use crate::proof_live;
 use crate::py::python_str;
 use crate::scheduler;
+use crate::seat;
+use crate::seat_live::{self, Seated};
 use crate::services::KINDS as SERVICE_KINDS;
 use crate::services_live;
 use crate::sessions;
 use crate::stable_live;
 use crate::world::{RoadError, World};
 use axum::body::Bytes;
-use axum::extract::{Path, Query, State};
+use axum::extract::{ConnectInfo, Path, Query, State};
 use axum::http::{header, HeaderMap, StatusCode};
+use axum::middleware::{self, Next};
 use axum::response::sse::{Event, KeepAlive, Sse};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
+use axum::Extension;
 use axum::Router;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::convert::Infallible;
+use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -72,7 +78,6 @@ use std::time::Duration;
 use tokio_stream::wrappers::BroadcastStream;
 use tokio_stream::StreamExt;
 
-pub const PERSON_DEFAULT: &str = "did:orreth:person:jb";
 pub const PORT_DEFAULT: u16 = 4601;
 
 /// The glass's path law: `ORRETH_GLASS`, else the one page beside the crate.
@@ -150,6 +155,7 @@ struct App {
     bodies: Option<Arc<Bodies>>, // P7 sp6: the crew this kernel seats and governs
     gateway: Gateway,            // THE GATEWAY's doors from the kernel's side
     templates: HashMap<String, Value>, // the seats' templates by body name (the crew card's LLM line)
+    gate: seat_live::Ceilings, // P7 sp8 row 3: the knock ceiling at every door (per person · per address)
 }
 
 /// A lit bridge: its port, its readiness, its meter, and its stop.
@@ -305,6 +311,7 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
         bodies: bodies_arc.clone(),
         gateway: gateway.clone(),
         templates,
+        gate: seat_live::Ceilings::new(),
     });
     let mut tasks = Vec::new();
     // the crew: the benches swept, the boot rite once, the kernel's duties declared, then every seat spawned
@@ -542,9 +549,12 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
                     tokio::time::sleep(Duration::from_millis(100)).await;
                 }
             };
-            if let Err(e) = axum::serve(listener, router)
-                .with_graceful_shutdown(shutdown)
-                .await
+            if let Err(e) = axum::serve(
+                listener,
+                router.into_make_service_with_connect_info::<SocketAddr>(),
+            )
+            .with_graceful_shutdown(shutdown)
+            .await
             {
                 eprintln!("the door fell: {e}");
             }
@@ -698,8 +708,162 @@ fn router(app: Arc<App>) -> Router {
         .route("/confirm", post(confirm_post))
         .route("/enroll", post(enroll_post))
         .route("/enroll/confirm", post(enroll_confirm_post))
+        .route("/seat", get(seat_get).post(seat_post)) // P7 sp8 row 3: the seat — the person's code in, the token out
+        .route("/seat/leave", post(seat_leave)) // the person ends their own seat — recorded
         .fallback(|| async { StatusCode::NOT_FOUND })
+        .layer(middleware::from_fn_with_state(app.clone(), gate)) // P7 sp8 row 3: THE GATE at every door
         .with_state(app)
+}
+
+/// P7 sp8 row 3: THE GATE at every door — the browser origin closed, the knock ceiling,
+/// the seat read from the bearer (the feed: its `seat` query), the door's need against
+/// the seat's grants. An open door (the page, the health, the guide, the world checks,
+/// the seat door, the enrollment's confirm, the seam, the bodies' display door) passes
+/// with a per-address ceiling; `/enroll` stands open while no one holds the ground (the
+/// ceremony). The unseated wear one face (401); a seated person lacking the grant wears
+/// the proof's (403). Law for law with the Python handler's `_admit`.
+async fn gate(
+    State(app): State<Arc<App>>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    mut req: axum::extract::Request,
+    next: Next,
+) -> Response {
+    let path = req.uri().path().to_string();
+    let method = req.method().as_str().to_string();
+    let query = req.uri().query().map(str::to_string);
+    let (origin, host, authorization) = {
+        let header = |name: &str| -> Option<String> {
+            req.headers()
+                .get(name)
+                .and_then(|v| v.to_str().ok())
+                .map(str::to_string)
+        };
+        (header("origin"), header("host"), header("authorization"))
+    };
+    if !seat::origin_ok(origin.as_deref(), host.as_deref()) {
+        return answer(403, one_face());
+    }
+    let needs = seat::door_needs(&method, &path);
+    let by_addr = format!("addr:{}", addr.ip());
+    if needs == "open" {
+        if !app.gate.knock(&by_addr) {
+            return answer(429, seat::busy());
+        }
+        return next.run(req).await;
+    }
+    let mut tok = seat::bearer(authorization.as_deref());
+    if tok.is_none() && path == "/feed" {
+        tok = query.as_deref().and_then(|q| {
+            q.split('&')
+                .find_map(|kv| kv.strip_prefix("seat=").map(str::to_string))
+        });
+    }
+    // the offline half first (no ground for a forged seat); the ceiling spent BEFORE the ground is asked (a
+    // flood never reaches it); then the gate's memory, and the ground once per SEEN_S
+    let mut seated = None;
+    if let Some(off) = tok
+        .as_deref()
+        .and_then(|t| seat_live::offline(&app.kernel, t))
+    {
+        if !app.gate.knock(&off.person) {
+            return answer(429, seat::busy());
+        }
+        seated = app.gate.remembered(&off.seat_id);
+        if seated.is_none() {
+            if let Ok(g) = ground(&app).await {
+                seated = seat_live::on_ground(&g, &app.cfg.world, off)
+                    .await
+                    .unwrap_or(None);
+                if let Some(s) = &seated {
+                    app.gate.remember(s);
+                }
+            }
+        }
+    }
+    let Some(s) = seated else {
+        if needs == "enroll" {
+            let held = match ground(&app).await {
+                Ok(g) => seat_live::owner(&g, scope(&app))
+                    .await
+                    .ok()
+                    .flatten()
+                    .is_some(),
+                Err(_) => true,
+            };
+            if !held {
+                if !app.gate.knock(&by_addr) {
+                    return answer(429, seat::busy());
+                }
+                return next.run(req).await;
+            }
+        }
+        return answer(401, seat::not_seated());
+    };
+    if needs == "govern" && !s.govern {
+        return answer(403, one_face());
+    }
+    req.extensions_mut().insert(s);
+    next.run(req).await
+}
+
+/// `GET /seat` — the seat door's face: is this ground held? how long is a seat?
+async fn seat_get(State(app): State<Arc<App>>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        Ok::<_, RoadError>(
+            json!({"ceremony": seat_live::owner(&g, scope(&app)).await?.is_none(),
+                                  "hours": seat_live::hours()}),
+        )
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+const PERSON_GRAMMAR: &str = "a person is named by a lower-case name (letters, digits, - or _; 2 to 24) or their did:orreth:person:… DID";
+
+/// `POST /seat {person, code}` — the person's code from their authenticator; the token back (201).
+async fn seat_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let Some(person) = seat::person_did(p["person"].as_str()) else {
+        return answer(400, json!({"error": PERSON_GRAMMAR}));
+    };
+    let code = s_opt(&p, "code");
+    let out = async {
+        let mut g = ground(&app).await?;
+        seat_live::take(
+            &mut g,
+            &app.cfg.world,
+            &app.kernel,
+            &person,
+            code.as_deref(),
+            None,
+        )
+        .await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(201, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `POST /seat/leave` — the seated person ends their own seat (200).
+async fn seat_leave(State(app): State<Arc<App>>, Extension(seated): Extension<Seated>) -> Response {
+    let out = async {
+        let mut g = ground(&app).await?;
+        let made =
+            seat_live::leave(&mut g, &app.cfg.world, &seated.seat_id, &seated.person).await?;
+        app.gate.forget(&seated.seat_id); // this kernel forgets the seat at once
+        Ok::<_, RoadError>(made)
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
 }
 
 type Q = Query<HashMap<String, String>>;
@@ -708,10 +872,7 @@ type Q = Query<HashMap<String, String>>;
 fn answer(code: u16, v: Value) -> Response {
     (
         StatusCode::from_u16(code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
-        [
-            (header::CONTENT_TYPE, "application/json"),
-            (header::ACCESS_CONTROL_ALLOW_ORIGIN, "*"),
-        ],
+        [(header::CONTENT_TYPE, "application/json")], // P7 sp8 row 3: no open origin — the glass is served by this door
         v.to_string(),
     )
         .into_response()
@@ -723,6 +884,8 @@ fn answer(code: u16, v: Value) -> Response {
 fn refuse(e: RoadError) -> Response {
     match e {
         RoadError::NotConfirmed { .. } => answer(403, one_face()),
+        RoadError::NotSeated => answer(401, seat::not_seated()),
+        RoadError::Busy => answer(429, seat::busy()),
         RoadError::Forbidden(w) => answer(403, json!({"error": w})),
         RoadError::Refused(w) => answer(400, json!({"error": w})),
         RoadError::NotYet(w) => answer(501, json!({"error": w})),
@@ -893,12 +1056,11 @@ async fn crew_door(State(app): State<Arc<App>>) -> Response {
     }
 }
 
-async fn sessions_get(State(app): State<Arc<App>>, Query(q): Q) -> Response {
-    let person = q
-        .get("person")
-        .cloned()
-        .filter(|p| !p.is_empty())
-        .unwrap_or_else(|| PERSON_DEFAULT.into());
+async fn sessions_get(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+) -> Response {
+    let person = seated.person.clone();
     let out = async {
         let mut g = ground(&app).await?;
         sessions::sessions_view(&mut g, scope(&app), &person, 30, &app.cfg.human_zone).await
@@ -910,9 +1072,13 @@ async fn sessions_get(State(app): State<Arc<App>>, Query(q): Q) -> Response {
     }
 }
 
-async fn sessions_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
+async fn sessions_post(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
     let p = body_json(&body);
-    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let person = seated.person.clone();
     let title = s_opt(&p, "title");
     let opt_out = crate::py::truthy(&p["opt_out"]);
     let archive = s_opt(&p, "archive");
@@ -937,12 +1103,12 @@ async fn sessions_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
 }
 
 /// P7 sp5: verbatim recall (MEM-1) — by ref (as of a time, or its lineage), by ask, by session, by window.
-async fn recall_door(State(app): State<Arc<App>>, Query(q): Q) -> Response {
-    let person = q
-        .get("person")
-        .cloned()
-        .filter(|p| !p.is_empty())
-        .unwrap_or_else(|| PERSON_DEFAULT.into());
+async fn recall_door(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    Query(q): Q,
+) -> Response {
+    let person = seated.person.clone();
     let window = match (q.get("from"), q.get("to")) {
         (Some(f), Some(t)) if !f.is_empty() && !t.is_empty() => Some((f.as_str(), t.as_str())),
         _ => None,
@@ -981,12 +1147,12 @@ async fn recall_door(State(app): State<Arc<App>>, Query(q): Q) -> Response {
 }
 
 /// P7 sp5: the compliance export — a READ, the requester's own asks only, SIGNED by the kernel's self.
-async fn export_door(State(app): State<Arc<App>>, Query(q): Q) -> Response {
-    let person = q
-        .get("person")
-        .cloned()
-        .filter(|p| !p.is_empty())
-        .unwrap_or_else(|| PERSON_DEFAULT.into());
+async fn export_door(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    Query(q): Q,
+) -> Response {
+    let person = seated.person.clone();
     let fmt = q
         .get("format")
         .cloned()
@@ -1023,7 +1189,6 @@ async fn export_door(State(app): State<Arc<App>>, Query(q): Q) -> Response {
                     header::CONTENT_DISPOSITION,
                     "attachment; filename=\"orreth-compliance.csv\"",
                 ),
-                (header::ACCESS_CONTROL_ALLOW_ORIGIN, "*"),
             ],
             crate::export::to_csv(&bundle),
         )
@@ -1078,10 +1243,14 @@ async fn digest_door(State(app): State<Arc<App>>, Path(id): Path<String>) -> Res
 }
 
 /// P7 sp5: on demand, or rebuild.
-async fn digest_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
+async fn digest_post(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
     let p = body_json(&body);
     let sid = s_or(&p, "session", "");
-    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let person = seated.person.clone();
     let out = async {
         let mut g = ground(&app).await?;
         crate::digest::build(&mut g, scope(&app), &sid, &person, &app.cfg.human_zone).await
@@ -1114,17 +1283,15 @@ async fn session_door(State(app): State<Arc<App>>, Path(id): Path<String>) -> Re
     }
 }
 
-async fn proof_door(State(app): State<Arc<App>>, Query(q): Q) -> Response {
-    let person = q
-        .get("person")
-        .cloned()
-        .filter(|p| !p.is_empty())
-        .unwrap_or_else(|| PERSON_DEFAULT.into());
+async fn proof_door(State(app): State<Arc<App>>, Extension(seated): Extension<Seated>) -> Response {
+    let person = seated.person.clone();
     let out = async {
         let g = ground(&app).await?;
         let enrolled = proof_live::enrolled(&g, scope(&app), &person).await?;
         let masters = proof_live::masters(&g, scope(&app)).await?;
-        Ok::<_, RoadError>(json!({"person": person, "enrolled": enrolled, "masters": masters}))
+        let owner = seat_live::owner(&g, scope(&app)).await?;
+        Ok::<_, RoadError>(json!({"person": person, "enrolled": enrolled, "masters": masters, "owner": owner,
+                                  "seat": {"seat_id": seated.seat_id, "role": seated.role, "expiry": seated.expiry}}))
     }
     .await;
     match out {
@@ -1235,13 +1402,17 @@ async fn markers_kinds(State(app): State<Arc<App>>) -> Response {
 /// words validated, the kind read (P23: a typed prefix wins, then the chip's
 /// word, then the words' own read), an intention DECLARED, a name at the
 /// head selecting its body (W7), then `submit_ask`.
-async fn ask_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
+async fn ask_post(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
     let p = body_json(&body);
     let text = s_or(&p, "text", "").trim().to_string();
     if text.is_empty() {
         return answer(400, json!({"error": "an empty ask asks nothing"}));
     }
-    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let person = seated.person.clone();
     let to: Option<Vec<String>> = if crate::py::truthy(&p["to"]) {
         match p["to"].as_array() {
             Some(a) if !a.is_empty() && a.iter().all(Value::is_string) => Some(
@@ -1385,15 +1556,15 @@ async fn ask_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
     }
 }
 
-async fn confirm_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
+async fn confirm_post(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
     let p = body_json(&body);
     let ask_id = s_or(&p, "ask_id", "");
     let approve = crate::py::truthy(&p["approve"]);
-    let by = if crate::py::truthy(&p["by"]) {
-        python_str(&p["by"])
-    } else {
-        s_or(&p, "person", PERSON_DEFAULT)
-    };
+    let by = seated.person.clone(); // P7 sp8 row 3: the word is the SEAT's — a master confirms from their own seat
     let code = s_opt(&p, "code");
     let out = async {
         let mut g = ground(&app).await?;
@@ -1414,12 +1585,28 @@ async fn confirm_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
     }
 }
 
-async fn enroll_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
+async fn enroll_post(
+    State(app): State<Arc<App>>,
+    seated: Option<Extension<Seated>>,
+    body: Bytes,
+) -> Response {
     let p = body_json(&body);
-    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let actor = seated.map(|e| e.0);
+    let named = if crate::py::truthy(&p["person"]) {
+        python_str(&p["person"])
+    } else {
+        actor.as_ref().map(|a| a.person.clone()).unwrap_or_default()
+    };
+    let Some(person) = seat::person_did(Some(&named)) else {
+        return answer(400, json!({"error": PERSON_GRAMMAR}));
+    };
     let code = s_opt(&p, "code");
     let out = async {
         let mut g = ground(&app).await?;
+        // P7 sp8 row 3: the ceremony while no one holds the ground; else oneself (the old code, grave) or a governing seat
+        if !seat_live::may_enroll(&g, scope(&app), actor.as_ref(), &person).await? {
+            return Err(RoadError::NotConfirmed { rest: false });
+        }
         proof_live::enroll(&mut g, &app.cfg.world, &person, code.as_deref()).await
     }
     .await;
@@ -1431,7 +1618,9 @@ async fn enroll_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
 
 async fn enroll_confirm_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
     let p = body_json(&body);
-    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let Some(person) = seat::person_did(p["person"].as_str()) else {
+        return answer(403, one_face()); // the code IS the proof, for a person named in the grammar
+    };
     let code = s_or(&p, "code", "");
     let out = async {
         let mut g = ground(&app).await?;
@@ -1448,12 +1637,11 @@ async fn enroll_confirm_post(State(app): State<Arc<App>>, body: Bytes) -> Respon
 
 /// P7 sp8: `GET /profile?person=` — the portrait: every live word with its label, the named
 /// fields resolved, the slice the bodies read, the clock this ground would use.
-async fn profile_door(State(app): State<Arc<App>>, Query(q): Q) -> Response {
-    let person = q
-        .get("person")
-        .filter(|p| !p.is_empty())
-        .cloned()
-        .unwrap_or_else(|| PERSON_DEFAULT.into());
+async fn profile_door(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+) -> Response {
+    let person = seated.person.clone();
     let out = async {
         let g = ground(&app).await?;
         crate::profile_live::portrait(&g, &app.cfg.world, &person).await
@@ -1467,9 +1655,13 @@ async fn profile_door(State(app): State<Arc<App>>, Query(q): Q) -> Response {
 
 /// P7 sp8: `POST /profile {person, text}` — "my name is …" · "I live in …" · "forget about me: …" ·
 /// "what do you know about me?" — read by the law; words that say nothing refuse in words (400).
-async fn profile_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
+async fn profile_post(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
     let p = body_json(&body);
-    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let person = seated.person.clone();
     let text = s_or(&p, "text", "").trim().to_string();
     if text.is_empty() {
         return answer(
@@ -1525,10 +1717,14 @@ async fn seam_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
 }
 
 /// P7 sp7: `POST /asks/stop {id}` — a routed ask set to rest here and at its home.
-async fn asks_stop(State(app): State<Arc<App>>, body: Bytes) -> Response {
+async fn asks_stop(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
     let p = body_json(&body);
     let id = s_or(&p, "id", "");
-    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let person = seated.person.clone();
     let out = async {
         let mut g = ground(&app).await?;
         app.seam.stop_ask(&mut g, &id, &person).await
@@ -1541,10 +1737,14 @@ async fn asks_stop(State(app): State<Arc<App>>, body: Bytes) -> Response {
 }
 
 /// P7 sp7: `POST /world/rehome {to_cell}` — held at the interlock (L2); on the yes the epoch advances.
-async fn world_rehome(State(app): State<Arc<App>>, body: Bytes) -> Response {
+async fn world_rehome(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
     let p = body_json(&body);
     let to_cell = s_or(&p, "to_cell", "");
-    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let person = seated.person.clone();
     let out = async {
         let mut g = ground(&app).await?;
         let held = crate::cells_live::hold_rehome(
@@ -1590,7 +1790,11 @@ async fn schedules_door(State(app): State<Arc<App>>, Path(runner): Path<String>)
 }
 
 /// A human schedule lands: `{runner, text, every_s >= 5}`.
-async fn schedules_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
+async fn schedules_post(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
     let p = body_json(&body);
     let runner = s_or(&p, "runner", "");
     let text = s_or(&p, "text", "").trim().to_string();
@@ -1605,7 +1809,7 @@ async fn schedules_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
             json!({"error": "a schedule is {runner, text, every_s >= 5}"}),
         );
     }
-    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let person = seated.person.clone();
     let out = async {
         let mut g = ground(&app).await?;
         scheduler::add(
@@ -1628,9 +1832,13 @@ async fn schedules_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
 }
 
 /// The human's stop of a schedule: recorded, never a delete; a kernel one refuses.
-async fn schedules_rest(State(app): State<Arc<App>>, body: Bytes) -> Response {
+async fn schedules_rest(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
     let p = body_json(&body);
-    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let person = seated.person.clone();
     let sid = s_or(&p, "schedule_id", "");
     let out = async {
         let g = ground(&app).await?;
@@ -1854,10 +2062,15 @@ async fn minds_search(State(app): State<Arc<App>>, Query(q): Q) -> Response {
 }
 
 /// The Stable's acts — the held ones hold at the interlock (L2); check and restore run at once.
-async fn minds_post(State(app): State<Arc<App>>, uri: axum::http::Uri, body: Bytes) -> Response {
+async fn minds_post(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    uri: axum::http::Uri,
+    body: Bytes,
+) -> Response {
     let path = uri.path().to_string();
     let p = body_json(&body);
-    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let person = seated.person.clone();
     let session = s_opt(&p, "session");
     let name = s_or(&p, "name", "").trim().to_lowercase();
     let out = async {
@@ -1921,10 +2134,15 @@ async fn minds_post(State(app): State<Arc<App>>, uri: axum::http::Uri, body: Byt
 }
 
 /// The shelf's doors — the owner's, plain words (P6.5 sp1 · sp2).
-async fn services_post(State(app): State<Arc<App>>, uri: axum::http::Uri, body: Bytes) -> Response {
+async fn services_post(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    uri: axum::http::Uri,
+    body: Bytes,
+) -> Response {
     let path = uri.path().to_string();
     let p = body_json(&body);
-    let person = s_or(&p, "person", PERSON_DEFAULT);
+    let person = seated.person.clone();
     let name = s_or(&p, "name", "").trim().to_string();
     let secrets: Vec<String> = p["secrets_with"]
         .as_array()
@@ -1977,8 +2195,8 @@ async fn services_post(State(app): State<Arc<App>>, uri: axum::http::Uri, body: 
 
 /// Rule 11: the stop — and its reverse (W20). ANY intention's stop is grave
 /// (W5): a bare one is HELD for the code (the kernel's: code, then master).
-async fn intentions_act(app: Arc<App>, p: Value, restart: bool) -> Response {
-    let person = s_or(&p, "person", PERSON_DEFAULT);
+async fn intentions_act(app: Arc<App>, seated: Seated, p: Value, restart: bool) -> Response {
+    let person = seated.person.clone();
     let iid = {
         let v = s_or(&p, "intention_id", "");
         if v.is_empty() {
@@ -2032,10 +2250,18 @@ async fn intentions_act(app: Arc<App>, p: Value, restart: bool) -> Response {
     }
 }
 
-async fn intentions_stop(State(app): State<Arc<App>>, body: Bytes) -> Response {
-    intentions_act(app, body_json(&body), false).await
+async fn intentions_stop(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
+    intentions_act(app, seated, body_json(&body), false).await
 }
 
-async fn intentions_restart(State(app): State<Arc<App>>, body: Bytes) -> Response {
-    intentions_act(app, body_json(&body), true).await
+async fn intentions_restart(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
+    intentions_act(app, seated, body_json(&body), true).await
 }

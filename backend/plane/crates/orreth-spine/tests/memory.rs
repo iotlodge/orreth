@@ -10,6 +10,7 @@
 //! agrees on its root, and verifies; a purge leaves both doors empty.
 //! Needs the rig (scripts/dev.sh up) and NO Bridge on :4600.
 //!   cargo test -p orreth-spine --features bridge --test memory -- --nocapture
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the gate: the proof SITS before it knocks (the ceremony through the doors) · 2026-09-26
 
 use orreth_spine::bridge::{glass_path, light, Config};
 use orreth_spine::export;
@@ -61,8 +62,9 @@ async fn http(port: u16, method: &str, path: &str, body: Option<&Value>) -> (u16
         .await
         .expect("the door answers");
     let body = body.map(|b| b.to_string()).unwrap_or_default();
+    let seat = seat_header(port);
     let req = format!(
-        "{method} {path} HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\ncontent-type: \
+        "{method} {path} HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n{seat}content-type: \
          application/json\r\ncontent-length: {}\r\n\r\n{body}",
         body.len()
     );
@@ -90,6 +92,102 @@ async fn get(port: u16, path: &str) -> (u16, Value) {
 async fn post(port: u16, path: &str, body: Value) -> (u16, Value) {
     let (s, _, b) = http(port, "POST", path, Some(&body)).await;
     (s, serde_json::from_str(&b).unwrap_or(Value::Null))
+}
+
+// ---- P7 sp8 row 3: THE GATE — every door reads the person from the SEAT; a proof sits first
+static SEATS: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<u16, String>>> =
+    std::sync::OnceLock::new();
+static SECRETS: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<String, String>>> =
+    std::sync::OnceLock::new();
+
+/// The seat this proof holds at a port, as the request header line — or nothing.
+fn seat_header(port: u16) -> String {
+    SEATS
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap()
+        .get(&port)
+        .map(|w| format!("authorization: Bearer {w}\r\n"))
+        .unwrap_or_default()
+}
+
+#[allow(dead_code)]
+fn secret_of(person: &str) -> String {
+    SECRETS
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap()
+        .get(person)
+        .cloned()
+        .expect("the person's secret is known: sit first")
+}
+
+/// The ceremony a human runs in the glass, through the doors alone: enroll (the door
+/// stands open while no one holds this ground; afterwards on the seated owner's word),
+/// confirm with the first code, sit with the next — the seat rides every later knock at
+/// this port. Returns the seat's answer.
+async fn sit(port: u16, person: &str) -> Value {
+    let known = SECRETS
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap()
+        .get(person)
+        .cloned();
+    let secret = match known {
+        Some(s) => s,
+        None => {
+            let (s, b) = post(port, "/enroll", json!({"person": person})).await;
+            assert_eq!(s, 201, "the enroll at :{port} for {person}: {b}");
+            let secret = b["secret"].as_str().unwrap().to_string();
+            let code =
+                orreth_spine::proof::totp(&secret, orreth_spine::proof_live::now_unix()).unwrap();
+            let (s, b) = post(
+                port,
+                "/enroll/confirm",
+                json!({"person": person, "code": code}),
+            )
+            .await;
+            assert_eq!(s, 200, "the confirm at :{port} for {person}: {b}");
+            SECRETS
+                .get_or_init(Default::default)
+                .lock()
+                .unwrap()
+                .insert(person.to_string(), secret.clone());
+            secret
+        }
+    };
+    let code = orreth_spine::proof::totp(&secret, orreth_spine::proof_live::now_unix()).unwrap();
+    let (mut s, mut b) = post(port, "/seat", json!({"person": person, "code": code})).await;
+    if s == 403 {
+        // another GROUND at this port (a second cell): the known secret is not enrolled here — its own ceremony
+        let (es, eb) = post(port, "/enroll", json!({"person": person})).await;
+        assert_eq!(
+            es, 201,
+            "the enroll at :{port} for {person} (a second ground): {eb}"
+        );
+        let secret2 = eb["secret"].as_str().unwrap().to_string();
+        let code2 =
+            orreth_spine::proof::totp(&secret2, orreth_spine::proof_live::now_unix()).unwrap();
+        let (cs, cb) = post(
+            port,
+            "/enroll/confirm",
+            json!({"person": person, "code": code2}),
+        )
+        .await;
+        assert_eq!(cs, 200, "the confirm at :{port}: {cb}");
+        let code3 =
+            orreth_spine::proof::totp(&secret2, orreth_spine::proof_live::now_unix()).unwrap();
+        let r = post(port, "/seat", json!({"person": person, "code": code3})).await;
+        s = r.0;
+        b = r.1;
+    }
+    assert_eq!(s, 201, "the seat at :{port} for {person}: {b}");
+    SEATS
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap()
+        .insert(port, b["wire"].as_str().unwrap().to_string());
+    b
 }
 
 async fn wait_for(port: u16, path: &str, within: Duration, pred: impl Fn(&Value) -> bool) -> Value {
@@ -187,6 +285,8 @@ async fn shadow_two_kernels_read_one_record_and_sign_as_one_self() {
         lit.wait_ready(Duration::from_secs(60)).await,
         "the Rust feed and dispatcher hold their assignments"
     );
+    sit(rs_port, &person).await; // P7 sp8 row 3: the ceremony — the person holds this ground, at both doors
+    sit(py_port, &person).await;
     let mut g = Ground::connect(&world.pg_dsn).await.unwrap();
     g.ensure_all().await.unwrap();
 

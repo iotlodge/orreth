@@ -8,6 +8,8 @@ import json
 import secrets
 import time
 import urllib.request
+
+from tests import seats  # P7 sp8 row 3: every door reads the person from the SEAT — the test sits first
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -75,13 +77,13 @@ def test_recall_in_a_window_reads_what_was_true_then(pg, monkeypatch):
     time.sleep(0.05); then = _now(); time.sleep(0.05)
     st.put("librarian", "temp", "The temperature is 70 degrees.")
     win = {"from": datetime(2020, 1, 1, tzinfo=timezone.utc).isoformat(), "to": then}
-    ask = dispatch.submit_ask(pg, "what was the temperature?", window=win)
+    ask = dispatch.submit_ask(pg, "what was the temperature?", person="did:orreth:person:test", window=win)
     lib._current_ask = ask
     lib._graph.invoke({"text": "what was the temperature?", "reply": "", "steps": [],
                        "notes": [], "hold": None, "read": []})
     prompt = gw.calls[0]["prompt"]
     assert "as of" in prompt and "60 degrees" in prompt and "70 degrees" not in prompt
-    ask2 = dispatch.submit_ask(pg, "what is the temperature?")
+    ask2 = dispatch.submit_ask(pg, "what is the temperature?", person="did:orreth:person:test")
     lib._current_ask = ask2
     lib._graph.invoke({"text": "what is the temperature?", "reply": "", "steps": [],
                        "notes": [], "hold": None, "read": []})
@@ -97,7 +99,7 @@ def test_the_recall_door_serves_then_and_the_lineage_over_http(pg, rig):
         time.sleep(0.05); then = _now(); time.sleep(0.05)
         st.put("librarian", "http-fact", "second words")
     def get(q):
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/recall?{q}", timeout=10) as r:
+        with seats.urlopen(f"http://127.0.0.1:{port}/recall?{q}", timeout=10) as r:
             return json.loads(r.read())
     from urllib.parse import urlencode
     assert get("ref=librarian/http-fact")["memory"]["body"] == "second words"

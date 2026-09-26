@@ -92,3 +92,37 @@ peer answers again. **The stop** (rule 11): "stop it" on a routed ask's line
 **Re-homing** ("re-home this universe to cell three") is held at L2; the epoch
 advances on the yes, the old home refuses to serve, a stale epoch is fenced.
 The proof: `cargo test -p orreth-spine --features bridge --test cells -- --nocapture`.
+
+## The gate (P7 sp8 row 3a — the human seat)
+
+Every door reads the person from a SEAT TOKEN, never from the request body. A
+seat is a capability token in the 0006 shape (subject · audience · grants ·
+constraints{expiry, direction} · chain · sig; attenuation-only; the contract
+`contracts/v0/capability-token.schema.json`), minted by the kernel's own self
+as this universe's root after the person's code from their enrolled
+authenticator, and carried on every knock as `authorization: Bearer <base64url
+of the canonical token>` (the live feed, which a browser cannot send headers
+to, takes it as its `seat` query). THE CEREMONY: on a ground no one holds, the
+first person to prove an authenticator becomes its OWNER — a master from that
+moment — and enrolling anyone else is the owner's (or a master's) word; a
+person re-enrolls themselves with their old code. A seat lasts
+`SPINE_SEAT_HOURS` (24); "leave my seat" ends it early, recorded. The unseated
+wear one face (401 `{"error": "not seated"}`); a seated person lacking a grant
+wears the proof's (403). The browser origin is CLOSED (a foreign `Origin` is
+refused before the body is read; no open origin on any answer). The knock
+ceiling (0071) stands at every door — per person, per address at an open door
+— `SPINE_CEILING_RATE` (20 a second) up to `SPINE_CEILING_BURST` (60), then
+"the door is busy for you — try again shortly" (429).
+
+Open doors (no seat): the page, `/health`, `/guide`, `/harness`, `GET /seat`;
+`POST /seat` and `POST /enroll/confirm` (the code IS the proof); `/seam` (its
+own signature); `/delta` (the bodies' display door); `POST /enroll` while no
+one holds the ground. Governing doors (the owner's or a master's seat):
+`/world/rehome`, `/bodies/restart`, the shelf's and the Stable's changes.
+Doors: `GET /seat` → `{ceremony, hours}` · `POST /seat {person, code}` → the
+token, its wire, the role, the words · `POST /seat/leave`. The reference is
+`orreth_spine/seat.py` (the gate is `glass.py`'s `_admit`); the Rust kernel's
+twin is `seat.rs` · `seat_live.rs` with a tower layer in `bridge.rs`; the
+fixture is `conformance/seat-v0.json`; the proof `tests/gate.rs`. In the
+tests, `tests/seats.py` runs the ceremony through the doors so every door test
+sits before it knocks.

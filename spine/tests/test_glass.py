@@ -10,6 +10,8 @@ import secrets
 import time
 import urllib.request
 
+from tests import seats  # P7 sp8 row 3: every door reads the person from the SEAT — the test sits first
+
 import pytest
 
 from orreth_spine import dispatch, envelope as ev, gateway, glass, resident, tools
@@ -22,7 +24,7 @@ rails = pytest.mark.skipif(
 
 
 def _get(port, path):
-    with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}",
+    with seats.urlopen(f"http://127.0.0.1:{port}{path}",
                                 timeout=10) as r:
         return r.status, r.read()
 
@@ -31,7 +33,7 @@ def _post(port, path, obj):
     req = urllib.request.Request(
         f"http://127.0.0.1:{port}{path}", data=json.dumps(obj).encode(),
         headers={"content-type": "application/json"}, method="POST")
-    with urllib.request.urlopen(req, timeout=10) as r:
+    with seats.urlopen(req, timeout=10) as r:
         return r.status, json.loads(r.read())
 
 
@@ -128,7 +130,7 @@ def test_a_world_sees_only_its_own_ground(pg, monkeypatch):
     r = resident.Resident(SPINE / "templates" / "echo-resident.v0.json")
     r.load_policy(SPINE / "policy" / "covenant-policy.v1.json")  # dispatched
     r.join(pg)                                   # by the session's world
-    ask_id = dispatch.submit_ask(pg, "a word for my own world")
+    ask_id = dispatch.submit_ask(pg, "a word for my own world", person="did:orreth:person:test")
     assert ask_id in {a["ask_id"] for a in glass.asks_view(pg)}
     assert glass.ask_view(pg, ask_id)["scope"] == mine
     assert "echo" in {x["name"] for x in glass.residents_view(pg)}
@@ -144,7 +146,7 @@ def test_an_ask_wears_its_time_window(pg, monkeypatch):
     into its committed event, so the scope is real, never eye candy."""
     monkeypatch.setenv("SPINE_SCOPE", "u:law-" + secrets.token_hex(3))
     win = {"from": "2026-09-14T00:00:00+00:00", "to": "2026-09-17T18:00:00+00:00"}
-    ask_id = dispatch.submit_ask(pg, "what happened between last Monday and today?",
+    ask_id = dispatch.submit_ask(pg, "what happened between last Monday and today?", person="did:orreth:person:test",
                                  window=win)
     assert glass.ask_view(pg, ask_id)["window"] == win
     cur = pg.cursor()
@@ -152,7 +154,7 @@ def test_an_ask_wears_its_time_window(pg, monkeypatch):
                 " LIKE %s", (f"%{ask_id}%",))
     events = [ev.decode(bytes(b)) for (b,) in cur.fetchall()]
     assert any(e["payload"].get("window") == win for e in events)
-    plain = dispatch.submit_ask(pg, "and with no time words at all")
+    plain = dispatch.submit_ask(pg, "and with no time words at all", person="did:orreth:person:test")
     assert glass.ask_view(pg, plain)["window"] is None
 
 
@@ -164,10 +166,10 @@ def test_sessions_roll_list_and_load_and_never_spill(pg, monkeypatch):
     monkeypatch.setenv("SPINE_SCOPE", "u:law-" + secrets.token_hex(3))
     me = "did:orreth:person:test"
     first = glass.open_session(pg, me, title="the first topic")
-    a1 = dispatch.submit_ask(pg, "first words", session=first)
-    a2 = dispatch.submit_ask(pg, "second words", session=first)
+    a1 = dispatch.submit_ask(pg, "first words", person="did:orreth:person:test", session=first)
+    a2 = dispatch.submit_ask(pg, "second words", person="did:orreth:person:test", session=first)
     second = glass.open_session(pg, me)
-    b1 = dispatch.submit_ask(pg, "a new topic entirely", session=second)
+    b1 = dispatch.submit_ask(pg, "a new topic entirely", person="did:orreth:person:test", session=second)
     listed = glass.sessions_view(pg, me)
     assert [x["session_id"] for x in listed] == [second, first]   # newest first
     assert listed[1]["asks"] == 2 and listed[1]["last_words"] == "second words"
@@ -193,7 +195,7 @@ def test_a_resident_reads_only_this_sessions_results(pg, monkeypatch):
     sa, sb = glass.open_session(pg, me), glass.open_session(pg, me)
     cur = pg.cursor()
     for ses, tok in ((sa, tok_a), (sb, tok_b)):            # a reply landed by
-        aid = dispatch.submit_ask(pg, f"about {tok}", session=ses)  # the echo
+        aid = dispatch.submit_ask(pg, f"about {tok}", person="did:orreth:person:test", session=ses)  # the echo
         cur.execute("UPDATE spine_asks SET status = 'replied', served_by = %s,"
                     " reply = %s, replied_at = now() WHERE ask_id = %s",
                     (echo.identity.did, f"the echo said marker {tok}", aid))
@@ -202,7 +204,7 @@ def test_a_resident_reads_only_this_sessions_results(pg, monkeypatch):
                             gateway=gw)
     lib.load_policy(SPINE / "policy" / "covenant-policy.v1.json")
     lib._serve_conn = pg
-    lib._current_ask = dispatch.submit_ask(pg, "what was said here?", session=sb)
+    lib._current_ask = dispatch.submit_ask(pg, "what was said here?", person="did:orreth:person:test", session=sb)
     out = lib._graph.invoke({"text": "what was said here?", "reply": "",
                              "steps": [], "notes": [], "hold": None})
     prompt = gw.calls[0]["prompt"]
@@ -213,21 +215,26 @@ def test_a_resident_reads_only_this_sessions_results(pg, monkeypatch):
 
 @rails
 def test_the_session_doors_answer_over_http_as_the_glass_asks(pg, rig):
-    """The doors as a browser calls them — the person URL-encoded in the
-    query (found by the Playwright: the door matched no one and every
-    session read 'none yet'): roll, list, load, and an ask filed in the
-    session, all over HTTP alone."""
-    from urllib.parse import quote
-    me = "did:orreth:person:" + secrets.token_hex(3)
+    """The doors as a browser calls them — P7 sp8 row 3: the person is the
+    SEAT's, never the query's (the old Playwright wound, the door matching no
+    one, cannot recur: the seat names the person on every knock): roll, list,
+    load, and an ask filed in the session, all over HTTP alone; another
+    seated person sees none of it."""
+    me = "did:orreth:person:p" + secrets.token_hex(3)
+    seats.seat(rig.port, me)                                     # enrolled on the owner's word, seated by their code
     s, rolled = _post(rig.port, "/sessions", {"person": me, "title": "over http"})
     assert s == 201 and rolled["session_id"].startswith("ses_")
-    _s, filed = _post(rig.port, "/ask", {"text": "a word in my session",
+    _s, filed = _post(rig.port, "/ask", {"text": "a word in my session", "person": me,
                                          "to": ["echo"], "session": rolled["session_id"]})
-    s, body = _get(rig.port, "/sessions?person=" + quote(me, safe=""))
+    s, body = _get(rig.port, "/sessions?person=" + me)
     listed = json.loads(body)["sessions"]
     assert s == 200 and [x["session_id"] for x in listed] == [rolled["session_id"]]
     assert listed[0]["asks"] == 1 and listed[0]["last_words"] == "a word in my session"
     s, body = _get(rig.port, "/session/" + rolled["session_id"])
     assert s == 200 and [a["ask_id"] for a in json.loads(body)["asks"]] == filed["ids"]
-    s, body = _get(rig.port, "/sessions?person=" + quote("did:orreth:person:nobody", safe=""))
+    other = "did:orreth:person:p" + secrets.token_hex(3)
+    seats.seat(rig.port, other)
+    s, body = _get(rig.port, "/sessions?person=" + other)        # the query is a hint to the helper; the door reads the seat
     assert s == 200 and json.loads(body)["sessions"] == []
+    s, body = seats.unseated(rig.port, "GET", "/sessions")       # no seat: the unseated's one face
+    assert (s, body) == (401, {"error": "not seated"})

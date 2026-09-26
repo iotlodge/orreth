@@ -162,15 +162,21 @@ def test_w20_the_restart_door_holds_and_the_glass_wears_the_verb(pg, monkeypatch
     h = intent.declare(pg, "keep the lamp lit every hour", serves="business", kind="human", by=me, every_s=3600)
     intent.stop(pg, h["intention_id"], by=me, proof="L3-code")
     from orreth_spine.glass import make_glass_handler
-    import io
+    from orreth_spine import seat
+    from orreth_spine.identity import Identity
+    import io, os
+    kernel = Identity("kernel", os.urandom(32), kind="kernel")   # P7 sp8 row 3: the door reads the person from the SEAT — minted here
+    proof.confirm_enrollment(pg, me, proof.totp(proof.enroll(pg, me)["secret"]))
+    wire = seat.take(pg, me, proof.totp(proof.active_secret(pg, me)), kernel)["wire"]
     Handler = make_glass_handler(feed=type("F", (), {"subscribe": lambda *a, **k: None,
                                                         "unsubscribe": lambda *a, **k: None})(),
-                                 dsn=pg.info.dsn.replace("dbname=", "dbname=") + "", bodies={})
+                                 dsn=pg.info.dsn.replace("dbname=", "dbname=") + "", bodies={}, kernel=kernel)
     body = json.dumps({"ref": h["intention_id"], "person": me}).encode()
 
     class Req(Handler):                                          # the handler alone, no socket
         def __init__(self):
-            self.path = "/intentions/restart"; self.headers = {"content-length": str(len(body))}
+            self.path = "/intentions/restart"
+            self.headers = {"content-length": str(len(body)), "authorization": "Bearer " + wire}
             self.rfile = io.BytesIO(body); self.wfile = io.BytesIO(); self.out = {}
         def send_response(self, code): self.out["code"] = code
         def send_header(self, *a): pass

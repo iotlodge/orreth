@@ -11,6 +11,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE (JB's seed) · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the cell's topics · the /world door · the home settled at light · 2026-09-25
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the profile doors (W58) · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (a): every door reads the person from the SEAT, never the body; the origin closed; the knock ceiling at every door; the seat doors · 2026-09-26
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -41,7 +42,7 @@ from pathlib import Path
 import psycopg
 
 from . import bridgefeed, digest, dispatch, envelope as ev, export, ground, harness, intent, markers, mitl, monitor, outbox
-from . import cells, placement, presence, profile, projector, proof, scheduler, services, sinks
+from . import cells, placement, presence, profile, projector, proof, scheduler, seat, services, sinks
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRefused, Resident
 
@@ -229,7 +230,7 @@ def _refused_card(r: dict, nature: str | None = None) -> dict:
 
 def recall_view(conn, *, ref: str | None = None, ask: str | None = None,
                 session: str | None = None, window: tuple[str, str] | None = None,
-                person: str = "did:orreth:person:jb", at: str | None = None,
+                person: str, at: str | None = None,
                 history: bool = False) -> dict | None:
     """Verbatim recall (MEM-1, canon 0003): every word, byte-exact — by
     ref (a memory), by ask, by session (the worldline), or by timeframe
@@ -429,6 +430,11 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                        gateway=None, services_home=None, kernel=None):
     Base = bridgefeed.make_handler(feed)
     bodies = bodies or {}            # the rig's bodies by name (the harness door)
+    # P7 sp8 row 3: THE GATE — the seat is verified against this kernel's own self (the
+    # universe root); the knock ceiling stands at every door, per person or per address
+    from .identity import Identity
+    signer = kernel or Identity.kernel(None)
+    gate = seat.Ceilings()
     # P6.5 sp1: the shelf's doors probe a mind through the rig's gateway and
     # seat a new service's seed beside the agents' (None: ephemeral, tests)
 
@@ -440,14 +446,66 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
             body = json.dumps(obj).encode()
             self.send_response(code)
             self.send_header("content-type", "application/json")
-            self.send_header("access-control-allow-origin", "*")
-            self.end_headers()
+            self.end_headers()                     # P7 sp8 row 3: no open origin — the glass is served by this door
             self.wfile.write(body)
+
+        def _admit(self, method: str):
+            """THE GATE (P7 sp8 row 3): the browser origin closed, the knock ceiling, the
+            seat read from the bearer (the feed: its `seat` query), the door's need
+            against the seat's grants. Returns (who, answered): `who` the seat —
+            {person, seat_id, role, govern, …} — or None at an open door; `answered`
+            when a refusal already went out. The unseated wear one face (401); a
+            seated person lacking the grant wears the proof's (403)."""
+            path = self.path.split("?")[0]
+            if not seat.origin_ok(self.headers.get("origin"), self.headers.get("host")):
+                self._json(403, dict(proof.ONE_FACE)); return None, True
+            needs = seat.door_needs(method, path)
+            ca = getattr(self, "client_address", None)          # a stub request (tests) has no socket
+            addr = "addr:" + (ca[0] if ca else "?")
+            if needs == "open":
+                if not gate.knock(addr):
+                    self._json(429, seat.busy()); return None, True
+                return None, False
+            tok = seat.bearer(self.headers.get("authorization"))
+            if tok is None and path == "/feed" and "?" in self.path:
+                from urllib.parse import parse_qs
+                tok = (parse_qs(self.path.split("?", 1)[1]).get("seat") or [None])[0]
+            who = None
+            if tok:
+                off = seat.offline(tok, signer)          # the offline half first: no ground for a forged seat
+                if off is not None:
+                    if not gate.knock(off["person"]):     # the ceiling spent BEFORE the ground is asked (a flood never reaches it)
+                        self._json(429, seat.busy()); return None, True
+                    who = gate.remembered(off["seat_id"])
+                    if who is None:
+                        with psycopg.connect(dsn, autocommit=True) as conn:
+                            who = seat.on_ground(conn, off)
+                        if who is not None:
+                            gate.remember(who)
+            if who is None:
+                if needs == "enroll":              # the ceremony: the door stands open until someone holds the ground
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        nobody = seat.owner(conn) is None
+                    if nobody:
+                        if not gate.knock(addr):
+                            self._json(429, seat.busy()); return None, True
+                        return None, False
+                self._json(401, dict(seat.NOT_SEATED)); return None, True
+            if needs == "govern" and not who["govern"]:
+                self._json(403, dict(proof.ONE_FACE)); return None, True
+            return who, False
 
         def do_GET(self):
             path = self.path.split("?")[0]
+            who, answered = self._admit("GET")
+            if answered:
+                return
+            person = who["person"] if who else None
             if path in ("/feed", "/health"):
                 return Base.do_GET(self)
+            if path == "/seat":                          # P7 sp8 row 3: the seat door's face — is this ground held? how long is a seat?
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    return self._json(200, {"ceremony": seat.owner(conn) is None, "hours": seat.hours()})
             if path in ("/", "/index.html"):
                 html = (GLASS_DIR / "index.html").read_bytes()
                 self.send_response(200)
@@ -491,7 +549,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                             conn, ref=qs.get("ref"), ask=qs.get("ask"),
                             session=qs.get("session"),
                             window=(qs["from"], qs["to"]) if qs.get("from") and qs.get("to") else None,
-                            person=qs.get("person") or "did:orreth:person:jb",
+                            person=person,
                             at=qs.get("at"), history=qs.get("history") == "1")
                 except psycopg.DataError:
                     return self._json(400, {"error": "the window is two ISO times, from and to"})
@@ -500,15 +558,12 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 return self._json(200, view)
             if path == "/sessions":
                 from urllib.parse import parse_qs
-                qs = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
-                person = (qs.get("person") or ["did:orreth:person:jb"])[0]
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"sessions": sessions_view(conn, person)})
             if path == "/mitl":                           # P6 sp3: is MITL in the lit crew? what does it wear?
                 from urllib.parse import parse_qs
                 qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
                     if "?" in self.path else {}
-                person = qs.get("person") or "did:orreth:person:jb"
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     ont = mitl.ontology(conn)
                     return self._json(200, {
@@ -517,13 +572,11 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                         "ontology": {"passages": len(ont),
                                      "files": sorted({o["path"] for o in ont})},
                         "citations": mitl.citations()})      # W15: path#n → a human name
-            if path == "/proof":                          # P6 sp1: enrolled? who are the masters?
-                from urllib.parse import parse_qs
-                qs = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
-                person = (qs.get("person") or ["did:orreth:person:jb"])[0]
+            if path == "/proof":                          # P6 sp1: enrolled? who are the masters? (P7 sp8 row 3: the SEAT's person, and the owner)
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"person": person, "enrolled": proof.enrolled(conn, person),
-                                            "masters": proof.masters(conn)})
+                                            "masters": proof.masters(conn), "owner": seat.owner(conn),
+                                            "seat": {"seat_id": who["seat_id"], "role": who["role"], "expiry": who["expiry"]}})
             if path == "/analyzer":                      # P25: origins, from the ground
                 from urllib.parse import parse_qs
                 qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
@@ -578,9 +631,6 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(200, {"kinds": markers.kinds(conn)})
             if path == "/profile":                       # P7 sp8: the human's own profile — theirs to see (W58)
                 from urllib.parse import parse_qs
-                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
-                    if "?" in self.path else {}
-                person = str(qs.get("person") or "did:orreth:person:jb")
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, profile.portrait(conn, person))
             if path == "/services":                      # P6.5 sp1: the shelf — every service, its ladder state
@@ -610,7 +660,6 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 from urllib.parse import parse_qs
                 qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
                     if "?" in self.path else {}
-                person = qs.get("person") or "did:orreth:person:jb"
                 fmt = qs.get("format") or "json"
                 if fmt not in ("json", "csv"):
                     return self._json(400, {"error": "format is json or csv"})
@@ -629,7 +678,6 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     self.send_header("content-type", "text/csv; charset=utf-8")
                     self.send_header("content-disposition",
                                      'attachment; filename="orreth-compliance.csv"')
-                    self.send_header("access-control-allow-origin", "*")
                     self.end_headers()
                     self.wfile.write(body)
                     return
@@ -651,17 +699,35 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
 
         def do_POST(self):
             path = self.path.split("?")[0]
+            who, answered = self._admit("POST")      # P7 sp8 row 3: the gate, BEFORE the body is read
+            if answered:
+                return
+            person = who["person"] if who else None  # the seat's person — never the body's word
             ln = int(self.headers.get("content-length") or 0)
             try:
                 p = json.loads(self.rfile.read(ln) or b"{}")
             except Exception:
                 p = {}
+            if path == "/seat":                       # P7 sp8 row 3: THE SEAT — the person's code from their authenticator; the token back
+                target = seat.person_did(p.get("person"))
+                if target is None:
+                    return self._json(400, {"error": "a person is named by a lower-case name (letters, digits, - or _; 2 to 24) or their did:orreth:person:… DID"})
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        made = seat.take(conn, target, str(p.get("code") or "") or None, signer)
+                except proof.NotConfirmed:                # no authenticator, a wrong code: the one face
+                    return self._json(403, dict(proof.ONE_FACE))
+                return self._json(201, made)
+            if path == "/seat/leave":                 # the person ends their own seat — recorded
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    made = seat.leave(conn, who["seat_id"], person)
+                gate.forget(who["seat_id"])               # this kernel forgets the seat at once; another over the same ground within SEEN_S
+                return self._json(200, made)
             if path == "/ask":
                 text = str(p.get("text") or "").strip()
                 if not text:
                     return self._json(400, {"error": "an empty ask asks "
                                                      "nothing"})
-                person = str(p.get("person") or "did:orreth:person:jb")
                 to = p.get("to") or None
                 if to is not None and not (isinstance(to, list) and
                                            all(isinstance(t, str)
@@ -707,7 +773,6 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 return self._json(201, {"id": out})
             if path == "/intentions":                 # declared by a human
                 words = str(p.get("words") or p.get("text") or "").strip()
-                person = str(p.get("person") or "did:orreth:person:jb")
                 rw = intent.read_words("intention: " + words) if words else {}
                 try:
                     with psycopg.connect(dsn, autocommit=True) as conn:
@@ -721,7 +786,6 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(400, {"error": str(e)})
                 return self._json(201, {"intention": made})
             if path in ("/intentions/stop", "/intentions/restart"):   # rule 11: the stop — and its reverse (W20)
-                person = str(p.get("person") or "did:orreth:person:jb")
                 iid = str(p.get("intention_id") or p.get("ref") or "")
                 verb, act = (("stop", intent.stop) if path.endswith("/stop")
                              else ("restart", intent.restart))
@@ -747,12 +811,10 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 if not (runner and text and every >= 5):
                     return self._json(400, {"error": "a schedule is {runner, text,"
                                                      " every_s >= 5}"})
-                person = str(p.get("person") or "did:orreth:person:jb")
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     sid = scheduler.add(conn, runner, "human", text, every, person)
                 return self._json(201, {"schedule_id": sid})
             if path == "/schedules/rest":             # the human's stop
-                person = str(p.get("person") or "did:orreth:person:jb")
                 try:
                     with psycopg.connect(dsn, autocommit=True) as conn:
                         scheduler.rest(conn, str(p.get("schedule_id") or ""), person)
@@ -777,7 +839,6 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
             if path in ("/minds", "/minds/assign", "/minds/unassign", "/minds/refill", "/minds/check",
                         "/minds/retire", "/minds/restore"):      # P6.5 sp3: the Stable's doors — held acts hold
                 from . import stable
-                person = str(p.get("person") or "did:orreth:person:jb")
                 session = str(p.get("session") or "") or None
                 name = str(p.get("name") or "").strip().lower()
                 try:
@@ -826,8 +887,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(404, {"error": "no such body"})  # scheduler)
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, harness.run(conn, body))
-            if path == "/sessions":                   # roll a fresh one —
-                person = str(p.get("person") or "did:orreth:person:jb")   # and
+            if path == "/sessions":                   # roll a fresh one — and
                 with psycopg.connect(dsn, autocommit=True) as conn:                        # digest
                     sid = open_session(conn, person,                      # the one
                                        title=str(p.get("title") or "") or None,
@@ -840,12 +900,11 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                         made = markers.declare(conn, str(p.get("kind") or ""),
                                                str(p.get("group") or ""),
                                                str(p.get("description") or ""),
-                                               str(p.get("person") or "did:orreth:person:jb"))
+                                               person)
                 except ValueError as e:
                     return self._json(400, {"error": str(e)})
                 return self._json(201, made)
             if path == "/mark":                       # a human marks from the chat
-                person = str(p.get("person") or "did:orreth:person:jb")
                 ref = str(p.get("ref") or "")
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     if not ref and p.get("session"):
@@ -869,23 +928,21 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
             if path == "/digest":                     # on demand, or rebuild
                 sid = str(p.get("session") or "")
                 with psycopg.connect(dsn, autocommit=True) as conn:
-                    made = digest.build(conn, sid, by=str(p.get("person") or "did:orreth:person:jb"))
+                    made = digest.build(conn, sid, by=person)
                 if made is None:
                     return self._json(404, {"error": "no such session"})
                 return self._json(200 if not made["new"] else 201, made)
             if path == "/confirm":
                 ask_id = str(p.get("ask_id") or "")
                 approve = bool(p.get("approve", False))   # absent = cancel
-                by = str(p.get("by") or p.get("person") or "did:orreth:person:jb")
-                try:
+                try:                                      # P7 sp8 row 3: the word is the SEAT's — a master confirms from their own seat
                     with psycopg.connect(dsn, autocommit=True) as conn:
-                        out = dispatch.confirm_ask(conn, ask_id, approve=approve, person=by,
+                        out = dispatch.confirm_ask(conn, ask_id, approve=approve, person=person,
                                                    code=str(p.get("code") or "") or None)
                 except proof.NotConfirmed:                # rule 4: ONE face, every refusal
                     return self._json(403, dict(proof.ONE_FACE))
                 return self._json(202, out)
             if path == "/mitl":                           # P6 sp3: the soft toggle — a recorded fact
-                person = str(p.get("person") or "did:orreth:person:jb")
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     made = mitl.summon(conn, person, str(p.get("session") or "") or None,
                                        on=bool(p.get("summon", True)))
@@ -894,7 +951,6 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 change = p.get("change")
                 if not isinstance(change, dict):
                     return self._json(400, {"error": "a change is {kind, ref or draft, words}"})
-                person = str(p.get("person") or "did:orreth:person:jb")
                 try:
                     with psycopg.connect(dsn, autocommit=True) as conn:
                         made = mitl.impact(conn, change, person=person,
@@ -904,7 +960,6 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 return self._json(201, made)
             if path in ("/services", "/services/version", "/services/check",
                         "/services/retire", "/services/restore", "/services/mcp"):   # P6.5 sp1: the shelf's doors — the owner's, plain words
-                person = str(p.get("person") or "did:orreth:person:jb")
                 name = str(p.get("name") or "").strip()
                 try:
                     with psycopg.connect(dsn, autocommit=True) as conn:
@@ -942,7 +997,6 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 except services.ServiceRefused as e:
                     return self._json(400, {"error": str(e)})
             if path == "/profile":                        # P7 sp8: "my name is …" · "I live in …" · "forget about me: …" — theirs to adjust (W58)
-                person = str(p.get("person") or "did:orreth:person:jb")
                 text = str(p.get("text") or "").strip()
                 if not text:
                     return self._json(400, {"error": "say something about yourself, or ask what I know"})
@@ -952,19 +1006,25 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 except profile.ProfileRefused as e:
                     return self._json(400, {"error": str(e)})
                 return self._json(201 if made["act"] != "read" else 200, made)
-            if path == "/enroll":                         # P6 sp1: "enroll my authenticator"
-                person = str(p.get("person") or "did:orreth:person:jb")
+            if path == "/enroll":                         # P6 sp1: "enroll my authenticator" — P7 sp8 row 3: the ceremony, oneself, or a governing seat
+                target = seat.person_did(p.get("person") or person)
+                if target is None:
+                    return self._json(400, {"error": "a person is named by a lower-case name (letters, digits, - or _; 2 to 24) or their did:orreth:person:… DID"})
                 try:
                     with psycopg.connect(dsn, autocommit=True) as conn:
-                        made = proof.enroll(conn, person, code=str(p.get("code") or "") or None)
-                except proof.NotConfirmed:                # re-enrolling is grave: the old code
+                        if not seat.may_enroll(conn, who, target):
+                            raise proof.NotConfirmed()
+                        made = proof.enroll(conn, target, code=str(p.get("code") or "") or None)
+                except proof.NotConfirmed:                # re-enrolling is grave: the old code; another's is the owner's word
                     return self._json(403, dict(proof.ONE_FACE))
                 return self._json(201, made)
-            if path == "/enroll/confirm":                 # the first code confirms it
-                person = str(p.get("person") or "did:orreth:person:jb")
+            if path == "/enroll/confirm":                 # the first code confirms it — the code IS the proof (an open door)
+                target = seat.person_did(p.get("person"))
+                if target is None:
+                    return self._json(403, dict(proof.ONE_FACE))
                 try:
                     with psycopg.connect(dsn, autocommit=True) as conn:
-                        made = proof.confirm_enrollment(conn, person, str(p.get("code") or ""))
+                        made = proof.confirm_enrollment(conn, target, str(p.get("code") or ""))
                 except proof.NotConfirmed:
                     return self._json(403, dict(proof.ONE_FACE))
                 return self._json(200, made)

@@ -68,7 +68,7 @@ def test_mitl_is_born_of_the_third_kind_and_thinks_only_through_the_gateway(pg, 
     kinds = {x["name"]: x["kind"] for x in glass.residents_view(pg)}
     assert kinds == {"mitl": "firmware"}
     ses = glass.open_session(pg, ME)
-    [aid] = dispatch.submit_ask(pg, "what does the canon say about the meter?", to=["mitl"], session=ses)
+    [aid] = dispatch.submit_ask(pg, "what does the canon say about the meter?", person="did:orreth:person:test", to=["mitl"], session=ses)
     assert markers.get(pg, glass.ask_view(pg, aid)["marker"])["kind"] == "thought"   # an include
     _serve(pg, m, aid, [ME])
     v = glass.ask_view(pg, aid)
@@ -82,7 +82,7 @@ def test_mitl_is_born_of_the_third_kind_and_thinks_only_through_the_gateway(pg, 
     assert reply_ev[0]["authority_chain"] == [ME, m.identity.did]                   # AG-7: H → mitl
     bare = _body("firmware-mitl.v0.json", None)                                    # no gateway:
     bare.join(pg)                                                                  # the deterministic
-    [aid2] = dispatch.submit_ask(pg, "and now?", to=["mitl"], session=ses)         # graph, no meter,
+    [aid2] = dispatch.submit_ask(pg, "and now?", person="did:orreth:person:test", to=["mitl"], session=ses)         # graph, no meter,
     _serve(pg, bare, aid2, [ME])                                                   # no model, ever
     assert glass.ask_view(pg, aid2)["status"] == "replied"
     assert gateway.meter_lines(pg, bare.identity.did) == []
@@ -129,7 +129,7 @@ def test_summon_and_dismiss_are_recorded_facts_with_the_chain(pg, monkeypatch):
     session's latest objective — rows that stay, never a deletion."""
     _scope(monkeypatch)
     ses = glass.open_session(pg, ME)
-    obj = dispatch.submit_ask(pg, "an objective first", session=ses)
+    obj = dispatch.submit_ask(pg, "an objective first", person="did:orreth:person:test", session=ses)
     obj_marker = glass.ask_view(pg, obj)["marker"]
     assert mitl.summoned(pg, ses) is False
     s = mitl.summon(pg, ME, ses)
@@ -205,7 +205,7 @@ def test_impact_on_a_new_watch_names_the_monitor_body_and_the_metric(pg, monkeyp
     mon.join(pg)
     planner = _body("firmware-planner.v0.json", gateway.FakeGateway(reply="plan"))
     planner.join(pg)
-    [pa] = dispatch.submit_ask(pg, "warm the meter", to=["planner"])
+    [pa] = dispatch.submit_ask(pg, "warm the meter", person="did:orreth:person:test", to=["planner"])
     _serve(pg, planner, pa, [ME])                                                  # a cost to name
     r = _kernel_intention(pg)
     gw = gateway.FakeGateway(reply="WHO AND WHAT IT TOUCHES: the monitor body, the Resiliency "

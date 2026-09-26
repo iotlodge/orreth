@@ -45,7 +45,7 @@ def _walk(pg, r, text, tok):
     from tests.test_resident import (_dispatch, _purge_queue,
                                  _serve_until_replied)
     _purge_queue()
-    ask_id = dispatch.submit_ask(pg, text)
+    ask_id = dispatch.submit_ask(pg, text, person="did:orreth:person:test")
     assert outbox.drain(pg, sinks.KafkaSink()) >= 1
     _dispatch(pg)
     return ask_id, _serve_until_replied(pg, r, ask_id)

@@ -8,6 +8,8 @@ import json
 import os
 import urllib.request
 
+from tests import seats  # P7 sp8 row 3: every door reads the person from the SEAT — the test sits first
+
 import pytest
 
 from orreth_spine import cells, envelope as ev, gateway, ground, harness, rails
@@ -80,12 +82,12 @@ def test_the_topics_wear_the_namespace():
 
 def test_the_world_card_on_the_door(rig):
     """`/world` — the universe, its cell and epoch, the kernel that keeps it, its peers."""
-    with urllib.request.urlopen(f"http://127.0.0.1:{rig.port}/world", timeout=10) as r:
+    with seats.urlopen(f"http://127.0.0.1:{rig.port}/world", timeout=10) as r:
         card = json.loads(r.read())
     assert card["scope"] == ev.scope() and card["homed"] and card["epoch"] >= 1
     assert card["kernel"] == rig.kernel.did and card["door"] == f"http://127.0.0.1:{rig.port}"
     assert card["cell"] == (os.environ.get("SPINE_CELL") or "local") and card["peers"] == []
-    with urllib.request.urlopen(f"http://127.0.0.1:{rig.port}/monitor", timeout=10) as r:
+    with seats.urlopen(f"http://127.0.0.1:{rig.port}/monitor", timeout=10) as r:
         snap = json.loads(r.read())
     assert snap["home"]["cell"] == card["cell"] and snap["home"]["epoch"] == card["epoch"]
 

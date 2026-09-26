@@ -6,8 +6,8 @@
   "$defs": {
     "DID": {
       "type": "string",
-      "pattern": "^did:(web|key):\\S+$",
-      "description": "Universe-unique decentralized identifier, becky-issued (0006). did:web at roots, did:key at leaves."
+      "pattern": "^did:(web|key|orreth):\\S+$",
+      "description": "Universe-unique decentralized identifier, becky-issued (0006). did:web at roots, did:key at leaves; did:orreth:<kind>:<sha256(public)[..32]> on the rearchitected spine (kernel · agent · service) and did:orreth:person:<name> for a human (JB's rule-9 word, 2026-09-26, sp8 row 3: the seat token wears the 0006 shape)."
     },
     "ContentHash": {
       "type": "string",

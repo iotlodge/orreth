@@ -15,6 +15,8 @@ import secrets
 import time
 import urllib.error
 import urllib.request
+
+from tests import seats  # P7 sp8 row 3: every door reads the person from the SEAT — the test sits first
 from pathlib import Path
 
 import pytest
@@ -329,28 +331,40 @@ def _post(port, path, obj):
     req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", data=json.dumps(obj).encode(),
                                  headers={"content-type": "application/json"}, method="POST")
     try:
-        with urllib.request.urlopen(req, timeout=10) as r:
+        with seats.urlopen(req, timeout=10) as r:
             return r.status, json.loads(r.read())
     except urllib.error.HTTPError as e:
         return e.code, json.loads(e.read())
 
 
 def _get(port, path):
-    with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=10) as r:
+    with seats.urlopen(f"http://127.0.0.1:{port}{path}", timeout=10) as r:
         return json.loads(r.read())
 
 
 @rails
 def test_the_doors_enroll_hold_the_kernels_intention_and_wear_one_face(pg, rig):
     port = rig.port
-    me = "did:orreth:person:jb"
-    assert _get(port, f"/proof?person={me}") == {"person": me, "enrolled": False, "masters": []}
-    s, b = _post(port, "/enroll", {"person": me})
-    assert s == 201 and b["uri"].startswith("otpauth://totp/Orreth:jb") and b["qr"].startswith("data:image/png;base64,")
+    # P7 sp8 row 3: THE GATE — the session's OWNER holds the ground (the helper ran the
+    # ceremony: the first to prove an authenticator here); `me` is a second person,
+    # enrolled on the owner's word, confirmed by the first code, seated by the next
+    own = seats.owner(port)
+    me = "did:orreth:person:jb-" + secrets.token_hex(2)
+    st = _get(port, "/proof")                                          # the owner's own seat speaks
+    assert st["person"] == own and st["enrolled"] is True and st["owner"] == own and own in st["masters"]
+    assert st["seat"]["role"] == "owner" and st["seat"]["seat_id"].startswith("seat_")
+    assert _post(port, "/enroll", {"person": "Not A Name!"})[0] == 400  # the person grammar, in words
+    s, b = _post(port, "/enroll", {"person": me})                      # a governing seat enrolls another
+    assert s == 201 and b["uri"].startswith("otpauth://totp/Orreth:jb-") and b["qr"].startswith("data:image/png;base64,")
     assert _post(port, "/enroll/confirm", {"person": me, "code": "000000"}) == (403, ONE_FACE)
     assert _post(port, "/enroll/confirm", {"person": me, "code": proof.totp(b["secret"])}) == (200, {"person": me, "enrolled": True})
-    assert _get(port, f"/proof?person={me}")["enrolled"] is True
-    assert _post(port, "/enroll", {"person": me}) == (403, ONE_FACE)          # re-enrolling is grave
+    assert _post(port, "/seat", {"person": me, "code": "000000"}) == (403, ONE_FACE)   # a wrong code: the one face
+    s, taken = _post(port, "/seat", {"person": me, "code": proof.totp(b["secret"])})
+    assert s == 201 and taken["role"] == "person" and taken["owner"] is False and taken["seat"]["subject"] == me
+    assert "seated, jb-" in taken["words"] and "24 hours" in taken["words"]
+    mine = seats.get(port, "/proof", person=me)[1]
+    assert mine["person"] == me and mine["enrolled"] is True and me not in mine["masters"]
+    assert _post(port, "/enroll", {"person": me}) == (403, ONE_FACE)          # re-enrolling is grave: the old code, even on the owner's word
     assert _post(port, "/confirm", {"ask_id": "ask_nobody", "approve": True}) == (403, ONE_FACE)
     for _ in range(150):                                                     # Resiliency, declared at boot
         ints = [i for i in _get(port, "/intentions")["intentions"] if i["kind"] == "kernel"]
@@ -365,8 +379,11 @@ def test_the_doors_enroll_hold_the_kernels_intention_and_wear_one_face(pg, rig):
     assert view["hold"] == {"tool": "intent.stop", "class": "grave", "level": "L3-master",
                             "needs_code": True, "code_ok": False}                 # W5: the code, then the master
     assert "second named person" in view["reply"] and view["proof"] == "L1"
-    assert _post(port, "/confirm", {"ask_id": b["held"], "approve": True, "by": me}) == (403, ONE_FACE)
-    assert _post(port, "/confirm", {"ask_id": b["held"], "approve": True, "by": "did:orreth:person:nobody"}) == (403, ONE_FACE)
+    assert _post(port, "/confirm", {"ask_id": b["held"], "approve": True, "by": me}) == (403, ONE_FACE)   # the asker as master
+    assert seats.unseated(port, "POST", "/confirm", {"ask_id": b["held"], "approve": True, "by": "did:orreth:person:nobody"}) == (401, {"error": "not seated"})   # a stranger has no seat
+    other = "did:orreth:person:quinn-" + secrets.token_hex(2)               # a seated person who is NOT a master
+    seats.seat(port, other)                                                 # enrolled on the owner's word, seated by their code
+    assert _post(port, "/confirm", {"ask_id": b["held"], "approve": True, "by": other}) == (403, ONE_FACE)
     s, c = _post(port, "/confirm", {"ask_id": b["held"], "approve": False})    # cancel, at every level
     assert s == 202 and c["level"] == "L3-master"
     view = _get(port, "/ask/" + b["held"])

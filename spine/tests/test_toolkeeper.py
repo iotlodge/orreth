@@ -375,6 +375,8 @@ def test_the_shelf_door_shows_the_nesting_and_the_keeper_stands_in_the_crew(pg, 
     tk = next(b for b in crew["crew"] if b["name"] == "toolkeeper")
     assert tk["kind"] == "firmware" and "tools:services" in tk["capabilities"]
     _scope(monkeypatch)                     # the shelf of THIS test's world (the session's shelf stays as it was)
+    from tests import seats
+    seats.govern(rig.port, ME)                    # P7 sp8 row 3a: registering a server is a governing seat's word
     st, r = _post(rig.port, "/services/mcp", {"name": "clock", "locator": REF, "person": ME})
     assert st == 201 and r["service"]["kind"] == "mcp" and r["tools"]["new"] == ["now", "echo"]
     _s, body = _get(rig.port, "/services?kind=tool")

@@ -3,6 +3,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: ureq · libc · the bodies proof · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the gate's proof · 2026-09-26
 [package]
 name = "orreth-spine"
 version = "0.1.0"
@@ -67,6 +68,11 @@ required-features = ["bridge"]
 
 [[test]]
 name = "cells"
+required-features = ["bridge"]
+
+# The gate's proof (P7 sp8 row 3): the ceremony, the seat at every door, the origin closed, the ceiling.
+[[test]]
+name = "gate"
 required-features = ["bridge"]
 
 [[bin]]

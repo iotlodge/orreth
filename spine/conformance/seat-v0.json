@@ -1,0 +1,1464 @@
+{
+ "contract": "orreth.seat/1",
+ "version": 0,
+ "generated_by": "orreth_spine.seat (the Python reference) \u00b7 P7 sp8 row 3 (a) THE HUMAN SEAT",
+ "generated_at": "2026-09-26T18:00:00.000Z",
+ "cases": [
+  {
+   "name": "seat_mint: the owner's seat",
+   "kind": "seat_mint",
+   "input": {
+    "seed_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "subject": "did:orreth:person:jb",
+    "audience": "u:dev",
+    "grants": [
+     {
+      "action": "retrieve",
+      "space": {
+       "scope": "u:dev"
+      }
+     },
+     {
+      "action": "write",
+      "space": {
+       "scope": "u:dev"
+      }
+     },
+     {
+      "action": "govern",
+      "space": {
+       "scope": "u:dev"
+      }
+     }
+    ],
+    "expiry": "2026-09-27T18:00:00.000Z",
+    "direction": "within",
+    "budget": null
+   },
+   "expect": {
+    "token": {
+     "subject": "did:orreth:person:jb",
+     "audience": "u:dev",
+     "grants": [
+      {
+       "action": "retrieve",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "write",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "govern",
+       "space": {
+        "scope": "u:dev"
+       }
+      }
+     ],
+     "constraints": {
+      "expiry": "2026-09-27T18:00:00.000Z",
+      "direction": "within"
+     },
+     "chain": [
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"govern\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"public_key\":\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"ba6c74ed5c5c798981fb13f7060f868f70312ca08442c37842d223993484cf73062257d8dbc8346d91a0dd4d8a36fa183079d2a5908d04a24eea67c3f627dc00\"},\"subject\":\"did:orreth:person:jb\"}"
+     ],
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+      "sig": "5c548141fa29a2cf58eaf287aa7caee761f4913572799b80c38e3a148719e37050433947855082bf0b4ca54579aaf296e5d46584dc41421f48a8726abe131c03"
+     }
+    },
+    "bytes": "{\"audience\":\"u:dev\",\"chain\":[\"{\\\"audience\\\":\\\"u:dev\\\",\\\"constraints\\\":{\\\"direction\\\":\\\"within\\\",\\\"expiry\\\":\\\"2026-09-27T18:00:00.000Z\\\"},\\\"grants\\\":[{\\\"action\\\":\\\"retrieve\\\",\\\"space\\\":{\\\"scope\\\":\\\"u:dev\\\"}},{\\\"action\\\":\\\"write\\\",\\\"space\\\":{\\\"scope\\\":\\\"u:dev\\\"}},{\\\"action\\\":\\\"govern\\\",\\\"space\\\":{\\\"scope\\\":\\\"u:dev\\\"}}],\\\"issuer\\\":\\\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\\\",\\\"public_key\\\":\\\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\\\",\\\"sig\\\":{\\\"alg\\\":\\\"ed25519\\\",\\\"by\\\":\\\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\\\",\\\"sig\\\":\\\"ba6c74ed5c5c798981fb13f7060f868f70312ca08442c37842d223993484cf73062257d8dbc8346d91a0dd4d8a36fa183079d2a5908d04a24eea67c3f627dc00\\\"},\\\"subject\\\":\\\"did:orreth:person:jb\\\"}\"],\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"govern\",\"space\":{\"scope\":\"u:dev\"}}],\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"5c548141fa29a2cf58eaf287aa7caee761f4913572799b80c38e3a148719e37050433947855082bf0b4ca54579aaf296e5d46584dc41421f48a8726abe131c03\"},\"subject\":\"did:orreth:person:jb\"}",
+    "seat_id": "seat_dbe684817ac76263",
+    "wire": "eyJhdWRpZW5jZSI6InU6ZGV2IiwiY2hhaW4iOlsie1wiYXVkaWVuY2VcIjpcInU6ZGV2XCIsXCJjb25zdHJhaW50c1wiOntcImRpcmVjdGlvblwiOlwid2l0aGluXCIsXCJleHBpcnlcIjpcIjIwMjYtMDktMjdUMTg6MDA6MDAuMDAwWlwifSxcImdyYW50c1wiOlt7XCJhY3Rpb25cIjpcInJldHJpZXZlXCIsXCJzcGFjZVwiOntcInNjb3BlXCI6XCJ1OmRldlwifX0se1wiYWN0aW9uXCI6XCJ3cml0ZVwiLFwic3BhY2VcIjp7XCJzY29wZVwiOlwidTpkZXZcIn19LHtcImFjdGlvblwiOlwiZ292ZXJuXCIsXCJzcGFjZVwiOntcInNjb3BlXCI6XCJ1OmRldlwifX1dLFwiaXNzdWVyXCI6XCJkaWQ6b3JyZXRoOmtlcm5lbDo1NjQ3NWFhNzU0NjM0NzRjMDI4NWRmNWRiZjJiY2FiN1wiLFwicHVibGljX2tleVwiOlwiMDNhMTA3YmZmM2NlMTBiZTFkNzBkZDE4ZTc0YmMwOTk2N2U0ZDYzMDliYTUwZDVmMWRkYzg2NjQxMjU1MzFiOFwiLFwic2lnXCI6e1wiYWxnXCI6XCJlZDI1NTE5XCIsXCJieVwiOlwiZGlkOm9ycmV0aDprZXJuZWw6NTY0NzVhYTc1NDYzNDc0YzAyODVkZjVkYmYyYmNhYjdcIixcInNpZ1wiOlwiYmE2Yzc0ZWQ1YzVjNzk4OTgxZmIxM2Y3MDYwZjg2OGY3MDMxMmNhMDg0NDJjMzc4NDJkMjIzOTkzNDg0Y2Y3MzA2MjI1N2Q4ZGJjODM0NmQ5MWEwZGQ0ZDhhMzZmYTE4MzA3OWQyYTU5MDhkMDRhMjRlZWE2N2MzZjYyN2RjMDBcIn0sXCJzdWJqZWN0XCI6XCJkaWQ6b3JyZXRoOnBlcnNvbjpqYlwifSJdLCJjb25zdHJhaW50cyI6eyJkaXJlY3Rpb24iOiJ3aXRoaW4iLCJleHBpcnkiOiIyMDI2LTA5LTI3VDE4OjAwOjAwLjAwMFoifSwiZ3JhbnRzIjpbeyJhY3Rpb24iOiJyZXRyaWV2ZSIsInNwYWNlIjp7InNjb3BlIjoidTpkZXYifX0seyJhY3Rpb24iOiJ3cml0ZSIsInNwYWNlIjp7InNjb3BlIjoidTpkZXYifX0seyJhY3Rpb24iOiJnb3Zlcm4iLCJzcGFjZSI6eyJzY29wZSI6InU6ZGV2In19XSwic2lnIjp7ImFsZyI6ImVkMjU1MTkiLCJieSI6ImRpZDpvcnJldGg6a2VybmVsOjU2NDc1YWE3NTQ2MzQ3NGMwMjg1ZGY1ZGJmMmJjYWI3Iiwic2lnIjoiNWM1NDgxNDFmYTI5YTJjZjU4ZWFmMjg3YWE3Y2FlZTc2MWY0OTEzNTcyNzk5YjgwYzM4ZTNhMTQ4NzE5ZTM3MDUwNDMzOTQ3ODU1MDgyYmYwYjRjYTU0NTc5YWFmMjk2ZTVkNDY1ODRkYzQxNDIxZjQ4YTg3MjZhYmUxMzFjMDMifSwic3ViamVjdCI6ImRpZDpvcnJldGg6cGVyc29uOmpiIn0"
+   }
+  },
+  {
+   "name": "seat_mint: a person's seat",
+   "kind": "seat_mint",
+   "input": {
+    "seed_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "subject": "did:orreth:person:quinn",
+    "audience": "u:dev",
+    "grants": [
+     {
+      "action": "retrieve",
+      "space": {
+       "scope": "u:dev"
+      }
+     },
+     {
+      "action": "write",
+      "space": {
+       "scope": "u:dev"
+      }
+     }
+    ],
+    "expiry": "2026-09-27T18:00:00.000Z",
+    "direction": "within",
+    "budget": null
+   },
+   "expect": {
+    "token": {
+     "subject": "did:orreth:person:quinn",
+     "audience": "u:dev",
+     "grants": [
+      {
+       "action": "retrieve",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "write",
+       "space": {
+        "scope": "u:dev"
+       }
+      }
+     ],
+     "constraints": {
+      "expiry": "2026-09-27T18:00:00.000Z",
+      "direction": "within"
+     },
+     "chain": [
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"public_key\":\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"0d61f1d5d3bd7ab1504771eafd4fe1d94e4549fb6999426a5e96f3b3b5b7e7a2405fd8d8cc4287c217c374ce90b13503bd95f3653fadfd5630247c21ed012302\"},\"subject\":\"did:orreth:person:quinn\"}"
+     ],
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+      "sig": "6a9ac640c94b8906678491ad2d248130f4ed06526a74e8ef3dd44849e6eda1c3cf0835f79551a773f6ef6f664201d976f1caa32f67314ce8e892b9513e600f07"
+     }
+    },
+    "bytes": "{\"audience\":\"u:dev\",\"chain\":[\"{\\\"audience\\\":\\\"u:dev\\\",\\\"constraints\\\":{\\\"direction\\\":\\\"within\\\",\\\"expiry\\\":\\\"2026-09-27T18:00:00.000Z\\\"},\\\"grants\\\":[{\\\"action\\\":\\\"retrieve\\\",\\\"space\\\":{\\\"scope\\\":\\\"u:dev\\\"}},{\\\"action\\\":\\\"write\\\",\\\"space\\\":{\\\"scope\\\":\\\"u:dev\\\"}}],\\\"issuer\\\":\\\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\\\",\\\"public_key\\\":\\\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\\\",\\\"sig\\\":{\\\"alg\\\":\\\"ed25519\\\",\\\"by\\\":\\\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\\\",\\\"sig\\\":\\\"0d61f1d5d3bd7ab1504771eafd4fe1d94e4549fb6999426a5e96f3b3b5b7e7a2405fd8d8cc4287c217c374ce90b13503bd95f3653fadfd5630247c21ed012302\\\"},\\\"subject\\\":\\\"did:orreth:person:quinn\\\"}\"],\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}}],\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"6a9ac640c94b8906678491ad2d248130f4ed06526a74e8ef3dd44849e6eda1c3cf0835f79551a773f6ef6f664201d976f1caa32f67314ce8e892b9513e600f07\"},\"subject\":\"did:orreth:person:quinn\"}",
+    "seat_id": "seat_f97cbca30c912603",
+    "wire": "eyJhdWRpZW5jZSI6InU6ZGV2IiwiY2hhaW4iOlsie1wiYXVkaWVuY2VcIjpcInU6ZGV2XCIsXCJjb25zdHJhaW50c1wiOntcImRpcmVjdGlvblwiOlwid2l0aGluXCIsXCJleHBpcnlcIjpcIjIwMjYtMDktMjdUMTg6MDA6MDAuMDAwWlwifSxcImdyYW50c1wiOlt7XCJhY3Rpb25cIjpcInJldHJpZXZlXCIsXCJzcGFjZVwiOntcInNjb3BlXCI6XCJ1OmRldlwifX0se1wiYWN0aW9uXCI6XCJ3cml0ZVwiLFwic3BhY2VcIjp7XCJzY29wZVwiOlwidTpkZXZcIn19XSxcImlzc3VlclwiOlwiZGlkOm9ycmV0aDprZXJuZWw6NTY0NzVhYTc1NDYzNDc0YzAyODVkZjVkYmYyYmNhYjdcIixcInB1YmxpY19rZXlcIjpcIjAzYTEwN2JmZjNjZTEwYmUxZDcwZGQxOGU3NGJjMDk5NjdlNGQ2MzA5YmE1MGQ1ZjFkZGM4NjY0MTI1NTMxYjhcIixcInNpZ1wiOntcImFsZ1wiOlwiZWQyNTUxOVwiLFwiYnlcIjpcImRpZDpvcnJldGg6a2VybmVsOjU2NDc1YWE3NTQ2MzQ3NGMwMjg1ZGY1ZGJmMmJjYWI3XCIsXCJzaWdcIjpcIjBkNjFmMWQ1ZDNiZDdhYjE1MDQ3NzFlYWZkNGZlMWQ5NGU0NTQ5ZmI2OTk5NDI2YTVlOTZmM2IzYjViN2U3YTI0MDVmZDhkOGNjNDI4N2MyMTdjMzc0Y2U5MGIxMzUwM2JkOTVmMzY1M2ZhZGZkNTYzMDI0N2MyMWVkMDEyMzAyXCJ9LFwic3ViamVjdFwiOlwiZGlkOm9ycmV0aDpwZXJzb246cXVpbm5cIn0iXSwiY29uc3RyYWludHMiOnsiZGlyZWN0aW9uIjoid2l0aGluIiwiZXhwaXJ5IjoiMjAyNi0wOS0yN1QxODowMDowMC4wMDBaIn0sImdyYW50cyI6W3siYWN0aW9uIjoicmV0cmlldmUiLCJzcGFjZSI6eyJzY29wZSI6InU6ZGV2In19LHsiYWN0aW9uIjoid3JpdGUiLCJzcGFjZSI6eyJzY29wZSI6InU6ZGV2In19XSwic2lnIjp7ImFsZyI6ImVkMjU1MTkiLCJieSI6ImRpZDpvcnJldGg6a2VybmVsOjU2NDc1YWE3NTQ2MzQ3NGMwMjg1ZGY1ZGJmMmJjYWI3Iiwic2lnIjoiNmE5YWM2NDBjOTRiODkwNjY3ODQ5MWFkMmQyNDgxMzBmNGVkMDY1MjZhNzRlOGVmM2RkNDQ4NDllNmVkYTFjM2NmMDgzNWY3OTU1MWE3NzNmNmVmNmY2NjQyMDFkOTc2ZjFjYWEzMmY2NzMxNGNlOGU4OTJiOTUxM2U2MDBmMDcifSwic3ViamVjdCI6ImRpZDpvcnJldGg6cGVyc29uOnF1aW5uIn0"
+   }
+  },
+  {
+   "name": "seat_mint: a body's lease with the fuel clause (the join desk's shape, row 3b)",
+   "kind": "seat_mint",
+   "input": {
+    "seed_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "subject": "did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0",
+    "audience": "u:dev",
+    "grants": [
+     {
+      "action": "retrieve",
+      "space": "self"
+     }
+    ],
+    "expiry": "2026-10-26T18:00:00.000Z",
+    "direction": "within",
+    "budget": {
+     "tokens": 50000,
+     "renew_days": 1
+    }
+   },
+   "expect": {
+    "token": {
+     "subject": "did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0",
+     "audience": "u:dev",
+     "grants": [
+      {
+       "action": "retrieve",
+       "space": "self"
+      }
+     ],
+     "constraints": {
+      "expiry": "2026-10-26T18:00:00.000Z",
+      "direction": "within",
+      "budget": {
+       "tokens": 50000,
+       "renew_days": 1
+      }
+     },
+     "chain": [
+      "{\"audience\":\"u:dev\",\"constraints\":{\"budget\":{\"renew_days\":1,\"tokens\":50000},\"direction\":\"within\",\"expiry\":\"2026-10-26T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":\"self\"}],\"issuer\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"public_key\":\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"e3fbad9de1da1b638130c1262c0c16b6647728b7939c8dc43f1beff2cf8c351a6b846f8d2173e1c7e9a6d88bc81e053ad10ca1c7c3708551d4711bd6db972d00\"},\"subject\":\"did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0\"}"
+     ],
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+      "sig": "69a78f48e26c31a5e7917cae316ad2cc488110df6fa227ef636daa06942f393058cdc09e176e4b63f45e9c883940e65a7252f520997900e61ddad164ac21ce0a"
+     }
+    },
+    "bytes": "{\"audience\":\"u:dev\",\"chain\":[\"{\\\"audience\\\":\\\"u:dev\\\",\\\"constraints\\\":{\\\"budget\\\":{\\\"renew_days\\\":1,\\\"tokens\\\":50000},\\\"direction\\\":\\\"within\\\",\\\"expiry\\\":\\\"2026-10-26T18:00:00.000Z\\\"},\\\"grants\\\":[{\\\"action\\\":\\\"retrieve\\\",\\\"space\\\":\\\"self\\\"}],\\\"issuer\\\":\\\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\\\",\\\"public_key\\\":\\\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\\\",\\\"sig\\\":{\\\"alg\\\":\\\"ed25519\\\",\\\"by\\\":\\\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\\\",\\\"sig\\\":\\\"e3fbad9de1da1b638130c1262c0c16b6647728b7939c8dc43f1beff2cf8c351a6b846f8d2173e1c7e9a6d88bc81e053ad10ca1c7c3708551d4711bd6db972d00\\\"},\\\"subject\\\":\\\"did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0\\\"}\"],\"constraints\":{\"budget\":{\"renew_days\":1,\"tokens\":50000},\"direction\":\"within\",\"expiry\":\"2026-10-26T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":\"self\"}],\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"69a78f48e26c31a5e7917cae316ad2cc488110df6fa227ef636daa06942f393058cdc09e176e4b63f45e9c883940e65a7252f520997900e61ddad164ac21ce0a\"},\"subject\":\"did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0\"}",
+    "seat_id": "seat_a8e4e0725c77a5b3",
+    "wire": "eyJhdWRpZW5jZSI6InU6ZGV2IiwiY2hhaW4iOlsie1wiYXVkaWVuY2VcIjpcInU6ZGV2XCIsXCJjb25zdHJhaW50c1wiOntcImJ1ZGdldFwiOntcInJlbmV3X2RheXNcIjoxLFwidG9rZW5zXCI6NTAwMDB9LFwiZGlyZWN0aW9uXCI6XCJ3aXRoaW5cIixcImV4cGlyeVwiOlwiMjAyNi0xMC0yNlQxODowMDowMC4wMDBaXCJ9LFwiZ3JhbnRzXCI6W3tcImFjdGlvblwiOlwicmV0cmlldmVcIixcInNwYWNlXCI6XCJzZWxmXCJ9XSxcImlzc3VlclwiOlwiZGlkOm9ycmV0aDprZXJuZWw6NTY0NzVhYTc1NDYzNDc0YzAyODVkZjVkYmYyYmNhYjdcIixcInB1YmxpY19rZXlcIjpcIjAzYTEwN2JmZjNjZTEwYmUxZDcwZGQxOGU3NGJjMDk5NjdlNGQ2MzA5YmE1MGQ1ZjFkZGM4NjY0MTI1NTMxYjhcIixcInNpZ1wiOntcImFsZ1wiOlwiZWQyNTUxOVwiLFwiYnlcIjpcImRpZDpvcnJldGg6a2VybmVsOjU2NDc1YWE3NTQ2MzQ3NGMwMjg1ZGY1ZGJmMmJjYWI3XCIsXCJzaWdcIjpcImUzZmJhZDlkZTFkYTFiNjM4MTMwYzEyNjJjMGMxNmI2NjQ3NzI4Yjc5MzljOGRjNDNmMWJlZmYyY2Y4YzM1MWE2Yjg0NmY4ZDIxNzNlMWM3ZTlhNmQ4OGJjODFlMDUzYWQxMGNhMWM3YzM3MDg1NTFkNDcxMWJkNmRiOTcyZDAwXCJ9LFwic3ViamVjdFwiOlwiZGlkOm9ycmV0aDphZ2VudDo2NWI2MDY3M2Q2ZWQ4ODRiZjAxYzJjMjIyZDgyYWRhMFwifSJdLCJjb25zdHJhaW50cyI6eyJidWRnZXQiOnsicmVuZXdfZGF5cyI6MSwidG9rZW5zIjo1MDAwMH0sImRpcmVjdGlvbiI6IndpdGhpbiIsImV4cGlyeSI6IjIwMjYtMTAtMjZUMTg6MDA6MDAuMDAwWiJ9LCJncmFudHMiOlt7ImFjdGlvbiI6InJldHJpZXZlIiwic3BhY2UiOiJzZWxmIn1dLCJzaWciOnsiYWxnIjoiZWQyNTUxOSIsImJ5IjoiZGlkOm9ycmV0aDprZXJuZWw6NTY0NzVhYTc1NDYzNDc0YzAyODVkZjVkYmYyYmNhYjciLCJzaWciOiI2OWE3OGY0OGUyNmMzMWE1ZTc5MTdjYWUzMTZhZDJjYzQ4ODExMGRmNmZhMjI3ZWY2MzZkYWEwNjk0MmYzOTMwNThjZGMwOWUxNzZlNGI2M2Y0NWU5Yzg4Mzk0MGU2NWE3MjUyZjUyMDk5NzkwMGU2MWRkYWQxNjRhYzIxY2UwYSJ9LCJzdWJqZWN0IjoiZGlkOm9ycmV0aDphZ2VudDo2NWI2MDY3M2Q2ZWQ4ODRiZjAxYzJjMjIyZDgyYWRhMCJ9"
+   }
+  },
+  {
+   "name": "seat_verify: the owner's seat, in time -> ok",
+   "kind": "seat_verify",
+   "input": {
+    "token": {
+     "subject": "did:orreth:person:jb",
+     "audience": "u:dev",
+     "grants": [
+      {
+       "action": "retrieve",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "write",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "govern",
+       "space": {
+        "scope": "u:dev"
+       }
+      }
+     ],
+     "constraints": {
+      "expiry": "2026-09-27T18:00:00.000Z",
+      "direction": "within"
+     },
+     "chain": [
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"govern\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"public_key\":\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"ba6c74ed5c5c798981fb13f7060f868f70312ca08442c37842d223993484cf73062257d8dbc8346d91a0dd4d8a36fa183079d2a5908d04a24eea67c3f627dc00\"},\"subject\":\"did:orreth:person:jb\"}"
+     ],
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+      "sig": "5c548141fa29a2cf58eaf287aa7caee761f4913572799b80c38e3a148719e37050433947855082bf0b4ca54579aaf296e5d46584dc41421f48a8726abe131c03"
+     }
+    },
+    "root_did": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+    "root_key_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+    "now": "2026-09-26T18:00:00.000Z"
+   },
+   "expect": {
+    "verdict": "ok"
+   }
+  },
+  {
+   "name": "seat_verify: the same seat after its expiry -> expired",
+   "kind": "seat_verify",
+   "input": {
+    "token": {
+     "subject": "did:orreth:person:jb",
+     "audience": "u:dev",
+     "grants": [
+      {
+       "action": "retrieve",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "write",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "govern",
+       "space": {
+        "scope": "u:dev"
+       }
+      }
+     ],
+     "constraints": {
+      "expiry": "2026-09-27T18:00:00.000Z",
+      "direction": "within"
+     },
+     "chain": [
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"govern\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"public_key\":\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"ba6c74ed5c5c798981fb13f7060f868f70312ca08442c37842d223993484cf73062257d8dbc8346d91a0dd4d8a36fa183079d2a5908d04a24eea67c3f627dc00\"},\"subject\":\"did:orreth:person:jb\"}"
+     ],
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+      "sig": "5c548141fa29a2cf58eaf287aa7caee761f4913572799b80c38e3a148719e37050433947855082bf0b4ca54579aaf296e5d46584dc41421f48a8726abe131c03"
+     }
+    },
+    "root_did": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+    "root_key_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+    "now": "2026-09-28T00:00:00.000Z"
+   },
+   "expect": {
+    "verdict": "expired"
+   }
+  },
+  {
+   "name": "seat_verify: a seat minted by another kernel -> foreign authority",
+   "kind": "seat_verify",
+   "input": {
+    "token": {
+     "subject": "did:orreth:person:jb",
+     "audience": "u:dev",
+     "grants": [
+      {
+       "action": "retrieve",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "write",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "govern",
+       "space": {
+        "scope": "u:dev"
+       }
+      }
+     ],
+     "constraints": {
+      "expiry": "2026-09-27T18:00:00.000Z",
+      "direction": "within"
+     },
+     "chain": [
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"govern\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:kernel:947561e3eb43b38b2d5f7c2f6a74f30b\",\"public_key\":\"43cdc023d22d5f9e107d1a0693457d35d1d10eb7d21c721192f56f5de40665d3\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:947561e3eb43b38b2d5f7c2f6a74f30b\",\"sig\":\"7e248ea8a1d00b646a8dc191d418190113f821cb017eb49fc8b4a8de5a2062bc396bdc9d506a28bbc578bd5b6bd464f235792e3511c33e29d0d982c9700bf801\"},\"subject\":\"did:orreth:person:jb\"}"
+     ],
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:kernel:947561e3eb43b38b2d5f7c2f6a74f30b",
+      "sig": "95d7d7592efdba0ea246193cb04d43fc2485ba32d2d7c16693bd23f7c0593a337bee8aff9d73a630fa134534c9f0c2e19b6cd2ec04096962e5857654857c9a07"
+     }
+    },
+    "root_did": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+    "root_key_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+    "now": "2026-09-26T18:00:00.000Z"
+   },
+   "expect": {
+    "verdict": "foreign authority"
+   }
+  },
+  {
+   "name": "seat_verify: a seat whose grants were widened after the mint -> broken chain",
+   "kind": "seat_verify",
+   "input": {
+    "token": {
+     "subject": "did:orreth:person:jb",
+     "audience": "u:dev",
+     "grants": [
+      {
+       "action": "retrieve",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "write",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "govern",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "issue",
+       "space": "apex"
+      }
+     ],
+     "constraints": {
+      "expiry": "2026-09-27T18:00:00.000Z",
+      "direction": "within"
+     },
+     "chain": [
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"govern\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"public_key\":\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"ba6c74ed5c5c798981fb13f7060f868f70312ca08442c37842d223993484cf73062257d8dbc8346d91a0dd4d8a36fa183079d2a5908d04a24eea67c3f627dc00\"},\"subject\":\"did:orreth:person:jb\"}"
+     ],
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+      "sig": "5c548141fa29a2cf58eaf287aa7caee761f4913572799b80c38e3a148719e37050433947855082bf0b4ca54579aaf296e5d46584dc41421f48a8726abe131c03"
+     }
+    },
+    "root_did": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+    "root_key_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+    "now": "2026-09-26T18:00:00.000Z"
+   },
+   "expect": {
+    "verdict": "broken chain"
+   }
+  },
+  {
+   "name": "seat_verify: a seat whose outer signature was touched -> bad signature",
+   "kind": "seat_verify",
+   "input": {
+    "token": {
+     "subject": "did:orreth:person:jb",
+     "audience": "u:dev",
+     "grants": [
+      {
+       "action": "retrieve",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "write",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "govern",
+       "space": {
+        "scope": "u:dev"
+       }
+      }
+     ],
+     "constraints": {
+      "expiry": "2026-09-27T18:00:00.000Z",
+      "direction": "within"
+     },
+     "chain": [
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"govern\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"public_key\":\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"ba6c74ed5c5c798981fb13f7060f868f70312ca08442c37842d223993484cf73062257d8dbc8346d91a0dd4d8a36fa183079d2a5908d04a24eea67c3f627dc00\"},\"subject\":\"did:orreth:person:jb\"}"
+     ],
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+      "sig": "0c548141fa29a2cf58eaf287aa7caee761f4913572799b80c38e3a148719e37050433947855082bf0b4ca54579aaf296e5d46584dc41421f48a8726abe131c03"
+     }
+    },
+    "root_did": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+    "root_key_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+    "now": "2026-09-26T18:00:00.000Z"
+   },
+   "expect": {
+    "verdict": "bad signature"
+   }
+  },
+  {
+   "name": "seat_verify: a lease narrowed by the body that holds it (two hops) -> ok",
+   "kind": "seat_verify",
+   "input": {
+    "token": {
+     "subject": "did:orreth:agent:00000000000000000000000000000000",
+     "audience": "u:dev",
+     "grants": [
+      {
+       "action": "retrieve",
+       "space": {
+        "scope": "u:dev/e:one"
+       }
+      }
+     ],
+     "constraints": {
+      "expiry": "2026-09-27T18:00:00.000Z",
+      "direction": "within"
+     },
+     "chain": [
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"public_key\":\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"90056e97b187a79ae6694bc3945450b5fda504201813e85c69e80c3b213040210fcba6cd27cb1f33f038bab3d4a788ccc4c2000736f5f0c97b711d5990951b08\"},\"subject\":\"did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0\"}",
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev/e:one\"}}],\"issuer\":\"did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0\",\"public_key\":\"79b5562e8fe654f94078b112e8a98ba7901f853ae695bed7e0e3910bad049664\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0\",\"sig\":\"7f74a7efe1cea172b97269a8f248e17e5bf8e65271304e1871c4eb75fc8d6931a15450299136626e4349716424041f0e3d911440f0f1fac56ea802e92231e50f\"},\"subject\":\"did:orreth:agent:00000000000000000000000000000000\"}"
+     ],
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0",
+      "sig": "697a84dbcf4e06b54b76b22ec59eaad8f2c3ccc2d5fd775b56440b523dadc7b8a556cf49a9443ce82a0d29893eece5954934713d3f31a6d6c4035b5ffeec640f"
+     }
+    },
+    "root_did": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+    "root_key_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+    "now": "2026-09-26T18:00:00.000Z"
+   },
+   "expect": {
+    "verdict": "ok"
+   }
+  },
+  {
+   "name": "seat_verify: a lease widened by the body that holds it -> amplified",
+   "kind": "seat_verify",
+   "input": {
+    "token": {
+     "subject": "did:orreth:agent:00000000000000000000000000000000",
+     "audience": "u:dev",
+     "grants": [
+      {
+       "action": "govern",
+       "space": {
+        "scope": "u:dev"
+       }
+      }
+     ],
+     "constraints": {
+      "expiry": "2026-09-27T18:00:00.000Z",
+      "direction": "within"
+     },
+     "chain": [
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"public_key\":\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"90056e97b187a79ae6694bc3945450b5fda504201813e85c69e80c3b213040210fcba6cd27cb1f33f038bab3d4a788ccc4c2000736f5f0c97b711d5990951b08\"},\"subject\":\"did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0\"}",
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"govern\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0\",\"public_key\":\"79b5562e8fe654f94078b112e8a98ba7901f853ae695bed7e0e3910bad049664\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0\",\"sig\":\"6dd6974ae38ec208aed1309bb7e01f790a187fe7761476755ad983bc4f8cef2c3b6d12b1612c63b54695baeebee6658589b654197dec586396c25bb5d2e18f04\"},\"subject\":\"did:orreth:agent:00000000000000000000000000000000\"}"
+     ],
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0",
+      "sig": "62ac55c7aca0339036f0262a17a9ae5ca51905ecbd7f993fd63bf7f3bc4af18cd673c80debcb0e682e2027b6f84254061ec560f82d004c96a714a9490ce4b006"
+     }
+    },
+    "root_did": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+    "root_key_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+    "now": "2026-09-26T18:00:00.000Z"
+   },
+   "expect": {
+    "verdict": "amplified"
+   }
+  },
+  {
+   "name": "seat_verify: a lease whose child outlives it -> amplified",
+   "kind": "seat_verify",
+   "input": {
+    "token": {
+     "subject": "did:orreth:agent:00000000000000000000000000000000",
+     "audience": "u:dev",
+     "grants": [
+      {
+       "action": "retrieve",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "write",
+       "space": {
+        "scope": "u:dev"
+       }
+      }
+     ],
+     "constraints": {
+      "expiry": "2026-12-01T00:00:00.000Z",
+      "direction": "within"
+     },
+     "chain": [
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"public_key\":\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"90056e97b187a79ae6694bc3945450b5fda504201813e85c69e80c3b213040210fcba6cd27cb1f33f038bab3d4a788ccc4c2000736f5f0c97b711d5990951b08\"},\"subject\":\"did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0\"}",
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-12-01T00:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0\",\"public_key\":\"79b5562e8fe654f94078b112e8a98ba7901f853ae695bed7e0e3910bad049664\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0\",\"sig\":\"8651bce21145cccd75f6d8aab3e115d89d26ce56ca590a3f7eb65ae17335cd553d8458531419c4bd809cbd29fc079bd3f641d86967c676ca8238ca91cc50eb05\"},\"subject\":\"did:orreth:agent:00000000000000000000000000000000\"}"
+     ],
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0",
+      "sig": "b529d19ab51735a9bd9ce9f8d55a53e8ded5cf240bb7f53e233c5c944fac6ac609144cb2e26e8013b1af5f14e21b9d8c020b97ab45358a6531eff54304203e06"
+     }
+    },
+    "root_did": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+    "root_key_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+    "now": "2026-09-26T18:00:00.000Z"
+   },
+   "expect": {
+    "verdict": "amplified"
+   }
+  },
+  {
+   "name": "seat_verify: a hop issued by a self that is not the hop above's subject -> broken chain",
+   "kind": "seat_verify",
+   "input": {
+    "token": {
+     "subject": "did:orreth:agent:00000000000000000000000000000000",
+     "audience": "u:dev",
+     "grants": [
+      {
+       "action": "retrieve",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "write",
+       "space": {
+        "scope": "u:dev"
+       }
+      }
+     ],
+     "constraints": {
+      "expiry": "2026-09-27T18:00:00.000Z",
+      "direction": "within"
+     },
+     "chain": [
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"public_key\":\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"90056e97b187a79ae6694bc3945450b5fda504201813e85c69e80c3b213040210fcba6cd27cb1f33f038bab3d4a788ccc4c2000736f5f0c97b711d5990951b08\"},\"subject\":\"did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0\"}",
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:kernel:947561e3eb43b38b2d5f7c2f6a74f30b\",\"public_key\":\"43cdc023d22d5f9e107d1a0693457d35d1d10eb7d21c721192f56f5de40665d3\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:947561e3eb43b38b2d5f7c2f6a74f30b\",\"sig\":\"0dcefd91032c316d3045ddff670fdd2e071cd2da01953ba3420a5f302519b3ee0a77d51aa2e0b49cc05121859edaab979751b86f789994c9d63f7076d44cfd0e\"},\"subject\":\"did:orreth:agent:00000000000000000000000000000000\"}"
+     ],
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:kernel:947561e3eb43b38b2d5f7c2f6a74f30b",
+      "sig": "9cdbf97fd007793e67839ce8d05b36f7d6aecd99bad65da02f6acdfd0af94583e80a657546455225aea9bce81ab8d0e333843f783634d68cbc1e94a989dca10b"
+     }
+    },
+    "root_did": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+    "root_key_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+    "now": "2026-09-26T18:00:00.000Z"
+   },
+   "expect": {
+    "verdict": "broken chain"
+   }
+  },
+  {
+   "name": "seat_verify: not the shape (no chain) -> malformed",
+   "kind": "seat_verify",
+   "input": {
+    "token": {
+     "subject": "did:orreth:person:jb",
+     "audience": "u:dev",
+     "grants": [
+      {
+       "action": "retrieve",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "write",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "govern",
+       "space": {
+        "scope": "u:dev"
+       }
+      }
+     ],
+     "constraints": {
+      "expiry": "2026-09-27T18:00:00.000Z",
+      "direction": "within"
+     },
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+      "sig": "5c548141fa29a2cf58eaf287aa7caee761f4913572799b80c38e3a148719e37050433947855082bf0b4ca54579aaf296e5d46584dc41421f48a8726abe131c03"
+     }
+    },
+    "root_did": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+    "root_key_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+    "now": "2026-09-26T18:00:00.000Z"
+   },
+   "expect": {
+    "verdict": "malformed"
+   }
+  },
+  {
+   "name": "seat_verify: not the shape (a string) -> malformed",
+   "kind": "seat_verify",
+   "input": {
+    "token": "not a token",
+    "root_did": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+    "root_key_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+    "now": "2026-09-26T18:00:00.000Z"
+   },
+   "expect": {
+    "verdict": "malformed"
+   }
+  },
+  {
+   "name": "seat_verify: a chain hop rewritten under the same signature -> bad signature",
+   "kind": "seat_verify",
+   "input": {
+    "token": {
+     "subject": "did:orreth:person:jb",
+     "audience": "u:dev",
+     "grants": [
+      {
+       "action": "retrieve",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "write",
+       "space": {
+        "scope": "u:dev"
+       }
+      },
+      {
+       "action": "govern",
+       "space": {
+        "scope": "u:dev"
+       }
+      }
+     ],
+     "constraints": {
+      "expiry": "2026-09-27T18:00:00.000Z",
+      "direction": "within"
+     },
+     "chain": [
+      "{\"audience\":\"u:dev\",\"constraints\":{\"direction\":\"within\",\"expiry\":\"2026-09-27T18:00:00.000Z\"},\"grants\":[{\"action\":\"retrieve\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"write\",\"space\":{\"scope\":\"u:dev\"}},{\"action\":\"govern\",\"space\":{\"scope\":\"u:dev\"}}],\"issuer\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"public_key\":\"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8\",\"sig\":{\"alg\":\"ed25519\",\"by\":\"did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7\",\"sig\":\"ba6c74ed5c5c798981fb13f7060f868f70312ca08442c37842d223993484cf73062257d8dbc8346d91a0dd4d8a36fa183079d2a5908d04a24eea67c3f627dc00\"},\"subject\":\"did:orreth:person:mallory\"}"
+     ],
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+      "sig": "5c548141fa29a2cf58eaf287aa7caee761f4913572799b80c38e3a148719e37050433947855082bf0b4ca54579aaf296e5d46584dc41421f48a8726abe131c03"
+     }
+    },
+    "root_did": "did:orreth:kernel:56475aa75463474c0285df5dbf2bcab7",
+    "root_key_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+    "now": "2026-09-26T18:00:00.000Z"
+   },
+   "expect": {
+    "verdict": "bad signature"
+   }
+  },
+  {
+   "name": "seat_grants: person in u:dev",
+   "kind": "seat_grants",
+   "input": {
+    "role": "person",
+    "scope": "u:dev"
+   },
+   "expect": {
+    "grants": [
+     {
+      "action": "retrieve",
+      "space": {
+       "scope": "u:dev"
+      }
+     },
+     {
+      "action": "write",
+      "space": {
+       "scope": "u:dev"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "seat_grants: owner in u:dev",
+   "kind": "seat_grants",
+   "input": {
+    "role": "owner",
+    "scope": "u:dev"
+   },
+   "expect": {
+    "grants": [
+     {
+      "action": "retrieve",
+      "space": {
+       "scope": "u:dev"
+      }
+     },
+     {
+      "action": "write",
+      "space": {
+       "scope": "u:dev"
+      }
+     },
+     {
+      "action": "govern",
+      "space": {
+       "scope": "u:dev"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "seat_grants: master in u:dev",
+   "kind": "seat_grants",
+   "input": {
+    "role": "master",
+    "scope": "u:dev"
+   },
+   "expect": {
+    "grants": [
+     {
+      "action": "retrieve",
+      "space": {
+       "scope": "u:dev"
+      }
+     },
+     {
+      "action": "write",
+      "space": {
+       "scope": "u:dev"
+      }
+     },
+     {
+      "action": "govern",
+      "space": {
+       "scope": "u:dev"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "door_needs: GET /",
+   "kind": "door_needs",
+   "input": {
+    "method": "GET",
+    "path": "/"
+   },
+   "expect": {
+    "needs": "open"
+   }
+  },
+  {
+   "name": "door_needs: GET /index.html",
+   "kind": "door_needs",
+   "input": {
+    "method": "GET",
+    "path": "/index.html"
+   },
+   "expect": {
+    "needs": "open"
+   }
+  },
+  {
+   "name": "door_needs: GET /health",
+   "kind": "door_needs",
+   "input": {
+    "method": "GET",
+    "path": "/health"
+   },
+   "expect": {
+    "needs": "open"
+   }
+  },
+  {
+   "name": "door_needs: GET /guide",
+   "kind": "door_needs",
+   "input": {
+    "method": "GET",
+    "path": "/guide"
+   },
+   "expect": {
+    "needs": "open"
+   }
+  },
+  {
+   "name": "door_needs: GET /harness",
+   "kind": "door_needs",
+   "input": {
+    "method": "GET",
+    "path": "/harness"
+   },
+   "expect": {
+    "needs": "open"
+   }
+  },
+  {
+   "name": "door_needs: GET /seat",
+   "kind": "door_needs",
+   "input": {
+    "method": "GET",
+    "path": "/seat"
+   },
+   "expect": {
+    "needs": "open"
+   }
+  },
+  {
+   "name": "door_needs: GET /feed",
+   "kind": "door_needs",
+   "input": {
+    "method": "GET",
+    "path": "/feed"
+   },
+   "expect": {
+    "needs": "retrieve"
+   }
+  },
+  {
+   "name": "door_needs: GET /asks",
+   "kind": "door_needs",
+   "input": {
+    "method": "GET",
+    "path": "/asks"
+   },
+   "expect": {
+    "needs": "retrieve"
+   }
+  },
+  {
+   "name": "door_needs: GET /profile",
+   "kind": "door_needs",
+   "input": {
+    "method": "GET",
+    "path": "/profile"
+   },
+   "expect": {
+    "needs": "retrieve"
+   }
+  },
+  {
+   "name": "door_needs: GET /export",
+   "kind": "door_needs",
+   "input": {
+    "method": "GET",
+    "path": "/export"
+   },
+   "expect": {
+    "needs": "retrieve"
+   }
+  },
+  {
+   "name": "door_needs: GET /world",
+   "kind": "door_needs",
+   "input": {
+    "method": "GET",
+    "path": "/world"
+   },
+   "expect": {
+    "needs": "retrieve"
+   }
+  },
+  {
+   "name": "door_needs: POST /seat",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/seat"
+   },
+   "expect": {
+    "needs": "open"
+   }
+  },
+  {
+   "name": "door_needs: POST /seat/leave",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/seat/leave"
+   },
+   "expect": {
+    "needs": "write"
+   }
+  },
+  {
+   "name": "door_needs: POST /enroll",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/enroll"
+   },
+   "expect": {
+    "needs": "enroll"
+   }
+  },
+  {
+   "name": "door_needs: POST /enroll/confirm",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/enroll/confirm"
+   },
+   "expect": {
+    "needs": "open"
+   }
+  },
+  {
+   "name": "door_needs: POST /seam",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/seam"
+   },
+   "expect": {
+    "needs": "open"
+   }
+  },
+  {
+   "name": "door_needs: POST /delta",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/delta"
+   },
+   "expect": {
+    "needs": "open"
+   }
+  },
+  {
+   "name": "door_needs: POST /ask",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/ask"
+   },
+   "expect": {
+    "needs": "write"
+   }
+  },
+  {
+   "name": "door_needs: POST /confirm",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/confirm"
+   },
+   "expect": {
+    "needs": "write"
+   }
+  },
+  {
+   "name": "door_needs: POST /profile",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/profile"
+   },
+   "expect": {
+    "needs": "write"
+   }
+  },
+  {
+   "name": "door_needs: POST /sessions",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/sessions"
+   },
+   "expect": {
+    "needs": "write"
+   }
+  },
+  {
+   "name": "door_needs: POST /minds/check",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/minds/check"
+   },
+   "expect": {
+    "needs": "write"
+   }
+  },
+  {
+   "name": "door_needs: POST /services/check",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/services/check"
+   },
+   "expect": {
+    "needs": "write"
+   }
+  },
+  {
+   "name": "door_needs: POST /world/rehome",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/world/rehome"
+   },
+   "expect": {
+    "needs": "govern"
+   }
+  },
+  {
+   "name": "door_needs: POST /bodies/restart",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/bodies/restart"
+   },
+   "expect": {
+    "needs": "govern"
+   }
+  },
+  {
+   "name": "door_needs: POST /services",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/services"
+   },
+   "expect": {
+    "needs": "govern"
+   }
+  },
+  {
+   "name": "door_needs: POST /services/retire",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/services/retire"
+   },
+   "expect": {
+    "needs": "govern"
+   }
+  },
+  {
+   "name": "door_needs: POST /minds",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/minds"
+   },
+   "expect": {
+    "needs": "govern"
+   }
+  },
+  {
+   "name": "door_needs: POST /minds/refill",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/minds/refill"
+   },
+   "expect": {
+    "needs": "govern"
+   }
+  },
+  {
+   "name": "door_needs: DELETE /asks",
+   "kind": "door_needs",
+   "input": {
+    "method": "DELETE",
+    "path": "/asks"
+   },
+   "expect": {
+    "needs": "write"
+   }
+  },
+  {
+   "name": "origin_ok: origin None at host '127.0.0.1:4601'",
+   "kind": "origin_ok",
+   "input": {
+    "origin": null,
+    "host": "127.0.0.1:4601"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "origin_ok: origin 'http://127.0.0.1:4601' at host '127.0.0.1:4601'",
+   "kind": "origin_ok",
+   "input": {
+    "origin": "http://127.0.0.1:4601",
+    "host": "127.0.0.1:4601"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "origin_ok: origin 'http://localhost:4601' at host '127.0.0.1:4601'",
+   "kind": "origin_ok",
+   "input": {
+    "origin": "http://localhost:4601",
+    "host": "127.0.0.1:4601"
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "origin_ok: origin 'http://127.0.0.1:4600' at host '127.0.0.1:4601'",
+   "kind": "origin_ok",
+   "input": {
+    "origin": "http://127.0.0.1:4600",
+    "host": "127.0.0.1:4601"
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "origin_ok: origin 'https://evil.example' at host '127.0.0.1:4601'",
+   "kind": "origin_ok",
+   "input": {
+    "origin": "https://evil.example",
+    "host": "127.0.0.1:4601"
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "origin_ok: origin 'HTTP://127.0.0.1:4601' at host '127.0.0.1:4601'",
+   "kind": "origin_ok",
+   "input": {
+    "origin": "HTTP://127.0.0.1:4601",
+    "host": "127.0.0.1:4601"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "origin_ok: origin 'http://127.0.0.1:4601' at host ''",
+   "kind": "origin_ok",
+   "input": {
+    "origin": "http://127.0.0.1:4601",
+    "host": ""
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "bearer: None",
+   "kind": "bearer",
+   "input": {
+    "header": null
+   },
+   "expect": {
+    "wire": null
+   }
+  },
+  {
+   "name": "bearer: ''",
+   "kind": "bearer",
+   "input": {
+    "header": ""
+   },
+   "expect": {
+    "wire": null
+   }
+  },
+  {
+   "name": "bearer: 'Bearer abc.def'",
+   "kind": "bearer",
+   "input": {
+    "header": "Bearer abc.def"
+   },
+   "expect": {
+    "wire": "abc.def"
+   }
+  },
+  {
+   "name": "bearer: 'bearer   xyz '",
+   "kind": "bearer",
+   "input": {
+    "header": "bearer   xyz "
+   },
+   "expect": {
+    "wire": "xyz"
+   }
+  },
+  {
+   "name": "bearer: 'Basic abc'",
+   "kind": "bearer",
+   "input": {
+    "header": "Basic abc"
+   },
+   "expect": {
+    "wire": null
+   }
+  },
+  {
+   "name": "bearer: 'Bearer'",
+   "kind": "bearer",
+   "input": {
+    "header": "Bearer"
+   },
+   "expect": {
+    "wire": null
+   }
+  },
+  {
+   "name": "seat_words: busy",
+   "kind": "seat_words",
+   "input": {
+    "what": "busy"
+   },
+   "expect": {
+    "words": "the door is busy for you \u2014 try again shortly",
+    "face": {
+     "error": "the door is busy for you \u2014 try again shortly",
+     "retry_after_s": 1
+    }
+   }
+  },
+  {
+   "name": "seat_words: not seated",
+   "kind": "seat_words",
+   "input": {
+    "what": "not_seated"
+   },
+   "expect": {
+    "face": {
+     "error": "not seated"
+    }
+   }
+  },
+  {
+   "name": "seat_words: taken by jb as owner (the ceremony)",
+   "kind": "seat_words",
+   "input": {
+    "what": "taken",
+    "person": "did:orreth:person:jb",
+    "role": "owner",
+    "hours": 24.0,
+    "ceremony": true
+   },
+   "expect": {
+    "words": "you hold this ground now, jb \u2014 the first to prove an authenticator here is its owner \u00b7 your seat is the owner's for 24 hours; say \u201cleave my seat\u201d to end it sooner"
+   }
+  },
+  {
+   "name": "seat_words: taken by quinn as person",
+   "kind": "seat_words",
+   "input": {
+    "what": "taken",
+    "person": "did:orreth:person:quinn",
+    "role": "person",
+    "hours": 24.0,
+    "ceremony": false
+   },
+   "expect": {
+    "words": "seated, quinn \u00b7 your seat is a person's for 24 hours; say \u201cleave my seat\u201d to end it sooner"
+   }
+  },
+  {
+   "name": "seat_words: taken by ada as master",
+   "kind": "seat_words",
+   "input": {
+    "what": "taken",
+    "person": "did:orreth:person:ada",
+    "role": "master",
+    "hours": 8.0,
+    "ceremony": false
+   },
+   "expect": {
+    "words": "seated, ada \u00b7 your seat is a master's for 8 hours; say \u201cleave my seat\u201d to end it sooner"
+   }
+  },
+  {
+   "name": "person_did: 'jb'",
+   "kind": "person_did",
+   "input": {
+    "text": "jb"
+   },
+   "expect": {
+    "did": "did:orreth:person:jb"
+   }
+  },
+  {
+   "name": "person_did: 'did:orreth:person:jb'",
+   "kind": "person_did",
+   "input": {
+    "text": "did:orreth:person:jb"
+   },
+   "expect": {
+    "did": "did:orreth:person:jb"
+   }
+  },
+  {
+   "name": "person_did: 'JB'",
+   "kind": "person_did",
+   "input": {
+    "text": "JB"
+   },
+   "expect": {
+    "did": null
+   }
+  },
+  {
+   "name": "person_did: 'Mallory!'",
+   "kind": "person_did",
+   "input": {
+    "text": "Mallory!"
+   },
+   "expect": {
+    "did": null
+   }
+  },
+  {
+   "name": "person_did: 'did:orreth:person:Mallory!'",
+   "kind": "person_did",
+   "input": {
+    "text": "did:orreth:person:Mallory!"
+   },
+   "expect": {
+    "did": null
+   }
+  },
+  {
+   "name": "person_did: ''",
+   "kind": "person_did",
+   "input": {
+    "text": ""
+   },
+   "expect": {
+    "did": null
+   }
+  },
+  {
+   "name": "person_did: None",
+   "kind": "person_did",
+   "input": {
+    "text": null
+   },
+   "expect": {
+    "did": null
+   }
+  },
+  {
+   "name": "person_did: 'a'",
+   "kind": "person_did",
+   "input": {
+    "text": "a"
+   },
+   "expect": {
+    "did": null
+   }
+  },
+  {
+   "name": "person_did: 'ab'",
+   "kind": "person_did",
+   "input": {
+    "text": "ab"
+   },
+   "expect": {
+    "did": "did:orreth:person:ab"
+   }
+  },
+  {
+   "name": "person_did: 'aaaaaaaaaaaaaaaaaaaaaaaa'",
+   "kind": "person_did",
+   "input": {
+    "text": "aaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "expect": {
+    "did": "did:orreth:person:aaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  },
+  {
+   "name": "person_did: 'aaaaaaaaaaaaaaaaaaaaaaaaa'",
+   "kind": "person_did",
+   "input": {
+    "text": "aaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "expect": {
+    "did": null
+   }
+  },
+  {
+   "name": "person_did: 'quinn-2'",
+   "kind": "person_did",
+   "input": {
+    "text": "quinn-2"
+   },
+   "expect": {
+    "did": "did:orreth:person:quinn-2"
+   }
+  },
+  {
+   "name": "person_did: 'x_y9'",
+   "kind": "person_did",
+   "input": {
+    "text": "x_y9"
+   },
+   "expect": {
+    "did": "did:orreth:person:x_y9"
+   }
+  },
+  {
+   "name": "did_of_key: the body's agent DID from its key",
+   "kind": "seat_did_of_key",
+   "input": {
+    "kind": "agent",
+    "public_key_hex": "79b5562e8fe654f94078b112e8a98ba7901f853ae695bed7e0e3910bad049664"
+   },
+   "expect": {
+    "did": "did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0"
+   }
+  }
+ ]
+}

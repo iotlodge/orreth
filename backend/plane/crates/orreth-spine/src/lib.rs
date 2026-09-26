@@ -5,6 +5,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: memory · kernel_self · store · digest · export_live · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: body · stable (pure) · bodies · stable_live · services_live · gateway · mcp_live · keepers (live) · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the human profile: profile (pure) · profile_live (W58) · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the gate: seat (pure) · seat_live (the owner, the seats, the ceilings) · 2026-09-26
 //! `orreth-spine` — the kernel's pure laws in Rust, ported from the Python spine
 //! (`spine/orreth_spine/`) against the conformance suite (canon 0008).
 //!
@@ -32,6 +33,10 @@
 //! - [`profile`] — P7 sp8: the human's own words about themselves (what a
 //!   sentence tells, the labeled slice, the weather's default), pure; measured
 //!   by `profile-v0.json`; the record and the doors are [`profile_live`].
+//! - [`seat`] — P7 sp8 row 3: THE HUMAN SEAT — the 0006 capability token
+//!   (mint · verify through its fences · attenuate · the wire · the id), the
+//!   doors' needs, the closed origin, the person grammar; measured by
+//!   `seat-v0.json`; the owner, the seats and the ceilings are [`seat_live`].
 //!
 //! Phase 7 sp2 adds the GROUND AND THE RAILS behind the `rails` feature —
 //! off by default so `cargo test` stays hermetic; on, the crate stands on
@@ -94,6 +99,7 @@ pub mod profile;
 pub mod proof;
 pub mod py;
 pub mod rails;
+pub mod seat;
 pub mod services;
 pub mod stable;
 pub mod tools;
@@ -153,6 +159,8 @@ pub mod scheduler;
 pub mod schema;
 #[cfg(feature = "rails")]
 pub mod seam;
+#[cfg(feature = "rails")]
+pub mod seat_live;
 #[cfg(feature = "rails")]
 pub mod services_live;
 #[cfg(feature = "rails")]

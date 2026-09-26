@@ -6,6 +6,8 @@ supersedes when the episode grew. The pack reads the short version first."""
 import json
 import secrets
 import urllib.request
+
+from tests import seats  # P7 sp8 row 3: every door reads the person from the SEAT — the test sits first
 from pathlib import Path
 
 import pytest
@@ -89,22 +91,22 @@ def test_the_digest_doors_over_http(pg, rig):
         req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", data=json.dumps(obj).encode(),
                                      headers={"content-type": "application/json"}, method="POST")
         try:
-            with urllib.request.urlopen(req, timeout=15) as r:
+            with seats.urlopen(req, timeout=15) as r:
                 return r.status, json.loads(r.read())
         except urllib.error.HTTPError as e:
             return e.code, json.loads(e.read())
-    me = "did:orreth:person:" + secrets.token_hex(3)
+    me = "did:orreth:person:p" + secrets.token_hex(3)   # the person grammar: a letter first
     _s, a = post("/sessions", {"person": me, "title": "over http"})
     _s, filed = post("/ask", {"text": "a word for the digest", "to": ["echo"], "session": a["session_id"]})
     import time
     for _ in range(40):                                                    # the echo answers
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/ask/{filed['ids'][0]}", timeout=10) as r:
+        with seats.urlopen(f"http://127.0.0.1:{port}/ask/{filed['ids'][0]}", timeout=10) as r:
             if json.loads(r.read())["status"] == "replied":
                 break
         time.sleep(0.5)
     s, b = post("/sessions", {"person": me, "archive": a["session_id"]})     # the roll digests it
     assert s == 201
-    with urllib.request.urlopen(f"http://127.0.0.1:{port}/digest/{a['session_id']}", timeout=10) as r:
+    with seats.urlopen(f"http://127.0.0.1:{port}/digest/{a['session_id']}", timeout=10) as r:
         d = json.loads(r.read())
     assert "a word for the digest" in d["body"] and filed["ids"][0] in d["sources"]
     s, again = post("/digest", {"session": a["session_id"], "person": me})

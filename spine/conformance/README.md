@@ -240,3 +240,15 @@ the same files, unchanged — before any module earns the word "ported".
     `held_by` names the argument field and the values that hold at the interlock — a held
     value wears the declared class, any other runs at once, routine). Execution is not
     measured: it is the body's, never the kernel's.
+  - `seat_mint` · `seat_verify` · `seat_grants` · `door_needs` · `origin_ok` · `bearer` ·
+    `seat_words` · `seat_did_of_key` · `person_did` (seat-v0, P7 sp8 row 3a — THE HUMAN
+    SEAT) — the 0006 capability token from a root seed (the exact bytes: the hop with the
+    issuer's key and Sig, the chain as canonical strings, the outer Sig over the content;
+    the seat's id `seat_<sha256[..16]>`; the wire as unpadded base64url and back); the
+    verdicts in fence order (`ok` · `malformed` · `expired` · `foreign authority` · `broken
+    chain` · `bad signature` · `amplified` — a widened hop, a child outliving its parent, a
+    hop issued by a self that is not the hop above's subject); what a role may do (a person
+    reads and writes within the world; the owner and a master also govern); what each door
+    asks (open · enroll · retrieve · write · govern); the closed origin; the bearer header;
+    the busy and the unseated faces and the words on a seat taken; the person grammar (a
+    bare name or the DID, never reissued); a key-bearing self's DID from its key.

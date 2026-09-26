@@ -63,7 +63,7 @@ def test_the_interlock_holds_then_the_yes_releases(pg):
     r.load_policy(POLICY)
     r.join(pg)
     _purge_queue()
-    ask_id = dispatch.submit_ask(pg, f"Seal my note {tok} forever.")
+    ask_id = dispatch.submit_ask(pg, f"Seal my note {tok} forever.", person="did:orreth:person:test")
     from orreth_spine import outbox, sinks
     assert outbox.drain(pg, sinks.KafkaSink()) >= 1
     _dispatch(pg)
@@ -77,7 +77,7 @@ def test_the_interlock_holds_then_the_yes_releases(pg):
     assert json.loads(held)["tool"] == "seal-record"
     assert tools.journal(pg, r.identity.did) == []          # held = never ran
     # the deliberate yes
-    dispatch.confirm_ask(pg, ask_id, approve=True)
+    dispatch.confirm_ask(pg, ask_id, person="did:orreth:person:test", approve=True)
     status, reply, _by = _serve_until_replied(pg, r, ask_id)
     assert status == "replied" and "Done, on your word" in reply
     assert tools.journal(pg, r.identity.did) == [("seal-record", True)]
@@ -93,12 +93,12 @@ def test_cancel_is_the_default_and_the_act_never_ran(pg):
     r.load_policy(POLICY)
     r.join(pg)
     _purge_queue()
-    ask_id = dispatch.submit_ask(pg, f"Seal my other note {tok} forever.")
+    ask_id = dispatch.submit_ask(pg, f"Seal my other note {tok} forever.", person="did:orreth:person:test")
     from orreth_spine import outbox, sinks
     assert outbox.drain(pg, sinks.KafkaSink()) >= 1
     _dispatch(pg)
     r.serve_once(pg, idle_s=2.0, max_commands=100)
-    dispatch.confirm_ask(pg, ask_id, approve=False)    # the default: cancel
+    dispatch.confirm_ask(pg, ask_id, person="did:orreth:person:test", approve=False)    # the default: cancel
     import time as _t
     cur = pg.cursor()
     end = _t.monotonic() + 30
@@ -131,7 +131,7 @@ def test_the_librarian_tells_the_temperature_outside(pg):
     # P7 sp8 (W58): the weather is read for THE HUMAN'S OWN PLACE — told first, in their words;
     # the geocoder is stood in for so the proof reaches the one real road (the weather itself)
     from orreth_spine import profile
-    profile.say(pg, "did:orreth:person:jb", "I live in Payson, Arizona",
+    profile.say(pg, "did:orreth:person:test", "I live in Payson, Arizona",   # the asker's own place (the walk asks as person:test)
                 geocoder=lambda place: {"lat": 34.2308, "lon": -111.3251, "zone": "America/Phoenix",
                                         "label": "Payson, Arizona, United States"})
     _ask, (status, reply, _by) = _walk(

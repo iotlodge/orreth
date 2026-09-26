@@ -11,6 +11,8 @@ import secrets
 import time
 import urllib.request
 
+from tests import seats  # P7 sp8 row 3: every door reads the person from the SEAT — the test sits first
+
 import pytest
 
 from orreth_spine import gateway, glass
@@ -31,13 +33,13 @@ def test_the_words_form_live_and_the_door_keeps_the_truth(pg, rig):
     reply = f"alpha beta gamma delta {tok} end"
     rig.resident.gateway = gateway.FakeGateway(reply=reply)
     if True:
-        client = SSEClient(rig.port)
+        client = SSEClient(rig.port, seat=seats.seat(rig.port))   # the feed reads the seat from its query
         req = urllib.request.Request(
             f"http://127.0.0.1:{rig.port}/ask",
             data=json.dumps({"text": f"stream it (marker {tok})",
                              "to": ["librarian"]}).encode(),
             headers={"content-type": "application/json"}, method="POST")
-        with urllib.request.urlopen(req, timeout=10) as r:
+        with seats.urlopen(req, timeout=10) as r:
             ask_id = json.loads(r.read())["ids"][0]
         deltas, saw_reply = [], False
         end = time.monotonic() + 45
@@ -56,7 +58,7 @@ def test_the_words_form_live_and_the_door_keeps_the_truth(pg, rig):
         assert len(deltas) >= 4          # the words formed LIVE, word by word
         assert "".join(deltas).strip() == reply
         # the door still serves the whole truth
-        with urllib.request.urlopen(
+        with seats.urlopen(
                 f"http://127.0.0.1:{rig.port}/ask/{ask_id}",
                 timeout=10) as r:
             assert json.loads(r.read())["reply"] == reply

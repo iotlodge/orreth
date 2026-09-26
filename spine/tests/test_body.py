@@ -146,7 +146,7 @@ def test_a_body_stands_as_its_own_process_and_stops_whole():
         with _public() as conn:
             _poll(conn, "SELECT until > now() FROM spine_leases WHERE name = 'echo' AND scope = %s", (ev.scope(),),
                   lambda r: r[0] is True)                               # M2: alive while it serves
-            ids = dispatch.submit_ask(conn, "echo, the walk's word is HERON", to=["echo"])
+            ids = dispatch.submit_ask(conn, "echo, the walk's word is HERON", person="did:orreth:person:test", to=["echo"])
             aid = ids[0]
             dispatch.publish_command(_serve_command(aid, "echo"))
             row = _poll(conn, "SELECT status, reply FROM spine_asks WHERE ask_id = %s", (aid,),
@@ -199,7 +199,7 @@ def test_a_body_streams_its_words_to_the_kernels_door():
         line = b.wait_words("librarian is alive")
         assert "fake mind" in line and f"words to {door}" in line
         with _public() as conn:
-            ids = dispatch.submit_ask(conn, "librarian, in one word, who are you?", to=["librarian"])
+            ids = dispatch.submit_ask(conn, "librarian, in one word, who are you?", person="did:orreth:person:test", to=["librarian"])
             dispatch.publish_command(_serve_command(ids[0], "librarian"))
             _poll(conn, "SELECT status FROM spine_asks WHERE ask_id = %s", (ids[0],), lambda r: r[0] == "replied", 90.0)
         end = time.monotonic() + 5.0

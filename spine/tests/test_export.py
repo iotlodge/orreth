@@ -13,6 +13,8 @@ import os
 import secrets
 import urllib.error
 import urllib.request
+
+from tests import seats  # P7 sp8 row 3: every door reads the person from the SEAT — the test sits first
 from pathlib import Path
 
 import pytest
@@ -312,14 +314,14 @@ rails = pytest.mark.skipif(
 
 
 def _get(port, path):
-    with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=10) as r:
+    with seats.urlopen(f"http://127.0.0.1:{port}{path}", timeout=10) as r:
         return r.status, r.headers, r.read()
 
 
 def _post(port, path, obj):
     req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", data=json.dumps(obj).encode(),
                                  headers={"content-type": "application/json"}, method="POST")
-    with urllib.request.urlopen(req, timeout=10) as r:
+    with seats.urlopen(req, timeout=10) as r:
         return r.status, json.loads(r.read())
 
 

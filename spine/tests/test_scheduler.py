@@ -9,6 +9,8 @@ the Operating State. AG-6's scheduled half: the kernel runs the harness."""
 import json
 import secrets
 import urllib.request
+
+from tests import seats  # P7 sp8 row 3: every door reads the person from the SEAT — the test sits first
 from pathlib import Path
 
 import pytest
@@ -134,13 +136,13 @@ def test_the_schedule_doors_over_http_and_the_organ_beats_in_the_rig(pg, rig):
         req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", data=json.dumps(obj).encode(),
                                      headers={"content-type": "application/json"}, method="POST")
         try:
-            with urllib.request.urlopen(req, timeout=10) as r:
+            with seats.urlopen(req, timeout=10) as r:
                 return r.status, json.loads(r.read())
         except urllib.error.HTTPError as e:
             return e.code, json.loads(e.read())
     s, made = post("/schedules", {"runner": "echo", "text": "echo the hour", "every_s": 3600})
     assert s == 201 and made["schedule_id"].startswith("sch_")
-    with urllib.request.urlopen(f"http://127.0.0.1:{port}/schedules/librarian", timeout=10) as r:
+    with seats.urlopen(f"http://127.0.0.1:{port}/schedules/librarian", timeout=10) as r:
         card = json.loads(r.read())
     assert card["kernel"] and card["kernel"][0]["editable"] is False       # the rig declared it
     assert card["role"] and "worth remembering" in card["role"][0]["text"]  # the template's

@@ -4,6 +4,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the five mcp kinds · beat_lock · loop_words · plan_words · observed_words · watch_note · cannot_act · improvement_note · crew_hash · turned_fact · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the twelve minds kinds · backoff · park_rule · parked_words · parked_fact · harness_verdict · harness_command · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: topic_name · peers_from · address_home · epoch_check · world_fact · seam_sign · seam_verify · the words · sealed_words · ceiling · 2026-09-25
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the seat: seat_mint · seat_verify · seat_grants · door_needs · origin_ok · bearer · seat_words · seat_did_of_key · person_did · 2026-09-26
 //! The Rust conformance runner (canon 0008 · P7 sp1): every fixture under
 //! `spine/conformance/*-v*.json` — the same files the Python reference
 //! generated and passes, unchanged — dispatched by case kind exactly as
@@ -15,7 +16,7 @@
 
 use orreth_spine::{
     ask, beat, body, canonical, cells, content_hash, envelope, export, intent, kernel_self, mcp,
-    memory, mitl, placement, profile, proof, rails, services, stable, tools, watch,
+    memory, mitl, placement, profile, proof, rails, seat, services, stable, tools, watch,
 };
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
@@ -123,6 +124,15 @@ const PORTED_KINDS: &[&str] = &[
     "sealed_words",
     "rehome_words",
     "ceiling",
+    "seat_mint",
+    "seat_verify",
+    "seat_grants",
+    "door_needs",
+    "origin_ok",
+    "bearer",
+    "seat_words",
+    "seat_did_of_key",
+    "person_did",
 ];
 
 fn fixture_dir() -> PathBuf {
@@ -1238,6 +1248,92 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             ),
             s(&exp["words"]),
             "the words"
+        ),
+        // ---- orreth.seat/1 (P7 sp8 row 3a): THE HUMAN SEAT — the 0006 token from a seed, its verdicts, the doors' needs
+        "seat_mint" => {
+            let signer =
+                kernel_self::KernelSelf::from_seed(&hex_bytes(s(&inp["seed_hex"])), "kernel");
+            let t = seat::mint(
+                &signer,
+                s(&inp["subject"]),
+                s(&inp["audience"]),
+                &inp["grants"],
+                s(&inp["expiry"]),
+                s(&inp["direction"]),
+                Some(&inp["budget"]),
+                None,
+            )
+            .map_err(|e| format!("the mint refused: {e}"))?;
+            same!(t, exp["token"], "the token");
+            same!(
+                String::from_utf8(canonical(&t)).unwrap(),
+                s(&exp["bytes"]),
+                "the bytes"
+            );
+            same!(seat::seat_id(&t), s(&exp["seat_id"]), "the seat id");
+            same!(seat::wire(&t), s(&exp["wire"]), "the wire");
+            same!(
+                seat::unwire(s(&exp["wire"])),
+                Some(t.clone()),
+                "the wire back"
+            );
+        }
+        "seat_verify" => same!(
+            seat::verify(
+                &inp["token"],
+                s(&inp["root_did"]),
+                s(&inp["root_key_hex"]),
+                s(&inp["now"])
+            ),
+            s(&exp["verdict"]),
+            "the verdict"
+        ),
+        "seat_grants" => same!(
+            seat::grants_for(s(&inp["role"]), s(&inp["scope"])),
+            exp["grants"],
+            "the grants"
+        ),
+        "door_needs" => same!(
+            seat::door_needs(s(&inp["method"]), s(&inp["path"])),
+            s(&exp["needs"]),
+            "the door's need"
+        ),
+        "origin_ok" => same!(
+            seat::origin_ok(opt_str(&inp["origin"]), opt_str(&inp["host"])),
+            exp["ok"].as_bool().unwrap(),
+            "the origin"
+        ),
+        "bearer" => same!(
+            seat::bearer(opt_str(&inp["header"])),
+            opt_str(&exp["wire"]).map(str::to_string),
+            "the bearer"
+        ),
+        "seat_words" => match s(&inp["what"]) {
+            "busy" => {
+                same!(seat::BUSY_WORDS, s(&exp["words"]), "the busy words");
+                same!(seat::busy(), exp["face"], "the busy face");
+            }
+            "not_seated" => same!(seat::not_seated(), exp["face"], "the unseated's face"),
+            _ => same!(
+                seat::taken_words(
+                    s(&inp["person"]),
+                    s(&inp["role"]),
+                    inp["hours"].as_f64().unwrap(),
+                    inp["ceremony"].as_bool().unwrap()
+                ),
+                s(&exp["words"]),
+                "the taken words"
+            ),
+        },
+        "seat_did_of_key" => same!(
+            seat::did_of_key(s(&inp["kind"]), s(&inp["public_key_hex"])),
+            Some(s(&exp["did"]).to_string()),
+            "the did"
+        ),
+        "person_did" => same!(
+            seat::person_did(opt_str(&inp["text"])),
+            opt_str(&exp["did"]).map(str::to_string),
+            "the person's did"
         ),
         "ceiling" => {
             let (allowed, after) = cells::ceiling(

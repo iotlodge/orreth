@@ -5,6 +5,8 @@ body wearing the crew binding (the binding schema's v0)."""
 import json
 import secrets
 import urllib.request
+
+from tests import seats  # P7 sp8 row 3: every door reads the person from the SEAT — the test sits first
 from pathlib import Path
 
 import pytest
@@ -31,7 +33,7 @@ def test_the_crew_door_shows_every_body_and_both_sides(pg, monkeypatch):
     monkeypatch.setenv("SPINE_SCOPE", "u:law-" + secrets.token_hex(3))
     echo = _body("echo-resident.v0.json"); echo.join(pg)
     _body("librarian-resident.v0.json").join(pg)
-    aid = dispatch.submit_ask(pg, "served once")
+    aid = dispatch.submit_ask(pg, "served once", person="did:orreth:person:test")
     pg.cursor().execute("UPDATE spine_asks SET status = 'replied', served_by = %s,"
                         " reply = 'x', replied_at = now() WHERE ask_id = %s",
                         (echo.identity.did, aid))
@@ -58,7 +60,7 @@ def test_the_crew_binding_births_the_workspace_agent(pg, monkeypatch):
     assert (crew.name, crew.kind, crew.function) == ("crew", "firmware", "workspace:crew")
     crew.join(pg); crew._serve_conn = pg
     ses = glass.open_session(pg, "did:orreth:person:test")
-    [aid] = dispatch.submit_ask(pg, "who is here?", to=["crew"], session=ses)
+    [aid] = dispatch.submit_ask(pg, "who is here?", person="did:orreth:person:test", to=["crew"], session=ses)
     crew._current_ask = aid
     crew._graph.invoke({"text": "who is here?", "reply": "", "steps": [],
                         "notes": [], "hold": None, "read": []})
@@ -72,7 +74,7 @@ def test_the_crew_binding_births_the_workspace_agent(pg, monkeypatch):
 def test_the_crew_door_answers_over_http_with_the_whole_rig(pg, rig):
     """The rig seats residents, the includes, and the crew agent; the door
     a browser calls lists them all with their kinds."""
-    with urllib.request.urlopen(f"http://127.0.0.1:{rig.port}/crew", timeout=10) as r:
+    with seats.urlopen(f"http://127.0.0.1:{rig.port}/crew", timeout=10) as r:
         cards = {c["name"]: c["kind"] for c in json.loads(r.read())["crew"]}
     assert cards == {"librarian": "resident", "echo": "resident", "planner": "firmware",
                      "critic": "firmware", "grader": "firmware", "crew": "firmware", "stablekeeper": "firmware",

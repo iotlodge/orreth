@@ -5,6 +5,8 @@ lens the resident's recall honors (P6, "between X and Y")."""
 import json
 import secrets
 import urllib.request
+
+from tests import seats  # P7 sp8 row 3: every door reads the person from the SEAT — the test sits first
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -37,7 +39,7 @@ def test_acquire_lands_every_word_with_its_event_and_recalls_byte_exact(pg, monk
     assert "acquired" in out and ev.content_hash(TEXT)[:16] in out
     st = store.OrrethStore(pg, by_did=lib.identity.did)
     assert st.get("librarian", "hempcrete") == TEXT                    # byte-exact, by ref
-    assert glass.recall_view(pg, ref="librarian/hempcrete")["memory"]["body"] == TEXT
+    assert glass.recall_view(pg, person="did:orreth:person:test", ref="librarian/hempcrete")["memory"]["body"] == TEXT
     cur = pg.cursor()
     cur.execute("SELECT body FROM spine_outbox WHERE convert_from(body, 'UTF8') LIKE %s",
                 ("%librarian/hempcrete%",))
@@ -48,8 +50,8 @@ def test_acquire_lands_every_word_with_its_event_and_recalls_byte_exact(pg, monk
     win = lambda a, b: ((now - timedelta(hours=a)).isoformat(), (now - timedelta(hours=b)).isoformat())
     assert [m["key"] for m in st.within("librarian", *win(1, -1))] == ["hempcrete"]   # by timeframe
     assert st.within("librarian", *win(48, 24)) == []
-    assert glass.recall_view(pg, window=win(48, 24))["memories"] == []
-    assert glass.recall_view(pg, window=win(1, -1))["memories"][0]["body"] == TEXT
+    assert glass.recall_view(pg, person="did:orreth:person:test", window=win(48, 24))["memories"] == []
+    assert glass.recall_view(pg, person="did:orreth:person:test", window=win(1, -1))["memories"][0]["body"] == TEXT
 
 
 def test_recall_reads_the_asks_window_over_all_the_humans_worldlines(pg, monkeypatch):
@@ -95,7 +97,7 @@ def test_the_recall_door_answers_verbatim_over_http(pg, rig):
     port = rig.port
     def get(q):
         try:
-            with urllib.request.urlopen(f"http://127.0.0.1:{port}/recall?{q}", timeout=10) as r:
+            with seats.urlopen(f"http://127.0.0.1:{port}/recall?{q}", timeout=10) as r:
                 return r.status, json.loads(r.read())
         except urllib.error.HTTPError as e:
             return e.code, json.loads(e.read())

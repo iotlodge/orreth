@@ -339,6 +339,8 @@ def test_the_built_ins_register_at_birth_and_the_shelf_door_lists_every_kind(pg,
     assert e.value.code == 400
     _s, h = _get(rig.port, "/harness")
     assert {c["name"]: c["ok"] for c in json.loads(h)["checks"]}["every service healthy or retired"] is True
+    from tests import seats
+    seats.govern(rig.port, ME)                    # P7 sp8 row 3a: the shelf's changes are a governing seat's word
     st, r = _post(rig.port, "/services/retire", {"name": "seal-record", "person": ME})
     assert st == 202 and r["level"] == "L2" and r["held"].startswith("ask_")
     st, v = _get(rig.port, f"/ask/{r['held']}")

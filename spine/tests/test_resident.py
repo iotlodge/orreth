@@ -147,7 +147,7 @@ def test_the_whole_road_ask_to_reply_to_feed(pg):
         r.load_policy(POLICY)
         r.join(pg)
         text = f"Marker {tok}: please repeat every single word of this ask."
-        ask_id = dispatch.submit_ask(pg, text)
+        ask_id = dispatch.submit_ask(pg, text, person="did:orreth:person:test")
         assert outbox.drain(pg, sinks.KafkaSink()) >= 1
         d = _dispatch(pg)
         assert d["applied"] >= 1
