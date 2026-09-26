@@ -355,6 +355,7 @@
     background:rgba(0,0,0,.25);border-bottom:1px solid var(--seam);
     white-space:pre-wrap}
   .journey a.stopit{color:var(--accent,#d4a24c);text-decoration:none;cursor:pointer}
+  .msg.folded-hold{opacity:.75;padding:4px 10px}
   .bexpand .journey-notes{color:var(--dim);font-style:italic;
     font-size:11px;margin-top:6px}
   #composer{display:flex;gap:8px;padding:12px 14px;border-top:1px solid
@@ -1039,9 +1040,13 @@ function renderOutcome(id, v, line){
     return;
   }
   if (line._row){                                                                            // the hold settled:
-    line._row.querySelectorAll("button,input").forEach(b => b.disabled = true);
     const held = line._row.closest(".msg");                                                  // W35: back into the log, in order
     if (held && held.parentElement && held.parentElement.id === "pin") log.appendChild(held);
+    if (held){                                                                                // W60 (walk #15, JB's seed): the settled question FOLDS to one soft line —
+      const said = v.status === "cancelled" ? "you cancelled" : v.status === "replied" ? "you said yes" : v.status;   // the record keeps every word; nobody scrolls past a dead question
+      held.className = "msg theirs folded-hold";
+      held.innerHTML = `<div class="who">the kernel</div><span class="meta">held at the interlock · ${esc(said)} · ${hhmm(v.replied_at || v.asked_at)} · proof ${esc(v.proof || "L1")} · recorded</span>`;
+    }
   }
   const bubble = line._duty && v.status === "replied"
     ? dutyBubble(name, v)                                                                   // W21: a duty's reply folds to one line
