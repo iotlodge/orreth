@@ -1373,7 +1373,8 @@ approved (covenant rule 9).
   ride the rail one run at a time (120 s each); `dev.sh suite` still refuses
   beside a lit Bridge. Python suite 508 (469 before); five Rust proofs green; clippy + fmt clean. **Walk #14 (JB, 2026-09-25): PASS, no friction.** Pushed after JB's review of the plane diff.
 - **sp7 — CELLS, PARTITION, ISOLATION, HARDENING** (M7 · M8) ✅ **BUILT
-  2026-09-25 — walk OWED (JB in the glass, SPEC-CELLS-01)**, built once in the
+  2026-09-25 — walk #15 PASS w/ friction the same day (JB in the glass,
+  SPEC-CELLS-01; W53–W60 cured, W58 the human profile OWED)**, built once in the
   Rust kernel. **JB's locks at the open:** the WHOLE seam in one spoonful; the
   dev metal is ONE Postgres box with a database and a role per cell; bodies
   stay host processes (a container metal is sp8's). **"Cells = worlds":** a
