@@ -1455,13 +1455,26 @@ approved (covenant rule 9).
   Python suite 571 (508 before); six Rust proofs green (rails · askroad ·
   loops · memory · bodies · cells); clippy + fmt clean on both feature sets. The plane diff awaits JB's review
   before the push (P7's law).
-- **sp8 — THE RELEASE WAVE.** `orrethd` re-based on `orreth-spine` replaces
-  the Python glass; the new line replaces main; VERSION 1.0.
+- **sp8 — THE RELEASE WAVE (JB's locks, 2026-09-25 evening, after walk
+  #15).** Its first row is THE HUMAN PROFILE crossing to the new kernel
+  (W58: the person's place · zone · name · what they told us, provenance-
+  labeled as the Mirror had it, read into every resident's context at the
+  voiced answer and into the weather tool's default) — the residents know JB
+  before anyone else sees the product. Then `orrethd` re-based on
+  `orreth-spine` replaces the Python glass, the tool door moves, the human's
+  own door stands behind a real gate, the new line replaces main — at
+  **VERSION 0.1.0**, not 1.0. The version law: the new line starts at 0.1.0
+  and the minor climbs by spoonful (0.2, 0.3 …); the old line keeps 0.72 on
+  its tag forever; **1.0 is written only when the SELF-DELIVERY PROOF closes**
+  — Orreth files a feature through Orreth and delivers it for itself (Phase
+  9 below). Calling anything 1.0 before that would be a claim the register
+  cannot back.
 
 Honest scale: ten to fifteen thousand lines of Rust, eight spoonfuls, more
 than one session each. Close conditions: every fixture kind ported; JB
 walks the same four P6 specs plus the P3–P5 specs against the Rust kernel
-green; docs; VERSION 1.0 in the release commit.
+green; docs; VERSION 0.1.0 in the release commit (JB's lock 2026-09-25: 1.0
+waits for the self-delivery proof, Phase 9).
 
 ## Phase 6.5 — THE ORGANS (a parallel Python track beside the port — opened 2026-09-22 on JB's locks in 0009)
 
@@ -1815,3 +1828,37 @@ The halt is lifted for THIS line, THIS plan, THESE laws. Slicing stays
 honest, closes stay whole, the experience is tested by the human it is
 for, in the glass, and the first thing V1 must prove is not a feature —
 it is a conversation.
+
+## Phases 8 and 9 — THE CLOSED LOOP (JB's direction, 2026-09-25 evening; the road after the release wave)
+
+JB's words: Orreth is a governed, adaptive, polymorphic firmware that, like a
+multi-axis mill, will MAKE ITSELF — build features onto the rails, or a new
+rail, when the kernel's rails (processes with human and LLM involvement)
+approve them as value. "Use Orreth, through Orreth, to create." The third
+level of verification is one such extension of human escalation already
+standing. Not ready for 1.0 until that loop has closed once — and the first
+thing the loop needs is what the kernel KNOWS (no RAG in the kernel yet; the
+wound this rearchitecture began from).
+
+- **Phase 8 — THE FACTORIES.** Opens with THE LANE (the embedding lane in
+  the kernel — the Brain must know what it acquires before it can grow from
+  it; E-RAG's re-walk pays it). Then: skills, prompts and graph templates as
+  VERSIONED OBJECTS minted through the kernel (0011's factories, 0045's craft
+  room, carried); a body's ask for a missing tool or skill is a governed
+  ESCALATION that lands as a factory ask (a kernel improvement, or by design
+  a human's ask); an EXPERIMENT with two arms graded by the grader identity
+  (0043 · 0058: arms as records, promotion as a stamped act) — one arm by
+  residents, firmware and MITL, the other by decoupled LangGraph workflows
+  managed by intention, every step visible in the workspace's Intentions;
+  the Monitoring gains a monitor for the human's asks and the standing and
+  active queues (the middleware read by humans and kernel alike). Each row
+  proof-shaped (rule 12).
+- **Phase 9 — THE SELF-DELIVERY PROOF.** Use Orreth, through Orreth, to
+  create a Claude agent that uses the Brain to deliver an objective, mint
+  its skills and prompts through the factories, and templatize it as a
+  LangGraph body run in the workspace — the ontologies, the rails and the
+  grading of an objective verified end to end, on behalf of a human and by
+  a human with MITL's help. When it closes once, VERSION reads 1.0.
+- **Tabled until then** (JB, 2026-09-25): cells across machines, bodies in
+  containers, the multiverse portal, the Custodian — none is needed to
+  close the loop.
