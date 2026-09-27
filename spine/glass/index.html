@@ -2,6 +2,7 @@
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass), walk #7's wounds · 2026-09-21 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures (glass): W27 the person's latest session · W32 one Esc, one thing · W33 a pull retracts when focus moves · W34/W39 a stop never needs the exact words · W35 the code row pinned · 2026-09-23 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7 walk #15 cures: W53 a closed pull gives its focus back · 2026-09-25 -->
+<!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #17/#18 cures (glass): W61 a cancelled hold wears no proof word · W62 a retired service is at rest · W63 the YOU tag wears the seat's name · W64 a person's hold whose code is right reaches every other seated glass for a declared master's click · W65/W66 the stop grammar takes "stopping" · "start" and ignores state words · W67 the master reads the master's words · 2026-09-27 -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -1052,9 +1053,13 @@ async function onNotice(n){
   if (!line && n.kind.includes("confirm.needed")){   // P6.5 sp2: a hold this chat did not file — the keeper's
     const vh = await fetch("/ask/" + n.ref).then(x=>x.json()).catch(()=>null);   // proposal (rule 11: it never
     if (!vh || vh.served_by !== "the kernel" || !(vh.hold || {}).tool || vh.status !== "awaiting-confirm") return;   // retires alone)
-    if (!(vh.person || "").startsWith("did:orreth:agent:")) return;                // a body proposed it: the human cuts
+    const body = (vh.person || "").startsWith("did:orreth:agent:");               // a body proposed it: the human cuts
+    // W64 (walk #18): a PERSON's grave act whose code is right now waits for a declared master — it reaches every other seated glass, the master's road to the ask
+    const forMaster = !body && vh.hold.level === "L3-master" && vh.hold.code_ok === true && PERSON && vh.person !== PERSON;
+    if (!body && !forMaster) return;
     const atDoor = vh.hold.tool === "join.admit";                                    // P7 sp8 row 3b: a body at the join desk — a governing seat admits it
-    el("msg mine", `<em>${esc(atDoor ? ((vh.hold.args || {}).name || whoIs(vh.person)) + " asks to join · the desk" : whoIs(vh.person) + " proposes · the shelf")}</em><div class="meta">${esc(vh.text)}</div>`);
+    el("msg mine", `<em>${esc(forMaster ? whoIs(vh.person) + " asks · their code was right · a declared master's click runs it"
+                              : atDoor ? ((vh.hold.args || {}).name || whoIs(vh.person)) + " asks to join · the desk" : whoIs(vh.person) + " proposes · the shelf")}</em><div class="meta">${esc(vh.text)}</div>`);
     PENDING[n.ref] = el("journey", "held at the interlock — cancel is the default…");
     renderOutcome(n.ref, vh, PENDING[n.ref]);
     return;
@@ -1117,7 +1122,11 @@ function renderOutcome(id, v, line){
     // W5: the kernel's intention asks for the asker's CODE first (needs_code, code_ok false), the master's click after
     const step = level === "L3-code" || (level === "L3-master" && hold.needs_code && !hold.code_ok) ? "code"
                : level === "L3-master" ? "master" : "yes";
-    const m = el("msg theirs", who + esc(v.reply));
+    // W67 (walk #18): the master reads the master's words — not the asker's six-digit instructions
+    const words = step === "master" && v.person !== PERSON
+      ? `${whoIs(v.person)} asks: ${v.text}. Their code was right. You are seated as a declared master — your click runs it; Cancel is the default and turns it away, recorded.`
+      : v.reply;
+    const m = el("msg theirs", who + esc(words));
     document.getElementById("pin").appendChild(m);   // W35 (walk #11): the hold is PINNED above the composer until it settles —
     const row = holdRow(id, step, level, v.person);  // the crew's bubbles never scroll the code row away
     // P6 sp3: every hold offers "expected impact?" — MITL's answer renders here, before Cancel / Yes
@@ -1125,7 +1134,8 @@ function renderOutcome(id, v, line){
     m.appendChild(row); row.querySelector(".btn-cancel").focus();
     PENDING[id] = el("journey", step === "code" ? (level === "L3-master" ? "held — your code first, then a declared master's click · cancel is the default"
                                                                             : "held — this needs your code · cancel is the default")
-                              : step === "master" ? "held — this needs a second named person · cancel is the default"
+                              : step === "master" ? (v.person !== PERSON ? `held — ${whoIs(v.person)}'s code was right · your click as a declared master runs it · cancel is the default`
+                                                                          : "held — this needs a second named person · cancel is the default")
                               : "held at the interlock — your word decides");
     PENDING[id]._row = row; PENDING[id]._stopping = line._stopping; PENDING[id]._verb = line._verb;   // the verb rides along: "standing again", not "at rest", after a restart
     return;
@@ -1136,7 +1146,7 @@ function renderOutcome(id, v, line){
     if (held){                                                                                // W60 (walk #15, JB's seed): the settled question FOLDS to one soft line —
       const said = v.status === "cancelled" ? "you cancelled" : v.status === "replied" ? "you said yes" : v.status;   // the record keeps every word; nobody scrolls past a dead question
       held.className = "msg theirs folded-hold";
-      held.innerHTML = `<div class="who">the kernel</div><span class="meta">held at the interlock · ${esc(said)} · ${hhmm(v.replied_at || v.asked_at)} · proof ${esc(v.proof || "L1")} · recorded</span>`;
+      held.innerHTML = `<div class="who">the kernel</div><span class="meta">held at the interlock · ${esc(said)} · ${hhmm(v.replied_at || v.asked_at)} · ${v.status === "cancelled" ? "nothing ran, nothing was proved" : "proof " + esc(v.proof || "L1")} · recorded</span>`;   // W61 (walk #17): a cancel wears no proof level
     }
   }
   const bubble = line._duty && v.status === "replied"
@@ -1534,9 +1544,10 @@ const STOP_NOISE = new Set(["the", "and", "that", "this", "with", "for", "every"
 function looseMatch(i, want){                    // W39: a word in common, the runner, or what it serves
   const w = (i.words || "").toLowerCase(), serves = (i.serves || "").toLowerCase(), runner = (i.runner || "").toLowerCase();
   if (w.includes(want) || serves === want || runner === want) return true;
-  const toks = want.split(/[^a-z0-9]+/).filter(t => t.length >= 3 && !STOP_NOISE.has(t));
+  // W66 (walk #18): state words ("standing resiliency intention") are not a name — and each word is tried against what it serves and who runs it
+  const toks = want.split(/[^a-z0-9]+/).filter(t => t.length >= 3 && !STOP_NOISE.has(t) && !/^(standing|rested|resting|kernel|kernels|own|current)$/.test(t));
   const have = new Set(w.split(/[^a-z0-9]+/));
-  return toks.length > 0 && toks.some(t => have.has(t));
+  return toks.length > 0 && toks.some(t => have.has(t) || t === serves || t === runner);
 }
 function offerIntentions(rows, verb, head){       // the choice, one click each — never the exact words again
   const box = el("msg theirs", `<div class="who">${head}</div>`);
@@ -1571,9 +1582,10 @@ async function stopRoutedWords(text){             // W56: "stop it" · "stop tha
 async function stopWords(text){                  // W34 · W39 (walk #11): "stop" · "echo, stop" · "stop my time intention" — never the exact words
   const bare = text.match(/^(?:([a-z][a-z0-9_-]*),\s*)?(stop|rest|restart|resume)\s*[.!]?$/i);
   // "echo, restart intention 'every 5 seconds'" · "stop my time intention" · "restart the kernel's resiliency intention"
-  const m = bare ? null : text.match(/^(?:([a-z][a-z0-9_-]*),\s*)?(stop|rest|restart|resume)\s+(?:the\s+|my\s+)?(?:intention\s+)?(kernel'?s\s+)?(.+?)(?:\s+intention)?\s*[.!]?$/i);
+  // W65 (walk #18): "stopping …" · "please stop …" · "restarting …" are the same word — a near miss went to a resident, who then claimed the act
+  const m = bare ? null : text.match(/^(?:([a-z][a-z0-9_-]*),\s*)?(?:please\s+)?(stop|stopping|rest|resting|restart|restarting|resume|resuming|start|starting)\s+(?:the\s+|my\s+)?(?:intention\s+)?(kernel'?s\s+)?(.+?)(?:\s+intention)?\s*[.!]?$/i);
   if (!bare && !m) return false;
-  const verb = /^(restart|resume)$/i.test(bare ? bare[2] : m[2]) ? "restart" : "stop";
+  const verb = /^(restart|restarting|resume|resuming|start|starting)$/i.test(bare ? bare[2] : m[2]) ? "restart" : "stop";   // W65: "start" is a restart of a rested one
   const runner = ((bare ? bare[1] : m[1]) || "").toLowerCase();
   const kernels = !!(m && m[3]);
   const want = m ? m[4].toLowerCase().trim().replace(/^["'“‘]+|["'”’]+$/g, "").trim() : "";
@@ -1692,7 +1704,8 @@ async function loadCrew(){
 
 /* ---- P6.5 sp1: THE SHELF — every service the kernel governs (tool · mcp · store · source · mind), one ladder ---- */
 function stateWords(s){ return `${s.state}${s.state === "versioned" ? " (" + s.version + ")" : ""} · since ${hhmm(s.since)}`; }
-function healthWords(s){ const h = s.last_health; if (!h) return "never probed";
+function healthWords(s){ const h = s.last_health; if (s.state === "retired") return "at rest — retired, not probed";   // W62 (walk #17)
+  if (!h) return "never probed";
   return (h.ok === true ? "healthy" : h.ok === false ? "UNHEALTHY" : "not probed") + ` · ${hhmm(h.at)} · ${h.detail}`; }
 function serviceCard(s){
   const d = document.createElement("div"); d.className = "card service" + (s.state === "retired" ? " retired" : "");
@@ -1807,7 +1820,7 @@ function drawPortrait(p){                       // the portrait, every word with
 function drawYou(p){                            // the YOU tag under the sun: who this door knows you are
   const tag = document.getElementById("youtag"); if (!tag) return;
   const bits = [];
-  if (p && p.name) bits.push(p.name); else bits.push("you");
+  if (p && p.name) bits.push(p.name); else bits.push(PERSON ? whoIs(PERSON) : "you");   // W63 (walk #18): the seat's name before "you"
   if (p && p.place) bits.push(p.place);
   if (p && p.clock) bits.push(p.clock);
   tag.textContent = bits.join(" · ");

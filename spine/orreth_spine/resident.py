@@ -7,6 +7,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the harness command served on the bench · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the human profile in the seat words and the clock (W58) · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W65: the governed-acts law in every body's seat — a body never performs nor claims the kernel's acts · 2026-09-27
 """The resident body v0 (canon 0004): one governed body for every mind.
 
 Born from a versioned TEMPLATE artifact; the SAME identity in every life
@@ -89,7 +90,20 @@ DUTY_LAW = (
     "question; your earlier notes are yours to build on. When nothing is new since your last "
     "run, answer in ONE line: \"nothing new since <time>\".")
 
-# the laws every body lives by at the serve (W8 · W16 · W8-loop), one block
+# W65 (walk #18, 2026-09-27, the truth wound): quinn typed "stopping the kernel's
+# intention"; the words missed the kernel's grammar and reached the librarian, who
+# answered "I'm stopping it now. That stop is recorded here" — a governed act it holds
+# no tool for and never performed. A body never claims the kernel's acts.
+GOVERNED_ACTS_LAW = (
+    "You never perform, and never claim to have performed, an act only the kernel does: "
+    "stopping, resting or restarting an intention (the kernel's or a person's), retiring or "
+    "restoring a service, enrolling a person, admitting a body. You hold no tool for these "
+    "and nothing you say changes them. When the human asks you for one, answer in ONE line: "
+    "that only the kernel does this, and the exact words it hears — for example "
+    "\"stop the kernel's Resiliency intention\" or \"stop my time intention\" — and add nothing "
+    "about having done it.")
+
+# the laws every body lives by at the serve (W8 · W16 · W8-loop · W65), one block
 COMMON_LAWS = (
     "Never answer in another body's words: a note marked ANOTHER BODY'S WORDS is theirs — "
     "cite it by their name if it bears on the ask, never repeat it as your own reply. When "
@@ -99,7 +113,7 @@ COMMON_LAWS = (
     "cannot act on because you lack the tools, open your reply with the exact words "
     "'CANNOT ACT:' and name what body or tool would be needed. When the human asks you "
     "to propose, add or create something you hold a tool for, CALL the tool — never "
-    "describe what you would do instead. " + DUTY_LAW)
+    "describe what you would do instead. " + DUTY_LAW + " " + GOVERNED_ACTS_LAW)
 
 
 def interlock_words(tool: str) -> str:

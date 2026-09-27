@@ -2,6 +2,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the APPROVE of a kernel-held act runs intent.stop · intent.restart · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the APPROVE of service.retire and the Stable's acts (mind.*) settles here · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: name_of shared with the seam · the world.rehome act settles here · 2026-09-25
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W64: the asker's right code files a second confirm-needed notice (step master) through the outbox — the master's road to the ask · 2026-09-27
 //! The ask road on the ground — mirrors `orreth_spine.dispatch` (the write
 //! half) and the ask views of `orreth_spine.glass`: ONE write path. A human's
 //! ask lands on `spine_asks` WITH its marker and its `ask.received` fact in
@@ -568,12 +569,36 @@ pub async fn confirm_ask(
                 return Err(e);
             }
             held["code_ok"] = json!(true);
-            g.client()
-                .execute(
-                    "UPDATE spine_asks SET held = $1 WHERE ask_id = $2",
-                    &[&held.to_string(), &ask_id],
-                )
-                .await?;
+            // W64 (walk #18): the code is right — the hold now waits for a declared
+            // master's CLICK, and every other seated glass must hear it (the master's
+            // road to the ask); the notice rides the outbox with the held row's change.
+            let tx = g.client_mut().transaction().await?;
+            tx.execute(
+                "UPDATE spine_asks SET held = $1 WHERE ask_id = $2",
+                &[&held.to_string(), &ask_id],
+            )
+            .await?;
+            let seq = next_seq(&tx, ask_id).await?;
+            let n = Mint {
+                kind: "event".into(),
+                r#type: CONFIRM_NEEDED.into(),
+                universe_id: w.scope.clone(),
+                scope_path: w.scope.clone(),
+                payload: json!({"ref": ask_id, "hash": "sha256:-", "tool": held["tool"], "class": held["class"],
+                                "level": level, "needs_code": true, "code_ok": true, "step": "master"}),
+                correlation_id: Some(ask_id.to_string()),
+                authority_chain: Some(vec![h.person.clone(), KERNEL.to_string()]),
+                aggregate: Some(json!({"type": "ask", "id": ask_id, "sequence": seq})),
+                marker: None,
+            }
+            .mint()?;
+            outbox::add_row(
+                &tx,
+                &envelope::encode(&n)?,
+                n["message_id"].as_str().unwrap_or_default(),
+            )
+            .await?;
+            tx.commit().await?;
             return Ok(
                 json!({"id": ask_id, "approve": true, "level": level, "step": "code", "next": "master"}),
             );

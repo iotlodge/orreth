@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, a body never confirms (one face) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W12 · W19 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the dispatcher listens on the cell's topic · 2026-09-25
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W64: the asker's right code files a second confirm-needed notice (step master) — the master's road to the ask · 2026-09-27
 """The ask road (canon 0002's chain, in miniature): ONE write path.
 
 A human's ask lands on the ground with its event in one transaction; the
@@ -269,9 +270,24 @@ def confirm_ask(conn, ask_id: str, *, approve: bool,
                             rabbit_url=rabbit_url)
                 raise
             held["code_ok"] = True
+            # W64 (walk #18): the code is right — the hold now waits for a declared
+            # master's CLICK, and every other seated glass must hear it (the master's
+            # road to the ask); the notice rides the outbox with the held row's change
+            from .proof import KERNEL
+            from .resident import CONFIRM_NEEDED, _next_seq
+            asker = row[3]
             with conn.transaction():
-                conn.cursor().execute("UPDATE spine_asks SET held = %s WHERE ask_id = %s",
-                                      (json.dumps(held), ask_id))
+                cur = conn.cursor()
+                cur.execute("UPDATE spine_asks SET held = %s WHERE ask_id = %s",
+                            (json.dumps(held), ask_id))
+                n = ev.make_envelope(
+                    kind="event", type=CONFIRM_NEEDED, universe_id=ev.scope(), scope_path=ev.scope(),
+                    payload={"ref": ask_id, "hash": "sha256:-", "tool": held.get("tool"),
+                             "class": held.get("class"), "level": level,
+                             "needs_code": True, "code_ok": True, "step": "master"},
+                    correlation_id=ask_id, authority_chain=[asker, KERNEL],
+                    aggregate={"type": "ask", "id": ask_id, "sequence": _next_seq(cur, ask_id)})
+                outbox.add_row(cur, ev.encode(n), n["message_id"])
             return {"id": ask_id, "approve": True, "level": level, "step": "code",
                     "next": "master"}          # held still: the master's click is owed
         try:

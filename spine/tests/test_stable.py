@@ -10,6 +10,7 @@ runs model arms and reads four new world checks; the keeper's tool holds
 what is consequential and names the act at the interlock (W30); a server
 names itself (W28); a keeper's follow-up stays with the keeper (W29)."""
 import json
+import os
 import secrets
 from datetime import datetime, timezone
 from pathlib import Path
@@ -33,6 +34,13 @@ def fake(monkeypatch):
     monkeypatch.setenv(stable.GATEWAY_DIAL, f.base)
     monkeypatch.setenv(stable.GATEWAY_KEY_DIAL, MASTER)
     monkeypatch.setenv("SPINE_SCOPE", "u:stable-" + secrets.token_hex(3))
+    # CI (2026-09-27): the seeds judge a mind's secret BY NAME (reachable or not — the
+    # env-secrets law, the value never read here); the fake gateway calls no provider.
+    # A box without the keys (the GitHub runner) refused haiku · sonnet · llama at the
+    # seed and six of these laws failed for a week. A placeholder stands in.
+    for k in ("ANTHROPIC_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY"):
+        if not os.environ.get(k):
+            monkeypatch.setenv(k, "sk-placeholder-the-fake-gateway-calls-no-provider")
     yield f
     f.close()
 

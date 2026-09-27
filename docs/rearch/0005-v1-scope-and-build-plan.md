@@ -1507,8 +1507,10 @@ approved (covenant rule 9).
     weather tool says it has no coordinates.
   - **The rows after it (JB's locks, 2026-09-26, after walk #16).** Each in
     a fresh session (the token-bleed law), each walked by JB, in this order:
-    - **Row 2 — THE TOOL DOOR MOVES** ✅ **BUILT 2026-09-26 (walk #17
-      OWED — the script in the walk register).** The built-in tools'
+    - **Row 2 — THE TOOL DOOR MOVES** ✅ **BUILT 2026-09-26 — walk #17 PASS
+      w/ friction 2026-09-27 (JB in the glass; W61 the cancelled hold's "proof
+      L1" · W62 the retired mind's health word — both cured in the glass the
+      same day).** The built-in tools'
       DECLARATIONS (name · description · input schema · consequence class ·
       the ground and master flags · `held_by`: which arguments hold at the
       interlock) are DATA in `spine/tools.v0.json`, beside the crew
@@ -1564,7 +1566,15 @@ approved (covenant rule 9).
       bodies the kernel spawns keep their governed join; KCR-0001 re-paid on
       the new kernel. Persons: the name never reissued (`persons.py`'s law).
       Two to three sessions.
-      - **(a) THE HUMAN SEAT** ✅ **BUILT 2026-09-26 (walk #18 OWED — the
+      - **(a) THE HUMAN SEAT** ✅ **BUILT 2026-09-26 — walk #18 PASS w/ friction
+        2026-09-27 (JB in the glass): two WOUNDS found and cured in the walk —
+        W64 the master's road (the asker's right code now files a second
+        confirm-needed notice on both kernels, and every other seated glass draws
+        the hold for a declared master's click) and W65 a resident claiming the
+        kernel's act (every body wears the governed-acts law; the grammar takes
+        "stopping"); W63 · W66 · W67 legibility cured in the glass; the flood
+        step of the script corrected (a real flood, not seventy in a row) (walk
+        #18 was — the
         script in the walk register; SPEC-GATE-01).** JB's locks at the open
         (AskUserQuestion): the contract's DID pattern widened to `did:orreth`
         (rule 9, his word — `contracts/v0/common.schema.json`, one line) ·
@@ -1669,7 +1679,9 @@ approved (covenant rule 9).
            lands twice today and the doubled tests are most of a day. Row 3b
            lands once on the Rust kernel and once in the fixture; row 4
            narrows the reference to fixtures and shadow proofs, as written.
-      - **(b) THE MACHINE JOIN DESK** ✅ **BUILT 2026-09-26 (walk #19 OWED —
+      - **(b) THE MACHINE JOIN DESK** ✅ **BUILT 2026-09-26 (walk #19 half-walked
+        2026-09-27 at the doors by Fable at JB's ask; the governing clicks OWED
+        to JB's seat —
         SPEC-DESK-01).** JB's four locks at the open (AskUserQuestion): a
         LEASE opens the body's own words (`POST /delta`) and the desk's doors,
         nothing more, and stands on the ground as a SEAT with the role `body`
