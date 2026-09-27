@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import dispatch, envelope as ev, gateway, glass, harness, markers, mcp, mitl, resident, services, tools
+from orreth_spine import dispatch, envelope as ev, gateway, glass, harness, markers, mcp, mitl, proof, resident, services, tools
 
 from tests.test_glass import _get, _post  # noqa: E402
 from tests.test_mind import _rails_up  # noqa: E402
@@ -252,6 +252,7 @@ def test_the_keeper_proposes_after_n_strikes_and_never_retires_alone(pg, monkeyp
     assert services.get(pg, "echo")["state"] == "unhealthy"           # proposed, not retired
     assert mcp.keeper_beat(pg, keeper=keeper.identity.did)["proposed"] == []   # one waits: no second
     assert harness.keeper_proposes(pg)["ok"] is True
+    proof.declare_master(pg, ME, by=ME)          # W69: a keeper's proposal is a GOVERNING seat's word — the human here governs
     dispatch.confirm_ask(pg, p["held"], approve=False, person=ME)     # cancel: nothing ran; the count reads
     assert services.get(pg, "echo")["state"] == "unhealthy" and mcp.strikes(pg, "echo") == 1   # since the proposal
     assert mcp.keeper_beat(pg, keeper=keeper.identity.did)["proposed"] == []                    # (the beat that waited)
