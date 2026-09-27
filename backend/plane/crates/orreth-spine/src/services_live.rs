@@ -774,12 +774,11 @@ pub async fn probe(
         let mut pinged = gw.ping(g, &w.scope, &who, &name, &name, &route).await;
         // W71 (walk #19, 2026-09-27): the ladder is the truth — a stall the gateway no longer
         // lists ("Invalid model name") is written back from its manifest and pinged once more
-        if let Ok(said) = &pinged {
-            if said.to_lowercase().contains("invalid model name")
-                && gw.add_stall(&name, &m).await.is_ok()
-            {
-                pinged = gw.ping(g, &w.scope, &who, &name, &name, &route).await;
-            }
+        let refused = match &pinged {
+            Ok(s) | Err(s) => s.to_lowercase().contains("invalid model name"), // the gateway's refusal rides the Err arm
+        };
+        if refused && gw.add_stall(&name, &m).await.is_ok() {
+            pinged = gw.ping(g, &w.scope, &who, &name, &name, &route).await;
         }
         return Ok(match pinged {
             Ok(said) => {
