@@ -430,7 +430,13 @@ pub async fn hold_kernel_act(
         Some(c) => c.to_uppercase().collect::<String>() + chars.as_str(),
         None => String::new(),
     };
-    let question = crate::proof::question_for(level, &capital, needs_code);
+    // W74 (walk #19): the desk's hold already says it all ("… a no turns it away. Cancel is the
+    // default.") — the L2 wrapper ("is consequential … you can restore it later") is not for a join
+    let question = if tool == crate::desk::ADMIT_TOOL {
+        capital.clone()
+    } else {
+        crate::proof::question_for(level, &capital, needs_code)
+    };
     let mut payload = json!({"ref": ask_id, "hash": content_hash(&Value::String(text.into())),
                              "tool": tool, "class": cls, "level": level});
     if needs_code {

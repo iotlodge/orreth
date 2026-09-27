@@ -1028,6 +1028,9 @@ pub async fn ask_view(g: &Ground, scope: &str, ask_id: &str) -> Result<Option<Va
                 v["needs_code"] = json!(true);
                 v["code_ok"] = json!(h["code_ok"].as_bool() == Some(true));
             }
+            if h["args"].is_object() {
+                v["args"] = h["args"].clone(); // W73 (walk #19): the glass names a body at the desk by them
+            }
             v
         }
         _ => Value::Null,

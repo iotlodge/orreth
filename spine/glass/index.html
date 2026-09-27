@@ -416,7 +416,7 @@
 <div id="chat">
   <div id="grip" title="drag to resize — the upper-right corner stays"
        aria-label="resize the chat" role="separator"></div>
-  <header><span>THE ONE CHAT · u:dev</span>
+  <header><span id="chat-head">THE ONE CHAT · u:dev</span>
     <span class="hint"><a id="ses-list">sessions</a> · <a id="ses-new">new session</a>
       · <a onclick="toggleChat(false)" title="close the chat, keep the pulls">▾ close</a>
       · [Esc] returns to the bridge</span></header>
@@ -471,7 +471,7 @@ window.fetch = function(url, opts){
 let SEAT_ASKED = false;
 async function unseated(){                        // the seat form, once: the ceremony on a fresh ground, else name + code
   if (SEAT_ASKED) return; SEAT_ASKED = true;
-  SEAT = null; PERSON = null; GOVERN = false;
+  SEAT = null; PERSON = null; GOVERN = false; drawHead();
   try { localStorage.removeItem("orreth.seat"); } catch (e) {}
   const st = await _fetch("/seat").then(x=>x.json()).catch(()=>null);
   const ceremony = !!(st && st.ceremony), hours = st && st.hours ? st.hours : 24;
@@ -511,7 +511,7 @@ async function takeSeat(name, code, msg, row){   // the code proves the person; 
                         : r && r.b && r.b.error ? r.b.error : "the seat door did not answer");
     return;
   }
-  SEAT = r.b.wire; PERSON = r.b.person; GOVERN = seatGoverns(seatToken(SEAT));
+  SEAT = r.b.wire; PERSON = r.b.person; GOVERN = seatGoverns(seatToken(SEAT)); drawHead();
   try { localStorage.setItem("orreth.seat", SEAT); } catch (e) {}
   stepDone(msg, row, esc(r.b.words));
   setTimeout(() => location.reload(), 700);
@@ -522,7 +522,7 @@ async function seatWords(text){                  // "leave my seat" · "who am I
     el("msg mine", esc(text));
     const r = await fetch("/seat/leave", {method:"POST", headers:{"content-type":"application/json"}, body: "{}"}).then(x=>x.json()).catch(()=>null);
     sysline(esc(r && r.words ? r.words : "your seat is ended"));
-    SEAT = null; PERSON = null; GOVERN = false; try { localStorage.removeItem("orreth.seat"); } catch (e) {}
+    SEAT = null; PERSON = null; GOVERN = false; drawHead(); try { localStorage.removeItem("orreth.seat"); } catch (e) {}
     setTimeout(() => location.reload(), 700);
     return true;
   }
@@ -1824,7 +1824,14 @@ function drawPortrait(p){                       // the portrait, every word with
   sysline(`your clock here reads ${esc(p.clock || "the ground's own")} · say “forget about me: my place” (or “forget that …”) to withdraw a word — the record keeps that you said it once`);
   drawYou(p);
 }
+function drawHead(){                            // W75 (JB, walk #19): the chat names WHO holds it — a human checks this before every word
+  const h = document.getElementById("chat-head"); if (!h) return;
+  const base = h.textContent.split(" · ").slice(0, 2).join(" · ");
+  h.textContent = PERSON ? `${base} · ${whoIs(PERSON)}` : base;
+  h.title = PERSON ? `this chat is ${whoIs(PERSON)}'s — the seat this window holds` : "no seat yet — the seat form opens on the first word";
+}
 function drawYou(p){                            // the YOU tag under the sun: who this door knows you are
+  drawHead();
   const tag = document.getElementById("youtag"); if (!tag) return;
   const bits = [];
   if (p && p.name) bits.push(p.name); else bits.push(PERSON ? whoIs(PERSON) : "you");   // W63 (walk #18): the seat's name before "you"

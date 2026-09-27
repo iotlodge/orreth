@@ -376,6 +376,7 @@ def test_the_doors_enroll_hold_the_kernels_intention_and_wear_one_face(pg, rig):
     assert s == 202 and b["level"] == "L3-master" and b["held"].startswith("ask_")
     view = _get(port, "/ask/" + b["held"])
     assert view["status"] == "awaiting-confirm" and view["served_by"] == "the kernel"
+    assert view["hold"].pop("args") == {"intention_id": res["intention_id"]}       # W73: the act's args ride the view
     assert view["hold"] == {"tool": "intent.stop", "class": "grave", "level": "L3-master",
                             "needs_code": True, "code_ok": False}                 # W5: the code, then the master
     assert "second named person" in view["reply"] and view["proof"] == "L1"

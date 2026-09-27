@@ -107,6 +107,7 @@ def ask_view(conn, ask_id: str) -> dict | None:
             "marker": row[11], "origin": origin,                # 0006 · 0007
             "proof": row[12] or "L1",                           # P6 sp1: the level the act wore
             "hold": ({"tool": h.get("tool"), "class": h.get("class", "consequential"),
+                      **({"args": h["args"]} if isinstance(h.get("args"), dict) else {}),   # W73: a body at the desk is named by them
                       "level": h.get("level", "L2"),                 # what the hold demands
                       **({"needs_code": True, "code_ok": bool(h.get("code_ok"))}   # W5: the asker's
                          if h.get("needs_code") else {})}            # code, then the master

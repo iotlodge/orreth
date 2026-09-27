@@ -1679,9 +1679,9 @@ approved (covenant rule 9).
            lands twice today and the doubled tests are most of a day. Row 3b
            lands once on the Rust kernel and once in the fixture; row 4
            narrows the reference to fixtures and shadow proofs, as written.
-      - **(b) THE MACHINE JOIN DESK** ✅ **BUILT 2026-09-26 (walk #19 half-walked
-        2026-09-27 at the doors by Fable at JB's ask; the governing clicks OWED
-        to JB's seat; W69 (WOUND, JB's live test 2026-09-27): a seat that only
+      - **(b) THE MACHINE JOIN DESK** ✅ **BUILT 2026-09-26 — walk #19 PASS w/
+        friction 2026-09-27 (JB's five clicks: denied · admitted on jb's word ·
+        the standing welcome; W73 · W74 legibility cured; W69 (WOUND, JB's live test 2026-09-27): a seat that only
         reads and writes confirmed the keeper's proposal — CURED on both kernels:
         the word at the interlock is the asker's own or a governing seat's,
         never any seated person's (gate.rs · test_proof.py); W71 (WOUND, cured): the shelf's

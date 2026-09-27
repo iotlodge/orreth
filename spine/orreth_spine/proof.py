@@ -435,7 +435,9 @@ def hold_kernel_act(conn, *, text: str, person: str, tool: str, args: dict,
     needs_code = bool(needs_code) and level == "L3-master"   # L3-code IS the code; the flag
     if needs_code:                       # W5: the asker's code, then the master's click
         held["needs_code"], held["code_ok"] = True, False
-    question = question_for(level, text[:1].upper() + text[1:], needs_code=needs_code)
+    capital = text[:1].upper() + text[1:]
+    # W74 (walk #19): the desk's hold already says it all — no L2 wrapper mashed onto a join
+    question = capital if tool == "join.admit" else question_for(level, capital, needs_code=needs_code)
     n = ev.make_envelope(
         kind="event", type=CONFIRM_NEEDED, universe_id=ev.scope(), scope_path=ev.scope(),
         payload={"ref": ask_id, "hash": ev.content_hash(text), "tool": tool,
