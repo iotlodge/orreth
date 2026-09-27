@@ -1775,6 +1775,27 @@ approved (covenant rule 9).
       July's `v0.1.0-universe-runs`; demo.orreth.ai and docs.orreth.ai stay
       FROZEN until JB says otherwise. Then JB walks the P3–P6 specs against
       the Rust kernel alone. One to two sessions.
+    - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
+      the release wave, driven by a proof that needs a stranger — rule 12).**
+      Row 3b's honest limit in plain words: the kernel's own crew hold the
+      RAILS (the bench where asks arrive, the replies, the Record, the
+      harness, the presence lease that makes a body read as alive) because
+      the kernel hands the rails' addresses only to the processes it spawns;
+      a STRANGER'S body — one this kernel did not spawn — holds only the HTTP
+      doors, and after the desk the one door its lease opens is its own words
+      at `/delta`. It is a proven, admitted, leased self that cannot yet
+      work. The lease's grants (`retrieve self · write self`) already declare
+      the road; what is missing is the doors: the BENCH over the door (its
+      commands — serve · confirm · the harness — as a long poll or a stream)
+      and the REPLY door · a SIGNED MACHINE ASK (the body asks the world by
+      its DID) · its own records (remember and recall under `self`) · the
+      FUELED gateway key handed at collect (the Stable's metered key, so the
+      fuel clause names money it can spend — rule 5: the kernel authorizes
+      and meters, never sees the prompt) · PRESENCE over the door (the roster
+      and the monitor see it). It wants row 4's connection pool first. 0.1.0
+      ships with the crew fully governed and strangers honestly limited to the
+      desk and the feed; the first proof world or second box that needs a
+      stranger opens this row. Two to three sessions.
 
 Honest scale: ten to fifteen thousand lines of Rust, eight spoonfuls, more
 than one session each. Close conditions: every fixture kind ported; JB
