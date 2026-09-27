@@ -58,6 +58,7 @@ use crate::services_live;
 use crate::sessions;
 use crate::stable_live;
 use crate::world::{RoadError, World};
+use crate::{desk, desk_live};
 use axum::body::Bytes;
 use axum::extract::{ConnectInfo, Path, Query, State};
 use axum::http::{header, HeaderMap, StatusCode};
@@ -710,6 +711,10 @@ fn router(app: Arc<App>) -> Router {
         .route("/enroll/confirm", post(enroll_confirm_post))
         .route("/seat", get(seat_get).post(seat_post)) // P7 sp8 row 3: the seat — the person's code in, the token out
         .route("/seat/leave", post(seat_leave)) // the person ends their own seat — recorded
+        .route("/join", get(desk_door).post(join_post)) // P7 sp8 row 3b: THE MACHINE JOIN DESK — a body asks and is challenged; the desk is a seated read
+        .route("/join/prove", post(join_prove)) // the body's signature over the desk's own nonce
+        .route("/join/lease", post(join_lease)) // the admitted body collects its lease with the same key
+        .route("/join/:id", get(join_door)) // a join's status (open: the id is its own secret; the lease never rides it)
         .fallback(|| async { StatusCode::NOT_FOUND })
         .layer(middleware::from_fn_with_state(app.clone(), gate)) // P7 sp8 row 3: THE GATE at every door
         .with_state(app)
@@ -800,6 +805,10 @@ async fn gate(
         return answer(401, seat::not_seated());
     };
     if needs == "govern" && !s.govern {
+        return answer(403, one_face());
+    }
+    // P7 sp8 row 3b: a body's LEASE opens its own words and nothing more; a person's seat never speaks as a body
+    if (needs == "lease") != (s.role == "body") {
         return answer(403, one_face());
     }
     req.extensions_mut().insert(s);
@@ -1929,6 +1938,88 @@ async fn harness_ab(State(app): State<Arc<App>>, body: Bytes) -> Response {
     match out {
         Ok(v) => answer(200, v),
         Err(RoadError::Refused(w)) if w == "no such body" => answer(404, json!({"error": w})),
+        Err(e) => refuse(e),
+    }
+}
+
+// ---- the machine join desk (P7 sp8 row 3b) --------------------------------------------------
+
+/// `POST /join {did, name, role, public_key, template_hash, policy_hash, ticket?}` — a body asks
+/// to join and is challenged in the same breath (201: `{id, status: challenged, nonce, words}`).
+async fn join_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let out = async {
+        let mut g = ground(&app).await?;
+        desk_live::ask(&mut g, &app.cfg.world, &p).await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(201, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `POST /join/prove {id, did, sig}` — the proof over the desk's own nonce (200: the join's
+/// word — done on a standing word, staged for a governing seat's click, or denied).
+async fn join_prove(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let (id, did) = (s_or(&p, "id", ""), s_or(&p, "did", ""));
+    let sig = p["sig"].clone();
+    let out = async {
+        let mut g = ground(&app).await?;
+        let manifest: Option<&dyn desk_live::Manifest> =
+            app.bodies.as_deref().map(|b| b as &dyn desk_live::Manifest);
+        desk_live::prove(&mut g, &app.cfg.world, manifest, &id, &did, &sig).await
+    }
+    .await;
+    match out {
+        Ok(Some(v)) => answer(200, v),
+        Ok(None) => answer(404, desk::refused()),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `GET /join/<id>` — the join's status in the desk's words (never the lease).
+async fn join_door(State(app): State<Arc<App>>, Path(id): Path<String>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        desk_live::status(&g, &app.cfg.world, &id).await
+    }
+    .await;
+    match out {
+        Ok(Some(v)) => answer(200, v),
+        Ok(None) => answer(404, desk::refused()),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `POST /join/lease {id, did, sig}` — the admitted body collects its lease with the same key
+/// (200: `{lease, wire, lease_id, expiry, admitted_by, words}`); any other knock wears the one face.
+async fn join_lease(State(app): State<Arc<App>>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let (id, did) = (s_or(&p, "id", ""), s_or(&p, "did", ""));
+    let sig = p["sig"].clone();
+    let out = async {
+        let mut g = ground(&app).await?;
+        desk_live::collect(&mut g, &app.cfg.world, &app.kernel, &id, &did, &sig).await
+    }
+    .await;
+    match out {
+        Ok(Some(v)) => answer(200, v),
+        Ok(None) => answer(404, desk::refused()),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `GET /join` — the desk as a seated person reads it: every join asked of this world, newest first.
+async fn desk_door(State(app): State<Arc<App>>, Extension(_seated): Extension<Seated>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        desk_live::list(&g, &app.cfg.world, 50).await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, json!({"joins": v, "lease_days": desk::lease_days()})),
         Err(e) => refuse(e),
     }
 }

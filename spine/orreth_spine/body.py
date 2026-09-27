@@ -167,9 +167,11 @@ class DeltaSink:
     their own, so a slow door never slows a thought; display only (glass-
     bound): a miss is dropped in silence, the durable truth is the reply."""
 
-    def __init__(self, door: str, every_s: float = 0.08):
+    def __init__(self, door: str, every_s: float = 0.08, bearer: str | None = None):
         self.door = door.rstrip("/")
         self.every_s = every_s
+        # P7 sp8 row 3b: the body's words wear its LEASE — the door refuses them unleased
+        self.headers = {"content-type": "application/json", **({"authorization": "Bearer " + bearer} if bearer else {})}
         self._q: queue.Queue = queue.Queue()
         self._stop = threading.Event()
         self._t = threading.Thread(target=self._run, daemon=True)
@@ -203,7 +205,7 @@ class DeltaSink:
                     try:
                         if conn is None:
                             conn = http.client.HTTPConnection(u.hostname, u.port or 80, timeout=2.0)
-                        conn.request("POST", "/delta", body, {"content-type": "application/json"})
+                        conn.request("POST", "/delta", body, self.headers)
                         r = conn.getresponse()
                         r.read()
                         break
@@ -265,7 +267,20 @@ def serve(template, binding, policy, *, stop: threading.Event, ready: threading.
         _say(f"{r.name} wears no covenant policy ({type(e).__name__}: {e}) — it never joins")
         return EXIT_NO_POLICY
     door = os.environ.get(KERNEL_DOOR_DIAL)
-    sink = DeltaSink(door) if door else None
+    lease = None
+    if door:
+        # P7 sp8 row 3b: THE JOIN DESK — a body spawned by a kernel joins through its door: challenged,
+        # proves the key behind its DID, admitted on the kernel's spawn ticket (the crew manifest is the
+        # human's word) or its standing welcome, else waits for a governing seat's yes; then collects
+        # its lease. Turned away → refused at birth, never restarted (the fact is on the ground).
+        from . import desk
+        lease = desk.knock(door, r.identity, name=r.name, kind=r.kind, template_hash=r.template_hash,
+                           policy_hash=r.policy["hash"], ticket=os.environ.get(desk.SPAWN_TICKET_DIAL), say=_say)
+        if lease is None:
+            _say(f"{r.name} was turned away at the door — never started")
+            return EXIT_REFUSED
+        _say(f"{r.name} holds a lease: {lease['lease_id']} until {lease['expiry']} · {lease['admitted_by']}")
+    sink = DeltaSink(door, bearer=lease["wire"]) if door else None
     if sink is not None:
         r.on_delta = sink
     with psycopg.connect(PG_DSN, autocommit=True) as conn:

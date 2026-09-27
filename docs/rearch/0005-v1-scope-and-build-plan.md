@@ -1669,11 +1669,90 @@ approved (covenant rule 9).
            lands twice today and the doubled tests are most of a day. Row 3b
            lands once on the Rust kernel and once in the fixture; row 4
            narrows the reference to fixtures and shadow proofs, as written.
-      - **(b) THE MACHINE JOIN DESK — NEXT SESSION ("sp8 row 3b"):** the
-        five-status desk, the nonce signed with the key behind the DID, the
-        human's yes as a kernel-held act, the chained LEASE minted by
-        `seat.mint` with the fuel clause (the token's shape already carries
-        `budget`), the body's signed knock at `/delta`, KCR-0001 re-paid.
+      - **(b) THE MACHINE JOIN DESK** ✅ **BUILT 2026-09-26 (walk #19 OWED —
+        SPEC-DESK-01).** JB's four locks at the open (AskUserQuestion): a
+        LEASE opens the body's own words (`POST /delta`) and the desk's doors,
+        nothing more, and stands on the ground as a SEAT with the role `body`
+        (one gate law for people and bodies) · the human's yes is a
+        KERNEL-HELD ACT (`join.admit`, consequential, L2) that appears in the
+        chat like a keeper's proposal, cancel the default, and only a
+        GOVERNING seat (the owner or a master) may click it — a person's seat
+        wears the one face; a hold nobody answers in the holds' fifteen
+        minutes is DENIED and recorded (0012's "expire = deny + signal",
+        closing the old desk's forever-staged gap) · the kernel's own crew
+        join through the SAME desk: each life carries a one-time SPAWN
+        TICKET (`SPINE_SPAWN_TICKET`) the kernel handed the process, and a
+        proven key whose template is the one the kernel spawned is admitted at
+        once, "on the crew manifest" (the manifest is the human's word) · the
+        one-rig-per-test-session spoonful (lock 5) opens as its own session
+        after this row. THE DESK, carried from `orreth_sim/joindoor.py` law
+        for law: `POST /join {did, name, role, public_key, template_hash,
+        policy_hash, ticket?}` asks and is CHALLENGED in one breath (the
+        desk's own nonce; a DID here is a hash, so the key rides beside it
+        and must derive it) → `POST /join/prove {id, did, sig}` — the body's
+        signature over `{did, join_nonce}` (the old SDK's exact bytes) → a
+        forged proof is DENIED with the one face ("join refused"); a stale
+        nonce (120 s) is re-challenged; a proven key is admitted on a
+        STANDING WORD (the spawn ticket, or the STANDING WELCOME: the same
+        self admitted here before) or STAGED with the hold → the yes mints
+        nothing yet: the body COLLECTS its lease at `POST /join/lease {id,
+        did, sig}` with a signature over `{did, join, join_nonce}` — an id
+        alone collects nothing — and the lease is `seat.mint` to the body's
+        DID, this world the audience, grants `retrieve self · write self`,
+        the FUEL CLAUSE in its budget (`{cost: <the Stable's dollars>,
+        renew_days}` — `SPINE_LEASE_USD` · `SPINE_LEASE_RENEW_DAYS`, the body's
+        virtual key's own terms) for `SPINE_JOIN_LEASE_DAYS` (30); the same
+        knock again returns the same lease. `GET /join/<id>` is the join's
+        status (open: the id is its own secret; the lease never rides it);
+        `GET /join` is the desk, a seated read ("who is at the door?" in the
+        glass). Facts `orreth.join.asked.v1` · `.proved.v1` · `.admitted.v1` ·
+        `.denied.v1` and the lease's `orreth.seat.taken.v1` (role `body`);
+        table `spine_desk` (the road's 18th). `door_needs` grows `lease`:
+        `POST /delta` needs a body's lease (unleased → 401; a person's seat →
+        403; a lease at any person's door → 403) — seat-v0's one `/delta`
+        case amended honestly. Built ONCE on the Rust kernel (`desk.rs` the
+        pure law · `desk_live.rs` the ground · the doors in `bridge.rs` · the
+        `join.admit` arm in `asks::settle_kernel_act` · the ticket in
+        `bodies.rs`) and once in the fixture (JB's lock 7): the Python
+        reference `desk.py` carries the pure law for the fixture and the
+        BODY'S side of the knock (`desk.knock` — `body.py` joins through the
+        kernel's door when it was spawned by one, wears its lease at `/delta`,
+        and exits refused when turned away); the Python Bridge grows no door.
+        Fixture `desk-v0.json` (86 cases: every transition · the challenge's
+        and the collect's bytes · the proof's verdicts · the lease's exact
+        bytes with the fuel clause, verifying at its root and refusing at
+        another · the words · the names · the doors' needs; the minted leases
+        validate against `capability-token.schema.json`; runner 631/631
+        across 116 kinds, none unported); proof `tests/desk.rs` (one Rust
+        kernel: challenged · a forged proof denied · proved and staged with
+        the hold in the chat · a person's click refused · nothing collects
+        before the word · the owner's yes · the lease by the key with the fuel
+        clause · the lease at the doors · the standing welcome · a stale
+        challenge · the expired hold · the one face); `tests/bodies.rs` (the
+        crew's two bodies admitted on the crew manifest, their words leased);
+        `tests/test_desk.py` (the laws in words, and the body's knock against
+        a played desk). KCR-0001 RE-PAID on the new kernel: a stranger's body
+        joins through the doors alone — no root key in any process but the
+        kernel's own self, no ground for the joiner — and the human's word is
+        a recorded act. **Honest limits:** a leased stranger is decorative
+        until a machine ask road lands (it speaks on the feed; it serves
+        nothing without the rails); a body that holds the ground's DSN stands
+        inside the trust boundary — the desk governs the DOORS; the spawn
+        ticket rides the child's environment on one box; the challenge's nonce
+        is 16 random bytes and the join id is its hash; the desk's list is a
+        seated read with no glass pull beyond the words; walk #19 OWED.
+      - **THE STANDING KEY-CHECK (JB's pin), designed with the desk — built
+        only when a proof asks (rule 12).** The desk's challenge IS the
+        act: a leased body that asks again proves its key against a fresh
+        nonce and is admitted on its standing welcome in silence. The cadence,
+        when it is wanted, is one dial (`SPINE_KEYCHECK_S`, 0 = off, unbuilt)
+        and one loop: the kernel asks each leased body to re-join before its
+        lease's day ends; a body that cannot prove has its seat LEFT by the
+        kernel (`orreth.seat.left.v1`, by "the key-check") and its words fall
+        silent at `/delta` within the gate's five seconds. WHAT it is (the
+        template hash the kernel spawned) is checked at the ticket; WHO it is
+        (the key behind the DID) at every proof. Nothing new to build for the
+        law; the loop and the dial wait for a proof's wound.
     - **Row 4 — THE RE-BASE AND MAIN REPLACED AT 0.1.0 (JB's plane
       approval, 2026-09-26: the OLD `orrethd` crate is RETIRED from the
       workspace — it lives on at the `main-v0.72-old-world` tag forever —

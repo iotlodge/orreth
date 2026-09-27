@@ -194,6 +194,9 @@ impl BodyState {
 struct Inner {
     states: HashMap<String, BodyState>,
     pids: HashMap<String, u32>,
+    /// P7 sp8 row 3b: the one-time SPAWN TICKET each life carries to the join desk — the
+    /// kernel's own word for a body it spawned (the crew manifest is the human's), spent once.
+    tickets: HashMap<String, String>,
 }
 
 /// The crew a kernel governs.
@@ -238,6 +241,7 @@ impl Bodies {
             inner: Mutex::new(Inner {
                 states,
                 pids: HashMap::new(),
+                tickets: HashMap::new(),
             }),
             stop: AtomicBool::new(false),
             wake,
@@ -277,12 +281,13 @@ impl Bodies {
         PathBuf::from("python3")
     }
 
-    fn command(&self, args: &[String]) -> tokio::process::Command {
+    fn command(&self, args: &[String], ticket: &str) -> tokio::process::Command {
         let mut c = tokio::process::Command::new(self.python());
         c.args(["-u", "-m", "orreth_spine.body"])
             .args(args)
             .current_dir(&self.spine)
             .envs(self.env())
+            .env(crate::desk::SPAWN_TICKET_DIAL, ticket) // P7 sp8 row 3b: this life's word at the join desk
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::piped())
@@ -452,6 +457,25 @@ impl Bodies {
         }
     }
 
+    /// P7 sp8 row 3b: the desk's question — did this kernel hand this body this ticket? Spent on a yes.
+    pub fn take_ticket(&self, name: &str, ticket: &str) -> bool {
+        let mut i = self.inner.lock().unwrap_or_else(|p| p.into_inner());
+        if i.tickets.get(name).is_some_and(|t| t == ticket) {
+            i.tickets.remove(name);
+            true
+        } else {
+            false
+        }
+    }
+
+    /// The template this kernel spawned a seat from, by its hash — WHAT the body says it is, checked at the desk.
+    pub fn template_hash_of(&self, name: &str) -> Option<String> {
+        self.seats
+            .iter()
+            .find(|s| s.name == name)
+            .map(|s| crate::hash::content_hash(&s.template_json))
+    }
+
     fn set_pid(&self, name: &str, pid: Option<u32>) {
         let mut i = self.inner.lock().unwrap_or_else(|p| p.into_inner());
         match pid {
@@ -491,7 +515,14 @@ impl Bodies {
                 args.push("--binding".into());
                 args.push(b.display().to_string());
             }
-            let mut child = match self.command(&args).spawn() {
+            // P7 sp8 row 3b: a fresh ticket every life — the desk admits this body's proven key on it, once
+            let ticket = crate::world::token_hex(16);
+            self.inner
+                .lock()
+                .unwrap_or_else(|p| p.into_inner())
+                .tickets
+                .insert(seat.name.clone(), ticket.clone());
+            let mut child = match self.command(&args, &ticket).spawn() {
                 Ok(c) => c,
                 Err(e) => {
                     self.set(&seat.name, |s| {
@@ -783,5 +814,14 @@ impl Bodies {
             .iter()
             .map(|s| (s.name.clone(), s.template_json.clone()))
             .collect()
+    }
+}
+
+impl crate::desk_live::Manifest for Bodies {
+    fn take_ticket(&self, name: &str, ticket: &str) -> bool {
+        Bodies::take_ticket(self, name, ticket)
+    }
+    fn template_hash_of(&self, name: &str) -> Option<String> {
+        Bodies::template_hash_of(self, name)
     }
 }

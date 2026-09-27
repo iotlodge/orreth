@@ -1,7 +1,7 @@
 {
  "contract": "orreth.seat/1",
  "version": 0,
- "generated_by": "orreth_spine.seat (the Python reference) \u00b7 P7 sp8 row 3 (a) THE HUMAN SEAT",
+ "generated_by": "orreth_spine.seat (the Python reference) \u00b7 P7 sp8 row 3 (a) THE HUMAN SEAT \u00b7 amended row 3 (b): POST /delta needs a body's LEASE",
  "generated_at": "2026-09-26T18:00:00.000Z",
  "cases": [
   {
@@ -968,7 +968,7 @@
     "path": "/delta"
    },
    "expect": {
-    "needs": "open"
+    "needs": "lease"
    }
   },
   {

@@ -1,8 +1,8 @@
 {
  "format": "orreth-guide/1",
- "version": "0.5.0",
- "title": "THE GUIDE \u00b7 what you can say here, and what happens",
- "kept_by": "the kernel \u2014 the same words on every door; Fable keeps it current with each spoonful",
+ "version": "0.5.1",
+ "title": "THE GUIDE · what you can say here, and what happens",
+ "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful",
  "sections": [
   {
    "id": "chat",
@@ -39,11 +39,11 @@
      "does": "A table of every ask, act and reply with its chain of who acted for whom, signed by the kernel; two downloads beneath it, JSON and CSV."
     },
     {
-     "say": "list my sessions \u00b7 new session",
-     "does": "Your worldlines, newest first, each with its short version; a new session archives the old one \u2014 nothing is deleted."
+     "say": "list my sessions · new session",
+     "does": "Your worldlines, newest first, each with its short version; a new session archives the old one — nothing is deleted."
     },
     {
-     "say": "guide \u00b7 help \u00b7 ?",
+     "say": "guide · help · ?",
      "does": "This guide, opened to where you are."
     }
    ]
@@ -55,16 +55,16 @@
    "lead": "The chip under the composer reads the kind from your words; one click flips it.",
    "entries": [
     {
-     "say": "thought: \u2026",
+     "say": "thought: …",
      "does": "One answer, now."
     },
     {
-     "say": "objective: \u2026",
+     "say": "objective: …",
      "does": "Work the crew owns until it is done; the Analyzer shows it under its origin."
     },
     {
      "say": "keep this world resilient: when a watch goes red, get it green",
-     "does": "An intention \u2014 a standing purpose that wakes on what it watches; it appears in the Analyzer with its stop."
+     "does": "An intention — a standing purpose that wakes on what it watches; it appears in the Analyzer with its stop."
     },
     {
      "say": "echo, every 5 seconds, say the time, please",
@@ -75,8 +75,8 @@
   {
    "id": "involvement",
    "when": "chat",
-   "title": "How much of you a task needs \u2014 manual \u00b7 manual assist \u00b7 full auto",
-   "lead": "The kind of your ask decides how far the kernel goes without you, and it never goes one step further without a word from you. A THOUGHT moves nothing: you ask, one body answers, you are the whole loop (manual). An OBJECTIVE moves what you asked and stops at every consequence: the planner breaks it into steps, the crew acts, and any step that changes something holds for your Cancel or Yes (manual assist). An INTENTION keeps moving until you rest it: the kernel watches for what you named \u2014 a red watch, a clock \u2014 plans the next objective itself, files it, and the loop turns; you are told, not asked \u2014 except at a consequence, which still holds for you (full auto). Three things tell you which mode a thing is in: the chip under the composer (the kind), the hold row (the kernel is waiting on you), and the Analyzer (every intention and objective by origin, with its stop).",
+   "title": "How much of you a task needs — manual · manual assist · full auto",
+   "lead": "The kind of your ask decides how far the kernel goes without you, and it never goes one step further without a word from you. A THOUGHT moves nothing: you ask, one body answers, you are the whole loop (manual). An OBJECTIVE moves what you asked and stops at every consequence: the planner breaks it into steps, the crew acts, and any step that changes something holds for your Cancel or Yes (manual assist). An INTENTION keeps moving until you rest it: the kernel watches for what you named — a red watch, a clock — plans the next objective itself, files it, and the loop turns; you are told, not asked — except at a consequence, which still holds for you (full auto). Three things tell you which mode a thing is in: the chip under the composer (the kind), the hold row (the kernel is waiting on you), and the Analyzer (every intention and objective by origin, with its stop).",
    "entries": [
     {
      "say": "what is the temperature outside?",
@@ -84,18 +84,18 @@
     },
     {
      "say": "objective: get the weather tool healthy again",
-     "does": "MANUAL ASSIST. The planner writes the steps, the crew runs them, the Analyzer shows the tree. When a step would change something (retire, re-pin, refill), the chat shows a hold with Cancel as the default \u2014 nothing runs until you click Yes (a grave step asks for your authenticator's code). Your part: one word to start, one word at each hold. Say \u201cstop it\u201d at any time; what was left undone is said."
+     "does": "MANUAL ASSIST. The planner writes the steps, the crew runs them, the Analyzer shows the tree. When a step would change something (retire, re-pin, refill), the chat shows a hold with Cancel as the default — nothing runs until you click Yes (a grave step asks for your authenticator's code). Your part: one word to start, one word at each hold. Say “stop it” at any time; what was left undone is said."
     },
     {
      "say": "keep this world resilient: when a watch goes red, get it green",
-     "does": "FULL AUTO. A standing purpose. The kernel observes (the red), asks the planner for the next objective, files it, the crew acts, the observation lands, the loop turns \u2014 you read it in the Analyzer and the Intentions band; you are not asked. Consequential steps STILL hold for you: the kernel never lowers the ladder because it is running on its own. Your part: declare once; decide holds when they come; rest it when you want (\u201cstop the \u2026 intention\u201d \u2014 your code, then a master's click; \u201crestart intention '\u2026'\u201d stands it again)."
+     "does": "FULL AUTO. A standing purpose. The kernel observes (the red), asks the planner for the next objective, files it, the crew acts, the observation lands, the loop turns — you read it in the Analyzer and the Intentions band; you are not asked. Consequential steps STILL hold for you: the kernel never lowers the ladder because it is running on its own. Your part: declare once; decide holds when they come; rest it when you want (“stop the … intention” — your code, then a master's click; “restart intention '…'” stands it again)."
     },
     {
      "say": "echo, every 5 seconds, say the time, please",
-     "does": "FULL AUTO on a clock: the same loop, woken by a cadence instead of a red. \u201cecho, stop\u201d rests it."
+     "does": "FULL AUTO on a clock: the same loop, woken by a cadence instead of a red. “echo, stop” rests it."
     },
     {
-     "say": "summon MITL \u00b7 expected impact?",
+     "say": "summon MITL · expected impact?",
      "does": "In any mode, before you decide a hold: the Master Mind In The Loop says who and what the act touches, from the canon."
     },
     {
@@ -115,7 +115,7 @@
      "does": "Nothing runs; the hold is recorded as cancelled."
     },
     {
-     "say": "Yes \u2014 do it",
+     "say": "Yes — do it",
      "does": "The act runs on your word and wears proof L2; a grave act asks for your authenticator's code instead (\"enroll my authenticator\" once)."
     },
     {
@@ -124,7 +124,7 @@
     },
     {
      "say": "(a proposal from a keeper)",
-     "does": "A keeper never retires, assigns, refills or re-pins alone \u2014 it proposes here and you cut; a proposal whose reason has passed withdraws itself."
+     "does": "A keeper never retires, assigns, refills or re-pins alone — it proposes here and you cut; a proposal whose reason has passed withdraws itself."
     }
    ]
   },
@@ -132,18 +132,18 @@
    "id": "crew",
    "when": "crew",
    "title": "The Crew",
-   "lead": "Every body in this world, both sides: what it served and the job it runs. When this kernel seats the bodies itself (the Rust kernel alone), each card says where its process stands \u2014 alive, restarting, PARKED or refused. Beneath the bodies stands the shelf.",
+   "lead": "Every body in this world, both sides: what it served and the job it runs. When this kernel seats the bodies itself (the Rust kernel alone), each card says where its process stands — alive, restarting, PARKED or refused. Beneath the bodies stands the shelf.",
    "entries": [
     {
-     "say": "what services are here? \u00b7 show the tools \u00b7 show the LLMs",
-     "does": "The shelf, from the registry: every tool, MCP server, store, source and LLM on one ladder \u2014 registered \u2192 versioned \u2192 healthy | unhealthy \u2192 retired."
+     "say": "what services are here? · show the tools · show the LLMs",
+     "does": "The shelf, from the registry: every tool, MCP server, store, source and LLM on one ladder — registered → versioned → healthy | unhealthy → retired."
     },
     {
-     "say": "check the services \u00b7 check the minds",
+     "say": "check the services · check the minds",
      "does": "Every standing service probed by its kind; an LLM answers a one-token ping through the gateway."
     },
     {
-     "say": "retire the weather tool \u00b7 restore the weather tool",
+     "say": "retire the weather tool · restore the weather tool",
      "does": "Retire holds at the interlock; restore is a new fact. Retired is dormancy, never deletion."
     },
     {
@@ -152,23 +152,23 @@
     },
     {
      "say": "stablekeeper, add the LLM ollama gemma3:270m as gemma",
-     "does": "An LLM wherever it lives \u2014 anthropic \u00b7 openrouter \u00b7 ollama \u00b7 openai \u00b7 compatible \u2014 becomes a stall in the Stable and an entry in the gateway; held for your yes."
+     "does": "An LLM wherever it lives — anthropic · openrouter · ollama · openai · compatible — becomes a stall in the Stable and an entry in the gateway; held for your yes."
     },
     {
-     "say": "assign librarian to gemma \u00b7 assign librarian to gemma for fast work \u00b7 unassign librarian",
-     "does": "Which LLM a body uses, for all its work or one class of work (fast \u00b7 standard \u00b7 deep); the card says \"LLM: \u2026\" and why."
+     "say": "assign librarian to gemma · assign librarian to gemma for fast work · unassign librarian",
+     "does": "Which LLM a body uses, for all its work or one class of work (fast · standard · deep); the card says \"LLM: …\" and why."
     },
     {
-     "say": "librarian's fuel \u00b7 refill librarian by $2",
-     "does": "A body's allowance for this window and what it has spent; a refill holds at the interlock \u2014 real spending."
+     "say": "librarian's fuel · refill librarian by $2",
+     "does": "A body's allowance for this window and what it has spent; a refill holds at the interlock — real spending."
     },
     {
-     "say": "schedule an ask for librarian\u2026 (on its card)",
+     "say": "schedule an ask for librarian… (on its card)",
      "does": "A standing duty on the clock, shown on the card's job side; \"rest it\" stops it."
     },
     {
      "say": "restart the echo body",
-     "does": "A body the kernel PARKED (it died three times in five minutes) or refused at birth is tried again on your word \u2014 its deaths forgotten, the same self. A body that simply died comes back by itself; nothing is ever deleted."
+     "does": "A body the kernel PARKED (it died three times in five minutes) or refused at birth is tried again on your word — its deaths forgotten, the same self. A body that simply died comes back by itself; nothing is ever deleted."
     }
    ]
   },
@@ -180,7 +180,7 @@
    "entries": [
     {
      "say": "watch for asks left waiting",
-     "does": "The monitor agent proposes a watch \u2014 a hold you cut; a watch is RED while its condition holds and turns in the chat."
+     "does": "The monitor agent proposes a watch — a hold you cut; a watch is RED while its condition holds and turns in the chat."
     },
     {
      "say": "propose a watch that usd_today > 5",
@@ -219,24 +219,24 @@
   {
    "id": "seat",
    "when": "chat",
-   "title": "Your seat \u2014 who this door knows you are",
-   "lead": "Every door reads who you are from your SEAT, never from the page. You take a seat with the code your authenticator shows; it lasts a day. On a ground no one holds yet, the first person to prove an authenticator becomes its owner; from then on only the owner or a master can enroll someone new. Nobody types a master's name any more \u2014 a master confirms a grave act from their own seat, in their own window.",
+   "title": "Your seat — who this door knows you are",
+   "lead": "Every door reads who you are from your SEAT, never from the page. You take a seat with the code your authenticator shows; it lasts a day. On a ground no one holds yet, the first person to prove an authenticator becomes its owner; from then on only the owner or a master can enroll someone new. Nobody types a master's name any more — a master confirms a grave act from their own seat, in their own window. Bodies hold the machine's twin: a LEASE, earned at the join desk — a body proves the key behind its DID, and a governing seat says yes.",
    "entries": [
     {
-     "say": "(the seat form) your name + the 6-digit code \u00b7 Take my seat",
-     "does": "The kernel signs a token naming you, what you may do here and until when; the page carries it on every knock. The first proof on an unheld ground: \u201cyou hold this ground now\u201d."
+     "say": "(the seat form) your name + the 6-digit code · Take my seat",
+     "does": "The kernel signs a token naming you, what you may do here and until when; the page carries it on every knock. The first proof on an unheld ground: “you hold this ground now”."
     },
     {
-     "say": "(the seat form, no one holds the ground yet) your name \u00b7 Enroll",
+     "say": "(the seat form, no one holds the ground yet) your name · Enroll",
      "does": "The QR for your authenticator; the first code finishes enrolling; the next one takes your seat as the owner."
     },
     {
-     "say": "my seat \u00b7 who am I seated as?",
-     "does": "Seated as whom, until when, and what the seat may do: retrieve \u00b7 write (\u00b7 govern for the owner and a master)."
+     "say": "my seat · who am I seated as?",
+     "does": "Seated as whom, until when, and what the seat may do: retrieve · write (· govern for the owner and a master)."
     },
     {
      "say": "leave my seat",
-     "does": "Ends this seat now \u2014 recorded, never deleted; the seat form returns. Another window's seat is its own."
+     "does": "Ends this seat now — recorded, never deleted; the seat form returns. Another window's seat is its own."
     },
     {
      "say": "enroll quinn",
@@ -247,27 +247,31 @@
      "does": "Re-enrolling yourself is grave: your current code first, then the new QR."
     },
     {
-     "say": "(a grave act, as the asker) type your code \u2192 a declared master clicks Confirm as master in THEIR window",
+     "say": "(a grave act, as the asker) type your code → a declared master clicks Confirm as master in THEIR window",
      "does": "The two-person law, honestly: the master is a second seated person; the typed name is gone."
+    },
+    {
+     "say": "who is at the door?",
+     "does": "The join desk: every body that asked to join this world, newest first — the crew (admitted on the crew manifest), a stranger waiting for your yes, one turned away. A stranger's knock appears in the chat as a hold: Cancel is the default; only the owner or a master can click Yes."
     }
    ]
   },
   {
    "id": "you",
    "when": "chat",
-   "title": "You \u2014 what this ground knows about you",
-   "lead": "Your profile is yours: what you tell this ground about yourself, in your own words, labeled by who said it \u2014 \u201cyou told me\u201d \u00b7 \u201cI observed\u201d \u00b7 \u201cthe mirror noticed\u201d (reserved). Every body reads it first when it answers you; a routed ask carries it to the far cell for that answer alone. The YOU tag under the sun shows who this door knows you are.",
+   "title": "You — what this ground knows about you",
+   "lead": "Your profile is yours: what you tell this ground about yourself, in your own words, labeled by who said it — “you told me” · “I observed” · “the mirror noticed” (reserved). Every body reads it first when it answers you; a routed ask carries it to the far cell for that answer alone. The YOU tag under the sun shows who this door knows you are.",
    "entries": [
     {
-     "say": "my name is JB \u00b7 call me JB",
+     "say": "my name is JB · call me JB",
      "does": "Your name, trusted on your word. The newest word wins; the old one stays in the record."
     },
     {
-     "say": "I live in Boulder, Colorado \u00b7 my place is Payson, Arizona",
-     "does": "Your place, in your words. The kernel looks its coordinates and clock up once (Open-Meteo, no key) and keeps them beside your words as \u201cI observed\u201d \u2014 the weather tool then answers for YOUR place, never a fixed point. With no place told, it says so rather than reading someone else's weather."
+     "say": "I live in Boulder, Colorado · my place is Payson, Arizona",
+     "does": "Your place, in your words. The kernel looks its coordinates and clock up once (Open-Meteo, no key) and keeps them beside your words as “I observed” — the weather tool then answers for YOUR place, never a fixed point. With no place told, it says so rather than reading someone else's weather."
     },
     {
-     "say": "my time zone is America/Denver \u00b7 my clock is Europe/Paris",
+     "say": "my time zone is America/Denver · my clock is Europe/Paris",
      "does": "Your clock, told; every time a body reads you is in it. Untold, the clock of your told place; untold both, the browser's zone, then the ground's dial."
     },
     {
@@ -275,12 +279,12 @@
      "does": "A free word about you. Every resident reads it in its context, never recites it unasked."
     },
     {
-     "say": "what do you know about me? \u00b7 show my profile \u00b7 who am I",
+     "say": "what do you know about me? · show my profile · who am I",
      "does": "The portrait: every live word with its label and the clock this ground would use for you."
     },
     {
-     "say": "forget about me: my place \u00b7 forget my name \u00b7 forget that I take my coffee black",
-     "does": "A recorded withdrawal on your word \u2014 the words no longer read; the record keeps that you said them once. Never a deletion."
+     "say": "forget about me: my place · forget my name · forget that I take my coffee black",
+     "does": "A recorded withdrawal on your word — the words no longer read; the record keeps that you said them once. Never a deletion."
     }
    ]
   },
@@ -296,11 +300,11 @@
     },
     {
      "say": "list my sessions",
-     "does": "Each session's short version \u2014 the digest \u2014 written from the Record alone; the same on every door."
+     "does": "Each session's short version — the digest — written from the Record alone; the same on every door."
     },
     {
-     "say": "export compliance for this session \u00b7 export compliance for today",
-     "does": "Signed by the kernel's own self (did:orreth:kernel:\u2026); a stranger can verify the chain and the signature."
+     "say": "export compliance for this session · export compliance for today",
+     "does": "Signed by the kernel's own self (did:orreth:kernel:…); a stranger can verify the chain and the signature."
     },
     {
      "say": "forget the trailer note",
@@ -311,7 +315,7 @@
   {
    "id": "cells",
    "when": "monitor",
-   "title": "Cells \u2014 a second universe, and the seam between them",
+   "title": "Cells — a second universe, and the seam between them",
    "lead": "A cell is one universe's home: its own kernel, its own database and role, its own benches, its own bodies and keys. Two cells that name each other can speak over a signed seam. What this world is and where it stands reads in the Monitoring's PULSE and PEERS.",
    "entries": [
     {
@@ -320,11 +324,11 @@
     },
     {
      "say": "librarian@two, what is the weather?",
-     "does": "An ask that names a cell ROUTES HOME: cell two's own librarian answers, and the answer lands on your ask here, its journey saying so. \"two/librarian, \u2026\" works too."
+     "does": "An ask that names a cell ROUTES HOME: cell two's own librarian answers, and the answer lands on your ask here, its journey saying so. \"two/librarian, …\" works too."
     },
     {
      "say": "stop it (on a routed ask's line)",
-     "does": "Rests the ask here and tells its home cell to rest it too \u2014 the human can always stop what the machine manages."
+     "does": "Rests the ask here and tells its home cell to rest it too — the human can always stop what the machine manages."
     },
     {
      "say": "scripts/dev.sh cell two (in a terminal)",
@@ -336,7 +340,7 @@
     },
     {
      "say": "(when a peer is dark)",
-     "does": "An ask routed to it reads PARKED in plain words \u2014 nothing is lost; the moment the peer answers again the ask goes and is answered once. The PEERS view says \"unreachable since\"."
+     "does": "An ask routed to it reads PARKED in plain words — nothing is lost; the moment the peer answers again the ask goes and is answered once. The PEERS view says \"unreachable since\"."
     }
    ]
   }

@@ -15,8 +15,8 @@
 //! runner has no arm for (the list and the dispatch must agree).
 
 use orreth_spine::{
-    ask, beat, body, canonical, cells, content_hash, envelope, export, intent, kernel_self, mcp,
-    memory, mitl, placement, profile, proof, rails, seat, services, stable, tools, watch,
+    ask, beat, body, canonical, cells, content_hash, desk, envelope, export, intent, kernel_self,
+    mcp, memory, mitl, placement, profile, proof, rails, seat, services, stable, tools, watch,
 };
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
@@ -133,6 +133,17 @@ const PORTED_KINDS: &[&str] = &[
     "seat_words",
     "seat_did_of_key",
     "person_did",
+    // P7 sp8 row 3b — orreth.desk/1 (THE MACHINE JOIN DESK: the statuses, the challenge, the proof, the lease, the words)
+    "desk_transition",
+    "desk_challenge",
+    "desk_collect",
+    "desk_join_id",
+    "desk_prove",
+    "desk_collect_ok",
+    "desk_fuel",
+    "desk_lease",
+    "desk_words",
+    "desk_name",
 ];
 
 fn fixture_dir() -> PathBuf {
@@ -1334,6 +1345,156 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             seat::person_did(opt_str(&inp["text"])),
             opt_str(&exp["did"]).map(str::to_string),
             "the person's did"
+        ),
+        // ---- orreth.desk/1 (P7 sp8 row 3b): THE MACHINE JOIN DESK
+        "desk_transition" => same!(
+            desk::transition_legal(s(&inp["from"]), s(&inp["to"])),
+            exp["legal"].as_bool().unwrap(),
+            "the transition"
+        ),
+        "desk_challenge" => {
+            let p = desk::challenge_payload(s(&inp["did"]), s(&inp["nonce"]));
+            same!(p, exp["payload"], "the challenge's payload");
+            same!(
+                String::from_utf8(canonical(&p)).unwrap(),
+                s(&exp["bytes"]),
+                "the challenge's bytes"
+            );
+        }
+        "desk_collect" => {
+            let p = desk::collect_payload(s(&inp["did"]), s(&inp["join"]), s(&inp["nonce"]));
+            same!(p, exp["payload"], "the collect's payload");
+            same!(
+                String::from_utf8(canonical(&p)).unwrap(),
+                s(&exp["bytes"]),
+                "the collect's bytes"
+            );
+        }
+        "desk_join_id" => same!(
+            desk::join_id_of(s(&inp["did"]), s(&inp["nonce"])),
+            s(&exp["id"]),
+            "the join's id"
+        ),
+        "desk_prove" => {
+            same!(
+                desk::prove(
+                    s(&inp["did"]),
+                    s(&inp["public_key"]),
+                    s(&inp["nonce"]),
+                    &inp["sig"]
+                ),
+                exp["ok"].as_bool().unwrap(),
+                "the proof's verdict"
+            );
+            if let Some(seed) = opt_str(&inp["seed_hex"]) {
+                let me = kernel_self::KernelSelf::from_seed(&hex_bytes(seed), "agent");
+                same!(
+                    desk::proof_of(&me, s(&inp["nonce"])),
+                    inp["sig"],
+                    "the proof's bytes"
+                );
+            }
+        }
+        "desk_collect_ok" => {
+            same!(
+                desk::collect_ok(
+                    s(&inp["did"]),
+                    s(&inp["public_key"]),
+                    s(&inp["join"]),
+                    s(&inp["nonce"]),
+                    &inp["sig"]
+                ),
+                exp["ok"].as_bool().unwrap(),
+                "the collect's verdict"
+            );
+            if let Some(seed) = opt_str(&inp["seed_hex"]) {
+                let me = kernel_self::KernelSelf::from_seed(&hex_bytes(seed), "agent");
+                same!(
+                    desk::collect_sig(&me, s(&inp["join"]), s(&inp["nonce"])),
+                    inp["sig"],
+                    "the collect's bytes"
+                );
+            }
+        }
+        "desk_fuel" => same!(
+            desk::fuel_clause(
+                inp["usd"].as_f64().unwrap(),
+                inp["renew_days"].as_i64().unwrap()
+            ),
+            exp["clause"],
+            "the fuel clause"
+        ),
+        "desk_lease" => {
+            let signer =
+                kernel_self::KernelSelf::from_seed(&hex_bytes(s(&inp["seed_hex"])), "kernel");
+            let t = desk::lease(
+                &signer,
+                s(&inp["did"]),
+                s(&inp["scope"]),
+                s(&inp["expiry"]),
+                inp["usd"].as_f64().unwrap(),
+                inp["renew_days"].as_i64().unwrap(),
+            )
+            .map_err(|e| format!("the lease refused: {e}"))?;
+            same!(t, exp["token"], "the lease");
+            same!(
+                String::from_utf8(canonical(&t)).unwrap(),
+                s(&exp["bytes"]),
+                "the lease's bytes"
+            );
+            same!(seat::seat_id(&t), s(&exp["lease_id"]), "the lease id");
+            same!(seat::wire(&t), s(&exp["wire"]), "the wire");
+            same!(t["grants"], exp["grants"], "the lease's grants");
+            same!(
+                seat::verify(
+                    &t,
+                    &signer.did(),
+                    &signer.verify_key_hex(),
+                    "2026-10-01T00:00:00.000Z"
+                ),
+                s(&exp["verdict"]),
+                "the lease's verdict at its root"
+            );
+        }
+        "desk_words" => match s(&inp["what"]) {
+            "status" => same!(
+                desk::words(
+                    s(&inp["status"]),
+                    s(&inp["name"]),
+                    s(&inp["scope"]),
+                    opt_str(&inp["by"])
+                ),
+                s(&exp["words"]),
+                "the status words"
+            ),
+            "admitted" => same!(
+                desk::admitted_by(
+                    inp["ticket"].as_bool().unwrap(),
+                    opt_str(&inp["welcome"]),
+                    opt_str(&inp["person"])
+                ),
+                s(&exp["words"]),
+                "the admitting word"
+            ),
+            "hold" => same!(
+                desk::hold_words(
+                    s(&inp["name"]),
+                    s(&inp["kind"]),
+                    s(&inp["template_hash"]),
+                    inp["days"].as_i64().unwrap()
+                ),
+                s(&exp["words"]),
+                "the hold's words"
+            ),
+            _ => {
+                same!(desk::refused(), exp["face"], "the one face");
+                same!(desk::REFUSED_WORDS, s(&exp["words"]), "the refused words");
+            }
+        },
+        "desk_name" => same!(
+            desk::name_ok(s(&inp["name"])),
+            exp["ok"].as_bool().unwrap(),
+            "the name"
         ),
         "ceiling" => {
             let (allowed, after) = cells::ceiling(

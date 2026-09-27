@@ -493,6 +493,8 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 self._json(401, dict(seat.NOT_SEATED)); return None, True
             if needs == "govern" and not who["govern"]:
                 self._json(403, dict(proof.ONE_FACE)); return None, True
+            if (needs == "lease") != (who.get("role") == "body"):   # P7 sp8 row 3b: a body's LEASE opens its own words and nothing
+                self._json(403, dict(proof.ONE_FACE)); return None, True   # more; a person's seat never speaks as a body
             return who, False
 
         def do_GET(self):

@@ -181,12 +181,46 @@ def test_a_body_stands_as_its_own_process_and_stops_whole():
 @rails
 def test_a_body_streams_its_words_to_the_kernels_door():
     got: list[dict] = []
+    from orreth_spine import desk, seat
+    from orreth_spine.identity import Identity
+    kernel = Identity("kernel", secrets.token_bytes(32), kind="kernel")   # the played kernel's own self
+    joins: dict[str, dict] = {}                                           # P7 sp8 row 3b: the door plays THE DESK
 
     class H(BaseHTTPRequestHandler):
+        def _json(self, code, obj):
+            raw = json.dumps(obj).encode()
+            self.send_response(code); self.send_header("content-type", "application/json")
+            self.send_header("content-length", str(len(raw))); self.end_headers(); self.wfile.write(raw)
+
         def do_POST(self):
             n = int(self.headers.get("content-length") or 0)
-            got.append(json.loads(self.rfile.read(n) or b"{}"))
-            self.send_response(204); self.end_headers()
+            p = json.loads(self.rfile.read(n) or b"{}")
+            if self.path == "/join":                                       # challenged in the same breath
+                nonce = secrets.token_hex(16); jid = desk.join_id_of(p["did"], nonce)
+                joins[jid] = {"did": p["did"], "pk": p["public_key"], "nonce": nonce, "status": "challenged", "ticket": p.get("ticket")}
+                return self._json(201, {"id": jid, "status": "challenged", "nonce": nonce})
+            if self.path == "/join/prove":                                 # the key behind the DID, the desk's own nonce
+                j = joins[p["id"]]
+                if not desk.prove(j["did"], j["pk"], j["nonce"], p["sig"]):
+                    j["status"] = "denied"; return self._json(200, {"id": p["id"], "status": "denied"})
+                j["status"] = "done"                                       # this door's own word admits at once
+                return self._json(200, {"id": p["id"], "status": "done", "admitted_by": desk.admitted_by(ticket=True)})
+            if self.path == "/join/lease":                                 # collected by the same key
+                j = joins[p["id"]]
+                if j["status"] != "done" or not desk.collect_ok(j["did"], j["pk"], p["id"], j["nonce"], p["sig"]):
+                    return self._json(403, {"error": "not confirmed"})
+                tok = desk.lease(kernel, did=j["did"], scope=ev.scope(), expiry="2027-01-01T00:00:00.000Z", usd=1.0, renew_days=1)
+                j["lease"] = seat.wire(tok)
+                return self._json(200, {"id": p["id"], "status": "done", "lease": tok, "wire": j["lease"],
+                                        "lease_id": seat.seat_id(tok), "expiry": "2027-01-01T00:00:00.000Z",
+                                        "admitted_by": desk.admitted_by(ticket=True)})
+            if self.path == "/delta":                                      # the body's words wear its lease
+                wire = seat.bearer(self.headers.get("authorization"))
+                if not wire or wire not in {j.get("lease") for j in joins.values()}:
+                    return self._json(401, dict(seat.NOT_SEATED))
+                got.append(p)
+                self.send_response(204); self.end_headers(); return
+            self._json(404, dict(desk.REFUSED))
 
         def log_message(self, *a):                                     # quiet
             pass
@@ -198,6 +232,8 @@ def test_a_body_streams_its_words_to_the_kernels_door():
     try:
         line = b.wait_words("librarian is alive")
         assert "fake mind" in line and f"words to {door}" in line
+        assert any("librarian holds a lease" in l and "crew manifest" in l for l in b.lines), b.lines   # joined through the desk first
+        assert len(joins) == 1 and next(iter(joins.values()))["ticket"] is None                       # no ticket: the door's own word
         with _public() as conn:
             ids = dispatch.submit_ask(conn, "librarian, in one word, who are you?", person="did:orreth:person:test", to=["librarian"])
             dispatch.publish_command(_serve_command(ids[0], "librarian"))

@@ -980,6 +980,7 @@ async function send(given, label, toOverride, parent){
   if (given == null && workspaceWords(text)) return;       // the pulls, by words
   if (given == null && await markWords(text)) return;      // a human marks (0006)
   if (given == null && await enrollWords(text)) return;    // "enroll my authenticator" (P6 sp1)
+  if (given == null && await deskWords(text)) return;      // "who is at the door?" — the join desk (P7 sp8 row 3b)
   if (given == null && (await stopRoutedWords(text) || await stopWords(text))) return;      // "stop the kernel's … intention"
   if (given == null && guideWords(text)) return;           // "guide" · "help" · "?" — THE GUIDE, opened to where you are (walk #13, JB's seed)
   if (given == null && await profileWords(text)) return;   // "my name is …" · "I live in …" · "what do you know about me?" · "forget about me: …" (P7 sp8, W58)
@@ -1052,7 +1053,8 @@ async function onNotice(n){
     const vh = await fetch("/ask/" + n.ref).then(x=>x.json()).catch(()=>null);   // proposal (rule 11: it never
     if (!vh || vh.served_by !== "the kernel" || !(vh.hold || {}).tool || vh.status !== "awaiting-confirm") return;   // retires alone)
     if (!(vh.person || "").startsWith("did:orreth:agent:")) return;                // a body proposed it: the human cuts
-    el("msg mine", `<em>${esc(whoIs(vh.person))} proposes · the shelf</em><div class="meta">${esc(vh.text)}</div>`);
+    const atDoor = vh.hold.tool === "join.admit";                                    // P7 sp8 row 3b: a body at the join desk — a governing seat admits it
+    el("msg mine", `<em>${esc(atDoor ? ((vh.hold.args || {}).name || whoIs(vh.person)) + " asks to join · the desk" : whoIs(vh.person) + " proposes · the shelf")}</em><div class="meta">${esc(vh.text)}</div>`);
     PENDING[n.ref] = el("journey", "held at the interlock — cancel is the default…");
     renderOutcome(n.ref, vh, PENDING[n.ref]);
     return;
@@ -1466,6 +1468,21 @@ function drawEnroll(b, re, seatAs){           // W2: the QR only — the secret 
   }, "Not now", () => { msg.querySelectorAll(".qr,.reveal,.copy").forEach(x => x.remove());
                         sysline(re ? "the new authenticator was not finished — your current one still stands; say “enroll my authenticator” to start over"
                                    : "not enrolled — the QR is gone from view; say “enroll my authenticator” to start over"); });
+}
+async function deskWords(text){               // "who is at the door?" · "the join desk" — every body that asked to join this world, newest first (P7 sp8 row 3b)
+  const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
+  if (!/^(who is at the door|who's at the door|the (join )?desk|show (me )?the (join )?desk|joins)$/.test(t)) return false;
+  el("msg mine", esc(text));
+  const r = await fetch("/join").then(x => x.ok ? x.json() : null).catch(() => null);
+  if (!r){ sysline("the desk did not answer"); return true; }
+  const joins = r.joins || [];
+  if (!joins.length){ sysline("no body has asked to join this world yet — a body that knocks is challenged to prove its key, then waits here for a governing seat's yes"); return true; }
+  sysline(`the join desk · ${joins.length} ${joins.length === 1 ? "join" : "joins"} · a lease lasts ${esc(String(r.lease_days))} days`);
+  for (const j of joins.slice(0, 12)){
+    const when = j.updated_at ? new Date(j.updated_at).toLocaleString() : "";
+    sysline(`${esc(j.name)} (a ${esc(j.kind)}) · <b>${esc(j.status)}</b> · ${esc(j.words || "")}${j.admitted_by && j.status !== "done" ? " · " + esc(j.admitted_by) : ""}${when ? " · " + esc(when) : ""}`);
+  }
+  return true;
 }
 async function enrollWords(text){             // "enroll my authenticator" · the old words "… with code 123456" still work as an alias · "enroll quinn" (the owner's word, P7 sp8 row 3)
   const other = text.match(/^enroll (?:an? )?(?:authenticator for )?([a-z][a-z0-9_-]{1,23})\s*[.!]?$/i);

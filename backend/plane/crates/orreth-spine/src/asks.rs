@@ -781,6 +781,14 @@ pub async fn settle_kernel_act(
                     .to_string();
                 crate::cells_live::rehome_in(&tx, w, &to_cell, by).await?
             }
+            t if t == crate::desk::ADMIT_TOOL => {
+                // P7 sp8 row 3b: a body's proven key admitted on a GOVERNING seat's word — the lease is its to collect
+                let jid = held["args"]["join"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .to_string();
+                crate::desk_live::admit_in(&tx, w, &jid, by).await?
+            }
             _ => return Err(RoadError::NotConfirmed { rest: false }),
         };
         let (n, r) = match level.as_str() {
@@ -825,6 +833,12 @@ pub async fn settle_kernel_act(
             "L1".to_string(),
         )
     };
+    if !approve && tool == crate::desk::ADMIT_TOOL {
+        // P7 sp8 row 3b: a no (or no word within the holds' window) turns the join away, recorded
+        if let Some(jid) = held["args"]["join"].as_str() {
+            crate::desk_live::deny_in(&tx, w, jid, reason.unwrap_or("the human said no")).await?;
+        }
+    }
     let seq = next_seq(&tx, ask_id).await?;
     let j = Mint {
         kind: "event".into(),

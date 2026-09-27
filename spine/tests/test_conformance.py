@@ -14,6 +14,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: topic_name · peers_from · address_home · epoch_check · world_fact · seam_sign · seam_verify · the words · sealed_words · ceiling · 2026-09-25
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the profile's arms (W58) · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the seat's arms: seat_mint · seat_verify · seat_grants · door_needs · origin_ok · bearer · seat_words · seat_did_of_key · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3 (b), the desk's arms: desk_transition · desk_challenge · desk_collect · desk_join_id · desk_prove · desk_collect_ok · desk_fuel · desk_lease · desk_words · desk_name · 2026-09-26
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -24,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import (body as _body, cells, dispatch, envelope as ev, export, ground, harness, intent, mcp, mitl, monitor,
+from orreth_spine import (body as _body, cells, desk, dispatch, envelope as ev, export, ground, harness, intent, mcp, mitl, monitor,
                           placement, presence, profile, proof, rails, resident, scheduler, seat, services, stable, store, digest,
                           tools)
 from orreth_spine.identity import Identity
@@ -446,5 +447,43 @@ def test_fixture(contract, case):
         assert seat.person_did(inp["text"]) == exp["did"]
     elif kind == "seat_did_of_key":
         assert seat.did_of_key(inp["kind"], inp["public_key_hex"]) == exp["did"]
+    # ---- orreth.desk/1 (P7 sp8 row 3b): THE MACHINE JOIN DESK — the statuses, the challenge, the proof, the lease, the words ----
+    elif kind == "desk_transition":              # a settled word is never rewritten; proved answers only a challenge
+        assert desk.transition_legal(inp["from"], inp["to"]) == exp["legal"]
+    elif kind == "desk_challenge":               # the bytes the joiner signs: {did, join_nonce}
+        assert desk.challenge_payload(inp["did"], inp["nonce"]) == exp["payload"]
+        assert desk.canonical_bytes(exp["payload"]) == exp["bytes"]
+    elif kind == "desk_collect":                 # the bytes that collect the lease: {did, join, join_nonce}
+        assert desk.collect_payload(inp["did"], inp["join"], inp["nonce"]) == exp["payload"]
+        assert desk.canonical_bytes(exp["payload"]) == exp["bytes"]
+    elif kind == "desk_join_id":
+        assert desk.join_id_of(inp["did"], inp["nonce"]) == exp["id"]
+    elif kind == "desk_prove":                   # the declared key derives the DID; the signature stands over the desk's own nonce
+        assert desk.prove(inp["did"], inp["public_key"], inp["nonce"], inp["sig"]) == exp["ok"]
+        if inp.get("seed_hex"):                  # the proof's own bytes, from the seed
+            assert desk.proof_of(Identity("body", bytes.fromhex(inp["seed_hex"]), kind="agent"), inp["nonce"]) == inp["sig"]
+    elif kind == "desk_collect_ok":
+        assert desk.collect_ok(inp["did"], inp["public_key"], inp["join"], inp["nonce"], inp["sig"]) == exp["ok"]
+        if inp.get("seed_hex"):
+            assert desk.collect_sig(Identity("body", bytes.fromhex(inp["seed_hex"]), kind="agent"), inp["join"], inp["nonce"]) == inp["sig"]
+    elif kind == "desk_fuel":                    # dollars per window; 0 days is the lump
+        assert desk.fuel_clause(inp["usd"], inp["renew_days"]) == exp["clause"]
+    elif kind == "desk_lease":                   # the lease's exact bytes from the root's seed; it verifies at that root
+        signer = Identity("kernel", bytes.fromhex(inp["seed_hex"]), kind="kernel")
+        t = desk.lease(signer, did=inp["did"], scope=inp["scope"], expiry=inp["expiry"], usd=inp["usd"], renew_days=inp["renew_days"])
+        assert t == exp["token"] and ev.canonical(t).decode("ascii") == exp["bytes"]
+        assert seat.seat_id(t) == exp["lease_id"] and seat.wire(t) == exp["wire"] and t["grants"] == exp["grants"]
+        assert seat.verify(t, root_did=signer.did, root_key_hex=signer.verify_key_hex, now="2026-10-01T00:00:00.000Z") == exp["verdict"]
+    elif kind == "desk_words":
+        if inp["what"] == "status":
+            assert desk.words(inp["status"], inp["name"], inp["scope"], inp["by"]) == exp["words"]
+        elif inp["what"] == "admitted":
+            assert desk.admitted_by(ticket=inp["ticket"], welcome=inp["welcome"], person=inp["person"]) == exp["words"]
+        elif inp["what"] == "hold":
+            assert desk.hold_words(inp["name"], inp["kind"], inp["template_hash"], inp["days"]) == exp["words"]
+        else:
+            assert desk.REFUSED == exp["face"] and desk.REFUSED["error"] == exp["words"]
+    elif kind == "desk_name":
+        assert desk.name_ok(inp["name"]) == exp["ok"]
     else:
         pytest.fail(f"unknown case kind {kind!r} in {contract}")

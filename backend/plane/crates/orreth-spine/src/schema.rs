@@ -209,7 +209,7 @@ pub const GATEWAY_DDL: &[&str] = &[
 ];
 
 /// The tags and their DDL, in the order the road ensures them.
-pub const ROAD: [(&str, &[&str]); 17] = [
+pub const ROAD: [(&str, &[&str]); 18] = [
     ("resident", RESIDENT_DDL),
     ("markers", MARKERS_DDL),
     ("proof", PROOF_DDL),
@@ -227,6 +227,7 @@ pub const ROAD: [(&str, &[&str]); 17] = [
     ("seam", crate::seam::SEAM_DDL), // P7 sp7: the seam's outbound queue, the routed ask's columns
     ("profile", crate::profile_live::PROFILE_DDL), // P7 sp8: the human's own profile, the carried slice on the ask
     ("seat", crate::seat_live::SEAT_DDL), // P7 sp8 row 3: the owner and the seats (the gate)
+    ("desk", crate::desk_live::DESK_DDL), // P7 sp8 row 3b: the machine join desk
 ];
 
 /// Every table the ask road stands on, once per ground per process.

@@ -252,3 +252,20 @@ the same files, unchanged — before any module earns the word "ported".
     asks (open · enroll · retrieve · write · govern); the closed origin; the bearer header;
     the busy and the unseated faces and the words on a seat taken; the person grammar (a
     bare name or the DID, never reissued); a key-bearing self's DID from its key.
+  - `desk_transition` · `desk_challenge` · `desk_collect` · `desk_join_id` · `desk_prove` ·
+    `desk_collect_ok` · `desk_fuel` · `desk_lease` · `desk_words` · `desk_name` (desk-v0, P7 sp8
+    row 3b — THE MACHINE JOIN DESK) — the five statuses and every legal move between them (a
+    settled word is never rewritten; `proved` answers only a `challenged`; a challenge may be
+    re-issued from any open status); the bytes a joiner signs (`{did, join_nonce}`, the old
+    SDK's shape) and the bytes that collect a lease (`{did, join, join_nonce}`); the join's
+    id (`join_` + sha256(did · "\n" · nonce)[..12]); the proof's verdict — the declared key
+    must derive the DID it claims (a hash), a service's or a person's DID may not knock, the
+    signature must stand over the desk's OWN nonce, and the proof's own bytes from a seed; the
+    fuel clause (dollars per window; 0 days is the lump); the lease's exact bytes from the
+    root's seed (`seat.mint` to the body's DID with grants `retrieve self · write self` and
+    the clause in its budget), its id and wire, `ok` at its root, `expired` past its day and
+    `foreign authority` at another's; the words (each status, whose word admitted — the crew
+    manifest · the standing welcome · a person — the hold's text, the one face); a body's
+    name grammar. The `door_needs` cases carry the desk's doors: `/join` · `/join/prove` ·
+    `/join/lease` and a join's status are open, the desk's list is a read, and `POST /delta`
+    now needs a body's LEASE (seat-v0's one `/delta` case amended the same day).

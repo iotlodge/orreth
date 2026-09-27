@@ -10,8 +10,10 @@ after their proof (the code from the authenticator they enrolled) and
 chained to the kernel's own self as this universe's root. EVERY door reads
 the person from the token, never the body (`door_needs` says which doors
 stand open — the page, the health, the guide, the world checks, the proof
-doors whose code IS the proof, the seam with its own signature, the
-bodies' display door — and which need `retrieve` · `write` · `govern`).
+doors whose code IS the proof, the seam with its own signature, the join
+desk's doors whose proof is a signature — and which need `retrieve` ·
+`write` · `govern`; since row 3b a body's own words at `/delta` need its
+LEASE — a seat with the role `body`, minted by the desk, `desk.py`).
 
 THE CEREMONY: on a ground no one holds, the first person to PROVE an
 authenticator becomes its OWNER — declared once as a fact, a master from
@@ -254,7 +256,8 @@ def grants_for(role: str, scope: str) -> list:
 
 
 OPEN_GET = ("/", "/index.html", "/health", "/guide", "/harness", "/seat")
-OPEN_POST = ("/seat", "/enroll/confirm", "/seam", "/delta")
+OPEN_POST = ("/seat", "/enroll/confirm", "/seam", "/join", "/join/prove", "/join/lease")   # P7 sp8 row 3b: the desk's doors answer proof, not seats
+LEASE_POST = ("/delta",)                              # P7 sp8 row 3b: a body's own words wear its LEASE (a seat with the role `body`)
 GOVERN_POST = ("/world/rehome", "/bodies/restart",
                "/services", "/services/version", "/services/retire", "/services/restore", "/services/mcp",
                "/minds", "/minds/assign", "/minds/unassign", "/minds/refill", "/minds/retire", "/minds/restore")
@@ -263,18 +266,22 @@ GOVERN_POST = ("/world/rehome", "/bodies/restart",
 def door_needs(method: str, path: str) -> str:
     """What a door asks of the one who knocks: `open` (no seat — the page, the health,
     the guide, the world checks, the seat door itself, the enrollment's confirm whose code
-    is the proof, the seam with its own signature, the bodies' display door) · `enroll`
-    (the ceremony while no one holds the ground; else the owner's word, or one's own old
-    code) · `retrieve` (every other read) · `write` (every other act) · `govern` (re-home,
-    the bodies' lever, the shelf's and the Stable's changes)."""
+    is the proof, the seam with its own signature, the join desk's doors whose proof is a
+    signature, a join's own status) · `enroll` (the ceremony while no one holds the
+    ground; else the owner's word, or one's own old code) · `lease` (a body's own words
+    on the feed — its lease, never a person's seat) · `retrieve` (every other read) ·
+    `write` (every other act) · `govern` (re-home, the bodies' lever, the shelf's and the
+    Stable's changes)."""
     m = method.upper()
     if m == "GET":
-        return "open" if path in OPEN_GET else "retrieve"
+        return "open" if path in OPEN_GET or path.startswith("/join/") else "retrieve"
     if m == "POST":
         if path == "/enroll":
             return "enroll"
         if path in OPEN_POST:
             return "open"
+        if path in LEASE_POST:
+            return "lease"
         if path in GOVERN_POST:
             return "govern"
         return "write"

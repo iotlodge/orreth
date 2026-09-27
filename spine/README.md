@@ -116,8 +116,10 @@ ceiling (0071) stands at every door — per person, per address at an open door
 
 Open doors (no seat): the page, `/health`, `/guide`, `/harness`, `GET /seat`;
 `POST /seat` and `POST /enroll/confirm` (the code IS the proof); `/seam` (its
-own signature); `/delta` (the bodies' display door); `POST /enroll` while no
-one holds the ground. Governing doors (the owner's or a master's seat):
+own signature); the join desk's `/join` · `/join/prove` · `/join/lease` and a
+join's status (their proof is a signature); `POST /enroll` while no one holds
+the ground. `POST /delta` (a body's own words) needs the body's LEASE — a seat
+with the role `body` (row 3b). Governing doors (the owner's or a master's seat):
 `/world/rehome`, `/bodies/restart`, the shelf's and the Stable's changes.
 Doors: `GET /seat` → `{ceremony, hours}` · `POST /seat {person, code}` → the
 token, its wire, the role, the words · `POST /seat/leave`. The reference is
@@ -126,3 +128,42 @@ twin is `seat.rs` · `seat_live.rs` with a tower layer in `bridge.rs`; the
 fixture is `conformance/seat-v0.json`; the proof `tests/gate.rs`. In the
 tests, `tests/seats.py` runs the ceremony through the doors so every door test
 sits before it knocks.
+
+## The join desk (P7 sp8 row 3b — the machine's gate)
+
+A BODY joins through a five-status desk the kernel keeps (`orreth_sim/joindoor.py`
+carried law for law): `pending → challenged → proved → staged → done | denied`.
+`POST /join {did, name, role, public_key, template_hash, policy_hash, ticket?}`
+asks and is CHALLENGED in the same breath — the desk's own nonce; a DID here is
+a hash of the key, so the key rides beside it and must derive it. `POST
+/join/prove {id, did, sig}` is the body's signature over `{did, join_nonce}`
+(the old SDK's exact bytes): a forged proof is DENIED with the one face ("join
+refused"); a stale nonce (120 s) is re-challenged; a proven key is admitted at
+once on a standing word — the CREW MANIFEST (a one-time `SPINE_SPAWN_TICKET`
+the kernel handed the process, and the template it spawned) or the STANDING
+WELCOME (the same self admitted here before) — else STAGED: the kernel holds
+`join.admit` in the chat like a keeper's proposal, cancel the default, and only
+a GOVERNING seat's click admits it (a person's seat wears the one face; a hold
+nobody answers in fifteen minutes is denied, recorded). The body then COLLECTS
+its lease at `POST /join/lease {id, did, sig}` with the same key (a signature
+over `{did, join, join_nonce}`; an id alone collects nothing): the 0006 token
+to its DID, this world the audience, grants `retrieve self · write self`, the
+FUEL CLAUSE in its budget (`{cost, renew_days}` — `SPINE_LEASE_USD` ·
+`SPINE_LEASE_RENEW_DAYS`) for `SPINE_JOIN_LEASE_DAYS` (30). The lease is a SEAT
+with the role `body`: it opens the body's own words at `/delta` and nothing
+more. `GET /join/<id>` is a join's status (open; the lease never rides it);
+`GET /join` is the desk — "who is at the door?" in the glass. Facts
+`orreth.join.asked.v1 · .proved.v1 · .admitted.v1 · .denied.v1` and the
+lease's `orreth.seat.taken.v1`; table `spine_desk`.
+
+Built once on the Rust kernel (`desk.rs` · `desk_live.rs` · the doors in
+`bridge.rs` · the `join.admit` arm of the settle · the ticket in `bodies.rs`)
+and once in the fixture `conformance/desk-v0.json` (JB's lock: the Python
+reference grows no new doors). `orreth_spine/desk.py` is the reference's pure
+law AND the body's side of the knock: `desk.knock` — `body.py` joins through
+the kernel's door when a kernel spawned it, wears its lease on every `/delta`
+knock, and exits refused when turned away. Proofs: `tests/desk.rs` (one Rust
+kernel; a stranger's whole road) · `tests/bodies.rs` (the crew admitted on the
+manifest) · `tests/test_desk.py` (the body's knock against a played desk). The
+standing key-check (JB's pin) is this desk's own act — a re-join proves the key
+again and is admitted on the welcome in silence; its cadence waits for a proof.

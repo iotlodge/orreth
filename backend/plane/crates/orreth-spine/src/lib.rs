@@ -86,6 +86,7 @@ pub mod beat;
 pub mod body;
 pub mod canonical;
 pub mod cells;
+pub mod desk;
 pub mod envelope;
 pub mod export;
 pub mod hash;
@@ -113,6 +114,8 @@ pub mod bodies;
 pub mod bridge;
 #[cfg(feature = "rails")]
 pub mod cells_live;
+#[cfg(feature = "rails")]
+pub mod desk_live;
 #[cfg(feature = "rails")]
 pub mod digest;
 #[cfg(feature = "rails")]

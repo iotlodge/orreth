@@ -78,6 +78,29 @@ async fn http(port: u16, method: &str, path: &str, body: Option<&Value>) -> (u16
     (status, body)
 }
 
+/// A knock with no seat and no lease — the stranger's.
+async fn http_bare(port: u16, method: &str, path: &str, body: Option<&Value>) -> (u16, String) {
+    let mut s = TcpStream::connect(("127.0.0.1", port))
+        .await
+        .expect("the door answers");
+    let body = body.map(|b| b.to_string()).unwrap_or_default();
+    let req = format!(
+        "{method} {path} HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\ncontent-type: \
+         application/json\r\ncontent-length: {}\r\n\r\n{body}",
+        body.len()
+    );
+    s.write_all(req.as_bytes()).await.unwrap();
+    let mut raw = Vec::new();
+    s.read_to_end(&mut raw).await.unwrap();
+    let text = String::from_utf8_lossy(&raw).to_string();
+    let status: u16 = text
+        .split_whitespace()
+        .nth(1)
+        .and_then(|c| c.parse().ok())
+        .unwrap_or(0);
+    (status, text)
+}
+
 async fn get(port: u16, path: &str) -> (u16, Value) {
     let (s, b) = http(port, "GET", path, None).await;
     (s, serde_json::from_str(&b).unwrap_or(Value::Null))
@@ -301,6 +324,39 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
     })
     .await;
     assert_eq!(mon["values"]["bodies_dormant"], json!(0));
+    // P7 sp8 row 3b: the crew joined through THE DESK — each body's key proven, admitted on the
+    // crew manifest (the kernel's spawn ticket), its lease collected; its words at /delta wear it
+    let (st, d) = get(port, "/join").await;
+    assert_eq!(st, 200, "{d}");
+    let joins = d["joins"].as_array().unwrap();
+    for name in ["echo", "librarian"] {
+        let j = joins
+            .iter()
+            .find(|j| j["name"] == json!(name) && j["status"] == json!("done"))
+            .unwrap_or_else(|| panic!("{name} joined through the desk: {d}"));
+        assert_eq!(
+            j["admitted_by"],
+            json!("admitted on the crew manifest — this kernel spawned this body"),
+            "{j}"
+        );
+        assert!(
+            j["expiry"].as_str().is_some(),
+            "the lease's day is on the row: {j}"
+        );
+    }
+    assert_eq!(
+        joins.iter().find(|j| j["name"] == json!("echo")).unwrap()["did"],
+        json!(echo_did),
+        "the desk's self is the process's self"
+    );
+    let (st, _) = http_bare(
+        port,
+        "POST",
+        "/delta",
+        Some(&json!({"ref": "x", "text": "unleased"})),
+    )
+    .await;
+    assert_eq!(st, 401, "a body's words need its lease");
 
     // ---- 2. an ask through the Rust door, served by a body the Rust kernel spawned
     let (st, made) = post(port, "/sessions", json!({"person": person})).await;

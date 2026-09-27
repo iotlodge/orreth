@@ -59,7 +59,7 @@ pub fn did_of_key(kind: &str, public_key_hex: &str) -> Option<String> {
     Some(format!("did:orreth:{kind}:{}", &sha256_hex(&bytes)[..32]))
 }
 
-fn kind_of(did: &str) -> &str {
+pub(crate) fn kind_of(did: &str) -> &str {
     let parts: Vec<&str> = did.split(':').collect();
     if parts.len() >= 4 && parts[0] == "did" && parts[1] == "orreth" {
         parts[2]
@@ -78,11 +78,11 @@ pub fn hex_decode(h: &str) -> Option<Vec<u8>> {
         .collect()
 }
 
-fn sig_of(signer: &KernelSelf, payload: &Value) -> Value {
+pub(crate) fn sig_of(signer: &KernelSelf, payload: &Value) -> Value {
     json!({"alg": "ed25519", "by": signer.did(), "sig": signer.sign(payload)})
 }
 
-fn sig_ok(sig: &Value, payload: &Value, public_key_hex: &str) -> bool {
+pub(crate) fn sig_ok(sig: &Value, payload: &Value, public_key_hex: &str) -> bool {
     if sig.get("alg").and_then(Value::as_str) != Some("ed25519") {
         return false;
     }
@@ -373,7 +373,17 @@ pub fn grants_for(role: &str, scope: &str) -> Value {
 }
 
 pub const OPEN_GET: [&str; 6] = ["/", "/index.html", "/health", "/guide", "/harness", "/seat"];
-pub const OPEN_POST: [&str; 4] = ["/seat", "/enroll/confirm", "/seam", "/delta"];
+/// P7 sp8 row 3b: the desk's doors answer proof, not seats.
+pub const OPEN_POST: [&str; 6] = [
+    "/seat",
+    "/enroll/confirm",
+    "/seam",
+    "/join",
+    "/join/prove",
+    "/join/lease",
+];
+/// P7 sp8 row 3b: a body's own words wear its LEASE (a seat with the role `body`).
+pub const LEASE_POST: [&str; 1] = ["/delta"];
 pub const GOVERN_POST: [&str; 13] = [
     "/world/rehome",
     "/bodies/restart",
@@ -390,11 +400,12 @@ pub const GOVERN_POST: [&str; 13] = [
     "/minds/restore",
 ];
 
-/// What a door asks of the one who knocks: `open` · `enroll` · `retrieve` · `write` · `govern`.
+/// What a door asks of the one who knocks: `open` · `enroll` · `lease` · `retrieve` · `write` · `govern`
+/// (a join's own status, `GET /join/<id>`, is open; the desk's list, `GET /join`, is a read).
 pub fn door_needs(method: &str, path: &str) -> &'static str {
     match method.to_ascii_uppercase().as_str() {
         "GET" => {
-            if OPEN_GET.contains(&path) {
+            if OPEN_GET.contains(&path) || path.starts_with("/join/") {
                 "open"
             } else {
                 "retrieve"
@@ -405,6 +416,8 @@ pub fn door_needs(method: &str, path: &str) -> &'static str {
                 "enroll"
             } else if OPEN_POST.contains(&path) {
                 "open"
+            } else if LEASE_POST.contains(&path) {
+                "lease"
             } else if GOVERN_POST.contains(&path) {
                 "govern"
             } else {
