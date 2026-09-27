@@ -389,3 +389,32 @@ def test_the_doors_enroll_hold_the_kernels_intention_and_wear_one_face(pg, rig):
     view = _get(port, "/ask/" + b["held"])
     assert view["status"] == "cancelled" and view["hold"] is None and "nothing was done" in view["reply"].lower()
     assert [i for i in _get(port, "/intentions")["intentions"] if i["intention_id"] == res["intention_id"]][0]["active"] is True
+
+
+def test_the_word_at_the_interlock_is_the_askers_own_or_a_governing_seats(pg):
+    """W69 (walk #19, 2026-09-27): quinn — a seated person who reads and writes and
+    does not govern — clicked Yes on the stablekeeper's proposal and the kernel retired
+    a mind "on your word". The law: a hold is decided by the one who asked, or by a
+    governing seat (the owner, a declared master); any other seated person meets the
+    one face, whichever way they click, and the hold stands. The asker's own cancel is
+    always taken."""
+    asker, quinn, master = _person("asker"), _person("quinn"), _person("master")
+    resident.ensure_schema(pg); proof.ensure_schema(pg)
+    l2 = "ask_" + secrets.token_hex(8)                                            # an L2 hold, by hand
+    with pg.transaction():
+        pg.cursor().execute(
+            "INSERT INTO spine_asks (ask_id, text, person, status, held, scope)"
+            " VALUES (%s, 'seal it', %s, 'awaiting-confirm', %s, %s)",
+            (l2, asker, json.dumps({"tool": "seal-record", "args": {"key": "k"},
+                                    "class": "consequential", "level": "L2"}), ev.scope()))
+    for approve in (True, False):
+        with pytest.raises(proof.NotConfirmed):
+            dispatch.confirm_ask(pg, l2, approve=approve, person=quinn)
+    cur = pg.cursor(); cur.execute("SELECT status FROM spine_asks WHERE ask_id = %s", (l2,))
+    assert cur.fetchone()[0] == "awaiting-confirm"                                # the hold stands
+    assert proof.attempts(pg, l2) == []                                           # no proof was even judged
+    assert proof.declare_master(pg, master, by=asker) and proof.governs(pg, master)
+    assert not proof.governs(pg, quinn)
+    out = dispatch.confirm_ask(pg, l2, approve=False, person=asker)              # the asker's own word is taken —
+    assert out == {"id": l2, "approve": False, "level": "L2"}                     # a resident's hold settles on the rail (test_soul walks that)
+

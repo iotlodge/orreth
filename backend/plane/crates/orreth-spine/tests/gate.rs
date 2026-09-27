@@ -362,6 +362,61 @@ async fn the_gate_seats_the_owner_first_and_every_door_reads_the_seat() {
     );
     println!("gate · quinn sits as a person; the governing doors wear the one face");
 
+    // ---- 3b. W69 (walk #19, 2026-09-27): the word at the interlock is the ASKER's own, or a
+    // governing seat's. jb (the owner) holds a consequential act; quinn — seated, reads and
+    // writes, does not govern — clicks Yes and meets the one face; the hold stands; jb's
+    // own cancel is taken.
+    let (s, _, v) = knock(
+        port,
+        "POST",
+        "/world/rehome",
+        Some(&json!({"to_cell": "px"})),
+        &jb_h,
+    )
+    .await;
+    assert_eq!(
+        s, 202,
+        "the owner's re-home holds at the interlock (L2): {v}"
+    );
+    let held = v["held"].as_str().expect("a held ask id").to_string();
+    for approve in [true, false] {
+        let (s, _, v) = knock(
+            port,
+            "POST",
+            "/confirm",
+            Some(&json!({"ask_id": held, "approve": approve})),
+            &q_h,
+        )
+        .await;
+        assert_eq!(
+            (s, v),
+            (403, one_face.clone()),
+            "quinn's word on jb's hold (approve={approve}) is refused with the one face"
+        );
+    }
+    let (_, _, v) = knock(port, "GET", &format!("/ask/{held}"), None, &jb_h).await;
+    assert_eq!(
+        v["status"],
+        json!("awaiting-confirm"),
+        "the hold stands after quinn's clicks: {v}"
+    );
+    let (s, _, _) = knock(
+        port,
+        "POST",
+        "/confirm",
+        Some(&json!({"ask_id": held, "approve": false})),
+        &jb_h,
+    )
+    .await;
+    assert_eq!(s, 202, "the asker's own cancel is taken");
+    let (_, _, v) = knock(port, "GET", &format!("/ask/{held}"), None, &jb_h).await;
+    assert_eq!(
+        v["status"],
+        json!("cancelled"),
+        "cancelled on the asker's word: {v}"
+    );
+    println!("gate · W69: a seat that only reads and writes decides nobody's hold — the one face; the asker's cancel taken");
+
     // ---- 4. a seat from another kernel, a seat with its bytes touched, a seat past its time
     let stranger = KernelSelf::ephemeral();
     let forged = seat::mint(

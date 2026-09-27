@@ -2,7 +2,7 @@
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass), walk #7's wounds · 2026-09-21 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures (glass): W27 the person's latest session · W32 one Esc, one thing · W33 a pull retracts when focus moves · W34/W39 a stop never needs the exact words · W35 the code row pinned · 2026-09-23 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7 walk #15 cures: W53 a closed pull gives its focus back · 2026-09-25 -->
-<!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #17/#18 cures (glass): W61 a cancelled hold wears no proof word · W62 a retired service is at rest · W63 the YOU tag wears the seat's name · W64 a person's hold whose code is right reaches every other seated glass for a declared master's click · W65/W66 the stop grammar takes "stopping" · "start" and ignores state words · W67 the master reads the master's words · 2026-09-27 -->
+<!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #17/#18 cures (glass): W61 a cancelled hold wears no proof word · W62 a retired service is at rest · W63 the YOU tag wears the seat's name · W64 a person's hold whose code is right reaches every other seated glass for a declared master's click · W65/W66 the stop grammar takes "stopping" · "start" and ignores state words · W67 the master reads the master's words · W68 a hold the clock ended says so · W69 a seat that only reads and writes is shown a hold and no button · 2026-09-27 -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -453,12 +453,13 @@
    (no seat, an expired one, a left one, a forged one — the same words) brings the seat form into the chat:
    your name and the code your authenticator shows. On a ground no one holds, the first to prove an
    authenticator becomes its OWNER — the ceremony — and enrolling anyone else is the owner's word. ---- */
-let PERSON = null, SEAT = null;
+let PERSON = null, SEAT = null, GOVERN = false;   // W69: whether this seat GOVERNS (the owner, a master) — read off its own grants
 function seatToken(wire){ try { return JSON.parse(atob(wire.replace(/-/g, "+").replace(/_/g, "/"))); } catch (e) { return null; } }
+function seatGoverns(t){ return !!(t && Array.isArray(t.grants) && t.grants.some(g => g && g.action === "govern")); }
 (function seatLoad(){
   try { SEAT = localStorage.getItem("orreth.seat") || null; } catch (e) {}
   const t = SEAT && seatToken(SEAT);
-  if (t && t.constraints && new Date(t.constraints.expiry) > new Date()) PERSON = t.subject;
+  if (t && t.constraints && new Date(t.constraints.expiry) > new Date()){ PERSON = t.subject; GOVERN = seatGoverns(t); }
   else SEAT = null;
 })();
 const _fetch = window.fetch.bind(window);
@@ -470,7 +471,7 @@ window.fetch = function(url, opts){
 let SEAT_ASKED = false;
 async function unseated(){                        // the seat form, once: the ceremony on a fresh ground, else name + code
   if (SEAT_ASKED) return; SEAT_ASKED = true;
-  SEAT = null; PERSON = null;
+  SEAT = null; PERSON = null; GOVERN = false;
   try { localStorage.removeItem("orreth.seat"); } catch (e) {}
   const st = await _fetch("/seat").then(x=>x.json()).catch(()=>null);
   const ceremony = !!(st && st.ceremony), hours = st && st.hours ? st.hours : 24;
@@ -510,7 +511,7 @@ async function takeSeat(name, code, msg, row){   // the code proves the person; 
                         : r && r.b && r.b.error ? r.b.error : "the seat door did not answer");
     return;
   }
-  SEAT = r.b.wire; PERSON = r.b.person;
+  SEAT = r.b.wire; PERSON = r.b.person; GOVERN = seatGoverns(seatToken(SEAT));
   try { localStorage.setItem("orreth.seat", SEAT); } catch (e) {}
   stepDone(msg, row, esc(r.b.words));
   setTimeout(() => location.reload(), 700);
@@ -521,7 +522,7 @@ async function seatWords(text){                  // "leave my seat" · "who am I
     el("msg mine", esc(text));
     const r = await fetch("/seat/leave", {method:"POST", headers:{"content-type":"application/json"}, body: "{}"}).then(x=>x.json()).catch(()=>null);
     sysline(esc(r && r.words ? r.words : "your seat is ended"));
-    SEAT = null; PERSON = null; try { localStorage.removeItem("orreth.seat"); } catch (e) {}
+    SEAT = null; PERSON = null; GOVERN = false; try { localStorage.removeItem("orreth.seat"); } catch (e) {}
     setTimeout(() => location.reload(), 700);
     return true;
   }
@@ -1144,7 +1145,8 @@ function renderOutcome(id, v, line){
     const held = line._row.closest(".msg");                                                  // W35: back into the log, in order
     if (held && held.parentElement && held.parentElement.id === "pin") log.appendChild(held);
     if (held){                                                                                // W60 (walk #15, JB's seed): the settled question FOLDS to one soft line —
-      const said = v.status === "cancelled" ? "you cancelled" : v.status === "replied" ? "you said yes" : v.status;   // the record keeps every word; nobody scrolls past a dead question
+      const onClock = v.status === "cancelled" && /no word came/i.test(v.reply || "");                              // W68 (walk #19): the holds' fifteen minutes ran out — nobody cancelled
+      const said = v.status === "cancelled" ? (onClock ? "no word came — cancelled on the kernel's clock" : "you cancelled") : v.status === "replied" ? "you said yes" : v.status;   // the record keeps every word; nobody scrolls past a dead question
       held.className = "msg theirs folded-hold";
       held.innerHTML = `<div class="who">the kernel</div><span class="meta">held at the interlock · ${esc(said)} · ${hhmm(v.replied_at || v.asked_at)} · ${v.status === "cancelled" ? "nothing ran, nothing was proved" : "proof " + esc(v.proof || "L1")} · recorded</span>`;   // W61 (walk #17): a cancel wears no proof level
     }
@@ -1267,6 +1269,11 @@ function secs(a, b){ return `${Math.max(0, (new Date(b) - new Date(a)) / 1000).t
 
 function holdRow(id, step, level, asker){   // one hold row: Cancel default · a typed code, or a MASTER's click from their own seat · Enter never confirms
   const row = document.createElement("div"); row.className = "confirm-row";
+  // W69 (walk #19): the word is the asker's own, or a governing seat's — a seat that only reads and writes is shown the hold (nothing runs unseen) and no button
+  if (asker && asker !== PERSON && !GOVERN && step !== "master"){
+    row.innerHTML = `<span class="stepwords">held for ${esc(whoIs(asker))}'s own word, or a governing seat's — not yours to decide</span>`;
+    return row;
+  }
   if (step === "code")                                       // a code is TYPED, then a click
     row.innerHTML = `<button class="btn-cancel">Cancel (default)</button>` +
       `<input inputmode="numeric" maxlength="6" pattern="[0-9]*" placeholder="6-digit code" aria-label="the code from your authenticator">` +

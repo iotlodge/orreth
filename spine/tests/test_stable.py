@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import dispatch, envelope as ev, gateway, glass, harness, mcp, monitor, resident, services, stable, tools
+from orreth_spine import dispatch, envelope as ev, gateway, glass, harness, mcp, monitor, proof, resident, services, stable, tools
 from tests.fake_gateway import MASTER, FakeLiteLLM
 
 SPINE = Path(__file__).resolve().parents[1]
@@ -154,6 +154,7 @@ def test_a_drained_lease_speaks_in_words_and_the_keeper_proposes_a_refill_the_hu
     monkeypatch.setenv(stable.LEASE_USD_DIAL, "0.00003")
     gw = gateway.LiteLLMGateway()
     services.seed(pg, gateway=gw, home=None)
+    proof.declare_master(pg, ME, by=ME)     # W69: a keeper's proposal is a GOVERNING seat's word — the human here governs
     keeper = _body("firmware-stablekeeper.v0.json", gw); keeper.join(pg)
     assert (keeper.kind, keeper.function, keeper.template["capabilities"]) == ("firmware", "minds", ["ask", "tools:minds"])
     lib = _body("librarian-resident.v0.json", gw); lib.join(pg)
@@ -204,6 +205,7 @@ def test_the_market_eyes_drift_and_eol_and_the_keeper_proposes_never_acts(pg, fa
     assignment, and an arm PINS."""
     gw = gateway.LiteLLMGateway()
     services.seed(pg, gateway=gw, home=None)
+    proof.declare_master(pg, ME, by=ME)     # W69: a keeper's proposal is a GOVERNING seat's word — the human here governs
     keeper = _body("firmware-stablekeeper.v0.json", gw); keeper.join(pg)
     llama_route = "openrouter/meta-llama/llama-3.3-70b-instruct"
     d = stable.deal("meta-llama/llama-3.3-70b-instruct", "openrouter", klass="fast", price={"in_per_m": 0.1, "out_per_m": 0.3}, context=128000)

@@ -2,7 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, a body never confirms (one face) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W12 · W19 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the dispatcher listens on the cell's topic · 2026-09-25
-# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W64: the asker's right code files a second confirm-needed notice (step master) — the master's road to the ask · 2026-09-27
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W64: the asker's right code files a second confirm-needed notice (step master) — the master's road to the ask · W69: the word at the interlock is the asker's own or a governing seat's · 2026-09-27
 """The ask road (canon 0002's chain, in miniature): ONE write path.
 
 A human's ask lands on the ground with its event in one transaction; the
@@ -252,6 +252,12 @@ def confirm_ask(conn, ask_id: str, *, approve: bool,
     held = json.loads(row[2]) if row and row[2] else {}
     level = held.get("level") or "L2"
     reason = None
+    # W69 (walk #19, 2026-09-27): the word at the interlock is the ASKER's own, or a
+    # GOVERNING seat's (the owner, a declared master) — never any seated person's. A seat
+    # that reads and writes clicked Yes on the keeper's proposal and the kernel retired a
+    # mind "on your word". L3-master's second person is judged by the masters below.
+    if row is not None and person != row[3] and level != "L3-master" and not proof.governs(conn, person):
+        raise proof.NotConfirmed()
     if approve:
         if row is None or row[4] != "awaiting-confirm":
             raise proof.NotConfirmed()          # nothing held: the one face

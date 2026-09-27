@@ -4,6 +4,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W20 the kernel settles a restart · W23 the words (rule 11) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures, W35's boundary: a kernel-held act with no word for 15 minutes is cancelled by the default (`expire_holds`) · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W69: `governs` — the owner or a declared master; the word at the interlock is the asker's own or a governing seat's · 2026-09-27
 """The proof demand rises to meet the consequence (canon 0001 P12 · 0005 P6 sp1).
 
 Every act wears a CONSEQUENCE CLASS — routine · consequential · grave —
@@ -272,6 +273,16 @@ def masters(conn) -> list[str]:
     cur.execute("SELECT person FROM spine_masters WHERE scope = %s ORDER BY declared_at, person",
                 (ev.scope(),))
     return [r[0] for r in cur.fetchall()]
+
+
+def governs(conn, person: str) -> bool:
+    """W69 (walk #19, 2026-09-27): does this person hold a GOVERNING seat here — the
+    owner (the ceremony) or a declared master? The desk's `governs`, law for law: the
+    word at the interlock is the asker's own or a governing seat's, never any seated
+    person's."""
+    from . import seat
+    seat.ensure_schema(conn)
+    return seat.owner(conn) == person or is_master(conn, person)
 
 
 def is_master(conn, person: str) -> bool:

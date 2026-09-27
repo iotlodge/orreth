@@ -2,7 +2,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the APPROVE of a kernel-held act runs intent.stop · intent.restart · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the APPROVE of service.retire and the Stable's acts (mind.*) settles here · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: name_of shared with the seam · the world.rehome act settles here · 2026-09-25
-// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W64: the asker's right code files a second confirm-needed notice (step master) through the outbox — the master's road to the ask · 2026-09-27
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W64: the asker's right code files a second confirm-needed notice (step master) through the outbox — the master's road to the ask · W69: the word at the interlock is the asker's own or a governing seat's (desk_live::governs) · 2026-09-27
 //! The ask road on the ground — mirrors `orreth_spine.dispatch` (the write
 //! half) and the ask views of `orreth_spine.glass`: ONE write path. A human's
 //! ask lands on `spine_asks` WITH its marker and its `ask.received` fact in
@@ -536,6 +536,18 @@ pub async fn confirm_ask(
         .filter(|l| !l.is_empty())
         .unwrap_or("L2")
         .to_string();
+    // W69 (walk #19, 2026-09-27): the word at the interlock is the ASKER's own, or a
+    // GOVERNING seat's (the owner, a declared master) — never any seated person's. A
+    // seat that reads and writes clicked Yes on the keeper's proposal and the kernel
+    // retired a mind "on your word". L3-master's second person is judged by the masters.
+    if let Some(h) = &held_row {
+        if person != h.person
+            && level != "L3-master"
+            && !crate::desk_live::governs(g.client(), &w.scope, person).await?
+        {
+            return Err(RoadError::NotConfirmed { rest: false });
+        }
+    }
     if approve {
         let Some(h) = &held_row else {
             return Err(RoadError::NotConfirmed { rest: false });

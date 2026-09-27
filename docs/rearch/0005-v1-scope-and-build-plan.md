@@ -1681,7 +1681,10 @@ approved (covenant rule 9).
            narrows the reference to fixtures and shadow proofs, as written.
       - **(b) THE MACHINE JOIN DESK** ✅ **BUILT 2026-09-26 (walk #19 half-walked
         2026-09-27 at the doors by Fable at JB's ask; the governing clicks OWED
-        to JB's seat —
+        to JB's seat; W69 (WOUND, JB's live test 2026-09-27): a seat that only
+        reads and writes confirmed the keeper's proposal — CURED on both kernels:
+        the word at the interlock is the asker's own or a governing seat's,
+        never any seated person's (gate.rs · test_proof.py) —
         SPEC-DESK-01).** JB's four locks at the open (AskUserQuestion): a
         LEASE opens the body's own words (`POST /delta`) and the desk's doors,
         nothing more, and stands on the ground as a SEAT with the role `body`
