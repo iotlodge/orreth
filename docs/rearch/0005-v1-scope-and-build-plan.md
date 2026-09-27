@@ -1771,6 +1771,49 @@ approved (covenant rule 9).
         template hash the kernel spawned) is checked at the ticket; WHO it is
         (the key behind the DID) at every proof. Nothing new to build for the
         law; the loop and the dial wait for a proof's wound.
+    - **Row 3c — THE REMEDIATION RAIL (JB's lock, 2026-09-27 evening, after
+      the walk day; ORDER LOCKED: lock 5 the one-rig-per-test-session spoonful
+      first, then THIS row, then row 4 — the rail MUST WORK before main is
+      replaced at 0.1.0).** The finding (walk day, the Resiliency loop in the
+      glass): the SENSING half is a real rail — a watch red wakes the intention,
+      a turn opens under the observation, the planner is asked, the objective is
+      filed to the runner, the reply heard once, every hop recorded — and the
+      REMEDIATION half is a conversation, not a rail. Three gaps, read in the
+      code: (1) the planner is told almost nothing (`plan_words`: the intention's
+      words + "a marker of kind watch on <id>") while the kernel holds every fact
+      on the ground — so it invents ("the watch holder must deliver the three
+      facts"); (2) nobody is told what LEVERS exist (restart · park · check ·
+      restore · re-home) — so a plan is a sentence, not an act, and the job lands
+      on a reader (the librarian) who "holds still"; (3) GREEN is never
+      attributed — a watch that heals itself reads as served, the improvement
+      marker fires only on a runner's "cannot act", the loop can neither learn
+      nor stop churning (W72 is the symptom; this is the wound). THE DESIGN, in
+      the kernel's own shapes: **(a) THE FORENSIC TURN** — before anyone thinks,
+      the kernel assembles a DOSSIER from the ground (the watch's definition and
+      threshold · its last readings · the bodies/services it names and their
+      state · the last acts on them · what happened the last time it went red);
+      a pure kernel read, no LLM, handed to the planner in place of a marker id.
+      **(b) THE LEVER CATALOGUE** — every governed act the kernel can perform is
+      DECLARED as data beside `tools.v0.json` (name · what it does · consequence
+      class · level · what it needs); the planner is told the catalogue and
+      answers IN it ("restart body monitor, because the dossier shows it dormant
+      past its lease" — or "no lever fits, because …"); a plan is an act the
+      interlock already knows how to hold: consequential levers hold for a click
+      in manual assist and run under full auto with the stop (the guide's three
+      modes, unchanged). **(c) THE KERNEL IS THE REMEDIATION RUNNER** — a
+      resident plans and reports; the kernel pulls the lever through the same
+      doors a human would, under the intention's authority chain, as a journey
+      hop; a resident never again receives a job it cannot do. **(d) THE
+      ATTRIBUTED OUTCOME** — after a lever the kernel re-reads the watch: green
+      after our act = a recorded improvement WITH its cause; green with no act =
+      recorded as self-healed, the turn closed without pretending; red after the
+      lever = the next lever, or the human with the dossier attached — which is
+      what the drift harness grades (W72's proper cure). Built on BOTH kernels by
+      canon; a conformance fixture for the catalogue and the dossier shape; a
+      proof that plants a red and watches the kernel cure it with an attributed
+      green; a walk where JB kills a body and reads the whole story in the chat
+      in plain words. Not a follow-up that can slip: the difference between a
+      kernel that notices and a kernel that acts.
     - **Row 4 — THE RE-BASE AND MAIN REPLACED AT 0.1.0 (JB's plane
       approval, 2026-09-26: the OLD `orrethd` crate is RETIRED from the
       workspace — it lives on at the `main-v0.72-old-world` tag forever —
