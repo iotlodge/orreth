@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the services registry · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the Tools keeper: the mcp probe is real; record_health; the rig's HOME · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: a mind's check writes a stall the gateway no longer lists back from the ladder and pings again · 2026-09-27
 """The services registry v0 (canon 0005 P6.5 sp1 · 0009 §3 "one ladder, two
 keepers" · 0018 services as identities · 0059 the env-secrets law).
 
@@ -403,6 +404,15 @@ def _probe(conn, row: dict, gateway, by: str = KERNEL) -> tuple[bool | None, str
                                  model=m.get("model"), max_tokens=1, pin=row["name"])
         except Exception as e:                       # noqa: BLE001 — the honest verdict
             return False, f"the gateway did not answer: {type(e).__name__}: {str(e)[:140]}"
+        if "invalid model name" in str(said or "").lower() and getattr(gateway, "stable", None) is not None:
+            # W71 (walk #19, 2026-09-27): the ladder is the truth — a stall the gateway no longer
+            # lists is written back from its manifest and pinged once more
+            try:
+                gateway.stable.add_stall(row["name"], m)
+                said = gateway.think(conn, did=who, system="Answer with one word.", prompt="ping",
+                                     model=m.get("model"), max_tokens=1, pin=row["name"])
+            except Exception as e:                   # noqa: BLE001
+                return False, f"the gateway did not answer: {type(e).__name__}: {str(e)[:140]}"
         if str(said or "").lstrip().lower().startswith("i cannot think") or str(said or "").lstrip().lower().startswith("i am out of fuel"):
             return False, f"the mind did not answer: {str(said)[:160]}"
         return True, f"the gateway answered a one-token ping through the meter ({m.get('route') or m.get('model')})"

@@ -1684,7 +1684,10 @@ approved (covenant rule 9).
         to JB's seat; W69 (WOUND, JB's live test 2026-09-27): a seat that only
         reads and writes confirmed the keeper's proposal — CURED on both kernels:
         the word at the interlock is the asker's own or a governing seat's,
-        never any seated person's (gate.rs · test_proof.py) —
+        never any seated person's (gate.rs · test_proof.py); W71 (WOUND, cured): the shelf's
+        restore of a mind left the gateway without its entry — one restore law on
+        both kernels, and the health check heals a missing entry from the ladder; W70
+        (OPEN, row 4's lock): a reloaded chat replays only the asks the person filed —
         SPEC-DESK-01).** JB's four locks at the open (AskUserQuestion): a
         LEASE opens the body's own words (`POST /delta`) and the desk's doors,
         nothing more, and stands on the ground as a SEAT with the role `body`

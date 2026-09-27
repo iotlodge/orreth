@@ -35,6 +35,7 @@
 //! Stable's `/minds…` · the shelf's `POST /services…`. Every other door
 //! answers 404 with no body, as the Python handler does.
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (a): the seat read at every door by a tower layer — the person from the token, never the body; the origin closed; the knock ceiling per person; the seat doors · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: the shelf's restore door routes every kind through restore_mind — one restore law · 2026-09-27
 
 use crate::asks::{self, Submit, FEED_TOPICS};
 use crate::bodies::{self, Bodies};
@@ -2272,7 +2273,12 @@ async fn services_post(
                 Ok((202, json!({"held": held, "level": services_live::RETIRE_LEVEL, "class": services_live::RETIRE_CLASS})))
             }
             _ => {
-                let made = services_live::restore(&mut g, w, &name, &person).await?;
+                // W71 (walk #19, 2026-09-27): ONE restore law — "restore the gemma mind" through the
+                // shelf's door left the ladder registered and the gateway without its entry
+                // ("Invalid model name"); a restored mind's entry is written back, as /minds/restore does
+                let ready = app.gateway.ready().await;
+                let gw = if ready { Some(&app.gateway) } else { None };
+                let made = stable_live::restore_mind(&mut g, w, gw, &name, &person).await?;
                 Ok((201, json!({"service": made})))
             }
         }

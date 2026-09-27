@@ -12,6 +12,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the cell's topics · the /world door · the home settled at light · 2026-09-25
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the profile doors (W58) · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (a): every door reads the person from the SEAT, never the body; the origin closed; the knock ceiling at every door; the seat doors · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: the shelf's restore door routes every kind through stable.restore_mind — one restore law · 2026-09-27
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -994,7 +995,9 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                                                         session=str(p.get("session") or "") or None)
                             return self._json(202, {"held": held, "level": services.RETIRE_LEVEL,
                                                     "class": services.RETIRE_CLASS})
-                        made = services.restore(conn, name, by=person)   # a new fact
+                        from . import stable as _stable                  # W71: ONE restore law — a mind's entry written back
+                        gw = _stable.Gateway()
+                        made = _stable.restore_mind(conn, name, by=person, gw=gw if gw.ready() else None)   # a new fact
                         return self._json(201, {"service": made})
                 except services.ServiceRefused as e:
                     return self._json(400, {"error": str(e)})

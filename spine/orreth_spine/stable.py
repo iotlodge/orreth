@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: restore_mind writes back a MIND's entry only · 2026-09-27
 """The Stable v0 (canon 0005 P6.5 sp3 · 0009 §2 "the STABLE firmware" · 0019
 the Stable · 0058 the market · JB's lock 2026-09-24: "LiteLLM executes; the
 registry knows and decides").
@@ -532,8 +533,11 @@ def retire_mind(conn, name: str, *, by: str, gw: Gateway | None = None, **kw) ->
 
 
 def restore_mind(conn, name: str, *, by: str, gw: Gateway | None = None) -> dict:
+    """A new fact; a MIND's entry written back into the gateway (W71: the shelf's one
+    restore door routes every kind here — a tool or a store touches no gateway, as
+    the Rust kernel's `restore_mind` has it)."""
     made = services.restore(conn, name, by=by)
-    if gw is not None:
+    if gw is not None and made.get("kind") == "mind":
         gw.add_stall(name, made["manifest"])
     return made
 

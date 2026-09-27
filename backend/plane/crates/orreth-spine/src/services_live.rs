@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: a mind's check writes a stall the gateway no longer lists back from the ladder and pings again · 2026-09-27
 //! The services registry on the ground — `orreth_spine.services` ported
 //! (P6.5 sp1 · 0009 §3 "one ladder, two keepers" · 0018 services as
 //! identities · 0059 the env-secrets law): ONE registry for tool · mcp ·
@@ -770,41 +771,49 @@ pub async fn probe(
             python_str(&row["did"])
         };
         let route = python_str(&m["route"]);
-        return Ok(
-            match gw.ping(g, &w.scope, &who, &name, &name, &route).await {
-                Ok(said) => {
-                    let low = said.trim_start().to_lowercase();
-                    if low.starts_with("i cannot think") || low.starts_with("i am out of fuel") {
-                        (
-                            Some(false),
-                            format!(
-                                "the mind did not answer: {}",
-                                crate::world::head(&said, 160)
-                            ),
-                        )
-                    } else {
-                        (
-                            Some(true),
-                            format!(
-                                "the gateway answered a one-token ping through the meter ({})",
-                                if route.is_empty() {
-                                    python_str(&m["model"])
-                                } else {
-                                    route
-                                }
-                            ),
-                        )
-                    }
+        let mut pinged = gw.ping(g, &w.scope, &who, &name, &name, &route).await;
+        // W71 (walk #19, 2026-09-27): the ladder is the truth — a stall the gateway no longer
+        // lists ("Invalid model name") is written back from its manifest and pinged once more
+        if let Ok(said) = &pinged {
+            if said.to_lowercase().contains("invalid model name")
+                && gw.add_stall(&name, &m).await.is_ok()
+            {
+                pinged = gw.ping(g, &w.scope, &who, &name, &name, &route).await;
+            }
+        }
+        return Ok(match pinged {
+            Ok(said) => {
+                let low = said.trim_start().to_lowercase();
+                if low.starts_with("i cannot think") || low.starts_with("i am out of fuel") {
+                    (
+                        Some(false),
+                        format!(
+                            "the mind did not answer: {}",
+                            crate::world::head(&said, 160)
+                        ),
+                    )
+                } else {
+                    (
+                        Some(true),
+                        format!(
+                            "the gateway answered a one-token ping through the meter ({})",
+                            if route.is_empty() {
+                                python_str(&m["model"])
+                            } else {
+                                route
+                            }
+                        ),
+                    )
                 }
-                Err(words) => (
-                    Some(false),
-                    format!(
-                        "the mind did not answer: {}",
-                        crate::world::head(&words, 160)
-                    ),
+            }
+            Err(words) => (
+                Some(false),
+                format!(
+                    "the mind did not answer: {}",
+                    crate::world::head(&words, 160)
                 ),
-            },
-        );
+            ),
+        });
     }
     if kind == "mcp" {
         return Ok(crate::mcp_live::probe(g, w, row, by).await);
