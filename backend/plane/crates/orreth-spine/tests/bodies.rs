@@ -801,7 +801,7 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
     );
     let hr = hop["reply"].as_str().unwrap();
     assert!(
-        hr.starts_with("On the intention's authority the kernel pulled body.restart name=echo: echo is being restarted on your word")
+        hr.starts_with("On the intention's authority the kernel pulled body.restart name=echo: echo is being restarted on the intention's word")
             && hr.ends_with("Because the fake mind reads echo parked after three deaths."),
         "{hr}"
     );

@@ -46,7 +46,7 @@ fn restart_body(name: &str) -> String {
     #[cfg(feature = "bridge")]
     {
         if let Some(b) = crate::bodies::handle() {
-            return match b.restart(name) {
+            return match b.restart_on(name, "the intention's word") {
                 Ok(v) => v["words"].as_str().unwrap_or_default().to_string(),
                 Err(e) => format!("refused — {e}"),
             };

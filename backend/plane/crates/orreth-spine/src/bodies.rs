@@ -729,6 +729,12 @@ impl Bodies {
 
     /// The human's lever: a parked or refused body is tried again (its deaths forgotten).
     pub fn restart(&self, name: &str) -> Result<Value, RoadError> {
+        self.restart_on(name, "your word")
+    }
+
+    /// The same lever pulled on another's word — the kernel's, under an intention (row 3c;
+    /// W83: the words name whose word it was).
+    pub fn restart_on(&self, name: &str, whose: &str) -> Result<Value, RoadError> {
         let state = self
             .inner
             .lock()
@@ -746,7 +752,7 @@ impl Bodies {
                     w.notify_one();
                 }
                 Ok(
-                    json!({"name": name, "restarting": true, "words": format!("{name} is being restarted on your word — its deaths are forgotten; if it dies {PARK_STRIKES} times again in {} it parks again", crate::body::window_words(PARK_WINDOW_S))}),
+                    json!({"name": name, "restarting": true, "words": format!("{name} is being restarted on {whose} — its deaths are forgotten; if it dies {PARK_STRIKES} times again in {} it parks again", crate::body::window_words(PARK_WINDOW_S))}),
                 )
             }
             Some(st) => Ok(
