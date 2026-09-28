@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (a): the human seat's proof · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4: the proof's client is patient at the ceiling (a 429 outside the flood step is retried after retry_after_s) · 2026-09-28
 //! THE GATE'S PROOF (canon 0005 sp8 row 3 · 0006 §3 · covenant rules 3 and 4),
 //! on the dev rig, by name:
 //!
@@ -49,8 +50,9 @@ fn spine_dir() -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../spine")
 }
 
-/// One knock, with whatever headers the case needs (a seat, an origin, none).
-async fn knock(
+/// One knock, raw: the answer as the door gave it, a busy answer included. The flood step
+/// (8) counts these.
+async fn knock_once(
     port: u16,
     method: &str,
     path: &str,
@@ -88,6 +90,31 @@ async fn knock(
         head,
         serde_json::from_str(&body).unwrap_or(Value::Null),
     )
+}
+
+/// A patient knock: the proof's ordinary client honours the gate's own words («try again
+/// shortly») and knocks again after `retry_after_s`. Every step but the flood knocks this
+/// way — the ceiling is dialed low for this binary (burst 8), and the open doors of steps
+/// 1–3 (the seat door, the confirm, the health) spend the per-address bucket faster than
+/// it refills on a quick machine; without patience quinn's seat met a 429 (red since
+/// 34965c0, proof-order, not the gate).
+async fn knock(
+    port: u16,
+    method: &str,
+    path: &str,
+    body: Option<&Value>,
+    headers: &[(&str, &str)],
+) -> (u16, String, Value) {
+    let mut tries = 0;
+    loop {
+        let (status, head, v) = knock_once(port, method, path, body, headers).await;
+        if status != 429 || tries >= 6 {
+            return (status, head, v);
+        }
+        let after = v["retry_after_s"].as_f64().unwrap_or(1.0).max(0.25);
+        tokio::time::sleep(Duration::from_secs_f64(after)).await;
+        tries += 1;
+    }
 }
 
 fn bearer(wire: &str) -> String {
@@ -545,7 +572,7 @@ async fn the_gate_seats_the_owner_first_and_every_door_reads_the_seat() {
         let h: Vec<(String, String)> = vec![("authorization".into(), bearer(&jb_wire))];
         handles.push(tokio::spawn(async move {
             let hh: Vec<(&str, &str)> = h.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
-            knock(port, "GET", "/asks", None, &hh).await
+            knock_once(port, "GET", "/asks", None, &hh).await
         }));
     }
     let mut served = 0;
@@ -571,7 +598,7 @@ async fn the_gate_seats_the_owner_first_and_every_door_reads_the_seat() {
     assert_eq!(s, 200, "the open door's bucket is its own");
     let mut open_busy = 0;
     for _ in 0..24 {
-        let (s, _, v) = knock(port, "GET", "/health", None, &[]).await;
+        let (s, _, v) = knock_once(port, "GET", "/health", None, &[]).await;
         if s == 429 {
             open_busy += 1;
             assert_eq!(v["error"], json!(seat::BUSY_WORDS));
