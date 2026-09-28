@@ -309,7 +309,7 @@ def forensic(conn, watch_id: str, *, episode: str | None = None, bodies: list[di
     `episode` names this red's first turn, so what was tried this time is
     listed apart from the last time."""
     from datetime import datetime, timezone
-    from . import monitor, presence
+    from . import monitor
     from .body import PARKED
     cur = conn.cursor()
     snap = monitor.snapshot(conn, rails=False)
@@ -329,9 +329,12 @@ def forensic(conn, watch_id: str, *, episode: str | None = None, bodies: list[di
     metric = w["metric"]
     if metric in ("bodies_dormant", "bodies_alive"):
         seated = {b["name"]: b for b in (bodies or [])}
-        cur.execute("SELECT name, did, until FROM spine_leases WHERE scope = %s AND until <= now()"
-                    " ORDER BY name", (ev.scope(),))
-        for name, did, until in cur.fetchall():
+        # W82 (walk #20): ONE read — the roster the snapshot judged is the roster the dossier names; a
+        # second read of the leases a moment later once found nobody dormant under a red of value 2
+        for b in snap["bodies"]:
+            if b["alive"]:
+                continue
+            name, did, until = b["name"], b["did"], datetime.fromisoformat(b["until"])
             state = f"dormant — its lease lapsed {ago_words(_secs_between(now, until))}"
             b = seated.get(name)
             if b:
@@ -350,7 +353,7 @@ def forensic(conn, watch_id: str, *, episode: str | None = None, bodies: list[di
             subjects.append({"kind": "body", "name": name, "did": did, "state": state})
             names.append(name)
         # the roster's view of the others, so the planner knows who stands
-        alive = [b["name"] for b in presence.roster(conn) if b["alive"]]
+        alive = [b["name"] for b in snap["bodies"] if b["alive"]]
         if alive and subjects:
             subjects.append({"kind": "crew", "name": "alive", "state": ", ".join(alive)})
     elif metric == "asks_received":

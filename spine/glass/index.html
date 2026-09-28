@@ -1,4 +1,6 @@
-<!-- PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16 -->
+<!-- PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16
+     Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #20 cures: W78 the kernel's own hop drawn from its reply · W79 the BODIES card reads the kernel's process state (life · PARKED words) · W81 the Analyzer row's words no longer squeezed by its meta · the row's "last red" chip · 2026-09-28
+-->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass), walk #7's wounds · 2026-09-21 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures (glass): W27 the person's latest session · W32 one Esc, one thing · W33 a pull retracts when focus moves · W34/W39 a stop never needs the exact words · W35 the code row pinned · 2026-09-23 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7 walk #15 cures: W53 a closed pull gives its focus back · 2026-09-25 -->
@@ -349,9 +351,10 @@
   .dot.replied{background:var(--jade)}
   .dot.cancelled{background:#555}
   @keyframes pulse{50%{opacity:.35}}
-  .brow .snip{flex:1;overflow:hidden;text-overflow:ellipsis;
+  .brow .snip{flex:1 1 auto;min-width:14em;overflow:hidden;text-overflow:ellipsis;
     white-space:nowrap}
-  .brow .meta{color:var(--dim);font-size:10.5px;flex:none}
+  .brow .meta{color:var(--dim);font-size:10.5px;flex:0 1 auto;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}   /* W81 (walk #20): the words were squeezed to "kee…" by a long meta */
   .bexpand{padding:8px 26px 12px;color:var(--ink);font-size:12.5px;
     background:rgba(0,0,0,.25);border-bottom:1px solid var(--seam);
     white-space:pre-wrap}
@@ -1064,6 +1067,17 @@ async function onNotice(n){
                               : atDoor ? ((vh.hold.args || {}).name || whoIs(vh.person)) + " asks to join · the desk" : whoIs(vh.person) + " proposes · the shelf")}</em><div class="meta">${esc(vh.text)}</div>`);
     PENDING[n.ref] = el("journey", "held at the interlock — cancel is the default…");
     renderOutcome(n.ref, vh, PENDING[n.ref]);
+    return;
+  }
+  if (!line && n.kind.includes("reply")){         // W78 (walk #20): THE KERNEL'S OWN HOP — a lever it pulled, or the
+    const vk = await fetch("/ask/" + n.ref).then(x=>x.json()).catch(()=>null);   // dossier it handed a person — is an
+    if (!vk || vk.served_by !== "the kernel" || vk.status !== "replied" || !vk.origin || vk.origin.kind !== "intention") return;
+    const words = `“${esc((vk.origin.words || "").slice(0, 80))}”`;              // ask the kernel served itself: no
+    el("msg mine", `<em>the kernel acts · on the intention's authority · ${words}</em>` +   // ask.received rides the feed,
+       `<div class="meta">${esc(vk.text)}</div>`);                               // so it is drawn from its reply
+    const bub = el("msg theirs", `<div class="who">the kernel</div>` + cite(plain(vk.reply || "")));
+    if (vk.reply) bub.prepend(copyBtn(() => stripMarks(vk.reply)));
+    if (SESSION && vk.session !== SESSION) el("journey", `in the intention's own session · ${hhmm(vk.replied_at || vk.asked_at)}`);
     return;
   }
   if (!line){                                     // an ask this chat did not file —
@@ -1998,6 +2012,10 @@ let HC = null, HC_AT = 0;                        // the health checks, read ever
 async function loadMonitor(){
   const s = await fetch("/monitor").then(x=>x.json()).catch(()=>null);
   if (!s) return;
+  // W79 (walk #20): the kernel's OWN view of the bodies it seats as processes — life · state · the parked
+  // words — beside the lease the roster shows; the Python door has no /bodies, so it stays a lease alone
+  const gov = await fetch("/bodies").then(x => x.ok ? x.json() : null).catch(()=>null);
+  const GOV = {}; for (const b of (gov && gov.bodies) || []) GOV[b.name] = b;
   const real = document.getElementById("views"); const keep = real.scrollTop;
   const box = document.createElement("div");      // W48 (walk #12): painted off-screen, swapped in ONLY when something changed — no flash
   const view = (title, rows) => {
@@ -2039,8 +2057,11 @@ async function loadMonitor(){
   view("RAILS", row("outbox pending", s.outbox.pending, s.outbox.pending ? "red" : "ok") +
        row("oldest unpublished", s.outbox.oldest_age_s != null ? s.outbox.oldest_age_s.toFixed(1) + " s" : "—") +
        row("ask.received topic depth", s.topic_depth ?? "?") + benches);
-  view("BODIES", s.bodies.map(b => `<div class="row"><span><span class="dot ${b.alive ? "alive" : "dormant"}"></span>` +
-       `${esc(b.name)} · ${esc(b.kind)}</span><span class="${b.alive ? "ok" : "red"}">${b.alive ? "alive" : "dormant"} · until ${hhmm(b.until)}</span></div>`).join("") ||
+  view("BODIES", s.bodies.map(b => { const g = GOV[b.name]; const parked = g && (g.state === "parked" || g.state === "refused");
+       return `<div class="row"><span><span class="dot ${parked ? "dormant" : b.alive ? "alive" : "dormant"}"></span>` +
+       `${esc(b.name)} · ${esc(b.kind)}${g ? ` · life ${g.lives}` : ""}</span><span class="${parked || !b.alive ? "red" : "ok"}">` +
+       `${parked ? g.state.toUpperCase() : b.alive ? "alive" : "dormant"}${g && !parked && g.state !== "alive" ? " · " + esc(g.state) : ""} · until ${hhmm(b.until)}</span></div>` +
+       (parked ? `<div class="meta" style="padding:0 8px 6px">${esc(g.words || "")}</div>` : ""); }).join("") ||
        `<div class="meta">no leases yet</div>`);
   view("ASKS", Object.entries(s.asks).map(([k, v]) => row(k, v)).join("") || `<div class="meta">none in this world</div>`);
   view("WATCHES", (s.watches.map(w => row(`${w.name} — ${w.reads || `${w.metric} ${w.op} ${w.threshold} · now ${w.value}`}`,

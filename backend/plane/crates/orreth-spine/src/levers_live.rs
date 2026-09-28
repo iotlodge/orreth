@@ -144,16 +144,26 @@ pub async fn forensic(
     let mut subjects = Vec::new();
     let mut names: Vec<String> = Vec::new();
     if metric == "bodies_dormant" || metric == "bodies_alive" {
-        let rows = g
-            .client()
-            .query(
-                "SELECT name, did, greatest(0, extract(epoch from now() - until))::float8 FROM spine_leases \
-                 WHERE scope = $1 AND until <= now() ORDER BY name",
-                &[&w.scope],
-            )
-            .await?;
-        for r in rows {
-            let (name, did, ago): (String, String, f64) = (r.get(0), r.get(1), r.get(2));
+        // W82 (walk #20): ONE read — the roster the snapshot judged is the roster the dossier names
+        let now_s = crate::py::parse_iso_secs(&crate::envelope::now_iso()).unwrap_or(0);
+        let dormant: Vec<(String, String, f64)> = snap["bodies"]
+            .as_array()
+            .map(|a| {
+                a.iter()
+                    .filter(|b| b["alive"] != json!(true))
+                    .map(|b| {
+                        let until = crate::py::parse_iso_secs(b["until"].as_str().unwrap_or(""))
+                            .unwrap_or(now_s);
+                        (
+                            b["name"].as_str().unwrap_or_default().to_string(),
+                            b["did"].as_str().unwrap_or_default().to_string(),
+                            (now_s - until).max(0) as f64,
+                        )
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        for (name, did, ago) in dormant {
             let mut state = format!("dormant — its lease lapsed {}", ago_words(Some(ago as i64)));
             let seated = bodies.and_then(|b| b.iter().find(|x| x["name"].as_str() == Some(&name)));
             match seated {
@@ -199,12 +209,15 @@ pub async fn forensic(
             subjects.push(json!({"kind": "body", "name": name, "did": did, "state": state}));
             names.push(name);
         }
-        let alive: Vec<String> = crate::presence::roster(g, &w.scope)
-            .await?
-            .iter()
-            .filter(|b| b["alive"] == json!(true))
-            .filter_map(|b| b["name"].as_str().map(str::to_string))
-            .collect();
+        let alive: Vec<String> = snap["bodies"]
+            .as_array()
+            .map(|a| {
+                a.iter()
+                    .filter(|b| b["alive"] == json!(true))
+                    .filter_map(|b| b["name"].as_str().map(str::to_string))
+                    .collect()
+            })
+            .unwrap_or_default();
         if !alive.is_empty() && !subjects.is_empty() {
             subjects.push(json!({"kind": "crew", "name": "alive", "state": alive.join(", ")}));
         }

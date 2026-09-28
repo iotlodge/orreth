@@ -1929,7 +1929,11 @@ approved (covenant rule 9).
       episode, then the human; a consequential lever holds for a person's
       click in every mode — JB's clarification the same night settled it (the
       modes are the human's dial of involvement, never a licence for the
-      machine to run alone); the walk (SPEC-REMEDY-01) is OWED to JB's seat.
+      machine to run alone). **WALK #20 (JB, 2026-09-28 morning): PASS w/
+      friction — the rail cured four parks live on :4601 with the real planner;
+      the glass hid it (W78 the kernel's hop not drawn · W79 BODIES showed
+      leases alone · W81 the row's words squeezed · W82 the dossier's second
+      read), all cured the same morning; W70 felt again at the seat (row 4).**
     - **Row 4 — THE RE-BASE AND MAIN REPLACED AT 0.1.0 (JB's plane
       approval, 2026-09-26: the OLD `orrethd` crate is RETIRED from the
       workspace — it lives on at the `main-v0.72-old-world` tag forever —
