@@ -2248,6 +2248,15 @@ approved (covenant rule 9).
       verify is crypto" — the old world's root seed protection must be matched or bettered by
       the new kernel's self, seats, desk and SDK seeds; if matched or better, nothing is
       adjusted) rides re-base sp1 as a read, its verdict in the honest boundary.
+      **JB's word, 2026-09-28 night, after the crypto read: "Yes remove all five crates with the
+      sweep."** Rule 9's explicit approval, given: `orreth-crypto` · `orreth-node` · `orreth-store` ·
+      `orreth-resolver` · `orreth-rollup` leave the workspace with the old `orrethd` in re-base sp2's
+      sweep — the new kernel depends on none of them, and they live on whole at the tag
+      `main-v0.72-old-world` and the branch `old-world/main-v0.72`. The sweep rewrites covenant
+      rule 9 in the same commit (the sacred core becomes `orreth-spine`'s crypto surface —
+      `kernel_self` · `seat` · `desk` · `envelope`'s canonical bytes — and `contracts/v0`), and
+      the workspace `Cargo.toml` lists one member. The crypto read's five named gaps stay on the
+      honest boundary; the book states plainly that the kernel is its own root.
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the
