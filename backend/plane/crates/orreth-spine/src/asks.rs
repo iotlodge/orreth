@@ -3,6 +3,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the APPROVE of service.retire and the Stable's acts (mind.*) settles here · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: name_of shared with the seam · the world.rehome act settles here · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W64: the asker's right code files a second confirm-needed notice (step master) through the outbox — the master's road to the ask · W69: the word at the interlock is the asker's own or a governing seat's (desk_live::governs) · 2026-09-27
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `FEED_TOPICS` widened from nine to thirty-one · the ask view names the DUTY that filed it (`duty`) so the scheduler's track can light · 2026-09-28
 //! The ask road on the ground — mirrors `orreth_spine.dispatch` (the write
 //! half) and the ask views of `orreth_spine.glass`: ONE write path. A human's
 //! ask lands on `spine_asks` WITH its marker and its `ask.received` fact in
@@ -40,8 +41,12 @@ pub const SERVE_CMD: &str = "orreth.resident.serve.v1";
 pub use crate::ask::HARNESS_FAILED;
 pub use crate::watch::WATCH_TURNED;
 
-/// The topics the Bridge feed reads — `glass.FEED_TOPICS`, in order.
-pub const FEED_TOPICS: [&str; 9] = [
+/// The topics the Bridge feed reads — `glass.FEED_TOPICS`, in order. Row 4, panel sp2:
+/// widened from nine — every fact the rails already carried but the glass never saw
+/// (a body parked, a tool hop, a lease crossing the line, a lever pulled, a seat taken, a
+/// body at the join desk, an intention's life, the shelf's and the Stable's changes, a
+/// memory landed, the kernel's own heartbeat) now reaches THE PANEL as a pointer.
+pub const FEED_TOPICS: [&str; 33] = [
     ASK_RECEIVED,
     crate::memory::SESSION_OPENED, // W51: a roll is a fact every door's sessions list follows
     JOURNEY,
@@ -51,6 +56,31 @@ pub const FEED_TOPICS: [&str; 9] = [
     markers_live::MARKER_SET,
     ASK_REFUSED,
     WATCH_TURNED,
+    // ---- panel sp2: the feed widened ----
+    crate::body::PARKED,             // the kernel stopped restarting a body
+    crate::presence::LEASE_LAPSED,   // a body stopped renewing
+    crate::presence::LEASE_SEATED,   // a body serves again
+    crate::levers::PULLED,           // the kernel pulled a lever under an intention
+    crate::export_live::TOOL_CALLED, // a body's tool hop
+    crate::rails::HEARTBEAT_TOPIC,   // the kernel's own breath on a rail
+    crate::intent::INTENTION_DECLARED,
+    crate::intent::INTENTION_STOPPED,
+    crate::intent::INTENTION_RESTARTED,
+    crate::services_live::REGISTERED, // the shelf
+    crate::services_live::VERSIONED,
+    crate::services_live::HEALTH,
+    crate::services_live::RETIRED,
+    crate::services_live::RESTORED,
+    crate::stable::ASSIGNED, // the Stable
+    crate::stable::UNASSIGNED,
+    crate::stable::FUELED,       // the meter
+    crate::memory::MEMORY_EVENT, // a memory landed on the ground
+    crate::seat::SEAT_TAKEN,     // the desk
+    crate::seat::SEAT_LEFT,
+    crate::desk::JOIN_ASKED, // the join desk
+    crate::desk::JOIN_PROVED,
+    crate::desk::JOIN_ADMITTED,
+    crate::desk::JOIN_DENIED,
 ];
 
 // ---- the fact, minted now ------------------------------------------------------------
@@ -1036,6 +1066,19 @@ pub async fn ask_view(g: &Ground, scope: &str, ask_id: &str) -> Result<Option<Va
         _ => Value::Null,
     };
     let proof: Option<String> = row.get(12);
+    // row 4, panel sp2: an ask the SCHEDULER filed names its duty — the panel lights the
+    // scheduler's track for it; a person's own ask carries none
+    let duty: Option<String> = if has_table(g, "spine_occurrences").await? {
+        g.client()
+            .query_opt(
+                "SELECT schedule_id FROM spine_occurrences WHERE ref = $1 ORDER BY at DESC LIMIT 1",
+                &[&ask_id],
+            )
+            .await?
+            .map(|r| r.get(0))
+    } else {
+        None
+    };
     Ok(Some(json!({
         "ask_id": ask_id, "text": row.get::<_, String>(0), "person": row.get::<_, String>(1),
         "status": status, "reply": reply, "served_by": served_by,
@@ -1044,7 +1087,7 @@ pub async fn ask_view(g: &Ground, scope: &str, ask_id: &str) -> Result<Option<Va
         "replied_at": iso_opt(row.get::<_, Option<SystemTime>>(8)),
         "window": json_text(row.get::<_, Option<String>>(9).as_deref()),
         "session": row.get::<_, Option<String>>(10),
-        "marker": marker, "origin": origin,
+        "marker": marker, "origin": origin, "duty": duty,
         "proof": proof.filter(|p| !p.is_empty()).unwrap_or_else(|| "L1".into()),
         "hold": hold, "journey": journey,
     })))

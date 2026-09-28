@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, THE REMEDIATION RAIL · 2026-09-27
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `pull` mints `orreth.lever.pulled.v1` with the turn's record, one transaction · 2026-09-28
 //! The ground half of `orreth_spine.levers` (P7 sp8 row 3c, THE REMEDIATION
 //! RAIL): the FORENSIC TURN (`forensic` — the dossier read off the ground, no
 //! mind), the KERNEL AS THE REMEDIATION RUNNER (`pull` — a routine lever run
@@ -561,13 +562,43 @@ pub async fn pull(
         .await?;
         (aid, false)
     };
-    g.client()
-        .execute(
+    // row 4, panel sp2: the pull is a fact on the feed (`orreth.lever.pulled.v1`), landed in
+    // the same transaction as the turn's record — no pull without its fact
+    let iid = intention["intention_id"].as_str().unwrap_or_default();
+    let e = Mint {
+        kind: "event".into(),
+        r#type: crate::levers::PULLED.into(),
+        universe_id: w.scope.clone(),
+        scope_path: w.scope.clone(),
+        payload: crate::levers::pulled_payload(&ask_id, &name, args, because, held, iid),
+        correlation_id: Some(iid.to_string()),
+        authority_chain: Some(if person == KERNEL {
+            vec![KERNEL.into()]
+        } else {
+            vec![person.to_string(), KERNEL.into()]
+        }),
+        ..Default::default()
+    }
+    .mint()?;
+    let raw = envelope::encode(&e)?;
+    let mid = e["message_id"].as_str().unwrap_or_default().to_string();
+    let (n2, a2, b2, k2, t2) = (
+        name.clone(),
+        args.to_string(),
+        because.to_string(),
+        ask_id.clone(),
+        turn_id.to_string(),
+    );
+    outbox::commit_with_outbox(g, &raw, &mid, None, async move |tx| {
+        tx.execute(
             "UPDATE spine_intent_turns SET lever = $1, lever_args = $2, because = $3, lever_ask = $4, pulled_at \
              = CASE WHEN $5 THEN NULL ELSE now() END, objective_ask = '-' WHERE turn_id = $6",
-            &[&name, &args.to_string(), &because, &ask_id, &held, &turn_id],
+            &[&n2, &a2, &b2, &k2, &held, &t2],
         )
         .await?;
+        Ok(())
+    })
+    .await?;
     Ok(json!({"turn_id": turn_id, "lever": name, "args": args, "ask_id": ask_id, "held": held}))
 }
 

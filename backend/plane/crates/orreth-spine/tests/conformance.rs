@@ -6,6 +6,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the twelve minds kinds · backoff · park_rule · parked_words · parked_fact · harness_verdict · harness_command · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: topic_name · peers_from · address_home · epoch_check · world_fact · seam_sign · seam_verify · the words · sealed_words · ceiling · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the seat: seat_mint · seat_verify · seat_grants · door_needs · origin_ok · bearer · seat_words · seat_did_of_key · person_did · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `pulled_fact` · `lease_fact` ported · 2026-09-28
 //! The Rust conformance runner (canon 0008 · P7 sp1): every fixture under
 //! `spine/conformance/*-v*.json` — the same files the Python reference
 //! generated and passes, unchanged — dispatched by case kind exactly as
@@ -91,6 +92,9 @@ const PORTED_KINDS: &[&str] = &[
     "hold_expiry",
     "crew_hash",
     "turned_fact",
+    // row 4, panel sp2 — the pull and the lease crossing as facts
+    "pulled_fact",
+    "lease_fact",
     // P7 sp5 — orreth.memory/1 and the signed export
     "search_terms",
     "memory_fact",
@@ -905,6 +909,69 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             s(&exp["text"]).to_string(),
             "the ago words"
         ),
+        // ---- row 4, panel sp2: the pull and the lease crossing are facts on the feed ----
+        "pulled_fact" => {
+            let payload = levers::pulled_payload(
+                s(&inp["ask_id"]),
+                s(&inp["lever"]),
+                &inp["args"],
+                s(&inp["because"]),
+                inp["held"].as_bool().unwrap_or(false),
+                s(&inp["intention_id"]),
+            );
+            same!(payload, exp["payload"], "the payload");
+            let env = levers::pulled_fact(
+                s(&inp["scope"]),
+                s(&inp["intention_id"]),
+                s(&inp["person"]),
+                payload,
+                s(&inp["message_id"]),
+                s(&inp["occurred_at"]),
+            );
+            same!(env["type"], exp["type"], "the type");
+            same!(env["authority_chain"], exp["chain"], "the chain");
+            same!(
+                env["correlation_id"],
+                exp["correlation_id"],
+                "the correlation"
+            );
+            let bytes = envelope::encode(&env).map_err(|e| e.to_string())?;
+            same!(
+                String::from_utf8(bytes).unwrap(),
+                s(&exp["bytes"]).to_string(),
+                "the fact's bytes"
+            );
+        }
+        "lease_fact" => {
+            let payload = ask::lease_payload(
+                s(&inp["name"]),
+                s(&inp["did"]),
+                s(&inp["kind"]),
+                s(&inp["until"]),
+            );
+            same!(payload, exp["payload"], "the payload");
+            let env = ask::lease_fact(
+                s(&inp["scope"]),
+                s(&inp["type"]),
+                s(&inp["did"]),
+                payload,
+                s(&inp["message_id"]),
+                s(&inp["occurred_at"]),
+            );
+            same!(env["type"], exp["type"], "the type");
+            same!(env["authority_chain"], exp["chain"], "the chain");
+            same!(
+                env["correlation_id"],
+                exp["correlation_id"],
+                "the correlation"
+            );
+            let bytes = envelope::encode(&env).map_err(|e| e.to_string())?;
+            same!(
+                String::from_utf8(bytes).unwrap(),
+                s(&exp["bytes"]).to_string(),
+                "the fact's bytes"
+            );
+        }
         "hold_expiry" => {
             same!(
                 Value::from(proof::HOLD_TTL_MIN),

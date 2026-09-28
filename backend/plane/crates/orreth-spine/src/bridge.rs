@@ -5,6 +5,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the crew spawned and governed · /delta · /bodies · the Stable's doors · the shelf's doors · the harness over the rail · the keepers' beats · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the cell — the home at light · the /world door · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the profile doors (W58) · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: the fact door `/fact/<message_id>` · the presence sweep's loop · 2026-09-28
 //! The Rust bridge — the doors and the feed of `orreth_spine.glass` +
 //! `bridgefeed` on axum, lit in SHADOW on :4601 beside the Python Bridge on
 //! :4600, both on one ground. It serves the SAME page (`spine/glass/index.html`
@@ -48,6 +49,8 @@ use crate::intent::{read_words, ASK_KINDS};
 use crate::intent_live::{self, Declare};
 use crate::markers_live;
 use crate::monitor;
+use crate::outbox;
+use crate::presence;
 use crate::proof::one_face;
 use crate::proof_live;
 use crate::py::python_str;
@@ -483,6 +486,34 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
             }
         }));
     }
+    // row 4, panel sp2: the presence sweep — every 5 s; a lease that lapses or is seated
+    // again becomes a fact on the feed (the note lives on the ground: no beat claim needed,
+    // two kernels race for the row and one wins it)
+    {
+        let (w, stop) = (w.clone(), stop.clone());
+        tasks.push(tokio::spawn(async move {
+            while !stop.load(Ordering::Relaxed) {
+                match Ground::connect(&w.pg_dsn).await {
+                    Ok(mut g) => {
+                        while !stop.load(Ordering::Relaxed) {
+                            if let Err(e) = presence::sweep(&mut g, &w).await {
+                                eprintln!("the presence sweep stumbled: {e}");
+                                if matches!(e, RoadError::Rail(_)) {
+                                    break; // stand again on a fresh connection
+                                }
+                            }
+                            sleep_unless_stopped(&stop, Duration::from_secs(presence::SWEEP_S))
+                                .await;
+                        }
+                    }
+                    Err(e) => eprintln!("the presence sweep could not reach the ground: {e}"),
+                }
+                if !stop.load(Ordering::Relaxed) {
+                    tokio::time::sleep(Duration::from_millis(500)).await;
+                }
+            }
+        }));
+    }
     // the intent rail's beat — Resiliency declared at boot, then a turn every 3 s
     {
         let (w, stop) = (w.clone(), stop.clone());
@@ -658,6 +689,7 @@ fn router(app: Arc<App>) -> Router {
         .route("/health", get(health))
         .route("/shadow", get(shadow))
         .route("/ask/:id", get(ask_door))
+        .route("/fact/:id", get(fact_door)) // row 4, panel sp2: a fact by its message id — the feed's pointer read through one door
         .route("/ask", post(ask_post))
         .route("/asks", get(asks_door))
         .route("/residents", get(residents_door))
@@ -1016,6 +1048,30 @@ async fn shadow(State(app): State<Arc<App>>) -> Response {
             "human_zone": app.cfg.human_zone, "glass": app.cfg.glass.display().to_string(),
         }),
     )
+}
+
+/// Row 4, panel sp2: THE FACT DOOR — a committed fact by its message id, the pointer
+/// every feed notice carries. The glass reads what a notice points at through this one
+/// door instead of a door per topic. Only this world's facts; anything else is "no such
+/// fact" — one face (rule 4). A seated read, like `/ask/<id>`.
+async fn fact_door(State(app): State<Arc<App>>, Path(id): Path<String>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        Ok::<_, RoadError>(outbox::fact_by_id(&g, &id).await?)
+    }
+    .await;
+    match out {
+        Ok(Some(e)) if e["universe_id"].as_str() == Some(scope(&app)) => answer(
+            200,
+            json!({
+                "message_id": e["message_id"], "type": e["type"], "occurred_at": e["occurred_at"],
+                "payload": e["payload"], "authority_chain": e["authority_chain"],
+                "correlation_id": e["correlation_id"], "marker": e["marker"],
+            }),
+        ),
+        Ok(_) => answer(404, json!({"error": "no such fact"})),
+        Err(e) => refuse(e),
+    }
 }
 
 async fn ask_door(State(app): State<Arc<App>>, Path(id): Path<String>) -> Response {

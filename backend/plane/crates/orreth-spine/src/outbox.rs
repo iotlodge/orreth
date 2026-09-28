@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `fact_by_id` — the fact door's read · 2026-09-28
 //! The transactional outbox and its relay — mirrors `orreth_spine.outbox`
 //! (canon 0002, law 2). Domain state and the intent to publish commit in ONE
 //! Postgres transaction: a committed row can never lack its event, a
@@ -79,6 +80,25 @@ pub async fn add_row(tx: &Transaction<'_>, raw: &[u8], message_id: &str) -> Resu
 pub struct Lag {
     pub pending: i64,
     pub oldest_age_s: Option<f64>,
+}
+
+/// Row 4, panel sp2: THE FACT DOOR's read — a committed fact by its message id (the
+/// feed's pointer), decoded from the outbox; `None` when no such row stands.
+pub async fn fact_by_id(
+    g: &Ground,
+    message_id: &str,
+) -> Result<Option<serde_json::Value>, RailError> {
+    let row = g
+        .client()
+        .query_opt(
+            "SELECT body FROM spine_outbox WHERE message_id = $1",
+            &[&message_id],
+        )
+        .await?;
+    Ok(row.and_then(|r| {
+        let body: Vec<u8> = r.get(0);
+        crate::envelope::decode(&body).ok()
+    }))
 }
 
 pub async fn outbox_lag(g: &Ground) -> Result<Lag, RailError> {

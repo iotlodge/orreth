@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, THE REMEDIATION RAIL · 2026-09-27
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `PULLED` · `pulled_payload` · `pulled_fact`; `pull` mints the fact with the turn's record · 2026-09-28
 """The remediation rail (canon 0005, P7 sp8 row 3c): the half of the
 Resiliency loop that ACTS.
 
@@ -50,6 +51,7 @@ from pathlib import Path
 from . import envelope as ev, outbox
 
 FORMAT = "orreth-levers/1"
+PULLED = "orreth.lever.pulled.v1"          # row 4, panel sp2: the kernel's pull is a fact on the feed
 CATALOGUE = Path(__file__).resolve().parents[1] / "levers.v0.json"      # beside tools.v0.json
 DECLARED_KEYS = ("name", "description", "needs", "consequence", "for", "doors", "settles_s")
 CLASSES = ("routine", "consequential", "grave")
@@ -263,6 +265,27 @@ def pulled_words(lever: str, args: dict | None, because: str, result: str) -> st
     """What the kernel's own row says after a routine lever ran (or refused)."""
     return (f"On the intention's authority the kernel pulled {lever} {_args_words(args)}".rstrip()
             + f": {result} Because {because}.")
+
+
+def pulled_payload(ask_id: str, lever: str, args: dict | None, because: str, held: bool, intention_id: str) -> dict:
+    """The pulled fact's payload: the kernel's row (or the hold) as the feed's pointer,
+    the lever and its args, the planner's reason, whether it HELD at the interlock, and
+    the intention it served. The hash is over the lever and its args."""
+    args = args or {}
+    return {"ref": ask_id, "hash": ev.content_hash({"args": args, "lever": lever}), "lever": lever,
+            "args": args, "because": because, "held": bool(held), "intention": intention_id}
+
+
+def pulled_fact(ask_id: str, lever: str, args: dict | None, because: str, held: bool, intention_id: str,
+                person: str, scope: str | None = None) -> dict:
+    """The pulled fact whole: the intention's person then the kernel (the kernel alone
+    under its own intention), the intention as correlation, no aggregate, no marker
+    (conformance `pulled_fact`)."""
+    sc = scope or ev.scope()
+    return ev.make_envelope(kind="event", type=PULLED, universe_id=sc, scope_path=sc,
+                            payload=pulled_payload(ask_id, lever, args, because, held, intention_id),
+                            correlation_id=intention_id,
+                            authority_chain=[person, KERNEL] if person != KERNEL else [KERNEL])
 
 
 def handed_words(watch: str, tried: list[dict], dossier_text: str) -> str:
@@ -496,11 +519,16 @@ def pull(conn, intention: dict, *, turn_id: str, cause_marker: str | None, lever
                             parent_marker=cause_marker,
                             note=f"pulled {lever['name']} {_args_words(args)}".rstrip() + f" — {result}")
         held = False
-    with conn.transaction():
-        conn.cursor().execute(
+    # panel sp2: the pull is a fact on the feed, landed with the turn's record — one transaction
+    e = pulled_fact(ask_id, lever["name"], args, because, held, intention["intention_id"], intention["added_by"])
+
+    def domain(cur):
+        cur.execute(
             "UPDATE spine_intent_turns SET lever = %s, lever_args = %s, because = %s, lever_ask = %s,"
             " pulled_at = CASE WHEN %s THEN NULL ELSE now() END, objective_ask = '-' WHERE turn_id = %s",
             (lever["name"], json.dumps(args), because, ask_id, held, turn_id))
+
+    outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)
     return {"turn_id": turn_id, "lever": lever["name"], "args": args, "ask_id": ask_id, "held": held}
 
 

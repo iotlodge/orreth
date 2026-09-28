@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, THE REMEDIATION RAIL · 2026-09-27
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `PULLED` · `pulled_payload` · `pulled_fact` — the kernel's pull is a fact on the feed · 2026-09-28
 //! `orreth.levers/1` — the pure half of `orreth_spine.levers` (P7 sp8 row 3c,
 //! THE REMEDIATION RAIL): every governed act the kernel itself can pull is
 //! DECLARED as data in `spine/levers.v0.json` beside `tools.v0.json`, read by
@@ -11,6 +12,7 @@
 //! `dossier_words` · `remedy_words` · `outcome_words` · `ago_words`). The
 //! forensic read, the pull and the attribution turn in [`crate::levers_live`].
 
+use crate::hash::content_hash;
 use crate::py::{fold_ws, python_str, repr_str};
 use regex::Regex;
 use serde_json::{json, Map, Value};
@@ -40,6 +42,56 @@ pub const TRIES: i64 = 2;
 /// The planner's word for "no lever fits".
 pub const NONE: &str = "none";
 pub const OUTCOMES: [&str; 4] = ["cured", "self-healed", "still-red", "cancelled"];
+/// Row 4, panel sp2: THE LEVER-PULLED FACT — a lever was data and doors; the kernel's pull
+/// left no fact on the feed, so the glass could not light it. Now every pull is a fact.
+pub const PULLED: &str = "orreth.lever.pulled.v1";
+
+/// The pulled fact's payload: the kernel's row (or the hold) as the feed's pointer, the
+/// lever and its args, the planner's reason, whether it HELD at the interlock, and the
+/// intention it served. The hash is over the lever and its args.
+pub fn pulled_payload(
+    ask_id: &str,
+    lever: &str,
+    args: &Value,
+    because: &str,
+    held: bool,
+    intention_id: &str,
+) -> Value {
+    json!({
+        "ref": ask_id, "hash": content_hash(&json!({"args": args, "lever": lever})),
+        "lever": lever, "args": args, "because": because, "held": held, "intention": intention_id,
+    })
+}
+
+/// The pulled fact whole: the chain is the intention's person then the kernel (the
+/// kernel alone under its own intention), the intention as correlation, no aggregate, no
+/// marker. The id and the clock are the caller's (`levers-v0.json` `pulled_fact`).
+pub fn pulled_fact(
+    scope: &str,
+    intention_id: &str,
+    person: &str,
+    payload: Value,
+    message_id: &str,
+    occurred_at: &str,
+) -> Value {
+    let chain = if person == KERNEL {
+        vec![KERNEL]
+    } else {
+        vec![person, KERNEL]
+    };
+    json!({
+        "specversion": crate::envelope::SPECVERSION,
+        "message_id": message_id,
+        "message_kind": "event",
+        "type": PULLED,
+        "universe_id": scope,
+        "scope_path": scope,
+        "occurred_at": occurred_at,
+        "payload": payload,
+        "correlation_id": intention_id,
+        "authority_chain": chain,
+    })
+}
 
 /// The spine home: `ORRETH_SPINE`, else the crate's `../../../../spine`.
 pub fn spine_dir() -> PathBuf {

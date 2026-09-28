@@ -14,6 +14,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (a): every door reads the person from the SEAT, never the body; the origin closed; the knock ceiling at every door; the seat doors · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 lock 5, one rig per test session: THE RIG YIELDS (`park` · `resume`); W77 a refused POST drains its bytes first · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: the shelf's restore door routes every kind through stable.restore_mind — one restore law · 2026-09-27
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `FEED_TOPICS` widened to thirty-three · the fact door `/fact/<message_id>` (`fact_view`) · the ask view's `duty` · the presence sweep on the schedule loop's beat · 2026-09-28
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -45,6 +46,7 @@ import psycopg
 
 from . import bridgefeed, digest, dispatch, envelope as ev, export, ground, harness, intent, markers, mitl, monitor, outbox
 from . import cells, placement, presence, profile, projector, proof, scheduler, seat, services, sinks
+from . import body as _body, desk, levers as _levers, rails, stable as _stable, store   # panel sp2: the feed's topics
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRefused, Resident
 
@@ -55,7 +57,22 @@ FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED, SESSION_OPENED,
                harness.HARNESS_FAILED,   # a failing run escalates to the chat
                markers.MARKER_SET,       # a marker set is seen where it lands
                dispatch.ASK_REFUSED,     # W19: an ask to a body not here, answered at the door
-               monitor.WATCH_TURNED]     # W14: a watch turned red or green
+               monitor.WATCH_TURNED,     # W14: a watch turned red or green
+               # row 4, panel sp2: the feed widened from nine — every fact the rails carried but
+               # the glass never saw reaches THE PANEL as a pointer (the same list as the Rust
+               # kernel's `asks.rs` FEED_TOPICS, in the same order)
+               _body.PARKED,                       # the kernel stopped restarting a body
+               presence.LEASE_LAPSED,              # a body stopped renewing
+               presence.LEASE_SEATED,              # a body serves again
+               _levers.PULLED,                     # the kernel pulled a lever under an intention
+               export.TOOL_CALLED,                 # a body's tool hop
+               rails.HEARTBEAT_TOPIC,              # the kernel's own breath on a rail
+               intent.INTENTION_DECLARED, intent.INTENTION_STOPPED, intent.INTENTION_RESTARTED,
+               services.REGISTERED, services.VERSIONED, services.HEALTH, services.RETIRED, services.RESTORED,
+               _stable.ASSIGNED, _stable.UNASSIGNED, _stable.FUELED,   # the Stable · the meter
+               store.MEMORY_EVENT,                 # a memory landed on the ground
+               seat.SEAT_TAKEN, seat.SEAT_LEFT,    # the desk
+               desk.JOIN_ASKED, desk.JOIN_PROVED, desk.JOIN_ADMITTED, desk.JOIN_DENIED]   # the join desk
 
 
 def ask_view(conn, ask_id: str) -> dict | None:
@@ -96,6 +113,13 @@ def ask_view(conn, ask_id: str) -> dict | None:
     offer = None                     # walk #7: the monitor's OFFER, one click
     if row[2] == "replied" and row[3] and (row[5] == "monitor" or _name_of(conn, row[4]) == "monitor"):
         offer = monitor.offer_in(row[3])
+    duty = None                      # panel sp2: an ask the SCHEDULER filed names its duty
+    try:
+        cur.execute("SELECT schedule_id FROM spine_occurrences WHERE ref = %s ORDER BY at DESC LIMIT 1", (ask_id,))
+        r1 = cur.fetchone()
+        duty = r1[0] if r1 else None
+    except Exception:
+        duty = None
     return {"ask_id": ask_id, "text": row[0], "person": row[1],
             "status": row[2], "reply": row[3], "served_by": row[4],
             "offer": offer,         # {words, ask} when the monitor offered a watch
@@ -105,7 +129,7 @@ def ask_view(conn, ask_id: str) -> dict | None:
             "replied_at": row[8].isoformat() if row[8] else None,
             "window": json.loads(row[9]) if row[9] else None,  # P6
             "session": row[10],                                 # P20
-            "marker": row[11], "origin": origin,                # 0006 · 0007
+            "marker": row[11], "origin": origin, "duty": duty,   # 0006 · 0007 · panel sp2
             "proof": row[12] or "L1",                           # P6 sp1: the level the act wore
             "hold": ({"tool": h.get("tool"), "class": h.get("class", "consequential"),
                       **({"args": h["args"]} if isinstance(h.get("args"), dict) else {}),   # W73: a body at the desk is named by them
@@ -114,6 +138,26 @@ def ask_view(conn, ask_id: str) -> dict | None:
                          if h.get("needs_code") else {})}            # code, then the master
                      if row[2] == "awaiting-confirm" and (h := json.loads(row[13] or "{}")) else None),
             "journey": [n for n in notes if n]}
+
+
+def fact_view(conn, message_id: str) -> dict | None:
+    """THE FACT DOOR (row 4, panel sp2): a committed fact by its message id — the
+    pointer every feed notice carries — so the glass reads what a notice points at
+    through one door instead of a door per topic. Only this world's facts; anything
+    else is "no such fact" — one face (rule 4)."""
+    cur = conn.cursor()
+    cur.execute("SELECT body FROM spine_outbox WHERE message_id = %s", (message_id,))
+    row = cur.fetchone()
+    if row is None:
+        return None
+    try:
+        e = ev.decode(bytes(row[0]))
+    except Exception:
+        return None
+    if e.get("universe_id") != ev.scope():
+        return None
+    return {k: e.get(k) for k in ("message_id", "type", "occurred_at", "payload", "authority_chain",
+                                  "correlation_id", "marker")}
 
 
 def _name_of(conn, did: str | None) -> str | None:
@@ -524,6 +568,12 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 if view is None:
                     return self._json(404, {"error": "no such ask"})
                 return self._json(200, view)
+            if path.startswith("/fact/"):                # row 4, panel sp2: THE FACT DOOR — a fact by its message id
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    e = fact_view(conn, path.split("/fact/", 1)[1])
+                if e is None:
+                    return self._json(404, {"error": "no such fact"})
+                return self._json(200, e)
             if path == "/asks":
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"asks": asks_view(conn)})
@@ -1196,6 +1246,10 @@ class BridgeRig:
                     continue
                 try:
                     scheduler.tick(conn, bodies)
+                except Exception:
+                    pass
+                try:
+                    presence.sweep(conn)              # panel sp2: a lease crossing the line is a fact
                 except Exception:
                     pass
                 if time.monotonic() >= next_beat:     # P6.5 sp2: the keeper's beat — every MCP server

@@ -77,6 +77,14 @@
     {
      "say": "(click a marker chip — structural · quality · resiliency)",
      "does": "Dims that group's rows on the board and the tape."
+    },
+    {
+     "say": "(click ☀ or ☾ in the ceiling)",
+     "does": "The Daylight Glass: the same panel in daylight — paper, ink, bronze — or back to the night. Remembered in this browser; with nothing remembered, your system's own preference decides."
+    },
+    {
+     "say": "(watch the presence track · a tool's lamp · the scheduler's track)",
+     "does": "A lease lapsing lights the presence track red and the station goes dashed within five seconds; seated again, violet. A tool hop lights the tool's lamp cyan under the shelf and the dispatcher's track toward it. A duty waking on its clock lights the scheduler's track toward the runner. A lever the kernel pulls lights the monitor and the intent track toward the body it acts on — red when it is held at the interlock for your word."
     }
    ]
   },

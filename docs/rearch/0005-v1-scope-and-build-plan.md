@@ -2076,6 +2076,54 @@ approved (covenant rule 9).
       shared read is a small sp2 cleanup); the worldtag shows the world only
       to a seated person. WALK OWED: SPEC-PANEL-01 (JB on :4601) — the first
       screenshot is the campaign's hero.
+      **panel sp2 BUILT 2026-09-28** (both kernels). THE FEED WIDENED — `FEED_TOPICS`
+      from nine to thirty-three (`asks.rs` · `glass.py`, the same list in the same
+      order): a body's park · the lease facts · the lever-pulled fact · a tool hop ·
+      the kernel's heartbeat · an intention's life · the shelf's five facts · the
+      Stable's three · a memory landed · a seat taken or left · the join desk's four.
+      THE LEASE FACTS — `orreth.lease.lapsed.v1` · `orreth.lease.seated.v1`: the kernel
+      SWEEPS the leases every 5 s (`presence::sweep` · `presence.sweep`) and every
+      line crossed is a fact; the note lives on the ground (`spine_leases.noted_alive`)
+      so two kernels on one ground race for the row and one wins it — no lapse minted
+      twice, no beat claim needed; a lease never noted is noted silently (no history
+      invented). THE LEVER-PULLED FACT — `orreth.lever.pulled.v1`, minted by `pull` in
+      the same transaction as the turn's record (the kernel's row or the hold as the
+      pointer · the lever · its args · because · held · the intention; the chain the
+      person then the kernel). THE FACT DOOR — `GET /fact/<message_id>`: a committed
+      fact by the pointer every notice carries, so the glass reads what a notice
+      points at through ONE door instead of a door per topic (this world's only; any
+      other id "no such fact"). The ask view names its DUTY (`duty` = the schedule
+      that filed it) so the scheduler's track can light. THE GLASS: every new kind
+      is read once through the fact door (`factOf`) and lit where it crossed — the
+      presence track and the station (red on a lapse, violet seated again, the chip
+      re-drawn within the sweep's 5 s), the tool's lamp and the dispatcher's track on
+      a hop (counted per session on the SHELF's PERFORMANCE line and the tool's
+      inspector), the monitor and the intent track on a pull (red when held, the
+      desk red too), the desk on a seat taken or a body at the join desk, the gateway
+      and the meter on the Stable's facts, the analyzer on an intention's life, the
+      scheduler's track on a duty's ask; the chat and the panel share one
+      `/ask/<id>` read per notice (`askRead`). THE DAYLIGHT GLASS (JB's ask,
+      2026-09-28 — a large share of people prefer light): the old glass's daylight
+      (2026-07-26) — paper · ink · bronze, never an inversion — carried to the panel;
+      every colour a token, redefined under `[data-theme="light"]`, the panel's lamps
+      and segments wearing the same tokens so the flip is live mid-fact; the ☀ / ☾ in
+      the ceiling flips it, remembered in the browser (`orreth.theme`), the system's
+      own preference otherwise, applied before the first paint. Fixtures EXTENDED,
+      never regenerated: `loops-v0.json` `lease_fact` (2) · `levers-v0.json`
+      `pulled_fact` (2), both runners' arms; the guide's PANEL section gained the
+      light and the new lamps. PROVEN: cargo build · clippy · fmt clean; Rust
+      conformance 679/679 · Python 680; `cargo test --lib` 45 green;
+      `test_cure_walk8` + `test_bridgefeed` 13 green; the kernel relit on :4601
+      minted ten `lease.seated` facts as the crew came back (the sweep, live); a
+      stubbed-door dry run in Chrome of all thirteen new notice kinds — zero
+      exceptions, the tape plain, the scheduler's track lit for a duty's ask, one hop
+      counted, the inspector reading it; the Daylight Glass screenshotted on :4601.
+      HONEST LIMITS (sp2): still a dry run's light, not a seated walk's —
+      SPEC-PANEL-01 OWED, widened (a lease lapse lights within 5 s · a lever pull ·
+      a tool hop · the light flipped); PERFORMANCE = the outbox's age · the spend ·
+      the asks waiting · the hops counted — the pool and per-door latency are sp3;
+      the tool hop is the Python body's own fact (the Rust kernel's crew are Python
+      processes), tailed now, never minted by the kernel itself.
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the

@@ -5,6 +5,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the meter's world · the cells' tables · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the human profile's table (W58) · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the seat's tables (the gate) · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `spine_leases.noted_alive` — the sweep's note on the ground · 2026-09-28
 //! The ask road's tables — the Python spine's DDL, word for word, under the
 //! same tags its `once` guard uses (`resident` · `markers` · `proof` · `intent`
 //! · `presence` · `digest`), so two spines on one ground never disagree about a
@@ -123,6 +124,9 @@ pub const PRESENCE_DDL: &[&str] = &[
     "CREATE TABLE IF NOT EXISTS spine_leases ( did text PRIMARY KEY, name text NOT NULL, kind text \
      NOT NULL, scope text NOT NULL, until timestamptz NOT NULL, renewed_at timestamptz NOT NULL \
      DEFAULT now())",
+    // row 4, panel sp2: what the sweep last noted of the lease's liveness — the note lives on
+    // the ground so two kernels never mint one lapse twice (`presence::sweep`)
+    "ALTER TABLE spine_leases ADD COLUMN IF NOT EXISTS noted_alive boolean",
 ];
 
 /// `digest.ensure_schema`: the short versions (MEM-3) — read by the sessions door.

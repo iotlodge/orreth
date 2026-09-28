@@ -350,6 +350,19 @@ def test_fixture(contract, case):
         assert got == exp["text"]
     elif kind == "ago_words":
         assert levers.ago_words(inp["s"]) == exp["text"]
+    elif kind == "pulled_fact":                  # panel sp2: orreth.lever.pulled.v1 — the kernel's pull, a fact on the feed
+        e = levers.pulled_fact(inp["ask_id"], inp["lever"], inp["args"], inp["because"], inp["held"], inp["intention_id"],
+                               inp["person"], scope=inp["scope"])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert (e["payload"], e["type"], e["authority_chain"], e["correlation_id"]) == \
+            (exp["payload"], exp["type"], exp["chain"], exp["correlation_id"])
+        assert ev.encode(e).decode("ascii") == exp["bytes"]
+    elif kind == "lease_fact":                   # panel sp2: orreth.lease.lapsed/seated.v1 — a lease crossing the line
+        e = presence.lease_fact(inp["type"], inp["name"], inp["did"], inp["kind"], inp["until"], scope=inp["scope"])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert (e["payload"], e["type"], e["authority_chain"], e["correlation_id"]) == \
+            (exp["payload"], exp["type"], exp["chain"], exp["correlation_id"])
+        assert ev.encode(e).decode("ascii") == exp["bytes"]
     elif kind == "crew_hash":                    # the crew's shape, sorted, as canonical bytes
         assert intent.crew_shape_hash([(n, c) for n, c in inp["shape"]]) == exp["hash"]
     # ---- orreth.memory/1 (P7 sp5): the Record's laws — recall's grammar, the landed and purged facts, the digest ----

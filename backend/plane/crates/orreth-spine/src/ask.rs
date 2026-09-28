@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: W26's words · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: the ask's fact and the door's refusal, as bytes · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: the lease facts' pure half — `LEASE_LAPSED` · `LEASE_SEATED` · `lease_payload` · `lease_fact` · 2026-09-28
 //! `orreth.ask/1` and the word-shaped laws of `orreth.intent/1` — the pure
 //! half of `orreth_spine.dispatch` (the address at the head of an ask, W7;
 //! the door's refusal for a body that is not here, W19), `harness` (a reply
@@ -28,6 +29,43 @@ pub const W26_STEP: &str = "the mind returned no words — asked again, once (W2
 pub const HARNESS_FAILED: &str = "orreth.harness.failed.v1";
 /// M2: a body is alive while its lease is fresh — the lease's length in seconds.
 pub const LEASE_TTL_S: i64 = 15;
+
+// ---- row 4, panel sp2: THE LEASE FACTS (the pure half; the sweep is `presence::sweep`) ----
+/// A lease crossed the line alive → dormant: the body stopped renewing.
+pub const LEASE_LAPSED: &str = "orreth.lease.lapsed.v1";
+/// A lease crossed the line dormant → alive: the body serves again (or first seated).
+pub const LEASE_SEATED: &str = "orreth.lease.seated.v1";
+
+/// The payload of a lease fact: the body by NAME (the feed's pointer — the panel's
+/// station), its self, its kind, and the lease's edge as the ground holds it.
+pub fn lease_payload(name: &str, did: &str, kind: &str, until: &str) -> Value {
+    json!({"ref": name, "hash": content_hash(&Value::String(did.into())), "did": did, "kind": kind, "until": until})
+}
+
+/// The lease fact whole: the kernel's chain, the body's self as correlation, no
+/// aggregate, no marker. The id and the clock are the caller's (the live sweep mints
+/// them; the fixture fixes them — `loops-v0.json` `lease_fact`).
+pub fn lease_fact(
+    scope: &str,
+    typ: &str,
+    did: &str,
+    payload: Value,
+    message_id: &str,
+    occurred_at: &str,
+) -> Value {
+    json!({
+        "specversion": crate::envelope::SPECVERSION,
+        "message_id": message_id,
+        "message_kind": "event",
+        "type": typ,
+        "universe_id": scope,
+        "scope_path": scope,
+        "occurred_at": occurred_at,
+        "payload": payload,
+        "correlation_id": did,
+        "authority_chain": [KERNEL],
+    })
+}
 
 // ---- dispatch.py ------------------------------------------------------------------
 
