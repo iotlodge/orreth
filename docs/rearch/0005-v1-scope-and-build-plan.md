@@ -2214,6 +2214,27 @@ approved (covenant rule 9).
       that does not collide with July's `v0.1.0-universe-runs` (`v0.1.0-the-kernel`), main fast-
       forwarded to the rearch line (JB's own push), the demo and docs sites still FROZEN; then
       JB walks the P3–P6 specs against the Rust kernel alone.
+      **JB's locks, 2026-09-28 night (the chat before the README):** (1) *No lingering .72.*
+      When main is replaced nothing of the old era stays in the tree that the new kernel does not
+      use — the survey found `orreth-spine` self-contained (no dependency on the five sacred
+      crates, the old `orrethd`, or `backend/conformance`); the sweep leaves `backend/plane/
+      crates/orrethd` · `backend/conformance` · `agents/flavors` · `site` · `infrastructure` ·
+      `capabilities` · dev.sh's `old`/`replant` verbs · the old README, and keeps `spine` · the
+      SDK · `contracts` · `docs/rearch` · the constitution (`docs/design` 0000–0017 + vision) ·
+      the covenant · the honest boundary; the five sacred crates' removal is JB's call (rule 9),
+      recommended: remove, they live at the tag. (2) *THE BOOK IS THE DOC SOURCE.* The
+      architecture markdowns scattered across the 0.72 era (the dive docs 0018–0073 among them)
+      do not carry into 0.1; when 0.1 is pushed, docs.orreth.ai (`~/PycharmProjects/orreth-docs`,
+      Starlight, frozen at 0.72.520 since 2026-09-14) is REWRITTEN for USAGE and, most of all,
+      UNDERSTANDING — the one place a stranger learns why a kernel, what the rails are, how to
+      sit, ask, watch and build; the release-alignment law turns the book with the release.
+      (3) *The README's argument* (JB's seed): the industry's systemic problem today is entropy
+      in agent fleets; a kernel removes it as the operating system did for programs — rigid
+      control (identity · memory · rails · meter · gate · watches · levers) held by the kernel,
+      the policy held by humans (the three modes, the interlock), intent as the unit of control,
+      and a fluid, immersive experience because the control is rigid (the one chat, THE PANEL as
+      the first image). Ancestors: 0064 The Open Book (the book's laws: walked before written,
+      plain-first, canon as labels).
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the
