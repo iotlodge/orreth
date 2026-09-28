@@ -1831,9 +1831,25 @@ approved (covenant rule 9).
       class · level · what it needs); the planner is told the catalogue and
       answers IN it ("restart body monitor, because the dossier shows it dormant
       past its lease" — or "no lever fits, because …"); a plan is an act the
-      interlock already knows how to hold: consequential levers hold for a click
-      in manual assist and run under full auto with the stop (the guide's three
-      modes, unchanged). **(c) THE KERNEL IS THE REMEDIATION RUNNER** — a
+      interlock already knows how to hold: a consequential lever holds for a
+      person's click in EVERY mode (JB's clarification, 2026-09-27 night, after
+      the build: the three modes are the human's dial for how much of the
+      engineering they contribute — manual: the person builds or imports their
+      own graph in the workspace; assist: the person works with residents,
+      firmware, MITL and a workspace agent on creating and revising prompts and
+      skills; full auto: the person gives a resident a prompt, they dialog, the
+      person says "submit this as intention" and the kernel's rails bring in the
+      firmware, MITL and the agents to strategize and plan. "I have NEVER meant
+      that humans or agents of any kind can be fully automatic." Objectives tend
+      to be versioned, reusable graphs chosen by intent; intentions are graphs
+      that invoke many graphs; the kernel exists to follow the chain an
+      intention, its objectives and their thoughts take through the operating
+      kernel, to replay it, and to detect states of non-desire and apply
+      escalation or an autonomous agentic response — a closed-loop,
+      identity-anchored kernel that can span the globe and every cloud and
+      still be one point of governance and knowledge across time and changing
+      active state; knowing the thing involved at the time of the event is also
+      knowing where it was and where it should be, from repeated observation). **(c) THE KERNEL IS THE REMEDIATION RUNNER** — a
       resident plans and reports; the kernel pulls the lever through the same
       doors a human would, under the intention's authority chain, as a journey
       hop; a resident never again receives a job it cannot do. **(d) THE
@@ -1910,10 +1926,10 @@ approved (covenant rule 9).
       shelf's and the Stable's; the Rust monitor still reads five metrics
       (`minds_*` watches are the reference's); the dossier's history is the
       outbox (a retention sweep would shorten its memory); TWO tries per red
-      episode, then the human; the canon's "run under full auto" for a
-      consequential lever is NOT built — the guide's standing law (a
-      consequence still holds for you) won, and JB's lock on the difference
-      is owed; the walk (SPEC-REMEDY-01) is OWED to JB's seat.
+      episode, then the human; a consequential lever holds for a person's
+      click in every mode — JB's clarification the same night settled it (the
+      modes are the human's dial of involvement, never a licence for the
+      machine to run alone); the walk (SPEC-REMEDY-01) is OWED to JB's seat.
     - **Row 4 — THE RE-BASE AND MAIN REPLACED AT 0.1.0 (JB's plane
       approval, 2026-09-26: the OLD `orrethd` crate is RETIRED from the
       workspace — it lives on at the `main-v0.72-old-world` tag forever —
