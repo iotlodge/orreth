@@ -455,6 +455,12 @@
   .tool.consequential{border-color:var(--amber-dim)} .tool.grave{border-color:var(--red)} .tool.retired{opacity:.45;border-style:dashed}
   .tool.unhealthy{color:var(--red)}
   .tool .lamp{width:6px;height:6px}
+  #doors{display:flex;flex-wrap:wrap;gap:5px}
+  #doors:empty::after{content:"no door knocked on in the last ten minutes";color:var(--dim);font-size:10.5px}
+  .door{display:flex;align-items:center;gap:6px;border:1px solid var(--seam);border-radius:4px;padding:2px 8px;font-size:10.5px;color:var(--dim);
+    background:var(--glass);cursor:pointer;white-space:nowrap}
+  .door b{color:var(--ink);font-weight:normal;letter-spacing:.04em}
+  .door.slow{border-color:var(--red)} .door.slow b,.door.slow{color:var(--red)}
   #board{display:grid;gap:4px}
   #board:empty::after{content:"nothing running yet — ask anything in the chat, or declare an intention";color:var(--dim);font-size:10.5px}
   .run{display:grid;grid-template-columns:minmax(160px,260px) 1fr minmax(120px,200px);gap:10px;align-items:center;padding:5px 8px;
@@ -524,6 +530,8 @@
         <div class="rail-row" title="presence — the leases that say who is alive; a lease lapsing or seated again lights it, the station follows"><span>presence</span><div class="track" data-rail="presence"></div><span class="depth" id="d-presence">—</span></div>
         <div class="rail-row" title="intent — the standing intentions' ticks: observe, plan, act, attribute"><span>intent</span><div class="track" data-rail="intent"></div><span class="depth" id="d-intent">—</span></div>
       </div></div>
+    <div class="perf-only"><div class="prow-label"><span>the doors · p50 / p95</span><span class="line"></span><span class="r">every door this kernel answered in the last ten minutes · half within the first number, nineteen of twenty within the second · the slowest first · red past one second · click one to open it</span></div>
+      <div id="doors"></div></div>
     <div><div class="prow-label"><span>the crew's stations · firmware</span><span class="line"></span><span class="r">a chip seated by its lease · dashed = declared, not seated · amber = parked · click one to open it</span></div>
       <div class="stations" id="st-fw"></div></div>
     <div><div class="prow-label"><span>stations · residents</span><span class="line"></span><span class="r">the bodies that answer you</span></div>
@@ -550,7 +558,7 @@
     <span class="pname" title="THE PANEL — the kernel drawn as a control room's mimic panel: geometry is architecture, light is operations, colour is origin">T H E &nbsp; P A N E L</span>
     <button class="tog lit" data-layer="arch" title="ARCHITECTURE — what is built, seated, or offline: the organs, every declared socket, the tools · click to show or hide the empty sockets and the tools"><span class="lamp"></span>ARCHITECTURE</button>
     <button class="tog lit" data-layer="ops" title="OPERATIONS — what is happening now: the rails light, the stations answer, the running board moves · click to dim it"><span class="lamp"></span>OPERATIONS</button>
-    <button class="tog" data-layer="perf" title="PERFORMANCE — the numbers over the same drawing: the outbox's age, the spend, the asks waiting · the pool and per-door latency land in panel sp3"><span class="lamp"></span>PERFORMANCE</button>
+    <button class="tog" data-layer="perf" title="PERFORMANCE — the numbers over the same drawing: under each organ its doors' p95 (how long the slowest of twenty knocks took), under the GROUND the pool of lines to the ground, the outbox's age, the spend, the benches' depth, and THE DOORS row — every door answered in the last ten minutes, the slowest first, red past one second"><span class="lamp"></span>PERFORMANCE</button>
     <span class="chips"><span title="the marker groups — dim a group's rows on the board and the tape">markers</span><span id="mchips"></span></span>
   </div>
   <div class="strip"></div>
@@ -2220,7 +2228,9 @@ async function loadMonitor(){
     .map(([q, n]) => row("bench " + q.split(".").slice(3).join(".") || "shared", n ?? "?")).join("");
   view("RAILS", row("outbox pending", s.outbox.pending, s.outbox.pending ? "red" : "ok") +
        row("oldest unpublished", s.outbox.oldest_age_s != null ? s.outbox.oldest_age_s.toFixed(1) + " s" : "—") +
-       row("ask.received topic depth", s.topic_depth ?? "?") + benches);
+       row("ask.received topic depth", s.topic_depth ?? "?") + benches +
+       row("ground pool", s.pool ? `${s.pool.busy} of ${s.pool.ceiling} lines busy · ${s.pool.waiting} waiting · longest wait ${ms(Number(s.pool.wait_max_ms))}` : "none — a connection per knock", s.pool && s.pool.waiting ? "red" : "ok") +
+       (s.doors || []).slice(0, 6).map(d => row("door " + d.door, `${ms(Number(d.p50_ms))} / ${ms(Number(d.p95_ms))} · ${d.n} knocks`, Number(d.p95_ms) >= 1000 ? "red" : "ok")).join(""));
   view("BODIES", s.bodies.map(b => { const g = GOV[b.name]; const parked = g && (g.state === "parked" || g.state === "refused");
        return `<div class="row"><span><span class="dot ${parked ? "dormant" : b.alive ? "alive" : "dormant"}"></span>` +
        `${esc(b.name)} · ${esc(b.kind)}${g ? ` · life ${g.lives}` : ""}</span><span class="${parked || !b.alive ? "red" : "ok"}">` +
@@ -2533,8 +2543,13 @@ document.getElementById("ses-new").onclick = () => rollSession(true);
    heartbeat, an intention's life, the shelf's and the Stable's changes, a memory landed, a seat taken or left, a body
    at the join desk — each read ONCE through the fact door (`/fact/<message_id>`) and lit where it crossed; a duty's ask
    (`duty` on the ask view) lights the scheduler's track; the chat and the panel share one `/ask/<id>` read per notice.
-   HONEST LIMITS, plainly: PERFORMANCE shows what the doors measure today (the outbox's age, the spend, the asks
-   waiting, the tool hops counted this session) — the pool and per-door latency are panel sp3. ---- */
+   panel sp3 (2026-09-28): PERFORMANCE — THE POOL (the kernel's lines to the ground, borrowed per knock: busy · waiting ·
+   opened for how many knocks, on the GROUND) and THE DOORS (the kernel's clock at every door, folded to a p50 and a p95 over
+   the last ten minutes: each organ's p-line names its own doors' p95; THE DOORS row lists every door, the slowest first, red
+   past one second; a door is an inspector door too). Both ride the /monitor snapshot (`doors` · `pool` · `values.door_p95_ms`),
+   read on the monitor's 5 s beat and on every watch turned — a watch can stand on door_p95_ms, pool_busy or pool_waiting.
+   HONEST LIMITS, plainly: the reference kernel has no pool and says so (null, never a zero); the reading is the kernel's own
+   process (two kernels on one ground each show their own doors); the benches' depth is the rails' count at the read. ---- */
 const PANEL = {ROST: [], MON: null, GOV: {}, MINDS: null, SERV: null, INTS: [], ORIG: [], KINDS: [], SEEN: null, LEVERS: null,
                ACT: {}, COL: {}, timers: {}, debounces: {},
                HOPS: {}, HOPN: 0, TICKS: 0, DUTIES: new Set(), FACTS: new Map(), ASKS: new Map()};   // sp2: the hops and duties counted this session; the reads shared
@@ -2606,7 +2621,8 @@ function outWords(ref, text){ const row = document.querySelector(`.run[data-ref=
 function panelDesk(){
   const tk = SEAT && seatToken(SEAT);
   document.getElementById("o-desk-v").textContent = PERSON ? `${whoIs(PERSON)} · ${GOVERN ? "governs" : "reads · writes"}` : "no seat";
-  document.getElementById("p-desk").textContent = tk ? `seat until ${hhmm(tk.constraints.expiry)}` : "—";
+  const pd = document.getElementById("p-desk"); pd.dataset.seat = tk ? `seat until ${hhmm(tk.constraints.expiry)}` : "—";
+  pd.textContent = pd.dataset.seat + doorLine(["/seat", "/enroll", "/join"]);
   lampRest("l-desk", PERSON ? "on" : "");
 }
 async function panelStations(){                    // the sockets: /crew (the roster) · /monitor (the leases) · /bodies (the kernel's own eyes)
@@ -2658,9 +2674,41 @@ function panelMonitorOrgan(){                      // the MONITOR organ and the 
   const bodies = s.bodies || [], alive = bodies.filter(b => b.alive).length;
   document.getElementById("d-presence").textContent = `${alive} of ${bodies.length} leases alive`;
   document.getElementById("o-ground-s").textContent = `${Object.values(a).reduce((x, y) => x + y, 0)} asks in this world` + (a["awaiting-confirm"] ? ` · ${a["awaiting-confirm"]} held at the interlock` : "");
-  document.getElementById("p-ground").textContent = `outbox ${ob.pending ?? "?"} pending · oldest ${ob.oldest_age_s != null ? Number(ob.oldest_age_s).toFixed(1) + " s" : "—"}`;
-  document.getElementById("p-monitor").textContent = `${w.length} watches read live · checks every 30 s`;
-  lampRest("l-ground", "on");
+  const pool = s.pool;                             // panel sp3: THE POOL — the lines to the ground (the reference has none: null, said plainly)
+  document.getElementById("p-ground").textContent = (pool ? `pool ${pool.busy} of ${pool.ceiling} lines busy${pool.waiting ? ` · ${pool.waiting} WAITING for a line` : ""} · ${pool.opened_total} opened for ${pool.borrowed_total} knocks` : "no pool — a connection per knock") +
+    ` · outbox ${ob.pending ?? "?"} pending · oldest ${ob.oldest_age_s != null ? Number(ob.oldest_age_s).toFixed(1) + " s" : "—"}`;
+  document.getElementById("p-monitor").textContent = `${w.length} watch${w.length === 1 ? "" : "es"} judged every 3 s` + doorLine(["/monitor", "/levers", "/harness"]);
+  const pd = document.getElementById("p-desk"); pd.textContent = (pd.dataset.seat || "—") + doorLine(["/seat", "/enroll", "/join"]);
+  const benches = Object.entries(s.benches || {}).filter(([k, n]) => k !== "error" && n != null);
+  if (benches.length) document.getElementById("d-dispatcher").textContent += ` · ${benches.reduce((x, [, n]) => x + Number(n || 0), 0)} queued on ${benches.length} bench${benches.length === 1 ? "" : "es"}`;
+  panelDoors(s.doors || []);
+  lampRest("l-ground", pool && pool.waiting ? "red" : "on");
+}
+/* ---- panel sp3: THE DOORS — how long every door takes (the kernel's clock at every door, folded to a p50 and a p95 over
+   the last ten minutes) and THE POOL (the lines to the ground, borrowed per knock) — the PERFORMANCE layer on the same blocks ---- */
+function ms(v){ return v == null || !isFinite(v) ? "—" : v >= 1000 ? (v / 1000).toFixed(2) + " s" : v.toFixed(v < 10 ? 1 : 0) + " ms"; }
+function doorP95(prefixes){                        // the slowest p95 among the doors whose route is, or is under, one of these
+  const ds = ((PANEL.MON && PANEL.MON.doors) || []).filter(d => { const r = (d.door || "").split(" ")[1] || ""; return prefixes.some(p => r === p || r.startsWith(p + "/")); });
+  return ds.length ? Math.max(...ds.map(d => Number(d.p95_ms || 0))) : null;
+}
+function doorLine(prefixes){ const p = doorP95(prefixes); return p == null ? " · its doors not knocked on yet" : ` · its doors p95 ${ms(p)}`; }
+function panelDoors(doors){                        // THE DOORS row: every door this kernel answered in the window, the slowest first, red past one second
+  const host = document.getElementById("doors"); host.innerHTML = "";
+  for (const d of doors){
+    const slow = Number(d.p95_ms) >= 1000;
+    const el = document.createElement("span"); el.className = "door" + (slow ? " slow" : "");
+    el.innerHTML = `<b>${pt(d.door)}</b> ${ms(Number(d.p50_ms))} / ${ms(Number(d.p95_ms))}`;
+    el.title = `${d.door} — ${d.n} knock${d.n === 1 ? "" : "s"} in the last ten minutes · half answered within ${ms(Number(d.p50_ms))} · nineteen of twenty within ${ms(Number(d.p95_ms))} · the slowest ${ms(Number(d.max_ms))}` + (slow ? " · SLOW: past the one-second law" : "") + " · click to open";
+    el.onclick = () => inspectDoor(d);
+    host.appendChild(el);
+  }
+}
+function inspectDoor(d){
+  const slow = Number(d.p95_ms) >= 1000;
+  inspect(d.door, ["a door of this kernel — how long a knock takes, from the gate to the answer", "—", "—", `${d.n} knock${d.n === 1 ? "" : "s"} in the last ten minutes`,
+                   `half within ${ms(Number(d.p50_ms))} · nineteen of twenty within ${ms(Number(d.p95_ms))} · the slowest ${ms(Number(d.max_ms))}`, slow ? "SLOW — past the one-second law" : "within the one-second law"],
+          [["open the monitor", () => toggleMonitor(true), true],
+           ["watch the doors", () => { toggleChat(true); const i = document.getElementById("chat-in"); i.value = "monitor, propose a watch that door_p95_ms > 1000"; i.focus(); }]]);
 }
 async function panelGateway(){                     // the GATEWAY organ: /minds — the Stable's minds, the gateway's answer, the spend
   const r = await fetch("/minds").then(x=>x.json()).catch(()=>null); PANEL.MINDS = r;
@@ -2670,7 +2718,7 @@ async function panelGateway(){                     // the GATEWAY organ: /minds 
   const ready = !!(r.gateway && r.gateway.ready);
   document.getElementById("o-gateway-v").textContent = `${standing.length} mind${standing.length === 1 ? "" : "s"} standing`;
   document.getElementById("o-gateway-s").textContent = ready ? "answers · every thought goes through it" : "DARK — no LLM can answer";
-  document.getElementById("p-gateway").textContent = `$${usd.toFixed(4)} spent today`;
+  document.getElementById("p-gateway").textContent = `$${usd.toFixed(4)} spent today` + doorLine(["/minds"]);
   lampRest("l-gateway", ready ? "on" : "red");
 }
 async function panelShelf(){                       // the SHELF organ and the tool lamps: /services
@@ -2681,7 +2729,7 @@ async function panelShelf(){                       // the SHELF organ and the to
   const by = {}; for (const s of sv) by[s.kind] = (by[s.kind] || 0) + 1;
   document.getElementById("o-shelf-v").textContent = `${tools.length} tool${tools.length === 1 ? "" : "s"}`;
   document.getElementById("o-shelf-s").textContent = Object.entries(by).filter(([k]) => k !== "tool").map(([k, n]) => `${n} ${k}`).join(" · ") + (un ? ` · ${un} unhealthy` : "");
-  document.getElementById("p-shelf").textContent = `${sv.filter(s => s.state === "retired").length} retired · ${PANEL.HOPN} tool hop${PANEL.HOPN === 1 ? "" : "s"} this session`;
+  document.getElementById("p-shelf").textContent = `${sv.filter(s => s.state === "retired").length} retired · ${PANEL.HOPN} tool hop${PANEL.HOPN === 1 ? "" : "s"} this session` + doorLine(["/services"]);
   lampRest("l-shelf", un ? "red" : "on");
   host.innerHTML = "";
   for (const s of tools){
@@ -2700,7 +2748,7 @@ async function panelAnalyzer(){                    // the ANALYZER organ, the in
   const objs = PANEL.ORIG.filter(o => o.kind === "objective"), obs = PANEL.ORIG.filter(o => o.kind !== "objective" && o.kind !== "intention");
   document.getElementById("o-analyzer-v").textContent = `${standing.length} intention${standing.length === 1 ? "" : "s"} standing`;
   document.getElementById("o-analyzer-s").textContent = `${objs.length} objective${objs.length === 1 ? "" : "s"} · ${obs.length} observation${obs.length === 1 ? "" : "s"}`;
-  document.getElementById("p-analyzer").textContent = `${PANEL.ORIG.length} origins read`;
+  document.getElementById("p-analyzer").textContent = `${PANEL.ORIG.length} origins read` + doorLine(["/analyzer", "/intentions", "/markers"]);
   const kernels = standing.filter(i => i.kind === "kernel").length;
   document.getElementById("d-intent").textContent = standing.length ? `${standing.length} standing · ${kernels} the kernel's` : "none standing";
   if (!PANEL.TICKS) document.getElementById("d-scheduler").textContent = "no duty woke yet this session";
@@ -2938,7 +2986,9 @@ function inspectOrgan(id){
       PERSON ? `${whoIs(PERSON)} · ${GOVERN ? "governs" : "reads · writes"} · until ${tk ? hhmm(tk.constraints.expiry) : "?"}` : "no seat", "—", "/seat · /enroll · /join", "—"],
       [["my seat", () => seatWords("my seat"), true], ["who is at the door?", () => deskWords("who is at the door?")], ["enroll someone", () => { toggleChat(true); const i = document.getElementById("chat-in"); i.value = "enroll "; i.focus(); }]]);
   if (id === "ground") inspect("the ground · memory", ["every ask, reply, marker and record of this world", `${w.scope || "?"} · cell ${w.cell || "?"}` + (w.epoch ? ` · epoch ${w.epoch}` : ""), "—", "—",
-      Object.entries(s.asks || {}).map(([k, n]) => `${n} ${k}`).join(" · ") || "—", `outbox ${(s.outbox || {}).pending ?? "?"} pending`],
+      Object.entries(s.asks || {}).map(([k, n]) => `${n} ${k}`).join(" · ") || "—",
+      `outbox ${(s.outbox || {}).pending ?? "?"} pending` + (s.pool ? ` · pool ${s.pool.busy} of ${s.pool.ceiling} lines busy · ${s.pool.waiting} waiting · longest wait ${ms(Number(s.pool.wait_max_ms))}` : " · no pool (a connection per knock)") +
+      ((s.doors || []).length ? ` · slowest door ${s.doors[0].door} p95 ${ms(Number(s.doors[0].p95_ms))}` : "")],
       [["what world is this?", () => serviceWords("what world is this?"), true], ["list my sessions", () => sessionWords("list my sessions")]]);
   if (id === "gateway"){ const r = PANEL.MINDS || {}; inspect("the gateway · the Stable", ["every LLM call goes through it, metered in dollars", r.gateway && r.gateway.base ? r.gateway.base : "—",
       r.gateway && r.gateway.ready ? "answers" : "DARK", "—", (r.minds || []).map(m => `${m.name} · ${m.state}`).join(" · ") || "no minds", `$${(r.minds || []).reduce((x, m) => x + Number((m.spend || {}).usd_today || 0), 0).toFixed(4)} today`],

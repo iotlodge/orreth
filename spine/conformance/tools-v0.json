@@ -62,14 +62,14 @@
    }
   },
   {
-   "name": "tool_manifest: the add-watch tool \u2014 its declaration, read from tools.v0.json, pinned",
+   "name": "tool_manifest: the add-watch tool - its declaration, read from tools.v0.json, pinned (re-pinned panel sp3: the description names door_p95_ms and the pool's strain)",
    "kind": "tool_manifest",
    "input": {
     "name": "add-watch"
    },
    "expect": {
-    "bytes": "{\"consequence\":\"consequential\",\"description\":\"Propose a new monitoring watch: a named ALERT on one metric (outbox_pending \\u00b7 oldest_outbox_age_s \\u00b7 asks_received \\u00b7 bodies_alive \\u00b7 bodies_dormant) \\u2014 the watch turns RED when `metric op threshold` holds and is green otherwise (ops: <= >= < > ==). To catch dormant bodies: bodies_dormant > 0. To catch asks left waiting: asks_received > 0. It holds for the human's yes before it lands. When the human asks you to propose a watch, call this tool \\u2014 never describe the watch in words instead.\",\"input_schema\":{\"properties\":{\"metric\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"op\":{\"type\":\"string\"},\"threshold\":{\"type\":\"number\"}},\"required\":[\"name\",\"metric\",\"op\",\"threshold\"],\"type\":\"object\"},\"name\":\"add-watch\"}",
-    "hash": "sha256:988c3957391006e3ca87332a99567899cf8dc825936925edcb7abafaa68144ff",
+    "bytes": "{\"consequence\":\"consequential\",\"description\":\"Propose a new monitoring watch: a named ALERT on one metric (outbox_pending \\u00b7 oldest_outbox_age_s \\u00b7 asks_received \\u00b7 bodies_alive \\u00b7 bodies_dormant \\u00b7 door_p95_ms \\u2014 the slowest door's p95 in milliseconds \\u00b7 pool_busy \\u00b7 pool_waiting \\u2014 the ground pool's strain) \\u2014 the watch turns RED when `metric op threshold` holds and is green otherwise (ops: <= >= < > ==). To catch dormant bodies: bodies_dormant > 0. To catch asks left waiting: asks_received > 0. To catch a slow door: door_p95_ms > 1000. It holds for the human's yes before it lands. When the human asks you to propose a watch, call this tool \\u2014 never describe the watch in words instead.\",\"input_schema\":{\"properties\":{\"metric\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"op\":{\"type\":\"string\"},\"threshold\":{\"type\":\"number\"}},\"required\":[\"name\",\"metric\",\"op\",\"threshold\"],\"type\":\"object\"},\"name\":\"add-watch\"}",
+    "hash": "sha256:c5bcb573120f3e709b7d98b7b2e239638146960ffb623d106ac88d98c5e5e97a",
     "consequence": "consequential",
     "ground": true,
     "master": false

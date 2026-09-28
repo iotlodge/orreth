@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: THE POOL at every door (`ground` borrows a line) · THE CLOCK middleware · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the schedule and intent loops as tasks · /monitor · /schedules · /harness · /intentions/stop|restart · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE door · 2026-09-24
@@ -50,6 +51,7 @@ use crate::intent_live::{self, Declare};
 use crate::markers_live;
 use crate::monitor;
 use crate::outbox;
+use crate::pool::{Line, Pool};
 use crate::presence;
 use crate::proof::one_face;
 use crate::proof_live;
@@ -161,6 +163,7 @@ struct App {
     gateway: Gateway,            // THE GATEWAY's doors from the kernel's side
     templates: HashMap<String, Value>, // the seats' templates by body name (the crew card's LLM line)
     gate: seat_live::Ceilings, // P7 sp8 row 3: the knock ceiling at every door (per person · per address)
+    pool: Arc<Pool>, // row 4, panel sp3: THE POOL — the doors' lines to the ground, borrowed per knock
 }
 
 /// A lit bridge: its port, its readiness, its meter, and its stop.
@@ -317,6 +320,7 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
         gateway: gateway.clone(),
         templates,
         gate: seat_live::Ceilings::new(),
+        pool: Pool::new(&w.pg_dsn, crate::pool::ceiling_from_env()),
     });
     let mut tasks = Vec::new();
     // the crew: the benches swept, the boot rite once, the kernel's duties declared, then every seat spawned
@@ -751,6 +755,7 @@ fn router(app: Arc<App>) -> Router {
         .route("/join/:id", get(join_door)) // a join's status (open: the id is its own secret; the lease never rides it)
         .fallback(|| async { StatusCode::NOT_FOUND })
         .layer(middleware::from_fn_with_state(app.clone(), gate)) // P7 sp8 row 3: THE GATE at every door
+        .layer(middleware::from_fn(clock)) // row 4, panel sp3: THE CLOCK outside the gate — the whole knock is timed
         .with_state(app)
 }
 
@@ -939,8 +944,25 @@ fn refuse(e: RoadError) -> Response {
     }
 }
 
-async fn ground(app: &App) -> Result<Ground, RoadError> {
-    Ok(Ground::connect(&app.cfg.world.pg_dsn).await?)
+/// Row 4, panel sp3: a door stands on a LINE borrowed from the pool — back in the
+/// pool when the knock is answered, never a fresh connection per knock.
+async fn ground(app: &App) -> Result<Line, RoadError> {
+    app.pool.borrow().await
+}
+
+/// Row 4, panel sp3: THE CLOCK at every door — how long the knock took, from the
+/// gate to the answer, one sample under the door's name (`doors::door_name`); the
+/// Monitoring folds it to a p50 and a p95 per door and the judge watches it.
+async fn clock(req: axum::extract::Request, next: Next) -> Response {
+    let method = req.method().as_str().to_string();
+    let path = req.uri().path().to_string();
+    let t0 = std::time::Instant::now();
+    let res = next.run(req).await;
+    if path != "/feed" {
+        // the feed is a stream, not a knock: its life is not a door's latency
+        crate::doors::record(&method, &path, t0.elapsed().as_secs_f64() * 1000.0);
+    }
+    res
 }
 
 fn scope(app: &App) -> &str {

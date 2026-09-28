@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: THE CLOCK at every door (the reference has no pool; `pool` reads null) · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the shelf's doors (`/services…`); the built-ins registered and probed at boot · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the Tools keeper born with the rig; its beat; the reference clock by the dial · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W20 `/intentions/restart` · the harness door `GET /harness` · 2026-09-21
@@ -47,6 +48,7 @@ import psycopg
 from . import bridgefeed, digest, dispatch, envelope as ev, export, ground, harness, intent, markers, mitl, monitor, outbox
 from . import cells, placement, presence, profile, projector, proof, scheduler, seat, services, sinks
 from . import body as _body, desk, levers as _levers, rails, stable as _stable, store   # panel sp2: the feed's topics
+from . import doors as _doors                                                          # panel sp3: THE CLOCK at every door
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRefused, Resident
 
@@ -544,7 +546,24 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 self._json(403, dict(proof.ONE_FACE)); return None, True   # more; a person's seat never speaks as a body
             return who, False
 
+        # row 4, panel sp3: THE CLOCK at every door — how long the knock took, from the gate to the
+        # answer, one sample under the door's name (`doors.door_name`); the Monitoring folds it to a
+        # p50 and a p95 per door and the judge watches it. The feed is a stream, never timed.
+        def _timed(self, method: str, door):
+            t0 = time.perf_counter()
+            try:
+                return door()
+            finally:
+                if self.path.split("?")[0] != "/feed":
+                    _doors.record(method, self.path, (time.perf_counter() - t0) * 1000.0)
+
         def do_GET(self):
+            return self._timed("GET", self._get)
+
+        def do_POST(self):
+            return self._timed("POST", self._post)
+
+        def _get(self):
             path = self.path.split("?")[0]
             who, answered = self._admit("GET")
             if answered:
@@ -757,7 +776,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
             self.send_response(404)
             self.end_headers()
 
-        def do_POST(self):
+        def _post(self):
             path = self.path.split("?")[0]
             ln = int(self.headers.get("content-length") or 0)
             raw = self.rfile.read(ln) if ln > 0 else b""   # W77 (lock 5's whole run, 2026-09-27): the bytes are DRAINED

@@ -16,6 +16,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the seat's arms: seat_mint · seat_verify · seat_grants · door_needs · origin_ok · bearer · seat_words · seat_did_of_key · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, the rail's arms: lever_manifest · lever_remedies · lever_words · read_lever · dossier_words · remedy_words · outcome_words · ago_words · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3 (b), the desk's arms: desk_transition · desk_challenge · desk_collect · desk_join_id · desk_prove · desk_collect_ok · desk_fuel · desk_lease · desk_words · desk_name · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3, the doors' arms: door_name · door_fold · door_slowest · 2026-09-28
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -26,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import (body as _body, cells, desk, dispatch, envelope as ev, export, ground, harness, intent, levers, mcp,
+from orreth_spine import (body as _body, cells, desk, dispatch, doors, envelope as ev, export, ground, harness, intent, levers, mcp,
                           mitl, monitor, placement, presence, profile, proof, rails, resident, scheduler, seat, services, stable,
                           store, digest, tools)
 from orreth_spine.identity import Identity
@@ -115,6 +116,14 @@ def test_fixture(contract, case):
         assert harness.refused_words(inp["reply"]) is exp["refused"]
     elif kind == "echo_reply":                   # W24: the echoed words alone; one plain line for a question
         assert resident.echo_reply(inp["name"], inp["text"]) == exp["reply"]
+    # ---- orreth.doors/1 (row 4, panel sp3): a door's name and the fold of its latency ----
+    elif kind == "door_name":
+        assert doors.door_name(inp["method"], inp["path"]) == exp["door"]
+    elif kind == "door_fold":
+        assert doors.fold(inp["samples_ms"]) == exp
+    elif kind == "door_slowest":
+        assert [r["door"] for r in doors.slowest_first(inp["reads"])] == exp["order"]
+        assert doors.slowest_p95(inp["reads"]) == exp["p95"]
     # ---- orreth.watch/1 (W14): the sense of a watch — red WHEN the condition holds ----
     elif kind == "watch_judge":
         red = monitor.judge_one(inp["op"], inp["value"], inp["threshold"])

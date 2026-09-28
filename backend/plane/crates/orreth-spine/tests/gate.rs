@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (a): the human seat's proof · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4: the proof's client is patient at the ceiling (a 429 outside the flood step is retried after retry_after_s) · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: the pool made the proof's steps quick — jb's bucket is let refill before the raw feed knock and the flood · 2026-09-28
 //! THE GATE'S PROOF (canon 0005 sp8 row 3 · 0006 §3 · covenant rules 3 and 4),
 //! on the dev rig, by name:
 //!
@@ -540,6 +541,11 @@ async fn the_gate_seats_the_owner_first_and_every_door_reads_the_seat() {
     println!("gate · the origin is closed");
 
     // ---- 6. the feed carries the seat as its query
+    // panel sp3: with THE POOL the steps above run fast enough that jb's bucket (burst 8, refill
+    // 4/s) is still spent here — the raw feed knock below and the flood of step 8 are not
+    // patient, so the proof lets the bucket refill first (proof-order, not the gate)
+    let bucket_refills = || tokio::time::sleep(Duration::from_millis(2500));
+    bucket_refills().await;
     let (s, head, _) = knock(port, "GET", "/feed", None, &[]).await;
     assert_eq!(s, 401, "the feed needs a seat: {head}");
     {
@@ -567,6 +573,7 @@ async fn the_gate_seats_the_owner_first_and_every_door_reads_the_seat() {
     println!("gate · quinn left: {v}");
 
     // ---- 8. the knock ceiling at every door: a flood from one seat meets the busy words (burst 8 here)
+    bucket_refills().await;
     let mut handles = Vec::new();
     for _ in 0..24 {
         let h: Vec<(String, String)> = vec![("authorization".into(), bearer(&jb_wire))];

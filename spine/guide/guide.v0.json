@@ -72,7 +72,7 @@
     },
     {
      "say": "(click ARCHITECTURE · OPERATIONS · PERFORMANCE on the sill)",
-     "does": "Three soft toggles on one drawing, any combination. ARCHITECTURE shows the empty sockets and the tools; OPERATIONS the rails and the board; PERFORMANCE the numbers the doors measure today."
+     "does": "Three soft toggles on one drawing, any combination. ARCHITECTURE shows the empty sockets and the tools; OPERATIONS the rails and the board; PERFORMANCE the numbers: under each organ its doors' p95 (how long the slowest one in twenty knocks took), under the GROUND the pool of lines to the ground (how many are busy, how many knocks wait for one), the outbox's age, the spend, the benches' depth, and THE DOORS row - every door this kernel answered in the last ten minutes, the slowest first, red past one second. A watch can stand on door_p95_ms, pool_busy or pool_waiting."
     },
     {
      "say": "(click a marker chip — structural · quality · resiliency)",

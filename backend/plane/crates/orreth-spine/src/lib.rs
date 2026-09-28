@@ -87,6 +87,7 @@ pub mod body;
 pub mod canonical;
 pub mod cells;
 pub mod desk;
+pub mod doors;
 pub mod envelope;
 pub mod export;
 pub mod hash;
@@ -151,6 +152,8 @@ pub mod mcp_live;
 pub mod monitor;
 #[cfg(feature = "rails")]
 pub mod outbox;
+#[cfg(feature = "rails")]
+pub mod pool;
 #[cfg(feature = "rails")]
 pub mod presence;
 #[cfg(feature = "rails")]

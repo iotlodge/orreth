@@ -323,6 +323,7 @@ _METRIC_WORDS = (                 # a watch in plain words names its metric (v0 
     ("oldest_outbox_age_s", r"oldest|\bage\b|\bold\b|stale"),
     ("outbox_pending", r"outbox|pending|backlog"),
     ("asks_received", r"\basks?\b|received|waiting|unserved"),
+    ("door_p95_ms", r"\bslow\b|latency|\bdoors?\b|p95"),          # panel sp3: the doors' latency
 )
 
 

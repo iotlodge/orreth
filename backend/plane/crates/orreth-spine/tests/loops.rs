@@ -23,6 +23,7 @@
 //! anything; beside a live Bridge on :4600 it refuses to run.
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the gate: the proof SITS before it knocks (the ceremony through the doors) · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: the planner reads the dossier · 2026-09-27
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: the pool reuses its lines · the doors timed on both kernels · 2026-09-28
 
 #![cfg(feature = "bridge")]
 
@@ -534,6 +535,50 @@ async fn shadow_two_kernels_beat_on_one_ground_one_beat_at_a_time() {
         "{}",
         mon["benches"]
     );
+    // row 4, panel sp3: THE POOL — every door of this proof borrowed a line; the lines were
+    // reused (far more knocks than lines opened, never past the ceiling) and none waits now
+    let pool = &mon["pool"];
+    assert!(pool.is_object(), "the Rust kernel reads its pool: {pool}");
+    let (opened, borrowed, ceiling) = (
+        pool["opened_total"].as_u64().unwrap(),
+        pool["borrowed_total"].as_u64().unwrap(),
+        pool["ceiling"].as_u64().unwrap(),
+    );
+    assert!(
+        opened <= ceiling && borrowed > opened,
+        "lines reused: opened {opened} of {ceiling}, borrowed {borrowed}"
+    );
+    assert_eq!(pool["waiting"], json!(0));
+    assert!(
+        mon_py["pool"].is_null(),
+        "the reference has no pool and says so: {}",
+        mon_py["pool"]
+    );
+    // THE CLOCK — both kernels time their doors: the monitor door itself, read once more
+    let (_, mon2) = get(rs_port, "/monitor").await;
+    let (_, mon2_py) = get(py_port, "/monitor").await;
+    for (who, m) in [("rust", &mon2), ("python", &mon2_py)] {
+        let doors = m["doors"]
+            .as_array()
+            .unwrap_or_else(|| panic!("{who}: doors"));
+        let d = doors
+            .iter()
+            .find(|d| d["door"] == json!("GET /monitor"))
+            .unwrap_or_else(|| panic!("{who}: the monitor door is timed: {doors:?}"));
+        assert!(
+            d["n"].as_u64().unwrap() >= 1
+                && d["p95_ms"].as_f64().unwrap() >= d["p50_ms"].as_f64().unwrap()
+        );
+        let slowest = doors
+            .iter()
+            .filter_map(|d| d["p95_ms"].as_f64())
+            .fold(0.0, f64::max);
+        assert_eq!(
+            m["values"]["door_p95_ms"].as_f64().unwrap(),
+            slowest,
+            "{who}: the watch reads the slowest door"
+        );
+    }
     let (s, hz) = get(rs_port, "/harness").await;
     assert_eq!(s, 200);
     let (_, hz_py) = get(py_port, "/harness").await;

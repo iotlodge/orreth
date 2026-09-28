@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: the doors' latency and the pool in the snapshot · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the Operating State names the cell and epoch · 2026-09-25
 //! The Monitoring workspace's ground — `orreth_spine.monitor` (canon 0001:
 //! "if it's monitoring, it goes here"): the live snapshot of the Operating
@@ -163,12 +164,19 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
     let alive = bodies.iter().filter(|b| b["alive"] == json!(true)).count();
     let lag = outbox_lag(g).await?;
     let last = last_harness(g, scope).await?;
+    // row 4, panel sp3: the doors this process served (their p50 · p95 over the window) and
+    // the pool's strain — read in-process, so the judge and the levers see what the door shows
+    let doors = crate::doors::read();
+    let pool = crate::pool::read_all();
     let values = json!({
         "outbox_pending": lag.pending,
         "oldest_outbox_age_s": lag.oldest_age_s.unwrap_or(0.0),
         "asks_received": asks.get("received").and_then(Value::as_i64).unwrap_or(0),
         "bodies_alive": alive,
         "bodies_dormant": bodies.len() - alive,
+        "door_p95_ms": crate::doors::slowest_p95(&doors),
+        "pool_busy": pool.as_ref().and_then(|p| p["busy"].as_u64()).unwrap_or(0),
+        "pool_waiting": pool.as_ref().and_then(|p| p["waiting"].as_u64()).unwrap_or(0),
     });
     let rows = g
         .client()
@@ -241,6 +249,8 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
         "benches": if rails { benches(w, &names).await } else { json!({}) },
         "topic_depth": if rails { topic_depth(w).await } else { Value::Null },
         "harness": last,
+        "doors": doors,
+        "pool": pool,
     }))
 }
 

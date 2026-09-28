@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P4 sp4, the Monitoring workspace · 2026-09-18
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: the doors' latency in the snapshot · door_p95_ms watchable · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W14 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W22 an offer is a proposal · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the farm's metrics: the Monitoring grows with the Stable · 2026-09-24
@@ -25,7 +26,7 @@ import json
 import re
 import secrets
 
-from . import envelope as ev, outbox, presence
+from . import doors, envelope as ev, outbox, presence
 from .rails import RABBIT_URL
 
 WATCH_TURNED = "orreth.watch.turned.v1"     # a watch changed state: red ↔ green
@@ -34,7 +35,10 @@ METRICS = ("outbox_pending", "oldest_outbox_age_s", "asks_received",
            "bodies_alive", "bodies_dormant",
            # P6.5 sp3: the farm's metrics — the Monitoring grows with the Stable
            "minds_standing", "minds_unhealthy", "usd_today", "route_failures_1h", "meter_rate_10m",
-           "bodies_drained")
+           "bodies_drained",
+           # row 4, panel sp3: the performance law, watched — the slowest door's p95 (the pool's strain,
+           # pool_busy · pool_waiting, is the Rust kernel's: the reference opens a connection per knock)
+           "door_p95_ms")
 OPS = {"<=": lambda v, t: v <= t, ">=": lambda v, t: v >= t,
        "<": lambda v, t: v < t, ">": lambda v, t: v > t, "==": lambda v, t: v == t}
 
@@ -211,6 +215,8 @@ def snapshot(conn, *, rails: bool = True) -> dict:
         "bodies_dormant": len(bodies) - len(alive),
     }
     values.update(_farm(conn))
+    doors_read = doors.read()                     # panel sp3: the doors this process served, the slowest first
+    values["door_p95_ms"] = doors.slowest_p95(doors_read)
     stable_view = _stable(conn)
     cur.execute("SELECT watch_id, name, metric, op, threshold, added_by, last_ok, since"
                 " FROM spine_watches WHERE scope = %s ORDER BY added_at", (ev.scope(),))
@@ -242,6 +248,8 @@ def snapshot(conn, *, rails: bool = True) -> dict:
         "harness": ({"template": last[0], "version": last[1], "passed": last[2],
                      "failed": last[3], "ran_at": last[4].isoformat()} if last else None),
         "stable": stable_view,                        # P6.5 sp3: the farm's face in the Monitoring
+        "doors": doors_read,                          # panel sp3: per-door p50 · p95 · max over the window
+        "pool": None,                                 # panel sp3: the reference has no pool — a connection per knock, said plainly
     }
 
 

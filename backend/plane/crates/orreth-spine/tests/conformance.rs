@@ -7,6 +7,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: topic_name · peers_from · address_home · epoch_check · world_fact · seam_sign · seam_verify · the words · sealed_words · ceiling · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the seat: seat_mint · seat_verify · seat_grants · door_needs · origin_ok · bearer · seat_words · seat_did_of_key · person_did · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `pulled_fact` · `lease_fact` ported · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: `door_name` · `door_fold` · `door_slowest` ported · 2026-09-28
 //! The Rust conformance runner (canon 0008 · P7 sp1): every fixture under
 //! `spine/conformance/*-v*.json` — the same files the Python reference
 //! generated and passes, unchanged — dispatched by case kind exactly as
@@ -17,9 +18,9 @@
 //! runner has no arm for (the list and the dispatch must agree).
 
 use orreth_spine::{
-    ask, beat, body, canonical, cells, content_hash, desk, envelope, export, intent, kernel_self,
-    levers, mcp, memory, mitl, placement, profile, proof, rails, seat, services, stable, tools,
-    watch,
+    ask, beat, body, canonical, cells, content_hash, desk, doors, envelope, export, intent,
+    kernel_self, levers, mcp, memory, mitl, placement, profile, proof, rails, seat, services,
+    stable, tools, watch,
 };
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
@@ -95,6 +96,10 @@ const PORTED_KINDS: &[&str] = &[
     // row 4, panel sp2 — the pull and the lease crossing as facts
     "pulled_fact",
     "lease_fact",
+    // row 4, panel sp3 — orreth.doors/1: a door's name and the fold of its latency
+    "door_name",
+    "door_fold",
+    "door_slowest",
     // P7 sp5 — orreth.memory/1 and the signed export
     "search_terms",
     "memory_fact",
@@ -348,6 +353,37 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             s(&exp["reply"]),
             "echo reply"
         ),
+        // ---- orreth.doors/1 (row 4, panel sp3): a door's name and the fold of its latency ----
+        "door_name" => {
+            same!(
+                doors::door_name(s(&inp["method"]), s(&inp["path"])),
+                s(&exp["door"]),
+                "door"
+            );
+        }
+        "door_fold" => {
+            let samples: Vec<f64> = inp["samples_ms"]
+                .as_array()
+                .cloned()
+                .unwrap_or_default()
+                .iter()
+                .filter_map(Value::as_f64)
+                .collect();
+            same!(doors::fold(&samples), exp.clone(), "fold");
+        }
+        "door_slowest" => {
+            let reads = inp["reads"].as_array().cloned().unwrap_or_default();
+            let order: Vec<String> = doors::slowest_first(reads.clone())
+                .iter()
+                .map(|r| s(&r["door"]).to_string())
+                .collect();
+            same!(json!(order), exp["order"], "order");
+            same!(
+                doors::slowest_p95(&reads),
+                exp["p95"].as_f64().unwrap(),
+                "p95"
+            );
+        }
         // ---- orreth.watch/1: the sense of a watch — red WHEN the condition holds ----
         "watch_judge" => {
             let red = watch::judge(

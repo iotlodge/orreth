@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the turned fact as bytes · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: door_p95_ms · pool_busy · pool_waiting watchable · 2026-09-28
 //! `orreth.watch/1` — the pure half of `orreth_spine.monitor`: the SENSE of a
 //! watch (W14 — RED when `value op threshold` holds now, green otherwise),
 //! its human sentence, and the monitor's offer read from its words (W22).
@@ -14,12 +15,16 @@ use serde_json::{json, Value};
 use std::sync::LazyLock;
 
 /// The metrics this world measures.
-pub const METRICS: [&str; 5] = [
+pub const METRICS: [&str; 8] = [
     "outbox_pending",
     "oldest_outbox_age_s",
     "asks_received",
     "bodies_alive",
     "bodies_dormant",
+    // row 4, panel sp3: the performance law, watched — the slowest door's p95 and the pool's strain
+    "door_p95_ms",
+    "pool_busy",
+    "pool_waiting",
 ];
 /// A watch changed state: red ↔ green.
 pub const WATCH_TURNED: &str = "orreth.watch.turned.v1";

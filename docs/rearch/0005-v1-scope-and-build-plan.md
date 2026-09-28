@@ -1644,7 +1644,7 @@ approved (covenant rule 9).
         kernel to extend through what it, and/or a human, creates while being
         able to serve as a kernel." Seven standing laws, found by the seat's
         build, each with its row:
-        1. **A connection pool at every door — with ROW 4.** Today each Rust
+        1. **A connection pool at every door — with ROW 4** ✅ **BUILT 2026-09-28 (panel sp3: `pool.rs` — THE POOL; `ground` borrows a LINE per knock, `SPINE_POOL` the ceiling, default 16).** Today each Rust
            door (46 sites in `bridge.rs`) and the Python reference open a
            fresh ground connection per knock; the gate proof exhausted
            Postgres with ninety knocks from one seat before the ceiling moved
@@ -1655,7 +1655,7 @@ approved (covenant rule 9).
            lock and deadlocked once on an ALTER TABLE (the memory proof). A
            versioned `spine_schema` table: the first kernel migrates, later
            kernels wait and verify; a relight never races a light.
-        3. **Per-door latency in the Monitoring — with ROW 4.** The meter
+        3. **Per-door latency in the Monitoring — with ROW 4** ✅ **BUILT 2026-09-28 (panel sp3: `doors.rs` · `doors.py` — THE CLOCK at every door on both kernels; `/monitor` → `doors` · `pool` · `values.door_p95_ms`, watchable).** The meter
            covers minds; no door records how long it took. A p50 and p95 per
            door, judged by the same beat that judges watches, so the
            performance law is watched before a walk finds it.
@@ -2124,6 +2124,53 @@ approved (covenant rule 9).
       the asks waiting · the hops counted — the pool and per-door latency are sp3;
       the tool hop is the Python body's own fact (the Rust kernel's crew are Python
       processes), tailed now, never minted by the kernel itself.
+      **panel sp3 BUILT 2026-09-28 — THE PERFORMANCE LAYER, after the pool and the
+      per-door latency (locks 1 and 3 of "the kernel that lasts", paid here).** THE POOL
+      (`pool.rs`, Rust): the App holds a pool of LINES to the ground; every door borrows one
+      for the knock (`ground(&app)` → a `Line`, back in the pool when dropped; a transaction
+      rides `client_mut` as before — the 52 door sites and the gate's two reads unchanged in
+      shape); at most `SPINE_POOL` lines (default 16) — past the ceiling a knock WAITS for a
+      line and the wait is counted; a line whose connection ended or whose ground moved is not
+      returned; the rails' loops keep their own standing lines. THE CLOCK (`doors.rs` ·
+      `doors.py`, both kernels): one middleware outside the gate times every knock from the
+      gate to the answer under the door's NAME (`door_name` — the route as the router spells it,
+      an id folded to `:id`, a stranger's path to `other` so a scanner never grows the table;
+      the feed is a stream, never timed); the last 256 samples per door, folded over the last
+      ten minutes to a nearest-rank p50 · p95 · max in integer arithmetic (`fold` — each reading
+      an actual sample, so both kernels pick the same one). THE MONITORING reads both
+      (`/monitor` → `doors`, the slowest first · `pool`, `null` on the reference which has none
+      and says so · `values.door_p95_ms` the slowest door's p95 · `values.pool_busy` ·
+      `values.pool_waiting`) and the same beat that judges watches judges them: a watch can
+      stand on `door_p95_ms > 1000` (the ≤ 1 s law), the add-watch tool's declaration names
+      the new metrics (re-pinned in `tools-v0.json`), the monitor's offer reads "slow" ·
+      "latency" · "door" · "p95" as the metric. THE GLASS: under each organ its own doors' p95
+      (DESK the seat · enroll · join doors; GROUND the pool — busy of ceiling, waiting, opened
+      for how many knocks, plus the outbox; GATEWAY the minds' doors; SHELF the services';
+      MONITOR the monitor · levers · harness doors, judged every 3 s; ANALYZER its own), the
+      dispatcher's depth gains the benches' count, THE DOORS row under the rails lists every
+      door answered in the window, the slowest first, red past one second, each a door into the
+      inspector ("watch the doors" prefills the chat with the watch to propose); the ground's
+      inspector and the monitor drawer's RAILS view read the same. Fixture NEW `doors-v0.json`
+      (`door_name` 10 · `door_fold` 5 · `door_slowest` 1), both runners' arms; the guide's PANEL
+      entry. PROVEN: cargo build · clippy · fmt clean; `cargo test --lib` 48 (three doors laws);
+      Rust conformance 696/696 · Python 696; the reference's monitor proof over HTTP (the doors
+      timed, `GET /monitor` read on the second knock, the pool `null`); the Rust loops proof
+      widened (the pool's lines REUSED — far more knocks than lines opened, none waiting; both
+      kernels time their doors and the watch reads the slowest); the gate proof green twice
+      (eight of twenty-four served, the burst exactly — its steps grew quick enough on the pool
+      that jb's bucket is now let refill before the raw feed knock and the flood: proof-order,
+      as fefa35a); cells · bodies · desk · memory · askroad · rails green; the spine suite 906
+      green with the stale kernel stopped first (the law); the relit :4601 read live; a
+      stubbed-door dry run of the PERFORMANCE layer in Chrome. FOUND, not cured: `cargo test
+      --features rails --test rails` alone has not compiled since `proof_live.rs` grew the QR
+      deps (`base64` · `qrcode` · `flate2`) under the `bridge` feature only — `dev.sh rust
+      rails` is red; under `--features bridge` the same five rail proofs are green. HONEST LIMITS (sp3): the reference kernel has no pool (a
+      connection per knock, `pool: null`); the reading is the kernel's own process (two kernels
+      on one ground each show their own doors, and two kernels lit in one test process share
+      one ring); the pool counts since light, the doors over ten minutes; lock 2 (the
+      single-writer schema migrator) and lock 4's last polls (the roster's 20 s beat) remain
+      for the re-base; SPEC-PANEL-01 still OWED, widened once more (click PERFORMANCE, read the
+      pool and THE DOORS row, open a door).
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the

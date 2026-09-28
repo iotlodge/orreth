@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P4 sp4, Monitoring · leases · harness · 2026-09-18
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): the watch's sense (W14) · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: the doors timed, the reference's null pool · 2026-09-28
 """P4 sp4: presence leases (M2) — alive while serving, dormant never
 deleted; the Monitoring ground — the snapshot and the WATCHES, added
 through the interlock; the A/B harness v0 (AG-6's non-scheduled half) —
@@ -99,6 +100,14 @@ def test_the_monitor_door_and_the_harness_door_over_http(pg, rig):
         snap = json.loads(r.read())
     assert {"outbox", "asks", "bodies", "values", "watches", "benches", "topic_depth", "harness"} <= set(snap)
     assert snap["values"]["bodies_alive"] >= 7                    # leases renewed as they serve
+    # row 4, panel sp3: the doors are timed — this knock lands after it answers, so a second read
+    # shows the monitor door itself; the reference has no pool and says so (null), never a zero
+    assert snap["pool"] is None and isinstance(snap["doors"], list) and snap["values"]["door_p95_ms"] >= 0
+    with seats.urlopen(f"http://127.0.0.1:{rig.port}/monitor", timeout=15) as r:
+        snap2 = json.loads(r.read())
+    mon = [d for d in snap2["doors"] if d["door"] == "GET /monitor"]
+    assert mon and mon[0]["n"] >= 1 and mon[0]["p95_ms"] >= mon[0]["p50_ms"] > 0
+    assert snap2["values"]["door_p95_ms"] == max(d["p95_ms"] for d in snap2["doors"])
     assert {b["name"] for b in snap["bodies"] if b["alive"]} >= {"librarian", "crew", "monitor"}
     req = urllib.request.Request(f"http://127.0.0.1:{rig.port}/harness/run",
                                  data=json.dumps({"template": "librarian"}).encode(),
@@ -106,3 +115,23 @@ def test_the_monitor_door_and_the_harness_door_over_http(pg, rig):
     with seats.urlopen(req, timeout=30) as r:
         run = json.loads(r.read())
     assert run["template"] == "librarian" and run["passed"] == 2 and run["failed"] == 0
+
+
+def test_the_doors_are_named_timed_and_folded_the_slowest_first():
+    """Row 4, panel sp3: the pure half — a door's name as the router spells it, the
+    ring keeping the last KEEP samples, the reading the slowest first, the watch's
+    metric the slowest p95 (the fixture doors-v0.json pins the fold on both kernels)."""
+    from orreth_spine import doors
+    assert doors.door_name("get", "/ask/ask_1a2b?x=1") == "GET /ask/:id"
+    assert doors.door_name("GET", "/schedules/librarian") == "GET /schedules/:runner"
+    assert doors.door_name("GET", "/wp-admin") == "GET other"
+    d = doors.Doors()
+    for i in range(doors.KEEP + 10):
+        d.record("GET /monitor", i)
+    d.record("GET /ask/:id", 5000.0)
+    r = d.read()
+    assert r[0]["door"] == "GET /ask/:id" and r[1]["n"] == doors.KEEP and r[1]["max_ms"] == doors.KEEP + 9
+    assert doors.slowest_p95(r) == 5000.0
+    d.clear()
+    assert d.read() == [] and doors.slowest_p95([]) == 0.0
+    assert doors.fold([]) == {"n": 0, "p50_ms": None, "p95_ms": None, "max_ms": None}
