@@ -2235,6 +2235,19 @@ approved (covenant rule 9).
       and a fluid, immersive experience because the control is rigid (the one chat, THE PANEL as
       the first image). Ancestors: 0064 The Open Book (the book's laws: walked before written,
       plain-first, canon as labels).
+      **JB's lock, the same night — THE BOOK'S ONE LAW OF UNDERSTANDING.** "How it works"
+      must be simple: the core kernel works THE SAME WAY as everything built on it — one law,
+      applied at every layer as the world grows, so identity and security EXTEND as the kernel
+      adapts to the INTENT of humans. The frame the book teaches: HUMANS SIT OUTSIDE AND APPLY
+      CONTROL (policy · security · HITL/OL · forensic); ORRETH APPLIES ONTOLOGY to the active
+      state and the architecture to keep the world REPRODUCIBLE · TRUSTED · UNDERSTOOD · always
+      EVOLVING (as LLMs evolve, the RL strategies self-improve the kernel's running state and
+      therefore the agents); INTENTIONS such as COST · RTO · RPO · ROI control SCALE. The rails
+      and the self-improvement are explained as automation ONLY beside how the control is
+      applied — never automation alone. The crypto verification (JB: "the only crate we should
+      verify is crypto" — the old world's root seed protection must be matched or bettered by
+      the new kernel's self, seats, desk and SDK seeds; if matched or better, nothing is
+      adjusted) rides re-base sp1 as a read, its verdict in the honest boundary.
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the
