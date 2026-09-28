@@ -486,6 +486,18 @@
   .tog .lamp{width:7px;height:7px} .tog.lit{color:var(--ink)} .tog.lit .lamp{background:var(--amber);box-shadow:0 0 6px var(--amber)}
   .tog:focus-visible{outline:1px solid var(--amber);outline-offset:3px}
   #sill .chips{display:flex;gap:5px;letter-spacing:.1em;align-items:center}
+  /* ---- FULL SCREEN (JB's ask, 2026-09-28: "those with wide monitors would love it"): the panel alone, edge to edge —
+     the ceiling, the strips, the floor and the side tabs fold away, the sill stays as the one thin bar (the toggles, the
+     chat, the way out); on a wide display the drawing is scaled up to be read from a distance; the browser's own full
+     screen is asked for on the click (a gesture is the browser's law), Esc or F leaves it; remembered in this browser ---- */
+  body.wall #ceiling,body.wall .strip,body.wall #floor,body.wall #crew-tab,body.wall #monitor-tab{display:none}
+  body.wall #window-frame{margin:0;padding:6px 6px 0;border:none;border-radius:0;box-shadow:none;background:var(--hull)}
+  body.wall #space{border-radius:0}
+  body.wall #sill{padding:5px 26px 6px}
+  #sill .wall-only{display:none} body.wall #sill .wall-only{display:inline-flex}
+  #sill #wallbtn .glyph{font-size:13px;line-height:1}
+  @media (min-width:1600px){body.wall #space{zoom:1.15}}
+  @media (min-width:2200px){body.wall #space{zoom:1.35}}
   #sill .mchip{border:1px solid var(--seam);border-radius:10px;padding:0 8px;cursor:pointer;color:var(--dim);background:none;font:inherit;font-size:9.5px;letter-spacing:.1em}
   #sill .mchip.lit{color:var(--ink);border-color:var(--amber-dim)}
   /* the inspector: every block is a door — it opens in place; one click sets the chat's scope */
@@ -560,6 +572,9 @@
     <button class="tog lit" data-layer="ops" title="OPERATIONS — what is happening now: the rails light, the stations answer, the running board moves · click to dim it"><span class="lamp"></span>OPERATIONS</button>
     <button class="tog" data-layer="perf" title="PERFORMANCE — the numbers over the same drawing: under each organ its doors' p95 (how long the slowest of twenty knocks took), under the GROUND the pool of lines to the ground, the outbox's age, the spend, the benches' depth, and THE DOORS row — every door answered in the last ten minutes, the slowest first, red past one second"><span class="lamp"></span>PERFORMANCE</button>
     <span class="chips"><span title="the marker groups — dim a group's rows on the board and the tape">markers</span><span id="mchips"></span></span>
+    <button class="tog" id="wallbtn" onclick="wall(!document.body.classList.contains('wall'), true)" title="FULL SCREEN — the panel alone, edge to edge, for a wide monitor: the ceiling, the tabs and the floor fold away and the browser goes full screen too · Esc or F leaves it · remembered in this browser"><span class="glyph">⛶</span>FULL SCREEN</button>
+    <button class="tog wall-only" onclick="toggleChat()" title="the chat — every reply arrives whole">CHAT ▾</button>
+    <button class="tog wall-only" onclick="toggleBand()" title="the Analyzer — everything born in the chat, by origin">ANALYZER ▴</button>
   </div>
   <div class="strip"></div>
   <div id="floor" onclick="toggleBand()" title="the Analyzer — everything born in the chat, by origin">A N A L Y Z E R ▴</div>
@@ -738,9 +753,28 @@ addEventListener("keydown", e => {
     else if (band.classList.contains("open")) toggleBand(false);     // the pull on top closes first;
     else if (monitorPull.classList.contains("open")) toggleMonitor(false);   // the chat and the focus only
     else if (crewPull.classList.contains("open")) toggleCrew(false);         // when no pull is open —
-    else { popAllFocus(); toggleChat(false); }                      // then the bridge, scope restored exactly
+    else if (chat.classList.contains("open") || FOCUS.length) { popAllFocus(); toggleChat(false); }   // then the bridge, scope restored exactly
+    else if (document.body.classList.contains("wall")) wall(false, true);   // last of all, full screen is left
+  }
+  if ((e.key === "f" || e.key === "F") && !e.metaKey && !e.ctrlKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || "") && !(e.target && e.target.isContentEditable)){
+    e.preventDefault(); wall(!document.body.classList.contains("wall"), true);   // F: full screen on or off (never while typing)
   }
 });
+/* ---- FULL SCREEN (JB's ask, 2026-09-28): the panel alone, edge to edge. `gesture` = a click or a key, when the browser's
+   own full screen may be asked for; on load the remembered layout is applied without it (the browser's law). ---- */
+function wall(on, gesture){
+  document.body.classList.toggle("wall", on);
+  const b = document.getElementById("wallbtn"); if (b){ b.classList.toggle("lit", on); b.innerHTML = `<span class="glyph">⛶</span>${on ? "LEAVE FULL SCREEN" : "FULL SCREEN"}`; }
+  try { localStorage.setItem("orreth.panel.wall", on ? "1" : "0"); } catch (e) {}
+  if (gesture){
+    if (on && !document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+    if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+  }
+}
+document.addEventListener("fullscreenchange", () => {     // the browser's own Esc leaves the browser's full screen: the panel follows
+  if (!document.fullscreenElement && document.body.classList.contains("wall")) wall(false, false);
+});
+(function wallLoad(){ let w = null; try { w = localStorage.getItem("orreth.panel.wall"); } catch (e) {} if (w === "1") wall(true, false); })();
 
 /* ---- THE GUIDE (walk #13, JB's seed): kept by the kernel, served by every door, opened to where you are ---- */
 const guideBox = document.getElementById("guide");

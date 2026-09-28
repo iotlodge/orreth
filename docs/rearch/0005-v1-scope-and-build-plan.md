@@ -2171,6 +2171,18 @@ approved (covenant rule 9).
       single-writer schema migrator) and lock 4's last polls (the roster's 20 s beat) remain
       for the re-base; SPEC-PANEL-01 still OWED, widened once more (click PERFORMANCE, read the
       pool and THE DOORS row, open a door).
+      **FULL SCREEN (JB's ask the same evening: "I would so love a full screen mode — those with
+      wide monitors would love it"):** ⛶ FULL SCREEN on the sill, or F — the panel alone, edge
+      to edge: the ceiling, the strips, the floor and the side tabs fold away, the sill stays as
+      the one thin bar (the toggles, CHAT, ANALYZER, the way out); on a wide display the drawing
+      is scaled up (1.15× past 1600 px, 1.35× past 2200 px) to be read from across the room;
+      the browser's own full screen is asked for on the click (a gesture is the browser's law,
+      so a reload restores the layout, not the browser's state); Esc leaves it LAST (after the
+      inspector, the guide, the pulls and the chat — one Esc, one thing) and the browser's own
+      Esc is followed; remembered in this browser (`orreth.panel.wall`). The guide's PANEL
+      entry names it. Proven: the script parses; the glass tests 21 green; clicked live on :4601
+      (the ceiling gone, the sill the one bar, 1.15× at 1710 px, remembered; two Escs closed the
+      chat then left it).
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the

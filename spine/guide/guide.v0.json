@@ -75,6 +75,10 @@
      "does": "Three soft toggles on one drawing, any combination. ARCHITECTURE shows the empty sockets and the tools; OPERATIONS the rails and the board; PERFORMANCE the numbers: under each organ its doors' p95 (how long the slowest one in twenty knocks took), under the GROUND the pool of lines to the ground (how many are busy, how many knocks wait for one), the outbox's age, the spend, the benches' depth, and THE DOORS row - every door this kernel answered in the last ten minutes, the slowest first, red past one second. A watch can stand on door_p95_ms, pool_busy or pool_waiting."
     },
     {
+     "say": "(click FULL SCREEN on the sill, or press F)",
+     "does": "The panel alone, edge to edge, for a wide monitor: the ceiling, the tabs and the floor fold away, the browser goes full screen too, and on a wide display the drawing is scaled up to be read from across the room. The sill stays as the one thin bar - the toggles, CHAT, ANALYZER and the way out. Esc or F leaves it. Remembered in this browser."
+    },
+    {
      "say": "(click a marker chip — structural · quality · resiliency)",
      "does": "Dims that group's rows on the board and the tape."
     },
