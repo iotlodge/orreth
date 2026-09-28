@@ -2192,6 +2192,28 @@ approved (covenant rule 9).
       VERSION law (a stale era means the glass lies about what world it is) kept by reading the
       running binary. Proven: the gate proof reads version · kernel · lit_at at the open door;
       the reference's monitor proof reads its health; seen live on :4601.
+      **ROW 4 OPENED — JB's word 2026-09-28 ("the previous main will be archived in such a way
+      you can access if needed, yes? If so, yes do 4 rebase"): THE OLD WORLD'S ARCHIVE, verified
+      against git before the answer.** The tag `main-v0.72-old-world` stands locally and on origin
+      (annotated, at 3f88cb4 = main's exact tip, VERSION 0.72), holding the old `orrethd` crate
+      beside the five sacred crates; a branch `old-world/main-v0.72` now stands at the same
+      commit on origin so the old world is a branch away, not only a tag away (`git switch
+      old-world/main-v0.72`); the pre-purge copy stays at `../orreth-backup-20260902`. Nothing
+      of the old world is deleted by the re-base — main is REPLACED, its history kept whole under
+      the tag and the branch. **The re-base in three spoonfuls, one fresh session each (JB's
+      token-bleed law):** *re-base sp1* THE GROUND'S LAST LAWS — the single-writer schema
+      migrator (lock 2: a versioned `spine_schema` table; the first kernel migrates, later
+      kernels wait and verify; both kernels), the projector's POISON-PARKING in the Rust inbox,
+      the four Python-only doors crossed (`GET/POST /mitl` · `POST /impact` · `POST /mark` ·
+      `POST /markers/kinds`), lock 4's last polls (the roster's 20 s beat) made feed-driven.
+      *re-base sp2* THE NAME AND THE RIG — the old `orrethd` crate retired from the workspace,
+      the new kernel's binary named `orrethd` inside `orreth-spine`, `Dockerfile` + `compose.yaml`
+      building it, `dev.sh` lighting the Rust kernel on :4600 as THE door with the Python Bridge
+      as the `reference` verb (the stale-rig refusals re-aimed), the root README rewritten for
+      the new world. *re-base sp3* MAIN REPLACED — VERSION 0.1.0 in the release commit, a tag
+      that does not collide with July's `v0.1.0-universe-runs` (`v0.1.0-the-kernel`), main fast-
+      forwarded to the rearch line (JB's own push), the demo and docs sites still FROZEN; then
+      JB walks the P3–P6 specs against the Rust kernel alone.
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the
