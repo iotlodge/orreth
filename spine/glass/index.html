@@ -60,7 +60,9 @@
   #ceiling{padding:10px 26px 8px;display:flex;align-items:center;
     justify-content:space-between}
   #nameplate{letter-spacing:.55em;color:var(--amber);font-size:13px;
-    text-shadow:0 0 12px var(--glow)}
+    text-shadow:0 0 12px var(--glow);text-align:center}
+  .vtag{display:block;color:var(--dim);font-size:9.5px;letter-spacing:.14em;text-shadow:none;margin-top:1px;cursor:help}
+  #sill .vtag{display:none;letter-spacing:.14em;font-size:9.5px} body.wall #sill .vtag{display:inline}
   #chat-tab{cursor:pointer;color:var(--dim);border:1px solid var(--seam);
     border-radius:4px;padding:4px 14px;background:var(--hull2);
     letter-spacing:.2em;font-size:11px;transition:color .2s}
@@ -521,7 +523,7 @@
   <div class="strip"></div>
   <div id="ceiling">
     <span style="width:120px"><span class="daybtn" id="daybtn" onclick="themeFlip()" title="the Daylight Glass — flip the light (remembered in this browser)">☀</span></span>
-    <span id="nameplate">O R R E T H</span>
+    <span id="nameplate">O R R E T H<span class="vtag" id="vtag" title="the kernel that serves this page — its version, which kernel, and when it was lit; read live from its health door on every connection">…</span></span>
     <span id="chat-tab" onclick="toggleChat()">C H A T ▾</span>
   </div>
   <div id="window-frame"><div id="space" aria-label="THE PANEL — the kernel drawn as a mimic panel: geometry is architecture, light is operations, colour is origin">
@@ -568,6 +570,7 @@
   </div></div>
   <div id="sill">
     <span class="pname" title="THE PANEL — the kernel drawn as a control room's mimic panel: geometry is architecture, light is operations, colour is origin">T H E &nbsp; P A N E L</span>
+    <span class="vtag wall-only" id="vtag2" title="the kernel that serves this page — its version, which kernel, and when it was lit; read live from its health door">…</span>
     <button class="tog lit" data-layer="arch" title="ARCHITECTURE — what is built, seated, or offline: the organs, every declared socket, the tools · click to show or hide the empty sockets and the tools"><span class="lamp"></span>ARCHITECTURE</button>
     <button class="tog lit" data-layer="ops" title="OPERATIONS — what is happening now: the rails light, the stations answer, the running board moves · click to dim it"><span class="lamp"></span>OPERATIONS</button>
     <button class="tog" data-layer="perf" title="PERFORMANCE — the numbers over the same drawing: under each organ its doors' p95 (how long the slowest of twenty knocks took), under the GROUND the pool of lines to the ground, the outbox's age, the spend, the benches' depth, and THE DOORS row — every door answered in the last ten minutes, the slowest first, red past one second"><span class="lamp"></span>PERFORMANCE</button>
@@ -3066,10 +3069,19 @@ function connectFeed(){
   src.addEventListener("delta", e => onDelta(JSON.parse(e.data)));
   src.addEventListener("resync", () => {          // the ring moved on without this glass: the still panel is read whole again
     pulse.textContent = "PULSE · resync — fetch fresh through the doors"; panelHydrate().catch(()=>{}); });
-  src.onopen = () => pulse.textContent = "PULSE · listening" +
-    (lastRev ? " · rev " + lastRev : "");
+  src.onopen = () => { versionRead(); pulse.textContent = "PULSE · listening" +
+    (lastRev ? " · rev " + lastRev : ""); };
   src.onerror = () => pulse.textContent = "PULSE · reconnecting…";
 }
+/* ---- the version whisper (JB's ask, 2026-09-28): a LIVE version number up top — what the kernel says of itself through its
+   health door (its version · which kernel · when it was lit), read on load and again on every feed connection, so a relit
+   kernel changes the number without a reload; in full screen it rides the sill ---- */
+async function versionRead(){
+  const h = await fetch("/health").then(x => x.ok ? x.json() : null).catch(()=>null);
+  const t = h && h.version ? `v${h.version} · ${h.kernel === "rust" ? "rust kernel" : h.kernel === "reference" ? "the reference (python)" : (h.kernel || "?")} · lit ${h.lit_at ? hhmm(h.lit_at) : "?"}` : "the kernel did not answer";
+  for (const id of ["vtag", "vtag2"]){ const el = document.getElementById(id); if (el) el.textContent = t; }
+}
+versionRead();
 panelHydrate().catch(()=>{});            /* row 4: the still panel, read through the doors */
 connectFeed();
 toggleChat(true);            /* the chat greets you (profile setting later) */

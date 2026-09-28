@@ -164,6 +164,7 @@ struct App {
     templates: HashMap<String, Value>, // the seats' templates by body name (the crew card's LLM line)
     gate: seat_live::Ceilings, // P7 sp8 row 3: the knock ceiling at every door (per person · per address)
     pool: Arc<Pool>, // row 4, panel sp3: THE POOL — the doors' lines to the ground, borrowed per knock
+    lit_at: String, // JB's ask 2026-09-28: the version whisper — when this kernel was lit, said by the health door
 }
 
 /// A lit bridge: its port, its readiness, its meter, and its stop.
@@ -321,6 +322,7 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
         templates,
         gate: seat_live::Ceilings::new(),
         pool: Pool::new(&w.pg_dsn, crate::pool::ceiling_from_env()),
+        lit_at: crate::envelope::now_iso(),
     });
     let mut tasks = Vec::new();
     // the crew: the benches swept, the boot rite once, the kernel's duties declared, then every seat spawned
@@ -1054,7 +1056,10 @@ async fn feed_door(State(app): State<Arc<App>>, headers: HeaderMap) -> Response 
 async fn health(State(app): State<Arc<App>>) -> Response {
     answer(
         200,
-        json!({"rev": app.feed.rev(), "clients": app.feed.clients()}),
+        // JB's ask 2026-09-28: a LIVE version number up top — the kernel says what it is (its crate
+        // version, which kernel, when it was lit); the glass reads it here, never from its own words
+        json!({"rev": app.feed.rev(), "clients": app.feed.clients(),
+               "version": env!("CARGO_PKG_VERSION"), "kernel": "rust", "lit_at": app.lit_at}),
     )
 }
 

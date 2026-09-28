@@ -2183,6 +2183,15 @@ approved (covenant rule 9).
       entry names it. Proven: the script parses; the glass tests 21 green; clicked live on :4601
       (the ceiling gone, the sill the one bar, 1.15× at 1710 px, remembered; two Escs closed the
       chat then left it).
+      **THE VERSION WHISPER (JB's ask, the same evening: "do need a live version number up top
+      somewhere"):** the kernel says what it is through its open health door — `version` (the
+      crate's, `CARGO_PKG_VERSION`; the reference's from its package) · `kernel` (`rust` ·
+      `reference`) · `lit_at` — and the glass reads it under the nameplate on load and again on
+      every feed connection, so a relit kernel changes the number without a reload; in full
+      screen it rides the sill beside THE PANEL. Never the page's own word: the covenant's
+      VERSION law (a stale era means the glass lies about what world it is) kept by reading the
+      running binary. Proven: the gate proof reads version · kernel · lit_at at the open door;
+      the reference's monitor proof reads its health; seen live on :4601.
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the

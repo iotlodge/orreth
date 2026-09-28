@@ -108,6 +108,10 @@ def test_the_monitor_door_and_the_harness_door_over_http(pg, rig):
     mon = [d for d in snap2["doors"] if d["door"] == "GET /monitor"]
     assert mon and mon[0]["n"] >= 1 and mon[0]["p95_ms"] >= mon[0]["p50_ms"] > 0
     assert snap2["values"]["door_p95_ms"] == max(d["p95_ms"] for d in snap2["doors"])
+    # the version whisper (JB's ask): the reference says what it is through its health door
+    with seats.urlopen(f"http://127.0.0.1:{rig.port}/health", timeout=15) as r:
+        h = json.loads(r.read())
+    assert h["kernel"] == "reference" and h["version"] and h["lit_at"].endswith("Z")
     assert {b["name"] for b in snap["bodies"] if b["alive"]} >= {"librarian", "crew", "monitor"}
     req = urllib.request.Request(f"http://127.0.0.1:{rig.port}/harness/run",
                                  data=json.dumps({"template": "librarian"}).encode(),

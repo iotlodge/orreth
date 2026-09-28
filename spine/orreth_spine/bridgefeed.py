@@ -1,4 +1,5 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the feed's topics wear the cell's namespace · 2026-09-25
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — the health door says the version, the kernel and when it was lit (JB's ask) · 2026-09-28
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P1 sp3, the Bridge feed v0 (M6-lite) · 2026-09-16
 """The Bridge feed (canon 0002): the one place the glass connects.
 
@@ -17,6 +18,12 @@ snapshot instead of trusting a gap.
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
+try:
+    from importlib.metadata import version as _pkg_version
+    _VERSION = _pkg_version("orreth-spine")            # the reference's own version, read from its package
+except Exception:                                      # noqa: BLE001 — an unpackaged checkout still answers
+    _VERSION = "0.0.1"
 import os
 import queue
 import threading
@@ -157,6 +164,8 @@ def _sse_frame(notice: dict) -> bytes:
 
 
 def make_handler(feed: Feed):
+    lit_at = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")   # the version whisper: when this kernel was lit
+
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *_a):           # quiet; the feed is the log
             pass
@@ -164,8 +173,8 @@ def make_handler(feed: Feed):
         def do_GET(self):
             path = self.path.split("?")[0]
             if path == "/health":
-                body = json.dumps({"rev": feed.rev,
-                                   "clients": feed.clients}).encode()
+                body = json.dumps({"rev": feed.rev, "clients": feed.clients,
+                                   "version": _VERSION, "kernel": "reference", "lit_at": lit_at}).encode()
                 self.send_response(200)
                 self.send_header("content-type", "application/json")
                 self.end_headers()

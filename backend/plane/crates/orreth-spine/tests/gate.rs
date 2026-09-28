@@ -601,8 +601,15 @@ async fn the_gate_seats_the_owner_first_and_every_door_reads_the_seat() {
         "gate · twenty-four knocks at once from one seat: {served} served, {busy} met the ceiling"
     );
     // an open door keeps its own bucket, per address — and it too has a ceiling
-    let (s, _, _) = knock(port, "GET", "/health", None, &[]).await;
+    let (s, _, v) = knock(port, "GET", "/health", None, &[]).await;
     assert_eq!(s, 200, "the open door's bucket is its own");
+    // the version whisper: the kernel says what it is through its health door
+    assert_eq!(v["version"], json!(env!("CARGO_PKG_VERSION")), "{v}");
+    assert_eq!(v["kernel"], json!("rust"));
+    assert!(
+        v["lit_at"].as_str().is_some_and(|t| t.ends_with('Z')),
+        "{v}"
+    );
     let mut open_busy = 0;
     for _ in 0..24 {
         let (s, _, v) = knock_once(port, "GET", "/health", None, &[]).await;
