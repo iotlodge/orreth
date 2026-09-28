@@ -2035,6 +2035,47 @@ approved (covenant rule 9).
       the PERFORMANCE layer once the pool and per-door latency land; replay
       later by scrubbing the feed's ring. Two to three sessions; the first
       screenshot is the article campaign's hero.
+      **panel sp1 BUILT 2026-09-28** (`spine/glass/index.html`, one file, no
+      foreign JS): the starfield and the sun are gone; `#space` is THE PANEL —
+      the six organs (DESK · GROUND · GATEWAY · SHELF · MONITOR · ANALYZER,
+      each read through its own door: the seat · `/world` + `/monitor` ·
+      `/minds` · `/services` · `/monitor` + `/levers` · `/intentions` +
+      `/analyzer`), the five rail tracks, the crew's stations (a chip seated by
+      its lease from the roster + `/monitor` + the kernel's `/bodies`; dashed
+      = declared, not seated; amber = parked, the words on the chip), the
+      shelf's tool lamps bordered by consequence, THE RUNNING BOARD (standing
+      intentions then the newest objectives, each row a door into the
+      Analyzer), the tape (the feed in words, seven kept), and the inspector
+      (what · self · lease · life · serving · meter + one-click doors: scope
+      the chat here · @mention · its card · where does it stand? · restart a
+      parked body · retire/restore a tool). The nine feed topics light it:
+      ask.received lights the desk → relay → ground → dispatcher → the target's
+      station in the asker's colour; journey lights the station's act; reply
+      lights the station and the relay back and writes the row's outcome;
+      confirm.needed reds the desk and the row; marker.set diffs `/markers` by
+      id → the tape + the analyzer's lamp in the marker's origin colour, the
+      intent track for intention · observation · watch-red; watch.turned reads
+      `/monitor` and reds or greens the monitor; harness.failed reds it;
+      session.opened flashes the desk. The sill: T H E  P A N E L ·
+      ARCHITECTURE · OPERATIONS · PERFORMANCE (remembered in the browser) + the
+      marker-group chips from `/markers/kinds`. Esc closes the inspector
+      first. A resync re-reads the still panel whole (the old resync only
+      changed the pulse's words). Unseated, the panel says "take your seat"
+      and stays dark. The guide gained THE PANEL's section. PROVEN: `node
+      --check` on the script; `tests/test_cure_walk8.py` (reads the glass) 7
+      green; a dry run in a browser on :4601 with the doors stubbed in their
+      real shapes — ten stations, echo parked amber with its words, nine tool
+      lamps, four board rows with hops, four tape lines, the inspector on the
+      parked echo offering "restart it"; console clean on the live page.
+      HONEST LIMITS (sp1): the sockets' lease state is re-read on the roster's
+      20 s beat (a lease lapse is polled state until sp2's heartbeat fact); a
+      tool hop, a body's park and the scheduler's ticks reach the glass only
+      in sp2; PERFORMANCE shows the outbox's age, the spend and the asks
+      waiting — the pool and per-door latency are sp3; the panel fetches
+      `/ask/<id>` once more per ask notice beside the chat's own read (one
+      shared read is a small sp2 cleanup); the worldtag shows the world only
+      to a seated person. WALK OWED: SPEC-PANEL-01 (JB on :4601) — the first
+      screenshot is the campaign's hero.
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the

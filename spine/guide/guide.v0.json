@@ -49,6 +49,38 @@
    ]
   },
   {
+   "id": "panel",
+   "when": "chat",
+   "title": "THE PANEL — the main window",
+   "lead": "The kernel drawn as a control room's panel. Geometry is architecture: every block sits where its declaration puts it and never moves. Light is operations: a fact on the feed lights a lamp or a rail segment, then fades. Colour is origin: amber a person's word, cyan a body's act, violet the kernel's own, red a watch or a hold. A quiet kernel is a dark, still panel.",
+   "entries": [
+    {
+     "say": "(click DESK · GROUND · GATEWAY · SHELF · MONITOR · ANALYZER)",
+     "does": "The kernel's six organs, always seated. A click opens the inspector in place: what it is, its self, what it serves, and one-click doors into the chat, the crew, the monitor or the analyzer."
+    },
+    {
+     "say": "(click a station — planner · librarian · echo …)",
+     "does": "A crew seat. Solid = seated by its lease; dashed = declared, not seated; amber = parked by the kernel. The inspector shows its self, lease, life and last act; \"scope the chat here\" makes the chat speak to that body alone."
+    },
+    {
+     "say": "(click a tool under the shelf)",
+     "does": "A tool the kernel governs. Its border says how consequential it is: plain routine, amber consequential, red grave. Retire or restore it from the inspector — a retire holds at the interlock."
+    },
+    {
+     "say": "(click a row on the running board)",
+     "does": "The intention → objective → thought → action chain, live. A click opens that origin in the Analyzer."
+    },
+    {
+     "say": "(click ARCHITECTURE · OPERATIONS · PERFORMANCE on the sill)",
+     "does": "Three soft toggles on one drawing, any combination. ARCHITECTURE shows the empty sockets and the tools; OPERATIONS the rails and the board; PERFORMANCE the numbers the doors measure today."
+    },
+    {
+     "say": "(click a marker chip — structural · quality · resiliency)",
+     "does": "Dims that group's rows on the board and the tape."
+    }
+   ]
+  },
+  {
    "id": "kinds",
    "when": "chat",
    "title": "The kind of an ask",
@@ -88,7 +120,7 @@
     },
     {
      "say": "keep this world resilient: when a watch goes red, get it green",
-     "does": "FULL AUTO. A standing purpose. The kernel observes (the red), reads the ground itself first — the watch, who it names and their state, the last acts on them, what happened last time — and hands the planner that dossier with the LEVERS it can pull (restart a body · check or restore a service or a mind · retire one); the planner answers with one lever and its reason; the kernel pulls it with its own hands, as a row in the intention\u2019s session, then reads the watch again and says what happened — green after its act wears the cause, green on its own is said to be self-healed, still red tries once more and then hands you the dossier. You read it in the Analyzer (\u201clast red: cured\u201d) and the Intentions band; you are not asked. Consequential steps STILL hold for you: the kernel never lowers the ladder because it is running on its own. Your part: declare once; decide holds when they come; rest it when you want (“stop the … intention” — your code, then a master's click; “restart intention '…'” stands it again)."
+     "does": "FULL AUTO. A standing purpose. The kernel observes (the red), reads the ground itself first — the watch, who it names and their state, the last acts on them, what happened last time — and hands the planner that dossier with the LEVERS it can pull (restart a body · check or restore a service or a mind · retire one); the planner answers with one lever and its reason; the kernel pulls it with its own hands, as a row in the intention’s session, then reads the watch again and says what happened — green after its act wears the cause, green on its own is said to be self-healed, still red tries once more and then hands you the dossier. You read it in the Analyzer (“last red: cured”) and the Intentions band; you are not asked. Consequential steps STILL hold for you: the kernel never lowers the ladder because it is running on its own. Your part: declare once; decide holds when they come; rest it when you want (“stop the … intention” — your code, then a master's click; “restart intention '…'” stands it again)."
     },
     {
      "say": "echo, every 5 seconds, say the time, please",

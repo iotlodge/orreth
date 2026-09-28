@@ -4,6 +4,7 @@
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass), walk #7's wounds · 2026-09-21 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures (glass): W27 the person's latest session · W32 one Esc, one thing · W33 a pull retracts when focus moves · W34/W39 a stop never needs the exact words · W35 the code row pinned · 2026-09-23 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7 walk #15 cures: W53 a closed pull gives its focus back · 2026-09-25 -->
+<!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp1: THE PANEL replaces the starfield in the main viewport — six organs · five rail tracks · the crew's sockets · the shelf's tool lamps · the running board · the tape · the inspector · the sill's three soft toggles + marker-group chips; lit by the nine feed topics live today; the worldtag and the YOU tag move into the GROUND and DESK blocks · 2026-09-28 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #17/#18 cures (glass): W61 a cancelled hold wears no proof word · W62 a retired service is at rest · W63 the YOU tag wears the seat's name · W64 a person's hold whose code is right reaches every other seated glass for a declared master's click · W65/W66 the stop grammar takes "stopping" · "start" and ignores state words · W67 the master reads the master's words · W68 a hold the clock ended says so · W69 a seat that only reads and writes is shown a hold and no button · 2026-09-27 -->
 <!doctype html>
 <html lang="en">
@@ -49,11 +50,6 @@
       rgba(232,168,76,.16),transparent 32%),
       radial-gradient(ellipse at 30% 70%,rgba(90,110,220,.12),
       transparent 45%),var(--space)}
-  #stars{position:absolute;inset:0}
-  #sun{position:absolute;left:60%;top:36%;width:26px;height:26px;
-    border-radius:50%;background:radial-gradient(circle,#ffe9bf,
-    var(--amber) 55%,transparent 72%);
-    box-shadow:0 0 34px 10px rgba(232,168,76,.35)}
   .worldtag{position:absolute;color:var(--dim);font-size:11px;
     letter-spacing:.12em}
   #sill{display:flex;justify-content:center;gap:26px;color:var(--dim);
@@ -373,6 +369,107 @@
     cursor:pointer;letter-spacing:.1em}
   #pulse{position:fixed;left:26px;bottom:12px;color:var(--dim);
     font-size:10.5px;letter-spacing:.12em}
+  /* ---- THE PANEL (row 4, panel sp1 — JB's lock 2026-09-28): the main viewport is a MIMIC PANEL of the kernel,
+     the control room's signal box. Geometry is architecture (every block's place comes from a declaration and
+     never moves) · light is operations (a fact lights a lamp or a rail segment, then fades) · colour is origin
+     (amber a person's word · cyan a body's act · violet the kernel's own · red a watch or a hold) · three soft
+     toggles on one drawing, never three views. Every lamp is a fact; a quiet kernel is a dark, still panel. ---- */
+  :root{--cyan:#6fc3e8; --violet:#a58cf0; --red:#e86a5c; --dark-lamp:#262b38; --grid:rgba(139,147,168,.07)}
+  #space{overflow:auto;padding:12px 14px;display:grid;gap:12px;align-content:start;
+    background:linear-gradient(var(--grid) 1px,transparent 1px) 0 0/24px 24px,
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/24px 24px,
+      radial-gradient(ellipse at 50% 30%,#0b1020 0%,var(--space) 70%)}
+  .prow-label{display:flex;align-items:center;gap:10px;margin-bottom:5px;font-size:9.5px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--amber-dim)}
+  .prow-label .line{flex:1;height:1px;background:var(--seam)}
+  .prow-label .r{color:var(--dim);letter-spacing:.08em;text-transform:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #organs{display:grid;grid-template-columns:repeat(6,1fr);gap:9px}
+  .organ{background:var(--glass);border:1px solid var(--seam);border-radius:6px;padding:7px 9px;min-height:70px;cursor:pointer;min-width:0}
+  .organ:hover,.station:hover,.tool:hover,.run:hover{border-color:var(--amber-dim)}
+  .organ .t{display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .organ .n{letter-spacing:.14em;font-size:10.5px;color:var(--ink)}
+  .organ .v{font-size:13.5px;margin-top:3px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .organ .s{color:var(--dim);font-size:10.5px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .organ .worldtag,.organ #youtag{position:static;font-size:inherit;letter-spacing:.04em;color:inherit}
+  .organ #youtag:hover{color:var(--amber)}
+  .perf-only{display:none} body.perf .perf-only{display:block}
+  .organ .bar{height:4px;background:var(--dark-lamp);border-radius:2px;margin-top:5px;overflow:hidden}
+  .organ .bar i{display:block;height:100%;background:var(--jade);width:0;transition:width .6s}
+  .lamp{width:8px;height:8px;border-radius:50%;background:var(--dark-lamp);box-shadow:inset 0 0 2px #000;display:inline-block;flex:none;
+    transition:background 1.4s ease-out,box-shadow 1.4s ease-out}
+  .lamp.on{background:var(--jade);box-shadow:0 0 6px var(--jade);transition:none}
+  .lamp.human{background:var(--amber);box-shadow:0 0 6px var(--amber);transition:none}
+  .lamp.agent{background:var(--cyan);box-shadow:0 0 6px var(--cyan);transition:none}
+  .lamp.kernel{background:var(--violet);box-shadow:0 0 6px var(--violet);transition:none}
+  .lamp.red{background:var(--red);box-shadow:0 0 7px var(--red);transition:none}
+  .lamp.hold{background:var(--amber-dim);box-shadow:0 0 4px var(--amber-dim);transition:none}
+  #rails{display:grid;gap:4px}
+  .rail-row{display:grid;grid-template-columns:86px 1fr 230px;align-items:center;gap:10px;font-size:9.5px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--dim)}
+  .rail-row .depth{text-align:right;letter-spacing:.04em;text-transform:none;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .track{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;height:6px}
+  .seg{background:var(--dark-lamp);border-radius:1px;transition:background 1.6s ease-out,box-shadow 1.6s ease-out}
+  .seg.human{background:var(--amber);box-shadow:0 0 5px var(--amber);transition:none}
+  .seg.agent{background:var(--cyan);box-shadow:0 0 5px var(--cyan);transition:none}
+  .seg.kernel{background:var(--violet);box-shadow:0 0 5px var(--violet);transition:none}
+  .seg.red{background:var(--red);box-shadow:0 0 5px var(--red);transition:none}
+  .stations{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:7px}
+  .stations:empty::after{content:"no body seated yet — the kernel seats its crew at light";color:var(--dim);font-size:10.5px}
+  .station{background:var(--glass);border:1px solid var(--seam);border-radius:6px;padding:5px 8px;cursor:pointer;min-height:58px;font-size:11px;min-width:0}
+  .station .t{display:flex;align-items:center;gap:6px}
+  .station .n{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .station .k{font-size:9.5px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .station .act{font-size:10.5px;color:var(--dim);margin-top:3px;min-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .station.parked{border-color:var(--amber-dim)} .station.parked .n{color:var(--amber-dim)}
+  .station.socket{border-style:dashed;opacity:.6;background:transparent} .station.socket .n{color:var(--dim)}
+  .station.lit{border-color:var(--cyan)} .station.lit.h{border-color:var(--amber)} .station.lit.kn{border-color:var(--violet)}
+  body:not(.arch) .station.socket{display:none}
+  #tools{display:flex;flex-wrap:wrap;gap:5px}
+  #tools:empty::after{content:"the shelf door has not answered yet";color:var(--dim);font-size:10.5px}
+  .tool{display:flex;align-items:center;gap:6px;border:1px solid var(--seam);border-radius:4px;padding:2px 8px;font-size:10.5px;color:var(--dim);
+    background:var(--glass);cursor:pointer}
+  .tool.consequential{border-color:var(--amber-dim)} .tool.grave{border-color:var(--red)} .tool.retired{opacity:.45;border-style:dashed}
+  .tool.unhealthy{color:var(--red)}
+  .tool .lamp{width:6px;height:6px}
+  #board{display:grid;gap:4px}
+  #board:empty::after{content:"nothing running yet — ask anything in the chat, or declare an intention";color:var(--dim);font-size:10.5px}
+  .run{display:grid;grid-template-columns:minmax(160px,260px) 1fr minmax(120px,200px);gap:10px;align-items:center;padding:5px 8px;
+    border:1px solid var(--seam);border-radius:6px;background:var(--glass);font-size:11px;cursor:pointer;min-width:0}
+  .run .who{display:flex;align-items:center;gap:8px;min-width:0}
+  .run .who div{min-width:0} .run .who .w{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+  .run .who .k{font-size:9.5px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .run .chain{display:flex;align-items:center;gap:5px;flex-wrap:wrap;color:var(--dim);min-width:0}
+  .run .hop{border:1px solid var(--seam);border-radius:3px;padding:0 6px;color:var(--ink);white-space:nowrap;font-size:10.5px;max-width:22em;overflow:hidden;text-overflow:ellipsis}
+  .run .hop.now{border-color:var(--cyan);color:var(--cyan)} .run .hop.done{color:var(--dim)} .run .hop.red{border-color:var(--red);color:var(--red)}
+  .run .hop.human{border-color:var(--amber);color:var(--amber)} .run .hop.kernel{border-color:var(--violet);color:var(--violet)}
+  .run .out{text-align:right;color:var(--dim);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .run.rested{opacity:.55}
+  body:not(.ops) #board,body:not(.ops) #tape,body:not(.ops) #rails{opacity:.25}
+  body:not(.arch) #tools{opacity:.35}
+  #tape{font-size:10.5px;color:var(--dim);white-space:nowrap;overflow:hidden;display:flex;gap:16px;min-height:15px}
+  #tape span{flex:none} #tape b{color:var(--ink);font-weight:normal} #tape i{font-style:normal;opacity:.6}
+  body.no-structural .g-structural,body.no-quality .g-quality,body.no-resiliency .g-resiliency{opacity:.18}
+  /* the sill: THE PANEL's three soft toggles, and the marker-group chips 0006 promised the main viewport */
+  #sill{align-items:center;flex-wrap:wrap;gap:18px;padding:8px 26px 2px}
+  #sill .pname{color:var(--amber);letter-spacing:.42em;cursor:help}
+  .tog{cursor:pointer;display:inline-flex;align-items:center;gap:7px;background:none;border:0;color:var(--dim);font:inherit;letter-spacing:inherit;padding:2px}
+  .tog .lamp{width:7px;height:7px} .tog.lit{color:var(--ink)} .tog.lit .lamp{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+  .tog:focus-visible{outline:1px solid var(--amber);outline-offset:3px}
+  #sill .chips{display:flex;gap:5px;letter-spacing:.1em;align-items:center}
+  #sill .mchip{border:1px solid var(--seam);border-radius:10px;padding:0 8px;cursor:pointer;color:var(--dim);background:none;font:inherit;font-size:9.5px;letter-spacing:.1em}
+  #sill .mchip.lit{color:var(--ink);border-color:var(--amber-dim)}
+  /* the inspector: every block is a door — it opens in place; one click sets the chat's scope */
+  #insp{position:absolute;right:12px;top:12px;width:min(330px,calc(100% - 24px));background:#0e121e;border:1px solid var(--amber-dim);border-radius:8px;
+    padding:9px 12px;font-size:11.5px;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:3}
+  #insp .t{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;gap:8px}
+  #insp .t b{letter-spacing:.12em;font-weight:normal;color:var(--amber);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #insp dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:0} #insp dt{color:var(--dim)} #insp dd{margin:0;min-width:0;overflow-wrap:anywhere}
+  #insp .acts{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
+  #insp .acts button{font:inherit;font-size:10.5px;background:var(--hull2);color:var(--ink);border:1px solid var(--seam);border-radius:4px;padding:2px 8px;cursor:pointer}
+  #insp .acts button.p{border-color:var(--amber);color:var(--amber)}
+  #insp .x{background:none;border:0;color:var(--dim);cursor:pointer;font:inherit}
+  @media (max-width:820px){#organs{grid-template-columns:repeat(3,1fr)} .run{grid-template-columns:1fr} .run .out{text-align:left} .rail-row{grid-template-columns:64px 1fr 110px}}
+  @media (prefers-reduced-motion:reduce){.lamp,.seg,.organ .bar i{transition:none}}
 </style>
 </head>
 <body>
@@ -383,13 +480,53 @@
     <span id="nameplate">O R R E T H</span>
     <span id="chat-tab" onclick="toggleChat()">C H A T ▾</span>
   </div>
-  <div id="window-frame"><div id="space">
-    <canvas id="stars"></canvas><div id="sun"></div>
-    <span class="worldtag" id="worldtag" style="left:63%;top:33%" title="the world this door serves, its cell and its epoch — from /world">u:dev</span>
-    <span class="worldtag" style="left:70%;top:52%">librarian · alive</span>
-    <span class="worldtag" id="youtag" style="left:14%;top:60%;cursor:pointer" onclick="profileWords('what do you know about me?')" title="what this ground knows about you — click to read it">you</span>
+  <div id="window-frame"><div id="space" aria-label="THE PANEL — the kernel drawn as a mimic panel: geometry is architecture, light is operations, colour is origin">
+    <div><div class="prow-label"><span>the kernel's organs</span><span class="line"></span><span class="r">declared by the kernel · always seated · click one to open it</span></div>
+      <div id="organs">
+        <div class="organ" data-organ="desk" title="THE DESK — the gate: who is seated, who may enroll, the join desk where a machine asks in · click to open"><div class="t"><span class="n">DESK</span><span class="lamp" id="l-desk"></span></div><div class="v" id="o-desk-v">no seat</div><div class="s"><span id="youtag" onclick="event.stopPropagation(); profileWords('what do you know about me?')" title="what this ground knows about you — click to read it">you</span></div><div class="perf-only s" id="p-desk">—</div></div>
+        <div class="organ" data-organ="ground" title="THE GROUND — the kernel's memory: every ask, reply, marker and record, in this world · click to open"><div class="t"><span class="n">GROUND</span><span class="lamp" id="l-ground"></span></div><div class="v"><span class="worldtag" id="worldtag" title="the world this door serves, its cell and its epoch — from /world">u:dev</span></div><div class="s" id="o-ground-s">—</div><div class="perf-only s" id="p-ground">—</div></div>
+        <div class="organ" data-organ="gateway" title="THE GATEWAY — every LLM call goes through it, metered in dollars · the Stable's minds stand behind it · click to open"><div class="t"><span class="n">GATEWAY</span><span class="lamp" id="l-gateway"></span></div><div class="v" id="o-gateway-v">—</div><div class="s" id="o-gateway-s">—</div><div class="perf-only s" id="p-gateway">—</div></div>
+        <div class="organ" data-organ="shelf" title="THE SHELF — every service the kernel governs: tools, MCP servers, stores, sources, minds · one ladder · click to open"><div class="t"><span class="n">SHELF</span><span class="lamp" id="l-shelf"></span></div><div class="v" id="o-shelf-v">—</div><div class="s" id="o-shelf-s">—</div><div class="perf-only s" id="p-shelf">—</div></div>
+        <div class="organ" data-organ="monitor" title="THE MONITOR — the watches, the health checks, the harness, the levers the kernel can pull · click to open"><div class="t"><span class="n">MONITOR</span><span class="lamp" id="l-monitor"></span></div><div class="v" id="o-monitor-v">—</div><div class="s" id="o-monitor-s">—</div><div class="perf-only s" id="p-monitor">—</div></div>
+        <div class="organ" data-organ="analyzer" title="THE ANALYZER — everything born in the chat, by origin: intentions, objectives, thoughts, actions · click to open"><div class="t"><span class="n">ANALYZER</span><span class="lamp" id="l-analyzer"></span></div><div class="v" id="o-analyzer-v">—</div><div class="s" id="o-analyzer-s">—</div><div class="perf-only s" id="p-analyzer">—</div></div>
+      </div></div>
+    <div><div class="prow-label"><span>the firmware-rails</span><span class="line"></span><span class="r">a segment lights when a fact passes, then fades · amber a person · cyan a body · violet the kernel · red a watch or a hold</span></div>
+      <div id="rails">
+        <div class="rail-row" title="the relay — carries every fact from the outbox to the topics"><span>relay</span><div class="track" data-rail="relay"></div><span class="depth" id="d-relay">—</span></div>
+        <div class="rail-row" title="the dispatcher — hands each ask to the bench of the body that serves it"><span>dispatcher</span><div class="track" data-rail="dispatcher"></div><span class="depth" id="d-dispatcher">—</span></div>
+        <div class="rail-row" title="the scheduler — wakes the crew's duties on their clocks (lights in panel sp2)"><span>scheduler</span><div class="track" data-rail="scheduler"></div><span class="depth" id="d-scheduler">—</span></div>
+        <div class="rail-row" title="presence — the leases that say who is alive (lights in panel sp2)"><span>presence</span><div class="track" data-rail="presence"></div><span class="depth" id="d-presence">—</span></div>
+        <div class="rail-row" title="intent — the standing intentions' ticks: observe, plan, act, attribute"><span>intent</span><div class="track" data-rail="intent"></div><span class="depth" id="d-intent">—</span></div>
+      </div></div>
+    <div><div class="prow-label"><span>the crew's stations · firmware</span><span class="line"></span><span class="r">a chip seated by its lease · dashed = declared, not seated · amber = parked · click one to open it</span></div>
+      <div class="stations" id="st-fw"></div></div>
+    <div><div class="prow-label"><span>stations · residents</span><span class="line"></span><span class="r">the bodies that answer you</span></div>
+      <div class="stations" id="st-res"></div></div>
+    <div><div class="prow-label"><span>the shelf's tools</span><span class="line"></span><span class="r">border = how consequential · plain routine · amber consequential · red grave · a lamp = a tool hop (panel sp2)</span></div>
+      <div id="tools"></div></div>
+    <div><div class="prow-label"><span>the running board</span><span class="line"></span><span class="r">intention → objective → thought → action · the marker tree, live · every row a door</span></div>
+      <div id="board"></div></div>
+    <div id="tape" title="the feed, in words — the newest facts first"></div>
+    <div id="insp" hidden>
+      <div class="t"><b id="i-name">—</b><button class="x" id="i-close" aria-label="close the inspector" title="close · [Esc]">✕</button></div>
+      <dl>
+        <dt>what</dt><dd id="i-kind">—</dd>
+        <dt>self</dt><dd id="i-did">—</dd>
+        <dt>lease</dt><dd id="i-lease">—</dd>
+        <dt>life</dt><dd id="i-life">—</dd>
+        <dt>serving</dt><dd id="i-serving">—</dd>
+        <dt>meter</dt><dd id="i-meter">—</dd>
+      </dl>
+      <div class="acts" id="i-acts"></div>
+    </div>
   </div></div>
-  <div id="sill">O R R E R Y&nbsp;&nbsp;·&nbsp;&nbsp;B R A I N&nbsp;&nbsp;·&nbsp;&nbsp;A T L A S</div>
+  <div id="sill">
+    <span class="pname" title="THE PANEL — the kernel drawn as a control room's mimic panel: geometry is architecture, light is operations, colour is origin">T H E &nbsp; P A N E L</span>
+    <button class="tog lit" data-layer="arch" title="ARCHITECTURE — what is built, seated, or offline: the organs, every declared socket, the tools · click to show or hide the empty sockets and the tools"><span class="lamp"></span>ARCHITECTURE</button>
+    <button class="tog lit" data-layer="ops" title="OPERATIONS — what is happening now: the rails light, the stations answer, the running board moves · click to dim it"><span class="lamp"></span>OPERATIONS</button>
+    <button class="tog" data-layer="perf" title="PERFORMANCE — the numbers over the same drawing: the outbox's age, the spend, the asks waiting · the pool and per-door latency land in panel sp3"><span class="lamp"></span>PERFORMANCE</button>
+    <span class="chips"><span title="the marker groups — dim a group's rows on the board and the tape">markers</span><span id="mchips"></span></span>
+  </div>
   <div class="strip"></div>
   <div id="floor" onclick="toggleBand()" title="the Analyzer — everything born in the chat, by origin">A N A L Y Z E R ▴</div>
 </div>
@@ -537,24 +674,6 @@ async function seatWords(text){                  // "leave my seat" · "who am I
   }
   return false;
 }
-/* ---- the starfield (drawn once; the window looks out on something) ---- */
-(() => {
-  const c = document.getElementById("stars");
-  const draw = () => {
-    c.width = c.clientWidth; c.height = c.clientHeight;
-    const g = c.getContext("2d");
-    g.clearRect(0,0,c.width,c.height);
-    for (let i = 0; i < 240; i++) {
-      const r = Math.random()*1.3 + .2;
-      g.fillStyle = `rgba(${200+Math.random()*55|0},
-        ${200+Math.random()*55|0},255,${.25+Math.random()*.6})`;
-      g.beginPath();
-      g.arc(Math.random()*c.width, Math.random()*c.height, r, 0, 7);
-      g.fill();
-    }
-  };
-  draw(); addEventListener("resize", draw);
-})();
 
 /* ---- the chat pull + THE ESC LAW: one keystroke returns the bridge ---- */
 const chat = document.getElementById("chat");
@@ -565,7 +684,8 @@ function toggleChat(open){
 }
 addEventListener("keydown", e => {
   if (e.key === "Escape") {                             // SPEC-ESC-01 + P19 — W32 (walk #11): ONE Esc, ONE thing —
-    if (guideBox.classList.contains("open")) toggleGuide(false);      // the guide is on top of everything
+    if (inspOpen()) inspClose();                                     // the panel's inspector is the smallest thing open
+    else if (guideBox.classList.contains("open")) toggleGuide(false); // the guide is on top of everything
     else if (band.classList.contains("open")) toggleBand(false);     // the pull on top closes first;
     else if (monitorPull.classList.contains("open")) toggleMonitor(false);   // the chat and the focus only
     else if (crewPull.classList.contains("open")) toggleCrew(false);         // when no pull is open —
@@ -637,7 +757,7 @@ function drawChips(){
 }
 async function loadRoster(){                      // W18: the rail reads the SAME door as the cards (rule 7)
   const r = await fetch("/crew").then(x=>x.json()).catch(()=>null);
-  if (!r) return;
+  if (!r || !r.crew) return;                      // unseated: the door answers "not seated", no roster
   ROSTER = r.crew.map(c => ({name: c.name, did: c.did, lives: c.lives, kind: c.kind, nature: c.nature || "",
                              refused: !!c.refused, why: c.refused ? ((c.placement || {}).reasons || []).join("; ") : ""}));
   for (const res of ROSTER){
@@ -649,6 +769,7 @@ async function loadRoster(){                      // W18: the rail reads the SAM
     if (first) SELECTED.add(first.name);
   }
   drawChips();
+  panelStations().catch(()=>{});                  // row 4: the sockets follow the roster's beat (a lease lapse is polled state until panel sp2)
 }
 function addressed(text){                         // W7: "echo, …" · "@echo …" · "librarian: …" → that body alone
   const m = (text || "").match(/^\s*@?([a-z0-9_-]+)\s*[,:]\s*\S/i);
@@ -1033,6 +1154,7 @@ async function send(given, label, toOverride, parent){
 
 /* every notice is a pointer — the glass fetches truth through the door */
 async function onNotice(n){
+  panelNotice(n).catch(()=>{});                   // row 4: THE PANEL lights first — the chat's own reading follows
   if (n.kind === "orreth.session.opened.v1"){      // W51 (walk #13): a roll on ANY door — this door's sessions list follows
     if (SESSIONS_SHOWN) listSessions();            // the list was shown here: it follows
     return;
@@ -1412,6 +1534,7 @@ let WORLD = null;                                // P7 sp7: the world card — t
 async function loadWorld(){
   WORLD = await fetch("/world").then(x=>x.json()).catch(()=>null);
   const tag = document.getElementById("worldtag");
+  if (WORLD && !WORLD.scope) WORLD = null;         // unseated: the door answers "not seated", no world card
   if (WORLD && tag) tag.textContent = `${WORLD.scope} · cell ${WORLD.cell}` + (WORLD.epoch ? ` · epoch ${WORLD.epoch}` : "");
   return WORLD;
 }
@@ -2357,6 +2480,352 @@ document.getElementById("ses-new").onclick = () => rollSession(true);
   grip.addEventListener("pointerup", done); grip.addEventListener("pointercancel", done);
 })();
 
+/* ---- THE PANEL (row 4, panel sp1 — JB's lock 2026-09-28): the main viewport is a MIMIC PANEL of the kernel.
+   GEOMETRY IS ARCHITECTURE — the six organs are the kernel's fixed slots; every crew seat the kernel declares is a
+   socket (a lease = a chip seated · declared without a lease = a dashed empty socket · parked = amber); tools are
+   lamps under the shelf. LIGHT IS OPERATIONS — a fact on the feed lights the segments it crosses and the station
+   it reaches, then fades; nothing orbits; a quiet kernel is a dark, still panel that costs nothing to draw.
+   COLOUR IS ORIGIN — amber a person's word · cyan a body's act · violet the kernel's own · red a watch or a hold.
+   Every block is a door: the inspector opens in place and sets the chat's scope in one click.
+   sp1's HONEST LIMITS, plainly: the feed tails nine topics today, so the desk, the dispatcher, the intent track,
+   the stations and the board light live; a tool hop, a lease lapse, a body's park and the scheduler's ticks reach
+   the glass only in panel sp2 (the feed widened + the lever-pulled and lease-lapse facts) — until then the sockets'
+   lease state is re-read on the roster's 20 s beat; PERFORMANCE shows what the doors measure today (the outbox's
+   age, the spend, the asks waiting) — the pool and per-door latency are panel sp3. ---- */
+const PANEL = {ROST: [], MON: null, GOV: {}, MINDS: null, SERV: null, INTS: [], ORIG: [], KINDS: [], SEEN: null, LEVERS: null,
+               ACT: {}, COL: {}, timers: {}, debounces: {}};
+const ORGAN_COL = {desk: 1, ground: 5, gateway: 9, shelf: 13, monitor: 17, analyzer: 21};
+(function panelTracks(){ document.querySelectorAll("#rails .track").forEach(t => { for (let i = 0; i < 24; i++){ const s = document.createElement("i"); s.className = "seg"; t.appendChild(s); } }); })();
+function pt(x){ return esc(String(x ?? "")); }
+function hm(iso){ return new Date(iso).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}); }   // the panel's clocks: no seconds
+function panelDebounce(name, fn, ms){ if (PANEL.debounces[name]) return; PANEL.debounces[name] = setTimeout(() => { PANEL.debounces[name] = null; fn(); }, ms); }
+function lampRest(id, cls){                        // a lamp's resting state: on (seated · answers) · hold (parked) · red · dark
+  const e = document.getElementById(id); if (!e) return; e.dataset.rest = cls || "";
+  if (!PANEL.timers[id]){ e.classList.remove("on","human","agent","kernel","red","hold"); if (cls) e.classList.add(cls); }
+}
+function lampFlash(id, cls, ms){                   // a fact lights the lamp in its origin's colour, then the rest returns
+  const e = document.getElementById(id); if (!e) return;
+  e.classList.remove("on","human","agent","kernel","red","hold"); e.classList.add(cls); clearTimeout(PANEL.timers[id]);
+  PANEL.timers[id] = setTimeout(() => { PANEL.timers[id] = null; e.classList.remove(cls); if (e.dataset.rest) e.classList.add(e.dataset.rest); }, ms || 160);
+}
+function railLight(name, a, b, cls){               // the segments a fact crosses, lit, then fading (the CSS transition)
+  const t = document.querySelector(`#rails .track[data-rail="${name}"]`); if (!t) return;
+  const [lo, hi] = a <= b ? [a, b] : [b, a];
+  for (let i = Math.max(0, lo); i <= Math.min(23, hi); i++){ const s = t.children[i]; s.classList.remove("human","agent","kernel","red"); s.classList.add(cls);
+    setTimeout(() => s.classList.remove(cls), 160); }
+}
+function hueOf(by){                                // COLOUR IS ORIGIN, read off the DID
+  if (!by) return "agent";
+  if (by === "the kernel" || by.startsWith("did:orreth:kernel")) return "kernel";
+  if (by.startsWith("did:orreth:person")) return "human";
+  return "agent";
+}
+function hueOfAsk(v){ if (v && v.origin && v.origin.kind === "intention") return v.origin.by === "the kernel" ? "kernel" : "human"; return hueOf(v && v.person); }
+function nameOf(v){ return NAMES[v.served_by] || (v.served_by === "the kernel" ? "the kernel" : null) || v.target || "the crew"; }
+function colOf(name){ return PANEL.COL[name] ?? 12; }
+function plainKind(k){ return String(k || "").replace(/^orreth\./, "").replace(/\.v\d+$/, "").replace(/[._]/g, " "); }
+function stationLit(name, cls, words, ms){          // the station a fact reaches: its border and lamp in the origin's colour, its act line
+  const st = document.querySelector(`.station[data-id="${CSS.escape(name || "")}"]`); if (!st) return;
+  st.classList.remove("h","kn"); st.classList.add("lit"); if (cls === "human") st.classList.add("h"); if (cls === "kernel") st.classList.add("kn");
+  lampFlash("s-" + name, cls, 180);
+  if (words){ PANEL.ACT[name] = words; st.querySelector(".act").textContent = words; }
+  clearTimeout(st._t); st._t = setTimeout(() => st.classList.remove("lit","h","kn"), ms || 1800);
+}
+function tape(kind, words, grp){                   // the feed in words — the newest first, seven kept
+  const t = document.getElementById("tape"); const s = document.createElement("span"); s.className = "g-" + (grp || "structural");
+  s.innerHTML = `<b>${pt(kind)}</b> ${pt(words)} <i>${hhmm(new Date().toISOString())}</i>`; t.prepend(s); while (t.children.length > 7) t.lastChild.remove();
+}
+function hop(ref, text, cls){                      // a hop on the running board's row for this ask, if the row stands
+  const row = document.querySelector(`.run[data-ref="${CSS.escape(ref || "")}"]`); if (!row) return;
+  const ch = row.querySelector(".chain"); ch.querySelectorAll(".hop.now").forEach(h => { h.classList.remove("now"); h.classList.add("done"); });
+  const h = document.createElement("span"); h.className = "hop " + (cls || "now"); h.textContent = text; ch.appendChild(h);
+  while (ch.children.length > 6) ch.firstChild.remove();
+}
+function outWords(ref, text){ const row = document.querySelector(`.run[data-ref="${CSS.escape(ref || "")}"]`); if (row) row.querySelector(".out").textContent = text; }
+/* ---- hydration: the still panel, read through the doors (on load · on a resync · on the roster's beat) ---- */
+function panelDesk(){
+  const tk = SEAT && seatToken(SEAT);
+  document.getElementById("o-desk-v").textContent = PERSON ? `${whoIs(PERSON)} · ${GOVERN ? "governs" : "reads · writes"}` : "no seat";
+  document.getElementById("p-desk").textContent = tk ? `seat until ${hhmm(tk.constraints.expiry)}` : "—";
+  lampRest("l-desk", PERSON ? "on" : "");
+}
+async function panelStations(){                    // the sockets: /crew (the roster) · /monitor (the leases) · /bodies (the kernel's own eyes)
+  if (!SEAT) return;
+  const [mon, gov] = await Promise.all([fetch("/monitor").then(x=>x.json()).catch(()=>null),
+                                        fetch("/bodies").then(x => x.ok ? x.json() : null).catch(()=>null)]);
+  if (mon) PANEL.MON = mon;
+  PANEL.GOV = {}; for (const b of (gov && gov.bodies) || []) PANEL.GOV[b.name] = b;
+  const leases = {}; for (const b of (PANEL.MON && PANEL.MON.bodies) || []) leases[b.name] = b;
+  const fw = ROSTER.filter(r => r.kind === "firmware"), res = ROSTER.filter(r => r.kind !== "firmware");
+  const all = [...fw, ...res]; all.forEach((r, i) => PANEL.COL[r.name] = Math.min(23, Math.round((i + .5) * 24 / Math.max(1, all.length))));
+  const draw = (host, list) => {
+    const keep = {}; host.querySelectorAll(".station").forEach(s => keep[s.dataset.id] = s);
+    host.innerHTML = "";
+    for (const r of list){
+      const l = leases[r.name], g = PANEL.GOV[r.name];
+      const parked = g && (g.state === "parked" || g.state === "refused");
+      const seated = !!(l && l.alive) && !parked && !r.refused;
+      const d = document.createElement("div"); d.dataset.id = r.name; d.dataset.col = PANEL.COL[r.name];
+      d.className = "station" + (parked ? " parked" : seated ? "" : " socket");
+      const kind = r.kind === "firmware" ? (r.nature || "firmware").split(/[—·]/)[0].trim().slice(0, 28) : "resident";
+      const act = parked ? (g.state === "parked" ? "PARKED · " : "REFUSED · ") + (g.words || "").slice(0, 60)
+                : r.refused ? "refused at birth — " + (r.why || "") : seated ? (PANEL.ACT[r.name] || "idle") : "declared · no lease";
+      const meta = seated ? `life ${r.lives}` + (l && l.until ? ` · until ${hm(l.until)}` : "") : parked ? `life ${g.lives}` : "socket";
+      d.innerHTML = `<div class="t"><span class="lamp" id="s-${pt(r.name)}"></span><span class="n">${pt(r.name)}</span></div><div class="k">${pt(kind)}</div>` +
+                    `<div class="act">${pt(act)}</div><div class="k" style="text-transform:none;letter-spacing:0">${pt(meta)}</div>`;
+      d.title = `${r.name} — ${r.nature || kind} · ${seated ? "seated by its lease" : parked ? "parked by the kernel" : "declared, not seated"} · click to open`;
+      d.onclick = () => inspectStation(r.name);
+      host.appendChild(d);
+      lampRest("s-" + r.name, seated ? "on" : parked ? "hold" : r.refused ? "red" : "");
+      if (keep[r.name] && keep[r.name].classList.contains("lit")) d.classList.add("lit");
+    }
+  };
+  draw(document.getElementById("st-fw"), fw); draw(document.getElementById("st-res"), res);
+  panelMonitorOrgan();
+}
+function panelMonitorOrgan(){                      // the MONITOR organ and the rails' depths, from the /monitor snapshot
+  const s = PANEL.MON; if (!s) return;
+  const w = s.watches || [], red = w.filter(x => x.red).length;
+  const h = s.harness;
+  document.getElementById("o-monitor-v").textContent = w.length ? `${w.length - red}/${w.length} watches green` : "no watches yet";
+  document.getElementById("o-monitor-s").textContent = (red ? `${red} RED · ` : "") + (h ? `harness ${h.failed ? h.failed + " failed" : "green"}` : "harness not run") +
+    (PANEL.LEVERS ? ` · ${PANEL.LEVERS.length} levers` : "");
+  lampRest("l-monitor", red || (h && h.failed) ? "red" : "on");
+  const ob = s.outbox || {};
+  document.getElementById("d-relay").textContent = `outbox ${ob.pending ?? "?"} pending` + (ob.oldest_age_s != null && ob.pending ? ` · oldest ${Number(ob.oldest_age_s).toFixed(0)} s` : "");
+  const a = s.asks || {}; const inflight = (a.received || 0) + (a.routed || 0) + (a.dispatched || 0);
+  document.getElementById("d-dispatcher").textContent = `${inflight} in flight · ${a.replied || 0} replied` + (a["awaiting-confirm"] ? ` · ${a["awaiting-confirm"]} held` : "");
+  const bodies = s.bodies || [], alive = bodies.filter(b => b.alive).length;
+  document.getElementById("d-presence").textContent = `${alive} of ${bodies.length} leases alive`;
+  document.getElementById("o-ground-s").textContent = `${Object.values(a).reduce((x, y) => x + y, 0)} asks in this world` + (a["awaiting-confirm"] ? ` · ${a["awaiting-confirm"]} held at the interlock` : "");
+  document.getElementById("p-ground").textContent = `outbox ${ob.pending ?? "?"} pending · oldest ${ob.oldest_age_s != null ? Number(ob.oldest_age_s).toFixed(1) + " s" : "—"}`;
+  document.getElementById("p-monitor").textContent = `${w.length} watches read live · checks every 30 s`;
+  lampRest("l-ground", "on");
+}
+async function panelGateway(){                     // the GATEWAY organ: /minds — the Stable's minds, the gateway's answer, the spend
+  const r = await fetch("/minds").then(x=>x.json()).catch(()=>null); PANEL.MINDS = r;
+  if (!r){ document.getElementById("o-gateway-v").textContent = "no answer"; lampRest("l-gateway", "red"); return; }
+  const minds = r.minds || [], standing = minds.filter(m => m.state !== "retired");
+  const usd = minds.reduce((x, m) => x + Number((m.spend || {}).usd_today || 0), 0);
+  const ready = !!(r.gateway && r.gateway.ready);
+  document.getElementById("o-gateway-v").textContent = `${standing.length} mind${standing.length === 1 ? "" : "s"} standing`;
+  document.getElementById("o-gateway-s").textContent = ready ? "answers · every thought goes through it" : "DARK — no LLM can answer";
+  document.getElementById("p-gateway").textContent = `$${usd.toFixed(4)} spent today`;
+  lampRest("l-gateway", ready ? "on" : "red");
+}
+async function panelShelf(){                       // the SHELF organ and the tool lamps: /services
+  const r = await fetch("/services").then(x=>x.json()).catch(()=>null); PANEL.SERV = r;
+  const host = document.getElementById("tools");
+  if (!r){ document.getElementById("o-shelf-v").textContent = "no answer"; lampRest("l-shelf", "red"); return; }
+  const sv = r.services || [], tools = sv.filter(s => s.kind === "tool"), un = sv.filter(s => (s.last_health || {}).ok === false && s.state !== "retired").length;
+  const by = {}; for (const s of sv) by[s.kind] = (by[s.kind] || 0) + 1;
+  document.getElementById("o-shelf-v").textContent = `${tools.length} tool${tools.length === 1 ? "" : "s"}`;
+  document.getElementById("o-shelf-s").textContent = Object.entries(by).filter(([k]) => k !== "tool").map(([k, n]) => `${n} ${k}`).join(" · ") + (un ? ` · ${un} unhealthy` : "");
+  document.getElementById("p-shelf").textContent = `${sv.filter(s => s.state === "retired").length} retired · tool hops: panel sp2`;
+  lampRest("l-shelf", un ? "red" : "on");
+  host.innerHTML = "";
+  for (const s of tools){
+    const c = ((s.manifest || {}).consequence || "routine");
+    const t = document.createElement("span"); t.className = "tool " + c + (s.state === "retired" ? " retired" : "") + ((s.last_health || {}).ok === false ? " unhealthy" : "");
+    t.innerHTML = `<span class="lamp" id="t-${pt(s.name)}"></span>${pt(s.name)}`;
+    t.title = `${s.name} — a ${c} tool · ${s.state}` + ((s.manifest || {}).server ? ` · through the ${s.manifest.server} MCP server` : "") + " · click to open";
+    t.onclick = () => inspectTool(s.name);
+    host.appendChild(t);
+  }
+}
+async function panelAnalyzer(){                    // the ANALYZER organ, the intent depth and the running board: /intentions · /analyzer
+  const [ints, an] = await Promise.all([fetch("/intentions").then(x=>x.json()).catch(()=>null), fetch("/analyzer").then(x=>x.json()).catch(()=>null)]);
+  PANEL.INTS = (ints && ints.intentions) || []; PANEL.ORIG = (an && an.origins) || [];
+  const standing = PANEL.INTS.filter(i => i.active !== false);
+  const objs = PANEL.ORIG.filter(o => o.kind === "objective"), obs = PANEL.ORIG.filter(o => o.kind !== "objective" && o.kind !== "intention");
+  document.getElementById("o-analyzer-v").textContent = `${standing.length} intention${standing.length === 1 ? "" : "s"} standing`;
+  document.getElementById("o-analyzer-s").textContent = `${objs.length} objective${objs.length === 1 ? "" : "s"} · ${obs.length} observation${obs.length === 1 ? "" : "s"}`;
+  document.getElementById("p-analyzer").textContent = `${PANEL.ORIG.length} origins read`;
+  const kernels = standing.filter(i => i.kind === "kernel").length;
+  document.getElementById("d-intent").textContent = standing.length ? `${standing.length} standing · ${kernels} the kernel's` : "none standing";
+  document.getElementById("d-scheduler").textContent = "lights in panel sp2";
+  lampRest("l-analyzer", an ? "on" : "red");
+  panelBoard();
+}
+function panelBoard(){                             // THE RUNNING BOARD: standing intentions, then the newest objectives — every row a door into the Analyzer
+  const box = document.getElementById("board"); const lit = {}; box.querySelectorAll(".run").forEach(r => lit[r.dataset.ref] = r.querySelector(".chain").innerHTML);
+  const ints = PANEL.ORIG.filter(o => o.kind === "intention" && o.active !== false).slice(0, 2);
+  const objs = PANEL.ORIG.filter(o => o.kind === "objective").slice(0, 4);
+  box.innerHTML = "";
+  for (const o of [...ints, ...objs]){
+    const isInt = o.kind === "intention";
+    const grp = isInt && o.serves === "resiliency" ? "resiliency" : "structural";
+    const hue = isInt ? (o.origin_kind === "kernel" || o.by === "the kernel" ? "kernel" : "human") : hueOf(o.by || o.person || "did:orreth:person:");
+    const r = document.createElement("div"); r.className = "run g-" + grp + (isInt && o.active === false ? " rested" : ""); r.dataset.ref = o.ref || ""; r.dataset.root = o.root || "";
+    const c = o.counts || {}; const hops = Object.entries(c).map(([k, n]) => `<span class="hop done">${n} ${pt(k)}${n > 1 ? "s" : ""}</span>`).join("");
+    const state = isInt ? (o.blocked ? `<span class="hop red">waiting for a crew that can act</span>` : `<span class="hop kernel">standing</span>`)
+                : o.status === "awaiting-confirm" ? `<span class="hop red">held at the interlock</span>`
+                : o.status === "replied" ? `<span class="hop done">replied</span>` : o.status === "cancelled" ? `<span class="hop done">cancelled</span>`
+                : o.status === "refused" ? `<span class="hop red">refused</span>` : `<span class="hop now">${pt(o.target || "the crew")} · ${pt(o.status || "on its way")}</span>`;
+    const out = isInt ? (o.last_outcome ? `last red: ${String(o.last_outcome).split(" — ")[0]}` : o.serves === "schedule" && o.cadence ? `${o.cadence} · ${o.runs || 0} runs` : `serves ${o.serves || "?"}`) +
+                        (o.last_at ? ` · ${hhmm(o.last_at)}` : "")
+                      : `${o.target || "any"} · ${hhmm(o.at)}`;
+    r.innerHTML = `<div class="who"><span class="lamp ${hue}" style="transition:none"></span><div><div class="w">${pt(o.words || o.note || o.ref)}</div>` +
+                  `<div class="k">${isInt ? "intention · " + pt(o.origin_kind || o.serves || "") : "objective · " + pt(whoIs(o.by || o.person || "") === "?" ? "a person" : whoIs(o.by || o.person))}</div></div></div>` +
+                  `<div class="chain">${lit[o.ref] || hops + state}</div><div class="out">${pt(out)}</div>`;
+    r.title = `${isInt ? "an intention" : "an objective"} — click to open it in the Analyzer`;
+    r.onclick = () => { BAND_OPEN = {root: o.root}; toggleBand(true); };
+    box.appendChild(r);
+  }
+}
+async function panelKinds(){                       // the marker-group chips on the sill (0006's promise): from the kernel's own vocabulary
+  const k = await fetch("/markers/kinds").then(x=>x.json()).catch(()=>({kinds: []})); PANEL.KINDS = k.kinds || [];
+  const groups = [...new Set(PANEL.KINDS.map(x => x.group))]; const host = document.getElementById("mchips"); host.innerHTML = "";
+  let off = {}; try { off = JSON.parse(localStorage.getItem("orreth.panel.groups") || "{}"); } catch (e) {}
+  for (const g of groups){
+    const b = document.createElement("button"); b.className = "mchip" + (off[g] ? "" : " lit"); b.textContent = g;
+    b.title = `${g} markers — ${PANEL.KINDS.filter(x => x.group === g).map(x => x.kind).join(" · ")} · click to dim them on the board and the tape`;
+    document.body.classList.toggle("no-" + g, !!off[g]);
+    b.onclick = () => { off[g] = !off[g]; b.classList.toggle("lit", !off[g]); document.body.classList.toggle("no-" + g, !!off[g]);
+                        try { localStorage.setItem("orreth.panel.groups", JSON.stringify(off)); } catch (e) {} };
+    host.appendChild(b);
+  }
+}
+async function panelMarkers(first){                // a marker landed: the newest sixty, diffed by id — the tape and the analyzer's lamp, in the marker's origin colour
+  const m = await fetch("/markers").then(x=>x.json()).catch(()=>null); if (!m) return;
+  const rows = m.markers || []; const groupOf = {}; for (const k of PANEL.KINDS) groupOf[k.kind] = k.group;
+  if (first || !PANEL.SEEN){ PANEL.SEEN = new Set(rows.map(r => r.id)); return; }
+  const fresh = rows.filter(r => !PANEL.SEEN.has(r.id)).reverse();
+  for (const r of fresh){
+    PANEL.SEEN.add(r.id); const hue = hueOf(r.by), grp = groupOf[r.kind] || "structural";
+    tape(`marker · ${r.kind}`, `${whoIs(r.by)} · ${(r.words || r.note || r.ref || "").slice(0, 60)}`, grp);
+    lampFlash("l-analyzer", grp === "resiliency" ? "red" : hue, 260);
+    if (r.kind === "intention" || r.kind === "observation" || r.kind === "watch-red") railLight("intent", ORGAN_COL.analyzer, ORGAN_COL.monitor, grp === "resiliency" ? "red" : hue);
+    if (r.kind === "action" || r.kind === "improvement"){ const who = NAMES[r.by]; if (who) stationLit(who, hue, `${r.kind} · ${(r.words || r.note || "").slice(0, 40)}`); }
+  }
+  if (PANEL.SEEN.size > 400) PANEL.SEEN = new Set(rows.map(r => r.id));
+}
+async function panelLevers(){ const r = await fetch("/levers").then(x => x.ok ? x.json() : null).catch(()=>null); PANEL.LEVERS = r && r.levers ? r.levers : null; }
+function panelUnseated(){                          // no seat, no doors: the panel says so in plain words and stays dark
+  for (const id of ["gateway", "shelf", "monitor", "analyzer"]){ document.getElementById(`o-${id}-v`).textContent = "take your seat"; document.getElementById(`o-${id}-s`).textContent = "the doors open to a seated person"; }
+  document.getElementById("o-ground-s").textContent = "the doors open to a seated person";
+  for (const id of ["relay", "dispatcher", "scheduler", "presence", "intent"]) document.getElementById(`d-${id}`).textContent = "—";
+}
+async function panelHydrate(){                     // the still panel, whole — on load and on a feed resync (fetch fresh through the doors)
+  panelDesk();
+  if (!SEAT){ panelUnseated(); return; }
+  await Promise.all([panelLevers(), panelGateway(), panelShelf(), panelAnalyzer(), panelKinds()]);
+  await panelStations();
+  await panelMarkers(true);
+}
+/* ---- the light: every notice on the feed is a pointer; the panel reads the fact through the door and lights what it crossed ---- */
+async function panelNotice(n){
+  const k = n.kind || "", words = plainKind(k);
+  if (k === "orreth.marker.set.v1"){ panelDebounce("markers", panelMarkers, 250); panelDebounce("analyzer", panelAnalyzer, 700); return; }
+  if (k === "orreth.watch.turned.v1"){
+    const s = await fetch("/monitor").then(x=>x.json()).catch(()=>null); if (s) PANEL.MON = s;
+    const w = s && (s.watches || []).find(x => x.watch_id === n.ref);
+    tape(words, w ? `${w.name} · ${w.state || (w.red ? "red" : "green")}` : n.ref, "resiliency");
+    lampFlash("l-monitor", w && w.red ? "red" : "on", 900); railLight("relay", ORGAN_COL.monitor, ORGAN_COL.analyzer, w && w.red ? "red" : "agent");
+    panelMonitorOrgan(); return;
+  }
+  if (k === "orreth.harness.failed.v1"){ tape(words, n.ref, "resiliency"); lampFlash("l-monitor", "red", 900); panelDebounce("stations", panelStations, 600); return; }
+  if (k === "orreth.session.opened.v1"){ tape(words, "a fresh session"); lampFlash("l-desk", "human", 220); return; }
+  if (!n.ref) return;
+  const v = await fetch("/ask/" + n.ref).then(x => x.ok ? x.json() : null).catch(()=>null); if (!v) return;
+  const c = hueOfAsk(v), name = nameOf(v), col = name === "the kernel" ? ORGAN_COL.analyzer : colOf(name);
+  if (k.includes("ask.received")){
+    tape(words, `${c === "kernel" ? "the kernel" : c === "human" ? whoIs(v.person) : whoIs(v.person)} · “${(v.text || "").slice(0, 50)}”`);
+    lampFlash("l-desk", c, 220); railLight("relay", ORGAN_COL.desk, ORGAN_COL.ground, c); lampFlash("l-ground", c, 220);
+    railLight("dispatcher", ORGAN_COL.ground, colOf(v.target || name), c);
+    if (v.target) stationLit(v.target, c, `serving “${(v.text || "").slice(0, 36)}”`);
+    hop(n.ref, v.target || "the crew", c === "human" ? "human" : c === "kernel" ? "kernel" : "now");
+    panelDebounce("analyzer", panelAnalyzer, 700); return;
+  }
+  if (k.includes("journey")){
+    const last = (v.journey || [])[v.journey.length - 1] || ""; const short = last.replace(/^[^:]+: /, "");
+    railLight("dispatcher", col, col, "agent"); stationLit(name, "agent", short.slice(0, 48)); hop(n.ref, short.slice(0, 40), "now"); return;
+  }
+  if (k.includes("confirm.needed")){
+    tape(words, `${name} · “${(v.text || "").slice(0, 40)}” · held at the interlock`);
+    lampFlash("l-desk", "red", 1400); railLight("relay", col, ORGAN_COL.desk, "red"); hop(n.ref, "held at the interlock", "red"); panelDebounce("analyzer", panelAnalyzer, 700); return;
+  }
+  if (k.includes("ask.refused")){ tape(words, `${whoIs(v.person)} · refused at the door`); lampFlash("l-desk", "red", 900); hop(n.ref, "refused", "red"); return; }
+  if (k.includes("reply")){
+    const took = v.replied_at ? secs(v.asked_at, v.replied_at) : "";
+    const kc = v.served_by === "the kernel" ? "kernel" : "agent";
+    tape(words, `${name}${took ? " · " + took : ""}${v.status === "cancelled" ? " · cancelled" : ""}`);
+    if (name === "the kernel") lampFlash("l-analyzer", "kernel", 300); else { stationLit(name, kc, `replied${took ? " · " + took : ""}`); railLight("relay", col, ORGAN_COL.desk, kc); }
+    lampFlash("l-ground", kc, 220); lampFlash("l-desk", kc, 220);
+    hop(n.ref, v.status === "cancelled" ? "cancelled" : "reply", "done"); outWords(n.ref, `${name}${took ? " · " + took : ""} · proof ${v.proof || "L1"}`);
+    panelDebounce("analyzer", panelAnalyzer, 700); panelDebounce("gateway", panelGateway, 1500); return;
+  }
+}
+/* ---- every block is a door: the inspector ---- */
+function inspOpen(){ return !document.getElementById("insp").hidden; }
+function inspClose(){ document.getElementById("insp").hidden = true; }
+function inspect(name, rows, acts){
+  document.getElementById("i-name").textContent = name;
+  const ids = ["i-kind", "i-did", "i-lease", "i-life", "i-serving", "i-meter"];
+  rows.forEach((r, i) => { document.getElementById(ids[i]).textContent = r || "—"; });
+  const box = document.getElementById("i-acts"); box.innerHTML = "";
+  for (const [label, fn, primary] of acts){ const b = document.createElement("button"); if (primary) b.className = "p"; b.textContent = label; b.onclick = fn; box.appendChild(b); }
+  document.getElementById("insp").hidden = false;
+}
+function scopeChat(name){                          // one click: the chat speaks to this body alone (a click on a resident chip widens it again)
+  SELECTED = new Set([name]); drawChips(); toggleChat(true);
+  sysline(`the chat now speaks to ${esc(name)} alone — click a resident chip on the right to widen it`);
+}
+function mention(name){ toggleChat(true); const i = document.getElementById("chat-in"); i.value = `${name}, `; i.focus(); }
+async function inspectStation(name){
+  const cr = await fetch("/crew").then(x=>x.json()).catch(()=>null); const c = cr && cr.crew.find(x => x.name === name); if (!c) return;
+  const l = ((PANEL.MON && PANEL.MON.bodies) || []).find(b => b.name === name), g = PANEL.GOV[name], p = c.placement || {};
+  const parked = g && (g.state === "parked" || g.state === "refused");
+  const acts = [["scope the chat here", () => scopeChat(name), true], ["@mention", () => mention(name)], ["its card", () => toggleCrew(true)],
+                ["where does it stand?", () => placementWords(`where does ${name} stand?`)]];
+  if (parked) acts.push(["restart it", () => serviceWords(`restart the ${name} body`)]);
+  inspect(name, [`${c.kind} · ${c.nature || ""}`.slice(0, 90), c.did, c.refused ? "refused at birth" : l && l.alive ? `alive · until ${hhmm(l.until)}` : "no lease · declared, not seated",
+                 `life ${c.lives}` + (g ? ` · ${g.state}${parked && g.words ? " — " + g.words : ""}` : "") + (p.cell ? ` · cell ${p.cell}` : ""),
+                 PANEL.ACT[name] || (c.side_a && c.side_a.asks_served ? `${c.side_a.asks_served} asks served` : "idle"),
+                 c.mind ? `${c.mind.stall || "no mind can serve"}${c.mind.last && c.mind.last.usd != null ? " · last thought $" + Number(c.mind.last.usd).toFixed(4) : ""}` : "—"], acts);
+}
+function inspectTool(name){
+  const s = ((PANEL.SERV && PANEL.SERV.services) || []).find(x => x.name === name); if (!s) return;
+  const m = s.manifest || {}, h = s.last_health;
+  const acts = [["its card", () => toggleCrew(true), true], ["check the tools", () => serviceWords("check the tools")]];
+  if (s.retirable) acts.push(["retire it → the interlock", () => retireService(s.name, s.kind)]);
+  if (s.restorable) acts.push(["restore it", () => restoreService(s.name, s.kind)]);
+  inspect(name, [`tool · ${m.consequence || "routine"}${m.server ? " · through the " + m.server + " MCP server" : ""}`, s.did, `${s.state} · since ${hhmm(s.since)}`,
+                 `v${s.version} · by ${whoIs(s.by)}`, h ? (h.ok === true ? "healthy" : h.ok === false ? "UNHEALTHY" : "not probed") + ` · ${hhmm(h.at)}` : "never probed", "tool hops: panel sp2"], acts);
+}
+function inspectOrgan(id){
+  const w = WORLD || {}, s = PANEL.MON || {}, tk = SEAT && seatToken(SEAT);
+  if (id === "desk") inspect("the desk · the gate", ["the kernel's self: who is seated, who may enroll, the join desk", w.kernel || "—",
+      PERSON ? `${whoIs(PERSON)} · ${GOVERN ? "governs" : "reads · writes"} · until ${tk ? hhmm(tk.constraints.expiry) : "?"}` : "no seat", "—", "/seat · /enroll · /join", "—"],
+      [["my seat", () => seatWords("my seat"), true], ["who is at the door?", () => deskWords("who is at the door?")], ["enroll someone", () => { toggleChat(true); const i = document.getElementById("chat-in"); i.value = "enroll "; i.focus(); }]]);
+  if (id === "ground") inspect("the ground · memory", ["every ask, reply, marker and record of this world", `${w.scope || "?"} · cell ${w.cell || "?"}` + (w.epoch ? ` · epoch ${w.epoch}` : ""), "—", "—",
+      Object.entries(s.asks || {}).map(([k, n]) => `${n} ${k}`).join(" · ") || "—", `outbox ${(s.outbox || {}).pending ?? "?"} pending`],
+      [["what world is this?", () => serviceWords("what world is this?"), true], ["list my sessions", () => sessionWords("list my sessions")]]);
+  if (id === "gateway"){ const r = PANEL.MINDS || {}; inspect("the gateway · the Stable", ["every LLM call goes through it, metered in dollars", r.gateway && r.gateway.base ? r.gateway.base : "—",
+      r.gateway && r.gateway.ready ? "answers" : "DARK", "—", (r.minds || []).map(m => `${m.name} · ${m.state}`).join(" · ") || "no minds", `$${(r.minds || []).reduce((x, m) => x + Number((m.spend || {}).usd_today || 0), 0).toFixed(4)} today`],
+      [["show the minds", () => serviceWords("show the minds"), true], ["open the monitor", () => toggleMonitor(true)]]); }
+  if (id === "shelf"){ const sv = (PANEL.SERV && PANEL.SERV.services) || []; inspect("the shelf · services", ["tool · mcp · store · source · mind — one ladder", "—", "—", "—",
+      `${sv.length} registered · ${sv.filter(x => x.state === "retired").length} retired`, "—"],
+      [["show the tools", () => serviceWords("show the tools"), true], ["check the services", () => serviceWords("check the services")]]); }
+  if (id === "monitor") inspect("the monitor", ["watches · health checks · the harness · the levers", "—", "—", "—",
+      (s.watches || []).map(x => `${x.name} ${x.red ? "RED" : "green"}`).join(" · ") || "no watches", PANEL.LEVERS ? `${PANEL.LEVERS.length} levers the kernel can pull` : "—"],
+      [["open the monitor", () => toggleMonitor(true), true], ["run the harness", () => { toggleMonitor(true); fetch("/harness/run", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({template: "librarian"})}).catch(()=>null); }]]);
+  if (id === "analyzer") inspect("the analyzer", ["everything born in the chat, by origin", "—", "—", "—",
+      PANEL.INTS.filter(i => i.active !== false).map(i => `“${(i.words || "").slice(0, 30)}”`).join(" · ") || "no intention standing", `${PANEL.ORIG.length} origins`],
+      [["open the analyzer", () => toggleBand(true), true]]);
+}
+document.querySelectorAll("#organs .organ").forEach(o => o.onclick = () => inspectOrgan(o.dataset.organ));
+document.getElementById("i-close").onclick = inspClose;
+/* ---- the sill: three soft toggles on one drawing, remembered in this browser ---- */
+(function sill(){
+  let on = {arch: true, ops: true, perf: false}; try { Object.assign(on, JSON.parse(localStorage.getItem("orreth.panel.layers") || "{}")); } catch (e) {}
+  document.querySelectorAll("#sill .tog[data-layer]").forEach(b => {
+    const L = b.dataset.layer; b.classList.toggle("lit", !!on[L]); document.body.classList.toggle(L, !!on[L]);
+    b.onclick = () => { on[L] = !on[L]; b.classList.toggle("lit", on[L]); document.body.classList.toggle(L, on[L]);
+                        try { localStorage.setItem("orreth.panel.layers", JSON.stringify(on)); } catch (e) {} };
+  });
+})();
+
 /* ---- the feed: one SSE stream, pointer-only, gap-repairing ---- */
 const pulse = document.getElementById("pulse");
 let lastRev = null;
@@ -2372,12 +2841,13 @@ function connectFeed(){
                                      loadBand(); }, 400);
     refreshPulls(); };
   src.addEventListener("delta", e => onDelta(JSON.parse(e.data)));
-  src.addEventListener("resync", () =>
-    pulse.textContent = "PULSE · resync — fetch fresh through the doors");
+  src.addEventListener("resync", () => {          // the ring moved on without this glass: the still panel is read whole again
+    pulse.textContent = "PULSE · resync — fetch fresh through the doors"; panelHydrate().catch(()=>{}); });
   src.onopen = () => pulse.textContent = "PULSE · listening" +
     (lastRev ? " · rev " + lastRev : "");
   src.onerror = () => pulse.textContent = "PULSE · reconnecting…";
 }
+panelHydrate().catch(()=>{});            /* row 4: the still panel, read through the doors */
 connectFeed();
 toggleChat(true);            /* the chat greets you (profile setting later) */
 </script>
