@@ -1664,12 +1664,45 @@ approved (covenant rule 9).
            doors the feed already announces; feed-driven refresh makes a
            quiet window cost nothing and the per-person ceiling generous by
            construction.
-        5. **One rig per test session — the next test-infrastructure
-           spoonful (with row 3b, whose desk adds proofs).** Each module
-           lights ten bodies and probes eleven services before its first
-           test; the Python suite is six to seven minutes mostly for that.
-           Shared rig, the shelf probe skipped under test: the suite runs
-           before every commit.
+        5. **One rig per test session** ✅ **BUILT 2026-09-27 (its own
+           session, as locked).** The suite lit a whole rig per test FILE —
+           eighteen boots a run, each ten bodies joined, the shelf seeded
+           and probed, MITL acquiring the canon (nine seconds of load
+           behind the tests that followed) and four seconds to stop. Now
+           ONE rig per session, lit at the first test that asks for it and
+           stopped whole at the end. THE RIG YIELDS: a session rig was
+           tried once before (2026-09-17) and stole every self-serving
+           test's commands off the benches — its crew poll the same queues,
+           by name — so every test that does not ask for the rig parks it
+           first (`BridgeRig.park`: the dispatcher passes every fact by,
+           the crew leave the benches, the schedule and intent beats hold;
+           a park waits for every loop's word, at most a second) and
+           `resume` wakes it for the next test that asks; a test's aim (a
+           seat's mind set by hand) is undone after the test. THE
+           MEASUREMENT corrected the lock's premise: the shelf probe was
+           not the cost (once a session it is under a second, and the shelf
+           test proves the boot probe, so it stays); the one rig took the
+           run from 6 min 40 s to 5 min 37 s, and the rest was the
+           test-side dispatcher — `projector.run_once` waited out eight
+           seconds of SILENCE on every call, about thirty calls a run, for
+           facts the sink had flushed before the call was made. Cured:
+           `run_once` ends at the topic's END (every assigned partition
+           read to its high watermark, then one empty poll); the silence
+           window stays only as the fallback for a consumer the broker
+           never assigns. The first whole run also found seven assertions
+           that W73 (the hold's args on the ask view, 2026-09-27) had
+           broken the day before — CI red since f20e76d, unseen because
+           only the touched laws had been run — fixed the way test_proof
+           was. The fourth whole run found **W77** (a wound of the gate,
+           row 3a, one run in four): a POST the gate refuses was answered
+           BEFORE its bytes were read, and a door that closes on unread
+           bytes is a connection reset on the knocker's side — the 401's
+           words lost; cured in the reference glass (the bytes are drained
+           first, held unparsed, never read FOR the gate; the Rust kernel's
+           hyper drains on its own). Suite: 831 passed, five whole runs
+           green, 2 min 56 s at best and 4 min 36 s under the Mac's load
+           (was 7 failed · 824 passed in 6 min 40 s). The suite runs before
+           every commit.
         6. **Root rotation as a rite — with the identity row (the seed
            `seeds/identity-layer-and-the-seat.md`).** The kernel's self is
            one seed file; every seat and every seam pin chains to it. 0006's

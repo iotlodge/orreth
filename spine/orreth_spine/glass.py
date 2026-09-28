@@ -12,6 +12,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the cell's topics · the /world door · the home settled at light · 2026-09-25
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the profile doors (W58) · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (a): every door reads the person from the SEAT, never the body; the origin closed; the knock ceiling at every door; the seat doors · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 lock 5, one rig per test session: THE RIG YIELDS (`park` · `resume`); W77 a refused POST drains its bytes first · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: the shelf's restore door routes every kind through stable.restore_mind — one restore law · 2026-09-27
 """The glass server v0 (canon 0001): the one place a human connects.
 
@@ -703,13 +704,16 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
 
         def do_POST(self):
             path = self.path.split("?")[0]
-            who, answered = self._admit("POST")      # P7 sp8 row 3: the gate, BEFORE the body is read
+            ln = int(self.headers.get("content-length") or 0)
+            raw = self.rfile.read(ln) if ln > 0 else b""   # W77 (lock 5's whole run, 2026-09-27): the bytes are DRAINED
+            # before the gate answers — a refusal that closes the door on unread bytes is a connection reset on
+            # the knocker's side, not the 401 the gate meant (one run in four lost the refusal's words to it).
+            who, answered = self._admit("POST")      # P7 sp8 row 3: the gate — the body is held unparsed, never read FOR it
             if answered:
                 return
             person = who["person"] if who else None  # the seat's person — never the body's word
-            ln = int(self.headers.get("content-length") or 0)
             try:
-                p = json.loads(self.rfile.read(ln) or b"{}")
+                p = json.loads(raw or b"{}")
             except Exception:
                 p = {}
             if path == "/seat":                       # P7 sp8 row 3: THE SEAT — the person's code from their authenticator; the token back
@@ -1055,6 +1059,19 @@ class BridgeRig:
         spine = Path(__file__).resolve().parents[1]
         self.dsn = dsn or PG_DSN
         self._stop = threading.Event()
+        # lock 5 (2026-09-27): THE RIG YIELDS. A test session lights ONE rig; a test
+        # that serves its own bodies on the session's benches asks it to `park()`:
+        # the dispatcher passes every fact by, the crew leave the benches, the
+        # schedule and intent loops hold their beats — and `resume()` wakes them.
+        # Every yielding loop signs in (`_pausable`) and signs its park (`_parked`,
+        # stamped with the park's generation) so park() returns only when no loop
+        # of this rig can still take a command — a stale signature from an earlier
+        # park never counts.
+        self._park = threading.Event()
+        self._park_gen = 0
+        self._pausable: set[str] = set()
+        self._parked: dict[str, int] = {}
+        self._park_lock = threading.Lock()
         self.feed = bridgefeed.Feed()
         self.gateway = gateway                       # P6.5 sp1: the mind the shelf probes
         from .identity import Identity
@@ -1143,7 +1160,7 @@ class BridgeRig:
                     dispatch.run_dispatcher(
                         conn, consumer="glass-dispatcher", group=gid,
                         stop=self._stop, ready=self.dispatcher_ready,
-                        offset="earliest")  # no produce/assign race:
+                        offset="earliest", pause=self._park)  # no produce/assign race:
                     # replay is cheap (skips) and re-serves refuse
                 except Exception:
                     time.sleep(0.5)
@@ -1168,7 +1185,10 @@ class BridgeRig:
                     time.sleep(0.3)
             next_beat = time.monotonic() + self._tool_check_s()
             next_stable = time.monotonic() + self._mind_check_s()
+            self._sign_in("schedule")
             while not self._stop.is_set():
+                if self._yielding("schedule"):
+                    continue
                 try:
                     scheduler.tick(conn, bodies)
                 except Exception:
@@ -1179,7 +1199,7 @@ class BridgeRig:
                 if time.monotonic() >= next_stable:   # P6.5 sp3: the Stable keeper's beat — every mind
                     next_stable = time.monotonic() + self._mind_check_s()   # pinged, the market's eyes,
                     self._stable_beat(conn)           # drift · EOL · drained · strikes → proposals
-                time.sleep(5)
+                self._nap(5)
 
     @staticmethod
     def _tool_check_s() -> float:
@@ -1293,12 +1313,15 @@ class BridgeRig:
                         print(f"the intent rail could not declare at boot: {type(e).__name__}: {e}",
                               file=sys.stderr, flush=True)
                     time.sleep(0.3)
+            self._sign_in("intent")
             while not self._stop.is_set():
+                if self._yielding("intent"):
+                    continue
                 try:
                     intent.turn(conn)
                 except Exception:
                     pass
-                time.sleep(3)
+                self._nap(3)
 
     def _serve_loop(self, resident):
         with psycopg.connect(self.dsn, autocommit=True) as conn:
@@ -1324,13 +1347,77 @@ class BridgeRig:
                 except Exception as e:      # a body that cannot read the canon
                     print(f"mitl could not acquire the ontology: {type(e).__name__}: {e}",
                           file=sys.stderr, flush=True)      # still serves — and says so
+            self._sign_in(f"serve:{resident.name}")
             while not self._stop.is_set():
+                if self._yielding(f"serve:{resident.name}"):
+                    continue                # lock 5: the bench is a test's while the rig yields
                 try:
                     presence.renew(conn, resident.identity.did, resident.name,
                                    resident.kind)         # M2: alive while I serve
                     resident.serve_once(conn, idle_s=1.0, max_commands=50)
                 except Exception:
                     pass
+
+    # ---- lock 5: THE RIG YIELDS ---------------------------------------------------------
+    # One rig per test session (canon 0005, JB's lock 5, 2026-09-27). The suite
+    # once lit a whole rig per test file — ten bodies joined, the shelf seeded and
+    # probed, MITL acquiring the canon — eighteen times a run; the session-wide
+    # rig that was tried first stole every self-serving test's commands off the
+    # benches (its crew poll the same queues, by name). So the one rig YIELDS: a
+    # test that serves its own bodies parks it, and while parked the rig takes
+    # nothing from the session — the dispatcher passes facts by, the crew stand
+    # off the benches, no beat files an ask or a duty. The relay keeps relaying
+    # (a committed fact reaching its topic is never the rig's to withhold) and
+    # the doors stay open (a door answers from the ground, not the benches).
+
+    def _nap(self, seconds: float) -> None:
+        """A beat's rest that ends early at a park or a stop — so parking
+        never waits out a five-second beat, and neither does stop()."""
+        end = time.monotonic() + seconds
+        while time.monotonic() < end and not self._park.is_set() and not self._stop.is_set():
+            time.sleep(0.05)
+
+    def _sign_in(self, who: str) -> None:
+        with self._park_lock:
+            self._pausable.add(who)
+
+    def _yielding(self, who: str) -> bool:
+        """True when this loop sat out a park: it signs its park, waits for
+        `resume()` (or the rig's stop), then signs back in."""
+        if not self._park.is_set():
+            return False
+        while self._park.is_set() and not self._stop.is_set():
+            with self._park_lock:
+                self._parked[who] = self._park_gen   # this park's generation, re-signed each turn
+            time.sleep(0.02)
+        with self._park_lock:
+            self._parked.pop(who, None)
+        return True
+
+    def park(self, timeout_s: float = 15.0) -> bool:
+        """The rig yields the benches: returns once every loop that signed
+        in has signed its park (a serving crew member finishes its poll
+        first — up to a second), False if one never did."""
+        with self._park_lock:
+            self._park_gen += 1
+            gen = self._park_gen
+        self._park.set()
+        end = time.monotonic() + timeout_s
+        while time.monotonic() < end:
+            with self._park_lock:
+                if all(self._parked.get(w) == gen for w in self._pausable):
+                    return True
+            time.sleep(0.02)
+        return False
+
+    def resume(self) -> None:
+        """The benches are the rig's again; every parked loop wakes within
+        a few hundredths of a second."""
+        self._park.clear()
+
+    @property
+    def parked(self) -> bool:
+        return self._park.is_set()
 
     def _sweep_benches(self) -> None:
         """Operator's act at the rig's own start: clear THIS world's

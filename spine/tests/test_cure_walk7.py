@@ -401,6 +401,7 @@ def test_w5_the_stop_of_any_intention_asks_for_the_code_first(pg, monkeypatch):
                                    args={"intention_id": h["intention_id"]}, level=pr.value.level,
                                    needs_code=pr.value.needs_code)
     v = glass.ask_view(pg, ask_id)
+    assert v["hold"].pop("args") == {"intention_id": h["intention_id"]}                # W73: the act's args ride the view
     assert v["hold"] == {"tool": "intent.stop", "class": "grave", "level": "L3-code"}   # the level IS the code
     assert "This needs your code" in v["reply"]
     with pytest.raises(proof.NotConfirmed):                                           # a wrong code: one face

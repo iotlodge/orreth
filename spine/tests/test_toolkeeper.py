@@ -245,6 +245,7 @@ def test_the_keeper_proposes_after_n_strikes_and_never_retires_alone(pg, monkeyp
     assert (p["name"], p["kind"], p["strikes"]) == ("echo", "tool", 3)
     v = glass.ask_view(pg, p["held"])
     assert v["status"] == "awaiting-confirm" and v["served_by"] == "the kernel" and v["person"] == keeper.identity.did
+    assert v["hold"].pop("args") == {"name": "echo"}                                   # W73: the act's args ride the view
     assert v["hold"] == {"tool": "service.retire", "class": "consequential", "level": "L2"}
     assert v["text"] == ("the toolkeeper proposes retiring the echo tool — unhealthy across 3 checks in a row "
                          "(gone from the server's list)")
@@ -296,6 +297,7 @@ def test_the_keeper_thinks_through_the_gateway_and_its_register_holds_while_chec
         [a1] = dispatch.submit_ask(pg, f"toolkeeper, add the MCP server at {REF}", person=ME, to=["toolkeeper"], session=ses)
         _serve(pg, keeper, a1)
         v = glass.ask_view(pg, a1)
+        assert v["hold"].pop("args") == {"action": "register", "locator": REF, "name": "clock"}   # W73: the act's args ride the view
         assert v["status"] == "awaiting-confirm" and v["hold"] == {"tool": "services", "class": "consequential", "level": "L2"}
         assert services.get(pg, "clock") is None                        # held: nothing registered yet
         keeper._serve_conn = pg

@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp3, a body never confirms (one face) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W5 · W12 · W19 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the dispatcher listens on the cell's topic · 2026-09-25
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 lock 5, the standing dispatcher can be asked to pause (the rig yields) · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W64: the asker's right code files a second confirm-needed notice (step master) — the master's road to the ask · W69: the word at the interlock is the asker's own or a governing seat's · 2026-09-27
 """The ask road (canon 0002's chain, in miniature): ONE write path.
 
@@ -363,14 +364,17 @@ def dispatch_once(conn, *, consumer: str, group: str,
 
 def run_dispatcher(conn, *, consumer: str, group: str, stop,
                    rabbit_url: str | None = None, ready=None,
-                   offset: str = "latest") -> None:
+                   offset: str = "latest", pause=None) -> None:
     """The standing dispatcher (the rig's shape): one consumer for its
     whole life, dispatching only its own world's NEW facts (latest —
     a rig dispatches what happens while it lives; another world's facts
-    cost nothing)."""
+    cost nothing). `pause` (lock 5: the rig yields) is an Event; while it
+    is set every fact is passed by as not ours — a test serving its own
+    bodies dispatches for itself."""
     projector.run_forever(
         conn, group=group, topics=[_topic(ASK_RECEIVED)], consumer_name=consumer,
         apply=lambda _cur, env: publish_command(_command_for(env),
                                                 rabbit_url),
-        skip=lambda env: env.get("scope_path") != ev.scope(),
+        skip=lambda env: (pause is not None and pause.is_set())
+        or env.get("scope_path") != ev.scope(),
         stop=stop, ready=ready, offset=offset)

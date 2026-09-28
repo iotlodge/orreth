@@ -173,6 +173,7 @@ def test_retire_is_held_then_rested_never_deleted_and_restore_is_a_new_fact(pg, 
     held = services.hold_retire(pg, "weather", person=ME, session=ses)
     v = glass.ask_view(pg, held)
     assert v["status"] == "awaiting-confirm" and v["served_by"] == "the kernel"
+    assert v["hold"].pop("args") == {"name": "weather"}                                # W73: the act's args ride the view
     assert v["hold"] == {"tool": "service.retire", "class": "consequential", "level": "L2"}
     assert v["reply"] == ("Are you sure? Retiring the weather tool is consequential — it is recorded, and "
                           "you can restore it later. Cancel is the default; a deliberate click confirms.")

@@ -173,6 +173,7 @@ def test_a_drained_lease_speaks_in_words_and_the_keeper_proposes_a_refill_the_hu
     assert (p["kind"], p["name"]) == ("refill", "librarian")
     v = glass.ask_view(pg, p["held"])
     assert v["status"] == "awaiting-confirm" and v["served_by"] == "the kernel" and v["person"] == keeper.identity.did
+    assert v["hold"].pop("args") == {"did": did, "name": "librarian", "usd": 1.0}      # W73: the act's args ride the view
     assert v["hold"] == {"tool": stable.REFILL_TOOL, "class": "consequential", "level": "L2"}
     assert v["text"] == "the stablekeeper proposes refilling librarian by $1 — its allowance is spent and it cannot think"
     assert stable.keeper_beat(pg, keeper=keeper.identity.did, gateway=gw, gw=gw.stable)["proposed"] == []   # one waits
@@ -306,6 +307,8 @@ def test_the_keepers_tool_holds_what_is_consequential_and_names_the_act(pg, fake
     [a1] = dispatch.submit_ask(pg, "stablekeeper, add the mind ollama llama3.2 as llama", person=ME, to=["stablekeeper"], session=ses)
     _serve(pg, keeper, a1)
     v = glass.ask_view(pg, a1)
+    assert v["hold"].pop("args") == {"action": "register", "klass": "fast", "model": "llama3.2",
+                                     "name": "llama", "provider": "ollama"}            # W73: the act's args ride the view
     assert v["status"] == "awaiting-confirm" and v["hold"] == {"tool": "minds", "class": "consequential", "level": "L2"}
     assert v["reply"] == ("Are you sure? Adding the llama LLM (ollama llama3.2) to the Stable and the gateway is consequential — "
                           "it is recorded, and you can rest it later. Cancel is the default; a deliberate click confirms.")

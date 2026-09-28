@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P1 sp2, the events shadow (M4-lite) · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 lock 5: run_once ends at the topic's end, never by waiting out a silence · 2026-09-27
 """The projector (canon 0002 · 0003): a consumer that folds committed
 facts into a rebuildable read model.
 
@@ -99,13 +100,40 @@ def run_forever(conn, *, group: str, topics: list[str], consumer_name: str,
         cons.close()
 
 
+def _caught_up(cons) -> bool:
+    """True once every assigned partition has been read to its end (the
+    high watermark): the fresh group's replay is over and nothing waits.
+    Lock 5 (2026-09-27): this is the honest end of a run_once — the
+    suite's every test-side dispatch used to wait out `idle_s` of
+    silence (8 s × ~30 calls: most of the suite's minutes, measured), for
+    facts a synchronous sink had long since flushed to the topic."""
+    tps = cons.assignment()
+    if not tps:
+        return False                       # not joined yet: nothing is known
+    try:
+        for tp in tps:
+            low, high = cons.get_watermark_offsets(tp, timeout=1.0)
+            if high <= low:
+                continue                   # an empty partition: nothing to read
+            pos = cons.position([tp])[0].offset
+            if pos < 0 or pos < high:
+                return False               # not yet fetched, or behind the end
+        return True
+    except Exception:                      # noqa: BLE001 — unknown is not caught up
+        return False
+
+
 def run_once(conn, *, group: str, topics: list[str], consumer_name: str,
              apply, bootstrap: str | None = None, max_messages: int = 500,
              idle_s: float = 8.0, skip=None) -> dict:
-    """Consume until idle or the cap: for each message decode → apply
-    through the durable inbox (`apply(cur, env)` is the read-model
-    effect) → commit the offset ONLY after the database has. Returns the
-    honest tally: applied, absorbed (duplicate/stale), parked."""
+    """Consume until the topic's end, the cap, or `idle_s` of silence:
+    for each message decode → apply through the durable inbox
+    (`apply(cur, env)` is the read-model effect) → commit the offset ONLY
+    after the database has. Returns the honest tally: applied, absorbed
+    (duplicate/stale), parked. The end of the topic (every assigned
+    partition read to its high watermark, then one empty poll) ends the
+    call; `idle_s` is the fallback for a consumer the broker never
+    assigns."""
     ensure_schema(conn)
     inbox.ensure_schema(conn)
     cons = Consumer({
@@ -121,7 +149,11 @@ def run_once(conn, *, group: str, topics: list[str], consumer_name: str,
         seen = 0
         while time.monotonic() < deadline and seen < max_messages:
             msg = cons.poll(0.5)
-            if msg is None or msg.error():
+            if msg is None:
+                if _caught_up(cons):       # lock 5: read to the end — done, not "quiet for 8 s"
+                    break
+                continue
+            if msg.error():
                 continue
             deadline = time.monotonic() + idle_s
             try:

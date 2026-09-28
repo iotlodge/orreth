@@ -105,6 +105,7 @@ def test_w20_a_rested_intention_is_restarted_through_the_stops_ladder_and_the_st
                                    args={"intention_id": h["intention_id"]}, level=pr.value.level,
                                    needs_code=pr.value.needs_code)
     v = glass.ask_view(pg, ask_id)
+    assert v["hold"].pop("args") == {"intention_id": h["intention_id"]}                # W73: the act's args ride the view
     assert v["hold"] == {"tool": "intent.restart", "class": "grave", "level": "L3-code"}
     assert "cannot be undone" not in v["reply"] and "you can rest it later" in v["reply"]   # W23 at L3 too
     with pytest.raises(proof.NotConfirmed):                                         # a wrong code: one face

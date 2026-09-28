@@ -19,8 +19,19 @@ names itself and exits non-zero.
 ## Test the laws
 
 ```bash
-uv run pytest -q              # envelope laws — no brokers needed (CI runs these)
+scripts/dev.sh suite          # the whole suite (831 laws, three to five minutes) — the rig up, no Bridge or kernel lit
+uv run pytest -q tests/test_envelope.py   # the envelope laws alone need no rails
 ```
+
+ONE rig for the whole session (canon 0005, lock 5, 2026-09-27): `tests/conftest.py`
+lights it at the first test that asks for `rig` and stops it whole at the end. A test
+that serves its own bodies on the session's benches never races that rig's crew,
+because THE RIG YIELDS — every test that does not ask for `rig` parks it for its turn
+(`BridgeRig.park`: the dispatcher passes every fact by, the crew stand off the
+benches, the beats hold) and the next test that asks resumes it. The test-side
+dispatcher (`dispatch_once` → `projector.run_once`) ends when the topic is read to its
+end, never by waiting out a silence. A Bridge or a Rust kernel lit beside the suite
+poisons it (the stale-rig law; `dev.sh suite` refuses to start).
 
 ## What lives here (so far)
 
