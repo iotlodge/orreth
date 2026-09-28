@@ -1956,6 +1956,19 @@ approved (covenant rule 9).
       July's `v0.1.0-universe-runs`; demo.orreth.ai and docs.orreth.ai stay
       FROZEN until JB says otherwise. Then JB walks the P3–P6 specs against
       the Rust kernel alone. One to two sessions.
+      **JB's lock, 2026-09-28 (after walk #20), BEFORE main is replaced:
+      THE MAIN VIEWPORT.** Replacing main drops a great deal the old world had
+      built, so the bridge's main view must first become a LIVE, soft-toggled,
+      LED-style monitoring display of the active kernel as it stands — the
+      kernel and its operations SEEN through the markers and the rails as they
+      operate (the intention → objective → thought chain, the watches, the
+      levers pulled, the outcomes attributed, the bodies' lives), never a page
+      that polls a document. JB: "since we've started this view has been
+      rather lacking … continuity is really starting to come together";
+      determine how feasible it is to see the kernel through its markers and
+      rails, then build it as row 4's "glass driven by the feed" grown into
+      the viewport. Ancestors: the console orrery north star, the Commander
+      correction (command-first · ≤2 clicks · density · alive), W70 · W76.
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the
