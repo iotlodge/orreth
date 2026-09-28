@@ -1969,6 +1969,72 @@ approved (covenant rule 9).
       rails, then build it as row 4's "glass driven by the feed" grown into
       the viewport. Ancestors: the console orrery north star, the Commander
       correction (command-first · ≤2 clicks · density · alive), W70 · W76.
+      **JB's lock, 2026-09-28 (the feasibility read, same day): THE PANEL —
+      ONE viewport, replacing Brain and Orrery.** JB's direction: with Orreth
+      a kernel with firmware and residents across vast deployments, one
+      viewport, not two; the Brain and the Orrery moved continuously and
+      told neither the state of the ARCHITECTURE (what is built, running,
+      offline) nor the state of OPERATIONS (human intentions and objectives ·
+      agent intentions, observations, thoughts) nor PERFORMANCE. His seed was
+      a living circuit board (organs and bodies as chips, tools as small
+      chips off the Tools chip); Fable's read found the closer cousin in the
+      kernel's own words — the control room's MIMIC PANEL, the signal box:
+      rails · benches · doors · seats · holds · parks · the interlock · the
+      lever frame (row 3c built the lever frame). Locked as **THE PANEL**
+      (the sill's name), three laws:
+      1. **Geometry is architecture.** Every block's place comes from a
+         declaration and never moves: the six ORGANS (desk · ground · gateway
+         · shelf · monitor · analyzer) are the kernel's fixed slots, always
+         seated; the crew seats of `crew.v0.json` are SOCKETS — a body with a
+         lease is a chip in its socket, declared-without-a-lease a dashed
+         empty socket, parked sits amber; tools are small lamps under the
+         shelf; levers hang off the monitor; a cell is a sibling panel. A
+         body declared in the workspace is a socket the moment it is
+         declared and lights when spawned — the view adapts to the
+         architecture as agents are built, run, and go offline.
+      2. **Light is operations.** The five firmware-rails (0004: relay ·
+         dispatcher · scheduler · presence · intent) are five TRACKS; a fact
+         lights the segments it crosses and the station it reaches, then
+         decays. Nothing orbits, nothing drifts; a quiet kernel is a dark,
+         still panel that costs nothing to draw (the feed law, item 4).
+         COLOUR IS ORIGIN: amber a person's word · cyan a body's act · violet
+         the kernel's own · red a watch or a hold — the human/machine share of
+         what is happening, read at a glance. Under the schematic, THE
+         RUNNING BOARD: the intention → objective → thought → action chain as
+         rows — the marker tree the analyzer already serves, live.
+      3. **Three soft toggles on one drawing, never three views.** The sill's
+         ORRERY · BRAIN · ATLAS becomes ARCHITECTURE · OPERATIONS ·
+         PERFORMANCE (any combination lit) plus the marker-group chips 0006
+         promised the main viewport; the PERFORMANCE layer overlays the
+         meter, the pool, per-door p50/p95, bench depth and outbox age on the
+         same blocks. Every block is a door: click a station and the
+         inspector opens in place (kind · DID · lease · life · serving ·
+         meter), sets chat scope in one click, and its timeline is the
+         marker ancestry. No eye candy (0001 "no surface exists for eye
+         candy") — every lamp is a fact.
+      **The feasibility read (Fable, 2026-09-28).** LIVE TODAY: the feed is
+      SSE with `Last-Event-ID` replay (`bridge.rs` `feed_door`) and already
+      carries marker.set · ask.received · journey · reply · confirm.needed ·
+      watch.turned · harness.failed · session.opened; the marker doors give
+      tree · ancestry · stream — the chain is queryable now. ONE LINE AWAY:
+      the feed tails only nine topics (`asks.rs` `FEED_TOPICS`); body.parked ·
+      heartbeat · intention.* · service.* · mind.* (incl. fueled) ·
+      memory.landed · tool.called · seat.* · join.* are minted to the rails
+      and never reach the glass. MISSING: a LEVER-PULLED fact (levers are
+      data + doors, not events) · a LEASE-LAPSE fact (presence is polled
+      state) · per-door latency (item 3) · doors for tools · cells · the
+      gateway (today via `/minds` · `/world` · `/monitor`) · the drawing
+      surface itself (`#space` draws a one-shot starfield). The glass is one
+      file, no foreign JS; the panel needs none. Concept sketch (scripted
+      feed, real names): https://claude.ai/artifact/4s5u4biCd3pGF7beJkczGY
+      **Build, in three spoonfuls:** **panel sp1** the skeleton in `#space`
+      (declarations → geometry, the three toggles, the inspector, handlers
+      for what is live today; the sill reads THE PANEL) · **panel sp2** widen
+      the feed topics + the lever-pulled and lease-lapse facts, light the
+      presence track, the shelf lamps, the desk and the meter · **panel sp3**
+      the PERFORMANCE layer once the pool and per-door latency land; replay
+      later by scrubbing the feed's ring. Two to three sessions; the first
+      screenshot is the article campaign's hero.
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the
