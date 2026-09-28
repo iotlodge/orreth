@@ -384,6 +384,42 @@ def changes_announced(conn) -> dict:
             "silent": silent}
 
 
+def reds_answered(conn, *, minutes: int = 2) -> dict:
+    """P7 sp8 row 3c, THE ELEVENTH (W72's cure — the drift harness grades
+    the remediation rail): every red older than `minutes` under an
+    intention has its story — a lever pulled, a hold at the interlock,
+    or the human told with the dossier — and every red that went green
+    has its outcome attributed (cured with its cause, self-healed, or
+    handed on). A red nobody answered, or a green nobody attributed, is
+    the wound named here."""
+    from . import intent
+    intent.ensure_schema(conn)
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT t.turn_id, w.name, t.lever, t.lever_ask, t.outcome, w.last_ok, t.at"
+        " FROM spine_intent_turns t JOIN spine_watches w ON w.watch_id = t.watch"
+        " WHERE w.scope = %s AND t.watch IS NOT NULL ORDER BY t.at", (ev.scope(),))
+    unanswered, unattributed, answered, attributed = [], [], 0, 0
+    for tid, name, lever, lask, outcome, last_ok, at in cur.fetchall():
+        if outcome is not None:
+            attributed += 1
+            continue
+        cur.execute("SELECT count(*) FROM spine_intent_turns WHERE turn_id = %s AND at < now() - make_interval(mins => %s)",
+                    (tid, int(minutes)))
+        old = bool(cur.fetchone()[0])
+        if lever is None and old:
+            unanswered.append(name)
+        elif lever is not None:
+            answered += 1
+        if last_ok and old:
+            unattributed.append(name)
+    detail = (f"{attributed} attributed · {answered} answered, open"
+              + (f" · unanswered past {minutes} min: {', '.join(unanswered)}" if unanswered else "")
+              + (f" · green without a word: {', '.join(unattributed)}" if unattributed else ""))
+    return {"name": "every red is answered and every green attributed", "ok": not unanswered and not unattributed,
+            "detail": detail, "unanswered": unanswered, "unattributed": unattributed}
+
+
 def checks(conn) -> list[dict]:
     """Every world check, read off the ground — the harness door lists
     them; a failed check is a wound named in words."""
@@ -394,4 +430,5 @@ def checks(conn) -> list[dict]:
     return [duty_answered(conn), offers_are_holds(conn), services_healthy(conn),
             mcp_servers_answer(conn), keeper_proposes(conn),
             minds_answer(conn), gateway_holds(conn), meter_agrees(conn), changes_announced(conn),
-            cells.sealed(conn)]                      # P7 sp7: the TENTH — this cell's role reaches no other database
+            cells.sealed(conn),                      # P7 sp7: the TENTH — this cell's role reaches no other database
+            reds_answered(conn)]                     # P7 sp8 row 3c: the ELEVENTH — the remediation rail graded

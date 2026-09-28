@@ -411,7 +411,64 @@ pub async fn changes_announced(g: &Ground) -> Result<Value, RoadError> {
               "silent": silent}))
 }
 
-/// Every world check, read off the ground — the harness door lists them (ten, as the reference's).
+/// P7 sp8 row 3c, THE ELEVENTH (W72's cure — the drift harness grades the
+/// remediation rail): every red older than `minutes` under an intention has
+/// its story (a lever pulled, a hold at the interlock, or the human told with
+/// the dossier), and every red that went green has its outcome attributed.
+pub async fn reds_answered(g: &Ground, scope: &str, minutes: i64) -> Result<Value, RoadError> {
+    let rows = g
+        .client()
+        .query(
+            "SELECT t.turn_id, w.name, t.lever, t.outcome, w.last_ok, t.at < now() - make_interval(mins => \
+             $2::int) FROM spine_intent_turns t JOIN spine_watches w ON w.watch_id = t.watch WHERE w.scope = \
+             $1 AND t.watch IS NOT NULL ORDER BY t.at",
+            &[&scope, &(minutes as i32)],
+        )
+        .await?;
+    let (mut unanswered, mut unattributed, mut answered, mut attributed) =
+        (Vec::new(), Vec::new(), 0, 0);
+    for r in rows {
+        let (name, lever, outcome, last_ok, old): (
+            String,
+            Option<String>,
+            Option<String>,
+            Option<bool>,
+            bool,
+        ) = (r.get(1), r.get(2), r.get(3), r.get(4), r.get(5));
+        if outcome.is_some() {
+            attributed += 1;
+            continue;
+        }
+        if lever.is_none() && old {
+            unanswered.push(name.clone());
+        } else if lever.is_some() {
+            answered += 1;
+        }
+        if last_ok == Some(true) && old {
+            unattributed.push(name);
+        }
+    }
+    let mut detail = format!("{attributed} attributed · {answered} answered, open");
+    if !unanswered.is_empty() {
+        detail.push_str(&format!(
+            " · unanswered past {minutes} min: {}",
+            unanswered.join(", ")
+        ));
+    }
+    if !unattributed.is_empty() {
+        detail.push_str(&format!(
+            " · green without a word: {}",
+            unattributed.join(", ")
+        ));
+    }
+    Ok(
+        json!({"name": "every red is answered and every green attributed",
+              "ok": unanswered.is_empty() && unattributed.is_empty(), "detail": detail,
+              "unanswered": unanswered, "unattributed": unattributed}),
+    )
+}
+
+/// Every world check, read off the ground — the harness door lists them (eleven, as the reference's).
 pub async fn checks(g: &Ground, scope: &str, gw: &Gateway) -> Result<Vec<Value>, RoadError> {
     Ok(vec![
         duty_answered(g, scope).await?,
@@ -424,6 +481,7 @@ pub async fn checks(g: &Ground, scope: &str, gw: &Gateway) -> Result<Vec<Value>,
         meter_agrees(g, scope, gw).await?,
         changes_announced(g).await?,
         crate::cells_live::sealed(g).await?, // P7 sp7: the TENTH — this cell's role reaches no other database
+        reds_answered(g, scope, 2).await?, // P7 sp8 row 3c: the ELEVENTH — the remediation rail graded
     ])
 }
 

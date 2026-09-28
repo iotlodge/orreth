@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the stop and the restart · `declared` · the loop (interested · plan · on_marker · due · file · hear · turn) · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures: W35 a stop asked is a stop held · W37 a duplicate purpose named at the door · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, THE REMEDIATION RAIL: the forensic turn · the lever road · the attributed outcome · 2026-09-27
 //! Intentions on the ground — the row half of `orreth_spine.intent` (0007):
 //! an intention declared at the door lands as its row, its ROOT marker, its
 //! own session (where its objectives show) and its fact, in one transaction;
@@ -200,8 +201,10 @@ pub async fn listing(
                 "SELECT {COLS}, (SELECT count(*) FROM spine_markers c WHERE c.parent = i.marker \
                  AND c.kind = 'objective'), (SELECT count(*) FROM spine_markers c WHERE c.parent \
                  = i.marker   AND c.kind NOT IN ('objective', 'thought')), (SELECT count(*) FROM \
-                 spine_intent_turns t WHERE t.intention_id = i.intention_id) FROM spine_intentions \
-                 i WHERE i.scope = $1 AND ($2::text IS NULL OR i.serves = $2) AND ($3::text IS \
+                 spine_intent_turns t WHERE t.intention_id = i.intention_id), (SELECT outcome || ' — ' \
+                 || coalesce(outcome_note, '') FROM spine_intent_turns t WHERE t.intention_id = \
+                 i.intention_id AND t.outcome IS NOT NULL ORDER BY outcome_at DESC LIMIT 1) FROM \
+                 spine_intentions i WHERE i.scope = $1 AND ($2::text IS NULL OR i.serves = $2) AND ($3::text IS \
                  NULL OR i.kind = $3) ORDER BY i.added_at DESC LIMIT $4"
             ),
             &[&scope, &serves, &kind, &limit],
@@ -214,6 +217,7 @@ pub async fn listing(
             d["objectives"] = json!(r.get::<_, i64>(22));
             d["observations"] = json!(r.get::<_, i64>(23));
             d["turns"] = json!(r.get::<_, i64>(24));
+            d["last_outcome"] = json!(r.get::<_, Option<String>>(25)); // row 3c: the newest attributed outcome
             d
         })
         .collect())
@@ -494,15 +498,31 @@ async fn blocked(g: &Ground, scope: &str, intention: &Value) -> Result<bool, Roa
     Ok(false)
 }
 
+/// P7 sp8 row 3c: what a plan under a RED WATCH carries — the dossier the
+/// planner reads, the levers this door serves, the marker the ask sits under,
+/// the watch, this red's episode (its first turn) and which try this is.
+#[derive(Debug, Clone, Default)]
+pub struct Remedy {
+    pub dossier: Option<Value>,
+    pub levers: Vec<Value>,
+    pub parent: Option<String>,
+    pub watch: Option<String>,
+    pub episode: Option<String>,
+    pub tries: i64,
+}
+
 /// The kernel asks the intention's planner — under the observation that woke
 /// it (or under the intention itself, on cadence): "the next objective?" One
-/// turn per cause, ever; nothing while the intention is blocked (W8).
+/// turn per cause, ever; nothing while the intention is blocked (W8). Under a
+/// RED WATCH (row 3c) the planner is handed the DOSSIER and the levers this
+/// door serves, and answers in the catalogue.
 pub async fn plan(
     g: &mut Ground,
     w: &World,
     intention: &Value,
     cause: Option<&Value>,
     observed: &str,
+    remedy: Remedy,
 ) -> Result<Value, RoadError> {
     let iid = intention["intention_id"]
         .as_str()
@@ -527,18 +547,27 @@ pub async fn plan(
                          "note": intention["blocked_note"]}),
         );
     }
-    let text = plan_words(
-        intention["serves"].as_str().unwrap_or_default(),
-        intention["words"].as_str().unwrap_or_default(),
-        observed,
-    );
+    let text = match &remedy.dossier {
+        Some(_) => crate::levers::remedy_words(
+            intention["serves"].as_str().unwrap_or_default(),
+            intention["words"].as_str().unwrap_or_default(),
+            observed,
+            &crate::levers::lever_words(&remedy.levers.iter().collect::<Vec<_>>()),
+        ),
+        None => plan_words(
+            intention["serves"].as_str().unwrap_or_default(),
+            intention["words"].as_str().unwrap_or_default(),
+            observed,
+        ),
+    };
     let planner = intention["planner"]
         .as_str()
         .unwrap_or("planner")
         .to_string();
-    let parent = match cause {
-        Some(c) => c["id"].as_str().map(str::to_string),
-        None => intention["marker"].as_str().map(str::to_string),
+    let parent = match (&remedy.parent, cause) {
+        (Some(p), _) => Some(p.clone()),
+        (None, Some(c)) => c["id"].as_str().map(str::to_string),
+        (None, None) => intention["marker"].as_str().map(str::to_string),
     };
     let filed = crate::asks::submit_ask(
         g,
@@ -560,9 +589,13 @@ pub async fn plan(
     let tid = format!("turn_{}", token_hex(5));
     let cause_id = cause.and_then(|c| c["id"].as_str().map(str::to_string));
     let tx = g.client_mut().transaction().await?;
+    let dossier_text = remedy.dossier.as_ref().map(Value::to_string);
+    let episode = remedy.episode.clone().unwrap_or_else(|| tid.clone());
+    let tries: i32 = remedy.tries.max(1) as i32;
     tx.execute(
-        "INSERT INTO spine_intent_turns (turn_id, intention_id, cause, plan_ask) VALUES ($1, $2, $3, $4)",
-        &[&tid, &iid, &cause_id, &aid],
+        "INSERT INTO spine_intent_turns (turn_id, intention_id, cause, plan_ask, dossier, watch, episode, \
+         tries) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+        &[&tid, &iid, &cause_id, &aid, &dossier_text, &remedy.watch, &episode, &tries],
     )
     .await?;
     tx.execute(
@@ -607,10 +640,48 @@ pub async fn on_marker(
             }
         }
     }
+    if kind == WATCH_RED {
+        // row 3c: the FORENSIC TURN before anyone thinks — the dossier, and the levers this door serves
+        let bodies = crate::levers_live::bodies_view();
+        let d = crate::levers_live::forensic(g, w, r#ref, None, bodies.as_deref()).await?;
+        let observed = crate::levers::dossier_words(&d);
+        let cat = crate::levers_live::catalogue()?;
+        let offered: Vec<Value> = crate::levers::remedies(
+            &cat,
+            d["watch"]["metric"].as_str().unwrap_or_default(),
+            crate::levers::DOOR,
+        )
+        .into_iter()
+        .cloned()
+        .collect();
+        let mut out = Vec::new();
+        for i in cands {
+            let t = plan(
+                g,
+                w,
+                &i,
+                Some(marker),
+                &observed,
+                Remedy {
+                    dossier: Some(d.clone()),
+                    levers: offered.clone(),
+                    parent: None,
+                    watch: Some(r#ref.to_string()),
+                    episode: None,
+                    tries: 1,
+                },
+            )
+            .await?;
+            if t["planned"] == json!(true) {
+                out.push(t);
+            }
+        }
+        return Ok(out);
+    }
     let observed = observed_words(kind, r#ref, note);
     let mut out = Vec::new();
     for i in cands {
-        let t = plan(g, w, &i, Some(marker), &observed).await?;
+        let t = plan(g, w, &i, Some(marker), &observed, Remedy::default()).await?;
         if t["planned"] == json!(true) {
             out.push(t);
         }
@@ -629,13 +700,18 @@ type Heard = (
     Option<String>,
     String,
 );
-/// A plan to file: turn · intention · added_by · runner · marker · session · reply.
+/// A plan to file: turn · intention · added_by · runner · marker · session · reply ·
+/// dossier · cause · watch · outcome (row 3c).
 type Pending = (
     String,
     String,
     String,
     Option<String>,
     String,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
     Option<String>,
     Option<String>,
 );
@@ -731,7 +807,7 @@ async fn due(g: &mut Ground, w: &World) -> Result<Vec<Value>, RoadError> {
         {
             continue;
         }
-        out.push(plan(g, w, &i, None, CADENCE_DUE).await?);
+        out.push(plan(g, w, &i, None, CADENCE_DUE, Remedy::default()).await?);
         let every = i["every_s"].as_i64().unwrap_or(0) as f64;
         g.client()
             .execute(
@@ -750,10 +826,10 @@ async fn file_objectives(g: &mut Ground, w: &World) -> Result<Vec<Value>, RoadEr
     let rows = g
         .client()
         .query(
-            "SELECT t.turn_id, i.intention_id, i.added_by, i.runner, i.marker, i.session, a.reply \
-             FROM spine_intent_turns t JOIN spine_intentions i ON i.intention_id = t.intention_id \
-             JOIN spine_asks a ON a.ask_id = t.plan_ask WHERE t.objective_ask IS NULL AND a.status = \
-             'replied' AND i.active AND i.scope = $1",
+            "SELECT t.turn_id, i.intention_id, i.added_by, i.runner, i.marker, i.session, a.reply, \
+             t.dossier, t.cause, t.watch, t.outcome FROM spine_intent_turns t JOIN spine_intentions i \
+             ON i.intention_id = t.intention_id JOIN spine_asks a ON a.ask_id = t.plan_ask WHERE \
+             t.objective_ask IS NULL AND a.status = 'replied' AND i.active AND i.scope = $1",
             &[&w.scope],
         )
         .await?;
@@ -768,13 +844,116 @@ async fn file_objectives(g: &mut Ground, w: &World) -> Result<Vec<Value>, RoadEr
                 r.get(4),
                 r.get(5),
                 r.get(6),
+                r.get(7),
+                r.get(8),
+                r.get(9),
+                r.get(10),
             )
         })
         .collect();
     let held = held_stops(g, &w.scope).await?; // W35: nothing new filed while the code is awaited
+    let cat = crate::levers_live::catalogue()?;
     let mut filed = Vec::new();
-    for (tid, iid, by, runner, marker, session, reply) in pending {
+    for (tid, iid, by, runner, marker, session, reply, dossier, cause, watch, outcome) in pending {
         if held.contains(&iid) {
+            continue;
+        }
+        if outcome.is_some() {
+            // row 3c: the watch closed before the planner spoke — nothing to file
+            g.client()
+                .execute(
+                    "UPDATE spine_intent_turns SET objective_ask = '-' WHERE turn_id = $1",
+                    &[&tid],
+                )
+                .await?;
+            continue;
+        }
+        let read = match &dossier {
+            Some(_) => crate::levers::read_lever(reply.as_deref()),
+            None => None,
+        };
+        if let Some(read) = read {
+            // row 3c: the planner answered IN the catalogue — the kernel is the runner
+            let Some(intention) = get(g, &w.scope, &iid).await? else {
+                continue;
+            };
+            let d: Value = dossier
+                .as_deref()
+                .and_then(|t| serde_json::from_str(t).ok())
+                .unwrap_or(Value::Null);
+            let wname = d["watch"]["name"].as_str().unwrap_or_default().to_string();
+            let decl = read
+                .lever
+                .as_deref()
+                .and_then(|l| crate::levers::declared(&cat, l))
+                .cloned();
+            let served = decl.as_ref().is_some_and(|dc| {
+                dc["doors"]
+                    .as_array()
+                    .is_some_and(|a| a.iter().any(|x| x == crate::levers::DOOR))
+                    && dc["consequence"].as_str() != Some("grave")
+            });
+            let wid = watch.clone().unwrap_or_default();
+            if read.lever.is_none() || !served {
+                // no lever fits — the human, with the dossier attached
+                let note = match &read.lever {
+                    None => crate::levers::no_lever_note(&wname, &read.because),
+                    Some(l) => crate::levers::unserved_note(&wname, l),
+                };
+                markers_live::set_marker(
+                    g,
+                    w,
+                    "observation",
+                    &wid,
+                    crate::ask::KERNEL,
+                    Some(&marker),
+                    Some(&note),
+                    None,
+                )
+                .await?;
+                let because = if read.because.is_empty() {
+                    note.clone()
+                } else {
+                    read.because.clone()
+                };
+                let aid = crate::levers_live::kernel_row(
+                    g,
+                    w,
+                    &by,
+                    session.as_deref(),
+                    &format!("no lever fits watch {}", crate::py::repr_str(&wname)),
+                    &crate::levers::notice_words(
+                        &wname,
+                        &because,
+                        &crate::levers::dossier_words(&d),
+                    ),
+                    cause.as_deref(),
+                    Some(&note),
+                )
+                .await?;
+                g.client()
+                    .execute(
+                        "UPDATE spine_intent_turns SET lever = $1, because = $2, lever_ask = $3, objective_ask = \
+                         '-' WHERE turn_id = $4",
+                        &[&crate::levers::NONE, &read.because, &aid, &tid],
+                    )
+                    .await?;
+                filed.push(json!({"turn_id": tid, "intention_id": iid, "lever": Value::Null, "notice": aid}));
+                continue;
+            }
+            let mut p = crate::levers_live::pull(
+                g,
+                w,
+                &intention,
+                &tid,
+                cause.as_deref(),
+                decl.as_ref().unwrap(),
+                &Value::Object(read.args.clone()),
+                &read.because,
+            )
+            .await?;
+            p["intention_id"] = json!(iid);
+            filed.push(p);
             continue;
         }
         let words: String = crate::py::fold_ws(reply.as_deref().unwrap_or(""))
@@ -869,7 +1048,12 @@ async fn turn_inner(g: &mut Ground, w: &World) -> Result<Value, RoadError> {
     let due = due(g, w).await?;
     let filed = file_objectives(g, w).await?;
     let heard = hear_runners(g, w).await?; // W8: a runner that cannot act is heard once
+                                           // row 3c: every open red re-read, its outcome named
+    let cat = crate::levers_live::catalogue()?;
+    let bodies = crate::levers_live::bodies_view();
+    let attributed = crate::levers_live::attribute(g, w, &cat, bodies.as_deref()).await?;
     Ok(
-        json!({"observed": observed, "due": due, "filed": filed, "heard": heard, "expired": expired}),
+        json!({"observed": observed, "due": due, "filed": filed, "heard": heard, "expired": expired,
+               "attributed": attributed}),
     )
 }

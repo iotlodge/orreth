@@ -1,0 +1,808 @@
+{
+ "contract": "orreth.levers/1",
+ "version": 0,
+ "generated_by": "orreth_spine.levers (Python reference), canon 0008 \u00b7 P7 sp8 row 3c THE REMEDIATION RAIL",
+ "generated_at": "2026-09-27",
+ "cases": [
+  {
+   "name": "lever_manifest: body.restart \u2014 the declaration as data, its canonical bytes and pin",
+   "kind": "lever_manifest",
+   "input": {
+    "name": "body.restart"
+   },
+   "expect": {
+    "manifest": {
+     "name": "body.restart",
+     "description": "Restart a body this kernel seats that is PARKED (it died three times in five minutes, so the kernel stopped restarting it) or was refused at birth. Its deaths are forgotten and it comes back as the same self. A body that is alive or already restarting is left alone.",
+     "needs": {
+      "name": "the body's name, as the roster spells it"
+     },
+     "consequence": "routine",
+     "for": [
+      "bodies_dormant",
+      "bodies_alive"
+     ],
+     "doors": [
+      "rust"
+     ],
+     "settles_s": 45
+    },
+    "bytes": "{\"consequence\":\"routine\",\"description\":\"Restart a body this kernel seats that is PARKED (it died three times in five minutes, so the kernel stopped restarting it) or was refused at birth. Its deaths are forgotten and it comes back as the same self. A body that is alive or already restarting is left alone.\",\"doors\":[\"rust\"],\"for\":[\"bodies_dormant\",\"bodies_alive\"],\"name\":\"body.restart\",\"needs\":{\"name\":\"the body's name, as the roster spells it\"},\"settles_s\":45}",
+    "hash": "sha256:8a45865369fbf442aff6555dcd65c4df3d9a2d770c563f5c1bb1140f4ef3e383"
+   }
+  },
+  {
+   "name": "lever_manifest: service.check \u2014 the declaration as data, its canonical bytes and pin",
+   "kind": "lever_manifest",
+   "input": {
+    "name": "service.check"
+   },
+   "expect": {
+    "manifest": {
+     "name": "service.check",
+     "description": "Probe one service on the shelf by name right now and record its health - the ladder steps to healthy or unhealthy. Nothing changes but the record.",
+     "needs": {
+      "name": "the service's name, as the shelf spells it"
+     },
+     "consequence": "routine",
+     "for": [
+      "*"
+     ],
+     "doors": [
+      "python",
+      "rust"
+     ],
+     "settles_s": 10
+    },
+    "bytes": "{\"consequence\":\"routine\",\"description\":\"Probe one service on the shelf by name right now and record its health - the ladder steps to healthy or unhealthy. Nothing changes but the record.\",\"doors\":[\"python\",\"rust\"],\"for\":[\"*\"],\"name\":\"service.check\",\"needs\":{\"name\":\"the service's name, as the shelf spells it\"},\"settles_s\":10}",
+    "hash": "sha256:77e3e8a5ba39214ada232af3d526bc50166fc8c811e8e9581ff4f530a7473c03"
+   }
+  },
+  {
+   "name": "lever_manifest: service.retire \u2014 the declaration as data, its canonical bytes and pin",
+   "kind": "lever_manifest",
+   "input": {
+    "name": "service.retire"
+   },
+   "expect": {
+    "manifest": {
+     "name": "service.retire",
+     "description": "Rest a service or a mind that keeps failing - it leaves the shelf (a mind leaves the gateway too), recorded, never deleted; a person can restore it later. Consequential: it holds at the interlock for a person's yes.",
+     "needs": {
+      "name": "the service's or mind's name"
+     },
+     "consequence": "consequential",
+     "for": [
+      "route_failures_1h",
+      "minds_unhealthy"
+     ],
+     "doors": [
+      "python",
+      "rust"
+     ],
+     "settles_s": 10
+    },
+    "bytes": "{\"consequence\":\"consequential\",\"description\":\"Rest a service or a mind that keeps failing - it leaves the shelf (a mind leaves the gateway too), recorded, never deleted; a person can restore it later. Consequential: it holds at the interlock for a person's yes.\",\"doors\":[\"python\",\"rust\"],\"for\":[\"route_failures_1h\",\"minds_unhealthy\"],\"name\":\"service.retire\",\"needs\":{\"name\":\"the service's or mind's name\"},\"settles_s\":10}",
+    "hash": "sha256:2b324f8a0db48dc7c25172af9ea3b7084569ef2f1a9e5435d11e79f9a49c6fca"
+   }
+  },
+  {
+   "name": "lever_manifest: intent.stop \u2014 the declaration as data, its canonical bytes and pin",
+   "kind": "lever_manifest",
+   "input": {
+    "name": "intent.stop"
+   },
+   "expect": {
+    "manifest": {
+     "name": "intent.stop",
+     "description": "Rest an intention - recorded, never deleted. Grave: a person's code, and a master's click for the kernel's own. The kernel never pulls it as a remedy.",
+     "needs": {
+      "intention_id": "the intention's id"
+     },
+     "consequence": "grave",
+     "for": [],
+     "doors": [
+      "python",
+      "rust"
+     ],
+     "settles_s": 0
+    },
+    "bytes": "{\"consequence\":\"grave\",\"description\":\"Rest an intention - recorded, never deleted. Grave: a person's code, and a master's click for the kernel's own. The kernel never pulls it as a remedy.\",\"doors\":[\"python\",\"rust\"],\"for\":[],\"name\":\"intent.stop\",\"needs\":{\"intention_id\":\"the intention's id\"},\"settles_s\":0}",
+    "hash": "sha256:2a7e165de95afdc04136f3a62cf357621b8756e552065dd8d35bbbcc8bf44fc5"
+   }
+  },
+  {
+   "name": "lever_manifest: world.rehome \u2014 the declaration as data, its canonical bytes and pin",
+   "kind": "lever_manifest",
+   "input": {
+    "name": "world.rehome"
+   },
+   "expect": {
+    "manifest": {
+     "name": "world.rehome",
+     "description": "Re-home this universe to another cell - its epoch advances. Consequential; never a remedy for a red watch.",
+     "needs": {
+      "to_cell": "the cell's name"
+     },
+     "consequence": "consequential",
+     "for": [],
+     "doors": [
+      "rust"
+     ],
+     "settles_s": 0
+    },
+    "bytes": "{\"consequence\":\"consequential\",\"description\":\"Re-home this universe to another cell - its epoch advances. Consequential; never a remedy for a red watch.\",\"doors\":[\"rust\"],\"for\":[],\"name\":\"world.rehome\",\"needs\":{\"to_cell\":\"the cell's name\"},\"settles_s\":0}",
+    "hash": "sha256:8e62300f760eaf2df6487e33c7e75d2431a569b747ce3e725b186525b6f704a1"
+   }
+  },
+  {
+   "name": "lever_remedies: bodies_dormant at the rust door \u2014 served, for the metric, never grave",
+   "kind": "lever_remedies",
+   "input": {
+    "metric": "bodies_dormant",
+    "door": "rust"
+   },
+   "expect": {
+    "names": [
+     "body.restart",
+     "service.check",
+     "service.restore"
+    ]
+   }
+  },
+  {
+   "name": "lever_remedies: bodies_dormant at the python door \u2014 served, for the metric, never grave",
+   "kind": "lever_remedies",
+   "input": {
+    "metric": "bodies_dormant",
+    "door": "python"
+   },
+   "expect": {
+    "names": [
+     "service.check",
+     "service.restore"
+    ]
+   }
+  },
+  {
+   "name": "lever_remedies: asks_received at the rust door \u2014 served, for the metric, never grave",
+   "kind": "lever_remedies",
+   "input": {
+    "metric": "asks_received",
+    "door": "rust"
+   },
+   "expect": {
+    "names": [
+     "service.check",
+     "service.restore"
+    ]
+   }
+  },
+  {
+   "name": "lever_remedies: route_failures_1h at the python door \u2014 served, for the metric, never grave",
+   "kind": "lever_remedies",
+   "input": {
+    "metric": "route_failures_1h",
+    "door": "python"
+   },
+   "expect": {
+    "names": [
+     "service.check",
+     "mind.check",
+     "service.restore",
+     "mind.restore",
+     "service.retire"
+    ]
+   }
+  },
+  {
+   "name": "lever_remedies: minds_unhealthy at the rust door \u2014 served, for the metric, never grave",
+   "kind": "lever_remedies",
+   "input": {
+    "metric": "minds_unhealthy",
+    "door": "rust"
+   },
+   "expect": {
+    "names": [
+     "service.check",
+     "mind.check",
+     "service.restore",
+     "mind.restore",
+     "service.retire"
+    ]
+   }
+  },
+  {
+   "name": "lever_remedies: usd_today at the python door \u2014 served, for the metric, never grave",
+   "kind": "lever_remedies",
+   "input": {
+    "metric": "usd_today",
+    "door": "python"
+   },
+   "expect": {
+    "names": [
+     "service.check",
+     "service.restore"
+    ]
+   }
+  },
+  {
+   "name": "lever_words: the catalogue as the planner reads it (bodies_dormant, rust)",
+   "kind": "lever_words",
+   "input": {
+    "levers": [
+     {
+      "name": "body.restart",
+      "description": "Restart a body this kernel seats that is PARKED (it died three times in five minutes, so the kernel stopped restarting it) or was refused at birth. Its deaths are forgotten and it comes back as the same self. A body that is alive or already restarting is left alone.",
+      "needs": {
+       "name": "the body's name, as the roster spells it"
+      },
+      "consequence": "routine",
+      "for": [
+       "bodies_dormant",
+       "bodies_alive"
+      ],
+      "doors": [
+       "rust"
+      ],
+      "settles_s": 45
+     },
+     {
+      "name": "service.check",
+      "description": "Probe one service on the shelf by name right now and record its health - the ladder steps to healthy or unhealthy. Nothing changes but the record.",
+      "needs": {
+       "name": "the service's name, as the shelf spells it"
+      },
+      "consequence": "routine",
+      "for": [
+       "*"
+      ],
+      "doors": [
+       "python",
+       "rust"
+      ],
+      "settles_s": 10
+     },
+     {
+      "name": "service.restore",
+      "description": "Bring a retired service back onto the shelf - a new recorded fact, its retirement stays in the record. Only for a service the kernel or a keeper retired; never one a person rested on purpose.",
+      "needs": {
+       "name": "the service's name"
+      },
+      "consequence": "routine",
+      "for": [
+       "*"
+      ],
+      "doors": [
+       "python",
+       "rust"
+      ],
+      "settles_s": 10
+     }
+    ]
+   },
+   "expect": {
+    "text": "LEVERS this kernel can pull for this watch (name and what it needs \u00b7 what it does):\n- body.restart name=<the body's name, as the roster spells it> \u00b7 Restart a body this kernel seats that is PARKED (it died three times in five minutes, so the kernel stopped restarting it) or was refused at birth. Its deaths are forgotten and it comes back as the same self. A body that is alive or already restarting is left alone. Runs at once.\n- service.check name=<the service's name, as the shelf spells it> \u00b7 Probe one service on the shelf by name right now and record its health - the ladder steps to healthy or unhealthy. Nothing changes but the record. Runs at once.\n- service.restore name=<the service's name> \u00b7 Bring a retired service back onto the shelf - a new recorded fact, its retirement stays in the record. Only for a service the kernel or a keeper retired; never one a person rested on purpose. Runs at once."
+   }
+  },
+  {
+   "name": "lever_words: no lever at all",
+   "kind": "lever_words",
+   "input": {
+    "levers": []
+   },
+   "expect": {
+    "text": "LEVERS this kernel can pull for this watch: none."
+   }
+  },
+  {
+   "name": "read_lever: LEVER: body.restart name=echo \u2014 BECAUSE: echo is",
+   "kind": "read_lever",
+   "input": {
+    "reply": "LEVER: body.restart name=echo \u2014 BECAUSE: echo is parked after three deaths."
+   },
+   "expect": {
+    "read": {
+     "lever": "body.restart",
+     "args": {
+      "name": "echo"
+     },
+     "because": "echo is parked after three deaths"
+    }
+   }
+  },
+  {
+   "name": "read_lever: **LEVER:** none - because the waiting ask needs ",
+   "kind": "read_lever",
+   "input": {
+    "reply": "**LEVER:** none - because the waiting ask needs a body"
+   },
+   "expect": {
+    "read": {
+     "lever": null,
+     "args": {},
+     "because": "the waiting ask needs a body"
+    }
+   }
+  },
+  {
+   "name": "read_lever: My answer: lever: Service.Check name=\"weather\" :",
+   "kind": "read_lever",
+   "input": {
+    "reply": "My answer: lever: Service.Check name=\"weather\" : it reads unhealthy"
+   },
+   "expect": {
+    "read": {
+     "lever": "service.check",
+     "args": {
+      "name": "weather"
+     },
+     "because": "it reads unhealthy"
+    }
+   }
+  },
+  {
+   "name": "read_lever: > LEVER: service.retire name=gemma, BECAUSE: it ",
+   "kind": "read_lever",
+   "input": {
+    "reply": "  > LEVER: service.retire name=gemma, BECAUSE: it failed nine checks in a row.  "
+   },
+   "expect": {
+    "read": {
+     "lever": "service.retire",
+     "args": {
+      "name": "gemma"
+     },
+     "because": "it failed nine checks in a row"
+    }
+   }
+  },
+  {
+   "name": "read_lever: lever: Body.Restart name=echo",
+   "kind": "read_lever",
+   "input": {
+    "reply": "lever: Body.Restart name=echo"
+   },
+   "expect": {
+    "read": {
+     "lever": "body.restart",
+     "args": {
+      "name": "echo"
+     },
+     "because": ""
+    }
+   }
+  },
+  {
+   "name": "read_lever: Restart the echo body.",
+   "kind": "read_lever",
+   "input": {
+    "reply": "Restart the echo body."
+   },
+   "expect": {
+    "read": null
+   }
+  },
+  {
+   "name": "read_lever: I cannot act: no lever",
+   "kind": "read_lever",
+   "input": {
+    "reply": "I cannot act: no lever"
+   },
+   "expect": {
+    "read": null
+   }
+  },
+  {
+   "name": "read_lever: empty",
+   "kind": "read_lever",
+   "input": {
+    "reply": ""
+   },
+   "expect": {
+    "read": null
+   }
+  },
+  {
+   "name": "read_lever: no reply at all",
+   "kind": "read_lever",
+   "input": {
+    "reply": null
+   },
+   "expect": {
+    "read": null
+   }
+  },
+  {
+   "name": "dossier_words: the whole dossier",
+   "kind": "dossier_words",
+   "input": {
+    "dossier": {
+     "watch": {
+      "name": "a body's lease lapsed",
+      "metric": "bodies_dormant",
+      "op": ">",
+      "threshold": 0.0,
+      "value": 1,
+      "state": "red",
+      "since": "2026-09-27T20:11:03.120+00:00",
+      "since_s": 40
+     },
+     "readings": [
+      {
+       "at": "2026-09-27T20:11:03.120+00:00",
+       "to": "red",
+       "value": 1
+      },
+      {
+       "at": "2026-09-27T19:58:10+00:00",
+       "to": "green",
+       "value": 0
+      }
+     ],
+     "subjects": [
+      {
+       "kind": "body",
+       "name": "echo",
+       "state": "dormant \u2014 its lease lapsed 40 seconds ago; PARKED by the kernel: it died 3 times"
+      },
+      {
+       "kind": "crew",
+       "name": "alive",
+       "state": "librarian, planner"
+      }
+     ],
+     "acts": [
+      {
+       "at": "2026-09-27T20:10:59+00:00",
+       "words": "the kernel parked echo after 3 deaths"
+      },
+      {
+       "at": "2026-09-27T19:58:02+00:00",
+       "words": "the kernel pulled body.restart name=echo \u2192 cured"
+      }
+     ],
+     "last_red": {
+      "at": "2026-09-27T19:57:40+00:00",
+      "lever": "body.restart",
+      "args": {
+       "name": "echo"
+      },
+      "outcome": "cured",
+      "note": "watch 'a body's lease lapsed' went green after the kernel pulled body.restart name=echo \u2014 the planner's reason: it was parked"
+     },
+     "tried": [
+      {
+       "lever": "service.check",
+       "args": {
+        "name": "weather"
+       },
+       "outcome": "still-red"
+      },
+      {
+       "lever": "body.restart",
+       "args": {
+        "name": "echo"
+       },
+       "outcome": null
+      }
+     ]
+    }
+   },
+   "expect": {
+    "text": "THE WATCH: \"a body's lease lapsed\" is red \u2014 red when bodies_dormant > 0.0, now 1, since 20:11:03 (40 seconds ago).\nWHAT IT SAW LATELY: red at 20:11:03 (value 1) \u00b7 green at 19:58:10 (value 0).\nWHO IT NAMES: echo (body) \u2014 dormant \u2014 its lease lapsed 40 seconds ago; PARKED by the kernel: it died 3 times; alive (crew) \u2014 librarian, planner.\nTHE LAST ACTS ON THEM: 20:10:59 the kernel parked echo after 3 deaths \u00b7 19:58:02 the kernel pulled body.restart name=echo \u2192 cured.\nTHE LAST TIME IT WENT RED: 19:57:40 \u2014 the kernel pulled body.restart name=echo; cured (watch 'a body's lease lapsed' went green after the kernel pulled body.restart name=echo \u2014 the planner's reason: it was parked).\nTRIED THIS TIME: service.check name=weather \u2192 still-red \u00b7 body.restart name=echo \u2192 no change yet."
+   }
+  },
+  {
+   "name": "dossier_words: a bare dossier",
+   "kind": "dossier_words",
+   "input": {
+    "dossier": {
+     "watch": {
+      "name": "asks left waiting",
+      "metric": "asks_received",
+      "op": ">",
+      "threshold": 0.0,
+      "value": 2,
+      "state": "red",
+      "since": null,
+      "since_s": null
+     },
+     "readings": [],
+     "subjects": [],
+     "acts": [],
+     "last_red": null,
+     "tried": []
+    }
+   },
+   "expect": {
+    "text": "THE WATCH: 'asks left waiting' is red \u2014 red when asks_received > 0.0, now 2.\nWHAT IT SAW LATELY: nothing before this.\nWHO IT NAMES: no one by name \u2014 the metric is the world's.\nTHE LAST ACTS ON THEM: none recorded.\nTHE LAST TIME IT WENT RED: never before.\nTRIED THIS TIME: nothing yet."
+   }
+  },
+  {
+   "name": "dossier_words: no lever last time",
+   "kind": "dossier_words",
+   "input": {
+    "dossier": {
+     "watch": {
+      "name": "asks left waiting",
+      "metric": "asks_received",
+      "op": ">",
+      "threshold": 0.0,
+      "value": 1,
+      "state": "red",
+      "since": "2026-09-27T09:00:00+00:00",
+      "since_s": 7300
+     },
+     "readings": [
+      {
+       "at": "2026-09-27T09:00:00+00:00",
+       "to": "red",
+       "value": 1
+      }
+     ],
+     "subjects": [
+      {
+       "kind": "ask",
+       "name": "ask_00000000000000a1",
+       "state": "waiting 2 hours ago \u2014 for any body: \"what is the weather?\""
+      }
+     ],
+     "acts": [],
+     "last_red": {
+      "at": "2026-09-26T09:00:00+00:00",
+      "lever": "none",
+      "args": {},
+      "outcome": "self-healed",
+      "note": null
+     },
+     "tried": []
+    }
+   },
+   "expect": {
+    "text": "THE WATCH: 'asks left waiting' is red \u2014 red when asks_received > 0.0, now 1, since 09:00:00 (2 hours ago).\nWHAT IT SAW LATELY: red at 09:00:00 (value 1).\nWHO IT NAMES: ask_00000000000000a1 (ask) \u2014 waiting 2 hours ago \u2014 for any body: \"what is the weather?\".\nTHE LAST ACTS ON THEM: none recorded.\nTHE LAST TIME IT WENT RED: 09:00:00 \u2014 no lever was pulled; self-healed.\nTRIED THIS TIME: nothing yet."
+   }
+  },
+  {
+   "name": "remedy_words: the planner's ask under a red watch (resiliency)",
+   "kind": "remedy_words",
+   "input": {
+    "serves": "resiliency",
+    "words": "keep this world resilient: when a watch goes red, get it green",
+    "dossier_text": "THE WATCH: 'asks left waiting' is red \u2014 red when asks_received > 0.0, now 2.\nWHAT IT SAW LATELY: nothing before this.\nWHO IT NAMES: no one by name \u2014 the metric is the world's.\nTHE LAST ACTS ON THEM: none recorded.\nTHE LAST TIME IT WENT RED: never before.\nTRIED THIS TIME: nothing yet.",
+    "levers_text": "LEVERS this kernel can pull for this watch (name and what it needs \u00b7 what it does):\n- body.restart name=<the body's name, as the roster spells it> \u00b7 Restart a body this kernel seats that is PARKED (it died three times in five minutes, so the kernel stopped restarting it) or was refused at birth. Its deaths are forgotten and it comes back as the same self. A body that is alive or already restarting is left alone. Runs at once.\n- service.check name=<the service's name, as the shelf spells it> \u00b7 Probe one service on the shelf by name right now and record its health - the ladder steps to healthy or unhealthy. Nothing changes but the record. Runs at once.\n- service.restore name=<the service's name> \u00b7 Bring a retired service back onto the shelf - a new recorded fact, its retirement stays in the record. Only for a service the kernel or a keeper retired; never one a person rested on purpose. Runs at once."
+   },
+   "expect": {
+    "text": "INTENTION (serves resiliency): keep this world resilient: when a watch goes red, get it green\nTHE DOSSIER \u2014 what the kernel read on the ground, no guessing needed:\nTHE WATCH: 'asks left waiting' is red \u2014 red when asks_received > 0.0, now 2.\nWHAT IT SAW LATELY: nothing before this.\nWHO IT NAMES: no one by name \u2014 the metric is the world's.\nTHE LAST ACTS ON THEM: none recorded.\nTHE LAST TIME IT WENT RED: never before.\nTRIED THIS TIME: nothing yet.\nLEVERS this kernel can pull for this watch (name and what it needs \u00b7 what it does):\n- body.restart name=<the body's name, as the roster spells it> \u00b7 Restart a body this kernel seats that is PARKED (it died three times in five minutes, so the kernel stopped restarting it) or was refused at birth. Its deaths are forgotten and it comes back as the same self. A body that is alive or already restarting is left alone. Runs at once.\n- service.check name=<the service's name, as the shelf spells it> \u00b7 Probe one service on the shelf by name right now and record its health - the ladder steps to healthy or unhealthy. Nothing changes but the record. Runs at once.\n- service.restore name=<the service's name> \u00b7 Bring a retired service back onto the shelf - a new recorded fact, its retirement stays in the record. Only for a service the kernel or a keeper retired; never one a person rested on purpose. Runs at once.\nReply on ONE line, in this shape and nothing else:\nLEVER: <name> <what it needs>=<value> \u2014 BECAUSE: <one plain sentence, from the dossier>\nor, when no lever fits: LEVER: none \u2014 BECAUSE: <one plain sentence>"
+   }
+  },
+  {
+   "name": "outcome_words: cured",
+   "kind": "outcome_words",
+   "input": {
+    "outcome": "cured",
+    "watch": "a body's lease lapsed",
+    "lever": "body.restart",
+    "args": {
+     "name": "echo"
+    },
+    "because": "it was parked"
+   },
+   "expect": {
+    "text": "watch \"a body's lease lapsed\" went green after the kernel pulled body.restart name=echo \u2014 the planner's reason: it was parked"
+   }
+  },
+  {
+   "name": "outcome_words: self-healed",
+   "kind": "outcome_words",
+   "input": {
+    "outcome": "self-healed",
+    "watch": "asks left waiting"
+   },
+   "expect": {
+    "text": "watch 'asks left waiting' went green on its own \u2014 the kernel pulled no lever; recorded as self-healed"
+   }
+  },
+  {
+   "name": "outcome_words: still-red",
+   "kind": "outcome_words",
+   "input": {
+    "outcome": "still-red",
+    "watch": "a body's lease lapsed",
+    "lever": "service.check",
+    "args": {
+     "name": "weather"
+    },
+    "settles_s": 10
+   },
+   "expect": {
+    "text": "watch \"a body's lease lapsed\" is still red 10 seconds after the kernel pulled service.check name=weather"
+   }
+  },
+  {
+   "name": "outcome_words: cancelled",
+   "kind": "outcome_words",
+   "input": {
+    "outcome": "cancelled",
+    "watch": "a body's lease lapsed",
+    "lever": "service.retire",
+    "args": {
+     "name": "gemma"
+    },
+    "why": "Cancelled \u2014 nothing was done. Cancel is always the default here."
+   },
+   "expect": {
+    "text": "the service.retire name=gemma lever for watch \"a body's lease lapsed\" never ran \u2014 Cancelled \u2014 nothing was done. Cancel is always the default here."
+   }
+  },
+  {
+   "name": "outcome_words: no-lever",
+   "kind": "outcome_words",
+   "input": {
+    "outcome": "no-lever",
+    "watch": "asks left waiting",
+    "because": "the waiting ask needs a body"
+   },
+   "expect": {
+    "text": "no lever fits watch 'asks left waiting' \u2014 the planner's reason: the waiting ask needs a body"
+   }
+  },
+  {
+   "name": "outcome_words: unserved",
+   "kind": "outcome_words",
+   "input": {
+    "outcome": "unserved",
+    "watch": "a body's lease lapsed",
+    "lever": "body.restart"
+   },
+   "expect": {
+    "text": "the planner named body.restart for watch \"a body's lease lapsed\" \u2014 a lever this door does not serve"
+   }
+  },
+  {
+   "name": "outcome_words: pulled",
+   "kind": "outcome_words",
+   "input": {
+    "outcome": "pulled",
+    "lever": "body.restart",
+    "args": {
+     "name": "echo"
+    },
+    "because": "it was parked",
+    "result": "echo is being restarted on the kernel's word."
+   },
+   "expect": {
+    "text": "On the intention's authority the kernel pulled body.restart name=echo: echo is being restarted on the kernel's word. Because it was parked."
+   }
+  },
+  {
+   "name": "outcome_words: handed",
+   "kind": "outcome_words",
+   "input": {
+    "outcome": "handed",
+    "watch": "a body's lease lapsed",
+    "tried": [
+     {
+      "lever": "service.check",
+      "args": {
+       "name": "weather"
+      }
+     },
+     {
+      "lever": "body.restart",
+      "args": {
+       "name": "echo"
+      }
+     }
+    ],
+    "dossier_text": "THE WATCH: ..."
+   },
+   "expect": {
+    "text": "Watch \"a body's lease lapsed\" is still red after the kernel tried service.check name=weather \u00b7 body.restart name=echo. The kernel has no other lever for it \u2014 this one is yours. What the kernel read on the ground:\nTHE WATCH: ..."
+   }
+  },
+  {
+   "name": "outcome_words: notice",
+   "kind": "outcome_words",
+   "input": {
+    "outcome": "notice",
+    "watch": "asks left waiting",
+    "because": "the waiting ask needs a body",
+    "dossier_text": "THE WATCH: ..."
+   },
+   "expect": {
+    "text": "Watch 'asks left waiting' is red and no lever the kernel holds fits it \u2014 the planner's reason: the waiting ask needs a body. This one is yours. What the kernel read on the ground:\nTHE WATCH: ..."
+   }
+  },
+  {
+   "name": "ago_words: 0",
+   "kind": "ago_words",
+   "input": {
+    "s": 0
+   },
+   "expect": {
+    "text": "0 seconds ago"
+   }
+  },
+  {
+   "name": "ago_words: 1",
+   "kind": "ago_words",
+   "input": {
+    "s": 1
+   },
+   "expect": {
+    "text": "1 second ago"
+   }
+  },
+  {
+   "name": "ago_words: 59",
+   "kind": "ago_words",
+   "input": {
+    "s": 59
+   },
+   "expect": {
+    "text": "59 seconds ago"
+   }
+  },
+  {
+   "name": "ago_words: 60",
+   "kind": "ago_words",
+   "input": {
+    "s": 60
+   },
+   "expect": {
+    "text": "1 minute ago"
+   }
+  },
+  {
+   "name": "ago_words: 61",
+   "kind": "ago_words",
+   "input": {
+    "s": 61
+   },
+   "expect": {
+    "text": "1 minute ago"
+   }
+  },
+  {
+   "name": "ago_words: 3599",
+   "kind": "ago_words",
+   "input": {
+    "s": 3599
+   },
+   "expect": {
+    "text": "59 minutes ago"
+   }
+  },
+  {
+   "name": "ago_words: 3600",
+   "kind": "ago_words",
+   "input": {
+    "s": 3600
+   },
+   "expect": {
+    "text": "1 hour ago"
+   }
+  },
+  {
+   "name": "ago_words: 7300",
+   "kind": "ago_words",
+   "input": {
+    "s": 7300
+   },
+   "expect": {
+    "text": "2 hours ago"
+   }
+  },
+  {
+   "name": "ago_words: None",
+   "kind": "ago_words",
+   "input": {
+    "s": null
+   },
+   "expect": {
+    "text": "just now"
+   }
+  }
+ ]
+}

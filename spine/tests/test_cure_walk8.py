@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds) + close staging · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: the eleventh check · the planner reads the dossier · 2026-09-27
 """The laws behind walk #8's cures (docs/rearch/baselines/after-walk-2026-09-17.md,
 "Walk #8"): W20 a rested intention is RESTARTED — its own recorded fact,
 the same ladder as the stop, the stop's fact kept; W21 a standing duty is
@@ -269,7 +270,8 @@ def test_w21_the_harness_catches_a_duty_refused_and_passes_a_note(pg, monkeypatc
                                                       "the keeper proposes after strikes, never retires alone",
                                                       "every mind answers", "the gateway answers and holds every mind",   # P6.5 sp3: four more
                                                       "the meter and the gateway agree", "a model change is announced",
-                                                      "this cell is sealed"]                  # P7 sp7: the tenth
+                                                      "this cell is sealed",                  # P7 sp7: the tenth
+                                                      "every red is answered and every green attributed"]   # P7 sp8 row 3c: the eleventh
     assert harness.checks(pg)[0]["ok"] is False
     _land(pg, occ["ref"], "nothing new since 7:12 PM", lib.identity.did)
     assert harness.duty_answered(pg)["ok"] is True

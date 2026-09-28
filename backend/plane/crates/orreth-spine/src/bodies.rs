@@ -33,8 +33,21 @@ use std::collections::{HashMap, VecDeque};
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock, Weak};
 use std::time::Duration;
+
+/// P7 sp8 row 3c: the crew this process governs, for the remediation rail's hand
+/// (`body.restart` pulled by the kernel under an intention) and its dossier.
+static HANDLE: RwLock<Option<Weak<Bodies>>> = RwLock::new(None);
+
+/// The bodies this kernel seats, if any — the newest lit in this process.
+pub fn handle() -> Option<Arc<Bodies>> {
+    HANDLE
+        .read()
+        .unwrap_or_else(|p| p.into_inner())
+        .as_ref()
+        .and_then(Weak::upgrade)
+}
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::Notify;
 
@@ -232,7 +245,7 @@ impl Bodies {
             .iter()
             .map(|s| (s.name.clone(), Arc::new(Notify::new())))
             .collect();
-        Arc::new(Bodies {
+        let me = Arc::new(Bodies {
             seats,
             spine,
             world,
@@ -246,7 +259,9 @@ impl Bodies {
             stop: AtomicBool::new(false),
             wake,
             tasks: Mutex::new(Vec::new()),
-        })
+        });
+        *HANDLE.write().unwrap_or_else(|p| p.into_inner()) = Some(Arc::downgrade(&me));
+        me
     }
 
     /// The child's environment: the kernel's own, the world's dials on top,

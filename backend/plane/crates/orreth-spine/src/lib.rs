@@ -92,6 +92,7 @@ pub mod export;
 pub mod hash;
 pub mod intent;
 pub mod kernel_self;
+pub mod levers;
 pub mod mcp;
 pub mod memory;
 pub mod mitl;
@@ -140,6 +141,8 @@ pub mod inbox;
 pub mod intent_live;
 #[cfg(feature = "rails")]
 pub mod invoke;
+#[cfg(feature = "rails")]
+pub mod levers_live;
 #[cfg(feature = "rails")]
 pub mod markers_live;
 #[cfg(feature = "rails")]

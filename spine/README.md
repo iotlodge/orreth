@@ -19,7 +19,7 @@ names itself and exits non-zero.
 ## Test the laws
 
 ```bash
-scripts/dev.sh suite          # the whole suite (831 laws, three to five minutes) — the rig up, no Bridge or kernel lit
+scripts/dev.sh suite          # the whole suite (885 laws, three to five minutes) — the rig up, no Bridge or kernel lit
 uv run pytest -q tests/test_envelope.py   # the envelope laws alone need no rails
 ```
 
@@ -69,6 +69,20 @@ PARKS one that dies three times in five minutes (a fact, `orreth.body.parked.v1`
 "restart the <name> body" is the human's lever), never restarts a refusal, and stops
 every body at dark. Dials: `SPINE_BODIES` (crew · none) · `SPINE_CREW` (another
 manifest) · `SPINE_PYTHON` (another interpreter) · `SPINE_BODY_EPHEMERAL` (tests).
+
+Beside the tools stands `levers.v0.json` — THE LEVER CATALOGUE (P7 sp8 row 3c, the
+remediation rail): every governed act the kernel itself can pull, declared as data
+(`name · description · needs · consequence · for · doors · settles_s`) and read by both
+kernels (`GET /levers`). When a watch goes red the kernel reads the ground first — the
+watch, who it names and their state, the last acts on them, the last time it went red —
+and hands the planner that dossier with the levers this door serves; the planner answers
+IN the catalogue ("LEVER: body.restart name=echo — BECAUSE: …"); the kernel pulls the
+lever with its own hands as a recorded hop in the intention's session (a routine lever at
+once, a consequential one held for a person's click), then reads the watch again and
+says what happened: cured with its cause · self-healed · still red (once more, then the
+human with the dossier) · cancelled. The eleventh world check grades it: every red
+answered, every green attributed. `SPINE_FAKE_REPLY` scripts the fake mind's one line for
+a proof.
 
 ## Cells (P7 sp7 — cells · partition · isolation · hardening)
 

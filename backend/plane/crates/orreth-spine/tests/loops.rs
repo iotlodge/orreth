@@ -22,6 +22,7 @@
 //! prints "rails not up — skipped by name" and passes green without proving
 //! anything; beside a live Bridge on :4600 it refuses to run.
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the gate: the proof SITS before it knocks (the ceremony through the doors) · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: the planner reads the dossier · 2026-09-27
 
 #![cfg(feature = "bridge")]
 
@@ -420,7 +421,7 @@ async fn shadow_two_kernels_beat_on_one_ground_one_beat_at_a_time() {
         pv["text"]
             .as_str()
             .unwrap()
-            .contains("OBSERVED: a marker of kind 'watch-red'"),
+            .contains("THE DOSSIER — what the kernel read on the ground"), // row 3c: the dossier, not a marker id
         "{pv}"
     );
     let oid = objective_ask.expect("the objective was filed");
@@ -543,8 +544,8 @@ async fn shadow_two_kernels_beat_on_one_ground_one_beat_at_a_time() {
     // eighth is compared by name and verdict alone)
     let py_checks = hz_py["checks"].as_array().unwrap();
     let rs_checks = hz["checks"].as_array().unwrap();
-    assert_eq!(rs_checks.len(), 10, "{hz}"); // P7 sp7: the tenth — this cell is sealed
-    assert_eq!(py_checks.len(), 10, "{hz_py}");
+    assert_eq!(rs_checks.len(), 11, "{hz}"); // P7 sp7: the tenth — this cell is sealed; row 3c: the eleventh — every red answered
+    assert_eq!(py_checks.len(), 11, "{hz_py}");
     for (i, (a, b)) in rs_checks.iter().zip(py_checks.iter()).enumerate() {
         assert_eq!(a["name"], b["name"], "check {i}");
         assert_eq!(

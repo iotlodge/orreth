@@ -590,6 +590,11 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     if qs.get("origin"):
                         return self._json(200, markers.origin(conn, qs["origin"]))
                     return self._json(200, {"origins": markers.origins(conn)})
+            if path == "/levers":                        # row 3c: THE LEVER CATALOGUE — what the kernel itself can pull
+                from . import levers as _levers
+                cat = _levers.catalogue()
+                return self._json(200, {"door": _levers.DOOR, "levers": [_levers.lever_manifest(d) for d in cat],
+                                        "served": [d["name"] for d in cat if _levers.DOOR in d["doors"]]})
             if path == "/intentions":                    # 0007: the standing purposes
                 from urllib.parse import parse_qs
                 qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \

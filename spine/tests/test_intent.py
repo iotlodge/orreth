@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch intent sp1, the fifth firmware-rail · 2026-09-19
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: the eleventh check · the planner reads the dossier · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): IH-1 under the watch's sense (W14), the runner joined (W19), the human's stop held (W5) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures: W35 a stop asked is a stop held · W37 a duplicate purpose named at the door · W38 the honest word in more shapes · W40 standing intentions never off the board · 2026-09-23
 """The intent loop (canon 0007, block 11): an intention is a record with
@@ -75,7 +76,7 @@ def test_ih1_a_red_watch_turns_the_resiliency_loop_and_the_stop_ends_it(pg, monk
     [(plan_ask, objective_ask)] = cur.fetchall()
     assert objective_ask is None
     pv = glass.ask_view(pg, plan_ask)
-    assert pv["target"] == "planner" and pv["session"] == r["session"] and "OBSERVED" in pv["text"]
+    assert pv["target"] == "planner" and pv["session"] == r["session"] and "THE DOSSIER" in pv["text"]   # row 3c
     assert [m["kind"] for m in markers.ancestry(pg, _marker_of(pg, plan_ask))] == ["thought", "watch-red", "intention"]
     assert intent.turn(pg)["observed"] == [] and intent.turn(pg)["filed"] == []    # still red: one turn per cause
     with pg.transaction():

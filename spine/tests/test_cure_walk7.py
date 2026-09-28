@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's wounds · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: a green on its own is an improvement too (self-healed) · 2026-09-27
 """The kernel cures of walk #7 (docs/rearch/baselines/after-walk-2026-09-17.md,
 "Walk #7"), each a law in the suite: W14 a watch's state follows its
 metric and the loop wakes on the red TRANSITION alone; W8 a runner that
@@ -193,8 +194,9 @@ def test_w8_the_loop_hears_a_runner_that_cannot_act_once_and_waits_for_the_crew_
     t = intent.turn(pg)
     assert len(t["observed"]) == 1 and len(_turns(pg, r["intention_id"])) == 1       # no second plan
     cur = pg.cursor()
-    cur.execute("SELECT count(*) FROM spine_markers WHERE kind = 'improvement' AND parent = %s", (r["marker"],))
-    assert cur.fetchone()[0] == 1                                                    # still one
+    cur.execute("SELECT count(*) FROM spine_markers WHERE kind = 'improvement' AND parent = %s"
+                " AND note LIKE 'runner cannot act%%'", (r["marker"],))            # row 3c: a green on its own
+    assert cur.fetchone()[0] == 1                                                    # still one (of the runner's)
     # the crew changes: a new body joins — the block lifts, the loop plans again
     _body("echo-resident.v0.json").join(pg)
     presence.renew(pg, lib.identity.did, "librarian", "resident", ttl_s=60)

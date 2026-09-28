@@ -673,6 +673,7 @@ fn router(app: Arc<App>) -> Router {
         .route("/analyzer", get(analyzer_door))
         .route("/services", get(services_door).post(services_post))
         .route("/intentions", get(intentions_door))
+        .route("/levers", get(levers_door)) // P7 sp8 row 3c: THE LEVER CATALOGUE — what the kernel itself can pull
         .route("/markers", get(markers_door))
         .route("/markers/kinds", get(markers_kinds))
         .route("/monitor", get(monitor_door))
@@ -1342,6 +1343,20 @@ async fn services_door(State(app): State<Arc<App>>, Query(q): Q) -> Response {
     .await;
     match out {
         Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// P7 sp8 row 3c: the lever catalogue as data — every governed act this kernel can pull, and which it serves.
+async fn levers_door() -> Response {
+    match crate::levers_live::catalogue() {
+        Ok(cat) => answer(
+            200,
+            json!({"door": crate::levers::DOOR,
+                   "levers": cat.iter().map(crate::levers::manifest).collect::<Vec<_>>(),
+                   "served": cat.iter().filter(|d| d["doors"].as_array().is_some_and(|a| a.iter().any(|x| x == crate::levers::DOOR)))
+                                .filter_map(|d| d["name"].as_str()).collect::<Vec<_>>()}),
+        ),
         Err(e) => refuse(e),
     }
 }

@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch markers sp1, the open vocabulary of WHY · 2026-09-19
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W21 the schedule row wears its cadence · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cure W40: the origins keep every standing intention · 2026-09-23
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: an intention's origin row carries its last attributed outcome · 2026-09-27
 """Markers (canon 0006): the kernel's open, governed vocabulary of WHY.
 A marker is a typed origin on a fact — {kind, id, parent, by}: a root
 fact mints it, a serving fact carries it, a new beginning under it mints
@@ -306,12 +307,17 @@ def with_words(conn, rows: list[dict]) -> list[dict]:
         cur.execute("SELECT count(*) FROM pg_attribute WHERE attrelid = to_regclass('spine_intentions')"
                     " AND attname = 'blocked_note' AND NOT attisdropped")
         blk = ", blocked_note" if cur.fetchone()[0] else ", NULL"
-        cur.execute("SELECT intention_id, left(words, 100), active, serves, kind" + blk +
-                    " FROM spine_intentions WHERE intention_id = ANY(%s)", (iids,))
+        cur.execute("SELECT count(*) FROM pg_attribute WHERE attrelid = to_regclass('spine_intent_turns')"
+                    " AND attname = 'outcome' AND NOT attisdropped")
+        last = (", (SELECT outcome || ' — ' || coalesce(outcome_note, '') FROM spine_intent_turns t"
+                "   WHERE t.intention_id = i.intention_id AND t.outcome IS NOT NULL ORDER BY outcome_at DESC LIMIT 1)"
+                if cur.fetchone()[0] else ", NULL")            # row 3c: the newest attributed outcome
+        cur.execute("SELECT intention_id, left(words, 100), active, serves, kind" + blk + last +
+                    " FROM spine_intentions i WHERE intention_id = ANY(%s)", (iids,))
         found = {r[0]: r[1:] for r in cur.fetchall()}
         for m in rows:
             if m["ref"] in found:
-                m["words"], m["active"], m["serves"], m["origin_kind"], note = found[m["ref"]]
+                m["words"], m["active"], m["serves"], m["origin_kind"], note, m["last_outcome"] = found[m["ref"]]
                 m["blocked"], m["blocked_note"] = note is not None, note   # W6: waiting for a crew
     sids = [m["ref"] for m in rows if m["ref"].startswith("sch_")]
     if sids and _has(conn, "spine_schedules"):

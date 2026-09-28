@@ -712,6 +712,7 @@ function originRow(o){
                                 : `${esc(o.target || "any")} · ${esc(o.status || "")}`}` +
     `${counts(o) ? " · " + esc(counts(o)) : ""} · ${hhmm(o.at)}</span>` +
     (isInt && o.blocked ? `<span class="blocked" title="${esc(o.blocked_note || "")}">waiting for a crew that can act: ${esc(o.blocked_note || "")}</span>` : "") +   // W6
+    (isInt && o.last_outcome ? `<span class="meta" title="${esc(o.last_outcome)}"> · last red: ${esc(String(o.last_outcome).split(" — ")[0])}</span>` : "") +   // row 3c: the newest attributed outcome — cured · self-healed · still-red · cancelled
     (isInt && o.serves !== "schedule" ? (o.active !== false
         ? `<span class="stop" data-stop="${esc(o.ref)}" title="rule 11: recorded, never deleted — the stop asks for your code in the chat">stop</span>`
         : `<span class="stop" data-restart="${esc(o.ref)}" title="W20: the reverse of the stop — a new recorded fact, the history whole; it asks for your code in the chat">restart</span>`) : "");

@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: `set_marker` with its fact · the interest law (`dispatch_interests`) · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cure W40: the origins keep every standing intention · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: an intention's row carries its last attributed outcome · 2026-09-27
 //! Markers on the ground — mirrors `orreth_spine.markers` (canon 0006): the
 //! registry (the kernel's seven seeded in every world), the marker row minted
 //! WITH the fact inside the write path's own transaction, the ROOT column
@@ -430,8 +431,10 @@ pub async fn with_words(g: &Ground, mut rows: Vec<Value>) -> Result<Vec<Value>, 
         let found = g
             .client()
             .query(
-                "SELECT intention_id, left(words, 100), active, serves, kind, blocked_note FROM \
-                 spine_intentions WHERE intention_id = ANY($1)",
+                "SELECT i.intention_id, left(i.words, 100), i.active, i.serves, i.kind, i.blocked_note, \
+                 (SELECT outcome || ' — ' || coalesce(outcome_note, '') FROM spine_intent_turns t WHERE \
+                 t.intention_id = i.intention_id AND t.outcome IS NOT NULL ORDER BY outcome_at DESC LIMIT 1) \
+                 FROM spine_intentions i WHERE i.intention_id = ANY($1)",
                 &[&iids],
             )
             .await?;
@@ -446,6 +449,8 @@ pub async fn with_words(g: &Ground, mut rows: Vec<Value>) -> Result<Vec<Value>, 
                 o.insert("origin_kind".into(), json!(r.get::<_, String>(4)));
                 o.insert("blocked".into(), json!(note.is_some()));
                 o.insert("blocked_note".into(), json!(note));
+                // row 3c: the newest attributed outcome, for the Analyzer's "last red: …"
+                o.insert("last_outcome".into(), json!(r.get::<_, Option<String>>(6)));
             }
         }
     }

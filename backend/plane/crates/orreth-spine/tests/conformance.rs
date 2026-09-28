@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails: rail_names · outbox_row · inbox_key · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: ladder_step · manifest_pin · ask_fact · refused_fact · ask_kind · otpauth · hold_words · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, the rail's arms: lever_manifest · lever_remedies · lever_words · read_lever · dossier_words · remedy_words · outcome_words · ago_words · 2026-09-27
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the five mcp kinds · beat_lock · loop_words · plan_words · observed_words · watch_note · cannot_act · improvement_note · crew_hash · turned_fact · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the twelve minds kinds · backoff · park_rule · parked_words · parked_fact · harness_verdict · harness_command · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: topic_name · peers_from · address_home · epoch_check · world_fact · seam_sign · seam_verify · the words · sealed_words · ceiling · 2026-09-25
@@ -16,7 +17,8 @@
 
 use orreth_spine::{
     ask, beat, body, canonical, cells, content_hash, desk, envelope, export, intent, kernel_self,
-    mcp, memory, mitl, placement, profile, proof, rails, seat, services, stable, tools, watch,
+    levers, mcp, memory, mitl, placement, profile, proof, rails, seat, services, stable, tools,
+    watch,
 };
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
@@ -77,6 +79,14 @@ const PORTED_KINDS: &[&str] = &[
     "watch_note",
     "cannot_act",
     "improvement_note",
+    "lever_manifest",
+    "lever_remedies",
+    "lever_words",
+    "read_lever",
+    "dossier_words",
+    "remedy_words",
+    "outcome_words",
+    "ago_words",
     "duplicate_words",
     "hold_expiry",
     "crew_hash",
@@ -794,6 +804,106 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             intent::improvement_note(s(&inp["who"]), opt_str(&inp["reply"])),
             s(&exp["note"]).to_string(),
             "the note"
+        ),
+        // ---- orreth.levers/1 (P7 sp8 row 3c): THE REMEDIATION RAIL's pure laws ----
+        "lever_manifest" | "lever_remedies" => {
+            let cat = levers::catalogue(&levers::spine_dir())
+                .map_err(|e| format!("the catalogue: {e}"))?;
+            if kind == "lever_manifest" {
+                let d = levers::declared(&cat, s(&inp["name"]))
+                    .ok_or_else(|| format!("no lever named {} is declared", inp["name"]))?;
+                let m = levers::manifest(d);
+                same!(m, exp["manifest"], "the declaration as data");
+                same!(
+                    canonical::canonical_string(&m),
+                    s(&exp["bytes"]).to_string(),
+                    "the declaration's bytes"
+                );
+                same!(services::pin(&m), s(&exp["hash"]).to_string(), "the pin");
+            } else {
+                let names: Vec<Value> = levers::remedies(&cat, s(&inp["metric"]), s(&inp["door"]))
+                    .iter()
+                    .map(|d| d["name"].clone())
+                    .collect();
+                same!(json!(names), exp["names"], "the remedies this door serves");
+            }
+        }
+        "lever_words" => {
+            let list: Vec<Value> = inp["levers"].as_array().cloned().unwrap_or_default();
+            same!(
+                levers::lever_words(&list.iter().collect::<Vec<_>>()),
+                s(&exp["text"]).to_string(),
+                "the catalogue as the planner reads it"
+            );
+        }
+        "read_lever" => same!(
+            levers::read_lever(opt_str(&inp["reply"]))
+                .map(|r| r.to_value())
+                .unwrap_or(Value::Null),
+            exp["read"],
+            "the planner's answer read in the catalogue"
+        ),
+        "dossier_words" => same!(
+            levers::dossier_words(&inp["dossier"]),
+            s(&exp["text"]).to_string(),
+            "the dossier in plain words"
+        ),
+        "remedy_words" => same!(
+            levers::remedy_words(
+                s(&inp["serves"]),
+                s(&inp["words"]),
+                s(&inp["dossier_text"]),
+                s(&inp["levers_text"])
+            ),
+            s(&exp["text"]).to_string(),
+            "the planner's ask under a red watch"
+        ),
+        "outcome_words" => {
+            let got = match s(&inp["outcome"]) {
+                "cured" => levers::cured_note(
+                    s(&inp["watch"]),
+                    s(&inp["lever"]),
+                    &inp["args"],
+                    s(&inp["because"]),
+                ),
+                "self-healed" => levers::self_healed_note(s(&inp["watch"])),
+                "still-red" => levers::still_red_note(
+                    s(&inp["watch"]),
+                    s(&inp["lever"]),
+                    &inp["args"],
+                    inp["settles_s"].as_i64().unwrap_or(0),
+                ),
+                "cancelled" => levers::cancelled_note(
+                    s(&inp["watch"]),
+                    s(&inp["lever"]),
+                    &inp["args"],
+                    s(&inp["why"]),
+                ),
+                "no-lever" => levers::no_lever_note(s(&inp["watch"]), s(&inp["because"])),
+                "unserved" => levers::unserved_note(s(&inp["watch"]), s(&inp["lever"])),
+                "pulled" => levers::pulled_words(
+                    s(&inp["lever"]),
+                    &inp["args"],
+                    s(&inp["because"]),
+                    s(&inp["result"]),
+                ),
+                "handed" => levers::handed_words(
+                    s(&inp["watch"]),
+                    &inp["tried"].as_array().cloned().unwrap_or_default(),
+                    s(&inp["dossier_text"]),
+                ),
+                _ => levers::notice_words(
+                    s(&inp["watch"]),
+                    s(&inp["because"]),
+                    s(&inp["dossier_text"]),
+                ),
+            };
+            same!(got, s(&exp["text"]).to_string(), "the outcome's words");
+        }
+        "ago_words" => same!(
+            levers::ago_words(inp["s"].as_i64()),
+            s(&exp["text"]).to_string(),
+            "the ago words"
         ),
         "hold_expiry" => {
             same!(

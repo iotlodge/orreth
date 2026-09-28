@@ -3,6 +3,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds), walk #8's W20 the restart · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the turn under the beat lock; the loop's words in one place · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures: W35 a stop asked is a stop held · W37 a duplicate purpose named at the door · W38 the honest word in more shapes · 2026-09-23
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, THE REMEDIATION RAIL: the forensic turn · the lever road · the attributed outcome · 2026-09-27
 """The intent loop — the fifth firmware-rail (canon 0007, block 11).
 
 Human INTENTION is the topmost origin of work. An intention is a record
@@ -91,6 +92,12 @@ def ensure_schema(conn) -> None:
         # W20: the restart is recorded beside the stop — the history stays whole
         cur.execute("ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS restarted_by text")
         cur.execute("ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS restarted_at timestamptz")
+        # P7 sp8 row 3c: the remediation rail — the dossier the planner read, the lever the kernel
+        # pulled (its args, the planner's reason, the hop's ask, when), the outcome attributed
+        for col in ("dossier text", "watch text", "episode text", "tries int NOT NULL DEFAULT 1",
+                    "lever text", "lever_args text", "because text", "lever_ask text",
+                    "pulled_at timestamptz", "outcome text", "outcome_at timestamptz", "outcome_note text"):
+            cur.execute(f"ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS {col}")
 
 
 # ---- the kind of an ask (P23): the words propose it, the human flips it ----
@@ -258,7 +265,9 @@ def listing(conn, *, serves: str | None = None, kind: str | None = None,
         " (SELECT count(*) FROM spine_markers c WHERE c.parent = i.marker AND c.kind = 'objective'),"
         " (SELECT count(*) FROM spine_markers c WHERE c.parent = i.marker"
         "   AND c.kind NOT IN ('objective', 'thought')),"
-        " (SELECT count(*) FROM spine_intent_turns t WHERE t.intention_id = i.intention_id)"
+        " (SELECT count(*) FROM spine_intent_turns t WHERE t.intention_id = i.intention_id),"
+        " (SELECT outcome || ' — ' || coalesce(outcome_note, '') FROM spine_intent_turns t"
+        "   WHERE t.intention_id = i.intention_id AND t.outcome IS NOT NULL ORDER BY outcome_at DESC LIMIT 1)"
         " FROM spine_intentions i WHERE i.scope = %s"
         " AND (%s::text IS NULL OR i.serves = %s) AND (%s::text IS NULL OR i.kind = %s)"
         " AND (%s::boolean IS NULL OR i.active = %s)"
@@ -267,7 +276,8 @@ def listing(conn, *, serves: str | None = None, kind: str | None = None,
     out = []
     for r in cur.fetchall():
         d = _dict(r[:_NCOLS])
-        d.update(objectives=int(r[_NCOLS]), observations=int(r[_NCOLS + 1]), turns=int(r[_NCOLS + 2]))
+        d.update(objectives=int(r[_NCOLS]), observations=int(r[_NCOLS + 1]), turns=int(r[_NCOLS + 2]),
+                 last_outcome=r[_NCOLS + 3])          # row 3c: the newest attributed outcome, in words
         out.append(d)
     return out
 
@@ -407,11 +417,16 @@ def interested(conn, kind: str) -> list[dict]:
             if kind in d["interests"] and d["intention_id"] not in held]
 
 
-def plan(conn, intention: dict, *, cause: dict | None, observed: str) -> dict:
+def plan(conn, intention: dict, *, cause: dict | None, observed: str, dossier: dict | None = None,
+         levers: list[dict] | None = None, parent: str | None = None, watch: str | None = None,
+         episode: str | None = None, tries: int = 1) -> dict:
     """The kernel asks the intention's planner — under the observation
     that woke it (or under the intention itself, on cadence): 'the next
-    objective?' One turn per cause, ever."""
-    from . import dispatch
+    objective?' One turn per cause, ever. Under a RED WATCH (row 3c) the
+    planner is handed the DOSSIER and the levers this door serves, and
+    answers in the catalogue; the turn remembers the dossier, the watch
+    and its episode (this red's first turn)."""
+    from . import dispatch, levers as _levers
     cur = conn.cursor()
     if cause:
         cur.execute("SELECT turn_id FROM spine_intent_turns WHERE cause = %s", (cause["id"],))
@@ -420,17 +435,22 @@ def plan(conn, intention: dict, *, cause: dict | None, observed: str) -> dict:
     if _blocked(conn, intention):        # W8: the runner cannot act — nothing more until the crew changes
         return {"planned": False, "blocked": True, "intention_id": intention["intention_id"],
                 "note": intention.get("blocked_note")}
-    text = plan_words(intention['serves'], intention['words'], observed)
+    if dossier is not None:                                      # row 3c: the forensic turn
+        text = _levers.remedy_words(intention['serves'], intention['words'], observed,
+                                    _levers.lever_words(levers or []))
+    else:
+        text = plan_words(intention['serves'], intention['words'], observed)
     [aid] = dispatch.submit_ask(conn, text, person=intention["added_by"],
                                 to=[intention["planner"]],
-                                parent_marker=(cause["id"] if cause else intention["marker"]),
+                                parent_marker=(parent or (cause["id"] if cause else intention["marker"])),
                                 session=intention["session"])
     tid = "turn_" + secrets.token_hex(5)
     with conn.transaction():
         c = conn.cursor()
-        c.execute("INSERT INTO spine_intent_turns (turn_id, intention_id, cause, plan_ask)"
-                  " VALUES (%s, %s, %s, %s)",
-                  (tid, intention["intention_id"], cause["id"] if cause else None, aid))
+        c.execute("INSERT INTO spine_intent_turns (turn_id, intention_id, cause, plan_ask, dossier, watch,"
+                  " episode, tries) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                  (tid, intention["intention_id"], cause["id"] if cause else None, aid,
+                   json.dumps(dossier) if dossier is not None else None, watch, episode or tid, int(tries)))
         c.execute("UPDATE spine_intentions SET last_at = now() WHERE intention_id = %s",
                   (intention["intention_id"],))
     return {"planned": True, "turn_id": tid, "intention_id": intention["intention_id"],
@@ -451,9 +471,26 @@ def on_marker(conn, marker: dict, ref: str, note: str | None) -> list[dict]:
         mine = [i for i in cands if i["marker"] == root]
         if mine:
             cands = mine
+    if marker["kind"] == WATCH_RED:                       # row 3c: the FORENSIC TURN before anyone thinks
+        from . import levers as _levers
+        d = _levers.forensic(conn, ref, bodies=BODIES())
+        observed = _levers.dossier_words(d)
+        offered = _levers.remedies(_levers.catalogue(), d["watch"]["metric"], _levers.DOOR)
+        return [t for t in (plan(conn, i, cause=marker, observed=observed, dossier=d, levers=offered,
+                                 watch=ref) for i in cands) if t["planned"]]
     observed = observed_words(marker['kind'], ref, note)
     return [t for t in (plan(conn, i, cause=marker, observed=observed) for i in cands)
             if t["planned"]]
+
+
+def BODIES():
+    """The kernel's own view of the bodies it seats as processes, for the
+    dossier — the reference seats none (its crew are the Bridge's threads);
+    the Rust kernel reads its `Bodies`. A hook a rig may replace."""
+    return None
+
+
+RESTART = None      # the body.restart lever's hand: name → words; the reference has none (the Rust kernel's)
 
 
 def _watch_transitions(conn) -> list[dict]:
@@ -572,16 +609,52 @@ def _file_objectives(conn) -> list[dict]:
     from . import dispatch
     cur = conn.cursor()
     cur.execute(
-        "SELECT t.turn_id, i.intention_id, i.added_by, i.runner, i.marker, i.session, a.reply"
+        "SELECT t.turn_id, i.intention_id, i.added_by, i.runner, i.marker, i.session, a.reply,"
+        " t.dossier, t.cause, t.watch, t.outcome"
         " FROM spine_intent_turns t"
         " JOIN spine_intentions i ON i.intention_id = t.intention_id"
         " JOIN spine_asks a ON a.ask_id = t.plan_ask"
         " WHERE t.objective_ask IS NULL AND a.status = 'replied' AND i.active AND i.scope = %s",
         (ev.scope(),))
+    from . import markers
     filed = []
     held = held_stops(conn)                    # W35: nothing new filed while the code is awaited
-    for tid, iid, by, runner, marker, session, reply in cur.fetchall():
+    from . import levers as _levers
+    cat = _levers.catalogue()
+    for tid, iid, by, runner, marker, session, reply, dossier, cause, watch, outcome in cur.fetchall():
         if iid in held:
+            continue
+        if outcome is not None:                      # row 3c: the watch closed before the planner spoke
+            with conn.transaction():
+                conn.cursor().execute("UPDATE spine_intent_turns SET objective_ask = '-'"
+                                      " WHERE turn_id = %s", (tid,))
+            continue
+        read = _levers.read_lever(reply) if dossier else None
+        if read is not None:                         # row 3c: the planner answered IN the catalogue
+            intention = get(conn, iid)
+            d = json.loads(dossier)
+            wname = d["watch"]["name"]
+            decl = _levers.declared(cat, read["lever"]) if read["lever"] else None
+            served = decl is not None and _levers.DOOR in decl["doors"] and decl["consequence"] != "grave"
+            if read["lever"] is None or not served:  # no lever fits — the human, with the dossier attached
+                note = (_levers.no_lever_note(wname, read["because"]) if read["lever"] is None
+                        else _levers.unserved_note(wname, read["lever"]))
+                markers.set_marker(conn, "observation", ref=watch, by="the kernel", parent=marker, note=note)
+                aid = _levers.kernel_row(conn, person=by, session=session,
+                                         text=f"no lever fits watch {wname!r}",
+                                         reply=_levers.notice_words(wname, read["because"] or note,
+                                                                    _levers.dossier_words(d)),
+                                         parent_marker=cause, note=note)
+                with conn.transaction():
+                    conn.cursor().execute(
+                        "UPDATE spine_intent_turns SET lever = %s, because = %s, lever_ask = %s,"
+                        " objective_ask = '-' WHERE turn_id = %s",
+                        (_levers.NONE, read["because"], aid, tid))
+                filed.append({"turn_id": tid, "intention_id": iid, "lever": None, "notice": aid})
+                continue
+            p = _levers.pull(conn, intention, turn_id=tid, cause_marker=cause, lever=decl, args=read["args"],
+                             because=read["because"], bodies=RESTART)
+            filed.append({"turn_id": tid, "intention_id": iid, **p})
             continue
         words = " ".join((reply or "").split())[:500]
         if not words:
@@ -672,4 +745,7 @@ def _turn(conn) -> dict:
     due = _due(conn)
     filed = _file_objectives(conn)
     heard = _hear_runners(conn)          # W8: a runner that cannot act is heard once
-    return {"observed": observed, "due": due, "filed": filed, "heard": heard, "expired": expired}
+    from . import levers as _levers
+    attributed = _levers.attribute(conn, bodies=BODIES())   # row 3c: every open red re-read, its outcome named
+    return {"observed": observed, "due": due, "filed": filed, "heard": heard, "expired": expired,
+            "attributed": attributed}

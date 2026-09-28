@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells · partition · isolation · hardening · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the profile rides the routed ask (W58) · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: eleven world checks · 2026-09-27
 //! THE CELLS' PROOF (canon 0002 rule 8 · 0005 P7 sp7 · M7 + M8): two Rust
 //! kernels stand as two CELLS on one Postgres box — each its own database
 //! and role, its own benches and topics, its own kernel self — and name
@@ -441,7 +442,7 @@ async fn two_cells_on_one_box_route_home_park_resume_and_fence() {
         .unwrap();
     assert_eq!(sealed["ok"], json!(true), "{sealed}");
     assert_eq!(sealed["reachable"], json!([db_a]));
-    assert_eq!(h["checks"].as_array().unwrap().len(), 10, "ten checks");
+    assert_eq!(h["checks"].as_array().unwrap().len(), 11, "eleven checks"); // row 3c: the eleventh
     println!("cells · sealed: {}", sealed["detail"]);
 
     // ---- 3. the seam: peers pinned on first sight, live

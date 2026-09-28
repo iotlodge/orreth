@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: the eleventh check · the planner reads the dossier · 2026-09-27
 """The Stable keeper (canon 0005 P6.5 sp3 · 0009 §2 · 0019 · 0058 · JB's
 lock 2026-09-24: LiteLLM executes, the registry knows and decides): a
 mind is a stall on the one ladder AND a model entry in the gateway; a
@@ -270,8 +271,9 @@ def test_the_harness_runs_model_arms_and_reads_the_stables_world_checks(pg, fake
     with pytest.raises(ValueError):
         harness.run(pg, lib, cases=cases, arm="ghost")
     names = [c["name"] for c in harness.checks(pg)]
-    assert names[-5:] == ["every mind answers", "the gateway answers and holds every mind", "the meter and the gateway agree", "a model change is announced",
-                          "this cell is sealed"]                                             # P7 sp7: the tenth
+    assert names[-6:] == ["every mind answers", "the gateway answers and holds every mind", "the meter and the gateway agree", "a model change is announced",
+                          "this cell is sealed",                                             # P7 sp7: the tenth
+                          "every red is answered and every green attributed"]               # P7 sp8 row 3c: the eleventh
     assert harness.minds_answer(pg)["unprobed"] == ["haiku", "sonnet"] and harness.minds_answer(pg)["ok"] is False
     services.check_all(pg, kind="mind", gateway=gw, by=ME)
     assert harness.minds_answer(pg) == {"name": "every mind answers", "ok": True, "detail": "2 of 2 answered", "silent": [], "unprobed": []}

@@ -269,3 +269,17 @@ the same files, unchanged — before any module earns the word "ported".
     name grammar. The `door_needs` cases carry the desk's doors: `/join` · `/join/prove` ·
     `/join/lease` and a join's status are open, the desk's list is a read, and `POST /delta`
     now needs a body's LEASE (seat-v0's one `/delta` case amended the same day).
+  - `lever_manifest` · `lever_remedies` · `lever_words` · `read_lever` · `dossier_words` ·
+    `remedy_words` · `outcome_words` · `ago_words` (levers-v0, P7 sp8 row 3c — THE REMEDIATION
+    RAIL) — the lever catalogue as DATA: both runners read `spine/levers.v0.json` (beside the
+    tools') by `input.name` and must build the same manifest (name · description · needs ·
+    consequence · for · doors · settles_s — `expect.bytes` canonical, `expect.hash` the pin);
+    the remedies a door offers for a watch's metric (served by the door, declared for the
+    metric or for any, never grave); the catalogue as the planner reads it; the planner's
+    answer read IN the catalogue ("LEVER: <name> <needs>=<value> — BECAUSE: …" · "LEVER: none
+    — BECAUSE: …" · a sentence is `null`, the crew's road; marks and one short preface
+    forgiven); the dossier in six plain lines (the watch, what it saw lately, who it names,
+    the last acts on them, the last time it went red, what was tried this time — every clock
+    and every "ago" already in the input, so the law is pure); the planner's ask under a red
+    watch; every outcome's words (cured with its cause · self-healed · still-red · cancelled
+    · no lever · unserved · pulled · handed to the human · the notice); and `ago_words`.

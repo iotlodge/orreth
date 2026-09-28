@@ -102,6 +102,20 @@ pub const INTENT_DDL: &[&str] = &[
     "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS heard boolean NOT NULL DEFAULT false",
     "ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS restarted_by text",
     "ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS restarted_at timestamptz",
+    // P7 sp8 row 3c: the remediation rail — the dossier the planner read, the lever the kernel
+    // pulled (its args, the planner's reason, the hop's ask, when), the outcome attributed
+    "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS dossier text",
+    "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS watch text",
+    "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS episode text",
+    "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS tries int NOT NULL DEFAULT 1",
+    "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS lever text",
+    "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS lever_args text",
+    "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS because text",
+    "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS lever_ask text",
+    "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS pulled_at timestamptz",
+    "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS outcome text",
+    "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS outcome_at timestamptz",
+    "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS outcome_note text",
 ];
 
 /// `presence.ensure_schema`: the leases (M2).

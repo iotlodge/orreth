@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells · partition · isolation · hardening · 2026-09-25
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: the eleventh check follows the tenth · 2026-09-27
 """CELLS (P7 sp7): the universe's home on the ground, the world card on
 the door, the tenth check, the meter wearing its world, the topics
 wearing the cell's namespace. The seam itself (peers · route home ·
@@ -56,8 +57,8 @@ def test_the_tenth_check_reads_the_role_and_its_reach(pg):
     so — never hidden."""
     ground.ensure_all(pg)
     checks = harness.checks(pg)
-    assert [c["name"] for c in checks][-1] == "this cell is sealed" and len(checks) == 10
-    c = checks[-1]
+    assert [c["name"] for c in checks][-2] == "this cell is sealed" and len(checks) == 11   # row 3c: the eleventh follows
+    c = checks[-2]
     assert c["role"] and c["database"] and c["database"] in c["reachable"]
     ok, words = cells.sealed_words(c["role"], c["database"], c["reachable"])
     assert c["ok"] == ok and c["detail"] == words

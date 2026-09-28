@@ -1,0 +1,142 @@
+{
+  "format": "orreth-levers/1",
+  "version": "0.1.0",
+  "words": "THE LEVER CATALOGUE (P7 sp8 row 3c, the remediation rail): every governed act the kernel itself can pull, DECLARED as data beside tools.v0.json and read by both kernels. A lever is what the kernel does with its own hands through the same doors a person would - a tool is what a body runs. The planner is shown the levers this door serves for the watch's metric and answers IN the catalogue; a routine lever runs at once under the intention's authority, a consequential one holds at the interlock for a person's click (the guide's law: the kernel never lowers the ladder because it is running on its own), a grave one is never pulled by the kernel. `for` names the watch metrics a lever can remedy ('*' = any; [] = declared, never offered as a remedy). `needs` names the arguments. `doors` names the kernels whose door serves it. `settles_s` is how long the kernel waits after pulling before it re-reads the watch.",
+  "levers": [
+    {
+      "name": "body.restart",
+      "description": "Restart a body this kernel seats that is PARKED (it died three times in five minutes, so the kernel stopped restarting it) or was refused at birth. Its deaths are forgotten and it comes back as the same self. A body that is alive or already restarting is left alone.",
+      "needs": {"name": "the body's name, as the roster spells it"},
+      "consequence": "routine",
+      "for": ["bodies_dormant", "bodies_alive"],
+      "doors": ["rust"],
+      "settles_s": 45
+    },
+    {
+      "name": "service.check",
+      "description": "Probe one service on the shelf by name right now and record its health - the ladder steps to healthy or unhealthy. Nothing changes but the record.",
+      "needs": {"name": "the service's name, as the shelf spells it"},
+      "consequence": "routine",
+      "for": ["*"],
+      "doors": ["python", "rust"],
+      "settles_s": 10
+    },
+    {
+      "name": "mind.check",
+      "description": "Probe one mind (an LLM on the Stable) by name right now and record its health; a mind whose gateway entry went missing is written back from its ladder.",
+      "needs": {"name": "the mind's name, as the Stable spells it"},
+      "consequence": "routine",
+      "for": ["minds_unhealthy", "route_failures_1h", "minds_standing"],
+      "doors": ["python", "rust"],
+      "settles_s": 10
+    },
+    {
+      "name": "service.restore",
+      "description": "Bring a retired service back onto the shelf - a new recorded fact, its retirement stays in the record. Only for a service the kernel or a keeper retired; never one a person rested on purpose.",
+      "needs": {"name": "the service's name"},
+      "consequence": "routine",
+      "for": ["*"],
+      "doors": ["python", "rust"],
+      "settles_s": 10
+    },
+    {
+      "name": "mind.restore",
+      "description": "Bring a retired mind back onto the Stable and into the gateway - a new recorded fact, its retirement stays in the record. Only for a mind the kernel or a keeper retired; never one a person rested on purpose.",
+      "needs": {"name": "the mind's name"},
+      "consequence": "routine",
+      "for": ["minds_unhealthy", "minds_standing", "route_failures_1h"],
+      "doors": ["python", "rust"],
+      "settles_s": 10
+    },
+    {
+      "name": "service.retire",
+      "description": "Rest a service or a mind that keeps failing - it leaves the shelf (a mind leaves the gateway too), recorded, never deleted; a person can restore it later. Consequential: it holds at the interlock for a person's yes.",
+      "needs": {"name": "the service's or mind's name"},
+      "consequence": "consequential",
+      "for": ["route_failures_1h", "minds_unhealthy"],
+      "doors": ["python", "rust"],
+      "settles_s": 10
+    },
+    {
+      "name": "intent.stop",
+      "description": "Rest an intention - recorded, never deleted. Grave: a person's code, and a master's click for the kernel's own. The kernel never pulls it as a remedy.",
+      "needs": {"intention_id": "the intention's id"},
+      "consequence": "grave",
+      "for": [],
+      "doors": ["python", "rust"],
+      "settles_s": 0
+    },
+    {
+      "name": "intent.restart",
+      "description": "Stand a rested intention again - a new recorded fact, its stop stays in the record. Grave, the same ladder as the stop. The kernel never pulls it as a remedy.",
+      "needs": {"intention_id": "the intention's id"},
+      "consequence": "grave",
+      "for": [],
+      "doors": ["python", "rust"],
+      "settles_s": 0
+    },
+    {
+      "name": "mind.register",
+      "description": "Add a mind to the Stable with its deal (provider, model, price). Consequential; the keeper proposes it, a person cuts it.",
+      "needs": {"name": "the mind's name", "deal": "the deal"},
+      "consequence": "consequential",
+      "for": [],
+      "doors": ["python", "rust"],
+      "settles_s": 0
+    },
+    {
+      "name": "mind.assign",
+      "description": "Assign a body's class of work to a mind. Consequential.",
+      "needs": {"subject": "the body", "klass": "the class of work", "stall": "the mind"},
+      "consequence": "consequential",
+      "for": [],
+      "doors": ["python", "rust"],
+      "settles_s": 0
+    },
+    {
+      "name": "mind.unassign",
+      "description": "Take a body's class of work off its mind. Consequential.",
+      "needs": {"subject": "the body", "klass": "the class of work"},
+      "consequence": "consequential",
+      "for": [],
+      "doors": ["python", "rust"],
+      "settles_s": 0
+    },
+    {
+      "name": "mind.refill",
+      "description": "Refill a body's fuel by an amount in dollars. Consequential.",
+      "needs": {"name": "the body", "usd": "the dollars"},
+      "consequence": "consequential",
+      "for": [],
+      "doors": ["python", "rust"],
+      "settles_s": 0
+    },
+    {
+      "name": "mind.repin",
+      "description": "Re-pin a mind's deal to the market's price. Consequential.",
+      "needs": {"name": "the mind's name", "deal": "the deal"},
+      "consequence": "consequential",
+      "for": [],
+      "doors": ["python", "rust"],
+      "settles_s": 0
+    },
+    {
+      "name": "world.rehome",
+      "description": "Re-home this universe to another cell - its epoch advances. Consequential; never a remedy for a red watch.",
+      "needs": {"to_cell": "the cell's name"},
+      "consequence": "consequential",
+      "for": [],
+      "doors": ["rust"],
+      "settles_s": 0
+    },
+    {
+      "name": "join.admit",
+      "description": "Admit a body that proved its key at the join desk - a governing seat's yes. Consequential; never a remedy.",
+      "needs": {"join": "the join's id"},
+      "consequence": "consequential",
+      "for": [],
+      "doors": ["rust"],
+      "settles_s": 0
+    }
+  ]
+}

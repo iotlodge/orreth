@@ -14,6 +14,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: topic_name · peers_from · address_home · epoch_check · world_fact · seam_sign · seam_verify · the words · sealed_words · ceiling · 2026-09-25
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the profile's arms (W58) · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the seat's arms: seat_mint · seat_verify · seat_grants · door_needs · origin_ok · bearer · seat_words · seat_did_of_key · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, the rail's arms: lever_manifest · lever_remedies · lever_words · read_lever · dossier_words · remedy_words · outcome_words · ago_words · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3 (b), the desk's arms: desk_transition · desk_challenge · desk_collect · desk_join_id · desk_prove · desk_collect_ok · desk_fuel · desk_lease · desk_words · desk_name · 2026-09-26
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
@@ -25,9 +26,9 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import (body as _body, cells, desk, dispatch, envelope as ev, export, ground, harness, intent, mcp, mitl, monitor,
-                          placement, presence, profile, proof, rails, resident, scheduler, seat, services, stable, store, digest,
-                          tools)
+from orreth_spine import (body as _body, cells, desk, dispatch, envelope as ev, export, ground, harness, intent, levers, mcp,
+                          mitl, monitor, placement, presence, profile, proof, rails, resident, scheduler, seat, services, stable,
+                          store, digest, tools)
 from orreth_spine.identity import Identity
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
@@ -319,6 +320,36 @@ def test_fixture(contract, case):
         assert intent.duplicate_words(inp["kind"], inp["words"]) == exp["text"]
     elif kind == "improvement_note":
         assert intent.improvement_note(inp["who"], inp["reply"]) == exp["note"]
+    # ---- orreth.levers/1 (P7 sp8 row 3c): THE REMEDIATION RAIL's pure laws ----
+    elif kind == "lever_manifest":               # the declaration as data, both kernels read levers.v0.json by name
+        d = levers.declared(levers.catalogue(), inp["name"])
+        m = levers.lever_manifest(d)
+        assert m == exp["manifest"]
+        assert ev.canonical(m).decode("ascii") == exp["bytes"] and ev.content_hash(m) == exp["hash"]
+    elif kind == "lever_remedies":               # served by the door, for the metric, never grave
+        assert [d["name"] for d in levers.remedies(levers.catalogue(), inp["metric"], inp["door"])] == exp["names"]
+    elif kind == "lever_words":                  # the catalogue as the planner reads it
+        assert levers.lever_words(inp["levers"]) == exp["text"]
+    elif kind == "read_lever":                   # the planner's answer read IN the catalogue
+        assert levers.read_lever(inp["reply"]) == exp["read"]
+    elif kind == "dossier_words":                # the forensic turn in plain words
+        assert levers.dossier_words(inp["dossier"]) == exp["text"]
+    elif kind == "remedy_words":                 # what the kernel asks the planner under a red watch
+        assert levers.remedy_words(inp["serves"], inp["words"], inp["dossier_text"], inp["levers_text"]) == exp["text"]
+    elif kind == "outcome_words":                # the attributed outcome's words
+        o = inp["outcome"]
+        got = (levers.cured_note(inp["watch"], inp["lever"], inp["args"], inp["because"]) if o == "cured"
+               else levers.self_healed_note(inp["watch"]) if o == "self-healed"
+               else levers.still_red_note(inp["watch"], inp["lever"], inp["args"], inp["settles_s"]) if o == "still-red"
+               else levers.cancelled_note(inp["watch"], inp["lever"], inp["args"], inp["why"]) if o == "cancelled"
+               else levers.no_lever_note(inp["watch"], inp["because"]) if o == "no-lever"
+               else levers.unserved_note(inp["watch"], inp["lever"]) if o == "unserved"
+               else levers.pulled_words(inp["lever"], inp["args"], inp["because"], inp["result"]) if o == "pulled"
+               else levers.handed_words(inp["watch"], inp["tried"], inp["dossier_text"]) if o == "handed"
+               else levers.notice_words(inp["watch"], inp["because"], inp["dossier_text"]))
+        assert got == exp["text"]
+    elif kind == "ago_words":
+        assert levers.ago_words(inp["s"]) == exp["text"]
     elif kind == "crew_hash":                    # the crew's shape, sorted, as canonical bytes
         assert intent.crew_shape_hash([(n, c) for n, c in inp["shape"]]) == exp["hash"]
     # ---- orreth.memory/1 (P7 sp5): the Record's laws — recall's grammar, the landed and purged facts, the digest ----

@@ -58,6 +58,7 @@ EXIT_NO_POLICY = 4                                # no covenant policy — termi
 PARK_STRIKES = 3                                  # deaths inside the window that park a body
 PARK_WINDOW_S = 300                               # the window
 BACKOFF_CAP_S = 30.0                              # the longest wait before a restart
+FAKE_REPLY_DIAL = "SPINE_FAKE_REPLY"                # a proof scripts what the fake mind says when the gateway is dark
 KERNEL_DOOR_DIAL = "SPINE_KERNEL_DOOR"            # where a spawned body streams its words (http://127.0.0.1:<port>)
 EPHEMERAL_DIAL = "SPINE_BODY_EPHEMERAL"           # tests only: an ephemeral self (home=None)
 
@@ -231,8 +232,9 @@ def _gateway():
         from .gateway import LiteLLMGateway
         return LiteLLMGateway(), f"every mind through the gateway at {_stable.Gateway().base}"
     from .gateway import FakeGateway
-    return (FakeGateway(reply="I am the fake mind — the gateway is dark; run scripts/dev.sh up "
-                              "and restart me to think for real."),
+    scripted = os.environ.get(FAKE_REPLY_DIAL)      # row 3c's proofs script the fake mind's one reply
+    return (FakeGateway(reply=scripted or "I am the fake mind — the gateway is dark; run scripts/dev.sh up "
+                                          "and restart me to think for real."),
             f"a fake mind (the gateway at {_stable.Gateway().base} is dark)")
 
 

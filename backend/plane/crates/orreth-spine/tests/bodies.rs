@@ -19,6 +19,7 @@
 //! live Bridge on :4600 it refuses to run. The bodies think with the fake
 //! mind (the gateway dial points at a dark port) — no spend.
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the gate: the proof SITS before it knocks (the ceremony through the doors) · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, THE REMEDIATION RAIL: the kernel cures the parked echo itself, the green attributed · 2026-09-27
 
 #![cfg(feature = "bridge")]
 
@@ -257,15 +258,23 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
     std::env::set_var("SPINE_KERNEL_HOME", home.join("kernel"));
     std::env::set_var("SPINE_SERVICES_HOME", home.join("services"));
     std::env::set_var("SPINE_GATEWAY", "http://127.0.0.1:1"); // the gateway dark: the fake mind, no spend
+                                                              // P7 sp8 row 3c: the fake mind's one line is the PLANNER's answer in the lever catalogue — every
+                                                              // body says it (the librarian's reply still names the fake mind, as step 3 reads)
+    std::env::set_var(
+        "SPINE_FAKE_REPLY",
+        "LEVER: body.restart name=echo — BECAUSE: the fake mind reads echo parked after three deaths.",
+    );
     std::env::set_var("SPINE_MIND_CHECK_S", "5"); // the keepers beat inside the proof's minute
     std::env::set_var("SPINE_TOOL_CHECK_S", "5");
-    // a two-seat crew for the proof: the librarian (a mind, a golden set) and the echo
+    // a three-seat crew for the proof: the librarian (a mind, a golden set), the echo, and the
+    // planner (row 3c: the Resiliency loop asks it under the dossier)
     let crew = home.join("crew.v0.json");
     std::fs::write(
         &crew,
         json!({"format": "orreth-crew/1", "seats": [
             {"template": "templates/librarian-resident.v0.json"},
-            {"template": "templates/echo-resident.v0.json"}]})
+            {"template": "templates/echo-resident.v0.json"},
+            {"template": "templates/firmware-planner.v0.json"}]})
         .to_string(),
     )
     .unwrap();
@@ -290,7 +299,7 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
     assert!(lit.wait_ready(Duration::from_secs(60)).await);
     sit(port, &person).await; // P7 sp8 row 3: the ceremony — the person holds this ground
     let bodies = lit.bodies.clone().expect("this kernel seats a crew");
-    assert_eq!(bodies.seats.len(), 2);
+    assert_eq!(bodies.seats.len(), 3);
     let mut feed = lit.feed.subscribe();
 
     // ---- 1. the crew is seated: two processes, joined, alive on their leases
@@ -305,7 +314,7 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
     assert!(echo_did.starts_with("did:orreth:agent:"), "{v}");
     assert_eq!(body_of(&v, "echo")["lives"], json!(1));
     let residents = wait_for(port, "/residents", Duration::from_secs(60), |v| {
-        v["residents"].as_array().is_some_and(|a| a.len() == 2)
+        v["residents"].as_array().is_some_and(|a| a.len() == 3)
     })
     .await;
     let echo_row = residents["residents"]
@@ -320,7 +329,7 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
         "the roster's self is the process's self"
     );
     let mon = wait_for(port, "/monitor", Duration::from_secs(60), |v| {
-        v["values"]["bodies_alive"] == json!(2)
+        v["values"]["bodies_alive"] == json!(3)
     })
     .await;
     assert_eq!(mon["values"]["bodies_dormant"], json!(0));
@@ -446,8 +455,8 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
     assert_eq!(hz["last"]["template"], json!("librarian"));
     assert_eq!(
         hz["checks"].as_array().unwrap().len(),
-        10,
-        "ten world checks on the Rust door (P7 sp7 added the tenth): {hz}"
+        11,
+        "eleven world checks on the Rust door (P7 sp8 row 3c added the eleventh): {hz}"
     );
     assert_eq!(
         post(port, "/harness/run", json!({"template": "nobody"}))
@@ -641,7 +650,186 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
         "its deaths forgotten on the human's word"
     );
 
-    // ---- 8. the crew card knows which LLM the librarian thinks with (the Stable's decision, from this kernel)
+    // ---- 8. THE REMEDIATION RAIL (P7 sp8 row 3c): a watch on dormant bodies stands green; the echo is
+    // killed three more times and parks; its lease lapses; the watch turns red; the kernel assembles the
+    // DOSSIER and asks the planner under it with the levers this door serves; the planner answers in the
+    // catalogue; THE KERNEL restarts the echo itself, as a recorded hop in Resiliency's session; the watch
+    // goes green and the kernel attributes it — an improvement WITH its cause
+    let wid = orreth_spine::monitor::add_watch(
+        &g,
+        &world.scope,
+        "a body's lease lapsed",
+        "bodies_dormant",
+        ">",
+        0.0,
+        &person,
+    )
+    .await
+    .unwrap();
+    let (_, lv) = get(port, "/levers").await;
+    assert!(
+        lv["served"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("body.restart")),
+        "{lv}"
+    );
+    for life in 4..=6 {
+        let v = wait_for(port, "/bodies", Duration::from_secs(120), |v| {
+            let b = body_of(v, "echo");
+            b["state"] == json!("alive") && b["lives"] == json!(life)
+        })
+        .await;
+        let pid = body_of(&v, "echo")["pid"].as_u64().unwrap() as u32;
+        unsafe {
+            libc::kill(pid as libc::pid_t, libc::SIGKILL);
+        }
+    }
+    wait_for(port, "/bodies", Duration::from_secs(120), |v| {
+        body_of(v, "echo")["state"] == json!("parked")
+    })
+    .await;
+    let path = "/intentions?kind=kernel";
+    let res = wait_for(port, path, Duration::from_secs(240), |v| {
+        v["intentions"].as_array().is_some_and(|a| {
+            a.iter().any(|i| {
+                i["serves"] == json!("resiliency")
+                    && i["last_outcome"]
+                        .as_str()
+                        .is_some_and(|o| o.starts_with("cured"))
+            })
+        })
+    })
+    .await;
+    let res = res["intentions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|i| i["serves"] == json!("resiliency"))
+        .unwrap()
+        .clone();
+    assert_eq!(
+        res["last_outcome"],
+        json!("cured — watch \"a body's lease lapsed\" went green after the kernel pulled body.restart name=echo — the planner's reason: the fake mind reads echo parked after three deaths"),
+        "{res}"
+    );
+    let v = wait_for(port, "/bodies", Duration::from_secs(60), |v| {
+        body_of(v, "echo")["state"] == json!("alive")
+    })
+    .await;
+    assert_eq!(
+        body_of(&v, "echo")["did"],
+        json!(echo_did),
+        "the same self, restarted by the kernel"
+    );
+    let turn = g
+        .client()
+        .query_one(
+            "SELECT plan_ask, lever, lever_args, because, lever_ask, outcome, dossier FROM spine_intent_turns \
+             WHERE watch = $1 AND intention_id = $2 ORDER BY at DESC LIMIT 1",
+            &[&wid, &res["intention_id"].as_str().unwrap()],
+        )
+        .await
+        .unwrap();
+    /// The turn as the proof reads it: plan · lever · args · because · hop · outcome · dossier.
+    type TurnRow = (
+        String,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+    );
+    let (plan_ask, lever, largs, because, lever_ask, outcome, dossier): TurnRow = (
+        turn.get(0),
+        turn.get(1),
+        turn.get(2),
+        turn.get(3),
+        turn.get(4),
+        turn.get(5),
+        turn.get(6),
+    );
+    assert_eq!(
+        (
+            lever.as_deref(),
+            largs.as_deref(),
+            because.as_deref(),
+            outcome.as_deref()
+        ),
+        (
+            Some("body.restart"),
+            Some(r#"{"name":"echo"}"#),
+            Some("the fake mind reads echo parked after three deaths"),
+            Some("cured")
+        )
+    );
+    let d: Value = serde_json::from_str(&dossier.unwrap()).unwrap();
+    let echo_subject = d["subjects"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["name"] == json!("echo"))
+        .expect("the dossier names the echo");
+    assert!(
+        echo_subject["state"]
+            .as_str()
+            .unwrap()
+            .contains("PARKED by the kernel: it died 3 times"),
+        "{echo_subject}"
+    );
+    let (_, pv) = get(port, &format!("/ask/{plan_ask}")).await;
+    assert_eq!(pv["target"], json!("planner"));
+    let text = pv["text"].as_str().unwrap();
+    assert!(
+        text.contains("THE DOSSIER — what the kernel read on the ground")
+            && text.contains("WHO IT NAMES: echo (body) — dormant")
+            && text.contains("- body.restart name=<")
+            && !text.contains("a marker of kind"),
+        "{text}"
+    );
+    let (_, hop) = get(port, &format!("/ask/{}", lever_ask.unwrap())).await;
+    assert_eq!(hop["served_by"], json!("the kernel"));
+    assert_eq!(hop["status"], json!("replied"));
+    assert_eq!(
+        hop["session"], res["session"],
+        "a hop in Resiliency's own session"
+    );
+    assert_eq!(
+        hop["text"],
+        json!("the kernel pulls body.restart name=echo")
+    );
+    let hr = hop["reply"].as_str().unwrap();
+    assert!(
+        hr.starts_with("On the intention's authority the kernel pulled body.restart name=echo: echo is being restarted on your word")
+            && hr.ends_with("Because the fake mind reads echo parked after three deaths."),
+        "{hr}"
+    );
+    let notes: Vec<String> = g
+        .client()
+        .query(
+            "SELECT note FROM spine_markers WHERE scope = $1 AND kind = 'improvement' AND ref = $2",
+            &[&world.scope, &wid],
+        )
+        .await
+        .unwrap()
+        .iter()
+        .map(|r| r.get(0))
+        .collect();
+    assert_eq!(
+        notes,
+        vec!["watch \"a body's lease lapsed\" went green after the kernel pulled body.restart name=echo — the planner's reason: the fake mind reads echo parked after three deaths".to_string()]
+    );
+    let (_, hv) = get(port, "/harness").await;
+    let eleventh = hv["checks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == json!("every red is answered and every green attributed"))
+        .expect("the eleventh check");
+    assert_eq!(eleventh["ok"], json!(true), "{eleventh}");
+
+    // ---- 9. the crew card knows which LLM the librarian thinks with (the Stable's decision, from this kernel)
     let (_, crew) = get(port, "/crew").await;
     let lib = crew["crew"]
         .as_array()
@@ -652,11 +840,11 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
     assert!(lib.get("mind").is_some(), "{lib}");
 
     // ---- down, WHOLE: nothing left running
-    let pids: Vec<u32> = ["echo", "librarian"]
+    let pids: Vec<u32> = ["echo", "librarian", "planner"]
         .iter()
         .filter_map(|n| bodies.pid_of(n))
         .collect();
-    assert_eq!(pids.len(), 2);
+    assert_eq!(pids.len(), 3);
     lit.stop().await;
     for pid in &pids {
         let end = Instant::now() + Duration::from_secs(10);
@@ -669,7 +857,7 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
     let _ = v;
     let _ = std::fs::remove_dir_all(&home);
     println!(
-        "bodies proof: the Rust kernel alone seated {} bodies as processes on {}, served asks through them, streamed the words, ran the harness over the rail (run {rid}), brought the echo back as the same self ({echo_did}) after a kill, parked it after three deaths and restarted it on the word, and stopped whole — pids {pids:?} gone",
+        "bodies proof: the Rust kernel alone seated {} bodies as processes on {}, served asks through them, streamed the words, ran the harness over the rail (run {rid}), brought the echo back as the same self ({echo_did}) after a kill, parked it after three deaths and restarted it on the word, parked it again and CURED it itself under Resiliency (watch {wid}: the dossier, the planner's lever, the kernel's restart, the green attributed), and stopped whole — pids {pids:?} gone",
         bodies.seats.len(),
         world.scope
     );

@@ -1847,6 +1847,73 @@ approved (covenant rule 9).
       green; a walk where JB kills a body and reads the whole story in the chat
       in plain words. Not a follow-up that can slip: the difference between a
       kernel that notices and a kernel that acts.
+      **✅ BUILT 2026-09-27 (its own session, after lock 5), both kernels.**
+      THE CATALOGUE: `spine/levers.v0.json` (format `orreth-levers/1`) beside
+      `tools.v0.json` — fifteen levers, each `name · description · needs ·
+      consequence · for (the watch metrics it remedies; `*` any; `[]` declared,
+      never offered) · doors (which kernel serves it) · settles_s`; read by
+      `levers.py` / `levers.rs` (`catalogue` refuses a wrong format, a missing
+      key, an unknown class, a name twice); `GET /levers` on both doors. THE
+      FORENSIC TURN: `forensic` reads the ground alone — the watch with its
+      value and since · the last six turned facts · WHO IT NAMES by metric
+      (bodies_*: the dormant bodies with the lease's lapse, the kernel's own
+      process state — PARKED with its deaths and last words — or the parked
+      fact; asks_received: the waiting asks; outbox_*: the outbox; minds_*: the
+      unhealthy minds) · the last acts on them (held kernel acts, park facts,
+      earlier pulls) · the last time it went red (the previous episode's lever
+      and outcome) · what was tried this time; `dossier_words` says it in six
+      plain lines; `remedy_words` hands the planner the intention, the dossier,
+      the levers this door serves for the metric (`remedies`: served, for the
+      metric, never grave) and ONE shape to answer in. THE ANSWER IN THE
+      CATALOGUE: `read_lever` — "LEVER: body.restart name=echo — BECAUSE: …" or
+      "LEVER: none — BECAUSE: …", marks and one preface forgiven; a plain
+      sentence is still the crew's road (a business intention's objective).
+      THE KERNEL AS RUNNER: `pull` — a routine lever runs at once through the
+      same door a person uses (`body.restart` → the kernel's `Bodies`;
+      `service.check` · `mind.check` · `service.restore` · `mind.restore`) and
+      is recorded as a hop in the intention's own session (`kernel_row`: an ask
+      the kernel served, born replied, an `action` marker under the red's
+      marker, journey + reply on the rail: "On the intention's authority the
+      kernel pulled body.restart name=echo: … Because …"); a consequential
+      lever (`service.retire`) HOLDS at the interlock with the planner's reason
+      in the hold's words, for a person's click — the guide's law kept: the
+      kernel never lowers the ladder because it runs on its own; a grave lever
+      is never offered; a lever this door does not serve, or "none", hands the
+      human the dossier in the intention's session ("This one is yours") with
+      an `observation` marker, and the crew never receives a job it cannot do.
+      THE ATTRIBUTED OUTCOME: `attribute` runs every beat after the monitor
+      judged — green after our act = `cured`, an `improvement` marker "watch
+      … went green after the kernel pulled … — the planner's reason: …"; green
+      with no act = `self-healed` (an `improvement` too; a hold still waiting
+      is WITHDRAWN as not needed); red past the lever's `settles_s` =
+      `still-red`, ONE more plan with TRIED THIS TIME in the dossier, then the
+      human with the dossier attached; a hold cancelled = `cancelled`. The turn
+      row remembers it all (`dossier · watch · episode · tries · lever ·
+      lever_args · because · lever_ask · pulled_at · outcome · outcome_at ·
+      outcome_note`); `/intentions` carries `last_outcome`, the Analyzer's row
+      shows "last red: cured". THE HARNESS GRADES IT (W72's cure): the
+      ELEVENTH world check, "every red is answered and every green attributed"
+      — a red older than two minutes with no lever, hold or notice, or a green
+      nobody attributed, is the wound named. PROOFS: `levers-v0.json` (44 cases,
+      eight kinds, both runners green) · `tests/test_remediation.py` (ten laws:
+      the catalogue and the reader; the dossier's words; the forensic turn's
+      plan text; no lever → the notice with the dossier, then self-healed; a
+      routine lever pulled and the green attributed to it; an unserved lever
+      said honestly; a consequential lever held and cancelled; a green while
+      the hold waits withdraws it; still red → once more → the human; the
+      harness naming an unanswered red) · `tests/bodies.rs` step 8 (the Rust
+      kernel alone: the echo parked again, the dossier naming it PARKED, the
+      planner's lever, THE KERNEL restarting it, `cured` attributed, the
+      eleventh check green) · `tests/loops.rs` (a sentence still files the
+      crew's objective). **Honest limits:** the reference's door serves no
+      `body.restart` (its crew are the Bridge's threads) — its remedies are the
+      shelf's and the Stable's; the Rust monitor still reads five metrics
+      (`minds_*` watches are the reference's); the dossier's history is the
+      outbox (a retention sweep would shorten its memory); TWO tries per red
+      episode, then the human; the canon's "run under full auto" for a
+      consequential lever is NOT built — the guide's standing law (a
+      consequence still holds for you) won, and JB's lock on the difference
+      is owed; the walk (SPEC-REMEDY-01) is OWED to JB's seat.
     - **Row 4 — THE RE-BASE AND MAIN REPLACED AT 0.1.0 (JB's plane
       approval, 2026-09-26: the OLD `orrethd` crate is RETIRED from the
       workspace — it lives on at the `main-v0.72-old-world` tag forever —
