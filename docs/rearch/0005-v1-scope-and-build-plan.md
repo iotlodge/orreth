@@ -2366,6 +2366,97 @@ approved (covenant rule 9).
       JB decides crate by crate; sp1 is BUILT and stays OPEN until that discussion; sp2's sweep waits
       on it. (sp1 itself touched none of the five: the migrator, the park, the doors and the roster
       live in `orreth-spine` and the reference alone.)
+      **JB's word, 2026-09-29 morning — THE SPIRIT-REVIEW LAW (the crate discussion's standard):**
+      "Previous Orreth had many many features in the farm and stable and workspace and although we're
+      going a different direction going forward for these we will eventually be embedded also … I just
+      don't want you to toss out previous work without first assessing if there are features of that
+      target crate that Orreth still needs to achieve its intended objectives as a global kernel. If you
+      deem we're matched or better, then just like crypto you can action. Before we toss out stuff from
+      old, let's ensure the SPIRIT of the feature/element are reviewed for applicability." THE LAW: for
+      every old element the sweep removes — a read like the crypto read FIRST (what it built · which of
+      its features a GLOBAL KERNEL still needs · what the new kernel matches, betters or LACKS · a
+      verdict on the honest boundary); matched-or-better → action without asking; a gap → named and
+      carried forward as a seed or a row, never silently dropped. JB NAMED THREE GAPS, recorded as seeds,
+      not built in the sweep: (1) THE COSTS PANEL — the meter tracks everything in dollars but THE PANEL
+      shows no ACCUMULATED costs/tokens ("not a big deal … aggregating the metrics into a Costs Panel,
+      down road") → `seeds/the-costs-panel.md`; (2) TWO MISSING RESIDENTS, `security` and `architect`
+      (formerly allen) — "this one bugs me": like the librarian and the Firmware, Orreth feels
+      incomplete without them; essential to the running state AND rails of OPERABILITY →
+      `seeds/security-and-architect-residents.md`; (3) THE `identity` FIRMWARE CHIP — "if Identity is a
+      core element of proof and … the Orreth Firmware will need an associated Cloud element to
+      effectively action Cloud based Identity Providers, why isn't it a Firmware chip"; Orreth decouples
+      the authority of agents so no one agent can do GRAVE acts outside its scope → the identity seed
+      extended (`seeds/identity-layer-and-the-seat.md`).
+      **re-base sp2 BUILT 2026-09-29 — THE NAME AND THE RIG, after the spirit read.** THE READ: (a) the
+      organs — canon 0009 IS the read (63 rows, each old organ's seat: carried · re-seated · capability ·
+      parked · dropped on purpose); the sweep removes the old organs' CODE (the sim, the flavors, the
+      capabilities' genesis, the console site, the CDK stack), whose laws are carried or whose seats are
+      named there; the gaps 0009 already names stand (the Bell's reach beyond the glass, the content
+      rails of 0068 — the SDK's rails twin now SKIPS in plain words for want of a reference on the new
+      kernel — the Thumb, the dials drawer, the package, the roll-up across cells, the Epoch), and JB's
+      three join them as seeds; (b) the four crates — `orreth-node` · `orreth-store` · `orreth-resolver`
+      · `orreth-rollup` read one by one (the honest boundary, four rows beside the crypto row): none is
+      integrable code (the first plane's in-memory universe on JSON values, an object store the ground
+      replaced, a fold and a monoid with no caller) and no crate outside the old `orrethd` depends on
+      any; what MATCHES or BETTERS: content-addressed append-only memory with sibling corrections, the
+      purge's hash tombstone, one-face refusal at every door, the chain verified at presentation with
+      attenuation, nothing grading its own yardstick, a cell's isolation stronger than a prefix; what is
+      LACKING, named as seeds: signed ingress on memory rows (the machine road), the two clocks and the
+      lived-vs-archive label (0004 rule 8), recall escalating across worlds by time horizon with the
+      un-served remainder, visibility classes (with the seam), a revoked set, a read-time re-hash of a memory row against its address, a fidelity label on a digest whose source was purged, keep-class floors at ingress, the tighten-only cascade
+      BETWEEN worlds with a content-addressed law on every thought, the monoid's fold across cells (THE
+      COSTS PANEL). **JB's word, 2026-09-29 midday, on the reads: "All four leave with sp2."** All five crates
+      (crypto's read done the day before) left the workspace in sp2's commit as crypto's precedent —
+      their laws on the boundary and in the seeds, their fixtures (`crypto` · `flows` · `resolver` ·
+      `rollup`) at the tag; covenant rule 9 REWRITTEN in the same commit (the sacred core = `orreth-spine`'s
+      crypto surface — `kernel_self` · `seat` · `desk` · `envelope` · `canonical` — and `contracts/v0`);
+      the workspace `Cargo.toml` lists one member.
+      THE BUILD: the kernel's binary is **`orrethd`** (`orreth-spine`, `src/bin/orrethd.rs`; born
+      `spine-bridge`), THE door on **:4600** (`PORT_DEFAULT`); the Python reference lights on **:4601**
+      (`glass.py` reads `SPINE_BRIDGE_PORT`); the old `orrethd` crate and its tier profiles left the
+      workspace; `scripts/dev.sh` rewritten — `kernel [stop]` (a release build, the crew as processes) ·
+      `reference [stop]` · `walk` = up + kernel · `cell` (peers default `local=http://127.0.0.1:4600`,
+      the first cell :4602) · `suite` refuses beside a lit kernel OR reference · `bridge`/`shadow` are
+      signposts · `old` is a signpost to the tag · `replant` (the old launchd keeper's word, still loaded
+      on JB's Mac) says how to unload; every Rust proof refuses beside :4600 or :4601 and says
+      `dev.sh kernel stop`. ONE IMAGE: the repo root's `Dockerfile` (stage 1 the release binary with
+      cmake for librdkafka; stage 2 debian-slim + python3 + uv, the spine's venv synced, the glass, the
+      crew, the templates, the tools and `docs/rearch` — the MITL reads the canon from disk — beside
+      `/usr/local/bin/orrethd`; `SPINE_PYTHON` names the venv; `ORRETH_HOME` a volume for the seeds) and
+      `spine/compose.yaml`'s `kernel` service behind the `kernel` profile (`--profile kernel up -d
+      --build`), the events rail given an INTERNAL listener (`events:29092`) so a box reaches Kafka by
+      name (the host's `localhost:9092` unchanged; the events box is recreated once — its topics are a
+      queue's, the ground is the log). THE SWEEP (JB's lock 1, no lingering .72): `backend/conformance` ·
+      `backend/plane/crates/orrethd` + `profiles` + the old plane `Dockerfile` · `agents/flavors` +
+      `agents/Dockerfile` + `agents/README.md` · `capabilities` · `infrastructure` · `scripts/demo.sh` ·
+      `scripts/shoot.sh` · `docs/demos.md` · `docs/guides` · the dive docs `docs/design/0018`–`0073` +
+      `the-objective-atlas.md` — 281 paths out of the index, every one moved WHOLE into the git-ignored
+      `archive/0.72/` (nothing deleted on disk; the git-ignored `site/` and `docs/articles/` moved with
+      them); the CI's old `reference` job (backend/conformance) gone, the `spine` and `plane` jobs stand;
+      the SDK's parity test re-aimed at the spine (`orreth_spine.envelope` canonical + hash; an SDK
+      signature verified by the reference's primitive over the reference's bytes; 10 pass, the rails twin
+      12 skipped naming the gap); the covenant's rule 6 names the reference spine; AGENTS.md and the
+      repo CLAUDE.md's rule 4 name the new ports; `docs/design/README.md` rewritten (the constitution
+      0000–0017 + the registers; the old road at the tag); the honest boundary says where 0.72 evidence
+      lives; the root README REWRITTEN for the new world (JB's argument: entropy in agent fleets → a
+      kernel removes it as the OS did → rigid control held by the kernel, policy by humans, intent the
+      unit of control → a fluid experience BECAUSE the control is rigid; THE PANEL first; the one law of
+      understanding; what runs today; run it · test it · read the tree; where the old world went);
+      `backend/plane/README.md` for one crate. PROVEN: the release binary built and LIT on :4600 through
+      `dev.sh kernel` (`/health`: kernel rust · schema 2 · version 0.1.0 — the crate's; `VERSION` turns
+      at sp3), the crew seated as its processes; the last shadow kernel on :4601 stopped whole; the SDK
+      parity 10 green; cargo fmt · clippy · the hermetic workspace tests and the doors proof (below).
+      FOUND AT THE BOX'S FIRST LIGHT, CURED: (i) a fresh volume made a SECOND crew of new selves under
+      the same world and the gateway refused their key aliases (one crew per ground is the law) — the box
+      now mounts the host's own `~/.orreth` (`ORRETH_SEEDS`), the same selves every life (the crew came
+      back at life 110 · 92 · 85 …, no stumble); (ii) the kernel bound loopback inside the box — healthy
+      within, unreachable through the published port — `SPINE_BIND` (127.0.0.1 on the host; 0.0.0.0 in the
+      image); (iii) the MITL's ontology missed the covenant — the image carries
+      `.claude/skills/orreth-covenant`. HONEST LIMITS: the box is lit and answers `/health` from the host
+      but has not been walked in the glass; the events box's recreate loses the dev topics' history once (the outbox is the queue);
+      the reference's residents serve beside the kernel's crew if both are lit with bodies (one crew per
+      ground is the law — `SPINE_BODIES=none` on the second); the P7 canon (0008, the sp3–sp8 entries above) keeps the name
+      `spine-bridge` as history.
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the

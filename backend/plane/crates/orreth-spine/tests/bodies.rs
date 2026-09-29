@@ -238,8 +238,8 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
     if !rig_up("the_rust_kernel_alone_seats_and_governs_the_crew") {
         return;
     }
-    if port_open(4600) {
-        println!("a Bridge holds :4600 — the bodies proof refuses to run beside a live rig (stop it: scripts/dev.sh bridge stop)");
+    if port_open(4600) || port_open(4601) {
+        println!("a kernel holds :4600 or the reference :4601 — the bodies proof refuses to run beside a live rig (stop it: scripts/dev.sh kernel stop · scripts/dev.sh reference stop)");
         return;
     }
     let tok = token_hex(3);

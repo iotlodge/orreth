@@ -39,8 +39,9 @@ process — mayflies in a universe designed for living things. Review caught it
 
 6. **Canonical bytes are the contract** (0000 §3).
    Sorted keys, compact separators, ensure_ascii — byte-identical across the SDK, the
-   Python sim, and the Rust plane. Any touch to canonicalization or signing runs
-   `agents/orreth-agent-sdk/tests/test_parity.py` green before it lands.
+   Python reference (`spine/orreth_spine/envelope.py`) and the Rust kernel
+   (`orreth-spine/src/canonical.rs`). Any touch to canonicalization or signing runs
+   `agents/orreth-agent-sdk/tests/test_parity.py` and the envelope fixture green before it lands.
 
 7. **One world, one picture.**
    Roster, orrery, rollup, and Console must agree. Anything a floor shows about the
@@ -50,10 +51,17 @@ process — mayflies in a universe designed for living things. Review caught it
 8. **Lived time is monotone** (0004).
    The universe rejects backdated lived memory. Keep it that way.
 
-9. **The core is sacred.**
-   `backend/plane/crates/orreth-node`, `orreth-store`, the crypto crates, and
-   `contracts/v0` change only with JB's explicit, stated approval for that specific
-   change. "It would be convenient" is not approval.
+9. **The core is sacred.** (rewritten 2026-09-29, re-base sp2, on JB's word after the
+   crate reads)
+   The kernel's crypto surface in `backend/plane/crates/orreth-spine` — `kernel_self`
+   (the kernel's own seed and signature), `seat` (the capability token's mint and
+   verification), `desk` (the join proof over the desk's own nonce), `envelope` and
+   `canonical` (the one true bytes) — and `contracts/v0` change only with JB's explicit,
+   stated approval for that specific change. "It would be convenient" is not approval.
+   The first plane's crates (`orreth-crypto` · `orreth-node` · `orreth-store` ·
+   `orreth-resolver` · `orreth-rollup`) rest whole at the tag `main-v0.72-old-world`;
+   their laws the new kernel lacks are named on the honest boundary and in
+   `docs/rearch/seeds/`, never silently dropped.
 
 10. **Provenance or nothing.**
     Every new source file opens with a `# PROVENANCE:` banner naming its author model;

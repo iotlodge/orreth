@@ -49,8 +49,8 @@ The RabbitMQ management console is at http://localhost:15672
 
 The kernel spawns and governs every body as its own process. The crew is ONE
 manifest, `crew.v0.json`, read by both spines: the Python Bridge (`glass.py`)
-seats it in-process as the reference; the Rust kernel (`spine-bridge`,
-`scripts/dev.sh shadow`) spawns one process per seat. Beside it, `tools.v0.json`
+seats it in-process as the reference (`scripts/dev.sh reference`, :4601); the
+kernel (`orrethd`, `scripts/dev.sh kernel`, :4600) spawns one process per seat. Beside it, `tools.v0.json`
 declares the built-in tools (name · words · schema · class · flags) — data both
 kernels read; each kernel seeds the shelf from it and probes a built-in itself,
 while a tool's execution stays in the body (`tools.py` binds each name to its
@@ -97,7 +97,7 @@ doors serve the world card, `/world`.
 
 ```bash
 scripts/dev.sh cell two                       # u:two on spine_two as cell_two, benches/topics 'two', seeds in ~/.orreth/cells/two, :4602
-scripts/dev.sh shadow stop; SPINE_PEERS=two=http://127.0.0.1:4602 scripts/dev.sh shadow   # the first cell names its peer
+scripts/dev.sh kernel stop; SPINE_PEERS=two=http://127.0.0.1:4602 scripts/dev.sh kernel   # the first cell names its peer
 scripts/dev.sh cell two stop                  # down whole, its bodies with it
 ```
 
@@ -156,8 +156,8 @@ sits before it knocks.
 
 ## The join desk (P7 sp8 row 3b — the machine's gate)
 
-A BODY joins through a five-status desk the kernel keeps (`orreth_sim/joindoor.py`
-carried law for law): `pending → challenged → proved → staged → done | denied`.
+A BODY joins through a five-status desk the kernel keeps (the old world's desk,
+`orreth_sim/joindoor.py` at the tag `main-v0.72-old-world`, carried law for law): `pending → challenged → proved → staged → done | denied`.
 `POST /join {did, name, role, public_key, template_hash, policy_hash, ticket?}`
 asks and is CHALLENGED in the same breath — the desk's own nonce; a DID here is
 a hash of the key, so the key rides beside it and must derive it. `POST

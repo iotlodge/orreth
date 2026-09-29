@@ -7,6 +7,8 @@
 # `orreth-spine-ground`, so a recreated container keeps the world — it ran on
 # an anonymous volume before (migrated once by hand: stop · create · cp -a · up).
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper: the gateway joins the rig · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp2: the kernel `orrethd` as a box (profile `kernel`);
+#          the events rail gains an in-network listener so a box reaches it by name · 2026-09-29
 name: orreth-spine
 
 services:
@@ -48,11 +50,14 @@ services:
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      # two doors: the host reaches the rail at localhost:9092 (the kernel on the host, the suite, the
+      # reference); a BOX reaches it at events:29092 (re-base sp2 — the kernel's own box)
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,INTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,INTERNAL://events:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -97,6 +102,39 @@ services:
       interval: 5s
       timeout: 5s
       retries: 40
+    restart: unless-stopped
+
+  # re-base sp2 (2026-09-29): THE KERNEL as a box — `orrethd` built from the repo's Dockerfile, the crew
+  # inside it, the same glass on :4600. Behind the `kernel` profile so `scripts/dev.sh up` keeps lighting
+  # the four rails alone (the walk kernel runs on the host, a release build, its bodies beside it):
+  #     docker compose -f spine/compose.yaml --profile kernel up -d --build kernel
+  # Its seeds (the kernel self, the bodies) are the HOST's own `~/.orreth` (ORRETH_SEEDS to point elsewhere)
+  # — the box is the same world as the host kernel, the same selves every life (covenant rule 1). Found at
+  # the first light: a fresh volume made a second crew of new selves under the same world, and the gateway
+  # refused their key aliases (one crew per ground is the law). The host kernel and this box never light
+  # together on :4600.
+  kernel:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: ghcr.io/iotlodge/orrethd:dev
+    container_name: orreth-spine-kernel
+    profiles: ["kernel"]
+    ports: ["4600:4600"]
+    environment:
+      SPINE_PG: postgresql://orreth:orreth-dev@ground:5432/spine
+      SPINE_RABBIT: amqp://orreth:orreth-dev@invoke:5672/%2F
+      SPINE_KAFKA: events:29092
+      SPINE_GATEWAY: http://gateway:4000
+      SPINE_GATEWAY_KEY: ${SPINE_GATEWAY_KEY:-sk-orreth-dev}
+      SPINE_HUMAN_ZONE: ${SPINE_HUMAN_ZONE:-America/Denver}
+      SPINE_MASTERS: ${SPINE_MASTERS:-}
+    volumes:
+      - ${ORRETH_SEEDS:-~/.orreth}:/var/lib/orreth
+    depends_on:
+      ground: { condition: service_healthy }
+      invoke: { condition: service_healthy }
+      events: { condition: service_healthy }
     restart: unless-stopped
 
 volumes:

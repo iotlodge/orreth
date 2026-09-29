@@ -1,0 +1,12 @@
+# the image is the kernel and the spine — nothing else rides in (re-base sp2, 2026-09-29)
+*
+!backend/plane
+!spine
+!docs/rearch
+!.claude/skills/orreth-covenant
+!VERSION
+backend/plane/target
+spine/.venv
+spine/**/__pycache__
+spine/.pytest_cache
+docs/rearch/baselines

@@ -1,11 +1,18 @@
 # PROVENANCE: authored by Opus 4.8 (2026-07-05), pending Fable 5 review — see agents/PROVENANCE.md
-"""The SDK signs bytes the plane must accept. This proves it — canonicalization parity
-against the Orreth reference, plus a signature the reference verifier accepts.
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp2: the reference is the spine · 2026-09-29
+"""The SDK signs bytes the kernel must accept. This proves it — canonicalization parity
+against the Orreth REFERENCE (the Python spine, `spine/orreth_spine/envelope.py` — the one
+law the Rust kernel's `canonical.rs` is held to by the envelope fixture), plus a signature
+the reference's own primitive accepts over the reference's own bytes.
 
-    cd agents/orreth-agent-sdk && uv run --with cryptography \
-        --with pytest --with ../../backend/conformance pytest -q
-    # or simply, from backend/conformance's env which already has orreth_sim:
-    #   PYTHONPATH=agents/orreth-agent-sdk:backend/conformance pytest agents/orreth-agent-sdk/tests
+    cd agents/orreth-agent-sdk && uv run --with cryptography --with pynacl \
+        --with pytest --with ../../spine pytest -q
+    # or, from the spine's env which already has orreth_spine:
+    #   PYTHONPATH=agents/orreth-agent-sdk pytest agents/orreth-agent-sdk/tests
+
+Before re-base sp2 the reference was the old world's sim (`backend/conformance/orreth_sim`),
+now at the tag `main-v0.72-old-world`; the content rails' twin test below still names it,
+skipped honestly until the rails have a reference on the new kernel.
 """
 import sys
 from pathlib import Path
@@ -13,12 +20,12 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "backend" / "conformance"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "spine"))
 
 from orreth_agent import crypto as sdk
 
 try:
-    from orreth_sim import crypto as ref
+    from orreth_spine import envelope as ref
 except Exception:                                    # reference not importable → skip parity
     ref = None
 
@@ -31,28 +38,33 @@ CASES = [
 ]
 
 
-@pytest.mark.skipif(ref is None, reason="orreth_sim reference not on path")
+@pytest.mark.skipif(ref is None, reason="orreth_spine reference not on path")
 @pytest.mark.parametrize("obj", CASES)
 def test_canonical_bytes_match_reference(obj):
     assert sdk.canonical(obj) == ref.canonical(obj)
 
 
-@pytest.mark.skipif(ref is None, reason="orreth_sim reference not on path")
+@pytest.mark.skipif(ref is None, reason="orreth_spine reference not on path")
 @pytest.mark.parametrize("obj", CASES)
 def test_content_hash_matches_reference(obj):
     assert sdk.content_hash(obj) == ref.content_hash(obj)
 
 
-@pytest.mark.skipif(ref is None, reason="orreth_sim reference not on path")
-def test_reference_verifier_accepts_sdk_signature():
-    """A signature the SDK produces must verify under the reference's verifier — the exact
-    property the plane relies on when it checks an agent's memory."""
+@pytest.mark.skipif(ref is None, reason="orreth_spine reference not on path")
+def test_reference_primitive_accepts_sdk_signature():
+    """A signature the SDK produces must verify, under the reference's own signing
+    primitive (PyNaCl Ed25519 — `orreth_spine.identity` signs and the desk proves with
+    it), over the REFERENCE's canonical bytes of the same payload — the exact property
+    the kernel relies on when it checks a body's proof or a record's signature."""
+    nacl = pytest.importorskip("nacl.signing")
     kp = sdk.KeyPair()
     did = sdk.did_key_for(kp.public)
     payload = {"id": "sha256:x", "kind": "episodic", "scope": "u:demo/e:cloud/f:prod",
                "author": did, "occurred_at": "2026-07-05T00:00:00Z", "provenance_class": "lived"}
     sig = kp.sign(did, payload)
-    assert ref.verify_sig(sig, payload, kp.public)
+    public_bytes = sdk.b64d(kp.public[1:])           # the SDK's `z…` multibase, the raw 32 bytes behind it
+    nacl.VerifyKey(public_bytes).verify(ref.canonical(payload), sdk.b64d(sig["sig"]))   # raises on a bad signature
+    assert sdk.verify_sig(sig, payload, kp.public)   # and the SDK's own verifier agrees
 
 
 def test_did_key_roundtrip():
@@ -64,7 +76,15 @@ def test_did_key_roundtrip():
 # ---- 0068 sp4: the rails twin (Fable 5, 2026-09-10) --------------------------------
 # The SDK carries its own copy of the content rails so a field agent enforces
 # the same law the kernel's lanes do. One corpus through both modules —
-# detection, masking, refusal, and events must be IDENTICAL.
+# detection, masking, refusal, and events must be IDENTICAL. The reference
+# lived in the old world's sim; the new kernel has no content rails yet (a
+# named gap of re-base sp2's spirit read — canon 0005 row 4), so this twin
+# skips in plain words until the rails stand on the new kernel.
+
+try:
+    from orreth_sim import rails as ref_rails          # the old world's, at the tag main-v0.72-old-world
+except Exception:
+    ref_rails = None
 
 RAIL_CORPUS = [
     "clean text with nothing to see",
@@ -87,12 +107,12 @@ RAIL_SETS = [
 ]
 
 
-@pytest.mark.skipif(ref is None, reason="orreth_sim reference not on path")
+@pytest.mark.skipif(ref_rails is None,
+                    reason="the content rails have no reference on the new kernel yet (the old sim rests at the tag)")
 @pytest.mark.parametrize("text", RAIL_CORPUS)
 @pytest.mark.parametrize("direction", ["entering", "leaving"])
 def test_rails_enforcement_matches_reference(text, direction):
     from orreth_agent import rails as sdk_rails
-    from orreth_sim import rails as ref_rails
     for rules in RAIL_SETS:
         assert (sdk_rails.enforce(rules, direction, text)
                 == ref_rails.enforce(rules, direction, text))

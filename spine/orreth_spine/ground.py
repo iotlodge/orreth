@@ -24,7 +24,7 @@ FINISHED (the same day, CI: a thread born mid-birth skipped DDL, its seed hit an
 undefined table, and the relay died; no resident ever replied).
 
 THE BEAT LOCK (P7 sp4 — the loops' shadow law): two kernels stand on one
-ground in SHADOW (the Python Bridge on :4600, the Rust bridge on :4601),
+ground side by side (the Rust kernel `orrethd` on :4600, the Python reference on :4601),
 and each runs the standing loops — the scheduler's tick, the intent
 rail's turn. A beat reads what is due and acts on it; two beats at once
 would file the same occurrence twice, observe the same red twice, plan

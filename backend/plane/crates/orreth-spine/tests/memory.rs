@@ -209,8 +209,8 @@ async fn shadow_two_kernels_read_one_record_and_sign_as_one_self() {
     if !rig_up("shadow_two_kernels_read_one_record") {
         return;
     }
-    if port_open(4600) {
-        println!("a Bridge holds :4600 — the shadow proof refuses to run beside a live rig (stop it: scripts/dev.sh bridge stop)");
+    if port_open(4600) || port_open(4601) {
+        println!("a kernel holds :4600 or the reference :4601 — the shadow proof refuses to run beside a live rig (stop it: scripts/dev.sh kernel stop · scripts/dev.sh reference stop)");
         return;
     }
     let tok = token_hex(3);

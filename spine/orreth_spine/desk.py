@@ -1,7 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (b): the machine join desk · 2026-09-26
 """THE MACHINE JOIN DESK (canon 0005 sp8 row 3b · 0006 §2–3 · 0012 · covenant rule 3).
 
-A BODY joins a world the way the old world's desk let it (`orreth_sim/joindoor.py`,
+A BODY joins a world the way the old world's desk let it (`orreth_sim/joindoor.py` at the tag `main-v0.72-old-world`,
 JB's lock 2026-07-07), carried onto the new kernel: the five-status desk
 
     pending → challenged → proved → staged → done | denied

@@ -11,7 +11,7 @@
 //! the report line is the honest word. Each test stands on its own throwaway
 //! schema (a ground of its own, per the ground law) and its own queue
 //! namespace, so it can never race a live rig or another test. The shadow
-//! test refuses to run while a Bridge holds :4600 (the stale-rig law).
+//! test refuses to run while a kernel holds :4600 or the reference :4601 (the stale-rig law).
 
 #![cfg(feature = "rails")]
 
@@ -484,8 +484,8 @@ async fn shadow_the_two_spines_share_one_ground_and_one_truth() {
     if !rig_up("shadow_the_two_spines_share_one_ground_and_one_truth") {
         return;
     }
-    if port_open(4600) {
-        println!("a Bridge holds :4600 — the shadow proof refuses to run beside a live rig (stop it: scripts/dev.sh bridge stop)");
+    if port_open(4600) || port_open(4601) {
+        println!("a kernel holds :4600 or the reference :4601 — the shadow proof refuses to run beside a live rig (stop it: scripts/dev.sh kernel stop · scripts/dev.sh reference stop)");
         return;
     }
     let tok = token();

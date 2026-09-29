@@ -30,7 +30,7 @@ BridgeRig is the whole dev Operating State in one object: the relay
 breathing the outbox onto the rail, the dispatcher turning facts into
 invocations, the librarian serving, and the glass on top. One command:
 
-    python -m orreth_spine.glass        # http://127.0.0.1:4600/
+    python -m orreth_spine.glass        # http://127.0.0.1:4601/  (SPINE_BRIDGE_PORT; the Rust kernel `orrethd` is THE door on :4600 since re-base sp2)
 
 (a real mind when ANTHROPIC_API_KEY is present; a fake one otherwise —
 the laws are identical either way).
@@ -1152,7 +1152,7 @@ class BridgeRig:
     """The whole dev Operating State: relay + dispatcher + one resident +
     the glass, breathing together; stopped together."""
 
-    def __init__(self, *, gateway=None, template=None, port: int = 4600,
+    def __init__(self, *, gateway=None, template=None, port: int = 4601,
                  dsn: str | None = None, policy=None, second: bool = True,
                  home: str | os.PathLike | None = None):
         """`home` is where the residents' seeds live (covenant rule 1: a
@@ -1592,8 +1592,9 @@ def main() -> int:
                                "and restart me to think for real.")
         mind = f"a fake mind (the gateway at {_stable.Gateway().base} is dark)"
     home = Path(os.environ.get("ORRETH_HOME", Path.home() / ".orreth")) / "agents"
-    rig = BridgeRig(gateway=gw, home=home).start()   # the same selves, every life
-    print(f"the Bridge is lit: http://127.0.0.1:{rig.port}/  ({mind})")
+    port = int(os.environ.get("SPINE_BRIDGE_PORT") or 4601)   # re-base sp2: the reference's door is :4601; orrethd holds :4600
+    rig = BridgeRig(gateway=gw, home=home, port=port).start()   # the same selves, every life
+    print(f"the reference Bridge is lit: http://127.0.0.1:{rig.port}/  ({mind})")
     print("crew: " + " · ".join(f"{r.name} {r.identity.did}"
                                 for r in rig.residents) + f"  (home {home})")
     print("Ctrl+C brings it down whole.")
@@ -1602,7 +1603,7 @@ def main() -> int:
             time.sleep(1)
     except KeyboardInterrupt:
         rig.stop()
-        print("\nthe Bridge is dark — stopped whole, nothing left running.")
+        print("\nthe reference Bridge is dark — stopped whole, nothing left running.")
     return 0
 
 

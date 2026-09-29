@@ -87,7 +87,8 @@ use std::time::Duration;
 use tokio_stream::wrappers::BroadcastStream;
 use tokio_stream::StreamExt;
 
-pub const PORT_DEFAULT: u16 = 4601;
+/// re-base sp2 (2026-09-29): the Rust kernel is THE door on :4600; the Python reference lights on :4601.
+pub const PORT_DEFAULT: u16 = 4600;
 
 /// The glass's path law: `ORRETH_GLASS`, else the one page beside the crate.
 pub fn glass_path() -> PathBuf {
@@ -126,7 +127,7 @@ pub struct Config {
 }
 
 impl Config {
-    /// The dials: `SPINE_BRIDGE_PORT` (4601) and the world's.
+    /// The dials: `SPINE_BRIDGE_PORT` (4600) and the world's.
     pub fn from_env() -> Config {
         Config {
             port: std::env::var("SPINE_BRIDGE_PORT")
@@ -236,9 +237,18 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
             masters.join(", ")
         );
     }
-    let listener = tokio::net::TcpListener::bind(("127.0.0.1", cfg.port))
+    // re-base sp2: `SPINE_BIND` — loopback on the host (the door is the person's own machine's);
+    // `0.0.0.0` in the kernel's box, so the published port reaches it (found at the box's first light:
+    // healthy inside, unreachable from the host).
+    let bind = std::env::var("SPINE_BIND")
+        .ok()
+        .filter(|b| !b.trim().is_empty())
+        .unwrap_or_else(|| "127.0.0.1".to_string());
+    let listener = tokio::net::TcpListener::bind((bind.as_str(), cfg.port))
         .await
-        .map_err(|e| RoadError::Refused(format!("the door could not bind :{} — {e}", cfg.port)))?;
+        .map_err(|e| {
+            RoadError::Refused(format!("the door could not bind {bind}:{} — {e}", cfg.port))
+        })?;
     let port = listener.local_addr().map(|a| a.port()).unwrap_or(cfg.port);
     let stop = Arc::new(AtomicBool::new(false));
     let dispatcher_ready = Arc::new(AtomicBool::new(false));

@@ -4,6 +4,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: ureq · libc · the bodies proof · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the gate's proof · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp2: the binary is `orrethd` · 2026-09-29
 [package]
 name = "orreth-spine"
 version = "0.1.0"
@@ -29,7 +30,7 @@ rdkafka = { workspace = true, optional = true }
 rand = { workspace = true, optional = true }
 
 # The bridge (P7 sp3) rides behind `bridge` (which implies `rails`): the doors,
-# the SSE feed and the `spine-bridge` binary on :4601 — the Rust bridge in
+# the SSE feed and the `orrethd` binary (born `spine-bridge` on :4601 — the Rust bridge in
 # SHADOW beside the Python Bridge on :4600. `tests/askroad.rs` needs it:
 #   cargo test -p orreth-spine --features bridge --test rails --test askroad -- --nocapture
 axum = { workspace = true, optional = true }
@@ -80,7 +81,8 @@ required-features = ["bridge"]
 name = "doors"
 required-features = ["bridge"]
 
+# re-base sp2 (2026-09-29): the kernel's binary is `orrethd` — the old `orrethd` crate retired, the name re-based here.
 [[bin]]
-name = "spine-bridge"
-path = "src/bin/spine-bridge.rs"
+name = "orrethd"
+path = "src/bin/orrethd.rs"
 required-features = ["bridge"]

@@ -1,89 +1,40 @@
-# backend/plane — `orrethd`, the Rust plane
+# backend/plane — the Rust kernel, `orrethd`
 
-The deterministic, security-critical half of Orreth (0000 §3): gateway, resolver, router, stores,
-crypto. Built **against the conformance suite** — the Python simulator in `../conformance` is the
-reference; the fixtures in `../conformance/fixtures` are the contract between the two.
+<!-- PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp2: the plane re-based on orreth-spine · 2026-09-29 -->
 
-## Crates
+The kernel is one crate, **`crates/orreth-spine`**, ported law for law from the Python reference
+(`../../spine/orreth_spine`) against the conformance suite (canon `docs/rearch/0008`): a module is
+ported only when its fixture (`../../spine/conformance/*.json`) passes unchanged on both kernels.
 
-| Crate | What it proves today |
+| Feature | What it holds |
 |---|---|
-| `orreth-crypto` | canonical JSON **byte-for-byte** with the Python reference (sorted keys, `ensure_ascii` escaping, ryu floats) · sha256 content-addressing · Ed25519 verification of Python-produced signatures |
-| `orreth-rollup` | the StatBundle monoid (0005): merge/report/tier_score match the reference to 1e-9; monoid laws tested |
-| `orreth-resolver` | the cascade fold (0007): resolved content matches the reference **including the content-addressed id** — same chain, same hash, either language |
-| `orreth-node` | the node semantics: store (append-only, high-water clock), gateway ingress (signature/revocation/scope — the plane verifies, never signs), and the retrieval router (escalation, budget-miss ≡ authz-miss, interview firewall, tombstone fidelity). Replays the reference's full three-flow scenario from `fixtures/flows.json`, exactly |
-| `orreth-store` | the body store on the `object_store` trait (S3 API as contract, backend as config — decision 2026-07-02): bodies leave the record at ingress (`store://` refs), reads are **verified against their own content address** (tampering on disk is caught), and a tombstone is **physical erasure** — bytes gone, signed stub remains. In-memory + local FS now; the `aws` feature flag turns on S3 at hosted-deploy time |
-| `orrethd` | **the binary — one node, tier as a profile.** Loads a TierProfile, stands up the node with the body store behind it, and serves the gateway over HTTP: `POST /records` (ingress — verify, clock, store), `GET /records/:id/body` (hash-verified), `POST /retrieve` (the router, uniform 403 refusal), `GET /health`. **Trust-root pinned from the profile**: token chains must start at `trust_root.root`, hop continuity and scope attenuation verified at presentation — a self-issued token, however well signed, is refused. The plane verifies, never signs |
+| *(default)* | The pure laws — hermetic, no rig: canonical bytes · hashes · envelopes · the ask road · loops · markers · intent · memory · export · the desk · the seat · cells · levers · doors. `cargo test` runs them and the conformance runner (730 cases). |
+| `rails` | The ground (tokio-postgres) and the rails (lapin for RabbitMQ, rdkafka for Kafka — librdkafka built from source by cmake): the schema migrator, the outbox, the inbox with poison-parking, the beats. `tests/rails.rs` needs the rig. |
+| `bridge` | The doors and the SSE feed on axum, the bodies' seam (the crew spawned and governed as processes), the cells' seam, the gate, the pool, the clock at every door — and the **`orrethd`** binary. The proofs `askroad` · `loops` · `memory` · `bodies` · `cells` · `gate` · `desk` · `doors` need the rig and refuse beside a lit kernel. |
 
-## Run a node
+## Build and run
 
 ```bash
-# mint/print the persistent demo root (Python side — cognition holds keys, the plane never does)
-cd ../conformance && uv run python smoke_orrethd.py root-pub
-# start the daemon with the pinned root's public key
-cargo run -p orrethd -- --profile profiles/demo-field.json \
-  --store-dir /tmp/orreth-bodies --root-pub <that key>
-# then: Python signs, Rust verifies, on the wire — and only the pinned root mints authority
-cd ../conformance && uv run python smoke_orrethd.py
+cargo test                                                      # hermetic: the laws and the fixtures
+cargo build --release -p orreth-spine --features bridge --bin orrethd
+SPINE_BRIDGE_PORT=4600 target/release/orrethd                   # or: scripts/dev.sh kernel
+cargo test -p orreth-spine --features bridge --test doors -- --nocapture   # one proof on the rig
 ```
 
-## The tree — parent/child over the wire
+Dials: `SPINE_PG` · `SPINE_RABBIT` · `SPINE_KAFKA` (the rails) · `SPINE_GATEWAY` · `SPINE_BRIDGE_PORT`
+(4600) · `SPINE_BIND` (127.0.0.1; the box binds 0.0.0.0) · `SPINE_SCOPE` · `SPINE_QUEUE_NS` · `SPINE_BODIES` (`crew` | `none`) · `ORRETH_SPINE` (the
+spine home: crew, templates, tools, glass) · `ORRETH_HOME` (the seeds) · `SPINE_POOL` · `SPINE_PROFILE`.
+The image is built from the repo root's `Dockerfile` (the binary beside the spine's venv, the crew
+inside).
 
-`orrethd --parent <url>` makes a node a child (0000 §1: PUSH up / PULL down; a parent never
-reaches in). At boot the child **PULLs** its parent's floors from `GET /standards` (inherited
-floors dominate; a child tightens, never loosens). On a retrieval whose window outruns the local
-horizon, the child **serves what it has and delegates the deeper remainder UP** (`0002 §3`) —
-forwarding the query over HTTP with the spent budget deducted, then merging newest-first
-(`occurred_at` travels with every hit for exactly this). A refusing or dead parent is
-indistinguishable from budget exhaustion: un-served coverage, honest remainder, never an error
-shape. Demo: `demo_spacetime_window.py` — two daemons, one query, 300 days scrubbed.
+`serde_json` stays on default features in this workspace: its map is a BTreeMap (sorted keys), which
+the canonicalization parity with the reference depends on. Never enable `preserve_order`.
 
-## Persistence — the daemon may die; the records don't
+## The old world's crates
 
-`orrethd --pg postgres://…` turns on write-through persistence: every **accepted** record
-lands as JSONB (the stored form — body_ref, keep_class, received_at), and at boot the daemon
-restores its records **and its high-water mark**, so the clock's monotonicity survives
-restarts. Bodies already live in the object store; Postgres holds pointers, not blobs.
-Dev database: `docker run -d --name orreth-pg -e POSTGRES_PASSWORD=orreth -p 5433:5432 postgres:16`.
-The resurrection demo: run `demo_digital_life.py born`, kill the daemon, restart it, run
-`wake` — the life outlives the process, the machine boundary, and now the daemon itself.
-
-Next: pgvector for semantic retrieval — and the pane, where all of this gets its window.
-
-## Run
-
-```bash
-cargo test
-```
-
-(Fixtures are committed; no Python needed. Regenerate them from `../conformance` with
-`uv run python gen_fixtures.py` whenever the reference changes.)
-
-> serde_json stays on default features — its `Map` is a `BTreeMap` (sorted keys), which the
-> canonicalization parity depends on. Never enable `preserve_order` in this workspace.
-
-## One laptop = one universe
-
-```bash
-cd backend/conformance && uv run python smoke_orrethd.py root-pub   # mints .smoke-root-seed
-echo "ORRETH_ROOT_PUB=<that key>" > ../../infrastructure/.env       # keep seed + env in step
-docker compose -f infrastructure/compose.yaml up --build            # the tree assembles
-uv run python demo_spacetime_window.py 4502 4500 500 450            # one query, three tiers
-```
-
-The boot logs are the layering claim proving itself: the universe listens, the ecosystem pulls
-its floor, the field inherits the apex's law through the middle tier without ever meeting the
-apex. `docker compose restart field-prod` is the resurrection demo at infrastructure level —
-"restored N record(s) · high_water=Some(…)" — and a field-scoped token that scrubs past its
-lease gets `partial`: the window is bounded by entitlement, honestly, even in containers.
-
-## The Window — the daemon carries its own glass
-
-`GET /window` serves the first pane: a single-file observatory console over the tier. The pane
-is a **client of the retrieval contract** (0008) — no privileged path; every render is a
-tokened `/retrieve`. The time rail plots memories as stars across the window's span (fidelity
-as spectral shift: verified near-light, distilled blue-shifted, expired red-shifted; the
-un-served remainder hatched like sky the telescope can't reach), the tier beads light up as
-the escalation crosses them, and bodies fetch hash-verified on open.
-`uv run python demo_open_window.py 4502 4500` seeds a biography across the tree and prints
-your URL — the capability rides the fragment; the daemon never sees it.
+`orreth-crypto` · `orreth-node` · `orreth-store` · `orreth-resolver` · `orreth-rollup` were the first
+plane's crates (0.72). Each was read against the new kernel before it left (the crypto read
+2026-09-28, the other four in re-base sp2 — canon `0005` row 4; verdicts on the honest boundary), and
+on JB's word of 2026-09-29 all five left the workspace with the old `orrethd` crate and its tier
+profiles. The new kernel depends on none of them; they rest whole at the tag `main-v0.72-old-world`,
+and every law the new kernel lacks is named as a seed. The workspace has one member.

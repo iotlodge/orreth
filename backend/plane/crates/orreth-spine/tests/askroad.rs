@@ -225,8 +225,8 @@ async fn shadow_an_ask_through_the_rust_door_is_served_by_the_python_librarian_a
     if !rig_up("shadow_an_ask_through_the_rust_door") {
         return;
     }
-    if port_open(4600) {
-        println!("a Bridge holds :4600 — the shadow proof refuses to run beside a live rig (stop it: scripts/dev.sh bridge stop)");
+    if port_open(4600) || port_open(4601) {
+        println!("a kernel holds :4600 or the reference :4601 — the shadow proof refuses to run beside a live rig (stop it: scripts/dev.sh kernel stop · scripts/dev.sh reference stop)");
         return;
     }
     let tok = token_hex(3);

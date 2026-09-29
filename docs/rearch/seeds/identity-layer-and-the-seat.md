@@ -93,3 +93,21 @@ person), and the proof is Orreth's own authenticator code. With an identity laye
    step-up at grave acts; the honest-boundary rows above retired one by one.
 3. **Hardening** (with the first stranger's deployment): the device-bound seat;
    the federated seat over the seam; passkeys for the human-signed act.
+
+## JB's word, 2026-09-29 (re-base sp2's spirit read) — identity is a FIRMWARE CHIP
+
+"If Identity is a core element of proof and I as an architect know that the Orreth Firmware will
+need an associated Cloud element to effectively action Cloud based Identity Providers, why isn't
+it a Firmware chip." Orreth decouples the authority of agents so no one agent can do GRAVE acts
+outside its scope — identity as its own firmware resident is that decoupling made flesh.
+
+The mapping onto what stands: today the kernel's self is the root (`kernel_self.rs`, the honest
+boundary's crypto row: the kernel IS its own root), the seat is minted by the kernel after the TOTP
+proof (row 3a), the join desk admits bodies (row 3b), and the standing key-check is pinned above.
+The chip gathers those into one firmware resident, `identity`, of the third kind (0004 block 9):
+it holds the ceremony and the seats, re-challenges bodies on the cadence, fronts the cloud identity
+layer (OIDC/SAML providers as the proofing step, the assurance level on the seat), and is the one
+place a person's name and a DID's profile meet — so authority is decoupled from every other body,
+and a cloud element extends the chip rather than the kernel. Fixture `identity-v0`; a template
+`firmware-identity.v0.json` on the crew manifest. Not before 0.1.0; it opens with the cloud
+identity layer this seed already names.

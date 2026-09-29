@@ -111,7 +111,7 @@ fn reads_between(
         .map(|(t, n)| (t.clone(), n - before.get(t).copied().unwrap_or(0)))
         .filter(|(_, d)| *d > 0)
         .collect();
-    per.sort_by(|a, b| b.1.cmp(&a.1));
+    per.sort_by_key(|a| std::cmp::Reverse(a.1));
     (per.iter().map(|(_, d)| d).sum(), per)
 }
 
@@ -120,8 +120,8 @@ async fn the_four_doors_answer_on_the_rust_kernel_alone() {
     if !rig_up("the_four_doors_answer_on_the_rust_kernel_alone") {
         return;
     }
-    if port_open(4600) {
-        println!("a Bridge holds :4600 — the doors proof refuses to run beside a live rig (stop it: scripts/dev.sh bridge stop)");
+    if port_open(4600) || port_open(4601) {
+        println!("a kernel holds :4600 or the reference :4601 — the doors proof refuses to run beside a live rig (stop it: scripts/dev.sh kernel stop · scripts/dev.sh reference stop)");
         return;
     }
     let tok = token_hex(3);
@@ -597,7 +597,11 @@ async fn the_four_doors_answer_on_the_rust_kernel_alone() {
             "spine_mind_assignments",
             "spine_meter",
         ];
-        let mine: Vec<(String, i64)> = per.iter().filter(|(t, _)| own.contains(&t.as_str())).cloned().collect();
+        let mine: Vec<(String, i64)> = per
+            .iter()
+            .filter(|(t, _)| own.contains(&t.as_str()))
+            .cloned()
+            .collect();
         let reads: i64 = mine.iter().map(|(_, d)| d).sum();
         // the beats read joins and asks every second or so (about ten reads in the window); the old
         // door's signature was a table read ONCE PER BODY — thirty here, sixty for the services
@@ -607,7 +611,10 @@ async fn the_four_doors_answer_on_the_rust_kernel_alone() {
                 "the crew door read {t} {d} times for thirty bodies — a fixed few, never one per body; all: {per:?}"
             );
         }
-        assert!(reads <= 40, "the crew door's own tables read {reads} times for thirty bodies: {mine:?}");
+        assert!(
+            reads <= 40,
+            "the crew door's own tables read {reads} times for thirty bodies: {mine:?}"
+        );
         println!(
             "doors · the perf cure: thirty bodies, one knock, the crew's own tables read {reads} times in all, {} ms",
             took.as_millis()

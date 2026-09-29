@@ -63,8 +63,9 @@
 //! [`dispatcher`] (the standing events consumer: `ask.received` → a serve
 //! command on the target's bench; the relay loop) · [`feed`] (the Bridge
 //! feed's heart: revisions, the ring, the fan-out); and behind `bridge`:
-//! [`bridge`] — the doors and the SSE feed on axum, the `spine-bridge`
-//! binary's whole, in SHADOW on :4601 beside the Python Bridge on :4600.
+//! [`bridge`] — the doors and the SSE feed on axum, the `orrethd` binary's
+//! whole: THE door on :4600 since re-base sp2 (it lit in SHADOW on :4601 as
+//! `spine-bridge` through P7; the Python reference now lights on :4601).
 //!
 //! Phase 7 sp4 adds THE LOOPS — pure: [`beat`] (the beat lock's classes and
 //! words) · [`mcp`] (the five mcp kinds: the requests' bytes, the pins, the

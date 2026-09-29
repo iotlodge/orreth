@@ -1,12 +1,9 @@
+# re-base sp2 (2026-09-29): ONE member. The first plane's crates (orreth-crypto · node · store · resolver ·
+# rollup) and the old `orrethd` were each read against the new kernel and, on JB's word, retired to the tag
+# `main-v0.72-old-world` (the branch `old-world/main-v0.72`); the kernel's binary `orrethd` is orreth-spine's.
 [workspace]
 resolver = "2"
 members = [
-    "crates/orreth-crypto",
-    "crates/orreth-rollup",
-    "crates/orreth-resolver",
-    "crates/orreth-node",
-    "crates/orreth-store",
-    "crates/orrethd",
     "crates/orreth-spine",
 ]
 
@@ -33,8 +30,7 @@ tokio-postgres = "0.7"
 lapin = "4"
 rdkafka = { version = "0.39", features = ["cmake-build"] }
 rand = "0.8"
-# P7 sp3 (orreth-spine, feature `bridge`): the Rust bridge on :4601 — axum (the
-# version orrethd wears), tokio-stream for the SSE feed, qrcode + flate2 for the
+# P7 sp3 (orreth-spine, feature `bridge`): the Rust bridge, now `orrethd` on :4600 — axum, tokio-stream for the SSE feed, qrcode + flate2 for the
 # enrollment QR (the matrix drawn, the PNG written by hand as the Python does).
 axum = "0.7"
 tokio-stream = { version = "0.1", features = ["sync"] }
