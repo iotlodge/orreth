@@ -128,8 +128,10 @@ Brain, the Console, the demo reel, the old `orrethd` plane and its Python sim â€
 2026-09-14 for the foundation this world stands on (performance for hundreds of bodies, one signed
 log, one law at every layer). It is kept whole, never deleted, at the tag `main-v0.72-old-world`
 and the branch `old-world/main-v0.72`; `docs/rearch/0009` is the ledger of what each old organ
-became here. The book at [docs.orreth.ai](https://docs.orreth.ai) still teaches that world; it is
-rewritten for this one at the release wave.
+became here. Since `v0.1.0-the-kernel` (2026-09-29, re-base sp3) `main` carries THIS world â€” `VERSION`
+says `0.1.0`, and both kernels' health doors whisper the same number. The book at
+[docs.orreth.ai](https://docs.orreth.ai) still teaches the old world; it is rewritten for this one
+at the release wave.
 
 ---
 

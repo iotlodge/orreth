@@ -20,7 +20,8 @@ with the evidence named — a claim not on that page is a claim we do not make.
 **Where the old world lives.** The dive docs `0018`–`0073` (the Tool Farm through the
 Whole Journey Judged), their decisions, the sim in `backend/conformance`, the old `orrethd`
 crate and the 0.72 rig are kept whole — never deleted, never force-moved — at the tag
-`main-v0.72-old-world` and the branch `old-world/main-v0.72`. `../rearch/0009` is the
+`main-v0.72-old-world` and the branch `old-world/main-v0.72`; `main` carries the new world
+from the tag `v0.1.0-the-kernel` (re-base sp3, 2026-09-29). `../rearch/0009` is the
 ledger of what each old organ became on the new kernel (carried · re-seated · capability ·
 parked · dropped). A stranger learns Orreth from the book (docs.orreth.ai), rewritten for
 the new world at the release wave; never from a dive doc.
@@ -63,4 +64,6 @@ the new world at the release wave; never from a dive doc.
    experience wound stops the line.
 4. The closing commit updates canon `0005`, the honest boundary, the conformance README
    and `agents/PROVENANCE.md` — in the same commit, never later.
-5. `VERSION` wears the world's era; the glass whispers it.
+5. `VERSION` wears the world's era; the glass whispers it. Since 0.1.0 the era is ONE number
+   on three faces — `VERSION`, the kernel crate's version, the reference package's version —
+   and a hermetic test on each kernel holds its face to `VERSION` (`the_era_is_one_number`).

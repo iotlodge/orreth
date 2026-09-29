@@ -9,6 +9,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `pulled_fact` · `lease_fact` ported · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: `door_name` · `door_fold` · `door_slowest` ported · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: `schema_version` · `schema_tables` (the migrator's contract) · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp3: THE ERA — `VERSION` and the crate wear one number · 2026-09-29
 //! The Rust conformance runner (canon 0008 · P7 sp1): every fixture under
 //! `spine/conformance/*-v*.json` — the same files the Python reference
 //! generated and passes, unchanged — dispatched by case kind exactly as
@@ -185,6 +186,22 @@ const PORTED_KINDS: &[&str] = &[
 
 fn fixture_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../spine/conformance")
+}
+
+/// THE ERA (re-base sp3 · covenant rule 7, one world one picture): the repo's
+/// `VERSION` is the world's era, and the kernel's health door whispers the
+/// crate's own version. They are ONE number, or the glass lies about what
+/// world it is — the drift the covenant's checklist was written for.
+#[test]
+fn the_era_is_one_number() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../VERSION");
+    let era = std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("VERSION at {} — {e}", path.display()));
+    assert_eq!(
+        era.trim(),
+        env!("CARGO_PKG_VERSION"),
+        "VERSION and the kernel's crate must wear one number"
+    );
 }
 
 fn fixtures() -> Vec<(String, Value)> {

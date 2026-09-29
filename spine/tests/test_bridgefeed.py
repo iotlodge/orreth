@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P1 sp3, the Bridge feed v0 (M6-lite) · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp3: THE ERA — VERSION and the package wear one number · 2026-09-29
 """M6-lite's laws: the glass gets pointer-only notices over one SSE
 stream; reconnects repair their gap through SSE's own Last-Event-ID;
 a gap the ring no longer holds says `resync` honestly; and the notice
@@ -9,6 +10,8 @@ import json
 import os
 import secrets
 import time
+from importlib.metadata import version as _pkg_version
+from pathlib import Path
 
 import pytest
 
@@ -18,6 +21,14 @@ BOOT = os.environ.get("SPINE_KAFKA", "localhost:9092")
 
 
 # ---- pure Feed laws (no rails needed) --------------------------------------------
+
+def test_the_era_is_one_number():
+    """THE ERA (re-base sp3 · covenant rule 7): the repo's VERSION is the world's era;
+    the reference's health door whispers its own package's version. They are ONE
+    number, or the glass lies about what world it is."""
+    era = (Path(__file__).resolve().parents[2] / "VERSION").read_text().strip()
+    assert _pkg_version("orreth-spine") == era, f"VERSION {era} vs package {_pkg_version('orreth-spine')}"
+
 
 def test_revisions_are_monotone_and_ring_replays_the_gap():
     f = bridgefeed.Feed(ring=10)

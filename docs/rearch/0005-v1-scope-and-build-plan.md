@@ -2457,6 +2457,31 @@ approved (covenant rule 9).
       the reference's residents serve beside the kernel's crew if both are lit with bodies (one crew per
       ground is the law — `SPINE_BODIES=none` on the second); the P7 canon (0008, the sp3–sp8 entries above) keeps the name
       `spine-bridge` as history.
+      **re-base sp3 BUILT 2026-09-29 — MAIN REPLACED AT 0.1.0 (the release commit).** THE ERA: `VERSION`
+      turns 0.80 → **0.1.0** — the first number of the new world, not the eighty-first of the old; the
+      kernel crate already wore 0.1.0 (its health door whispers `env!("CARGO_PKG_VERSION")`), the Python
+      reference's package turns 0.0.1 → 0.1.0 (`spine/pyproject.toml` + `uv.lock`; its health door
+      whispers `importlib.metadata.version`), so the era is ONE number on three faces (covenant rule 7,
+      one world one picture) and a hermetic test on each kernel holds its face to `VERSION` —
+      `the_era_is_one_number` in `tests/conformance.rs` and `tests/test_bridgefeed.py` — the drift the
+      covenant's checklist was written for ("a stale era means the glass lies about what world it is"),
+      now a red test instead of a memory. THE TAG: `v0.1.0-the-kernel`, annotated on the release commit
+      (July's `v0.1.0-universe-runs` untouched — the two never collide). THE PUSH IS JB's OWN (his lock):
+      `main` is an ancestor of `rearch/foundation` (verified: `git merge-base --is-ancestor`), so main
+      FAST-FORWARDS — no merge commit, no force, the old world's history whole beneath the new; the
+      README and `docs/design/README.md` say main carries this world from the tag. THE FREEZE HOLDS:
+      demo.orreth.ai and docs.orreth.ai stay at 0.72 (the book's rewrite is its own work — THE BOOK IS
+      THE DOC SOURCE); no image is pushed to GHCR and the SDK stays 0.4.0 on PyPI (nothing in it changed)
+      — the release-alignment law's public surfaces turn on JB's word, not on a tag. CI's trigger already
+      names `main` and `rearch/**`, so the fast-forward runs the same gate. PROVEN: `cargo test --test
+      conformance` 2 green (the runner + the era), `cargo fmt` + `clippy --tests` clean; the reference's
+      hermetic conformance · feed · envelope proofs 748 green with the era test among them; the package
+      reads 0.1.0 after `uv sync`; the SDK parity 10 green (with `pynacl` present — the SDK's own venv
+      lacks it and skips one, 9 + 13, the same bytes); the root image rebuilt at `orrethd:0.1.0` and its
+      `VERSION` read from inside the box; the live kernel on :4600 whispers 0.1.0 · rust · schema 2.
+      HONEST LIMITS: the reference on :4601 is not relit in this spoonful (its whisper is proven by the
+      package read and the test, not a live door); the image is local, not published; the walks (the
+      P3–P6 specs against the kernel alone) are JB's, after the push.
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the
