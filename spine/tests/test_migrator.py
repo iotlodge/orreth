@@ -43,9 +43,12 @@ def test_the_first_birth_migrates_and_the_next_verifies():
         assert cur.fetchall() == [(ground.SCHEMA_VERSION, "reference")]
         with psycopg.connect(DSN, autocommit=True) as b:           # a second connection, born later
             b.execute("SET search_path TO spine_mig_a")
-            second = ground.ensure_all(b)
-            assert second["migrated"] is False and second["found"] == ground.SCHEMA_VERSION
+            second = ground.ensure_all(b)                           # this process's memo: trusted, nothing asked
+            assert second["migrated"] is False and second.get("memo") is True
             assert ground.ensured(b) >= set(ground.TAGS)            # flagged, no DDL run
+            ground.forget(b)                                        # another process's birth: verified on the ground
+            second = ground.ensure_all(b)
+            assert second["migrated"] is False and second["found"] == ground.SCHEMA_VERSION and "memo" not in second
         cur.execute("SELECT count(*) FROM spine_schema")
         assert cur.fetchone()[0] == 1                               # one version row, one writer
         assert "verified" in ground.words(second) and "migrated 0 → 1" in ground.words(first)
@@ -58,6 +61,7 @@ def test_a_ground_whose_version_lies_is_refused():
         a.execute("DROP TABLE spine_mitl")
         with psycopg.connect(DSN, autocommit=True) as b:
             b.execute("SET search_path TO spine_mig_b")
+            ground.forget(b)                                        # a fresh process would not carry the memo
             with pytest.raises(ground.GroundRefused) as e:
                 ground.ensure_all(b)
             assert "spine_mitl is missing" in str(e.value) and "not stood on" in str(e.value)
@@ -82,5 +86,5 @@ def test_two_kernels_birthing_together_have_one_writer():
     for t in ts:
         t.join(60)
     assert not errs, errs
-    assert sum(1 for o in outs if o["migrated"]) == 1               # exactly one writer
+    assert sum(1 for o in outs if o["migrated"]) == 1               # exactly one writer (the others: the memo, or verified)
     assert all(o["ground"] == ground.SCHEMA_VERSION for o in outs)  # the rest waited, then verified

@@ -2304,7 +2304,12 @@ approved (covenant rule 9).
       dispatched); `tests/doors.rs` NEW (the four doors and the parked doors on the Rust kernel alone,
       through the gate); `tests/test_migrator.py` NEW (3) · `test_events_shadow.py` the hold (1) ·
       `test_cure_walk8.py` no roster timer (1); the spine suite 946 green and every bridge proof (rails 9 ·
-      askroad · loops · memory · bodies · cells · gate · desk · doors) green with the stale kernel stopped first. HONEST LIMITS: the version is one number for the whole
+      askroad · loops · memory · bodies · cells · gate · desk · doors) green with the stale kernel stopped first. FOUND LIVE THE SAME NIGHT, CURED: a body's serve loop births every second (`resident.serve_once` →
+      `ground.ensure_all`), and the migrator made that once-free call a lock and forty checks per body per
+      second — some four hundred and fifty queries a second at rest from ten bodies, the lock taken ten times a
+      second (JB's screenshot came in that hour: `/crew` 1.55 s, `/bodies` 3.5 s); the ground law restored — a ground this PROCESS already migrated or verified is
+      trusted for the process's life (`ground._MIGRATED` · `forget` for a proof that lies on purpose).
+      HONEST LIMITS: the version is one number for the whole
       schema (a change to any statement bumps it in both kernels in the same change — the fixture
       catches a kernel that forgot); the verify step checks tables, not columns (the parity proof
       checks columns); a holding dispatcher does not poll the broker for minutes and is re-seated by

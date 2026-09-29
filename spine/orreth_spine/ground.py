@@ -123,12 +123,32 @@ def _modules():
             services, stable, profile, seat, desk)
 
 
+_MIGRATED: dict[str, dict] = {}     # this PROCESS's verdict per ground (DSN + search_path): once, never per tick
+
+
+def forget(conn) -> None:
+    """Drop this process's memo of a ground (a proof that lies to the ground on purpose)."""
+    from . import outbox
+    _MIGRATED.pop(outbox.ground_key(conn), None)
+
+
 def migrate(conn) -> dict:
     """THE MIGRATOR: one locked transaction; the version read; below this kernel's
     version every module's DDL runs and the version is recorded (the single
     writer); at or past it nothing runs and every declared table is verified.
-    Returns what the birth found and did — `{"found", "ground", "kernel", "migrated"}`."""
+    Returns what the birth found and did — `{"found", "ground", "kernel", "migrated"}`.
+    ONCE PER GROUND PER PROCESS (the ground law): a ground this process already
+    migrated or verified is trusted for the process's life — the connection is
+    flagged and nothing is asked of the ground (found live 2026-09-28: a body's
+    serve loop births every second; the lock and forty checks per body per second
+    starved every door)."""
     from . import outbox
+    key = outbox.ground_key(conn)
+    memo = _MIGRATED.get(key)
+    if memo is not None:
+        for tag in TAGS:
+            outbox.once(conn, tag)
+        return dict(memo, migrated=False, memo=True)
     with conn.transaction():
         cur = conn.cursor()
         cur.execute("SELECT pg_advisory_xact_lock(742199)")     # a kernel lighting beside a migrating one WAITS here
@@ -152,6 +172,7 @@ def migrate(conn) -> dict:
             for tag in TAGS:                   # flagged on this connection, no DDL run
                 outbox.once(conn, tag)
     out = {"found": found, "ground": max(found, SCHEMA_VERSION), "kernel": SCHEMA_VERSION, "migrated": migrated}
+    _MIGRATED[key] = dict(out)
     SCHEMA.update(out)
     return out
 
