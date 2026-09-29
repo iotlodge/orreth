@@ -10,6 +10,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: `door_name` · `door_fold` · `door_slowest` ported · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: `schema_version` · `schema_tables` (the migrator's contract) · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp3: THE ERA — `VERSION` and the crate wear one number · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass: `watch_metrics` · 2026-09-29
 //! The Rust conformance runner (canon 0008 · P7 sp1): every fixture under
 //! `spine/conformance/*-v*.json` — the same files the Python reference
 //! generated and passes, unchanged — dispatched by case kind exactly as
@@ -45,6 +46,7 @@ const PORTED_KINDS: &[&str] = &[
     "echo_reply",
     "watch_judge",
     "watch_reads",
+    "watch_metrics",
     "address",
     "offer",
     "citation_name",
@@ -590,6 +592,10 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
                 (exp["red"].as_bool().unwrap(), s(&exp["state"])),
                 "red · state"
             );
+        }
+        "watch_metrics" => {
+            let got: Vec<Value> = watch::METRICS.iter().map(|m| json!(m)).collect();
+            same!(json!(got), exp["metrics"], "metrics");
         }
         "watch_reads" => {
             let got = watch::reads(

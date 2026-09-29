@@ -2237,14 +2237,17 @@ async function loadMonitor(){
     const d = document.createElement("div"); d.className = "view";
     d.innerHTML = `<h5>${title}</h5>` + rows; box.appendChild(d); return d; };
   const row = (k, v, cls) => `<div class="row"><span>${esc(k)}</span><span class="${cls || ""}">${esc(String(v))}</span></div>`;
+  const meas = (x, f) => x == null ? "not measured here" : f(x);       // the honest glass: absent ≠ zero
   const v = s.values || {};
   const home = s.home || {};                                                         // P7 sp7: the cell this universe stands in
   view("PULSE", row("feed revision", lastRev ?? "—") + row("world", s.world) +
        row("stands in", `cell ${home.cell || "?"}` + (home.epoch ? ` · epoch ${home.epoch}` : "") + (home.namespace ? ` · benches and topics '${home.namespace}'` : "")) +
-       row("spent today (every mind)", "$" + Number(v.usd_today || 0).toFixed(4)) +
-       row("thoughts in the last 10 min", (v.meter_rate_10m || 0) + " / min") +
-       row("could not think (last hour)", v.route_failures_1h || 0, v.route_failures_1h ? "red" : "ok") +
-       row("bodies out of fuel", v.bodies_drained || 0, v.bodies_drained ? "red" : "ok"));
+       // the honest glass (2026-09-29): a value the kernel does not carry is SAID — never drawn as a zero
+       // (the Rust pulse read $0.0000 over a metered crew for a week; now both kernels carry the farm)
+       row("spent today (this world, every mind)", meas(v.usd_today, x => "$" + Number(x).toFixed(4))) +
+       row("thoughts in the last 10 min", meas(v.meter_rate_10m, x => x + " / min")) +
+       row("could not think (last hour)", meas(v.route_failures_1h, x => x), v.route_failures_1h ? "red" : "ok") +
+       row("bodies out of fuel", meas(v.bodies_drained, x => x), v.bodies_drained ? "red" : "ok"));
   // P7 sp7: THE PEERS — every cell this one names, its self pinned, how far behind my picture of it is
   const wc = await loadWorld();
   const peers = (wc && wc.peers) || [];
@@ -2256,7 +2259,7 @@ async function loadMonitor(){
                 `<span class="${pr.unreachable_since ? "red" : pr.did ? "ok" : ""}">${pr.unreachable_since ? "unreachable" : pr.did ? "pinned" : "not yet heard"}</span></div>`; }).join("") ||
        `<div class="meta">no peers named — light a second cell with <code>scripts/dev.sh cell two</code> and relight this kernel so it names it (SPINE_PEERS)</div>`);
   const stb = s.stable || {minds: [], assignments: []};                            // P6.5 sp3: THE STABLE — every mind, its deal, its spend
-  view("THE STABLE · LLMs · " + (v.minds_standing || 0) + " standing" + (v.minds_unhealthy ? " · " + v.minds_unhealthy + " unhealthy" : ""),
+  view("THE STABLE · LLMs · " + meas(v.minds_standing, x => x + " standing") + (v.minds_unhealthy ? " · " + v.minds_unhealthy + " unhealthy" : ""),
        (stb.minds || []).map(m => `<div class="row"><span>${esc(m.words)}</span><span class="${m.state === "unhealthy" ? "red" : m.state === "retired" ? "" : "ok"}">${esc(m.state)}</span></div>`).join("") +
        ((stb.assignments || []).length ? (stb.assignments.map(a => row(`${a.subject === "*" ? "every body" : a.subject} uses`, `${a.stall} for ${a.klass === "any" ? "all" : a.klass} work`)).join(""))
                                         : `<div class="meta">no assignments — every body uses its template's LLM; say “assign librarian to haiku”</div>`) ||

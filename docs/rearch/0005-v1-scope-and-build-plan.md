@@ -2482,6 +2482,65 @@ approved (covenant rule 9).
       HONEST LIMITS: the reference on :4601 is not relit in this spoonful (its whisper is proven by the
       package read and the test, not a live door); the image is local, not published; the walks (the
       P3–P6 specs against the kernel alone) are JB's, after the push.
+      **THE HONEST GLASS — JB's walk of the Monitoring on the release kernel, 2026-09-29 evening
+      (his screenshots, after sp3's commit): five wounds, one cure spoonful in five parts; JB's lock:
+      "build the whole cure spoonful now". PART 1 BUILT the same night (the pulse reads the money);
+      PARTS 2–5 are the NEXT session's first work (`the honest glass sp2`).** THE WOUNDS: **W84** the
+      PULSE read "spent today $0.0000 · 0 / min" over a crew that had spent $0.4852 on 436 metered
+      thoughts that day — the meter is SOUND (every model call lands one row, the dollars are the
+      gateway's own response-cost header, the kernel reconciles against the gateway's spend log; no
+      bypass; the SDK chassis's in-process pricing is a separate ledger for row 5), but the Rust
+      snapshot carried nine values where the reference carries fifteen and the glass drew an absent
+      value as a zero; THE STABLE read "0 standing" over a full shelf; a watch on spend was refused
+      as an unknown name so the rail's spend and mind remedies could never fire there. **W85** every
+      body twice in BODIES: the Docker box's first crew (ten selves born 20:38Z, leased fifteen
+      seconds, never back) beside the host's crew — the roster keys on the keypair, the desk checks a
+      name's spelling and never whether it is HELD, the box's kernel admitted its own fresh selves on
+      the crew manifest without a person; the crew card shows the right self only by the accident of
+      join order; the dead rows' "life 1" is borrowed from the living process; no door retires a
+      dormant lease and `bodies_dormant` counts dead selves for the ground's life. **W86** four RED
+      watches, all JB's own (walks 4 · 6 · 9, planted through the interlock): "always red" red by
+      construction; "asks-awaiting-confirm" misnamed (it reads `asks_received`, threshold 4) and red
+      because seven of the nine received asks are the watch loop's OWN orphaned objectives from
+      09-19 — a red watch files objectives, they never terminate, they sit in `received`, and that is
+      the number the watch reads (the loop inflates the metric it asks the crew to lower); and NO WAY
+      TO REST A WATCH — no door, no tool, no lever, no control on the card (covenant rule 11 names
+      this a defect); twenty-three more watch rows in dead proof scopes the prune never touches.
+      **W87** the PEERS card: "cell two · unreachable since 17:31" — four DAYS old, the words drop the
+      date; no door lets a peer go. **W88** the reference summed the meter over EVERY world (the pulse
+      says "world u:dev"). PART 1 BUILT: `watch.rs` + `monitor.py` ONE vocabulary of fifteen metrics
+      in one order on both kernels, pinned by the new fixture kind `watch_metrics` (both runners);
+      `monitor.rs` `farm` + `stable_face` ported field for field (`values` gains minds_standing ·
+      minds_unhealthy · usd_today · route_failures_1h · meter_rate_10m · bodies_drained; the snapshot
+      gains `stable`); the meter read BY WORLD on both kernels (W88); the reference measures its pool
+      as 0 busy · 0 waiting (no pool — said as such); the glass says "not measured here" for an
+      absent value, never a zero, and the pulse row reads "spent today (this world, every mind)".
+      PROVEN: Rust conformance 2 green with `watch_metrics` · Python 732; `test_monitor` 11 on the
+      ground; fmt · clippy clean. NEXT (`the honest glass sp2`, fresh session — the plan is locked):
+      (2) ONE NAME, ONE SELF — `presence::roster` folded one row per name (newest lease, earlier
+      selves counted) for the monitor on both kernels, `bodies_dormant` = names with no living self,
+      the glass draws "N earlier selves"; the Rust desk STAGES a proven key that claims a name
+      another self holds a LIVE lease on — never admitted on a ticket or a welcome — the hold words
+      naming the incumbent (a `desk_live` change; `desk.rs` untouched, rule 9); (3) THE WATCH'S REST
+      — schema VERSION 3 (`spine_watches.active` · `rested_by` · `rested_at`, both kernels, fixture
+      `schema-v0` to 3), `monitor::rest_watch` modeled on `scheduler::rest` (recorded, never a
+      delete), `POST /watches/rest` on both kernels with the governing check INSIDE the handler
+      (`desk_live::governs` · `proof.governs` — `seat.rs`'s door table untouched, rule 9), judge and
+      snapshot read `active` only, a "rest it" lever on the WATCHES card with the watch's author drawn,
+      and `/asks/stop` widened to a LOCAL ask (today it refuses all but a routed one) with the ASKS
+      card listing the asks left waiting, each with "stop it"; (4) THE PEER LET GO — the unreachable
+      time wears its date when it is not today (in the query, the pure words untouched),
+      `spine_peers.forgotten_by` · `forgotten_at` in schema 3, `POST /peers/forget` on both kernels,
+      the pin at light clears it, a "forget it" lever on the row; (5) THE GROUND'S PRUNE —
+      `prune.ground()` deletes every row whose scope is test-shaped (`u:<word>-<hex>`) across every
+      table with a scope column, `residue()` and `dev.sh prune` call it, the suite's teardown prunes
+      its own scope, every Rust proof prunes its scope beside its namespace. Then the dev ground's
+      residue (the ten dead selves · the seven orphans · the four watches) is settled through the new
+      doors as recorded acts, the kernel relit, and JB re-walks the Monitoring. HONEST LIMITS of
+      part 1: the release kernel on :4600 is NOT relit with it (JB's glass still shows the old
+      pulse until `dev.sh kernel`); no Rust proof yet reads `/monitor`'s farm values over HTTP (the
+      reference's `test_stable` does; sp2 adds the Rust read to `tests/doors.rs`); the reference has
+      no join desk, so the name law lands on the Rust kernel alone.
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the

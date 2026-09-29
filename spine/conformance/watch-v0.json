@@ -216,6 +216,30 @@
      "ask": "propose the watch you described \u2014 call add-watch with its name, metric, op and threshold"
     }
    }
+  },
+  {
+   "name": "watch_metrics: the vocabulary both kernels measure - fifteen names in one order; a name here is a value the snapshot carries, never a zero by omission (the honest glass, 2026-09-29)",
+   "kind": "watch_metrics",
+   "input": {},
+   "expect": {
+    "metrics": [
+     "outbox_pending",
+     "oldest_outbox_age_s",
+     "asks_received",
+     "bodies_alive",
+     "bodies_dormant",
+     "minds_standing",
+     "minds_unhealthy",
+     "usd_today",
+     "route_failures_1h",
+     "meter_rate_10m",
+     "bodies_drained",
+     "door_p95_ms",
+     "pool_busy",
+     "pool_waiting",
+     "parked"
+    ]
+   }
   }
  ]
 }

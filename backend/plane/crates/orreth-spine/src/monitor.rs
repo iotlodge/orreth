@@ -3,6 +3,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the Operating State names the cell and epoch · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the topic's depth read on ONE held broker client — never a fresh client (a full-metadata fetch) per snapshot · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass (JB's screenshots 2026-09-29): the farm's six values and THE STABLE's face ported from the reference (the pulse read $0 over a metered crew — nine values where the reference carries fifteen); the meter read BY WORLD on both; the roster folded one row per name · 2026-09-29
 //! The Monitoring workspace's ground — `orreth_spine.monitor` (canon 0001:
 //! "if it's monitoring, it goes here"): the live snapshot of the Operating
 //! State — rails, benches, bodies, asks, the last harness run — and the
@@ -158,6 +159,82 @@ fn as_f64(v: &Value) -> f64 {
     v.as_f64().unwrap_or(0.0)
 }
 
+/// P6.5 sp3's farm metrics, ported (the honest glass, 2026-09-29): the Stable's numbers off
+/// THIS world's ground — minds standing and unhealthy, dollars today, route failures in the
+/// last hour, the meter's rate over ten minutes, bodies out of fuel. Field for field the
+/// reference's `_farm`, with one law both now keep: the meter is read BY SCOPE — the pulse
+/// says "world u:dev", so its dollars are that world's and no other's.
+async fn farm(g: &Ground, scope: &str) -> Result<Value, RoadError> {
+    let mut out = json!({"minds_standing": 0, "minds_unhealthy": 0, "usd_today": 0.0,
+                         "route_failures_1h": 0, "meter_rate_10m": 0.0, "bodies_drained": 0});
+    if crate::schema::has_table(g, "spine_services").await? {
+        let r = g
+            .client()
+            .query_one(
+                "SELECT count(*) FILTER (WHERE state IN ('registered','versioned','healthy')), count(*) \
+                 FILTER (WHERE state = 'unhealthy') FROM spine_services WHERE scope = $1 AND kind = 'mind'",
+                &[&scope],
+            )
+            .await?;
+        out["minds_standing"] = json!(r.get::<_, i64>(0));
+        out["minds_unhealthy"] = json!(r.get::<_, i64>(1));
+    }
+    if crate::schema::has_table(g, "spine_meter").await? {
+        let r = g
+            .client()
+            .query_one(
+                "SELECT coalesce(sum(usd) FILTER (WHERE at >= date_trunc('day', now())), 0)::float8, \
+                 count(*) FILTER (WHERE ok = false AND at >= now() - interval '1 hour'), count(*) FILTER \
+                 (WHERE at >= now() - interval '10 minutes') FROM spine_meter WHERE scope = $1",
+                &[&scope],
+            )
+            .await?;
+        let usd: f64 = r.get(0);
+        out["usd_today"] = json!((usd * 1e6).round() / 1e6);
+        out["route_failures_1h"] = json!(r.get::<_, i64>(1));
+        out["meter_rate_10m"] = json!((r.get::<_, i64>(2) as f64 / 10.0 * 100.0).round() / 100.0);
+    }
+    if crate::schema::has_table(g, "spine_mind_keys").await? {
+        let r = g
+            .client()
+            .query_one(
+                "SELECT count(*) FROM spine_mind_keys WHERE scope = $1 AND drained_at IS NOT NULL",
+                &[&scope],
+            )
+            .await?;
+        out["bodies_drained"] = json!(r.get::<_, i64>(0));
+    }
+    Ok(out)
+}
+
+/// THE STABLE's face (P6.5 sp3, ported): each mind's words and spend, the assignments —
+/// the reference's `_stable`; the face never breaks the snapshot.
+async fn stable_face(g: &Ground, scope: &str) -> Value {
+    if !matches!(
+        crate::schema::has_table(g, "spine_services").await,
+        Ok(true)
+    ) {
+        return json!({"minds": [], "assignments": []});
+    }
+    let out: Result<Value, RoadError> = async {
+        let minds: Vec<Value> = crate::stable_live::stalls(g, scope)
+            .await?
+            .iter()
+            .map(|s| {
+                json!({
+                    "name": s["name"], "state": s["state"], "words": crate::stable::stall_words(s),
+                    "spend": s.get("spend").cloned().unwrap_or(Value::Null),
+                    "last": s.get("last_health").and_then(|h| h.get("detail")).cloned()
+                        .or_else(|| s.get("last_detail").cloned()).unwrap_or(Value::Null),
+                })
+            })
+            .collect();
+        Ok(json!({"minds": minds, "assignments": crate::stable_live::assignments(g.client(), scope).await?}))
+    }
+    .await;
+    out.unwrap_or_else(|e| json!({"minds": [], "assignments": [], "error": format!("{e}")}))
+}
+
 /// The Operating State, live, for this world — `monitor.snapshot`, field for
 /// field: the rails read only when `rails` is asked (the door asks; the judge
 /// does not).
@@ -185,7 +262,7 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
     // re-base sp1: the poison events the dispatcher holds at (the ground's count — the same
     // on both kernels), watchable as `parked`
     let parked = crate::inbox::parked(g, Some(crate::dispatcher::CONSUMER), 20).await?;
-    let values = json!({
+    let mut values = json!({
         "parked": parked.len(),
         "outbox_pending": lag.pending,
         "oldest_outbox_age_s": lag.oldest_age_s.unwrap_or(0.0),
@@ -196,6 +273,13 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
         "pool_busy": pool.as_ref().and_then(|p| p["busy"].as_u64()).unwrap_or(0),
         "pool_waiting": pool.as_ref().and_then(|p| p["waiting"].as_u64()).unwrap_or(0),
     });
+    // the honest glass (2026-09-29): the farm's six — the pulse had read $0 over a metered crew
+    if let Some(m) = farm(g, scope).await?.as_object() {
+        for (k, v) in m {
+            values[k] = v.clone();
+        }
+    }
+    let stable_view = stable_face(g, scope).await;
     let rows = g
         .client()
         .query(
@@ -267,6 +351,7 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
         "benches": if rails { benches(w, &names).await } else { json!({}) },
         "topic_depth": if rails { topic_depth(w).await } else { Value::Null },
         "harness": last,
+        "stable": stable_view,
         "doors": doors,
         "pool": pool,
         "parked": parked,

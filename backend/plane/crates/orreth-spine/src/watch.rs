@@ -2,6 +2,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the turned fact as bytes · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: door_p95_ms · pool_busy · pool_waiting watchable · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass (JB's screenshots 2026-09-29): the farm's six metrics join the vocabulary — one list on both kernels, pinned by `watch_metrics` · 2026-09-29
 //! `orreth.watch/1` — the pure half of `orreth_spine.monitor`: the SENSE of a
 //! watch (W14 — RED when `value op threshold` holds now, green otherwise),
 //! its human sentence, and the monitor's offer read from its words (W22).
@@ -15,13 +16,21 @@ use regex::Regex;
 use serde_json::{json, Value};
 use std::sync::LazyLock;
 
-/// The metrics this world measures.
-pub const METRICS: [&str; 9] = [
+/// The metrics this world measures — ONE vocabulary on both kernels, in one order (fixture
+/// `watch_metrics`); a name here is a name the snapshot carries, never a zero by omission.
+pub const METRICS: [&str; 15] = [
     "outbox_pending",
     "oldest_outbox_age_s",
     "asks_received",
     "bodies_alive",
     "bodies_dormant",
+    // P6.5 sp3's farm metrics, ported 2026-09-29 (the honest glass): the Stable's numbers
+    "minds_standing",
+    "minds_unhealthy",
+    "usd_today",
+    "route_failures_1h",
+    "meter_rate_10m",
+    "bodies_drained",
     // row 4, panel sp3: the performance law, watched — the slowest door's p95 and the pool's strain
     "door_p95_ms",
     "pool_busy",

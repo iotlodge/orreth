@@ -6,6 +6,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the Operating State names the cell and epoch · 2026-09-25
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the park once by its place, its fact, the HOLD until a person advances it, the advance · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the topic's depth on ONE held consumer, never a fresh one per snapshot · 2026-09-29
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass (JB's screenshots 2026-09-29): one watch vocabulary on both kernels · the meter read by world · the roster folded one row per name · a watch's REST · 2026-09-29
 """The Monitoring workspace's ground (canon 0001: "if it's monitoring, it
 goes here"): the live snapshot of the Operating State — rails, benches,
 bodies, asks, the last harness run — and the WATCHES: named checks the
@@ -38,9 +39,10 @@ METRICS = ("outbox_pending", "oldest_outbox_age_s", "asks_received",
            # P6.5 sp3: the farm's metrics — the Monitoring grows with the Stable
            "minds_standing", "minds_unhealthy", "usd_today", "route_failures_1h", "meter_rate_10m",
            "bodies_drained",
-           # row 4, panel sp3: the performance law, watched — the slowest door's p95 (the pool's strain,
-           # pool_busy · pool_waiting, is the Rust kernel's: the reference opens a connection per knock)
-           "door_p95_ms",
+           # row 4, panel sp3: the performance law, watched — the slowest door's p95 and the pool's
+           # strain; the honest glass (2026-09-29): ONE vocabulary on both kernels, in one order
+           # (fixture `watch_metrics`) — the reference has no pool and measures its strain as 0
+           "door_p95_ms", "pool_busy", "pool_waiting",
            # re-base sp1: poison events the dispatcher holds at — a person's decision is owed
            "parked")
 OPS = {"<=": lambda v, t: v <= t, ">=": lambda v, t: v >= t,
@@ -172,9 +174,12 @@ def _farm(conn) -> dict:
                     (ev.scope(),))
         r = cur.fetchone(); out["minds_standing"], out["minds_unhealthy"] = int(r[0]), int(r[1])
     if _has_table(conn, "spine_meter"):
+        # the honest glass (2026-09-29): the meter read BY WORLD — the pulse says "world u:dev", so
+        # its dollars are that world's and no other's (the same law on the Rust kernel)
         cur.execute("SELECT coalesce(sum(usd) FILTER (WHERE at >= date_trunc('day', now())), 0),"
                     " count(*) FILTER (WHERE ok = false AND at >= now() - interval '1 hour'),"
-                    " count(*) FILTER (WHERE at >= now() - interval '10 minutes') FROM spine_meter")
+                    " count(*) FILTER (WHERE at >= now() - interval '10 minutes') FROM spine_meter"
+                    " WHERE scope = %s", (ev.scope(),))
         r = cur.fetchone()
         out["usd_today"] = round(float(r[0]), 6); out["route_failures_1h"] = int(r[1])
         out["meter_rate_10m"] = round(int(r[2]) / 10.0, 2)
@@ -225,6 +230,7 @@ def snapshot(conn, *, rails: bool = True) -> dict:
     values.update(_farm(conn))
     doors_read = doors.read()                     # panel sp3: the doors this process served, the slowest first
     values["door_p95_ms"] = doors.slowest_p95(doors_read)
+    values["pool_busy"], values["pool_waiting"] = 0, 0    # no pool here — nothing busy, nothing waiting (said as such)
     from . import projector                       # re-base sp1: the poison events the dispatcher holds at (the
     parked = projector.parked(conn, "glass-dispatcher", 20) if _has_table(conn, "spine_parked") else []
     values["parked"] = len(parked)                # ground's count — the same on both kernels), watchable

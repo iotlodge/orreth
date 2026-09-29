@@ -18,6 +18,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3 (b), the desk's arms: desk_transition · desk_challenge · desk_collect · desk_join_id · desk_prove · desk_collect_ok · desk_fuel · desk_lease · desk_words · desk_name · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3, the doors' arms: door_name · door_fold · door_slowest · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: schema_version · schema_tables (the migrator's contract) · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass: watch_metrics · 2026-09-29
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -158,6 +159,8 @@ def test_fixture(contract, case):
         assert (red, "red" if red else "green") == (exp["red"], exp["state"])
     elif kind == "watch_reads":
         assert monitor.reads(inp) == exp["reads"]
+    elif kind == "watch_metrics":                # the honest glass: one vocabulary on both kernels
+        assert list(monitor.METRICS) == exp["metrics"]
     # ---- orreth.ask/1 (W19): the door's refusal for a body that is not here ----
     elif kind == "address":                      # W7: a name at the head selects that body
         assert dispatch.address(inp["text"], inp["names"]) == exp["name"]
