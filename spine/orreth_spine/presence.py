@@ -31,6 +31,7 @@ def ensure_schema(conn) -> None:
         # panel sp2: what the sweep last noted of the lease's liveness — on the ground, so two
         # kernels never mint one lapse twice
         cur.execute("ALTER TABLE spine_leases ADD COLUMN IF NOT EXISTS noted_alive boolean")
+        cur.execute("CREATE INDEX IF NOT EXISTS spine_leases_scope ON spine_leases (scope, name)")   # schema 2 (the perf cure)
 
 
 def renew(conn, did: str, name: str, kind: str, ttl_s: int = TTL_S) -> None:

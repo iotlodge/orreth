@@ -62,6 +62,7 @@ def ensure_schema(conn) -> None:
         cur.execute("ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS note text")
         # P7 sp7: the meter wears its world — the per-world roll-up (0009's open row)
         cur.execute("ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS scope text")
+        cur.execute("CREATE INDEX IF NOT EXISTS spine_meter_did ON spine_meter (did, meter_id DESC)")   # schema 2 (the perf cure)
 
 
 def _scope() -> str:

@@ -56,6 +56,9 @@ RIG_BOXES="orreth-spine-ground orreth-spine-invoke orreth-spine-events orreth-sp
 GATEWAY_PORT=4604   # P6.5 sp3: THE GATEWAY (LiteLLM), run and managed by Orreth — every mind thinks through it
 BRIDGE_PORT=4600; BRIDGE_LOG="$TMPDIR/bridge.log"; SUITE_LOG="$TMPDIR/suite.log"; RUST_LOG="$TMPDIR/rust.log"
 SHADOW_PORT=4601; SHADOW_LOG="$TMPDIR/shadow.log"   # P7 sp3: the Rust bridge in SHADOW beside the Python Bridge
+# the perf cure (2026-09-29): the walk kernel is a RELEASE build — every door number JB reads is the real one
+# (a debug build ran 50–100× its own query cost); SPINE_PROFILE=debug keeps the quick build for a code loop
+PROFILE_DIR="${SPINE_PROFILE:-release}"; CARGO_PROFILE=""; [ "$PROFILE_DIR" = release ] && CARGO_PROFILE="--release"
 
 bridge_pid() { lsof -nP -iTCP:$BRIDGE_PORT -sTCP:LISTEN -t 2>/dev/null | head -1 || true; }
 shadow_pid() { lsof -nP -iTCP:$SHADOW_PORT -sTCP:LISTEN -t 2>/dev/null | head -1 || true; }
@@ -138,12 +141,12 @@ shadow_light() {  # P7 sp3: the Rust bridge (spine-bridge) on :4601, the same gr
   ground_up || { echo "· the ground is dark on :5433 — run scripts/dev.sh up first"; return 1; }
   load_env
   echo "· building spine-bridge (cargo, feature bridge) …"
-  (cd "$PLANE" && cargo build --quiet -p orreth-spine --features bridge --bin spine-bridge) || { echo "· the build refused — read the errors above"; return 1; }
+  (cd "$PLANE" && cargo build --quiet -p orreth-spine --features bridge --bin spine-bridge $CARGO_PROFILE) || { echo "· the build refused — read the errors above"; return 1; }
   # P7 sp6: whose bodies serve? Beside a lit Python Bridge the Rust kernel seats NONE (one crew, never
   # doubled); alone it seats the crew as processes it governs (SPINE_BODIES honours an explicit setting).
   bodies="${SPINE_BODIES:-}"
   if [ -z "$bodies" ]; then [ -n "$(bridge_pid)" ] && bodies=none || bodies=crew; fi
-  (cd "$PLANE" && SPINE_BRIDGE_PORT=$SHADOW_PORT SPINE_BODIES="$bodies" nohup "$PLANE/target/debug/spine-bridge" >"$SHADOW_LOG" 2>&1 &)
+  (cd "$PLANE" && SPINE_BRIDGE_PORT=$SHADOW_PORT SPINE_BODIES="$bodies" nohup "$PLANE/target/$PROFILE_DIR/spine-bridge" >"$SHADOW_LOG" 2>&1 &)
   for i in $(seq 60); do [ -n "$(shadow_pid)" ] && break; sleep 0.5; done
   pid=$(shadow_pid)
   [ -z "$pid" ] && { echo "· the Rust bridge never took :$SHADOW_PORT in 30 s — read $SHADOW_LOG"; tail -5 "$SHADOW_LOG"; return 1; }
@@ -194,13 +197,13 @@ cell_light() {  # P7 sp7: a second universe beside u:dev — its own kernel on i
   cell_seal "$name"
   load_env
   echo "· building spine-bridge (cargo, feature bridge) …"
-  (cd "$PLANE" && cargo build --quiet -p orreth-spine --features bridge --bin spine-bridge) || { echo "· the build refused — read the errors above"; return 1; }
+  (cd "$PLANE" && cargo build --quiet -p orreth-spine --features bridge --bin spine-bridge $CARGO_PROFILE) || { echo "· the build refused — read the errors above"; return 1; }
   echo "$port" >"$home/port"
   log="$TMPDIR/cell-$name.log"
   peers="${SPINE_PEERS:-local=http://127.0.0.1:$SHADOW_PORT}"
   (cd "$PLANE" && ORRETH_HOME="$home" SPINE_PG="postgresql://cell_$name:cell-$name-dev@localhost:5433/spine_$name" \
      SPINE_SCOPE="u:$name" SPINE_CELL="$name" SPINE_QUEUE_NS="$name" SPINE_BRIDGE_PORT="$port" SPINE_BODIES=crew \
-     SPINE_PEERS="$peers" nohup "$PLANE/target/debug/spine-bridge" >"$log" 2>&1 &)
+     SPINE_PEERS="$peers" nohup "$PLANE/target/$PROFILE_DIR/spine-bridge" >"$log" 2>&1 &)
   for i in $(seq 60); do [ -n "$(cell_pid "$port")" ] && break; sleep 0.5; done
   pid=$(cell_pid "$port")
   [ -z "$pid" ] && { echo "· cell $name never took :$port in 30 s — read $log"; tail -5 "$log"; return 1; }
@@ -461,6 +464,10 @@ case "${1:-}" in
            (cd "$PLANE" && cargo test -p orreth-spine --test conformance -- --nocapture 2>/dev/null | grep "conformance —" | sed 's/^/  /') || true
            [ "$rc" = 0 ] && echo "· plane green" || echo "· plane NOT green (cargo exit $rc) — read $RUST_LOG"
            exit $rc ;;
+  prune)   # the perf cure (2026-09-29): the brokers' TEST RESIDUE — every test-shaped namespace's topics and queues,
+           # the empty test-prefixed groups; a person's namespaces (two · perf · the dev world) are never touched
+           ground_up || { echo "· the rig is dark — run scripts/dev.sh up first"; exit 1; }
+           (cd "$SPINE" && uv run --quiet python -m orreth_spine.prune "${2:-}") ;;
   walk)    "$0" up; bridge_light
            echo "· open the glass: http://127.0.0.1:$BRIDGE_PORT/" ;;
   old)     shift; old_rig "$@" ;;
@@ -471,6 +478,6 @@ case "${1:-}" in
   *) if [ -f "$(cell_home "$1")/port" ]; then      # a cell's bare name: `two` lights it, `two stop` darkens it
        case "${2:-}" in stop) cell_stop "$1" ;; ""|start) cell_light "$1" ;; *) echo "usage: scripts/dev.sh cell $1 [port|stop|seal]"; exit 2 ;; esac
      else
-       echo "usage: scripts/dev.sh up|down|status|logs|bridge [stop]|shadow [stop]|cell <name> [port|stop|seal]|suite [pytest args]|rust [rails]|walk|old <verb>|replant"
+       echo "usage: scripts/dev.sh up|down|status|logs|bridge [stop]|shadow [stop]|cell <name> [port|stop|seal]|suite [pytest args]|rust [rails]|prune [ns]|walk|old <verb>|replant"
      fi ;;
 esac

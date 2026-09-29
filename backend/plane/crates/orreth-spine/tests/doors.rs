@@ -86,6 +86,35 @@ async fn knock(
     panic!("the door stayed busy");
 }
 
+/// The ground's own count of table reads (sequential + index scans), per spine table.
+async fn table_reads(g: &orreth_spine::ground::Ground) -> std::collections::BTreeMap<String, i64> {
+    g.client()
+        .query(
+            "SELECT relname, (seq_scan + idx_scan)::bigint FROM pg_stat_user_tables WHERE schemaname = \
+             current_schema() AND relname LIKE 'spine\\_%'",
+            &[],
+        )
+        .await
+        .unwrap()
+        .iter()
+        .map(|r| (r.get::<_, String>(0), r.get::<_, i64>(1)))
+        .collect()
+}
+
+/// The reads between two counts, per table, the busiest first — and their sum.
+fn reads_between(
+    before: &std::collections::BTreeMap<String, i64>,
+    after: &std::collections::BTreeMap<String, i64>,
+) -> (i64, Vec<(String, i64)>) {
+    let mut per: Vec<(String, i64)> = after
+        .iter()
+        .map(|(t, n)| (t.clone(), n - before.get(t).copied().unwrap_or(0)))
+        .filter(|(_, d)| *d > 0)
+        .collect();
+    per.sort_by(|a, b| b.1.cmp(&a.1));
+    (per.iter().map(|(_, d)| d).sum(), per)
+}
+
 #[tokio::test]
 async fn the_four_doors_answer_on_the_rust_kernel_alone() {
     if !rig_up("the_four_doors_answer_on_the_rust_kernel_alone") {
@@ -512,7 +541,95 @@ async fn the_four_doors_answer_on_the_rust_kernel_alone() {
     .await;
     assert_eq!((s, v), (404, json!({"error": "no such parked event"})));
 
+    // ---- 8. THE PERF CURE (2026-09-29): the crew door reads a FIXED handful of tables however
+    // large the crew — thirty bodies joined by hand on the ground, one knock, and the ground's
+    // own count of table reads (sequential + index scans over spine_% tables) stays under a
+    // dozen; the old door read six tables per body (a hundred and eighty here)
+    {
+        use orreth_spine::ground::Ground;
+        let g = Ground::connect(&rails::pg_dsn()).await.unwrap();
+        for i in 0..30 {
+            let (name, did) = (
+                format!("body{i:02}"),
+                format!("did:orreth:agent:perf{i:02}{tok}"),
+            );
+            g.client()
+                .execute(
+                    "INSERT INTO spine_joins (did, name, life, template_hash, policy_version, policy_hash, sig, \
+                     scope, kind, nature) VALUES ($1, $2, 1, 'sha256:t', 'v1', 'sha256:p', 'sig', $3, 'resident', 'a proof body')",
+                    &[&did, &name, &world.scope],
+                )
+                .await
+                .unwrap();
+            g.client()
+                .execute(
+                    "INSERT INTO spine_leases (did, name, kind, scope, until) VALUES ($1, $2, 'resident', $3, now() + \
+                     interval '1 hour') ON CONFLICT (did) DO NOTHING",
+                    &[&did, &name, &world.scope],
+                )
+                .await
+                .unwrap();
+        }
+        let (s, v) = knock(port, "GET", "/crew", None, &h).await; // a warm-up: the pool's line, the plan cache
+        assert_eq!(s, 200, "{v}");
+        // the kernel's own loops read the ground while we measure (the beats every few seconds), so
+        // the judgment is on the CREW DOOR'S OWN tables: each read a fixed few times however large
+        // the crew — the old door read the meter thirty times and the services sixty for thirty bodies
+        g.client()
+            .execute("SELECT pg_stat_force_next_flush()", &[])
+            .await
+            .unwrap(); // this connection's own inserts counted BEFORE the baseline
+        tokio::time::sleep(Duration::from_millis(1500)).await;
+        let before = table_reads(&g).await;
+        let t0 = std::time::Instant::now();
+        let (s, v) = knock(port, "GET", "/crew", None, &h).await;
+        let took = t0.elapsed();
+        assert_eq!(s, 200, "{v}");
+        assert_eq!(v["crew"].as_array().map(Vec::len), Some(30), "thirty cards");
+        tokio::time::sleep(Duration::from_millis(1500)).await;
+        let after = table_reads(&g).await;
+        let (_total, per) = reads_between(&before, &after);
+        let own = [
+            "spine_joins",
+            "spine_leases",
+            "spine_refusals",
+            "spine_services",
+            "spine_mind_assignments",
+            "spine_meter",
+        ];
+        let mine: Vec<(String, i64)> = per.iter().filter(|(t, _)| own.contains(&t.as_str())).cloned().collect();
+        let reads: i64 = mine.iter().map(|(_, d)| d).sum();
+        // the beats read joins and asks every second or so (about ten reads in the window); the old
+        // door's signature was a table read ONCE PER BODY — thirty here, sixty for the services
+        for (t, d) in &mine {
+            assert!(
+                *d < 15,
+                "the crew door read {t} {d} times for thirty bodies — a fixed few, never one per body; all: {per:?}"
+            );
+        }
+        assert!(reads <= 40, "the crew door's own tables read {reads} times for thirty bodies: {mine:?}");
+        println!(
+            "doors · the perf cure: thirty bodies, one knock, the crew's own tables read {reads} times in all, {} ms",
+            took.as_millis()
+        );
+        g.client()
+            .execute(
+                "DELETE FROM spine_joins WHERE scope = $1 AND name LIKE 'body%'",
+                &[&world.scope],
+            )
+            .await
+            .unwrap();
+        g.client()
+            .execute(
+                "DELETE FROM spine_leases WHERE scope = $1 AND name LIKE 'body%'",
+                &[&world.scope],
+            )
+            .await
+            .unwrap();
+    }
+
     println!("doors · the four doors answer on the Rust kernel alone: a kind declared and refused · a mark set with the interested asked · MITL's card with {} citations · the toggle recorded · the impact read from the ground and judged by the ladder, the ask filed to mitl", cites.len());
     lit.stop().await;
+    let _ = orreth_spine::events::prune_namespace(&world.kafka, &format!("t{tok}")).await; // the proof's residue leaves with it
     let _ = std::fs::remove_dir_all(&home);
 }

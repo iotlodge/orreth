@@ -51,7 +51,7 @@ def test_the_first_birth_migrates_and_the_next_verifies():
             assert second["migrated"] is False and second["found"] == ground.SCHEMA_VERSION and "memo" not in second
         cur.execute("SELECT count(*) FROM spine_schema")
         assert cur.fetchone()[0] == 1                               # one version row, one writer
-        assert "verified" in ground.words(second) and "migrated 0 → 1" in ground.words(first)
+        assert "verified" in ground.words(second) and f"migrated 0 → {ground.SCHEMA_VERSION}" in ground.words(first)
 
 
 def test_a_ground_whose_version_lies_is_refused():

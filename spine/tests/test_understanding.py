@@ -60,7 +60,8 @@ def test_search_is_stemmed_and_ranked(pg, monkeypatch):
     partial = st.search("librarian", "hempc")                             # a token the stemmer can't hold:
     assert partial[0]["key"] == "hempcrete" and partial[0]["rank"] == 0.0   # the word-match fallback finds it
     st.put("librarian", "hempcrete", "Hempcrete now cures in 14 days with the new lime.")
-    then = _now()
+    then = pg.execute("SELECT now()").fetchone()[0].isoformat()   # the GROUND's clock — a row's validity is stamped by it, and the
+    #                                                              host's clock runs a few milliseconds apart (a flake seen 2026-09-29)
     assert "14 days" in st.search("librarian", "hempcrete cure")[0]["body"]          # now
     assert "14 days" in st.search("librarian", "hempcrete cure", at=then)[0]["body"]
 

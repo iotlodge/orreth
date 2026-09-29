@@ -787,4 +787,6 @@ async fn shadow_two_kernels_beat_on_one_ground_one_beat_at_a_time() {
     let _ = tokio::time::timeout(Duration::from_secs(60), py.wait()).await;
     let _ = py.kill().await;
     lit.stop().await;
+    let _ = orreth_spine::events::prune_namespace(&world.kafka, &format!("t{tok}")).await;
+    // the proof's residue leaves with it
 }

@@ -285,7 +285,8 @@ the same files, unchanged — before any module earns the word "ported".
     · no lever · unserved · pulled · handed to the human · the notice); and `ago_words`.
   - `schema_version` · `schema_tables` (schema-v0, re-base sp1 — THE MIGRATOR's contract): both
     kernels carry the same `SCHEMA_VERSION` and declare the same sorted set of tables (the
-    version table among them); a kernel that changes any DDL bumps the number in BOTH kernels.
+    version table among them); a kernel that changes any DDL bumps the number in BOTH kernels
+    (2 on 2026-09-29: the indexes — the perf cure).
   - `inbox_parked_fact` · `inbox_advanced_fact` · `inbox_parked_words` · `body_hash` (inbox-v0,
     re-base sp1 — POISON-PARKING): the fact a consumer mints when it parks a poison with its
     evidence (`ref: parked:<id>` · the place on the rail · the evidence's sha256 · the reason,

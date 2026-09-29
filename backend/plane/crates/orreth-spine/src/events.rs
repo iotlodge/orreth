@@ -36,6 +36,57 @@ pub async fn declare_topics(bootstrap: &str, topics: &[&str]) -> Result<(), Rail
     Ok(())
 }
 
+/// Delete topics (the proofs' and the suite's housekeeping — the perf cure, 2026-09-29):
+/// a topic already gone is not a wound.
+pub async fn delete_topics(bootstrap: &str, topics: &[&str]) -> Result<usize, RailError> {
+    if topics.is_empty() {
+        return Ok(0);
+    }
+    let admin: AdminClient<DefaultClientContext> = ClientConfig::new()
+        .set("bootstrap.servers", bootstrap)
+        .create()?;
+    let out = admin
+        .delete_topics(topics, &AdminOptions::new())
+        .await
+        .map_err(|e| RailError::Events(e.to_string()))?;
+    Ok(out.iter().filter(|r| r.is_ok()).count())
+}
+
+/// Every topic wearing a namespace (`….<ns>`) deleted — a proof's residue leaves with it.
+pub async fn prune_namespace(bootstrap: &str, ns: &str) -> Result<usize, RailError> {
+    use rdkafka::consumer::{BaseConsumer, Consumer};
+    let c: BaseConsumer = ClientConfig::new()
+        .set("bootstrap.servers", bootstrap)
+        .create()?;
+    let md = c
+        .fetch_metadata(None, Duration::from_secs(30))
+        .map_err(|e| RailError::Events(e.to_string()))?;
+    let suffix = format!(".{ns}");
+    let mine: Vec<String> = md
+        .topics()
+        .iter()
+        .map(|t| t.name().to_string())
+        .filter(|t| t.ends_with(&suffix))
+        .collect();
+    let refs: Vec<&str> = mine.iter().map(String::as_str).collect();
+    delete_topics(bootstrap, &refs).await
+}
+
+/// Consumer groups deleted (a kernel's own at stop — the group-per-life law leaves no ghost).
+pub async fn delete_groups(bootstrap: &str, groups: &[&str]) -> Result<usize, RailError> {
+    if groups.is_empty() {
+        return Ok(0);
+    }
+    let admin: AdminClient<DefaultClientContext> = ClientConfig::new()
+        .set("bootstrap.servers", bootstrap)
+        .create()?;
+    let out = admin
+        .delete_groups(groups, &AdminOptions::new())
+        .await
+        .map_err(|e| RailError::Events(e.to_string()))?;
+    Ok(out.iter().filter(|r| r.is_ok()).count())
+}
+
 /// One delivery awaiting its commit: the envelope (when the body was one)
 /// and its place on the rail.
 #[derive(Debug, Clone)]

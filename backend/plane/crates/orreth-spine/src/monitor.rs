@@ -2,6 +2,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: the doors' latency and the pool in the snapshot · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the Operating State names the cell and epoch · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the topic's depth read on ONE held broker client — never a fresh client (a full-metadata fetch) per snapshot · 2026-09-29
 //! The Monitoring workspace's ground — `orreth_spine.monitor` (canon 0001:
 //! "if it's monitoring, it goes here"): the live snapshot of the Operating
 //! State — rails, benches, bodies, asks, the last harness run — and the
@@ -101,15 +102,27 @@ async fn benches(w: &World, names: &[String]) -> Value {
 /// The `ask.received` topic's depth (high − low watermark), or `null` when
 /// the rail does not answer — as `monitor._topic_depth`.
 async fn topic_depth(w: &World) -> Value {
+    use rdkafka::consumer::{BaseConsumer, Consumer};
+    use std::sync::{Mutex, OnceLock};
+    // the perf cure (2026-09-29): ONE client for the process's life — a fresh client per snapshot
+    // fetched the broker's whole metadata each time (400–700 ms against five thousand topics, every
+    // five seconds while the Monitoring was open) and left a ghost group behind
+    static HELD: OnceLock<Mutex<Option<(String, BaseConsumer)>>> = OnceLock::new();
     let kafka = w.kafka.clone();
     let depth = tokio::task::spawn_blocking(move || -> Option<i64> {
-        use rdkafka::consumer::{BaseConsumer, Consumer};
-        let c: BaseConsumer = rdkafka::config::ClientConfig::new()
-            .set("bootstrap.servers", &kafka)
-            .set("group.id", format!("monitor-{}", token_hex(3)))
-            .create()
-            .ok()?;
-        let (lo, hi) = c
+        let held = HELD.get_or_init(|| Mutex::new(None));
+        let mut slot = held.lock().unwrap_or_else(|p| p.into_inner());
+        if slot.as_ref().is_none_or(|(b, _)| *b != kafka) {
+            let c: BaseConsumer = rdkafka::config::ClientConfig::new()
+                .set("bootstrap.servers", &kafka)
+                .set("group.id", "monitor-depth")
+                .create()
+                .ok()?;
+            *slot = Some((kafka.clone(), c));
+        }
+        let (lo, hi) = slot
+            .as_ref()?
+            .1
             .fetch_watermarks(ASK_RECEIVED, 0, Duration::from_secs(3))
             .ok()?;
         Some(hi - lo)

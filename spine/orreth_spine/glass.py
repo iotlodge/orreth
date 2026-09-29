@@ -17,6 +17,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: the shelf's restore door routes every kind through stable.restore_mind — one restore law · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `FEED_TOPICS` widened to thirty-three · the fact door `/fact/<message_id>` (`fact_view`) · the ask view's `duty` · the presence sweep on the schedule loop's beat · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the park once by its place, its fact, the HOLD until a person advances it, the advance · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the crew door in SET queries · the retention beat on the schedule loop · 2026-09-29
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -199,28 +200,46 @@ KERNEL_DUTIES = [                # every body runs these — kernel-required,
 ]
 
 
-def mind_line(conn, name: str, did: str, template: dict | None) -> dict | None:
-    """P6.5 sp3 (walk #12, JB's callout): which mind this body thinks with
-    NOW and why — the Stable's decision for it (a pin · an assignment ·
-    the template's model · the class), and the last thought it rode."""
+def meter_lasts(conn, dids: list[str]) -> dict[str, dict]:
+    """The last metered thought per self, ONE query for every self named (the crew door's read)."""
+    if not dids:
+        return {}
+    cur = conn.cursor()
+    cur.execute("SELECT to_regclass('spine_meter') IS NOT NULL")
+    if not cur.fetchone()[0]:
+        return {}
+    cur.execute("SELECT DISTINCT ON (did) did, stall, usd, at, ok FROM spine_meter WHERE did = ANY(%s)"
+                " AND stall IS NOT NULL ORDER BY did, meter_id DESC", (list(dids),))
+    return {d: {"stall": st, "usd": usd, "at": at.isoformat(), "ok": ok} for d, st, usd, at, ok in cur.fetchall()}
+
+
+def mind_line_with(stalls: list[dict], assigned: list[dict], last: dict | None, name: str,
+                   template: dict | None) -> dict | None:
+    """The mind line over rows already in hand (the perf cure: the crew door fetches the Stable's
+    stalls, the assignments and the meter's last lines ONCE, then reads every body from them —
+    no query per body). None when the template names no mind."""
     mind = (template or {}).get("mind") or {}
     if not mind:
         return None
     from . import stable
-    d = stable.resolve_for(conn, subject=name, model=mind.get("model"), klass=mind.get("class"), pin=mind.get("pin"))
+    d = stable.resolve(stalls, assigned, subject=name, klass=mind.get("class"), pin=mind.get("pin"), model=mind.get("model"))
     out = {"stall": d.get("stall"), "why": d.get("why") or d.get("reason"), "degraded": bool(d.get("degraded"))}
     if d.get("stall"):
-        s = services.get(conn, d["stall"]) or {}
+        s = next((s for s in stalls if s.get("name") == d["stall"]), {})
         m = s.get("manifest") or {}
         out["route"] = f"{m.get('provider', '?')} {m.get('model', '?')}"; out["klass"] = m.get("class")
-    cur = conn.cursor()
-    cur.execute("SELECT to_regclass('spine_meter') IS NOT NULL")
-    if cur.fetchone()[0]:
-        cur.execute("SELECT stall, usd, at, ok FROM spine_meter WHERE did = %s AND stall IS NOT NULL ORDER BY meter_id DESC LIMIT 1", (did,))
-        r = cur.fetchone()
-        if r:
-            out["last"] = {"stall": r[0], "usd": r[1], "at": r[2].isoformat(), "ok": r[3]}
+    if last:
+        out["last"] = last
     return out
+
+
+def mind_line(conn, name: str, did: str, template: dict | None) -> dict | None:
+    """P6.5 sp3 (walk #12, JB's callout): which mind this body thinks with
+    NOW and why — the Stable's decision for it (a pin · an assignment ·
+    the template's model · the class), and the last thought it rode."""
+    from . import stable
+    return mind_line_with(services.listing(conn, kind="mind"), stable.assignments(conn),
+                          meter_lasts(conn, [did]).get(did), name, template)
 
 
 def crew_view(conn, bodies: dict | None = None) -> list[dict]:
@@ -234,22 +253,29 @@ def crew_view(conn, bodies: dict | None = None) -> list[dict]:
         "SELECT DISTINCT ON (name) name, kind, did, life, joined_at,"
         " policy_version, template_hash, capabilities, placement, nature FROM spine_joins"
         " WHERE scope = %s ORDER BY name, join_id DESC", (ev.scope(),))
+    rows = cur.fetchall()
     alive = {b["did"]: b["alive"] for b in presence.roster(conn)}
     here = placement.ground_declares()      # P6 sp4: where this ground is
     refused = placement.refusals(conn)      # the bodies it could not seat
+    # the perf cure (2026-09-29): a FIXED handful of reads however large the crew — the served counts in
+    # one GROUP BY, the Stable's stalls and assignments once, the meter's last lines in one DISTINCT ON
+    cur.execute("SELECT served_by, count(*), max(replied_at) FROM spine_asks WHERE scope = %s"
+                " AND status <> 'received' AND served_by IS NOT NULL GROUP BY served_by", (ev.scope(),))
+    served = {d: (n, last) for d, n, last in cur.fetchall()}
+    if bodies:
+        from . import stable
+        stalls, assigned = services.listing(conn, kind="mind"), stable.assignments(conn)
+        lasts = meter_lasts(conn, [r[2] for r in rows])
     cards = []
-    for name, kind, did, life, joined, pv, th, caps, plc, nature in cur.fetchall():
-        cur.execute("SELECT count(*), max(replied_at) FROM spine_asks"
-                    " WHERE served_by = %s AND scope = %s AND status <> 'received'",
-                    (did, ev.scope()))
-        n, last = cur.fetchone()
+    for name, kind, did, life, joined, pv, th, caps, plc, nature in rows:
+        n, last = served.get(did, (0, None))
         prof = json.loads(plc) if plc else dict(placement.DEFAULT)
         r = refused.pop(name, None)
         if r is not None and r["refused_at"] > joined:   # refused SINCE its last join:
             cards.append(_refused_card(r, nature)); continue   # the picture says so (rule 7)
         body = (bodies or {}).get(name)
         cards.append({
-            "mind": mind_line(conn, name, did, getattr(body, "template", None)) if body is not None else None,
+            "mind": mind_line_with(stalls, assigned, lasts.get(did), name, getattr(body, "template", None)) if body is not None else None,
             "name": name, "kind": kind, "did": did, "lives": life,
             "nature": nature or "",         # W7: what it IS, one line
             "joined_at": joined.isoformat(), "policy_version": pv,
@@ -1263,6 +1289,7 @@ class BridgeRig:
                     time.sleep(0.3)
             next_beat = time.monotonic() + self._tool_check_s()
             next_stable = time.monotonic() + self._mind_check_s()
+            next_prune = time.monotonic()                     # RETENTION (the perf cure): the first hour's sweep at once
             self._sign_in("schedule")
             while not self._stop.is_set():
                 if self._yielding("schedule"):
@@ -1278,6 +1305,13 @@ class BridgeRig:
                 if time.monotonic() >= next_beat:     # P6.5 sp2: the keeper's beat — every MCP server
                     next_beat = time.monotonic() + self._tool_check_s()   # probed, its tools synced,
                     self._keeper_beat(conn)           # the strikes rule → a proposal the human cuts
+                if time.monotonic() >= next_prune:    # RETENTION: published outbox rows past the keep window, hourly, one kernel
+                    next_prune = time.monotonic() + 3600
+                    with ground.beat(conn, "retention") as ours:
+                        if ours:
+                            n = outbox.prune(conn)
+                            if n:
+                                print(f"  [kernel] retention: {n} published outbox rows older than {outbox.keep_days():g} days pruned", flush=True)
                 if time.monotonic() >= next_stable:   # P6.5 sp3: the Stable keeper's beat — every mind
                     next_stable = time.monotonic() + self._mind_check_s()   # pinged, the market's eyes,
                     self._stable_beat(conn)           # drift · EOL · drained · strikes → proposals

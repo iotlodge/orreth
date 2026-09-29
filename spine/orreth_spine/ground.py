@@ -4,6 +4,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the beat lock (the loops' shadow law) · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the human profile's ground · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: THE MIGRATOR (lock 2) — the single writer, the version on the ground, the later kernel waits and verifies · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): SCHEMA VERSION 2 — the indexes the doors and the relay were missing · 2026-09-29
 """Every ground, ensured when a connection is BORN — never inside a serve.
 
 The law (found live at the intent sp1 relight): `outbox.once` keeps a
@@ -55,7 +56,7 @@ from contextlib import contextmanager
 from . import envelope as ev
 
 BEAT_LOCK = 742200                  # the beat classes count up from here (the DDL guard is 742199)
-BEATS = {"scheduler": 1, "intent": 2, "keeper": 3}
+BEATS = {"scheduler": 1, "intent": 2, "keeper": 3, "retention": 4}   # 4: the outbox's prune (the perf cure)
 HELD = "the beat is held by another kernel on this ground"
 
 
@@ -94,7 +95,7 @@ TAGS = ("outbox", "inbox", "heartbeat", "projector", "resident", "gateway", "too
 # tag was orphaned — the Stable's tables were born inside a request, the very thing the law
 # forbids) and `desk` (the machine join desk, the Rust kernel's table) join the one list.
 
-SCHEMA_VERSION = 1          # THE MIGRATOR: bumped in BOTH kernels whenever any DDL statement changes
+SCHEMA_VERSION = 2          # THE MIGRATOR: bumped in BOTH kernels whenever any DDL statement changes (2: the indexes, the perf cure 2026-09-29)
 TABLES = (                  # every table both kernels stand on at this version (fixture `schema_tables`)
     "spine_aggregate_cursor", "spine_asks", "spine_authenticators", "spine_desk", "spine_digests",
     "spine_harness_runs", "spine_heartbeat", "spine_inbox", "spine_intent_turns", "spine_intentions",

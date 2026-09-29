@@ -273,6 +273,11 @@ def ensure_schema(conn) -> None:
                     " zone text")
         cur.execute("ALTER TABLE spine_joins ADD COLUMN IF NOT EXISTS"
                     " nature text")        # W7: what the body IS, in one line
+        # schema 2 (the perf cure): the crew's read, the served count, a session's latest ask, the counts by status
+        cur.execute("CREATE INDEX IF NOT EXISTS spine_joins_scope_name ON spine_joins (scope, name, join_id DESC)")
+        cur.execute("CREATE INDEX IF NOT EXISTS spine_asks_scope_served ON spine_asks (scope, served_by)")
+        cur.execute("CREATE INDEX IF NOT EXISTS spine_asks_session ON spine_asks (session, asked_at DESC)")
+        cur.execute("CREATE INDEX IF NOT EXISTS spine_asks_scope_status ON spine_asks (scope, status)")
 
 
 def _next_seq(cur, ask_id: str) -> int:

@@ -622,5 +622,6 @@ async fn the_gate_seats_the_owner_first_and_every_door_reads_the_seat() {
     println!("gate · the open door met its own ceiling {open_busy} times in twenty-four");
 
     lit.stop().await;
+    let _ = orreth_spine::events::prune_namespace(&world.kafka, &format!("t{tok}")).await; // the proof's residue leaves with it
     let _ = std::fs::remove_dir_all(&home);
 }

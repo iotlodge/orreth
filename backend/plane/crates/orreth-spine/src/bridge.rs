@@ -8,6 +8,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the profile doors (W58) · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: the fact door `/fact/<message_id>` · the presence sweep's loop · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the RETENTION beat (hourly, one kernel) · 2026-09-29
 //! The Rust bridge — the doors and the feed of `orreth_spine.glass` +
 //! `bridgefeed` on axum, lit in SHADOW on :4601 beside the Python Bridge on
 //! :4600, both on one ground. It serves the SAME page (`spine/glass/index.html`
@@ -181,6 +182,7 @@ pub struct Lit {
     /// P7 sp6: the crew this kernel seats — `None` when it seats none.
     pub bodies: Option<Arc<Bodies>>,
     tasks: Vec<tokio::task::JoinHandle<()>>,
+    kafka: String,
 }
 
 impl Lit {
@@ -208,6 +210,13 @@ impl Lit {
         for t in self.tasks {
             let _ = tokio::time::timeout(Duration::from_secs(15), t).await;
         }
+        // the perf cure (2026-09-29): the group-per-life law leaves no ghost — this life's groups go with it
+        let feed_group = format!("glass-feed-{}", self.port);
+        let _ = tokio::time::timeout(
+            Duration::from_secs(10),
+            crate::events::delete_groups(&self.kafka, &[self.group.as_str(), feed_group.as_str()]),
+        )
+        .await;
     }
 }
 
@@ -524,6 +533,45 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
             }
         }));
     }
+    // RETENTION (the perf cure, 2026-09-29): once an hour, under the `retention` beat, the outbox's
+    // published rows past the keep window are pruned — the relay's poll stays O(pending) by the
+    // partial index, the table stays a queue's size, the fact door keeps its window
+    {
+        let (w, stop) = (w.clone(), stop.clone());
+        tasks.push(tokio::spawn(async move {
+            while !stop.load(Ordering::Relaxed) {
+                match Ground::connect(&w.pg_dsn).await {
+                    Ok(g) => {
+                        while !stop.load(Ordering::Relaxed) {
+                            match crate::beat::try_beat(&g, &w.scope, "retention").await {
+                                Ok(true) => {
+                                    match outbox::prune(&g, outbox::keep_days()).await {
+                                        Ok(n) if n > 0 => eprintln!(
+                                            "  [kernel] retention: {n} published outbox rows older than {} days pruned",
+                                            outbox::keep_days()
+                                        ),
+                                        Ok(_) => {}
+                                        Err(e) => eprintln!("the retention sweep stumbled: {e}"),
+                                    }
+                                    let _ = crate::beat::end_beat(&g, &w.scope, "retention").await;
+                                }
+                                Ok(false) => {}
+                                Err(e) => {
+                                    eprintln!("the retention beat could not be claimed: {e}");
+                                    break;
+                                }
+                            }
+                            sleep_unless_stopped(&stop, Duration::from_secs(3600)).await;
+                        }
+                    }
+                    Err(e) => eprintln!("the retention sweep could not reach the ground: {e}"),
+                }
+                if !stop.load(Ordering::Relaxed) {
+                    tokio::time::sleep(Duration::from_millis(500)).await;
+                }
+            }
+        }));
+    }
     // the intent rail's beat — Resiliency declared at boot, then a turn every 3 s
     {
         let (w, stop) = (w.clone(), stop.clone());
@@ -613,6 +661,7 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
         feed,
         bodies: bodies_arc,
         tasks,
+        kafka: w.kafka.clone(),
     })
 }
 

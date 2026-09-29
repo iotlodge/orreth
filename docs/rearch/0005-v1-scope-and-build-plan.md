@@ -2319,6 +2319,42 @@ approved (covenant rule 9).
       (`acquire_ontology`), the Rust door reads what was acquired; the `mark` TOOL stays the body's
       (`tools.py`), only the door crossed; `cargo test --features rails --test rails` alone is still
       red on the QR deps (as sp3 found).
+      **THE PERF CURE — built 2026-09-29 before sp2 (JB's word: "move forward on any needed fixes …
+      fix before next spoon").** JB's screenshot of THE DOORS row (`/crew` 1.55 s · `/bodies` 3.5 s ·
+      Kafka 188 %) was read on the live rig, then on a fresh cell with ten bodies knocked warm: `/bodies`
+      5 ms (the 3.5 s was the suite on the same machine), `/crew` 350–680 ms on an EMPTY ground —
+      structural: `crew_view` ran 3 + 6N queries (a served count, the Stable's route, the service, the
+      meter per body); `/monitor` 300–500 ms — one RabbitMQ passive declare per body and a FRESH Kafka
+      client per snapshot (a full-metadata fetch, 400–700 ms against 5,330 topics); the outbox at
+      131,757 rows with only a primary key, the relay's poll a 74 ms sequential scan five times a second
+      and `outbox_lag` scanning it again; no index on `scope` anywhere while the dev ground carried 388
+      test worlds; the broker holding 5,288 topics (4,047 from test namespaces), 2,687 groups (897 ghost
+      `glass-dispatcher-*` from the group-per-life law) and RabbitMQ 2,336 queues, nothing ever deleting
+      them; and the walk kernel a DEBUG build. The cure, five parts: (1) SCHEMA VERSION 2 — the migrator's
+      first real use: a partial index on the outbox's unpublished rows (the relay's poll O(pending)), and
+      scope indexes on joins · leases · asks (served · session · status) · meter (did) · refusals · tool
+      calls, the same statements in both kernels (the parity proof now compares indexes too: 63 the same).
+      (2) RETENTION — the outbox is a queue, not the log: published rows past `SPINE_OUTBOX_KEEP_DAYS`
+      (default 7) are pruned hourly under the new `retention` beat (class 4 — `loops-v0` `beat_lock`
+      extended), on both kernels; an unpublished row is never touched; the fact door keeps its window.
+      (3) O(1) DOORS — `crew_view` reads a FIXED handful of tables however large the crew (the served
+      counts in one GROUP BY, the Stable's stalls and assignments once, the meter's last lines in one
+      DISTINCT ON, `mind_line_with` over rows in hand — both kernels); the monitor's topic depth on ONE
+      held broker client for the process's life (both kernels). (4) THE RESIDUE — `orreth_spine.prune`
+      (`scripts/dev.sh prune [ns]`): every test-shaped namespace's topics and queues and the empty
+      test-prefixed groups, never a person's namespace; the suite prunes its own namespace at its end
+      (`conftest`); every bridge proof prunes its namespace when its kernel stops; a kernel deletes its own
+      two groups at stop (no ghost). (5) A RELEASE BUILD for the walk kernel and the cells
+      (`SPINE_PROFILE=debug` keeps the quick build). PROVEN: `tests/doors.rs` step 8 — thirty bodies
+      joined by hand, one knock, the crew's own tables read a fixed few times (the ground's own scan
+      counts; the old door read the meter thirty times and the services sixty); `tests/rails.rs` §8 the
+      retention (the old published row alone pruned); the migrator's parity proof with indexes; both
+      conformance runners; the spine suite and every bridge proof green. HONEST LIMITS: the monitor's
+      benches are still one passive declare per body on one connection (RabbitMQ, ~1 ms each); the
+      glass still re-reads `/crew` on every lease notice (debounced 300 ms) rather than patching one
+      station; the kernel's beats re-seed the marker kinds (seven inserts) several times a second — a
+      smell seen in the proof's idle window, not cured here; the `mark` tool and MITL's ontology stay the
+      Python body's.
       **JB's word, 2026-09-28 night (mid-sp1): THE FIVE-CRATE REMOVAL RETRACTED, PENDING REVIEW.**
       "I want to retract my previous ignore/remove about those other crates … if it involves
       integrating those elements of crates, we should at least review those like you did crypto. I

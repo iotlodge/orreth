@@ -21,6 +21,11 @@ def _queue_ns():
     os.environ["SPINE_QUEUE_NS"] = tok
     os.environ["SPINE_SCOPE"] = "u:test-" + tok
     yield
+    try:                                            # the perf cure (2026-09-29): the session's residue on the
+        from orreth_spine import prune              # brokers — its topics, its queues, the empty test groups —
+        prune.namespace(tok)                        # leaves with it (found live: 5,288 topics after six days)
+    except Exception:                               # noqa: BLE001 — a dark broker prunes nothing
+        pass
     os.environ.pop("SPINE_QUEUE_NS", None)
     os.environ.pop("SPINE_SCOPE", None)
 

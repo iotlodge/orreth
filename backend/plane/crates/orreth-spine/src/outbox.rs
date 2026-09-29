@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `fact_by_id` — the fact door's read · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): RETENTION — the outbox is a queue, not the log; published rows past the keep window are pruned under the beat · 2026-09-29
 //! The transactional outbox and its relay — mirrors `orreth_spine.outbox`
 //! (canon 0002, law 2). Domain state and the intent to publish commit in ONE
 //! Postgres transaction: a committed row can never lack its event, a
@@ -66,6 +67,32 @@ pub async fn add_row(tx: &Transaction<'_>, raw: &[u8], message_id: &str) -> Resu
     )
     .await?;
     Ok(())
+}
+
+/// `SPINE_OUTBOX_KEEP_DAYS`: how long a PUBLISHED row stays readable through the fact door
+/// (the outbox is a queue, not the log — the rail carried the fact; the Record and the markers
+/// are the memory). Default seven days.
+pub fn keep_days() -> f64 {
+    std::env::var("SPINE_OUTBOX_KEEP_DAYS")
+        .ok()
+        .and_then(|v| v.parse::<f64>().ok())
+        .filter(|d| *d > 0.0)
+        .unwrap_or(7.0)
+}
+
+/// RETENTION (the perf cure): published rows older than the keep window are deleted — never an
+/// unpublished one (the relay still owes it). Returns how many left. Run under the `retention`
+/// beat so two kernels on one ground never both sweep.
+pub async fn prune(g: &Ground, keep_days: f64) -> Result<u64, RailError> {
+    let n = g
+        .client()
+        .execute(
+            "DELETE FROM spine_outbox WHERE published_at IS NOT NULL AND published_at < now() - ($1 * \
+             interval '1 day')",
+            &[&keep_days],
+        )
+        .await?;
+    Ok(n)
 }
 
 /// The honest meter: rows awaiting publish, and the oldest one's age.

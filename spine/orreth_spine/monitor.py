@@ -5,6 +5,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the farm's metrics: the Monitoring grows with the Stable · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the Operating State names the cell and epoch · 2026-09-25
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the park once by its place, its fact, the HOLD until a person advances it, the advance · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the topic's depth on ONE held consumer, never a fresh one per snapshot · 2026-09-29
 """The Monitoring workspace's ground (canon 0001: "if it's monitoring, it
 goes here"): the live snapshot of the Operating State — rails, benches,
 bodies, asks, the last harness run — and the WATCHES: named checks the
@@ -140,15 +141,19 @@ def _benches(names: list[str]) -> dict:
         return {"error": type(e).__name__}
 
 
+_DEPTH: dict = {}                      # the perf cure: ONE consumer for the process's life (a fresh one per
+                                       # snapshot fetched the broker's whole metadata every five seconds)
+
+
 def _topic_depth() -> int | None:
     try:
         from confluent_kafka import Consumer, TopicPartition
         from .projector import KAFKA_BOOTSTRAP
         from .resident import ASK_RECEIVED
-        c = Consumer({"bootstrap.servers": KAFKA_BOOTSTRAP,
-                      "group.id": "monitor-" + secrets.token_hex(3)})
+        c = _DEPTH.get(KAFKA_BOOTSTRAP)
+        if c is None:
+            c = _DEPTH[KAFKA_BOOTSTRAP] = Consumer({"bootstrap.servers": KAFKA_BOOTSTRAP, "group.id": "monitor-depth"})
         lo, hi = c.get_watermark_offsets(TopicPartition(ASK_RECEIVED, 0), timeout=3)
-        c.close()
         return hi - lo
     except Exception:
         return None

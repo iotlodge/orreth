@@ -7,6 +7,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the seat's tables (the gate) · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `spine_leases.noted_alive` — the sweep's note on the ground · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: THE MIGRATOR (lock 2) — `spine_schema`, the version, every table both kernels stand on · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): SCHEMA VERSION 2 — the indexes the doors and the relay were missing · 2026-09-29
 //! The ask road's tables — the Python spine's DDL, word for word, under the
 //! same tags its `once` guard uses (`resident` · `markers` · `proof` · `intent`
 //! · `presence` · `digest`), so two spines on one ground never disagree about a
@@ -32,7 +33,7 @@ use std::sync::LazyLock;
 /// (or past) its number runs no DDL at all — it VERIFIES that every table it declares
 /// stands, and refuses to light on a ground that lies. A kernel lighting beside a
 /// migrating one WAITS at the lock and then verifies (`Ground::ensure_all`).
-pub const SCHEMA_VERSION: i32 = 1;
+pub const SCHEMA_VERSION: i32 = 2; // 2: the indexes (the perf cure, 2026-09-29)
 
 /// The version table itself — created before the version is read, under the same lock.
 pub const SCHEMA_DDL: &[&str] = &[
@@ -70,6 +71,12 @@ pub const RESIDENT_DDL: &[&str] = &[
     "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS zone text",
     "ALTER TABLE spine_sessions ADD COLUMN IF NOT EXISTS zone text",
     "ALTER TABLE spine_joins ADD COLUMN IF NOT EXISTS nature text",
+    // schema 2 (the perf cure): the crew's read, the served count, a session's latest ask, the
+    // monitor's counts by status — each was a sequential scan of every world's rows
+    "CREATE INDEX IF NOT EXISTS spine_joins_scope_name ON spine_joins (scope, name, join_id DESC)",
+    "CREATE INDEX IF NOT EXISTS spine_asks_scope_served ON spine_asks (scope, served_by)",
+    "CREATE INDEX IF NOT EXISTS spine_asks_session ON spine_asks (session, asked_at DESC)",
+    "CREATE INDEX IF NOT EXISTS spine_asks_scope_status ON spine_asks (scope, status)",
 ];
 
 /// `markers.ensure_schema`: the registry, the markers, the ROOT column (P25)
@@ -148,6 +155,8 @@ pub const PRESENCE_DDL: &[&str] = &[
     // row 4, panel sp2: what the sweep last noted of the lease's liveness — the note lives on
     // the ground so two kernels never mint one lapse twice (`presence::sweep`)
     "ALTER TABLE spine_leases ADD COLUMN IF NOT EXISTS noted_alive boolean",
+    // schema 2: the roster and the sweep read one world's leases, not every world's
+    "CREATE INDEX IF NOT EXISTS spine_leases_scope ON spine_leases (scope, name)",
 ];
 
 /// `digest.ensure_schema`: the short versions (MEM-3) — read by the sessions door.
@@ -247,6 +256,8 @@ pub const GATEWAY_DDL: &[&str] = &[
     "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = \
      'spine_meter' AND column_name = 'note') THEN ALTER TABLE spine_meter ADD COLUMN note text; END IF; \
      END $$",
+    // schema 2: a body's last meter line and its spend, by its self
+    "CREATE INDEX IF NOT EXISTS spine_meter_did ON spine_meter (did, meter_id DESC)",
 ];
 
 /// `mitl.ensure_schema` (re-base sp1: the four Python-only doors cross): the soft toggle's
@@ -264,6 +275,8 @@ pub const PLACEMENT_DDL: &[&str] = &[
      NULL, name text NOT NULL, kind text NOT NULL, template_hash text NOT NULL, placement text \
      NOT NULL, ground text NOT NULL, reasons text NOT NULL, marker text, scope text NOT NULL, \
      refused_at timestamptz NOT NULL DEFAULT now())",
+    // schema 2: the latest refusal per body, one world at a time
+    "CREATE INDEX IF NOT EXISTS spine_refusals_scope_name ON spine_refusals (scope, name, refusal_id DESC)",
 ];
 
 /// `tools.ensure_schema`: the tool journal — every hop a body made through its tool door
@@ -275,6 +288,8 @@ pub const TOOLS_DDL: &[&str] = &[
     "ALTER TABLE spine_tool_calls ADD COLUMN IF NOT EXISTS authority_chain text",
     "ALTER TABLE spine_tool_calls ADD COLUMN IF NOT EXISTS ask text",
     "ALTER TABLE spine_tool_calls ADD COLUMN IF NOT EXISTS service text",
+    // schema 2: a body's hops by its self, newest first (the export, the tool lamps)
+    "CREATE INDEX IF NOT EXISTS spine_tool_calls_did ON spine_tool_calls (did, call_id DESC)",
 ];
 
 // ---- the rails' three and the tables their own modules once held (re-base sp1: every DDL lives
@@ -288,6 +303,9 @@ pub const OUTBOX_DDL: &[&str] = &[
     "ALTER TABLE spine_outbox ADD COLUMN IF NOT EXISTS committed_at timestamptz NOT NULL DEFAULT \
      now()",
     "ALTER TABLE spine_outbox ADD COLUMN IF NOT EXISTS publish_attempts int NOT NULL DEFAULT 0",
+    // schema 2: THE RELAY'S POLL — five times a second, `WHERE published_at IS NULL` — walks the
+    // pending rows alone, never the whole table (found 2026-09-28: a 131k-row sequential scan per poll)
+    "CREATE INDEX IF NOT EXISTS spine_outbox_pending ON spine_outbox (outbox_id) WHERE published_at IS NULL",
 ];
 
 /// The table its home module (`inbox`) once held — re-exported there.

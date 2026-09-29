@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the meter wears its world · 2026-09-25
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): `mind_line_with` over pre-fetched rows — the crew door reads the Stable once, not once per body · 2026-09-29
 //! THE STABLE on the ground — the live half of `orreth_spine.stable` (P6.5 sp3
 //! · 0009 §2 · 0019 · 0058; JB's lock 2026-09-24: LiteLLM executes, the
 //! registry knows and decides): stalls (services of kind mind, each a model
@@ -31,6 +32,7 @@ use crate::stable::{
 use crate::world::{isoformat, refused, RoadError, World};
 use regex::Regex;
 use serde_json::{json, Value};
+use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant, SystemTime};
 use tokio_postgres::{GenericClient, Transaction};
@@ -1303,18 +1305,65 @@ pub async fn mind_line(
     did: &str,
     template: Option<&Value>,
 ) -> Result<Option<Value>, RoadError> {
-    let Some(mind) = template.map(|t| &t["mind"]).filter(|m| truthy(m)) else {
-        return Ok(None);
-    };
-    let d = resolve_for(
-        g.client(),
-        scope,
-        Some(name),
-        mind["model"].as_str(),
-        mind["class"].as_str(),
-        mind["pin"].as_str(),
-    )
-    .await?;
+    let stalls = services_live::rows(g.client(), scope, Some("mind")).await?;
+    let assigned = assignments(g.client(), scope).await?;
+    let lasts = meter_lasts(g, std::slice::from_ref(&did.to_string())).await?;
+    Ok(mind_line_with(
+        &stalls,
+        &assigned,
+        lasts.get(did),
+        name,
+        template,
+    ))
+}
+
+/// The last metered thought per self, ONE query for every self named (the crew door's read):
+/// `{did: {stall, usd, at, ok}}`; empty when no meter stands.
+pub async fn meter_lasts(g: &Ground, dids: &[String]) -> Result<HashMap<String, Value>, RoadError> {
+    if dids.is_empty() || !crate::schema::has_table(g, "spine_meter").await? {
+        return Ok(HashMap::new());
+    }
+    let rows = g
+        .client()
+        .query(
+            "SELECT DISTINCT ON (did) did, stall, usd, at, ok FROM spine_meter WHERE did = ANY($1) AND stall IS \
+             NOT NULL ORDER BY did, meter_id DESC",
+            &[&dids],
+        )
+        .await?;
+    Ok(rows
+        .iter()
+        .map(|r| {
+            (
+                r.get::<_, String>(0),
+                json!({"stall": r.get::<_, String>(1), "usd": r.get::<_, Option<f64>>(2),
+                       "at": isoformat(r.get::<_, SystemTime>(3)), "ok": r.get::<_, bool>(4)}),
+            )
+        })
+        .collect())
+}
+
+/// The mind line over rows already in hand (the perf cure: the crew door fetches the Stable's
+/// stalls, the assignments and the meter's last lines ONCE, then reads every body from them —
+/// no query per body). `None` when the template names no mind.
+pub fn mind_line_with(
+    stalls: &[Value],
+    assigned: &[Value],
+    last: Option<&Value>,
+    name: &str,
+    template: Option<&Value>,
+) -> Option<Value> {
+    let mind = template.map(|t| &t["mind"]).filter(|m| truthy(m))?;
+    let d = resolve(
+        stalls,
+        assigned,
+        ResolveAsk {
+            subject: Some(name),
+            klass: mind["class"].as_str(),
+            pin: mind["pin"].as_str(),
+            model: mind["model"].as_str(),
+        },
+    );
     let why = if truthy(&d["why"]) {
         d["why"].clone()
     } else {
@@ -1322,7 +1371,7 @@ pub async fn mind_line(
     };
     let mut out = json!({"stall": d["stall"], "why": why, "degraded": truthy(&d["degraded"])});
     if let Some(stall) = d["stall"].as_str() {
-        if let Some(s) = services_live::get(g.client(), scope, stall).await? {
+        if let Some(s) = stalls.iter().find(|s| s["name"].as_str() == Some(stall)) {
             let m = &s["manifest"];
             out["route"] = json!(format!(
                 "{} {}",
@@ -1332,21 +1381,10 @@ pub async fn mind_line(
             out["klass"] = m["class"].clone();
         }
     }
-    if crate::schema::has_table(g, "spine_meter").await? {
-        if let Some(r) = g
-            .client()
-            .query_opt(
-                "SELECT stall, usd, at, ok FROM spine_meter WHERE did = $1 AND stall IS NOT NULL ORDER BY meter_id DESC \
-                 LIMIT 1",
-                &[&did],
-            )
-            .await?
-        {
-            out["last"] = json!({"stall": r.get::<_, String>(0), "usd": r.get::<_, Option<f64>>(1),
-                                 "at": isoformat(r.get::<_, SystemTime>(2)), "ok": r.get::<_, bool>(3)});
-        }
+    if let Some(l) = last {
+        out["last"] = l.clone();
     }
-    Ok(Some(out))
+    Some(out)
 }
 
 /// The register door's deal from a body — `stable.deal` on the door's fields.

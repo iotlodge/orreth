@@ -628,4 +628,6 @@ async fn shadow_an_ask_through_the_rust_door_is_served_by_the_python_librarian_a
     let _ = tokio::time::timeout(Duration::from_secs(60), py.wait()).await;
     let _ = py.kill().await;
     lit.stop().await;
+    let _ = orreth_spine::events::prune_namespace(&world.kafka, &format!("t{tok}")).await;
+    // the proof's residue leaves with it
 }

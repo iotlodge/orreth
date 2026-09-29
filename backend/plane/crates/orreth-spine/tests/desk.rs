@@ -550,6 +550,7 @@ async fn the_desk_challenges_proves_stages_and_leases_a_body() {
     println!("desk · malformed asks wear the one face");
 
     lit.stop().await;
+    let _ = orreth_spine::events::prune_namespace(&world.kafka, &format!("t{tok}")).await; // the proof's residue leaves with it
     let _ = std::fs::remove_dir_all(&home);
     println!("desk · PASS — challenged · denied · proved · staged · a person refused · the owner's yes · the lease by the key · the lease at the doors · the standing welcome · a stale challenge · the expired hold · the one face");
 }

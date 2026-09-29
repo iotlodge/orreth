@@ -130,6 +130,7 @@ def ensure_schema(conn) -> None:
             " template_hash text NOT NULL, placement text NOT NULL,"
             " ground text NOT NULL, reasons text NOT NULL, marker text,"
             " scope text NOT NULL, refused_at timestamptz NOT NULL DEFAULT now())")
+        cur.execute("CREATE INDEX IF NOT EXISTS spine_refusals_scope_name ON spine_refusals (scope, name, refusal_id DESC)")   # schema 2 (the perf cure)
 
 
 def refuse(conn, body, prof: dict, ground: dict, reasons: list[str]) -> dict:

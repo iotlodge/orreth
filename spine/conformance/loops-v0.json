@@ -1,11 +1,11 @@
 {
  "contract": "orreth.loops/1",
  "version": 0,
- "generated_by": "orreth_spine.ground (the beat lock) + intent (the loop's words) + monitor + envelope (Python reference), canon 0008 \u00b7 P7 sp4 \u00b7 extended 2026-09-28 (row 4, panel sp2: `lease_fact`)",
+ "generated_by": "orreth_spine.ground (the beat lock) + intent (the loop's words) + monitor + envelope (Python reference), canon 0008 \u00b7 P7 sp4 \u00b7 extended 2026-09-28 (row 4, panel sp2: `lease_fact`) \u00b7 extended 2026-09-29 (the retention beat)",
  "generated_at": "2026-09-23",
  "cases": [
   {
-   "name": "beat_lock: the classes count up from 742200 and the keys they make; the held words",
+   "name": "beat_lock: the classes count up from 742200 and the keys they make; the held words (retention joined 2026-09-29: the outbox's prune)",
    "kind": "beat_lock",
    "input": {},
    "expect": {
@@ -13,12 +13,14 @@
     "beats": {
      "scheduler": 1,
      "intent": 2,
-     "keeper": 3
+     "keeper": 3,
+     "retention": 4
     },
     "keys": {
      "scheduler": 742201,
      "intent": 742202,
-     "keeper": 742203
+     "keeper": 742203,
+     "retention": 742204
     },
     "held": "the beat is held by another kernel on this ground"
    }

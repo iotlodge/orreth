@@ -5,11 +5,11 @@
  "generated_at": "2026-09-28T19:00:00Z",
  "cases": [
   {
-   "name": "schema_version: both kernels carry the same number - bumped together whenever any DDL statement changes",
+   "name": "schema_version: both kernels carry the same number - 2: the indexes (the perf cure, 2026-09-29); bumped together whenever any DDL statement changes",
    "kind": "schema_version",
    "input": {},
    "expect": {
-    "version": 1
+    "version": 2
    }
   },
   {

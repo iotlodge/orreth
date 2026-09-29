@@ -14,7 +14,12 @@
 
 /// The beat classes count up from here (the DDL guard is 742199).
 pub const BEAT_LOCK: i64 = 742200;
-pub const BEATS: [(&str, i64); 3] = [("scheduler", 1), ("intent", 2), ("keeper", 3)];
+pub const BEATS: [(&str, i64); 4] = [
+    ("scheduler", 1),
+    ("intent", 2),
+    ("keeper", 3),
+    ("retention", 4),
+]; // 4: the outbox's prune (the perf cure)
 pub const HELD: &str = "the beat is held by another kernel on this ground";
 
 /// The advisory lock's first key for a beat class; an unknown class is `None`.

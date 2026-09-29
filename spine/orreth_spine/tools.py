@@ -509,6 +509,7 @@ def ensure_schema(conn) -> None:
         cur.execute("ALTER TABLE spine_tool_calls ADD COLUMN IF NOT EXISTS ask text")
         # P6.5 sp1: the hop names the SERVICE it called (the registry's DID)
         cur.execute("ALTER TABLE spine_tool_calls ADD COLUMN IF NOT EXISTS service text")
+        cur.execute("CREATE INDEX IF NOT EXISTS spine_tool_calls_did ON spine_tool_calls (did, call_id DESC)")   # schema 2 (the perf cure)
 
 
 class ToolDoor:

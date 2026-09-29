@@ -2,6 +2,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE door · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the crew card's LLM line for the bodies this kernel seats · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the crew door in SET queries — a fixed handful of reads however large the crew · 2026-09-29
 //! The human's worldlines and the roster's reads — mirrors the session,
 //! resident, crew and shelf views of `orreth_spine.glass` (P20 · canon 0004)
 //! and the reads of `presence` · `placement` · `services` they stand on:
@@ -279,20 +280,43 @@ pub async fn crew_view(
     let alive = alive_map(g, scope).await?;
     let here = ground_declares();
     let mut refused = crate::asks::refusals(g, scope).await?;
+    // the perf cure (2026-09-29): a FIXED handful of reads however large the crew — the served
+    // counts in one GROUP BY, the Stable's stalls and assignments once, the meter's last lines in
+    // one DISTINCT ON — then every card is built from what is in hand (it was 3 + 6N queries)
+    let mut served: std::collections::HashMap<String, (i64, Option<SystemTime>)> =
+        std::collections::HashMap::new();
+    for s in g
+        .client()
+        .query(
+            "SELECT served_by, count(*), max(replied_at) FROM spine_asks WHERE scope = $1 AND status <> \
+             'received' AND served_by IS NOT NULL GROUP BY served_by",
+            &[&scope],
+        )
+        .await?
+    {
+        served.insert(s.get(0), (s.get(1), s.get(2)));
+    }
+    let (stalls, assigned) = if templates.is_some() {
+        (
+            crate::services_live::rows(g.client(), scope, Some("mind")).await?,
+            crate::stable_live::assignments(g.client(), scope).await?,
+        )
+    } else {
+        (Vec::new(), Vec::new())
+    };
+    let dids: Vec<String> = rows.iter().map(|r| r.get::<_, String>(2)).collect();
+    let lasts = if templates.is_some() {
+        crate::stable_live::meter_lasts(g, &dids).await?
+    } else {
+        std::collections::HashMap::new()
+    };
     let mut cards = Vec::new();
     for r in &rows {
         let name: String = r.get(0);
         let did: String = r.get(2);
         let joined: SystemTime = r.get(4);
         let nature: Option<String> = r.get(9);
-        let served = g
-            .client()
-            .query_one(
-                "SELECT count(*), max(replied_at) FROM spine_asks WHERE served_by = $1 AND scope \
-                 = $2 AND status <> 'received'",
-                &[&did, &scope],
-            )
-            .await?;
+        let (asks_served, last_served) = served.get(&did).cloned().unwrap_or((0, None));
         let prof = profile_of(r.get::<_, Option<String>>(8).as_deref());
         if let Some(rf) = refused.remove(&name) {
             if rf.refused_at > joined {
@@ -302,10 +326,9 @@ pub async fn crew_view(
         }
         // P6.5 sp3 (walk #12, W43): which LLM this body thinks with, and why — when this
         // kernel seats the body (its template is known); else null, as the reference's
-        let mind = match templates.and_then(|t| t.get(&name)) {
-            Some(t) => crate::stable_live::mind_line(g, scope, &name, &did, Some(t)).await?,
-            None => None,
-        };
+        let mind = templates.and_then(|t| t.get(&name)).and_then(|t| {
+            crate::stable_live::mind_line_with(&stalls, &assigned, lasts.get(&did), &name, Some(t))
+        });
         cards.push(json!({
             "mind": mind,
             "name": name, "kind": r.get::<_, String>(1), "did": did, "lives": r.get::<_, i32>(3),
@@ -314,7 +337,7 @@ pub async fn crew_view(
             "template": head(&r.get::<_, String>(6), 12),
             "capabilities": json_text(r.get::<_, Option<String>>(7).as_deref()).unwrap_or(json!([])),
             "placement": card(&prof, &here),
-            "side_a": {"asks_served": served.get::<_, i64>(0), "last_served": iso_opt(served.get::<_, Option<SystemTime>>(1))},
+            "side_a": {"asks_served": asks_served, "last_served": iso_opt(last_served)},
             "side_b": {"kernel": KERNEL_DUTIES.iter().map(|d| json!({"duty": d, "editable": false})).collect::<Vec<_>>(), "human": [], "role": []},
         }));
     }

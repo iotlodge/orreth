@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P1 sp1, the durability boundary (M1) · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the pending index · RETENTION (`keep_days` · `prune`) · 2026-09-29
 """The transactional outbox and its relay (canon 0002, law 2).
 
 Domain state and the intent to publish commit in ONE Postgres
@@ -91,6 +92,28 @@ def once(conn, tag: str) -> bool:
     return True
 
 
+def keep_days() -> float:
+    """`SPINE_OUTBOX_KEEP_DAYS`: how long a PUBLISHED row stays readable through the fact door
+    (the outbox is a queue, not the log — the rail carried the fact; the Record and the markers
+    are the memory). Default seven days."""
+    import os
+    try:
+        d = float(os.environ.get("SPINE_OUTBOX_KEEP_DAYS", "") or 7.0)
+    except ValueError:
+        d = 7.0
+    return d if d > 0 else 7.0
+
+
+def prune(conn, keep: float | None = None) -> int:
+    """RETENTION (the perf cure): published rows older than the keep window are deleted — never
+    an unpublished one (the relay still owes it). Returns how many left. Run under the
+    `retention` beat so two kernels on one ground never both sweep."""
+    cur = conn.cursor()
+    cur.execute("DELETE FROM spine_outbox WHERE published_at IS NOT NULL"
+                " AND published_at < now() - (%s * interval '1 day')", (keep_days() if keep is None else keep,))
+    return int(cur.rowcount or 0)
+
+
 class OutboxBudgetExceeded(RuntimeError):
     """The unpublished backlog reached its declared budget — the write is
     refused honestly rather than the backlog growing without bound."""
@@ -115,6 +138,8 @@ def ensure_schema(conn) -> None:
                     " committed_at timestamptz NOT NULL DEFAULT now()")
         cur.execute("ALTER TABLE spine_outbox ADD COLUMN IF NOT EXISTS"
                     " publish_attempts int NOT NULL DEFAULT 0")
+        # schema 2: THE RELAY'S POLL walks the pending rows alone, never the whole table
+        cur.execute("CREATE INDEX IF NOT EXISTS spine_outbox_pending ON spine_outbox (outbox_id) WHERE published_at IS NULL")
 
 
 def commit_with_outbox(conn, raw: bytes, message_id: str,

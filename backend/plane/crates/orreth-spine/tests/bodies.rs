@@ -846,6 +846,7 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
         .collect();
     assert_eq!(pids.len(), 3);
     lit.stop().await;
+    let _ = orreth_spine::events::prune_namespace(&world.kafka, &format!("t{tok}")).await; // the proof's residue leaves with it
     for pid in &pids {
         let end = Instant::now() + Duration::from_secs(10);
         while alive(*pid) && Instant::now() < end {

@@ -678,6 +678,20 @@ async fn columns(g: &Ground, schema: &str) -> Vec<(String, String, String, Strin
         .collect()
 }
 
+/// The index names a schema holds, `spine_%` tables only.
+async fn indexes(g: &Ground, schema: &str) -> Vec<String> {
+    g.client()
+        .query(
+            "SELECT indexname FROM pg_indexes WHERE schemaname = $1 AND tablename LIKE 'spine\\_%' ORDER BY 1",
+            &[&schema],
+        )
+        .await
+        .unwrap()
+        .iter()
+        .map(|r| r.get::<_, String>(0))
+        .collect()
+}
+
 #[tokio::test]
 async fn schema_the_first_birth_migrates_and_the_next_verifies() {
     if !rig_up("schema_the_first_birth_migrates_and_the_next_verifies") {
@@ -810,6 +824,20 @@ async fn schema_the_two_kernels_migrate_one_ground_the_same() {
     );
     let rs = columns(&g, &format!("spine_rs_{tok}")).await;
     let py = columns(&g, &py_schema).await;
+    // schema 2: the indexes too — the same names on both kernels (the doors' and the relay's cure)
+    let (rs_idx, py_idx) = (
+        indexes(&g, &format!("spine_rs_{tok}")).await,
+        indexes(&g, &py_schema).await,
+    );
+    let rs_idx: Vec<String> = rs_idx
+        .into_iter()
+        .filter(|i| i != "spine_counter_pkey")
+        .collect(); // own_ground's test table
+    assert_eq!(rs_idx, py_idx, "the two kernels' indexes differ");
+    assert!(
+        rs_idx.iter().any(|i| i == "spine_outbox_pending"),
+        "the relay's partial index stands"
+    );
     let rs: Vec<_> = rs.into_iter().filter(|c| c.0 != "spine_counter").collect();
     let only_rs: Vec<_> = rs.iter().filter(|c| !py.contains(c)).collect();
     let only_py: Vec<_> = py.iter().filter(|c| !rs.contains(c)).collect();
@@ -818,9 +846,10 @@ async fn schema_the_two_kernels_migrate_one_ground_the_same() {
         "the two kernels' schemas differ —\n  only the Rust kernel: {only_rs:?}\n  only the reference: {only_py:?}"
     );
     println!(
-        "rails · the migrator: both kernels stand {} columns over {} tables, column for column the same",
+        "rails · the migrator: both kernels stand {} columns over {} tables and {} indexes, the same",
         rs.len(),
-        orreth_spine::schema::tables().len()
+        orreth_spine::schema::tables().len(),
+        rs_idx.len()
     );
     g.client()
         .batch_execute(&format!("DROP SCHEMA IF EXISTS {py_schema} CASCADE"))
@@ -979,5 +1008,46 @@ async fn poison_parks_visibly_and_the_dispatcher_holds_until_a_person_advances()
     stop.store(true, Ordering::Relaxed);
     let _ = tokio::time::timeout(Duration::from_secs(15), task).await;
     println!("rails · poison-parking: parked:{id} with 23 bytes of evidence and its fact, the good ask held behind it, advanced on a person's word, then dispatched");
+    drop_ground(&g, &tok).await;
+}
+
+// ---- 8. RETENTION (the perf cure, 2026-09-29): the outbox is a queue, not the log ------------
+
+#[tokio::test]
+async fn retention_prunes_old_published_rows_and_never_an_unpublished_one() {
+    if !rig_up("retention_prunes_old_published_rows_and_never_an_unpublished_one") {
+        return;
+    }
+    let tok = token();
+    let g = own_ground(&tok).await;
+    for (mid, published, age_days) in [
+        ("msg_old_published", true, 10),
+        ("msg_new_published", true, 1),
+        ("msg_old_unpublished", false, 10),
+    ] {
+        g.client()
+            .execute(
+                "INSERT INTO spine_outbox (message_id, body, committed_at, published_at) VALUES ($1, $2, now() - \
+                 ($3 * interval '1 day'), CASE WHEN $4 THEN now() - ($3 * interval '1 day') ELSE NULL END)",
+                &[&mid, &b"{}".as_slice(), &(age_days as f64), &published],
+            )
+            .await
+            .unwrap();
+    }
+    let n = outbox::prune(&g, 7.0).await.unwrap();
+    assert_eq!(n, 1, "the old published row alone");
+    let left: Vec<String> = g
+        .client()
+        .query("SELECT message_id FROM spine_outbox ORDER BY 1", &[])
+        .await
+        .unwrap()
+        .iter()
+        .map(|r| r.get(0))
+        .collect();
+    assert_eq!(left, vec!["msg_new_published", "msg_old_unpublished"]);
+    assert_eq!(outbox::keep_days(), 7.0);
+    println!(
+        "rails · retention: one old published row pruned; the new one and the unpublished one kept"
+    );
     drop_ground(&g, &tok).await;
 }

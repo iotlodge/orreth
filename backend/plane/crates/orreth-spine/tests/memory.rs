@@ -503,6 +503,7 @@ async fn shadow_two_kernels_read_one_record_and_sign_as_one_self() {
     py_stdin.write_all(b"\n").await.unwrap();
     let _ = tokio::time::timeout(Duration::from_secs(60), py.wait()).await;
     lit.stop().await;
+    let _ = orreth_spine::events::prune_namespace(&world.kafka, &format!("t{tok}")).await; // the proof's residue leaves with it
     let _ = std::fs::remove_dir_all(&kernel_home);
     println!(
         "memory proof: one Record, one self — {} export rows, signed by {}",
