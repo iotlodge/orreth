@@ -52,7 +52,7 @@
    "id": "panel",
    "when": "chat",
    "title": "THE PANEL — the main window",
-   "lead": "The kernel drawn as a control room's panel. Geometry is architecture: every block sits where its declaration puts it and never moves. Light is operations: a fact on the feed lights a lamp or a rail segment, then fades. Colour is origin: amber a person's word, cyan a body's act, violet the kernel's own, red a watch or a hold. A quiet kernel is a dark, still panel.",
+   "lead": "The kernel drawn as a control room's panel. Geometry is architecture: every block sits where its declaration puts it and never moves. Light is operations: a fact on the feed lights a lamp or a rail segment, then fades. Colour is origin: amber a person's word, cyan a body's act, violet the kernel's own, red a watch or a hold. A quiet kernel is a dark, still panel. The panel knocks on no door by a clock: the roster, the stations and every lamp follow the feed — a body joining, refused, parked, its lease crossing the line.",
    "entries": [
     {
      "say": "(click DESK · GROUND · GATEWAY · SHELF · MONITOR · ANALYZER)",
@@ -237,6 +237,10 @@
     {
      "say": "run the harness against the librarian now",
      "does": "The golden cases against a body's LLM; a failing run escalates to the chat. From the Rust kernel the run rides the rail to the body and lands when it is done."
+    },
+    {
+     "say": "advance past parked 3",
+     "does": "The RAILS card names every event the dispatcher HOLDS at — bytes the rail carried that were never an envelope, or a fact that can never apply — parked with its evidence, nothing behind it dispatched until a person decides. Your word (or the card's lever) advances it, recorded in your name; nothing is lost silently and nothing loops."
     }
    ]
   },

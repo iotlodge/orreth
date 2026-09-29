@@ -22,24 +22,7 @@ use std::time::SystemTime;
 
 /// `store.ensure_schema` — the same DDL as the Python spine (a fresh ground;
 /// the old-ground migration the reference carries is a no-op here).
-pub const STORE_DDL: &[&str] = &[
-    "CREATE TABLE IF NOT EXISTS spine_memories ( memory_id bigserial PRIMARY KEY, namespace text NOT \
-     NULL, key text NOT NULL, body text NOT NULL, hash text NOT NULL, by_did text NOT NULL, scope \
-     text, landed_at timestamptz NOT NULL DEFAULT now(), valid_from timestamptz NOT NULL DEFAULT \
-     now(), valid_to timestamptz, supersedes text, understanding text NOT NULL DEFAULT \
-     'tsvector:english', tsv tsvector GENERATED ALWAYS AS (to_tsvector('english', body)) STORED)",
-    "CREATE UNIQUE INDEX IF NOT EXISTS spine_memories_id ON spine_memories (memory_id)",
-    "CREATE UNIQUE INDEX IF NOT EXISTS spine_memories_current ON spine_memories (namespace, key, \
-     scope) WHERE valid_to IS NULL",
-    "CREATE INDEX IF NOT EXISTS spine_memories_tsv ON spine_memories USING GIN (tsv)",
-    // the column added only when missing: an ALTER takes an AccessExclusive lock even when it
-    // has nothing to add, and a kernel booting beside another's inserts deadlocked on it
-    // (found by the memory proof, 2026-09-24)
-    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
-     'spine_memories' AND column_name = 'state') THEN ALTER TABLE spine_memories ADD COLUMN state \
-     text NOT NULL DEFAULT 'in'; END IF; END $$",
-    "CREATE INDEX IF NOT EXISTS spine_memories_landed ON spine_memories (namespace, scope, landed_at)",
-];
+pub use crate::schema::STORE_DDL;
 
 const VALID_NOW: &str = "valid_to IS NULL";
 

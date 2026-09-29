@@ -20,16 +20,7 @@ pub const REHOME_CLASS: &str = "consequential";
 pub const REHOME_LEVEL: &str = "L2";
 
 /// `cells.ensure_schema`: the world, its peers, the seam's nonces.
-pub const CELLS_DDL: &[&str] = &[
-    "CREATE TABLE IF NOT EXISTS spine_world ( scope text PRIMARY KEY, cell text NOT NULL, epoch int NOT \
-     NULL DEFAULT 1, kernel text NOT NULL, door text, opened_at timestamptz NOT NULL DEFAULT now(), \
-     rehomed_at timestamptz, rehomed_by text)",
-    "CREATE TABLE IF NOT EXISTS spine_peers ( cell text NOT NULL, scope text NOT NULL, door text NOT \
-     NULL, did text, world text, epoch int, pinned_at timestamptz, last_seen timestamptz, cursor bigint \
-     NOT NULL DEFAULT 0, unreachable_since timestamptz, PRIMARY KEY (cell, scope))",
-    "CREATE TABLE IF NOT EXISTS spine_seam_nonces ( nonce text PRIMARY KEY, scope text NOT NULL, \
-     seen_at timestamptz NOT NULL DEFAULT now())",
-];
+pub use crate::schema::CELLS_DDL;
 
 /// This kernel's cell — the ground declares it (`SPINE_CELL`, else `local`).
 pub fn cell_here() -> String {

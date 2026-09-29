@@ -855,7 +855,7 @@ async function loadRoster(){                      // W18: the rail reads the SAM
     if (first) SELECTED.add(first.name);
   }
   drawChips();
-  panelStations().catch(()=>{});                  // row 4: the sockets follow the roster's beat (a lease lapse is polled state until panel sp2)
+  panelStations().catch(()=>{});                  // the sockets follow the roster — and the roster follows the FEED (re-base sp1: lock 4's last poll gone)
 }
 function addressed(text){                         // W7: "echo, …" · "@echo …" · "librarian: …" → that body alone
   const m = (text || "").match(/^\s*@?([a-z0-9_-]+)\s*[,:]\s*\S/i);
@@ -864,7 +864,7 @@ function addressed(text){                         // W7: "echo, …" · "@echo �
   return hit ? hit.name : null;
 }
 const ZONE = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { return undefined; } })();
-loadRoster(); setInterval(loadRoster, 20000);
+loadRoster();                                     // once at load — then only on a notice: a body joined (a life) · refused · parked · its lease crossed (re-base sp1, lock 4: no timer)
 
 /* ---- the Objectives band: the floor hatch opens ---- */
 const band = document.getElementById("band");
@@ -2164,6 +2164,12 @@ async function serviceWords(text){                 // "what services are here?" 
             (w.peers && w.peers.length ? ` · peers: ${w.peers.map(pr => esc(pr.words)).join(" · ")}` : " · no peers named"));
     return true;
   }
+  m = t.match(/^advance\s+(?:past\s+)?(?:the\s+)?parked\s*(?:event\s*)?[:#]?\s*(\d+)$/);   // re-base sp1: past a poison the dispatcher holds at
+  if (m){
+    el("msg mine", esc(text));
+    await advanceParked(m[1]);
+    return true;
+  }
   m = t.match(/^(?:restart|revive|start)\s+(?:the\s+)?([a-z0-9_-]+)\s+body(?:\s+again)?$/);   // P7 sp6: the human's lever on a parked body
   if (m){
     el("msg mine", esc(text));
@@ -2267,6 +2273,10 @@ async function loadMonitor(){
        row("oldest unpublished", s.outbox.oldest_age_s != null ? s.outbox.oldest_age_s.toFixed(1) + " s" : "—") +
        row("ask.received topic depth", s.topic_depth ?? "?") + benches +
        row("ground pool", s.pool ? `${s.pool.busy} of ${s.pool.ceiling} lines busy · ${s.pool.waiting} waiting · longest wait ${ms(Number(s.pool.wait_max_ms))}` : "none — a connection per knock", s.pool && s.pool.waiting ? "red" : "ok") +
+       // re-base sp1: POISON-PARKING — every event the dispatcher holds at, its evidence, and the person's lever
+       row("poison held at (the rail waits for a person)", v.parked || 0, v.parked ? "red" : "ok") +
+       (s.parked || []).map(pk => `<div class="row"><span>${esc(pk.words)}<div class="meta">parked:${pk.parked_id} · ${pk.bytes} bytes · ${esc(String(pk.hash).slice(0, 23))}… · since ${hhmm(pk.parked_at)}</div></span>` +
+         `<span class="stop" data-advance="${pk.parked_id}" title="the operator's explicit decision: the dispatcher commits past this event and goes on — recorded in your name">advance past it</span></div>`).join("") +
        (s.doors || []).slice(0, 6).map(d => row("door " + d.door, `${ms(Number(d.p50_ms))} / ${ms(Number(d.p95_ms))} · ${d.n} knocks`, Number(d.p95_ms) >= 1000 ? "red" : "ok")).join(""));
   view("BODIES", s.bodies.map(b => { const g = GOV[b.name]; const parked = g && (g.state === "parked" || g.state === "refused");
        return `<div class="row"><span><span class="dot ${parked ? "dormant" : b.alive ? "alive" : "dormant"}"></span>` +
@@ -2662,6 +2672,18 @@ function panelDesk(){
   pd.textContent = pd.dataset.seat + doorLine(["/seat", "/enroll", "/join"]);
   lampRest("l-desk", PERSON ? "on" : "");
 }
+async function advanceParked(id){                  // re-base sp1: the operator's word — a governing seat's
+  const r = await fetch("/parked/advance", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({parked_id: Number(id)})}).then(x=>x.json()).catch(()=>null);
+  sysline(!r ? "the parked door did not answer" : r.error ? esc(r.error) :
+          r.already ? `parked:${id} was already advanced by ${esc(r.advanced_by || "?")}` : `advanced past parked:${id} — the dispatcher goes on, in your name`);
+  if (r && !r.error) loadMonitor().catch(()=>{});
+  return r;
+}
+document.getElementById("views").addEventListener("click", e => {
+  const a = e.target && e.target.dataset && e.target.dataset.advance;
+  if (a) advanceParked(a);
+});
 async function panelStations(){                    // the sockets: /crew (the roster) · /monitor (the leases) · /bodies (the kernel's own eyes)
   if (!SEAT) return;
   const [mon, gov] = await Promise.all([fetch("/monitor").then(x=>x.json()).catch(()=>null),
@@ -2875,13 +2897,28 @@ async function panelNotice(n){
   if (k === "orreth.body.parked.v1"){
     tape("body parked", `${n.ref} · the kernel stopped restarting it`, "resiliency");
     stationLit(n.ref, "red", "PARKED by the kernel", 2500); railLight("presence", ORGAN_COL.ground, colOf(n.ref), "red"); lampFlash("l-monitor", "red", 900);
-    panelDebounce("stations", panelStations, 300); return;
+    panelDebounce("roster", loadRoster, 300); return;
   }
   if (k === "orreth.lease.lapsed.v1" || k === "orreth.lease.seated.v1"){
     const lapsed = k.includes("lapsed");
     tape(lapsed ? "lease lapsed" : "lease seated", `${n.ref} · ${lapsed ? "stopped renewing — dormant until it serves again" : "serves again"}`, lapsed ? "resiliency" : "structural");
     railLight("presence", ORGAN_COL.ground, colOf(n.ref), lapsed ? "red" : "kernel"); stationLit(n.ref, lapsed ? "red" : "kernel", lapsed ? "lease lapsed" : "seated by its lease", 2500);
-    panelDebounce("stations", panelStations, 300); return;
+    panelDebounce("roster", loadRoster, 300); return;
+  }
+  if (k === "orreth.body.joined.v1" || k === "orreth.body.refused.v1"){   // re-base sp1: the roster's own facts — a body joined (a life) · refused at birth
+    const joined = k.endsWith("joined.v1");
+    const f = joined ? null : await factOf(n); const who = joined ? n.ref : ((f && f.payload && f.payload.name) || NAMES[n.ref] || n.ref);
+    tape(joined ? "body joined" : "body refused", `${who} · ${joined ? "joined this world — a life begins" : "refused at birth by placement"}`, joined ? "structural" : "resiliency");
+    lampFlash("l-desk", joined ? "agent" : "red", 900); railLight("presence", ORGAN_COL.ground, ORGAN_COL.desk, joined ? "agent" : "red");
+    panelDebounce("roster", loadRoster, 300); return;
+  }
+  if (k === "orreth.inbox.parked.v1" || k === "orreth.inbox.advanced.v1"){   // re-base sp1: a poison held at · a person's advance
+    const held = k.endsWith("parked.v1");
+    tape(held ? "poison parked" : "advanced past it", `${n.ref} · ${held ? "the dispatcher holds at it — a person must advance it" : "the dispatcher goes on, on a person's word"}`, held ? "resiliency" : "structural");
+    lampFlash("l-ground", held ? "red" : "human", 1200); railLight("dispatcher", ORGAN_COL.ground, ORGAN_COL.monitor, held ? "red" : "human");
+    const s = await fetch("/monitor").then(x=>x.json()).catch(()=>null); if (s) PANEL.MON = s;
+    panelMonitorOrgan(); if (document.getElementById("views").children.length) loadMonitor().catch(()=>{});
+    return;
   }
   if (k === "orreth.lever.pulled.v1"){
     const f = await factOf(n); const p = (f && f.payload) || {}; const who = (p.args || {}).name; const hue = p.held ? "red" : "kernel";

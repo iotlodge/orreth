@@ -7,6 +7,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the cell — the home at light · the /world door · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the profile doors (W58) · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: the fact door `/fact/<message_id>` · the presence sweep's loop · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
 //! The Rust bridge — the doors and the feed of `orreth_spine.glass` +
 //! `bridgefeed` on axum, lit in SHADOW on :4601 beside the Python Bridge on
 //! :4600, both on one ground. It serves the SAME page (`spine/glass/index.html`
@@ -55,7 +56,7 @@ use crate::pool::{Line, Pool};
 use crate::presence;
 use crate::proof::one_face;
 use crate::proof_live;
-use crate::py::python_str;
+use crate::py::{python_str, truthy};
 use crate::scheduler;
 use crate::seat;
 use crate::seat_live::{self, Seated};
@@ -165,6 +166,7 @@ struct App {
     gate: seat_live::Ceilings, // P7 sp8 row 3: the knock ceiling at every door (per person · per address)
     pool: Arc<Pool>, // row 4, panel sp3: THE POOL — the doors' lines to the ground, borrowed per knock
     lit_at: String, // JB's ask 2026-09-28: the version whisper — when this kernel was lit, said by the health door
+    schema: crate::ground::Migration, // re-base sp1 (lock 2): what the birth found on the ground and what it did
 }
 
 /// A lit bridge: its port, its readiness, its meter, and its stop.
@@ -215,7 +217,8 @@ impl Lit {
 pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
     let w = cfg.world.clone();
     let mut g = Ground::connect(&w.pg_dsn).await?;
-    g.ensure_all().await?;
+    let schema = g.ensure_all().await?; // THE MIGRATOR: one writer; the rest wait and verify
+    eprintln!("  [kernel] {}", schema.words());
     markers_live::seed(&g, &w.scope).await?;
     let masters = proof_live::seed_masters(&mut g, &w, &cfg.masters).await?;
     if !masters.is_empty() {
@@ -323,6 +326,7 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
         gate: seat_live::Ceilings::new(),
         pool: Pool::new(&w.pg_dsn, crate::pool::ceiling_from_env()),
         lit_at: crate::envelope::now_iso(),
+        schema,
     });
     let mut tasks = Vec::new();
     // the crew: the benches swept, the boot rite once, the kernel's duties declared, then every seat spawned
@@ -694,6 +698,8 @@ fn router(app: Arc<App>) -> Router {
         .route("/feed", get(feed_door))
         .route("/health", get(health))
         .route("/shadow", get(shadow))
+        .route("/parked", get(parked_door)) // re-base sp1: the poison events held at
+        .route("/parked/advance", post(parked_advance)) // … and the person's word to go past one
         .route("/ask/:id", get(ask_door))
         .route("/fact/:id", get(fact_door)) // row 4, panel sp2: a fact by its message id — the feed's pointer read through one door
         .route("/ask", post(ask_post))
@@ -713,7 +719,10 @@ fn router(app: Arc<App>) -> Router {
         .route("/intentions", get(intentions_door))
         .route("/levers", get(levers_door)) // P7 sp8 row 3c: THE LEVER CATALOGUE — what the kernel itself can pull
         .route("/markers", get(markers_door))
-        .route("/markers/kinds", get(markers_kinds))
+        .route("/markers/kinds", get(markers_kinds).post(markers_declare)) // re-base sp1: the four Python-only doors cross
+        .route("/mark", post(mark_door))
+        .route("/mitl", get(mitl_door).post(mitl_toggle))
+        .route("/impact", post(impact_door))
         .route("/monitor", get(monitor_door))
         .route("/profile", get(profile_door).post(profile_post)) // P7 sp8: the human's own profile — theirs to see and adjust (W58)
         .route("/world", get(world_door)) // P7 sp7: the world card — the universe, its cell, its epoch, its peers
@@ -1058,9 +1067,54 @@ async fn health(State(app): State<Arc<App>>) -> Response {
         200,
         // JB's ask 2026-09-28: a LIVE version number up top — the kernel says what it is (its crate
         // version, which kernel, when it was lit); the glass reads it here, never from its own words
+        // re-base sp1 (lock 2): and which schema the ground holds against this kernel's own
         json!({"rev": app.feed.rev(), "clients": app.feed.clients(),
-               "version": env!("CARGO_PKG_VERSION"), "kernel": "rust", "lit_at": app.lit_at}),
+               "version": env!("CARGO_PKG_VERSION"), "kernel": "rust", "lit_at": app.lit_at,
+               "schema": app.schema.to_value()}),
     )
+}
+
+/// re-base sp1: THE PARKED — every poison event the dispatcher holds at, with its
+/// evidence, newest first (both kernels).
+async fn parked_door(State(app): State<Arc<App>>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        let rows = crate::inbox::parked(&g, None, 50).await?;
+        Ok::<_, RoadError>(json!({"parked": rows, "consumer": dispatcher::CONSUMER,
+                                  "held": rows.iter().filter(|r| r["consumer"] == json!(dispatcher::CONSUMER)).count()}))
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// re-base sp1: the operator's explicit decision (a governing seat) — advance the
+/// dispatcher past a parked poison; the advance is a recorded fact in the person's name.
+async fn parked_advance(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
+    let p = body_json(&body);
+    let Some(id) = p["parked_id"].as_i64() else {
+        return answer(
+            400,
+            json!({"error": "name the parked event: {parked_id} (GET /parked lists them)"}),
+        );
+    };
+    let out = async {
+        let mut g = ground(&app).await?;
+        let sc = scope(&app).to_string();
+        Ok::<_, RoadError>(crate::inbox::advance(&mut g, &sc, id, &seated.person).await?)
+    }
+    .await;
+    match out {
+        Ok(Some(v)) => answer(202, v),
+        Ok(None) => answer(404, json!({"error": "no such parked event"})),
+        Err(e) => refuse(e),
+    }
 }
 
 /// Rust-only: the dispatcher's meter — what this life dispatched, absorbed, skipped.
@@ -1490,6 +1544,176 @@ async fn markers_door(State(app): State<Arc<App>>, Query(q): Q) -> Response {
     .await;
     match out {
         Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+// ---- re-base sp1: the four Python-only doors cross — `POST /markers/kinds` · `POST /mark` ·
+// `GET/POST /mitl` · `POST /impact` (the reference's `glass.py` mounts, law for law) ----
+
+/// `POST /markers/kinds`: declare a kind — `{kind, group, description}`; the seat's person declares.
+async fn markers_declare(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
+    let p = body_json(&body);
+    let out = async {
+        let g = ground(&app).await?;
+        markers_live::declare(
+            &g,
+            scope(&app),
+            &s_or(&p, "kind", ""),
+            &s_or(&p, "group", ""),
+            &s_or(&p, "description", ""),
+            &seated.person,
+        )
+        .await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(201, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `POST /mark`: a human marks from the chat — `{kind, note?, ref?, session?}`; no ref
+/// but a session marks the session's latest ask; the marked ask's marker is the parent;
+/// every interested body (and intention) is asked to act.
+async fn mark_door(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
+    let p = body_json(&body);
+    let out = async {
+        let mut g = ground(&app).await?;
+        let mut r#ref = s_or(&p, "ref", "");
+        if r#ref.is_empty() && truthy(&p["session"]) {
+            let session = python_str(&p["session"]);
+            r#ref = g
+                .client()
+                .query_opt(
+                    "SELECT ask_id FROM spine_asks WHERE session = $1 ORDER BY asked_at DESC LIMIT 1",
+                    &[&session],
+                )
+                .await?
+                .map(|r| r.get::<_, String>(0))
+                .unwrap_or_default();
+        }
+        if r#ref.is_empty() {
+            return Err(RoadError::Refused("mark what? name an ask or a session".into()));
+        }
+        let parent: Option<String> = g
+            .client()
+            .query_opt("SELECT marker FROM spine_asks WHERE ask_id = $1", &[&r#ref])
+            .await?
+            .and_then(|r| r.get(0));
+        let note = s_opt(&p, "note");
+        let m = markers_live::set_marker(
+            &mut g,
+            &app.cfg.world,
+            &s_or(&p, "kind", ""),
+            &r#ref,
+            &seated.person,
+            parent.as_deref(),
+            note.as_deref(),
+            None,
+        )
+        .await?;
+        let asked = markers_live::dispatch_interests(&mut g, &app.cfg.world, &m, &r#ref, m["note"].as_str()).await?;
+        Ok::<_, RoadError>(json!({"marker": m, "asked": asked}))
+    }
+    .await;
+    match out {
+        Ok(v) => answer(201, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `GET /mitl`: is MITL in the lit crew (for this session, or this person)? what does it
+/// wear? every citation (W15).
+async fn mitl_door(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    Query(q): Q,
+) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        crate::mitl_live::card(
+            &g,
+            scope(&app),
+            q.get("session")
+                .map(String::as_str)
+                .filter(|s| !s.is_empty()),
+            &seated.person,
+        )
+        .await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `POST /mitl`: the soft toggle — `{summon: bool (default true), session?}`, a recorded fact.
+async fn mitl_toggle(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
+    let p = body_json(&body);
+    let on = match p.get("summon") {
+        None => true,
+        Some(v) => truthy(v),
+    };
+    let out = async {
+        let mut g = ground(&app).await?;
+        crate::mitl_live::summon(
+            &mut g,
+            &app.cfg.world,
+            &seated.person,
+            s_opt(&p, "session").as_deref(),
+            on,
+        )
+        .await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(201, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `POST /impact`: "expected impact of this change?" — `{change: {kind, ref or draft, words}, session?}`.
+async fn impact_door(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
+    let p = body_json(&body);
+    let change = &p["change"];
+    if !change.is_object() {
+        return answer(
+            400,
+            json!({"error": "a change is {kind, ref or draft, words}"}),
+        );
+    }
+    let out = async {
+        let mut g = ground(&app).await?;
+        crate::mitl_live::impact(
+            &mut g,
+            &app.cfg.world,
+            change,
+            &seated.person,
+            s_opt(&p, "session").as_deref(),
+        )
+        .await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(201, v),
         Err(e) => refuse(e),
     }
 }

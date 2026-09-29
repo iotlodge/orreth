@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the turned fact as bytes · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: door_p95_ms · pool_busy · pool_waiting watchable · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
 //! `orreth.watch/1` — the pure half of `orreth_spine.monitor`: the SENSE of a
 //! watch (W14 — RED when `value op threshold` holds now, green otherwise),
 //! its human sentence, and the monitor's offer read from its words (W22).
@@ -15,7 +16,7 @@ use serde_json::{json, Value};
 use std::sync::LazyLock;
 
 /// The metrics this world measures.
-pub const METRICS: [&str; 8] = [
+pub const METRICS: [&str; 9] = [
     "outbox_pending",
     "oldest_outbox_age_s",
     "asks_received",
@@ -25,6 +26,8 @@ pub const METRICS: [&str; 8] = [
     "door_p95_ms",
     "pool_busy",
     "pool_waiting",
+    // re-base sp1: poison events the dispatcher holds at — a person's decision is owed
+    "parked",
 ];
 /// A watch changed state: red ↔ green.
 pub const WATCH_TURNED: &str = "orreth.watch.turned.v1";

@@ -28,14 +28,7 @@ use tokio_postgres::{GenericClient, Transaction};
 pub const KERNEL: &str = "the kernel";
 
 /// `spine_desk`: every join this world was asked for, by status.
-pub const DESK_DDL: &[&str] = &[
-    "CREATE TABLE IF NOT EXISTS spine_desk ( join_id text PRIMARY KEY, scope text NOT NULL, did text NOT NULL, \
-     name text NOT NULL, kind text NOT NULL, public_key text NOT NULL, template_hash text NOT NULL DEFAULT '', \
-     policy_hash text NOT NULL DEFAULT '', status text NOT NULL, nonce text NOT NULL, nonce_at timestamptz NOT \
-     NULL DEFAULT now(), ticket text, ask_id text, admitted_by text, lease_id text, lease text, expiry \
-     timestamptz, asked_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now())",
-    "CREATE INDEX IF NOT EXISTS spine_desk_did ON spine_desk (scope, did)",
-];
+pub use crate::schema::DESK_DDL;
 
 fn fact(
     w: &World,

@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (a): the human seat · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
 //! `orreth.seat/1` — the pure half of `orreth_spine.seat` (canon 0005 sp8 row
 //! 3 · 0006 §3 · covenant rules 3 and 4): THE HUMAN SEAT. A capability token
 //! in the 0006 shape (subject · audience · grants · constraints{expiry,
@@ -384,9 +385,10 @@ pub const OPEN_POST: [&str; 6] = [
 ];
 /// P7 sp8 row 3b: a body's own words wear its LEASE (a seat with the role `body`).
 pub const LEASE_POST: [&str; 1] = ["/delta"];
-pub const GOVERN_POST: [&str; 13] = [
+pub const GOVERN_POST: [&str; 14] = [
     "/world/rehome",
     "/bodies/restart",
+    "/parked/advance", // re-base sp1: advancing past a poison is an operator's explicit decision
     "/services",
     "/services/version",
     "/services/retire",

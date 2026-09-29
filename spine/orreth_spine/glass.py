@@ -16,6 +16,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 lock 5, one rig per test session: THE RIG YIELDS (`park` · `resume`); W77 a refused POST drains its bytes first · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: the shelf's restore door routes every kind through stable.restore_mind — one restore law · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `FEED_TOPICS` widened to thirty-three · the fact door `/fact/<message_id>` (`fact_view`) · the ask view's `duty` · the presence sweep on the schedule loop's beat · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the park once by its place, its fact, the HOLD until a person advances it, the advance · 2026-09-28
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -49,6 +50,7 @@ from . import bridgefeed, digest, dispatch, envelope as ev, export, ground, harn
 from . import cells, placement, presence, profile, projector, proof, scheduler, seat, services, sinks
 from . import body as _body, desk, levers as _levers, rails, stable as _stable, store   # panel sp2: the feed's topics
 from . import doors as _doors                                                          # panel sp3: THE CLOCK at every door
+from . import projector as _projector                                                  # re-base sp1: the parked, the advance
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRefused, Resident
 
@@ -74,7 +76,9 @@ FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED, SESSION_OPENED,
                _stable.ASSIGNED, _stable.UNASSIGNED, _stable.FUELED,   # the Stable · the meter
                store.MEMORY_EVENT,                 # a memory landed on the ground
                seat.SEAT_TAKEN, seat.SEAT_LEFT,    # the desk
-               desk.JOIN_ASKED, desk.JOIN_PROVED, desk.JOIN_ADMITTED, desk.JOIN_DENIED]   # the join desk
+               desk.JOIN_ASKED, desk.JOIN_PROVED, desk.JOIN_ADMITTED, desk.JOIN_DENIED,   # the join desk
+               _projector.PARKED, _projector.ADVANCED,   # re-base sp1: the poison parked, the person's advance
+               _body.JOINED, _body.REFUSED]              # re-base sp1: a body joined (a life) · refused at birth — the roster's facts
 
 
 def ask_view(conn, ask_id: str) -> dict | None:

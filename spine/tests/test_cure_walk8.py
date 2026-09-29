@@ -344,3 +344,16 @@ def test_w24_echos_reply_is_the_echoed_words_alone_and_a_bare_ask_carries_no_win
     planner = _body("firmware-planner.v0.json"); planner.join(pg)
     [p] = dispatch.submit_ask(pg, "plan it", person=ME, to=["planner"], session=ses)
     assert _serve(pg, planner, p)["reply"].startswith("I am planner — the planner, a firmware body")
+
+
+def test_the_roster_follows_the_feed_never_a_timer():
+    """Re-base sp1 (lock 4's last poll): the roster is read once at load and then only
+    on a notice — a body joined (a life), refused, parked, its lease crossed. No
+    timer knocks on /crew; both kernels carry the roster's facts on the feed."""
+    from orreth_spine import body as _body, glass as _glass
+    assert "setInterval(loadRoster" not in GLASS
+    assert 'panelDebounce("roster", loadRoster' in GLASS
+    assert "orreth.body.joined.v1" in GLASS and "orreth.body.refused.v1" in GLASS
+    assert _body.JOINED in _glass.FEED_TOPICS and _body.REFUSED in _glass.FEED_TOPICS
+    e = _body.joined_fact("echo", "did:orreth:agent:echo0000", "resident", 3, None, scope="u:dev")
+    assert e["payload"]["ref"] == "echo" and e["payload"]["life"] == 3 and e["authority_chain"] == ["did:orreth:agent:echo0000"]

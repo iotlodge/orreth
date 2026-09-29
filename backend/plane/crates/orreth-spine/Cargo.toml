@@ -75,6 +75,11 @@ required-features = ["bridge"]
 name = "gate"
 required-features = ["bridge"]
 
+# The four doors' proof (re-base sp1): mitl · impact · mark · markers/kinds on the Rust kernel alone, and THE PARKED's doors.
+[[test]]
+name = "doors"
+required-features = ["bridge"]
+
 [[bin]]
 name = "spine-bridge"
 path = "src/bin/spine-bridge.rs"

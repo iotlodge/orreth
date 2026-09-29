@@ -21,11 +21,7 @@ use crate::{content_hash, events};
 use serde_json::{json, Value};
 use std::time::{Duration, Instant};
 
-pub const DDL: &[&str] = &[
-    "CREATE TABLE IF NOT EXISTS spine_heartbeat ( message_id text PRIMARY \
-                            KEY, body bytea NOT NULL, committed_at timestamptz NOT NULL DEFAULT \
-                            now())",
-];
+pub use crate::schema::HEARTBEAT_DDL as DDL;
 
 pub async fn ensure_schema(g: &mut Ground) -> Result<(), RailError> {
     g.ensure("heartbeat", DDL).await.map(|_| ())

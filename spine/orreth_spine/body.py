@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 2, the one-shot `--seed-shelf` rite retires: the Rust kernel seeds and probes the shelf itself · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: lock 4's last poll — a body's JOIN is a fact (orreth.body.joined.v1), so the roster follows the feed · 2026-09-28
 """THE SDK-SIDE BODY (canon 0004 · 0008's end shape · 0005 P7 sp6, THE BODIES'
 SEAM).
 
@@ -49,7 +50,25 @@ CREW_MANIFEST = SPINE / "crew.v0.json"
 CREW_FORMAT = "orreth-crew/1"
 
 PARKED = "orreth.body.parked.v1"                  # the kernel stopped restarting a body — a fact, with its evidence
+JOINED = "orreth.body.joined.v1"                  # re-base sp1: a body joined this world (a life) — the roster's own fact
+REFUSED = "orreth.body.refused.v1"                # placement refused it at birth (placement.py mints it; named here for the feed)
 KERNEL = "the kernel"
+
+
+def joined_payload(name: str, did: str, kind: str, life: int, nature: str | None) -> dict:
+    """The join fact's payload: the body by NAME (the feed's pointer — the roster's row),
+    its self, its kind, which life this is, what it is (conformance `joined_fact`)."""
+    return {"ref": name, "hash": ev.content_hash(did), "did": did, "kind": kind, "life": int(life),
+            "nature": nature or ""}
+
+
+def joined_fact(name: str, did: str, kind: str, life: int, nature: str | None, scope: str | None = None) -> dict:
+    """A body joined this world — its own fact in ITS chain (the join is the body's act, signed
+    by its self), no aggregate, no marker."""
+    sc = scope or ev.scope()
+    return ev.make_envelope(kind="event", type=JOINED, universe_id=sc, scope_path=sc,
+                            payload=joined_payload(name, did, kind, life, nature),
+                            correlation_id=did, authority_chain=[did])
 
 EXIT_STOPPED = 0                                  # stopped whole on the kernel's word
 EXIT_REFUSED = 3                                  # refused at birth (placement) — terminal, never restarted

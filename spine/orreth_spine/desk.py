@@ -272,3 +272,26 @@ def knock(door: str, identity, *, name: str, kind: str, template_hash: str, poli
 def canonical_bytes(obj) -> str:
     """The fixture's helper: the canonical bytes of a payload as ASCII."""
     return ev.canonical(obj).decode("ascii")
+
+
+# ---- the record (re-base sp1) ----------------------------------------------------------
+
+DESK_DDL = (      # word for word with the Rust kernel's `desk_live::DESK_DDL` — the desk is the
+    "CREATE TABLE IF NOT EXISTS spine_desk ( join_id text PRIMARY KEY, scope text NOT NULL, did text NOT NULL, "
+    "name text NOT NULL, kind text NOT NULL, public_key text NOT NULL, template_hash text NOT NULL DEFAULT '', "
+    "policy_hash text NOT NULL DEFAULT '', status text NOT NULL, nonce text NOT NULL, nonce_at timestamptz NOT "
+    "NULL DEFAULT now(), ticket text, ask_id text, admitted_by text, lease_id text, lease text, expiry "
+    "timestamptz, asked_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now())",
+    "CREATE INDEX IF NOT EXISTS spine_desk_did ON spine_desk (scope, did)",
+)     # Rust kernel's to write; declared here too so one migrator serves both kernels
+
+
+def ensure_schema(conn) -> None:
+    from .outbox import once
+    if not once(conn, "desk"):
+        return
+    with conn.transaction():
+        cur = conn.cursor()
+        cur.execute("SELECT pg_advisory_xact_lock(742199)")  # DDL race guard
+        for ddl in DESK_DDL:
+            cur.execute(ddl)

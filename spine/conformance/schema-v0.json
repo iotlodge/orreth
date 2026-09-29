@@ -1,0 +1,66 @@
+{
+ "contract": "orreth.schema/1",
+ "version": 0,
+ "generated_by": "orreth_spine.ground (the Python reference) - rearch row 4, re-base sp1: THE MIGRATOR (lock 2)",
+ "generated_at": "2026-09-28T19:00:00Z",
+ "cases": [
+  {
+   "name": "schema_version: both kernels carry the same number - bumped together whenever any DDL statement changes",
+   "kind": "schema_version",
+   "input": {},
+   "expect": {
+    "version": 1
+   }
+  },
+  {
+   "name": "schema_tables: every table both kernels stand on at this version, the version table among them - sorted, no other",
+   "kind": "schema_tables",
+   "input": {},
+   "expect": {
+    "tables": [
+     "spine_aggregate_cursor",
+     "spine_asks",
+     "spine_authenticators",
+     "spine_desk",
+     "spine_digests",
+     "spine_harness_runs",
+     "spine_heartbeat",
+     "spine_inbox",
+     "spine_intent_turns",
+     "spine_intentions",
+     "spine_joins",
+     "spine_leases",
+     "spine_marker_kinds",
+     "spine_markers",
+     "spine_masters",
+     "spine_memories",
+     "spine_meter",
+     "spine_mind_assignments",
+     "spine_mind_keys",
+     "spine_mitl",
+     "spine_occurrences",
+     "spine_outbox",
+     "spine_owner",
+     "spine_parked",
+     "spine_peers",
+     "spine_profile",
+     "spine_proof_attempts",
+     "spine_refusals",
+     "spine_schedules",
+     "spine_schema",
+     "spine_seam_nonces",
+     "spine_seam_out",
+     "spine_seats",
+     "spine_service_health",
+     "spine_service_versions",
+     "spine_services",
+     "spine_sessions",
+     "spine_tool_calls",
+     "spine_watches",
+     "spine_world"
+    ],
+    "count": 40
+   }
+  }
+ ]
+}

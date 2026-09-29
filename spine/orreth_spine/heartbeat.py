@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P0 sp1, the rig breathes · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: the breath's table under the one guard (the migrator's `heartbeat` tag) · 2026-09-28
 """The rig's first breath: one envelope through each rail, bytes exact.
 
 Run it with the spine rig up (`docker compose up -d` in spine/):
@@ -17,6 +18,21 @@ from . import rails
 
 UNIVERSE = "u:dev"
 SCOPE = "u:dev"
+
+DDL = ("CREATE TABLE IF NOT EXISTS spine_heartbeat ( message_id text PRIMARY KEY, body bytea NOT NULL,"
+       " committed_at timestamptz NOT NULL DEFAULT now())")      # word for word with the Rust kernel's
+
+
+def ensure_schema(conn) -> None:
+    """The breath's table, once per ground per process under the DDL guard —
+    re-base sp1: it was stood unguarded by `rails.ground_breath` before."""
+    from .outbox import once
+    if not once(conn, "heartbeat"):
+        return
+    with conn.transaction():
+        cur = conn.cursor()
+        cur.execute("SELECT pg_advisory_xact_lock(742199)")  # DDL race guard
+        cur.execute(DDL)
 
 
 def _beat(kind: str, rail_name: str) -> dict:

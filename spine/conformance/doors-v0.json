@@ -336,6 +336,28 @@
     ],
     "p95": 1200.5
    }
+  },
+  {
+   "name": "door_name: /parked is its own door (re-base sp1)",
+   "kind": "door_name",
+   "input": {
+    "method": "get",
+    "path": "/parked"
+   },
+   "expect": {
+    "door": "GET /parked"
+   }
+  },
+  {
+   "name": "door_name: /parked/advance is its own door (re-base sp1)",
+   "kind": "door_name",
+   "input": {
+    "method": "post",
+    "path": "/parked/advance"
+   },
+   "expect": {
+    "door": "POST /parked/advance"
+   }
   }
  ]
 }

@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: per-door latency in the Monitoring · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the park once by its place, its fact, the HOLD until a person advances it, the advance · 2026-09-28
 """`orreth.doors/1` — how long every door takes, in the kernel's own words
 (canon 0005 row 4, JB's lock 3 of "the kernel that lasts": *a p50 and p95
 per door, judged by the same beat that judges watches, so the performance
@@ -33,6 +34,7 @@ KNOWN = frozenset((
     "intentions", "levers", "markers", "monitor", "profile", "world", "seam", "schedules",
     "harness", "delta", "bodies", "minds", "confirm", "enroll", "seat", "join", "mitl", "impact",
     "mark",
+    "parked",           # re-base sp1: the poison events held at, and the advance
 ))
 _ID_AFTER = frozenset(("ask", "fact", "session", "digest", "join"))
 

@@ -173,8 +173,10 @@ def make_handler(feed: Feed):
         def do_GET(self):
             path = self.path.split("?")[0]
             if path == "/health":
+                from . import ground as _ground          # re-base sp1 (lock 2): which schema the ground holds
                 body = json.dumps({"rev": feed.rev, "clients": feed.clients,
-                                   "version": _VERSION, "kernel": "reference", "lit_at": lit_at}).encode()
+                                   "version": _VERSION, "kernel": "reference", "lit_at": lit_at,
+                                   "schema": dict(_ground.SCHEMA)}).encode()
                 self.send_response(200)
                 self.send_header("content-type", "application/json")
                 self.end_headers()

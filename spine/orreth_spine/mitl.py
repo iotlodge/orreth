@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, MITL names the services a change touches (kind `service`) · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, an MCP server's change names the tools under it; a tool names its server · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: the four Python-only doors cross to the Rust kernel — the pure parts named (`ask_text` · `kind_name`) so the fixtures pin them · 2026-09-28
 """MITL v0 — the Master Mind In the Loop (canon 0001 · 0004 · 0005 P6 sp3).
 
 The specialist of Orreth as a firmware body of the third kind: the same
@@ -324,6 +325,7 @@ _METRIC_WORDS = (                 # a watch in plain words names its metric (v0 
     ("outbox_pending", r"outbox|pending|backlog"),
     ("asks_received", r"\basks?\b|received|waiting|unserved"),
     ("door_p95_ms", r"\bslow\b|latency|\bdoors?\b|p95"),          # panel sp3: the doors' latency
+    ("parked", r"parked|poison"),                                 # re-base sp1: a poison the dispatcher holds at
 )
 
 
@@ -668,6 +670,21 @@ def shape(change: dict, touches: dict, verdict_: str, ask_id: str | None,
     }
 
 
+def ask_text(t: dict, verdict_: str, ground: list[str]) -> str:
+    """The impact ask's words (conformance `impact_text`): the change first (W6 — the
+    Analyzer's twig reads "the change: keep this world resilient…", never the prompt's
+    shape), then THE GROUND as the kernel read it, the verdict by the ladder, the ask."""
+    head = (t["words"] or next((i["words"] for i in t["intentions"] if i.get("words")), None)
+            or next((w["name"] for w in t["watches"] if w.get("name")), None)
+            or f"the {t['kind']}" + (f" {t['ref']}" if t["ref"] else ""))
+    return (f"the change: {head} — expected impact?\n"
+            f"THE CHANGE: a {t['kind']}" + (f" ({t['ref']})" if t["ref"] else "") + "\n"
+            "THE GROUND (read by the kernel — this is the record):\n- " + "\n- ".join(ground) + "\n"
+            f"VERDICT BY THE LADDER: {verdict_}\n"
+            "Answer in plain words, three short parts — WHO AND WHAT IT TOUCHES · THE RISK · "
+            "WHAT TO WATCH AFTER — and end with the verdict line above, unchanged.")
+
+
 def impact(conn, change: dict, *, person: str, session: str | None = None) -> dict:
     """The door: the ground read and the verdict judged here, by rule;
     the words asked of MITL as an ordinary ask (its journey, its reply,
@@ -677,17 +694,7 @@ def impact(conn, change: dict, *, person: str, session: str | None = None) -> di
     t = read_ground(conn, change)
     v = verdict(t)
     ground = describe(t)
-    head = (t["words"] or next((i["words"] for i in t["intentions"] if i.get("words")), None)
-            or next((w["name"] for w in t["watches"] if w.get("name")), None)
-            or f"the {t['kind']}" + (f" {t['ref']}" if t["ref"] else ""))
-    # W6: the ask's words START with the change — the Analyzer's twig reads
-    # "the change: keep this world resilient…", never the prompt's shape
-    text = (f"the change: {head} — expected impact?\n"
-            f"THE CHANGE: a {t['kind']}" + (f" ({t['ref']})" if t["ref"] else "") + "\n"
-            "THE GROUND (read by the kernel — this is the record):\n- " + "\n- ".join(ground) + "\n"
-            f"VERDICT BY THE LADDER: {v}\n"
-            "Answer in plain words, three short parts — WHO AND WHAT IT TOUCHES · THE RISK · "
-            "WHAT TO WATCH AFTER — and end with the verdict line above, unchanged.")
+    text = ask_text(t, v, ground)
     parent = t["marker"] or _latest_objective(conn, session)
     [aid] = dispatch.submit_ask(conn, text, person=person, to=[NAME], session=session,
                                 parent_marker=parent, kind="thought")

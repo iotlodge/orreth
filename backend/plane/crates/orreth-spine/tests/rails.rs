@@ -660,3 +660,324 @@ async fn shadow_the_two_spines_share_one_ground_and_one_truth() {
         .await
         .ok();
 }
+
+// ---- 6. THE MIGRATOR (re-base sp1, lock 2): one writer, the rest wait and verify ---------
+
+/// The columns a schema holds, `spine_%` only — the contract both kernels must produce.
+async fn columns(g: &Ground, schema: &str) -> Vec<(String, String, String, String)> {
+    g.client()
+        .query(
+            "SELECT table_name, column_name, data_type, is_nullable FROM information_schema.columns \
+             WHERE table_schema = $1 AND table_name LIKE 'spine\\_%' ORDER BY 1, 2",
+            &[&schema],
+        )
+        .await
+        .unwrap()
+        .iter()
+        .map(|r| (r.get(0), r.get(1), r.get(2), r.get(3)))
+        .collect()
+}
+
+#[tokio::test]
+async fn schema_the_first_birth_migrates_and_the_next_verifies() {
+    if !rig_up("schema_the_first_birth_migrates_and_the_next_verifies") {
+        return;
+    }
+    let tok = token();
+    let g = own_ground(&tok).await; // its birth: the first writer
+    let schema = format!("spine_rs_{tok}");
+    let row = g
+        .client()
+        .query_one("SELECT version, kernel FROM spine_schema", &[])
+        .await
+        .unwrap();
+    assert_eq!(
+        (row.get::<_, i32>(0), row.get::<_, String>(1)),
+        (orreth_spine::schema::SCHEMA_VERSION, "rust".to_string())
+    );
+    let tables: Vec<String> = g
+        .client()
+        .query(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema = $1 AND \
+             table_name LIKE 'spine\\_%' ORDER BY 1",
+            &[&schema],
+        )
+        .await
+        .unwrap()
+        .iter()
+        .map(|r| r.get(0))
+        .collect();
+    let mut declared = orreth_spine::schema::tables();
+    declared.sort();
+    let tables: Vec<String> = tables
+        .into_iter()
+        .filter(|t| t != "spine_counter")
+        .collect(); // own_ground's test table
+    assert_eq!(
+        tables, declared,
+        "the ground holds exactly the declared tables"
+    );
+    // the next birth: no DDL, verified
+    let mut b = Ground::connect(&rails::pg_dsn()).await.unwrap();
+    b.set_search_path(&schema).await.unwrap();
+    let m = b.ensure_all().await.unwrap();
+    assert!(!m.migrated && m.found == orreth_spine::schema::SCHEMA_VERSION);
+    assert!(m.words().contains("verified"));
+    let n: i64 = g
+        .client()
+        .query_one("SELECT count(*) FROM spine_schema", &[])
+        .await
+        .unwrap()
+        .get(0);
+    assert_eq!(n, 1, "one version row — one writer");
+    // a ground whose version lies is refused in plain words
+    g.client()
+        .batch_execute("DROP TABLE spine_mitl")
+        .await
+        .unwrap();
+    let mut c = Ground::connect(&rails::pg_dsn()).await.unwrap();
+    c.set_search_path(&schema).await.unwrap();
+    let e = c.ensure_all().await.unwrap_err().to_string();
+    assert!(
+        e.contains("spine_mitl is missing") && e.contains("not stood on"),
+        "{e}"
+    );
+    println!("rails · the migrator: the first birth wrote version {}, the next verified, the lie refused",
+             orreth_spine::schema::SCHEMA_VERSION);
+    drop_ground(&g, &tok).await;
+}
+
+#[tokio::test]
+async fn schema_two_kernels_birthing_together_have_one_writer() {
+    if !rig_up("schema_two_kernels_birthing_together_have_one_writer") {
+        return;
+    }
+    let tok = token();
+    let schema = format!("spine_rs_{tok}");
+    let g = Ground::connect(&rails::pg_dsn()).await.unwrap();
+    g.client()
+        .batch_execute(&format!(
+            "DROP SCHEMA IF EXISTS {schema} CASCADE; CREATE SCHEMA {schema}"
+        ))
+        .await
+        .unwrap();
+    let mut a = Ground::connect(&rails::pg_dsn()).await.unwrap();
+    let mut b = Ground::connect(&rails::pg_dsn()).await.unwrap();
+    let mut c = Ground::connect(&rails::pg_dsn()).await.unwrap();
+    a.set_search_path(&schema).await.unwrap();
+    b.set_search_path(&schema).await.unwrap();
+    c.set_search_path(&schema).await.unwrap();
+    let (ma, mb, mc) = tokio::join!(a.ensure_all(), b.ensure_all(), c.ensure_all());
+    let ms = [ma.unwrap(), mb.unwrap(), mc.unwrap()];
+    assert_eq!(
+        ms.iter().filter(|m| m.migrated).count(),
+        1,
+        "exactly one writer: {ms:?}"
+    );
+    assert!(ms
+        .iter()
+        .all(|m| m.ground == orreth_spine::schema::SCHEMA_VERSION));
+    println!(
+        "rails · the migrator: three kernels born together — one wrote, two waited and verified"
+    );
+    drop_ground(&g, &tok).await;
+}
+
+#[tokio::test]
+async fn schema_the_two_kernels_migrate_one_ground_the_same() {
+    if !rig_up("schema_the_two_kernels_migrate_one_ground_the_same") {
+        return;
+    }
+    let tok = token();
+    let g = own_ground(&tok).await; // the Rust birth on schema spine_rs_<tok>
+    let py_schema = format!("spine_py_{tok}");
+    // the Python reference's birth on ITS OWN fresh schema, through its own migrator
+    let out = python(
+        &tok,
+        &format!(
+            "from orreth_spine import ground; import psycopg, os\n\
+             c = psycopg.connect(os.environ['SPINE_PG'], autocommit=True)\n\
+             c.execute('DROP SCHEMA IF EXISTS {py_schema} CASCADE'); c.execute('CREATE SCHEMA {py_schema}')\n\
+             c.execute('SET search_path TO {py_schema}')\n\
+             m = ground.ensure_all(c); print(m['migrated'], m['ground'], ground.SCHEMA_VERSION)"
+        ),
+    )
+    .await;
+    assert_eq!(
+        out.trim(),
+        format!("True {v} {v}", v = orreth_spine::schema::SCHEMA_VERSION),
+        "the reference carries the same version"
+    );
+    let rs = columns(&g, &format!("spine_rs_{tok}")).await;
+    let py = columns(&g, &py_schema).await;
+    let rs: Vec<_> = rs.into_iter().filter(|c| c.0 != "spine_counter").collect();
+    let only_rs: Vec<_> = rs.iter().filter(|c| !py.contains(c)).collect();
+    let only_py: Vec<_> = py.iter().filter(|c| !rs.contains(c)).collect();
+    assert!(
+        only_rs.is_empty() && only_py.is_empty(),
+        "the two kernels' schemas differ —\n  only the Rust kernel: {only_rs:?}\n  only the reference: {only_py:?}"
+    );
+    println!(
+        "rails · the migrator: both kernels stand {} columns over {} tables, column for column the same",
+        rs.len(),
+        orreth_spine::schema::tables().len()
+    );
+    g.client()
+        .batch_execute(&format!("DROP SCHEMA IF EXISTS {py_schema} CASCADE"))
+        .await
+        .ok();
+    drop_ground(&g, &tok).await;
+}
+
+// ---- 7. POISON-PARKING (re-base sp1): parked with its evidence, the rail holds, a person advances --
+
+#[tokio::test]
+async fn poison_parks_visibly_and_the_dispatcher_holds_until_a_person_advances() {
+    if !rig_up("poison_parks_visibly_and_the_dispatcher_holds_until_a_person_advances") {
+        return;
+    }
+    use orreth_spine::dispatcher::{self, Meter, CONSUMER};
+    use orreth_spine::world::World;
+    use rdkafka::producer::{FutureProducer, FutureRecord};
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Arc;
+    let tok = token();
+    let schema = format!("spine_rs_{tok}");
+    let mut g = own_ground(&tok).await;
+    let mut w = World::from_env();
+    w.scope = format!("u:poison-{tok}");
+    w.ns = format!("p{tok}");
+    let topic = rails::topic(orreth_spine::asks::ASK_RECEIVED, &w.ns);
+    events::declare_topics(&w.kafka, &[&topic]).await.unwrap();
+    let producer: FutureProducer = rdkafka::config::ClientConfig::new()
+        .set("bootstrap.servers", &w.kafka)
+        .create()
+        .unwrap();
+    // the poison first — bytes that are not an envelope
+    producer
+        .send(
+            FutureRecord::to(&topic)
+                .key("poison")
+                .payload(b"this is not an envelope"),
+            Duration::from_secs(10),
+        )
+        .await
+        .map_err(|(e, _)| e)
+        .unwrap();
+    // then a good ask of THIS world, behind it
+    let good = Mint {
+        kind: "event".into(),
+        r#type: orreth_spine::asks::ASK_RECEIVED.into(),
+        universe_id: w.scope.clone(),
+        scope_path: w.scope.clone(),
+        payload: json!({"ref": format!("ask_{tok}"), "hash": "sha256:-", "text": "hello", "person": "did:orreth:person:t"}),
+        ..Default::default()
+    }
+    .mint()
+    .unwrap();
+    let raw = envelope::encode(&good).unwrap();
+    producer
+        .send(
+            FutureRecord::to(&topic).key("good").payload(&raw),
+            Duration::from_secs(10),
+        )
+        .await
+        .map_err(|(e, _)| e)
+        .unwrap();
+    // the dispatcher stands on the same ground, its own line
+    let mut gd = Ground::connect(&rails::pg_dsn()).await.unwrap();
+    gd.set_search_path(&schema).await.unwrap();
+    gd.ensure_all().await.unwrap();
+    let stop = Arc::new(AtomicBool::new(false));
+    let ready = Arc::new(AtomicBool::new(false));
+    let meter = Arc::new(Meter::default());
+    let group = dispatcher::group_per_life();
+    let (w2, stop2, ready2, meter2) = (w.clone(), stop.clone(), ready.clone(), meter.clone());
+    let task = tokio::spawn(async move {
+        dispatcher::run_dispatcher(&mut gd, &w2, &group, stop2, ready2, meter2).await
+    });
+    // parked, with its evidence, within the deadline
+    let deadline = std::time::Instant::now() + Duration::from_secs(40);
+    while inbox::parked_count(&g, CONSUMER).await.unwrap() == 0 {
+        assert!(
+            std::time::Instant::now() < deadline,
+            "the poison was never parked"
+        );
+        tokio::time::sleep(Duration::from_millis(300)).await;
+    }
+    let rows = inbox::parked(&g, Some(CONSUMER), 10).await.unwrap();
+    assert_eq!(rows.len(), 1);
+    let p = &rows[0];
+    assert!(
+        p["reason"]
+            .as_str()
+            .unwrap()
+            .starts_with("undecodable body:"),
+        "{p}"
+    );
+    assert_eq!(p["bytes"], json!(23));
+    assert_eq!(
+        p["hash"],
+        json!(orreth_spine::ask::body_hash(b"this is not an envelope"))
+    );
+    assert_eq!(p["topic"].as_str().unwrap(), topic);
+    assert!(p["words"]
+        .as_str()
+        .unwrap()
+        .contains("holds there until a person advances it"));
+    let id = p["parked_id"].as_i64().unwrap();
+    // the fact rode the outbox with the row
+    let facts: Vec<Value> = g
+        .client()
+        .query(
+            "SELECT body FROM spine_outbox ORDER BY outbox_id DESC LIMIT 5",
+            &[],
+        )
+        .await
+        .unwrap()
+        .iter()
+        .filter_map(|r| envelope::decode(&r.get::<_, Vec<u8>>(0)).ok())
+        .collect();
+    let parked_fact = facts
+        .iter()
+        .find(|e| e["type"] == json!(orreth_spine::ask::INBOX_PARKED))
+        .expect("the parked fact on the outbox");
+    assert_eq!(parked_fact["payload"]["ref"], json!(format!("parked:{id}")));
+    assert_eq!(parked_fact["authority_chain"], json!(["the kernel"]));
+    // the rail HOLDS: the good ask behind the poison is not dispatched
+    tokio::time::sleep(Duration::from_secs(3)).await;
+    assert_eq!(meter.read().0, 0, "the dispatcher went past the poison");
+    assert_eq!(meter.parked.load(Ordering::Relaxed), 1);
+    // a person's word: advanced — recorded and said
+    let v = inbox::advance(&mut g, &w.scope, id, "did:orreth:person:jb")
+        .await
+        .unwrap()
+        .expect("the parked row");
+    assert_eq!(
+        (v["advanced"].clone(), v["already"].clone()),
+        (json!(true), json!(false))
+    );
+    assert_eq!(v["advanced_by"], json!("did:orreth:person:jb"));
+    let deadline = std::time::Instant::now() + Duration::from_secs(20);
+    while meter.read().0 == 0 {
+        assert!(
+            std::time::Instant::now() < deadline,
+            "the dispatcher never went on after the advance"
+        );
+        tokio::time::sleep(Duration::from_millis(300)).await;
+    }
+    assert_eq!(inbox::parked_count(&g, CONSUMER).await.unwrap(), 0);
+    let again = inbox::advance(&mut g, &w.scope, id, "did:orreth:person:jb")
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(again["already"], json!(true));
+    assert!(inbox::advance(&mut g, &w.scope, 999_999, "x")
+        .await
+        .unwrap()
+        .is_none());
+    stop.store(true, Ordering::Relaxed);
+    let _ = tokio::time::timeout(Duration::from_secs(15), task).await;
+    println!("rails · poison-parking: parked:{id} with 23 bytes of evidence and its fact, the good ask held behind it, advanced on a person's word, then dispatched");
+    drop_ground(&g, &tok).await;
+}

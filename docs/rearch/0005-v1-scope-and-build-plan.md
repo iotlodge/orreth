@@ -2257,6 +2257,74 @@ approved (covenant rule 9).
       `kernel_self` · `seat` · `desk` · `envelope`'s canonical bytes — and `contracts/v0`), and
       the workspace `Cargo.toml` lists one member. The crypto read's five named gaps stay on the
       honest boundary; the book states plainly that the kernel is its own root.
+      **re-base sp1 BUILT 2026-09-28 — THE GROUND'S LAST LAWS (unclosed: JB's discussion of the
+      crates owed, below).** THE MIGRATOR (lock 2, `ground.rs` · `ground.py` · `schema.rs`): the
+      ground wears a VERSION in `spine_schema`; a birth takes the DDL lock, creates the version
+      table, reads the highest version, and either RUNS every statement this kernel knows and
+      records the version (below its own `SCHEMA_VERSION`, 1) or runs NO DDL and VERIFIES that
+      every declared table stands (at or past it), refusing in plain words a ground whose version
+      lies; a kernel lighting beside a migrating one waits at the lock and then verifies — one
+      writer, ever; the health door says `schema` (ground · kernel · found · migrated). Both
+      kernels stand the SAME forty tables: the Rust kernel gained `spine_mitl` · `spine_refusals`
+      · `spine_tool_calls` · `spine_parked` and the harness run's `arm`, the reference gained
+      `spine_desk` and a guarded `spine_heartbeat` (the rig's breath once stood a poorer
+      `spine_outbox` unguarded — cured), the Stable's orphaned tag joined the one list (its tables
+      were born inside requests — the very thing the ground law forbids), and the Rust `DO $$`
+      column probes now read THIS schema's columns (they read every schema's before: a column on
+      the public ground hid a missing one on a fresh schema — found by the parity proof); every
+      DDL is PURE in `schema.rs` (re-exported from its home module) so the contract is read without
+      a rail. POISON-PARKING (`events.rs` · `inbox.rs` · `dispatcher.rs` · `projector.py`): the
+      rail reader keeps the body's bytes and the decoder's words; a body that is not an envelope,
+      or a fact that can never apply (a gap, a refused shape — never the rail's own refusal), is
+      PARKED once by its place with its evidence and its fact (`orreth.inbox.parked.v1`), and the
+      dispatcher HOLDS at it — nothing behind it dispatched, the offset never committed past — until
+      a person's word ADVANCES it (`POST /parked/advance`, a governing seat, `orreth.inbox.advanced.v1`
+      in their name; `GET /parked` lists what is held; `values.parked` watchable; the RAILS card shows
+      each with its lever; "advance past parked 3" in the chat); the reference's standing consumer
+      holds the same way (its `run_once` still breaks, as the events proof pins). THE FOUR DOORS
+      (`mitl_live.rs` · `mitl.rs` · `markers.rs` · `bridge.rs`): `GET/POST /mitl` · `POST /impact` ·
+      `POST /mark` · `POST /markers/kinds` answer on the Rust kernel, the reference's shapes and words
+      law for law — the ontology's passages and their citations from the canon on disk, the toggle's
+      recorded fact, the impact's ground read (seven kinds, every note the reference's) and the
+      verdict by the ladder, the ask filed to mitl as a thought; the pure parts named on the reference
+      (`mitl.ask_text` · `markers.kind_name`) so the fixtures pin them. LOCK 4's LAST POLL: the roster
+      is read once at load and then only on a notice — a body's JOIN is now a fact
+      (`orreth.body.joined.v1`, minted in the join's own transaction, its own chain) and the refusal's
+      fact is finally subscribed; `setInterval(loadRoster)` is gone (the monitor's 5 s beat stays, a
+      pull open on purpose reading process readings no fact announces). FIXTURES: NEW `schema-v0.json`
+      (the version and the forty tables) · `inbox-v0.json` (the parked and advanced facts, the words,
+      the hash) · `markers-v0.json` (the kind-name law); EXTENDED `mitl-v0` (passages · metric_in ·
+      describe · impact_text) · `bodies-v0` (`joined_fact`) · `seat-v0` (the parked doors' needs) ·
+      `doors-v0` (their names). PROVEN: cargo build · clippy · fmt clean on both feature sets; Rust
+      conformance 730/730 · Python 740 (conformance · mitl · markers); `cargo test --lib` 49;
+      `tests/rails.rs` the migrator's three (the first birth writes 1 and the next verifies, a lie
+      refused; three kernels born together — one wrote, two waited; both kernels' schemas column for
+      column the same — 392 columns over 40 tables) and the poison's one (parked:1 with 23 bytes of
+      evidence and its fact, the good ask held behind it, advanced on a person's word, then
+      dispatched); `tests/doors.rs` NEW (the four doors and the parked doors on the Rust kernel alone,
+      through the gate); `tests/test_migrator.py` NEW (3) · `test_events_shadow.py` the hold (1) ·
+      `test_cure_walk8.py` no roster timer (1); the spine suite 946 green and every bridge proof (rails 9 ·
+      askroad · loops · memory · bodies · cells · gate · desk · doors) green with the stale kernel stopped first. HONEST LIMITS: the version is one number for the whole
+      schema (a change to any statement bumps it in both kernels in the same change — the fixture
+      catches a kernel that forgot); the verify step checks tables, not columns (the parity proof
+      checks columns); a holding dispatcher does not poll the broker for minutes and is re-seated by
+      it on the advance (harmless: the offset was never committed); the impact door's unknown-metric
+      note names each kernel's OWN metrics (the reference measures the farm's, the Rust kernel the
+      pool's — the lists are not yet one); MITL's ontology is still acquired by the Python body
+      (`acquire_ontology`), the Rust door reads what was acquired; the `mark` TOOL stays the body's
+      (`tools.py`), only the door crossed; `cargo test --features rails --test rails` alone is still
+      red on the QR deps (as sp3 found).
+      **JB's word, 2026-09-28 night (mid-sp1): THE FIVE-CRATE REMOVAL RETRACTED, PENDING REVIEW.**
+      "I want to retract my previous ignore/remove about those other crates … if it involves
+      integrating those elements of crates, we should at least review those like you did crypto. I
+      don't want to make a bad decision and have it bite you and I spoons later … don't close this
+      sp until we discuss." So: rule 9's approval of 2026-09-28 (the five leave with sp2's sweep) is
+      WITHDRAWN; `orreth-node` · `orreth-store` · `orreth-resolver` · `orreth-rollup` ·
+      `orreth-crypto` stay in the workspace until each has had a read like the crypto read — what it
+      built, what the new kernel matches, betters or lacks, its verdict on the honest boundary — and
+      JB decides crate by crate; sp1 is BUILT and stays OPEN until that discussion; sp2's sweep waits
+      on it. (sp1 itself touched none of the five: the migrator, the park, the doors and the roster
+      live in `orreth-spine` and the reference alone.)
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the

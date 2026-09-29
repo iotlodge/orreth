@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the dispatcher and the relay on the cell's topics · 2026-09-25
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
 //! The standing loops of a bridge — mirrors `dispatch.run_dispatcher` (the
 //! events-rail consumer turning a committed `ask.received` into a serve
 //! command on the target's bench) and the rig's relay loop.
@@ -15,6 +16,19 @@
 //! second command). A replay from `earliest` at boot costs the same: every
 //! old fact is already a footprint. Facts of another world are skipped by
 //! scope and committed (`SPINE_SCOPE` fences worlds on one broker).
+//!
+//! POISON-PARKING (re-base sp1 — the projector's law, `projector.py`: "a body
+//! that cannot be decoded is PARKED visibly with its evidence and the projector
+//! stops at it — advancing past a poison event is an operator's explicit
+//! decision, never a silent loss"): a body that is not an envelope, or a fact
+//! that can never apply (a gap in its aggregate's sequence, a refused shape),
+//! is parked ONCE by its place on the rail — the row and its fact
+//! (`orreth.inbox.parked.v1`) together — and the dispatcher HOLDS at it: the
+//! offset is never committed past, nothing after it is dispatched, and every
+//! two seconds it asks the ground whether a person has advanced it
+//! (`inbox::advance` — `POST /parked/advance`, a governing seat). A transient
+//! refusal (the ground, the broker, the bench) is NOT poison: it returns as
+//! before and the kernel stands the dispatcher again from the committed offset.
 
 use crate::asks::{command_for, ASK_RECEIVED};
 use crate::events::{Pending, Reader};
@@ -46,6 +60,8 @@ pub struct Meter {
     pub absorbed: AtomicU64,
     /// Facts of another world, committed past.
     pub skipped: AtomicU64,
+    /// re-base sp1: poison events this life PARKED (each held at until advanced).
+    pub parked: AtomicU64,
 }
 
 impl Meter {
@@ -56,6 +72,68 @@ impl Meter {
             self.skipped.load(Ordering::Relaxed),
         )
     }
+}
+
+/// How often a holding dispatcher asks the ground whether a person advanced it.
+pub const HOLD_POLL: Duration = Duration::from_secs(2);
+
+/// Is this refusal the FACT's own (poison — it will never apply), or the rail's
+/// (transient — stand again and it may)?
+pub fn is_poison(e: &RailError) -> bool {
+    matches!(
+        e,
+        RailError::Gap { .. } | RailError::Refused(_) | RailError::Envelope(_)
+    )
+}
+
+/// The park and the hold: the facts skipped before it committed (they are done), the
+/// poison parked once with its evidence, then the dispatcher standing at it — never
+/// committing past — until a person's word advances it (then the offset is committed
+/// and the loop goes on) or the kernel stops (the offset uncommitted: a relit
+/// dispatcher re-reads the same poison, finds its row, and holds again).
+#[allow(clippy::too_many_arguments)]
+async fn hold_at(
+    g: &mut Ground,
+    w: &World,
+    reader: &Reader,
+    p: &Pending,
+    reason: &str,
+    stop: &AtomicBool,
+    meter: &Meter,
+    behind: &mut Option<Pending>,
+) -> Result<(), RailError> {
+    if let Some(b) = behind.take() {
+        reader.commit(&b)?;
+    }
+    let (id, fresh) = inbox::park(
+        g,
+        &w.scope,
+        CONSUMER,
+        &p.topic,
+        p.partition,
+        p.offset,
+        &p.raw,
+        reason,
+    )
+    .await?;
+    if fresh {
+        meter.parked.fetch_add(1, Ordering::Relaxed);
+    }
+    eprintln!(
+        "  [kernel] {} (parked:{id})",
+        crate::ask::parked_words(CONSUMER, &p.topic, p.partition, p.offset, reason)
+    );
+    while !stop.load(Ordering::Relaxed) {
+        if inbox::advanced(g, id).await? {
+            reader.commit(p)?;
+            eprintln!(
+                "  [kernel] advanced past parked:{id} on a person's word — the dispatcher goes on"
+            );
+            return Ok(());
+        }
+        tokio::time::sleep(HOLD_POLL).await;
+    }
+    Ok(())
 }
 
 /// The standing dispatcher: one consumer for its whole life, dispatching
@@ -94,23 +172,47 @@ pub async fn run_dispatcher(
             }
             continue;
         };
+        if p.env.is_none() {
+            // a body that is not an envelope: parked with its evidence, and the rail holds
+            let reason = format!(
+                "undecodable body: {}",
+                p.flaw.as_deref().unwrap_or("no body")
+            );
+            hold_at(g, w, &reader, &p, &reason, &stop, &meter, &mut behind).await?;
+            skipped_since = 0;
+            continue;
+        }
         let ours = p
             .env
             .as_ref()
             .is_some_and(|env| env["scope_path"].as_str() == Some(&w.scope));
         if let (Some(env), true) = (&p.env, ours) {
-            let cmd = command_for(env).map_err(|e| RailError::Refused(e.to_string()))?;
             let (url, ns) = (w.rabbit_url.clone(), w.ns.clone());
-            let out = inbox::apply_event(g, CONSUMER, env, async move |_tx| {
-                invoke::publish_command(&url, &cmd, &ns).await
-            })
-            .await?;
-            match out {
-                Outcome::Applied => meter.dispatched.fetch_add(1, Ordering::Relaxed),
-                Outcome::Duplicate | Outcome::Stale => {
-                    meter.absorbed.fetch_add(1, Ordering::Relaxed)
+            let out = match command_for(env) {
+                Err(e) => Err(RailError::Refused(e.to_string())),
+                Ok(cmd) => {
+                    inbox::apply_event(g, CONSUMER, env, async move |_tx| {
+                        invoke::publish_command(&url, &cmd, &ns).await
+                    })
+                    .await
                 }
             };
+            match out {
+                Ok(Outcome::Applied) => {
+                    meter.dispatched.fetch_add(1, Ordering::Relaxed);
+                }
+                Ok(Outcome::Duplicate | Outcome::Stale) => {
+                    meter.absorbed.fetch_add(1, Ordering::Relaxed);
+                }
+                Err(e) if is_poison(&e) => {
+                    // the fact itself can never apply: parked, and the rail holds
+                    let reason = format!("could not apply: {e}");
+                    hold_at(g, w, &reader, &p, &reason, &stop, &meter, &mut behind).await?;
+                    skipped_since = 0;
+                    continue;
+                }
+                Err(e) => return Err(e), // the rail's own refusal: stand again from the committed offset
+            }
             reader.commit(&p)?;
             behind = None;
             skipped_since = 0;

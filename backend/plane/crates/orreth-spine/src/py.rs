@@ -42,6 +42,11 @@ pub fn python_str(v: &Value) -> String {
     }
 }
 
+/// Python's `s[:n]` — the first n CHARACTERS, a plain cut, no ellipsis.
+pub fn cut_chars(s: &str, n: usize) -> String {
+    s.chars().take(n).collect()
+}
+
 /// Python's `repr()` of a str (`f"{name!r}"`): single quotes unless the text
 /// holds a single quote and no double quote; backslash, the quote, `\n` `\r`
 /// `\t` escaped; other control characters as `\xNN`; printable unicode kept.

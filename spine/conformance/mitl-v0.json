@@ -1,7 +1,7 @@
 {
  "contract": "orreth.impact/1",
  "version": 0,
- "generated_by": "orreth_spine.mitl + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 sp3 \u00b7 P6 cure sp2 (glass), walk #7 W15 (citation_name)",
+ "generated_by": "orreth_spine.mitl + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 sp3 \u00b7 P6 cure sp2 (glass), walk #7 W15 (citation_name) \u00b7 extended 2026-09-28 (re-base sp1: passages \u00b7 metric_in \u00b7 describe \u00b7 impact_text)",
  "generated_at": "2026-09-21",
  "cases": [
   {
@@ -319,6 +319,440 @@
    },
    "expect": {
     "name": "elsewhere, Elsewhere"
+   }
+  },
+  {
+   "name": "passages: two paragraphs pack into one passage",
+   "kind": "passages",
+   "input": {
+    "text": "# The charter\n\nThe first paragraph.\n\nThe second, packed with the first.",
+    "limit": 2400
+   },
+   "expect": {
+    "passages": [
+     "# The charter\n\nThe first paragraph.\n\nThe second, packed with the first."
+    ]
+   }
+  },
+  {
+   "name": "passages: a heading opens a new passage",
+   "kind": "passages",
+   "input": {
+    "text": "# One\n\nWords under one.\n\n## Two\n\nWords under two.\n\n\nMore under two.",
+    "limit": 2400
+   },
+   "expect": {
+    "passages": [
+     "# One\n\nWords under one.",
+     "## Two\n\nWords under two.\n\nMore under two."
+    ]
+   }
+  },
+  {
+   "name": "passages: a paragraph wider than the pack is cut, every word kept",
+   "kind": "passages",
+   "input": {
+    "text": "abcdefghijabcdefghijabcdefghij\n\nshort",
+    "limit": 12
+   },
+   "expect": {
+    "passages": [
+     "abcdefghijab",
+     "cdefghijabcd",
+     "efghij",
+     "short"
+    ]
+   }
+  },
+  {
+   "name": "passages: blank space between paragraphs is not a passage",
+   "kind": "passages",
+   "input": {
+    "text": "\n\n  \n\npara one\n   \n\npara two\n\n",
+    "limit": 2400
+   },
+   "expect": {
+    "passages": [
+     "para one\n\npara two"
+    ]
+   }
+  },
+  {
+   "name": "metric_in: 'no body is dormant'",
+   "kind": "metric_in",
+   "input": {
+    "words": "no body is dormant"
+   },
+   "expect": {
+    "metric": "bodies_dormant"
+   }
+  },
+  {
+   "name": "metric_in: 'when bodies_alive drops'",
+   "kind": "metric_in",
+   "input": {
+    "words": "when bodies_alive drops"
+   },
+   "expect": {
+    "metric": "bodies_alive"
+   }
+  },
+  {
+   "name": "metric_in: 'the outbox never backs up'",
+   "kind": "metric_in",
+   "input": {
+    "words": "the outbox never backs up"
+   },
+   "expect": {
+    "metric": "outbox_pending"
+   }
+  },
+  {
+   "name": "metric_in: 'the sky is blue'",
+   "kind": "metric_in",
+   "input": {
+    "words": "the sky is blue"
+   },
+   "expect": {
+    "metric": null
+   }
+  },
+  {
+   "name": "metric_in: 'asks left waiting too long'",
+   "kind": "metric_in",
+   "input": {
+    "words": "asks left waiting too long"
+   },
+   "expect": {
+    "metric": "asks_received"
+   }
+  },
+  {
+   "name": "metric_in: 'the doors are slow'",
+   "kind": "metric_in",
+   "input": {
+    "words": "the doors are slow"
+   },
+   "expect": {
+    "metric": "door_p95_ms"
+   }
+  },
+  {
+   "name": "describe: the ground in lines (watch)",
+   "kind": "describe",
+   "input": {
+    "touches": {
+     "kind": "watch",
+     "ref": null,
+     "words": "no body is dormant",
+     "bodies": [
+      {
+       "name": "monitor",
+       "kind": "firmware",
+       "did": "did:orreth:agent:mon00000",
+       "joined": true
+      },
+      {
+       "name": "planner",
+       "kind": null,
+       "did": null,
+       "joined": false
+      }
+     ],
+     "chains": [
+      "H \u2192 monitor \u2192 tool:add-watch",
+      "the kernel \u2192 planner \u2192 the crew (when \u201ckeep this world resilient\u201d wakes on watch-red)"
+     ],
+     "intentions": [
+      {
+       "intention_id": "int_1",
+       "words": "keep this world resilient",
+       "kind": "kernel",
+       "serves": "orreth",
+       "wakes": true
+      },
+      {
+       "intention_id": "int_2",
+       "words": "stock the pantry",
+       "kind": "human",
+       "serves": "business",
+       "shares": [
+        "watch-red"
+       ],
+       "wakes": false
+      },
+      {
+       "intention_id": "int_3",
+       "words": "an old one",
+       "kind": "human",
+       "serves": "business",
+       "active": false,
+       "wakes": false
+      }
+     ],
+     "watches": [
+      {
+       "watch_id": "watch_1",
+       "name": "no body dormant",
+       "metric": "bodies_dormant",
+       "op": "<=",
+       "threshold": 0.0,
+       "red": true
+      }
+     ],
+     "markers": [
+      {
+       "id": "mk_a",
+       "kind": "intention",
+       "ref": "int_1",
+       "under": {
+        "objective": 3,
+        "thought": 1
+       }
+      },
+      {
+       "id": "mk_b",
+       "kind": "objective",
+       "ref": "ask_1"
+      }
+     ],
+     "services": [],
+     "cost": {
+      "monitor": {
+       "thoughts": 2,
+       "tokens": 412
+      }
+     },
+     "notes": [
+      "no metric named 'x' \u2014 the metrics are a, b"
+     ],
+     "kernel": false,
+     "class": "consequential",
+     "level": "L2",
+     "marker": null,
+     "metric": "bodies_dormant",
+     "placement": {
+      "cell": "local",
+      "metal": "gpu",
+      "affinity": [
+       "planner"
+      ],
+      "secrets_with": [
+       "vault"
+      ]
+     }
+    }
+   },
+   "expect": {
+    "lines": [
+     "bodies: monitor (firmware), planner (not joined)",
+     "chains: H \u2192 monitor \u2192 tool:add-watch \u00b7 the kernel \u2192 planner \u2192 the crew (when \u201ckeep this world resilient\u201d wakes on watch-red)",
+     "intention (kernel, serves orreth): \u201ckeep this world resilient\u201d \u2014 wakes on it",
+     "intention (human, serves business): \u201cstock the pantry\u201d \u2014 shares watch-red",
+     "intention (human, serves business): \u201can old one\u201d \u2014 at rest",
+     "watch on the same metric: no body dormant \u2014 bodies_dormant <= 0.0 (red now)",
+     "marker: intention mk_a \u2014 grew 3 objective, 1 thought",
+     "marker: objective mk_b",
+     "cost so far: monitor \u2014 2 thoughts, 412 tokens on the meter",
+     "metric: bodies_dormant",
+     "placement asked: cell 'local' \u00b7 metal gpu \u00b7 beside planner \u00b7 secrets vault",
+     "consequence: consequential \u2192 L2",
+     "no metric named 'x' \u2014 the metrics are a, b"
+    ]
+   }
+  },
+  {
+   "name": "impact_text: the ask's words (watch)",
+   "kind": "impact_text",
+   "input": {
+    "touches": {
+     "kind": "watch",
+     "ref": null,
+     "words": "no body is dormant",
+     "bodies": [
+      {
+       "name": "monitor",
+       "kind": "firmware",
+       "did": "did:orreth:agent:mon00000",
+       "joined": true
+      },
+      {
+       "name": "planner",
+       "kind": null,
+       "did": null,
+       "joined": false
+      }
+     ],
+     "chains": [
+      "H \u2192 monitor \u2192 tool:add-watch",
+      "the kernel \u2192 planner \u2192 the crew (when \u201ckeep this world resilient\u201d wakes on watch-red)"
+     ],
+     "intentions": [
+      {
+       "intention_id": "int_1",
+       "words": "keep this world resilient",
+       "kind": "kernel",
+       "serves": "orreth",
+       "wakes": true
+      },
+      {
+       "intention_id": "int_2",
+       "words": "stock the pantry",
+       "kind": "human",
+       "serves": "business",
+       "shares": [
+        "watch-red"
+       ],
+       "wakes": false
+      },
+      {
+       "intention_id": "int_3",
+       "words": "an old one",
+       "kind": "human",
+       "serves": "business",
+       "active": false,
+       "wakes": false
+      }
+     ],
+     "watches": [
+      {
+       "watch_id": "watch_1",
+       "name": "no body dormant",
+       "metric": "bodies_dormant",
+       "op": "<=",
+       "threshold": 0.0,
+       "red": true
+      }
+     ],
+     "markers": [
+      {
+       "id": "mk_a",
+       "kind": "intention",
+       "ref": "int_1",
+       "under": {
+        "objective": 3,
+        "thought": 1
+       }
+      },
+      {
+       "id": "mk_b",
+       "kind": "objective",
+       "ref": "ask_1"
+      }
+     ],
+     "services": [],
+     "cost": {
+      "monitor": {
+       "thoughts": 2,
+       "tokens": 412
+      }
+     },
+     "notes": [
+      "no metric named 'x' \u2014 the metrics are a, b"
+     ],
+     "kernel": false,
+     "class": "consequential",
+     "level": "L2",
+     "marker": null,
+     "metric": "bodies_dormant",
+     "placement": {
+      "cell": "local",
+      "metal": "gpu",
+      "affinity": [
+       "planner"
+      ],
+      "secrets_with": [
+       "vault"
+      ]
+     }
+    },
+    "verdict": "consider",
+    "ground": [
+     "bodies: monitor (firmware), planner (not joined)",
+     "chains: H \u2192 monitor \u2192 tool:add-watch \u00b7 the kernel \u2192 planner \u2192 the crew (when \u201ckeep this world resilient\u201d wakes on watch-red)",
+     "intention (kernel, serves orreth): \u201ckeep this world resilient\u201d \u2014 wakes on it",
+     "intention (human, serves business): \u201cstock the pantry\u201d \u2014 shares watch-red",
+     "intention (human, serves business): \u201can old one\u201d \u2014 at rest",
+     "watch on the same metric: no body dormant \u2014 bodies_dormant <= 0.0 (red now)",
+     "marker: intention mk_a \u2014 grew 3 objective, 1 thought",
+     "marker: objective mk_b",
+     "cost so far: monitor \u2014 2 thoughts, 412 tokens on the meter",
+     "metric: bodies_dormant",
+     "placement asked: cell 'local' \u00b7 metal gpu \u00b7 beside planner \u00b7 secrets vault",
+     "consequence: consequential \u2192 L2",
+     "no metric named 'x' \u2014 the metrics are a, b"
+    ]
+   },
+   "expect": {
+    "text": "the change: no body is dormant \u2014 expected impact?\nTHE CHANGE: a watch\nTHE GROUND (read by the kernel \u2014 this is the record):\n- bodies: monitor (firmware), planner (not joined)\n- chains: H \u2192 monitor \u2192 tool:add-watch \u00b7 the kernel \u2192 planner \u2192 the crew (when \u201ckeep this world resilient\u201d wakes on watch-red)\n- intention (kernel, serves orreth): \u201ckeep this world resilient\u201d \u2014 wakes on it\n- intention (human, serves business): \u201cstock the pantry\u201d \u2014 shares watch-red\n- intention (human, serves business): \u201can old one\u201d \u2014 at rest\n- watch on the same metric: no body dormant \u2014 bodies_dormant <= 0.0 (red now)\n- marker: intention mk_a \u2014 grew 3 objective, 1 thought\n- marker: objective mk_b\n- cost so far: monitor \u2014 2 thoughts, 412 tokens on the meter\n- metric: bodies_dormant\n- placement asked: cell 'local' \u00b7 metal gpu \u00b7 beside planner \u00b7 secrets vault\n- consequence: consequential \u2192 L2\n- no metric named 'x' \u2014 the metrics are a, b\nVERDICT BY THE LADDER: consider\nAnswer in plain words, three short parts \u2014 WHO AND WHAT IT TOUCHES \u00b7 THE RISK \u00b7 WHAT TO WATCH AFTER \u2014 and end with the verdict line above, unchanged."
+   }
+  },
+  {
+   "name": "describe: the ground in lines (act)",
+   "kind": "describe",
+   "input": {
+    "touches": {
+     "kind": "act",
+     "ref": "erase-record",
+     "words": "",
+     "bodies": [],
+     "chains": [],
+     "intentions": [],
+     "watches": [],
+     "markers": [],
+     "services": [],
+     "cost": {},
+     "notes": [],
+     "kernel": false,
+     "class": "grave",
+     "level": "L3-code",
+     "marker": null
+    }
+   },
+   "expect": {
+    "lines": [
+     "consequence: grave \u2192 L3-code"
+    ]
+   }
+  },
+  {
+   "name": "impact_text: the ask's words (act)",
+   "kind": "impact_text",
+   "input": {
+    "touches": {
+     "kind": "act",
+     "ref": "erase-record",
+     "words": "",
+     "bodies": [],
+     "chains": [],
+     "intentions": [],
+     "watches": [],
+     "markers": [],
+     "services": [],
+     "cost": {},
+     "notes": [],
+     "kernel": false,
+     "class": "grave",
+     "level": "L3-code",
+     "marker": null
+    },
+    "verdict": "grave \u2014 needs L3",
+    "ground": [
+     "consequence: grave \u2192 L3-code"
+    ]
+   },
+   "expect": {
+    "text": "the change: the act erase-record \u2014 expected impact?\nTHE CHANGE: a act (erase-record)\nTHE GROUND (read by the kernel \u2014 this is the record):\n- consequence: grave \u2192 L3-code\nVERDICT BY THE LADDER: grave \u2014 needs L3\nAnswer in plain words, three short parts \u2014 WHO AND WHAT IT TOUCHES \u00b7 THE RISK \u00b7 WHAT TO WATCH AFTER \u2014 and end with the verdict line above, unchanged."
+   }
+  },
+  {
+   "name": "metric_in: 'a poison parked on the rail'",
+   "kind": "metric_in",
+   "input": {
+    "words": "a poison parked on the rail"
+   },
+   "expect": {
+    "metric": "parked"
    }
   }
  ]

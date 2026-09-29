@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W21 the schedule row wears its cadence · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cure W40: the origins keep every standing intention · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: an intention's origin row carries its last attributed outcome · 2026-09-27
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: the four Python-only doors cross to the Rust kernel — the pure parts named (`ask_text` · `kind_name`) so the fixtures pin them · 2026-09-28
 """Markers (canon 0006): the kernel's open, governed vocabulary of WHY.
 A marker is a typed origin on a fact — {kind, id, parent, by}: a root
 fact mints it, a serving fact carries it, a new beginning under it mints
@@ -105,17 +106,26 @@ def kinds(conn) -> list[dict]:
              "declared_at": r[4].isoformat()} for r in cur.fetchall()]
 
 
-def declare(conn, kind: str, grp: str, description: str, by: str) -> dict:
-    """A new kind enters the vocabulary — declared, never invented."""
-    seed(conn)
+def kind_name(kind: str, grp: str) -> tuple[str, str]:
+    """The kind-name law (conformance `declare_kind`): a kind is a short lowercase name —
+    letters, digits, dashes — stripped and lowered; its group stripped and lowered,
+    `declared` when none is given. Refuses in words."""
     kind = kind.strip().lower()
     if not kind or not kind.replace("-", "").replace("_", "").isalnum():
         raise ValueError("a kind is a short lowercase name: letters, digits, dashes")
+    return kind, (grp.strip().lower() or "declared")
+
+
+def declare(conn, kind: str, grp: str, description: str, by: str) -> dict:
+    """A new kind enters the vocabulary — declared, never invented. (The answer carries
+    the group as it was SAID; the row holds it as the law spells it.)"""
+    seed(conn)
+    kind, stored = kind_name(kind, grp)
     with conn.transaction():
         conn.cursor().execute(
             "INSERT INTO spine_marker_kinds (kind, grp, description, declared_by, scope)"
             " VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING",
-            (kind, grp.strip().lower() or "declared", description, by, ev.scope()))
+            (kind, stored, description, by, ev.scope()))
     return {"kind": kind, "group": grp}
 
 

@@ -18,14 +18,7 @@ use tokio_postgres::Transaction;
 
 /// The Python spine's DDL for the outbox, word for word (the heartbeat's
 /// earlier, poorer table grows the missing columns).
-pub const DDL: &[&str] = &[
-    "CREATE TABLE IF NOT EXISTS spine_outbox ( outbox_id bigserial PRIMARY KEY, message_id text \
-     NOT NULL UNIQUE, body bytea NOT NULL, committed_at timestamptz NOT NULL DEFAULT now(), \
-     published_at timestamptz, publish_attempts int NOT NULL DEFAULT 0)",
-    "ALTER TABLE spine_outbox ADD COLUMN IF NOT EXISTS committed_at timestamptz NOT NULL DEFAULT \
-     now()",
-    "ALTER TABLE spine_outbox ADD COLUMN IF NOT EXISTS publish_attempts int NOT NULL DEFAULT 0",
-];
+pub use crate::schema::OUTBOX_DDL as DDL;
 
 pub async fn ensure_schema(g: &mut Ground) -> Result<(), RailError> {
     g.ensure("outbox", DDL).await.map(|_| ())

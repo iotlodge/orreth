@@ -283,3 +283,18 @@ the same files, unchanged — before any module earns the word "ported".
     and every "ago" already in the input, so the law is pure); the planner's ask under a red
     watch; every outcome's words (cured with its cause · self-healed · still-red · cancelled
     · no lever · unserved · pulled · handed to the human · the notice); and `ago_words`.
+  - `schema_version` · `schema_tables` (schema-v0, re-base sp1 — THE MIGRATOR's contract): both
+    kernels carry the same `SCHEMA_VERSION` and declare the same sorted set of tables (the
+    version table among them); a kernel that changes any DDL bumps the number in BOTH kernels.
+  - `inbox_parked_fact` · `inbox_advanced_fact` · `inbox_parked_words` · `body_hash` (inbox-v0,
+    re-base sp1 — POISON-PARKING): the fact a consumer mints when it parks a poison with its
+    evidence (`ref: parked:<id>` · the place on the rail · the evidence's sha256 · the reason,
+    the kernel's chain) and the fact a person's advance mints (their chain); the park in plain
+    words; the evidence's hash.
+  - `joined_fact` (bodies-v0, re-base sp1 — lock 4's last poll): `orreth.body.joined.v1` — a
+    body joined this world (a life), the body by name as the pointer, its self as correlation
+    and chain.
+  - `passages` · `metric_in` · `describe` · `impact_text` (mitl-v0, re-base sp1 — the four doors
+    cross): the canon split into passages the pack can carry whole; the metric a watch's words
+    name; the ground in lines; the impact ask's text. `declare_kind` (markers-v0): the kind-name
+    law — a short lowercase name, its group lowered (`declared` when none), the refusal's words.

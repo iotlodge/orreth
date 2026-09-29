@@ -1,0 +1,77 @@
+{
+ "contract": "orreth.markers/1",
+ "version": 0,
+ "generated_by": "orreth_spine.markers (the Python reference) - rearch row 4, re-base sp1: the mark and markers/kinds doors cross",
+ "generated_at": "2026-09-28T19:30:00Z",
+ "cases": [
+  {
+   "name": "declare_kind: 'Improvement' in 'Quality'",
+   "kind": "declare_kind",
+   "input": {
+    "kind": "Improvement",
+    "group": "Quality"
+   },
+   "expect": {
+    "kind": "improvement",
+    "group": "quality"
+   }
+  },
+  {
+   "name": "declare_kind: 'bug-report' in ''",
+   "kind": "declare_kind",
+   "input": {
+    "kind": "bug-report",
+    "group": ""
+   },
+   "expect": {
+    "kind": "bug-report",
+    "group": "declared"
+   }
+  },
+  {
+   "name": "declare_kind: 'a_kind_2' in '  DECLARED '",
+   "kind": "declare_kind",
+   "input": {
+    "kind": "a_kind_2",
+    "group": "  DECLARED "
+   },
+   "expect": {
+    "kind": "a_kind_2",
+    "group": "declared"
+   }
+  },
+  {
+   "name": "declare_kind: '' in 'x'",
+   "kind": "declare_kind",
+   "input": {
+    "kind": "",
+    "group": "x"
+   },
+   "expect": {
+    "error": "a kind is a short lowercase name: letters, digits, dashes"
+   }
+  },
+  {
+   "name": "declare_kind: 'not a kind' in 'x'",
+   "kind": "declare_kind",
+   "input": {
+    "kind": "not a kind",
+    "group": "x"
+   },
+   "expect": {
+    "error": "a kind is a short lowercase name: letters, digits, dashes"
+   }
+  },
+  {
+   "name": "declare_kind: 'mk!' in 'x'",
+   "kind": "declare_kind",
+   "input": {
+    "kind": "mk!",
+    "group": "x"
+   },
+   "expect": {
+    "error": "a kind is a short lowercase name: letters, digits, dashes"
+   }
+  }
+ ]
+}

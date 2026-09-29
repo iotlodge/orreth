@@ -6,6 +6,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the human profile's table (W58) · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the seat's tables (the gate) · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `spine_leases.noted_alive` — the sweep's note on the ground · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: THE MIGRATOR (lock 2) — `spine_schema`, the version, every table both kernels stand on · 2026-09-28
 //! The ask road's tables — the Python spine's DDL, word for word, under the
 //! same tags its `once` guard uses (`resident` · `markers` · `proof` · `intent`
 //! · `presence` · `digest`), so two spines on one ground never disagree about a
@@ -16,8 +17,28 @@
 //! health) are the Python's to create — the readers ask `to_regclass` first,
 //! as the reference does.
 
+#[cfg(feature = "rails")]
 use crate::ground::Ground;
+#[cfg(feature = "rails")]
 use crate::rail_error::RailError;
+use regex::Regex;
+use std::sync::LazyLock;
+
+/// THE MIGRATOR (lock 2, re-base sp1): the ground's schema wears a VERSION. Both kernels
+/// carry the same number and the same set of tables (fixture `schema-v0.json` pins both);
+/// whenever any DDL statement changes, the number is bumped in BOTH kernels in the same
+/// change. At birth the first kernel to take the DDL lock and find the ground below its
+/// number runs every statement and records the number; a kernel that finds the ground at
+/// (or past) its number runs no DDL at all — it VERIFIES that every table it declares
+/// stands, and refuses to light on a ground that lies. A kernel lighting beside a
+/// migrating one WAITS at the lock and then verifies (`Ground::ensure_all`).
+pub const SCHEMA_VERSION: i32 = 1;
+
+/// The version table itself — created before the version is read, under the same lock.
+pub const SCHEMA_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_schema ( version int PRIMARY KEY, kernel text NOT NULL, \
+     migrated_at timestamptz NOT NULL DEFAULT now())",
+];
 
 /// `resident.ensure_schema`: the joins, the asks, the sessions.
 pub const RESIDENT_DDL: &[&str] = &[
@@ -166,6 +187,8 @@ pub const HARNESS_DDL: &[&str] = &[
     "CREATE TABLE IF NOT EXISTS spine_harness_runs ( run_id text PRIMARY KEY, template text NOT \
      NULL, version text NOT NULL, passed int NOT NULL, failed int NOT NULL, details text NOT \
      NULL, scope text NOT NULL, ran_at timestamptz NOT NULL DEFAULT now())",
+    // P6.5 sp3 on the reference: the mind this run rode (the migrator's parity proof found it missing here)
+    "ALTER TABLE spine_harness_runs ADD COLUMN IF NOT EXISTS arm text",
 ];
 
 /// `services.ensure_schema` (P6.5 sp1): the shelf — one registry for tool · mcp · store · source · mind.
@@ -183,7 +206,7 @@ pub const SERVICES_DDL: &[&str] = &[
      NOT NULL, scope text NOT NULL, did text NOT NULL, ok boolean, detail text NOT NULL, at \
      timestamptz NOT NULL DEFAULT now())",
     "CREATE INDEX IF NOT EXISTS spine_services_kind ON spine_services (scope, kind)",
-    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = \
      'spine_services' AND column_name = 'root_marker') THEN ALTER TABLE spine_services ADD COLUMN root_marker text; END IF; \
      END $$",
 ];
@@ -206,28 +229,168 @@ pub const GATEWAY_DDL: &[&str] = &[
      DEFAULT now())",
     // P7 sp7: the meter wears its world — the per-world roll-up
     "ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS scope text",
-    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = \
      'spine_meter' AND column_name = 'service') THEN ALTER TABLE spine_meter ADD COLUMN service text; END IF; \
      END $$",
-    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = \
      'spine_meter' AND column_name = 'usd') THEN ALTER TABLE spine_meter ADD COLUMN usd double precision; END IF; \
      END $$",
-    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = \
      'spine_meter' AND column_name = 'stall') THEN ALTER TABLE spine_meter ADD COLUMN stall text; END IF; \
      END $$",
-    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = \
      'spine_meter' AND column_name = 'request_id') THEN ALTER TABLE spine_meter ADD COLUMN request_id text; END IF; \
      END $$",
-    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = \
      'spine_meter' AND column_name = 'ok') THEN ALTER TABLE spine_meter ADD COLUMN ok boolean NOT NULL DEFAULT true; END IF; \
      END $$",
-    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = \
      'spine_meter' AND column_name = 'note') THEN ALTER TABLE spine_meter ADD COLUMN note text; END IF; \
      END $$",
 ];
 
+/// `mitl.ensure_schema` (re-base sp1: the four Python-only doors cross): the soft toggle's
+/// record — summoned · dismissed, never a deletion.
+pub const MITL_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_mitl ( row_id bigserial PRIMARY KEY, session text, person \
+     text NOT NULL, state text NOT NULL, marker text, scope text NOT NULL, at timestamptz NOT \
+     NULL DEFAULT now())",
+];
+
+/// `placement.ensure_schema`: the refusals at birth (the Python body records its own; this
+/// kernel reads them — and now stands the table too, so one migrator serves both kernels).
+pub const PLACEMENT_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_refusals ( refusal_id bigserial PRIMARY KEY, did text NOT \
+     NULL, name text NOT NULL, kind text NOT NULL, template_hash text NOT NULL, placement text \
+     NOT NULL, ground text NOT NULL, reasons text NOT NULL, marker text, scope text NOT NULL, \
+     refused_at timestamptz NOT NULL DEFAULT now())",
+];
+
+/// `tools.ensure_schema`: the tool journal — every hop a body made through its tool door
+/// (the Python body's to write; the kernel's export reads it).
+pub const TOOLS_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_tool_calls ( call_id bigserial PRIMARY KEY, did text NOT \
+     NULL, tool text NOT NULL, args text NOT NULL, ok boolean NOT NULL, result text, at \
+     timestamptz NOT NULL DEFAULT now())",
+    "ALTER TABLE spine_tool_calls ADD COLUMN IF NOT EXISTS authority_chain text",
+    "ALTER TABLE spine_tool_calls ADD COLUMN IF NOT EXISTS ask text",
+    "ALTER TABLE spine_tool_calls ADD COLUMN IF NOT EXISTS service text",
+];
+
+// ---- the rails' three and the tables their own modules once held (re-base sp1: every DDL lives
+// here, PURE, so the migrator's contract — the version and the tables — is read without a rail) ----
+
+/// The table its home module (`outbox`) once held — re-exported there.
+pub const OUTBOX_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_outbox ( outbox_id bigserial PRIMARY KEY, message_id text \
+     NOT NULL UNIQUE, body bytea NOT NULL, committed_at timestamptz NOT NULL DEFAULT now(), \
+     published_at timestamptz, publish_attempts int NOT NULL DEFAULT 0)",
+    "ALTER TABLE spine_outbox ADD COLUMN IF NOT EXISTS committed_at timestamptz NOT NULL DEFAULT \
+     now()",
+    "ALTER TABLE spine_outbox ADD COLUMN IF NOT EXISTS publish_attempts int NOT NULL DEFAULT 0",
+];
+
+/// The table its home module (`inbox`) once held — re-exported there.
+pub const INBOX_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_inbox ( consumer text NOT NULL, message_id text NOT NULL, \
+     first_seen timestamptz NOT NULL DEFAULT now(), status text NOT NULL DEFAULT 'working', \
+     attempts int NOT NULL DEFAULT 1, PRIMARY KEY (consumer, message_id))",
+    "CREATE TABLE IF NOT EXISTS spine_aggregate_cursor ( consumer text NOT NULL, aggregate_id \
+     text NOT NULL, last_sequence bigint NOT NULL DEFAULT 0, PRIMARY KEY (consumer, \
+     aggregate_id))",
+    // re-base sp1: THE PARKED — a poison event's evidence (the Python projector's table, word
+    // for word) and the operator's word that let a consumer advance past it
+    "CREATE TABLE IF NOT EXISTS spine_parked ( parked_id bigserial PRIMARY KEY, consumer text NOT \
+     NULL, topic text, partition int, kafka_offset bigint, body bytea, reason text NOT NULL, \
+     parked_at timestamptz NOT NULL DEFAULT now())",
+    "ALTER TABLE spine_parked ADD COLUMN IF NOT EXISTS advanced_by text",
+    "ALTER TABLE spine_parked ADD COLUMN IF NOT EXISTS advanced_at timestamptz",
+];
+
+/// The table its home module (`heartbeat`) once held — re-exported there.
+pub const HEARTBEAT_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_heartbeat ( message_id text PRIMARY \
+                            KEY, body bytea NOT NULL, committed_at timestamptz NOT NULL DEFAULT \
+                            now())",
+];
+
+/// The table its home module (`store`) once held — re-exported there.
+pub const STORE_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_memories ( memory_id bigserial PRIMARY KEY, namespace text NOT \
+     NULL, key text NOT NULL, body text NOT NULL, hash text NOT NULL, by_did text NOT NULL, scope \
+     text, landed_at timestamptz NOT NULL DEFAULT now(), valid_from timestamptz NOT NULL DEFAULT \
+     now(), valid_to timestamptz, supersedes text, understanding text NOT NULL DEFAULT \
+     'tsvector:english', tsv tsvector GENERATED ALWAYS AS (to_tsvector('english', body)) STORED)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS spine_memories_id ON spine_memories (memory_id)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS spine_memories_current ON spine_memories (namespace, key, \
+     scope) WHERE valid_to IS NULL",
+    "CREATE INDEX IF NOT EXISTS spine_memories_tsv ON spine_memories USING GIN (tsv)",
+    // the column added only when missing: an ALTER takes an AccessExclusive lock even when it
+    // has nothing to add, and a kernel booting beside another's inserts deadlocked on it
+    // (found by the memory proof, 2026-09-24)
+    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = \
+     'spine_memories' AND column_name = 'state') THEN ALTER TABLE spine_memories ADD COLUMN state \
+     text NOT NULL DEFAULT 'in'; END IF; END $$",
+    "CREATE INDEX IF NOT EXISTS spine_memories_landed ON spine_memories (namespace, scope, landed_at)",
+];
+
+/// The table its home module (`cells_live`) once held — re-exported there.
+pub const CELLS_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_world ( scope text PRIMARY KEY, cell text NOT NULL, epoch int NOT \
+     NULL DEFAULT 1, kernel text NOT NULL, door text, opened_at timestamptz NOT NULL DEFAULT now(), \
+     rehomed_at timestamptz, rehomed_by text)",
+    "CREATE TABLE IF NOT EXISTS spine_peers ( cell text NOT NULL, scope text NOT NULL, door text NOT \
+     NULL, did text, world text, epoch int, pinned_at timestamptz, last_seen timestamptz, cursor bigint \
+     NOT NULL DEFAULT 0, unreachable_since timestamptz, PRIMARY KEY (cell, scope))",
+    "CREATE TABLE IF NOT EXISTS spine_seam_nonces ( nonce text PRIMARY KEY, scope text NOT NULL, \
+     seen_at timestamptz NOT NULL DEFAULT now())",
+];
+
+/// The table its home module (`seam`) once held — re-exported there.
+pub const SEAM_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_seam_out ( out_id bigserial PRIMARY KEY, cell text NOT NULL, scope \
+     text NOT NULL, kind text NOT NULL, body text NOT NULL, ref text, attempts int NOT NULL DEFAULT 0, \
+     next_at timestamptz NOT NULL DEFAULT now(), sent_at timestamptz, last_error text, added_at \
+     timestamptz NOT NULL DEFAULT now())",
+    "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS home_cell text",
+    "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS remote_id text",
+    "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS seam_side text",
+    "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS seam_sent boolean NOT NULL DEFAULT false",
+    "ALTER TABLE spine_peers ADD COLUMN IF NOT EXISTS picture text",
+];
+
+/// The table its home module (`profile_live`) once held — re-exported there.
+pub const PROFILE_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_profile ( claim_id bigserial PRIMARY KEY, scope text NOT NULL, \
+     person text NOT NULL, field text NOT NULL, value text NOT NULL, asserted_by text NOT NULL, state \
+     text NOT NULL, quoted text, evidence text, lat double precision, lon double precision, zone text, \
+     by_did text NOT NULL, marker text, ask text, at timestamptz NOT NULL DEFAULT now(), withdrawn_at \
+     timestamptz, withdrawn_by text, withdrawn_marker text)",
+    "CREATE INDEX IF NOT EXISTS spine_profile_person ON spine_profile (scope, person, at DESC)",
+    "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS carried_profile text",
+];
+
+/// The table its home module (`seat_live`) once held — re-exported there.
+pub const SEAT_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_owner ( scope text PRIMARY KEY, person text NOT NULL, \
+     declared_at timestamptz NOT NULL DEFAULT now())",
+    "CREATE TABLE IF NOT EXISTS spine_seats ( seat_id text PRIMARY KEY, person text NOT NULL, scope \
+     text NOT NULL, role text NOT NULL, expiry timestamptz NOT NULL, taken_at timestamptz NOT NULL \
+     DEFAULT now(), left_at timestamptz, left_by text)",
+];
+
+/// The table its home module (`desk_live`) once held — re-exported there.
+pub const DESK_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_desk ( join_id text PRIMARY KEY, scope text NOT NULL, did text NOT NULL, \
+     name text NOT NULL, kind text NOT NULL, public_key text NOT NULL, template_hash text NOT NULL DEFAULT '', \
+     policy_hash text NOT NULL DEFAULT '', status text NOT NULL, nonce text NOT NULL, nonce_at timestamptz NOT \
+     NULL DEFAULT now(), ticket text, ask_id text, admitted_by text, lease_id text, lease text, expiry \
+     timestamptz, asked_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now())",
+    "CREATE INDEX IF NOT EXISTS spine_desk_did ON spine_desk (scope, did)",
+];
+
 /// The tags and their DDL, in the order the road ensures them.
-pub const ROAD: [(&str, &[&str]); 18] = [
+pub const ROAD: [(&str, &[&str]); 21] = [
     ("resident", RESIDENT_DDL),
     ("markers", MARKERS_DDL),
     ("proof", PROOF_DDL),
@@ -237,18 +400,24 @@ pub const ROAD: [(&str, &[&str]); 18] = [
     ("monitor", MONITOR_DDL),
     ("scheduler", SCHEDULER_DDL),
     ("harness", HARNESS_DDL),
-    ("store", crate::store::STORE_DDL), // P7 sp5: the Record (spine_memories)
+    ("store", STORE_DDL),       // P7 sp5: the Record (spine_memories)
     ("services", SERVICES_DDL), // P7 sp6: the shelf, the Stable, the meter — the registry seam
     ("stable", STABLE_DDL),
     ("gateway", GATEWAY_DDL),
-    ("cells", crate::cells_live::CELLS_DDL), // P7 sp7: the world, its peers, the seam's nonces
-    ("seam", crate::seam::SEAM_DDL), // P7 sp7: the seam's outbound queue, the routed ask's columns
-    ("profile", crate::profile_live::PROFILE_DDL), // P7 sp8: the human's own profile, the carried slice on the ask
-    ("seat", crate::seat_live::SEAT_DDL), // P7 sp8 row 3: the owner and the seats (the gate)
-    ("desk", crate::desk_live::DESK_DDL), // P7 sp8 row 3b: the machine join desk
+    ("cells", CELLS_DDL),     // P7 sp7: the world, its peers, the seam's nonces
+    ("seam", SEAM_DDL),       // P7 sp7: the seam's outbound queue, the routed ask's columns
+    ("profile", PROFILE_DDL), // P7 sp8: the human's own profile, the carried slice on the ask
+    ("seat", SEAT_DDL),       // P7 sp8 row 3: the owner and the seats (the gate)
+    ("desk", DESK_DDL),       // P7 sp8 row 3b: the machine join desk
+    // re-base sp1: the tables the Python reference stood alone until the migrator — one
+    // migrator, one set of tables, either kernel the writer
+    ("mitl", MITL_DDL),
+    ("placement", PLACEMENT_DDL),
+    ("tools", TOOLS_DDL),
 ];
 
 /// Every table the ask road stands on, once per ground per process.
+#[cfg(feature = "rails")]
 pub async fn ensure_road(g: &mut Ground) -> Result<(), RailError> {
     for (tag, ddl) in ROAD {
         g.ensure(tag, ddl).await?;
@@ -256,7 +425,44 @@ pub async fn ensure_road(g: &mut Ground) -> Result<(), RailError> {
     Ok(())
 }
 
+/// EVERY tag and its DDL this kernel stands on, in birth order — the rails' three, then
+/// the road. The migrator runs them all inside one locked transaction; the version row
+/// is the memo on the ground.
+pub fn every_ddl() -> Vec<(&'static str, &'static [&'static str])> {
+    let mut out: Vec<(&'static str, &'static [&'static str])> = vec![
+        ("outbox", OUTBOX_DDL),
+        ("inbox", INBOX_DDL),
+        ("heartbeat", HEARTBEAT_DDL),
+    ];
+    out.extend(ROAD);
+    out
+}
+
+static CREATE_TABLE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"CREATE TABLE IF NOT EXISTS (\w+)").unwrap());
+
+/// The table names a DDL list declares (the `CREATE TABLE IF NOT EXISTS` words).
+pub fn tables_of(ddl: &[&str]) -> Vec<String> {
+    ddl.iter()
+        .filter_map(|stmt| CREATE_TABLE_RE.captures(stmt))
+        .map(|c| c[1].to_string())
+        .collect()
+}
+
+/// Every table this kernel's schema declares, sorted and unique — the version table
+/// among them (fixture `schema_tables`; the verify step of the migrator).
+pub fn tables() -> Vec<String> {
+    let mut out = tables_of(SCHEMA_DDL);
+    for (_, ddl) in every_ddl() {
+        out.extend(tables_of(ddl));
+    }
+    out.sort();
+    out.dedup();
+    out
+}
+
 /// Does a table the Python spine owns stand on this ground?
+#[cfg(feature = "rails")]
 pub async fn has_table(g: &Ground, table: &str) -> Result<bool, RailError> {
     let row = g
         .client()

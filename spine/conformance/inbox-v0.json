@@ -1,0 +1,144 @@
+{
+ "contract": "orreth.inbox/1",
+ "version": 0,
+ "generated_by": "orreth_spine.projector + orreth_spine.envelope (the Python reference) - rearch row 4, re-base sp1: POISON-PARKING",
+ "generated_at": "2026-09-28T19:00:00Z",
+ "cases": [
+  {
+   "name": "inbox_parked_fact: a body that is not an envelope - the place on the rail, the evidence's hash, the reason, the kernel's chain, the parked pointer as correlation",
+   "kind": "inbox_parked_fact",
+   "input": {
+    "scope": "u:dev",
+    "parked_id": 7,
+    "consumer": "glass-dispatcher",
+    "topic": "dev.00.orreth.ask.received.v1",
+    "partition": 0,
+    "offset": 41,
+    "body": "this is not an envelope",
+    "reason": "undecodable body: EnvelopeError: not JSON",
+    "message_id": "msg_0000000000000000000000d1",
+    "occurred_at": "2026-09-28T19:00:05.000Z"
+   },
+   "expect": {
+    "payload": {
+     "ref": "parked:7",
+     "hash": "sha256:d239e01d34608ec9dca6cbabdbb50066c5eb4741674b589169920fb4a72f3de1",
+     "consumer": "glass-dispatcher",
+     "topic": "dev.00.orreth.ask.received.v1",
+     "partition": 0,
+     "offset": 41,
+     "reason": "undecodable body: EnvelopeError: not JSON"
+    },
+    "type": "orreth.inbox.parked.v1",
+    "chain": [
+     "the kernel"
+    ],
+    "correlation_id": "parked:7",
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"parked:7\",\"message_id\":\"msg_0000000000000000000000d1\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-28T19:00:05.000Z\",\"payload\":{\"consumer\":\"glass-dispatcher\",\"hash\":\"sha256:d239e01d34608ec9dca6cbabdbb50066c5eb4741674b589169920fb4a72f3de1\",\"offset\":41,\"partition\":0,\"reason\":\"undecodable body: EnvelopeError: not JSON\",\"ref\":\"parked:7\",\"topic\":\"dev.00.orreth.ask.received.v1\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.inbox.parked.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "inbox_parked_fact: a fact that can never apply (a gap) - the same shape, the reason in the inbox's words",
+   "kind": "inbox_parked_fact",
+   "input": {
+    "scope": "u:dev",
+    "parked_id": 8,
+    "consumer": "glass-dispatcher",
+    "topic": "dev.00.orreth.ask.received.v1",
+    "partition": 0,
+    "offset": 42,
+    "body": "{\"specversion\":\"1.0\",\"message_id\":\"msg_x\"}",
+    "reason": "could not apply: a gap in agg-1's sequence: expected 2, got 5",
+    "message_id": "msg_0000000000000000000000d2",
+    "occurred_at": "2026-09-28T19:00:05.000Z"
+   },
+   "expect": {
+    "payload": {
+     "ref": "parked:8",
+     "hash": "sha256:dc4cda6f21ebeccc6129387279a8a49e61c9b5e8d7cb9ccdf00bdd7dd68f2dd6",
+     "consumer": "glass-dispatcher",
+     "topic": "dev.00.orreth.ask.received.v1",
+     "partition": 0,
+     "offset": 42,
+     "reason": "could not apply: a gap in agg-1's sequence: expected 2, got 5"
+    },
+    "type": "orreth.inbox.parked.v1",
+    "chain": [
+     "the kernel"
+    ],
+    "correlation_id": "parked:8",
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"parked:8\",\"message_id\":\"msg_0000000000000000000000d2\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-28T19:00:05.000Z\",\"payload\":{\"consumer\":\"glass-dispatcher\",\"hash\":\"sha256:dc4cda6f21ebeccc6129387279a8a49e61c9b5e8d7cb9ccdf00bdd7dd68f2dd6\",\"offset\":42,\"partition\":0,\"reason\":\"could not apply: a gap in agg-1's sequence: expected 2, got 5\",\"ref\":\"parked:8\",\"topic\":\"dev.00.orreth.ask.received.v1\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.inbox.parked.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "inbox_advanced_fact: a person's explicit decision - the same place, who decided, their chain, the parked pointer as correlation",
+   "kind": "inbox_advanced_fact",
+   "input": {
+    "scope": "u:dev",
+    "parked_id": 7,
+    "consumer": "glass-dispatcher",
+    "topic": "dev.00.orreth.ask.received.v1",
+    "partition": 0,
+    "offset": 41,
+    "by": "did:orreth:person:jb",
+    "message_id": "msg_0000000000000000000000d3",
+    "occurred_at": "2026-09-28T19:02:00.000Z"
+   },
+   "expect": {
+    "payload": {
+     "ref": "parked:7",
+     "hash": "sha256:b708a4748124c663d549152b31419e34a379ca850acb61f98785cb26cb44606a",
+     "consumer": "glass-dispatcher",
+     "topic": "dev.00.orreth.ask.received.v1",
+     "partition": 0,
+     "offset": 41,
+     "by": "did:orreth:person:jb"
+    },
+    "type": "orreth.inbox.advanced.v1",
+    "chain": [
+     "did:orreth:person:jb"
+    ],
+    "correlation_id": "parked:7",
+    "bytes": "{\"authority_chain\":[\"did:orreth:person:jb\"],\"correlation_id\":\"parked:7\",\"message_id\":\"msg_0000000000000000000000d3\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-28T19:02:00.000Z\",\"payload\":{\"by\":\"did:orreth:person:jb\",\"consumer\":\"glass-dispatcher\",\"hash\":\"sha256:b708a4748124c663d549152b31419e34a379ca850acb61f98785cb26cb44606a\",\"offset\":41,\"partition\":0,\"ref\":\"parked:7\",\"topic\":\"dev.00.orreth.ask.received.v1\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.inbox.advanced.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "inbox_parked_words: glass-dispatcher at dev.00.orreth.ask.received.v1/0@41",
+   "kind": "inbox_parked_words",
+   "input": {
+    "consumer": "glass-dispatcher",
+    "topic": "dev.00.orreth.ask.received.v1",
+    "partition": 0,
+    "offset": 41,
+    "reason": "undecodable body: EnvelopeError: not JSON"
+   },
+   "expect": {
+    "words": "glass-dispatcher parked the event at dev.00.orreth.ask.received.v1/0@41 \u2014 undecodable body: EnvelopeError: not JSON \u2014 and holds there until a person advances it"
+   }
+  },
+  {
+   "name": "inbox_parked_words: projector-a at dev.00.orreth.reply.v1/2@9",
+   "kind": "inbox_parked_words",
+   "input": {
+    "consumer": "projector-a",
+    "topic": "dev.00.orreth.reply.v1",
+    "partition": 2,
+    "offset": 9,
+    "reason": "could not apply: a gap"
+   },
+   "expect": {
+    "words": "projector-a parked the event at dev.00.orreth.reply.v1/2@9 \u2014 could not apply: a gap \u2014 and holds there until a person advances it"
+   }
+  },
+  {
+   "name": "body_hash: sha256 over the bytes as delivered",
+   "kind": "body_hash",
+   "input": {
+    "body": "this is not an envelope"
+   },
+   "expect": {
+    "hash": "sha256:d239e01d34608ec9dca6cbabdbb50066c5eb4741674b589169920fb4a72f3de1"
+   }
+  }
+ ]
+}

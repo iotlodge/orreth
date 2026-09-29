@@ -8,6 +8,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the harness command served on the bench · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the human profile in the seat words and the clock (W58) · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W65: the governed-acts law in every body's seat — a body never performs nor claims the kernel's acts · 2026-09-27
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: lock 4's last poll — a body's JOIN is a fact (orreth.body.joined.v1), so the roster follows the feed · 2026-09-28
 """The resident body v0 (canon 0004): one governed body for every mind.
 
 Born from a versioned TEMPLATE artifact; the SAME identity in every life
@@ -362,6 +363,8 @@ class Resident:
         if not ok:
             _placement.refuse(conn, self, self.placement, ground, reasons)
             raise PlacementRefused(self.name, reasons)
+        from . import body as _body
+        outbox.ensure_schema(conn)
         with conn.transaction():
             cur = conn.cursor()
             cur.execute("SELECT count(*) FROM spine_joins WHERE did = %s",
@@ -383,6 +386,10 @@ class Resident:
                  json.dumps(self.template.get("interests", [])),      # + interests
                  ev.canonical(self.placement).decode("ascii"),        # + where I stand
                  self.nature or None))                                # + what I am (W7)
+            # re-base sp1: the join is a FACT in the same transaction (orreth.body.joined.v1) —
+            # the roster follows the feed, never a timer (lock 4's last poll)
+            e = _body.joined_fact(self.name, self.identity.did, self.kind, life, self.nature)
+            outbox.add_row(cur, ev.encode(e), e["message_id"])
         from . import scheduler                  # the role schedules the
         for sch in self.template.get("schedules", []):   # template declares are
             scheduler.declared(conn, self.name, "role", sch["text"],   # registered

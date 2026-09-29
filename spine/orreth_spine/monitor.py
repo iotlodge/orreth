@@ -4,6 +4,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W22 an offer is a proposal · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the farm's metrics: the Monitoring grows with the Stable · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the Operating State names the cell and epoch · 2026-09-25
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the park once by its place, its fact, the HOLD until a person advances it, the advance · 2026-09-28
 """The Monitoring workspace's ground (canon 0001: "if it's monitoring, it
 goes here"): the live snapshot of the Operating State — rails, benches,
 bodies, asks, the last harness run — and the WATCHES: named checks the
@@ -38,7 +39,9 @@ METRICS = ("outbox_pending", "oldest_outbox_age_s", "asks_received",
            "bodies_drained",
            # row 4, panel sp3: the performance law, watched — the slowest door's p95 (the pool's strain,
            # pool_busy · pool_waiting, is the Rust kernel's: the reference opens a connection per knock)
-           "door_p95_ms")
+           "door_p95_ms",
+           # re-base sp1: poison events the dispatcher holds at — a person's decision is owed
+           "parked")
 OPS = {"<=": lambda v, t: v <= t, ">=": lambda v, t: v >= t,
        "<": lambda v, t: v < t, ">": lambda v, t: v > t, "==": lambda v, t: v == t}
 
@@ -217,6 +220,9 @@ def snapshot(conn, *, rails: bool = True) -> dict:
     values.update(_farm(conn))
     doors_read = doors.read()                     # panel sp3: the doors this process served, the slowest first
     values["door_p95_ms"] = doors.slowest_p95(doors_read)
+    from . import projector                       # re-base sp1: the poison events the dispatcher holds at (the
+    parked = projector.parked(conn, "glass-dispatcher", 20) if _has_table(conn, "spine_parked") else []
+    values["parked"] = len(parked)                # ground's count — the same on both kernels), watchable
     stable_view = _stable(conn)
     cur.execute("SELECT watch_id, name, metric, op, threshold, added_by, last_ok, since"
                 " FROM spine_watches WHERE scope = %s ORDER BY added_at", (ev.scope(),))
@@ -250,6 +256,7 @@ def snapshot(conn, *, rails: bool = True) -> dict:
         "stable": stable_view,                        # P6.5 sp3: the farm's face in the Monitoring
         "doors": doors_read,                          # panel sp3: per-door p50 · p95 · max over the window
         "pool": None,                                 # panel sp3: the reference has no pool — a connection per knock, said plainly
+        "parked": parked,                             # re-base sp1: the poison events held at, newest first
     }
 
 

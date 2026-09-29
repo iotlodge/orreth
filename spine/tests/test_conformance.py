@@ -17,6 +17,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, the rail's arms: lever_manifest · lever_remedies · lever_words · read_lever · dossier_words · remedy_words · outcome_words · ago_words · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3 (b), the desk's arms: desk_transition · desk_challenge · desk_collect · desk_join_id · desk_prove · desk_collect_ok · desk_fuel · desk_lease · desk_words · desk_name · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3, the doors' arms: door_name · door_fold · door_slowest · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: schema_version · schema_tables (the migrator's contract) · 2026-09-28
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -27,9 +28,9 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import (body as _body, cells, desk, dispatch, doors, envelope as ev, export, ground, harness, intent, levers, mcp,
-                          mitl, monitor, placement, presence, profile, proof, rails, resident, scheduler, seat, services, stable,
-                          store, digest, tools)
+from orreth_spine import (body as _body, cells, desk, dispatch, doors, envelope as ev, export, ground, harness, intent, levers,
+                          markers, mcp, mitl, monitor, placement, presence, profile, projector, proof, rails, resident, scheduler,
+                          seat, services, stable, store, digest, tools)
 from orreth_spine.identity import Identity
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
@@ -117,6 +118,33 @@ def test_fixture(contract, case):
     elif kind == "echo_reply":                   # W24: the echoed words alone; one plain line for a question
         assert resident.echo_reply(inp["name"], inp["text"]) == exp["reply"]
     # ---- orreth.doors/1 (row 4, panel sp3): a door's name and the fold of its latency ----
+    elif kind == "joined_fact":                  # re-base sp1: orreth.body.joined.v1 — a body joined (a life), the roster's fact
+        e = _body.joined_fact(inp["name"], inp["did"], inp["kind"], inp["life"], inp["nature"], scope=inp["scope"])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert (e["payload"], e["type"], e["authority_chain"], e["correlation_id"]) == \
+            (exp["payload"], exp["type"], exp["chain"], exp["correlation_id"])
+        assert ev.encode(e).decode("ascii") == exp["bytes"]
+    # ---- orreth.inbox/1 (re-base sp1): POISON-PARKING — the parked and the advanced facts, the words ----
+    elif kind in ("inbox_parked_fact", "inbox_advanced_fact"):
+        if kind == "inbox_parked_fact":
+            e = projector.parked_fact(inp["parked_id"], inp["consumer"], inp["topic"], inp["partition"], inp["offset"],
+                                      inp["body"].encode(), inp["reason"], scope=inp["scope"])
+        else:
+            e = projector.advanced_fact(inp["parked_id"], inp["consumer"], inp["topic"], inp["partition"], inp["offset"],
+                                        inp["by"], scope=inp["scope"])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert (e["payload"], e["type"], e["authority_chain"], e["correlation_id"]) == \
+            (exp["payload"], exp["type"], exp["chain"], exp["correlation_id"])
+        assert ev.encode(e).decode("ascii") == exp["bytes"]
+    elif kind == "inbox_parked_words":
+        assert projector.parked_words(inp["consumer"], inp["topic"], inp["partition"], inp["offset"], inp["reason"]) == exp["words"]
+    elif kind == "body_hash":
+        assert projector.body_hash(inp["body"].encode()) == exp["hash"]
+    # ---- orreth.schema/1 (re-base sp1, lock 2): THE MIGRATOR's contract — the version and the tables ----
+    elif kind == "schema_version":
+        assert ground.SCHEMA_VERSION == exp["version"]
+    elif kind == "schema_tables":
+        assert sorted(ground.TABLES) == exp["tables"] and len(ground.TABLES) == exp["count"]
     elif kind == "door_name":
         assert doors.door_name(inp["method"], inp["path"]) == exp["door"]
     elif kind == "door_fold":
@@ -135,6 +163,22 @@ def test_fixture(contract, case):
         assert dispatch.address(inp["text"], inp["names"]) == exp["name"]
     elif kind == "offer":                        # walk #7: the monitor's offer, read from its words
         assert monitor.offer_in(inp["reply"]) == exp["offer"]
+    # ---- orreth.impact/1 (re-base sp1): the four doors cross — the ontology's passages, the metric in words,
+    # the ground's lines, the impact ask's text; orreth.markers/1: the kind-name law ----
+    elif kind == "passages":
+        assert mitl.passages(inp["text"], inp["limit"]) == exp["passages"]
+    elif kind == "metric_in":
+        assert mitl._metric_in(inp["words"]) == exp["metric"]
+    elif kind == "describe":
+        assert mitl.describe(inp["touches"]) == exp["lines"]
+    elif kind == "impact_text":
+        assert mitl.ask_text(inp["touches"], inp["verdict"], inp["ground"]) == exp["text"]
+    elif kind == "declare_kind":
+        try:
+            k, g = markers.kind_name(inp["kind"], inp["group"])
+            assert exp == {"kind": k, "group": g}
+        except ValueError as e:
+            assert exp == {"error": str(e)}
     elif kind == "citation_name":                # W15: a citation in a human's name
         assert mitl.citation_name(inp["path"], inp["heading"], inp["rule"]) == exp["name"]
     elif kind == "absent_words":

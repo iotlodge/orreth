@@ -26,15 +26,7 @@ use std::time::{Duration, SystemTime};
 use tokio_postgres::Transaction;
 
 /// `profile.ensure_schema`, word for word (the seam's column rides on `spine_asks`).
-pub const PROFILE_DDL: &[&str] = &[
-    "CREATE TABLE IF NOT EXISTS spine_profile ( claim_id bigserial PRIMARY KEY, scope text NOT NULL, \
-     person text NOT NULL, field text NOT NULL, value text NOT NULL, asserted_by text NOT NULL, state \
-     text NOT NULL, quoted text, evidence text, lat double precision, lon double precision, zone text, \
-     by_did text NOT NULL, marker text, ask text, at timestamptz NOT NULL DEFAULT now(), withdrawn_at \
-     timestamptz, withdrawn_by text, withdrawn_marker text)",
-    "CREATE INDEX IF NOT EXISTS spine_profile_person ON spine_profile (scope, person, at DESC)",
-    "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS carried_profile text",
-];
+pub use crate::schema::PROFILE_DDL;
 
 const GEOCODE_TIMEOUT: Duration = Duration::from_secs(6);
 

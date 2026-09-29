@@ -257,6 +257,29 @@ pub async fn kinds(g: &Ground, scope: &str) -> Result<Vec<Value>, RoadError> {
         .collect())
 }
 
+/// `markers.declare`: a new kind enters the vocabulary — declared, never invented. The
+/// answer carries the group as it was SAID; the row holds it as the law spells it
+/// (`markers::kind_name`). Refuses in words (a 400 at the door).
+pub async fn declare(
+    g: &Ground,
+    scope: &str,
+    kind: &str,
+    grp: &str,
+    description: &str,
+    by: &str,
+) -> Result<Value, RoadError> {
+    seed(g, scope).await?;
+    let (k, stored) = crate::markers::kind_name(kind, grp).map_err(refused)?;
+    g.client()
+        .execute(
+            "INSERT INTO spine_marker_kinds (kind, grp, description, declared_by, scope) VALUES ($1, $2, \
+             $3, $4, $5) ON CONFLICT DO NOTHING",
+            &[&k, &stored, &description, &by, &scope],
+        )
+        .await?;
+    Ok(json!({"kind": k, "group": grp}))
+}
+
 /// Declared before use — the teaching names the registry (`UnknownKind`).
 pub async fn check_kind(g: &Ground, scope: &str, kind: &str) -> Result<(), RoadError> {
     seed(g, scope).await?;

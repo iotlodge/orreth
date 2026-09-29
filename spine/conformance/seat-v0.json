@@ -1459,6 +1459,28 @@
    "expect": {
     "did": "did:orreth:agent:65b60673d6ed884bf01c2c222d82ada0"
    }
+  },
+  {
+   "name": "door_needs: GET /parked (re-base sp1)",
+   "kind": "door_needs",
+   "input": {
+    "method": "GET",
+    "path": "/parked"
+   },
+   "expect": {
+    "needs": "retrieve"
+   }
+  },
+  {
+   "name": "door_needs: POST /parked/advance (re-base sp1)",
+   "kind": "door_needs",
+   "input": {
+    "method": "POST",
+    "path": "/parked/advance"
+   },
+   "expect": {
+    "needs": "govern"
+   }
   }
  ]
 }

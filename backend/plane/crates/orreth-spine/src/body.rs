@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: lock 4's last poll — a body's JOIN is a fact (orreth.body.joined.v1), so the roster follows the feed · 2026-09-28
 //! `orreth.bodies/1` — the pure laws of `orreth_spine.body` and the rail half
 //! of `orreth_spine.harness` (P7 sp6, THE BODIES' SEAM), measured by
 //! `spine/conformance/bodies-v0.json`: the wait before the n-th restart of a
@@ -22,6 +23,18 @@ fn cut(s: &str, n: usize) -> String {
 
 /// The kernel stopped restarting a body — a fact, with its evidence.
 pub const PARKED: &str = "orreth.body.parked.v1";
+/// re-base sp1: a body joined this world (a life) — the roster's own fact (the Python body
+/// mints it in its join's transaction; both kernels' feeds carry it).
+pub const JOINED: &str = "orreth.body.joined.v1";
+/// Placement refused a body at birth (the Python body records it; named here for the feed).
+pub const REFUSED: &str = "orreth.body.refused.v1";
+
+/// `body.joined_payload`: the body by NAME (the feed's pointer — the roster's row), its self,
+/// its kind, which life this is, what it is (conformance `joined_fact`).
+pub fn joined_payload(name: &str, did: &str, kind: &str, life: i64, nature: Option<&str>) -> Value {
+    json!({"ref": name, "hash": content_hash(&Value::String(did.into())), "did": did, "kind": kind,
+           "life": life, "nature": nature.unwrap_or("")})
+}
 /// The kernel asks a body to run its golden cases through its own graph.
 pub const HARNESS_CMD: &str = "orreth.resident.harness.v1";
 pub const KERNEL: &str = "the kernel";

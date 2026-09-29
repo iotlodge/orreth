@@ -4,6 +4,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: name_of shared with the seam · the world.rehome act settles here · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W64: the asker's right code files a second confirm-needed notice (step master) through the outbox — the master's road to the ask · W69: the word at the interlock is the asker's own or a governing seat's (desk_live::governs) · 2026-09-27
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `FEED_TOPICS` widened from nine to thirty-one · the ask view names the DUTY that filed it (`duty`) so the scheduler's track can light · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
 //! The ask road on the ground — mirrors `orreth_spine.dispatch` (the write
 //! half) and the ask views of `orreth_spine.glass`: ONE write path. A human's
 //! ask lands on `spine_asks` WITH its marker and its `ask.received` fact in
@@ -46,7 +47,7 @@ pub use crate::watch::WATCH_TURNED;
 /// (a body parked, a tool hop, a lease crossing the line, a lever pulled, a seat taken, a
 /// body at the join desk, an intention's life, the shelf's and the Stable's changes, a
 /// memory landed, the kernel's own heartbeat) now reaches THE PANEL as a pointer.
-pub const FEED_TOPICS: [&str; 33] = [
+pub const FEED_TOPICS: [&str; 37] = [
     ASK_RECEIVED,
     crate::memory::SESSION_OPENED, // W51: a roll is a fact every door's sessions list follows
     JOURNEY,
@@ -81,6 +82,12 @@ pub const FEED_TOPICS: [&str; 33] = [
     crate::desk::JOIN_PROVED,
     crate::desk::JOIN_ADMITTED,
     crate::desk::JOIN_DENIED,
+    // ---- re-base sp1: the poison parked, and the person's advance ----
+    crate::ask::INBOX_PARKED,
+    crate::ask::INBOX_ADVANCED,
+    // ---- re-base sp1: the roster's facts — a body joined (a life) · refused at birth ----
+    crate::body::JOINED,
+    crate::body::REFUSED,
 ];
 
 // ---- the fact, minted now ------------------------------------------------------------

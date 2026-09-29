@@ -24,13 +24,7 @@ use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// `seat.ensure_schema`: the owner, the seats.
-pub const SEAT_DDL: &[&str] = &[
-    "CREATE TABLE IF NOT EXISTS spine_owner ( scope text PRIMARY KEY, person text NOT NULL, \
-     declared_at timestamptz NOT NULL DEFAULT now())",
-    "CREATE TABLE IF NOT EXISTS spine_seats ( seat_id text PRIMARY KEY, person text NOT NULL, scope \
-     text NOT NULL, role text NOT NULL, expiry timestamptz NOT NULL, taken_at timestamptz NOT NULL \
-     DEFAULT now(), left_at timestamptz, left_by text)",
-];
+pub use crate::schema::SEAT_DDL;
 
 /// `SPINE_SEAT_HOURS` (24).
 pub fn hours() -> f64 {

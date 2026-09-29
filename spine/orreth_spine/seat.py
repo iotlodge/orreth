@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (a): the human seat · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the park once by its place, its fact, the HOLD until a person advances it, the advance · 2026-09-28
 """THE HUMAN SEAT (canon 0005 sp8 row 3 · 0006 §3 · covenant rules 3 and 4).
 
 Until this row every door read the person from the request body and
@@ -259,6 +260,7 @@ OPEN_GET = ("/", "/index.html", "/health", "/guide", "/harness", "/seat")
 OPEN_POST = ("/seat", "/enroll/confirm", "/seam", "/join", "/join/prove", "/join/lease")   # P7 sp8 row 3b: the desk's doors answer proof, not seats
 LEASE_POST = ("/delta",)                              # P7 sp8 row 3b: a body's own words wear its LEASE (a seat with the role `body`)
 GOVERN_POST = ("/world/rehome", "/bodies/restart",
+               "/parked/advance",                     # re-base sp1: advancing past a poison is an operator's explicit decision
                "/services", "/services/version", "/services/retire", "/services/restore", "/services/mcp",
                "/minds", "/minds/assign", "/minds/unassign", "/minds/refill", "/minds/retire", "/minds/restore")
 

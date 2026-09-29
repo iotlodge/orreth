@@ -790,6 +790,66 @@
      "the kernel"
     ]
    }
+  },
+  {
+   "name": "joined_fact: echo life 1 - orreth.body.joined.v1, the body by name as the pointer, its self as correlation and chain (re-base sp1)",
+   "kind": "joined_fact",
+   "input": {
+    "scope": "u:dev",
+    "name": "echo",
+    "did": "did:orreth:agent:echo0000",
+    "kind": "resident",
+    "life": 1,
+    "nature": null,
+    "message_id": "msg_0000000000000000000000e1",
+    "occurred_at": "2026-09-28T19:10:00.000Z"
+   },
+   "expect": {
+    "payload": {
+     "ref": "echo",
+     "hash": "sha256:9b929e1147cccb44213941e11c38b8e0d47a10651ae9015dd552de4e40a65cf9",
+     "did": "did:orreth:agent:echo0000",
+     "kind": "resident",
+     "life": 1,
+     "nature": ""
+    },
+    "type": "orreth.body.joined.v1",
+    "chain": [
+     "did:orreth:agent:echo0000"
+    ],
+    "correlation_id": "did:orreth:agent:echo0000",
+    "bytes": "{\"authority_chain\":[\"did:orreth:agent:echo0000\"],\"correlation_id\":\"did:orreth:agent:echo0000\",\"message_id\":\"msg_0000000000000000000000e1\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-28T19:10:00.000Z\",\"payload\":{\"did\":\"did:orreth:agent:echo0000\",\"hash\":\"sha256:9b929e1147cccb44213941e11c38b8e0d47a10651ae9015dd552de4e40a65cf9\",\"kind\":\"resident\",\"life\":1,\"nature\":\"\",\"ref\":\"echo\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.body.joined.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "joined_fact: planner life 4 - orreth.body.joined.v1, the body by name as the pointer, its self as correlation and chain (re-base sp1)",
+   "kind": "joined_fact",
+   "input": {
+    "scope": "u:dev",
+    "name": "planner",
+    "did": "did:orreth:agent:plan0000",
+    "kind": "firmware",
+    "life": 4,
+    "nature": "a planner of the third kind",
+    "message_id": "msg_0000000000000000000000e4",
+    "occurred_at": "2026-09-28T19:10:00.000Z"
+   },
+   "expect": {
+    "payload": {
+     "ref": "planner",
+     "hash": "sha256:74158e16c80108e3922546fa10e97ee26f7b7827129e72f2446f75d3707c2d08",
+     "did": "did:orreth:agent:plan0000",
+     "kind": "firmware",
+     "life": 4,
+     "nature": "a planner of the third kind"
+    },
+    "type": "orreth.body.joined.v1",
+    "chain": [
+     "did:orreth:agent:plan0000"
+    ],
+    "correlation_id": "did:orreth:agent:plan0000",
+    "bytes": "{\"authority_chain\":[\"did:orreth:agent:plan0000\"],\"correlation_id\":\"did:orreth:agent:plan0000\",\"message_id\":\"msg_0000000000000000000000e4\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-28T19:10:00.000Z\",\"payload\":{\"did\":\"did:orreth:agent:plan0000\",\"hash\":\"sha256:74158e16c80108e3922546fa10e97ee26f7b7827129e72f2446f75d3707c2d08\",\"kind\":\"firmware\",\"life\":4,\"nature\":\"a planner of the third kind\",\"ref\":\"planner\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.body.joined.v1\",\"universe_id\":\"u:dev\"}"
+   }
   }
  ]
 }

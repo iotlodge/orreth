@@ -6,6 +6,7 @@ visibly and never advances. Needs the events rail (skips politely when
 it's down; SPINE_REQUIRE_KAFKA makes absence a FAILURE — CI sets it)."""
 import os
 import secrets
+import time
 
 import pytest
 
@@ -181,3 +182,58 @@ def test_another_worlds_facts_cost_nothing_against_the_cap(pg):
         skip=lambda env: env.get("scope_path") != "u:dev")  # _env's world
     assert out["applied"] == 1                  # ours, past three free skips
     assert _view(pg, consumer, aid) == 1
+
+
+def test_the_standing_consumer_holds_at_a_poison_until_a_person_advances(pg):
+    """Re-base sp1 — the same law on both kernels: the standing consumer parks
+    a poison once by its place, with its fact, and HOLDS at it (nothing behind
+    it applies) until a person's word advances it; then it goes on."""
+    import threading
+    import psycopg
+    from conftest import DSN
+    tok = secrets.token_hex(4)
+    typ, aid = f"orreth.test-{tok}.counter.v1", f"agg-{tok}"
+    from confluent_kafka import Producer
+    p = Producer({"bootstrap.servers": BOOT})
+    p.produce(rails.topic(typ), value=b"this is not an envelope")
+    p.flush(10)
+    envs = _commit_and_relay(pg, typ, aid, 1)               # a good fact BEHIND the poison
+    consumer, applied, stop = f"hold-{tok}", [], threading.Event()
+
+    def consume():
+        with psycopg.connect(DSN, autocommit=True) as own:  # its own line: a connection is one thread's
+            own.execute("SET search_path TO spine_test")
+            projector.run_forever(own, group=f"g-{consumer}", topics=[rails.topic(typ)],
+                                  consumer_name=consumer, apply=lambda cur, env: applied.append(env["message_id"]),
+                                  stop=stop, offset="earliest")
+
+    t = threading.Thread(target=consume, daemon=True)
+    t.start()
+    try:
+        deadline = time.monotonic() + 40
+        while projector.parked_count(pg, consumer) == 0:
+            assert time.monotonic() < deadline, "the poison was never parked"
+            time.sleep(0.3)
+        [row] = projector.parked(pg, consumer)
+        assert row["reason"].startswith("undecodable body:") and row["bytes"] == 23
+        assert row["hash"] == projector.body_hash(b"this is not an envelope")
+        cur = pg.cursor()
+        cur.execute("SELECT body FROM spine_outbox ORDER BY outbox_id DESC LIMIT 5")
+        facts = [ev.decode(bytes(b)) for (b,) in cur.fetchall()]
+        fact = next(e for e in facts if e["type"] == projector.PARKED)
+        assert fact["payload"]["ref"] == f"parked:{row['parked_id']}" and fact["authority_chain"] == ["the kernel"]
+        time.sleep(3)
+        assert applied == [], "the consumer went past the poison"
+        made = projector.advance(pg, row["parked_id"], "did:orreth:person:jb")
+        assert made["advanced"] and not made["already"]
+        deadline = time.monotonic() + 20
+        while not applied:
+            assert time.monotonic() < deadline, "the consumer never went on after the advance"
+            time.sleep(0.3)
+        assert applied == [envs[0]["message_id"]]
+        assert projector.parked_count(pg, consumer) == 0
+        assert projector.advance(pg, row["parked_id"], "did:orreth:person:jb")["already"] is True
+        assert projector.advance(pg, 999_999, "x") is None
+    finally:
+        stop.set()
+        t.join(15)

@@ -2,6 +2,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: W26's words · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: the ask's fact and the door's refusal, as bytes · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: the lease facts' pure half — `LEASE_LAPSED` · `LEASE_SEATED` · `lease_payload` · `lease_fact` · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
 //! `orreth.ask/1` and the word-shaped laws of `orreth.intent/1` — the pure
 //! half of `orreth_spine.dispatch` (the address at the head of an ask, W7;
 //! the door's refusal for a body that is not here, W19), `harness` (a reply
@@ -65,6 +66,89 @@ pub fn lease_fact(
         "correlation_id": did,
         "authority_chain": [KERNEL],
     })
+}
+
+// ---- projector.py (re-base sp1): the parked and the advanced ---------------------------
+
+/// The dispatcher parked a poison event with its evidence and holds at it.
+pub const INBOX_PARKED: &str = "orreth.inbox.parked.v1";
+/// A person let the dispatcher advance past a parked event — their explicit decision.
+pub const INBOX_ADVANCED: &str = "orreth.inbox.advanced.v1";
+
+/// The evidence's hash: `sha256:` + hex over the body's bytes as delivered.
+pub fn body_hash(body: &[u8]) -> String {
+    format!("sha256:{}", crate::hash::sha256_hex(body))
+}
+
+/// The feed's pointer to a parked event.
+pub fn parked_ref(parked_id: i64) -> String {
+    format!("parked:{parked_id}")
+}
+
+/// `projector.parked_payload`: where on the rail, whose consumer, the evidence's hash, why.
+pub fn parked_payload(
+    parked_id: i64,
+    consumer: &str,
+    topic: &str,
+    partition: i32,
+    offset: i64,
+    body_hash: &str,
+    reason: &str,
+) -> Value {
+    json!({"ref": parked_ref(parked_id), "hash": body_hash, "consumer": consumer, "topic": topic,
+           "partition": partition, "offset": offset, "reason": reason})
+}
+
+/// `projector.advanced_payload`: the same place, and who decided.
+pub fn advanced_payload(
+    parked_id: i64,
+    consumer: &str,
+    topic: &str,
+    partition: i32,
+    offset: i64,
+    by: &str,
+) -> Value {
+    json!({"ref": parked_ref(parked_id), "hash": content_hash(&Value::String(by.into())),
+           "consumer": consumer, "topic": topic, "partition": partition, "offset": offset, "by": by})
+}
+
+/// A kernel fact whole with the id and the clock given (the live park mints them; the
+/// fixture fixes them — `inbox-v0.json`): no aggregate, no marker.
+pub fn inbox_fact(
+    scope: &str,
+    typ: &str,
+    payload: Value,
+    correlation_id: &str,
+    chain: &[&str],
+    message_id: &str,
+    occurred_at: &str,
+) -> Value {
+    json!({
+        "specversion": crate::envelope::SPECVERSION,
+        "message_id": message_id,
+        "message_kind": "event",
+        "type": typ,
+        "universe_id": scope,
+        "scope_path": scope,
+        "occurred_at": occurred_at,
+        "payload": payload,
+        "correlation_id": correlation_id,
+        "authority_chain": chain,
+    })
+}
+
+/// `projector.parked_words`: the park in plain words (the log, the tape, the monitor).
+pub fn parked_words(
+    consumer: &str,
+    topic: &str,
+    partition: i32,
+    offset: i64,
+    reason: &str,
+) -> String {
+    format!(
+        "{consumer} parked the event at {topic}/{partition}@{offset} — {reason} — and holds there \
+         until a person advances it"
+    )
 }
 
 // ---- dispatch.py ------------------------------------------------------------------

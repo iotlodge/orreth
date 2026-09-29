@@ -94,6 +94,7 @@ pub mod hash;
 pub mod intent;
 pub mod kernel_self;
 pub mod levers;
+pub mod markers; // re-base sp1: the kind-name law, pure
 pub mod mcp;
 pub mod memory;
 pub mod mitl;
@@ -102,6 +103,7 @@ pub mod profile;
 pub mod proof;
 pub mod py;
 pub mod rails;
+pub mod schema; // re-base sp1: PURE — the migrator's contract (every DDL, the version, the tables)
 pub mod seat;
 pub mod services;
 pub mod stable;
@@ -149,6 +151,8 @@ pub mod markers_live;
 #[cfg(feature = "rails")]
 pub mod mcp_live;
 #[cfg(feature = "rails")]
+pub mod mitl_live; // re-base sp1: MITL's ground half — the ontology, the toggle, the impact read
+#[cfg(feature = "rails")]
 pub mod monitor;
 #[cfg(feature = "rails")]
 pub mod outbox;
@@ -164,8 +168,6 @@ pub mod proof_live;
 pub mod rail_error;
 #[cfg(feature = "rails")]
 pub mod scheduler;
-#[cfg(feature = "rails")]
-pub mod schema;
 #[cfg(feature = "rails")]
 pub mod seam;
 #[cfg(feature = "rails")]

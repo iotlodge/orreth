@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P0 sp1, the rig breathes · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: topics wear the cell's namespace · 2026-09-25
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: the ground breath stands its tables under the one guard · 2026-09-28
 """One breath through each rail (canon 0002).
 
 Every breath is the same proof: an envelope goes in, comes back, and the
@@ -45,19 +46,12 @@ def ground_breath(env: dict) -> float:
     """Postgres: heartbeat + outbox row in ONE transaction, read back exact."""
     raw = ev.encode(env)
     t0 = time.perf_counter()
-    with psycopg.connect(PG_DSN) as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "CREATE TABLE IF NOT EXISTS spine_heartbeat ("
-                " message_id text PRIMARY KEY,"
-                " body bytea NOT NULL,"
-                " committed_at timestamptz NOT NULL DEFAULT now())")
-            cur.execute(
-                "CREATE TABLE IF NOT EXISTS spine_outbox ("
-                " outbox_id bigserial PRIMARY KEY,"
-                " message_id text NOT NULL,"
-                " body bytea NOT NULL,"
-                " published_at timestamptz)")
+    from . import heartbeat as _hb, outbox as _outbox     # lazily: heartbeat imports this module
+    with psycopg.connect(PG_DSN, autocommit=True) as conn:
+        _hb.ensure_schema(conn)          # re-base sp1: the tables under the one guard — the breath
+        _outbox.ensure_schema(conn)      # once stood a POORER spine_outbox here, unguarded
+        with conn.transaction():
+            cur = conn.cursor()
             cur.execute(
                 "INSERT INTO spine_heartbeat (message_id, body)"
                 " VALUES (%s, %s) ON CONFLICT DO NOTHING",
@@ -65,7 +59,6 @@ def ground_breath(env: dict) -> float:
             cur.execute(
                 "INSERT INTO spine_outbox (message_id, body) VALUES (%s, %s)",
                 (env["message_id"], raw))
-        conn.commit()
         with conn.cursor() as cur:
             cur.execute("SELECT body FROM spine_heartbeat WHERE message_id=%s",
                         (env["message_id"],))

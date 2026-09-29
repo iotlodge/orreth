@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops' three tags · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: the road's six tags at birth · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: THE MIGRATOR (lock 2) — the single writer, the version on the ground, the later kernel waits and verifies · 2026-09-28
 //! The ground — mirrors `orreth_spine.ground` and the memo half of
 //! `orreth_spine.outbox` (`once` · `ground_key` · `mark_ground_done`).
 //!
@@ -20,8 +21,22 @@
 //! The tables are THE SAME tables the Python spine uses — same names, same
 //! columns, the same `CREATE TABLE IF NOT EXISTS` words — so both spines can
 //! stand on one ground in shadow (the sp2 proof).
+//!
+//! THE MIGRATOR (lock 2, re-base sp1 — "the single-writer schema migrator"):
+//! the memo above is per PROCESS; the ground itself now remembers, in
+//! `spine_schema`, which VERSION of the schema it holds. A birth takes the
+//! DDL lock, creates the version table if it is missing, reads the highest
+//! version recorded, and then does ONE of two things: below this kernel's
+//! `SCHEMA_VERSION` it runs every statement this kernel knows (all
+//! `IF NOT EXISTS` — an old ground is grown, a fresh one is born) and records
+//! the version; at or past it, it runs NO DDL and VERIFIES that every table it
+//! declares stands, refusing to light on a ground whose version lies. Two
+//! kernels lighting together on a fresh ground: the second waits at the lock
+//! while the first migrates, then verifies — one writer, ever. Hundreds of
+//! kernels on one ground cost one migration, not hundreds of `ALTER`s.
 
 use crate::rail_error::RailError;
+use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock};
 use tokio_postgres::{Client, NoTls};
@@ -29,27 +44,55 @@ use tokio_postgres::{Client, NoTls};
 /// The DDL race guard — `pg_advisory_xact_lock(742199)`, as Python takes it.
 pub const DDL_LOCK: i64 = 742199;
 
-/// The tags this spine ensures at birth (the Python spine ensures more —
-/// its `ground.TAGS`; the Rust spine grows its list spoonful by spoonful —
-/// sp3 added the ask road's six, sp4 the loops' three).
-pub const TAGS: [&str; 16] = [
-    "outbox",
-    "inbox",
-    "heartbeat",
-    "resident",
-    "markers",
-    "proof",
-    "intent",
-    "presence",
-    "digest",
-    "store",
-    "monitor",
-    "scheduler",
-    "harness",
-    "services",
-    "stable",
-    "gateway",
-];
+/// The tags this spine ensures at birth — every tag the migrator runs, in order
+/// (the rails' three, then the road; `schema::every_ddl`).
+pub fn tags() -> Vec<&'static str> {
+    crate::schema::every_ddl()
+        .into_iter()
+        .map(|(tag, _)| tag)
+        .collect()
+}
+
+/// What a birth found on the ground and what it did (lock 2's honest answer;
+/// the health door says it).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Migration {
+    /// The version the ground held before this birth (0: a ground never versioned).
+    pub found: i32,
+    /// The version the ground holds now.
+    pub ground: i32,
+    /// This kernel's own schema version.
+    pub kernel: i32,
+    /// Did THIS birth run the DDL (the single writer)? Else it waited and verified.
+    pub migrated: bool,
+}
+
+impl Migration {
+    /// The health door's word: `{"ground", "kernel", "found", "migrated"}`.
+    pub fn to_value(&self) -> Value {
+        json!({"ground": self.ground, "kernel": self.kernel, "found": self.found, "migrated": self.migrated})
+    }
+
+    /// Plain words for the log at light.
+    pub fn words(&self) -> String {
+        if self.migrated {
+            format!(
+                "the ground's schema migrated {} → {} by this kernel",
+                self.found, self.ground
+            )
+        } else if self.ground > self.kernel {
+            format!(
+                "the ground's schema is {} — newer than this kernel's {} — verified, nothing run",
+                self.ground, self.kernel
+            )
+        } else {
+            format!(
+                "the ground's schema verified at {} — nothing run",
+                self.ground
+            )
+        }
+    }
+}
 
 static GROUNDS_DONE: OnceLock<Mutex<HashMap<String, HashSet<String>>>> = OnceLock::new();
 
@@ -155,13 +198,61 @@ impl Ground {
     }
 
     /// Every ground this spine knows, ensured at BIRTH — never inside a serve
-    /// — then the ground marked done so later connections are born flagged.
-    pub async fn ensure_all(&mut self) -> Result<(), RailError> {
-        crate::outbox::ensure_schema(self).await?;
-        crate::inbox::ensure_schema(self).await?;
-        crate::heartbeat::ensure_schema(self).await?;
-        crate::schema::ensure_road(self).await?;
-        mark_ground_done(&self.key, TAGS);
-        Ok(())
+    /// — through THE MIGRATOR: one locked transaction; the version read; below
+    /// this kernel's version every statement runs and the version is recorded
+    /// (the single writer); at or past it nothing runs and every declared
+    /// table is verified. Then the ground is marked done so later connections
+    /// are born flagged.
+    pub async fn ensure_all(&mut self) -> Result<Migration, RailError> {
+        let every = crate::schema::every_ddl();
+        let kernel = crate::schema::SCHEMA_VERSION;
+        let tx = self.client.transaction().await?;
+        tx.execute("SELECT pg_advisory_xact_lock($1)", &[&DDL_LOCK])
+            .await?; // a kernel lighting beside a migrating one WAITS here
+        for stmt in crate::schema::SCHEMA_DDL {
+            tx.batch_execute(stmt).await?;
+        }
+        let found: i32 = tx
+            .query_one("SELECT coalesce(max(version), 0) FROM spine_schema", &[])
+            .await?
+            .get(0);
+        let migrated = found < kernel;
+        if migrated {
+            for (_, ddl) in &every {
+                for stmt in *ddl {
+                    tx.batch_execute(stmt).await?;
+                }
+            }
+            tx.execute(
+                "INSERT INTO spine_schema (version, kernel) VALUES ($1, 'rust')",
+                &[&kernel],
+            )
+            .await?;
+        } else {
+            for table in crate::schema::tables() {
+                let stands: bool = tx
+                    .query_one("SELECT to_regclass($1) IS NOT NULL", &[&table])
+                    .await?
+                    .get(0);
+                if !stands {
+                    return Err(RailError::Refused(format!(
+                        "the ground says its schema is version {found} but the table {table} is \
+                         missing — a ground that lies is not stood on (drop the spine_schema row \
+                         to let a kernel migrate it again, or restore the table)"
+                    )));
+                }
+            }
+        }
+        tx.commit().await?;
+        for (tag, _) in &every {
+            self.ensured.insert(tag.to_string());
+        }
+        mark_ground_done(&self.key, every.iter().map(|(t, _)| *t));
+        Ok(Migration {
+            found,
+            ground: found.max(kernel),
+            kernel,
+            migrated,
+        })
     }
 }

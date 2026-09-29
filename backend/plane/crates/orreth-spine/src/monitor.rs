@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: the doors' latency and the pool in the snapshot · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the Operating State names the cell and epoch · 2026-09-25
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
 //! The Monitoring workspace's ground — `orreth_spine.monitor` (canon 0001:
 //! "if it's monitoring, it goes here"): the live snapshot of the Operating
 //! State — rails, benches, bodies, asks, the last harness run — and the
@@ -168,7 +169,11 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
     // the pool's strain — read in-process, so the judge and the levers see what the door shows
     let doors = crate::doors::read();
     let pool = crate::pool::read_all();
+    // re-base sp1: the poison events the dispatcher holds at (the ground's count — the same
+    // on both kernels), watchable as `parked`
+    let parked = crate::inbox::parked(g, Some(crate::dispatcher::CONSUMER), 20).await?;
     let values = json!({
+        "parked": parked.len(),
         "outbox_pending": lag.pending,
         "oldest_outbox_age_s": lag.oldest_age_s.unwrap_or(0.0),
         "asks_received": asks.get("received").and_then(Value::as_i64).unwrap_or(0),
@@ -251,6 +256,7 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
         "harness": last,
         "doors": doors,
         "pool": pool,
+        "parked": parked,
     }))
 }
 

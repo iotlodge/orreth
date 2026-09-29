@@ -8,6 +8,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the seat: seat_mint · seat_verify · seat_grants · door_needs · origin_ok · bearer · seat_words · seat_did_of_key · person_did · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `pulled_fact` · `lease_fact` ported · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: `door_name` · `door_fold` · `door_slowest` ported · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: `schema_version` · `schema_tables` (the migrator's contract) · 2026-09-28
 //! The Rust conformance runner (canon 0008 · P7 sp1): every fixture under
 //! `spine/conformance/*-v*.json` — the same files the Python reference
 //! generated and passes, unchanged — dispatched by case kind exactly as
@@ -96,6 +97,23 @@ const PORTED_KINDS: &[&str] = &[
     // row 4, panel sp2 — the pull and the lease crossing as facts
     "pulled_fact",
     "lease_fact",
+    // row 4, re-base sp1 — orreth.schema/1: THE MIGRATOR's contract (the version and the tables)
+    "schema_version",
+    "schema_tables",
+    // row 4, re-base sp1 — orreth.bodies/1: a body joined (a life) — the roster's fact
+    "joined_fact",
+    // row 4, re-base sp1 — orreth.impact/1: the four doors cross (the passages, the metric in words, the
+    // ground's lines, the impact ask's text) · orreth.markers/1: the kind-name law
+    "passages",
+    "metric_in",
+    "describe",
+    "impact_text",
+    "declare_kind",
+    // row 4, re-base sp1 — orreth.inbox/1: POISON-PARKING (the parked and the advanced facts, the words)
+    "inbox_parked_fact",
+    "inbox_advanced_fact",
+    "inbox_parked_words",
+    "body_hash",
     // row 4, panel sp3 — orreth.doors/1: a door's name and the fold of its latency
     "door_name",
     "door_fold",
@@ -353,6 +371,164 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             s(&exp["reply"]),
             "echo reply"
         ),
+        // ---- orreth.impact/1 · orreth.markers/1 (row 4, re-base sp1): the four doors cross ----
+        "passages" => {
+            same!(
+                json!(mitl::passages(
+                    s(&inp["text"]),
+                    inp["limit"].as_u64().unwrap() as usize
+                )),
+                exp["passages"],
+                "the passages"
+            );
+        }
+        "metric_in" => {
+            same!(
+                json!(mitl::metric_in(s(&inp["words"]))),
+                exp["metric"],
+                "the metric"
+            );
+        }
+        "describe" => {
+            same!(
+                json!(mitl::describe(&inp["touches"])),
+                exp["lines"],
+                "the lines"
+            );
+        }
+        "impact_text" => {
+            let ground: Vec<String> = inp["ground"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|l| s(l).to_string())
+                .collect();
+            same!(
+                mitl::ask_text(&inp["touches"], s(&inp["verdict"]), &ground),
+                s(&exp["text"]).to_string(),
+                "the text"
+            );
+        }
+        "declare_kind" => {
+            let got = match orreth_spine::markers::kind_name(s(&inp["kind"]), s(&inp["group"])) {
+                Ok((k, g)) => json!({"kind": k, "group": g}),
+                Err(e) => json!({"error": e}),
+            };
+            same!(got, exp.clone(), "the kind and its group");
+        }
+        // ---- orreth.bodies/1 (row 4, re-base sp1): a body joined — the roster's own fact ----
+        "joined_fact" => {
+            let payload = body::joined_payload(
+                s(&inp["name"]),
+                s(&inp["did"]),
+                s(&inp["kind"]),
+                inp["life"].as_i64().unwrap(),
+                opt_str(&inp["nature"]),
+            );
+            same!(payload, exp["payload"], "the payload");
+            let env = ask::inbox_fact(
+                s(&inp["scope"]),
+                body::JOINED,
+                payload,
+                s(&inp["did"]),
+                &[s(&inp["did"])],
+                s(&inp["message_id"]),
+                s(&inp["occurred_at"]),
+            );
+            same!(env["type"], exp["type"], "the type");
+            same!(env["authority_chain"], exp["chain"], "the chain");
+            same!(
+                String::from_utf8(envelope::encode(&env).unwrap()).unwrap(),
+                s(&exp["bytes"]).to_string(),
+                "the bytes"
+            );
+        }
+        // ---- orreth.inbox/1 (row 4, re-base sp1): POISON-PARKING — the parked and the advanced facts ----
+        "inbox_parked_fact" | "inbox_advanced_fact" => {
+            let (typ, payload, chain): (&str, Value, Vec<&str>) = if kind == "inbox_parked_fact" {
+                (
+                    ask::INBOX_PARKED,
+                    ask::parked_payload(
+                        inp["parked_id"].as_i64().unwrap(),
+                        s(&inp["consumer"]),
+                        s(&inp["topic"]),
+                        inp["partition"].as_i64().unwrap() as i32,
+                        inp["offset"].as_i64().unwrap(),
+                        &ask::body_hash(s(&inp["body"]).as_bytes()),
+                        s(&inp["reason"]),
+                    ),
+                    vec!["the kernel"],
+                )
+            } else {
+                (
+                    ask::INBOX_ADVANCED,
+                    ask::advanced_payload(
+                        inp["parked_id"].as_i64().unwrap(),
+                        s(&inp["consumer"]),
+                        s(&inp["topic"]),
+                        inp["partition"].as_i64().unwrap() as i32,
+                        inp["offset"].as_i64().unwrap(),
+                        s(&inp["by"]),
+                    ),
+                    vec![s(&inp["by"])],
+                )
+            };
+            same!(payload, exp["payload"], "the payload");
+            let env = ask::inbox_fact(
+                s(&inp["scope"]),
+                typ,
+                payload,
+                &ask::parked_ref(inp["parked_id"].as_i64().unwrap()),
+                &chain,
+                s(&inp["message_id"]),
+                s(&inp["occurred_at"]),
+            );
+            same!(env["type"], exp["type"], "the type");
+            same!(env["authority_chain"], exp["chain"], "the chain");
+            same!(
+                env["correlation_id"],
+                exp["correlation_id"],
+                "the correlation"
+            );
+            same!(
+                String::from_utf8(envelope::encode(&env).unwrap()).unwrap(),
+                s(&exp["bytes"]).to_string(),
+                "the bytes"
+            );
+        }
+        "inbox_parked_words" => {
+            same!(
+                ask::parked_words(
+                    s(&inp["consumer"]),
+                    s(&inp["topic"]),
+                    inp["partition"].as_i64().unwrap() as i32,
+                    inp["offset"].as_i64().unwrap(),
+                    s(&inp["reason"])
+                ),
+                s(&exp["words"]).to_string(),
+                "the words"
+            );
+        }
+        "body_hash" => {
+            same!(
+                ask::body_hash(s(&inp["body"]).as_bytes()),
+                s(&exp["hash"]).to_string(),
+                "the hash"
+            );
+        }
+        // ---- orreth.schema/1 (row 4, re-base sp1, lock 2): THE MIGRATOR's contract ----
+        "schema_version" => {
+            same!(
+                json!(orreth_spine::schema::SCHEMA_VERSION),
+                exp["version"],
+                "version"
+            );
+        }
+        "schema_tables" => {
+            let tables = orreth_spine::schema::tables();
+            same!(json!(tables), exp["tables"], "tables");
+            same!(json!(tables.len()), exp["count"], "count");
+        }
         // ---- orreth.doors/1 (row 4, panel sp3): a door's name and the fold of its latency ----
         "door_name" => {
             same!(

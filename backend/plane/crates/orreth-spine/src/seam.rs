@@ -38,17 +38,7 @@ use tokio::sync::Notify;
 
 /// The seam's tables and the columns it adds beside the ask road's (both spines
 /// declare them; `IF NOT EXISTS` keeps two spines on one ground in agreement).
-pub const SEAM_DDL: &[&str] = &[
-    "CREATE TABLE IF NOT EXISTS spine_seam_out ( out_id bigserial PRIMARY KEY, cell text NOT NULL, scope \
-     text NOT NULL, kind text NOT NULL, body text NOT NULL, ref text, attempts int NOT NULL DEFAULT 0, \
-     next_at timestamptz NOT NULL DEFAULT now(), sent_at timestamptz, last_error text, added_at \
-     timestamptz NOT NULL DEFAULT now())",
-    "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS home_cell text",
-    "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS remote_id text",
-    "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS seam_side text",
-    "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS seam_sent boolean NOT NULL DEFAULT false",
-    "ALTER TABLE spine_peers ADD COLUMN IF NOT EXISTS picture text",
-];
+pub use crate::schema::SEAM_DDL;
 
 /// How often a peer is greeted when all is well.
 pub const HELLO_EVERY_S: f64 = 10.0;

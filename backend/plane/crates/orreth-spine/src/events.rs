@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: `assigned` · `next` / `commit` for the standing consumers · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
 //! The events rail read side (Kafka) — the consumer half of
 //! `orreth_spine.rails.events_breath` and the read loop of
 //! `orreth_spine.projector` in miniature: a fresh group reads a topic from its
@@ -43,6 +44,10 @@ pub struct Pending {
     pub topic: String,
     pub partition: i32,
     pub offset: i64,
+    /// re-base sp1: the body's bytes as delivered — a poison's evidence for the park.
+    pub raw: Vec<u8>,
+    /// re-base sp1: why the body was not an envelope, in the decoder's words (`None` when it was).
+    pub flaw: Option<String>,
 }
 
 /// A consumer standing on the rail as one group member for its whole life.
@@ -86,19 +91,29 @@ impl Reader {
     /// `timeout` (`None` when none came), decoded when it is an envelope,
     /// with its place on the rail — commit it with [`Reader::commit`] AFTER
     /// the work, never before. A body that is not an envelope comes back with
-    /// `env: None` (the Python projector parks it; a dispatcher skips bad
-    /// bytes) and is committed like any other.
+    /// `env: None`, its bytes in `raw` and the decoder's words in `flaw` — the
+    /// dispatcher PARKS it with that evidence and holds (re-base sp1).
     pub async fn next(&self, timeout: Duration) -> Result<Option<Pending>, RailError> {
         let msg = match tokio::time::timeout(timeout, self.consumer.recv()).await {
             Err(_) => return Ok(None),
             Ok(Err(e)) => return Err(e.into()),
             Ok(Ok(m)) => m,
         };
+        let raw = msg.payload().map(<[u8]>::to_vec).unwrap_or_default();
+        let (env, flaw) = match msg.payload() {
+            None => (None, Some("no body".to_string())),
+            Some(p) => match envelope::decode(p) {
+                Ok(e) => (Some(e), None),
+                Err(e) => (None, Some(e.to_string())),
+            },
+        };
         Ok(Some(Pending {
-            env: msg.payload().and_then(|p| envelope::decode(p).ok()),
+            env,
             topic: msg.topic().to_string(),
             partition: msg.partition(),
             offset: msg.offset(),
+            raw,
+            flaw,
         }))
     }
 
