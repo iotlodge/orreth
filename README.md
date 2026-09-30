@@ -88,9 +88,10 @@ scripts/dev.sh kernel stop # everything down whole, nothing left running
 reference on `:4601` beside or instead of the kernel. Provider keys ride in from your shell or a
 `.env` at the root — a key value lives in no record and no file of Orreth's.
 
-As a box: `docker build -t ghcr.io/iotlodge/orrethd .` then
-`docker compose -f spine/compose.yaml --profile kernel up -d` — the kernel and its crew in one image
-beside the rig's four boxes, its selves kept on a named volume.
+As a box: `docker compose -f spine/compose.yaml --profile kernel up -d` pulls the published kernel
+(`ghcr.io/iotlodge/orrethd:0.1.0`, linux/arm64) — the kernel and its crew in one image beside the
+rig's four boxes, its selves kept on a named volume. `docker build -t ghcr.io/iotlodge/orrethd:0.1.0 .`
+from the repo root builds the same image from this tree.
 
 ## Test it
 

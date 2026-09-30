@@ -106,8 +106,12 @@ services:
 
   # re-base sp2 (2026-09-29): THE KERNEL as a box — `orrethd` built from the repo's Dockerfile, the crew
   # inside it, the same glass on :4600. Behind the `kernel` profile so `scripts/dev.sh up` keeps lighting
-  # the four rails alone (the walk kernel runs on the host, a release build, its bodies beside it):
-  #     docker compose -f spine/compose.yaml --profile kernel up -d --build kernel
+  # the four rails alone (the walk kernel runs on the host, a release build, its bodies beside it).
+  # The image is pinned to the PUBLISHED release (THE REFRESH SEASON step 1, 2026-09-30: `0.1.0` on
+  # ghcr.io, linux/arm64, `:latest` the same bytes) — `up -d` pulls that; `--build kernel` rebuilds the
+  # same name from this tree, the way the release itself is built before it is pushed:
+  #     docker compose -f spine/compose.yaml --profile kernel up -d            # the published kernel
+  #     docker compose -f spine/compose.yaml --profile kernel up -d --build kernel   # this tree
   # Its seeds (the kernel self, the bodies) are the HOST's own `~/.orreth` (ORRETH_SEEDS to point elsewhere)
   # — the box is the same world as the host kernel, the same selves every life (covenant rule 1). Found at
   # the first light: a fresh volume made a second crew of new selves under the same world, and the gateway
@@ -117,7 +121,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    image: ghcr.io/iotlodge/orrethd:dev
+    image: ghcr.io/iotlodge/orrethd:0.1.0
     container_name: orreth-spine-kernel
     profiles: ["kernel"]
     ports: ["4600:4600"]
