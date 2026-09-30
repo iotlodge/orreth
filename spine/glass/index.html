@@ -2,6 +2,7 @@
      Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #20 cures: W78 the kernel's own hop drawn from its reply · W79 the BODIES card reads the kernel's process state (life · PARKED words) · W81 the Analyzer row's words no longer squeezed by its meta · the row's "last red" chip · 2026-09-28
      Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W85 · W86 · W87): BODIES one row per name with the earlier selves counted · WATCHES with the author and "rest it" · ASKS lists the asks left waiting, each with "stop it" · PEERS with "forget it" · 2026-09-29
      Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (JB: "clean up the monitor pull … a bit chaotic"): the Monitoring pull wider, ONE anatomy for every card — a title with its summary on the right, aligned rows (label · a dim sub-line · a status pill · a lever column), tabular numbers, short clocks, the pulse as a stat strip · 2026-09-29
+     Amended: Claude Fable 5.1 (claude-fable-5-1) — THE TOUR (JB's ask, 2026-09-29 night: "a really nice soft line guide for the Panel itself … non-engineer terms … do it yourself, work with firmware/residents assisted, or simply ask it to take the lead … we want them to want to explore"): a soft line drawn around one region of the LIVE panel at a time with a plain-words card beside it, a "try it" that puts words in the chat and never sends them, ← → and Esc; opened from TOUR on the sill or by saying "tour" · 2026-09-29
 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass), walk #7's wounds · 2026-09-21 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures (glass): W27 the person's latest session · W32 one Esc, one thing · W33 a pull retracts when focus moves · W34/W39 a stop never needs the exact words · W35 the code row pinned · 2026-09-23 -->
@@ -22,7 +23,7 @@
     --space:#070a16; --space-glow:#0b1020; --glass:rgba(22,26,38,.82);
     --ink:#dfe3ee; --dim:#8b93a8; --jade:#7fd8a8; --red-ink:var(--red-ink); --dim-lamp:#5a5f70;
     --bubble-mine:#26304a; --bubble-mine-line:#334063; --bubble-theirs:#1d2230; --field:#141820; --card:#1a1f2c;
-    --inspector:#0e121e; --btn-ink:#1a1408; --hover:rgba(255,255,255,.03); --well:rgba(0,0,0,.25);
+    --inspector:#0e121e; --btn-ink:#1a1408; --hover:rgba(255,255,255,.03); --well:rgba(0,0,0,.25); --tour-dim:rgba(4,6,12,.5);
     --shadow:rgba(0,0,0,.5); --shadow2:rgba(0,0,0,.55); --frame-shadow:inset 0 0 40px rgba(0,0,0,.6);
     --glow:rgba(232,168,76,.35); --lamp-rim:inset 0 0 2px #000;
   }
@@ -38,7 +39,7 @@
     --ink:#262C3D; --dim:#5D6377; --jade:#237A50; --red-ink:#B0503F; --dim-lamp:#BFB499;
     --cyan:#2F6FA8; --violet:#6C4BB0; --red:#B0503F; --dark-lamp:#D6CDB8; --grid:rgba(96,80,40,.09);
     --bubble-mine:#DCE3F2; --bubble-mine-line:#B7C3DF; --bubble-theirs:#F7F3E9; --field:#FBF9F2; --card:#F3EEE2;
-    --inspector:#FBF8F0; --btn-ink:#FAF6EC; --hover:rgba(0,0,0,.03); --well:rgba(96,80,40,.07);
+    --inspector:#FBF8F0; --btn-ink:#FAF6EC; --hover:rgba(0,0,0,.03); --well:rgba(96,80,40,.07); --tour-dim:rgba(70,58,34,.28);
     --shadow:rgba(96,80,40,.18); --shadow2:rgba(96,80,40,.24); --frame-shadow:inset 0 0 40px rgba(96,80,40,.12);
     --glow:rgba(156,114,29,.18); --lamp-rim:inset 0 0 2px rgba(0,0,0,.25);
   }
@@ -552,6 +553,41 @@
   @media (min-width:2200px){body.wall #space{zoom:1.35}}
   #sill .mchip{border:1px solid var(--seam);border-radius:10px;padding:0 8px;cursor:pointer;color:var(--dim);background:none;font:inherit;font-size:9.5px;letter-spacing:.1em}
   #sill .mchip.lit{color:var(--ink);border-color:var(--amber-dim)}
+  /* ---- THE TOUR (JB, 2026-09-29): a soft line around one region of the live panel at a time, the rest dimmed but
+     still moving; a card beside it in plain words; the panel stays clickable through the line ---- */
+  #tour{position:fixed;inset:0;z-index:14;pointer-events:none;display:none}
+  #tour.open{display:block}
+  #tour-line{position:fixed;border:1px solid var(--amber);border-radius:12px;pointer-events:none;
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--amber) 22%,transparent),0 0 28px color-mix(in srgb,var(--amber) 40%,transparent),0 0 0 200vmax var(--tour-dim);
+    transition:left .5s cubic-bezier(.22,.9,.3,1),top .5s cubic-bezier(.22,.9,.3,1),width .5s cubic-bezier(.22,.9,.3,1),height .5s cubic-bezier(.22,.9,.3,1)}
+  #tour-line.soft{animation:tourbreath 3.2s ease-in-out infinite}
+  @keyframes tourbreath{0%,100%{box-shadow:0 0 0 3px color-mix(in srgb,var(--amber) 18%,transparent),0 0 22px color-mix(in srgb,var(--amber) 30%,transparent),0 0 0 200vmax var(--tour-dim)}
+                        50%{box-shadow:0 0 0 4px color-mix(in srgb,var(--amber) 30%,transparent),0 0 36px color-mix(in srgb,var(--amber) 55%,transparent),0 0 0 200vmax var(--tour-dim)}}
+  #tour-card{position:fixed;width:min(380px,calc(100vw - 32px));pointer-events:auto;background:var(--inspector);border:1px solid var(--amber-dim);
+    border-radius:12px;padding:12px 14px 10px;font-size:12.5px;line-height:1.5;color:var(--ink);box-shadow:0 14px 40px var(--shadow);
+    transition:left .5s cubic-bezier(.22,.9,.3,1),top .5s cubic-bezier(.22,.9,.3,1)}
+  #tour-card .k{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:4px;padding-right:22px}
+  #tour-card .k b{color:var(--amber);letter-spacing:.14em;font-weight:normal;font-size:11px}
+  #tour-card .k span{color:var(--dim);font-size:10.5px;letter-spacing:.1em}
+  #tour-card h4{margin:0 0 6px;font-size:14px;font-weight:500;color:var(--ink);letter-spacing:.02em}
+  #tour-card p{margin:0 0 6px;color:var(--ink)}
+  #tour-card p.q{color:var(--dim);font-style:italic}
+  #tour-card .try{display:inline-flex;align-items:center;gap:8px;margin:4px 0 8px;padding:5px 10px;border:1px dashed var(--amber-dim);border-radius:8px;cursor:pointer;color:var(--amber);font-size:11.5px;max-width:100%}
+  #tour-card .try:hover{border-style:solid;background:var(--hover)}
+  #tour-card .try i{font-style:normal;color:var(--dim);font-size:10px;letter-spacing:.14em;flex:none}
+  #tour-card .try span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #tour-card .nav{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--seam-soft);padding-top:8px;margin-top:2px}
+  #tour-card .nav .dots{display:flex;gap:4px;flex-wrap:wrap}
+  #tour-card .nav .dots i{width:5px;height:5px;border-radius:50%;background:var(--seam);display:block}
+  #tour-card .nav .dots i.on{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+  #tour-card .nav .dots i.done{background:var(--amber-dim)}
+  #tour-card .nav button{font:inherit;font-size:11px;letter-spacing:.1em;background:var(--hull2);color:var(--ink);border:1px solid var(--seam);border-radius:6px;padding:3px 10px;cursor:pointer}
+  #tour-card .nav button.p{border-color:var(--amber);color:var(--amber)}
+  #tour-card .nav button:disabled{opacity:.35;cursor:default}
+  #tour-card .x{position:absolute;right:8px;top:6px;background:none;border:0;color:var(--dim);cursor:pointer;font:inherit;font-size:12px}
+  #tour-card .x:hover{color:var(--amber)}
+  #sill #tourbtn.beckon .lamp{background:var(--amber);animation:tourbeckon 2.4s ease-in-out infinite}
+  @keyframes tourbeckon{0%,100%{box-shadow:0 0 2px var(--amber)}50%{box-shadow:0 0 10px var(--amber)}}
   /* the inspector: every block is a door — it opens in place; one click sets the chat's scope */
   #insp{position:absolute;right:12px;top:12px;width:min(330px,calc(100% - 24px));background:var(--inspector);border:1px solid var(--amber-dim);border-radius:8px;
     padding:9px 12px;font-size:11.5px;box-shadow:0 10px 30px var(--shadow);z-index:3}
@@ -625,6 +661,7 @@
     <button class="tog lit" data-layer="ops" title="OPERATIONS — what is happening now: the rails light, the stations answer, the running board moves · click to dim it"><span class="lamp"></span>OPERATIONS</button>
     <button class="tog" data-layer="perf" title="PERFORMANCE — the numbers over the same drawing: under each organ its doors' p95 (how long the slowest of twenty knocks took), under the GROUND the pool of lines to the ground, the outbox's age, the spend, the benches' depth, and THE DOORS row — every door answered in the last ten minutes, the slowest first, red past one second"><span class="lamp"></span>PERFORMANCE</button>
     <span class="chips"><span title="the marker groups — dim a group's rows on the board and the tape">markers</span><span id="mchips"></span></span>
+    <button class="tog" id="tourbtn" onclick="tourStart()" title="THE TOUR — a soft line around each part of the panel in turn, in plain words: what it is, what to try · ← → to move, Esc to leave · say 'tour' in the chat any time"><span class="lamp"></span>TOUR</button>
     <button class="tog" id="wallbtn" onclick="wall(!document.body.classList.contains('wall'), true)" title="FULL SCREEN — the panel alone, edge to edge, for a wide monitor: the ceiling, the tabs and the floor fold away and the browser goes full screen too · Esc or F leaves it · remembered in this browser"><span class="glyph">⛶</span>FULL SCREEN</button>
     <button class="tog wall-only" onclick="toggleChat()" title="the chat — every reply arrives whole">CHAT ▾</button>
     <button class="tog wall-only" onclick="toggleBand()" title="the Analyzer — everything born in the chat, by origin">ANALYZER ▴</button>
@@ -648,6 +685,11 @@
 <div id="guide" role="dialog" aria-label="the guide">
   <header onclick="toggleGuide(false)" style="cursor:pointer" title="close the guide">THE GUIDE · what you can say here, and what happens · [Esc] closes this · ▾ close</header>
   <div id="guide-rows"></div>
+</div>
+
+<div id="tour" aria-live="polite">
+  <div id="tour-line"></div>
+  <div id="tour-card" role="dialog" aria-label="the tour"></div>
 </div>
 
 <div id="band">
@@ -801,13 +843,17 @@ function toggleChat(open){
 }
 addEventListener("keydown", e => {
   if (e.key === "Escape") {                             // SPEC-ESC-01 + P19 — W32 (walk #11): ONE Esc, ONE thing —
-    if (inspOpen()) inspClose();                                     // the panel's inspector is the smallest thing open
+    if (tourOpen()) tourEnd();                                       // THE TOUR is the lightest thing on top of everything
+    else if (inspOpen()) inspClose();                                // the panel's inspector is the smallest thing open
     else if (guideBox.classList.contains("open")) toggleGuide(false); // the guide is on top of everything
     else if (band.classList.contains("open")) toggleBand(false);     // the pull on top closes first;
     else if (monitorPull.classList.contains("open")) toggleMonitor(false);   // the chat and the focus only
     else if (crewPull.classList.contains("open")) toggleCrew(false);         // when no pull is open —
     else if (chat.classList.contains("open") || FOCUS.length) { popAllFocus(); toggleChat(false); }   // then the bridge, scope restored exactly
     else if (document.body.classList.contains("wall")) wall(false, true);   // last of all, full screen is left
+  }
+  if (tourOpen() && (e.key === "ArrowRight" || e.key === "ArrowLeft") && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || "")){
+    e.preventDefault(); tourStep(e.key === "ArrowRight" ? 1 : -1); return;
   }
   if ((e.key === "f" || e.key === "F") && !e.metaKey && !e.ctrlKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || "") && !(e.target && e.target.isContentEditable)){
     e.preventDefault(); wall(!document.body.classList.contains("wall"), true);   // F: full screen on or off (never while typing)
@@ -839,6 +885,9 @@ function whereAmI(){
 }
 function guideWords(text){
   const t = text.trim().toLowerCase().replace(/[.!]+$/, "");
+  if (/^(tour|the tour|show me around|guide the panel|walk me through( the panel| it)?|what am i looking at|where am i)$/.test(t)){
+    el("msg mine", esc(text)); toggleChat(false); tourStart(); return true;      // THE TOUR: the panel itself, in plain words
+  }
   if (!/^(guide|help|\?|the guide|show (me )?the guide|what can i say( here)?)$/.test(t)) return false;
   el("msg mine", esc(text));
   toggleGuide(true);
@@ -868,6 +917,118 @@ async function toggleGuide(open){
     if (ta){ ta.value = say; ta.focus(); }
   });
 }
+
+/* ---- THE TOUR (JB, 2026-09-29): the panel itself, in plain words — a soft line around one region of the LIVE
+   drawing at a time (its lights keep moving underneath), a card beside it saying what it is and what to try; "try it"
+   puts words in the chat and never sends them; ← → move, Esc leaves; steps whose part is folded away (full screen,
+   a layer off) are skipped. It is a guide to explore by, not a manual: three ways to work — do it yourself, work
+   with the crew, or ask the kernel to take the lead — and a person in and on the loop in every one of them. ---- */
+const TOUR = [
+  {at: "#space", title: "Welcome to the panel",
+   words: ["This is a kernel for agents, drawn as a control room's panel. Everything you see is real and live: the shapes are what is built, the light is what is happening right now, and the colour says who did it — amber a person, cyan an agent, violet the kernel itself.",
+           "You sit outside it and steer. There are three ways to work here: do it yourself, work alongside the crew, or ask the kernel to take the lead. Every one of them keeps a person in and on the loop. Let's walk it."]},
+  {at: "#organs", title: "The kernel's organs",
+   words: ["Six organs the kernel always carries. The DESK is the door: who is seated, who may come in. The GROUND is its memory — every ask, reply and record, signed, in this world. The GATEWAY is where every thought an agent has is bought, in dollars. The SHELF holds every tool and service the kernel governs. The MONITOR watches the world and holds the levers. The ANALYZER shows everything that was born in the chat, by who asked.",
+           "A lamp lit jade means the organ is well. Click any organ and it opens in place."]},
+  {at: "#rails", title: "The rails",
+   words: ["Five rails carry the world's traffic. When a fact passes — an ask, a reply, a lease, a duty waking, an intention taking a step — a segment lights toward whoever it is for, then fades. Watch them for a minute and you'll see the world breathe.",
+           "Nothing travels off the rails. That's why every act can be replayed and explained later."]},
+  {at: "#st-fw", title: "The firmware — the crew with jobs",
+   words: ["These are agents with a function and no persona: the planner, the critic, the grader, the toolkeeper, the stable-keeper who looks after the language models themselves, and MITL — the mind-in-the-loop who has read the architecture and can explain it to you.",
+           "They serve you in the chat, they serve the kernel's schedules and policies, and they do their jobs on a clock. Each chip is seated by a lease; a dashed chip is declared but not seated; amber means the kernel parked it and will say why."],
+   try: "mitl, what does the planner do?"},
+  {at: "#st-res", title: "The residents — the ones who answer you",
+   words: ["Residents are the agents with a persona: the librarian keeps records and reads them back to you word for word; echo simply answers, so you can see the road an ask takes. Every resident is a permanent self — if one dies it comes back as the same self, with the same memory.",
+           "Click a station to open its inspector: what it is, its self, its lease, its life, what it is serving, and what it has cost."],
+   try: "librarian, what is the temperature outside?"},
+  {at: "#tools", title: "The shelf's tools",
+   words: ["Every tool the crew may use, with its border saying how consequential it is: plain is routine, amber holds for your yes, red is grave. A lamp flashes when an agent reaches for one.",
+           "Where this is going: agents will make their own tools, prove them, and put them on this shelf for other agents to use — through the same gates you see here, with a person's word on anything that matters."]},
+  {at: "#board", title: "The running board",
+   words: ["Everything in flight, as a tree: an INTENTION you stated, the OBJECTIVES the kernel filed under it, the THOUGHTS and ACTIONS the crew took to meet them. Every row is a door — click one and the Analyzer opens on it.",
+           "This is the part that grows when you let the kernel take the lead."]},
+  {at: "#tape", title: "The tape",
+   words: ["The same facts, in words, newest first: who asked, who answered, how long it took, which lease lapsed, which lever the kernel pulled and why. If you only read one line of the panel, read this one."]},
+  {at: "#sill", title: "The sill — three soft switches",
+   words: ["ARCHITECTURE shows what is built, even the empty sockets. OPERATIONS shows what is happening. PERFORMANCE lays the numbers over the same drawing — how long each door takes, what the world has spent.",
+           "FULL SCREEN puts the panel alone on a wide display, so a room can watch a world from across the floor. As the panel grows new views, each will stand on its own monitor the same way. Press F any time."]},
+  {at: "#chat-tab", title: "The one chat",
+   words: ["Everything begins here. Ask a question and a resident answers, whole. Say something standing — “keep this world resilient” — and it becomes an INTENTION the kernel works on for as long as you let it. Say “guide” to see what else you can say, “tour” to come back here.",
+           "It is not an ordinary prompt: it can open any pull, scope itself to one agent, call an agent in another world by name, and summon MITL when you are unsure."],
+   try: "guide"},
+  {at: "#crew-tab", title: "The CREW pull",
+   words: ["Every body in this world on one page — residents and firmware, both sides of each: what it is, its self, its schedule, its mind, its spend. Pulls slide in from the edges; Esc puts them back."]},
+  {at: "#monitor-tab", title: "The MONITOR pull",
+   words: ["The operating state, live: the pulse (what the world spent today), the peers, the language models, the health checks, the rails, every body, the asks left waiting, the watches, and the harness. Every lever a person can pull is on it — rest a watch, stop an ask, let a peer go — and each is recorded, never deleted."],
+   try: "open the monitor"},
+  {at: "#floor", title: "The ANALYZER hatch",
+   words: ["Lift the floor and you see everything born in the chat by its origin: your intentions, the objectives under them, what is in flight and what is done. It is the kernel's own account of what it is doing for you."]},
+  {at: "#space", title: "Three ways to work",
+   words: ["Do it yourself: you build or bring your own agent and seat it here under the same laws. Work with the crew: you and the residents and firmware craft the words, the skills and the plan together — MITL at your elbow. Or ask the kernel to take the lead: say what you want kept true, and the rails bring in the planner, the critic and the crew to observe, plan, act and report.",
+           "In every one of the three, a consequential act holds until a person says yes. The dial is how much of the engineering you do — never whether a person is in the loop."],
+   try: "keep this world resilient: when a watch goes red, get it green"},
+  {at: '[data-organ="desk"]', title: "A person in and on the loop",
+   words: ["Nobody acts anonymously here. You sat down with a seat the kernel minted after you proved who you are; every agent came in through the desk on a person's word; every consequential act waits at the interlock for a click; and you can stop anything the machine manages, any time, with a word.",
+           "Security is not bolted onto the agents. It is the shape of the room."],
+   try: "mitl, what would happen if I stopped the resiliency intention?"},
+  {at: "#space", title: "Go and explore",
+   words: ["Click anything — every organ, station, tool and row is a door. Watch the rails for a while. Ask the librarian something you'd ask a colleague. State one intention and come back tomorrow to read the board.",
+           "Say “tour” whenever you want this walk again, and “guide” for everything you can say. The panel is yours."]},
+];
+const tourBox = document.getElementById("tour"), tourLine = document.getElementById("tour-line"), tourCard = document.getElementById("tour-card");
+let TOUR_AT = -1;
+function tourOpen(){ return tourBox.classList.contains("open"); }
+function tourVisible(sel){
+  const el = document.querySelector(sel); if (!el) return null;
+  const r = el.getBoundingClientRect();
+  return (r.width > 0 && r.height > 0 && getComputedStyle(el).display !== "none") ? el : null;
+}
+function tourStart(){
+  try { localStorage.setItem("orreth.tour.seen", "1"); } catch (e) {}
+  document.getElementById("tourbtn").classList.remove("beckon");
+  if (!document.body.classList.contains("arch")) document.querySelector('#sill .tog[data-layer="arch"]').click();   // the tools are on the walk
+  toggleChat(false); toggleCrew(false); toggleMonitor(false); toggleBand(false); if (inspOpen()) inspClose();   // the panel alone under the line
+  tourBox.classList.add("open"); TOUR_AT = -1; tourStep(1);
+}
+function tourEnd(){ tourBox.classList.remove("open"); tourLine.classList.remove("soft"); TOUR_AT = -1; }
+function tourStep(dir){
+  let i = TOUR_AT;
+  do { i += dir; } while (i >= 0 && i < TOUR.length && !tourVisible(TOUR[i].at));   // a part folded away is skipped
+  if (i < 0) return;
+  if (i >= TOUR.length){ tourEnd(); return; }
+  TOUR_AT = i; tourDraw();
+}
+function tourDraw(){
+  const st = TOUR[TOUR_AT]; const el = tourVisible(st.at); if (!el){ tourStep(1); return; }
+  if (st.at !== "#space") el.scrollIntoView({block: "nearest", inline: "nearest"});
+  const r = el.getBoundingClientRect(), pad = st.at === "#space" ? 4 : 8;
+  const L = Math.max(4, r.left - pad), T = Math.max(4, r.top - pad);
+  const W = Math.min(innerWidth - L - 4, r.width + pad * 2), H = Math.min(innerHeight - T - 4, r.height + pad * 2);
+  Object.assign(tourLine.style, {left: L + "px", top: T + "px", width: W + "px", height: H + "px"});
+  tourLine.classList.add("soft");
+  const n = TOUR.length, done = TOUR_AT;
+  tourCard.innerHTML = `<button class="x" onclick="tourEnd()" title="leave the tour · Esc">✕</button>` +
+    `<div class="k"><b>THE TOUR</b><span>${TOUR_AT + 1} of ${n}</span></div><h4>${esc(st.title)}</h4>` +
+    st.words.map(w => `<p>${esc(w)}</p>`).join("") +
+    (st.try ? `<div class="try" data-try="${esc(st.try)}" title="puts these words in the chat — nothing is sent until you press ASK"><i>TRY IT</i><span>“${esc(st.try)}”</span></div>` : "") +
+    `<div class="nav"><button onclick="tourStep(-1)" ${TOUR_AT === 0 ? "disabled" : ""} title="←">← back</button>` +
+    `<div class="dots">${TOUR.map((_, k) => `<i class="${k === TOUR_AT ? "on" : k < TOUR_AT ? "done" : ""}"></i>`).join("")}</div>` +
+    `<button class="p" onclick="tourStep(1)" title="→">${TOUR_AT === n - 1 ? "done ✓" : "next →"}</button></div>`;
+  const t = tourCard.querySelector("[data-try]");
+  if (t) t.onclick = () => { toggleChat(true); const ta = document.getElementById("chat-in"); if (ta){ ta.value = t.dataset.try; ta.focus(); } };
+  // the card sits below the line when there is room, else above, else beside; never off the screen
+  const cw = Math.min(380, innerWidth - 32), ch = tourCard.offsetHeight || 220;
+  let cl = Math.min(Math.max(16, L), innerWidth - cw - 16), ct;
+  if (W > innerWidth * 0.6) cl = Math.round((innerWidth - cw) / 2);            // a wide part: the card under its middle
+  if (st.at === "#space"){ cl = Math.round((innerWidth - cw) / 2); ct = Math.round((innerHeight - ch) / 2); }
+  else if (T + H + ch + 14 < innerHeight) ct = T + H + 10;
+  else if (T - ch - 14 > 0) ct = T - ch - 10;
+  else { ct = Math.max(16, Math.min(T, innerHeight - ch - 16)); cl = L + W + 12 < innerWidth - cw - 16 ? L + W + 12 : Math.max(16, L - cw - 12); }
+  Object.assign(tourCard.style, {left: cl + "px", top: ct + "px"});
+}
+addEventListener("resize", () => { if (tourOpen()) tourDraw(); });
+document.getElementById("space").addEventListener("scroll", () => { if (tourOpen()) tourDraw(); }, {passive: true});
+(function tourBeckon(){ let seen = null; try { seen = localStorage.getItem("orreth.tour.seen"); } catch (e) {} if (!seen) document.getElementById("tourbtn").classList.add("beckon"); })();
 
 /* ---- the crew rail: residents on the right edge, targets by chip ---- */
 const NAMES = {};                 // did -> name

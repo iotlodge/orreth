@@ -1,6 +1,6 @@
 {
  "format": "orreth-guide/1",
- "version": "0.5.1",
+ "version": "0.5.2",
  "title": "THE GUIDE · what you can say here, and what happens",
  "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful",
  "sections": [
@@ -54,6 +54,10 @@
    "title": "THE PANEL — the main window",
    "lead": "The kernel drawn as a control room's panel. Geometry is architecture: every block sits where its declaration puts it and never moves. Light is operations: a fact on the feed lights a lamp or a rail segment, then fades. Colour is origin: amber a person's word, cyan a body's act, violet the kernel's own, red a watch or a hold. A quiet kernel is a dark, still panel. The panel knocks on no door by a clock: the roster, the stations and every lamp follow the feed — a body joining, refused, parked, its lease crossing the line.",
    "entries": [
+    {
+     "say": "tour · show me around · what am I looking at",
+     "does": "THE TOUR: a soft line walks you around the panel one part at a time, in plain words — what it is, what to try — with the world still moving underneath. ← → to move, Esc to leave; the TOUR switch on the sill opens it too."
+    },
     {
      "say": "(click DESK · GROUND · GATEWAY · SHELF · MONITOR · ANALYZER)",
      "does": "The kernel's six organs, always seated. A click opens the inspector in place: what it is, its self, what it serves, and one-click doors into the chat, the crew, the monitor or the analyzer."
