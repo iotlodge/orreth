@@ -2641,6 +2641,23 @@ approved (covenant rule 9).
       is a QUEUE the policy assigns to a role (firmware · resident · agent · person); the kernel
       drives each to compliance and a person sees only what the policy says a person must. The
       Monitoring's levers are the manual mode of this law, never its whole.
+      **THE REFRESH SEASON'S WOUNDS (2026-09-30, found while every public surface was turned to
+      the kernel — the-refresh-season; OPEN unless said cured):** **W93** a FRESH gateway refuses
+      `/model/info` ("LLM Model List not loaded") and the kernel reads that list before `/model/new`,
+      so on an empty gateway no mind can be seeded or registered (the dev rig never sees it — its
+      gateway's store already holds models); a direct `/model/new` works from empty; the cure is
+      add-before-list, or an empty list read from that answer (the book's compose works around it
+      with a gateway config naming the haiku stall). **W94** the boxed kernel registers a mind only
+      when the key's NAME is reachable in its own env (the env-secrets law), and `spine/compose.yaml`'s
+      `kernel` service passes no key names — the box refuses haiku "secret ANTHROPIC_API_KEY is not
+      reachable here"; the book's compose passes the names. **W95** (small) the image has no `ps`
+      or `pkill` (debian slim). **W96 THE WIPED SEAT FORM — CURED 2026-09-30 (step 3):** on a fresh
+      browser the seat form (drawn once, on the first 401) was cleared away by the session roll,
+      which read the 401's `{error}` as a session and called `clearDisplay()` — JB: "I've tried 10
+      different ways to enter jb … nothing works"; the guard is now "one form WHILE IT STANDS or is
+      being drawn" (a wiped form is drawn again on the next refusal; two racing refusals draw one
+      form), and the session roll and list return quietly on a not-seated answer. A seed beside it:
+      THE GUIDE says nothing of how to take a seat (rule 13) — a line for the guide's next pass.
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the

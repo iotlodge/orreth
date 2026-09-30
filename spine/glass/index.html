@@ -10,6 +10,7 @@
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp1: THE PANEL replaces the starfield in the main viewport — six organs · five rail tracks · the crew's sockets · the shelf's tool lamps · the running board · the tape · the inspector · the sill's three soft toggles + marker-group chips; lit by the nine feed topics live today; the worldtag and the YOU tag move into the GROUND and DESK blocks · 2026-09-28 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: THE DAYLIGHT GLASS (light mode — JB's ask, the old glass's paper · ink · bronze carried to the panel; every colour a token; remembered in this browser, the system's preference otherwise) · the feed widened to thirty-three topics lights the presence and scheduler tracks, the shelf's tool lamps, the desk and the meter · the lever-pulled and lease facts · the fact door read once per notice · one shared /ask read between the chat and the panel · 2026-09-28 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #17/#18 cures (glass): W61 a cancelled hold wears no proof word · W62 a retired service is at rest · W63 the YOU tag wears the seat's name · W64 a person's hold whose code is right reaches every other seated glass for a declared master's click · W65/W66 the stop grammar takes "stopping" · "start" and ignores state words · W67 the master reads the master's words · W68 a hold the clock ended says so · W69 a seat that only reads and writes is shown a hold and no button · 2026-09-27 -->
+<!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — THE SPECTATOR (the refresh season's step 3, JB 2026-09-30: "on the demo site, as before, we need the github star feature, docs link"): demo.orreth.ai is a PHOTOGRAPH of a kernel that really ran — with `window.ORRETH_DEMO` injected by scripts/snapshot_glass.py, every read comes from a captured fixture, every write is refused with one face, the captured minutes of the feed replay on a loop, the clock reads the photograph's moment, the seat form never opens, and THE TOUR opens itself for a first visit; the sill carries the book (📖 docs.orreth.ai) and the source (★ GitHub) on every kernel · 2026-09-30 -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -538,6 +539,8 @@
   .tog{cursor:pointer;display:inline-flex;align-items:center;gap:7px;background:none;border:0;color:var(--dim);font:inherit;letter-spacing:inherit;padding:2px}
   .tog .lamp{width:7px;height:7px} .tog.lit{color:var(--ink)} .tog.lit .lamp{background:var(--amber);box-shadow:0 0 6px var(--amber)}
   .tog:focus-visible{outline:1px solid var(--amber);outline-offset:3px}
+  a.tog{text-decoration:none} a.tog:hover{color:var(--ink)} a.tog svg{width:13px;height:13px;fill:currentColor}
+  #specband{display:none;color:var(--amber);letter-spacing:.14em;cursor:help} body.spectator #specband{display:inline}
   #sill .chips{display:flex;gap:5px;letter-spacing:.1em;align-items:center}
   /* ---- FULL SCREEN (JB's ask, 2026-09-28: "those with wide monitors would love it"): the panel alone, edge to edge —
      the ceiling, the strips, the floor and the side tabs fold away, the sill stays as the one thin bar (the toggles, the
@@ -663,6 +666,9 @@
     <span class="chips"><span title="the marker groups — dim a group's rows on the board and the tape">markers</span><span id="mchips"></span></span>
     <button class="tog" id="tourbtn" onclick="tourStart()" title="THE TOUR — a soft line around each part of the panel in turn, in plain words: what it is, what to try · ← → to move, Esc to leave · say 'tour' in the chat any time"><span class="lamp"></span>TOUR</button>
     <button class="tog" id="wallbtn" onclick="wall(!document.body.classList.contains('wall'), true)" title="FULL SCREEN — the panel alone, edge to edge, for a wide monitor: the ceiling, the tabs and the floor fold away and the browser goes full screen too · Esc or F leaves it · remembered in this browser"><span class="glyph">⛶</span>FULL SCREEN</button>
+    <a class="tog" href="https://docs.orreth.ai" target="_blank" rel="noopener" title="THE BOOK — docs.orreth.ai: what Orreth is, how to run it, how to build a body of your own">📖 THE BOOK</a>
+    <a class="tog" href="https://github.com/iotlodge/orreth" target="_blank" rel="noopener" title="THE SOURCE — the kernel is public: read it, run it, star it on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>STAR IT</a>
+    <span id="specband" title="this page is a photograph: every number, every body, every fact was read from a kernel that really ran, at the moment named here — the feed replays its captured minutes on a loop; you may look at everything and move nothing">…</span>
     <button class="tog wall-only" onclick="toggleChat()" title="the chat — every reply arrives whole">CHAT ▾</button>
     <button class="tog wall-only" onclick="toggleBand()" title="the Analyzer — everything born in the chat, by origin">ANALYZER ▴</button>
   </div>
@@ -767,9 +773,50 @@ window.fetch = function(url, opts){
   if (SEAT){ const h = new Headers(opts.headers || {}); if (!h.has("authorization")) h.set("authorization", "Bearer " + SEAT); opts.headers = h; }
   return _fetch(url, opts).then(r => { if (r.status === 401) unseated(); return r; });
 };
-let SEAT_ASKED = false;
-async function unseated(){                        // the seat form, once: the ceremony on a fresh ground, else name + code
-  if (SEAT_ASKED) return; SEAT_ASKED = true;
+/* ---- THE SPECTATOR (the refresh season's step 3, 2026-09-30): demo.orreth.ai is a PHOTOGRAPH of a kernel that really ran.
+   scripts/snapshot_glass.py reads every door of a live kernel with a real seat, writes the answers as fixtures beside this page,
+   records some minutes of the feed, and injects `window.ORRETH_DEMO` — {at, person, governs, world, refusal}. Under it:
+   every GET reads its fixture (the same words the kernel answered), every other knock is refused with ONE face, the feed
+   replays its captured minutes on a loop, the clock reads the photograph's moment (so every age on the page is the age it
+   had), the seat form never opens, and THE TOUR opens itself for a first visit. Nothing of the kernel ships: no seat, no key,
+   no endpoint — a page that cannot act is the strongest form of "view only". Absent live. ---- */
+if (window.ORRETH_DEMO) (function spectator(){
+  const D = window.ORRETH_DEMO;
+  document.body.classList.add("spectator");
+  // the clock: the photograph's moment, moving forward from there — and back to it when the feed replays from its first minute
+  const _Date = Date; let shift = _Date.now() - _Date.parse(D.at);
+  window.Date = class extends _Date { constructor(...a){ if (a.length) super(...a); else super(_Date.now() - shift); } static now(){ return _Date.now() - shift; } };
+  // the seat: the spectator reads as the person who held the seat when the moment was taken, and writes as no one
+  SEAT = "spectator"; PERSON = D.person || null; GOVERN = !!D.governs;
+  unseated = async function(){};                                          // no seat form on a photograph
+  const refusal = D.refusal || "a spectator may watch this world turn, not move it — this page is a photograph of a kernel that ran; run your own from the book";
+  const fixture = u => { let p = String(u).replace(/^https?:\/\/[^/]+/, "").replace(/^\//, ""); try { p = decodeURIComponent(p); } catch (e) {}   // one name per door, safe on any bucket
+    return "fixtures/" + p.replace(/[\/?&=]/g, m => ({"/": "__", "?": "~", "&": "~", "=": "-"})[m]).replace(/[^A-Za-z0-9._~-]/g, "_") + ".json"; };
+  const answer = (status, body) => new Response(JSON.stringify(body), {status, headers: {"content-type": "application/json"}});
+  window.fetch = function(url, opts){
+    if (((opts && opts.method) || "GET").toUpperCase() !== "GET") return Promise.resolve(answer(403, {error: refusal}));
+    return _fetch(fixture(url)).then(r => r.ok ? r : answer(404, {error: "this door was not in the photograph"})).catch(() => answer(404, {error: "this door was not in the photograph"}));
+  };
+  // the feed: the captured minutes, replayed in their own rhythm, from the first minute again when they run out
+  window.EventSource = class {
+    constructor(){ this._on = {}; this.onmessage = null; this.onopen = null; this.onerror = null; this._timers = [];
+      _fetch("fixtures/feed.json").then(r => r.json()).then(f => { this._feed = f; if (this.onopen) this.onopen({}); this._play(); }).catch(() => { if (this.onerror) this.onerror({}); }); }
+    addEventListener(name, fn){ this._on[name] = fn; }
+    _play(){ shift = _Date.now() - _Date.parse(D.at);
+      const evs = (this._feed && this._feed.events) || [], span = (this._feed && this._feed.seconds ? this._feed.seconds : 60) * 1000;
+      for (const e of evs) this._timers.push(setTimeout(() => { const ev = {data: e.data}; if (e.event) { if (this._on[e.event]) this._on[e.event](ev); } else if (this.onmessage) this.onmessage(ev); }, e.t));
+      this._timers.push(setTimeout(() => this._play(), span + 1500)); }
+    close(){ this._timers.forEach(clearTimeout); this._timers = []; }
+  };
+  // the band on the sill, and the tour for a first visit
+  const when = new _Date(D.at).toLocaleString([], {dateStyle: "medium", timeStyle: "short"});
+  const band = document.getElementById("specband"); if (band) band.textContent = "A PHOTOGRAPH · " + when;
+  setTimeout(() => { let seen = null; try { seen = localStorage.getItem("orreth.tour.seen"); } catch (e) {} if (!seen) tourStart(); }, 1600);
+})();
+let SEAT_ASKED = false, SEAT_ROW = null;
+async function unseated(){                        // the seat form, once WHILE IT STANDS: the ceremony on a fresh ground, else name + code
+  if (SEAT_ASKED && (SEAT_ROW === "drawing" || (SEAT_ROW && document.body.contains(SEAT_ROW)))) return;   // W96 (JB, 2026-09-30): ONE form while it
+  SEAT_ASKED = true; SEAT_ROW = "drawing";                                                                 // stands or is being drawn; a wiped form is drawn again on the next refusal
   SEAT = null; PERSON = null; GOVERN = false; drawHead();
   try { localStorage.removeItem("orreth.seat"); } catch (e) {}
   const st = await _fetch("/seat").then(x=>x.json()).catch(()=>null);
@@ -800,7 +847,7 @@ async function unseated(){                        // the seat form, once: the ce
     stepDone(msg, row, `enrolling ${esc(name.value.trim())}`);
     drawEnroll(c.b, false, name.value.trim());
   };
-  msg.appendChild(row); name.focus();
+  msg.appendChild(row); name.focus(); SEAT_ROW = row;
 }
 async function takeSeat(name, code, msg, row){   // the code proves the person; the token comes back; the page wakes seated
   const r = await _fetch("/seat", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({person: name, code})})
@@ -2633,6 +2680,7 @@ async function rollSession(announce){
     body: JSON.stringify({person: PERSON, archive: SESSION || undefined})})   // the roll
     .then(x=>x.json()).catch(()=>null);                        // digests the archived one
   if (!r) { sysline("the sessions door did not answer"); return; }
+  if (r.error){ if (SEAT) sysline(esc(r.error)); return; }     // W96: not seated — the seat form speaks; the chat is not cleared under it
   SESSION = r.session_id;
   try { localStorage.setItem("orreth.session", SESSION); } catch (e) {}
   popAllFocus();                    // a new topic starts at the bridge's focus
@@ -2645,6 +2693,7 @@ async function listSessions(){
   const r = await fetch("/sessions?person=" + encodeURIComponent(PERSON))
     .then(x=>x.json()).catch(()=>null);
   if (!r) { sysline("the sessions door did not answer"); return; }
+  if (r.error || !Array.isArray(r.sessions)){ if (SEAT && r.error) sysline(esc(r.error)); return; }   // W96: not seated — the form speaks
   LAST_LIST = r.sessions; SESSIONS_SHOWN = true;
   const box = el("msg theirs", `<div class="who">sessions · newest first · click one to load it</div>`);
   if (!LAST_LIST.length) box.innerHTML += `<div class="sesrow">none yet</div>`;
@@ -3395,7 +3444,8 @@ function connectFeed(){
    kernel changes the number without a reload; in full screen it rides the sill ---- */
 async function versionRead(){
   const h = await fetch("/health").then(x => x.ok ? x.json() : null).catch(()=>null);
-  const t = h && h.version ? `v${h.version} · ${h.kernel === "rust" ? "rust kernel" : h.kernel === "reference" ? "the reference (python)" : (h.kernel || "?")} · lit ${h.lit_at ? hhmm(h.lit_at) : "?"}` : "the kernel did not answer";
+  const t = (h && h.version ? `v${h.version} · ${h.kernel === "rust" ? "rust kernel" : h.kernel === "reference" ? "the reference (python)" : (h.kernel || "?")} · lit ${h.lit_at ? hhmm(h.lit_at) : "?"}` : "the kernel did not answer")
+          + (window.ORRETH_DEMO ? " · a photograph" : "");                              // THE SPECTATOR: the whisper says what this page is
   for (const id of ["vtag", "vtag2"]){ const el = document.getElementById(id); if (el) el.textContent = t; }
 }
 versionRead();

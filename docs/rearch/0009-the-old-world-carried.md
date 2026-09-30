@@ -160,7 +160,7 @@ is the exact thing this page exists to prevent.
 | Old organ (dive) | What it did | Seat | Evidence / gap |
 |---|---|---|---|
 | The Open Book — docs.orreth.ai (0064) | Learn · Build · Reference | RE-SEATED — P7 sp8 (docs in every close loop) | FROZEN under the halt; the book teaches the old doors. |
-| demo.orreth.ai | the spectator site | PARKED — until release (0005) | frozen at era 0.60. |
+| demo.orreth.ai | the spectator site | CARRIED — the refresh season's step 3 (2026-09-30) | a photograph of THE PANEL: `scripts/snapshot_glass.py` reads every door with a real seat and films the feed; the glass's spectator block answers reads from fixtures, refuses writes with one face, replays the film, reads the photograph's clock; the stack re-homed at `infrastructure/cdk`. |
 | Articles 01–08, the campaign, Show HN | | PARKED — until release (0005) | |
 | The six embodied proof repos | body · fleet · blackbox · genuine · ota · fuel | PARKED — 0005's out-of-V1 list | held deliberately; their own season. |
 | The multiverse portal · voice · enterprise IdP federation | | PARKED — 0005 (voice V2; federation seam declared, minimal) | |
