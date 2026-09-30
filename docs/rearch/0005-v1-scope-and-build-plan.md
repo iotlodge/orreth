@@ -2625,6 +2625,40 @@ walks the same four P6 specs plus the P3–P5 specs against the Rust kernel
 green; docs; VERSION 0.1.0 in the release commit (JB's lock 2026-09-25: 1.0
 waits for the self-delivery proof, Phase 9).
 
+    - **Row 6 — THE LEARNING LOOPS AND THE LONG OBJECTIVE (JB's word,
+      2026-09-29 night, while the article set was tightened: "let's be sure
+      those are not lost in the build sequence").** Two claims the articles
+      make as design are held here as OWED rows, so a promise on LinkedIn is a
+      row in the plan and never a memory. **(a) THE THIRD LOOP** (article 11 ·
+      seed `docs/rearch/seeds/embedded-graded-learning.md`): a GRADER as a
+      firmware resident (its own identity, its own key, its own meter, no
+      persona), an events-rail consumer of `orreth.reply.v1` that grades
+      against its rubric and commits a SIGNED VERDICT through the outbox like
+      any fact; verdicts distill into a per-body LESSONS DIGEST (the digest
+      machinery of P5 sp3, a new kind) packed into the body's context at the
+      next serve; an agent ingests lessons ONLY from graders it is assigned
+      (the Stable's assignment law, reused); the four laws of article 12 as
+      code (provenance or nothing · lessons never reach the gate, the seat or
+      the intention's scope · human thumbs route THROUGH the grader as
+      evidence · grade the grader on a golden set) and the two-speed law (a
+      lesson that would become permanent goes through the harness and a
+      versioned change); the creator absorbs its sub-agents' grades. The
+      banked demo: an answer, a verdict on the feed seconds later, the next
+      answer better — and saying why. **(b) MEM-2 WHOLE — the long objective's
+      resume** (article 13 · canon 0003 MEM-2, "proven at the per-ask hop; the
+      long objective's resume waits for long objectives"): a 500–1000-hop
+      objective under an intention (row 5's machine road files them)
+      checkpointed at every hop on the body's own saver connection (P5 sp4's
+      mechanism), killed at hop N by the proof and RESUMED at N as the same
+      self, owing exactly what it owed, duplicating nothing, the journey
+      saying "resumed at N"; the walk = JB kills a body mid-objective in the
+      glass and reads it pick up where it stood. **(c)** the fourth loop (ML
+      over the operating state) stays a SEED (`seeds/ml-over-the-operating-
+      state.md`) — said as design in the articles, never as built. ORDER:
+      after row 5 (the third loop needs a stranger's body to grade as well as
+      the crew's; the long objective needs the machine road's asks). The
+      honest boundary carries both as DESIGNED · OWED until their walks pass.
+
 ## Phase 6.5 — THE ORGANS (a parallel Python track beside the port — opened 2026-09-22 on JB's locks in 0009)
 
 JB, 2026-09-22: the first architecture's organs — the Stable, the Tool Farm
