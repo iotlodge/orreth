@@ -5,7 +5,17 @@ by the kernel; policy is held by humans; an intention is the unit of control. Ev
 lands on one signed record, and a person can always stop what the machine manages.
 
 <!-- PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp2: the README rewritten for the new world · 2026-09-29.
-     The 0.72 README (seventy-three dives, the Living Brain, the demo reel) rests at the tag main-v0.72-old-world. -->
+     The 0.72 README (seventy-three dives, the Living Brain, the demo reel) rests at the tag main-v0.72-old-world.
+     Amended: THE REFRESH SEASON step 5 (JB 2026-09-30): the panel and the monitor pictured, light and dark by the reader's theme; docs/ARCHITECTURE.md linked · 2026-09-30 -->
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/panel-tour-dark.jpg">
+  <img alt="THE PANEL — the kernel drawn as a control room's mimic panel: six organs, five rails, the crew's stations, the shelf's tools, the running board — with the tour's first card open" src="docs/images/panel-tour-light.jpg" width="100%">
+</picture>
+
+*THE PANEL on a running kernel: geometry is what is declared, light is what is happening, colour is
+who did it. Walk it yourself at [demo.orreth.ai](https://demo.orreth.ai); the architecture is drawn
+in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).*
 
 ---
 
@@ -68,6 +78,14 @@ and return are how humans control scale.
   when the lever is routine, and holds for a person when it is consequential; the outcome is
   attributed on the record.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/monitor-dark.jpg">
+  <img alt="The Monitoring pull beside the one chat: the pulse, the peers over the seam, the Stable's minds, the health checks, and the librarian answering" src="docs/images/monitor-light.jpg" width="100%">
+</picture>
+
+*The Monitoring pull beside the one chat — the operating state with every remedy a lever a person
+can see.*
+
 The full register of what is proven, partial or parked — with the evidence named — is
 [`docs/design/the-honest-boundary.md`](docs/design/the-honest-boundary.md). A claim not on that
 page is a claim we do not make.
@@ -115,6 +133,7 @@ test dispatcher (the stale-rig law).
 | `spine/conformance` | The fixtures both kernels pass unchanged — the contract between them (canon `0008`). |
 | `spine/glass/index.html` | The one page: the chat and THE PANEL, served by either kernel. |
 | `spine/crew.v0.json` · `spine/templates` · `spine/tools.v0.json` · `spine/levers.v0.json` | The crew, the templates, the tools' declarations and the lever catalogue — data both kernels read. |
+| `docs/ARCHITECTURE.md` | **The map of this world**: the six organs and five rails, the road an ask takes, the seat and the lease, the four memories, the remediation rail, cells and the seam — drawn, light and dark. |
 | `docs/rearch/0001`–`0009` | **The canon of the new world**: the experience charter, transport, memory, agent, the build plan, markers, intent, the port, the old world carried. |
 | `docs/design/0000`–`0017` | **The constitution** the covenant enforces; `the-honest-boundary.md` is the standing register. |
 | `docs/vision` | The vision the constitution serves. |
