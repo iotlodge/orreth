@@ -2597,6 +2597,50 @@ approved (covenant rule 9).
       are the cure); `dev.sh prune` takes the dead proof scopes' rows now; the reference has no
       join desk, so the name law stands on the Rust kernel alone; a watch's rest and a peer's
       forgetting are rows, not facts on the feed (the panel's tape does not say them — a seed).
+      **WALK #21 (JB, 2026-09-29 night → 2026-09-30 morning): PASS w/ friction on the ASKS bar**
+      — JB: "I can see ASK Stop over in chat and drop from monitor" (the other cards' verdicts
+      not given in words; the spec stays walked on this bar alone). FOUR WOUNDS and a seed, all
+      OPEN — JB's word: record now, cure after the refresh season (the-refresh-season):
+      **W89** the stop's words name no ask — three stops read as three identical chat lines
+      ("Stopped on your word — the ask was set to rest here…"); `STOPPED_WORDS` is one constant on
+      both kernels while the remote stop already names its target; the line must wear the ask's
+      words clipped · asker → target · id. **W90** a waiting ask's "since" wears no date — the six
+      asks JB saw as "since 1:38 PM" were 1 to 11 DAYS old (09-19 · 09-21 · 09-22 ×2 · 09-25 ·
+      09-29); W87's law (the date when not today) for the ASKS card too. **W91 THE LOST SERVE** —
+      why six asks waited for days: read on the dev ground 2026-09-30 (Fable, direct psql +
+      RabbitMQ's counters): each orphan's `ask.received` fact was dispatched exactly once
+      (`glass-dispatcher` footprint done), yet no resident footprint exists for it — the footprints
+      at those seconds belong to SIBLING asks filed the same second; the planner's queue holds 0
+      with every delivered message acked; and the command exchange `orreth.command.v1` counts
+      13,784 published IN against 13,757 published OUT since 2026-09-22 — 27 commands entered the
+      exchange and reached NO queue. `invoke::publish` publishes `mandatory` with confirms but reads
+      `confirmation.is_ack()` alone — lapin's Ack CARRIES a returned (unroutable) message, so a
+      return is taken as delivery, the dispatcher commits its footprint, and the ask waits forever:
+      no beat re-dispatches a received ask without a footprint. The moment of unroutability is NOT
+      proven (stopped on JB's word — "if you can't find it, let's not burn tokens"): every orphan
+      sits within seconds of a relight or beside a sibling; the binding may be absent for an
+      instant, or the fact's target may be missing. THE CURE (owed): (a) `publish` refuses a returned
+      message (Ack(Some(_)) is a refusal) → the dispatcher stands again or parks with evidence;
+      (b) THE BENCH SWEEP — a kernel beat finds every ask `received` longer than N s with no
+      resident footprint and re-dispatches it once with a journey line; a second miss parks it.
+      **W92 THE LOOP ON A FAILED THOUGHT** — `intent_live.rs` files a replied plan's first 500 chars
+      as the objective without reading them: the planner's failure "I cannot think right now — the
+      gateway refused: …Server disconnected" (twice, 09-30 04:55 · 06:01) and its boilerplate
+      "I am planner — the planner, a firmware body of Orreth…" were filed to the librarian as
+      objectives, and the librarian answered "I see you are in distress…" — fuel spent on a
+      failure. The cure: a reply that is a failure or refusal (the gateway's words · `refused_words`)
+      parks the turn with a note and never becomes an objective; a self-introduction is not a plan.
+      **SEED (perf law)** the dispatcher opens its reader from `earliest` at every relight and bumps
+      `attempts` on every past fact of ours (attempts up to 240 on the dev ground) — O(facts) writes
+      per relight, the growing-corpus smell; a committed offset per group, or a cursor, at row 5.
+      **JB's PRINCIPLE (2026-09-30), a law for rows 5–6 — THE COMPLIANT STATE:** "these imply work on
+      the rails that should automatically result in autonomous resolution and detection for action
+      … a few things work but not truly Ontology to achieve compliant state … I would expect these
+      to fill queues that policy states firmware, residents, agents must action." Every residue —
+      an ask received and unserved, a red watch, a parked poison, a peer gone, a failed thought —
+      is a QUEUE the policy assigns to a role (firmware · resident · agent · person); the kernel
+      drives each to compliance and a person sees only what the policy says a person must. The
+      Monitoring's levers are the manual mode of this law, never its whole.
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the
