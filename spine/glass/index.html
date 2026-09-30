@@ -1,6 +1,7 @@
 <!-- PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16
      Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #20 cures: W78 the kernel's own hop drawn from its reply · W79 the BODIES card reads the kernel's process state (life · PARKED words) · W81 the Analyzer row's words no longer squeezed by its meta · the row's "last red" chip · 2026-09-28
      Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W85 · W86 · W87): BODIES one row per name with the earlier selves counted · WATCHES with the author and "rest it" · ASKS lists the asks left waiting, each with "stop it" · PEERS with "forget it" · 2026-09-29
+     Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (JB: "clean up the monitor pull … a bit chaotic"): the Monitoring pull wider, ONE anatomy for every card — a title with its summary on the right, aligned rows (label · a dim sub-line · a status pill · a lever column), tabular numbers, short clocks, the pulse as a stat strip · 2026-09-29
 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass), walk #7's wounds · 2026-09-21 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures (glass): W27 the person's latest session · W32 one Esc, one thing · W33 a pull retracts when focus moves · W34/W39 a stop never needs the exact words · W35 the code row pinned · 2026-09-23 -->
@@ -264,7 +265,7 @@
     border-left:none;border-radius:0 8px 8px 0;background:var(--glass);
     z-index:8;transition:color .2s}
   #monitor-tab:hover{color:var(--amber)}
-  #monitor{position:fixed;left:0;top:6vh;height:88vh;width:min(560px,92vw);
+  #monitor{position:fixed;left:0;top:6vh;height:88vh;width:min(760px,94vw);
     transform:translateX(-104%);transition:transform .45s
     cubic-bezier(.22,.9,.3,1);z-index:9;display:flex;flex-direction:column;
     border:1px solid var(--seam);border-left:none;border-radius:0 14px 14px 0;
@@ -279,6 +280,54 @@
   .view h5{margin:0 0 5px;font-size:10.5px;letter-spacing:.2em;color:var(--dim)}
   .view .row{display:flex;justify-content:space-between;gap:10px;padding:1px 0}
   .view .row span:last-child{color:var(--amber)}
+  /* ---- the honest glass sp2 (JB, 2026-09-29): the Monitoring's ONE anatomy — every card a title with its
+     summary on the right; every row a label with a dim sub-line, a status pill, a lever column; numbers tabular ---- */
+  #monitor header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  #monitor header .x{color:var(--dim);letter-spacing:.08em;font-size:10.5px;flex:none}
+  #monitor header .x:hover{color:var(--amber)}
+  #views{padding:10px 14px 18px;font-variant-numeric:tabular-nums}
+  .mcard{border:1px solid var(--seam);border-radius:10px;margin:0 0 10px;background:var(--well);
+    font-size:12px;color:var(--ink);overflow:hidden}
+  .mcard>.mhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+    padding:7px 12px;border-bottom:1px solid var(--seam-soft);background:var(--hover)}
+  .mcard>.mhead .t{font-size:10.5px;letter-spacing:.2em;color:var(--dim);flex:none}
+  .mcard>.mhead .k{font-size:11px;color:var(--dim);text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mcard>.mhead .k b{color:var(--ink);font-weight:500}
+  .mcard>.mhead .k .ok,.mcard>.mhead .k .red{font-weight:500}
+  .mcard .mbody{padding:2px 12px 6px}
+  .mrow{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:14px;align-items:start;
+    padding:6px 0;border-top:1px solid var(--seam-soft)}
+  .mrow:first-child{border-top:none}
+  .mrow.lv{grid-template-columns:minmax(0,1fr) auto auto}
+  .mrow .l{min-width:0;color:var(--ink);line-height:1.35;display:flex;align-items:flex-start;gap:8px}
+  .mrow .l .dot{margin-top:5px}
+  .mrow .l .w{min-width:0}
+  .mrow .l .w .clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .mrow .sub{display:block;color:var(--dim);font-size:10.5px;line-height:1.4;margin-top:1px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mrow .v{color:var(--amber);white-space:nowrap;text-align:right;line-height:1.35;display:flex;
+    align-items:center;justify-content:flex-end;gap:8px;flex-wrap:nowrap}
+  .mrow .v .when{color:var(--dim);font-size:11px}
+  .mrow .lever{white-space:nowrap;color:var(--dim);font-size:10.5px;cursor:pointer;
+    border:1px solid var(--seam);border-radius:6px;padding:2px 7px;margin-top:-1px;transition:color .15s,border-color .15s}
+  .mrow .lever:hover{color:var(--amber);border-color:var(--amber-dim)}
+  .pill{display:inline-block;font-size:10px;letter-spacing:.06em;padding:1px 7px;border-radius:9px;
+    border:1px solid var(--seam);color:var(--dim);line-height:1.5;white-space:nowrap}
+  .pill.ok{color:var(--jade)!important;border-color:color-mix(in srgb,var(--jade) 45%,transparent);background:color-mix(in srgb,var(--jade) 12%,transparent)}
+  .pill.red{color:var(--red-ink)!important;border-color:color-mix(in srgb,var(--red-ink) 45%,transparent);background:color-mix(in srgb,var(--red-ink) 12%,transparent)}
+  .pill.warn{color:var(--amber)!important;border-color:color-mix(in srgb,var(--amber) 45%,transparent);background:color-mix(in srgb,var(--amber) 12%,transparent)}
+  .mnote{color:var(--dim);font-size:11px;padding:6px 0;line-height:1.4}
+  .mnote code{color:var(--ink)}
+  .msub{font-size:10px;letter-spacing:.18em;color:var(--dim);padding:8px 0 2px;border-top:1px solid var(--seam-soft);margin-top:2px}
+  .mchips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0 4px}
+  .mchip{font-size:11px;color:var(--dim);border:1px solid var(--seam);border-radius:7px;padding:2px 8px;white-space:nowrap}
+  .mchip b{color:var(--ink);font-weight:500;margin-left:5px}
+  .mchip.red b{color:var(--red-ink)} .mchip.ok b{color:var(--jade)} .mchip.warn b{color:var(--amber)}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;padding:8px 0 4px}
+  .tile{border:1px solid var(--seam-soft);border-radius:8px;padding:7px 10px;min-width:0}
+  .tile .n{font-size:16px;color:var(--amber);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tile .n.ok{color:var(--jade)} .tile .n.red{color:var(--red-ink)} .tile .n.dim{color:var(--dim);font-size:12px;line-height:1.6}
+  .tile .d{font-size:10.5px;color:var(--dim);margin-top:2px;line-height:1.3}
   .ok{color:var(--jade)!important}.red{color:var(--red-ink)!important}
   .dot.alive{background:var(--jade)}.dot.dormant{background:var(--dim-lamp)}
   #crew{position:fixed;left:0;top:6vh;height:88vh;width:min(520px,92vw);
@@ -592,7 +641,7 @@
 
 <div id="monitor-tab" onclick="toggleMonitor()" title="monitoring — the Operating State, live">M O N I T O R</div>
 <div id="monitor">
-  <header onclick="toggleMonitor(false)" style="cursor:pointer" title="close the Monitoring">MONITORING · the Operating State, live — rails · bodies · asks · watches · the harness · [Esc] closes this · ▾ close</header>
+  <header onclick="toggleMonitor(false)" style="cursor:pointer" title="close the Monitoring"><span>MONITORING · the Operating State, live — the pulse · peers · the Stable · health · rails · bodies · asks · watches · the harness</span><span class="x">Esc · ▾ close</span></header>
   <div id="views"></div>
 </div>
 
@@ -2234,81 +2283,109 @@ async function loadMonitor(){
   const GOV = {}; for (const b of (gov && gov.bodies) || []) GOV[b.name] = b;
   const real = document.getElementById("views"); const keep = real.scrollTop;
   const box = document.createElement("div");      // W48 (walk #12): painted off-screen, swapped in ONLY when something changed — no flash
-  const view = (title, rows) => {
-    const d = document.createElement("div"); d.className = "view";
-    d.innerHTML = `<h5>${title}</h5>` + rows; box.appendChild(d); return d; };
-  const row = (k, v, cls) => `<div class="row"><span>${esc(k)}</span><span class="${cls || ""}">${esc(String(v))}</span></div>`;
-  const meas = (x, f) => x == null ? "not measured here" : f(x);       // the honest glass: absent ≠ zero
+  // ---- the ONE anatomy (JB, 2026-09-29: "a bit chaotic"): a card = a title + its summary on the right + rows;
+  // a row = a label (with an optional dot and a dim sub-line) · a value or a pill · an optional lever
+  const card = (title, kicker, body) => {
+    const d = document.createElement("div"); d.className = "mcard";
+    d.innerHTML = `<div class="mhead"><span class="t">${title}</span><span class="k">${kicker || ""}</span></div><div class="mbody">${body}</div>`;
+    box.appendChild(d); return d; };
+  const pill = (text, cls) => `<span class="pill ${cls || ""}">${esc(text)}</span>`;
+  const lever = (attr, id, words, title) => `<span class="lever" data-${attr}="${esc(id)}" title="${esc(title)}">${esc(words)}</span>`;
+  const line = o => `<div class="mrow${o.lever ? " lv" : ""}"><span class="l">${o.dot ? `<span class="dot ${o.dot}"></span>` : ""}<span class="w">` +
+    `<span class="${o.clamp ? "clamp" : ""}">${o.label}</span>${o.sub ? `<span class="sub" title="${esc(o.subTitle || "")}">${o.sub}</span>` : ""}</span></span>` +
+    `<span class="v ${o.cls || ""}">${o.value || ""}</span>${o.lever || ""}</div>`;
+  const kv = (k, v, cls) => line({label: esc(k), value: esc(String(v)), cls});
+  const note = html => `<div class="mnote">${html}</div>`;
+  const sub = html => `<div class="msub">${html}</div>`;
+  const chip = (k, n, cls) => `<span class="mchip ${cls || ""}">${esc(k)}<b>${esc(String(n))}</b></span>`;
+  const hm = iso => { try { return new Date(iso).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}); } catch (e) { return "?"; } };
+  const meas = (x, f) => x == null ? null : f(x);                              // the honest glass: absent ≠ zero
+  const tile = (n, d, cls) => `<div class="tile"><div class="n ${n == null ? "dim" : cls || ""}">${n == null ? "not measured here" : esc(String(n))}</div><div class="d">${esc(d)}</div></div>`;
   const v = s.values || {};
   const home = s.home || {};                                                         // P7 sp7: the cell this universe stands in
-  view("PULSE", row("feed revision", lastRev ?? "—") + row("world", s.world) +
-       row("stands in", `cell ${home.cell || "?"}` + (home.epoch ? ` · epoch ${home.epoch}` : "") + (home.namespace ? ` · benches and topics '${home.namespace}'` : "")) +
-       // the honest glass (2026-09-29): a value the kernel does not carry is SAID — never drawn as a zero
-       // (the Rust pulse read $0.0000 over a metered crew for a week; now both kernels carry the farm)
-       row("spent today (this world, every mind)", meas(v.usd_today, x => "$" + Number(x).toFixed(4))) +
-       row("thoughts in the last 10 min", meas(v.meter_rate_10m, x => x + " / min")) +
-       row("could not think (last hour)", meas(v.route_failures_1h, x => x), v.route_failures_1h ? "red" : "ok") +
-       row("bodies out of fuel", meas(v.bodies_drained, x => x), v.bodies_drained ? "red" : "ok"));
-  // P7 sp7: THE PEERS — every cell this one names, its self pinned, how far behind my picture of it is
+  // ---- PULSE: the money and the mind as a stat strip; the world's address beneath
+  card("PULSE", `world <b>${esc(s.world)}</b> · cell <b>${esc(home.cell || "?")}</b>${home.epoch ? ` · epoch <b>${home.epoch}</b>` : ""} · feed rev <b>${lastRev ?? "—"}</b>`,
+       `<div class="tiles">` +
+       tile(meas(v.usd_today, x => "$" + Number(x).toFixed(4)), "spent today · this world, every mind") +
+       tile(meas(v.meter_rate_10m, x => x + " / min"), "thoughts in the last 10 min") +
+       tile(meas(v.route_failures_1h, x => x), "could not think · last hour", v.route_failures_1h ? "red" : "ok") +
+       tile(meas(v.bodies_drained, x => x), "bodies out of fuel", v.bodies_drained ? "red" : "ok") + `</div>` +
+       (home.namespace ? note(`benches and topics wear the namespace <code>${esc(home.namespace)}</code>`) : ""));
+  // ---- PEERS: every cell this one names, its self pinned, how far behind my picture of it is (P7 sp7)
   const wc = await loadWorld();
   const peers = (wc && wc.peers) || [];
-  view("PEERS · the cells this one speaks to over the signed seam",
+  card("PEERS", peers.length ? `<b>${peers.length}</b> cell${peers.length === 1 ? "" : "s"} over the signed seam` : "no cells named",
        peers.map(pr => { let roster = []; try { roster = JSON.parse(pr.picture || "[]"); } catch(e) {}
          const alive = roster.filter(b => b.alive).map(b => b.name);
-         return `<div class="row"><span>${esc(pr.words)}${pr.did ? ` · <span class="meta">${esc(pr.did.slice(0, 32))}…</span>` : ""}` +
-                `${alive.length ? `<div class="meta">alive there: ${esc(alive.join(", "))} — say “${esc(alive[0])}@${esc(pr.cell)}, …” to ask it</div>` : ""}</span>` +
-                `<span class="${pr.unreachable_since ? "red" : pr.did ? "ok" : ""}">${pr.unreachable_since ? "unreachable" : pr.did ? "pinned" : "not yet heard"}` +
-                (GOVERN ? ` <span class="stop" data-forget="${esc(pr.cell)}" title="lets this peer go on your word — recorded on its row, never deleted; the cell is named again when a kernel is relit naming it (SPINE_PEERS)">forget it</span>` : "") +
-                `</span></div>`; }).join("") ||
-       `<div class="meta">no peers named — light a second cell with <code>scripts/dev.sh cell two</code> and relight this kernel so it names it (SPINE_PEERS)</div>`);
-  const stb = s.stable || {minds: [], assignments: []};                            // P6.5 sp3: THE STABLE — every mind, its deal, its spend
-  view("THE STABLE · LLMs · " + meas(v.minds_standing, x => x + " standing") + (v.minds_unhealthy ? " · " + v.minds_unhealthy + " unhealthy" : ""),
-       (stb.minds || []).map(m => `<div class="row"><span>${esc(m.words)}</span><span class="${m.state === "unhealthy" ? "red" : m.state === "retired" ? "" : "ok"}">${esc(m.state)}</span></div>`).join("") +
-       ((stb.assignments || []).length ? (stb.assignments.map(a => row(`${a.subject === "*" ? "every body" : a.subject} uses`, `${a.stall} for ${a.klass === "any" ? "all" : a.klass} work`)).join(""))
-                                        : `<div class="meta">no assignments — every body uses its template's LLM; say “assign librarian to haiku”</div>`) ||
-       `<div class="meta">no LLM in the Stable — say “stablekeeper, add the LLM ollama llama3.2 as llama”</div>`);
-  // P6.5 sp3 (walk #12, W45): the HEALTH CHECKS — nine things that must be true of this world, read from the ground right now
+         return line({label: esc(pr.words),
+                      sub: (pr.did ? `${esc(pr.did.slice(0, 40))}… ` : "") + (alive.length ? `· alive there: ${esc(alive.join(", "))} — say “${esc(alive[0])}@${esc(pr.cell)}, …” to ask it` : ""),
+                      value: pill(pr.unreachable_since ? "unreachable" : pr.did ? "pinned" : "not yet heard", pr.unreachable_since ? "red" : pr.did ? "ok" : ""),
+                      lever: GOVERN ? lever("forget", pr.cell, "forget it", "lets this peer go on your word — recorded on its row, never deleted; the cell is named again when a kernel is relit naming it (SPINE_PEERS)") : ""}); }).join("") ||
+       note(`no peers named — light a second cell with <code>scripts/dev.sh cell two</code> and relight this kernel so it names it (SPINE_PEERS)`));
+  // ---- THE STABLE: every mind, its deal, its spend; the assignments (P6.5 sp3)
+  const stb = s.stable || {minds: [], assignments: []};
+  card("THE STABLE · LLMs", (v.minds_standing == null ? "not measured here" : `<b>${v.minds_standing}</b> standing`) + (v.minds_unhealthy ? ` · <span class="red">${v.minds_unhealthy} unhealthy</span>` : ""),
+       (stb.minds || []).map(m => line({label: esc(m.words), value: pill(m.state, m.state === "unhealthy" ? "red" : m.state === "retired" ? "" : "ok")})).join("") +
+       ((stb.assignments || []).length ? sub("ASSIGNMENTS") + stb.assignments.map(a => kv(`${a.subject === "*" ? "every body" : a.subject} uses`, `${a.stall} for ${a.klass === "any" ? "all" : a.klass} work`)).join("")
+                                        : note("no assignments — every body uses its template's LLM; say “assign librarian to haiku”")) ||
+       note("no LLM in the Stable — say “stablekeeper, add the LLM ollama llama3.2 as llama”"));
+  // ---- HEALTH CHECKS: what must be true of this world, read from the ground now (walk #12, W45)
   if (!HC || Date.now() - HC_AT > 30000){ HC = await fetch("/harness").then(x=>x.json()).catch(()=>null); HC_AT = Date.now(); }
-  const hc = HC;
-  view("HEALTH CHECKS · what must be true of this world, read from the ground now" + (HC_AT ? " · as of " + hhmm(new Date(HC_AT).toISOString()) : ""),
-       hc && hc.checks ? hc.checks.map(c => `<div class="row"><span>${c.ok ? "✓" : "✗"} ${esc(c.name)} — <span class="meta">${esc(c.detail || "")}</span></span><span class="${c.ok ? "ok" : "red"}">${c.ok ? "holds" : "BROKEN"}</span></div>`).join("")
-                      : `<div class="meta">the health door did not answer</div>`);
+  const hc = HC, checks = (hc && hc.checks) || [], broken = checks.filter(c => !c.ok).length;
+  card("HEALTH CHECKS", checks.length ? `${broken ? `<span class="red">${broken} broken</span> · ` : ""}<b>${checks.length - broken}</b> of ${checks.length} hold` + (HC_AT ? ` · as of ${hm(new Date(HC_AT).toISOString())}` : "") : "",
+       checks.length ? checks.map(c => line({label: esc(c.name), sub: esc(c.detail || ""), subTitle: c.detail || "", value: pill(c.ok ? "holds" : "broken", c.ok ? "ok" : "red")})).join("")
+                     : note("the health door did not answer"));
+  // ---- RAILS: the outbox, the topic, the benches, the pool, the poison held at, the doors' clocks
   const benches = Object.entries(s.benches || {}).filter(([k]) => k !== "error")
-    .map(([q, n]) => row("bench " + q.split(".").slice(3).join(".") || "shared", n ?? "?")).join("");
-  view("RAILS", row("outbox pending", s.outbox.pending, s.outbox.pending ? "red" : "ok") +
-       row("oldest unpublished", s.outbox.oldest_age_s != null ? s.outbox.oldest_age_s.toFixed(1) + " s" : "—") +
-       row("ask.received topic depth", s.topic_depth ?? "?") + benches +
-       row("ground pool", s.pool ? `${s.pool.busy} of ${s.pool.ceiling} lines busy · ${s.pool.waiting} waiting · longest wait ${ms(Number(s.pool.wait_max_ms))}` : "none — a connection per knock", s.pool && s.pool.waiting ? "red" : "ok") +
-       // re-base sp1: POISON-PARKING — every event the dispatcher holds at, its evidence, and the person's lever
-       row("poison held at (the rail waits for a person)", v.parked || 0, v.parked ? "red" : "ok") +
-       (s.parked || []).map(pk => `<div class="row"><span>${esc(pk.words)}<div class="meta">parked:${pk.parked_id} · ${pk.bytes} bytes · ${esc(String(pk.hash).slice(0, 23))}… · since ${hhmm(pk.parked_at)}</div></span>` +
-         `<span class="stop" data-advance="${pk.parked_id}" title="the operator's explicit decision: the dispatcher commits past this event and goes on — recorded in your name">advance past it</span></div>`).join("") +
-       (s.doors || []).slice(0, 6).map(d => row("door " + d.door, `${ms(Number(d.p50_ms))} / ${ms(Number(d.p95_ms))} · ${d.n} knocks`, Number(d.p95_ms) >= 1000 ? "red" : "ok")).join(""));
-  view("BODIES", s.bodies.map(b => { const g = GOV[b.name]; const parked = g && (g.state === "parked" || g.state === "refused");
-       return `<div class="row"><span><span class="dot ${parked ? "dormant" : b.alive ? "alive" : "dormant"}"></span>` +
-       `${esc(b.name)} · ${esc(b.kind)}${g ? ` · life ${g.lives}` : ""}${b.earlier_selves ? ` <span class="meta" title="this name was held by ${b.earlier_selves} earlier self${b.earlier_selves === 1 ? "" : "ves"} (other keypairs) — they stay on the ground, counted, never drawn as a second body">· ${b.earlier_selves} earlier ${b.earlier_selves === 1 ? "self" : "selves"}</span>` : ""}</span><span class="${parked || !b.alive ? "red" : "ok"}">` +
-       `${parked ? g.state.toUpperCase() : b.alive ? "alive" : "dormant"}${g && !parked && g.state !== "alive" ? " · " + esc(g.state) : ""} · until ${hhmm(b.until)}</span></div>` +
-       (parked ? `<div class="meta" style="padding:0 8px 6px">${esc(g.words || "")}</div>` : ""); }).join("") ||
-       `<div class="meta">no leases yet</div>`);
-  // the honest glass sp2 (W86): the asks LEFT WAITING are listed, each with its stop — a count alone hid seven of
-  // the watch loop's own orphaned objectives behind "received 9" with no way to reach them (rule 11)
+    .map(([q, n]) => kv("bench " + (q.split(".").slice(3).join(".") || "shared"), n ?? "?")).join("");
+  const doors = (s.doors || []).slice(0, 6);
+  card("RAILS", `outbox <b class="${s.outbox.pending ? "red" : "ok"}">${s.outbox.pending}</b> pending · poison held at <b class="${v.parked ? "red" : "ok"}">${v.parked || 0}</b>` + (s.pool ? ` · pool <b>${s.pool.busy}/${s.pool.ceiling}</b> busy` : ""),
+       kv("outbox pending", s.outbox.pending, s.outbox.pending ? "red" : "ok") +
+       kv("oldest unpublished", s.outbox.oldest_age_s != null ? s.outbox.oldest_age_s.toFixed(1) + " s" : "—") +
+       kv("ask.received topic depth", s.topic_depth ?? "?") + benches +
+       kv("ground pool", s.pool ? `${s.pool.busy} of ${s.pool.ceiling} lines busy · ${s.pool.waiting} waiting · longest wait ${ms(Number(s.pool.wait_max_ms))}` : "none — a connection per knock", s.pool && s.pool.waiting ? "red" : "ok") +
+       kv("poison held at (the rail waits for a person)", v.parked || 0, v.parked ? "red" : "ok") +
+       (s.parked || []).map(pk => line({label: esc(pk.words), sub: `parked:${pk.parked_id} · ${pk.bytes} bytes · ${esc(String(pk.hash).slice(0, 23))}… · since ${hm(pk.parked_at)}`,
+         lever: lever("advance", pk.parked_id, "advance past it", "the operator's explicit decision: the dispatcher commits past this event and goes on — recorded in your name")})).join("") +
+       (doors.length ? sub("THE DOORS · p50 / p95 · knocks in the last ten minutes, the slowest first") +
+         doors.map(d => kv(d.door, `${ms(Number(d.p50_ms))} / ${ms(Number(d.p95_ms))} · ${d.n}`, Number(d.p95_ms) >= 1000 ? "red" : "ok")).join("") : ""));
+  // ---- BODIES: one row per NAME (W85), the kernel's own eyes beside the lease (W79)
+  const bAlive = s.bodies.filter(b => b.alive).length;
+  card("BODIES", `<b class="ok">${bAlive}</b> alive${s.bodies.length - bAlive ? ` · <span class="red">${s.bodies.length - bAlive} dormant</span>` : ""}${gov && gov.mode === "crew" ? " · the kernel's own crew" : ""}`,
+       s.bodies.map(b => { const g = GOV[b.name]; const parked = g && (g.state === "parked" || g.state === "refused");
+         const state = parked ? g.state : b.alive ? "alive" : "dormant";
+         return line({dot: parked || !b.alive ? "dormant" : "alive", label: esc(b.name),
+                      sub: `${esc(b.kind)}${g ? ` · life ${g.lives}` : ""}${g && !parked && g.state !== "alive" ? ` · ${esc(g.state)}` : ""}` +
+                           (b.earlier_selves ? ` · ${b.earlier_selves} earlier ${b.earlier_selves === 1 ? "self" : "selves"}` : "") +
+                           (parked && g.words ? ` — ${esc(g.words)}` : ""),
+                      subTitle: (b.earlier_selves ? `this name was held by ${b.earlier_selves} earlier self${b.earlier_selves === 1 ? "" : "ves"} (other keypairs) — they stay on the ground, counted, never drawn as a second body. ` : "") + (parked && g.words ? g.words : ""),
+                      value: pill(state, parked || !b.alive ? "red" : "ok") + `<span class="when">until ${hm(b.until)}</span>`}); }).join("") ||
+       note("no leases yet"));
+  // ---- ASKS: the counts as chips; the asks LEFT WAITING listed, each with its stop (W86 — rule 11)
   const waiting = s.waiting || [];
-  view("ASKS", Object.entries(s.asks).map(([k, v]) => row(k, v)).join("") +
-       waiting.map(a => `<div class="row"><span>${esc(a.text)}<div class="meta">left waiting since ${hhmm(a.asked_at)} · asked by ${esc(whoIs(a.person))}${a.target ? " · for " + esc(a.target) : ""} · ${esc(a.ask_id)}</div></span>` +
-         `<span class="stop" data-stop="${esc(a.ask_id)}" title="stops this ask on your word before any body serves it — recorded as cancelled, its reply says so">stop it</span></div>`).join("") ||
-       `<div class="meta">none in this world</div>`);
-  // sp2 (W86): the watch's AUTHOR is drawn and a "rest it" lever rests it — recorded on its row, never deleted;
-  // the rested are counted, not drawn as red
-  view("WATCHES" + (s.watches_rested ? ` · ${s.watches_rested} rested` : ""), (s.watches.map(w => `<div class="row"><span>${esc(`${w.name} — ${w.reads || `${w.metric} ${w.op} ${w.threshold} · now ${w.value}`}`)}` +
-       `<div class="meta">added by ${esc(whoIs(w.added_by))}</div></span><span class="${w.red ? "red" : "ok"}">` +
-       `${esc(`${(w.state || (w.red ? "red" : "green")).toUpperCase()}${w.since ? " · since " + hhmm(w.since) : ""}`)}` +
-       ` <span class="stop" data-rest="${esc(w.watch_id)}" title="rests this watch on your word (its author's, or a governing seat's) — recorded on its row, never deleted; it turns nothing red from then on">rest it</span></span></div>`).join("") ||
-       `<div class="meta">none yet — ask the monitor agent to propose one ("watch for asks left waiting")</div>`));
-  const hv = view("HARNESS", (s.harness ? row(`${s.harness.template} v${s.harness.version} · ${hhmm(s.harness.ran_at)}`,
-       `${s.harness.passed} passed · ${s.harness.failed} failed`, s.harness.failed ? "red" : "ok") : `<div class="meta">no run yet</div>`) +
-       `<span class="assist">run the harness against the librarian now</span>`);
-  hv.querySelector(".assist").onclick = async () => {
-    hv.querySelector(".assist").textContent = "running…";
+  const order = ["received", "awaiting-confirm", "served", "replied", "refused", "cancelled"];
+  const askKeys = Object.keys(s.asks).sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99));
+  card("ASKS", `<b>${Object.values(s.asks).reduce((a, b) => a + b, 0)}</b> in this world` + (waiting.length ? ` · <span class="warn" style="color:var(--amber)">${waiting.length} left waiting</span>` : ""),
+       (askKeys.length ? `<div class="mchips">` + askKeys.map(k => chip(k, s.asks[k], k === "received" ? "warn" : k === "refused" ? "red" : k === "replied" ? "ok" : "")).join("") + `</div>` : note("none in this world")) +
+       (waiting.length ? sub(`LEFT WAITING · nobody has served these yet · “stop it” cancels one on your word`) +
+         waiting.map(a => line({label: esc(a.text), clamp: true,
+           sub: `since ${hm(a.asked_at)} · asked by ${esc(whoIs(a.person))}${a.target ? ` → ${esc(a.target)}` : ""} · ${esc(a.ask_id)}`, subTitle: a.text,
+           lever: lever("stop", a.ask_id, "stop it", "stops this ask on your word before any body serves it — recorded as cancelled, its reply says so")})).join("") : ""));
+  // ---- WATCHES: each with its author and its rest (W86); the rested counted, never drawn red
+  const wRed = s.watches.filter(w => w.red).length;
+  card("WATCHES", (s.watches.length ? `<b class="ok">${s.watches.length - wRed}</b> green${wRed ? ` · <span class="red">${wRed} red</span>` : ""}` : "none standing") + (s.watches_rested ? ` · ${s.watches_rested} rested` : ""),
+       s.watches.map(w => line({label: esc(w.name),
+         sub: `${esc(w.reads || `${w.metric} ${w.op} ${w.threshold} · now ${w.value}`)} · added by ${esc(whoIs(w.added_by))}`, subTitle: w.reads || "",
+         value: pill(w.state || (w.red ? "red" : "green"), w.red ? "red" : "ok") + (w.since ? `<span class="when">since ${hm(w.since)}</span>` : ""),
+         lever: lever("rest", w.watch_id, "rest it", "rests this watch on your word (its author's, or a governing seat's) — recorded on its row, never deleted; it turns nothing red from then on")})).join("") ||
+       note(`none yet — ask the monitor agent to propose one (“watch for asks left waiting”)`));
+  // ---- HARNESS: the last run, and the lever to run it now
+  const hv = card("HARNESS", s.harness ? `last run ${hm(s.harness.ran_at)} · <b class="${s.harness.failed ? "red" : "ok"}">${s.harness.passed} passed · ${s.harness.failed} failed</b>` : "no run yet",
+       (s.harness ? line({label: `${esc(s.harness.template)} v${esc(String(s.harness.version))}`, sub: `ran at ${hhmm(s.harness.ran_at)}`,
+                          value: pill(s.harness.failed ? `${s.harness.failed} failed` : "all passed", s.harness.failed ? "red" : "ok")}) : note("no run yet")) +
+       `<div class="mrow lv"><span class="l"><span class="w">run the harness against the librarian now</span></span><span class="v"></span><span class="lever" data-run="harness" title="the golden cases against the librarian's mind — a failing run is a fact on the rail">run it</span></div>`);
+  hv.querySelector("[data-run]").onclick = async () => {
+    hv.querySelector("[data-run]").textContent = "running…";
     await fetch("/harness/run", {method:"POST", headers:{"content-type":"application/json"},
                                  body: JSON.stringify({template: "librarian"})}).catch(()=>null);
     HC_AT = 0; loadMonitor();
