@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the brokers' TEST RESIDUE pruned · 2026-09-29
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: THE GROUND'S PRUNE — every row whose world is test-shaped, across every table with a scope column (`ground` · `scope`) · 2026-09-29
 """The brokers' housekeeping (the perf cure, 2026-09-29): every test session and every proof
 names its own namespace (`t<6 hex>`, `a…` · `b…` · `p…` for the cells' and the poison's
 proofs) and the brokers keep every topic, queue and consumer group it made — found live: a
@@ -13,6 +14,17 @@ Three prunes, each honest about what it touches:
   test-only topics (`orreth.test-…` · `orreth.shadow-…` · `orreth.test.cap.…`), and the empty
   test-prefixed groups. The rig's `scripts/dev.sh prune` verb.
 - Nothing here touches a namespace a person named (`two`, `perf`, the dev world's bare topics).
+
+THE GROUND'S PRUNE (the honest glass sp2, 2026-09-29): the same residue on the GROUND — every
+test session and every proof names its world `u:<word>-<6 hex>` (`u:test-t1a2b3c` · `u:loops-…` ·
+`u:doors-…` · `u:law-…`), and the ground kept every row it wrote (found live: 388 test worlds; the
+dev world's WATCHES card counted twenty-three watch rows in dead proof scopes it could never rest).
+- `scope(conn, world)` — ONE world's rows, across every table with a `scope` column and the
+  three child tables that hang off one (`spine_intent_turns` · `spine_occurrences` ·
+  `spine_proof_attempts`, by their parent). A proof calls it for its own world at its end.
+- `ground(conn)` — every world whose name is test-shaped. The suite's teardown and the rig's
+  `scripts/dev.sh prune` call it. A world a person named (`u:dev`, `u:acme`) is never touched:
+  the shape is the law, not a list.
 """
 from __future__ import annotations
 
@@ -21,6 +33,12 @@ import re
 import sys
 
 NS_RE = re.compile(r"^[a-z][0-9a-f]{6}$")                      # a test session's namespace
+SCOPE_RE = r"^u:[a-z]+-[0-9a-f]{6}$"                             # a test session's or a proof's WORLD (Postgres regex)
+CHILDREN = (                                                    # tables without a scope, hung off a parent that has one
+    ("spine_intent_turns", "intention_id", "spine_intentions", "intention_id"),
+    ("spine_occurrences", "schedule_id", "spine_schedules", "schedule_id"),
+    ("spine_proof_attempts", "ask_id", "spine_asks", "ask_id"),
+)
 TOPIC_RESIDUE_RE = re.compile(r"^orreth\.(test-|shadow-|test\.cap\.)")
 GROUP_PREFIXES = ("glass-dispatcher-", "glass-feed-", "g-", "td-", "shadow-", "probe-", "monitor-")
 
@@ -107,6 +125,57 @@ def _pw(base, user, pw):
     m = urllib.request.HTTPPasswordMgrWithDefaultRealm(); m.add_password(None, base, user, pw); return m
 
 
+def _scoped_tables(conn) -> list[str]:
+    """Every spine table on this ground with a `scope` column — read from the catalogue,
+    so a table born after this file is pruned too."""
+    cur = conn.cursor()
+    cur.execute("SELECT table_name FROM information_schema.columns WHERE table_schema = current_schema()"
+                " AND column_name = 'scope' AND table_name LIKE 'spine\\_%' ORDER BY 1")
+    return [r[0] for r in cur.fetchall()]
+
+
+def _prune_where(conn, where: str, params: tuple) -> dict:
+    out: dict = {}
+    with conn.transaction():
+        cur = conn.cursor()
+        for child, key, parent, pkey in CHILDREN:
+            cur.execute("SELECT to_regclass(%s) IS NOT NULL AND to_regclass(%s) IS NOT NULL", (child, parent))
+            if not cur.fetchone()[0]:
+                continue
+            cur.execute(f"DELETE FROM {child} WHERE {key} IN (SELECT {pkey} FROM {parent} WHERE {where})", params)
+            if cur.rowcount:
+                out[child] = cur.rowcount
+        for t in _scoped_tables(conn):
+            cur.execute(f"DELETE FROM {t} WHERE {where}", params)
+            if cur.rowcount:
+                out[t] = cur.rowcount
+    return out
+
+
+def scope(conn, world: str) -> dict:
+    """ONE world's rows, gone — every table with a scope column, the children by their
+    parent. `{table: rows}` for what was touched."""
+    return _prune_where(conn, "scope = %s", (world,))
+
+
+def ground(conn=None) -> dict:
+    """Every TEST-SHAPED world's rows (`u:<word>-<6 hex>`), gone. A person's world is
+    never touched. `{table: rows}` for what was touched, plus `worlds` counted first."""
+    if conn is None:
+        import psycopg
+        from .rails import PG_DSN
+        with psycopg.connect(PG_DSN, autocommit=True) as c:
+            return ground(c)
+    cur = conn.cursor()
+    worlds = 0
+    for t in _scoped_tables(conn):
+        cur.execute(f"SELECT count(DISTINCT scope) FROM {t} WHERE scope ~ %s", (SCOPE_RE,))
+        worlds = max(worlds, int(cur.fetchone()[0]))
+    out = {"worlds": worlds}
+    out.update(_prune_where(conn, "scope ~ %s", (SCOPE_RE,)))
+    return out
+
+
 def namespace(ns: str) -> dict:
     """ONE session's residue: its topics, its queues, the empty test-prefixed groups."""
     admin = _kafka()
@@ -117,13 +186,20 @@ def namespace(ns: str) -> dict:
 
 
 def residue() -> dict:
-    """Every test-shaped namespace's residue, and the test-only bare topics."""
+    """Every test-shaped namespace's residue, the test-only bare topics — and (sp2) every
+    test-shaped world's rows on the ground."""
     admin = _kafka()
     all_topics = list(admin.list_topics(timeout=60).topics)
     topics = [t for t in all_topics if (lambda ns: ns is not None and NS_RE.match(ns))(_topic_ns(t)) or TOPIC_RESIDUE_RE.match(t)]
     out = {"topics": _delete_topics(admin, topics), "topics_kept": len(all_topics) - len(topics),
            "groups": _delete_groups(admin, _empty_test_groups(admin)),
            "queues": _delete_queues(lambda q: re.search(r"[.-][a-z][0-9a-f]{6}(?:[.-]|$)", q) is not None)}
+    try:
+        g = ground()
+        out["ground_worlds"] = g.pop("worlds", 0)
+        out["ground_rows"] = sum(g.values())
+    except Exception as e:                                         # noqa: BLE001 — a dark ground prunes nothing, said
+        out["ground_error"] = type(e).__name__
     return out
 
 

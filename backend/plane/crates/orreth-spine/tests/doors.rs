@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: the four Python-only doors cross — walked over HTTP on the Rust kernel alone · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: step 9 — the farm's values over HTTP · the roster folded one row per name · a watch RESTED · a waiting ask STOPPED · a peer LET GO · the proof's world pruned · 2026-09-29
 //! THE FOUR DOORS (re-base sp1): `GET/POST /mitl` · `POST /impact` · `POST /mark` ·
 //! `POST /markers/kinds` — until now the reference's alone — knocked on the Rust
 //! kernel lit alone, through the gate (a seated person), each answer's shape the
@@ -633,6 +634,358 @@ async fn the_four_doors_answer_on_the_rust_kernel_alone() {
             )
             .await
             .unwrap();
+    }
+
+    // ---- 9. THE HONEST GLASS sp2: the farm's values over HTTP (part 1's owed proof) · ONE NAME,
+    // ONE SELF on the roster · a watch RESTED (rule 11) · a local ask left waiting STOPPED · a
+    // peer four days gone wears its date and is LET GO · the proof's world pruned from the ground
+    {
+        use orreth_spine::ground::Ground;
+        let mut g = Ground::connect(&rails::pg_dsn()).await.unwrap();
+        let jb = "did:orreth:person:jb";
+        // the fifteen: every metric the vocabulary names is a NUMBER in the snapshot, never absent
+        let (s, m) = knock(port, "GET", "/monitor", None, &h).await;
+        assert_eq!(s, 200, "{m}");
+        for k in orreth_spine::watch::METRICS {
+            assert!(
+                m["values"][k].is_number(),
+                "the snapshot carries `{k}` as a number: {}",
+                m["values"]
+            );
+        }
+        assert!(
+            m["stable"]["minds"].is_array()
+                && m["waiting"].is_array()
+                && m["watches_rested"].is_number(),
+            "{m}"
+        );
+        // the roster folded: two selves under one name draw ONE row, the living one first, the earlier counted
+        for (did, name, alive) in [
+            ("did:orreth:agent:twin-old", "twin", false),
+            ("did:orreth:agent:twin-new", "twin", true),
+            ("did:orreth:agent:gone-old", "gone", false),
+            ("did:orreth:agent:gone-new", "gone", false),
+        ] {
+            let did = format!("{did}{tok}");
+            g.client()
+                .execute(
+                    &format!("INSERT INTO spine_leases (did, name, kind, scope, until) VALUES ($1, $2, 'resident', $3, now() {} interval '1 hour')", if alive { "+" } else { "-" }),
+                    &[&did, &name, &world.scope],
+                )
+                .await
+                .unwrap();
+        }
+        let (s, m) = knock(port, "GET", "/monitor", None, &h).await;
+        assert_eq!(s, 200, "{m}");
+        let bodies = m["bodies"].as_array().unwrap();
+        let twin: Vec<&Value> = bodies
+            .iter()
+            .filter(|b| b["name"] == json!("twin"))
+            .collect();
+        let gone: Vec<&Value> = bodies
+            .iter()
+            .filter(|b| b["name"] == json!("gone"))
+            .collect();
+        assert_eq!(
+            (twin.len(), gone.len()),
+            (1, 1),
+            "one row per name: {bodies:?}"
+        );
+        assert_eq!(
+            (twin[0]["alive"].clone(), twin[0]["earlier_selves"].clone()),
+            (json!(true), json!(1)),
+            "{}",
+            twin[0]
+        );
+        assert!(
+            twin[0]["did"].as_str().unwrap().contains("twin-new"),
+            "the living self is the row: {}",
+            twin[0]
+        );
+        assert_eq!(
+            (gone[0]["alive"].clone(), gone[0]["earlier_selves"].clone()),
+            (json!(false), json!(1)),
+            "{}",
+            gone[0]
+        );
+        assert_eq!(
+            (
+                m["values"]["bodies_alive"].clone(),
+                m["values"]["bodies_dormant"].clone()
+            ),
+            (json!(1), json!(1)),
+            "names, not selves: {}",
+            m["values"]
+        );
+        // a watch born red, then RESTED on the owner's word: gone from the card, counted, turned no more
+        let wid = orreth_spine::monitor::add_watch(
+            &g,
+            &world.scope,
+            "sp2 always red",
+            "bodies_alive",
+            ">=",
+            0.0,
+            jb,
+        )
+        .await
+        .unwrap();
+        let (s, m) = knock(port, "GET", "/monitor", None, &h).await;
+        assert_eq!(s, 200);
+        let w = m["watches"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|w| w["watch_id"] == json!(wid))
+            .cloned()
+            .unwrap();
+        assert_eq!(
+            (w["red"].clone(), w["added_by"].clone()),
+            (json!(true), json!(jb)),
+            "{w}"
+        );
+        let (s, v) = knock(
+            port,
+            "POST",
+            "/watches/rest",
+            Some(&json!({"watch_id": wid})),
+            &[],
+        )
+        .await;
+        assert_eq!(
+            (s, v),
+            (401, json!({"error": "not seated"})),
+            "the rest needs a seat"
+        );
+        let (s, v) = knock(
+            port,
+            "POST",
+            "/watches/rest",
+            Some(&json!({"watch_id": "watch_nope"})),
+            &h,
+        )
+        .await;
+        assert_eq!((s, v), (404, json!({"error": "no such watch"})));
+        let (s, v) = knock(
+            port,
+            "POST",
+            "/watches/rest",
+            Some(&json!({"watch_id": wid})),
+            &h,
+        )
+        .await;
+        assert_eq!(
+            (s, v["rested"].clone(), v["already"].clone()),
+            (202, json!(wid), json!(false)),
+            "{v}"
+        );
+        let (s, m) = knock(port, "GET", "/monitor", None, &h).await;
+        assert_eq!(s, 200);
+        assert!(
+            m["watches"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|w| w["watch_id"] != json!(wid)),
+            "a rested watch is not drawn: {}",
+            m["watches"]
+        );
+        assert_eq!(m["watches_rested"], json!(1));
+        let row = g
+            .client()
+            .query_one("SELECT active, rested_by, rested_at IS NOT NULL FROM spine_watches WHERE watch_id = $1", &[&wid])
+            .await
+            .unwrap();
+        assert_eq!(
+            (
+                row.get::<_, bool>(0),
+                row.get::<_, String>(1),
+                row.get::<_, bool>(2)
+            ),
+            (false, jb.to_string(), true),
+            "recorded, never deleted"
+        );
+        let (s, v) = knock(
+            port,
+            "POST",
+            "/watches/rest",
+            Some(&json!({"watch_id": wid})),
+            &h,
+        )
+        .await;
+        assert_eq!(
+            (s, v["already"].clone()),
+            (202, json!(true)),
+            "the same word twice is idempotent: {v}"
+        );
+        // a local ask left WAITING: listed in the snapshot, stopped on the asker's word — recorded, with its facts
+        let aid = format!("ask_sp2{tok}");
+        g.client()
+            .execute(
+                "INSERT INTO spine_asks (ask_id, text, person, scope, status) VALUES ($1, 'left waiting for a body that never came', $2, $3, 'received')",
+                &[&aid, &jb, &world.scope],
+            )
+            .await
+            .unwrap();
+        let (s, m) = knock(port, "GET", "/monitor", None, &h).await;
+        assert_eq!(s, 200);
+        let waiting = m["waiting"].as_array().unwrap();
+        assert!(
+            waiting
+                .iter()
+                .any(|a| a["ask_id"] == json!(aid) && a["person"] == json!(jb)),
+            "the waiting ask is listed: {waiting:?}"
+        );
+        let (s, v) = knock(
+            port,
+            "POST",
+            "/asks/stop",
+            Some(&json!({"id": "ask_nope"})),
+            &h,
+        )
+        .await;
+        assert_eq!(
+            (s, v.clone()),
+            (400, json!({"error": "no such ask"})),
+            "{v}"
+        );
+        let (s, v) = knock(port, "POST", "/asks/stop", Some(&json!({"id": aid})), &h).await;
+        assert_eq!(
+            (s, v["status"].clone(), v["words"].clone()),
+            (
+                200,
+                json!("cancelled"),
+                json!(orreth_spine::seam::STOPPED_WORDS)
+            ),
+            "{v}"
+        );
+        let (s, v) = knock(port, "POST", "/asks/stop", Some(&json!({"id": aid})), &h).await;
+        assert_eq!(
+            (s, v["status"].clone(), v["words"].clone()),
+            (
+                200,
+                json!("cancelled"),
+                json!("it had already come to rest")
+            ),
+            "{v}"
+        );
+        let (s, m) = knock(port, "GET", "/monitor", None, &h).await;
+        assert!(
+            m["waiting"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|a| a["ask_id"] != json!(aid)),
+            "stopped: no longer waiting"
+        );
+        assert_eq!(
+            (s, m["asks"]["cancelled"].clone()),
+            (200, json!(1)),
+            "{}",
+            m["asks"]
+        );
+        let facts: i64 = g
+            .client()
+            .query_one(
+                "SELECT count(*) FROM spine_outbox WHERE convert_from(body, 'UTF8') LIKE '%\"correlation_id\":\"' || $1 || '\"%' AND \
+                 (convert_from(body, 'UTF8') LIKE '%orreth.journey.v1%' OR convert_from(body, 'UTF8') LIKE '%orreth.reply.v1%')",
+                &[&aid],
+            )
+            .await
+            .unwrap()
+            .get(0);
+        assert_eq!(
+            facts, 2,
+            "the stop is a journey line and a reply on the rail"
+        );
+        // a peer four days gone: its words wear the DATE; let go on the owner's word; the pin at light names it again
+        g.client()
+            .execute(
+                "INSERT INTO spine_peers (cell, scope, door, unreachable_since) VALUES ('ghost', $1, 'http://127.0.0.1:1', now() - interval '4 days')",
+                &[&world.scope],
+            )
+            .await
+            .unwrap();
+        let (s, wc) = knock(port, "GET", "/world", None, &h).await;
+        assert_eq!(s, 200, "{wc}");
+        let ghost = wc["peers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|p| p["cell"] == json!("ghost"))
+            .cloned()
+            .unwrap();
+        let words = ghost["words"].as_str().unwrap().to_string();
+        assert!(
+            words.starts_with("cell ghost · unreachable since 20")
+                && words.len() > "cell ghost · unreachable since HH:MM".len(),
+            "the date is worn: {words}"
+        );
+        let (s, v) = knock(
+            port,
+            "POST",
+            "/peers/forget",
+            Some(&json!({"cell": "nobody"})),
+            &h,
+        )
+        .await;
+        assert_eq!(
+            (s, v),
+            (404, json!({"error": "no such peer is named here"}))
+        );
+        let (s, v) = knock(
+            port,
+            "POST",
+            "/peers/forget",
+            Some(&json!({"cell": "ghost"})),
+            &h,
+        )
+        .await;
+        assert_eq!(
+            (s, v["forgotten"].clone(), v["by"].clone()),
+            (202, json!("ghost"), json!(jb)),
+            "{v}"
+        );
+        let (s, wc) = knock(port, "GET", "/world", None, &h).await;
+        assert_eq!(s, 200);
+        assert!(
+            wc["peers"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|p| p["cell"] != json!("ghost")),
+            "a peer let go is not drawn: {}",
+            wc["peers"]
+        );
+        let row = g
+            .client()
+            .query_one("SELECT forgotten_by, forgotten_at IS NOT NULL FROM spine_peers WHERE cell = 'ghost' AND scope = $1", &[&world.scope])
+            .await
+            .unwrap();
+        assert_eq!(
+            (row.get::<_, String>(0), row.get::<_, bool>(1)),
+            (jb.to_string(), true),
+            "recorded, never deleted"
+        );
+        // the ground's prune: the proof's world leaves every table — the watch, the ask, the peer, the leases
+        let pruned = orreth_spine::ground::prune_scope(&mut g, &world.scope)
+            .await
+            .unwrap();
+        let touched: Vec<&str> = pruned.iter().map(|(t, _)| t.as_str()).collect();
+        for t in ["spine_watches", "spine_asks", "spine_peers", "spine_leases"] {
+            assert!(touched.contains(&t), "prune touched {t}: {pruned:?}");
+        }
+        let left: i64 = g
+            .client()
+            .query_one(
+                "SELECT (SELECT count(*) FROM spine_watches WHERE scope = $1) + (SELECT count(*) FROM spine_asks WHERE scope = $1) + \
+                 (SELECT count(*) FROM spine_peers WHERE scope = $1) + (SELECT count(*) FROM spine_leases WHERE scope = $1)",
+                &[&world.scope],
+            )
+            .await
+            .unwrap()
+            .get(0);
+        assert_eq!(left, 0, "the world's rows are gone");
+        println!("doors · the honest glass sp2: fifteen values over HTTP · the roster folded (twin alive, 1 earlier self) · a watch rested and counted · a waiting ask stopped with 2 facts · a peer four days gone wore its date and was let go · {} tables pruned", pruned.len());
     }
 
     println!("doors · the four doors answer on the Rust kernel alone: a kind declared and refused · a mark set with the interested asked · MITL's card with {} citations · the toggle recorded · the impact read from the ground and judged by the ladder, the ask filed to mitl", cites.len());

@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P4 sp4, presence leases (M2) · 2026-09-18
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: THE LEASE FACTS — `orreth.lease.lapsed.v1` · `orreth.lease.seated.v1` minted by the sweep, noted on the ground (`noted_alive`) · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W85): ONE NAME, ONE SELF — the roster folded one row per name, the earlier selves counted · 2026-09-29
 """Presence leases (canon 0002 M2): a body is ALIVE while its lease is
 fresh — it renews as it serves; a body that stops renewing goes DORMANT
 in seconds and stays listed (the roster breathes; nothing is deleted).
@@ -47,14 +48,22 @@ def renew(conn, did: str, name: str, kind: str, ttl_s: int = TTL_S) -> None:
 
 
 def roster(conn) -> list[dict]:
-    """Every body that ever held a lease in this world, alive or dormant."""
+    """Every NAME that ever held a lease in this world, ONE row each — the self
+    serving under it now (a living lease first, else the latest), alive or
+    dormant, with the EARLIER SELVES counted (the honest glass sp2, W85: JB's
+    BODIES card drew every body twice — a box's first crew of ten fresh selves
+    beside the host's, keyed on the keypair; a name is what the person reads, a
+    self is what the ground keys, and the card folds to the name). Nothing is
+    deleted: the earlier selves stay on the ground, counted, never drawn as
+    a second body."""
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute(
-        "SELECT did, name, kind, until, renewed_at, until > now() FROM spine_leases"
-        " WHERE scope = %s ORDER BY name", (ev.scope(),))
+        "SELECT DISTINCT ON (name) did, name, kind, until, renewed_at, until > now(),"
+        " (count(*) OVER (PARTITION BY name))::int - 1 FROM spine_leases"
+        " WHERE scope = %s ORDER BY name, (until > now()) DESC, until DESC", (ev.scope(),))
     return [{"did": r[0], "name": r[1], "kind": r[2], "until": r[3].isoformat(),
-             "renewed_at": r[4].isoformat(), "alive": bool(r[5])}
+             "renewed_at": r[4].isoformat(), "alive": bool(r[5]), "earlier_selves": int(r[6])}
             for r in cur.fetchall()]
 
 

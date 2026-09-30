@@ -18,6 +18,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `FEED_TOPICS` widened to thirty-three · the fact door `/fact/<message_id>` (`fact_view`) · the ask view's `duty` · the presence sweep on the schedule loop's beat · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the park once by its place, its fact, the HOLD until a person advances it, the advance · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the crew door in SET queries · the retention beat on the schedule loop · 2026-09-29
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86 · W87): `POST /watches/rest` · `POST /asks/stop` (a local ask) · `POST /peers/forget` — the governing word checked INSIDE the handler (the seat's door table untouched, rule 9) · 2026-09-29
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -897,6 +898,36 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 except (ValueError, markers.UnknownKind) as e:
                     return self._json(400, {"error": str(e)})
                 return self._json(201, {"intention": made})
+            if path == "/watches/rest":               # the honest glass sp2 (W86): a watch RESTED — rule 11's lever
+                wid = str(p.get("watch_id") or "")    # the word is the watch's author's own, or a governing seat's (W69)
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    cur = conn.cursor()
+                    cur.execute("SELECT added_by FROM spine_watches WHERE watch_id = %s AND scope = %s", (wid, ev.scope()))
+                    row = cur.fetchone()
+                    if row is None:
+                        return self._json(404, {"error": "no such watch"})
+                    if row[0] != person and not proof.governs(conn, person):
+                        return self._json(403, {"error": "a watch rests on its author's word or a governing seat's — yours reads and writes"})
+                    made = monitor.rest_watch(conn, wid, person)
+                return self._json(202, {"rested": wid, "name": made["name"], "already": made["already"]})
+            if path == "/asks/stop":                  # the honest glass sp2 (W86): a LOCAL ask left waiting is stopped (rule 11)
+                aid = str(p.get("id") or p.get("ask_id") or "")
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        made = dispatch.stop_ask(conn, aid, person)
+                except KeyError:
+                    return self._json(404, {"error": "no such ask"})
+                except PermissionError as e:
+                    return self._json(403, {"error": str(e)})
+                return self._json(200, made)
+            if path == "/peers/forget":               # the honest glass sp2 (W87): a peer LET GO — a governing seat's word
+                cell = str(p.get("cell") or "").strip().lower()
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    if not proof.governs(conn, person):
+                        return self._json(403, {"error": "a peer is let go on a governing seat's word — yours reads and writes"})
+                    if not cells.forget_peer(conn, cell, person):
+                        return self._json(404, {"error": "no such peer is named here"})
+                return self._json(202, {"forgotten": cell, "by": person})
             if path in ("/intentions/stop", "/intentions/restart"):   # rule 11: the stop — and its reverse (W20)
                 iid = str(p.get("intention_id") or p.get("ref") or "")
                 verb, act = (("stop", intent.stop) if path.endswith("/stop")

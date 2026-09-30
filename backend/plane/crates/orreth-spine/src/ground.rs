@@ -2,6 +2,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops' three tags · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: the road's six tags at birth · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: THE MIGRATOR (lock 2) — the single writer, the version on the ground, the later kernel waits and verifies · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: THE GROUND'S PRUNE — one world's rows gone across every table with a scope column (`prune_scope`; a proof's teardown) · 2026-09-29
 //! The ground — mirrors `orreth_spine.ground` and the memo half of
 //! `orreth_spine.outbox` (`once` · `ground_key` · `mark_ground_done`).
 //!
@@ -255,4 +256,74 @@ impl Ground {
             migrated,
         })
     }
+}
+
+/// The tables without a scope that hang off a parent that has one (the reference's
+/// `prune.CHILDREN`): `(child, key, parent, parent key)`.
+pub const PRUNE_CHILDREN: [(&str, &str, &str, &str); 3] = [
+    (
+        "spine_intent_turns",
+        "intention_id",
+        "spine_intentions",
+        "intention_id",
+    ),
+    (
+        "spine_occurrences",
+        "schedule_id",
+        "spine_schedules",
+        "schedule_id",
+    ),
+    ("spine_proof_attempts", "ask_id", "spine_asks", "ask_id"),
+];
+
+/// THE GROUND'S PRUNE (the honest glass sp2, 2026-09-29): ONE world's rows, gone — every spine
+/// table with a `scope` column (read from the catalogue, so a table born after this line is
+/// pruned too) and the three child tables by their parent. A proof calls it for its own world
+/// at its end, beside `events::prune_namespace` (found live: 388 test worlds on the dev ground;
+/// twenty-three watch rows in dead proof scopes the WATCHES card could never rest). Returns
+/// `(table, rows)` for what was touched. The reference's `prune.scope`, law for law.
+pub async fn prune_scope(g: &mut Ground, scope: &str) -> Result<Vec<(String, u64)>, RailError> {
+    let mut out = Vec::new();
+    let tx = g.client.transaction().await?;
+    for (child, key, parent, pkey) in PRUNE_CHILDREN {
+        let both: bool = tx
+            .query_one(
+                "SELECT to_regclass($1) IS NOT NULL AND to_regclass($2) IS NOT NULL",
+                &[&child, &parent],
+            )
+            .await?
+            .get(0);
+        if !both {
+            continue;
+        }
+        let n = tx
+            .execute(
+                &format!("DELETE FROM {child} WHERE {key} IN (SELECT {pkey} FROM {parent} WHERE scope = $1)"),
+                &[&scope],
+            )
+            .await?;
+        if n > 0 {
+            out.push((child.to_string(), n));
+        }
+    }
+    let tables: Vec<String> = tx
+        .query(
+            "SELECT table_name FROM information_schema.columns WHERE table_schema = current_schema() AND \
+             column_name = 'scope' AND table_name LIKE 'spine\\_%' ORDER BY 1",
+            &[],
+        )
+        .await?
+        .iter()
+        .map(|r| r.get::<_, String>(0))
+        .collect();
+    for t in tables {
+        let n = tx
+            .execute(&format!("DELETE FROM {t} WHERE scope = $1"), &[&scope])
+            .await?;
+        if n > 0 {
+            out.push((t, n));
+        }
+    }
+    tx.commit().await?;
+    Ok(out)
 }

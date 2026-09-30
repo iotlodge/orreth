@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: THE LEASE FACTS — `orreth.lease.lapsed.v1` · `orreth.lease.seated.v1` minted by the kernel's sweep, noted on the ground (`noted_alive`) so two kernels never mint one lapse twice · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W85): ONE NAME, ONE SELF — the roster folded one row per name, the earlier selves counted · 2026-09-29
 //! Presence leases (canon 0002 M2) — `orreth_spine.presence`: a body is ALIVE
 //! while its lease is fresh — it renews as it serves; a body that stops
 //! renewing goes DORMANT in seconds and stays listed (the roster breathes;
@@ -37,13 +38,19 @@ pub async fn renew(
     Ok(())
 }
 
-/// Every body that ever held a lease in this world, alive or dormant.
+/// Every NAME that ever held a lease in this world, ONE row each — the self serving under
+/// it now (a living lease first, else the latest), alive or dormant, with the EARLIER SELVES
+/// counted (the honest glass sp2, W85: JB's BODIES card drew every body twice — a box's first
+/// crew of ten fresh selves beside the host's, keyed on the keypair; a name is what the
+/// person reads, a self is what the ground keys, and the card folds to the name). Nothing is
+/// deleted: the earlier selves stay on the ground, counted, never drawn as a second body.
 pub async fn roster(g: &Ground, scope: &str) -> Result<Vec<Value>, RoadError> {
     let rows = g
         .client()
         .query(
-            "SELECT did, name, kind, until, renewed_at, until > now() FROM spine_leases WHERE scope \
-             = $1 ORDER BY name",
+            "SELECT DISTINCT ON (name) did, name, kind, until, renewed_at, until > now(), \
+             (count(*) OVER (PARTITION BY name))::int - 1 FROM spine_leases WHERE scope = $1 ORDER \
+             BY name, (until > now()) DESC, until DESC",
             &[&scope],
         )
         .await?;
@@ -56,6 +63,7 @@ pub async fn roster(g: &Ground, scope: &str) -> Result<Vec<Value>, RoadError> {
                 "until": isoformat(r.get::<_, SystemTime>(3)),
                 "renewed_at": isoformat(r.get::<_, SystemTime>(4)),
                 "alive": r.get::<_, bool>(5),
+                "earlier_selves": r.get::<_, i32>(6),
             })
         })
         .collect())

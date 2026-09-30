@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (a): the human seat's proof · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4: the proof's client is patient at the ceiling (a 429 outside the flood step is retried after retry_after_s) · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: the pool made the proof's steps quick — jb's bucket is let refill before the raw feed knock and the flood · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: the proof's world pruned from the ground at its end (`ground::prune_scope`) · 2026-09-29
 //! THE GATE'S PROOF (canon 0005 sp8 row 3 · 0006 §3 · covenant rules 3 and 4),
 //! on the dev rig, by name:
 //!
@@ -623,5 +624,8 @@ async fn the_gate_seats_the_owner_first_and_every_door_reads_the_seat() {
 
     lit.stop().await;
     let _ = orreth_spine::events::prune_namespace(&world.kafka, &format!("t{tok}")).await; // the proof's residue leaves with it
+    if let Ok(mut g) = orreth_spine::ground::Ground::connect(&world.pg_dsn).await {
+        let _ = orreth_spine::ground::prune_scope(&mut g, &world.scope).await; // sp2: the proof's world leaves the ground with it
+    }
     let _ = std::fs::remove_dir_all(&home);
 }

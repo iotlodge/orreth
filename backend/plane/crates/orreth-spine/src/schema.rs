@@ -8,6 +8,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `spine_leases.noted_alive` — the sweep's note on the ground · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: THE MIGRATOR (lock 2) — `spine_schema`, the version, every table both kernels stand on · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): SCHEMA VERSION 2 — the indexes the doors and the relay were missing · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: SCHEMA VERSION 3 — a watch's rest (`spine_watches.active` · `rested_by` · `rested_at`) and a peer's forgetting (`spine_peers.forgotten_by` · `forgotten_at`), recorded on their rows (rule 11) · 2026-09-29
 //! The ask road's tables — the Python spine's DDL, word for word, under the
 //! same tags its `once` guard uses (`resident` · `markers` · `proof` · `intent`
 //! · `presence` · `digest`), so two spines on one ground never disagree about a
@@ -33,7 +34,7 @@ use std::sync::LazyLock;
 /// (or past) its number runs no DDL at all — it VERIFIES that every table it declares
 /// stands, and refuses to light on a ground that lies. A kernel lighting beside a
 /// migrating one WAITS at the lock and then verifies (`Ground::ensure_all`).
-pub const SCHEMA_VERSION: i32 = 2; // 2: the indexes (the perf cure, 2026-09-29)
+pub const SCHEMA_VERSION: i32 = 3; // 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29)
 
 /// The version table itself — created before the version is read, under the same lock.
 pub const SCHEMA_DDL: &[&str] = &[
@@ -177,6 +178,11 @@ pub const MONITOR_DDL: &[&str] = &[
      NOT NULL, scope text NOT NULL, added_at timestamptz NOT NULL DEFAULT now())",
     "ALTER TABLE spine_watches ADD COLUMN IF NOT EXISTS last_ok boolean",
     "ALTER TABLE spine_watches ADD COLUMN IF NOT EXISTS since timestamptz",
+    // schema 3 (the honest glass sp2, W86): a watch's REST — recorded on its row, never a delete
+    // (rule 11: there was no way to rest a watch)
+    "ALTER TABLE spine_watches ADD COLUMN IF NOT EXISTS active boolean NOT NULL DEFAULT true",
+    "ALTER TABLE spine_watches ADD COLUMN IF NOT EXISTS rested_by text",
+    "ALTER TABLE spine_watches ADD COLUMN IF NOT EXISTS rested_at timestamptz",
 ];
 
 /// `scheduler.ensure_schema`: the schedules (with their intention's marker), the occurrences.
@@ -362,6 +368,10 @@ pub const CELLS_DDL: &[&str] = &[
      NOT NULL DEFAULT 0, unreachable_since timestamptz, PRIMARY KEY (cell, scope))",
     "CREATE TABLE IF NOT EXISTS spine_seam_nonces ( nonce text PRIMARY KEY, scope text NOT NULL, \
      seen_at timestamptz NOT NULL DEFAULT now())",
+    // schema 3 (the honest glass sp2, W87): a peer LET GO — recorded on its row, never deleted; a
+    // kernel relit naming the cell (SPINE_PEERS) names it again
+    "ALTER TABLE spine_peers ADD COLUMN IF NOT EXISTS forgotten_by text",
+    "ALTER TABLE spine_peers ADD COLUMN IF NOT EXISTS forgotten_at timestamptz",
 ];
 
 /// The table its home module (`seam`) once held — re-exported there.

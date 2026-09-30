@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells · partition · isolation · hardening · 2026-09-25
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W87): the unreachable time wears its date when it is not today · a peer LET GO on a governing seat's word (`forget_peer`, schema 3) · 2026-09-29
 //! The cell's LIVE half (canon 0002 rule 8 · 0005 P7 sp7): the universe's
 //! home on the ground (`spine_world`: one row per universe — its cell, its
 //! epoch, the kernel that keeps it), settled at light and said as a fact
@@ -138,14 +139,18 @@ pub async fn epoch(g: &Ground, scope: &str) -> Result<i64, RoadError> {
     Ok(row.map(|r| r.get::<_, i32>(0) as i64).unwrap_or(1))
 }
 
-/// Every peer this cell names, as the ground remembers it.
+/// Every peer this cell names, as the ground remembers it — a peer let go is not drawn. The
+/// unreachable time is on the human's clock: the time alone when it is today, the DATE before
+/// it when it is not (W87: JB read "unreachable since 17:31" over a peer four days gone).
 pub async fn peers(g: &Ground, scope: &str, zone: &str) -> Result<Vec<Value>, RoadError> {
     let rows = g
         .client()
         .query(
             "SELECT cell, door, did, world, epoch, pinned_at, last_seen, cursor, unreachable_since, \
              extract(epoch FROM (clock_timestamp() - last_seen))::float8, \
-             to_char(unreachable_since AT TIME ZONE $2, 'HH24:MI') FROM spine_peers WHERE scope = $1 ORDER BY cell",
+             to_char(unreachable_since AT TIME ZONE $2, CASE WHEN (unreachable_since AT TIME ZONE $2)::date = \
+             (clock_timestamp() AT TIME ZONE $2)::date THEN 'HH24:MI' ELSE 'YYYY-MM-DD HH24:MI' END) FROM \
+             spine_peers WHERE scope = $1 AND forgotten_at IS NULL ORDER BY cell",
             &[&scope, &zone],
         )
         .await?;
@@ -168,6 +173,23 @@ pub async fn peers(g: &Ground, scope: &str, zone: &str) -> Result<Vec<Value>, Ro
             })
         })
         .collect())
+}
+
+/// A peer LET GO on a governing seat's word (W87 · rule 11): recorded on its row —
+/// `forgotten_by` · `forgotten_at` — never a delete; the card stops drawing it and the seam
+/// neither greets it nor routes to it. A kernel relit naming the cell in SPINE_PEERS names it
+/// again (`Seam::ensure_peers`). `Ok(false)` when no such peer is named here (or it is
+/// already let go).
+pub async fn forget_peer(g: &Ground, scope: &str, cell: &str, by: &str) -> Result<bool, RoadError> {
+    let n = g
+        .client()
+        .execute(
+            "UPDATE spine_peers SET forgotten_by = $3, forgotten_at = now() WHERE cell = $1 AND scope = $2 AND \
+             forgotten_at IS NULL",
+            &[&cell, &scope, &by],
+        )
+        .await?;
+    Ok(n == 1)
 }
 
 /// The tenth check, read off the ground: which databases this connection's

@@ -2541,6 +2541,62 @@ approved (covenant rule 9).
       pulse until `dev.sh kernel`); no Rust proof yet reads `/monitor`'s farm values over HTTP (the
       reference's `test_stable` does; sp2 adds the Rust read to `tests/doors.rs`); the reference has
       no join desk, so the name law lands on the Rust kernel alone.
+      **THE HONEST GLASS sp2 — PARTS 2–5 BUILT, 2026-09-29 night, exactly as planned above.**
+      (2) ONE NAME, ONE SELF (W85): `presence::roster` · `presence.roster` fold ONE row per name
+      (`DISTINCT ON (name)`, the living lease first, else the latest; `earlier_selves` counted,
+      never drawn; `bodies_dormant` = names with no living self); the glass draws "· N earlier
+      selves" beside the name. The Rust desk (`desk_live::prove`) asks the ground whether the
+      name is HELD by a living self that is not this key; if so the proven key is STAGED for a
+      governing seat's word — never a ticket's, never a welcome's — the `join.proved` fact
+      carrying `held_by`, the hold's words naming the incumbent (`held_name_words`), the door's
+      answer `held_by` (`desk.rs` untouched, rule 9). (3) THE WATCH'S REST (W86): SCHEMA VERSION
+      3 on both kernels (`spine_watches.active` · `rested_by` · `rested_at`; fixture `schema-v0`
+      pins 3); `monitor::rest_watch` · `monitor.rest_watch` recorded on the row, never a delete,
+      idempotent (`already`); the snapshot and the judge read `active` alone and the snapshot
+      counts `watches_rested`; `POST /watches/rest` on both kernels — 202 · 404 · 403 in words —
+      with the word the author's own or a governing seat's (W69), checked INSIDE the handler
+      (`desk_live::governs` · `proof.governs`; `seat.rs` and `seat.py`'s door tables untouched);
+      the WATCHES card draws each watch's author and a "rest it" lever, its title counting the
+      rested. `/asks/stop` WIDENED to a LOCAL ask left waiting on both kernels (the Rust seam's
+      `stop_local` behind the routed path; the reference's `dispatch.stop_ask`, a door it did not
+      have): the asker's or a governing seat's word, the row `cancelled` with `STOPPED_WORDS` as
+      its reply and the kernel as its server, a journey line and the reply on the rail in one
+      transaction; an ask already served or at rest says so and stands. The snapshot lists the
+      asks left WAITING (`waiting`: id · words · asker · target · since) and the ASKS card draws
+      each with "stop it". (4) THE PEER LET GO (W87): the unreachable time wears its DATE when
+      it is not today (in the query on Rust; `cells.unreachable_clock` on the reference; the pure
+      `lag_words` untouched); `spine_peers.forgotten_by` · `forgotten_at` in schema 3;
+      `cells_live::forget_peer` · `cells.forget_peer` recorded on the row; `POST /peers/forget`
+      on both kernels (a governing seat's word, inside the handler); a peer let go is not drawn,
+      not greeted and not routed to (`Seam::peer_row`), and the pin at light names it again
+      (`ensure_peers` clears the forgetting); the PEERS row draws "forget it" for a governing
+      seat. (5) THE GROUND'S PRUNE: `prune.scope(conn, world)` · `prune.ground(conn)` on the
+      reference (every table with a scope column read from the catalogue, the three child tables
+      by their parent — `spine_intent_turns` · `spine_occurrences` · `spine_proof_attempts`; the
+      shape `u:<word>-<6 hex>` is the law, a person's world is never touched), `residue()` and
+      `dev.sh prune` call it, the suite's teardown prunes every test-shaped world at its end;
+      `ground::prune_scope` on the kernel, called by every Rust proof at its end beside its
+      namespace (cells' proofs drop their own databases). PROVEN: `tests/desk.rs` step 7b (an
+      impostor's key claiming scout's held name → staged, `held_by` scout, the hold naming the
+      held name, scout's lease untouched) green; `tests/doors.rs` step 9 (the fifteen values as
+      numbers over HTTP — part 1's owed proof; the roster folded, twin alive with 1 earlier self,
+      gone dormant with 1, `bodies_alive` 1 · `bodies_dormant` 1; a watch born red rested on
+      the owner's word — gone from the card, counted, the row recorded, the same word twice
+      idempotent, unseated 401, unknown 404; a waiting ask listed, stopped with two facts on the
+      rail, the second stop "it had already come to rest", unknown 400; a peer four days gone
+      wearing its date, let go 202, not drawn, recorded, unknown 404; `prune_scope` touching 14
+      tables and leaving the world's count at 0) green; Rust conformance 2 (`schema_version` 3 +
+      the era) · lib 49 · clippy · fmt clean; the reference's `test_monitor` 12 + `test_cells` 5
+      (the fold · the rest and the judge · the waiting and the stop with its facts · the prune
+      of one world beside a person's · the three doors on the rig with a seated non-governing
+      person refused in words · the date and the forgetting) green; `test_desk` · `test_scheduler`
+      · `test_migrator` green; Python conformance 732. THE WALK: SPEC-HONEST-01 in the
+      experience specs — JB's re-walk of the Monitoring. HONEST LIMITS: the dev ground's own
+      residue (the seven orphaned objectives, JB's four watches) is settled through the new
+      levers by JB's own clicks in the walk, not by Fable (Fable never sits as JB; the levers
+      are the cure); `dev.sh prune` takes the dead proof scopes' rows now; the reference has no
+      join desk, so the name law stands on the Rust kernel alone; a watch's rest and a peer's
+      forgetting are rows, not facts on the feed (the panel's tape does not say them — a seed).
     - **Row 5 — THE MACHINE ROAD (JB's lock, 2026-09-27: the first row AFTER
       the release wave, driven by a proof that needs a stranger — rule 12).**
       Row 3b's honest limit in plain words: the kernel's own crew hold the

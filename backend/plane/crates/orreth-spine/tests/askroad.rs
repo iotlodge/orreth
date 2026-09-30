@@ -20,6 +20,7 @@
 //! With no rig it prints "rails not up — skipped by name" and passes green
 //! without proving anything; beside a live Bridge on :4600 it refuses to run.
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the gate: the proof SITS before it knocks (the ceremony through the doors) · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: the proof's world pruned from the ground at its end (`ground::prune_scope`) · 2026-09-29
 
 #![cfg(feature = "bridge")]
 
@@ -629,5 +630,8 @@ async fn shadow_an_ask_through_the_rust_door_is_served_by_the_python_librarian_a
     let _ = py.kill().await;
     lit.stop().await;
     let _ = orreth_spine::events::prune_namespace(&world.kafka, &format!("t{tok}")).await;
+    if let Ok(mut g) = orreth_spine::ground::Ground::connect(&world.pg_dsn).await {
+        let _ = orreth_spine::ground::prune_scope(&mut g, &world.scope).await; // sp2: the proof's world leaves the ground with it
+    }
     // the proof's residue leaves with it
 }

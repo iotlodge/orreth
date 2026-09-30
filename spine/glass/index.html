@@ -1,5 +1,6 @@
 <!-- PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P3 sp1, the glass exists · 2026-09-16
      Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #20 cures: W78 the kernel's own hop drawn from its reply · W79 the BODIES card reads the kernel's process state (life · PARKED words) · W81 the Analyzer row's words no longer squeezed by its meta · the row's "last red" chip · 2026-09-28
+     Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W85 · W86 · W87): BODIES one row per name with the earlier selves counted · WATCHES with the author and "rest it" · ASKS lists the asks left waiting, each with "stop it" · PEERS with "forget it" · 2026-09-29
 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass), walk #7's wounds · 2026-09-21 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures (glass): W27 the person's latest session · W32 one Esc, one thing · W33 a pull retracts when focus moves · W34/W39 a stop never needs the exact words · W35 the code row pinned · 2026-09-23 -->
@@ -2256,7 +2257,9 @@ async function loadMonitor(){
          const alive = roster.filter(b => b.alive).map(b => b.name);
          return `<div class="row"><span>${esc(pr.words)}${pr.did ? ` · <span class="meta">${esc(pr.did.slice(0, 32))}…</span>` : ""}` +
                 `${alive.length ? `<div class="meta">alive there: ${esc(alive.join(", "))} — say “${esc(alive[0])}@${esc(pr.cell)}, …” to ask it</div>` : ""}</span>` +
-                `<span class="${pr.unreachable_since ? "red" : pr.did ? "ok" : ""}">${pr.unreachable_since ? "unreachable" : pr.did ? "pinned" : "not yet heard"}</span></div>`; }).join("") ||
+                `<span class="${pr.unreachable_since ? "red" : pr.did ? "ok" : ""}">${pr.unreachable_since ? "unreachable" : pr.did ? "pinned" : "not yet heard"}` +
+                (GOVERN ? ` <span class="stop" data-forget="${esc(pr.cell)}" title="lets this peer go on your word — recorded on its row, never deleted; the cell is named again when a kernel is relit naming it (SPINE_PEERS)">forget it</span>` : "") +
+                `</span></div>`; }).join("") ||
        `<div class="meta">no peers named — light a second cell with <code>scripts/dev.sh cell two</code> and relight this kernel so it names it (SPINE_PEERS)</div>`);
   const stb = s.stable || {minds: [], assignments: []};                            // P6.5 sp3: THE STABLE — every mind, its deal, its spend
   view("THE STABLE · LLMs · " + meas(v.minds_standing, x => x + " standing") + (v.minds_unhealthy ? " · " + v.minds_unhealthy + " unhealthy" : ""),
@@ -2283,13 +2286,23 @@ async function loadMonitor(){
        (s.doors || []).slice(0, 6).map(d => row("door " + d.door, `${ms(Number(d.p50_ms))} / ${ms(Number(d.p95_ms))} · ${d.n} knocks`, Number(d.p95_ms) >= 1000 ? "red" : "ok")).join(""));
   view("BODIES", s.bodies.map(b => { const g = GOV[b.name]; const parked = g && (g.state === "parked" || g.state === "refused");
        return `<div class="row"><span><span class="dot ${parked ? "dormant" : b.alive ? "alive" : "dormant"}"></span>` +
-       `${esc(b.name)} · ${esc(b.kind)}${g ? ` · life ${g.lives}` : ""}</span><span class="${parked || !b.alive ? "red" : "ok"}">` +
+       `${esc(b.name)} · ${esc(b.kind)}${g ? ` · life ${g.lives}` : ""}${b.earlier_selves ? ` <span class="meta" title="this name was held by ${b.earlier_selves} earlier self${b.earlier_selves === 1 ? "" : "ves"} (other keypairs) — they stay on the ground, counted, never drawn as a second body">· ${b.earlier_selves} earlier ${b.earlier_selves === 1 ? "self" : "selves"}</span>` : ""}</span><span class="${parked || !b.alive ? "red" : "ok"}">` +
        `${parked ? g.state.toUpperCase() : b.alive ? "alive" : "dormant"}${g && !parked && g.state !== "alive" ? " · " + esc(g.state) : ""} · until ${hhmm(b.until)}</span></div>` +
        (parked ? `<div class="meta" style="padding:0 8px 6px">${esc(g.words || "")}</div>` : ""); }).join("") ||
        `<div class="meta">no leases yet</div>`);
-  view("ASKS", Object.entries(s.asks).map(([k, v]) => row(k, v)).join("") || `<div class="meta">none in this world</div>`);
-  view("WATCHES", (s.watches.map(w => row(`${w.name} — ${w.reads || `${w.metric} ${w.op} ${w.threshold} · now ${w.value}`}`,
-       `${(w.state || (w.red ? "red" : "green")).toUpperCase()}${w.since ? " · since " + hhmm(w.since) : ""}`, w.red ? "red" : "ok")).join("") ||
+  // the honest glass sp2 (W86): the asks LEFT WAITING are listed, each with its stop — a count alone hid seven of
+  // the watch loop's own orphaned objectives behind "received 9" with no way to reach them (rule 11)
+  const waiting = s.waiting || [];
+  view("ASKS", Object.entries(s.asks).map(([k, v]) => row(k, v)).join("") +
+       waiting.map(a => `<div class="row"><span>${esc(a.text)}<div class="meta">left waiting since ${hhmm(a.asked_at)} · asked by ${esc(whoIs(a.person))}${a.target ? " · for " + esc(a.target) : ""} · ${esc(a.ask_id)}</div></span>` +
+         `<span class="stop" data-stop="${esc(a.ask_id)}" title="stops this ask on your word before any body serves it — recorded as cancelled, its reply says so">stop it</span></div>`).join("") ||
+       `<div class="meta">none in this world</div>`);
+  // sp2 (W86): the watch's AUTHOR is drawn and a "rest it" lever rests it — recorded on its row, never deleted;
+  // the rested are counted, not drawn as red
+  view("WATCHES" + (s.watches_rested ? ` · ${s.watches_rested} rested` : ""), (s.watches.map(w => `<div class="row"><span>${esc(`${w.name} — ${w.reads || `${w.metric} ${w.op} ${w.threshold} · now ${w.value}`}`)}` +
+       `<div class="meta">added by ${esc(whoIs(w.added_by))}</div></span><span class="${w.red ? "red" : "ok"}">` +
+       `${esc(`${(w.state || (w.red ? "red" : "green")).toUpperCase()}${w.since ? " · since " + hhmm(w.since) : ""}`)}` +
+       ` <span class="stop" data-rest="${esc(w.watch_id)}" title="rests this watch on your word (its author's, or a governing seat's) — recorded on its row, never deleted; it turns nothing red from then on">rest it</span></span></div>`).join("") ||
        `<div class="meta">none yet — ask the monitor agent to propose one ("watch for asks left waiting")</div>`));
   const hv = view("HARNESS", (s.harness ? row(`${s.harness.template} v${s.harness.version} · ${hhmm(s.harness.ran_at)}`,
        `${s.harness.passed} passed · ${s.harness.failed} failed`, s.harness.failed ? "red" : "ok") : `<div class="meta">no run yet</div>`) +
@@ -2683,9 +2696,35 @@ async function advanceParked(id){                  // re-base sp1: the operator'
   if (r && !r.error) loadMonitor().catch(()=>{});
   return r;
 }
+async function restWatch(id){                     // the honest glass sp2 (W86): rule 11's lever on a watch
+  const r = await fetch("/watches/rest", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({watch_id: id})}).then(x=>x.json()).catch(()=>null);
+  sysline(!r ? "the watches door did not answer" : r.error ? esc(r.error) :
+          r.already ? `the watch “${esc(r.name)}” was already at rest` : `the watch “${esc(r.name)}” rests, on your word — recorded, never deleted; it turns nothing red from now on`);
+  if (r && !r.error) loadMonitor().catch(()=>{});
+  return r;
+}
+async function stopWaiting(id){                   // sp2 (W86): a local ask left waiting, stopped
+  const r = await fetch("/asks/stop", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({id})}).then(x=>x.json()).catch(()=>null);
+  sysline(!r ? "the asks door did not answer" : r.error ? esc(r.error) : esc(r.words || `ask ${id} · ${r.status}`));
+  if (r && !r.error) loadMonitor().catch(()=>{});
+  return r;
+}
+async function forgetPeer(cell){                  // sp2 (W87): a peer let go on a governing seat's word
+  const r = await fetch("/peers/forget", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({cell})}).then(x=>x.json()).catch(()=>null);
+  sysline(!r ? "the peers door did not answer" : r.error ? esc(r.error) : `cell ${esc(cell)} let go, on your word — recorded on its row; relight a kernel naming it to speak to it again`);
+  if (r && !r.error){ WORLD = null; loadMonitor().catch(()=>{}); }
+  return r;
+}
 document.getElementById("views").addEventListener("click", e => {
-  const a = e.target && e.target.dataset && e.target.dataset.advance;
-  if (a) advanceParked(a);
+  const d = e.target && e.target.dataset;
+  if (!d) return;
+  if (d.advance) advanceParked(d.advance);
+  else if (d.rest) restWatch(d.rest);
+  else if (d.stop) stopWaiting(d.stop);
+  else if (d.forget) forgetPeer(d.forget);
 });
 async function panelStations(){                    // the sockets: /crew (the roster) · /monitor (the leases) · /bodies (the kernel's own eyes)
   if (!SEAT) return;

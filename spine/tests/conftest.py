@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P1 sp1, the durability boundary (M1) · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 lock 5, one rig per test session; the rig yields to a test that serves its own bodies · 2026-09-27
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: the session's worlds pruned from the ground at its end · 2026-09-29
 """The ground fixture: a throwaway schema per test session so every run
 starts clean. Skips politely when the rig is down — unless
 SPINE_REQUIRE_PG is set (CI sets it: there, no ground means FAIL, never
@@ -25,6 +26,11 @@ def _queue_ns():
         from orreth_spine import prune              # brokers — its topics, its queues, the empty test groups —
         prune.namespace(tok)                        # leaves with it (found live: 5,288 topics after six days)
     except Exception:                               # noqa: BLE001 — a dark broker prunes nothing
+        pass
+    try:                                            # the honest glass sp2: the session's worlds on the GROUND
+        from orreth_spine import prune              # (u:test-<ns> and every u:law-… a test named) leave with it —
+        prune.ground()                              # every test-shaped world; a person's world is never touched
+    except Exception:                               # noqa: BLE001 — a dark ground prunes nothing
         pass
     os.environ.pop("SPINE_QUEUE_NS", None)
     os.environ.pop("SPINE_SCOPE", None)

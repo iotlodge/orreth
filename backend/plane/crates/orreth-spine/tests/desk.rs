@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (b): the machine join desk's proof · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W85): ONE NAME, ONE SELF — a proven key claiming a name a living self holds is STAGED, the hold naming the incumbent; the proof's world pruned at its end · 2026-09-29
 //! THE DESK'S PROOF (canon 0005 sp8 row 3b · 0006 §2–3 · 0012 · covenant rule 3),
 //! on the dev rig, by name:
 //!
@@ -449,6 +450,73 @@ async fn the_desk_challenges_proves_stages_and_leases_a_body() {
     assert_ne!(v["lease_id"], json!(lease_id), "a new life, a new lease");
     println!("desk · scout re-joined on its standing welcome, no click owed");
 
+    // ---- 7b. ONE NAME, ONE SELF (the honest glass sp2, W85): scout holds a LIVE lease under its
+    // name; a different key asks to join AS scout — proven, then STAGED for a governing seat's
+    // word (never admitted on a welcome it does not have, nor on a ticket), the hold and the
+    // door both naming the incumbent; nothing about scout's own lease changes
+    {
+        let g = Ground::connect(&world.pg_dsn).await.expect("the ground");
+        g.client()
+            .execute(
+                "INSERT INTO spine_leases (did, name, kind, scope, until) VALUES ($1, 'scout', 'resident', $2, now() + \
+                 interval '1 hour') ON CONFLICT (did) DO UPDATE SET until = EXCLUDED.until",
+                &[&scout.did(), &world.scope],
+            )
+            .await
+            .unwrap();
+        let impostor = agent("impostor");
+        let (s, a) = knock(
+            port,
+            "POST",
+            "/join",
+            Some(&ask_of(&impostor, "scout")),
+            &[],
+        )
+        .await;
+        assert_eq!(s, 201, "{a}");
+        let jid_i = a["id"].as_str().unwrap().to_string();
+        let nonce_i = a["nonce"].as_str().unwrap().to_string();
+        let (s, v) = knock(
+            port,
+            "POST",
+            "/join/prove",
+            Some(&json!({"id": jid_i, "did": impostor.did(), "sig": desk::proof_of(&impostor, &nonce_i)})),
+            &[],
+        )
+        .await;
+        assert_eq!((s, v["status"].clone()), (200, json!("staged")), "{v}");
+        assert_eq!(
+            v["held_by"],
+            json!(scout.did()),
+            "the hold names the incumbent: {v}"
+        );
+        assert!(
+            v["words"].as_str().unwrap().contains("a living self")
+                && v["words"].as_str().unwrap().contains("holds that name"),
+            "{v}"
+        );
+        let held_ask = v["ask"].as_str().unwrap().to_string();
+        let (s, h) = knock(port, "GET", &format!("/ask/{held_ask}"), None, &jb).await;
+        assert_eq!(s, 200, "{h}");
+        let hold_text = h["text"].as_str().unwrap_or_default().to_string();
+        assert!(
+            hold_text.contains("a name a LIVING self already holds")
+                && hold_text.contains("serves as scout"),
+            "the hold's words name the held name: {hold_text}"
+        );
+        let same: i64 = g
+            .client()
+            .query_one(
+                "SELECT count(*) FROM spine_leases WHERE scope = $1 AND name = 'scout' AND did = $2 AND until > now()",
+                &[&world.scope, &scout.did()],
+            )
+            .await
+            .unwrap()
+            .get(0);
+        assert_eq!(same, 1, "scout's own lease stands untouched");
+        println!("desk · ONE NAME, ONE SELF: a proven key claiming scout's held name is staged, the hold naming …{}", &scout.did()[scout.did().len() - 8..]);
+    }
+
     // ---- 8. a stale challenge is re-issued; the desk's list is a seated read
     let rover = agent("rover");
     let (s, a) = knock(port, "POST", "/join", Some(&ask_of(&rover, "rover")), &[]).await;
@@ -492,7 +560,7 @@ async fn the_desk_challenges_proves_stages_and_leases_a_body() {
     let (s, v) = knock(port, "GET", "/join", None, &jb).await;
     assert_eq!(s, 200, "{v}");
     let joins = v["joins"].as_array().unwrap();
-    assert_eq!(joins.len(), 4, "{v}");
+    assert_eq!(joins.len(), 5, "{v}"); // scout · scout again · impostor-as-scout · rover, and the first denied
     assert_eq!(v["lease_days"], json!(7));
     assert_eq!(joins[0]["name"], json!("rover"));
     assert_eq!(joins[0]["status"], json!("staged"));
@@ -551,6 +619,9 @@ async fn the_desk_challenges_proves_stages_and_leases_a_body() {
 
     lit.stop().await;
     let _ = orreth_spine::events::prune_namespace(&world.kafka, &format!("t{tok}")).await; // the proof's residue leaves with it
+    if let Ok(mut g) = orreth_spine::ground::Ground::connect(&world.pg_dsn).await {
+        let _ = orreth_spine::ground::prune_scope(&mut g, &world.scope).await; // sp2: the proof's world leaves the ground with it
+    }
     let _ = std::fs::remove_dir_all(&home);
     println!("desk · PASS — challenged · denied · proved · staged · a person refused · the owner's yes · the lease by the key · the lease at the doors · the standing welcome · a stale challenge · the expired hold · the one face");
 }

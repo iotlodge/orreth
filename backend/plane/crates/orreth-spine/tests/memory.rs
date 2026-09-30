@@ -11,6 +11,7 @@
 //! Needs the rig (scripts/dev.sh up) and NO Bridge on :4600.
 //!   cargo test -p orreth-spine --features bridge --test memory -- --nocapture
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the gate: the proof SITS before it knocks (the ceremony through the doors) · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: the proof's world pruned from the ground at its end (`ground::prune_scope`) · 2026-09-29
 
 use orreth_spine::bridge::{glass_path, light, Config};
 use orreth_spine::export;
@@ -504,6 +505,9 @@ async fn shadow_two_kernels_read_one_record_and_sign_as_one_self() {
     let _ = tokio::time::timeout(Duration::from_secs(60), py.wait()).await;
     lit.stop().await;
     let _ = orreth_spine::events::prune_namespace(&world.kafka, &format!("t{tok}")).await; // the proof's residue leaves with it
+    if let Ok(mut g) = orreth_spine::ground::Ground::connect(&world.pg_dsn).await {
+        let _ = orreth_spine::ground::prune_scope(&mut g, &world.scope).await; // sp2: the proof's world leaves the ground with it
+    }
     let _ = std::fs::remove_dir_all(&kernel_home);
     println!(
         "memory proof: one Record, one self — {} export rows, signed by {}",

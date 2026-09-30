@@ -7,6 +7,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the park once by its place, its fact, the HOLD until a person advances it, the advance · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the topic's depth on ONE held consumer, never a fresh one per snapshot · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass (JB's screenshots 2026-09-29): one watch vocabulary on both kernels · the meter read by world · the roster folded one row per name · a watch's REST · 2026-09-29
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86): THE WATCH'S REST — `rest_watch` recorded on the row (schema 3), the judge and the snapshot read the ACTIVE watches; the asks left WAITING listed in the snapshot for their stop · 2026-09-29
 """The Monitoring workspace's ground (canon 0001: "if it's monitoring, it
 goes here"): the live snapshot of the Operating State — rails, benches,
 bodies, asks, the last harness run — and the WATCHES: named checks the
@@ -66,6 +67,11 @@ def ensure_schema(conn) -> None:
                     " last_ok boolean")     # 0007: the intent rail sees a watch TURN red
         cur.execute("ALTER TABLE spine_watches ADD COLUMN IF NOT EXISTS"
                     " since timestamptz")   # W14: when the state last turned
+        # schema 3 (the honest glass sp2, W86): a watch's REST — recorded on its row, never a delete
+        # (rule 11: the human can always stop what the machine manages; there was no way to rest a watch)
+        cur.execute("ALTER TABLE spine_watches ADD COLUMN IF NOT EXISTS active boolean NOT NULL DEFAULT true")
+        cur.execute("ALTER TABLE spine_watches ADD COLUMN IF NOT EXISTS rested_by text")
+        cur.execute("ALTER TABLE spine_watches ADD COLUMN IF NOT EXISTS rested_at timestamptz")
 
 
 def judge_one(op: str, value, threshold) -> bool:
@@ -122,6 +128,41 @@ def add_watch(conn, name: str, metric: str, op: str, threshold: float,
             " added_by, scope) VALUES (%s, %s, %s, %s, %s, %s, %s)",
             (wid, name, metric, op, float(threshold), by, ev.scope()))
     return wid
+
+
+def rest_watch(conn, watch_id: str, by: str) -> dict:
+    """The human's stop of a watch (the honest glass sp2, W86 — rule 11): recorded
+    on the row — `active` false, who rested it, when — never a delete; the judge
+    and the snapshot read the active watches alone, so a rested watch turns no
+    intention and draws no red. Modeled on `scheduler.rest`. Returns the row's
+    name and author; KeyError when no such watch stands here."""
+    ensure_schema(conn)
+    cur = conn.cursor()
+    cur.execute("SELECT name, added_by, active FROM spine_watches WHERE watch_id = %s AND scope = %s",
+                (watch_id, ev.scope()))
+    row = cur.fetchone()
+    if row is None:
+        raise KeyError(watch_id)
+    if row[2]:
+        with conn.transaction():
+            conn.cursor().execute(
+                "UPDATE spine_watches SET active = false, rested_by = %s, rested_at = now()"
+                " WHERE watch_id = %s", (by, watch_id))
+    return {"watch_id": watch_id, "name": row[0], "added_by": row[1], "rested_by": by,
+            "already": not row[2]}
+
+
+def waiting(conn, limit: int = 20) -> list[dict]:
+    """The asks left WAITING in this world (status `received`, nobody serving yet),
+    newest first — each one a person can stop (the honest glass sp2, W86: seven of
+    nine received asks were the watch loop's own orphaned objectives, and the
+    ASKS card showed a count with no way to reach them)."""
+    cur = conn.cursor()
+    cur.execute("SELECT ask_id, text, person, target, asked_at FROM spine_asks"
+                " WHERE scope = %s AND status = 'received' ORDER BY asked_at DESC LIMIT %s",
+                (ev.scope(), limit))
+    return [{"ask_id": r[0], "text": r[1][:140], "person": r[2], "target": r[3],
+             "asked_at": r[4].isoformat()} for r in cur.fetchall()]
 
 
 def _benches(names: list[str]) -> dict:
@@ -236,7 +277,7 @@ def snapshot(conn, *, rails: bool = True) -> dict:
     values["parked"] = len(parked)                # ground's count — the same on both kernels), watchable
     stable_view = _stable(conn)
     cur.execute("SELECT watch_id, name, metric, op, threshold, added_by, last_ok, since"
-                " FROM spine_watches WHERE scope = %s ORDER BY added_at", (ev.scope(),))
+                " FROM spine_watches WHERE scope = %s AND active ORDER BY added_at", (ev.scope(),))  # sp2: the active alone
     watches = []
     for w in cur.fetchall():
         red = judge_one(w[3], values[w[2]], w[4])
@@ -250,6 +291,8 @@ def snapshot(conn, *, rails: bool = True) -> dict:
              "since": w[7].isoformat() if w[7] is not None and recorded_red == red else None}
         d["reads"] = reads(d)
         watches.append(d)
+    cur.execute("SELECT count(*) FROM spine_watches WHERE scope = %s AND NOT active", (ev.scope(),))
+    rested = int(cur.fetchone()[0])                # sp2: the rested are counted, never drawn as red
     from . import cells
     home = cells.card(conn)
     return {
@@ -260,6 +303,8 @@ def snapshot(conn, *, rails: bool = True) -> dict:
         "bodies": bodies,
         "values": values,
         "watches": watches,
+        "watches_rested": rested,                     # sp2 (W86): how many watches a person has rested here
+        "waiting": waiting(conn),                     # sp2 (W86): the asks left waiting, each with its stop
         "benches": _benches([b["name"] for b in bodies]) if rails else {},
         "topic_depth": _topic_depth() if rails else None,
         "harness": ({"template": last[0], "version": last[1], "passed": last[2],

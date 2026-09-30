@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells · partition · isolation · hardening · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the routed ask carries the asker's profile slice (W58) · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86 · W87): a peer let go is neither greeted nor routed to, and the pin at light names it again; `stop_ask` widened to a LOCAL ask left waiting (rule 11) · 2026-09-29
 //! THE SEAM between cells (canon 0002 rule 8 · JB's locks 2026-09-25): two
 //! cells that NAME each other as peers (`SPINE_PEERS`) speak over one door,
 //! `POST /seam`, in messages SIGNED by their kernels' own selves — the peer's
@@ -45,6 +46,9 @@ pub const HELLO_EVERY_S: f64 = 10.0;
 /// The seam's HTTP patience.
 pub const SEAM_TIMEOUT: Duration = Duration::from_secs(5);
 pub const KERNEL: &str = "the kernel";
+/// The reply a stopped local ask wears (the honest glass sp2, W86) — the reference's `dispatch.STOPPED_WORDS`.
+pub const STOPPED_WORDS: &str =
+    "Stopped on your word — the ask was set to rest here before any body served it.";
 
 /// What came back from a peer, or why nothing did.
 #[derive(Debug)]
@@ -140,7 +144,7 @@ impl Seam {
             g.client()
                 .execute(
                     "INSERT INTO spine_peers (cell, scope, door) VALUES ($1, $2, $3) ON CONFLICT (cell, scope) DO \
-                     UPDATE SET door = EXCLUDED.door",
+                     UPDATE SET door = EXCLUDED.door, forgotten_by = NULL, forgotten_at = NULL",
                     &[&p.cell, &self.world.scope, &p.door],
                 )
                 .await?;
@@ -223,7 +227,7 @@ impl Seam {
             .query_opt(
                 "SELECT door, did, world, epoch, unreachable_since IS NOT NULL, \
                  extract(epoch FROM (clock_timestamp() - coalesce(last_seen, 'epoch'::timestamptz)))::float8 \
-                 FROM spine_peers WHERE cell = $1 AND scope = $2",
+                 FROM spine_peers WHERE cell = $1 AND scope = $2 AND forgotten_at IS NULL",
                 &[&cell, &self.world.scope],
             )
             .await?;
@@ -765,7 +769,7 @@ impl Seam {
             )
             .await?;
         let Some(row) = row else {
-            return Err(refused("no such routed ask"));
+            return self.stop_local(g, ask_id, person).await; // sp2 (W86): an ask left waiting HERE
         };
         let (status, cell, remote, target): (
             String,
@@ -817,6 +821,60 @@ impl Seam {
             .await?;
         }
         Ok(json!({"ask_id": ask_id, "status": "cancelled", "words": words}))
+    }
+
+    /// A LOCAL ask left WAITING is stopped (the honest glass sp2, W86 — rule 11: the human can
+    /// always stop what the machine manages; the door had refused all but a routed ask). The
+    /// word is the asker's own or a governing seat's (W69). The row goes `cancelled` with plain
+    /// words as its reply, the kernel as its server; a journey line and the reply are facts on
+    /// the rail, in one transaction (`settle`). An ask already served, replied or at rest says
+    /// so and is left as it stands. Field for field the reference's `dispatch.stop_ask`.
+    async fn stop_local(
+        &self,
+        g: &mut Ground,
+        ask_id: &str,
+        person: &str,
+    ) -> Result<Value, RoadError> {
+        let row = g
+            .client()
+            .query_opt(
+                "SELECT status, person, target FROM spine_asks WHERE ask_id = $1 AND scope = $2",
+                &[&ask_id, &self.world.scope],
+            )
+            .await?;
+        let Some(row) = row else {
+            return Err(refused("no such ask"));
+        };
+        let (status, asker, target): (String, String, Option<String>) =
+            (row.get(0), row.get(1), row.get(2));
+        if asker != person
+            && !crate::desk_live::governs(g.client(), &self.world.scope, person).await?
+        {
+            return Err(RoadError::Forbidden(
+                "the word at a stop is the asker's own, or a governing seat's".into(),
+            ));
+        }
+        if status != "received" {
+            let words = if status == "served" {
+                "it is already being served — its reply lands when it comes"
+            } else {
+                "it had already come to rest"
+            };
+            return Ok(json!({"ask_id": ask_id, "status": status, "words": words}));
+        }
+        self.settle(
+            g,
+            ask_id,
+            "cancelled",
+            STOPPED_WORDS,
+            Some(KERNEL),
+            &[person.to_string(), KERNEL.to_string()],
+            &format!("{KERNEL}: stopped by {person} before any body served it — rule 11, the human can always stop"),
+        )
+        .await?;
+        Ok(
+            json!({"ask_id": ask_id, "status": "cancelled", "words": STOPPED_WORDS, "target": target}),
+        )
     }
 
     // ---- the home side -------------------------------------------------------------------

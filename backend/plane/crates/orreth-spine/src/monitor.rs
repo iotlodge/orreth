@@ -4,6 +4,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the topic's depth read on ONE held broker client — never a fresh client (a full-metadata fetch) per snapshot · 2026-09-29
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass (JB's screenshots 2026-09-29): the farm's six values and THE STABLE's face ported from the reference (the pulse read $0 over a metered crew — nine values where the reference carries fifteen); the meter read BY WORLD on both; the roster folded one row per name · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86): THE WATCH'S REST — `rest_watch` recorded on the row (schema 3), the judge and the snapshot read the ACTIVE watches; the asks left WAITING listed in the snapshot for their stop · 2026-09-29
 //! The Monitoring workspace's ground — `orreth_spine.monitor` (canon 0001:
 //! "if it's monitoring, it goes here"): the live snapshot of the Operating
 //! State — rails, benches, bodies, asks, the last harness run — and the
@@ -59,6 +60,68 @@ pub async fn add_watch(
         )
         .await?;
     Ok(wid)
+}
+
+/// The human's stop of a watch (the honest glass sp2, W86 — rule 11): recorded on the row —
+/// `active` false, who rested it, when — never a delete; the judge and the snapshot read the
+/// active watches alone, so a rested watch turns no intention and draws no red. Modeled on
+/// `scheduler::rest`. `Ok(None)` — no such watch here; else the row's name, author and
+/// whether it was already at rest.
+pub async fn rest_watch(
+    g: &Ground,
+    scope: &str,
+    watch_id: &str,
+    by: &str,
+) -> Result<Option<Value>, RoadError> {
+    let row = g
+        .client()
+        .query_opt(
+            "SELECT name, added_by, active FROM spine_watches WHERE watch_id = $1 AND scope = $2",
+            &[&watch_id, &scope],
+        )
+        .await?;
+    let Some(row) = row else {
+        return Ok(None);
+    };
+    let (name, added_by, active): (String, String, bool) = (row.get(0), row.get(1), row.get(2));
+    if active {
+        g.client()
+            .execute(
+                "UPDATE spine_watches SET active = false, rested_by = $1, rested_at = now() WHERE \
+                 watch_id = $2",
+                &[&by, &watch_id],
+            )
+            .await?;
+    }
+    Ok(Some(json!({
+        "watch_id": watch_id, "name": name, "added_by": added_by, "rested_by": by, "already": !active,
+    })))
+}
+
+/// The asks left WAITING in this world (status `received`, nobody serving yet), newest first
+/// — each one a person can stop (the honest glass sp2, W86: seven of nine received asks were
+/// the watch loop's own orphaned objectives, and the ASKS card showed a count with no way to
+/// reach them). Field for field the reference's `monitor.waiting`.
+pub async fn waiting(g: &Ground, scope: &str, limit: i64) -> Result<Vec<Value>, RoadError> {
+    let rows = g
+        .client()
+        .query(
+            "SELECT ask_id, text, person, target, asked_at FROM spine_asks WHERE scope = $1 AND \
+             status = 'received' ORDER BY asked_at DESC LIMIT $2",
+            &[&scope, &limit],
+        )
+        .await?;
+    Ok(rows
+        .iter()
+        .map(|r| {
+            let text: String = r.get(1);
+            json!({
+                "ask_id": r.get::<_, String>(0), "text": text.chars().take(140).collect::<String>(),
+                "person": r.get::<_, String>(2), "target": r.get::<_, Option<String>>(3),
+                "asked_at": isoformat(r.get::<_, SystemTime>(4)),
+            })
+        })
+        .collect())
 }
 
 /// The benches' depths: the shared bench and every body's own, by a passive
@@ -284,10 +347,19 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
         .client()
         .query(
             "SELECT watch_id, name, metric, op, threshold, added_by, last_ok, since FROM \
-             spine_watches WHERE scope = $1 ORDER BY added_at",
+             spine_watches WHERE scope = $1 AND active ORDER BY added_at",
             &[&scope],
         )
-        .await?;
+        .await?; // sp2: the active alone — a rested watch turns nothing and draws no red
+    let rested: i64 = g
+        .client()
+        .query_one(
+            "SELECT count(*) FROM spine_watches WHERE scope = $1 AND NOT active",
+            &[&scope],
+        )
+        .await?
+        .get(0);
+    let waiting = waiting(g, scope, 20).await?;
     let mut watches = Vec::new();
     for r in rows {
         let (metric, op): (String, String) = (r.get(2), r.get(3));
@@ -348,6 +420,8 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
         "bodies": bodies,
         "values": values,
         "watches": watches,
+        "watches_rested": rested, // sp2 (W86): how many watches a person has rested here
+        "waiting": waiting,       // sp2 (W86): the asks left waiting, each with its stop
         "benches": if rails { benches(w, &names).await } else { json!({}) },
         "topic_depth": if rails { topic_depth(w).await } else { Value::Null },
         "harness": last,

@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells · partition · isolation · hardening · 2026-09-25
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W87): the unreachable time wears its date · a peer LET GO on a governing seat's word (`forget_peer`, schema 3) · 2026-09-29
 """CELLS (canon 0002 rule 8 · 0001 P9/P10 · 0005 P7 sp7 — JB's locks, 2026-09-25):
 a CELL is one universe's physical home — its own kernel self, its own
 ground (a database and a role that reaches no other), its own benches and
@@ -263,7 +264,11 @@ def ensure_schema(conn) -> None:
                     "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS remote_id text",
                     "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS seam_side text",
                     "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS seam_sent boolean NOT NULL DEFAULT false",
-                    "ALTER TABLE spine_peers ADD COLUMN IF NOT EXISTS picture text"):
+                    "ALTER TABLE spine_peers ADD COLUMN IF NOT EXISTS picture text",
+                    # schema 3 (the honest glass sp2, W87): a peer LET GO — recorded on its row, never deleted;
+                    # a kernel relit naming the cell (SPINE_PEERS) names it again
+                    "ALTER TABLE spine_peers ADD COLUMN IF NOT EXISTS forgotten_by text",
+                    "ALTER TABLE spine_peers ADD COLUMN IF NOT EXISTS forgotten_at timestamptz"):
             cur.execute(ddl)
 
 
@@ -321,16 +326,41 @@ def _human(t):
     return t.astimezone(ZoneInfo(human_zone_name()))
 
 
+def unreachable_clock(t) -> str:
+    """The moment a peer stopped answering, on the human's clock — the time alone
+    when it is today, the DATE before it when it is not (the honest glass sp2, W87:
+    JB read "unreachable since 17:31" over a peer four DAYS gone)."""
+    from datetime import datetime, timezone
+    h = _human(t)
+    today = _human(datetime.now(timezone.utc)).date()
+    return h.strftime("%H:%M") if h.date() == today else h.strftime("%Y-%m-%d %H:%M")
+
+
+def forget_peer(conn, cell: str, by: str) -> bool:
+    """A peer LET GO on a governing seat's word (W87 · rule 11): recorded on its
+    row — `forgotten_by` · `forgotten_at` — never a delete; the card stops drawing
+    it and nothing is routed to it. A kernel relit naming the cell in SPINE_PEERS
+    names it again. False when no such peer is named here (or it is already let go)."""
+    ensure_schema(conn)
+    with conn.transaction():
+        cur = conn.cursor()
+        cur.execute("UPDATE spine_peers SET forgotten_by = %s, forgotten_at = now()"
+                    " WHERE cell = %s AND scope = %s AND forgotten_at IS NULL",
+                    (by, cell, ev.scope()))
+        return cur.rowcount == 1
+
+
 def peers(conn) -> list[dict]:
     """Every peer this cell names, as the ground remembers it: pinned DID,
     the world it homes, when it was last heard, its lag in words."""
     cur = conn.cursor()
     cur.execute("SELECT cell, door, did, world, epoch, pinned_at, last_seen, cursor, unreachable_since,"
-                " extract(epoch FROM (clock_timestamp() - last_seen)) FROM spine_peers WHERE scope = %s ORDER BY cell",
+                " extract(epoch FROM (clock_timestamp() - last_seen)) FROM spine_peers"
+                " WHERE scope = %s AND forgotten_at IS NULL ORDER BY cell",     # a peer let go is not drawn
                 (ev.scope(),))
     out = []
     for r in cur.fetchall():
-        since = _human(r[8]).strftime("%H:%M") if r[8] else None      # W52: the human's clock
+        since = unreachable_clock(r[8]) if r[8] else None                 # W52: the human's clock · W87: its date
         out.append({"cell": r[0], "door": r[1], "did": r[2], "world": r[3], "epoch": r[4],
                     "pinned_at": r[5].isoformat() if r[5] else None,
                     "last_seen": r[6].isoformat() if r[6] else None, "cursor": r[7],

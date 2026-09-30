@@ -30,7 +30,8 @@
 #                                pass a file or -k to narrow) — REFUSES while a kernel or the reference is lit (the stale-rig law)
 #   scripts/dev.sh rust [rails]  cargo test in backend/plane (the whole workspace, hermetic) + the
 #                                conformance report line; `rust rails` runs the rail tests on the rig, by name
-#   scripts/dev.sh prune [ns]    the brokers' test residue pruned (topics · queues · empty test groups); a namespace to narrow
+#   scripts/dev.sh prune [ns]    the brokers' test residue pruned (topics · queues · empty test groups) and every test-shaped
+#                                world's rows on the ground (u:<word>-<6 hex>; a person's world is never touched); a namespace to narrow
 #   scripts/dev.sh walk          up + kernel — the human's word to open the glass (http://127.0.0.1:4600)
 #   scripts/dev.sh replant       the OLD world's keeper's word (com.orreth.replant): nothing to replant here any more —
 #                                says how to unload the keeper; the old rig lives at the tag main-v0.72-old-world
@@ -311,7 +312,9 @@ case "${1:-}" in
            [ "$rc" = 0 ] && echo "· plane green" || echo "· plane NOT green (cargo exit $rc) — read $RUST_LOG"
            exit $rc ;;
   prune)   # the perf cure (2026-09-29): the brokers' TEST RESIDUE — every test-shaped namespace's topics and queues,
-           # the empty test-prefixed groups; a person's namespaces (two · perf · the dev world) are never touched
+           # the empty test-prefixed groups; a person's namespaces (two · perf · the dev world) are never touched.
+           # the honest glass sp2: the GROUND's residue too — every test-shaped world's rows (u:<word>-<6 hex>) across
+           # every table with a scope column; u:dev and every world a person named stay whole
            ground_up || { echo "· the rig is dark — run scripts/dev.sh up first"; exit 1; }
            (cd "$SPINE" && uv run --quiet python -m orreth_spine.prune "${2:-}") ;;
   walk)    "$0" up; kernel_light

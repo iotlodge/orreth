@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (b): the machine join desk on the ground · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W85): ONE NAME, ONE SELF — a proven key claiming a name another self holds a LIVE lease on is STAGED, never admitted on a ticket or a welcome; the hold words name the incumbent (`desk.rs` untouched, rule 9) · 2026-09-29
 //! THE MACHINE JOIN DESK on the ground (canon 0005 sp8 row 3b · 0006 · 0012 ·
 //! covenant rule 3) — the doors' half of `desk`. A body ASKS and is CHALLENGED in
 //! one motion (the desk's own nonce); it PROVES with the key behind its DID; a
@@ -312,6 +313,48 @@ pub async fn prove(
             json!({"id": join_id, "status": "denied", "words": desk::REFUSED_WORDS}),
         ));
     }
+    // the honest glass sp2 (W85): ONE NAME, ONE SELF — is the name HELD by a living self that is
+    // not this key? A box's kernel once admitted ten fresh selves on its crew manifest while the
+    // host's crew held live leases under the same names, and the BODIES card drew every body
+    // twice. The desk checked a name's spelling and never whether it was held. Now a proven key
+    // claiming a held name is STAGED for a governing seat's word — never a ticket's, never a
+    // welcome's — with the hold naming the incumbent.
+    let incumbent: Option<String> = g
+        .client()
+        .query_opt(
+            "SELECT did FROM spine_leases WHERE scope = $1 AND name = $2 AND did <> $3 AND until > now() ORDER \
+             BY until DESC LIMIT 1",
+            &[&w.scope, &r.name, &r.did],
+        )
+        .await?
+        .map(|x| x.get(0));
+    if let Some(holder) = incumbent {
+        let proved = fact(
+            w,
+            desk::JOIN_PROVED,
+            join_id,
+            json!({"did": r.did, "name": r.name, "kind": r.kind, "template": r.template_hash, "held_by": holder}),
+            vec![r.did.clone(), KERNEL.into()],
+        )?;
+        let ask_id = crate::proof_live::hold_kernel_act(
+            g,
+            w,
+            &held_name_words(&r.name, &r.kind, &holder, desk::lease_days()),
+            &r.did,
+            desk::ADMIT_TOOL,
+            json!({"join": join_id, "name": r.name, "did": r.did, "held_by": holder}),
+            desk::ADMIT_LEVEL,
+            None,
+            desk::ADMIT_CLASS,
+            false,
+        )
+        .await?;
+        set_status(g, w, join_id, "staged", None, Some(&ask_id), vec![proved]).await?;
+        return Ok(Some(
+            json!({"id": join_id, "status": "staged", "ask": ask_id, "held_by": holder,
+                   "words": held_name_view_words(&r.name, &holder)}),
+        ));
+    }
     // the key is proven — whose word admits it?
     let by_ticket = match (&r.ticket, manifest) {
         (Some(t), Some(m)) => {
@@ -390,6 +433,35 @@ pub async fn prove(
         json!({"id": join_id, "status": "staged", "ask": ask_id,
                    "words": desk::words("staged", &r.name, &w.scope, None)}),
     ))
+}
+
+/// The text the kernel's hold carries when a proven key claims a HELD name (W85) — plain,
+/// for the person who will click; the incumbent named by the tail of its DID.
+pub fn held_name_words(name: &str, kind: &str, holder: &str, days: i64) -> String {
+    let who: String = holder
+        .chars()
+        .rev()
+        .take(8)
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .collect();
+    format!(
+        "{name} (a {kind}) asks to join this world under a name a LIVING self already holds — …{who} serves as {name} on a fresh lease right now. Its key is proven, but a spawn ticket or a standing welcome never admits a second self under a held name. A yes admits it anyway (two selves, one name) with a LEASE for {days} days; a no turns it away. Cancel is the default."
+    )
+}
+
+/// The desk's word to the body at the door when its name is held (W85).
+pub fn held_name_view_words(name: &str, holder: &str) -> String {
+    let who: String = holder
+        .chars()
+        .rev()
+        .take(8)
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .collect();
+    format!("{name} proved its key, but a living self (…{who}) holds that name — the door waits for a governing seat's yes")
 }
 
 /// Does this person hold a governing seat here — the owner, or a declared master?

@@ -4,6 +4,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the dispatcher listens on the cell's topic · 2026-09-25
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 lock 5, the standing dispatcher can be asked to pause (the rig yields) · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W64: the asker's right code files a second confirm-needed notice (step master) — the master's road to the ask · W69: the word at the interlock is the asker's own or a governing seat's · 2026-09-27
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86): a LOCAL ask left waiting is STOPPED on the asker's or a governing seat's word (`stop_ask`) — rule 11 · 2026-09-29
 """The ask road (canon 0002's chain, in miniature): ONE write path.
 
 A human's ask lands on the ground with its event in one transaction; the
@@ -189,6 +190,51 @@ def _refuse_at_door(conn, ask_id: str, text: str, person: str, target: str, why:
 
     outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)
     return ask_id
+
+
+STOPPED_WORDS = "Stopped on your word — the ask was set to rest here before any body served it."
+
+
+def stop_ask(conn, ask_id: str, person: str) -> dict:
+    """A local ask left WAITING is stopped (the honest glass sp2, W86 — rule 11: the
+    human can always stop what the machine manages). The word is the asker's own
+    or a governing seat's (W69). The row goes `cancelled` with plain words as its
+    reply, the kernel as its server; a journey line and the reply are facts on the
+    rail, in one transaction. An ask already served, replied or at rest says so
+    and is left as it stands. KeyError: no such ask here; PermissionError: not
+    this person's to stop."""
+    from . import proof
+    from .resident import JOURNEY, REPLY, _next_seq
+    cur = conn.cursor()
+    cur.execute("SELECT status, person, target, marker FROM spine_asks WHERE ask_id = %s AND scope = %s",
+                (ask_id, ev.scope()))
+    row = cur.fetchone()
+    if row is None:
+        raise KeyError(ask_id)
+    status, asker, target, marker = row
+    if asker != person and not proof.governs(conn, person):
+        raise PermissionError("the word at a stop is the asker's own, or a governing seat's")
+    if status != "received":
+        return {"ask_id": ask_id, "status": status,
+                "words": ("it is already being served — its reply lands when it comes"
+                          if status == "served" else "it had already come to rest")}
+    chain = [person, proof.KERNEL]
+    note = f"{proof.KERNEL}: stopped by {person} before any body served it — rule 11, the human can always stop"
+    j = ev.make_envelope(kind="event", type=JOURNEY, universe_id=ev.scope(), scope_path=ev.scope(),
+                         payload={"ref": ask_id, "hash": "sha256:-", "note": note},
+                         correlation_id=ask_id, authority_chain=chain)
+
+    def domain(cur):
+        cur.execute("UPDATE spine_asks SET status = 'cancelled', reply = %s, served_by = %s,"
+                    " replied_at = clock_timestamp() WHERE ask_id = %s", (STOPPED_WORDS, proof.KERNEL, ask_id))
+        r = ev.make_envelope(kind="event", type=REPLY, universe_id=ev.scope(), scope_path=ev.scope(),
+                             payload={"ref": ask_id, "hash": ev.content_hash(STOPPED_WORDS), "proof": "L1"},
+                             correlation_id=ask_id, authority_chain=chain,
+                             aggregate={"type": "ask", "id": ask_id, "sequence": _next_seq(cur, ask_id)})
+        outbox.add_row(cur, ev.encode(r), r["message_id"])
+
+    outbox.commit_with_outbox(conn, ev.encode(j), j["message_id"], domain)
+    return {"ask_id": ask_id, "status": "cancelled", "words": STOPPED_WORDS, "target": target}
 
 
 def publish_command(env: dict, rabbit_url: str | None = None) -> None:

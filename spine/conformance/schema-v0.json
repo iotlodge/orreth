@@ -1,15 +1,15 @@
 {
  "contract": "orreth.schema/1",
  "version": 0,
- "generated_by": "orreth_spine.ground (the Python reference) - rearch row 4, re-base sp1: THE MIGRATOR (lock 2)",
- "generated_at": "2026-09-28T19:00:00Z",
+ "generated_by": "orreth_spine.ground (the Python reference) - rearch row 4, re-base sp1: THE MIGRATOR (lock 2); version 3 by the honest glass sp2",
+ "generated_at": "2026-09-29T21:00:00Z",
  "cases": [
   {
-   "name": "schema_version: both kernels carry the same number - 2: the indexes (the perf cure, 2026-09-29); bumped together whenever any DDL statement changes",
+   "name": "schema_version: both kernels carry the same number - 3: a watch's rest and a peer's forgetting (the honest glass sp2, 2026-09-29), after 2: the indexes (the perf cure); bumped together whenever any DDL statement changes",
    "kind": "schema_version",
    "input": {},
    "expect": {
-    "version": 2
+    "version": 3
    }
   },
   {

@@ -40,6 +40,7 @@
 //! answers 404 with no body, as the Python handler does.
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (a): the seat read at every door by a tower layer — the person from the token, never the body; the origin closed; the knock ceiling per person; the seat doors · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: the shelf's restore door routes every kind through restore_mind — one restore law · 2026-09-27
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86 · W87): `POST /watches/rest` · `POST /peers/forget` — the governing word checked INSIDE the handler (`seat.rs`'s door table untouched, rule 9); `/asks/stop` reaches a local ask · 2026-09-29
 
 use crate::asks::{self, Submit, FEED_TOPICS};
 use crate::bodies::{self, Bodies};
@@ -787,7 +788,9 @@ fn router(app: Arc<App>) -> Router {
         .route("/world", get(world_door)) // P7 sp7: the world card — the universe, its cell, its epoch, its peers
         .route("/world/rehome", post(world_rehome)) // P7 sp7: re-home the universe — held at L2, the epoch advances on the yes
         .route("/seam", post(seam_post)) // P7 sp7: the seam — signed messages between peer cells
-        .route("/asks/stop", post(asks_stop)) // P7 sp7: the human stops a routed ask (rule 11)
+        .route("/asks/stop", post(asks_stop)) // P7 sp7: the human stops a routed ask (rule 11) · sp2: or a local one left waiting
+        .route("/watches/rest", post(watches_rest)) // the honest glass sp2 (W86): a watch rested — rule 11's lever
+        .route("/peers/forget", post(peers_forget)) // the honest glass sp2 (W87): a peer let go — a governing seat's word
         .route("/schedules", post(schedules_post))
         .route("/schedules/rest", post(schedules_rest))
         .route("/schedules/:runner", get(schedules_door))
@@ -2107,7 +2110,82 @@ async fn seam_post(State(app): State<Arc<App>>, body: Bytes) -> Response {
     }
 }
 
-/// P7 sp7: `POST /asks/stop {id}` — a routed ask set to rest here and at its home.
+/// The honest glass sp2 (W86): `POST /watches/rest {watch_id}` — a watch RESTED, recorded on
+/// its row (rule 11). The word is the watch's author's own or a governing seat's (W69): the
+/// governing check is made INSIDE the handler (`desk_live::governs`), the seat's door table
+/// untouched (rule 9). 202 `{rested, name, already}` · 404 no such watch · 403 in words.
+async fn watches_rest(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
+    let p = body_json(&body);
+    let wid = s_or(&p, "watch_id", "");
+    let person = seated.person.clone();
+    let out = async {
+        let g = ground(&app).await?;
+        let sc = scope(&app);
+        let author: Option<String> = g
+            .client()
+            .query_opt(
+                "SELECT added_by FROM spine_watches WHERE watch_id = $1 AND scope = $2",
+                &[&wid, &sc],
+            )
+            .await?
+            .map(|r| r.get(0));
+        let Some(author) = author else {
+            return Ok::<_, RoadError>(None);
+        };
+        if author != person && !desk_live::governs(g.client(), sc, &person).await? {
+            return Err(RoadError::Forbidden(
+                "a watch rests on its author's word or a governing seat's — yours reads and writes"
+                    .into(),
+            ));
+        }
+        monitor::rest_watch(&g, sc, &wid, &person).await
+    }
+    .await;
+    match out {
+        Ok(Some(v)) => answer(
+            202,
+            json!({"rested": wid, "name": v["name"], "already": v["already"]}),
+        ),
+        Ok(None) => answer(404, json!({"error": "no such watch"})),
+        Err(e) => refuse(e),
+    }
+}
+
+/// The honest glass sp2 (W87): `POST /peers/forget {cell}` — a peer LET GO on a governing
+/// seat's word, recorded on its row (rule 11); the governing check made inside the handler.
+/// 202 `{forgotten, by}` · 404 no such peer · 403 in words.
+async fn peers_forget(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
+    let p = body_json(&body);
+    let cell = s_or(&p, "cell", "").trim().to_lowercase();
+    let person = seated.person.clone();
+    let out = async {
+        let g = ground(&app).await?;
+        let sc = scope(&app);
+        if !desk_live::governs(g.client(), sc, &person).await? {
+            return Err(RoadError::Forbidden(
+                "a peer is let go on a governing seat's word — yours reads and writes".into(),
+            ));
+        }
+        crate::cells_live::forget_peer(&g, sc, &cell, &person).await
+    }
+    .await;
+    match out {
+        Ok(true) => answer(202, json!({"forgotten": cell, "by": person})),
+        Ok(false) => answer(404, json!({"error": "no such peer is named here"})),
+        Err(e) => refuse(e),
+    }
+}
+
+/// P7 sp7: `POST /asks/stop {id}` — a routed ask set to rest here and at its home; sp2 (W86):
+/// or a LOCAL ask left waiting, on the asker's or a governing seat's word.
 async fn asks_stop(
     State(app): State<Arc<App>>,
     Extension(seated): Extension<Seated>,

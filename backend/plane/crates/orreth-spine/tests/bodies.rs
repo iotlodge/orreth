@@ -20,6 +20,7 @@
 //! mind (the gateway dial points at a dark port) — no spend.
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the gate: the proof SITS before it knocks (the ceremony through the doors) · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, THE REMEDIATION RAIL: the kernel cures the parked echo itself, the green attributed · 2026-09-27
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: the proof's world pruned from the ground at its end (`ground::prune_scope`) · 2026-09-29
 
 #![cfg(feature = "bridge")]
 
@@ -847,6 +848,9 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
     assert_eq!(pids.len(), 3);
     lit.stop().await;
     let _ = orreth_spine::events::prune_namespace(&world.kafka, &format!("t{tok}")).await; // the proof's residue leaves with it
+    if let Ok(mut g) = orreth_spine::ground::Ground::connect(&world.pg_dsn).await {
+        let _ = orreth_spine::ground::prune_scope(&mut g, &world.scope).await; // sp2: the proof's world leaves the ground with it
+    }
     for pid in &pids {
         let end = Instant::now() + Duration::from_secs(10);
         while alive(*pid) && Instant::now() < end {

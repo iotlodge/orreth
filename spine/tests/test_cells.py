@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells · partition · isolation · hardening · 2026-09-25
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: the eleventh check follows the tenth · 2026-09-27
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W87): the unreachable time wears its date · a peer let go, recorded · 2026-09-29
 """CELLS (P7 sp7): the universe's home on the ground, the world card on
 the door, the tenth check, the meter wearing its world, the topics
 wearing the cell's namespace. The seam itself (peers · route home ·
@@ -108,3 +109,25 @@ def test_the_seam_laws_hold_end_to_end():
     assert cells.address_home("librarian@two, hello") == {"cell": "two", "name": "librarian"}
     assert cells.strip_home("librarian@two, hello") == "librarian, hello"
     assert cells.address_home("echo, say HERON") is None
+
+
+def test_a_peer_gone_for_days_wears_its_date_and_is_let_go_recorded(pg, monkeypatch):
+    """W87 (the honest glass sp2): "unreachable since 17:31" over a peer four days gone —
+    now the DATE is worn when the moment is not today; `forget_peer` records the letting-go
+    on the row (never a delete) and the card stops drawing it."""
+    import datetime as dt
+    monkeypatch.setenv("SPINE_SCOPE", "u:law-" + os.urandom(3).hex())
+    cells.ensure_schema(pg)
+    pg.cursor().execute("INSERT INTO spine_peers (cell, scope, door, unreachable_since) VALUES ('ghost', %s, 'http://127.0.0.1:1', now() - interval '4 days'),"
+                        " ('near', %s, 'http://127.0.0.1:2', now() - interval '1 minute')", (ev.scope(), ev.scope()))
+    by_cell = {p["cell"]: p for p in cells.peers(pg)}
+    assert len(by_cell["ghost"]["words"].split("unreachable since ")[1]) == len("2026-09-25 17:31")
+    assert len(by_cell["near"]["words"].split("unreachable since ")[1]) == len("17:31")
+    assert len(cells.unreachable_clock(dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=4))) == len("2026-09-25 17:31")
+    assert cells.forget_peer(pg, "ghost", "did:orreth:person:jb") is True
+    assert cells.forget_peer(pg, "ghost", "did:orreth:person:jb") is False       # already let go
+    assert cells.forget_peer(pg, "nobody", "did:orreth:person:jb") is False
+    assert [p["cell"] for p in cells.peers(pg)] == ["near"]
+    cur = pg.cursor()
+    cur.execute("SELECT forgotten_by, forgotten_at IS NOT NULL FROM spine_peers WHERE cell = 'ghost' AND scope = %s", (ev.scope(),))
+    assert cur.fetchone() == ("did:orreth:person:jb", True)                     # recorded, never deleted
