@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp2: one image for the kernel · 2026-09-29
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — W95: procps in the box (ps · pkill) · 2026-10-02
 #
 # orrethd — the Orreth kernel, one image. The Rust kernel (`orreth-spine`, feature `bridge`)
 # is THE door on :4600; the crew it seats are Python bodies (`orreth_spine.body`), spawned as
@@ -24,7 +25,8 @@ RUN cd backend/plane && cargo build --release -p orreth-spine --features bridge 
 
 # ---- stage 2: the bodies' python beside the binary ---------------------------------------
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends python3 ca-certificates curl \
+# procps (W95, the book's walk): `ps` and `pkill` inside the box — debian slim ships neither
+RUN apt-get update && apt-get install -y --no-install-recommends python3 ca-certificates curl procps \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 WORKDIR /opt/orreth

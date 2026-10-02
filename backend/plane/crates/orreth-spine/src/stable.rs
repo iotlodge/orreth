@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W93 THE EMPTY GATEWAY: the model list read from the gateway's answer, an empty store an empty list · 2026-10-02
 //! `orreth.minds/1` — the pure laws of `orreth_spine.stable` (P6.5 sp3, THE
 //! STABLE: LiteLLM executes; the registry knows and decides), ported word for
 //! word against `spine/conformance/minds-v0.json`: the gateway's route for a
@@ -556,6 +557,46 @@ pub fn recommend(stalls: &[Value], retiring: &str) -> Value {
     json!({"stall": name_of(b),
            "why": format!("same class, fits the deal, nearest price (${} vs ${} per million in)",
                           g_fmt(price_in(b)), g_fmt(op))})
+}
+
+/// The gateway's own words out of a refusal body — `{"error": {"message"}}`
+/// first, then `{"error": …}`, then the body itself cut at 300 (mirrors
+/// `Gateway._words`). Hermetic, so the conformance fixture can pin it.
+pub fn gateway_words(body: &Value) -> String {
+    match body.get("error") {
+        Some(Value::Object(e)) => e
+            .get("message")
+            .map(crate::py::python_str)
+            .unwrap_or_else(|| Value::Object(e.clone()).to_string()),
+        Some(other) => crate::py::python_str(other),
+        None => crate::py::python_str(body).chars().take(300).collect(),
+    }
+}
+
+/// W93 (the book's walk, 2026-09-30): a FRESH gateway with an empty store
+/// refuses `/model/info` with "LLM Model List not loaded in …" — and the
+/// kernel read that list before `/model/new`, so on an empty gateway no mind
+/// could ever be seeded or registered (the dev rig never saw it: its store
+/// already held models). That answer IS the empty list. Any other refusal
+/// keeps its words. Mirrors `Gateway._models_from`; fixture `gateway_models`.
+pub fn models_from(status: u16, body: &Value) -> Result<serde_json::Map<String, Value>, String> {
+    if status != 200 {
+        let w = gateway_words(body);
+        if w.to_lowercase().contains("model list not loaded") {
+            return Ok(serde_json::Map::new());
+        }
+        return Err(format!("the gateway's model list refused: {w}"));
+    }
+    let mut out = serde_json::Map::new();
+    for m in body["data"].as_array().cloned().unwrap_or_default() {
+        let id = m["model_info"]["id"]
+            .as_str()
+            .or_else(|| m["model_name"].as_str())
+            .unwrap_or_default()
+            .to_string();
+        out.insert(id, m);
+    }
+    Ok(out)
 }
 
 /// `stable.drained_words`: the honest word when a body is out of fuel.

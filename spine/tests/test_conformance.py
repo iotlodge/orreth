@@ -213,6 +213,13 @@ def test_fixture(contract, case):
         with pytest.raises(stable.StableRefused) as e:
             stable.deal(inp["model"], inp["provider"], klass=inp.get("klass", "standard"), key=inp["key"] if "key" in inp else "auto")
         assert str(e.value) == exp["words"]
+    elif kind == "gateway_models":               # W93: an empty store's refusal is the empty list
+        if "refused" in exp:
+            with pytest.raises(stable.GatewayDark) as e:
+                stable.Gateway._models_from(inp["status"], inp["body"])
+            assert str(e.value) == exp["refused"]
+        else:
+            assert sorted(stable.Gateway._models_from(inp["status"], inp["body"])) == exp["ids"]
     elif kind == "drained_words":
         assert stable.drained_words(inp["name"], inp["gauge"]) == exp["words"]
     elif kind == "act_words":

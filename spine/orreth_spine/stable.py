@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: restore_mind writes back a MIND's entry only · 2026-09-27
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — W93 THE EMPTY GATEWAY: an empty store's refusal is the empty list · 2026-10-02
 """The Stable v0 (canon 0005 P6.5 sp3 · 0009 §2 "the STABLE firmware" · 0019
 the Stable · 0058 the market · JB's lock 2026-09-24: "LiteLLM executes; the
 registry knows and decides").
@@ -331,8 +332,21 @@ class Gateway:
     def models(self) -> dict[str, dict]:
         """Every model entry the gateway holds, by its id (the stall's name)."""
         st, body, _ = self._call("GET", "/model/info")
+        return self._models_from(st, body)
+
+    @staticmethod
+    def _models_from(st: int, body: dict) -> dict[str, dict]:
+        """W93 (the book's walk, 2026-09-30): a FRESH gateway with an empty
+        store refuses `/model/info` with "LLM Model List not loaded in …" —
+        and the kernel read that list before `/model/new`, so on an empty
+        gateway no mind could ever be seeded or registered (the dev rig never
+        saw it: its store already held models). That answer IS the empty
+        list; any other refusal keeps its words. Fixture `gateway_models`."""
         if st != 200:
-            raise GatewayDark(f"the gateway's model list refused: {self._words(body)}")
+            words = Gateway._words(body)
+            if "model list not loaded" in words.lower():
+                return {}
+            raise GatewayDark(f"the gateway's model list refused: {words}")
         return {str((m.get("model_info") or {}).get("id") or m.get("model_name")): m for m in body.get("data", [])}
 
     def add_stall(self, name: str, d: dict) -> dict:

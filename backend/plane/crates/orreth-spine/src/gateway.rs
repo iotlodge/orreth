@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W93 THE EMPTY GATEWAY: an empty store's refusal is the empty list · 2026-10-02
 //! THE GATEWAY's doors from the kernel's side — `orreth_spine.stable.Gateway`
 //! (the LiteLLM management API under the master key: models · keys · spend)
 //! and the one chat door for the CANARY (`services._probe`, kind mind: a
@@ -46,14 +47,7 @@ pub struct Gateway {
 }
 
 fn words_of(body: &Value) -> String {
-    match body.get("error") {
-        Some(Value::Object(e)) => e
-            .get("message")
-            .map(crate::py::python_str)
-            .unwrap_or_else(|| Value::Object(e.clone()).to_string()),
-        Some(other) => crate::py::python_str(other),
-        None => crate::py::python_str(body).chars().take(300).collect(),
-    }
+    crate::stable::gateway_words(body)
 }
 
 impl Gateway {
@@ -155,7 +149,8 @@ impl Gateway {
         )
     }
 
-    /// Every model entry the gateway holds, by its id (the stall's name).
+    /// Every model entry the gateway holds, by its id (the stall's name) —
+    /// an EMPTY store's refusal read as the empty list (W93, `stable::models_from`).
     pub async fn models(&self) -> Result<serde_json::Map<String, Value>, GatewayDark> {
         let (st, body, _) = self
             .call(
@@ -166,22 +161,7 @@ impl Gateway {
                 Duration::from_secs(TIMEOUT_S),
             )
             .await?;
-        if st != 200 {
-            return Err(GatewayDark(format!(
-                "the gateway's model list refused: {}",
-                words_of(&body)
-            )));
-        }
-        let mut out = serde_json::Map::new();
-        for m in body["data"].as_array().cloned().unwrap_or_default() {
-            let id = m["model_info"]["id"]
-                .as_str()
-                .or_else(|| m["model_name"].as_str())
-                .unwrap_or_default()
-                .to_string();
-            out.insert(id, m);
-        }
-        Ok(out)
+        crate::stable::models_from(st, &body).map_err(GatewayDark)
     }
 
     /// The stall's model entry — idempotent by id; the key by env NAME; the

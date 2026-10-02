@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P0 sp1, the rig breathes · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — W94: the kernel box reaches the provider key names · 2026-10-02
 # The new line's dev rig: the ground (Postgres), the invocation rail
 # (RabbitMQ), the events rail (Kafka, KRaft single node). Host ports are
 # chosen to never collide with the old world's rig (4500-4502) or a local
@@ -133,6 +134,14 @@ services:
       SPINE_GATEWAY_KEY: ${SPINE_GATEWAY_KEY:-sk-orreth-dev}
       SPINE_HUMAN_ZONE: ${SPINE_HUMAN_ZONE:-America/Denver}
       SPINE_MASTERS: ${SPINE_MASTERS:-}
+      # W94 (the book's walk, 2026-09-30): the kernel registers a mind only when the key's NAME is
+      # reachable in ITS OWN environment (the env-secrets law — the box resolves the name, the value
+      # never travels into a record); the gateway alone holding the names left the boxed kernel
+      # refusing haiku "secret ANTHROPIC_API_KEY is not reachable here". The same names ride in
+      # here; an empty value reads as not reachable on both kernels.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     volumes:
       - ${ORRETH_SEEDS:-~/.orreth}:/var/lib/orreth
     depends_on:

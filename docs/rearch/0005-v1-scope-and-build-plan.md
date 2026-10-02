@@ -2661,11 +2661,17 @@ approved (covenant rule 9).
       so on an empty gateway no mind can be seeded or registered (the dev rig never sees it — its
       gateway's store already holds models); a direct `/model/new` works from empty; the cure is
       add-before-list, or an empty list read from that answer (the book's compose works around it
-      with a gateway config naming the haiku stall). **W94** the boxed kernel registers a mind only
+      with a gateway config naming the haiku stall). **CURED 2026-10-02:** `stable::models_from` ·
+      `Gateway._models_from` read the gateway's answer — "LLM Model List not loaded" IS the empty
+      list, any other refusal keeps its words; fixture `gateway_models` ×5 (both refusal shapes, a
+      401 refused in words) pinned on both kernels. **W94** the boxed kernel registers a mind only
       when the key's NAME is reachable in its own env (the env-secrets law), and `spine/compose.yaml`'s
       `kernel` service passes no key names — the box refuses haiku "secret ANTHROPIC_API_KEY is not
-      reachable here"; the book's compose passes the names. **W95** (small) the image has no `ps`
-      or `pkill` (debian slim). **W96 THE WIPED SEAT FORM — CURED 2026-09-30 (step 3):** on a fresh
+      reachable here"; the book's compose passes the names. **CURED 2026-10-02:** the `kernel`
+      service carries `ANTHROPIC_API_KEY` · `OPENROUTER_API_KEY` · `OPENAI_API_KEY` as the gateway
+      does (an empty value reads as not reachable on both kernels — the names only, never a value
+      in a record). **W95** (small) the image has no `ps` or `pkill` (debian slim) — **CURED
+      2026-10-02** (`procps` in the runtime stage; rides the next image, 0.1.0 as published lacks it). **W96 THE WIPED SEAT FORM — CURED 2026-09-30 (step 3):** on a fresh
       browser the seat form (drawn once, on the first 401) was cleared away by the session roll,
       which read the 401's `{error}` as a session and called `clearDisplay()` — JB: "I've tried 10
       different ways to enter jb … nothing works"; the guard is now "one form WHILE IT STANDS or is

@@ -2942,6 +2942,99 @@
     "degraded": false,
     "reason": null
    }
+  },
+  {
+   "name": "gateway_models: two stalls held",
+   "kind": "gateway_models",
+   "input": {
+    "status": 200,
+    "body": {
+     "data": [
+      {
+       "model_name": "haiku",
+       "model_info": {
+        "id": "haiku",
+        "base_model": "anthropic/claude-haiku-4-5"
+       }
+      },
+      {
+       "model_name": "gemma",
+       "model_info": {
+        "id": "gemma",
+        "base_model": "ollama/gemma3"
+       }
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ids": [
+     "gemma",
+     "haiku"
+    ]
+   }
+  },
+  {
+   "name": "gateway_models: an empty store, FastAPI's detail shape (W93)",
+   "kind": "gateway_models",
+   "input": {
+    "status": 500,
+    "body": {
+     "detail": {
+      "error": "LLM Model List not loaded in. Make sure you passed models in your config.yaml or on the LiteLLM Admin UI."
+     }
+    }
+   },
+   "expect": {
+    "ids": []
+   }
+  },
+  {
+   "name": "gateway_models: an empty store, the proxy's error shape (W93)",
+   "kind": "gateway_models",
+   "input": {
+    "status": 500,
+    "body": {
+     "error": {
+      "message": "LLM Model List not loaded in. Make sure you passed models in your config.yaml or on the LiteLLM Admin UI.",
+      "type": "internal_server_error",
+      "code": "500"
+     }
+    }
+   },
+   "expect": {
+    "ids": []
+   }
+  },
+  {
+   "name": "gateway_models: no key: refused in the gateway's words",
+   "kind": "gateway_models",
+   "input": {
+    "status": 401,
+    "body": {
+     "error": {
+      "message": "Authentication Error, No api key passed in.",
+      "type": "auth_error",
+      "code": "401"
+     }
+    }
+   },
+   "expect": {
+    "refused": "the gateway's model list refused: Authentication Error, No api key passed in."
+   }
+  },
+  {
+   "name": "gateway_models: an empty data list is an empty list",
+   "kind": "gateway_models",
+   "input": {
+    "status": 200,
+    "body": {
+     "data": []
+    }
+   },
+   "expect": {
+    "ids": []
+   }
   }
  ]
 }

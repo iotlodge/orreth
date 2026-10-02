@@ -45,6 +45,7 @@ const PORTED_KINDS: &[&str] = &[
     "duty_text",
     "refused_words",
     "not_a_plan",
+    "gateway_models",
     "echo_reply",
     "watch_judge",
     "watch_reads",
@@ -1541,6 +1542,30 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             match got {
                 Ok(d) => return Err(format!("the deal did not refuse: {d}")),
                 Err(words) => same!(words, s(&exp["words"]).to_string(), "the refusal"),
+            }
+        }
+        "gateway_models" => {
+            // W93: an empty store's refusal is the empty list; any other refusal keeps its words
+            let got = stable::models_from(inp["status"].as_u64().unwrap() as u16, &inp["body"]);
+            match (got, exp.get("refused")) {
+                (Ok(m), None) => {
+                    let mut ids: Vec<String> = m.keys().cloned().collect();
+                    ids.sort();
+                    let want: Vec<String> = exp["ids"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|v| v.as_str().unwrap().to_string())
+                        .collect();
+                    same!(ids, want, "model ids");
+                }
+                (Err(e), Some(r)) => same!(e, s(r).to_string(), "model list refused"),
+                (got, _) => {
+                    return Err(format!(
+                        "gateway_models: got {:?}, fixture says {exp}",
+                        got.map(|m| m.len())
+                    ))
+                }
             }
         }
         "drained_words" => same!(
