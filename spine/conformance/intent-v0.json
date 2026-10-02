@@ -345,6 +345,76 @@
    "expect": {
     "reply": "repeat this."
    }
+  },
+  {
+   "name": "not_a_plan: 'I cannot think right now \u2014 the gateway refused: ' \u2192 a failed thought (W92)",
+   "kind": "not_a_plan",
+   "input": {
+    "reply": "I cannot think right now \u2014 the gateway refused: litellm.APIConnectionError: Server disconnected."
+   },
+   "expect": {
+    "why": "a failed thought"
+   }
+  },
+  {
+   "name": "not_a_plan: \"I am out of fuel \u2014 planner's LLM allowance of $0\" \u2192 a failed thought (W92)",
+   "kind": "not_a_plan",
+   "input": {
+    "reply": "I am out of fuel \u2014 planner's LLM allowance of $0.50 for this window is spent."
+   },
+   "expect": {
+    "why": "a failed thought"
+   }
+  },
+  {
+   "name": "not_a_plan: 'I am planner \u2014 the planner, a firmware body of O' \u2192 a self-introduction (W92)",
+   "kind": "not_a_plan",
+   "input": {
+    "reply": "I am planner \u2014 the planner, a firmware body of Orreth \u2014 lays out the next steps from what the residents brought, plainly. Ask me for the next objective."
+   },
+   "expect": {
+    "why": "a self-introduction"
+   }
+  },
+  {
+   "name": "not_a_plan: '**I will not.** The dossier names nothing I can ' \u2192 a refusal (W92)",
+   "kind": "not_a_plan",
+   "input": {
+    "reply": "**I will not.** The dossier names nothing I can act on."
+   },
+   "expect": {
+    "why": "a refusal"
+   }
+  },
+  {
+   "name": "not_a_plan: 'Serve the waiting ask and confirm the bench is d' \u2192 None (W92)",
+   "kind": "not_a_plan",
+   "input": {
+    "reply": "Serve the waiting ask and confirm the bench is drained."
+   },
+   "expect": {
+    "why": null
+   }
+  },
+  {
+   "name": "not_a_plan: 'The gateway refused earlier today; now serve the' \u2192 None (W92)",
+   "kind": "not_a_plan",
+   "input": {
+    "reply": "The gateway refused earlier today; now serve the waiting ask and say what you found."
+   },
+   "expect": {
+    "why": null
+   }
+  },
+  {
+   "name": "not_a_plan: 'I am not sure the watch is right \u2014 re-read the b' \u2192 None (W92)",
+   "kind": "not_a_plan",
+   "input": {
+    "reply": "I am not sure the watch is right \u2014 re-read the bench and report the count."
+   },
+   "expect": {
+    "why": null
+   }
   }
  ]
 }

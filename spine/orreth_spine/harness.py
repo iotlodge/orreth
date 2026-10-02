@@ -5,6 +5,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, model ARMS on a run (the same golden cases against two minds) · three checks: every mind answers · the gateway answers and holds every stall · the meter and the gateway agree · a model change is announced · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the run over the invoke rail (`orreth.resident.harness.v1`) · the verdict factored (fixture bodies-v0) · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the tenth check — this cell is sealed · 2026-09-25
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — W92 THE LOOP ON A FAILED THOUGHT: not_a_plan · 2026-10-02
 """The A/B harness v0 (canon 0004, AG-6): golden cases run against a body's
 mind; every run is a record; a failing run is a FACT on the rail
 (orreth.harness.failed.v1) that the feed carries to the chat as a soft
@@ -182,6 +183,29 @@ def refused_words(reply: str | None) -> bool:
     reply that merely mentions the words is an answer."""
     head = " ".join((reply or "").split()).lstrip("*#-> \"“'")
     return bool(REFUSAL_RE.match(head))
+
+
+FAILED_THOUGHT_RE = re.compile(r"^(i cannot think right now\b|i am out of fuel\b)", re.I)
+INTRO_RE = re.compile(r"^i am [a-z0-9][\w.-]* — ", re.I)      # resident.py: f"I am {self.name} — {persona}. "
+
+
+def not_a_plan(reply: str | None) -> str | None:
+    """W92 (walk #21): the planner's reply is read BEFORE it becomes an
+    objective — a failed thought ("I cannot think right now — the gateway
+    refused …", "I am out of fuel — …"), a refusal (`refused_words`) or the
+    body's own self-introduction ("I am planner — the planner, a firmware
+    body of Orreth …") is NOT a plan, and is never filed to the crew: fuel
+    was spent on a failure once (the librarian answered "I see you are in
+    distress …"). Returns the plain reason, or None for a plan. Pinned by
+    the conformance fixture `not_a_plan` on both kernels."""
+    head = " ".join((reply or "").split()).lstrip("*#-> \"“'")
+    if FAILED_THOUGHT_RE.match(head):
+        return "a failed thought"
+    if refused_words(reply):
+        return "a refusal"
+    if INTRO_RE.match(head):
+        return "a self-introduction"
+    return None
 
 
 def duty_answered(conn) -> dict:

@@ -11,6 +11,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: `schema_version` · `schema_tables` (the migrator's contract) · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp3: THE ERA — `VERSION` and the crate wear one number · 2026-09-29
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass: `watch_metrics` · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W92: not_a_plan pinned · 2026-10-02
 //! The Rust conformance runner (canon 0008 · P7 sp1): every fixture under
 //! `spine/conformance/*-v*.json` — the same files the Python reference
 //! generated and passes, unchanged — dispatched by case kind exactly as
@@ -43,6 +44,7 @@ const PORTED_KINDS: &[&str] = &[
     "restart_demand",
     "duty_text",
     "refused_words",
+    "not_a_plan",
     "echo_reply",
     "watch_judge",
     "watch_reads",
@@ -384,6 +386,11 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             ask::refused_words(opt_str(&inp["reply"])),
             exp["refused"].as_bool().unwrap(),
             "refused"
+        ),
+        "not_a_plan" => same!(
+            ask::not_a_plan(opt_str(&inp["reply"])),
+            exp["why"].as_str(),
+            "not a plan (W92)"
         ),
         "echo_reply" => same!(
             ask::echo_reply(s(&inp["name"]), s(&inp["text"])),

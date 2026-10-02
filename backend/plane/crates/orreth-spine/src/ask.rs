@@ -3,6 +3,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: the ask's fact and the door's refusal, as bytes · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: the lease facts' pure half — `LEASE_LAPSED` · `LEASE_SEATED` · `lease_payload` · `lease_fact` · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W92 THE LOOP ON A FAILED THOUGHT: not_a_plan · 2026-10-02
 //! `orreth.ask/1` and the word-shaped laws of `orreth.intent/1` — the pure
 //! half of `orreth_spine.dispatch` (the address at the head of an ask, W7;
 //! the door's refusal for a body that is not here, W19), `harness` (a reply
@@ -269,6 +270,35 @@ pub fn refused_words(reply: Option<&str>) -> bool {
     REFUSAL_RE.is_match(head)
 }
 
+static FAILED_THOUGHT_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)^(i cannot think right now\b|i am out of fuel\b)").unwrap());
+// resident.py: f"I am {self.name} — {persona}. " — the body's own introduction
+static INTRO_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)^i am [a-z0-9][\w.-]* — ").unwrap());
+
+/// W92 (walk #21): the planner's reply is read BEFORE it becomes an
+/// objective — a failed thought ("I cannot think right now — the gateway
+/// refused …", "I am out of fuel — …"), a refusal (`refused_words`) or the
+/// body's own self-introduction ("I am planner — the planner, a firmware body
+/// of Orreth …") is NOT a plan and is never filed to the crew: fuel was spent
+/// on a failure once (the librarian answered "I see you are in distress …").
+/// The plain reason, or `None` for a plan — mirrors `harness.not_a_plan`,
+/// pinned by the conformance fixture `not_a_plan`.
+pub fn not_a_plan(reply: Option<&str>) -> Option<&'static str> {
+    let folded = fold_ws(reply.unwrap_or(""));
+    let head = folded.trim_start_matches(|c: char| "*#-> \"“'".contains(c));
+    if FAILED_THOUGHT_RE.is_match(head) {
+        return Some("a failed thought");
+    }
+    if refused_words(reply) {
+        return Some("a refusal");
+    }
+    if INTRO_RE.is_match(head) {
+        return Some("a self-introduction");
+    }
+    None
+}
+
 // ---- resident.py ------------------------------------------------------------------
 
 static QUESTION_RE: LazyLock<Regex> = LazyLock::new(|| {
@@ -366,6 +396,40 @@ mod tests {
         assert!(refused_words(Some("I'm not answering that.")));
         assert!(!refused_words(Some("I willnot")));
         assert!(!refused_words(None));
+    }
+
+    #[test]
+    fn a_failed_thought_is_not_a_plan() {
+        assert_eq!(
+            not_a_plan(Some(
+                "I cannot think right now — the gateway refused: Server disconnected."
+            )),
+            Some("a failed thought")
+        );
+        assert_eq!(
+            not_a_plan(Some("I am out of fuel — planner's LLM allowance is spent.")),
+            Some("a failed thought")
+        );
+        assert_eq!(not_a_plan(Some("**I will not.**")), Some("a refusal"));
+        assert_eq!(
+            not_a_plan(Some(
+                "I am planner — the planner, a firmware body of Orreth — lays out the next steps."
+            )),
+            Some("a self-introduction")
+        );
+        assert_eq!(
+            not_a_plan(Some(
+                "Serve the waiting ask and confirm the bench is drained."
+            )),
+            None
+        );
+        assert_eq!(
+            not_a_plan(Some(
+                "The gateway refused earlier; now serve the waiting ask."
+            )),
+            None
+        );
+        assert_eq!(not_a_plan(None), None);
     }
 
     #[test]

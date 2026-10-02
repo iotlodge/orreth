@@ -4,6 +4,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the turn under the beat lock; the loop's words in one place · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures: W35 a stop asked is a stop held · W37 a duplicate purpose named at the door · W38 the honest word in more shapes · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, THE REMEDIATION RAIL: the forensic turn · the lever road · the attributed outcome · 2026-09-27
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — W92 THE LOOP ON A FAILED THOUGHT: a failed thought is parked with a note, never filed · 2026-10-02
 """The intent loop — the fifth firmware-rail (canon 0007, block 11).
 
 Human INTENTION is the topmost origin of work. An intention is a record
@@ -655,6 +656,16 @@ def _file_objectives(conn) -> list[dict]:
             p = _levers.pull(conn, intention, turn_id=tid, cause_marker=cause, lever=decl, args=read["args"],
                              because=read["because"], bodies=RESTART)
             filed.append({"turn_id": tid, "intention_id": iid, **p})
+            continue
+        from .harness import not_a_plan
+        from .digest import _head
+        why = not_a_plan(reply)
+        if why is not None:                          # W92: a failed thought is never an objective
+            note = f"nothing filed — the planner's reply was {why}: {_head(reply, 120)}"
+            with conn.transaction():
+                conn.cursor().execute("UPDATE spine_intent_turns SET objective_ask = '-', because = %s"
+                                      " WHERE turn_id = %s", (note, tid))
+            filed.append({"turn_id": tid, "intention_id": iid, "parked": why, "note": note})
             continue
         words = " ".join((reply or "").split())[:500]
         if not words:

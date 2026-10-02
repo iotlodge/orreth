@@ -2,6 +2,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the stop and the restart · `declared` · the loop (interested · plan · on_marker · due · file · hear · turn) · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures: W35 a stop asked is a stop held · W37 a duplicate purpose named at the door · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, THE REMEDIATION RAIL: the forensic turn · the lever road · the attributed outcome · 2026-09-27
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W92 THE LOOP ON A FAILED THOUGHT: a failed thought is parked with a note, never filed · 2026-10-02
 //! Intentions on the ground — the row half of `orreth_spine.intent` (0007):
 //! an intention declared at the door lands as its row, its ROOT marker, its
 //! own session (where its objectives show) and its fact, in one transaction;
@@ -954,6 +955,22 @@ async fn file_objectives(g: &mut Ground, w: &World) -> Result<Vec<Value>, RoadEr
             .await?;
             p["intention_id"] = json!(iid);
             filed.push(p);
+            continue;
+        }
+        if let Some(why) = crate::ask::not_a_plan(reply.as_deref()) {
+            // W92: a failed thought, a refusal or a self-introduction is never an objective —
+            // the turn is parked with its note, no ask filed, no fuel spent on a failure
+            let note = format!(
+                "nothing filed — the planner's reply was {why}: {}",
+                crate::memory::head(reply.as_deref().unwrap_or(""), 120)
+            );
+            g.client()
+                .execute(
+                    "UPDATE spine_intent_turns SET objective_ask = '-', because = $1 WHERE turn_id = $2",
+                    &[&note, &tid],
+                )
+                .await?;
+            filed.push(json!({"turn_id": tid, "intention_id": iid, "parked": why, "note": note}));
             continue;
         }
         let words: String = crate::py::fold_ws(reply.as_deref().unwrap_or(""))

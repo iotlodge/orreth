@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: the eleventh check · the planner reads the dossier · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): IH-1 under the watch's sense (W14), the runner joined (W19), the human's stop held (W5) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures: W35 a stop asked is a stop held · W37 a duplicate purpose named at the door · W38 the honest word in more shapes · W40 standing intentions never off the board · 2026-09-23
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — W92 THE LOOP ON A FAILED THOUGHT: a failed thought parked, never filed · 2026-10-02
 """The intent loop (canon 0007, block 11): an intention is a record with
 a root marker; the loop observes (a red watch), asks the planner under
 the observation, and files the planner's reply as an objective under the
@@ -104,6 +105,45 @@ def test_ih1_a_red_watch_turns_the_resiliency_loop_and_the_stop_ends_it(pg, monk
     assert intent.stop(pg, r["intention_id"], by=ME)["active"] is False             # one face, twice
     with pytest.raises(KeyError):
         intent.stop(pg, "int_nobody", by=ME)
+
+
+@pytest.mark.parametrize("reply, why", [
+    ("I cannot think right now — the gateway refused: Server disconnected.", "a failed thought"),
+    ("I am planner — the planner, a firmware body of Orreth — lays out the next steps from what the residents brought, plainly.", "a self-introduction"),
+])
+def test_w92_a_failed_thought_is_parked_with_a_note_and_never_filed(pg, monkeypatch, reply, why):
+    """W92 (walk #21): the planner's failure ("I cannot think right now —
+    the gateway refused …") and its self-introduction were filed to the
+    librarian as objectives, and fuel was spent answering them. Now the
+    reply is read first: not a plan → the turn is parked with a note
+    (`because`), `objective_ask` = '-', no ask to the crew, the beat says
+    `parked`; the loop does not turn again for the same cause."""
+    monkeypatch.setenv("SPINE_SCOPE", "u:law-" + secrets.token_hex(3))
+    planner = _body("firmware-planner.v0.json", gateway.FakeGateway(reply=reply))
+    planner.join(pg); planner._serve_conn = pg
+    _body("librarian-resident.v0.json").join(pg)
+    r = intent.declared(pg, intent.RESILIENCY["words"], serves="resiliency", kind="kernel",
+                        by="the kernel", interests=intent.RESILIENCY["interests"],
+                        planner="planner", runner="librarian")
+    monitor.add_watch(pg, "asks left waiting", "asks_received", ">", 0, by=ME)
+    dispatch.submit_ask(pg, "one ask, unserved", person="did:orreth:person:test")
+    [obs] = intent.turn(pg)["observed"]
+    cur = pg.cursor()
+    cur.execute("SELECT plan_ask FROM spine_intent_turns WHERE intention_id = %s", (r["intention_id"],))
+    [(plan_ask,)] = cur.fetchall()
+    with pg.transaction():
+        planner._serve_ask(pg.cursor(), plan_ask, ["the kernel"])                  # the planner "answers"
+    t = intent.turn(pg)
+    [f] = t["filed"]
+    assert f["parked"] == why and f["note"].startswith(f"nothing filed — the planner's reply was {why}: ")
+    cur.execute("SELECT objective_ask, because FROM spine_intent_turns WHERE intention_id = %s", (r["intention_id"],))
+    [(objective_ask, because)] = cur.fetchall()
+    assert objective_ask == "-" and because == f["note"]
+    cur.execute("SELECT count(*) FROM spine_asks WHERE session = %s AND target = 'librarian'", (r["session"],))
+    assert cur.fetchone()[0] == 0, "no ask reached the crew"
+    [row] = [i for i in intent.listing(pg) if i["intention_id"] == r["intention_id"]]
+    assert row["objectives"] == 0 and row["turns"] == 1
+    assert intent.turn(pg)["filed"] == [], "parked once; the loop does not file it again"
 
 
 def test_ih2_the_ask_wears_its_kind(pg, monkeypatch):

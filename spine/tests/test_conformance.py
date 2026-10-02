@@ -19,6 +19,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3, the doors' arms: door_name · door_fold · door_slowest · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: schema_version · schema_tables (the migrator's contract) · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass: watch_metrics · 2026-09-29
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — W92: not_a_plan pinned · 2026-10-02
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
@@ -116,6 +117,8 @@ def test_fixture(contract, case):
         assert scheduler.duty_text(inp["text"], inp["every_s"], inp["since"], inp["notes"]) == exp["text"]
     elif kind == "refused_words":                # W21: a reply that OPENS as a refusal
         assert harness.refused_words(inp["reply"]) is exp["refused"]
+    elif kind == "not_a_plan":                   # W92: a failed thought, a refusal or a self-introduction is not a plan
+        assert harness.not_a_plan(inp["reply"]) == exp["why"]
     elif kind == "echo_reply":                   # W24: the echoed words alone; one plain line for a question
         assert resident.echo_reply(inp["name"], inp["text"]) == exp["reply"]
     # ---- orreth.doors/1 (row 4, panel sp3): a door's name and the fold of its latency ----

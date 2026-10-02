@@ -2623,6 +2623,14 @@ approved (covenant rule 9).
       message (Ack(Some(_)) is a refusal) → the dispatcher stands again or parks with evidence;
       (b) THE BENCH SWEEP — a kernel beat finds every ask `received` longer than N s with no
       resident footprint and re-dispatches it once with a journey line; a second miss parks it.
+      **(a) CURED 2026-10-02:** `invoke::publish_on` reads the broker's whole answer — an Ack that
+      CARRIES a returned message is `RailError::Undelivered` (the rail's moment, never the fact's
+      poison): the dispatcher's transaction rolls back with no footprint and it stands again at the
+      same fact; the words name the key and the command. Proven on the rig in `tests/rails.rs` (a
+      command on a key with no bound queue refused as undelivered and read as non-poison; the bound
+      road still delivering). Found on the way: the crate no longer built with `--features rails`
+      alone (the QR and PNG crates sat in `bridge` while `proof_live` is a `rails` module) — moved
+      to `rails`, `dev.sh rust rails` compiles again. (b) THE BENCH SWEEP still owed.
       **W92 THE LOOP ON A FAILED THOUGHT** — `intent_live.rs` files a replied plan's first 500 chars
       as the objective without reading them: the planner's failure "I cannot think right now — the
       gateway refused: …Server disconnected" (twice, 09-30 04:55 · 06:01) and its boilerplate
@@ -2630,6 +2638,12 @@ approved (covenant rule 9).
       objectives, and the librarian answered "I see you are in distress…" — fuel spent on a
       failure. The cure: a reply that is a failure or refusal (the gateway's words · `refused_words`)
       parks the turn with a note and never becomes an objective; a self-introduction is not a plan.
+      **CURED 2026-10-02:** `not_a_plan` (`ask.rs` · `harness.py`; fixture `not_a_plan` ×7 pinned on
+      both kernels) reads the reply BEFORE it is filed — a failed thought ("I cannot think right now",
+      "I am out of fuel") · a refusal · the body's self-introduction park the turn with its note in
+      `because`, `objective_ask` '-', no ask to the crew, the beat reporting `parked`; proven in
+      `test_intent` (both shapes, the loop not filing it again) and the Rust unit test. A parked
+      plan's retry is a queue for the compliant state (rows 5–6), not a patch here.
       **SEED (perf law)** the dispatcher opens its reader from `earliest` at every relight and bumps
       `attempts` on every past fact of ours (attempts up to 240 on the dev ground) — O(facts) writes
       per relight, the growing-corpus smell; a committed offset per group, or a cursor, at row 5.
