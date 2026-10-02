@@ -3,6 +3,7 @@
      Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W85 · W86 · W87): BODIES one row per name with the earlier selves counted · WATCHES with the author and "rest it" · ASKS lists the asks left waiting, each with "stop it" · PEERS with "forget it" · 2026-09-29
      Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (JB: "clean up the monitor pull … a bit chaotic"): the Monitoring pull wider, ONE anatomy for every card — a title with its summary on the right, aligned rows (label · a dim sub-line · a status pill · a lever column), tabular numbers, short clocks, the pulse as a stat strip · 2026-09-29
      Amended: Claude Fable 5.1 (claude-fable-5-1) — THE TOUR (JB's ask, 2026-09-29 night: "a really nice soft line guide for the Panel itself … non-engineer terms … do it yourself, work with firmware/residents assisted, or simply ask it to take the lead … we want them to want to explore"): a soft line drawn around one region of the LIVE panel at a time with a plain-words card beside it, a "try it" that puts words in the chat and never sends them, ← → and Esc; opened from TOUR on the sill or by saying "tour" · 2026-09-29
+     Amended: Claude Fable 5.1 (claude-fable-5-1) — W90 (walk #21): every "since" wears its date when it is not today (sinceWords) · 2026-10-02
 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp2 (glass), walk #7's wounds · 2026-09-21 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures (glass): W27 the person's latest session · W32 one Esc, one thing · W33 a pull retracts when focus moves · W34/W39 a stop never needs the exact words · W35 the code row pinned · 2026-09-23 -->
@@ -1510,7 +1511,7 @@ async function onNotice(n){
     const s = await fetch("/monitor").then(x=>x.json()).catch(()=>null);
     const w = s && (s.watches || []).find(x => x.watch_id === n.ref);
     if (w) sysline(`watch “${esc(w.name)}” turned <span class="${w.red ? "red" : "ok"}">${esc(w.state)}</span>` +
-                   ` · value ${esc(String(w.value))}${w.since ? " · since " + hhmm(w.since) : ""} · ${esc(w.reads || "")}`);
+                   ` · value ${esc(String(w.value))}${w.since ? " · since " + sinceWords(w.since) : ""} · ${esc(w.reads || "")}`);
     if (monitorPull.classList.contains("open")) loadMonitor();
     return;
   }
@@ -1746,6 +1747,12 @@ document.getElementById("chat-in").addEventListener("input", e => {
   if (w || !e.target.value.trim()) { WINDOW = w; drawClock(); }
 });
 function hhmm(iso){ return new Date(iso).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"}); }
+function sinceWords(iso){                          // W90 (walk #21): a "since" wears its DATE when it is not today — six asks read "since 1:38 PM" and were 1 to 11 days old (W87's law, for every since)
+  const d = new Date(iso), now = new Date();
+  const today = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  const t = d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+  return today ? t : `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")} ${t}`;
+}
 function secs(a, b){ return `${Math.max(0, (new Date(b) - new Date(a)) / 1000).toFixed(1)} s`; }
 
 function holdRow(id, step, level, asker){   // one hold row: Cancel default · a typed code, or a MASTER's click from their own seat · Enter never confirms
@@ -2149,7 +2156,7 @@ async function loadCrew(){
       (kind === "kernel" ? ` onclick="this.classList.toggle('asked')"` : "") + `>${esc(s.text)} <span class="meta">(${when(s)})</span>` +
       (kind === "kernel" ? `<span class="why">kernel-required — visible, never editable</span>`
         : s.active ? `<span class="rest" data-rest="${esc(s.schedule_id)}">rest it</span>`
-        : `<span class="meta"> · at rest since ${hhmm(s.rested_at)}</span>`) + `</div>`;
+        : `<span class="meta"> · at rest since ${sinceWords(s.rested_at)}</span>`) + `</div>`;
     const schedules = sched.kernel.map(s => line(s, "kernel")).join("") + sched.role.map(s => line(s, "role")).join("") +
       sched.human.map(s => line(s, "human")).join("");
     d.innerHTML =
@@ -2577,7 +2584,7 @@ async function loadMonitor(){
        (askKeys.length ? `<div class="mchips">` + askKeys.map(k => chip(k, s.asks[k], k === "received" ? "warn" : k === "refused" ? "red" : k === "replied" ? "ok" : "")).join("") + `</div>` : note("none in this world")) +
        (waiting.length ? sub(`LEFT WAITING · nobody has served these yet · “stop it” cancels one on your word`) +
          waiting.map(a => line({label: esc(a.text), clamp: true,
-           sub: `since ${hm(a.asked_at)} · asked by ${esc(whoIs(a.person))}${a.target ? ` → ${esc(a.target)}` : ""} · ${esc(a.ask_id)}`, subTitle: a.text,
+           sub: `since ${sinceWords(a.asked_at)} · asked by ${esc(whoIs(a.person))}${a.target ? ` → ${esc(a.target)}` : ""} · ${esc(a.ask_id)}`, subTitle: a.text,
            lever: lever("stop", a.ask_id, "stop it", "stops this ask on your word before any body serves it — recorded as cancelled, its reply says so")})).join("") : ""));
   // ---- WATCHES: each with its author and its rest (W86); the rested counted, never drawn red
   const wRed = s.watches.filter(w => w.red).length;

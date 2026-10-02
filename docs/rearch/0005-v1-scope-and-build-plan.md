@@ -2604,9 +2604,16 @@ approved (covenant rule 9).
       **W89** the stop's words name no ask — three stops read as three identical chat lines
       ("Stopped on your word — the ask was set to rest here…"); `STOPPED_WORDS` is one constant on
       both kernels while the remote stop already names its target; the line must wear the ask's
-      words clipped · asker → target · id. **W90** a waiting ask's "since" wears no date — the six
+      words clipped · asker → target · id. **CURED 2026-10-02:** `ask::stopped_words` ·
+      `dispatch.stopped_words` (fixture `stopped_words` ×4 on both kernels): "Stopped on your word —
+      the ask “<words, 60>” (<asker> → <target or the crew> · <id>) was set to rest here before any
+      body served it."; the stop door on both kernels reads the ask's text and wears it; the
+      remote stop names the id too; proven in `doors.rs` step 9 and `test_monitor`. **W90** a waiting ask's "since" wears no date — the six
       asks JB saw as "since 1:38 PM" were 1 to 11 DAYS old (09-19 · 09-21 · 09-22 ×2 · 09-25 ·
-      09-29); W87's law (the date when not today) for the ASKS card too. **W91 THE LOST SERVE** —
+      09-29); W87's law (the date when not today) for the ASKS card too. **CURED 2026-10-02:** the
+      glass's `sinceWords` (the time alone today, the date before it otherwise, on the reader's own
+      clock) on the ASKS card's since, a watch's since and a rested watch's since — one helper, both
+      kernels, the asks' `asked_at` already carried. **W91 THE LOST SERVE** —
       why six asks waited for days: read on the dev ground 2026-09-30 (Fable, direct psql +
       RabbitMQ's counters): each orphan's `ask.received` fact was dispatched exactly once
       (`glass-dispatcher` footprint done), yet no resident footprint exists for it — the footprints
