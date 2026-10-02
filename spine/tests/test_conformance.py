@@ -117,6 +117,8 @@ def test_fixture(contract, case):
         assert scheduler.duty_text(inp["text"], inp["every_s"], inp["since"], inp["notes"]) == exp["text"]
     elif kind == "refused_words":                # W21: a reply that OPENS as a refusal
         assert harness.refused_words(inp["reply"]) is exp["refused"]
+    elif kind == "stopped_words":                # W89: the stop's words name the ask
+        assert dispatch.stopped_words(inp["text"], inp["asker"], inp["target"], inp["ask_id"]) == exp["words"]
     elif kind == "not_a_plan":                   # W92: a failed thought, a refusal or a self-introduction is not a plan
         assert harness.not_a_plan(inp["reply"]) == exp["why"]
     elif kind == "echo_reply":                   # W24: the echoed words alone; one plain line for a question

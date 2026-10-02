@@ -4,6 +4,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: the lease facts' pure half — `LEASE_LAPSED` · `LEASE_SEATED` · `lease_payload` · `lease_fact` · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — W92 THE LOOP ON A FAILED THOUGHT: not_a_plan · 2026-10-02
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W89: stopped_words names the ask · 2026-10-02
 //! `orreth.ask/1` and the word-shaped laws of `orreth.intent/1` — the pure
 //! half of `orreth_spine.dispatch` (the address at the head of an ask, W7;
 //! the door's refusal for a body that is not here, W19), `harness` (a reply
@@ -299,6 +300,20 @@ pub fn not_a_plan(reply: Option<&str>) -> Option<&'static str> {
     None
 }
 
+/// W89 (walk #21): the stop's words NAME the ask — JB read three stops as three
+/// identical chat lines. The line wears the ask's words clipped, the asker
+/// (a person DID folded to its name) → the target (or the crew), and the id.
+/// Mirrors `dispatch.stopped_words`; fixture `stopped_words`.
+pub fn stopped_words(text: &str, asker: &str, target: Option<&str>, ask_id: &str) -> String {
+    let who = asker.rsplit(':').next().unwrap_or(asker);
+    format!(
+        "Stopped on your word — the ask “{}” ({who} → {} · {ask_id}) was set to rest here before any \
+         body served it.",
+        crate::memory::head(text, 60),
+        target.filter(|t| !t.is_empty()).unwrap_or("the crew")
+    )
+}
+
 // ---- resident.py ------------------------------------------------------------------
 
 static QUESTION_RE: LazyLock<Regex> = LazyLock::new(|| {
@@ -430,6 +445,22 @@ mod tests {
             None
         );
         assert_eq!(not_a_plan(None), None);
+    }
+
+    #[test]
+    fn a_stop_names_its_ask() {
+        let w = stopped_words(
+            "left waiting for a body that never came",
+            "did:orreth:person:jb",
+            None,
+            "ask_1",
+        );
+        assert_eq!(w, "Stopped on your word — the ask “left waiting for a body that never came” (jb → the crew · ask_1) was set to rest here before any body served it.");
+        let long = "x".repeat(80);
+        assert!(
+            stopped_words(&long, "the kernel", Some("librarian"), "ask_2")
+                .contains("…” (the kernel → librarian · ask_2)")
+        );
     }
 
     #[test]

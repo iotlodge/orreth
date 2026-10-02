@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): the watch's sense (W14) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: the doors timed, the reference's null pool · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W85 · W86): the roster folded one row per name · a watch's REST · the asks left waiting and a local ask's STOP · the ground's prune · the three doors on the rig · 2026-09-29
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — W89: the stop names its ask · 2026-10-02
 """P4 sp4: presence leases (M2) — alive while serving, dormant never
 deleted; the Monitoring ground — the snapshot and the WATCHES, added
 through the interlock; the A/B harness v0 (AG-6's non-scheduled half) —
@@ -210,10 +211,12 @@ def test_the_asks_left_waiting_are_listed_and_a_local_one_is_stopped_with_its_fa
     with pytest.raises(KeyError):
         dispatch.stop_ask(pg, "ask_nope", jb)
     made = dispatch.stop_ask(pg, aid, jb)
-    assert made["status"] == "cancelled" and made["words"] == dispatch.STOPPED_WORDS
+    words = dispatch.stopped_words("left waiting for a body that never came", jb, None, aid)   # W89: names the ask
+    assert made["status"] == "cancelled" and made["words"] == words
+    assert "“left waiting for a body that never came” (jb → the crew · " + aid + ")" in words
     snap = monitor.snapshot(pg, rails=False)
     assert snap["waiting"] == [] and snap["asks"] == {"cancelled": 1}
-    assert glass.ask_view(pg, aid)["reply"] == dispatch.STOPPED_WORDS
+    assert glass.ask_view(pg, aid)["reply"] == words
     cur = pg.cursor()
     cur.execute("SELECT convert_from(body, 'UTF8') FROM spine_outbox WHERE convert_from(body, 'UTF8')"
                 " LIKE %s ORDER BY outbox_id", ('%"correlation_id":"' + aid + '"%',))

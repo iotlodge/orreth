@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: the four Python-only doors cross — walked over HTTP on the Rust kernel alone · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: step 9 — the farm's values over HTTP · the roster folded one row per name · a watch RESTED · a waiting ask STOPPED · a peer LET GO · the proof's world pruned · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W89: the stop names its ask · 2026-10-02
 //! THE FOUR DOORS (re-base sp1): `GET/POST /mitl` · `POST /impact` · `POST /mark` ·
 //! `POST /markers/kinds` — until now the reference's alone — knocked on the Rust
 //! kernel lit alone, through the gate (a seated person), each answer's shape the
@@ -849,13 +850,13 @@ async fn the_four_doors_answer_on_the_rust_kernel_alone() {
             "{v}"
         );
         let (s, v) = knock(port, "POST", "/asks/stop", Some(&json!({"id": aid})), &h).await;
-        assert_eq!(
-            (s, v["status"].clone(), v["words"].clone()),
-            (
-                200,
-                json!("cancelled"),
-                json!(orreth_spine::seam::STOPPED_WORDS)
-            ),
+        assert_eq!((s, v["status"].clone()), (200, json!("cancelled")), "{v}");
+        let words = v["words"].as_str().unwrap_or_default();
+        assert!(
+            // W89: the stop names its ask — the words clipped, asker → target, the id
+            words.starts_with(
+                "Stopped on your word — the ask “left waiting for a body that never came” ("
+            ) && words.contains(&format!("→ the crew · {aid}) was set to rest here")),
             "{v}"
         );
         let (s, v) = knock(port, "POST", "/asks/stop", Some(&json!({"id": aid})), &h).await;

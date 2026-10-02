@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells · partition · isolation · hardening · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the routed ask carries the asker's profile slice (W58) · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86 · W87): a peer let go is neither greeted nor routed to, and the pin at light names it again; `stop_ask` widened to a LOCAL ask left waiting (rule 11) · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W89: the stop's words name the ask · 2026-10-02
 //! THE SEAM between cells (canon 0002 rule 8 · JB's locks 2026-09-25): two
 //! cells that NAME each other as peers (`SPINE_PEERS`) speak over one door,
 //! `POST /seam`, in messages SIGNED by their kernels' own selves — the peer's
@@ -46,9 +47,6 @@ pub const HELLO_EVERY_S: f64 = 10.0;
 /// The seam's HTTP patience.
 pub const SEAM_TIMEOUT: Duration = Duration::from_secs(5);
 pub const KERNEL: &str = "the kernel";
-/// The reply a stopped local ask wears (the honest glass sp2, W86) — the reference's `dispatch.STOPPED_WORDS`.
-pub const STOPPED_WORDS: &str =
-    "Stopped on your word — the ask was set to rest here before any body served it.";
 
 /// What came back from a peer, or why nothing did.
 #[derive(Debug)]
@@ -792,7 +790,7 @@ impl Seam {
             )
             .await?;
         let words = format!(
-            "Stopped on your word — the ask to {} was set to rest here{}.",
+            "Stopped on your word — the ask to {} ({ask_id}) was set to rest here{}.",
             target.as_deref().unwrap_or("the peer"),
             if remote.is_some() {
                 format!(" and cell {cell} was told to rest it too")
@@ -838,15 +836,15 @@ impl Seam {
         let row = g
             .client()
             .query_opt(
-                "SELECT status, person, target FROM spine_asks WHERE ask_id = $1 AND scope = $2",
+                "SELECT status, person, target, text FROM spine_asks WHERE ask_id = $1 AND scope = $2",
                 &[&ask_id, &self.world.scope],
             )
             .await?;
         let Some(row) = row else {
             return Err(refused("no such ask"));
         };
-        let (status, asker, target): (String, String, Option<String>) =
-            (row.get(0), row.get(1), row.get(2));
+        let (status, asker, target, text): (String, String, Option<String>, String) =
+            (row.get(0), row.get(1), row.get(2), row.get(3));
         if asker != person
             && !crate::desk_live::governs(g.client(), &self.world.scope, person).await?
         {
@@ -862,19 +860,19 @@ impl Seam {
             };
             return Ok(json!({"ask_id": ask_id, "status": status, "words": words}));
         }
+        // W89: the words name the ask — its words clipped, asker → target, the id
+        let words = crate::ask::stopped_words(&text, &asker, target.as_deref(), ask_id);
         self.settle(
             g,
             ask_id,
             "cancelled",
-            STOPPED_WORDS,
+            &words,
             Some(KERNEL),
             &[person.to_string(), KERNEL.to_string()],
             &format!("{KERNEL}: stopped by {person} before any body served it — rule 11, the human can always stop"),
         )
         .await?;
-        Ok(
-            json!({"ask_id": ask_id, "status": "cancelled", "words": STOPPED_WORDS, "target": target}),
-        )
+        Ok(json!({"ask_id": ask_id, "status": "cancelled", "words": words, "target": target}))
     }
 
     // ---- the home side -------------------------------------------------------------------

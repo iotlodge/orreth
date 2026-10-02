@@ -350,6 +350,58 @@
     "interests": [],
     "every_s": 5
    }
+  },
+  {
+   "name": "stopped_words: 'left waiting for a body that never came' by jb (W89)",
+   "kind": "stopped_words",
+   "input": {
+    "text": "left waiting for a body that never came",
+    "asker": "did:orreth:person:jb",
+    "target": null,
+    "ask_id": "ask_1"
+   },
+   "expect": {
+    "words": "Stopped on your word \u2014 the ask \u201cleft waiting for a body that never came\u201d (jb \u2192 the crew \u00b7 ask_1) was set to rest here before any body served it."
+   }
+  },
+  {
+   "name": "stopped_words: 'Serve the waiting ask and confirm the be' by the kernel (W89)",
+   "kind": "stopped_words",
+   "input": {
+    "text": "Serve the waiting ask and confirm the bench is drained, then say what the count was afterwards.",
+    "asker": "the kernel",
+    "target": "librarian",
+    "ask_id": "ask_2"
+   },
+   "expect": {
+    "words": "Stopped on your word \u2014 the ask \u201cServe the waiting ask and confirm the bench is drained, the\u2026\u201d (the kernel \u2192 librarian \u00b7 ask_2) was set to rest here before any body served it."
+   }
+  },
+  {
+   "name": "stopped_words: 'what   day is it' by quinn (W89)",
+   "kind": "stopped_words",
+   "input": {
+    "text": "  what   day is it  ",
+    "asker": "did:orreth:person:quinn",
+    "target": "echo",
+    "ask_id": "ask_3"
+   },
+   "expect": {
+    "words": "Stopped on your word \u2014 the ask \u201cwhat day is it\u201d (quinn \u2192 echo \u00b7 ask_3) was set to rest here before any body served it."
+   }
+  },
+  {
+   "name": "stopped_words: 'stop' by scout (W89)",
+   "kind": "stopped_words",
+   "input": {
+    "text": "stop",
+    "asker": "did:orreth:body:scout",
+    "target": "",
+    "ask_id": "ask_4"
+   },
+   "expect": {
+    "words": "Stopped on your word \u2014 the ask \u201cstop\u201d (scout \u2192 the crew \u00b7 ask_4) was set to rest here before any body served it."
+   }
   }
  ]
 }
