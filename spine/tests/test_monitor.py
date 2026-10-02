@@ -311,7 +311,8 @@ def test_the_rest_the_stop_and_the_forget_doors_on_the_rig(pg, rig):
     s, b = seats.post(port, "/asks/stop", {"id": waiting[0]["ask_id"], "person": "did:orreth:person:quinn"})
     assert s == 403
     s, b = seats.post(port, "/asks/stop", {"id": waiting[0]["ask_id"]})
-    assert s == 200 and b["status"] == "cancelled" and b["words"] == dispatch.STOPPED_WORDS
+    assert s == 200 and b["status"] == "cancelled"
+    assert b["words"] == dispatch.stopped_words("sp2 left waiting", owner, None, waiting[0]["ask_id"])   # W89: names the ask
     s, b = seats.post(port, "/asks/stop", {"id": "ask_nope"})
     assert s == 404
     pg.cursor().execute("INSERT INTO spine_peers (cell, scope, door, unreachable_since) VALUES ('ghost', %s, 'http://127.0.0.1:1', now() - interval '4 days')",
