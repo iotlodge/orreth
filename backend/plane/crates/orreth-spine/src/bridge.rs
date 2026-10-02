@@ -9,6 +9,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: the fact door `/fact/<message_id>` · the presence sweep's loop · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the RETENTION beat (hourly, one kernel) · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W91 THE BENCH SWEEP: the bench beat · 2026-10-02
 //! The Rust bridge — the doors and the feed of `orreth_spine.glass` +
 //! `bridgefeed` on axum, lit in SHADOW on :4601 beside the Python Bridge on
 //! :4600, both on one ground. It serves the SAME page (`spine/glass/index.html`
@@ -576,6 +577,43 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
                         }
                     }
                     Err(e) => eprintln!("the retention sweep could not reach the ground: {e}"),
+                }
+                if !stop.load(Ordering::Relaxed) {
+                    tokio::time::sleep(Duration::from_millis(500)).await;
+                }
+            }
+        }));
+    }
+    // THE BENCH SWEEP (W91, 2026-10-02): every 30 s under the `bench` beat, an ask left `received`
+    // past SPINE_BENCH_SWEEP_S with no body serving it is dispatched again once, then rested with
+    // words — no ask waits for days again
+    {
+        let (w, stop) = (w.clone(), stop.clone());
+        tasks.push(tokio::spawn(async move {
+            while !stop.load(Ordering::Relaxed) {
+                match Ground::connect(&w.pg_dsn).await {
+                    Ok(mut g) => {
+                        while !stop.load(Ordering::Relaxed) {
+                            match crate::beat::try_beat(&g, &w.scope, "bench").await {
+                                Ok(true) => {
+                                    if let Err(e) =
+                                        crate::bench::sweep(&mut g, &w, crate::bench::sweep_after())
+                                            .await
+                                    {
+                                        eprintln!("the bench sweep stumbled: {e}");
+                                    }
+                                    let _ = crate::beat::end_beat(&g, &w.scope, "bench").await;
+                                }
+                                Ok(false) => {}
+                                Err(e) => {
+                                    eprintln!("the bench beat could not be claimed: {e}");
+                                    break;
+                                }
+                            }
+                            sleep_unless_stopped(&stop, Duration::from_secs(30)).await;
+                        }
+                    }
+                    Err(e) => eprintln!("the bench sweep could not reach the ground: {e}"),
                 }
                 if !stop.load(Ordering::Relaxed) {
                     tokio::time::sleep(Duration::from_millis(500)).await;

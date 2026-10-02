@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W91: the bench beat (5) · 2026-10-02
 //! THE BEAT LOCK — the loops' shadow law (`orreth_spine.ground.beat`). Two
 //! kernels stand on one ground in SHADOW (the Python Bridge on :4600, this
 //! bridge on :4601) and each runs the standing loops — the scheduler's tick,
@@ -14,12 +15,13 @@
 
 /// The beat classes count up from here (the DDL guard is 742199).
 pub const BEAT_LOCK: i64 = 742200;
-pub const BEATS: [(&str, i64); 4] = [
+pub const BEATS: [(&str, i64); 5] = [
     ("scheduler", 1),
     ("intent", 2),
     ("keeper", 3),
     ("retention", 4),
-]; // 4: the outbox's prune (the perf cure)
+    ("bench", 5),
+]; // 4: the outbox's prune (the perf cure) · 5: THE BENCH SWEEP (W91)
 pub const HELD: &str = "the beat is held by another kernel on this ground";
 
 /// The advisory lock's first key for a beat class; an unknown class is `None`.

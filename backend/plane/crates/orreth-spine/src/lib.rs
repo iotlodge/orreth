@@ -113,6 +113,8 @@ pub mod watch;
 
 #[cfg(feature = "rails")]
 pub mod asks;
+#[cfg(feature = "rails")]
+pub mod bench;
 #[cfg(feature = "bridge")]
 pub mod bodies;
 #[cfg(feature = "bridge")]

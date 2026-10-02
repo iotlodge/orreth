@@ -9,7 +9,7 @@
    "kind": "schema_version",
    "input": {},
    "expect": {
-    "version": 3
+    "version": 4
    }
   },
   {

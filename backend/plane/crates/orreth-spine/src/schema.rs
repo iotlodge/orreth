@@ -9,6 +9,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: THE MIGRATOR (lock 2) — `spine_schema`, the version, every table both kernels stand on · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): SCHEMA VERSION 2 — the indexes the doors and the relay were missing · 2026-09-29
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: SCHEMA VERSION 3 — a watch's rest (`spine_watches.active` · `rested_by` · `rested_at`) and a peer's forgetting (`spine_peers.forgotten_by` · `forgotten_at`), recorded on their rows (rule 11) · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — schema 4: an ask's resent_at (W91 THE BENCH SWEEP) · 2026-10-02
 //! The ask road's tables — the Python spine's DDL, word for word, under the
 //! same tags its `once` guard uses (`resident` · `markers` · `proof` · `intent`
 //! · `presence` · `digest`), so two spines on one ground never disagree about a
@@ -34,7 +35,7 @@ use std::sync::LazyLock;
 /// (or past) its number runs no DDL at all — it VERIFIES that every table it declares
 /// stands, and refuses to light on a ground that lies. A kernel lighting beside a
 /// migrating one WAITS at the lock and then verifies (`Ground::ensure_all`).
-pub const SCHEMA_VERSION: i32 = 3; // 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29)
+pub const SCHEMA_VERSION: i32 = 4; // 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02)
 
 /// The version table itself — created before the version is read, under the same lock.
 pub const SCHEMA_DDL: &[&str] = &[
@@ -52,6 +53,7 @@ pub const RESIDENT_DDL: &[&str] = &[
      text NOT NULL, status text NOT NULL DEFAULT 'received', reply text, served_by text, held \
      text, asked_at timestamptz NOT NULL DEFAULT now(), replied_at timestamptz)",
     "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS held text",
+    "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS resent_at timestamptz",
     "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS seq int NOT NULL DEFAULT 1",
     "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS target text",
     "ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS scope text",

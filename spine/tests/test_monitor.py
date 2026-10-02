@@ -2,7 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel): the watch's sense (W14) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: the doors timed, the reference's null pool · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W85 · W86): the roster folded one row per name · a watch's REST · the asks left waiting and a local ask's STOP · the ground's prune · the three doors on the rig · 2026-09-29
-# Amended: Claude Fable 5.1 (claude-fable-5-1) — W89: the stop names its ask · 2026-10-02
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — W89: the stop names its ask · W91 THE BENCH SWEEP proven · 2026-10-02
 """P4 sp4: presence leases (M2) — alive while serving, dormant never
 deleted; the Monitoring ground — the snapshot and the WATCHES, added
 through the interlock; the A/B harness v0 (AG-6's non-scheduled half) —
@@ -222,6 +222,44 @@ def test_the_asks_left_waiting_are_listed_and_a_local_one_is_stopped_with_its_fa
                 " LIKE %s ORDER BY outbox_id", ('%"correlation_id":"' + aid + '"%',))
     assert {json.loads(r[0])["type"] for r in cur.fetchall()} >= {"orreth.journey.v1", "orreth.reply.v1"}
     assert dispatch.stop_ask(pg, aid, jb)["words"] == "it had already come to rest"
+
+
+def test_the_bench_sweep_dispatches_a_waiting_ask_again_once_then_rests_it(pg, monkeypatch):
+    """W91 THE BENCH SWEEP: an ask left `received` past the dial with no body serving it is
+    dispatched again ONCE (a serve command on the same road, a journey line, `resent_at`);
+    still waiting the same span later, the kernel rests it with plain words as its reply
+    (cancelled · the kernel · the reply on the rail). A younger ask is left alone."""
+    monkeypatch.setenv("SPINE_SCOPE", "u:law-" + secrets.token_hex(3))
+    jb = "did:orreth:person:jb"
+    from orreth_spine import outbox
+    outbox.ensure_schema(pg)
+    aid = dispatch.submit_ask(pg, "left waiting for a body that never came", person=jb)
+    dispatch.submit_ask(pg, "just asked", person=jb)
+    pg.cursor().execute("UPDATE spine_asks SET asked_at = clock_timestamp() - interval '200 seconds'"
+                        " WHERE ask_id = %s", (aid,))
+    sent = []
+    swept = dispatch.sweep_bench(pg, 90, publish=sent.append)
+    assert swept == {"resent": [aid], "rested": []}
+    [cmd] = sent
+    assert cmd["type"] == "orreth.resident.serve.v1" and cmd["payload"]["ref"] == aid and cmd["correlation_id"] == aid
+    cur = pg.cursor()
+    cur.execute("SELECT status, resent_at IS NOT NULL FROM spine_asks WHERE ask_id = %s", (aid,))
+    assert cur.fetchone() == ("received", True)
+    assert dispatch.sweep_bench(pg, 90, publish=sent.append) == {"resent": [], "rested": []}   # the span not yet passed
+    pg.cursor().execute("UPDATE spine_asks SET resent_at = clock_timestamp() - interval '200 seconds'"
+                        " WHERE ask_id = %s", (aid,))
+    assert dispatch.sweep_bench(pg, 90, publish=sent.append) == {"resent": [], "rested": [aid]}
+    assert len(sent) == 1, "dispatched again once, never twice"
+    v = glass.ask_view(pg, aid)
+    assert v["status"] == "cancelled" and v["served_by"] == "the kernel"
+    assert v["reply"].startswith("Set to rest by the kernel — no body took this ask from the bench in ")
+    assert any("dispatched again, once" in j for j in v["journey"]) and any("rested by the bench sweep" in j for j in v["journey"])
+    cur.execute("SELECT convert_from(body, 'UTF8') FROM spine_outbox WHERE convert_from(body, 'UTF8')"
+                " LIKE %s ORDER BY outbox_id", ('%"correlation_id":"' + aid + '"%',))
+    types = [json.loads(r[0])["type"] for r in cur.fetchall()]
+    assert types[-3:] == ["orreth.journey.v1", "orreth.journey.v1", "orreth.reply.v1"]
+    assert dispatch.sweep_bench(pg, 90, publish=sent.append) == {"resent": [], "rested": []}
+    assert monitor.snapshot(pg, rails=False)["waiting"][0]["text"] == "just asked"   # the young one still waits
 
 
 def test_the_grounds_prune_takes_one_test_shaped_world_and_leaves_a_persons(pg, monkeypatch):

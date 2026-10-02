@@ -19,6 +19,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the park once by its place, its fact, the HOLD until a person advances it, the advance · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the crew door in SET queries · the retention beat on the schedule loop · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86 · W87): `POST /watches/rest` · `POST /asks/stop` (a local ask) · `POST /peers/forget` — the governing word checked INSIDE the handler (the seat's door table untouched, rule 9) · 2026-09-29
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — W91 THE BENCH SWEEP: the bench beat in the reference · 2026-10-02
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -1321,6 +1322,7 @@ class BridgeRig:
             next_beat = time.monotonic() + self._tool_check_s()
             next_stable = time.monotonic() + self._mind_check_s()
             next_prune = time.monotonic()                     # RETENTION (the perf cure): the first hour's sweep at once
+            next_bench = time.monotonic() + 30                # W91 THE BENCH SWEEP: every 30 s, one kernel
             self._sign_in("schedule")
             while not self._stop.is_set():
                 if self._yielding("schedule"):
@@ -1343,6 +1345,14 @@ class BridgeRig:
                             n = outbox.prune(conn)
                             if n:
                                 print(f"  [kernel] retention: {n} published outbox rows older than {outbox.keep_days():g} days pruned", flush=True)
+                if time.monotonic() >= next_bench:    # W91 THE BENCH SWEEP: an ask left received past the dial is
+                    next_bench = time.monotonic() + 30   # dispatched again once, then rested with words
+                    try:
+                        with ground.beat(conn, "bench") as ours:
+                            if ours:
+                                dispatch.sweep_bench(conn, dispatch.sweep_after_s())
+                    except Exception as e:
+                        print(f"the bench sweep stumbled: {e}", flush=True)
                 if time.monotonic() >= next_stable:   # P6.5 sp3: the Stable keeper's beat — every mind
                     next_stable = time.monotonic() + self._mind_check_s()   # pinged, the market's eyes,
                     self._stable_beat(conn)           # drift · EOL · drained · strikes → proposals

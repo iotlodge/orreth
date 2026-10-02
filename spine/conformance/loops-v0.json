@@ -14,13 +14,15 @@
      "scheduler": 1,
      "intent": 2,
      "keeper": 3,
-     "retention": 4
+     "retention": 4,
+     "bench": 5
     },
     "keys": {
      "scheduler": 742201,
      "intent": 742202,
      "keeper": 742203,
-     "retention": 742204
+     "retention": 742204,
+     "bench": 742205
     },
     "held": "the beat is held by another kernel on this ground"
    }

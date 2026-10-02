@@ -2637,7 +2637,20 @@ approved (covenant rule 9).
       command on a key with no bound queue refused as undelivered and read as non-poison; the bound
       road still delivering). Found on the way: the crate no longer built with `--features rails`
       alone (the QR and PNG crates sat in `bridge` while `proof_live` is a `rails` module) — moved
-      to `rails`, `dev.sh rust rails` compiles again. (b) THE BENCH SWEEP still owed.
+      to `rails`, `dev.sh rust rails` compiles again. **(b) THE BENCH SWEEP — CURED 2026-10-02:**
+      a kernel beat on both kernels (`bench`, class 5, every 30 s, one kernel per ground): an ask
+      still `received` past `SPINE_BENCH_SWEEP_S` (default 90 s) with nobody serving it is DISPATCHED
+      AGAIN, ONCE — the serve command minted from the row as the door minted it, on the same road
+      (part a makes a return a refusal), a journey line, `resent_at` on the row (schema 4; a resident
+      never re-serves a settled ask, the conditional-transition law); still `received` the same span
+      later, the kernel RESTS it with plain words as its reply (cancelled · the kernel · the reply and
+      a journey line on the rail), so the person reads it in the chat instead of a count. `bench.rs`
+      · `dispatch.sweep_bench`; words pinned (`sweep_words`); proven in `tests/rails.rs` (a 200 s
+      orphan: the command back on echo's road · marked · untouched inside the span · rested with
+      three facts in order · the young ask left alone) and `test_monitor` (the same on the reference,
+      the rail stood in for). The dial `SPINE_BENCH_SWEEP_S` is OWED to the book's dials page. This is
+      the first rail built to JB's COMPLIANT-STATE principle below — a residue the kernel drives to
+      rest, the person told why.
       **W92 THE LOOP ON A FAILED THOUGHT** — `intent_live.rs` files a replied plan's first 500 chars
       as the objective without reading them: the planner's failure "I cannot think right now — the
       gateway refused: …Server disconnected" (twice, 09-30 04:55 · 06:01) and its boilerplate

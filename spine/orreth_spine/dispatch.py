@@ -6,6 +6,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W64: the asker's right code files a second confirm-needed notice (step master) — the master's road to the ask · W69: the word at the interlock is the asker's own or a governing seat's · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86): a LOCAL ask left waiting is STOPPED on the asker's or a governing seat's word (`stop_ask`) — rule 11 · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — W89: the stop's words name the ask · 2026-10-02
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — W91 THE BENCH SWEEP: sweep_bench · swept_words · rested_words · 2026-10-02
 """The ask road (canon 0002's chain, in miniature): ONE write path.
 
 A human's ask lands on the ground with its event in one transaction; the
@@ -17,6 +18,7 @@ point)."""
 from __future__ import annotations
 
 import json
+import os
 import re
 import secrets
 
@@ -193,6 +195,20 @@ def _refuse_at_door(conn, ask_id: str, text: str, person: str, target: str, why:
     return ask_id
 
 
+def swept_words(waited_s: int) -> str:
+    """W91 THE BENCH SWEEP — the journey line when the kernel dispatches a
+    waiting ask again, once. Mirrors `ask::swept_words`; fixture `sweep_words`."""
+    return (f"the kernel: this ask was received {waited_s} s ago and no body took it from the bench — "
+            "dispatched again, once (W91 THE BENCH SWEEP)")
+
+
+def rested_words(waited_s: int) -> str:
+    """W91 THE BENCH SWEEP — the reply a waiting ask wears when the kernel rests
+    it after the second miss. Mirrors `ask::rested_words`; fixture `sweep_words`."""
+    return (f"Set to rest by the kernel — no body took this ask from the bench in {waited_s} s, though it "
+            "was dispatched twice. Ask again when a body is here.")
+
+
 def stopped_words(text: str, asker: str, target: str | None, ask_id: str) -> str:
     """W89 (walk #21): the stop's words NAME the ask — JB read three stops as
     three identical chat lines. The line wears the ask's words clipped, the
@@ -245,6 +261,76 @@ def stop_ask(conn, ask_id: str, person: str) -> dict:
 
     outbox.commit_with_outbox(conn, ev.encode(j), j["message_id"], domain)
     return {"ask_id": ask_id, "status": "cancelled", "words": words, "target": target}
+
+
+def sweep_after_s() -> int:
+    """`SPINE_BENCH_SWEEP_S`: how long an ask may sit `received` with no body serving it
+    before the kernel dispatches it again (and, the same span later, rests it). Default 90."""
+    try:
+        s = int(os.environ.get("SPINE_BENCH_SWEEP_S", "") or 90)
+    except ValueError:
+        s = 90
+    return s if s > 0 else 90
+
+
+def sweep_bench(conn, older_than_s: int, rabbit_url: str | None = None, publish=None) -> dict:
+    """THE BENCH SWEEP (W91, walk #21 — the compliant state): an ask still `received`
+    after `older_than_s` with nobody serving it is DISPATCHED AGAIN, ONCE (a new serve
+    command on the same road, a journey line, `resent_at` on the row — a resident never
+    re-serves a settled ask); still `received` the same span after that, the kernel
+    RESTS it with plain words as its reply (cancelled · the kernel as its server · the
+    reply on the rail). Mirrors `bench::sweep`. `publish` stands in for the rail in a proof."""
+    from . import proof
+    from .resident import JOURNEY, REPLY, _next_seq
+    send = publish or (lambda env: publish_command(env, rabbit_url))
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT ask_id, text, person, target, session, time_window, resent_at IS NOT NULL,"
+        " floor(extract(epoch FROM (clock_timestamp() - asked_at)))::int FROM spine_asks"
+        " WHERE scope = %s AND status = 'received' AND asked_at < clock_timestamp() - %s * interval '1 second'"
+        " AND (resent_at IS NULL OR resent_at < clock_timestamp() - %s * interval '1 second')"
+        " ORDER BY asked_at LIMIT 50", (ev.scope(), older_than_s, older_than_s))
+    resent, rested = [], []
+    for ask_id, text, person, target, session, window, again, waited in cur.fetchall():
+        def journey(c, note, chain):
+            j = ev.make_envelope(kind="event", type=JOURNEY, universe_id=ev.scope(), scope_path=ev.scope(),
+                                 payload={"ref": ask_id, "hash": "sha256:-", "note": note},
+                                 correlation_id=ask_id, authority_chain=chain,
+                                 aggregate={"type": "ask", "id": ask_id, "sequence": _next_seq(c, ask_id)})
+            outbox.add_row(c, ev.encode(j), j["message_id"])
+        if not again:
+            payload = {"ref": ask_id, "hash": ev.content_hash(text)}
+            if target:
+                payload["target"] = target
+            if session:
+                payload["session"] = session
+            if window:
+                payload["window"] = json.loads(window)
+            fact = ev.make_envelope(kind="event", type=ASK_RECEIVED, universe_id=ev.scope(), scope_path=ev.scope(),
+                                    payload=payload, correlation_id=ask_id, authority_chain=[person])
+            send(_command_for(fact))
+            with conn.transaction():
+                c = conn.cursor()
+                c.execute("UPDATE spine_asks SET resent_at = clock_timestamp() WHERE ask_id = %s", (ask_id,))
+                journey(c, swept_words(waited), [proof.KERNEL])
+            print(f"  [kernel] bench sweep: {ask_id} dispatched again after {waited} s", flush=True)
+            resent.append(ask_id)
+            continue
+        words = rested_words(waited)
+        with conn.transaction():
+            c = conn.cursor()
+            c.execute("UPDATE spine_asks SET status = 'cancelled', reply = %s, served_by = %s,"
+                      " replied_at = clock_timestamp() WHERE ask_id = %s", (words, proof.KERNEL, ask_id))
+            journey(c, f"{proof.KERNEL}: rested by the bench sweep — dispatched twice, no body took it in {waited} s (W91)",
+                    [proof.KERNEL])
+            r = ev.make_envelope(kind="event", type=REPLY, universe_id=ev.scope(), scope_path=ev.scope(),
+                                 payload={"ref": ask_id, "hash": ev.content_hash(words), "proof": "L1"},
+                                 correlation_id=ask_id, authority_chain=[proof.KERNEL],
+                                 aggregate={"type": "ask", "id": ask_id, "sequence": _next_seq(c, ask_id)})
+            outbox.add_row(c, ev.encode(r), r["message_id"])
+        print(f"  [kernel] bench sweep: {ask_id} rested — dispatched twice, no body took it in {waited} s", flush=True)
+        rested.append(ask_id)
+    return {"resent": resent, "rested": rested}
 
 
 def publish_command(env: dict, rabbit_url: str | None = None) -> None:

@@ -402,6 +402,28 @@
    "expect": {
     "words": "Stopped on your word \u2014 the ask \u201cstop\u201d (scout \u2192 the crew \u00b7 ask_4) was set to rest here before any body served it."
    }
+  },
+  {
+   "name": "sweep_words: 95 s (W91 THE BENCH SWEEP)",
+   "kind": "sweep_words",
+   "input": {
+    "waited_s": 95
+   },
+   "expect": {
+    "swept": "the kernel: this ask was received 95 s ago and no body took it from the bench \u2014 dispatched again, once (W91 THE BENCH SWEEP)",
+    "rested": "Set to rest by the kernel \u2014 no body took this ask from the bench in 95 s, though it was dispatched twice. Ask again when a body is here."
+   }
+  },
+  {
+   "name": "sweep_words: 1830 s (W91 THE BENCH SWEEP)",
+   "kind": "sweep_words",
+   "input": {
+    "waited_s": 1830
+   },
+   "expect": {
+    "swept": "the kernel: this ask was received 1830 s ago and no body took it from the bench \u2014 dispatched again, once (W91 THE BENCH SWEEP)",
+    "rested": "Set to rest by the kernel \u2014 no body took this ask from the bench in 1830 s, though it was dispatched twice. Ask again when a body is here."
+   }
   }
  ]
 }

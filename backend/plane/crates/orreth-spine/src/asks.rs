@@ -98,7 +98,7 @@ fn new_message_id() -> String {
 }
 
 /// `ask::ask_fact` with the id and the clock minted now.
-fn fact_now(
+pub(crate) fn fact_now(
     typ: &str,
     scope: &str,
     ask_id: &str,

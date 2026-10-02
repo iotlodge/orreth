@@ -47,6 +47,7 @@ const PORTED_KINDS: &[&str] = &[
     "not_a_plan",
     "gateway_models",
     "stopped_words",
+    "sweep_words",
     "echo_reply",
     "watch_judge",
     "watch_reads",
@@ -389,6 +390,19 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             exp["refused"].as_bool().unwrap(),
             "refused"
         ),
+        "sweep_words" => {
+            let w = inp["waited_s"].as_i64().unwrap();
+            same!(
+                ask::swept_words(w),
+                s(&exp["swept"]).to_string(),
+                "swept (W91)"
+            );
+            same!(
+                ask::rested_words(w),
+                s(&exp["rested"]).to_string(),
+                "rested (W91)"
+            );
+        }
         "stopped_words" => same!(
             ask::stopped_words(
                 s(&inp["text"]),

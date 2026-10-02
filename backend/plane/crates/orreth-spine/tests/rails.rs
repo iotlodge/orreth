@@ -1,6 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the shadow rides the cell's topic · 2026-09-25
-// Amended: Claude Fable 5.1 (claude-fable-5-1) — W91 THE LOST SERVE: a returned command is undelivered, proven on the rig · 2026-10-02
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W91 THE LOST SERVE: a returned command is undelivered, proven on the rig · W91 THE BENCH SWEEP proven · 2026-10-02
 //! The rails, proven on the dev rig (`spine/compose.yaml`) — Phase 0's and
 //! Phase 1 sp1/sp2's laws, in Rust, on the same ground the Python spine
 //! stands on. Runs only by name with the feature on:
@@ -902,6 +902,138 @@ async fn schema_the_two_kernels_migrate_one_ground_the_same() {
         .batch_execute(&format!("DROP SCHEMA IF EXISTS {py_schema} CASCADE"))
         .await
         .ok();
+    drop_ground(&g, &tok).await;
+}
+
+// ---- 6b. THE BENCH SWEEP (W91): a waiting ask dispatched again once, then rested with words -----
+
+#[tokio::test]
+async fn the_bench_sweep_dispatches_a_waiting_ask_again_once_then_rests_it() {
+    if !rig_up("the_bench_sweep_dispatches_a_waiting_ask_again_once_then_rests_it") {
+        return;
+    }
+    use orreth_spine::world::World;
+    let tok = token();
+    let mut g = own_ground(&tok).await;
+    let mut w = World::from_env();
+    w.scope = format!("u:bench-{tok}");
+    w.ns = format!("b{tok}");
+    let aid = format!("ask_bench_{tok}");
+    // an ask received 200 s ago that no body ever took — W91's orphan, targeted at echo
+    g.client()
+        .execute(
+            "INSERT INTO spine_asks (ask_id, text, person, target, scope, status, asked_at) VALUES ($1, \
+             'left waiting for a body that never came', 'did:orreth:person:jb', 'echo', $2, 'received', \
+             clock_timestamp() - interval '200 seconds')",
+            &[&aid, &w.scope],
+        )
+        .await
+        .unwrap();
+    let after = Duration::from_secs(90);
+    // a younger ask is left alone
+    g.client()
+        .execute(
+            "INSERT INTO spine_asks (ask_id, text, person, scope, status) VALUES ($1, 'just asked', \
+             'did:orreth:person:jb', $2, 'received')",
+            &[&format!("ask_young_{tok}"), &w.scope],
+        )
+        .await
+        .unwrap();
+    let first = orreth_spine::bench::sweep(&mut g, &w, after).await.unwrap();
+    assert_eq!(first, json!({"resent": [aid], "rested": []}), "{first}");
+    // the command rode echo's own road again, wearing the ask
+    let back = orreth_spine::invoke::receive(
+        &w.rabbit_url,
+        &rails::serve_queue(&w.ns, Some("echo")),
+        &rails::serve_key(&w.ns, Some("echo")),
+        Duration::from_secs(10),
+        |b| {
+            envelope::decode(b)
+                .map(|e| e["payload"]["ref"] == json!(aid))
+                .unwrap_or(false)
+        },
+    )
+    .await
+    .expect("the serve command is on echo's bench again");
+    let cmd = envelope::decode(&back).unwrap();
+    assert_eq!(cmd["type"], json!(orreth_spine::asks::SERVE_CMD));
+    assert_eq!(cmd["payload"]["target"], json!("echo"));
+    let row = g
+        .client()
+        .query_one(
+            "SELECT status, resent_at IS NOT NULL FROM spine_asks WHERE ask_id = $1",
+            &[&aid],
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        (row.get::<_, String>(0), row.get::<_, bool>(1)),
+        ("received".to_string(), true),
+        "still waiting, marked as dispatched again"
+    );
+    // the same sweep again at once: nothing — the second span has not passed
+    let again = orreth_spine::bench::sweep(&mut g, &w, after).await.unwrap();
+    assert_eq!(again, json!({"resent": [], "rested": []}), "{again}");
+    // the span passes with nobody serving: the kernel rests it with plain words
+    g.client()
+        .execute(
+            "UPDATE spine_asks SET resent_at = clock_timestamp() - interval '200 seconds' WHERE ask_id = $1",
+            &[&aid],
+        )
+        .await
+        .unwrap();
+    let second = orreth_spine::bench::sweep(&mut g, &w, after).await.unwrap();
+    assert_eq!(second, json!({"resent": [], "rested": [aid]}), "{second}");
+    let row = g
+        .client()
+        .query_one(
+            "SELECT status, reply, served_by FROM spine_asks WHERE ask_id = $1",
+            &[&aid],
+        )
+        .await
+        .unwrap();
+    let (status, reply, by): (String, String, String) = (row.get(0), row.get(1), row.get(2));
+    assert_eq!((status.as_str(), by.as_str()), ("cancelled", "the kernel"));
+    assert!(
+        reply.starts_with("Set to rest by the kernel — no body took this ask from the bench in ")
+            && reply.ends_with("though it was dispatched twice. Ask again when a body is here."),
+        "{reply}"
+    );
+    // the facts: two journey lines and one reply on the rail, in order
+    let kinds: Vec<String> = g
+        .client()
+        .query(
+            "SELECT convert_from(body, 'UTF8') FROM spine_outbox WHERE convert_from(body, 'UTF8') LIKE $1 ORDER BY outbox_id",
+            &[&format!("%\"correlation_id\":\"{aid}\"%")],
+        )
+        .await
+        .unwrap()
+        .iter()
+        .map(|r| {
+            let e: Value = serde_json::from_str(r.get(0)).unwrap();
+            format!(
+                "{}{}",
+                e["type"].as_str().unwrap(),
+                e["payload"]["note"].as_str().map(|n| if n.contains("dispatched again, once") { " (again)" } else { " (rested)" }).unwrap_or("")
+            )
+        })
+        .collect();
+    assert_eq!(
+        kinds,
+        vec![
+            "orreth.journey.v1 (again)".to_string(),
+            "orreth.journey.v1 (rested)".to_string(),
+            "orreth.reply.v1".to_string()
+        ],
+        "{kinds:?}"
+    );
+    let third = orreth_spine::bench::sweep(&mut g, &w, after).await.unwrap();
+    assert_eq!(
+        third,
+        json!({"resent": [], "rested": []}),
+        "at rest, the sweep passes it by"
+    );
+    println!("rails · THE BENCH SWEEP: a 200 s orphan dispatched again once (the command back on echo's road, a journey line), rested with words after the second span (reply + journey on the rail), the young ask untouched");
     drop_ground(&g, &tok).await;
 }
 

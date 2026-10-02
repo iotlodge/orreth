@@ -9,6 +9,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the human profile in the seat words and the clock (W58) · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W65: the governed-acts law in every body's seat — a body never performs nor claims the kernel's acts · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: lock 4's last poll — a body's JOIN is a fact (orreth.body.joined.v1), so the roster follows the feed · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — schema 4: an ask's resent_at (W91 THE BENCH SWEEP) · 2026-10-02
 """The resident body v0 (canon 0004): one governed body for every mind.
 
 Born from a versioned TEMPLATE artifact; the SAME identity in every life
@@ -225,6 +226,8 @@ def ensure_schema(conn) -> None:
             " replied_at timestamptz)")
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
                     " held text")
+        cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
+                    " resent_at timestamptz")        # W91 THE BENCH SWEEP: dispatched again, once
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"
                     " seq int NOT NULL DEFAULT 1")
         cur.execute("ALTER TABLE spine_asks ADD COLUMN IF NOT EXISTS"

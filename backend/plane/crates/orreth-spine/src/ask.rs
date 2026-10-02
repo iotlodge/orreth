@@ -5,6 +5,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — W92 THE LOOP ON A FAILED THOUGHT: not_a_plan · 2026-10-02
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — W89: stopped_words names the ask · 2026-10-02
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W91 THE BENCH SWEEP: swept_words · rested_words · 2026-10-02
 //! `orreth.ask/1` and the word-shaped laws of `orreth.intent/1` — the pure
 //! half of `orreth_spine.dispatch` (the address at the head of an ask, W7;
 //! the door's refusal for a body that is not here, W19), `harness` (a reply
@@ -311,6 +312,24 @@ pub fn stopped_words(text: &str, asker: &str, target: Option<&str>, ask_id: &str
          body served it.",
         crate::memory::head(text, 60),
         target.filter(|t| !t.is_empty()).unwrap_or("the crew")
+    )
+}
+
+/// W91 THE BENCH SWEEP — the journey line when the kernel dispatches a waiting
+/// ask again, once. Mirrors `dispatch.swept_words`; fixture `sweep_words`.
+pub fn swept_words(waited_s: i64) -> String {
+    format!(
+        "the kernel: this ask was received {waited_s} s ago and no body took it from the bench — \
+         dispatched again, once (W91 THE BENCH SWEEP)"
+    )
+}
+
+/// W91 THE BENCH SWEEP — the reply a waiting ask wears when the kernel rests
+/// it after the second miss. Mirrors `dispatch.rested_words`; fixture `sweep_words`.
+pub fn rested_words(waited_s: i64) -> String {
+    format!(
+        "Set to rest by the kernel — no body took this ask from the bench in {waited_s} s, though it \
+         was dispatched twice. Ask again when a body is here."
     )
 }
 
