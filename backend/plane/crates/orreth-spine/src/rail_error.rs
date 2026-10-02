@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W91 THE LOST SERVE: a returned publish is undelivered · 2026-10-02
 //! The rails' refusals, worded as the Python reference words them: the
 //! outbox budget names its numbers (`OutboxBudgetExceeded`), a gap names the
 //! aggregate and the sequences (`GapDetected`), a sink's refusal carries the
@@ -23,6 +24,10 @@ pub enum RailError {
     Sink(String),
     /// The invoke rail refused (AMQP).
     Invoke(lapin::Error),
+    /// The invoke rail took the command but did not DELIVER it (W91): the
+    /// broker returned it unroutable, or never confirmed it. A rail's
+    /// moment, never the fact's fault — the caller stands again.
+    Undelivered(String),
     /// The events rail refused (Kafka).
     Events(String),
     /// A rail never answered in time.
@@ -62,6 +67,7 @@ impl fmt::Display for RailError {
             ),
             RailError::Sink(why) => write!(f, "{why}"),
             RailError::Invoke(e) => write!(f, "the invoke rail refused: {e}"),
+            RailError::Undelivered(why) => write!(f, "{why}"),
             RailError::Events(why) => write!(f, "the events rail refused: {why}"),
             RailError::Timeout(what) => write!(f, "{what}"),
             RailError::Envelope(e) => write!(f, "{e}"),

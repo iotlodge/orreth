@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the shadow rides the cell's topic · 2026-09-25
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W91 THE LOST SERVE: a returned command is undelivered, proven on the rig · 2026-10-02
 //! The rails, proven on the dev rig (`spine/compose.yaml`) — Phase 0's and
 //! Phase 1 sp1/sp2's laws, in Rust, on the same ground the Python spine
 //! stands on. Runs only by name with the feature on:
@@ -442,8 +443,54 @@ async fn the_heartbeat_rides_all_three_rails() {
     .await
     .unwrap();
     assert_eq!(back, raw);
+
+    // W91 THE LOST SERVE: a command published on a key NO queue is bound to is confirmed
+    // AND returned by the broker in one breath — the kernel must read that as undelivered
+    // (a rail refusal the dispatcher stands again at), never as a delivery with a footprint
+    let conn = orreth_spine::invoke::connect(&rabbit).await.unwrap();
+    let ch = conn.create_channel().await.unwrap();
+    ch.confirm_select(lapin::options::ConfirmSelectOptions::default())
+        .await
+        .unwrap();
+    orreth_spine::invoke::declare(
+        &ch,
+        &rails::serve_queue(&ns, Some("echo")),
+        &rails::serve_key(&ns, Some("echo")),
+    )
+    .await
+    .unwrap();
+    let nowhere = rails::serve_key(&ns, Some("nobody-lives-here"));
+    let lost = orreth_spine::invoke::publish_on(&ch, &nowhere, &raw, "cmd-lost")
+        .await
+        .expect_err("a command with no road is refused, not swallowed");
+    let words = lost.to_string();
+    assert!(
+        matches!(lost, RailError::Undelivered(_))
+            && words.contains("unroutable")
+            && words.contains("cmd-lost"),
+        "the refusal names the return: {words}"
+    );
+    assert!(
+        !orreth_spine::dispatcher::is_poison(&lost),
+        "a returned command is the rail's moment, not the fact's poison — the dispatcher stands again"
+    );
+    // and the bound road still delivers, confirmed with nothing returned
+    orreth_spine::invoke::publish_on(&ch, &rails::serve_key(&ns, Some("echo")), &raw, "cmd-found")
+        .await
+        .expect("the bound road delivers");
+    conn.close(200, "done".into()).await.ok();
+    let again = orreth_spine::invoke::receive(
+        &rabbit,
+        &rails::serve_queue(&ns, Some("echo")),
+        &rails::serve_key(&ns, Some("echo")),
+        Duration::from_secs(10),
+        |b| b == raw,
+    )
+    .await
+    .unwrap();
+    assert_eq!(again, raw);
     println!(
-        "rails · the rig breathes from Rust: ground {:.1} ms · invoke {:.1} ms · events {:.1} ms · all three composed (applied, then duplicate) · a targeted serve command round-tripped on {}",
+        "rails · the rig breathes from Rust: ground {:.1} ms · invoke {:.1} ms · events {:.1} ms · all three composed (applied, then duplicate) · a targeted serve command round-tripped on {} · a command with no bound road refused as undelivered (W91)",
         ground_ms.as_secs_f64() * 1e3,
         invoke_ms.as_secs_f64() * 1e3,
         events_ms.as_secs_f64() * 1e3,

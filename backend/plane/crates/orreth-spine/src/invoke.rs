@@ -1,10 +1,12 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp2, the ground and the rails · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W91 THE LOST SERVE: a returned publish is undelivered · 2026-10-02
 //! The invoke rail (RabbitMQ) — mirrors `orreth_spine.dispatch.publish_command`
 //! and `orreth_spine.rails.invoke_breath`. Publisher-side topology is the law:
 //! on a fresh broker a topic exchange DROPS a message with no bound queue,
 //! silently — so the publisher declares exchange + queue + binding
 //! (idempotent) and publishes `mandatory` with confirms, so an unroutable
-//! command fails LOUDLY instead of vanishing. A consumer acknowledges only
+//! command fails LOUDLY instead of vanishing — and a RETURNED command is
+//! read as undelivered, never as a delivery (W91). A consumer acknowledges only
 //! after the bytes are verified (the ACK law, canon 0002 law 4).
 
 use crate::envelope;
@@ -15,7 +17,9 @@ use lapin::options::{
     ExchangeDeclareOptions, QueueBindOptions, QueueDeclareOptions,
 };
 use lapin::types::{FieldTable, ShortString};
-use lapin::{BasicProperties, Channel, Connection, ConnectionProperties, ExchangeKind};
+use lapin::{
+    BasicProperties, Channel, Confirmation, Connection, ConnectionProperties, ExchangeKind,
+};
 use serde_json::Value;
 use std::time::{Duration, Instant};
 
@@ -60,8 +64,9 @@ pub async fn declare(ch: &Channel, queue: &str, key: &str) -> Result<(), RailErr
 }
 
 /// Publish one body on the command exchange with confirms: persistent,
-/// mandatory, wearing its message id. Refuses by name when the broker does
-/// not confirm.
+/// mandatory, wearing its message id. Declares the queue and its binding
+/// first, so the road is there before the command takes it. Refuses by name
+/// when the broker returns the command or does not confirm it.
 pub async fn publish(
     url: &str,
     queue: &str,
@@ -73,6 +78,27 @@ pub async fn publish(
     let ch = conn.create_channel().await?;
     ch.confirm_select(ConfirmSelectOptions::default()).await?;
     declare(&ch, queue, key).await?;
+    let out = publish_on(&ch, key, body, message_id).await;
+    conn.close(200, ss("done")).await.ok();
+    out
+}
+
+/// The publish itself, on a channel already in confirm mode — and the
+/// reading of the broker's answer. W91 THE LOST SERVE (2026-09-30): a
+/// `mandatory` publish with no queue bound to its key is CONFIRMED by the
+/// broker and RETURNED in the same breath — lapin's `Ack` carries the
+/// returned message. Reading `is_ack()` alone took a return as a delivery,
+/// the dispatcher committed its footprint, and the ask waited for days
+/// (27 commands entered the exchange and reached no queue on the dev
+/// ground). A returned or unconfirmed command is `Undelivered` — the rail's
+/// moment, not the fact's fault — so the caller's transaction rolls back
+/// and the dispatcher stands again at the same fact.
+pub async fn publish_on(
+    ch: &Channel,
+    key: &str,
+    body: &[u8],
+    message_id: &str,
+) -> Result<(), RailError> {
     let confirmation = ch
         .basic_publish(
             ss(COMMAND_EXCHANGE),
@@ -88,14 +114,20 @@ pub async fn publish(
         )
         .await?
         .await?;
-    let ok = confirmation.is_ack();
-    conn.close(200, ss("done")).await.ok();
-    if !ok {
-        return Err(RailError::Refused(
-            "the invoke rail did not confirm the publish".into(),
-        ));
+    match confirmation {
+        Confirmation::Ack(None) => Ok(()),
+        Confirmation::Ack(Some(returned)) | Confirmation::Nack(Some(returned)) => {
+            Err(RailError::Undelivered(format!(
+                "the invoke rail returned the command unroutable — no queue was bound to \
+                 `{key}` at that instant ({} {}); the command {message_id} was not delivered",
+                returned.reply_code,
+                returned.reply_text.as_str()
+            )))
+        }
+        Confirmation::Nack(None) | Confirmation::NotRequested => Err(RailError::Undelivered(
+            format!("the invoke rail did not confirm the command {message_id} on `{key}`"),
+        )),
     }
-    Ok(())
 }
 
 /// A committed fact becomes an invoke command: a targeted command routes to

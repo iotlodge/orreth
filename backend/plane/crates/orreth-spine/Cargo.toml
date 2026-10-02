@@ -42,8 +42,8 @@ ureq = { workspace = true, optional = true }
 libc = { workspace = true, optional = true }
 
 [features]
-rails = ["dep:tokio", "dep:tokio-postgres", "dep:lapin", "dep:rdkafka", "dep:rand", "dep:ureq"]
-bridge = ["rails", "dep:axum", "dep:tokio-stream", "dep:qrcode", "dep:flate2", "dep:base64", "dep:libc", "tokio/signal"]
+rails = ["dep:tokio", "dep:tokio-postgres", "dep:lapin", "dep:rdkafka", "dep:rand", "dep:ureq", "dep:qrcode", "dep:flate2", "dep:base64"]
+bridge = ["rails", "dep:axum", "dep:tokio-stream", "dep:libc", "tokio/signal"]
 
 [[test]]
 name = "rails"

@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the dispatcher and the relay on the cell's topics · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — W91 THE LOST SERVE: a returned command stands the dispatcher again, never a footprint · 2026-10-02
 //! The standing loops of a bridge — mirrors `dispatch.run_dispatcher` (the
 //! events-rail consumer turning a committed `ask.received` into a serve
 //! command on the target's bench) and the rig's relay loop.
@@ -211,7 +212,10 @@ pub async fn run_dispatcher(
                     skipped_since = 0;
                     continue;
                 }
-                Err(e) => return Err(e), // the rail's own refusal: stand again from the committed offset
+                // the rail's own refusal — the ground gone, the broker unreachable, a command
+                // RETURNED unroutable or unconfirmed (W91 `Undelivered`): the transaction rolled
+                // back with no footprint; stand again from the committed offset at this same fact
+                Err(e) => return Err(e),
             }
             reader.commit(&p)?;
             behind = None;
