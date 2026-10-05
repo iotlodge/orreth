@@ -10,7 +10,7 @@ policy, the run record, HITL gates, the custodian tier, the knowledge loop, the 
 model plane, the lifeforce agents. They are design-phase documents — schemas, contracts,
 rationale, locked decisions — and they still bind.
 
-**Where the build lives now.** The new world's canon is `../rearch/0001`–`0009` (the
+**Where the build lives now.** The new world's canon is `../rearch/0001`–`0010` (the
 experience charter · transport · memory · agent · the build plan · markers · intent · the
 Rust plane and the port · the old world carried). The build plan (`../rearch/0005`) is the
 one road; a spoonful is planned, built, proven and walked there. **The honest boundary**
@@ -54,6 +54,7 @@ the new world at the release wave; never from a dive doc.
 - [`the-honest-boundary.md`](the-honest-boundary.md) — proven · partial · parked, evidence named.
 - `../decisions/` — the ADRs (`0001` the proofs era) and the locked-decision ledger.
 - `../rearch/0009` — the old world carried: every old organ's seat on the new kernel.
+- `../rearch/0010` — THE WORKSHOP: the Engineered Agents of Orreth — Phase 8 pulled ahead, JB's eight locks of 2026-10-05; builds held until his word.
 
 ## How we work a spoonful (the standing rhythm)
 

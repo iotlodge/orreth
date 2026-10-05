@@ -3,7 +3,9 @@
 <!-- PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp2: JB's named gap of the spirit read · 2026-09-29 -->
 
 **Status: SEED (JB, 2026-09-29, the crate discussion before re-base sp2) — recorded, not built; a row
-after the release wave.**
+after the release wave.** **Amended 2026-10-05 (`../0010` lock 7): the COST measurement's v0 — spend
+attributable to an intention, objective or ask over all spend — lands in Phase 8 sp5 as a watch;
+itemisation to the metal stays this panel's.**
 
 ## JB's word, faithfully
 

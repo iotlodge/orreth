@@ -71,11 +71,14 @@ Business, Security, Resiliency, Compliance, and Cost.
   an objective under it. Cost next: the meter on the gateway, a
   `cost-anomaly` kind.
 - **Templates are declarations, not graphs.** `intentions/<name>.v0.json`,
-  cut from the draft shelf; the intention architect (a Workspace
-  Engineering binding) helps a human fill one in the chat. The graph that
+  cut from the draft shelf; the intention architect (a Workshop
+  binding) helps a human fill one in the chat. The graph that
   runs an intention is the intent loop — one engine (0040): the planner
   emits objectives, objectives are asks, the crew's graphs run them. A
-  human-authored LangGraph per intention waits for a proof that needs it.
+  human-authored LangGraph per intention waited for a proof that needs it —
+  **THE WORKSHOP (0010, 2026-10-05) is that proof**: an agent's graph is a
+  versioned component the hull runs as its work node; the intent loop stays
+  the one engine for intentions.
 - **Firmware-rails and on-behalf-of.** JB's names, adopted: the rails are
   the embedded loops the Operating Kernel provides as features; a human
   submits and the kernel's agents own the work through them — the chain

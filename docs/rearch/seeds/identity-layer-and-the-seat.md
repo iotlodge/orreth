@@ -110,4 +110,7 @@ layer (OIDC/SAML providers as the proofing step, the assurance level on the seat
 place a person's name and a DID's profile meet — so authority is decoupled from every other body,
 and a cloud element extends the chip rather than the kernel. Fixture `identity-v0`; a template
 `firmware-identity.v0.json` on the crew manifest. Not before 0.1.0; it opens with the cloud
-identity layer this seed already names.
+identity layer this seed already names. **Amended 2026-10-05 (`../0010` lock
+8): v0 of the `identity` chip lands in Phase 8 sp6 as a reviewer at the
+Experiment gate (the ceremony and the seats · a candidate's lease claims · the
+key-check cadence); the cloud identity layer still follows.**

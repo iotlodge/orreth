@@ -2759,6 +2759,10 @@ waits for the self-delivery proof, Phase 9).
       after row 5 (the third loop needs a stranger's body to grade as well as
       the crew's; the long objective needs the machine road's asks). The
       honest boundary carries both as DESIGNED · OWED until their walks pass.
+      **Amended 2026-10-05 (0010):** the grader's SIGNED VERDICTS on
+      Experiment arms and live replies land in Phase 8 sp4 (the Workshop,
+      pulled ahead of row 5); the lessons digest, MEM-2 whole and the ML seed
+      stay here.
 
 ## Phase 6.5 — THE ORGANS (a parallel Python track beside the port — opened 2026-09-22 on JB's locks in 0009)
 
@@ -3124,19 +3128,32 @@ standing. Not ready for 1.0 until that loop has closed once — and the first
 thing the loop needs is what the kernel KNOWS (no RAG in the kernel yet; the
 wound this rearchitecture began from).
 
-- **Phase 8 — THE FACTORIES.** Opens with THE LANE (the embedding lane in
-  the kernel — the Brain must know what it acquires before it can grow from
-  it; E-RAG's re-walk pays it). Then: skills, prompts and graph templates as
-  VERSIONED OBJECTS minted through the kernel (0011's factories, 0045's craft
-  room, carried); a body's ask for a missing tool or skill is a governed
-  ESCALATION that lands as a factory ask (a kernel improvement, or by design
-  a human's ask); an EXPERIMENT with two arms graded by the grader identity
-  (0043 · 0058: arms as records, promotion as a stamped act) — one arm by
-  residents, firmware and MITL, the other by decoupled LangGraph workflows
-  managed by intention, every step visible in the workspace's Intentions;
-  the Monitoring gains a monitor for the human's asks and the standing and
-  active queues (the middleware read by humans and kernel alike). Each row
-  proof-shaped (rule 12).
+- **Phase 8 — THE WORKSHOP (rewritten 2026-10-05 on JB's locks — canon
+  `0010-the-workshop.md`; PULLED AHEAD OF ROW 5).** The factories with the
+  Workshop as their face: the Engineered Agents of Orreth. Six spoonfuls,
+  each walked in the glass before the next opens: (1) THE PATH — universe ·
+  floor · room on one ScopePath in one kernel per cell, mode tighten-only,
+  crews per level, schema v5, the cascade and roll-up seeds at their minimum;
+  (2) THE SHELF WIDENED — template · prompt · skill · policy · graph ·
+  binding · golden as kinds of the one shelf, the wear table, the draft shelf
+  in the ground under the person, source with repo and commit, the HULL with
+  its three edges (chat · work · event) and the template's graph finally
+  read; (3) THE WORKSHOP v0 — the full-screen pull, declaration-to-canvas
+  renderer, node inspector, draft editing, the `workshop` binding and the
+  mind chip; (4) THE EXPERIMENT AND THE CUT — experiment rooms, two arms, the
+  grader's signed verdicts (row 6a's verdicts absorbed here), the proposal,
+  the stamped promotion into a next life, the decom ladder (rest L2 → decom
+  L3) and its prune beat; (5) THE OPERATING STATE — the five measurement
+  watches at v0 (Trust · Recall · Efficiency · Experience · Cost), one kernel
+  intention, the improvement loop landing proposals on the owner's draft
+  shelf, summon generalized, import from a repo; (6) THE TWO CHIPS —
+  identity and security v0 as the gate's reviewers. THE PROOF IS BOB, walked
+  end to end, then walked again by the Workshop agent on JB's words (the
+  Orreth-skill law). Builds HELD until JB's word. What was here before
+  (THE LANE, the factory ask as escalation) stays owed AFTER the Workshop:
+  the lane with RAG (P6.5 sp4/sp5), the stranger with row 5, the lessons
+  digest with row 6a, the architect with RAG. Each row proof-shaped
+  (rule 12).
 - **Phase 9 — THE SELF-DELIVERY PROOF.** Use Orreth, through Orreth, to
   create a Claude agent that uses the Brain to deliver an objective, mint
   its skills and prompts through the factories, and templatize it as a

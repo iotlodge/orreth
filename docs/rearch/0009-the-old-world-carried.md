@@ -63,7 +63,7 @@ is the exact thing this page exists to prevent.
 
 | Old organ (dive) | What it did | Seat | Evidence / gap |
 |---|---|---|---|
-| The cascade resolver (0007) | floors tighten-only, ResolvedContext content-addressed, every thought names its law | RE-SEATED partial — P7 sp7 gave every universe its OWN policy sheet (a cell wears its own `spine/policy`); the tighten-only cascade BETWEEN worlds and the context hash on a thought await a proof's need | `spine/policy/covenant-policy.v1.json` is ONE flat policy worn by every body. No floors, no cascade, no context hash on a thought. |
+| The cascade resolver (0007) | floors tighten-only, ResolvedContext content-addressed, every thought names its law | RE-SEATED partial — P7 sp7 gave every universe its OWN policy sheet (a cell wears its own `spine/policy`); the tighten-only cascade BETWEEN worlds and the context hash on a thought await a proof's need | `spine/policy/covenant-policy.v1.json` is ONE flat policy worn by every body. No floors, no cascade, no context hash on a thought. → **UNPARKED 2026-10-05 (0010 sp1):** the ScopePath (universe · floor · room) and the fold DOWN the path at its minimum |
 | HITL gates, quorum, cooling-off (0012) | consequence waits for humans; silence never approves | CARRIED partial — `proof.py` · `tools.py` · `mitl.py` | L1/L2/L3 ladder, ConsequentialHold, MFA. No distinct-signer quorum, no cooling-off, no expiry law. |
 | The Reins — rule 11 (0051) | cancel/rest as recorded acts on everything managed | CARRIED — `intent.py` stop · `scheduler.py` rest · `proof.py` stop_demand | walked green in P6. |
 | Markers & severity lanes (0024) | signed annotations deriving from what they mark | CARRIED — `markers.py` (0006) | the open vocabulary of WHY; severity lanes not modeled. |
@@ -142,7 +142,7 @@ is the exact thing this page exists to prevent.
 
 | Old organ (dive) | What it did | Seat | Evidence / gap |
 |---|---|---|---|
-| A template is a universe as data; the Shipyard (0009 · 0021) | League · Second Brain · Company; floors launched by conversation | CARRIED partial — P7 sp7 (cells = worlds) | a universe is a CELL: `scripts/dev.sh cell <name>` stands a second one on its own database, role, benches, topics, kernel self and seeds, sealed from the first; two cells speak over the signed seam. A universe launched BY CONVERSATION (the Shipyard's door) and a universe as a template's DATA await sp8's package. |
+| A template is a universe as data; the Shipyard (0009 · 0021) | League · Second Brain · Company; floors launched by conversation | CARRIED partial — P7 sp7 (cells = worlds) | a universe is a CELL: `scripts/dev.sh cell <name>` stands a second one on its own database, role, benches, topics, kernel self and seeds, sealed from the first; two cells speak over the signed seam. A universe launched BY CONVERSATION (the Shipyard's door) and a universe as a template's DATA await sp8's package. → **0010 (2026-10-05):** universe = the cell; FLOOR and ROOM = scopes inside it on one path, each staffed by manifest |
 | One binary, tier = profile, two clocks (0000 · 0004-old) | universe-time monotone, wall-clock for money | CARRIED partial — validity intervals, the meter's clock (W17) | no declared universe-time; rule 8's rejection of backdating not modeled. |
 | The Continuity Universe + the Testament (0034 · 0035) | the personal universe; survivorship | PARKED — template-shaped, waits for worlds | the standing grave law (never revive f:probe:4509) belongs to the old rig. |
 | Dials (0063) | | RE-SEATED — see governance | |

@@ -4,7 +4,9 @@
 canon. Distilled from the Experience Deep Dive (sessions 2026-09-14 and
 2026-09-16, raw narration in `experience-capture.md`). The Experience
 defines what Orreth must feel like; transport and agents are chosen to
-serve it — never the other way around.
+serve it — never the other way around. **Amended 2026-10-05 (0010, JB's
+lock): the pull "Workspace Engineering" is THE WORKSHOP — the one place where
+all mutability occurs; the draft shelf lives in the ground under the person.**
 
 ---
 
@@ -62,7 +64,8 @@ carrying the pulls, warm light, glass.
 - **Pulls** are the focus areas. Each is themed to the bridge and can open
   into a window of its own with views across its categories.
 - **[Esc] always returns to the top-level view** — recovery without hunting.
-- The pulls: **Chat (Inference)** · **Workspace Engineering** ·
+- The pulls: **Chat (Inference)** · **the Workshop** (was "Workspace
+  Engineering" — 0010) ·
   **Monitoring** · **Gateways (LLMs)** · **Tools** · **Controls** ·
   **Crew/Agents** — plus the **ANALYZER** floor hatch (block 11 — JB's
   verdict, 2026-09-19: Objectives is NOT a pull; the hatch is the
@@ -71,7 +74,7 @@ carrying the pulls, warm light, glass.
 | Pull | What lives there |
 |---|---|
 | Chat (Inference) | The one conversation with the whole Operating State |
-| Workspace Engineering | Authoring (agents, prompts, policies, skills, guardrails; factories; the MITL impact door) and the Graph Studio (prototype, watch, replay, tune-in-graph) — two views, one artifact shelf |
+| The Workshop | Authoring (agents, prompts, policies, skills, guardrails; factories; the MITL impact door) and the Graph Studio (prototype, watch, replay, tune-in-graph) — two views, one shelf; the one place where all mutability occurs (`0010`, 2026-10-05) |
 | Monitoring | Everything monitoring/testing, views per focus area — "if it's monitoring, it goes here" |
 | Gateways | LLM providers and models |
 | Tools | The tool estate |
@@ -159,8 +162,9 @@ focus; the human never leaves it.
   never as an act**: "would you like me to open template #x in the
   workspace?" The opening is the human's word or click.
 - **The draft shelf.** While a human authors an agent, prompt, skill, or
-  policy, the draft lives in their profile — never in Orreth's brain —
-  until they cut a version; the cut is the gate (0004).
+  policy, the draft lives in the ground under the person — never on the
+  shelf nor in any recall (0010; was "in their profile") — until they cut a
+  version; the cut is the gate (0004).
 - **Workspace agents build for humans.** In Monitoring, the workspace
   agent can acquire, build, test, route for the human's approval, and
   implement new monitoring: Orreth works on behalf of humans to create
@@ -201,7 +205,7 @@ anywhere else. **Objectives are not a pull.**
   origin's tree. The one invoke: "follow up on this by …" in the chat.
   The MARKERS view lives here (lineage is history; Monitoring stays
   *now*). Its assistant reviews (planner · critic · gap analyzer);
-  Workspace Engineering's assistant makes (CUD) — the CUD line is what
+  the Workshop's assistant makes (CUD) — the CUD line is what
   separates the two pulls.
 - **On behalf of, in one line.** A human submits; the kernel's agents own
   it through the firmware-rails (0004); the chain says *who*, the marker

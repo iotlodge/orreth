@@ -1,6 +1,9 @@
 # Seed — Embedded Graded Learning (the third loop)
 
 **Status: SEED (JB, 2026-09-16) — deep dive proposed after Phase 3.**
+**Amended 2026-10-05 (`../0010` lock 7): the grader's SIGNED VERDICTS on
+Experiment arms and on live replies land in Phase 8 sp4 (the Workshop); the
+lessons digest — the fast lane — stays here as the next row.**
 JB's idea, captured with Fable's first mapping onto the locked canon.
 No build until the dive.
 

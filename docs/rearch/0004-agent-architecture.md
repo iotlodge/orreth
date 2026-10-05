@@ -6,7 +6,11 @@ agent-on-behalf-of = attribution and traceability, chain design ratified,
 verified at testing as AG-7). Designed against the locked Experience
 Charter (0001), Transport (0002), and Memory (0003). **Amended 2026-09-18
 (block 9, JB's lock): the third kind — firmware agents; the draft shelf;
-skill allocation by need.**
+skill allocation by need.** **Amended 2026-10-05 (0010, JB's eight locks):
+the HULL (three entry edges, the template's `graph` read as a versioned
+component); helpers (sub-agents) as lives under their creator's DID; the
+draft shelf in the ground under the person; the levels (universe · floor ·
+room) each staffed.**
 
 ---
 
@@ -162,6 +166,14 @@ mutability. **Firmware agents are the third kind: the same body of laws,
 no persona, named by their function** — planner · gap analyzer · critic ·
 grader · debater · analysis — and the workspace agents bound to the pulls.
 
+**Amended 2026-10-05 (0010):** a fourth class, the **sub-agent** (plain
+word in the glass: *helper*), is a LIFE under its creator's DID, never a
+self — a numbered life with a narrower lease, no DID, no chat, its grades
+folding to its creator; its graph is still a versioned component on the
+shelf. And every level of the path (universe · floor · room) may stand its
+own firmware and resident instances by manifest; mode (dev · prod ·
+experiment room) lives on every scope of the path, tighten-only.
+
 - **A keypair is still a self.** "No name" means no human name and no
   persona — never no identity. Every firmware agent is a DID born from a
   versioned template, wearing the covenant, joining through becky's door,
@@ -235,11 +247,15 @@ Monitoring:
   it). Cost next (the meter on the gateway; a `cost-anomaly` kind).
 - **Intention templates are declarations, not graphs**:
   `intentions/<name>.v0.json`, cut from the draft shelf; the **intention
-  architect** (Workspace Engineering's binding) helps a human fill one in
+  architect** (the Workshop's binding) helps a human fill one in
   the chat ("create an intention to …"). The graph that runs an intention
   is the intent loop itself — one engine (0040's law): the planner emits
   objectives, objectives are asks, the crew's graphs run them. A
-  human-authored LangGraph per intention waits for a proof that needs it.
+  human-authored LangGraph per intention waited for a proof that needs it
+  — **0010 (2026-10-05) is that proof**: an AGENT's `graph` is a versioned
+  component the HULL runs as its work node (hear → recall → route → chat ·
+  work · event → the work node); the intent loop stays the one engine for
+  intentions.
 - **Self-improving under human cut.** Improvement marker → critic → a
   proposed change on the draft shelf → the human cuts the version. Never
   raw feedback into a body (the graded-learning seed's guardrail).
@@ -257,11 +273,13 @@ Monitoring:
 | **When** | On demand (a human asks), on gap detection (MITL proposes — the human approves in chat), and eventually as the objective-driven loop matures. |
 
 **The draft shelf (block 9).** While a human creates or updates an agent,
-prompt, skill, policy, or binding, the draft lives in **their profile**
-(S3/local) — never in Orreth's brain or template inventory. **Cutting a
-version is the gate**: only then does the artifact join the shelf, linked
-by version to every operating instance that wears it. Unversioned means
-higher risk; the kernel never holds it. In Workspace Engineering every
+prompt, skill, policy, or binding, the draft lives in the ground **under
+the person** — a drafts table beside the profile (amended 2026-10-05, 0010;
+was "their profile (S3/local)") — never on the shelf, in any inventory, or
+in any recall; only its author's seat reads it. **Cutting a version is the
+gate**: only then does the artifact join the shelf, linked by version to
+every operating instance that wears it (the wear table). Unversioned means
+higher risk; the shelf never holds it. In the Workshop every
 kind of metadata an agent wears — skills · tools · prompts · persona ·
 policies — carries an **"Agent Assistance"** soft link into that agent's
 versioning, where MITL helps author the next cut.

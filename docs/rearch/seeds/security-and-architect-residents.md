@@ -4,6 +4,10 @@
 
 **Status: SEED (JB, 2026-09-29, the crate discussion before re-base sp2) — recorded, not built; a row
 after the release wave, driven by a proof's need (rule 12).**
+**Amended 2026-10-05 (`../0010` lock 8): `security` v0 lands in Phase 8 sp6 as
+a reviewer at the Experiment gate (capability and policy diffs · the refusals
+ground · the key-check cadence); `architect` stays HELD with RAG, after the
+Workshop.**
 
 ## JB's word, faithfully
 
