@@ -3,6 +3,8 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W19 (the refused ask in the record) · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp1, the tool hop reads the service DID · 2026-09-22
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: the pure laws factored for the fixture; the kernel's own self signs the export · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: a world's record spans its levels · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """The compliance export (canon 0005 P6 sp2 · AG-7): the chain, proven to
 a stranger.
 
@@ -169,7 +171,7 @@ def verify(bundle: dict) -> bool:
 def current_session(conn, person: str) -> str | None:
     cur = conn.cursor()
     cur.execute("SELECT session_id FROM spine_sessions WHERE person = %s AND scope = %s"
-                " ORDER BY opened_at DESC LIMIT 1", (person, ev.scope()))
+                " ORDER BY opened_at DESC LIMIT 1", (person, ev.universe()))
     r = cur.fetchone()
     return r[0] if r else None
 
@@ -184,7 +186,7 @@ def build(conn, *, person: str, session: str | None = None,
     from .outbox import ensure_schema as _out
     _asks(conn); _marks(conn); _out(conn)
     cur = conn.cursor()
-    world = ev.scope()
+    world = ev.universe()
     if not (session or window or marker):
         session = current_session(conn, person)
     scope: dict = {"person": person}
@@ -259,7 +261,7 @@ def build(conn, *, person: str, session: str | None = None,
             except Exception:
                 continue
             kind = KIND_OF.get(e.get("type"))
-            if kind is None or e.get("scope_path") != world:
+            if kind is None or not (str(e.get("scope_path") or "") == world or str(e.get("scope_path") or "").startswith(world + "/")):
                 continue
             row = _row(e, kind, oid, asks, intentions, marker_ids, firmware, words_by_intention)
             if row is not None:

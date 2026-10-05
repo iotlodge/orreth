@@ -3,6 +3,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE door · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the crew card's LLM line for the bodies this kernel seats · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the crew door in SET queries — a fixed handful of reads however large the crew · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: the crew, residents and alive reads at every level of the universe; the card wears the body's level · 2026-10-05
 //! The human's worldlines and the roster's reads — mirrors the session,
 //! resident, crew and shelf views of `orreth_spine.glass` (P20 · canon 0004)
 //! and the reads of `presence` · `placement` · `services` they stand on:
@@ -161,8 +162,8 @@ pub async fn residents_view(g: &Ground, scope: &str) -> Result<Vec<Value>, RoadE
     let rows = g
         .client()
         .query(
-            "SELECT DISTINCT ON (name) name, did, life, joined_at, kind, nature FROM spine_joins \
-             WHERE scope = $1 ORDER BY name, join_id DESC",
+            "SELECT DISTINCT ON (name) name, did, life, joined_at, kind, nature, scope FROM spine_joins \
+             WHERE (scope = $1 OR scope LIKE $1 || '/%') ORDER BY name, join_id DESC",
             &[&scope],
         )
         .await?;
@@ -174,6 +175,7 @@ pub async fn residents_view(g: &Ground, scope: &str) -> Result<Vec<Value>, RoadE
                 "lives": r.get::<_, i32>(2), "joined_at": isoformat(r.get::<_, SystemTime>(3)),
                 "kind": r.get::<_, String>(4),
                 "nature": r.get::<_, Option<String>>(5).unwrap_or_default(),
+                "scope": r.get::<_, String>(6), // Phase 8 sp1: the level this body joined at
             })
         })
         .collect())
@@ -232,7 +234,7 @@ async fn alive_map(
     let rows = g
         .client()
         .query(
-            "SELECT did, until > now() FROM spine_leases WHERE scope = $1 ORDER BY name",
+            "SELECT did, until > now() FROM spine_leases WHERE (scope = $1 OR scope LIKE $1 || '/%') ORDER BY name",
             &[&scope],
         )
         .await?;
@@ -272,8 +274,8 @@ pub async fn crew_view(
         .client()
         .query(
             "SELECT DISTINCT ON (name) name, kind, did, life, joined_at, policy_version, \
-             template_hash, capabilities, placement, nature FROM spine_joins WHERE scope = $1 \
-             ORDER BY name, join_id DESC",
+             template_hash, capabilities, placement, nature, scope FROM spine_joins WHERE (scope = $1 OR \
+             scope LIKE $1 || '/%') ORDER BY name, join_id DESC",
             &[&scope],
         )
         .await?;
@@ -288,8 +290,8 @@ pub async fn crew_view(
     for s in g
         .client()
         .query(
-            "SELECT served_by, count(*), max(replied_at) FROM spine_asks WHERE scope = $1 AND status <> \
-             'received' AND served_by IS NOT NULL GROUP BY served_by",
+            "SELECT served_by, count(*), max(replied_at) FROM spine_asks WHERE (scope = $1 OR scope LIKE $1 || \
+             '/%') AND status <> 'received' AND served_by IS NOT NULL GROUP BY served_by",
             &[&scope],
         )
         .await?
@@ -332,6 +334,7 @@ pub async fn crew_view(
         cards.push(json!({
             "mind": mind,
             "name": name, "kind": r.get::<_, String>(1), "did": did, "lives": r.get::<_, i32>(3),
+            "scope": r.get::<_, String>(10), // Phase 8 sp1: the level this body joined at (its scope path)
             "nature": nature.unwrap_or_default(), "joined_at": isoformat(joined),
             "policy_version": r.get::<_, String>(5), "alive": alive.get(&did).copied(),
             "template": head(&r.get::<_, String>(6), 12),

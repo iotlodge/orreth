@@ -5,6 +5,8 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures, W35's boundary: a kernel-held act with no word for 15 minutes is cancelled by the default (`expire_holds`) · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W69: `governs` — the owner or a declared master; the word at the interlock is the asker's own or a governing seat's · 2026-09-27
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: the kernel settles `level.open` at L2 · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """The proof demand rises to meet the consequence (canon 0001 P12 · 0005 P6 sp1).
 
 Every act wears a CONSEQUENCE CLASS — routine · consequential · grave —
@@ -196,7 +198,7 @@ def ensure_schema(conn) -> None:
 
 def _event(type_: str, ref: str, payload: dict, by: str) -> dict:
     return ev.make_envelope(
-        kind="event", type=type_, universe_id=ev.scope(), scope_path=ev.scope(),
+        kind="event", type=type_, universe_id=ev.universe(), scope_path=ev.universe(),
         payload={"ref": ref, "hash": "sha256:-", **payload},
         correlation_id=ref, authority_chain=[by])
 
@@ -208,7 +210,7 @@ def active_secret(conn, person: str) -> str | None:
     cur = conn.cursor()
     cur.execute("SELECT secret FROM spine_authenticators WHERE person = %s AND scope = %s"
                 " AND confirmed_at IS NOT NULL AND retired_at IS NULL"
-                " ORDER BY auth_id DESC LIMIT 1", (person, ev.scope()))
+                " ORDER BY auth_id DESC LIMIT 1", (person, ev.universe()))
     row = cur.fetchone()
     return row[0] if row else None
 
@@ -232,9 +234,9 @@ def enroll(conn, person: str, *, code: str | None = None) -> dict:
     def domain(cur):
         cur.execute("UPDATE spine_authenticators SET retired_at = now() WHERE person = %s"
                     " AND scope = %s AND confirmed_at IS NULL AND retired_at IS NULL",
-                    (person, ev.scope()))                  # one pending at a time
+                    (person, ev.universe()))                  # one pending at a time
         cur.execute("INSERT INTO spine_authenticators (person, secret, scope) VALUES (%s, %s, %s)",
-                    (person, secret, ev.scope()))
+                    (person, secret, ev.universe()))
 
     outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)
     uri = otpauth_uri(person, secret)
@@ -249,7 +251,7 @@ def confirm_enrollment(conn, person: str, code: str | None) -> dict:
     cur = conn.cursor()
     cur.execute("SELECT auth_id, secret FROM spine_authenticators WHERE person = %s AND scope = %s"
                 " AND confirmed_at IS NULL AND retired_at IS NULL ORDER BY auth_id DESC LIMIT 1",
-                (person, ev.scope()))
+                (person, ev.universe()))
     row = cur.fetchone()
     if row is None or not verify(row[1], code):
         raise NotConfirmed()
@@ -258,7 +260,7 @@ def confirm_enrollment(conn, person: str, code: str | None) -> dict:
     def domain(cur):
         cur.execute("UPDATE spine_authenticators SET retired_at = now() WHERE person = %s AND scope = %s"
                     " AND confirmed_at IS NOT NULL AND retired_at IS NULL AND auth_id <> %s",
-                    (person, ev.scope(), row[0]))
+                    (person, ev.universe(), row[0]))
         cur.execute("UPDATE spine_authenticators SET confirmed_at = now() WHERE auth_id = %s", (row[0],))
 
     outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)
@@ -271,7 +273,7 @@ def masters(conn) -> list[str]:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT person FROM spine_masters WHERE scope = %s ORDER BY declared_at, person",
-                (ev.scope(),))
+                (ev.universe(),))
     return [r[0] for r in cur.fetchall()]
 
 
@@ -299,7 +301,7 @@ def declare_master(conn, person: str, *, by: str) -> bool:
 
     def domain(cur):
         cur.execute("INSERT INTO spine_masters (person, declared_by, scope) VALUES (%s, %s, %s)"
-                    " ON CONFLICT DO NOTHING", (person, by, ev.scope()))
+                    " ON CONFLICT DO NOTHING", (person, by, ev.universe()))
 
     outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)
     return True
@@ -407,7 +409,7 @@ def expire_holds(conn, minutes: int = HOLD_TTL_MIN) -> list[str]:
     cur = conn.cursor()
     cur.execute("SELECT ask_id FROM spine_asks WHERE scope = %s AND served_by = %s"
                 " AND status = 'awaiting-confirm' AND asked_at < now() - make_interval(mins => %s)",
-                (ev.scope(), KERNEL, int(minutes)))
+                (ev.universe(), KERNEL, int(minutes)))
     out = []
     for (aid,) in cur.fetchall():
         try:
@@ -439,7 +441,7 @@ def hold_kernel_act(conn, *, text: str, person: str, tool: str, args: dict,
     # W74 (walk #19): the desk's hold already says it all — no L2 wrapper mashed onto a join
     question = capital if tool == "join.admit" else question_for(level, capital, needs_code=needs_code)
     n = ev.make_envelope(
-        kind="event", type=CONFIRM_NEEDED, universe_id=ev.scope(), scope_path=ev.scope(),
+        kind="event", type=CONFIRM_NEEDED, universe_id=ev.universe(), scope_path=ev.universe(),
         payload={"ref": ask_id, "hash": ev.content_hash(text), "tool": tool,
                  "class": cls, "level": level, **({"needs_code": True} if needs_code else {})},
         correlation_id=ask_id, authority_chain=[person, KERNEL],
@@ -450,7 +452,7 @@ def hold_kernel_act(conn, *, text: str, person: str, tool: str, args: dict,
         cur.execute(
             "INSERT INTO spine_asks (ask_id, text, person, status, reply, served_by, held,"
             " scope, session, marker) VALUES (%s, %s, %s, 'awaiting-confirm', %s, %s, %s, %s, %s, %s)",
-            (ask_id, text, person, question, KERNEL, json.dumps(held), ev.scope(), session, mid))
+            (ask_id, text, person, question, KERNEL, json.dumps(held), ev.universe(), session, mid))
 
     outbox.commit_with_outbox(conn, ev.encode(n), n["message_id"], domain)
     return ask_id
@@ -477,7 +479,7 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
 
         def note(text: str) -> None:
             j = ev.make_envelope(
-                kind="event", type=JOURNEY, universe_id=ev.scope(), scope_path=ev.scope(),
+                kind="event", type=JOURNEY, universe_id=ev.universe(), scope_path=ev.universe(),
                 payload={"ref": ask_id, "hash": "sha256:-", "note": f"{KERNEL}: {text}"},
                 correlation_id=ask_id, authority_chain=chain,
                 aggregate={"type": "ask", "id": ask_id, "sequence": _next_seq(cur, ask_id)},
@@ -502,6 +504,9 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
                 result = (f"the {made['name']} {made['kind']} is retired — at rest on the shelf, "
                           f"recorded, never deleted; say “restore the {made['name']} {made['kind']}” "
                           "to bring it back")
+            elif held["tool"] == "level.open":           # Phase 8 sp1: a floor or room opened on the person's word
+                from . import levels
+                result = levels.open_in(conn, held["args"], by=asker, ask=ask_id, marker=row[3])
             elif held["tool"].startswith("mind."):        # P6.5 sp3: the Stable's acts — register · assign ·
                 from . import stable                     # unassign · refill · re-pin; the keeper proposed, the human cut
                 result = stable.settle(conn, held, asker=asker, ask_id=ask_id, parent_marker=row[3],
@@ -533,7 +538,7 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
                     " replied_at = clock_timestamp() WHERE ask_id = %s",   # W17: the landing, not the start
                     (status, reply, proof, ask_id))
         r = ev.make_envelope(
-            kind="event", type=REPLY, universe_id=ev.scope(), scope_path=ev.scope(),
+            kind="event", type=REPLY, universe_id=ev.universe(), scope_path=ev.universe(),
             payload={"ref": ask_id, "hash": ev.content_hash(reply), "proof": proof},
             correlation_id=ask_id, authority_chain=chain, marker=marker,
             aggregate={"type": "ask", "id": ask_id, "sequence": _next_seq(cur, ask_id)})

@@ -8,6 +8,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the topic's depth on ONE held consumer, never a fresh one per snapshot · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass (JB's screenshots 2026-09-29): one watch vocabulary on both kernels · the meter read by world · the roster folded one row per name · a watch's REST · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86): THE WATCH'S REST — `rest_watch` recorded on the row (schema 3), the judge and the snapshot read the ACTIVE watches; the asks left WAITING listed in the snapshot for their stop · 2026-09-29
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """The Monitoring workspace's ground (canon 0001: "if it's monitoring, it
 goes here"): the live snapshot of the Operating State — rails, benches,
 bodies, asks, the last harness run — and the WATCHES: named checks the
@@ -126,7 +127,7 @@ def add_watch(conn, name: str, metric: str, op: str, threshold: float,
         conn.cursor().execute(
             "INSERT INTO spine_watches (watch_id, name, metric, op, threshold,"
             " added_by, scope) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-            (wid, name, metric, op, float(threshold), by, ev.scope()))
+            (wid, name, metric, op, float(threshold), by, ev.universe()))
     return wid
 
 
@@ -139,7 +140,7 @@ def rest_watch(conn, watch_id: str, by: str) -> dict:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT name, added_by, active FROM spine_watches WHERE watch_id = %s AND scope = %s",
-                (watch_id, ev.scope()))
+                (watch_id, ev.universe()))
     row = cur.fetchone()
     if row is None:
         raise KeyError(watch_id)
@@ -160,7 +161,7 @@ def waiting(conn, limit: int = 20) -> list[dict]:
     cur = conn.cursor()
     cur.execute("SELECT ask_id, text, person, target, asked_at FROM spine_asks"
                 " WHERE scope = %s AND status = 'received' ORDER BY asked_at DESC LIMIT %s",
-                (ev.scope(), limit))
+                (ev.universe(), limit))
     return [{"ask_id": r[0], "text": r[1][:140], "person": r[2], "target": r[3],
              "asked_at": r[4].isoformat()} for r in cur.fetchall()]
 
@@ -212,7 +213,7 @@ def _farm(conn) -> dict:
     if _has_table(conn, "spine_services"):
         cur.execute("SELECT count(*) FILTER (WHERE state IN ('registered','versioned','healthy')),"
                     " count(*) FILTER (WHERE state = 'unhealthy') FROM spine_services WHERE scope = %s AND kind = 'mind'",
-                    (ev.scope(),))
+                    (ev.universe(),))
         r = cur.fetchone(); out["minds_standing"], out["minds_unhealthy"] = int(r[0]), int(r[1])
     if _has_table(conn, "spine_meter"):
         # the honest glass (2026-09-29): the meter read BY WORLD — the pulse says "world u:dev", so
@@ -220,12 +221,12 @@ def _farm(conn) -> dict:
         cur.execute("SELECT coalesce(sum(usd) FILTER (WHERE at >= date_trunc('day', now())), 0),"
                     " count(*) FILTER (WHERE ok = false AND at >= now() - interval '1 hour'),"
                     " count(*) FILTER (WHERE at >= now() - interval '10 minutes') FROM spine_meter"
-                    " WHERE scope = %s", (ev.scope(),))
+                    " WHERE scope = %s", (ev.universe(),))
         r = cur.fetchone()
         out["usd_today"] = round(float(r[0]), 6); out["route_failures_1h"] = int(r[1])
         out["meter_rate_10m"] = round(int(r[2]) / 10.0, 2)
     if _has_table(conn, "spine_mind_keys"):
-        cur.execute("SELECT count(*) FROM spine_mind_keys WHERE scope = %s AND drained_at IS NOT NULL", (ev.scope(),))
+        cur.execute("SELECT count(*) FROM spine_mind_keys WHERE scope = %s AND drained_at IS NOT NULL", (ev.universe(),))
         out["bodies_drained"] = int(cur.fetchone()[0])
     return out
 
@@ -252,13 +253,13 @@ def snapshot(conn, *, rails: bool = True) -> dict:
     outbox.ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT status, count(*) FROM spine_asks WHERE scope = %s"
-                " GROUP BY status", (ev.scope(),))
+                " GROUP BY status", (ev.universe(),))
     asks = {s: int(n) for s, n in cur.fetchall()}
     bodies = presence.roster(conn)
     alive = [b for b in bodies if b["alive"]]
     lag = outbox.outbox_lag(conn)
     cur.execute("SELECT template, version, passed, failed, ran_at FROM spine_harness_runs"
-                " WHERE scope = %s ORDER BY ran_at DESC LIMIT 1", (ev.scope(),)) \
+                " WHERE scope = %s ORDER BY ran_at DESC LIMIT 1", (ev.universe(),)) \
         if _has_table(conn, "spine_harness_runs") else None
     last = cur.fetchone() if _has_table(conn, "spine_harness_runs") else None
     values = {
@@ -277,7 +278,7 @@ def snapshot(conn, *, rails: bool = True) -> dict:
     values["parked"] = len(parked)                # ground's count — the same on both kernels), watchable
     stable_view = _stable(conn)
     cur.execute("SELECT watch_id, name, metric, op, threshold, added_by, last_ok, since"
-                " FROM spine_watches WHERE scope = %s AND active ORDER BY added_at", (ev.scope(),))  # sp2: the active alone
+                " FROM spine_watches WHERE scope = %s AND active ORDER BY added_at", (ev.universe(),))  # sp2: the active alone
     watches = []
     for w in cur.fetchall():
         red = judge_one(w[3], values[w[2]], w[4])
@@ -291,12 +292,12 @@ def snapshot(conn, *, rails: bool = True) -> dict:
              "since": w[7].isoformat() if w[7] is not None and recorded_red == red else None}
         d["reads"] = reads(d)
         watches.append(d)
-    cur.execute("SELECT count(*) FROM spine_watches WHERE scope = %s AND NOT active", (ev.scope(),))
+    cur.execute("SELECT count(*) FROM spine_watches WHERE scope = %s AND NOT active", (ev.universe(),))
     rested = int(cur.fetchone()[0])                # sp2: the rested are counted, never drawn as red
     from . import cells
     home = cells.card(conn)
     return {
-        "world": ev.scope(),
+        "world": ev.universe(),
         "home": {"cell": home["cell"], "epoch": home["epoch"], "namespace": home["namespace"]},   # P7 sp7
         "outbox": lag,
         "asks": asks,
@@ -341,7 +342,7 @@ def judge(conn) -> list[dict]:
         frm = None if was_ok is None else ("green" if was_ok else "red")
         to = w["state"]
         e = ev.make_envelope(
-            kind="event", type=WATCH_TURNED, universe_id=ev.scope(), scope_path=ev.scope(),
+            kind="event", type=WATCH_TURNED, universe_id=ev.universe(), scope_path=ev.universe(),
             payload={"ref": w["watch_id"], "hash": ev.content_hash(w["name"]),
                      "name": w["name"], "metric": w["metric"], "op": w["op"],
                      "threshold": w["threshold"], "value": w["value"], "from": frm, "to": to},

@@ -477,7 +477,7 @@ pub async fn build(
             let Some(kind) = e.get("type").and_then(Value::as_str).and_then(kind_of) else {
                 continue;
             };
-            if e.get("scope_path").and_then(Value::as_str) != Some(world) {
+            if !crate::seat::within(e.get("scope_path").and_then(Value::as_str).unwrap_or_default(), world) {
                 continue;
             }
             if let Some(mut row) = row(

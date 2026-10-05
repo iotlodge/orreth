@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, THE REMEDIATION RAIL · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `PULLED` · `pulled_payload` · `pulled_fact`; `pull` mints the fact with the turn's record · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """The remediation rail (canon 0005, P7 sp8 row 3c): the half of the
 Resiliency loop that ACTS.
 
@@ -281,7 +282,7 @@ def pulled_fact(ask_id: str, lever: str, args: dict | None, because: str, held: 
     """The pulled fact whole: the intention's person then the kernel (the kernel alone
     under its own intention), the intention as correlation, no aggregate, no marker
     (conformance `pulled_fact`)."""
-    sc = scope or ev.scope()
+    sc = scope or ev.universe()
     return ev.make_envelope(kind="event", type=PULLED, universe_id=sc, scope_path=sc,
                             payload=pulled_payload(ask_id, lever, args, because, held, intention_id),
                             correlation_id=intention_id,
@@ -381,7 +382,7 @@ def forensic(conn, watch_id: str, *, episode: str | None = None, bodies: list[di
             subjects.append({"kind": "crew", "name": "alive", "state": ", ".join(alive)})
     elif metric == "asks_received":
         cur.execute("SELECT ask_id, text, target, asked_at FROM spine_asks WHERE scope = %s"
-                    " AND status = 'received' ORDER BY asked_at LIMIT 6", (ev.scope(),))
+                    " AND status = 'received' ORDER BY asked_at LIMIT 6", (ev.universe(),))
         for aid, text, target, at in cur.fetchall():
             subjects.append({"kind": "ask", "name": aid,
                              "state": f"waiting {ago_words(_secs_between(now, at))} — for "
@@ -402,7 +403,7 @@ def forensic(conn, watch_id: str, *, episode: str | None = None, bodies: list[di
     for name in names[:6]:
         cur.execute("SELECT asked_at, held::json->>'tool', status, person FROM spine_asks WHERE scope = %s"
                     " AND served_by = %s AND held IS NOT NULL AND held::json->'args'->>'name' = %s"
-                    " ORDER BY asked_at DESC LIMIT 3", (ev.scope(), KERNEL, name))
+                    " ORDER BY asked_at DESC LIMIT 3", (ev.universe(), KERNEL, name))
         for at, tool, status, person in cur.fetchall():
             acts.append({"at": at.isoformat(), "words": f"{tool} on {name} — {status}, asked by {person}"})
         for e in _events(conn, name, PARKED, limit=2):
@@ -449,12 +450,12 @@ def kernel_row(conn, *, person: str, session: str | None, text: str, reply: str,
     marker = {"kind": "action", "id": mid, "parent": parent_marker, "by": KERNEL}
     chain = [person, KERNEL] if person != KERNEL else [KERNEL]
     j = ev.make_envelope(
-        kind="event", type=JOURNEY, universe_id=ev.scope(), scope_path=ev.scope(),
+        kind="event", type=JOURNEY, universe_id=ev.universe(), scope_path=ev.universe(),
         payload={"ref": ask_id, "hash": "sha256:-", "note": f"{KERNEL}: {note or text}"},
         correlation_id=ask_id, authority_chain=chain,
         aggregate={"type": "ask", "id": ask_id, "sequence": 1}, marker=marker)
     r = ev.make_envelope(
-        kind="event", type=REPLY, universe_id=ev.scope(), scope_path=ev.scope(),
+        kind="event", type=REPLY, universe_id=ev.universe(), scope_path=ev.universe(),
         payload={"ref": ask_id, "hash": ev.content_hash(reply), "proof": "L1"},
         correlation_id=ask_id, authority_chain=chain,
         aggregate={"type": "ask", "id": ask_id, "sequence": 2}, marker=marker)
@@ -464,7 +465,7 @@ def kernel_row(conn, *, person: str, session: str | None, text: str, reply: str,
         cur.execute(
             "INSERT INTO spine_asks (ask_id, text, person, status, reply, served_by, scope, session,"
             " marker, seq, proof, replied_at) VALUES (%s, %s, %s, 'replied', %s, %s, %s, %s, %s, 2, 'L1',"
-            " clock_timestamp())", (ask_id, text, person, reply, KERNEL, ev.scope(), session, mid))
+            " clock_timestamp())", (ask_id, text, person, reply, KERNEL, ev.universe(), session, mid))
         outbox.add_row(cur, ev.encode(r), r["message_id"])
 
     outbox.commit_with_outbox(conn, ev.encode(j), j["message_id"], domain)
@@ -555,7 +556,7 @@ def attribute(conn, *, levers: list[dict] | None = None, bodies: list[dict] | No
         " t.pulled_at, t.tries, t.episode, t.dossier, w.name, w.last_ok, w.metric, a.status, a.reply"
         " FROM spine_intent_turns t JOIN spine_watches w ON w.watch_id = t.watch"
         " LEFT JOIN spine_asks a ON a.ask_id = t.lever_ask"
-        " WHERE t.outcome IS NULL AND t.watch IS NOT NULL AND w.scope = %s ORDER BY t.at", (ev.scope(),))
+        " WHERE t.outcome IS NULL AND t.watch IS NOT NULL AND w.scope = %s ORDER BY t.at", (ev.universe(),))
     rows = cur.fetchall()
     now = datetime.now(timezone.utc)
     moved = []

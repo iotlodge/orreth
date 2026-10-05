@@ -1,5 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (a): the human seat · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the park once by its place, its fact, the HOLD until a person advances it, the advance · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: `/levels/open` governs; a seat row at any level · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """THE HUMAN SEAT (canon 0005 sp8 row 3 · 0006 §3 · covenant rules 3 and 4).
 
 Until this row every door read the person from the request body and
@@ -260,6 +262,7 @@ OPEN_GET = ("/", "/index.html", "/health", "/guide", "/harness", "/seat")
 OPEN_POST = ("/seat", "/enroll/confirm", "/seam", "/join", "/join/prove", "/join/lease")   # P7 sp8 row 3b: the desk's doors answer proof, not seats
 LEASE_POST = ("/delta",)                              # P7 sp8 row 3b: a body's own words wear its LEASE (a seat with the role `body`)
 GOVERN_POST = ("/world/rehome", "/bodies/restart",
+               "/levels/open",                        # Phase 8 sp1: a floor or room opens on a governing seat's word
                "/parked/advance",                     # re-base sp1: advancing past a poison is an operator's explicit decision
                "/services", "/services/version", "/services/retire", "/services/restore", "/services/mcp",
                "/minds", "/minds/assign", "/minds/unassign", "/minds/refill", "/minds/retire", "/minds/restore")
@@ -357,7 +360,7 @@ def ensure_schema(conn) -> None:
 
 def _event(type_: str, ref: str, payload: dict, chain: list) -> dict:
     return ev.make_envelope(
-        kind="event", type=type_, universe_id=ev.scope(), scope_path=ev.scope(),
+        kind="event", type=type_, universe_id=ev.universe(), scope_path=ev.universe(),
         payload={"ref": ref, "hash": "sha256:-", **payload},
         correlation_id=ref, authority_chain=chain)
 
@@ -365,7 +368,7 @@ def _event(type_: str, ref: str, payload: dict, chain: list) -> dict:
 def owner(conn) -> str | None:
     ensure_schema(conn)
     cur = conn.cursor()
-    cur.execute("SELECT person FROM spine_owner WHERE scope = %s", (ev.scope(),))
+    cur.execute("SELECT person FROM spine_owner WHERE scope = %s", (ev.universe(),))
     row = cur.fetchone()
     return row[0] if row else None
 
@@ -381,7 +384,7 @@ def declare_owner(conn, person: str) -> bool:
 
     def domain(cur):
         cur.execute("INSERT INTO spine_owner (scope, person) VALUES (%s, %s) ON CONFLICT DO NOTHING",
-                    (ev.scope(), person))
+                    (ev.universe(), person))
 
     outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)
     proof.declare_master(conn, person, by=CEREMONY)
@@ -406,14 +409,14 @@ def take(conn, person: str, code: str | None, signer, *, hours_: float | None = 
     role = role_of(conn, person)
     h = hours() if hours_ is None else float(hours_)
     expiry = (datetime.now(timezone.utc) + timedelta(hours=h)).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-    token = mint(signer, subject=person, audience=ev.scope(), grants=grants_for(role, ev.scope()), expiry=expiry)
+    token = mint(signer, subject=person, audience=ev.universe(), grants=grants_for(role, ev.universe()), expiry=expiry)
     sid = seat_id(token)
     e = _event(SEAT_TAKEN, sid, {"hash": ev.content_hash(token), "person": person, "role": role,
                                  "expiry": expiry, "ceremony": ceremony}, [person, proof.KERNEL])
 
     def domain(cur):
         cur.execute("INSERT INTO spine_seats (seat_id, person, scope, role, expiry) VALUES (%s, %s, %s, %s, %s)",
-                    (sid, person, ev.scope(), role, expiry))
+                    (sid, person, ev.universe(), role, expiry))
 
     outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)
     return {"seat": token, "wire": wire(token), "seat_id": sid, "person": person, "role": role,
@@ -451,7 +454,8 @@ def on_ground(conn, off: dict) -> dict | None:
     sid = off["seat_id"]
     tok = None
     cur = conn.cursor()
-    cur.execute("SELECT role FROM spine_seats WHERE seat_id = %s AND scope = %s AND left_at IS NULL", (sid, ev.scope()))
+    cur.execute(f"SELECT role FROM spine_seats WHERE seat_id = %s AND {ev.WITHIN} AND left_at IS NULL",
+                (sid, *ev.within_params(ev.universe())))     # Phase 8 sp1: a body's lease wears its level
     row = cur.fetchone()
     if row is None:
         return None
@@ -486,7 +490,7 @@ def seats(conn, person: str) -> list[dict]:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT seat_id, role, expiry, taken_at, left_at FROM spine_seats WHERE person = %s AND scope = %s"
-                " ORDER BY taken_at DESC LIMIT 20", (person, ev.scope()))
+                " ORDER BY taken_at DESC LIMIT 20", (person, ev.universe()))
     return [{"seat_id": r[0], "role": r[1], "expiry": r[2].isoformat(), "taken_at": r[3].isoformat(),
              "left_at": r[4].isoformat() if r[4] else None} for r in cur.fetchall()]
 

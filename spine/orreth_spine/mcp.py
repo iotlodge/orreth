@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the Tools keeper · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """MCP through ONE door (canon 0005 P6.5 sp2 · 0009 §1 the Tools firmware ·
 0059 the Toolshed's laws · 0018 services as identities).
 
@@ -511,7 +512,7 @@ def changes(conn, since=None, *, limit: int = 40) -> list[dict]:
     cur.execute(
         "SELECT at, by_did, note FROM spine_markers WHERE scope = %s AND root = %s AND marker_id <> %s"
         " AND (%s::timestamptz IS NULL OR at > %s::timestamptz) ORDER BY at DESC LIMIT %s",
-        (ev.scope(), root, root, since, since, limit))
+        (ev.universe(), root, root, since, since, limit))
     return [{"at": r[0].isoformat(), "by": r[1], "note": r[2] or ""} for r in cur.fetchall()][::-1]
 
 
@@ -520,7 +521,7 @@ def last_ask_at(conn, keeper_did: str, words: str = "changed") -> str | None:
     newest is the one being served)."""
     cur = conn.cursor()
     cur.execute("SELECT asked_at FROM spine_asks WHERE scope = %s AND served_by = %s AND text ILIKE %s"
-                " ORDER BY asked_at DESC OFFSET 1 LIMIT 1", (ev.scope(), keeper_did, f"%{words}%"))
+                " ORDER BY asked_at DESC OFFSET 1 LIMIT 1", (ev.universe(), keeper_did, f"%{words}%"))
     r = cur.fetchone()
     return r[0].isoformat() if r else None
 
@@ -539,7 +540,7 @@ def last_proposal(conn, name: str) -> dict | None:
     cur = conn.cursor()
     cur.execute("SELECT ask_id, status, asked_at FROM spine_asks WHERE scope = %s AND served_by = %s"
                 " AND held IS NOT NULL AND held::json->>'tool' = %s AND held::json->'args'->>'name' = %s"
-                " ORDER BY asked_at DESC LIMIT 1", (ev.scope(), services.KERNEL, services.RETIRE_TOOL, name))
+                " ORDER BY asked_at DESC LIMIT 1", (ev.universe(), services.KERNEL, services.RETIRE_TOOL, name))
     r = cur.fetchone()
     return {"ask_id": r[0], "status": r[1], "asked_at": r[2].isoformat()} if r else None
 
@@ -552,7 +553,7 @@ def strikes(conn, name: str) -> int:
     cur = conn.cursor()
     cur.execute("SELECT ok FROM spine_service_health WHERE name = %s AND scope = %s"
                 " AND (%s::timestamptz IS NULL OR at > %s::timestamptz) ORDER BY health_id DESC LIMIT 50",
-                (name, ev.scope(), prop["asked_at"] if prop else None, prop["asked_at"] if prop else None))
+                (name, ev.universe(), prop["asked_at"] if prop else None, prop["asked_at"] if prop else None))
     n = 0
     for (ok,) in cur.fetchall():
         if ok is False:

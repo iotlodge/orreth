@@ -20,19 +20,21 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: schema_version · schema_tables (the migrator's contract) · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass: watch_metrics · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — W92: not_a_plan pinned · 2026-10-02
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: path_parse · path_child · mode_tighten · mode_dial · experiment_room · level_absolute · cascade_fold · rollup_merge · rollup_report · rollup_tier_score · level_fact · 2026-10-05
 """The conformance suite (canon 0008): language-neutral fixtures the
 Python reference must pass today and `orrethd` must pass in Phase 7 — the
 same files, unchanged. A fixture the reference fails is a wound."""
 import json
 import os
+import re
 from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 
-from orreth_spine import (body as _body, cells, desk, dispatch, doors, envelope as ev, export, ground, harness, intent, levers,
-                          markers, mcp, mitl, monitor, placement, presence, profile, projector, proof, rails, resident, scheduler,
-                          seat, services, stable, store, digest, tools)
+from orreth_spine import (body as _body, cells, desk, dispatch, doors, envelope as ev, export, ground, harness, intent, levels,
+                          levers, markers, mcp, mitl, monitor, placement, presence, profile, projector, proof, rails, resident,
+                          scheduler, seat, services, stable, store, digest, tools)
 from orreth_spine.identity import Identity
 
 ROOT = Path(__file__).resolve().parents[1] / "conformance"
@@ -150,6 +152,64 @@ def test_fixture(contract, case):
     elif kind == "body_hash":
         assert projector.body_hash(inp["body"].encode()) == exp["hash"]
     # ---- orreth.schema/1 (re-base sp1, lock 2): THE MIGRATOR's contract — the version and the tables ----
+    elif kind == "path_parse":                   # Phase 8 sp1 THE PATH: the grammar — u:<universe>[/f:<floor>[/r:<room>]]
+        if exp["ok"]:
+            assert (levels.universe_of(inp["path"]), levels.level_of(inp["path"]), levels.name_of(inp["path"]),
+                    levels.parent_of(inp["path"]), levels.ancestors(inp["path"]), levels.words(inp["path"])) == \
+                (exp["universe"], exp["level"], exp["name"], exp["parent"], exp["ancestors"], exp["words"])
+            assert levels.ok(inp["path"])
+        else:
+            with pytest.raises(ValueError, match=re.escape(exp["error"])):
+                levels.parse(inp["path"])
+            assert not levels.ok(inp["path"])
+    elif kind == "path_child":                   # the child law: a floor under a universe, a room on a floor
+        if exp["ok"]:
+            assert levels.child(inp["parent"], inp["level"], inp["name"]) == exp["path"]
+        else:
+            with pytest.raises(ValueError, match=re.escape(exp["error"])):
+                levels.child(inp["parent"], inp["level"], inp["name"])
+    elif kind == "mode_tighten":                 # mode only tightens down the path
+        if exp["ok"]:
+            assert levels.tighten(inp["parent"], inp["asked"]) == exp["mode"]
+        else:
+            with pytest.raises(ValueError, match=re.escape(exp["error"])):
+                levels.tighten(inp["parent"], inp["asked"])
+    elif kind == "mode_dial":                    # SPINE_MODE: unset → dev; dev · prod; anything else refused
+        if exp["ok"]:
+            assert levels.mode_of_dial(inp["value"]) == exp["mode"]
+        else:
+            with pytest.raises(ValueError, match=re.escape(exp["error"])):
+                levels.mode_of_dial(inp["value"])
+    elif kind == "experiment_room":              # only a room opens as an experiment room
+        if exp["ok"]:
+            levels.experiment_ok(inp["level"], inp["experiment"])
+        else:
+            with pytest.raises(ValueError, match=re.escape(exp["error"])):
+                levels.experiment_ok(inp["level"], inp["experiment"])
+    elif kind == "level_absolute":               # a manifest's relative `at` under the universe
+        if exp["ok"]:
+            assert levels.absolute(inp["universe"], inp["at"]) == exp["path"]
+        else:
+            with pytest.raises(ValueError, match=re.escape(exp["error"])):
+                levels.absolute(inp["universe"], inp["at"])
+    elif kind == "cascade_fold":                 # 0007 carried: the fold root → leaf, content-addressed
+        assert levels.cascade(inp["tiers"]) == exp["context"]
+    elif kind == "rollup_merge":                 # 0005 carried: the monoid, left-folded from the empty bundle
+        b = levels.empty_bundle()
+        for r in inp["runs"]:
+            b = levels.merge(b, levels.bundle_of(r))
+        assert b == exp["merged"]
+    elif kind == "rollup_report":                # the Beta prior applied ONCE at report
+        assert levels.report(inp["bundle"], inp["objective"], tuple(inp["prior"])) == exp["report"]
+    elif kind == "rollup_tier_score":            # floors gate, weights average
+        assert levels.tier_score(inp["bundle"], inp["objectives"], tuple(inp["prior"])) == exp["score"]
+    elif kind == "level_fact":                   # orreth.level.opened.v1 — the universe as universe_id, the level's path as scope_path
+        e = levels.opened_fact(inp["path"], inp["mode"], inp["experiment"], inp["by"], inp["reason"])
+        e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
+        assert (e["type"], e["payload"], e["authority_chain"], e["correlation_id"], e["universe_id"], e["scope_path"]) == \
+            (exp["type"], exp["payload"], exp["chain"], exp["correlation_id"], exp["universe_id"], exp["scope_path"])
+        assert ev.encode(e).decode("ascii") == exp["bytes"]
+        assert levels.opened_words(inp["path"], inp["mode"], inp["experiment"]) == exp["words"]
     elif kind == "schema_version":
         assert ground.SCHEMA_VERSION == exp["version"]
     elif kind == "schema_tables":

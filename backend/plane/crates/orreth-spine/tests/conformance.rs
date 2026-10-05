@@ -12,6 +12,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp3: THE ERA — `VERSION` and the crate wear one number · 2026-09-29
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass: `watch_metrics` · 2026-09-29
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — W92: not_a_plan pinned · 2026-10-02
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: the levels' eleven kinds (levels-v0) · 2026-10-05
 //! The Rust conformance runner (canon 0008 · P7 sp1): every fixture under
 //! `spine/conformance/*-v*.json` — the same files the Python reference
 //! generated and passes, unchanged — dispatched by case kind exactly as
@@ -24,8 +25,7 @@
 use orreth_spine::{
     ask, beat, body, canonical, cells, content_hash, desk, doors, envelope, export, intent,
     kernel_self, levers, mcp, memory, mitl, placement, profile, proof, rails, seat, services,
-    stable, tools, watch,
-};
+    stable, tools, watch, levels};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -63,6 +63,18 @@ const PORTED_KINDS: &[&str] = &[
     "profile",
     "honor",
     "rail_names",
+    // Phase 8 sp1, THE PATH (levels-v0)
+    "path_parse",
+    "path_child",
+    "mode_tighten",
+    "mode_dial",
+    "experiment_room",
+    "level_absolute",
+    "cascade_fold",
+    "rollup_merge",
+    "rollup_report",
+    "rollup_tier_score",
+    "level_fact",
     "outbox_row",
     "inbox_key",
     "ladder_step",
@@ -724,6 +736,104 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             same!(placement::why_here(&prof, &ground), s(&exp["why"]), "why");
         }
         // ---- orreth.rails/1 (P7 sp2): the rails' names and shapes — what the ground and rails stand on ----
+        // ---- Phase 8 sp1, THE PATH: the levels' laws (levels-v0) ----
+        "path_parse" => {
+            let path = s(&inp["path"]);
+            if exp["ok"].as_bool() == Some(true) {
+                same!(levels::ok(path), true, "ok");
+                same!(levels::universe_of(path).unwrap(), s(&exp["universe"]), "universe");
+                same!(levels::level_of(path).unwrap(), s(&exp["level"]), "level");
+                same!(levels::name_of(path).unwrap(), s(&exp["name"]), "name");
+                same!(json!(levels::parent_of(path).unwrap()), exp["parent"], "parent");
+                same!(json!(levels::ancestors(path).unwrap()), exp["ancestors"], "ancestors");
+                same!(levels::words(path).unwrap(), s(&exp["words"]), "words");
+            } else {
+                same!(levels::ok(path), false, "ok");
+                same!(levels::parse(path).unwrap_err(), s(&exp["error"]), "the refusal");
+            }
+        }
+        "path_child" => {
+            let got = levels::child(s(&inp["parent"]), s(&inp["level"]), s(&inp["name"]));
+            if exp["ok"].as_bool() == Some(true) {
+                same!(got.clone().unwrap(), s(&exp["path"]), "path");
+            } else {
+                same!(got.clone().unwrap_err(), s(&exp["error"]), "the refusal");
+            }
+        }
+        "mode_tighten" => {
+            let got = levels::tighten(s(&inp["parent"]), opt_str(&inp["asked"]));
+            if exp["ok"].as_bool() == Some(true) {
+                same!(got.clone().unwrap(), s(&exp["mode"]), "mode");
+            } else {
+                same!(got.clone().unwrap_err(), s(&exp["error"]), "the refusal");
+            }
+        }
+        "mode_dial" => {
+            let got = levels::mode_of_dial(opt_str(&inp["value"]));
+            if exp["ok"].as_bool() == Some(true) {
+                same!(got.clone().unwrap(), s(&exp["mode"]), "mode");
+            } else {
+                same!(got.clone().unwrap_err(), s(&exp["error"]), "the refusal");
+            }
+        }
+        "experiment_room" => {
+            let got = levels::experiment_ok(s(&inp["level"]), inp["experiment"].as_bool().unwrap_or(false));
+            if exp["ok"].as_bool() == Some(true) {
+                same!(got.is_ok(), true, "ok");
+            } else {
+                same!(got.clone().unwrap_err(), s(&exp["error"]), "the refusal");
+            }
+        }
+        "level_absolute" => {
+            let got = levels::absolute(s(&inp["universe"]), opt_str(&inp["at"]));
+            if exp["ok"].as_bool() == Some(true) {
+                same!(got.clone().unwrap(), s(&exp["path"]), "path");
+            } else {
+                same!(got.clone().unwrap_err(), s(&exp["error"]), "the refusal");
+            }
+        }
+        "cascade_fold" => {
+            let tiers = inp["tiers"].as_array().cloned().unwrap_or_default();
+            same!(levels::cascade(&tiers).unwrap(), exp["context"], "the resolved context");
+        }
+        "rollup_merge" => {
+            let mut b = levels::empty_bundle();
+            for r in inp["runs"].as_array().cloned().unwrap_or_default() {
+                b = levels::merge(&b, &levels::bundle_of(&r));
+            }
+            same!(b, exp["merged"], "the merged bundle");
+        }
+        "rollup_report" => {
+            let prior = (inp["prior"][0].as_f64().unwrap(), inp["prior"][1].as_f64().unwrap());
+            same!(levels::report(&inp["bundle"], s(&inp["objective"]), prior), exp["report"], "the report");
+        }
+        "rollup_tier_score" => {
+            let prior = (inp["prior"][0].as_f64().unwrap(), inp["prior"][1].as_f64().unwrap());
+            let objectives = inp["objectives"].as_array().cloned().unwrap_or_default();
+            same!(levels::tier_score(&inp["bundle"], &objectives, prior), exp["score"], "the tier score");
+        }
+        "level_fact" => {
+            let (path, mode, by, reason) = (s(&inp["path"]), s(&inp["mode"]), s(&inp["by"]), s(&inp["reason"]));
+            let experiment = inp["experiment"].as_bool().unwrap_or(false);
+            let payload = levels::opened_payload(path, mode, experiment, by, reason).unwrap();
+            same!(payload, exp["payload"], "the payload");
+            same!(json!(levels::opened_chain(by)), exp["chain"], "the chain");
+            same!(levels::LEVEL_OPENED, s(&exp["type"]), "the type");
+            let env = json!({
+                "specversion": envelope::SPECVERSION, "message_id": inp["message_id"], "message_kind": "event",
+                "type": levels::LEVEL_OPENED, "universe_id": levels::universe_of(path).unwrap(), "scope_path": path,
+                "occurred_at": inp["occurred_at"], "payload": payload, "correlation_id": path,
+                "authority_chain": levels::opened_chain(by),
+            });
+            same!(env["universe_id"], exp["universe_id"], "universe_id");
+            same!(env["scope_path"], exp["scope_path"], "scope_path");
+            same!(
+                String::from_utf8(envelope::encode(&env).map_err(|e| e.to_string())?).unwrap(),
+                s(&exp["bytes"]),
+                "the bytes"
+            );
+            same!(levels::opened_words(path, mode, experiment).unwrap(), s(&exp["words"]), "the words");
+        }
         "rail_names" => {
             let (ns, name) = (s(&inp["ns"]), opt_str(&inp["name"]));
             let got = serde_json::json!({

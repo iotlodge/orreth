@@ -385,8 +385,9 @@ pub const OPEN_POST: [&str; 6] = [
 ];
 /// P7 sp8 row 3b: a body's own words wear its LEASE (a seat with the role `body`).
 pub const LEASE_POST: [&str; 1] = ["/delta"];
-pub const GOVERN_POST: [&str; 14] = [
+pub const GOVERN_POST: [&str; 15] = [
     "/world/rehome",
+    "/levels/open", // Phase 8 sp1: a floor or room opens on a governing seat's word
     "/bodies/restart",
     "/parked/advance", // re-base sp1: advancing past a poison is an operator's explicit decision
     "/services",

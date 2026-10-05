@@ -1,0 +1,1586 @@
+{
+ "contract": "orreth.levels/1",
+ "version": 0,
+ "generated_by": "orreth_spine.levels (the Python reference) - rearch Phase 8 sp1, THE PATH: the path grammar, mode tighten-only, the cascade fold (0007 carried), the roll-up monoid (0005 carried), the level fact",
+ "generated_at": "2026-10-05T18:00:00Z",
+ "cases": [
+  {
+   "name": "path_parse: u:dev",
+   "kind": "path_parse",
+   "input": {
+    "path": "u:dev"
+   },
+   "expect": {
+    "ok": true,
+    "universe": "u:dev",
+    "level": "universe",
+    "name": "dev",
+    "parent": null,
+    "ancestors": [
+     "u:dev"
+    ],
+    "words": "universe dev"
+   }
+  },
+  {
+   "name": "path_parse: u:dev/f:ops",
+   "kind": "path_parse",
+   "input": {
+    "path": "u:dev/f:ops"
+   },
+   "expect": {
+    "ok": true,
+    "universe": "u:dev",
+    "level": "floor",
+    "name": "ops",
+    "parent": "u:dev",
+    "ancestors": [
+     "u:dev",
+     "u:dev/f:ops"
+    ],
+    "words": "floor ops of universe dev"
+   }
+  },
+  {
+   "name": "path_parse: u:dev/f:ops/r:bob",
+   "kind": "path_parse",
+   "input": {
+    "path": "u:dev/f:ops/r:bob"
+   },
+   "expect": {
+    "ok": true,
+    "universe": "u:dev",
+    "level": "room",
+    "name": "bob",
+    "parent": "u:dev/f:ops",
+    "ancestors": [
+     "u:dev",
+     "u:dev/f:ops",
+     "u:dev/f:ops/r:bob"
+    ],
+    "words": "room bob on floor ops of universe dev"
+   }
+  },
+  {
+   "name": "path_parse: u:test-t1a2b3",
+   "kind": "path_parse",
+   "input": {
+    "path": "u:test-t1a2b3"
+   },
+   "expect": {
+    "ok": true,
+    "universe": "u:test-t1a2b3",
+    "level": "universe",
+    "name": "test-t1a2b3",
+    "parent": null,
+    "ancestors": [
+     "u:test-t1a2b3"
+    ],
+    "words": "universe test-t1a2b3"
+   }
+  },
+  {
+   "name": "path_parse: u:law-9f",
+   "kind": "path_parse",
+   "input": {
+    "path": "u:law-9f"
+   },
+   "expect": {
+    "ok": true,
+    "universe": "u:law-9f",
+    "level": "universe",
+    "name": "law-9f",
+    "parent": null,
+    "ancestors": [
+     "u:law-9f"
+    ],
+    "words": "universe law-9f"
+   }
+  },
+  {
+   "name": "path_parse: u:x/f:a-b_c/r:r1",
+   "kind": "path_parse",
+   "input": {
+    "path": "u:x/f:a-b_c/r:r1"
+   },
+   "expect": {
+    "ok": true,
+    "universe": "u:x",
+    "level": "room",
+    "name": "r1",
+    "parent": "u:x/f:a-b_c",
+    "ancestors": [
+     "u:x",
+     "u:x/f:a-b_c",
+     "u:x/f:a-b_c/r:r1"
+    ],
+    "words": "room r1 on floor a-b_c of universe x"
+   }
+  },
+  {
+   "name": "path_parse refuses: ''",
+   "kind": "path_parse",
+   "input": {
+    "path": ""
+   },
+   "expect": {
+    "ok": false,
+    "error": "a scope path reads u:<universe>, u:<universe>/f:<floor>, or u:<universe>/f:<floor>/r:<room> \u2014 got ''"
+   }
+  },
+  {
+   "name": "path_parse refuses: 'f:ops'",
+   "kind": "path_parse",
+   "input": {
+    "path": "f:ops"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a scope path reads u:<universe>, u:<universe>/f:<floor>, or u:<universe>/f:<floor>/r:<room> \u2014 got 'f:ops'"
+   }
+  },
+  {
+   "name": "path_parse refuses: 'u:dev/r:bob'",
+   "kind": "path_parse",
+   "input": {
+    "path": "u:dev/r:bob"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a scope path reads u:<universe>, u:<universe>/f:<floor>, or u:<universe>/f:<floor>/r:<room> \u2014 got 'u:dev/r:bob'"
+   }
+  },
+  {
+   "name": "path_parse refuses: 'u:dev/f:ops/r:bob/x:1'",
+   "kind": "path_parse",
+   "input": {
+    "path": "u:dev/f:ops/r:bob/x:1"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a scope path reads u:<universe>, u:<universe>/f:<floor>, or u:<universe>/f:<floor>/r:<room> \u2014 got 'u:dev/f:ops/r:bob/x:1'"
+   }
+  },
+  {
+   "name": "path_parse refuses: 'u:Dev'",
+   "kind": "path_parse",
+   "input": {
+    "path": "u:Dev"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a scope path reads u:<universe>, u:<universe>/f:<floor>, or u:<universe>/f:<floor>/r:<room> \u2014 got 'u:Dev'"
+   }
+  },
+  {
+   "name": "path_parse refuses: 'u:dev//f:x'",
+   "kind": "path_parse",
+   "input": {
+    "path": "u:dev//f:x"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a scope path reads u:<universe>, u:<universe>/f:<floor>, or u:<universe>/f:<floor>/r:<room> \u2014 got 'u:dev//f:x'"
+   }
+  },
+  {
+   "name": "path_parse refuses: 'u:dev/f:ops/f:two'",
+   "kind": "path_parse",
+   "input": {
+    "path": "u:dev/f:ops/f:two"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a scope path reads u:<universe>, u:<universe>/f:<floor>, or u:<universe>/f:<floor>/r:<room> \u2014 got 'u:dev/f:ops/f:two'"
+   }
+  },
+  {
+   "name": "path_parse refuses: 'dev'",
+   "kind": "path_parse",
+   "input": {
+    "path": "dev"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a scope path reads u:<universe>, u:<universe>/f:<floor>, or u:<universe>/f:<floor>/r:<room> \u2014 got 'dev'"
+   }
+  },
+  {
+   "name": "path_parse refuses: 'u:'",
+   "kind": "path_parse",
+   "input": {
+    "path": "u:"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a scope path reads u:<universe>, u:<universe>/f:<floor>, or u:<universe>/f:<floor>/r:<room> \u2014 got 'u:'"
+   }
+  },
+  {
+   "name": "path_parse refuses: 'u:dev/'",
+   "kind": "path_parse",
+   "input": {
+    "path": "u:dev/"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a scope path reads u:<universe>, u:<universe>/f:<floor>, or u:<universe>/f:<floor>/r:<room> \u2014 got 'u:dev/'"
+   }
+  },
+  {
+   "name": "path_parse refuses: 'u:dev/f:ops/r:'",
+   "kind": "path_parse",
+   "input": {
+    "path": "u:dev/f:ops/r:"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a scope path reads u:<universe>, u:<universe>/f:<floor>, or u:<universe>/f:<floor>/r:<room> \u2014 got 'u:dev/f:ops/r:'"
+   }
+  },
+  {
+   "name": "path_child: floor ops under u:dev",
+   "kind": "path_child",
+   "input": {
+    "parent": "u:dev",
+    "level": "floor",
+    "name": "ops"
+   },
+   "expect": {
+    "ok": true,
+    "path": "u:dev/f:ops"
+   }
+  },
+  {
+   "name": "path_child: room bob under u:dev/f:ops",
+   "kind": "path_child",
+   "input": {
+    "parent": "u:dev/f:ops",
+    "level": "room",
+    "name": "bob"
+   },
+   "expect": {
+    "ok": true,
+    "path": "u:dev/f:ops/r:bob"
+   }
+  },
+  {
+   "name": "path_child refuses: room 'bob' under u:dev",
+   "kind": "path_child",
+   "input": {
+    "parent": "u:dev",
+    "level": "room",
+    "name": "bob"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a room opens on a floor \u2014 u:dev is a universe"
+   }
+  },
+  {
+   "name": "path_child refuses: floor 'two' under u:dev/f:ops",
+   "kind": "path_child",
+   "input": {
+    "parent": "u:dev/f:ops",
+    "level": "floor",
+    "name": "two"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a floor opens under a universe \u2014 u:dev/f:ops is a floor"
+   }
+  },
+  {
+   "name": "path_child refuses: room 'deeper' under u:dev/f:ops/r:bob",
+   "kind": "path_child",
+   "input": {
+    "parent": "u:dev/f:ops/r:bob",
+    "level": "room",
+    "name": "deeper"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a room opens on a floor \u2014 u:dev/f:ops/r:bob is a room"
+   }
+  },
+  {
+   "name": "path_child refuses: universe 'two' under u:dev",
+   "kind": "path_child",
+   "input": {
+    "parent": "u:dev",
+    "level": "universe",
+    "name": "two"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a universe opens as a cell, never under another scope"
+   }
+  },
+  {
+   "name": "path_child refuses: floor 'Ops' under u:dev",
+   "kind": "path_child",
+   "input": {
+    "parent": "u:dev",
+    "level": "floor",
+    "name": "Ops"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a level's name is lower-case letters, digits, - and _ (1 to 48)"
+   }
+  },
+  {
+   "name": "path_child refuses: floor '' under u:dev",
+   "kind": "path_child",
+   "input": {
+    "parent": "u:dev",
+    "level": "floor",
+    "name": ""
+   },
+   "expect": {
+    "ok": false,
+    "error": "a level's name is lower-case letters, digits, - and _ (1 to 48)"
+   }
+  },
+  {
+   "name": "path_child refuses: wing 'x' under u:dev",
+   "kind": "path_child",
+   "input": {
+    "parent": "u:dev",
+    "level": "wing",
+    "name": "x"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a level is one of floor or room (a universe opens as a cell) \u2014 got 'wing'"
+   }
+  },
+  {
+   "name": "mode_tighten: None under dev",
+   "kind": "mode_tighten",
+   "input": {
+    "parent": "dev",
+    "asked": null
+   },
+   "expect": {
+    "ok": true,
+    "mode": "dev"
+   }
+  },
+  {
+   "name": "mode_tighten: '' under dev",
+   "kind": "mode_tighten",
+   "input": {
+    "parent": "dev",
+    "asked": ""
+   },
+   "expect": {
+    "ok": true,
+    "mode": "dev"
+   }
+  },
+  {
+   "name": "mode_tighten: 'dev' under dev",
+   "kind": "mode_tighten",
+   "input": {
+    "parent": "dev",
+    "asked": "dev"
+   },
+   "expect": {
+    "ok": true,
+    "mode": "dev"
+   }
+  },
+  {
+   "name": "mode_tighten: 'prod' under dev",
+   "kind": "mode_tighten",
+   "input": {
+    "parent": "dev",
+    "asked": "prod"
+   },
+   "expect": {
+    "ok": true,
+    "mode": "prod"
+   }
+  },
+  {
+   "name": "mode_tighten: 'PROD' under dev",
+   "kind": "mode_tighten",
+   "input": {
+    "parent": "dev",
+    "asked": "PROD"
+   },
+   "expect": {
+    "ok": true,
+    "mode": "prod"
+   }
+  },
+  {
+   "name": "mode_tighten: None under prod",
+   "kind": "mode_tighten",
+   "input": {
+    "parent": "prod",
+    "asked": null
+   },
+   "expect": {
+    "ok": true,
+    "mode": "prod"
+   }
+  },
+  {
+   "name": "mode_tighten: 'prod' under prod",
+   "kind": "mode_tighten",
+   "input": {
+    "parent": "prod",
+    "asked": "prod"
+   },
+   "expect": {
+    "ok": true,
+    "mode": "prod"
+   }
+  },
+  {
+   "name": "mode_tighten refuses: 'dev' under prod",
+   "kind": "mode_tighten",
+   "input": {
+    "parent": "prod",
+    "asked": "dev"
+   },
+   "expect": {
+    "ok": false,
+    "error": "mode only tightens down the path \u2014 under a prod level every floor and room is prod; dev is looser"
+   }
+  },
+  {
+   "name": "mode_tighten refuses: 'test' under dev",
+   "kind": "mode_tighten",
+   "input": {
+    "parent": "dev",
+    "asked": "test"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a mode is dev or prod \u2014 got 'test'"
+   }
+  },
+  {
+   "name": "mode_tighten refuses: 'dev' under stage",
+   "kind": "mode_tighten",
+   "input": {
+    "parent": "stage",
+    "asked": "dev"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a mode is dev or prod \u2014 got 'stage'"
+   }
+  },
+  {
+   "name": "mode_dial: None",
+   "kind": "mode_dial",
+   "input": {
+    "value": null
+   },
+   "expect": {
+    "ok": true,
+    "mode": "dev"
+   }
+  },
+  {
+   "name": "mode_dial: ''",
+   "kind": "mode_dial",
+   "input": {
+    "value": ""
+   },
+   "expect": {
+    "ok": true,
+    "mode": "dev"
+   }
+  },
+  {
+   "name": "mode_dial: 'dev'",
+   "kind": "mode_dial",
+   "input": {
+    "value": "dev"
+   },
+   "expect": {
+    "ok": true,
+    "mode": "dev"
+   }
+  },
+  {
+   "name": "mode_dial: 'prod'",
+   "kind": "mode_dial",
+   "input": {
+    "value": "prod"
+   },
+   "expect": {
+    "ok": true,
+    "mode": "prod"
+   }
+  },
+  {
+   "name": "mode_dial: ' Prod '",
+   "kind": "mode_dial",
+   "input": {
+    "value": " Prod "
+   },
+   "expect": {
+    "ok": true,
+    "mode": "prod"
+   }
+  },
+  {
+   "name": "mode_dial refuses: 'staging'",
+   "kind": "mode_dial",
+   "input": {
+    "value": "staging"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a universe's mode is dev or prod \u2014 SPINE_MODE says 'staging'"
+   }
+  },
+  {
+   "name": "experiment_room: room experiment=True",
+   "kind": "experiment_room",
+   "input": {
+    "level": "room",
+    "experiment": true
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "experiment_room: room experiment=False",
+   "kind": "experiment_room",
+   "input": {
+    "level": "room",
+    "experiment": false
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "experiment_room refuses: floor experiment=True",
+   "kind": "experiment_room",
+   "input": {
+    "level": "floor",
+    "experiment": true
+   },
+   "expect": {
+    "ok": false,
+    "error": "only a room opens as an experiment room"
+   }
+  },
+  {
+   "name": "experiment_room: floor experiment=False",
+   "kind": "experiment_room",
+   "input": {
+    "level": "floor",
+    "experiment": false
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "experiment_room refuses: universe experiment=True",
+   "kind": "experiment_room",
+   "input": {
+    "level": "universe",
+    "experiment": true
+   },
+   "expect": {
+    "ok": false,
+    "error": "only a room opens as an experiment room"
+   }
+  },
+  {
+   "name": "cascade_fold: three_tier_chain \u2014 soft most-specific-wins and attributed \u00b7 skills additive, higher version wins \u00b7 floors sorted by content hash \u00b7 mode the tightest \u00b7 the id the content hash",
+   "kind": "cascade_fold",
+   "input": {
+    "tiers": [
+     {
+      "scope": "u:demo",
+      "version": "0.0.1",
+      "mode": "dev",
+      "skills": {
+       "pitching": "1.0.0"
+      },
+      "soft": {
+       "tone": {
+        "value": "wild",
+        "version": "1.0.0"
+       }
+      },
+      "floors": [
+       {
+        "action": "keep-raw",
+        "keep_for": "P90D",
+        "match": {
+         "outcome": "failure"
+        },
+        "reason": "failures survive"
+       }
+      ]
+     },
+     {
+      "scope": "u:demo/f:cloud",
+      "version": "0.0.1",
+      "mode": "dev",
+      "skills": {
+       "scouting": "1.0.0"
+      },
+      "soft": {},
+      "floors": [
+       {
+        "action": "refuse",
+        "match": {
+         "tool": "erase-record"
+        },
+        "reason": "grave acts need L3"
+       }
+      ]
+     },
+     {
+      "scope": "u:demo/f:cloud/r:prod",
+      "version": "0.0.1",
+      "mode": "prod",
+      "skills": {
+       "pitching": "2.0.0"
+      },
+      "soft": {
+       "tone": {
+        "value": "REAL",
+        "version": "1.0.0"
+       }
+      },
+      "floors": []
+     }
+    ]
+   },
+   "expect": {
+    "context": {
+     "id": "sha256:88fe45d773fa154d931bc95dd6667687ac90aef3e3bff427493e083684991b9f",
+     "scope": "u:demo/f:cloud/r:prod",
+     "mode": "prod",
+     "floors": [
+      {
+       "action": "refuse",
+       "match": {
+        "tool": "erase-record"
+       },
+       "reason": "grave acts need L3"
+      },
+      {
+       "action": "keep-raw",
+       "keep_for": "P90D",
+       "match": {
+        "outcome": "failure"
+       },
+       "reason": "failures survive"
+      }
+     ],
+     "soft": {
+      "tone": {
+       "value": "REAL",
+       "from_scope": "u:demo/f:cloud/r:prod",
+       "version": "1.0.0"
+      }
+     },
+     "skills": {
+      "pitching": "2.0.0",
+      "scouting": "1.0.0"
+     },
+     "as_of": [
+      {
+       "scope": "u:demo",
+       "version": "0.0.1",
+       "mode": "dev"
+      },
+      {
+       "scope": "u:demo/f:cloud",
+       "version": "0.0.1",
+       "mode": "dev"
+      },
+      {
+       "scope": "u:demo/f:cloud/r:prod",
+       "version": "0.0.1",
+       "mode": "prod"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "cascade_fold: the same chain declared in another order \u2014 the same id",
+   "kind": "cascade_fold",
+   "input": {
+    "tiers": [
+     {
+      "scope": "u:demo",
+      "version": "0.0.1",
+      "mode": "dev",
+      "skills": {
+       "pitching": "1.0.0"
+      },
+      "soft": {
+       "tone": {
+        "value": "wild",
+        "version": "1.0.0"
+       }
+      },
+      "floors": [
+       {
+        "action": "refuse",
+        "match": {
+         "tool": "erase-record"
+        },
+        "reason": "grave acts need L3"
+       }
+      ]
+     },
+     {
+      "scope": "u:demo/f:cloud",
+      "version": "0.0.1",
+      "mode": "dev",
+      "skills": {
+       "scouting": "1.0.0"
+      },
+      "soft": {},
+      "floors": [
+       {
+        "action": "keep-raw",
+        "keep_for": "P90D",
+        "match": {
+         "outcome": "failure"
+        },
+        "reason": "failures survive"
+       }
+      ]
+     },
+     {
+      "scope": "u:demo/f:cloud/r:prod",
+      "version": "0.0.1",
+      "mode": "prod",
+      "skills": {
+       "pitching": "2.0.0"
+      },
+      "soft": {
+       "tone": {
+        "value": "REAL",
+        "version": "1.0.0"
+       }
+      },
+      "floors": []
+     }
+    ]
+   },
+   "expect": {
+    "context": {
+     "id": "sha256:88fe45d773fa154d931bc95dd6667687ac90aef3e3bff427493e083684991b9f",
+     "scope": "u:demo/f:cloud/r:prod",
+     "mode": "prod",
+     "floors": [
+      {
+       "action": "refuse",
+       "match": {
+        "tool": "erase-record"
+       },
+       "reason": "grave acts need L3"
+      },
+      {
+       "action": "keep-raw",
+       "keep_for": "P90D",
+       "match": {
+        "outcome": "failure"
+       },
+       "reason": "failures survive"
+      }
+     ],
+     "soft": {
+      "tone": {
+       "value": "REAL",
+       "from_scope": "u:demo/f:cloud/r:prod",
+       "version": "1.0.0"
+      }
+     },
+     "skills": {
+      "pitching": "2.0.0",
+      "scouting": "1.0.0"
+     },
+     "as_of": [
+      {
+       "scope": "u:demo",
+       "version": "0.0.1",
+       "mode": "dev"
+      },
+      {
+       "scope": "u:demo/f:cloud",
+       "version": "0.0.1",
+       "mode": "dev"
+      },
+      {
+       "scope": "u:demo/f:cloud/r:prod",
+       "version": "0.0.1",
+       "mode": "prod"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "cascade_fold: a universe alone \u2014 no soft, no skills, no floors",
+   "kind": "cascade_fold",
+   "input": {
+    "tiers": [
+     {
+      "scope": "u:dev",
+      "mode": "dev",
+      "version": "0"
+     }
+    ]
+   },
+   "expect": {
+    "context": {
+     "id": "sha256:3e5e99c903476be68e988a63edba9e61b08b50e865601b179b0c0eac5ddb6d38",
+     "scope": "u:dev",
+     "mode": "dev",
+     "floors": [],
+     "soft": {},
+     "skills": {},
+     "as_of": [
+      {
+       "scope": "u:dev",
+       "version": "0",
+       "mode": "dev"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "cascade_fold: a version compares by its numbers (1.10.0 beats 1.9.3-rc1)",
+   "kind": "cascade_fold",
+   "input": {
+    "tiers": [
+     {
+      "scope": "u:v",
+      "mode": "dev",
+      "skills": {
+       "a": "1.10.0"
+      }
+     },
+     {
+      "scope": "u:v/f:x",
+      "mode": "dev",
+      "skills": {
+       "a": "1.9.3-rc1"
+      }
+     }
+    ]
+   },
+   "expect": {
+    "context": {
+     "id": "sha256:e1e5641c5a2e749fc605cc2b3804597d96e1b29a85d944857f2e4cabc5aba7ef",
+     "scope": "u:v/f:x",
+     "mode": "dev",
+     "floors": [],
+     "soft": {},
+     "skills": {
+      "a": "1.10.0"
+     },
+     "as_of": [
+      {
+       "scope": "u:v",
+       "version": "0",
+       "mode": "dev"
+      },
+      {
+       "scope": "u:v/f:x",
+       "version": "0",
+       "mode": "dev"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "rollup_merge: simple",
+   "kind": "rollup_merge",
+   "input": {
+    "runs": [
+     {
+      "outcome": "success",
+      "scores": [
+       {
+        "objective": "reliability",
+        "score": 0.9
+       }
+      ],
+      "cost": {
+       "tokens": 100
+      }
+     },
+     {
+      "outcome": "success",
+      "scores": [
+       {
+        "objective": "reliability",
+        "score": 0.8
+       }
+      ],
+      "cost": {
+       "tokens": 100
+      }
+     },
+     {
+      "outcome": "success",
+      "scores": [
+       {
+        "objective": "reliability",
+        "score": 0.7
+       }
+      ],
+      "cost": {
+       "tokens": 100
+      }
+     }
+    ]
+   },
+   "expect": {
+    "merged": {
+     "n": 3,
+     "outcomes": {
+      "success": 3,
+      "failure": 0,
+      "partial": 0,
+      "aborted": 0
+     },
+     "per_objective": [
+      {
+       "objective": "reliability",
+       "n": 3,
+       "sum": 2.4000000000000004,
+       "sum_sq": 1.9400000000000002,
+       "min": 0.7,
+       "max": 0.9,
+       "floor_breaches": 0
+      }
+     ],
+     "cost": {
+      "tokens": 300,
+      "model_calls": 0,
+      "usd": 0,
+      "wall_ms": 0
+     },
+     "compliance": "clean"
+    }
+   }
+  },
+  {
+   "name": "rollup_report: simple \u2014 reliability under the uniform prior",
+   "kind": "rollup_report",
+   "input": {
+    "bundle": {
+     "n": 3,
+     "outcomes": {
+      "success": 3,
+      "failure": 0,
+      "partial": 0,
+      "aborted": 0
+     },
+     "per_objective": [
+      {
+       "objective": "reliability",
+       "n": 3,
+       "sum": 2.4000000000000004,
+       "sum_sq": 1.9400000000000002,
+       "min": 0.7,
+       "max": 0.9,
+       "floor_breaches": 0
+      }
+     ],
+     "cost": {
+      "tokens": 300,
+      "model_calls": 0,
+      "usd": 0,
+      "wall_ms": 0
+     },
+     "compliance": "clean"
+    },
+    "objective": "reliability",
+    "prior": [
+     1.0,
+     1.0
+    ]
+   },
+   "expect": {
+    "report": {
+     "mean": 0.68,
+     "ci95": [
+      0.3067413408014938,
+      1.0
+     ],
+     "n": 3,
+     "compliance": "clean",
+     "floor_breaches": 0
+    }
+   }
+  },
+  {
+   "name": "rollup_tier_score: simple \u2014 floors gate, weights average",
+   "kind": "rollup_tier_score",
+   "input": {
+    "bundle": {
+     "n": 3,
+     "outcomes": {
+      "success": 3,
+      "failure": 0,
+      "partial": 0,
+      "aborted": 0
+     },
+     "per_objective": [
+      {
+       "objective": "reliability",
+       "n": 3,
+       "sum": 2.4000000000000004,
+       "sum_sq": 1.9400000000000002,
+       "min": 0.7,
+       "max": 0.9,
+       "floor_breaches": 0
+      }
+     ],
+     "cost": {
+      "tokens": 300,
+      "model_calls": 0,
+      "usd": 0,
+      "wall_ms": 0
+     },
+     "compliance": "clean"
+    },
+    "objectives": [
+     {
+      "objective": "reliability",
+      "weight": 0.7
+     },
+     {
+      "objective": "compliance",
+      "weight": 0.3,
+      "floor": true
+     }
+    ],
+    "prior": [
+     1.0,
+     1.0
+    ]
+   },
+   "expect": {
+    "score": {
+     "score": 0.68,
+     "compliance": "clean"
+    }
+   }
+  },
+  {
+   "name": "rollup_merge: a breach anywhere is a breach of the whole",
+   "kind": "rollup_merge",
+   "input": {
+    "runs": [
+     {
+      "outcome": "success",
+      "scores": [
+       {
+        "objective": "reliability",
+        "score": 0.9
+       }
+      ],
+      "cost": {
+       "tokens": 100
+      }
+     },
+     {
+      "outcome": "success",
+      "scores": [
+       {
+        "objective": "reliability",
+        "score": 0.8
+       }
+      ],
+      "cost": {
+       "tokens": 100
+      }
+     },
+     {
+      "outcome": "success",
+      "scores": [
+       {
+        "objective": "reliability",
+        "score": 0.7
+       }
+      ],
+      "cost": {
+       "tokens": 100
+      }
+     },
+     {
+      "outcome": "success",
+      "scores": [
+       {
+        "objective": "reliability",
+        "score": 0.95
+       }
+      ],
+      "cost": {
+       "tokens": 100
+      }
+     },
+     {
+      "outcome": "success",
+      "scores": [
+       {
+        "objective": "reliability",
+        "score": 0.6
+       }
+      ],
+      "cost": {
+       "tokens": 100
+      }
+     },
+     {
+      "outcome": "failure",
+      "scores": [
+       {
+        "objective": "compliance",
+        "score": 0.98,
+        "floor_breached": true
+       }
+      ],
+      "cost": {
+       "tokens": 100
+      }
+     }
+    ]
+   },
+   "expect": {
+    "merged": {
+     "n": 6,
+     "outcomes": {
+      "success": 5,
+      "failure": 1,
+      "partial": 0,
+      "aborted": 0
+     },
+     "per_objective": [
+      {
+       "objective": "compliance",
+       "n": 1,
+       "sum": 0.98,
+       "sum_sq": 0.9603999999999999,
+       "min": 0.98,
+       "max": 0.98,
+       "floor_breaches": 1
+      },
+      {
+       "objective": "reliability",
+       "n": 5,
+       "sum": 3.9500000000000006,
+       "sum_sq": 3.2025,
+       "min": 0.6,
+       "max": 0.95,
+       "floor_breaches": 0
+      }
+     ],
+     "cost": {
+      "tokens": 600,
+      "model_calls": 0,
+      "usd": 0,
+      "wall_ms": 0
+     },
+     "compliance": "breached"
+    }
+   }
+  },
+  {
+   "name": "rollup_report: a breach anywhere is a breach of the whole \u2014 reliability under the uniform prior",
+   "kind": "rollup_report",
+   "input": {
+    "bundle": {
+     "n": 6,
+     "outcomes": {
+      "success": 5,
+      "failure": 1,
+      "partial": 0,
+      "aborted": 0
+     },
+     "per_objective": [
+      {
+       "objective": "compliance",
+       "n": 1,
+       "sum": 0.98,
+       "sum_sq": 0.9603999999999999,
+       "min": 0.98,
+       "max": 0.98,
+       "floor_breaches": 1
+      },
+      {
+       "objective": "reliability",
+       "n": 5,
+       "sum": 3.9500000000000006,
+       "sum_sq": 3.2025,
+       "min": 0.6,
+       "max": 0.95,
+       "floor_breaches": 0
+      }
+     ],
+     "cost": {
+      "tokens": 600,
+      "model_calls": 0,
+      "usd": 0,
+      "wall_ms": 0
+     },
+     "compliance": "breached"
+    },
+    "objective": "reliability",
+    "prior": [
+     1.0,
+     1.0
+    ]
+   },
+   "expect": {
+    "report": {
+     "mean": 0.7071428571428573,
+     "ci95": [
+      0.39179305137155196,
+      1.0
+     ],
+     "n": 5,
+     "compliance": "breached",
+     "floor_breaches": 0
+    }
+   }
+  },
+  {
+   "name": "rollup_tier_score: a breach anywhere is a breach of the whole \u2014 floors gate, weights average",
+   "kind": "rollup_tier_score",
+   "input": {
+    "bundle": {
+     "n": 6,
+     "outcomes": {
+      "success": 5,
+      "failure": 1,
+      "partial": 0,
+      "aborted": 0
+     },
+     "per_objective": [
+      {
+       "objective": "compliance",
+       "n": 1,
+       "sum": 0.98,
+       "sum_sq": 0.9603999999999999,
+       "min": 0.98,
+       "max": 0.98,
+       "floor_breaches": 1
+      },
+      {
+       "objective": "reliability",
+       "n": 5,
+       "sum": 3.9500000000000006,
+       "sum_sq": 3.2025,
+       "min": 0.6,
+       "max": 0.95,
+       "floor_breaches": 0
+      }
+     ],
+     "cost": {
+      "tokens": 600,
+      "model_calls": 0,
+      "usd": 0,
+      "wall_ms": 0
+     },
+     "compliance": "breached"
+    },
+    "objectives": [
+     {
+      "objective": "reliability",
+      "weight": 0.7
+     },
+     {
+      "objective": "compliance",
+      "weight": 0.3,
+      "floor": true
+     }
+    ],
+    "prior": [
+     1.0,
+     1.0
+    ]
+   },
+   "expect": {
+    "score": {
+     "score": 0.7071428571428573,
+     "compliance": "breached"
+    }
+   }
+  },
+  {
+   "name": "rollup_merge: the empty bundle is the identity",
+   "kind": "rollup_merge",
+   "input": {
+    "runs": []
+   },
+   "expect": {
+    "merged": {
+     "n": 0,
+     "outcomes": {
+      "success": 0,
+      "failure": 0,
+      "partial": 0,
+      "aborted": 0
+     },
+     "per_objective": [],
+     "cost": {
+      "tokens": 0,
+      "model_calls": 0,
+      "usd": 0,
+      "wall_ms": 0
+     },
+     "compliance": "clean"
+    }
+   }
+  },
+  {
+   "name": "rollup_report: an objective never scored \u2014 the prior alone, n 0",
+   "kind": "rollup_report",
+   "input": {
+    "bundle": {
+     "n": 0,
+     "outcomes": {
+      "success": 0,
+      "failure": 0,
+      "partial": 0,
+      "aborted": 0
+     },
+     "per_objective": [],
+     "cost": {
+      "tokens": 0,
+      "model_calls": 0,
+      "usd": 0,
+      "wall_ms": 0
+     },
+     "compliance": "clean"
+    },
+    "objective": "reliability",
+    "prior": [
+     1.0,
+     1.0
+    ]
+   },
+   "expect": {
+    "report": {
+     "mean": 0.5,
+     "ci95": [
+      0.0,
+      1.0
+     ],
+     "n": 0,
+     "compliance": "clean",
+     "floor_breaches": 0
+    }
+   }
+  },
+  {
+   "name": "level_fact: universe fixture \u2014 opened at light",
+   "kind": "level_fact",
+   "input": {
+    "path": "u:fixture",
+    "mode": "dev",
+    "experiment": false,
+    "by": "the kernel",
+    "reason": "opened at light",
+    "message_id": "msg_aaaaaaaaaaaaaaaaaaaaaaaa",
+    "occurred_at": "2026-10-05T15:00:00.000Z"
+   },
+   "expect": {
+    "type": "orreth.level.opened.v1",
+    "payload": {
+     "ref": "u:fixture",
+     "hash": "sha256:ee6d80aa28b5832bdf9d0a5a56b0d0296fe25ca65b8931437dec287dbf6a7616",
+     "level": "universe",
+     "name": "fixture",
+     "parent": null,
+     "mode": "dev",
+     "experiment": false,
+     "by": "the kernel",
+     "reason": "opened at light"
+    },
+    "chain": [
+     "the kernel"
+    ],
+    "correlation_id": "u:fixture",
+    "universe_id": "u:fixture",
+    "scope_path": "u:fixture",
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"u:fixture\",\"message_id\":\"msg_aaaaaaaaaaaaaaaaaaaaaaaa\",\"message_kind\":\"event\",\"occurred_at\":\"2026-10-05T15:00:00.000Z\",\"payload\":{\"by\":\"the kernel\",\"experiment\":false,\"hash\":\"sha256:ee6d80aa28b5832bdf9d0a5a56b0d0296fe25ca65b8931437dec287dbf6a7616\",\"level\":\"universe\",\"mode\":\"dev\",\"name\":\"fixture\",\"parent\":null,\"reason\":\"opened at light\",\"ref\":\"u:fixture\"},\"scope_path\":\"u:fixture\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.level.opened.v1\",\"universe_id\":\"u:fixture\"}",
+    "words": "universe fixture is open (dev)"
+   }
+  },
+  {
+   "name": "level_fact: floor ops of universe fixture \u2014 declared by the crew manifest",
+   "kind": "level_fact",
+   "input": {
+    "path": "u:fixture/f:ops",
+    "mode": "dev",
+    "experiment": false,
+    "by": "the crew manifest",
+    "reason": "declared by the crew manifest",
+    "message_id": "msg_aaaaaaaaaaaaaaaaaaaaaaaa",
+    "occurred_at": "2026-10-05T15:00:00.000Z"
+   },
+   "expect": {
+    "type": "orreth.level.opened.v1",
+    "payload": {
+     "ref": "u:fixture/f:ops",
+     "hash": "sha256:2a3e10e593e1b6fb3cb698fc52d8274a158352cb3d8c7c57790e21580fe7812e",
+     "level": "floor",
+     "name": "ops",
+     "parent": "u:fixture",
+     "mode": "dev",
+     "experiment": false,
+     "by": "the crew manifest",
+     "reason": "declared by the crew manifest"
+    },
+    "chain": [
+     "the kernel"
+    ],
+    "correlation_id": "u:fixture/f:ops",
+    "universe_id": "u:fixture",
+    "scope_path": "u:fixture/f:ops",
+    "bytes": "{\"authority_chain\":[\"the kernel\"],\"correlation_id\":\"u:fixture/f:ops\",\"message_id\":\"msg_aaaaaaaaaaaaaaaaaaaaaaaa\",\"message_kind\":\"event\",\"occurred_at\":\"2026-10-05T15:00:00.000Z\",\"payload\":{\"by\":\"the crew manifest\",\"experiment\":false,\"hash\":\"sha256:2a3e10e593e1b6fb3cb698fc52d8274a158352cb3d8c7c57790e21580fe7812e\",\"level\":\"floor\",\"mode\":\"dev\",\"name\":\"ops\",\"parent\":\"u:fixture\",\"reason\":\"declared by the crew manifest\",\"ref\":\"u:fixture/f:ops\"},\"scope_path\":\"u:fixture/f:ops\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.level.opened.v1\",\"universe_id\":\"u:fixture\"}",
+    "words": "floor ops of universe fixture is open (dev)"
+   }
+  },
+  {
+   "name": "level_fact: room bob on floor ops of universe fixture \u2014 opened on a person's word",
+   "kind": "level_fact",
+   "input": {
+    "path": "u:fixture/f:ops/r:bob",
+    "mode": "prod",
+    "experiment": true,
+    "by": "did:orreth:person:jb",
+    "reason": "opened on a person's word",
+    "message_id": "msg_aaaaaaaaaaaaaaaaaaaaaaaa",
+    "occurred_at": "2026-10-05T15:00:00.000Z"
+   },
+   "expect": {
+    "type": "orreth.level.opened.v1",
+    "payload": {
+     "ref": "u:fixture/f:ops/r:bob",
+     "hash": "sha256:38021e18e08a28d0f3648f5087b65a4a037be0576bb07af1da3f927314ec7fac",
+     "level": "room",
+     "name": "bob",
+     "parent": "u:fixture/f:ops",
+     "mode": "prod",
+     "experiment": true,
+     "by": "did:orreth:person:jb",
+     "reason": "opened on a person's word"
+    },
+    "chain": [
+     "did:orreth:person:jb",
+     "the kernel"
+    ],
+    "correlation_id": "u:fixture/f:ops/r:bob",
+    "universe_id": "u:fixture",
+    "scope_path": "u:fixture/f:ops/r:bob",
+    "bytes": "{\"authority_chain\":[\"did:orreth:person:jb\",\"the kernel\"],\"correlation_id\":\"u:fixture/f:ops/r:bob\",\"message_id\":\"msg_aaaaaaaaaaaaaaaaaaaaaaaa\",\"message_kind\":\"event\",\"occurred_at\":\"2026-10-05T15:00:00.000Z\",\"payload\":{\"by\":\"did:orreth:person:jb\",\"experiment\":true,\"hash\":\"sha256:38021e18e08a28d0f3648f5087b65a4a037be0576bb07af1da3f927314ec7fac\",\"level\":\"room\",\"mode\":\"prod\",\"name\":\"bob\",\"parent\":\"u:fixture/f:ops\",\"reason\":\"opened on a person's word\",\"ref\":\"u:fixture/f:ops/r:bob\"},\"scope_path\":\"u:fixture/f:ops/r:bob\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.level.opened.v1\",\"universe_id\":\"u:fixture\"}",
+    "words": "room bob on floor ops of universe fixture is open (prod) \u2014 an experiment room: nothing promotes out of it except through the Experiment gate"
+   }
+  },
+  {
+   "name": "level_absolute: None in u:dev",
+   "kind": "level_absolute",
+   "input": {
+    "universe": "u:dev",
+    "at": null
+   },
+   "expect": {
+    "ok": true,
+    "path": "u:dev"
+   }
+  },
+  {
+   "name": "level_absolute: '' in u:dev",
+   "kind": "level_absolute",
+   "input": {
+    "universe": "u:dev",
+    "at": ""
+   },
+   "expect": {
+    "ok": true,
+    "path": "u:dev"
+   }
+  },
+  {
+   "name": "level_absolute: 'f:ops' in u:dev",
+   "kind": "level_absolute",
+   "input": {
+    "universe": "u:dev",
+    "at": "f:ops"
+   },
+   "expect": {
+    "ok": true,
+    "path": "u:dev/f:ops"
+   }
+  },
+  {
+   "name": "level_absolute: 'f:ops/r:bob' in u:dev",
+   "kind": "level_absolute",
+   "input": {
+    "universe": "u:dev",
+    "at": "f:ops/r:bob"
+   },
+   "expect": {
+    "ok": true,
+    "path": "u:dev/f:ops/r:bob"
+   }
+  },
+  {
+   "name": "level_absolute: 'u:dev/f:ops' in u:dev",
+   "kind": "level_absolute",
+   "input": {
+    "universe": "u:dev",
+    "at": "u:dev/f:ops"
+   },
+   "expect": {
+    "ok": true,
+    "path": "u:dev/f:ops"
+   }
+  },
+  {
+   "name": "level_absolute refuses: 'u:two/f:ops' in u:dev",
+   "kind": "level_absolute",
+   "input": {
+    "universe": "u:dev",
+    "at": "u:two/f:ops"
+   },
+   "expect": {
+    "ok": false,
+    "error": "u:two/f:ops does not stand in u:dev"
+   }
+  },
+  {
+   "name": "level_absolute refuses: 'r:bob' in u:dev",
+   "kind": "level_absolute",
+   "input": {
+    "universe": "u:dev",
+    "at": "r:bob"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a scope path reads u:<universe>, u:<universe>/f:<floor>, or u:<universe>/f:<floor>/r:<room> \u2014 got 'u:dev/r:bob'"
+   }
+  }
+ ]
+}

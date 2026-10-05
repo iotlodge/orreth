@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P4 sp5, the scheduler · 2026-09-18
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W21 a duty is framed as a duty · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the tick under the beat lock (the loops' shadow law) · 2026-09-23
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """The scheduler — a kernel organ (canon 0004: three schedulers, one
 body). A SCHEDULE is a standing intention on the ground: HUMAN (the
 identity's, CRUD through the door), ROLE (declared by a body's template,
@@ -129,7 +130,7 @@ def add(conn, runner: str, kind: str, text: str, every_s: int, by: str,
             " next_at, added_by, scope, marker) VALUES (%s, %s, %s, %s, %s,"
             " now() + make_interval(secs => %s), %s, %s, %s)",
             (sid, runner, kind, text, int(every_s),
-             int(first_in_s if first_in_s is not None else 0), by, ev.scope(), mid))
+             int(first_in_s if first_in_s is not None else 0), by, ev.universe(), mid))
     return sid
 
 
@@ -139,7 +140,7 @@ def declared(conn, runner: str, kind: str, text: str, every_s: int, by: str) -> 
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT schedule_id, marker FROM spine_schedules WHERE runner = %s AND kind = %s"
-                " AND text = %s AND scope = %s", (runner, kind, text, ev.scope()))
+                " AND text = %s AND scope = %s", (runner, kind, text, ev.universe()))
     row = cur.fetchone()
     if row is None:
         return add(conn, runner, kind, text, every_s, by, first_in_s=every_s)
@@ -156,7 +157,7 @@ def rest(conn, schedule_id: str, by: str) -> None:
     """The human's stop: recorded, reversible in the Record, never a delete."""
     cur = conn.cursor()
     cur.execute("SELECT kind FROM spine_schedules WHERE schedule_id = %s AND scope = %s",
-                (schedule_id, ev.scope()))
+                (schedule_id, ev.universe()))
     row = cur.fetchone()
     if row is None:
         raise KeyError(schedule_id)
@@ -177,7 +178,7 @@ def for_runner(conn, runner: str) -> dict:
         " s.active, s.added_by, s.rested_by, s.rested_at,"
         " (SELECT count(*) FROM spine_occurrences o WHERE o.schedule_id = s.schedule_id)"
         " FROM spine_schedules s WHERE s.runner = %s AND s.scope = %s"
-        " ORDER BY s.kind, s.added_at", (runner, ev.scope()))
+        " ORDER BY s.kind, s.added_at", (runner, ev.universe()))
     out = {"human": [], "role": [], "kernel": []}
     for r in cur.fetchall():
         out[r[1]].append({
@@ -211,7 +212,7 @@ def _tick(conn, bodies: dict | None) -> list[dict]:
     cur = conn.cursor()
     cur.execute("SELECT schedule_id, runner, kind, text, every_s, added_by, marker, last_at"
                 " FROM spine_schedules WHERE active AND next_at <= now() AND scope = %s"
-                " ORDER BY next_at", (ev.scope(),))
+                " ORDER BY next_at", (ev.universe(),))
     occurred = []
     from .resident import HUMAN_ZONE_DEFAULT, HUMAN_ZONE_DIAL
     import os

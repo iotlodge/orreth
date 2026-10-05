@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the kernel-required face · the proof's demand · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, the gate: the unseated's face · the ceiling's · 2026-09-26
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: `within_sql` · 2026-10-05
 //! The world a bridge process stands in — its scope (`SPINE_SCOPE`), its
 //! benches (`SPINE_QUEUE_NS`), its rails — carried explicitly so a test can
 //! stand two worlds in one process; and the small idioms every live module
@@ -36,6 +37,12 @@ impl World {
             kafka: rails::kafka_bootstrap(),
         }
     }
+}
+
+/// Phase 8 sp1, THE PATH: the clause a listing at a level reads with — the level itself and
+/// everything within it (`col = $n OR col LIKE $n || '/%'`), one parameter, the path.
+pub fn within_sql(col: &str, n: usize) -> String {
+    format!("({col} = ${n} OR {col} LIKE ${n} || '/%')")
 }
 
 /// The road's refusals — each one a door's answer, never a bare code.

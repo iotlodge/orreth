@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7 walk #15, W54: the default cell means wherever this ground stands · 2026-09-25
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: refusals read at every level of the universe · 2026-10-05
 """Placement policy v0 (canon 0001 P10 · 0004 · 0005 P6 sp4): where a body
 may run is a rule of the world, never an accident.
 
@@ -150,7 +151,7 @@ def refuse(conn, body, prof: dict, ground: dict, reasons: list[str]) -> dict:
                "ground": {"cell": ground["cell"], "metal": ground["metal"]},
                "reasons": list(reasons)}
     e = ev.make_envelope(
-        kind="event", type=REFUSED, universe_id=ev.scope(), scope_path=ev.scope(),
+        kind="event", type=REFUSED, universe_id=ev.universe(), scope_path=ev.scope(),
         payload=payload, correlation_id=ref, authority_chain=["the kernel"], marker=marker)
 
     def domain(cur):
@@ -176,8 +177,8 @@ def refusals(conn) -> dict[str, dict]:
         return {}
     cur.execute(
         "SELECT DISTINCT ON (name) name, did, kind, template_hash, placement, ground, reasons,"
-        " marker, refused_at FROM spine_refusals WHERE scope = %s ORDER BY name, refusal_id DESC",
-        (ev.scope(),))
+        f" marker, refused_at FROM spine_refusals WHERE {ev.WITHIN} ORDER BY name, refusal_id DESC",
+        ev.within_params(ev.universe()))
     return {r[0]: {"name": r[0], "did": r[1], "kind": r[2], "template": r[3],
                    "placement": json.loads(r[4]), "ground": json.loads(r[5]),
                    "reasons": json.loads(r[6]), "marker": r[7], "refused_at": r[8]}

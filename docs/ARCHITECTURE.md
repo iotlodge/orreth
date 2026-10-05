@@ -72,7 +72,14 @@ broker: the glass listens to the **feed**, a stream of small pointers, and reads
 a door.
 
 **The crew** is ten bodies the kernel spawns and governs as its own processes, declared in one
-manifest (`spine/crew.v0.json`), each a template plus, for the workspace agents, a binding.
+manifest (`spine/crew.v0.json`), each a template plus, for the workspace agents, a binding. The
+manifest also declares the **levels** of the world (Phase 8 sp1, THE PATH): a universe is the
+cell itself; inside it a kernel serves **floors** and their **rooms** on one scope path
+(`u:dev/f:ops/r:bob`), and a seat may name the level it stands on (`"at": "f:ops"`) — the body is
+born with that level as its scope, joins at it, and what it writes about itself wears it. Mode
+(dev or prod) is declared when the cell opens (`SPINE_MODE`) and only tightens down the path; a
+listing at a level sees everything within it; a floor or room opens on a governing seat's word,
+held at L2 ("open floor ops" in the chat, or `POST /levels/open`).
 Residents have a name and a persona and are the ones who answer you: the **librarian** (reads and
 recalls what the world knows, keeps your words in the Record, reviews its day on the hour) and
 **echo** (repeats your words with no mind, so the road an ask takes can be seen). Firmware bodies
@@ -184,6 +191,9 @@ never a deletion.
 ---
 
 ## 6 · Cells and the seam — how two worlds speak
+
+A cell is a universe — one kernel, one database, one role. Inside it the kernel serves three
+levels on one path (universe · floor · room, Phase 8 sp1); between cells speaks the seam below.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/arch-seam-dark.svg">

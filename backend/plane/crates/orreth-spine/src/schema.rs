@@ -10,6 +10,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): SCHEMA VERSION 2 — the indexes the doors and the relay were missing · 2026-09-29
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: SCHEMA VERSION 3 — a watch's rest (`spine_watches.active` · `rested_by` · `rested_at`) and a peer's forgetting (`spine_peers.forgotten_by` · `forgotten_at`), recorded on their rows (rule 11) · 2026-09-29
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — schema 4: an ask's resent_at (W91 THE BENCH SWEEP) · 2026-10-02
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — schema 5: the levels (`spine_levels`, THE PATH, Phase 8 sp1) · 2026-10-05
 //! The ask road's tables — the Python spine's DDL, word for word, under the
 //! same tags its `once` guard uses (`resident` · `markers` · `proof` · `intent`
 //! · `presence` · `digest`), so two spines on one ground never disagree about a
@@ -35,7 +36,7 @@ use std::sync::LazyLock;
 /// (or past) its number runs no DDL at all — it VERIFIES that every table it declares
 /// stands, and refuses to light on a ground that lies. A kernel lighting beside a
 /// migrating one WAITS at the lock and then verifies (`Ground::ensure_all`).
-pub const SCHEMA_VERSION: i32 = 4; // 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02)
+pub const SCHEMA_VERSION: i32 = 5; // 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05)
 
 /// The version table itself — created before the version is read, under the same lock.
 pub const SCHEMA_DDL: &[&str] = &[
@@ -419,8 +420,17 @@ pub const DESK_DDL: &[&str] = &[
     "CREATE INDEX IF NOT EXISTS spine_desk_did ON spine_desk (scope, did)",
 ];
 
+/// The table its home module (`levels_live`) holds — Phase 8 sp1, THE PATH: one row per level
+/// of this universe (the universe itself, its floors, their rooms), the mode each wears.
+pub const LEVELS_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_levels ( path text PRIMARY KEY, scope text NOT NULL, level text NOT NULL, \
+     name text NOT NULL, parent text, mode text NOT NULL, experiment boolean NOT NULL DEFAULT false, declares \
+     text, opened_by text NOT NULL, opened_at timestamptz NOT NULL DEFAULT now(), ask text, marker text)",
+    "CREATE INDEX IF NOT EXISTS spine_levels_scope ON spine_levels (scope, parent)",
+];
+
 /// The tags and their DDL, in the order the road ensures them.
-pub const ROAD: [(&str, &[&str]); 21] = [
+pub const ROAD: [(&str, &[&str]); 22] = [
     ("resident", RESIDENT_DDL),
     ("markers", MARKERS_DDL),
     ("proof", PROOF_DDL),
@@ -444,6 +454,7 @@ pub const ROAD: [(&str, &[&str]); 21] = [
     ("mitl", MITL_DDL),
     ("placement", PLACEMENT_DDL),
     ("tools", TOOLS_DDL),
+    ("levels", LEVELS_DDL), // Phase 8 sp1: THE PATH — the levels of this universe (schema 5)
 ];
 
 /// Every table the ask road stands on, once per ground per process.

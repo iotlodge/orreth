@@ -1,6 +1,6 @@
 {
  "format": "orreth-guide/1",
- "version": "0.5.2",
+ "version": "0.6.0",
  "title": "THE GUIDE · what you can say here, and what happens",
  "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful",
  "sections": [
@@ -393,6 +393,34 @@
     {
      "say": "(when a peer is dark)",
      "does": "An ask routed to it reads PARKED in plain words — nothing is lost; the moment the peer answers again the ask goes and is answered once. The PEERS view says \"unreachable since\"."
+    }
+   ]
+  },
+  {
+   "id": "levels",
+   "when": "monitor",
+   "title": "Levels — the universe, its floors, their rooms",
+   "lead": "One kernel per cell serves three levels on one path: the UNIVERSE (this cell), its FLOORS, and their ROOMS (u:dev/f:ops/r:bob). A crew can be seated on any level by the crew manifest; what a body writes about itself wears its level, and a listing at a level sees everything within it. Mode only tightens down the path: a prod universe's floors and rooms are prod. The GROUND organ names the universe's mode and its levels.",
+   "entries": [
+    {
+     "say": "what levels are here?",
+     "does": "Every floor and room of this universe with its mode, who is seated there, and what rolls up from within it."
+    },
+    {
+     "say": "open floor ops",
+     "does": "Consequential: held at the interlock (a governing seat's yes). A floor under this universe, in the universe's mode — \"open floor ops as prod\" tightens it."
+    },
+    {
+     "say": "open room bob on floor ops as an experiment room",
+     "does": "A room on the floor; an experiment room is where a candidate cut is tried — nothing promotes out of it except through the Experiment gate (a later spoonful)."
+    },
+    {
+     "say": "open floor x as dev (under a prod universe)",
+     "does": "Refused in words: mode only tightens down the path."
+    },
+    {
+     "say": "SPINE_MODE=prod (in the kernel's environment at light)",
+     "does": "Declares the universe prod when its cell opens; a relight may tighten dev to prod and never loosen it — a prod universe refuses to light as dev."
     }
    ]
   }

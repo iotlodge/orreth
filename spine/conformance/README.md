@@ -301,3 +301,31 @@ the same files, unchanged — before any module earns the word "ported".
     cross): the canon split into passages the pack can carry whole; the metric a watch's words
     name; the ground in lines; the impact ask's text. `declare_kind` (markers-v0): the kind-name
     law — a short lowercase name, its group lowered (`declared` when none), the refusal's words.
+  - `path_parse` · `path_child` · `mode_tighten` · `mode_dial` · `experiment_room` ·
+    `level_absolute` (levels-v0, Phase 8 sp1 THE PATH) — the ScopePath's laws: a path
+    reads `u:<universe>[/f:<floor>[/r:<room>]]` (names lower-case letters, digits, - and _,
+    1 to 48) → its universe, level, name, parent, ancestors root to leaf, and its plain words
+    (`floor ops of universe dev`); a floor opens under a universe and a room on a floor (a
+    universe only as a cell); mode only tightens down the path (dev → prod, never back; unasked
+    = the parent's); `SPINE_MODE` unset → dev; only a room opens as an experiment room; a
+    manifest's `at` is relative to the universe (`f:ops` → `u:dev/f:ops`). Every refusal is in
+    words, pinned.
+  - `cascade_fold` (levels-v0) — 0007's resolver carried at its minimum: tiers root → leaf
+    (`scope · version · mode · soft · skills · floors`) → the resolved context: `soft`
+    most-specific-wins and ATTRIBUTED (`from_scope`), `skills` additive with the higher version
+    winning (compared by its numbers), `floors` the union sorted by content hash, `mode` the
+    tightest, `as_of` every tier in order, and the `id` = the content hash of the content —
+    the same chain declared in another order folds to the same id.
+  - `rollup_merge` · `rollup_report` · `rollup_tier_score` (levels-v0) — 0005's StatBundle
+    monoid carried whole: runs lifted and left-folded from the empty bundle (n · outcomes ·
+    per-objective n/sum/sum²/min/max/floor_breaches · cost · compliance — a breach anywhere
+    is a breach of the whole, never averaged away); the report's Beta posterior (mean · 95 %
+    interval by the normal approximation · n) with the prior applied ONCE; the tier score a
+    weighted mean over NON-floor objectives. The sums are pinned as the reference's doubles,
+    left-folded in the fixture's order — both kernels add in that order.
+  - `level_fact` (levels-v0) — `orreth.level.opened.v1` for a fixed id and clock: the path as
+    ref, its shape (level · name · parent · mode · experiment) hashed, who opened it and why;
+    `universe_id` the universe, `scope_path` the level's own path, the path as correlation;
+    the chain `[the kernel]` for the kernel's or the manifest's word, `[person, the kernel]`
+    for a person's; and the act's words (`floor ops of universe dev is open (dev)`).
+  - `schema_version` 5 · `schema_tables` 41 (schema-v0) — `spine_levels` joins at Phase 8 sp1.

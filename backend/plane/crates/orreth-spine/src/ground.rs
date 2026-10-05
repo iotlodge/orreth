@@ -298,7 +298,7 @@ pub async fn prune_scope(g: &mut Ground, scope: &str) -> Result<Vec<(String, u64
         }
         let n = tx
             .execute(
-                &format!("DELETE FROM {child} WHERE {key} IN (SELECT {pkey} FROM {parent} WHERE scope = $1)"),
+                &format!("DELETE FROM {child} WHERE {key} IN (SELECT {pkey} FROM {parent} WHERE (scope = $1 OR scope LIKE $1 || '/%'))"),
                 &[&scope],
             )
             .await?;
@@ -318,7 +318,7 @@ pub async fn prune_scope(g: &mut Ground, scope: &str) -> Result<Vec<(String, u64
         .collect();
     for t in tables {
         let n = tx
-            .execute(&format!("DELETE FROM {t} WHERE scope = $1"), &[&scope])
+            .execute(&format!("DELETE FROM {t} WHERE (scope = $1 OR scope LIKE $1 || '/%')"), &[&scope]) // Phase 8 sp1: every level
             .await?;
         if n > 0 {
             out.push((t, n));

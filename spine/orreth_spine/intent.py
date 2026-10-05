@@ -5,6 +5,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cures: W35 a stop asked is a stop held · W37 a duplicate purpose named at the door · W38 the honest word in more shapes · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c, THE REMEDIATION RAIL: the forensic turn · the lever road · the attributed outcome · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — W92 THE LOOP ON A FAILED THOUGHT: a failed thought is parked with a note, never filed · 2026-10-02
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """The intent loop — the fifth firmware-rail (canon 0007, block 11).
 
 Human INTENTION is the topmost origin of work. An intention is a record
@@ -204,7 +205,7 @@ def declare(conn, words: str, *, serves: str, kind: str, by: str,
     if kind == "human":                    # W37: a duplicate purpose is named at the door
         cur = conn.cursor()
         cur.execute("SELECT kind FROM spine_intentions WHERE words = %s AND scope = %s AND active"
-                    " ORDER BY added_at LIMIT 1", (words, ev.scope()))
+                    " ORDER BY added_at LIMIT 1", (words, ev.universe()))
         row = cur.fetchone()
         if row:
             raise ValueError(duplicate_words(row[0], words))
@@ -213,7 +214,7 @@ def declare(conn, words: str, *, serves: str, kind: str, by: str,
     sid = "ses_" + secrets.token_hex(6)
     marker = {"kind": "intention", "id": mid, "parent": None, "by": by}
     e = ev.make_envelope(
-        kind="event", type=INTENTION_DECLARED, universe_id=ev.scope(), scope_path=ev.scope(),
+        kind="event", type=INTENTION_DECLARED, universe_id=ev.universe(), scope_path=ev.universe(),
         payload={"ref": iid, "hash": ev.content_hash(words), "serves": serves, "kind": kind,
                  "interests": interests, "planner": planner, "every_s": every_s},
         correlation_id=iid, authority_chain=[by],
@@ -222,14 +223,14 @@ def declare(conn, words: str, *, serves: str, kind: str, by: str,
     def domain(cur):
         markers.insert(cur, mid, "intention", None, iid, by, words[:200])   # the root: WHY
         cur.execute("INSERT INTO spine_sessions (session_id, person, scope, title, state)"
-                    " VALUES (%s, %s, %s, %s, 'in')", (sid, by, ev.scope(), words[:120]))
+                    " VALUES (%s, %s, %s, %s, 'in')", (sid, by, ev.universe(), words[:120]))
         cur.execute(
             "INSERT INTO spine_intentions (intention_id, words, serves, kind, interests,"
             " planner, runner, every_s, gates, added_by, scope, marker, session, next_at)"
             " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,"
             " CASE WHEN %s::int IS NULL THEN NULL ELSE now() + make_interval(secs => %s) END)",
             (iid, words, serves, kind, json.dumps(interests), planner, runner, every_s,
-             json.dumps(gates) if gates else None, by, ev.scope(), mid, sid,
+             json.dumps(gates) if gates else None, by, ev.universe(), mid, sid,
              every_s, every_s or 0))
 
     outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)
@@ -242,7 +243,7 @@ def declared(conn, words: str, **kw) -> dict:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT intention_id FROM spine_intentions WHERE words = %s AND kind = %s"
-                " AND scope = %s", (" ".join(words.split()), kw.get("kind"), ev.scope()))
+                " AND scope = %s", (" ".join(words.split()), kw.get("kind"), ev.universe()))
     row = cur.fetchone()
     return get(conn, row[0]) if row else declare(conn, words, **kw)
 
@@ -251,7 +252,7 @@ def get(conn, intention_id: str) -> dict | None:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute(f"SELECT {_COLS} FROM spine_intentions WHERE intention_id = %s AND scope = %s",
-                (intention_id, ev.scope()))
+                (intention_id, ev.universe()))
     r = cur.fetchone()
     return _dict(r) if r else None
 
@@ -273,7 +274,7 @@ def listing(conn, *, serves: str | None = None, kind: str | None = None,
         " AND (%s::text IS NULL OR i.serves = %s) AND (%s::text IS NULL OR i.kind = %s)"
         " AND (%s::boolean IS NULL OR i.active = %s)"
         " ORDER BY i.added_at DESC LIMIT %s",
-        (ev.scope(), serves, serves, kind, kind, active, active, limit))
+        (ev.universe(), serves, serves, kind, kind, active, active, limit))
     out = []
     for r in cur.fetchall():
         d = _dict(r[:_NCOLS])
@@ -308,7 +309,7 @@ def stop(conn, intention_id: str, by: str, *, proof: str | None = None,
     ensure_schema(conn); outbox.ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT marker, active, kind, words FROM spine_intentions"
-                " WHERE intention_id = %s AND scope = %s", (intention_id, ev.scope()))
+                " WHERE intention_id = %s AND scope = %s", (intention_id, ev.universe()))
     row = cur.fetchone()
     if row is None:
         raise KeyError(intention_id)
@@ -324,7 +325,7 @@ def stop(conn, intention_id: str, by: str, *, proof: str | None = None,
     if confirmed_by:
         payload["confirmed_by"] = confirmed_by
     e = ev.make_envelope(
-        kind="event", type=INTENTION_STOPPED, universe_id=ev.scope(), scope_path=ev.scope(),
+        kind="event", type=INTENTION_STOPPED, universe_id=ev.universe(), scope_path=ev.universe(),
         payload=payload, correlation_id=intention_id,
         authority_chain=[by] + ([confirmed_by] if confirmed_by and confirmed_by != by else []),
         marker=marker)
@@ -360,7 +361,7 @@ def restart(conn, intention_id: str, by: str, *, proof: str | None = None,
     ensure_schema(conn); outbox.ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT marker, active, kind, words, every_s FROM spine_intentions"
-                " WHERE intention_id = %s AND scope = %s", (intention_id, ev.scope()))
+                " WHERE intention_id = %s AND scope = %s", (intention_id, ev.universe()))
     row = cur.fetchone()
     if row is None:
         raise KeyError(intention_id)
@@ -376,7 +377,7 @@ def restart(conn, intention_id: str, by: str, *, proof: str | None = None,
     if confirmed_by:
         payload["confirmed_by"] = confirmed_by
     e = ev.make_envelope(
-        kind="event", type=INTENTION_RESTARTED, universe_id=ev.scope(), scope_path=ev.scope(),
+        kind="event", type=INTENTION_RESTARTED, universe_id=ev.universe(), scope_path=ev.universe(),
         payload=payload, correlation_id=intention_id,
         authority_chain=[by] + ([confirmed_by] if confirmed_by and confirmed_by != by else []),
         marker=marker)
@@ -402,7 +403,7 @@ def held_stops(conn) -> set[str]:
     cur = conn.cursor()
     cur.execute("SELECT held::json->'args'->>'intention_id' FROM spine_asks WHERE scope = %s"
                 " AND served_by = 'the kernel' AND status = 'awaiting-confirm'"
-                " AND held::json->>'tool' = 'intent.stop'", (ev.scope(),))
+                " AND held::json->>'tool' = 'intent.stop'", (ev.universe(),))
     return {r[0] for r in cur.fetchall() if r[0]}
 
 
@@ -412,7 +413,7 @@ def interested(conn, kind: str) -> list[dict]:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute(f"SELECT {_COLS} FROM spine_intentions WHERE scope = %s AND active"
-                " ORDER BY added_at", (ev.scope(),))
+                " ORDER BY added_at", (ev.universe(),))
     held = held_stops(conn)
     return [d for d in (_dict(r) for r in cur.fetchall())
             if kind in d["interests"] and d["intention_id"] not in held]
@@ -507,7 +508,7 @@ def crew_hash(conn) -> str:
     hashed: when it changes, a runner that could not act may now."""
     cur = conn.cursor()
     cur.execute("SELECT DISTINCT ON (name) name, capabilities FROM spine_joins"
-                " WHERE scope = %s ORDER BY name, join_id DESC", (ev.scope(),))
+                " WHERE scope = %s ORDER BY name, join_id DESC", (ev.universe(),))
     return crew_shape_hash([(n, json.loads(c or "[]")) for n, c in cur.fetchall()])
 
 
@@ -567,7 +568,7 @@ def _hear_runners(conn) -> list[dict]:
         " JOIN spine_asks a ON a.ask_id = t.objective_ask"
         " LEFT JOIN LATERAL (SELECT name FROM spine_joins WHERE did = a.served_by"
         "   ORDER BY join_id DESC LIMIT 1) j ON true"
-        " WHERE NOT t.heard AND a.status IN ('replied', 'refused') AND i.scope = %s", (ev.scope(),))
+        " WHERE NOT t.heard AND a.status IN ('replied', 'refused') AND i.scope = %s", (ev.universe(),))
     heard = []
     for tid, iid, marker, runner, blocked, aid, reply, who in cur.fetchall():
         with conn.transaction():
@@ -590,7 +591,7 @@ def _due(conn) -> list[dict]:
     """Cadence: every active intention whose beat came due plans once."""
     cur = conn.cursor()
     cur.execute(f"SELECT {_COLS} FROM spine_intentions WHERE scope = %s AND active"
-                " AND every_s IS NOT NULL AND next_at <= now() ORDER BY next_at", (ev.scope(),))
+                " AND every_s IS NOT NULL AND next_at <= now() ORDER BY next_at", (ev.universe(),))
     held = held_stops(conn)                    # W35: a held stop pauses the cadence
     out = []
     for i in (_dict(r) for r in cur.fetchall()):
@@ -616,7 +617,7 @@ def _file_objectives(conn) -> list[dict]:
         " JOIN spine_intentions i ON i.intention_id = t.intention_id"
         " JOIN spine_asks a ON a.ask_id = t.plan_ask"
         " WHERE t.objective_ask IS NULL AND a.status = 'replied' AND i.active AND i.scope = %s",
-        (ev.scope(),))
+        (ev.universe(),))
     from . import markers
     filed = []
     held = held_stops(conn)                    # W35: nothing new filed while the code is awaited

@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: the four doors cross — the pure parts (passages · citations · metric_in · describe · shape · ask_text) · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: 0009 and 0010 join the ontology v0 corpus · 2026-10-05
 //! `orreth.impact/1` — the pure half of `orreth_spine.mitl`: a citation in a
 //! human's name (W15 — the canon file's title and the passage's place) and
 //! the verdict ladder applied by rule, never by a brain. MITL's corpus, the
@@ -16,7 +17,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, Mutex};
 
 /// The canon in human names (the path stays in the record).
-pub const TITLES: [(&str, &str); 9] = [
+pub const TITLES: [(&str, &str); 11] = [
     (
         "docs/rearch/0001-experience-charter.md",
         "the experience charter",
@@ -40,6 +41,12 @@ pub const TITLES: [(&str, &str); 9] = [
         "docs/rearch/0008-the-rust-plane-and-the-port.md",
         "the Rust plane and the port",
     ),
+    // Phase 8 sp1 (THE PATH): the old world carried, and THE WORKSHOP — the levels' canon
+    (
+        "docs/rearch/0009-the-old-world-carried.md",
+        "the old world carried",
+    ),
+    ("docs/rearch/0010-the-workshop.md", "the Workshop"),
     (".claude/skills/orreth-covenant/SKILL.md", "the covenant"),
 ];
 

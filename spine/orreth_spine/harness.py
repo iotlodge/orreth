@@ -6,6 +6,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the run over the invoke rail (`orreth.resident.harness.v1`) · the verdict factored (fixture bodies-v0) · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells: the tenth check — this cell is sealed · 2026-09-25
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — W92 THE LOOP ON A FAILED THOUGHT: not_a_plan · 2026-10-02
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """The A/B harness v0 (canon 0004, AG-6): golden cases run against a body's
 mind; every run is a record; a failing run is a FACT on the rail
 (orreth.harness.failed.v1) that the feed carries to the chat as a soft
@@ -77,7 +78,7 @@ def command_for(run_id: str, target: str, cases: list[dict], *, arm: str | None 
     record the run as `run_id` (the Rust door polls for it). The cases ride
     the command whole — a golden set is the kernel's, not the body's — and
     the payload wears their hash; the chain is the kernel's."""
-    sc = scope or ev.scope()
+    sc = scope or ev.universe()
     payload = {"ref": run_id, "hash": ev.content_hash(cases), "target": target, "cases": list(cases)}
     if arm:
         payload["arm"] = arm
@@ -140,11 +141,11 @@ def _run(conn, body, cases, parent_marker, arm, run_id=None):
             "INSERT INTO spine_harness_runs (run_id, template, version, passed,"
             " failed, details, scope, arm) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
             (rid, body.template["name"], version, passed, failed,
-             json.dumps(details), ev.scope(), arm))
+             json.dumps(details), ev.universe(), arm))
         if failed:
             e = ev.make_envelope(
-                kind="event", type=HARNESS_FAILED, universe_id=ev.scope(),
-                scope_path=ev.scope(),
+                kind="event", type=HARNESS_FAILED, universe_id=ev.universe(),
+                scope_path=ev.universe(),
                 payload={"ref": rid, "hash": "sha256:-", "template": body.template["name"],
                          "version": version, "passed": passed, "failed": failed},
                 correlation_id=rid, authority_chain=[body.identity.did], marker=marker)
@@ -217,7 +218,7 @@ def duty_answered(conn) -> dict:
         " FROM spine_schedules s JOIN spine_occurrences o ON o.schedule_id = s.schedule_id"
         " JOIN spine_asks a ON a.ask_id = o.ref"
         " WHERE s.scope = %s AND s.kind IN ('human', 'role') AND a.status = 'replied'"
-        " ORDER BY s.runner, a.replied_at DESC", (ev.scope(),))
+        " ORDER BY s.runner, a.replied_at DESC", (ev.universe(),))
     refused, seen = [], 0
     for runner, sid, aid, reply, at in cur.fetchall():
         seen += 1
@@ -239,7 +240,7 @@ def offers_are_holds(conn, n: int = 5) -> dict:
     from .monitor import OFFER_RE
     cur = conn.cursor()
     cur.execute("SELECT did FROM spine_joins WHERE name = 'monitor' AND scope = %s"
-                " ORDER BY join_id DESC LIMIT 1", (ev.scope(),))
+                " ORDER BY join_id DESC LIMIT 1", (ev.universe(),))
     row = cur.fetchone()
     if row is None:
         return {"name": "the monitor's offers arrive as holds", "ok": True,
@@ -247,13 +248,13 @@ def offers_are_holds(conn, n: int = 5) -> dict:
     did = row[0]
     cur.execute("SELECT ask_id, reply, replied_at FROM spine_asks WHERE served_by = %s"
                 " AND status = 'replied' AND scope = %s ORDER BY replied_at DESC LIMIT %s",
-                (did, ev.scope(), n))
+                (did, ev.universe(), n))
     offers = [(a, r, at) for a, r, at in cur.fetchall() if OFFER_RE.search(r or "")]
     unheld = []
     for aid, reply, at in offers:
         cur.execute("SELECT 1 FROM spine_asks WHERE served_by = %s AND scope = %s"
                     " AND held IS NOT NULL AND held::json->>'tool' = 'add-watch'"
-                    " AND asked_at >= %s - interval '5 seconds' LIMIT 1", (did, ev.scope(), at))
+                    " AND asked_at >= %s - interval '5 seconds' LIMIT 1", (did, ev.universe(), at))
         if cur.fetchone() is None:
             unheld.append({"ask": aid, "opens": " ".join((reply or "").split())[:120]})
     detail = (f"{len(offers)} offer{'s' if len(offers) != 1 else ''} in the last {n} replies; "
@@ -317,7 +318,7 @@ def keeper_proposes(conn) -> dict:
             unproposed.append(s["name"])            # strikes count since the last proposal: ≥ n = none heard
     cur = conn.cursor()
     cur.execute("SELECT count(*) FROM spine_markers WHERE scope = %s AND kind = 'observation'"
-                " AND note LIKE '%% retire: retired%%' AND by_did LIKE 'did:orreth:agent:%%'", (ev.scope(),))
+                " AND note LIKE '%% retire: retired%%' AND by_did LIKE 'did:orreth:agent:%%'", (ev.universe(),))
     alone = int(cur.fetchone()[0])                  # a body retiring by its own hand = an observation, not an act under an ask
     detail = (f"strikes rule: {n} in a row" + (f" · unproposed: {', '.join(unproposed)}" if unproposed else " · every strike proposed")
               + (f" · {alone} retired by a body alone" if alone else ""))
@@ -422,7 +423,7 @@ def reds_answered(conn, *, minutes: int = 2) -> dict:
     cur.execute(
         "SELECT t.turn_id, w.name, t.lever, t.lever_ask, t.outcome, w.last_ok, t.at"
         " FROM spine_intent_turns t JOIN spine_watches w ON w.watch_id = t.watch"
-        " WHERE w.scope = %s AND t.watch IS NOT NULL ORDER BY t.at", (ev.scope(),))
+        " WHERE w.scope = %s AND t.watch IS NOT NULL ORDER BY t.at", (ev.universe(),))
     unanswered, unattributed, answered, attributed = [], [], 0, 0
     for tid, name, lever, lask, outcome, last_ok, at in cur.fetchall():
         if outcome is not None:

@@ -132,7 +132,7 @@ test dispatcher (the stale-rig law).
 | `spine/orreth_spine` | **The reference.** The same kernel in Python, written first; the Bridge on `:4601`; the bodies every kernel spawns (`orreth_spine.body`). |
 | `spine/conformance` | The fixtures both kernels pass unchanged — the contract between them (canon `0008`). |
 | `spine/glass/index.html` | The one page: the chat and THE PANEL, served by either kernel. |
-| `spine/crew.v0.json` · `spine/templates` · `spine/tools.v0.json` · `spine/levers.v0.json` | The crew, the templates, the tools' declarations and the lever catalogue — data both kernels read. |
+| `spine/crew.v0.json` · `spine/templates` · `spine/tools.v0.json` · `spine/levers.v0.json` | The crew (and the levels it declares — the floors and rooms a seat may stand on), the templates, the tools' declarations and the lever catalogue — data both kernels read. |
 | `docs/ARCHITECTURE.md` | **The map of this world**: the six organs and five rails, the road an ask takes, the seat and the lease, the four memories, the remediation rail, cells and the seam — drawn, light and dark. |
 | `docs/rearch/0001`–`0009` | **The canon of the new world**: the experience charter, transport, memory, agent, the build plan, markers, intent, the port, the old world carried. |
 | `docs/design/0000`–`0017` | **The constitution** the covenant enforces; `the-honest-boundary.md` is the standing register. |

@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the human profile (W58, the Mirror's first row carried) · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """THE HUMAN PROFILE (canon 0003 "packing the mind" slot 1 · "who remembers
 what" · 0001 P22 the human's profile · the old world's 0025 + 0070 carried —
 W58, walk #15: cell two's librarian answered the weather for the WRONG
@@ -237,7 +238,7 @@ def claims(conn, person: str, *, withdrawn: bool = False) -> list[dict]:
     cur.execute("SELECT claim_id, person, field, value, asserted_by, state, quoted, evidence, lat, lon, zone,"
                 " by_did, marker, ask, at, withdrawn_at, withdrawn_by FROM spine_profile"
                 " WHERE scope = %s AND person = %s" + ("" if withdrawn else " AND withdrawn_at IS NULL")
-                + " ORDER BY claim_id DESC", (ev.scope(), person))
+                + " ORDER BY claim_id DESC", (ev.universe(), person))
     return _rows(cur)
 
 
@@ -249,7 +250,7 @@ def profile_root(conn, person: str) -> str:
     cur = conn.cursor()
     cur.execute("SELECT marker_id FROM spine_markers WHERE scope = %s AND parent IS NULL"
                 " AND kind = 'observation' AND ref = %s AND by_did = %s ORDER BY at LIMIT 1",
-                (ev.scope(), f"{PROFILE_REF}:{person}", person))
+                (ev.universe(), f"{PROFILE_REF}:{person}", person))
     r = cur.fetchone()
     if r:
         return r[0]
@@ -278,7 +279,7 @@ def _fact(conn, type_: str, person: str, by: str, payload: dict, *, ask: str | N
     parent = parent_marker or profile_root(conn, person)
     marker = {"kind": kind, "id": mid, "parent": parent, "by": by}
     chain = [KERNEL] if by == KERNEL else [by, KERNEL]
-    e = ev.make_envelope(kind="event", type=type_, universe_id=ev.scope(), scope_path=ev.scope(),
+    e = ev.make_envelope(kind="event", type=type_, universe_id=ev.universe(), scope_path=ev.universe(),
                          payload=dict(payload, ref=person, by=by), correlation_id=ask or person,
                          authority_chain=chain, marker=marker)
 
@@ -334,7 +335,7 @@ def tell(conn, person: str, field: str, value: str, *, ask: str | None = None,
     def _domain(cur, mid):
         cur.execute("INSERT INTO spine_profile (scope, person, field, value, asserted_by, state, quoted, by_did, marker, ask)"
                     " VALUES (%s, %s, %s, %s, 'human', 'trusted', %s, %s, %s, %s) RETURNING claim_id",
-                    (ev.scope(), person, field, value, quoted or value, person, mid, ask))
+                    (ev.universe(), person, field, value, quoted or value, person, mid, ask))
         told["claim_id"] = cur.fetchone()[0]
         if seen is not None:
             omid = _observe(cur, person, value, seen, ask=ask, parent=mid)
@@ -366,8 +367,8 @@ def _observe(cur, person: str, place: str, seen: dict, *, ask: str | None, paren
                    f"{KERNEL} observed: {label} is at {seen['lat']:.2f},{seen['lon']:.2f}")
     cur.execute("INSERT INTO spine_profile (scope, person, field, value, asserted_by, state, evidence, lat, lon, zone,"
                 " by_did, marker, ask) VALUES (%s, %s, 'place', %s, 'kernel', 'trusted', %s, %s, %s, %s, %s, %s, %s)",
-                (ev.scope(), person, label, place, seen["lat"], seen["lon"], seen.get("zone"), KERNEL, omid, ask))
-    e = ev.make_envelope(kind="event", type=OBSERVED, universe_id=ev.scope(), scope_path=ev.scope(),
+                (ev.universe(), person, label, place, seen["lat"], seen["lon"], seen.get("zone"), KERNEL, omid, ask))
+    e = ev.make_envelope(kind="event", type=OBSERVED, universe_id=ev.universe(), scope_path=ev.universe(),
                          payload={"ref": person, "hash": ev.content_hash({"place": place, "lat": seen["lat"], "lon": seen["lon"]}),
                                   "field": "place", "value": label, "asserted_by": "kernel", "state": "trusted",
                                   "evidence": place, "lat": seen["lat"], "lon": seen["lon"], "zone": seen.get("zone"),

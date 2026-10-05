@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: restore_mind writes back a MIND's entry only · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — W93 THE EMPTY GATEWAY: an empty store's refusal is the empty list · 2026-10-02
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """The Stable v0 (canon 0005 P6.5 sp3 · 0009 §2 "the STABLE firmware" · 0019
 the Stable · 0058 the market · JB's lock 2026-09-24: "LiteLLM executes; the
 registry knows and decides").
@@ -483,7 +484,7 @@ def assignments(conn) -> list[dict]:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT subject, klass, stall, by_did, at FROM spine_mind_assignments WHERE scope = %s"
-                " ORDER BY subject, klass", (ev.scope(),))
+                " ORDER BY subject, klass", (ev.universe(),))
     return [{"subject": r[0], "klass": r[1], "stall": r[2], "by": r[3], "at": r[4].isoformat()} for r in cur.fetchall()]
 
 
@@ -497,7 +498,7 @@ def _mind_fact(conn, type_: str, ref: str, payload: dict, by: str, note: str, *,
     chain = [by] if by == services.KERNEL else [by, services.KERNEL]
     if confirmed_by and confirmed_by != by:
         chain = [by, confirmed_by, services.KERNEL]
-    e = ev.make_envelope(kind="event", type=type_, universe_id=ev.scope(), scope_path=ev.scope(),
+    e = ev.make_envelope(kind="event", type=type_, universe_id=ev.universe(), scope_path=ev.universe(),
                          payload=dict(payload, ref=ref, by=by), correlation_id=ask or ref,
                          authority_chain=chain, marker={"kind": kind, "id": mid, "parent": parent, "by": by})
 
@@ -573,7 +574,7 @@ def assign(conn, subject: str, klass: str, stall: str, *, by: str, ask: str | No
         cur.execute("INSERT INTO spine_mind_assignments (subject, scope, klass, stall, by_did, at)"
                     " VALUES (%s, %s, %s, %s, %s, clock_timestamp())"
                     " ON CONFLICT (subject, scope, klass) DO UPDATE SET stall = EXCLUDED.stall,"
-                    " by_did = EXCLUDED.by_did, at = clock_timestamp()", (subject, ev.scope(), klass, stall, by))
+                    " by_did = EXCLUDED.by_did, at = clock_timestamp()", (subject, ev.universe(), klass, stall, by))
 
     _mind_fact(conn, ASSIGNED, s["did"], {"subject": subject, "klass": klass, "stall": stall, "hash": s["manifest_hash"]},
                by, f"{subject} uses the {stall} LLM for {'all' if klass == ANY else klass} work", ask=ask, parent_marker=parent_marker,
@@ -586,7 +587,7 @@ def unassign(conn, subject: str, klass: str, *, by: str, ask: str | None = None,
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT stall FROM spine_mind_assignments WHERE subject = %s AND scope = %s AND klass = %s",
-                (subject, ev.scope(), klass))
+                (subject, ev.universe(), klass))
     r = cur.fetchone()
     if r is None:
         raise StableRefused(f"{subject} has no {klass} assignment to lift")
@@ -594,7 +595,7 @@ def unassign(conn, subject: str, klass: str, *, by: str, ask: str | None = None,
 
     def domain(cur, mid):
         cur.execute("DELETE FROM spine_mind_assignments WHERE subject = %s AND scope = %s AND klass = %s",
-                    (subject, ev.scope(), klass))
+                    (subject, ev.universe(), klass))
 
     _mind_fact(conn, UNASSIGNED, s["did"] if s else r[0], {"subject": subject, "klass": klass, "stall": r[0]},
                by, f"{subject} no longer pinned to {r[0]} ({klass})", ask=ask, parent_marker=parent_marker,
@@ -622,18 +623,18 @@ def key_for(conn, did: str, name: str, gw: Gateway, *, by: str = services.KERNEL
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT key, alias, max_usd, renew_days FROM spine_mind_keys WHERE did = %s AND scope = %s",
-                (did, ev.scope()))
+                (did, ev.universe()))
     r = cur.fetchone()
     if r is not None:
         return {"key": r[0], "alias": r[1], "max_usd": r[2], "renew_days": r[3], "new": False}
     max_usd, days = lease_defaults()
-    alias = f"{ev.scope()}:{name}"
+    alias = f"{ev.universe()}:{name}"
     made = gw.key_new(did=did, alias=alias, max_usd=max_usd, renew_days=days)
 
     def domain(cur, mid):
         cur.execute("INSERT INTO spine_mind_keys (did, scope, alias, key, max_usd, renew_days)"
                     " VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (did, scope) DO NOTHING",
-                    (did, ev.scope(), alias, made["key"], max_usd, days))
+                    (did, ev.universe(), alias, made["key"], max_usd, days))
 
     _mind_fact(conn, FUELED, did, {"max_usd": max_usd, "renew_days": days, "alias": alias, "first": True},
                by, f"{name} fueled: ${max_usd:g} every {days} day{'s' if days != 1 else ''}", domain=domain)
@@ -642,7 +643,7 @@ def key_for(conn, did: str, name: str, gw: Gateway, *, by: str = services.KERNEL
 
 def mark_drained(conn, did: str) -> None:
     conn.cursor().execute("UPDATE spine_mind_keys SET drained_at = clock_timestamp() WHERE did = %s AND scope = %s",
-                          (did, ev.scope()))
+                          (did, ev.universe()))
 
 
 def fuel(conn, did: str, gw: Gateway | None) -> dict | None:
@@ -651,7 +652,7 @@ def fuel(conn, did: str, gw: Gateway | None) -> dict | None:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT key, max_usd, renew_days, drained_at, refills FROM spine_mind_keys WHERE did = %s AND scope = %s",
-                (did, ev.scope()))
+                (did, ev.universe()))
     r = cur.fetchone()
     if r is None:
         return None
@@ -674,7 +675,7 @@ def refill(conn, did: str, add_usd: float, *, by: str, gw: Gateway, name: str | 
     the gateway — a fuel fact; the drained mark lifted."""
     ensure_schema(conn)
     cur = conn.cursor()
-    cur.execute("SELECT key, alias, max_usd FROM spine_mind_keys WHERE did = %s AND scope = %s", (did, ev.scope()))
+    cur.execute("SELECT key, alias, max_usd FROM spine_mind_keys WHERE did = %s AND scope = %s", (did, ev.universe()))
     r = cur.fetchone()
     if r is None:
         raise StableRefused(f"{name or did} has no lease yet — it is fueled on its first thought")
@@ -687,7 +688,7 @@ def refill(conn, did: str, add_usd: float, *, by: str, gw: Gateway, name: str | 
 
     def domain(cur, mid):
         cur.execute("UPDATE spine_mind_keys SET max_usd = %s, drained_at = NULL, refills = refills + 1"
-                    " WHERE did = %s AND scope = %s", (new_max, did, ev.scope()))
+                    " WHERE did = %s AND scope = %s", (new_max, did, ev.universe()))
 
     _mind_fact(conn, FUELED, did, {"max_usd": new_max, "added_usd": add, "alias": r[1], "first": False},
                by, f"{name or did} refilled by ${add:g} — allowance now ${new_max:g}", ask=ask,
@@ -873,7 +874,7 @@ def _last_hold(conn, tool: str, name: str) -> dict | None:
     cur = conn.cursor()
     cur.execute("SELECT ask_id, status FROM spine_asks WHERE scope = %s AND served_by = %s AND held IS NOT NULL"
                 " AND held::json->>'tool' = %s AND (held::json->'args'->>'name' = %s OR held::json->'args'->>'did' = %s)"
-                " ORDER BY asked_at DESC LIMIT 1", (ev.scope(), services.KERNEL, tool, name, name))
+                " ORDER BY asked_at DESC LIMIT 1", (ev.universe(), services.KERNEL, tool, name, name))
     r = cur.fetchone()
     return {"ask_id": r[0], "status": r[1]} if r else None
 
@@ -904,7 +905,7 @@ def proposals(conn, *, keeper: str, gw: Gateway | None, catalog: dict | None = N
                  + (f"; the swap: the {swap['stall']} LLM ({swap['why']})" if swap.get("stall") else f"; {swap['why']}"))})
     cur = conn.cursor()
     cur.execute("SELECT k.did, k.alias, k.max_usd FROM spine_mind_keys k WHERE k.scope = %s AND k.drained_at IS NOT NULL",
-                (ev.scope(),))
+                (ev.universe(),))
     for did, alias, max_usd in cur.fetchall():
         prev = _last_hold(conn, REFILL_TOOL, did)
         if prev and prev["status"] == "awaiting-confirm":
@@ -993,7 +994,7 @@ def reconcile(conn, gw: Gateway | None, n: int = 20, grace_s: int = 30) -> dict:
     if not cur.fetchone()[0]:
         return {"checked": 0, "agreed": 0, "fresh": 0, "mismatched": [], "meter_usd": 0.0, "gateway_usd": 0.0,
                 "words": "no lease and no meter on this ground yet"}
-    cur.execute("SELECT did FROM spine_mind_keys WHERE scope = %s", (ev.scope(),))
+    cur.execute("SELECT did FROM spine_mind_keys WHERE scope = %s", (ev.universe(),))
     dids = [r[0] for r in cur.fetchall()]
     out = {"checked": 0, "agreed": 0, "fresh": 0, "unkeyed": 0, "mismatched": [], "meter_usd": 0.0, "gateway_usd": 0.0}
     if gw is None:

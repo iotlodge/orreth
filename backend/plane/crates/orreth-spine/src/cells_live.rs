@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells · partition · isolation · hardening · 2026-09-25
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W87): the unreachable time wears its date when it is not today · a peer LET GO on a governing seat's word (`forget_peer`, schema 3) · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: the universe's level row and mode at light; the card says the mode · 2026-10-05
 //! The cell's LIVE half (canon 0002 rule 8 · 0005 P7 sp7): the universe's
 //! home on the ground (`spine_world`: one row per universe — its cell, its
 //! epoch, the kernel that keeps it), settled at light and said as a fact
@@ -92,6 +93,9 @@ pub async fn home(
                 .await?;
         }
     }
+    // Phase 8 sp1, THE PATH: the universe's own level row — opened at light with the cell's
+    // declared mode (`SPINE_MODE`); a relight may tighten it (dev → prod), never loosen it
+    crate::levels_live::ensure_universe(g, scope, None).await?;
     card(g, scope, cell, Some(kernel_did), "", "UTC").await
 }
 
@@ -113,9 +117,17 @@ pub async fn card(
         )
         .await?;
     let iso = |t: Option<std::time::SystemTime>| t.map(crate::world::isoformat);
+    // Phase 8 sp1: the universe's declared mode, from its level row (null before the level stands)
+    let mode = if crate::levels::ok(scope) {
+        crate::levels_live::row(g.client(), scope)
+            .await?
+            .and_then(|r| r["mode"].as_str().map(str::to_string))
+    } else {
+        None
+    };
     Ok(match row {
         Some(r) => json!({
-            "scope": scope, "cell": r.get::<_, String>(0), "epoch": r.get::<_, i32>(1),
+            "scope": scope, "mode": mode, "cell": r.get::<_, String>(0), "epoch": r.get::<_, i32>(1),
             "kernel": r.get::<_, String>(2), "door": r.get::<_, Option<String>>(3),
             "opened_at": iso(r.get::<_, Option<std::time::SystemTime>>(4)),
             "rehomed_at": iso(r.get::<_, Option<std::time::SystemTime>>(5)),
@@ -123,7 +135,7 @@ pub async fn card(
             "namespace": ns, "peers": peers(g, scope, zone).await?,
         }),
         None => json!({
-            "scope": scope, "cell": cell, "epoch": Value::Null, "kernel": kernel_did, "door": Value::Null,
+            "scope": scope, "mode": mode, "cell": cell, "epoch": Value::Null, "kernel": kernel_did, "door": Value::Null,
             "opened_at": Value::Null, "rehomed_at": Value::Null, "rehomed_by": Value::Null, "homed": false,
             "namespace": ns, "peers": peers(g, scope, zone).await?,
         }),

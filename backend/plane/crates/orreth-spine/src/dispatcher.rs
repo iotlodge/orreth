@@ -186,7 +186,10 @@ pub async fn run_dispatcher(
         let ours = p
             .env
             .as_ref()
-            .is_some_and(|env| env["scope_path"].as_str() == Some(&w.scope));
+            .is_some_and(|env| {
+                // Phase 8 sp1: a body seated on a floor files its asks with the floor's path
+                crate::seat::within(env["scope_path"].as_str().unwrap_or_default(), &w.scope)
+            });
         if let (Some(env), true) = (&p.env, ours) {
             let (url, ns) = (w.rabbit_url.clone(), w.ns.clone());
             let out = match command_for(env) {

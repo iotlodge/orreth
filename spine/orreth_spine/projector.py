@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P1 sp2, the events shadow (M4-lite) · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 lock 5: run_once ends at the topic's end, never by waiting out a silence · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the park once by its place, its fact, the HOLD until a person advances it, the advance · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """The projector (canon 0002 · 0003): a consumer that folds committed
 facts into a rebuildable read model.
 
@@ -65,7 +66,7 @@ def advanced_payload(parked_id: int, consumer: str, topic: str, partition: int, 
 
 def parked_fact(parked_id: int, consumer: str, topic: str, partition: int, offset: int, body: bytes,
                 reason: str, scope: str | None = None) -> dict:
-    sc = scope or ev.scope()
+    sc = scope or ev.universe()
     return ev.make_envelope(kind="event", type=PARKED, universe_id=sc, scope_path=sc,
                             payload=parked_payload(parked_id, consumer, topic, partition, offset,
                                                    body_hash(body), reason),
@@ -74,7 +75,7 @@ def parked_fact(parked_id: int, consumer: str, topic: str, partition: int, offse
 
 def advanced_fact(parked_id: int, consumer: str, topic: str, partition: int, offset: int, by: str,
                   scope: str | None = None) -> dict:
-    sc = scope or ev.scope()
+    sc = scope or ev.universe()
     return ev.make_envelope(kind="event", type=ADVANCED, universe_id=sc, scope_path=sc,
                             payload=advanced_payload(parked_id, consumer, topic, partition, offset, by),
                             correlation_id=parked_ref(parked_id), authority_chain=[by])

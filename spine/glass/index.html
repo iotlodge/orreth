@@ -620,7 +620,7 @@
     <div><div class="prow-label"><span>the kernel's organs</span><span class="line"></span><span class="r">declared by the kernel · always seated · click one to open it</span></div>
       <div id="organs">
         <div class="organ" data-organ="desk" title="THE DESK — the gate: who is seated, who may enroll, the join desk where a machine asks in · click to open"><div class="t"><span class="n">DESK</span><span class="lamp" id="l-desk"></span></div><div class="v" id="o-desk-v">no seat</div><div class="s"><span id="youtag" onclick="event.stopPropagation(); profileWords('what do you know about me?')" title="what this ground knows about you — click to read it">you</span></div><div class="perf-only s" id="p-desk">—</div></div>
-        <div class="organ" data-organ="ground" title="THE GROUND — the kernel's memory: every ask, reply, marker and record, in this world · click to open"><div class="t"><span class="n">GROUND</span><span class="lamp" id="l-ground"></span></div><div class="v"><span class="worldtag" id="worldtag" title="the world this door serves, its cell and its epoch — from /world">u:dev</span></div><div class="s" id="o-ground-s">—</div><div class="perf-only s" id="p-ground">—</div></div>
+        <div class="organ" data-organ="ground" title="THE GROUND — the kernel's memory: every ask, reply, marker and record, in this world · its levels: the universe, its floors, their rooms · click to open"><div class="t"><span class="n">GROUND</span><span class="lamp" id="l-ground"></span></div><div class="v"><span class="worldtag" id="worldtag" title="the world this door serves — its mode (dev or prod), its cell and its epoch — from /world">u:dev</span></div><div class="s" id="o-ground-s">—</div><div class="s" id="o-ground-levels" title="the levels of this universe — its floors and their rooms, who is seated on each (from /levels); say “what levels are here?” or “open floor ops” in the chat">—</div><div class="perf-only s" id="p-ground">—</div></div>
         <div class="organ" data-organ="gateway" title="THE GATEWAY — every LLM call goes through it, metered in dollars · the Stable's minds stand behind it · click to open"><div class="t"><span class="n">GATEWAY</span><span class="lamp" id="l-gateway"></span></div><div class="v" id="o-gateway-v">—</div><div class="s" id="o-gateway-s">—</div><div class="perf-only s" id="p-gateway">—</div></div>
         <div class="organ" data-organ="shelf" title="THE SHELF — every service the kernel governs: tools, MCP servers, stores, sources, minds · one ladder · click to open"><div class="t"><span class="n">SHELF</span><span class="lamp" id="l-shelf"></span></div><div class="v" id="o-shelf-v">—</div><div class="s" id="o-shelf-s">—</div><div class="perf-only s" id="p-shelf">—</div></div>
         <div class="organ" data-organ="monitor" title="THE MONITOR — the watches, the health checks, the harness, the levers the kernel can pull · click to open"><div class="t"><span class="n">MONITOR</span><span class="lamp" id="l-monitor"></span></div><div class="v" id="o-monitor-v">—</div><div class="s" id="o-monitor-s">—</div><div class="perf-only s" id="p-monitor">—</div></div>
@@ -1886,8 +1886,22 @@ async function loadWorld(){
   WORLD = await fetch("/world").then(x=>x.json()).catch(()=>null);
   const tag = document.getElementById("worldtag");
   if (WORLD && !WORLD.scope) WORLD = null;         // unseated: the door answers "not seated", no world card
-  if (WORLD && tag) tag.textContent = `${WORLD.scope} · cell ${WORLD.cell}` + (WORLD.epoch ? ` · epoch ${WORLD.epoch}` : "");
+  if (WORLD && tag) tag.textContent = `${WORLD.scope}` + (WORLD.mode ? ` · ${WORLD.mode}` : "") + ` · cell ${WORLD.cell}` + (WORLD.epoch ? ` · epoch ${WORLD.epoch}` : "");
+  loadLevels();
   return WORLD;
+}
+let LEVELS = null;                               // Phase 8 sp1, THE PATH: the universe's floors and rooms — from /levels
+async function loadLevels(){
+  LEVELS = await fetch("/levels").then(x=>x.json()).catch(()=>null);
+  const line = document.getElementById("o-ground-levels");
+  if (!line) return LEVELS;
+  if (!LEVELS || !LEVELS.levels){ line.textContent = "—"; return LEVELS; }
+  const below = LEVELS.levels.filter(l => l.level !== "universe");
+  if (!below.length){ line.textContent = "one level — no floors yet · say “open floor ops”"; return LEVELS; }
+  const seated = n => n === 1 ? "1 body" : `${n} bodies`;
+  line.textContent = below.map(l => `${l.level === "room" ? "  └ " : ""}${l.level} ${l.name} · ${l.mode}${l.experiment ? " · experiment" : ""} · ${seated(l.rolled ? l.rolled.bodies : l.here.bodies)}`).join("  ");
+  line.title = below.map(l => `${l.words} — ${l.mode}${l.experiment ? ", an experiment room" : ""} · opened by ${l.opened_by} · here: ${l.here.bodies} bodies, ${l.here.asks_served} asks served · within it: ${l.rolled.bodies} bodies, ${l.rolled.asks_served} asks served`).join("\n");
+  return LEVELS;
 }
 loadWorld();
 setTimeout(loadYou, 0);                          // P7 sp8: the YOU tag (PERSON is declared below)
@@ -2419,6 +2433,37 @@ async function serviceWords(text){                 // "what services are here?" 
       return true;
     }
     sysline(r && r.error ? esc(r.error) : "the re-home door did not answer (the Python door does not serve it — the Rust kernel's)");
+    return true;
+  }
+  m = t.match(/^open\s+(floor|room)\s+([a-z0-9_-]+)(?:\s+on\s+(?:the\s+)?floor\s+([a-z0-9_-]+))?(?:\s+as\s+(?:an?\s+)?(experiment(?:\s+room)?|dev|prod))?(?:\s+as\s+(?:an?\s+)?(experiment(?:\s+room)?|dev|prod))?$/);   // Phase 8 sp1, THE PATH: a level opens on a governing seat's word — consequential, held at L2
+  if (m){
+    el("msg mine", esc(text)); toggleChat(true);
+    const u = (WORLD && WORLD.scope) || "u:dev";
+    const level = m[1], name = m[2];
+    const parent = level === "room" ? (m[3] ? `${u}/f:${m[3]}` : null) : u;
+    if (!parent){ sysline("a room opens ON a floor — say “open room bob on floor ops”"); return true; }
+    const flags = [m[4], m[5]].filter(Boolean);
+    const body = {parent, level, name, person: PERSON, session: SESSION || undefined};
+    if (flags.some(f => f.startsWith("experiment"))) body.experiment = true;
+    const mode = flags.find(f => f === "dev" || f === "prod"); if (mode) body.mode = mode;
+    const r = await fetch("/levels/open", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify(body)}).then(x=>x.json()).catch(()=>null);
+    if (r && r.held){
+      PENDING[r.held] = el("journey", `opening ${esc(level)} ${esc(name)}${body.experiment ? " as an experiment room" : ""}${mode ? " as " + esc(mode) : ""} is consequential — the kernel holds it at the interlock…`);
+      const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);
+      if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
+      setTimeout(loadLevels, 3000);
+      return true;
+    }
+    sysline(r && r.error ? esc(r.error) : "the levels door did not answer");
+    return true;
+  }
+  m = t.match(/^(?:what|which)\s+(?:levels|floors|rooms)\s+(?:are\s+)?(?:here|open|in\s+this\s+(?:world|universe))\??$/);   // Phase 8 sp1: "what levels are here?"
+  if (m){
+    el("msg mine", esc(text));
+    const L = await loadLevels();
+    if (!L || !L.levels){ sysline("the levels door did not answer"); return true; }
+    const rows = L.levels.map(l => `${esc(l.words)} — ${esc(l.mode)}${l.experiment ? ", an experiment room" : ""} · ${l.here.bodies} seated here, ${l.rolled.bodies} within · ${l.rolled.asks_served} asks served within · opened by ${esc(l.opened_by)}`);
+    sysline(`${esc(L.universe)} is a ${esc(L.mode || "dev")} universe with ${L.levels.length - 1} level${L.levels.length === 2 ? "" : "s"} below it` + (rows.length ? ":<br>" + rows.join("<br>") : "") + `<br>say “open floor <name>” or “open room <name> on floor <floor>” (as prod · as an experiment room) — a governing seat's word, held at the interlock`);
     return true;
   }
   m = t.match(/^(?:what|which)\s+(?:world|cell|universe)\s+(?:is\s+this|am\s+i\s+in)\??$/);   // P7 sp7: "what world is this?"
@@ -3240,6 +3285,12 @@ async function panelNotice(n){
     tape(lapsed ? "lease lapsed" : "lease seated", `${n.ref} · ${lapsed ? "stopped renewing — dormant until it serves again" : "serves again"}`, lapsed ? "resiliency" : "structural");
     railLight("presence", ORGAN_COL.ground, colOf(n.ref), lapsed ? "red" : "kernel"); stationLit(n.ref, lapsed ? "red" : "kernel", lapsed ? "lease lapsed" : "seated by its lease", 2500);
     panelDebounce("roster", loadRoster, 300); return;
+  }
+  if (k === "orreth.level.opened.v1"){   // Phase 8 sp1, THE PATH: a floor or room opened — at light, by the manifest, on a person's word
+    const f = await factOf(n); const p = (f && f.payload) || {};
+    tape("level opened", `${p.level || "level"} ${p.name || n.ref} · ${p.mode || ""}${p.experiment ? " · an experiment room" : ""} · ${p.reason || ""}`, "structural");
+    lampFlash("l-ground", p.by && p.by.startsWith("did:orreth:person:") ? "human" : "kernel", 900); railLight("relay", ORGAN_COL.ground, ORGAN_COL.desk, p.by && p.by.startsWith("did:orreth:person:") ? "human" : "kernel");
+    panelDebounce("levels", loadLevels, 300); return;
   }
   if (k === "orreth.body.joined.v1" || k === "orreth.body.refused.v1"){   // re-base sp1: the roster's own facts — a body joined (a life) · refused at birth
     const joined = k.endsWith("joined.v1");

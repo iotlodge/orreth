@@ -10,6 +10,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W65: the governed-acts law in every body's seat — a body never performs nor claims the kernel's acts · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: lock 4's last poll — a body's JOIN is a fact (orreth.body.joined.v1), so the roster follows the feed · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — schema 4: an ask's resent_at (W91 THE BENCH SWEEP) · 2026-10-02
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: a body's own scope path (`scope`), its join and facts wearing it, the crew read within the universe, the seat words naming the level · 2026-10-05
 """The resident body v0 (canon 0004): one governed body for every mind.
 
 Born from a versioned TEMPLATE artifact; the SAME identity in every life
@@ -37,6 +38,7 @@ import pika
 from langgraph.graph import END, START, StateGraph
 
 from . import envelope as ev
+from . import levels as _levels
 from . import inbox, outbox, placement as _placement
 from .identity import Identity
 from .rails import COMMAND_EXCHANGE, RABBIT_URL
@@ -295,8 +297,14 @@ def _next_seq(cur, ask_id: str) -> int:
 class Resident:
     def __init__(self, template_path: str | os.PathLike,
                  *, home: str | os.PathLike | None = None, gateway=None,
-                 binding: str | os.PathLike | None = None):
+                 binding: str | os.PathLike | None = None, scope: str | None = None):
         raw = Path(template_path).read_bytes()
+        # Phase 8 sp1, THE PATH: the scope path this body is seated on — a floor's or a room's
+        # when the crew manifest says so (the reference seats it in-process; a spawned body
+        # reads its own SPINE_SCOPE), else the process's world. What the body writes about
+        # itself (its join, its lease, its facts' scope_path) wears it; its universe is
+        # `ev.universe()`.
+        self.scope = scope or ev.scope()
         self.template = json.loads(raw)
         if self.template.get("format") != "orreth-resident-template/1":
             raise ValueError("not a resident template: "
@@ -389,14 +397,14 @@ class Resident:
                 " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (self.identity.did, self.name, life, self.template_hash,
                  self.policy["version"], self.policy["hash"], sig,
-                 ev.scope(), self.kind,        # joined THIS world, as my kind,
+                 self.scope, self.kind,        # joined THIS world at MY level, as my kind,
                  json.dumps(self.template.get("capabilities", [])),   # declared
                  json.dumps(self.template.get("interests", [])),      # + interests
                  ev.canonical(self.placement).decode("ascii"),        # + where I stand
                  self.nature or None))                                # + what I am (W7)
             # re-base sp1: the join is a FACT in the same transaction (orreth.body.joined.v1) —
             # the roster follows the feed, never a timer (lock 4's last poll)
-            e = _body.joined_fact(self.name, self.identity.did, self.kind, life, self.nature)
+            e = _body.joined_fact(self.name, self.identity.did, self.kind, life, self.nature, scope=self.scope)
             outbox.add_row(cur, ev.encode(e), e["message_id"])
         from . import scheduler                  # the role schedules the
         for sch in self.template.get("schedules", []):   # template declares are
@@ -523,8 +531,8 @@ class Resident:
                     # binding names which); the crew: every body here
                     cur.execute(
                         "SELECT DISTINCT ON (name) name, kind, life, policy_version,"
-                        " capabilities, did FROM spine_joins WHERE scope = %s"
-                        " ORDER BY name, join_id DESC", (ev.scope(),))
+                        f" capabilities, did FROM spine_joins WHERE {ev.WITHIN}"
+                        " ORDER BY name, join_id DESC", ev.within_params(ev.universe()))
                     for n, k, life, pv, caps, did in cur.fetchall():
                         notes.append(f"crew card — {n}: {k}, life {life}, wearing "
                                      f"covenant policy v{pv}, capabilities "
@@ -740,7 +748,7 @@ class Resident:
         entry), and the common laws of the serve."""
         from . import profile
         parts = [time_words(human_zone(conn, ask_id)),
-                 f"THE WORLD you serve in is {ev.scope()}; you are {self.name}, "
+                 f"THE WORLD you serve in is {self.scope} ({_levels.words(self.scope) if _levels.ok(self.scope) else 'a world'}); you are {self.name}, "
                  f"a {self.kind} body" + (f" whose function is {self.function}" if self.function else "") + ".",
                  profile.seat_words(conn, ask_id),     # P7 sp8: slot 1 of the pack — who this human is (W58)
                  COVENANT_SLICE]
@@ -800,8 +808,8 @@ class Resident:
             # never a retry loop (0002's failure table): the refusal lands
             # as a visible journey event and the footprint stands
             j = ev.make_envelope(
-                kind="event", type=JOURNEY, universe_id=ev.scope(),
-                scope_path=ev.scope(),
+                kind="event", type=JOURNEY, universe_id=ev.universe(),
+                scope_path=self.scope,
                 payload={"ref": ask_id, "hash": "sha256:-",
                          "note": f"{self.name}: refused a stale command — "
                                  f"this ask is not on my ground"},
@@ -847,8 +855,8 @@ class Resident:
                 " reply = %s, served_by = %s, held = %s WHERE ask_id = %s",
                 (question, self.identity.did, json.dumps(held), ask_id))
             n = ev.make_envelope(
-                kind="event", type=CONFIRM_NEEDED, universe_id=ev.scope(),
-                scope_path=ev.scope(),
+                kind="event", type=CONFIRM_NEEDED, universe_id=ev.universe(),
+                scope_path=self.scope,
                 payload={"ref": ask_id, "hash": "sha256:-",
                          "tool": held["tool"], "class": held["class"],
                          "level": held["level"]},     # the hold wears its level
@@ -875,8 +883,8 @@ class Resident:
     def _journey(self, cur, ask_id: str, steps: list, chain: list) -> None:
         for step in steps:
             j = ev.make_envelope(
-                kind="event", type=JOURNEY, universe_id=ev.scope(),
-                scope_path=ev.scope(),
+                kind="event", type=JOURNEY, universe_id=ev.universe(),
+                scope_path=self.scope,
                 payload={"ref": ask_id, "hash": "sha256:-",
                          "note": f"{self.name}: {step}"},
                 correlation_id=ask_id, authority_chain=chain,
@@ -897,7 +905,7 @@ class Resident:
             " served_by = %s, replied_at = clock_timestamp() WHERE ask_id = %s",
             (status, reply, proof, self.identity.did, ask_id))
         r = ev.make_envelope(
-            kind="event", type=REPLY, universe_id=ev.scope(), scope_path=ev.scope(),
+            kind="event", type=REPLY, universe_id=ev.universe(), scope_path=self.scope,
             payload={"ref": ask_id, "hash": ev.content_hash(reply), "proof": proof},
             correlation_id=ask_id, authority_chain=chain, marker=self._current_marker,
             aggregate={"type": "ask", "id": ask_id,

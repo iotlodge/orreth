@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 2, the one-shot `--seed-shelf` rite retires: the Rust kernel seeds and probes the shelf itself · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: lock 4's last poll — a body's JOIN is a fact (orreth.body.joined.v1), so the roster follows the feed · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: a seat's `at` · the manifest's levels · `seat_scope` · 2026-10-05
 """THE SDK-SIDE BODY (canon 0004 · 0008's end shape · 0005 P7 sp6, THE BODIES'
 SEAM).
 
@@ -66,7 +67,7 @@ def joined_fact(name: str, did: str, kind: str, life: int, nature: str | None, s
     """A body joined this world — its own fact in ITS chain (the join is the body's act, signed
     by its self), no aggregate, no marker."""
     sc = scope or ev.scope()
-    return ev.make_envelope(kind="event", type=JOINED, universe_id=sc, scope_path=sc,
+    return ev.make_envelope(kind="event", type=JOINED, universe_id=sc.split("/", 1)[0], scope_path=sc,
                             payload=joined_payload(name, did, kind, life, nature),
                             correlation_id=did, authority_chain=[did])
 
@@ -160,7 +161,8 @@ def crew_seats(manifest: dict) -> list[dict]:
         t = str(s.get("template") or "").strip()
         if not t:
             raise ValueError("a seat names its template")
-        out.append({"template": t, "binding": (str(s["binding"]).strip() if s.get("binding") else None)})
+        at = str(s.get("at") or "").strip() or None          # Phase 8 sp1: the level this seat stands on (f:ops · f:ops/r:bob)
+        out.append({"template": t, "binding": (str(s["binding"]).strip() if s.get("binding") else None), "at": at})
     if not out:
         raise ValueError("a crew has at least one seat")
     return out
@@ -173,10 +175,24 @@ def crew(spine: str | os.PathLike | None = None) -> list[dict]:
     """The seats with their paths resolved against the spine home (the
     manifest `SPINE_CREW` names, else `crew.v0.json`)."""
     base = Path(spine or SPINE)
-    manifest = Path(os.environ.get(CREW_DIAL) or (base / "crew.v0.json"))
-    seats = crew_seats(json.loads(manifest.read_text("utf-8")))
-    return [{"template": base / s["template"], "binding": (base / s["binding"]) if s["binding"] else None}
+    seats = crew_seats(manifest(spine))
+    return [{"template": base / s["template"], "binding": (base / s["binding"]) if s["binding"] else None,
+             "at": s["at"]}
             for s in seats]
+
+
+def manifest(spine: str | os.PathLike | None = None) -> dict:
+    """The crew manifest as a document (`SPINE_CREW`, else `crew.v0.json`) — its seats and,
+    Phase 8 sp1, the levels it declares."""
+    base = Path(spine or SPINE)
+    path = Path(os.environ.get(CREW_DIAL) or (base / "crew.v0.json"))
+    return json.loads(path.read_text("utf-8"))
+
+
+def seat_scope(universe: str, at: str | None) -> str:
+    """The scope path a seat's body wears: the universe, or the declared level within it."""
+    from . import levels
+    return levels.absolute(universe, at)
 
 
 # ---- the words as they form: to the kernel's door, coalesced ----------------------------------------------
@@ -296,7 +312,8 @@ def serve(template, binding, policy, *, stop: threading.Event, ready: threading.
         # its lease. Turned away → refused at birth, never restarted (the fact is on the ground).
         from . import desk
         lease = desk.knock(door, r.identity, name=r.name, kind=r.kind, template_hash=r.template_hash,
-                           policy_hash=r.policy["hash"], ticket=os.environ.get(desk.SPAWN_TICKET_DIAL), say=_say)
+                           policy_hash=r.policy["hash"], ticket=os.environ.get(desk.SPAWN_TICKET_DIAL), say=_say,
+                           scope=r.scope)          # Phase 8 sp1: at MY level (the seat's, from SPINE_SCOPE)
         if lease is None:
             _say(f"{r.name} was turned away at the door — never started")
             return EXIT_REFUSED

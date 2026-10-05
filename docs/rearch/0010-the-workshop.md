@@ -269,7 +269,23 @@ Each spoonful is a thing a human proves in the glass before the next opens
 
 1. **THE PATH.** Universe, floor, room on one ScopePath in one kernel per
    cell; mode tighten-only; crews per level by manifest; the cascade and
-   roll-up seeds at their minimum; schema v5.
+   roll-up seeds at their minimum; schema v5. **BUILT 2026-10-05 (JB's word:
+   "spoonful 1, THE PATH"); the walk in the glass OWED.** What landed: the
+   grammar and the child law · `SPINE_MODE` at the cell's open, tighten-only
+   down the path, a prod universe refusing to light as dev · the experiment
+   room (rooms only) · `spine_levels` (schema 5) with the universe's row seeded
+   at light and the crew manifest's `levels` declared at light · a seat's `at`
+   seating its body on a level, the body born with the level as its scope,
+   joining AT the level · the `scope` column a path: listings at a level see
+   everything within it, a body's shared reads resolve at its universe, its
+   memories recall UP the path · `GET /levels` with HERE and ROLLED (the 0005
+   monoid) · `GET /levels/context` (the 0007 fold) · `POST /levels/open` held
+   at L2 · the glass's mode tag, levels line, chat words and notice · 0009 and
+   0010 in MITL's corpus · fixture `levels-v0.json` (69), 818/818 on both
+   kernels. Named, not in sp1: a floor's own shelf, Stable and policy (the
+   shared reads escalate to the universe); the Rust kernel's own reads stand
+   at the universe (one kernel per cell is always at depth 1); `context_hash`
+   on a thought; the Costs Panel's fold; the book's `SPINE_MODE` pin.
 2. **THE SHELF WIDENED.** The craft kinds, the wear table, the draft shelf
    under the person, golden as a component, source with repo and commit;
    the hull with its three edges, the template's graph finally read.

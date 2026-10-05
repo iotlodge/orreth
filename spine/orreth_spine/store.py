@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P2 sp2, the mind arrives · 2026-09-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P5 sp2, Understanding v0 (lineage · validity · a ranked projection) · 2026-09-19
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: the pure laws factored for the fixture; the kernel's own self signs the export · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: memories land at the body's level; recall escalates UP the path, the nearest level winning a key · 2026-10-05
 """The OrrethStore (canon 0003): LangGraph memory ergonomics, kernel truth
 beneath.
 
@@ -18,6 +19,15 @@ enforcement stays at the door that owns the connection.
 from __future__ import annotations
 
 from . import envelope as ev
+
+
+def _up() -> list[str]:
+    """The scopes a read escalates through (Phase 8 sp1, THE PATH): this process's own path
+    and every level above it, so a body on a floor recalls its floor's memories and the
+    universe's — the nearest level wins a key. Writes land at the body's own path."""
+    from . import levels
+    sc = ev.scope()
+    return levels.ancestors(sc) if levels.ok(sc) else [sc]
 import re
 
 from . import outbox
@@ -135,7 +145,7 @@ class OrrethStore:
                 cur.execute("UPDATE spine_memories SET valid_to = now()"
                             " WHERE memory_id = %s", (prev[0],))
             e = ev.make_envelope(
-                kind="event", type=MEMORY_EVENT, universe_id=ev.scope(),
+                kind="event", type=MEMORY_EVENT, universe_id=ev.universe(),
                 scope_path=ev.scope(), payload=payload,
                 authority_chain=[self.by_did])
             cur.execute(
@@ -151,13 +161,14 @@ class OrrethStore:
         cur = self._conn.cursor()
         if at is None:
             cur.execute(f"SELECT body FROM spine_memories WHERE namespace = %s"
-                        f" AND key = %s AND scope = %s AND {_VALID_NOW} AND {_IN_STATE}",
-                        (namespace, key, ev.scope(), self.state))
+                        f" AND key = %s AND scope = ANY(%s) AND {_VALID_NOW} AND {_IN_STATE}"
+                        " ORDER BY length(scope) DESC LIMIT 1",
+                        (namespace, key, _up(), self.state))
         else:
             cur.execute(f"SELECT body FROM spine_memories WHERE namespace = %s"
-                        f" AND key = %s AND scope = %s AND {_VALID_AT} AND {_IN_STATE}"
-                        " ORDER BY valid_from DESC LIMIT 1",
-                        (namespace, key, ev.scope(), at, at, self.state))
+                        f" AND key = %s AND scope = ANY(%s) AND {_VALID_AT} AND {_IN_STATE}"
+                        " ORDER BY length(scope) DESC, valid_from DESC LIMIT 1",
+                        (namespace, key, _up(), at, at, self.state))
         row = cur.fetchone()
         return row[0] if row else None
 
@@ -166,8 +177,8 @@ class OrrethStore:
         cur = self._conn.cursor()
         cur.execute(
             "SELECT hash, body, valid_from, valid_to, supersedes, understanding"
-            " FROM spine_memories WHERE namespace = %s AND key = %s AND scope = %s"
-            " ORDER BY valid_from", (namespace, key, ev.scope()))
+            " FROM spine_memories WHERE namespace = %s AND key = %s AND scope = ANY(%s)"
+            " ORDER BY valid_from", (namespace, key, _up()))
         return [{"hash": r[0], "body": r[1], "valid_from": r[2].isoformat(),
                  "valid_to": r[3].isoformat() if r[3] else None,
                  "supersedes": r[4], "understanding": r[5]} for r in cur.fetchall()]
@@ -185,9 +196,9 @@ class OrrethStore:
         cur.execute(
             f"SELECT key, body, ts_rank(tsv, q) AS rank FROM spine_memories,"
             f" websearch_to_tsquery('english', %s) q"
-            f" WHERE namespace = %s AND scope = %s AND {valid} AND {_IN_STATE} AND tsv @@ q"
+            f" WHERE namespace = %s AND scope = ANY(%s) AND {valid} AND {_IN_STATE} AND tsv @@ q"
             f" ORDER BY rank DESC, landed_at DESC LIMIT %s",
-            (terms, namespace, ev.scope(), *vargs, self.state, limit))
+            (terms, namespace, _up(), *vargs, self.state, limit))
         rows = [{"key": k, "body": b, "rank": float(r)} for k, b, r in cur.fetchall()]
         if rows:
             return rows
@@ -195,9 +206,9 @@ class OrrethStore:
         conds = " OR ".join(["body ILIKE %s"] * len(words))
         cur.execute(
             f"SELECT key, body FROM spine_memories"
-            f" WHERE namespace = %s AND scope = %s AND {valid} AND {_IN_STATE} AND ({conds})"
+            f" WHERE namespace = %s AND scope = ANY(%s) AND {valid} AND {_IN_STATE} AND ({conds})"
             f" ORDER BY landed_at DESC LIMIT %s",
-            (namespace, ev.scope(), *vargs, self.state, *[f"%{w}%" for w in words], limit))
+            (namespace, _up(), *vargs, self.state, *[f"%{w}%" for w in words], limit))
         return [{"key": k, "body": b, "rank": 0.0} for k, b in cur.fetchall()]
 
     def within(self, namespace: str, from_iso: str, to_iso: str,
@@ -207,9 +218,9 @@ class OrrethStore:
         cur = self._conn.cursor()
         cur.execute(
             f"SELECT key, body, landed_at FROM spine_memories WHERE namespace = %s"
-            f" AND scope = %s AND {_IN_STATE} AND landed_at BETWEEN %s AND %s"
+            f" AND scope = ANY(%s) AND {_IN_STATE} AND landed_at BETWEEN %s AND %s"
             f" ORDER BY landed_at LIMIT %s",
-            (namespace, ev.scope(), self.state, from_iso, to_iso, limit))
+            (namespace, _up(), self.state, from_iso, to_iso, limit))
         return [{"key": k, "body": b, "landed_at": t.isoformat()}
                 for k, b, t in cur.fetchall()]
 
@@ -217,9 +228,9 @@ class OrrethStore:
         cur = self._conn.cursor()
         cur.execute(
             f"SELECT key, body FROM spine_memories WHERE namespace = %s"
-            f" AND scope = %s AND {_VALID_NOW} AND {_IN_STATE}"
+            f" AND scope = ANY(%s) AND {_VALID_NOW} AND {_IN_STATE}"
             f" ORDER BY landed_at DESC LIMIT %s",
-            (namespace, ev.scope(), self.state, limit))
+            (namespace, _up(), self.state, limit))
         return [{"key": k, "body": b} for k, b in cur.fetchall()]
 
     def purge(self, namespace: str, key: str) -> dict:
@@ -234,7 +245,7 @@ class OrrethStore:
             hashes = [r[0] for r in cur.fetchall()]
             if hashes:
                 e = ev.make_envelope(
-                    kind="event", type=PURGE_EVENT, universe_id=ev.scope(),
+                    kind="event", type=PURGE_EVENT, universe_id=ev.universe(),
                     scope_path=ev.scope(), payload=purge_payload(namespace, key, hashes),
                     authority_chain=[self.by_did])
                 outbox.add_row(cur, ev.encode(e), e["message_id"])

@@ -94,6 +94,7 @@ pub mod export;
 pub mod hash;
 pub mod intent;
 pub mod kernel_self;
+pub mod levels; // Phase 8 sp1: THE PATH — the levels' pure laws
 pub mod levers;
 pub mod markers; // re-base sp1: the kind-name law, pure
 pub mod mcp;
@@ -147,6 +148,8 @@ pub mod inbox;
 pub mod intent_live;
 #[cfg(feature = "rails")]
 pub mod invoke;
+#[cfg(feature = "rails")]
+pub mod levels_live; // Phase 8 sp1: the levels on the ground
 #[cfg(feature = "rails")]
 pub mod levers_live;
 #[cfg(feature = "rails")]

@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the brokers' TEST RESIDUE pruned · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: THE GROUND'S PRUNE — every row whose world is test-shaped, across every table with a scope column (`ground` · `scope`) · 2026-09-29
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: a pruned world takes its levels · 2026-10-05
 """The brokers' housekeeping (the perf cure, 2026-09-29): every test session and every proof
 names its own namespace (`t<6 hex>`, `a…` · `b…` · `p…` for the cells' and the poison's
 proofs) and the brokers keep every topic, queue and consumer group it made — found live: a
@@ -155,7 +156,7 @@ def _prune_where(conn, where: str, params: tuple) -> dict:
 def scope(conn, world: str) -> dict:
     """ONE world's rows, gone — every table with a scope column, the children by their
     parent. `{table: rows}` for what was touched."""
-    return _prune_where(conn, "scope = %s", (world,))
+    return _prune_where(conn, "(scope = %s OR scope LIKE %s || '/%%')", (world, world))   # Phase 8 sp1: every level
 
 
 def ground(conn=None) -> dict:

@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P5 sp3, the Digest (MEM-3) · 2026-09-19
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp5, memory and the export: the pure laws factored for the fixture; the kernel's own self signs the export · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #13 cures: W51 a roll is a fact the feed carries · W52 the digest in the human's zone · THE GUIDE (JB's seed) · 2026-09-24
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """The Digest (canon 0003, JB's compression law): the short version of an
 episode, written at its boundary, CITING every record it compresses. v0
 is extractive and deterministic — the head of every exchange, who
@@ -83,7 +84,7 @@ def compose_session(conn, session_id: str) -> tuple[str, list[str]] | None:
     cur = conn.cursor()
     cur.execute("SELECT session_id, title, opened_at, person, coalesce(state, 'in')"
                 " FROM spine_sessions WHERE session_id = %s AND scope = %s",
-                (session_id, ev.scope()))
+                (session_id, ev.universe()))
     row = cur.fetchone()
     if row is None:
         return None
@@ -92,7 +93,7 @@ def compose_session(conn, session_id: str) -> tuple[str, list[str]] | None:
     # opening (the same human, this world) — or now, for the latest one
     cur.execute("SELECT coalesce(min(opened_at), now()) FROM spine_sessions"
                 " WHERE person = %s AND scope = %s AND opened_at > %s",
-                (person, ev.scope(), opened))
+                (person, ev.universe(), opened))
     span_end = cur.fetchone()[0]
     cur.execute(
         "SELECT a.ask_id, a.text, a.reply, a.status, a.asked_at, a.replied_at,"
@@ -112,7 +113,7 @@ def compose_session(conn, session_id: str) -> tuple[str, list[str]] | None:
             cur.execute(
                 "SELECT namespace, key, body FROM spine_memories WHERE scope = %s"
                 " AND state = %s AND landed_at BETWEEN %s AND %s ORDER BY landed_at",
-                (ev.scope(), state, opened, span_end))
+                (ev.universe(), state, opened, span_end))
             memories = cur.fetchall()
     body, sources = compose_lines(session_id, title, opened.astimezone(z), asks, memories)
     return body, sources, state
@@ -132,7 +133,7 @@ def build(conn, session_id: str, by: str = "the digest builder") -> dict | None:
         cur = conn.cursor()
         cur.execute("SELECT digest_id, hash FROM spine_digests WHERE kind = 'session'"
                     " AND ref = %s AND scope = %s AND valid_to IS NULL FOR UPDATE",
-                    (session_id, ev.scope()))
+                    (session_id, ev.universe()))
         prev = cur.fetchone()
         if prev and prev[1] == h:
             return {"digest_id": prev[0], "hash": h, "body": body, "sources": sources,
@@ -145,10 +146,10 @@ def build(conn, session_id: str, by: str = "the digest builder") -> dict | None:
             "INSERT INTO spine_digests (digest_id, kind, ref, body, sources, hash,"
             " by_did, scope, supersedes, state)"
             " VALUES (%s, 'session', %s, %s, %s, %s, %s, %s, %s, %s)",
-            (did, session_id, body, json.dumps(sources), h, by, ev.scope(),
+            (did, session_id, body, json.dumps(sources), h, by, ev.universe(),
              prev[1] if prev else None, state))
         e = ev.make_envelope(
-            kind="event", type=DIGEST_EVENT, universe_id=ev.scope(), scope_path=ev.scope(),
+            kind="event", type=DIGEST_EVENT, universe_id=ev.universe(), scope_path=ev.universe(),
             payload={"ref": did, "hash": h, "session": session_id,
                      "sources": len(sources)}, correlation_id=session_id,
             authority_chain=[by])
@@ -162,7 +163,7 @@ def of_session(conn, session_id: str) -> dict | None:
     cur = conn.cursor()
     cur.execute("SELECT digest_id, body, sources, hash, by_did, built_at, supersedes"
                 " FROM spine_digests WHERE kind = 'session' AND ref = %s AND scope = %s"
-                " AND valid_to IS NULL", (session_id, ev.scope()))
+                " AND valid_to IS NULL", (session_id, ev.universe()))
     r = cur.fetchone()
     return {"digest_id": r[0], "session": session_id, "body": r[1],
             "sources": json.loads(r[2]), "hash": r[3], "by": r[4],
@@ -175,7 +176,7 @@ def rebuild_citing(conn, ref: str, by: str = "the digest builder") -> int:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT ref FROM spine_digests WHERE kind = 'session' AND scope = %s"
-                " AND valid_to IS NULL AND sources LIKE %s", (ev.scope(), f'%"{ref}"%'))
+                " AND valid_to IS NULL AND sources LIKE %s", (ev.universe(), f'%"{ref}"%'))
     n = 0
     for (session_id,) in cur.fetchall():
         made = build(conn, session_id, by=by)
@@ -200,7 +201,7 @@ def for_person(conn, person: str, *, exclude: str | None = None,
             " AND EXISTS (SELECT 1 FROM spine_asks a"
             "  WHERE a.session = d.ref AND a.asked_at BETWEEN %s AND %s)"
             " ORDER BY s.opened_at DESC LIMIT %s",
-            (ev.scope(), state, person, exclude or "", window["from"], window["to"], limit))
+            (ev.universe(), state, person, exclude or "", window["from"], window["to"], limit))
     else:
         cur.execute(
             "SELECT d.digest_id, d.ref, d.body, d.sources FROM spine_digests d"
@@ -208,6 +209,6 @@ def for_person(conn, person: str, *, exclude: str | None = None,
             " WHERE d.kind = 'session' AND d.scope = %s AND d.valid_to IS NULL"
             " AND d.state = %s AND s.person = %s AND d.ref <> %s"
             " ORDER BY s.opened_at DESC LIMIT %s",
-            (ev.scope(), state, person, exclude or "", limit))
+            (ev.universe(), state, person, exclude or "", limit))
     return [{"digest_id": r[0], "session": r[1], "body": r[2],
              "sources": json.loads(r[3])} for r in cur.fetchall()]

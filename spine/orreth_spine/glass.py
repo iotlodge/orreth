@@ -20,6 +20,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the crew door in SET queries · the retention beat on the schedule loop · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86 · W87): `POST /watches/rest` · `POST /asks/stop` (a local ask) · `POST /peers/forget` — the governing word checked INSIDE the handler (the seat's door table untouched, rule 9) · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — W91 THE BENCH SWEEP: the bench beat in the reference · 2026-10-02
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: `GET /levels` · `GET /levels/context` · `POST /levels/open` (held at L2) · the manifest's levels declared at light · each seat on its level · the crew, asks and residents views within the universe · 2026-10-05
 """The glass server v0 (canon 0001): the one place a human connects.
 
 It serves the Bridge page, the live feed (SSE), and the human-path
@@ -50,7 +51,7 @@ from pathlib import Path
 import psycopg
 
 from . import bridgefeed, digest, dispatch, envelope as ev, export, ground, harness, intent, markers, mitl, monitor, outbox
-from . import cells, placement, presence, profile, projector, proof, scheduler, seat, services, sinks
+from . import cells, levels, placement, presence, profile, projector, proof, scheduler, seat, services, sinks
 from . import body as _body, desk, levers as _levers, rails, stable as _stable, store   # panel sp2: the feed's topics
 from . import doors as _doors                                                          # panel sp3: THE CLOCK at every door
 from . import projector as _projector                                                  # re-base sp1: the parked, the advance
@@ -81,7 +82,8 @@ FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED, SESSION_OPENED,
                seat.SEAT_TAKEN, seat.SEAT_LEFT,    # the desk
                desk.JOIN_ASKED, desk.JOIN_PROVED, desk.JOIN_ADMITTED, desk.JOIN_DENIED,   # the join desk
                _projector.PARKED, _projector.ADVANCED,   # re-base sp1: the poison parked, the person's advance
-               _body.JOINED, _body.REFUSED]              # re-base sp1: a body joined (a life) · refused at birth — the roster's facts
+               _body.JOINED, _body.REFUSED,              # re-base sp1: a body joined (a life) · refused at birth — the roster's facts
+               levels.LEVEL_OPENED]                      # Phase 8 sp1: a floor or room opened — at light, by the manifest, on a person's word
 
 
 def ask_view(conn, ask_id: str) -> dict | None:
@@ -185,8 +187,8 @@ def asks_view(conn, limit: int = 30) -> list[dict]:
     cur = conn.cursor()
     cur.execute(
         "SELECT ask_id, text, person, status, served_by, target, fanout,"
-        " asked_at, replied_at FROM spine_asks WHERE scope = %s"
-        " ORDER BY asked_at DESC LIMIT %s", (ev.scope(), limit))
+        f" asked_at, replied_at FROM spine_asks WHERE {ev.WITHIN}"
+        " ORDER BY asked_at DESC LIMIT %s", (*ev.within_params(ev.universe()), limit))
     return [{"ask_id": r[0], "text": r[1][:140], "person": r[2],
              "status": r[3], "served_by": r[4], "target": r[5],
              "fanout": r[6], "asked_at": r[7].isoformat(),
@@ -253,23 +255,23 @@ def crew_view(conn, bodies: dict | None = None) -> list[dict]:
     cur = conn.cursor()
     cur.execute(
         "SELECT DISTINCT ON (name) name, kind, did, life, joined_at,"
-        " policy_version, template_hash, capabilities, placement, nature FROM spine_joins"
-        " WHERE scope = %s ORDER BY name, join_id DESC", (ev.scope(),))
+        " policy_version, template_hash, capabilities, placement, nature, scope FROM spine_joins"
+        f" WHERE {ev.WITHIN} ORDER BY name, join_id DESC", ev.within_params(ev.universe()))
     rows = cur.fetchall()
     alive = {b["did"]: b["alive"] for b in presence.roster(conn)}
     here = placement.ground_declares()      # P6 sp4: where this ground is
     refused = placement.refusals(conn)      # the bodies it could not seat
     # the perf cure (2026-09-29): a FIXED handful of reads however large the crew — the served counts in
     # one GROUP BY, the Stable's stalls and assignments once, the meter's last lines in one DISTINCT ON
-    cur.execute("SELECT served_by, count(*), max(replied_at) FROM spine_asks WHERE scope = %s"
-                " AND status <> 'received' AND served_by IS NOT NULL GROUP BY served_by", (ev.scope(),))
+    cur.execute(f"SELECT served_by, count(*), max(replied_at) FROM spine_asks WHERE {ev.WITHIN}"
+                " AND status <> 'received' AND served_by IS NOT NULL GROUP BY served_by", ev.within_params(ev.universe()))
     served = {d: (n, last) for d, n, last in cur.fetchall()}
     if bodies:
         from . import stable
         stalls, assigned = services.listing(conn, kind="mind"), stable.assignments(conn)
         lasts = meter_lasts(conn, [r[2] for r in rows])
     cards = []
-    for name, kind, did, life, joined, pv, th, caps, plc, nature in rows:
+    for name, kind, did, life, joined, pv, th, caps, plc, nature, sc in rows:
         n, last = served.get(did, (0, None))
         prof = json.loads(plc) if plc else dict(placement.DEFAULT)
         r = refused.pop(name, None)
@@ -279,6 +281,7 @@ def crew_view(conn, bodies: dict | None = None) -> list[dict]:
         cards.append({
             "mind": mind_line_with(stalls, assigned, lasts.get(did), name, getattr(body, "template", None)) if body is not None else None,
             "name": name, "kind": kind, "did": did, "lives": life,
+            "scope": sc,                    # Phase 8 sp1: the level this body joined at (its scope path)
             "nature": nature or "",         # W7: what it IS, one line
             "joined_at": joined.isoformat(), "policy_version": pv,
             "alive": alive.get(did),        # M2: a fresh lease, or dormant
@@ -373,7 +376,7 @@ def open_session(conn, person: str, title: str | None = None,
     ensure_schema(conn)
     sid = "ses_" + secrets.token_hex(6)
     outbox.ensure_schema(conn)
-    e = ev.make_envelope(kind="event", type=SESSION_OPENED, universe_id=ev.scope(), scope_path=ev.scope(),
+    e = ev.make_envelope(kind="event", type=SESSION_OPENED, universe_id=ev.universe(), scope_path=ev.scope(),
                          payload=session_payload(sid, person, title, archive, "opt-out" if opt_out else "in"),
                          correlation_id=sid, authority_chain=[person])
     with conn.transaction():
@@ -456,11 +459,11 @@ def residents_view(conn) -> list[dict]:
     """The chat's right edge: who lives here — name, self, lives."""
     cur = conn.cursor()
     cur.execute(
-        "SELECT DISTINCT ON (name) name, did, life, joined_at, kind, nature"
-        " FROM spine_joins WHERE scope = %s ORDER BY name, join_id DESC",
-        (ev.scope(),))
+        "SELECT DISTINCT ON (name) name, did, life, joined_at, kind, nature, scope"
+        f" FROM spine_joins WHERE {ev.WITHIN} ORDER BY name, join_id DESC",
+        ev.within_params(ev.universe()))
     return [{"name": r[0], "did": r[1], "lives": r[2],
-             "joined_at": r[3].isoformat(), "kind": r[4], "nature": r[5] or ""}
+             "joined_at": r[3].isoformat(), "kind": r[4], "nature": r[5] or "", "scope": r[6]}
             for r in cur.fetchall()]
 
 
@@ -641,6 +644,23 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
             if path == "/world":                         # P7 sp7: the world card — the universe, its cell, its epoch, its peers
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, cells.card(conn, kernel.did if kernel else None))
+            if path == "/levels":                        # Phase 8 sp1: THE PATH — every level of this universe, root first, what stands here and what rolls up
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    rows = levels.listing(conn, ev.universe())
+                    return self._json(200, {"universe": ev.universe(), "mode": next((r["mode"] for r in rows if r["level"] == "universe"), None),
+                                            "levels": rows})
+            if path == "/levels/context":                # the cascade at a path: the law folded root → leaf, content-addressed
+                from urllib.parse import parse_qs
+                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
+                    if "?" in self.path else {}
+                target = str(qs.get("path") or ev.universe())
+                if not levels.ok(target) or not levels.within(target, ev.universe()):
+                    return self._json(400, {"error": levels.GRAMMAR + f" — got {target!r}"})
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        return self._json(200, levels.context(conn, target))
+                except levels.LevelRefused as e:
+                    return self._json(404, {"error": str(e)})
             if path.startswith("/schedules/"):           # the card's side B
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, scheduler.for_runner(
@@ -899,6 +919,18 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 except (ValueError, markers.UnknownKind) as e:
                     return self._json(400, {"error": str(e)})
                 return self._json(201, {"intention": made})
+            if path == "/levels/open":                # Phase 8 sp1: a floor or room opened on a person's word — consequential, held at L2
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    if not proof.governs(conn, person):
+                        return self._json(403, {"error": "a level opens on a governing seat's word — yours reads and writes"})
+                    try:
+                        made = levels.hold_open(conn, {"parent": p.get("parent") or ev.universe(), "level": p.get("level"),
+                                                       "name": p.get("name"), "mode": p.get("mode"),
+                                                       "experiment": bool(p.get("experiment")), "declares": p.get("declares")},
+                                                person=person, session=str(p.get("session") or "") or None)
+                    except levels.LevelRefused as e:
+                        return self._json(400, {"error": str(e)})
+                return self._json(202, made)
             if path == "/watches/rest":               # the honest glass sp2 (W86): a watch RESTED — rule 11's lever
                 wid = str(p.get("watch_id") or "")    # the word is the watch's author's own, or a governing seat's (W69)
                 with psycopg.connect(dsn, autocommit=True) as conn:
@@ -1193,6 +1225,7 @@ class BridgeRig:
         selves: tests only, never a resident (found by the Playwright:
         every relight had been a stranger wearing the librarian's name)."""
         spine = Path(__file__).resolve().parents[1]
+        self.spine = spine                           # Phase 8 sp1: the manifest's home, for the levels at light
         self.dsn = dsn or PG_DSN
         self._stop = threading.Event()
         # lock 5 (2026-09-27): THE RIG YIELDS. A test session lights ONE rig; a test
@@ -1238,7 +1271,9 @@ class BridgeRig:
                 tpath = Path(template) if template else tpath
             elif tpath.name.startswith("echo") and not second:
                 continue
-            r = Resident(tpath, gateway=gateway, home=home, binding=bpath)
+            # Phase 8 sp1: the seat's level (`at`) — the body wears that scope path from its birth
+            r = Resident(tpath, gateway=gateway, home=home, binding=bpath,
+                         scope=_body.seat_scope(ev.universe(), seat.get("at")))
             r.load_policy(policy_path)
             self.residents.append(r)
             if self.resident is None:
@@ -1510,7 +1545,7 @@ class BridgeRig:
                     continue                # lock 5: the bench is a test's while the rig yields
                 try:
                     presence.renew(conn, resident.identity.did, resident.name,
-                                   resident.kind)         # M2: alive while I serve
+                                   resident.kind, scope=resident.scope)   # M2: alive while I serve — at my level
                     resident.serve_once(conn, idle_s=1.0, max_commands=50)
                 except Exception:
                     pass
@@ -1597,6 +1632,9 @@ class BridgeRig:
         with psycopg.connect(self.dsn, autocommit=True) as conn:     # P7 sp7: the universe's home settled at light
             ground.ensure_all(conn)
             self.home = cells.home(conn, self.kernel.did, f"http://127.0.0.1:{self.port}")
+            # Phase 8 sp1: the crew manifest's levels stand before the crew is seated on them
+            for lv in levels.declare(conn, ev.universe(), _body.manifest(self.spine)):
+                print(f"  [levels] {lv['words']} declared by the crew manifest ({lv['mode']})", file=sys.stderr, flush=True)
         for t in self._threads:
             t.start()
         return self

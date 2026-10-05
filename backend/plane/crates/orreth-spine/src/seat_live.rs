@@ -239,7 +239,8 @@ pub async fn on_ground(g: &Ground, w: &World, off: Seated) -> Result<Option<Seat
     let row = g
         .client()
         .query_opt(
-            "SELECT role FROM spine_seats WHERE seat_id = $1 AND scope = $2 AND left_at IS NULL",
+            "SELECT role FROM spine_seats WHERE seat_id = $1 AND (scope = $2 OR scope LIKE $2 || '/%') AND left_at \
+             IS NULL", // Phase 8 sp1: a body's lease wears its level
             &[&off.seat_id, &w.scope],
         )
         .await?;

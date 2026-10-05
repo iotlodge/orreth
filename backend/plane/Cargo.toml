@@ -11,7 +11,10 @@ members = [
 # which the canonicalization parity with the Python reference depends on.
 # Never enable "preserve_order" in this workspace.
 [workspace.dependencies]
-serde_json = "1"
+# Phase 8 sp1 (THE PATH): `float_roundtrip` — the reference's doubles (the roll-up's sums) must
+# parse to the SAME bits here; the fast path is a ulp off on 1.9400000000000002 (found by the
+# levels fixture). Default features otherwise (the BTreeMap keeps canonical bytes sorted).
+serde_json = { version = "1", features = ["float_roundtrip"] }
 sha2 = "0.10"
 ed25519-dalek = "2"
 base64 = "0.22"

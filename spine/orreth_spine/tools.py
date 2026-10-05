@@ -5,6 +5,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper's `minds` tool · the interlock names the act (W30) · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the weather tool reads the asker's own place (W58) · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 2, the tool door moves: the declarations are DATA (`spine/tools.v0.json`) both kernels read; the executors bind to them here · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """The tool door v0 (canon 0004): a resident acts only through a
 governed door.
 
@@ -379,8 +380,8 @@ def _minds_tool(args: dict, conn) -> str:
 def _did_of_body(conn, name: str) -> str | None:
     from . import envelope as _ev
     cur = conn.cursor()
-    cur.execute("SELECT did FROM spine_joins WHERE scope = %s AND lower(name) = lower(%s) ORDER BY join_id DESC LIMIT 1",
-                (_ev.scope(), name))
+    cur.execute(f"SELECT did FROM spine_joins WHERE {_ev.WITHIN} AND lower(name) = lower(%s) ORDER BY join_id DESC LIMIT 1",
+                (*_ev.within_params(_ev.universe()), name))      # Phase 8 sp1: a body at any level of the universe
     r = cur.fetchone()
     return r[0] if r else None
 
@@ -617,7 +618,7 @@ class ToolDoor:
                                f"{name}:{self.marker or self.did}", self.did, name)
                 marker = {"kind": "action", "id": mid, "parent": self.marker, "by": self.did}
             e = ev.make_envelope(                # the fact: the hop on the wire (AG-7)
-                kind="event", type=TOOL_CALLED, universe_id=ev.scope(), scope_path=ev.scope(),
+                kind="event", type=TOOL_CALLED, universe_id=ev.universe(), scope_path=ev.universe(),
                 payload={"ref": self.ask or self.did, "hash": ev.content_hash(public),
                          "tool": name, "ok": ok, "by": self.did,
                          **({"service": service} if service else {})},

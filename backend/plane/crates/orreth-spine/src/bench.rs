@@ -61,7 +61,8 @@ pub async fn sweep(g: &mut Ground, w: &World, older_than: Duration) -> Result<Va
         .client()
         .query(
             "SELECT ask_id, text, person, target, fanout, session, time_window, resent_at IS NOT NULL, \
-             floor(extract(epoch FROM (clock_timestamp() - asked_at)))::int8 FROM spine_asks WHERE scope = $1 \
+             floor(extract(epoch FROM (clock_timestamp() - asked_at)))::int8 FROM spine_asks WHERE (scope = $1 OR \
+             scope LIKE $1 || '/%') \
              AND status = 'received' AND asked_at < clock_timestamp() - $2 * interval '1 second' AND \
              (resent_at IS NULL OR resent_at < clock_timestamp() - $2 * interval '1 second') ORDER BY \
              asked_at LIMIT 50",

@@ -1,19 +1,19 @@
 {
  "contract": "orreth.schema/1",
  "version": 0,
- "generated_by": "orreth_spine.ground (the Python reference) - rearch row 4, re-base sp1: THE MIGRATOR (lock 2); version 3 by the honest glass sp2",
- "generated_at": "2026-09-29T21:00:00Z",
+ "generated_by": "orreth_spine.ground (the Python reference) - rearch row 4, re-base sp1: THE MIGRATOR (lock 2); version 5 by Phase 8 sp1 THE PATH",
+ "generated_at": "2026-10-05T18:00:00Z",
  "cases": [
   {
-   "name": "schema_version: both kernels carry the same number - 3: a watch's rest and a peer's forgetting (the honest glass sp2, 2026-09-29), after 2: the indexes (the perf cure); bumped together whenever any DDL statement changes",
+   "name": "schema_version: both kernels carry the same number - 5: the levels (spine_levels, THE PATH, Phase 8 sp1, 2026-10-05), after 4: an ask's resent_at (W91), 3: a watch's rest and a peer's forgetting, 2: the indexes; bumped together whenever any DDL statement changes",
    "kind": "schema_version",
    "input": {},
    "expect": {
-    "version": 4
+    "version": 5
    }
   },
   {
-   "name": "schema_tables: every table both kernels stand on at this version, the version table among them - sorted, no other",
+   "name": "schema_tables: every table both kernels stand on at this version, the version table among them - 41 tables at schema 5 (spine_levels joins at Phase 8 sp1)",
    "kind": "schema_tables",
    "input": {},
    "expect": {
@@ -30,6 +30,7 @@
      "spine_intentions",
      "spine_joins",
      "spine_leases",
+     "spine_levels",
      "spine_marker_kinds",
      "spine_markers",
      "spine_masters",
@@ -59,7 +60,7 @@
      "spine_watches",
      "spine_world"
     ],
-    "count": 40
+    "count": 41
    }
   }
  ]

@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (b): the machine join desk · 2026-09-26
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: the knock names the level the body joins at · 2026-10-05
 """THE MACHINE JOIN DESK (canon 0005 sp8 row 3b · 0006 §2–3 · 0012 · covenant rule 3).
 
 A BODY joins a world the way the old world's desk let it (`orreth_sim/joindoor.py` at the tag `main-v0.72-old-world`,
@@ -206,7 +207,8 @@ def hold_words(name: str, kind: str, template_hash: str, days: int) -> str:
 
 
 def knock(door: str, identity, *, name: str, kind: str, template_hash: str, policy_hash: str,
-          ticket: str | None = None, wait_s: float = 600.0, poll_s: float = 1.0, say=None) -> dict | None:
+          ticket: str | None = None, wait_s: float = 600.0, poll_s: float = 1.0, say=None,
+          scope: str | None = None) -> dict | None:
     """One body at the kernel's door: ask (challenged) → prove → wait for the word
     (a spawn ticket or a standing welcome answers at once; else a governing seat's
     click) → collect the lease with the same key. Returns `{lease, wire, lease_id,
@@ -232,7 +234,8 @@ def knock(door: str, identity, *, name: str, kind: str, template_hash: str, poli
             conn.close()
 
     ask = {"did": identity.did, "name": name, "role": kind, "public_key": identity.verify_key_hex,
-           "template_hash": template_hash, "policy_hash": policy_hash}
+           "template_hash": template_hash, "policy_hash": policy_hash,
+           "scope": scope or ev.scope()}            # Phase 8 sp1: the LEVEL this body joins at (its own path)
     if ticket:
         ask["ticket"] = ticket
     st, a = call("POST", "/join", ask)

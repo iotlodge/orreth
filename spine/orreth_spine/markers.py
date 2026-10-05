@@ -3,6 +3,8 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch walk #11 cure W40: the origins keep every standing intention · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: an intention's origin row carries its last attributed outcome · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: the four Python-only doors cross to the Rust kernel — the pure parts named (`ask_text` · `kind_name`) so the fixtures pin them · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: the interested bodies at every level of the universe · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """Markers (canon 0006): the kernel's open, governed vocabulary of WHY.
 A marker is a typed origin on a fact — {kind, id, parent, by}: a root
 fact mints it, a serving fact carries it, a new beginning under it mints
@@ -80,7 +82,7 @@ def seed(conn) -> None:
     the second ground never got its seed; the rig's `watch-red` was then
     unknown and Resiliency never declared)."""
     ensure_schema(conn)
-    scope = ev.scope()
+    scope = ev.universe()
     done = getattr(conn, "_spine_seeded", None)
     if done is None:
         done = set()
@@ -101,7 +103,7 @@ def kinds(conn) -> list[dict]:
     seed(conn)
     cur = conn.cursor()
     cur.execute("SELECT kind, grp, description, declared_by, declared_at FROM spine_marker_kinds"
-                " WHERE scope = %s ORDER BY grp, kind", (ev.scope(),))
+                " WHERE scope = %s ORDER BY grp, kind", (ev.universe(),))
     return [{"kind": r[0], "group": r[1], "description": r[2], "declared_by": r[3],
              "declared_at": r[4].isoformat()} for r in cur.fetchall()]
 
@@ -125,7 +127,7 @@ def declare(conn, kind: str, grp: str, description: str, by: str) -> dict:
         conn.cursor().execute(
             "INSERT INTO spine_marker_kinds (kind, grp, description, declared_by, scope)"
             " VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING",
-            (kind, stored, description, by, ev.scope()))
+            (kind, stored, description, by, ev.universe()))
     return {"kind": kind, "group": grp}
 
 
@@ -133,7 +135,7 @@ def check_kind(conn, kind: str) -> None:
     seed(conn)
     cur = conn.cursor()
     cur.execute("SELECT 1 FROM spine_marker_kinds WHERE kind = %s AND scope = %s",
-                (kind, ev.scope()))
+                (kind, ev.universe()))
     if cur.fetchone() is None:
         known = ", ".join(k["kind"] for k in kinds(conn))
         raise UnknownKind(f"no marker kind named {kind!r} is declared here — declare it "
@@ -152,7 +154,7 @@ def insert(cur, marker_id: str, kind: str, parent: str | None, ref: str,
         "INSERT INTO spine_markers (marker_id, kind, parent, ref, by_did, note, scope, root)"
         " VALUES (%s, %s, %s, %s, %s, %s, %s,"
         " coalesce((SELECT root FROM spine_markers WHERE marker_id = %s), %s))",
-        (marker_id, kind, parent, ref, by, note, ev.scope(), parent, marker_id))
+        (marker_id, kind, parent, ref, by, note, ev.universe(), parent, marker_id))
 
 
 def mint(conn, kind: str, ref: str, by: str, parent: str | None = None,
@@ -170,7 +172,7 @@ def get(conn, marker_id: str) -> dict | None:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT marker_id, kind, parent, ref, by_did, note, at FROM spine_markers"
-                " WHERE marker_id = %s AND scope = %s", (marker_id, ev.scope()))
+                " WHERE marker_id = %s AND scope = %s", (marker_id, ev.universe()))
     r = cur.fetchone()
     return {"id": r[0], "kind": r[1], "parent": r[2], "ref": r[3], "by": r[4],
             "note": r[5], "at": r[6].isoformat()} if r else None
@@ -197,7 +199,7 @@ def set_marker(conn, kind: str, ref: str, by: str, parent: str | None = None,
     if by not in authority:
         authority.append(by)
     e = ev.make_envelope(
-        kind="event", type=MARKER_SET, universe_id=ev.scope(), scope_path=ev.scope(),
+        kind="event", type=MARKER_SET, universe_id=ev.universe(), scope_path=ev.universe(),
         payload={"ref": ref, "hash": ev.content_hash(note or ""), "marker_id": mid,
                  "kind": kind, "parent": parent},
         correlation_id=ref, authority_chain=authority, marker=marker)
@@ -212,7 +214,7 @@ def interested(conn, kind: str) -> list[str]:
     """The bodies of this world whose templates declared interest in a kind."""
     cur = conn.cursor()
     cur.execute("SELECT DISTINCT ON (name) name, interests FROM spine_joins"
-                " WHERE scope = %s ORDER BY name, join_id DESC", (ev.scope(),))
+                f" WHERE {ev.WITHIN} ORDER BY name, join_id DESC", ev.within_params(ev.universe()))
     return [name for name, ints in cur.fetchall()
             if ints and kind in json.loads(ints)]
 
@@ -252,7 +254,7 @@ def tree(conn, root: str, limit: int = 500) -> list[dict]:
         "  UNION ALL"
         "  SELECT m.marker_id, m.kind, m.parent, m.ref, m.by_did, m.note, m.at, t.depth + 1"
         "   FROM spine_markers m JOIN t ON m.parent = t.marker_id)"
-        " SELECT * FROM t ORDER BY depth, at LIMIT %s", (root, ev.scope(), limit))
+        " SELECT * FROM t ORDER BY depth, at LIMIT %s", (root, ev.universe(), limit))
     return [_row(r) for r in cur.fetchall()]
 
 
@@ -267,7 +269,7 @@ def ancestry(conn, marker_id: str) -> list[dict]:
         "  UNION ALL"
         "  SELECT m.marker_id, m.kind, m.parent, m.ref, m.by_did, m.note, m.at, a.depth + 1"
         "   FROM spine_markers m JOIN a ON m.marker_id = a.parent)"
-        " SELECT * FROM a ORDER BY depth", (marker_id, ev.scope()))
+        " SELECT * FROM a ORDER BY depth", (marker_id, ev.universe()))
     return [_row(r) for r in cur.fetchall()]
 
 
@@ -281,7 +283,7 @@ def stream(conn, kind: str | None = None, grp: str | None = None, limit: int = 6
         " ON k.kind = m.kind AND k.scope = m.scope"
         " WHERE m.scope = %s AND (%s::text IS NULL OR m.kind = %s)"
         " AND (%s::text IS NULL OR k.grp = %s) ORDER BY m.at DESC LIMIT %s",
-        (ev.scope(), kind, kind, grp, grp, limit))
+        (ev.universe(), kind, kind, grp, grp, limit))
     out = []
     for r in cur.fetchall():
         d = _row(r[:8]); d["group"] = r[8]; out.append(d)
@@ -363,7 +365,7 @@ def origins(conn, limit: int = 60) -> list[dict]:
         " AND (r.marker_id IN (SELECT n.marker_id FROM spine_markers n WHERE n.scope = %s"
         "        AND n.parent IS NULL ORDER BY n.at DESC LIMIT %s)"
         "   OR r.marker_id IN (SELECT i.marker FROM spine_intentions i WHERE i.scope = %s AND i.active))"
-        " ORDER BY r.at DESC", (ev.scope(), ev.scope(), limit, ev.scope()))   # W40: a standing intention is never off the board
+        " ORDER BY r.at DESC", (ev.universe(), ev.universe(), limit, ev.universe()))   # W40: a standing intention is never off the board
     out = []
     for row in cur.fetchall():
         d = _row(row[:8]); d["root"] = d["id"]

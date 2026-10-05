@@ -10,6 +10,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the RETENTION beat (hourly, one kernel) · 2026-09-29
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — W91 THE BENCH SWEEP: the bench beat · 2026-10-02
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: `GET /levels` · `GET /levels/context` · `POST /levels/open` (held at L2) · the manifest's levels declared at light · the mode said at light · 2026-10-05
 //! The Rust bridge — the doors and the feed of `orreth_spine.glass` +
 //! `bridgefeed` on axum, lit in SHADOW on :4601 beside the Python Bridge on
 //! :4600, both on one ground. It serves the SAME page (`spine/glass/index.html`
@@ -282,11 +283,23 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
     )
     .await?;
     eprintln!(
-        "{} stands in cell {cell} at epoch {} — kept by {}",
+        "{} stands in cell {cell} at epoch {} — kept by {} · mode {}",
         w.scope,
         home["epoch"],
-        kernel.did()
+        kernel.did(),
+        home["mode"].as_str().unwrap_or("dev")
     );
+    // Phase 8 sp1, THE PATH: the crew manifest's floors and rooms stand before the crew is
+    // seated on them — declared at light, in the universe's mode unless a tighter one is asked
+    if let Ok(doc) = bodies::manifest(&cfg.spine) {
+        for lv in crate::levels_live::declare(&mut g, &w.scope, &doc).await? {
+            eprintln!(
+                "  [levels] {} declared by the crew manifest ({})",
+                lv["words"].as_str().unwrap_or_default(),
+                lv["mode"].as_str().unwrap_or_default()
+            );
+        }
+    }
     // P7 sp7: THE SEAM — signed by this kernel's self; the peers this cell names
     let seam = Arc::new(crate::seam::Seam::new(
         &cell,
@@ -825,6 +838,9 @@ fn router(app: Arc<App>) -> Router {
         .route("/profile", get(profile_door).post(profile_post)) // P7 sp8: the human's own profile — theirs to see and adjust (W58)
         .route("/world", get(world_door)) // P7 sp7: the world card — the universe, its cell, its epoch, its peers
         .route("/world/rehome", post(world_rehome)) // P7 sp7: re-home the universe — held at L2, the epoch advances on the yes
+        .route("/levels", get(levels_door)) // Phase 8 sp1: THE PATH — every level of this universe, what stands here and what rolls up
+        .route("/levels/context", get(levels_context)) // the cascade at a path: the law folded root → leaf, content-addressed
+        .route("/levels/open", post(levels_open)) // a floor or room opened on a governing seat's word — held at L2
         .route("/seam", post(seam_post)) // P7 sp7: the seam — signed messages between peer cells
         .route("/asks/stop", post(asks_stop)) // P7 sp7: the human stops a routed ask (rule 11) · sp2: or a local one left waiting
         .route("/watches/rest", post(watches_rest)) // the honest glass sp2 (W86): a watch rested — rule 11's lever
@@ -2267,6 +2283,81 @@ async fn world_rehome(
     .await;
     match out {
         Ok(v) => answer(202, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `GET /levels` — Phase 8 sp1: every level of this universe, root first, with what stands
+/// HERE and what is ROLLED up from within it.
+async fn levels_door(State(app): State<Arc<App>>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        let rows = crate::levels_live::listing(&g, scope(&app)).await?;
+        let mode = rows
+            .iter()
+            .find(|r| r["level"] == "universe")
+            .and_then(|r| r["mode"].as_str().map(str::to_string));
+        Ok::<_, RoadError>(json!({"universe": scope(&app), "mode": mode, "levels": rows}))
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `GET /levels/context?path=…` — the cascade at a path (the universe when unsaid).
+async fn levels_context(State(app): State<Arc<App>>, Query(q): Query<HashMap<String, String>>) -> Response {
+    let target = q
+        .get("path")
+        .map(|p| p.trim().to_string())
+        .filter(|p| !p.is_empty())
+        .unwrap_or_else(|| scope(&app).to_string());
+    if !crate::levels::ok(&target) || !seat::within(&target, scope(&app)) {
+        return answer(
+            400,
+            json!({"error": format!("{} — got {}", crate::levels::GRAMMAR, crate::levels::py_repr(&target))}),
+        );
+    }
+    let out = async {
+        let g = ground(&app).await?;
+        crate::levels_live::context(&g, &target).await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(RoadError::Refused(words)) if words.ends_with("is not open here") => {
+            answer(404, json!({"error": words}))
+        }
+        Err(e) => refuse(e),
+    }
+}
+
+/// `POST /levels/open {parent?, level, name, mode?, experiment?, declares?, session?}` — a
+/// governing seat's word (the gate's door table says govern); the laws checked now, the act
+/// held at L2 (202 `{held, level, class, path}`).
+async fn levels_open(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    body: Bytes,
+) -> Response {
+    let p = body_json(&body);
+    let person = seated.person.clone();
+    let out = async {
+        let mut g = ground(&app).await?;
+        crate::levels_live::hold_open(
+            &mut g,
+            &app.cfg.world,
+            &p,
+            &person,
+            s_opt(&p, "session").as_deref(),
+        )
+        .await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(202, v),
+        Err(RoadError::Refused(words)) => answer(400, json!({"error": words})),
         Err(e) => refuse(e),
     }
 }

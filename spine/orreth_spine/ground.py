@@ -7,6 +7,8 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): SCHEMA VERSION 2 — the indexes the doors and the relay were missing · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: SCHEMA VERSION 3 — a watch's rest and a peer's forgetting, recorded on their rows (rule 11) · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — schema 4 · the bench beat (W91) · 2026-10-02
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — schema 5 · the levels (Phase 8 sp1, THE PATH) · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """Every ground, ensured when a connection is BORN — never inside a serve.
 
 The law (found live at the intent sp1 relight): `outbox.once` keeps a
@@ -70,13 +72,13 @@ def beat_key(name: str) -> int:
 def try_beat(conn, name: str) -> bool:
     """Claim this world's beat of a class — True when it is ours to run."""
     cur = conn.cursor()
-    cur.execute("SELECT pg_try_advisory_lock(%s::int, hashtext(%s))", (beat_key(name), ev.scope()))
+    cur.execute("SELECT pg_try_advisory_lock(%s::int, hashtext(%s))", (beat_key(name), ev.universe()))
     return bool(cur.fetchone()[0])
 
 
 def end_beat(conn, name: str) -> None:
     conn.cursor().execute("SELECT pg_advisory_unlock(%s::int, hashtext(%s))",
-                          (beat_key(name), ev.scope()))
+                          (beat_key(name), ev.universe()))
 
 
 @contextmanager
@@ -92,16 +94,16 @@ def beat(conn, name: str):
 
 TAGS = ("outbox", "inbox", "heartbeat", "projector", "resident", "gateway", "tools", "store",
         "markers", "monitor", "scheduler", "harness", "presence", "digest", "intent",
-        "proof", "mitl", "placement", "services", "stable", "cells", "profile", "seat", "desk")
+        "proof", "mitl", "placement", "services", "stable", "cells", "profile", "seat", "desk", "levels")
 # re-base sp1: `heartbeat` (the rig's breath stood its table unguarded before), `stable` (its
 # tag was orphaned — the Stable's tables were born inside a request, the very thing the law
 # forbids) and `desk` (the machine join desk, the Rust kernel's table) join the one list.
 
-SCHEMA_VERSION = 4          # THE MIGRATOR: bumped in BOTH kernels whenever any DDL statement changes (2: the indexes, the perf cure 2026-09-29; 3: a watch's rest · a peer's forgetting, the honest glass sp2 2026-09-29; 4: an ask's resent_at, W91 THE BENCH SWEEP 2026-10-02)
+SCHEMA_VERSION = 5          # THE MIGRATOR: bumped in BOTH kernels whenever any DDL statement changes (2: the indexes, the perf cure 2026-09-29; 3: a watch's rest · a peer's forgetting, the honest glass sp2 2026-09-29; 4: an ask's resent_at, W91 THE BENCH SWEEP 2026-10-02; 5: the levels — spine_levels, THE PATH, Phase 8 sp1 2026-10-05)
 TABLES = (                  # every table both kernels stand on at this version (fixture `schema_tables`)
     "spine_aggregate_cursor", "spine_asks", "spine_authenticators", "spine_desk", "spine_digests",
     "spine_harness_runs", "spine_heartbeat", "spine_inbox", "spine_intent_turns", "spine_intentions",
-    "spine_joins", "spine_leases", "spine_marker_kinds", "spine_markers", "spine_masters", "spine_memories",
+    "spine_joins", "spine_leases", "spine_levels", "spine_marker_kinds", "spine_markers", "spine_masters", "spine_memories",
     "spine_meter", "spine_mind_assignments", "spine_mind_keys", "spine_mitl", "spine_occurrences",
     "spine_outbox", "spine_owner", "spine_parked", "spine_peers", "spine_profile", "spine_proof_attempts",
     "spine_refusals", "spine_schedules", "spine_schema", "spine_seam_nonces", "spine_seam_out", "spine_seats",
@@ -118,12 +120,12 @@ class GroundRefused(RuntimeError):
 
 
 def _modules():
-    from . import (cells, desk, digest, gateway, harness, heartbeat, inbox, intent, markers, mitl, monitor,
+    from . import (cells, desk, digest, gateway, harness, heartbeat, inbox, intent, levels, markers, mitl, monitor,
                    outbox, placement, presence, profile, projector, proof, resident, scheduler, seat, services,
                    stable, store, tools)
     return (outbox, inbox, heartbeat, projector, resident, gateway, tools, store, markers,
             monitor, scheduler, harness, presence, digest, intent, proof, mitl, placement, cells,
-            services, stable, profile, seat, desk)
+            services, stable, profile, seat, desk, levels)
 
 
 _MIGRATED: dict[str, dict] = {}     # this PROCESS's verdict per ground (DSN + search_path): once, never per tick

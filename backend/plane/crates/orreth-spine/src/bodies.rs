@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam · 2026-09-24
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: a seat's `at` — the level it stands on; `manifest` reads the levels; a body is born with its level as `SPINE_SCOPE` · 2026-10-05
 //! THE BODIES' SEAM (canon 0004 · 0008's end shape · 0005 P7 sp6): the kernel
 //! SPAWNS and GOVERNS the crew as processes. Each seat of the one crew
 //! manifest (`spine/crew.v0.json`, read by both spines) becomes ONE process —
@@ -86,11 +87,13 @@ pub struct Seat {
     pub template: PathBuf,
     pub binding: Option<PathBuf>,
     pub template_json: Value,
+    /// Phase 8 sp1: the level this seat stands on, relative to the universe (`f:ops` · `f:ops/r:bob`); none = the universe.
+    pub at: Option<String>,
 }
 
-/// `body.crew`: the manifest's seats with their paths resolved and their
-/// templates read (the name a binding gives, else the template's).
-pub fn crew(spine: &Path) -> Result<Vec<Seat>, RoadError> {
+/// `body.manifest`: the crew manifest as a document (`SPINE_CREW`, else `crew.v0.json`) — its
+/// seats and, Phase 8 sp1, the levels it declares.
+pub fn manifest(spine: &Path) -> Result<Value, RoadError> {
     let path = std::env::var(CREW_DIAL)
         .ok()
         .filter(|p| !p.is_empty())
@@ -110,6 +113,13 @@ pub fn crew(spine: &Path) -> Result<Vec<Seat>, RoadError> {
             doc["format"]
         )));
     }
+    Ok(doc)
+}
+
+/// `body.crew`: the manifest's seats with their paths resolved and their
+/// templates read (the name a binding gives, else the template's).
+pub fn crew(spine: &Path) -> Result<Vec<Seat>, RoadError> {
+    let doc = manifest(spine)?;
     let mut out = Vec::new();
     for s in doc["seats"].as_array().cloned().unwrap_or_default() {
         let t = s["template"].as_str().unwrap_or("").trim().to_string();
@@ -154,6 +164,11 @@ pub fn crew(spine: &Path) -> Result<Vec<Seat>, RoadError> {
             template,
             binding,
             template_json: tj,
+            at: s["at"]
+                .as_str()
+                .map(str::trim)
+                .filter(|a| !a.is_empty())
+                .map(str::to_string),
         });
     }
     if out.is_empty() {
@@ -264,12 +279,19 @@ impl Bodies {
         me
     }
 
+    /// The scope path a seat's body wears: the universe, or the declared level within it.
+    pub fn seat_scope(&self, seat: &Seat) -> String {
+        crate::levels::absolute(&self.world.scope, seat.at.as_deref())
+            .unwrap_or_else(|_| self.world.scope.clone())
+    }
+
     /// The child's environment: the kernel's own, the world's dials on top,
-    /// the kernel's door for the words as they form.
-    fn env(&self) -> Vec<(String, String)> {
+    /// the kernel's door for the words as they form. Phase 8 sp1: `SPINE_SCOPE` is the
+    /// SEAT's level — a body on a floor is born knowing where it stands.
+    fn env(&self, seat: &Seat) -> Vec<(String, String)> {
         let mut e = vec![
             ("SPINE_QUEUE_NS".to_string(), self.world.ns.clone()),
-            ("SPINE_SCOPE".to_string(), self.world.scope.clone()),
+            ("SPINE_SCOPE".to_string(), self.seat_scope(seat)),
             ("SPINE_PG".to_string(), self.world.pg_dsn.clone()),
             ("SPINE_RABBIT".to_string(), self.world.rabbit_url.clone()),
             ("SPINE_KAFKA".to_string(), self.world.kafka.clone()),
@@ -296,12 +318,12 @@ impl Bodies {
         PathBuf::from("python3")
     }
 
-    fn command(&self, args: &[String], ticket: &str) -> tokio::process::Command {
+    fn command(&self, args: &[String], ticket: &str, seat: &Seat) -> tokio::process::Command {
         let mut c = tokio::process::Command::new(self.python());
         c.args(["-u", "-m", "orreth_spine.body"])
             .args(args)
             .current_dir(&self.spine)
-            .envs(self.env())
+            .envs(self.env(seat))
             .env(crate::desk::SPAWN_TICKET_DIAL, ticket) // P7 sp8 row 3b: this life's word at the join desk
             .stdin(Stdio::null())
             .stdout(Stdio::null())
@@ -537,7 +559,7 @@ impl Bodies {
                 .unwrap_or_else(|p| p.into_inner())
                 .tickets
                 .insert(seat.name.clone(), ticket.clone());
-            let mut child = match self.command(&args, &ticket).spawn() {
+            let mut child = match self.command(&args, &ticket, &seat).spawn() {
                 Ok(c) => c,
                 Err(e) => {
                     self.set(&seat.name, |s| {

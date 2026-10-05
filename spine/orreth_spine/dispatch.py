@@ -7,6 +7,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86): a LOCAL ask left waiting is STOPPED on the asker's or a governing seat's word (`stop_ask`) — rule 11 · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — W89: the stop's words name the ask · 2026-10-02
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — W91 THE BENCH SWEEP: sweep_bench · swept_words · rested_words · 2026-10-02
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: a body at any level is here; the dispatcher takes every level's facts · 2026-10-05
 """The ask road (canon 0002's chain, in miniature): ONE write path.
 
 A human's ask lands on the ground with its event in one transaction; the
@@ -40,8 +41,8 @@ def absent(conn, name: str) -> str | None:
     dormant body may still wake to its bench."""
     from . import placement
     cur = conn.cursor()
-    cur.execute("SELECT max(joined_at) FROM spine_joins WHERE name = %s AND scope = %s",
-                (name, ev.scope()))
+    cur.execute(f"SELECT max(joined_at) FROM spine_joins WHERE name = %s AND {ev.WITHIN}",
+                (name, *ev.within_params(ev.universe())))     # Phase 8 sp1: at any level of this universe
     joined = cur.fetchone()[0]
     r = placement.refusals(conn).get(name)
     if r is not None and (joined is None or r["refused_at"] > joined):
@@ -142,7 +143,7 @@ def submit_ask(conn, text: str, *, person: str,
                 "from": str(window.get("from") or ""),
                 "to": str(window.get("to") or "")}
         e = ev.make_envelope(
-            kind="event", type=ASK_RECEIVED, universe_id=ev.scope(),
+            kind="event", type=ASK_RECEIVED, universe_id=ev.universe(),
             scope_path=ev.scope(), payload=payload,
             correlation_id=fanout or ask_id, authority_chain=[person],
             aggregate={"type": "ask", "id": ask_id, "sequence": 1},
@@ -176,7 +177,7 @@ def _refuse_at_door(conn, ask_id: str, text: str, person: str, target: str, why:
     reply = refusal_words(target, why)
     marker_id = marker["id"]
     e = ev.make_envelope(
-        kind="event", type=ASK_REFUSED, universe_id=ev.scope(), scope_path=ev.scope(),
+        kind="event", type=ASK_REFUSED, universe_id=ev.universe(), scope_path=ev.scope(),
         payload={"ref": ask_id, "hash": ev.content_hash(text), "target": target,
                  "reason": why, **({"session": session} if session else {})},
         correlation_id=fanout or ask_id, authority_chain=[person, KERNEL],
@@ -246,14 +247,14 @@ def stop_ask(conn, ask_id: str, person: str) -> dict:
     chain = [person, proof.KERNEL]
     words = stopped_words(text, asker, target, ask_id)          # W89: the words name the ask
     note = f"{proof.KERNEL}: stopped by {person} before any body served it — rule 11, the human can always stop"
-    j = ev.make_envelope(kind="event", type=JOURNEY, universe_id=ev.scope(), scope_path=ev.scope(),
+    j = ev.make_envelope(kind="event", type=JOURNEY, universe_id=ev.universe(), scope_path=ev.scope(),
                          payload={"ref": ask_id, "hash": "sha256:-", "note": note},
                          correlation_id=ask_id, authority_chain=chain)
 
     def domain(cur):
         cur.execute("UPDATE spine_asks SET status = 'cancelled', reply = %s, served_by = %s,"
                     " replied_at = clock_timestamp() WHERE ask_id = %s", (words, proof.KERNEL, ask_id))
-        r = ev.make_envelope(kind="event", type=REPLY, universe_id=ev.scope(), scope_path=ev.scope(),
+        r = ev.make_envelope(kind="event", type=REPLY, universe_id=ev.universe(), scope_path=ev.scope(),
                              payload={"ref": ask_id, "hash": ev.content_hash(words), "proof": "L1"},
                              correlation_id=ask_id, authority_chain=chain,
                              aggregate={"type": "ask", "id": ask_id, "sequence": _next_seq(cur, ask_id)})
@@ -287,13 +288,13 @@ def sweep_bench(conn, older_than_s: int, rabbit_url: str | None = None, publish=
     cur.execute(
         "SELECT ask_id, text, person, target, session, time_window, resent_at IS NOT NULL,"
         " floor(extract(epoch FROM (clock_timestamp() - asked_at)))::int FROM spine_asks"
-        " WHERE scope = %s AND status = 'received' AND asked_at < clock_timestamp() - %s * interval '1 second'"
+        f" WHERE {ev.WITHIN} AND status = 'received' AND asked_at < clock_timestamp() - %s * interval '1 second'"
         " AND (resent_at IS NULL OR resent_at < clock_timestamp() - %s * interval '1 second')"
-        " ORDER BY asked_at LIMIT 50", (ev.scope(), older_than_s, older_than_s))
+        " ORDER BY asked_at LIMIT 50", (*ev.within_params(ev.universe()), older_than_s, older_than_s))
     resent, rested = [], []
     for ask_id, text, person, target, session, window, again, waited in cur.fetchall():
         def journey(c, note, chain):
-            j = ev.make_envelope(kind="event", type=JOURNEY, universe_id=ev.scope(), scope_path=ev.scope(),
+            j = ev.make_envelope(kind="event", type=JOURNEY, universe_id=ev.universe(), scope_path=ev.scope(),
                                  payload={"ref": ask_id, "hash": "sha256:-", "note": note},
                                  correlation_id=ask_id, authority_chain=chain,
                                  aggregate={"type": "ask", "id": ask_id, "sequence": _next_seq(c, ask_id)})
@@ -306,7 +307,7 @@ def sweep_bench(conn, older_than_s: int, rabbit_url: str | None = None, publish=
                 payload["session"] = session
             if window:
                 payload["window"] = json.loads(window)
-            fact = ev.make_envelope(kind="event", type=ASK_RECEIVED, universe_id=ev.scope(), scope_path=ev.scope(),
+            fact = ev.make_envelope(kind="event", type=ASK_RECEIVED, universe_id=ev.universe(), scope_path=ev.scope(),
                                     payload=payload, correlation_id=ask_id, authority_chain=[person])
             send(_command_for(fact))
             with conn.transaction():
@@ -323,7 +324,7 @@ def sweep_bench(conn, older_than_s: int, rabbit_url: str | None = None, publish=
                       " replied_at = clock_timestamp() WHERE ask_id = %s", (words, proof.KERNEL, ask_id))
             journey(c, f"{proof.KERNEL}: rested by the bench sweep — dispatched twice, no body took it in {waited} s (W91)",
                     [proof.KERNEL])
-            r = ev.make_envelope(kind="event", type=REPLY, universe_id=ev.scope(), scope_path=ev.scope(),
+            r = ev.make_envelope(kind="event", type=REPLY, universe_id=ev.universe(), scope_path=ev.scope(),
                                  payload={"ref": ask_id, "hash": ev.content_hash(words), "proof": "L1"},
                                  correlation_id=ask_id, authority_chain=[proof.KERNEL],
                                  aggregate={"type": "ask", "id": ask_id, "sequence": _next_seq(c, ask_id)})
@@ -390,7 +391,7 @@ def confirm_ask(conn, ask_id: str, *, approve: bool,
     if cur.fetchone():
         raise proof.NotConfirmed()
     cur.execute("SELECT target, served_by, held, person, status FROM spine_asks"
-                " WHERE ask_id=%s AND scope=%s", (ask_id, ev.scope()))
+                f" WHERE ask_id=%s AND {ev.WITHIN}", (ask_id, *ev.within_params(ev.universe())))
     row = cur.fetchone()
     held = json.loads(row[2]) if row and row[2] else {}
     level = held.get("level") or "L2"
@@ -430,7 +431,7 @@ def confirm_ask(conn, ask_id: str, *, approve: bool,
                 cur.execute("UPDATE spine_asks SET held = %s WHERE ask_id = %s",
                             (json.dumps(held), ask_id))
                 n = ev.make_envelope(
-                    kind="event", type=CONFIRM_NEEDED, universe_id=ev.scope(), scope_path=ev.scope(),
+                    kind="event", type=CONFIRM_NEEDED, universe_id=ev.universe(), scope_path=ev.scope(),
                     payload={"ref": ask_id, "hash": "sha256:-", "tool": held.get("tool"),
                              "class": held.get("class"), "level": level,
                              "needs_code": True, "code_ok": True, "step": "master"},
@@ -476,10 +477,17 @@ def _settle(conn, row, ask_id: str, *, approve: bool, person: str, level: str,
         if target:
             payload["target"] = target
     e = ev.make_envelope(
-        kind="command", type=CONFIRM_CMD, universe_id=ev.scope(),
+        kind="command", type=CONFIRM_CMD, universe_id=ev.universe(),
         scope_path=ev.scope(), payload=payload,
         correlation_id=ask_id, authority_chain=[person])
     publish_command(e, rabbit_url)
+
+
+def _ours(env: dict) -> bool:
+    """A fact of THIS universe — at any of its levels (Phase 8 sp1: a body seated on a floor
+    files its asks with the floor's path as scope_path)."""
+    from .seat import within
+    return within(str(env.get("scope_path") or ""), ev.universe())
 
 
 def _command_for(event_env: dict) -> dict:
@@ -501,7 +509,7 @@ def dispatch_once(conn, *, consumer: str, group: str,
         conn, group=group, topics=[_topic(ASK_RECEIVED)], consumer_name=consumer,
         apply=lambda _cur, env: publish_command(_command_for(env),
                                                 rabbit_url),
-        skip=lambda env: env.get("scope_path") != ev.scope(), **kw)
+        skip=lambda env: not _ours(env), **kw)
 
 
 def run_dispatcher(conn, *, consumer: str, group: str, stop,
@@ -518,5 +526,5 @@ def run_dispatcher(conn, *, consumer: str, group: str, stop,
         apply=lambda _cur, env: publish_command(_command_for(env),
                                                 rabbit_url),
         skip=lambda env: (pause is not None and pause.is_set())
-        or env.get("scope_path") != ev.scope(),
+        or not _ours(env),
         stop=stop, ready=ready, offset=offset)

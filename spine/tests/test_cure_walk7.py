@@ -275,8 +275,9 @@ def test_w12_every_body_knows_time_its_world_its_zone_and_its_seat(pg, monkeypat
         keeper = _body(p, SystemWordsGateway()); keeper.join(pg)
         [aid] = dispatch.submit_ask(pg, "what do you wear?", person=ME, to=["keeper"])
         kw = _serve(pg, keeper, aid)["reply"]
-        assert "The canon on 'nothing grades its own yardstick' [" in kw and "orreth-covenant/SKILL.md#" in kw
-        assert "Nothing grades its own yardstick" in kw                                # the passage itself
+        # Phase 8 sp1: the corpus grew (0009 · 0010 quote the rule too) — the citation names A canon file, by path
+        assert "The canon on 'nothing grades its own yardstick' [" in kw and ("orreth-covenant/SKILL.md#" in kw or "docs/rearch/" in kw)
+        assert "nothing grades its own yardstick" in kw.lower()                        # the passage itself
     finally:
         p.unlink(missing_ok=True)
     # an unknown zone is said, never guessed

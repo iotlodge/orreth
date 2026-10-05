@@ -1,6 +1,7 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: THE LEASE FACTS — `orreth.lease.lapsed.v1` · `orreth.lease.seated.v1` minted by the kernel's sweep, noted on the ground (`noted_alive`) so two kernels never mint one lapse twice · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W85): ONE NAME, ONE SELF — the roster folded one row per name, the earlier selves counted · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: a lease wears the body's level; the roster and the sweep see every level within the universe · 2026-10-05
 //! Presence leases (canon 0002 M2) — `orreth_spine.presence`: a body is ALIVE
 //! while its lease is fresh — it renews as it serves; a body that stops
 //! renewing goes DORMANT in seconds and stays listed (the roster breathes;
@@ -49,8 +50,8 @@ pub async fn roster(g: &Ground, scope: &str) -> Result<Vec<Value>, RoadError> {
         .client()
         .query(
             "SELECT DISTINCT ON (name) did, name, kind, until, renewed_at, until > now(), \
-             (count(*) OVER (PARTITION BY name))::int - 1 FROM spine_leases WHERE scope = $1 ORDER \
-             BY name, (until > now()) DESC, until DESC",
+             (count(*) OVER (PARTITION BY name))::int - 1, scope FROM spine_leases WHERE (scope = $1 OR scope \
+             LIKE $1 || '/%') ORDER BY name, (until > now()) DESC, until DESC",
             &[&scope],
         )
         .await?;
@@ -64,6 +65,7 @@ pub async fn roster(g: &Ground, scope: &str) -> Result<Vec<Value>, RoadError> {
                 "renewed_at": isoformat(r.get::<_, SystemTime>(4)),
                 "alive": r.get::<_, bool>(5),
                 "earlier_selves": r.get::<_, i32>(6),
+                "scope": r.get::<_, String>(7), // Phase 8 sp1: the level the lease stands on
             })
         })
         .collect())
@@ -88,17 +90,17 @@ pub const SWEEP_S: u64 = 5;
 pub async fn sweep(g: &mut Ground, w: &World) -> Result<Vec<Value>, RoadError> {
     g.client()
         .execute(
-            "UPDATE spine_leases SET noted_alive = (until > now()) WHERE scope = $1 AND noted_alive \
-             IS NULL",
+            "UPDATE spine_leases SET noted_alive = (until > now()) WHERE (scope = $1 OR scope LIKE $1 || '/%') \
+             AND noted_alive IS NULL",
             &[&w.scope],
         )
         .await?;
     let rows = g
         .client()
         .query(
-            "UPDATE spine_leases SET noted_alive = (until > now()) WHERE scope = $1 AND noted_alive \
-             IS DISTINCT FROM (until > now()) RETURNING did, name, kind, until, (until > now()) \
-             AS alive",
+            "UPDATE spine_leases SET noted_alive = (until > now()) WHERE (scope = $1 OR scope LIKE $1 || '/%') \
+             AND noted_alive IS DISTINCT FROM (until > now()) RETURNING did, name, kind, until, (until > now()) \
+             AS alive, scope",
             &[&w.scope],
         )
         .await?;
@@ -107,11 +109,12 @@ pub async fn sweep(g: &mut Ground, w: &World) -> Result<Vec<Value>, RoadError> {
         let (did, name, kind): (String, String, String) = (r.get(0), r.get(1), r.get(2));
         let until = isoformat(r.get::<_, SystemTime>(3));
         let alive: bool = r.get(4);
+        let at: String = r.get(5); // Phase 8 sp1: the fact wears the lease's own level
         let e = Mint {
             kind: "event".into(),
             r#type: if alive { LEASE_SEATED } else { LEASE_LAPSED }.into(),
             universe_id: w.scope.clone(),
-            scope_path: w.scope.clone(),
+            scope_path: at,
             payload: lease_payload(&name, &did, &kind, &until),
             correlation_id: Some(did.clone()),
             authority_chain: Some(vec![KERNEL.into()]),

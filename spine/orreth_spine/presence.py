@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P4 sp4, presence leases (M2) · 2026-09-18
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: THE LEASE FACTS — `orreth.lease.lapsed.v1` · `orreth.lease.seated.v1` minted by the sweep, noted on the ground (`noted_alive`) · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W85): ONE NAME, ONE SELF — the roster folded one row per name, the earlier selves counted · 2026-09-29
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: a lease wears the body's level; the roster and the sweep see every level within the universe · 2026-10-05
 """Presence leases (canon 0002 M2): a body is ALIVE while its lease is
 fresh — it renews as it serves; a body that stops renewing goes DORMANT
 in seconds and stays listed (the roster breathes; nothing is deleted).
@@ -35,8 +36,9 @@ def ensure_schema(conn) -> None:
         cur.execute("CREATE INDEX IF NOT EXISTS spine_leases_scope ON spine_leases (scope, name)")   # schema 2 (the perf cure)
 
 
-def renew(conn, did: str, name: str, kind: str, ttl_s: int = TTL_S) -> None:
-    """The body's own act, every serve: 'I am here until <now + ttl>'."""
+def renew(conn, did: str, name: str, kind: str, ttl_s: int = TTL_S, scope: str | None = None) -> None:
+    """The body's own act, every serve: 'I am here until <now + ttl>' — the lease wears the
+    body's own scope path (Phase 8 sp1: the level it is seated on)."""
     ensure_schema(conn)
     with conn.transaction():
         conn.cursor().execute(
@@ -44,7 +46,7 @@ def renew(conn, did: str, name: str, kind: str, ttl_s: int = TTL_S) -> None:
             " VALUES (%s, %s, %s, %s, now() + make_interval(secs => %s))"
             " ON CONFLICT (did) DO UPDATE SET until = EXCLUDED.until,"
             " renewed_at = now(), name = EXCLUDED.name, kind = EXCLUDED.kind",
-            (did, name, kind, ev.scope(), ttl_s))
+            (did, name, kind, scope or ev.scope(), ttl_s))
 
 
 def roster(conn) -> list[dict]:
@@ -60,10 +62,10 @@ def roster(conn) -> list[dict]:
     cur = conn.cursor()
     cur.execute(
         "SELECT DISTINCT ON (name) did, name, kind, until, renewed_at, until > now(),"
-        " (count(*) OVER (PARTITION BY name))::int - 1 FROM spine_leases"
-        " WHERE scope = %s ORDER BY name, (until > now()) DESC, until DESC", (ev.scope(),))
+        " (count(*) OVER (PARTITION BY name))::int - 1, scope FROM spine_leases"
+        f" WHERE {ev.WITHIN} ORDER BY name, (until > now()) DESC, until DESC", ev.within_params(ev.universe()))
     return [{"did": r[0], "name": r[1], "kind": r[2], "until": r[3].isoformat(),
-             "renewed_at": r[4].isoformat(), "alive": bool(r[5]), "earlier_selves": int(r[6])}
+             "renewed_at": r[4].isoformat(), "alive": bool(r[5]), "earlier_selves": int(r[6]), "scope": r[7]}
             for r in cur.fetchall()]
 
 
@@ -77,7 +79,7 @@ def lease_fact(type: str, name: str, did: str, kind: str, until: str, scope: str
     """A lease fact whole: the kernel's chain, the body's self as correlation, no
     aggregate, no marker (conformance `lease_fact`)."""
     sc = scope or ev.scope()
-    return ev.make_envelope(kind="event", type=type, universe_id=sc, scope_path=sc,
+    return ev.make_envelope(kind="event", type=type, universe_id=sc.split("/", 1)[0], scope_path=sc,
                             payload=lease_payload(name, did, kind, until),
                             correlation_id=did, authority_chain=[KERNEL])
 
@@ -93,13 +95,13 @@ def sweep(conn) -> list[dict]:
     ensure_schema(conn); outbox.ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("UPDATE spine_leases SET noted_alive = (until > now())"
-                " WHERE scope = %s AND noted_alive IS NULL", (ev.scope(),))
+                f" WHERE {ev.WITHIN} AND noted_alive IS NULL", ev.within_params(ev.universe()))
     cur.execute("UPDATE spine_leases SET noted_alive = (until > now())"
-                " WHERE scope = %s AND noted_alive IS DISTINCT FROM (until > now())"
-                " RETURNING did, name, kind, until, (until > now())", (ev.scope(),))
+                f" WHERE {ev.WITHIN} AND noted_alive IS DISTINCT FROM (until > now())"
+                " RETURNING did, name, kind, until, (until > now()), scope", ev.within_params(ev.universe()))
     minted = []
-    for did, name, kind, until, alive in cur.fetchall():
-        e = lease_fact(LEASE_SEATED if alive else LEASE_LAPSED, name, did, kind, until.isoformat())
+    for did, name, kind, until, alive, sc in cur.fetchall():
+        e = lease_fact(LEASE_SEATED if alive else LEASE_LAPSED, name, did, kind, until.isoformat(), scope=sc)
         outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"])
         minted.append(e)
     return minted

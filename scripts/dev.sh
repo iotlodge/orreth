@@ -135,7 +135,7 @@ kernel_light() {  # re-base sp2: THE KERNEL — orrethd on :4600, the crew its o
   for i in $(seq 60); do [ -n "$(kernel_pid)" ] && break; sleep 0.5; done
   pid=$(kernel_pid)
   [ -z "$pid" ] && { echo "· the kernel never took :$KERNEL_PORT in 30 s — read $KERNEL_LOG"; tail -5 "$KERNEL_LOG"; return 1; }
-  echo "· the kernel is lit: http://127.0.0.1:$KERNEL_PORT/  (orrethd · pid $pid · bodies: $bodies · $mind) — log: $KERNEL_LOG"
+  echo "· the kernel is lit: http://127.0.0.1:$KERNEL_PORT/  (orrethd · pid $pid · bodies: $bodies · mode: ${SPINE_MODE:-dev} · $mind) — log: $KERNEL_LOG"
   [ "$bodies" = crew ] && echo "· the crew is the kernel's: every seat a process it spawns and governs (kill one: it comes back as the same self; kill it three times in five minutes: it parks and says so)" || echo "· the kernel seats no bodies — the reference's serve (SPINE_BODIES=none)"
 }
 

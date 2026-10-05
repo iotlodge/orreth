@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, the Tools keeper: the mcp probe is real; record_health; the rig's HOME · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: a mind's check writes a stall the gateway no longer lists back from the ladder and pings again · 2026-09-27
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """The services registry v0 (canon 0005 P6.5 sp1 · 0009 §3 "one ladder, two
 keepers" · 0018 services as identities · 0059 the env-secrets law).
 
@@ -177,7 +178,7 @@ _COLS = ("name, scope, kind, did, manifest, manifest_hash, version, placement, s
 def get(conn, name: str) -> dict | None:
     ensure_schema(conn)
     cur = conn.cursor()
-    cur.execute(f"SELECT {_COLS} FROM spine_services WHERE name = %s AND scope = %s", (name, ev.scope()))
+    cur.execute(f"SELECT {_COLS} FROM spine_services WHERE name = %s AND scope = %s", (name, ev.universe()))
     r = cur.fetchone()
     return _row(r) if r else None
 
@@ -188,7 +189,7 @@ def did_of(conn, kind: str, name: str) -> str | None:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT did FROM spine_services WHERE scope = %s AND kind = %s AND name = %s",
-                (ev.scope(), kind, name))
+                (ev.universe(), kind, name))
     r = cur.fetchone()
     return r[0] if r else None
 
@@ -197,7 +198,7 @@ def state_of(conn, kind: str, name: str) -> str | None:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT state FROM spine_services WHERE scope = %s AND kind = %s AND name = %s",
-                (ev.scope(), kind, name))
+                (ev.universe(), kind, name))
     r = cur.fetchone()
     return r[0] if r else None
 
@@ -208,7 +209,7 @@ def mind_did(conn, model: str) -> str | None:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT did FROM spine_services WHERE scope = %s AND kind = 'mind'"
-                " AND manifest::json->>'model' = %s ORDER BY registered_at LIMIT 1", (ev.scope(), model))
+                " AND manifest::json->>'model' = %s ORDER BY registered_at LIMIT 1", (ev.universe(), model))
     r = cur.fetchone()
     return r[0] if r else None
 
@@ -217,7 +218,7 @@ def stall_did(conn, stall: str) -> str | None:
     """P6.5 sp3: the mind service by its stall NAME — what a dollar meter row carries."""
     ensure_schema(conn)
     cur = conn.cursor()
-    cur.execute("SELECT did FROM spine_services WHERE scope = %s AND kind = 'mind' AND name = %s", (ev.scope(), stall))
+    cur.execute("SELECT did FROM spine_services WHERE scope = %s AND kind = 'mind' AND name = %s", (ev.universe(), stall))
     r = cur.fetchone()
     return r[0] if r else None
 
@@ -236,7 +237,7 @@ def shelf_root(conn) -> str:
     cur = conn.cursor()
     cur.execute("SELECT marker_id FROM spine_markers WHERE scope = %s AND parent IS NULL"
                 " AND kind = 'observation' AND ref = %s AND by_did = %s ORDER BY at LIMIT 1",
-                (ev.scope(), SHELF_REF, KERNEL))
+                (ev.universe(), SHELF_REF, KERNEL))
     r = cur.fetchone()
     if r:
         return r[0]
@@ -268,7 +269,7 @@ def _fact(conn, verb: str, svc: dict, by: str, *, extra: dict | None = None,
                "kind": svc["kind"], "version": svc["version"], "state": svc["state"], "by": by}
     payload.update(extra or {})
     e = ev.make_envelope(
-        kind="event", type=FACT_OF[verb], universe_id=ev.scope(), scope_path=ev.scope(),
+        kind="event", type=FACT_OF[verb], universe_id=ev.universe(), scope_path=ev.universe(),
         payload=payload, correlation_id=ask or svc["did"], authority_chain=chain, marker=marker)
 
     def _domain(cur):
@@ -333,12 +334,12 @@ def register(conn, name: str, kind: str, manifest: dict, *, by: str = KERNEL,
             "INSERT INTO spine_services (name, scope, kind, did, manifest, manifest_hash, version,"
             " placement, secrets_with, state, by_did, since, marker, root_marker)"
             " VALUES (%s, %s, %s, %s, %s, %s, 1, %s, %s, 'registered', %s, clock_timestamp(), %s, %s)",
-            (name, ev.scope(), kind, ident.did, ev.canonical(manifest).decode("ascii"), h,
+            (name, ev.universe(), kind, ident.did, ev.canonical(manifest).decode("ascii"), h,
              ev.canonical(prof).decode("ascii"), json.dumps(prof["secrets_with"]), by, mid, mid))
         cur.execute(
             "INSERT INTO spine_service_versions (name, scope, version, manifest, manifest_hash, by_did)"
             " VALUES (%s, %s, 1, %s, %s, %s)",
-            (name, ev.scope(), ev.canonical(manifest).decode("ascii"), h, by))
+            (name, ev.universe(), ev.canonical(manifest).decode("ascii"), h, by))
 
     _fact(conn, "register", svc, by, extra={"placement": prof, "secrets_with": prof["secrets_with"]},
           domain=domain)
@@ -365,11 +366,11 @@ def version(conn, name: str, manifest: dict, *, by: str = KERNEL) -> dict:
             "UPDATE spine_services SET manifest = %s, manifest_hash = %s, version = %s,"
             " state = 'versioned', since = clock_timestamp(), marker = %s"
             " WHERE name = %s AND scope = %s",
-            (ev.canonical(manifest).decode("ascii"), h, n, mid, name, ev.scope()))
+            (ev.canonical(manifest).decode("ascii"), h, n, mid, name, ev.universe()))
         cur.execute(
             "INSERT INTO spine_service_versions (name, scope, version, manifest, manifest_hash, by_did)"
             " VALUES (%s, %s, %s, %s, %s, %s)",
-            (name, ev.scope(), n, ev.canonical(manifest).decode("ascii"), h, by))
+            (name, ev.universe(), n, ev.canonical(manifest).decode("ascii"), h, by))
 
     _fact(conn, "version", svc, by, extra={"previous_hash": row["manifest_hash"]}, domain=domain)
     return get(conn, name)
@@ -466,11 +467,11 @@ def record_health(conn, name: str, ok: bool | None, detail: str, *, by: str = KE
     def domain(cur, mid):
         cur.execute(
             "INSERT INTO spine_service_health (name, scope, did, ok, detail) VALUES (%s, %s, %s, %s, %s)",
-            (name, ev.scope(), row["did"], ok, detail))
+            (name, ev.universe(), row["did"], ok, detail))
         cur.execute(
             "UPDATE spine_services SET state = %s, since = CASE WHEN state = %s THEN since ELSE clock_timestamp() END,"
             " last_ok = %s, last_detail = %s, last_checked_at = clock_timestamp()"
-            " WHERE name = %s AND scope = %s", (state, state, ok, detail, name, ev.scope()))
+            " WHERE name = %s AND scope = %s", (state, state, ok, detail, name, ev.universe()))
 
     _fact(conn, verb or "healthy", svc, by, extra={"ok": ok, "detail": detail}, domain=domain)
     if ok:
@@ -490,7 +491,7 @@ def withdraw_stale_proposals(conn, name: str) -> list[str]:
         return []
     cur.execute("SELECT ask_id FROM spine_asks WHERE scope = %s AND served_by = %s AND status = 'awaiting-confirm'"
                 " AND held IS NOT NULL AND held::json->>'tool' = %s AND held::json->'args'->>'name' = %s"
-                " AND person LIKE 'did:orreth:agent:%%'", (ev.scope(), KERNEL, RETIRE_TOOL, name))
+                " AND person LIKE 'did:orreth:agent:%%'", (ev.universe(), KERNEL, RETIRE_TOOL, name))
     out = []
     for (aid,) in cur.fetchall():
         try:
@@ -538,7 +539,7 @@ def retire(conn, name: str, *, by: str, ask: str | None = None,
 
     def domain(cur, mid):
         cur.execute("UPDATE spine_services SET state = 'retired', since = clock_timestamp(), marker = %s"
-                    " WHERE name = %s AND scope = %s", (mid, name, ev.scope()))
+                    " WHERE name = %s AND scope = %s", (mid, name, ev.universe()))
 
     _fact(conn, "retire", svc, by, extra={"from": row["state"]}, parent_marker=parent_marker,
           ask=ask, domain=domain, confirmed_by=confirmed_by)
@@ -554,7 +555,7 @@ def restore(conn, name: str, *, by: str) -> dict:
 
     def domain(cur, mid):
         cur.execute("UPDATE spine_services SET state = 'registered', since = clock_timestamp(),"
-                    " marker = %s WHERE name = %s AND scope = %s", (mid, name, ev.scope()))
+                    " marker = %s WHERE name = %s AND scope = %s", (mid, name, ev.universe()))
 
     _fact(conn, "restore", svc, by, domain=domain)
     return get(conn, name)
@@ -570,7 +571,7 @@ def listing(conn, kind: str | None = None) -> list[dict]:
     here = _placement.ground_declares()
     cur = conn.cursor()
     cur.execute(f"SELECT {_COLS} FROM spine_services WHERE scope = %s AND (%s::text IS NULL OR kind = %s)"
-                " ORDER BY kind, name", (ev.scope(), kind, kind))
+                " ORDER BY kind, name", (ev.universe(), kind, kind))
     out = []
     for r in cur.fetchall():
         s = _row(r)
@@ -586,7 +587,7 @@ def versions(conn, name: str) -> list[dict]:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT version, manifest_hash, by_did, at FROM spine_service_versions"
-                " WHERE name = %s AND scope = %s ORDER BY version", (name, ev.scope()))
+                " WHERE name = %s AND scope = %s ORDER BY version", (name, ev.universe()))
     return [{"version": r[0], "manifest_hash": r[1], "by": r[2], "at": r[3].isoformat()}
             for r in cur.fetchall()]
 
@@ -595,7 +596,7 @@ def health(conn, name: str, limit: int = 10) -> list[dict]:
     ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT ok, detail, at FROM spine_service_health WHERE name = %s AND scope = %s"
-                " ORDER BY health_id DESC LIMIT %s", (name, ev.scope(), limit))
+                " ORDER BY health_id DESC LIMIT %s", (name, ev.universe(), limit))
     return [{"ok": r[0], "detail": r[1], "at": r[2].isoformat()} for r in cur.fetchall()]
 
 

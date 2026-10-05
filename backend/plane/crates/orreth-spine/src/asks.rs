@@ -5,6 +5,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #18, W64: the asker's right code files a second confirm-needed notice (step master) through the outbox — the master's road to the ask · W69: the word at the interlock is the asker's own or a governing seat's (desk_live::governs) · 2026-09-27
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: `FEED_TOPICS` widened from nine to thirty-one · the ask view names the DUTY that filed it (`duty`) so the scheduler's track can light · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: `level.open` settles at L2 · the feed's 38th topic · the names, refusals and asks read at every level of the universe · 2026-10-05
 //! The ask road on the ground — mirrors `orreth_spine.dispatch` (the write
 //! half) and the ask views of `orreth_spine.glass`: ONE write path. A human's
 //! ask lands on `spine_asks` WITH its marker and its `ask.received` fact in
@@ -47,7 +48,7 @@ pub use crate::watch::WATCH_TURNED;
 /// (a body parked, a tool hop, a lease crossing the line, a lever pulled, a seat taken, a
 /// body at the join desk, an intention's life, the shelf's and the Stable's changes, a
 /// memory landed, the kernel's own heartbeat) now reaches THE PANEL as a pointer.
-pub const FEED_TOPICS: [&str; 37] = [
+pub const FEED_TOPICS: [&str; 38] = [
     ASK_RECEIVED,
     crate::memory::SESSION_OPENED, // W51: a roll is a fact every door's sessions list follows
     JOURNEY,
@@ -88,6 +89,8 @@ pub const FEED_TOPICS: [&str; 37] = [
     // ---- re-base sp1: the roster's facts — a body joined (a life) · refused at birth ----
     crate::body::JOINED,
     crate::body::REFUSED,
+    // ---- Phase 8 sp1: a floor or room opened — at light, by the manifest, on a person's word ----
+    crate::levels::LEVEL_OPENED,
 ];
 
 // ---- the fact, minted now ------------------------------------------------------------
@@ -174,8 +177,8 @@ pub async fn refusals(g: &Ground, scope: &str) -> Result<HashMap<String, Refusal
         .client()
         .query(
             "SELECT DISTINCT ON (name) name, did, kind, template_hash, placement, ground, \
-             reasons, marker, refused_at FROM spine_refusals WHERE scope = $1 ORDER BY name, \
-             refusal_id DESC",
+             reasons, marker, refused_at FROM spine_refusals WHERE (scope = $1 OR scope LIKE $1 || '/%') \
+             ORDER BY name, refusal_id DESC",
             &[&scope],
         )
         .await?;
@@ -211,8 +214,8 @@ pub async fn absent(g: &Ground, scope: &str, name: &str) -> Result<Option<String
     let joined: Option<SystemTime> = g
         .client()
         .query_one(
-            "SELECT max(joined_at) FROM spine_joins WHERE name = $1 AND scope = $2",
-            &[&name, &scope],
+            "SELECT max(joined_at) FROM spine_joins WHERE name = $1 AND (scope = $2 OR scope LIKE $2 || '/%')",
+            &[&name, &scope], // Phase 8 sp1: at any level of this universe
         )
         .await?
         .get(0);
@@ -235,7 +238,7 @@ pub async fn names_here(g: &Ground, scope: &str) -> Result<Vec<String>, RoadErro
     let rows = g
         .client()
         .query(
-            "SELECT DISTINCT name FROM spine_joins WHERE scope = $1",
+            "SELECT DISTINCT name FROM spine_joins WHERE (scope = $1 OR scope LIKE $1 || '/%')",
             &[&scope],
         )
         .await?;
@@ -847,6 +850,10 @@ pub async fn settle_kernel_act(
                 )
                 .await?
             }
+            t if t == crate::levels::OPEN_TOOL => {
+                // Phase 8 sp1: a floor or room opened on the person's word — the row and its fact in this record's transaction
+                crate::levels_live::open_in(&tx, &held["args"], &asker, Some(ask_id), marker_id.as_deref()).await?
+            }
             "world.rehome" => {
                 // P7 sp7: the universe re-homed — its epoch advances, the old home may not commit
                 let to_cell = held["args"]["to_cell"]
@@ -973,7 +980,8 @@ pub async fn name_of(
     };
     Ok(g.client()
         .query_opt(
-            "SELECT name FROM spine_joins WHERE did = $1 AND scope = $2 ORDER BY join_id DESC LIMIT 1",
+            "SELECT name FROM spine_joins WHERE did = $1 AND (scope = $2 OR scope LIKE $2 || '/%') ORDER BY join_id \
+             DESC LIMIT 1",
             &[&did, &scope],
         )
         .await?
@@ -1106,7 +1114,7 @@ pub async fn asks_view(g: &Ground, scope: &str, limit: i64) -> Result<Vec<Value>
         .client()
         .query(
             "SELECT ask_id, text, person, status, served_by, target, fanout, asked_at, replied_at \
-             FROM spine_asks WHERE scope = $1 ORDER BY asked_at DESC LIMIT $2",
+             FROM spine_asks WHERE (scope = $1 OR scope LIKE $1 || '/%') ORDER BY asked_at DESC LIMIT $2",
             &[&scope, &limit],
         )
         .await?;

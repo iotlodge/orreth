@@ -149,8 +149,8 @@ pub async fn interested_bodies(
     let rows = g
         .client()
         .query(
-            "SELECT DISTINCT ON (name) name, interests FROM spine_joins WHERE scope = $1 ORDER BY \
-             name, join_id DESC",
+            "SELECT DISTINCT ON (name) name, interests FROM spine_joins WHERE (scope = $1 OR scope LIKE $1 || \
+             '/%') ORDER BY name, join_id DESC", // Phase 8 sp1: at every level of the universe
             &[&scope],
         )
         .await?;

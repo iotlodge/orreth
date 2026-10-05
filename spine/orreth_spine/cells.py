@@ -1,5 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells · partition · isolation · hardening · 2026-09-25
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W87): the unreachable time wears its date · a peer LET GO on a governing seat's word (`forget_peer`, schema 3) · 2026-09-29
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: the universe's level row and mode at light; the card says the mode · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
 """CELLS (canon 0002 rule 8 · 0001 P9/P10 · 0005 P7 sp7 — JB's locks, 2026-09-25):
 a CELL is one universe's physical home — its own kernel self, its own
 ground (a database and a role that reaches no other), its own benches and
@@ -282,11 +284,12 @@ def home(conn, kernel_did: str, door: str, cell: str | None = None) -> dict:
     the `opened` fact; present in THIS cell → the row as it stands (the
     kernel's door refreshed); present in another cell → refused in words."""
     ensure_schema(conn); outbox.ensure_schema(conn)
-    scope = ev.scope()
+    scope = ev.universe()
     cell = cell or os.environ.get(CELL_DIAL) or DEFAULT_CELL
     cur = conn.cursor()
     cur.execute("SELECT cell, epoch, kernel, opened_at, rehomed_at FROM spine_world WHERE scope = %s", (scope,))
     row = cur.fetchone()
+    from . import levels
     if row is None:
         e = world_fact(scope, cell, 1, kernel_did, door, "opened")
 
@@ -294,11 +297,13 @@ def home(conn, kernel_did: str, door: str, cell: str | None = None) -> dict:
             c.execute("INSERT INTO spine_world (scope, cell, epoch, kernel, door) VALUES (%s, %s, 1, %s, %s)"
                       " ON CONFLICT (scope) DO NOTHING", (scope, cell, kernel_did, door))
         outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)
+        levels.ensure_universe(conn, scope)      # Phase 8 sp1: the universe's own level, its declared mode
         return card(conn, kernel_did)
     if row[0] != cell:
         raise NotMyHome(f"{scope} is homed in cell {row[0]} (epoch {row[1]}) — this kernel says it is cell {cell}; "
                         f"light it as cell {row[0]}, or re-home the universe first")
     cur.execute("UPDATE spine_world SET kernel = %s, door = %s WHERE scope = %s", (kernel_did, door, scope))
+    levels.ensure_universe(conn, scope)          # a relight may tighten the mode, never loosen it
     return card(conn, kernel_did)
 
 
@@ -306,12 +311,15 @@ def card(conn, kernel_did: str | None = None) -> dict:
     """The world card (rule 7 — the same on both doors): the universe, its
     cell and epoch, the kernel that keeps it, its peers with their lag."""
     ensure_schema(conn)
-    scope = ev.scope()
+    scope = ev.universe()
     cur = conn.cursor()
     cur.execute("SELECT cell, epoch, kernel, door, opened_at, rehomed_at, rehomed_by FROM spine_world WHERE scope = %s",
                 (scope,))
     row = cur.fetchone()
-    out = {"scope": scope, "cell": row[0] if row else (os.environ.get(CELL_DIAL) or DEFAULT_CELL),
+    from . import levels
+    lv = levels.row(conn, scope) if levels.ok(scope) else None
+    out = {"scope": scope, "mode": lv["mode"] if lv else None,      # Phase 8 sp1: the universe's declared mode
+           "cell": row[0] if row else (os.environ.get(CELL_DIAL) or DEFAULT_CELL),
            "epoch": row[1] if row else None, "kernel": row[2] if row else kernel_did,
            "door": row[3] if row else None, "opened_at": row[4].isoformat() if row else None,
            "rehomed_at": row[5].isoformat() if row and row[5] else None,
@@ -346,7 +354,7 @@ def forget_peer(conn, cell: str, by: str) -> bool:
         cur = conn.cursor()
         cur.execute("UPDATE spine_peers SET forgotten_by = %s, forgotten_at = now()"
                     " WHERE cell = %s AND scope = %s AND forgotten_at IS NULL",
-                    (by, cell, ev.scope()))
+                    (by, cell, ev.universe()))
         return cur.rowcount == 1
 
 
@@ -357,7 +365,7 @@ def peers(conn) -> list[dict]:
     cur.execute("SELECT cell, door, did, world, epoch, pinned_at, last_seen, cursor, unreachable_since,"
                 " extract(epoch FROM (clock_timestamp() - last_seen)) FROM spine_peers"
                 " WHERE scope = %s AND forgotten_at IS NULL ORDER BY cell",     # a peer let go is not drawn
-                (ev.scope(),))
+                (ev.universe(),))
     out = []
     for r in cur.fetchall():
         since = unreachable_clock(r[8]) if r[8] else None                 # W52: the human's clock · W87: its date

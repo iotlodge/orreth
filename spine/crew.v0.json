@@ -1,10 +1,13 @@
 {
   "format": "orreth-crew/1",
-  "version": "0.1.0",
-  "words": "the crew a kernel seats at light — one body per seat, one process per body when the kernel spawns them (P7 sp6); the Python Bridge seats the same crew in-process as the reference",
+  "version": "0.2.0",
+  "words": "the crew a kernel seats at light — one body per seat, one process per body when the kernel spawns them (P7 sp6); the Python Bridge seats the same crew in-process as the reference; Phase 8 sp1 THE PATH: `levels` declares the floors and rooms a seat may stand on (`at`, relative to the universe), opened at light in the universe's mode unless a tighter one is asked",
+  "levels": [
+    {"at": "f:ops", "words": "the operations floor — where the toy bodies stand (echo); a floor's crew is its own"}
+  ],
   "seats": [
     {"template": "templates/librarian-resident.v0.json"},
-    {"template": "templates/echo-resident.v0.json"},
+    {"template": "templates/echo-resident.v0.json", "at": "f:ops"},
     {"template": "templates/firmware-planner.v0.json"},
     {"template": "templates/firmware-critic.v0.json"},
     {"template": "templates/firmware-grader.v0.json"},

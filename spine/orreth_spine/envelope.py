@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5 (claude-fable-5) — rearch P0 sp1, the rig breathes · 2026-09-16
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: `universe()` · the within clause · 2026-10-05
 """The shared transport envelope (orreth.transport/1), v0.
 
 One broker-neutral metadata contract for every rail (canon 0002). An
@@ -25,6 +26,24 @@ def scope() -> str:
     running Bridge's dispatcher bridged a test's facts onto its own
     benches and its librarian answered them)."""
     return os.environ.get("SPINE_SCOPE", "u:dev")
+
+
+def universe() -> str:
+    """The UNIVERSE this process stands in — the first segment of its scope path (Phase 8
+    sp1, THE PATH): `u:dev` for a body seated at `u:dev/f:ops`. A body's shared reads (the
+    shelf, the Stable, the policy, the kernel's own tables) resolve here; what it writes
+    about itself wears its whole path (`scope()`)."""
+    return scope().split("/", 1)[0]
+
+
+WITHIN = "(scope = %s OR scope LIKE %s || '/%%')"
+
+
+def within_params(path: str | None = None) -> tuple[str, str]:
+    """The two parameters `WITHIN` takes — the path twice: `scope = p OR scope LIKE p/%`
+    (a listing at a level sees everything within it — the roll-up at its minimum)."""
+    p = path or scope()
+    return (p, p)
 
 SPECVERSION = "orreth.transport/1"
 KINDS = ("command", "event")

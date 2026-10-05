@@ -3149,7 +3149,63 @@ wound this rearchitecture began from).
   shelf, summon generalized, import from a repo; (6) THE TWO CHIPS —
   identity and security v0 as the gate's reviewers. THE PROOF IS BOB, walked
   end to end, then walked again by the Workshop agent on JB's words (the
-  Orreth-skill law). Builds HELD until JB's word. What was here before
+  Orreth-skill law). Builds HELD until JB's word — **given 2026-10-05
+  ("spoonful 1, THE PATH")**.
+  - **sp1 — THE PATH** ✅ **BUILT 2026-10-05 — walk OWED (JB in the glass,
+    SPEC-PATH-01)**: `orreth_spine/levels.py` · `levels.rs` + `levels_live.rs`
+    — the path grammar (`u:<universe>[/f:<floor>[/r:<room>]]`, names lower-case
+    letters, digits, - and _), the child law, the words ("floor ops of universe
+    dev"), MODE TIGHTEN-ONLY (dev → prod, never back; `SPINE_MODE` declares the
+    universe's mode when its cell opens — a relight may tighten, a prod universe
+    refuses to light as dev), the experiment room (rooms only), the CASCADE FOLD
+    (0007 at its minimum: soft most-specific-wins and attributed · skills additive,
+    the higher version winning · floors sorted by content hash · mode the tightest ·
+    the resolved context content-addressed; the universe tier's floors are the
+    policy sheet's rules; each level's `declares` its soft · skills · floors), the
+    ROLL-UP MONOID (0005's StatBundle carried whole: merge · the Beta report · the
+    tier score), the level fact `orreth.level.opened.v1` (the feed's 38th topic).
+    **Schema 5**: `spine_levels` — one row per level of this universe (41 tables,
+    410 columns, 65 indexes, the same on both kernels); the universe's own row
+    seeded at light (`cells.home` · `cells_live::home`); the crew manifest's
+    `levels` declared at light (`{"at": "f:ops"}`), a seat's `at` seating its body
+    on a level — the body is BORN with the level as its `SPINE_SCOPE`, knocks at the
+    desk AT THE LEVEL (the desk refuses a level not open), and its join, lease,
+    desk row and seat row wear it. **The `scope` column every table carries is now
+    a path**: a row written at the universe wears `u:dev` as before; a row written
+    by or for a body on a floor wears the floor's path; A LISTING AT A LEVEL SEES
+    EVERYTHING WITHIN IT (the crew door, the residents, the roster and its sweep,
+    the asks band, the address law, the interested bodies, the refusals, the
+    desk, the dispatcher's "ours", the bench sweep, the export, the prune — the
+    roll-up UP the path at its minimum); A BODY'S SHARED READS RESOLVE AT ITS
+    UNIVERSE (`ev.universe()`: the shelf, the Stable, the policy, the kernel's
+    tables), and its memories land at its level with recall escalating UP the path
+    (the nearest level wins a key). Doors on both kernels: `GET /levels` (the tree,
+    each level with what stands HERE and what ROLLS UP from within — bodies · asks
+    served · spend as the monoid's bundle), `GET /levels/context?path=` (the fold),
+    `POST /levels/open` (govern; the laws checked at the door in words, then
+    `level.open` held at L2 — the lever on both doors; a no stands nothing). THE
+    GLASS: the GROUND organ's tag wears the mode (`u:dev · dev · cell local`), a
+    levels line beneath it ("floor ops · dev · 1 body"), the chat's "open floor
+    ops" · "open room bob on floor ops as an experiment room" · "open floor x as
+    prod" · "what levels are here?", the `level opened` notice. THE ORRETH SKILL:
+    0009 and 0010 join MITL's ontology v0 corpus (11 files); the guide's `levels`
+    section. The shipped crew declares floor `ops` and seats the echo on it (JB's
+    to reverse in one line). Fixture `levels-v0.json` (69 cases: path_parse ·
+    path_child · mode_tighten · mode_dial · experiment_room · level_absolute ·
+    cascade_fold · rollup_merge · rollup_report · rollup_tier_score · level_fact);
+    conformance **818/818 on both kernels** (serde_json's `float_roundtrip` turned
+    on: the fast path parsed `1.9400000000000002` a ulp off). Proofs:
+    `tests/test_levels.py` (5) · `tests/levels.rs` (the six steps on the rig: the
+    universe dev, the floor declared, the echo joined AT the floor and seen from
+    the universe with its level, an ask from the universe served by the floor's
+    body and rolled up, the cascade content-addressed, quinn's seat refused and
+    jb's L2 no/yes, the refusals in words, the prune taking the levels) · the
+    migrator parity · the desk and doors proofs. **NOT in sp1 (named, owed):** a
+    floor's own shelf, Stable and policy (the escalation UP for shared reads is
+    the universe's today); the Rust kernel's own reads stand at the universe (one
+    kernel per cell, always at depth 1 — the body-side laws are the reference's);
+    the Costs Panel's fold; `context_hash` on a thought; the book's `SPINE_MODE`
+    dial pin (turns with the phase's release). What was here before
   (THE LANE, the factory ask as escalation) stays owed AFTER the Workshop:
   the lane with RAG (P6.5 sp4/sp5), the stranger with row 5, the lessons
   digest with row 6a, the architect with RAG. Each row proof-shaped

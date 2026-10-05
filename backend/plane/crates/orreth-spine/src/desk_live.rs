@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3, THE GATE (b): the machine join desk on the ground · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W85): ONE NAME, ONE SELF — a proven key claiming a name another self holds a LIVE lease on is STAGED, never admitted on a ticket or a welcome; the hold words name the incumbent (`desk.rs` untouched, rule 9) · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: a body joins AT A LEVEL — the knock's `scope`, open here and within the universe; the desk's rows, the lease's audience and the seat row wear it; the desk reads every level · 2026-10-05
 //! THE MACHINE JOIN DESK on the ground (canon 0005 sp8 row 3b · 0006 · 0012 ·
 //! covenant rule 3) — the doors' half of `desk`. A body ASKS and is CHALLENGED in
 //! one motion (the desk's own nonce); it PROVES with the key behind its DID; a
@@ -77,10 +78,12 @@ pub struct Row {
     pub expiry: Option<SystemTime>,
     pub asked_at: SystemTime,
     pub updated_at: SystemTime,
+    /// Phase 8 sp1: the level this body asked to join at (its scope path).
+    pub scope: String,
 }
 
 const COLS: &str = "join_id, did, name, kind, public_key, template_hash, status, nonce, nonce_at, ticket, ask_id, \
-                    admitted_by, lease_id, lease, expiry, asked_at, updated_at";
+                    admitted_by, lease_id, lease, expiry, asked_at, updated_at, scope";
 
 fn row_of(r: &tokio_postgres::Row) -> Row {
     Row {
@@ -101,6 +104,7 @@ fn row_of(r: &tokio_postgres::Row) -> Row {
         expiry: r.get(14),
         asked_at: r.get(15),
         updated_at: r.get(16),
+        scope: r.get(17),
     }
 }
 
@@ -110,8 +114,8 @@ async fn get<C: GenericClient>(
     join_id: &str,
 ) -> Result<Option<Row>, RoadError> {
     Ok(c.query_opt(
-        &format!("SELECT {COLS} FROM spine_desk WHERE join_id = $1 AND scope = $2"),
-        &[&join_id, &scope],
+        &format!("SELECT {COLS} FROM spine_desk WHERE join_id = $1 AND (scope = $2 OR scope LIKE $2 || '/%')"),
+        &[&join_id, &scope], // Phase 8 sp1: a join at any level of this universe
     )
     .await?
     .map(|r| row_of(&r)))
@@ -168,6 +172,28 @@ pub async fn ask(g: &mut Ground, w: &World, p: &Value) -> Result<Value, RoadErro
     {
         return Err(RoadError::Refused(desk::REFUSED_WORDS.into()));
     }
+    // Phase 8 sp1, THE PATH: the level the body asks to join at — its own path when the manifest
+    // seats it on a floor or in a room; the universe when unsaid. It must be open here.
+    let at = {
+        let a = s("scope");
+        if a.is_empty() {
+            w.scope.clone()
+        } else {
+            a
+        }
+    };
+    if !crate::levels::ok(&at) || !crate::seat::within(&at, &w.scope) {
+        return Err(RoadError::Refused(format!(
+            "{at} is not a level of {} — a body joins at this universe or a floor or room within it",
+            w.scope
+        )));
+    }
+    if crate::levels_live::row(g.client(), &at).await?.is_none() {
+        return Err(RoadError::Refused(format!(
+            "{} is not open here — open it first (the crew manifest's `levels`, or “open floor …” in the chat)",
+            crate::levels::words(&at).unwrap_or_else(|_| at.clone())
+        )));
+    }
     let nonce = token_hex(16);
     let join_id = desk::join_id_of(&did, &nonce);
     let e = fact(
@@ -181,7 +207,7 @@ pub async fn ask(g: &mut Ground, w: &World, p: &Value) -> Result<Value, RoadErro
     let mid = e["message_id"].as_str().unwrap_or_default().to_string();
     let (j2, sc2, d2, n2, k2, pk2, t2, p2, no2, tk2) = (
         join_id.clone(),
-        w.scope.clone(),
+        at.clone(),
         did.clone(),
         name.clone(),
         role.clone(),
@@ -220,7 +246,7 @@ pub async fn list(g: &Ground, w: &World, limit: i64) -> Result<Vec<Value>, RoadE
         .client()
         .query(
             &format!(
-                "SELECT {COLS} FROM spine_desk WHERE scope = $1 ORDER BY asked_at DESC LIMIT $2"
+                "SELECT {COLS} FROM spine_desk WHERE (scope = $1 OR scope LIKE $1 || '/%') ORDER BY asked_at DESC LIMIT $2"
             ),
             &[&w.scope, &limit],
         )
@@ -247,7 +273,7 @@ async fn set_status(
     let tx = g.client_mut().transaction().await?;
     tx.execute(
         "UPDATE spine_desk SET status = $1, admitted_by = COALESCE($2, admitted_by), ask_id = COALESCE($3, \
-         ask_id), updated_at = now() WHERE join_id = $4 AND scope = $5",
+         ask_id), updated_at = now() WHERE join_id = $4 AND (scope = $5 OR scope LIKE $5 || '/%')",
         &[&status, &admitted_by, &ask_id, &join_id, &w.scope],
     )
     .await?;
@@ -322,7 +348,8 @@ pub async fn prove(
     let incumbent: Option<String> = g
         .client()
         .query_opt(
-            "SELECT did FROM spine_leases WHERE scope = $1 AND name = $2 AND did <> $3 AND until > now() ORDER \
+            "SELECT did FROM spine_leases WHERE (scope = $1 OR scope LIKE $1 || '/%') AND name = $2 AND did <> $3 \
+             AND until > now() ORDER \
              BY until DESC LIMIT 1",
             &[&w.scope, &r.name, &r.did],
         )
@@ -368,7 +395,8 @@ pub async fn prove(
     } else {
         g.client()
             .query_opt(
-                "SELECT join_id FROM spine_desk WHERE scope = $1 AND did = $2 AND status = 'done' AND join_id <> \
+                "SELECT join_id FROM spine_desk WHERE (scope = $1 OR scope LIKE $1 || '/%') AND did = $2 AND status = \
+                 'done' AND join_id <> \
                  $3 ORDER BY updated_at DESC LIMIT 1",
                 &[&w.scope, &r.did, &join_id],
             )
@@ -598,8 +626,9 @@ pub async fn collect(
         .map(|d| d.as_millis() as u64)
         .unwrap_or(0);
     let expiry = envelope::iso_millis(now_ms + (desk::lease_days() as u64) * 86_400_000);
+    // Phase 8 sp1: the lease's audience is the level the body joined at (within the universe — the seat's law)
     let token =
-        desk::lease(signer, did, &w.scope, &expiry, usd, renew_days).map_err(RoadError::Refused)?;
+        desk::lease(signer, did, &r.scope, &expiry, usd, renew_days).map_err(RoadError::Refused)?;
     let lid = seat::seat_id(&token);
     let e = fact(
         w,
@@ -614,7 +643,7 @@ pub async fn collect(
     let (l2, d2, sc2, x2, j2, t2) = (
         lid.clone(),
         did.to_string(),
-        w.scope.clone(),
+        r.scope.clone(),
         expiry.clone(),
         join_id.to_string(),
         token.to_string(),

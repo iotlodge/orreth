@@ -3,6 +3,8 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp2, an MCP server's change names the tools under it; a tool names its server · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: the four Python-only doors cross to the Rust kernel — the pure parts named (`ask_text` · `kind_name`) so the fixtures pin them · 2026-09-28
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: 0009 and 0010 join the ontology v0 corpus (the Orreth-skill law) · 2026-10-05
 """MITL v0 — the Master Mind In the Loop (canon 0001 · 0004 · 0005 P6 sp3).
 
 The specialist of Orreth as a firmware body of the third kind: the same
@@ -51,6 +53,8 @@ ONTOLOGY = (                                        # the Orreth ontology v0: th
     "docs/rearch/0006-markers-dive.md",
     "docs/rearch/0007-intent-dive.md",
     "docs/rearch/0008-the-rust-plane-and-the-port.md",
+    "docs/rearch/0009-the-old-world-carried.md",      # Phase 8 sp1: the old world carried — the levels' ancestry
+    "docs/rearch/0010-the-workshop.md",               # Phase 8 sp1: THE WORKSHOP — the levels, the shelf, the Experiment
     ".claude/skills/orreth-covenant/SKILL.md",
 )
 PASSAGE = 2400                                      # a passage the pack can carry whole
@@ -63,6 +67,8 @@ TITLES = {                                          # W15: the canon in human na
     "docs/rearch/0006-markers-dive.md": "the markers dive",
     "docs/rearch/0007-intent-dive.md": "the intent dive",
     "docs/rearch/0008-the-rust-plane-and-the-port.md": "the Rust plane and the port",
+    "docs/rearch/0009-the-old-world-carried.md": "the old world carried",
+    "docs/rearch/0010-the-workshop.md": "the Workshop",
     ".claude/skills/orreth-covenant/SKILL.md": "the covenant",
 }
 KINDS = ("watch", "intention", "template", "binding", "placement", "act", "service")
@@ -209,7 +215,7 @@ def ontology(conn) -> list[dict]:
     cur = conn.cursor()
     cur.execute("SELECT key, hash, landed_at, length(body) FROM spine_memories"
                 " WHERE namespace = %s AND scope = %s AND valid_to IS NULL ORDER BY key",
-                (NAME, ev.scope()))
+                (NAME, ev.universe()))
     out = []
     for key, h, at, n in cur.fetchall():
         path, _, num = key.partition("#")
@@ -259,8 +265,8 @@ def summon(conn, person: str, session: str | None = None, *, on: bool = True) ->
     state = "summoned" if on else "dismissed"
     ref = session or person
     e = ev.make_envelope(
-        kind="event", type=SUMMONED if on else DISMISSED, universe_id=ev.scope(),
-        scope_path=ev.scope(),
+        kind="event", type=SUMMONED if on else DISMISSED, universe_id=ev.universe(),
+        scope_path=ev.universe(),
         payload={"ref": ref, "hash": "sha256:-", "by": person, "session": session,
                  "body": NAME},
         correlation_id=ref, authority_chain=[person], marker=marker)
@@ -269,7 +275,7 @@ def summon(conn, person: str, session: str | None = None, *, on: bool = True) ->
         markers.insert(cur, mid, "action", parent, ref, person,
                        f"MITL {state} — {EXPANSION}")
         cur.execute("INSERT INTO spine_mitl (session, person, state, marker, scope)"
-                    " VALUES (%s, %s, %s, %s, %s)", (session, person, state, mid, ev.scope()))
+                    " VALUES (%s, %s, %s, %s, %s)", (session, person, state, mid, ev.universe()))
 
     outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)
     return {"summoned": on, "state": state, "person": person, "session": session,
@@ -283,10 +289,10 @@ def summoned(conn, session: str | None = None, person: str | None = None) -> boo
     cur = conn.cursor()
     if session:
         cur.execute("SELECT state FROM spine_mitl WHERE session = %s AND scope = %s"
-                    " ORDER BY row_id DESC LIMIT 1", (session, ev.scope()))
+                    " ORDER BY row_id DESC LIMIT 1", (session, ev.universe()))
     else:
         cur.execute("SELECT state FROM spine_mitl WHERE session IS NULL AND person = %s"
-                    " AND scope = %s ORDER BY row_id DESC LIMIT 1", (person or "", ev.scope()))
+                    " AND scope = %s ORDER BY row_id DESC LIMIT 1", (person or "", ev.universe()))
     r = cur.fetchone()
     return bool(r and r[0] == "summoned")
 
@@ -303,7 +309,7 @@ def _bodies(conn) -> dict[str, dict]:
     """Every body of this world by name — its kind, self, and life."""
     cur = conn.cursor()
     cur.execute("SELECT DISTINCT ON (name) name, kind, did, life FROM spine_joins"
-                " WHERE scope = %s ORDER BY name, join_id DESC", (ev.scope(),))
+                " WHERE scope = %s ORDER BY name, join_id DESC", (ev.universe(),))
     return {n: {"name": n, "kind": k, "did": d, "life": life} for n, k, d, life in cur.fetchall()}
 
 
@@ -371,7 +377,7 @@ def read_ground(conn, change: dict) -> dict:
     if ref and ref.startswith("ask_"):
         cur = conn.cursor()
         cur.execute("SELECT held, marker, served_by, text, status FROM spine_asks"
-                    " WHERE ask_id = %s AND scope = %s", (ref, ev.scope()))
+                    " WHERE ask_id = %s AND scope = %s", (ref, ev.universe()))
         row = cur.fetchone()
         if row is None:
             t["notes"].append("no such ask is held on this ground")
@@ -413,7 +419,7 @@ def read_ground(conn, change: dict) -> dict:
         if _has(conn, "spine_watches"):
             cur = conn.cursor()
             cur.execute("SELECT watch_id, name, metric, op, threshold, last_ok FROM spine_watches"
-                        " WHERE scope = %s ORDER BY added_at", (ev.scope(),))
+                        " WHERE scope = %s ORDER BY added_at", (ev.universe(),))
             for w in cur.fetchall():
                 if metric and w[2] == metric:
                     t["watches"].append({"watch_id": w[0], "name": w[1], "metric": w[2], "op": w[3],
@@ -589,7 +595,7 @@ def _service_touched(conn, t: dict, kind: str, name: str) -> tuple[dict | None, 
     if kind == "tool":
         cur = conn.cursor()
         cur.execute("SELECT DISTINCT ON (name) name, capabilities FROM spine_joins WHERE scope = %s"
-                    " ORDER BY name, join_id DESC", (ev.scope(),))
+                    " ORDER BY name, join_id DESC", (ev.universe(),))
         for n, caps in cur.fetchall():
             if f"tools:{name}" in json.loads(caps or "[]"):
                 declared.append(n)

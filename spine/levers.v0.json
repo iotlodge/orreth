@@ -137,6 +137,15 @@
       "for": [],
       "doors": ["rust"],
       "settles_s": 0
+    },
+    {
+      "name": "level.open",
+      "description": "Open a floor under this universe, or a room on a floor - a level a crew can be seated on (Phase 8 sp1, THE PATH). Mode only tightens down the path (dev may hold prod; prod never holds dev); only a room opens as an experiment room. Consequential; a level stands forever once open; never a remedy.",
+      "needs": {"parent": "the level it opens under (the universe, or a floor's path)", "level": "floor or room", "name": "lower-case letters, digits, - and _", "mode": "dev or prod (unsaid: the parent's)", "experiment": "true for an experiment room (rooms only)"},
+      "consequence": "consequential",
+      "for": [],
+      "doors": ["python", "rust"],
+      "settles_s": 0
     }
   ]
 }
