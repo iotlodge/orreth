@@ -1,8 +1,8 @@
 {
  "format": "orreth-guide/1",
- "version": "0.6.0",
+ "version": "0.7.0",
  "title": "THE GUIDE · what you can say here, and what happens",
- "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful",
+ "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful (JB's law 2026-10-06: the guide turns with every word the glass learns or stops hearing — test_guide holds it to the parsers)",
  "sections": [
   {
    "id": "chat",
@@ -45,6 +45,10 @@
     {
      "say": "guide · help · ?",
      "does": "This guide, opened to where you are."
+    },
+    {
+     "say": "(open a reply's journey — the ⌄ on its line)",
+     "does": "Every hop the body took, in order: heard the ask · recalled N notes · routed to the chat edge (a human's ask) — or the work edge (a duty, an objective) or the event edge (a marker it is interested in) · the work node runs graph mind.v0: think · thought it through the metered gateway. Since Phase 8 sp2 every body runs this HULL and its template's graph is the work node."
     }
    ]
   },
@@ -180,11 +184,11 @@
    "id": "crew",
    "when": "crew",
    "title": "The Crew",
-   "lead": "Every body in this world, both sides: what it served and the job it runs. When this kernel seats the bodies itself (the Rust kernel alone), each card says where its process stands — alive, restarting, PARKED or refused. Beneath the bodies stands the shelf.",
+   "lead": "Every body in this world, both sides: what it served and the job it runs. When this kernel seats the bodies itself (the Rust kernel alone), each card says where its process stands — alive, restarting, PARKED or refused. Beneath the bodies stands the shelf — the services the kernel governs and the crafts the bodies are made of.",
    "entries": [
     {
-     "say": "what services are here? · show the tools · show the LLMs",
-     "does": "The shelf, from the registry: every tool, MCP server, store, source and LLM on one ladder — registered → versioned → healthy | unhealthy → retired."
+     "say": "what services are here? · show the tools · show the LLMs · show the crafts",
+     "does": "The shelf, from the registry: every tool, MCP server, store, source and LLM — and, since Phase 8 sp2, every CRAFT a body is made of (templates, prompts, skills, policies, graphs, bindings, golden sets) — on one ladder: registered → versioned → healthy | unhealthy → retired. A craft's card says who wears it; the drafts and the cut are under “The shelf widened”."
     },
     {
      "say": "check the services · check the minds",
@@ -359,8 +363,8 @@
      "does": "Signed by the kernel's own self (did:orreth:kernel:…); a stranger can verify the chain and the signature."
     },
     {
-     "say": "forget the trailer note",
-     "does": "Governed erasure: every version leaves; a tombstone keeps the hashes; the digests that cited it are rebuilt."
+     "say": "librarian, forget the trailer note",
+     "does": "The librarian's own purge, held at the interlock (consequential): every version leaves; a tombstone keeps the hashes; the digests that cited it are rebuilt. A body's word, not the glass's — say it to the body that remembers it."
     }
    ]
   },
@@ -400,11 +404,15 @@
    "id": "levels",
    "when": "monitor",
    "title": "Levels — the universe, its floors, their rooms",
-   "lead": "One kernel per cell serves three levels on one path: the UNIVERSE (this cell), its FLOORS, and their ROOMS (u:dev/f:ops/r:bob). A crew can be seated on any level by the crew manifest; what a body writes about itself wears its level, and a listing at a level sees everything within it. Mode only tightens down the path: a prod universe's floors and rooms are prod. The GROUND organ names the universe's mode and its levels.",
+   "lead": "One kernel per cell serves three levels on one path: the UNIVERSE (this cell), its FLOORS, and their ROOMS (u:dev/f:ops/r:bob). A crew can be seated on any level by the crew manifest; what a body writes about itself wears its level, and a listing at a level sees everything within it. Mode only tightens down the path: a prod universe's floors and rooms are prod. The GROUND organ names the universe's mode and its levels. The shipped crew seats the echo on floor ops, so the levels line under the GROUND organ reads “floor ops · dev · 1 body” from the first light.",
    "entries": [
     {
      "say": "what levels are here?",
      "does": "Every floor and room of this universe with its mode, who is seated there, and what rolls up from within it."
+    },
+    {
+     "say": "echo, say the word HERON once",
+     "does": "The echo stands on floor ops, yet an ask from the universe reaches it: the address law reads within the universe, and the reply wears the floor's path (u:dev/f:ops) on its journey."
     },
     {
      "say": "open floor ops",
@@ -412,11 +420,11 @@
     },
     {
      "say": "open room bob on floor ops as an experiment room",
-     "does": "A room on the floor; an experiment room is where a candidate cut is tried — nothing promotes out of it except through the Experiment gate (a later spoonful)."
+     "does": "A room on the floor; an experiment room is where a candidate cut is tried — two arms, the grader's verdict, the stamped promotion — nothing promotes out of it except through the Experiment gate (spoonful 4)."
     },
     {
-     "say": "open floor x as dev (under a prod universe)",
-     "does": "Refused in words: mode only tightens down the path."
+     "say": "open room loose on floor three as dev",
+     "does": "Under a prod floor, refused in words before anything is held: mode only tightens down the path."
     },
     {
      "say": "SPINE_MODE=prod (in the kernel's environment at light)",
@@ -426,37 +434,41 @@
   },
   {
    "id": "shelf-widened",
-   "when": "monitor",
+   "when": "crew",
    "title": "The shelf widened — the crafts a body is made of, who wears them, your drafts",
-   "lead": "The SHELF holds every service the kernel governs (tools, MCP servers, stores, sources, minds) and, since Phase 8 sp2, every CRAFT a body is made of: templates, prompts, skills, policies, graphs, bindings and golden sets. A craft is addressed by its name and pin (librarian.template, mind.v0.graph) and is never a self. The WEAR TABLE says which body wears which craft at which version — 'in use by N'. A DRAFT lives under you alone until you CUT it onto the shelf; the cut is held at the interlock. Every body now runs the HULL: hear, recall, route to the chat, work or event edge, then its template's graph as the work node.",
+   "lead": "The SHELF (in the CREW pull, beneath the bodies) holds every service the kernel governs (tools, MCP servers, stores, sources, minds) and, since Phase 8 sp2, every CRAFT a body is made of: templates, prompts, skills, policies, graphs, bindings and golden sets. A craft is addressed by its name and pin (librarian.template, mind.v0.graph) and is never a self — its card says “address craft:… (no self)”. The WEAR TABLE says which body wears which craft at which version — “in use by N”. A DRAFT lives under you alone until you CUT it onto the shelf; the cut is held at the interlock. Every body now runs the HULL: hear, recall, route to the chat, work or event edge, then its template's graph as the work node. The SHELF organ's second line counts the crafts.",
    "entries": [
     {
-     "say": "show the crafts",
-     "does": "Every craft on the shelf with its ladder state and how many bodies wear it now; 'show the templates' (graphs, prompts, skills, policies, bindings, goldens) narrows it."
+     "say": "show the crafts · show the templates · show the prompts · show the graphs",
+     "does": "Every craft on the shelf with its ladder state, its health and how many bodies wear it now; a kind's word narrows it (templates · prompts · skills · policies · graphs · bindings · goldens)."
     },
     {
-     "say": "who wears the librarian template?",
-     "does": "The bodies wearing that component now, by life and version — the blast radius a change would touch."
+     "say": "who wears the librarian template? · who wears mind.v0.graph?",
+     "does": "The bodies wearing that component now, by life and version — “librarian.template is worn by 1 body: librarian (life 107, v1)” — the blast radius a change would touch."
     },
     {
      "say": "what is echo made of?",
-     "does": "The components a body wears: its template, policy, graph and golden set, each with its version and pin."
+     "does": "The components a body wears: “echo.template v1 · pin f249b129 · the-orreth-covenant.policy v1 · echo.v0.graph v1”. A body joined before the wear table shows nothing until its next life, and says so."
     },
     {
      "say": "my drafts",
-     "does": "Your drafts and no one else's — they live in the ground under your seat, never on the shelf, never in any recall."
+     "does": "Your drafts and no one else's — they live in the ground under your seat, never on the shelf, never in any recall. With none, the words to start one."
     },
     {
-     "say": "draft a prompt called greeting: Greet the human by name.",
-     "does": "Routine: the draft is saved under your seat (a template, graph, policy, binding or golden set is drafted as JSON after the colon)."
+     "say": "draft a prompt called greeting: Greet the human by name, warmly.",
+     "does": "Routine: the draft is saved under your seat (saying it again with the same name updates it). A prompt or a skill takes its words after the colon; a template, graph, policy, binding or golden set takes its JSON — draft a template called bob: {\"graph\": \"mind.v0\", \"kind\": \"agent\"}. Half-formed words (no colon) are taught back, never sent to a body."
     },
     {
      "say": "cut the greeting draft",
-     "does": "Consequential: held at the interlock. On your yes the draft lands on the shelf as version 1, or the next version of a craft already there; the draft is spent. A resident's template asks your code; firmware cuts only in a dev universe; an agent's template waits for the Experiment."
+     "does": "Consequential: held at the interlock — “cutting the greeting prompt — version 1 onto the shelf”. On your yes the draft lands as version 1, or the next version of a craft already there (a sibling); it is probed at once and the draft is spent. The same bytes twice refuse (“nothing to cut”). A resident's template asks your code (L3); firmware cuts only in a dev universe; an agent's template is refused in words until the Experiment (spoonful 4)."
+    },
+    {
+     "say": "discard the greeting draft",
+     "does": "Lets a draft go — it was never recorded, so nothing is kept."
     },
     {
      "say": "retire the greeting prompt · restore the greeting prompt",
-     "does": "The same ladder every service rides — at rest, never deleted; restored as a new fact."
+     "does": "The same ladder every service rides — “the greeting prompt is retired — at rest on the shelf, recorded, never deleted”; restored as a new fact, standing registered again."
     }
    ]
   }

@@ -105,6 +105,9 @@ process — mayflies in a universe designed for living things. Review caught it
   it; a stale era means the glass lies about what world it is. Caught out-of-band three
   times before this line existed (last: 2026-07-24, v0.35 worn by a forty-dive world).
 - Every word a human will read plain (rule 13)? Walk scripts and register rows included.
+- THE GUIDE turned with the glass (JB's law, 2026-10-06)? Every word the chat learns or stops
+  hearing lands in `spine/guide/guide.v0.json` in the same spoonful — `spine/tests/test_guide.py`
+  holds its command lines to the glass's parsers; grow its heads list with the new words.
 - Did this work move a row of `docs/design/the-honest-boundary.md` — prove a claim,
   narrow a partial, unpark a park? → the register updates **in the same closing
   commit** (JB's lock, 2026-07-26). A register that lags lies with confidence; a
