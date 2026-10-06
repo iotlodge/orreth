@@ -501,8 +501,9 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
                 made = stable.retire_mind(conn, held["args"]["name"], by=asker, ask=ask_id,
                                           parent_marker=row[3], confirmed_by=by,   # P6.5 sp2: the keeper's
                                           gw=stable.Gateway() if (services.get(conn, held["args"]["name"]) or {}).get("kind") == "mind" else None)  # proposal, the human's cut; sp3: a mind leaves the gateway too
-                result = (f"the {made['name']} {made['kind']} is retired — at rest on the shelf, "
-                          f"recorded, never deleted; say “restore the {made['name']} {made['kind']}” "
+                from .crafts import plain as _plain          # W100: "the greeting prompt", never "greeting.prompt prompt"
+                result = (f"the {_plain(made['name'], made['kind'])} is retired — at rest on the shelf, "
+                          f"recorded, never deleted; say “restore the {_plain(made['name'], made['kind'])}” "
                           "to bring it back")
             elif held["tool"] == "level.open":           # Phase 8 sp1: a floor or room opened on the person's word
                 from . import levels

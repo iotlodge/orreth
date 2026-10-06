@@ -124,6 +124,15 @@ def is_craft(kind: str) -> bool:
     return kind in CRAFT_KINDS
 
 
+def plain(name: str, kind: str) -> str:
+    """A service in the human's words (rule 13): `greeting prompt` for a craft (the shelf name
+    already wears its kind), `weather tool` for an identity — W100 (walk SPEC-SHELF-01)."""
+    sp = split_name(name)
+    if sp and sp[1] == kind:
+        return f"{sp[0]} {kind}"
+    return f"{name} {kind}"
+
+
 def validate(kind: str, manifest) -> dict:
     """The declaration reads whole, or the reason why not — `{ok, reason}`; one law per kind."""
     if kind not in CRAFT_KINDS:
@@ -693,7 +702,9 @@ def cut(conn, person: str, draft_id: str, *, by: str | None = None, ask: str | N
         row = services.version(conn, sn, d["body"], by=who)
     with conn.transaction():
         conn.cursor().execute("DELETE FROM spine_drafts WHERE draft_id = %s", (draft_id,))
-    return row
+    ok_, detail = probe(conn, row)                   # walk SPEC-SHELF-01: a cut craft is probed at the cut — never "never probed"
+    services.record_health(conn, sn, ok_, detail, by=who)
+    return services.get(conn, sn)
 
 
 def worn_words(component: str, wearers: list[dict]) -> str:

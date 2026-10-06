@@ -721,7 +721,7 @@ pub async fn hold_retire(
     crate::proof_live::hold_kernel_act(
         g,
         w,
-        &format!("retiring the {name} {kind}"),
+        &format!("retiring the {}", crate::crafts::plain(name, &kind)),
         person,
         RETIRE_TOOL,
         json!({"name": name}),

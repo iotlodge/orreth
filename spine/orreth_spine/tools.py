@@ -422,7 +422,8 @@ def _services_tool(args: dict, conn) -> str:
         return f"checked {len(out)}: " + " · ".join(lines)
     if act == "retire":
         made = services.retire(conn, name, by=by, ask=args.get("_ask"), parent_marker=args.get("_parent"))
-        return f"the {made['name']} {made['kind']} is retired — at rest on the shelf, recorded, never deleted; restore brings it back"
+        from .crafts import plain as _plain
+        return f"the {_plain(made['name'], made['kind'])} is retired — at rest on the shelf, recorded, never deleted; restore brings it back"
     if act == "restore":
         made = services.restore(conn, name, by=by)
         return f"the {made['name']} {made['kind']} stands registered again — a new fact; its stop stays in the record"

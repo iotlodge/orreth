@@ -2283,12 +2283,16 @@ async function mindDoor(path, body, words){        // P6.5 sp3: a Stable act —
   }
   sysline(r && r.error ? esc(r.error) : "the Stable's door did not answer");
 }
+function plainService(name, kind){               // W100 (walk SPEC-SHELF-01): "greeting prompt", never "greeting.prompt prompt"
+  if (kind && CRAFT_KINDS.includes(kind) && name.endsWith("." + kind)) return `${name.slice(0, -kind.length - 1)} ${kind}`;
+  return `${name} ${kind || "service"}`;
+}
 async function retireService(name, kind){          // consequential (L2): the kernel holds it — the interlock arrives in the chat
   toggleChat(true);
   const r = await fetch("/services/retire", {method:"POST", headers:{"content-type":"application/json"},
     body: JSON.stringify({name, person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
   if (r && r.held){
-    PENDING[r.held] = el("journey", `retiring the ${esc(name)} ${esc(kind || "service")} is consequential — the kernel holds it at the interlock…`);
+    PENDING[r.held] = el("journey", `retiring the ${esc(plainService(name, kind))} is consequential — the kernel holds it at the interlock…`);
     const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);   // the hold may have landed before its notice
     if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
     return;
@@ -2299,7 +2303,7 @@ async function restoreService(name, kind){         // a new fact; its stop stays
   toggleChat(true);
   const r = await fetch("/services/restore", {method:"POST", headers:{"content-type":"application/json"},
     body: JSON.stringify({name, person: PERSON})}).then(x=>x.json()).catch(()=>null);
-  sysline(r && r.service ? `${esc(name)} ${esc(kind || "service")} restored — standing ${esc(r.service.state)} again · a new fact; its stop stays in the record`
+  sysline(r && r.service ? `the ${esc(plainService(name, kind))} is restored — standing ${esc(r.service.state)} again · a new fact; its stop stays in the record`
         : r && r.error ? esc(r.error) : "the restore door did not answer");
   refreshPulls();
 }
@@ -2467,12 +2471,23 @@ async function serviceWords(text){                 // "what services are here?" 
       sysline(`<b>draft</b> · ${esc(d.name)} ${esc(d.kind)} · ${esc(d.draft_id)} · saved ${hhmm(d.updated_at)}${d.words ? " · " + esc(d.words) : ""} — say “cut the ${esc(d.name)} draft” (held at the interlock) or “discard the ${esc(d.name)} draft”`);
     return true;
   }
+  m = t.match(/^draft\s+(?:an?\s+)?(template|prompt|skill|policy|graph|binding|golden)\s+(?:called\s+|named\s+)?([a-z0-9][a-z0-9._-]*)\s*$/);   // W99 (walk SPEC-SHELF-01): the half-formed words are taught here, never handed to a body
+  if (m){
+    el("msg mine", esc(text));
+    sysline(m[1] === "prompt" || m[1] === "skill"
+      ? `a ${esc(m[1])} draft wants its words after a colon — say “draft a ${esc(m[1])} called ${esc(m[2])}: <the text>”`
+      : `a ${esc(m[1])} draft wants its declaration after a colon — say “draft a ${esc(m[1])} called ${esc(m[2])}: { … }” with its JSON (the Workshop's editor is spoonful 3)`);
+    return true;
+  }
   m = t.match(/^draft\s+(?:an?\s+)?(template|prompt|skill|policy|graph|binding|golden)\s+(?:called\s+|named\s+)?([a-z0-9][a-z0-9._-]*)\s*[:—-]\s*([\s\S]+)$/);
   if (m){
     el("msg mine", esc(text));
     const kind = m[1], name = m[2], rest = m[3].trim();
     let body;
-    if (rest.startsWith("{")){ try { body = JSON.parse(rest); } catch (e) { sysline("the draft's declaration did not parse as JSON — fix the braces and say it again"); return true; } }
+    if (rest.startsWith("{")){
+      try { body = JSON.parse(rest); }
+      catch (e) { try { body = JSON.parse(rest.replace(/\\"/g, '"')); } catch (e2) { sysline("the draft's declaration did not parse as JSON — fix the braces and say it again"); return true; } }   // W101: quotes pasted escaped (\") are read plain
+    }
     else if (kind === "prompt") body = {text: rest};
     else if (kind === "skill") body = {words: rest.split(/\.\s/)[0], text: rest};
     else { sysline(`a ${esc(kind)} draft is a declaration — say “draft a ${esc(kind)} called ${esc(name)}: { … }” with its JSON, or open the Workshop (spoonful 3)`); return true; }

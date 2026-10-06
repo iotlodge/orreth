@@ -395,6 +395,9 @@ pub async fn cut_in(tx: &Transaction<'_>, w: &World, args: &Value, by: &str) -> 
         services_live::version_in(tx, w, &sn, &body, by).await?
     };
     tx.execute("DELETE FROM spine_drafts WHERE draft_id = $1", &[&draft_id]).await?;
+    // walk SPEC-SHELF-01: a cut craft is probed at the cut — its card reads healthy, never "never probed"
+    let (ok, detail) = probe(tx, &w.scope, &row).await?;
+    services_live::record_health_in(tx, w, &sn, ok, &detail, by).await?;
     let hash = python_str(&row["manifest_hash"]);
     Ok(format!(
         "the {sn} is on the shelf as version {} ({}) — pin {}…; the draft is spent",

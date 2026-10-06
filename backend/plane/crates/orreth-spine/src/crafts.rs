@@ -39,6 +39,15 @@ pub fn is_craft(kind: &str) -> bool {
     CRAFT_KINDS.contains(&kind)
 }
 
+/// `crafts.plain`: a service in the human's words — `greeting prompt` for a craft, `weather tool`
+/// for an identity (W100, walk SPEC-SHELF-01).
+pub fn plain(name: &str, kind: &str) -> String {
+    match split_name(name) {
+        Some((bare, k)) if k == kind => format!("{bare} {kind}"),
+        _ => format!("{name} {kind}"),
+    }
+}
+
 fn kinds_words() -> String {
     CRAFT_KINDS.join(", ")
 }

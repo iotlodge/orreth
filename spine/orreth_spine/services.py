@@ -555,7 +555,8 @@ def hold_retire(conn, name: str, *, person: str, session: str | None = None) -> 
     from .proof import hold_kernel_act
     row = get(conn, name)
     _refuse_step(name, row["state"] if row else None, "retire")
-    return hold_kernel_act(conn, text=f"retiring the {name} {row['kind']}", person=person,
+    from .crafts import plain as _plain
+    return hold_kernel_act(conn, text=f"retiring the {_plain(name, row['kind'])}", person=person,
                            tool=RETIRE_TOOL, args={"name": name}, level=RETIRE_LEVEL,
                            session=session, cls=RETIRE_CLASS)
 

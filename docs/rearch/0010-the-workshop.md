@@ -289,8 +289,8 @@ Each spoonful is a thing a human proves in the glass before the next opens
 2. **THE SHELF WIDENED.** The craft kinds, the wear table, the draft shelf
    under the person, golden as a component, source with repo and commit;
    the hull with its three edges, the template's graph finally read. **BUILT
-   2026-10-05 (JB's word: "spoonful 2, THE SHELF WIDENED"); the walk in the
-   glass OWED (SPEC-SHELF-01).** What landed, both kernels law for law: the
+   2026-10-05 (JB's word: "spoonful 2, THE SHELF WIDENED"); WALKED the same
+   evening (SPEC-SHELF-01 PASS; W99 · W100 · W101 cured).** What landed, both kernels law for law: the
    one shelf's kinds widened to twelve — the five identities and the seven
    crafts (`template · prompt · skill · policy · graph · binding · golden`), a
    craft named `<name>.<kind>` on the shelf and ADDRESSED (`craft:<name>.<kind>`

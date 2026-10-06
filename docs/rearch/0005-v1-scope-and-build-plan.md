@@ -3231,7 +3231,7 @@ wound this rearchitecture began from).
     hand restore of a dev ground stays JB's own: `UPDATE spine_levels SET
     mode='dev' WHERE scope='u:dev'`.
   - **sp2 — THE SHELF WIDENED** ✅ **BUILT 2026-10-05 (JB's word: "spoonful 2, THE
-    SHELF WIDENED") — walk OWED (JB in the glass, SPEC-SHELF-01)**:
+    SHELF WIDENED") — WALKED 2026-10-05 evening (JB, SPEC-SHELF-01): every bar PASS; three wounds found and cured the same night — W99 (a half-formed "draft a prompt called greeting" reached a body; the glass now teaches the form), W100 (retire/restore words doubled a craft's kind — `crafts.plain` on both kernels and the glass), W101 (the spec's own JSON showed escaped quotes — the script reads plain, the glass tolerates `\"`); a cut craft is now probed at the cut**:
     `orreth_spine/crafts.py` · `crafts.rs` + `crafts_live.rs` — THE CRAFT KINDS on the
     ONE shelf (`services.KINDS` widened from five to twelve: the identities tool · mcp ·
     store · source · mind, and the crafts template · prompt · skill · policy · graph ·

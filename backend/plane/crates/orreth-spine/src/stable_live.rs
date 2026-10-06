@@ -770,13 +770,11 @@ pub async fn settle_in(
         }
         RETIRE_TOOL => {
             let made = retire_mind_in(tx, w, gw, &python_str(&a["name"]), asker, at).await?;
+            // W100 (walk SPEC-SHELF-01): "the greeting prompt", never "greeting.prompt prompt"
+            let plain = crate::crafts::plain(&python_str(&made["name"]), &python_str(&made["kind"]));
             Ok(format!(
-                "the {} {} is retired — at rest on the shelf, recorded, never deleted; say \u{201c}restore the {} {}\u{201d} \
-                 to bring it back",
-                python_str(&made["name"]),
-                python_str(&made["kind"]),
-                python_str(&made["name"]),
-                python_str(&made["kind"])
+                "the {plain} is retired — at rest on the shelf, recorded, never deleted; say \u{201c}restore the {plain}\u{201d} \
+                 to bring it back"
             ))
         }
         other => Err(refused(format!(
