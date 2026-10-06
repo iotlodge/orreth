@@ -571,6 +571,45 @@ class Resident:
                         h = snap["harness"]
                         notes.append(f"harness — {h['template']} v{h['version']}: "
                                      f"{h['passed']} passed, {h['failed']} failed")
+                elif self.function == "workspace:workshop":
+                    # Phase 8 sp3: the Workshop's agent reads the SHELF's crafts (what stands,
+                    # who wears it) and — on the author's OWN ask only — the one draft the
+                    # author has open in the Workshop, named in the ask as [draft <id>]; a
+                    # draft is never recalled otherwise (AG-9): the author's seat reads it
+                    from . import crafts, services
+                    from .crafts import CRAFT_KINDS
+                    rows = [r for r in services.listing(conn) if r["kind"] in CRAFT_KINDS]
+                    notes.append(f"THE SHELF holds {len(rows)} crafts (name · kind · version · state · worn by): "
+                                 + "; ".join(f"{r['name']} · v{r['version']} · {r['state']} · worn by {r.get('worn_by', 0)}"
+                                             for r in rows[:80]))
+                    for r in rows[:80]:
+                        m = r.get("manifest") or {}
+                        line = (m.get("words") or m.get("nature") or m.get("charge") or
+                                (m.get("text") or "")[:160] or "")
+                        if r["kind"] == "graph":
+                            line = (f"entry {m.get('entry')} · nodes " + ", ".join(
+                                f"{n.get('id')} ({n.get('kind')}" + (f", prompt {n['prompt']}" if n.get('prompt') else "")
+                                + (f", skill {n['skill']}" if n.get('skill') else "") + (f", tools {n['tools']}" if n.get('tools') else "")
+                                + (f", mind {n['mind']}" if n.get('mind') else "") + ")" for n in m.get("nodes") or [])
+                                + " · edges " + ", ".join(f"{e.get('from')}→{e.get('to')}" + (f" {crafts.when_words(e)}" if e.get('when') else "")
+                                                          for e in m.get("edges") or []))
+                        elif r["kind"] == "template":
+                            line = f"a {m.get('kind', 'resident')} body · graph {m.get('graph')} · {m.get('nature') or m.get('charge') or ''}"[:220]
+                        notes.append(f"craft {r['name']}: {line}")
+                    import re as _re
+                    for did_ in _re.findall(r"\[draft (draft_[0-9a-f]+)\]", s["text"]):
+                        d = crafts.draft(conn, person, did_) if person else None
+                        if d is None:
+                            notes.append(f"the ask names draft {did_}, which is not this human's — nothing read")
+                            continue
+                        v = crafts.validate(d["kind"], d["body"])
+                        notes.append(f"THE OPEN DRAFT — the human's own {d['name']} {d['kind']} ({d['draft_id']}), "
+                                     f"{'reads whole' if v['ok'] else 'NOT whole yet: ' + str(v['reason'])}. Its declaration: "
+                                     f"{json.dumps(d['body'], ensure_ascii=False)}. When the human asks to CHANGE it, call the "
+                                     f"`draft` tool ONCE with name {d['name']!r}, kind {d['kind']!r} and the WHOLE edited "
+                                     "declaration as `body` — never a fragment, never a description of the change instead. "
+                                     "The cut is the human's alone: say “say cut the "
+                                     f"{d['name']} draft” and never offer to cut it yourself.")
                 elif (self.function or "").startswith("workspace:"):
                     # a workspace agent reads ITS workspace's facts (the
                     # binding names which); the crew: every body here
@@ -675,11 +714,15 @@ class Resident:
                 return {"reply": (f"CANNOT ACT: my template names the graph {want!r}, which is not on the "
                                   "shelf nor shipped with the spine — nothing ran; register it, or restore it."),
                         "steps": s["steps"] + [f"the work node found no graph named {want!r} — nothing ran"]}
-            out: dict = {"steps": list(s["steps"]) + [f"the work node runs graph {g['name']}: "
-                                                    + " → ".join(crafts.path(g))]}
+            br = crafts.branches(g)                      # Phase 8 sp3: the graph may BRANCH — the way out is
+            out: dict = {"steps": list(s["steps"]) + [    # picked as the run goes, each pick said in the journey
+                f"the work node runs graph {g['name']}: " + " → ".join(crafts.path(g))
+                + (f" · branches at {', '.join(br)} — the way out picked as the run goes" if br else "")]}
             cur_state = dict(s, steps=out["steps"])
-            for nid in crafts.path(g):
-                n = crafts.node(g, nid)
+            cur, visited = g.get("entry"), 0
+            while cur is not None and visited <= len(g.get("nodes", [])):
+                visited += 1
+                n = crafts.node(g, cur)
                 if n["kind"] == "echo":
                     part = {"reply": echo_reply(self.name, cur_state["text"]),
                             "steps": cur_state["steps"] + [f"echoed every word — none summarized away "
@@ -690,6 +733,11 @@ class Resident:
                 out.update(part)
                 if part.get("hold"):
                     break                                # a held act stops the line at a safe boundary
+                cur, why = crafts.next_node(g, cur, {"edge": cur_state.get("edge"), "ask": cur_state["text"],
+                                                     "reply": cur_state.get("reply")})
+                if why:
+                    cur_state["steps"] = cur_state["steps"] + [why]
+                    out["steps"] = cur_state["steps"]
             return out
 
         def think(s: _State, node: dict | None = None) -> dict:
@@ -739,20 +787,43 @@ class Resident:
                                "are executing, mark it: call the mark tool "
                                "with kind 'improvement' and a short note — "
                                "other bodies act on marks.")   # 0006's policy line
+                worn: list[str] = []                   # Phase 8 sp3: the node's refs, said in the journey
                 if node.get("prompt"):                 # Phase 8 sp2: a node's prompt component, from the shelf
                     from . import crafts
                     pr = crafts.get(self._serve_conn, str(node["prompt"]), "prompt")
                     if pr and pr["state"] != "retired":
                         system += "\n\n" + str(pr["manifest"].get("text") or "")
+                        worn.append(f"prompt {node['prompt']}")
+                    else:
+                        worn.append(f"prompt {node['prompt']} (not on the shelf — not read)")
+                if node.get("skill"):                  # Phase 8 sp3: a node's skill component — the words a body follows
+                    from . import crafts
+                    sk = crafts.get(self._serve_conn, str(node["skill"]), "skill")
+                    if sk and sk["state"] != "retired":
+                        system += "\n\nTHE SKILL you follow here — " + str(sk["manifest"].get("words") or "") + \
+                                  ":\n" + str(sk["manifest"].get("text") or "")
+                        worn.append(f"skill {node['skill']}")
+                    else:
+                        worn.append(f"skill {node['skill']} (not on the shelf — not read)")
                 system += "\n\n" + self.seat_words(self._serve_conn, self._current_ask)
                 prompt = ""
                 if s["notes"]:
                     prompt += ("Your recalled notes:\n- "
                                + "\n- ".join(s["notes"]) + "\n\n")
                 prompt += f"The ask: {s['text']}"
+                caps = list(self.template.get("capabilities", []))
+                if node.get("tools") is not None:      # Phase 8 sp3: the node NARROWS the door to the tools it names —
+                    asked = {f"tools:{t}" for t in node["tools"]}          # never past what the template declares
+                    shut = sorted(t[6:] for t in asked if t not in caps)
+                    caps = [c for c in caps if not c.startswith("tools:") or c in asked]
+                    worn.append("tools " + (", ".join(node["tools"]) or "none")
+                                + (f" ({', '.join(shut)} never declared by the template — the door stays shut)" if shut else ""))
+                if node.get("mind"):                   # Phase 8 sp3: the node pins the stall it thinks with
+                    mind = dict(mind, pin=str(node["mind"]))
+                    worn.append(f"mind pinned to the {node['mind']} stall")
+                node_step = [f"node {node.get('id')}: " + " · ".join(worn)] if worn else []
                 door = ToolDoor(self._serve_conn, did=self.identity.did,
-                                capabilities=self.template.get(
-                                    "capabilities", []), name=self.name,
+                                capabilities=caps, name=self.name,
                                 marker=(self._current_marker or {}).get("id"),
                                 ask=self._current_ask,          # AG-7: the door wears
                                 chain=self._full_chain(s.get("read")))   # the chain
@@ -780,7 +851,7 @@ class Resident:
                             if not (reply or "").strip():
                                 reply = W26_WORDS
                         return {"reply": reply,
-                                "steps": s["steps"] + acts + retried
+                                "steps": s["steps"] + node_step + acts + retried
                                 + ["thought it through the metered gateway"]}
                     reply = self.gateway.think(
                         self._serve_conn, did=self.identity.did,
@@ -799,13 +870,13 @@ class Resident:
                 except ConsequentialHold as h:
                     return {"hold": {"tool": h.tool, "args": h.tool_args,
                                      "class": h.consequence, "level": h.level},
-                            "steps": s["steps"]
+                            "steps": s["steps"] + node_step
                             + [f"the {h.tool} act is {h.consequence} — "
                                "held at the interlock for the human"
                                + ("" if h.level == "L2" else f" · needs {h.level}")]}
                 return {"reply": reply,
-                        "steps": s["steps"] + retried + ["thought it through the "
-                                                         "metered gateway"]}
+                        "steps": s["steps"] + node_step + retried + ["thought it through the "
+                                                                     "metered gateway"]}
             if self.kind == "firmware":
                 # P6 sp4's side cure (found by sp3): a firmware body without a
                 # gateway wears no persona — the echo names it plainly instead

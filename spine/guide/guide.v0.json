@@ -1,6 +1,6 @@
 {
  "format": "orreth-guide/1",
- "version": "0.7.0",
+ "version": "0.8.0",
  "title": "THE GUIDE · what you can say here, and what happens",
  "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful (JB's law 2026-10-06: the guide turns with every word the glass learns or stops hearing — test_guide holds it to the parsers)",
  "sections": [
@@ -469,6 +469,42 @@
     {
      "say": "retire the greeting prompt · restore the greeting prompt",
      "does": "The same ladder every service rides — “the greeting prompt is retired — at rest on the shelf, recorded, never deleted”; restored as a new fact, standing registered again."
+    }
+   ]
+  },
+  {
+   "id": "workshop",
+   "when": "workshop",
+   "title": "The Workshop — where a craft is authored: your drafts, the canvas, the inspector, the agent, the cut",
+   "lead": "THE WORKSHOP (the tab on the right, full screen) is the one place where all mutability occurs. The left rail finds earlier work: YOUR DRAFTS (under your seat alone — never on the shelf, never in any recall) and THE SHELF's crafts by kind, with a filter box. The canvas DRAWS THE DECLARATION: a graph's nodes as blocks (the entry ringed cyan; THINK is the metered mind, ECHO the words back; each node's prompt · skill · tools · mind refs beneath) and its ways out as arrows — a plain arrow is the default (“otherwise”), a violet arrow wears a WHEN: the hull's edge the ask took (chat · work · event), a pattern in the ask's words, or a pattern in the last reply. A node may have several ways out when at most one wears no when; the graph runs forward only. Click a node or an arrow to edit it in the inspector; the DECLARATION box below is the same truth as JSON. SAVE is routine (under your seat); the CUT is yours and holds at the interlock. With the Workshop open the chat speaks to its agent, workshop, and your open draft rides your ask so it edits that draft on your words. The MIND chip in the header assigns the agent's stall from the Stable (held at the interlock, L2): an Anthropic stall is Claude the model, metered like every mind; Claude the developer (repo access) is Phase 9, not this chip. Floor and room are not chosen here: a craft's card says where its wearers stand; where a next life stands is a field on the promotion (spoonful 4).",
+   "entries": [
+    {
+     "say": "open the workshop · workshop · close the workshop",
+     "does": "Opens or closes the Workshop pull (one pull at a time; Esc closes it). Opening pushes a focus: the chat speaks to the Workshop agent until you close it."
+    },
+    {
+     "say": "load the librarian template in the workshop · load mind.v0 in the workshop · load my bob draft in the workshop",
+     "does": "Opens the Workshop with that craft or draft loaded. A craft from the shelf is read-only — its address, pin, version, health, who wears it and WHERE each wearer stands; “draft from this” copies it into a new draft of yours (cut it and it lands as the next version, a sibling). A template draws the graph it wears."
+    },
+    {
+     "say": "(click a node)",
+     "does": "The NODE INSPECTOR: id · kind (think | echo) · prompt and skill (from the shelf; both join the node's system words) · tools (narrows the door to those named — never past what the template declares) · mind (pins a stall) · words; add a node after it, add a way out, make it the entry, remove it. Apply, then SAVE."
+    },
+    {
+     "say": "(click an arrow)",
+     "does": "THE WAY OUT: set its when — otherwise (the default, at most one per node) · the hull's edge (chat · work · event) · a pattern in the ask · a pattern in the last reply — or remove it. The run takes the first when that holds, else the default, else the line ends there."
+    },
+    {
+     "say": "(SAVE · CUT · discard changes · discard the draft · ask the agent)",
+     "does": "SAVE writes the draft under your seat (routine, L1). CUT is the chat's “cut the <name> draft” — held at the interlock, probed at once on your yes. The declaration box takes JSON too (apply it to the canvas); escaped quotes read plain."
+    },
+    {
+     "say": "workshop, add an echo node after think · workshop, wire a way out of think to greet when the ask says hello",
+     "does": "The Workshop agent reads your open draft (on your ask alone) and edits it through its draft tool with the whole declaration — the canvas redraws and says so. It never cuts: the cut is yours."
+    },
+    {
+     "say": "(the MIND chip)",
+     "does": "Assigns the Workshop agent's stall through the Stable's own door — consequential, held at the interlock (L2). “stablekeeper, add the LLM anthropic <model> as <name>” adds a frontier stall to choose from."
     }
    ]
   }

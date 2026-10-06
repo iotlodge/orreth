@@ -175,6 +175,11 @@ async fn the_shelf_widened_crafts_addressed_the_wear_rows_written_and_a_draft_cu
     assert!(service(&shelf, "librarian.golden")["manifest"]["cases"].as_array().is_some_and(|c| c.len() == 2));
     assert_eq!(service(&shelf, "the-orreth-covenant.policy")["kind"], json!("policy"));
     assert_eq!(service(&shelf, "shelf.skill")["kind"], json!("skill"));
+    // Phase 8 sp3, THE WORKSHOP v0: the third workspace seat's binding and the Workshop's Orreth skill stand at light;
+    // the Workshop agent's one tool, `draft`, is a built-in on the shelf (routine — a draft under the human's seat)
+    assert_eq!(service(&shelf, "workshop.binding")["manifest"]["pull"], json!("workshop"));
+    assert_eq!(service(&shelf, "workshop.skill")["kind"], json!("skill"));
+    assert_eq!(service(&shelf, "draft")["manifest"]["consequence"], json!("routine"));
     assert!(service(&shelf, "weather")["did"].as_str().unwrap().starts_with("did:orreth:service:"), "an identity is still a self");
     let (s, c) = knock(port, "POST", "/services/check", Some(&json!({"name": "librarian.template"})), &jb).await;
     assert_eq!(s, 200, "{c}");

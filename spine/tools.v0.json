@@ -110,6 +110,43 @@
       "ground": true
     },
     {
+      "name": "draft",
+      "description": "Save a DRAFT of a craft under the human whose ask you serve — a template, prompt, skill, policy, graph, binding or golden set (Phase 8 sp3, THE WORKSHOP). Routine: a draft is unversioned and lives under the human's seat alone, never on the shelf. Pass the WHOLE declaration as `body` (the full object as it should stand after the change — never a fragment), the draft's `name` (short, lowercase) and its `kind`; the same name and kind updates the human's existing draft. The cut onto the shelf is the human's alone (\"cut the <name> draft\") — never offer to cut. When the human asks you to change, add to or write a draft, CALL this tool; never describe the change instead.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "template",
+              "prompt",
+              "skill",
+              "policy",
+              "graph",
+              "binding",
+              "golden"
+            ]
+          },
+          "body": {
+            "type": "object"
+          },
+          "words": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "body"
+        ]
+      },
+      "consequence": "routine",
+      "ground": true
+    },
+    {
       "name": "services",
       "description": "Keep the shelf of services. action=register adds an MCP server (name: a short lowercase name; locator: its command line or URL, or env:NAME; secrets_with: the env NAMES it needs) and lists its tools onto the shelf. action=check probes one service by name, or every MCP server when no name is given. action=retire / restore move a service by name. action=changes reads what changed on the shelf since the last ask. action=list names what stands. Register, retire and restore hold for the human's yes at the interlock; check, changes and list run at once. When the human asks you to add, check, retire or restore, CALL this tool — never describe the act instead.",
       "input_schema": {

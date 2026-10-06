@@ -28,6 +28,7 @@ COMMAND_HEADS = (
     "tour", "show me around", "what am i looking at", "what world is this", "re-home ", "what levels", "open floor", "open room",
     "who wears", "what is ", "my drafts", "draft a", "draft an", "cut the", "discard the", "thought:", "objective:",
     "librarian's fuel", "echo, every", "propose a watch", "watch for",
+    "open the workshop", "close the workshop", "load ", "workshop,",            # Phase 8 sp3: THE WORKSHOP
 )
 # lines the glass hears through a body or a door, not a parser — named, never silently skipped
 BODY_OR_DOOR = (
@@ -88,7 +89,7 @@ def test_the_guide_reads_whole():
     ids = [s["id"] for s in g["sections"]]
     assert len(ids) == len(set(ids)), "a section id repeats"
     for s in g["sections"]:
-        assert s.get("when") in ("chat", "crew", "monitor", "band"), f"section {s['id']}: `when` names the pull it stands in"
+        assert s.get("when") in ("chat", "crew", "monitor", "band", "workshop"), f"section {s['id']}: `when` names the pull it stands in"
         assert s.get("title") and s.get("lead") and s.get("entries"), f"section {s['id']} is whole: title, lead, entries"
         for e in s["entries"]:
             assert e.get("say") and e.get("does"), f"section {s['id']}: every entry says and does"

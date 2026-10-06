@@ -114,7 +114,7 @@ def test_the_crew_is_one_manifest():
     seats = body.crew()
     names = [s["template"].name for s in seats]
     assert names[0].startswith("librarian") and names[1].startswith("echo")
-    assert sum(1 for s in seats if s["binding"]) == 2                    # crew · monitor bindings
+    assert sum(1 for s in seats if s["binding"]) == 3                    # crew · monitor · workshop bindings (Phase 8 sp3)
     assert all(s["template"].exists() and (s["binding"] is None or s["binding"].exists()) for s in seats)
     with pytest.raises(ValueError, match="not a crew manifest"):
         body.crew_seats({"format": "x"})

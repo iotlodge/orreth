@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 THE WORKSHOP sp2, THE SHELF WIDENED: the craft kinds · the wear table · the draft shelf · the hull's edges · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp3 THE WORKSHOP v0: the graph declaration BRANCHES (an edge wears `when`: the hull's edge · the ask's words · the last reply), per-node refs typed, the default line and the run-time pick · 2026-10-06
 """THE SHELF WIDENED (canon 0010 lock 3 · lock 6 · 0004 AG-9 · 0005 Phase 8 sp2).
 
 JB's laws: *every Agent is a sum of its versioned components; an Agent cannot
@@ -48,9 +49,18 @@ stop at a safe boundary) live in the hull, never in the agent's graph.
 THE GRAPH DECLARATION v0 (0004's open "template schema v0", answered here):
 declaration first, canvas as the view — `{format: orreth-graph/1, name,
 entry, nodes: [{id, kind: think | echo, prompt?, skill?, tools?, mind?}],
-edges: [{from, to}]}`; v0 runs the ONE path from the entry along the edges (a
-node with two ways out refuses — branching is the Workshop's authoring,
-spoonful 3). The pure laws here are the fixture's (`crafts-v0.json`).
+edges: [{from, to, when?}]}`. Spoonful 3 (THE WORKSHOP v0) lets it BRANCH:
+an edge may wear `when` — exactly one of `{"edge": chat | work | event}` (the
+hull's edge this ask took), `{"ask": "<pattern>"}` (the ask's words) or
+`{"reply": "<pattern>"}` (the last node's reply) — and a node may have several
+ways out when at most ONE of them wears no `when` (the default, "otherwise").
+The run picks the first `when` that holds, in declaration order, else the
+default, else the line ends there. The graph runs FORWARD only (a loop
+refuses). A node's refs are executed by the hull: `prompt` and `skill` join
+the system words, `tools` narrows the door to those the template declares,
+`mind` pins the stall. `path(g)` is the DEFAULT LINE (the edges without a
+`when`, from the entry); `branches(g)` names the nodes that branch. The pure
+laws here are the fixture's (`crafts-v0.json`).
 """
 from __future__ import annotations
 
@@ -74,6 +84,7 @@ FORMATS = {
     "skill": "orreth-skill/1",
 }
 NODE_KINDS = ("think", "echo")                       # v0: the metered mind · the words back
+WHEN_KEYS = ("edge", "ask", "reply")                 # sp3: what a way out may be conditioned on
 EDGES = ("chat", "work", "event")                    # the hull's three edges = the three modes of agent interoperability
 STRUCTURAL = ("objective", "intention", "thought", "action", "observation")   # markers.SEED's structural group
 TEMPLATE_KINDS = ("resident", "firmware", "agent")   # the three selves (0010 lock 4)
@@ -191,8 +202,10 @@ def validate(kind: str, manifest) -> dict:
 
 
 def validate_graph(g) -> dict:
-    """The graph declaration v0: an entry; nodes with unique ids and a known kind; edges that name
-    nodes; ONE way out of every node (v0 runs a line — branching is the Workshop's)."""
+    """The graph declaration v0, branching since sp3: an entry; nodes with unique ids, a known
+    kind and typed refs (`prompt` · `skill` · `mind` a name; `tools` a list of names); edges that
+    name nodes, each wearing at most one `when` (edge · ask · reply); at most ONE way out of a
+    node without a `when` (the default); forward only — a loop refuses."""
     if not isinstance(g, dict) or g.get("format") != FORMATS["graph"]:
         return {"ok": False, "reason": f"a graph declares format {FORMATS['graph']!r}"}
     nodes = g.get("nodes")
@@ -206,6 +219,12 @@ def validate_graph(g) -> dict:
             return {"ok": False, "reason": f"node ids are unique — {n['id']!r} appears twice"}
         if n.get("kind") not in NODE_KINDS:
             return {"ok": False, "reason": f"node {n['id']!r}: a node's kind is one of {', '.join(NODE_KINDS)} — got {n.get('kind')!r}"}
+        for ref in ("prompt", "skill", "mind"):
+            if ref in n and n[ref] is not None and (not isinstance(n[ref], str) or not n[ref].strip()):
+                return {"ok": False, "reason": f"node {n['id']!r}: `{ref}` names a {ref if ref != 'mind' else 'stall'} by name"}
+        if "tools" in n and n["tools"] is not None and (
+                not isinstance(n["tools"], list) or not all(isinstance(t, str) and t.strip() for t in n["tools"])):
+            return {"ok": False, "reason": f"node {n['id']!r}: `tools` is a list of tool names"}
         ids.append(n["id"])
     entry = g.get("entry")
     if entry not in ids:
@@ -213,31 +232,120 @@ def validate_graph(g) -> dict:
     edges = g.get("edges", [])
     if not isinstance(edges, list):
         return {"ok": False, "reason": "edges is a list of {from, to}"}
-    outs: dict[str, str] = {}
+    defaults: set[str] = set()
     for e in edges:
         if not isinstance(e, dict) or e.get("from") not in ids or e.get("to") not in ids:
             fr, to = (e.get("from"), e.get("to")) if isinstance(e, dict) else (None, None)
             return {"ok": False, "reason": f"an edge names two nodes — {fr!r} → {to!r} does not"}
-        if e["from"] in outs:
-            return {"ok": False, "reason": f"node {e['from']!r} has two ways out — v0 runs one path; branching is the Workshop's"}
-        outs[e["from"]] = e["to"]
-    try:
-        path(g)
-    except CraftRefused as x:
-        return {"ok": False, "reason": str(x)}
+        w = e.get("when")
+        if w is None:
+            if e["from"] in defaults:
+                return {"ok": False, "reason": f"node {e['from']!r} has two ways out and neither says when — one way out may be the default; every other wears a `when` (edge · ask · reply)"}
+            defaults.add(e["from"])
+            continue
+        if not isinstance(w, dict) or len(w) != 1 or next(iter(w)) not in WHEN_KEYS:
+            return {"ok": False, "reason": f"the way out of {e['from']!r} to {e['to']!r}: `when` is one of {{edge}}, {{ask}} or {{reply}}"}
+        k, v = next(iter(w.items()))
+        if k == "edge" and v not in EDGES:
+            return {"ok": False, "reason": f"the way out of {e['from']!r} to {e['to']!r}: `when.edge` is one of {', '.join(EDGES)} — got {v!r}"}
+        if k != "edge" and (not isinstance(v, str) or not v.strip()):
+            return {"ok": False, "reason": f"the way out of {e['from']!r} to {e['to']!r}: `when.{k}` is a pattern — the words to look for"}
+    loop = _loops_at(g, ids)
+    if loop is not None:
+        return {"ok": False, "reason": f"the graph loops at {loop!r} — v0 runs forward only"}
     return {"ok": True, "reason": None}
 
 
+def _loops_at(g: dict, ids: list[str]) -> str | None:
+    """The first node (in declaration order) that can reach itself along ANY edges — None when
+    the graph runs forward only."""
+    outs: dict[str, list[str]] = {i: [] for i in ids}
+    for e in g.get("edges", []):
+        if isinstance(e, dict) and e.get("from") in outs:
+            outs[e["from"]].append(e.get("to"))
+    for start in ids:
+        seen, stack = set(), list(outs[start])
+        while stack:
+            cur = stack.pop()
+            if cur == start:
+                return start
+            if cur in seen or cur not in outs:
+                continue
+            seen.add(cur)
+            stack.extend(outs[cur])
+    return None
+
+
 def path(g: dict) -> list[str]:
-    """The nodes a run visits, from the entry along the edges, in order; a loop refuses."""
-    outs = {e["from"]: e["to"] for e in g.get("edges", []) if isinstance(e, dict)}
+    """THE DEFAULT LINE: the nodes a run visits from the entry along the edges that wear no
+    `when` (the "otherwise" of every node), in order — what the canvas draws as the spine of the
+    graph and the probe says; a loop refuses. A node whose every way out is conditioned ends
+    the line."""
+    outs = {e["from"]: e["to"] for e in g.get("edges", []) if isinstance(e, dict) and e.get("when") is None}
     seen, cur = [], g.get("entry")
     while cur is not None:
         if cur in seen:
-            raise CraftRefused(f"the graph loops at {cur!r} — v0 runs a line")
+            raise CraftRefused(f"the graph loops at {cur!r} — v0 runs forward only")
         seen.append(cur)
         cur = outs.get(cur)
     return seen
+
+
+def branches(g: dict) -> list[str]:
+    """The nodes with more than one way out, in declaration order."""
+    counts: dict[str, int] = {}
+    for e in g.get("edges", []):
+        if isinstance(e, dict):
+            counts[e.get("from")] = counts.get(e.get("from"), 0) + 1
+    return [n["id"] for n in g.get("nodes", []) if counts.get(n.get("id"), 0) > 1]
+
+
+def when_words(e: dict) -> str:
+    """A way out, in words (rule 13): `when the ask took the chat edge` · `when the ask says
+    /weather/` · `when the reply says /HOLD/` · `otherwise`."""
+    w = e.get("when") if isinstance(e, dict) else None
+    if not w:
+        return "otherwise"
+    k, v = next(iter(w.items()))
+    if k == "edge":
+        return f"when the ask took the {v} edge"
+    return f"when the {'ask' if k == 'ask' else 'reply'} says /{v}/"
+
+
+def next_node(g: dict, node_id: str, ctx: dict) -> tuple[str | None, str | None]:
+    """THE RUN-TIME PICK (the hull's, Python only — the Rust kernel runs no graph): the first
+    way out of `node_id` whose `when` holds, in declaration order — `edge` against the hull's
+    edge, `ask` and `reply` as patterns searched (case-blind) in the ask's words and the last
+    reply — else the default, else None (the line ends). Returns the next node and the journey's
+    words; a pattern that does not compile is said and never matches."""
+    ways = [e for e in g.get("edges", []) if isinstance(e, dict) and e.get("from") == node_id]
+    if not ways:
+        return None, None
+    default = next((e for e in ways if e.get("when") is None), None)
+    said = []
+    for e in ways:
+        w = e.get("when")
+        if not w:
+            continue
+        k, v = next(iter(w.items()))
+        if k == "edge":
+            hit = (ctx.get("edge") or "chat") == v
+        else:
+            text = str(ctx.get("ask" if k == "ask" else "reply") or "")
+            try:
+                hit = re.search(str(v), text, re.I) is not None
+            except re.error as x:
+                said.append(f"the way out to {e['to']!r} has a pattern that does not read ({x}) — skipped")
+                hit = False
+        if hit:
+            words = f"took the way out to {e['to']!r} — {when_words(e)}"
+            return e["to"], " · ".join(said + [words]) if said else words
+    if default is not None:
+        words = (f"took the default way out to {default['to']!r} — no `when` held" if len(ways) > 1
+                 else None)
+        return default["to"], " · ".join(said + [words]) if (said and words) else (words or (" · ".join(said) or None))
+    words = f"no way out of {node_id!r} held — the line ends here"
+    return None, " · ".join(said + [words])
 
 
 def node(g: dict, node_id: str) -> dict:
@@ -474,7 +582,9 @@ def probe(conn, row: dict) -> tuple[bool | None, str]:
             return True, f"the declaration reads whole ({len(m.get('cases') or [])} cases); its template {m.get('template')} is not on the shelf yet"
         return True, f"the declaration reads whole ({len(m.get('cases') or [])} cases) for the {m.get('template')} template"
     if kind == "graph":
-        return True, f"the declaration reads whole — {len(m.get('nodes') or [])} node(s): " + " → ".join(path(m))
+        br = branches(m)
+        return True, (f"the declaration reads whole — {len(m.get('nodes') or [])} node(s): " + " → ".join(path(m))
+                      + (f" · branches at {', '.join(br)}" if br else ""))
     return True, "the declaration reads whole"
 
 

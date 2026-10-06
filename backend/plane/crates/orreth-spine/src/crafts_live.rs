@@ -160,7 +160,9 @@ pub async fn probe<C: GenericClient>(c: &C, scope: &str, row: &Value) -> Result<
         "graph" => {
             let n = m["nodes"].as_array().map(Vec::len).unwrap_or(0);
             let p = crafts::path(&m).unwrap_or_default();
-            Ok((Some(true), format!("the declaration reads whole — {n} node(s): {}", p.join(" → "))))
+            let br = crafts::branches(&m);                 // Phase 8 sp3: the probe names where it branches
+            let tail = if br.is_empty() { String::new() } else { format!(" · branches at {}", br.join(", ")) };
+            Ok((Some(true), format!("the declaration reads whole — {n} node(s): {}{tail}", p.join(" → "))))
         }
         _ => Ok((Some(true), "the declaration reads whole".into())),
     }

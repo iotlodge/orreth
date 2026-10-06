@@ -1,8 +1,8 @@
 {
  "contract": "orreth.crafts/1",
  "version": 0,
- "generated_by": "orreth_spine.crafts (the Python reference) - rearch Phase 8 sp2, THE SHELF WIDENED: the craft kinds on the one shelf, the graph declaration v0, the hull's edges, the wear rows, the cut's demand",
- "generated_at": "2026-10-05",
+ "generated_by": "orreth_spine.crafts (the Python reference) - rearch Phase 8 sp2, THE SHELF WIDENED: the craft kinds on the one shelf, the graph declaration v0, the hull's edges, the wear rows, the cut's demand; Phase 8 sp3, THE WORKSHOP v0: the graph BRANCHES (an edge wears `when`: edge \u00b7 ask \u00b7 reply; one default at most; forward only), per-node refs typed, `graph_path` is the default line",
+ "generated_at": "2026-10-06",
  "cases": [
   {
    "name": "craft_name: librarian as a template",
@@ -436,7 +436,7 @@
    },
    "expect": {
     "ok": false,
-    "reason": "node 'a' has two ways out \u2014 v0 runs one path; branching is the Workshop's"
+    "reason": "node 'a' has two ways out and neither says when \u2014 one way out may be the default; every other wears a `when` (edge \u00b7 ask \u00b7 reply)"
    }
   },
   {
@@ -472,7 +472,7 @@
    },
    "expect": {
     "ok": false,
-    "reason": "the graph loops at 'a' \u2014 v0 runs a line"
+    "reason": "the graph loops at 'a' \u2014 v0 runs forward only"
    }
   },
   {
@@ -1574,6 +1574,483 @@
    },
    "expect": {
     "words": "x.prompt is worn by no body now"
+   }
+  },
+  {
+   "name": "craft_manifest: a graph that BRANCHES (sp3) \u2014 one default way out, two wearing `when`, typed refs",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "b",
+     "entry": "r",
+     "nodes": [
+      {
+       "id": "r",
+       "kind": "think"
+      },
+      {
+       "id": "greet",
+       "kind": "echo"
+      },
+      {
+       "id": "w",
+       "kind": "think",
+       "prompt": "weather-words",
+       "skill": "shelf",
+       "tools": [
+        "weather"
+       ],
+       "mind": "haiku"
+      }
+     ],
+     "edges": [
+      {
+       "from": "r",
+       "to": "greet",
+       "when": {
+        "ask": "^(hi|hello)"
+       }
+      },
+      {
+       "from": "r",
+       "to": "w",
+       "when": {
+        "edge": "work"
+       }
+      },
+      {
+       "from": "r",
+       "to": "w"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": true,
+    "reason": null
+   }
+  },
+  {
+   "name": "craft_manifest: a graph with two ways out and no `when` on either (sp3: one default at most)",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "b",
+     "entry": "r",
+     "nodes": [
+      {
+       "id": "r",
+       "kind": "think"
+      },
+      {
+       "id": "a",
+       "kind": "echo"
+      },
+      {
+       "id": "b",
+       "kind": "echo"
+      }
+     ],
+     "edges": [
+      {
+       "from": "r",
+       "to": "a"
+      },
+      {
+       "from": "r",
+       "to": "b"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "node 'r' has two ways out and neither says when \u2014 one way out may be the default; every other wears a `when` (edge \u00b7 ask \u00b7 reply)"
+   }
+  },
+  {
+   "name": "craft_manifest: a way out whose `when` is not edge, ask or reply",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "b",
+     "entry": "r",
+     "nodes": [
+      {
+       "id": "r",
+       "kind": "think"
+      },
+      {
+       "id": "a",
+       "kind": "echo"
+      }
+     ],
+     "edges": [
+      {
+       "from": "r",
+       "to": "a",
+       "when": {
+        "mood": "good"
+       }
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "the way out of 'r' to 'a': `when` is one of {edge}, {ask} or {reply}"
+   }
+  },
+  {
+   "name": "craft_manifest: a way out whose `when.edge` is not one of the hull's three",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "b",
+     "entry": "r",
+     "nodes": [
+      {
+       "id": "r",
+       "kind": "think"
+      },
+      {
+       "id": "a",
+       "kind": "echo"
+      }
+     ],
+     "edges": [
+      {
+       "from": "r",
+       "to": "a",
+       "when": {
+        "edge": "side"
+       }
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "the way out of 'r' to 'a': `when.edge` is one of chat, work, event \u2014 got 'side'"
+   }
+  },
+  {
+   "name": "craft_manifest: a way out whose `when.ask` is empty",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "b",
+     "entry": "r",
+     "nodes": [
+      {
+       "id": "r",
+       "kind": "think"
+      },
+      {
+       "id": "a",
+       "kind": "echo"
+      }
+     ],
+     "edges": [
+      {
+       "from": "r",
+       "to": "a",
+       "when": {
+        "ask": ""
+       }
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "the way out of 'r' to 'a': `when.ask` is a pattern \u2014 the words to look for"
+   }
+  },
+  {
+   "name": "craft_manifest: a way out wearing two conditions at once",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "b",
+     "entry": "r",
+     "nodes": [
+      {
+       "id": "r",
+       "kind": "think"
+      },
+      {
+       "id": "a",
+       "kind": "echo"
+      }
+     ],
+     "edges": [
+      {
+       "from": "r",
+       "to": "a",
+       "when": {
+        "edge": "chat",
+        "ask": "x"
+       }
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "the way out of 'r' to 'a': `when` is one of {edge}, {ask} or {reply}"
+   }
+  },
+  {
+   "name": "craft_manifest: a graph that loops through a conditioned way out (forward only)",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "b",
+     "entry": "r",
+     "nodes": [
+      {
+       "id": "r",
+       "kind": "think"
+      },
+      {
+       "id": "a",
+       "kind": "echo"
+      }
+     ],
+     "edges": [
+      {
+       "from": "r",
+       "to": "a",
+       "when": {
+        "edge": "chat"
+       }
+      },
+      {
+       "from": "a",
+       "to": "r"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "the graph loops at 'r' \u2014 v0 runs forward only"
+   }
+  },
+  {
+   "name": "craft_manifest: a node whose `tools` is not a list of names",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "b",
+     "entry": "r",
+     "nodes": [
+      {
+       "id": "r",
+       "kind": "think",
+       "tools": "weather"
+      }
+     ],
+     "edges": []
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "node 'r': `tools` is a list of tool names"
+   }
+  },
+  {
+   "name": "craft_manifest: a node whose `prompt` is not a name",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "b",
+     "entry": "r",
+     "nodes": [
+      {
+       "id": "r",
+       "kind": "think",
+       "prompt": [
+        "a"
+       ]
+      }
+     ],
+     "edges": []
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "node 'r': `prompt` names a prompt by name"
+   }
+  },
+  {
+   "name": "craft_manifest: a node whose `mind` is empty",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "b",
+     "entry": "r",
+     "nodes": [
+      {
+       "id": "r",
+       "kind": "think",
+       "mind": " "
+      }
+     ],
+     "edges": []
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "node 'r': `mind` names a stall by name"
+   }
+  },
+  {
+   "name": "craft_manifest: a node whose every way out is conditioned (the default line ends there)",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "b",
+     "entry": "r",
+     "nodes": [
+      {
+       "id": "r",
+       "kind": "think"
+      },
+      {
+       "id": "a",
+       "kind": "echo"
+      }
+     ],
+     "edges": [
+      {
+       "from": "r",
+       "to": "a",
+       "when": {
+        "reply": "HOLD"
+       }
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": true,
+    "reason": null
+   }
+  },
+  {
+   "name": "graph_path: a branching graph \u2014 the DEFAULT LINE (the ways out wearing no `when`)",
+   "kind": "graph_path",
+   "input": {
+    "graph": {
+     "format": "orreth-graph/1",
+     "name": "b",
+     "entry": "r",
+     "nodes": [
+      {
+       "id": "r",
+       "kind": "think"
+      },
+      {
+       "id": "greet",
+       "kind": "echo"
+      },
+      {
+       "id": "w",
+       "kind": "think",
+       "prompt": "weather-words",
+       "skill": "shelf",
+       "tools": [
+        "weather"
+       ],
+       "mind": "haiku"
+      }
+     ],
+     "edges": [
+      {
+       "from": "r",
+       "to": "greet",
+       "when": {
+        "ask": "^(hi|hello)"
+       }
+      },
+      {
+       "from": "r",
+       "to": "w",
+       "when": {
+        "edge": "work"
+       }
+      },
+      {
+       "from": "r",
+       "to": "w"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "path": [
+     "r",
+     "w"
+    ]
+   }
+  },
+  {
+   "name": "graph_path: a node whose every way out is conditioned ends the line",
+   "kind": "graph_path",
+   "input": {
+    "graph": {
+     "format": "orreth-graph/1",
+     "name": "b",
+     "entry": "r",
+     "nodes": [
+      {
+       "id": "r",
+       "kind": "think"
+      },
+      {
+       "id": "a",
+       "kind": "echo"
+      }
+     ],
+     "edges": [
+      {
+       "from": "r",
+       "to": "a",
+       "when": {
+        "reply": "HOLD"
+       }
+      }
+     ]
+    }
+   },
+   "expect": {
+    "path": [
+     "r"
+    ]
    }
   }
  ]

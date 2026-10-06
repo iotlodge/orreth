@@ -53,6 +53,10 @@ required-features = ["rails"]
 name = "askroad"
 required-features = ["bridge"]
 
+[[test]]
+name = "crafts"
+required-features = ["bridge"]
+
 # The loops' shadow proof (P7 sp4): both kernels beating on one ground, one beat at a time.
 [[test]]
 name = "loops"

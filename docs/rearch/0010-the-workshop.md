@@ -270,7 +270,8 @@ Each spoonful is a thing a human proves in the glass before the next opens
 1. **THE PATH.** Universe, floor, room on one ScopePath in one kernel per
    cell; mode tighten-only; crews per level by manifest; the cascade and
    roll-up seeds at their minimum; schema v5. **BUILT 2026-10-05 (JB's word:
-   "spoonful 1, THE PATH"); the walk in the glass OWED.** What landed: the
+   "spoonful 1, THE PATH"); WALKED the same evening (SPEC-PATH-01 PASS, W97 ·
+   W98 cured).** What landed: the
    grammar and the child law · `SPINE_MODE` at the cell's open, tighten-only
    down the path, a prod universe refusing to light as dev · the experiment
    room (rooms only) · `spine_levels` (schema 5) with the universe's row seeded
@@ -328,7 +329,33 @@ Each spoonful is a thing a human proves in the glass before the next opens
 3. **THE WORKSHOP v0.** The full-screen pull (like THE PANEL), the
    declaration-to-canvas renderer, the node inspector, draft editing, the
    `workshop` binding and the mind chip, "load Y in the Workshop" from chat,
-   finding earlier work.
+   finding earlier work. **BUILT 2026-10-06 (JB's word: "Spoonful 3, THE
+   WORKSHOP v0"); the walk in the glass OWED (SPEC-WORKSHOP-01).** JB's lock
+   at the open: Floor and Room are deploy-step fields — the Workshop shows
+   where a craft's wearers stand; the choice rides sp4's promotion. What
+   landed: THE GRAPH BRANCHES on both kernels — an edge wears `when` (one of
+   `{edge: chat | work | event}` · `{ask: pattern}` · `{reply: pattern}`), at
+   most one default way out per node, typed node refs, forward only;
+   `path(g)` the default line, `branches(g)` the forks (fixture `crafts-v0`
+   86 → 99, conformance 918/918) · THE HULL picks the way out as the run goes
+   and says each pick; a node's `skill` joins the system words, its `tools`
+   narrow the door (never past the template), its `mind` pins the stall ·
+   THE WORKSHOP'S AGENT: the `workshop` binding (the third workspace seat),
+   its recall the shelf and the ONE open draft the author's ask names (AG-9
+   kept), its one tool `draft` (routine, under the ask's person; the cut
+   stays the human's) · THE MIND CHIP through `/minds/assign` (subject
+   `workshop`, L2; "Claude the model" named, Claude the developer named as
+   Phase 9) · THE GLASS: the full-screen pull with the rail (drafts · the
+   shelf by kind · filter · new draft), the SVG canvas (layered by the
+   longest road, the entry ringed, `when` arrows violet, the legend's
+   default line), the node and way-out inspectors, the JSON declaration box,
+   SAVE · CUT · discard, read-only crafts with WHERE IT STANDS and "draft
+   from this", the agent's hand redrawing the open draft, "open the
+   workshop" · "load Y in the workshop" · the `workshop` skill and guide
+   section. Named, not in sp3: drag-to-wire; a frontier Claude stall seeded
+   (no invented price); the live-watch and replay uses of the renderer; a
+   graph compiled to its own LangGraph (the hull interprets the declaration
+   inside one hop — one engine).
 4. **THE EXPERIMENT AND THE CUT.** Experiment rooms, two arms, the grader's
    signed verdicts on arms and live replies, the proposal, the stamped
    promotion into a next life, the decom ladder and its prune beat.
@@ -365,9 +392,14 @@ evolves.
 
 ## Open, carried (not locked)
 
-- Whether Floor and Room appear as **standing selectors** in the Workshop
+- ~~Whether Floor and Room appear as **standing selectors** in the Workshop
   or as **fields on the deploy step** of a lifecycle (JB named both; decide
-  at spoonful 3's open).
+  at spoonful 3's open).~~ **LOCKED by JB 2026-10-06 at sp3's open: fields on
+  the deploy step.** The Workshop v0 shows WHERE a craft's wearers stand
+  (read-only, from the wear table and the crew's levels); where a body's
+  next life stands is a field on sp4's promotion. No standing selector — a
+  draft has no level (it lives under the person) and the shelf resolves at
+  the universe (a floor's own shelf is named, not built).
 - ~~The exact declaration shape of the `graph` component (0004's open
   "template schema v0"); lands with spoonful 2's fixture.~~ **ANSWERED in
   spoonful 2:** `orreth-graph/1` — `entry` · `nodes: [{id, kind: think | echo,

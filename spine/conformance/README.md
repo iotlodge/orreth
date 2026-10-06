@@ -345,3 +345,13 @@ the same files, unchanged — before any module earns the word "ported".
     Experiment) · `wear_of` (the rows a body wears at its join: template · binding · policy ·
     graph · golden, each by the shelf's pin) · `golden_document` · `cut_words` · `worn_words`.
   - `schema_version` 6 · `schema_tables` 43 (schema-v0) — `spine_wear` and `spine_drafts` join at Phase 8 sp2.
+  - **Phase 8 sp3, THE WORKSHOP v0 (`crafts-v0.json` grows 86 → 99; `tools-v0.json` pins the `draft` tool)** — the
+    graph declaration BRANCHES: an edge may wear `when`, exactly one of `{edge: chat | work | event}` (the hull's
+    edge the ask took) · `{ask: <pattern>}` (the ask's words) · `{reply: <pattern>}` (the last node's reply); a node
+    may have several ways out when at most ONE wears no `when` (the default, "otherwise" — two defaults refuse in
+    words); a node's refs are typed (`prompt` · `skill` · `mind` a name; `tools` a list of names); the graph runs
+    FORWARD ONLY (a loop anywhere, through any way out, refuses — "v0 runs forward only"). `graph_path` is now THE
+    DEFAULT LINE — the ways out without a `when`, from the entry; a node whose every way out is conditioned ends the
+    line. The run-time pick (the first `when` that holds, else the default, else the line ends) is the hull's and
+    Python's alone — the Rust kernel runs no graph. The `draft` tool: routine, ground — the Workshop agent's one
+    tool, a draft under the human whose ask it serves.

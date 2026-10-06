@@ -3293,6 +3293,87 @@ wound this rearchitecture began from).
     re-pointed at a promotion (sp4); the sub-agent's code noun (no life is minted before
     sp4); branching graphs and per-node skills and tools executed (sp3's authoring — v0
     reads a node's `prompt` only); a floor's own shelf; the Costs Panel's fold.
+    - **sp3 — THE WORKSHOP v0** ✅ **BUILT 2026-10-06 (JB's word: "Spoonful 3, THE
+      WORKSHOP v0") — walk OWED (JB in the glass, SPEC-WORKSHOP-01)**. JB's lock at the
+      open (the one call 0010 carried): Floor and Room are **fields on the deploy step**
+      — the Workshop shows WHERE a craft's wearers stand (read-only); where a next life
+      stands is a field on sp4's promotion; no standing selector. THE GRAPH DECLARATION
+      BRANCHES, both kernels law for law (`crafts.py` · `crafts.rs`): an edge may wear
+      `when` — exactly one of `{edge: chat | work | event}` (the hull's edge the ask took),
+      `{ask: <pattern>}` (the ask's words), `{reply: <pattern>}` (the last node's reply) —
+      and a node may have several ways out when at most ONE wears no `when` (the default,
+      "otherwise"); a node's refs are typed (`prompt` · `skill` · `mind` a name, `tools` a
+      list of names); the graph runs FORWARD ONLY (a loop anywhere refuses — "v0 runs
+      forward only"); `path(g)` is the DEFAULT LINE (the ways out without a `when`, from
+      the entry — what the canvas draws as the spine and the probe says, "branches at
+      route" named); `branches(g)` the nodes that fork. THE HULL EXECUTES IT (`resident.py`,
+      Python only — the Rust kernel runs no graph): the work node walks the graph picking
+      the way out as the run goes — `next_node`: the first `when` that holds in declaration
+      order, else the default, else the line ends — each pick said in the journey ("took the
+      way out to 'greet' — when the ask says /^hello/" · "took the default way out to 'rest'
+      — no `when` held" · "no way out of 'rest' held — the line ends here"; a pattern that
+      does not read is said and never matches); a node's `skill` joins the system words
+      beside its `prompt`, its `tools` NARROW the door to those named and never past what
+      the template declares (the shut ones said: "acquire never declared by the template —
+      the door stays shut"), its `mind` pins the stall — one journey line per node ("node
+      think: prompt greet · skill shelf · tools weather · mind pinned to the haiku stall").
+      THE WORKSHOP'S AGENT (0010 lock 8): the workspace firmware's third binding
+      `spine/bindings/workshop.v0.json` (`workshop`, skills `workshop:read` · `workshop:draft`,
+      capability `tools:draft`), the third workspace seat on the crew manifest (0.3.0, eleven
+      seats); its recall reads THE SHELF (every craft: version · state · worn by · what it
+      declares, a graph's nodes and ways out in words) and — on the author's OWN ask only —
+      THE OPEN DRAFT the ask names as `[draft <id>]` (AG-9 kept to the letter: the author's
+      seat reads it; another person's draft named in an ask is "not this human's — nothing
+      read"); its ONE TOOL `draft` (declared in `tools.v0.json`, pinned in `tools-v0.json`,
+      routine, ground): saves the WHOLE declaration under the ASK's person — the same name
+      and kind updates that human's draft — says whether it reads whole, and says the cut is
+      the human's; an ask with no human behind it saves nothing and says so. THE MIND CHIP
+      in the Workshop's header assigns the agent's stall through the Stable's own held door
+      (`/minds/assign`, subject `workshop`, L2); an Anthropic stall is named "Claude the
+      model" on the chip, and the chip's card says Claude the developer is Phase 9. THE
+      GLASS — THE WORKSHOP PULL (full screen, the tab on the right, Esc closes it, one pull
+      at a time, a focus to its agent while open): the left rail FINDS EARLIER WORK (YOUR
+      DRAFTS · THE SHELF's crafts by kind · a filter box · "+ new draft" with a skeleton per
+      kind); the CANVAS draws the declaration as inline SVG — nodes layered by the longest
+      road from the entry (the entry ringed cyan, THINK · ECHO named, the refs beneath,
+      unreached nodes dashed), ways out as arrows (a plain arrow the default, a violet arrow
+      wearing its `when` in words, a backward arrow bowed under), a legend with the default
+      line; a template draws the graph it wears from the shelf; a prompt · skill · policy ·
+      binding · golden set shows as a card; the NODE INSPECTOR (id · kind · prompt and skill
+      from the shelf · tools as checkboxes narrowed from the shelf's tools · mind from the
+      stalls · words; add a node after · add a way out · make it the entry · remove) and the
+      WAY-OUT INSPECTOR (otherwise · edge · ask · reply, the target, remove); the DECLARATION
+      box as JSON, the same truth both ways (escaped quotes read plain, W101); SAVE routine
+      under the seat, CUT → the chat's held cut, discard changes, discard the draft, "ask the
+      agent"; a craft from the shelf opens READ-ONLY with address · pin · state · health ·
+      worn by · WHERE IT STANDS (each wearer and the floor or room it stands on) and "draft
+      from this" (a copy under the person; its cut lands as the next version); the open draft
+      re-read on every notice — the agent's hand redraws the canvas and says so; the chat's
+      "open the workshop" · "close the workshop" · "load the librarian template in the
+      workshop" · "load my bob draft in the workshop"; the open draft's id rides the ask to
+      the agent (`workshopWire`); every craft card's "open in the Workshop"; the SHELF organ's
+      inspector offers it. THE ORRETH SKILL: `spine/skills/workshop.v0.json` on the shelf;
+      the guide's `workshop` section (0.8.0, `when: workshop`; `test_guide` grows its heads
+      and admits the pull). Fixture `crafts-v0.json` 86 → 99 (the branching graph whole; two
+      defaults refused; a `when` not edge · ask · reply; a bad edge; an empty pattern; two
+      conditions at once; a loop through a conditioned way out; `tools` not a list; `prompt`
+      not a name; `mind` empty; every way out conditioned; `graph_path` the default line, and
+      the line ending) — conformance **918/918 on the Rust kernel, 919 on the reference**;
+      `tools-v0.json` pins the `draft` tool. Proofs: `spine/tests/test_workshop.py` (4: the
+      branching law and the run-time pick · the hull picking the way out as the run goes,
+      said in the journey · a node's refs executed through a fake gateway, the door narrowed
+      · the Workshop seat, the shelf's binding and skill at light, the draft tool under the
+      ask's person and refused without one, the recall reading the shelf and only the
+      author's open draft) · `tests/crafts.rs` on the rig (the workshop binding and skill
+      stand at light, the `draft` tool a routine built-in; the test gains its Cargo entry) ·
+      the Python suite. **NOT in sp3 (named, owed):** drag-to-wire on the canvas (0010: a
+      later spoonful); a frontier Claude stall seeded at light (its price is not the
+      kernel's to invent — "stablekeeper, add the LLM anthropic <model> as <name>" adds one);
+      watching a live body's hops and replaying an intention's marker chain on the same
+      canvas (0010's second and third uses of the one renderer — the data stands, the view
+      is owed); a graph compiled to its own LangGraph (the hull's work node interprets the
+      declaration inside one checkpointed hop — one engine, 0040's law, said plainly); the
+      Rust kernel runs no graph (bodies are Python); the Experiment and the promotion (sp4).
   What was here before
   (THE LANE, the factory ask as escalation) stays owed AFTER the Workshop:
   the lane with RAG (P6.5 sp4/sp5), the stranger with row 5, the lessons

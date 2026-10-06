@@ -1,20 +1,50 @@
 {
   "format": "orreth-crew/1",
-  "version": "0.2.0",
-  "words": "the crew a kernel seats at light — one body per seat, one process per body when the kernel spawns them (P7 sp6); the Python Bridge seats the same crew in-process as the reference; Phase 8 sp1 THE PATH: `levels` declares the floors and rooms a seat may stand on (`at`, relative to the universe), opened at light in the universe's mode unless a tighter one is asked",
+  "version": "0.3.0",
+  "words": "the crew a kernel seats at light — one body per seat, one process per body when the kernel spawns them (P7 sp6); the Python Bridge seats the same crew in-process as the reference; Phase 8 sp1 THE PATH: `levels` declares the floors and rooms a seat may stand on (`at`, relative to the universe), opened at light in the universe's mode unless a tighter one is asked; Phase 8 sp3 THE WORKSHOP v0: a third workspace seat wears the `workshop` binding",
   "levels": [
-    {"at": "f:ops", "words": "the operations floor — where the toy bodies stand (echo); a floor's crew is its own"}
+    {
+      "at": "f:ops",
+      "words": "the operations floor — where the toy bodies stand (echo); a floor's crew is its own"
+    }
   ],
   "seats": [
-    {"template": "templates/librarian-resident.v0.json"},
-    {"template": "templates/echo-resident.v0.json", "at": "f:ops"},
-    {"template": "templates/firmware-planner.v0.json"},
-    {"template": "templates/firmware-critic.v0.json"},
-    {"template": "templates/firmware-grader.v0.json"},
-    {"template": "templates/firmware-mitl.v0.json"},
-    {"template": "templates/firmware-toolkeeper.v0.json"},
-    {"template": "templates/firmware-stablekeeper.v0.json"},
-    {"template": "templates/workspace-firmware.v0.json", "binding": "bindings/crew.v0.json"},
-    {"template": "templates/workspace-firmware.v0.json", "binding": "bindings/monitor.v0.json"}
+    {
+      "template": "templates/librarian-resident.v0.json"
+    },
+    {
+      "template": "templates/echo-resident.v0.json",
+      "at": "f:ops"
+    },
+    {
+      "template": "templates/firmware-planner.v0.json"
+    },
+    {
+      "template": "templates/firmware-critic.v0.json"
+    },
+    {
+      "template": "templates/firmware-grader.v0.json"
+    },
+    {
+      "template": "templates/firmware-mitl.v0.json"
+    },
+    {
+      "template": "templates/firmware-toolkeeper.v0.json"
+    },
+    {
+      "template": "templates/firmware-stablekeeper.v0.json"
+    },
+    {
+      "template": "templates/workspace-firmware.v0.json",
+      "binding": "bindings/crew.v0.json"
+    },
+    {
+      "template": "templates/workspace-firmware.v0.json",
+      "binding": "bindings/monitor.v0.json"
+    },
+    {
+      "template": "templates/workspace-firmware.v0.json",
+      "binding": "bindings/workshop.v0.json"
+    }
   ]
 }

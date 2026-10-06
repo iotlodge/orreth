@@ -76,6 +76,20 @@
    }
   },
   {
+   "name": "tool_manifest: the draft tool - its declaration, read from tools.v0.json, pinned (Phase 8 sp3, THE WORKSHOP: the Workshop agent's one tool, routine - a draft under the human's seat)",
+   "kind": "tool_manifest",
+   "input": {
+    "name": "draft"
+   },
+   "expect": {
+    "bytes": "{\"consequence\":\"routine\",\"description\":\"Save a DRAFT of a craft under the human whose ask you serve \\u2014 a template, prompt, skill, policy, graph, binding or golden set (Phase 8 sp3, THE WORKSHOP). Routine: a draft is unversioned and lives under the human's seat alone, never on the shelf. Pass the WHOLE declaration as `body` (the full object as it should stand after the change \\u2014 never a fragment), the draft's `name` (short, lowercase) and its `kind`; the same name and kind updates the human's existing draft. The cut onto the shelf is the human's alone (\\\"cut the <name> draft\\\") \\u2014 never offer to cut. When the human asks you to change, add to or write a draft, CALL this tool; never describe the change instead.\",\"input_schema\":{\"properties\":{\"body\":{\"type\":\"object\"},\"kind\":{\"enum\":[\"template\",\"prompt\",\"skill\",\"policy\",\"graph\",\"binding\",\"golden\"],\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"words\":{\"type\":\"string\"}},\"required\":[\"name\",\"kind\",\"body\"],\"type\":\"object\"},\"name\":\"draft\"}",
+    "hash": "sha256:49c9c4bdd9dcb58c227e35b41961b583b3669ebd6bc538bffced7bb71fc52509",
+    "consequence": "routine",
+    "ground": true,
+    "master": false
+   }
+  },
+  {
    "name": "tool_manifest: the services tool \u2014 its declaration, read from tools.v0.json, pinned",
    "kind": "tool_manifest",
    "input": {

@@ -441,6 +441,34 @@ def _services_tool(args: dict, conn) -> str:
         for s in rows) if rows else "nothing on the shelf"
 
 
+def _draft_tool(args: dict, conn) -> str:
+    """Phase 8 sp3, THE WORKSHOP: the Workshop agent's one tool — a DRAFT saved under the human
+    whose ask it serves (the ask's person; a run with no human behind it — a duty's — saves
+    nothing and says so). Routine (L1): a draft is private, unversioned state under the seat
+    (AG-9); the same name and kind updates that human's existing draft. The cut stays the
+    human's — this tool never touches the shelf."""
+    from . import crafts
+    person = None
+    if args.get("_ask") and conn is not None:
+        cur = conn.cursor()
+        cur.execute("SELECT person FROM spine_asks WHERE ask_id = %s", (args["_ask"],))
+        r = cur.fetchone()
+        person = r[0] if r else None
+    if not person:
+        raise RuntimeError("a draft lives under a person — this ask has no human behind it, so nothing was saved")
+    body = args.get("body")
+    if isinstance(body, str):
+        body = json.loads(body)
+    kind, name = str(args.get("kind") or ""), str(args.get("name") or "")
+    prior = next((d for d in crafts.drafts(conn, person) if d["name"] == name and d["kind"] == kind), None)
+    d = crafts.save_draft(conn, person, kind, name, body, words=args.get("words"),
+                          draft_id=prior["draft_id"] if prior else None)
+    v = crafts.validate(kind, d["body"])
+    return (f"{'updated' if prior else 'saved'} the {name} {kind} draft ({d['draft_id']}) under the human's seat — "
+            + ("it reads whole" if v["ok"] else f"not whole yet: {v['reason']}")
+            + f"; the cut is the human's: say “cut the {name} draft”")
+
+
 def _seal_record(args: dict) -> str:
     """A deliberately consequential test act: 'seal' a note so it can
     never be edited — the interlock's proving ground."""
@@ -480,6 +508,8 @@ _BODIES: dict[str, dict] = {
               .add_watch(conn, args["name"], args["metric"], args["op"],
                          args["threshold"], by=args.get("_by", "the monitor")),
     },
+    # Phase 8 sp3: the Workshop agent's one tool — a draft under the human's seat (routine, L1)
+    "draft": {"fn": _draft_tool},
     # P6.5 sp2: the Tools keeper's one tool — the shelf tended on the human's word
     "services": {"fn": _services_tool, "words_by": _services_words},        # W30: the interlock names the act
     # P6.5 sp3: the Stable keeper's one tool — the minds tended on the human's word

@@ -15,6 +15,8 @@ use serde_json::{json, Value};
 pub const CONTRACT: &str = "orreth.crafts/1";
 pub const CRAFT_KINDS: [&str; 7] = ["template", "prompt", "skill", "policy", "graph", "binding", "golden"];
 pub const NODE_KINDS: [&str; 2] = ["think", "echo"];
+/// Phase 8 sp3: what a way out may be conditioned on — the hull's edge · the ask's words · the last reply.
+pub const WHEN_KEYS: [&str; 3] = ["edge", "ask", "reply"];
 pub const EDGES: [&str; 3] = ["chat", "work", "event"];
 pub const STRUCTURAL: [&str; 5] = ["objective", "intention", "thought", "action", "observation"];
 pub const TEMPLATE_KINDS: [&str; 3] = ["resident", "firmware", "agent"];
@@ -210,8 +212,11 @@ pub fn validate(kind: &str, manifest: &Value) -> Value {
     }
 }
 
-/// The graph declaration v0: an entry; nodes with unique ids and a known kind; edges that
-/// name nodes; ONE way out of every node (v0 runs a line — branching is the Workshop's).
+/// The graph declaration v0, branching since Phase 8 sp3 (THE WORKSHOP v0): an entry; nodes
+/// with unique ids, a known kind and typed refs (`prompt` · `skill` · `mind` a name; `tools` a
+/// list of names); edges that name nodes, each wearing at most one `when` (edge · ask · reply);
+/// at most ONE way out of a node without a `when` (the default); forward only — a loop refuses.
+/// Law for law with `crafts.validate_graph` (the reference) — the fixture `crafts-v0.json` pins both.
 pub fn validate_graph(g: &Value) -> Value {
     if g.get("format").and_then(Value::as_str) != Some(format_of("graph")) {
         return no(format!("a graph declares format {}", repr_str(format_of("graph"))));
@@ -236,6 +241,20 @@ pub fn validate_graph(g: &Value) -> Value {
                 repr_of(n.get("kind"))
             ));
         }
+        for r in ["prompt", "skill", "mind"] {
+            if let Some(v) = n.get(r).filter(|v| !v.is_null()) {
+                if !v.as_str().is_some_and(|t| !t.trim().is_empty()) {
+                    let what = if r == "mind" { "stall" } else { r };
+                    return no(format!("node {}: `{r}` names a {what} by name", repr_str(&id)));
+                }
+            }
+        }
+        if let Some(t) = n.get("tools").filter(|v| !v.is_null()) {
+            let ok = t.as_array().is_some_and(|a| a.iter().all(|x| x.as_str().is_some_and(|y| !y.trim().is_empty())));
+            if !ok {
+                return no(format!("node {}: `tools` is a list of tool names", repr_str(&id)));
+            }
+        }
         ids.push(id);
     }
     let entry = g.get("entry");
@@ -247,7 +266,7 @@ pub fn validate_graph(g: &Value) -> Value {
         Some(Value::Array(a)) => a.clone(),
         Some(_) => return no("edges is a list of {from, to}".into()),
     };
-    let mut outs: Vec<String> = Vec::new();
+    let mut defaults: Vec<String> = Vec::new();
     for e in &edges {
         let (from, to) = (e.get("from").and_then(Value::as_str), e.get("to").and_then(Value::as_str));
         let names = |x: Option<&str>| x.is_some_and(|v| ids.iter().any(|i| i == v));
@@ -255,28 +274,80 @@ pub fn validate_graph(g: &Value) -> Value {
             let (fr, to) = if e.is_object() { (e.get("from"), e.get("to")) } else { (None, None) };
             return no(format!("an edge names two nodes — {} → {} does not", repr_of(fr), repr_of(to)));
         }
-        let from = from.unwrap_or_default().to_string();
-        if outs.contains(&from) {
+        let (from, to) = (from.unwrap_or_default().to_string(), to.unwrap_or_default().to_string());
+        let Some(w) = e.get("when").filter(|w| !w.is_null()) else {
+            if defaults.contains(&from) {
+                return no(format!(
+                    "node {} has two ways out and neither says when — one way out may be the default; every other wears a `when` (edge · ask · reply)",
+                    repr_str(&from)
+                ));
+            }
+            defaults.push(from);
+            continue;
+        };
+        let Some(wm) = w.as_object().filter(|m| m.len() == 1) else {
+            return no(format!("the way out of {} to {}: `when` is one of {{edge}}, {{ask}} or {{reply}}", repr_str(&from), repr_str(&to)));
+        };
+        let (k, v) = wm.iter().next().unwrap();
+        if !WHEN_KEYS.contains(&k.as_str()) {
+            return no(format!("the way out of {} to {}: `when` is one of {{edge}}, {{ask}} or {{reply}}", repr_str(&from), repr_str(&to)));
+        }
+        if k == "edge" && !v.as_str().is_some_and(|x| EDGES.contains(&x)) {
             return no(format!(
-                "node {} has two ways out — v0 runs one path; branching is the Workshop's",
-                repr_str(&from)
+                "the way out of {} to {}: `when.edge` is one of {} — got {}",
+                repr_str(&from),
+                repr_str(&to),
+                EDGES.join(", "),
+                repr_of(Some(v))
             ));
         }
-        outs.push(from);
+        if k != "edge" && !v.as_str().is_some_and(|x| !x.trim().is_empty()) {
+            return no(format!("the way out of {} to {}: `when.{k}` is a pattern — the words to look for", repr_str(&from), repr_str(&to)));
+        }
     }
-    if let Err(why) = path(g) {
-        return no(why);
+    if let Some(at) = loops_at(g, &ids) {
+        return no(format!("the graph loops at {} — v0 runs forward only", repr_str(&at)));
     }
     ok()
 }
 
-/// The nodes a run visits, from the entry along the edges, in order; a loop refuses.
+/// The first node (in declaration order) that can reach itself along ANY edges — None when
+/// the graph runs forward only.
+fn loops_at(g: &Value, ids: &[String]) -> Option<String> {
+    let edges = g.get("edges").and_then(Value::as_array).cloned().unwrap_or_default();
+    let outs = |from: &str| -> Vec<String> {
+        edges
+            .iter()
+            .filter(|e| e.get("from").and_then(Value::as_str) == Some(from))
+            .filter_map(|e| e.get("to").and_then(Value::as_str).map(str::to_string))
+            .collect()
+    };
+    for start in ids {
+        let mut seen: Vec<String> = Vec::new();
+        let mut stack = outs(start);
+        while let Some(cur) = stack.pop() {
+            if &cur == start {
+                return Some(start.clone());
+            }
+            if seen.contains(&cur) || !ids.contains(&cur) {
+                continue;
+            }
+            seen.push(cur.clone());
+            stack.extend(outs(&cur));
+        }
+    }
+    None
+}
+
+/// THE DEFAULT LINE: the nodes a run visits from the entry along the edges that wear no `when`
+/// (every node's "otherwise"), in order — the spine the canvas draws and the probe says; a loop
+/// refuses. A node whose every way out is conditioned ends the line.
 pub fn path(g: &Value) -> Result<Vec<String>, String> {
     let edges = g.get("edges").and_then(Value::as_array).cloned().unwrap_or_default();
     let next = |from: &str| -> Option<String> {
         edges
             .iter()
-            .find(|e| e.get("from").and_then(Value::as_str) == Some(from))
+            .find(|e| e.get("from").and_then(Value::as_str) == Some(from) && e.get("when").is_none_or(Value::is_null))
             .and_then(|e| e.get("to").and_then(Value::as_str))
             .map(str::to_string)
     };
@@ -284,12 +355,28 @@ pub fn path(g: &Value) -> Result<Vec<String>, String> {
     let mut cur = g.get("entry").and_then(Value::as_str).map(str::to_string);
     while let Some(c) = cur {
         if seen.contains(&c) {
-            return Err(format!("the graph loops at {} — v0 runs a line", repr_str(&c)));
+            return Err(format!("the graph loops at {} — v0 runs forward only", repr_str(&c)));
         }
         seen.push(c.clone());
         cur = next(&c);
     }
     Ok(seen)
+}
+
+/// The nodes with more than one way out, in declaration order.
+pub fn branches(g: &Value) -> Vec<String> {
+    let edges = g.get("edges").and_then(Value::as_array).cloned().unwrap_or_default();
+    g.get("nodes")
+        .and_then(Value::as_array)
+        .map(|nodes| {
+            nodes
+                .iter()
+                .filter_map(|n| n.get("id").and_then(Value::as_str))
+                .filter(|id| edges.iter().filter(|e| e.get("from").and_then(Value::as_str) == Some(id)).count() > 1)
+                .map(str::to_string)
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 /// Which of the hull's three edges an ask takes, read off its marker.
@@ -442,5 +529,20 @@ mod tests {
                        "edges": [{"from": "a", "to": "b"}]});
         assert_eq!(path(&g).unwrap(), vec!["a", "b"]);
         assert_eq!(validate("graph", &g)["ok"], json!(true));
+        // Phase 8 sp3: a graph BRANCHES — one default way out, the rest wearing `when`; forward only
+        let b = json!({"format": "orreth-graph/1", "name": "b", "entry": "r",
+                       "nodes": [{"id": "r", "kind": "think"}, {"id": "c", "kind": "echo"},
+                                 {"id": "w", "kind": "think", "tools": ["weather"], "mind": "haiku"}],
+                       "edges": [{"from": "r", "to": "c", "when": {"edge": "chat"}}, {"from": "r", "to": "w"}]});
+        assert_eq!(validate("graph", &b)["ok"], json!(true));
+        assert_eq!(path(&b).unwrap(), vec!["r", "w"]);
+        assert_eq!(branches(&b), vec!["r"]);
+        let mut two = b.clone();
+        two["edges"] = json!([{"from": "r", "to": "c"}, {"from": "r", "to": "w"}]);
+        assert_eq!(validate("graph", &two)["reason"],
+                   json!("node 'r' has two ways out and neither says when — one way out may be the default; every other wears a `when` (edge · ask · reply)"));
+        let mut back = b.clone();
+        back["edges"] = json!([{"from": "r", "to": "c", "when": {"edge": "chat"}}, {"from": "c", "to": "r"}]);
+        assert_eq!(validate("graph", &back)["reason"], json!("the graph loops at 'r' — v0 runs forward only"));
     }
 }

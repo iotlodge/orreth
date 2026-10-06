@@ -46,9 +46,9 @@ carries them:
 | Organ | What it is | Its doors |
 |---|---|---|
 | **DESK** | Who is seated and who may come in — the seat a person takes with a code from their authenticator, and the join desk every body walks through. | `/seat` · `/enroll` · `/join` |
-| **GROUND** | The kernel's memory: one Postgres database, one schema with one writer ever, forty tables — every ask, reply, fact, lease, watch and meter line. | `/recall` · `/export` · `/fact/:id` · `/parked` |
+| **GROUND** | The kernel's memory: one Postgres database, one schema with one writer ever, forty-three tables — every ask, reply, fact, lease, watch and meter line. | `/recall` · `/export` · `/fact/:id` · `/parked` |
 | **GATEWAY** | The meter: LiteLLM, run and managed by the kernel. Every body has its own virtual key wearing its budget; every answer comes back with its cost. | `/minds` · `/minds/spend` |
-| **SHELF** | Every service the kernel governs — tools, MCP servers, stores, sources and minds — and every craft a body is made of — templates, prompts, skills, policies, graphs, bindings and golden sets, addressed by name and pin, never a self — on one lifecycle ladder: registered → versioned → healthy or unhealthy → retired. The wear table says which body wears which craft at which version; a draft lives under its author until the cut. | `/services` · `/wear` · `/drafts` |
+| **SHELF** | Every service the kernel governs — tools, MCP servers, stores, sources and minds — and every craft a body is made of — templates, prompts, skills, policies, graphs, bindings and golden sets, addressed by name and pin, never a self — on one lifecycle ladder: registered → versioned → healthy or unhealthy → retired. The wear table says which body wears which craft at which version; a draft lives under its author until the cut. A graph declaration may branch (a way out wears `when`: the hull's edge · the ask's words · the last reply; one default at most; forward only), and the body's hull picks the way out as the run goes. | `/services` · `/wear` · `/drafts` |
 | **MONITOR** | The operating state, live: the rails, the bodies, the asks, the watches, the health checks, the harness, and every lever. | `/monitor` · `/harness` · `/levers` · `/bodies` |
 | **ANALYZER** | Everything born in the chat, grouped by origin — intentions, the objectives under them, in flight and done — read from the ground. | `/analyzer` · `/intentions` · `/markers` |
 
@@ -230,8 +230,11 @@ One HTML page (`spine/glass/index.html`), served by either kernel, no build step
 room's mimic panel: **geometry is what is declared** (the organs, every socket, the tools), **light
 is what is happening** (a segment lights when a fact passes, then fades), **colour is who did it**
 (amber a person, cyan a body, violet the kernel, red a watch or a hold). Three soft toggles —
-ARCHITECTURE, OPERATIONS, PERFORMANCE — layer the same drawing. The CREW and MONITOR pulls and the
-ANALYZER hatch are the same truth from the same doors, and every row is a door.
+ARCHITECTURE, OPERATIONS, PERFORMANCE — layer the same drawing. The CREW and MONITOR pulls, the
+ANALYZER hatch and THE WORKSHOP (Phase 8 sp3: the full-screen pull where a craft is authored — your
+drafts under your seat, the shelf's crafts, a graph drawn from its declaration with the node inspector,
+the cut held at the interlock, its own agent `workshop` on your words) are the same truth from the same
+doors, and every row is a door.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/monitor-dark.jpg">
@@ -255,6 +258,6 @@ take the lead — and in every one a consequence holds for a person.
 
 - [`design/the-honest-boundary.md`](design/the-honest-boundary.md) — the standing register: proven, partial, parked, with the evidence named.
 - [`rearch/0005-v1-scope-and-build-plan.md`](rearch/0005-v1-scope-and-build-plan.md) — the build plan and the walks that proved each row.
-- [`rearch/0001`–`0009`](rearch/) — the canon of this world: the experience charter, transport, memory, agent, markers, intent, the port, the old world carried.
+- [`rearch/0001`–`0010`](rearch/) — the canon of this world: the experience charter, transport, memory, agent, markers, intent, the port, the old world carried, the Workshop.
 - [`design/0000`–`0017`](design/) — the constitution the covenant enforces; [`.claude/skills/orreth-covenant`](../.claude/skills/orreth-covenant/SKILL.md) — the hard rules every model coding here holds to.
 - [docs.orreth.ai](https://docs.orreth.ai) — the book: run it, watch it, build a body of your own.

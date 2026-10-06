@@ -236,7 +236,7 @@
   .brow .blocked{color:var(--red-ink);font-size:10.5px;flex:none;max-width:38%;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
   /* W13: a click on any pull raises it above the chat */
-  #crew.raised,#monitor.raised,#band.raised{z-index:11}
+  #crew.raised,#monitor.raised,#band.raised,#workshop.raised{z-index:11}
   /* the kind of an ask (P23): the words propose it; the human flips it */
   #kind{display:flex;gap:10px;align-items:baseline;padding:2px 14px 8px;
     font-size:10.5px;color:var(--dim);letter-spacing:.2em}
@@ -413,6 +413,48 @@
   #guide-rows .say{color:var(--ink);cursor:pointer}
   #guide-rows .say:hover{text-decoration:underline}
   #guide-rows .does{color:var(--dim)}
+  /* ---- THE WORKSHOP (Phase 8 sp3, canon 0010): the one place where all mutability occurs — a full-screen pull like THE PANEL ---- */
+  #workshop-tab{position:fixed;right:0;top:38vh;writing-mode:vertical-rl;padding:14px 7px;color:var(--dim);font-size:10.5px;
+    letter-spacing:.3em;cursor:pointer;border:1px solid var(--seam);border-right:none;border-radius:10px 0 0 10px;background:var(--glass);z-index:8;user-select:none}
+  #workshop-tab:hover{color:var(--amber)}
+  #workshop{position:fixed;inset:0;transform:translateX(104%);transition:transform .45s cubic-bezier(.22,.9,.3,1);z-index:9;
+    display:grid;grid-template-rows:auto minmax(0,1fr);background:var(--glass);backdrop-filter:blur(12px);border-left:1px solid var(--seam)}
+  #workshop.open{transform:translateX(0)} #workshop.raised{z-index:11}
+  #workshop>header{display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--seam);color:var(--amber);font-size:11px;letter-spacing:.12em;flex-wrap:wrap}
+  #workshop>header .x{margin-left:auto;color:var(--dim);cursor:pointer;letter-spacing:.08em;font-size:10.5px} #workshop>header .x:hover{color:var(--amber)}
+  #ws-chip{display:inline-flex;gap:8px;align-items:center;color:var(--dim);letter-spacing:.06em;font-size:10.5px;cursor:help}
+  #ws-chip select{font:inherit;font-size:11px;color:var(--ink);background:var(--field);border:1px solid var(--seam);border-radius:7px;padding:3px 6px;max-width:28em}
+  #ws-body{display:grid;grid-template-columns:minmax(230px,21%) minmax(0,1fr) minmax(280px,25%);grid-template-rows:minmax(0,1fr) auto;min-height:0}
+  #ws-rail{grid-column:1;grid-row:1/3;border-right:1px solid var(--seam);overflow-y:auto;padding:8px 10px;font-size:12px}
+  #ws-canvas{grid-column:2;grid-row:1;position:relative;overflow:auto;min-height:0;background:radial-gradient(circle at 1px 1px,var(--grid) 1px,transparent 1.5px) 0 0/22px 22px}
+  #ws-canvas svg{display:block} #ws-insp{grid-column:3;grid-row:1/3;border-left:1px solid var(--seam);overflow-y:auto;padding:10px 12px;font-size:12px;color:var(--ink)}
+  #ws-decl{grid-column:2;grid-row:2;border-top:1px solid var(--seam);padding:8px 12px 10px;display:flex;flex-direction:column;gap:6px;min-height:0}
+  #ws-decl textarea{font:inherit;font-size:11.5px;color:var(--ink);background:var(--field);border:1px solid var(--seam);border-radius:8px;padding:8px 10px;
+    min-height:110px;max-height:30vh;resize:vertical;outline:none;white-space:pre;overflow:auto} #ws-decl textarea.ro{opacity:.75}
+  .ws-h{font-size:10.5px;letter-spacing:.2em;color:var(--dim);margin:10px 0 4px} .ws-h.sub{margin:6px 0 2px;letter-spacing:.14em;opacity:.8}
+  .ws-row{padding:4px 7px;border-radius:6px;cursor:pointer;color:var(--ink);display:flex;gap:8px;align-items:baseline;border-left:2px solid transparent}
+  .ws-row:hover{background:var(--hover)} .ws-row.on{background:var(--well);border-left-color:var(--amber)} .ws-row.retired{opacity:.55} .ws-row.new{color:var(--amber)}
+  .ws-row .kind{color:var(--dim);font-size:10.5px;letter-spacing:.1em;flex:none} .ws-row .meta{color:var(--dim);font-size:10.5px;margin-left:auto;flex:none}
+  #ws-filter{width:100%;box-sizing:border-box;font:inherit;font-size:12px;color:var(--ink);background:var(--field);border:1px solid var(--seam);border-radius:8px;padding:6px 9px;outline:none}
+  #ws-filter:focus{border-color:var(--amber-dim)}
+  #ws-insp label{display:block;color:var(--dim);font-size:10.5px;letter-spacing:.14em;margin:9px 0 2px} #ws-insp label.chk{display:inline-flex;gap:5px;align-items:center;letter-spacing:0;margin:2px 10px 2px 0;font-size:11.5px;color:var(--ink)}
+  #ws-insp input,#ws-insp select{width:100%;box-sizing:border-box;font:inherit;font-size:12px;color:var(--ink);background:var(--field);border:1px solid var(--seam);border-radius:7px;padding:5px 8px;outline:none}
+  #ws-insp input[type=checkbox]{width:auto} .ws-checks{display:flex;flex-wrap:wrap}
+  .ws-kv{display:grid;grid-template-columns:5.5em 1fr;gap:8px;padding:3px 0;border-top:1px dotted var(--seam)} .ws-kv span{color:var(--dim);font-size:10.5px;letter-spacing:.1em} .ws-kv b{font-weight:normal;color:var(--ink);word-break:break-word} .ws-kv i{color:var(--dim);font-style:normal;font-size:10.5px}
+  .ws-text{padding:4px 0;color:var(--ink);white-space:pre-wrap} .ws-text.dim{color:var(--dim)} .ws-card{padding:16px 22px;font-size:12.5px;max-width:70em}
+  .ws-empty{padding:30px 34px;color:var(--dim);font-size:12.5px;max-width:60em;line-height:1.6} .ws-banner{padding:8px 14px;color:var(--dim);font-size:11px;border-bottom:1px dotted var(--seam)}
+  .ws-legend{padding:8px 14px 14px;color:var(--dim);font-size:10.5px;line-height:1.6} .ws-legend b{color:var(--violet);font-weight:normal}
+  .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .ws-btn{font:inherit;font-size:11px;letter-spacing:.08em;background:var(--well);color:var(--ink);border:1px solid var(--seam);border-radius:7px;padding:5px 10px;cursor:pointer}
+  .ws-btn:hover{border-color:var(--amber-dim)} .ws-btn.p{background:var(--amber-dim);color:var(--btn-ink);border-color:transparent} .ws-btn.hold{border-color:var(--red)}
+  #ws-canvas .node rect{fill:var(--well);stroke:var(--seam);stroke-width:1.2;cursor:pointer} #ws-canvas .node.on rect{stroke:var(--amber);stroke-width:1.8} #ws-canvas .node.entry rect{stroke:var(--cyan)}
+  #ws-canvas .node text{fill:var(--ink);font-size:12px;font-family:inherit;pointer-events:none} #ws-canvas .node .k{fill:var(--dim);font-size:9.5px;letter-spacing:.12em} #ws-canvas .node .r{fill:var(--amber);font-size:10px}
+  #ws-canvas .node.off rect{stroke-dasharray:4 3;opacity:.6} #ws-canvas .node.bad rect{stroke:var(--red)}
+  #ws-canvas .edge path{fill:none;stroke:var(--dim);stroke-width:1.4;cursor:pointer} #ws-canvas .edge path.hit{stroke:transparent;stroke-width:16px}
+  #ws-canvas .edge.when path:not(.hit){stroke:var(--violet)} #ws-canvas .edge.on path:not(.hit){stroke:var(--amber);stroke-width:2}
+  #ws-canvas .edge text{fill:var(--dim);font-size:10px;font-family:inherit;pointer-events:none} #ws-canvas .edge.when text{fill:var(--violet)} #ws-canvas .edge.on text{fill:var(--amber)}
+  #ws-canvas .a-dim{fill:var(--dim)} #ws-canvas .a-when{fill:var(--violet)} #ws-canvas .a-on{fill:var(--amber)}
+  body.wall #workshop-tab{display:none}
   #band header{padding:9px 16px;color:var(--amber);font-size:11px;
     letter-spacing:.3em;border-bottom:1px solid var(--seam)}
   #band-rows{flex:1;overflow-y:auto;padding:6px 10px}
@@ -672,6 +714,7 @@
     <span id="specband" title="this page is a photograph: every number, every body, every fact was read from a kernel that really ran, at the moment named here — the feed replays its captured minutes on a loop; you may look at everything and move nothing">…</span>
     <button class="tog wall-only" onclick="toggleChat()" title="the chat — every reply arrives whole">CHAT ▾</button>
     <button class="tog wall-only" onclick="toggleBand()" title="the Analyzer — everything born in the chat, by origin">ANALYZER ▴</button>
+    <button class="tog wall-only" onclick="toggleWorkshop()" title="the Workshop — where a craft is authored">WORKSHOP ▸</button>
   </div>
   <div class="strip"></div>
   <div id="floor" onclick="toggleBand()" title="the Analyzer — everything born in the chat, by origin">A N A L Y Z E R ▴</div>
@@ -687,6 +730,21 @@
 <div id="monitor">
   <header onclick="toggleMonitor(false)" style="cursor:pointer" title="close the Monitoring"><span>MONITORING · the Operating State, live — the pulse · peers · the Stable · health · rails · bodies · asks · watches · the harness</span><span class="x">Esc · ▾ close</span></header>
   <div id="views"></div>
+</div>
+
+<div id="workshop-tab" onclick="toggleWorkshop()" title="the Workshop — where a craft is authored: your drafts, the shelf's crafts, the graph drawn from its declaration, the cut">W O R K S H O P</div>
+<div id="workshop" role="region" aria-label="the Workshop">
+  <header>
+    <span>THE WORKSHOP · the one place where all mutability occurs — your drafts · the shelf's crafts · the graph drawn from its declaration · the node inspector · the cut</span>
+    <span id="ws-chip">MIND <select id="ws-mind"><option value="">…</option></select><span id="ws-mind-card"></span></span>
+    <span class="x" onclick="toggleWorkshop(false)" title="close the Workshop">Esc · ▾ close</span>
+  </header>
+  <div id="ws-body">
+    <div id="ws-rail"><input id="ws-filter" placeholder="find a draft or a craft — by name, kind or words" autocomplete="off"><div id="ws-list"></div></div>
+    <div id="ws-canvas"></div>
+    <div id="ws-insp"></div>
+    <div id="ws-decl"><div class="ws-h" id="ws-decl-h">THE DECLARATION · the same truth as the canvas</div><textarea id="ws-json" spellcheck="false" readonly></textarea><div class="acts" id="ws-acts"></div></div>
+  </div>
 </div>
 
 <div id="guide" role="dialog" aria-label="the guide">
@@ -897,6 +955,7 @@ addEventListener("keydown", e => {
     else if (band.classList.contains("open")) toggleBand(false);     // the pull on top closes first;
     else if (monitorPull.classList.contains("open")) toggleMonitor(false);   // the chat and the focus only
     else if (crewPull.classList.contains("open")) toggleCrew(false);         // when no pull is open —
+    else if (workshopPull.classList.contains("open")) toggleWorkshop(false); // the Workshop is a pull too (Phase 8 sp3)
     else if (chat.classList.contains("open") || FOCUS.length) { popAllFocus(); toggleChat(false); }   // then the bridge, scope restored exactly
     else if (document.body.classList.contains("wall")) wall(false, true);   // last of all, full screen is left
   }
@@ -929,6 +988,7 @@ function whereAmI(){
   if (crewPull.classList.contains("open")) return "crew";
   if (monitorPull.classList.contains("open")) return "monitor";
   if (band.classList.contains("open")) return "band";
+  if (workshopPull.classList.contains("open")) return "workshop";   // Phase 8 sp3
   return "chat";
 }
 function guideWords(text){
@@ -1466,9 +1526,10 @@ async function send(given, label, toOverride, parent){
   // its own label; the machine's prompt never appears as if typed
   el("msg mine", (label ? `<em>${esc(label)}</em>` : esc(text)) + (to.length > 1 || named
     ? `<div class="who" style="text-align:right">→ ${esc(to.join(" + "))}${named ? " · by name" : ""}</div>` : ""));
+  const wire = workshopWire(text, to);           // Phase 8 sp3: the open draft's id rides the ask to the Workshop agent
   const r = await fetch("/ask", {method:"POST",
     headers:{"content-type":"application/json"},
-    body: JSON.stringify({text, to: to.length ? to : undefined,
+    body: JSON.stringify({text: wire, to: to.length ? to : undefined,
                           window: WINDOW ? {from: WINDOW.from.toISOString(),
                                             to: WINDOW.to.toISOString()} : undefined,
                           session: SESSION || undefined, kind, parent: parent || undefined,
@@ -1909,7 +1970,7 @@ setTimeout(loadYou, 0);                          // P7 sp8: the YOU tag (PERSON 
 function toggleCrew(open){
   const was = crewPull.classList.contains("open");
   const now = open ?? !was;
-  if (now && !was){ toggleBand(false); toggleMonitor(false); }   // W33: one pull at a time
+  if (now && !was){ toggleBand(false); toggleMonitor(false); toggleWorkshop(false); }   // W33: one pull at a time
   crewPull.classList.toggle("open", now);
   layoutChat();
   if (now && !was){
@@ -2137,6 +2198,10 @@ function workspaceWords(text){
   const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
   if (/^((open|show)( me)?( the)? crew|crew|the crew)$/.test(t)) { toggleCrew(true); return true; }
   if (/^((open|show)( me)?( the)? (monitor|monitoring)|monitor|monitoring)$/.test(t)) { toggleMonitor(true); return true; }
+  if (/^((open|show)( me)?( the)? workshop|workshop|the workshop)$/.test(t)) { toggleWorkshop(true); return true; }        // Phase 8 sp3
+  if (/^close the workshop$/.test(t)) { toggleWorkshop(false); return true; }
+  const lw = t.match(/^(?:load|open)\s+(?:the\s+|my\s+)?([a-z0-9][a-z0-9._-]*)(?:\s+(template|prompt|skill|policy|graph|binding|golden|draft))?\s+in\s+the\s+workshop$/);
+  if (lw){ el("msg mine", esc(text)); workshopLoad(lw[1], lw[2] || null); return true; }   // "load the librarian template in the workshop" · "load my bob draft in the workshop"
   return false;
 }
 async function loadCrew(){
@@ -2238,7 +2303,8 @@ function serviceCard(s){
                     (s.kind === "template" ? ` · a ${esc(m.kind || "resident")} body · graph ${esc(m.graph || "?")}` : s.kind === "graph" ? ` · ${(m.nodes || []).length} node${(m.nodes || []).length === 1 ? "" : "s"}: ${esc((m.nodes || []).map(n => n.id + " (" + n.kind + ")").join(" → "))}`
                      : s.kind === "golden" ? ` · ${(m.cases || []).length} case${(m.cases || []).length === 1 ? "" : "s"} for the ${esc(m.template || "?")} template` : s.kind === "policy" ? ` · ${(m.rules || []).length} rules · v${esc(m.version || "?")}`
                      : s.kind === "binding" ? ` · the ${esc(m.pull || "?")} pull` : s.kind === "prompt" ? ` · “${esc(String(m.text || "").slice(0, 90))}${String(m.text || "").length > 90 ? "…" : ""}”` : ` · ${esc(m.words || "")}`) +
-                    ` <span class="assist" data-wear title="who wears this component now, by life and version — from /wear">who wears it?</span></div>` : "";
+                    ` <span class="assist" data-wear title="who wears this component now, by life and version — from /wear">who wears it?</span>` +
+                    ` · <span class="assist" data-ws title="open this craft in the Workshop — its declaration drawn, read-only; draft from it there">open in the Workshop</span></div>` : "";
   d.innerHTML = `<h5><span class="kind">${esc(s.kind)}</span>${esc(isCraft ? s.craft || s.name : s.name)} <span class="meta">· ${esc(stateWords(s))}</span></h5>` +
     `<div class="meta">${isCraft ? "address " + esc(s.did) + " (no self — a craft is addressed, never minted)" : "self …" + esc(s.did.slice(-8))} · pin ${esc(s.manifest_hash.slice(7, 19))} · v${s.version} · by ${esc(whoIs(s.by))}</div>` +
     craftLine + mcpLine + under + mindLine +
@@ -2248,6 +2314,7 @@ function serviceCard(s){
      : s.restorable ? `<span class="assist" data-restore title="a new fact — its stop stays in the record">restore ${esc(s.name)}</span>` : "");
   const r = d.querySelector("[data-retire]"); if (r) r.onclick = () => retireService(s.name, s.kind);
   const wq = d.querySelector("[data-wear]"); if (wq) wq.onclick = () => serviceWords(`who wears ${s.name}?`);
+  const ws = d.querySelector("[data-ws]"); if (ws) ws.onclick = () => workshopLoad(s.craft || s.name, s.kind);   // Phase 8 sp3
   const b = d.querySelector("[data-restore]"); if (b) b.onclick = () => restoreService(s.name, s.kind);
   return d;
 }
@@ -2256,7 +2323,7 @@ async function loadShelf(box){
   const st = await fetch("/minds").then(x=>x.json()).catch(()=>null);      // P6.5 sp3: the Stable's spend rides the mind cards
   if (r && st) for (const s of r.services) if (s.kind === "mind"){ const m = (st.minds || []).find(x => x.name === s.name); if (m) s.spend = m.spend; }
   const head = document.createElement("div"); head.className = "shelf-head";
-  head.textContent = "THE SHELF · every service the kernel governs — tool · mcp · store · source · mind (an LLM) — and every CRAFT a body is made of — template · prompt · skill · policy · graph · binding · golden set (addressed by name and pin, never a self; worn by N bodies) · one ladder: registered → versioned → healthy | unhealthy → retired · a draft lives under YOU until you cut it onto the shelf (“my drafts” · “cut the <name> draft”)";
+  head.textContent = "THE SHELF · every service the kernel governs — tool · mcp · store · source · mind (an LLM) — and every CRAFT a body is made of — template · prompt · skill · policy · graph · binding · golden set (addressed by name and pin, never a self; worn by N bodies) · one ladder: registered → versioned → healthy | unhealthy → retired · a draft lives under YOU until you cut it onto the shelf (“my drafts” · “cut the <name> draft”) · THE WORKSHOP (the tab on the right, or “open the workshop”) draws a craft's declaration and edits your drafts";
   box.appendChild(head);
   if (!r){ box.insertAdjacentHTML("beforeend", `<div class="meta">the shelf door did not answer</div>`); return; }
   if (!r.services.length){ box.insertAdjacentHTML("beforeend", `<div class="meta">nothing on the shelf yet — the kernel registers its built-ins at boot</div>`); return; }
@@ -2476,7 +2543,7 @@ async function serviceWords(text){                 // "what services are here?" 
     el("msg mine", esc(text));
     sysline(m[1] === "prompt" || m[1] === "skill"
       ? `a ${esc(m[1])} draft wants its words after a colon — say “draft a ${esc(m[1])} called ${esc(m[2])}: <the text>”`
-      : `a ${esc(m[1])} draft wants its declaration after a colon — say “draft a ${esc(m[1])} called ${esc(m[2])}: { … }” with its JSON (the Workshop's editor is spoonful 3)`);
+      : `a ${esc(m[1])} draft wants its declaration after a colon — say “draft a ${esc(m[1])} called ${esc(m[2])}: { … }” with its JSON, or say “open the workshop” and start it there`);
     return true;
   }
   m = t.match(/^draft\s+(?:an?\s+)?(template|prompt|skill|policy|graph|binding|golden)\s+(?:called\s+|named\s+)?([a-z0-9][a-z0-9._-]*)\s*[:—-]\s*([\s\S]+)$/);
@@ -2490,7 +2557,7 @@ async function serviceWords(text){                 // "what services are here?" 
     }
     else if (kind === "prompt") body = {text: rest};
     else if (kind === "skill") body = {words: rest.split(/\.\s/)[0], text: rest};
-    else { sysline(`a ${esc(kind)} draft is a declaration — say “draft a ${esc(kind)} called ${esc(name)}: { … }” with its JSON, or open the Workshop (spoonful 3)`); return true; }
+    else { sysline(`a ${esc(kind)} draft is a declaration — say “draft a ${esc(kind)} called ${esc(name)}: { … }” with its JSON, or say “open the workshop” and start it there`); return true; }
     const mine = await fetch("/drafts").then(x=>x.json()).catch(()=>null);
     const prior = mine && (mine.drafts || []).find(d => d.name === name && d.kind === kind);
     const r = await fetch("/drafts", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({kind, name, body, person: PERSON, draft_id: prior ? prior.draft_id : undefined})}).then(x=>x.json()).catch(()=>null);
@@ -2610,7 +2677,7 @@ const monitorPull = document.getElementById("monitor");
 function toggleMonitor(open){
   const was = monitorPull.classList.contains("open");
   const now = open ?? !was;
-  if (now && !was){ toggleBand(false); toggleCrew(false); }      // W33: one pull at a time
+  if (now && !was){ toggleBand(false); toggleCrew(false); toggleWorkshop(false); }      // W33: one pull at a time
   monitorPull.classList.toggle("open", now);
   layoutChat();
   if (now && !was){
@@ -2631,7 +2698,431 @@ function refreshPulls(){                 // P17: a change anywhere reflects in
     crewTimer = setTimeout(() => { crewTimer = null; loadCrew(); }, 400);   // lens
   if (monitorPull.classList.contains("open") && !monitorTimer)
     monitorTimer = setTimeout(() => { monitorTimer = null; loadMonitor(); }, 400);
+  if (workshopPull.classList.contains("open") && !workshopTimer)          // Phase 8 sp3: the agent's hand on a draft redraws the canvas
+    workshopTimer = setTimeout(() => { workshopTimer = null; loadWorkshop(); }, 600);
 }
+/* ---- THE WORKSHOP (Phase 8 sp3, canon 0010 — JB's lock: "the one place where all mutability occurs"). A full-screen
+   pull like THE PANEL: the left rail finds earlier work (YOUR DRAFTS under your seat · THE SHELF's crafts by kind, a
+   filter box); the canvas DRAWS THE DECLARATION (a graph's nodes as blocks, its ways out as arrows — the default line
+   plain, a `when` in violet); the NODE INSPECTOR edits a node's id · kind · prompt · skill · tools · mind, adds a node
+   or a way out, removes one; the DECLARATION box is the same truth as JSON; SAVE is routine (L1, under your seat);
+   THE CUT is yours and holds at the interlock; the MIND CHIP assigns the Workshop agent's stall through the Stable's
+   own held door. With the pull open the chat speaks to its agent, `workshop`, and the open draft rides the ask by id
+   so the agent reads YOUR draft on YOUR ask alone (AG-9). Floor and room are not chosen here (JB's lock 2026-10-06):
+   the Workshop shows WHERE a craft's wearers stand; where a next life stands is a field on sp4's promotion. ---- */
+var workshopPull = document.getElementById("workshop");   // `var`: a pull toggled at load (before this line runs) finds it undefined, never a dead zone
+const WS = {drafts: [], shelf: [], tools: [], minds: null, open: null, decl: null, dirty: false, sel: null, selEdge: null, filter: "", stands: {}};
+const NODE_KINDS = ["think", "echo"], WHEN_KINDS = ["otherwise", "edge", "ask", "reply"], HULL_EDGES = ["chat", "work", "event"];
+function toggleWorkshop(open){
+  if (!workshopPull){ workshopPull = document.getElementById("workshop"); if (!workshopPull) return; }
+  const was = workshopPull.classList.contains("open");
+  const now = open ?? !was;
+  if (now && !was){ toggleBand(false); toggleMonitor(false); toggleCrew(false); }   // W33: one pull at a time
+  workshopPull.classList.toggle("open", now);
+  if (now && !was){
+    loadWorkshop();
+    pushFocus({kind: "workspace", id: "ws_workshop", name: "workshop", window: null,
+               label: "the Workshop · its agent, workshop — with a draft open, say what to change and it edits it on your words"});
+  }
+  if (!now && was) popFocusOf("ws_workshop");                    // W53: the pull closed, its focus goes with it
+}
+let workshopTimer = null;
+async function loadWorkshop(){
+  const [dr, sv, md] = await Promise.all([
+    fetch("/drafts").then(x=>x.json()).catch(()=>null),
+    fetch("/services").then(x=>x.json()).catch(()=>null),
+    fetch("/minds").then(x=>x.json()).catch(()=>null)]);
+  WS.drafts = (dr && dr.drafts) || [];
+  const all = (sv && sv.services) || [];
+  WS.shelf = all.filter(s => CRAFT_KINDS.includes(s.kind));
+  WS.tools = all.filter(s => s.kind === "tool" && s.state !== "retired").map(s => s.name);
+  WS.minds = md;
+  if (WS.open && WS.open.source === "draft"){                   // the open draft, re-read: the agent's hand redraws it
+    const d = WS.drafts.find(x => x.draft_id === WS.open.draft.draft_id);
+    if (!d){ sysline(`your ${esc(WS.open.name)} ${esc(WS.open.kind)} draft is no longer under your seat (cut or discarded) — the canvas cleared`); WS.open = null; WS.decl = null; }
+    else {
+      if (d.updated_at !== WS.open.draft.updated_at && !WS.dirty){ WS.decl = JSON.parse(JSON.stringify(d.body)); WS.sel = null; WS.selEdge = null;
+        sysline(`your ${esc(d.name)} ${esc(d.kind)} draft changed under your seat (the Workshop agent's hand, or another of your sessions) — the canvas redrew`); }
+      WS.open.draft = d;
+    }
+  }
+  if (WS.open && WS.open.source === "shelf"){
+    const s = WS.shelf.find(x => x.name === WS.open.craft.name);
+    if (s){ WS.open.craft = s; WS.decl = JSON.parse(JSON.stringify(s.manifest || {})); }
+  }
+  drawWorkshopRail(); drawMindChip(); drawWorkshop();
+}
+function plainKind(k){ return k === "golden" ? "golden set" : k; }
+function drawWorkshopRail(){
+  const box = document.getElementById("ws-list"); if (!box) return;
+  const f = WS.filter.trim().toLowerCase();
+  const hit = (words) => !f || words.toLowerCase().includes(f);
+  let h = `<div class="ws-h">YOUR DRAFTS · under your seat alone</div>`;
+  const mine = WS.drafts.filter(d => hit(`${d.name} ${d.kind} ${d.words || ""}`));
+  if (!WS.drafts.length) h += `<div class="meta">none yet — start one below, or say “draft a prompt called greeting: …” in the chat</div>`;
+  else if (!mine.length) h += `<div class="meta">no draft matches “${esc(f)}”</div>`;
+  for (const d of mine)
+    h += `<div class="ws-row ${WS.open && WS.open.source === "draft" && WS.open.draft.draft_id === d.draft_id ? "on" : ""}" data-draft="${esc(d.draft_id)}" title="${esc(d.draft_id)} · saved ${hhmm(d.updated_at)}"><span class="kind">${esc(plainKind(d.kind))}</span>${esc(d.name)}<span class="meta">${hhmm(d.updated_at)}</span></div>`;
+  h += `<div class="ws-row new" data-new title="a new draft of yours — pick its kind and name in the inspector"><span class="kind">+</span>new draft</div>`;
+  h += `<div class="ws-h">THE SHELF · the crafts a body is made of</div>`;
+  for (const k of CRAFT_KINDS){
+    const rows = WS.shelf.filter(s => s.kind === k && hit(`${s.craft || s.name} ${s.kind} ${((s.manifest || {}).words || "")}`));
+    if (!rows.length) continue;
+    h += `<div class="ws-h sub">${esc(plainKind(k))}${k === "golden" ? "s" : "s"}</div>`;
+    for (const s of rows)
+      h += `<div class="ws-row ${WS.open && WS.open.source === "shelf" && WS.open.craft.name === s.name ? "on" : ""} ${s.state === "retired" ? "retired" : ""}" data-craft="${esc(s.name)}" title="${esc(s.did)} · v${s.version} · ${esc(s.state)}">${esc(s.craft || s.name)}<span class="meta">v${s.version}${s.worn_by ? ` · worn by ${s.worn_by}` : ""}${s.state === "retired" ? " · retired" : ""}</span></div>`;
+  }
+  box.innerHTML = h;
+  box.querySelectorAll("[data-draft]").forEach(r => r.onclick = () => wsOpenDraft(WS.drafts.find(d => d.draft_id === r.dataset.draft)));
+  box.querySelectorAll("[data-craft]").forEach(r => r.onclick = () => wsOpenCraft(WS.shelf.find(s => s.name === r.dataset.craft)));
+  const nw = box.querySelector("[data-new]"); if (nw) nw.onclick = wsNewDraft;
+}
+function wsOpenDraft(d){
+  if (!d) return;
+  if (WS.dirty && !confirmLeave()) return;
+  WS.open = {source: "draft", draft: d, kind: d.kind, name: d.name};
+  WS.decl = JSON.parse(JSON.stringify(d.body || {})); WS.dirty = false; WS.sel = null; WS.selEdge = null;
+  drawWorkshopRail(); drawWorkshop();
+}
+function wsOpenCraft(s){
+  if (!s) return;
+  if (WS.dirty && !confirmLeave()) return;
+  WS.open = {source: "shelf", craft: s, kind: s.kind, name: s.craft || s.name};
+  WS.decl = JSON.parse(JSON.stringify(s.manifest || {})); WS.dirty = false; WS.sel = null; WS.selEdge = null;
+  WS.stands[s.name] = null; wsStands(s);
+  drawWorkshopRail(); drawWorkshop();
+}
+function confirmLeave(){                       // no browser dialog (it would block the glass): the unsaved draft is said in the inspector
+  sysline("the open draft has unsaved changes — SAVE it (routine, under your seat) or DISCARD CHANGES in the inspector before opening another");
+  return false;
+}
+async function wsStands(s){                    // WHERE IT STANDS (JB's lock 2026-10-06): the wearers and the floor or room each stands on — read-only
+  const [w, tbl] = await Promise.all([fetch("/wear?component=" + encodeURIComponent(s.name)).then(x=>x.json()).catch(()=>null),
+                                      fetch("/wear").then(x=>x.json()).catch(()=>null)]);   // the open rows carry each wearer's scope path
+  const out = [];
+  for (const r of ((tbl && tbl.wear) || []).filter(r => r.component === s.name))
+    out.push(`${r.body || whoIs(r.did)} (life ${r.life}${r.version ? ", v" + r.version : " — worn off the shelf"}) stands on ${r.scope || "this universe"}`);
+  WS.stands[s.name] = {words: (w && w.words) || "", rows: out};
+  if (WS.open && WS.open.source === "shelf" && WS.open.craft.name === s.name) drawInspector();
+}
+function wsNewDraft(){
+  if (WS.dirty && !confirmLeave()) return;
+  WS.open = {source: "new", kind: "graph", name: ""}; WS.decl = null; WS.sel = null; WS.selEdge = null; WS.dirty = false;
+  drawWorkshopRail(); drawWorkshop();
+}
+function skeleton(kind, name){
+  if (kind === "graph") return {format: "orreth-graph/1", name, version: "0.1.0", words: "", entry: "think", nodes: [{id: "think", kind: "think"}], edges: []};
+  if (kind === "template") return {format: "orreth-resident-template/1", name, version: "0.1.0", nature: "", kind: "agent", graph: "mind.v0", mind: {model: "claude-haiku-4-5-20251001"}, capabilities: ["ask"]};
+  if (kind === "prompt") return {format: "orreth-prompt/1", text: ""};
+  if (kind === "skill") return {format: "orreth-skill/1", name, version: "0.1.0", words: "", text: ""};
+  if (kind === "policy") return {format: "orreth-covenant-policy/1", name, version: "1", rules: [""]};
+  if (kind === "binding") return {format: "orreth-workspace-binding/1", pull: name, name, version: "0.1.0", nature: "", prompt: "", skills: [], policy: "covenant-policy.v1"};
+  return {format: "orreth-golden/1", template: name, cases: [{ask: "", expect: [""]}]};
+}
+/* ---- the canvas: the declaration drawn — layered left to right by the longest road from the entry ---- */
+function graphOf(){                           // what the canvas draws: a graph itself; a template's graph (from the shelf); else nothing
+  if (!WS.decl) return null;
+  if (WS.open.kind === "graph") return {g: WS.decl, via: null};
+  if (WS.open.kind === "template"){
+    const s = WS.shelf.find(x => x.kind === "graph" && (x.craft || x.name) === WS.decl.graph);
+    return s ? {g: s.manifest, via: `the ${esc(WS.open.name)} template wears graph ${esc(WS.decl.graph)} — drawn from the shelf, read-only here (load it in the Workshop to draft from it)`}
+             : {g: null, via: `the ${esc(WS.open.name)} template names graph ${esc(String(WS.decl.graph || "?"))}, which is not on the shelf — a body wearing it cannot act`};
+  }
+  return null;
+}
+function layoutGraph(g){
+  const nodes = Array.isArray(g.nodes) ? g.nodes.filter(n => n && n.id != null) : [];
+  const edges = Array.isArray(g.edges) ? g.edges.filter(e => e && e.from != null && e.to != null) : [];
+  const ids = nodes.map(n => String(n.id));
+  const depth = {}; const q = [[String(g.entry), 0]]; const seen = new Set();
+  let guard = 0;
+  while (q.length && guard++ < 5000){           // the longest road from the entry (forward only; a loop in a half-made draft is bounded)
+    const [id, d] = q.shift();
+    if (!ids.includes(id)) continue;
+    if (depth[id] != null && depth[id] >= d) continue;
+    depth[id] = d;
+    if (d > ids.length) continue;
+    for (const e of edges) if (String(e.from) === id) q.push([String(e.to), d + 1]);
+  }
+  const maxD = Math.max(0, ...Object.values(depth));
+  const cols = {}; const pos = {};
+  for (const n of nodes){ const id = String(n.id); const d = depth[id] != null ? depth[id] : maxD + 1; (cols[d] = cols[d] || []).push(id); }
+  const W = 190, H = 70, GX = 150, GY = 34, X0 = 40, Y0 = 36;
+  let maxRows = 1;
+  for (const [d, list] of Object.entries(cols)){ maxRows = Math.max(maxRows, list.length); list.forEach((id, i) => { pos[id] = {x: X0 + Number(d) * (W + GX), y: Y0 + i * (H + GY), w: W, h: H, off: depth[id] == null}; }); }
+  const width = X0 * 2 + (Object.keys(cols).length) * (W + GX), height = Y0 * 2 + maxRows * (H + GY);
+  return {pos, edges, nodes, width: Math.max(width, 420), height: Math.max(height, 240), branching: new Set(edges.map(e => String(e.from)).filter((f, i, a) => a.indexOf(f) !== i))};
+}
+function whenWords(e){
+  const w = e && e.when; if (!w || typeof w !== "object") return "otherwise";
+  const k = Object.keys(w)[0];
+  if (k === "edge") return `when the ask took the ${w[k]} edge`;
+  if (k === "ask") return `when the ask says /${w[k]}/`;
+  if (k === "reply") return `when the reply says /${w[k]}/`;
+  return `when ${k}: ${w[k]}`;
+}
+function refsOf(n){
+  const r = [];
+  if (n.prompt) r.push("prompt " + n.prompt); if (n.skill) r.push("skill " + n.skill);
+  if (Array.isArray(n.tools)) r.push("tools " + (n.tools.join(", ") || "none")); if (n.mind) r.push("mind " + n.mind);
+  return r.join(" · ");
+}
+function drawCanvas(){
+  const box = document.getElementById("ws-canvas"); box.innerHTML = "";
+  if (!WS.open){ box.innerHTML = `<div class="ws-empty">THE WORKSHOP · pick a draft of yours or a craft from the shelf on the left — a graph draws itself here; its nodes and ways out open in the inspector on the right · say “open the workshop” any time, or “load the librarian template in the workshop”</div>`; return; }
+  if (WS.open.source === "new"){ box.innerHTML = `<div class="ws-empty">a new draft — name it in the inspector; a graph starts as one think node (the metered mind), a template as an agent wearing mind.v0</div>`; return; }
+  const gf = graphOf();
+  if (!gf){                                     // a prompt · skill · policy · binding · golden: the declaration is the view
+    const m = WS.decl || {}; let card = "";
+    if (WS.open.kind === "prompt") card = `<div class="ws-h">THE PROMPT'S WORDS · join a node's system words when a graph names it</div><div class="ws-text">${esc(String(m.text || "(empty — write the words in the declaration box)"))}</div>`;
+    else if (WS.open.kind === "skill") card = `<div class="ws-h">THE SKILL · ${esc(String(m.words || ""))}</div><div class="ws-text">${esc(String(m.text || "(empty)"))}</div>`;
+    else if (WS.open.kind === "policy") card = `<div class="ws-h">THE POLICY'S RULES · v${esc(String(m.version || "?"))}</div>` + (m.rules || []).map((r, i) => `<div class="ws-text">${i + 1}. ${esc(String(r))}</div>`).join("");
+    else if (WS.open.kind === "binding") card = `<div class="ws-h">THE BINDING · the ${esc(String(m.pull || "?"))} pull · its agent ${esc(String(m.name || "?"))}</div><div class="ws-text">${esc(String(m.nature || ""))}</div><div class="ws-text dim">${esc(String(m.prompt || "").slice(0, 600))}</div><div class="meta">skills ${esc((m.skills || []).join(", ") || "none")} · tools ${esc((m.capabilities || []).join(", ") || "none")}</div>`;
+    else if (WS.open.kind === "golden") card = `<div class="ws-h">THE GOLDEN SET · ${(m.cases || []).length} case${(m.cases || []).length === 1 ? "" : "s"} for the ${esc(String(m.template || "?"))} template · required of every engineered agent</div>` + (m.cases || []).map((c, i) => `<div class="ws-text"><b>${i + 1}.</b> ask: ${esc(String(c.ask || ""))} <span class="dim">· expect: ${esc((c.expect || []).join(" · "))}</span></div>`).join("");
+    box.innerHTML = `<div class="ws-card">${card}</div>`; return;
+  }
+  if (gf.via) box.insertAdjacentHTML("beforeend", `<div class="ws-banner">${gf.via}</div>`);
+  if (!gf.g) return;
+  const g = gf.g, L = layoutGraph(g), NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg"); svg.setAttribute("width", L.width); svg.setAttribute("height", L.height); svg.setAttribute("viewBox", `0 0 ${L.width} ${L.height}`);
+  const defs = document.createElementNS(NS, "defs");
+  for (const [id, cls] of [["arrow", "a-dim"], ["arrow-when", "a-when"], ["arrow-on", "a-on"]]){
+    const mk = document.createElementNS(NS, "marker"); mk.setAttribute("id", id); mk.setAttribute("viewBox", "0 0 10 10"); mk.setAttribute("refX", "9"); mk.setAttribute("refY", "5"); mk.setAttribute("markerWidth", "7"); mk.setAttribute("markerHeight", "7"); mk.setAttribute("orient", "auto-start-reverse");
+    const p = document.createElementNS(NS, "path"); p.setAttribute("d", "M 0 0 L 10 5 L 0 10 z"); p.setAttribute("class", cls); mk.appendChild(p); defs.appendChild(mk);
+  }
+  svg.appendChild(defs);
+  const editable = WS.open.source === "draft" && WS.open.kind === "graph";
+  L.edges.forEach((e, i) => {
+    const a = L.pos[String(e.from)], b = L.pos[String(e.to)]; if (!a || !b) return;
+    const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x, y2 = b.y + b.h / 2;
+    const back = x2 <= x1;                      // a way out drawn backwards (a loop in a half-made draft) bows under
+    const twins = L.edges.filter(x => String(x.from) === String(e.from) && String(x.to) === String(e.to));   // two ways out to the same node bow apart
+    const bow = (twins.indexOf(e) - (twins.length - 1) / 2) * 48;
+    const P = back ? [[x1, y1], [x1 + 60, y1 + 90 + bow], [x2 - 60, y2 + 90 + bow], [x2, y2]]
+                   : [[x1, y1], [(x1 + x2) / 2, y1 + bow], [(x1 + x2) / 2, y2 + bow], [x2, y2]];
+    const d = `M ${P[0][0]} ${P[0][1]} C ${P[1][0]} ${P[1][1]}, ${P[2][0]} ${P[2][1]}, ${P[3][0]} ${P[3][1]}`;
+    const at = (t) => { const m = 1 - t; return [0, 1].map(i => m*m*m*P[0][i] + 3*m*m*t*P[1][i] + 3*m*t*t*P[2][i] + t*t*t*P[3][i]); };   // a point on the curve
+    const gE = document.createElementNS(NS, "g"); gE.setAttribute("class", "edge" + (e.when ? " when" : "") + (WS.selEdge === i ? " on" : ""));
+    const hit = document.createElementNS(NS, "path"); hit.setAttribute("d", d); hit.setAttribute("class", "hit");
+    const p = document.createElementNS(NS, "path"); p.setAttribute("d", d); p.setAttribute("marker-end", `url(#${WS.selEdge === i ? "arrow-on" : e.when ? "arrow-when" : "arrow"})`);
+    gE.appendChild(hit); gE.appendChild(p);
+    if (e.when || L.branching.has(String(e.from))){
+      const [lx, ly] = at(0.4);                 // the words ride the curve itself, clear of both blocks
+      const t = document.createElementNS(NS, "text"); t.setAttribute("x", lx); t.setAttribute("y", ly - 6); t.setAttribute("text-anchor", "middle"); t.textContent = whenWords(e); gE.appendChild(t);
+    }
+    gE.onclick = (ev) => { ev.stopPropagation(); WS.selEdge = i; WS.sel = null; drawWorkshop(); };
+    const title = document.createElementNS(NS, "title"); title.textContent = `${e.from} → ${e.to} · ${whenWords(e)}` + (editable ? " · click to set or clear its when" : ""); gE.appendChild(title);
+    svg.appendChild(gE);
+  });
+  for (const n of L.nodes){
+    const id = String(n.id), p = L.pos[id]; if (!p) continue;
+    const gN = document.createElementNS(NS, "g"); gN.setAttribute("class", "node" + (id === String(g.entry) ? " entry" : "") + (WS.sel === id ? " on" : "") + (p.off ? " off" : "") + (NODE_KINDS.includes(n.kind) ? "" : " bad"));
+    gN.setAttribute("transform", `translate(${p.x},${p.y})`);
+    const r = document.createElementNS(NS, "rect"); r.setAttribute("width", p.w); r.setAttribute("height", p.h); r.setAttribute("rx", 10); gN.appendChild(r);
+    const t1 = document.createElementNS(NS, "text"); t1.setAttribute("x", 12); t1.setAttribute("y", 24); t1.textContent = id + (id === String(g.entry) ? "  · entry" : ""); gN.appendChild(t1);
+    const t2 = document.createElementNS(NS, "text"); t2.setAttribute("x", 12); t2.setAttribute("y", 42); t2.setAttribute("class", "k"); t2.textContent = (n.kind === "think" ? "THINK · the metered mind" : n.kind === "echo" ? "ECHO · the words back" : `${String(n.kind || "?").toUpperCase()} · not a kind the hull runs`) + (p.off ? " · unreached" : ""); gN.appendChild(t2);
+    const t3 = document.createElementNS(NS, "text"); t3.setAttribute("x", 12); t3.setAttribute("y", 59); t3.setAttribute("class", "r"); const rf = refsOf(n); t3.textContent = rf.length > 34 ? rf.slice(0, 33) + "…" : rf; gN.appendChild(t3);
+    const title = document.createElementNS(NS, "title"); title.textContent = `${id} · ${n.kind}${rf ? " · " + rf : ""}${n.words ? " — " + n.words : ""}` + (editable ? " · click to inspect and edit" : " · click to inspect"); gN.appendChild(title);
+    gN.onclick = (ev) => { ev.stopPropagation(); WS.sel = id; WS.selEdge = null; drawWorkshop(); };
+    svg.appendChild(gN);
+  }
+  svg.onclick = () => { WS.sel = null; WS.selEdge = null; drawWorkshop(); };
+  box.appendChild(svg);
+  const spine = defaultLine(g);
+  box.insertAdjacentHTML("beforeend", `<div class="ws-legend">entry ringed cyan · a plain arrow is the default way out (“otherwise”) · a violet arrow wears a <b>when</b> (the hull's edge · the ask's words · the last reply) · the default line: ${esc(spine.join(" → ") || "—")}${L.branching.size ? ` · branches at ${esc([...L.branching].join(", "))}` : ""} · forward only (a loop refuses at the cut)</div>`);
+}
+function defaultLine(g){
+  const outs = {}; for (const e of (g.edges || [])) if (e && !e.when && outs[String(e.from)] == null) outs[String(e.from)] = String(e.to);
+  const seen = []; let cur = g.entry != null ? String(g.entry) : null;
+  while (cur != null && !seen.includes(cur) && seen.length <= (g.nodes || []).length){ seen.push(cur); cur = outs[cur]; }
+  return seen;
+}
+/* ---- the inspector: a node, a way out, the craft, or a new draft ---- */
+function opt(list, cur, none){ return (none ? `<option value="">${esc(none)}</option>` : "") + list.map(v => `<option value="${esc(v)}" ${String(v) === String(cur ?? "") ? "selected" : ""}>${esc(v)}</option>`).join(""); }
+function drawInspector(){
+  const box = document.getElementById("ws-insp"); if (!box) return;
+  if (!WS.open){ box.innerHTML = `<div class="ws-h">THE INSPECTOR</div><div class="meta">click a node or an arrow on the canvas, or a row on the left</div>`; return; }
+  if (WS.open.source === "new"){
+    box.innerHTML = `<div class="ws-h">A NEW DRAFT · yours alone until the cut</div><label>kind</label><select id="ws-new-kind">${opt(CRAFT_KINDS, "graph")}</select><label>name · lowercase letters, digits, - _ .</label><input id="ws-new-name" placeholder="bob.v0"><div class="acts"><button class="ws-btn p" id="ws-new-go">start the draft</button></div><div class="meta">saved under your seat at once (routine, L1); the Workshop agent can edit it on your words; “cut the &lt;name&gt; draft” puts it on the shelf (held at the interlock)</div>`;
+    box.querySelector("#ws-new-go").onclick = async () => {
+      const kind = box.querySelector("#ws-new-kind").value, name = box.querySelector("#ws-new-name").value.trim().toLowerCase();
+      if (!/^[a-z0-9][a-z0-9._-]{0,63}$/.test(name)){ sysline("a draft's name is a short lowercase name: letters, digits, dashes, dots, underscores"); return; }
+      const r = await fetch("/drafts", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({kind, name, body: skeleton(kind, name), person: PERSON})}).then(x=>x.json()).catch(()=>null);
+      if (!r || !r.draft){ sysline(r && r.error ? esc(r.error) : "the draft shelf did not answer"); return; }
+      sysline(`started your ${esc(kind)} draft <b>${esc(name)}</b> (${esc(r.draft.draft_id)}) — under your seat alone`);
+      await loadWorkshop(); wsOpenDraft(WS.drafts.find(d => d.draft_id === r.draft.draft_id));
+    };
+    return;
+  }
+  const ro = WS.open.source === "shelf";
+  let h = "";
+  if (ro){
+    const s = WS.open.craft, st = WS.stands[s.name];
+    h += `<div class="ws-h">THE CRAFT · read-only — a craft on the shelf is a version; change it by drafting from it</div>` +
+         `<div class="ws-kv"><span>what</span><b>${esc(plainKind(s.kind))} ${esc(WS.open.name)}</b></div><div class="ws-kv"><span>address</span><b>${esc(s.did)}</b> <i>(no self — addressed, never minted)</i></div>` +
+         `<div class="ws-kv"><span>pin</span><b>${esc(s.manifest_hash.slice(7, 23))}</b></div><div class="ws-kv"><span>stands</span><b>${esc(stateWords(s))}</b></div><div class="ws-kv"><span>health</span><b>${esc(healthWords(s))}</b></div>` +
+         `<div class="ws-kv"><span>worn by</span><b>${s.worn_by ? `${s.worn_by} bod${s.worn_by === 1 ? "y" : "ies"} now` : "no body now"}</b></div>` +
+         `<div class="ws-h">WHERE IT STANDS · the wearers and the floor or room each stands on</div>` +
+         (st === undefined || st === null ? `<div class="meta">reading the wear table…</div>` : st.rows.length ? st.rows.map(r => `<div class="ws-text">${esc(r)}</div>`).join("") : `<div class="meta">${esc(st.words || "worn by no body now")} — where a NEXT life stands is chosen on the promotion (spoonful 4), not here</div>`) +
+         `<div class="acts"><button class="ws-btn p" id="ws-fork">draft from this</button><button class="ws-btn" id="ws-who">who wears it?</button>${s.retirable ? `<button class="ws-btn" id="ws-retire">retire → the interlock</button>` : s.restorable ? `<button class="ws-btn" id="ws-restore">restore</button>` : ""}</div>`;
+  }
+  const gf = graphOf(); const g = gf && gf.g;
+  const editable = !ro && WS.open.kind === "graph";
+  if (g && WS.sel != null){
+    const n = (g.nodes || []).find(x => String(x.id) === WS.sel);
+    if (n){
+      const prompts = WS.shelf.filter(s => s.kind === "prompt" && s.state !== "retired").map(s => s.craft || s.name);
+      const skills = WS.shelf.filter(s => s.kind === "skill" && s.state !== "retired").map(s => s.craft || s.name);
+      const stalls = ((WS.minds && WS.minds.minds) || []).filter(m => m.state !== "retired").map(m => m.name);
+      h += `<div class="ws-h">THE NODE · ${esc(WS.sel)}${String(g.entry) === WS.sel ? " · the entry" : ""}</div>`;
+      if (editable){
+        h += `<label>id</label><input id="ws-n-id" value="${esc(WS.sel)}">` +
+             `<label>kind · think = the metered mind · echo = the words back</label><select id="ws-n-kind">${opt(NODE_KINDS, n.kind)}</select>` +
+             `<label>prompt · a prompt on the shelf joins the system words</label><select id="ws-n-prompt">${opt(prompts, n.prompt, "— none —")}</select>` +
+             `<label>skill · a skill on the shelf, the words a body follows</label><select id="ws-n-skill">${opt(skills, n.skill, "— none —")}</select>` +
+             `<label>tools · narrows the door to these (never past what the template declares)</label><div class="ws-checks">${WS.tools.map(t => `<label class="chk"><input type="checkbox" data-tool="${esc(t)}" ${Array.isArray(n.tools) && n.tools.includes(t) ? "checked" : ""}>${esc(t)}</label>`).join("") || `<span class="meta">no tools on the shelf</span>`}<label class="chk"><input type="checkbox" id="ws-n-tools-any" ${Array.isArray(n.tools) ? "" : "checked"}>the template's own (no narrowing)</label></div>` +
+             `<label>mind · pins the stall this node thinks with</label><select id="ws-n-mind">${opt(stalls, n.mind, "— the body's own —")}</select>` +
+             `<label>words · what this node does, for a reader</label><input id="ws-n-words" value="${esc(String(n.words || ""))}">` +
+             `<div class="acts"><button class="ws-btn p" id="ws-n-apply">apply to the draft</button><button class="ws-btn" id="ws-n-after">add a node after</button><button class="ws-btn" id="ws-n-way">add a way out</button><button class="ws-btn" id="ws-n-entry">make it the entry</button><button class="ws-btn" id="ws-n-rm">remove the node</button></div>`;
+      } else {
+        h += `<div class="ws-kv"><span>kind</span><b>${esc(String(n.kind))}</b></div>` + (refsOf(n) ? `<div class="ws-kv"><span>refs</span><b>${esc(refsOf(n))}</b></div>` : "") + (n.words ? `<div class="ws-text">${esc(String(n.words))}</div>` : "");
+        const ways = (g.edges || []).filter(e => String(e.from) === WS.sel);
+        h += `<div class="ws-kv"><span>ways out</span><b>${ways.length ? ways.map(e => `→ ${esc(String(e.to))} ${esc(whenWords(e))}`).join("<br>") : "none — the run ends here"}</b></div>`;
+      }
+    }
+  } else if (g && WS.selEdge != null && (g.edges || [])[WS.selEdge]){
+    const e = g.edges[WS.selEdge]; const wk = e.when && typeof e.when === "object" ? Object.keys(e.when)[0] : "otherwise"; const wv = wk !== "otherwise" ? e.when[wk] : "";
+    h += `<div class="ws-h">THE WAY OUT · ${esc(String(e.from))} → ${esc(String(e.to))}</div>`;
+    if (editable){
+      h += `<label>when · a plain way out is the default (“otherwise”); at most one default per node</label><select id="ws-e-kind">${opt(WHEN_KINDS, wk)}</select>` +
+           `<div id="ws-e-val">${wk === "edge" ? `<label>the hull's edge the ask took</label><select id="ws-e-edge">${opt(HULL_EDGES, wv)}</select>` : wk === "ask" || wk === "reply" ? `<label>the pattern to look for in the ${wk === "ask" ? "ask's words" : "last reply"} (case-blind)</label><input id="ws-e-pat" value="${esc(String(wv))}" placeholder="^(hi|hello)">` : ""}</div>` +
+           `<label>to</label><select id="ws-e-to">${opt((g.nodes || []).map(x => String(x.id)), e.to)}</select>` +
+           `<div class="acts"><button class="ws-btn p" id="ws-e-apply">apply to the draft</button><button class="ws-btn" id="ws-e-rm">remove this way out</button></div>`;
+    } else h += `<div class="ws-kv"><span>taken</span><b>${esc(whenWords(e))}</b></div>`;
+  } else if (!ro){
+    const d = WS.open.draft;
+    h += `<div class="ws-h">THE DRAFT · yours alone until the cut</div><div class="ws-kv"><span>what</span><b>${esc(plainKind(d.kind))} ${esc(d.name)}</b></div><div class="ws-kv"><span>id</span><b>${esc(d.draft_id)}</b></div><div class="ws-kv"><span>saved</span><b>${hhmm(d.updated_at)}${WS.dirty ? " · <i>unsaved changes here</i>" : ""}</b></div>` +
+         (d.words ? `<div class="ws-text">${esc(d.words)}</div>` : "") +
+         `<div class="meta">${editable ? "click a node or an arrow to edit it; add a node after the selected one; the declaration box below is the same truth as JSON." : "edit the declaration in the box below — the same truth as the canvas."} The cut checks it whole (the kernel's law, both kernels); a half-made draft saves fine.</div>` +
+         `<div class="meta">THE AGENT: with the Workshop open the chat speaks to <b>workshop</b> — say “add an echo node after think” or “wire a way out of think to greet when the ask says hello”; it edits this draft through its draft tool and the canvas redraws.</div>`;
+    if (editable && g && !(g.nodes || []).length) h += `<div class="acts"><button class="ws-btn" id="ws-n-first">add the first node</button></div>`;
+  }
+  box.innerHTML = h;
+  // the wires
+  const q = (id) => box.querySelector("#" + id);
+  if (ro){
+    q("ws-fork").onclick = async () => {
+      const s = WS.open.craft; const name = (s.craft || s.name);
+      const r = await fetch("/drafts", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({kind: s.kind, name, body: s.manifest, person: PERSON, words: `drafted from ${s.name} v${s.version}`})}).then(x=>x.json()).catch(()=>null);
+      if (!r || !r.draft){ sysline(r && r.error ? esc(r.error) : "the draft shelf did not answer"); return; }
+      sysline(`drafted <b>${esc(name)}</b> ${esc(plainKind(s.kind))} from the shelf's version ${s.version} — under your seat; cut it and it lands as version ${s.version + 1} (a sibling)`);
+      await loadWorkshop(); wsOpenDraft(WS.drafts.find(d => d.draft_id === r.draft.draft_id));
+    };
+    q("ws-who").onclick = () => serviceWords(`who wears ${WS.open.craft.name}?`);
+    if (q("ws-retire")) q("ws-retire").onclick = () => retireService(WS.open.craft.name, WS.open.craft.kind);
+    if (q("ws-restore")) q("ws-restore").onclick = () => restoreService(WS.open.craft.name, WS.open.craft.kind);
+    return;
+  }
+  const mutate = (fn) => { fn(WS.decl); WS.dirty = true; drawWorkshop(); };
+  if (q("ws-n-apply")) q("ws-n-apply").onclick = () => mutate(gg => {
+    const n = gg.nodes.find(x => String(x.id) === WS.sel); const old = WS.sel; const nid = q("ws-n-id").value.trim();
+    if (nid && nid !== old){ if (gg.nodes.some(x => String(x.id) === nid)){ sysline(`a node named ${esc(nid)} is already in the graph — ids are unique`); return; }
+      n.id = nid; for (const e of gg.edges || []){ if (String(e.from) === old) e.from = nid; if (String(e.to) === old) e.to = nid; } if (String(gg.entry) === old) gg.entry = nid; WS.sel = nid; }
+    n.kind = q("ws-n-kind").value;
+    const pr = q("ws-n-prompt").value, sk = q("ws-n-skill").value, md = q("ws-n-mind").value, wd = q("ws-n-words").value.trim();
+    if (pr) n.prompt = pr; else delete n.prompt; if (sk) n.skill = sk; else delete n.skill; if (md) n.mind = md; else delete n.mind; if (wd) n.words = wd; else delete n.words;
+    if (q("ws-n-tools-any").checked) delete n.tools; else n.tools = [...box.querySelectorAll("[data-tool]:checked")].map(c => c.dataset.tool);
+  });
+  if (q("ws-n-after")) q("ws-n-after").onclick = () => mutate(gg => {
+    let i = 1, nid; do { nid = `node-${i++}`; } while (gg.nodes.some(x => String(x.id) === nid));
+    gg.nodes.push({id: nid, kind: "think"}); gg.edges = gg.edges || [];
+    const hasDefault = gg.edges.some(e => String(e.from) === WS.sel && !e.when);
+    gg.edges.push(hasDefault ? {from: WS.sel, to: nid, when: {edge: "chat"}} : {from: WS.sel, to: nid}); WS.sel = nid; WS.selEdge = null;
+  });
+  if (q("ws-n-way")) q("ws-n-way").onclick = () => mutate(gg => {
+    gg.edges = gg.edges || []; const to = (gg.nodes.find(x => String(x.id) !== WS.sel) || gg.nodes[0]).id;
+    const hasDefault = gg.edges.some(e => String(e.from) === WS.sel && !e.when);
+    gg.edges.push(hasDefault ? {from: WS.sel, to, when: {edge: "chat"}} : {from: WS.sel, to}); WS.selEdge = gg.edges.length - 1; WS.sel = null;
+  });
+  if (q("ws-n-entry")) q("ws-n-entry").onclick = () => mutate(gg => { gg.entry = WS.sel; });
+  if (q("ws-n-rm")) q("ws-n-rm").onclick = () => mutate(gg => {
+    gg.nodes = gg.nodes.filter(x => String(x.id) !== WS.sel); gg.edges = (gg.edges || []).filter(e => String(e.from) !== WS.sel && String(e.to) !== WS.sel);
+    if (String(gg.entry) === WS.sel) gg.entry = gg.nodes.length ? gg.nodes[0].id : null; WS.sel = null;
+  });
+  if (q("ws-n-first")) q("ws-n-first").onclick = () => mutate(gg => { gg.nodes = [{id: "think", kind: "think"}]; gg.entry = "think"; gg.edges = []; WS.sel = "think"; });
+  if (q("ws-e-kind")) q("ws-e-kind").onchange = () => mutate(gg => {
+    const e = gg.edges[WS.selEdge]; const k = q("ws-e-kind").value;
+    if (k === "otherwise") delete e.when; else if (k === "edge") e.when = {edge: "chat"}; else e.when = {[k]: ""};
+  });
+  if (q("ws-e-apply")) q("ws-e-apply").onclick = () => mutate(gg => {
+    const e = gg.edges[WS.selEdge]; e.to = q("ws-e-to").value; const k = q("ws-e-kind").value;
+    if (k === "otherwise") delete e.when; else if (k === "edge") e.when = {edge: q("ws-e-edge").value}; else e.when = {[k]: q("ws-e-pat").value};
+  });
+  if (q("ws-e-rm")) q("ws-e-rm").onclick = () => mutate(gg => { gg.edges.splice(WS.selEdge, 1); WS.selEdge = null; });
+}
+/* ---- the declaration box: the same truth as JSON; SAVE · CUT · DISCARD ---- */
+function drawDecl(){
+  const ta = document.getElementById("ws-json"), acts = document.getElementById("ws-acts"), head = document.getElementById("ws-decl-h");
+  if (!ta) return;
+  const ro = !WS.open || WS.open.source !== "draft";
+  ta.value = WS.decl ? JSON.stringify(WS.decl, null, 2) : ""; ta.readOnly = ro; ta.classList.toggle("ro", ro);
+  head.textContent = !WS.open ? "THE DECLARATION · the same truth as the canvas" : ro ? `THE DECLARATION · ${WS.open.source === "shelf" ? "as it stands on the shelf (read-only)" : "name the draft first"}` : `THE DECLARATION · ${plainKind(WS.open.kind)} ${WS.open.name} · edit here or on the canvas${WS.dirty ? " · UNSAVED" : ""}`;
+  acts.innerHTML = ro ? "" : `<button class="ws-btn" id="ws-apply">apply the JSON to the canvas</button><button class="ws-btn p" id="ws-save">SAVE · routine, under your seat</button><button class="ws-btn hold" id="ws-cut">CUT onto the shelf → the interlock</button><button class="ws-btn" id="ws-undo">discard changes</button><button class="ws-btn" id="ws-discard">discard the draft</button><button class="ws-btn" id="ws-ask">ask the agent</button>`;
+  if (ro) return;
+  const q = (id) => document.getElementById(id);
+  q("ws-apply").onclick = () => {
+    let v; try { v = JSON.parse(ta.value); } catch (e) { try { v = JSON.parse(ta.value.replace(/\\"/g, '"')); } catch (e2) { sysline("the declaration did not parse as JSON — fix the braces and apply again"); return; } }   // W101: escaped quotes read plain
+    if (!v || typeof v !== "object" || Array.isArray(v)){ sysline("a declaration is an object"); return; }
+    WS.decl = v; WS.dirty = true; WS.sel = null; WS.selEdge = null; drawWorkshop();
+  };
+  q("ws-save").onclick = async () => {
+    const d = WS.open.draft;
+    const r = await fetch("/drafts", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({kind: d.kind, name: d.name, body: WS.decl, words: d.words || undefined, person: PERSON, draft_id: d.draft_id})}).then(x=>x.json()).catch(()=>null);
+    if (!r || !r.draft){ sysline(r && r.error ? esc(r.error) : "the draft shelf did not answer"); return; }
+    WS.dirty = false; WS.open.draft = r.draft;
+    sysline(`saved your ${esc(d.kind)} draft <b>${esc(d.name)}</b> — under your seat alone, not on the shelf; say “cut the ${esc(d.name)} draft” or click CUT to put it there (held at the interlock)`);
+    loadWorkshop();
+  };
+  q("ws-cut").onclick = async () => {
+    if (WS.dirty){ sysline("SAVE the draft first — the cut reads what stands under your seat, not the box"); return; }
+    serviceWords(`cut the ${WS.open.draft.name} draft`);
+  };
+  q("ws-undo").onclick = () => { WS.decl = JSON.parse(JSON.stringify(WS.open.draft.body || {})); WS.dirty = false; WS.sel = null; WS.selEdge = null; drawWorkshop(); };
+  q("ws-discard").onclick = () => serviceWords(`discard the ${WS.open.draft.name} draft`);
+  q("ws-ask").onclick = () => { toggleChat(true); const i = document.getElementById("chat-in"); i.value = "workshop, "; i.focus(); };
+}
+function drawWorkshop(){ drawCanvas(); drawInspector(); drawDecl(); drawWorkshopRail(); }
+document.getElementById("ws-filter").oninput = (e) => { WS.filter = e.target.value; drawWorkshopRail(); };
+/* ---- THE MIND CHIP (0010 lock 8): the Workshop agent's stall, assigned through the Stable's own held door ---- */
+function drawMindChip(){
+  const sel = document.getElementById("ws-mind"); if (!sel || !WS.minds) return;
+  const stalls = (WS.minds.minds || []).filter(m => m.state !== "retired");
+  const a = (WS.minds.assignments || []).find(x => x.subject === "workshop") || (WS.minds.assignments || []).find(x => x.subject === "*");
+  const cur = a ? a.stall : "";
+  sel.innerHTML = `<option value="">${cur ? "" : "the template's own (haiku) · "}pick a stall…</option>` + stalls.map(m => `<option value="${esc(m.name)}" ${m.name === cur ? "selected" : ""}>${esc(m.name)} · ${esc((m.manifest || {}).model || "?")}${(m.manifest || {}).provider === "anthropic" ? " · Claude the model" : ""}</option>`).join("");
+  sel.title = "THE MIND CHIP — which stall of the Stable the Workshop agent thinks with: assigning is consequential and holds at the interlock in the chat (L2). An Anthropic stall here is Claude the MODEL, metered like every mind. Claude the DEVELOPER (repo access, the factories' hands) is Phase 9 — not this chip. “stablekeeper, add the LLM anthropic <model> as <name>” adds a frontier stall.";
+  sel.onchange = () => { const stall = sel.value; if (!stall) return;
+    mindDoor("/minds/assign", {subject: "workshop", stall, klass: "any"}, `assigning the Workshop agent to the ${esc(stall)} stall is consequential — the kernel holds it at the interlock (L2)…`); };
+  const card = document.getElementById("ws-mind-card"); if (card) card.textContent = cur ? `· ${cur}` : "· the template's own";
+}
+/* ---- the words: open · close · load Y in the Workshop ---- */
+async function workshopLoad(name, kind){
+  toggleWorkshop(true); await loadWorkshop();
+  const d = WS.drafts.find(x => x.name === name && (!kind || kind === "draft" || x.kind === kind));
+  if (kind === "draft" || (d && !kind)){ if (d){ wsOpenDraft(d); return true; } sysline(`no draft of yours named ${esc(name)} — say “my drafts”`); return true; }
+  const s = WS.shelf.find(x => (x.craft || x.name) === name && (!kind || x.kind === kind)) || WS.shelf.find(x => x.name === name);
+  if (s){ wsOpenCraft(s); return true; }
+  if (d){ wsOpenDraft(d); return true; }
+  sysline(`nothing named ${esc(name)} on the shelf or in your drafts — say “show the crafts” or “my drafts”`); return true;
+}
+function workshopWire(text, to){        // the open draft rides the ask BY ID so the agent reads YOUR draft on YOUR ask alone (AG-9)
+  if (!workshopPull.classList.contains("open") || !WS.open || WS.open.source !== "draft" || !to.includes("workshop")) return text;
+  if (/\[draft draft_[0-9a-f]+\]/.test(text)) return text;
+  return `${text}\n[draft ${WS.open.draft.draft_id}]`;
+}
+
+workshopPull.addEventListener("pointerdown", () => { [crewPull, monitorPull, band].forEach(q => q.classList.remove("raised")); workshopPull.classList.add("raised"); });   // W13
+
 let HC = null, HC_AT = 0;                        // the health checks, read every 30 s (nine laws, some through the gateway)
 async function loadMonitor(){
   const s = await fetch("/monitor").then(x=>x.json()).catch(()=>null);
@@ -3556,7 +4047,7 @@ function inspectOrgan(id){
       [["show the minds", () => serviceWords("show the minds"), true], ["open the monitor", () => toggleMonitor(true)]]); }
   if (id === "shelf"){ const sv = (PANEL.SERV && PANEL.SERV.services) || []; inspect("the shelf · services and crafts", ["tool · mcp · store · source · mind · template · prompt · skill · policy · graph · binding · golden — one ladder", "—", "—", "—",
       `${sv.length} registered · ${sv.filter(x => CRAFT_KINDS.includes(x.kind)).length} crafts · ${sv.filter(x => x.state === "retired").length} retired`, "—"],
-      [["show the tools", () => serviceWords("show the tools"), true], ["show the crafts", () => serviceWords("show the crafts")], ["my drafts", () => serviceWords("my drafts")], ["check the services", () => serviceWords("check the services")]]); }
+      [["show the tools", () => serviceWords("show the tools"), true], ["show the crafts", () => serviceWords("show the crafts")], ["my drafts", () => serviceWords("my drafts")], ["open the workshop", () => toggleWorkshop(true)], ["check the services", () => serviceWords("check the services")]]); }
   if (id === "monitor") inspect("the monitor", ["watches · health checks · the harness · the levers", "—", "—", "—",
       (s.watches || []).map(x => `${x.name} ${x.red ? "RED" : "green"}`).join(" · ") || "no watches", PANEL.LEVERS ? `${PANEL.LEVERS.length} levers the kernel can pull` : "—"],
       [["open the monitor", () => toggleMonitor(true), true], ["run the harness", () => { toggleMonitor(true); fetch("/harness/run", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({template: "librarian"})}).catch(()=>null); }]]);
