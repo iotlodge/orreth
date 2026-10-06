@@ -1537,7 +1537,7 @@ async function onNotice(n){
     return;
   }
   if (!line && n.kind.includes("reply")){         // W78 (walk #20): THE KERNEL'S OWN HOP — a lever it pulled, or the
-    const vk = await askRead(n.ref);                                              // dossier it handed a person — is an
+    const vk = await askRead(n.ref, true);          // W97: fresh — the reply is terminal                                              // dossier it handed a person — is an
     if (!vk || vk.served_by !== "the kernel" || vk.status !== "replied" || !vk.origin || vk.origin.kind !== "intention") return;
     const words = `“${esc((vk.origin.words || "").slice(0, 80))}”`;              // ask the kernel served itself: no
     el("msg mine", `<em>the kernel acts · on the intention's authority · ${words}</em>` +   // ask.received rides the feed,
@@ -1566,7 +1566,8 @@ async function onNotice(n){
     PENDING[n.ref] = el("journey", `→ ${esc(v0.target || "…")} — on its way…`);
     return;
   }
-  const v = await askRead(n.ref);                    // sp2: one read, shared with the panel
+  const terminal = n.kind.includes("reply") || n.kind.includes("confirm.needed") || n.kind.includes("ask.refused");
+  const v = await askRead(n.ref, terminal);          // sp2: one read, shared with the panel — W97: a terminal notice reads fresh
   if (!v) return;
   if (n.kind.includes("journey") && v.journey.length){
     line.textContent = v.journey[v.journey.length-1];
@@ -2957,9 +2958,9 @@ const PANEL = {ROST: [], MON: null, GOV: {}, MINDS: null, SERV: null, INTS: [], 
                HOPS: {}, HOPN: 0, TICKS: 0, DUTIES: new Set(), FACTS: new Map(), ASKS: new Map()};   // sp2: the hops and duties counted this session; the reads shared
 /* ---- one read per pointer (sp2's cleanup): the chat and the panel share a single /ask/<id> read for the same notice;
    a fact the notice points at is read once through the fact door ---- */
-function askRead(ref){
-  const now = Date.now(), c = PANEL.ASKS.get(ref);
-  if (c && now - c.at < 600) return c.p;
+function askRead(ref, fresh){                   // W97 (SPEC-PATH-01, 2026-10-05): a TERMINAL notice (reply · refused · confirm needed) never takes the
+  const now = Date.now(), c = PANEL.ASKS.get(ref);   // cached view — the echo serves inside the 600 ms window, and its reply notice read the journey's stale view ("no words came back")
+  if (c && !fresh && now - c.at < 600) return c.p;
   const p = fetch("/ask/" + ref).then(x => x.ok ? x.json() : null).catch(()=>null);
   PANEL.ASKS.set(ref, {at: now, p}); if (PANEL.ASKS.size > 200) PANEL.ASKS.delete(PANEL.ASKS.keys().next().value);
   return p;

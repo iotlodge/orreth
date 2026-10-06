@@ -3205,7 +3205,20 @@ wound this rearchitecture began from).
     the universe's today); the Rust kernel's own reads stand at the universe (one
     kernel per cell, always at depth 1 — the body-side laws are the reference's);
     the Costs Panel's fold; `context_hash` on a thought; the book's `SPINE_MODE`
-    dial pin (turns with the phase's release). What was here before
+    dial pin (turns with the phase's release). **WALKED 2026-10-05 evening (JB,
+    SPEC-PATH-01, the first six bars): PASS w/ one wound** — "what levels are
+    here?" read the universe and the manifest's floor with their counts; "open
+    floor 2" · "open room bob on floor ops as an experiment room" · "open floor
+    three as prod" each held at the interlock and settled on his yes with the
+    level in words; "open room loose on floor three as dev" refused in words
+    (mode only tightens); "open room x" taught the floor. **W97** the echo's
+    bubble read "(no words came back)" though the ground held its reply: the
+    glass's shared `askRead` (PANEL sp2's one read per pointer, 600 ms) handed
+    the REPLY notice the journey's cached view — a mindless body serves inside
+    the window. **CURED 2026-10-05:** a terminal notice (reply · refused ·
+    confirm needed) reads fresh, never the cache. The relight bars (the tag as
+    prod; a prod universe refusing dev) stand for JB's next light:
+    `SPINE_MODE=prod scripts/dev.sh kernel`. What was here before
   (THE LANE, the factory ask as escalation) stays owed AFTER the Workshop:
   the lane with RAG (P6.5 sp4/sp5), the stranger with row 5, the lessons
   digest with row 6a, the architect with RAG. Each row proof-shaped
