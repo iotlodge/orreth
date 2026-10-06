@@ -94,21 +94,22 @@ def beat(conn, name: str):
 
 TAGS = ("outbox", "inbox", "heartbeat", "projector", "resident", "gateway", "tools", "store",
         "markers", "monitor", "scheduler", "harness", "presence", "digest", "intent",
-        "proof", "mitl", "placement", "services", "stable", "cells", "profile", "seat", "desk", "levels")
+        "proof", "mitl", "placement", "services", "stable", "cells", "profile", "seat", "desk", "levels",
+        "crafts")                                        # Phase 8 sp2: the wear table and the draft shelf
 # re-base sp1: `heartbeat` (the rig's breath stood its table unguarded before), `stable` (its
 # tag was orphaned — the Stable's tables were born inside a request, the very thing the law
 # forbids) and `desk` (the machine join desk, the Rust kernel's table) join the one list.
 
-SCHEMA_VERSION = 5          # THE MIGRATOR: bumped in BOTH kernels whenever any DDL statement changes (2: the indexes, the perf cure 2026-09-29; 3: a watch's rest · a peer's forgetting, the honest glass sp2 2026-09-29; 4: an ask's resent_at, W91 THE BENCH SWEEP 2026-10-02; 5: the levels — spine_levels, THE PATH, Phase 8 sp1 2026-10-05)
+SCHEMA_VERSION = 6          # THE MIGRATOR: bumped in BOTH kernels whenever any DDL statement changes (2: the indexes, the perf cure 2026-09-29; 3: a watch's rest · a peer's forgetting, the honest glass sp2 2026-09-29; 4: an ask's resent_at, W91 THE BENCH SWEEP 2026-10-02; 5: the levels — spine_levels, THE PATH, Phase 8 sp1 2026-10-05; 6: the wear table and the draft shelf — spine_wear · spine_drafts, THE SHELF WIDENED, Phase 8 sp2 2026-10-05)
 TABLES = (                  # every table both kernels stand on at this version (fixture `schema_tables`)
-    "spine_aggregate_cursor", "spine_asks", "spine_authenticators", "spine_desk", "spine_digests",
+    "spine_aggregate_cursor", "spine_asks", "spine_authenticators", "spine_desk", "spine_digests", "spine_drafts",
     "spine_harness_runs", "spine_heartbeat", "spine_inbox", "spine_intent_turns", "spine_intentions",
     "spine_joins", "spine_leases", "spine_levels", "spine_marker_kinds", "spine_markers", "spine_masters", "spine_memories",
     "spine_meter", "spine_mind_assignments", "spine_mind_keys", "spine_mitl", "spine_occurrences",
     "spine_outbox", "spine_owner", "spine_parked", "spine_peers", "spine_profile", "spine_proof_attempts",
     "spine_refusals", "spine_schedules", "spine_schema", "spine_seam_nonces", "spine_seam_out", "spine_seats",
     "spine_service_health", "spine_service_versions", "spine_services", "spine_sessions", "spine_tool_calls",
-    "spine_watches", "spine_world",
+    "spine_watches", "spine_wear", "spine_world",
 )
 SCHEMA_DDL = ("CREATE TABLE IF NOT EXISTS spine_schema ( version int PRIMARY KEY, kernel text NOT NULL,"
               " migrated_at timestamptz NOT NULL DEFAULT now())")
@@ -120,12 +121,12 @@ class GroundRefused(RuntimeError):
 
 
 def _modules():
-    from . import (cells, desk, digest, gateway, harness, heartbeat, inbox, intent, levels, markers, mitl, monitor,
+    from . import (cells, crafts, desk, digest, gateway, harness, heartbeat, inbox, intent, levels, markers, mitl, monitor,
                    outbox, placement, presence, profile, projector, proof, resident, scheduler, seat, services,
                    stable, store, tools)
     return (outbox, inbox, heartbeat, projector, resident, gateway, tools, store, markers,
             monitor, scheduler, harness, presence, digest, intent, proof, mitl, placement, cells,
-            services, stable, profile, seat, desk, levels)
+            services, stable, profile, seat, desk, levels, crafts)
 
 
 _MIGRATED: dict[str, dict] = {}     # this PROCESS's verdict per ground (DSN + search_path): once, never per tick

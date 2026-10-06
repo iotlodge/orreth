@@ -36,7 +36,7 @@ use std::sync::LazyLock;
 /// (or past) its number runs no DDL at all — it VERIFIES that every table it declares
 /// stands, and refuses to light on a ground that lies. A kernel lighting beside a
 /// migrating one WAITS at the lock and then verifies (`Ground::ensure_all`).
-pub const SCHEMA_VERSION: i32 = 5; // 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05)
+pub const SCHEMA_VERSION: i32 = 6; // 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05) · 6: the wear table and the draft shelf — spine_wear · spine_drafts (THE SHELF WIDENED, Phase 8 sp2, 2026-10-05)
 
 /// The version table itself — created before the version is read, under the same lock.
 pub const SCHEMA_DDL: &[&str] = &[
@@ -429,8 +429,22 @@ pub const LEVELS_DDL: &[&str] = &[
     "CREATE INDEX IF NOT EXISTS spine_levels_scope ON spine_levels (scope, parent)",
 ];
 
+/// Phase 8 sp2, THE SHELF WIDENED (`crafts_live`): the wear table — which body wears which component at
+/// which version (the body writes its rows in its join's transaction) — and the draft shelf under the person.
+pub const CRAFTS_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_wear ( wear_id bigserial PRIMARY KEY, scope text NOT NULL, did text NOT NULL, \
+     body text NOT NULL, life int NOT NULL, component text NOT NULL, kind text NOT NULL, hash text NOT NULL, version \
+     int, since timestamptz NOT NULL DEFAULT now(), until timestamptz)",
+    "CREATE INDEX IF NOT EXISTS spine_wear_component ON spine_wear (scope, component, until)",
+    "CREATE INDEX IF NOT EXISTS spine_wear_body ON spine_wear (scope, did, until)",
+    "CREATE TABLE IF NOT EXISTS spine_drafts ( draft_id text PRIMARY KEY, scope text NOT NULL, person text NOT NULL, \
+     kind text NOT NULL, name text NOT NULL, body text NOT NULL, words text, from_marker text, at timestamptz NOT NULL \
+     DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now())",
+    "CREATE INDEX IF NOT EXISTS spine_drafts_person ON spine_drafts (scope, person, updated_at DESC)",
+];
+
 /// The tags and their DDL, in the order the road ensures them.
-pub const ROAD: [(&str, &[&str]); 22] = [
+pub const ROAD: [(&str, &[&str]); 23] = [
     ("resident", RESIDENT_DDL),
     ("markers", MARKERS_DDL),
     ("proof", PROOF_DDL),
@@ -455,6 +469,7 @@ pub const ROAD: [(&str, &[&str]); 22] = [
     ("placement", PLACEMENT_DDL),
     ("tools", TOOLS_DDL),
     ("levels", LEVELS_DDL), // Phase 8 sp1: THE PATH — the levels of this universe (schema 5)
+    ("crafts", CRAFTS_DDL), // Phase 8 sp2: THE SHELF WIDENED — the wear table and the draft shelf (schema 6)
 ];
 
 /// Every table the ask road stands on, once per ground per process.

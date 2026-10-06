@@ -288,7 +288,43 @@ Each spoonful is a thing a human proves in the glass before the next opens
    on a thought; the Costs Panel's fold; the book's `SPINE_MODE` pin.
 2. **THE SHELF WIDENED.** The craft kinds, the wear table, the draft shelf
    under the person, golden as a component, source with repo and commit;
-   the hull with its three edges, the template's graph finally read.
+   the hull with its three edges, the template's graph finally read. **BUILT
+   2026-10-05 (JB's word: "spoonful 2, THE SHELF WIDENED"); the walk in the
+   glass OWED (SPEC-SHELF-01).** What landed, both kernels law for law: the
+   one shelf's kinds widened to twelve — the five identities and the seven
+   crafts (`template · prompt · skill · policy · graph · binding · golden`), a
+   craft named `<name>.<kind>` on the shelf and ADDRESSED (`craft:<name>.<kind>`
+   in the `did` column — a component is not a self, no DID minted), its health
+   its declaration reading whole (a template's graph must stand on the shelf) ·
+   the crafts the spine ships registered at light (nine templates, two
+   bindings, the covenant policy, the graphs `mind.v0` and `echo.v0`, the
+   librarian's golden set, the `shelf` skill) · a `source`'s second form
+   (`repo · commit · entry`, "not probed here" until import) · THE WEAR TABLE
+   (`spine_wear`, schema 6): the body writes one row per component in its
+   join's transaction, the previous life's rows closed; `GET /wear` answers
+   who wears what ("in use by N" on every craft card) · THE DRAFT SHELF
+   (`spine_drafts`): under the person, the author's seat alone, routine to
+   save (L1, no fact); THE CUT (`POST /drafts/cut` → the kernel's held act
+   `craft.cut`) at the class's level — L2, a resident's template L3-code,
+   firmware refused in a prod universe, an agent's template refused until
+   the Experiment — settled as the ladder's register or version with the
+   person on the chain, the draft spent · THE HULL in `resident.py`: hear →
+   recall → route → `edge-chat · edge-work · edge-event` → `work`, the edge
+   read off the ask's marker and said in the journey; the work node runs the
+   template's `graph` component from the shelf (the file as fallback), node
+   by node — `think` the metered mind (a node's `prompt` component joins the
+   system words), `echo` the words back; a template naming a graph the shelf
+   lacks CANNOT ACT and says so · the golden set a component the harness reads
+   first · the glass: craft cards (address, worn by N, what it declares, "who
+   wears it?"), the organ's crafts count, the chat's "show the crafts" · "who
+   wears the librarian template?" · "what is echo made of?" · "my drafts" ·
+   "draft a prompt called …: …" · "cut the … draft" (held) · "discard …" ·
+   fixture `crafts-v0.json` ×86 (eleven kinds), conformance on both kernels ·
+   `test_crafts.py` (6) · `tests/crafts.rs` on the rig. Named, not in sp2: the
+   wear row's `until` at decom (sp4); a re-cut re-pointing the wear table
+   (sp4's promotion); the sub-agent's code noun (no life is minted before
+   sp4); branching graphs and per-node tools and skills executed (the Workshop's
+   authoring, sp3 — v0 reads `prompt` only); a floor's own shelf.
 3. **THE WORKSHOP v0.** The full-screen pull (like THE PANEL), the
    declaration-to-canvas renderer, the node inspector, draft editing, the
    `workshop` binding and the mind chip, "load Y in the Workshop" from chat,
@@ -332,8 +368,11 @@ evolves.
 - Whether Floor and Room appear as **standing selectors** in the Workshop
   or as **fields on the deploy step** of a lifecycle (JB named both; decide
   at spoonful 3's open).
-- The exact declaration shape of the `graph` component (0004's open
-  "template schema v0"); lands with spoonful 2's fixture.
+- ~~The exact declaration shape of the `graph` component (0004's open
+  "template schema v0"); lands with spoonful 2's fixture.~~ **ANSWERED in
+  spoonful 2:** `orreth-graph/1` — `entry` · `nodes: [{id, kind: think | echo,
+  prompt?, skill?, tools?, mind?}]` · `edges: [{from, to}]`, one path from the
+  entry (fixture `crafts-v0.json`, `craft_manifest` · `graph_path`).
 - Agent-created resources and "kernel tools" protected in prod — JB's own
   dive, later.
 - Sub-agent words in code (`helper` in the glass is locked; the code's noun

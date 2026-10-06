@@ -25,7 +25,7 @@
 use orreth_spine::{
     ask, beat, body, canonical, cells, content_hash, desk, doors, envelope, export, intent,
     kernel_self, levers, mcp, memory, mitl, placement, profile, proof, rails, seat, services,
-    stable, tools, watch, levels};
+    stable, tools, watch, levels, crafts};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -75,6 +75,18 @@ const PORTED_KINDS: &[&str] = &[
     "rollup_report",
     "rollup_tier_score",
     "level_fact",
+    // Phase 8 sp2, THE SHELF WIDENED (crafts-v0)
+    "craft_name",
+    "craft_split",
+    "craft_manifest",
+    "graph_path",
+    "hull_edge",
+    "source_form",
+    "cut_demand",
+    "wear_of",
+    "golden_document",
+    "cut_words",
+    "worn_words",
     "outbox_row",
     "inbox_key",
     "ladder_step",
@@ -736,6 +748,52 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             same!(placement::why_here(&prof, &ground), s(&exp["why"]), "why");
         }
         // ---- orreth.rails/1 (P7 sp2): the rails' names and shapes — what the ground and rails stand on ----
+        // ---- Phase 8 sp2, THE SHELF WIDENED: the crafts' laws (crafts-v0) ----
+        "craft_name" => {
+            let got = crafts::craft_name(s(&inp["name"]), s(&inp["kind"]));
+            if exp["ok"].as_bool() == Some(true) {
+                same!(got.clone().unwrap(), s(&exp["shelf_name"]), "shelf name");
+                same!(crafts::address(s(&inp["name"]), s(&inp["kind"])).unwrap(), s(&exp["address"]), "address");
+            } else {
+                same!(got.clone().unwrap_err(), s(&exp["error"]), "the refusal");
+            }
+        }
+        "craft_split" => {
+            let got = crafts::split_name(s(&inp["shelf_name"])).map(|(n, k)| json!([n, k])).unwrap_or(Value::Null);
+            same!(got, exp["craft"], "the split");
+        }
+        "craft_manifest" => same!(crafts::validate(s(&inp["kind"]), &inp["manifest"]), exp.clone(), "the verdict"),
+        "graph_path" => same!(json!(crafts::path(&inp["graph"]).unwrap()), exp["path"], "the path"),
+        "hull_edge" => {
+            let e = crafts::hull_edge(opt_str(&inp["marker_kind"]), opt_str(&inp["parent_kind"]));
+            same!(e, s(&exp["edge"]), "the edge");
+            same!(crafts::edge_words(e, opt_str(&inp["parent_kind"])), s(&exp["words"]), "the words");
+        }
+        "source_form" => same!(crafts::source_form(&inp["manifest"]), exp.clone(), "the form"),
+        "cut_demand" => same!(crafts::cut_demand(s(&inp["kind"]), &inp["manifest"], s(&inp["mode"])), exp.clone(), "the demand"),
+        "wear_of" => {
+            let got = crafts::wear_of(&inp["parts"]);
+            if exp["ok"].as_bool() == Some(true) {
+                same!(json!(got.clone().unwrap()), exp["worn"], "the rows worn");
+            } else {
+                same!(got.clone().unwrap_err(), s(&exp["error"]), "the refusal");
+            }
+        }
+        "golden_document" => {
+            let d = crafts::golden_document(s(&inp["template"]), inp["cases"].as_array().unwrap());
+            same!(d, exp["document"], "the document");
+            same!(orreth_spine::content_hash(&d), s(&exp["hash"]), "the hash");
+        }
+        "cut_words" => same!(
+            crafts::cut_words(s(&inp["name"]), s(&inp["kind"]), s(&inp["verb"]), inp["version"].as_i64().unwrap_or(1)),
+            s(&exp["words"]),
+            "the words"
+        ),
+        "worn_words" => same!(
+            crafts::worn_words(s(&inp["component"]), inp["wearers"].as_array().unwrap()),
+            s(&exp["words"]),
+            "the words"
+        ),
         // ---- Phase 8 sp1, THE PATH: the levels' laws (levels-v0) ----
         "path_parse" => {
             let path = s(&inp["path"]);

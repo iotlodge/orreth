@@ -610,7 +610,7 @@ async fn shadow_an_ask_through_the_rust_door_is_served_by_the_python_librarian_a
     assert_eq!(s, 200);
     assert_eq!(
         shelf["kinds"],
-        json!(["tool", "mcp", "store", "source", "mind"])
+        json!(["tool", "mcp", "store", "source", "mind", "template", "prompt", "skill", "policy", "graph", "binding", "golden"])
     );
     assert_eq!(
         shelf["services"],

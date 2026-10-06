@@ -423,6 +423,42 @@
      "does": "Declares the universe prod when its cell opens; a relight may tighten dev to prod and never loosen it — a prod universe refuses to light as dev."
     }
    ]
+  },
+  {
+   "id": "shelf-widened",
+   "when": "monitor",
+   "title": "The shelf widened — the crafts a body is made of, who wears them, your drafts",
+   "lead": "The SHELF holds every service the kernel governs (tools, MCP servers, stores, sources, minds) and, since Phase 8 sp2, every CRAFT a body is made of: templates, prompts, skills, policies, graphs, bindings and golden sets. A craft is addressed by its name and pin (librarian.template, mind.v0.graph) and is never a self. The WEAR TABLE says which body wears which craft at which version — 'in use by N'. A DRAFT lives under you alone until you CUT it onto the shelf; the cut is held at the interlock. Every body now runs the HULL: hear, recall, route to the chat, work or event edge, then its template's graph as the work node.",
+   "entries": [
+    {
+     "say": "show the crafts",
+     "does": "Every craft on the shelf with its ladder state and how many bodies wear it now; 'show the templates' (graphs, prompts, skills, policies, bindings, goldens) narrows it."
+    },
+    {
+     "say": "who wears the librarian template?",
+     "does": "The bodies wearing that component now, by life and version — the blast radius a change would touch."
+    },
+    {
+     "say": "what is echo made of?",
+     "does": "The components a body wears: its template, policy, graph and golden set, each with its version and pin."
+    },
+    {
+     "say": "my drafts",
+     "does": "Your drafts and no one else's — they live in the ground under your seat, never on the shelf, never in any recall."
+    },
+    {
+     "say": "draft a prompt called greeting: Greet the human by name.",
+     "does": "Routine: the draft is saved under your seat (a template, graph, policy, binding or golden set is drafted as JSON after the colon)."
+    },
+    {
+     "say": "cut the greeting draft",
+     "does": "Consequential: held at the interlock. On your yes the draft lands on the shelf as version 1, or the next version of a craft already there; the draft is spent. A resident's template asks your code; firmware cuts only in a dev universe; an agent's template waits for the Experiment."
+    },
+    {
+     "say": "retire the greeting prompt · restore the greeting prompt",
+     "does": "The same ladder every service rides — at rest, never deleted; restored as a new fact."
+    }
+   ]
   }
  ]
 }

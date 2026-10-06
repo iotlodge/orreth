@@ -146,6 +146,15 @@
       "for": [],
       "doors": ["python", "rust"],
       "settles_s": 0
+    },
+    {
+      "name": "craft.cut",
+      "description": "Cut a draft onto the shelf as a versioned craft - a template, prompt, skill, policy, graph, binding or golden set (Phase 8 sp2, THE SHELF WIDENED). The gate of the draft shelf: a registered craft at version 1, or the next version of one already there; the draft is spent. Consequential (L2); a resident's template asks the code (L3); firmware cuts only in a dev universe; an agent's template waits for the Experiment. Never a remedy.",
+      "needs": {"draft_id": "the draft, the person's own", "person": "its author - the seat that cuts"},
+      "consequence": "consequential",
+      "for": [],
+      "doors": ["python", "rust"],
+      "settles_s": 0
     }
   ]
 }

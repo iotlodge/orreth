@@ -1,0 +1,1580 @@
+{
+ "contract": "orreth.crafts/1",
+ "version": 0,
+ "generated_by": "orreth_spine.crafts (the Python reference) - rearch Phase 8 sp2, THE SHELF WIDENED: the craft kinds on the one shelf, the graph declaration v0, the hull's edges, the wear rows, the cut's demand",
+ "generated_at": "2026-10-05",
+ "cases": [
+  {
+   "name": "craft_name: librarian as a template",
+   "kind": "craft_name",
+   "input": {
+    "name": "librarian",
+    "kind": "template"
+   },
+   "expect": {
+    "ok": true,
+    "shelf_name": "librarian.template",
+    "address": "craft:librarian.template"
+   }
+  },
+  {
+   "name": "craft_name: crew as a binding",
+   "kind": "craft_name",
+   "input": {
+    "name": "crew",
+    "kind": "binding"
+   },
+   "expect": {
+    "ok": true,
+    "shelf_name": "crew.binding",
+    "address": "craft:crew.binding"
+   }
+  },
+  {
+   "name": "craft_name: mind.v0 as a graph",
+   "kind": "craft_name",
+   "input": {
+    "name": "mind.v0",
+    "kind": "graph"
+   },
+   "expect": {
+    "ok": true,
+    "shelf_name": "mind.v0.graph",
+    "address": "craft:mind.v0.graph"
+   }
+  },
+  {
+   "name": "craft_name: librarian as a golden",
+   "kind": "craft_name",
+   "input": {
+    "name": "librarian",
+    "kind": "golden"
+   },
+   "expect": {
+    "ok": true,
+    "shelf_name": "librarian.golden",
+    "address": "craft:librarian.golden"
+   }
+  },
+  {
+   "name": "craft_name: the-orreth-covenant as a policy",
+   "kind": "craft_name",
+   "input": {
+    "name": "the-orreth-covenant",
+    "kind": "policy"
+   },
+   "expect": {
+    "ok": true,
+    "shelf_name": "the-orreth-covenant.policy",
+    "address": "craft:the-orreth-covenant.policy"
+   }
+  },
+  {
+   "name": "craft_name: greeting as a prompt",
+   "kind": "craft_name",
+   "input": {
+    "name": "greeting",
+    "kind": "prompt"
+   },
+   "expect": {
+    "ok": true,
+    "shelf_name": "greeting.prompt",
+    "address": "craft:greeting.prompt"
+   }
+  },
+  {
+   "name": "craft_name: shelf as a skill",
+   "kind": "craft_name",
+   "input": {
+    "name": "shelf",
+    "kind": "skill"
+   },
+   "expect": {
+    "ok": true,
+    "shelf_name": "shelf.skill",
+    "address": "craft:shelf.skill"
+   }
+  },
+  {
+   "name": "craft_name: lowercase refused",
+   "kind": "craft_name",
+   "input": {
+    "name": "Librarian",
+    "kind": "template"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a craft name is a short lowercase name: letters, digits, dashes, dots, underscores"
+   }
+  },
+  {
+   "name": "craft_name: empty refused",
+   "kind": "craft_name",
+   "input": {
+    "name": "",
+    "kind": "graph"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a craft name is a short lowercase name: letters, digits, dashes, dots, underscores"
+   }
+  },
+  {
+   "name": "craft_name: not a craft kind refused",
+   "kind": "craft_name",
+   "input": {
+    "name": "echo",
+    "kind": "tool"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a craft kind is one of template, prompt, skill, policy, graph, binding, golden \u2014 not 'tool'"
+   }
+  },
+  {
+   "name": "craft_name: already suffixed refused",
+   "kind": "craft_name",
+   "input": {
+    "name": "librarian.template",
+    "kind": "template"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a craft name is a short lowercase name: letters, digits, dashes, dots, underscores"
+   }
+  },
+  {
+   "name": "craft_name: a space refused",
+   "kind": "craft_name",
+   "input": {
+    "name": "a b",
+    "kind": "prompt"
+   },
+   "expect": {
+    "ok": false,
+    "error": "a craft name is a short lowercase name: letters, digits, dashes, dots, underscores"
+   }
+  },
+  {
+   "name": "craft_split: librarian.template",
+   "kind": "craft_split",
+   "input": {
+    "shelf_name": "librarian.template"
+   },
+   "expect": {
+    "craft": [
+     "librarian",
+     "template"
+    ]
+   }
+  },
+  {
+   "name": "craft_split: mind.v0.graph",
+   "kind": "craft_split",
+   "input": {
+    "shelf_name": "mind.v0.graph"
+   },
+   "expect": {
+    "craft": [
+     "mind.v0",
+     "graph"
+    ]
+   }
+  },
+  {
+   "name": "craft_split: weather",
+   "kind": "craft_split",
+   "input": {
+    "shelf_name": "weather"
+   },
+   "expect": {
+    "craft": null
+   }
+  },
+  {
+   "name": "craft_split: haiku",
+   "kind": "craft_split",
+   "input": {
+    "shelf_name": "haiku"
+   },
+   "expect": {
+    "craft": null
+   }
+  },
+  {
+   "name": "craft_split: crew.binding",
+   "kind": "craft_split",
+   "input": {
+    "shelf_name": "crew.binding"
+   },
+   "expect": {
+    "craft": [
+     "crew",
+     "binding"
+    ]
+   }
+  },
+  {
+   "name": "craft_split: x.policy",
+   "kind": "craft_split",
+   "input": {
+    "shelf_name": "x.policy"
+   },
+   "expect": {
+    "craft": [
+     "x",
+     "policy"
+    ]
+   }
+  },
+  {
+   "name": "craft_split: template",
+   "kind": "craft_split",
+   "input": {
+    "shelf_name": "template"
+   },
+   "expect": {
+    "craft": null
+   }
+  },
+  {
+   "name": "craft_manifest: a template reads whole",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "template",
+    "manifest": {
+     "format": "orreth-resident-template/1",
+     "name": "bob",
+     "graph": "mind.v0",
+     "kind": "agent"
+    }
+   },
+   "expect": {
+    "ok": true,
+    "reason": null
+   }
+  },
+  {
+   "name": "craft_manifest: a template of an unknown kind",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "template",
+    "manifest": {
+     "format": "orreth-resident-template/1",
+     "name": "bob",
+     "graph": "mind.v0",
+     "kind": "organ"
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "a template's kind is one of resident, firmware, agent \u2014 got 'organ'"
+   }
+  },
+  {
+   "name": "craft_manifest: a template without a graph",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "template",
+    "manifest": {
+     "format": "orreth-resident-template/1",
+     "name": "bob"
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "a template names its graph component (`graph`) \u2014 the hull's work node"
+   }
+  },
+  {
+   "name": "craft_manifest: a template with the wrong format",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "template",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "bob",
+     "graph": "mind.v0"
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "a template declares format 'orreth-resident-template/1' \u2014 got 'orreth-graph/1'"
+   }
+  },
+  {
+   "name": "craft_manifest: the shipped mind graph",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "mind.v0",
+     "version": "0.1.0",
+     "words": "the one metered thought \u2014 the body's recalled notes and the ask through the gateway, its tools at the door; today's think, as a component on the shelf (Phase 8 sp2)",
+     "entry": "think",
+     "nodes": [
+      {
+       "id": "think",
+       "kind": "think",
+       "words": "think it through the metered gateway with the seat words, the covenant slice and the tools the template declares"
+      }
+     ],
+     "edges": []
+    }
+   },
+   "expect": {
+    "ok": true,
+    "reason": null
+   }
+  },
+  {
+   "name": "craft_manifest: the shipped echo graph",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "echo.v0",
+     "version": "0.1.0",
+     "words": "the words back, every one \u2014 the body proven before the mind arrives; no gateway, no meter",
+     "entry": "echo",
+     "nodes": [
+      {
+       "id": "echo",
+       "kind": "echo",
+       "words": "repeat the ask's words; a question it cannot answer by nature earns one plain line more"
+      }
+     ],
+     "edges": []
+    }
+   },
+   "expect": {
+    "ok": true,
+    "reason": null
+   }
+  },
+  {
+   "name": "craft_manifest: a graph with no entry",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "g",
+     "nodes": [
+      {
+       "id": "a",
+       "kind": "think"
+      }
+     ],
+     "edges": []
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "a graph names its entry node \u2014 None is not a node"
+   }
+  },
+  {
+   "name": "craft_manifest: a graph whose node kind is unknown",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "g",
+     "entry": "a",
+     "nodes": [
+      {
+       "id": "a",
+       "kind": "fly"
+      }
+     ],
+     "edges": []
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "node 'a': a node's kind is one of think, echo \u2014 got 'fly'"
+   }
+  },
+  {
+   "name": "craft_manifest: a graph with two ways out",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "g",
+     "entry": "a",
+     "nodes": [
+      {
+       "id": "a",
+       "kind": "think"
+      },
+      {
+       "id": "b",
+       "kind": "echo"
+      },
+      {
+       "id": "c",
+       "kind": "echo"
+      }
+     ],
+     "edges": [
+      {
+       "from": "a",
+       "to": "b"
+      },
+      {
+       "from": "a",
+       "to": "c"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "node 'a' has two ways out \u2014 v0 runs one path; branching is the Workshop's"
+   }
+  },
+  {
+   "name": "craft_manifest: a graph that loops",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "g",
+     "entry": "a",
+     "nodes": [
+      {
+       "id": "a",
+       "kind": "think"
+      },
+      {
+       "id": "b",
+       "kind": "echo"
+      }
+     ],
+     "edges": [
+      {
+       "from": "a",
+       "to": "b"
+      },
+      {
+       "from": "b",
+       "to": "a"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "the graph loops at 'a' \u2014 v0 runs a line"
+   }
+  },
+  {
+   "name": "craft_manifest: a graph with a duplicate id",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "g",
+     "entry": "a",
+     "nodes": [
+      {
+       "id": "a",
+       "kind": "think"
+      },
+      {
+       "id": "a",
+       "kind": "echo"
+      }
+     ],
+     "edges": []
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "node ids are unique \u2014 'a' appears twice"
+   }
+  },
+  {
+   "name": "craft_manifest: a graph whose edge names a stranger",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "g",
+     "entry": "a",
+     "nodes": [
+      {
+       "id": "a",
+       "kind": "think"
+      }
+     ],
+     "edges": [
+      {
+       "from": "a",
+       "to": "z"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "an edge names two nodes \u2014 'a' \u2192 'z' does not"
+   }
+  },
+  {
+   "name": "craft_manifest: a two-node line",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "g",
+     "entry": "a",
+     "nodes": [
+      {
+       "id": "a",
+       "kind": "think",
+       "prompt": "greeting"
+      },
+      {
+       "id": "b",
+       "kind": "echo"
+      }
+     ],
+     "edges": [
+      {
+       "from": "a",
+       "to": "b"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": true,
+    "reason": null
+   }
+  },
+  {
+   "name": "craft_manifest: the shipped golden set",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "golden",
+    "manifest": {
+     "format": "orreth-golden/1",
+     "template": "librarian",
+     "cases": [
+      {
+       "ask": "Repeat exactly this word and nothing else: PELICAN",
+       "expect": [
+        "PELICAN"
+       ]
+      },
+      {
+       "ask": "In one sentence, who are you?",
+       "expect": [
+        "librarian"
+       ]
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": true,
+    "reason": null
+   }
+  },
+  {
+   "name": "craft_manifest: a golden set without cases",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "golden",
+    "manifest": {
+     "format": "orreth-golden/1",
+     "template": "bob",
+     "cases": []
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "a golden set is its cases \u2014 a non-empty list of {ask, expect}"
+   }
+  },
+  {
+   "name": "craft_manifest: a golden case that expects nothing",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "golden",
+    "manifest": {
+     "format": "orreth-golden/1",
+     "template": "bob",
+     "cases": [
+      {
+       "ask": "hi",
+       "expect": []
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "case 1 expects words (`expect`, a non-empty list)"
+   }
+  },
+  {
+   "name": "craft_manifest: a golden set naming no template",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "golden",
+    "manifest": {
+     "format": "orreth-golden/1",
+     "cases": [
+      {
+       "ask": "hi",
+       "expect": [
+        "hi"
+       ]
+      }
+     ]
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "a golden set names the template it proves (`template`)"
+   }
+  },
+  {
+   "name": "craft_manifest: the covenant policy",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "policy",
+    "manifest": {
+     "format": "orreth-covenant-policy/1",
+     "name": "the-orreth-covenant",
+     "version": "1.1.0",
+     "rules": [
+      "A keypair is a self, and a self survives the process \u2014 a new identity per run is a defect, never a feature.",
+      "Nothing grades its own yardstick \u2014 outcomes are recorded by another, never self-attested.",
+      "Joining is a governed request \u2014 no agent enters the world without loading this policy and passing the gate.",
+      "Refusal wears one face outward; governed gates teach inward.",
+      "The plane authorizes and meters; it never sees the prompt \u2014 and no mind thinks off-meter.",
+      "Canonical bytes are the contract \u2014 the same message is the same bytes everywhere.",
+      "One world, one picture \u2014 every view derives from the same committed truth.",
+      "Lived time is monotone \u2014 backdated memory is refused.",
+      "The core is sacred \u2014 it changes only with the human's explicit word.",
+      "Provenance or nothing \u2014 every artifact names its author.",
+      "The human can always stop what the machine manages \u2014 cancellation is a first-class recorded act.",
+      "Every ask wears its journey, and every schedule lives in its runner \u2014 nothing runs unseen.",
+      "Every word aimed at a human is plain \u2014 complete, in the human's own terms; a machinery name only beside its plain words, never instead of them."
+     ]
+    }
+   },
+   "expect": {
+    "ok": true,
+    "reason": null
+   }
+  },
+  {
+   "name": "craft_manifest: a policy with no rules",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "policy",
+    "manifest": {
+     "format": "orreth-covenant-policy/1",
+     "name": "p",
+     "version": "1",
+     "rules": []
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "a policy is its rules \u2014 a non-empty list of plain sentences"
+   }
+  },
+  {
+   "name": "craft_manifest: the crew binding",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "binding",
+    "manifest": {
+     "format": "orreth-workspace-binding/1",
+     "pull": "crew",
+     "name": "crew",
+     "version": "0.1.0",
+     "nature": "answers about the crew from the cards \u2014 who stands here and what each wears",
+     "prompt": "You are bound to the CREW workspace: the cards of every body in this world \u2014 residents and firmware \u2014 their kind, self, lives, the policy worn, declared capabilities, and both sides (asks served; the duties they run). Kernel-required duties are visible, never editable: say so in plain words if asked to change one.",
+     "skills": [
+      "crew:read"
+     ],
+     "policy": "covenant-policy.v1"
+    }
+   },
+   "expect": {
+    "ok": true,
+    "reason": null
+   }
+  },
+  {
+   "name": "craft_manifest: a binding without a pull",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "binding",
+    "manifest": {
+     "format": "orreth-workspace-binding/1",
+     "name": "x"
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "a binding names its pull"
+   }
+  },
+  {
+   "name": "craft_manifest: a prompt",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "prompt",
+    "manifest": {
+     "format": "orreth-prompt/1",
+     "name": "greeting",
+     "text": "Greet the human by name."
+    }
+   },
+   "expect": {
+    "ok": true,
+    "reason": null
+   }
+  },
+  {
+   "name": "craft_manifest: a prompt with no text",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "prompt",
+    "manifest": {
+     "format": "orreth-prompt/1",
+     "name": "greeting"
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "a prompt is its text (`text`)"
+   }
+  },
+  {
+   "name": "craft_manifest: a skill",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "skill",
+    "manifest": {
+     "format": "orreth-skill/1",
+     "name": "shelf",
+     "words": "how the shelf is read",
+     "text": "Say ..."
+    }
+   },
+   "expect": {
+    "ok": true,
+    "reason": null
+   }
+  },
+  {
+   "name": "craft_manifest: a skill with no words",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "skill",
+    "manifest": {
+     "format": "orreth-skill/1",
+     "name": "shelf",
+     "text": "Say ..."
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "a skill has a words \u2014 what it is, in one line"
+   }
+  },
+  {
+   "name": "craft_manifest: an empty declaration",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "template",
+    "manifest": {}
+   },
+   "expect": {
+    "ok": false,
+    "reason": "a template is a non-empty object \u2014 its declaration"
+   }
+  },
+  {
+   "name": "craft_manifest: a kind that is no craft",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "tool",
+    "manifest": {
+     "format": "x"
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "a craft kind is one of template, prompt, skill, policy, graph, binding, golden \u2014 not 'tool'"
+   }
+  },
+  {
+   "name": "graph_path: mind.v0",
+   "kind": "graph_path",
+   "input": {
+    "graph": {
+     "format": "orreth-graph/1",
+     "name": "mind.v0",
+     "version": "0.1.0",
+     "words": "the one metered thought \u2014 the body's recalled notes and the ask through the gateway, its tools at the door; today's think, as a component on the shelf (Phase 8 sp2)",
+     "entry": "think",
+     "nodes": [
+      {
+       "id": "think",
+       "kind": "think",
+       "words": "think it through the metered gateway with the seat words, the covenant slice and the tools the template declares"
+      }
+     ],
+     "edges": []
+    }
+   },
+   "expect": {
+    "path": [
+     "think"
+    ]
+   }
+  },
+  {
+   "name": "graph_path: echo.v0",
+   "kind": "graph_path",
+   "input": {
+    "graph": {
+     "format": "orreth-graph/1",
+     "name": "echo.v0",
+     "version": "0.1.0",
+     "words": "the words back, every one \u2014 the body proven before the mind arrives; no gateway, no meter",
+     "entry": "echo",
+     "nodes": [
+      {
+       "id": "echo",
+       "kind": "echo",
+       "words": "repeat the ask's words; a question it cannot answer by nature earns one plain line more"
+      }
+     ],
+     "edges": []
+    }
+   },
+   "expect": {
+    "path": [
+     "echo"
+    ]
+   }
+  },
+  {
+   "name": "graph_path: a two-node line",
+   "kind": "graph_path",
+   "input": {
+    "graph": {
+     "format": "orreth-graph/1",
+     "name": "g",
+     "entry": "a",
+     "nodes": [
+      {
+       "id": "a",
+       "kind": "think",
+       "prompt": "greeting"
+      },
+      {
+       "id": "b",
+       "kind": "echo"
+      }
+     ],
+     "edges": [
+      {
+       "from": "a",
+       "to": "b"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "path": [
+     "a",
+     "b"
+    ]
+   }
+  },
+  {
+   "name": "hull_edge: marker objective under None",
+   "kind": "hull_edge",
+   "input": {
+    "marker_kind": "objective",
+    "parent_kind": null
+   },
+   "expect": {
+    "edge": "chat",
+    "words": "routed to the chat edge \u2014 a human's ask"
+   }
+  },
+  {
+   "name": "hull_edge: marker thought under None",
+   "kind": "hull_edge",
+   "input": {
+    "marker_kind": "thought",
+    "parent_kind": null
+   },
+   "expect": {
+    "edge": "chat",
+    "words": "routed to the chat edge \u2014 a human's ask"
+   }
+  },
+  {
+   "name": "hull_edge: marker thought under objective",
+   "kind": "hull_edge",
+   "input": {
+    "marker_kind": "thought",
+    "parent_kind": "objective"
+   },
+   "expect": {
+    "edge": "chat",
+    "words": "routed to the chat edge \u2014 a human's ask"
+   }
+  },
+  {
+   "name": "hull_edge: marker objective under intention",
+   "kind": "hull_edge",
+   "input": {
+    "marker_kind": "objective",
+    "parent_kind": "intention"
+   },
+   "expect": {
+    "edge": "work",
+    "words": "routed to the work edge \u2014 assigned work under an intention"
+   }
+  },
+  {
+   "name": "hull_edge: marker objective under objective",
+   "kind": "hull_edge",
+   "input": {
+    "marker_kind": "objective",
+    "parent_kind": "objective"
+   },
+   "expect": {
+    "edge": "work",
+    "words": "routed to the work edge \u2014 assigned work under an intention"
+   }
+  },
+  {
+   "name": "hull_edge: marker objective under thought",
+   "kind": "hull_edge",
+   "input": {
+    "marker_kind": "objective",
+    "parent_kind": "thought"
+   },
+   "expect": {
+    "edge": "work",
+    "words": "routed to the work edge \u2014 assigned work under an intention"
+   }
+  },
+  {
+   "name": "hull_edge: marker objective under action",
+   "kind": "hull_edge",
+   "input": {
+    "marker_kind": "objective",
+    "parent_kind": "action"
+   },
+   "expect": {
+    "edge": "work",
+    "words": "routed to the work edge \u2014 assigned work under an intention"
+   }
+  },
+  {
+   "name": "hull_edge: marker objective under observation",
+   "kind": "hull_edge",
+   "input": {
+    "marker_kind": "objective",
+    "parent_kind": "observation"
+   },
+   "expect": {
+    "edge": "work",
+    "words": "routed to the work edge \u2014 assigned work under an intention"
+   }
+  },
+  {
+   "name": "hull_edge: marker objective under watch-red",
+   "kind": "hull_edge",
+   "input": {
+    "marker_kind": "objective",
+    "parent_kind": "watch-red"
+   },
+   "expect": {
+    "edge": "event",
+    "words": "routed to the event edge \u2014 a marker of kind watch-red asked for a response"
+   }
+  },
+  {
+   "name": "hull_edge: marker objective under improvement",
+   "kind": "hull_edge",
+   "input": {
+    "marker_kind": "objective",
+    "parent_kind": "improvement"
+   },
+   "expect": {
+    "edge": "event",
+    "words": "routed to the event edge \u2014 a marker of kind improvement asked for a response"
+   }
+  },
+  {
+   "name": "hull_edge: marker objective under cost-anomaly",
+   "kind": "hull_edge",
+   "input": {
+    "marker_kind": "objective",
+    "parent_kind": "cost-anomaly"
+   },
+   "expect": {
+    "edge": "event",
+    "words": "routed to the event edge \u2014 a marker of kind cost-anomaly asked for a response"
+   }
+  },
+  {
+   "name": "hull_edge: marker None under None",
+   "kind": "hull_edge",
+   "input": {
+    "marker_kind": null,
+    "parent_kind": null
+   },
+   "expect": {
+    "edge": "chat",
+    "words": "routed to the chat edge \u2014 a human's ask"
+   }
+  },
+  {
+   "name": "source_form: a locator by name",
+   "kind": "source_form",
+   "input": {
+    "manifest": {
+     "locator": "SPINE_PG"
+    }
+   },
+   "expect": {
+    "ok": true,
+    "form": "locator",
+    "reason": null
+   }
+  },
+  {
+   "name": "source_form: a repo'd origin",
+   "kind": "source_form",
+   "input": {
+    "manifest": {
+     "repo": "https://github.com/x/bob",
+     "commit": "a1b2c3d4e5f6",
+     "entry": "bob.graph:build"
+    }
+   },
+   "expect": {
+    "ok": true,
+    "form": "repo",
+    "reason": null
+   }
+  },
+  {
+   "name": "source_form: a repo without a commit",
+   "kind": "source_form",
+   "input": {
+    "manifest": {
+     "repo": "https://github.com/x/bob",
+     "entry": "bob"
+    }
+   },
+   "expect": {
+    "ok": false,
+    "form": "repo",
+    "reason": "a repo'd source pins a commit \u2014 7 to 64 hex characters"
+   }
+  },
+  {
+   "name": "source_form: a repo with a short commit",
+   "kind": "source_form",
+   "input": {
+    "manifest": {
+     "repo": "r",
+     "commit": "abc",
+     "entry": "e"
+    }
+   },
+   "expect": {
+    "ok": false,
+    "form": "repo",
+    "reason": "a repo'd source pins a commit \u2014 7 to 64 hex characters"
+   }
+  },
+  {
+   "name": "source_form: a repo without an entry",
+   "kind": "source_form",
+   "input": {
+    "manifest": {
+     "repo": "r",
+     "commit": "a1b2c3d4e"
+    }
+   },
+   "expect": {
+    "ok": false,
+    "form": "repo",
+    "reason": "a repo'd source names its entry point (`entry`: the module or file the graph is built from)"
+   }
+  },
+  {
+   "name": "source_form: nothing named",
+   "kind": "source_form",
+   "input": {
+    "manifest": {
+     "what": "?"
+    }
+   },
+   "expect": {
+    "ok": false,
+    "form": null,
+    "reason": "a source names a locator by NAME, or a repo with its commit and entry point"
+   }
+  },
+  {
+   "name": "source_form: not an object",
+   "kind": "source_form",
+   "input": {
+    "manifest": []
+   },
+   "expect": {
+    "ok": false,
+    "form": null,
+    "reason": "a source is a non-empty object"
+   }
+  },
+  {
+   "name": "cut_demand: a prompt in dev",
+   "kind": "cut_demand",
+   "input": {
+    "kind": "prompt",
+    "manifest": {
+     "format": "orreth-prompt/1",
+     "text": "x"
+    },
+    "mode": "dev"
+   },
+   "expect": {
+    "ok": true,
+    "level": "L2",
+    "reason": null
+   }
+  },
+  {
+   "name": "cut_demand: a graph in prod",
+   "kind": "cut_demand",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "mind.v0",
+     "version": "0.1.0",
+     "words": "the one metered thought \u2014 the body's recalled notes and the ask through the gateway, its tools at the door; today's think, as a component on the shelf (Phase 8 sp2)",
+     "entry": "think",
+     "nodes": [
+      {
+       "id": "think",
+       "kind": "think",
+       "words": "think it through the metered gateway with the seat words, the covenant slice and the tools the template declares"
+      }
+     ],
+     "edges": []
+    },
+    "mode": "prod"
+   },
+   "expect": {
+    "ok": true,
+    "level": "L2",
+    "reason": null
+   }
+  },
+  {
+   "name": "cut_demand: a resident template",
+   "kind": "cut_demand",
+   "input": {
+    "kind": "template",
+    "manifest": {
+     "format": "orreth-resident-template/1",
+     "name": "bob",
+     "graph": "mind.v0",
+     "kind": "resident"
+    },
+    "mode": "dev"
+   },
+   "expect": {
+    "ok": true,
+    "level": "L3-code",
+    "reason": null
+   }
+  },
+  {
+   "name": "cut_demand: a template with no kind is a resident's",
+   "kind": "cut_demand",
+   "input": {
+    "kind": "template",
+    "manifest": {
+     "format": "orreth-resident-template/1",
+     "name": "b",
+     "graph": "mind.v0"
+    },
+    "mode": "prod"
+   },
+   "expect": {
+    "ok": true,
+    "level": "L3-code",
+    "reason": null
+   }
+  },
+  {
+   "name": "cut_demand: a firmware template in dev",
+   "kind": "cut_demand",
+   "input": {
+    "kind": "template",
+    "manifest": {
+     "format": "orreth-resident-template/1",
+     "name": "bob",
+     "graph": "mind.v0",
+     "kind": "firmware"
+    },
+    "mode": "dev"
+   },
+   "expect": {
+    "ok": true,
+    "level": "L2",
+    "reason": null
+   }
+  },
+  {
+   "name": "cut_demand: a firmware template in prod",
+   "kind": "cut_demand",
+   "input": {
+    "kind": "template",
+    "manifest": {
+     "format": "orreth-resident-template/1",
+     "name": "bob",
+     "graph": "mind.v0",
+     "kind": "firmware"
+    },
+    "mode": "prod"
+   },
+   "expect": {
+    "ok": false,
+    "level": null,
+    "reason": "firmware is cut only in a dev universe \u2014 it reaches prod as a release"
+   }
+  },
+  {
+   "name": "cut_demand: an agent template",
+   "kind": "cut_demand",
+   "input": {
+    "kind": "template",
+    "manifest": {
+     "format": "orreth-resident-template/1",
+     "name": "bob",
+     "graph": "mind.v0",
+     "kind": "agent"
+    },
+    "mode": "dev"
+   },
+   "expect": {
+    "ok": false,
+    "level": null,
+    "reason": "an agent's cut goes through the Experiment \u2014 two arms, the grader's verdict, the stamped promotion (spoonful 4)"
+   }
+  },
+  {
+   "name": "cut_demand: a kind that is no craft",
+   "kind": "cut_demand",
+   "input": {
+    "kind": "tool",
+    "manifest": {},
+    "mode": "dev"
+   },
+   "expect": {
+    "ok": false,
+    "level": null,
+    "reason": "a craft kind is one of template, prompt, skill, policy, graph, binding, golden \u2014 not 'tool'"
+   }
+  },
+  {
+   "name": "wear_of: the librarian with its golden set",
+   "kind": "wear_of",
+   "input": {
+    "parts": {
+     "template": {
+      "name": "librarian",
+      "hash": "sha256:4834945f7bf91f82efc5cf881d902ec1cfa58f1be01cb35fe602b8ad4620c552"
+     },
+     "binding": null,
+     "policy": {
+      "name": "the-orreth-covenant",
+      "hash": "sha256:1162002ad8d5f6c9eb1dc527689b5b26e7c3ce8d9d5c81d74d11354497cf1b74"
+     },
+     "graph": {
+      "name": "mind.v0",
+      "hash": "sha256:faf714076852a677275082392d47cd85e8f91f4cc4c978cd720bdeeb136e2181"
+     },
+     "golden": {
+      "name": "librarian",
+      "hash": "sha256:56567f1559670bdddf840725739b7f42134c96c803454b14fef16531a5c6d1a5"
+     }
+    }
+   },
+   "expect": {
+    "ok": true,
+    "worn": [
+     {
+      "component": "librarian.template",
+      "kind": "template",
+      "hash": "sha256:4834945f7bf91f82efc5cf881d902ec1cfa58f1be01cb35fe602b8ad4620c552"
+     },
+     {
+      "component": "the-orreth-covenant.policy",
+      "kind": "policy",
+      "hash": "sha256:1162002ad8d5f6c9eb1dc527689b5b26e7c3ce8d9d5c81d74d11354497cf1b74"
+     },
+     {
+      "component": "mind.v0.graph",
+      "kind": "graph",
+      "hash": "sha256:faf714076852a677275082392d47cd85e8f91f4cc4c978cd720bdeeb136e2181"
+     },
+     {
+      "component": "librarian.golden",
+      "kind": "golden",
+      "hash": "sha256:56567f1559670bdddf840725739b7f42134c96c803454b14fef16531a5c6d1a5"
+     }
+    ]
+   }
+  },
+  {
+   "name": "wear_of: a workspace seat with its binding",
+   "kind": "wear_of",
+   "input": {
+    "parts": {
+     "template": {
+      "name": "workspace",
+      "hash": "sha256:aa"
+     },
+     "binding": {
+      "name": "crew",
+      "hash": "sha256:bb"
+     },
+     "policy": {
+      "name": "the-orreth-covenant",
+      "hash": "sha256:cc"
+     },
+     "graph": {
+      "name": "mind.v0",
+      "hash": "sha256:dd"
+     }
+    }
+   },
+   "expect": {
+    "ok": true,
+    "worn": [
+     {
+      "component": "workspace.template",
+      "kind": "template",
+      "hash": "sha256:aa"
+     },
+     {
+      "component": "crew.binding",
+      "kind": "binding",
+      "hash": "sha256:bb"
+     },
+     {
+      "component": "the-orreth-covenant.policy",
+      "kind": "policy",
+      "hash": "sha256:cc"
+     },
+     {
+      "component": "mind.v0.graph",
+      "kind": "graph",
+      "hash": "sha256:dd"
+     }
+    ]
+   }
+  },
+  {
+   "name": "wear_of: the echo, bare",
+   "kind": "wear_of",
+   "input": {
+    "parts": {
+     "template": {
+      "name": "echo",
+      "hash": "sha256:ee"
+     },
+     "policy": {
+      "name": "the-orreth-covenant",
+      "hash": "sha256:cc"
+     }
+    }
+   },
+   "expect": {
+    "ok": true,
+    "worn": [
+     {
+      "component": "echo.template",
+      "kind": "template",
+      "hash": "sha256:ee"
+     },
+     {
+      "component": "the-orreth-covenant.policy",
+      "kind": "policy",
+      "hash": "sha256:cc"
+     }
+    ]
+   }
+  },
+  {
+   "name": "wear_of: no policy refused",
+   "kind": "wear_of",
+   "input": {
+    "parts": {
+     "template": {
+      "name": "x",
+      "hash": "sha256:ff"
+     }
+    }
+   },
+   "expect": {
+    "ok": false,
+    "error": "a body wears a policy \u2014 none named"
+   }
+  },
+  {
+   "name": "golden_document: the harness's bare list wrapped",
+   "kind": "golden_document",
+   "input": {
+    "template": "librarian",
+    "cases": [
+     {
+      "ask": "Repeat exactly this word and nothing else: PELICAN",
+      "expect": [
+       "PELICAN"
+      ]
+     },
+     {
+      "ask": "In one sentence, who are you?",
+      "expect": [
+       "librarian"
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "document": {
+     "format": "orreth-golden/1",
+     "template": "librarian",
+     "cases": [
+      {
+       "ask": "Repeat exactly this word and nothing else: PELICAN",
+       "expect": [
+        "PELICAN"
+       ]
+      },
+      {
+       "ask": "In one sentence, who are you?",
+       "expect": [
+        "librarian"
+       ]
+      }
+     ]
+    },
+    "hash": "sha256:56567f1559670bdddf840725739b7f42134c96c803454b14fef16531a5c6d1a5"
+   }
+  },
+  {
+   "name": "cut_words: greeting register",
+   "kind": "cut_words",
+   "input": {
+    "name": "greeting",
+    "kind": "prompt",
+    "verb": "register",
+    "version": 1
+   },
+   "expect": {
+    "words": "cutting the greeting prompt \u2014 version 1 onto the shelf"
+   }
+  },
+  {
+   "name": "cut_words: librarian version",
+   "kind": "cut_words",
+   "input": {
+    "name": "librarian",
+    "kind": "template",
+    "verb": "version",
+    "version": 3
+   },
+   "expect": {
+    "words": "cutting the librarian template \u2014 version 3 onto the shelf"
+   }
+  },
+  {
+   "name": "worn_words: librarian.template",
+   "kind": "worn_words",
+   "input": {
+    "component": "librarian.template",
+    "wearers": [
+     {
+      "body": "librarian",
+      "life": 4,
+      "version": 1
+     }
+    ]
+   },
+   "expect": {
+    "words": "librarian.template is worn by 1 body: librarian (life 4, v1)"
+   }
+  },
+  {
+   "name": "worn_words: mind.v0.graph",
+   "kind": "worn_words",
+   "input": {
+    "component": "mind.v0.graph",
+    "wearers": [
+     {
+      "body": "librarian",
+      "life": 4,
+      "version": 1
+     },
+     {
+      "body": "planner",
+      "life": 2,
+      "version": null
+     }
+    ]
+   },
+   "expect": {
+    "words": "mind.v0.graph is worn by 2 bodies: librarian (life 4, v1), planner (life 2, off the shelf)"
+   }
+  },
+  {
+   "name": "worn_words: x.prompt",
+   "kind": "worn_words",
+   "input": {
+    "component": "x.prompt",
+    "wearers": []
+   },
+   "expect": {
+    "words": "x.prompt is worn by no body now"
+   }
+  }
+ ]
+}

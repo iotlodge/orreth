@@ -507,6 +507,12 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
             elif held["tool"] == "level.open":           # Phase 8 sp1: a floor or room opened on the person's word
                 from . import levels
                 result = levels.open_in(conn, held["args"], by=asker, ask=ask_id, marker=row[3])
+            elif held["tool"] == "craft.cut":            # Phase 8 sp2: THE CUT — a draft lands on the shelf on the person's word
+                from . import crafts
+                made = crafts.cut(conn, held["args"]["person"], held["args"]["draft_id"], by=asker, ask=ask_id,
+                                  parent_marker=row[3], confirmed_by=by)
+                result = (f"the {made['name']} is on the shelf as version {made['version']} ({made['state']}) — "
+                          f"pin {made['manifest_hash'][7:19]}…; the draft is spent")
             elif held["tool"].startswith("mind."):        # P6.5 sp3: the Stable's acts — register · assign ·
                 from . import stable                     # unassign · refill · re-pin; the keeper proposed, the human cut
                 result = stable.settle(conn, held, asker=asker, ask_id=ask_id, parent_marker=row[3],

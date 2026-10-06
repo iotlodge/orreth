@@ -354,7 +354,7 @@ naturally" — it now explicitly is):
 
 - MITL toggle semantics fine detail + factory governance depth — design
   lands with the MITL build phase, inside the resolved on-behalf-of law.
-- Template schema v0 (the exact declaration shape) — lands with the first
+- ~~Template schema v0 (the exact declaration shape)~~ — **ANSWERED 2026-10-05 (0010, Phase 8 sp2 THE SHELF WIDENED):** a template is `orreth-resident-template/1` naming its body, its `graph` component and its kind (resident · firmware · agent); the graph is `orreth-graph/1` — declaration first: an `entry`, `nodes` of `{id, kind: think | echo, prompt?, skill?, tools?, mind?}`, `edges` of `{from, to}`, one path from the entry (branching is the Workshop's authoring, spoonful 3); both on the one shelf as crafts (fixture `crafts-v0.json`). Was: lands with the first
   build spoonful, through the factories.
 - ~~Whether the scheduler is a kernel organ or a duty of a standing
   resident~~ — **DECIDED and BUILT (P4 sp5): a kernel organ** —

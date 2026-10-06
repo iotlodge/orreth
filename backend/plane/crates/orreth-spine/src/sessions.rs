@@ -374,6 +374,8 @@ pub async fn services_listing(
             &[&scope, &kind],
         )
         .await?;
+    // Phase 8 sp2: "in use by N" — the wear table's count on every craft row
+    let worn = crate::crafts_live::wear_counts(g.client(), scope).await.unwrap_or(json!({}));
     Ok(rows
         .iter()
         .map(|r| {
@@ -382,7 +384,7 @@ pub async fn services_listing(
             let c = card(&prof, &here);
             let state: String = r.get(9);
             let checked: Option<SystemTime> = r.get(15);
-            json!({
+            let mut v = json!({
                 "name": r.get::<_, String>(0), "kind": r.get::<_, String>(2), "did": r.get::<_, String>(3),
                 "manifest": json_text(r.get::<_, Option<String>>(4).as_deref()),
                 "manifest_hash": r.get::<_, String>(5), "version": r.get::<_, i32>(6),
@@ -395,7 +397,14 @@ pub async fn services_listing(
                 "secrets": c["secrets"].clone(),
                 "retirable": ladder_step(Some(&state), "retire").ok,
                 "restorable": ladder_step(Some(&state), "restore").ok,
-            })
+            });
+            let name: String = r.get(0);
+            let kind: String = r.get(2);
+            if let Some((bare, _k)) = crate::crafts::split_name(&name).filter(|_| crate::crafts::is_craft(&kind)) {
+                v["craft"] = json!(bare);
+                v["worn_by"] = worn.get(&name).cloned().unwrap_or(json!(0));
+            }
+            v
         })
         .collect())
 }

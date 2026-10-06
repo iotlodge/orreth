@@ -263,6 +263,7 @@ OPEN_POST = ("/seat", "/enroll/confirm", "/seam", "/join", "/join/prove", "/join
 LEASE_POST = ("/delta",)                              # P7 sp8 row 3b: a body's own words wear its LEASE (a seat with the role `body`)
 GOVERN_POST = ("/world/rehome", "/bodies/restart",
                "/levels/open",                        # Phase 8 sp1: a floor or room opens on a governing seat's word
+               "/drafts/cut",                         # Phase 8 sp2: THE CUT — a draft onto the shelf, the gate (a draft itself is the seat's own write)
                "/parked/advance",                     # re-base sp1: advancing past a poison is an operator's explicit decision
                "/services", "/services/version", "/services/retire", "/services/restore", "/services/mcp",
                "/minds", "/minds/assign", "/minds/unassign", "/minds/refill", "/minds/retire", "/minds/restore")

@@ -52,9 +52,11 @@ def ensure_schema(conn) -> None:
         cur.execute("ALTER TABLE spine_harness_runs ADD COLUMN IF NOT EXISTS arm text")   # P6.5 sp3: the mind this run rode
 
 
-def golden(template: str) -> list[dict]:
-    p = GOLDEN / f"{template}.v0.json"
-    return json.loads(p.read_text()) if p.exists() else []
+def golden(template: str, conn=None) -> list[dict]:
+    """A template's golden cases — Phase 8 sp2: the GOLDEN COMPONENT on the shelf first (a craft
+    beside the template), the spine's file as the fallback (a bare list, or the declaration)."""
+    from . import crafts
+    return crafts.golden_for(conn, template)
 
 
 def verdict(cases: list[dict], replies: list[str]) -> dict:
@@ -99,7 +101,7 @@ def run(conn, body, cases: list[dict] | None = None,
     _ground(conn)
     ensure_schema(conn)
     outbox.ensure_schema(conn)
-    cases = cases if cases is not None else golden(body.template["name"])
+    cases = cases if cases is not None else golden(body.template["name"], conn)
     body._serve_conn = conn
     body._current_ask = None
     details, passed = [], 0

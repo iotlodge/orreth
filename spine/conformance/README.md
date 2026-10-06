@@ -329,3 +329,19 @@ the same files, unchanged — before any module earns the word "ported".
     the chain `[the kernel]` for the kernel's or the manifest's word, `[person, the kernel]`
     for a person's; and the act's words (`floor ops of universe dev is open (dev)`).
   - `schema_version` 5 · `schema_tables` 41 (schema-v0) — `spine_levels` joins at Phase 8 sp1.
+  - **Phase 8 sp2, THE SHELF WIDENED (`crafts-v0.json`, contract `orreth.crafts/1`)** — the
+    craft kinds on the one shelf: `craft_name` (`<name>.<kind>` and the address `craft:<name>.<kind>`,
+    the refusals in words) · `craft_split` · `craft_manifest` (one law per kind: a template names
+    its body and its graph and wears a known kind; a binding its pull and name; a policy its version
+    and rules; a golden set its template and non-empty cases with words expected; a prompt its text;
+    a skill its name, words and text; a graph as below) · `graph_path` (the declaration v0 —
+    `{format: orreth-graph/1, entry, nodes: [{id, kind: think | echo, prompt?, skill?, tools?,
+    mind?}], edges: [{from, to}]}` — runs ONE path from the entry; two ways out, a loop, a
+    duplicate id or an edge naming a stranger refuse) · `hull_edge` (chat · work · event read off the
+    ask's marker: a thought or a root is chat; a parent of a structural kind is work; any other
+    parent is an event — with the journey's words) · `source_form` (a locator by NAME, or a repo'd
+    origin `{repo, commit (7–64 hex), entry}`) · `cut_demand` (L2 for every craft; a resident's
+    template L3-code; firmware refused in a prod universe; an agent's template refused until the
+    Experiment) · `wear_of` (the rows a body wears at its join: template · binding · policy ·
+    graph · golden, each by the shelf's pin) · `golden_document` · `cut_words` · `worn_words`.
+  - `schema_version` 6 · `schema_tables` 43 (schema-v0) — `spine_wear` and `spine_drafts` join at Phase 8 sp2.

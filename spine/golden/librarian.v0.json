@@ -1,14 +1,18 @@
-[
-  {
-    "ask": "Repeat exactly this word and nothing else: PELICAN",
-    "expect": [
-      "PELICAN"
-    ]
-  },
-  {
-    "ask": "In one sentence, who are you?",
-    "expect": [
-      "librarian"
-    ]
-  }
-]
+{
+  "format": "orreth-golden/1",
+  "template": "librarian",
+  "cases": [
+    {
+      "ask": "Repeat exactly this word and nothing else: PELICAN",
+      "expect": [
+        "PELICAN"
+      ]
+    },
+    {
+      "ask": "In one sentence, who are you?",
+      "expect": [
+        "librarian"
+      ]
+    }
+  ]
+}

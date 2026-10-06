@@ -1,0 +1,11 @@
+{
+  "format": "orreth-graph/1",
+  "name": "echo.v0",
+  "version": "0.1.0",
+  "words": "the words back, every one — the body proven before the mind arrives; no gateway, no meter",
+  "entry": "echo",
+  "nodes": [
+    {"id": "echo", "kind": "echo", "words": "repeat the ask's words; a question it cannot answer by nature earns one plain line more"}
+  ],
+  "edges": []
+}

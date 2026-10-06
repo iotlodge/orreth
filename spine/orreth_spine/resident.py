@@ -11,6 +11,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: lock 4's last poll — a body's JOIN is a fact (orreth.body.joined.v1), so the roster follows the feed · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — schema 4: an ask's resent_at (W91 THE BENCH SWEEP) · 2026-10-02
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: a body's own scope path (`scope`), its join and facts wearing it, the crew read within the universe, the seat words naming the level · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp2 THE SHELF WIDENED: THE HULL — hear → recall → route → chat · work · event → the work node, the template's `graph` component finally read; the wear rows at the join · 2026-10-05
 """The resident body v0 (canon 0004): one governed body for every mind.
 
 Born from a versioned TEMPLATE artifact; the SAME identity in every life
@@ -23,6 +24,17 @@ and only then, acknowledges the delivery (the ACK law).
 The mind here is deliberately small — an echo that proves the FULL-reply
 law (every word of the ask comes back verbatim inside the answer). The
 LLM arrives in the next spoonful; the body's laws never change.
+
+THE HULL (Phase 8 sp2, canon 0010 lock 6): the body's fixed graph is
+hear → recall → ROUTE → one of three edges — CHAT (a human's ask) · WORK
+(assigned work under an intention) · EVENT (a marker dispatched by interest)
+— into the WORK NODE, which runs the template's `graph` component from the
+shelf (`mind.v0` = the metered think · `echo.v0` = the echo), node by node
+along its one path. The kernel's laws live in the hull — the seat words, the
+covenant slice, the metered gateway, the checkpoint per hop, the stop at a
+safe boundary — never in the agent's graph. At its join the body writes what
+it WEARS (its template · binding · policy · graph · golden, each by the
+shelf's own pin) into the wear table: "in use by N", the blast radius.
 """
 from __future__ import annotations
 
@@ -203,6 +215,7 @@ class _State(TypedDict):
     notes: list
     hold: dict | None
     read: list          # the DIDs whose results this mind read (the chain)
+    edge: str           # Phase 8 sp2: which of the hull's edges this ask took — chat · work · event
 
 
 def ensure_schema(conn) -> None:
@@ -359,7 +372,8 @@ class Resident:
         pol = json.loads(Path(path).read_bytes())
         self.policy = {"version": pol["version"],
                        "hash": ev.content_hash(pol),
-                       "rules": len(pol.get("rules", []))}
+                       "rules": len(pol.get("rules", [])),
+                       "name": str(pol.get("name") or "covenant-policy")}   # Phase 8 sp2: the craft it wears
         return self.policy
 
     def join(self, conn) -> dict:
@@ -379,8 +393,10 @@ class Resident:
         if not ok:
             _placement.refuse(conn, self, self.placement, ground, reasons)
             raise PlacementRefused(self.name, reasons)
-        from . import body as _body
+        from . import body as _body, crafts
         outbox.ensure_schema(conn)
+        crafts.ensure_schema(conn)
+        worn = self.worn(conn)                      # Phase 8 sp2: what this life is made of, by the shelf's pins
         with conn.transaction():
             cur = conn.cursor()
             cur.execute("SELECT count(*) FROM spine_joins WHERE did = %s",
@@ -406,6 +422,9 @@ class Resident:
             # the roster follows the feed, never a timer (lock 4's last poll)
             e = _body.joined_fact(self.name, self.identity.did, self.kind, life, self.nature, scope=self.scope)
             outbox.add_row(cur, ev.encode(e), e["message_id"])
+            # Phase 8 sp2: THE WEAR TABLE — one row per component this life wears, the previous
+            # life's rows closed, in the join's own transaction ("in use by N" follows the roster)
+            crafts.record_wear(cur, scope=self.scope, did=self.identity.did, body=self.name, life=life, worn=worn)
         from . import scheduler                  # the role schedules the
         for sch in self.template.get("schedules", []):   # template declares are
             scheduler.declared(conn, self.name, "role", sch["text"],   # registered
@@ -413,6 +432,32 @@ class Resident:
         return {"did": self.identity.did, "life": life,
                 "policy_version": self.policy["version"],
                 "placement": dict(self.placement)}
+
+    def worn(self, conn) -> list[dict]:
+        """The components this body is made of (Phase 8 sp2): its template, its binding, its
+        policy, its graph and its golden set — each named with the content hash the shelf pins,
+        so the wear row finds its version by hash (None = worn off the shelf, said honestly)."""
+        from . import crafts
+        parts = {"template": {"name": self.template["name"], "hash": self.template_hash},
+                 "policy": {"name": self.policy["name"], "hash": self.policy["hash"]}}
+        if self.binding:
+            parts["binding"] = {"name": self.binding["name"], "hash": ev.content_hash(self.binding)}
+        g = self.graph_declaration(conn)
+        if g:
+            parts["graph"] = {"name": g["name"], "hash": ev.content_hash(g)}
+        try:
+            gold = crafts.get(conn, self.template["name"], "golden")
+        except Exception:                           # noqa: BLE001 — a ground without the shelf yet
+            gold = None
+        if gold and gold["state"] != "retired":
+            parts["golden"] = {"name": self.template["name"], "hash": gold["manifest_hash"]}
+        return crafts.wear_of(parts)
+
+    def graph_declaration(self, conn=None) -> dict | None:
+        """The template's `graph` component — the shelf first, the spine's folder as the fallback
+        (Phase 8 sp2: finally read); None when neither has it (the work node says so)."""
+        from . import crafts
+        return crafts.graph_for(conn if conn is not None else self._serve_conn, self.template)
 
     # ---- the mind (small, real) ----------------------------------------------
 
@@ -602,7 +647,53 @@ class Resident:
                              + ", ".join(names.get(d, d[-8:]) for d in read))
             return {"notes": notes, "steps": steps, "read": read}
 
-        def think(s: _State) -> dict:
+        def route(s: _State) -> dict:
+            """Phase 8 sp2, THE HULL: which edge this ask takes, read off its marker — a thought
+            or a root is CHAT (a human's ask); a parent of a structural kind is WORK (an
+            intention's occurrence, an objective); any other parent kind is an EVENT."""
+            from . import crafts
+            mk = self._current_marker or {}
+            parent_kind = None
+            if mk.get("parent") and self._serve_conn is not None:
+                cur = self._serve_conn.cursor()
+                cur.execute("SELECT kind FROM spine_markers WHERE marker_id = %s", (mk["parent"],))
+                r = cur.fetchone()
+                parent_kind = r[0] if r else None
+            edge = crafts.hull_edge(mk.get("kind"), parent_kind)
+            return {"edge": edge, "steps": s["steps"] + [crafts.edge_words(edge, parent_kind)]}
+
+        def edge(_s: _State) -> dict:
+            return {}                                    # the edge itself is the route's word; the node is the hop
+
+        def work(s: _State) -> dict:
+            """THE WORK NODE: the template's graph component, node by node along its one path —
+            `think` is the metered mind, `echo` the words back. No declaration, no work — said."""
+            from . import crafts
+            g = self.graph_declaration()
+            if g is None:
+                want = self.template.get("graph")
+                return {"reply": (f"CANNOT ACT: my template names the graph {want!r}, which is not on the "
+                                  "shelf nor shipped with the spine — nothing ran; register it, or restore it."),
+                        "steps": s["steps"] + [f"the work node found no graph named {want!r} — nothing ran"]}
+            out: dict = {"steps": list(s["steps"]) + [f"the work node runs graph {g['name']}: "
+                                                    + " → ".join(crafts.path(g))]}
+            cur_state = dict(s, steps=out["steps"])
+            for nid in crafts.path(g):
+                n = crafts.node(g, nid)
+                if n["kind"] == "echo":
+                    part = {"reply": echo_reply(self.name, cur_state["text"]),
+                            "steps": cur_state["steps"] + [f"echoed every word — none summarized away "
+                                                            f"({self.template.get('persona') or 'a plain-spoken echo'})"]}
+                else:
+                    part = think(cur_state, n)
+                cur_state.update(part)
+                out.update(part)
+                if part.get("hold"):
+                    break                                # a held act stops the line at a safe boundary
+            return out
+
+        def think(s: _State, node: dict | None = None) -> dict:
+            node = node or {}
             if self.function == "grade" and not s.get("read"):
                 # scribe-class (covenant rule 2): with nothing but my own
                 # words in view there is nothing I may grade — refused
@@ -648,6 +739,11 @@ class Resident:
                                "are executing, mark it: call the mark tool "
                                "with kind 'improvement' and a short note — "
                                "other bodies act on marks.")   # 0006's policy line
+                if node.get("prompt"):                 # Phase 8 sp2: a node's prompt component, from the shelf
+                    from . import crafts
+                    pr = crafts.get(self._serve_conn, str(node["prompt"]), "prompt")
+                    if pr and pr["state"] != "retired":
+                        system += "\n\n" + str(pr["manifest"].get("text") or "")
                 system += "\n\n" + self.seat_words(self._serve_conn, self._current_ask)
                 prompt = ""
                 if s["notes"]:
@@ -731,11 +827,19 @@ class Resident:
         g = StateGraph(_State)
         g.add_node("hear", hear)
         g.add_node("recall", recall)
-        g.add_node("think", think)
+        g.add_node("route", route)                      # Phase 8 sp2: THE HULL
+        g.add_node("edge-chat", edge)
+        g.add_node("edge-work", edge)
+        g.add_node("edge-event", edge)
+        g.add_node("work", work)
         g.add_edge(START, "hear")
         g.add_edge("hear", "recall")
-        g.add_edge("recall", "think")
-        g.add_edge("think", END)
+        g.add_edge("recall", "route")
+        g.add_conditional_edges("route", lambda s: "edge-" + (s.get("edge") or "chat"),
+                                {"edge-chat": "edge-chat", "edge-work": "edge-work", "edge-event": "edge-event"})
+        for e in ("edge-chat", "edge-work", "edge-event"):
+            g.add_edge(e, "work")
+        g.add_edge("work", END)
         return g.compile(checkpointer=checkpointer)
 
     def seat_words(self, conn, ask_id: str | None) -> str:
@@ -824,7 +928,7 @@ class Resident:
         _mrow = cur.fetchone()
         self._current_marker = _mk.as_env(self._serve_conn, _mrow[0]) if _mrow and _mrow[0] else None
         initial = {"text": text, "reply": "", "steps": [], "notes": [],
-                   "hold": None, "read": []}
+                   "hold": None, "read": [], "edge": ""}
         resumed = None
         if self._ckpt_graph is not None:            # MEM-2: resume at the hop
             config = {"configurable": {"thread_id": ask_id}}

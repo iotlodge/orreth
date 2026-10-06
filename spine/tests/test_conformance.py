@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import (body as _body, cells, desk, dispatch, doors, envelope as ev, export, ground, harness, intent, levels,
+from orreth_spine import (body as _body, cells, crafts, desk, dispatch, doors, envelope as ev, export, ground, harness, intent, levels,
                           levers, markers, mcp, mitl, monitor, placement, presence, profile, projector, proof, rails, resident,
                           scheduler, seat, services, stable, store, digest, tools)
 from orreth_spine.identity import Identity
@@ -210,6 +210,40 @@ def test_fixture(contract, case):
             (exp["type"], exp["payload"], exp["chain"], exp["correlation_id"], exp["universe_id"], exp["scope_path"])
         assert ev.encode(e).decode("ascii") == exp["bytes"]
         assert levels.opened_words(inp["path"], inp["mode"], inp["experiment"]) == exp["words"]
+    # ---- orreth.crafts/1 (Phase 8 sp2, THE SHELF WIDENED) ----
+    elif kind == "craft_name":                   # <name>.<kind> — one name, one kind; the address, never a DID
+        if exp["ok"]:
+            assert (crafts.craft_name(inp["name"], inp["kind"]), crafts.address(inp["name"], inp["kind"])) == (exp["shelf_name"], exp["address"])
+        else:
+            with pytest.raises(crafts.CraftRefused, match=re.escape(exp["error"])):
+                crafts.craft_name(inp["name"], inp["kind"])
+    elif kind == "craft_split":
+        r = crafts.split_name(inp["shelf_name"])
+        assert (list(r) if r else None) == exp["craft"]
+    elif kind == "craft_manifest":               # the declaration reads whole, or why not — one law per kind
+        assert crafts.validate(inp["kind"], inp["manifest"]) == exp
+    elif kind == "graph_path":                   # the one path from the entry along the edges
+        assert crafts.path(inp["graph"]) == exp["path"]
+    elif kind == "hull_edge":                    # chat · work · event, read off the ask's marker
+        e = crafts.hull_edge(inp["marker_kind"], inp["parent_kind"])
+        assert (e, crafts.edge_words(e, inp["parent_kind"])) == (exp["edge"], exp["words"])
+    elif kind == "source_form":                  # a locator by NAME, or a repo'd origin
+        assert crafts.source_form(inp["manifest"]) == exp
+    elif kind == "cut_demand":                   # what a cut demands, by the craft's class
+        assert crafts.cut_demand(inp["kind"], inp["manifest"], inp["mode"]) == exp
+    elif kind == "wear_of":                      # the rows a body wears at its join
+        if exp["ok"]:
+            assert crafts.wear_of(inp["parts"]) == exp["worn"]
+        else:
+            with pytest.raises(crafts.CraftRefused, match=re.escape(exp["error"])):
+                crafts.wear_of(inp["parts"])
+    elif kind == "golden_document":
+        d = crafts.golden_document(inp["template"], inp["cases"])
+        assert d == exp["document"] and ev.content_hash(d) == exp["hash"]
+    elif kind == "cut_words":
+        assert crafts.cut_words(inp["name"], inp["kind"], inp["verb"], inp["version"]) == exp["words"]
+    elif kind == "worn_words":
+        assert crafts.worn_words(inp["component"], inp["wearers"]) == exp["words"]
     elif kind == "schema_version":
         assert ground.SCHEMA_VERSION == exp["version"]
     elif kind == "schema_tables":

@@ -1,0 +1,11 @@
+{
+  "format": "orreth-graph/1",
+  "name": "mind.v0",
+  "version": "0.1.0",
+  "words": "the one metered thought — the body's recalled notes and the ask through the gateway, its tools at the door; today's think, as a component on the shelf (Phase 8 sp2)",
+  "entry": "think",
+  "nodes": [
+    {"id": "think", "kind": "think", "words": "think it through the metered gateway with the seat words, the covenant slice and the tools the template declares"}
+  ],
+  "edges": []
+}

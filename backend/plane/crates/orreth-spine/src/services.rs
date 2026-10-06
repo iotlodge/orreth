@@ -9,7 +9,9 @@ use crate::hash::content_hash;
 use serde_json::{json, Value};
 
 /// The kinds a service can be.
-pub const KINDS: [&str; 5] = ["tool", "mcp", "store", "source", "mind"];
+/// The identities (each a DID) — and, Phase 8 sp2, the craft kinds (addressed, never minted).
+pub const SERVICE_KINDS: [&str; 5] = ["tool", "mcp", "store", "source", "mind"];
+pub const KINDS: [&str; 12] = ["tool", "mcp", "store", "source", "mind", "template", "prompt", "skill", "policy", "graph", "binding", "golden"];
 /// The ladder's rungs.
 pub const STATES: [&str; 5] = ["registered", "versioned", "healthy", "unhealthy", "retired"];
 /// The steps, in the order the refusal names them.

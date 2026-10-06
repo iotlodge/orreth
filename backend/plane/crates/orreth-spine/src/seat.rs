@@ -385,9 +385,10 @@ pub const OPEN_POST: [&str; 6] = [
 ];
 /// P7 sp8 row 3b: a body's own words wear its LEASE (a seat with the role `body`).
 pub const LEASE_POST: [&str; 1] = ["/delta"];
-pub const GOVERN_POST: [&str; 15] = [
+pub const GOVERN_POST: [&str; 16] = [
     "/world/rehome",
     "/levels/open", // Phase 8 sp1: a floor or room opens on a governing seat's word
+    "/drafts/cut",  // Phase 8 sp2: THE CUT — a draft onto the shelf, the gate (a draft itself is the seat's own write)
     "/bodies/restart",
     "/parked/advance", // re-base sp1: advancing past a poison is an operator's explicit decision
     "/services",

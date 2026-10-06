@@ -48,7 +48,7 @@ carries them:
 | **DESK** | Who is seated and who may come in — the seat a person takes with a code from their authenticator, and the join desk every body walks through. | `/seat` · `/enroll` · `/join` |
 | **GROUND** | The kernel's memory: one Postgres database, one schema with one writer ever, forty tables — every ask, reply, fact, lease, watch and meter line. | `/recall` · `/export` · `/fact/:id` · `/parked` |
 | **GATEWAY** | The meter: LiteLLM, run and managed by the kernel. Every body has its own virtual key wearing its budget; every answer comes back with its cost. | `/minds` · `/minds/spend` |
-| **SHELF** | Every service the kernel governs — tools, MCP servers, stores, sources and minds — on one lifecycle ladder: registered → versioned → healthy or unhealthy → retired. | `/services` |
+| **SHELF** | Every service the kernel governs — tools, MCP servers, stores, sources and minds — and every craft a body is made of — templates, prompts, skills, policies, graphs, bindings and golden sets, addressed by name and pin, never a self — on one lifecycle ladder: registered → versioned → healthy or unhealthy → retired. The wear table says which body wears which craft at which version; a draft lives under its author until the cut. | `/services` · `/wear` · `/drafts` |
 | **MONITOR** | The operating state, live: the rails, the bodies, the asks, the watches, the health checks, the harness, and every lever. | `/monitor` · `/harness` · `/levers` · `/bodies` |
 | **ANALYZER** | Everything born in the chat, grouped by origin — intentions, the objectives under them, in flight and done — read from the ground. | `/analyzer` · `/intentions` · `/markers` |
 

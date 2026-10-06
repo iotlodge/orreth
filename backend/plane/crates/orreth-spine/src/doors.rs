@@ -74,6 +74,9 @@ const KNOWN: &[&str] = &[
     "impact",
     "mark",
     "parked", // re-base sp1: the poison events held at, and the advance
+    "levels", // Phase 8 sp1: THE PATH (named here in sp2 — the sp1 doors folded to `other`)
+    "drafts", // Phase 8 sp2: the draft shelf under the person
+    "wear",   // Phase 8 sp2: the wear table
 ];
 
 /// A door's name: `METHOD /route` as the router spells it. The second

@@ -504,7 +504,10 @@ pub fn golden(template: &str) -> Vec<Value> {
     std::fs::read_to_string(p)
         .ok()
         .and_then(|t| serde_json::from_str::<Value>(&t).ok())
-        .and_then(|v| v.as_array().cloned())
+        .and_then(|v| match v {
+            Value::Array(a) => Some(a),                          // the bare list
+            other => other["cases"].as_array().cloned(),          // Phase 8 sp2: the golden component's declaration
+        })
         .unwrap_or_default()
 }
 

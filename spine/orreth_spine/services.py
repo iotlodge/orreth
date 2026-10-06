@@ -3,6 +3,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: a mind's check writes a stall the gateway no longer lists back from the ladder and pings again · 2026-09-27
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp2 THE SHELF WIDENED: the craft kinds (template · prompt · skill · policy · graph · binding · golden) on the one shelf — addressed, never minted; a source's repo form; "in use by N" · 2026-10-05
 """The services registry v0 (canon 0005 P6.5 sp1 · 0009 §3 "one ladder, two
 keepers" · 0018 services as identities · 0059 the env-secrets law).
 
@@ -43,6 +44,15 @@ ping under the service's own DID, through the meter; a store or source —
 its locator is reachable by NAME; an mcp — initialize + tools/list through
 the one MCP door (mcp.py, P6.5 sp2), its listed tools synced onto the
 shelf as services of kind tool placed under it.
+
+THE SHELF WIDENED (Phase 8 sp2, 0010 lock 3): the same shelf holds the
+CRAFT kinds a body is made of — `template · prompt · skill · policy · graph ·
+binding · golden` (crafts.py) — on the same ladder, the same pin, the same
+version history, the same doors. A craft is addressed by name and hash and
+MINTS NO DID (Orreth Law 1): its `did` column carries the plain address
+`craft:<name>.<kind>`. Its health is its declaration reading whole. A
+`source` now has two forms: a locator by NAME, or a repo'd origin (repo ·
+commit · entry) — the latter "not probed here" until import (spoonful 5).
 """
 from __future__ import annotations
 
@@ -53,7 +63,9 @@ from pathlib import Path
 from . import envelope as ev, outbox, placement as _placement
 from .identity import Identity
 
-KINDS = ("tool", "mcp", "store", "source", "mind")
+SERVICE_KINDS = ("tool", "mcp", "store", "source", "mind")     # the identities — each a DID
+CRAFT_KINDS = ("template", "prompt", "skill", "policy", "graph", "binding", "golden")   # Phase 8 sp2: addressed, never minted
+KINDS = SERVICE_KINDS + CRAFT_KINDS
 STATES = ("registered", "versioned", "healthy", "unhealthy", "retired")
 VERBS = ("register", "version", "healthy", "unhealthy", "retire", "restore")
 LADDER_WORDS = ("the ladder: registered → versioned(n) → healthy | unhealthy → retired; "
@@ -292,7 +304,18 @@ def _validate(name: str, kind: str, manifest) -> None:
     if not isinstance(manifest, dict) or not manifest:
         raise ServiceRefused("a manifest is a non-empty object: what the service declares "
                              "(a tool's schema, a mind's route and model, an mcp server's tools, "
-                             "a store's or source's locator by NAME)")
+                             "a store's or source's locator by NAME, a craft's declaration)")
+    from . import crafts
+    if kind in CRAFT_KINDS:                          # Phase 8 sp2: a craft's declaration reads whole, and its
+        v = crafts.validate(kind, manifest)          # shelf name wears its kind (`librarian.template`)
+        if not v["ok"]:
+            raise ServiceRefused(f"the {name} {kind} does not read whole: {v['reason']}")
+        if crafts.split_name(n) != (n[: -len(kind) - 1], kind):
+            raise ServiceRefused(f"a {kind} on the shelf is named <name>.{kind} — {n!r} is not")
+    if kind == "source":
+        f = crafts.source_form(manifest)
+        if not f["ok"]:
+            raise ServiceRefused(f"the {name} source: {f['reason']}")
 
 
 def register(conn, name: str, kind: str, manifest: dict, *, by: str = KERNEL,
@@ -325,8 +348,12 @@ def register(conn, name: str, kind: str, manifest: dict, *, by: str = KERNEL,
             raise ServiceRefused(f"the {name} service is already registered as a {row['kind']} — "
                                  f"a name wears one kind; {kind} needs its own name")
         _refuse_step(name, row["state"], "register")
-    ident = Identity.load(name, HOME if home is _UNSET else home, kind="service")
-    svc = {"name": name, "kind": kind, "did": ident.did, "manifest": manifest, "manifest_hash": h,
+    if kind in CRAFT_KINDS:                          # Phase 8 sp2: a craft is addressed, never minted (Law 1)
+        from . import crafts
+        did = crafts.ADDRESS + name
+    else:
+        did = Identity.load(name, HOME if home is _UNSET else home, kind="service").did
+    svc = {"name": name, "kind": kind, "did": did, "manifest": manifest, "manifest_hash": h,
            "version": 1, "placement": prof, "secrets_with": prof["secrets_with"], "state": "registered"}
 
     def domain(cur, mid):
@@ -334,7 +361,7 @@ def register(conn, name: str, kind: str, manifest: dict, *, by: str = KERNEL,
             "INSERT INTO spine_services (name, scope, kind, did, manifest, manifest_hash, version,"
             " placement, secrets_with, state, by_did, since, marker, root_marker)"
             " VALUES (%s, %s, %s, %s, %s, %s, 1, %s, %s, 'registered', %s, clock_timestamp(), %s, %s)",
-            (name, ev.universe(), kind, ident.did, ev.canonical(manifest).decode("ascii"), h,
+            (name, ev.universe(), kind, did, ev.canonical(manifest).decode("ascii"), h,
              ev.canonical(prof).decode("ascii"), json.dumps(prof["secrets_with"]), by, mid, mid))
         cur.execute(
             "INSERT INTO spine_service_versions (name, scope, version, manifest, manifest_hash, by_did)"
@@ -380,6 +407,12 @@ def version(conn, name: str, manifest: dict, *, by: str = KERNEL) -> dict:
 
 def _probe(conn, row: dict, gateway, by: str = KERNEL) -> tuple[bool | None, str]:
     kind, m = row["kind"], row["manifest"]
+    if kind in CRAFT_KINDS:                          # Phase 8 sp2: a craft's health is its declaration reading whole
+        from . import crafts
+        return crafts.probe(conn, row)
+    if kind == "source" and not m.get("locator"):    # the repo'd form — fetched at import (spoonful 5), not probed here
+        return None, (f"not probed here — a repo'd source ({m.get('repo')} @ {str(m.get('commit'))[:12]}, "
+                      f"entry {m.get('entry')}) is fetched at import, a later spoonful")
     if kind == "tool" and m.get("server"):          # P6.5 sp2: an MCP-born tool — its server lists it, or it is gone
         from . import mcp
         return mcp.probe_tool(conn, row)
@@ -580,6 +613,13 @@ def listing(conn, kind: str | None = None) -> list[dict]:
         s["retirable"] = ladder_step(s["state"], "retire")["ok"]
         s["restorable"] = ladder_step(s["state"], "restore")["ok"]
         out.append(s)
+    if any(s["kind"] in CRAFT_KINDS for s in out):   # Phase 8 sp2: "in use by N" — the wear table's count
+        from . import crafts
+        worn = crafts.wear_counts(conn)
+        for s in out:
+            if s["kind"] in CRAFT_KINDS:
+                s["craft"] = crafts.split_name(s["name"])[0]
+                s["worn_by"] = worn.get(s["name"], 0)
     return out
 
 
@@ -652,6 +692,9 @@ def seed(conn, *, gateway=None, home: str | os.PathLike | None = _UNSET) -> dict
     mind = mind_of(gateway)
     if mind is not None:
         one(mind[0], "mind", mind[1], mind[2])
+    from . import crafts                             # Phase 8 sp2: the crafts the spine ships — templates, bindings,
+    cr = crafts.seed(conn, by=KERNEL)                # the policy, the graphs, the golden sets, the skills
+    made += cr["registered"]; versioned += cr["versioned"]; refused += cr["refused"]
     if type(gateway).__name__ == "LiteLLMGateway":     # P6.5 sp3: the rig's own stall, through the Stable
         from . import stable
         st = stable.seed(conn, gateway.stable, home=home)

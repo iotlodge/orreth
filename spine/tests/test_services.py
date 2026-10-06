@@ -326,11 +326,18 @@ def test_the_built_ins_register_at_birth_and_the_shelf_door_lists_every_kind(pg,
             break
         time.sleep(0.3)
     by_name = {s["name"]: s for s in shelf}
-    assert set(by_name) == {"weather", "acquire", "mark", "purge-memory", "add-watch", "seal-record",
-                            "erase-record", "services", "minds", "ground", "record"}   # no gateway: no mind seeded (honest);
+    # Phase 8 sp2 THE SHELF WIDENED: the crafts the spine ships stand beside the identities — addressed, never minted
+    crafts_ = {n: s for n, s in by_name.items() if s["kind"] in services.CRAFT_KINDS}
+    idents = {n: s for n, s in by_name.items() if s["kind"] not in services.CRAFT_KINDS}
+    assert set(idents) == {"weather", "acquire", "mark", "purge-memory", "add-watch", "seal-record",
+                           "erase-record", "services", "minds", "ground", "record"}   # no gateway: no mind seeded (honest);
     # (P6.5 sp2: the keeper's `services` tool is a built-in on the shelf too — eight tools now)
-    assert {s["kind"] for s in shelf} == {"tool", "store"}
-    assert all(s["did"].startswith("did:orreth:service:") and s["state"] == "healthy" for s in shelf)
+    assert {s["kind"] for s in idents.values()} == {"tool", "store"}
+    assert all(s["did"].startswith("did:orreth:service:") and s["state"] == "healthy" for s in idents.values())
+    assert {"librarian.template", "echo.template", "crew.binding", "the-orreth-covenant.policy", "mind.v0.graph",
+            "echo.v0.graph", "librarian.golden"} <= set(crafts_)
+    assert all(s["did"] == "craft:" + s["name"] and s["state"] == "healthy" and "worn_by" in s for s in crafts_.values())
+    assert crafts_["librarian.template"]["craft"] == "librarian" and crafts_["librarian.golden"]["last_health"]["ok"] is True
     assert by_name["weather"]["placement"]["why"] == "stands on local · cpu" and by_name["weather"]["secrets"] == []
     assert by_name["record"]["last_health"]["ok"] is True
     _s, body = _get(rig.port, "/services?kind=store")

@@ -51,7 +51,7 @@ from pathlib import Path
 import psycopg
 
 from . import bridgefeed, digest, dispatch, envelope as ev, export, ground, harness, intent, markers, mitl, monitor, outbox
-from . import cells, levels, placement, presence, profile, projector, proof, scheduler, seat, services, sinks
+from . import cells, crafts, levels, placement, presence, profile, projector, proof, scheduler, seat, services, sinks
 from . import body as _body, desk, levers as _levers, rails, stable as _stable, store   # panel sp2: the feed's topics
 from . import doors as _doors                                                          # panel sp3: THE CLOCK at every door
 from . import projector as _projector                                                  # re-base sp1: the parked, the advance
@@ -776,6 +776,26 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(200, {"services": services.listing(conn, kind=kind),
                                             "kinds": list(services.KINDS),
                                             "ground": {"cell": here["cell"], "metal": here["metal"]}})
+            if path == "/drafts":                        # Phase 8 sp2: THE DRAFT SHELF — this person's own drafts, and no one else's (AG-9)
+                if not person:
+                    return self._json(401, {"error": "a draft is read by its author's seat — knock with yours"})
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    return self._json(200, {"drafts": crafts.drafts(conn, person), "person": person,
+                                            "kinds": list(crafts.CRAFT_KINDS)})
+            if path == "/wear":                          # Phase 8 sp2: THE WEAR TABLE — which body wears which component at which version
+                from urllib.parse import parse_qs
+                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
+                    if "?" in self.path else {}
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    comp = str(qs.get("component") or "").strip()
+                    if comp:
+                        if "." not in comp and qs.get("kind"):
+                            comp = crafts.craft_name(comp, str(qs["kind"]))
+                        rows = crafts.worn_by(conn, comp)
+                        return self._json(200, {"component": comp, "worn_by": rows, "words": crafts.worn_words(comp, rows)})
+                    if qs.get("did"):
+                        return self._json(200, {"did": qs["did"], "wears": crafts.wears(conn, str(qs["did"]))})
+                    return self._json(200, {"wear": crafts.wear_table(conn), "counts": crafts.wear_counts(conn)})
             if path == "/markers":                       # the tree · the ancestry · the stream
                 from urllib.parse import parse_qs
                 qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
@@ -1134,6 +1154,33 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 except ValueError as e:
                     return self._json(400, {"error": str(e)})
                 return self._json(201, made)
+            if path in ("/drafts", "/drafts/discard", "/drafts/cut"):   # Phase 8 sp2: THE DRAFT SHELF — under the person; the cut is the gate
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        if path == "/drafts":                         # routine (L1): the draft lands under the seat's person — no fact
+                            body_ = p.get("body")
+                            if isinstance(body_, str):
+                                try:
+                                    body_ = json.loads(body_)
+                                except ValueError:
+                                    return self._json(400, {"error": "a draft's body is an object (JSON) — the declaration as it stands"})
+                            made = crafts.save_draft(conn, person, str(p.get("kind") or ""), str(p.get("name") or ""),
+                                                     body_ if body_ is not None else {}, words=str(p.get("words") or "") or None,
+                                                     draft_id=str(p.get("draft_id") or "") or None)
+                            return self._json(201, {"draft": made})
+                        if path == "/drafts/discard":
+                            gone = crafts.discard_draft(conn, person, str(p.get("draft_id") or ""))
+                            return self._json(200 if gone else 404, {"discarded": gone} if gone
+                                              else {"error": "no such draft of yours here"})
+                        if not proof.governs(conn, person):           # the cut: a governing seat's word
+                            return self._json(403, {"error": "a craft is cut on a governing seat's word — yours reads and writes"})
+                        held = crafts.hold_cut(conn, person, str(p.get("draft_id") or ""),
+                                               session=str(p.get("session") or "") or None)
+                        c = crafts.cut_check(conn, person, str(p.get("draft_id") or ""))
+                        return self._json(202, {"held": held, "level": c["level"], "class": crafts.CUT_CLASS,
+                                                "shelf_name": c["shelf_name"], "verb": c["verb"], "version": c["version"]})
+                except crafts.CraftRefused as e:
+                    return self._json(400, {"error": str(e)})
             if path in ("/services", "/services/version", "/services/check",
                         "/services/retire", "/services/restore", "/services/mcp"):   # P6.5 sp1: the shelf's doors — the owner's, plain words
                 name = str(p.get("name") or "").strip()

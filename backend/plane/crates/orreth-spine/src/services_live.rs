@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam · 2026-09-24
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #19, W71: a mind's check writes a stall the gateway no longer lists back from the ladder and pings again · 2026-09-27
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp2 THE SHELF WIDENED: the craft kinds on the one shelf — addressed, never minted; a source's repo form; the crafts seeded at light · 2026-10-05
 //! The services registry on the ground — `orreth_spine.services` ported
 //! (P6.5 sp1 · 0009 §3 "one ladder, two keepers" · 0018 services as
 //! identities · 0059 the env-secrets law): ONE registry for tool · mcp ·
@@ -304,8 +305,25 @@ fn validate(name: &str, kind: &str, manifest: &Value) -> Result<(), RoadError> {
     if !manifest.as_object().is_some_and(|m| !m.is_empty()) {
         return Err(refused(
             "a manifest is a non-empty object: what the service declares (a tool's schema, a mind's \
-             route and model, an mcp server's tools, a store's or source's locator by NAME)",
+             route and model, an mcp server's tools, a store's or source's locator by NAME, a craft's declaration)",
         ));
+    }
+    if crate::crafts::is_craft(kind) {
+        // Phase 8 sp2: a craft's declaration reads whole, and its shelf name wears its kind (`librarian.template`)
+        let v = crate::crafts::validate(kind, manifest);
+        if v["ok"] != json!(true) {
+            return Err(refused(format!("the {name} {kind} does not read whole: {}", python_str(&v["reason"]))));
+        }
+        let want = n.strip_suffix(&format!(".{kind}")).filter(|b| !b.is_empty());
+        if want.is_none() || crate::crafts::split_name(n) != want.map(|b| (b.to_string(), kind.to_string())) {
+            return Err(refused(format!("a {kind} on the shelf is named <name>.{kind} — {} is not", repr_str(n))));
+        }
+    }
+    if kind == "source" {
+        let f = crate::crafts::source_form(manifest);
+        if f["ok"] != json!(true) {
+            return Err(refused(format!("the {name} source: {}", python_str(&f["reason"]))));
+        }
     }
     Ok(())
 }
@@ -380,7 +398,11 @@ pub async fn register_in(
         }
         refuse_step(name, Some(state), "register")?;
     }
-    let did = service_did(name)?;
+    let did = if crate::crafts::is_craft(kind) {
+        format!("{}{name}", crate::crafts::ADDRESS) // Phase 8 sp2: a craft is addressed, never minted (Law 1)
+    } else {
+        service_did(name)?
+    };
     let prof_v = prof.to_value();
     let svc = json!({"name": name, "kind": kind, "did": did, "manifest": manifest, "manifest_hash": h,
                      "version": 1, "placement": prof_v, "secrets_with": prof.secrets_with, "state": "registered"});
@@ -722,6 +744,18 @@ pub async fn probe(
     let kind = python_str(&row["kind"]);
     let m = row["manifest"].clone();
     let name = python_str(&row["name"]);
+    if crate::crafts::is_craft(&kind) {
+        // Phase 8 sp2: a craft's health is its declaration reading whole
+        return crate::crafts_live::probe(g.client(), &w.scope, row).await;
+    }
+    if kind == "source" && !truthy(&m["locator"]) {
+        // the repo'd form — fetched at import (spoonful 5), not probed here
+        let commit = python_str(&m["commit"]);
+        return Ok((None, format!(
+            "not probed here — a repo'd source ({} @ {}, entry {}) is fetched at import, a later spoonful",
+            python_str(&m["repo"]), commit.get(..12).unwrap_or(&commit), python_str(&m["entry"])
+        )));
+    }
     if kind == "tool" && truthy(&m["server"]) {
         return Ok(crate::mcp_live::probe_tool(g, w, row).await);
     }
@@ -924,6 +958,11 @@ pub async fn seed(g: &mut Ground, w: &World, spine: &std::path::Path) -> Result<
         if let Err(e) = out {
             refused_.push(format!("{name}: {e}"));
         }
+    }
+    // Phase 8 sp2: the crafts the spine ships — templates, bindings, the policy, the graphs, the golden sets, the skills
+    let cr = crate::crafts_live::seed(g, w, spine).await?;
+    for (k, into) in [("registered", &mut made), ("versioned", &mut versioned), ("refused", &mut refused_)] {
+        into.extend(cr[k].as_array().into_iter().flatten().map(python_str));
     }
     Ok(json!({"registered": made, "refused": refused_, "versioned": versioned}))
 }

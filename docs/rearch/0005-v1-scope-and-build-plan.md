@@ -3229,7 +3229,71 @@ wound this rearchitecture began from).
     `orreth.level.opened.v1` with the reason "tightened with the universe" (both
     kernels; `test_levels` proves the floor and the experiment room follow). The
     hand restore of a dev ground stays JB's own: `UPDATE spine_levels SET
-    mode='dev' WHERE scope='u:dev'`. What was here before
+    mode='dev' WHERE scope='u:dev'`.
+  - **sp2 — THE SHELF WIDENED** ✅ **BUILT 2026-10-05 (JB's word: "spoonful 2, THE
+    SHELF WIDENED") — walk OWED (JB in the glass, SPEC-SHELF-01)**:
+    `orreth_spine/crafts.py` · `crafts.rs` + `crafts_live.rs` — THE CRAFT KINDS on the
+    ONE shelf (`services.KINDS` widened from five to twelve: the identities tool · mcp ·
+    store · source · mind, and the crafts template · prompt · skill · policy · graph ·
+    binding · golden), the same ladder, pin, version history and doors; a craft named
+    `<name>.<kind>` (`librarian.template` · `mind.v0.graph` · `librarian.golden`) and
+    ADDRESSED — `craft:<name>.<kind>` in the `did` column, no DID minted (Orreth Law 1:
+    a component is not a self); one validation law per kind (the declaration reads whole);
+    a craft's health = its declaration reading whole, a template's only when its graph
+    stands on the shelf; the crafts the spine ships seeded at light on both kernels (the
+    templates and bindings, the covenant policy, the graphs `mind.v0` · `echo.v0` under
+    `spine/graphs/`, the librarian's golden set as `orreth-golden/1`, the `shelf` skill
+    under `spine/skills/`) — the same self every boot, a changed declaration re-pinned.
+    A `source`'s SECOND FORM: a repo'd origin `{repo, commit, entry}` beside the locator —
+    declared now, "not probed here" until import (sp5). THE WEAR TABLE (`spine_wear`,
+    SCHEMA 6 — 43 tables · 431 columns · 70 indexes, the same on both kernels): the body writes one row per component it is
+    made of in its join's own transaction (template · binding · policy · graph · golden,
+    each by the shelf's pin, its version read by hash — None said honestly when the shelf
+    has no such pin), the previous life's rows closed; `GET /wear` (the table · `?component=`
+    who wears it, in words · `?did=` what a body is made of); the listing's `worn_by` on
+    every craft row ("in use by N"). THE DRAFT SHELF (`spine_drafts`): a draft lives in
+    the ground UNDER THE PERSON (AG-9 — the author's seat alone reads it; never on the
+    shelf, never in a listing or a recall); `GET/POST /drafts` routine (L1, no fact) ·
+    `/drafts/discard`; THE CUT `POST /drafts/cut` → the kernel's held act `craft.cut`
+    (lever on both doors) at the class's level — `cut_demand`: L2 for every craft, a
+    resident's template L3-code, firmware REFUSED in a prod universe ("reaches prod as a
+    release"), an agent's template REFUSED until the Experiment (sp4) — settled on the
+    human's yes as the ladder's own register (version 1) or version (n+1, a sibling) with
+    the person on the chain, the draft spent; the refusals in words before anything is
+    held (not whole · same bytes · retired · a name wearing another kind). THE HULL
+    (`resident.py`): hear → recall → ROUTE → `edge-chat` · `edge-work` · `edge-event` →
+    `work` — the edge read off the ask's marker (`hull_edge`: a thought or a root is chat;
+    a parent of a structural kind — objective · intention · thought · action · observation
+    — is work; any other parent kind is an event) and said in the journey ("routed to the
+    chat edge — a human's ask"); the work node runs the template's `graph` component
+    FINALLY READ (the shelf first, `spine/graphs/` as the fallback), node by node along
+    its one path — `think` today's metered mind (a node's `prompt` component joins the
+    system words; the W26 retry, the hold, the grader's scribe refusal all unchanged),
+    `echo` the words back; a template naming a graph neither holds answers `CANNOT ACT`
+    and says so. THE GRAPH DECLARATION v0 (0004's open "template schema v0" answered):
+    `orreth-graph/1` — `entry` · `nodes: [{id, kind: think | echo, prompt?, skill?,
+    tools?, mind?}]` · `edges: [{from, to}]`; one path (two ways out, a loop, a duplicate
+    id, an edge to a stranger refuse). The golden set a COMPONENT the harness reads first
+    (`harness.golden(template, conn)`; the Rust door the same). THE GLASS: craft cards
+    (address, "worn by N bodies now", what it declares, "who wears it?"), the organ's
+    crafts count and inspector, the chat's "show the crafts" · "show the templates" ·
+    "who wears the librarian template?" · "what is echo made of?" · "my drafts" · "draft a
+    prompt called greeting: …" · "cut the greeting draft" (held) · "discard …" · "retire
+    the greeting prompt". THE ORRETH SKILL: `spine/skills/shelf.v0.json` on the shelf; the
+    guide's "shelf widened" section. Fixture `crafts-v0.json` (86 cases, eleven kinds:
+    `craft_name` · `craft_split` · `craft_manifest` · `graph_path` · `hull_edge` ·
+    `source_form` · `cut_demand` · `wear_of` · `golden_document` · `cut_words` ·
+    `worn_words`); `schema_version` 6 · `schema_tables` 43. Proofs: `spine/tests/
+    test_crafts.py` (6: the crafts addressed never minted and their health · the wear rows
+    at the join and the next life closing them · the draft shelf under the person and the
+    cut as the gate, by class · firmware only in dev · the hull's edges and the graph read
+    · the golden component) · `tests/crafts.rs` on the rig · the migrator parity · the
+    Python suite. `doors.KNOWN` names `levels` (sp1's doors folded to `other` — found
+    here), `drafts`, `wear`. Named, not in sp2: the wear rows closed at decom and
+    re-pointed at a promotion (sp4); the sub-agent's code noun (no life is minted before
+    sp4); branching graphs and per-node skills and tools executed (sp3's authoring — v0
+    reads a node's `prompt` only); a floor's own shelf; the Costs Panel's fold.
+  What was here before
   (THE LANE, the factory ask as escalation) stays owed AFTER the Workshop:
   the lane with RAG (P6.5 sp4/sp5), the stranger with row 5, the lessons
   digest with row 6a, the architect with RAG. Each row proof-shaped

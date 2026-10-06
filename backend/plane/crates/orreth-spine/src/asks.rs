@@ -854,6 +854,10 @@ pub async fn settle_kernel_act(
                 // Phase 8 sp1: a floor or room opened on the person's word — the row and its fact in this record's transaction
                 crate::levels_live::open_in(&tx, &held["args"], &asker, Some(ask_id), marker_id.as_deref()).await?
             }
+            t if t == crate::crafts::CUT_TOOL => {
+                // Phase 8 sp2: THE CUT — the draft lands on the shelf as the ladder's own fact, the person on the chain
+                crate::crafts_live::cut_in(&tx, w, &held["args"], &asker).await?
+            }
             "world.rehome" => {
                 // P7 sp7: the universe re-homed — its epoch advances, the old home may not commit
                 let to_cell = held["args"]["to_cell"]

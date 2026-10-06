@@ -622,7 +622,7 @@
         <div class="organ" data-organ="desk" title="THE DESK — the gate: who is seated, who may enroll, the join desk where a machine asks in · click to open"><div class="t"><span class="n">DESK</span><span class="lamp" id="l-desk"></span></div><div class="v" id="o-desk-v">no seat</div><div class="s"><span id="youtag" onclick="event.stopPropagation(); profileWords('what do you know about me?')" title="what this ground knows about you — click to read it">you</span></div><div class="perf-only s" id="p-desk">—</div></div>
         <div class="organ" data-organ="ground" title="THE GROUND — the kernel's memory: every ask, reply, marker and record, in this world · its levels: the universe, its floors, their rooms · click to open"><div class="t"><span class="n">GROUND</span><span class="lamp" id="l-ground"></span></div><div class="v"><span class="worldtag" id="worldtag" title="the world this door serves — its mode (dev or prod), its cell and its epoch — from /world">u:dev</span></div><div class="s" id="o-ground-s">—</div><div class="s" id="o-ground-levels" title="the levels of this universe — its floors and their rooms, who is seated on each (from /levels); say “what levels are here?” or “open floor ops” in the chat">—</div><div class="perf-only s" id="p-ground">—</div></div>
         <div class="organ" data-organ="gateway" title="THE GATEWAY — every LLM call goes through it, metered in dollars · the Stable's minds stand behind it · click to open"><div class="t"><span class="n">GATEWAY</span><span class="lamp" id="l-gateway"></span></div><div class="v" id="o-gateway-v">—</div><div class="s" id="o-gateway-s">—</div><div class="perf-only s" id="p-gateway">—</div></div>
-        <div class="organ" data-organ="shelf" title="THE SHELF — every service the kernel governs: tools, MCP servers, stores, sources, minds · one ladder · click to open"><div class="t"><span class="n">SHELF</span><span class="lamp" id="l-shelf"></span></div><div class="v" id="o-shelf-v">—</div><div class="s" id="o-shelf-s">—</div><div class="perf-only s" id="p-shelf">—</div></div>
+        <div class="organ" data-organ="shelf" title="THE SHELF — every service the kernel governs: tools, MCP servers, stores, sources, minds · and, since Phase 8 sp2, the CRAFTS a body is made of: templates, prompts, skills, policies, graphs, bindings, golden sets — each addressed by name and pin, worn by N bodies · one ladder · click to open"><div class="t"><span class="n">SHELF</span><span class="lamp" id="l-shelf"></span></div><div class="v" id="o-shelf-v">—</div><div class="s" id="o-shelf-s">—</div><div class="perf-only s" id="p-shelf">—</div></div>
         <div class="organ" data-organ="monitor" title="THE MONITOR — the watches, the health checks, the harness, the levers the kernel can pull · click to open"><div class="t"><span class="n">MONITOR</span><span class="lamp" id="l-monitor"></span></div><div class="v" id="o-monitor-v">—</div><div class="s" id="o-monitor-s">—</div><div class="perf-only s" id="p-monitor">—</div></div>
         <div class="organ" data-organ="analyzer" title="THE ANALYZER — everything born in the chat, by origin: intentions, objectives, thoughts, actions · click to open"><div class="t"><span class="n">ANALYZER</span><span class="lamp" id="l-analyzer"></span></div><div class="v" id="o-analyzer-v">—</div><div class="s" id="o-analyzer-s">—</div><div class="perf-only s" id="p-analyzer">—</div></div>
       </div></div>
@@ -2232,14 +2232,22 @@ function serviceCard(s){
                     (m.context ? ` · context ${Number(m.context).toLocaleString()}` : "") + (m.key ? ` · key ${esc(m.key)} (by name)` : " · no key needed") +
                     `</div><div class="meta">${sp.calls ? `spent $${(sp.usd || 0).toFixed(4)} over ${sp.calls} call${sp.calls === 1 ? "" : "s"} ($${(sp.usd_today || 0).toFixed(4)} today)` : "never called"}` +
                     (sp.failed ? ` · ${sp.failed} could not think` : "") + `</div>` : "";
-  d.innerHTML = `<h5><span class="kind">${esc(s.kind)}</span>${esc(s.name)} <span class="meta">· ${esc(stateWords(s))}</span></h5>` +
-    `<div class="meta">self …${esc(s.did.slice(-8))} · pin ${esc(s.manifest_hash.slice(7, 19))} · v${s.version} · by ${esc(whoIs(s.by))}</div>` +
-    mcpLine + under + mindLine +
+  // Phase 8 sp2: a CRAFT is addressed, never a self — its card says who wears it ("in use by N") and what it declares
+  const isCraft = CRAFT_KINDS.includes(s.kind);
+  const craftLine = isCraft ? `<div class="meta">${s.worn_by ? `worn by ${s.worn_by} bod${s.worn_by === 1 ? "y" : "ies"} now` : "worn by no body now"}` +
+                    (s.kind === "template" ? ` · a ${esc(m.kind || "resident")} body · graph ${esc(m.graph || "?")}` : s.kind === "graph" ? ` · ${(m.nodes || []).length} node${(m.nodes || []).length === 1 ? "" : "s"}: ${esc((m.nodes || []).map(n => n.id + " (" + n.kind + ")").join(" → "))}`
+                     : s.kind === "golden" ? ` · ${(m.cases || []).length} case${(m.cases || []).length === 1 ? "" : "s"} for the ${esc(m.template || "?")} template` : s.kind === "policy" ? ` · ${(m.rules || []).length} rules · v${esc(m.version || "?")}`
+                     : s.kind === "binding" ? ` · the ${esc(m.pull || "?")} pull` : s.kind === "prompt" ? ` · “${esc(String(m.text || "").slice(0, 90))}${String(m.text || "").length > 90 ? "…" : ""}”` : ` · ${esc(m.words || "")}`) +
+                    ` <span class="assist" data-wear title="who wears this component now, by life and version — from /wear">who wears it?</span></div>` : "";
+  d.innerHTML = `<h5><span class="kind">${esc(s.kind)}</span>${esc(isCraft ? s.craft || s.name : s.name)} <span class="meta">· ${esc(stateWords(s))}</span></h5>` +
+    `<div class="meta">${isCraft ? "address " + esc(s.did) + " (no self — a craft is addressed, never minted)" : "self …" + esc(s.did.slice(-8))} · pin ${esc(s.manifest_hash.slice(7, 19))} · v${s.version} · by ${esc(whoIs(s.by))}</div>` +
+    craftLine + mcpLine + under + mindLine +
     `<div class="stands">${esc(p.why || "")}${secrets}</div>` +
     `<div class="health ${(s.last_health || {}).ok === false ? "bad" : ""}">health: ${esc(healthWords(s))}</div>` +
     (s.retirable ? `<span class="assist" data-retire title="consequential — held at the interlock in the chat; cancel is the default">retire ${esc(s.name)} → the interlock</span>`
      : s.restorable ? `<span class="assist" data-restore title="a new fact — its stop stays in the record">restore ${esc(s.name)}</span>` : "");
   const r = d.querySelector("[data-retire]"); if (r) r.onclick = () => retireService(s.name, s.kind);
+  const wq = d.querySelector("[data-wear]"); if (wq) wq.onclick = () => serviceWords(`who wears ${s.name}?`);
   const b = d.querySelector("[data-restore]"); if (b) b.onclick = () => restoreService(s.name, s.kind);
   return d;
 }
@@ -2248,7 +2256,7 @@ async function loadShelf(box){
   const st = await fetch("/minds").then(x=>x.json()).catch(()=>null);      // P6.5 sp3: the Stable's spend rides the mind cards
   if (r && st) for (const s of r.services) if (s.kind === "mind"){ const m = (st.minds || []).find(x => x.name === s.name); if (m) s.spend = m.spend; }
   const head = document.createElement("div"); head.className = "shelf-head";
-  head.textContent = "THE SHELF · every service the kernel governs — tool · mcp · store · source · mind (an LLM) · one ladder: registered → versioned → healthy | unhealthy → retired · an LLM is a stall in the Stable and a model entry in the gateway";
+  head.textContent = "THE SHELF · every service the kernel governs — tool · mcp · store · source · mind (an LLM) — and every CRAFT a body is made of — template · prompt · skill · policy · graph · binding · golden set (addressed by name and pin, never a self; worn by N bodies) · one ladder: registered → versioned → healthy | unhealthy → retired · a draft lives under YOU until you cut it onto the shelf (“my drafts” · “cut the <name> draft”)";
   box.appendChild(head);
   if (!r){ box.insertAdjacentHTML("beforeend", `<div class="meta">the shelf door did not answer</div>`); return; }
   if (!r.services.length){ box.insertAdjacentHTML("beforeend", `<div class="meta">nothing on the shelf yet — the kernel registers its built-ins at boot</div>`); return; }
@@ -2295,8 +2303,12 @@ async function restoreService(name, kind){         // a new fact; its stop stays
         : r && r.error ? esc(r.error) : "the restore door did not answer");
   refreshPulls();
 }
+const CRAFT_KINDS = ["template", "prompt", "skill", "policy", "graph", "binding", "golden"];   // Phase 8 sp2: what a body is made of
 const SERVICE_KINDS = {service: null, services: null, tool: "tool", tools: "tool", mind: "mind", minds: "mind",
-                       store: "store", stores: "store", source: "source", sources: "source", mcp: "mcp", mcps: "mcp", shelf: null};
+                       store: "store", stores: "store", source: "source", sources: "source", mcp: "mcp", mcps: "mcp", shelf: null,
+                       template: "template", templates: "template", prompt: "prompt", prompts: "prompt", skill: "skill", skills: "skill",
+                       policy: "policy", policies: "policy", graph: "graph", graphs: "graph", binding: "binding", bindings: "binding",
+                       golden: "golden", goldens: "golden", craft: "craft", crafts: "craft"};
 /* ---- the human's own profile (P7 sp8, W58): what you tell this ground about yourself, in your words, provenance-labeled ---- */
 const PROFILE_RX = /^(?:my name is|call me|i am |i'm |i live in|i live at|i am in|i'm in|i am living in|i'm living in|my (?:place|home|town) is|my (?:time ?zone|zone|clock) is|i am on|i'm on|remember about me|about me:|my profile|what do you know about me|show (?:me )?my profile|read my profile|who am i|forget (?:about me|my|that|about))/i;
 async function profileWords(text){
@@ -2403,22 +2415,93 @@ async function serviceWords(text){                 // "what services are here?" 
                    `lifting ${esc(subject === "*" ? "every body" : subject)}'s ${klass === "any" ? "all-work" : esc(klass)} assignment is consequential — the kernel holds it at the interlock…`);
     return true;
   }
-  m = t.match(/^(?:what|which)\s+(services?|tools?|minds?|stores?|sources?|mcps?)\s+(?:are|is)\s+(?:here|on the shelf|registered)$|^show\s+(?:me\s+)?(?:the\s+)?(services|tools|stores|sources|mcps|shelf)$|^(?:what|which)\s+(services|tools|stores|sources|mcps)\s+(?:do we have|have we got|are there)$/);   // W31: "show the tools" too
+  m = t.match(/^(?:what|which)\s+(services?|tools?|minds?|stores?|sources?|mcps?|templates?|prompts?|skills?|polic(?:y|ies)|graphs?|bindings?|goldens?|crafts?)\s+(?:are|is)\s+(?:here|on the shelf|registered)$|^show\s+(?:me\s+)?(?:the\s+)?(services|tools|stores|sources|mcps|shelf|templates|prompts|skills|policies|graphs|bindings|goldens|crafts)$|^(?:what|which)\s+(services|tools|stores|sources|mcps|templates|prompts|skills|policies|graphs|bindings|goldens|crafts)\s+(?:do we have|have we got|are there)$/);   // W31: "show the tools" too · Phase 8 sp2: the craft kinds
   if (m){
     el("msg mine", esc(text));
-    const kind = SERVICE_KINDS[m[1] || m[2] || m[3]];
-    const r = await fetch("/services" + (kind ? "?kind=" + kind : "")).then(x=>x.json()).catch(()=>null);
+    const word = m[1] || m[2] || m[3];
+    const kind = SERVICE_KINDS[word] || (/^polic/.test(word) ? "policy" : null);
+    const r = await fetch("/services" + (kind && kind !== "craft" ? "?kind=" + kind : "")).then(x=>x.json()).catch(()=>null);
     if (!r){ sysline("the shelf door did not answer"); return true; }
-    if (!r.services.length){ sysline(`nothing on the shelf${kind ? " of kind " + esc(kind) : ""} — the kernel registers its built-ins at boot`); return true; }
-    for (const s of r.services)
-      sysline(`<b>${esc(s.kind)}</b> · ${esc(s.name)} · ${esc(stateWords(s))} · ${esc((s.placement || {}).why || "")} · health: ${esc(healthWords(s).split(" · ")[0])}`);
+    const rows = kind === "craft" ? r.services.filter(s => CRAFT_KINDS.includes(s.kind)) : r.services;
+    if (!rows.length){ sysline(`nothing on the shelf${kind ? " of kind " + esc(kind) : ""} — the kernel registers its built-ins at boot`); return true; }
+    for (const s of rows)
+      sysline(`<b>${esc(s.kind)}</b> · ${esc(s.name)} · ${esc(stateWords(s))}` + (CRAFT_KINDS.includes(s.kind) ? ` · worn by ${s.worn_by || 0}` : ` · ${esc((s.placement || {}).why || "")}`) + ` · health: ${esc(healthWords(s).split(" · ")[0])}`);
     toggleCrew(true);                              // the shelf, in the CREW pull
     return true;
   }
-  m = t.match(/^(retire|restore)\s+(?:the\s+)?([a-z0-9_.-]+)(?:\s+(tool|mind|store|source|mcp|service))?$/);
+  m = t.match(/^(retire|restore)\s+(?:the\s+)?([a-z0-9_.-]+)(?:\s+(tool|mind|store|source|mcp|service|template|prompt|skill|policy|graph|binding|golden))?$/);
   if (m){
     el("msg mine", esc(text));
-    if (m[1] === "retire") await retireService(m[2], m[3]); else await restoreService(m[2], m[3]);
+    const name = CRAFT_KINDS.includes(m[3]) && !m[2].endsWith("." + m[3]) ? `${m[2]}.${m[3]}` : m[2];   // Phase 8 sp2: "retire the greeting prompt" → greeting.prompt
+    if (m[1] === "retire") await retireService(name, m[3]); else await restoreService(name, m[3]);
+    return true;
+  }
+  // ---- Phase 8 sp2, THE SHELF WIDENED: the wear table and the draft shelf, in words ----
+  m = t.match(/^who\s+wears\s+(?:the\s+)?([a-z0-9_.-]+)(?:\s+(template|prompt|skill|policy|graph|binding|golden))?\??$/);
+  if (m){
+    el("msg mine", esc(text));
+    const comp = m[2] && !m[1].endsWith("." + m[2]) ? `${m[1]}.${m[2]}` : m[1];
+    const r = await fetch("/wear?component=" + encodeURIComponent(comp)).then(x=>x.json()).catch(()=>null);
+    sysline(r && r.words ? esc(r.words) : "the wear door did not answer");
+    return true;
+  }
+  m = t.match(/^(?:what\s+(?:does|is)\s+([a-z0-9_-]+)\s+(?:wear(?:ing)?|made\s+of)\??|what\s+is\s+([a-z0-9_-]+)\s+made\s+of\??)$/);
+  if (m){
+    el("msg mine", esc(text));
+    const who = m[1] || m[2];
+    const crew = await fetch("/crew").then(x=>x.json()).catch(()=>null);
+    const b = crew && (crew.crew || []).find(c => (c.name || "").toLowerCase() === who.toLowerCase());
+    if (!b || !b.did){ sysline(`${esc(who)} is not a body here — say “what's here?” for the crew`); return true; }
+    const r = await fetch("/wear?did=" + encodeURIComponent(b.did)).then(x=>x.json()).catch(()=>null);
+    if (!r || !r.wears || !r.wears.length){ sysline(`${esc(who)} wears nothing on record — its join predates the wear table; it writes its rows at its next life`); return true; }
+    sysline(`${esc(who)} is made of: ` + r.wears.map(w => `${esc(w.component)} ${w.version ? "v" + w.version : "(off the shelf)"} · pin ${esc(String(w.hash).slice(7, 15))}`).join(" · "));
+    return true;
+  }
+  m = t.match(/^(?:my\s+drafts|what\s+(?:drafts\s+)?(?:am\s+i|have\s+i)\s+(?:drafting|drafted|got))\??$/);
+  if (m){
+    el("msg mine", esc(text));
+    const r = await fetch("/drafts").then(x=>x.json()).catch(()=>null);
+    if (!r || r.error){ sysline(r && r.error ? esc(r.error) : "the draft shelf did not answer"); return true; }
+    if (!r.drafts.length){ sysline("no drafts under your seat — say “draft a prompt called greeting: Greet the human by name.” to start one; a draft is yours alone until you cut it onto the shelf"); return true; }
+    for (const d of r.drafts)
+      sysline(`<b>draft</b> · ${esc(d.name)} ${esc(d.kind)} · ${esc(d.draft_id)} · saved ${hhmm(d.updated_at)}${d.words ? " · " + esc(d.words) : ""} — say “cut the ${esc(d.name)} draft” (held at the interlock) or “discard the ${esc(d.name)} draft”`);
+    return true;
+  }
+  m = t.match(/^draft\s+(?:an?\s+)?(template|prompt|skill|policy|graph|binding|golden)\s+(?:called\s+|named\s+)?([a-z0-9][a-z0-9._-]*)\s*[:—-]\s*([\s\S]+)$/);
+  if (m){
+    el("msg mine", esc(text));
+    const kind = m[1], name = m[2], rest = m[3].trim();
+    let body;
+    if (rest.startsWith("{")){ try { body = JSON.parse(rest); } catch (e) { sysline("the draft's declaration did not parse as JSON — fix the braces and say it again"); return true; } }
+    else if (kind === "prompt") body = {text: rest};
+    else if (kind === "skill") body = {words: rest.split(/\.\s/)[0], text: rest};
+    else { sysline(`a ${esc(kind)} draft is a declaration — say “draft a ${esc(kind)} called ${esc(name)}: { … }” with its JSON, or open the Workshop (spoonful 3)`); return true; }
+    const mine = await fetch("/drafts").then(x=>x.json()).catch(()=>null);
+    const prior = mine && (mine.drafts || []).find(d => d.name === name && d.kind === kind);
+    const r = await fetch("/drafts", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({kind, name, body, person: PERSON, draft_id: prior ? prior.draft_id : undefined})}).then(x=>x.json()).catch(()=>null);
+    if (!r || r.error){ sysline(r && r.error ? esc(r.error) : "the draft shelf did not answer"); return true; }
+    sysline(`${prior ? "updated" : "saved"} your ${esc(kind)} draft <b>${esc(name)}</b> (${esc(r.draft.draft_id)}) — under your seat alone, not on the shelf; say “cut the ${esc(name)} draft” to put it there (held at the interlock)`);
+    return true;
+  }
+  m = t.match(/^(cut|discard)\s+(?:the\s+)?(?:draft\s+)?([a-z0-9][a-z0-9._-]*)(?:\s+draft)?$/);
+  if (m){
+    el("msg mine", esc(text)); toggleChat(true);
+    const mine = await fetch("/drafts").then(x=>x.json()).catch(()=>null);
+    const d = mine && (mine.drafts || []).find(x => x.name === m[2] || x.draft_id === m[2]);
+    if (!d){ sysline(`no draft of yours named ${esc(m[2])} — say “my drafts”`); return true; }
+    if (m[1] === "discard"){
+      const r = await fetch("/drafts/discard", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({draft_id: d.draft_id, person: PERSON})}).then(x=>x.json()).catch(()=>null);
+      sysline(r && r.discarded ? `discarded your ${esc(d.kind)} draft ${esc(d.name)} — it was never on the shelf, so nothing is kept` : (r && r.error ? esc(r.error) : "the draft shelf did not answer"));
+      return true;
+    }
+    const r = await fetch("/drafts/cut", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({draft_id: d.draft_id, person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
+    if (r && r.held){
+      PENDING[r.held] = el("journey", `cutting the ${esc(d.name)} ${esc(d.kind)} onto the shelf (${esc(r.verb)} → version ${r.version}) is consequential — the kernel holds it at the interlock (${esc(r.level)})…`);
+      const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);
+      if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
+      return true;
+    }
+    sysline(r && r.error ? esc(r.error) : "the draft shelf did not answer");
     return true;
   }
   m = t.match(/^re-?home\s+(?:this\s+)?(?:universe|world)\s+(?:to\s+)?(?:cell\s+)?([a-z0-9_-]+)$/);   // P7 sp7: re-home the universe — consequential, held at L2
@@ -3169,7 +3252,8 @@ async function panelShelf(){                       // the SHELF organ and the to
   const sv = r.services || [], tools = sv.filter(s => s.kind === "tool"), un = sv.filter(s => (s.last_health || {}).ok === false && s.state !== "retired").length;
   const by = {}; for (const s of sv) by[s.kind] = (by[s.kind] || 0) + 1;
   document.getElementById("o-shelf-v").textContent = `${tools.length} tool${tools.length === 1 ? "" : "s"}`;
-  document.getElementById("o-shelf-s").textContent = Object.entries(by).filter(([k]) => k !== "tool").map(([k, n]) => `${n} ${k}`).join(" · ") + (un ? ` · ${un} unhealthy` : "");
+  const crafts = sv.filter(s => CRAFT_KINDS.includes(s.kind)).length;   // Phase 8 sp2: the crafts, one word on the organ
+  document.getElementById("o-shelf-s").textContent = Object.entries(by).filter(([k]) => k !== "tool" && !CRAFT_KINDS.includes(k)).map(([k, n]) => `${n} ${k}`).join(" · ") + (crafts ? ` · ${crafts} craft${crafts === 1 ? "" : "s"}` : "") + (un ? ` · ${un} unhealthy` : "");
   document.getElementById("p-shelf").textContent = `${sv.filter(s => s.state === "retired").length} retired · ${PANEL.HOPN} tool hop${PANEL.HOPN === 1 ? "" : "s"} this session` + doorLine(["/services"]);
   lampRest("l-shelf", un ? "red" : "on");
   host.innerHTML = "";
@@ -3455,9 +3539,9 @@ function inspectOrgan(id){
   if (id === "gateway"){ const r = PANEL.MINDS || {}; inspect("the gateway · the Stable", ["every LLM call goes through it, metered in dollars", r.gateway && r.gateway.base ? r.gateway.base : "—",
       r.gateway && r.gateway.ready ? "answers" : "DARK", "—", (r.minds || []).map(m => `${m.name} · ${m.state}`).join(" · ") || "no minds", `$${(r.minds || []).reduce((x, m) => x + Number((m.spend || {}).usd_today || 0), 0).toFixed(4)} today`],
       [["show the minds", () => serviceWords("show the minds"), true], ["open the monitor", () => toggleMonitor(true)]]); }
-  if (id === "shelf"){ const sv = (PANEL.SERV && PANEL.SERV.services) || []; inspect("the shelf · services", ["tool · mcp · store · source · mind — one ladder", "—", "—", "—",
-      `${sv.length} registered · ${sv.filter(x => x.state === "retired").length} retired`, "—"],
-      [["show the tools", () => serviceWords("show the tools"), true], ["check the services", () => serviceWords("check the services")]]); }
+  if (id === "shelf"){ const sv = (PANEL.SERV && PANEL.SERV.services) || []; inspect("the shelf · services and crafts", ["tool · mcp · store · source · mind · template · prompt · skill · policy · graph · binding · golden — one ladder", "—", "—", "—",
+      `${sv.length} registered · ${sv.filter(x => CRAFT_KINDS.includes(x.kind)).length} crafts · ${sv.filter(x => x.state === "retired").length} retired`, "—"],
+      [["show the tools", () => serviceWords("show the tools"), true], ["show the crafts", () => serviceWords("show the crafts")], ["my drafts", () => serviceWords("my drafts")], ["check the services", () => serviceWords("check the services")]]); }
   if (id === "monitor") inspect("the monitor", ["watches · health checks · the harness · the levers", "—", "—", "—",
       (s.watches || []).map(x => `${x.name} ${x.red ? "RED" : "green"}`).join(" · ") || "no watches", PANEL.LEVERS ? `${PANEL.LEVERS.length} levers the kernel can pull` : "—"],
       [["open the monitor", () => toggleMonitor(true), true], ["run the harness", () => { toggleMonitor(true); fetch("/harness/run", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({template: "librarian"})}).catch(()=>null); }]]);

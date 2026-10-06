@@ -841,6 +841,10 @@ fn router(app: Arc<App>) -> Router {
         .route("/levels", get(levels_door)) // Phase 8 sp1: THE PATH — every level of this universe, what stands here and what rolls up
         .route("/levels/context", get(levels_context)) // the cascade at a path: the law folded root → leaf, content-addressed
         .route("/levels/open", post(levels_open)) // a floor or room opened on a governing seat's word — held at L2
+        .route("/drafts", get(drafts_door).post(drafts_post)) // Phase 8 sp2: THE DRAFT SHELF — the seat's own drafts; saving one is routine
+        .route("/drafts/discard", post(drafts_post))
+        .route("/drafts/cut", post(drafts_post)) // THE CUT — a draft onto the shelf, held at the class's level
+        .route("/wear", get(wear_door)) // THE WEAR TABLE — which body wears which component at which version
         .route("/seam", post(seam_post)) // P7 sp7: the seam — signed messages between peer cells
         .route("/asks/stop", post(asks_stop)) // P7 sp7: the human stops a routed ask (rule 11) · sp2: or a local one left waiting
         .route("/watches/rest", post(watches_rest)) // the honest glass sp2 (W86): a watch rested — rule 11's lever
@@ -2287,6 +2291,101 @@ async fn world_rehome(
     }
 }
 
+/// `GET /drafts` — Phase 8 sp2: THE DRAFT SHELF — this person's own drafts, and no one else's (AG-9).
+async fn drafts_door(State(app): State<Arc<App>>, Extension(seated): Extension<Seated>) -> Response {
+    let person = seated.person.clone();
+    let out = async {
+        let g = ground(&app).await?;
+        let drafts = crate::crafts_live::drafts(g.client(), scope(&app), &person).await?;
+        Ok::<_, RoadError>(json!({"drafts": drafts, "person": person, "kinds": crate::crafts::CRAFT_KINDS}))
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `POST /drafts {kind, name, body, words?, draft_id?}` (201, routine — no fact) ·
+/// `POST /drafts/discard {draft_id}` · `POST /drafts/cut {draft_id, session?}` — THE CUT, a
+/// governing seat's word, held at the class's level (202 `{held, level, class, shelf_name, verb, version}`).
+async fn drafts_post(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    uri: axum::http::Uri,
+    body: Bytes,
+) -> Response {
+    let path = uri.path().to_string();
+    let p = body_json(&body);
+    let person = seated.person.clone();
+    let out = async {
+        let mut g = ground(&app).await?;
+        let w = &app.cfg.world;
+        match path.as_str() {
+            "/drafts" => {
+                let body_v = match &p["body"] {
+                    Value::String(t) => serde_json::from_str::<Value>(t)
+                        .map_err(|_| RoadError::Refused("a draft's body is an object (JSON) — the declaration as it stands".into()))?,
+                    Value::Null => json!({}),
+                    other => other.clone(),
+                };
+                let made = crate::crafts_live::save_draft(
+                    &mut g, w, &person, &s_or(&p, "kind", ""), &s_or(&p, "name", ""), &body_v,
+                    s_opt(&p, "words").as_deref(), s_opt(&p, "draft_id").as_deref(), None,
+                )
+                .await?;
+                Ok::<_, RoadError>((201, json!({"draft": made})))
+            }
+            "/drafts/discard" => {
+                let gone = crate::crafts_live::discard_draft(&mut g, w, &person, &s_or(&p, "draft_id", "")).await?;
+                if gone {
+                    Ok((200, json!({"discarded": true})))
+                } else {
+                    Ok((404, json!({"error": "no such draft of yours here"})))
+                }
+            }
+            _ => {
+                let made = crate::crafts_live::hold_cut(&mut g, w, &person, &s_or(&p, "draft_id", ""), s_opt(&p, "session").as_deref()).await?;
+                Ok((202, made))
+            }
+        }
+    }
+    .await;
+    match out {
+        Ok((code, v)) => answer(code, v),
+        Err(RoadError::Refused(words)) => answer(400, json!({"error": words})),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `GET /wear[?component=&kind=|did=]` — Phase 8 sp2: THE WEAR TABLE.
+async fn wear_door(State(app): State<Arc<App>>, Query(q): Query<HashMap<String, String>>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        let sc = scope(&app);
+        let mut comp = q.get("component").cloned().unwrap_or_default().trim().to_string();
+        if !comp.is_empty() {
+            if let Some(k) = q.get("kind").filter(|_| !comp.contains('.')) {
+                comp = crate::crafts::craft_name(&comp, k).map_err(RoadError::Refused)?;
+            }
+            let rows = crate::crafts_live::worn_by(g.client(), sc, &comp).await?;
+            let words = crate::crafts::worn_words(&comp, &rows);
+            return Ok::<_, RoadError>(json!({"component": comp, "worn_by": rows, "words": words}));
+        }
+        if let Some(did) = q.get("did") {
+            return Ok(json!({"did": did, "wears": crate::crafts_live::wears(g.client(), did).await?}));
+        }
+        Ok(json!({"wear": crate::crafts_live::wear_table(g.client(), sc).await?,
+                  "counts": crate::crafts_live::wear_counts(g.client(), sc).await?}))
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(RoadError::Refused(words)) => answer(400, json!({"error": words})),
+        Err(e) => refuse(e),
+    }
+}
+
 /// `GET /levels` — Phase 8 sp1: every level of this universe, root first, with what stands
 /// HERE and what is ROLLED up from within it.
 async fn levels_door(State(app): State<Arc<App>>) -> Response {
@@ -2477,7 +2576,8 @@ async fn harness_run(State(app): State<Arc<App>>, body: Bytes) -> Response {
     let out = async {
         let g = ground(&app).await?;
         let w = &app.cfg.world;
-        let cases = harness::golden(&template);
+        // Phase 8 sp2: the golden set is a component — the shelf's first, the file as the fallback
+        let cases = crate::crafts_live::golden_for(g.client(), &w.scope, &template, &app.cfg.spine).await?;
         let rid = harness::run_over_rail(&g, w, &template, &cases, s_opt(&p, "arm").as_deref(), None).await?;
         match harness::wait_run(&g, &rid, Duration::from_secs(90)).await? {
             Some(row) => Ok::<_, RoadError>((200, row)),

@@ -35,6 +35,8 @@ KNOWN = frozenset((
     "harness", "delta", "bodies", "minds", "confirm", "enroll", "seat", "join", "mitl", "impact",
     "mark",
     "parked",           # re-base sp1: the poison events held at, and the advance
+    "levels",           # Phase 8 sp1: THE PATH (named here in sp2 — the sp1 doors folded to `other`)
+    "drafts", "wear",   # Phase 8 sp2: the draft shelf under the person · the wear table
 ))
 _ID_AFTER = frozenset(("ask", "fact", "session", "digest", "join"))
 

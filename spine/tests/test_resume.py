@@ -5,7 +5,7 @@ owing what it owed; the journey says so."""
 import secrets
 from pathlib import Path
 
-from orreth_spine import dispatch, gateway, glass, resident
+from orreth_spine import dispatch, gateway, glass, ground, resident
 
 SPINE = Path(__file__).resolve().parents[1]
 POLICY = SPINE / "policy" / "covenant-policy.v1.json"
@@ -23,8 +23,9 @@ class CutOnce(gateway.FakeGateway):
         return super().think(conn, **kw)
 
 
-def test_a_body_that_dies_mid_think_resumes_at_think(pg, monkeypatch):
+def test_a_body_that_dies_mid_think_resumes_at_the_work_node(pg, monkeypatch):
     monkeypatch.setenv("SPINE_SCOPE", "u:law-" + secrets.token_hex(3))
+    ground.ensure_all(pg)                              # every ground at birth, as a body's process does (the test ran order-dependent before)
     gw = CutOnce("the answer, after the cut")
     lib = resident.Resident(SPINE / "templates" / "librarian-resident.v0.json", gateway=gw)
     lib.load_policy(POLICY); lib.join(pg); lib._serve_conn = pg
@@ -39,7 +40,7 @@ def test_a_body_that_dies_mid_think_resumes_at_think(pg, monkeypatch):
         assert "power cut" in str(e)
     assert glass.ask_view(pg, ask)["status"] == "received"          # the serve rolled back
     snap = lib._ckpt_graph.get_state({"configurable": {"thread_id": ask}})
-    assert snap.next == ("think",)                                   # but the hops before it stayed
+    assert snap.next == ("work",)                                    # but the hops before it stayed (Phase 8 sp2: the hull's work node)
     with pg.transaction():                                           # the next life serves again
         lib._serve_ask(pg.cursor(), ask, ["did:orreth:person:test"])
     view = glass.ask_view(pg, ask)
@@ -48,4 +49,4 @@ def test_a_body_that_dies_mid_think_resumes_at_think(pg, monkeypatch):
     notes = view["journey"]
     assert sum("heard the ask" in n for n in notes) == 1              # never re-heard
     assert sum("recalled" in n for n in notes) == 1                   # never re-recalled
-    assert any("resumed at think" in n for n in notes)                # and it says so
+    assert any("resumed at work" in n for n in notes)                 # and it says so
