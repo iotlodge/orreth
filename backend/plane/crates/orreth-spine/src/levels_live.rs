@@ -131,6 +131,26 @@ pub async fn ensure_universe(
                 e["message_id"].as_str().unwrap_or_default(),
             )
             .await?;
+            // W98 (SPEC-PATH-01, JB's relight 2026-10-05): a level looser than its parent is unlawful —
+            // every floor and room within the universe tightens WITH it, each said as a fact
+            let below = tx
+                .query(
+                    "UPDATE spine_levels SET mode = $1 WHERE scope = $2 AND path <> $2 AND mode <> $1 RETURNING \
+                     path, experiment",
+                    &[&mode, &universe],
+                )
+                .await?;
+            for r in below {
+                let (path, experiment): (String, bool) = (r.get(0), r.get(1));
+                let e = levels::opened_fact(&path, &mode, experiment, KERNEL, "tightened with the universe")
+                    .map_err(refused)?;
+                crate::outbox::add_row(
+                    &tx,
+                    &crate::envelope::encode(&e)?,
+                    e["message_id"].as_str().unwrap_or_default(),
+                )
+                .await?;
+            }
             tx.commit().await?;
         }
         Some(_) => {}

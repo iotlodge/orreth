@@ -436,6 +436,13 @@ def ensure_universe(conn, universe: str, dial: str | None = None) -> dict:
             cur.execute("UPDATE spine_levels SET mode = %s WHERE path = %s", (mode, universe))
             e = opened_fact(universe, mode, False, KERNEL, "tightened at light")
             outbox.add_row(cur, ev.encode(e), e["message_id"])
+            # W98 (SPEC-PATH-01, JB's relight 2026-10-05): a level looser than its parent is unlawful —
+            # every floor and room within the universe tightens WITH it, each said as a fact
+            cur.execute("UPDATE spine_levels SET mode = %s WHERE scope = %s AND path <> %s AND mode <> %s"
+                        " RETURNING path, experiment", (mode, universe, universe, mode))
+            for path, experiment in cur.fetchall():
+                e = opened_fact(path, mode, bool(experiment), KERNEL, "tightened with the universe")
+                outbox.add_row(cur, ev.encode(e), e["message_id"])
         return row(conn, universe)
     return r
 

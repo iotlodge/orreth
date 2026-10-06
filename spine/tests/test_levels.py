@@ -54,9 +54,15 @@ def test_the_universe_opens_at_light_in_its_declared_mode_and_only_tightens(pg, 
     assert (row["level"], row["mode"], row["parent"], row["opened_by"]) == ("universe", "dev", None, "the kernel")
     assert [f["payload"]["reason"] for f in _facts(pg, levels.LEVEL_OPENED) if f["payload"]["ref"] == u] == ["opened at light"]
     assert levels.ensure_universe(pg, u)["mode"] == "dev"                    # a relight says nothing new
+    levels.declare(pg, u, {"format": "orreth-crew/1", "seats": [], "levels": [{"at": "f:ops"}, {"at": "f:ops/r:lab", "experiment": True}]})
     assert levels.ensure_universe(pg, u, "prod")["mode"] == "prod"          # tightened, recorded
     assert [f["payload"]["reason"] for f in _facts(pg, levels.LEVEL_OPENED) if f["payload"]["ref"] == u] == \
         ["opened at light", "tightened at light"]
+    # W98: the floor and the room tightened WITH the universe — a level looser than its parent never stands
+    assert levels.row(pg, f"{u}/f:ops")["mode"] == "prod" and levels.row(pg, f"{u}/f:ops/r:lab")["mode"] == "prod"
+    assert levels.row(pg, f"{u}/f:ops/r:lab")["experiment"] is True
+    assert [f["payload"]["reason"] for f in _facts(pg, levels.LEVEL_OPENED) if f["payload"]["ref"] == f"{u}/f:ops"] == \
+        ["declared by the crew manifest", "tightened with the universe"]
     with pytest.raises(levels.LevelRefused, match="mode only tightens down the path"):
         levels.ensure_universe(pg, u, "dev")                                 # a prod universe never lights as dev
     with pytest.raises(levels.LevelRefused, match="dev or prod"):

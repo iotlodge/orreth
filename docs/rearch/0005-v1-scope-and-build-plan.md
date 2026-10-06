@@ -3216,9 +3216,20 @@ wound this rearchitecture began from).
     glass's shared `askRead` (PANEL sp2's one read per pointer, 600 ms) handed
     the REPLY notice the journey's cached view — a mindless body serves inside
     the window. **CURED 2026-10-05:** a terminal notice (reply · refused ·
-    confirm needed) reads fresh, never the cache. The relight bars (the tag as
-    prod; a prod universe refusing dev) stand for JB's next light:
-    `SPINE_MODE=prod scripts/dev.sh kernel`. What was here before
+    confirm needed) reads fresh, never the cache. **The relight bars WALKED the
+    same evening (JB): PASS** — `SPINE_MODE=prod scripts/dev.sh kernel` lit with
+    "mode: prod", the GROUND tag read `u:dev · prod · cell local`, and the plain
+    relight refused in the log in words ("u:dev is a prod universe and SPINE_MODE
+    asks dev: mode only tightens down the path"). **W98** found on his screenshot:
+    under the prod universe the levels line still read `floor 2 · dev` and
+    `floor ops · dev` — a level looser than its parent, the very thing tighten-only
+    forbids; the tightening at light touched the universe's row alone. **CURED
+    2026-10-05:** when the universe tightens at light, every floor and room within
+    it tightens WITH it in the same transaction, each said as
+    `orreth.level.opened.v1` with the reason "tightened with the universe" (both
+    kernels; `test_levels` proves the floor and the experiment room follow). The
+    hand restore of a dev ground stays JB's own: `UPDATE spine_levels SET
+    mode='dev' WHERE scope='u:dev'`. What was here before
   (THE LANE, the factory ask as escalation) stays owed AFTER the Workshop:
   the lane with RAG (P6.5 sp4/sp5), the stranger with row 5, the lessons
   digest with row 6a, the architect with RAG. Each row proof-shaped
