@@ -170,8 +170,13 @@ impl Gateway {
     pub async fn add_stall(&self, name: &str, d: &Value) -> Result<bool, GatewayDark> {
         let have = self.models().await?;
         let present = have.contains_key(name);
+        let pin = d["price"]["in_per_m"].as_f64().unwrap_or(0.0);
+        let pout = d["price"]["out_per_m"].as_f64().unwrap_or(0.0);
         if let Some(h) = have.get(name) {
-            if h["model_info"]["base_model"] == d["route"] {
+            // W107: an entry that stands for the same base model is kept — unless the deal now carries a price
+            // the entry never got (an entry without costs is charged $0 on every streamed answer): rewritten
+            let priced_entry = h["litellm_params"]["input_cost_per_token"].as_f64().is_some();
+            if h["model_info"]["base_model"] == d["route"] && ((pin == 0.0 && pout == 0.0) || priced_entry) {
                 return Ok(true);
             }
             self.drop_stall(name).await?;
@@ -183,8 +188,6 @@ impl Gateway {
         if let Some(b) = d["base"].as_str().filter(|b| !b.is_empty()) {
             params["api_base"] = json!(b);
         }
-        let pin = d["price"]["in_per_m"].as_f64().unwrap_or(0.0);
-        let pout = d["price"]["out_per_m"].as_f64().unwrap_or(0.0);
         if pin != 0.0 || pout != 0.0 {
             params["input_cost_per_token"] = json!(pin / 1e6);
             params["output_cost_per_token"] = json!(pout / 1e6);

@@ -360,9 +360,14 @@ class Gateway:
         reply), and the fuel clause would not bind. An entry already there
         without them is rewritten."""
         have = self.models().get(name)
+        pr = d.get("price") or {}
+        priced = bool(pr.get("in_per_m") or pr.get("out_per_m"))
         if have is not None:
             info = have.get("model_info") or {}
-            if info.get("base_model") == d["route"]:
+            # W107 (2026-10-07): an entry for the same base model is kept — unless the deal now carries a price the
+            # entry never got (an entry without costs streams for free): then it is rewritten with the costs
+            priced_entry = (have.get("litellm_params") or {}).get("input_cost_per_token") is not None
+            if info.get("base_model") == d["route"] and (not priced or priced_entry):
                 return {"present": True}
             self.drop_stall(name)                    # an old entry that streams for free: rewritten
         params = {"model": d["route"]}
@@ -370,8 +375,7 @@ class Gateway:
             params["api_key"] = f"os.environ/{d['key']}"
         if d.get("base"):
             params["api_base"] = d["base"]
-        pr = d.get("price") or {}
-        if pr.get("in_per_m") or pr.get("out_per_m"):   # the pin's price is the contract the gateway charges by
+        if priced:                                   # the pin's price is the contract the gateway charges by
             params["input_cost_per_token"] = float(pr.get("in_per_m", 0.0)) / 1e6
             params["output_cost_per_token"] = float(pr.get("out_per_m", 0.0)) / 1e6
         st, body, _ = self._call("POST", "/model/new", {"model_name": name, "litellm_params": params,

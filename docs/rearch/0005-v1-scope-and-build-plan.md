@@ -3396,6 +3396,28 @@ wound this rearchitecture began from).
       ?options=-c search_path=<schema>`), as the rig proofs already do — on its own schema the
       reply arrived and the card folded. The spec is now a NUMBERED walk (one thing to do, one
       thing to see, per step) at JB's ask.
+      **W107 — THE $0 STALL (JB, 2026-10-07, adding sonnet for the mind chip: "it has no $$
+      other than 0. Will this work correctly? Are we really tracking costs through the
+      gateway?").** The Rust door's register path (`stable_live::register_mind_in`) pinned the
+      deal AS GIVEN — "stablekeeper, add the LLM anthropic claude-sonnet-5-5 as sonnet" names no
+      price, so the pin read $0 in / $0 out — where the reference's keeper and both kernels' seed
+      read the gateway's own price map (LiteLLM knew sonnet: $2 in / $10 out per million, context
+      1,000,000). The meter charges BY THE PIN (`stable.usd(price, tokens)` into `spine_meter`), so
+      every sonnet thought would have metered $0 and the Cost measurement would have lied; and an
+      entry written without costs is charged $0 by the gateway on every streamed answer (the
+      2026-09-24 finding), so the fuel clause would not bind either. **CURED 2026-10-07, both
+      kernels:** a deal pinned without a price takes the gateway's map after the entry is made
+      (`seen_deal` → the price, the context, the modalities), the entry is rewritten with the costs,
+      and the pin lands priced; both gateway clients (`gateway.rs::add_stall` · `stable.py
+      Gateway.add_stall`) rewrite an entry that stands without costs when its deal gains them —
+      proven live through the cured Rust door on a private kernel (sonnet-test → $2 / $10 ·
+      1,000,000) and by `test_stable::test_w107_…` on the fake gateway. JB's standing sonnet pin is
+      re-pinned by the human's word: "stablekeeper, repin sonnet" (the keeper's `repin` act — the
+      market's price onto the pin as version 2, held at L2); the guide teaches it (0.8.1). Costs ARE
+      tracked through the gateway: every body thinks through LiteLLM on :4604 with its own virtual
+      key and budget (the fuel clause), the gateway's usage lands in `spine_meter` priced by the
+      pin, the mind cards and "X's fuel" read it — haiku stands at 1,675 thoughts, $3.27, on JB's
+      ground today; gemma (local ollama) at $0 honestly.
   What was here before
   (THE LANE, the factory ask as escalation) stays owed AFTER the Workshop:
   the lane with RAG (P6.5 sp4/sp5), the stranger with row 5, the lessons

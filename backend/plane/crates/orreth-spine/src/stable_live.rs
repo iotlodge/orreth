@@ -231,15 +231,36 @@ pub async fn register_mind_in(
             "an LLM needs a short lowercase name (letters, digits, . _ -)",
         ));
     }
+    let mut d = d.clone();
     if let Some(gw) = gw {
-        gw.add_stall(&name, d).await?;
+        gw.add_stall(&name, &d).await?;
+        // W107 (JB, 2026-10-07: "sonnet … has no $$ other than 0 — will this work correctly?"): a deal pinned
+        // WITHOUT a price takes the gateway's own price map — never guessed, never left at $0 — as the reference
+        // keeper and both seeds already do; the entry is rewritten so the gateway charges by the pin too
+        let unpriced = d["price"]["in_per_m"].as_f64().unwrap_or(0.0) == 0.0
+            && d["price"]["out_per_m"].as_f64().unwrap_or(0.0) == 0.0;
+        if unpriced {
+            if let Ok(Some(seen)) = gw.seen_deal(&name).await {
+                if seen["price"]["in_per_m"].as_f64().is_some() {
+                    d["price"] = seen["price"].clone();
+                    if d["context"].is_null() && !seen["context"].is_null() {
+                        d["context"] = seen["context"].clone();
+                    }
+                    if d["modalities"] == json!(["text"]) && seen["modalities"].is_array() {
+                        d["modalities"] = seen["modalities"].clone();
+                    }
+                    gw.drop_stall(&name).await?;
+                    gw.add_stall(&name, &d).await?;
+                }
+            }
+        }
     }
     let secrets: Vec<String> = d["key"]
         .as_str()
         .filter(|k| !k.is_empty())
         .map(|k| vec![k.to_string()])
         .unwrap_or_default();
-    services_live::register_in(tx, w, &name, "mind", d, by, None, &secrets).await
+    services_live::register_in(tx, w, &name, "mind", &d, by, None, &secrets).await
 }
 
 /// `stable.repin_mind` inside `tx`: a changed deal re-pins the stall and rewrites its entry.

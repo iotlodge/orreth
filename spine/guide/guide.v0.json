@@ -1,6 +1,6 @@
 {
  "format": "orreth-guide/1",
- "version": "0.8.0",
+ "version": "0.8.1",
  "title": "THE GUIDE · what you can say here, and what happens",
  "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful (JB's law 2026-10-06: the guide turns with every word the glass learns or stops hearing — test_guide holds it to the parsers)",
  "sections": [
@@ -204,7 +204,11 @@
     },
     {
      "say": "stablekeeper, add the LLM ollama gemma3:270m as gemma",
-     "does": "An LLM wherever it lives — anthropic · openrouter · ollama · openai · compatible — becomes a stall in the Stable and an entry in the gateway; held for your yes."
+     "does": "An LLM wherever it lives — anthropic · openrouter · ollama · openai · compatible — becomes a stall in the Stable and an entry in the gateway; held for your yes. A deal added without a price takes the gateway's own price map (W107: never left at $0 — the meter charges by the pin); say the price yourself to pin another: “… as sonnet at $2 in and $10 out per million”."
+    },
+    {
+     "say": "stablekeeper, repin sonnet",
+     "does": "Re-pins a stall from the market's word — the gateway's price map (or OpenRouter's catalog): the new price, context and modalities land as the next version (held at the interlock, L2); the old pin stays in its history. The cure for a stall that reads $0 in / $0 out."
     },
     {
      "say": "assign librarian to gemma · assign librarian to gemma for fast work · unassign librarian",

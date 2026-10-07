@@ -152,6 +152,8 @@ def test_a_drained_lease_speaks_in_words_and_the_keeper_proposes_a_refill_the_hu
     keeper's DID, cancel the default, none while one waits; the human's
     yes grows the allowance at the gateway (a fuel fact, the chain
     keeper → human → kernel) and the body thinks again."""
+    from orreth_spine import ground
+    ground.ensure_all(pg)                                   # the ground whole: the monitor's snapshot reads the levels (ran order-dependent before)
     monkeypatch.setenv(stable.LEASE_USD_DIAL, "0.00003")
     gw = gateway.LiteLLMGateway()
     services.seed(pg, gateway=gw, home=None)
@@ -384,3 +386,24 @@ def test_the_stables_doors_hold_and_the_shelf_shows_the_deal(rig, fake):
     st, body = _get(rig.port, "/monitor")
     vals = json.loads(body)["values"]
     assert {"minds_standing", "usd_today", "route_failures_1h", "meter_rate_10m", "bodies_drained"} <= set(vals)
+
+
+def test_w107_an_unpriced_entry_is_rewritten_when_the_deal_gains_a_price(pg, fake):
+    """W107 (JB, 2026-10-07: sonnet added through the Rust door read "$0 in / $0 out"): a deal pinned
+    without a price takes the gateway's own price map, and an entry that stands without costs is
+    REWRITTEN when its deal gains them — an entry without costs is charged $0 on every streamed
+    answer, so the meter would lie. The Rust door's register path reads the map the same way
+    (proven live on a private kernel 2026-10-07); here the gateway client's law."""
+    gw = gateway.LiteLLMGateway().stable
+    bare = stable.deal(SONNET, "anthropic")                           # no price said
+    assert bare["price"] == {"in_per_m": 0.0, "out_per_m": 0.0}
+    gw.add_stall("w107", bare)
+    assert "input_cost_per_token" not in fake.models["w107"]["litellm_params"]
+    assert gw.add_stall("w107", bare) == {"present": True}             # the same unpriced deal: kept
+    seen = gw.seen_deal("w107")                                        # the gateway's own map knows the price
+    assert seen["price"]["in_per_m"] > 0
+    priced = stable.deal(SONNET, "anthropic", price=seen["price"], context=seen["context"])
+    assert gw.add_stall("w107", priced) == {"present": True}           # rewritten, not kept
+    lp = fake.models["w107"]["litellm_params"]
+    assert lp["input_cost_per_token"] == seen["price"]["in_per_m"] / 1e6 and lp["output_cost_per_token"] == seen["price"]["out_per_m"] / 1e6
+    assert gw.add_stall("w107", priced) == {"present": True} and fake.models["w107"]["litellm_params"] == lp   # priced, kept
