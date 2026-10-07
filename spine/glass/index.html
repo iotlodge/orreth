@@ -2760,6 +2760,7 @@ async function loadWorkshop(){
   drawWorkshopRail(); drawMindChip(); drawWorkshop();
 }
 function plainKind(k){ return k === "golden" ? "golden set" : k; }
+function pluralKind(k){ return {template: "templates", prompt: "prompts", skill: "skills", policy: "policies", graph: "graphs", binding: "bindings", golden: "golden sets"}[k] || k + "s"; }   // W103: "policys"
 function drawWorkshopRail(){
   const box = document.getElementById("ws-list"); if (!box) return;
   const f = WS.filter.trim().toLowerCase();
@@ -2775,7 +2776,7 @@ function drawWorkshopRail(){
   for (const k of CRAFT_KINDS){
     const rows = WS.shelf.filter(s => s.kind === k && hit(`${s.craft || s.name} ${s.kind} ${((s.manifest || {}).words || "")}`));
     if (!rows.length) continue;
-    h += `<div class="ws-h sub">${esc(plainKind(k))}${k === "golden" ? "s" : "s"}</div>`;
+    h += `<div class="ws-h sub">${esc(pluralKind(k))}</div>`;
     for (const s of rows)
       h += `<div class="ws-row ${WS.open && WS.open.source === "shelf" && WS.open.craft.name === s.name ? "on" : ""} ${s.state === "retired" ? "retired" : ""}" data-craft="${esc(s.name)}" title="${esc(s.did)} · v${s.version} · ${esc(s.state)}">${esc(s.craft || s.name)}<span class="meta">v${s.version}${s.worn_by ? ` · worn by ${s.worn_by}` : ""}${s.state === "retired" ? " · retired" : ""}</span></div>`;
   }
@@ -2832,7 +2833,7 @@ function graphOf(){                           // what the canvas draws: a graph 
   if (WS.open.kind === "graph") return {g: WS.decl, via: null};
   if (WS.open.kind === "template"){
     const s = WS.shelf.find(x => x.kind === "graph" && (x.craft || x.name) === WS.decl.graph);
-    return s ? {g: s.manifest, via: `the ${esc(WS.open.name)} template wears graph ${esc(WS.decl.graph)} — drawn from the shelf, read-only here (load it in the Workshop to draft from it)`}
+    return s ? {g: s.manifest, via: `the ${esc(WS.open.name)} template wears graph ${esc(WS.decl.graph)} — drawn from the shelf, read-only here (click ${esc(WS.decl.graph)} under graphs on the left to draft from it)`}
              : {g: null, via: `the ${esc(WS.open.name)} template names graph ${esc(String(WS.decl.graph || "?"))}, which is not on the shelf — a body wearing it cannot act`};
   }
   return null;
@@ -2966,7 +2967,7 @@ function drawInspector(){
   if (ro){
     const s = WS.open.craft, st = WS.stands[s.name];
     h += `<div class="ws-h">THE CRAFT · read-only — a craft on the shelf is a version; change it by drafting from it</div>` +
-         `<div class="ws-kv"><span>what</span><b>${esc(plainKind(s.kind))} ${esc(WS.open.name)}</b></div><div class="ws-kv"><span>address</span><b>${esc(s.did)}</b> <i>(no self — addressed, never minted)</i></div>` +
+         `<div class="ws-kv"><span>what</span><b>${esc(plainKind(s.kind))} ${esc(WS.open.name)}</b></div><div class="ws-kv"><span>address</span><b>${esc(s.did)} <i>(no self — addressed, never minted)</i></b></div>` +
          `<div class="ws-kv"><span>pin</span><b>${esc(s.manifest_hash.slice(7, 23))}</b></div><div class="ws-kv"><span>stands</span><b>${esc(stateWords(s))}</b></div><div class="ws-kv"><span>health</span><b>${esc(healthWords(s))}</b></div>` +
          `<div class="ws-kv"><span>worn by</span><b>${s.worn_by ? `${s.worn_by} bod${s.worn_by === 1 ? "y" : "ies"} now` : "no body now"}</b></div>` +
          `<div class="ws-h">WHERE IT STANDS · the wearers and the floor or room each stands on</div>` +

@@ -683,7 +683,7 @@ class Resident:
                             (read,))
                 names = {d: n for d, n in cur.fetchall()}
                 steps.append("read the session's results by "
-                             + ", ".join(names.get(d, d[-8:]) for d in read))
+                             + ", ".join(names.get(d, d if not d.startswith("did:") else d[-8:]) for d in read))   # W106: "e kernel"
             return {"notes": notes, "steps": steps, "read": read}
 
         def route(s: _State) -> dict:

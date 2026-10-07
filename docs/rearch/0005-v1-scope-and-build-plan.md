@@ -3380,6 +3380,22 @@ wound this rearchitecture began from).
       Workshop never rises above the chat; with both open the chat docks as a full-height
       column on the right and the Workshop yields its right edge (`layoutWorkshop`); CHAT in
       the Workshop's header; the grip resizes the docked chat's width. The walk's bars stand.
+      **JB's first screenshots (2026-10-07) and Fable's own walk the same morning** (a private
+      kernel on :4610 — its own universe `u:fable`, its own schema, the seat `fable` governing;
+      every step of SPEC-WORKSHOP-01 walked by hand in Chrome): the fifteen steps PASS as
+      written. Four wounds found in JB's pictures and cured: **W103** the rail's plurals read
+      "policys" (a plural map: policies · golden sets); **W104** the craft card's "(no self —
+      addressed, never minted)" note fell into the label column; **W105** a template's banner
+      said "load it in the Workshop to draft from it" to a reader already standing in the
+      Workshop (now "click mind.v0 under graphs on the left"); **W106** the journey read
+      "read the session's results by echo, e kernel, crew" — the kernel's name sliced like a
+      DID (`resident.py`). A false alarm worth its lesson: on the first private walk the cut's
+      "Done, on your word" never arrived live — two kernels (JB's :4600 and the test's :4610)
+      were pumping ONE outbox table, so JB's kernel published the test kernel's reply onto its
+      own topics; a second kernel on a shared ground needs its own schema (`SPINE_PG …
+      ?options=-c search_path=<schema>`), as the rig proofs already do — on its own schema the
+      reply arrived and the card folded. The spec is now a NUMBERED walk (one thing to do, one
+      thing to see, per step) at JB's ask.
   What was here before
   (THE LANE, the factory ask as escalation) stays owed AFTER the Workshop:
   the lane with RAG (P6.5 sp4/sp5), the stranger with row 5, the lessons
