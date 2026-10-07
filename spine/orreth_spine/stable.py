@@ -959,16 +959,32 @@ def search(conn, q: str | None = None, *, klass: str | None = None, max_in_per_m
     return out
 
 
+LOCAL_PROVIDERS = ("ollama",)                        # a mind on this metal: no charge, honestly
+
+
+def price_words(name: str, m: dict) -> str:
+    """A stall's price in words (rule 13, W108): a local mind says "local · no charge"; a pin without a
+    price says so and names the cure — never a bare "$0 in / $0 out" that reads like a bargain."""
+    pr = m.get("price") or {}
+    pin, pout = float(pr.get("in_per_m") or 0), float(pr.get("out_per_m") or 0)
+    if (m.get("provider") or "") in LOCAL_PROVIDERS and not pin and not pout:
+        return "local · no charge"
+    if not pin and not pout:
+        return f"UNPRICED — the meter would read $0; say \u201cstablekeeper, repin {name}\u201d"
+    return f"${pin:g} in / ${pout:g} out per million"
+
+
 def stall_words(s: dict) -> str:
     m = s.get("manifest") or {}
-    pr = m.get("price") or {}
     sp = s.get("spend") or {}
-    return (f"{s['name']} — {m.get('provider')} {m.get('model')} · {m.get('class')} · "
-            f"${pr.get('in_per_m', 0):g} in / ${pr.get('out_per_m', 0):g} out per million"
+    spent = (f" · spent ${sp.get('usd', 0):.4f} over {sp.get('calls', 0)} call{'s' if sp.get('calls', 0) != 1 else ''}"
+             if sp.get("calls") else " · never called")
+    if not m.get("provider"):                        # W108: the old world's built-in mind, retired at the Stable's birth
+        return f"{s['name']} — the old world's built-in mind ({m.get('model') or 'no model named'}), retired at the Stable's birth · {s['state']}{spent}"
+    return (f"{s['name']} — {m.get('provider')} {m.get('model')} · {m.get('class') or 'standard'} · "
+            + price_words(s["name"], m)
             + (f" · context {int(m['context']):,}" if m.get("context") else "")
-            + f" · {s['state']}"
-            + (f" · spent ${sp.get('usd', 0):.4f} over {sp.get('calls', 0)} call{'s' if sp.get('calls', 0) != 1 else ''}"
-               if sp.get("calls") else " · never called"))
+            + f" · {s['state']}" + spent)
 
 
 def spend(conn) -> dict:

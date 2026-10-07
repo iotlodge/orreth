@@ -3418,6 +3418,21 @@ wound this rearchitecture began from).
       key and budget (the fuel clause), the gateway's usage lands in `spine_meter` priced by the
       pin, the mind cards and "X's fuel" read it — haiku stands at 1,675 thoughts, $3.27, on JB's
       ground today; gemma (local ollama) at $0 honestly.
+      **W108 — THE STABLE'S WORDS (JB's Monitor, 2026-10-07: "does this image read right to
+      you?").** It did not: the old world's built-in mind read "anthropic — None
+      claude-haiku-4-5-20251001 · None · $0 in / $0 out per million" (a provider and a class
+      printed as Python's None — rule 13); a local ollama mind read "$0 in / $0 out per million"
+      like a bargain; an unpriced pin (sonnet) read exactly like a free one while its line showed
+      "spent $0.0001 over 2 calls" — the two un-streamed probe calls priced by the gateway's own
+      cost header (`x-litellm-response-cost`), the pin's $0 waiting for every streamed thought.
+      **CURED 2026-10-07, both kernels and the glass** (`stable.stall_words` · `price_words` —
+      `stable.rs` the same; the mind card's line in the glass): the old built-in reads "the old
+      world's built-in mind (claude-haiku-4-5-20251001), retired at the Stable's birth"; a local
+      mind reads "local · no charge"; a pin without a price reads "UNPRICED — the meter would
+      read $0; say “stablekeeper, repin sonnet”". `test_stable::test_w108_…` holds the four
+      lines. The meter's two prices, said plainly: an un-streamed answer is priced by the
+      gateway's cost header; a streamed answer (every body's thought) by the pin — so the pin is
+      what must be right.
   What was here before
   (THE LANE, the factory ask as escalation) stays owed AFTER the Workshop:
   the lane with RAG (P6.5 sp4/sp5), the stranger with row 5, the lessons

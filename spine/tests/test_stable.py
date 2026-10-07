@@ -322,7 +322,7 @@ def test_the_keepers_tool_holds_what_is_consequential_and_names_the_act(pg, fake
         keeper._confirm_ask(pg.cursor(), a1, True, [ME], proof="L2", by=ME)
     ll = services.get(pg, "llama")
     assert ll is not None and ll["kind"] == "mind" and fake.models["llama"]["litellm_params"]["model"] == "ollama/llama3.2"
-    assert glass.ask_view(pg, a1)["reply"].startswith("Done, on your word: the llama LLM stands in the Stable — llama — ollama llama3.2 · fast · $0 in / $0 out per million")
+    assert glass.ask_view(pg, a1)["reply"].startswith("Done, on your word: the llama LLM stands in the Stable — llama — ollama llama3.2 · fast · local · no charge")
     # the routine acts run at once: list (W31 — from the registry), fuel, spend
     words = tools._minds_tool({"action": "list", "_by": keeper.identity.did}, pg)
     assert words.startswith("2 minds: haiku — anthropic") and "llama — ollama llama3.2" in words and "no assignments" in words
@@ -407,3 +407,17 @@ def test_w107_an_unpriced_entry_is_rewritten_when_the_deal_gains_a_price(pg, fak
     lp = fake.models["w107"]["litellm_params"]
     assert lp["input_cost_per_token"] == seen["price"]["in_per_m"] / 1e6 and lp["output_cost_per_token"] == seen["price"]["out_per_m"] / 1e6
     assert gw.add_stall("w107", priced) == {"present": True} and fake.models["w107"]["litellm_params"] == lp   # priced, kept
+
+
+def test_w108_a_stalls_line_reads_plain_in_every_case():
+    """W108 (JB's Monitor, 2026-10-07): the old world's built-in mind read "anthropic — None … · None ·
+    $0 in / $0 out"; a local mind read "$0 in / $0 out" like a bargain; an unpriced pin read the same
+    as a free one. Rule 13: every line plain, the cure named."""
+    old = {"name": "anthropic", "state": "retired", "manifest": {"route": "anthropic/claude", "model": "claude-haiku-4-5-20251001"}, "spend": {"calls": 1, "usd": 0}}
+    assert stable.stall_words(old) == "anthropic — the old world's built-in mind (claude-haiku-4-5-20251001), retired at the Stable's birth · retired · spent $0.0000 over 1 call"
+    local = {"name": "gemma", "state": "healthy", "manifest": stable.deal("gemma3:270m", "ollama"), "spend": None}
+    assert stable.stall_words(local) == "gemma — ollama gemma3:270m · standard · local · no charge · healthy · never called"
+    bare = {"name": "sonnet", "state": "healthy", "manifest": stable.deal(SONNET, "anthropic"), "spend": {"calls": 2, "usd": 0.0001}}
+    assert stable.stall_words(bare) == f"sonnet — anthropic {SONNET} · standard · UNPRICED — the meter would read $0; say “stablekeeper, repin sonnet” · healthy · spent $0.0001 over 2 calls"
+    priced = {"name": "haiku", "state": "healthy", "manifest": stable.deal(HAIKU, "anthropic", klass="fast", price={"in_per_m": 1, "out_per_m": 5}, context=200000)}
+    assert stable.stall_words(priced) == f"haiku — anthropic {HAIKU} · fast · $1 in / $5 out per million · context 200,000 · healthy · never called"

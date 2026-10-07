@@ -2299,7 +2299,11 @@ function serviceCard(s){
   const under = s.kind === "tool" && m.server ? `<div class="meta">through the ${esc(m.server)} MCP server · ${esc(m.consequence || "routine")}</div>` : "";
   // P6.5 sp3: a mind wears its DEAL — where it resides, its class, its price per million in and out, its context — and what it has cost
   const sp = s.spend || {};
-  const mindLine = s.kind === "mind" ? `<div class="meta">${esc(m.provider || "?")} ${esc(m.model || "?")} · ${esc(m.class || "standard")} · $${(m.price || {}).in_per_m ?? 0} in / $${(m.price || {}).out_per_m ?? 0} out per million` +
+  const priceWords = (nm, mm) => { const p = mm.price || {}; const pin = Number(p.in_per_m || 0), pout = Number(p.out_per_m || 0);   // W108: the words of a price
+    if (mm.provider === "ollama" && !pin && !pout) return "local · no charge";
+    if (!pin && !pout) return `UNPRICED — the meter would read $0; say “stablekeeper, repin ${esc(nm)}”`;
+    return `$${pin} in / $${pout} out per million`; };
+  const mindLine = s.kind === "mind" ? `<div class="meta">${m.provider ? esc(m.provider) + " " + esc(m.model || "?") + " · " + esc(m.class || "standard") : "the old world's built-in mind (" + esc(m.model || "no model named") + "), retired at the Stable's birth"} · ${priceWords(s.name, m)}` +
                     (m.context ? ` · context ${Number(m.context).toLocaleString()}` : "") + (m.key ? ` · key ${esc(m.key)} (by name)` : " · no key needed") +
                     `</div><div class="meta">${sp.calls ? `spent $${(sp.usd || 0).toFixed(4)} over ${sp.calls} call${sp.calls === 1 ? "" : "s"} ($${(sp.usd_today || 0).toFixed(4)} today)` : "never called"}` +
                     (sp.failed ? ` · ${sp.failed} could not think` : "") + `</div>` : "";

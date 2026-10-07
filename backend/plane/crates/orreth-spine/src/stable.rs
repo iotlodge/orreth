@@ -704,42 +704,63 @@ pub fn act_words(tool: &str, args: &Value) -> String {
     }
 }
 
+/// `stable.price_words`: a stall's price in words (rule 13, W108): a local mind says "local · no
+/// charge"; a pin without a price says so and names the cure — never a bare "$0 in / $0 out".
+pub fn price_words(name: &str, m: &Value) -> String {
+    let pr = m.get("price").filter(|p| truthy(p)).cloned().unwrap_or(json!({}));
+    let pin = f_of(pr.get("in_per_m").unwrap_or(&Value::Null));
+    let pout = f_of(pr.get("out_per_m").unwrap_or(&Value::Null));
+    let provider = m.get("provider").and_then(Value::as_str).unwrap_or_default();
+    if LOCAL_PROVIDERS.contains(&provider) && pin == 0.0 && pout == 0.0 {
+        return "local · no charge".into();
+    }
+    if pin == 0.0 && pout == 0.0 {
+        return format!("UNPRICED — the meter would read $0; say \u{201c}stablekeeper, repin {name}\u{201d}");
+    }
+    format!("${} in / ${} out per million", g_fmt(pin), g_fmt(pout))
+}
+
+/// A mind on this metal: no charge, honestly.
+pub const LOCAL_PROVIDERS: [&str; 1] = ["ollama"];
+
 /// `stable.stall_words`: one line for a stall on the shelf.
 pub fn stall_words(s: &Value) -> String {
     let m = manifest(s);
-    let pr = m
-        .get("price")
-        .filter(|p| truthy(p))
-        .cloned()
-        .unwrap_or(json!({}));
     let sp = s
         .get("spend")
         .filter(|p| truthy(p))
         .cloned()
         .unwrap_or(json!({}));
     let calls = sp["calls"].as_i64().unwrap_or(0);
+    let spent = if calls > 0 {
+        format!(" · spent ${:.4} over {calls} call{}", f_of(&sp["usd"]), if calls != 1 { "s" } else { "" })
+    } else {
+        " · never called".to_string()
+    };
+    let provider = m.get("provider").and_then(Value::as_str).unwrap_or_default();
+    if provider.is_empty() {
+        // W108: the old world's built-in mind, retired at the Stable's birth — never "None None"
+        let model = m.get("model").and_then(Value::as_str).filter(|x| !x.is_empty()).unwrap_or("no model named");
+        return format!(
+            "{} — the old world's built-in mind ({model}), retired at the Stable's birth · {}{spent}",
+            name_of(s),
+            s_of(&s["state"])
+        );
+    }
+    let class = m.get("class").and_then(Value::as_str).filter(|x| !x.is_empty()).unwrap_or("standard");
     let mut out = format!(
-        "{} — {} {} · {} · ${} in / ${} out per million",
+        "{} — {} {} · {} · {}",
         name_of(s),
-        python_str(m.get("provider").unwrap_or(&Value::Null)),
+        provider,
         python_str(m.get("model").unwrap_or(&Value::Null)),
-        python_str(m.get("class").unwrap_or(&Value::Null)),
-        g_fmt(f_of(pr.get("in_per_m").unwrap_or(&Value::Null))),
-        g_fmt(f_of(pr.get("out_per_m").unwrap_or(&Value::Null)))
+        class,
+        price_words(&name_of(s), &m)
     );
     if let Some(c) = m.get("context").and_then(opt_i64).filter(|c| *c != 0) {
         out.push_str(&format!(" · context {}", thousands(c)));
     }
     out.push_str(&format!(" · {}", s_of(&s["state"])));
-    if calls > 0 {
-        out.push_str(&format!(
-            " · spent ${:.4} over {calls} call{}",
-            f_of(&sp["usd"]),
-            if calls != 1 { "s" } else { "" }
-        ));
-    } else {
-        out.push_str(" · never called");
-    }
+    out.push_str(&spent);
     out
 }
 
