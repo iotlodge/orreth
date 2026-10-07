@@ -236,7 +236,7 @@
   .brow .blocked{color:var(--red-ink);font-size:10.5px;flex:none;max-width:38%;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
   /* W13: a click on any pull raises it above the chat */
-  #crew.raised,#monitor.raised,#band.raised,#workshop.raised{z-index:11}
+  #crew.raised,#monitor.raised,#band.raised{z-index:11}
   /* the kind of an ask (P23): the words propose it; the human flips it */
   #kind{display:flex;gap:10px;align-items:baseline;padding:2px 14px 8px;
     font-size:10.5px;color:var(--dim);letter-spacing:.2em}
@@ -419,7 +419,11 @@
   #workshop-tab:hover{color:var(--amber)}
   #workshop{position:fixed;inset:0;transform:translateX(104%);transition:transform .45s cubic-bezier(.22,.9,.3,1);z-index:9;
     display:grid;grid-template-rows:auto minmax(0,1fr);background:var(--glass);backdrop-filter:blur(12px);border-left:1px solid var(--seam)}
-  #workshop.open{transform:translateX(0)} #workshop.raised{z-index:11}
+  #workshop.open{transform:translateX(0)}
+  /* W102 (JB, 2026-10-07): the Workshop NEVER covers the chat — with both open the chat DOCKS as a full-height column on
+     the right and the Workshop yields to it (its right edge set by layoutWorkshop); the Workshop's own header offers CHAT */
+  body:has(#workshop.open) #chat{right:0;border-radius:0;border-left:1px solid var(--seam);border-bottom:none;box-shadow:none}
+  body:has(#workshop.open) #chat #grip{display:none}
   #workshop>header{display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--seam);color:var(--amber);font-size:11px;letter-spacing:.12em;flex-wrap:wrap}
   #workshop>header .x{margin-left:auto;color:var(--dim);cursor:pointer;letter-spacing:.08em;font-size:10.5px} #workshop>header .x:hover{color:var(--amber)}
   #ws-chip{display:inline-flex;gap:8px;align-items:center;color:var(--dim);letter-spacing:.06em;font-size:10.5px;cursor:help}
@@ -737,7 +741,8 @@
   <header>
     <span>THE WORKSHOP · the one place where all mutability occurs — your drafts · the shelf's crafts · the graph drawn from its declaration · the node inspector · the cut</span>
     <span id="ws-chip">MIND <select id="ws-mind"><option value="">…</option></select><span id="ws-mind-card"></span></span>
-    <span class="x" onclick="toggleWorkshop(false)" title="close the Workshop">Esc · ▾ close</span>
+    <span class="x" onclick="toggleChat()" title="the chat — docked beside the Workshop; with a draft open it speaks to the Workshop agent">CHAT ▾</span>
+    <span class="x" style="margin-left:0" onclick="toggleWorkshop(false)" title="close the Workshop">Esc · ▾ close</span>
   </header>
   <div id="ws-body">
     <div id="ws-rail"><input id="ws-filter" placeholder="find a draft or a craft — by name, kind or words" autocomplete="off"><div id="ws-list"></div></div>
@@ -946,6 +951,7 @@ function toggleChat(open){
   chat.classList.toggle("open", open ?? !chat.classList.contains("open"));
   if (chat.classList.contains("open"))
     document.getElementById("chat-in").focus();
+  if (typeof layoutWorkshop === "function") layoutWorkshop();   // W102: the Workshop yields to the chat
 }
 addEventListener("keydown", e => {
   if (e.key === "Escape") {                             // SPEC-ESC-01 + P19 — W32 (walk #11): ONE Esc, ONE thing —
@@ -2725,6 +2731,7 @@ function toggleWorkshop(open){
                label: "the Workshop · its agent, workshop — with a draft open, say what to change and it edits it on your words"});
   }
   if (!now && was) popFocusOf("ws_workshop");                    // W53: the pull closed, its focus goes with it
+  layoutWorkshop();                                              // W102: the chat docks beside it, never under it
 }
 let workshopTimer = null;
 async function loadWorkshop(){
@@ -3121,7 +3128,22 @@ function workshopWire(text, to){        // the open draft rides the ask BY ID so
   return `${text}\n[draft ${WS.open.draft.draft_id}]`;
 }
 
-workshopPull.addEventListener("pointerdown", () => { [crewPull, monitorPull, band].forEach(q => q.classList.remove("raised")); workshopPull.classList.add("raised"); });   // W13
+/* W102: the Workshop yields to the chat — the chat docks full-height on the right, the Workshop's right edge meets it */
+let WS_DOCK = null;                       // the chat's own size, kept while it is docked beside the Workshop
+function wsDocked(){ return workshopPull && workshopPull.classList.contains("open") && chat.classList.contains("open"); }
+function layoutWorkshop(){
+  if (!workshopPull) return;
+  if (wsDocked()){
+    if (WS_DOCK === null) WS_DOCK = {w: chat.style.width || "", h: chat.style.height || ""};
+    const want = Math.max(320, Math.min(parseFloat(chat.style.width) || 560, Math.floor(window.innerWidth * 0.36)));
+    chat.style.width = want + "px"; chat.style.height = window.innerHeight + "px";
+    workshopPull.style.right = Math.ceil(chat.getBoundingClientRect().width) + "px";
+  } else {
+    workshopPull.style.right = "";
+    if (WS_DOCK !== null){ chat.style.width = WS_DOCK.w; chat.style.height = WS_DOCK.h; WS_DOCK = null; }
+  }
+}
+addEventListener("resize", layoutWorkshop);
 
 let HC = null, HC_AT = 0;                        // the health checks, read every 30 s (nine laws, some through the gateway)
 async function loadMonitor(){
@@ -3515,7 +3537,8 @@ document.getElementById("ses-new").onclick = () => rollSession(true);
     if (!drag) return;
     const w = Math.max(320, Math.min(window.innerWidth - 24, drag.right - e.clientX));
     const h = Math.max(240, Math.min(window.innerHeight - 24, e.clientY - drag.top));
-    chat.style.width = w + "px"; chat.style.height = h + "px";
+    chat.style.width = w + "px"; if (!wsDocked()) chat.style.height = h + "px";
+    if (wsDocked()) layoutWorkshop();
   });
   const done = () => { if (!drag) return; drag = null;
     try { localStorage.setItem("orreth.chat.size", JSON.stringify(

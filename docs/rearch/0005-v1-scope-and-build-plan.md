@@ -3374,6 +3374,12 @@ wound this rearchitecture began from).
       is owed); a graph compiled to its own LangGraph (the hull's work node interprets the
       declaration inside one checkpointed hop — one engine, 0040's law, said plainly); the
       Rust kernel runs no graph (bodies are Python); the Experiment and the promotion (sp4).
+      **W102 (JB's first touch, 2026-10-07):** the Workshop covered the chat's composer — a
+      click anywhere in the pull raised it above the chat (z-index 11 over 10) and nothing
+      lowered it, in full screen too; unusable with its agent. **CURED the same morning:** the
+      Workshop never rises above the chat; with both open the chat docks as a full-height
+      column on the right and the Workshop yields its right edge (`layoutWorkshop`); CHAT in
+      the Workshop's header; the grip resizes the docked chat's width. The walk's bars stand.
   What was here before
   (THE LANE, the factory ask as escalation) stays owed AFTER the Workshop:
   the lane with RAG (P6.5 sp4/sp5), the stranger with row 5, the lessons
